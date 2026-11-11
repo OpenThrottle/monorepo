@@ -617,7 +617,10 @@ not report them as dead. See [Knip.md](./Knip.md).
 clause, which no linter can see.
 
 - **kebab-case** file names (`my-component.ts`) — except React components, which are
-  **PascalCase**. _Honor system._
+  **PascalCase**, hooks (`useFoo.ts`, see [Hook shape](#hook-shape)), and utils, which are
+  **camelCase** and named after the function they export (`utils/moveListItem.ts` exports
+  `moveListItem`). The file name is the direct tie to the function; a file grouping several
+  utils gets a short camelCase name for the group (`utils/reorder.ts`). _Honor system._
 - **camelCase** variables and functions (`myVariable`, `myFunction()`).
 - **PascalCase** classes, types, and interfaces (`MyClass`, `MyInterface`).
 - **ALL_CAPS** constants and enum values (`MAX_COUNT`, `Color.RED`).
@@ -638,7 +641,7 @@ One selector per clause:
 | camelCase variables (PascalCase components, UPPER_CASE constants) | `variable`                       |
 
 **The file-name clause is not enforced** — `naming-convention` operates on identifiers and
-cannot see file names. kebab-case files with PascalCase components stay honor system;
+cannot see file names. kebab-case files, PascalCase components and camelCase utils stay honor system;
 `@tools/generators` scaffolding them correctly is the practical safeguard.
 
 `leadingUnderscore: 'allowSingleOrDouble'` on the function and variable selectors. Without

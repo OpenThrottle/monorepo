@@ -56,8 +56,8 @@ export async function utilGenerator(
 
   const names = parsePossibleNames(nameString);
 
-  // The name is the exported identifier; the file name is derived from it
-  // (`moveListItem` → `move-list-item.ts`), so anything but camelCase would
+  // The name is both the exported identifier and the file name
+  // (`moveListItem` → `moveListItem.ts`), so anything but camelCase would
   // emit an unparseable `export const move-list-item`.
   const invalidNames = names.flatMap((name: string) => {
     const error = validateCamelCase(name);

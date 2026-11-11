@@ -298,7 +298,8 @@ Sub-generators per generator:
   with `Table`; routes any valid name. Components/forms/modals/tables use **named** exports; route
   files may use a **default** export (framework requirement). `import * as React from 'react'`.
 - **react** — PascalCase components and hooks, camelCase utils; kebab-case file names except React
-  components (a util's file is the kebab form of its camelCase name, e.g. `move-list-item.ts`). All generated output uses **named** exports.
+  components, hooks and utils (a util's file is named after the camelCase function it exports, e.g.
+  `moveListItem.ts`). All generated output uses **named** exports.
 - **nestjs** — **kebab-case** services, modules and applications; named exports. Resolvers return
   hand-written `@ObjectType()` classes (see the `ot-stack` skill); entity changes stay backwards compatible — deprecate
   rather than remove. Mock providers in `beforeEach`; model/entity factories for tests.
@@ -339,7 +340,7 @@ NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react \
 
 - **Components:** PascalCase – `UserCard`
 - **Hooks:** `useSomething`
-- **Utils:** camelCase name (the exported identifier) – `moveListItem` writes `utils/move-list-item.ts`; a non-camelCase name is rejected
+- **Utils:** camelCase, file named after the function – `moveListItem` writes `utils/moveListItem.ts`; a non-camelCase name is rejected
 - **NestJS:** kebab-case
 - **Packages:** kebab-case
 - **Forms:** Must end with `Form`

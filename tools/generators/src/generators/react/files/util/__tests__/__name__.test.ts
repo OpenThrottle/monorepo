@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { <%= name %> } from '../<%= nameKebab %>';
+import { <%= name %> } from '../<%= name %>';
 
 describe('<%= name %>', () => {
   test('FIXME: should be defined', () => {

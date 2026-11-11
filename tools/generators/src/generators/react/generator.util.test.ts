@@ -37,11 +37,11 @@ describe('utilGenerator', () => {
   const target = '@openthrottle/react-router-ui';
   const packageName = 'react-router-ui';
   const name = 'moveListItem';
-  const utilPath = `packages/${packageName}/src/utils/move-list-item.ts`;
-  const testPath = `packages/${packageName}/src/utils/__tests__/move-list-item.test.ts`;
+  const utilPath = `packages/${packageName}/src/utils/moveListItem.ts`;
+  const testPath = `packages/${packageName}/src/utils/__tests__/moveListItem.test.ts`;
 
   describe('when the name is camelCase', () => {
-    test('writes kebab-case .ts files exporting the camelCase identifier', async () => {
+    test('writes camelCase .ts files named after the exported identifier', async () => {
       await utilGenerator(tree, { destination: target, name });
 
       const files = tree
@@ -61,7 +61,7 @@ describe('utilGenerator', () => {
         'export const moveListItem = ',
       );
       expect(tree.read(testPath, 'utf-8')).toContain(
-        `import { moveListItem } from '../move-list-item';`,
+        `import { moveListItem } from '../moveListItem';`,
       );
     });
   });
