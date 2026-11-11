@@ -1,7 +1,8 @@
 # OpenThrottle database migrations — one-shot runner image for the consumer install.
 #
-# Tiny image (node + pg + databases/migrations) that applies pending SQL
-# migrations against the compose Postgres on the network, then exits. Wired into
+# Tiny image (node + pg + databases/<db>/migrations) that applies pending SQL
+# migrations to every registered database (openthrottle, cms) on the compose
+# Postgres, creating any that are missing, then exits. Wired into
 # the root docker-compose.yml and applications/openthrottle/docker-compose.yml as
 # the `migrations` init service (server depends_on it with
 # service_completed_successfully).
@@ -31,9 +32,13 @@ ENV NODE_ENV="production"
 RUN echo '{ "private": true, "type": "module" }' > package.json \
   && npm install --no-save --omit=dev pg@8
 
-# The runner resolves migrations relative to itself (databases/migrations/).
-COPY ./databases/migrate.ts ./databases/migration-runner.ts ./databases/
-COPY ./databases/migrations ./databases/migrations
+# The runner resolves each database's migrations relative to itself
+# (databases/<db>/migrations/, per databases/database-registry.ts). One COPY per
+# registered database: copying all of databases/ would also pick up a local
+# openthrottle/seed.sql, which .dockerignore re-includes for the postgres image.
+COPY ./databases/migrate.ts ./databases/migration-runner.ts ./databases/database-registry.ts ./databases/
+COPY ./databases/openthrottle/migrations ./databases/openthrottle/migrations
+COPY ./databases/cms/migrations ./databases/cms/migrations
 
 # Non-root.
 RUN useradd --system --uid 1001 appuser && chown -R appuser /app

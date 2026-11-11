@@ -24,7 +24,7 @@ Anyone who plans work in this monorepo from an AI editor or agent and wants that
 
 OpenThrottle is **project-management software backed by Postgres** (+ pgvector for semantic search). The `openthrottle-mcp` server is a thin, **GraphQL-only** boundary to `openthrottle-server`; every tool call you make is a query or mutation against real database rows.
 
-The consequence worth internalizing: **plans and tasks are first-class rows, not documents.** A plan is not a Markdown file you write and commit — it is a row in `plans` with an `id` (UUID), and its tasks are rows in `tasks` that reference it. You create, read, and mutate them through tools, and you retrieve their content back the same way. (Schema details: [databases/README.md](../../databases/README.md).)
+The consequence worth internalizing: **plans and tasks are first-class rows, not documents.** A plan is not a Markdown file you write and commit — it is a row in `plans` with an `id` (UUID), and its tasks are rows in `tasks` that reference it. You create, read, and mutate them through tools, and you retrieve their content back the same way. (Schema details: [databases/openthrottle/README.md](../../databases/openthrottle/README.md).)
 
 ### Plans → tasks
 
@@ -217,7 +217,7 @@ Two caveats:
   an unexpanded `${...}` placeholder is treated as unset, so a client that does not know the
   variable falls back to the cwd rather than sending the literal.
 
-> **When to set `project`/`projectId`:** only when the plan is clearly scoped to **one** NX project. Leave it unset for cross-cutting, infra, or documentation work. Criteria: [databases/README.md § Project association](../../databases/README.md).
+> **When to set `project`/`projectId`:** only when the plan is clearly scoped to **one** NX project. Leave it unset for cross-cutting, infra, or documentation work. Criteria: [databases/openthrottle/README.md § Project association](../../databases/openthrottle/README.md).
 
 ### Create many plans atomically — `create_plans`
 
@@ -439,6 +439,6 @@ Nothing to do after the merge — the verifier resolves the squash commit itself
 | **Project association** (when to set `projectId`)  | See the “When to set `project`/`projectId`” note above.                                                                  |
 | **Run loop / queue** (Ralph)                       | [tools/workflows/README.md](../../tools/workflows/README.md), [`agents-ralph` skill](../../skills/agents-ralph/SKILL.md) |
 | **Conventional commits & staging**                 | [`github-commit` skill](../../skills/github-commit/SKILL.md)                                                             |
-| **Schema, migrations, `sort_order`, commit links** | [databases/README.md](../../databases/README.md)                                                                         |
+| **Schema, migrations, `sort_order`, commit links** | [databases/openthrottle/README.md](../../databases/openthrottle/README.md)                                               |
 | **`wave` full contract** (why a layer, not a DAG)  | [task-wave-encoding.md](./task-wave-encoding.md)                                                                         |
 | **Monorepo-wide agent conventions**                | [AGENTS.md § OpenThrottle](../../AGENTS.md), [CLAUDE.md](../../CLAUDE.md)                                                |

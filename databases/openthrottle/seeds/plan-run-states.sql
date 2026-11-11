@@ -1,16 +1,16 @@
 -- DEV-ONLY fixture: one plan with a run in every state the plan Details "Runs" card renders, for
 -- UI visual passes (light / dark / narrow) on run states. NOT a migration: never place this under
--- databases/migrations/ and never wire it into `database:migrate`, CI or a deploy path.
+-- databases/openthrottle/migrations/ and never wire it into `database:migrate`, CI or a deploy path.
 --
 -- Run it against the LOCAL database (the root docker-compose Postgres on 6010):
 --
 --   docker exec -i openthrottle-postgres-1 psql -v ON_ERROR_STOP=1 \
---     -U openthrottle_user -d openthrottle < databases/seeds/plan-run-states.sql
+--     -U openthrottle_user -d openthrottle < databases/openthrottle/seeds/plan-run-states.sql
 --
 -- or, with a local psql client:
 --
 --   PGPASSWORD=openthrottle_password psql -v ON_ERROR_STOP=1 -h localhost -p 6010 \
---     -U openthrottle_user -d openthrottle -f databases/seeds/plan-run-states.sql
+--     -U openthrottle_user -d openthrottle -f databases/openthrottle/seeds/plan-run-states.sql
 --
 -- Then sign in as developer@openthrottle.ai (FEATURE_CHARLIE_PREVIEW on) and open the
 -- "[fixture] run states" plan's Details tab. Remove everything it created with the CLEANUP block
@@ -67,7 +67,7 @@ VALUES (
   'fe000000-0000-4000-8000-000000000001',
   'fixture',
   'fixture',
-  'DEV-ONLY fixture from databases/seeds/plan-run-states.sql: one run per state for visual passes on the Runs card. Safe to delete.',
+  'DEV-ONLY fixture from databases/openthrottle/seeds/plan-run-states.sql: one run per state for visual passes on the Runs card. Safe to delete.',
   'PENDING',
   '[fixture] run states'
 );

@@ -50,7 +50,7 @@ import { RepositoryInspectionService } from '../../repository-inspection/reposit
 import { resolveArtifactForWrite } from '../artifact-type-registry/artifact-type-registry.utils.ts';
 import type { RecordSettledRunArtifactsInput } from './settle-run-ledger.types.ts';
 
-/** Seeded service account that owns Ralph runs (databases/migrations/045). */
+/** Seeded service account that owns Ralph runs (databases/openthrottle/migrations/045). */
 const WORKFLOW_RALPH_SERVICE_ACCOUNT_NAME = 'workflow-ralph';
 const TOOL_NAME = 'workflow-ralph';
 

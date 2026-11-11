@@ -2,7 +2,7 @@
 
 Audit of operations needed for notes, plans, projects, tasks, commit, activity, output, search, and health so openthrottle-mcp can achieve parity with ai-mcp over GraphQL only (no direct OpenThrottle Postgres).
 
-> **The Commit area is superseded by the work ledger.** `link_commit` and the `commit_links` table were retired (migration [`075_drop_commit_links.sql`](../../../databases/migrations/075_drop_commit_links.sql), backfilled by `069_backfill_work_ledger_from_commit_links.sql`). Do **not** open work to add a `linkCommit` mutation. Record a merged squash with `attach_session_subject` + `record_artifact(type: "git_commit")`, or `pnpm exec workflow-link-merge` — see [ot-plans](../../../skills/ot-plans/SKILL.md) and [databases/README.md](../../../databases/README.md) § work ledger. Per-task work commits carry traceability via `Plan-Id:` / `Task-Id:` footers only. The rest of this audit still describes live coverage.
+> **The Commit area is superseded by the work ledger.** `link_commit` and the `commit_links` table were retired (migration [`075_drop_commit_links.sql`](../../../databases/openthrottle/migrations/075_drop_commit_links.sql), backfilled by `069_backfill_work_ledger_from_commit_links.sql`). Do **not** open work to add a `linkCommit` mutation. Record a merged squash with `attach_session_subject` + `record_artifact(type: "git_commit")`, or `pnpm exec workflow-link-merge` — see [ot-plans](../../../skills/ot-plans/SKILL.md) and [databases/openthrottle/README.md](../../../databases/openthrottle/README.md) § work ledger. Per-task work commits carry traceability via `Plan-Id:` / `Task-Id:` footers only. The rest of this audit still describes live coverage.
 
 ## Summary
 

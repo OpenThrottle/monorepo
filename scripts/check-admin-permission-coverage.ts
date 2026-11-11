@@ -20,7 +20,7 @@ const logger = createLogger();
  * for flags:*). Migration 045 added plans:read/plans:write and forgot to, so admin
  * silently lost coverage on any DB migrated forward from 034 (fixed by 092).
  *
- * This check parses databases/migrations/*.sql statically (no DB needed) and fails if
+ * This check parses databases/openthrottle/migrations/*.sql statically (no DB needed) and fails if
  * any permission defined by a migration is never granted to admin by an equal-or-later
  * migration — either by an explicit `p.name IN (...)` grant or a blanket
  * `CROSS JOIN permissions WHERE r.name = 'admin'`. Note a blanket grant only covers
@@ -32,6 +32,7 @@ const MIGRATIONS_DIR = join(
   dirname(fileURLToPath(import.meta.url)),
   '..',
   'databases',
+  'openthrottle',
   'migrations',
 );
 
@@ -161,7 +162,7 @@ async function main(): Promise<void> {
     logger.fail(
       `${gaps.length} uncovered permission(s). Any migration that INSERTs into ` +
         `permissions must also grant the new permission to admin (see 085 for the ` +
-        `pattern; databases/README.md § RBAC). admin must stay the full superset.`,
+        `pattern; databases/openthrottle/README.md § RBAC). admin must stay the full superset.`,
     );
     process.exit(1);
   }

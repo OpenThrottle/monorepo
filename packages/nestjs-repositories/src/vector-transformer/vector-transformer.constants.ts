@@ -1,6 +1,6 @@
 /**
  * @description ValueTransformer for pgvector vector(1536) columns. Serializes number[] to Postgres vector string format and back.
- * Matches databases/migrations (001, 004, 005).
+ * Matches databases/openthrottle/migrations (001, 004, 005).
  */
 
 import type { ValueTransformer } from 'typeorm';

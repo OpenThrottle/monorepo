@@ -14,21 +14,23 @@ import { isPlanStatus, isTaskStatus } from './config.utils.ts';
 
 /**
  * Ascends from the working directory to the monorepo root (the first ancestor
- * that contains `databases/migrations`). Nx runs test targets from the workspace
+ * that contains `databases/openthrottle/migrations`). Nx runs test targets from the workspace
  * root, so this resolves the committed migrations regardless of project layout.
  */
 function findMigrationsDir(): string {
   let dir = process.cwd();
 
   for (let depth = 0; depth < 12; depth += 1) {
-    const candidate = join(dir, 'databases', 'migrations');
+    const candidate = join(dir, 'databases', 'openthrottle', 'migrations');
     if (existsSync(candidate)) return candidate;
     const parent = resolve(dir, '..');
     if (parent === dir) break;
     dir = parent;
   }
 
-  throw new Error('Could not locate databases/migrations from the test file.');
+  throw new Error(
+    'Could not locate databases/openthrottle/migrations from the test file.',
+  );
 }
 
 /**

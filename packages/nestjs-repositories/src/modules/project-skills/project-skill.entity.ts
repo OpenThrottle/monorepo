@@ -1,6 +1,6 @@
 /**
  * @description TypeORM entity for the project_skills table. Matches
- * databases/migrations (061, 074, 090, 093).
+ * databases/openthrottle/migrations (061, 074, 090, 093).
  */
 
 import {

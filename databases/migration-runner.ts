@@ -1,9 +1,18 @@
 import { createHash } from 'node:crypto';
 import { readdir, readFile } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
 
 import type { Client } from 'pg';
+
+import type { DatabaseDefinition } from './database-registry.ts';
+import {
+  databaseNameOf,
+  isValidDatabaseName,
+  migrationsDirFor,
+  primaryDatabase,
+  resolveDatabaseUrl,
+  withDatabaseName,
+} from './database-registry.ts';
 
 /**
  * @description The single schema_migrations ledger implementation, shared by
@@ -26,17 +35,28 @@ import type { Client } from 'pg';
  * workspace. Logging is injected for the same reason.
  */
 
-/** Absolute path to the migration files, resolved relative to this module. */
+/** Absolute path to the primary (openthrottle) database's migration files. */
 export function defaultMigrationsDir(): string {
-  return join(dirname(fileURLToPath(import.meta.url)), 'migrations');
+  return migrationsDirFor(primaryDatabase());
 }
 
-/** fs-backed {@link MigrationSource} reading `.sql` files from `dir` (default {@link defaultMigrationsDir}). */
+/**
+ * fs-backed {@link MigrationSource} reading `.sql` files from `dir` (default
+ * {@link defaultMigrationsDir}). A missing directory lists as empty: a database
+ * with no migrations yet still gets created and gets its ledger.
+ */
 export function createFsMigrationSource(
   dir: string = defaultMigrationsDir(),
 ): MigrationSource {
   return {
-    list: () => readdir(dir),
+    list: async () => {
+      try {
+        return await readdir(dir);
+      } catch (error) {
+        if (hasErrorCode(error, 'ENOENT')) return [];
+        throw error;
+      }
+    },
     read: (file) => readFile(join(dir, file), 'utf-8'),
   };
 }
@@ -45,7 +65,7 @@ export function createFsMigrationSource(
 export const LEDGER_TABLE = 'schema_migrations';
 
 /** Tables whose presence proves a DB already carries the openthrottle schema (gates the cut-over log). */
-export const CORE_TABLES = ['plans', 'tasks'] as const;
+export const CORE_TABLES: readonly string[] = primaryDatabase().coreTables;
 
 /**
  * Migrations whose body was deliberately replaced with a no-op after release.
@@ -56,10 +76,8 @@ export const CORE_TABLES = ['plans', 'tasks'] as const;
  * Retire a migration only when re-applying it would damage user data, and say
  * why in the file itself.
  */
-export const RETIRED_MIGRATIONS: ReadonlySet<string> = new Set([
-  '010_normalize_author_to_visormatt.sql',
-  '013_normalize_assignee_to_visormatt.sql',
-]);
+export const RETIRED_MIGRATIONS: ReadonlySet<string> =
+  primaryDatabase().retiredMigrations;
 
 /**
  * A migration recorded in the ledger. `checksum` is null for rows seeded by the
@@ -168,6 +186,7 @@ export async function runMigrations(
   source: MigrationSource,
   log: (message: string) => void = console.log,
   warn: (message: string) => void = console.warn,
+  retiredMigrations: ReadonlySet<string> = RETIRED_MIGRATIONS,
 ): Promise<MigrationRunResult> {
   await store.ensureLedger();
 
@@ -190,7 +209,7 @@ export async function runMigrations(
     );
   }
 
-  await warnOnChecksumDrift(applied, sqlFiles, source, warn);
+  await warnOnChecksumDrift(applied, sqlFiles, source, warn, retiredMigrations);
 
   const pending = selectPendingMigrations(
     sqlFiles,
@@ -231,13 +250,14 @@ async function warnOnChecksumDrift(
   sqlFiles: readonly string[],
   source: MigrationSource,
   warn: (message: string) => void,
+  retiredMigrations: ReadonlySet<string>,
 ): Promise<void> {
   const present = new Set(sqlFiles);
   const hashable = applied.filter(
     (a) =>
       a.checksum !== null &&
       present.has(a.filename) &&
-      !RETIRED_MIGRATIONS.has(a.filename),
+      !retiredMigrations.has(a.filename),
   );
 
   const entries = await Promise.all(
@@ -264,9 +284,11 @@ export class PgMigrationStore implements MigrationStore {
   // An explicit field rather than a parameter property: parameter properties
   // are not erasable, so Node's native type stripping rejects them.
   private readonly client: Client;
+  private readonly coreTables: readonly string[];
 
-  constructor(client: Client) {
+  constructor(client: Client, coreTables: readonly string[] = CORE_TABLES) {
     this.client = client;
+    this.coreTables = coreTables;
   }
 
   async ensureLedger(): Promise<void> {
@@ -290,7 +312,7 @@ export class PgMigrationStore implements MigrationStore {
     const { rows } = await this.client.query<{ present: boolean }>(
       `SELECT bool_and(to_regclass('public.' || t) IS NOT NULL) AS present
        FROM unnest($1::text[]) AS t`,
-      [[...CORE_TABLES]],
+      [[...this.coreTables]],
     );
     return rows[0]?.present === true;
   }
@@ -309,4 +331,159 @@ export class PgMigrationStore implements MigrationStore {
       throw e;
     }
   }
+}
+
+/** The slice of a pg client {@link ensureDatabaseExists} needs; `pg.Client` satisfies it. */
+export interface DatabaseAdminClient {
+  query(
+    text: string,
+    values?: unknown[],
+  ): Promise<{ readonly rowCount: number | null }>;
+}
+
+/** Postgres `duplicate_database`: a concurrent runner created it between our check and CREATE. */
+const DUPLICATE_DATABASE = '42P04';
+
+/** Whether `error` carries `code` (a pg SQLSTATE or a Node errno code). */
+function hasErrorCode(error: unknown, code: string): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    error.code === code
+  );
+}
+
+/**
+ * Create database `name` on the server `admin` is connected to, unless it
+ * already exists. Returns whether this call created it.
+ *
+ * `/docker-entrypoint-initdb.d` only runs against an EMPTY volume, so an init
+ * script alone never creates a database on an existing dev volume or a deployed
+ * box; every migration entrypoint calls this before migrating a non-primary
+ * database. `CREATE DATABASE` cannot run inside a transaction, so this is two
+ * plain statements, and a runner racing us to it (`42P04`) counts as existing.
+ */
+export async function ensureDatabaseExists(
+  admin: DatabaseAdminClient,
+  name: string,
+): Promise<boolean> {
+  if (!isValidDatabaseName(name)) {
+    throw new Error(
+      `Refusing to create database "${name}": names must be lowercase identifiers (a-z, 0-9, _).`,
+    );
+  }
+
+  const existing = await admin.query(
+    'SELECT 1 FROM pg_database WHERE datname = $1',
+    [name],
+  );
+  if ((existing.rowCount ?? 0) > 0) return false;
+
+  try {
+    // The name is validated above; identifiers cannot be bound as parameters.
+    await admin.query(`CREATE DATABASE "${name}"`);
+    return true;
+  } catch (error) {
+    if (hasErrorCode(error, DUPLICATE_DATABASE)) return false;
+    throw error;
+  }
+}
+
+/** What happened to one database in a {@link migrateDatabases} run. */
+export interface DatabaseMigrationOutcome {
+  /** Whether the run created the database before migrating it. */
+  readonly created: boolean;
+  readonly database: DatabaseDefinition['name'];
+  readonly result: MigrationRunResult;
+}
+
+/** Side effects {@link migrateDatabases} needs; {@link createPgDatabaseMigrator} is the pg impl. */
+export interface DatabaseMigrator {
+  /** Create the database at `url` if missing, connecting through `adminUrl`. Returns whether it was created. */
+  ensureDatabase(adminUrl: string, url: string): Promise<boolean>;
+  /** Run the ledger for `database` against `url`. */
+  migrate(
+    database: DatabaseDefinition,
+    url: string,
+  ): Promise<MigrationRunResult>;
+}
+
+/** Inputs to {@link migrateDatabases}. */
+export interface MigrateDatabasesInput {
+  readonly databases: readonly DatabaseDefinition[];
+  readonly env: NodeJS.ProcessEnv;
+  readonly log: (message: string) => void;
+  readonly migrator: DatabaseMigrator;
+  /** Connection URL of the primary database; every other URL derives from it. */
+  readonly primaryUrl: string;
+}
+
+/**
+ * Migrate each database in order, each against its own ledger. A non-primary
+ * database is created first when it does not exist yet.
+ *
+ * Fail-fast: the first database that throws stops the run and the error
+ * propagates, so later databases are not attempted. Every entrypoint exits
+ * non-zero on it, and a stack that is half-migrated must not boot anyway: the
+ * compose server waits on the migrations service succeeding.
+ */
+export async function migrateDatabases(
+  input: MigrateDatabasesInput,
+): Promise<readonly DatabaseMigrationOutcome[]> {
+  const outcomes: DatabaseMigrationOutcome[] = [];
+
+  /* eslint-disable no-await-in-loop -- databases migrate in order, and the first failure stops the run */
+  for (const database of input.databases) {
+    const url = resolveDatabaseUrl(database, input.primaryUrl, input.env);
+    input.log(`Database ${database.name} (${databaseNameOf(url)}):`);
+
+    const created = database.primary
+      ? false
+      : await input.migrator.ensureDatabase(input.primaryUrl, url);
+    if (created) input.log(`Created database ${databaseNameOf(url)}.`);
+
+    const result = await input.migrator.migrate(database, url);
+    outcomes.push({ created, database: database.name, result });
+  }
+  /* eslint-enable no-await-in-loop */
+
+  return outcomes;
+}
+
+/**
+ * pg-backed {@link DatabaseMigrator}. `connect` is injected so the workspace and
+ * the container image can each supply their own `pg.Client` construction.
+ */
+export function createPgDatabaseMigrator(
+  connect: (url: string) => Promise<Client>,
+  log: (message: string) => void = console.log,
+  warn: (message: string) => void = console.warn,
+): DatabaseMigrator {
+  return {
+    ensureDatabase: async (adminUrl, url) => {
+      // Connect to the maintenance database on the same server: the primary
+      // database may not be the one the admin can reach first on a fresh box.
+      const admin = await connect(withDatabaseName(adminUrl, 'postgres'));
+      try {
+        return await ensureDatabaseExists(admin, databaseNameOf(url));
+      } finally {
+        await admin.end();
+      }
+    },
+    migrate: async (database, url) => {
+      const client = await connect(url);
+      try {
+        return await runMigrations(
+          new PgMigrationStore(client, database.coreTables),
+          createFsMigrationSource(migrationsDirFor(database)),
+          log,
+          warn,
+          database.retiredMigrations,
+        );
+      } finally {
+        await client.end();
+      }
+    },
+  };
 }

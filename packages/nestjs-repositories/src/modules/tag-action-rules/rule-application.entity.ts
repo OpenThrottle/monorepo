@@ -1,6 +1,6 @@
 /**
  * @description TypeORM entity for rule_applications (the apply-once ledger).
- * Matches databases/migrations/066.
+ * Matches databases/openthrottle/migrations/066.
  */
 
 import {

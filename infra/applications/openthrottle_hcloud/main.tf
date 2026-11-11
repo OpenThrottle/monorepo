@@ -56,9 +56,9 @@ locals {
   })
 
   # The backup script is shipped verbatim onto the box rather than duplicated in
-  # the template, so databases/backup-offsite.sh stays the single source of truth
-  # and can be tested locally (see databases/SEEDING.md).
-  backup_script = file("${path.module}/../../../databases/backup-offsite.sh")
+  # the template, so databases/openthrottle/backup-offsite.sh stays the single source of truth
+  # and can be tested locally (see databases/openthrottle/SEEDING.md).
+  backup_script = file("${path.module}/../../../databases/openthrottle/backup-offsite.sh")
 
   startup_script = var.deploy_enabled ? templatefile("${path.module}/templates/startup.sh.tpl", {
     api_domain             = var.api_domain

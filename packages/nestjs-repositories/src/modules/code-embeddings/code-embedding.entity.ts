@@ -3,7 +3,7 @@ import { Column, CreateDateColumn, Entity, PrimaryColumn } from 'typeorm';
 import { vectorTransformer } from '../../vector-transformer/vector-transformer.constants.ts';
 
 /**
- * @description TypeORM entity for the code_embeddings table (databases/migrations 052). Backs the
+ * @description TypeORM entity for the code_embeddings table (databases/openthrottle/migrations 052). Backs the
  * `@openthrottle/openthrottle-ide` engine's pgvector `VectorStore`. Unlike plan/task embeddings this
  * has no FK/metadata: the `id` is a content-derived chunk id (hashContent(path + content)) and the
  * store is scoped by `workspaceRoot`. Uses pgvector vector(1536).

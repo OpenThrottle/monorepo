@@ -12,7 +12,7 @@ Verification is a script, not a checklist:
 
 ```bash
 POSTGRES_HOST=… POSTGRES_PORT=… POSTGRES_USER=… POSTGRES_PASSWORD=… POSTGRES_DB=… \
-  databases/verify-restore.sh
+  databases/openthrottle/verify-restore.sh
 ```
 
 ## 1. Decide which source is authoritative
@@ -27,7 +27,7 @@ The root `docker-compose.yml` mounts **exactly one** of two Postgres volumes, an
 
 Check which one is live before dumping anything — the mount toggle is commented in the `postgres`
 service's `volumes:` block, and taking a dump from the wrong one produces a plausible-looking
-database with the wrong contents. See `databases/README.md` § "Local Postgres volumes".
+database with the wrong contents. See `databases/openthrottle/README.md` § "Local Postgres volumes".
 
 > ⚠️ Never `docker compose down -v`. It destroys **both** volumes, including the personal archive.
 > Use `docker compose stop postgres` to swap safely.
@@ -38,7 +38,7 @@ database with the wrong contents. See `databases/README.md` § "Local Postgres v
 pnpm run database:backup
 ```
 
-Writes `databases/backups/openthrottle-YYYYMMDD-HHMMSS.zip` — a **zip containing plain SQL**, not a
+Writes `databases/openthrottle/backups/openthrottle-YYYYMMDD-HHMMSS.zip` — a **zip containing plain SQL**, not a
 `.sql.gz` and not a `pg_dump` custom-format archive. It keeps the 14 most recent by default
 (`DATABASE_BACKUP_RETENTION_COUNT`).
 
@@ -70,7 +70,7 @@ emits `\restrict` / `\unrestrict` meta-commands, and an older `psql` fails on th
 the container, which matches by construction:
 
 ```bash
-unzip -p databases/backups/openthrottle-YYYYMMDD-HHMMSS.zip > /tmp/openthrottle.sql
+unzip -p databases/openthrottle/backups/openthrottle-YYYYMMDD-HHMMSS.zip > /tmp/openthrottle.sql
 
 docker compose exec -T -e PGPASSWORD="$POSTGRES_PASSWORD" postgres \
   psql --host localhost --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" \
@@ -100,7 +100,7 @@ verifier caught this exact case when the exit code did not.
 ## 5. Verify
 
 ```bash
-databases/verify-restore.sh
+databases/openthrottle/verify-restore.sh
 ```
 
 It checks four things, and the fourth is the one that matters most:
@@ -121,9 +121,9 @@ Compare row counts against the source by diffing two runs:
 
 ```bash
 # against the source
-… databases/verify-restore.sh --counts-only > /tmp/source-counts.txt
+… databases/openthrottle/verify-restore.sh --counts-only > /tmp/source-counts.txt
 # against the target
-… databases/verify-restore.sh --counts-only > /tmp/target-counts.txt
+… databases/openthrottle/verify-restore.sh --counts-only > /tmp/target-counts.txt
 diff /tmp/source-counts.txt /tmp/target-counts.txt
 ```
 
@@ -133,6 +133,22 @@ path that actually matters:
 ```bash
 # via the OT MCP, or a GraphQL query against the target
 semantic_search "hetzner deployment"
+```
+
+## 5b. Restoring the `cms` database
+
+Every database on the server has its own archive (`cms-YYYYMMDD-HHMMSS.zip` beside
+`openthrottle-…`, from `pnpm run database:backup` or `backup-offsite.sh`). Restore one the same
+way as above, with `--dbname cms` (or `$CMS_POSTGRES_DB`), into a database that exists and is
+empty. `database:migrate` creates it if you migrate first, which also stamps its ledger. In that
+case restore with `--clean` dumps only, or drop and recreate the database.
+
+`verify-restore.sh` is openthrottle-specific: it checks pgvector and embeddings, and `cms` has
+neither. For `cms` the check is the ledger, which must match the source:
+
+```bash
+psql --dbname cms -Atc 'SELECT count(*) FROM schema_migrations'
+ls databases/cms/migrations/*.sql | wc -l
 ```
 
 ## 6. Provision credentials (manual, once)
@@ -145,7 +161,7 @@ docker compose run --rm bootstrap
 
 Idempotent, and deliberately never automatic — `up` must never silently provision a possibly-shared
 database. See
-[`infra/applications/openthrottle_hcloud/SECRETS.md`](../infra/applications/openthrottle_hcloud/SECRETS.md)
+[`infra/applications/openthrottle_hcloud/SECRETS.md`](../../infra/applications/openthrottle_hcloud/SECRETS.md)
 for passing tokens into that one invocation without putting them in `user_data`.
 
 ## ⚠️ The ledger decides what the first deploy re-applies
@@ -153,7 +169,7 @@ for passing tokens into that one invocation without putting them in `user_data`.
 **Read this before restoring into anything you care about.**
 
 Every migration entrypoint runs the same `schema_migrations` ledger
-([`databases/migration-runner.ts`](./migration-runner.ts)):
+([`databases/migration-runner.ts`](../migration-runner.ts)):
 
 | Entrypoint                                    | Used by                           | Ledger?                                  |
 | --------------------------------------------- | --------------------------------- | ---------------------------------------- |

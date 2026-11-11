@@ -1,6 +1,6 @@
 /**
  * @description TypeORM entity for the OpenThrottle agent_trajectories table (one ATIF v1.8 document
- * per agent run iteration). Matches databases/migrations (145).
+ * per agent run iteration). Matches databases/openthrottle/migrations (145).
  */
 
 import type { AtifTrajectory } from '@openthrottle/openthrottle-agentic-utils';

@@ -21,16 +21,21 @@
 #   2. This: a logical pg_dump shipped to storage the box does not control.
 #      An on-box backup does not survive the failure mode it exists for.
 #
+# Every database on the server gets its own archive: openthrottle (POSTGRES_DB)
+# and cms (CMS_POSTGRES_DB, default cms) — see databases/database-registry.ts.
+# Called with no OT_BACKUP_LABEL, the script runs itself once per database, in
+# that order, and stops at the first failure.
+#
 # Output format deliberately MATCHES scripts/openthrottle-database-backup.ts —
-# openthrottle-YYYYMMDD-HHMMSS.zip containing plain SQL — so a dump from either
-# source restores through the identical procedure in databases/SEEDING.md.
+# <db>-YYYYMMDD-HHMMSS.zip containing plain SQL — so a dump from either
+# source restores through the identical procedure in databases/openthrottle/SEEDING.md.
 # Retention mirrors DATABASE_BACKUP_RETENTION_COUNT (default 14) rather than
 # inventing a second scheme.
 #
 # Usage:
 #   POSTGRES_HOST=… POSTGRES_PORT=… POSTGRES_USER=… POSTGRES_PASSWORD=… \
 #   POSTGRES_DB=… OT_BACKUP_REMOTE=hetzner-storage:openthrottle/backups \
-#     databases/backup-offsite.sh
+#     databases/openthrottle/backup-offsite.sh
 #
 # OT_BACKUP_REMOTE is an rclone destination. rclone is used because one binary
 # covers both realistic targets: Hetzner Storage Box (sftp) and any
@@ -51,15 +56,29 @@ set -euo pipefail
 : "${POSTGRES_PORT:?POSTGRES_PORT is required}"
 : "${POSTGRES_USER:?POSTGRES_USER is required}"
 
+# One run per database. A new database here must also be added to
+# databases/database-registry.ts, and the other way round.
+if [[ -z "${OT_BACKUP_LABEL:-}" ]]; then
+  OT_BACKUP_LABEL=openthrottle bash "${BASH_SOURCE[0]}"
+  OT_BACKUP_LABEL=cms POSTGRES_DB="${CMS_POSTGRES_DB:-cms}" bash "${BASH_SOURCE[0]}"
+  exit 0
+fi
+
+readonly LABEL="${OT_BACKUP_LABEL}"
+if [[ ! "${LABEL}" =~ ^[a-z_][a-z0-9_]*$ ]]; then
+  echo "[backup] FATAL: OT_BACKUP_LABEL must be a lowercase identifier" >&2
+  exit 1
+fi
+
 readonly BACKUP_DIR="${OT_BACKUP_DIR:-/var/backups/openthrottle}"
 readonly REMOTE="${OT_BACKUP_REMOTE:-}"
 readonly RETENTION="${DATABASE_BACKUP_RETENTION_COUNT:-14}"
 TS="$(date -u +%Y%m%d-%H%M%S)"
 readonly TS
-readonly SQL_PATH="${BACKUP_DIR}/openthrottle-${TS}.sql"
-readonly ZIP_PATH="${BACKUP_DIR}/openthrottle-${TS}.zip"
+readonly SQL_PATH="${BACKUP_DIR}/${LABEL}-${TS}.sql"
+readonly ZIP_PATH="${BACKUP_DIR}/${LABEL}-${TS}.zip"
 
-log() { echo "[openthrottle-backup] $*"; }
+log() { echo "[${LABEL}-backup] $*"; }
 
 mkdir -p "${BACKUP_DIR}"
 
@@ -71,7 +90,7 @@ mkdir -p "${BACKUP_DIR}"
 #
 # NOTE: this dumps the LOGICAL contents, which is what protects against data
 # loss. It does NOT capture the pgvector extension binaries — a restore target
-# must already have pgvector available. databases/verify-restore.sh checks that.
+# must already have pgvector available. databases/openthrottle/verify-restore.sh checks that.
 ################################################################################
 # pg_dump REFUSES to dump a newer server ("aborting because of server version
 # mismatch"), and a deployed box has no host Postgres client at all — the only
@@ -159,14 +178,15 @@ else
       log "pruning remote ${stale}"
       rclone deletefile "${REMOTE}/${stale}"
     fi
-  done < <(rclone lsf "${REMOTE}" --include 'openthrottle-*.zip' 2>/dev/null | sort -r)
+  done < <(rclone lsf "${REMOTE}" --include "${LABEL}-*.zip" 2>/dev/null | sort -r)
 fi
 
 ################################################################################
 # 4. Local retention — same window as scripts/openthrottle-database-backup.ts
 #
-# Matched on the exact openthrottle-YYYYMMDD-HHMMSS.zip pattern so nothing else
-# in the directory can be deleted, mirroring that script's BACKUP_ARCHIVE_PATTERN.
+# Matched on this database's <db>-*.zip archives so nothing else in the
+# directory (another database's archives included) can be deleted, mirroring
+# that script's backupArchivePattern.
 ################################################################################
 local_index=0
 while IFS= read -r stale; do
@@ -177,7 +197,7 @@ while IFS= read -r stale; do
     rm -f "${BACKUP_DIR}/${stale}"
   fi
 done < <(
-  find "${BACKUP_DIR}" -maxdepth 1 -type f -name 'openthrottle-*.zip' \
+  find "${BACKUP_DIR}" -maxdepth 1 -type f -name "${LABEL}-*.zip" \
     -exec basename {} \; 2>/dev/null | sort -r
 )
 

@@ -4,14 +4,16 @@ import {
   ensurePostgresReachable,
   getPostgresUrl,
 } from '@openthrottle/openthrottle-agentic-utils';
-import { Client } from 'pg';
 
+import { DATABASES } from '../databases/database-registry.ts';
 import {
-  createFsMigrationSource,
-  PgMigrationStore,
-  runMigrations,
+  createPgDatabaseMigrator,
+  migrateDatabases,
 } from '../databases/migration-runner.ts';
-import { guardSharedMigrations } from './openthrottle-database-migrations.ts';
+import {
+  connectClient,
+  guardSharedMigrations,
+} from './openthrottle-database-migrations.ts';
 import { createLogger } from './utils/index.ts';
 
 const logger = createLogger();
@@ -27,8 +29,9 @@ const logger = createLogger();
  *  2. Reachability preflight with bounded retry — covers the race where
  *     `pnpm run database:start` was just issued and the container isn't accepting
  *     connections yet.
- *  3. On reachable: delegate to the existing idempotent {@link runMigrations} runner
- *     (single source of truth — no second migration mechanism).
+ *  3. On reachable: migrate every registered database through the shared
+ *     ledger (`migrateDatabases` — single source of truth, no second migration
+ *     mechanism), creating any non-primary database that does not exist yet.
  *  4. On unreachable after the window: fail fast with actionable guidance and exit 1.
  *
  * The Docker path (Dockerfile.Migrations + compose `migrations` init service) stays
@@ -132,20 +135,21 @@ async function main(): Promise<void> {
   }
 
   const connectionString = getPostgresUrl();
-  const probe = (): Promise<void> => ensurePostgresReachable(connectionString);
+  const probe = (): Promise<void> => {
+    return ensurePostgresReachable(connectionString);
+  };
   const migrate = async (): Promise<void> => {
-    const client = new Client({ connectionString });
-    await client.connect();
-    try {
-      await runMigrations(
-        new PgMigrationStore(client),
-        createFsMigrationSource(),
+    await migrateDatabases({
+      databases: DATABASES,
+      env: process.env,
+      log: logger.info,
+      migrator: createPgDatabaseMigrator(
+        connectClient,
         logger.info,
         logger.warn,
-      );
-    } finally {
-      await client.end();
-    }
+      ),
+      primaryUrl: connectionString,
+    });
   };
 
   try {

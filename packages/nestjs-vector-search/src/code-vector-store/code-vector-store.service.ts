@@ -53,7 +53,7 @@ function toVectorLiteral(embedding: number[]): string {
 /**
  * @description pgvector-backed implementation of the `@openthrottle/openthrottle-ide` engine's
  * {@link VectorStore} interface, persisting code-chunk vectors in the `code_embeddings` table
- * (databases/migrations 052). Every operation is scoped by `workspaceRoot`. Uses raw SQL via the
+ * (databases/openthrottle/migrations 052). Every operation is scoped by `workspaceRoot`. Uses raw SQL via the
  * injected TypeORM {@link DataSource} so the pgvector `<=>` operator and the HNSW index are used
  * directly (TypeORM has no first-class pgvector API) — the same approach as node-client's openthrottle-client.
  */

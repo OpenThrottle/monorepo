@@ -284,7 +284,7 @@ jobs:
           registry: ${{ env.ARTIFACT_REGISTRY_REGION }}-docker.pkg.dev/${{ env.GOOGLE_PROJECT_ID }}/openthrottle
           tag: sha-${{ github.sha }}
 
-      # The migrations image is a tiny non-Nx runner (node + pg + databases/migrations), built
+      # The migrations image is a tiny non-Nx runner (node + pg + databases/openthrottle/migrations), built
       # directly from Dockerfile.Migrations — it has no applications/<app>/package.json, no
       # `--target production`, and no NX/PNPM build args, so the docker-build-push composite action
       # (and the Nx-affected gating in `plan`) do not apply. It is intentionally cheap to build, so it is

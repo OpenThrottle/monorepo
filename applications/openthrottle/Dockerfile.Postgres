@@ -12,4 +12,4 @@ FROM pgvector/pgvector:0.8.2-pg${POSTGRES_VERSION}-trixie
 # nothing instead of failing the build. `database[s]` must be a glob too:
 # .dockerignore only re-includes seed.sql, so without it the databases/
 # folder is absent from the context and a literal path would fail to lstat.
-COPY ./database[s]/seed.sql* /docker-entrypoint-initdb.d/
+COPY ./database[s]/openthrottle/seed.sql* /docker-entrypoint-initdb.d/

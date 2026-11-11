@@ -136,7 +136,7 @@ this page adds no numbers of its own.
 
 **Tied `sort_order` values.** Not available: migration `049` creates
 `idx_tasks_plan_id_sort_order` as a UNIQUE index on `(plan_id, sort_order)`, and
-[`databases/README.md` § Task sort_order](../../databases/README.md) states the same. Two tasks
+[`databases/openthrottle/README.md` § Task sort_order](../../databases/openthrottle/README.md) states the same. Two tasks
 cannot share a `sort_order`. Ruled out 2026-09-10; do not re-propose it.
 
 **Option B — `tasks.depends_on UUID[]`.** A true DAG, and the most expressive option. Rejected for
@@ -152,7 +152,7 @@ could be written:
   unresolvable id as satisfied (silently parallelizing work that had a real dependency) or as
   blocking forever (deadlocking the plan). All three need deciding.
 - **SKIPPED / PROMOTED / CANCELED dependencies.** `SKIPPED` means "deferred, may be revisited"
-  (`databases/README.md` § Status semantics) and is terminal for remaining-work purposes; so is
+  (`databases/openthrottle/README.md` § Status semantics) and is terminal for remaining-work purposes; so is
   `PROMOTED` (the work continued as its own plan, resolved here but not complete). A
   dependency that is skipped or promoted is neither done nor pending, so each edge needs a rule for whether it
   releases its dependents — and "skipped counts as satisfied" is exactly how a task runs before the
@@ -165,7 +165,7 @@ rest.
 **Option C — a `task_tags` dimension (`wave-1`, `wave-2`, …).** It looks free — the table and its
 MCP tools already exist — and it is not. `task_tags` constrains `dimension` to `('domain', 'phase')`
 and `tag` to kebab-case (migration
-[`064_create_plan_tags_and_task_tags.sql`](../../databases/migrations/064_create_plan_tags_and_task_tags.sql),
+[`064_create_plan_tags_and_task_tags.sql`](../../databases/openthrottle/migrations/064_create_plan_tags_and_task_tags.sql),
 constraints `chk_task_tags_dimension` and `chk_task_tags_tag_kebab`). Shipping waves this way needs
 a migration that drops and recreates `chk_task_tags_dimension` with a third value, on **both**
 `task_tags` and `plan_tags` to keep the two tables' vocabularies aligned — no smaller than the
@@ -181,8 +181,8 @@ Honest scope for task 3, so it is not discovered a layer at a time:
 
 | Layer            | File                                                                                                                                                                                            |
 | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Migration        | `databases/migrations/<next>_add_wave_to_tasks.sql` (+ `COMMENT ON COLUMN`)                                                                                                                     |
-| Schema docs      | `databases/README.md` — Schema, Indexes and the migration list                                                                                                                                  |
+| Migration        | `databases/openthrottle/migrations/<next>_add_wave_to_tasks.sql` (+ `COMMENT ON COLUMN`)                                                                                                        |
+| Schema docs      | `databases/openthrottle/README.md` — Schema, Indexes and the migration list                                                                                                                     |
 | Entity           | `packages/nestjs-repositories/src/modules/tasks/task.entity.ts` (column **and** the `TaskData` pick), `tasks.service.ts`, `tasks.factory.ts`                                                    |
 | GraphQL          | `applications/openthrottle-server/src/graphql/tasks/task.object.ts`, `task.input.ts` (`CreateTaskInput`, `CreateTasksItemInput`, `UpdateTaskInput`), `tasks.resolver.ts`                        |
 | Generated schema | `applications/openthrottle-server/schema.gql` + all `__generated__` output                                                                                                                      |
@@ -199,4 +199,4 @@ Honest scope for task 3, so it is not discovered a layer at a time:
   tasks share a checkout.
 - [`skills/ot-loop/SKILL.md`](../../skills/ot-loop/SKILL.md) — the execution loop, the disjoint
   file-set eligibility test, and why validation stays serialized.
-- [`databases/README.md`](../../databases/README.md) — Task `sort_order`, status semantics, schema.
+- [`databases/openthrottle/README.md`](../../databases/openthrottle/README.md) — Task `sort_order`, status semantics, schema.

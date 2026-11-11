@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for agent_token_usage. Matches databases/migrations/083 and 135.
+ * @description TypeORM entity for agent_token_usage. Matches databases/openthrottle/migrations/083 and 135.
  * One immutable row per persisted assistant turn (normalized token/cost usage).
  */
 

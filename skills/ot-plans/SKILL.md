@@ -42,7 +42,7 @@ injection and every list tool sort by `sortOrder ASC, createdAt ASC`.
 - **Insert mid-list:** `update_task` takes `sortOrder`; the 1000-wide gaps exist so you can land
   between two tasks without renumbering.
 - **Renumber:** `reorder_plan_tasks` assigns `1000, 2000, …` in the task-id order you give.
-- Schema: `databases/README.md` § Task sort_order.
+- Schema: `databases/openthrottle/README.md` § Task sort_order.
 
 ## Task wave (concurrency layer) — set it while you author
 
@@ -145,4 +145,4 @@ backstops a run that died before opening a PR. Two things the injected mechanics
 
 - **Commits:** [`github-commit`](../github-commit/SKILL.md) · **Execution:** [`ot-loop`](../ot-loop/SKILL.md), [`agents-ralph`](../agents-ralph/SKILL.md)
 - **Skill-usage telemetry:** [`docs/monorepo/skill-usage-telemetry-scope.md`](../../docs/monorepo/skill-usage-telemetry-scope.md)
-- **Code style:** [`docs/monorepo/code-style.md`](../../docs/monorepo/code-style.md) · **DB / ingest:** `databases/README.md`
+- **Code style:** [`docs/monorepo/code-style.md`](../../docs/monorepo/code-style.md) · **DB / ingest:** `databases/openthrottle/README.md`

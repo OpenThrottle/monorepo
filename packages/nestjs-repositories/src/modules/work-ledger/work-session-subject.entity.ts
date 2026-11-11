@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for the OpenThrottle work_session_subjects table. Matches databases/migrations/068.
+ * @description TypeORM entity for the OpenThrottle work_session_subjects table. Matches databases/openthrottle/migrations/068.
  * Session ↔ plan/task association; task_id NULL = plan-level subject.
  */
 

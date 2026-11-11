@@ -73,7 +73,7 @@ ssh "${DEPLOY_USER}@${DEPLOY_HOST}" 'cd /opt/openthrottle \
 Then verify before deleting the old copy:
 
 ```bash
-POSTGRES_HOST=… databases/verify-restore.sh
+POSTGRES_HOST=… databases/openthrottle/verify-restore.sh
 ```
 
 ## Rung 2b — move Postgres off the box
@@ -94,7 +94,7 @@ its environment and the compose service name is never baked into application con
 
 Two things to do first:
 
-1. **Seed the new database** with [`databases/SEEDING.md`](../databases/SEEDING.md) — it is
+1. **Seed the new database** with [`databases/openthrottle/SEEDING.md`](../databases/openthrottle/SEEDING.md) — it is
    parameterised on `POSTGRES_HOST`/`POSTGRES_PORT` precisely so it works against any target.
 2. **Check the connection model.** The server holds long-lived connections (TypeORM pool,
    graphql-ws subscriptions, BullMQ). A serverless pooler that assumes short-lived connections is not
@@ -161,7 +161,7 @@ between changing configuration and porting an application.
    `prefix`). Editing `source` in one root would make Terraform **destroy every hcloud resource** —
    including the data volume — and create GCP ones. Never do that. Apply the other root instead.
 2. **Data.** Nothing copies it. Dump and restore via
-   [`databases/SEEDING.md`](../databases/SEEDING.md), then verify with `verify-restore.sh`.
+   [`databases/openthrottle/SEEDING.md`](../databases/openthrottle/SEEDING.md), then verify with `verify-restore.sh`.
 3. **DNS.** Records must be repointed by hand. See
    [`applications/openthrottle_hcloud/CUTOVER.md`](./applications/openthrottle_hcloud/CUTOVER.md).
 4. **Secrets.** `jwt_secret` is generated on the Hetzner box and stored only there. Migrating it

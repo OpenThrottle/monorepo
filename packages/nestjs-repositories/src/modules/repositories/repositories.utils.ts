@@ -4,7 +4,7 @@
  * ssh shorthand and ssh:// convert to https, http upgrades to https, userinfo drops,
  * the host lowercases, and trailing `.git` / `/` strip. Returns null for empty or
  * unrecognizable input (the caller treats that as a provisional, local-only repository).
- * Keep in sync with the SQL twin in databases/migrations/078_create_repositories_and_checkouts.sql.
+ * Keep in sync with the SQL twin in databases/openthrottle/migrations/078_create_repositories_and_checkouts.sql.
  *
  * @public
  */

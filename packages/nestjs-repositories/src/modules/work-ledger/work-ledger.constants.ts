@@ -1,5 +1,5 @@
 /**
- * @description Shared value sets for the work-ledger tables (databases/migrations/068).
+ * @description Shared value sets for the work-ledger tables (databases/openthrottle/migrations/068).
  * `as const` objects instead of TS enums, per repo code style. Kept in sync with the
  * CHECK constraints in the migration and the type registry (slice 2).
  */

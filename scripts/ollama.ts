@@ -24,7 +24,7 @@ const logger = createLogger();
  * that outputs 1536 dimensions; these output other sizes (all-minilm 384,
  * mxbai-embed-large 1024, nomic-embed-text 768) — for 1536-dim OpenThrottle
  * embeddings use OpenAI, or an Ollama model that outputs 1536 when available.
- * See databases/README.md § Embedding dimension strategy.
+ * See databases/openthrottle/README.md § Embedding dimension strategy.
  */
 export const OLLAMA_MODELS = {
   chat: ['llama4'],

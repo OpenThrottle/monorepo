@@ -20,9 +20,9 @@ through — the sibling `nestjs-typeorm` has no consumers.
 
 ## Invariants & gotchas
 
-- A schema change is **two edits, together**: the SQL migration under `databases/migrations/`
+- A schema change is **two edits, together**: the SQL migration under `databases/openthrottle/migrations/`
   AND the entity here. Every entity's class JSDoc names the migrations it matches, e.g. plan:
-  `Matches databases/migrations (002, 012, 014, 022)`. Keep that reference current when you
+  `Matches databases/openthrottle/migrations (002, 012, 014, 022)`. Keep that reference current when you
   add or alter columns.
 - Undeclared workspace deps: `src` imports `@openthrottle/nestjs-modules`,
   `@openthrottle/openthrottle-agentic-utils`, and `@openthrottle/openthrottle-agentic-workflow`,

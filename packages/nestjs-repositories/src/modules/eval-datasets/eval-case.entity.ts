@@ -1,6 +1,6 @@
 /**
  * @description TypeORM entity for the OpenThrottle eval_cases table (one input with its gold
- * answer). Matches databases/migrations (147).
+ * answer). Matches databases/openthrottle/migrations (147).
  */
 
 import {

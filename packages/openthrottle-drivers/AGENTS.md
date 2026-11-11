@@ -35,7 +35,7 @@ Grok, OpenCode). Each CLI is one `defineDriver(...)` module; a shared engine
   `claude`/`cursor`: the unchanged `tools/workflows` `run-iteration.test.ts` runs
   against these drivers. Claude emits `claude -p …` (NOT `--bare`). Don't "fix" it.
 - **Widening `DRIVER_IDS` ripples**: `WORKFLOW_RUNNER_IDS` derives from it, and the
-  `plan_runs.execution_backend` CHECK (databases/migrations/079) + server
+  `plan_runs.execution_backend` CHECK (databases/openthrottle/migrations/079) + server
   `PlanRunExecutionBackend`/guard enumerate the same set. Add a migration + widen
   those surfaces when you add a runnable id.
 - Built package (real `build`/`build-package`, `exports` → `dist/`) — server consumes

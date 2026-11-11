@@ -14,30 +14,30 @@ NestJS backend for the OpenThrottle platform. Exposes a GraphQL API for plans, t
 
 - Node.js ≥ 22
 - pnpm (monorepo root)
-- **Postgres** – OpenThrottle DB; see [databases/README.md](../../databases/README.md) for setup (e.g. `docker compose up -d openthrottle-postgres`, then `pnpm run database:migrate`)
+- **Postgres** – OpenThrottle DB; see [databases/openthrottle/README.md](../../databases/openthrottle/README.md) for setup (e.g. `docker compose up -d openthrottle-postgres`, then `pnpm run database:migrate`)
 - **Redis** – For BullMQ and GraphQL cache (e.g. from same compose: `docker compose up -d openthrottle-redis` if present, or local Redis on default port)
 
 ## Environment
 
 Copy `.env.default` to `.env` and adjust. Key variables:
 
-| Variable                           | Purpose                                                                                                                      |
-| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `PORT`                             | HTTP port (default `6021`)                                                                                                   |
-| `APP_URL`                          | Base URL (e.g. `http://localhost:6021`)                                                                                      |
-| `JWT_SECRET`                       | Secret for JWT signing/verification                                                                                          |
-| `POSTGRES_*` / `POSTGRES_URL`      | Postgres connection ([README](../../databases/README.md) uses `POSTGRES_*`; this app uses `POSTGRES_*` as in `.env.default`) |
-| `REDIS_HOST`, `REDIS_PORT`         | Redis for BullMQ and GraphQL cache                                                                                           |
-| `CORS_ORIGINS`, `CORS_CREDENTIALS` | Allowed frontend origins (e.g. openthrottle-developer, localhost)                                                            |
-| `GITHUB_TOKEN`                     | Optional; for GitHub API (e.g. listing PRs)                                                                                  |
-| `BULLMQ_BOARD_*`                   | BullMQ Board admin credentials                                                                                               |
-| `WORKSPACE_ROOT`                   | Monorepo root when the API is not started from the repo (spawns, scheduled backup); see doc below                            |
-| `DATABASE_BACKUP_CRON`             | Optional; enables daily BullMQ backup (`pnpm run database:backup`).                                                          |
-| `DATABASE_BACKUP_TZ`               | Optional IANA timezone for backup cron (default UTC)                                                                         |
-| `DATABASE_BACKUP_ENABLED`          | Optional kill switch when cron is set (default true)                                                                         |
-| `DATABASE_BACKUP_JOB_TIMEOUT_MS`   | Optional BullMQ job timeout for one backup run (default `1800000`, 30 min)                                                   |
-| `STRIPE_SECRET_KEY`                | Stripe API secret (`sk_…`); required for checkout and webhook verification                                                   |
-| `STRIPE_WEBHOOK_SECRET`            | Stripe webhook signing secret (`whsec_…`); set when webhooks are enabled                                                     |
+| Variable                           | Purpose                                                                                                                                   |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `PORT`                             | HTTP port (default `6021`)                                                                                                                |
+| `APP_URL`                          | Base URL (e.g. `http://localhost:6021`)                                                                                                   |
+| `JWT_SECRET`                       | Secret for JWT signing/verification                                                                                                       |
+| `POSTGRES_*` / `POSTGRES_URL`      | Postgres connection ([README](../../databases/openthrottle/README.md) uses `POSTGRES_*`; this app uses `POSTGRES_*` as in `.env.default`) |
+| `REDIS_HOST`, `REDIS_PORT`         | Redis for BullMQ and GraphQL cache                                                                                                        |
+| `CORS_ORIGINS`, `CORS_CREDENTIALS` | Allowed frontend origins (e.g. openthrottle-developer, localhost)                                                                         |
+| `GITHUB_TOKEN`                     | Optional; for GitHub API (e.g. listing PRs)                                                                                               |
+| `BULLMQ_BOARD_*`                   | BullMQ Board admin credentials                                                                                                            |
+| `WORKSPACE_ROOT`                   | Monorepo root when the API is not started from the repo (spawns, scheduled backup); see doc below                                         |
+| `DATABASE_BACKUP_CRON`             | Optional; enables daily BullMQ backup (`pnpm run database:backup`).                                                                       |
+| `DATABASE_BACKUP_TZ`               | Optional IANA timezone for backup cron (default UTC)                                                                                      |
+| `DATABASE_BACKUP_ENABLED`          | Optional kill switch when cron is set (default true)                                                                                      |
+| `DATABASE_BACKUP_JOB_TIMEOUT_MS`   | Optional BullMQ job timeout for one backup run (default `1800000`, 30 min)                                                                |
+| `STRIPE_SECRET_KEY`                | Stripe API secret (`sk_…`); required for checkout and webhook verification                                                                |
+| `STRIPE_WEBHOOK_SECRET`            | Stripe webhook signing secret (`whsec_…`); set when webhooks are enabled                                                                  |
 
 See `.env.default` for full list and comments.
 
@@ -118,6 +118,6 @@ deactivate
 
 ## Related
 
-- **OpenThrottle DB** – [databases/README.md](../../databases/README.md) (schema, migrations, ingest, embeddings)
+- **OpenThrottle DB** – [databases/openthrottle/README.md](../../databases/openthrottle/README.md) (schema, migrations, ingest, embeddings)
 - **MCP (openthrottle-mcp)** – Talks to this server via GraphQL only; see `packages/openthrottle-mcp` and `skills/ot-plans/SKILL.md`
 - **OpenThrottle docs** – `docs/openthrottle/`

@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for user_skill_tags. Matches databases/migrations/060 + 063.
+ * @description TypeORM entity for user_skill_tags. Matches databases/openthrottle/migrations/060 + 063.
  */
 
 import {

@@ -49,8 +49,8 @@ describe('blogSeedRefusal', () => {
 describe('blog seed file', () => {
   const sql = readFileSync(defaultBlogSeedPath(), 'utf-8');
 
-  it('lives under databases/seeds, never databases/migrations', () => {
-    expect(defaultBlogSeedPath()).toBe(join(process.cwd(), 'databases', 'seeds', 'blog.sql')); // prettier-ignore
+  it('lives under databases/openthrottle/seeds, never databases/openthrottle/migrations', () => {
+    expect(defaultBlogSeedPath()).toBe(join(process.cwd(), 'databases', 'openthrottle', 'seeds', 'blog.sql')); // prettier-ignore
   });
 
   it('upserts by slug and never uses now()-relative dates', () => {

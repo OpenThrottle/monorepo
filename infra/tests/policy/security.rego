@@ -178,7 +178,7 @@ database_port("6379")
 # This box holds the Postgres data directory, so it is the Hetzner analogue of
 # requiring versioning on the state bucket (rule 3): cheap protection against
 # an irreversible mistake. Backups are also only one of the two required
-# layers — see databases/backup-offsite.sh for the offsite dump.
+# layers — see databases/openthrottle/backup-offsite.sh for the offsite dump.
 
 deny contains msg if {
 	some name

@@ -50,7 +50,7 @@ pnpm run database:migrate
 
 Stop the stack when finished: `pnpm run database:stop`.
 
-Schema and imports: `[databases/README.md](../../databases/README.md)`.
+Schema and imports: `[databases/openthrottle/README.md](../../databases/openthrottle/README.md)`.
 
 ---
 
@@ -190,5 +190,5 @@ Full map: [local-services-and-ports.md](../monorepo/local-services-and-ports.md)
 | Server + developer daily dev         | [run-openthrottle-server-developer.md](./run-openthrottle-server-developer.md)                  |
 | MCP verification detail              | [verification-environment.md](../../packages/openthrottle-mcp/docs/verification-environment.md) |
 | Auth and tokens                      | [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md)                                         |
-| DB schema, embeddings, imports       | [databases/README.md](../../databases/README.md)                                                |
+| DB schema, embeddings, imports       | [databases/openthrottle/README.md](../../databases/openthrottle/README.md)                      |
 | Embeddings (Ollama or OpenAI)        | [monorepo/Ollama.md](../monorepo/Ollama.md)                                                     |

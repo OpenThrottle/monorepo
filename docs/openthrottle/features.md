@@ -15,28 +15,28 @@ OpenThrottle (OT) is a **plans knowledge base**: a Postgres-backed app (and MCP 
 - Create and manage **plans** with **tasks**; track status: **backlog**, blocked, **canceled**, completed, in_progress, pending, **queued** (plans only; Run plan enqueues in BullMQ), skipped.
 - Optional **assignee** (GitHub username) and **summary** (PRD wrap-up, next actions) on plans and tasks.
 - List plans by status (and optional project filter); list tasks by plan or category; see remaining tasks per plan (`get_remaining_tasks_for_plan`).
-- **Detailed docs:** [databases/README.md](../../databases/README.md) (schema, plans/tasks tables, Plan and task attributes), [`skills/ot-plans/SKILL.md`](../../skills/ot-plans/SKILL.md) (MCP tools: `get_plan`, `create_plan`, `get_tasks_by_plan_id`, `get_remaining_tasks_for_plan`, `list_tasks_by_category`, `create_task`, `update_task`; optional `project`/`projectId` on `list_plans_by_status`).
+- **Detailed docs:** [databases/openthrottle/README.md](../../databases/openthrottle/README.md) (schema, plans/tasks tables, Plan and task attributes), [`skills/ot-plans/SKILL.md`](../../skills/ot-plans/SKILL.md) (MCP tools: `get_plan`, `create_plan`, `get_tasks_by_plan_id`, `get_remaining_tasks_for_plan`, `list_tasks_by_category`, `create_task`, `update_task`; optional `project`/`projectId` on `list_plans_by_status`).
 
 ### Projects
 
 - Group and filter **plans** (and tasks) by **NX project** (e.g. openthrottle-developer, openthrottle). Optional `project_id` / project on create/update; leave unset for cross-cutting or docs-only work.
-- **Detailed docs:** [databases/README.md](../../databases/README.md) (§ Project association (when to set project)).
+- **Detailed docs:** [databases/openthrottle/README.md](../../databases/openthrottle/README.md) (§ Project association (when to set project)).
 
 ### Semantic search (plans and tasks)
 
 - **Semantic search** over plans and tasks (pgvector embeddings). Ask questions in natural language and get relevant plan/task content via **openthrottle-mcp** (OT MCP).
-- **Detailed docs:** [databases/README.md](../../databases/README.md) (plan_embeddings, task_embeddings, embedding strategy).
+- **Detailed docs:** [databases/openthrottle/README.md](../../databases/openthrottle/README.md) (plan_embeddings, task_embeddings, embedding strategy).
 
 ### Documentation search
 
 - Ingest **docs/** and NX project READMEs into OpenThrottle; search documentation semantically via **openthrottle-mcp** (`semantic_search`, `list_sources`, `get_document`) alongside plans and tasks. (The former standalone `docs-mcp` server is retired; its role folded into `openthrottle-mcp` — see [mcp-registration.md § Current state](./mcp-registration.md#current-state).)
-- **Detailed docs:** [databases/README.md](../../databases/README.md) (documentation, documentation_embeddings, ingest).
+- **Detailed docs:** [databases/openthrottle/README.md](../../databases/openthrottle/README.md) (documentation, documentation_embeddings, ingest).
 
 ### Activity and commit links
 
 - **Activity by date:** see what was worked on or shipped on a given day or in the last N days (commits, plan output, task updates).
 - **Commit links:** associate a git commit (e.g. squash after PR merge) with a plan and optional task; activity tools use this for “what landed.”
-- **Detailed docs:** [databases/README.md](../../databases/README.md) (commit_links, Option A workflow, get_activity_by_date, get_last_activity).
+- **Detailed docs:** [databases/openthrottle/README.md](../../databases/openthrottle/README.md) (commit_links, Option A workflow, get_activity_by_date, get_last_activity).
 
 ### Ralph (agentic execution)
 
@@ -56,7 +56,7 @@ OpenThrottle (OT) is a **plans knowledge base**: a Postgres-backed app (and MCP 
 ### Notes
 
 - Quick **notes** (unstructured thoughts) with optional author; foundation for planning (e.g. create plan from note). Exposed via MCP.
-- **Detailed docs:** [databases/README.md](../../databases/README.md) (notes table, MCP create_note, list_notes, etc.).
+- **Detailed docs:** [databases/openthrottle/README.md](../../databases/openthrottle/README.md) (notes table, MCP create_note, list_notes, etc.).
 
 ### Runs entirely locally on Open Source
 
@@ -73,7 +73,7 @@ OpenThrottle (OT) is a **plans knowledge base**: a Postgres-backed app (and MCP 
 
 Postgres and Redis are required; **Ollama** is what makes semantic search work with no cloud API at all. **OpenAI** is optional — set `OPENAI_API_KEY` instead if you prefer cloud embeddings.
 
-- **Detailed docs:** [monorepo/Ollama.md](../monorepo/Ollama.md) § Embeddings for OpenThrottle (provider config, dimension caveat, MCP launcher), [databases/README.md](../../databases/README.md) (embedding dimension strategy), [local-quickstart.md](./local-quickstart.md) (fresh clone → running).
+- **Detailed docs:** [monorepo/Ollama.md](../monorepo/Ollama.md) § Embeddings for OpenThrottle (provider config, dimension caveat, MCP launcher), [databases/openthrottle/README.md](../../databases/openthrottle/README.md) (embedding dimension strategy), [local-quickstart.md](./local-quickstart.md) (fresh clone → running).
 
 ### Running and scheduling a plan
 
@@ -97,12 +97,12 @@ The **Run** control on Plan Details is a split button. It lives in the plan tool
 
 **GraphQL.** `schedulePlanRun(input: SchedulePlanRunInput!)` takes everything `enqueuePlanRun` takes (`planId`, a required `branch`, `ralph` tuning with `backend`/`model`/`effort`/`iterations`, optional `checkoutId`, `idempotencyKey`, ...) plus a required `scheduledFor` ISO-8601 instant and an optional `replaceScheduled` (reschedule), and returns `planRunId`, `jobId`, `scheduledFor`, `executionBackend` and `planId`. `enqueuePlanRun` and `enqueuePlanRalphOrchestrator` take an optional `cancelScheduled` to run a scheduled plan now. Refusals are GraphQL errors with `extensions.code` `PLAN_ALREADY_SCHEDULED`, `PLAN_ACTIVE` or `PLAN_NOT_SCHEDULABLE`, plus the waiting run's `planRunId` and `scheduledFor`. Cancel with `cancelPlanRun(input: { planId, planRunId })`: with `planRunId` it cancels only that `SCHEDULED` run (delayed job removed, row `CANCELLED`), returns a `SCHEDULED` plan to `PENDING`, and leaves any live run and the tasks alone. It is idempotent: a `planRunId` that has already fired or settled is a no-op, and one that is `QUEUED` or `IN_PROGRESS` is rejected. Omit `planRunId` to cancel the whole plan's queued and scheduled runs and stop a live one. Plan objects expose `scheduledRunAt` and `scheduledRunId` for the soonest waiting run.
 
-- **Detailed docs:** [databases/README.md](../../databases/README.md) (`plan_runs.scheduled_for` and the `SCHEDULED` / `MISSED` / `SUPERSEDED` statuses), [plan-run-worktrees.md](./plan-run-worktrees.md) (where a run executes).
+- **Detailed docs:** [databases/openthrottle/README.md](../../databases/openthrottle/README.md) (`plan_runs.scheduled_for` and the `SCHEDULED` / `MISSED` / `SUPERSEDED` statuses), [plan-run-worktrees.md](./plan-run-worktrees.md) (where a run executes).
 
 ### Background jobs (optional)
 
 - **Run plan** enqueues a plan in BullMQ (status → queued, then in_progress when the worker runs). **Daily stats** for dashboard/analytics.
-- **Detailed docs:** [databases/README.md](../../databases/README.md) (queued status, doc tables).
+- **Detailed docs:** [databases/openthrottle/README.md](../../databases/openthrottle/README.md) (queued status, doc tables).
 
 ### Evals (preview)
 

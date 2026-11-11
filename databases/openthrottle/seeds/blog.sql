@@ -1,5 +1,5 @@
 -- DEV-ONLY sample content for the public blog (migration 131: blog_authors, blog_tags,
--- blog_posts, blog_post_tags). NOT a migration: never place this under databases/migrations/
+-- blog_posts, blog_post_tags). NOT a migration: never place this under databases/openthrottle/migrations/
 -- and never wire it into `database:migrate`, CI or a deploy path. Applied on demand by
 -- `pnpm run database:seed:blog` (scripts/openthrottle-database-seed-blog.ts), which refuses
 -- NODE_ENV=production and any non-local Postgres host.

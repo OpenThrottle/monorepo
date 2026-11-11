@@ -1,6 +1,6 @@
 /**
  * @description TypeORM entity for OpenThrottle user_disabled_agent_clis table. Matches
- * databases/migrations/091 + 092. Presence-as-disabled: a row means the user turned something off;
+ * databases/openthrottle/migrations/091 + 092. Presence-as-disabled: a row means the user turned something off;
  * the absence of a row means it is enabled (the default all-enabled posture). The nullable `model`
  * discriminates granularity: `model` null = the WHOLE agent (backend) is disabled; a non-null `model`
  * = that single model is disabled within an otherwise-enabled agent. Rows are only ever inserted

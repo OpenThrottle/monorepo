@@ -5,7 +5,7 @@ import type {
 
 /**
  * @description Shared constants and JSON shapes for typed rollout flags
- * (databases/migrations/084 + 089). `as const` objects instead of TS enums.
+ * (databases/openthrottle/migrations/084 + 089). `as const` objects instead of TS enums.
  */
 
 /** Flag value kinds. Mirrors chk_rollout_flags_kind. */

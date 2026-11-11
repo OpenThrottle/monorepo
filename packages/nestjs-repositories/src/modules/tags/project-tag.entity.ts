@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for project_tags. Matches databases/migrations/070.
+ * @description TypeORM entity for project_tags. Matches databases/openthrottle/migrations/070.
  */
 
 import {

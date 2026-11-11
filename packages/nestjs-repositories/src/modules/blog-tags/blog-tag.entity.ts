@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for OpenThrottle blog_tags table. Matches databases/migrations (131).
+ * @description TypeORM entity for OpenThrottle blog_tags table. Matches databases/openthrottle/migrations (131).
  * The blog_post_tags join table is owned by {@link BlogPost}'s `@JoinTable`; this is the inverse side.
  */
 

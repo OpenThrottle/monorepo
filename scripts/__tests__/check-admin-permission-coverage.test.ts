@@ -1,7 +1,9 @@
 import { readdir, readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+
 import { describe, expect, it } from 'vitest';
+
 import {
   adminGrantInStatement,
   findAdminPermissionGaps,
@@ -14,6 +16,7 @@ const MIGRATIONS_DIR = join(
   '..',
   '..',
   'databases',
+  'openthrottle',
   'migrations',
 );
 
@@ -81,10 +84,12 @@ describe('adminGrantInStatement', () => {
 });
 
 describe('findAdminPermissionGaps', () => {
-  const file = (filename: string, sql: string): MigrationFile => ({
-    filename,
-    sql,
-  });
+  const file = (filename: string, sql: string): MigrationFile => {
+    return {
+      filename,
+      sql,
+    };
+  };
 
   it('reports no gaps when a blanket admin grant follows the definition', () => {
     expect(
@@ -138,7 +143,7 @@ describe('findAdminPermissionGaps', () => {
 });
 
 describe('real migrations corpus', () => {
-  it('admin is granted every permission defined across databases/migrations', async () => {
+  it('admin is granted every permission defined across databases/openthrottle/migrations', async () => {
     const entries = await readdir(MIGRATIONS_DIR);
     const files = await Promise.all(
       entries

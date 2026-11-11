@@ -5,6 +5,7 @@ import { join } from 'node:path';
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import type { DatabaseDefinition } from '../../databases/database-registry.ts';
 import { guardSharedMigrations } from '../openthrottle-database-migrations';
 import {
   branchMigrationsMessage,
@@ -41,8 +42,7 @@ describe('evaluateMigrationGuard', () => {
 
     expect(result).toEqual({
       kind: 'refused',
-      message:
-        'this branch adds migrations 138_new.sql; a shared-DB worktree cannot apply them. Run `pnpm worktree:db isolate`.',
+      message: `this branch adds migrations 138_new.sql; a shared-DB worktree cannot apply them. Run \`pnpm worktree:db isolate\`.`,
     });
     expect(branchMigrationsMessage(['a.sql', 'b.sql'])).toContain(
       'a.sql, b.sql',
@@ -91,17 +91,22 @@ const git = (cwd: string, ...args: string[]): void => {
   execFileSync('git', args, { cwd, stdio: 'ignore' });
 };
 
-/** A throwaway repo whose `refs/remotes/origin/main` holds `onMain` under databases/migrations. */
+/** A throwaway repo whose `refs/remotes/origin/main` holds `onMain` under databases/openthrottle/migrations. */
 const makeRepo = (onMain: readonly string[], withRef = true): string => {
   const dir = mkdtempSync(join(tmpdir(), 'ot-migration-guard-'));
   git(dir, 'init', '-q', '-b', 'main');
   git(dir, 'config', 'user.email', 'test@example.com');
   git(dir, 'config', 'user.name', 'test');
   git(dir, 'config', 'commit.gpgsign', 'false');
-  mkdirSync(join(dir, 'databases/migrations'), { recursive: true });
+  mkdirSync(join(dir, 'databases/openthrottle/migrations'), {
+    recursive: true,
+  });
 
   for (const file of onMain) {
-    writeFileSync(join(dir, 'databases/migrations', file), 'SELECT 1;\n');
+    writeFileSync(
+      join(dir, 'databases/openthrottle/migrations', file),
+      'SELECT 1;\n',
+    );
   }
 
   git(dir, 'add', '-A');
@@ -151,30 +156,117 @@ describe('listOriginMainMigrations / checkMigrationGuard (real git)', () => {
   });
 });
 
+describe('listOriginMainMigrations across moved and new databases (real git)', () => {
+  /** A repo whose origin/main keeps its migrations under the pre-move `databases/migrations`. */
+  const makeLegacyRepo = (onMain: readonly string[]): string => {
+    const dir = mkdtempSync(join(tmpdir(), 'ot-migration-guard-legacy-'));
+    git(dir, 'init', '-q', '-b', 'main');
+    git(dir, 'config', 'user.email', 'test@example.com');
+    git(dir, 'config', 'user.name', 'test');
+    git(dir, 'config', 'commit.gpgsign', 'false');
+    mkdirSync(join(dir, 'databases/migrations'), { recursive: true });
+    for (const file of onMain) {
+      writeFileSync(join(dir, 'databases/migrations', file), 'SELECT 1;\n');
+    }
+    git(dir, 'add', '-A');
+    git(dir, 'commit', '-q', '-m', 'main');
+    git(dir, 'update-ref', 'refs/remotes/origin/main', 'HEAD');
+    return dir;
+  };
+
+  it('falls back to the legacy directory when main has not seen the move yet', () => {
+    const repo = makeLegacyRepo(['001_a.sql']);
+
+    expect(listOriginMainMigrations(repo)).toEqual(['001_a.sql']);
+    expect(
+      checkMigrationGuard({ cwd: repo, localFiles: ['001_a.sql'], mode: 'shared' }), // prettier-ignore
+    ).toEqual({ kind: 'allowed' });
+  });
+
+  it('treats a database absent from main as all branch-only', () => {
+    const repo = makeRepo(['001_a.sql']);
+
+    expect(
+      listOriginMainMigrations(repo, 'databases/cms/migrations', []),
+    ).toEqual([]);
+    expect(
+      checkMigrationGuard({
+        cwd: repo,
+        database: 'cms',
+        legacyMigrationsDirs: [],
+        localFiles: ['001_create_schemas.sql'],
+        migrationsDir: 'databases/cms/migrations',
+        mode: 'shared',
+      }),
+    ).toEqual({
+      kind: 'refused',
+      message: branchMigrationsMessage(['001_create_schemas.sql'], 'cms'),
+    });
+  });
+});
+
 describe('guardSharedMigrations (the CLI entrypoints share it)', () => {
   afterEach(() => {
     vi.unstubAllEnvs();
   });
 
-  const source = (files: string[]) => ({
-    list: async () => files,
-    read: async () => '',
-  });
+  const source = (files: string[]) => {
+    return {
+      list: async () => files,
+      read: async () => '',
+    };
+  };
+
+  /** Per-database sources: the named database gets `files`, every other one gets none. */
+  const sourcesFor = (byDatabase: Readonly<Record<string, string[]>>) => {
+    return (database: DatabaseDefinition) => {
+      return source(byDatabase[database.name] ?? []);
+    };
+  };
 
   it('refuses a shared worktree carrying a branch-only migration before any database work', async () => {
     const repo = makeRepo(['001_a.sql']);
     vi.stubEnv('OT_WORKTREE_DB', 'shared');
 
-    const result = await guardSharedMigrations(
-      source(['001_a.sql', '099_branch.sql']),
-      repo,
-    );
+    const result = await guardSharedMigrations({
+      cwd: repo,
+      sourceFor: sourcesFor({ openthrottle: ['001_a.sql', '099_branch.sql'] }),
+    });
 
     expect(result).toEqual({
       kind: 'refused',
-      message:
-        'this branch adds migrations 099_branch.sql; a shared-DB worktree cannot apply them. Run `pnpm worktree:db isolate`.',
+      message: `this branch adds migrations to the openthrottle database 099_branch.sql; a shared-DB worktree cannot apply them. Run \`pnpm worktree:db isolate\`.`,
     });
+  });
+
+  it('refuses a branch-only migration in a second database', async () => {
+    const repo = makeRepo(['001_a.sql']);
+    vi.stubEnv('OT_WORKTREE_DB', 'shared');
+
+    const result = await guardSharedMigrations({
+      cwd: repo,
+      sourceFor: sourcesFor({
+        cms: ['001_create_schemas.sql'],
+        openthrottle: ['001_a.sql'],
+      }),
+    });
+
+    expect(result).toEqual({
+      kind: 'refused',
+      message: branchMigrationsMessage(['001_create_schemas.sql'], 'cms'),
+    });
+  });
+
+  it('allows a database with no migrations yet', async () => {
+    const repo = makeRepo(['001_a.sql']);
+    vi.stubEnv('OT_WORKTREE_DB', 'shared');
+
+    await expect(
+      guardSharedMigrations({
+        cwd: repo,
+        sourceFor: sourcesFor({ openthrottle: ['001_a.sql'] }),
+      }),
+    ).resolves.toEqual({ kind: 'allowed' });
   });
 
   it('allows the primary (no marker) even with branch-only migrations', async () => {
@@ -182,7 +274,12 @@ describe('guardSharedMigrations (the CLI entrypoints share it)', () => {
     vi.stubEnv('OT_WORKTREE_DB', '');
 
     await expect(
-      guardSharedMigrations(source(['001_a.sql', '099_branch.sql']), repo),
+      guardSharedMigrations({
+        cwd: repo,
+        sourceFor: sourcesFor({
+          openthrottle: ['001_a.sql', '099_branch.sql'],
+        }),
+      }),
     ).resolves.toEqual({ kind: 'allowed' });
   });
 
@@ -191,7 +288,12 @@ describe('guardSharedMigrations (the CLI entrypoints share it)', () => {
     vi.stubEnv('OT_WORKTREE_DB', 'isolated');
 
     await expect(
-      guardSharedMigrations(source(['001_a.sql', '099_branch.sql']), repo),
+      guardSharedMigrations({
+        cwd: repo,
+        sourceFor: sourcesFor({
+          openthrottle: ['001_a.sql', '099_branch.sql'],
+        }),
+      }),
     ).resolves.toEqual({ kind: 'allowed' });
   });
 });

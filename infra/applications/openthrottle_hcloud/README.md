@@ -91,8 +91,8 @@ a drop-in.
   provisioned without landing in `user_data`.
 - [`CUTOVER.md`](./CUTOVER.md) — DNS/TLS cutover and verifying the public surface with
   [`infra/tests/exposure/verify-exposure.sh`](../../tests/exposure/verify-exposure.sh).
-- [`databases/SEEDING.md`](../../../databases/SEEDING.md) — loading a dump into a fresh database, and
-  [`verify-restore.sh`](../../../databases/verify-restore.sh) to prove it worked.
+- [`databases/openthrottle/SEEDING.md`](../../../databases/openthrottle/SEEDING.md) — loading a dump into a fresh database, and
+  [`verify-restore.sh`](../../../databases/openthrottle/verify-restore.sh) to prove it worked.
 
 ## Gotchas
 

@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for OpenThrottle tasks table. Matches databases/migrations (003, 012, 015, 023, 049, 055, 071, 126).
+ * @description TypeORM entity for OpenThrottle tasks table. Matches databases/openthrottle/migrations (003, 012, 015, 023, 049, 055, 071, 126).
  */
 
 import {
@@ -74,7 +74,7 @@ export class Task {
   category!: string | null;
 
   /**
-   * @description The `plan_task_status` Postgres enum (databases/migrations 028,
+   * @description The `plan_task_status` Postgres enum (databases/openthrottle/migrations 028,
    * 029). Tasks never take QUEUED (plans-only), but the column shares the same DB
    * enum type. Typed as the shared SSOT enum rather than free text; default
    * matches the migration (`PENDING`, uppercase).

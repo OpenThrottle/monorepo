@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for OpenThrottle plan_output_stream table. Matches databases/migrations (007, 077).
+ * @description TypeORM entity for OpenThrottle plan_output_stream table. Matches databases/openthrottle/migrations (007, 077).
  */
 
 import {

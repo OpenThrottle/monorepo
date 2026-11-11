@@ -1,6 +1,6 @@
 # OpenThrottle monorepo architecture
 
-How the OpenThrottle applications and packages fit together — Mermaid diagrams plus short narratives. See also `applications/openthrottle/README.md` (the Docker Compose stack) and `databases/README.md` (the schema).
+How the OpenThrottle applications and packages fit together — Mermaid diagrams plus short narratives. See also `applications/openthrottle/README.md` (the Docker Compose stack) and `databases/openthrottle/README.md` (the schema).
 
 The two summary tables below are **not exhaustive**: `packages/` holds ~60 packages. `pnpm nx show projects` is the authoritative inventory; these tables name the ones you need to understand the request path.
 
@@ -106,7 +106,7 @@ Shared infra used by the server: **Postgres** (OpenThrottle schema in `databases
 
 ## Related docs
 
-- **OpenThrottle schema and usage:** `databases/README.md`
+- **OpenThrottle schema and usage:** `databases/openthrottle/README.md`
 - **Run locally (OSS/Ollama embeddings):** `docs/monorepo/Ollama.md` § Embeddings for OpenThrottle
 - **Docker Compose stack:** `applications/openthrottle/README.md`
 - **Ralph and workflows:** `tools/workflows/README.md`, `AGENTS.md`

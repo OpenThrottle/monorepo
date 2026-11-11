@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for user_workspace_settings. Matches databases/migrations/042.
+ * @description TypeORM entity for user_workspace_settings. Matches databases/openthrottle/migrations/042.
  */
 
 import {

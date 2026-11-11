@@ -10,7 +10,7 @@ Biweekly. Schema changes land less often than application code, and the failure 
 
 OpenThrottle is an Nx + pnpm workspace monorepo (Node >= 22, pnpm only). Run every task through Nx, prefixed with `pnpm` — never the underlying tooling directly.
 
-The database layer lives in `databases/` — read `databases/README.md` first; it is the source of truth for schema conventions. Migrations are SQL files in `databases/migrations/`. The NestJS server (`applications/openthrottle-server`) reaches Postgres through TypeORM entities and `@openthrottle/nestjs-typeorm`.
+The database layer lives in `databases/` — read `databases/AGENTS.md` (how the databases share one runner) and then `databases/openthrottle/README.md`, the source of truth for schema conventions. Each database has its own migrations: `databases/openthrottle/migrations/` and `databases/cms/migrations/` (see `databases/cms/README.md`). The NestJS server (`applications/openthrottle-server`) reaches Postgres through TypeORM entities and `@openthrottle/nestjs-typeorm`.
 
 Commands this job uses:
 
@@ -18,7 +18,7 @@ Commands this job uses:
 pnpm run check:local:migration-comments    # nx run monorepo:check-migration-table-comments
 pnpm run database:start                    # Postgres + Redis via docker compose (read-only inspection only)
 psql "$DATABASE_URL" -c '\d+ <table>'      # inspect a live table, if a local DB is already running
-git log --since='90 days ago' --name-only -- databases/migrations
+git log --since='90 days ago' --name-only -- 'databases/*/migrations'
 ```
 
 Facts that change the analysis:

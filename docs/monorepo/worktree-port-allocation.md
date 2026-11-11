@@ -130,7 +130,7 @@ postgres` / `docker compose down --remove-orphans` unchanged.
 
 ### Migration guard (shared mode)
 
-A branch that adds `databases/migrations/1xx_*.sql` must never apply it to the shared
+A branch that adds `databases/openthrottle/migrations/1xx_*.sql` must never apply it to the shared
 database (drift detection is warn-only, an abandoned branch leaves tables behind, number
 collisions land in real data). With `OT_WORKTREE_DB=shared`, `pnpm run database:migrate`
 and `monorepo:ensure-migrations` (the gate under `dev-api`/`dev`) **refuse**, before

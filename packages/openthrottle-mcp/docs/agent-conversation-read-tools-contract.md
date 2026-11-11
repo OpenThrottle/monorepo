@@ -207,6 +207,6 @@ Document in [verification-environment.md](./verification-environment.md):
 ## Related docs
 
 - Server design: [applications/openthrottle-server/docs/agent-conversations-design.md](../../../applications/openthrottle-server/docs/agent-conversations-design.md)
-- DB schema: [databases/README.md](../../../databases/README.md) § Agent conversations
+- DB schema: [databases/openthrottle/README.md](../../../databases/openthrottle/README.md) § Agent conversations
 - MCP auth: [AUTH.md](./AUTH.md)
 - New chat UX (not MCP): plan task `3ff35e87`

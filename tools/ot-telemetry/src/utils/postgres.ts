@@ -49,7 +49,7 @@ export async function connectReadOnly(
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
     throw new Error(
-      `${POSTGRES_CONNECTION_FAILURE_PREFIX} ${detail} ${describeEnvVarsTried()} Set one of these (see databases/README.md) and retry.`,
+      `${POSTGRES_CONNECTION_FAILURE_PREFIX} ${detail} ${describeEnvVarsTried()} Set one of these (see databases/openthrottle/README.md) and retry.`,
       { cause: error },
     );
   }

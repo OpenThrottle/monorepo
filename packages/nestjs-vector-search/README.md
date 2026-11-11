@@ -37,7 +37,7 @@ The host app must configure a TypeORM root (the default `DataSource` is injected
 
    ```bash
    pnpm run database:start      # Postgres (+ Redis)
-   pnpm run database:migrate    # applies databases/migrations/052_create_code_embeddings_table.sql
+   pnpm run database:migrate    # applies databases/openthrottle/migrations/052_create_code_embeddings_table.sql
    ```
 
 2. **Embeddings provider** — one of (same env the rest of the platform uses):

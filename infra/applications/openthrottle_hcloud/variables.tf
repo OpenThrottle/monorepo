@@ -200,7 +200,7 @@ variable "mcp_image" {
 
 variable "postgres_image" {
   default     = "pgvector/pgvector:0.8.2-pg18-trixie"
-  description = "Postgres image, which must ship pgvector. Defaults to the upstream prebuilt pgvector image rather than building applications/openthrottle/Dockerfile.Postgres: that Dockerfile COPYs databases/seed.sql and a deployed box has no checkout to build from. The -trixie tag matters — it matches the Debian 13 / glibc 2.41 base the existing data volumes were initialized with, and the default tag is Debian 12, which triggers a collation version mismatch."
+  description = "Postgres image, which must ship pgvector. Defaults to the upstream prebuilt pgvector image rather than building applications/openthrottle/Dockerfile.Postgres: that Dockerfile COPYs databases/openthrottle/seed.sql and a deployed box has no checkout to build from. The -trixie tag matters — it matches the Debian 13 / glibc 2.41 base the existing data volumes were initialized with, and the default tag is Debian 12, which triggers a collation version mismatch."
   type        = string
 }
 

@@ -1,5 +1,8 @@
 import { describe, expect, test } from 'vitest';
+
+import { DATABASES } from '../../databases/database-registry.ts';
 import {
+  backupsDirFor,
   resolveBackupRetentionCount,
   selectBackupsToPrune,
 } from '../openthrottle-database-backup';
@@ -36,6 +39,30 @@ describe('selectBackupsToPrune', () => {
 
   test('returns nothing when the count is within the retention window', () => {
     expect(selectBackupsToPrune(ARCHIVES, 5)).toEqual([]);
+  });
+
+  test('prunes one database without touching another database archives', () => {
+    const cmsArchives = ['cms-20260101-000000.zip', 'cms-20260102-000000.zip'];
+    const listing = [...ARCHIVES, ...cmsArchives];
+
+    expect(selectBackupsToPrune(listing, 1, 'cms')).toEqual([
+      'cms-20260101-000000.zip',
+    ]);
+    expect(selectBackupsToPrune(listing, 1, 'openthrottle')).toEqual([
+      'openthrottle-20260102-000000.zip',
+      'openthrottle-20260101-000000.zip',
+    ]);
+  });
+});
+
+describe('backupsDirFor', () => {
+  test('gives every database its own backups directory', () => {
+    expect(
+      DATABASES.map((database) => backupsDirFor(database, '/repo')),
+    ).toEqual([
+      '/repo/databases/openthrottle/backups',
+      '/repo/databases/cms/backups',
+    ]);
   });
 });
 

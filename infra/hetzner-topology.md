@@ -29,7 +29,7 @@ Three consequences:
 
 1. **There is no data to migrate off GCP.** No GCP Postgres holds production data and no GCP endpoint
    serves traffic. The database task is therefore a _seed from a dump_, not a cutover — the
-   authoritative source is the local Docker Postgres volume described in `databases/README.md`.
+   authoritative source is the local Docker Postgres volume described in `databases/openthrottle/README.md`.
 2. **The cost comparison is avoided spend, not recovered spend.** Standing this stack up on Hetzner
    costs ~EUR 7.09/mo where standing the _same_ stack up on GCP would have cost ~50 USD/mo. Nobody is
    currently paying the ~50.

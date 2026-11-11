@@ -1,6 +1,6 @@
 /**
  * @description TypeORM entity for skill_usage_outcomes. Matches
- * databases/migrations/085_create_skill_usage_outcomes.sql. Opt-in
+ * databases/openthrottle/migrations/085_create_skill_usage_outcomes.sql. Opt-in
  * outcome/duration enrichment for skills we author — correlated to
  * skill_usage_events by session_id + skill_name.
  */

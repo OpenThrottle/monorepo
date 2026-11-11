@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for the OpenThrottle work_sessions table. Matches databases/migrations/068.
+ * @description TypeORM entity for the OpenThrottle work_sessions table. Matches databases/openthrottle/migrations/068.
  * Scalar-only (like PlanRun); FK columns are plain uuids — relations are added when a resolver needs them.
  */
 

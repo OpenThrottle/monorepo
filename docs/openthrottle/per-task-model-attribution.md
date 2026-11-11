@@ -41,7 +41,7 @@ Two structural problems with the current source, not one:
 ## The binding constraint: sessions are append-only
 
 `work_sessions` is documented append-only — _"Only `ended_at`/`closed_by` mutate after creation"_
-(`databases/migrations/068_create_work_ledger_tables.sql`). The GraphQL surface agrees: the schema
+(`databases/openthrottle/migrations/068_create_work_ledger_tables.sql`). The GraphQL surface agrees: the schema
 exposes exactly three session mutations, and none of them can change a model.
 
 ```

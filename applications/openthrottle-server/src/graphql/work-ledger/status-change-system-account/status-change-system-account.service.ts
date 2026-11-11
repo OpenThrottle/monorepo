@@ -1,5 +1,5 @@
 /**
- * @description Resolves the seeded 'status-change-system' service account id (databases/migrations/127)
+ * @description Resolves the seeded 'status-change-system' service account id (databases/openthrottle/migrations/127)
  * for background writers that call {@link WorkLedgerCaptureService.recordStatusChange} with no
  * request principal — the stale sweeper, `plans.processor`, and any other BullMQ worker that
  * transitions plan/task status on its own initiative rather than on behalf of a request.

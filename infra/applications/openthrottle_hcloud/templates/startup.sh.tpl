@@ -352,7 +352,7 @@ BACKUPENVEOF
   log "REMINDER: configure the rclone remote before the first run —"
   log "  rclone config   # then verify: rclone lsd $${backup_remote}"
   log "REMINDER: an untested backup is not a backup. Run a restore drill:"
-  log "  databases/SEEDING.md and databases/verify-restore.sh"
+  log "  databases/openthrottle/SEEDING.md and databases/openthrottle/verify-restore.sh"
 else
   log "no backup remote configured; NO offsite backups will be taken"
   log "Hetzner snapshots alone share the server's fate for some failure modes."

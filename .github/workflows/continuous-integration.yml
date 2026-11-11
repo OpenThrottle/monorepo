@@ -851,7 +851,7 @@ jobs:
       # second of two concurrent branches only becomes wrong once the first
       # lands. The check resolves against the base ref TIP for exactly that
       # reason, so it must be free to run even when this PR's diff is empty
-      # under databases/migrations/. It costs ~1s.
+      # under databases/openthrottle/migrations/. It costs ~1s.
       #
       # In the merge queue there is no base_ref either, so the base falls back to
       # `main`. HEAD is the queue commit (the `main` tip plus every squash ahead of

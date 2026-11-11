@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for skill_availability_rules. Matches databases/migrations/062.
+ * @description TypeORM entity for skill_availability_rules. Matches databases/openthrottle/migrations/062.
  * Each rule matches skills by tag/slug allow/deny lists, optionally scoped to an environment.
  * `editor`/`role` are reserved-inert nullable columns — the v1 resolver ignores them.
  */

@@ -4,7 +4,7 @@
 
 This playbook is for someone who has already configured the **openthrottle-mcp** MCP and can run **openthrottle-server** (and optionally the developer app). It describes what to do next, how the pieces fit together, and gives a copy-paste **prompt sequence** for a minimal end-to-end exercise in your own repo.
 
-**Related:** How to **register** MCP servers (tiers, config locations, template, editor parity) is in [`mcp-registration.md`](./mcp-registration.md). Schema, migrations, embeddings, and commit-link conventions live in [`databases/README.md`](../../databases/README.md). MCP smoke checks and env alignment are in [`packages/openthrottle-mcp/docs/verification-environment.md`](../../packages/openthrottle-mcp/docs/verification-environment.md).
+**Related:** How to **register** MCP servers (tiers, config locations, template, editor parity) is in [`mcp-registration.md`](./mcp-registration.md). Schema, migrations, embeddings, and commit-link conventions live in [`databases/openthrottle/README.md`](../../databases/openthrottle/README.md). MCP smoke checks and env alignment are in [`packages/openthrottle-mcp/docs/verification-environment.md`](../../packages/openthrottle-mcp/docs/verification-environment.md).
 
 ---
 
@@ -28,7 +28,7 @@ Use this before relying on OT tools in the agent.
 | Editor registers **openthrottle-mcp**, `API_URL` matches | [mcp-registration.md](./mcp-registration.md), [verification-environment.md](../../packages/openthrottle-mcp/docs/verification-environment.md)                                                                |
 | Embedding provider configured (for `semantic_search`)    | **`OLLAMA_BASE_URL`** or **`OPENAI_API_KEY`** on **`applications/openthrottle-server/.env`** — [Ollama.md § Embeddings for OpenThrottle](../monorepo/Ollama.md#embeddings-for-openthrottle-ollama-or-openai) |
 
-For database layout, imports, and PRD-style fields on plans/tasks, see [`databases/README.md`](../../databases/README.md).
+For database layout, imports, and PRD-style fields on plans/tasks, see [`databases/openthrottle/README.md`](../../databases/openthrottle/README.md).
 
 ---
 
@@ -40,15 +40,15 @@ For database layout, imports, and PRD-style fields on plans/tasks, see [`databas
 
 ### When to use which tool
 
-| Question or intent                            | Use                                                                                                                                                                                                                                     |
-| --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| “What plans/tasks exist?” / status lists      | **openthrottle-mcp** — `list_plans_by_status`, `get_plan`, `get_tasks_by_plan_id`                                                                                                                                                       |
-| “Find plans about X” (meaning, not filenames) | **openthrottle-mcp** — `semantic_search`, then `get_document` for a chunk                                                                                                                                                               |
-| “What’s in the OT knowledge base?”            | **openthrottle-mcp** — `list_sources`                                                                                                                                                                                                   |
-| “What does this repo’s docs say about X?”     | **openthrottle-mcp** — `semantic_search` / `get_document` over ingested `docs/`                                                                                                                                                         |
-| Create or update a plan/task                  | **openthrottle-mcp** — `create_plan`, `create_task`, `update_task` (never a new plan `.md` in `docs/`)                                                                                                                                  |
-| Log agent iteration output for a plan         | **openthrottle-mcp** — `append_plan_output`                                                                                                                                                                                             |
-| Tie landed work on `main` to a plan           | Nothing to call — `settle_plan_run` carries `headSha` / `prNumber` when the PR opens and the server records it; an hourly `Plan-Id:` trailer harvest backstops anything missed (see [`databases/README.md`](../../databases/README.md)) |
+| Question or intent                            | Use                                                                                                                                                                                                                                                               |
+| --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| “What plans/tasks exist?” / status lists      | **openthrottle-mcp** — `list_plans_by_status`, `get_plan`, `get_tasks_by_plan_id`                                                                                                                                                                                 |
+| “Find plans about X” (meaning, not filenames) | **openthrottle-mcp** — `semantic_search`, then `get_document` for a chunk                                                                                                                                                                                         |
+| “What’s in the OT knowledge base?”            | **openthrottle-mcp** — `list_sources`                                                                                                                                                                                                                             |
+| “What does this repo’s docs say about X?”     | **openthrottle-mcp** — `semantic_search` / `get_document` over ingested `docs/`                                                                                                                                                                                   |
+| Create or update a plan/task                  | **openthrottle-mcp** — `create_plan`, `create_task`, `update_task` (never a new plan `.md` in `docs/`)                                                                                                                                                            |
+| Log agent iteration output for a plan         | **openthrottle-mcp** — `append_plan_output`                                                                                                                                                                                                                       |
+| Tie landed work on `main` to a plan           | Nothing to call — `settle_plan_run` carries `headSha` / `prNumber` when the PR opens and the server records it; an hourly `Plan-Id:` trailer harvest backstops anything missed (see [`databases/openthrottle/README.md`](../../databases/openthrottle/README.md)) |
 
 ---
 
@@ -110,7 +110,7 @@ Summarize how many sources and pending plans you see.
 | MCP tools missing or “not connected” | Cursor MCP config, restart Cursor; `API_URL_INTERNAL` matches server port ([verification-environment.md](../../packages/openthrottle-mcp/docs/verification-environment.md)).                   |
 | GraphQL errors / 401 / 403           | Token: `OPENTHROTTLE_MCP_AUTH_TOKEN`; server. [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md). Re-run [bootstrap](./local-quickstart.md#3-bootstrap-service-account-tokens) if needed. |
 | Bootstrap script skips account       | Active credential already exists — rotate per [AUTH.md § Credential rotation](../../packages/openthrottle-mcp/docs/AUTH.md#credential-rotation).                                               |
-| Empty search / no embeddings         | Data imported? Embedding keys and dimension strategy in [`databases/README.md`](../../databases/README.md).                                                                                    |
+| Empty search / no embeddings         | Data imported? Embedding keys and dimension strategy in [`databases/openthrottle/README.md`](../../databases/openthrottle/README.md).                                                          |
 | Agent writes a plan to a `.md` file  | Redirect it: plans belong in OT via MCP; see [`ot-plans`](../../skills/ot-plans/SKILL.md).                                                                                                     |
 
 ---
@@ -125,7 +125,7 @@ Summarize how many sources and pending plans you see.
 | MCP verification, env, smoke checks             | [verification-environment.md](../../packages/openthrottle-mcp/docs/verification-environment.md) |
 | MCP server registration (tiers, config, parity) | [mcp-registration.md](./mcp-registration.md)                                                    |
 | MCP config template                             | [`.cursor/mcp.json`](../../.cursor/mcp.json)                                                    |
-| DB schema, migrations, imports, commit links    | [databases/README.md](../../databases/README.md)                                                |
+| DB schema, migrations, imports, commit links    | [databases/openthrottle/README.md](../../databases/openthrottle/README.md)                      |
 | OT MCP tool choice and skills                   | [`ot-plans`](../../skills/ot-plans/SKILL.md), `skills/ot-*`                                     |
 | Workflow CLI / Ralph (optional)                 | [tools/workflows/README.md](../../tools/workflows/README.md)                                    |
 | Embeddings (Ollama or OpenAI)                   | [monorepo/Ollama.md](../monorepo/Ollama.md)                                                     |

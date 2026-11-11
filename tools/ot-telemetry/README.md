@@ -49,7 +49,7 @@ precedence (first match wins):
 2. `POSTGRES_URL`
 3. Discrete `POSTGRES_*` pieces (host/port/db/user/password)
 
-See [`databases/README.md`](../../databases/README.md) for the connection conventions this
+See [`databases/openthrottle/README.md`](../../databases/openthrottle/README.md) for the connection conventions this
 reuses.
 
 ## CLI flags

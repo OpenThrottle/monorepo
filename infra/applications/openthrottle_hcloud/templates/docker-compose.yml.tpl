@@ -198,7 +198,7 @@ services:
   #
   #     Uses the upstream prebuilt pgvector image rather than
   #     applications/openthrottle/Dockerfile.Postgres: that Dockerfile COPYs
-  #     databases/seed.sql, and a deployed box has no repository checkout to
+  #     databases/openthrottle/seed.sql, and a deployed box has no repository checkout to
   #     build from. The schema comes from the migrations runner instead, which is
   #     the correct source of truth for a deployment; seed.sql is a local-dev
   #     convenience.

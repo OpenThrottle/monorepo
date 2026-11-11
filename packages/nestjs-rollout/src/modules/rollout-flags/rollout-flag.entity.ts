@@ -1,6 +1,6 @@
 /**
  * @description TypeORM entity for the rollout feature-flags table. Matches
- * databases/migrations (084, 089).
+ * databases/openthrottle/migrations (084, 089).
  */
 
 import {
