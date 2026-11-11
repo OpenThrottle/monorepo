@@ -25,6 +25,7 @@ npm install @openthrottle/react-router-shadcn
 - **Alert** - Inline callout (Alert, AlertTitle, AlertDescription) with default and destructive variants
 - **Button** - Versatile button component with multiple variants and sizes
 - **Card** - Container component with header, content, and footer sections
+- **Carousel** - Embla-powered slide carousel with previous/next controls and arrow-key navigation
 - **Chart** - Chart primitives (ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent) for building charts with Recharts; supports metrics visualization (CPU, memory, etc.)
 - **Input** - Styled text input component
 - **Progress** - Progress bar for loading or value indicators

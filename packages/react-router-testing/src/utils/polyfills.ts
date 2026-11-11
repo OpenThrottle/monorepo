@@ -148,6 +148,36 @@ const installResizeObserver = (
   });
 };
 
+/**
+ * No-op {@link IntersectionObserver} for jsdom, which omits the API. embla
+ * (the shadcn `Carousel`) constructs one on mount to track slides in view;
+ * nothing is ever reported as intersecting.
+ */
+class TestIntersectionObserver implements IntersectionObserver {
+  readonly root: Document | Element | null = null;
+  readonly rootMargin: string = '0px';
+  readonly scrollMargin: string = '0px';
+  readonly thresholds: ReadonlyArray<number> = [0];
+
+  disconnect(): void {}
+  observe(): void {}
+  takeRecords(): IntersectionObserverEntry[] {
+    return [];
+  }
+  unobserve(): void {}
+}
+
+const installIntersectionObserver = (): void => {
+  if (typeof globalThis.IntersectionObserver !== 'undefined') {
+    return;
+  }
+
+  globalThis.IntersectionObserver = TestIntersectionObserver;
+  teardowns.push(() => {
+    Reflect.deleteProperty(globalThis, 'IntersectionObserver');
+  });
+};
+
 const installElementShims = (): void => {
   if (typeof Element === 'undefined') {
     return;
@@ -299,8 +329,8 @@ const resolveResizeObserverSize = (
 
 /**
  * Install the jsdom shims OpenThrottle React Router component tests depend on:
- * `window.matchMedia`, `ResizeObserver`, `Element.prototype.scrollIntoView`, and
- * Element pointer capture. Idempotent — each shim only patches when missing.
+ * `window.matchMedia`, `ResizeObserver`, `IntersectionObserver`,
+ * `Element.prototype.scrollIntoView`, and Element pointer capture. Idempotent — each shim only patches when missing.
  *
  * The `ResizeObserver` shim is a no-op by default; pass
  * {@link InstallPolyfillsOptions.resizeObserverSize} to make it report a
@@ -314,6 +344,7 @@ export const installPolyfills = (
 ): void => {
   installMatchMedia();
   installResizeObserver(resolveResizeObserverSize(options.resizeObserverSize));
+  installIntersectionObserver();
   installElementShims();
 
   if (options.webgl === true) {

@@ -8,6 +8,7 @@ describe('installPolyfills', () => {
 
     expect(typeof window.matchMedia).toBe('function');
     expect(typeof globalThis.ResizeObserver).toBe('function');
+    expect(typeof globalThis.IntersectionObserver).toBe('function');
     expect(typeof Element.prototype.scrollIntoView).toBe('function');
     expect(typeof Element.prototype.hasPointerCapture).toBe('function');
     expect(typeof Element.prototype.releasePointerCapture).toBe('function');
@@ -39,6 +40,17 @@ describe('installPolyfills', () => {
     expect(window.matchMedia).toBe(firstMatchMedia);
     expect(globalThis.ResizeObserver).toBe(firstResizeObserver);
     expect(Element.prototype.scrollIntoView).toBe(firstScrollIntoView);
+  });
+
+  test('IntersectionObserver shim is inert and records nothing', () => {
+    installPolyfills();
+
+    const callback = vi.fn();
+    const observer = new globalThis.IntersectionObserver(callback);
+    observer.observe(document.createElement('div'));
+
+    expect(observer.takeRecords()).toEqual([]);
+    expect(callback).not.toHaveBeenCalled();
   });
 
   test('ResizeObserver shim is a no-op by default', async () => {
