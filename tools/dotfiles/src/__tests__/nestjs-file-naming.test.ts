@@ -98,6 +98,12 @@ ruleTester.run('nestjs-file-naming', nestjsFileNaming, {
       errors: [{ messageId: 'folderMismatch' }],
       filename: 'src/queues/plans/plans-queue-producer.module.ts',
     },
+    // A repository is folder-named like a service.
+    {
+      code: CODE,
+      errors: [{ messageId: 'folderMismatch' }],
+      filename: 'src/plans/plan-records.repository.ts',
+    },
     // A test file is checked as its source, and the expected name keeps the
     // test extension.
     {
@@ -133,6 +139,10 @@ ruleTester.run('nestjs-file-naming', nestjsFileNaming, {
     { code: CODE, filename: 'src/queues/usage-limit/usage-limit.service.ts' },
     { code: CODE, filename: 'src/queues/usage-limit/usage-limit.utils.ts' },
     { code: CODE, filename: 'src/queues/usage-limit/usage-limit.constants.ts' },
+    {
+      code: CODE,
+      filename: 'src/base-repository/base-repository.repository.ts',
+    },
     // The sub-folder answer to the multi-module folder.
     {
       code: CODE,

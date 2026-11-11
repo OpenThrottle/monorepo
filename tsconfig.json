@@ -249,6 +249,9 @@
     },
     {
       "path": "./packages/nestjs-repositories-cms"
+    },
+    {
+      "path": "./packages/nestjs-postgres"
     }
   ]
 }

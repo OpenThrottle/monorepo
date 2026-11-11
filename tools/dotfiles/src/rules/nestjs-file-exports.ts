@@ -13,6 +13,9 @@ import { parseNestFile } from './nestjs-file-shared.ts';
  *     `.controller.ts` export exactly one class carrying the matching Nest
  *     decorator, and nothing else — a type a provider needs lives in the
  *     folder's `.types.ts`.
+ *   - `.repository.ts` exports only classes: a data-access class over one
+ *     table, which may be an undecorated abstract base or an `@Injectable()`
+ *     subclass. A type it needs lives in `.types.ts`.
  *   - `.utils.ts` exports only functions.
  *   - `.types.ts` exports only types and interfaces.
  *   - `.constants.ts` exports only `const` values that are not functions.
@@ -64,6 +67,11 @@ const ALLOWED_SHAPES: Readonly<Record<string, AllowedExports>> = {
     homes: { class: 'a `.service.ts` in its own folder' },
     label: `Nest provider values (\`const\` provider objects or arrays, or functions returning them)`,
     shapes: ['constant', 'function'],
+  },
+  repository: {
+    homes: {},
+    label: 'repository classes',
+    shapes: ['class'],
   },
   types: { homes: {}, label: 'types and interfaces', shapes: ['type'] },
   utils: { homes: {}, label: 'functions', shapes: ['function'] },

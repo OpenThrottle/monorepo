@@ -399,6 +399,14 @@
         "src/register-workspace-type-stripping.ts",
       ],
     },
+    // Test support (fixtures, factories, the TestRecord entity) is imported only by
+    // *.test.ts files, which the root ignore hides from the import graph.
+    "packages/nestjs-postgres": {
+      "entry": ["src/index.ts"],
+      "ignore": ["src/**/*.factory.ts", "src/**/testing/**"],
+      "ignoreDependencies": ["@faker-js/faker", "fishery"],
+      "project": ["src/**/*.ts"],
+    },
     "packages/nestjs-repositories": {
       "entry": [
         "src/index.ts",
