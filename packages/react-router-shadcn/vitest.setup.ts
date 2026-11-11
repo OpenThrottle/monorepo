@@ -14,6 +14,28 @@ if (globalThis.ResizeObserver === undefined) {
 }
 
 /**
+ * @description jsdom does not implement `IntersectionObserver`; embla (the
+ * `Carousel`) constructs one on mount.
+ */
+class IntersectionObserverStub implements IntersectionObserver {
+  public readonly root: Document | Element | null = null;
+  public readonly rootMargin: string = '0px';
+  public readonly scrollMargin: string = '0px';
+  public readonly thresholds: ReadonlyArray<number> = [0];
+
+  public disconnect(): void {}
+  public observe(): void {}
+  public takeRecords(): IntersectionObserverEntry[] {
+    return [];
+  }
+  public unobserve(): void {}
+}
+
+if (globalThis.IntersectionObserver === undefined) {
+  globalThis.IntersectionObserver = IntersectionObserverStub;
+}
+
+/**
  * @description jsdom does not implement `matchMedia`; Sonner and others read it in effects.
  */
 if (globalThis.matchMedia === undefined) {

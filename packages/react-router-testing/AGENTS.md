@@ -12,7 +12,7 @@ run the consuming apps' tests, not just this package's.
 ## Layout
 
 - [src/setup.ts](src/setup.ts) — `setupReactRouterTest(options)`: jest-dom matchers, `afterEach(cleanup)`, polyfills, `window.env`.
-- [src/polyfills.ts](src/polyfills.ts) — `installPolyfills` / `uninstallPolyfills`: matchMedia, ResizeObserver, `scrollIntoView`, pointer capture.
+- [src/polyfills.ts](src/polyfills.ts) — `installPolyfills` / `uninstallPolyfills`: matchMedia, ResizeObserver, IntersectionObserver (inert; embla needs it), `scrollIntoView`, pointer capture.
 - [src/env.ts](src/env.ts) — `DEFAULT_TEST_ENV` fixture + `createTestEnv` / `installTestEnv`.
 - [src/router-context.ts](src/router-context.ts) — `createTestRouterContext()` for loader/action unit tests (React Router types `context` as `RouterContextProvider`; `{}` no longer typechecks).
 
