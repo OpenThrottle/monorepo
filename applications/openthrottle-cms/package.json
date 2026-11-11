@@ -17,6 +17,7 @@
     "@vercel/react-router": "catalog:",
     "dotenv": "catalog:",
     "isbot": "catalog:",
+    "lucide-react": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-router": "catalog:",
