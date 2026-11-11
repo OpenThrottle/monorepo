@@ -1,7 +1,7 @@
 import { Card, cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { useReorderItem } from '../hooks';
+import { useReorderItem } from '../hooks/useReorderItem';
 import { ReorderHandle } from './ReorderHandle';
 
 /**

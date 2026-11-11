@@ -2,7 +2,7 @@ import { Button, cn } from '@openthrottle/react-router-shadcn';
 import { DotsSixVerticalIcon } from '@phosphor-icons/react/dist/ssr/DotsSixVertical';
 import * as React from 'react';
 
-import { REORDER_HANDLE_COPY } from '../data';
+import { REORDER_HANDLE_COPY } from '../data/data.copy';
 
 /**
  * @public

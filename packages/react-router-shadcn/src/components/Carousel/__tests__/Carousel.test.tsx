@@ -11,7 +11,6 @@ import { CarouselContent } from '../CarouselContent';
 import { CarouselItem } from '../CarouselItem';
 import { CarouselNext } from '../CarouselNext';
 import { CarouselPrevious } from '../CarouselPrevious';
-import { useCarousel } from '../useCarousel';
 
 describe('Carousel Component', () => {
   let component: RenderResult;
@@ -66,23 +65,5 @@ describe('Carousel Component', () => {
     await userEvent.keyboard('{ArrowRight}{ArrowLeft}');
 
     expect(region).toBeInTheDocument();
-  });
-});
-
-describe('useCarousel', () => {
-  test('throws outside a Carousel', () => {
-    const Orphan = (): React.ReactElement => {
-      useCarousel();
-
-      return <div />;
-    };
-    const consoleError = vi
-      .spyOn(console, 'error')
-      .mockImplementation(() => {});
-
-    expect(() => render(<Orphan />)).toThrow(
-      'useCarousel must be used within a <Carousel />.',
-    );
-    consoleError.mockRestore();
   });
 });

@@ -7,7 +7,7 @@ export interface MockReorderItem {
 }
 
 /**
- * @description Sample rows for ReorderGroup stories and specs (upstream's default list).
+ * @description Sample rows for the ReorderGroup specs (upstream's default list).
  */
 export const MOCK_REORDER_ITEMS: readonly MockReorderItem[] = [
   { id: '1', text: 'Write a cool JS library' },

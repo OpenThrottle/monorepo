@@ -79,7 +79,7 @@ describe('generatorReactRouterRoute', () => {
     expect(route).not.toContain('Uuid');
   });
 
-  test('emits a loader-only resource route for api.* names', async () => {
+  test('emits a loader + action resource route for api.* names', async () => {
     await generatorReactRouterRoute(tree, { application, name: 'api.schemas' });
 
     const files = tree
@@ -93,9 +93,11 @@ describe('generatorReactRouterRoute', () => {
 
     expect(files).toStrictEqual([
       'applications/openthrottle/app/routes/api.schemas.tsx',
+      'applications/openthrottle/app/routes/api.schemas.tsx.graphql',
       'applications/openthrottle/app/routes/__tests__/api.schemas.test.tsx',
     ]);
     expect(route).toContain('export const loader');
+    expect(route).toContain('export const action');
     expect(route).not.toContain('export default');
   });
 });

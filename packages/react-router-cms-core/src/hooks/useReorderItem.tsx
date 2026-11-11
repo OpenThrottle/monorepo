@@ -2,8 +2,8 @@ import type { Identifier } from 'dnd-core';
 import * as React from 'react';
 import { useDrag, useDrop } from 'react-dnd';
 
-import { CMS_REORDER_DRAG_TYPE } from '../data';
-import { shouldReorderOnHover } from '../utils';
+import { CMS_REORDER_DRAG_TYPE } from '../data/data.reorder';
+import { shouldReorderOnHover } from '../utils/should-reorder-on-hover';
 
 /**
  * @public

@@ -1,7 +1,7 @@
 import * as React from 'react';
 
-import type { CmsReorderListSource } from '../types';
-import { moveListItem } from '../utils';
+import type { CmsReorderListSource } from '../types/cms-reorder-list';
+import { moveListItem } from '../utils/move-list-item';
 
 /**
  * @public

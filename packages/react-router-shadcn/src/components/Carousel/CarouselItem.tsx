@@ -2,8 +2,8 @@
 
 import * as React from 'react';
 
+import { useCarousel } from '../../hooks/useCarousel';
 import { cn } from '../../utils/cn';
-import { useCarousel } from './useCarousel';
 
 export interface CarouselItemProps extends React.ComponentProps<'div'> {}
 

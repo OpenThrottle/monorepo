@@ -1,7 +1,7 @@
 import { atom } from 'jotai';
 
-import type { CmsDevice } from '../config';
-import { CMS_DEVICE } from '../config';
+import type { CmsDevice } from '../config/cms-device';
+import { CMS_DEVICE } from '../config/cms-device';
 
 /**
  * @description Editor chrome preferences.

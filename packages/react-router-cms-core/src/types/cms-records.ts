@@ -1,4 +1,4 @@
-import type { CmsStatus } from '../config';
+import type { CmsStatus } from '../config/cms-status';
 
 /**
  * @description A stored layout row: a named, slugged entry point into a fragment tree. Field names

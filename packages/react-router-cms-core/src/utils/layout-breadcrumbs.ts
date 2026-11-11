@@ -1,4 +1,4 @@
-import type { CmsFragment } from '../types';
+import type { CmsFragment } from '../types/cms-fragment';
 
 /**
  * @public

@@ -3,7 +3,7 @@ import { render } from '@testing-library/react';
 import * as React from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { REORDER_HANDLE_COPY } from '../../data';
+import { REORDER_HANDLE_COPY } from '../../data/data.copy';
 import { ReorderHandle } from '../ReorderHandle';
 
 describe('ReorderHandle', () => {

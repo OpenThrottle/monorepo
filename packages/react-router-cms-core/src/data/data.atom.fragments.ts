@@ -1,6 +1,6 @@
 import { atom } from 'jotai';
 
-import type { CmsFragment } from '../types';
+import type { CmsFragment } from '../types/cms-fragment';
 
 /**
  * @description The fragments available to the editor (the component palette).

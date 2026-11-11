@@ -660,6 +660,27 @@ export const eslintConfig = tslint.config([
       '**/root.tsx',
     ],
     rules: {
+      // React Router typegen infers loader/action/meta return types and feeds
+      // them into Route.ComponentProps (loaderData/actionData) and MetaArgs. A
+      // hand-written return type there is always vaguer than the inferred one
+      // (`Promise<Record<string, never>>` erases the payload), so route-module
+      // framework exports are exempt from the module-boundary rule. Everything
+      // else in a route module still needs its return type.
+      '@typescript-eslint/explicit-module-boundary-types': [
+        'warn',
+        {
+          allowHigherOrderFunctions: true,
+          allowTypedFunctionExpressions: true,
+          allowedNames: [
+            'action',
+            'clientAction',
+            'clientLoader',
+            'headers',
+            'loader',
+            'meta',
+          ],
+        },
+      ],
       'max-lines': [
         'warn',
         { max: 210, skipBlankLines: false, skipComments: false },
