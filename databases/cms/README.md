@@ -78,8 +78,16 @@ both connections, and checked by the application rather than by the database. Th
 `profiles` table in the `openthrottle` database, would put CMS data in the wrong ledger. That work is
 a follow-up OT plan, not part of this schema.
 
+## Entities
+
+The TypeORM entities for these tables live in
+[`@openthrottle/nestjs-repositories-cms`](../../packages/nestjs-repositories-cms/README.md), on a
+named `cms` DataSource. A schema change here is two edits: the migration and its entity.
+
 ## Not here yet
 
-- TypeORM entities, a NestJS module and GraphQL for these tables. Nothing in the server reads them
+Tracked in OT plan `18a3b88f-50fe-4944-97a3-71835d45e393`:
+
+- GraphQL for these tables, and wiring the entities into an app. Nothing in the server reads them
   yet.
 - Seed data for local development.

@@ -29,7 +29,7 @@ No `package.json` here. Everything runs through root `pnpm run database:*` scrip
 - Never edit an applied migration in place — add a new numbered file. Comment backfills go in batch files (≤10 tables per file).
 - Every `CREATE TABLE` must have `COMMENT ON TABLE` in the **same** migration file (tone model: `openthrottle/migrations/038_create_plan_runs_table.sql`; say "OpenThrottle", or "OpenThrottle CMS" in `cms`). `COMMENT ON COLUMN` for non-obvious columns. Enforced diff-scoped vs `main`, across every database, by `pnpm nx run monorepo:check-migration-table-comments` (also in `check:local`). A byte-identical rename does not count as a change.
 - Use idempotent DDL (`CREATE TABLE IF NOT EXISTS`, guarded `ALTER`s, foreign keys in their own guarded statement). Patterns and naming: [skills/ot-postgres/SKILL.md](../skills/ot-postgres/SKILL.md).
-- After an `openthrottle` schema change, sync the TypeORM entities in `@openthrottle/nestjs-repositories` (entity JSDoc cites the migration numbers). `cms` has no entities yet.
+- After an `openthrottle` schema change, sync the TypeORM entities in `@openthrottle/nestjs-repositories` (entity JSDoc cites the migration numbers). After a `cms` schema change, sync the entities in `@openthrottle/nestjs-repositories-cms`.
 - A shared-DB worktree refuses a branch-only migration in **any** database; run `pnpm worktree:db isolate` first.
 
 ## Adding a database

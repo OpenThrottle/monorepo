@@ -49,6 +49,73 @@ export function getPostgresUrl(env: NodeJS.ProcessEnv = process.env): string {
   return connectionString;
 }
 
+/**
+ * Env var holding a full connection URL for the `cms` database. Overrides the
+ * URL derived from the primary connection.
+ */
+export const CMS_POSTGRES_URL_ENV = `CMS_POSTGRES_URL`;
+
+/** Env var naming the `cms` database on the primary server. */
+export const CMS_POSTGRES_DB_ENV = `CMS_POSTGRES_DB`;
+
+/** Database name used for `cms` when {@link CMS_POSTGRES_DB_ENV} is unset. */
+export const CMS_DEFAULT_DATABASE_NAME = `cms`;
+
+/** Outcome of {@link getCmsPostgresUrl}. */
+export type CmsPostgresUrlResult =
+  | { readonly error: string; readonly ok: false }
+  | { readonly ok: true; readonly url: string };
+
+/** {@link getPostgresUrl} as a result instead of a throw. */
+function resolvePrimaryPostgresUrl(
+  env: NodeJS.ProcessEnv,
+): CmsPostgresUrlResult {
+  try {
+    return { ok: true, url: getPostgresUrl(env) };
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return { error: detail, ok: false };
+  }
+}
+
+/**
+ * @description Resolves the `cms` database's connection string from env, with
+ * the same precedence as the `cms` entry in `databases/database-registry.ts`:
+ * {@link CMS_POSTGRES_URL_ENV}, else the primary connection
+ * ({@link getPostgresUrl}) with its database swapped for
+ * {@link CMS_POSTGRES_DB_ENV} (default {@link CMS_DEFAULT_DATABASE_NAME}).
+ * Returns a result rather than throwing so callers can report a missing
+ * connection without a `try`/`catch`.
+ * @public
+ */
+export function getCmsPostgresUrl(
+  env: NodeJS.ProcessEnv = process.env,
+): CmsPostgresUrlResult {
+  const explicit = env[CMS_POSTGRES_URL_ENV]?.trim();
+  if (explicit) {
+    return { ok: true, url: explicit };
+  }
+
+  const primary = resolvePrimaryPostgresUrl(env);
+  if (!primary.ok) {
+    return primary;
+  }
+
+  const databaseName =
+    env[CMS_POSTGRES_DB_ENV]?.trim() || CMS_DEFAULT_DATABASE_NAME;
+
+  try {
+    const parsed = new URL(primary.url);
+    parsed.pathname = `/${encodeURIComponent(databaseName)}`;
+    return { ok: true, url: parsed.toString() };
+  } catch {
+    return {
+      error: `🚨 The primary Postgres URL could not be parsed`,
+      ok: false,
+    };
+  }
+}
+
 export function getPostgresLoggingLevel(
   env: NodeJS.ProcessEnv = process.env,
 ): boolean {

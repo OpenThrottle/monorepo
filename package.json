@@ -14,6 +14,7 @@
     "@openthrottle/agentic-replay-testing": "workspace:^",
     "@openthrottle/nestjs-modules": "workspace:^",
     "@openthrottle/nestjs-repositories": "workspace:^",
+    "@openthrottle/nestjs-repositories-cms": "workspace:^",
     "@openthrottle/nestjs-testing": "workspace:^",
     "@openthrottle/node-client": "workspace:^",
     "@openthrottle/openthrottle-agentic-utils": "workspace:^",
