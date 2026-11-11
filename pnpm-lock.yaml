@@ -3216,6 +3216,9 @@ importers:
 
   packages/react-router-cms-core:
     dependencies:
+      '@openthrottle/react-router-cms-ui':
+        specifier: workspace:^
+        version: link:../react-router-cms-ui
       '@openthrottle/react-router-shadcn':
         specifier: workspace:^
         version: link:../react-router-shadcn
@@ -3240,7 +3243,13 @@ importers:
       react-dnd:
         specifier: 'catalog:'
         version: 16.0.1(@types/hoist-non-react-statics@3.3.7(@types/react@19.2.7))(@types/node@24.19.2)(@types/react@19.2.7)(react@19.2.4)
+      react-router:
+        specifier: 'catalog:'
+        version: 8.0.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
     devDependencies:
+      '@openthrottle/react-router-testing':
+        specifier: workspace:^
+        version: link:../react-router-testing
       '@testing-library/jest-dom':
         specifier: 'catalog:'
         version: 6.9.1

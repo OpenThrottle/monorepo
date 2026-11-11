@@ -1,0 +1,122 @@
+import { render, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { createStore, Provider } from 'jotai';
+import * as React from 'react';
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
+import { createRoutesStub } from 'react-router';
+import { describe, expect, test, vi } from 'vitest';
+
+import { atomFragmentDraft } from '../../data/data.atom.fragment-draft';
+import { CORE_FORM_COPY, FORM_CHILDREN_COPY } from '../../data/data.copy';
+import { MOCK_FORM_SCHEMA } from '../../data/mock.form-schema';
+import { MOCK_FRAGMENT_RECORDS } from '../../data/mock.fragment-records';
+import type { CmsParsedSchema } from '../../types/cms-json-schema';
+import type { CmsFormChildrenBindings } from '../../types/cms-render';
+import { CoreFormRenderer } from '../CoreFormRenderer';
+
+const withChildren: CmsParsedSchema = {
+  ...MOCK_FORM_SCHEMA,
+  json_schema: {
+    properties: { items: { type: 'children' }, nothing: { type: 'null' } },
+    type: 'object',
+  },
+};
+
+const bindings: CmsFormChildrenBindings = {
+  addHref: '/add',
+  fragments: MOCK_FRAGMENT_RECORDS,
+  getEditHref: (fragment) => `/edit/${fragment.uuid}`,
+  onRemove: vi.fn(),
+  onReorder: vi.fn(),
+};
+
+const renderForm = (
+  schema: CmsParsedSchema,
+  childrenBindings: CmsFormChildrenBindings | undefined,
+) => {
+  const store = createStore();
+  store.set(atomFragmentDraft, { title: 'Hello' });
+  const submitted: FormData[] = [];
+  const Component = () => {
+    return (
+      <Provider store={store}>
+        <DndProvider backend={HTML5Backend}>
+          <CoreFormRenderer
+            childrenBindings={childrenBindings}
+            className={undefined}
+            fragmentUuid="fragment-1"
+            intent="updateFragment"
+            schema={schema}
+          />
+        </DndProvider>
+      </Provider>
+    );
+  };
+  const action = async (args: { readonly request: Request }) => {
+    submitted.push(await args.request.formData());
+    return null;
+  };
+  const RoutesStub = createRoutesStub([{ Component, action, path: '/' }]);
+
+  return { component: render(<RoutesStub />), submitted };
+};
+
+describe('CoreFormRenderer', () => {
+  test('renders one pane per property, the first open', () => {
+    const { component } = renderForm(MOCK_FORM_SCHEMA, undefined);
+    const keys = Object.keys(MOCK_FORM_SCHEMA.json_schema.properties ?? {});
+
+    keys.forEach((key) => {
+      expect(
+        component.getByRole('button', { name: new RegExp(`^${key}`) }),
+      ).toBeInTheDocument();
+    });
+    expect(component.getByText('A button or plain text')).toBeVisible();
+  });
+
+  test('maps a property to its field once its pane opens', async () => {
+    const { component } = renderForm(MOCK_FORM_SCHEMA, undefined);
+
+    await userEvent.click(component.getByRole('button', { name: /^size/ }));
+
+    expect(
+      component.getByRole('combobox', { name: 'size' }),
+    ).toBeInTheDocument();
+  });
+
+  test('submits the draft and the hidden fields', async () => {
+    const { component, submitted } = renderForm(MOCK_FORM_SCHEMA, undefined);
+
+    await userEvent.click(
+      component.getByRole('button', { name: CORE_FORM_COPY.save }),
+    );
+
+    await waitFor(() => {
+      expect(submitted).toHaveLength(1);
+    });
+    const [data] = submitted;
+    expect(data?.get('_action')).toBe('updateFragment');
+    expect(data?.get('fragment_uuid')).toBe('fragment-1');
+    expect(data?.get('properties')).toBe(JSON.stringify({ title: 'Hello' }));
+    expect(data?.get('typename')).toBe('Mock');
+  });
+
+  describe('for a children property', () => {
+    test('renders the children field from the bindings', () => {
+      const { component } = renderForm(withChildren, bindings);
+
+      expect(
+        component.getByRole('link', { name: FORM_CHILDREN_COPY.add }),
+      ).toBeInTheDocument();
+    });
+
+    test('renders no field without bindings', () => {
+      const { component } = renderForm(withChildren, undefined);
+
+      expect(
+        component.queryByRole('link', { name: FORM_CHILDREN_COPY.add }),
+      ).toBeNull();
+    });
+  });
+});
