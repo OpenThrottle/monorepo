@@ -13,7 +13,7 @@ Platform-specific prebuilt binaries (packages that declare `os`/`cpu`, e.g.
 `@rollup/rollup-linux-x64-gnu`, `fsevents`) are omitted: which ones install depends on
 the host OS, and each shares the license of the cross-platform toolchain already listed.
 
-**2142** third-party packages.
+**2143** third-party packages.
 
 ## License summary
 
@@ -30,6 +30,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | LicenseRef-PolyForm-Shield-1.0.0 | 2 |
 | MIT-0 | 2 |
 | MPL-2.0 | 2 |
+| (AFL-2.1 OR BSD-3-Clause) | 1 |
 | (Apache-2.0 AND BSD-3-Clause) | 1 |
 | (Apache-2.0 OR MPL-1.1) | 1 |
 | (MIT AND BSD-3-Clause) | 1 |
@@ -1465,6 +1466,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `json-bigint` | 1.0.0 | MIT | [Andrey Sidorov](https://github.com/sidorares/json-bigint#readme) |
 | `json-buffer` | 3.0.1 | MIT | [Dominic Tarr](https://github.com/dominictarr/json-buffer) |
 | `json-parse-even-better-errors` | 2.3.1 | MIT | [Kat Marchán](https://github.com/npm/json-parse-even-better-errors#readme) |
+| `json-schema` | 0.4.0 | (AFL-2.1 OR BSD-3-Clause) | [Kris Zyp](https://github.com/kriszyp/json-schema#readme) |
 | `json-schema-to-ts` | 1.6.4, 3.1.1 | MIT | [Thomas Aribart](https://github.com/ThomasAribart/json-schema-to-ts#readme) |
 | `json-schema-traverse` | 0.4.1, 1.0.0 | MIT | [Evgeny Poberezkin](https://github.com/epoberezkin/json-schema-traverse#readme) |
 | `json-schema-typed` | 8.0.2 | BSD-2-Clause | [Remy Rylan](https://github.com/RemyRylan/json-schema-typed/tree/main/dist/node) |

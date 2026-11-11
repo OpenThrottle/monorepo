@@ -10,10 +10,14 @@
     "**/*.spec.tsx",
     "**/*.test.ts",
     "**/*.test.tsx",
+    "**/*.stories.tsx",
     "dist",
     "tests/**"
   ],
   "references": [
+    {
+      "path": "../react-router-shadcn/tsconfig.lib.json"
+    },
     {
       "path": "../../tools/dotfiles/tsconfig.lib.json"
     }
