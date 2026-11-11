@@ -64,7 +64,7 @@ Use **ot-generators** for scaffolding, **nx-workspace** for graph and targets, *
 
 ## 2. Data, embeddings, imports (`databases/`)
 
-**SQL migrations and table comments:** [**ot-postgres**](../ot-postgres/SKILL.md) (`COMMENT ON TABLE`, migration naming, diff-scoped lint). **Schema, ingest, embeddings:** **`databases/README.md`**.
+**SQL migrations and table comments:** [**ot-postgres**](../ot-postgres/SKILL.md) (`COMMENT ON TABLE`, migration naming, diff-scoped lint). **Schema, ingest, embeddings:** **`databases/openthrottle/README.md`**.
 
 **Typical commands (repo root)**
 
@@ -75,7 +75,7 @@ Use **ot-generators** for scaffolding, **nx-workspace** for graph and targets, *
 | `pnpm run database:import-docs`         | Ingest `docs/` + NX READMEs into documentation tables          |
 | `pnpm run database:import-agent-assets` | Ingest `skills/` + `.agents/` assets into documentation tables |
 
-**Embeddings:** dimension strategy and **Ollama** / **`OPENAI_API_KEY`** are documented in **`databases/README.md`** (embedding section). For local Ollama and Cursor proxy, see **`docs/monorepo/Ollama.md`** and **`AGENTS.md`** (local embeddings / `OLLAMA_*`).
+**Embeddings:** dimension strategy and **Ollama** / **`OPENAI_API_KEY`** are documented in **`databases/openthrottle/README.md`** (embedding section). For local Ollama and Cursor proxy, see **`docs/monorepo/Ollama.md`** and **`AGENTS.md`** (local embeddings / `OLLAMA_*`).
 
 **Relationship to MCP:** **`openthrottle-mcp` does not connect to Postgres directly** — only **openthrottle-server** GraphQL. DB scripts and migrations are for the server and offline ingest, not for MCP process configuration.
 

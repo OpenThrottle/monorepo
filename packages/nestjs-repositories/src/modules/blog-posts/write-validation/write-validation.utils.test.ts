@@ -14,7 +14,7 @@ import {
 
 const MIGRATION = join(
   dirname(fileURLToPath(import.meta.url)),
-  '../../../../../../databases/migrations/131_create_blog_tables.sql',
+  '../../../../../../databases/openthrottle/migrations/131_create_blog_tables.sql',
 );
 
 describe('BLOG_SLUG_PATTERN', () => {

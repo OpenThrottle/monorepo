@@ -104,7 +104,7 @@ pnpm run database:stop
 pnpm run database:start
 ```
 
-> See [databases/README.md](./databases/README.md) and [local-quickstart.md](./docs/openthrottle/local-quickstart.md).
+> See [databases/openthrottle/README.md](./databases/openthrottle/README.md) and [local-quickstart.md](./docs/openthrottle/local-quickstart.md).
 
 **3. Version mismatches?**
 

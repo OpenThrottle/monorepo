@@ -517,7 +517,7 @@ const seed = async (dataSource: DataSource, reset: boolean): Promise<void> => {
 
   for (const entry of drifted) {
     console.warn(
-      `seed-demo: WARNING '${entry.table}' snapshot has ${entry.skippedColumns.join(', ')} — absent from the demo schema, so skipped. The dev database is ahead of databases/migrations.`,
+      `seed-demo: WARNING '${entry.table}' snapshot has ${entry.skippedColumns.join(', ')} — absent from the demo schema, so skipped. The dev database is ahead of databases/openthrottle/migrations.`,
     );
   }
   console.log(`seed-demo: demo login is ${DEMO_USER.email}`);

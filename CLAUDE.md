@@ -66,7 +66,7 @@ How to apply:
 - **`applications/`** — deployable apps. `openthrottle-server` is the NestJS code-first GraphQL API; `openthrottle-developer`, `openthrottle-admin`, `openthrottle-website` are React Router (v8) + Vite apps; [`openthrottle-app`](applications/openthrottle-app/README.md) is the Electron desktop shell around the developer app.
 - **`packages/`** — `@openthrottle/nestjs-*` (server modules: auth, bullmq, typeorm, redis, graphql, …), `@openthrottle/react-router-*` (shared UI/client libs), `openthrottle-agentic-*` (Ralph agentic tooling), `openthrottle-mcp` (the OT MCP server).
 - **`tools/`** — Nx plugins, `@tools/generators` (scaffolding templates), `@tools/workflows` (Ralph CLI).
-- **`databases/`** — OpenThrottle Postgres schema, migrations, local DB scripts.
+- **`databases/`** — the Postgres databases (`openthrottle`, `cms`), one folder and one migration ledger each, sharing one runner and one server; local DB scripts.
 - Every project carries Nx tags (`name:`, `type:`, `production:`, `technology:`) used for filtering and release; validate with `pnpm nx:validate-tags`.
 
 ### Source-first React Router packages (no `build` target)

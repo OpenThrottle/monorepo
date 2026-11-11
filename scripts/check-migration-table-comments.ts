@@ -1,28 +1,42 @@
 /**
  * @description Diff-scoped lint: changed migration files with CREATE TABLE must
  * include COMMENT ON TABLE for each created table in the same file (038 pattern).
+ * Covers every database in `databases/database-registry.ts`; pure renames are
+ * not changes (see utils/migration-diff.ts).
  */
 
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
+import { DATABASES } from '../databases/database-registry.ts';
 import { createLogger } from './utils/index.ts';
+import {
+  changedMigrationPaths,
+  migrationDiffArgs,
+} from './utils/migration-diff.ts';
 
 const logger = createLogger();
 
 const ROOT = process.cwd();
-const MIGRATIONS_DIR = 'databases/migrations';
+/** Every database's migrations directory, plus where any of them used to live (so a move pairs as a rename). */
+const MIGRATIONS_DIRS = DATABASES.flatMap((database) => [
+  database.migrationsPath,
+  ...database.legacyMigrationsPaths,
+]);
 
 const CREATE_TABLE_PATTERN =
   /CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?([a-z][a-z0-9_]*)/gi;
 
 const COMMENT_ON_TABLE_PATTERN = /COMMENT\s+ON\s+TABLE\s+([a-z][a-z0-9_]*)/gi;
 
-const resolveBaseRef = (): string =>
-  process.env.MIGRATION_COMMENT_LINT_BASE?.trim() ||
-  process.env.GITHUB_BASE_REF?.trim() ||
-  'main';
+const resolveBaseRef = (): string => {
+  return (
+    process.env.MIGRATION_COMMENT_LINT_BASE?.trim() ||
+    process.env.GITHUB_BASE_REF?.trim() ||
+    'main'
+  );
+};
 
 const resolveMergeBase = (baseRef: string): string => {
   try {
@@ -39,18 +53,11 @@ const listChangedMigrationFiles = (baseRef: string): readonly string[] => {
   const mergeBase = resolveMergeBase(baseRef);
   const output = execFileSync(
     'git',
-    ['diff', '--name-only', `${mergeBase}...HEAD`, '--', `${MIGRATIONS_DIR}/`],
+    migrationDiffArgs(`${mergeBase}...HEAD`, MIGRATIONS_DIRS),
     { cwd: ROOT, encoding: 'utf8' },
-  ).trim();
+  );
 
-  if (!output) {
-    return [];
-  }
-
-  return output
-    .split('\n')
-    .map((file) => file.trim())
-    .filter((file) => file.endsWith('.sql'));
+  return changedMigrationPaths(output);
 };
 
 const collectMatches = (
@@ -92,7 +99,7 @@ const run = (): void => {
 
   if (changedFiles.length === 0) {
     logger.success(
-      `check-migration-table-comments: OK (no changed files under ${MIGRATIONS_DIR}/ vs ${baseRef})`,
+      `check-migration-table-comments: OK (no changed files under ${MIGRATIONS_DIRS.join(', ')} vs ${baseRef})`,
     );
     return;
   }

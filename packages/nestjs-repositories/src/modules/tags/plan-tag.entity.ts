@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for plan_tags. Matches databases/migrations/064.
+ * @description TypeORM entity for plan_tags. Matches databases/openthrottle/migrations/064.
  */
 
 import {

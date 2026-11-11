@@ -184,7 +184,7 @@ The server auto-applies pending migrations on boot and fails fast if Postgres is
 - [`MONOREPO.md`](https://github.com/openthrottle/monorepo/blob/main/MONOREPO.md) — how the Nx + pnpm workspace is organized
 - [`AGENTS.md`](https://github.com/openthrottle/monorepo/blob/main/AGENTS.md) — the tiered agent-facing guidance (per-project `AGENTS.md` files sit next to the code they describe)
 - [`CONTRIBUTING.md`](https://github.com/openthrottle/monorepo/blob/main/CONTRIBUTING.md) — contribution conventions, incl. the source-first React Router packages
-- [`databases/README.md`](https://github.com/openthrottle/monorepo/blob/main/databases/README.md) — schema, migrations, DB setup
+- [`databases/openthrottle/README.md`](https://github.com/openthrottle/monorepo/blob/main/databases/openthrottle/README.md) — schema, migrations, DB setup
 
 ---
 

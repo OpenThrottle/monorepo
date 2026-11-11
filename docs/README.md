@@ -21,7 +21,7 @@ Along the way:
 
 - [features.md](./openthrottle/features.md) — product overview: plans, tasks, semantic search, agentic execution (Ralph), dashboard.
 - [monorepo-architecture.md](./openthrottle/monorepo-architecture.md) — how the apps and packages fit together (diagrams).
-- [../databases/README.md](../databases/README.md) — Postgres schema, migrations, embeddings, imports.
+- [../databases/openthrottle/README.md](../databases/openthrottle/README.md) — Postgres schema, migrations, embeddings, imports.
 
 ## Usage & reference
 

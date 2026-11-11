@@ -8,14 +8,25 @@ import { pathToFileURL } from 'node:url';
 
 import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
 
+import type { DatabaseDefinition } from '../databases/database-registry.ts';
+import {
+  databaseNameOf,
+  DATABASES,
+  parseDatabaseFlag,
+  resolveDatabaseUrl,
+  selectDatabases,
+} from '../databases/database-registry.ts';
 import { createLogger } from './utils/index.ts';
 
 const logger = createLogger();
 
 /**
- * @description Backs up the OpenThrottle Postgres database to a timestamped zip file.
- * Uses POSTGRES_URL or POSTGRES_* env vars. Requires openthrottle Postgres to be running (e.g. docker-compose).
- * Writes to databases/backups/openthrottle-YYYYMMDD-HHMMSS.zip (plain SQL inside).
+ * @description Backs up every database in `databases/database-registry.ts` to
+ * its own timestamped zip file (`--database <name>` backs up just one).
+ * Uses POSTGRES_URL or POSTGRES_* env vars for the primary; the others derive
+ * from it. Requires Postgres to be running (e.g. docker-compose).
+ * Writes to databases/<db>/backups/<db>-YYYYMMDD-HHMMSS.zip (plain SQL inside)
+ * and keeps DATABASE_BACKUP_RETENTION_COUNT archives per database.
  *
  * When the docker-compose `postgres` service is running, pg_dump executes
  * inside the container so the client version always matches the server
@@ -24,7 +35,13 @@ const logger = createLogger();
  * when the container is not available.
  */
 
-const BACKUPS_DIR = join(process.cwd(), 'databases', 'backups');
+/** Where `database`'s archives go: `databases/<db>/backups` under `root`. */
+export function backupsDirFor(
+  database: DatabaseDefinition,
+  root: string = process.cwd(),
+): string {
+  return join(root, 'databases', database.name, 'backups');
+}
 
 /**
  * The docker-compose *service* name. The running *container* is named by
@@ -36,8 +53,10 @@ const POSTGRES_SERVICE = 'postgres';
 /** Default number of scheduled backups to retain when the env var is unset. */
 const DEFAULT_BACKUP_RETENTION_COUNT = 14;
 
-/** Matches only generated backup archives — never seed*.sql or other files. */
-const BACKUP_ARCHIVE_PATTERN = /^openthrottle-\d{8}-\d{6}\.zip$/;
+/** Matches only `database`'s generated backup archives — never seed*.sql or other files. */
+function backupArchivePattern(database: string): RegExp {
+  return new RegExp(`^${database}-\\d{8}-\\d{6}\\.zip$`);
+}
 
 /**
  * @description Resolves the retention count from `DATABASE_BACKUP_RETENTION_COUNT`
@@ -59,16 +78,18 @@ export function resolveBackupRetentionCount(
 /**
  * @description Pure selection: given a directory listing, returns the backup
  * archives to delete so only the `keep` most recent remain. Only
- * `openthrottle-YYYYMMDD-HHMMSS.zip` files are considered — seed*.sql and any
+ * `<database>-YYYYMMDD-HHMMSS.zip` files are considered — seed*.sql and any
  * other file are always excluded. The timestamped name sorts chronologically,
  * so a descending sort keeps the newest.
  */
 export function selectBackupsToPrune(
   filenames: readonly string[],
   keep: number,
+  database: string = 'openthrottle',
 ): string[] {
+  const pattern = backupArchivePattern(database);
   const archives = filenames
-    .filter((name) => BACKUP_ARCHIVE_PATTERN.test(name))
+    .filter((name) => pattern.test(name))
     .sort()
     .reverse();
 
@@ -79,7 +100,11 @@ export function selectBackupsToPrune(
  * @description Deletes backup archives beyond the retention window. Never touches
  * non-archive files (seed*.sql, etc.). Best-effort: logs and continues on error.
  */
-async function pruneOldBackups(dir: string, keep: number): Promise<void> {
+async function pruneOldBackups(
+  dir: string,
+  keep: number,
+  database: string,
+): Promise<void> {
   let entries: string[];
   try {
     entries = await readdir(dir);
@@ -87,14 +112,14 @@ async function pruneOldBackups(dir: string, keep: number): Promise<void> {
     return;
   }
 
-  const toDelete = selectBackupsToPrune(entries, keep);
+  const toDelete = selectBackupsToPrune(entries, keep, database);
   await Promise.all(
     toDelete.map((name) => unlink(join(dir, name)).catch(() => {})),
   );
 
   if (toDelete.length > 0) {
     logger.info(
-      `Pruned ${toDelete.length} old backup(s), keeping the ${keep} most recent.`,
+      `Pruned ${toDelete.length} old ${database} backup(s), keeping the ${keep} most recent.`,
     );
   }
 }
@@ -134,7 +159,16 @@ function resolvePostgresContainerId(): string | null {
   return id === '' ? null : id;
 }
 
-function dumpViaContainer(containerId: string, sqlPath: string): number | null {
+/**
+ * `pg_dump` inside the container. `databaseName` undefined means the
+ * container's own `$POSTGRES_DB` (the primary); any other database is passed
+ * as a positional argument so the shell never interpolates it.
+ */
+function dumpViaContainer(
+  containerId: string,
+  sqlPath: string,
+  databaseName: string | undefined,
+): number | null {
   const sqlFile = openSync(sqlPath, 'w');
 
   try {
@@ -147,7 +181,9 @@ function dumpViaContainer(containerId: string, sqlPath: string): number | null {
         containerId,
         'sh',
         '-c',
-        'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" -F p',
+        'pg_dump -U "$POSTGRES_USER" -d "${1:-$POSTGRES_DB}" -F p',
+        'sh',
+        ...(databaseName === undefined ? [] : [databaseName]),
       ],
       { shell: false, stdio: ['ignore', sqlFile, 'inherit'] },
     );
@@ -168,23 +204,31 @@ function dumpViaHost(connectionString: string, sqlPath: string): number | null {
   return pgDump.status;
 }
 
-async function main(): Promise<void> {
-  const connectionString = getPostgresUrl();
-  await mkdir(BACKUPS_DIR, { recursive: true });
+/** Dump, zip and prune one database. Throws when pg_dump or zip fails. */
+async function backupDatabase(
+  database: DatabaseDefinition,
+  primaryUrl: string,
+  containerId: string | null,
+  ts: string,
+): Promise<void> {
+  const connectionString = resolveDatabaseUrl(database, primaryUrl);
+  const dir = backupsDirFor(database);
+  await mkdir(dir, { recursive: true });
 
-  const ts = timestamp();
-  const sqlPath = join(BACKUPS_DIR, `openthrottle-${ts}.sql`);
-  const zipPath = join(BACKUPS_DIR, `openthrottle-${ts}.zip`);
+  const sqlPath = join(dir, `${database.name}-${ts}.sql`);
+  const zipPath = join(dir, `${database.name}-${ts}.zip`);
 
-  const containerId = resolvePostgresContainerId();
+  const containerDatabase = database.primary
+    ? undefined
+    : databaseNameOf(connectionString);
   const dumpStatus = containerId
-    ? dumpViaContainer(containerId, sqlPath)
+    ? dumpViaContainer(containerId, sqlPath, containerDatabase)
     : dumpViaHost(connectionString, sqlPath);
 
   if (dumpStatus !== 0) {
     await unlink(sqlPath).catch(() => {});
     throw new Error(
-      `pg_dump (${containerId ? 'container' : 'host'}) exited with code ${dumpStatus}`,
+      `pg_dump of ${database.name} (${containerId ? 'container' : 'host'}) exited with code ${dumpStatus}`,
     );
   }
 
@@ -200,9 +244,30 @@ async function main(): Promise<void> {
 
   await unlink(sqlPath);
 
-  logger.success(`Backup written to: ${zipPath}`);
+  logger.success(`Backup of ${database.name} written to: ${zipPath}`);
 
-  await pruneOldBackups(BACKUPS_DIR, resolveBackupRetentionCount());
+  await pruneOldBackups(dir, resolveBackupRetentionCount(), database.name);
+}
+
+async function main(): Promise<void> {
+  const databases = selectDatabases(parseDatabaseFlag(process.argv.slice(2)));
+  if (!databases) {
+    const known = DATABASES.map((database) => database.name).join(', ');
+    throw new Error(`Unknown --database. Known databases: ${known}.`);
+  }
+
+  const primaryUrl = getPostgresUrl();
+  const containerId = resolvePostgresContainerId();
+  const ts = timestamp();
+
+  // One database at a time: each pg_dump streams a whole database, and the
+  // first failure should stop the run with a non-zero exit (the scheduled
+  // backup job reports it) rather than race the rest.
+  /* eslint-disable no-await-in-loop -- sequential dumps, fail-fast */
+  for (const database of databases) {
+    await backupDatabase(database, primaryUrl, containerId, ts);
+  }
+  /* eslint-enable no-await-in-loop */
 }
 
 // Only auto-run when executed directly (so tests can import the pure helpers

@@ -75,7 +75,7 @@ OT-owned skills are authored under [`skills/`](./skills/) and surfaced to every 
 
 - **ot-generators** — `@tools/generators`, `NX_ISOLATE_PLUGINS=false`, `pnpm nx`, AGENT_USAGE alignment: [`skills/ot-generators/SKILL.md`](./skills/ot-generators/SKILL.md)
 - **ot-stack** — openthrottle-server GraphQL, databases/embeddings, openthrottle-developer UI, openthrottle-mcp package: [`skills/ot-stack/SKILL.md`](./skills/ot-stack/SKILL.md)
-- **ot-postgres** — SQL migrations, `COMMENT ON TABLE` / column comments, idempotent DDL in `databases/migrations/`: [`skills/ot-postgres/SKILL.md`](./skills/ot-postgres/SKILL.md)
+- **ot-postgres** — SQL migrations, `COMMENT ON TABLE` / column comments, idempotent DDL in `databases/<db>/migrations/` (`openthrottle`, `cms`): [`skills/ot-postgres/SKILL.md`](./skills/ot-postgres/SKILL.md)
 - **ot-plans** — openthrottle-mcp, plans/tasks, `Plan-Id` / `Task-Id`, post-merge work-ledger commit recording: [`skills/ot-plans/SKILL.md`](./skills/ot-plans/SKILL.md)
 - **agents-ralph** — the Ralph loop prompt: one task at a time, status sync, commit cadence: [`skills/agents-ralph/SKILL.md`](./skills/agents-ralph/SKILL.md)
 - **github-commit** — conventional commits, staging, `Plan-Id` / `Task-Id` footers: [`skills/github-commit/SKILL.md`](./skills/github-commit/SKILL.md)
@@ -86,7 +86,7 @@ OT-owned skills are authored under [`skills/`](./skills/) and surfaced to every 
 - **Discoverability:** Run `pnpm exec workflow-ralph --help` (and other bins) for usage. See `tools/workflows/README.md` for bin list.
 - **Run:** `pnpm exec workflow-ralph --plan <openthrottle-plan-uuid>` (or `--task <openthrottle-task-uuid>` for task-centric). OpenThrottle (OT) required; see `tools/workflows/README.md`. Optional defaults: `.workflow-ralph.json` (see `.workflow-ralph.json.example`, `docs/workflows/ralph-config-migration.md`).
 - **API queue (spawn vs orchestrator):** `enqueuePlanRun` runs nested `workflow-ralph` in the worker; `enqueuePlanRalphOrchestrator` runs the in-process GraphQL Ralph orchestrator (no child CLI). See `tools/workflows/README.md` § Worktree + BullMQ workflow. Docker, worker cwd, and compose follow-ups: investigation plan `677b6849-1912-4fa8-a5f6-d8233f2cdf97`.
-- **Commit as you go, push once per plan:** When running Ralph (or working with OT plans/tasks), **commit after each task** — conventional commits, with `Plan-Id` and `Task-Id` in the body or footer (traceability is non-negotiable) — but **push once per plan, not once per task**. Every push to a branch with a ready PR triggers a full CI run, so an N-task plan used to cost N CI runs of a branch nobody was reviewing yet; batching gives the same total validation over one run. Keep the PR in **draft** until the last task is `COMPLETED`, then `gh pr ready`. Push mid-plan only when you genuinely need to (handing off, or a worktree at risk of being reaped). See [docs/monorepo/ci-cost.md](docs/monorepo/ci-cost.md). If `main` uses a merge queue, treat `gh pr merge --auto` as an **enqueue** step until the PR actually reports `mergedAt`; record OT work-ledger commits only after the queue lands the PR, using the landed merge commit (`mergeCommit.oid` from `gh pr view --json mergeCommit`) or the default-branch SHA rather than the branch head. See `databases/README.md` § Commit links.
+- **Commit as you go, push once per plan:** When running Ralph (or working with OT plans/tasks), **commit after each task** — conventional commits, with `Plan-Id` and `Task-Id` in the body or footer (traceability is non-negotiable) — but **push once per plan, not once per task**. Every push to a branch with a ready PR triggers a full CI run, so an N-task plan used to cost N CI runs of a branch nobody was reviewing yet; batching gives the same total validation over one run. Keep the PR in **draft** until the last task is `COMPLETED`, then `gh pr ready`. Push mid-plan only when you genuinely need to (handing off, or a worktree at risk of being reaped). See [docs/monorepo/ci-cost.md](docs/monorepo/ci-cost.md). If `main` uses a merge queue, treat `gh pr merge --auto` as an **enqueue** step until the PR actually reports `mergedAt`; record OT work-ledger commits only after the queue lands the PR, using the landed merge commit (`mergeCommit.oid` from `gh pr view --json mergeCommit`) or the default-branch SHA rather than the branch head. See `databases/openthrottle/README.md` § Commit links.
 
 ## Code style
 
@@ -195,7 +195,7 @@ byte-for-byte, so they cannot be gitignored — instead the root
 - **Tool selection:** [`ot-plans`](./skills/ot-plans/SKILL.md) — when to use which OT MCP tool ("ask OT", status queries, semantic search, list sources), plus the plan/task lifecycle and the post-merge work-ledger flow.
 - **OT skills:** `ot-*` (authored in `skills/ot-*`, surfaced via the generated `.agents/skills/ot-*`) — `/ot-plans` for plan and task work (create, edit, list by status, ask the knowledge base), `/ot-loop` to drive a plan to completion, `/ot-onboarding` for orientation.
 - For "ask OpenThrottle …" or "ask OT …" or "OT, …", follow the OT rule and use the **openthrottle-mcp** MCP server; answer only from retrieved chunks.
-- **PRD summarization:** Plans and tasks have an optional `summary` field. Fill it at completion or when closing work with next actions, usage guides, or (for tasks) why blocked. See `databases/README.md` § PRD summarization.
+- **PRD summarization:** Plans and tasks have an optional `summary` field. Fill it at completion or when closing work with next actions, usage guides, or (for tasks) why blocked. See `databases/openthrottle/README.md` § PRD summarization.
 
 ### Plans in OT only; fail loudly
 
@@ -205,7 +205,7 @@ byte-for-byte, so they cannot be gitignored — instead the root
 
 ## Local embeddings (Ollama)
 
-- For local-only embedding (no OpenAI key): set **`OLLAMA_BASE_URL`** and/or **`OLLAMA_EMBEDDING_MODEL`**; `pnpm run database:import-docs` / `pnpm run database:import-agent-assets` and openthrottle-server then use Ollama when configured. See `databases/README.md` (embedding dimension strategy) and `scripts/ollama.sh`.
+- For local-only embedding (no OpenAI key): set **`OLLAMA_BASE_URL`** and/or **`OLLAMA_EMBEDDING_MODEL`**; `pnpm run database:import-docs` / `pnpm run database:import-agent-assets` and openthrottle-server then use Ollama when configured. See `databases/openthrottle/README.md` (embedding dimension strategy) and `scripts/ollama.sh`.
 - **Cursor with a custom Ollama model:** start the proxy with **`pnpm ollama-proxy`** (requires Ollama and optionally Caddy at `https://ollama.local`). See [docs/monorepo/Ollama.md](docs/monorepo/Ollama.md) § Using Cursor with Ollama via the proxy and [tools/ollama-proxy/README.md](tools/ollama-proxy/README.md).
 - **When using Caddy** (tools/caddy): set **`OLLAMA_BASE_URL`** to the Caddy-proxied URL so `database:import-docs`, `database:import-agent-assets`, and other consumers use one stable endpoint:
   - **Option B** (local domains): `https://ollama.local`

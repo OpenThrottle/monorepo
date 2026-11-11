@@ -19,7 +19,7 @@ disable-model-invocation: false
 
 ## What Ralph does
 
-1. **Input:** An idea or a PRD (JSON/Markdown or already in OpenThrottle). If it's rough, turn it into a **plan** and **tasks** in OpenThrottle — OpenThrottle MCP `create_plan` / `create_task` per [`ot-plans`](../ot-plans/SKILL.md). For a strict, hyper-detailed PRD, ensure plan/tasks in OpenThrottle match the PRD; required vs optional vs inferred attributes are defined in [Databases README.md](../../databases/README.md).
+1. **Input:** An idea or a PRD (JSON/Markdown or already in OpenThrottle). If it's rough, turn it into a **plan** and **tasks** in OpenThrottle — OpenThrottle MCP `create_plan` / `create_task` per [`ot-plans`](../ot-plans/SKILL.md). For a strict, hyper-detailed PRD, ensure plan/tasks in OpenThrottle match the PRD; required vs optional vs inferred attributes are defined in [Databases README.md](../../databases/openthrottle/README.md).
 2. **Loop:** Pick one task → set `IN_PROGRESS` → do the work → validate (e.g. `nx affected --targets lint typecheck`) → set `COMPLETED` → **run `/github-commit`**. Do **not** record a commit artifact during the loop, and do **not** wait for the merge to record one either. **Who opens the PR depends on the path** (orchestrator vs interactive `/ot-loop` under Rules): under the orchestrator the host settles with `headSha` / `prNumber` after it pushes; on interactive `/ot-loop` you open the PR then settle. There is no post-merge ledger step. If a run dies before a PR exists, the hourly trailer harvest adopts the work from the `Plan-Id:` footers on `main` — which is why those footers matter. Add new tasks when the work reveals more work — before completing the plan's last open task, which closes the plan (if already closed, `update_plan` it back to `IN_PROGRESS` first). Repeat until every task is `COMPLETED`.
 3. **Progress:** Plan and tasks live in OpenThrottle; decisions and logs go to **plan_output_stream** via `append_plan_output` / `get_plan_output`. No separate output files. When logging progress, pass `taskId` = the task you are **actively working** (not just the iteration seed) so output is attributed to that task and surfaces on the Task detail Output tab. One iteration can touch several tasks — tag the id of the task the log actually describes; omit `taskId` only for genuinely plan-level notes.
 
@@ -64,6 +64,6 @@ Always keep plan and task status in OpenThrottle up to date:
 
 ## References
 
-- **OpenThrottle:** What it is, how to interact, and the full MCP tool catalog: [`ot-plans`](../ot-plans/SKILL.md). Schema and PRD attribute mapping (required / inferred / optional): [databases README](../../databases/README.md).
+- **OpenThrottle:** What it is, how to interact, and the full MCP tool catalog: [`ot-plans`](../ot-plans/SKILL.md). Schema and PRD attribute mapping (required / inferred / optional): [databases README](../../databases/openthrottle/README.md).
 - **Ralph:** [ghuntley.com/ralph](https://ghuntley.com/ralph)
 - Workflow/design: [Workflow README](../../tools/workflows/README.md) and [Ralph Design](../../docs/workflows/ralph-design.md)

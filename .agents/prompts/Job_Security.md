@@ -29,7 +29,7 @@ Facts that change the analysis:
 - The three React Router apps (`openthrottle-developer`, `openthrottle-admin`, `openthrottle-website`) expose config to the client through `window.env`. Anything placed there is public. Server-only values must never reach it.
 - Form input is parsed through `parseFormData` in `@openthrottle/react-router-graphql`, which validates with Zod. An action that reads raw form data without a schema is unvalidated input.
 - A nonce-based CSP rollout is in progress across the RR apps — missing or bypassed nonce usage is a real finding, not a hypothetical.
-- SQL lives in `databases/migrations/`; runtime queries go through TypeORM. Raw string-interpolated SQL is the pattern to hunt.
+- SQL lives in `databases/openthrottle/migrations/`; runtime queries go through TypeORM. Raw string-interpolated SQL is the pattern to hunt.
 - Secrets in local development come from `.env` files that are **not** committed; a committed `.env` with real values is always a critical finding.
 
 ## What to inspect

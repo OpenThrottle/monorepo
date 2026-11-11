@@ -176,7 +176,7 @@ A third, quieter one: the snapshot comes from the dev database, which can carry
 columns the committed migrations do not create yet. The loader skips those and
 says so — `WARNING 'plans' snapshot has working_directory — absent from the demo
 schema`. A growing list means the dev database has drifted from
-`databases/migrations`.
+`databases/openthrottle/migrations`.
 
 ### Size
 

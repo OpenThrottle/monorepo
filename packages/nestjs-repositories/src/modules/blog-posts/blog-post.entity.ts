@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for OpenThrottle blog_posts table. Matches databases/migrations (131, 133).
+ * @description TypeORM entity for OpenThrottle blog_posts table. Matches databases/openthrottle/migrations (131, 133).
  * Public visibility (`status = 'PUBLISHED' AND published_at <= now()`) is NOT encoded here —
  * it lives once, in `applyBlogPostVisibility` (blog-post-visibility.ts).
  */

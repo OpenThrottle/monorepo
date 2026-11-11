@@ -26,11 +26,11 @@ export const RUN_STATUS_VARIANT: Record<string, BadgeProps['variant']> = {
  * at a glance in the run-history list, not just on the detail page.
  *
  * `no_op` is deliberately **amber, not red**: the run executed cleanly and nothing broke, but the
- * agent reported it did no work (see databases/migrations/095). Colouring it as an error would be as
+ * agent reported it did no work (see databases/openthrottle/migrations/095). Colouring it as an error would be as
  * misleading as the green it used to get; amber reads as "needs a look" without claiming a failure.
  *
  * `usage_limited` is amber for the same reason: the agent stopped on a subscription limit, nothing
- * broke, and the run usually continues by itself once the limit resets (databases/migrations/139).
+ * broke, and the run usually continues by itself once the limit resets (databases/openthrottle/migrations/139).
  *
  * `missed` is amber too: no agent ran, because the fire came due while the server was down (or too
  * late for the schedule's misfire policy) — worth a look, but nothing failed (migration 141).

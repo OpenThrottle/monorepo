@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for the scheduled_agent_jobs table (databases/migrations/082, 096,
+ * @description TypeORM entity for the scheduled_agent_jobs table (databases/openthrottle/migrations/082, 096,
  * 141, 142): a user-defined "run a prompt with a driver/model/settings on a schedule" job — a cron
  * pattern, an interval, or a single run. The DB row is
  * authoritative; a BullMQ repeatable scheduler keyed by `schedulerKey` is a projection reconciled

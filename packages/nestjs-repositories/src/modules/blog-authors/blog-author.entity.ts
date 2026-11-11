@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for OpenThrottle blog_authors table. Matches databases/migrations (131).
+ * @description TypeORM entity for OpenThrottle blog_authors table. Matches databases/openthrottle/migrations (131).
  */
 
 import {

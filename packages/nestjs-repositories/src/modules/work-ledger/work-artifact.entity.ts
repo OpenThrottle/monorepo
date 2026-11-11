@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for the OpenThrottle work_artifacts table. Matches databases/migrations/068.
+ * @description TypeORM entity for the OpenThrottle work_artifacts table. Matches databases/openthrottle/migrations/068.
  * Typed output produced within a work session; payload is per-type JSONB validated in app code (slice 2).
  */
 

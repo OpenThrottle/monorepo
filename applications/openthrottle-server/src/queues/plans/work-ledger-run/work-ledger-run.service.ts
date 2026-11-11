@@ -29,7 +29,7 @@ import {
 import { resolveAgenticRalphWorkerWorkflowGraphqlConfigFromEnv } from '../../agentic-ralph/agentic-ralph.utils.ts';
 import type { OpenRalphSessionInput } from './work-ledger-run.types.ts';
 
-/** Seeded service account that owns Ralph runs (databases/migrations/045). */
+/** Seeded service account that owns Ralph runs (databases/openthrottle/migrations/045). */
 const WORKFLOW_RALPH_SERVICE_ACCOUNT_NAME = 'workflow-ralph';
 const TOOL_NAME = 'workflow-ralph';
 

@@ -1,6 +1,6 @@
 /**
  * @description TypeORM entity for the OpenThrottle eval_datasets table (a versioned, per-repository
- * case set). Matches databases/migrations (147).
+ * case set). Matches databases/openthrottle/migrations (147).
  */
 
 import {

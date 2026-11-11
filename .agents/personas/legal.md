@@ -73,5 +73,5 @@ Keep prose conservative and actionable; prefer bullets over legal essays.
 - [`.agents/skills/secret-scanning/SKILL.md`](../skills/secret-scanning/SKILL.md) — when and how to run secret scans
 - [`AGENTS.md`](../../AGENTS.md) and [`CLAUDE.md`](../../CLAUDE.md) — no tool attribution in any output
 - [`github-commit`](../skills/github-commit/SKILL.md) — no co-author footers; conventional commit footers only
-- [databases/README.md](../../databases/README.md) — service account credential storage (hashed secrets)
+- [databases/openthrottle/README.md](../../databases/openthrottle/README.md) — service account credential storage (hashed secrets)
 - [CONTRIBUTING.md](../../CONTRIBUTING.md) — contributor expectations and monorepo conventions

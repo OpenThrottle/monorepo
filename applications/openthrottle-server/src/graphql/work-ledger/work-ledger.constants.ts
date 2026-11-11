@@ -4,7 +4,7 @@
  * `captureFailureIsFatal: false` capture — every background/bulk writer). Deliberately a single
  * unpunctuated token so an alert can match it exactly: these lines are the only evidence that a
  * status transition happened without a ledger row, and nothing else surfaces them until the
- * agreement script in databases/reports is next run.
+ * agreement script in databases/openthrottle/reports is next run.
  *
  * Lives in its own module — rather than on {@link PlanStatusService}, which re-exports it so
  * existing imports keep working — so the bulk task-status writers

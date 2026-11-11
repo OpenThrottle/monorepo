@@ -1,6 +1,6 @@
 /**
  * @description TypeORM entity for skill_usage_events. Matches
- * databases/migrations/084_create_skill_usage_events.sql, as widened by
+ * databases/openthrottle/migrations/084_create_skill_usage_events.sql, as widened by
  * 114_widen_skill_usage_scope_personal.sql. One immutable row per
  * harness-captured skill invocation (ours, personal and third-party).
  */

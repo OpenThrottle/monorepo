@@ -54,8 +54,8 @@ apps, `packages/openthrottle-mcp`) consumes its schema through the committed
   work-ledger Query fields differently, which is why only this command produces the file.
 - Schema evolution (never remove/change existing fields; `@deprecated(reason)`) — root CLAUDE.md.
 - TypeORM entities live in `packages/nestjs-repositories`, not here; each entity's JSDoc names
-  the `databases/migrations/` files it matches. A schema change means a new SQL migration in
-  `databases/migrations/` plus the matching entity edit — this app has no TypeORM migrations.
+  the `databases/openthrottle/migrations/` files it matches. A schema change means a new SQL migration in
+  `databases/openthrottle/migrations/` plus the matching entity edit — this app has no TypeORM migrations.
 - `rawBody: true` in `main.ts` is required for Stripe webhook signature verification
   (`req.rawBody`); don't drop it when touching bootstrap.
 - The custom `useBodyParser('json', { type: [...] })` in `main.ts` (CSP report parsing) is
@@ -87,4 +87,4 @@ apps, `packages/openthrottle-mcp`) consumes its schema through the committed
 
 - [README.md](./README.md) — env table, CLS/auth details, Stripe webhook endpoints.
 - [docs/](./docs/) — feature design docs (log tail, workspace settings, agent conversations).
-- [../../databases/README.md](../../databases/README.md) — the database this app reads/writes.
+- [../../databases/openthrottle/README.md](../../databases/openthrottle/README.md) — the database this app reads/writes.

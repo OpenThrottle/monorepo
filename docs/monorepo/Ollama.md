@@ -9,7 +9,7 @@
 ## Running Ollama
 
 - Install from https://ollama.com/download; start the app or run `ollama serve`.
-- Pull models: `scripts/ollama.ts (pnpm run ollama:pull)` (chat and embedding models). See `databases/README.md` for embedding dimension strategy.
+- Pull models: `scripts/ollama.ts (pnpm run ollama:pull)` (chat and embedding models). See `databases/openthrottle/README.md` for embedding dimension strategy.
 
 ## Embeddings for OpenThrottle (Ollama or OpenAI)
 
@@ -21,7 +21,7 @@ Semantic search (`semantic_search`) and doc/plan ingest embed on **openthrottle-
 | **OpenAI**                | **`OPENAI_API_KEY`** (leave the Ollama vars unset), e.g. `text-embedding-3-small`                                              | Cloud embeddings; the rest of the stack still runs locally.                |
 | **Neither**               | —                                                                                                                              | The stack runs; `semantic_search` and ingest embedding are simply skipped. |
 
-**Dimension caveat:** OpenThrottle stores **1536-dim** vectors. If the Ollama model returns a different dimension, embeddings are skipped — see [`databases/README.md`](../../databases/README.md) § Embedding dimension strategy.
+**Dimension caveat:** OpenThrottle stores **1536-dim** vectors. If the Ollama model returns a different dimension, embeddings are skipped — see [`databases/openthrottle/README.md`](../../databases/openthrottle/README.md) § Embedding dimension strategy.
 
 ### MCP launcher and embeddings
 
@@ -40,7 +40,7 @@ The monorepo uses [Caddy](https://caddyserver.com/) to expose local services wit
 | **Option B** (local domains) | `https://ollama.local`     | You use `api.local`, `developer.local`, `ollama.local` (add to `/etc/hosts`). |
 | **Option A** (path-based)    | `https://localhost/ollama` | You use a single origin with no `/etc/hosts` changes.                         |
 
-- **Set `OLLAMA_BASE_URL`** to the proxied URL when using Caddy so `openthrottle:import`, LangChain, openthrottle-server, and other consumers use the same endpoint. See root `.env.default`, `AGENTS.md`, and `databases/README.md`.
+- **Set `OLLAMA_BASE_URL`** to the proxied URL when using Caddy so `openthrottle:import`, LangChain, openthrottle-server, and other consumers use the same endpoint. See root `.env.default`, `AGENTS.md`, and `databases/openthrottle/README.md`.
 - Caddy config: `tools/caddy/Caddyfile` (Option B) and `tools/caddy/Caddyfile.path-based` (Option A). Run Caddy from repo root per `tools/caddy/README.md`.
 - **Trusting Caddy's certificate:** For HTTPS without certificate errors in browsers and Node/fetch, install Caddy's local CA: run **`caddy trust`** once (see [tools/caddy/README.md](../../tools/caddy/README.md) § Local HTTPS and trust store).
 

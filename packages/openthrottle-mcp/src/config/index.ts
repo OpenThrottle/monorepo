@@ -30,7 +30,7 @@ Hard rules:
 When to use which server:
 - Plans & tasks → these OpenThrottle tools (here).
 - Repo docs under docs/ → the docs MCP server.
-- Database schema → databases/README.md.`;
+- Database schema → databases/openthrottle/README.md.`;
 
 /**
  * @description The instructions a server serving `enabled` advertises: {@link SERVER_INSTRUCTIONS}, plus

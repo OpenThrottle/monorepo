@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for OpenThrottle plan_runs table. Matches databases/migrations/038 (+ 047, 053, 076, 080, 087, 110, 138, 140).
+ * @description TypeORM entity for OpenThrottle plan_runs table. Matches databases/openthrottle/migrations/038 (+ 047, 053, 076, 080, 087, 110, 138, 140).
  */
 
 import type { PlanRunConfigSnapshot } from '@openthrottle/openthrottle-plan-config';
@@ -15,7 +15,7 @@ export type PlanRunKind = 'orchestrator' | 'spawn';
 /**
  * Supported agent-CLI backends for a plan run. Kept in lockstep with the
  * `openthrottle-drivers` `DRIVER_IDS` set and the `plan_runs_execution_backend_check`
- * constraint (see databases/migrations/106). Declared as a standalone union so the
+ * constraint (see databases/openthrottle/migrations/106). Declared as a standalone union so the
  * repositories layer stays decoupled from the CLI-invocation package.
  */
 export type PlanRunExecutionBackend =

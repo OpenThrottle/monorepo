@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for repository_checkouts. Matches databases/migrations/078.
+ * @description TypeORM entity for repository_checkouts. Matches databases/openthrottle/migrations/078.
  * A checkout is a per-user on-disk instance of a repository; the row is a cache over
  * the manifest and git state actually on disk (disk is the source of truth).
  */

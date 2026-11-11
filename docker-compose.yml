@@ -9,7 +9,7 @@
 #
 #     Canonical images: server → Dockerfile.NestJS, developer →
 #     Dockerfile.ReactRouter, postgres → Dockerfile.Postgres (the Postgres
-#     build COPYs ./databases/seed.sql, so generate it first if missing),
+#     build COPYs ./databases/openthrottle/seed.sql, so generate it first if missing),
 #     migrations → Dockerfile.Migrations (one-shot; server waits for it).
 #
 #     Networking (Docker Desktop): the server reaches postgres/redis via
@@ -27,7 +27,7 @@
 #         docker compose run --rm bootstrap
 #
 #     Idempotent. Exact copy-pasteable steps (local + shared DB) live in
-#     databases/README.md § "Bootstrapping a fully-Dockerized install".
+#     databases/openthrottle/README.md § "Bootstrapping a fully-Dockerized install".
 #
 #     🔧 Dev mode (contributors) | hot reload from source, no distroless rebuilds:
 #
@@ -239,7 +239,7 @@ services:
       # data, comment the `postgres_data` line and uncomment the
       # `postgres_data_dev_personal` line, then restart postgres. Both volumes
       # are declared under the top-level `volumes:` block. See
-      # databases/README.md § "Local Postgres volumes (personal ↔ public)".
+      # databases/openthrottle/README.md § "Local Postgres volumes (personal ↔ public)".
       # ⚠️ Never `docker compose down -v` — it destroys BOTH volumes, wiping the
       # personal archive. Use `docker compose stop postgres` to swap safely.
       - postgres_data_dev_personal:/var/lib/postgresql # 🔒 pre-public personal archive (PG18 path)

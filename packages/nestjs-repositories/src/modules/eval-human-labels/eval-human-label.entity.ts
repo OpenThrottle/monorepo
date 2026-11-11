@@ -1,6 +1,6 @@
 /**
  * @description TypeORM entity for the OpenThrottle eval_human_labels table (one rater's verdict on
- * one agent trajectory). Matches databases/migrations (146).
+ * one agent trajectory). Matches databases/openthrottle/migrations (146).
  */
 
 import {

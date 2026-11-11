@@ -49,7 +49,7 @@ pnpm check:bootstrap-secrets               # confirms all six keys present
 
 Any previously-distributed copy of the rotated token stops working — update `OPENTHROTTLE_MCP_AUTH_TOKEN` in `applications/openthrottle-server/.env` and Cursor MCP `env`, then reload the MCP. To rotate by hand instead, revoke the active credential in admin GraphQL (see [Credential rotation](#credential-rotation)), delete the stale line, and re-run the bootstrap script.
 
-**Nuke gotcha:** `pnpm database:stop` / `docker compose down` (no `-v`) leave the named Postgres volume — and thus the existing service-account credentials — intact, so the next bootstrap sees an active credential and takes the rotate path instead of a clean first mint. For a truly fresh mint you must remove the volume with `docker compose down -v` (this destroys the local database — see [databases/README.md](../../../databases/README.md)).
+**Nuke gotcha:** `pnpm database:stop` / `docker compose down` (no `-v`) leave the named Postgres volume — and thus the existing service-account credentials — intact, so the next bootstrap sees an active credential and takes the rotate path instead of a clean first mint. For a truly fresh mint you must remove the volume with `docker compose down -v` (this destroys the local database — see [databases/openthrottle/README.md](../../../databases/openthrottle/README.md)).
 
 ## Token source (openthrottle-mcp)
 
@@ -154,7 +154,7 @@ Use the `serviceAccountId` for `openthrottle-mcp` in `CreateServiceAccountCreden
 
 Plans queue / Ralph orchestration can call GraphQL with `**OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN**` (service account `workflow-ralph`). Mint via the same bootstrap script or admin GraphQL.
 
-See `applications/openthrottle-server/.env.default` and [databases/README.md](../../../databases/README.md).
+See `applications/openthrottle-server/.env.default` and [databases/openthrottle/README.md](../../../databases/openthrottle/README.md).
 
 ## Human JWT (optional for MCP)
 
@@ -179,4 +179,4 @@ JWTs expire (~24h). Prefer service accounts for MCP.
 
 - [verification-environment.md](./verification-environment.md) — ports, smoke checklist, secondary workspace
 - [openthrottle-server-auth.md](../../../docs/openthrottle/openthrottle-server-auth.md) — guards, RBAC, service account model
-- [databases/README.md](../../../databases/README.md) — migrations and bootstrap script
+- [databases/openthrottle/README.md](../../../databases/openthrottle/README.md) — migrations and bootstrap script

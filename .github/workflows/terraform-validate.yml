@@ -157,7 +157,7 @@ jobs:
               api_domain             = "api.example.com"
               backup_remote          = "remote:bucket"
               backup_retention_count = "14"
-              backup_script          = file("__REPO__/databases/backup-offsite.sh")
+              backup_script          = file("__REPO__/databases/openthrottle/backup-offsite.sh")
               caddyfile_content      = "example.com {}"
               compose_content        = "services: {}"
               developer_domain       = "dev.example.com"
@@ -211,7 +211,7 @@ jobs:
 
           # The standalone scripts are plain bash and check directly.
           shellcheck --shell=bash \
-            databases/backup-offsite.sh \
-            databases/verify-restore.sh \
+            databases/openthrottle/backup-offsite.sh \
+            databases/openthrottle/verify-restore.sh \
             infra/tests/contract/check-provider-contract.sh \
             infra/tests/exposure/verify-exposure.sh

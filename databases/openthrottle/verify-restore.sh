@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 #
-# Verifies a restored OpenThrottle database. Provider-agnostic: point it at any
+# Verifies a restored OpenThrottle (openthrottle) database. The cms database has
+# no embeddings or extensions to check; databases/openthrottle/SEEDING.md § 5b
+# covers it. Provider-agnostic: point it at any
 # target with POSTGRES_HOST / POSTGRES_PORT / POSTGRES_USER / POSTGRES_PASSWORD /
 # POSTGRES_DB, so the same checks cover a Hetzner box, a GCP Cloud SQL instance,
 # a local container, or a scratch database in a restore drill.
@@ -20,11 +22,11 @@
 #
 # Usage:
 #   POSTGRES_HOST=... POSTGRES_PORT=... POSTGRES_USER=... \
-#   POSTGRES_PASSWORD=... POSTGRES_DB=... databases/verify-restore.sh
+#   POSTGRES_PASSWORD=... POSTGRES_DB=... databases/openthrottle/verify-restore.sh
 #
 #   # Capture a baseline from the source, then diff against the target:
-#   ... databases/verify-restore.sh --counts-only > /tmp/source-counts.txt
-#   ... databases/verify-restore.sh --counts-only > /tmp/target-counts.txt
+#   ... databases/openthrottle/verify-restore.sh --counts-only > /tmp/source-counts.txt
+#   ... databases/openthrottle/verify-restore.sh --counts-only > /tmp/target-counts.txt
 #   diff /tmp/source-counts.txt /tmp/target-counts.txt
 
 set -euo pipefail
@@ -133,7 +135,7 @@ fi
 # containerized runner baked into Dockerfile.Migrations (databases/migrate.ts)
 # share databases/migration-runner.ts. A missing or empty ledger means the next
 # deploy runs the one-time cut-over, re-applying every migration once. See
-# databases/SEEDING.md.
+# databases/openthrottle/SEEDING.md.
 ################################################################################
 echo "== migration ledger =="
 has_ledger="$(psql_q "SELECT count(*) FROM pg_tables WHERE schemaname='public' AND tablename='schema_migrations';")"

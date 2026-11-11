@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for the OpenThrottle plan_messages table (the plan inbox). Matches databases/migrations (144).
+ * @description TypeORM entity for the OpenThrottle plan_messages table (the plan inbox). Matches databases/openthrottle/migrations (144).
  */
 
 import {

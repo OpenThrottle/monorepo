@@ -11,7 +11,7 @@ Design for persisted web chat threads in OpenThrottle. Implements plan `4fa6d16c
 
 ## Persistence
 
-Migration: `databases/migrations/051_create_agent_conversations_tables.sql`
+Migration: `databases/openthrottle/migrations/051_create_agent_conversations_tables.sql`
 
 TypeORM: `packages/nestjs-repositories/src/modules/agent-conversations/`
 
@@ -19,7 +19,7 @@ GraphQL module: `applications/openthrottle-server/src/graphql/agent-conversation
 
 Persistence helpers for chat turns: `applications/openthrottle-server/src/graphql/agents/chat-persistence/chat-persistence.utils.ts`
 
-See [databases/README.md](../../../databases/README.md) § Agent conversations for FK rules, lifecycle, size caps, and the boundary vs `plan_output_stream`.
+See [databases/openthrottle/README.md](../../../databases/openthrottle/README.md) § Agent conversations for FK rules, lifecycle, size caps, and the boundary vs `plan_output_stream`.
 
 ## `agentsRunChatTurn` — `persist` flag
 

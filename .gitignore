@@ -35,20 +35,23 @@ docker-compose.worktree.yml
 # `pnpm worktree:serve` logs and pidfiles (scripts/worktree_serve.ts); .worktree/ itself holds tracked shims
 .worktree/logs/
 **/__generated__/**/*
-databases/backups/**/*.sql
-databases/backups/**/*.zip
+databases/*/backups/**/*.sql
+databases/*/backups/**/*.zip
+# Pre-move location of the openthrottle dumps; existing checkouts still hold them here.
+databases/backups/
 # Local Postgres seed dump — a full pg_dump of a dev's own database. Kept out of
 # the repo so personal plans/tasks/notes and credential hashes never leak into a
 # public checkout. The fresh/public DB is seeded by scripts instead: migrate +
-# bootstrap-default-user + bootstrap-service-accounts (see databases/README.md).
-# A locally-generated databases/seed.sql is still baked into your own postgres
+# bootstrap-default-user + bootstrap-service-accounts (see databases/openthrottle/README.md).
+# A locally-generated databases/openthrottle/seed.sql is still baked into your own postgres
 # image (see .dockerignore) — it just never gets committed.
+databases/openthrottle/seed.sql
 databases/seed.sql
 # Durable local copy of the values the bootstrap scripts otherwise print only
 # once (service-account tokens + default-user login). Holds credential material,
-# local-only, never committed — same rationale as databases/seed.sql above. NOT
+# local-only, never committed — same rationale as databases/openthrottle/seed.sql above. NOT
 # covered by the .env* glob (it does not start with .env), so it is listed here
-# explicitly. See scripts/local-secrets-file.ts and databases/README.md.
+# explicitly. See scripts/local-secrets-file.ts and databases/openthrottle/README.md.
 .bootstrap-secrets.local
 # @tools/ot-telemetry (src/index.ts) defaults --out to a scratch dir OUTSIDE
 # this repo, so neither file should ever appear here. These two entries are anchored to the repo

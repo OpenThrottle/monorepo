@@ -27,7 +27,7 @@ Documentation surfaces in scope:
 - The three-tier `AGENTS.md` hierarchy: root, mid-level, and per-project files under `applications/*`, `packages/*`, `tools/*`.
 - `docs/**` — including `docs/monorepo/agent-editor-folders.md` (folder layout and agent/editor paths) and `docs/tools/templates/AGENT_USAGE.md` (generator usage).
 - Agent assets: `skills/**/SKILL.md` (authored SSOT), `.agents/personas/**`, `.agents/prompts/**` — plus the generated skill mirrors under `.agents/`, `.claude/` and `.gemini/`.
-- Per-package `README.md` files and `databases/README.md`.
+- Per-package `README.md` files and `databases/openthrottle/README.md`.
 
 Facts that change the analysis:
 

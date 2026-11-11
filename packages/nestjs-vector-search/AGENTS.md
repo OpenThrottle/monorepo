@@ -30,7 +30,7 @@ through `openthrottle-server` GraphQL ("architecture B" — the client never tou
   different shape from the other embedding tables (content-hash TEXT PK, no FK/metadata).
 - Embeddings are `vector(1536)`; the platform silently skips vectors of any other length. The
   OpenAI-vs-Ollama dimension strategy lives in
-  [databases/README.md § Embedding dimension strategy](../../databases/README.md) — link to it,
+  [databases/openthrottle/README.md § Embedding dimension strategy](../../databases/openthrottle/README.md) — link to it,
   don't restate it.
 - No embeddings provider configured is a supported state: `isProviderConfigured()` drives the
   `unavailable` status and the Semantic tab's gated UI — don't turn it into a thrown error.

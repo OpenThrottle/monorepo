@@ -1,6 +1,6 @@
 /**
  * @description TypeORM entity for the OpenThrottle eval_grades table (one grader's verdict on one
- * trial). Matches databases/migrations (147).
+ * trial). Matches databases/openthrottle/migrations (147).
  */
 
 import {

@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for agent_conversations. Matches databases/migrations/051.
+ * @description TypeORM entity for agent_conversations. Matches databases/openthrottle/migrations/051.
  */
 
 import {

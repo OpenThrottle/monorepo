@@ -11,7 +11,7 @@ interface CodeSnapshotRow {
 
 /**
  * @description Persists the `@openthrottle/openthrottle-ide` engine's `hashWorkspace` output (a
- * per-file content-hash snapshot) in the `code_index_snapshots` table (databases/migrations 054),
+ * per-file content-hash snapshot) in the `code_index_snapshots` table (databases/openthrottle/migrations 054),
  * one row per `workspaceRoot`. {@link CodeSearchService} loads the prior snapshot before an index to
  * compute the incremental delta (engine `diffSnapshots`) and saves the fresh snapshot after a
  * successful index. Uses raw SQL via the injected TypeORM {@link DataSource} — the same approach as

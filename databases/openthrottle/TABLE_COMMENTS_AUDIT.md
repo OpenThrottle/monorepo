@@ -2,11 +2,11 @@
 
 Permanent checklist for `COMMENT ON TABLE` coverage and the OpenThrottle rename backfill. **SSOT for backfill batches** — do not track in plan output stream or GitHub issues.
 
-| Field                      | Value                                                                                                                         |
-| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| Last audited               | 2026-06-06                                                                                                                    |
-| Method                     | `obj_description` on `pg_class` (public base tables) cross-checked against `COMMENT ON TABLE` in `databases/migrations/*.sql` |
-| Migrations applied through | `050_comment_on_openthrottle_tables_batch_a.sql`                                                                              |
+| Field                      | Value                                                                                                                                      |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Last audited               | 2026-06-06                                                                                                                                 |
+| Method                     | `obj_description` on `pg_class` (public base tables) cross-checked against `COMMENT ON TABLE` in `databases/openthrottle/migrations/*.sql` |
+| Migrations applied through | `050_comment_on_openthrottle_tables_batch_a.sql`                                                                                           |
 
 ## Summary
 

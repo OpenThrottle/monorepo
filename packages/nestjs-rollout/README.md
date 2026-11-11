@@ -113,7 +113,7 @@ SSOT for client types and UI hydration; this package remains SSOT for evaluation
 math and persistence. See that README for `applicationKey` (`APP_NAME` today,
 UUID-ready prop name) and anon/auth adopt steps.
 
-Schema: `databases/migrations/084` (table) + `089` (typed variations / fallthrough).
+Schema: `databases/openthrottle/migrations/084` (table) + `089` (typed variations / fallthrough).
 `synchronize` is off — the entity mirrors migrations.
 
 ## Installation

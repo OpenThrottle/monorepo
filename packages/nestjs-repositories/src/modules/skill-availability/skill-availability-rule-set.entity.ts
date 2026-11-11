@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for skill_availability_rule_sets. Matches databases/migrations/062.
+ * @description TypeORM entity for skill_availability_rule_sets. Matches databases/openthrottle/migrations/062.
  * At most one row per project (unique project_id); carries the single per-project posture and
  * owns zero or more SkillAvailabilityRule rows.
  */

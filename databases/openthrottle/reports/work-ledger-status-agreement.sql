@@ -12,15 +12,15 @@
 -- -- do not wire this into a cron, a BullMQ processor, or a metric.
 --
 -- HOW TO RUN. Plain read-only report, no side effects, nothing persistent created -- this is
--- why it lives under databases/reports/ rather than databases/migrations/ and carries no
+-- why it lives under databases/openthrottle/reports/ rather than databases/openthrottle/migrations/ and carries no
 -- migration number.
 --
 --   docker exec -i openthrottle-postgres-1 psql -U openthrottle_user -d openthrottle \
---     -f databases/reports/work-ledger-status-agreement.sql
+--     -f databases/openthrottle/reports/work-ledger-status-agreement.sql
 --
 -- or, against a non-Docker Postgres, plain:
 --
---   psql "$POSTGRES_URL" -f databases/reports/work-ledger-status-agreement.sql
+--   psql "$POSTGRES_URL" -f databases/openthrottle/reports/work-ledger-status-agreement.sql
 --
 -- SCHEMA NOTES (cost real time to work out -- recorded here so the next person doesn't repeat
 -- the work):

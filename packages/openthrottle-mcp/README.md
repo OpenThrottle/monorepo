@@ -2,7 +2,7 @@
 
 Model Context Protocol (MCP) server for OpenThrottle: plans, tasks, and GraphQL-backed tools (no direct database access). Tools call `openthrottle-server` over GraphQL only.
 
-For schema, embeddings, and local Postgres setup, see [databases/README.md](../../databases/README.md). Workspace-wide conventions: [AGENTS.md](../../AGENTS.md).
+For schema, embeddings, and local Postgres setup, see [databases/openthrottle/README.md](../../databases/openthrottle/README.md). Workspace-wide conventions: [AGENTS.md](../../AGENTS.md).
 
 **Registering this server:** the canonical guide is [docs/openthrottle/mcp-registration.md](../../docs/openthrottle/mcp-registration.md) — tiers, config locations, the `.cursor/mcp.json` template, and editor parity. The package-specific launcher and env details below stay here.
 
@@ -265,5 +265,5 @@ Smoke checklist (human JWT, persist fixture, boundary warning): [docs/verificati
 ### Related (not MCP scope)
 
 - **New chat UX** (clear sessionStorage UUID, mint fresh conversation on next send): developer UI in `@openthrottle/react-router-chat` — plan task `3ff35e87`, not these MCP tools.
-- **DB schema:** [databases/README.md](../../databases/README.md) § Agent conversations.
+- **DB schema:** [databases/openthrottle/README.md](../../databases/openthrottle/README.md) § Agent conversations.
 - **Server design:** [applications/openthrottle-server/docs/agent-conversations-design.md](../../applications/openthrottle-server/docs/agent-conversations-design.md).

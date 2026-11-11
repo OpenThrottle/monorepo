@@ -2,7 +2,7 @@ import type { BlogPostStatus } from './blog-posts.types.ts';
 
 /**
  * @description Vocabulary of `blog_posts.status`. Mirrors the
- * `chk_blog_posts_status` CHECK constraint in databases/migrations/131 (a CHECK, not a
+ * `chk_blog_posts_status` CHECK constraint in databases/openthrottle/migrations/131 (a CHECK, not a
  * Postgres enum type).
  * @public
  */

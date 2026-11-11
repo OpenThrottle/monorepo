@@ -1,5 +1,5 @@
 /**
- * @description Static lint for `databases/migrations/`, guarding the two hygiene
+ * @description Static lint for `databases/openthrottle/migrations/`, guarding the two hygiene
  * failures found by the 2026-08-21 database health sweep (OT plan 70239a50):
  *
  *   1. FOREIGN-KEY SKIP — an inline `REFERENCES` inside a statement guarded by
@@ -43,20 +43,31 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
+import type { DatabaseDefinition } from '../databases/database-registry.ts';
+import { DATABASES } from '../databases/database-registry.ts';
 import type { DuplicatePrefixScope } from './check-migration-hygiene.rules';
 import {
   findDuplicatePrefixCollisions,
   findGuardedForeignKeyStatements,
 } from './check-migration-hygiene.rules';
 import { createLogger } from './utils/index.ts';
+import {
+  changedMigrationPaths,
+  migrationDiffArgs,
+} from './utils/migration-diff.ts';
 
 const logger = createLogger();
 
 const ROOT = process.cwd();
-const MIGRATIONS_DIR = 'databases/migrations';
+/** Every database's migrations directory, plus where any of them used to live (so a move pairs as a rename). */
+const MIGRATIONS_DIRS = DATABASES.flatMap((database) => [
+  database.migrationsPath,
+  ...database.legacyMigrationsPaths,
+]);
 
 /**
- * Numeric prefixes duplicated on disk and accepted as applied history. Anything
+ * Numeric prefixes duplicated on disk and accepted as applied history, in the
+ * openthrottle database (prefixes are per database: `cms` has its own 001). Anything
  * NEW sharing a prefix is a violation.
  *
  * They are accepted rather than renamed because `schema_migrations` is keyed on
@@ -75,20 +86,20 @@ const MIGRATIONS_DIR = 'databases/migrations';
  *   other's file, and the rule was not running in CI at all. Both holes are
  *   closed — see OT plan 21841c4f.
  */
-const GRANDFATHERED_DUPLICATE_PREFIXES = new Set([
-  '084',
-  '085',
-  '087',
-  '090',
-  '092',
-  '110',
-  '111',
-]);
+const GRANDFATHERED_DUPLICATE_PREFIXES: Readonly<
+  Record<DatabaseDefinition['name'], ReadonlySet<string>>
+> = {
+  cms: new Set(),
+  openthrottle: new Set(['084', '085', '087', '090', '092', '110', '111']),
+};
 
-const resolveBaseRef = (): string =>
-  process.env.MIGRATION_COMMENT_LINT_BASE?.trim() ||
-  process.env.GITHUB_BASE_REF?.trim() ||
-  'main';
+const resolveBaseRef = (): string => {
+  return (
+    process.env.MIGRATION_COMMENT_LINT_BASE?.trim() ||
+    process.env.GITHUB_BASE_REF?.trim() ||
+    'main'
+  );
+};
 
 const revParse = (ref: string): string | null => {
   try {
@@ -135,25 +146,32 @@ const resolveMergeBase = (baseCommit: string): string | null => {
  * stale, so `origin/main` is tried first and the bare ref is the fallback for a
  * clone with no remote.
  */
-const resolveBaseTip = (baseRef: string): string | null =>
-  revParse(`origin/${baseRef}`) ?? revParse(baseRef);
+const resolveBaseTip = (baseRef: string): string | null => {
+  return revParse(`origin/${baseRef}`) ?? revParse(baseRef);
+};
 
-/** Migration basenames as of `commit`. */
-const listMigrationFilesAt = (commit: string): readonly string[] =>
-  execFileSync(
+/** Migration basenames in `dir` as of `commit`. */
+const listMigrationFilesAt = (
+  commit: string,
+  dir: string,
+): readonly string[] => {
+  return execFileSync(
     'git',
-    ['ls-tree', '-r', '--name-only', commit, '--', `${MIGRATIONS_DIR}/`],
+    ['ls-tree', '-r', '--name-only', commit, '--', `${dir}/`],
     { cwd: ROOT, encoding: 'utf8' },
   )
     .split('\n')
     .map((file) => path.basename(file.trim()))
     .filter((file) => file.endsWith('.sql'));
+};
 
-/** Migration basenames on disk right now. */
-const listMigrationFilesOnDisk = (): readonly string[] =>
-  readdirSync(path.join(ROOT, MIGRATIONS_DIR)).filter((file) =>
-    file.endsWith('.sql'),
-  );
+/** Migration basenames in `dir` on disk right now (none when the directory does not exist). */
+const listMigrationFilesOnDisk = (dir: string): readonly string[] => {
+  const absolute = path.join(ROOT, dir);
+  if (!existsSync(absolute)) return [];
+
+  return readdirSync(absolute).filter((file) => file.endsWith('.sql'));
+};
 
 /**
  * Whether this run judges a branch against its base, or the trunk against itself.
@@ -166,6 +184,7 @@ const listMigrationFilesOnDisk = (): readonly string[] =>
  */
 const resolveDuplicatePrefixScope = (
   baseTip: string | null,
+  database: DatabaseDefinition,
 ): DuplicatePrefixScope => {
   if (process.argv.includes('--all')) return { kind: 'trunk' };
 
@@ -173,7 +192,12 @@ const resolveDuplicatePrefixScope = (
 
   if (baseTip === revParse('HEAD')) return { kind: 'trunk' };
 
-  return { baseFiles: listMigrationFilesAt(baseTip), kind: 'branch' };
+  // A database that moved compares against wherever main still keeps it.
+  const baseFiles = [database.migrationsPath, ...database.legacyMigrationsPaths]
+    .map((dir) => listMigrationFilesAt(baseTip, dir))
+    .find((files) => files.length > 0);
+
+  return { baseFiles: baseFiles ?? [], kind: 'branch' };
 };
 
 const listChangedMigrationFiles = (
@@ -186,29 +210,17 @@ const listChangedMigrationFiles = (
   // where the merge-base IS HEAD — and the caller warns loudly either way.
   if (mergeBase === null) return [];
 
+  // Deletions and byte-identical renames are dropped (utils/migration-diff.ts):
+  // a removed migration has no file left to read, and a pure move is not
+  // content this branch wrote. A rename that also edited the file still counts.
   const output = execFileSync(
     'git',
-    [
-      'diff',
-      '--name-only',
-      // Exclude deletions. A migration removed or renumbered on this branch has
-      // no file left to read, and reading it would crash the check instead of
-      // reporting anything useful. A rename still surfaces as its added path.
-      '--diff-filter=d',
-      `${mergeBase}...HEAD`,
-      '--',
-      `${MIGRATIONS_DIR}/`,
-    ],
+    migrationDiffArgs(`${mergeBase}...HEAD`, MIGRATIONS_DIRS),
     { cwd: ROOT, encoding: 'utf8' },
-  ).trim();
-
-  if (!output) return [];
+  );
 
   return (
-    output
-      .split('\n')
-      .map((file) => file.trim())
-      .filter((file) => file.endsWith('.sql'))
+    changedMigrationPaths(output)
       // The path list comes from a COMMIT diff but the rules read the WORKING
       // TREE, so the two can legitimately disagree — a migration deleted or
       // renumbered after the last commit is named by the diff but is no longer
@@ -226,32 +238,36 @@ const checkGuardedForeignKeys = (relativePath: string): readonly string[] => {
       `If the table or column already exists the guard skips the whole statement, the ` +
       `foreign key is never created, and the ledger still marks the migration applied. ` +
       `Create the table or column first, then add the constraint in its own statement ` +
-      `guarded on pg_constraint (see databases/README.md § Foreign keys in migrations).`,
+      `guarded on pg_constraint (see databases/openthrottle/README.md § Foreign keys in migrations).`,
   );
 };
 
 const checkDuplicatePrefixes = (
   baseRef: string,
   baseTip: string | null,
+  database: DatabaseDefinition,
 ): readonly string[] => {
-  const scope = resolveDuplicatePrefixScope(baseTip);
+  const scope = resolveDuplicatePrefixScope(baseTip, database);
+  const branchNote =
+    `Note the pile is measured against the tip of ${baseRef}, not your merge-base: ` +
+    `a sibling branch may have landed its half after you cut this one, so renumbering ` +
+    `is needed even though nothing here changed.`;
+  const trunkNote =
+    `This is the post-merge pass on the trunk, so the collision is ALREADY on main. ` +
+    `Renaming an applied migration is not the fix — schema_migrations is keyed on ` +
+    `filename. Grandfather the prefix and record why.`;
+  const scopeNote = scope.kind === 'branch' ? branchNote : trunkNote;
 
   return findDuplicatePrefixCollisions(
-    listMigrationFilesOnDisk(),
+    listMigrationFilesOnDisk(database.migrationsPath),
     scope,
-    GRANDFATHERED_DUPLICATE_PREFIXES,
+    GRANDFATHERED_DUPLICATE_PREFIXES[database.name],
   ).map(
     ({ files, incoming, prefix }) =>
-      `${MIGRATIONS_DIR}/: numeric prefix ${prefix} is used by ${files.length} migrations ` +
+      `${database.migrationsPath}/: numeric prefix ${prefix} is used by ${files.length} migrations ` +
       `(${files.join(', ')}). A prefix must identify exactly one migration — renumber ` +
       `${incoming.join(', ')}. ` +
-      (scope.kind === 'branch'
-        ? `Note the pile is measured against the tip of ${baseRef}, not your merge-base: ` +
-          `a sibling branch may have landed its half after you cut this one, so renumbering ` +
-          `is needed even though nothing here changed.`
-        : `This is the post-merge pass on the trunk, so the collision is ALREADY on main. ` +
-          `Renaming an applied migration is not the fix — schema_migrations is keyed on ` +
-          `filename. Grandfather the prefix and record why.`),
+      scopeNote,
   );
 };
 
@@ -287,7 +303,9 @@ const run = (): void => {
   // 2026-09-10 — is precisely what let 110 and 111 through.
   const violations = [
     ...changedFiles.flatMap(checkGuardedForeignKeys),
-    ...checkDuplicatePrefixes(baseRef, baseTip),
+    ...DATABASES.flatMap((database) => {
+      return checkDuplicatePrefixes(baseRef, baseTip, database);
+    }),
   ];
 
   if (violations.length > 0) {

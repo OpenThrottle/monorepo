@@ -1,6 +1,6 @@
 /**
  * @description TypeORM entity for the OpenThrottle eval_trials table (one attempt at one case,
- * linked to its agent trajectory). Matches databases/migrations (147).
+ * linked to its agent trajectory). Matches databases/openthrottle/migrations (147).
  */
 
 import {

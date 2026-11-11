@@ -94,7 +94,7 @@ Two ideas underpin all of them.
 
 ### G4 — `commit_links` was cut over in one plan, not run in parallel
 
-Historical, and complete: it is cited only by `databases/migrations/075_drop_commit_links.sql`. Before the ledger, git provenance lived in a `commit_links` table. Rather than keep two schemas alive side by side, the cutover happened in one plan: existing rows were backfilled into `git_commit` artifacts (migration 069), writers dual-wrote only until every reader had moved to the ledger, and then the table was dropped (075, which asserts parity before dropping). The ledger is now the only home for commit provenance.
+Historical, and complete: it is cited only by `databases/openthrottle/migrations/075_drop_commit_links.sql`. Before the ledger, git provenance lived in a `commit_links` table. Rather than keep two schemas alive side by side, the cutover happened in one plan: existing rows were backfilled into `git_commit` artifacts (migration 069), writers dual-wrote only until every reader had moved to the ledger, and then the table was dropped (075, which asserts parity before dropping). The ledger is now the only home for commit provenance.
 
 ### G5 — Ralph worker sessions are actored to the real principal
 
@@ -144,14 +144,14 @@ Durability instead comes from the verifier. It is a scheduled sweep that re-quer
 
 The ledger was designed in `docs/monorepo/work-ledger-design.md` (PR #185). That doc was removed by commit `2b8e39b1` in the pre-public markdown cleanup (PR #291), which swept every `docs/monorepo/*-design.md` out of the tree. It was not lost: `git show 2b8e39b1^:docs/monorepo/work-ledger-design.md` prints it in full, numbered sections and all. The guarantees above are the parts of it the code still leans on, restated against how the code behaves today — where the two disagree, trust this doc and the code over the archive.
 
-Code and database comments no longer cite it. **One knowing exception:** the text of the applied migration files still does. `databases/migrations/068_create_work_ledger_tables.sql` names the doc in its header and cites its sections both in plain `--` comments and in its original `COMMENT ON` statements, and `113_add_instant_to_work_sessions_closed_by.sql` cites a section in the `closed_by` comment it set. Those files stay as written because applied migrations are checksummed and immutable (`databases/README.md` § Run-once / idempotent). The comments the database actually carries now were re-issued without citations by `databases/migrations/129_strip_design_doc_citations_from_work_ledger_comments.sql`, which runs after both. Read the 068 and 113 file text as a record of what was applied, not as live documentation.
+Code and database comments no longer cite it. **One knowing exception:** the text of the applied migration files still does. `databases/openthrottle/migrations/068_create_work_ledger_tables.sql` names the doc in its header and cites its sections both in plain `--` comments and in its original `COMMENT ON` statements, and `113_add_instant_to_work_sessions_closed_by.sql` cites a section in the `closed_by` comment it set. Those files stay as written because applied migrations are checksummed and immutable (`databases/openthrottle/README.md` § Run-once / idempotent). The comments the database actually carries now were re-issued without citations by `databases/openthrottle/migrations/129_strip_design_doc_citations_from_work_ledger_comments.sql`, which runs after both. Read the 068 and 113 file text as a record of what was applied, not as live documentation.
 
 ---
 
 ## Related
 
-- `databases/migrations/068_create_work_ledger_tables.sql` — the original schema and its comments.
-- `databases/migrations/113_add_instant_to_work_sessions_closed_by.sql` — the `instant` value.
-- `databases/migrations/129_strip_design_doc_citations_from_work_ledger_comments.sql` — the current table and column comments.
+- `databases/openthrottle/migrations/068_create_work_ledger_tables.sql` — the original schema and its comments.
+- `databases/openthrottle/migrations/113_add_instant_to_work_sessions_closed_by.sql` — the `instant` value.
+- `databases/openthrottle/migrations/129_strip_design_doc_citations_from_work_ledger_comments.sql` — the current table and column comments.
 - `packages/openthrottle-mcp/src/session/session-headers.ts` — ambient session propagation.
 - `applications/openthrottle-server/src/graphql/work-ledger/work-ledger-capture/work-ledger-capture.service.ts` — the server-side capture path.

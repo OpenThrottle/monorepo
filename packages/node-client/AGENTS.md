@@ -40,7 +40,7 @@ agent-asset search, plan-creation) and `@openthrottle/openthrottle-agentic-utils
   whole path to Ollama; an Ollama model with a different dimensionality will not match the
   stored 1536-dim OpenAI vectors. Keep the ingest provider and the query provider aligned.
 - **Entities are borrowed, not owned.** Schema changes live in `nestjs-repositories` +
-  the SQL migration under `databases/migrations/`; this package only registers those
+  the SQL migration under `databases/openthrottle/migrations/`; this package only registers those
   entities on its `DataSource`. If a new entity is needed for a query, add it to the
   `entities` array in `data-source.ts`.
 - **Source-first, but ships `dist` to the server.** `nx.targets` uses the `__build` /

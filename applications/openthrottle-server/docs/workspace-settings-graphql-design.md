@@ -10,7 +10,7 @@ Design for **Settings → Workspace** in openthrottle-developer. Implements plan
 
 ## Persistence
 
-Migration: `databases/migrations/042_create_workspace_settings_tables.sql`
+Migration: `databases/openthrottle/migrations/042_create_workspace_settings_tables.sql`
 
 | Table                          | Purpose                                                                                   |
 | ------------------------------ | ----------------------------------------------------------------------------------------- |

@@ -1,7 +1,8 @@
 ---
 name: ot-postgres
 description: >-
-  OpenThrottle Postgres SQL authoring: migrations in databases/migrations/,
+  OpenThrottle Postgres SQL authoring: migrations in databases/<db>/migrations/
+  (openthrottle, cms),
   table design, naming, COMMENT ON TABLE/COLUMN standards, and idempotent DDL
   patterns. USE WHEN adding or editing SQL migrations, schema changes, table
   comments, or Postgres work under databases/ — not for routine OT plan CRUD
@@ -12,30 +13,37 @@ description: >-
 
 ## When to read this skill
 
-- You add or edit files under **`databases/migrations/`**.
+- You add or edit files under **`databases/<db>/migrations/`** (`openthrottle` or `cms`).
 - You design new tables, indexes, or constraints for OpenThrottle Postgres.
 - You backfill **`COMMENT ON TABLE`** / **`COMMENT ON COLUMN`** for existing tables.
-- You need migration workflow or naming — start here, then read **`databases/README.md`** for full detail.
+- You need migration workflow or naming — start here, then read **`databases/openthrottle/README.md`** for full detail.
 
 Use **ot-stack** for embeddings, ingest scripts, and server/entity sync. Use **ot-plans** for plans/tasks MCP — not this skill.
 
+## Which database? (decide first)
+
+Each database (`databases/database-registry.ts`) has its own `migrations/`, numbering and ledger:
+`openthrottle` for everything `openthrottle-server` reads, `cms` for `openthrottle-cms` content
+(`databases/cms/README.md`). **No foreign keys across databases** — store the id by value. Pick the
+next number from **that database's** folder on `main`.
+
 ## Table comment rules (required)
 
-1. **Every new table** must have **`COMMENT ON TABLE`** in the **same migration file** as **`CREATE TABLE`**. Follow the tone in `databases/migrations/038_create_plan_runs_table.sql`: short, purpose-focused prose; use **"OpenThrottle"** in new comments.
+1. **Every new table** must have **`COMMENT ON TABLE`** in the **same migration file** as **`CREATE TABLE`**. Follow the tone in `databases/openthrottle/migrations/038_create_plan_runs_table.sql`: short, purpose-focused prose; use **"OpenThrottle"** in new comments (**"OpenThrottle CMS"** in the `cms` database).
 2. **`COMMENT ON COLUMN`** is **optional** — add it for non-obvious fields (enums, JSONB shapes, snapshot columns, check-constraint semantics). See `038_create_plan_runs_table.sql` (`execution_backend`).
 3. **Batch comment-only migrations** (e.g. `039_comment_on_openthrottle_tables_batch_a.sql` … `041_…_batch_c.sql`, and `050_comment_on_openthrottle_tables_batch_a.sql`) are for **backfill or rename debt only** — **≤10 tables per file**. Do not split new table DDL from its table comment across files.
-4. **Do not edit applied migrations in place** to add comments; add a new numbered batch file instead (audit: `databases/TABLE_COMMENTS_AUDIT.md`).
+4. **Do not edit applied migrations in place** to add comments; add a new numbered batch file instead (audit: `databases/openthrottle/TABLE_COMMENTS_AUDIT.md`).
 
 ## Migration workflow (pointer)
 
-Canonical commands and schema overview: **`databases/README.md`**.
+Canonical commands and schema overview: **`databases/openthrottle/README.md`**.
 
-| Step             | Command / path                                                                                      |
-| ---------------- | --------------------------------------------------------------------------------------------------- |
-| Apply migrations | `pnpm run database:migrate`                                                                         |
-| New migration    | Next `NNN_snake_case.sql` in `databases/migrations/` — check the tip of `main`, not your branch     |
-| Entity sync      | Update `@openthrottle/nestjs-repositories` entities to match SQL                                    |
-| Local CI gate    | `pnpm nx run monorepo:check-migration-table-comments` (diff-scoped; also in `pnpm run check:local`) |
+| Step             | Command / path                                                                                       |
+| ---------------- | ---------------------------------------------------------------------------------------------------- |
+| Apply migrations | `pnpm run database:migrate` (every DB; `-- --database <name>` for one)                               |
+| New migration    | Next `NNN_snake_case.sql` in `databases/<db>/migrations/` — check the tip of `main`, not your branch |
+| Entity sync      | `openthrottle` only: update `@openthrottle/nestjs-repositories` entities to match SQL                |
+| Local CI gate    | `pnpm nx run monorepo:check-migration-table-comments` (diff-scoped; also in `pnpm run check:local`)  |
 
 **Enforcement:** Changed migration files that introduce **`CREATE TABLE`** must include matching **`COMMENT ON TABLE`** for each created table in the **same file**. Base ref: `main` (override with `MIGRATION_COMMENT_LINT_BASE`).
 
@@ -73,13 +81,13 @@ A prefix must identify exactly one file. `check-migration-hygiene` fails on any 
 
 **Never renumber a migration that has been applied anywhere.** `schema_migrations` declares `filename TEXT PRIMARY KEY`, so a rename makes the runner treat the file as unapplied and re-run it, while the original row survives forever naming a file that no longer exists. Applied duplicates are grandfathered instead — seven prefixes are, in two cohorts. Editing an applied migration in place fails too: the runner checksums them.
 
-The numeric scheme was weighed against timestamp prefixes on 2026-09-10 and deliberately kept; the reasoning and the conditions that would reopen it are in `databases/README.md`. Do not switch schemes on your own initiative.
+The numeric scheme was weighed against timestamp prefixes on 2026-09-10 and deliberately kept; the reasoning and the conditions that would reopen it are in `databases/openthrottle/README.md`. Do not switch schemes on your own initiative.
 
-Full detail: `databases/README.md` § One migration per numeric prefix.
+Full detail: `databases/openthrottle/README.md` § One migration per numeric prefix.
 
 ## Patterns appendix (idempotent DDL)
 
-Summarized from existing migrations — see **`databases/README.md`** for workflow; do not duplicate full README here.
+Summarized from existing migrations — see **`databases/openthrottle/README.md`** for workflow; do not duplicate full README here.
 
 ```sql
 -- Table + comment (038 pattern)

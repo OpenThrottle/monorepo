@@ -1,6 +1,6 @@
 /**
  * @description TypeORM entity for the OpenThrottle eval_runs table (one configuration executed over
- * a dataset). Matches databases/migrations (147).
+ * a dataset). Matches databases/openthrottle/migrations (147).
  */
 
 import {

@@ -66,6 +66,6 @@ caddy run --config tools/caddy/Caddyfile
 ## References
 
 - Caddyfile docs: <https://caddyserver.com/docs/caddyfile>
-- Ollama in this repo: [Ollama.md](./Ollama.md), `scripts/ollama.ts` (`pnpm run ollama:pull`), `databases/README.md`
+- Ollama in this repo: [Ollama.md](./Ollama.md), `scripts/ollama.ts` (`pnpm run ollama:pull`), `databases/openthrottle/README.md`
 - Server / developer config: `applications/openthrottle-server/.env.default`,
   `applications/openthrottle-developer/app/global/config/settings.ts`

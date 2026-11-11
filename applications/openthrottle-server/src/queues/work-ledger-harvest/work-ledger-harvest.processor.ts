@@ -35,7 +35,7 @@ import {
 const CONCURRENCY = 1;
 const TOOL_NAME = 'work-ledger-harvest';
 
-/** Seeded service account that owns harvested artifacts (databases/migrations/117). */
+/** Seeded service account that owns harvested artifacts (databases/openthrottle/migrations/117). */
 const HARVEST_SERVICE_ACCOUNT_NAME = 'work-ledger-harvest';
 
 /** Extract owner/repo from a github.com remote URL; null when it is not one. */

@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for repositories. Matches databases/migrations/078.
+ * @description TypeORM entity for repositories. Matches databases/openthrottle/migrations/078.
  * Identity is the normalized git remote URL; provisional rows (NULL remote) exist
  * for local-only folders until a remote is detected.
  */

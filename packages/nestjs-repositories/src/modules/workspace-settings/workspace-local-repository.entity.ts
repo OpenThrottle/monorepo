@@ -1,6 +1,6 @@
 /**
  * @description View shape kept for compatibility after workspace_local_repositories
- * was split into repositories + repository_checkouts (databases/migrations/078).
+ * was split into repositories + repository_checkouts (databases/openthrottle/migrations/078).
  * `id` is the checkout id; git fields come from the linked repository row.
  *
  * @deprecated Use Repository / RepositoryCheckout from modules/repositories.

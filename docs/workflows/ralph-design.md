@@ -10,7 +10,7 @@
 ## Goal
 
 - **Ralph** runs a single workflow: idea or PRD → **plan and tasks in OpenThrottle** → execute one task at a time until done. Progress lives in OpenThrottle (plan, tasks, `plan_output_stream`); no file-based modes or OUTPUT files.
-- Input can be a rough idea (use `/openthrottle/planning-mode` or OT MCP `create_plan` / `create_task` to turn it into a plan + tasks) or a **strict, hyper-detailed PRD** (ensure plan/tasks in OT match the PRD; required vs optional vs inferred attributes are in `databases/README.md`).
+- Input can be a rough idea (use `/openthrottle/planning-mode` or OT MCP `create_plan` / `create_task` to turn it into a plan + tasks) or a **strict, hyper-detailed PRD** (ensure plan/tasks in OT match the PRD; required vs optional vs inferred attributes are in `databases/openthrottle/README.md`).
 
 ## Modes
 
@@ -28,7 +28,7 @@
 
 ## PRD and OpenThrottle attribute mapping
 
-- For a **strict, hyper-detailed PRD**: create or update plan/tasks in OpenThrottle so they match the PRD. Required, inferred, and optional fields are in **`databases/README.md`** under "Plan and task attributes (PRD mapping)".
+- For a **strict, hyper-detailed PRD**: create or update plan/tasks in OpenThrottle so they match the PRD. Required, inferred, and optional fields are in **`databases/openthrottle/README.md`** under "Plan and task attributes (PRD mapping)".
 - Required for plans: `title`. The agent infers `author` (GitHub handle) when missing; for `category`, infer when missing or confirm/adjust when provided so it fits the plan. Required for tasks: `title`, `plan_id`. Timestamps are always handled by the DB.
 
 ## Signals
@@ -44,7 +44,7 @@
 
 ## Plan-centric task status
 
-The CLI sets the plan to `IN_PROGRESS` at run start. Each iteration it fetches remaining tasks (PENDING, IN_PROGRESS, BLOCKED), **resumes the lowest `sortOrder` IN_PROGRESS task if any** (so a previously started task is not skipped), otherwise picks the lowest `sortOrder` PENDING or QUEUED task and sets it to `IN_PROGRESS`. Task lists and next-task selection use canonical order **`sortOrder ASC`, `createdAt ASC`** — not `createdAt` alone. See `databases/README.md` § Task sort_order and `packages/openthrottle-agentic-ralph/src/utils/plan-task-list-order.ts` (`pickRalphTaskForIteration`).
+The CLI sets the plan to `IN_PROGRESS` at run start. Each iteration it fetches remaining tasks (PENDING, IN_PROGRESS, BLOCKED), **resumes the lowest `sortOrder` IN_PROGRESS task if any** (so a previously started task is not skipped), otherwise picks the lowest `sortOrder` PENDING or QUEUED task and sets it to `IN_PROGRESS`. Task lists and next-task selection use canonical order **`sortOrder ASC`, `createdAt ASC`** — not `createdAt` alone. See `databases/openthrottle/README.md` § Task sort_order and `packages/openthrottle-agentic-ralph/src/utils/plan-task-list-order.ts` (`pickRalphTaskForIteration`).
 
 To fix execution order without delete-and-recreate, use GraphQL `reorderPlanTasks` or MCP `reorder_plan_tasks` (renumbers `1000, 2000, …` in the given task-id order). Batch `create_tasks` appends new tasks after the plan max when `sortOrder` is omitted per item.
 
@@ -77,6 +77,6 @@ Ralph requires OpenThrottle (OT) to be configured and reachable for plan/task mo
 
 - **Server-side Ralph (BullMQ):** Local CLI vs nested `workflow-ralph` spawn vs in-process orchestrator (`enqueuePlanRun` vs `enqueuePlanRalphOrchestrator`) — `tools/workflows/README.md` § Worktree + BullMQ workflow. Compose/Docker/path deferrals: investigation plan `677b6849-1912-4fa8-a5f6-d8233f2cdf97`.
 - **Agentic prompt (v4):** [`skills/agents-ralph/SKILL.md`](../../skills/agents-ralph/SKILL.md)
-- **OpenThrottle MCP tool selection:** `skills/ot-plans/SKILL.md`, `databases/README.md`
+- **OpenThrottle MCP tool selection:** `skills/ot-plans/SKILL.md`, `databases/openthrottle/README.md`
 - **Cross-repo usage:** `tools/workflows/README.md` § Cross-repo usage and [tools/workflows/docs/cross-repo-usage.md](../../tools/workflows/docs/cross-repo-usage.md)
 - **Ralph technique:** [ghuntley.com/ralph](https://ghuntley.com/ralph)

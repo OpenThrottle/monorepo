@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for OpenThrottle mcp_connector_connections table. Matches databases/migrations/084.
+ * @description TypeORM entity for OpenThrottle mcp_connector_connections table. Matches databases/openthrottle/migrations/084.
  */
 
 import {

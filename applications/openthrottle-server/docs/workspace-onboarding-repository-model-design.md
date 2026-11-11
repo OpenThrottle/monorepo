@@ -41,7 +41,7 @@ migration once multi-user usage exposes it.
 ### DDL
 
 ```sql
--- databases/migrations/<NNN>_create_repositories_and_checkouts.sql
+-- databases/openthrottle/migrations/<NNN>_create_repositories_and_checkouts.sql
 
 CREATE TABLE IF NOT EXISTS repositories (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

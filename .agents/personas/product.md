@@ -65,4 +65,4 @@ Keep prose tight; prefer bullets and checklists over essays.
 - [`ot-plans`](../skills/ot-plans/SKILL.md) — OT MCP tool selection, plan/task lifecycle, Plan-Id / Task-Id traceability
 - [`tools/workflows/README.md`](../../tools/workflows/README.md) — CLI, queue, and runtime config
 - [tools/workflows/README.md](../../tools/workflows/README.md) — workflow bins and Ralph flags
-- [databases/README.md](../../databases/README.md) — plan/task schema, PRD attributes, summarization
+- [databases/openthrottle/README.md](../../databases/openthrottle/README.md) — plan/task schema, PRD attributes, summarization

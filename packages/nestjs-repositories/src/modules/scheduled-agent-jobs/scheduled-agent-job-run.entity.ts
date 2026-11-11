@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for the scheduled_agent_job_runs table (databases/migrations/082, 087,
+ * @description TypeORM entity for the scheduled_agent_job_runs table (databases/openthrottle/migrations/082, 087,
  * 095, 096, 139, 141): the
  * append-only run history (status/timing/exit) for a scheduled_agent_jobs row. Run *logs* are not
  * here — they stream to the JSONL sink (queueJobLogs/queueJobLogTail), joined by `bullmqJobId`.
@@ -23,7 +23,7 @@ import type { ScheduledAgentJobDriverId } from './scheduled-agent-job.entity.ts'
  * subscription usage limit — it is terminal for the row and is NOT an error; a continuation run may
  * have been enqueued (see `resumeOfRunId`). `failed` stays reserved for a non-zero exit, timeout, or
  * spawn failure. `missed` is created terminal: a cron fire the job's misfire policy did not run, so
- * no agent was spawned (see `scheduledFor`). See databases/migrations/095, 139 and 141.
+ * no agent was spawned (see `scheduledFor`). See databases/openthrottle/migrations/095, 139 and 141.
  */
 export type ScheduledAgentJobRunStatus =
   | 'cancelled'

@@ -2,17 +2,18 @@
 
 import { Client } from 'pg';
 
+import { DATABASES } from './database-registry.ts';
 import {
-  createFsMigrationSource,
-  PgMigrationStore,
-  runMigrations,
+  createPgDatabaseMigrator,
+  migrateDatabases,
 } from './migration-runner.ts';
 
 /**
  * @description Container entrypoint for the `openthrottle/migrations` image
  * (`Dockerfile.Migrations`), run as the compose `migrations` init service.
- * Applies pending migrations through the shared schema_migrations ledger
- * (`./migration-runner.ts`) and exits non-zero on failure, so a server that
+ * Migrates every database in `./database-registry.ts` (creating any that are
+ * missing) through the shared schema_migrations ledger (`./migration-runner.ts`),
+ * one ledger per database, and exits non-zero on failure, so a server that
  * `depends_on: service_completed_successfully` never boots on a half-migrated DB.
  *
  * Runs under Node's native type stripping with only `pg` installed — no build
@@ -53,22 +54,25 @@ export function resolvePostgresUrl(
   return `postgresql://${POSTGRES_USER}:${encodedPassword}@${POSTGRES_HOST}:${port}/${POSTGRES_DB}`;
 }
 
-async function main(): Promise<void> {
-  const client = new Client({ connectionString: resolvePostgresUrl() });
+/** Open a connected `pg.Client` for `url`. */
+async function connect(url: string): Promise<Client> {
+  const client = new Client({ connectionString: url });
   await client.connect();
+  return client;
+}
 
+async function main(): Promise<void> {
   try {
-    await runMigrations(
-      new PgMigrationStore(client),
-      createFsMigrationSource(),
-      console.log,
-      console.warn,
-    );
+    await migrateDatabases({
+      databases: DATABASES,
+      env: process.env,
+      log: console.log,
+      migrator: createPgDatabaseMigrator(connect, console.log, console.warn),
+      primaryUrl: resolvePostgresUrl(),
+    });
   } catch (e) {
     console.error(' 🔴 Migration failed:', e);
     process.exitCode = 1;
-  } finally {
-    await client.end();
   }
 }
 

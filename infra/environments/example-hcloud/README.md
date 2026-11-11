@@ -67,7 +67,7 @@ reaches `user_data` at all**. Full reasoning:
 - [`../../applications/openthrottle_hcloud/CUTOVER.md`](../../applications/openthrottle_hcloud/CUTOVER.md)
   — DNS/TLS, then verify the public surface with
   [`../../tests/exposure/verify-exposure.sh`](../../tests/exposure/verify-exposure.sh).
-- [`../../../databases/SEEDING.md`](../../../databases/SEEDING.md) — load an existing dataset and
+- [`../../../databases/openthrottle/SEEDING.md`](../../../databases/openthrottle/SEEDING.md) — load an existing dataset and
   verify it (a row count does not prove the embeddings survived).
 - [`../../SCALING.md`](../../SCALING.md) — bigger box, growing the volume, moving Postgres off the
   box, or switching provider.

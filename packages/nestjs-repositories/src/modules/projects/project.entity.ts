@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for OpenThrottle projects table. Matches databases/migrations (024).
+ * @description TypeORM entity for OpenThrottle projects table. Matches databases/openthrottle/migrations (024).
  */
 
 import {

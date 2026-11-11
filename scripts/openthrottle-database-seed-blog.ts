@@ -15,7 +15,7 @@ import { createLogger } from './utils/index.ts';
 const logger = createLogger();
 
 /**
- * @description Applies the DEV-ONLY sample blog content in databases/seeds/blog.sql
+ * @description Applies the DEV-ONLY sample blog content in databases/openthrottle/seeds/blog.sql
  * (2 authors, 3 tags, 6 posts covering published, draft, archived and
  * future-scheduled visibility). Idempotent: re-running leaves every row byte-identical.
  * Uses POSTGRES_URL or POSTGRES_* env vars, like `database:migrate`, and needs migration 131.
@@ -35,7 +35,7 @@ const LOCAL_POSTGRES_HOSTS: ReadonlySet<string> = new Set([
 
 /** Absolute path to the seed file, resolved from the current working directory. */
 export function defaultBlogSeedPath(): string {
-  return join(process.cwd(), 'databases', 'seeds', 'blog.sql');
+  return join(process.cwd(), 'databases', 'openthrottle', 'seeds', 'blog.sql');
 }
 
 /** Hostname of a Postgres connection string, lowercased, without IPv6 brackets. */

@@ -1,6 +1,6 @@
 /**
  * @description TypeORM entity for the OpenThrottle eval_judge_calibrations table (one measurement
- * of a judge against human labels). Matches databases/migrations (148).
+ * of a judge against human labels). Matches databases/openthrottle/migrations (148).
  */
 
 import {

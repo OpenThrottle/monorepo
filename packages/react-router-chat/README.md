@@ -142,7 +142,7 @@ Root action handlers:
 - `intent: send-agent-message` — forwards `persist` and optional `conversationId` to `agentsRunChatTurn`.
 - `intent: load-agent-conversation-messages` — calls `getAgentConversationMessages` and maps rows via `mapPersistedAgentConversationMessages`.
 
-Server design (GraphQL CRUD, `persist` contract, pagination): [applications/openthrottle-server/docs/agent-conversations-design.md](../../applications/openthrottle-server/docs/agent-conversations-design.md). Database schema: [databases/README.md](../../databases/README.md) § Agent conversations.
+Server design (GraphQL CRUD, `persist` contract, pagination): [applications/openthrottle-server/docs/agent-conversations-design.md](../../applications/openthrottle-server/docs/agent-conversations-design.md). Database schema: [databases/openthrottle/README.md](../../databases/openthrottle/README.md) § Agent conversations.
 
 ### Persist toggle + conversations switcher (streaming chat)
 

@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for tag_action_rules. Matches databases/migrations/065.
+ * @description TypeORM entity for tag_action_rules. Matches databases/openthrottle/migrations/065.
  */
 
 import type { TagActionType } from '@openthrottle/openthrottle-skills';

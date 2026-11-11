@@ -13,7 +13,7 @@ export interface CodeIndexSnapshotEntry {
 }
 
 /**
- * @description TypeORM entity for the code_index_snapshots table (databases/migrations 054). Stores
+ * @description TypeORM entity for the code_index_snapshots table (databases/openthrottle/migrations 054). Stores
  * the `@openthrottle/openthrottle-ide` engine's `hashWorkspace` output per workspace so the next
  * index can `diffSnapshots` and re-embed only added/changed files. Like CodeEmbedding, the concrete
  * read/write path is raw SQL (CodeSnapshotStore in @openthrottle/nestjs-vector-search); this entity

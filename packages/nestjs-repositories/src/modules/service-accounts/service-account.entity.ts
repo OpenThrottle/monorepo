@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for OpenThrottle service_accounts table. Matches databases/migrations/044.
+ * @description TypeORM entity for OpenThrottle service_accounts table. Matches databases/openthrottle/migrations/044.
  */
 
 import {
