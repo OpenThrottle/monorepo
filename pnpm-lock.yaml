@@ -881,6 +881,9 @@ importers:
       '@openthrottle/nestjs-modules':
         specifier: workspace:^
         version: link:packages/nestjs-modules
+      '@openthrottle/nestjs-postgres':
+        specifier: workspace:^
+        version: link:packages/nestjs-postgres
       '@openthrottle/nestjs-repositories':
         specifier: workspace:^
         version: link:packages/nestjs-repositories
@@ -2426,6 +2429,34 @@ importers:
       '@nestjs/testing':
         specifier: 'catalog:'
         version: 12.0.1(@nestjs/common@12.0.1(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.0.1)(@nestjs/platform-express@12.0.1)
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@24.19.2)(happy-dom@20.11.1)(jsdom@28.1.0(@noble/hashes@1.8.0)(supports-color@8.1.1))(vite@8.2.0(@types/node@24.19.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.49.0)(tsx@4.23.1)(yaml@2.9.0))
+
+  packages/nestjs-postgres:
+    dependencies:
+      '@nestjs/common':
+        specifier: 'catalog:'
+        version: 12.0.1(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1)
+      '@openthrottle/nestjs-modules':
+        specifier: workspace:^
+        version: link:../nestjs-modules
+      typeorm:
+        specifier: 'catalog:'
+        version: 0.3.31(babel-plugin-macros@3.1.0)(ioredis@5.11.1(supports-color@8.1.1))(pg@8.21.0)(supports-color@8.1.1)(ts-node@10.9.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(@types/node@24.19.2)(@typescript/typescript6@6.0.2))
+    devDependencies:
+      '@faker-js/faker':
+        specifier: 'catalog:'
+        version: 10.5.0
+      '@openthrottle/nestjs-testing':
+        specifier: workspace:^
+        version: link:../nestjs-testing
+      fishery:
+        specifier: 'catalog:'
+        version: 2.4.0
+      reflect-metadata:
+        specifier: 'catalog:'
+        version: 0.2.2
       vitest:
         specifier: 'catalog:'
         version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@24.19.2)(happy-dom@20.11.1)(jsdom@28.1.0(@noble/hashes@1.8.0)(supports-color@8.1.1))(vite@8.2.0(@types/node@24.19.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.49.0)(tsx@4.23.1)(yaml@2.9.0))

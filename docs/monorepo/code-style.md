@@ -683,8 +683,8 @@ queues/usage-limit/
   usage-limit.utils.ts
 ```
 
-- **Module-scoped kinds** — `module`, `service`, `processor`, `resolver`, `controller`,
-  `types`, `constants`, `utils` — are named for their folder: in `queues/plans/` the only
+- **Module-scoped kinds** — `module`, `service`, `processor`, `repository`, `resolver`,
+  `controller`, `types`, `constants`, `utils` — are named for their folder: in `queues/plans/` the only
   service name is `plans.service.ts`. A file directly in a project's `src/` takes the
   project's folder name (`packages/nestjs-auth/src/nestjs-auth.module.ts`); an
   application's root `src/app.module.ts` is the one exception.

@@ -116,8 +116,31 @@ export let resumeCount = 0;
       errors: [{ messageId: 'wrongExport' }, { messageId: 'wrongExport' }],
       filename: `${DIR}/usage-limit.constants.ts`,
     },
+    // .repository.ts that exports a constant and a type beside the class.
+    {
+      code: `export abstract class UsageLimitRepository {}
+
+export const PAGE_SIZE = 25;
+
+export interface UsageLimitPage { readonly total: number }
+`,
+      errors: [{ messageId: 'wrongExport' }, { messageId: 'wrongExport' }],
+      filename: `${DIR}/usage-limit.repository.ts`,
+    },
   ],
   valid: [
+    // .repository.ts — an undecorated abstract base or an injectable subclass.
+    {
+      code: `export abstract class UsageLimitRepository {}
+`,
+      filename: `${DIR}/usage-limit.repository.ts`,
+    },
+    {
+      code: `@Injectable()
+export class UsageLimitRepository {}
+`,
+      filename: `${DIR}/usage-limit.repository.ts`,
+    },
     {
       code: `import { Injectable } from '@nestjs/common';
 

@@ -1,0 +1,29 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDirs": ["./src"]
+  },
+  "include": ["src/**/*.json", "src/**/*"],
+  "exclude": [
+    "**/*.factory.ts",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/testing/**",
+    "dist",
+    "tests/**"
+  ],
+  "references": [
+    {
+      "path": "../nestjs-modules/tsconfig.lib.json"
+    },
+    {
+      "path": "../nestjs-testing/tsconfig.lib.json"
+    },
+    {
+      "path": "../../tools/dotfiles/tsconfig.lib.json"
+    }
+  ]
+}

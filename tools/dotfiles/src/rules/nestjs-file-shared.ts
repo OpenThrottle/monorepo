@@ -15,6 +15,7 @@ export const FOLDER_KINDS: readonly string[] = [
   'controller',
   'module',
   'processor',
+  'repository',
   'resolver',
   'service',
   'types',
