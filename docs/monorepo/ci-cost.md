@@ -29,19 +29,20 @@ Two corollaries:
 
 ### Only one workflow actually spends
 
-Nine workflows have triggers; **one** consumes runners.
+Nine workflows had triggers when this was measured (`cache-cleanup.yml` came later); **one** consumes runners.
 
-| Workflow                         | Runs (30d) | Runners consumed           |
-| -------------------------------- | ---------- | -------------------------- |
-| `continuous-integration.yml`     | **739**    | ✅ the only live spender   |
-| `vercel-deploy.yml`              | 734        | none — both jobs `skipped` |
-| `openthrottle-docker.yml`        | 608        | none — `skipped`           |
-| `secret-scan.yml`                | 440        | none — `skipped`           |
-| `docs-watch.yml`                 | 45         | none — `skipped`           |
-| `daily-merged-prs-summary.yml`   | 30         | none — `skipped`           |
-| `terraform-validate.yml`         | 13         | minimal                    |
-| `dependency-graph-scheduled.yml` | 5          | none — `skipped`           |
-| `nx-release.yml`                 | 0          | none                       |
+| Workflow                               | Runs (30d) | Runners consumed            |
+| -------------------------------------- | ---------- | --------------------------- |
+| `continuous-integration.yml`           | **739**    | ✅ the only live spender    |
+| `vercel-deploy.yml`                    | 734        | none — both jobs `skipped`  |
+| `openthrottle-docker.yml`              | 608        | none — `skipped`            |
+| `secret-scan.yml`                      | 440        | none — `skipped`            |
+| `docs-watch.yml`                       | 45         | none — `skipped`            |
+| `daily-merged-prs-summary.yml`         | 30         | none — `skipped`            |
+| `terraform-validate.yml`               | 13         | minimal                     |
+| `dependency-graph-scheduled.yml`       | 5          | none — `skipped`            |
+| `nx-release.yml`                       | 0          | none                        |
+| `cache-cleanup.yml` (added 2026-11-10) | —          | one `gh` call per closed PR |
 
 A high trigger count is **not** a cost. A job whose `if:` evaluates false reports `skipped` and bills nothing. That is why disabling more workflows was explicitly a non-goal of the cost plan — that ground was already worked.
 
@@ -290,7 +291,13 @@ affected list, or a project lands on two boxes or none:
 - The Nx cache is keyed per shard (`cache-suffix: shard-<jobIndex>`, see `node-setup`), so each
   shard restores a **different** cache. Weights derived from local cache state would differ per box.
 
-Regenerate with `pnpm exec tsx ./scripts/generate-shard-weights.ts` (~20 min, sequential by design).
+Regenerate with `pnpm exec tsx ./scripts/generate-shard-weights.ts --from-ci` (seconds). Every
+merge-queue `build` shard uploads an `nx-profile-shard-<n>` artifact, which is the `NX_PROFILE` trace
+of its real task durations, and `--from-ci[=N]` takes the median over the last N queue runs. That
+measures the table on the 4-vCPU runners the partition runs on. The 2026-09-16 laptop table
+under-weighted react-router-ui roughly fourfold (OT plan 80b62f5e). The old local mode
+(`generate-shard-weights.ts` with no flag, ~20 min, sequential by design) still works for a
+workspace with no CI history.
 It is **expected to drift and safe to let drift**: weights affect BALANCE only. Correctness comes
 from `verifyShardSelection()`'s Nx round-trip, which never reads them, and a missing or corrupt
 table falls back to the old round-robin deal. Do not wire this into CI.
@@ -475,6 +482,41 @@ Turning it off takes **two** changes, and the second is not optional:
 With neither the queue nor `strict`, nothing stops two PRs that each pass alone from breaking `main`
 together, which is exactly what probe #652 did. Keep the workflow's `merge_group` trigger either
 way.
+
+---
+
+## Main-path speed-up (2026-11-10, OT plan `80b62f5e`)
+
+The changes below take wall-clock off the path every merged commit travels. They also stop the
+repository writing caches that nothing can ever read. Measure with
+`pnpm exec tsx scripts/ci-timings.ts --event=<push|merge_group|pull_request> --limit=N`: it reads
+job and step records through `gh` and prints medians.
+
+**Baseline** (2026-11-10, successful runs that included a build; _critical_ = the slowest build
+shard, _spread_ = slowest minus fastest shard):
+
+| Event          |   n | Wall   | Critical | Spread | NX step |
+| -------------- | --: | ------ | -------- | ------ | ------- |
+| push to `main` |  14 | 10m37s | 8m54s    | 3m04s  | 7m21s   |
+| `merge_group`  |  14 | 10m49s | 10m33s   | 2m06s  | 8m54s   |
+| ready PR       |   6 | 12m00s | 11m46s   | 1m05s  | 10m05s  |
+
+The Actions cache held **10.9 GB against its 10 GB quota**.
+
+| Change                                                                                           | Why                                                                                                                                                                                                                                                                                                                                                                                                   |
+| ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **A push to `main` whose SHA already passed the queue runs `warm-cache`, not `build` + `gates`** | The queue fast-forwards `main` to the exact `merge_group.head_sha` it just validated, so the push re-tested an identical tree for 9–14 min on four runners. `changes` asks the API for a green `merge_group` run at `github.sha` and fails closed to the full matrix otherwise. The cache is warmed rather than skipped because caches are ref-scoped: `main` is the only scope PRs can restore from. |
+| **The suite-sharded `--shard` slice runs in the background**                                     | It used to start only after lint, typecheck and every other test (~3 min at the end of each box). Its dependency tasks come from Nx's task graph and are built first, so the two Nx processes share no task. The step fails on a missing `Test Files` summary, a `(0 test)` file or a kernel OOM kill.                                                                                                |
+| **Shard weights from CI profiles**                                                               | Each queue shard uploads an `NX_PROFILE` trace (`nx-profile-shard-<n>`). `generate-shard-weights.ts --from-ci` replaces the laptop measurement that under-weighted react-router-ui about fourfold.                                                                                                                                                                                                    |
+| **The queue restores caches but never saves them** (`node-setup` `save-cache`)                   | Each entry runs on a unique `gh-readonly-queue/*` ref, so its ~1.4 GB of saves could never be restored. It caused the quota overflow that evicted the `main` entries PRs read.                                                                                                                                                                                                                        |
+| **`nx-dependency-graph` is dispatch-only**                                                       | Its `if` was `github.ref == 'refs/heads/main'`, which every push to main matches, contrary to its own comment.                                                                                                                                                                                                                                                                                        |
+| **`cache-cleanup.yml` deletes a PR's caches when it closes**                                     | Each ready push saves about 860 MB that only that PR can ever restore.                                                                                                                                                                                                                                                                                                                                |
+
+**Owed, once this has run on `main`** (follow-up OT plan `1d2f247c`): the after numbers for the
+table above, regenerating `shard-weights.json --from-ci` and confirming a shard spread under ~90s,
+a CI-run A/B of the Vitest import levers (a laptop A/B varied ±45% run to run, so it proved
+nothing), and the cross-shard dependency work. Revisit the 4th-box question only after those
+numbers are in, because both sides of its arithmetic have moved.
 
 ---
 

@@ -1,10 +1,15 @@
 import { execFileSync } from 'node:child_process';
-import { writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { availableParallelism } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { SUITE_SHARDED_PROJECTS } from './parallelize-tasks.ts';
+import {
+  downloadProfiles,
+  mergeWeights,
+  weighRun,
+} from './shard-weights-from-ci.ts';
 import { createLogger, flagValue, hasFlag } from './utils/index.ts';
 
 /**
@@ -50,9 +55,13 @@ import { createLogger, flagValue, hasFlag } from './utils/index.ts';
  *
  * USAGE
  *   pnpm exec tsx ./scripts/generate-shard-weights.ts [--dry-run] [--projects=a,b]
+ *   pnpm exec tsx ./scripts/generate-shard-weights.ts --from-ci[=10] [--dry-run]
  *
- * This takes on the order of 20 minutes over the whole workspace. It is meant
- * to be run occasionally and by hand, not in CI.
+ * The local mode takes on the order of 20 minutes over the whole workspace.
+ * `--from-ci` is the preferred mode: it reads the `NX_PROFILE` traces the CI
+ * shards upload (see shard-weights-from-ci.ts), so the table is measured on
+ * the hardware the partition actually runs on, and it takes seconds. Both are
+ * run by hand, never from CI itself.
  */
 
 const logger = createLogger();
@@ -78,8 +87,12 @@ export interface ShardWeights {
   readonly weights: Readonly<Record<string, number>>;
 }
 
-const capture = (command: string, args: string[]): string =>
-  execFileSync(command, args, { encoding: 'utf-8', env: process.env }).trim();
+const capture = (command: string, args: string[]): string => {
+  return execFileSync(command, args, {
+    encoding: 'utf-8',
+    env: process.env,
+  }).trim();
+};
 
 const getProjects = (): string[] => {
   const raw = capture('pnpm', ['nx', 'show', 'projects', '--json', '--silent']);
@@ -88,10 +101,11 @@ const getProjects = (): string[] => {
   return [...projects].sort();
 };
 
-const getTargetsFor = (project: string): string =>
-  SUITE_SHARDED_PROJECTS.includes(project)
+const getTargetsFor = (project: string): string => {
+  return SUITE_SHARDED_PROJECTS.includes(project)
     ? SUITE_SHARDED_TARGETS
     : MEASURED_TARGETS;
+};
 
 /**
  * @description Time one project's targets. A project missing every target still
@@ -150,11 +164,77 @@ const getCommit = (): string => {
 /** Sorted keys so regeneration produces a minimal, reviewable diff. */
 const buildWeights = (
   measured: ReadonlyMap<string, number>,
-): Record<string, number> =>
-  Object.fromEntries([...measured.entries()].sort(([a], [b]) => a.localeCompare(b))); // prettier-ignore
+): Record<string, number> => { return Object.fromEntries([...measured.entries()].sort(([a], [b]) => a.localeCompare(b))); }; // prettier-ignore
+
+const readPreviousWeights = (): Record<string, number> => {
+  try {
+    const parsed: unknown = JSON.parse(readFileSync(WEIGHTS_PATH, 'utf-8'));
+    const weights = typeof parsed === 'object' && parsed !== null && 'weights' in parsed ? parsed.weights : undefined; // prettier-ignore
+
+    if (typeof weights !== 'object' || weights === null) return {};
+
+    return Object.fromEntries(
+      Object.entries(weights).filter((entry): entry is [string, number] => typeof entry[1] === 'number'), // prettier-ignore
+    );
+  } catch {
+    return {};
+  }
+};
+
+const write = (payload: ShardWeights, dryRun: boolean): void => {
+  if (dryRun) {
+    logger.warn('--dry-run: not writing shard-weights.json');
+    console.log(JSON.stringify(payload, null, 2));
+
+    return;
+  }
+
+  writeFileSync(WEIGHTS_PATH, `${JSON.stringify(payload, null, 2)}\n`);
+  logger.success(`Wrote ${WEIGHTS_PATH} (${Object.keys(payload.weights).length} projects)`); // prettier-ignore
+};
+
+const mainFromCi = (dryRun: boolean): void => {
+  const limit = Number(flagValue('from-ci') ?? '10') || 10;
+  const runs = downloadProfiles(limit);
+
+  if (runs.length === 0) {
+    logger.fail('No merge-queue CI run has nx-profile-shard-* artifacts yet; nothing to weigh.'); // prettier-ignore
+    process.exitCode = 1;
+
+    return;
+  }
+
+  logger.heading(`Weighing ${runs.length} merge-queue CI run(s) from their NX_PROFILE traces`); // prettier-ignore
+
+  const weights = mergeWeights(
+    runs.map((tasks) => weighRun(tasks, SUITE_SHARDED_PROJECTS)),
+    readPreviousWeights(),
+  );
+
+  write(
+    {
+      metadata: {
+        commit: getCommit(),
+        generatedAt: new Date().toISOString(),
+        hostParallelism: 4,
+        note: `CI-measured ms per project (median of ${runs.length} merge-queue runs' NX_PROFILE traces) for lint+typecheck+test (lint+typecheck only for suite-sharded projects). Unmeasured projects carry their previous weight, scaled. Balance only — never correctness.`, // prettier-ignore
+        nxVersion: getNxVersion(),
+      },
+      weights,
+    },
+    dryRun,
+  );
+};
 
 const main = (): void => {
   const dryRun = hasFlag('dry-run');
+
+  if (hasFlag('from-ci')) {
+    mainFromCi(dryRun);
+
+    return;
+  }
+
   const only = flagValue('projects');
   const projects = only ? only.split(',').map((p) => p.trim()) : getProjects();
 
@@ -185,15 +265,7 @@ const main = (): void => {
     weights: buildWeights(measured),
   };
 
-  if (dryRun) {
-    logger.warn('--dry-run: not writing shard-weights.json');
-    console.log(JSON.stringify(payload, null, 2));
-
-    return;
-  }
-
-  writeFileSync(WEIGHTS_PATH, `${JSON.stringify(payload, null, 2)}\n`);
-  logger.success(`Wrote ${WEIGHTS_PATH} (${measured.size} projects)`);
+  write(payload, dryRun);
 };
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

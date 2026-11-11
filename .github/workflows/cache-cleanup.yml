@@ -1,0 +1,44 @@
+################################################################################
+#
+#   🧹 Delete a pull request's Actions caches once it closes.
+#
+#   A PR's caches live under `refs/pull/<n>/merge` and can only ever be restored
+#   by later runs of that same PR, so once it is closed or merged they are dead
+#   weight. They are not small: each ready push saves four ~215 MB Nx entries
+#   (three shards plus `gates`) and, on a lockfile change, a ~336 MB pnpm store.
+#   Left to GitHub's LRU, they push the repo over its 10 GB quota and evict
+#   the `main` entries every PR restores from (OT plan 80b62f5e,
+#   docs/monorepo/ci-cost.md).
+#
+#   💰 One `gh` call on a standard runner, with no checkout and no install.
+#
+#   Fork PRs get a read-only token here, so their delete is refused; that is
+#   reported and tolerated. Their caches still age out via the LRU.
+#
+################################################################################
+name: '🧹 Cache cleanup'
+
+on:
+  pull_request:
+    types: [closed]
+
+permissions:
+  # `gh cache delete` needs actions: write.
+  actions: write
+
+jobs:
+  delete-pr-caches:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    steps:
+      - name: '🧹 Delete this PR’s caches'
+        env:
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+          REF: refs/pull/${{ github.event.pull_request.number }}/merge
+        run: |
+          set -euo pipefail
+          echo "Caches on $REF before cleanup:"
+          gh cache list --ref "$REF" --limit 100 || true
+          gh cache delete --all --ref "$REF" --succeed-on-no-caches \
+            || echo "⚠️ delete refused (fork PR with a read-only token?); LRU eviction will reclaim these"
