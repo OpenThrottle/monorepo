@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { spawnSync } from 'node:child_process';
-import { closeSync, openSync } from 'node:fs';
+import { closeSync, existsSync, openSync, readFileSync } from 'node:fs';
 import { mkdir, readdir, unlink } from 'node:fs/promises';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -16,6 +16,8 @@ import {
   resolveDatabaseUrl,
   selectDatabases,
 } from '../databases/database-registry.ts';
+import { resolvePrimaryComposeProject } from './openthrottle-database-lifecycle.ts';
+import { readEnvFile } from './utils/env.ts';
 import { createLogger } from './utils/index.ts';
 
 const logger = createLogger();
@@ -31,8 +33,9 @@ const logger = createLogger();
  * When the docker-compose `postgres` service is running, pg_dump executes
  * inside the container so the client version always matches the server
  * (a host pg_dump older than the server — e.g. Homebrew 17 vs Postgres 18 —
- * aborts with a server version mismatch). Falls back to the host pg_dump
- * when the container is not available.
+ * aborts with a server version mismatch). Only THIS checkout's compose
+ * project counts (an isolated worktree runs its own); with none running it
+ * falls back to the host pg_dump rather than another project's container.
  */
 
 /** Where `database`'s archives go: `databases/<db>/backups` under `root`. */
@@ -136,27 +139,86 @@ function timestamp(): string {
   return `${y}${m}${day}-${h}${min}${s}`;
 }
 
+/** What {@link selectPostgresContainerId} needs from `docker ps`. */
+export interface DockerPsResult {
+  readonly status: number | null;
+  readonly stdout: string;
+}
+
+/** Runs `docker <args>` and returns its exit status and stdout. Injected so the selection is testable. */
+export type RunDockerPs = (args: readonly string[]) => DockerPsResult;
+
+const runDockerPs: RunDockerPs = (args) => {
+  const ps = spawnSync('docker', [...args], { encoding: 'utf8', shell: false });
+
+  return { status: ps.status, stdout: ps.stdout ?? '' };
+};
+
+/** Which compose project's `postgres` to look for: its name and the checkout it runs from. */
+export interface ComposeProjectRef {
+  readonly name: string;
+  /** Absolute checkout root — compose stamps it on every container as `com.docker.compose.project.working_dir`. */
+  readonly workingDir: string;
+}
+
 /**
  * @description Resolves the running container ID for the compose `postgres`
- * service via its compose label, or null when no such container is running.
- * Uses the label rather than a hardcoded name because compose names the
- * container `<project>-postgres-1`, not `postgres`.
+ * service OF `project`, or null when this checkout has none running. Uses
+ * labels rather than a hardcoded name because compose names the container
+ * `<project>-postgres-1`, not `postgres`. The project and working-dir labels
+ * matter: with an isolated worktree running, several projects each have a
+ * `postgres` service, and a hand-run container can carry copied
+ * project/service labels (seen: `ot-verify-*`, no working_dir). Taking the
+ * first service match dumps whichever `docker ps` listed first. Null — never
+ * another checkout's container — sends the caller to the host pg_dump.
  */
-function resolvePostgresContainerId(): string | null {
-  const ps = spawnSync(
-    'docker',
-    [
-      'ps',
-      '-q',
-      '--filter',
-      `label=com.docker.compose.service=${POSTGRES_SERVICE}`,
-    ],
-    { encoding: 'utf8', shell: false },
-  );
+export function selectPostgresContainerId(
+  project: ComposeProjectRef,
+  run: RunDockerPs = runDockerPs,
+): string | null {
+  const ps = run([
+    'ps',
+    '-q',
+    '--filter',
+    `label=com.docker.compose.project=${project.name}`,
+    '--filter',
+    `label=com.docker.compose.project.working_dir=${project.workingDir}`,
+    '--filter',
+    `label=com.docker.compose.service=${POSTGRES_SERVICE}`,
+  ]);
 
-  const id = ps.status === 0 ? ps.stdout.trim().split('\n')[0] : '';
+  const id = ps.status === 0 ? (ps.stdout.trim().split('\n')[0] ?? '') : '';
 
   return id === '' ? null : id;
+}
+
+/**
+ * @description The compose project this checkout's `docker compose` commands
+ * run under, resolved the way compose does: `COMPOSE_PROJECT_NAME` from the
+ * process env, then from `<root>/.env` (a worktree's provisioner writes
+ * `openthrottle-<slug>` there), then the compose file's top-level `name:`,
+ * then the directory name.
+ */
+export function resolveComposeProject(
+  root: string = process.cwd(),
+  env: Readonly<Record<string, string | undefined>> = process.env,
+): string {
+  const composeFile = join(root, 'docker-compose.yml');
+  const fileEnv = readEnvFile(join(root, '.env'));
+  const fromProcess = env.COMPOSE_PROJECT_NAME?.trim();
+  const hasProcessProject = fromProcess !== undefined && fromProcess !== '';
+  const primaryEnv = hasProcessProject
+    ? { ...fileEnv, COMPOSE_PROJECT_NAME: fromProcess }
+    : fileEnv;
+  const composeContents = existsSync(composeFile)
+    ? readFileSync(composeFile, 'utf8')
+    : '';
+
+  return resolvePrimaryComposeProject({
+    composeContents,
+    primaryDir: root,
+    primaryEnv,
+  });
 }
 
 /**
@@ -257,7 +319,17 @@ async function main(): Promise<void> {
   }
 
   const primaryUrl = getPostgresUrl();
-  const containerId = resolvePostgresContainerId();
+  const root = process.cwd();
+  const project = resolveComposeProject(root);
+  const containerId = selectPostgresContainerId({
+    name: project,
+    workingDir: root,
+  });
+  if (containerId === null) {
+    logger.info(
+      `No running postgres container for compose project "${project}" in ${root}; using the host pg_dump.`,
+    );
+  }
   const ts = timestamp();
 
   // One database at a time: each pg_dump streams a whole database, and the
