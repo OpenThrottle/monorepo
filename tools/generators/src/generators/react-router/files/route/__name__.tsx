@@ -17,9 +17,7 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   links: (_match) => [],
 };
 
-export const loader = async (
-  _args: Route.LoaderArgs,
-): Promise<Record<string, never>> => {
+export const loader = async (_args: Route.LoaderArgs) => {
   return {};
 };
 
@@ -27,7 +25,7 @@ export const links: Route.LinksFunction = () => {
   return [];
 };
 
-export const meta: Route.MetaFunction = (_args) => {
+export const meta = (_args: Route.MetaArgs) => {
   return [{ title: `<%= nameTitle %> | ${SITE_TITLE}` }];
 };
 
@@ -66,9 +64,7 @@ export default function Component(
   );
 }
 
-export const action = async (
-  _args: Route.ActionArgs,
-): Promise<Record<string, never>> => {
+export const action = async (_args: Route.ActionArgs) => {
   return {};
 };
 

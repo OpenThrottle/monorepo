@@ -67,6 +67,9 @@ export * from './components/Tooltip/index';
 export * from './data/data.cron-presets';
 export * from './data/data.faceted-filter';
 
+// Hooks
+export * from './hooks/useCarousel';
+
 // Themes
 export * from './themes/index';
 

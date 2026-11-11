@@ -3,10 +3,10 @@
 import { ArrowLeft } from 'lucide-react';
 import * as React from 'react';
 
+import { useCarousel } from '../../hooks/useCarousel';
 import { cn } from '../../utils/cn';
 import type { ButtonProps } from '../Button';
 import { Button } from '../Button';
-import { useCarousel } from './useCarousel';
 
 export interface CarouselPreviousProps extends ButtonProps {}
 

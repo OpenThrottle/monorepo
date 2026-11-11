@@ -1,8 +1,8 @@
 import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { useReorderList } from '../hooks';
-import type { CmsReorderListSource } from '../types';
+import { useReorderList } from '../hooks/useReorderList';
+import type { CmsReorderListSource } from '../types/cms-reorder-list';
 import { ReorderItem } from './ReorderItem';
 
 /**

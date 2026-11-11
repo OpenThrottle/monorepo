@@ -5,7 +5,7 @@ import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { REORDER_HANDLE_COPY } from '../../data';
+import { REORDER_HANDLE_COPY } from '../../data/data.copy';
 import { ReorderItem } from '../ReorderItem';
 
 describe('ReorderItem', () => {

@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
-import type { CmsReorderListSource } from '../../types';
+import type { CmsReorderListSource } from '../../types/cms-reorder-list';
 import { useReorderList } from '../useReorderList';
 
 describe('useReorderList', () => {

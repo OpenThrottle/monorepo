@@ -1,6 +1,11 @@
-export * from './components';
-// export * from './config';
-// export * from './data';
-// export * from './hooks';
+export * from './components/Button';
+export * from './components/Card';
+export * from './components/Carousel';
+export * from './components/Heading';
+export * from './components/Hero';
+export * from './components/Image';
+export * from './components/Layout';
+export * from './components/Link';
+export * from './components/Tweet';
+export * from './components/Wysiwyg';
 export * from './types';
-// export * from './utils';

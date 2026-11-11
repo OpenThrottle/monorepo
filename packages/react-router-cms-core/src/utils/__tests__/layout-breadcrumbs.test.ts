@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import type { CmsFragment } from '../../types';
+import type { CmsFragment } from '../../types/cms-fragment';
 import { getLayoutBreadcrumbs } from '../layout-breadcrumbs';
 
 const leaf = (uuid: string, typename: string): CmsFragment => {

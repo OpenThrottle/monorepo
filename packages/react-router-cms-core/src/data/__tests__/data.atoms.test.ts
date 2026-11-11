@@ -1,8 +1,8 @@
 import { createStore } from 'jotai';
 import { describe, expect, test } from 'vitest';
 
-import { CMS_DEVICE } from '../../config';
-import type { CmsFragment } from '../../types';
+import { CMS_DEVICE } from '../../config/cms-device';
+import type { CmsFragment } from '../../types/cms-fragment';
 import { atomFragment } from '../data.atom.fragment';
 import { atomFragments } from '../data.atom.fragments';
 import { atomSettings, atomSettingsDefault } from '../data.atom.settings';
