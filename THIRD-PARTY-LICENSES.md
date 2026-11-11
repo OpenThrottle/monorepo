@@ -13,13 +13,13 @@ Platform-specific prebuilt binaries (packages that declare `os`/`cpu`, e.g.
 `@rollup/rollup-linux-x64-gnu`, `fsevents`) are omitted: which ones install depends on
 the host OS, and each shares the license of the cross-platform toolchain already listed.
 
-**2142** third-party packages.
+**2145** third-party packages.
 
 ## License summary
 
 | License | Packages |
 | --- | --- |
-| MIT | 1843 |
+| MIT | 1846 |
 | Apache-2.0 | 97 |
 | ISC | 80 |
 | BSD-3-Clause | 59 |
@@ -1118,6 +1118,9 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `electron-to-chromium` | 1.5.399 | ISC | [Kilian Valkhof](https://github.com/Kilian/electron-to-chromium#readme) |
 | `electron-vite` | 6.0.0 | MIT | [Alex Wei](https://electron-vite.org) |
 | `electron-winstaller` | 5.4.0 | MIT | [source](https://github.com/electron/windows-installer#readme) |
+| `embla-carousel` | 8.6.0 | MIT | [David Jerleke](https://www.embla-carousel.com) |
+| `embla-carousel-react` | 8.6.0 | MIT | [David Jerleke](https://www.embla-carousel.com) |
+| `embla-carousel-reactive-utils` | 8.6.0 | MIT | [David Jerleke](https://www.embla-carousel.com) |
 | `emittery` | 0.13.1 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/emittery#readme) |
 | `emoji-regex` | 10.6.0, 8.0.0, 9.2.2 | MIT | [Mathias Bynens](https://mths.be/emoji-regex) |
 | `emojilib` | 2.4.0 | MIT | [Mu-An Chiou](https://github.com/muan/emojilib#readme) |
@@ -1752,7 +1755,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `pg-types` | 2.2.0 | MIT | [Brian M. Carlson](https://github.com/brianc/node-pg-types) |
 | `pgpass` | 1.0.5 | MIT | [Hannes Hörl](https://github.com/hoegaarden/pgpass#readme) |
 | `picocolors` | 1.1.1 | ISC | [Alexey Raspopov](https://github.com/alexeyraspopov/picocolors#readme) |
-| `picomatch` | 2.3.2, 4.0.4, 4.0.5 | MIT | [Jon Schlinkert](https://github.com/micromatch/picomatch) |
+| `picomatch` | 2.3.2, 4.0.4, 4.0.5, 4.0.7 | MIT | [Jon Schlinkert](https://github.com/micromatch/picomatch) |
 | `pidusage` | 4.0.1 | MIT | [soyuka](https://github.com/soyuka/pidusage) |
 | `pirates` | 4.0.7 | MIT | [Ari Porad](https://github.com/danez/pirates#readme) |
 | `piscina` | 4.9.3 | MIT | [James M Snell](https://github.com/piscinajs/piscina#readme) |
