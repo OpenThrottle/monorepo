@@ -62,7 +62,7 @@ see [tools/AGENTS.md](../../tools/AGENTS.md)).
   shell. Finalize gets the same path as `draftDir`. The dir is in the working tree because that is
   the only place every backend can write — `.git/` is denied or read-only under some CLIs' policies
   (Claude Code's sensitive-path guard, codex `workspace-write`) and an OS temp dir is outside others'
-  sandboxes (antigravity `--add-dir "$PWD"`, sandboxed gemini). The self-ignoring `.gitignore` keeps
+  sandboxes (antigravity `--add-dir "$PWD"`, sandboxed CLIs). The self-ignoring `.gitignore` keeps
   it untracked in any repo without that repo's own ignore rules. Never branch on `executionBackend`
   here. Finalize treats the
   draft as untrusted (`plan-run-pr-draft.ts`): it checks the conventional title and the absence of

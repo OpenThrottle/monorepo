@@ -22,7 +22,7 @@
  *    `write_to_file` failing at index 2, succeeding at index 4). A step-level `ERROR` is therefore
  *    NOT a turn failure — only `result.status` is authoritative.
  *
- * Unlike gemini (index-based `--resume`), agy resumes by id via `--conversation <id>`, so the
+ * agy resumes by id via `--conversation <id>`, so the
  * `init` conversation id IS emitted as a `session` chunk for the composer to reuse.
  */
 

@@ -1,7 +1,7 @@
 # @openthrottle/openthrottle-drivers
 
 The OpenThrottle-central contract for invoking **agent CLIs** (Claude Code, Codex,
-Cursor, Gemini, Grok, OpenCode). One `defineDriver(...)` call describes a CLI; a shared
+Cursor, Antigravity, Grok, OpenCode). One `defineDriver(...)` call describes a CLI; a shared
 execution engine runs it. Adding a new agent is a single module + test, not edits
 scattered across `tools/workflows` and the agentic packages.
 
@@ -56,7 +56,6 @@ const output = await runDriverAsync(
 | Claude   | `claude` / claude-code  | `--model` (omits `auto`) | `--permission-mode acceptEdits` | yes           | no                | no                      |
 | Codex    | `codex` / codex         | `--model` (omits `auto`) | `--sandbox workspace-write`     | no            | no                | no                      |
 | Cursor   | `cursor` / cursor-agent | `--model` (any value)    | `--force`                       | yes           | `--worktree-base` | `--skip-worktree-setup` |
-| Gemini   | `gemini` / gemini       | `--model` (omits `auto`) | `--approval-mode yolo`          | no            | no                | no                      |
 | Grok     | `grok` / grok           | `--model` (omits `auto`) | `--permission-mode acceptEdits` | yes           | no¹               | no                      |
 | OpenCode | `opencode` / opencode   | `--model` (omits `auto`) | `--auto`                        | no            | no                | no                      |
 
@@ -69,9 +68,6 @@ Command shapes (legacy-identical for cursor; claude adds stream-json output flag
 - `claude -p --permission-mode acceptEdits "<prompt>" --output-format stream-json --verbose [--model M] [-w [name]]` (the driver's `parseOutput` recovers the text-mode stdout from the terminal `result` event and reports usage limits)
 - `codex exec --sandbox workspace-write --skip-git-repo-check [--model M] "<prompt>"`
 - `cursor-agent --force -p "<prompt>" [--model M] [-w [name] [--worktree-base B] [--skip-worktree-setup]]`
-- `gemini --approval-mode yolo "<prompt>" [--model M] < /dev/null` (the redirect is load-bearing:
-  with a non-TTY stdin the CLI blocks reading it to EOF; the positional prompt is used because
-  `-p` is deprecated in 0.25.2)
 - `grok -p "<prompt>" --permission-mode acceptEdits [--model M] [-w [name]]`
 - `opencode run --auto "<prompt>" [--model M]`
 
@@ -105,5 +101,4 @@ Command shapes (legacy-identical for cursor; claude adds stream-json output flag
    `buildShellCommand` instead of shipping a broken command.
 
 Suggested follow-ups: **GitHub Copilot CLI** (`copilot`); second tier Amp, Aider,
-Goose, Qwen Code — each is one `defineDriver` module + test. (Gemini CLI landed as
-`src/drivers/gemini.ts` — dossier in `docs/openthrottle/gemini-stream-json-schema.md`.)
+Goose, Qwen Code — each is one `defineDriver` module + test.

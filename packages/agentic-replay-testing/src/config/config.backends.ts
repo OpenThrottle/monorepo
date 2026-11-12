@@ -11,7 +11,6 @@ import {
   type ConversationBackend,
   createCursorAgentSession,
   cursorAgentConversationBackend,
-  geminiConversationBackend,
   opencodeConversationBackend,
 } from '@openthrottle/openthrottle-agentic-utils';
 import { type DriverId, getDriver } from '@openthrottle/openthrottle-drivers';
@@ -196,16 +195,6 @@ export const CODEX_RECORDING_PROFILE: RecordingProfile = profileFor('codex', {
 });
 
 /** @public */
-export const GEMINI_RECORDING_PROFILE: RecordingProfile = profileFor('gemini', {
-  conversationBackend: geminiConversationBackend,
-  defaultModel: null,
-  dropStdoutLine: neverDrop,
-  mintSession: undefined,
-  redactKeys: DEFAULT_REDACT_KEYS,
-  sessionStrategy: SESSION_STRATEGIES.none,
-});
-
-/** @public */
 export const OPENCODE_RECORDING_PROFILE: RecordingProfile = profileFor(
   'opencode',
   {
@@ -241,6 +230,5 @@ export const RECORDING_PROFILES: Readonly<Record<string, RecordingProfile>> = {
   claude: CLAUDE_RECORDING_PROFILE,
   codex: CODEX_RECORDING_PROFILE,
   cursor: CURSOR_RECORDING_PROFILE,
-  gemini: GEMINI_RECORDING_PROFILE,
   opencode: OPENCODE_RECORDING_PROFILE,
 };

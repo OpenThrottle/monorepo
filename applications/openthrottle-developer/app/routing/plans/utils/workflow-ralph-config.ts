@@ -43,7 +43,6 @@ export const WORKFLOW_RALPH_KNOWN_BACKENDS = [
   'claude',
   'codex',
   'cursor',
-  'gemini',
   'grok',
   'opencode',
 ] as const;
@@ -62,9 +61,6 @@ export const formatWorkflowRalphExecutionBackendLabel = (
   }
   if (backend === 'cursor') {
     return 'Cursor (cursor-agent)';
-  }
-  if (backend === 'gemini') {
-    return 'Gemini CLI';
   }
   if (backend == null || backend === '') {
     return '—';

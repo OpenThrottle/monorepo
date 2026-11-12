@@ -251,10 +251,9 @@ describe('isAcpChatEnabled', () => {
   });
 
   it('routes listed drivers that have an ACP spec', () => {
-    const env = { [CHAT_ACP_BACKENDS_ENV]: 'cursor, Gemini' };
+    const env = { [CHAT_ACP_BACKENDS_ENV]: 'Cursor, claude' };
 
     expect(isAcpChatEnabled('cursor', env)).toBe(true);
-    expect(isAcpChatEnabled('gemini', env)).toBe(true);
     expect(isAcpChatEnabled('claude', env)).toBe(false);
   });
 

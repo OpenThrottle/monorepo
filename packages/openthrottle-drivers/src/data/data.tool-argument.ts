@@ -1,7 +1,7 @@
 /**
  * @description Which input field carries the one short argument shown on a worker's `→ <tool>`
  * line, per tool, and how long each rendering may be. Tool names are matched lower-cased because
- * the CLIs disagree on casing (Claude `Read`, cursor/opencode `read`, gemini `read_file`).
+ * the CLIs disagree on casing (Claude `Read`, cursor/opencode `read`, antigravity `read_file`).
  */
 
 export const TOOL_ARGUMENT_KINDS = {

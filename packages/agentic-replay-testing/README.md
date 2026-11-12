@@ -50,7 +50,6 @@ every turn, so each claude transcript carries one; a real rejection cannot be pr
 | cursor      | caller, pre-minted `create-chat` | 10           | 3        | no `permission-denied`: supervised let the write through             |
 | opencode    | CLI-minted `ses_…`               | 10           | 0        | no `permission-denied` (same); plan-run model gated on the account   |
 | antigravity | CLI-minted conversation id       | 11           | 3        | —                                                                    |
-| gemini      | none (history in the prompt)     | 0            | 0        | the recording account needs `GOOGLE_CLOUD_PROJECT`                   |
 
 Session strategy (`sessionStrategy` on each profile) decides what a resume turn continues. Every
 turn carries the full history, and a later turn's replay first replays the earlier turns, each

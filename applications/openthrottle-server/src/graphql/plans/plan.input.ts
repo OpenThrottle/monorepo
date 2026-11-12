@@ -249,7 +249,7 @@ export class RalphPlanRunTuningInput {
   backend?: string | null;
 
   @Field(() => String, {
-    description: `Reasoning-effort level for the run: "low", "medium", "high", "extraHigh", "max", or "ultra" (the same vocabulary as the chat composer's reasoning). Nullable + additive: omit to leave the run's effort unchanged. An unrecognized level is rejected. Recorded on the run's runConfigSnapshot and forwarded to the agent CLI, where each backend maps it to its own flag (claude --effort, codex -c model_reasoning_effort=, grok --reasoning-effort, opencode --variant), clamping to its accepted set; a backend with no reasoning knob (cursor, gemini, antigravity) ignores it.`,
+    description: `Reasoning-effort level for the run: "low", "medium", "high", "extraHigh", "max", or "ultra" (the same vocabulary as the chat composer's reasoning). Nullable + additive: omit to leave the run's effort unchanged. An unrecognized level is rejected. Recorded on the run's runConfigSnapshot and forwarded to the agent CLI, where each backend maps it to its own flag (claude --effort, codex -c model_reasoning_effort=, grok --reasoning-effort, opencode --variant), clamping to its accepted set; a backend with no reasoning knob (antigravity, cursor) ignores it.`,
     nullable: true,
   })
   effort?: string | null;
@@ -520,7 +520,7 @@ export class RegisterCliPlanRunInput {
   branch?: string | null;
 
   @Field(() => String, {
-    description: `Execution backend for this run: antigravity, claude, codex, cursor, gemini, grok, or opencode.`,
+    description: `Execution backend for this run: antigravity, claude, codex, cursor, grok, or opencode.`,
   })
   executionBackend!: string;
 

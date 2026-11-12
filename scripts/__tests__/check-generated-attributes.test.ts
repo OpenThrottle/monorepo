@@ -122,8 +122,8 @@ describe('check-generated-attributes', () => {
 
   describe('suggestGlob', () => {
     it('suggests a folder glob, never the file name', () => {
-      expect(suggestGlob('.gemini/hooks/skill-usage-capture.cjs')).toBe(
-        '.gemini/hooks/*.cjs linguist-generated=true',
+      expect(suggestGlob('.grok/hooks/skill-usage-capture.cjs')).toBe(
+        '.grok/hooks/*.cjs linguist-generated=true',
       );
     });
 

@@ -21,7 +21,6 @@ import { antigravityConversationBackend } from './antigravity/index.ts';
 import { claudeConversationBackend } from './claude/index.ts';
 import { codexConversationBackend } from './codex/index.ts';
 import { cursorAgentConversationBackend } from './cursor-agent/index.ts';
-import { geminiConversationBackend } from './gemini/index.ts';
 import { grokConversationBackend } from './grok/index.ts';
 import { opencodeConversationBackend } from './opencode/index.ts';
 import type { ConversationBackend } from './types.ts';
@@ -42,7 +41,6 @@ export const CONVERSATION_CLI_BACKENDS: Readonly<
   claude: claudeConversationBackend,
   codex: codexConversationBackend,
   cursor: withAcpRouting('cursor', cursorAgentConversationBackend),
-  gemini: withAcpRouting('gemini', geminiConversationBackend),
   grok: grokConversationBackend,
   opencode: opencodeConversationBackend,
 };

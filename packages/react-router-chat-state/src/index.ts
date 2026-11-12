@@ -1,7 +1,6 @@
 // 🧩 React Components
 export * from './components/ClaudeIcon';
 export * from './components/CursorIcon';
-export * from './components/GeminiIcon';
 export * from './components/GrokIcon';
 export * from './components/OpenAiIcon';
 export * from './components/OpenCodeIcon';

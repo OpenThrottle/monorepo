@@ -21,7 +21,7 @@ describe('main', () => {
   });
 
   describe('when a CLI driver is requested', () => {
-    it.each(['claude', 'codex', 'claude,codex,gemini'])(
+    it.each(['claude', 'codex', 'claude,codex,cursor'])(
       'exits 2 for --driver %s before touching the network',
       async (driver) => {
         vi.stubEnv('ANTHROPIC_API_KEY', 'k');

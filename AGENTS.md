@@ -166,7 +166,7 @@ byte-for-byte, so they cannot be gitignored — instead the root
 - `applications/openthrottle-server/schema.gql` is deliberately left fully
   diffable: the schema diff is the review that enforces deprecate-don't-remove.
 - **Adding a new committed payload directory? Add its glob in the same commit**
-  — a folder glob (`.gemini/hooks/*.cjs`), never a file name, which is how
+  — a folder glob (`.codex/hooks/*.cjs`), never a file name, which is how
   `plan-run-janitor.cjs` slipped past `.prettierignore`. _(Enforced.)_
   `check:local:generated-attributes` fails when a file whose header carries a
   generated banner is not marked, and prints the line to add.

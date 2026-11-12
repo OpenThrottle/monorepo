@@ -126,7 +126,6 @@ plus any per-run `env` — so a stub named here is the binary a run actually spa
 | `OPENTHROTTLE_CLAUDE_BIN`       | `claude`            |
 | `OPENTHROTTLE_CODEX_BIN`        | `codex`             |
 | `OPENTHROTTLE_CURSOR_AGENT_BIN` | `cursor-agent`      |
-| `OPENTHROTTLE_GEMINI_BIN`       | `gemini`            |
 | `OPENTHROTTLE_GROK_BIN`         | `grok`              |
 | `OPENTHROTTLE_OPENCODE_BIN`     | `opencode`          |
 | `OPENTHROTTLE_ANTIGRAVITY_BIN`  | `agy` (antigravity) |

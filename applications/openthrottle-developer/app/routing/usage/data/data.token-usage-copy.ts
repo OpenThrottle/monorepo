@@ -19,7 +19,6 @@ export const TOKEN_USAGE_PROVIDERS: readonly TokenUsageProviderOption[] = [
   { id: 'claude', label: 'Claude' },
   { id: 'codex', label: 'Codex' },
   { id: 'cursor', label: 'Cursor' },
-  { id: 'gemini', label: 'Gemini' },
   { id: 'grok', label: 'Grok' },
   { id: 'opencode', label: 'opencode' },
   { id: 'openai', label: 'OpenAI' },

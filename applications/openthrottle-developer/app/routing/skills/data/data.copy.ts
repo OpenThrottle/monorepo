@@ -36,7 +36,7 @@ export const SKILLS_ONBOARDING = {
     `Keep every agent on the same house rules, whichever CLI someone reaches for.`,
     `Scope a skill with tags and availability rules so it stays quiet where it doesn't belong.`,
   ],
-  whatItIs: `A skill is a folder with a SKILL.md in it: YAML frontmatter naming the skill and describing when to use it, then the instructions themselves. That's the open Agent Skills format from agentskills.io — not an OpenThrottle invention — so Claude Code, Cursor, Codex, OpenCode, and Gemini CLI all speak it.`,
+  whatItIs: `A skill is a folder with a SKILL.md in it: YAML frontmatter naming the skill and describing when to use it, then the instructions themselves. That's the open Agent Skills format from agentskills.io — not an OpenThrottle invention — so Claude Code, Cursor, Codex, OpenCode, and Antigravity all speak it.`,
 } satisfies GlobalFeatureOnboardingContent;
 
 /**

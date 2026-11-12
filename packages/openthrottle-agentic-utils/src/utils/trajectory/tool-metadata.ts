@@ -6,7 +6,7 @@
  * | CLI         | arguments                          | result content                     |
  * | ----------- | ---------------------------------- | ---------------------------------- |
  * | claude      | `toolCall` (object, on the call)   | `toolCall` (string, on the result) |
- * | gemini, agy | `toolCall` (object, on the call)   | `toolCall.output`                  |
+ * | agy         | `toolCall` (object, on the call)   | `toolCall.output`                  |
  * | cursor      | `toolCall` (args, on the call)     | `toolCall` (outcome, on the result) |
  * | cursor, old | `toolCall.<name>ToolCall.args`     | `toolCall.<name>ToolCall.result`   |
  * | opencode    | `toolCall` (on the call)           | `toolCall` (on the result)         |

@@ -14,7 +14,7 @@ import { createAcpConversationBackend } from './acp.ts';
 import { ACP_AGENT_SPECS } from './agent-specs.ts';
 
 /**
- * Env var naming the driver ids whose chat runs over ACP (`cursor,gemini`, or
+ * Env var naming the driver ids whose chat runs over ACP (`cursor`, or
  * `all`).
  *
  * @public

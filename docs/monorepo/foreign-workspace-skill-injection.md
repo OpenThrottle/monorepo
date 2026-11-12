@@ -57,43 +57,39 @@ Every agent CLI discovers skills **only from directories inside the working tree
 
 Two different consumers write these dirs, and the doc used to blur them — which made the gap list read wrong. Keep them apart:
 
-- **In-repo fan-out** (`ot-skill-sync`, `skills/ot-skill-sync/scripts/sync.sh`) — inside the OT monorepo. Its targets are configurable, and it gained `.gemini/skills` on 2026-08-26.
+- **In-repo fan-out** (`ot-skill-sync`, `skills/ot-skill-sync/scripts/sync.sh`) — inside the OT monorepo. Its targets are configurable.
 - **Foreign injection** (this record) — the server materializing into someone else's checkout. Its targets are hardcoded to `.agents/skills` + `.claude/skills`.
 
-So a CLI can be covered in-repo and still uncovered in a foreign repo. `gemini` is exactly that case today.
+So a CLI can be covered in one consumer and still uncovered in the other.
 
 ### What each CLI actually reads
 
-| CLI                | binary         | version    | `.agents/skills` | `.claude/skills` | `.gemini/skills` | its own in-repo dir                  |
-| ------------------ | -------------- | ---------- | :--------------: | :--------------: | :--------------: | ------------------------------------ |
-| Claude Code        | `claude`       | 2.1.232    |        —         |        ✅        |        —         | —                                    |
-| Cursor CLI         | `cursor-agent` | 2026.08.11 |        ✅        |        ✅        |        —         | `.cursor/skills`, `.codex/skills`    |
-| Grok Build         | `grok`         | 1.0.5      |        ✅        |        ✅        |        —         | `.grok/skills`, `.cursor/skills`     |
-| Google Antigravity | `agy`          | 1.1.21     |        ✅        |        —         |        —         | — (global `~/.gemini/config/skills`) |
-| Gemini CLI         | `gemini`       | 0.25.2     |        —         |        —         |        ✅        | `.gemini/skills`                     |
-| Codex CLI          | `codex`        | 0.145.0    |        —         |        —         |        —         | — (global `$CODEX_HOME/skills` only) |
-| OpenCode           | `opencode`     | 1.18.16    |        —         |        —         |        —         | `.opencode/skill(s)`                 |
+| CLI                | binary         | version    | `.agents/skills` | `.claude/skills` | its own in-repo dir                  |
+| ------------------ | -------------- | ---------- | :--------------: | :--------------: | ------------------------------------ |
+| Claude Code        | `claude`       | 2.1.232    |        —         |        ✅        | —                                    |
+| Cursor CLI         | `cursor-agent` | 2026.08.11 |        ✅        |        ✅        | `.cursor/skills`, `.codex/skills`    |
+| Grok Build         | `grok`         | 1.0.5      |        ✅        |        ✅        | `.grok/skills`, `.cursor/skills`     |
+| Google Antigravity | `agy`          | 1.1.21     |        ✅        |        —         | — (global `~/.gemini/config/skills`) |
+| Codex CLI          | `codex`        | 0.145.0    |        —         |        —         | — (global `$CODEX_HOME/skills` only) |
+| OpenCode           | `opencode`     | 1.18.16    |        —         |        —         | `.opencode/skill(s)`                 |
 
 ### Coverage — and the two remaining gaps
 
-| CLI                | in-repo fan-out         | foreign injection            | to close it                              |
-| ------------------ | ----------------------- | ---------------------------- | ---------------------------------------- |
-| Claude Code        | ✅ `.claude/skills`     | ✅ `.claude/skills`          | —                                        |
-| Cursor CLI         | ✅ `.agents/skills`     | ✅ both dirs                 | —                                        |
-| Grok Build         | ✅ `.agents/skills`     | ✅ both dirs                 | —                                        |
-| Google Antigravity | ✅ `.agents/skills`     | ✅ `.agents/skills`          | — (native, no fan-out needed)            |
-| Gemini CLI         | ✅ **`.gemini/skills`** | ❌ not a materializer target | add `.gemini/skills` to the materializer |
-| **OpenCode**       | ❌ **gap**              | ❌ **gap**                   | add `.opencode/skill` to both            |
-| **Codex CLI**      | ❌ **gap, unclosable**  | ❌ **gap, unclosable**       | nothing in-repo works — global dir only  |
+| CLI                | in-repo fan-out        | foreign injection      | to close it                             |
+| ------------------ | ---------------------- | ---------------------- | --------------------------------------- |
+| Claude Code        | ✅ `.claude/skills`    | ✅ `.claude/skills`    | —                                       |
+| Cursor CLI         | ✅ `.agents/skills`    | ✅ both dirs           | —                                       |
+| Grok Build         | ✅ `.agents/skills`    | ✅ both dirs           | —                                       |
+| Google Antigravity | ✅ `.agents/skills`    | ✅ `.agents/skills`    | — (native, no fan-out needed)           |
+| **OpenCode**       | ❌ **gap**             | ❌ **gap**             | add `.opencode/skill` to both           |
+| **Codex CLI**      | ❌ **gap, unclosable** | ❌ **gap, unclosable** | nothing in-repo works — global dir only |
 
 **The two open gaps are OpenCode and Codex.**
 
 - **OpenCode** — reads `.opencode/skill(s)/<name>/SKILL.md` in-repo. Closable in both consumers by adding `.opencode/skill` as a target; already supported in the fan-out as a one-line `AGENT_SKILL_DIRS` override, just not a default. This is a decision, not a blocker.
 - **Codex** — **cannot be closed by any in-repo mechanism.** 0.145.0 reads skills only from `$CODEX_HOME/skills` (`~/.codex/skills`). There is no project dir to write, so neither the fan-out nor injection can ever reach it without accepting a global dir, which is rejected below. Any future codex skills support needs a different mechanism entirely.
 
-**Gemini is no longer an unsolved question, only unfinished work.** The in-repo fan-out already writes `.gemini/skills` and the approach is proven — the target dir, its symlinks, and its managed `.gitignore` handling are all exercised in this repo — so extending the materializer with the same third dir is mechanical rather than exploratory.
-
-Injecting into **both** dirs reaches four of the seven with no per-CLI branching, and remains the right base: it is the union that covers the most CLIs per directory written, and it mirrors ot-skill-sync's own two-stage layout (`.agents/skills` as the universal view, `.claude/skills` as an agent fan-out target).
+Injecting into **both** dirs reaches four of the six with no per-CLI branching, and remains the right base: it is the union that covers the most CLIs per directory written, and it mirrors ot-skill-sync's own two-stage layout (`.agents/skills` as the universal view, `.claude/skills` as an agent fan-out target).
 
 ### Why the coverage lands where it does
 
@@ -107,12 +103,10 @@ Injecting into **both** dirs reaches four of the seven with no per-CLI branching
 
 The Antigravity CLI (see `packages/openthrottle-drivers/src/drivers/antigravity.ts`) discovers workspace skills from **`<workspace>/.agents/skills/<name>/`**, plus a global `~/.gemini/config/skills/<name>/`. The existing `.agents/skills` injection therefore reaches it with **zero changes to the materializer** — the one CLI the two-dir union covers natively.
 
-Two traps, both following from Antigravity being a ground-up Go rewrite that merely reuses the `~/.gemini` prefix:
+Two notes on its layout:
 
-- **`agy` has nothing to do with `.gemini/skills`.** That is the _Gemini CLI's_ project dir. Antigravity's global scope is `~/.gemini/config/skills`, a different layout under the same prefix. Adding `.gemini/skills` for gemini does not serve `agy`, and satisfying `agy` does not serve gemini.
+- **`agy` does not read `<repo>/.gemini/skills`.** Its global scope is `~/.gemini/config/skills`, and it writes workspace artifacts and transcripts under `<workspace>/.gemini/antigravity/`.
 - **`agy` supports an `.agents/skills.json` manifest** whose entries accept absolute and `~`-prefixed `path` values — the only out-of-repo skills _pointer_ found in any supported CLI. It does not rescue the design: the manifest is a **tracked file in the target repo**, so writing it would break the non-mutation guarantee (§4), and its global twin (`~/.gemini/config/skills.json`) is rejected below as a global. Recorded so any future revisit starts from the facts. (opencode's `opencode.json` `skills.paths` accepts absolute paths and draws the same tracked-file objection.)
-
-**Gemini discovery detail (0.25.2, from the shipped source):** gemini reads `.gemini/skills` (project scope — `Storage.getProjectSkillsDir()` returns `<targetDir>/.gemini/skills`) and `~/.gemini/skills` (user scope). The user scope is rejected below with the other globals, so the project dir is the only viable target.
 
 ### Rejected: global user dirs (`~/.claude/skills`, `~/.grok/skills`, …)
 

@@ -1,7 +1,7 @@
 /**
  * @description Reasoning-effort threading through each driver's `buildShellCommand`: the flag
- * appears (and clamps) for claude, codex, grok and opencode, and is silently ignored by cursor,
- * gemini and antigravity — whose commands must stay byte-identical with and without an effort.
+ * appears (and clamps) for claude, codex, grok and opencode, and is silently ignored by cursor
+ * and antigravity — whose commands must stay byte-identical with and without an effort.
  */
 
 import { describe, expect, it } from 'vitest';
@@ -19,7 +19,6 @@ import {
   claudeDriver,
   codexDriver,
   cursorDriver,
-  geminiDriver,
   grokDriver,
   opencodeDriver,
 } from '../index.ts';
@@ -110,14 +109,12 @@ describe('driver reasoning effort', () => {
     expect(withoutEffort).not.toMatch(/effort|variant|reasoning/);
   });
 
-  it('gemini and antigravity ignore effort', () => {
-    for (const driver of [geminiDriver, antigravityDriver]) {
-      expect(
-        driver.buildShellCommand(
-          config({ effort: DRIVER_REASONING_EFFORTS.high }),
-        ),
-      ).toBe(driver.buildShellCommand(config()));
-    }
+  it('antigravity ignores effort', () => {
+    expect(
+      antigravityDriver.buildShellCommand(
+        config({ effort: DRIVER_REASONING_EFFORTS.high }),
+      ),
+    ).toBe(antigravityDriver.buildShellCommand(config()));
   });
 
   it('each mapper returns undefined for an omitted level', () => {

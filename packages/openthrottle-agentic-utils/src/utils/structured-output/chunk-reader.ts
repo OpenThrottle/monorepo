@@ -12,7 +12,6 @@ import { createAntigravityEventMapper } from '../conversation-backend/antigravit
 import { mapClaudeEvent } from '../conversation-backend/claude/events.ts';
 import { mapCodexEvent } from '../conversation-backend/codex/events.ts';
 import { mapCursorEvent } from '../conversation-backend/cursor-agent/events.ts';
-import { createGeminiEventMapper } from '../conversation-backend/gemini/events.ts';
 import { mapGrokEvent } from '../conversation-backend/grok/events.ts';
 import { createOpencodeEventMapper } from '../conversation-backend/opencode/events.ts';
 import type { ConversationStreamChunk } from '../conversation-backend/types.ts';
@@ -107,8 +106,6 @@ export const createStructuredChunkReader = (
       return withConsolidatedText((event) => {
         return listOf(mapCursorEvent(event));
       });
-    case DRIVERS.gemini:
-      return createGeminiEventMapper();
     case DRIVERS.grok:
       return mapGrokEvent;
     case DRIVERS.opencode: {

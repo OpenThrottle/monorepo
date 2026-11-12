@@ -19,7 +19,6 @@ export const DRIVERS = {
   claude: 'claude',
   codex: 'codex',
   cursor: 'cursor',
-  gemini: 'gemini',
   grok: 'grok',
   opencode: 'opencode',
 } as const;

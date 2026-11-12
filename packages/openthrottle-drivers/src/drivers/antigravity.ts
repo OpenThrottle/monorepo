@@ -1,31 +1,25 @@
 /**
  * @description Google Antigravity CLI driver: headless print mode
- * (`agy -p "<prompt>" --dangerously-skip-permissions`). Antigravity is Google's replacement for the
- * Gemini CLI, which is deprecated for consumer tiers on 2026-06-18 (enterprise licenses and
- * API-key usage continue). It is a ground-up Go rewrite, so NONE of the `gemini` driver's verified
- * behavior carries over — this driver shares no assumptions with `gemini.ts`, which stays in place
- * untouched. Verified against Antigravity CLI 1.1.21 (darwin_arm64, official release tarball,
+ * (`agy -p "<prompt>" --dangerously-skip-permissions`). Verified against Antigravity CLI 1.1.21 (darwin_arm64, official release tarball,
  * SHA512-checked); full dossier in `docs/openthrottle/antigravity-stream-json-schema.md`.
  *
- * Headless contract (a superset of gemini's):
- * - `-p` / `--print` / `--prompt` all run one prompt non-interactively. Unlike gemini — where `-p`
- *   is DEPRECATED and a positional prompt is the supported form — here `--prompt` is a documented
+ * Headless contract:
+ * - `-p` / `--print` / `--prompt` all run one prompt non-interactively. `--prompt` is a documented
  *   live alias for `--print`, so `-p` is correct and stable.
- * - `--dangerously-skip-permissions` is the non-interactive approval flag (the analogue of gemini's
- *   `--approval-mode yolo`). Without it an agentic run blocks on tool-permission prompts.
- * - `--output-format text|json|stream-json` for structured output. NOT a differentiator: gemini
- *   0.25.2 has the same flag. This driver's shell path leaves the default (`text`) alone: the shell command feeds
+ * - `--dangerously-skip-permissions` is the non-interactive approval flag. Without it an agentic
+ *   run blocks on tool-permission prompts.
+ * - `--output-format text|json|stream-json` for structured output. This driver's shell path leaves the default (`text`) alone: the shell command feeds
  *   unattended plan runs whose output is logged verbatim, and the chat/streaming path builds its own
  *   argv in `openthrottle-agentic-utils` where `stream-json` belongs.
- * - `--model` selects the model; `agy models` genuinely lists them (gemini had no such subcommand).
- *   Real differentiators vs gemini: `--json-schema`, id-based `--conversation` resume, the `models`
- *   subcommand, `--effort`, `--sandbox`, and the load-bearing `--add-dir`.
+ * - `--model` selects the model; `agy models` lists them. Other notable flags:
+ *   `--json-schema`, id-based `--conversation` resume, `--effort`, `--sandbox`, and the
+ *   load-bearing `--add-dir`.
  *
  * Two spawn gotchas verified against 1.1.21:
  * - UNAUTHENTICATED HEADLESS RUNS BLOCK — they do not fail fast. `agy -p "…" < /dev/null` prints a
  *   Google OAuth consent URL and then waits for a pasted authorization code even in print mode with
- *   stdin closed, before failing with `authentication failed or timed out`. Gemini fast-failed with
- *   exit 41; this stalls for the auth window instead, so an unattended run MUST be bounded by
+ *   stdin closed, before failing with `authentication failed or timed out`. It does not fail fast; it
+ *   stalls for the auth window instead, so an unattended run MUST be bounded by
  *   `DriverInvocationConfig.timeoutMs` (the engine's timeout) or the CLI's own `--print-timeout`
  *   (default 5m). `< /dev/null` is still emitted: it makes the failure deterministic rather than
  *   leaving the child waiting on an inherited stdin.
@@ -46,10 +40,10 @@ import {
 const capabilities: DriverCapabilities = {
   /**
    * Antigravity resolves MCP servers from its OWN config scope, not from the workspace's committed
-   * files. It reuses the `~/.gemini` directory but with a different layout than the Gemini CLI —
-   * servers live in `~/.gemini/config/mcp_config.json`, NOT in `settings.json`'s `mcpServers` block.
+   * files. It keeps its config under `~/.gemini` —
+   * servers live in `~/.gemini/config/mcp_config.json`.
    * The 1.1.21 binary shows no `.mcp.json` handling, so an OT checkout's committed `.mcp.json`
-   * cannot reach `openthrottle-mcp`. As with codex and gemini, reachability is a property of the
+   * cannot reach `openthrottle-mcp`. As with codex, reachability is a property of the
    * host's own config, so surface it as "cannot be verified", not as "server missing".
    */
   attachesWorkspaceMcp: false,
@@ -57,12 +51,12 @@ const capabilities: DriverCapabilities = {
    * Wired to `antigravityConversationBackend` in `openthrottle-agentic-utils`
    * (conversation-backend/antigravity) — prompt in argv as the `-p` value, NDJSON stream-json mapper
    * over the verified `init`/`step_update`/`result` events, and real id-based multi-turn resume via
-   * `--conversation` (unlike gemini's flattened history). A guard test keeps this in lockstep with
+   * `--conversation` (rather than a flattened history). A guard test keeps this in lockstep with
    * `CONVERSATION_CLI_BACKENDS`.
    */
   chatStreaming: true,
   /**
-   * Emits no MCP flags. Unlike gemini, Antigravity does have a programmatic surface — an `mcp`
+   * Emits no MCP flags. Antigravity does have a programmatic surface — an `mcp`
    * subcommand (`add`, `remove`, `list`, `enable`, `disable`) — but that mutates host config as a
    * separate side-effecting step, which is not what `buildShellCommand` does: this builder is pure
    * and emits per-invocation flags only. No per-invocation MCP flag exists, so nothing is emitted.
@@ -89,7 +83,7 @@ const capabilities: DriverCapabilities = {
 };
 
 /**
- * `agy models` lists models, unlike the Gemini CLI. Verified against an authenticated 1.1.21: it
+ * `agy models` lists models. Verified against an authenticated 1.1.21: it
  * prints a `Fetching available models...` progress line, then one TAB-SEPARATED row per model —
  * `<id>\t<Display Name>` (e.g. `gemini-3.1-pro-high\tGemini 3.1 Pro (High)`). So `parse` takes the
  * first tab-delimited field of each row and keeps it only if it looks like a bare model id; the

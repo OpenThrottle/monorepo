@@ -77,10 +77,10 @@ describe('routes/resources.agent-setup action', () => {
   test('returns a failure result with the backend + mode when the mutation throws', async () => {
     mockExecute.mockRejectedValue(new Error('flag disabled'));
 
-    const result = await action(buildArgs({ backend: 'gemini' }));
+    const result = await action(buildArgs({ backend: 'antigravity' }));
 
     expect(result).toEqual({
-      backend: 'gemini',
+      backend: 'antigravity',
       disabled: false,
       errorMessage: 'flag disabled',
       mode: 'install',
@@ -92,11 +92,11 @@ describe('routes/resources.agent-setup action', () => {
     mockExecute.mockRejectedValue('nope');
 
     const result = await action(
-      buildArgs({ backend: 'gemini', intent: 'update' }),
+      buildArgs({ backend: 'antigravity', intent: 'update' }),
     );
 
     expect(result).toEqual({
-      backend: 'gemini',
+      backend: 'antigravity',
       disabled: false,
       errorMessage: 'Failed to start the run.',
       mode: 'update',

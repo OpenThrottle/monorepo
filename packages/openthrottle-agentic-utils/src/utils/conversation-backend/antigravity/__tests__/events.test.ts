@@ -31,7 +31,7 @@ const step = (payload: Record<string, unknown>) => {
 };
 
 describe('createAntigravityEventMapper', () => {
-  it('emits a session chunk from init (agy resumes by id, unlike gemini)', () => {
+  it('emits a session chunk from init (agy resumes by id)', () => {
     const map = createAntigravityEventMapper();
 
     expect(map(INIT)).toEqual([

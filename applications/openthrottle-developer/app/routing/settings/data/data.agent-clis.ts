@@ -15,7 +15,6 @@ export const AGENT_CLI_BACKENDS = {
   claude: 'claude',
   codex: 'codex',
   cursor: 'cursor',
-  gemini: 'gemini',
   grok: 'grok',
   opencode: 'opencode',
 } as const;
@@ -28,8 +27,7 @@ export type AgentCliBackend =
 export interface AgentCliCatalogEntry {
   /**
    * Installer URL (shown as a reference link; the actual install runs server-side). Matches the
-   * driver's own `install.url`, except `gemini`, which installs via npm and has no install script
-   * — geminicli.com is a docs page, and the parity test encodes that exception explicitly.
+   * driver's own `install.url`; the parity test enforces that.
    */
   readonly installUrl: string;
   /**
@@ -60,10 +58,6 @@ export const AGENT_CLI_CATALOG: Record<AgentCliBackend, AgentCliCatalogEntry> =
     cursor: {
       installUrl: 'https://cursor.com/install',
       label: 'Cursor Agent',
-    },
-    gemini: {
-      installUrl: 'https://geminicli.com',
-      label: 'Gemini CLI',
     },
     grok: {
       installUrl: 'https://x.ai/cli/install.sh',

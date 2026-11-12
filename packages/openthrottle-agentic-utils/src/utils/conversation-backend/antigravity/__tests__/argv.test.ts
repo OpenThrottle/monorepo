@@ -72,7 +72,7 @@ describe('buildAntigravityArgv', () => {
     expect(buildAntigravityArgv({ prompt: 'p' })).not.toContain('--mode');
   });
 
-  it('resumes by conversation id (agy is id-based, unlike gemini)', () => {
+  it('resumes by conversation id (agy is id-based)', () => {
     const argv = buildAntigravityArgv({
       prompt: 'p',
       resumeConversationId: 'abc-123',

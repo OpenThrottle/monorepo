@@ -1,6 +1,6 @@
 /**
  * @description Common typings for the OpenThrottle agent-CLI driver contract. Every agent CLI
- * (Claude Code, Codex, Cursor, Gemini, Grok, OpenCode) is described by an {@link AgentDriver} and invoked
+ * (Claude Code, Codex, Cursor, Grok, OpenCode, Antigravity) is described by an {@link AgentDriver} and invoked
  * with a {@link DriverInvocationConfig}. Decoupled from Ralph/workflow types on purpose so this
  * package stays a leaf dependency.
  */
@@ -75,7 +75,7 @@ export interface DriverInvocationConfig {
    * Reasoning effort for the run. Mapped per CLI by the shared helpers in `utils/reasoning-effort.ts`
    * (claude `--effort`, codex `-c model_reasoning_effort=`, grok `--reasoning-effort`, opencode
    * `--variant`), clamping to what that CLI accepts. Omitted ⇒ no flag. CLIs with no reasoning knob
-   * (cursor, gemini, antigravity) ignore it silently.
+   * (cursor, antigravity) ignore it silently.
    */
   readonly effort?: DriverReasoningEffort;
   /**
@@ -130,11 +130,11 @@ export interface DriverCapabilities {
    *
    * Deliberately distinct from {@link DriverCapabilities.mcpAutoApprove}, which only says whether
    * this driver EMITS flags. The two are independent, and conflating them warns on the wrong
-   * drivers: claude, grok, and opencode emit nothing yet attach fine, while codex and gemini also
+   * drivers: claude, grok, and opencode emit nothing yet attach fine, while codex and antigravity also
    * emit nothing and cannot attach at all. Consumers deciding whether an MCP-dependent prompt is viable
    * must read THIS flag.
    *
-   * `false` does not mean the CLI lacks MCP support — codex and gemini both have it, but resolve
+   * `false` does not mean the CLI lacks MCP support — codex and antigravity both have it, but resolve
    * servers from their own config scope rather than from the repo's committed files. For those, reachability is a
    * property of the HOST, so OT cannot verify it from the workspace; surface that as "cannot be
    * verified", never as a flat claim that the server is missing.
@@ -219,7 +219,7 @@ export type DriverModelListing =
  * pipes it to `installerShell` (`curl -fsSL <url> | <installerShell>`) — the vendor's official
  * installer; `method: 'npm'` installs `packageName` globally
  * (`npm install --global <packageName>`) for CLIs that ship no official curl-shell installer
- * (gemini — geminicli.com serves no install script, verified 2026-08-25). Kept as a pure
+ * (no CLI uses it today). Kept as a pure
  * descriptor — the leaf package never spawns; the impure executor (agentic-utils) reads this and is
  * the only place a subprocess runs.
  * @public

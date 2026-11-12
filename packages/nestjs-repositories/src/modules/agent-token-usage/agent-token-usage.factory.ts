@@ -56,7 +56,6 @@ export const agentTokenUsageFactory =
         'claude',
         'codex',
         'cursor',
-        'gemini',
         'grok',
         'opencode',
         'openai',

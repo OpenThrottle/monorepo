@@ -20,7 +20,7 @@ YELLOW='\033[1;33m'
 #                   never touched here); symlinks = our authored skills, generated
 # <agent>/skills/   per-agent fan-out for tools that don't read .agents/skills
 #                   natively (AGENT_SKILL_DIRS) — fully generated. Currently
-#                   .claude/skills (Claude Code) + .gemini/skills (Gemini CLI).
+#                   .claude/skills (Claude Code).
 #
 # Ownership is encoded by on-disk type, so no side-ledger is needed: inside
 # .agents/skills/ a REAL DIRECTORY is external (lockfile-owned) and a SYMLINK is
@@ -33,13 +33,12 @@ LOCKFILE_NAME="skills-lock.json"
 # Per-agent fan-out targets: the dirs used by CLIs that do NOT read
 # .agents/skills/ in-repo, so stage 1 alone never reaches them.
 #   .claude/skills  → Claude Code (only .claude/skills), and also read by Cursor + Grok
-#   .gemini/skills  → Gemini CLI (project scope; its only in-repo skills dir)
 # Antigravity (agy) needs no fan-out — it reads <workspace>/.agents/skills/ natively,
 # so stage 1 already covers it. See SKILL.md § "Which CLI reads what" for the
 # verified matrix, including the two CLIs no in-repo dir reaches (codex, opencode).
 # Override per repo (survives skill updates) with a space-separated env var, e.g.:
-#   AGENT_SKILL_DIRS=".claude/skills .gemini/skills .opencode/skill"
-AGENT_SKILL_DIRS_DEFAULT=".claude/skills .gemini/skills"
+#   AGENT_SKILL_DIRS=".claude/skills .opencode/skill"
+AGENT_SKILL_DIRS_DEFAULT=".claude/skills"
 AGENT_SKILL_DIRS="${AGENT_SKILL_DIRS:-$AGENT_SKILL_DIRS_DEFAULT}"
 
 # ── The personal (per-user) tier ─────────────────────────────────────────────

@@ -67,8 +67,8 @@ fi
 
 # Prune the generated skill-directory roots once emptied (agent dirs and the
 # legacy .cursor leftover root), then each root's parent — a fan-out target like
-# .gemini/skills creates a .gemini/ that exists only for us, whereas .claude/ and
-# .cursor/ hold other config and are left alone because they are not empty.
+# .opencode/skill creates an .opencode/ that exists only for us, whereas .claude/
+# and .cursor/ hold other config and are left alone because they are not empty.
 # rmdir removes only the exact directory and only when it is empty — never a
 # recursive sweep, and never .agents/skills, which may still hold committed
 # external installs. Empty-only is the point: the recursive-remove variant

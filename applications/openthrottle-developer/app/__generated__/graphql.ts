@@ -272,11 +272,11 @@ export type AgentCliModelOption = {
 
 export type AgentCliOptionObject = {
   __typename?: 'AgentCliOptionObject';
-  /** True when this CLI resolves the workspace's committed MCP config (.mcp.json / .cursor/mcp.json / opencode.json), so a run in this checkout can reach openthrottle-mcp. False for codex and gemini, which read only their own config scope (codex: user-scope config.toml; gemini: .gemini/settings.json, never .mcp.json) — for those, MCP reachability is a property of the host and cannot be verified from the workspace, so present it as unverifiable rather than as definitely missing. Distinct from emitting MCP flags: claude, grok, and opencode emit none yet attach fine. */
+  /** True when this CLI resolves the workspace's committed MCP config (.mcp.json / .cursor/mcp.json / opencode.json), so a run in this checkout can reach openthrottle-mcp. False for antigravity and codex, which read only their own config scope (antigravity: ~/.gemini/config/mcp_config.json; codex: user-scope config.toml; never .mcp.json) — for those, MCP reachability is a property of the host and cannot be verified from the workspace, so present it as unverifiable rather than as definitely missing. Distinct from emitting MCP flags: claude, grok, and opencode emit none yet attach fine. */
   attachesWorkspaceMcp: Scalars['Boolean']['output'];
   /** Logged-in account, subscription plan and active credential, reported by `claude auth status --json` (no OAuth tokens or credential files are read, and no Anthropic endpoint is called). Null for CLIs other than claude, or when the probe failed or timed out. */
   auth?: Maybe<AgentCliAuthStatusObject>;
-  /** Generic login state for this backend: probed for claude, cursor and gemini (no credential contents are read); "unknown" for the rest. */
+  /** Generic login state for this backend: probed for claude and cursor (no credential contents are read); "unknown" for the rest. */
   authState: AgentCliAuthStateObject;
   /** Backend discriminator (e.g. "cursor") used in StartConversationStreamInput. */
   backend: Scalars['String']['output'];
@@ -1079,7 +1079,7 @@ export type CreateScheduledAgentJobInputType = {
    * @deprecated Use repositoryCheckoutId to target a registered repository checkout; cwd is only consulted when no checkout is set.
    */
   cwd?: InputMaybe<Scalars['String']['input']>;
-  /** Agent driver id (claude | codex | cursor | gemini | grok | opencode). */
+  /** Agent driver id (antigravity | claude | codex | cursor | grok | opencode). */
   driverId: Scalars['String']['input'];
   /** Whether the schedule starts enabled (default true). */
   enabled?: InputMaybe<Scalars['Boolean']['input']>;
@@ -4939,7 +4939,7 @@ export type RalphPlanRunTuningInput = {
   backend?: InputMaybe<Scalars['String']['input']>;
   /** Opt out of the worktree default and run in the base checkout. Omit to get the worktree OpenThrottle derives for the plan; only an explicit true disables it. */
   disableWorktree?: InputMaybe<Scalars['Boolean']['input']>;
-  /** Reasoning-effort level for the run: "low", "medium", "high", "extraHigh", "max", or "ultra" (the same vocabulary as the chat composer's reasoning). Nullable + additive: omit to leave the run's effort unchanged. An unrecognized level is rejected. Recorded on the run's runConfigSnapshot and forwarded to the agent CLI, where each backend maps it to its own flag (claude --effort, codex -c model_reasoning_effort=, grok --reasoning-effort, opencode --variant), clamping to its accepted set; a backend with no reasoning knob (cursor, gemini, antigravity) ignores it. */
+  /** Reasoning-effort level for the run: "low", "medium", "high", "extraHigh", "max", or "ultra" (the same vocabulary as the chat composer's reasoning). Nullable + additive: omit to leave the run's effort unchanged. An unrecognized level is rejected. Recorded on the run's runConfigSnapshot and forwarded to the agent CLI, where each backend maps it to its own flag (claude --effort, codex -c model_reasoning_effort=, grok --reasoning-effort, opencode --variant), clamping to its accepted set; a backend with no reasoning knob (antigravity, cursor) ignores it. */
   effort?: InputMaybe<Scalars['String']['input']>;
   /** Per-iteration timeout in seconds (positive integer). */
   iterationTimeoutSeconds?: InputMaybe<Scalars['Int']['input']>;
@@ -5237,7 +5237,7 @@ export type RefreshCheckoutPayloadObject = {
 export type RegisterCliPlanRunInput = {
   /** OPTIONAL git branch this detached-CLI run operates on. Captured on plan_runs.branch as run provenance. Omit or null → store null; non-empty strings are stored verbatim (no server-side trim/reject — enqueue remains the REQUIRED branch boundary). */
   branch?: InputMaybe<Scalars['String']['input']>;
-  /** Execution backend for this run: antigravity, claude, codex, cursor, gemini, grok, or opencode. */
+  /** Execution backend for this run: antigravity, claude, codex, cursor, grok, or opencode. */
   executionBackend: Scalars['String']['input'];
   /** Whether this run's owner bumps its heartbeat on a ~15s timer. Omit or null → true, so the detached workflow-ralph CLI (which does) is unaffected. Pass false for an owner with no timer — an interactive /ot-loop agent turn, where a single test run outlives the staleness cutoff. A false run is exempt from the stale sweep, always reports isStale false, and can never yield RUN_STOPPING on cancel; nothing server-side will ever settle it, so its owner must. */
   heartbeatExpected?: InputMaybe<Scalars['Boolean']['input']>;
@@ -5771,7 +5771,7 @@ export type ScheduledAgentJobObject = {
    * @deprecated Use repositoryCheckoutId to target a registered repository checkout; cwd is only consulted when no checkout is set.
    */
   cwd?: Maybe<Scalars['String']['output']>;
-  /** Agent driver id (claude | codex | cursor | gemini | grok | opencode). */
+  /** Agent driver id (antigravity | claude | codex | cursor | grok | opencode). */
   driverId: Scalars['String']['output'];
   /** Whether the schedule is active (registered as a BullMQ scheduler). */
   enabled: Scalars['Boolean']['output'];
@@ -6859,7 +6859,7 @@ export type TokenUsageRowObject = {
   model?: Maybe<Scalars['String']['output']>;
   /** Output/completion tokens for the turn, when reported. */
   outputTokens?: Maybe<Scalars['Float']['output']>;
-  /** Provider identity (driver id: claude|codex|cursor|gemini|grok|opencode|openai). */
+  /** Provider identity (driver id: antigravity|claude|codex|cursor|grok|opencode|openai). */
   provider: Scalars['String']['output'];
   /** Reasoning tokens for the turn, when reported separately. */
   reasoningTokens?: Maybe<Scalars['Float']['output']>;

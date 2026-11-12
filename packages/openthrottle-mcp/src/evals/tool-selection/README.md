@@ -44,7 +44,7 @@ through the package's ordinary `test` target.
 
 ### Why `--driver` takes only `api`
 
-`--driver claude`, `--driver codex,gemini` and the rest exit 2. A CLI driver with the real OpenThrottle
+`--driver claude`, `--driver codex,cursor` and the rest exit 2. A CLI driver with the real OpenThrottle
 MCP attached would **execute** the tool it picks, so a case like `plan-create-basic` would call
 `create_plan` on a live server. Driving CLIs needs a **sandboxed MCP** first: a server that records the
 call and returns a canned result, with no database behind it. Until it exists, this suite measures the

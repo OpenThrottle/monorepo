@@ -2,7 +2,7 @@
  * @description Normalizes each CLI's token accounting onto ATIF's, where `prompt_tokens` INCLUDES
  * the cached tokens. CLIs disagree on that: Anthropic-style accounting (claude, cursor, opencode)
  * reports cache reads and writes ALONGSIDE `input`, so they are added back; OpenAI-style accounting
- * (codex) reports cached tokens as a SUBSET of `input`. gemini, antigravity and grok are read as
+ * (codex) reports cached tokens as a SUBSET of `input`. antigravity and grok are read as
  * inclusive — their streams carry no separate cache-write count to add. The raw usage object is
  * always kept in `extra.raw_usage`, so a wrong assumption here is recoverable from the stored data.
  */

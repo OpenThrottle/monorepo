@@ -58,7 +58,7 @@ new driver.
 A suite whose system under test is an agent CLI takes `--driver` with a comma list:
 
 ```bash
-pnpm nx run <project>:eval-<suite> -- --driver claude,codex,gemini --trials 3
+pnpm nx run <project>:eval-<suite> -- --driver antigravity,claude,codex --trials 3
 ```
 
 That produces **one `eval_run` per driver, run sequentially**, so reports compare driver against

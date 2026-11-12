@@ -2,14 +2,13 @@ import { describe, expect, it } from 'vitest';
 
 import { resolveChatBackendCapabilities } from '../capabilities.ts';
 
-const ACP_ENV = { OPENTHROTTLE_CHAT_ACP_BACKENDS: 'cursor,gemini' };
+const ACP_ENV = { OPENTHROTTLE_CHAT_ACP_BACKENDS: 'cursor' };
 
 const ALL_BACKENDS = [
   'antigravity',
   'claude',
   'codex',
   'cursor',
-  'gemini',
   'grok',
   'openai',
   'opencode',
@@ -41,12 +40,8 @@ describe('resolveChatBackendCapabilities (CLI paths)', () => {
     ]);
   });
 
-  it('replays full history for openai and CLI gemini, which cannot resume', () => {
+  it('replays full history for openai, which cannot resume', () => {
     expect(resolveChatBackendCapabilities('openai', {})).toMatchObject({
-      replaysFullHistory: true,
-      resume: false,
-    });
-    expect(resolveChatBackendCapabilities('gemini', {})).toMatchObject({
       replaysFullHistory: true,
       resume: false,
     });
@@ -84,22 +79,11 @@ describe('resolveChatBackendCapabilities (ACP overlay)', () => {
     });
   });
 
-  it('overlays gemini, which stops replaying history and has no image input', () => {
-    expect(resolveChatBackendCapabilities('gemini', ACP_ENV)).toEqual({
-      approvals: true,
-      imageInput: false,
-      mcpInjection: true,
-      replaysFullHistory: false,
-      resume: true,
-      steering: false,
-    });
-  });
-
   it('applies only to the backends the flag lists', () => {
     const env = { OPENTHROTTLE_CHAT_ACP_BACKENDS: 'cursor' };
 
     expect(resolveChatBackendCapabilities('cursor', env).approvals).toBe(true);
-    expect(resolveChatBackendCapabilities('gemini', env).approvals).toBe(false);
+    expect(resolveChatBackendCapabilities('codex', env).approvals).toBe(false);
   });
 
   it('never overlays backends without an ACP spec, even with `all`', () => {

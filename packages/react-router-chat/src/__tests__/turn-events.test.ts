@@ -331,7 +331,7 @@ describe('tool-name resolution', () => {
       'read',
     ],
     [
-      'gemini reports name/parameters on the toolCall payload',
+      'a name/parameters toolCall payload resolves its name',
       {
         callId: 't1',
         toolCall: { name: 'view_file', parameters: { path: 'a.ts' } },

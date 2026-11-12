@@ -223,7 +223,7 @@ describe('resolveWorkflowRunOptions', () => {
 
   it('accepts every canonical runner id (guard against a drifting local subset)', () => {
     // The literal this file's guard once used had drifted to three runners, silently
-    // downgrading codex/grok (and would have downgraded gemini) to the default runner.
+    // downgrading codex/grok to the default runner.
     for (const id of WORKFLOW_RUNNER_IDS) {
       expect(
         resolveWorkflowRunOptions({

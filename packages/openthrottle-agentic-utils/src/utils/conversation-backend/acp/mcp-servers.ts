@@ -3,7 +3,7 @@
  * server-side by `buildManagedMcpServers`) into ACP `McpServer` entries for
  * `session/new` / `session/load`. This is the one portable MCP injection path:
  * it replaces each CLI's own config mechanism (claude `--mcp-config`, opencode
- * `OPENCODE_CONFIG`, gemini's `.gemini/settings.json`).
+ * `OPENCODE_CONFIG`).
  */
 
 import type { McpServer } from '@agentclientprotocol/sdk';

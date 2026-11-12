@@ -229,7 +229,6 @@ const PLAN_RUN_EXECUTION_BACKENDS: Readonly<
   claude: true,
   codex: true,
   cursor: true,
-  gemini: true,
   grok: true,
   opencode: true,
 };

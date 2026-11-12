@@ -28,7 +28,7 @@ Facts that change the analysis:
   - **exit class**: success, failure or termination.
 - **Model variance produces shape noise.** A model that chooses a different tool this week adds or removes tool-call shapes with no CLI change at all. Re-run the scenario before you trust a shape-only finding. Use `--backend <id>` and compare the reported shapes across both runs.
 - A backend is **skipped** when its CLI is not installed or it has no committed transcripts. That is not drift; just list it.
-- A transcript that **could not be re-recorded** is usually auth, quota or account configuration (gemini needs `GOOGLE_CLOUD_PROJECT`; opencode's plan-run model is gated on the account). Report the error text. It is only drift if the CLI itself changed how it fails.
+- A transcript that **could not be re-recorded** is usually auth, quota or account configuration (opencode's plan-run model is gated on the account). Report the error text. It is only drift if the CLI itself changed how it fails.
 
 ## What to inspect
 

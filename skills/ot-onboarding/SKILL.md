@@ -85,7 +85,6 @@ agent you are, so pick your row:
 | ------------------- | --------------------------------------------------------------------------------------------- |
 | Claude Code         | the user-global memory store (`~/.claude/projects/<project>/memory/` + its `MEMORY.md` index) |
 | Codex               | `$CODEX_HOME/AGENTS.md` (usually `~/.codex/AGENTS.md`)                                        |
-| Gemini CLI          | `~/.gemini/GEMINI.md`                                                                         |
 | Grok Build          | its own memory store — `grok memory` (a command, not a file)                                  |
 | OpenCode            | `~/.config/opencode/AGENTS.md`                                                                |
 | Cursor, Antigravity | **no writable surface** — use the fallback below                                              |
@@ -111,7 +110,7 @@ the opposite. Work this as **search → report → ask → edit**, and never col
 
 ```bash
 grep -rniE 'plans/NNN|plans/README\.md|write (the |a )?(plan|prd|spec)|plan file|docs/plans|(plan|prd|spec|task list)[^.]{0,40}\.md' \
-  skills/ .agents/ AGENTS.md CLAUDE.md GEMINI.md docs/ 2>/dev/null \
+  skills/ .agents/ AGENTS.md CLAUDE.md docs/ 2>/dev/null \
   | grep -viE "never|not as|instead of|do not|don't|rather than|fail loudly"
 ```
 
@@ -241,7 +240,7 @@ Full catalog and the install CLI: [`skills/README.md`](https://github.com/openth
 Reading about plans is not the same as watching one appear. Do this once, now.
 
 1. **Open the agent you actually use.** OpenThrottle drives several — Claude Code, Cursor, Codex,
-   Gemini, Grok, OpenCode, Antigravity — and any of them can author a plan; the deep links a
+   Grok, OpenCode, Antigravity — and any of them can author a plan; the deep links a
    workspace offers are configured per user under `/settings/workspace`.
 2. **Open an OT-enabled folder.** That means a **registered checkout** — one of your own repositories
    OpenThrottle knows about (`/settings/repositories`), so a plan authored from that folder links back

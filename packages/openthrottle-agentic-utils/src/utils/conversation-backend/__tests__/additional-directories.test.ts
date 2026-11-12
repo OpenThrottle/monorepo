@@ -12,7 +12,7 @@ describe('maxDirectoriesForBackend', () => {
   });
 
   it('caps every backend without a repeatable directory flag at one', () => {
-    for (const backend of ['codex', 'cursor', 'gemini', 'grok', 'opencode']) {
+    for (const backend of ['codex', 'cursor', 'grok', 'opencode']) {
       expect(maxDirectoriesForBackend(backend)).toBe(1);
     }
   });

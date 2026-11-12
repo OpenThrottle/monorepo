@@ -9,7 +9,7 @@
  *
  * stdin is `ignore`d (see {@link DRIVER_STDIO}), not inherited: every driver takes its prompt as an
  * argument, and an inherited idle stdin pipe (an agent harness, a process manager) made claude wait
- * 3s per iteration ("no stdin data received in 3s") and would make a non-TTY gemini block forever.
+ * 3s per iteration ("no stdin data received in 3s") and would make a non-TTY CLI that reads stdin block forever.
  */
 
 import type { ChildProcess } from 'child_process';
