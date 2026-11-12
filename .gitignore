@@ -81,6 +81,10 @@ vitest.config.ts.timestamp*
 CLAUDE.local.md
 
 .cursor/cli-config.json
+# Legacy Nx Console AI rules file. Older Nx Console releases wrote it; current
+# ones (18.103+) only delete it or offer to migrate it to agent skills. Either way it
+# is per-developer output from outside the repo, never committed.
+.cursor/rules/nx-rules.mdc
 # Per-developer Cursor MCP config (may hold absolute paths / tokens). The
 # committed SSOT is .cursor/mcp.json — see docs/openthrottle/mcp-registration.md.
 # .cursor/mcp.json

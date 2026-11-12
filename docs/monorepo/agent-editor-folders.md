@@ -104,7 +104,7 @@ Prompts are flat files in `.agents/prompts/`; the walker derives slug and title 
 
 `Job_*` prompts deliberately repeat their shared rules rather than referencing a common preamble — they must work standalone when handed to any agent CLI, and a broken cross-file reference in an unattended run costs more than the duplication.
 
-**Editor-native** (not generated, not SSOT-mirrored): `.cursor/hooks.json`, local `.cursor/mcp.json` (from `mcp.json`), `.cursor/worktrees.json`, `.cursor/settings.json`. Nx Console may also write a generated Nx rule file into Cursor's own config directory from outside this repo; it is gitignored and harmless.
+**Editor-native** (not generated, not SSOT-mirrored): `.cursor/hooks.json`, local `.cursor/mcp.json` (from `mcp.json`), `.cursor/worktrees.json`, `.cursor/settings.json`. Older Nx Console releases may also write a generated Nx rule file to `.cursor/rules/nx-rules.mdc`; current ones only delete it as a legacy file or offer to migrate it to agent skills. That one path is gitignored, so it never shows up in `git status`.
 
 **Customizing an external skill:** never edit the vendored copy — it stays 1:1 with upstream and a re-sync would overwrite it. Author a companion skill in `skills/`, or layer the OT-specific guidance in a doc that references it. Exemplar: [code-style.md § Frontend design](./code-style.md#frontend-design) overlays the vendored `frontend-design` skill. See [docs/Skills.md](../Skills.md).
 
