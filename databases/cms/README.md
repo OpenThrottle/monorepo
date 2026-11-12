@@ -48,6 +48,10 @@ every insert is `ON CONFLICT DO NOTHING`, so re-running changes nothing (and lea
 edits to seeded rows alone). It connects to the `cms` database the way the migration runner does,
 so prefix `POSTGRES_PORT=<port>` for a worktree database, as with `database:migrate`.
 
+CI keeps it honest: the `database-seeds` job ([`scripts/check-database-seeds.sh`](../../scripts/check-database-seeds.sh))
+applies every migration to an empty Postgres, runs this seed and the blog seed twice, and fails if a
+run errors, the second run changes any row, or `welcome` stops resolving by slug.
+
 ## Tables
 
 | Table                | Purpose                                                                                   |
