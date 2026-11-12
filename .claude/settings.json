@@ -3,7 +3,13 @@
     "commit": "",
     "pr": ""
   },
-  "enabledMcpjsonServers": [],
+  "enabledMcpjsonServers": [
+    "fetch",
+    "github",
+    "maestro",
+    "openthrottle-mcp",
+    "shadcn"
+  ],
   "hooks": {
     "PostToolUse": [
       {
