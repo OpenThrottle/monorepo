@@ -31,7 +31,22 @@ the same, with these changes:
   `<table>_<column>_key`). The source gave the `layouts` foreign key the same name as its unique
   index.
 - **Comments** on every table and every non-obvious column.
-- **No seed.** The RocketCMS `seed.sql` is a Supabase `auth.*` dump, and it is not imported.
+- **No imported seed.** The RocketCMS `seed.sql` is a Supabase `auth.*` dump, and it is not imported.
+  A small synthetic one replaces it — see [Local seed data](#local-seed-data).
+
+## Local seed data
+
+`pnpm run database:seed:cms` loads [`seeds/cms.sql`](./seeds/cms.sql): four ACTIVE schemas
+(`Layout`, `Heading`, `Wysiwyg`, `Button`), a root `Layout` fragment with three ordered children, the
+`welcome` layout rooted at it, and one library (`Sample Library`) with one component, attached to
+that layout. It is synthetic — no profiles, no emails, no real people.
+
+It is **not a migration** and is not reachable from `database:migrate`, `ensure-migrations`, setup
+or any deploy path; the script refuses `NODE_ENV=production` and any Postgres host other than
+`localhost`, `127.0.0.1`, `::1` or the compose service `postgres`. Every row has a fixed uuid and
+every insert is `ON CONFLICT DO NOTHING`, so re-running changes nothing (and leaves your local
+edits to seeded rows alone). It connects to the `cms` database the way the migration runner does,
+so prefix `POSTGRES_PORT=<port>` for a worktree database, as with `database:migrate`.
 
 ## Tables
 
