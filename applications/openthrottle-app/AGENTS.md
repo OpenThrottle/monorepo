@@ -4,7 +4,7 @@ Electron shell around `openthrottle-developer`. Design: [docs/architecture.md](.
 
 ## Commands
 
-- `pnpm nx run openthrottle-app:dev` — `electron-vite dev`; opens the window.
+- `pnpm nx run openthrottle-app:dev` — `install-electron && electron-vite dev`; opens the window. electron-vite reads `path.txt` itself and never triggers electron's lazy binary download, so `install-electron` fetches it first (needs network once after a clean install; a no-op after).
 - `pnpm nx run openthrottle-app:build` — `electron-vite build` to `out/` (gitignored, a declared Nx output).
 - `pnpm nx run openthrottle-app:package` — stages the traced runtime closure, then `electron-builder --mac` into `dist/release/` (`OpenThrottle.app` + zip, arm64, ad-hoc signed). See [Packaging](#packaging-an-unsigned-macos-build).
 - `pnpm nx run openthrottle-app:test-e2e` — opt-in, **local-only** Playwright (`_electron`) smoke suite; see [Smoke e2e](#smoke-e2e-local-only).

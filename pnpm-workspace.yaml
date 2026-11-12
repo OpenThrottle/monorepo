@@ -7,6 +7,14 @@
 # pnpm 10 behavior, under which these were "Ignored build scripts" and the
 # workspace worked off prebuilt binaries. Flip one to `true` only if a build
 # is proven necessary.
+#
+# electron is deliberately absent: electron 45 (the locked version) has no
+# install scripts, so there is nothing for allowBuilds to allow. Its index.js
+# downloads the binary (dist/ + path.txt) lazily on the first
+# `require('electron')`. electron-vite never makes that require, so
+# `openthrottle-app:dev` runs electron's `install-electron` bin first; the
+# first dev run after a clean install therefore needs network access.
+# electron-builder (`openthrottle-app:package`) fetches its own Electron zip.
 allowBuilds:
   '@apollo/protobufjs': false
   '@nestjs/core': false
@@ -15,9 +23,6 @@ allowBuilds:
   '@swc/core': false
   bcrypt: false
   core-js: false
-  # electron's postinstall downloads the Electron binary (dist/ + path.txt);
-  # without it `openthrottle-app:dev` fails with "Error: Electron uninstall".
-  electron: true
   electron-winstaller: false
   esbuild: false
   keytar: false
