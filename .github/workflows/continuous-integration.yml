@@ -965,6 +965,12 @@ jobs:
       - name: '🧾 Claude config files are strict JSON'
         run: pnpm exec nx run monorepo:check-claude-config-json
 
+      # Whole-tree, static. A spec path passed to a test target after `--` silently
+      # runs the whole suite (the @nx/vitest executor drops it), and agents copied
+      # it from CLAUDE.md into runs of up to 932 files. Use `--testFile=<path>`.
+      - name: '🎯 Single-spec test docs use --testFile'
+        run: pnpm exec nx run monorepo:check-test-file-filter-docs
+
       # Static and build-free, so one shard is enough. Catches the `exports`
       # condition pointing into a gitignored build dir on a package whose own
       # sources import it by name — the mismatch that made shard assignment,

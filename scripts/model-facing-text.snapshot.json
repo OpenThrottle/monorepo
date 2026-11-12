@@ -169,7 +169,7 @@
     "prompt/Job_Roadmap.md": 9571,
     "prompt/Job_RulesConformance.md": 14873,
     "prompt/Job_Security.md": 9531,
-    "prompt/Job_TestHealth.md": 8156,
+    "prompt/Job_TestHealth.md": 8164,
     "prompt/Job_WorkInFlight.md": 9928,
     "skill/agents-ralph": 13976,
     "skill/github-commit": 3112,
@@ -209,7 +209,7 @@
     "alwaysInjected": 41405,
     "mcpInstructions": 2138,
     "mcpTools": 34486,
-    "prompts": 128025,
+    "prompts": 128033,
     "skills": 184414
   }
 }
