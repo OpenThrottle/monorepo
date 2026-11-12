@@ -11,6 +11,7 @@
 .pnpm-store
 .postgres-profiling
 .vercel
+.vitest
 build
 coverage
 design/*
@@ -99,4 +100,3 @@ CLAUDE.local.md
 !.agents/skills/*/
 .claude/skills/
 # End 🔄 Managed by OpenThrottle ot-skill-sync
-.vitest
