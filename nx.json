@@ -419,6 +419,15 @@
         "cwd": "{workspaceRoot}"
       }
     },
+    "check-test-file-filter-docs": {
+      "cache": false,
+      "description": "Fail when a tracked file documents a spec path passed positionally after `--` to a test target, via scripts/check-test-file-filter-docs.ts. The @nx/vitest:test executor drops a positional path after `--` and runs the whole suite; the working form is `--testFile=<path>` (OT plan 407bedcd). Never cached: the input is the whole tracked tree, like check-folder-vocabulary.",
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsx ./scripts/check-test-file-filter-docs.ts",
+        "cwd": "{workspaceRoot}"
+      }
+    },
     "cms-schemas": {
       "cache": false,
       "configurations": {

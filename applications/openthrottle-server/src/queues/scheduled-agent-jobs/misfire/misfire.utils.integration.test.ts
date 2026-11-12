@@ -5,8 +5,8 @@ import { Queue, Worker } from 'bullmq';
  * @description Real-Redis probe of what BullMQ does with a cron fire that came due while no worker
  * was running (the server was down). Opt-in, because it needs a live Redis and ~25s of wall clock:
  *
- *   OT_BULLMQ_REDIS_INTEGRATION=true pnpm nx run openthrottle-server:test -- \
- *     src/queues/scheduled-agent-jobs/scheduled-agent-jobs.misfire.integration.test.ts
+ *   OT_BULLMQ_REDIS_INTEGRATION=true pnpm nx run openthrottle-server:test \
+ *     --testFile=src/queues/scheduled-agent-jobs/misfire/misfire.utils.integration.test.ts
  *
  * It mirrors production: the scheduler is registered with `upsertJobScheduler` (pattern + tz, the
  * shape `ScheduledAgentJobSchedulerService.upsertScheduler` writes) and the boot reconcile is a
