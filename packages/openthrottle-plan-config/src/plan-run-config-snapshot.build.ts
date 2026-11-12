@@ -82,7 +82,9 @@ export const buildPlanRunConfigSnapshot = (
 
   return {
     ...(hasHooks ? { jobRunHooks: hooks } : {}),
+    ...(input.otLoop != null ? { otLoop: input.otLoop } : {}),
     ralph,
+    ...(input.runner != null ? { runner: input.runner } : {}),
     target: { mode, taskId },
     version: PLAN_RUN_CONFIG_SNAPSHOT_VERSION,
     workspace: {

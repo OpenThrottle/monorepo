@@ -1,3 +1,7 @@
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
 import { createMock } from '@golevelup/ts-vitest';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
@@ -14,6 +18,7 @@ import {
   type RepositoryCheckout,
   Task,
 } from '@openthrottle/nestjs-repositories';
+import { asMock } from '@openthrottle/nestjs-testing';
 import { isRecord } from '@openthrottle/nodejs-utils';
 import type { Queue } from 'bullmq';
 import { GraphQLError } from 'graphql';
@@ -32,9 +37,16 @@ import { buildPlanRunConfigSnapshotFromJobData } from '../enqueue-plan-run-confi
 import type { PlanStatusService } from '../plan-status/plan-status.service.ts';
 import { PlanEnqueueService } from './plan-enqueue.service.ts';
 
+// `runConfig` is a plain stored shell (no runner), not an auto-mocked proxy: the enqueue reads
+// `runConfig.runner` and `runConfig.otLoop`, and a proxy would answer with a function.
 const mockPlan = createMock<Plan>({
   id: '80864bba-630a-451d-bfd2-4b25ec202381',
   jobRunHooks: { hooks: [] },
+  runConfig: asMock<Plan['runConfig']>({
+    otLoop: undefined,
+    runner: undefined,
+    version: 1,
+  }),
   status: 'PENDING',
 });
 
@@ -942,6 +954,222 @@ describe('PlanEnqueueService', () => {
       ).rejects.toBeInstanceOf(BadRequestException);
     });
   });
+  describe('runner selection (OT Loop)', () => {
+    let dir: string;
+    const otLoopPlan = (
+      runConfig: Record<string, unknown>,
+    ): ReturnType<typeof createMock<Plan>> => {
+      return createMock<Plan>({
+        id: mockPlan.id,
+        jobRunHooks: { hooks: [] },
+        runConfig: asMock<Plan['runConfig']>({ version: 1, ...runConfig }),
+        status: 'PENDING',
+      });
+    };
+    const enqueue = (
+      overrides: Record<string, unknown> = {},
+    ): ReturnType<PlanEnqueueService['enqueueOrchestrator']> => {
+      return service.enqueueOrchestrator({
+        branch: 'feature/test',
+        idempotencyKey: null,
+        mode: null,
+        planId: mockPlan.id,
+        priority: null,
+        taskId: null,
+        workingDirectory: dir,
+        ...overrides,
+      });
+    };
+    const writeConfig = async (body: string): Promise<void> => {
+      await mkdir(join(dir, '.openthrottle'), { recursive: true });
+      await writeFile(join(dir, '.openthrottle', 'ot-loop.json'), body);
+    };
+    const enqueuedJobData = (): unknown => {
+      return mockEnqueuePlanRalphOrchestrator.mock.calls[0]?.[0]?.jobData;
+    };
+
+    beforeEach(async () => {
+      dir = await mkdtemp(join(tmpdir(), 'ot-loop-enqueue-'));
+    });
+
+    afterEach(async () => {
+      await rm(dir, { force: true, recursive: true });
+    });
+
+    test('enqueues under the one job name with runner ot-loop and records it on the snapshot', async () => {
+      await writeConfig(
+        JSON.stringify({ validation: { commands: ['pnpm test'] } }),
+      );
+
+      await enqueue({ runner: 'ot-loop' });
+
+      expect(enqueuedJobData()).toMatchObject({
+        runKind: 'orchestrator',
+        runner: 'ot-loop',
+      });
+      expect(mockRecordQueuedRun.mock.calls[0]?.[0]).toMatchObject({
+        runConfigSnapshot: { runner: 'ot-loop' },
+      });
+    });
+
+    test('carries the plan otLoop tuning onto the job and the snapshot', async () => {
+      const otLoop = {
+        maxRetries: 1,
+        validationCommands: ['pnpm nx run x:test'],
+      };
+      repo.findOne.mockResolvedValue(otLoopPlan({ otLoop, runner: 'ot-loop' }));
+
+      await enqueue();
+
+      expect(enqueuedJobData()).toMatchObject({ otLoop, runner: 'ot-loop' });
+      expect(mockRecordQueuedRun.mock.calls[0]?.[0]).toMatchObject({
+        runConfigSnapshot: { otLoop, runner: 'ot-loop' },
+      });
+    });
+
+    test('takes the runner from the stored plan config when the request names none', async () => {
+      await writeConfig(
+        JSON.stringify({ validation: { commands: ['pnpm test'] } }),
+      );
+      repo.findOne.mockResolvedValue(otLoopPlan({ runner: 'ot-loop' }));
+
+      await enqueue();
+
+      expect(enqueuedJobData()).toMatchObject({ runner: 'ot-loop' });
+    });
+
+    test('a request for ralph overrides a stored ot-loop and skips every OT Loop check', async () => {
+      repo.findOne.mockResolvedValue(otLoopPlan({ runner: 'ot-loop' }));
+
+      await enqueue({ ralph: { disableWorktree: true }, runner: 'ralph' });
+
+      expect(enqueuedJobData()).toMatchObject({ runner: 'ralph' });
+    });
+
+    test('leaves the payload untouched (Ralph, no runner key) when neither the request nor the plan names one', async () => {
+      await enqueue();
+
+      expect(enqueuedJobData()).not.toHaveProperty('runner');
+      expect(enqueuedJobData()).not.toHaveProperty('otLoop');
+    });
+
+    test('ignores a stored otLoop block on a Ralph run', async () => {
+      repo.findOne.mockResolvedValue(
+        otLoopPlan({ otLoop: { maxRetries: 3 }, runner: 'ralph' }),
+      );
+
+      await enqueue();
+
+      expect(enqueuedJobData()).not.toHaveProperty('otLoop');
+    });
+
+    test('rejects an unknown runner as a BadRequest naming the accepted set, enqueuing nothing', async () => {
+      await expect(enqueue({ runner: 'turbo' })).rejects.toThrow(
+        /Invalid runner: turbo \(expected one of: ralph, ot-loop\)/,
+      );
+      expect(mockEnqueuePlanRalphOrchestrator).not.toHaveBeenCalled();
+      expect(mockRecordQueuedRun).not.toHaveBeenCalled();
+    });
+
+    test('rejects an OT Loop run that opted out of a worktree, before recording anything', async () => {
+      await writeConfig(
+        JSON.stringify({ validation: { commands: ['pnpm test'] } }),
+      );
+
+      await expect(
+        enqueue({ ralph: { disableWorktree: true }, runner: 'ot-loop' }),
+      ).rejects.toThrow(/OT Loop needs a worktree/);
+      expect(mockEnqueuePlanRalphOrchestrator).not.toHaveBeenCalled();
+      expect(mockRecordQueuedRun).not.toHaveBeenCalled();
+    });
+
+    test('rejects an OT Loop run when no validation command resolves, with the documented message', async () => {
+      await expect(enqueue({ runner: 'ot-loop' })).rejects.toThrow(
+        'OT Loop needs a validation command: set otLoop.validationCommands on the plan or add .openthrottle/ot-loop.json',
+      );
+      expect(mockEnqueuePlanRalphOrchestrator).not.toHaveBeenCalled();
+      expect(mockRecordQueuedRun).not.toHaveBeenCalled();
+    });
+
+    test('rejects an OT Loop run whose committed config is invalid, naming the problem', async () => {
+      await writeConfig('{ not json');
+
+      await expect(enqueue({ runner: 'ot-loop' })).rejects.toThrow(
+        /\.openthrottle\/ot-loop\.json is invalid/,
+      );
+      expect(mockEnqueuePlanRalphOrchestrator).not.toHaveBeenCalled();
+    });
+
+    test('accepts the Nx default when the checkout has an nx.json', async () => {
+      await writeFile(join(dir, 'nx.json'), '{}');
+
+      await enqueue({ runner: 'ot-loop' });
+
+      expect(enqueuedJobData()).toMatchObject({ runner: 'ot-loop' });
+    });
+
+    test('accepts a validation override on the plan with no repo config', async () => {
+      repo.findOne.mockResolvedValue(
+        otLoopPlan({
+          otLoop: { validationCommands: ['make check'] },
+          runner: 'ot-loop',
+        }),
+      );
+
+      await enqueue();
+
+      expect(enqueuedJobData()).toMatchObject({ runner: 'ot-loop' });
+    });
+
+    test('enqueueSpawn (the enqueuePlanRun mutation) forwards the runner', async () => {
+      await writeConfig(
+        JSON.stringify({ validation: { commands: ['pnpm test'] } }),
+      );
+
+      await service.enqueueSpawn({
+        branch: 'feature/test',
+        planId: mockPlan.id,
+        runner: 'ot-loop',
+        workingDirectory: dir,
+      });
+
+      expect(enqueuedJobData()).toMatchObject({ runner: 'ot-loop' });
+    });
+
+    test('schedulePlanRun applies the same runner and the same rejections', async () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date('2026-11-01T12:00:00.000Z'));
+      mockRecordQueuedRun.mockResolvedValue({ id: 'run-scheduled-1' });
+
+      try {
+        await expect(
+          service.schedulePlanRun({
+            branch: 'feature/test',
+            planId: mockPlan.id,
+            runner: 'ot-loop',
+            scheduledFor: new Date('2026-11-01T14:00:00.000Z'),
+            workingDirectory: dir,
+          }),
+        ).rejects.toThrow(/OT Loop needs a validation command/);
+
+        await writeConfig(
+          JSON.stringify({ validation: { commands: ['pnpm test'] } }),
+        );
+        await service.schedulePlanRun({
+          branch: 'feature/test',
+          planId: mockPlan.id,
+          runner: 'ot-loop',
+          scheduledFor: new Date('2026-11-01T14:00:00.000Z'),
+          workingDirectory: dir,
+        });
+
+        expect(enqueuedJobData()).toMatchObject({ runner: 'ot-loop' });
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+  });
+
   describe('enqueueUsageLimitResume', () => {
     const limitedRun = createMock<PlanRun>({
       actorUserId: 'user-1',
@@ -1940,6 +2168,43 @@ describe('PlanEnqueueService', () => {
       expect(mockRecordQueuedRun).not.toHaveBeenCalled();
       expect(repo.manager.transaction.mock.calls).toHaveLength(
         transactionsBefore,
+      );
+    });
+
+    test('keeps an OT Loop run an OT Loop run: runner and otLoop survive the reproject', async () => {
+      const otLoop = {
+        maxRetries: 1,
+        validationCommands: ['pnpm nx run x:test'],
+      };
+      const otLoopJobData = buildRunPlanOrchestratorJobData({
+        mode: null,
+        otLoop,
+        planId: mockPlan.id,
+        ralph: { backend: 'claude' },
+        runner: 'ot-loop',
+        taskId: null,
+        workingDirectory: null,
+      });
+      mockEnqueuePlanRalphOrchestrator.mockResolvedValueOnce({
+        jobId: 'scheduled-plan-run-otloop',
+      });
+
+      await service.reprojectScheduledRun({
+        delayMs: 0,
+        run: createMock<PlanRun>({
+          bullmqJobId: 'scheduled-plan-run-otloop',
+          id: 'run-otloop',
+          planId: mockPlan.id,
+          runConfigSnapshot:
+            buildPlanRunConfigSnapshotFromJobData(otLoopJobData),
+          status: 'SCHEDULED',
+        }),
+      });
+
+      expect(mockEnqueuePlanRalphOrchestrator).toHaveBeenCalledWith(
+        expect.objectContaining({
+          jobData: expect.objectContaining({ otLoop, runner: 'ot-loop' }),
+        }),
       );
     });
 

@@ -9,7 +9,9 @@ import { beforeEach, describe, expect, test } from 'vitest';
 import {
   resetWorkflowRunToDefaultsAtom,
   workflowRalphRunOptionsAtom,
+  workflowRunnerAtom,
 } from '~/routing/plans/data/data.atom-plan';
+import { PLAN_RUN_RUNNER_COPY } from '~/routing/plans/data/data.copy';
 import { MOCK_PLAN_RUN_MODELS } from '~/routing/plans/data/mock.plan-run-models';
 
 import type { PlanTabConfigurationProps } from '../PlanTabConfiguration';
@@ -97,6 +99,49 @@ describe('PlanTabConfiguration Component', () => {
 
     expect(
       await component.findByTestId('PlanRunEffortControl-disabled'),
+    ).toBeInTheDocument();
+  });
+
+  test('selecting OT Loop hides the Ralph prompt and iterations; Ralph shows them again', async () => {
+    const user = userEvent.setup();
+    const props: PlanTabConfigurationProps = {
+      models: Promise.resolve([]),
+      onSaveJobRunHooks: () => undefined,
+      repositories: Promise.resolve([]),
+    };
+    const component = renderTab(props);
+
+    await component.findByTestId('PlanWorkflowConfigRunner');
+    expect(
+      component.getByTestId('PlanWorkflowConfigPrompt'),
+    ).toBeInTheDocument();
+    expect(
+      component.getByRole('spinbutton', { name: /Iteration count/ }),
+    ).toBeInTheDocument();
+
+    await user.click(
+      component.getByRole('radio', { name: PLAN_RUN_RUNNER_COPY.otLoopLabel }),
+    );
+
+    expect(getDefaultStore().get(workflowRunnerAtom)).toBe('ot-loop');
+    expect(
+      component.queryByTestId('PlanWorkflowConfigPrompt'),
+    ).not.toBeInTheDocument();
+    expect(
+      component.queryByRole('spinbutton', { name: /Iteration count/ }),
+    ).not.toBeInTheDocument();
+    expect(
+      component.getByRole('textbox', {
+        name: PLAN_RUN_RUNNER_COPY.validationLabel,
+      }),
+    ).toBeInTheDocument();
+
+    await user.click(
+      component.getByRole('radio', { name: PLAN_RUN_RUNNER_COPY.ralphLabel }),
+    );
+
+    expect(
+      component.getByTestId('PlanWorkflowConfigPrompt'),
     ).toBeInTheDocument();
   });
 });

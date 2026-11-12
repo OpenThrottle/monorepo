@@ -281,6 +281,8 @@ The Ralph tooling walks a plan's tasks in `sortOrder`, taking each `PENDING` tas
 - **CLI:** `pnpm exec workflow-ralph --plan <plan-uuid>` (or `--task <task-uuid>` for a single task). Run `pnpm exec workflow-ralph --help` for options.
 - **Queue:** enqueue a Run-plan job (BullMQ) — the plan flips to `QUEUED` until a worker picks it up, then `IN_PROGRESS`.
 
+Two runners can execute a queued plan, chosen per plan by `runConfigJson.runner` (or the enqueue input's `runner`; the Developer UI run dialog and Configuration tab expose it). **Ralph** is the default when `runner` is absent and is the only runner that uses the `/agents-ralph` prompt (until a follow-up plan retires it). **OT Loop** (`'ot-loop'`) is the headless implementation of the [`ot-loop`](../../skills/ot-loop/SKILL.md) skill's loop: it feeds any driver CLI a standalone prompt built from the task row, routes a model per task, and owns validation itself, configurable per repository in a committed `.openthrottle/ot-loop.json`. See [docs/workflows/ot-loop-job.md](../workflows/ot-loop-job.md).
+
 For the full run loop, worker-vs-orchestrator modes, and worktree behavior, see [tools/workflows/README.md](../../tools/workflows/README.md) (there is no `workflow-ralph` skill — the loop prompt is [`agents-ralph`](../../skills/agents-ralph/SKILL.md)). Don't reproduce that here — author good tasks and let the run loop own execution.
 
 ### Narrate progress — `append_plan_output` / `get_plan_output`

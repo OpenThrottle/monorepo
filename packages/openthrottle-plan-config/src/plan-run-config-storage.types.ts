@@ -20,6 +20,20 @@ export type PlanRunConfigWorktreeCleanup = 'keep' | 'on-pr';
 
 export type PlanRunConfigExecutionBackend = 'claude' | 'cursor';
 
+/** @description Runner that executes the plan run; an absent `runner` means `'ralph'`. */
+export type PlanRunConfigRunner = 'ot-loop' | 'ralph';
+
+/**
+ * @description OT Loop run tuning (`runConfigJson.otLoop`). Structurally compatible with
+ * `OtLoopRunTuning` in docs/workflows/ot-loop-job.md § 1. `maxRetries` is clamped 0..5 at run time.
+ */
+export interface PlanRunConfigOtLoop {
+  readonly finalValidationCommands?: readonly string[];
+  readonly maxRetries?: number;
+  readonly setupCommands?: readonly string[];
+  readonly validationCommands?: readonly string[];
+}
+
 /** @description Stored shape for `plans.job_run_hooks` (validated in openthrottle-server). */
 export interface PlanJobRunHooksStorage {
   readonly hooks: readonly unknown[];
@@ -53,7 +67,11 @@ export interface PlanRunConfigRalphV1 {
 }
 
 export interface PlanRunConfigStorageV1 {
+  /** @description OT Loop tuning; ignored unless `runner` is `'ot-loop'`. */
+  readonly otLoop?: PlanRunConfigOtLoop;
   readonly ralph: PlanRunConfigRalphV1;
+  /** @description Absent means `'ralph'`. */
+  readonly runner?: PlanRunConfigRunner;
   readonly target: {
     readonly mode: PlanRunConfigTargetMode;
     readonly taskId: string;
@@ -107,8 +125,12 @@ export interface PlanWorkflowUiState {
   /** @description Registered checkout id selected in the UI (optional; empty/absent = unset). */
   readonly checkoutId?: string;
   readonly iterationTimeoutText: string;
+  /** @description Carried through so a UI save does not drop it. */
+  readonly otLoop?: PlanRunConfigOtLoop;
   /** @description Registered repository id selected in the UI (optional; empty/absent = unset). */
   readonly repositoryId?: string;
+  /** @description Carried through so a UI save does not drop it. */
+  readonly runner?: PlanRunConfigRunner;
   readonly workflowInput: PlanWorkflowRalphRunOptions;
   readonly workingDirectory: string;
 }

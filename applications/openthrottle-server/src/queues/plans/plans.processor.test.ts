@@ -34,6 +34,7 @@ import { NotificationsService } from '../../notifications/notifications.service.
 import { PlanRunWorktreeCleanupService } from '../../services/plan-run-worktree-cleanup/plan-run-worktree-cleanup.service.ts';
 import { AgenticRalphOrchestratorService } from '../agentic-ralph/orchestrator/orchestrator.service.ts';
 import { BullMqRunOutputRetentionService } from '../bullmq-run-output/retention/retention.service.ts';
+import { OtLoopOrchestratorService } from '../ot-loop/orchestrator/orchestrator.service.ts';
 import { WorkflowLifecycleDispatcherFactory } from '../plan-lifecycle-hooks/workflow-lifecycle-dispatcher/workflow-lifecycle-dispatcher.service.ts';
 import {
   PLANS_QUEUE_NAME,
@@ -143,6 +144,12 @@ vi.mock('../job-run-hooks/job-run-hooks.utils', () => ({
 const mockRunPlanOrchestratorJob = vi.fn().mockResolvedValue({
   exitCode: 0,
   reason: 'workflow_tasks_exhausted',
+  status: 'finished',
+});
+
+const mockRunOtLoopJob = vi.fn().mockResolvedValue({
+  exitCode: 0,
+  reason: 'workflow_complete',
   status: 'finished',
 });
 
@@ -313,6 +320,10 @@ describe('PlansProcessor', () => {
           useValue: {
             runPlanOrchestratorJob: mockRunPlanOrchestratorJob,
           },
+        },
+        {
+          provide: OtLoopOrchestratorService,
+          useValue: { runPlanOrchestratorJob: mockRunOtLoopJob },
         },
         {
           provide: LoggerService,
@@ -816,6 +827,202 @@ describe('PlansProcessor', () => {
       resolveHooks();
       await run;
       vi.useRealTimers();
+    });
+  });
+
+  describe('OT Loop runner dispatch (orchestrator path)', () => {
+    const planId = '2794d106-95f9-427e-904d-e0f9b5cbe734';
+    const otLoopJob = (): RunPlanJob => {
+      return createMock<RunPlanJob>({
+        data: { planId, runKind: 'orchestrator', runner: 'ot-loop' },
+        id: 'job-1',
+      });
+    };
+
+    beforeEach(() => {
+      mockRunOtLoopJob.mockClear();
+      mockWriteGuardedStatus.mockClear();
+    });
+
+    it('runs Ralph, never OT Loop, when the payload names no runner', async () => {
+      await processor.process(mockJob);
+
+      expect(mockRunPlanOrchestratorJob).toHaveBeenCalledTimes(1);
+      expect(mockRunOtLoopJob).not.toHaveBeenCalled();
+    });
+
+    it('runs Ralph when the payload names runner ralph', async () => {
+      mockJob = createMock<RunPlanJob>({
+        data: { planId, runKind: 'orchestrator', runner: 'ralph' },
+        id: 'job-1',
+      });
+
+      await processor.process(mockJob);
+
+      expect(mockRunPlanOrchestratorJob).toHaveBeenCalledTimes(1);
+      expect(mockRunOtLoopJob).not.toHaveBeenCalled();
+    });
+
+    it('runs OT Loop, never Ralph, only when runner is ot-loop, with the same parameters', async () => {
+      const job = otLoopJob();
+
+      await processor.process(job);
+
+      expect(mockRunOtLoopJob).toHaveBeenCalledTimes(1);
+      expect(mockRunPlanOrchestratorJob).not.toHaveBeenCalled();
+      expect(mockRunOtLoopJob.mock.calls[0]?.[0]).toMatchObject({
+        correlation: {
+          correlationId: 'job-1',
+          queueJobId: 'job-1',
+          queueName: PLANS_QUEUE_NAME,
+        },
+        jobData: job.data,
+      });
+      expect(mockRunOtLoopJob.mock.calls[0]?.[0]?.signal).toBeInstanceOf(
+        AbortSignal,
+      );
+    });
+
+    it('settles COMPLETED with headSha and prNumber', async () => {
+      const settledRun = {
+        id: 'plan-run-1',
+        status: PLAN_RUN_STATUS.COMPLETED,
+      };
+      mockSettleRunByJob.mockResolvedValueOnce(settledRun);
+      mockRunOtLoopJob.mockResolvedValueOnce({
+        exitCode: 0,
+        headSha: 'cafef00d',
+        prNumber: 7,
+        reason: 'workflow_complete',
+        status: 'finished',
+      });
+
+      await processor.process(otLoopJob());
+
+      expect(mockSettleRunByJob).toHaveBeenCalledWith(
+        PLANS_QUEUE_NAME,
+        'job-1',
+        PLAN_RUN_STATUS.COMPLETED,
+      );
+      expect(mockRecordSettledRunArtifacts).toHaveBeenCalledWith({
+        headSha: 'cafef00d',
+        planRun: settledRun,
+        prNumber: 7,
+      });
+    });
+
+    it('settles CANCELLED when the run was cancelled', async () => {
+      mockRunOtLoopJob.mockResolvedValueOnce({
+        exitCode: 0,
+        reason: 'workflow_cancelled',
+        status: 'finished',
+      });
+
+      await processor.process(otLoopJob());
+
+      expect(mockSettleRunByJob).toHaveBeenCalledWith(
+        PLANS_QUEUE_NAME,
+        'job-1',
+        PLAN_RUN_STATUS.CANCELLED,
+      );
+    });
+
+    it('settles CANCELLED when a cancel arrives mid-task and aborts the signal the runner holds', async () => {
+      let observedAbort = false;
+      mockRunOtLoopJob.mockImplementationOnce(
+        async (params: { readonly signal: AbortSignal }) => {
+          // A task is running: the worker waits on the signal, as the driver does.
+          await new Promise<void>((resolve) => {
+            params.signal.addEventListener('abort', () => {
+              observedAbort = true;
+              resolve();
+            });
+            planRunCancellation.abort(planId);
+          });
+
+          return {
+            exitCode: 0,
+            reason: 'workflow_cancelled',
+            status: 'finished',
+          };
+        },
+      );
+
+      await processor.process(otLoopJob());
+
+      expect(observedAbort).toBe(true);
+      expect(mockSettleRunByJob).toHaveBeenCalledWith(
+        PLANS_QUEUE_NAME,
+        'job-1',
+        PLAN_RUN_STATUS.CANCELLED,
+      );
+    });
+
+    it('settles FAILED and returns the plan to the status it had before the run', async () => {
+      mockRepoFindOne.mockResolvedValueOnce({
+        status: 'QUEUED',
+        title: 'Test Plan',
+      });
+      mockRunOtLoopJob.mockResolvedValueOnce({
+        exitCode: 1,
+        reason: 'workflow_input_required',
+        status: 'failed',
+      });
+
+      await processor.process(otLoopJob());
+
+      expect(mockSettleRunByJob).toHaveBeenCalledWith(
+        PLANS_QUEUE_NAME,
+        'job-1',
+        PLAN_RUN_STATUS.FAILED,
+      );
+      expect(mockWriteGuardedStatus).toHaveBeenCalledWith(
+        planId,
+        expect.objectContaining({
+          guardCurrentStatus: 'IN_PROGRESS',
+          requestedStatus: 'QUEUED',
+        }),
+      );
+    });
+
+    it('leaves a failed Ralph run alone: only OT Loop restores the prior status', async () => {
+      mockRepoFindOne.mockResolvedValueOnce({
+        status: 'QUEUED',
+        title: 'Test Plan',
+      });
+      mockRunPlanOrchestratorJob.mockResolvedValueOnce({
+        exitCode: 1,
+        reason: 'workflow_unhandled',
+        status: 'failed',
+      });
+
+      await processor.process(mockJob);
+
+      expect(mockWriteGuardedStatus).not.toHaveBeenCalled();
+    });
+
+    it('hands a usage limit to the resume service with the OT Loop payload, settling nothing itself', async () => {
+      const usageLimit = {
+        rateLimitType: 'five_hour',
+        resetsAt: '2026-11-01T17:00:00.000Z',
+      };
+      const job = otLoopJob();
+      mockRunOtLoopJob.mockResolvedValueOnce({
+        exitCode: 0,
+        reason: 'workflow_usage_limited',
+        status: 'finished',
+        usageLimit,
+      });
+
+      await processor.process(job);
+
+      expect(mockHandleUsageLimited).toHaveBeenCalledExactlyOnceWith({
+        jobData: job.data,
+        jobId: 'job-1',
+        limit: usageLimit,
+        planId,
+      });
+      expect(mockSettleRunByJob).not.toHaveBeenCalled();
     });
   });
 

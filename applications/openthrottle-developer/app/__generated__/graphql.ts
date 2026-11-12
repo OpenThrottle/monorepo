@@ -1539,6 +1539,8 @@ export type EnqueuePlanRalphOrchestratorInput = {
   ralph?: InputMaybe<RalphPlanRunTuningInput>;
   /** Optional registered repository id. Resolved to the enqueuing user's single checkout of that repository (errors when there is no checkout, or when it is ambiguous). Used when checkoutId is omitted. */
   repositoryId?: InputMaybe<Scalars['ID']['input']>;
+  /** Which runner executes the run: "ralph" (the default) or "ot-loop" (the per-task discipline of /ot-loop run as deterministic job code, with a fresh worker per task). Nullable + additive: omit to use the plan's stored runConfig runner, else Ralph. An unrecognized value is rejected. "ot-loop" is also rejected when the run has no worktree (disableWorktree) or when no validation command resolves (set otLoop.validationCommands on the plan, or commit .openthrottle/ot-loop.json). */
+  runner?: InputMaybe<Scalars['String']['input']>;
   /** Required when mode is task; must belong to the plan. */
   taskId?: InputMaybe<Scalars['ID']['input']>;
   /** Optional absolute path to a local project directory used as the working directory for this run. Escape hatch used only when checkoutId and repositoryId are omitted. When all three are omitted, defaults to the monorepo root (WORKSPACE_ROOT or process.cwd()). Must be an existing directory; validated server-side. */
@@ -1564,6 +1566,8 @@ export type EnqueuePlanRunInput = {
   ralph?: InputMaybe<RalphPlanRunTuningInput>;
   /** Optional registered repository id. Resolved to the enqueuing user's single checkout of that repository (errors when there is no checkout, or when it is ambiguous). Used when checkoutId is omitted. */
   repositoryId?: InputMaybe<Scalars['ID']['input']>;
+  /** Which runner executes the run: "ralph" (the default) or "ot-loop" (the per-task discipline of /ot-loop run as deterministic job code, with a fresh worker per task). Nullable + additive: omit to use the plan's stored runConfig runner, else Ralph. An unrecognized value is rejected. "ot-loop" is also rejected when the run has no worktree (disableWorktree) or when no validation command resolves (set otLoop.validationCommands on the plan, or commit .openthrottle/ot-loop.json). */
+  runner?: InputMaybe<Scalars['String']['input']>;
   /** Optional absolute path to a local project directory used as the working directory for this run. Escape hatch used only when checkoutId and repositoryId are omitted. When all three are omitted, defaults to the monorepo root (WORKSPACE_ROOT or process.cwd()). Must be an existing directory; validated server-side. */
   workingDirectory?: InputMaybe<Scalars['String']['input']>;
 };
@@ -5734,6 +5738,8 @@ export type SchedulePlanRunInput = {
   replaceScheduled?: InputMaybe<Scalars['Boolean']['input']>;
   /** Optional registered repository id. Resolved to the enqueuing user's single checkout of that repository (errors when there is no checkout, or when it is ambiguous). Used when checkoutId is omitted. */
   repositoryId?: InputMaybe<Scalars['ID']['input']>;
+  /** Which runner executes the run: "ralph" (the default) or "ot-loop" (the per-task discipline of /ot-loop run as deterministic job code, with a fresh worker per task). Nullable + additive: omit to use the plan's stored runConfig runner, else Ralph. An unrecognized value is rejected. "ot-loop" is also rejected when the run has no worktree (disableWorktree) or when no validation command resolves (set otLoop.validationCommands on the plan, or commit .openthrottle/ot-loop.json). */
+  runner?: InputMaybe<Scalars['String']['input']>;
   /** REQUIRED absolute instant the run fires at (an ISO-8601 DateTime; send UTC or an explicit offset). Must be strictly in the future and no more than 30 days from now (SCHEDULED_PLAN_RUN_MAX_HORIZON_DAYS); the server rejects anything else. */
   scheduledFor: Scalars['DateTime']['input'];
   /** Optional absolute path to a local project directory used as the working directory for this run. Escape hatch used only when checkoutId and repositoryId are omitted. When all three are omitted, defaults to the monorepo root (WORKSPACE_ROOT or process.cwd()). Must be an existing directory; validated server-side. */

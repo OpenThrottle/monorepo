@@ -15,7 +15,10 @@ import {
   vi,
 } from 'vitest';
 
-import { PLAN_SCHEDULE_CONFIRM_COPY } from '~/routing/plans/data/data.copy';
+import {
+  PLAN_RUN_RUNNER_COPY,
+  PLAN_SCHEDULE_CONFIRM_COPY,
+} from '~/routing/plans/data/data.copy';
 import { formatPlanScheduledFor } from '~/routing/plans/utils/formatPlanScheduledFor';
 
 import { buildPlanRunConfigJson } from '../../testing/buildPlanRunConfigJson';
@@ -370,6 +373,112 @@ describe('PlanRunDialog Component', () => {
       expect(field(component, 'scheduledFor')).toBe('2026-11-02T21:00:00.000Z');
       expect(field(component, 'iterations')).toBe('7');
       expect(field(component, 'backend')).toBe('claude');
+    });
+  });
+
+  describe('runner', () => {
+    const otLoopConfig = (): string => {
+      return JSON.stringify({
+        ...JSON.parse(buildPlanRunConfigJson({ iterations: 7 })),
+        otLoop: { maxRetries: 1, validationCommands: ['pnpm test'] },
+        runner: 'ot-loop',
+      });
+    };
+
+    test('opens on Ralph when the plan names no runner and sends runner=ralph', async () => {
+      const component = await renderDialog();
+
+      expect(
+        component.getByRole('radio', { name: PLAN_RUN_RUNNER_COPY.ralphLabel }),
+      ).toBeChecked();
+      expect(field(component, 'runner')).toBe('ralph');
+      expect(field(component, 'iterations')).toBe('7');
+    });
+
+    test('choosing OT Loop hides iterations and sends runner and the OT Loop fields', async () => {
+      const user = userEvent.setup();
+      const component = await renderDialog();
+
+      await user.click(
+        component.getByRole('radio', {
+          name: PLAN_RUN_RUNNER_COPY.otLoopLabel,
+        }),
+      );
+      await user.type(
+        component.getByRole('textbox', {
+          name: PLAN_RUN_RUNNER_COPY.validationLabel,
+        }),
+        'pnpm nx run a:test',
+      );
+      await user.type(
+        component.getByRole('spinbutton', {
+          name: PLAN_RUN_RUNNER_COPY.maxRetriesLabel,
+        }),
+        '3',
+      );
+
+      expect(component.queryByLabelText('Iterations')).not.toBeInTheDocument();
+      expect(field(component, 'runner')).toBe('ot-loop');
+      expect(field(component, 'iterations')).toBeNull();
+      expect(field(component, 'otLoopValidationCommands')).toBe(
+        'pnpm nx run a:test',
+      );
+      expect(field(component, 'otLoopMaxRetries')).toBe('3');
+    });
+
+    test('opens on OT Loop with the plan values when the plan runs OT Loop', async () => {
+      const component = await renderDialog({
+        props: { runConfigJson: otLoopConfig() },
+      });
+
+      expect(
+        component.getByRole('radio', {
+          name: PLAN_RUN_RUNNER_COPY.otLoopLabel,
+        }),
+      ).toBeChecked();
+      expect(
+        component.getByRole('textbox', {
+          name: PLAN_RUN_RUNNER_COPY.validationLabel,
+        }),
+      ).toHaveValue('pnpm test');
+      expect(field(component, 'runner')).toBe('ot-loop');
+    });
+
+    test('an out-of-range retry count blocks submit with the reason', async () => {
+      const user = userEvent.setup();
+      const component = await renderDialog({
+        props: { runConfigJson: otLoopConfig() },
+      });
+
+      const retries = component.getByRole('spinbutton', {
+        name: PLAN_RUN_RUNNER_COPY.maxRetriesLabel,
+      });
+      await user.type(retries, '9');
+
+      expect(component.getByRole('button', { name: 'Run now' })).toBeDisabled();
+      expect(retries).toBeInvalid();
+      expect(retries).toHaveAccessibleDescription(
+        PLAN_RUN_RUNNER_COPY.maxRetriesInvalid(5),
+      );
+    });
+
+    test('submitting OT Loop posts the runner to the action', async () => {
+      const user = userEvent.setup();
+      const component = await renderDialog({
+        actionResult: { runPlan: { jobId: 'job-1', planId: 'plan-1' } },
+        props: { runConfigJson: otLoopConfig() },
+      });
+
+      await user.click(component.getByRole('button', { name: 'Run now' }));
+
+      await waitFor(() => expect(submitted).toHaveLength(1));
+      expect(submitted[0]).toMatchObject({
+        intent: 'runPlan',
+        otLoopMaxRetries: '1',
+        otLoopValidationCommands: 'pnpm test',
+        runner: 'ot-loop',
+      });
+      expect(submitted[0]).not.toHaveProperty('iterations');
     });
   });
 

@@ -60,6 +60,7 @@ import {
   runBeforeRunHooksAndHandleBlock,
 } from '../job-run-hooks/job-run-hooks.utils.ts';
 // import { DelayedError } from 'bullmq';
+import { OtLoopOrchestratorService } from '../ot-loop/orchestrator/orchestrator.service.ts';
 import { WorkflowLifecycleDispatcherFactory } from '../plan-lifecycle-hooks/workflow-lifecycle-dispatcher/workflow-lifecycle-dispatcher.service.ts';
 import { resolveRepeatablesOwner } from '../repeatable-job/repeatable-job.utils.ts';
 import {
@@ -86,6 +87,9 @@ import { UsageLimitResumeService } from './usage-limit-resume/usage-limit-resume
 import { WorkLedgerRunService } from './work-ledger-run/work-ledger-run.service.ts';
 
 const CONCURRENCY = 1;
+
+/** Which runner executes an orchestrator job; the payload's `runner` picks it, absent means Ralph. */
+type WorkflowKind = 'ot-loop' | 'ralph';
 
 /** Whether a worker may claim a run in `status` (see `PLAN_RUN_STARTABLE_STATUSES`). */
 const isStartableRunStatus = (status: string): boolean => {
@@ -139,6 +143,7 @@ export class PlansProcessor
     private readonly lifecycleDispatcherFactory: WorkflowLifecycleDispatcherFactory,
     private readonly logger: LoggerService,
     private readonly notifications: NotificationsService,
+    private readonly otLoopOrchestrator: OtLoopOrchestratorService,
     private readonly planOutputStreamService: PlanOutputStreamService,
     private readonly planRunCancellation: PlanRunCancellationService,
     private readonly planRunWorktreeCleanup: PlanRunWorktreeCleanupService,
@@ -952,6 +957,9 @@ export class PlansProcessor
       const repo = this.plansService.getRepository();
       const plan = await repo.findOne({ where: { id: planId } });
       const _planTitle = plan?.title ?? undefined;
+      // What the plan was before this run promotes it: the OT Loop runner restores it when the run
+      // fails at start (docs/workflows/ot-loop-job.md § 6), so the plan is not stranded IN_PROGRESS.
+      const priorPlanStatus = plan?.status ?? null;
 
       workSessionId = await this.workLedgerRun.openRalphSession({
         bullmqJobId: jobId,
@@ -1028,6 +1036,7 @@ export class PlansProcessor
         metricsAtStart,
         abortSignal,
         heartbeatTimer,
+        priorPlanStatus,
         lifecycleDispatcher,
         workSessionId,
       );
@@ -1330,7 +1339,7 @@ export class PlansProcessor
     readonly planId: string;
     readonly queueJobId: string;
     readonly queueName: string;
-    readonly workflowKind: 'ralph';
+    readonly workflowKind: WorkflowKind;
   }): void {
     this.logger.info(
       JSON.stringify({
@@ -1348,9 +1357,55 @@ export class PlansProcessor
   }
 
   /**
+   * Puts a plan the OT Loop runner failed to start back to the status it had before the run
+   * promoted it. Guarded on IN_PROGRESS, so a status a human changed meanwhile is never overwritten.
+   * Does not throw; logs on failure.
+   */
+  private async restorePlanStatusAfterFailedStart(
+    planId: string,
+    priorStatus: string | null,
+    reason: string,
+  ): Promise<void> {
+    if (priorStatus === null || priorStatus === 'IN_PROGRESS') {
+      return;
+    }
+
+    try {
+      const actorSub = await this.statusChangeSystemAccount.resolveId();
+      const restored = await this.planStatusService.writeGuardedStatus(planId, {
+        actorKind: AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
+        actorSub: actorSub ?? undefined,
+        captureFailureIsFatal: false,
+        guardCurrentStatus: 'IN_PROGRESS',
+        requestedStatus: priorStatus,
+        throwOnForbiddenInProgress: false,
+      });
+
+      if (restored) {
+        this.notifications.emitPlanStatusChanged({
+          planId,
+          status: priorStatus,
+        });
+      }
+
+      this.logger.info(
+        `OT Loop failed to start (${reason}); plan ${planId} ${restored ? `returned to ${priorStatus}` : `left as is (not IN_PROGRESS, or the transition was refused)`}`,
+        PlansProcessor.name,
+      );
+    } catch (error) {
+      this.logger.warn(
+        `Failed to restore plan status after a failed OT Loop start: planId=${planId}, error=${error instanceof Error ? error.message : String(error)}`,
+        PlansProcessor.name,
+      );
+    }
+  }
+
+  /**
    * In-process GraphQL Ralph via {@link AgenticRalphOrchestratorService} and
-   * `@openthrottle/openthrottle-agentic-ralph`. Does not use worktrees or `workflow-ralph` spawn;
-   * iteration uses `runIterationAsync` (Cursor or Claude per job `executionBackend`) in the server process.
+   * `@openthrottle/openthrottle-agentic-ralph`, or the OT Loop runner ({@link OtLoopOrchestratorService})
+   * when the payload's `runner` is `'ot-loop'`; both return a `WorkflowRunResult` and share every settle
+   * branch below. Does not use `workflow-ralph` spawn; iteration uses `runIterationAsync` (Cursor or Claude
+   * per job `executionBackend`) in the server process.
    */
   private async processOrchestrator(
     job: RunPlanJob,
@@ -1359,6 +1414,7 @@ export class PlansProcessor
     metricsAtStart: ProcessMetricsSnapshot,
     abortSignal: AbortSignal,
     heartbeatTimer: ReturnType<typeof setInterval>,
+    priorPlanStatus: string | null,
     lifecycleDispatcher?: ReturnType<
       WorkflowLifecycleDispatcherFactory['create']
     >,
@@ -1376,13 +1432,18 @@ export class PlansProcessor
       queueName: PLANS_QUEUE_NAME,
     } as const;
 
+    // Both runners share the one job name; the payload picks the runner, and absent means Ralph so
+    // jobs already persisted in Redis keep working (docs/workflows/ot-loop-job.md § 1).
+    const workflowKind: WorkflowKind =
+      data.runner === 'ot-loop' ? 'ot-loop' : 'ralph';
+
     this.logAgenticOrchestratorRunStructured({
       correlationId: correlation.correlationId,
       phase: 'start',
       planId: data.planId,
       queueJobId: correlation.queueJobId,
       queueName: correlation.queueName,
-      workflowKind: 'ralph',
+      workflowKind,
     });
 
     // Filled by the orchestrator once it has provisioned the run's worktree, so teardown acts on
@@ -1391,7 +1452,11 @@ export class PlansProcessor
       worktree: null,
     };
 
-    const outcome = await this.agenticRalphOrchestrator.runPlanOrchestratorJob({
+    const isOtLoop = workflowKind === 'ot-loop';
+    const runner = isOtLoop
+      ? this.otLoopOrchestrator
+      : this.agenticRalphOrchestrator;
+    const outcome = await runner.runPlanOrchestratorJob({
       correlation,
       jobData: data,
       lifecycleDispatcher,
@@ -1412,7 +1477,7 @@ export class PlansProcessor
       planId: data.planId,
       queueJobId: correlation.queueJobId,
       queueName: correlation.queueName,
-      workflowKind: 'ralph',
+      workflowKind,
     });
 
     // Stop the wall-clock heartbeat BEFORE any terminal plan_runs write below: a tick
@@ -1435,6 +1500,16 @@ export class PlansProcessor
         jobId,
         PLAN_RUN_STATUS.FAILED,
       );
+
+      // OT Loop only: a failure at start (no commands, a red setup) never reached a task, so the plan
+      // goes back to what it was rather than sitting IN_PROGRESS with no run (§ 6).
+      if (workflowKind === 'ot-loop') {
+        await this.restorePlanStatusAfterFailedStart(
+          data.planId,
+          priorPlanStatus,
+          outcome.reason,
+        );
+      }
 
       await this.completePlanRunWithHooks({
         abortSignal,

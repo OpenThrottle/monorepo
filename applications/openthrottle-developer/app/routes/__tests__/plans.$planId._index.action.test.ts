@@ -781,6 +781,104 @@ describe('routes/plans.$planId._index action (runPlan iterations + persisted mod
     );
   });
 
+  test('saves the OT Loop runner and its fields to the plan and sends runner at enqueue', async () => {
+    mockExecuteGraphqlWithAuth
+      .mockResolvedValueOnce({
+        plan: { id: planId, runConfigJson: savedConfig() },
+      })
+      .mockResolvedValueOnce({ updatePlan: { id: planId } })
+      .mockResolvedValueOnce({ enqueuePlanRun: { jobId: 'job-4', planId } });
+
+    const { request } = await post({
+      branch: 'feature/x',
+      intent: 'runPlan',
+      otLoopMaxRetries: '3',
+      otLoopValidationCommands: 'pnpm nx run a:test\npnpm nx run a:lint',
+      runner: 'ot-loop',
+    });
+
+    expect(documentsCalled()).toEqual([
+      PlanDetailRunConfigDocument,
+      PlanDetailUpdatePlanRunConfigDocument,
+      PlanDetailEnqueuePlanRunDocument,
+    ]);
+
+    const [, , update] = mockExecuteGraphqlWithAuth.mock.calls[1] ?? [];
+    const saved: unknown = JSON.parse(
+      z.object({ input: z.object({ runConfigJson: z.string() }) }).parse(update)
+        .input.runConfigJson,
+    );
+    expect(saved).toMatchObject({
+      otLoop: {
+        maxRetries: 3,
+        validationCommands: ['pnpm nx run a:test', 'pnpm nx run a:lint'],
+      },
+      runner: 'ot-loop',
+    });
+    expect(mockExecuteGraphqlWithAuth).toHaveBeenLastCalledWith(
+      request,
+      PlanDetailEnqueuePlanRunDocument,
+      {
+        input: {
+          branch: 'feature/x',
+          planId,
+          priority: 1,
+          runner: 'ot-loop',
+        },
+      },
+    );
+  });
+
+  test('choosing Ralph again drops a stored runner key and still sends runner', async () => {
+    const defaults = getDefaultPlanRunConfigStorage({ planId });
+    mockExecuteGraphqlWithAuth
+      .mockResolvedValueOnce({
+        plan: {
+          id: planId,
+          runConfigJson: serializePlanRunConfigForGraphql(
+            { ...defaults, runner: 'ot-loop' },
+            { planId },
+          ),
+        },
+      })
+      .mockResolvedValueOnce({ updatePlan: { id: planId } })
+      .mockResolvedValueOnce({ enqueuePlanRun: { jobId: 'job-5', planId } });
+
+    await post({ branch: 'feature/x', intent: 'runPlan', runner: 'ralph' });
+
+    const [, , update] = mockExecuteGraphqlWithAuth.mock.calls[1] ?? [];
+    const saved: unknown = JSON.parse(
+      z.object({ input: z.object({ runConfigJson: z.string() }) }).parse(update)
+        .input.runConfigJson,
+    );
+    expect(saved).not.toHaveProperty('runner');
+    expect(mockExecuteGraphqlWithAuth).toHaveBeenLastCalledWith(
+      expect.anything(),
+      PlanDetailEnqueuePlanRunDocument,
+      { input: expect.objectContaining({ runner: 'ralph' }) },
+    );
+  });
+
+  test('rejects an unknown runner or an out-of-range retry count without calling the server', async () => {
+    const unknown = await post({
+      branch: 'feature/x',
+      intent: 'runPlan',
+      runner: 'turbo',
+    });
+    const retries = await post({
+      branch: 'feature/x',
+      intent: 'runPlan',
+      otLoopMaxRetries: '9',
+      runner: 'ot-loop',
+    });
+
+    expect(unknown.result).toEqual({ runPlanError: 'Unknown runner "turbo".' });
+    expect(retries.result).toEqual({
+      runPlanError: 'Retries must be a whole number from 0 to 5.',
+    });
+    expect(mockExecuteGraphqlWithAuth).not.toHaveBeenCalled();
+  });
+
   test('skips the config write when the saved config already holds the selection', async () => {
     mockExecuteGraphqlWithAuth
       .mockResolvedValueOnce({

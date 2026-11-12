@@ -15,6 +15,7 @@ import type {
 import {
   DRIVER_OUTPUT_FORMATS,
   DRIVERS,
+  formatToolLine,
 } from '@openthrottle/openthrottle-drivers';
 
 import type { ConversationStreamChunk } from '../conversation-backend/types.ts';
@@ -34,6 +35,21 @@ const toolNameOf = (chunk: ConversationStreamChunk): string => {
   const name = stringOrNull(metadata.toolName) ?? stringOrNull(metadata.name);
 
   return name ?? 'tool';
+};
+
+/**
+ * The tool's arguments, where the CLI's event clearly carries them: `metadata.toolCall` (claude,
+ * cursor, gemini, antigravity, opencode) or, for codex, the finished `item` (its `command`). grok
+ * maps no tool events, so its lines have nothing to show.
+ */
+const toolInputOf = (chunk: ConversationStreamChunk): unknown => {
+  const metadata = chunk.metadata ?? {};
+
+  return metadata.toolCall ?? metadata.item;
+};
+
+const toolLineOf = (chunk: ConversationStreamChunk): string => {
+  return formatToolLine(toolNameOf(chunk), toolInputOf(chunk));
 };
 
 const isToolChunk = (chunk: ConversationStreamChunk): boolean => {
@@ -111,10 +127,10 @@ const renderChunk = (
     case CONVERSATION_STREAM_CHUNK_KINDS.text:
       return chunk.delta.trim() === '' ? null : chunk.delta;
     case CONVERSATION_STREAM_CHUNK_KINDS.toolCall:
-      return `→ ${toolNameOf(chunk)}`;
+      return toolLineOf(chunk);
     case CONVERSATION_STREAM_CHUNK_KINDS.toolResult:
       // codex reports a tool only once it finishes (no call event), so its result is the one line.
-      return hasSeenToolCall ? null : `→ ${toolNameOf(chunk)}`;
+      return hasSeenToolCall ? null : toolLineOf(chunk);
     case CONVERSATION_STREAM_CHUNK_KINDS.usageLimit:
       return 'Usage limit reached';
     default:
@@ -123,7 +139,7 @@ const renderChunk = (
 };
 
 /**
- * @description A line renderer for one run: assistant text, `→ <tool>` per tool call, and errors;
+ * @description A line renderer for one run: assistant text, `→ <tool> <short argument>` per tool call, and errors;
  * everything else (session, usage, thinking, tool results) renders nothing. Lines that are not JSON
  * pass through unchanged, as plugin and hook output always has. Stateful, so one per run.
  * @public

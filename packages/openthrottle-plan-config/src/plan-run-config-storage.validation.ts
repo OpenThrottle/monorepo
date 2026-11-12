@@ -5,6 +5,10 @@
 import { z } from 'zod';
 
 import {
+  planRunConfigOtLoopSchema,
+  planRunConfigRunnerSchema,
+} from './plan-run-config-ot-loop.validation.ts';
+import {
   DEFAULT_PLAN_RUN_RALPH_DEBUG_CLI,
   DEFAULT_PLAN_RUN_RALPH_EFFORT,
   DEFAULT_PLAN_RUN_RALPH_WORKTREE_CLEANUP,
@@ -66,7 +70,9 @@ const planRunConfigRalphV1Schema = z
 
 const planRunConfigStorageV1Schema = z
   .object({
+    otLoop: planRunConfigOtLoopSchema.optional(),
     ralph: planRunConfigRalphV1Schema,
+    runner: planRunConfigRunnerSchema.optional(),
     target: z
       .object({
         mode: z.enum(PLAN_RUN_CONFIG_TARGET_MODES),

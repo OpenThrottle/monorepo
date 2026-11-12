@@ -1432,6 +1432,7 @@ export class PlansResolver {
       priority: input.priority,
       ralph: input.ralph,
       repositoryId: input.repositoryId,
+      runner: input.runner,
       workingDirectory: input.workingDirectory,
     });
 
@@ -1540,6 +1541,7 @@ export class PlansResolver {
       priority: input.priority,
       ralph: input.ralph,
       repositoryId: input.repositoryId,
+      runner: input.runner,
       taskId,
       workingDirectory: input.workingDirectory,
     });
@@ -1598,6 +1600,7 @@ export class PlansResolver {
       ralph: input.ralph,
       replaceScheduled: input.replaceScheduled ?? null,
       repositoryId: input.repositoryId,
+      runner: input.runner,
       scheduledFor: input.scheduledFor,
       workingDirectory: input.workingDirectory,
     });

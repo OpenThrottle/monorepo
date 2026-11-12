@@ -19,6 +19,8 @@ export interface OutputStreamChunk {
   createdAt: unknown;
   id: string;
   iteration?: number | null;
+  /** @description Task the chunk is attributed to (worker and validation output); null/absent for plan-scoped chunks. */
+  taskId?: string | null;
 }
 
 export interface OutputStreamChunkDay {
@@ -121,4 +123,36 @@ export function groupChunksByDay(
   }
 
   return groups;
+}
+
+/**
+ * @description Ids of the chunks that open a new run of one task's output: task-tagged
+ * chunks whose task differs from the chunk before them. The stream labels a task once per
+ * run instead of on every batched chunk.
+ */
+export function getTaskRunStartIds(
+  chunks: readonly OutputStreamChunk[],
+): ReadonlySet<string> {
+  const starts = new Set<string>();
+  let previousTaskId: string | null | undefined;
+
+  for (const chunk of chunks) {
+    const taskId = chunk.taskId ?? null;
+
+    if (taskId !== null && taskId !== previousTaskId) {
+      starts.add(chunk.id);
+    }
+
+    previousTaskId = taskId;
+  }
+
+  return starts;
+}
+
+/** @description Display name for a task id: its title when known, else the id's first 8 characters. */
+export function getTaskDisplayName(
+  taskId: string,
+  taskTitles: ReadonlyMap<string, string> | undefined,
+): string {
+  return taskTitles?.get(taskId) ?? taskId.slice(0, 8);
 }

@@ -4,6 +4,10 @@
 
 import { z } from 'zod';
 
+import {
+  planRunConfigOtLoopSchema,
+  planRunConfigRunnerSchema,
+} from './plan-run-config-ot-loop.validation.ts';
 import { PLAN_RUN_CONFIG_SNAPSHOT_VERSION } from './plan-run-config-snapshot.constants.ts';
 import type { PlanRunConfigSnapshot } from './plan-run-config-snapshot.types.ts';
 import {
@@ -46,7 +50,9 @@ const planRunConfigSnapshotV1Schema = z
       })
       .strict()
       .optional(),
+    otLoop: planRunConfigOtLoopSchema.optional(),
     ralph: planRunConfigSnapshotRalphV1Schema,
+    runner: planRunConfigRunnerSchema.optional(),
     target: z
       .object({
         mode: z.enum(['plan', 'task']),

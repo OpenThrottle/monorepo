@@ -1,3 +1,7 @@
+import type {
+  PlanRunConfigOtLoop,
+  PlanRunConfigRunner,
+} from '@openthrottle/nestjs-repositories';
 import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 import type {
   JobRunHooksConfig,
@@ -27,12 +31,20 @@ export interface RunPlanOrchestratorJobData {
    * @description Defaults to `plan` when omitted. When `task`, set `taskId` for task-centric runs.
    */
   readonly mode?: RunPlanJobWorkflowMode;
+  /**
+   * OT Loop run tuning (docs/workflows/ot-loop-job.md § 1). Read only when `runner` is `'ot-loop'`.
+   */
+  readonly otLoop?: PlanRunConfigOtLoop;
   readonly planId: string;
   /**
    * Optional Ralph runtime (argv-equivalent nested flags); see `RalphNestedRunTuningInput` in `@tools/workflows`.
    */
   readonly ralph?: RalphNestedRunTuningInput;
   readonly runKind: 'orchestrator';
+  /**
+   * Which runner executes the job. Absent means `'ralph'`, so jobs already persisted in Redis keep working.
+   */
+  readonly runner?: PlanRunConfigRunner;
   readonly taskId?: string;
   /**
    * Optional absolute path to a local project directory. When set, the orchestrator uses this as the

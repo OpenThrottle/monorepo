@@ -30,6 +30,12 @@ apps, `packages/openthrottle-mcp`) consumes its schema through the committed
   queue-job log tail API; design doc in [docs/log-tail-api-design.md](./docs/log-tail-api-design.md)).
 - `src/queues/` — BullMQ queue modules (plans, code-index, daily-stats, database-backup,
   agentic-test) plus `bullmq-run-output.module.ts`.
+- **Plan runners:** both runners execute on the `Plans` queue under the one `'Agentic Ralph'` job
+  name; `PlansProcessor.processOrchestrator` dispatches on `jobData.runner` (absent = Ralph,
+  `'ot-loop'` = `src/queues/ot-loop/`, `OtLoopOrchestratorService`). Both return a
+  `WorkflowRunResult`, so every settle branch is shared. Run-start workspace setup (worktree,
+  checkout registration, config) is `src/services/plan-run-workspace/`; OT Loop skips its MCP
+  preflight and skill injection. Design: [`docs/workflows/ot-loop-job.md`](../../docs/workflows/ot-loop-job.md).
 - `src/guards/` + `src/auth/` — `GlobalAuthGuard` (service-account `ot_sa_…` tokens first, then
   JWT) and the CLS auth hook; registered as `APP_GUARD`.
 - `src/main.ts` — bootstrap: `rawBody: true`, CORS from `@openthrottle/nestjs-rbac`, shutdown

@@ -1,3 +1,5 @@
+import { BadRequestException } from '@nestjs/common';
+import type { PlanRunConfigRunner } from '@openthrottle/nestjs-repositories';
 import { GraphQLError } from 'graphql';
 import { QueryFailedError } from 'typeorm';
 
@@ -93,4 +95,32 @@ export const isOneScheduledRunViolation = (error: unknown): boolean => {
     'constraint' in driverError &&
     driverError.constraint === ONE_SCHEDULED_RUN_INDEX
   );
+};
+
+const isPlanRunConfigRunner = (value: string): value is PlanRunConfigRunner => {
+  return value === 'ot-loop' || value === 'ralph';
+};
+
+/**
+ * @description The runner a run uses: the request's `runner` when it names one, else the plan's
+ * stored `runConfig.runner`, else `undefined` (Ralph; the key stays off the job payload so existing
+ * runs are byte-for-byte unchanged). A request naming anything but `ralph` or `ot-loop` is a 400.
+ */
+export const resolveRequestedRunner = (
+  requested: string | null | undefined,
+  stored: PlanRunConfigRunner | undefined,
+): PlanRunConfigRunner | undefined => {
+  const trimmed = requested?.trim() ?? '';
+
+  if (trimmed === '') {
+    return stored;
+  }
+
+  if (!isPlanRunConfigRunner(trimmed)) {
+    throw new BadRequestException(
+      `Invalid runner: ${trimmed} (expected one of: ralph, ot-loop)`,
+    );
+  }
+
+  return trimmed;
 };

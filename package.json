@@ -18,6 +18,7 @@
     "@openthrottle/nestjs-repositories-cms": "workspace:^",
     "@openthrottle/nestjs-testing": "workspace:^",
     "@openthrottle/node-client": "workspace:^",
+    "@openthrottle/openthrottle-agentic-loop": "workspace:^",
     "@openthrottle/openthrottle-agentic-utils": "workspace:^",
     "@openthrottle/openthrottle-desktop-bridge": "workspace:^",
     "@openthrottle/openthrottle-skills": "workspace:^",

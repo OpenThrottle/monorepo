@@ -12,10 +12,7 @@ import { executeGraphqlV2 } from '@openthrottle/nodejs-graphql';
 import type { WorkflowRalphOrchestratorDeps } from '@openthrottle/openthrottle-agentic-ralph';
 import { buildWorkflowExecuteGraphqlV2Options } from '@openthrottle/openthrottle-agentic-ralph';
 
-import { ForeignSkillInjectionModule } from '../../services/foreign-skill-injection/foreign-skill-injection.module.ts';
-import { PlanRunWorkspacePreflightModule } from '../../services/plan-run-workspace-preflight/plan-run-workspace-preflight.module.ts';
-import { PlanRunWorktreeCheckoutModule } from '../../services/plan-run-worktree-checkout/plan-run-worktree-checkout.module.ts';
-import { PlanRunWorktreeProvisionModule } from '../../services/plan-run-worktree-provision/plan-run-worktree-provision.module.ts';
+import { PlanRunWorkspaceModule } from '../../services/plan-run-workspace/plan-run-workspace.module.ts';
 import { resolveAgenticRalphWorkerWorkflowGraphqlConfigFromEnv } from './agentic-ralph.utils.ts';
 import { createAgenticRalphOrchestratorDeps } from './agentic-ralph-orchestrator-deps.factory.ts';
 import { AgenticRalphOrchestratorService } from './orchestrator/orchestrator.service.ts';
@@ -56,11 +53,8 @@ import { AgenticRalphOrchestratorService } from './orchestrator/orchestrator.ser
         },
       ],
     }),
-    ForeignSkillInjectionModule,
     NestjsRepositoriesModule,
-    PlanRunWorkspacePreflightModule,
-    PlanRunWorktreeCheckoutModule,
-    PlanRunWorktreeProvisionModule,
+    PlanRunWorkspaceModule,
   ],
   providers: [AgenticRalphOrchestratorService],
 })

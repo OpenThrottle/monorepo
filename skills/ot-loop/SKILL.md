@@ -46,10 +46,11 @@ A session started from a kickoff brief (`/ot-loop <planUuid>` on line 1 — [`ot
 
 ## The loop (one task at a time)
 
-> **This section is the canonical statement of the per-task discipline.** Change it here and
-> nowhere else. One place restates it deliberately, because it is injected as a standalone
-> prompt with no access to this file: [`agents-ralph`](../agents-ralph/SKILL.md) (read by the
-> `workflow-ralph` CLI). Keep it in sync when you edit this. Everything else links here.
+> **This section is the canonical statement of the per-task discipline.** Two deliberate
+> restatements change with it, in the same PR: [`agents-ralph`](../agents-ralph/SKILL.md) (a
+> standalone prompt for the Ralph runner) and the OT Loop job, its headless implementation in code
+> (`packages/openthrottle-agentic-loop`; [design](../../docs/workflows/ot-loop-job.md), whose § 9
+> names its one exception). Everything else links here.
 
 Each `/loop` iteration works exactly one task. Resume the lowest-`sortOrder` `IN_PROGRESS` task first; otherwise pick the lowest `sortOrder` `PENDING`/`QUEUED`.
 
@@ -172,17 +173,12 @@ reachable from it. Prose now governs only the deliberate-escalation path, which 
 someone to consciously override the default. That is a much smaller blast radius than last time,
 and it is why the cap that matters is the structural one rather than the written one.
 
-### Harnesses without subagents
+### Headless runners
 
-Routing is an **interactive-only enhancement, not a requirement of the loop.** A driver with no
-Agent tool — the headless `workflow-ralph` path and every CLI backend it drives — runs the whole
-plan on the single `PlanRunConfigRalphV1.model` fixed at enqueue, exactly as it does today. That is
-correct behaviour, not a degraded mode, and it must not be reported as routing having happened.
-
-Attribution is the part that is **not** interactive-only: a headless driver knows the one model it
-was configured with, so it should still call `begin_task_session` per task and declare it. That
-gives the same per-task read-back with a constant value, which is the honest answer for a run that
-genuinely used one model.
+The OT Loop job routes each task by this same policy (loaded from the OT root), falling back to the
+run's model when its driver does not list the tier's, and records whichever model it passed. Ralph
+and `workflow-ralph` have no router: the whole plan runs on the model fixed at enqueue, which is not
+routing, but each task should still declare that model via `begin_task_session`.
 
 ## Intra-task fan-out
 

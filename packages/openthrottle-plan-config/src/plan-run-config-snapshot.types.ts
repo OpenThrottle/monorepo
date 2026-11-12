@@ -8,6 +8,8 @@ import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-wo
 import type { PLAN_RUN_CONFIG_SNAPSHOT_VERSION } from './plan-run-config-snapshot.constants.ts';
 import type {
   PlanJobRunHooksStorage,
+  PlanRunConfigOtLoop,
+  PlanRunConfigRunner,
   PlanRunConfigTargetMode,
 } from './plan-run-config-storage.types.ts';
 
@@ -34,7 +36,11 @@ export interface PlanRunConfigSnapshotRalphV1 {
 
 export interface PlanRunConfigSnapshotV1 {
   readonly jobRunHooks?: PlanJobRunHooksStorage;
+  /** @description OT Loop tuning the run was enqueued with. */
+  readonly otLoop?: PlanRunConfigOtLoop;
   readonly ralph: PlanRunConfigSnapshotRalphV1;
+  /** @description Absent means `'ralph'`. */
+  readonly runner?: PlanRunConfigRunner;
   readonly target: {
     readonly mode: PlanRunConfigTargetMode;
     readonly taskId: string;
@@ -60,6 +66,7 @@ export interface BuildPlanRunConfigSnapshotInput {
   readonly executionBackend: WorkflowConfigRunner;
   readonly jobRunHooks?: PlanJobRunHooksStorage | null;
   readonly mode?: PlanRunConfigTargetMode | null;
+  readonly otLoop?: PlanRunConfigOtLoop | null;
   readonly ralph?: {
     readonly debug?: PlanRunConfigSnapshotDebugCli | null;
     readonly effort?: string | null;
@@ -74,6 +81,7 @@ export interface BuildPlanRunConfigSnapshotInput {
     readonly worktreeBase?: string | null;
   } | null;
   readonly repositoryId?: string | null;
+  readonly runner?: PlanRunConfigRunner | null;
   readonly taskId?: string | null;
   readonly workingDirectory?: string | null;
 }

@@ -10,6 +10,7 @@ import { MetricsModule } from '../../metrics/metrics.module.ts';
 import { NotificationsModule } from '../../notifications/notifications.module.ts';
 import { PlanRunWorktreeCleanupModule } from '../../services/plan-run-worktree-cleanup/plan-run-worktree-cleanup.module.ts';
 import { AgenticRalphModule } from '../agentic-ralph/agentic-ralph.module.ts';
+import { OtLoopModule } from '../ot-loop/ot-loop.module.ts';
 import { PlanLifecycleHooksQueueProducerModule } from '../plan-lifecycle-hooks/producer/producer.module.ts';
 import { PlansProcessor } from './plans.processor.ts';
 import { PlansQueueProducerModule } from './producer/producer.module.ts';
@@ -45,6 +46,7 @@ import { WorkLedgerRunService } from './work-ledger-run/work-ledger-run.service.
     NestjsRepositoriesModule,
     NestjsWorktreesModule,
     NotificationsModule,
+    OtLoopModule,
     PlanEnqueueModule,
     PlanLifecycleHooksQueueProducerModule,
     PlanRunWorktreeCleanupModule,

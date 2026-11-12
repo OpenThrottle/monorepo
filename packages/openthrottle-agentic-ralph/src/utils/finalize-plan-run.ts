@@ -58,6 +58,17 @@ const DRAFT_ONLY_REASONS: ReadonlySet<FinalizePriorReason> = new Set([
   'workflow_tasks_blocked',
 ]);
 
+/**
+ * @description The `markReady` value Ralph has always derived from its prior reason: `true`
+ * unless the plan did not finish (blocked, budget or iteration limit).
+ * @public
+ */
+export const shouldMarkPlanRunReady = (
+  priorReason: FinalizePlanRunParams['priorReason'],
+): boolean => {
+  return !DRAFT_ONLY_REASONS.has(priorReason);
+};
+
 const isFinalizePriorReason = (
   reason: string,
 ): reason is FinalizePriorReason => {
@@ -73,6 +84,12 @@ export interface FinalizePlanRunParams {
    */
   readonly draftDir: string | undefined;
   readonly executeGraphqlV2: WorkflowExecuteGraphqlV2;
+  /**
+   * @description Whether to run `gh pr ready` after the push. Ralph passes
+   * {@link shouldMarkPlanRunReady} of its prior reason (the pre-existing derived value); the OT
+   * Loop path always passes `false` so its PR stays a draft.
+   */
+  readonly markReady: boolean;
   readonly onChunk: WorkflowRalphIterationOnChunk | undefined;
   readonly planId: string;
   readonly priorReason: FinalizePriorReason;
@@ -156,7 +173,13 @@ const appendHandoffDiagnostic = async (params: {
   }
 };
 
-const handoffOwed = async (params: {
+/**
+ * @description Records the owed finalize step (plan_output + `onChunk` diagnostic line) and returns
+ * the `workflow_complete_handoff_owed` result. Shared with the OT Loop finalize so a failed step
+ * there surfaces exactly like a failed push or PR here.
+ * @public
+ */
+export const finalizeHandoffOwed = async (params: {
   readonly cwd: string;
   readonly detail: string;
   readonly executeGraphqlV2: WorkflowExecuteGraphqlV2;
@@ -852,6 +875,7 @@ export const finalizePlanRun = async (
     cwd,
     draftDir,
     executeGraphqlV2,
+    markReady,
     onChunk,
     planId,
     priorReason,
@@ -859,7 +883,6 @@ export const finalizePlanRun = async (
   } = params;
   const isHandoffRetry = priorReason === 'workflow_complete_handoff_owed';
   const settledReason = isHandoffRetry ? 'workflow_complete' : priorReason;
-  const markReady = !DRAFT_ONLY_REASONS.has(priorReason);
 
   const branchResult = await runGit(runCommand, cwd, [
     'rev-parse',
@@ -869,7 +892,7 @@ export const finalizePlanRun = async (
   const branch = branchResult.exitCode === 0 ? branchResult.stdout.trim() : '';
 
   if (branch === '' || branch === 'HEAD') {
-    return handoffOwed({
+    return finalizeHandoffOwed({
       cwd,
       detail: branchResult.stderr.trim() || 'could not resolve current branch',
       executeGraphqlV2,
@@ -887,7 +910,7 @@ export const finalizePlanRun = async (
   ]);
 
   if (ahead.exitCode !== 0) {
-    return handoffOwed({
+    return finalizeHandoffOwed({
       cwd,
       detail: ahead.stderr.trim() || `could not compare to ${baseBranch}`,
       executeGraphqlV2,
@@ -931,7 +954,7 @@ export const finalizePlanRun = async (
   ]);
 
   if (pushed.exitCode !== 0) {
-    return handoffOwed({
+    return finalizeHandoffOwed({
       cwd,
       detail: pushed.stderr.trim() || pushed.stdout.trim() || 'git push failed',
       executeGraphqlV2,
@@ -947,7 +970,7 @@ export const finalizePlanRun = async (
   const headSha = hasHead ? headOut : undefined;
 
   if (headSha === undefined) {
-    return handoffOwed({
+    return finalizeHandoffOwed({
       cwd,
       detail: head.stderr.trim() || 'could not resolve HEAD sha after push',
       executeGraphqlV2,
@@ -976,7 +999,7 @@ export const finalizePlanRun = async (
     });
 
     if (!refreshed.ok) {
-      return handoffOwed({
+      return finalizeHandoffOwed({
         cwd,
         detail: refreshed.detail,
         executeGraphqlV2,
@@ -1005,7 +1028,7 @@ export const finalizePlanRun = async (
       ready.exitCode !== 0 &&
       !/already ready|not a draft/i.test(`${ready.stderr}\n${ready.stdout}`)
     ) {
-      return handoffOwed({
+      return finalizeHandoffOwed({
         cwd,
         detail:
           ready.stderr.trim() || ready.stdout.trim() || 'gh pr ready failed',
@@ -1035,7 +1058,7 @@ export const finalizePlanRun = async (
   });
 
   if (!created.ok) {
-    return handoffOwed({
+    return finalizeHandoffOwed({
       cwd,
       detail: created.detail,
       executeGraphqlV2,

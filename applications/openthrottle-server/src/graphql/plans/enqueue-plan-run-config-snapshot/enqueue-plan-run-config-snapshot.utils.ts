@@ -6,6 +6,8 @@ import {
   buildPlanRunConfigSnapshot,
   DEFAULT_PLAN_RUN_RALPH_RUNNER,
   type PlanJobRunHooksStorage,
+  type PlanRunConfigOtLoop,
+  type PlanRunConfigRunner,
   type PlanRunConfigSnapshot,
 } from '@openthrottle/nestjs-repositories';
 
@@ -21,9 +23,11 @@ interface OrchestratorJobInputFromSnapshot {
   readonly jobRunHooksJson: null;
   readonly materializedHookEntries: readonly [];
   readonly mode: 'task' | null;
+  readonly otLoop: PlanRunConfigOtLoop | null;
   readonly planId: string;
   readonly planJobRunHooks: PlanJobRunHooksStorage | null;
   readonly ralph: RalphPlanRunTuningInput;
+  readonly runner: PlanRunConfigRunner | null;
   readonly taskId: string | null;
   readonly workingDirectory: string | null;
 }
@@ -96,8 +100,10 @@ export const buildPlanRunConfigSnapshotFromJobData = (
       executionBackend,
       jobRunHooks,
       mode,
+      otLoop: jobData.otLoop ?? null,
       ralph: ralphSnapshot,
       repositoryId,
+      runner: jobData.runner ?? null,
       taskId: jobData.taskId ?? null,
       workingDirectory,
     });
@@ -143,6 +149,7 @@ export const orchestratorJobInputFromSnapshot = (
     jobRunHooksJson: null,
     materializedHookEntries: [],
     mode: isTaskMode ? 'task' : null,
+    otLoop: snapshot.otLoop ?? null,
     planId,
     planJobRunHooks: snapshot.jobRunHooks ?? null,
     ralph: {
@@ -160,6 +167,7 @@ export const orchestratorJobInputFromSnapshot = (
       worktree: ralph.worktree ?? null,
       worktreeBase: ralph.worktreeBase ?? null,
     },
+    runner: snapshot.runner ?? null,
     taskId: isTaskMode ? target.taskId : null,
     workingDirectory: workingDirectoryOrNull(workspace.workingDirectory),
   };

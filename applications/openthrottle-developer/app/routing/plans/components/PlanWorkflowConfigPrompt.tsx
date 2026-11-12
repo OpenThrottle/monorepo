@@ -9,8 +9,10 @@ import {
   SelectValue,
 } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
+import { useAtomValue } from 'jotai';
 import * as React from 'react';
 
+import { workflowRunnerAtom } from '~/routing/plans/data/data.atom-plan';
 import type { WorkflowRalphPromptLayer } from '~/routing/plans/utils/build-workflow-ralph-argv';
 import { DEFAULT_RALPH_PROMPT } from '~/routing/plans/utils/build-workflow-ralph-argv';
 
@@ -40,6 +42,7 @@ export const PlanWorkflowConfigPrompt = (
   } = props;
 
   // Hooks
+  const runner = useAtomValue(workflowRunnerAtom);
 
   // Setup
 
@@ -67,6 +70,10 @@ export const PlanWorkflowConfigPrompt = (
   // Life Cycle
 
   // 🔌 Short Circuit
+  // The OT Loop worker builds its own prompt; the Ralph prompt does not apply.
+  if (runner === 'ot-loop') {
+    return <></>;
+  }
 
   return (
     <OpenThrottleFieldset

@@ -3,6 +3,8 @@ import { render } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
+import { OUTPUT_STREAM_COPY } from '~/routing/plans/data/data.copy';
+
 import type { OutputStreamProps } from '../OutputStream';
 import { OutputStream } from '../OutputStream';
 
@@ -72,5 +74,75 @@ describe('OutputStream Component', () => {
     expect(component.getByText('Unknown date')).toBeInTheDocument();
     expect(component.container.textContent).not.toContain('#');
     expect(component.container.textContent).not.toContain('Invalid Date');
+  });
+
+  describe('task-tagged output', () => {
+    const taskChunks: OutputStreamProps['chunks'] = [
+      {
+        content: 'line one\n  indented line two',
+        createdAt: new Date(2026, 7, 19, 13, 0, 0),
+        id: 'chunk-1',
+        taskId: 'task-aaaa-1111',
+      },
+      {
+        content: 'more from the same task',
+        createdAt: new Date(2026, 7, 19, 13, 0, 1),
+        id: 'chunk-2',
+        taskId: 'task-aaaa-1111',
+      },
+      {
+        content: 'validation output',
+        createdAt: new Date(2026, 7, 19, 13, 0, 2),
+        id: 'chunk-3',
+        taskId: 'task-bbbb-2222',
+      },
+    ];
+
+    test('renders raw text verbatim in monospace, in order', () => {
+      const component = renderStream({ chunks: taskChunks });
+
+      const blocks = component.container.querySelectorAll('pre');
+
+      expect(blocks).toHaveLength(3);
+      expect([...blocks].map((block) => block.textContent)).toEqual([
+        'line one\n  indented line two',
+        'more from the same task',
+        'validation output',
+      ]);
+      expect(blocks[0]).toHaveClass('font-mono', 'whitespace-pre-wrap');
+    });
+
+    test('names each task once where its output starts, using titles when known', () => {
+      const component = renderStream({
+        chunks: taskChunks,
+        taskTitles: new Map([['task-aaaa-1111', 'Add the runner field']]),
+      });
+
+      const labels = component.getAllByTestId('OutputStream-task');
+
+      expect(labels).toHaveLength(2);
+      expect(labels[0]).toHaveTextContent(
+        OUTPUT_STREAM_COPY.taskLabel('Add the runner field'),
+      );
+      expect(labels[1]).toHaveTextContent(
+        OUTPUT_STREAM_COPY.taskLabel('task-bbb'),
+      );
+    });
+
+    test('plan-scoped chunks still render as Markdown without a task label', async () => {
+      const component = renderStream({
+        chunks: [
+          {
+            content: 'plain **bold**',
+            createdAt: new Date(2026, 7, 19, 13, 0, 0),
+            id: 'chunk-9',
+          },
+        ],
+      });
+
+      expect(await component.findByText('bold')).toBeInTheDocument();
+      expect(component.container.querySelector('pre')).toBeNull();
+      expect(component.queryByTestId('OutputStream-task')).toBeNull();
+    });
   });
 });

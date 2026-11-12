@@ -7,6 +7,7 @@
  */
 
 import type { DriverParsedOutput } from '../types/index.ts';
+import { formatToolLine } from './tool-argument.ts';
 import type { UsageLimit } from './usage-limit.ts';
 import {
   isClaudeUsageLimitResult,
@@ -85,7 +86,7 @@ export const parseClaudeStreamJsonOutput = (
   };
 };
 
-/** Text of an `assistant` event's `text` content blocks plus a `→ <tool>` line per `tool_use` block. */
+/** Text of an `assistant` event's `text` content blocks plus a `→ <tool> <arg>` line per `tool_use` block. */
 const renderAssistantEvent = (
   event: Record<string, unknown>,
 ): string | null => {
@@ -106,7 +107,7 @@ const renderAssistantEvent = (
     if (block.type === 'text' && typeof block.text === 'string') {
       parts.push(block.text);
     } else if (block.type === 'tool_use' && typeof block.name === 'string') {
-      parts.push(`→ ${block.name}`);
+      parts.push(formatToolLine(block.name, block.input));
     }
   }
 
@@ -119,7 +120,7 @@ const renderAssistantEvent = (
  * @description Live renderer for one line of Claude `stream-json` stdout (the driver's
  * `renderOutputLine`), so plan output and job logs read as prose instead of NDJSON.
  *
- * - `assistant` events render their `text` blocks, plus `→ <tool name>` for each `tool_use` block.
+ * - `assistant` events render their `text` blocks, plus `→ <tool name> <short argument>` for each `tool_use` block (see `formatToolLine`).
  * - A rejected `rate_limit_event` renders `Usage limit reached (<type>) — resets <ISO>`, omitting
  *   whichever parts are unknown.
  * - A `result` with `is_error` renders `Error: <result text>`; a successful `result` is `null`

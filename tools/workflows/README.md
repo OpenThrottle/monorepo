@@ -28,6 +28,21 @@ We're building out things like Agentic Ralph but in TypeScript packages. These s
 
 Mutation roles, profiling, and the `WORKTREE_TARGETS` post-run-check switch are detailed under [Worktree + BullMQ workflow](#worktree--bullmq-workflow-fan-outfan-in).
 
+### Two runners share the Plans queue
+
+The surfaces above are all the **Ralph runner**. A second runner, **OT Loop**, runs on the same
+`Plans` queue under the same BullMQ job name. It is the headless implementation of
+[`skills/ot-loop/SKILL.md` § The loop](../../skills/ot-loop/SKILL.md#the-loop-one-task-at-a-time):
+a pure state machine in `packages/openthrottle-agentic-loop` (`runOtLoop`), wired by
+`OtLoopOrchestratorService` in `applications/openthrottle-server/src/queues/ot-loop/`.
+
+- **Selection:** per plan by `runConfigJson.runner` (`'ralph'` | `'ot-loop'`; absent = Ralph, still the default) or the enqueue input's `runner` field. The Developer UI run dialog and Configuration tab expose the choice.
+- **`/agents-ralph`:** used only by the Ralph runner and the `workflow-ralph` CLI. The OT Loop runner never uses it; its worker is any `@openthrottle/openthrottle-drivers` CLI fed a standalone prompt built from the task row (no slash command, no skills, no OT MCP). `/agents-ralph` stays until a follow-up plan retires Ralph.
+- **Model routing:** OT Loop routes each task's model from `skills/ot-loop/references/model-routing.json`; Ralph runs the whole plan on one model.
+- **Validation:** job-owned for OT Loop, configurable per repository through a committed `.openthrottle/ot-loop.json` (this repo has one).
+
+Contract and ownership split: [docs/workflows/ot-loop-job.md](../../docs/workflows/ot-loop-job.md).
+
 ## Target architecture (Phase 2)
 
 > **Forward-looking.** The sections above describe how Ralph runs **today** (three surfaces, two

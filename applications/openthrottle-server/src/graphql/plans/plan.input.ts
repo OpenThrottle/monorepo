@@ -348,6 +348,12 @@ export class PlanRunOptionsInput {
   })
   priority?: number | null;
 
+  @Field(() => String, {
+    description: `Which runner executes the run: "ralph" (the default) or "ot-loop" (the per-task discipline of /ot-loop run as deterministic job code, with a fresh worker per task). Nullable + additive: omit to use the plan's stored runConfig runner, else Ralph. An unrecognized value is rejected. "ot-loop" is also rejected when the run has no worktree (disableWorktree) or when no validation command resolves (set otLoop.validationCommands on the plan, or commit .openthrottle/ot-loop.json).`,
+    nullable: true,
+  })
+  runner?: string | null;
+
   @Field(() => RalphPlanRunTuningInput, {
     description: `Optional Ralph / workflow-ralph runtime tuning (iterations, model, backend, etc.). When set, queued workers pass these to nested workflow-ralph; when omitted, defaults come from env and .workflow-ralph.json in the worktree cwd.`,
     nullable: true,
@@ -440,6 +446,12 @@ export class EnqueuePlanRalphOrchestratorInput {
     nullable: true,
   })
   priority?: number | null;
+
+  @Field(() => String, {
+    description: `Which runner executes the run: "ralph" (the default) or "ot-loop" (the per-task discipline of /ot-loop run as deterministic job code, with a fresh worker per task). Nullable + additive: omit to use the plan's stored runConfig runner, else Ralph. An unrecognized value is rejected. "ot-loop" is also rejected when the run has no worktree (disableWorktree) or when no validation command resolves (set otLoop.validationCommands on the plan, or commit .openthrottle/ot-loop.json).`,
+    nullable: true,
+  })
+  runner?: string | null;
 
   @Field(() => RalphPlanRunTuningInput, {
     description: `Optional Ralph tuning for the in-process orchestrator (iterations, model, backend, etc.).`,

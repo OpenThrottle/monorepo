@@ -585,3 +585,54 @@ describe('ralph.effort', () => {
     ).toEqual({ effort: 'max' });
   });
 });
+
+describe('runner and otLoop', () => {
+  const base = getDefaultPlanRunConfigStorage({ planId });
+
+  it('parses a config without them unchanged and keeps it default', () => {
+    const parsed = parsePlanRunConfigStorage(base);
+
+    expect(parsed).not.toHaveProperty('runner');
+    expect(parsed).not.toHaveProperty('otLoop');
+    expect(planHasCustomRunConfig(parsed, { planId })).toBe(false);
+  });
+
+  it('accepts and round-trips runner and otLoop through JSON and the UI state', () => {
+    const config: PlanRunConfigStorage = {
+      ...base,
+      otLoop: {
+        finalValidationCommands: ['pnpm run check:local'],
+        maxRetries: 5,
+        setupCommands: ['pnpm install'],
+        validationCommands: ['pnpm nx run x:test'],
+      },
+      runner: 'ot-loop',
+    };
+
+    const reparsed = parsePlanRunConfigJson(JSON.stringify(config));
+    expect(reparsed).toEqual(config);
+
+    const ui = workflowUiStateFromPlanRunConfig(planId, config);
+    expect(ui.runner).toBe('ot-loop');
+    expect(planRunConfigFromWorkflowUiState(ui)).toEqual(config);
+    expect(planHasCustomRunConfig(config, { planId })).toBe(true);
+  });
+
+  it('rejects an unknown runner, out-of-range retries and empty commands', () => {
+    expect(() =>
+      parsePlanRunConfigStorage({ ...base, runner: 'other' }),
+    ).toThrow();
+    expect(() =>
+      parsePlanRunConfigStorage({ ...base, otLoop: { maxRetries: 6 } }),
+    ).toThrow();
+    expect(() =>
+      parsePlanRunConfigStorage({ ...base, otLoop: { maxRetries: 1.5 } }),
+    ).toThrow();
+    expect(() =>
+      parsePlanRunConfigStorage({ ...base, otLoop: { setupCommands: [''] } }),
+    ).toThrow();
+    expect(() =>
+      parsePlanRunConfigStorage({ ...base, otLoop: { extra: true } }),
+    ).toThrow();
+  });
+});

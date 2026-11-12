@@ -1,3 +1,4 @@
+import type { PlanRunConfigRunner } from '@openthrottle/openthrottle-plan-config';
 import type { ChatModelOption } from '@openthrottle/react-router-chat';
 import {
   Badge,
@@ -11,6 +12,8 @@ import * as React from 'react';
 import { PlanDeferredSection } from '~/routing/plans/components/PlanDeferredSection';
 import { PlanRunEffortControl } from '~/routing/plans/components/PlanRunEffortControl';
 import { PlanRunModelPicker } from '~/routing/plans/components/PlanRunModelPicker';
+import { PlanRunOtLoopFields } from '~/routing/plans/components/PlanRunOtLoopFields';
+import { PlanRunRunnerField } from '~/routing/plans/components/PlanRunRunnerField';
 import {
   PLAN_RUN_DIALOG_COPY,
   PLAN_RUN_MODEL_EFFORT_COPY,
@@ -31,15 +34,22 @@ export interface PlanRunDialogSettingsProps {
   readonly onEffortChange: (effort: string) => void;
   readonly onIterationsChange: (iterationsText: string) => void;
   readonly onModelChange: (selection: PlanRunModelSelection) => void;
+  readonly onOtLoopMaxRetriesChange: (text: string) => void;
+  readonly onOtLoopValidationChange: (text: string) => void;
+  readonly onRunnerChange: (runner: PlanRunConfigRunner) => void;
+  readonly otLoopMaxRetriesError: string | undefined;
+  readonly otLoopMaxRetriesText: string;
+  readonly otLoopValidationText: string;
 
   /** @description The plan's configured iterations, named in the "resets to" hint. */
   readonly planIterations: number;
+  readonly runner: PlanRunConfigRunner;
 }
 
 /**
- * @description The Run dialog's settings: model + effort, labeled as PLAN settings
- * (the action saves them to the run config), and iterations, labeled as this run
- * only. Reuses the Configuration tab's {@link PlanRunModelPicker} and
+ * @description The Run dialog's settings: the runner (Ralph | OT Loop), model + effort,
+ * labeled as PLAN settings (the action saves them to the run config), then either
+ * iterations (Ralph; this run only) or the OT Loop validation override and retries. Reuses the Configuration tab's {@link PlanRunModelPicker} and
  * {@link PlanRunEffortControl}, so both surfaces edit the same fields.
  */
 export const PlanRunDialogSettings = (
@@ -56,7 +66,14 @@ export const PlanRunDialogSettings = (
     onEffortChange,
     onIterationsChange,
     onModelChange,
+    onOtLoopMaxRetriesChange,
+    onOtLoopValidationChange,
+    onRunnerChange,
+    otLoopMaxRetriesError,
+    otLoopMaxRetriesText,
+    otLoopValidationText,
     planIterations,
+    runner,
   } = props;
 
   // Hooks
@@ -69,6 +86,39 @@ export const PlanRunDialogSettings = (
   // Handlers
 
   // Markup
+  const iterationsField = (
+    <div className="flex flex-col gap-1.5">
+      <div className="flex items-center gap-2">
+        <Label htmlFor={iterationsId}>{copy.iterationsLabel}</Label>
+        <Badge variant="outline">{copy.iterationsScope}</Badge>
+      </div>
+      <Input
+        aria-describedby={`${iterationsId}-hint`}
+        aria-invalid={iterationsError !== undefined}
+        className="w-28"
+        id={iterationsId}
+        inputMode="numeric"
+        min={1}
+        onChange={(event) => onIterationsChange(event.target.value)}
+        step={1}
+        type="number"
+        value={iterationsText}
+      />
+      <p className="text-muted-foreground text-xs" id={`${iterationsId}-hint`}>
+        {copy.iterationsHint(planIterations)}
+      </p>
+    </div>
+  );
+
+  const otLoopFields = (
+    <PlanRunOtLoopFields
+      maxRetriesError={otLoopMaxRetriesError}
+      maxRetriesText={otLoopMaxRetriesText}
+      onMaxRetriesChange={onOtLoopMaxRetriesChange}
+      onValidationChange={onOtLoopValidationChange}
+      validationText={otLoopValidationText}
+    />
+  );
 
   // Life Cycle
 
@@ -79,6 +129,7 @@ export const PlanRunDialogSettings = (
       className={cn('flex flex-col gap-4', className)}
       data-testid="PlanRunDialogSettings"
     >
+      <PlanRunRunnerField onRunnerChange={onRunnerChange} runner={runner} />
       <section
         aria-labelledby={`${iterationsId}-plan`}
         className="border-border flex flex-col gap-3 rounded-lg border border-dashed p-3"
@@ -123,30 +174,7 @@ export const PlanRunDialogSettings = (
         </div>
       </section>
 
-      <div className="flex flex-col gap-1.5">
-        <div className="flex items-center gap-2">
-          <Label htmlFor={iterationsId}>{copy.iterationsLabel}</Label>
-          <Badge variant="outline">{copy.iterationsScope}</Badge>
-        </div>
-        <Input
-          aria-describedby={`${iterationsId}-hint`}
-          aria-invalid={iterationsError !== undefined}
-          className="w-28"
-          id={iterationsId}
-          inputMode="numeric"
-          min={1}
-          onChange={(event) => onIterationsChange(event.target.value)}
-          step={1}
-          type="number"
-          value={iterationsText}
-        />
-        <p
-          className="text-muted-foreground text-xs"
-          id={`${iterationsId}-hint`}
-        >
-          {copy.iterationsHint(planIterations)}
-        </p>
-      </div>
+      {runner === 'ot-loop' ? otLoopFields : iterationsField}
     </div>
   );
 };

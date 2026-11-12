@@ -9,9 +9,11 @@ import {
   SelectValue,
 } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
+import { useAtomValue } from 'jotai';
 import * as React from 'react';
 
 import { PlanWorkflowConfigModelEffort } from '~/routing/plans/components/PlanWorkflowConfigModelEffort';
+import { workflowRunnerAtom } from '~/routing/plans/data/data.atom-plan';
 import type {
   WorkflowRalphDebugCli,
   WorkflowRalphRunOptionsInput,
@@ -47,8 +49,11 @@ export const PlanWorkflowConfigTuning = (
   } = props;
 
   // Hooks
+  const runner = useAtomValue(workflowRunnerAtom);
 
   // Setup
+  // Iterations only bound a Ralph run; OT Loop runs each task once, with retries.
+  const showIterations = runner !== 'ot-loop';
 
   // Handlers
   const handleDebugChange = (value: WorkflowRalphDebugCli): void => {
@@ -81,33 +86,35 @@ export const PlanWorkflowConfigTuning = (
         effort, limit the iteration count, etc..
       </p>
       <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="workflow-run-iterations">--iterations</Label>
-          <Input
-            aria-describedby="workflow-run-iterations-hint"
-            aria-label="Iteration count for --iterations"
-            id="workflow-run-iterations"
-            min={1}
-            onBlur={handleIterationsBlur}
-            onChange={(e) => {
-              const raw = e.target.valueAsNumber;
-              if (!Number.isNaN(raw) && raw >= 1) {
-                setInput((prev) => ({
-                  ...prev,
-                  iterations: Math.floor(raw),
-                }));
-              }
-            }}
-            type="number"
-            value={input.iterations}
-          />
-          <p
-            className="text-muted-foreground text-xs"
-            id="workflow-run-iterations-hint"
-          >
-            Default {DEFAULT_RALPH_ITERATIONS}; omitted when default.
-          </p>
-        </div>
+        {showIterations && (
+          <div className="space-y-2">
+            <Label htmlFor="workflow-run-iterations">--iterations</Label>
+            <Input
+              aria-describedby="workflow-run-iterations-hint"
+              aria-label="Iteration count for --iterations"
+              id="workflow-run-iterations"
+              min={1}
+              onBlur={handleIterationsBlur}
+              onChange={(e) => {
+                const raw = e.target.valueAsNumber;
+                if (!Number.isNaN(raw) && raw >= 1) {
+                  setInput((prev) => ({
+                    ...prev,
+                    iterations: Math.floor(raw),
+                  }));
+                }
+              }}
+              type="number"
+              value={input.iterations}
+            />
+            <p
+              className="text-muted-foreground text-xs"
+              id="workflow-run-iterations-hint"
+            >
+              Default {DEFAULT_RALPH_ITERATIONS}; omitted when default.
+            </p>
+          </div>
+        )}
         <div className="space-y-2">
           <Label htmlFor="workflow-run-iteration-timeout">
             --iteration-timeout (seconds)

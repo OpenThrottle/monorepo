@@ -19,6 +19,11 @@ import { PLANS_DETAIL_TAB_SEARCH_PARAM } from '~/routing/plans/utils/parsers';
 import { hydratePlanRunConfigUiState } from '~/routing/plans/utils/plan-run-config-ui';
 import { reconcilePlanRunEffort } from '~/routing/plans/utils/plan-run-model-effort';
 import {
+  formatOtLoopCommandsText,
+  parseOtLoopCommandsText,
+  resolvePlanRunRunner,
+} from '~/routing/plans/utils/plan-run-ot-loop';
+import {
   composeScheduleInstant,
   formatScheduleTime,
   getDefaultScheduleInstant,
@@ -76,7 +81,10 @@ export const createPlanRunDialogDraft = (input: {
   readonly scheduledRunAt: Date | string | null | undefined;
 }): PlanRunDialogDraft => {
   const { mode, now, planId, runConfigJson, scheduledRunAt } = input;
-  const { workflowInput } = hydratePlanRunConfigUiState(planId, runConfigJson);
+  const { otLoop, runner, workflowInput } = hydratePlanRunConfigUiState(
+    planId,
+    runConfigJson,
+  );
   const scheduledInstant =
     scheduledRunAt == null ? undefined : new Date(scheduledRunAt);
   const hasScheduledInstant =
@@ -94,6 +102,10 @@ export const createPlanRunDialogDraft = (input: {
     iterationsText: String(workflowInput.iterations),
     mode,
     model: workflowInput.model,
+    otLoopMaxRetriesText:
+      otLoop?.maxRetries === undefined ? '' : String(otLoop.maxRetries),
+    otLoopValidationText: formatOtLoopCommandsText(otLoop?.validationCommands),
+    runner: resolvePlanRunRunner(runner),
     scheduleDate: defaultInstant,
     scheduleTime: formatScheduleTime(defaultInstant),
   };
@@ -185,7 +197,8 @@ export interface PlanRunDialogFieldsInput {
  * @description The hidden form fields the plan detail action reads, keys in alphabetical
  * order. Blank values are left out, as the toolbar's one-click Run form does. `backend` +
  * `model` always travel together; `effort` is omitted when unset; `iterations` is only the
- * per-run override; `scheduledFor` (an ISO instant) exists on the Schedule tab alone.
+ * per-run override and Ralph-only (dropped for OT Loop); the `otLoop*` fields travel only for
+ * OT Loop, and `runner` always travels; `scheduledFor` (an ISO instant) exists on the Schedule tab alone.
  */
 export const buildPlanRunDialogFields = (
   input: PlanRunDialogFieldsInput,
@@ -201,17 +214,29 @@ export const buildPlanRunDialogFields = (
     scheduledFor,
     workingDirectory,
   } = input;
+  const isOtLoop = draft.runner === 'ot-loop';
   const entries: readonly (readonly [string, string | undefined])[] = [
     ['backend', draft.backend],
     ['branch', branch],
     ['checkoutId', checkoutId],
     ['effort', draft.effort],
     ['intent', draft.mode === 'schedule' ? 'schedulePlanRun' : 'runPlan'],
-    ['iterations', iterations == null ? undefined : String(iterations)],
+    [
+      'iterations',
+      iterations == null || isOtLoop ? undefined : String(iterations),
+    ],
     ['jobRunHooksJson', jobRunHooksJson],
     ['model', draft.model],
+    ['otLoopMaxRetries', isOtLoop ? draft.otLoopMaxRetriesText : undefined],
+    [
+      'otLoopValidationCommands',
+      isOtLoop
+        ? parseOtLoopCommandsText(draft.otLoopValidationText).join('\n')
+        : undefined,
+    ],
     ['ralphTuning', ralphTuningJson],
     ['repositoryId', repositoryId],
+    ['runner', draft.runner],
     [
       'scheduledFor',
       draft.mode === 'schedule' ? scheduledFor?.toISOString() : undefined,
