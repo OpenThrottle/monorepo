@@ -67,7 +67,7 @@ A worktree runs its own stack: `pnpm worktree:serve <server|developer>` starts, 
 
 **Prompt filename prefixes** (`.agents/prompts/`, no frontmatter — slug derives from the filename): `Before_*` / `After_*` are **lifecycle hooks** injected around a run; `Job_*` are **standalone scheduled runs** (recurring audits invoked via Ralph `--prompt-file` or an OT scheduled job) that are read-only on source and file their findings as a single OpenThrottle plan. Details: [docs/monorepo/agent-editor-folders.md](docs/monorepo/agent-editor-folders.md).
 
-**Editor-native (not generated from an in-repo SSOT):** `.cursor/hooks.json`, `.cursor/mcp.json` (from `mcp.json`), `.cursor/worktrees.json`, `.cursor/settings.json`. See [CONTRIBUTING.md](./CONTRIBUTING.md) § Agent assets. Nx Console writes a generated Nx rule file into Cursor's own config directory from outside this repo; it is gitignored and harmless.
+**Editor-native (not generated from an in-repo SSOT):** `.cursor/hooks.json`, `.cursor/mcp.json` (from `mcp.json`), `.cursor/worktrees.json`, `.cursor/settings.json`. See [CONTRIBUTING.md](./CONTRIBUTING.md) § Agent assets. Older Nx Console releases write a generated Nx rule file to `.cursor/rules/nx-rules.mdc`; current ones only delete it as a legacy file or offer to migrate it to agent skills. That one path is gitignored, so it never shows up in `git status`.
 
 ## OpenThrottle Agent Skills
 
