@@ -11,7 +11,7 @@ export interface LogicParamsProps {
   /**
    * @description The match, then an optional fallback.
    * @maxItems 2
-   * @TJS-type children
+   * @cmsWidget children
    */
   readonly children: React.ReactNode;
 

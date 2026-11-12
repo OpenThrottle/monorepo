@@ -297,9 +297,8 @@ Sub-generators per generator:
 - **react-router** — PascalCase components; forms end with `Form`, modals with `Modal`, tables
   with `Table`; routes any valid name. Components/forms/modals/tables use **named** exports; route
   files may use a **default** export (framework requirement). `import * as React from 'react'`.
-- **react** — PascalCase components and hooks, camelCase utils; kebab-case file names except React
-  components, hooks and utils (a util's file is named after the camelCase function it exports, e.g.
-  `moveListItem.ts`). All generated output uses **named** exports.
+- **react** — PascalCase components and hooks, camelCase utils; a file is named after its single
+  export (`Button.tsx`, `useFoo.ts`, `getFormFieldKind.ts`), kebab-case otherwise. All generated output uses **named** exports.
 - **nestjs** — **kebab-case** services, modules and applications; named exports. Resolvers return
   hand-written `@ObjectType()` classes (see the `ot-stack` skill); entity changes stay backwards compatible — deprecate
   rather than remove. Mock providers in `beforeEach`; model/entity factories for tests.

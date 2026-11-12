@@ -1,0 +1,23 @@
+{
+  "$comment": "GENERATED — DO NOT EDIT. Regenerate with `pnpm nx run <project>:cms-schemas:write` (scripts/generate-cms-schemas.ts).",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "description": "Renders server-supplied rich text (HTML) with normalized typography.",
+  "properties": {
+    "className": {
+      "default": "my-20",
+      "description": "Classes to be applied on the component.",
+      "type": "string",
+      "x-cms-widget": "className"
+    },
+    "html": {
+      "default": "<div>\n<p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Explicabo porro debitis blanditiis corrupti dignissimos voluptate exercitationem quasi dolor, quisquam, voluptatum repellendus quidem labore maxime sapiente quis rerum deserunt nemo velit.</p>\n<p>Lorem ipsum dolor sit.</p>\n<p>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Nihil, magnam aliquid. Deleniti cupiditate magni omnis maiores doloribus nihil, quis aspernatur accusamus molestiae quas maxime soluta quae, illo harum culpa. Sit.</p>\n<p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Aspernatur iure et, enim, nostrum blanditiis ipsa deleniti dignissimos esse iste voluptatem possimus ipsum officiis!</p>\n\n<div class=\"flex items-center space-x-4 py-4\">\n<div class=\"h-24 w-24 overflow-hidden rounded-full\">\n<img alt=\"\" src=\"https://mattscholta.com/images/assets/matt-scaled.webp\">\n</div>\n<div class=\"flex h-full flex-col space-y-1\">\n<h4 class=\"heading inline-flex items-center text-2xl font-medium leading-tight\">Matthew Scholta</h4>\n<p class=\"heading inline-flex items-center text-lg font-normal leading-tight text-current\">Creator of RocketCMS</p>\n</div>\n</div>\n</div>",
+      "description": "The HTML content to be displayed. Rendered as-is with no client-side sanitization: it must be pre-sanitized by the server that supplies it. Never pass user-typed input here directly.",
+      "type": "string",
+      "x-cms-widget": "wysiwyg"
+    }
+  },
+  "required": ["html"],
+  "title": "Wysiwyg",
+  "type": "object"
+}

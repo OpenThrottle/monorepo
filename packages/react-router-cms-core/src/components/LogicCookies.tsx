@@ -17,14 +17,13 @@ import { LOGIC_COOKIES_COPY } from '../data/data.copy';
 export interface LogicCookiesProps {
   /**
    * @description The child components to be rendered via this Logic component.
-   * @TJS-type children
+   * @cmsWidget children
    */
   readonly children: React.ReactNode;
 
   /**
-   * @default "{}"
+   * @default {}
    * @description The cookies to match against, by name.
-   * @TJS-type object
    */
   readonly cookies: Readonly<Record<string, string>>;
 }

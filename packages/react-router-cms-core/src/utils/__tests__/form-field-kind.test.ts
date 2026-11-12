@@ -16,6 +16,9 @@ const schema: CmsJsonSchema = {
     size: { enum: ['sm', 'lg'], type: 'string' },
     total: { type: 'integer' },
     untyped: {},
+    widgetClasses: { type: 'string', 'x-cms-widget': 'className' },
+    widgetItems: { type: 'array', 'x-cms-widget': 'children' },
+    widgetSize: { enum: ['sm'], type: 'string', 'x-cms-widget': 'json' },
   },
   type: 'object',
 };
@@ -33,6 +36,9 @@ describe('utils/getFormFieldKind', () => {
     ['total', 'number'],
     ['untyped', 'none'],
     ['missing', 'none'],
+    ['widgetClasses', 'className'],
+    ['widgetItems', 'children'],
+    ['widgetSize', 'wysiwyg'],
   ])('maps %s to %s', (key, kind) => {
     expect(getFormFieldKind(key, schema)).toBe(kind);
   });

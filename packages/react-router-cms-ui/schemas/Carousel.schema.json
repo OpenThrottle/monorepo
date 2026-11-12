@@ -1,0 +1,23 @@
+{
+  "$comment": "GENERATED — DO NOT EDIT. Regenerate with `pnpm nx run <project>:cms-schemas:write` (scripts/generate-cms-schemas.ts).",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "description": "A looping image carousel with previous/next controls.",
+  "properties": {
+    "className": {
+      "default": "",
+      "description": "Classes to be applied on the component.",
+      "type": "string",
+      "x-cms-widget": "className"
+    },
+    "images": {
+      "default": ["https://picsum.photos/id/300/800/200"],
+      "description": "An array of image URLs.",
+      "items": { "type": "string" },
+      "type": "array"
+    }
+  },
+  "required": ["images"],
+  "title": "Carousel",
+  "type": "object"
+}

@@ -1,0 +1,25 @@
+{
+  "$comment": "GENERATED — DO NOT EDIT. Regenerate with `pnpm nx run <project>:cms-schemas:write` (scripts/generate-cms-schemas.ts).",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "description": "Renders its first child when a URL search param has the expected value, and its second child (if any) otherwise.",
+  "properties": {
+    "children": {
+      "description": "The match, then an optional fallback.",
+      "maxItems": 2,
+      "type": "array",
+      "x-cms-widget": "children"
+    },
+    "param": {
+      "description": "The URL parameter to check against (case sensitive).",
+      "type": "string"
+    },
+    "value": {
+      "description": "The expected value of the URL parameter (case sensitive).",
+      "type": "string"
+    }
+  },
+  "required": ["param", "value"],
+  "title": "LogicParams",
+  "type": "object"
+}

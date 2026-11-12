@@ -37,6 +37,7 @@
     "targets": {
       "__build": {},
       "__build-package": {},
+      "cms-schemas": {},
       "lint": {},
       "test": {},
       "typecheck": {}

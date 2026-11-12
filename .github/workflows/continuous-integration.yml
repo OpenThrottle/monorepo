@@ -945,6 +945,13 @@ jobs:
       - name: '🗂️ Folder vocabulary (no junk-drawer folders)'
         run: pnpm exec nx run monorepo:check-folder-vocabulary
 
+      # Static and build-free (the TypeScript compiler API over each CMS block
+      # package). Fails when a package's committed schemas/ no longer match its
+      # block props interfaces — the JSON Schemas the CMS validates fragment
+      # properties against. Fix with `pnpm nx run <project>:cms-schemas:write`.
+      - name: '🧩 CMS block schema drift guard'
+        run: pnpm exec nx run-many --target=cms-schemas --configuration=check
+
       # Whole-tree read of every tracked file's header — a `gates` job step for
       # the same reason as its neighbours. Fails when a generated payload is not
       # marked linguist-generated in the root .gitattributes, the omission that

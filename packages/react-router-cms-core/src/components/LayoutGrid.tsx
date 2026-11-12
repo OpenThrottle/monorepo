@@ -9,14 +9,14 @@ import * as React from 'react';
 export interface LayoutGridProps {
   /**
    * @description The child components to be rendered via this Layout component.
-   * @TJS-type children
+   * @cmsWidget children
    */
   readonly children: React.ReactNode;
 
   /**
    * @default "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 p-8"
    * @description Classes to be applied on the component.
-   * @TJS-type className
+   * @cmsWidget className
    */
   readonly className: string | undefined;
 }

@@ -90,4 +90,10 @@ Tracked in OT plan `18a3b88f-50fe-4944-97a3-71835d45e393`:
 
 - GraphQL for these tables, and wiring the entities into an app. Nothing in the server reads them
   yet.
+- Filling `schemas` (OT plan `a608869b-407d-40a0-9dff-8d61fe578cf7`, task 5). The rows come from
+  the block JSON Schemas committed under `packages/react-router-cms-ui/schemas/` and
+  `packages/react-router-cms-core/schemas/`, where each `manifest.json` gives every block's
+  `typename` and a content-hash `version`. The sync is append-only by design: a new
+  `(typename, version)` inserts a row, nothing is updated or deleted, and fragments keep the
+  `schema_uuid` they were created with.
 - Seed data for local development.

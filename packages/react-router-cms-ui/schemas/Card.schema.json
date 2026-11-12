@@ -1,0 +1,33 @@
+{
+  "$comment": "GENERATED — DO NOT EDIT. Regenerate with `pnpm nx run <project>:cms-schemas:write` (scripts/generate-cms-schemas.ts).",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "description": "A content card with an icon, a heading and supporting copy.",
+  "properties": {
+    "className": {
+      "default": "",
+      "description": "Classes to be applied on the component.",
+      "type": "string",
+      "x-cms-widget": "className"
+    },
+    "copy": {
+      "default": "This is a sample card component.",
+      "description": "The copy displayed within the card",
+      "type": "string"
+    },
+    "heading": {
+      "default": "Don't mess with Texas",
+      "description": "The card heading",
+      "type": "string"
+    },
+    "icon": {
+      "default": "Pencil",
+      "description": "The name of the icon to show beside the heading.",
+      "enum": ["Pencil", "Rocket", "Star", "Sun"],
+      "type": "string"
+    }
+  },
+  "required": ["copy", "heading", "icon"],
+  "title": "Card",
+  "type": "object"
+}

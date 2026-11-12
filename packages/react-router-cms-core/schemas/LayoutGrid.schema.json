@@ -1,0 +1,22 @@
+{
+  "$comment": "GENERATED — DO NOT EDIT. Regenerate with `pnpm nx run <project>:cms-schemas:write` (scripts/generate-cms-schemas.ts).",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "description": "Lays its child components out on a responsive grid.",
+  "properties": {
+    "children": {
+      "description": "The child components to be rendered via this Layout component.",
+      "type": "array",
+      "x-cms-widget": "children"
+    },
+    "className": {
+      "default": "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 p-8",
+      "description": "Classes to be applied on the component.",
+      "type": "string",
+      "x-cms-widget": "className"
+    }
+  },
+  "required": [],
+  "title": "LayoutGrid",
+  "type": "object"
+}

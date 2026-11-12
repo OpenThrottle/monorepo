@@ -13,7 +13,7 @@ export interface WysiwygProps {
   /**
    * @default "my-20"
    * @description Classes to be applied on the component.
-   * @TJS-type className
+   * @cmsWidget className
    */
   readonly className?: string;
 
@@ -37,7 +37,7 @@ export interface WysiwygProps {
    * @description The HTML content to be displayed. Rendered as-is with no
    * client-side sanitization: it must be pre-sanitized by the server that
    * supplies it. Never pass user-typed input here directly.
-   * @TJS-type wysiwyg
+   * @cmsWidget wysiwyg
    */
   readonly html: string;
 }

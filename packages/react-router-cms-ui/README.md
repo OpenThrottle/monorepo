@@ -4,9 +4,10 @@ Content-block React components for OpenThrottle CMS pages — headings, heroes, 
 carousel, rich-text (WYSIWYG) blocks and more — built on `@openthrottle/react-router-shadcn`.
 Ported from the RocketCMS library.
 
-Each component's props carry `@default` / `@description` / `@TJS-type` doc-comment tags that the
-CMS turns into JSON Schemas for its prop editor, and a static `debug` property the CMS uses to
-outline blocks in debug mode.
+Each component's props carry `@default` / `@description` / `@cmsWidget` doc-comment tags that are
+generated into the committed JSON Schemas under `schemas/` (one per block, for the CMS prop editor
+and server-side validation), and a static `debug` property the CMS uses to outline blocks in debug
+mode. Regenerate with `pnpm nx run @openthrottle/react-router-cms-ui:cms-schemas:write`.
 
 ## Installation
 

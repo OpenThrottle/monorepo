@@ -616,11 +616,11 @@ not report them as dead. See [Knip.md](./Knip.md).
 **Enforced** by `@typescript-eslint/naming-convention` at `error` — except the file-name
 clause, which no linter can see.
 
-- **kebab-case** file names (`my-component.ts`) — except React components, which are
-  **PascalCase**, hooks (`useFoo.ts`, see [Hook shape](#hook-shape)), and utils, which are
-  **camelCase** and named after the function they export (`utils/moveListItem.ts` exports
-  `moveListItem`). The file name is the direct tie to the function; a file grouping several
-  utils gets a short camelCase name for the group (`utils/reorder.ts`). _Honor system._
+- **A file named for its single export takes that export's casing**: **PascalCase** for a React
+  component (`Button.tsx`), **camelCase** for a function (`getFormFieldKind.ts`) — the rule hooks
+  already follow (`useFoo.ts`). **kebab-case** for everything else: a module with several exports
+  (`schema-refs.ts`), scripts, config. NestJS `<folder>.<kind>.ts` and `data.<name>.ts` keep their
+  own forms. _Honor system._
 - **camelCase** variables and functions (`myVariable`, `myFunction()`).
 - **PascalCase** classes, types, and interfaces (`MyClass`, `MyInterface`).
 - **ALL_CAPS** constants and enum values (`MAX_COUNT`, `Color.RED`).
@@ -641,8 +641,16 @@ One selector per clause:
 | camelCase variables (PascalCase components, UPPER_CASE constants) | `variable`                       |
 
 **The file-name clause is not enforced** — `naming-convention` operates on identifiers and
-cannot see file names. kebab-case files, PascalCase components and camelCase utils stay honor system;
-`@tools/generators` scaffolding them correctly is the practical safeguard.
+cannot see file names, so it stays honor system; `@tools/generators` scaffolding them correctly is
+the practical safeguard.
+
+**Why a single-export file is named after its export.** The `react` generator's `util` uses one
+`name` for the identifier and the file, so it emits `getFormFieldKind.ts` exporting
+`getFormFieldKind`. A kebab-case rule forced a hand rename to `form-field-kind.ts` after every
+run — drift between the generator and the rule — and broke the one-glance mapping from a file to
+the symbol it exports. Matching the export's casing, as components and hooks already did, removes
+both. Existing kebab-case single-export files are renamed by OT plan `bc5f6aa0` (a codemod plus a gate),
+not opportunistically.
 
 `leadingUnderscore: 'allowSingleOrDouble'` on the function and variable selectors. Without
 it the rule rejects `__dirname`/`__filename` — the standard Node ESM idiom, in every

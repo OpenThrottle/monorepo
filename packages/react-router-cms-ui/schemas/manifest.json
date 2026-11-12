@@ -1,0 +1,55 @@
+{
+  "$comment": "GENERATED — DO NOT EDIT. Regenerate with `pnpm nx run <project>:cms-schemas:write` (scripts/generate-cms-schemas.ts).",
+  "schemas": [
+    {
+      "file": "Button.schema.json",
+      "typename": "Button",
+      "version": "99f22e569856b23f"
+    },
+    {
+      "file": "Card.schema.json",
+      "typename": "Card",
+      "version": "fa8fcad06be928a0"
+    },
+    {
+      "file": "Carousel.schema.json",
+      "typename": "Carousel",
+      "version": "3dc83018c17e522e"
+    },
+    {
+      "file": "Heading.schema.json",
+      "typename": "Heading",
+      "version": "d022867518761871"
+    },
+    {
+      "file": "Hero.schema.json",
+      "typename": "Hero",
+      "version": "62d4d7a6a82c0c6a"
+    },
+    {
+      "file": "Image.schema.json",
+      "typename": "Image",
+      "version": "351a233b10de4567"
+    },
+    {
+      "file": "Layout.schema.json",
+      "typename": "Layout",
+      "version": "3cc17ff6504a030b"
+    },
+    {
+      "file": "Link.schema.json",
+      "typename": "Link",
+      "version": "fa0e16a2a0993516"
+    },
+    {
+      "file": "Tweet.schema.json",
+      "typename": "Tweet",
+      "version": "f2fbc0d80f435c6e"
+    },
+    {
+      "file": "Wysiwyg.schema.json",
+      "typename": "Wysiwyg",
+      "version": "628142f65b409366"
+    }
+  ]
+}

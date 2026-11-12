@@ -1,0 +1,27 @@
+{
+  "$comment": "GENERATED — DO NOT EDIT. Regenerate with `pnpm nx run <project>:cms-schemas:write` (scripts/generate-cms-schemas.ts).",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "description": "A call-to-action link styled as a button, navigating with React Router.",
+  "properties": {
+    "className": {
+      "default": "uppercase",
+      "description": "Classes to be applied on the component.",
+      "type": "string",
+      "x-cms-widget": "className"
+    },
+    "cta": {
+      "default": "Call to action",
+      "description": "The label shown on the link",
+      "type": "string"
+    },
+    "to": {
+      "default": "/",
+      "description": "The path or URL to navigate to",
+      "type": "string"
+    }
+  },
+  "required": ["cta", "to"],
+  "title": "Link",
+  "type": "object"
+}
