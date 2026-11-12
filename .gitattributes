@@ -54,3 +54,22 @@ THIRD-PARTY-LICENSES.md linguist-generated=true
 # reviewer sees the change. Do not "fix" this omission — it is held in place by
 # ATTRIBUTE_EXEMPT_PATHS in scripts/check-generated-attributes.ts, which is the
 # guard that fails when a banner-headed file is missing from this file.
+
+# Also absent, because GitHub already handles it: pnpm-lock.yaml. Linguist's
+# built-in rules (`pnpm_lock?` in lib/linguist/generated.rb) mark it generated,
+# so it collapses in "Files changed" without a line here.
+
+#############################################################################
+# Vendored third-party content
+#
+#   linguist-vendored=true   Dropped from language stats and code search. Unlike
+#                            linguist-generated, the diff is NOT collapsed.
+#############################################################################
+
+# Third-party skills installed 1:1 by `npx skills add` (pinned in
+# skills-lock.json). OT-owned skills here are untracked symlinks into skills/,
+# so only vendored copies match. Not marked generated on purpose: a changed
+# third-party prompt or script is supply-chain input a reviewer must see
+# expanded. For the same reason skills-lock.json stays unmarked — its
+# computedHash diff says which skill changed.
+.agents/skills/**      linguist-vendored=true

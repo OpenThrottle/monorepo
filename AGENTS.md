@@ -165,6 +165,10 @@ byte-for-byte, so they cannot be gitignored — instead the root
   banner instead.
 - `applications/openthrottle-server/schema.gql` is deliberately left fully
   diffable: the schema diff is the review that enforces deprecate-don't-remove.
+- Vendored third-party skills (`.agents/skills/**`) are `linguist-vendored`,
+  not generated: out of language stats and code search, but expanded in review,
+  because a changed third-party prompt is supply-chain input. `pnpm-lock.yaml`
+  needs no line — GitHub's Linguist already treats it as generated.
 - **Adding a new committed payload directory? Add its glob in the same commit**
   — a folder glob (`.gemini/hooks/*.cjs`), never a file name, which is how
   `plan-run-janitor.cjs` slipped past `.prettierignore`. _(Enforced.)_
