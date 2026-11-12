@@ -13,7 +13,7 @@ Authoring references (load these; do not restate them here):
 
 Need a machine check? [`skills-ref validate`](https://github.com/agentskills/agentskills/tree/main/skills-ref) against the skill directory — a format check, not a production dependency.
 
-This folder is both OpenThrottle-wide workflow skills (the `github-*` family: `github-commit`, `github-pull-request`, `github-squash`) and repo-specific ones like [`ot-onboarding/`](./ot-onboarding/) (the new-user orientation on-ramp). Other OpenThrottle repos install these via `npx skills add openthrottle/monorepo --agent universal`.
+This folder is both OpenThrottle-wide workflow skills (the `github-*` family: `github-cleanup`, `github-commit`, `github-pull-request`, `github-squash`) and repo-specific ones like [`ot-onboarding/`](./ot-onboarding/) (the new-user orientation on-ramp). Other OpenThrottle repos install these via `npx skills add openthrottle/monorepo --agent universal`.
 
 ## Where skills live
 

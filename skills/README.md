@@ -75,6 +75,7 @@ The layout every tool reads is built by our own [`ot-skill-sync`](./ot-skill-syn
 
 **GitHub workflow skills** (formerly the `.cursor/commands/github/*` Cursor commands — now portable across every agent):
 
+- [`github-cleanup/`](./github-cleanup/) — delete local branches whose work already landed (squash merges included)
 - [`github-commit/`](./github-commit/) — write a conventional-commits message from the diff
 - [`github-pull-request/`](./github-pull-request/) — create or update a great Pull Request
 - [`github-squash/`](./github-squash/) — squash the branch to a single commit
