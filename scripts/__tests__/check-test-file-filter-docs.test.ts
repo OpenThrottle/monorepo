@@ -4,10 +4,7 @@ import { dirname, join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import {
-  findPositionalFilterHits,
-  main,
-} from '../check-test-file-filter-docs.ts';
+import { findRetiredFlagHits, main } from '../check-test-file-filter-docs.ts';
 import { run } from '../utils/exec.ts';
 
 describe('check-test-file-filter-docs', () => {
@@ -29,39 +26,40 @@ describe('check-test-file-filter-docs', () => {
     rmSync(repoRoot, { force: true, recursive: true });
   });
 
-  describe('when a tracked file documents the positional form', () => {
+  describe('when a tracked file documents the retired flag', () => {
     it.each([
-      'pnpm nx run <project>:test -- path/to/file.test.ts',
-      'pnpm nx run openthrottle-server:test -- \\',
-      'pnpm nx test openthrottle-mcp -- src/run-server.test.ts',
+      'pnpm nx run <project>:test --testFile=path/to/file.test.ts',
+      'pnpm nx run <project>:test --testFiles path/to/file.test.ts',
+      ' *     --testFile=src/queues/misfire.utils',
     ])('flags %s', (line) => {
       write('docs/example.md', `${line}\n`);
 
-      expect(findPositionalFilterHits(repoRoot)).toHaveLength(1);
+      expect(findRetiredFlagHits(repoRoot)).toHaveLength(1);
       expect(main(repoRoot)).toBe(1);
     });
   });
 
   describe('when every example uses the working form', () => {
     it.each([
-      'pnpm nx run <project>:test --testFile=path/to/file.test.ts',
+      'pnpm nx run <project>:test -- path/to/file.test.ts',
       'pnpm nx run <project>:test --watch',
       'pnpm nx run <project>:test',
       'pnpm run database:migrate -- --database cms',
     ])('passes %s', (line) => {
       write('docs/example.md', `${line}\n`);
 
-      expect(findPositionalFilterHits(repoRoot)).toEqual([]);
+      expect(findRetiredFlagHits(repoRoot)).toEqual([]);
       expect(main(repoRoot)).toBe(0);
     });
   });
 
   describe('when the match is outside documentation', () => {
-    it('ignores recorded .jsonl snapshots and untracked files', () => {
-      write('data/conversation.jsonl', '{"text":"nx run p:test -- a.ts"}\n');
-      writeFileSync(join(repoRoot, 'scratch.md'), 'nx run p:test -- a.ts\n');
+    it('ignores .jsonl snapshots, Nx migration prompts and untracked files', () => {
+      write('data/conversation.jsonl', '{"text":"p:test --testFile=a.ts"}\n');
+      write('tools/ai-migrations/@nx/vite/1.0.0/a.md', '--testFile=a.ts\n');
+      writeFileSync(join(repoRoot, 'scratch.md'), 'p:test --testFile=a.ts\n');
 
-      expect(findPositionalFilterHits(repoRoot)).toEqual([]);
+      expect(findRetiredFlagHits(repoRoot)).toEqual([]);
     });
   });
 });

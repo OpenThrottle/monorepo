@@ -148,14 +148,6 @@
         "executor": "nx:noop"
       },
       "test": {
-        "executor": "@nx/vitest:test",
-        "cache": true,
-        "options": {
-          "configFile": "{projectRoot}/vitest.config.ts",
-          "passWithNoTests": true,
-          "reportsDirectory": "{workspaceRoot}/coverage/monorepo",
-          "watch": false
-        },
         "outputs": [
           "{workspaceRoot}/coverage/monorepo"
         ]

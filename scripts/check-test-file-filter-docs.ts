@@ -1,50 +1,48 @@
 /**
  * @description Fails when a tracked file documents the single-spec test
- * command in the form that does not filter: `nx run <project>:test -- <file>`.
+ * command with the retired `--testFile` flag.
  *
- * Every test target runs the `@nx/vitest:test` executor, which forwards only
- * its `testFiles` option (alias `testFile`) to Vitest as a file filter. That
- * option declares no positional `argv` default, so a path after `--` lands in
- * Nx's unparsed overrides and is dropped: the whole suite runs, and nothing
- * says so. Agents followed the old CLAUDE.md line and ran 15–932 files where
- * they meant one (OT plan 407bedcd). The working form is
- * `pnpm nx run <project>:test --testFile=<path>`.
+ * Until Nx 24 every test target ran the `@nx/vitest:test` executor, whose
+ * `testFiles` option (alias `testFile`) was the only file filter: a path after
+ * `--` was dropped and the whole suite ran (OT plan 407bedcd). Nx 24 removed
+ * that executor. Test targets now run the `vitest` CLI through
+ * `nx:run-commands`, which forwards a path after `--` to Vitest as a filter and
+ * passes `--testFile` through as an option Vitest rejects (`Unknown option`).
+ * The working form is `pnpm nx run <project>:test -- <path>`.
  *
  * Tracked text files only (`git grep -I`). The `.jsonl` showroom snapshots are
- * recorded conversations, not documentation, so they are skipped.
+ * recorded conversations, and `tools/ai-migrations/` holds Nx's own migration
+ * prompts for older versions, so neither is documentation anyone follows here.
  */
 import { createLogger, run } from './utils/index.ts';
 
 const logger = createLogger();
 
-/**
- * `:test` or `nx test <project>`, then `--`, then a positional value or a
- * line continuation (`\`) that carries one onto the next line.
- */
-export const POSITIONAL_FILTER_PATTERN = String.raw`(:test|nx test [^ ]+) +-- +([^- ]|\\)`;
+/** `--testFile` or `--testFiles`, as a flag (followed by `=` or a space). */
+export const RETIRED_FLAG_PATTERN = String.raw`--testFiles?[= ]`;
 
 /** Paths whose matches are not documentation anyone follows. */
 export const EXCLUDED_PATHSPECS: readonly string[] = [
   ':!*.jsonl',
   ':!scripts/check-test-file-filter-docs.ts',
   ':!scripts/__tests__/check-test-file-filter-docs.test.ts',
+  ':!tools/ai-migrations/**',
 ];
 
 /** One offending line: `path:line:text`, as `git grep -n` prints it. */
-export interface PositionalFilterHit {
+export interface RetiredFlagHit {
   readonly line: string;
 }
 
-/** Every tracked line that documents the dropped positional form. */
-export const findPositionalFilterHits = (
-  cwd: string,
-): PositionalFilterHit[] => {
+/** Every tracked line that documents the retired `--testFile` flag. */
+export const findRetiredFlagHits = (cwd: string): RetiredFlagHit[] => {
   const result = run(
     'git',
     [
       'grep',
       '-nIE',
-      POSITIONAL_FILTER_PATTERN,
+      '-e',
+      RETIRED_FLAG_PATTERN,
       '--',
       '.',
       ...EXCLUDED_PATHSPECS,
@@ -64,22 +62,22 @@ export const findPositionalFilterHits = (
 };
 
 export const main = (cwd: string = process.cwd()): number => {
-  const hits = findPositionalFilterHits(cwd);
+  const hits = findRetiredFlagHits(cwd);
 
   if (hits.length === 0) {
-    logger.success('Test file filter docs: no `:test -- <file>` examples');
+    logger.success('Test file filter docs: no `--testFile` examples');
 
     return 0;
   }
 
-  logger.fail(`${hits.length} line(s) document \`:test -- <file>\`, which runs the whole suite:`); // prettier-ignore
+  logger.fail(`${hits.length} line(s) document \`--testFile\`, which Vitest rejects:`); // prettier-ignore
   for (const hit of hits) {
     logger.info(`  ${hit.line}`);
   }
 
   logger.blank();
-  logger.info('@nx/vitest:test drops a positional path after `--`.');
-  logger.info('Write `pnpm nx run <project>:test --testFile=<path>` instead.');
+  logger.info('Test targets run the vitest CLI; `--testFile` was an option of the removed @nx/vitest:test executor.'); // prettier-ignore
+  logger.info('Write `pnpm nx run <project>:test -- <path>` instead.');
 
   return 1;
 };

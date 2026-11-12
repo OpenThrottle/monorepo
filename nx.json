@@ -1,5 +1,8 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "affected": {
+    "legacy": true
+  },
   "analytics": true,
   "defaultBase": "main",
   "generators": {
@@ -63,7 +66,6 @@
         "buildTargetName": "build",
         "devTargetName": "dev",
         "startTargetName": "start",
-        "typecheckTargetName": "__NOT_USED__typecheck",
         "watchDepsTargetName": "watch-deps"
       }
     },
@@ -172,28 +174,6 @@
     },
     "build": [
       {
-        "cache": true,
-        "dependsOn": [
-          "^build",
-          "^codegen-graphql",
-          "^codegen-react-router",
-          "^typecheck",
-          "codegen-graphql",
-          "codegen-react-router"
-        ],
-        "executor": "@nx/vite:build",
-        "inputs": ["noMarkdown", "^noMarkdown"],
-        "metadata": {
-          "description": "Build the project to {projectRoot}/dist via @nx/vite:build; runs after upstream build, codegen, and typecheck, and after this project's own codegen when those targets exist."
-        },
-        "options": {
-          "buildLibsFromSource": true,
-          "emptyOutDir": true,
-          "outputPath": "{projectRoot}/dist",
-          "tsConfig": "{projectRoot}/tsconfig.lib.json"
-        }
-      },
-      {
         "dependsOn": [
           "...",
           "^codegen-graphql",
@@ -205,7 +185,7 @@
           "plugin": "@nx/react/router-plugin"
         },
         "metadata": {
-          "description": "Run this app's codegen-graphql and codegen-react-router before the router plugin's react-router build. A separate entry because the @nx/vite:build default above is incompatible with that command, so Nx drops it — including its dependsOn — and the plugin's own dependsOn is only ^build. '...' keeps that ^build. Targets the project does not define are skipped (website has no codegen-graphql). The watch targets stay on dev: they never exit."
+          "description": "Run this app's codegen-graphql and codegen-react-router before the router plugin's react-router build. Filtered to the router plugin so these dependencies stay off the tsc-built packages, whose build targets declare their own. '...' keeps the plugin's own ^build. Targets the project does not define are skipped (website has no codegen-graphql). The watch targets stay on dev: they never exit."
         }
       }
     ],
@@ -420,7 +400,7 @@
     },
     "check-test-file-filter-docs": {
       "cache": false,
-      "description": "Fail when a tracked file documents a spec path passed positionally after `--` to a test target, via scripts/check-test-file-filter-docs.ts. The @nx/vitest:test executor drops a positional path after `--` and runs the whole suite; the working form is `--testFile=<path>` (OT plan 407bedcd). Never cached: the input is the whole tracked tree, like check-folder-vocabulary.",
+      "description": "Fail when a tracked file documents the retired `--testFile` flag on a test target, via scripts/check-test-file-filter-docs.ts. Test targets run the vitest CLI through nx:run-commands since Nx 24 removed @nx/vitest:test, so a single spec is `:test -- <path>` and `--testFile` fails with Vitest's `Unknown option` (OT plans 407bedcd, e3606c61). Never cached: the input is the whole tracked tree, like check-folder-vocabulary.",
       "executor": "nx:run-commands",
       "options": {
         "command": "tsx ./scripts/check-test-file-filter-docs.ts",
@@ -691,15 +671,18 @@
         "codegen-graphql",
         "codegen-react-router"
       ],
-      "executor": "@nx/vitest:test",
+      "executor": "nx:run-commands",
       "inputs": ["default", "^production"],
       "metadata": {
-        "description": "Run the project Vitest suite. Coverage is opt-in: set VITEST_COVERAGE=true to emit it under {workspaceRoot}/coverage/{projectRoot}. Depends on codegen (self + deps) so a fresh checkout generates the gitignored __generated__ output before Vitest collects — mirrors the typecheck/build wiring; without it source-first codegen packages (e.g. @openthrottle/openthrottle-developer-codegen) fail collection on 'Failed to resolve import ./__generated__/graphql'."
+        "description": "Run the project Vitest suite via nx:run-commands (Nx 24 removed @nx/vitest:test), the way the executor did: the workspace root's vitest, from {workspaceRoot}, with --root {projectRoot}. pnpm links 41 projects to other peer variants of the same vitest, and the test files and runner must resolve one copy, so never the project-local binary. NODE_ENV=test overrides the root .env's production, which flips the resolve conditions and breaks collection. Options are forwarded to the CLI: a single spec is `:test -- <path>`, and `--watch` overrides watch=false. Coverage is opt-in: set VITEST_COVERAGE=true to emit it under {workspaceRoot}/coverage/{projectRoot}. Depends on codegen (self + deps) so a fresh checkout generates the gitignored __generated__ output before Vitest collects — mirrors the typecheck/build wiring; without it source-first codegen packages (e.g. @openthrottle/openthrottle-developer-codegen) fail collection on 'Failed to resolve import ./__generated__/graphql'."
       },
       "options": {
-        "configFile": "{projectRoot}/vitest.config.ts",
+        "command": "vitest --root {projectRoot}",
+        "cwd": "{workspaceRoot}",
+        "env": {
+          "NODE_ENV": "test"
+        },
         "passWithNoTests": true,
-        "reportsDirectory": "{workspaceRoot}/coverage/{projectRoot}",
         "watch": false
       },
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"]

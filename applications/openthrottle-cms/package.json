@@ -29,6 +29,7 @@
   },
   "description": "FIXME: Add a description...",
   "devDependencies": {
+    "@nx/vite": "catalog:",
     "@openthrottle/react-router-testing": "workspace:^",
     "@tailwindcss/vite": "catalog:",
     "@testing-library/jest-dom": "catalog:",

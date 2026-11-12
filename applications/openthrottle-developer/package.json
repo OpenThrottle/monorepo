@@ -63,6 +63,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@nx/vite": "catalog:",
     "@openthrottle/openthrottle-drivers": "workspace:*",
     "@openthrottle/react-router-testing": "workspace:^",
     "@tailwindcss/vite": "catalog:",

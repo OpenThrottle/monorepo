@@ -16,7 +16,7 @@ Commands this job uses:
 pnpm run audit:test-coverage:json                   # machine-readable coverage/target audit (scripts/audit-test-coverage.ts)
 pnpm run audit:test-coverage                        # same, human-readable
 pnpm nx run <project>:test                          # run one project's Vitest suite
-pnpm nx run <project>:test --testFile=path/to/file.test.ts  # single test file
+pnpm nx run <project>:test -- path/to/file.test.ts         # single test file
 pnpm nx run <project>:typecheck                     # tsc over source AND tests — does NOT execute tests
 pnpm nx show project <project> --json               # inspect a project's targets
 git log --since='90 days ago' --name-only --pretty=format:                # churn source

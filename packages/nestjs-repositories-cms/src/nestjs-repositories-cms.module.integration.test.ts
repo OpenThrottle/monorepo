@@ -24,7 +24,7 @@ import { NestjsRepositoriesCmsModule } from './nestjs-repositories-cms.module.ts
  *
  *   pnpm run database:migrate -- --database cms
  *   OT_CMS_DB_INTEGRATION=true pnpm nx run nestjs-repositories-cms:test \
- *     --testFile=src/nestjs-repositories-cms.module.integration.test.ts
+ *     -- src/nestjs-repositories-cms.module.integration.test.ts
  *
  * The connection comes from CMS_POSTGRES_URL, else POSTGRES_URL / POSTGRES_*.
  */
