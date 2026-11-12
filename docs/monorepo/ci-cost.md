@@ -130,8 +130,9 @@ All estimates assume the standard `ubuntu-26.04` runner (free minutes on this pu
 ## CI sharding: 3 boxes, decided on measurement
 
 `build` is a 3-leg matrix (`env.jobCount: 3`, `matrix.jobIndex: [1, 2, 3]`, `fail-fast: false`).
-`scripts/parallelize-tasks.ts` deals the affected projects round-robin — applications first, so
-the heavy Vitest suites spread out — and prints each box's Nx `--exclude` selector. Live since OT
+`scripts/parallelize-tasks.ts` deals the projects that own an affected task for the workflow's
+`NX_SHARD_TARGETS` (task-based affected, since Nx 24) — packed by measured weight, falling back to
+round-robin with applications first — and prints each box's Nx `--exclude` selector. Live since OT
 plan `b19377d1`.
 
 **Runner minutes are free on this public repo, so shard count is a wall-clock and queue-contention

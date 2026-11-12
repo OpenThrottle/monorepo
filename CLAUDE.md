@@ -25,7 +25,7 @@ pnpm nx run openthrottle-server:dev                 # NestJS GraphQL API (auto-a
 pnpm nx run openthrottle-developer:dev              # Developer UI (React Router)
 
 pnpm nx run <project>:test                          # run a project's Vitest tests
-pnpm nx run <project>:test --testFile=path/to/file.test.ts  # single test file (NOT `-- <file>`: that is silently dropped and the whole suite runs)
+pnpm nx run <project>:test -- path/to/file.test.ts  # single test file (a vitest filter; `--testFile` was the removed Nx executor's option and Vitest rejects it)
 pnpm nx run <project>:test --watch                  # watch mode
 pnpm nx run <project>:lint
 pnpm nx run <project>:typecheck                     # tsc over source AND test files — does NOT execute tests

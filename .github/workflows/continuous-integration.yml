@@ -630,6 +630,12 @@ jobs:
       # is unchanged: evidence, not argument, and a developer machine with different
       # RAM still proves nothing about the CI box's ceiling.
       - name: '🧠 NX ${{ matrix.target }} affected (shard ${{ matrix.jobIndex }}/${{ env.jobCount }})'
+        env:
+          # The union of the targets the two `nx affected` commands below run.
+          # parallelize-tasks.ts deals the projects that own an affected task for
+          # these (Nx 24 task-based affected), so a target added below must be
+          # added here too, or a project affected only through it lands on no box.
+          NX_SHARD_TARGETS: lint,typecheck,bundle-hooks-check,test
         run: |
           set -euo pipefail
 
@@ -979,10 +985,10 @@ jobs:
       - name: '🧾 Claude config files are strict JSON'
         run: pnpm exec nx run monorepo:check-claude-config-json
 
-      # Whole-tree, static. A spec path passed to a test target after `--` silently
-      # runs the whole suite (the @nx/vitest executor drops it), and agents copied
-      # it from CLAUDE.md into runs of up to 932 files. Use `--testFile=<path>`.
-      - name: '🎯 Single-spec test docs use --testFile'
+      # Whole-tree, static. Test targets run the vitest CLI, so a single spec is
+      # `:test -- <path>`; the removed @nx/vitest executor's `--testFile` flag now
+      # fails with "Unknown option". Keeps stale examples out of agent-read docs.
+      - name: '🎯 Single-spec test docs use -- <path>'
         run: pnpm exec nx run monorepo:check-test-file-filter-docs
 
       # Static and build-free, so one shard is enough. Catches the `exports`

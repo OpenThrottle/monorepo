@@ -6,7 +6,7 @@ import { Queue, Worker } from 'bullmq';
  * was running (the server was down). Opt-in, because it needs a live Redis and ~25s of wall clock:
  *
  *   OT_BULLMQ_REDIS_INTEGRATION=true pnpm nx run openthrottle-server:test \
- *     --testFile=src/queues/scheduled-agent-jobs/misfire/misfire.utils.integration.test.ts
+ *     -- src/queues/scheduled-agent-jobs/misfire/misfire.utils.integration.test.ts
  *
  * It mirrors production: the scheduler is registered with `upsertJobScheduler` (pattern + tz, the
  * shape `ScheduledAgentJobSchedulerService.upsertScheduler` writes) and the boot reconcile is a

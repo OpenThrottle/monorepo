@@ -4,6 +4,7 @@ import {
   byName,
   distributeEvenly,
   formatShardOutputs,
+  getAffectedProjectsCommand,
   getChunkIndex,
   getChunkWeight,
   getExcludeSelector,
@@ -16,6 +17,7 @@ import {
   getTestGrouping,
   getWeight,
   packByWeight,
+  parseShardTargets,
   partitionProjects,
   splitProjects,
   SUITE_SHARDED_PROJECTS,
@@ -314,8 +316,9 @@ describe('getShardOutputs', () => {
   const projects = [...APPS, ...PACKAGES];
   const jobCount = 3;
 
-  const outputsFor = (jobIndex: number) =>
-    getShardOutputs(projects, jobIndex, jobCount);
+  const outputsFor = (jobIndex: number) => {
+    return getShardOutputs(projects, jobIndex, jobCount);
+  };
 
   it('carves the sharded app out of testSelector but keeps it in selector', () => {
     // APPS deal one-per-shard, so the developer app lands on shard 2.
@@ -600,5 +603,64 @@ describe('getChunkWeight', () => {
 
   it('is 0 for an empty chunk', () => {
     expect(getChunkWeight([], { a: 10 })).toBe(0);
+  });
+});
+
+describe('parseShardTargets', () => {
+  describe('when the variable names valid targets', () => {
+    it('returns them comma-joined, trimmed and without empties', () => {
+      expect(
+        parseShardTargets(' lint, typecheck,,bundle-hooks-check,test '),
+      ).toEqual({
+        ok: true,
+        targets: 'lint,typecheck,bundle-hooks-check,test',
+      });
+    });
+
+    it('accepts namespaced target names', () => {
+      expect(parseShardTargets('build:tsc,graphql-schema:check')).toEqual({
+        ok: true,
+        targets: 'build:tsc,graphql-schema:check',
+      });
+    });
+  });
+
+  describe('when the variable is unset or empty', () => {
+    it.each([undefined, '', ' , '])('rejects %j', (raw) => {
+      const result = parseShardTargets(raw);
+
+      expect(result.ok).toBe(false);
+      expect(result).toHaveProperty(
+        'error',
+        expect.stringContaining('NX_SHARD_TARGETS'),
+      );
+    });
+  });
+
+  describe('when a name could word-split or inject', () => {
+    it.each(['lint typecheck', 'lint;rm -rf /', 'test,$(id)', '-t'])(
+      'rejects %j',
+      (raw) => {
+        expect(parseShardTargets(raw).ok).toBe(false);
+      },
+    );
+  });
+});
+
+describe('getAffectedProjectsCommand', () => {
+  describe('without a selector', () => {
+    it('lists the projects owning an affected task for the targets', () => {
+      expect(getAffectedProjectsCommand('lint,test', undefined)).toBe(
+        'pnpm nx show projects --affected -t lint,test --json --silent',
+      );
+    });
+  });
+
+  describe('with a selector', () => {
+    it('narrows the same listing to the selector', () => {
+      expect(getAffectedProjectsCommand('lint,test', 'a,b')).toBe(
+        'pnpm nx show projects --affected -t lint,test --exclude="*,a,b" --json --silent',
+      );
+    });
   });
 });
