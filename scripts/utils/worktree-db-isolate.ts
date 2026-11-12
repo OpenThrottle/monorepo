@@ -44,8 +44,7 @@ export const wantsOwnDb = (
 const DB_URL_KEYS = ['OPENTHROTTLE_POSTGRES_URL', 'POSTGRES_URL', 'REDIS_URL'] as const; // prettier-ignore
 
 /** Rewrite the port of a `scheme://[user:pw@]host[:port]/...` URL. */
-export const withUrlPort = (url: string, port: number): string =>
-  url.replace(/^(\w+:\/\/(?:[^/?#]*@)?[^/?#:@]*)(?::\d+)?(?=[/?#]|$)/, `$1:${port}`); // prettier-ignore
+export const withUrlPort = (url: string, port: number): string => { return url.replace(/^(\w+:\/\/(?:[^/?#]*@)?[^/?#:@]*)(?::\d+)?(?=[/?#]|$)/, `$1:${port}`); }; // prettier-ignore
 
 /** What to write into one `.env` file. */
 export interface IsolateEnvInput {
@@ -104,8 +103,9 @@ export const isolateEnvContents = (
 };
 
 /** The compose project `teardown_worktree.ts` expects for this directory. */
-export const composeProjectFor = (root: string): string =>
-  `openthrottle-${basename(root).toLowerCase()}`;
+export const composeProjectFor = (root: string): string => {
+  return `openthrottle-${basename(root).toLowerCase()}`;
+};
 
 /** Outcome of the configure phase. */
 export type IsolateConfigResult =
@@ -132,11 +132,12 @@ const parsePort = (value: string | undefined): number | undefined => {
 };
 
 /** Every `.env` this worktree owns: the root one plus each application's. */
-const worktreeEnvFiles = (root: string): string[] =>
-  [
+const worktreeEnvFiles = (root: string): string[] => {
+  return [
     join(root, '.env'),
     ...globSync('applications/*/.env', { cwd: root }).map((relative) => join(root, relative)), // prettier-ignore
   ].filter((path) => existsSync(path));
+};
 
 /**
  * Phase 1: switch the worktree at `root` to its own database configuration.
@@ -181,11 +182,10 @@ export const configureIsolatedDb = (
 
   for (const path of worktreeEnvFiles(root)) {
     const before = readFileSync(path, 'utf8');
+    const isRootEnv = path === rootEnvPath;
+    const rootCompose = { prefix: `wt-${basename(root).toLowerCase()}-`, project: composeProjectFor(root) }; // prettier-ignore
     const after = isolateEnvContents(before, {
-      compose:
-        path === rootEnvPath
-          ? { prefix: `wt-${basename(root).toLowerCase()}-`, project: composeProjectFor(root) } // prettier-ignore
-          : undefined,
+      compose: isRootEnv ? rootCompose : undefined,
       owner: ownerFiles.has(path),
       ports,
     });
@@ -208,12 +208,15 @@ const stream = (
   env: Record<string, string>,
   command: string,
   args: readonly string[],
-): boolean =>
-  spawnSync(command, [...args], {
-    cwd: root,
-    env: { ...process.env, ...env },
-    stdio: 'inherit',
-  }).status === 0;
+): boolean => {
+  return (
+    spawnSync(command, [...args], {
+      cwd: root,
+      env: { ...process.env, ...env },
+      stdio: 'inherit',
+    }).status === 0
+  );
+};
 
 const sleepSync = (ms: number): void => {
   Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
@@ -247,12 +250,14 @@ const waitForPostgres = (
  * service accounts come last: the worktree's `.env` carries the source
  * checkout's `OPENTHROTTLE_MCP_AUTH_TOKEN` / `OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN`,
  * and without matching credentials in the fresh database that bearer is
- * rejected (so is `worktree:serve`'s probe).
+ * rejected (so is `worktree:serve`'s probe). The synthetic CMS content is last:
+ * it is sample data only, so nothing the worktree needs to boot waits on it.
  */
 export const ISOLATED_SEED_STEPS: readonly (readonly [string, string])[] = [
   ['applying migrations', 'database:migrate'],
   ['bootstrapping the default user', 'database:bootstrap-default-user'],
   ['bootstrapping the service-account credentials', 'database:bootstrap-service-accounts'], // prettier-ignore
+  ['seeding the sample CMS content', 'database:seed:cms'],
 ];
 
 /** The recovery commands printed when seeding fails part-way. */
@@ -266,7 +271,8 @@ export const SEED_RECOVERY = [
 /**
  * Phase 2: start this worktree's own containers, apply every migration,
  * bootstrap the default login user (developer@openthrottle.ai, with admin) and
- * the service-account credentials matching the worktree's bearer tokens.
+ * the service-account credentials matching the worktree's bearer tokens, then
+ * load the synthetic CMS seed.
  * The children get the isolated marker and ports explicitly, so neither a
  * not-yet-reloaded shell environment nor the shared database can leak in.
  * Returns an error message, or `undefined` on success.

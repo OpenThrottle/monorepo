@@ -111,6 +111,7 @@ jobs:
       # this job already has the diff and is effectively free — no extra runner.
       # Every gate DEFAULTS TO TRUE for non-PR events and whenever the diff
       # cannot be computed: these are correctness gates, so they fail CLOSED.
+      databases: ${{ steps.filter.outputs.databases }}
       deps: ${{ steps.filter.outputs.deps }}
       graph: ${{ steps.filter.outputs.graph }}
       model_text: ${{ steps.filter.outputs.model_text }}
@@ -194,11 +195,12 @@ jobs:
             *)
               {
                 echo "run=true"
+                echo "databases=true"
                 echo "deps=true"
                 echo "graph=true"
                 echo "model_text=true"
               } >> "$GITHUB_OUTPUT"
-              echo "event=${{ github.event_name }} → run/deps/graph/model_text=true (not a PR or queue entry)"
+              echo "event=${{ github.event_name }} → run/databases/deps/graph/model_text=true (not a PR or queue entry)"
               exit 0
               ;;
           esac
@@ -216,11 +218,12 @@ jobs:
           if ! changed="$(git diff --name-only "$base" "$head" 2>&1)"; then
             {
               echo "run=true"
+              echo "databases=true"
               echo "deps=true"
               echo "graph=true"
               echo "model_text=true"
             } >> "$GITHUB_OUTPUT"
-            echo "→ run/deps/graph/model_text=true (could not compute the diff; failing closed)"
+            echo "→ run/databases/deps/graph/model_text=true (could not compute the diff; failing closed)"
             echo "$changed"
             exit 0
           fi
@@ -244,6 +247,17 @@ jobs:
           else
             echo "run=false" >> "$GITHUB_OUTPUT"
             echo "→ run=false (docs/markdown only)"
+          fi
+
+          # databases: everything the database-seeds job exercises — the migrations
+          # and seeds, the runner and seed scripts, the URL helpers they share,
+          # the scripts' wiring in the root package.json, and the job itself.
+          if grep -qE '^databases/|^scripts/check-database-seeds\.sh$|^scripts/openthrottle-database-(migrations|seed-[a-z]+)\.ts$|^scripts/utils/|^packages/openthrottle-agentic-utils/|^package\.json$|^pnpm-lock\.yaml$|^\.github/workflows/continuous-integration\.yml$' <<<"$changed"; then
+            echo "databases=true" >> "$GITHUB_OUTPUT"
+            echo "→ databases=true (migrations, seeds or their scripts touched)"
+          else
+            echo "databases=false" >> "$GITHUB_OUTPUT"
+            echo "→ databases=false"
           fi
 
           # deps: the installed dependency graph can only change through these.
@@ -1161,6 +1175,67 @@ jobs:
         env:
           MODEL_FACING_TEXT_OVERRIDE: ${{ contains(github.event.pull_request.labels.*.name, 'model-facing-text-override') }}
 
+  # 🌱 Migrations + dev seeds against a REAL, empty Postgres
+  # (scripts/check-database-seeds.sh). The seeds are plain SQL, so nothing else
+  # checks them against the schema the migrations build: a migration that
+  # renames a column a seed writes would otherwise only surface the next time
+  # someone ran `database:seed:*` by hand. It applies every migration, runs each
+  # seed twice, and fails unless both runs succeed, the second changes no row,
+  # and the cms `welcome` layout resolves by slug.
+  #
+  # 💰 Its own job, not a `build` step, because it needs a Postgres service
+  # container that no other job wants. Path-gated on `databases` and skipped on
+  # drafts like `build`. Full migration set by nature: the point is to build the
+  # schema from nothing. The image matches applications/openthrottle/Dockerfile.Postgres,
+  # since the migrations need `vector` and `pg_trgm`.
+  database-seeds:
+    needs: changes
+    if: |
+      needs.changes.outputs.databases == 'true' &&
+      (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
+    runs-on: ubuntu-26.04
+    timeout-minutes: 15
+    concurrency:
+      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+      group: continuous-integration-${{ github.ref }}-database-seeds
+    services:
+      postgres:
+        image: pgvector/pgvector:0.8.2-pg18-trixie
+        env:
+          POSTGRES_DB: openthrottle
+          POSTGRES_PASSWORD: ci
+          POSTGRES_USER: ci
+        options: >-
+          --health-cmd "pg_isready -U ci -d openthrottle"
+          --health-interval 2s
+          --health-retries 30
+          --health-timeout 5s
+          --shm-size 128mb
+        ports:
+          - 5432:5432
+    env:
+      POSTGRES_DB: openthrottle
+      POSTGRES_HOST: localhost
+      POSTGRES_PASSWORD: ci
+      POSTGRES_PORT: '5432'
+      POSTGRES_USER: ci
+    steps:
+      - name: '📦 Checkout the code'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+
+      - name: '🤖 Node Setup'
+        uses: ./.github/actions/node-setup
+        with:
+          cache-suffix: database-seeds
+
+      - name: '🌱 Migrate an empty database, then run every seed twice'
+        run: scripts/check-database-seeds.sh
+        env:
+          # The `job` context is only available to steps, not to job-level `env`.
+          PG_CONTAINER: ${{ job.services.postgres.id }}
+
   # Stable required-check target. Branch protection should require THIS job
   # ("ci-success"), not a matrix-suffixed leg like `build (1, lint,typecheck,test)`
   # — there are now THREE such legs and their names change with the shard count,
@@ -1221,7 +1296,15 @@ jobs:
 
   ci-success:
     needs:
-      [attribution-guard, changes, build, gates, model-facing-text, warm-cache]
+      [
+        attribution-guard,
+        changes,
+        build,
+        database-seeds,
+        gates,
+        model-facing-text,
+        warm-cache,
+      ]
     if: always()
     runs-on: ubuntu-26.04
     timeout-minutes: 2
@@ -1230,12 +1313,13 @@ jobs:
         run: |
           attribution_result="${{ needs.attribution-guard.result }}"
           changes_result="${{ needs.changes.result }}"
+          database_seeds_result="${{ needs.database-seeds.result }}"
           build_result="${{ needs.build.result }}"
           gates_result="${{ needs.gates.result }}"
           model_text_result="${{ needs.model-facing-text.result }}"
           warm_result="${{ needs.warm-cache.result }}"
 
-          echo "attribution-guard: $attribution_result | changes: $changes_result | build: $build_result | gates: $gates_result | model-facing-text: $model_text_result"
+          echo "attribution-guard: $attribution_result | changes: $changes_result | build: $build_result | gates: $gates_result | database-seeds: $database_seeds_result | model-facing-text: $model_text_result"
 
           if [ "$changes_result" != "success" ]; then
             echo "❌ changes gate did not succeed ($changes_result)"
@@ -1263,6 +1347,13 @@ jobs:
           # it as the "last successful" base for the next affected range.
           if [ "$warm_result" != "success" ] && [ "$warm_result" != "skipped" ]; then
             echo "❌ cache warm-up did not succeed ($warm_result)"
+            exit 1
+          fi
+
+          # Path-gated on `databases` and skipped on drafts, so 'skipped' is
+          # legitimate; anything else is not.
+          if [ "$database_seeds_result" != "success" ] && [ "$database_seeds_result" != "skipped" ]; then
+            echo "❌ migrations + seeds check did not succeed ($database_seeds_result)"
             exit 1
           fi
 

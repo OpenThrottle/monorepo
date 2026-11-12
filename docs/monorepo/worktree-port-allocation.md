@@ -166,11 +166,12 @@ without the disabled postgres/redis, and starts the worktree's own containers un
 compose project (`openthrottle-<slug>`). It then applies every migration, runs
 `database:bootstrap-default-user` (developer@openthrottle.ai, with admin), and runs
 `database:bootstrap-service-accounts` so the service-account bearers the worktree's `.env`
-carries (copied from the source checkout) verify against the fresh database. The shared
+carries (copied from the source checkout) verify against the fresh database, and finally
+runs `database:seed:cms` so `openthrottle-cms` has a `welcome` layout to render. The shared
 database is **not** cloned (slow, and it may carry the personal-archive volume). Running it
 again on an isolated worktree is a no-op; if seeding fails part-way it prints the recovery
 commands (`database:start`, `database:migrate`, `database:bootstrap-default-user`,
-`database:bootstrap-service-accounts`).
+`database:bootstrap-service-accounts`, `database:seed:cms`).
 
 `database:start`/`database:stop` then act on the worktree's own containers (`stop` keeps
 the data). `pnpm worktree:remove` runs `.worktree/teardown.sh`, which for an isolated

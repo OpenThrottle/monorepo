@@ -19,17 +19,18 @@ import {
 } from '../utils/worktree-db-isolate.ts';
 
 describe('ISOLATED_SEED_STEPS', () => {
-  it('migrates, then bootstraps the default user, then the service-account credentials', () => {
+  it('migrates, bootstraps the default user and service accounts, then seeds the cms', () => {
     expect(ISOLATED_SEED_STEPS.map(([, script]) => script)).toEqual([
       'database:migrate',
       'database:bootstrap-default-user',
       'database:bootstrap-service-accounts',
+      'database:seed:cms',
     ]);
   });
 
   it('prints every step, after database:start, as the recovery commands', () => {
     expect(SEED_RECOVERY).toBe(
-      'pnpm run database:start && pnpm run database:migrate && pnpm run database:bootstrap-default-user && pnpm run database:bootstrap-service-accounts',
+      'pnpm run database:start && pnpm run database:migrate && pnpm run database:bootstrap-default-user && pnpm run database:bootstrap-service-accounts && pnpm run database:seed:cms',
     );
   });
 });
@@ -117,7 +118,9 @@ describe('isolateEnvContents', () => {
 });
 
 describe('configureIsolatedDb', () => {
-  const free = (): boolean => false;
+  const free = (): boolean => {
+    return false;
+  };
 
   it('allocates base+8/base+9 of the existing block and rewrites root and app env files', () => {
     const root = makeWorktree();
