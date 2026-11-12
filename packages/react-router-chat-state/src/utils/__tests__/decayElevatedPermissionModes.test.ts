@@ -89,4 +89,31 @@ describe('decayElevatedPermissionModes', () => {
     // A second pass finds nothing elevated → returns the same reference.
     expect(decayElevatedPermissionModes(once)).toBe(once);
   });
+
+  describe('when the user opted in to remember the permission mode', () => {
+    test('keeps elevated modes in the global field and every backend (same reference)', () => {
+      const input = state({
+        perBackend: {
+          claude: { permissionMode: ChatPermissionMode.fullAccess },
+          codex: { permissionMode: ChatPermissionMode.autoAcceptEdits },
+        },
+        permissionMode: ChatPermissionMode.fullAccess,
+        rememberPermissionMode: true,
+      });
+      expect(decayElevatedPermissionModes(input)).toBe(input);
+    });
+  });
+
+  describe('when the opt-in is off', () => {
+    test('still clears elevated modes', () => {
+      const result = decayElevatedPermissionModes(
+        state({
+          permissionMode: ChatPermissionMode.fullAccess,
+          rememberPermissionMode: false,
+        }),
+      );
+      expect(result.permissionMode).toBeUndefined();
+      expect(result.rememberPermissionMode).toBe(false);
+    });
+  });
 });

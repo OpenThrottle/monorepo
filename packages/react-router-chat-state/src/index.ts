@@ -40,3 +40,4 @@ export * from './utils/decayElevatedPermissionModes';
 export * from './utils/normalizeChatToolbarState';
 export * from './utils/reconcileChatToolbarState';
 export * from './utils/resolveProviderIcon';
+export * from './utils/writeChatToolbarBackendPref';

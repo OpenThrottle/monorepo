@@ -103,4 +103,85 @@ describe('ChatPermissionModeControl Component', () => {
       component.queryByTestId('ChatPermissionModeControl-trigger'),
     ).not.toBeInTheDocument();
   });
+
+  describe('remember my choice', () => {
+    const openMenu = async (
+      overrides: Partial<ChatPermissionModeControlProps>,
+    ): Promise<RenderResult> => {
+      const user = userEvent.setup();
+      const component = renderControl(overrides);
+      await user.click(
+        component.getByTestId('ChatPermissionModeControl-trigger'),
+      );
+      return component;
+    };
+
+    describe('when no change handler is supplied', () => {
+      test('hides the opt-in', async () => {
+        const component = await openMenu({});
+
+        expect(
+          component.queryByTestId('ChatPermissionModeControl-remember'),
+        ).not.toBeInTheDocument();
+      });
+    });
+
+    describe('when the backend has no elevated mode', () => {
+      test('hides the opt-in', async () => {
+        const component = await openMenu({
+          capabilities: {
+            ...ALL_MODES,
+            permissionModes: [ChatPermissionMode.supervised],
+          },
+          onRememberPermissionModeChange: vi.fn(),
+        });
+
+        expect(
+          component.queryByTestId('ChatPermissionModeControl-remember'),
+        ).not.toBeInTheDocument();
+      });
+    });
+
+    describe('when a handler is supplied and an elevated mode exists', () => {
+      test('renders an unchecked checkbox item by default', async () => {
+        const component = await openMenu({
+          onRememberPermissionModeChange: vi.fn(),
+        });
+
+        const item = component.getByTestId(
+          'ChatPermissionModeControl-remember',
+        );
+        expect(item).toHaveAttribute('role', 'menuitemcheckbox');
+        expect(item).toHaveAttribute('aria-checked', 'false');
+      });
+
+      test('reflects rememberPermissionMode as checked', async () => {
+        const component = await openMenu({
+          onRememberPermissionModeChange: vi.fn(),
+          rememberPermissionMode: true,
+        });
+
+        expect(
+          component.getByTestId('ChatPermissionModeControl-remember'),
+        ).toHaveAttribute('aria-checked', 'true');
+      });
+
+      test('fires the handler with the toggled value and keeps the menu open', async () => {
+        const onRememberPermissionModeChange = vi.fn();
+        const user = userEvent.setup();
+        const component = renderControl({ onRememberPermissionModeChange });
+        await user.click(
+          component.getByTestId('ChatPermissionModeControl-trigger'),
+        );
+        await user.click(
+          component.getByTestId('ChatPermissionModeControl-remember'),
+        );
+
+        expect(onRememberPermissionModeChange).toHaveBeenCalledWith(true);
+        expect(
+          component.getByTestId('ChatPermissionModeControl-mode-fullAccess'),
+        ).toBeInTheDocument();
+      });
+    });
+  });
 });

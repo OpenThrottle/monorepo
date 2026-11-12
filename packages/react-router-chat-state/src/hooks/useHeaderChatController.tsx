@@ -23,10 +23,6 @@ import { useFetcher } from 'react-router';
 import { capabilitiesForChatOption } from '../config/chat-capabilities';
 import { chatToolbarStateAtom } from '../data/data.atom.chat-toolbar';
 import { EMPTY_CHAT_OPTIONS } from '../data/data.chat-options';
-import type {
-  ChatToolbarBackendPrefs,
-  ChatToolbarState,
-} from '../data/data.chat-toolbar-state';
 import type { HeaderChatOptionsCache } from '../types';
 import { buildChatTurnFields } from '../utils/buildChatTurnFields';
 import type { ChatOptionsResponse } from '../utils/chat-discovery-options';
@@ -34,6 +30,7 @@ import { toCheckoutOptions } from '../utils/chat-discovery-options';
 import { buildModelGroups } from '../utils/chat-model-option';
 import { decodeChatOption } from '../utils/chat-model-option';
 import { reconcileChatToolbarState } from '../utils/reconcileChatToolbarState';
+import { writeChatToolbarBackendPref } from '../utils/writeChatToolbarBackendPref';
 import { useSessionPermissionDecay } from './useSessionPermissionDecay';
 
 /**
@@ -134,32 +131,16 @@ export function useHeaderChatController(
   const persist = effectiveToolbar.persist;
   const personaId = effectiveToolbar.personaId;
   const reasoning = effectiveToolbar.reasoning;
+  const rememberPermissionMode = effectiveToolbar.rememberPermissionMode;
   const repositoryIds = effectiveToolbar.repositoryIds;
   const serviceTier = effectiveToolbar.serviceTier;
 
   const decodedOption = modelId ? decodeChatOption(modelId) : null;
   const capabilities = capabilitiesForChatOption(decodedOption);
 
-  // Last-used-wins write path for the capability-gated controls: persist the new
-  // value both under the active backend's `perBackend` entry AND as the global
-  // fallback, so a never-touched backend inherits the most-recent choice.
+  // Last-used-wins write path for the capability-gated controls (see
+  // writeChatToolbarBackendPref): per-backend entry AND global fallback.
   const backendKey = decodedOption?.backend;
-  const writeBackendPref = (
-    previous: ChatToolbarState,
-    patch: ChatToolbarBackendPrefs,
-  ): ChatToolbarState => {
-    if (backendKey == null) {
-      return { ...previous, ...patch };
-    }
-    return {
-      ...previous,
-      ...patch,
-      perBackend: {
-        ...previous.perBackend,
-        [backendKey]: { ...previous.perBackend[backendKey], ...patch },
-      },
-    };
-  };
 
   const modelGroups = React.useMemo(() => buildModelGroups(models), [models]);
   const checkouts = React.useMemo(
@@ -177,6 +158,12 @@ export function useHeaderChatController(
   const setPersist = (persist: boolean): void => {
     return setToolbarState((previous) => ({ ...previous, persist }));
   };
+  const setRememberPermissionMode = (remember: boolean): void => {
+    return setToolbarState((previous) => ({
+      ...previous,
+      rememberPermissionMode: remember,
+    }));
+  };
   const setPersonaId = (personaId: string): void => {
     return setToolbarState((previous) => ({ ...previous, personaId }));
   };
@@ -192,17 +179,17 @@ export function useHeaderChatController(
 
   const setPermissionMode = (permissionMode: ChatPermissionMode): void => {
     return setToolbarState((previous) =>
-      writeBackendPref(previous, { permissionMode }),
+      writeChatToolbarBackendPref(previous, backendKey, { permissionMode }),
     );
   };
   const setReasoning = (reasoning: ChatReasoningLevel): void => {
     return setToolbarState((previous) =>
-      writeBackendPref(previous, { reasoning }),
+      writeChatToolbarBackendPref(previous, backendKey, { reasoning }),
     );
   };
   const setServiceTier = (serviceTier: ChatServiceTier): void => {
     return setToolbarState((previous) =>
-      writeBackendPref(previous, { serviceTier }),
+      writeChatToolbarBackendPref(previous, backendKey, { serviceTier }),
     );
   };
 
@@ -274,6 +261,7 @@ export function useHeaderChatController(
     onPersistChange: setPersist,
     onPersonaChange: setPersonaId,
     onReasoningChange: setReasoning,
+    onRememberPermissionModeChange: setRememberPermissionMode,
     onRespondToPermission: turn.onRespondToPermission,
     onRetry: turn.onRetry,
     onServiceTierChange: setServiceTier,
@@ -283,6 +271,7 @@ export function useHeaderChatController(
     personaId,
     personas,
     reasoning,
+    rememberPermissionMode,
     selectedCheckoutId: repositoryIds[0],
     selectedCheckoutIds: repositoryIds,
     serviceTier,

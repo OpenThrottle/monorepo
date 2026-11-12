@@ -2,24 +2,34 @@ import {
   Button,
   cn,
   DropdownMenu,
+  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@openthrottle/react-router-shadcn';
 import { Check, Lock } from 'lucide-react';
 import * as React from 'react';
 
 import { PERMISSION_MODE_META } from '../data/data.chat-permission-mode-meta';
-import type { ChatPermissionMode } from '../types';
+import { CHAT_PERMISSION_REMEMBER_COPY } from '../data/data.copy';
 import type { ChatBackendCapabilities } from '../types';
+import { ChatPermissionMode } from '../types';
 
 export interface ChatPermissionModeControlProps {
   /** Selected backend's capabilities; gates which modes render. */
   readonly capabilities: ChatBackendCapabilities;
   readonly className?: string;
   readonly onPermissionModeChange?: (mode: ChatPermissionMode) => void;
+  /**
+   * Renders the "Remember my choice" opt-in when supplied (and the backend has
+   * an elevated mode); omit to hide it. Pair with {@link rememberPermissionMode}.
+   */
+  readonly onRememberPermissionModeChange?: (remember: boolean) => void;
   /** Currently-selected permission mode. */
   readonly permissionMode?: ChatPermissionMode;
+  /** Whether an elevated mode is kept across sessions instead of resetting. */
+  readonly rememberPermissionMode?: boolean;
 }
 
 /**
@@ -28,15 +38,24 @@ export interface ChatPermissionModeControlProps {
  * description line per option and a checkmark on the active mode. The available
  * modes are gated by the selected backend's
  * {@link ChatBackendCapabilities.permissionModes}; the control returns nothing
- * when the backend exposes no modes. The package hardcodes no capability data.
+ * when the backend exposes no modes. When `onRememberPermissionModeChange` is
+ * supplied, a "Remember my choice" checkbox below the modes lets the user keep
+ * an elevated mode across sessions; it shows only when the backend offers an
+ * elevated mode. The package hardcodes no capability data.
  *
  * @public
  */
 export const ChatPermissionModeControl = (
   props: ChatPermissionModeControlProps,
 ): React.ReactElement | null => {
-  const { capabilities, className, onPermissionModeChange, permissionMode } =
-    props;
+  const {
+    capabilities,
+    className,
+    onPermissionModeChange,
+    onRememberPermissionModeChange,
+    permissionMode,
+    rememberPermissionMode = false,
+  } = props;
 
   // Hooks
 
@@ -45,13 +64,47 @@ export const ChatPermissionModeControl = (
   const activeMeta =
     permissionMode != null ? PERMISSION_MODE_META[permissionMode] : undefined;
   const TriggerIcon = activeMeta?.icon ?? Lock;
+  // Only Auto-accept edits / Full access ever reset, so the opt-in is
+  // meaningless for a backend whose sole mode is Supervised.
+  const hasElevatedMode = modes.some(
+    (mode) => mode !== ChatPermissionMode.supervised,
+  );
+  const showRemember = onRememberPermissionModeChange != null && hasElevatedMode; // prettier-ignore
 
   // Handlers
   const onSelectMode = (mode: ChatPermissionMode): void => {
     onPermissionModeChange?.(mode);
   };
+  const onRememberCheckedChange = (checked: boolean): void => {
+    onRememberPermissionModeChange?.(checked);
+  };
+  // Keep the menu open so the user sees the box tick.
+  const onRememberSelect = (event: Event): void => {
+    event.preventDefault();
+  };
 
   // Markup
+  const rememberItem = (
+    <>
+      <DropdownMenuSeparator />
+      <DropdownMenuCheckboxItem
+        checked={rememberPermissionMode}
+        className="items-start"
+        data-testid="ChatPermissionModeControl-remember"
+        onCheckedChange={onRememberCheckedChange}
+        onSelect={onRememberSelect}
+      >
+        <span className="flex min-w-0 flex-col">
+          <span className="font-medium">
+            {CHAT_PERMISSION_REMEMBER_COPY.label}
+          </span>
+          <span className="text-muted-foreground text-xs">
+            {CHAT_PERMISSION_REMEMBER_COPY.hint}
+          </span>
+        </span>
+      </DropdownMenuCheckboxItem>
+    </>
+  );
 
   // Life Cycle
 
@@ -103,6 +156,7 @@ export const ChatPermissionModeControl = (
             </DropdownMenuItem>
           );
         })}
+        {showRemember ? rememberItem : null}
       </DropdownMenuContent>
     </DropdownMenu>
   );

@@ -533,6 +533,38 @@ export interface ChatBackendCapabilities {
 }
 
 /**
+ * The composer toolbar's capability-gated props: the backend descriptor plus
+ * the reasoning / service-tier / permission-mode selections it gates. Split out
+ * of `ChatComposerToolbarProps` (which extends it) so the toolbar stays within
+ * the component line cap; the public prop shape is unchanged.
+ *
+ * @public
+ */
+export interface ChatComposerCapabilityProps {
+  /**
+   * Selected backend's capabilities. Gates the reasoning/tier, permission and
+   * checkout controls; omitting it renders none of them.
+   */
+  readonly capabilities?: ChatBackendCapabilities;
+  readonly onPermissionModeChange?: (mode: ChatPermissionMode) => void;
+  readonly onReasoningChange?: (level: ChatReasoningLevel) => void;
+  /**
+   * Shows the permission control's "Remember my choice" opt-in; omit to hide.
+   * Pair with {@link ChatComposerCapabilityProps.rememberPermissionMode}.
+   */
+  readonly onRememberPermissionModeChange?: (remember: boolean) => void;
+  readonly onServiceTierChange?: (tier: ChatServiceTier) => void;
+  /** Selected permission mode; pair with `capabilities`. */
+  readonly permissionMode?: ChatPermissionMode;
+  /** Selected reasoning level; pair with `capabilities`. */
+  readonly reasoning?: ChatReasoningLevel;
+  /** Keep an elevated permission mode across sessions instead of resetting it. */
+  readonly rememberPermissionMode?: boolean;
+  /** Selected service tier; pair with `capabilities`. */
+  readonly serviceTier?: ChatServiceTier;
+}
+
+/**
  * A selectable agent/persona in the composer toolbar's persona control. Shaped
  * close to the OpenThrottle personas registry so consumer wiring stays cheap.
  *

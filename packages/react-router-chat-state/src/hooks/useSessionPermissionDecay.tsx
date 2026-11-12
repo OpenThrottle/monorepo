@@ -13,7 +13,9 @@ import { decayElevatedPermissionModes } from '../utils/decayElevatedPermissionMo
  * same tab. SSR-safe (no-ops without `window`) and resilient when
  * `sessionStorage` is unavailable (private mode): it decays once for the mount
  * rather than throwing. The persisted write goes through the toolbar atom, so
- * the pure reconciler stays untouched. Mount it in each app's chat controller.
+ * the pure reconciler stays untouched. A user who opted in with
+ * `rememberPermissionMode` keeps their elevated mode: the decay is a no-op for
+ * them. Mount it in each app's chat controller.
  * @public
  */
 export function useSessionPermissionDecay(): void {

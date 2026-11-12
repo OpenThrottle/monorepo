@@ -12,7 +12,7 @@ import { APP_NAME } from '@openthrottle/react-router-utils';
  * can migrate old blobs forward instead of wiping the user's saved toolbar.
  * @public
  */
-export const CHAT_TOOLBAR_STATE_VERSION = 4 as const;
+export const CHAT_TOOLBAR_STATE_VERSION = 5 as const;
 
 /**
  * localStorage key for the persisted Chat Toolbar selections. Derived from
@@ -60,6 +60,13 @@ export interface ChatToolbarState {
   readonly personaId: string | undefined;
   readonly reasoning: ChatReasoningLevel | undefined;
   /**
+   * Opt-in to keep an elevated `permissionMode` (Auto-accept edits / Full
+   * access) across browser sessions. False by default: elevated modes decay to
+   * the safe default once per session (see `useSessionPermissionDecay`). Added
+   * in v5; absent in older blobs means false.
+   */
+  readonly rememberPermissionMode: boolean;
+  /**
    * Selected checkouts, PRIMARY FIRST — index 0 is the repository the agent
    * process runs in, the rest are additional granted context directories.
    * Replaced the single `repositoryId` in v4; empty means nothing chosen yet,
@@ -85,6 +92,7 @@ export const DEFAULT_CHAT_TOOLBAR_STATE: ChatToolbarState = {
   persist: true,
   personaId: undefined,
   reasoning: undefined,
+  rememberPermissionMode: false,
   repositoryIds: [],
   serviceTier: undefined,
   version: CHAT_TOOLBAR_STATE_VERSION,
