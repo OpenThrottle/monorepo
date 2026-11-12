@@ -77,6 +77,113 @@ describe('resolveForeignWorkspaceContext', () => {
   });
 });
 
+describe('resolveForeignWorkspaceContext git identity', () => {
+  const OT_COMMON_DIR = `${OT_ROOT}/.git`;
+  const OT_WORKTREE = `/home/me/.openthrottle/worktrees/OpenThrottle/monorepo/plan-a`;
+  const FOREIGN_REPO = '/code/other-repo';
+
+  /** Stands in for `git rev-parse --git-common-dir`: OT root + its worktree share one common dir. */
+  const resolveGitCommonDir = vi.fn((dir: string): string | undefined => {
+    if (dir === OT_ROOT || dir === OT_WORKTREE) {
+      return OT_COMMON_DIR;
+    }
+    if (dir === FOREIGN_REPO) {
+      return `${FOREIGN_REPO}/.git`;
+    }
+    return undefined;
+  });
+
+  describe('when the cwd is the OpenThrottle root itself', () => {
+    it('is not foreign and needs no git lookup', () => {
+      getOpenThrottleRootMock.mockReturnValue(OT_ROOT);
+      const context = resolveForeignWorkspaceContext(
+        OT_ROOT,
+        {},
+        {
+          resolveGitCommonDir,
+        },
+      );
+      expect(context.isForeign).toBe(false);
+      expect(resolveGitCommonDir).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when the cwd is a worktree of OpenThrottle outside the root path', () => {
+    it('is not foreign', () => {
+      getOpenThrottleRootMock.mockReturnValue(OT_ROOT);
+      const context = resolveForeignWorkspaceContext(
+        OT_WORKTREE,
+        {},
+        {
+          resolveGitCommonDir,
+        },
+      );
+      expect(context).toEqual({
+        isForeign: false,
+        openThrottleRoot: OT_ROOT,
+        workingDirectory: OT_WORKTREE,
+      });
+    });
+
+    it('gets no repository-scope prompt layer', () => {
+      getOpenThrottleRootMock.mockReturnValue(OT_ROOT);
+      const context = resolveForeignWorkspaceContext(
+        OT_WORKTREE,
+        {},
+        {
+          resolveGitCommonDir,
+        },
+      );
+      expect(buildForeignWorkspacePromptLayer(context)).toBeUndefined();
+    });
+  });
+
+  describe('when the cwd is a different repository', () => {
+    it('is foreign', () => {
+      getOpenThrottleRootMock.mockReturnValue(OT_ROOT);
+      const context = resolveForeignWorkspaceContext(
+        FOREIGN_REPO,
+        {},
+        {
+          resolveGitCommonDir,
+        },
+      );
+      expect(context.isForeign).toBe(true);
+      expect(buildForeignWorkspacePromptLayer(context)).toContain(
+        'NOT the OpenThrottle monorepo',
+      );
+    });
+  });
+
+  describe('when git cannot resolve a common dir', () => {
+    it('falls back to path containment (foreign) for an outside cwd', () => {
+      getOpenThrottleRootMock.mockReturnValue(OT_ROOT);
+      const context = resolveForeignWorkspaceContext(
+        '/not/a/repo',
+        {},
+        {
+          resolveGitCommonDir,
+        },
+      );
+      expect(context.isForeign).toBe(true);
+    });
+
+    it('stays foreign when the OpenThrottle root itself has no common dir', () => {
+      getOpenThrottleRootMock.mockReturnValue(OT_ROOT);
+      const context = resolveForeignWorkspaceContext(
+        OT_WORKTREE,
+        {},
+        {
+          resolveGitCommonDir: () => {
+            return undefined;
+          },
+        },
+      );
+      expect(context.isForeign).toBe(true);
+    });
+  });
+});
+
 describe('buildForeignWorkspacePromptLayer', () => {
   it('returns undefined when the context is not foreign', () => {
     expect(
