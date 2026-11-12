@@ -1,4 +1,3 @@
-import { nxReadySignal } from '@nx/vite/plugins/nx-ready-signal.plugin';
 import { reactRouter } from '@react-router/dev/vite';
 import tailwindcss from '@tailwindcss/vite';
 import { reactRouterDevTools } from 'react-router-devtools';
@@ -38,7 +37,6 @@ export default (config: ConfigEnv) => {
       useReactRouterDevTools && reactRouterDevTools(), // NOTE: Must come before reactRouter()
       reactRouter(),
       tailwindcss(),
-      nxReadySignal(),
     ],
     resolve: {
       // Vite 8 resolves tsconfig.json `paths` aliases natively (discovers the

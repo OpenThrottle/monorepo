@@ -1,4 +1,3 @@
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 import react from '@vitejs/plugin-react';
 import { existsSync } from 'fs';
 import { dirname } from 'path';
@@ -34,10 +33,6 @@ export interface CreateViteConfigOptions {
    * @description Custom entry points (defaults to auto-detection)
    */
   readonly entry?: readonly string[];
-  /**
-   * @description Whether to include nxCopyAssetsPlugin (defaults based on package type)
-   */
-  readonly includeAssets?: boolean;
   /**
    * @description Custom vite config overrides
    */
@@ -108,7 +103,6 @@ export const createViteConfig = (
     entry,
     cssCodeSplit,
     sourcemap = true,
-    includeAssets,
     overrides,
   } = options;
 
@@ -121,9 +115,6 @@ export const createViteConfig = (
   const shouldCssCodeSplit =
     cssCodeSplit ??
     (packageType === 'react' && entryPoints.includes('src/index.css'));
-
-  // Determine if we should include assets plugin
-  const shouldIncludeAssets = includeAssets ?? packageType !== 'nestjs';
 
   // Determine dts rollupTypes based on package type
   const rollupTypes = packageType !== 'nestjs';
@@ -139,11 +130,6 @@ export const createViteConfig = (
   // Add React plugin for React and React Native packages
   if (packageType === 'react' || packageType === 'react-native') {
     plugins.push(react());
-  }
-
-  // Add assets plugin if needed
-  if (shouldIncludeAssets) {
-    plugins.push(nxCopyAssetsPlugin(['README.md']));
   }
 
   // Calculate cache directory
