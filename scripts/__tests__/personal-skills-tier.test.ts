@@ -44,16 +44,18 @@ interface Sandbox {
   readonly repo: string;
 }
 
-const skillMarkdown = (name: string): string =>
-  `---\nname: ${name}\ndescription: Fixture skill. USE WHEN exercising the personal tier.\n---\n\n# ${name}\n`;
+const skillMarkdown = (name: string): string => {
+  return `---\nname: ${name}\ndescription: Fixture skill. USE WHEN exercising the personal tier.\n---\n\n# ${name}\n`;
+};
 
 const writeSkill = (root: string, name: string): void => {
   mkdirSync(join(root, name), { recursive: true });
   writeFileSync(join(root, name, 'SKILL.md'), skillMarkdown(name));
 };
 
-const git = (repo: string, ...args: readonly string[]): string =>
-  execFileSync('git', ['-C', repo, ...args], { encoding: 'utf8' });
+const git = (repo: string, ...args: readonly string[]): string => {
+  return execFileSync('git', ['-C', repo, ...args], { encoding: 'utf8' });
+};
 
 interface RunResult {
   readonly output: string;
@@ -71,8 +73,9 @@ interface ExecFailure {
   readonly stdout?: unknown;
 }
 
-const isExecFailure = (error: unknown): error is ExecFailure =>
-  typeof error === 'object' && error !== null;
+const isExecFailure = (error: unknown): error is ExecFailure => {
+  return typeof error === 'object' && error !== null;
+};
 
 const runCommand = (
   command: string,
@@ -108,36 +111,41 @@ const run = (
   sandbox: Sandbox,
   script: string,
   args: readonly string[],
-): RunResult =>
-  runCommand('bash', [script, ...args], sandbox.repo, sandbox.personalRoot);
+): RunResult => {
+  return runCommand(
+    'bash',
+    [script, ...args],
+    sandbox.repo,
+    sandbox.personalRoot,
+  );
+};
 
-const sync = (sandbox: Sandbox, args: readonly string[] = []): RunResult =>
-  run(
+const sync = (sandbox: Sandbox, args: readonly string[] = []): RunResult => {
+  return run(
     sandbox,
     join(sandbox.repo, 'skills', 'ot-skill-sync', 'scripts', 'sync.sh'),
     args,
   );
+};
 
-const cleanup = (sandbox: Sandbox): RunResult =>
-  run(
+const cleanup = (sandbox: Sandbox): RunResult => {
+  return run(
     sandbox,
     join(sandbox.repo, 'skills', 'ot-skill-sync', 'scripts', 'cleanup.sh'),
     [],
   );
+};
 
-const personal = (sandbox: Sandbox, args: readonly string[]): RunResult =>
-  run(
+const personal = (sandbox: Sandbox, args: readonly string[]): RunResult => {
+  return run(
     sandbox,
     join(sandbox.repo, 'skills', 'ot-skill-sync', 'scripts', 'personal.sh'),
     args,
   );
+};
 
 /** Every place a skill is materialized: the universal dir plus each fan-out. */
-const LINK_DIRS = [
-  '.agents/skills',
-  '.claude/skills',
-  '.gemini/skills',
-] as const;
+const LINK_DIRS = ['.agents/skills', '.claude/skills'] as const;
 
 describe('personal skills tier', () => {
   let sandbox: Sandbox;
@@ -172,7 +180,7 @@ describe('personal skills tier', () => {
 
     expect(result.status).toBe(0);
     expect(result.output).toContain('(personal)');
-    for (const dir of ['.agents/skills', '.claude/skills', '.gemini/skills']) {
+    for (const dir of ['.agents/skills', '.claude/skills']) {
       expect(
         git(sandbox.repo, 'check-ignore', '-q', `${dir}/my-draft`, '--'),
       ).toBe('');
@@ -210,7 +218,6 @@ describe('personal skills tier', () => {
 
     expect(status).not.toContain('my-draft');
     expect(status).not.toContain('.claude/');
-    expect(status).not.toContain('.gemini/');
   });
 
   it('refuses to use a personal root inside the repository', () => {
@@ -315,10 +322,11 @@ describe('personal skills tier', () => {
   });
 
   describe('personal.sh promote / demote', () => {
-    const stagedPaths = (repo: string): readonly string[] =>
-      git(repo, 'diff', '--cached', '--name-only')
+    const stagedPaths = (repo: string): readonly string[] => {
+      return git(repo, 'diff', '--cached', '--name-only')
         .split('\n')
         .filter((line) => line.length > 0);
+    };
 
     it('moves the skill into skills/, re-links it, and stages it', () => {
       personal(sandbox, ['new', 'my-experiment']);
@@ -434,8 +442,8 @@ describe('personal skills tier', () => {
   // directory would be a worse trade than a pinning test. This is that pin: one
   // contract, two implementations, asserted equal. Change one, change both.
   describe('one personal root, two implementations', () => {
-    const shellRoot = (env: NodeJS.ProcessEnv): string =>
-      execFileSync(
+    const shellRoot = (env: NodeJS.ProcessEnv): string => {
+      return execFileSync(
         'bash',
         [
           '-c',
@@ -443,6 +451,7 @@ describe('personal skills tier', () => {
         ],
         { encoding: 'utf8', env },
       ).trim();
+    };
 
     it('agrees on the default root', () => {
       const env = { ...process.env };
@@ -618,8 +627,8 @@ describe('personal skills tier', () => {
         expect(existsSync(join(sandbox.repo, dir, 'my-draft'))).toBe(false);
       }
       // rmdir semantics: a fan-out root that exists only for us is pruned once
-      // emptied, and .gemini/ with it.
-      expect(existsSync(join(sandbox.repo, '.gemini'))).toBe(false);
+      // emptied, and .claude/ with it (it holds nothing else in the sandbox).
+      expect(existsSync(join(sandbox.repo, '.claude'))).toBe(false);
       // The source outside the repo is never a casualty of unlinking.
       expect(
         existsSync(join(sandbox.personalRoot, 'my-draft', 'SKILL.md')),
@@ -713,13 +722,14 @@ describe('personal skills tier', () => {
   });
 
   describe('staging guard', () => {
-    const runGate = (repo: string, personalRoot: string): RunResult =>
-      runCommand(
+    const runGate = (repo: string, personalRoot: string): RunResult => {
+      return runCommand(
         'sh',
         ['-c', '. ./.husky/utils/personal-skills-gate.sh'],
         repo,
         personalRoot,
       );
+    };
 
     it('blocks a force-staged personal link and names it', () => {
       writeSkill(sandbox.personalRoot, 'my-draft');

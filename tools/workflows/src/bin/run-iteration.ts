@@ -53,7 +53,7 @@ export interface RunIterationConfig {
   /**
    * Reasoning effort, mapped per backend by the drivers' shared helpers (claude `--effort`, codex
    * `-c model_reasoning_effort=`, grok `--reasoning-effort`, opencode `--variant`). Backends with no
-   * reasoning knob (cursor, gemini, antigravity) ignore it.
+   * reasoning knob (cursor, antigravity) ignore it.
    */
   effort?: DriverReasoningEffort;
   /** Extra env for the runner subprocess, merged over `process.env` (e.g. `OT_PR_DRAFT_DIR`). */

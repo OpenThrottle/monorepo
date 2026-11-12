@@ -12,7 +12,6 @@ import { antigravityDriver } from './antigravity.ts';
 import { claudeDriver } from './claude.ts';
 import { codexDriver } from './codex.ts';
 import { cursorDriver } from './cursor.ts';
-import { geminiDriver } from './gemini.ts';
 import { grokDriver } from './grok.ts';
 import { opencodeDriver } from './opencode.ts';
 
@@ -20,7 +19,6 @@ export { antigravityDriver } from './antigravity.ts';
 export { claudeDriver } from './claude.ts';
 export { codexDriver } from './codex.ts';
 export { cursorDriver } from './cursor.ts';
-export { geminiDriver } from './gemini.ts';
 export { grokDriver } from './grok.ts';
 export { opencodeDriver } from './opencode.ts';
 
@@ -38,7 +36,6 @@ export const DRIVER_REGISTRY: Record<DriverId, AgentDriver> = {
   claude: claudeDriver,
   codex: codexDriver,
   cursor: cursorDriver,
-  gemini: geminiDriver,
   grok: grokDriver,
   opencode: opencodeDriver,
 };

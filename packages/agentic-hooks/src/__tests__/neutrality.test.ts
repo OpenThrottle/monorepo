@@ -42,7 +42,6 @@ const TOOL_IDENTIFIERS: readonly string[] = [
   'codex',
   'cursor',
   'cursor_project_dir',
-  'gemini',
   'grok',
   'opencode',
 ];

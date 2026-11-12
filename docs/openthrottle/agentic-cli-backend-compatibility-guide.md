@@ -13,10 +13,7 @@
 3. Record every answer in the [§12 template](#12-per-cli-findings-template), pasting **verbatim** sample payloads (never paraphrased — the adapter parses real bytes).
 4. Score against the [§11 rubric](#11-compatibility-rubric) → **Compatible / Compatible-with-degradation / Blocked**.
 5. Commit the filled template as `docs/openthrottle/<cli>-stream-json-schema.md`.
-   Completed contracts: [gemini](./gemini-stream-json-schema.md) (0.25.2 —
-   source-derived event schema; refresh with live NDJSON once an authenticated
-   host runs its §11 commands) and
-   [antigravity](./antigravity-stream-json-schema.md) (1.1.21 — live capture).
+   Completed contract: [antigravity](./antigravity-stream-json-schema.md) (1.1.21 — live capture).
 
 > ⚠️ These probes invoke a **real agent** (network, tokens, and — without
 > read-only flags — file/shell access). Always run in a **throwaway scratch

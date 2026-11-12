@@ -310,7 +310,7 @@ as "lost contact". Treat them as damage control for a hard crash, never as a sub
 | Claude Code `Stop` hook         | Claude  | ~6h after the session is provably gone       |
 | Unsupervised age sweep (server) | any     | ~12h after the run started                   |
 
-The floor is harness-agnostic: a run left open under cursor-agent, codex, gemini or antigravity is
+The floor is harness-agnostic: a run left open under cursor-agent, codex or antigravity is
 settled by the age sweep just as surely as one under Claude Code — the difference is latency, not
 coverage. What you lose by not settling is the accurate status and the hours in between, during
 which the run reads as live and its worktree stays marked busy.

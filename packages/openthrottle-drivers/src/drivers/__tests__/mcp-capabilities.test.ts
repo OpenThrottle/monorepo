@@ -25,14 +25,11 @@ describe('MCP capability matrix', () => {
       // antigravity resolves MCP from ~/.gemini/config/mcp_config.json, never .mcp.json.
       antigravity: false,
       claude: true,
-      // codex and gemini cannot reach a workspace's MCP servers: codex reads solely the user-scope
+      // codex cannot reach a workspace's MCP servers: it reads solely the user-scope
       // ~/.codex/config.toml and has no project-config concept (confirmed twice, by `codex mcp
-      // list` and `codex doctor`); gemini reads only `.gemini/settings.json` (user or workspace
-      // scope) and never `.mcp.json` (zero references in the 0.25.2 source), and OT checkouts
-      // commit no `.gemini/settings.json`.
+      // list` and `codex doctor`).
       codex: false,
       cursor: true,
-      gemini: false,
       grok: true,
       opencode: true,
     });
@@ -47,7 +44,7 @@ describe('MCP capability matrix', () => {
     }
 
     // Emits no flags AND cannot attach — indistinguishable from the above via mcpAutoApprove alone.
-    for (const id of ['codex', 'gemini'] as const) {
+    for (const id of ['codex'] as const) {
       const { capabilities } = getDriver(id);
       expect(capabilities.mcpAutoApprove).toBe(false);
       expect(capabilities.attachesWorkspaceMcp).toBe(false);

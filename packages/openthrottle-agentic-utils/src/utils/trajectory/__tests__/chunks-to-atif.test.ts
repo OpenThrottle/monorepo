@@ -42,7 +42,6 @@ const SUCCESSFUL_RUNS = [
   { driverId: 'claude', fixture: 'claude', tool: 'Write' },
   { driverId: 'codex', fixture: 'codex.synthetic', tool: 'command_execution' },
   { driverId: 'cursor', fixture: 'cursor', tool: 'edit' },
-  { driverId: 'gemini', fixture: 'gemini.synthetic', tool: 'write_file' },
 ];
 
 describe('chunksToAtif', () => {

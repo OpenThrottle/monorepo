@@ -16,14 +16,13 @@ document after mid-2027.
 
 ## Context
 
-OpenThrottle drives seven agent CLIs (`antigravity`, `claude`, `codex`, `cursor`, `gemini`, `grok`,
-`opencode`) and has no way to say, with a number it can trust, whether a change to a skill, prompt,
+OpenThrottle drives six agent CLIs (`antigravity`, `claude`, `codex`, `cursor`, `grok`, `opencode`) and has no way to say, with a number it can trust, whether a change to a skill, prompt,
 driver or model made a run better or worse. Two gaps are visible in the code:
 
 - **Run transcripts are thrown away.** Plan runs spawn agents through `runDriverAsync`
   (`tools/workflows/src/bin/run-iteration.ts`, plus the scheduled-agent runner). Only
   `drivers/claude.ts` implements `AgentDriver.parseOutput`, and it keeps only the final text and the
-  usage-limit signal. The other six drivers run in plain-text mode. Nothing records tool calls,
+  usage-limit signal. The other five drivers run in plain-text mode. Nothing records tool calls,
   tokens, cost, duration and exit status together, and `agent_token_usage` has no `plan_run_id`.
 - **One eval exists and it is narrow.** `packages/openthrottle-mcp/src/evals/tool-selection/`
   grades first-turn MCP tool selection with trials, per-model baselines and a regression exit code.
@@ -39,7 +38,7 @@ agents; a held-out grader nothing optimizes against.
 
 **Build the eval loop inside OT, and run the system under test through OT's own drivers.**
 
-The open-source harnesses compared were Harbor (MIT, covers all seven of our CLIs), Inspect AI with
+The open-source harnesses compared were Harbor (MIT, covers all six of our CLIs), Inspect AI with
 inspect_swe (MIT; claude, codex, gemini), Coder Eval (Apache-2.0; no cursor or grok), agent-exam and
 promptfoo (MIT, OpenAI-owned since March 2026). Every one of them installs and invokes the CLI
 through **its own adapter**. That measures "Claude Code as Harbor runs it", not "Claude Code as OT
@@ -122,7 +121,7 @@ upgrade.
 
 The chat path already solved per-CLI parsing. `packages/openthrottle-agentic-utils/src/utils/
 conversation-backend/<cli>/events.ts` maps each CLI's structured output (claude `stream-json`,
-`codex exec --json`, cursor/gemini/antigravity `stream-json`, opencode and grok JSON) onto one
+`codex exec --json`, cursor/antigravity `stream-json`, opencode and grok JSON) onto one
 `ConversationStreamChunk` stream: `text`, `thinking`, `tool_call`, `tool_result`, `usage`,
 `session`.
 
@@ -132,7 +131,7 @@ So capture is:
    structured-output flag (the same flags the chat argv builders already use), and a
    `renderOutputLine` keeps `plan_output_stream` and the run log human-readable, exactly as claude
    does today.
-2. **The chat event mappers are reused** for plan-run stdout. No second set of seven parsers.
+2. **The chat event mappers are reused** for plan-run stdout. No second set of six parsers.
 3. **One `chunksToAtif` converter** turns the chunk stream plus run metadata into ATIF.
 
 **Placement follows the dependency direction.** `openthrottle-agentic-utils` depends on
@@ -165,7 +164,7 @@ A driver whose CLI cannot report tool calls declares that in its capabilities, a
 are marked incomplete. They are never silently stored with an empty `tool_calls` array.
 
 **Doc drift found on the way:** the codex, cursor-agent, grok and opencode mappers each cite a
-`docs/openthrottle/<cli>-stream-json-schema.md` that does not exist. Only the claude, gemini and
+`docs/openthrottle/<cli>-stream-json-schema.md` that does not exist. Only the claude and
 antigravity schema docs are present. Task 2 writes the four missing ones alongside the fixtures.
 
 ## Decision 5 — Storage: Postgres JSONB, with caps
@@ -303,7 +302,7 @@ data to analyze by the time the UI is switched on.
 
 ## Consequences for the plan
 
-- **Task 2 shrinks.** It no longer writes seven parsers. It switches the plan-run drivers to
+- **Task 2 shrinks.** It no longer writes six parsers. It switches the plan-run drivers to
   structured output, adds `renderOutputLine` where missing, records fixture streams, writes the four
   missing schema docs, and builds `chunksToAtif` on the existing mappers.
 - **New task: Stop-hook transcript upload** for ot-loop Claude sessions (`source:

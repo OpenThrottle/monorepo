@@ -41,7 +41,6 @@ describe('DRIVER_IDS / DEFAULT_DRIVER_ID', () => {
       'claude',
       'codex',
       'cursor',
-      'gemini',
       'grok',
       'opencode',
     ]);
@@ -77,16 +76,15 @@ describe('parseDriverId', () => {
     expect(parseDriverId('OPENCODE', 'env')).toBe('opencode');
   });
 
-  it('accepts the widened ids codex, grok, and gemini', () => {
+  it('accepts the widened ids codex and grok', () => {
     expect(parseDriverId('codex')).toBe('codex');
     expect(parseDriverId('grok')).toBe('grok');
-    expect(parseDriverId('gemini')).toBe('gemini');
   });
 
   it('throws UnknownDriverError with a legacy-compatible message for unknown ids', () => {
     expect(() => parseDriverId('copilot', 'cli')).toThrow(UnknownDriverError);
     expect(() => parseDriverId('copilot', 'cli')).toThrow(
-      /Unknown execution backend "copilot"\. Supported: antigravity, claude, codex, cursor, gemini, grok, opencode/,
+      /Unknown execution backend "copilot"\. Supported: antigravity, claude, codex, cursor, grok, opencode/,
     );
   });
 

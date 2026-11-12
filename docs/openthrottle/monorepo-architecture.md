@@ -99,7 +99,7 @@ Shared infra used by the server: **Postgres** (OpenThrottle schema in `databases
 | **@openthrottle/nestjs-repositories**        | TypeORM-based data access for OpenThrottle (plans, tasks, embeddings, commit_links, plan_output_stream, documentation, users, roles, etc.); used only by openthrottle-server.               |
 | **@openthrottle/openthrottle-notifications** | Notifications (e.g. used by server/developer).                                                                                                                                              |
 | **@openthrottle/react-router-\***            | Shared React Router libs (auth, GraphQL, UI, utils, editor, profiling, chat, …) for the developer and other OT UIs. Source-first — no `build` target; see [MONOREPO.md](../../MONOREPO.md). |
-| **@openthrottle/openthrottle-drivers**       | Dep-free descriptors for each agent CLI (`claude`, `cursor-agent`, `gemini`, `antigravity`, …) — argv shapes and capabilities, no filesystem access.                                        |
+| **@openthrottle/openthrottle-drivers**       | Dep-free descriptors for each agent CLI (`claude`, `cursor-agent`, `antigravity`, …) — argv shapes and capabilities, no filesystem access.                                                  |
 | **@openthrottle/openthrottle-agentic-\***    | The agentic layer: `-ralph` (the loop + its codegen GraphQL documents), `-utils` (workspace paths, skill injection), `-workflow`.                                                           |
 
 ---

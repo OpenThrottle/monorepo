@@ -222,10 +222,10 @@ rewrite the beats to open a completed thread.
 
 ### 18-ollama-local-models — **app-gap, blocked**
 
-| beat                                            | verdict | note                                                                                                                                                                                                                                        |
-| ----------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 0–1 `/settings/agents` with local Ollama models | app-gap | That page lists agent CLIs **detected on the server host** — real machine state, not the demo database. The audited host lists antigravity, claude, codex, cursor, gemini, grok, opencode. No Ollama. Nothing in the seed can put it there. |
-| 4–5 the browser network panel                   | app-gap | Devtools. Playwright cannot put it in frame. Needs a typeset surface or a beat rewrite — and if the beat changes, the episode changes, not just the flow.                                                                                   |
+| beat                                            | verdict | note                                                                                                                                                                                                                                |
+| ----------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0–1 `/settings/agents` with local Ollama models | app-gap | That page lists agent CLIs **detected on the server host** — real machine state, not the demo database. The audited host lists antigravity, claude, codex, cursor, grok, opencode. No Ollama. Nothing in the seed can put it there. |
+| 4–5 the browser network panel                   | app-gap | Devtools. Playwright cannot put it in frame. Needs a typeset surface or a beat rewrite — and if the beat changes, the episode changes, not just the flow.                                                                           |
 
 Worth recording for its own sake: `/settings/agents` is **non-deterministic by
 construction** — it shows installed versions and a "Last checked <timestamp>"

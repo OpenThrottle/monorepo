@@ -40,7 +40,7 @@ describe('antigravity driver', () => {
     );
   });
 
-  it('emits -p (unlike gemini, --print/--prompt is not deprecated here)', () => {
+  it('emits -p', () => {
     expect(antigravityDriver.buildShellCommand(config())).toMatch(/ -p\b/);
   });
 
@@ -61,7 +61,7 @@ describe('antigravity driver', () => {
     );
   });
 
-  it('never emits --approval-mode (that is the gemini flag, not an antigravity one)', () => {
+  it('never emits --approval-mode', () => {
     expect(antigravityDriver.buildShellCommand(config())).not.toContain(
       '--approval-mode',
     );

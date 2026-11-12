@@ -22,7 +22,7 @@ export interface ScenarioRunContext {
   readonly cwd: string;
   /**
    * Every earlier turn's user prompt and assistant reply, oldest first. Some
-   * backends replay it into the prompt (gemini); the rest send only the latest
+   * backends replay it into the prompt; the rest send only the latest
    * message, so for them it changes nothing.
    */
   readonly history: readonly ScenarioMessage[];

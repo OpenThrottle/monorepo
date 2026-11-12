@@ -8,7 +8,7 @@ name: ot-skill-sync
 
 # ot-skill-sync
 
-This skill manages the **OpenThrottle agent-skills architecture** in whatever repository you're in. It exists so every AI tool — Claude Code, Cursor 2.4+, Codex, Grok Build, OpenCode, VSCode/Copilot, Gemini CLI, and anything else — sees the **same skills from the same starting point**, no matter which tool a teammate used to install them.
+This skill manages the **OpenThrottle agent-skills architecture** in whatever repository you're in. It exists so every AI tool — Claude Code, Cursor 2.4+, Codex, Grok Build, OpenCode, VSCode/Copilot, Antigravity, and anything else — sees the **same skills from the same starting point**, no matter which tool a teammate used to install them.
 
 All of these CLIs read the **[Agent Skills](https://agentskills.io/) `SKILL.md` standard**; they differ only in which directories they scan, and the differences are wider than "two near-universal dirs" — so the fan-out list is derived from a verified matrix, not an assumption.
 
@@ -22,7 +22,6 @@ Read off the installed binaries/bundles at the versions shown — the CLIs' own 
 | cursor (cursor-agent) | 2026.09.10 |        ✅        |        ✅        | `.cursor/skills`                     | ✅ stage 1               |
 | grok (Grok Build)     | 1.0.5      |        ✅        |        ✅        | `.grok/skills`                       | ✅ stage 1               |
 | antigravity (`agy`)   | 1.1.21     |        ✅        |        —         | — (global `~/.gemini/config/skills`) | ✅ stage 1               |
-| gemini (Gemini CLI)   | 0.25.2     |        —         |        —         | `.gemini/skills`                     | ✅ fan-out               |
 | codex                 | 0.145.0    |        —         |        —         | — (global `$CODEX_HOME/skills`)      | ❌ no in-repo dir exists |
 | opencode              | 1.18.16    |        —         |        —         | `.opencode/skill(s)`                 | ❌ not in the default    |
 
@@ -30,7 +29,7 @@ Notes on the two ❌ rows and the surprises above:
 
 - **codex 0.145.0 has no in-repo skills dir at all.** Skills live only in `$CODEX_HOME/skills` (`~/.codex/skills`). Its `.agents/` handling is plugin-marketplace manifests, not skills. Nothing in-repo can reach it. (Cursor reads `.codex/skills` — that is Cursor's compat scan, not codex's own.)
 - **opencode 1.18.16** reads project skills from `.opencode/skill(s)/<name>/SKILL.md`, and its "external" auto-scans are **home-scoped only** (`~/.claude/skills`, `~/.agents/skills` — disableable via `OPENCODE_DISABLE_EXTERNAL_SKILLS`). Add `.opencode/skill` to `AGENT_SKILL_DIRS` if a repo needs it; it is deliberately not a default.
-- **Antigravity needs no fan-out.** `agy` discovers `<workspace>/.agents/skills/<name>/` natively (plus the global `~/.gemini/config/skills/` and an `.agents/skills.json` manifest), so stage 1 already covers it. Do **not** add a `.gemini/skills` expectation for `agy` — that is the _Gemini CLI's_ dir, and the two share nothing but the `~/.gemini` prefix.
+- **Antigravity needs no fan-out.** `agy` discovers `<workspace>/.agents/skills/<name>/` natively (plus the global `~/.gemini/config/skills/` and an `.agents/skills.json` manifest), so stage 1 already covers it.
 - **The last column is additive, not exclusive — read it with the two ✅ columns, never alone.**
   Cursor is the row that invites the misreading: `.cursor/skills` in that column does **not** mean
   Cursor needs one. Its ✅ under `.agents/skills` is what matters, and that is why this repo
@@ -41,18 +40,18 @@ Notes on the two ❌ rows and the surprises above:
   is the error. Only the cursor row was re-probed; the other rows still stand at 2026-08-26.
 - **Claude Code 2.1.232 does not read `.agents/skills`.** `.claude/skills` is its only in-repo skills dir, which is exactly why the fan-out exists.
 
-Several CLIs additionally read per-tool **global** dirs (`~/.claude/skills`, `~/.codex/skills`, `~/.grok/skills`, `~/.gemini/skills`, `~/.gemini/config/skills`) that live outside any repo and are not part of this layout.
+Several CLIs additionally read per-tool **global** dirs (`~/.claude/skills`, `~/.codex/skills`, `~/.grok/skills`, `~/.gemini/config/skills`) that live outside any repo and are not part of this layout.
 
 ## The architecture
 
 Every openthrottle repo has (at most) four skill locations with strict ownership:
 
-| Location                                                 | Contents                                                                                                                                                                                                                                                                                                                      | Owned by                    |
-| -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- |
-| `skills/`                                                | Hand-authored skills, committed to git                                                                                                                                                                                                                                                                                        | Humans (via PRs)            |
-| `.agents/skills/`                                        | The merged SSOT view read in-repo by Cursor, Grok Build, and Antigravity (`agy`) — see the matrix above; Claude Code and the Gemini CLI reach it only via the fan-out. **Real directories** = external skills installed by `npx skills` (tracked in `skills-lock.json`). **Symlinks** = the repo's own `skills/*`, generated. | The skills CLI / this skill |
-| `<agent>/skills/` (`.claude/skills/`, `.gemini/skills/`) | Per-agent fan-out for the CLIs that do **not** read `.agents/skills/` in-repo — Claude Code (`.claude/skills`) and the Gemini CLI (`.gemini/skills`). All symlinks, all generated, all gitignored.                                                                                                                            | This skill                  |
-| `~/.openthrottle/skills/` (**outside the repo**)         | The per-user **personal tier**: private, half-finished, experimental skills. Linked in by sync and reaching every place a committed skill does, while being structurally impossible to commit. Override with `OPENTHROTTLE_PERSONAL_SKILLS_DIR`.                                                                              | You, and nobody else        |
+| Location                                         | Contents                                                                                                                                                                                                                                                                                                     | Owned by                    |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------- |
+| `skills/`                                        | Hand-authored skills, committed to git                                                                                                                                                                                                                                                                       | Humans (via PRs)            |
+| `.agents/skills/`                                | The merged SSOT view read in-repo by Cursor, Grok Build, and Antigravity (`agy`) — see the matrix above; Claude Code reaches it only via the fan-out. **Real directories** = external skills installed by `npx skills` (tracked in `skills-lock.json`). **Symlinks** = the repo's own `skills/*`, generated. | The skills CLI / this skill |
+| `<agent>/skills/` (`.claude/skills/`)            | Per-agent fan-out for the CLIs that do **not** read `.agents/skills/` in-repo — Claude Code (`.claude/skills`). All symlinks, all generated, all gitignored.                                                                                                                                                 | This skill                  |
+| `~/.openthrottle/skills/` (**outside the repo**) | The per-user **personal tier**: private, half-finished, experimental skills. Linked in by sync and reaching every place a committed skill does, while being structurally impossible to commit. Override with `OPENTHROTTLE_PERSONAL_SKILLS_DIR`.                                                             | You, and nobody else        |
 
 Sync is a three-stage pipeline: `skills/*` → `.agents/skills/` (stage 1), `<personal>/*` → `.agents/skills/` (stage 1b), then `.agents/skills/*` → each agent folder (stage 2). A name collision between `skills/` and `skills-lock.json` is an **error**, never a silent precedence.
 
@@ -162,10 +161,9 @@ puts them under this check from now on. A pointer worth following is worth writi
 
 ## Configuration
 
-Per-agent fan-out targets default to **`.claude/skills .gemini/skills`** — one dir per CLI that cannot see `.agents/skills/` in-repo:
+Per-agent fan-out targets default to **`.claude/skills`** — one dir per CLI that cannot see `.agents/skills/` in-repo:
 
 - `.claude/skills` — Claude Code's only in-repo skills dir (also read by Cursor and Grok, so it is doubly useful).
-- `.gemini/skills` — the Gemini CLI's only in-repo skills dir (project scope; `~/.gemini/skills` is its user scope and out of this layout).
 
 The personal root is configured the same way, and defaults to `~/.openthrottle/skills`:
 
@@ -179,7 +177,7 @@ CLIs that read `.agents/skills/` natively — Cursor, Grok Build, Antigravity (`
 
 ```bash
 # e.g. add opencode's project skills dir, or a Windsurf target
-AGENT_SKILL_DIRS=".claude/skills .gemini/skills .opencode/skill" bash <path>/scripts/sync.sh
+AGENT_SKILL_DIRS=".claude/skills .opencode/skill" bash <path>/scripts/sync.sh
 ```
 
 ## Setting up a new repo

@@ -226,7 +226,7 @@ describe('capabilitiesForChatOption', () => {
     }
 
     // The rest have no equivalent flag, so the composer stays single-select.
-    for (const backend of ['codex', 'cursor', 'gemini', 'grok', 'opencode']) {
+    for (const backend of ['codex', 'cursor', 'grok', 'opencode']) {
       const caps = capabilitiesForChatOption(decodeChatOption(backend));
       expect(caps.maxRepositories).toBe(1);
     }

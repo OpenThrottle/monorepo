@@ -1,8 +1,7 @@
 # antigravity (agy) CLI — headless contract
 
 The headless surface the `antigravity` driver
-(`packages/openthrottle-drivers/src/drivers/antigravity.ts`) is built against. Same structure as
-[`gemini-stream-json-schema.md`](./gemini-stream-json-schema.md).
+(`packages/openthrottle-drivers/src/drivers/antigravity.ts`) is built against.
 
 **Measured 2026-08-26** against Antigravity CLI **1.1.21**, `darwin_arm64`, official release tarball
 (`cli_mac_arm64.tar.gz`, SHA512 verified against the release manifest). Probed as an extracted
@@ -17,19 +16,19 @@ describes will not be the version on disk for long.
 
 ## 1. Invocation contract
 
-Headless one-shot exists and is first-class — a significant upgrade over the Gemini CLI:
+Headless one-shot exists and is first-class:
 
-| Concern                   | Gemini CLI 0.25.2                                             | Antigravity CLI 1.1.21                                                                                          |
-| ------------------------- | ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| Headless prompt           | positional arg (`-p` DEPRECATED)                              | **`-p` / `--print` / `--prompt`** (`--prompt` is a documented alias for `--print`, not deprecated)              |
-| Non-interactive approvals | `--approval-mode yolo`                                        | **`--dangerously-skip-permissions`**                                                                            |
-| Structured output         | `--output-format text\|json\|stream-json` (gemini has it too) | `--output-format text\|json\|stream-json`                                                                       |
-| Schema enforcement        | none                                                          | **`--json-schema <string\|path>`** (for `stream-json`, applies to the final result only)                        |
-| Model select              | `-m/--model`                                                  | `--model`                                                                                                       |
-| Model listing             | none                                                          | **`models` subcommand**                                                                                         |
-| Multi-turn                | flattened history (no resume)                                 | **`--conversation <ID>` id-based resume**, `-c/--continue` most recent                                          |
-| Multi-turn input          | n/a                                                           | `--input-format stream-json` (one NDJSON message per line on stdin; **requires** `--output-format stream-json`) |
-| Timeout                   | n/a                                                           | `--print-timeout` (default `5m0s`)                                                                              |
+| Concern                   | Antigravity CLI 1.1.21                                                                                          |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Headless prompt           | **`-p` / `--print` / `--prompt`** (`--prompt` is a documented alias for `--print`, not deprecated)              |
+| Non-interactive approvals | **`--dangerously-skip-permissions`**                                                                            |
+| Structured output         | `--output-format text\|json\|stream-json`                                                                       |
+| Schema enforcement        | **`--json-schema <string\|path>`** (for `stream-json`, applies to the final result only)                        |
+| Model select              | `--model`                                                                                                       |
+| Model listing             | **`models` subcommand**                                                                                         |
+| Multi-turn                | **`--conversation <ID>` id-based resume**, `-c/--continue` most recent                                          |
+| Multi-turn input          | `--input-format stream-json` (one NDJSON message per line on stdin; **requires** `--output-format stream-json`) |
+| Timeout                   | `--print-timeout` (default `5m0s`)                                                                              |
 
 Other flags relevant to a driver: `--add-dir` (repeatable workspace dirs), `--sandbox`,
 `--effort low|medium|high`, `--mode accept-edits|plan`, `--agent`, `--project` / `--new-project`,
@@ -51,8 +50,7 @@ reaped it first.
 Consequences for the driver:
 
 - A server-spawned run without pre-provisioned credentials **hangs for the auth window**, it does
-  not exit immediately. This is the analogue of Gemini's exit-41 fast-fail, but strictly worse:
-  Gemini failed instantly, agy stalls. `--print-timeout` and/or our own spawn timeout is mandatory.
+  not exit immediately. `--print-timeout` and/or our own spawn timeout is mandatory.
 - `models` when unauthenticated is clean: prints `Please sign in to view available models` and
   exits **1**.
 - Credential env candidates found in the binary: `GEMINI_API_KEY`, `GOOGLE_API_KEY`,
@@ -61,8 +59,8 @@ Consequences for the driver:
 
 ## 3. Config, MCP, and plugin resolution
 
-agy reuses the **`~/.gemini` directory** but with its own layout — it does _not_ read Gemini's
-`mcpServers` block in `settings.json`. Paths recovered from the binary:
+agy keeps its state under the **`~/.gemini` directory** with its own layout; MCP servers are not
+configured in `settings.json`. Paths recovered from the binary:
 
 ```
 ~/.gemini/antigravity-cli/settings.json          # CLI settings
@@ -77,7 +75,7 @@ agy reuses the **`~/.gemini` directory** but with its own layout — it does _no
 ```
 
 `antigravity mcp list` on a clean machine → `No MCP servers configured.` (exit 0). There is a real
-`mcp` subcommand (`add`, `remove`, `list`, `enable`, `disable`), so unlike Gemini, MCP servers are
+`mcp` subcommand (`add`, `remove`, `list`, `enable`, `disable`), so MCP servers are
 **programmatically registerable** rather than config-file-only. No evidence of `.mcp.json` support,
 so an OT checkout's committed `.mcp.json` is still not read — `attachesWorkspaceMcp: false` holds,
 but `mcpAutoApprove` may become achievable via `mcp add`.
@@ -105,7 +103,7 @@ Exit 0. Rows are `<id>\t<Display Name>`; the `Fetching available models...` prog
 tab. The driver's `discoverModels.parse` takes the first tab-delimited field per row — an
 initial "bare id per line" guess returned `[]` against real output and was fixed here.
 
-Note the catalog is not Gemini-only: it advertises Claude and GPT-OSS models too.
+Note the catalog is not Google-only: it advertises Claude and GPT-OSS models too.
 
 ### Inference is gated by ACCOUNT ELIGIBILITY, separately from auth
 
@@ -258,16 +256,13 @@ is `result.status` alone.
 `response`. `usage` totals for the turn; `thinking_tokens` exists as a field but was 0 in every
 captured sample (no thinking-specific event or step_type was observed at these effort levels).
 
-## 4. How this driver differs from `gemini.ts`
+## 4. Driver capabilities
 
-The headless surface is _better specified_ than the Gemini CLI's: `-p` with `--output-format
-stream-json`, optional `--json-schema`, non-interactive approvals via
-`--dangerously-skip-permissions`, id-based conversation resume, and a `models` subcommand for
-discovery.
-
-The surface is closer to Claude Code's than to Gemini's, which means the driver's
-`DriverCapabilities` differ substantially from `gemini.ts`: `supportsModelFlag: true` plus genuine
-model _listing_, and `mcpAutoApprove` is worth re-evaluating given `mcp add`.
+The headless surface is well specified: `-p` with `--output-format stream-json`, optional
+`--json-schema`, non-interactive approvals via `--dangerously-skip-permissions`, id-based
+conversation resume, and a `models` subcommand for discovery. It is close to Claude Code's, so the
+driver's `DriverCapabilities` set `supportsModelFlag: true` with genuine model _listing_, and
+`mcpAutoApprove` is worth re-evaluating given `mcp add`.
 
 ## 5. Still unverified
 

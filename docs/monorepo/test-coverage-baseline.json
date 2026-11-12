@@ -6603,27 +6603,6 @@
     },
     {
       "category": "utils",
-      "file": "packages/openthrottle-agentic-utils/src/utils/conversation-backend/gemini/argv.ts",
-      "project": "packages/openthrottle-agentic-utils",
-      "status": "tested",
-      "testFile": "packages/openthrottle-agentic-utils/src/utils/conversation-backend/gemini/__tests__/argv.test.ts"
-    },
-    {
-      "category": "utils",
-      "file": "packages/openthrottle-agentic-utils/src/utils/conversation-backend/gemini/events.ts",
-      "project": "packages/openthrottle-agentic-utils",
-      "status": "tested",
-      "testFile": "packages/openthrottle-agentic-utils/src/utils/conversation-backend/gemini/__tests__/events.test.ts"
-    },
-    {
-      "category": "utils",
-      "file": "packages/openthrottle-agentic-utils/src/utils/conversation-backend/gemini/gemini.ts",
-      "project": "packages/openthrottle-agentic-utils",
-      "status": "tested",
-      "testFile": "packages/openthrottle-agentic-utils/src/utils/conversation-backend/gemini/__tests__/gemini.test.ts"
-    },
-    {
-      "category": "utils",
       "file": "packages/openthrottle-agentic-utils/src/utils/conversation-backend/grok/argv.ts",
       "project": "packages/openthrottle-agentic-utils",
       "status": "tested",
@@ -7010,13 +6989,6 @@
     {
       "category": "components",
       "file": "packages/react-router-chat-state/src/components/CursorIcon.tsx",
-      "project": "packages/react-router-chat-state",
-      "status": "missing",
-      "testFile": null
-    },
-    {
-      "category": "components",
-      "file": "packages/react-router-chat-state/src/components/GeminiIcon.tsx",
       "project": "packages/react-router-chat-state",
       "status": "missing",
       "testFile": null
@@ -11686,8 +11658,8 @@
       "project": "packages/openthrottle-agentic-utils",
       "stub": 0,
       "stubFiles": [],
-      "tested": 49,
-      "total": 55
+      "tested": 46,
+      "total": 52
     },
     {
       "category": "utils",
@@ -11851,11 +11823,10 @@
     {
       "category": "components",
       "enforced": true,
-      "missing": 7,
+      "missing": 6,
       "missingFiles": [
         "packages/react-router-chat-state/src/components/ClaudeIcon.tsx",
         "packages/react-router-chat-state/src/components/CursorIcon.tsx",
-        "packages/react-router-chat-state/src/components/GeminiIcon.tsx",
         "packages/react-router-chat-state/src/components/GrokIcon.tsx",
         "packages/react-router-chat-state/src/components/OpenAiIcon.tsx",
         "packages/react-router-chat-state/src/components/OpenCodeIcon.tsx",
@@ -11866,7 +11837,7 @@
       "stub": 0,
       "stubFiles": [],
       "tested": 0,
-      "total": 7
+      "total": 6
     },
     {
       "category": "config",

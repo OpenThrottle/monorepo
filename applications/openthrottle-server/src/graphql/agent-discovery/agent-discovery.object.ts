@@ -134,7 +134,7 @@ export class AgentCliOptionObject {
   auth!: AgentCliAuthStatusObject | null;
 
   @Field(() => AgentCliAuthStateObject, {
-    description: `Generic login state for this backend: probed for claude, cursor and gemini (no credential contents are read); "unknown" for the rest.`,
+    description: `Generic login state for this backend: probed for claude and cursor (no credential contents are read); "unknown" for the rest.`,
   })
   authState!: AgentCliAuthStateObject;
 
@@ -144,7 +144,7 @@ export class AgentCliOptionObject {
   capabilities!: ChatBackendCapabilitiesObject;
 
   @Field(() => Boolean, {
-    description: `True when this CLI resolves the workspace's committed MCP config (.mcp.json / .cursor/mcp.json / opencode.json), so a run in this checkout can reach openthrottle-mcp. False for codex and gemini, which read only their own config scope (codex: user-scope config.toml; gemini: .gemini/settings.json, never .mcp.json) — for those, MCP reachability is a property of the host and cannot be verified from the workspace, so present it as unverifiable rather than as definitely missing. Distinct from emitting MCP flags: claude, grok, and opencode emit none yet attach fine.`,
+    description: `True when this CLI resolves the workspace's committed MCP config (.mcp.json / .cursor/mcp.json / opencode.json), so a run in this checkout can reach openthrottle-mcp. False for antigravity and codex, which read only their own config scope (antigravity: ~/.gemini/config/mcp_config.json; codex: user-scope config.toml; never .mcp.json) — for those, MCP reachability is a property of the host and cannot be verified from the workspace, so present it as unverifiable rather than as definitely missing. Distinct from emitting MCP flags: claude, grok, and opencode emit none yet attach fine.`,
   })
   attachesWorkspaceMcp!: boolean;
 

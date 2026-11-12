@@ -230,10 +230,9 @@ trigger. For `@tools/generators`, reach for **ot-generators** first.
 | [AGENTS.md](../../../AGENTS.md) § When to use nx_docs       | Nx task execution (`pnpm nx run`, `affected`), the Nx MCP, when to use **nx_docs**              |
 
 Skill **bodies** are authored under `skills/<slug>/`, generated into
-`.agents/skills/`, and fanned out to `.claude/skills/` and `.gemini/skills/`. Which
+`.agents/skills/`, and fanned out to `.claude/skills/`. Which
 directory a CLI scans differs: Cursor, Grok Build, and Antigravity (`agy`) read
-`.agents/skills/`; Claude Code reads only `.claude/skills/`; the Gemini CLI only
-`.gemini/skills/`. All of them resolve back to `skills/<slug>` for OT-owned skills —
+`.agents/skills/`; Claude Code reads only `.claude/skills/`. All of them resolve back to `skills/<slug>` for OT-owned skills —
 so edit `skills/`, then run `bash skills/ot-skill-sync/scripts/sync.sh`. Never
 hand-edit a generated skill directory.
 

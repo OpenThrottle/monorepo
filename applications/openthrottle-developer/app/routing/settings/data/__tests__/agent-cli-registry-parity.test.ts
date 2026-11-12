@@ -23,11 +23,10 @@ import { AGENT_CLI_BACKENDS } from '~/routing/settings/data/data.agent-clis';
 import { mergeAgentCliStatuses } from '~/routing/settings/utils/agent-cli-statuses';
 
 /**
- * Gemini is the one backend whose catalog link is NOT its driver's `install.url`: it installs via
- * npm (`@google/gemini-cli`) and geminicli.com serves no install script, so the catalog points at
- * the docs page instead. Verified against the driver descriptor rather than assumed.
+ * Backends whose catalog link is NOT their driver's `install.url` (a CLI with no curl-shell
+ * installer, linked to its docs page instead). Empty today: every driver ships an install script.
  */
-const DOCS_LINK_ONLY_BACKENDS = new Set<string>(['gemini']);
+const DOCS_LINK_ONLY_BACKENDS = new Set<string>([]);
 
 describe('agent CLI catalog / drivers registry parity', () => {
   it('lists exactly the registered driver ids', () => {
@@ -72,7 +71,7 @@ describe('agent CLI catalog / drivers registry parity', () => {
       const install = driver.install;
 
       // `install` is optional, and only the curl-shell method carries a url — npm-installed
-      // CLIs have none, which is exactly the gemini case the catalog links around.
+      // CLIs have none, so the catalog would have to link around them.
       if (install === undefined || install.method !== 'curl-shell') {
         expect(DOCS_LINK_ONLY_BACKENDS.has(driver.id)).toBe(true);
         continue;

@@ -2,7 +2,6 @@ import * as React from 'react';
 
 import { ClaudeIcon } from '../components/ClaudeIcon';
 import { CursorIcon } from '../components/CursorIcon';
-import { GeminiIcon } from '../components/GeminiIcon';
 import { GrokIcon } from '../components/GrokIcon';
 import { OpenAiIcon } from '../components/OpenAiIcon';
 import { OpenCodeIcon } from '../components/OpenCodeIcon';
@@ -13,7 +12,7 @@ const OPENAI_GROUP_PREFIX = 'openai:';
 
 /**
  * Map a picker group id to its provider glyph. Agent-CLI groups key on the bare
- * driver backend id (`claude`, `codex`, `cursor`, `gemini`, `grok`, `opencode`); local
+ * driver backend id (`claude`, `codex`, `cursor`, `grok`, `opencode`); local
  * OpenAI endpoint groups use the `openai:<providerOrHost>` prefix. Unknown ids
  * get a {@link ProviderLetterIcon} derived from the id. Pure and SSR-safe.
  *
@@ -33,8 +32,6 @@ export function resolveProviderIcon(groupId: string): React.ReactNode {
       return <OpenAiIcon />;
     case 'cursor':
       return <CursorIcon />;
-    case 'gemini':
-      return <GeminiIcon />;
     case 'grok':
       return <GrokIcon />;
     case 'opencode':

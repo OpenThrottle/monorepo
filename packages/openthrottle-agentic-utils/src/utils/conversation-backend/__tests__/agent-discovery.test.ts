@@ -1,10 +1,4 @@
-import {
-  chmodSync,
-  mkdirSync,
-  mkdtempSync,
-  rmSync,
-  writeFileSync,
-} from 'node:fs';
+import { chmodSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -18,7 +12,6 @@ const ANTIGRAVITY_BIN_ENV = 'OPENTHROTTLE_ANTIGRAVITY_BIN';
 const CLAUDE_BIN_ENV = 'OPENTHROTTLE_CLAUDE_BIN';
 const CODEX_BIN_ENV = 'OPENTHROTTLE_CODEX_BIN';
 const CURSOR_AGENT_BIN_ENV = 'OPENTHROTTLE_CURSOR_AGENT_BIN';
-const GEMINI_BIN_ENV = 'OPENTHROTTLE_GEMINI_BIN';
 const GROK_BIN_ENV = 'OPENTHROTTLE_GROK_BIN';
 const OPENCODE_BIN_ENV = 'OPENTHROTTLE_OPENCODE_BIN';
 
@@ -84,7 +77,6 @@ function hermeticEnv(overrides: Record<string, string>): NodeJS.ProcessEnv {
     [CLAUDE_BIN_ENV]: join(dir, 'missing-claude'),
     [CODEX_BIN_ENV]: join(dir, 'missing-codex'),
     [CURSOR_AGENT_BIN_ENV]: join(dir, 'missing-cursor'),
-    [GEMINI_BIN_ENV]: join(dir, 'missing-gemini'),
     [GROK_BIN_ENV]: join(dir, 'missing-grok'),
     HOME: process.env.HOME,
     [OPENCODE_BIN_ENV]: join(dir, 'missing-opencode'),
@@ -102,19 +94,18 @@ afterAll(() => {
 });
 
 describe('AGENT_CLI_ALLOWLIST', () => {
-  it('is derived from the drivers registry (all seven, incl. antigravity)', () => {
+  it('is derived from the drivers registry (all six, incl. antigravity)', () => {
     expect(AGENT_CLI_ALLOWLIST.map((entry) => entry.backend).sort()).toEqual([
       'antigravity',
       'claude',
       'codex',
       'cursor',
-      'gemini',
       'grok',
       'opencode',
     ]);
   });
 
-  it('marks every backend chat-capable (all seven have streaming adapters)', () => {
+  it('marks every backend chat-capable (all six have streaming adapters)', () => {
     const byId = new Map(AGENT_CLI_ALLOWLIST.map((e) => [e.backend, e]));
     expect(byId.get('antigravity')?.chatCapable).toBe(true);
     expect(byId.get('claude')?.chatCapable).toBe(true);
@@ -122,7 +113,6 @@ describe('AGENT_CLI_ALLOWLIST', () => {
     expect(byId.get('opencode')?.chatCapable).toBe(true);
     expect(byId.get('codex')?.chatCapable).toBe(true);
     expect(byId.get('grok')?.chatCapable).toBe(true);
-    expect(byId.get('gemini')?.chatCapable).toBe(true);
   });
 
   it('projects supportsCustomBaseUrl from the driver capability (opencode/codex/grok yes; claude/cursor no)', () => {
@@ -132,7 +122,6 @@ describe('AGENT_CLI_ALLOWLIST', () => {
     expect(byId.get('grok')?.supportsCustomBaseUrl).toBe(true);
     expect(byId.get('claude')?.supportsCustomBaseUrl).toBe(false);
     expect(byId.get('cursor')?.supportsCustomBaseUrl).toBe(false);
-    expect(byId.get('gemini')?.supportsCustomBaseUrl).toBe(false);
   });
 });
 
@@ -145,7 +134,6 @@ describe('discoverAgentClis', () => {
       'claude',
       'codex',
       'cursor',
-      'gemini',
       'grok',
       'opencode',
     ]);
@@ -490,28 +478,6 @@ describe('discoverAgentClis authState and capabilities', () => {
     expect(
       result.agents.find((agent) => agent.backend === 'claude')?.authState,
     ).toEqual({ detail: 'dev@example.com', status: 'authenticated' });
-  });
-
-  it('reports gemini authenticated from an API key, a cached login, else unauthenticated', async () => {
-    const bin = writeFakeBin('gemini-auth', '0.25.2\n');
-    const home = mkdtempSync(join(dir, 'home-'));
-    const gemini = (overrides: Record<string, string>) => {
-      return discoverAgentClis({
-        env: hermeticEnv({ [GEMINI_BIN_ENV]: bin, HOME: home, ...overrides }),
-      }).then(
-        (result) =>
-          result.agents.find((agent) => agent.backend === 'gemini')?.authState
-            .status,
-      );
-    };
-
-    expect(await gemini({})).toBe('unauthenticated');
-    expect(await gemini({ GEMINI_API_KEY: 'k' })).toBe('authenticated');
-    expect(await gemini({ GOOGLE_API_KEY: 'k' })).toBe('authenticated');
-
-    mkdirSync(join(home, '.gemini'));
-    writeFileSync(join(home, '.gemini', 'oauth_creds.json'), '{}', 'utf8');
-    expect(await gemini({})).toBe('authenticated');
   });
 
   it('reports unknown with no detail for backends that are not probed', async () => {

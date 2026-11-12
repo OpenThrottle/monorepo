@@ -15,17 +15,11 @@ export type PlanRunKind = 'orchestrator' | 'spawn';
 /**
  * Supported agent-CLI backends for a plan run. Kept in lockstep with the
  * `openthrottle-drivers` `DRIVER_IDS` set and the `plan_runs_execution_backend_check`
- * constraint (see databases/openthrottle/migrations/106). Declared as a standalone union so the
+ * constraint (see databases/openthrottle/migrations/156). Declared as a standalone union so the
  * repositories layer stays decoupled from the CLI-invocation package.
  */
 export type PlanRunExecutionBackend =
-  | 'antigravity'
-  | 'claude'
-  | 'codex'
-  | 'cursor'
-  | 'gemini'
-  | 'grok'
-  | 'opencode';
+  'antigravity' | 'claude' | 'codex' | 'cursor' | 'grok' | 'opencode';
 
 /** Scalar/column fields of PlanRun (no relations) surfaced to the API. */
 export type PlanRunData = Pick<

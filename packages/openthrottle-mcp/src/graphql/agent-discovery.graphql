@@ -3,7 +3,7 @@
 # CLIs detected on the server host with their versions and per-driver models.
 # `auth` (claude only) reports the account, plan and active credential from
 # `claude auth status`, including the API-key-overrides-subscription warning. `authState` is the generic
-# login state (claude, cursor, gemini probed) and `capabilities` the behavioral
+# login state (claude, cursor probed) and `capabilities` the behavioral
 # capabilities of the backend's chat path.
 
 query discoverAgentClis {

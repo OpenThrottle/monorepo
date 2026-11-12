@@ -7,7 +7,6 @@ import {
   claudeDriver,
   codexDriver,
   cursorDriver,
-  geminiDriver,
   grokDriver,
   opencodeDriver,
 } from '../index.ts';
@@ -23,7 +22,6 @@ const structured = config({ outputFormat: DRIVER_OUTPUT_FORMATS.structured });
 const STRUCTURED_DRIVERS = [
   { driver: codexDriver, flag: ' --json ' },
   { driver: cursorDriver, flag: ' --output-format stream-json' },
-  { driver: geminiDriver, flag: ' --output-format stream-json' },
   { driver: antigravityDriver, flag: ' --output-format stream-json' },
   { driver: grokDriver, flag: ' --output-format streaming-json' },
   { driver: opencodeDriver, flag: ' --format json' },
@@ -60,12 +58,6 @@ describe('structured output', () => {
         /^agy -p "do the task" --output-format stream-json /,
       );
     });
-
-    it('keeps the gemini stdin redirect last', () => {
-      expect(geminiDriver.buildShellCommand(structured)).toMatch(
-        /--output-format stream-json < \/dev\/null$/,
-      );
-    });
   });
 
   describe('claude', () => {
@@ -85,7 +77,6 @@ describe('structured output', () => {
         claudeDriver,
         codexDriver,
         cursorDriver,
-        geminiDriver,
         grokDriver,
         opencodeDriver,
       ]

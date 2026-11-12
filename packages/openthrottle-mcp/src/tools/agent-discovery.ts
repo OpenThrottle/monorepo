@@ -1,6 +1,6 @@
 /**
  * @description Agent-CLI discovery tool handler + schema: discover_agent_clis. Lists the agentic
- * CLIs (claude, codex, cursor, gemini, grok, opencode, …) detected as available on the server host, with
+ * CLIs (claude, codex, cursor, grok, opencode, …) detected as available on the server host, with
  * their versions and the models each can run, via the discoverAgentClis GraphQL query only —
  * GraphQL-only boundary, no core import, no Nest bootstrap in this process.
  *
@@ -97,7 +97,7 @@ function describeAuth(agent: AgentCli): string[] {
 
 export const discoverAgentClisToolParameters = z.object({}).strict();
 
-export const discoverAgentClisToolDescription = `Discover agentic CLIs (claude, codex, cursor, gemini, …) available on the server host: --version, models, and chatCapable (has a streaming chat backend). Cached 60s; no arguments. Each agent reports \`authState\` (authenticated | unauthenticated | unknown) and chat \`capabilities\` (resume, approvals, steering, imageInput, mcpInjection, replaysFullHistory); read capabilities instead of branching on backend names. claude's \`auth\` adds account, plan and active credential from \`claude auth status\`; relay \`auth.warning\` (ANTHROPIC_API_KEY overriding the subscription) to the user. No credential contents are read. Reflects the server's host, not this MCP process's.`;
+export const discoverAgentClisToolDescription = `Discover agentic CLIs (claude, codex, cursor, …) available on the server host: --version, models, and chatCapable (has a streaming chat backend). Cached 60s; no arguments. Each agent reports \`authState\` (authenticated | unauthenticated | unknown) and chat \`capabilities\` (resume, approvals, steering, imageInput, mcpInjection, replaysFullHistory); read capabilities instead of branching on backend names. claude's \`auth\` adds account, plan and active credential from \`claude auth status\`; relay \`auth.warning\` (ANTHROPIC_API_KEY overriding the subscription) to the user. No credential contents are read. Reflects the server's host, not this MCP process's.`;
 
 export async function discoverAgentClisToolHandler(
   _args: z.infer<typeof discoverAgentClisToolParameters>,

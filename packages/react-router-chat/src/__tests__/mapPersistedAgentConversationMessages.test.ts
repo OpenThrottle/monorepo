@@ -115,7 +115,7 @@ describe('mapPersistedAgentConversationMessages', () => {
       'read',
     ],
     [
-      'legacy gemini name/parameters payload',
+      'legacy name/parameters payload',
       {
         callId: 'c1',
         toolCall: { name: 'view_file', parameters: { path: 'a.ts' } },

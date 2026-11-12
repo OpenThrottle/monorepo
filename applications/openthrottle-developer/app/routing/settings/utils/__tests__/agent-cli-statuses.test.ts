@@ -116,7 +116,7 @@ describe('collectAgentCliAuthWarnings', () => {
         { auth: null, backend: 'cursor', label: 'Cursor Agent' },
         { backend: 'codex', label: 'Codex' },
         { auth: { warning: null }, backend: 'grok', label: 'Grok' },
-        { auth: { warning: '' }, backend: 'gemini', label: 'Gemini CLI' },
+        { auth: { warning: '' }, backend: 'antigravity', label: 'Antigravity' },
         {
           auth: { warning: 'ANTHROPIC_API_KEY is set.' },
           backend: 'claude',

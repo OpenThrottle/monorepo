@@ -25,13 +25,7 @@
  * the authority and rejects anything it does not accept — this union only shapes detection.
  */
 export type PlanRunExecutionBackend =
-  | 'antigravity'
-  | 'claude'
-  | 'codex'
-  | 'cursor'
-  | 'gemini'
-  | 'grok'
-  | 'opencode';
+  'antigravity' | 'claude' | 'codex' | 'cursor' | 'grok' | 'opencode';
 
 /**
  * Environment signatures, most-specific first. Each entry is a variable the harness sets
@@ -52,7 +46,6 @@ const BACKEND_ENV_MARKERS: readonly {
   { backend: 'cursor', variables: ['CURSOR_AGENT', 'CURSOR_TRACE_ID'] },
   { backend: 'codex', variables: ['CODEX_SANDBOX', 'CODEX_THREAD_ID'] },
   { backend: 'antigravity', variables: ['ANTIGRAVITY_AGENT'] },
-  { backend: 'gemini', variables: ['GEMINI_CLI'] },
   { backend: 'opencode', variables: ['OPENCODE_SESSION_ID'] },
 ];
 

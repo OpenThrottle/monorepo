@@ -1,6 +1,5 @@
 /**
- * Builds the `agy` argument array for one streamed chat turn. Unlike the gemini adapter — which
- * pipes the prompt through stdin because gemini's headless entry reads stdin to EOF — agy takes the
+ * Builds the `agy` argument array for one streamed chat turn. agy takes the
  * prompt as the VALUE of `-p`, so it travels in argv. Because this is a spawn arg array (never a
  * shell string) a prompt starting with `-` is still safe: it is a flag VALUE, not a positional.
  *
@@ -55,7 +54,7 @@ export interface AntigravityArgvOptions {
   readonly permissionMode?: ConversationPermissionMode;
   /** The turn's prompt; travels as the value of `-p`. */
   readonly prompt: string;
-  /** Conversation id to resume via `--conversation` (agy resumes by id, unlike gemini). */
+  /** Conversation id to resume via `--conversation` (agy resumes by id). */
   readonly resumeConversationId?: string;
 }
 

@@ -6,7 +6,7 @@ Single entry point for **where agent- and editor-specific config lives** in the 
 - **Personas / prompts** live under `.agents/` as their source of truth.
 - **Code style** is no longer a per-editor rules tree: it is normative in [`AGENTS.md`](../../AGENTS.md) § Code style, with rationale in [code-style.md](./code-style.md).
 
-> **SSOT in one paragraph.** Skill **bodies** are authored under [`skills/`](../../skills/) and generated into `.agents/skills/`; `.claude/skills/` and `.gemini/skills/` are the per-agent fan-outs. Cursor 2.4+ reads `.agents/skills/` directly — there is no `.cursor/skills` fan-out. Edit `skills/` in git PRs and re-run `sync.sh`; never hand-edit a generated skill directory. **Code style has no generated view at all** — it is plain Markdown that every agent reads natively: normative in [`AGENTS.md`](../../AGENTS.md) § Code style (and `CLAUDE.md`), with rationale and examples in [code-style.md](./code-style.md).
+> **SSOT in one paragraph.** Skill **bodies** are authored under [`skills/`](../../skills/) and generated into `.agents/skills/`; `.claude/skills/` is the per-agent fan-out. Cursor 2.4+ reads `.agents/skills/` directly — there is no `.cursor/skills` fan-out. Edit `skills/` in git PRs and re-run `sync.sh`; never hand-edit a generated skill directory. **Code style has no generated view at all** — it is plain Markdown that every agent reads natively: normative in [`AGENTS.md`](../../AGENTS.md) § Code style (and `CLAUDE.md`), with rationale and examples in [code-style.md](./code-style.md).
 
 **Related entry points (link, don't fork):**
 
@@ -47,7 +47,7 @@ repo root
     ├── settings.json.default, extensions.json, launch.json, mcp.json
 ```
 
-> **Skills are two-stage and fully generated.** `ot-skill-sync` builds `skills/*` → `.agents/skills/` (stage 1), then `.agents/skills/*` → each agent fan-out — currently `.claude/skills/` **and `.gemini/skills/`** (stage 2). The dedicated `.cursor/skills` fan-out was **dropped**: Cursor reads `.agents/skills/` (and `.claude/skills/`) directly, so it needs no separate copy. Every supported CLI reads the `SKILL.md` standard and they differ only in which dirs they scan — Cursor, Grok Build, and Antigravity (`agy`) read `.agents/skills/` in-repo; Claude Code reads only `.claude/skills/` and the Gemini CLI only `.gemini/skills/`, which is why both are fan-out targets. The verified per-CLI matrix (including codex, which has no in-repo skills dir, and opencode's `.opencode/skill(s)`) lives in [`skills/ot-skill-sync/SKILL.md`](../../skills/ot-skill-sync/SKILL.md). **Never hand-edit** `.agents/skills/`, `.claude/skills/`, or `.gemini/skills/`.
+> **Skills are two-stage and fully generated.** `ot-skill-sync` builds `skills/*` → `.agents/skills/` (stage 1), then `.agents/skills/*` → each agent fan-out — currently `.claude/skills/` (stage 2). The dedicated `.cursor/skills` fan-out was **dropped**: Cursor reads `.agents/skills/` (and `.claude/skills/`) directly, so it needs no separate copy. Every supported CLI reads the `SKILL.md` standard and they differ only in which dirs they scan — Cursor, Grok Build, and Antigravity (`agy`) read `.agents/skills/` in-repo; Claude Code reads only `.claude/skills/`, which is why it is the fan-out target. The verified per-CLI matrix (including codex, which has no in-repo skills dir, and opencode's `.opencode/skill(s)`) lives in [`skills/ot-skill-sync/SKILL.md`](../../skills/ot-skill-sync/SKILL.md). **Never hand-edit** `.agents/skills/` or `.claude/skills/`.
 
 > **Hooks reach child repositories differently from skills — do not copy the skills pattern.** The
 > **`.claude/settings.json` must be strict JSON — no comments, no trailing commas.** Claude Code
@@ -82,14 +82,14 @@ bash skills/ot-skill-sync/scripts/sync.sh --check  # validate without writing (C
 
 ## 2. What's authored vs generated
 
-| Concern            | Author here (SSOT)                                                                                                                                 | Generated (do not edit)                                                             |
-| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| OT-owned skills    | `skills/<slug>/SKILL.md`                                                                                                                           | `.agents/skills/<slug>` (symlink), `.claude/skills/<slug>`, `.gemini/skills/<slug>` |
-| External skills    | `npx skills add <owner>/<repo> --skill <name> --agent universal` (→ `skills-lock.json` + a real dir in `.agents/skills/`)                          | `.claude/skills/<slug>`, `.gemini/skills/<slug>`                                    |
-| Personal skills    | `~/.openthrottle/skills/<slug>/SKILL.md` — **outside the repo**, per-user, never committed (`OPENTHROTTLE_PERSONAL_SKILLS_DIR` overrides the root) | `.agents/skills/<slug>` (symlink), `.claude/skills/<slug>`, `.gemini/skills/<slug>` |
-| Code style         | `AGENTS.md` § Code style + `docs/monorepo/code-style.md`                                                                                           | — (no generated view; read natively)                                                |
-| Personas / prompts | `.agents/personas/`, `.agents/prompts/`                                                                                                            | — (loaded via Ralph `--prompt-file`)                                                |
-| Skill tags         | `project_skills.tags` (GraphQL / `/skills` UI; ingest does not write tags)                                                                         | —                                                                                   |
+| Concern            | Author here (SSOT)                                                                                                                                 | Generated (do not edit)                                    |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| OT-owned skills    | `skills/<slug>/SKILL.md`                                                                                                                           | `.agents/skills/<slug>` (symlink), `.claude/skills/<slug>` |
+| External skills    | `npx skills add <owner>/<repo> --skill <name> --agent universal` (→ `skills-lock.json` + a real dir in `.agents/skills/`)                          | `.claude/skills/<slug>`                                    |
+| Personal skills    | `~/.openthrottle/skills/<slug>/SKILL.md` — **outside the repo**, per-user, never committed (`OPENTHROTTLE_PERSONAL_SKILLS_DIR` overrides the root) | `.agents/skills/<slug>` (symlink), `.claude/skills/<slug>` |
+| Code style         | `AGENTS.md` § Code style + `docs/monorepo/code-style.md`                                                                                           | — (no generated view; read natively)                       |
+| Personas / prompts | `.agents/personas/`, `.agents/prompts/`                                                                                                            | — (loaded via Ralph `--prompt-file`)                       |
+| Skill tags         | `project_skills.tags` (GraphQL / `/skills` UI; ingest does not write tags)                                                                         | —                                                          |
 
 ### Prompt filename conventions (`.agents/prompts/`)
 
@@ -148,16 +148,16 @@ Claude Code reads `CLAUDE.md` natively but only loads a sibling `AGENTS.md` when
 
 ## 4. Git tracking (summary)
 
-| Tracked                                                                                  | Ignored / local                                                                                                     |
-| ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `skills/**` (OT-owned bodies), `skills-lock.json`                                        | —                                                                                                                   |
-| `.agents/skills/<external-slug>/**` (real dirs — vendored, pinned by `skills-lock.json`) | `.agents/skills/<own-slug>` (symlinks — generated, regenerated by `sync.sh`)                                        |
-| `.agents/personas/`, `.agents/prompts/`                                                  | —                                                                                                                   |
-| —                                                                                        | Cursor's own generated Nx rules directory (gitignored), `.cursor/mcp.json`, `.cursor/cli-config.json`               |
-| `.cursor/hooks.json`, `worktrees.json`, `settings.json`, `.cursor/mcp.json`              | `.claude/skills/` + `.gemini/skills/` (generated fan-out), Claude `projects/` / `sessions/` / `settings.local.json` |
-| `.vscode/settings.json.default`                                                          | `.vscode/settings.json`, `CLAUDE.local.md`                                                                          |
+| Tracked                                                                                  | Ignored / local                                                                                       |
+| ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `skills/**` (OT-owned bodies), `skills-lock.json`                                        | —                                                                                                     |
+| `.agents/skills/<external-slug>/**` (real dirs — vendored, pinned by `skills-lock.json`) | `.agents/skills/<own-slug>` (symlinks — generated, regenerated by `sync.sh`)                          |
+| `.agents/personas/`, `.agents/prompts/`                                                  | —                                                                                                     |
+| —                                                                                        | Cursor's own generated Nx rules directory (gitignored), `.cursor/mcp.json`, `.cursor/cli-config.json` |
+| `.cursor/hooks.json`, `worktrees.json`, `settings.json`, `.cursor/mcp.json`              | `.claude/skills/` (generated fan-out), Claude `projects/` / `sessions/` / `settings.local.json`       |
+| `.vscode/settings.json.default`                                                          | `.vscode/settings.json`, `CLAUDE.local.md`                                                            |
 
-> The `.gitignore` "Managed by OpenThrottle ot-skill-sync" block ignores `.agents/skills/*` (the own-skill symlinks) and all of `.claude/skills/` and `.gemini/skills/`, while un-ignoring `.agents/skills/*/` so vendored external-install directories stay tracked. CI regenerates the ignored symlinks with `sync.sh` before running the drift gate.
+> The `.gitignore` "Managed by OpenThrottle ot-skill-sync" block ignores `.agents/skills/*` (the own-skill symlinks) and all of `.claude/skills/`, while un-ignoring `.agents/skills/*/` so vendored external-install directories stay tracked. CI regenerates the ignored symlinks with `sync.sh` before running the drift gate.
 >
 > **Personal skills** (`~/.openthrottle/skills/`) are covered by the same block — their in-repo footprint is only symlinks, and git treats a symlink as a file, so `!.agents/skills/*/` never rescues one. That is asserted rather than assumed: `--check` runs `git check-ignore` on every personal link, and a pre-commit guard refuses to stage one. CI has no personal root and, with it absent, every code path behaves exactly as it did before the tier existed.
 

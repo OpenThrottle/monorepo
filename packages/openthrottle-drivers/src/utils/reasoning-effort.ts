@@ -4,7 +4,7 @@
  * chat composer's argv builders in `@openthrottle/openthrottle-agentic-utils` both consume it, so
  * the two surfaces can never drift. Every mapper returns `undefined` for an omitted level; the
  * caller then emits no flag and the CLI keeps its own default. A CLI with no reasoning knob
- * (cursor, gemini, antigravity) has no mapper and ignores the level.
+ * (cursor, antigravity) has no mapper and ignores the level.
  */
 
 /**

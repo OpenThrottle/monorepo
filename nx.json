@@ -229,7 +229,6 @@
         "{workspaceRoot}/*.md",
         "{workspaceRoot}/.agents/**/*",
         "{workspaceRoot}/.claude/**/*",
-        "{workspaceRoot}/.gemini/**/*",
         "{workspaceRoot}/databases/**/*.md",
         "{workspaceRoot}/docs/**/*.md",
         "{workspaceRoot}/skills/**/*",

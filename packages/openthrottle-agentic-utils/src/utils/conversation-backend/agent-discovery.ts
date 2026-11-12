@@ -8,8 +8,6 @@
  */
 
 import { spawn } from 'node:child_process';
-import { stat } from 'node:fs/promises';
-import { join } from 'node:path';
 
 import type { DriverModelListing } from '@openthrottle/openthrottle-drivers';
 import {
@@ -331,7 +329,6 @@ function probe(
 
 const CLAUDE_BACKEND = 'claude';
 const CURSOR_BACKEND = 'cursor';
-const GEMINI_BACKEND = 'gemini';
 const AUTH_DETAIL_MAX_CHARS = 200;
 
 function claudeAuthState(auth: ClaudeAuthStatus | null): AgentCliAuthState {
@@ -420,54 +417,9 @@ async function probeCursorAuthState(
   return { detail, status: AGENT_CLI_AUTH_STATUSES.unknown };
 }
 
-async function fileExists(path: string): Promise<boolean> {
-  try {
-    return (await stat(path)).isFile();
-  } catch {
-    return false;
-  }
-}
-
-function hasValue(value: string | undefined): boolean {
-  return value !== undefined && value.trim() !== '';
-}
-
-/** gemini: an API key in the env, or the cached login file's existence (never its contents). */
-async function probeGeminiAuthState(
-  env: NodeJS.ProcessEnv,
-): Promise<AgentCliAuthState> {
-  if (hasValue(env.GEMINI_API_KEY)) {
-    return {
-      detail: 'GEMINI_API_KEY is set',
-      status: AGENT_CLI_AUTH_STATUSES.authenticated,
-    };
-  }
-
-  if (hasValue(env.GOOGLE_API_KEY)) {
-    return {
-      detail: 'GOOGLE_API_KEY is set',
-      status: AGENT_CLI_AUTH_STATUSES.authenticated,
-    };
-  }
-
-  const home = env.HOME;
-
-  if (
-    hasValue(home) &&
-    (await fileExists(join(home ?? '', '.gemini', 'oauth_creds.json')))
-  ) {
-    return {
-      detail: 'Google login cached',
-      status: AGENT_CLI_AUTH_STATUSES.authenticated,
-    };
-  }
-
-  return { detail: null, status: AGENT_CLI_AUTH_STATUSES.unauthenticated };
-}
-
 /**
- * Probe one CLI. The claude `auth status`, cursor `status` and gemini
- * credential checks run concurrently with the version probe; their results are
+ * Probe one CLI. The claude `auth status` and cursor `status`
+ * checks run concurrently with the version probe; their results are
  * kept only when the binary is available. Every other entry has an unknown
  * `authState` and `auth: null`. The auth probes never reject.
  */
@@ -488,17 +440,6 @@ async function probeWithAuth(
     const [availability, authState] = await Promise.all([
       availabilityPromise,
       probeCursorAuthState(descriptor, env, probeTimeoutMs),
-    ]);
-
-    return availability.available
-      ? { ...availability, authState }
-      : availability;
-  }
-
-  if (descriptor.backend === GEMINI_BACKEND) {
-    const [availability, authState] = await Promise.all([
-      availabilityPromise,
-      probeGeminiAuthState(env),
     ]);
 
     return availability.available
@@ -527,7 +468,7 @@ async function probeWithAuth(
 /**
  * Probe every allowlisted agent CLI for availability + per-driver models. For
  * claude it also reports the account, plan and active credential via
- * `claude auth status` (never reading tokens); claude, cursor and gemini report
+ * `claude auth status` (never reading tokens); claude and cursor report
  * a generic `authState`, and every entry reports its chat `capabilities`.
  *
  * @public

@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import type { ChatCompletionMessage } from '../../chat-completions/index.ts';
-import { CHAT_ACP_BACKENDS_ENV } from '../acp/index.ts';
 import {
   backendReplaysFullHistory,
   CHAT_HANDOFF_DEFAULT_TOKEN_BUDGET,
@@ -120,18 +119,6 @@ describe('resolveHandoffTokenBudget', () => {
 describe('backendReplaysFullHistory', () => {
   it('is true for openai', () => {
     expect(backendReplaysFullHistory('openai', {})).toBe(true);
-  });
-
-  it('is true for gemini on its CLI path', () => {
-    expect(backendReplaysFullHistory('gemini', {})).toBe(true);
-  });
-
-  it('is false for gemini once the ACP flag routes it', () => {
-    expect(
-      backendReplaysFullHistory('gemini', {
-        [CHAT_ACP_BACKENDS_ENV]: 'gemini',
-      }),
-    ).toBe(false);
   });
 
   it('is false for session-based backends', () => {

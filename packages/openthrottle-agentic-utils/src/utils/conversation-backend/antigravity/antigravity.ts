@@ -6,12 +6,12 @@
  * teardown). The child receives a scrubbed environment — its host Google auth (API keys / ADC /
  * OAuth under HOME) but none of the server's secrets.
  *
- * Differences from the gemini adapter, all verified against 1.1.21 (see
+ * Behavior verified against 1.1.21 (see
  * docs/openthrottle/antigravity-stream-json-schema.md):
  * - The prompt travels in ARGV as the value of `-p`, not through stdin. agy does not read stdin as
  *   its one-shot input, so stdin is closed immediately: leaving it open risks the CLI's
  *   OAuth-code prompt sitting on it when credentials are missing.
- * - Multi-turn uses REAL id-based resume (`--conversation <id>`) rather than gemini's flattened
+ * - Multi-turn uses REAL id-based resume (`--conversation <id>`) rather than a flattened
  *   transcript, so `sessionId`/`resumeSession` are honored and the mapper emits a `session` chunk
  *   from `init`. History is only flattened as a fallback on a first turn that has prior messages.
  * - `--add-dir <cwd>` is mandatory: without it agy reports no active workspace and writes into

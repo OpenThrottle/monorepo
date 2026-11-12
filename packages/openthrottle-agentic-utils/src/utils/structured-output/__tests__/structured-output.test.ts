@@ -2,11 +2,11 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import {
+  antigravityDriver,
   claudeDriver,
   codexDriver,
   cursorDriver,
   DRIVER_OUTPUT_FORMATS,
-  geminiDriver,
 } from '@openthrottle/openthrottle-drivers';
 import { describe, expect, it } from 'vitest';
 
@@ -44,7 +44,7 @@ const render = (driverId: string, name: string): readonly string[] => {
     });
 };
 
-/** Recorded (or, for codex and gemini, synthetic) runs of the same one-tool prompt. */
+/** Recorded (or, for codex, synthetic) runs of the same one-tool prompt. */
 const SUCCESSFUL_RUNS = [
   {
     driverId: 'antigravity',
@@ -58,11 +58,6 @@ const SUCCESSFUL_RUNS = [
     name: 'codex.synthetic',
   },
   { driverId: 'cursor', line: '→ edit fixture/hello.txt', name: 'cursor' },
-  {
-    driverId: 'gemini',
-    line: '→ write_file hello.txt',
-    name: 'gemini.synthetic',
-  },
 ];
 
 describe('createStructuredChunkReader', () => {
@@ -72,7 +67,6 @@ describe('createStructuredChunkReader', () => {
       'claude',
       'codex',
       'cursor',
-      'gemini',
       'grok',
       'opencode',
     ];
@@ -229,11 +223,9 @@ describe('withStructuredOutput', () => {
     });
 
     it('installs a parser that recovers the text', () => {
-      const wrapped = withStructuredOutput(geminiDriver);
+      const wrapped = withStructuredOutput(antigravityDriver);
 
-      expect(wrapped.parseOutput?.(fixture('gemini.synthetic')).text).toBe(
-        'DONE',
-      );
+      expect(wrapped.parseOutput?.(fixture('antigravity')).text).toBe('DONE');
     });
 
     it('installs a line renderer', () => {

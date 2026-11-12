@@ -48,7 +48,6 @@ const CLI_CAPABILITIES: Readonly<Record<string, ChatBackendCapabilities>> = {
   claude: { ...NO_CAPABILITIES, mcpInjection: true, resume: true },
   codex: { ...NO_CAPABILITIES, resume: true },
   cursor: { ...NO_CAPABILITIES, resume: true },
-  gemini: { ...NO_CAPABILITIES, replaysFullHistory: true },
   grok: { ...NO_CAPABILITIES, resume: true },
   openai: { ...NO_CAPABILITIES, replaysFullHistory: true },
   opencode: { ...NO_CAPABILITIES, mcpInjection: true, resume: true },
@@ -57,11 +56,10 @@ const CLI_CAPABILITIES: Readonly<Record<string, ChatBackendCapabilities>> = {
 /**
  * Static ACP overlay, per the 2026-11-07 spike (not probed): session/load
  * resumes, supervised mode surfaces approvals, session/new injects MCP.
- * cursor advertises `promptCapabilities.image`; gemini is unverified, so false.
+ * cursor advertises `promptCapabilities.image`.
  */
 const ACP_IMAGE_INPUT: Readonly<Record<string, boolean>> = {
   cursor: true,
-  gemini: false,
 };
 
 /**

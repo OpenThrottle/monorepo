@@ -6,6 +6,7 @@
 
 import { EventEmitter } from 'node:events';
 
+import type { AgentDriver } from '@openthrottle/openthrottle-drivers';
 import { getDriver } from '@openthrottle/openthrottle-drivers';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -22,6 +23,13 @@ class FakeChild extends EventEmitter {
   public readonly stdout = new EventEmitter();
   public readonly kill = vi.fn();
 }
+
+/** A driver installed through npm — no shipped driver uses that channel today. */
+const NPM_DRIVER: AgentDriver = {
+  ...getDriver('claude'),
+  install: { method: 'npm', packageName: '@example/agent-cli' },
+  update: { method: 'reinstall' },
+};
 
 const HERMETIC_ENV: NodeJS.ProcessEnv = {
   HOME: '/home/tester',
@@ -67,20 +75,18 @@ describe('buildAgentSetupCommand', () => {
     });
   });
 
-  it('builds an npm global install for an npm-method descriptor (gemini)', () => {
-    expect(
-      buildAgentSetupCommand(getDriver('gemini'), 'install', HERMETIC_ENV),
-    ).toEqual({
-      args: ['install', '--global', '@google/gemini-cli'],
-      file: 'npm',
-    });
+  it('builds an npm global install for an npm-method descriptor', () => {
+    expect(buildAgentSetupCommand(NPM_DRIVER, 'install', HERMETIC_ENV)).toEqual(
+      {
+        args: ['install', '--global', '@example/agent-cli'],
+        file: 'npm',
+      },
+    );
   });
 
-  it('re-runs the npm install for a reinstall-method update (gemini)', () => {
-    expect(
-      buildAgentSetupCommand(getDriver('gemini'), 'update', HERMETIC_ENV),
-    ).toEqual({
-      args: ['install', '--global', '@google/gemini-cli'],
+  it('re-runs the npm install for a reinstall-method update', () => {
+    expect(buildAgentSetupCommand(NPM_DRIVER, 'update', HERMETIC_ENV)).toEqual({
+      args: ['install', '--global', '@example/agent-cli'],
       file: 'npm',
     });
   });
