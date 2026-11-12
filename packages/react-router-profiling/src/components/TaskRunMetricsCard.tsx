@@ -20,7 +20,7 @@ import * as React from 'react';
 import { TASK_RUN_INTERPRETATION_HINTS } from '../data/data.copy';
 import { METRIC_ROWS } from '../data/data.metric-rows';
 import { useJobTaskRunMetrics } from '../hooks/useJobTaskRunMetrics';
-import { computeTaskRunDeltas } from '../utils/task-run-metrics-deltas';
+import { computeTaskRunDeltas } from '../utils/computeTaskRunDeltas';
 
 export interface TaskRunMetricsCardProps {
   /** API base URL for openthrottle-server. Defaults to config. */

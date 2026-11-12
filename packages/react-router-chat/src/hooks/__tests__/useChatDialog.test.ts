@@ -3,8 +3,8 @@ import type { PropsWithChildren, ReactElement } from 'react';
 import * as React from 'react';
 import { describe, expect, test, vi } from 'vitest';
 
-import type { ChatProviderProps } from '../../context/chat-context';
-import { ChatProvider } from '../../context/chat-context';
+import type { ChatProviderProps } from '../../context/ChatProvider';
+import { ChatProvider } from '../../context/ChatProvider';
 import type { ChatMessage } from '../../types';
 import { useChatDialog } from '../useChatDialog';
 

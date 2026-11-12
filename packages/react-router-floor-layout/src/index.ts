@@ -32,7 +32,7 @@ export * from './hooks/useSelectionKeyboard';
 export * from './hooks/useViewport';
 
 // Geometry, model operations, serialization (world-space math, inches)
-export * from './utils/build-demo-layout';
+export * from './utils/buildDemoLayout';
 export * from './utils/elements';
 export * from './utils/geometry';
 export * from './utils/layout-operations';

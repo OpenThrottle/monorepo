@@ -10,7 +10,7 @@ import {
 } from '~/routing/skills/config/skill-create';
 import { SKILL_CREATE_COPY } from '~/routing/skills/data/data.copy';
 import { buildSkillScaffold } from '~/routing/skills/utils/build-skill-scaffold';
-import { splitTags } from '~/routing/skills/utils/split-tags';
+import { splitTags } from '~/routing/skills/utils/splitTags';
 
 /** What the route action returns on a refusal. A success redirects instead. */
 interface SkillCreateActionData {

@@ -22,7 +22,7 @@ import {
   runConfigSaveBlockedAtom,
 } from '~/routing/plans/data/data.atom-plan';
 import type { PlanRunConfigEditorPlan } from '~/routing/plans/types';
-import { readActionError } from '~/routing/plans/utils/read-action-error';
+import { readActionError } from '~/routing/plans/utils/readActionError';
 import {
   WORKFLOW_RUN_OPTIONS_EXPANDED_VALUE,
   WORKFLOW_RUN_OPTIONS_SEARCH_PARAM,

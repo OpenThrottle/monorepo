@@ -14,7 +14,7 @@ import {
   PLAN_RUN_BULLMQ_QUEUE_NAME,
   planRunJobDetailPath,
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
-import { readActionError } from '~/routing/plans/utils/read-action-error';
+import { readActionError } from '~/routing/plans/utils/readActionError';
 import {
   getPlanIsRunning,
   getPlanIsTerminal,

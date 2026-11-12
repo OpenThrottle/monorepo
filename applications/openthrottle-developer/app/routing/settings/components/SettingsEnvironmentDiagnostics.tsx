@@ -6,7 +6,7 @@ import { Link } from 'react-router';
 
 import { URL_MATRIX_ROWS } from '../data/data.url-matrix-rows';
 import { useSettingsEnvironmentDiagnostics } from '../hooks/useSettingsEnvironmentDiagnostics';
-import type { SettingsDiagnosticsLoaderData } from '../utils/settings-diagnostics-loader-data';
+import type { SettingsDiagnosticsLoaderData } from '../utils/getSettingsDiagnosticsLoaderData';
 import {
   VITE_DEVTOOLS_DOC_HREF,
   VITE_DEVTOOLS_DOC_PROFILING_HREF,

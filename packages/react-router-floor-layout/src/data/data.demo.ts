@@ -1,3 +1,3 @@
-import { buildDemoLayout } from '../utils/build-demo-layout';
+import { buildDemoLayout } from '../utils/buildDemoLayout';
 
 export const DEMO_LAYOUT = buildDemoLayout();

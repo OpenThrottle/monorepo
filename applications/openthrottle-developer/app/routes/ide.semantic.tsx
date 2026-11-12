@@ -13,7 +13,7 @@ import {
   IndexCodeRepositoryDocument,
 } from '~/__generated__/graphql';
 import { resolveSelectedRepository } from '~/routing/ide/utils/repositories';
-import { toSemanticStatus } from '~/routing/ide/utils/semantic-status';
+import { toSemanticStatus } from '~/routing/ide/utils/toSemanticStatus';
 
 /**
  * Resource route for the semantic tier (GraphQL-backed, architecture B). The loader

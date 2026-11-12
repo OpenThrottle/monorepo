@@ -4,7 +4,7 @@ import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
 import type { Route } from '@/app/routes/+types/personas.create';
-import { buildRootMatch } from '~/testing/root-match-fixture';
+import { buildRootMatch } from '~/testing/buildRootMatch';
 
 import CreatePersona from '../personas.create';
 

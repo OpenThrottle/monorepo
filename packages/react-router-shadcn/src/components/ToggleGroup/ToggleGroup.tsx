@@ -4,8 +4,8 @@ import { ToggleGroup as ToggleGroupPrimitive } from 'radix-ui';
 import * as React from 'react';
 
 import { cn } from '../../utils/cn';
-import type { ToggleGroupContextValue } from './toggle-group-context';
-import { ToggleGroupContext } from './toggle-group-context';
+import type { ToggleGroupContextValue } from './ToggleGroupContext';
+import { ToggleGroupContext } from './ToggleGroupContext';
 
 // `ToggleGroupPrimitive.Root` props are a union (single vs multiple), which an
 // `interface` cannot `extend` — so this props contract is an exported `type`

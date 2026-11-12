@@ -19,7 +19,7 @@ import { PlanWorkflowRunTransparencyAuditTable } from '~/routing/plans/component
 import { PlanWorkflowRunUpcoming } from '~/routing/plans/components/PlanWorkflowRunUpcoming';
 import { PLAN_RUN_TRANSPARENCY_COPY } from '~/routing/plans/data/data.copy';
 import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
-import type { PlanRunMetricsEntry } from '~/routing/plans/utils/plan-workflow-run-transparency';
+import type { PlanRunMetricsEntry } from '~/routing/plans/utils/joinPlanRunJobMetrics';
 
 export interface PlanWorkflowRunTransparencyProps {
   readonly planId: string;

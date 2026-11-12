@@ -7,7 +7,7 @@ import { createRoutesStub } from 'react-router';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 
 import type { Route } from '@/app/routes/+types/_index';
-import { buildRootMatch } from '~/testing/root-match-fixture';
+import { buildRootMatch } from '~/testing/buildRootMatch';
 
 import Index from '../_index';
 

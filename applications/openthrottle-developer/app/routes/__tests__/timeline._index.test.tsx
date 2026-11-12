@@ -12,7 +12,7 @@ import {
   TIMELINE_FIXTURE_MARKERS,
   TIMELINE_FIXTURE_SPANS,
 } from '~/routing/timeline/data/data.fixtures';
-import { buildRootMatch } from '~/testing/root-match-fixture';
+import { buildRootMatch } from '~/testing/buildRootMatch';
 
 import Component, { shouldRevalidate } from '../timeline._index';
 

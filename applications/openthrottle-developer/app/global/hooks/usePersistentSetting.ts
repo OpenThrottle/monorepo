@@ -6,8 +6,8 @@ import {
   writePersistentSetting,
 } from '~/global/config/persistent-setting-storage';
 import type { PersistentSettingSetter } from '~/global/types';
-import { acceptAny } from '~/global/utils/accept-any';
-import { isUpdaterFn } from '~/global/utils/is-updater-fn';
+import { acceptAny } from '~/global/utils/acceptAny';
+import { isUpdaterFn } from '~/global/utils/isUpdaterFn';
 
 export type UsePersistentSettingResult<T> = readonly [
   T,

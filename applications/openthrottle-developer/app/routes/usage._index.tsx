@@ -26,7 +26,7 @@ import { UsageOverview } from '~/routing/usage/components/UsageOverview';
 import { UsageSkillUsage } from '~/routing/usage/components/UsageSkillUsage';
 import { UsageSnapshot } from '~/routing/usage/components/UsageSnapshot';
 import { UsageTokenUsage } from '~/routing/usage/components/UsageTokenUsage';
-import { parseSkillScope } from '~/routing/usage/utils/parse-skill-scope';
+import { parseSkillScope } from '~/routing/usage/utils/parseSkillScope';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -41,7 +41,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   // `skillName` matches a discovered slug. Reuse it here rather than the
   // `projectSkills` query so links never depend on DB ingest/auth state.
   const { discoverRepoSkills } =
-    await import('~/routing/agents/utils/discover-repo-skills.server');
+    await import('~/routing/agents/utils/discoverRepoSkills.server');
   const { getMonorepoRoot } =
     await import('~/routing/agents/utils/resolve-monorepo-root.server');
 

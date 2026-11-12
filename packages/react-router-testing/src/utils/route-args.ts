@@ -1,6 +1,6 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
 
-import { createTestRouterContext } from './router-context';
+import { createTestRouterContext } from './createTestRouterContext';
 
 const DEFAULT_URL = 'http://localhost/';
 

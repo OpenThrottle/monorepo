@@ -6,7 +6,7 @@ import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 
 import { PLAN_SCHEDULE_CONFIRM_COPY } from '~/routing/plans/data/data.copy';
-import { formatPlanScheduledFor } from '~/routing/plans/utils/format-plan-scheduled-for';
+import { formatPlanScheduledFor } from '~/routing/plans/utils/formatPlanScheduledFor';
 
 import type { PlanUnscheduleActionProps } from '../PlanUnscheduleAction';
 import { PlanUnscheduleAction } from '../PlanUnscheduleAction';

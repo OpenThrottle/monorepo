@@ -1,7 +1,7 @@
 import * as React from 'react';
 
 import type { AppendChatMessageInput, ChatMessage } from '../types';
-import { createUniqueId } from '../utils/create-unique-id';
+import { createUniqueId } from '../utils/createUniqueId';
 
 export interface UseChatMessagesOptions {
   readonly initialMessages?: readonly ChatMessage[];

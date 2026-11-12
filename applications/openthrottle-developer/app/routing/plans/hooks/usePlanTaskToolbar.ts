@@ -8,7 +8,7 @@ import { useFetcher } from 'react-router';
 
 import { useActionToast } from '~/global/hooks/useActionToast';
 import type { action } from '~/routes/plans.$planId.tasks.$taskId._index';
-import { readActionError } from '~/routing/plans/utils/read-action-error';
+import { readActionError } from '~/routing/plans/utils/readActionError';
 
 export interface UsePlanTaskToolbarOptions {
   /**

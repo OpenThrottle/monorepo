@@ -2,7 +2,7 @@ export {
   buildPaginationPageItems,
   type BuildPaginationPageItemsOptions,
   type PaginationPageItem,
-} from './pagination-page-items';
+} from './buildPaginationPageItems';
 
 export interface ProjectsSearchParamsExtras {
   /** Plan list assignee filter. When set, multiple assignee params are appended. */

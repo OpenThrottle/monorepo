@@ -10,7 +10,7 @@ import * as React from 'react';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import type { Route } from '@/app/routes/+types/_index';
-import { buildRootMatch } from '~/testing/root-match-fixture';
+import { buildRootMatch } from '~/testing/buildRootMatch';
 import { renderRouteHarness } from '~/testing/route-fixtures';
 
 import Index, { shouldRevalidate } from '../_index';

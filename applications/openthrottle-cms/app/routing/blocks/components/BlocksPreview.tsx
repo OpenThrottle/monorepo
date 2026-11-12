@@ -15,7 +15,7 @@ import * as React from 'react';
 
 import { BLOCK_SAMPLES } from '../data/data.blocks';
 import { BLOCKS_COPY } from '../data/data.copy';
-import { debugClassName } from '../utils/debug-class-name';
+import { debugClassName } from '../utils/debugClassName';
 
 export interface BlocksPreviewProps {
   readonly className: string | undefined;

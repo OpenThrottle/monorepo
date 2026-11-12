@@ -28,7 +28,7 @@ import type { Route } from '@/app/routes/+types/users._index';
 import { CreateUserDocument, GetUsersDocument } from '~/__generated__/graphql';
 import { CreateUserInputSchema } from '~/__generated__/schemas';
 import { SITE_TITLE } from '~/global/config/settings';
-import { readActionError } from '~/global/utils/read-action-error';
+import { readActionError } from '~/global/utils/readActionError';
 import { UsersTable } from '~/routing/users/components/UsersTable';
 
 type HandleData = Route.ComponentProps['loaderData'];

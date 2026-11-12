@@ -33,10 +33,10 @@ export * from './hooks/useSessionPermissionDecay';
 export * from './types';
 
 // 🛠️ Utilities
+export * from './utils/buildChatTurnFields';
 export * from './utils/chat-discovery-options';
 export * from './utils/chat-model-option';
-export * from './utils/chat-toolbar-decay';
-export * from './utils/chat-toolbar-reconcile';
-export * from './utils/chat-turn-fields';
-export * from './utils/normalize-chat-toolbar-state';
-export * from './utils/resolve-provider-icon';
+export * from './utils/decayElevatedPermissionModes';
+export * from './utils/normalizeChatToolbarState';
+export * from './utils/reconcileChatToolbarState';
+export * from './utils/resolveProviderIcon';

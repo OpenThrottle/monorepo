@@ -2,7 +2,7 @@ import { cn, DataTable } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import type { ScheduledJobCardFragment } from '~/__generated__/graphql';
-import { buildScheduleTableColumns } from '~/routing/schedule/utils/schedule-table-columns';
+import { buildScheduleTableColumns } from '~/routing/schedule/utils/buildScheduleTableColumns';
 
 export interface ScheduleTableProps {
   className?: string;

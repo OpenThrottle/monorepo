@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import * as React from 'react';
 
-import { getCheckoutEditorLink } from '~/routing/plans/utils/checkout-editor-link';
+import { getCheckoutEditorLink } from '~/routing/plans/utils/getCheckoutEditorLink';
 
 export interface PlanRunProvenanceCheckout {
   readonly displayName: string;

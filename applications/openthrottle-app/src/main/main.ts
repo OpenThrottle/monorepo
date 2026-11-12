@@ -23,6 +23,7 @@ import type {
   SaveServerResult,
   ShellSettings,
 } from '../bridge/types/shell-bridge.ts';
+import { buildWindowOptions } from './buildWindowOptions.ts';
 import {
   DEFAULT_OT_SERVER_URL,
   SERVER_START_TIMEOUT_MS,
@@ -33,35 +34,34 @@ import {
   WINDOW_STATE_FILE_NAME,
   WINDOW_STATE_SAVE_DELAY_MS,
 } from './data/data.window-state.ts';
-import { createDeepLinkRouter } from './desktop/create-deep-link-router.ts';
-import { createNativeNotifier } from './desktop/create-native-notifier.ts';
-import { decideProtocolRegistration } from './desktop/decide-protocol-registration.ts';
-import { registerDesktopIpc } from './desktop/register-desktop-ipc.ts';
-import { createGuardedSessionProvider } from './security/create-guarded-session-provider.ts';
+import { createDeepLinkRouter } from './desktop/createDeepLinkRouter.ts';
+import { createNativeNotifier } from './desktop/createNativeNotifier.ts';
+import { decideProtocolRegistration } from './desktop/decideProtocolRegistration.ts';
+import { registerDesktopIpc } from './desktop/registerDesktopIpc.ts';
+import { createGuardedSessionProvider } from './security/createGuardedSessionProvider.ts';
 import {
   installSessionGuards,
   installWebContentsGuards,
 } from './security/install-security-guards.ts';
-import type { ServerSupervisor } from './server/create-server-supervisor.ts';
-import { createServerSupervisor } from './server/create-server-supervisor.ts';
-import { forkServerChild } from './server/fork-server-child.ts';
-import { probeOrigin } from './server/probe-origin.ts';
-import type { ProbeOtServerResult } from './server/probe-ot-server.ts';
-import { probeOtServer } from './server/probe-ot-server.ts';
-import { createSettingsStore } from './settings/create-settings-store.ts';
-import { registerShellIpc } from './shell/register-shell-ipc.ts';
-import { buildAppMenu } from './utils/build-app-menu.ts';
-import { buildErrorPageUrl } from './utils/build-error-page.ts';
-import { buildPartitionName } from './utils/build-partition-name.ts';
+import type { ServerSupervisor } from './server/createServerSupervisor.ts';
+import { createServerSupervisor } from './server/createServerSupervisor.ts';
+import { forkServerChild } from './server/forkServerChild.ts';
+import { probeOrigin } from './server/probeOrigin.ts';
+import type { ProbeOtServerResult } from './server/probeOtServer.ts';
+import { probeOtServer } from './server/probeOtServer.ts';
+import { createSettingsStore } from './settings/createSettingsStore.ts';
+import { registerShellIpc } from './shell/registerShellIpc.ts';
 import { buildServerEnv } from './utils/build-server-env.ts';
-import { decideStart } from './utils/decide-start.ts';
-import { normalizeServerUrl } from './utils/normalize-server-url.ts';
-import { resolveAppMode } from './utils/resolve-app-mode.ts';
-import { resolveDeveloperBuildDir } from './utils/resolve-developer-build-dir.ts';
-import { buildWindowOptions } from './window-options.ts';
-import type { WindowState } from './window-state/create-window-state-store.ts';
-import { createWindowStateStore } from './window-state/create-window-state-store.ts';
-import { isBoundsVisible } from './window-state/is-bounds-visible.ts';
+import { buildAppMenu } from './utils/buildAppMenu.ts';
+import { buildErrorPageUrl } from './utils/buildErrorPageUrl.ts';
+import { buildPartitionName } from './utils/buildPartitionName.ts';
+import { decideStart } from './utils/decideStart.ts';
+import { normalizeServerUrl } from './utils/normalizeServerUrl.ts';
+import { resolveAppMode } from './utils/resolveAppMode.ts';
+import { resolveDeveloperBuildDir } from './utils/resolveDeveloperBuildDir.ts';
+import type { WindowState } from './window-state/createWindowStateStore.ts';
+import { createWindowStateStore } from './window-state/createWindowStateStore.ts';
+import { isBoundsVisible } from './window-state/isBoundsVisible.ts';
 
 // electron-vite emits the main bundle and the server entry to out/main and the
 // preload bundle to out/preload; the preload is CommonJS because a sandboxed

@@ -6,7 +6,7 @@ import * as React from 'react';
 
 import { getMetricsApiBaseUrl } from '../config/metrics-api';
 import type { JobWithTaskRunMetrics } from '../types';
-import { fetchJobTaskRunMetrics } from '../utils/fetch-job-task-run-metrics';
+import { fetchJobTaskRunMetrics } from '../utils/fetchJobTaskRunMetrics';
 
 export interface UseJobTaskRunMetricsResult {
   readonly error: Error | null;

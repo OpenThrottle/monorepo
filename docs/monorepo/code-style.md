@@ -620,7 +620,22 @@ clause, which no linter can see.
   component (`Button.tsx`), **camelCase** for a function (`getFormFieldKind.ts`) — the rule hooks
   already follow (`useFoo.ts`). **kebab-case** for everything else: a module with several exports
   (`schema-refs.ts`), scripts, config. NestJS `<folder>.<kind>.ts` and `data.<name>.ts` keep their
-  own forms. _Honor system._
+  own forms. The boundary, as
+  [`scripts/codemod-file-name-casing.ts`](../../scripts/codemod-file-name-casing.ts) applies it:
+  - **Single export means one _value_ export.** Type-only exports beside it don't count, so a
+    function plus its `GetFooOptions` / `GetFooResult` types is single-export, exactly like a
+    component plus its props or a hook plus `UseFooOptions`.
+  - **The file mirrors the identifier exactly**, acronyms included: `getURLParts.ts` for
+    `getURLParts`, `getUrlParts.ts` for `getUrlParts`. A kebab stem that named something else
+    (`form-field-kind.ts` exporting `getFormFieldKind`) takes the export's name, not a recased
+    stem.
+  - **`.server` / `.client` suffixes stay** after the name: `getUser.server.ts`.
+  - **Companions follow the stem**: `getFoo.test.ts`, `getFoo.stories.tsx`,
+    `getFoo.tsx.graphql`.
+  - **Still kebab-case:** an ALL_CAPS constant export (`cms-status.ts` exporting `CMS_STATUS` —
+    data, not a function or a component), React Router route modules under `app/routes/` (their
+    names are URLs), entry scripts directly in a `scripts/` folder, and any module with
+    `export *` or a default export.
 - **camelCase** variables and functions (`myVariable`, `myFunction()`).
 - **PascalCase** classes, types, and interfaces (`MyClass`, `MyInterface`).
 - **ALL_CAPS** constants and enum values (`MAX_COUNT`, `Color.RED`).
@@ -640,9 +655,12 @@ One selector per clause:
 | camelCase functions (PascalCase for components)                   | `function`                       |
 | camelCase variables (PascalCase components, UPPER_CASE constants) | `variable`                       |
 
-**The file-name clause is not enforced** — `naming-convention` operates on identifiers and
-cannot see file names, so it stays honor system; `@tools/generators` scaffolding them correctly is
-the practical safeguard.
+**The file-name clause is enforced by an audit, not ESLint** — `naming-convention` operates on
+identifiers and cannot see file names. `pnpm run audit:file-name-casing:strict` (run in CI via
+`audit:strict`) fails on a single-export file in a React Router app, a `react-router-*` package
+or `openthrottle-app` that is not named for its export. It reuses the codemod's definition, so
+the fix is always `tsx ./scripts/codemod-file-name-casing.ts --project=<dir> --write`. There is
+no allowlist.
 
 **Why a single-export file is named after its export.** The `react` generator's `util` uses one
 `name` for the identifier and the file, so it emits `getFormFieldKind.ts` exporting

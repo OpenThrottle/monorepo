@@ -6,7 +6,7 @@ import { act, renderHook } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 
 import type { WebsocketDebuggerLogEntry } from '../../components/websocket-debugger/types';
-import { filterWebsocketDebuggerEntries } from '../../utils/filter-websocket-debugger-entries';
+import { filterWebsocketDebuggerEntries } from '../../utils/filterWebsocketDebuggerEntries';
 import { useWebsocketDebuggerLog } from '../useWebsocketDebuggerLog';
 
 const systemAlertPayload = {

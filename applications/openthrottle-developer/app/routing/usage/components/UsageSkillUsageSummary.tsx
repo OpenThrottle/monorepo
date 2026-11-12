@@ -12,7 +12,7 @@ import {
   SKILL_USAGE_COPY,
   SKILL_USAGE_SCOPES,
 } from '~/routing/usage/data/data.skill-usage-copy';
-import { skillUsageScopeCount } from '~/routing/usage/utils/skill-usage-scope-count';
+import { skillUsageScopeCount } from '~/routing/usage/utils/skillUsageScopeCount';
 
 export interface UsageSkillUsageSummaryProps {
   byScope: readonly UsageSkillUsageByScopeFragment[];

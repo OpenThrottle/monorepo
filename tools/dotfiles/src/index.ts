@@ -508,8 +508,10 @@ export const eslintConfig = tslint.config([
       ],
       // `naming-conventions.mdc`, translated selector by selector. Only the
       // clauses the rule can actually express are here — the doc's file-name
-      // clause (kebab-case, PascalCase for components) is not something
-      // `naming-convention` can see, so it stays honor-system.
+      // clause (a single-export file takes its export's casing: `Button.tsx`,
+      // `getFoo.ts`, `useFoo.ts`; kebab-case otherwise) is not something
+      // `naming-convention` can see, so `scripts/audit-file-name-casing.ts`
+      // gates it instead.
       //
       // Measured 2026-09-05, after excluding build output: 31 violations, all
       // fixed in the same change, so this is `error` rather than the `warn` the

@@ -1,7 +1,7 @@
 import { Badge, Button } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { formatPlanTagProvenance } from '~/routing/plans/utils/plan-tag-chips';
+import { formatPlanTagProvenance } from '~/routing/plans/utils/formatPlanTagProvenance';
 
 export interface PlanTagChipData {
   confidence?: number | null;

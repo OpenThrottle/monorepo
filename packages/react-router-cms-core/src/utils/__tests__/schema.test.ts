@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest';
 
 import { MOCK_SCHEMAS } from '../../data/mock.schemas';
 import type { CmsJsonSchema } from '../../types/cms-json-schema';
-import { getSchemaDefaults } from '../schema-defaults';
+import { getSchemaDefaults } from '../getSchemaDefaults';
 import { getSchemaProperty, getSchemaRef } from '../schema-property';
 import {
   schemaFindRefs,

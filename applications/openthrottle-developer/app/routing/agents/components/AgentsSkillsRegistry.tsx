@@ -11,7 +11,7 @@ import * as React from 'react';
 
 import { AgentsSkillsRegistryGrid } from '~/routing/agents/components/AgentsSkillsRegistryGrid';
 import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
-import { filterEntries } from '~/routing/agents/utils/filter-repo-skill-entries';
+import { filterEntries } from '~/routing/agents/utils/filterEntries';
 import { getRepoSkillsRegistryCounts } from '~/routing/agents/utils/repo-skills-registry';
 
 export interface AgentsSkillsRegistryProps {

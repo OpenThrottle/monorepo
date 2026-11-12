@@ -21,7 +21,7 @@
 
 import * as React from 'react';
 
-import { subscribeToNotificationsPreferenceStorageEvents } from '../utils/notifications-preference-storage-sync';
+import { subscribeToNotificationsPreferenceStorageEvents } from '../utils/subscribeToNotificationsPreferenceStorageEvents';
 import {
   getSystemNotificationsPreference,
   setSystemNotificationsPreference,

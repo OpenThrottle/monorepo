@@ -26,7 +26,7 @@ import { PlanTagChips } from '~/routing/plans/components/PlanTagChips';
 import { ProjectTasksTable } from '~/routing/projects/components/ProjectTasksTable';
 import { type ProjectTabValue } from '~/routing/projects/data/data.tabs';
 import { formatProjectDate } from '~/routing/projects/utils/format';
-import { isProjectTabValue } from '~/routing/projects/utils/is-project-tab-value';
+import { isProjectTabValue } from '~/routing/projects/utils/isProjectTabValue';
 
 type ProjectDetailLoaderData = Route.ComponentProps['loaderData'];
 

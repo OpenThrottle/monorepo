@@ -10,7 +10,7 @@ import {
   readChatOptionsCache,
   writeChatOptionsCache,
 } from '~/routing/home/utils/chat-options-cache';
-import { getGraphqlWsClient } from '~/services/graphql-ws-client';
+import { getGraphqlWsClient } from '~/services/getGraphqlWsClient';
 
 export interface UseHeaderChatControllerOptions {
   readonly enabled: boolean;

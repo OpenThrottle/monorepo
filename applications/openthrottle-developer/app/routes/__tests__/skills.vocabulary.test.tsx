@@ -9,7 +9,7 @@ import {
   SKILL_AVAILABILITY_COPY,
   SKILL_VOCABULARY_COPY,
 } from '~/routing/skills/data/data.copy';
-import { buildRootMatch } from '~/testing/root-match-fixture';
+import { buildRootMatch } from '~/testing/buildRootMatch';
 
 import Component from '../skills.vocabulary';
 

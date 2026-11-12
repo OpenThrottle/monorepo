@@ -3,7 +3,7 @@ import * as React from 'react';
 import { useDrag, useDrop } from 'react-dnd';
 
 import { CMS_REORDER_DRAG_TYPE } from '../data/data.reorder';
-import { shouldReorderOnHover } from '../utils/should-reorder-on-hover';
+import { shouldReorderOnHover } from '../utils/shouldReorderOnHover';
 
 /**
  * @public

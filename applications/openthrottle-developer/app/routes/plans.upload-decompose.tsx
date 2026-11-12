@@ -23,7 +23,7 @@ import type {
   DocumentDecomposeActionData,
   ProposedPlanDecomposition,
 } from '~/routing/plans/types/document-decompose';
-import { buildStubProposal } from '~/routing/plans/utils/document-decompose';
+import { buildStubProposal } from '~/routing/plans/utils/buildStubProposal';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

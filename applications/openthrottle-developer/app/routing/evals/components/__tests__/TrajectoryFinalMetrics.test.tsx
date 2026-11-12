@@ -3,7 +3,7 @@ import { describe, expect, test } from 'vitest';
 
 import { TRAJECTORY_SUMMARY_COPY } from '~/routing/evals/data/data.copy';
 import { MOCK_TRAJECTORY } from '~/routing/evals/data/mock.trajectory';
-import { renderEvals } from '~/routing/evals/testing/render-evals';
+import { renderEvals } from '~/routing/evals/testing/renderEvals';
 
 import { TrajectoryFinalMetrics } from '../TrajectoryFinalMetrics';
 

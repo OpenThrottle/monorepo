@@ -9,8 +9,8 @@ import type {
   CarouselContextProps,
   CarouselOptions,
   CarouselOrientation,
-} from './carousel-context';
-import { CarouselContext } from './carousel-context';
+} from './CarouselContext';
+import { CarouselContext } from './CarouselContext';
 
 export interface CarouselProps extends React.ComponentProps<'div'> {
   readonly opts?: CarouselOptions;

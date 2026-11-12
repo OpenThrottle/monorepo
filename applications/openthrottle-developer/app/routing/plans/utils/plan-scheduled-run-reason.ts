@@ -2,7 +2,7 @@ import {
   PLAN_STATUS_BADGE_COPY,
   PLAN_TOOLBAR_COPY,
 } from '~/routing/plans/data/data.copy';
-import { formatPlanScheduledFor } from '~/routing/plans/utils/format-plan-scheduled-for';
+import { formatPlanScheduledFor } from '~/routing/plans/utils/formatPlanScheduledFor';
 
 /**
  * @description The Run tooltip's explanation for a plan that already has a run waiting on its

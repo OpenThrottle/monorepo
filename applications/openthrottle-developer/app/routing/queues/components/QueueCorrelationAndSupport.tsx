@@ -9,8 +9,8 @@ import { Link } from 'react-router';
 
 import type { JobDetailsCardFragment } from '~/__generated__/graphql';
 import { formatWorkflowRalphExecutionBackendLabel } from '~/routing/plans/utils/build-workflow-ralph-argv';
-import { parseQueueJobDataString } from '~/routing/queues/utils/parse-queue-job-data';
-import { queueJobDetailPath } from '~/routing/queues/utils/queue-job-detail-path';
+import { parseQueueJobDataString } from '~/routing/queues/utils/parseQueueJobDataString';
+import { queueJobDetailPath } from '~/routing/queues/utils/queueJobDetailPath';
 
 export interface QueueCorrelationAndSupportProps {
   job: JobDetailsCardFragment;

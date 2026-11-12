@@ -9,7 +9,7 @@
 
 import { useEffect } from 'react';
 
-import { isEditableTarget } from '../utils/editable-target';
+import { isEditableTarget } from '../utils/isEditableTarget';
 
 /**
  * Configuration for {@link useSelectionKeyboard}.

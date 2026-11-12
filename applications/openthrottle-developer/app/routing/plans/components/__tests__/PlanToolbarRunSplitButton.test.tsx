@@ -12,7 +12,7 @@ import {
   PLAN_SCHEDULE_CONFIRM_COPY,
   PLAN_TOOLBAR_COPY,
 } from '~/routing/plans/data/data.copy';
-import { formatPlanScheduledFor } from '~/routing/plans/utils/format-plan-scheduled-for';
+import { formatPlanScheduledFor } from '~/routing/plans/utils/formatPlanScheduledFor';
 
 import type { PlanToolbarRunSplitButtonProps } from '../PlanToolbarRunSplitButton';
 import { PlanToolbarRunSplitButton } from '../PlanToolbarRunSplitButton';

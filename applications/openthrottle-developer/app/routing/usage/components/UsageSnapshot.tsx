@@ -10,7 +10,7 @@ import {
 import * as React from 'react';
 
 import type { DashboardDailyStatsCardFragment } from '~/__generated__/graphql';
-import { buildUsageSupportSnapshotJson } from '~/routing/usage/utils/build-usage-support-snapshot';
+import { buildUsageSupportSnapshotJson } from '~/routing/usage/utils/buildUsageSupportSnapshotJson';
 
 export interface UsageSnapshotProps {
   dailyStats: ReadonlyArray<DashboardDailyStatsCardFragment>;

@@ -9,7 +9,7 @@ import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import * as React from 'react';
 
 import type { GeneratorDetailCardFragment } from '~/__generated__/graphql';
-import { buildGeneratorNxPresets } from '~/routing/generators/utils/build-generator-nx-presets';
+import { buildGeneratorNxPresets } from '~/routing/generators/utils/buildGeneratorNxPresets';
 
 export interface GeneratorTabPresetsProps {
   generator: GeneratorDetailCardFragment;

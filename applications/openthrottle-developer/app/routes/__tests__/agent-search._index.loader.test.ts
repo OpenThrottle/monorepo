@@ -10,7 +10,7 @@ vi.mock('@openthrottle/react-router-graphql', () => ({
   executeGraphqlWithAuth: vi.fn(),
 }));
 
-vi.mock('~/routing/agent-search/utils/disk-fallback.server', () => ({
+vi.mock('~/routing/agent-search/utils/diskFallbackSearch.server', () => ({
   diskFallbackSearch: vi.fn(),
 }));
 
@@ -21,7 +21,7 @@ vi.mock('~/routing/agents/utils/resolve-monorepo-root.server', () => ({
 const { executeGraphqlWithAuth } =
   await import('@openthrottle/react-router-graphql');
 const { diskFallbackSearch } =
-  await import('~/routing/agent-search/utils/disk-fallback.server');
+  await import('~/routing/agent-search/utils/diskFallbackSearch.server');
 const { getMonorepoRoot } =
   await import('~/routing/agents/utils/resolve-monorepo-root.server');
 const { loader } = await import('../agent-search._index');

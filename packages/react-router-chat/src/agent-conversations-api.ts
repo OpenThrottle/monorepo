@@ -1,7 +1,7 @@
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 
-import { mapPersistedAgentConversationMessages } from './map-persisted-messages';
+import { mapPersistedAgentConversationMessages } from './mapPersistedAgentConversationMessages';
 import type {
   AgentConversationListItem,
   ListAgentConversationsResult,

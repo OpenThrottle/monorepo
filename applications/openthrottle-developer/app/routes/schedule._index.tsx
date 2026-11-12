@@ -26,8 +26,8 @@ import {
   SCHEDULE_ONBOARDING,
 } from '~/routing/schedule/data/data.copy';
 import { useScheduleAutoRefresh } from '~/routing/schedule/hooks/useScheduleAutoRefresh';
-import { buildInFlightByJob } from '~/routing/schedule/utils/build-in-flight-by-job';
-import { filterJobsBySearch } from '~/routing/schedule/utils/filter-jobs-by-search';
+import { buildInFlightByJob } from '~/routing/schedule/utils/buildInFlightByJob';
+import { filterJobsBySearch } from '~/routing/schedule/utils/filterJobsBySearch';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

@@ -15,7 +15,7 @@ import { parseDate } from '~/global/utils/dates';
 import type { action as planDetailAction } from '~/routes/plans.$planId._index';
 import { PlanRunDialogSchedule } from '~/routing/plans/components/PlanRunDialogSchedule';
 import { PLAN_RUN_RESCHEDULE_COPY } from '~/routing/plans/data/data.copy';
-import { getPlanRunDialogScheduleFeedback } from '~/routing/plans/utils/plan-run-dialog-schedule-feedback';
+import { getPlanRunDialogScheduleFeedback } from '~/routing/plans/utils/getPlanRunDialogScheduleFeedback';
 import {
   composeScheduleInstant,
   formatScheduledInstant,

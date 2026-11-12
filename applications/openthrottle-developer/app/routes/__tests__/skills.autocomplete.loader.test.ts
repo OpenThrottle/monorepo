@@ -9,7 +9,7 @@ vi.mock('@openthrottle/react-router-graphql', () => ({
   executeGraphqlWithAuth: vi.fn(),
 }));
 
-vi.mock('~/routing/agents/utils/discover-repo-skills.server', () => ({
+vi.mock('~/routing/agents/utils/discoverRepoSkills.server', () => ({
   discoverRepoSkills: vi.fn(),
 }));
 
@@ -20,7 +20,7 @@ vi.mock('~/routing/agents/utils/resolve-monorepo-root.server', () => ({
 const { executeGraphqlWithAuth } =
   await import('@openthrottle/react-router-graphql');
 const { discoverRepoSkills } =
-  await import('~/routing/agents/utils/discover-repo-skills.server');
+  await import('~/routing/agents/utils/discoverRepoSkills.server');
 const { getMonorepoRoot } =
   await import('~/routing/agents/utils/resolve-monorepo-root.server');
 const { loader } = await import('../skills.autocomplete');

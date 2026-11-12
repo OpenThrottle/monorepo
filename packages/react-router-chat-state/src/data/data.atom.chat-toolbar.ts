@@ -1,6 +1,6 @@
 import { atomWithStorage } from 'jotai/utils';
 
-import { createChatToolbarStorage } from '../utils/create-chat-toolbar-storage';
+import { createChatToolbarStorage } from '../utils/createChatToolbarStorage';
 import {
   CHAT_TOOLBAR_STORAGE_KEY,
   DEFAULT_CHAT_TOOLBAR_STATE,

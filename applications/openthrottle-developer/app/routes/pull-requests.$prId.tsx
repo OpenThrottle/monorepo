@@ -9,7 +9,7 @@ import type { MiddlewareFunction } from 'react-router';
 
 import type { Route } from '@/app/routes/+types/pull-requests.$prId';
 import { GetPullRequestDetailDocument } from '~/__generated__/graphql';
-import { getDefaultGithubRepo } from '~/global/config/github-default-repo';
+import { getDefaultGithubRepo } from '~/global/config/getDefaultGithubRepo';
 import { SITE_TITLE } from '~/global/config/settings';
 import { PullRequestDetail } from '~/routing/pull-requests/components/PullRequestDetail';
 import { PullRequestNotFound } from '~/routing/pull-requests/components/PullRequestNotFound';

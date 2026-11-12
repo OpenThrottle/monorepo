@@ -1,7 +1,7 @@
 import { Badge } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { getPlanRunStatusBadgeVariant } from '~/routing/plans/utils/plan-run-status-badge';
+import { getPlanRunStatusBadgeVariant } from '~/routing/plans/utils/getPlanRunStatusBadgeVariant';
 
 export interface PlanRunStatusBadgeProps {
   /** Raw `plan_runs.status`. A status without a known label shows its raw value in a neutral badge. */

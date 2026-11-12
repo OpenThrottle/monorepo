@@ -1,8 +1,8 @@
 import type { App, Session, WebContents } from 'electron';
 
-import { decideNavigation } from './decide-navigation.ts';
-import { decideWindowOpen } from './decide-window-open.ts';
-import { isPermissionAllowed } from './is-permission-allowed.ts';
+import { decideNavigation } from './decideNavigation.ts';
+import { decideWindowOpen } from './decideWindowOpen.ts';
+import { isPermissionAllowed } from './isPermissionAllowed.ts';
 
 export interface SecurityGuardsOptions {
   readonly app: Pick<App, 'on'>;

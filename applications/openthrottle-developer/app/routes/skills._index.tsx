@@ -30,20 +30,20 @@ import { SkillsToolbar } from '~/routing/skills/components/SkillsToolbar';
 import { SKILL_USAGE_RANGE_DAYS } from '~/routing/skills/config/skill-usage';
 import { SKILLS_ONBOARDING } from '~/routing/skills/data/data.copy';
 import type { SkillsIndexUsageData } from '~/routing/skills/types';
-import { filterSkillsByQuery } from '~/routing/skills/utils/filter-skills-by-query';
 import {
   filterSkillsBySource,
   parseSkillSourceFilter,
   type SkillSourceFilter,
 } from '~/routing/skills/utils/filter-skills-by-source';
-import { mergeRepoSkillsWithProjectSkills } from '~/routing/skills/utils/merge-project-skills';
-import { mergeRepoSkillsWithSkillAvailability } from '~/routing/skills/utils/merge-skill-availability';
+import { filterSkillsByQuery } from '~/routing/skills/utils/filterSkillsByQuery';
+import { mergeRepoSkillsWithProjectSkills } from '~/routing/skills/utils/mergeRepoSkillsWithProjectSkills';
+import { mergeRepoSkillsWithSkillAvailability } from '~/routing/skills/utils/mergeRepoSkillsWithSkillAvailability';
 import {
   loadProjectSkillFlags,
   loadSkillAvailability,
   loadSkillTagVocabulary,
 } from '~/routing/skills/utils/skill-index-loaders';
-import { toSkillsIndexUsageData } from '~/routing/skills/utils/to-skills-index-usage-data';
+import { toSkillsIndexUsageData } from '~/routing/skills/utils/toSkillsIndexUsageData';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -54,7 +54,7 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
 
 export const loader = async (args: Route.LoaderArgs) => {
   const { discoverRepoSkills } =
-    await import('~/routing/agents/utils/discover-repo-skills.server');
+    await import('~/routing/agents/utils/discoverRepoSkills.server');
 
   const { getMonorepoRoot } =
     await import('~/routing/agents/utils/resolve-monorepo-root.server');

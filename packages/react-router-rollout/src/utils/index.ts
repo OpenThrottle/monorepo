@@ -7,12 +7,12 @@ export {
   defaultsFromCatalog,
   type RolloutResolvedValues,
 } from './defaults-from-catalog';
-export { defineRolloutFlags } from './define-rollout-flags';
+export { defineRolloutFlags } from './defineRolloutFlags';
 export {
   mergeRolloutEvaluations,
   type MergeRolloutEvaluationsOptions,
-} from './merge-rollout-evaluations';
-export { parseRolloutValueJson } from './parse-rollout-value-json';
+} from './mergeRolloutEvaluations';
+export { parseRolloutValueJson } from './parseRolloutValueJson';
 export {
   clearRolloutEvaluationMemoryCache,
   readRolloutEvaluationCache,
@@ -20,4 +20,4 @@ export {
   rolloutEvaluationCacheKey,
   writeRolloutEvaluationCache,
 } from './rollout-evaluation-cache';
-export { toError } from './to-error';
+export { toError } from './toError';

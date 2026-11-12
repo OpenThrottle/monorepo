@@ -13,7 +13,7 @@ import type { AgentCliStatus } from '~/routing/settings/data/data.agent-clis';
 
 import { SettingsAgentsTableRow } from '../SettingsAgentsTableRow';
 
-vi.mock('~/services/graphql-ws-client', () => ({
+vi.mock('~/services/getGraphqlWsClient', () => ({
   getGraphqlWsClient: () => null,
 }));
 

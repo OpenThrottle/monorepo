@@ -13,8 +13,8 @@ import {
   PLAN_CHECKOUT_SELECTOR_COPY,
   PLAN_DEFERRED_SECTION_COPY,
 } from '~/routing/plans/data/data.copy';
-import { getPlanCheckoutHint } from '~/routing/plans/utils/plan-checkout-hint';
-import { toPlanCheckoutOptions } from '~/routing/plans/utils/plan-checkout-options';
+import { getPlanCheckoutHint } from '~/routing/plans/utils/getPlanCheckoutHint';
+import { toPlanCheckoutOptions } from '~/routing/plans/utils/toPlanCheckoutOptions';
 
 export interface PlanCheckoutSelectorProps {
   /** Registered checkout the plan's run config points at; empty = none. */

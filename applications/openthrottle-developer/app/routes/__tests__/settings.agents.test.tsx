@@ -9,7 +9,7 @@ import Component from '../settings.agents';
 
 // The table embeds the install/update controls, which open a graphql-ws
 // subscription; stub the singleton so the route never reaches for a real socket.
-vi.mock('~/services/graphql-ws-client', () => ({
+vi.mock('~/services/getGraphqlWsClient', () => ({
   getGraphqlWsClient: () => null,
 }));
 

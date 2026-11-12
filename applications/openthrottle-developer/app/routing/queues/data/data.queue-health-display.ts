@@ -1,4 +1,4 @@
-import type { QueueHealthLevel } from '~/routing/queues/utils/queue-health';
+import type { QueueHealthLevel } from '~/routing/queues/utils/computeQueueHealth';
 
 /** Health level → indicator dot background class. */
 export const QUEUE_HEALTH_DOT_CLASS: Record<QueueHealthLevel, string> = {

@@ -12,7 +12,7 @@ import {
   EVAL_STAT_COPY,
 } from '~/routing/evals/data/data.copy';
 import { MOCK_REPORT_BASE } from '~/routing/evals/data/mock.eval-report';
-import { renderEvals } from '~/routing/evals/testing/render-evals';
+import { renderEvals } from '~/routing/evals/testing/renderEvals';
 
 describe('EvalStat', () => {
   test('shows the label, value and detail', () => {

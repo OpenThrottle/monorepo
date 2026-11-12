@@ -22,7 +22,7 @@ import {
   PlanDetailWorkspaceRepositoriesDocument,
 } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
-import { markDeferredHandled } from '~/global/utils/mark-deferred-handled';
+import { markDeferredHandled } from '~/global/utils/markDeferredHandled';
 import { loadComposerModels } from '~/routing/home/utils/models.server';
 import {
   addHook,
@@ -44,7 +44,7 @@ import {
 } from '~/routing/plans/actions/planId';
 import { PlanDetailRoute } from '~/routing/plans/components/PlanDetailRoute';
 import { PlanRunConfigStoreProvider } from '~/routing/plans/components/PlanRunConfigStoreProvider';
-import { loadEnabledEditors } from '~/routing/plans/utils/load-enabled-editors';
+import { loadEnabledEditors } from '~/routing/plans/utils/loadEnabledEditors';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

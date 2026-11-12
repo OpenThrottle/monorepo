@@ -9,7 +9,7 @@ import type {
   RepositoriesSortBy,
   RepositoriesSortOrder,
 } from '~/routing/settings/repositories/config/repositories.defaults';
-import type { CheckoutDrift } from '~/routing/settings/utils/drift-labels';
+import type { CheckoutDrift } from '~/routing/settings/utils/driftLabels';
 
 /**
  * @description A single checkout as it arrives on the repositories index query.

@@ -21,7 +21,7 @@ import type {
 } from '~/__generated__/graphql';
 import { WorkspaceEditorTargetEditors } from '~/routing/settings/components/WorkspaceEditorTargetEditors';
 import { WORKSPACE_SETTINGS_COPY } from '~/routing/settings/data/data.copy';
-import type { WorkspaceEditorTargetGroup } from '~/routing/settings/utils/workspace-editor-targets';
+import type { WorkspaceEditorTargetGroup } from '~/routing/settings/utils/buildWorkspaceEditorTargetGroups';
 
 /** How many repositories render before the list collapses behind a show-all toggle. */
 const COLLAPSED_TARGET_COUNT = 6;

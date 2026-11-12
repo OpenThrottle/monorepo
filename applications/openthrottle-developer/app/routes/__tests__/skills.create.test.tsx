@@ -5,7 +5,7 @@ import { describe, expect, test, vi } from 'vitest';
 
 import type { Route } from '@/app/routes/+types/skills.create';
 import { SKILL_CREATE_COPY } from '~/routing/skills/data/data.copy';
-import { buildRootMatch } from '~/testing/root-match-fixture';
+import { buildRootMatch } from '~/testing/buildRootMatch';
 
 import SkillsCreate from '../skills.create';
 

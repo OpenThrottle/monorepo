@@ -41,7 +41,7 @@ for devtools/profiling/troubleshooting.
 - **A deferred loader promise started before an `await` must be marked handled.** If the awaited
   query throws (or a deferred one rejects while it is pending), nothing owns the deferred promise
   and Node exits the whole server. Call `markDeferredHandled([...])` from
-  `app/global/utils/mark-deferred-handled.ts` before the first `await`; the originals still reject
+  `app/global/utils/markDeferredHandled.ts` before the first `await`; the originals still reject
   for their `errorElement`. There is deliberately no process-level `unhandledRejection` backstop —
   the crash is what surfaced this bug (OT `a26a5be0`), and `openthrottle-server` also exits on one.
 - **Fresh worktrees fail Vitest at collection** until codegen runs — suites import from

@@ -10,13 +10,13 @@ import { PLAN_RUN_TRANSPARENCY_COPY } from '~/routing/plans/data/data.copy';
 import { PLAN_RUN_HISTORY_META_FIELDS } from '~/routing/plans/data/data.plan-run-history';
 import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
 import { planRunJobDetailPath } from '~/routing/plans/utils/build-workflow-ralph-argv';
+import type { PlanRunJobMetrics } from '~/routing/plans/utils/joinPlanRunJobMetrics';
 import {
   buildPlanRunSnapshotDiffLabels,
   readPlanRunSnapshotEffort,
   readPlanRunSnapshotWorkspacePath,
 } from '~/routing/plans/utils/plan-run-config-snapshot-ui';
 import { buildPlanRunMetaItems } from '~/routing/plans/utils/plan-run-sections';
-import type { PlanRunJobMetrics } from '~/routing/plans/utils/plan-workflow-run-transparency';
 
 export interface PlanWorkflowRunHistoryDetailProps {
   /** The run's completed-job metrics; null for runs with no job or no metrics yet. */

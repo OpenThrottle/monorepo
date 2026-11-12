@@ -22,7 +22,7 @@ import {
   RUN_TRIGGER_LABEL,
 } from '~/routing/schedule/data/data.run-status';
 import { useElapsedTicker } from '~/routing/schedule/hooks/useElapsedTicker';
-import { formatDuration } from '~/routing/schedule/utils/format-duration';
+import { formatDuration } from '~/routing/schedule/utils/formatDuration';
 
 export interface ScheduleActiveRunsProps {
   className?: string;

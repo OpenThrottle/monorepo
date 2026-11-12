@@ -34,8 +34,8 @@ import { useSubscription } from '@openthrottle/react-router-graphql';
 import * as React from 'react';
 
 import { PlanOutputChunkAddedDocument } from '~/__generated__/graphql';
-import { comparePlanOutputChunks } from '~/routing/plans/utils/compare-plan-output-chunks';
-import { getGraphqlWsClient } from '~/services/graphql-ws-client';
+import { comparePlanOutputChunks } from '~/routing/plans/utils/comparePlanOutputChunks';
+import { getGraphqlWsClient } from '~/services/getGraphqlWsClient';
 
 type Chunk = PlanDetailOutputChunksQuery['planOutputStreamChunks'][number];
 

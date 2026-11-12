@@ -17,7 +17,7 @@ import {
   DEFAULT_APPEARANCE_CONFIG,
 } from '~/global/data/data.appearance-config';
 import { configAtom } from '~/global/data/data.atom-config';
-import { buildRootMatch } from '~/testing/root-match-fixture';
+import { buildRootMatch } from '~/testing/buildRootMatch';
 
 import SettingsAppearance from '../settings.appearance';
 

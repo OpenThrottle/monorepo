@@ -14,7 +14,7 @@ import * as React from 'react';
 import { useRevalidator } from 'react-router';
 
 import { PlanLifecycleNotificationsDocument } from '~/__generated__/graphql';
-import { getGraphqlWsClient } from '~/services/graphql-ws-client';
+import { getGraphqlWsClient } from '~/services/getGraphqlWsClient';
 
 export function usePlanLifecycleRevalidation(planId: string): void {
   // Hooks

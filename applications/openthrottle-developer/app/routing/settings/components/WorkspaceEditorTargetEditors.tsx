@@ -6,11 +6,11 @@ import type {
   WorkspaceEditorId,
 } from '~/__generated__/graphql';
 import { WorkspaceEditorPresenceMarker } from '~/routing/settings/components/WorkspaceEditorPresenceMarker';
+import type { WorkspaceEditorTargetEditor } from '~/routing/settings/utils/buildWorkspaceEditorTargetGroups';
 import {
   getEditorPresenceStatus,
   readEditorPresence,
 } from '~/routing/settings/utils/workspace-editor-presence-status';
-import type { WorkspaceEditorTargetEditor } from '~/routing/settings/utils/workspace-editor-targets';
 
 export interface WorkspaceEditorTargetEditorsProps {
   className?: string;

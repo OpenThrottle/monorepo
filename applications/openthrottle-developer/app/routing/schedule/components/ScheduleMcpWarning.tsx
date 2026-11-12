@@ -2,7 +2,7 @@ import * as React from 'react';
 
 import type { DriverMcpOption } from '~/routing/schedule/data/data.driver-mcp';
 import { DRIVER_MCP_WARNING } from '~/routing/schedule/data/data.driver-mcp';
-import { resolveDriverMcpReachability } from '~/routing/schedule/utils/resolve-driver-mcp-reachability';
+import { resolveDriverMcpReachability } from '~/routing/schedule/utils/resolveDriverMcpReachability';
 
 export interface ScheduleMcpWarningProps {
   /** Available agent CLIs from discovery; undefined when discovery could not be loaded. */

@@ -17,7 +17,7 @@ import { NotesEmpty } from '~/routing/notes/components/NotesEmpty';
 import { NotesIntroduction } from '~/routing/notes/components/NotesIntroduction';
 import { NotesTable } from '~/routing/notes/components/NotesTable';
 import { NotesToolbar } from '~/routing/notes/components/NotesToolbar';
-import { filterNotesBySearch } from '~/routing/notes/utils/filter-notes-by-search';
+import { filterNotesBySearch } from '~/routing/notes/utils/filterNotesBySearch';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

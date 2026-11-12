@@ -13,7 +13,7 @@ import {
   SKILL_USAGE_COPY,
   SKILL_USAGE_SCOPES,
 } from '../../data/data.skill-usage-copy';
-import type { SkillUsageRowWithPresence } from '../../utils/partition-skill-usage-by-presence';
+import type { SkillUsageRowWithPresence } from '../../utils/partitionSkillUsageByPresence';
 import type { SkillUsageLeaderboardProps } from '../SkillUsageLeaderboard';
 import { SkillUsageLeaderboard } from '../SkillUsageLeaderboard';
 

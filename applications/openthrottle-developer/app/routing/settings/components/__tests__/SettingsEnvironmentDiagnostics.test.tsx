@@ -5,7 +5,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { SettingsDiagnosticsLoaderData } from '../../utils/settings-diagnostics-loader-data';
+import type { SettingsDiagnosticsLoaderData } from '../../utils/getSettingsDiagnosticsLoaderData';
 import { VITE_DEVTOOLS_DOC_QUICK_REF_HREF } from '../../utils/settings-docs-links';
 import { SettingsEnvironmentDiagnostics } from '../SettingsEnvironmentDiagnostics';
 

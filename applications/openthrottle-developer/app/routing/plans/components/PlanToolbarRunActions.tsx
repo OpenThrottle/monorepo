@@ -17,7 +17,7 @@ import { PlanRunDialog } from '~/routing/plans/components/PlanRunDialog';
 import { PlanToolbarActiveRunControl } from '~/routing/plans/components/PlanToolbarActiveRunControl';
 import { PlanToolbarRunSplitButton } from '~/routing/plans/components/PlanToolbarRunSplitButton';
 import { usePlanToolbarRunDialog } from '~/routing/plans/hooks/usePlanToolbarRunDialog';
-import { getEvaluateRulesTooltip } from '~/routing/plans/utils/evaluate-rules-tooltip';
+import { getEvaluateRulesTooltip } from '~/routing/plans/utils/getEvaluateRulesTooltip';
 
 export interface PlanToolbarRunActionsProps {
   readonly branch?: string;

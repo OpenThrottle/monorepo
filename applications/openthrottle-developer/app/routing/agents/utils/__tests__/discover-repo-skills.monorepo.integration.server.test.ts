@@ -8,7 +8,7 @@ import {
   type RepoSkillEntry,
   REQUIRED_AGENTS_SKILL_SLUGS,
 } from '~/routing/agents/data/data.repo-skills-registry';
-import { discoverRepoSkills } from '~/routing/agents/utils/discover-repo-skills.server';
+import { discoverRepoSkills } from '~/routing/agents/utils/discoverRepoSkills.server';
 import { getRepoSkillsRegistryCounts } from '~/routing/agents/utils/repo-skills-registry';
 import {
   findMonorepoRootFromPath,

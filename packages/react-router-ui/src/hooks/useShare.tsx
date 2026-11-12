@@ -1,7 +1,7 @@
 import * as React from 'react';
 
-import { getIsShareSupported } from '../utils/get-is-share-supported';
-import { resolveShareData } from '../utils/resolve-share-data';
+import { getIsShareSupported } from '../utils/getIsShareSupported';
+import { resolveShareData } from '../utils/resolveShareData';
 
 export interface UseShareOptions {
   /**

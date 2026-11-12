@@ -20,7 +20,7 @@ import { SITE_TITLE } from '~/global/config/settings';
 import { PromptCreateForm } from '~/routing/prompts/components/PromptCreateForm';
 import { PROMPTS_BASE_PATH } from '~/routing/prompts/config';
 import { usePromptCreateForm } from '~/routing/prompts/hooks/usePromptCreateForm';
-import { splitCommaLabels } from '~/routing/prompts/utils/split-comma-labels';
+import { splitCommaLabels } from '~/routing/prompts/utils/splitCommaLabels';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

@@ -16,9 +16,9 @@ import {
 } from 'vitest';
 
 import { PLAN_SCHEDULE_CONFIRM_COPY } from '~/routing/plans/data/data.copy';
-import { formatPlanScheduledFor } from '~/routing/plans/utils/format-plan-scheduled-for';
+import { formatPlanScheduledFor } from '~/routing/plans/utils/formatPlanScheduledFor';
 
-import { buildPlanRunConfigJson } from '../../testing/plan-run-config';
+import { buildPlanRunConfigJson } from '../../testing/buildPlanRunConfigJson';
 import type { PlanRunDialogProps } from '../PlanRunDialog';
 import { PlanRunDialog } from '../PlanRunDialog';
 

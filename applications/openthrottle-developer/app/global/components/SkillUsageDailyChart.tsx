@@ -12,7 +12,7 @@ import {
   SKILL_USAGE_CHART_SERIES,
   type SkillUsageChartDatum,
 } from '~/global/data/data.skill-usage-chart';
-import { formatSkillUsageChartDate } from '~/global/utils/format-skill-usage-chart-date';
+import { formatSkillUsageChartDate } from '~/global/utils/formatSkillUsageChartDate';
 
 export interface SkillUsageDailyChartProps {
   className?: string;

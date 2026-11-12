@@ -8,7 +8,7 @@ import { describe, expect, test } from 'vitest';
 import type { Route } from '@/app/routes/+types/skills.$slug';
 import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
 import type { SkillDetailUsageData } from '~/routing/skills/types';
-import { buildRootMatch } from '~/testing/root-match-fixture';
+import { buildRootMatch } from '~/testing/buildRootMatch';
 
 import Component from '../skills.$slug';
 

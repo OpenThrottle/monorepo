@@ -28,12 +28,12 @@ import type {
   ChatToolbarState,
 } from '../data/data.chat-toolbar-state';
 import type { HeaderChatOptionsCache } from '../types';
+import { buildChatTurnFields } from '../utils/buildChatTurnFields';
 import type { ChatOptionsResponse } from '../utils/chat-discovery-options';
 import { toCheckoutOptions } from '../utils/chat-discovery-options';
 import { buildModelGroups } from '../utils/chat-model-option';
 import { decodeChatOption } from '../utils/chat-model-option';
-import { reconcileChatToolbarState } from '../utils/chat-toolbar-reconcile';
-import { buildChatTurnFields } from '../utils/chat-turn-fields';
+import { reconcileChatToolbarState } from '../utils/reconcileChatToolbarState';
 import { useSessionPermissionDecay } from './useSessionPermissionDecay';
 
 /**

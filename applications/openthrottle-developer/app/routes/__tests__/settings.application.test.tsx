@@ -3,7 +3,7 @@ import * as React from 'react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
-import { getSettingsDiagnosticsLoaderData } from '~/routing/settings/utils/settings-diagnostics-loader-data';
+import { getSettingsDiagnosticsLoaderData } from '~/routing/settings/utils/getSettingsDiagnosticsLoaderData';
 
 import SettingsApplication from '../settings.application';
 

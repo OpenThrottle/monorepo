@@ -21,9 +21,9 @@ import {
 import { SettingsWorkspaceEditorsForm } from '~/routing/settings/components/SettingsWorkspaceEditorsForm';
 import { SettingsWorkspaceIntro } from '~/routing/settings/components/SettingsWorkspaceIntro';
 import { SettingsWorkspaceProfileForm } from '~/routing/settings/components/SettingsWorkspaceProfileForm';
-import { buildWorkspaceApplyResults } from '~/routing/settings/utils/workspace-apply-results';
+import { buildWorkspaceApplyResults } from '~/routing/settings/utils/buildWorkspaceApplyResults';
+import { buildWorkspaceEditorTargetGroups } from '~/routing/settings/utils/buildWorkspaceEditorTargetGroups';
 import { buildEditorPresenceIndex } from '~/routing/settings/utils/workspace-editor-presence-status';
-import { buildWorkspaceEditorTargetGroups } from '~/routing/settings/utils/workspace-editor-targets';
 // import { FolderGit2Icon } from 'lucide-react';
 // import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
 // import { WORKSPACE_SETTINGS_COPY } from '~/routing/settings/data/data.copy';

@@ -12,7 +12,7 @@ import {
   vi,
 } from 'vitest';
 
-import { buildPlanRunConfigJson } from '../../testing/plan-run-config';
+import { buildPlanRunConfigJson } from '../../testing/buildPlanRunConfigJson';
 import type {
   UsePlanRunDialogOptions,
   UsePlanRunDialogResult,

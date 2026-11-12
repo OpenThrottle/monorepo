@@ -21,7 +21,7 @@ import {
 } from '~/routing/settings/repositories/data/data.copy';
 import type { RepositoryCheckoutRow } from '~/routing/settings/repositories/types';
 import { toExpandedState } from '~/routing/settings/repositories/utils/expansion';
-import type { CheckoutDrift } from '~/routing/settings/utils/drift-labels';
+import type { CheckoutDrift } from '~/routing/settings/utils/driftLabels';
 
 export interface RepositoriesTableProps {
   /** Parent row ids to open on mount, e.g. groups whose worktree matched the search. */

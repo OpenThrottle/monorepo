@@ -5,8 +5,8 @@ import { Link } from 'react-router';
 
 import type { PlanRunConfigRepositoryFieldsFragment } from '~/__generated__/graphql';
 import { PLAN_RUN_DIALOG_COPY } from '~/routing/plans/data/data.copy';
-import { toPlanCheckoutOptions } from '~/routing/plans/utils/plan-checkout-options';
 import { getPlanConfigurationTabHref } from '~/routing/plans/utils/plan-run-dialog';
+import { toPlanCheckoutOptions } from '~/routing/plans/utils/toPlanCheckoutOptions';
 
 export interface PlanRunDialogWorkspaceProps {
   /** @description Run branch; blank renders as "not set" (submit is gated on it). */

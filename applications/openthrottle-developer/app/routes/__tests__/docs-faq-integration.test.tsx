@@ -7,7 +7,7 @@ import { afterEach, describe, expect, test } from 'vitest';
 import type { Route as DocsIndexRoute } from '@/app/routes/+types/docs._index';
 import type { Route as FaqRoute } from '@/app/routes/+types/faq._index';
 import { buildPersistentSettingKey } from '~/global/config/persistent-setting-storage';
-import { buildRootMatch } from '~/testing/root-match-fixture';
+import { buildRootMatch } from '~/testing/buildRootMatch';
 
 import DocsIndex from '../docs._index';
 import DocsSplat from '../docs.$';

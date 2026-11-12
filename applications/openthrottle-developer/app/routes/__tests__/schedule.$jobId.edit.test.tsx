@@ -5,7 +5,7 @@ import { describe, expect, test, vi } from 'vitest';
 
 import type { Route } from '@/app/routes/+types/schedule.$jobId.edit';
 import type { ScheduledJobDetailFragment } from '~/__generated__/graphql';
-import { buildRootMatch } from '~/testing/root-match-fixture';
+import { buildRootMatch } from '~/testing/buildRootMatch';
 import { renderRouteHarness, renderRoutesStub } from '~/testing/route-fixtures';
 
 import EditSchedule from '../schedule.$jobId.edit';

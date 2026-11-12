@@ -21,6 +21,6 @@ export type {
   ProcessMetricsSnapshot,
   TaskRunMetrics,
 } from './types';
-export { fetchJobTaskRunMetrics } from './utils/fetch-job-task-run-metrics';
-export { fetchServerMetrics } from './utils/fetch-server-metrics';
-export { computeTaskRunDeltas } from './utils/task-run-metrics-deltas';
+export { computeTaskRunDeltas } from './utils/computeTaskRunDeltas';
+export { fetchJobTaskRunMetrics } from './utils/fetchJobTaskRunMetrics';
+export { fetchServerMetrics } from './utils/fetchServerMetrics';

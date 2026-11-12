@@ -4,7 +4,7 @@ import * as React from 'react';
 import { Link } from 'react-router';
 
 import { GLOBAL_FEATURE_ONBOARDING_SECTION_COPY } from '../data/data.copy';
-import { isExternalHref } from '../utils/external-href';
+import { isExternalHref } from '../utils/isExternalHref';
 import type {
   GlobalFeatureOnboardingContent,
   GlobalFeatureOnboardingLink,

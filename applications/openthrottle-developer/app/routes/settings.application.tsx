@@ -11,7 +11,7 @@ import * as React from 'react';
 import type { Route } from '@/app/routes/+types/settings.application';
 import { SITE_TITLE } from '~/global/config/settings';
 import { SettingsEnvironmentDiagnostics } from '~/routing/settings/components/SettingsEnvironmentDiagnostics';
-import { getSettingsDiagnosticsLoaderData } from '~/routing/settings/utils/settings-diagnostics-loader-data';
+import { getSettingsDiagnosticsLoaderData } from '~/routing/settings/utils/getSettingsDiagnosticsLoaderData';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

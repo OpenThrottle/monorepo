@@ -19,7 +19,7 @@ const shared = vi.hoisted(() => {
   };
 });
 
-vi.mock('~/services/graphql-ws-client', () => ({
+vi.mock('~/services/getGraphqlWsClient', () => ({
   getGraphqlWsClient: () => shared.client,
 }));
 

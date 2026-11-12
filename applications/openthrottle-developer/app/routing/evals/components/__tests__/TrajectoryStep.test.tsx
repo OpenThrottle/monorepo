@@ -8,7 +8,7 @@ import {
   MOCK_SUBAGENT_ID,
   MOCK_TRAJECTORY,
 } from '~/routing/evals/data/mock.trajectory';
-import { renderEvals } from '~/routing/evals/testing/render-evals';
+import { renderEvals } from '~/routing/evals/testing/renderEvals';
 import type { TrajectoryStepView } from '~/routing/evals/types';
 import { buildTrajectoryTimeline } from '~/routing/evals/utils/timeline';
 

@@ -102,7 +102,7 @@ export const action = async (args: Route.ActionArgs) => {
   // dependency) out of the client bundle — the boundary pattern the sibling
   // skills routes use.
   const { createSkillFile } =
-    await import('~/routing/skills/utils/create-skill-file.server');
+    await import('~/routing/skills/utils/createSkillFile.server');
 
   const result = createSkillFile({ content, destination, slug });
 

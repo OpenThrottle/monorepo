@@ -65,7 +65,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   // The ATIF parser is node-only: parse on the server and hand the client the
   // plain document, never the package.
   const { parseTrajectoryDocument } =
-    await import('~/routing/evals/utils/parse-trajectory.server');
+    await import('~/routing/evals/utils/parseTrajectoryDocument.server');
   const { trajectoryJson, ...summary } = record;
   const { me } = result;
   const identity = me

@@ -10,7 +10,7 @@ import type { MiddlewareFunction } from 'react-router';
 import type { Route } from '@/app/routes/+types/pull-requests._index';
 import type { ListPullsInput } from '~/__generated__/graphql';
 import { GetPullRequestsDocument } from '~/__generated__/graphql';
-import { getDefaultGithubRepo } from '~/global/config/github-default-repo';
+import { getDefaultGithubRepo } from '~/global/config/getDefaultGithubRepo';
 import { SITE_TITLE } from '~/global/config/settings';
 import { PullRequestPreviewSheet } from '~/routing/pull-requests/components/PullRequestPreviewSheet';
 import { PullRequestsIntroduction } from '~/routing/pull-requests/components/PullRequestsIntroduction';

@@ -20,8 +20,8 @@ import {
   PLAN_RUN_HISTORY_META_FIELDS,
 } from '~/routing/plans/data/data.plan-run-history';
 import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
+import type { PlanRunJobMetrics } from '~/routing/plans/utils/joinPlanRunJobMetrics';
 import { buildPlanRunMetaItems } from '~/routing/plans/utils/plan-run-sections';
-import type { PlanRunJobMetrics } from '~/routing/plans/utils/plan-workflow-run-transparency';
 
 export interface PlanWorkflowRunHistoryRowProps {
   /** Completed-job metrics joined by `bullmqJobId`; null when the run has none. */

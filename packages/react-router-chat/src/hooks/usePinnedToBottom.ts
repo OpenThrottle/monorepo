@@ -1,8 +1,8 @@
 import * as React from 'react';
 
 import { NEAR_BOTTOM_THRESHOLD_PX } from '../config/near-bottom-threshold-px';
-import { distanceFromBottom } from '../utils/distance-from-bottom';
-import { findScroller } from '../utils/find-scroller';
+import { distanceFromBottom } from '../utils/distanceFromBottom';
+import { findScroller } from '../utils/findScroller';
 
 export interface UsePinnedToBottomOptions {
   /**

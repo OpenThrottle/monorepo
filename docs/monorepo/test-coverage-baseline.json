@@ -331,10 +331,10 @@
     },
     {
       "category": "config",
-      "file": "applications/openthrottle-developer/app/global/config/github-default-repo.ts",
+      "file": "applications/openthrottle-developer/app/global/config/getDefaultGithubRepo.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/global/config/__tests__/github-default-repo.test.ts"
+      "testFile": "applications/openthrottle-developer/app/global/config/__tests__/getDefaultGithubRepo.test.ts"
     },
     {
       "category": "config",
@@ -450,10 +450,10 @@
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/global/utils/handle-global-layout-header-search-chrome-event.ts",
+      "file": "applications/openthrottle-developer/app/global/utils/handleGlobalLayoutHeaderSearchChromeEvent.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/global/utils/__tests__/handle-global-layout-header-search-chrome-event.test.ts"
+      "testFile": "applications/openthrottle-developer/app/global/utils/__tests__/handleGlobalLayoutHeaderSearchChromeEvent.test.ts"
     },
     {
       "category": "utils",
@@ -1297,10 +1297,10 @@
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/agents/utils/filter-repo-skill-entries.ts",
+      "file": "applications/openthrottle-developer/app/routing/agents/utils/filterEntries.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/agents/utils/__tests__/filter-repo-skill-entries.test.ts"
+      "testFile": "applications/openthrottle-developer/app/routing/agents/utils/__tests__/filterEntries.test.ts"
     },
     {
       "category": "config",
@@ -1724,10 +1724,10 @@
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/generators/utils/build-generator-nx-presets.ts",
+      "file": "applications/openthrottle-developer/app/routing/generators/utils/buildGeneratorNxPresets.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/generators/utils/__tests__/build-generator-nx-presets.test.ts"
+      "testFile": "applications/openthrottle-developer/app/routing/generators/utils/__tests__/buildGeneratorNxPresets.test.ts"
     },
     {
       "category": "utils",
@@ -1850,10 +1850,10 @@
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/home/utils/audio-encoding.ts",
+      "file": "applications/openthrottle-developer/app/routing/home/utils/encodeFloat32ToInt16Base64.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/home/utils/__tests__/audio-encoding.test.ts"
+      "testFile": "applications/openthrottle-developer/app/routing/home/utils/__tests__/encodeFloat32ToInt16Base64.test.ts"
     },
     {
       "category": "components",
@@ -1885,10 +1885,10 @@
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/ide/utils/semantic-status.ts",
+      "file": "applications/openthrottle-developer/app/routing/ide/utils/toSemanticStatus.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/ide/utils/__tests__/semantic-status.test.ts"
+      "testFile": "applications/openthrottle-developer/app/routing/ide/utils/__tests__/toSemanticStatus.test.ts"
     },
     {
       "category": "data",
@@ -1955,10 +1955,10 @@
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/notes/utils/filter-notes-by-search.ts",
+      "file": "applications/openthrottle-developer/app/routing/notes/utils/filterNotesBySearch.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/notes/utils/__tests__/filter-notes-by-search.test.ts"
+      "testFile": "applications/openthrottle-developer/app/routing/notes/utils/__tests__/filterNotesBySearch.test.ts"
     },
     {
       "category": "utils",
@@ -2802,17 +2802,17 @@
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/plans/utils/document-decompose.ts",
+      "file": "applications/openthrottle-developer/app/routing/plans/utils/buildStubProposal.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/plans/utils/__tests__/document-decompose.test.ts"
+      "testFile": "applications/openthrottle-developer/app/routing/plans/utils/__tests__/buildStubProposal.test.ts"
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/plans/utils/format-status.ts",
+      "file": "applications/openthrottle-developer/app/routing/plans/utils/formatPlanTaskStatus.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/plans/utils/__tests__/format-status.test.ts"
+      "testFile": "applications/openthrottle-developer/app/routing/plans/utils/__tests__/formatPlanTaskStatus.test.ts"
     },
     {
       "category": "utils",
@@ -2823,10 +2823,10 @@
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/plans/utils/group-linked-artifacts.ts",
+      "file": "applications/openthrottle-developer/app/routing/plans/utils/groupLinkedArtifacts.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/plans/utils/__tests__/group-linked-artifacts.test.ts"
+      "testFile": "applications/openthrottle-developer/app/routing/plans/utils/__tests__/groupLinkedArtifacts.test.ts"
     },
     {
       "category": "utils",
@@ -2858,10 +2858,10 @@
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/plans/utils/linked-artifact-href.ts",
+      "file": "applications/openthrottle-developer/app/routing/plans/utils/toLinkedArtifactDestination.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/plans/utils/__tests__/linked-artifact-href.test.ts"
+      "testFile": "applications/openthrottle-developer/app/routing/plans/utils/__tests__/toLinkedArtifactDestination.test.ts"
     },
     {
       "category": "utils",
@@ -2879,7 +2879,7 @@
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/plans/utils/load-enabled-editors.ts",
+      "file": "applications/openthrottle-developer/app/routing/plans/utils/loadEnabledEditors.ts",
       "project": "applications/openthrottle-developer",
       "status": "missing",
       "testFile": null
@@ -2907,10 +2907,10 @@
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/plans/utils/plan-checkout-options.ts",
+      "file": "applications/openthrottle-developer/app/routing/plans/utils/toPlanCheckoutOptions.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/plans/utils/__tests__/plan-checkout-options.test.ts"
+      "testFile": "applications/openthrottle-developer/app/routing/plans/utils/__tests__/toPlanCheckoutOptions.test.ts"
     },
     {
       "category": "utils",
@@ -2942,17 +2942,17 @@
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/plans/utils/plan-tab-tasks-columns.tsx",
+      "file": "applications/openthrottle-developer/app/routing/plans/utils/buildPlanTabTasksColumns.tsx",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/plans/utils/__tests__/plan-tab-tasks-columns.test.tsx"
+      "testFile": "applications/openthrottle-developer/app/routing/plans/utils/__tests__/buildPlanTabTasksColumns.test.tsx"
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/plans/utils/plan-tag-chips.ts",
+      "file": "applications/openthrottle-developer/app/routing/plans/utils/formatPlanTagProvenance.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/plans/utils/__tests__/plan-tag-chips.test.ts"
+      "testFile": "applications/openthrottle-developer/app/routing/plans/utils/__tests__/formatPlanTagProvenance.test.ts"
     },
     {
       "category": "utils",
@@ -2991,10 +2991,10 @@
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/plans/utils/plan-workflow-run-transparency.ts",
+      "file": "applications/openthrottle-developer/app/routing/plans/utils/joinPlanRunJobMetrics.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/plans/utils/__tests__/plan-workflow-run-transparency.test.ts"
+      "testFile": "applications/openthrottle-developer/app/routing/plans/utils/__tests__/joinPlanRunJobMetrics.test.ts"
     },
     {
       "category": "utils",
@@ -3005,17 +3005,17 @@
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/plans/utils/plans-table-columns.tsx",
+      "file": "applications/openthrottle-developer/app/routing/plans/utils/buildPlansTableColumns.tsx",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/plans/utils/__tests__/plans-table-columns.test.tsx"
+      "testFile": "applications/openthrottle-developer/app/routing/plans/utils/__tests__/buildPlansTableColumns.test.tsx"
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/plans/utils/resolve-plan-working-directory.ts",
+      "file": "applications/openthrottle-developer/app/routing/plans/utils/resolvePlanWorkingDirectory.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/plans/utils/__tests__/resolve-plan-working-directory.test.ts"
+      "testFile": "applications/openthrottle-developer/app/routing/plans/utils/__tests__/resolvePlanWorkingDirectory.test.ts"
     },
     {
       "category": "utils",
@@ -3033,10 +3033,10 @@
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/plans/utils/task-details.ts",
+      "file": "applications/openthrottle-developer/app/routing/plans/utils/formatTaskDate.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/plans/utils/__tests__/task-details.test.ts"
+      "testFile": "applications/openthrottle-developer/app/routing/plans/utils/__tests__/formatTaskDate.test.ts"
     },
     {
       "category": "utils",
@@ -3061,10 +3061,10 @@
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/plans/utils/workflow-ralph-diff.ts",
+      "file": "applications/openthrottle-developer/app/routing/plans/utils/buildWorkflowRalphTuningDiffLabels.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/plans/utils/__tests__/workflow-ralph-diff.test.ts"
+      "testFile": "applications/openthrottle-developer/app/routing/plans/utils/__tests__/buildWorkflowRalphTuningDiffLabels.test.ts"
     },
     {
       "category": "utils",
@@ -3075,10 +3075,10 @@
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/plans/utils/workflow-ralph-validate.ts",
+      "file": "applications/openthrottle-developer/app/routing/plans/utils/validateWorkflowRalphRunOptionsState.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/plans/utils/__tests__/workflow-ralph-validate.test.ts"
+      "testFile": "applications/openthrottle-developer/app/routing/plans/utils/__tests__/validateWorkflowRalphRunOptionsState.test.ts"
     },
     {
       "category": "utils",
@@ -3201,10 +3201,10 @@
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/projects/utils/is-project-tab-value.ts",
+      "file": "applications/openthrottle-developer/app/routing/projects/utils/isProjectTabValue.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/projects/utils/__tests__/is-project-tab-value.test.ts"
+      "testFile": "applications/openthrottle-developer/app/routing/projects/utils/__tests__/isProjectTabValue.test.ts"
     },
     {
       "category": "utils",
@@ -3334,10 +3334,10 @@
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/prompts/utils/prompt-debug-snapshot.ts",
+      "file": "applications/openthrottle-developer/app/routing/prompts/utils/buildPromptDebugSnapshotJson.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/prompts/utils/__tests__/prompt-debug-snapshot.test.ts"
+      "testFile": "applications/openthrottle-developer/app/routing/prompts/utils/__tests__/buildPromptDebugSnapshotJson.test.ts"
     },
     {
       "category": "utils",
@@ -3691,38 +3691,38 @@
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/queues/utils/parse-queue-job-data.ts",
+      "file": "applications/openthrottle-developer/app/routing/queues/utils/parseQueueJobDataString.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/queues/utils/__tests__/parse-queue-job-data.test.ts"
+      "testFile": "applications/openthrottle-developer/app/routing/queues/utils/__tests__/parseQueueJobDataString.test.ts"
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/queues/utils/parse-queue-jobs-pagination.ts",
+      "file": "applications/openthrottle-developer/app/routing/queues/utils/parseQueueJobsPagination.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/queues/utils/__tests__/parse-queue-jobs-pagination.test.ts"
+      "testFile": "applications/openthrottle-developer/app/routing/queues/utils/__tests__/parseQueueJobsPagination.test.ts"
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/queues/utils/queue-health.ts",
+      "file": "applications/openthrottle-developer/app/routing/queues/utils/computeQueueHealth.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/queues/utils/__tests__/queue-health.test.ts"
+      "testFile": "applications/openthrottle-developer/app/routing/queues/utils/__tests__/computeQueueHealth.test.ts"
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/queues/utils/queue-job-detail-path.ts",
+      "file": "applications/openthrottle-developer/app/routing/queues/utils/queueJobDetailPath.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/queues/utils/__tests__/queue-job-detail-path.test.ts"
+      "testFile": "applications/openthrottle-developer/app/routing/queues/utils/__tests__/queueJobDetailPath.test.ts"
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/queues/utils/queue-job-log-line.ts",
+      "file": "applications/openthrottle-developer/app/routing/queues/utils/formatQueueJobLogLine.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/queues/utils/__tests__/queue-job-log-line.test.ts"
+      "testFile": "applications/openthrottle-developer/app/routing/queues/utils/__tests__/formatQueueJobLogLine.test.ts"
     },
     {
       "category": "utils",
@@ -3761,10 +3761,10 @@
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/queues/utils/summarize-queues.ts",
+      "file": "applications/openthrottle-developer/app/routing/queues/utils/summarizeQueues.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/queues/utils/__tests__/summarize-queues.test.ts"
+      "testFile": "applications/openthrottle-developer/app/routing/queues/utils/__tests__/summarizeQueues.test.ts"
     },
     {
       "category": "components",
@@ -4027,24 +4027,24 @@
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/schedule/utils/build-in-flight-by-job.ts",
+      "file": "applications/openthrottle-developer/app/routing/schedule/utils/buildInFlightByJob.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/schedule/utils/__tests__/build-in-flight-by-job.test.ts"
+      "testFile": "applications/openthrottle-developer/app/routing/schedule/utils/__tests__/buildInFlightByJob.test.ts"
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/schedule/utils/filter-jobs-by-search.ts",
+      "file": "applications/openthrottle-developer/app/routing/schedule/utils/filterJobsBySearch.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/schedule/utils/__tests__/filter-jobs-by-search.test.ts"
+      "testFile": "applications/openthrottle-developer/app/routing/schedule/utils/__tests__/filterJobsBySearch.test.ts"
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/schedule/utils/format-duration.ts",
+      "file": "applications/openthrottle-developer/app/routing/schedule/utils/formatDuration.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/schedule/utils/__tests__/format-duration.test.ts"
+      "testFile": "applications/openthrottle-developer/app/routing/schedule/utils/__tests__/formatDuration.test.ts"
     },
     {
       "category": "utils",
@@ -4055,10 +4055,10 @@
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/schedule/utils/format-when.ts",
+      "file": "applications/openthrottle-developer/app/routing/schedule/utils/formatWhen.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/schedule/utils/__tests__/format-when.test.ts"
+      "testFile": "applications/openthrottle-developer/app/routing/schedule/utils/__tests__/formatWhen.test.ts"
     },
     {
       "category": "utils",
@@ -4069,14 +4069,14 @@
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/schedule/utils/schedule-runs-table-columns.tsx",
+      "file": "applications/openthrottle-developer/app/routing/schedule/utils/buildScheduleRunsTableColumns.tsx",
       "project": "applications/openthrottle-developer",
       "status": "missing",
       "testFile": null
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/schedule/utils/schedule-table-columns.tsx",
+      "file": "applications/openthrottle-developer/app/routing/schedule/utils/buildScheduleTableColumns.tsx",
       "project": "applications/openthrottle-developer",
       "status": "missing",
       "testFile": null
@@ -4139,10 +4139,10 @@
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/search/utils/github-blob-href.ts",
+      "file": "applications/openthrottle-developer/app/routing/search/utils/githubBlobHref.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/search/utils/__tests__/github-blob-href.test.ts"
+      "testFile": "applications/openthrottle-developer/app/routing/search/utils/__tests__/githubBlobHref.test.ts"
     },
     {
       "category": "utils",
@@ -4153,24 +4153,24 @@
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/search/utils/plan-or-task-detail-href.ts",
+      "file": "applications/openthrottle-developer/app/routing/search/utils/planOrTaskDetailHref.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/search/utils/__tests__/plan-or-task-detail-href.test.ts"
+      "testFile": "applications/openthrottle-developer/app/routing/search/utils/__tests__/planOrTaskDetailHref.test.ts"
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/search/utils/search-card.ts",
+      "file": "applications/openthrottle-developer/app/routing/search/utils/normalizeSource.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/search/utils/__tests__/search-card.test.ts"
+      "testFile": "applications/openthrottle-developer/app/routing/search/utils/__tests__/normalizeSource.test.ts"
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/search/utils/search-why-this-result.ts",
+      "file": "applications/openthrottle-developer/app/routing/search/utils/formatRankSummary.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/search/utils/__tests__/search-why-this-result.test.ts"
+      "testFile": "applications/openthrottle-developer/app/routing/search/utils/__tests__/formatRankSummary.test.ts"
     },
     {
       "category": "components",
@@ -5000,10 +5000,10 @@
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/settings/repositories/utils/checkout-inspection-badges.ts",
+      "file": "applications/openthrottle-developer/app/routing/settings/repositories/utils/deriveCheckoutInspectionBadges.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/settings/repositories/utils/__tests__/checkout-inspection-badges.test.ts"
+      "testFile": "applications/openthrottle-developer/app/routing/settings/repositories/utils/__tests__/deriveCheckoutInspectionBadges.test.ts"
     },
     {
       "category": "utils",
@@ -5056,38 +5056,38 @@
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/settings/utils/count-non-default-appearance-fields.ts",
+      "file": "applications/openthrottle-developer/app/routing/settings/utils/countNonDefaultAppearanceFields.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/settings/utils/__tests__/count-non-default-appearance-fields.test.ts"
+      "testFile": "applications/openthrottle-developer/app/routing/settings/utils/__tests__/countNonDefaultAppearanceFields.test.ts"
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/settings/utils/drift-labels.ts",
+      "file": "applications/openthrottle-developer/app/routing/settings/utils/driftLabels.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/settings/utils/__tests__/drift-labels.test.ts"
+      "testFile": "applications/openthrottle-developer/app/routing/settings/utils/__tests__/driftLabels.test.ts"
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/settings/utils/format-editor-config-result.ts",
+      "file": "applications/openthrottle-developer/app/routing/settings/utils/formatEditorConfigApplyMessage.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/settings/utils/__tests__/format-editor-config-result.test.ts"
+      "testFile": "applications/openthrottle-developer/app/routing/settings/utils/__tests__/formatEditorConfigApplyMessage.test.ts"
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/settings/utils/is-client-log-level.ts",
+      "file": "applications/openthrottle-developer/app/routing/settings/utils/isClientLogLevel.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/settings/utils/__tests__/is-client-log-level.test.ts"
+      "testFile": "applications/openthrottle-developer/app/routing/settings/utils/__tests__/isClientLogLevel.test.ts"
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/settings/utils/normalize-url-base.ts",
+      "file": "applications/openthrottle-developer/app/routing/settings/utils/normalizeUrlBase.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/settings/utils/__tests__/normalize-url-base.test.ts"
+      "testFile": "applications/openthrottle-developer/app/routing/settings/utils/__tests__/normalizeUrlBase.test.ts"
     },
     {
       "category": "utils",
@@ -5126,10 +5126,10 @@
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/settings/utils/settings-diagnostics-loader-data.ts",
+      "file": "applications/openthrottle-developer/app/routing/settings/utils/getSettingsDiagnosticsLoaderData.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/settings/utils/__tests__/settings-diagnostics-loader-data.test.ts"
+      "testFile": "applications/openthrottle-developer/app/routing/settings/utils/__tests__/getSettingsDiagnosticsLoaderData.test.ts"
     },
     {
       "category": "utils",
@@ -5182,10 +5182,10 @@
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/settings/utils/workspace-apply-results.ts",
+      "file": "applications/openthrottle-developer/app/routing/settings/utils/buildWorkspaceApplyResults.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/settings/utils/__tests__/workspace-apply-results.test.ts"
+      "testFile": "applications/openthrottle-developer/app/routing/settings/utils/__tests__/buildWorkspaceApplyResults.test.ts"
     },
     {
       "category": "utils",
@@ -5196,10 +5196,10 @@
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/settings/utils/workspace-editor-targets.ts",
+      "file": "applications/openthrottle-developer/app/routing/settings/utils/buildWorkspaceEditorTargetGroups.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/settings/utils/__tests__/workspace-editor-targets.test.ts"
+      "testFile": "applications/openthrottle-developer/app/routing/settings/utils/__tests__/buildWorkspaceEditorTargetGroups.test.ts"
     },
     {
       "category": "utils",
@@ -5497,7 +5497,7 @@
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/skills/utils/filter-skills-by-query.ts",
+      "file": "applications/openthrottle-developer/app/routing/skills/utils/filterSkillsByQuery.ts",
       "project": "applications/openthrottle-developer",
       "status": "missing",
       "testFile": null
@@ -5511,17 +5511,17 @@
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/skills/utils/merge-project-skills.ts",
+      "file": "applications/openthrottle-developer/app/routing/skills/utils/mergeRepoSkillsWithProjectSkills.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/skills/utils/__tests__/merge-project-skills.test.ts"
+      "testFile": "applications/openthrottle-developer/app/routing/skills/utils/__tests__/mergeRepoSkillsWithProjectSkills.test.ts"
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/skills/utils/merge-skill-availability.ts",
+      "file": "applications/openthrottle-developer/app/routing/skills/utils/mergeRepoSkillsWithSkillAvailability.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/skills/utils/__tests__/merge-skill-availability.test.ts"
+      "testFile": "applications/openthrottle-developer/app/routing/skills/utils/__tests__/mergeRepoSkillsWithSkillAvailability.test.ts"
     },
     {
       "category": "utils",
@@ -5560,24 +5560,24 @@
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/skills/utils/source-badge.ts",
+      "file": "applications/openthrottle-developer/app/routing/skills/utils/getSkillSourceBadge.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/skills/utils/__tests__/source-badge.test.ts"
+      "testFile": "applications/openthrottle-developer/app/routing/skills/utils/__tests__/getSkillSourceBadge.test.ts"
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/skills/utils/to-skill-detail-usage-data.ts",
+      "file": "applications/openthrottle-developer/app/routing/skills/utils/toSkillDetailUsageData.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/skills/utils/__tests__/to-skill-detail-usage-data.test.ts"
+      "testFile": "applications/openthrottle-developer/app/routing/skills/utils/__tests__/toSkillDetailUsageData.test.ts"
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/skills/utils/to-skills-index-usage-data.ts",
+      "file": "applications/openthrottle-developer/app/routing/skills/utils/toSkillsIndexUsageData.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/skills/utils/__tests__/to-skills-index-usage-data.test.ts"
+      "testFile": "applications/openthrottle-developer/app/routing/skills/utils/__tests__/toSkillsIndexUsageData.test.ts"
     },
     {
       "category": "components",
@@ -5910,52 +5910,52 @@
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/usage/utils/aggregate-token-usage.ts",
+      "file": "applications/openthrottle-developer/app/routing/usage/utils/groupTokenUsage.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/usage/utils/__tests__/aggregate-token-usage.test.ts"
+      "testFile": "applications/openthrottle-developer/app/routing/usage/utils/__tests__/groupTokenUsage.test.ts"
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/usage/utils/build-usage-support-snapshot.ts",
+      "file": "applications/openthrottle-developer/app/routing/usage/utils/buildUsageSupportSnapshotJson.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/usage/utils/__tests__/build-usage-support-snapshot.test.ts"
+      "testFile": "applications/openthrottle-developer/app/routing/usage/utils/__tests__/buildUsageSupportSnapshotJson.test.ts"
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/usage/utils/parse-skill-scope.ts",
+      "file": "applications/openthrottle-developer/app/routing/usage/utils/parseSkillScope.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/usage/utils/__tests__/parse-skill-scope.test.ts"
+      "testFile": "applications/openthrottle-developer/app/routing/usage/utils/__tests__/parseSkillScope.test.ts"
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/usage/utils/partition-skill-usage-by-presence.ts",
+      "file": "applications/openthrottle-developer/app/routing/usage/utils/partitionSkillUsageByPresence.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/usage/utils/__tests__/partition-skill-usage-by-presence.test.ts"
+      "testFile": "applications/openthrottle-developer/app/routing/usage/utils/__tests__/partitionSkillUsageByPresence.test.ts"
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/usage/utils/skill-usage-chip-class.ts",
+      "file": "applications/openthrottle-developer/app/routing/usage/utils/skillUsageChipClass.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/usage/utils/__tests__/skill-usage-chip-class.test.ts"
+      "testFile": "applications/openthrottle-developer/app/routing/usage/utils/__tests__/skillUsageChipClass.test.ts"
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/usage/utils/skill-usage-scope-count.ts",
+      "file": "applications/openthrottle-developer/app/routing/usage/utils/skillUsageScopeCount.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/usage/utils/__tests__/skill-usage-scope-count.test.ts"
+      "testFile": "applications/openthrottle-developer/app/routing/usage/utils/__tests__/skillUsageScopeCount.test.ts"
     },
     {
       "category": "utils",
-      "file": "applications/openthrottle-developer/app/routing/usage/utils/usage-search.ts",
+      "file": "applications/openthrottle-developer/app/routing/usage/utils/buildUsageSearch.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/usage/utils/__tests__/usage-search.test.ts"
+      "testFile": "applications/openthrottle-developer/app/routing/usage/utils/__tests__/buildUsageSearch.test.ts"
     },
     {
       "category": "components",
@@ -7100,31 +7100,31 @@
     },
     {
       "category": "utils",
-      "file": "packages/react-router-chat-state/src/utils/chat-toolbar-decay.ts",
+      "file": "packages/react-router-chat-state/src/utils/decayElevatedPermissionModes.ts",
       "project": "packages/react-router-chat-state",
       "status": "tested",
-      "testFile": "packages/react-router-chat-state/src/utils/__tests__/chat-toolbar-decay.test.ts"
+      "testFile": "packages/react-router-chat-state/src/utils/__tests__/decayElevatedPermissionModes.test.ts"
     },
     {
       "category": "utils",
-      "file": "packages/react-router-chat-state/src/utils/chat-toolbar-reconcile.ts",
+      "file": "packages/react-router-chat-state/src/utils/reconcileChatToolbarState.ts",
       "project": "packages/react-router-chat-state",
       "status": "tested",
-      "testFile": "packages/react-router-chat-state/src/utils/__tests__/chat-toolbar-reconcile.test.ts"
+      "testFile": "packages/react-router-chat-state/src/utils/__tests__/reconcileChatToolbarState.test.ts"
     },
     {
       "category": "utils",
-      "file": "packages/react-router-chat-state/src/utils/chat-turn-fields.ts",
+      "file": "packages/react-router-chat-state/src/utils/buildChatTurnFields.ts",
       "project": "packages/react-router-chat-state",
       "status": "tested",
-      "testFile": "packages/react-router-chat-state/src/utils/__tests__/chat-turn-fields.test.ts"
+      "testFile": "packages/react-router-chat-state/src/utils/__tests__/buildChatTurnFields.test.ts"
     },
     {
       "category": "utils",
-      "file": "packages/react-router-chat-state/src/utils/resolve-provider-icon.tsx",
+      "file": "packages/react-router-chat-state/src/utils/resolveProviderIcon.tsx",
       "project": "packages/react-router-chat-state",
       "status": "tested",
-      "testFile": "packages/react-router-chat-state/src/utils/__tests__/resolve-provider-icon.test.tsx"
+      "testFile": "packages/react-router-chat-state/src/utils/__tests__/resolveProviderIcon.test.tsx"
     },
     {
       "category": "components",
@@ -7541,17 +7541,17 @@
     },
     {
       "category": "utils",
-      "file": "packages/react-router-chat/src/utils/chat-checkout-selection.ts",
+      "file": "packages/react-router-chat/src/utils/toggleCheckoutSelection.ts",
       "project": "packages/react-router-chat",
       "status": "tested",
-      "testFile": "packages/react-router-chat/src/utils/__tests__/chat-checkout-selection.test.ts"
+      "testFile": "packages/react-router-chat/src/utils/__tests__/toggleCheckoutSelection.test.ts"
     },
     {
       "category": "utils",
-      "file": "packages/react-router-chat/src/utils/chat-thread.ts",
+      "file": "packages/react-router-chat/src/utils/findLastUserMessageId.ts",
       "project": "packages/react-router-chat",
       "status": "tested",
-      "testFile": "packages/react-router-chat/src/utils/__tests__/chat-thread.test.ts"
+      "testFile": "packages/react-router-chat/src/utils/__tests__/findLastUserMessageId.test.ts"
     },
     {
       "category": "utils",
@@ -7562,10 +7562,10 @@
     },
     {
       "category": "utils",
-      "file": "packages/react-router-chat/src/utils/chat-usage-counter.ts",
+      "file": "packages/react-router-chat/src/utils/resolveTotalTokens.ts",
       "project": "packages/react-router-chat",
       "status": "tested",
-      "testFile": "packages/react-router-chat/src/utils/__tests__/chat-usage-counter.test.ts"
+      "testFile": "packages/react-router-chat/src/utils/__tests__/resolveTotalTokens.test.ts"
     },
     {
       "category": "utils",
@@ -7576,17 +7576,17 @@
     },
     {
       "category": "utils",
-      "file": "packages/react-router-chat/src/utils/checkout-labels.ts",
+      "file": "packages/react-router-chat/src/utils/describeCheckouts.ts",
       "project": "packages/react-router-chat",
       "status": "tested",
-      "testFile": "packages/react-router-chat/src/utils/__tests__/checkout-labels.test.ts"
+      "testFile": "packages/react-router-chat/src/utils/__tests__/describeCheckouts.test.ts"
     },
     {
       "category": "utils",
-      "file": "packages/react-router-chat/src/utils/checkout-search-filter.ts",
+      "file": "packages/react-router-chat/src/utils/checkoutSearchFilter.ts",
       "project": "packages/react-router-chat",
       "status": "tested",
-      "testFile": "packages/react-router-chat/src/utils/__tests__/checkout-search-filter.test.ts"
+      "testFile": "packages/react-router-chat/src/utils/__tests__/checkoutSearchFilter.test.ts"
     },
     {
       "category": "utils",
@@ -7940,17 +7940,17 @@
     },
     {
       "category": "utils",
-      "file": "packages/react-router-floor-layout/src/utils/editable-target.ts",
+      "file": "packages/react-router-floor-layout/src/utils/isEditableTarget.ts",
       "project": "packages/react-router-floor-layout",
       "status": "tested",
-      "testFile": "packages/react-router-floor-layout/src/utils/__tests__/editable-target.test.ts"
+      "testFile": "packages/react-router-floor-layout/src/utils/__tests__/isEditableTarget.test.ts"
     },
     {
       "category": "utils",
-      "file": "packages/react-router-floor-layout/src/utils/element-id.ts",
+      "file": "packages/react-router-floor-layout/src/utils/createElementId.ts",
       "project": "packages/react-router-floor-layout",
       "status": "tested",
-      "testFile": "packages/react-router-floor-layout/src/utils/__tests__/element-id.test.ts"
+      "testFile": "packages/react-router-floor-layout/src/utils/__tests__/createElementId.test.ts"
     },
     {
       "category": "utils",
@@ -8304,10 +8304,10 @@
     },
     {
       "category": "utils",
-      "file": "packages/react-router-notifications/src/utils/notifications-preference-storage-sync.ts",
+      "file": "packages/react-router-notifications/src/utils/subscribeToNotificationsPreferenceStorageEvents.ts",
       "project": "packages/react-router-notifications",
       "status": "tested",
-      "testFile": "packages/react-router-notifications/src/utils/__tests__/notifications-preference-storage-sync.test.ts"
+      "testFile": "packages/react-router-notifications/src/utils/__tests__/subscribeToNotificationsPreferenceStorageEvents.test.ts"
     },
     {
       "category": "utils",
@@ -8318,10 +8318,10 @@
     },
     {
       "category": "utils",
-      "file": "packages/react-router-notifications/src/utils/to-store-payload.ts",
+      "file": "packages/react-router-notifications/src/utils/toStorePayload.ts",
       "project": "packages/react-router-notifications",
       "status": "tested",
-      "testFile": "packages/react-router-notifications/src/utils/__tests__/to-store-payload.test.ts"
+      "testFile": "packages/react-router-notifications/src/utils/__tests__/toStorePayload.test.ts"
     },
     {
       "category": "components",
@@ -8493,24 +8493,24 @@
     },
     {
       "category": "utils",
-      "file": "packages/react-router-rollout/src/utils/define-rollout-flags.ts",
+      "file": "packages/react-router-rollout/src/utils/defineRolloutFlags.ts",
       "project": "packages/react-router-rollout",
       "status": "tested",
-      "testFile": "packages/react-router-rollout/src/utils/__tests__/define-rollout-flags.test.ts"
+      "testFile": "packages/react-router-rollout/src/utils/__tests__/defineRolloutFlags.test.ts"
     },
     {
       "category": "utils",
-      "file": "packages/react-router-rollout/src/utils/merge-rollout-evaluations.ts",
+      "file": "packages/react-router-rollout/src/utils/mergeRolloutEvaluations.ts",
       "project": "packages/react-router-rollout",
       "status": "tested",
-      "testFile": "packages/react-router-rollout/src/utils/__tests__/merge-rollout-evaluations.test.ts"
+      "testFile": "packages/react-router-rollout/src/utils/__tests__/mergeRolloutEvaluations.test.ts"
     },
     {
       "category": "utils",
-      "file": "packages/react-router-rollout/src/utils/parse-rollout-value-json.ts",
+      "file": "packages/react-router-rollout/src/utils/parseRolloutValueJson.ts",
       "project": "packages/react-router-rollout",
       "status": "tested",
-      "testFile": "packages/react-router-rollout/src/utils/__tests__/parse-rollout-value-json.test.ts"
+      "testFile": "packages/react-router-rollout/src/utils/__tests__/parseRolloutValueJson.test.ts"
     },
     {
       "category": "utils",
@@ -8570,10 +8570,10 @@
     },
     {
       "category": "utils",
-      "file": "packages/react-router-scheduling/src/utils/dark-mode.ts",
+      "file": "packages/react-router-scheduling/src/utils/isHostDark.ts",
       "project": "packages/react-router-scheduling",
       "status": "tested",
-      "testFile": "packages/react-router-scheduling/src/utils/__tests__/dark-mode.test.ts"
+      "testFile": "packages/react-router-scheduling/src/utils/__tests__/isHostDark.test.ts"
     },
     {
       "category": "utils",
@@ -9704,10 +9704,10 @@
     },
     {
       "category": "components",
-      "file": "packages/react-router-shadcn/src/components/Sidebar/sidebar-context.tsx",
+      "file": "packages/react-router-shadcn/src/components/Sidebar/SidebarContext.tsx",
       "project": "packages/react-router-shadcn",
       "status": "tested",
-      "testFile": "packages/react-router-shadcn/src/components/Sidebar/__tests__/sidebar-context.test.tsx"
+      "testFile": "packages/react-router-shadcn/src/components/Sidebar/__tests__/SidebarContext.test.tsx"
     },
     {
       "category": "components",
@@ -10026,10 +10026,10 @@
     },
     {
       "category": "components",
-      "file": "packages/react-router-shadcn/src/components/ToggleGroup/toggle-group-context.tsx",
+      "file": "packages/react-router-shadcn/src/components/ToggleGroup/ToggleGroupContext.tsx",
       "project": "packages/react-router-shadcn",
       "status": "tested",
-      "testFile": "packages/react-router-shadcn/src/components/ToggleGroup/__tests__/toggle-group-context.test.tsx"
+      "testFile": "packages/react-router-shadcn/src/components/ToggleGroup/__tests__/ToggleGroupContext.test.tsx"
     },
     {
       "category": "components",
@@ -10131,10 +10131,10 @@
     },
     {
       "category": "utils",
-      "file": "packages/react-router-testing/src/utils/router-context.ts",
+      "file": "packages/react-router-testing/src/utils/createTestRouterContext.ts",
       "project": "packages/react-router-testing",
       "status": "tested",
-      "testFile": "packages/react-router-testing/src/utils/__tests__/router-context.test.ts"
+      "testFile": "packages/react-router-testing/src/utils/__tests__/createTestRouterContext.test.ts"
     },
     {
       "category": "utils",
@@ -10467,17 +10467,17 @@
     },
     {
       "category": "utils",
-      "file": "packages/react-router-ui-global/src/utils/breadcrumb-handle.ts",
+      "file": "packages/react-router-ui-global/src/utils/hasBreadcrumbHandle.ts",
       "project": "packages/react-router-ui-global",
       "status": "tested",
-      "testFile": "packages/react-router-ui-global/src/utils/__tests__/breadcrumb-handle.test.ts"
+      "testFile": "packages/react-router-ui-global/src/utils/__tests__/hasBreadcrumbHandle.test.ts"
     },
     {
       "category": "utils",
-      "file": "packages/react-router-ui-global/src/utils/build-sound-arcs.ts",
+      "file": "packages/react-router-ui-global/src/utils/buildSoundArcs.ts",
       "project": "packages/react-router-ui-global",
       "status": "tested",
-      "testFile": "packages/react-router-ui-global/src/utils/__tests__/build-sound-arcs.test.ts"
+      "testFile": "packages/react-router-ui-global/src/utils/__tests__/buildSoundArcs.test.ts"
     },
     {
       "category": "utils",
@@ -10495,10 +10495,10 @@
     },
     {
       "category": "utils",
-      "file": "packages/react-router-ui-global/src/utils/external-href.ts",
+      "file": "packages/react-router-ui-global/src/utils/isExternalHref.ts",
       "project": "packages/react-router-ui-global",
       "status": "tested",
-      "testFile": "packages/react-router-ui-global/src/utils/__tests__/external-href.test.ts"
+      "testFile": "packages/react-router-ui-global/src/utils/__tests__/isExternalHref.test.ts"
     },
     {
       "category": "utils",
@@ -10509,10 +10509,10 @@
     },
     {
       "category": "utils",
-      "file": "packages/react-router-ui-global/src/utils/is-global-popover-confirm-submit-action.ts",
+      "file": "packages/react-router-ui-global/src/utils/isGlobalPopoverConfirmSubmitAction.ts",
       "project": "packages/react-router-ui-global",
       "status": "tested",
-      "testFile": "packages/react-router-ui-global/src/utils/__tests__/is-global-popover-confirm-submit-action.test.ts"
+      "testFile": "packages/react-router-ui-global/src/utils/__tests__/isGlobalPopoverConfirmSubmitAction.test.ts"
     },
     {
       "category": "utils",
@@ -10873,24 +10873,24 @@
     },
     {
       "category": "utils",
-      "file": "packages/react-router-ui/src/utils/is-fully-controlled.ts",
+      "file": "packages/react-router-ui/src/utils/isFullyControlled.ts",
       "project": "packages/react-router-ui",
       "status": "tested",
-      "testFile": "packages/react-router-ui/src/utils/__tests__/is-fully-controlled.test.ts"
+      "testFile": "packages/react-router-ui/src/utils/__tests__/isFullyControlled.test.ts"
     },
     {
       "category": "utils",
-      "file": "packages/react-router-ui/src/utils/is-notification-event-name.ts",
+      "file": "packages/react-router-ui/src/utils/isNotificationEventName.ts",
       "project": "packages/react-router-ui",
       "status": "tested",
-      "testFile": "packages/react-router-ui/src/utils/__tests__/is-notification-event-name.test.ts"
+      "testFile": "packages/react-router-ui/src/utils/__tests__/isNotificationEventName.test.ts"
     },
     {
       "category": "utils",
-      "file": "packages/react-router-ui/src/utils/pagination-page-items.ts",
+      "file": "packages/react-router-ui/src/utils/buildPaginationPageItems.ts",
       "project": "packages/react-router-ui",
       "status": "tested",
-      "testFile": "packages/react-router-ui/src/utils/__tests__/pagination-page-items.test.ts"
+      "testFile": "packages/react-router-ui/src/utils/__tests__/buildPaginationPageItems.test.ts"
     },
     {
       "category": "config",
@@ -11289,13 +11289,13 @@
       "enforced": true,
       "missing": 9,
       "missingFiles": [
-        "applications/openthrottle-developer/app/routing/plans/utils/load-enabled-editors.ts",
-        "applications/openthrottle-developer/app/routing/schedule/utils/schedule-runs-table-columns.tsx",
-        "applications/openthrottle-developer/app/routing/schedule/utils/schedule-table-columns.tsx",
+        "applications/openthrottle-developer/app/routing/plans/utils/loadEnabledEditors.ts",
+        "applications/openthrottle-developer/app/routing/schedule/utils/buildScheduleRunsTableColumns.tsx",
+        "applications/openthrottle-developer/app/routing/schedule/utils/buildScheduleTableColumns.tsx",
         "applications/openthrottle-developer/app/routing/settings/repositories/utils/expansion.ts",
         "applications/openthrottle-developer/app/routing/settings/repositories/utils/paths.ts",
         "applications/openthrottle-developer/app/routing/settings/utils/settings-mcp-action.ts",
-        "applications/openthrottle-developer/app/routing/skills/utils/filter-skills-by-query.ts",
+        "applications/openthrottle-developer/app/routing/skills/utils/filterSkillsByQuery.ts",
         "applications/openthrottle-developer/app/routing/timeline/utils/formatters.ts",
         "applications/openthrottle-developer/app/routing/timeline/utils/parsers.ts"
       ],

@@ -5,9 +5,7 @@ export type {
 export { useWebsocketDebuggerLog } from '../../hooks/useWebsocketDebuggerLog';
 export type { UseWebsocketDebuggerSocketSubscriptionOptions } from '../../hooks/useWebsocketDebuggerSocketSubscription';
 export { useWebsocketDebuggerSocketSubscription } from '../../hooks/useWebsocketDebuggerSocketSubscription';
-export { filterWebsocketDebuggerEntries } from '../../utils/filter-websocket-debugger-entries';
-export type { WebsocketDebuggerConnectionStatus } from './connection-status';
-export { formatWebsocketDebuggerStatusColor } from './connection-status';
+export { filterWebsocketDebuggerEntries } from '../../utils/filterWebsocketDebuggerEntries';
 export type { WebsocketDebuggerEventOption } from './event-options';
 export {
   WEBSOCKET_DEBUGGER_ALL_EVENT_NAMES,
@@ -17,6 +15,8 @@ export {
   formatWebsocketDebuggerPayload,
   formatWebsocketDebuggerReceivedAt,
 } from './format-log-entry';
+export type { WebsocketDebuggerConnectionStatus } from './formatWebsocketDebuggerStatusColor';
+export { formatWebsocketDebuggerStatusColor } from './formatWebsocketDebuggerStatusColor';
 export type {
   WebsocketDebuggerEventSubscriber,
   WebsocketDebuggerLogEntry,

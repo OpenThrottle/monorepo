@@ -4,8 +4,8 @@ import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
 import type { Route } from '@/app/routes/+types/settings._index';
-import { getSettingsDiagnosticsLoaderData } from '~/routing/settings/utils/settings-diagnostics-loader-data';
-import { buildRootMatch } from '~/testing/root-match-fixture';
+import { getSettingsDiagnosticsLoaderData } from '~/routing/settings/utils/getSettingsDiagnosticsLoaderData';
+import { buildRootMatch } from '~/testing/buildRootMatch';
 
 import SettingsIndex from '../settings._index';
 

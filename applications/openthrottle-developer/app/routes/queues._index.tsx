@@ -25,7 +25,7 @@ import { QueuesStats } from '~/routing/queues/components/QueuesStats';
 import { QueuesTable } from '~/routing/queues/components/QueuesTable';
 import { QueueStateChart } from '~/routing/queues/components/QueueStateChart';
 import { QueueStatRow } from '~/routing/queues/components/QueueStatRow';
-import { summarizeQueues } from '~/routing/queues/utils/summarize-queues';
+import { summarizeQueues } from '~/routing/queues/utils/summarizeQueues';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

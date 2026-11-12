@@ -16,7 +16,7 @@ import type {
 import { PlanTagChips } from '~/routing/plans/components/PlanTagChips';
 import { PromoteTaskButton } from '~/routing/plans/components/PromoteTaskButton';
 import { usePlanTaskToolbar } from '~/routing/plans/hooks/usePlanTaskToolbar';
-import { getTaskMarkCompleteTooltip } from '~/routing/plans/utils/task-mark-complete-tooltip';
+import { getTaskMarkCompleteTooltip } from '~/routing/plans/utils/getTaskMarkCompleteTooltip';
 
 export interface PlanTaskToolbarProps {
   className?: string;

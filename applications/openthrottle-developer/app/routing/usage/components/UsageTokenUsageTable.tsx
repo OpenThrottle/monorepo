@@ -12,7 +12,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import type { TokenUsageGroup } from '~/routing/usage/utils/aggregate-token-usage';
+import type { TokenUsageGroup } from '~/routing/usage/utils/groupTokenUsage';
 import { tokenUsageProviderLabel } from '~/routing/usage/utils/token-usage-labels';
 
 export interface UsageTokenUsageTableProps {

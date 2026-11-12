@@ -5,7 +5,7 @@ import { QUEUE_HEALTH_DOT_CLASS } from '~/routing/queues/data/data.queue-health-
 import {
   computeQueueHealth,
   type QueueHealthCounts,
-} from '~/routing/queues/utils/queue-health';
+} from '~/routing/queues/utils/computeQueueHealth';
 
 export interface QueueHealthPillProps extends QueueHealthCounts {
   className?: string;

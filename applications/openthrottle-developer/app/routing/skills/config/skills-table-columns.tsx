@@ -17,8 +17,8 @@ import {
   SKILLS_MODEL_INVOCATION_COPY,
   SKILLS_SOURCE_COPY,
 } from '~/routing/skills/data/data.copy';
+import { getSkillSourceBadge } from '~/routing/skills/utils/getSkillSourceBadge';
 import { getResolvedModelInvocationDisplay } from '~/routing/skills/utils/model-invocation-badge';
-import { getSkillSourceBadge } from '~/routing/skills/utils/source-badge';
 
 export type SkillsTableColumnValue =
   | RepoSkillEntry['disableModelInvocation']

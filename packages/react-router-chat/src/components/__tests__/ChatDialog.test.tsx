@@ -6,8 +6,8 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import type { ChatComposerControls } from '../../context/chat-context';
-import { ChatProvider } from '../../context/chat-context';
+import type { ChatComposerControls } from '../../context/ChatProvider';
+import { ChatProvider } from '../../context/ChatProvider';
 import type { ChatMessage } from '../../types';
 import { ChatComposerMode } from '../../types';
 import type { ChatDialogProps } from '../ChatDialog';

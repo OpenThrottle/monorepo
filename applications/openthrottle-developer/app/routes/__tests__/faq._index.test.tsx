@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, test } from 'vitest';
 import type { Route } from '@/app/routes/+types/faq._index';
 import { DOCS_FEATURE_FLAG_DEFAULTS } from '~/global/config/docs-feature-flags';
 import { buildPersistentSettingKey } from '~/global/config/persistent-setting-storage';
-import { buildRootMatch } from '~/testing/root-match-fixture';
+import { buildRootMatch } from '~/testing/buildRootMatch';
 
 import Component from '../faq._index';
 

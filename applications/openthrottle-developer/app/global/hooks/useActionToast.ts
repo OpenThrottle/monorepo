@@ -3,7 +3,7 @@ import { getActionError } from '@openthrottle/react-router-utils';
 import * as React from 'react';
 
 import type { ToastMessage } from '~/global/types';
-import { resolveToastMessage } from '~/global/utils/resolve-toast-message';
+import { resolveToastMessage } from '~/global/utils/resolveToastMessage';
 
 export interface UseActionToastOptions<TResult> {
   /**

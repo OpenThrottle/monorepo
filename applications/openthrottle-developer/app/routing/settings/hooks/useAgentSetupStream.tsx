@@ -12,7 +12,7 @@ import {
   AgentSetupChunkAddedDocument,
   type AgentSetupChunkAddedSubscription,
 } from '~/__generated__/graphql';
-import { getGraphqlWsClient } from '~/services/graphql-ws-client';
+import { getGraphqlWsClient } from '~/services/getGraphqlWsClient';
 
 type Chunk = AgentSetupChunkAddedSubscription['agentSetupChunkAdded'];
 

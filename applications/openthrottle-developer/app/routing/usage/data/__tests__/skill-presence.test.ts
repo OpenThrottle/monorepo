@@ -10,7 +10,7 @@ import {
   SKILL_PRESENCES,
 } from '~/routing/usage/data/data.skill-presence';
 import { SKILL_USAGE_SCOPES } from '~/routing/usage/data/data.skill-usage-copy';
-import { classifySkillUsagePresence } from '~/routing/usage/utils/classify-skill-usage-presence';
+import { classifySkillUsagePresence } from '~/routing/usage/utils/classifySkillUsagePresence';
 
 describe('skill-presence', () => {
   describe('classifySkillUsagePresence', () => {

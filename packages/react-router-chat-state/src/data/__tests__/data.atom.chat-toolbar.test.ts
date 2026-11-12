@@ -7,7 +7,7 @@ import {
 import { APP_NAME } from '@openthrottle/react-router-utils';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { normalizeChatToolbarState } from '../../utils/normalize-chat-toolbar-state';
+import { normalizeChatToolbarState } from '../../utils/normalizeChatToolbarState';
 import {
   CHAT_TOOLBAR_STATE_VERSION,
   CHAT_TOOLBAR_STORAGE_KEY,

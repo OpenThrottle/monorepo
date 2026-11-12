@@ -4,7 +4,7 @@ import * as React from 'react';
 import type { LinkProps, UIMatch } from 'react-router';
 import { useMatches } from 'react-router';
 
-import { hasBreadcrumbHandle } from '../utils/breadcrumb-handle';
+import { hasBreadcrumbHandle } from '../utils/hasBreadcrumbHandle';
 
 export interface GlobalLayoutBreadcrumbsHandle<TLoaderData = {}, THandle = {}> {
   breadcrumb?: (match: UIMatch<TLoaderData, THandle>) => React.ReactNode;

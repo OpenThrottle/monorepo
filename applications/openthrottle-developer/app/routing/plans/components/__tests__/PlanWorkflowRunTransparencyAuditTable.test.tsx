@@ -12,7 +12,7 @@ import {
   PLAN_RUN_HISTORY_INITIAL_ROWS,
 } from '~/routing/plans/data/data.plan-run-history';
 import { getDefaultWorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
-import type { PlanRunMetricsEntry } from '~/routing/plans/utils/plan-workflow-run-transparency';
+import type { PlanRunMetricsEntry } from '~/routing/plans/utils/joinPlanRunJobMetrics';
 
 import type { PlanRunAuditRow } from '../PlanWorkflowRunTransparencyAuditTable';
 import { PlanWorkflowRunTransparencyAuditTable } from '../PlanWorkflowRunTransparencyAuditTable';

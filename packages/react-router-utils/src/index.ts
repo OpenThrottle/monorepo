@@ -22,6 +22,6 @@ export * from './utils/id-fragment';
 export * from './utils/logger';
 export * from './utils/metadata';
 export * from './utils/parsers';
-export * from './utils/prefers-color-scheme-dark';
+export * from './utils/prefersColorSchemeDark';
 export * from './utils/seo';
 export * from './utils/theme';

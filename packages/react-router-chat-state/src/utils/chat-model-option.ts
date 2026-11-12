@@ -3,7 +3,7 @@ import type {
   ChatModelOption,
 } from '@openthrottle/react-router-chat';
 
-import { resolveProviderIcon } from './resolve-provider-icon';
+import { resolveProviderIcon } from './resolveProviderIcon';
 
 /**
  * @description Pure helpers for the chat composer's model dropdown. A toolbar

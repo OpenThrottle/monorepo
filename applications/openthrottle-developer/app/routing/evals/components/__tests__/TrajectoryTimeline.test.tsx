@@ -8,7 +8,7 @@ import {
   MOCK_LONG_TRAJECTORY,
   MOCK_TRAJECTORY,
 } from '~/routing/evals/data/mock.trajectory';
-import { renderEvals } from '~/routing/evals/testing/render-evals';
+import { renderEvals } from '~/routing/evals/testing/renderEvals';
 import { buildTrajectoryTimeline } from '~/routing/evals/utils/timeline';
 
 import { TrajectoryTimeline } from '../TrajectoryTimeline';

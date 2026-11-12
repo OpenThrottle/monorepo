@@ -1,7 +1,7 @@
 import * as React from 'react';
 
-import { normalizeUrlBase } from '~/routing/settings/utils/normalize-url-base';
-import type { SettingsDiagnosticsLoaderData } from '~/routing/settings/utils/settings-diagnostics-loader-data';
+import type { SettingsDiagnosticsLoaderData } from '~/routing/settings/utils/getSettingsDiagnosticsLoaderData';
+import { normalizeUrlBase } from '~/routing/settings/utils/normalizeUrlBase';
 
 export interface UseSettingsEnvironmentDiagnosticsOptions {
   /** Configured developer portal base URL (`env.APP_URL_DEVELOPER`). */

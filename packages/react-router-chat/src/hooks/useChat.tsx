@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-import type { ChatContextValue } from '../context/chat-context';
+import type { ChatContextValue } from '../context/ChatProvider';
 import { ChatContext } from '../data/data.chat-context';
 
 /**

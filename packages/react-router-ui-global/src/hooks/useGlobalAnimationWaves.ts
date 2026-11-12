@@ -1,13 +1,13 @@
 import * as React from 'react';
 
 import { DEFAULT_GLOBAL_ANIMATION_WAVES } from '../config/global-animation-waves';
-import { buildSoundArcs } from '../utils/build-sound-arcs';
+import { buildSoundArcs } from '../utils/buildSoundArcs';
 import {
   createResizeObserver,
   createVisibilityObserver,
 } from '../utils/create-canvas-observers';
-import { cubicAt } from '../utils/cubic-at';
-import { cubicDerivativeAt } from '../utils/cubic-derivative-at';
+import { cubicAt } from '../utils/cubicAt';
+import { cubicDerivativeAt } from '../utils/cubicDerivativeAt';
 
 /**
  * Tunables for the sound-wave arcs. Every field is optional; omitting one

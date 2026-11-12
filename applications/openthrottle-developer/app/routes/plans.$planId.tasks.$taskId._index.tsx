@@ -19,7 +19,7 @@ import {
 } from '~/routing/plans/actions/taskId';
 import { PlanTaskNotFound } from '~/routing/plans/components/PlanTaskNotFound';
 import { TaskDetailRoute } from '~/routing/plans/components/TaskDetailRoute';
-import { loadTaskDetailRelations } from '~/routing/plans/utils/load-task-detail-relations';
+import { loadTaskDetailRelations } from '~/routing/plans/utils/loadTaskDetailRelations';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

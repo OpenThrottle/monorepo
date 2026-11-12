@@ -9,7 +9,7 @@ import type { RolloutFlagFieldsFragment } from '~/__generated__/graphql';
 import { RolloutFlagKind } from '~/__generated__/graphql';
 import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
 import type { RolloutFlagKindOption } from '~/routing/settings/data/data.rollout-kinds';
-import { isRolloutFlagKind } from '~/routing/settings/utils/is-rollout-flag-kind';
+import { isRolloutFlagKind } from '~/routing/settings/utils/isRolloutFlagKind';
 
 /** Form-facing variation row (valueJson is already JSON-serialized). */
 export interface RolloutFormVariation {

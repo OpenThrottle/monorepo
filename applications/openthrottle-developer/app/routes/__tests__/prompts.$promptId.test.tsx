@@ -3,7 +3,7 @@ import { createTestRouterContext } from '@openthrottle/react-router-testing';
 import { describe, expect, test, vi } from 'vitest';
 
 import { CustomPromptType } from '~/__generated__/graphql';
-import { buildRootMatch } from '~/testing/root-match-fixture';
+import { buildRootMatch } from '~/testing/buildRootMatch';
 
 import { action, loader, meta } from '../prompts.$promptId';
 

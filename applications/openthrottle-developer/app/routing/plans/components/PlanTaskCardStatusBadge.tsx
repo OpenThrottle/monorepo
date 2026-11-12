@@ -2,7 +2,7 @@ import { Badge } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import { PlanStatusBadge } from '~/routing/plans/components/PlanStatusBadge';
-import { formatPlanTaskStatus } from '~/routing/plans/utils/format-status';
+import { formatPlanTaskStatus } from '~/routing/plans/utils/formatPlanTaskStatus';
 import { isPlanStatusKey } from '~/routing/plans/utils/utils.plans';
 
 export interface PlanTaskCardStatusBadgeProps {

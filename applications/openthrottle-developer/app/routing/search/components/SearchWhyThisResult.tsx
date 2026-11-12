@@ -3,15 +3,15 @@ import { Link } from 'react-router';
 
 import type { SearchChunk } from '~/__generated__/graphql';
 import type { SearchRankMeta } from '~/routing/search/types/search-rank-meta';
-import { githubBlobHref } from '~/routing/search/utils/github-blob-href';
-import { planOrTaskDetailHref } from '~/routing/search/utils/plan-or-task-detail-href';
+import { formatRankSummary } from '~/routing/search/utils/formatRankSummary';
+import { githubBlobHref } from '~/routing/search/utils/githubBlobHref';
+import { planOrTaskDetailHref } from '~/routing/search/utils/planOrTaskDetailHref';
 import {
   describeSimilarity,
   describeSource,
   formatDocSourceMeta,
   formatEntityIds,
 } from '~/routing/search/utils/search-why-hints';
-import { formatRankSummary } from '~/routing/search/utils/search-why-this-result';
 
 export interface SearchWhyThisResultProps {
   className?: string;

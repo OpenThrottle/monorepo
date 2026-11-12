@@ -12,7 +12,7 @@ import {
 import clsx from 'clsx';
 import * as React from 'react';
 
-import { getExpansionOptions } from '../utils/get-expansion-options';
+import { getExpansionOptions } from '../utils/getExpansionOptions';
 import {
   Table,
   TableBody,

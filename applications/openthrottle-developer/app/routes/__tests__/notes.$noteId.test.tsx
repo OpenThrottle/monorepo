@@ -6,7 +6,7 @@ import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
 import type { Route } from '@/app/routes/+types/notes.$noteId';
-import { buildRootMatch } from '~/testing/root-match-fixture';
+import { buildRootMatch } from '~/testing/buildRootMatch';
 import { createTestRoutesStub } from '~/testing/route-fixtures';
 
 import NoteDetail from '../notes.$noteId';

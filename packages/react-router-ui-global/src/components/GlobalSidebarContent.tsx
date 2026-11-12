@@ -21,7 +21,7 @@ import type { NavLinkProps } from 'react-router';
 import { NavLink, useLocation } from 'react-router';
 
 import { useCloseMobileSidebar } from '../hooks/useCloseMobileSidebar';
-import { resolveSectionDefaultOpen } from '../utils/resolve-section-default-open';
+import { resolveSectionDefaultOpen } from '../utils/resolveSectionDefaultOpen';
 import { getPathFromTo } from '../utils/utils.global';
 
 export interface GlobalSidebarContentLinkProps extends NavLinkProps {

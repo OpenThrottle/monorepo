@@ -4,7 +4,7 @@ import { describe, expect, test } from 'vitest';
 
 import type { Route } from '@/app/routes/+types/schedule.create';
 import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
-import { buildRootMatch } from '~/testing/root-match-fixture';
+import { buildRootMatch } from '~/testing/buildRootMatch';
 import { renderRoutesStub } from '~/testing/route-fixtures';
 
 import CreateSchedule from '../schedule.create';

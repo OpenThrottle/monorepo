@@ -12,7 +12,7 @@ import * as React from 'react';
 import type { useFetcher } from 'react-router';
 
 import type { RoleDetailsFragment } from '~/__generated__/graphql';
-import { readActionError } from '~/global/utils/read-action-error';
+import { readActionError } from '~/global/utils/readActionError';
 import type { action as roleDetailAction } from '~/routes/roles.$roleId';
 
 export interface RoleEditSheetProps {

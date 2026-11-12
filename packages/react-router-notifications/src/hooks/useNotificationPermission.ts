@@ -8,7 +8,7 @@ import { IS_BROWSER } from '@openthrottle/react-router-utils';
 import * as React from 'react';
 
 import type { NotificationPermissionState } from '../types';
-import { getNotificationPermission } from '../utils/get-notification-permission';
+import { getNotificationPermission } from '../utils/getNotificationPermission';
 
 /** @public */
 export interface UseNotificationPermissionResult {
