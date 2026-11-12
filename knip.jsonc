@@ -307,7 +307,6 @@
         "prettier-plugin-tailwindcss",
         "react-i18next",
         "react-scan",
-        "react-test-renderer",
         "react-toastify",
         "react-tooltip",
         "react-use",

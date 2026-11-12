@@ -858,7 +858,6 @@ overrides:
   graphql-request: ^7.4.0
   react: 19.2.4
   react-dom: 19.2.4
-  react-test-renderer: 19.2.4
   shadcn>zod: 3.25.76
   zod: ^4.4.3
   zod-to-json-schema: ^3.25.2
