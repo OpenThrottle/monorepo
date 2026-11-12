@@ -11,7 +11,10 @@ import {
 import { Check, Lock } from 'lucide-react';
 import * as React from 'react';
 
-import { PERMISSION_MODE_META } from '../data/data.chat-permission-mode-meta';
+import {
+  PERMISSION_MODE_META,
+  SUPERVISED_UNGATED_EDITS_DESCRIPTION,
+} from '../data/data.chat-permission-mode-meta';
 import { CHAT_PERMISSION_REMEMBER_COPY } from '../data/data.copy';
 import type { ChatBackendCapabilities } from '../types';
 import { ChatPermissionMode } from '../types';
@@ -70,6 +73,16 @@ export const ChatPermissionModeControl = (
     (mode) => mode !== ChatPermissionMode.supervised,
   );
   const showRemember = onRememberPermissionModeChange != null && hasElevatedMode; // prettier-ignore
+
+  const describeMode = (mode: ChatPermissionMode): string => {
+    if (
+      mode === ChatPermissionMode.supervised &&
+      !capabilities.supervisedGatesEdits
+    ) {
+      return SUPERVISED_UNGATED_EDITS_DESCRIPTION;
+    }
+    return PERMISSION_MODE_META[mode].description;
+  };
 
   // Handlers
   const onSelectMode = (mode: ChatPermissionMode): void => {
@@ -144,7 +157,7 @@ export const ChatPermissionModeControl = (
               <span className="flex min-w-0 flex-col">
                 <span className="font-medium">{meta.label}</span>
                 <span className="text-muted-foreground text-xs">
-                  {meta.description}
+                  {describeMode(mode)}
                 </span>
               </span>
               <Check

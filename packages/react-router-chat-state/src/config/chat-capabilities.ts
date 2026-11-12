@@ -4,6 +4,7 @@ import {
   ChatReasoningLevel,
 } from '@openthrottle/react-router-chat';
 
+import type { ChatAgentRuntime } from '../types';
 import type { DecodedChatOption } from '../utils/chat-model-option';
 
 /**
@@ -60,6 +61,7 @@ export const OPENAI_BACKEND_CAPABILITIES: ChatBackendCapabilities = {
   ],
   requiresRepository: false,
   serviceTiers: [],
+  supervisedGatesEdits: true,
   supportsModelFlag: true,
 };
 
@@ -89,6 +91,7 @@ export const DEFAULT_CLI_BACKEND_CAPABILITIES: ChatBackendCapabilities = {
   ],
   requiresRepository: true,
   serviceTiers: [],
+  supervisedGatesEdits: true,
   supportsModelFlag: true,
 };
 
@@ -117,6 +120,7 @@ export const CHAT_BACKEND_CAPABILITIES: Readonly<
     reasoningLevels: [],
     requiresRepository: true,
     serviceTiers: [],
+    supervisedGatesEdits: true,
     supportsModelFlag: true,
   },
   claude: {
@@ -131,6 +135,7 @@ export const CHAT_BACKEND_CAPABILITIES: Readonly<
     ],
     requiresRepository: true,
     serviceTiers: [],
+    supervisedGatesEdits: true,
     supportsModelFlag: true,
   },
   codex: {
@@ -143,6 +148,7 @@ export const CHAT_BACKEND_CAPABILITIES: Readonly<
     ],
     requiresRepository: true,
     serviceTiers: [],
+    supervisedGatesEdits: true,
     supportsModelFlag: true,
   },
   cursor: {
@@ -163,6 +169,7 @@ export const CHAT_BACKEND_CAPABILITIES: Readonly<
     reasoningLevels: [],
     requiresRepository: true,
     serviceTiers: [],
+    supervisedGatesEdits: true,
     supportsModelFlag: true,
   },
   grok: {
@@ -175,6 +182,7 @@ export const CHAT_BACKEND_CAPABILITIES: Readonly<
     ],
     requiresRepository: true,
     serviceTiers: [],
+    supervisedGatesEdits: true,
     supportsModelFlag: true,
   },
   opencode: {
@@ -188,6 +196,7 @@ export const CHAT_BACKEND_CAPABILITIES: Readonly<
     ],
     requiresRepository: true,
     serviceTiers: [],
+    supervisedGatesEdits: true,
     supportsModelFlag: true,
   },
 };
@@ -195,18 +204,30 @@ export const CHAT_BACKEND_CAPABILITIES: Readonly<
 /**
  * Capabilities for the currently-selected composer option. OpenAI endpoints get
  * the completion descriptor; a CLI backend gets its per-driver descriptor (or
- * the conservative default for an as-yet-uncharacterized driver).
+ * the conservative default for an as-yet-uncharacterized driver). When the
+ * backend's live `runtime` reports `approvals` (chat runs over ACP), all three
+ * permission postures are offered and `supervisedGatesEdits` follows the
+ * runtime's `editApprovals`.
  * @public
  */
 export function capabilitiesForChatOption(
   decoded: DecodedChatOption | null,
+  runtime: ChatAgentRuntime | undefined = undefined,
 ): ChatBackendCapabilities {
   if (decoded == null || decoded.backend === 'openai') {
     return OPENAI_BACKEND_CAPABILITIES;
   }
 
-  return (
+  const base =
     CHAT_BACKEND_CAPABILITIES[decoded.backend] ??
-    DEFAULT_CLI_BACKEND_CAPABILITIES
-  );
+    DEFAULT_CLI_BACKEND_CAPABILITIES;
+  if (runtime?.approvals !== true) {
+    return base;
+  }
+
+  return {
+    ...base,
+    permissionModes: ALL_PERMISSION_MODES,
+    supervisedGatesEdits: runtime.editApprovals,
+  };
 }

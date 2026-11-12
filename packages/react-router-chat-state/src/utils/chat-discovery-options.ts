@@ -5,6 +5,8 @@ import type {
   ChatPersonaOption,
 } from '@openthrottle/react-router-chat';
 
+import { AGENT_NOT_SIGNED_IN_SUFFIX } from '../data/data.copy';
+import type { ChatAgentRuntime } from '../types';
 import {
   cliGroupId,
   encodeCliEndpointOptionId,
@@ -66,7 +68,20 @@ export interface DiscoveredAgentCliModelOption {
  * @public
  */
 export interface DiscoveredAgentCli {
+  /**
+   * Auth state of the agent CLI. Optional because the admin app's discovery
+   * query does not select it; a missing value is treated as `unknown`.
+   */
+  readonly authState?: { readonly status: string };
   readonly backend: string;
+  /**
+   * Chat-runtime capabilities. Optional because the admin app's discovery query
+   * does not select it; a missing value is treated as `approvals: false`.
+   */
+  readonly capabilities?: {
+    readonly approvals: boolean;
+    readonly editApprovals: boolean;
+  };
   readonly chatCapable: boolean;
   /**
    * Whether the current user has left this agent enabled. Optional because the
@@ -156,6 +171,8 @@ export interface RepositoryOption {
  * @public
  */
 export interface ChatOptionsResponse {
+  /** Live per-agent runtime facts, keyed by backend id. */
+  readonly agentRuntimes: Readonly<Record<string, ChatAgentRuntime>>;
   /** Discovered local OpenAI models followed by allowlisted agent CLIs. */
   readonly models: readonly ChatModelOption[];
   readonly personas: readonly ChatPersonaOption[];
@@ -179,6 +196,34 @@ export function toChatModelOptions(
       label: model,
     }));
   });
+}
+
+/**
+ * Project each discovered agent's live runtime facts (ACP approvals, auth
+ * status), keyed by backend id. Missing fields degrade to `approvals: false`,
+ * `editApprovals: false`, `authStatus: 'unknown'`.
+ * @public
+ */
+export function toAgentRuntimes(
+  discovery: DiscoveredAgentClis,
+): Readonly<Record<string, ChatAgentRuntime>> {
+  return Object.fromEntries(
+    discovery.agents.map((agent) => [
+      agent.backend,
+      {
+        approvals: agent.capabilities?.approvals ?? false,
+        authStatus: agent.authState?.status ?? 'unknown',
+        editApprovals: agent.capabilities?.editApprovals ?? false,
+      },
+    ]),
+  );
+}
+
+function agentSubLabel(agent: DiscoveredAgentCli): string {
+  if (agent.authState?.status === 'unauthenticated') {
+    return `${agent.label} · ${AGENT_NOT_SIGNED_IN_SUFFIX}`;
+  }
+  return agent.label;
 }
 
 function resolveAgentModelEntries(
@@ -236,6 +281,7 @@ export function toAgentChatOptions(
     .filter((agent) => agent.chatCapable && agent.enabled !== false)
     .flatMap((agent) => {
       const models = resolveAgentModels(agent);
+      const subLabel = agentSubLabel(agent);
       if (models.length === 0) {
         // Distinguish "driver lists no models" (→ a single bare-backend option
         // at its default model) from "every model disabled" (→ offer nothing).
@@ -250,7 +296,7 @@ export function toAgentChatOptions(
             groupId: cliGroupId(agent.backend),
             id: agent.backend,
             label: agent.label,
-            subLabel: agent.label,
+            subLabel,
           },
         ];
       }
@@ -261,7 +307,7 @@ export function toAgentChatOptions(
         groupId: cliGroupId(agent.backend),
         id: encodeCliOptionId(agent.backend, model),
         label: model,
-        subLabel: agent.label,
+        subLabel,
       }));
     });
 }
@@ -387,7 +433,10 @@ export function toCheckoutOptions(
  * @public
  */
 export interface ChatDiscoveryLoaders {
-  loadAgentClis(): Promise<ChatModelOption[]>;
+  loadAgentClis(): Promise<{
+    readonly models: ChatModelOption[];
+    readonly runtimes: Readonly<Record<string, ChatAgentRuntime>>;
+  }>;
   loadDiscoveredModels(): Promise<ChatModelOption[]>;
   loadPersonas(): Promise<ChatPersonaOption[]>;
   loadRepositories(): Promise<RepositoryOption[]>;
@@ -411,7 +460,8 @@ export async function buildChatOptionsResponse(
   ]);
 
   return {
-    models: [...localModels, ...agentClis],
+    agentRuntimes: agentClis.runtimes,
+    models: [...localModels, ...agentClis.models],
     personas,
     repositories,
   };

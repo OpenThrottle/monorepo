@@ -34,3 +34,10 @@ export const PERMISSION_MODE_META: Record<
     label: 'Supervised',
   },
 };
+
+/**
+ * Supervised description for a backend that applies file edits without asking,
+ * so Supervised only gates commands and tools.
+ * @public
+ */
+export const SUPERVISED_UNGATED_EDITS_DESCRIPTION = `Ask before commands; edits apply without asking`;

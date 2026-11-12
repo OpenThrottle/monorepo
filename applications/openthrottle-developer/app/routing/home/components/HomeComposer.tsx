@@ -4,6 +4,7 @@ import {
   type ChatModelOption,
   type ChatPersonaOption,
 } from '@openthrottle/react-router-chat';
+import type { ChatAgentRuntime } from '@openthrottle/react-router-chat-state';
 import { CHAT_TOOLBAR_CONTEXT_SOURCES } from '@openthrottle/react-router-chat-state';
 import { InlineErrors } from '@openthrottle/react-router-shadcn';
 import { FEATURE_BETA_PREVIEW } from '@openthrottle/react-router-utils';
@@ -17,6 +18,8 @@ import type { RepositoryOption } from '~/routing/home/utils/models.server';
 import type { ComposerDefaultAgent } from '~/routing/home/utils/seedComposerDefaultAgent';
 
 export interface HomeComposerProps {
+  /** Live per-agent runtime facts (ACP approvals, auth) keyed by backend id. */
+  agentRuntimes: Readonly<Record<string, ChatAgentRuntime>>;
   /** Sidebar-backing conversation list; the composer refreshes it on new persisted turns. */
   conversationList: UseConversationListResult;
   /** The saved default agent; seeds the model and effort when nothing is remembered. */
@@ -42,6 +45,7 @@ export interface HomeComposerProps {
  */
 export const HomeComposer = (props: HomeComposerProps): React.ReactElement => {
   const {
+    agentRuntimes,
     conversationList,
     defaultAgent,
     models,
@@ -87,6 +91,7 @@ export const HomeComposer = (props: HomeComposerProps): React.ReactElement => {
     slashCommandProvider,
     voice,
   } = useHomeComposer({
+    agentRuntimes,
     conversationList,
     defaultAgent,
     models,

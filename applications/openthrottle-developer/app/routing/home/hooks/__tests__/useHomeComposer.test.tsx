@@ -103,6 +103,7 @@ function buildStub(
   overrides: Partial<UseHomeComposerOptions> = {},
 ): React.ReactElement {
   const props: UseHomeComposerOptions = {
+    agentRuntimes: {},
     conversationList: makeConversationList(),
     defaultAgent: null,
     models: [openaiModel],
@@ -342,6 +343,7 @@ describe('useHomeComposer', () => {
     // would otherwise reset the hook's internal dedupe ref).
     const propsRef: { current: UseHomeComposerOptions } = {
       current: {
+        agentRuntimes: {},
         conversationList,
         defaultAgent: null,
         models: [openaiModel],

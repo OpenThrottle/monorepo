@@ -1,12 +1,19 @@
 /**
  * The ACP feature flag. `OPENTHROTTLE_CHAT_ACP_BACKENDS` is a comma-separated
- * list of driver ids (or `all`) whose chat turns run over ACP instead of the
+ * list of driver ids (`cursor`, `antigravity`, or `all`) whose chat turns run over ACP instead of the
  * per-CLI headless adapter. Unset ⇒ every backend keeps its CLI adapter.
  *
  * Read per turn, not at import, so flipping it needs no server restart. Only
  * drivers with an {@link ACP_AGENT_SPECS} entry can be routed; the rest ignore
  * the flag. Plan runs (Ralph, scheduled jobs, ot-loop), hooks and
  * `--plugin-dir` injection never go through here — this is chat only.
+ *
+ * Hooks do not fire inside an ACP turn either: `cursor-agent acp`
+ * (2026.11.05) ran none of a project `.cursor/hooks.json` that fires ten
+ * events for the same prompt under `cursor-agent -p` in the same trusted
+ * workspace (plan 60dfd266). Chat routed here on cursor therefore carries no
+ * OT hook telemetry — skill-usage capture, bash-guard and format-on-edit
+ * included.
  */
 
 import type { ConversationBackend, ConversationBackendRun } from '../types.ts';

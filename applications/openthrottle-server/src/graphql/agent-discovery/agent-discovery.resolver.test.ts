@@ -22,6 +22,7 @@ const human: AuthPrincipal = { kind: AUTH_PRINCIPAL_KIND_USER, sub: 'user-1' };
 const AUTH_STATE = { detail: null, status: 'unknown' } as const;
 const CAPABILITIES = {
   approvals: false,
+  editApprovals: false,
   imageInput: false,
   mcpInjection: false,
   replaysFullHistory: false,
@@ -164,6 +165,7 @@ describe('AgentDiscoveryResolver', () => {
     } as const;
     const capabilities = {
       approvals: true,
+      editApprovals: false,
       imageInput: true,
       mcpInjection: true,
       replaysFullHistory: false,

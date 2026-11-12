@@ -107,7 +107,7 @@ export const useRunSkillDialog = (
 
   const decoded = modelId ? decodeChatOption(modelId) : null;
   const capabilities = capabilitiesForChatOption(decoded);
-  const isCliBackend = decoded !== null && decoded.backend !== 'openai';
+  const isCliBackend = decoded !== null && capabilities.requiresRepository;
   const submitDisabled =
     decoded === null ||
     (capabilities.requiresRepository &&

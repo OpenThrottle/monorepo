@@ -19,6 +19,7 @@ const FULL_CAPS: ChatBackendCapabilities = {
   ],
   requiresRepository: false,
   serviceTiers: [ChatServiceTier.standard, ChatServiceTier.fast],
+  supervisedGatesEdits: true,
   supportsModelFlag: true,
 };
 

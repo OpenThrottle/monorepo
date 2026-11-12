@@ -6,6 +6,7 @@ import type {
 
 import { capabilitiesForChatOption } from '../config/chat-capabilities';
 import type { ChatToolbarState } from '../data/data.chat-toolbar-state';
+import type { ChatAgentRuntime } from '../types';
 import { decodeChatOption } from './chat-model-option';
 
 /**
@@ -26,6 +27,12 @@ export interface ReconcileRepositoryOption {
  * @public
  */
 export interface ReconcileChatToolbarOptions {
+  /**
+   * Live per-agent runtime facts keyed by backend id; refines the capability
+   * descriptor (e.g. ACP offers all permission modes). Optional so existing
+   * callers keep the static behavior.
+   */
+  readonly agentRuntimes?: Readonly<Record<string, ChatAgentRuntime>>;
   readonly models: readonly ChatModelOption[];
   readonly personas: readonly ChatPersonaOption[];
   readonly repositories: readonly ReconcileRepositoryOption[];
@@ -211,13 +218,16 @@ export function reconcileChatToolbarState(
   persisted: ChatToolbarState,
   options: ReconcileChatToolbarOptions,
 ): ChatToolbarState {
-  const { models, personas, repositories } = options;
+  const { agentRuntimes, models, personas, repositories } = options;
 
   const modelId = resolvePersistedModelId(persisted.modelId, models);
   const personaId = resolvePersonaId(persisted.personaId, personas);
 
   const decoded = modelId != null ? decodeChatOption(modelId) : null;
-  const capabilities = capabilitiesForChatOption(decoded);
+  const capabilities = capabilitiesForChatOption(
+    decoded,
+    decoded != null ? agentRuntimes?.[decoded.backend] : undefined,
+  );
 
   const repositoryIds = resolveRepositoryIds(
     persisted.repositoryIds,

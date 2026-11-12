@@ -7,6 +7,7 @@ import {
   methods,
   type PermissionOption,
   type PromptResponse,
+  type SessionConfigOption,
 } from '@agentclientprotocol/sdk';
 import { describe, expect, it } from 'vitest';
 
@@ -76,6 +77,7 @@ describe('createAcpConversationBackend', () => {
         authMethods: [],
         configOptions: [],
         loadable: [],
+        modes: undefined,
         onPrompt: reply('hi there'),
       });
       const backend = createAcpConversationBackend(FAKE_SPEC, {
@@ -98,6 +100,7 @@ describe('createAcpConversationBackend', () => {
         authMethods: [],
         configOptions: [],
         loadable: undefined,
+        modes: undefined,
         onPrompt: reply('ok'),
       });
       const backend = createAcpConversationBackend(FAKE_SPEC, {
@@ -127,12 +130,14 @@ describe('createAcpConversationBackend', () => {
         authMethods: ['fake-login'],
         configOptions: [],
         loadable: [],
+        modes: undefined,
         onPrompt: reply('ok'),
       });
       const silent = createFakeLauncher({
         authMethods: ['something-else'],
         configOptions: [],
         loadable: [],
+        modes: undefined,
         onPrompt: reply('ok'),
       });
 
@@ -156,6 +161,7 @@ describe('createAcpConversationBackend', () => {
         authMethods: [],
         configOptions: [],
         loadable: [],
+        modes: undefined,
         onPrompt: reply('ok'),
       });
       const backend = createAcpConversationBackend(FAKE_SPEC, {
@@ -180,6 +186,7 @@ describe('createAcpConversationBackend', () => {
         authMethods: [],
         configOptions: [],
         loadable: [],
+        modes: undefined,
         onPrompt: reply('ok'),
       });
       const backend = createAcpConversationBackend(FAKE_SPEC, {
@@ -215,6 +222,7 @@ describe('createAcpConversationBackend', () => {
         authMethods: [],
         configOptions: [],
         loadable: ['persisted-7'],
+        modes: undefined,
         onPrompt: reply('resumed'),
       });
       const backend = createAcpConversationBackend(FAKE_SPEC, {
@@ -236,6 +244,7 @@ describe('createAcpConversationBackend', () => {
         authMethods: [],
         configOptions: [],
         loadable: [],
+        modes: undefined,
         onPrompt: reply('ok'),
       });
       const backend = createAcpConversationBackend(FAKE_SPEC, {
@@ -262,6 +271,7 @@ describe('createAcpConversationBackend', () => {
           modelOption('default[]', ['default[]', 'gpt-5.5[fast=true]']),
         ],
         loadable: [],
+        modes: undefined,
         onPrompt: reply('ok'),
       });
       const backend = createAcpConversationBackend(FAKE_SPEC, {
@@ -283,12 +293,131 @@ describe('createAcpConversationBackend', () => {
         authMethods: [],
         configOptions: [modelOption('default[]', ['default[]', 'gpt-5.5'])],
         loadable: [],
+        modes: undefined,
         onPrompt: reply('ok'),
       });
 
       await collect(
         createAcpConversationBackend(FAKE_SPEC, { launch: fake.launch }).stream(
           run({}),
+        ),
+      );
+
+      expect(fake.log.configSets).toEqual([]);
+    });
+  });
+
+  describe('session mode', () => {
+    const MODE_SPEC = {
+      ...FAKE_SPEC,
+      sessionMode: (mode: ConversationBackendRun['permissionMode']) => {
+        return mode === 'supervised' ? 'ask-first' : 'auto-edit';
+      },
+    };
+    const ASK_FIRST = { name: 'Ask first', value: 'ask-first' };
+    const AUTO_EDIT = { name: 'Auto edit', value: 'auto-edit' };
+    const modeOption = (
+      values: ReadonlyArray<{ readonly name: string; readonly value: string }>,
+    ): SessionConfigOption => {
+      return {
+        category: 'mode',
+        currentValue: 'auto-edit',
+        id: 'mode',
+        name: 'Mode',
+        options: [...values],
+        type: 'select',
+      };
+    };
+
+    it('sets the mode config option for the posture, once per change', async () => {
+      const fake = createFakeLauncher({
+        authMethods: [],
+        configOptions: [modeOption([ASK_FIRST, AUTO_EDIT])],
+        loadable: [],
+        modes: undefined,
+        onPrompt: reply('ok'),
+      });
+      const backend = createAcpConversationBackend(MODE_SPEC, {
+        launch: fake.launch,
+      });
+
+      await collect(backend.stream(run({ permissionMode: 'supervised' })));
+      await collect(
+        backend.stream(
+          run({ permissionMode: 'supervised', sessionId: 'minted-1' }),
+        ),
+      );
+      await collect(
+        backend.stream(
+          run({ permissionMode: 'autoAcceptEdits', sessionId: 'minted-1' }),
+        ),
+      );
+
+      expect(fake.log.configSets).toEqual([
+        { configId: 'mode', value: 'ask-first' },
+        { configId: 'mode', value: 'auto-edit' },
+      ]);
+      expect(fake.log.modeSets).toEqual([]);
+    });
+
+    it('falls back to session/set_mode when the agent only advertises modes', async () => {
+      const fake = createFakeLauncher({
+        authMethods: [],
+        configOptions: [],
+        loadable: [],
+        modes: {
+          availableModes: [
+            { id: 'ask-first', name: 'Ask first' },
+            { id: 'auto-edit', name: 'Auto edit' },
+          ],
+          currentModeId: 'auto-edit',
+        },
+        onPrompt: reply('ok'),
+      });
+      const backend = createAcpConversationBackend(MODE_SPEC, {
+        launch: fake.launch,
+      });
+
+      await collect(backend.stream(run({ permissionMode: 'supervised' })));
+      await collect(
+        backend.stream(
+          run({ permissionMode: 'supervised', sessionId: 'minted-1' }),
+        ),
+      );
+
+      expect(fake.log.modeSets).toEqual(['ask-first']);
+    });
+
+    it('leaves a mode the agent does not offer alone', async () => {
+      const fake = createFakeLauncher({
+        authMethods: [],
+        configOptions: [modeOption([AUTO_EDIT])],
+        loadable: [],
+        modes: undefined,
+        onPrompt: reply('ok'),
+      });
+
+      await collect(
+        createAcpConversationBackend(MODE_SPEC, { launch: fake.launch }).stream(
+          run({ permissionMode: 'supervised' }),
+        ),
+      );
+
+      expect(fake.log.configSets).toEqual([]);
+    });
+
+    it('leaves the mode alone when the spec maps none', async () => {
+      const fake = createFakeLauncher({
+        authMethods: [],
+        configOptions: [modeOption([ASK_FIRST, AUTO_EDIT])],
+        loadable: [],
+        modes: undefined,
+        onPrompt: reply('ok'),
+      });
+
+      await collect(
+        createAcpConversationBackend(FAKE_SPEC, { launch: fake.launch }).stream(
+          run({ permissionMode: 'supervised' }),
         ),
       );
 
@@ -338,6 +467,7 @@ describe('createAcpConversationBackend', () => {
         authMethods: [],
         configOptions: [],
         loadable: [],
+        modes: undefined,
         onPrompt: askTwice,
       });
       const backend = createAcpConversationBackend(FAKE_SPEC, {
@@ -361,6 +491,7 @@ describe('createAcpConversationBackend', () => {
         authMethods: [],
         configOptions: [],
         loadable: [],
+        modes: undefined,
         onPrompt: askTwice,
       });
       const backend = createAcpConversationBackend(FAKE_SPEC, {
@@ -401,6 +532,7 @@ describe('createAcpConversationBackend', () => {
           authMethods: [],
           configOptions: [],
           loadable: [],
+          modes: undefined,
           onPrompt: askShell,
         });
         return createAcpConversationBackend(FAKE_SPEC, { launch: fake.launch });
@@ -474,6 +606,7 @@ describe('createAcpConversationBackend', () => {
         authMethods: [],
         configOptions: [],
         loadable: [],
+        modes: undefined,
         onPrompt: async (turn) => {
           promptCount += 1;
           if (promptCount > 1) {
@@ -516,6 +649,7 @@ describe('createAcpConversationBackend', () => {
         authMethods: [],
         configOptions: [],
         loadable: [],
+        modes: undefined,
         onPrompt: () => {
           return Promise.reject(new Error('model unavailable'));
         },
@@ -535,6 +669,7 @@ describe('createAcpConversationBackend', () => {
         authMethods: [],
         configOptions: [],
         loadable: [],
+        modes: undefined,
         onPrompt: reply('ok'),
       });
       const backend = createAcpConversationBackend(FAKE_SPEC, {

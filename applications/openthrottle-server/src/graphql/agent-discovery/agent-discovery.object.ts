@@ -81,6 +81,11 @@ export class ChatBackendCapabilitiesObject {
   approvals!: boolean;
 
   @Field(() => Boolean, {
+    description: `Supervised approvals cover file edits too. False where approvals exist but the agent applies edits unasked (cursor under ACP).`,
+  })
+  editApprovals!: boolean;
+
+  @Field(() => Boolean, {
     description: `The backend accepts image input in a prompt.`,
   })
   imageInput!: boolean;

@@ -12,6 +12,7 @@ import {
   type ChatSlashCommandProvider,
   parseFileMentions,
 } from '@openthrottle/react-router-chat';
+import type { ChatAgentRuntime } from '@openthrottle/react-router-chat-state';
 import {
   buildChatTurnFields,
   buildModelGroups,
@@ -39,6 +40,8 @@ import type { ComposerDefaultAgent } from '~/routing/home/utils/seedComposerDefa
 import { seedComposerDefaultAgent } from '~/routing/home/utils/seedComposerDefaultAgent';
 
 export interface UseHomeComposerOptions {
+  /** Live per-agent runtime facts (ACP approvals, auth) keyed by backend id. */
+  agentRuntimes: Readonly<Record<string, ChatAgentRuntime>>;
   /** Sidebar-backing conversation list; the composer refreshes it on new persisted turns. */
   conversationList: UseConversationListResult;
   /** The saved default agent; seeds model + reasoning when the atom remembers none. */
@@ -100,8 +103,14 @@ export interface UseHomeComposerResult {
 export const useHomeComposer = (
   options: UseHomeComposerOptions,
 ): UseHomeComposerResult => {
-  const { conversationList, defaultAgent, models, repositories, turn } =
-    options;
+  const {
+    agentRuntimes,
+    conversationList,
+    defaultAgent,
+    models,
+    repositories,
+    turn,
+  } = options;
 
   // Hooks
   const [draft, setDraft] = React.useState('');
@@ -135,9 +144,9 @@ export const useHomeComposer = (
     () =>
       reconcileChatToolbarState(
         seedComposerDefaultAgent(toolbarState, defaultAgent, models),
-        { models, personas, repositories },
+        { agentRuntimes, models, personas, repositories },
       ),
-    [defaultAgent, models, personas, repositories, toolbarState],
+    [agentRuntimes, defaultAgent, models, personas, repositories, toolbarState],
   );
 
   const mode = effectiveToolbar.mode;
@@ -175,8 +184,6 @@ export const useHomeComposer = (
   });
 
   const decodedOption = modelId ? decodeChatOption(modelId) : null;
-  const isCliBackend =
-    decodedOption !== null && decodedOption.backend !== 'openai';
   // Capability-gated picks write per-backend AND global, like the header chat,
   // so an older per-backend value can never shadow a pick made here.
   const backendKey = decodedOption?.backend;
@@ -184,7 +191,12 @@ export const useHomeComposer = (
   // Capability descriptor for the selected backend gates the reasoning/tier,
   // permission, and checkout controls. Grouped model list + checkouts feed the
   // T3 composer primitives.
-  const capabilities = capabilitiesForChatOption(decodedOption);
+  const capabilities = capabilitiesForChatOption(
+    decodedOption,
+    decodedOption != null ? agentRuntimes[decodedOption.backend] : undefined,
+  );
+  // A backend that runs in a repository (agent CLIs) needs a checkout picked.
+  const isCliBackend = decodedOption !== null && capabilities.requiresRepository; // prettier-ignore
   const modelGroups = React.useMemo(() => buildModelGroups(models), [models]);
   const checkouts = React.useMemo(
     () => toCheckoutOptions(repositories),
@@ -242,7 +254,11 @@ export const useHomeComposer = (
       return;
     }
 
-    if (decoded.backend !== 'openai' && repositoryIds.length === 0) {
+    const submitCapabilities = capabilitiesForChatOption(
+      decoded,
+      agentRuntimes[decoded.backend],
+    );
+    if (submitCapabilities.requiresRepository && repositoryIds.length === 0) {
       turn.setError('Select a repository to run the agent in.');
       return;
     }

@@ -6,6 +6,7 @@
  * `OPENTHROTTLE_CHAT_ACP_BACKENDS` routes the backend's chat over ACP.
  */
 
+import { ACP_AGENT_SPECS } from './acp/agent-specs.ts';
 import { isAcpChatEnabled } from './acp/routing.ts';
 
 /**
@@ -16,6 +17,11 @@ import { isAcpChatEnabled } from './acp/routing.ts';
 export interface ChatBackendCapabilities {
   /** Tool-use approvals surface to the user in supervised mode. */
   readonly approvals: boolean;
+  /**
+   * Supervised approvals cover file edits too. False where approvals exist
+   * but the agent applies edits unasked (cursor under ACP).
+   */
+  readonly editApprovals: boolean;
   /** The backend accepts image input in a prompt. */
   readonly imageInput: boolean;
   /** The adapter consumes `run.mcpServers` (OT MCP is injected per run). */
@@ -30,6 +36,7 @@ export interface ChatBackendCapabilities {
 
 const NO_CAPABILITIES: ChatBackendCapabilities = {
   approvals: false,
+  editApprovals: false,
   imageInput: false,
   mcpInjection: false,
   replaysFullHistory: false,
@@ -56,9 +63,10 @@ const CLI_CAPABILITIES: Readonly<Record<string, ChatBackendCapabilities>> = {
 /**
  * Static ACP overlay, per the 2026-11-07 spike (not probed): session/load
  * resumes, supervised mode surfaces approvals, session/new injects MCP.
- * cursor advertises `promptCapabilities.image`.
+ * cursor and agy advertise `promptCapabilities.image`.
  */
 const ACP_IMAGE_INPUT: Readonly<Record<string, boolean>> = {
+  antigravity: true,
   cursor: true,
 };
 
@@ -84,6 +92,7 @@ export function resolveChatBackendCapabilities(
 
   return {
     approvals: true,
+    editApprovals: ACP_AGENT_SPECS[backend]?.asksBeforeEdits ?? false,
     imageInput: ACP_IMAGE_INPUT[backend] ?? false,
     mcpInjection: true,
     replaysFullHistory: false,

@@ -14,7 +14,7 @@ import { HomeThreadColumn } from '~/routing/home/components/HomeThreadColumn';
 import { useAgenticChatTurn } from '~/routing/home/hooks/useAgenticChatTurn';
 import { useConversationList } from '~/routing/home/hooks/useConversationList';
 import {
-  loadComposerModels,
+  loadComposerData,
   loadDefaultAgent,
   loadPersonas,
   loadRepositories,
@@ -31,21 +31,24 @@ export const loader = (args: Route.LoaderArgs) => {
   // Deferred: return the composer-data bundle as a naked promise (RR8 Single
   // Fetch serializes/streams it) so the route shell — hero + conversation
   // sidebar — paints immediately instead of blocking on cold model discovery
-  // (loadComposerModels probes local model servers). loadComposerModels issues
+  // (loadComposerData probes local model servers). loadComposerData issues
   // each discovery query once and derives the local / agent / driver×endpoint
   // lists from the shared payloads. Bundled into one Promise.all so
   // reconcileChatToolbarState reconciles them atomically on the client.
   const composerData = Promise.all([
-    loadComposerModels(args.request),
+    loadComposerData(args.request),
     loadRepositories(args.request),
     loadPersonas(args.request),
     loadDefaultAgent(args.request),
-  ]).then(([models, repositories, personas, defaultAgent]) => ({
-    defaultAgent,
-    models,
-    personas,
-    repositories,
-  }));
+  ]).then(
+    ([{ agentRuntimes, models }, repositories, personas, defaultAgent]) => ({
+      agentRuntimes,
+      defaultAgent,
+      models,
+      personas,
+      repositories,
+    }),
+  );
 
   return { composerData };
 };

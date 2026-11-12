@@ -46,6 +46,7 @@ const CLI_CAPS: ChatBackendCapabilities = {
   reasoningLevels: [ChatReasoningLevel.low, ChatReasoningLevel.high],
   requiresRepository: true,
   serviceTiers: [ChatServiceTier.standard, ChatServiceTier.fast],
+  supervisedGatesEdits: true,
   supportsModelFlag: true,
 };
 

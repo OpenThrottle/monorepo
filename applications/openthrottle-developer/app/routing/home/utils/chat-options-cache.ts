@@ -36,6 +36,7 @@ function isCachedChatOptions(value: unknown): value is CachedChatOptions {
   }
 
   return (
+    isRecord(value.data.agentRuntimes) &&
     Array.isArray(value.data.models) &&
     Array.isArray(value.data.personas) &&
     Array.isArray(value.data.repositories)

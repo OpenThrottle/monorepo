@@ -10,3 +10,16 @@ export interface HeaderChatOptionsCache {
   read(): ChatOptionsResponse | null;
   write(options: ChatOptionsResponse): void;
 }
+
+/**
+ * Live per-agent runtime facts from agent-CLI discovery that refine a backend's
+ * static capability descriptor: whether chat runs over ACP (`approvals`),
+ * whether Supervised gates file edits (`editApprovals`) and the agent's auth
+ * status (`unauthenticated` | `authenticated` | `unknown`).
+ * @public
+ */
+export interface ChatAgentRuntime {
+  readonly approvals: boolean;
+  readonly authStatus: string;
+  readonly editApprovals: boolean;
+}

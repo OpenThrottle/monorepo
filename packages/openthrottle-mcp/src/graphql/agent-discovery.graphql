@@ -26,6 +26,7 @@ query discoverAgentClis {
       backend
       capabilities {
         approvals
+        editApprovals
         imageInput
         mcpInjection
         replaysFullHistory

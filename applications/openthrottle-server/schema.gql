@@ -823,6 +823,11 @@ type ChatBackendCapabilitiesObject {
   """
   approvals: Boolean!
 
+  """
+  Supervised approvals cover file edits too. False where approvals exist but the agent applies edits unasked (cursor under ACP).
+  """
+  editApprovals: Boolean!
+
   """The backend accepts image input in a prompt."""
   imageInput: Boolean!
 

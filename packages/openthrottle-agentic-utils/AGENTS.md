@@ -38,6 +38,16 @@ composer: a backend maps its source's native output onto `ConversationStreamChun
 true`. A guard test (`__tests__/registry.test.ts`) enforces (3) ⟺ (4); discovery,
   the composer, the resolver's accepted-backend allowlist, and server routing all
   light up from there.
+- **ACP path (`acp/`, behind `OPENTHROTTLE_CHAT_ACP_BACKENDS`):** cursor and
+  antigravity can run chat as one long-lived ACP agent per conversation instead
+  of a CLI per turn. Per-agent launch facts and the permission-posture → session
+  mode shim live in `acp/agent-specs.ts`, never in `acp.ts`. Two things a turn
+  loses there, both probed against the real CLIs (plan 60dfd266): cursor applies
+  file edits without asking in every mode (`editApprovals: false`), and
+  `cursor-agent acp` runs **no** `.cursor/hooks.json` hooks — the same fixture
+  fires sessionStart/preToolUse/afterFileEdit/… under `cursor-agent -p` — so
+  chat-over-ACP on cursor carries no OT hook telemetry (skill-usage capture,
+  bash-guard, format-on-edit).
 
 ## Plan-run transcripts (structured output → ATIF)
 

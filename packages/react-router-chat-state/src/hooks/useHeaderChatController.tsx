@@ -110,6 +110,7 @@ export function useHeaderChatController(
   // Setup
   // Prefer a live fetch, then the fresh client cache, then empty.
   const options = optionsFetcher.data ?? cachedOptions ?? EMPTY_CHAT_OPTIONS;
+  const agentRuntimes = options.agentRuntimes;
   const models = options.models;
   const repositories = options.repositories;
   const personas =
@@ -118,11 +119,12 @@ export function useHeaderChatController(
   const effectiveToolbar = React.useMemo(
     () =>
       reconcileChatToolbarState(toolbarState, {
+        agentRuntimes,
         models,
         personas,
         repositories,
       }),
-    [models, personas, repositories, toolbarState],
+    [agentRuntimes, models, personas, repositories, toolbarState],
   );
 
   const mode = effectiveToolbar.mode;
@@ -136,7 +138,10 @@ export function useHeaderChatController(
   const serviceTier = effectiveToolbar.serviceTier;
 
   const decodedOption = modelId ? decodeChatOption(modelId) : null;
-  const capabilities = capabilitiesForChatOption(decodedOption);
+  const capabilities = capabilitiesForChatOption(
+    decodedOption,
+    decodedOption != null ? agentRuntimes[decodedOption.backend] : undefined,
+  );
 
   // Last-used-wins write path for the capability-gated controls (see
   // writeChatToolbarBackendPref): per-backend entry AND global fallback.
@@ -200,7 +205,11 @@ export function useHeaderChatController(
       return;
     }
 
-    if (decoded.backend !== 'openai' && repositoryIds.length === 0) {
+    const submitCapabilities = capabilitiesForChatOption(
+      decoded,
+      agentRuntimes[decoded.backend],
+    );
+    if (submitCapabilities.requiresRepository && repositoryIds.length === 0) {
       turn.setError('Select a repository to run the agent in.');
       return;
     }

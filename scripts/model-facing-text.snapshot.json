@@ -29,7 +29,7 @@
     "mcp.tool/delete_skill_availability_rule_set": 450,
     "mcp.tool/delete_tag_action_rule": 430,
     "mcp.tool/delete_task": 317,
-    "mcp.tool/discover_agent_clis": 881,
+    "mcp.tool/discover_agent_clis": 888,
     "mcp.tool/discover_local_models": 583,
     "mcp.tool/end_session": 369,
     "mcp.tool/get_activity_by_date": 655,
@@ -107,7 +107,7 @@
     "mcp.toolDescription/delete_skill_availability_rule_set": 165,
     "mcp.toolDescription/delete_tag_action_rule": 157,
     "mcp.toolDescription/delete_task": 55,
-    "mcp.toolDescription/discover_agent_clis": 665,
+    "mcp.toolDescription/discover_agent_clis": 672,
     "mcp.toolDescription/discover_local_models": 365,
     "mcp.toolDescription/end_session": 106,
     "mcp.toolDescription/get_activity_by_date": 294,
@@ -161,11 +161,11 @@
     "prompt/Job_ArchitectureDrift.md": 10197,
     "prompt/Job_DatabaseHealth.md": 9083,
     "prompt/Job_DeadCode.md": 8432,
-    "prompt/Job_DocDrift.md": 9533,
+    "prompt/Job_DocDrift.md": 9521,
     "prompt/Job_Issue_Reporting.md": 11673,
     "prompt/Job_MemoryDrift.md": 10214,
     "prompt/Job_Performance.md": 8936,
-    "prompt/Job_ReplayDrift.md": 7898,
+    "prompt/Job_ReplayDrift.md": 7861,
     "prompt/Job_Roadmap.md": 9571,
     "prompt/Job_RulesConformance.md": 14873,
     "prompt/Job_Security.md": 9531,
@@ -178,11 +178,11 @@
     "skill/github-squash": 8977,
     "skill/ot-folders": 21335,
     "skill/ot-generators": 10250,
-    "skill/ot-loop": 31605,
-    "skill/ot-onboarding": 25002,
+    "skill/ot-loop": 31597,
+    "skill/ot-onboarding": 24864,
     "skill/ot-plans": 8964,
     "skill/ot-postgres": 7499,
-    "skill/ot-skill-sync": 16123,
+    "skill/ot-skill-sync": 15488,
     "skill/ot-stack": 10184,
     "skill/ot-worktree": 12709,
     "skillDescription/agents-ralph": 291,
@@ -202,16 +202,16 @@
   },
   "reported": {
     "mcpToolset/admin": 14222,
-    "mcpToolset/agents": 3206,
+    "mcpToolset/agents": 3213,
     "mcpToolset/blog": 7444,
     "mcpToolset/core": 34486,
-    "mcpToolsFull": 59358
+    "mcpToolsFull": 59365
   },
   "totals": {
     "alwaysInjected": 41747,
     "mcpInstructions": 2138,
     "mcpTools": 34486,
-    "prompts": 128033,
-    "skills": 191372
+    "prompts": 127984,
+    "skills": 190591
   }
 }

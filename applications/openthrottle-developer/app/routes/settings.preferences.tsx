@@ -35,7 +35,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   // The enabled-editors probe only feeds an advisory warning, so its failure
   // degrades to "no warning" rather than taking the page down. Agent discovery
   // already degrades to an empty list on its own.
-  const [preferences, workspace, models] = await Promise.all([
+  const [preferences, workspace, { models }] = await Promise.all([
     executeGraphqlWithAuth(args.request, SettingsUserPreferencesDocument),
     executeGraphqlWithAuth(
       args.request,

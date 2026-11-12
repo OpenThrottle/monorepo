@@ -19,6 +19,7 @@ describe('resolveChatBackendCapabilities (CLI paths)', () => {
     for (const backend of ALL_BACKENDS) {
       expect(resolveChatBackendCapabilities(backend, {})).toMatchObject({
         approvals: false,
+        editApprovals: false,
         imageInput: false,
         steering: false,
       });
@@ -58,6 +59,7 @@ describe('resolveChatBackendCapabilities (CLI paths)', () => {
   it('resolves an unknown backend to all false', () => {
     expect(resolveChatBackendCapabilities('nope', ACP_ENV)).toEqual({
       approvals: false,
+      editApprovals: false,
       imageInput: false,
       mcpInjection: false,
       replaysFullHistory: false,
@@ -71,6 +73,21 @@ describe('resolveChatBackendCapabilities (ACP overlay)', () => {
   it('overlays cursor with approvals, resume, MCP injection and image input', () => {
     expect(resolveChatBackendCapabilities('cursor', ACP_ENV)).toEqual({
       approvals: true,
+      editApprovals: false,
+      imageInput: true,
+      mcpInjection: true,
+      replaysFullHistory: false,
+      resume: true,
+      steering: false,
+    });
+  });
+
+  it('overlays antigravity with approvals that cover edits', () => {
+    const env = { OPENTHROTTLE_CHAT_ACP_BACKENDS: 'antigravity' };
+
+    expect(resolveChatBackendCapabilities('antigravity', env)).toEqual({
+      approvals: true,
+      editApprovals: true,
       imageInput: true,
       mcpInjection: true,
       replaysFullHistory: false,
@@ -83,6 +100,10 @@ describe('resolveChatBackendCapabilities (ACP overlay)', () => {
     const env = { OPENTHROTTLE_CHAT_ACP_BACKENDS: 'cursor' };
 
     expect(resolveChatBackendCapabilities('cursor', env).approvals).toBe(true);
+    // cursor's ACP agent mode applies edits without asking (probed 2026-11-11).
+    expect(resolveChatBackendCapabilities('cursor', env).editApprovals).toBe(
+      false,
+    );
     expect(resolveChatBackendCapabilities('codex', env).approvals).toBe(false);
   });
 

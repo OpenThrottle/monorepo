@@ -80,6 +80,7 @@ describe('HomeComposer Component', () => {
 
   beforeEach(() => {
     props = {
+      agentRuntimes: {},
       conversationList: buildConversationList(),
       defaultAgent: null,
       models,
