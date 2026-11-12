@@ -1,8 +1,17 @@
-import { describe, expect, it } from 'vitest';
+import pidusage from 'pidusage';
+import { beforeAll, describe, expect, it } from 'vitest';
 
 import { createChildProcessMetricsCollector } from '../metrics.ts';
 
 describe('createChildProcessMetricsCollector with real pidusage', () => {
+  // On Linux, pidusage's first call shells out to `getconf` for the clock tick and
+  // page size, then caches them. On a loaded CI box that one call can outlast the
+  // sampling windows below, so the collector returns no samples and stop() is null.
+  // Pay the cost once up front so every window measures only steady-state calls.
+  beforeAll(async () => {
+    await pidusage(process.pid);
+  });
+
   it('collects metrics from the current process', async () => {
     const collector = createChildProcessMetricsCollector({
       keepSamples: true,

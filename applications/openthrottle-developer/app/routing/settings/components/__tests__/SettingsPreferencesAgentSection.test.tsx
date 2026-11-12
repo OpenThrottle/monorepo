@@ -120,8 +120,12 @@ describe('SettingsPreferencesAgentSection Component', () => {
           model: 'opus',
         },
       ]);
-      expect(store.get(chatToolbarStateAtom).modelId).toBeUndefined();
-      expect(store.get(chatToolbarStateAtom).reasoning).toBeUndefined();
+      // The reset runs in a passive effect after the action result lands, so it can
+      // commit after the saved notice renders; wait for it rather than racing it.
+      await waitFor(() => {
+        expect(store.get(chatToolbarStateAtom).modelId).toBeUndefined();
+        expect(store.get(chatToolbarStateAtom).reasoning).toBeUndefined();
+      });
     });
   });
 
