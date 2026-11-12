@@ -11,6 +11,7 @@
 .pnpm-store
 .postgres-profiling
 .vercel
+.vitest
 build
 coverage
 design/*

@@ -1,4 +1,4 @@
-import '@testing-library/jest-dom';
+import '@testing-library/jest-dom/vitest';
 
 /**
  * @description jsdom does not implement `ResizeObserver`; cmdk and other deps expect it.
