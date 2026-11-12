@@ -37,6 +37,7 @@ const matches: Route.ComponentProps['matches'] = [
     id: 'routes/_index',
     loaderData: {
       composerData: Promise.resolve({
+        defaultAgent: null,
         models: [],
         personas: [],
         repositories: [],
@@ -54,6 +55,7 @@ describe('routes/_index.tsx', () => {
         actionData={undefined}
         loaderData={{
           composerData: Promise.resolve({
+            defaultAgent: null,
             models: [],
             personas: [],
             repositories: [],
@@ -106,6 +108,7 @@ describe('routes/_index.tsx toolbar persistence', () => {
 
   const seededLoaderData: Route.ComponentProps['loaderData'] = {
     composerData: Promise.resolve({
+      defaultAgent: null,
       models: [
         { description: 'cursor-agent', groupId: 'cursor', id: 'cursor', label: 'cursor-agent', subLabel: 'cursor-agent' }, // prettier-ignore
       ],

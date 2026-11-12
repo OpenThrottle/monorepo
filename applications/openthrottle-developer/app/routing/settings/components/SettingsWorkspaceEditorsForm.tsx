@@ -2,7 +2,7 @@ import { Button, cn, Label } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
 import { ComputerIcon } from 'lucide-react';
 import * as React from 'react';
-import { Form, useNavigation } from 'react-router';
+import { Form, Link, useNavigation } from 'react-router';
 
 import type { WorkspaceEditorId } from '~/__generated__/graphql';
 import type {
@@ -14,7 +14,10 @@ import type {
 // import { WorkspaceEditorAffiliateLinks } from '~/routing/settings/components/WorkspaceEditorAffiliateLinks';
 import { WorkspaceEditorMultiSelect } from '~/routing/settings/components/WorkspaceEditorMultiSelect';
 import { WorkspaceEditorPresenceHints } from '~/routing/settings/components/WorkspaceEditorPresenceHints';
-import { WORKSPACE_SETTINGS_COPY } from '~/routing/settings/data/data.copy';
+import {
+  SETTINGS_PREFERENCES_COPY,
+  WORKSPACE_SETTINGS_COPY,
+} from '~/routing/settings/data/data.copy';
 
 export interface SettingsWorkspaceEditorsFormProps {
   actionError?: string | null;
@@ -103,7 +106,14 @@ export const SettingsWorkspaceEditorsForm = (
         />
 
         <p className="text-muted-foreground text-sm">
-          {WORKSPACE_SETTINGS_COPY.editorsExplainer}
+          {WORKSPACE_SETTINGS_COPY.editorsExplainer}{' '}
+          <Link
+            className="underline underline-offset-4"
+            data-testid="SettingsWorkspaceEditorsForm-default-link"
+            to="/settings/preferences"
+          >
+            {SETTINGS_PREFERENCES_COPY.setDefaultEditorLink}
+          </Link>
         </p>
 
         <div className="space-y-2">

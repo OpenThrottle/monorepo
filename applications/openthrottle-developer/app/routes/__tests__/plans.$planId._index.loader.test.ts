@@ -27,6 +27,7 @@ const mockExecuteGraphqlWithAuth = vi.mocked(
   graphqlWithAuth.executeGraphqlWithAuth,
 );
 const mockLoadComposerModels = vi.mocked(modelsServer.loadComposerModels);
+const mockLoadDefaultAgent = vi.mocked(modelsServer.loadDefaultAgent);
 
 const planId = '80864bba-630a-451d-bfd2-4b25ec202381';
 
@@ -109,6 +110,8 @@ describe('routes/plans.$planId._index loader', () => {
     mockExecuteGraphqlWithAuth.mockReset();
     mockLoadComposerModels.mockReset();
     mockLoadComposerModels.mockResolvedValue(models);
+    mockLoadDefaultAgent.mockReset();
+    mockLoadDefaultAgent.mockResolvedValue(null);
   });
 
   test('returns an empty data shape and skips GraphQL when planId is missing', async () => {
@@ -128,6 +131,7 @@ describe('routes/plans.$planId._index loader', () => {
     });
     await expect(result.inboxMessages).resolves.toEqual([]);
     await expect(result.models).resolves.toEqual([]);
+    await expect(result.defaultAgent).resolves.toBeNull();
     expect(mockLoadComposerModels).not.toHaveBeenCalled();
     await expect(result.outputChunks).resolves.toEqual([]);
     await expect(result.runHistory).resolves.toEqual({
@@ -377,6 +381,49 @@ describe('routes/plans.$planId._index loader', () => {
 
     await expect(result.enabledEditors).resolves.toEqual([]);
     expect(result.plan).toEqual(plan);
+  });
+
+  describe('defaultAgent', () => {
+    const claudeModels = [{ groupId: 'claude', id: 'claude|opus', label: 'Opus' }]; // prettier-ignore
+
+    test('resolves the saved default agent when its option is offered', async () => {
+      mockDocuments();
+      mockLoadComposerModels.mockResolvedValue(claudeModels);
+      mockLoadDefaultAgent.mockResolvedValue({
+        backend: 'claude',
+        effort: 'high',
+        model: 'opus',
+      });
+
+      const result = await callLoader();
+
+      await expect(result.defaultAgent).resolves.toEqual({
+        backend: 'claude',
+        effort: 'high',
+        model: 'opus',
+      });
+    });
+
+    test('resolves null when the saved agent is disabled or gone', async () => {
+      mockDocuments();
+      mockLoadDefaultAgent.mockResolvedValue({
+        backend: 'claude',
+        effort: null,
+        model: 'opus',
+      });
+
+      const result = await callLoader();
+
+      await expect(result.defaultAgent).resolves.toBeNull();
+    });
+
+    test('resolves null when there is no preference', async () => {
+      mockDocuments();
+
+      const result = await callLoader();
+
+      await expect(result.defaultAgent).resolves.toBeNull();
+    });
   });
 
   // The inbox is optional chrome with no error region, so a failed read (for

@@ -15,6 +15,7 @@ import {
   PLAN_RUN_DIALOG_COPY,
   PLAN_RUN_RUNNER_COPY,
 } from '~/routing/plans/data/data.copy';
+import { usePlanDefaultAgent } from '~/routing/plans/hooks/usePlanDefaultAgent';
 import type { UsePlanRunDialogConfirmResult } from '~/routing/plans/hooks/usePlanRunDialogConfirm';
 import { usePlanRunDialogConfirm } from '~/routing/plans/hooks/usePlanRunDialogConfirm';
 import type {
@@ -119,9 +120,13 @@ export const usePlanRunDialog = (
 
   // Hooks
   const fetcher = useFetcher<typeof action>();
+  // The user's default agent seeds a plan whose own agent is unset (D3); the
+  // plan's explicit run config always wins.
+  const defaultAgent = usePlanDefaultAgent();
   const [now, setNow] = React.useState(() => new Date());
   const [draft, setDraft] = React.useState(() =>
     createPlanRunDialogDraft({
+      defaultAgent,
       mode,
       now,
       planId,
@@ -249,6 +254,7 @@ export const usePlanRunDialog = (
     setNow(current);
     setDraft(
       createPlanRunDialogDraft({
+        defaultAgent,
         mode,
         now: current,
         planId,

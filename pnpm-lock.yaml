@@ -2562,6 +2562,9 @@ importers:
       '@openthrottle/openthrottle-agentic-workflow':
         specifier: workspace:^
         version: link:../openthrottle-agentic-workflow
+      '@openthrottle/openthrottle-drivers':
+        specifier: workspace:^
+        version: link:../openthrottle-drivers
       '@openthrottle/openthrottle-plan-config':
         specifier: workspace:^
         version: link:../openthrottle-plan-config

@@ -2750,6 +2750,8 @@ export type Mutation = {
   updateTask?: Maybe<TaskObject>;
   /** Update a user */
   updateUser?: Maybe<UserObject>;
+  /** Update the authenticated user's preferences. An omitted field is left unchanged; an explicit null clears it to the system default. */
+  updateUserPreferences: UserPreferencesObject;
   /**
    * Update metadata for a local repository owned by the authenticated user.
    * @deprecated Replaced by the repository/checkout model (refreshCheckout re-derives git metadata from disk).
@@ -3389,6 +3391,10 @@ export type MutationUpdateTaskArgs = {
 
 export type MutationUpdateUserArgs = {
   input: UpdateUserInput;
+};
+
+export type MutationUpdateUserPreferencesArgs = {
+  input: UpdateUserPreferencesInput;
 };
 
 export type MutationUpdateWorkspaceLocalRepositoryArgs = {
@@ -4353,6 +4359,8 @@ export type Query = {
   unverifiedWorkArtifacts: WorkArtifactListResult;
   /** Get a user by ID */
   user?: Maybe<UserObject>;
+  /** Preferences for the authenticated user. All fields are null until the user saves one. */
+  userPreferences: UserPreferencesObject;
   /** List all users, ordered by createdAt descending */
   users: Array<UserObject>;
   workArtifactsByPlan: WorkArtifactListResult;
@@ -7126,6 +7134,12 @@ export type UpdateUserInput = {
   id: Scalars['ID']['input'];
 };
 
+/** A partial update: an omitted field is left unchanged and an explicit null clears it. */
+export type UpdateUserPreferencesInput = {
+  defaultAgent?: InputMaybe<UserPreferencesAgentInput>;
+  defaultEditor?: InputMaybe<WorkspaceEditorId>;
+};
+
 export type UpdateWorkspaceLocalRepositoryInput = {
   displayName?: InputMaybe<Scalars['String']['input']>;
   gitDefaultBranch?: InputMaybe<Scalars['String']['input']>;
@@ -7187,6 +7201,36 @@ export type UserObject = {
   githubUsername: Scalars['String']['output'];
   id: Scalars['String']['output'];
   updatedAt: Scalars['DateTime']['output'];
+};
+
+/** A default agent. Backend and model are required together; effort may be null. */
+export type UserPreferencesAgentInput = {
+  /** Agent CLI driver id. */
+  backend: Scalars['String']['input'];
+  /** Reasoning effort level, or null for the backend's own default. */
+  effort?: InputMaybe<Scalars['String']['input']>;
+  /** Driver-specific model id. */
+  model: Scalars['String']['input'];
+};
+
+/** The user's default agent. Backend and model always travel together, so a half-set agent cannot be represented. */
+export type UserPreferencesAgentObject = {
+  __typename?: 'UserPreferencesAgentObject';
+  /** Agent CLI driver id (e.g. claude, cursor, codex). */
+  backend: Scalars['String']['output'];
+  /** Reasoning effort level, or null for the backend's own default. */
+  effort?: Maybe<Scalars['String']['output']>;
+  /** Driver-specific model id, opaque to the server. */
+  model: Scalars['String']['output'];
+};
+
+/** Per-user preferences. A null field means "use the system default". */
+export type UserPreferencesObject = {
+  __typename?: 'UserPreferencesObject';
+  /** Default agent (backend + model + effort), or null for the system default. */
+  defaultAgent?: Maybe<UserPreferencesAgentObject>;
+  /** Default editor for open-in-editor links, or null for the system default (VS Code). */
+  defaultEditor?: Maybe<WorkspaceEditorId>;
 };
 
 /** Per-user workspace profile: contact fields and enabled editors. */
@@ -7690,6 +7734,16 @@ export type GetMyUserQuery = {
   } | null;
 };
 
+export type GetMyDefaultEditorQueryVariables = Exact<{ [key: string]: never }>;
+
+export type GetMyDefaultEditorQuery = {
+  __typename?: 'Query';
+  userPreferences: {
+    __typename?: 'UserPreferencesObject';
+    defaultEditor?: WorkspaceEditorId | null;
+  };
+};
+
 export type EvaluateFeatureFlagsQueryVariables = Exact<{
   anonymousId?: InputMaybe<Scalars['String']['input']>;
   applicationKey?: InputMaybe<Scalars['String']['input']>;
@@ -8143,6 +8197,21 @@ export type TranscriptionStreamChunkAddedSubscription = {
     sessionId: string;
     sortOrder: number;
     transcript: string;
+  };
+};
+
+export type HomeDefaultAgentQueryVariables = Exact<{ [key: string]: never }>;
+
+export type HomeDefaultAgentQuery = {
+  __typename?: 'Query';
+  userPreferences: {
+    __typename?: 'UserPreferencesObject';
+    defaultAgent?: {
+      __typename?: 'UserPreferencesAgentObject';
+      backend: string;
+      effort?: string | null;
+      model: string;
+    } | null;
   };
 };
 
@@ -12359,6 +12428,68 @@ export type GetSettingsMcpQuery = {
   }>;
 };
 
+export type UserPreferencesFieldsFragment = {
+  __typename?: 'UserPreferencesObject';
+  defaultEditor?: WorkspaceEditorId | null;
+  defaultAgent?: {
+    __typename?: 'UserPreferencesAgentObject';
+    backend: string;
+    effort?: string | null;
+    model: string;
+  } | null;
+};
+
+export type SettingsUserPreferencesQueryVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type SettingsUserPreferencesQuery = {
+  __typename?: 'Query';
+  userPreferences: {
+    __typename?: 'UserPreferencesObject';
+    defaultEditor?: WorkspaceEditorId | null;
+    defaultAgent?: {
+      __typename?: 'UserPreferencesAgentObject';
+      backend: string;
+      effort?: string | null;
+      model: string;
+    } | null;
+  };
+};
+
+export type SettingsPreferencesEnabledEditorsQueryVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type SettingsPreferencesEnabledEditorsQuery = {
+  __typename?: 'Query';
+  workspaceSettings: {
+    __typename?: 'WorkspaceSettingsObject';
+    profile: {
+      __typename?: 'UserWorkspaceProfileObject';
+      enabledEditors: Array<WorkspaceEditorId>;
+    };
+  };
+};
+
+export type UpdateUserPreferencesMutationVariables = Exact<{
+  input: UpdateUserPreferencesInput;
+}>;
+
+export type UpdateUserPreferencesMutation = {
+  __typename?: 'Mutation';
+  updateUserPreferences: {
+    __typename?: 'UserPreferencesObject';
+    defaultEditor?: WorkspaceEditorId | null;
+    defaultAgent?: {
+      __typename?: 'UserPreferencesAgentObject';
+      backend: string;
+      effort?: string | null;
+      model: string;
+    } | null;
+  };
+};
+
 export type GetWorkspaceRepositoryQueryVariables = Exact<{
   repositoryId: Scalars['ID']['input'];
 }>;
@@ -16558,6 +16689,37 @@ export const McpConnectorConnectionFieldsFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<McpConnectorConnectionFieldsFragment, unknown>;
+export const UserPreferencesFieldsFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UserPreferencesFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'UserPreferencesObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'defaultAgent' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'backend' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'effort' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'defaultEditor' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<UserPreferencesFieldsFragment, unknown>;
 export const DiscoveredWorktreeFieldsFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -17463,6 +17625,37 @@ export const GetMyUserDocument = {
     },
   ],
 } as unknown as DocumentNode<GetMyUserQuery, GetMyUserQueryVariables>;
+export const GetMyDefaultEditorDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getMyDefaultEditor' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'userPreferences' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'defaultEditor' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetMyDefaultEditorQuery,
+  GetMyDefaultEditorQueryVariables
+>;
 export const EvaluateFeatureFlagsDocument = {
   kind: 'Document',
   definitions: [
@@ -19031,6 +19224,51 @@ export const TranscriptionStreamChunkAddedDocument = {
 } as unknown as DocumentNode<
   TranscriptionStreamChunkAddedSubscription,
   TranscriptionStreamChunkAddedSubscriptionVariables
+>;
+export const HomeDefaultAgentDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'HomeDefaultAgent' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'userPreferences' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'defaultAgent' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'backend' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'effort' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  HomeDefaultAgentQuery,
+  HomeDefaultAgentQueryVariables
 >;
 export const SearchAgentAssetsDocument = {
   kind: 'Document',
@@ -31130,6 +31368,186 @@ export const GetSettingsMcpDocument = {
     },
   ],
 } as unknown as DocumentNode<GetSettingsMcpQuery, GetSettingsMcpQueryVariables>;
+export const SettingsUserPreferencesDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'SettingsUserPreferences' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'userPreferences' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'UserPreferencesFields' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UserPreferencesFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'UserPreferencesObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'defaultAgent' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'backend' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'effort' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'defaultEditor' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  SettingsUserPreferencesQuery,
+  SettingsUserPreferencesQueryVariables
+>;
+export const SettingsPreferencesEnabledEditorsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'SettingsPreferencesEnabledEditors' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'workspaceSettings' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'profile' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'enabledEditors' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  SettingsPreferencesEnabledEditorsQuery,
+  SettingsPreferencesEnabledEditorsQueryVariables
+>;
+export const UpdateUserPreferencesDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'UpdateUserPreferences' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'UpdateUserPreferencesInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'updateUserPreferences' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'UserPreferencesFields' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UserPreferencesFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'UserPreferencesObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'defaultAgent' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'backend' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'effort' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'defaultEditor' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  UpdateUserPreferencesMutation,
+  UpdateUserPreferencesMutationVariables
+>;
 export const GetWorkspaceRepositoryDocument = {
   kind: 'Document',
   definitions: [

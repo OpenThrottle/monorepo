@@ -112,6 +112,41 @@ export const WORKSPACE_SETTINGS_COPY = {
 } as const;
 
 /**
+ * @description Copy for Settings → Preferences: the per-user defaults stored in
+ * `user_preferences` (default editor, default agent). A null preference means
+ * "use the system default", so every "System default" label below clears one.
+ * The two `setDefault*Link` labels are the entry points from Workspace and Agents.
+ */
+export const SETTINGS_PREFERENCES_COPY = {
+  agentClearButton: `Use system default`,
+  agentEffortHint: `Reasoning effort for this agent. Leave unset to use the agent's own default.`,
+  agentEffortLabel: `Effort`,
+  agentExplainer: `Preselected in the home composer and stamped onto new plans. A model you pick in the composer, or a plan's own run configuration, still wins.`,
+  agentLegend: `Default agent`,
+  agentModelLabel: `Agent and model`,
+  agentModelPlaceholder: `System default`,
+  agentNoModelsNotice: `No enabled agent models were discovered. Enable an agent in Settings → Agents.`,
+  agentSaveButton: `Save default agent`,
+  agentSavedNotice: `Default agent saved.`,
+  agentStaleNotice: `is no longer available, so the system default is used. Pick another agent or use the system default.`,
+  agentStaleTitle: `Saved default unavailable`,
+  agentSystemDefaultNotice: `No default set: the system default agent is used.`,
+  editorExplainer: `Used for open-in-editor links and as the first button wherever several editors are offered.`,
+  editorLabel: `Editor`,
+  editorLegend: `Default editor`,
+  editorNotEnabledLink: `Enable it in Workspace`,
+  editorNotEnabledNotice: `is not one of your enabled editors, so its buttons are hidden in places that only show enabled editors.`,
+  editorSaveButton: `Save default editor`,
+  editorSavedNotice: `Default editor saved.`,
+  editorSystemDefaultOption: `System default (VS Code)`,
+  intro: `Defaults that follow you across browsers. Leave one on its system default to keep today's behavior.`,
+  saveBusyLabel: `Saving…`,
+  setDefaultAgentLink: `Set your default agent`,
+  setDefaultEditorLink: `Set your default editor`,
+  title: `Preferences`,
+} as const;
+
+/**
  * @description Copy for the workspace repository details and edit routes.
  */
 export const WORKSPACE_REPOSITORY_DETAIL_COPY = {

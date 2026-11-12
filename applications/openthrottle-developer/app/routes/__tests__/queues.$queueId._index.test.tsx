@@ -63,6 +63,7 @@ type QueueLoaderData = Route.ComponentProps['loaderData'];
 const buildQueueMatches = (loaderData: QueueLoaderData): QueueMatches => {
   const rootData = {
     canonical: 'http://localhost/',
+    defaultEditor: null,
     env: getPublicEnv(),
     permissions: [],
     rootLoaderDiagnostics: {},

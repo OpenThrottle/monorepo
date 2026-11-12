@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import * as React from 'react';
 
+import { useDefaultEditor } from '~/global/hooks/useDefaultEditor';
 import { getCheckoutEditorLink } from '~/routing/plans/utils/getCheckoutEditorLink';
 
 export interface PlanRunProvenanceCheckout {
@@ -35,8 +36,8 @@ export interface PlanRunProvenanceCellProps {
  * @description Run-provenance cell for the queued-run audit table: the run's
  * branch, an "Open in editor" deep-link built from the worktree/checkout
  * filesystem path (shown only when a path is present), and the linked PR with
- * its lifecycle state and GitHub link. Reuses the shared {@link editorHref}
- * builder so the editor-scheme logic stays in the IDE package, not app-local.
+ * its lifecycle state and GitHub link. The editor link opens in the user's
+ * default editor (VS Code when unset) via the shared workspace deep links.
  */
 export const PlanRunProvenanceCell = (
   props: PlanRunProvenanceCellProps,
@@ -44,10 +45,11 @@ export const PlanRunProvenanceCell = (
   const { branch, checkout, pullRequest } = props;
 
   // Hooks
+  const defaultEditor = useDefaultEditor();
 
   // Setup
   // Only build a deep-link when a filesystem path is actually present.
-  const editorLink = getCheckoutEditorLink(checkout);
+  const editorLink = getCheckoutEditorLink(checkout, defaultEditor);
 
   // Handlers
 

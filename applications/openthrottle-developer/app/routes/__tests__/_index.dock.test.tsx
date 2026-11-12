@@ -94,6 +94,7 @@ const renderHome = (
 const resolvedComposerData = (): Route.ComponentProps['loaderData'] => {
   return {
     composerData: Promise.resolve({
+      defaultAgent: null,
       models: [],
       personas: [],
       repositories: [],

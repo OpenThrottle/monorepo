@@ -26,6 +26,7 @@ import {
   NewspaperIcon,
   NotebookTextIcon,
   Search,
+  SlidersHorizontalIcon,
   StickyNoteIcon,
   SwatchBookIcon,
   TerminalSquareIcon,
@@ -198,6 +199,12 @@ export const dataNavigationV2: Record<string, PermissionGatedNavigationLink[]> =
         disabled: false,
         icon: KeyRoundIcon,
         to: '/settings/keys',
+      },
+      {
+        children: 'Preferences',
+        disabled: false,
+        icon: SlidersHorizontalIcon,
+        to: '/settings/preferences',
       },
       {
         children: 'Repositories',

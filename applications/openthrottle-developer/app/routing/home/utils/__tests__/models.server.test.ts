@@ -9,7 +9,7 @@ const { executeGraphqlWithAuth } =
   await import('@openthrottle/react-router-graphql');
 const { DiscoverAgentClisDocument, DiscoverLocalModelsDocument } =
   await import('~/__generated__/graphql');
-const { loadComposerModels, loadRepositories } =
+const { loadComposerModels, loadDefaultAgent, loadRepositories } =
   await import('../models.server');
 
 const mockExecute = vi.mocked(executeGraphqlWithAuth);
@@ -218,5 +218,37 @@ describe('loadRepositories', () => {
     mockExecute.mockRejectedValue(new Error('unauthorized'));
 
     expect(await loadRepositories(request())).toEqual([]);
+  });
+});
+
+describe('loadDefaultAgent', () => {
+  beforeEach(() => {
+    mockExecute.mockReset();
+  });
+
+  test('returns the saved default agent', async () => {
+    mockExecute.mockResolvedValue({
+      userPreferences: {
+        defaultAgent: { backend: 'claude', effort: 'high', model: 'opus' },
+      },
+    });
+
+    expect(await loadDefaultAgent(request())).toEqual({
+      backend: 'claude',
+      effort: 'high',
+      model: 'opus',
+    });
+  });
+
+  test('returns null when no default agent is saved', async () => {
+    mockExecute.mockResolvedValue({ userPreferences: { defaultAgent: null } });
+
+    expect(await loadDefaultAgent(request())).toBeNull();
+  });
+
+  test('returns null when the query fails', async () => {
+    mockExecute.mockRejectedValue(new Error('unauthorized'));
+
+    expect(await loadDefaultAgent(request())).toBeNull();
   });
 });

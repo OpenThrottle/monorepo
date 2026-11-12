@@ -35,10 +35,14 @@ import {
   type UseVoiceInputResult,
 } from '~/routing/home/hooks/useVoiceInput';
 import type { RepositoryOption } from '~/routing/home/utils/models.server';
+import type { ComposerDefaultAgent } from '~/routing/home/utils/seedComposerDefaultAgent';
+import { seedComposerDefaultAgent } from '~/routing/home/utils/seedComposerDefaultAgent';
 
 export interface UseHomeComposerOptions {
   /** Sidebar-backing conversation list; the composer refreshes it on new persisted turns. */
   conversationList: UseConversationListResult;
+  /** The saved default agent; seeds model + reasoning when the atom remembers none. */
+  defaultAgent: ComposerDefaultAgent | null;
   /** Discovered composer models (local endpoints + agent CLIs + driver×endpoint). */
   models: ChatModelOption[];
   /** Registry personas; falls back to the mock list when empty. */
@@ -96,7 +100,8 @@ export interface UseHomeComposerResult {
 export const useHomeComposer = (
   options: UseHomeComposerOptions,
 ): UseHomeComposerResult => {
-  const { conversationList, models, repositories, turn } = options;
+  const { conversationList, defaultAgent, models, repositories, turn } =
+    options;
 
   // Hooks
   const [draft, setDraft] = React.useState('');
@@ -123,14 +128,16 @@ export const useHomeComposer = (
   // model/repo/persona id or a capability-invalid reasoning/tier/permission
   // never reaches the toolbar or onSubmit. Derive-only — reconciliation never
   // writes back to storage (see reconcileChatToolbarState).
+  // The saved default agent fills an empty modelId/reasoning first (D3/D4): a
+  // remembered pick wins, then the preference, then the reconciler's discovery
+  // seed. An invalid default is ignored rather than written anywhere.
   const effectiveToolbar = React.useMemo(
     () =>
-      reconcileChatToolbarState(toolbarState, {
-        models,
-        personas,
-        repositories,
-      }),
-    [models, personas, repositories, toolbarState],
+      reconcileChatToolbarState(
+        seedComposerDefaultAgent(toolbarState, defaultAgent, models),
+        { models, personas, repositories },
+      ),
+    [defaultAgent, models, personas, repositories, toolbarState],
   );
 
   const mode = effectiveToolbar.mode;

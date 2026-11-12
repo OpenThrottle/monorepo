@@ -6,12 +6,14 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { Route } from '@/app/+types/root';
 import {
+  GetMyDefaultEditorDocument,
   GetMyPermissionsDocument,
   GetMyUserDocument,
   GetRootHealthDocument,
+  WorkspaceEditorId,
 } from '~/__generated__/graphql';
 
-import { loader } from '../../root';
+import { loader, shouldRevalidate } from '../../root';
 
 vi.mock('@openthrottle/react-router-graphql', async (importOriginal) => {
   const actual =
@@ -124,6 +126,9 @@ const resolveHealthThenUser = (user: unknown): void => {
     if (document === GetMyPermissionsDocument) {
       return { myPermissions: ['blog:draft'] };
     }
+    if (document === GetMyDefaultEditorDocument) {
+      return { userPreferences: { defaultEditor: WorkspaceEditorId.Cursor } };
+    }
     throw new Error('unexpected GraphQL document');
   });
 };
@@ -201,6 +206,8 @@ describe('root loader: token gate + protected-prefix redirect', () => {
     );
     // `myPermissions` is loaded once here and read by useHasPermission.
     expect(data.permissions).toEqual(['blog:draft']);
+    // The default editor is loaded once here and provided to editor links.
+    expect(data.defaultEditor).toBe(WorkspaceEditorId.Cursor);
   });
 
   test('returns an empty permission list when no token is present', async () => {
@@ -210,6 +217,7 @@ describe('root loader: token gate + protected-prefix redirect', () => {
 
     assertIsData(result);
     expect(result.permissions).toEqual([]);
+    expect(result.defaultEditor).toBeNull();
   });
 
   test('redirects a protected path to /auth when the token is present but `me` resolves null', async () => {
@@ -274,5 +282,42 @@ describe('root loader: token gate + protected-prefix redirect', () => {
     const data = result;
     expect(data.rootLoaderFailure?.step).toBe('health');
     expect(data.serverHealth.api).not.toBe('healthy');
+  });
+});
+
+const revalidateArgs = (
+  formAction: string | undefined,
+  formMethod: 'GET' | 'POST' | undefined,
+): Parameters<typeof shouldRevalidate>[0] => {
+  const url = new URL('http://localhost/plans');
+
+  return {
+    currentParams: {},
+    currentUrl: url,
+    defaultShouldRevalidate: true,
+    formAction,
+    formMethod,
+    nextParams: {},
+    nextUrl: url,
+  };
+};
+
+describe('root shouldRevalidate', () => {
+  test('stays put for a plain navigation', () => {
+    expect(shouldRevalidate(revalidateArgs(undefined, undefined))).toBe(false);
+  });
+
+  test('stays put for a submission to any other route', () => {
+    expect(
+      shouldRevalidate(revalidateArgs('/settings/workspace', 'POST')),
+    ).toBe(false);
+  });
+
+  test('reloads after a save on the preferences route', () => {
+    // The default editor lives in root loader data; without this, editor links
+    // would keep the old editor until a full reload.
+    expect(
+      shouldRevalidate(revalidateArgs('/settings/preferences', 'POST')),
+    ).toBe(true);
   });
 });

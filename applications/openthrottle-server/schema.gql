@@ -4570,6 +4570,33 @@ type StartTranscriptionStreamResult {
   sessionId: String
 }
 
+"""
+The user's default agent. Backend and model always travel together, so a half-set agent cannot be represented.
+"""
+type UserPreferencesAgentObject {
+  """Agent CLI driver id (e.g. claude, cursor, codex)."""
+  backend: String!
+
+  """Reasoning effort level, or null for the backend's own default."""
+  effort: String
+
+  """Driver-specific model id, opaque to the server."""
+  model: String!
+}
+
+"""Per-user preferences. A null field means "use the system default"."""
+type UserPreferencesObject {
+  """
+  Default agent (backend + model + effort), or null for the system default.
+  """
+  defaultAgent: UserPreferencesAgentObject
+
+  """
+  Default editor for open-in-editor links, or null for the system default (VS Code).
+  """
+  defaultEditor: WorkspaceEditorId
+}
+
 type UserObject {
   createdAt: DateTime!
 
@@ -5852,6 +5879,11 @@ type Query {
     provider: String
   ): TokenUsageResultObject!
 
+  """
+  Preferences for the authenticated user. All fields are null until the user saves one.
+  """
+  userPreferences: UserPreferencesObject!
+
   """Get a user by ID"""
   user(id: ID!): UserObject
 
@@ -7083,6 +7115,11 @@ type Mutation {
   Flush and finalize an owned transcription session: sends END_OF_AUDIO upstream, waits a short flush window for the last revising segments, then emits the terminal done:true snapshot. Returns false (no throw) for unauthenticated, unknown, or foreign sessions.
   """
   stopTranscriptionStream(sessionId: ID!): Boolean!
+
+  """
+  Update the authenticated user's preferences. An omitted field is left unchanged; an explicit null clears it to the system default.
+  """
+  updateUserPreferences(input: UpdateUserPreferencesInput!): UserPreferencesObject!
 
   """Create a user"""
   createUser(input: CreateUserInput!): UserObject!
@@ -9269,6 +9306,28 @@ input RecordTokenUsageRowInput {
 
   """Total tokens for the turn, when reported."""
   totalTokens: Float
+}
+
+"""
+A partial update: an omitted field is left unchanged and an explicit null clears it.
+"""
+input UpdateUserPreferencesInput {
+  defaultAgent: UserPreferencesAgentInput
+  defaultEditor: WorkspaceEditorId
+}
+
+"""
+A default agent. Backend and model are required together; effort may be null.
+"""
+input UserPreferencesAgentInput {
+  """Agent CLI driver id."""
+  backend: String!
+
+  """Reasoning effort level, or null for the backend's own default."""
+  effort: String
+
+  """Driver-specific model id."""
+  model: String!
 }
 
 input CreateUserInput {

@@ -123,3 +123,15 @@ subscription TranscriptionStreamChunkAdded($sessionId: ID!) {
     transcript
   }
 }
+
+# The composer seeds from the saved default agent when the toolbar atom has no
+# remembered pick (D3/D4); the editor half is read once by the root loader.
+query HomeDefaultAgent {
+  userPreferences {
+    defaultAgent {
+      backend
+      effort
+      model
+    }
+  }
+}

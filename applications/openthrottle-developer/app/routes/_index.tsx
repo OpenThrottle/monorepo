@@ -15,6 +15,7 @@ import { useAgenticChatTurn } from '~/routing/home/hooks/useAgenticChatTurn';
 import { useConversationList } from '~/routing/home/hooks/useConversationList';
 import {
   loadComposerModels,
+  loadDefaultAgent,
   loadPersonas,
   loadRepositories,
 } from '~/routing/home/utils/models.server';
@@ -38,7 +39,9 @@ export const loader = (args: Route.LoaderArgs) => {
     loadComposerModels(args.request),
     loadRepositories(args.request),
     loadPersonas(args.request),
-  ]).then(([models, repositories, personas]) => ({
+    loadDefaultAgent(args.request),
+  ]).then(([models, repositories, personas, defaultAgent]) => ({
+    defaultAgent,
     models,
     personas,
     repositories,

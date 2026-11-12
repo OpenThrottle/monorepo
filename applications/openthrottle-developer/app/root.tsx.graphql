@@ -90,6 +90,14 @@ query getMyUser {
   }
 }
 
+# Only the default editor: every generic open-in-editor link reads it through
+# DefaultEditorContext. The agent half of the preferences is per-surface.
+query getMyDefaultEditor {
+  userPreferences {
+    defaultEditor
+  }
+}
+
 query evaluateFeatureFlags($anonymousId: String, $applicationKey: String) {
   evaluateFeatureFlags(
     anonymousId: $anonymousId

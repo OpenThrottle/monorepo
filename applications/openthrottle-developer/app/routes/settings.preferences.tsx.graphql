@@ -1,0 +1,30 @@
+fragment UserPreferencesFields on UserPreferencesObject {
+  defaultAgent {
+    backend
+    effort
+    model
+  }
+  defaultEditor
+}
+
+query SettingsUserPreferences {
+  userPreferences {
+    ...UserPreferencesFields
+  }
+}
+
+# Only the enabled editors: the Default editor section warns when the pick is
+# not among them (D5) and never enables it on the user's behalf.
+query SettingsPreferencesEnabledEditors {
+  workspaceSettings {
+    profile {
+      enabledEditors
+    }
+  }
+}
+
+mutation UpdateUserPreferences($input: UpdateUserPreferencesInput!) {
+  updateUserPreferences(input: $input) {
+    ...UserPreferencesFields
+  }
+}

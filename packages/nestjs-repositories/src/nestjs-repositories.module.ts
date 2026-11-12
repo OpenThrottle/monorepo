@@ -37,6 +37,7 @@ import { TagActionRulesModule } from './modules/tag-action-rules/tag-action-rule
 import { TagsModule } from './modules/tags/tags.module.ts';
 import { TaskEmbeddingsModule } from './modules/task-embeddings/task-embeddings.module.ts';
 import { TasksModule } from './modules/tasks/tasks.module.ts';
+import { UserPreferencesModule } from './modules/user-preferences/user-preferences.module.ts';
 import { UsersModule } from './modules/users/users.module.ts';
 import { WorkLedgerModule } from './modules/work-ledger/work-ledger.module.ts';
 import { WorkspaceSettingsModule } from './modules/workspace-settings/workspace-settings.module.ts';
@@ -79,6 +80,7 @@ import { getTypeOrmOptions } from './nestjs-repositories.utils.ts';
     TagsModule,
     TaskEmbeddingsModule,
     TasksModule,
+    UserPreferencesModule,
     UsersModule,
     WorkLedgerModule,
     WorkspaceSettingsModule,
@@ -128,6 +130,7 @@ import { getTypeOrmOptions } from './nestjs-repositories.utils.ts';
     TagsModule,
     TaskEmbeddingsModule,
     TasksModule,
+    UserPreferencesModule,
     UsersModule,
     WorkLedgerModule,
     WorkspaceSettingsModule,
