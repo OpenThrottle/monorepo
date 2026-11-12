@@ -2,10 +2,17 @@ import { describe, expect, it } from 'vitest';
 
 import { captureQuery, runWithQueryCapture } from './query-capture.utils.ts';
 
-const wait = (ms: number): Promise<void> => {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
+/**
+ * @description Yields `turns` macrotasks. Concurrent scopes interleave in turn
+ * order, so the test controls the ordering without reading the clock.
+ */
+const yieldTurns = async (turns: number): Promise<void> => {
+  for (let turn = 0; turn < turns; turn += 1) {
+    // eslint-disable-next-line no-await-in-loop -- each turn must finish before the next starts
+    await new Promise((resolve) => {
+      setImmediate(resolve);
+    });
+  }
 };
 
 describe('query capture store', () => {
@@ -40,7 +47,7 @@ describe('query capture store', () => {
 
     it('collects queries captured after an await', async () => {
       const { queries } = await runWithQueryCapture(async () => {
-        await wait(1);
+        await yieldTurns(1);
         captureQuery({ query: 'SELECT after_await' });
       });
 
@@ -75,7 +82,7 @@ describe('query capture store', () => {
     it('returns a rejection with the queries captured before it', async () => {
       const capture = await runWithQueryCapture(async () => {
         captureQuery({ query: 'SELECT before_reject' });
-        await wait(1);
+        await yieldTurns(1);
         throw error;
       });
 
@@ -92,11 +99,11 @@ describe('query capture store', () => {
       const [first, second] = await Promise.all([
         runWithQueryCapture(async () => {
           captureQuery({ query: 'SELECT first_1' });
-          await wait(10);
+          await yieldTurns(2);
           captureQuery({ query: 'SELECT first_2' });
         }),
         runWithQueryCapture(async () => {
-          await wait(5);
+          await yieldTurns(1);
           captureQuery({ query: 'SELECT second_1' });
         }),
       ]);

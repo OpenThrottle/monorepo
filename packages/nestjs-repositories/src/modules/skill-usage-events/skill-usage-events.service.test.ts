@@ -385,7 +385,11 @@ describe('SkillUsageEventsService', () => {
     ): Promise<unknown> => {
       const create = vi.fn((input: Partial<SkillUsageOutcome>) => input);
       const save = vi.fn((row: Partial<SkillUsageOutcome>) =>
-        Promise.resolve({ ...row, id: 'outcome-1', receivedAt: new Date() }),
+        Promise.resolve({
+          ...row,
+          id: 'outcome-1',
+          receivedAt: new Date(FIXED_NOW),
+        }),
       );
       const service = await buildService({ outcomes: { create, save } });
       await service.recordSkillUsageOutcome({

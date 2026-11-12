@@ -444,9 +444,9 @@ export const main = async (): Promise<void> => {
         const blockedTitles = remaining.map((blockedTask) => blockedTask.title);
         const titles = blockedTitles.map((title) => `"${title}"`).join(', ');
 
-        // eslint-disable-next-line no-await-in-loop
+        // eslint-disable-next-line no-await-in-loop -- sequential by design: plan is marked BLOCKED before the run is settled and the process exits
         await updatePlanStatus(openthrottleConfig, effectivePlanId, 'BLOCKED');
-        // eslint-disable-next-line no-await-in-loop
+        // eslint-disable-next-line no-await-in-loop -- sequential by design: the run is settled before the process exits
         await settleCliRunSafely('COMPLETED');
         console.log(
           ` - 📋 Plan ${COLORS.green}${effectivePlanId}${COLORS.reset} has only BLOCKED tasks left (${blockedTitles.length}): ${titles}. Unblock them and re-run to continue.`,

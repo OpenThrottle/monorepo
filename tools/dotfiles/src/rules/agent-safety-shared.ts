@@ -22,7 +22,7 @@ export const matchesAnyPath = (
   filename: string,
   patterns: readonly string[],
 ): boolean => {
-  const normalized = filename.replaceAll('\\', '/');
+  const normalized = filename.replace(/\\/g, '/');
   return patterns.some((pattern) => {
     const suffix = `/${pattern}`;
     return pattern.endsWith('/')

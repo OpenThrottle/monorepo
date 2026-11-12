@@ -299,7 +299,8 @@ describe('runEval with an injected iteration', () => {
         runIteration: async () => {
           active += 1;
           peak = Math.max(peak, active);
-          await new Promise((resolve) => setTimeout(resolve, 5));
+          // A macrotask yield lets the pool start its next worker while this one is in flight.
+          await new Promise((resolve) => setTimeout(resolve, 0));
           active -= 1;
 
           return okOutput;

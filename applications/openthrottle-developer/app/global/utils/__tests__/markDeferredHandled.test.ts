@@ -11,7 +11,7 @@ describe('markDeferredHandled', () => {
   // Node reports unhandled rejections only after the microtask queue drains.
   const flushRejectionTracking = async (): Promise<void> => {
     await new Promise((resolve) => {
-      setTimeout(resolve, 20);
+      setImmediate(resolve);
     });
   };
 

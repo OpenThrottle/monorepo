@@ -153,7 +153,7 @@ describe('EvalRunsService', () => {
     it('clears finishedAt when resuming from a pause', async () => {
       mockRunRepository.findOne.mockResolvedValue(
         evalRunFactory.build({
-          finishedAt: new Date(),
+          finishedAt: new Date('2026-11-01T01:00:00.000Z'),
           status: EVAL_RUN_STATUS.USAGE_LIMITED,
         }),
       );

@@ -129,9 +129,11 @@ describe('trajectory upload state sweep', () => {
         state: { planRunId: undefined, scanOffset: 0, uploaded: [] },
       });
 
+      // "Just now" is the file's own mtime, so the test never reads the clock.
+      const writtenAtMs = fs.statSync(path.join(dir, 'live.json')).mtimeMs;
       const result = await sweepTrajectoryUploadState({
         dir,
-        nowMs: Date.now(),
+        nowMs: writtenAtMs,
       });
 
       expect(result.deleted).toBe(0);

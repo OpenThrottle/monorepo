@@ -92,7 +92,7 @@ export async function replayFixture(
       `${transcriptStem(scenario, index)}.ndjson`,
     );
     // Earlier turns replay strictly in order: each feeds the next its history.
-    // eslint-disable-next-line no-await-in-loop
+    // eslint-disable-next-line no-await-in-loop -- each prior turn feeds the next its history
     const prior = await replayTurn(profile, priorPath, conversation);
     if (prior.report?.ok !== true) {
       throw new Error(

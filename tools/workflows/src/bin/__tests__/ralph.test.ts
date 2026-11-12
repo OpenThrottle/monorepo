@@ -45,7 +45,7 @@ const mockTask: TaskRow = {
 
 const mockBlockedTask: TaskRow = {
   category: null,
-  createdAt: new Date().toISOString(),
+  createdAt: FIXED_NOW_ISO,
   description: null,
   id: BLOCKED_TASK_ID,
   planId: PLAN_ID,
@@ -53,7 +53,7 @@ const mockBlockedTask: TaskRow = {
   sortOrder: 2000,
   status: 'BLOCKED',
   title: 'Needs human decision',
-  updatedAt: new Date().toISOString(),
+  updatedAt: FIXED_NOW_ISO,
   wave: null,
 };
 

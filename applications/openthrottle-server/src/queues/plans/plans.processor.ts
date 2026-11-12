@@ -321,7 +321,7 @@ export class PlansProcessor
         PlansProcessor.name,
       );
 
-      // eslint-disable-next-line no-await-in-loop
+      // eslint-disable-next-line no-await-in-loop -- one guarded write and notification per plan, in order, so the reconciliation log reads in sequence
       const written = await this.planStatusService.writeGuardedStatus(planId, {
         actorKind: AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
         actorSub: actorSub ?? undefined,

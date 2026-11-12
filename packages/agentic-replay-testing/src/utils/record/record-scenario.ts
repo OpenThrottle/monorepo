@@ -129,7 +129,7 @@ export async function recordScenario(
 
       // Turns are sequential by nature: a resume turn needs the previous
       // turn's session and reply.
-      // eslint-disable-next-line no-await-in-loop
+      // eslint-disable-next-line no-await-in-loop -- a resume turn needs the previous turn's session and reply
       const chunks: readonly ConversationStreamChunk[] = await withBinEnv(
         profile.binEnv,
         bin,

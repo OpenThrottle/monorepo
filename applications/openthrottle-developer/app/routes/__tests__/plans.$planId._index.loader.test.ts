@@ -299,7 +299,7 @@ describe('routes/plans.$planId._index loader', () => {
     // give it a full macrotask before asserting.
     const flushRejectionTracking = async (): Promise<void> => {
       await new Promise((resolve) => {
-        setTimeout(resolve, 20);
+        setImmediate(resolve);
       });
     };
 
@@ -342,9 +342,9 @@ describe('routes/plans.$planId._index loader', () => {
         (request, document, ...rest) => {
           if (document === PlanDetailCriticalDocument) {
             return new Promise((resolve) => {
-              setTimeout(() => {
+              setImmediate(() => {
                 resolve({ plan, tasksByPlanId: tasks });
-              }, 40);
+              });
             });
           }
           if (!fallback) {

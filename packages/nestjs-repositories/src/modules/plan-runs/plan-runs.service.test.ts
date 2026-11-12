@@ -537,7 +537,7 @@ describe('PlanRunsService', () => {
     it('reports false when the run is no longer SCHEDULED', async () => {
       qbExecute.mockResolvedValueOnce({ affected: 0 });
 
-      expect(await service.rescheduleScheduledRun('run-1', new Date())).toBe(
+      expect(await service.rescheduleScheduledRun('run-1', FIXED_NOW)).toBe(
         false,
       );
     });
