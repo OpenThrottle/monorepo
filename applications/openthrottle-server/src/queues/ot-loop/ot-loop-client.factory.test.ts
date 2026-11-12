@@ -15,6 +15,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type {
   OtLoopExecuteGraphql,
+  PlanOutputChunk,
   PlanOutputWriter,
 } from './ot-loop.types.ts';
 import { createOtLoopClient } from './ot-loop-client.factory.ts';
@@ -29,11 +30,11 @@ interface Call {
 
 describe('createOtLoopClient', () => {
   const calls: Call[] = [];
-  const written: { taskId: string | undefined; text: string }[] = [];
+  const written: PlanOutputChunk[] = [];
   const output: PlanOutputWriter = {
     settled: async () => undefined,
-    write: (taskId, text) => {
-      written.push({ taskId, text });
+    write: (chunk) => {
+      written.push(chunk);
     },
   };
   const respond = vi.fn((document: unknown): unknown => {
@@ -220,10 +221,19 @@ describe('createOtLoopClient', () => {
   });
 
   it('narrates through the shared writer, tagged with the task', async () => {
-    await buildClient().narrate({ message: 'task started', taskId: 't1' });
+    await buildClient().narrate({
+      attempt: 2,
+      message: 'task started',
+      taskId: 't1',
+    });
 
     expect(written).toEqual([
-      { taskId: 't1', text: '[ot-loop] task started\n' },
+      {
+        attempt: 2,
+        kind: 'loop',
+        taskId: 't1',
+        text: '[ot-loop] task started\n',
+      },
     ]);
     expect(callsTo(AppendPlanOutputDocument)).toHaveLength(0);
   });

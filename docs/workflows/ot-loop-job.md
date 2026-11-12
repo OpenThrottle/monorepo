@@ -387,11 +387,61 @@ Unlike the Ralph orchestrator path, which has no `onChunk`, the job passes `onCh
 tagged with `taskId`. Chunks are batched (flush at 4 KB or 2 s) so a chatty CLI does not write a row
 per line.
 
+### 10.1 Chunk kind and attempt (plan 540c8b5e)
+
+A task's output is one flat stream unless each chunk says what it is and which attempt produced it.
+The run view needs both to group a task into attempts
+(`Attempt 1 · worker 1m 17s · validation: lint ✗`).
+
+**Attempt travels in `plan_output_stream.iteration`.** The column has existed since migration 007
+and nothing in the OT Loop path writes it. Ralph's orchestrator never sets it either, but an agent
+_may_ pass one through `append_plan_output`, which is why the UI keeps showing `#N` for chunks that
+have no kind. Inside a task the loop writes the 1-based attempt number; retries and the commit-fix
+attempt each count. Plan-scoped loop lines (setup, finalize) leave it null.
+
+**Kind travels in a new nullable `plan_output_stream.kind` column**, `CHECK (kind IN ('loop',
+'worker', 'tool', 'validation'))`, exposed as a nullable `kind` field on `PlanOutputStreamChunk`
+and an optional `kind` on `AppendPlanOutputInput`.
+
+| Kind         | Written by                                      | Content                                                    |
+| ------------ | ----------------------------------------------- | ---------------------------------------------------------- |
+| `loop`       | `LoopClient.narrate`, the orchestrator's `say`  | `[ot-loop] …` status lines                                 |
+| `worker`     | the worker runner's batched sink                | agent prose                                                |
+| `tool`       | the worker runner's batched sink                | runs of consecutive `→ Tool arg` lines, split out of prose |
+| `validation` | the command validator, setup and final commands | start line, one summary line per command, red tail         |
+
+**Why a column and not an encoding.** The alternative was a marker inside `content`
+(`[ot-loop:worker] …`), the way loop lines already carry `[ot-loop]`. It was rejected:
+
+- The marker would reach every other reader of `content` — `get_plan_output`, semantic search,
+  retention exports — and each would have to strip it. A column is invisible to readers that do not
+  ask for it.
+- `content` is free text that agents write through `append_plan_output`. A Ralph agent echoing a
+  log line could forge a kind by accident; a column it never sets cannot be forged.
+- A typed, `CHECK`ed column lets the UI switch on a union instead of parsing text, and lets a later
+  `get_plan_output(kind: …)` filter in SQL.
+
+The cost is one additive migration, a GraphQL field and codegen — a plan task of its own.
+
+**Ralph is unaffected.** Every existing row and every Ralph chunk has `kind = null`. The run view
+groups by attempt only the task chunks that carry a kind; a null-kind chunk renders exactly as it
+does today, `#iteration` header included. No backfill: historical OT Loop rows stay flat.
+
+**Tool lines are split server-side.** The drivers already render a tool call as one `→ Tool arg`
+line (plan 8a529290). The worker runner splits each batch at line boundaries into prose and tool
+runs and writes each run as its own chunk, so a batch yields a handful of rows, not one per line.
+Splitting in the UI instead would leave `kind` unable to say what a chunk is.
+
+**Loop lines name tasks by title**, never by UUID, and an `attempt N failed` line carries the
+reason: the failing command and its first error line for validation, the message for a worker
+failure, the first line of the commit output for a commit failure.
+
 ---
 
 ## 11. Schema and migration needs
 
-**No database migration.** The runner is carried in the BullMQ payload and in
+**No database migration for the runner itself** (the chunk `kind` column of § 10.1 came later, in
+its own migration). The runner is carried in the BullMQ payload and in
 `run_config_snapshot`; `run_kind` keeps its in-process meaning; no new driver widens migration 079's
 `execution_backend` CHECK.
 

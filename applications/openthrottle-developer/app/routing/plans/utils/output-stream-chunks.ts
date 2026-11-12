@@ -19,6 +19,8 @@ export interface OutputStreamChunk {
   createdAt: unknown;
   id: string;
   iteration?: number | null;
+  /** @description Producer tag on OT Loop task chunks (loop, worker, tool, validation); null/absent for Ralph and historical rows. */
+  kind?: string | null;
   /** @description Task the chunk is attributed to (worker and validation output); null/absent for plan-scoped chunks. */
   taskId?: string | null;
 }
@@ -49,6 +51,13 @@ function toValidDate(value: unknown): Date | null {
   const date = new Date(value);
 
   return Number.isNaN(date.getTime()) ? null : date;
+}
+
+/**
+ * @description Epoch milliseconds for a chunk timestamp, or null when it is not a usable date.
+ */
+export function toChunkTimeMs(value: unknown): number | null {
+  return toValidDate(value)?.getTime() ?? null;
 }
 
 /**

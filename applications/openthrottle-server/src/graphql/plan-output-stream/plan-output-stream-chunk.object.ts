@@ -23,6 +23,12 @@ export class PlanOutputStreamChunkObject {
   })
   iteration!: number | null;
 
+  @Field(() => String, {
+    description: `Producer of the chunk: loop, worker, tool or validation; null for untagged chunks and historical rows.`,
+    nullable: true,
+  })
+  kind!: string | null;
+
   @Field(() => PlanObject, {
     description: `Resolved plan entity when planId is set`,
     nullable: true,

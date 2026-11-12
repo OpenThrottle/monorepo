@@ -11,6 +11,7 @@ import {
   readResultFile,
   SINK_MAX_BYTES,
   SINK_MAX_MS,
+  splitToolRuns,
   systemScheduleClock,
   tailForRetry,
 } from '@openthrottle/openthrottle-agentic-loop';
@@ -45,7 +46,14 @@ export const createOtLoopWorkerRunner = (
 
       const sink = createBatchedChunkSink(
         (text) => {
-          output.write(task.id, text);
+          splitToolRuns(text).forEach((run) => {
+            output.write({
+              attempt: input.attempt,
+              kind: run.kind,
+              taskId: task.id,
+              text: run.text,
+            });
+          });
         },
         { maxBytes: SINK_MAX_BYTES, maxMs: SINK_MAX_MS },
         systemScheduleClock,

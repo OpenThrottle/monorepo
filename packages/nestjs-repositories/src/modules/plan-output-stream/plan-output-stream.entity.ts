@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for OpenThrottle plan_output_stream table. Matches databases/openthrottle/migrations (007, 077).
+ * @description TypeORM entity for OpenThrottle plan_output_stream table. Matches databases/openthrottle/migrations (007, 077, 156).
  */
 
 import {
@@ -13,6 +13,7 @@ import {
 
 import type { Plan } from '../plans/plan.entity.ts';
 import type { Task } from '../tasks/task.entity.ts';
+import type { PlanOutputStreamKind } from './plan-output-stream.types.ts';
 
 @Entity('plan_output_stream')
 export class PlanOutputStreamChunk {
@@ -27,6 +28,10 @@ export class PlanOutputStreamChunk {
 
   @Column({ name: 'iteration', nullable: true, type: 'int' })
   iteration!: number | null;
+
+  // Producer tag (migration 156). NULL for untagged chunks and historical rows.
+  @Column({ name: 'kind', nullable: true, type: 'text' })
+  kind!: PlanOutputStreamKind | null;
 
   @Column({ name: 'task_id', nullable: true, type: 'uuid' })
   taskId!: string | null;

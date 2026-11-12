@@ -403,6 +403,7 @@ export function AppendPlanOutputInputSchema(): z.ZodObject<
   return z.object({
     content: z.string().min(1),
     iteration: z.number().nullish(),
+    kind: z.string().nullish(),
     planId: z.string().min(1),
     taskId: z.string().nullish(),
   });

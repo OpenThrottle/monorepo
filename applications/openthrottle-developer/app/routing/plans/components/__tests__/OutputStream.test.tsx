@@ -145,4 +145,40 @@ describe('OutputStream Component', () => {
       expect(component.queryByTestId('OutputStream-task')).toBeNull();
     });
   });
+
+  test('renders OT Loop chunks as one group per attempt with its header', () => {
+    const base = { createdAt: new Date(2026, 10, 11, 10, 0, 0), taskId: 't1' };
+    const component = renderStream({
+      chunks: [
+        { ...base, content: 'a', id: 'a1', iteration: 1, kind: 'worker' },
+        { ...base, content: 'b', id: 'a2', iteration: 2, kind: 'worker' },
+      ],
+      taskTitles: new Map([['t1', 'Do thing']]),
+    });
+
+    expect(component.getAllByTestId('OutputStreamAttempt')).toHaveLength(2);
+    expect(component.getAllByTestId('OutputStream-task')).toHaveLength(1);
+    expect(
+      component.getAllByTestId('OutputStreamAttempt-header')[1],
+    ).toHaveTextContent(OUTPUT_STREAM_COPY.attemptLabel(2));
+  });
+
+  test('renders Ralph chunks (kind null) as plain chunks, never as attempts', () => {
+    const component = renderStream({
+      chunks: [
+        {
+          content: 'raw ralph text',
+          createdAt: new Date(2026, 10, 11, 10, 0, 0),
+          id: 'r1',
+          iteration: 1,
+          kind: null,
+          taskId: 't1',
+        },
+      ],
+    });
+
+    expect(component.queryByTestId('OutputStreamAttempt')).toBeNull();
+    expect(component.getByText('raw ralph text').tagName).toBe('PRE');
+    expect(component.getByText('#1')).toBeInTheDocument();
+  });
 });

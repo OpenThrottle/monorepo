@@ -11,7 +11,11 @@ import type {
 import { getDriver } from '@openthrottle/openthrottle-drivers';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { OtLoopRunDriver, PlanOutputWriter } from './ot-loop.types.ts';
+import type {
+  OtLoopRunDriver,
+  PlanOutputChunk,
+  PlanOutputWriter,
+} from './ot-loop.types.ts';
 import { buildWorkerEnv } from './ot-loop.utils.ts';
 import { createOtLoopWorkerRunner } from './ot-loop-worker-runner.factory.ts';
 
@@ -36,11 +40,11 @@ const GOOD_RESULT = JSON.stringify({
 
 describe('createOtLoopWorkerRunner', () => {
   let cwd: string;
-  const written: { taskId: string | undefined; text: string }[] = [];
+  const written: PlanOutputChunk[] = [];
   const output: PlanOutputWriter = {
     settled: async () => undefined,
-    write: (taskId, text) => {
-      written.push({ taskId, text });
+    write: (chunk) => {
+      written.push(chunk);
     },
   };
   const onUsageLimit = vi.fn();
@@ -60,6 +64,7 @@ describe('createOtLoopWorkerRunner', () => {
   };
   const input = (signal: AbortSignal = new AbortController().signal) => {
     return {
+      attempt: 3,
       guidance: ['skip nothing'],
       model: 'sonnet',
       previousFailure: undefined,
@@ -178,7 +183,31 @@ describe('createOtLoopWorkerRunner', () => {
 
     await runner.run(input());
 
-    expect(written).toEqual([{ taskId: 'task-1', text: 'hello world' }]);
+    expect(written).toEqual([
+      { attempt: 3, kind: 'worker', taskId: 'task-1', text: 'hello world' },
+    ]);
+  });
+
+  it('writes tool runs and prose as separate chunks, in order, losslessly', async () => {
+    const batch = 'thinking\n→ Read a.ts\n→ Bash ls\n\ndone\n';
+    const runner = build(
+      driverThat((config, options) => {
+        config.onChunk?.({ data: batch, stream: 'stdout' });
+        options.onExit?.(0);
+
+        return 'done';
+      }),
+    );
+
+    await runner.run(input());
+
+    expect(written.map((chunk) => chunk.kind)).toEqual([
+      'worker',
+      'tool',
+      'worker',
+    ]);
+    expect(written.map((chunk) => chunk.text).join('')).toBe(batch);
+    expect(written.every((chunk) => chunk.attempt === 3)).toBe(true);
   });
 
   it('strips colour codes from driver output, including a code split across chunks', async () => {
@@ -195,7 +224,9 @@ describe('createOtLoopWorkerRunner', () => {
 
     await runner.run(input());
 
-    expect(written).toEqual([{ taskId: 'task-1', text: 'ok done' }]);
+    expect(written).toEqual([
+      { attempt: 3, kind: 'worker', taskId: 'task-1', text: 'ok done' },
+    ]);
   });
 
   it('classifies an aborted attempt as aborted even when the driver also printed its error sentinel', async () => {

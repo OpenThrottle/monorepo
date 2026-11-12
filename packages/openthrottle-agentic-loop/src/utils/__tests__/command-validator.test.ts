@@ -69,7 +69,7 @@ const makeSpawn = (scripts: Record<string, FakeScript>) => {
 const TASK = makeTask('1');
 
 const input = (signal: AbortSignal = new AbortController().signal) => {
-  return { signal, task: TASK, taskStartSha: `ab'c` };
+  return { attempt: 2, signal, task: TASK, taskStartSha: `ab'c` };
 };
 
 const build = (
@@ -189,8 +189,8 @@ describe('createCommandValidator output streaming', () => {
     }).validate(input());
 
     expect(chunks).toEqual([
-      { command: 'a', taskId: '1', text: '$ a\n' },
-      { command: 'a', taskId: '1', text: 'a ✔ · 46s\n' },
+      { attempt: 2, command: 'a', taskId: '1', text: '$ a\n' },
+      { attempt: 2, command: 'a', taskId: '1', text: 'a ✔ · 46s\n' },
     ]);
   });
 

@@ -79,6 +79,7 @@ describe('ANSI never reaches onChunk', () => {
     });
 
     await validator.validate({
+      attempt: 1,
       signal: new AbortController().signal,
       task: makeTask('1'),
       taskStartSha: 'abc',

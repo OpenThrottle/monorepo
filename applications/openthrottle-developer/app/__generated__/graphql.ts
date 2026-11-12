@@ -477,6 +477,8 @@ export type AppendPlanOutputInput = {
   content: Scalars['String']['input'];
   /** Optional iteration number for the output chunk */
   iteration?: InputMaybe<Scalars['Int']['input']>;
+  /** Optional producer tag for the chunk: loop, worker, tool or validation. Omit for an untagged chunk. */
+  kind?: InputMaybe<Scalars['String']['input']>;
   /** Plan id to append output to */
   planId: Scalars['ID']['input'];
   /** Optional task id to attribute this output chunk to (task-scoped output). Omit for plan-scoped chunks. */
@@ -3629,6 +3631,8 @@ export type PlanOutputStreamChunkObject = {
   id: Scalars['String']['output'];
   /** Optional iteration number for the output chunk */
   iteration?: Maybe<Scalars['Int']['output']>;
+  /** Producer of the chunk: loop, worker, tool or validation; null for untagged chunks and historical rows. */
+  kind?: Maybe<Scalars['String']['output']>;
   /** Resolved plan entity when planId is set */
   plan?: Maybe<PlanObject>;
   planId: Scalars['String']['output'];
@@ -9812,6 +9816,7 @@ export type PlanDetailOutputChunksQuery = {
     createdAt: any;
     id: string;
     iteration?: number | null;
+    kind?: string | null;
     planId: string;
     taskId?: string | null;
   }>;
@@ -9953,6 +9958,7 @@ export type PlanOutputChunkAddedSubscription = {
     createdAt: any;
     id: string;
     iteration?: number | null;
+    kind?: string | null;
     planId: string;
     taskId?: string | null;
   };
@@ -10350,6 +10356,7 @@ export type TaskOutputStreamChunksQuery = {
     createdAt: any;
     id: string;
     iteration?: number | null;
+    kind?: string | null;
     planId: string;
     taskId?: string | null;
   }>;
@@ -23732,6 +23739,7 @@ export const PlanDetailOutputChunksDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'iteration' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
               ],
@@ -24162,6 +24170,7 @@ export const PlanOutputChunkAddedDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'iteration' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
               ],
@@ -25415,6 +25424,7 @@ export const TaskOutputStreamChunksDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'iteration' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
               ],

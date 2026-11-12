@@ -263,6 +263,7 @@ query PlanDetailOutputChunks($planId: ID!) {
     createdAt
     id
     iteration
+    kind
     planId
     taskId
   }
@@ -369,6 +370,7 @@ subscription PlanOutputChunkAdded($planId: ID!) {
     createdAt
     id
     iteration
+    kind
     planId
     taskId
   }

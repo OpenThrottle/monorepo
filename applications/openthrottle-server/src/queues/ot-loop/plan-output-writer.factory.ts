@@ -20,12 +20,14 @@ export const createPlanOutputWriter = (options: {
 
   return {
     settled: () => tail,
-    write: (taskId, text) => {
+    write: ({ attempt, kind, taskId, text }) => {
       tail = tail.then(async () => {
         try {
           await executeGraphqlV2(AppendPlanOutputDocument, {
             input: {
               content: text,
+              ...(attempt !== undefined ? { iteration: attempt } : {}),
+              kind,
               planId,
               ...(taskId !== undefined ? { taskId } : {}),
             },
