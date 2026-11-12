@@ -1,7 +1,8 @@
 # pnpm global virtual store: evaluated, left off
 
 **Decision: keep the default per-project virtual store (`virtualStoreType: project`).**
-Evaluated against pnpm 12.14.0 in November 2026. It works and it is faster to install, but it
+Evaluated against pnpm 12.14.0 in November 2026, and the blocking hook (§ 1) was re-confirmed
+on 12.18.0. It works and it is faster to install, but it
 saves little on macOS and it breaks the developer app's test suite in a way pnpm gives you no
 switch for. This document exists so the next person who thinks "worktrees would install
 faster with the global virtual store" starts from the measurements instead of from zero.
@@ -51,8 +52,9 @@ files fail, because nearly every route test reaches recharts through
 `@openthrottle/react-router-shadcn`.
 
 The same test file passes when Vitest runs under plain `node` with no hook. It fails under
-`pnpm exec`. pnpm 12.14 has no setting to turn the hook off: `--config.node-options=""` still
-prepends it.
+`pnpm exec`. pnpm has no setting to turn the hook off: `--config.node-options=""` still
+prepends it. That was measured on 12.14 and re-checked on 12.18.0, where `pnpm exec` in a
+`virtualStoreType: global` project still sets `NODE_PATH` and the same `--import=data:…` hook.
 
 The suite's `vmForks` pool is load-bearing for its own reasons (see the `pool` note in
 `applications/openthrottle-developer/vitest.config.ts`), so switching pools to suit a local
