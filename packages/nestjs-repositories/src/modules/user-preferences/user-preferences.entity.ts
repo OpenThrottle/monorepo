@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for user_preferences. Matches databases/migrations/153.
+ * @description TypeORM entity for user_preferences. Matches databases/openthrottle/migrations/157.
  * One row per user; every preference column is nullable and NULL means "use the system default".
  * Raw column values are untrusted here — {@link UserPreferencesService} narrows them on read.
  */
