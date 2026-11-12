@@ -1,3 +1,4 @@
+import type { LoopOutputKind } from '@openthrottle/openthrottle-agentic-loop';
 import type {
   WorkflowExecuteGraphqlV2,
   WorkflowRalphCommandRunner,
@@ -13,12 +14,22 @@ import type {
 /** @description The worker-scoped GraphQL executor (same contract as Ralph's). */
 export type OtLoopExecuteGraphql = WorkflowExecuteGraphqlV2;
 
+/** @description One chunk for plan output: what it is, and where in the run it belongs. */
+export interface PlanOutputChunk {
+  /** 1-based attempt inside a task; `undefined` for plan-scoped lines. */
+  readonly attempt: number | undefined;
+  readonly kind: LoopOutputKind;
+  /** The task the chunk belongs to; `undefined` = plan-scoped. */
+  readonly taskId: string | undefined;
+  readonly text: string;
+}
+
 /** @description Serialises writes to plan output so batches land in order, tagged with their task. */
 export interface PlanOutputWriter {
   /** Resolves once every queued write has been attempted; never rejects. */
   readonly settled: () => Promise<void>;
-  /** Queues a write; `taskId` tags the chunk (`undefined` = plan-scoped). */
-  readonly write: (taskId: string | undefined, text: string) => void;
+  /** Queues a write tagged with the chunk's kind, task and attempt. */
+  readonly write: (chunk: PlanOutputChunk) => void;
 }
 
 /** @description What the OT Loop `LoopClient` needs to talk to OT as the worker. */

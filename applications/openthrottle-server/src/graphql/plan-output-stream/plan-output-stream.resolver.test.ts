@@ -62,6 +62,7 @@ describe('PlanOutputStreamResolver', () => {
     createdAt: new Date('2026-02-01T22:00:00.000Z'),
     id: 'fe000420-9f10-4d74-b7f2-d9c5c211ed50',
     iteration: 1,
+    kind: null,
     plan: mockPlan,
     planId: 'c70fc1ea-c7de-4fe8-9722-44781ad80415',
     taskId: null,
@@ -245,6 +246,47 @@ describe('PlanOutputStreamResolver', () => {
         `plan:${mockChunk.planId}:output`,
         { planOutputChunkAdded: { ...result } },
       );
+    });
+
+    test('persists a valid kind and defaults to null when omitted', async () => {
+      vi.mocked(planOutputStreamRepo.create).mockImplementation(
+        (entity: object) => entity,
+      );
+      vi.mocked(planOutputStreamRepo.save).mockImplementation(
+        (entity: object) => Promise.resolve(entity),
+      );
+
+      const tagged = await resolver.appendPlanOutput({
+        content: 'tagged',
+        iteration: null,
+        kind: 'validation',
+        planId: mockChunk.planId,
+        taskId: null,
+      });
+      const untagged = await resolver.appendPlanOutput({
+        content: 'untagged',
+        iteration: null,
+        planId: mockChunk.planId,
+        taskId: null,
+      });
+
+      expect(tagged.kind).toBe('validation');
+      expect(untagged.kind).toBeNull();
+    });
+
+    test('rejects an unknown kind without saving', async () => {
+      vi.mocked(planOutputStreamRepo.save).mockClear();
+
+      await expect(
+        resolver.appendPlanOutput({
+          content: 'bad',
+          iteration: null,
+          kind: 'bogus',
+          planId: mockChunk.planId,
+          taskId: null,
+        }),
+      ).rejects.toThrow(/Invalid plan output kind "bogus"/);
+      expect(planOutputStreamRepo.save).not.toHaveBeenCalled();
     });
 
     test('passes null iteration when omitted', async () => {

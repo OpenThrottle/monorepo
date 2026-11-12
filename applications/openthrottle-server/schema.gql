@@ -2923,6 +2923,11 @@ type PlanOutputStreamChunkObject {
   """Optional iteration number for the output chunk"""
   iteration: Int
 
+  """
+  Producer of the chunk: loop, worker, tool or validation; null for untagged chunks and historical rows.
+  """
+  kind: String
+
   """Resolved plan entity when planId is set"""
   plan: PlanObject
   planId: String!
@@ -8016,6 +8021,11 @@ input AppendPlanOutputInput {
 
   """Optional iteration number for the output chunk"""
   iteration: Int
+
+  """
+  Optional producer tag for the chunk: loop, worker, tool or validation. Omit for an untagged chunk.
+  """
+  kind: String
 
   """Plan id to append output to"""
   planId: ID!

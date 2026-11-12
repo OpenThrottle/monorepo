@@ -12,7 +12,7 @@ export interface CommandValidatorOptions {
   /** Resolved validation commands, possibly holding `{taskStartSha}`. */
   readonly commands: readonly string[];
   readonly cwd: string;
-  /** Batched output, tagged with the task id so the server can forward it to plan output. */
+  /** Batched output, tagged with the task id and attempt so the server can forward it to plan output. */
   readonly onChunk: ((chunk: ValidationChunk) => void) | undefined;
   readonly spawn: SpawnCommand;
   readonly timeoutMs: number;
@@ -28,7 +28,7 @@ export const createCommandValidator = (
   options: CommandValidatorOptions,
 ): LoopValidator => {
   return {
-    validate: async ({ signal, task, taskStartSha }) => {
+    validate: async ({ attempt, signal, task, taskStartSha }) => {
       if (options.commands.length === 0) {
         return {
           command: '(none)',
@@ -45,7 +45,7 @@ export const createCommandValidator = (
         }),
         cwd: options.cwd,
         onOutput: ({ command, text }) => {
-          options.onChunk?.({ command, taskId: task.id, text });
+          options.onChunk?.({ attempt, command, taskId: task.id, text });
         },
         signal,
         spawn: options.spawn,

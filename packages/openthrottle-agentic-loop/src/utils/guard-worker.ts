@@ -56,11 +56,13 @@ export const guardWorker = async (
   });
 
   if (changedOthers.length > 0) {
-    const ids = changedOthers.map((entry) => entry.id).join(', ');
+    const titles = changedOthers
+      .map((entry) => `"${entry.title}" ${entry.status}`)
+      .join(', ');
 
     await narrate(
       ctx,
-      `warning: other task statuses changed during the attempt (${ids}); left as is`,
+      `warning: other task statuses changed during the attempt (${titles}); left as is`,
       task.id,
     );
   }

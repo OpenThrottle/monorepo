@@ -9,6 +9,7 @@ import type {
 } from '../contract/index.ts';
 import { LOOP_TASK_STATUS } from '../contract/index.ts';
 import { THIN_TASK_BLOCK_SUMMARY } from '../data/data.constants.ts';
+import { describeAttemptFailure } from './describe-attempt-failure.ts';
 import { endTaskSession } from './end-task-session.ts';
 import { guardWorker } from './guard-worker.ts';
 import { isThinTask } from './is-thin-task.ts';
@@ -53,6 +54,7 @@ const flipTask = async (
     `task ${status} after ${seconds}s: ${summary ?? ''}`,
     task.id,
   );
+  ctx.tracker.attempt = undefined;
 };
 
 const createFollowUps = async (
@@ -194,7 +196,7 @@ const failAttempt = async (
 
   await narrate(
     ctx,
-    `attempt ${spec.retriesUsed + 1} failed; retrying`,
+    `attempt ${ctx.tracker.attempt ?? spec.retriesUsed + 1} failed: ${describeAttemptFailure(failure)}; retrying`,
     scope.task.id,
   );
 
@@ -212,6 +214,7 @@ const validateAndCommit = async (
   spec: AttemptSpec,
 ): Promise<TaskStep> => {
   const validation = await ctx.deps.validator.validate({
+    attempt: ctx.tracker.attempt ?? 1,
     signal: ctx.deps.cancel.signal,
     task: scope.task,
     taskStartSha: scope.startHead.sha,
@@ -222,17 +225,19 @@ const validateAndCommit = async (
   }
 
   if (validation.kind === 'red') {
+    const failure: AttemptFailure = {
+      command: validation.command,
+      exitCode: validation.exitCode,
+      kind: 'validation',
+      tail: validation.tail,
+    };
+
     return failAttempt(
       ctx,
       scope,
       spec,
-      {
-        command: validation.command,
-        exitCode: validation.exitCode,
-        kind: 'validation',
-        tail: validation.tail,
-      },
-      `validation failed after ${spec.retriesUsed + 1} attempts: ${validation.command} exited ${validation.exitCode}`,
+      failure,
+      `validation failed after ${spec.retriesUsed + 1} attempts: ${describeAttemptFailure(failure)}`,
     );
   }
 
@@ -303,6 +308,7 @@ const runWorker = async (
 ): Promise<WorkerAttemptResult> => {
   try {
     return await ctx.deps.worker.run({
+      attempt: ctx.tracker.attempt ?? 1,
       guidance: ctx.tracker.guidance,
       model: ctx.deps.modelFor(scope.task),
       previousFailure: spec.failure,
@@ -322,6 +328,12 @@ const attempt = async (
   spec: AttemptSpec,
 ): Promise<TaskStep> => {
   const carriedGuidance = ctx.tracker.guidance.length > 0;
+
+  // Every re-invocation follows a failure; the first invocation keeps the 1 set at task start.
+  if (spec.failure !== undefined) {
+    ctx.tracker.attempt = (ctx.tracker.attempt ?? 1) + 1;
+  }
+
   const attemptResult = await runWorker(ctx, scope, spec);
 
   await guardWorker(ctx, scope.task, scope.startHead, scope.boundarySnapshot);
@@ -345,6 +357,7 @@ export const runTask = async (
 ): Promise<TaskStep> => {
   const { client, git } = ctx.deps;
 
+  ctx.tracker.attempt = 1;
   ctx.tracker.currentTaskId = task.id;
   ctx.tracker.taskStartedAt = ctx.deps.clock.now();
 

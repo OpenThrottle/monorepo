@@ -477,6 +477,8 @@ export type AppendPlanOutputInput = {
   content: Scalars['String']['input'];
   /** Optional iteration number for the output chunk */
   iteration?: InputMaybe<Scalars['Int']['input']>;
+  /** Optional producer tag for the chunk: loop, worker, tool or validation. Omit for an untagged chunk. */
+  kind?: InputMaybe<Scalars['String']['input']>;
   /** Plan id to append output to */
   planId: Scalars['ID']['input'];
   /** Optional task id to attribute this output chunk to (task-scoped output). Omit for plan-scoped chunks. */
@@ -3623,6 +3625,8 @@ export type PlanOutputStreamChunkObject = {
   id: Scalars['String']['output'];
   /** Optional iteration number for the output chunk */
   iteration?: Maybe<Scalars['Int']['output']>;
+  /** Producer of the chunk: loop, worker, tool or validation; null for untagged chunks and historical rows. */
+  kind?: Maybe<Scalars['String']['output']>;
   /** Resolved plan entity when planId is set */
   plan?: Maybe<PlanObject>;
   planId: Scalars['String']['output'];

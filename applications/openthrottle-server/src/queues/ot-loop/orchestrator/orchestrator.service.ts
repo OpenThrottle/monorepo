@@ -16,6 +16,9 @@ import {
   createModelRouter,
   DEFAULT_COMMAND_TIMEOUT_MS,
   finalizeOtLoopRun,
+  firstErrorLine,
+  labelForCommand,
+  LOOP_OUTPUT_KIND,
   LOOP_PLAN_STATUS,
   LOOP_TASK_STATUS,
   nodeResolverFs,
@@ -156,10 +159,12 @@ export class OtLoopOrchestratorService {
       planId,
     });
     const say = (message: string): void => {
-      output.write(
-        undefined,
-        formatNarration(OT_LOOP_NARRATION_PREFIX, message),
-      );
+      output.write({
+        attempt: undefined,
+        kind: LOOP_OUTPUT_KIND.LOOP,
+        taskId: undefined,
+        text: formatNarration(OT_LOOP_NARRATION_PREFIX, message),
+      });
     };
 
     try {
@@ -330,7 +335,12 @@ export class OtLoopOrchestratorService {
       commands: input.commands,
       cwd: input.cwd,
       onOutput: ({ text }) => {
-        input.output.write(undefined, text);
+        input.output.write({
+          attempt: undefined,
+          kind: LOOP_OUTPUT_KIND.VALIDATION,
+          taskId: undefined,
+          text,
+        });
       },
       signal: input.signal,
       spawn: spawnShellCommand,
@@ -389,7 +399,12 @@ export class OtLoopOrchestratorService {
         commands: input.commands,
         cwd,
         onChunk: (chunk) => {
-          output.write(chunk.taskId, chunk.text);
+          output.write({
+            attempt: chunk.attempt,
+            kind: LOOP_OUTPUT_KIND.VALIDATION,
+            taskId: chunk.taskId,
+            text: chunk.text,
+          });
         },
         spawn: spawnShellCommand,
         timeoutMs: DEFAULT_COMMAND_TIMEOUT_MS,
@@ -536,7 +551,12 @@ export class OtLoopOrchestratorService {
       draftDir,
       executeGraphqlV2: this.executeGraphqlV2,
       onChunk: (chunk) => {
-        input.output.write(undefined, chunk.data);
+        input.output.write({
+          attempt: undefined,
+          kind: LOOP_OUTPUT_KIND.LOOP,
+          taskId: undefined,
+          text: chunk.data,
+        });
       },
       outcome: blocked ? 'tasks_blocked' : 'complete',
       planId,
@@ -604,7 +624,7 @@ export class OtLoopOrchestratorService {
     );
 
     input.say(
-      `final validation failed: ${result.command} exited ${result.exitCode}; the plan will end BLOCKED`,
+      `final validation failed: ${labelForCommand(result.command)} exited ${result.exitCode}: ${firstErrorLine(result.tail)}; the plan will end BLOCKED`,
     );
 
     return { blockedTaskIds: [created.createTask.id], kind: 'tasks_blocked' };

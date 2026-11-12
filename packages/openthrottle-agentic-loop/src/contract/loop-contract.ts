@@ -30,6 +30,22 @@ export const LOOP_PLAN_STATUS = {
 export type LoopPlanStatus =
   (typeof LOOP_PLAN_STATUS)[keyof typeof LOOP_PLAN_STATUS];
 
+/**
+ * @description What a plan-output chunk is. The values mirror the `plan_output_stream.kind` CHECK
+ * (docs/workflows/ot-loop-job.md § 10.1); the package keeps its own copy so it needs no server dependency.
+ * @public
+ */
+export const LOOP_OUTPUT_KIND = {
+  LOOP: 'loop',
+  TOOL: 'tool',
+  VALIDATION: 'validation',
+  WORKER: 'worker',
+} as const;
+
+/** @public */
+export type LoopOutputKind =
+  (typeof LOOP_OUTPUT_KIND)[keyof typeof LOOP_OUTPUT_KIND];
+
 /** @public */
 export interface LoopTask {
   readonly category: string | null;
@@ -90,6 +106,8 @@ export type AttemptFailure =
 
 /** @public */
 export interface WorkerAttemptInput {
+  /** 1-based worker invocation count for this task; retries and the commit-fix attempt count. */
+  readonly attempt: number;
   /** Run-scoped operator guidance, oldest first; empty when none was claimed yet. */
   readonly guidance: readonly string[];
   readonly model: string | undefined;
@@ -121,6 +139,7 @@ export type ValidationResult =
 /** @public */
 export interface LoopValidator {
   validate(input: {
+    readonly attempt: number;
     readonly signal: AbortSignal;
     readonly task: LoopTask;
     readonly taskStartSha: string;
@@ -186,6 +205,8 @@ export interface LoopClient {
   getPlanStatus(planId: string): Promise<string>;
   listTasks(planId: string): Promise<readonly LoopTask[]>;
   narrate(input: {
+    /** Attempt number for task-scoped lines inside a task; `undefined` otherwise. */
+    readonly attempt: number | undefined;
     readonly message: string;
     readonly taskId: string | undefined;
   }): Promise<void>;

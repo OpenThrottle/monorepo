@@ -12,7 +12,9 @@
 import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
 import * as React from 'react';
 
+import { OutputStreamAttempt } from '~/routing/plans/components/OutputStreamAttempt';
 import { OUTPUT_STREAM_COPY } from '~/routing/plans/data/data.copy';
+import { groupChunksIntoEntries } from '~/routing/plans/utils/output-stream-attempts';
 import type { OutputStreamChunk } from '~/routing/plans/utils/output-stream-chunks';
 import {
   formatChunkTime,
@@ -61,7 +63,29 @@ export const OutputStream = (props: OutputStreamProps): React.ReactElement => {
           </p>
 
           <ol className="border-border/60 mt-1 space-y-1.5 border-l pl-3">
-            {group.chunks.map((chunk) => {
+            {groupChunksIntoEntries(group.chunks).map((entry) => {
+              if (entry.type === 'attempt') {
+                const first = entry.attempt.chunks[0];
+
+                return (
+                  <li key={first?.id ?? entry.attempt.taskId}>
+                    {first !== undefined && taskRunStarts.has(first.id) && (
+                      <p
+                        className="text-foreground/80 mb-0.5 text-[11px] font-medium"
+                        data-testid="OutputStream-task"
+                        title={OUTPUT_STREAM_COPY.taskTitle}
+                      >
+                        {OUTPUT_STREAM_COPY.taskLabel(
+                          getTaskDisplayName(entry.attempt.taskId, taskTitles),
+                        )}
+                      </p>
+                    )}
+                    <OutputStreamAttempt attempt={entry.attempt} />
+                  </li>
+                );
+              }
+
+              const chunk = entry.chunk;
               const time = formatChunkTime(chunk.createdAt);
               const timestamp = formatChunkTimestamp(chunk.createdAt);
               const dateTime = toChunkDateTimeAttribute(chunk.createdAt);

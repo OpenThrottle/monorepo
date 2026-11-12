@@ -258,8 +258,14 @@ export type {
   PostPlanMessageParams,
   PostPlanMessageResult,
 } from './modules/plan-messages/plan-messages.types.ts';
+export {
+  PLAN_OUTPUT_STREAM_KIND,
+  PLAN_OUTPUT_STREAM_KINDS,
+} from './modules/plan-output-stream/plan-output-stream.constants.ts';
 export { PlanOutputStreamChunk } from './modules/plan-output-stream/plan-output-stream.entity.ts';
 export { PlanOutputStreamService } from './modules/plan-output-stream/plan-output-stream.service.ts';
+export type { PlanOutputStreamKind } from './modules/plan-output-stream/plan-output-stream.types.ts';
+export { isPlanOutputStreamKind } from './modules/plan-output-stream/plan-output-stream.utils.ts';
 export type {
   PlanRunData,
   PlanRunExecutionBackend,

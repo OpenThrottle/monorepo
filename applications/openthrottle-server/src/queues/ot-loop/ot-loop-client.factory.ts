@@ -4,6 +4,7 @@ import type {
   LoopPlanStatus,
   LoopTaskStatus,
 } from '@openthrottle/openthrottle-agentic-loop';
+import { LOOP_OUTPUT_KIND } from '@openthrottle/openthrottle-agentic-loop';
 import {
   CreateTasksDocument,
   GetPlanDocument,
@@ -145,8 +146,13 @@ export const createOtLoopClient = (
 
       return result.tasksByPlanId.map(toLoopTask);
     },
-    narrate: async ({ message, taskId }) => {
-      output.write(taskId, formatNarration(OT_LOOP_NARRATION_PREFIX, message));
+    narrate: async ({ attempt, message, taskId }) => {
+      output.write({
+        attempt,
+        kind: LOOP_OUTPUT_KIND.LOOP,
+        taskId,
+        text: formatNarration(OT_LOOP_NARRATION_PREFIX, message),
+      });
       await output.settled();
     },
     startWorkSession,

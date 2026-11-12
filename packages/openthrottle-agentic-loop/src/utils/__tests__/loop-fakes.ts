@@ -61,6 +61,11 @@ export interface FakeWorld {
   head: GitHeadState;
   inbox: string[][];
   readonly log: string[];
+  readonly narrations: {
+    readonly attempt: number | undefined;
+    readonly message: string;
+    readonly taskId: string | undefined;
+  }[];
   planStatus: string;
   readonly sessions: {
     readonly id: string;
@@ -69,6 +74,7 @@ export interface FakeWorld {
   }[];
   readonly tasks: Map<string, LoopTask>;
   validations: ValidationResult[];
+  readonly validatorAttempts: number[];
   readonly violations: string[];
   workerInputs: WorkerAttemptInput[];
 }
@@ -120,7 +126,11 @@ export const makeWorld = (options: FakeWorldOptions): FakeWorld => {
         },
         getPlanStatus: () => Promise.resolve(world.planStatus),
         listTasks: () => Promise.resolve([...tasks.values()]),
-        narrate: () => Promise.resolve(),
+        narrate: (entry) => {
+          world.narrations.push(entry);
+
+          return Promise.resolve();
+        },
         startWorkSession: ({ model, taskId }) => {
           sessionCounter += 1;
 
@@ -187,8 +197,9 @@ export const makeWorld = (options: FakeWorldOptions): FakeWorld => {
       modelFor: (task) =>
         task.category === 'hard' ? 'big-model' : 'small-model',
       validator: {
-        validate: () => {
+        validate: ({ attempt }) => {
           log.push('validate');
+          world.validatorAttempts.push(attempt);
 
           return Promise.resolve(
             world.validations.shift() ?? { kind: 'green' },
@@ -207,10 +218,12 @@ export const makeWorld = (options: FakeWorldOptions): FakeWorld => {
     head: { branch: 'run', sha: 'start' },
     inbox: options.inbox ?? [],
     log,
+    narrations: [],
     planStatus: 'IN_PROGRESS',
     sessions: [],
     tasks,
     validations: options.validations ?? [],
+    validatorAttempts: [],
     violations: [],
     workerInputs: [],
   };

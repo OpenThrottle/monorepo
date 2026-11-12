@@ -367,6 +367,7 @@ describe('OtLoopOrchestratorService', () => {
       mocks.runOtLoop.mockImplementation(
         async ({ deps }: { deps: LoopDeps }) => {
           await deps.worker.run({
+            attempt: 1,
             guidance: [],
             model: 'sonnet',
             previousFailure: undefined,
@@ -594,6 +595,7 @@ describe('OtLoopOrchestratorService', () => {
       mocks.runOtLoop.mockImplementation(
         async ({ deps }: { deps: LoopDeps }) => {
           await deps.worker.run({
+            attempt: 1,
             guidance: [],
             model: undefined,
             previousFailure: undefined,
@@ -657,6 +659,7 @@ describe('OtLoopOrchestratorService', () => {
       );
 
       expect(JSON.stringify(appended)).toContain('loop failed: boom');
+      expect(JSON.stringify(appended)).toContain('"kind":"loop"');
     });
   });
 
