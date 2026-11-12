@@ -1,6 +1,11 @@
-import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 // import { Analytics } from '@vercel/analytics/react';
+import {
+  GlobalErrorBoundary,
+  GlobalLayout,
+  GlobalProviders,
+} from '@openthrottle/react-router-ui-global';
 import { APP_URL, useNonce } from '@openthrottle/react-router-utils';
+import { PuzzleIcon, SquareIcon, TableIcon } from 'lucide-react';
 import * as React from 'react';
 import type { ShouldRevalidateFunction } from 'react-router';
 import {
@@ -43,6 +48,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   const env = {
     APP_ENV: process.env.APP_ENV,
     APP_NAME: process.env.APP_NAME,
+    APP_NAME_SHORT: process.env.APP_NAME_SHORT,
     APP_URL: process.env.APP_URL,
     APP_VERSION: process.env.APP_VERSION,
     NODE_ENV: process.env.NODE_ENV,
@@ -62,7 +68,11 @@ export const meta = (_args: Route.MetaArgs) => {
 /**
  * @link https://reactrouter.com/explanation/special-files#layout-export
  */
-export function Layout({ children }: { children: React.ReactNode }) {
+export function Layout({
+  children,
+}: {
+  children: React.ReactNode;
+}): React.ReactElement {
   // Hooks
   const data = useRouteLoaderData<typeof loader>('root');
   const nonce = useNonce();
@@ -125,7 +135,53 @@ export function Layout({ children }: { children: React.ReactNode }) {
         />
       </head>
       <body>
-        <main>{children}</main>
+        <GlobalProviders>
+          <GlobalLayout
+            data={{
+              Content: [
+                {
+                  children: 'Layouts',
+                  icon: PuzzleIcon,
+                  to: '/layouts',
+                },
+                {
+                  children: 'Fragments',
+                  icon: SquareIcon,
+                  to: '/fragments',
+                },
+                {
+                  children: 'Schemas',
+                  icon: TableIcon,
+                  to: '/schemas',
+                },
+                {
+                  children: 'Components',
+                  icon: TableIcon,
+                  to: '/components',
+                },
+                {
+                  children: 'Libraries',
+                  icon: TableIcon,
+                  to: '/libraries',
+                },
+                {
+                  children: 'Surveys',
+                  icon: TableIcon,
+                  to: '/surveys',
+                },
+                {
+                  children: 'Tags',
+                  icon: TableIcon,
+                  to: '/tags',
+                },
+              ],
+            }}
+            overrides={{}}
+          >
+            {children}
+          </GlobalLayout>
+        </GlobalProviders>
+
         <ScrollRestoration nonce={nonce} />
         {/* FIXME: Uncomment this when we have a production environment */}
         {/* <Analytics /> */}
