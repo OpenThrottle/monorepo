@@ -179,6 +179,106 @@ describe('captureTranscriptUsage', () => {
     });
   });
 
+  describe('account stamping', () => {
+    const account = {
+      credential_kind: 'subscription',
+      email: 'dev@example.com',
+      external_account_id: 'org-1:dev@example.com',
+      org_id: 'org-1',
+      org_name: 'Example',
+      plan: 'team',
+    };
+
+    const capturingServer = (): {
+      readonly accounts: unknown[];
+      readonly fetchImpl: HookFetch;
+    } => {
+      const accounts: unknown[] = [];
+      const fetchImpl: HookFetch = async (_url, init) => {
+        const rows = inputRowsOf(JSON.parse(init.body));
+        const list = Array.isArray(rows) ? rows : [];
+        for (const row of list) {
+          accounts.push(isRecordValue(row) ? row.account : undefined);
+        }
+        return {
+          json: async () => ({
+            data: { recordTokenUsage: { inserted: list.length, skipped: 0 } },
+          }),
+          ok: true,
+          status: 200,
+        };
+      };
+      return { accounts, fetchImpl };
+    };
+
+    const stopWith = (
+      fetchImpl: HookFetch,
+      resolveAccount: () => Promise<typeof account | null>,
+    ) => {
+      return captureTranscriptUsage({
+        agentTranscriptPath: null,
+        authToken: 'tok',
+        fetchImpl,
+        graphqlUrl: URL,
+        repoRoot: tmpRoot,
+        resolveAccount,
+        sessionId: SESSION,
+        timeoutMs: 200,
+        transcriptPath,
+      });
+    };
+
+    describe('when the account resolves', () => {
+      it('sends it on every row', async () => {
+        fs.writeFileSync(transcriptPath, readFixture('transcript.jsonl'));
+        const server = capturingServer();
+
+        await stopWith(server.fetchImpl, async () => account);
+
+        expect(server.accounts).toEqual([
+          {
+            credentialKind: 'subscription',
+            email: 'dev@example.com',
+            externalAccountId: 'org-1:dev@example.com',
+            orgId: 'org-1',
+            orgName: 'Example',
+            plan: 'team',
+          },
+          expect.objectContaining({
+            externalAccountId: 'org-1:dev@example.com',
+          }),
+        ]);
+      });
+    });
+
+    describe('when the account lookup fails', () => {
+      it('still sends the rows, unattributed', async () => {
+        fs.writeFileSync(transcriptPath, readFixture('transcript.jsonl'));
+        const server = capturingServer();
+
+        await stopWith(server.fetchImpl, async () => {
+          throw new Error('probe failed');
+        });
+
+        expect(server.accounts).toEqual([null, null]);
+      });
+    });
+
+    describe('when there are no new rows', () => {
+      it('does not look the account up', async () => {
+        const server = capturingServer();
+        let asked = 0;
+
+        await stopWith(server.fetchImpl, async () => {
+          asked += 1;
+          return account;
+        });
+
+        expect(asked).toBe(0);
+      });
+    });
+  });
+
   describe('a line still being written', () => {
     it('is not consumed, and the checkpoint stops before it', async () => {
       const consumed = writeMidWrite('transcript.jsonl', transcriptPath);

@@ -5,6 +5,8 @@
  * Re-exported from `.` they made the production server load faker at startup, and the image —
  * which installs production dependencies only — crashed with ERR_MODULE_NOT_FOUND.
  */
+export type { AgentAccountFactoryData } from '../modules/agent-accounts/agent-accounts.factory.ts';
+export { agentAccountFactory } from '../modules/agent-accounts/agent-accounts.factory.ts';
 export type {
   AgentConversationFactoryData,
   AgentConversationMessageFactoryData,

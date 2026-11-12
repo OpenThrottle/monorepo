@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 
+import { AgentAccountStampingModule } from '../../services/agent-account-stamping/agent-account-stamping.module.ts';
 import { EffectiveUserResolutionModule } from '../../services/effective-user-resolution/effective-user-resolution.module.ts';
 import { TokenUsageResolver } from './token-usage.resolver.ts';
 
@@ -11,7 +12,11 @@ import { TokenUsageResolver } from './token-usage.resolver.ts';
  * its authenticated principal acts as.
  */
 @Module({
-  imports: [EffectiveUserResolutionModule, NestjsRepositoriesModule],
+  imports: [
+    AgentAccountStampingModule,
+    EffectiveUserResolutionModule,
+    NestjsRepositoriesModule,
+  ],
   providers: [TokenUsageResolver],
 })
 export class TokenUsageGraphqlModule {}

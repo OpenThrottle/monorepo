@@ -6,8 +6,53 @@ import { Field, Float, InputType } from '@nestjs/graphql';
  * non-negative safe integers server-side. The owning user is never an input:
  * it is resolved from the authenticated principal.
  */
+@InputType({
+  description: `The agent account (login) a hook saw the turn billed to, as the agent CLI reported it. No credential value is ever sent.`,
+})
+export class RecordTokenUsageAccountInput {
+  @Field(() => String, {
+    description: `What the turn billed: api_key, subscription or unknown. Any other value is stored as unknown.`,
+  })
+  credentialKind!: string;
+
+  @Field(() => String, {
+    description: `Login email the CLI reported, when it reports one.`,
+    nullable: true,
+  })
+  email!: string | null;
+
+  @Field(() => String, {
+    description: `The provider's stable id for the login (for claude, <orgId>:<email>). The grouping key; a blank value leaves the row unattributed.`,
+  })
+  externalAccountId!: string;
+
+  @Field(() => String, {
+    description: `Provider organization or team id, when reported.`,
+    nullable: true,
+  })
+  orgId!: string | null;
+
+  @Field(() => String, {
+    description: `Provider organization or team name, when reported.`,
+    nullable: true,
+  })
+  orgName!: string | null;
+
+  @Field(() => String, {
+    description: `Subscription plan (for claude: pro, max, team, ...), when reported.`,
+    nullable: true,
+  })
+  plan!: string | null;
+}
+
 @InputType()
 export class RecordTokenUsageRowInput {
+  @Field(() => RecordTokenUsageAccountInput, {
+    description: `The agent account the turn was billed to, stamped by the hook at capture time. Null (or absent) leaves the row unattributed. Attribution never rejects a batch: an unusable account is ignored.`,
+    nullable: true,
+  })
+  account!: RecordTokenUsageAccountInput | null;
+
   @Field(() => Float, {
     description: `Cache-read tokens for the turn, when reported.`,
     nullable: true,

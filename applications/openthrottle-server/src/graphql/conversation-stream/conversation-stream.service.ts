@@ -41,6 +41,7 @@ import {
 } from '@openthrottle/openthrottle-agentic-utils';
 import type { UsageLimit } from '@openthrottle/openthrottle-drivers';
 
+import { AgentAccountStampingService } from '../../services/agent-account-stamping/agent-account-stamping.service.ts';
 import { CONVERSATION_STREAM_CHUNK_FIELD } from './conversation-stream.constants.ts';
 import type { StartConversationStreamRun } from './conversation-stream.types.ts';
 import type {
@@ -201,6 +202,7 @@ export class ConversationStreamService {
     private readonly conversations: AgentConversationsService,
     private readonly logger: LoggerService,
     private readonly tokenUsage: AgentTokenUsageService,
+    private readonly accountStamping: AgentAccountStampingService,
     @Inject(PUB_SUB) private readonly pubSub: PubSubEngine,
   ) {}
 
@@ -856,7 +858,8 @@ export class ConversationStreamService {
    * Fold the turn's `usage`-kind events through the shared normalizer into ONE
    * {@link NormalizedTokenUsage} (summing opencode's multiple mid-stream chunks;
    * an identity passthrough for single-terminal backends) and write a single
-   * `agent_token_usage` row. Nothing is written for a Private turn, when no
+   * `agent_token_usage` row, stamped with the agent account the turn was billed
+   * to (null when unidentified). Nothing is written for a Private turn, when no
    * backend reported usage, or when the folded usage carries no counts.
    * Fire-and-forget: failures are logged, never thrown into the stream.
    */
@@ -881,7 +884,16 @@ export class ConversationStreamService {
         return;
       }
 
+      // CLI backends spawn from the server's own env (scrubbed per driver), so
+      // that is the env whose login billed this turn.
+      const agentAccountId = await this.accountStamping.stampForRun(
+        run.userId,
+        run.backend,
+        process.env,
+      );
+
       await this.tokenUsage.recordTurnUsage({
+        agentAccountId,
         conversationId: run.conversationId,
         messageId: run.assistantMessageId,
         model: folded.model ?? run.model,

@@ -3,6 +3,7 @@ import type { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 
+import { AgentAccountsModule } from './modules/agent-accounts/agent-accounts.module.ts';
 import { AgentCliPreferencesModule } from './modules/agent-cli-preferences/agent-cli-preferences.module.ts';
 import { AgentConversationsModule } from './modules/agent-conversations/agent-conversations.module.ts';
 import { AgentTokenUsageModule } from './modules/agent-token-usage/agent-token-usage.module.ts';
@@ -46,6 +47,7 @@ import { getTypeOrmOptions } from './nestjs-repositories.utils.ts';
 @Module({
   controllers: [],
   exports: [
+    AgentAccountsModule,
     AgentCliPreferencesModule,
     AgentConversationsModule,
     AgentTokenUsageModule,
@@ -95,6 +97,7 @@ import { getTypeOrmOptions } from './nestjs-repositories.utils.ts';
         return { ...getTypeOrmOptions(), autoLoadEntities: true };
       },
     }),
+    AgentAccountsModule,
     AgentCliPreferencesModule,
     AgentConversationsModule,
     AgentTokenUsageModule,

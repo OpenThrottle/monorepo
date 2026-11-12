@@ -13,6 +13,9 @@ import type { UsageBranchOption } from '~/routing/usage/types';
 import { buildUsageSearch } from '~/routing/usage/utils/buildUsageSearch';
 
 export interface UsageBranchFilterProps {
+  /** Current `?provider=` (token usage); preserved when the branch changes. */
+  /** `?account=` token-usage filter to preserve, or null. */
+  accountParam?: string | null;
   className?: string;
   /** Range end (YYYY-MM-DD) the branch search runs over. */
   end: string;
@@ -20,7 +23,6 @@ export interface UsageBranchFilterProps {
   hasMore: boolean;
   /** SSR first page: default branch first, then A–Z. */
   initialOptions: readonly UsageBranchOption[];
-  /** Current `?provider=` (token usage); preserved when the branch changes. */
   providerParam: string | null;
   selectedCwd: string | null;
   selectedGitBranch: string | null;
@@ -37,6 +39,7 @@ export const UsageBranchFilter = (
     end,
     hasMore,
     initialOptions,
+    accountParam = null,
     providerParam,
     selectedCwd,
     selectedGitBranch,
@@ -79,6 +82,7 @@ export const UsageBranchFilter = (
   const handleValueChange = (value: string): void => {
     navigate(
       buildUsageSearch({
+        account: accountParam,
         cwd: selectedCwd,
         gitBranch: value === BRANCH_FILTER_ALL_VALUE ? null : value,
         provider: providerParam,

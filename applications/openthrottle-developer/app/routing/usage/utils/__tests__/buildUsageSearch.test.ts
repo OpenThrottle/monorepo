@@ -38,4 +38,10 @@ describe('buildUsageSearch', () => {
       }),
     ).toBe('?provider=openai');
   });
+
+  test('includes the account filter after the provider', () => {
+    expect(
+      buildUsageSearch({ account: 'unattributed', provider: 'grok' }),
+    ).toBe('?provider=grok&account=unattributed');
+  });
 });

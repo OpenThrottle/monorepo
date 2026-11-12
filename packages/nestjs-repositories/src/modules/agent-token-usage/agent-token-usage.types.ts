@@ -6,6 +6,8 @@ import type { NormalizedTokenUsage } from '@openthrottle/agentic-token-usage';
  * Conversation/message are nullable so non-chat sources can write too.
  */
 export interface RecordTokenUsageInput {
+  /** agent_accounts row the turn was billed to, stamped at write time; null when unidentified. */
+  readonly agentAccountId: string | null;
   readonly conversationId: string | null;
   readonly messageId: string | null;
   readonly model: string | null;
@@ -22,6 +24,8 @@ export interface RecordTokenUsageInput {
  * drain lands on the day the turn actually ran, not the day it was ingested.
  */
 export interface TokenUsageBatchRow {
+  /** agent_accounts row the turn was billed to, stamped at write time; null when unidentified. */
+  readonly agentAccountId: string | null;
   readonly cachedReadTokens: number | null;
   readonly cachedWriteTokens: number | null;
   readonly costUsd: number | null;
@@ -47,10 +51,20 @@ export interface TokenUsageBatchResult {
 }
 
 /**
+ * Narrow a range read to one agent account, or to the rows no account was
+ * stamped on.
+ */
+export type TokenUsageAccountFilter =
+  | { readonly id: string; readonly kind: 'account' }
+  | { readonly kind: 'unattributed' };
+
+/**
  * A user-scoped read over a date range: the caller's usage rows between `start`
- * and `end` (both YYYY-MM-DD, inclusive), optionally narrowed to one `provider`.
+ * and `end` (both YYYY-MM-DD, inclusive), optionally narrowed to one `provider`
+ * and/or one agent account.
  */
 export interface TokenUsageRangeQuery {
+  readonly account?: TokenUsageAccountFilter | null;
   readonly end: string;
   readonly provider?: string | null;
   readonly start: string;
@@ -67,4 +81,13 @@ export interface TokenUsageTotals {
   readonly reasoningTokens: number;
   readonly totalTokens: number;
   readonly turnCount: number;
+}
+
+/**
+ * Summed usage for one (agent account, provider) pair over a range. A null
+ * `agentAccountId` is the unattributed bucket for that provider.
+ */
+export interface TokenUsageByAccount extends TokenUsageTotals {
+  readonly agentAccountId: string | null;
+  readonly provider: string;
 }

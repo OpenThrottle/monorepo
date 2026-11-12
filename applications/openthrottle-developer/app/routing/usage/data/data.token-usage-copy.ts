@@ -95,7 +95,57 @@ export const TOKEN_USAGE_SOURCE_LABELS: Readonly<Record<string, string>> = {
   [TOKEN_USAGE_SOURCES.CLAUDE_CODE]: `Claude Code`,
 };
 
+/**
+ * `?account=` value for rows no agent account was stamped on, mirroring the
+ * server's `TOKEN_USAGE_UNATTRIBUTED_ACCOUNT_ID`.
+ */
+export const TOKEN_USAGE_UNATTRIBUTED_ACCOUNT_ID = 'unattributed';
+
+/**
+ * `TokenUsageAccountObject.credentialKind` values, mirroring the server's
+ * `agent_accounts.credential_kind`.
+ */
+export const TOKEN_USAGE_CREDENTIAL_KINDS = {
+  API_KEY: 'api_key',
+  SUBSCRIPTION: 'subscription',
+  UNKNOWN: 'unknown',
+} as const;
+
+/** Display labels for the credential kinds. */
+export const TOKEN_USAGE_CREDENTIAL_LABELS: Readonly<Record<string, string>> = {
+  [TOKEN_USAGE_CREDENTIAL_KINDS.API_KEY]: `API key`,
+  [TOKEN_USAGE_CREDENTIAL_KINDS.SUBSCRIPTION]: `Subscription`,
+  [TOKEN_USAGE_CREDENTIAL_KINDS.UNKNOWN]: `Unknown`,
+};
+
+/** Badge hue per credential kind on the "By account" table. */
+export const TOKEN_USAGE_CREDENTIAL_BADGE_COLORS: Readonly<
+  Record<string, 'amber' | 'sky' | 'slate'>
+> = {
+  [TOKEN_USAGE_CREDENTIAL_KINDS.API_KEY]: `amber`,
+  [TOKEN_USAGE_CREDENTIAL_KINDS.SUBSCRIPTION]: `sky`,
+  [TOKEN_USAGE_CREDENTIAL_KINDS.UNKNOWN]: `slate`,
+};
+
 export const TOKEN_USAGE_COPY = {
+  accounts: {
+    apiKeyLabel: `API key`,
+    columnAccount: `Account`,
+    columnCost: `Cost`,
+    columnPlan: `Plan`,
+    columnShare: `Share`,
+    columnTotal: `Total`,
+    columnTurns: `Turns`,
+    estimatePrefix: `≈ `,
+    estimateTitle: `List-price estimate. Subscription plans are not billed per token.`,
+    fallbackLabel: (providerLabel: string): string => {
+      return `${providerLabel} account`;
+    },
+    heading: `By account`,
+    intro: `Which agent login each request was billed to. Subscription costs are list-price estimates; API-key costs are what the key was charged. Requests recorded before accounts were tracked, and drivers that report no account, are unattributed.`,
+    showAll: `Show all accounts`,
+    unattributedLabel: `Unattributed`,
+  },
   emptyAllProviders: `No token usage recorded yet in this range. Usage is captured from persisted OpenThrottle chat turns (Private-mode turns are not recorded) and from interactive Claude Code sessions in this repository.`,
   emptyForProvider: (label: string): string =>
     `No ${label} token usage in this range.`,

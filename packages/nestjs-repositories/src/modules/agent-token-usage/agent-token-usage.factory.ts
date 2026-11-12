@@ -12,6 +12,7 @@ import {
 
 export type AgentTokenUsageFactoryData = Pick<
   AgentTokenUsage,
+  | 'agentAccountId'
   | 'cachedReadTokens'
   | 'cachedWriteTokens'
   | 'conversationId'
@@ -40,6 +41,7 @@ export const agentTokenUsageFactory =
     const outputTokens = faker.number.int({ max: 4000, min: 1 });
 
     return {
+      agentAccountId: null,
       cachedReadTokens: faker.number.int({ max: 5000, min: 0 }),
       cachedWriteTokens: faker.number.int({ max: 1000, min: 0 }),
       conversationId: faker.string.uuid(),

@@ -18,6 +18,7 @@ import type {
   RecordTokenUsageInput,
   TokenUsageBatchResult,
   TokenUsageBatchRow,
+  TokenUsageByAccount,
   TokenUsageRangeQuery,
   TokenUsageTotals,
 } from './agent-token-usage.types.ts';
@@ -60,6 +61,7 @@ export class AgentTokenUsageService {
     const { usage } = input;
 
     const row = this.usageRepository.create({
+      agentAccountId: input.agentAccountId,
       cachedReadTokens: usage.cacheReadTokens ?? null,
       cachedWriteTokens: usage.cacheWriteTokens ?? null,
       conversationId: input.conversationId,
@@ -108,6 +110,7 @@ export class AgentTokenUsageService {
           const rawUsage: object | null = row.rawUsage;
 
           return {
+            agentAccountId: row.agentAccountId,
             cachedReadTokens: row.cachedReadTokens,
             cachedWriteTokens: row.cachedWriteTokens,
             costUsd: row.costUsd ?? estimateAnthropicListPriceUsd(row),
@@ -177,6 +180,48 @@ export class AgentTokenUsageService {
   }
 
   /**
+   * The same filtered range summed per (agent account, provider), costliest
+   * first. Rows with no stamped account form one unattributed bucket per
+   * provider (`agentAccountId: null`).
+   */
+  async getUsageByAccountInRange(
+    query: TokenUsageRangeQuery,
+  ): Promise<TokenUsageByAccount[]> {
+    const rows = await this.rangeQuery(query)
+      .select('u.agent_account_id', 'agentAccountId')
+      .addSelect('u.provider', 'provider')
+      .addSelect('COUNT(*)', 'turnCount')
+      .addSelect('COALESCE(SUM(u.input_tokens), 0)', 'inputTokens')
+      .addSelect('COALESCE(SUM(u.output_tokens), 0)', 'outputTokens')
+      .addSelect('COALESCE(SUM(u.cached_read_tokens), 0)', 'cachedReadTokens')
+      .addSelect('COALESCE(SUM(u.cached_write_tokens), 0)', 'cachedWriteTokens')
+      .addSelect('COALESCE(SUM(u.reasoning_tokens), 0)', 'reasoningTokens')
+      .addSelect('COALESCE(SUM(u.total_tokens), 0)', 'totalTokens')
+      .addSelect('COALESCE(SUM(u.cost_usd), 0)', 'costUsd')
+      .groupBy('u.agent_account_id')
+      .addGroupBy('u.provider')
+      .orderBy('"costUsd"', 'DESC')
+      .addOrderBy('"totalTokens"', 'DESC')
+      .getRawMany<Record<string, unknown>>();
+
+    return rows.map((raw) => {
+      return {
+        agentAccountId:
+          typeof raw.agentAccountId === 'string' ? raw.agentAccountId : null,
+        cachedReadTokens: toNumber(raw.cachedReadTokens),
+        cachedWriteTokens: toNumber(raw.cachedWriteTokens),
+        costUsd: toNumber(raw.costUsd),
+        inputTokens: toNumber(raw.inputTokens),
+        outputTokens: toNumber(raw.outputTokens),
+        provider: typeof raw.provider === 'string' ? raw.provider : '',
+        reasoningTokens: toNumber(raw.reasoningTokens),
+        totalTokens: toNumber(raw.totalTokens),
+        turnCount: toNumber(raw.turnCount),
+      };
+    });
+  }
+
+  /**
    * When token usage last arrived, per source. Grouped by the producer id in
    * `source`, falling back to `provider` for any row with a NULL or blank source.
    */
@@ -192,7 +237,7 @@ export class AgentTokenUsageService {
     return toCaptureHealthRows(CAPTURE_HEALTH_STREAMS.TOKEN_USAGE, rows);
   }
 
-  /** Shared user + [start, endExclusive) + optional-provider filter. */
+  /** Shared user + [start, endExclusive) + optional provider / account filter. */
   private rangeQuery(
     query: TokenUsageRangeQuery,
   ): SelectQueryBuilder<AgentTokenUsage> {
@@ -206,6 +251,14 @@ export class AgentTokenUsageService {
 
     if (query.provider != null && query.provider !== '') {
       qb.andWhere('u.provider = :provider', { provider: query.provider });
+    }
+
+    if (query.account?.kind === 'account') {
+      qb.andWhere('u.agent_account_id = :agentAccountId', {
+        agentAccountId: query.account.id,
+      });
+    } else if (query.account?.kind === 'unattributed') {
+      qb.andWhere('u.agent_account_id IS NULL');
     }
 
     return qb;

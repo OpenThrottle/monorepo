@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for agent_token_usage. Matches databases/openthrottle/migrations/083 and 135.
+ * @description TypeORM entity for agent_token_usage. Matches databases/openthrottle/migrations/083, 135 and 158.
  * One immutable row per persisted assistant turn (normalized token/cost usage).
  */
 
@@ -12,6 +12,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
+import { AgentAccount } from '../agent-accounts/agent-accounts.entity.ts';
 import { AgentConversation } from '../agent-conversations/agent-conversation.entity.ts';
 import { AgentConversationMessage } from '../agent-conversations/agent-conversation-message.entity.ts';
 import { User } from '../users/user.entity.ts';
@@ -43,6 +44,7 @@ export type AgentTokenUsageSource =
   (typeof AGENT_TOKEN_USAGE_SOURCES)[keyof typeof AGENT_TOKEN_USAGE_SOURCES];
 
 export interface AgentTokenUsageData {
+  readonly agentAccountId: string | null;
   readonly cachedReadTokens: number | null;
   readonly cachedWriteTokens: number | null;
   readonly conversationId: string | null;
@@ -76,6 +78,13 @@ export class AgentTokenUsage {
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
   user?: User;
+
+  @Column({ name: 'agent_account_id', nullable: true, type: 'uuid' })
+  agentAccountId!: string | null;
+
+  @ManyToOne(() => AgentAccount, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'agent_account_id' })
+  agentAccount?: AgentAccount;
 
   @Column({ name: 'conversation_id', nullable: true, type: 'uuid' })
   conversationId!: string | null;

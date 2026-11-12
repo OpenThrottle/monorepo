@@ -7,6 +7,12 @@ import { Field, Float, ID, Int, ObjectType } from '@nestjs/graphql';
  */
 @ObjectType()
 export class TokenUsageRowObject {
+  @Field(() => ID, {
+    description: `Agent account (login) the turn was billed to, stamped when the row was written. Null when it could not be identified, and for rows written before accounts were recorded.`,
+    nullable: true,
+  })
+  agentAccountId!: string | null;
+
   @Field(() => Float, {
     description: `Cache-read tokens for the turn, when reported.`,
     nullable: true,
@@ -114,8 +120,71 @@ export class TokenUsageTotalsObject {
   turnCount!: number;
 }
 
+@ObjectType({
+  description: `An agent-CLI login that usage was billed to (a subscription seat or an API key), as the CLI reported it.`,
+})
+export class TokenUsageAccountObject {
+  @Field(() => String, {
+    description: `What the account's runs bill: api_key, subscription or unknown. Subscription costs are list-price estimates, not invoiced dollars.`,
+  })
+  credentialKind!: string;
+
+  @Field(() => String, {
+    description: `Login email, when the CLI reports one (codex is identified by account id only).`,
+    nullable: true,
+  })
+  email!: string | null;
+
+  @Field(() => ID, { description: `Agent account id.` })
+  id!: string;
+
+  @Field(() => Date, {
+    description: `When a usage row was last stamped with this account.`,
+  })
+  lastSeenAt!: Date;
+
+  @Field(() => String, {
+    description: `Provider organization or team name, when reported.`,
+    nullable: true,
+  })
+  orgName!: string | null;
+
+  @Field(() => String, {
+    description: `Subscription plan (for claude: pro, max, team, ...), when reported.`,
+    nullable: true,
+  })
+  plan!: string | null;
+
+  @Field(() => String, { description: `Driver id the account belongs to.` })
+  provider!: string;
+}
+
+@ObjectType({
+  description: `Usage over the range for one agent account on one provider. A null account is that provider's unattributed bucket.`,
+})
+export class TokenUsageByAccountObject {
+  @Field(() => TokenUsageAccountObject, {
+    description: `The account, or null for usage no account was stamped on (rows from before accounts were recorded, and drivers that report no identity).`,
+    nullable: true,
+  })
+  account!: TokenUsageAccountObject | null;
+
+  @Field(() => String, { description: `Provider (driver id) of the bucket.` })
+  provider!: string;
+
+  @Field(() => TokenUsageTotalsObject, {
+    description: `Summed usage + turn count for the bucket.`,
+  })
+  totals!: TokenUsageTotalsObject;
+}
+
 @ObjectType()
 export class TokenUsageResultObject {
+  @Field(() => [TokenUsageByAccountObject], {
+    description: `The same filtered range summed per agent account and provider, costliest first, with an unattributed bucket per provider.`,
+  })
+  byAccount!: TokenUsageByAccountObject[];
+
   @Field(() => [TokenUsageRowObject], {
     description: `Per-turn usage rows in the range, newest first.`,
   })
