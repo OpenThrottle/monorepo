@@ -3,7 +3,7 @@ import * as React from 'react';
 
 import type { ScheduledJobCardFragment } from '~/__generated__/graphql';
 import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
-import { describeScheduleCadence } from '~/routing/schedule/utils/describe-schedule-cadence';
+import { describeScheduleCadence } from '~/routing/schedule/utils/describeScheduleCadence';
 
 export interface ScheduleDetailSummaryProps {
   job: Pick<

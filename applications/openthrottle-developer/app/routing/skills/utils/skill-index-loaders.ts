@@ -13,8 +13,8 @@ import {
   SkillAvailabilityDocument,
   SkillsRecordTagVocabularyDocument,
 } from '~/__generated__/graphql';
-import { type ProjectSkillFlagRow } from '~/routing/skills/utils/merge-project-skills';
-import { type SkillAvailabilityRow } from '~/routing/skills/utils/merge-skill-availability';
+import { type ProjectSkillFlagRow } from '~/routing/skills/utils/mergeRepoSkillsWithProjectSkills';
+import { type SkillAvailabilityRow } from '~/routing/skills/utils/mergeRepoSkillsWithSkillAvailability';
 
 /** Fetches the `projectSkills` static flag+tags for the merge. Never throws. */
 export const loadProjectSkillFlags = async (

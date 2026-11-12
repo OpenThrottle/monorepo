@@ -5,7 +5,7 @@ import * as React from 'react';
 import { describe, expect, test, vi } from 'vitest';
 
 import type { Route } from '@/app/routes/+types/notes.create';
-import { buildRootMatch } from '~/testing/root-match-fixture';
+import { buildRootMatch } from '~/testing/buildRootMatch';
 import { renderRoutesStub } from '~/testing/route-fixtures';
 
 import CreateNote, { loader } from '../notes.create';

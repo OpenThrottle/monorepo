@@ -7,7 +7,7 @@ import {
   WORKSPACE_REPOSITORY_DETAIL_COPY,
 } from '~/routing/settings/data/data.copy';
 import { RepositoryHookTelemetry } from '~/routing/settings/repositories/components/RepositoryHookTelemetry';
-import { deriveCheckoutInspectionBadges } from '~/routing/settings/repositories/utils/checkout-inspection-badges';
+import { deriveCheckoutInspectionBadges } from '~/routing/settings/repositories/utils/deriveCheckoutInspectionBadges';
 
 export interface RepositoryDetailCheckoutProps {
   checkout: NonNullable<WorkspaceRepositoryFieldsFragment['checkouts']>[number];

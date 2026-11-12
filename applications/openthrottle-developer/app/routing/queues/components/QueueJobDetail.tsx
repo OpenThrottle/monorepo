@@ -18,7 +18,7 @@ import { QueueJobPayload } from '~/routing/queues/components/QueueJobPayload';
 import { QueueJobResults } from '~/routing/queues/components/QueueJobResults';
 import { QueueJobTimestamps } from '~/routing/queues/components/QueueJobTimestamps';
 import { QueueStateBadge } from '~/routing/queues/components/QueueStateBadge';
-import { parseQueueJobDataString } from '~/routing/queues/utils/parse-queue-job-data';
+import { parseQueueJobDataString } from '~/routing/queues/utils/parseQueueJobDataString';
 
 const CANCELLABLE_STATES = new Set(['active', 'delayed', 'waiting']);
 

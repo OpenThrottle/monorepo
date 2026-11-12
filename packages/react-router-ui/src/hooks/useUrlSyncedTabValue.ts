@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useSearchParams } from 'react-router';
 
-import { coerceTab } from '../utils/coerce-tab';
+import { coerceTab } from '../utils/coerceTab';
 
 export interface UseUrlSyncedTabValueOptions<TTab extends string = string> {
   readonly defaultValue: TTab;

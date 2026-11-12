@@ -81,7 +81,7 @@ const fakeClient = {
   },
 };
 
-vi.mock('~/services/graphql-ws-client', () => ({
+vi.mock('~/services/getGraphqlWsClient', () => ({
   getGraphqlWsClient: () => fakeClient,
 }));
 

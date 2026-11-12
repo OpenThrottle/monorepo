@@ -11,8 +11,8 @@ import { Link } from 'react-router';
 
 import type { QueueJobDetailsFragment } from '~/__generated__/graphql';
 import { QueueStateBadge } from '~/routing/queues/components/QueueStateBadge';
-import { parseQueueJobDataString } from '~/routing/queues/utils/parse-queue-job-data';
-import { queueJobDetailPath } from '~/routing/queues/utils/queue-job-detail-path';
+import { parseQueueJobDataString } from '~/routing/queues/utils/parseQueueJobDataString';
+import { queueJobDetailPath } from '~/routing/queues/utils/queueJobDetailPath';
 
 const JOB_ID_DISPLAY_MAX = 24;
 const FAILED_REASON_MAX = 72;

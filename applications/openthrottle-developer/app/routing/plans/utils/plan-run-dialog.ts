@@ -14,6 +14,7 @@ import type {
   PlanRunDialogDraft,
   PlanRunDialogMode,
 } from '~/routing/plans/types';
+import { getPlanScheduleDisabledReason } from '~/routing/plans/utils/getPlanScheduleDisabledReason';
 import { PLANS_DETAIL_TAB_SEARCH_PARAM } from '~/routing/plans/utils/parsers';
 import { hydratePlanRunConfigUiState } from '~/routing/plans/utils/plan-run-config-ui';
 import { reconcilePlanRunEffort } from '~/routing/plans/utils/plan-run-model-effort';
@@ -22,7 +23,6 @@ import {
   formatScheduleTime,
   getDefaultScheduleInstant,
 } from '~/routing/plans/utils/plan-run-schedule';
-import { getPlanScheduleDisabledReason } from '~/routing/plans/utils/plan-schedule-gate';
 import {
   getPlanIsRunning,
   getPlanIsTerminal,

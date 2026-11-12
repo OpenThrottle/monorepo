@@ -48,7 +48,7 @@ const REPO_SLUG = 'live-verify-repo-skill';
 
 let personalRoot: string;
 let originalPersonalRoot: string | undefined;
-let createSkillFile: typeof import('~/routing/skills/utils/create-skill-file.server').createSkillFile;
+let createSkillFile: typeof import('~/routing/skills/utils/createSkillFile.server').createSkillFile;
 
 const contentFor = (slug: string): string => {
   return `---\nname: ${slug}\ndescription: Live verification fixture for the create flow.\n---\n\n# ${slug}\n\nFixture body.\n`;
@@ -98,7 +98,7 @@ describe.runIf(IS_ENABLED)('live create flow', () => {
     process.env.WORKSPACE_ROOT = WORKTREE;
 
     ({ createSkillFile } =
-      await import('~/routing/skills/utils/create-skill-file.server'));
+      await import('~/routing/skills/utils/createSkillFile.server'));
   });
 
   afterAll(() => {
@@ -235,9 +235,9 @@ describe.runIf(IS_ENABLED)('live create flow', () => {
 
   test('the edit path can read back and rewrite the new repo skill', async () => {
     const { readSkillFileBySlug } =
-      await import('~/routing/skills/utils/read-skill-file.server');
+      await import('~/routing/skills/utils/readSkillFileBySlug.server');
     const { writeSkillFileBySlug } =
-      await import('~/routing/skills/utils/write-skill-file.server');
+      await import('~/routing/skills/utils/writeSkillFileBySlug.server');
 
     const read = readSkillFileBySlug(REPO_SLUG);
     expect(read.entry?.slug).toBe(REPO_SLUG);
@@ -254,7 +254,7 @@ describe.runIf(IS_ENABLED)('live create flow', () => {
 
   test('the personal skill reads back as Personal, not External', async () => {
     const { readSkillFileBySlug } =
-      await import('~/routing/skills/utils/read-skill-file.server');
+      await import('~/routing/skills/utils/readSkillFileBySlug.server');
 
     const read = readSkillFileBySlug(PERSONAL_SLUG);
     expect(read.entry?.slug).toBe(PERSONAL_SLUG);

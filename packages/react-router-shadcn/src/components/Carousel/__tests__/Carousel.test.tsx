@@ -6,8 +6,8 @@ import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { Carousel } from '../Carousel';
-import type { CarouselApi } from '../carousel-context';
 import { CarouselContent } from '../CarouselContent';
+import type { CarouselApi } from '../CarouselContext';
 import { CarouselItem } from '../CarouselItem';
 import { CarouselNext } from '../CarouselNext';
 import { CarouselPrevious } from '../CarouselPrevious';

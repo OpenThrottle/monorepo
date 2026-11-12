@@ -10,7 +10,7 @@ import {
 import type { SkillUsageScopeFilter } from '~/routing/usage/data/data.skill-usage-copy';
 import { useUsageBranchSearch } from '~/routing/usage/hooks/useUsageBranchSearch';
 import type { UsageBranchOption } from '~/routing/usage/types';
-import { buildUsageSearch } from '~/routing/usage/utils/usage-search';
+import { buildUsageSearch } from '~/routing/usage/utils/buildUsageSearch';
 
 export interface UsageBranchFilterProps {
   className?: string;

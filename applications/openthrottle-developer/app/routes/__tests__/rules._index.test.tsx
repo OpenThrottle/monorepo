@@ -7,7 +7,7 @@ import { afterEach, describe, expect, test } from 'vitest';
 import type { Route } from '@/app/routes/+types/rules._index';
 import type { TagActionRuleRowData } from '~/routing/rules/components/RulesTable';
 import { RULES_COPY, RULES_ONBOARDING } from '~/routing/rules/data/data.copy';
-import { buildRootMatch } from '~/testing/root-match-fixture';
+import { buildRootMatch } from '~/testing/buildRootMatch';
 
 import Index from '../rules._index';
 

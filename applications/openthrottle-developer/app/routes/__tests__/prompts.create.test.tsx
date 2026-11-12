@@ -2,7 +2,7 @@ import * as graphqlWithAuth from '@openthrottle/react-router-graphql';
 import { createTestRouterContext } from '@openthrottle/react-router-testing';
 import { describe, expect, test, vi } from 'vitest';
 
-import { buildRootMatch } from '~/testing/root-match-fixture';
+import { buildRootMatch } from '~/testing/buildRootMatch';
 
 import { action, meta } from '../prompts.create';
 

@@ -8,8 +8,8 @@ import { Ajv } from 'ajv';
 import { describe, expect, test } from 'vitest';
 
 import * as CmsCore from '../src/index';
+import { getSchemaDefaults } from '../src/utils/getSchemaDefaults';
 import { isCmsJsonSchema } from '../src/utils/parse-cms-schema';
-import { getSchemaDefaults } from '../src/utils/schema-defaults';
 
 /**
  * @description The committed output of `scripts/generate-cms-schemas.ts` for both block packages

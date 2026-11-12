@@ -16,7 +16,7 @@ import { LayoutGrid } from '../components/LayoutGrid';
 import { LogicCookies } from '../components/LogicCookies';
 import { LogicParams } from '../components/LogicParams';
 import type { CmsComponentRegistry } from '../types/cms-render';
-import { registerComponent } from '../utils/register-component';
+import { registerComponent } from '../utils/registerComponent';
 import {
   toButtonProps,
   toCardProps,

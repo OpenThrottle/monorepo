@@ -16,7 +16,7 @@ import { useHeaderChatController } from '../useHeaderChatController';
 // Return no ws client so the stream subscription never opens a real socket
 // (an undici connection attempt otherwise surfaces as an async uncaught error).
 // These tests exercise the toolbar + submit path, not live streaming.
-vi.mock('~/services/graphql-ws-client', () => ({
+vi.mock('~/services/getGraphqlWsClient', () => ({
   getGraphqlWsClient: () => null,
 }));
 

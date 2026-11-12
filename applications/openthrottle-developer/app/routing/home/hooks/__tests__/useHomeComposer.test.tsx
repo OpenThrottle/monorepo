@@ -23,7 +23,7 @@ import {
 
 // No live ws client: useVoiceInput's transcription stream and useSubscription
 // both no-op on a null client, so tests exercise composer state, not sockets.
-vi.mock('~/services/graphql-ws-client', () => ({
+vi.mock('~/services/getGraphqlWsClient', () => ({
   getGraphqlWsClient: () => null,
 }));
 

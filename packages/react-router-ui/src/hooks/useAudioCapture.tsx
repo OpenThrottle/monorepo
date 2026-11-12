@@ -7,8 +7,8 @@ import {
 } from '../config/audio-capture';
 import { WORKLET_PROCESSOR_SOURCE } from '../data/data.audio-capture-worklet';
 import type { AudioCaptureStatus } from '../types';
-import { isCaptureSupported } from '../utils/is-capture-supported';
-import { toError } from '../utils/to-error';
+import { isCaptureSupported } from '../utils/isCaptureSupported';
+import { toError } from '../utils/toError';
 
 export interface UseAudioCaptureOptions {
   /**

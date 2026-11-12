@@ -31,12 +31,12 @@ import { usePlanLifecycleRevalidation } from '~/routing/plans/hooks/usePlanLifec
 import { usePlanOutputStream } from '~/routing/plans/hooks/usePlanOutputStream';
 import { usePlanRunConfigEditor } from '~/routing/plans/hooks/usePlanRunConfigEditor';
 import type { PlanStatusKey } from '~/routing/plans/types';
+import { getUnsupervisedUnsettledRunId } from '~/routing/plans/utils/getUnsupervisedUnsettledRunId';
+import { getWorkflowRunBlockedReason } from '~/routing/plans/utils/getWorkflowRunBlockedReason';
 import { parsePlanTasksView } from '~/routing/plans/utils/parsers';
-import { resolvePlanWorkingDirectory } from '~/routing/plans/utils/resolve-plan-working-directory';
-import { getUnsupervisedUnsettledRunId } from '~/routing/plans/utils/unsupervised-unsettled-run-id';
+import { resolvePlanWorkingDirectory } from '~/routing/plans/utils/resolvePlanWorkingDirectory';
 import { isPlanStatusKey } from '~/routing/plans/utils/utils.plans';
 import { getResolvedTaskCount } from '~/routing/plans/utils/utils.plans';
-import { getWorkflowRunBlockedReason } from '~/routing/plans/utils/workflow-run-blocked-reason';
 
 export interface UsePlanDetailRouteOptions {
   readonly loaderData: Route.ComponentProps['loaderData'];

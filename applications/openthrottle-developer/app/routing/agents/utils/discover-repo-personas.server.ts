@@ -3,7 +3,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
 
 import type { RepoPersonaEntry } from '~/routing/agents/data/data.repo-personas-registry';
-import { parsePersonaFrontmatter } from '~/routing/agents/utils/parse-persona-frontmatter.server';
+import { parsePersonaFrontmatter } from '~/routing/agents/utils/parsePersonaFrontmatter.server';
 
 const PERSONAS_DIR = '.agents/personas';
 

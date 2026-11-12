@@ -7,13 +7,13 @@ import { SettingsAgentsSetupLogDialog } from '~/routing/settings/components/Sett
 import type { AgentCliStatus } from '~/routing/settings/data/data.agent-clis';
 import { SETTINGS_AGENTS_COPY } from '~/routing/settings/data/data.copy';
 import { useAgentSetupStream } from '~/routing/settings/hooks/useAgentSetupStream';
-import { getAgentCliActionLabel } from '~/routing/settings/utils/agent-cli-action-label';
 import { sanitizeAgentSetupLog } from '~/routing/settings/utils/agent-setup-log';
 import {
   getAgentSetupRowSummary,
   getAgentSetupRunMode,
   getAgentSetupRunStatus,
 } from '~/routing/settings/utils/agent-setup-run-status';
+import { getAgentCliActionLabel } from '~/routing/settings/utils/getAgentCliActionLabel';
 
 /** Resource-route action path backing the install/update controls. */
 const AGENT_SETUP_ACTION = '/resources/agent-setup';

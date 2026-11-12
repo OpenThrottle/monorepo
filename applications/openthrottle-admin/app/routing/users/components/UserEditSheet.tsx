@@ -12,7 +12,7 @@ import * as React from 'react';
 import type { useFetcher } from 'react-router';
 
 import type { UserDetailsFragment } from '~/__generated__/graphql';
-import { readActionError } from '~/global/utils/read-action-error';
+import { readActionError } from '~/global/utils/readActionError';
 import type { action as userDetailAction } from '~/routes/users.$userId';
 
 export interface UserEditSheetProps {

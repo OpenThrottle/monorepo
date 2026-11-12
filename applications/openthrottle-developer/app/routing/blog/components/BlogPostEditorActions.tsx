@@ -3,7 +3,7 @@ import { CheckIcon, SaveIcon } from 'lucide-react';
 import * as React from 'react';
 
 import { BLOG_EDITOR_COPY } from '~/routing/blog/data/data.copy';
-import { resolveSaveStatus } from '~/routing/blog/utils/resolve-save-status';
+import { resolveSaveStatus } from '~/routing/blog/utils/resolveSaveStatus';
 
 export interface BlogPostEditorActionsProps {
   readonly canSave: boolean;

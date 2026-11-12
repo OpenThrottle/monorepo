@@ -10,7 +10,7 @@ import {
   SKILL_PRESENCE_TOOLTIPS,
 } from '~/routing/usage/data/data.skill-presence';
 import { SKILL_USAGE_COPY } from '~/routing/usage/data/data.skill-usage-copy';
-import type { SkillUsageRowWithPresence } from '~/routing/usage/utils/partition-skill-usage-by-presence';
+import type { SkillUsageRowWithPresence } from '~/routing/usage/utils/partitionSkillUsageByPresence';
 import {
   skillUsageAvgDurationLabel,
   skillUsageOutcomesLabel,

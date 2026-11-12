@@ -29,14 +29,14 @@ import {
   STAGE_DIR,
   STAGE_OUT_DIR,
 } from './data/data.stage.ts';
-import { buildStagePackageJson } from './utils/build-stage-package-json.ts';
-import { findNativeFiles } from './utils/find-native-files.ts';
+import { buildStagePackageJson } from './utils/buildStagePackageJson.ts';
 import { findNearestSlot } from './utils/find-nearest-slot.ts';
+import { findNativeFiles } from './utils/findNativeFiles.ts';
 import { isEnvFile, isExcludedFile } from './utils/is-excluded-file.ts';
-import { parseAppManifest } from './utils/parse-app-manifest.ts';
+import { parseAppManifest } from './utils/parseAppManifest.ts';
 import type { StagePackage } from './utils/plan-stage-files.ts';
 import { isPackageLinkPath, planStageFiles } from './utils/plan-stage-files.ts';
-import { trimUnstagedDependencies } from './utils/trim-unstaged-dependencies.ts';
+import { trimUnstagedDependencies } from './utils/trimUnstagedDependencies.ts';
 
 const PROJECT_ROOT = resolve(import.meta.dirname, '..');
 const REPO_ROOT = resolve(PROJECT_ROOT, '../..');

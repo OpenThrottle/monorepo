@@ -6,7 +6,7 @@ import {
   MOCK_TRAJECTORY_SUMMARY,
   MOCK_UNPRICED_SESSION_SUMMARY,
 } from '~/routing/evals/data/mock.trajectory';
-import { renderEvals } from '~/routing/evals/testing/render-evals';
+import { renderEvals } from '~/routing/evals/testing/renderEvals';
 
 import { TaskTrajectoriesSection } from '../TaskTrajectoriesSection';
 

@@ -6,7 +6,7 @@ import { Link } from 'react-router';
 import type { DashboardQueueStatsCardFragment } from '~/__generated__/graphql';
 import { QueueHealthPill } from '~/routing/queues/components/QueueHealthPill';
 import { QUEUE_HEALTH_RANK } from '~/routing/queues/data/data.queue-health-display';
-import { computeQueueHealth } from '~/routing/queues/utils/queue-health';
+import { computeQueueHealth } from '~/routing/queues/utils/computeQueueHealth';
 
 const TOP_QUEUES = 6;
 

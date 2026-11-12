@@ -16,9 +16,9 @@ import * as React from 'react';
 
 import { VOICE_PHASE } from '~/routing/home/data/data.voice';
 import { useTranscriptionStream } from '~/routing/home/hooks/useTranscriptionStream';
-import { encodeFloat32ToInt16Base64 } from '~/routing/home/utils/audio-encoding';
-import { joinDraftParts } from '~/routing/home/utils/join-draft-parts';
-import { resolveMicState } from '~/routing/home/utils/resolve-mic-state';
+import { encodeFloat32ToInt16Base64 } from '~/routing/home/utils/encodeFloat32ToInt16Base64';
+import { joinDraftParts } from '~/routing/home/utils/joinDraftParts';
+import { resolveMicState } from '~/routing/home/utils/resolveMicState';
 
 type VoicePhase = (typeof VOICE_PHASE)[keyof typeof VOICE_PHASE];
 

@@ -3,7 +3,7 @@ import * as React from 'react';
 
 import { CHAT_TOOLBAR_SESSION_SENTINEL_KEY } from '../config/chat-session-permission-decay';
 import { chatToolbarStateAtom } from '../data/data.atom.chat-toolbar';
-import { decayElevatedPermissionModes } from '../utils/chat-toolbar-decay';
+import { decayElevatedPermissionModes } from '../utils/decayElevatedPermissionModes';
 
 /**
  * @description Boot hook that runs {@link decayElevatedPermissionModes} once per

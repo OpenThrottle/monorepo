@@ -89,8 +89,8 @@ import {
   parseQueueAndJobIdsFromCommanderQuery,
   REGEX_UUID,
 } from '~/global/utils/commander-empty-extras';
-import { handleGlobalLayoutHeaderSearchChromeEvent } from '~/global/utils/handle-global-layout-header-search-chrome-event';
-import { readTrimmedFormString } from '~/global/utils/read-trimmed-form-string';
+import { handleGlobalLayoutHeaderSearchChromeEvent } from '~/global/utils/handleGlobalLayoutHeaderSearchChromeEvent';
+import { readTrimmedFormString } from '~/global/utils/readTrimmedFormString';
 import type {
   RootLoaderDiagnostics,
   RootLoaderFailure,
@@ -113,7 +113,7 @@ import {
 import { filterNavigationByPermission } from '~/global/utils/utils.permissions';
 import { fetchMyPermissions } from '~/global/utils/utils.permissions.server';
 import { useHeaderChatController } from '~/routing/home/hooks/useHeaderChatController';
-import { queueJobDetailPath } from '~/routing/queues/utils/queue-job-detail-path';
+import { queueJobDetailPath } from '~/routing/queues/utils/queueJobDetailPath';
 import stylesheet from '~/styles.css?url';
 
 /**

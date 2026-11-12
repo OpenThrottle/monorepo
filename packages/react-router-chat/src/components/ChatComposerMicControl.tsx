@@ -9,7 +9,7 @@ import { Loader2, Mic } from 'lucide-react';
 import * as React from 'react';
 
 import { ChatComposerMicState } from '../types';
-import { getChatComposerMicLabel } from '../utils/chat-composer-mic-label';
+import { getChatComposerMicLabel } from '../utils/getChatComposerMicLabel';
 
 export interface ChatComposerMicControlProps {
   readonly micState: ChatComposerMicState;

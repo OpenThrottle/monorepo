@@ -3,7 +3,7 @@ import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
 import type { Route } from '@/app/routes/+types/projects.create';
-import { buildRootMatch } from '~/testing/root-match-fixture';
+import { buildRootMatch } from '~/testing/buildRootMatch';
 import { renderRoutesStub } from '~/testing/route-fixtures';
 
 import CreateProject from '../projects.create';

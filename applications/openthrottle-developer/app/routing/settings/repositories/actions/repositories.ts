@@ -21,7 +21,7 @@ import {
   CloneRepositoryInputSchema,
 } from '~/__generated__/schemas';
 import { RESCAN_WORKTREES_INTENT } from '~/routing/settings/repositories/config/repositories.defaults';
-import { errorMessageOr } from '~/routing/settings/repositories/utils/error-message';
+import { errorMessageOr } from '~/routing/settings/repositories/utils/errorMessageOr';
 import {
   PRUNE_WORKTREE_CHECKOUTS_INTENT,
   REMOVE_PLAN_RUN_WORKTREE_INTENT,

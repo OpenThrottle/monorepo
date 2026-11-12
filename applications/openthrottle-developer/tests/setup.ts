@@ -27,6 +27,6 @@ setupReactRouterTest({
 // is populated, and every subscription hook already guards for null (so it
 // simply skips subscribing — no socket, no async error). Specs that need a live
 // fake client still override this with their own `vi.mock` of the same module.
-vi.mock('~/services/graphql-ws-client', () => ({
+vi.mock('~/services/getGraphqlWsClient', () => ({
   getGraphqlWsClient: () => null,
 }));

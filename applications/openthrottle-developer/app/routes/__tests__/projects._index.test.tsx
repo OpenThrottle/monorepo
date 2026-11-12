@@ -5,7 +5,7 @@ import { describe, expect, test } from 'vitest';
 
 import type { Route } from '@/app/routes/+types/projects._index';
 import type { ProjectWithStats } from '~/routing/projects/types';
-import { buildRootMatch } from '~/testing/root-match-fixture';
+import { buildRootMatch } from '~/testing/buildRootMatch';
 import { renderRoutesStub } from '~/testing/route-fixtures';
 
 import Index from '../projects._index';

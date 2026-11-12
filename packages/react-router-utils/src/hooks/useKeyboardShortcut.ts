@@ -12,7 +12,7 @@
 
 import { useEffect } from 'react';
 
-import { isEditableTarget } from '../utils/is-editable-target';
+import { isEditableTarget } from '../utils/isEditableTarget';
 
 /**
  * Configuration for {@link useKeyboardShortcut}.

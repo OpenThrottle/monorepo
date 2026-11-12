@@ -7,8 +7,8 @@ import {
 import * as React from 'react';
 
 import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
+import { getSkillSourceBadge } from '~/routing/skills/utils/getSkillSourceBadge';
 import type { ModelInvocationBadge } from '~/routing/skills/utils/model-invocation-badge';
-import { getSkillSourceBadge } from '~/routing/skills/utils/source-badge';
 
 export interface SkillIntroductionBadgesProps {
   readonly entry: RepoSkillEntry;

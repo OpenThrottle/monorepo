@@ -12,8 +12,8 @@ import type { useFetcher } from 'react-router';
 import type { action } from '~/routes/plans.$planId._index';
 import { PlanScheduleConfirmDialog } from '~/routing/plans/components/PlanScheduleConfirmDialog';
 import { PLAN_SCHEDULE_CONFIRM_COPY } from '~/routing/plans/data/data.copy';
-import { formatPlanScheduledFor } from '~/routing/plans/utils/format-plan-scheduled-for';
-import { getPlanMarkCompleteTooltip } from '~/routing/plans/utils/plan-mark-complete-tooltip';
+import { formatPlanScheduledFor } from '~/routing/plans/utils/formatPlanScheduledFor';
+import { getPlanMarkCompleteTooltip } from '~/routing/plans/utils/getPlanMarkCompleteTooltip';
 
 export interface PlanToolbarStatusActionProps {
   readonly fetcherSetPlanStatus: ReturnType<typeof useFetcher<typeof action>>;

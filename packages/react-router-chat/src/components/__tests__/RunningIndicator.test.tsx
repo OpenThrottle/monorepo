@@ -8,7 +8,7 @@ import {
   RUNNING_INDICATOR_SLOW_HINT_AFTER_MS,
 } from '../../data/data.chat-run-phase-copy';
 import { ChatRunPhase } from '../../types';
-import { resolveRunningIndicatorCopy } from '../../utils/resolve-running-indicator-copy';
+import { resolveRunningIndicatorCopy } from '../../utils/resolveRunningIndicatorCopy';
 import type { RunningIndicatorProps } from '../RunningIndicator';
 import { RunningIndicator } from '../RunningIndicator';
 

@@ -9,9 +9,9 @@ import {
   DEFAULT_NOTIFICATIONS_STORAGE_KEY,
   NotificationsStoreContext,
 } from '../data';
-import { loadFromStorage } from '../utils/load-from-storage';
-import { reducer } from '../utils/notifications-reducer';
-import { saveToStorage } from '../utils/save-to-storage';
+import { loadFromStorage } from '../utils/loadFromStorage';
+import { reducer } from '../utils/reducer';
+import { saveToStorage } from '../utils/saveToStorage';
 import { NotificationsAnnouncer } from './NotificationsAnnouncer';
 
 export interface NotificationsStoreProviderProps {

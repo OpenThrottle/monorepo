@@ -12,9 +12,9 @@ import { Link } from 'react-router';
 import { WORKTREE_DISCOVERY_COPY } from '~/routing/settings/repositories/data/data.copy';
 import { useRescanWorktrees } from '~/routing/settings/repositories/hooks/useRescanWorktrees';
 import type { DiscoveredWorktreesResult } from '~/routing/settings/repositories/types';
-import { configuredRoots } from '~/routing/settings/repositories/utils/configured-roots';
+import { configuredRoots } from '~/routing/settings/repositories/utils/configuredRoots';
 import { summarizeDiscovery } from '~/routing/settings/repositories/utils/discovery-problems';
-import { pluralSuffix } from '~/routing/settings/repositories/utils/plural-suffix';
+import { pluralSuffix } from '~/routing/settings/repositories/utils/pluralSuffix';
 
 export interface WorktreeDiscoveryNoticeProps {
   className?: string;

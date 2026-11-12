@@ -4,7 +4,7 @@ import * as React from 'react';
 import { Form, Link } from 'react-router';
 
 import type { PullRequestsListFilters } from '~/routing/pull-requests/types/pull-requests-list-filters';
-import { mergedFilterValue } from '~/routing/pull-requests/utils/merged-filter-value';
+import { mergedFilterValue } from '~/routing/pull-requests/utils/mergedFilterValue';
 
 export interface PullRequestsToolbarProps {
   className?: string;

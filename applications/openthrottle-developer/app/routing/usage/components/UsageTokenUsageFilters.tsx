@@ -3,7 +3,7 @@ import * as React from 'react';
 import { Link } from 'react-router';
 
 import { TOKEN_USAGE_PROVIDERS } from '~/routing/usage/data/data.token-usage-copy';
-import { buildUsageSearch } from '~/routing/usage/utils/usage-search';
+import { buildUsageSearch } from '~/routing/usage/utils/buildUsageSearch';
 
 export interface UsageTokenUsageFiltersProps {
   className?: string;

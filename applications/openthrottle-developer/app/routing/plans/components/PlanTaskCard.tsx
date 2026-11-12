@@ -11,7 +11,7 @@ import type { PlanTaskRowFragment } from '~/__generated__/graphql';
 import { PlanManagedTaskBadge } from '~/routing/plans/components/PlanManagedTaskBadge';
 import { PlanTaskCardStatusBadge } from '~/routing/plans/components/PlanTaskCardStatusBadge';
 import { PlanTaskInlineActions } from '~/routing/plans/components/PlanTaskInlineActions';
-import { getTaskCardContext } from '~/routing/plans/utils/task-card-context';
+import { getTaskCardContext } from '~/routing/plans/utils/getTaskCardContext';
 
 const TASK_CARD_CONTEXT_TRUNCATE = 120;
 

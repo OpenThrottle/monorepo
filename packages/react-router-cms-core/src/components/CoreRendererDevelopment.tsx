@@ -8,7 +8,7 @@ import { atomSettings } from '../data/data.atom.settings';
 import { PREVIEW_COPY } from '../data/data.copy';
 import type { CmsFragment } from '../types/cms-fragment';
 import type { CmsComponentRegistry } from '../types/cms-render';
-import { applyFragmentDraft } from '../utils/apply-fragment-draft';
+import { applyFragmentDraft } from '../utils/applyFragmentDraft';
 import { CorePreviewFrame } from './CorePreviewFrame';
 import { CoreRendererDebug } from './CoreRendererDebug';
 

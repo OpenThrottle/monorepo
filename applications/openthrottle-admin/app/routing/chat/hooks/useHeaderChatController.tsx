@@ -6,7 +6,7 @@ import {
 } from '@openthrottle/react-router-chat-state';
 
 import { ConversationStreamChunkAddedDocument } from '~/__generated__/graphql';
-import { getGraphqlWsClient } from '~/services/graphql-ws-client';
+import { getGraphqlWsClient } from '~/services/getGraphqlWsClient';
 
 export interface UseHeaderChatControllerOptions {
   readonly enabled: boolean;

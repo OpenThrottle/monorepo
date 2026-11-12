@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { Route } from '@/app/routes/+types/skills._index';
 import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
 
-vi.mock('~/routing/agents/utils/discover-repo-skills.server', () => ({
+vi.mock('~/routing/agents/utils/discoverRepoSkills.server', () => ({
   discoverRepoSkills: vi.fn(),
 }));
 
@@ -18,7 +18,7 @@ vi.mock('@openthrottle/react-router-graphql', () => ({
 }));
 
 const { discoverRepoSkills } =
-  await import('~/routing/agents/utils/discover-repo-skills.server');
+  await import('~/routing/agents/utils/discoverRepoSkills.server');
 const { getMonorepoRoot } =
   await import('~/routing/agents/utils/resolve-monorepo-root.server');
 const { executeGraphqlWithAuth } =

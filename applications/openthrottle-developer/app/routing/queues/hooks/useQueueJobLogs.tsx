@@ -19,8 +19,8 @@ import type {
   QueueJobLogEvent,
   QueueJobLogStreamStatus,
 } from '~/routing/queues/types';
-import { compareQueueJobLogEvents } from '~/routing/queues/utils/compare-queue-job-log-events';
-import { getGraphqlWsClient } from '~/services/graphql-ws-client';
+import { compareQueueJobLogEvents } from '~/routing/queues/utils/compareQueueJobLogEvents';
+import { getGraphqlWsClient } from '~/services/getGraphqlWsClient';
 
 type QueueJobLogsPage = QueueJobLogsQuery['queueJobLogs'];
 

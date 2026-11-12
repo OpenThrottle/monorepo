@@ -18,7 +18,7 @@ import {
   MOCK_REPORT_CANDIDATE,
   MOCK_RUN_ROW,
 } from '~/routing/evals/data/mock.eval-report';
-import { renderEvals } from '~/routing/evals/testing/render-evals';
+import { renderEvals } from '~/routing/evals/testing/renderEvals';
 
 describe('EvalCompareVerdict', () => {
   test('says what McNemar found in plain words', () => {

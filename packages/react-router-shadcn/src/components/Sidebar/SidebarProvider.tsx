@@ -12,8 +12,8 @@ import {
   SIDEBAR_WIDTH,
   SIDEBAR_WIDTH_ICON,
 } from './sidebar-constants';
-import type { SidebarContextProps } from './sidebar-context';
-import { SidebarContext } from './sidebar-context';
+import type { SidebarContextProps } from './SidebarContext';
+import { SidebarContext } from './SidebarContext';
 
 export type SidebarProviderProps = React.ComponentProps<'div'> & {
   readonly defaultOpen?: boolean;

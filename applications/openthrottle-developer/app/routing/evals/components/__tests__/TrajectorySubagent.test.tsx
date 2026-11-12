@@ -3,7 +3,7 @@ import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
 import { MOCK_SUBAGENT } from '~/routing/evals/data/mock.trajectory';
-import { renderEvals } from '~/routing/evals/testing/render-evals';
+import { renderEvals } from '~/routing/evals/testing/renderEvals';
 
 import { TrajectorySubagent } from '../TrajectorySubagent';
 

@@ -3,7 +3,7 @@ import * as React from 'react';
 import { deriveRunPhaseFromEvents } from '../run-phase';
 import { buildTurnTimeline, foldTurnActivity } from '../turn-tool-groups';
 import type { ChatTurnEvent } from '../types';
-import { activityGroupAnchor } from '../utils/activity-group-anchor';
+import { activityGroupAnchor } from '../utils/activityGroupAnchor';
 import { ChatActivityGroup } from './ChatActivityGroup';
 import { ChatMessageBody } from './ChatMessageBody';
 import { ChatPermissionRequest } from './ChatPermissionRequest';

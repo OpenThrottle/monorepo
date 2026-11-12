@@ -5,7 +5,7 @@ import { SearchDocumentationCard } from '~/routing/search/components/SearchDocum
 import { SearchPlanCard } from '~/routing/search/components/SearchPlanCard';
 import { SearchTaskCard } from '~/routing/search/components/SearchTaskCard';
 import type { SearchRankMeta } from '~/routing/search/types/search-rank-meta';
-import { normalizeSource } from '~/routing/search/utils/search-card';
+import { normalizeSource } from '~/routing/search/utils/normalizeSource';
 
 export interface SearchCardProps {
   className?: string;

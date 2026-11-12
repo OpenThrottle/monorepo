@@ -7,8 +7,8 @@ import { describe, expect, test } from 'vitest';
 import { CORE_COMPONENTS } from '../../data/data.registry';
 import { MOCK_FRAGMENTS } from '../../data/mock.fragments';
 import type { CmsComponentRegistry } from '../../types/cms-render';
-import { createComponentRegistry } from '../../utils/component-registry';
-import { registerComponent } from '../../utils/register-component';
+import { createComponentRegistry } from '../../utils/createComponentRegistry';
+import { registerComponent } from '../../utils/registerComponent';
 import { toButtonProps } from '../../utils/registry-props';
 import { CoreRenderer } from '../CoreRenderer';
 

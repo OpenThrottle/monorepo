@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 import type { Route } from '@/app/routes/+types/plans._index';
 import type { PlanCardFragment } from '~/__generated__/graphql';
 import { PLANS_INDEX_EMPTY_COPY } from '~/routing/plans/data/data.copy';
-import { buildRootMatch } from '~/testing/root-match-fixture';
+import { buildRootMatch } from '~/testing/buildRootMatch';
 
 import Index from '../plans._index';
 

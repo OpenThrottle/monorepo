@@ -12,7 +12,7 @@ import * as React from 'react';
 
 import type { DeveloperRolloutFlags } from '~/global/data/data.rollout-flags';
 import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
-import { getRolloutHydrationStatusLabel } from '~/routing/settings/utils/rollout-hydration-status-label';
+import { getRolloutHydrationStatusLabel } from '~/routing/settings/utils/getRolloutHydrationStatusLabel';
 
 export interface RolloutSdkHydrationStatusProps {}
 

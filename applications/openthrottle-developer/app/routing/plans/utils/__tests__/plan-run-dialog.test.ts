@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, test } from 'vitest';
 
-import { buildPlanRunConfigJson } from '../../testing/plan-run-config';
+import { buildPlanRunConfigJson } from '../../testing/buildPlanRunConfigJson';
 import { parsePlanDetailTab } from '../parsers';
 import type { PlanRunDialogGatingInput } from '../plan-run-dialog';
 import {

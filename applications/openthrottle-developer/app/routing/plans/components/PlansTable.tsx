@@ -9,7 +9,7 @@ import {
   MOBILE_CARD_ROW_CLASS,
   MOBILE_CARD_TABLE_CLASS,
 } from '~/routing/plans/data/data.mobile-card';
-import { buildPlansTableColumns } from '~/routing/plans/utils/plans-table-columns';
+import { buildPlansTableColumns } from '~/routing/plans/utils/buildPlansTableColumns';
 
 export interface PlansTableProps {
   className?: string;

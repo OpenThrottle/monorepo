@@ -8,7 +8,7 @@ import {
   PROMPTS_EMPTY_COPY,
   PROMPTS_ONBOARDING,
 } from '~/routing/prompts/data/data.copy';
-import { buildRootMatch } from '~/testing/root-match-fixture';
+import { buildRootMatch } from '~/testing/buildRootMatch';
 import {
   renderRoutesStub,
   renderWithMemoryRouter,

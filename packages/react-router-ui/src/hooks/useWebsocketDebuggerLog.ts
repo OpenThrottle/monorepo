@@ -7,7 +7,7 @@ import * as React from 'react';
 import { WEBSOCKET_DEBUGGER_ALL_EVENT_NAMES } from '../components/websocket-debugger/event-options';
 import type { WebsocketDebuggerLogEntry } from '../components/websocket-debugger/types';
 import { WEBSOCKET_DEBUGGER_LOG_CAP } from '../components/websocket-debugger/types';
-import { createWebsocketDebuggerLogEntryId } from '../utils/create-websocket-debugger-log-entry-id';
+import { createWebsocketDebuggerLogEntryId } from '../utils/createWebsocketDebuggerLogEntryId';
 
 export interface UseWebsocketDebuggerLogOptions {
   /** @description Max entries to retain (default {@link WEBSOCKET_DEBUGGER_LOG_CAP}). */

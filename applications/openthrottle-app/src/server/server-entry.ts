@@ -16,7 +16,7 @@ import {
   dropUndefined,
   withLocalOrigin,
 } from '../main/utils/build-server-env.ts';
-import { createOtProxy } from './utils/create-ot-proxy.ts';
+import { createOtProxy } from './utils/createOtProxy.ts';
 
 const buildDir = process.env['OPENTHROTTLE_DEVELOPER_BUILD_DIR'];
 const serverUrl = process.env['API_URL_INTERNAL'];

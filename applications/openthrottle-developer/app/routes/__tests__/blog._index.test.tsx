@@ -7,7 +7,7 @@ import {
   MOCK_AGENT_DRAFT,
   MOCK_HUMAN_DRAFT,
 } from '~/routing/blog/data/mock.blog-posts';
-import { buildRootMatch } from '~/testing/root-match-fixture';
+import { buildRootMatch } from '~/testing/buildRootMatch';
 import { renderRoutesStub } from '~/testing/route-fixtures';
 
 import Component from '../blog._index';

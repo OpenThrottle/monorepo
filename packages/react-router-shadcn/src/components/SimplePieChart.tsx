@@ -7,7 +7,7 @@ import { ChartContainer } from './Chart/ChartContainer';
 import { ChartTooltip } from './Chart/ChartTooltip';
 import { ChartTooltipContent } from './Chart/ChartTooltipContent';
 import type { ChartConfig } from './chart-config';
-import { toDataKey } from './chart-data-key';
+import { toDataKey } from './toDataKey';
 
 const CHART_COLOR_VARS = [
   'var(--chart-1)',

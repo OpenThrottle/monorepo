@@ -3,7 +3,7 @@ import * as React from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { TASK_TRAJECTORIES_COPY } from '~/routing/evals/data/data.copy';
-import { renderEvals } from '~/routing/evals/testing/render-evals';
+import { renderEvals } from '~/routing/evals/testing/renderEvals';
 
 import { TaskTrajectoriesTab } from '../TaskTrajectoriesTab';
 

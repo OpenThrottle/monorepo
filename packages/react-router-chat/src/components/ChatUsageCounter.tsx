@@ -3,7 +3,7 @@ import * as React from 'react';
 
 import type { ChatTokenUsage } from '../types';
 import { formatTokenCount, formatUsageCost, hasUsageCounts } from '../usage';
-import { resolveTotalTokens } from '../utils/chat-usage-counter';
+import { resolveTotalTokens } from '../utils/resolveTotalTokens';
 
 export interface ChatUsageCounterProps {
   readonly className?: string;

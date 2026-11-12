@@ -82,8 +82,7 @@ one-way: cms-ui must never import cms-core.
   key in source. `FormWysiwyg` edits HTML source in a `TextArea` until an editor is chosen.
 - The react `util` generator uses `name` for both the identifier and the filename: pass camelCase
   and keep the file it writes (`getFormFieldKind.ts`) — a single-export file is named after its
-  export ([code-style.md § Naming](../../docs/monorepo/code-style.md#naming-conventions)). This
-  package's older utils are still kebab-case until the rename plan lands. Its `component` stub fails `no-empty-pattern` as
+  export ([code-style.md § Naming](../../docs/monorepo/code-style.md#naming-conventions)). Its `component` stub fails `no-empty-pattern` as
   generated; give the props a `className` before linting.
 
 ## Pointers

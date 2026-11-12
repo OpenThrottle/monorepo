@@ -12,7 +12,7 @@ import {
   SKILLS_ONBOARDING,
 } from '~/routing/skills/data/data.copy';
 import type { SkillsIndexUsageData } from '~/routing/skills/types';
-import { buildRootMatch } from '~/testing/root-match-fixture';
+import { buildRootMatch } from '~/testing/buildRootMatch';
 
 import Component from '../skills._index';
 

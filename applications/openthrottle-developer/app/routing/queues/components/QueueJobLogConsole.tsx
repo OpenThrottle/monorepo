@@ -15,7 +15,7 @@ import {
   QUEUE_JOB_LOG_STATUS_META,
 } from '~/routing/queues/data/data.queue-job-log-console';
 import { useQueueJobLogs } from '~/routing/queues/hooks/useQueueJobLogs';
-import { formatQueueJobLogLine } from '~/routing/queues/utils/queue-job-log-line';
+import { formatQueueJobLogLine } from '~/routing/queues/utils/formatQueueJobLogLine';
 
 export interface QueueJobLogConsoleProps {
   className?: string;

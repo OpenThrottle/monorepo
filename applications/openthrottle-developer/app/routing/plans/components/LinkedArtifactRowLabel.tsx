@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { Link } from 'react-router';
 
-import type { LinkedArtifactDestination } from '~/routing/plans/utils/linked-artifact-href';
 import type { LinkedArtifactView } from '~/routing/plans/utils/linked-artifact-payload';
+import type { LinkedArtifactDestination } from '~/routing/plans/utils/toLinkedArtifactDestination';
 
 export interface LinkedArtifactRowLabelProps {
   destination: LinkedArtifactDestination;

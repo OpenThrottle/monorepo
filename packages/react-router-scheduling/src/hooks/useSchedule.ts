@@ -3,7 +3,7 @@ import '../utils/temporal-bootstrap';
 import { useRef } from 'react';
 
 import type { CalendarEvent, ScheduleConfig, ScheduleInstance } from '../types';
-import { createSchedule } from '../utils/create-schedule';
+import { createSchedule } from '../utils/createSchedule';
 import type { SchedulingPlugins } from '../utils/plugins';
 
 /**

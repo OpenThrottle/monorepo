@@ -90,7 +90,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   let usedDiskFallback = false;
   if (results.length === 0) {
     const { diskFallbackSearch } =
-      await import('~/routing/agent-search/utils/disk-fallback.server');
+      await import('~/routing/agent-search/utils/diskFallbackSearch.server');
     const { getMonorepoRoot } =
       await import('~/routing/agents/utils/resolve-monorepo-root.server');
 

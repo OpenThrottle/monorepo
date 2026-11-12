@@ -8,7 +8,7 @@ import {
 import * as React from 'react';
 
 import { WORKSPACE_SETTINGS_COPY } from '~/routing/settings/data/data.copy';
-import type { WorkspaceApplyResult } from '~/routing/settings/utils/workspace-apply-results';
+import type { WorkspaceApplyResult } from '~/routing/settings/utils/buildWorkspaceApplyResults';
 
 export interface SettingsWorkspaceApplyResultsProps {
   className?: string;

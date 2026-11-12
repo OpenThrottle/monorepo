@@ -9,15 +9,15 @@ import {
   RUN_STATUS_VARIANT,
   RUN_TRIGGER_LABEL,
 } from '~/routing/schedule/data/data.run-status';
-import { formatDuration } from '~/routing/schedule/utils/format-duration';
 import {
   formatRunCost,
   formatSettingsSnapshot,
   hasRunUsage,
   runUsageRows,
 } from '~/routing/schedule/utils/format-usage';
-import { formatWhen } from '~/routing/schedule/utils/format-when';
-import { runUsageLimitRows } from '~/routing/schedule/utils/run-usage-limit-rows';
+import { formatDuration } from '~/routing/schedule/utils/formatDuration';
+import { formatWhen } from '~/routing/schedule/utils/formatWhen';
+import { runUsageLimitRows } from '~/routing/schedule/utils/runUsageLimitRows';
 
 export interface RunDetailProps {
   run: ScheduledJobRunDetailFragment;

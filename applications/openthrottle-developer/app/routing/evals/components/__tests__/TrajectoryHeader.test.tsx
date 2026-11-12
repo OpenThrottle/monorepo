@@ -6,7 +6,7 @@ import {
   MOCK_TRAJECTORY,
   MOCK_TRAJECTORY_SUMMARY,
 } from '~/routing/evals/data/mock.trajectory';
-import { renderEvals } from '~/routing/evals/testing/render-evals';
+import { renderEvals } from '~/routing/evals/testing/renderEvals';
 
 import { TrajectoryHeader } from '../TrajectoryHeader';
 

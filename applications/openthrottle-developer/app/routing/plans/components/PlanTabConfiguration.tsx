@@ -26,7 +26,7 @@ import {
   workflowWorkingDirectoryAtom,
 } from '~/routing/plans/data/data.atom-plan';
 import { PLAN_DEFERRED_SECTION_COPY } from '~/routing/plans/data/data.copy';
-import { applyPromptLayerChange } from '~/routing/plans/utils/plan-workflow-config-prompt';
+import { applyPromptLayerChange } from '~/routing/plans/utils/applyPromptLayerChange';
 
 /**
  * @description Workflow-ralph CLI options (`--plan` / `--task` and tuning flags)

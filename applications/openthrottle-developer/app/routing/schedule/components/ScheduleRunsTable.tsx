@@ -3,7 +3,7 @@ import * as React from 'react';
 
 import type { ScheduledJobRunRowFragment } from '~/__generated__/graphql';
 import { collectResumedRunIds } from '~/global/utils/utils.usage-limit';
-import { buildScheduleRunsTableColumns } from '~/routing/schedule/utils/schedule-runs-table-columns';
+import { buildScheduleRunsTableColumns } from '~/routing/schedule/utils/buildScheduleRunsTableColumns';
 
 export interface ScheduleRunsTableProps {
   className?: string;

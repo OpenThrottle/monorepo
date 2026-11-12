@@ -9,13 +9,13 @@ import {
 } from '~/routing/plans/data/data.linked-artifacts-panel-icons';
 import { LINKED_ARTIFACT_LIFECYCLE_STYLES } from '~/routing/plans/data/data.linked-artifacts-panel-lifecycle-styles';
 import { LINKED_ARTIFACT_VERIFICATION_STYLES } from '~/routing/plans/data/data.linked-artifacts-panel-verification-styles';
-import { toLinkedArtifactDestination } from '~/routing/plans/utils/linked-artifact-href';
+import { getLinkedArtifactVerifiedWhen } from '~/routing/plans/utils/getLinkedArtifactVerifiedWhen';
 import { toLinkedArtifactView } from '~/routing/plans/utils/linked-artifact-payload';
-import { getLinkedArtifactVerifiedWhen } from '~/routing/plans/utils/linked-artifact-verified-when';
 import {
   formatProducedAt,
   formatProducedAtRelative,
 } from '~/routing/plans/utils/linked-artifacts-panel';
+import { toLinkedArtifactDestination } from '~/routing/plans/utils/toLinkedArtifactDestination';
 
 export interface LinkedArtifactRowItemProps {
   artifact: LinkedArtifactRow;

@@ -19,8 +19,7 @@ import {
   type FloorElementType,
   type FloorLayout,
 } from '../types';
-import { isEditableTarget } from '../utils/editable-target';
-import { createElementId } from '../utils/element-id';
+import { createElementId } from '../utils/createElementId';
 import { createFloorElement, floorBounds } from '../utils/elements';
 import {
   clampPointToRect,
@@ -28,6 +27,7 @@ import {
   type Rect,
   snapValueToGrid,
 } from '../utils/geometry';
+import { isEditableTarget } from '../utils/isEditableTarget';
 import {
   addElement,
   createEmptyLayout,

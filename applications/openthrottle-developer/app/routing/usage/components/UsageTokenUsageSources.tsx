@@ -16,7 +16,7 @@ import * as React from 'react';
 
 import type { UsageTokenUsageRowFragment } from '~/__generated__/graphql';
 import { TOKEN_USAGE_COPY } from '~/routing/usage/data/data.token-usage-copy';
-import { groupTokenUsage } from '~/routing/usage/utils/aggregate-token-usage';
+import { groupTokenUsage } from '~/routing/usage/utils/groupTokenUsage';
 import { tokenUsageSourceLabel } from '~/routing/usage/utils/token-usage-labels';
 
 export interface UsageTokenUsageSourcesProps {

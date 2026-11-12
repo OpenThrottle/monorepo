@@ -6,7 +6,7 @@ import {
   MOCK_MY_LABEL,
   MOCK_OTHER_LABEL,
 } from '~/routing/evals/data/mock.trajectory';
-import { renderEvals } from '~/routing/evals/testing/render-evals';
+import { renderEvals } from '~/routing/evals/testing/renderEvals';
 
 import { TrajectoryLabelPanel } from '../TrajectoryLabelPanel';
 

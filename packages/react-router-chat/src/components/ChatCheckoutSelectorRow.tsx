@@ -10,7 +10,7 @@ import {
   shortenCheckoutPath,
 } from '../utils/checkout-display';
 import { checkoutSearchTerms } from '../utils/checkout-groups';
-import type { ChatCheckoutDescriptor } from '../utils/checkout-labels';
+import type { ChatCheckoutDescriptor } from '../utils/describeCheckouts';
 
 export interface ChatCheckoutSelectorRowProps {
   /** True when a {@link multiple} selection is at its cap, so unselected rows go inert. */

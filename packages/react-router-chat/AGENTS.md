@@ -13,7 +13,7 @@ Presentation + local message state only — no transport of its own.
 - [src/usage.ts](src/usage.ts) — pure, framework-free token-usage model: `ChatTokenUsage`, `normalizeUsage` (per-backend), `sumUsage`, `hasUsageCounts`, `formatTokenCount`, `formatUsageCost`.
 - [src/components/ChatUsageCounter.tsx](src/components/ChatUsageCounter.tsx) / [src/components/ChatTurnUsageSummary.tsx](src/components/ChatTurnUsageSummary.tsx) — composer footer running counter and per-turn Badge+Tooltip breakdown.
 - [src/hooks/useChatTurnFetcher.tsx](src/hooks/useChatTurnFetcher.tsx) — request/response fetcher; posts `intent: send-agent-message` / `load-agent-conversation-messages` to the host app's root action (`/` by default).
-- [src/map-persisted-messages.ts](src/map-persisted-messages.ts) — persisted-conversation rows → `ChatMessage`s.
+- [src/mapPersistedAgentConversationMessages.ts](src/mapPersistedAgentConversationMessages.ts) — persisted-conversation rows → `ChatMessage`s.
 - [src/conversation-stream.ts](src/conversation-stream.ts) — pure reducer `reduceStreamChunk` folding backend chunks into `StreamState`; `retryableIds` records messageIds whose terminal chunk was a retryable timeout (see below).
 - [src/components/ChatRetryNotice.tsx](src/components/ChatRetryNotice.tsx) — inline "Response timed out — Retry" affordance; `ChatThread`/`ChatDialog` render it via `canRetry`/`onRetry` (on `ChatComposerControls`).
 

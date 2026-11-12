@@ -23,8 +23,8 @@ import {
   TOKEN_USAGE_COPY,
   TOKEN_USAGE_STATS,
 } from '~/routing/usage/data/data.token-usage-copy';
-import { groupTokenUsage } from '~/routing/usage/utils/aggregate-token-usage';
-import { tokenUsageEmptyMessage } from '~/routing/usage/utils/token-usage-empty-message';
+import { groupTokenUsage } from '~/routing/usage/utils/groupTokenUsage';
+import { tokenUsageEmptyMessage } from '~/routing/usage/utils/tokenUsageEmptyMessage';
 
 export interface UsageTokenUsageProps {
   className?: string;

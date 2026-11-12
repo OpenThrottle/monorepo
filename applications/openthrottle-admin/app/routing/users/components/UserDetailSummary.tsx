@@ -3,7 +3,7 @@ import { formatDate } from 'date-fns';
 import * as React from 'react';
 
 import type { UserDetailsFragment } from '~/__generated__/graphql';
-import { formatOptionalDate } from '~/routing/users/utils/format-optional-date';
+import { formatOptionalDate } from '~/routing/users/utils/formatOptionalDate';
 
 export interface UserDetailSummaryProps {
   isDisabled: boolean;

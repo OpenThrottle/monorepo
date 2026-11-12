@@ -17,7 +17,7 @@ import {
   type SkillUsageScopeFilter,
 } from '~/routing/usage/data/data.skill-usage-copy';
 import type { UsageBranchOption } from '~/routing/usage/types';
-import { partitionSkillUsageByPresence } from '~/routing/usage/utils/partition-skill-usage-by-presence';
+import { partitionSkillUsageByPresence } from '~/routing/usage/utils/partitionSkillUsageByPresence';
 
 export interface UsageSkillUsageProps {
   /** SSR first page of branches: default branch first, then A–Z. */

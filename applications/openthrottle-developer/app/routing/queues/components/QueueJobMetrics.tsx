@@ -3,7 +3,7 @@ import { HeartHandshakeIcon } from 'lucide-react';
 import * as React from 'react';
 
 import type { JobDetailsCardFragment } from '~/__generated__/graphql';
-import { buildQueueJobMetricLines } from '~/routing/queues/utils/queue-job-metric-lines';
+import { buildQueueJobMetricLines } from '~/routing/queues/utils/buildQueueJobMetricLines';
 
 export interface QueueJobMetricsProps {
   job: JobDetailsCardFragment;

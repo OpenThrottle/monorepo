@@ -4,7 +4,7 @@ import {
 } from '@openthrottle/react-router-chat';
 
 import { ConversationStreamChunkAddedDocument } from '~/__generated__/graphql';
-import { getGraphqlWsClient } from '~/services/graphql-ws-client';
+import { getGraphqlWsClient } from '~/services/getGraphqlWsClient';
 
 /** The shared hook's result, re-typed here so existing importers keep this path. */
 export type UseAgenticChatTurnResult = SharedAgenticChatTurnResult;

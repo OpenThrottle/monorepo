@@ -4,7 +4,7 @@ import * as React from 'react';
 import { ChatPermissionResponderContext } from '../data/data.chat-permission-responder-context';
 import { usePinnedToBottom } from '../hooks/usePinnedToBottom';
 import type { ChatMessage, ChatPermissionResponder } from '../types';
-import { findLastUserMessageId } from '../utils/chat-thread';
+import { findLastUserMessageId } from '../utils/findLastUserMessageId';
 import { ChatRetryNotice } from './ChatRetryNotice';
 import { ChatThreadMessage } from './ChatThreadMessage';
 

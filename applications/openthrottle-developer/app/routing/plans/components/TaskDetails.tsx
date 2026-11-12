@@ -9,7 +9,7 @@ import { Link } from 'react-router';
 
 import type { PlanTaskRowFragment } from '~/__generated__/graphql';
 import { TASK_DETAIL_COPY } from '~/routing/plans/data/data.copy';
-import { formatTaskDate } from '~/routing/plans/utils/task-details';
+import { formatTaskDate } from '~/routing/plans/utils/formatTaskDate';
 
 export interface TaskDetailsProps {
   className?: string;

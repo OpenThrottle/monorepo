@@ -1,7 +1,7 @@
 import * as React from 'react';
 
-import { getMediaError } from '../utils/get-media-error';
-import { readPlaybackState } from '../utils/read-playback-state';
+import { getMediaError } from '../utils/getMediaError';
+import { readPlaybackState } from '../utils/readPlaybackState';
 
 export interface UseAudioOptions {
   /**

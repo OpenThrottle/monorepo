@@ -13,7 +13,7 @@ import { getWorkspaceEditorDeepLink } from '~/global/config/workspace-editor-dee
 import { PlanDeferredSection } from '~/routing/plans/components/PlanDeferredSection';
 import { PlanToolbarTagsSkeleton } from '~/routing/plans/components/PlanToolbarTagsSkeleton';
 import { PLAN_DEFERRED_SECTION_COPY } from '~/routing/plans/data/data.copy';
-import { getPlanEditorTooltip } from '~/routing/plans/utils/plan-editor-tooltip';
+import { getPlanEditorTooltip } from '~/routing/plans/utils/getPlanEditorTooltip';
 
 export interface PlanEditorActionsProps {
   className?: string;

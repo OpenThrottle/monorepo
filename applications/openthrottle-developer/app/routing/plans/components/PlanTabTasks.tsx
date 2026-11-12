@@ -9,8 +9,8 @@ import {
 } from '~/routing/plans/data/data.mobile-card';
 import { usePlanDetailRouteData } from '~/routing/plans/hooks/usePlanDetailRouteData';
 import { usePlanManagedTaskIds } from '~/routing/plans/hooks/usePlanManagedTaskIds';
+import { buildPlanTabTasksColumns } from '~/routing/plans/utils/buildPlanTabTasksColumns';
 import { filterOutHookTasks } from '~/routing/plans/utils/hook-tasks';
-import { buildPlanTabTasksColumns } from '~/routing/plans/utils/plan-tab-tasks-columns';
 import { sortPlanTasksByListOrder } from '~/routing/plans/utils/sort-plan-tasks-by-list-order';
 
 export interface PlanTabTasksProps {

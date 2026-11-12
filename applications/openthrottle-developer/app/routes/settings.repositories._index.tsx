@@ -15,11 +15,11 @@ import {
   GetSettingsRepositoriesDocument,
 } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
-import { markDeferredHandled } from '~/global/utils/mark-deferred-handled';
+import { markDeferredHandled } from '~/global/utils/markDeferredHandled';
 import { repositoriesAction } from '~/routing/settings/repositories/actions/repositories';
 import { RepositoriesSection } from '~/routing/settings/repositories/components/RepositoriesSection';
 import { useRepositoriesDiscovery } from '~/routing/settings/repositories/hooks/useRepositoriesDiscovery';
-import { buildRepositoriesView } from '~/routing/settings/repositories/utils/repositories-view';
+import { buildRepositoriesView } from '~/routing/settings/repositories/utils/buildRepositoriesView';
 import { shouldRevalidateRepositories } from '~/routing/settings/repositories/utils/revalidation';
 
 type HandleData = Route.ComponentProps['loaderData'];

@@ -5,7 +5,7 @@ Reusable modal chat UI for React Router apps: dialog or sheet shell, scrollable 
 > [!Warning]
 > **Assistant/system bodies are NOT rendered as Markdown — they are shown as escaped preformatted text.** `ChatMessageBody` passes the body to `@openthrottle/react-router-shadcn`'s `Markdown`, which currently emits the raw string inside `<pre>` (no Markdown parsing). The component name is aspirational.
 >
-> Assistant/system bodies originate from **untrusted sources** — server LLM output and persisted conversation history (see `src/map-persisted-messages.ts`). Before swapping in a real Markdown renderer you **must** keep raw HTML disabled. Mandatory requirements for any renderer change:
+> Assistant/system bodies originate from **untrusted sources** — server LLM output and persisted conversation history (see `src/mapPersistedAgentConversationMessages.ts`). Before swapping in a real Markdown renderer you **must** keep raw HTML disabled. Mandatory requirements for any renderer change:
 >
 > - Use a renderer with HTML disabled by default (e.g. `react-markdown` **without** `rehype-raw`), or sanitize output with DOMPurify. Never enable raw HTML passthrough.
 > - Add an XSS regression test asserting that an assistant body containing `<img src=x onerror=...>` / `<script>` does not execute or inject markup.

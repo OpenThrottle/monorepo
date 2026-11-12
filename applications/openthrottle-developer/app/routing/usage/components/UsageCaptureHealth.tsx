@@ -18,7 +18,7 @@ import type { UsageCaptureHealthRowFragment } from '~/__generated__/graphql';
 import { CAPTURE_HEALTH_STALE_AFTER_MS } from '~/routing/usage/data/data.capture-health';
 import { CAPTURE_HEALTH_COPY } from '~/routing/usage/data/data.capture-health-copy';
 import { buildCaptureHealthEntries } from '~/routing/usage/utils/capture-health';
-import { captureHealthStreamLabel } from '~/routing/usage/utils/capture-health-labels';
+import { captureHealthStreamLabel } from '~/routing/usage/utils/captureHealthStreamLabel';
 
 export interface UsageCaptureHealthProps {
   className?: string;

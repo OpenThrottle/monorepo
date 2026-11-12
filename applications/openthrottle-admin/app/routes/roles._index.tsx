@@ -28,7 +28,7 @@ import type { Route } from '@/app/routes/+types/roles._index';
 import { CreateRoleDocument, GetRolesDocument } from '~/__generated__/graphql';
 import { CreateRoleInputSchema } from '~/__generated__/schemas';
 import { SITE_TITLE } from '~/global/config/settings';
-import { readActionError } from '~/global/utils/read-action-error';
+import { readActionError } from '~/global/utils/readActionError';
 import { RolesTable } from '~/routing/roles/components/RolesTable';
 
 type HandleData = Route.ComponentProps['loaderData'];

@@ -22,7 +22,7 @@ import { QueueJobsTable } from '~/routing/queues/components/QueueJobsTable';
 import { QueueOpsToolbar } from '~/routing/queues/components/QueueOpsToolbar';
 import { QueueStatRow } from '~/routing/queues/components/QueueStatRow';
 import { QUEUE_JOB_STATE_FILTER_OPTIONS } from '~/routing/queues/data/data.job-state-filter-options';
-import { parseQueueJobsPagination } from '~/routing/queues/utils/parse-queue-jobs-pagination';
+import { parseQueueJobsPagination } from '~/routing/queues/utils/parseQueueJobsPagination';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

@@ -10,7 +10,7 @@ import type { CSSProperties, ReactElement } from 'react';
 import * as React from 'react';
 
 import type { UseScheduleResult } from '../hooks/useSchedule';
-import { isHostDark } from '../utils/dark-mode';
+import { isHostDark } from '../utils/isHostDark';
 import type { CalendarSlots } from './slots';
 import { buildCustomComponents } from './slots';
 

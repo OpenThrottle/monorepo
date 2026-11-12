@@ -11,7 +11,7 @@ import { FormSelect } from '../components/FormSelect';
 import { FormString } from '../components/FormString';
 import { FormWysiwyg } from '../components/FormWysiwyg';
 import type { CmsFormBaseProps } from '../types/cms-json-schema';
-import type { CmsFormFieldKind } from '../utils/form-field-kind';
+import type { CmsFormFieldKind } from '../utils/getFormFieldKind';
 
 /**
  * @description The field `CoreFormRenderer` mounts for each kind of property. `children` is

@@ -6,7 +6,7 @@ import type {
   WorkspaceBrowseEntry,
   WorkspaceBrowseListing,
 } from '~/routing/settings/repositories/types';
-import { buildBreadcrumbs } from '~/routing/settings/repositories/utils/build-breadcrumbs';
+import { buildBreadcrumbs } from '~/routing/settings/repositories/utils/buildBreadcrumbs';
 
 export interface UseAddFolderDialogOptions {
   /**

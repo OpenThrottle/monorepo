@@ -11,13 +11,13 @@ import {
 import * as React from 'react';
 
 import type { ChatCheckoutOption } from '../types';
-import { toggleCheckoutSelection } from '../utils/chat-checkout-selection';
 import { groupCheckoutOptions } from '../utils/checkout-groups';
+import { checkoutSearchFilter } from '../utils/checkoutSearchFilter';
 import {
   type ChatCheckoutDescriptor,
   describeCheckouts,
-} from '../utils/checkout-labels';
-import { checkoutSearchFilter } from '../utils/checkout-search-filter';
+} from '../utils/describeCheckouts';
+import { toggleCheckoutSelection } from '../utils/toggleCheckoutSelection';
 import { ChatCheckoutSelectorRow } from './ChatCheckoutSelectorRow';
 import { ChatCheckoutSelectorTrigger } from './ChatCheckoutSelectorTrigger';
 

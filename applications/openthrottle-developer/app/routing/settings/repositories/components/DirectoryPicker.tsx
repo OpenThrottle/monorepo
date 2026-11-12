@@ -13,7 +13,7 @@ import type {
   WorkspaceBreadcrumbSegment,
   WorkspaceBrowseEntry,
 } from '~/routing/settings/repositories/types';
-import { deriveBrowseListState } from '~/routing/settings/repositories/utils/browse-list-state';
+import { deriveBrowseListState } from '~/routing/settings/repositories/utils/deriveBrowseListState';
 
 export interface DirectoryPickerProps {
   breadcrumbs: WorkspaceBreadcrumbSegment[];

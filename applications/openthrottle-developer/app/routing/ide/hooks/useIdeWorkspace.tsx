@@ -8,7 +8,7 @@ import { useSymbolDetails } from '@openthrottle/react-router-ide';
 import * as React from 'react';
 import { useFetcher, useSearchParams } from 'react-router';
 
-import { buildSymbolEndpoint } from '~/routing/ide/utils/build-symbol-endpoint';
+import { buildSymbolEndpoint } from '~/routing/ide/utils/buildSymbolEndpoint';
 
 export interface UseIdeWorkspaceResult {
   readonly details: IdeSymbolDetails | undefined;

@@ -3,8 +3,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { DEFAULT_VIEW } from '../config/defaults';
 import type { CalendarView } from '../types';
 import { temporalToDate, toPlainDate } from '../utils/datetime';
-import { normalizeDate } from '../utils/normalize-date';
-import { shiftDate } from '../utils/shift-date';
+import { normalizeDate } from '../utils/normalizeDate';
+import { shiftDate } from '../utils/shiftDate';
 import { fromEngineViewName, toEngineViewName } from '../utils/views';
 import type { UseScheduleResult } from './useSchedule';
 

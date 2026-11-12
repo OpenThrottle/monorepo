@@ -4,7 +4,7 @@ import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
 import type { Route } from '@/app/routes/+types/legal.privacy-policy';
-import { buildRootMatch } from '~/testing/root-match-fixture';
+import { buildRootMatch } from '~/testing/buildRootMatch';
 
 import PrivacyPolicy from '../legal.privacy-policy';
 

@@ -4,7 +4,7 @@ import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
 import type { Route } from '@/app/routes/+types/pull-requests.$prId';
-import { buildRootMatch } from '~/testing/root-match-fixture';
+import { buildRootMatch } from '~/testing/buildRootMatch';
 
 import PullRequestDetail from '../pull-requests.$prId';
 

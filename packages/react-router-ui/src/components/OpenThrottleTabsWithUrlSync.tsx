@@ -6,7 +6,7 @@ import type {
   UrlSyncedTabConfig,
 } from '../config/open-throttle-tabs.api';
 import { useUrlSyncedTabValue } from '../hooks/useUrlSyncedTabValue';
-import { isFullyControlled } from '../utils/is-fully-controlled';
+import { isFullyControlled } from '../utils/isFullyControlled';
 
 type TabsRestProps = Omit<OpenThrottleTabsPropsContract, 'urlSync'>;
 

@@ -7,8 +7,8 @@ import type {
   WebsocketDebuggerSocket,
 } from '../components/websocket-debugger';
 import { WEBSOCKET_DEBUGGER_ALL_EVENT_NAMES } from '../components/websocket-debugger';
-import { filterWebsocketDebuggerEntries } from '../utils/filter-websocket-debugger-entries';
-import { isNotificationEventName } from '../utils/is-notification-event-name';
+import { filterWebsocketDebuggerEntries } from '../utils/filterWebsocketDebuggerEntries';
+import { isNotificationEventName } from '../utils/isNotificationEventName';
 import { useWebsocketDebuggerLog } from './useWebsocketDebuggerLog';
 import { useWebsocketDebuggerSocketSubscription } from './useWebsocketDebuggerSocketSubscription';
 

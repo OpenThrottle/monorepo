@@ -6,7 +6,7 @@ import {
   SCHEDULE_COPY,
   SCHEDULE_ONBOARDING,
 } from '~/routing/schedule/data/data.copy';
-import { buildRootMatch } from '~/testing/root-match-fixture';
+import { buildRootMatch } from '~/testing/buildRootMatch';
 import {
   renderRoutesStub,
   renderWithMemoryRouter,

@@ -11,7 +11,7 @@ import { SettingsAgentsTable } from '../SettingsAgentsTable';
 
 // The embedded install/update controls open a graphql-ws subscription; stub the
 // singleton so the table never reaches for a real socket.
-vi.mock('~/services/graphql-ws-client', () => ({
+vi.mock('~/services/getGraphqlWsClient', () => ({
   getGraphqlWsClient: () => null,
 }));
 

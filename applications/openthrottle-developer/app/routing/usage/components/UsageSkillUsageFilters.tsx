@@ -9,9 +9,9 @@ import {
   type SkillUsageScopeFilter,
 } from '~/routing/usage/data/data.skill-usage-copy';
 import type { UsageBranchOption } from '~/routing/usage/types';
-import { skillUsageChipClass } from '~/routing/usage/utils/skill-usage-chip-class';
+import { buildUsageSearch } from '~/routing/usage/utils/buildUsageSearch';
 import { skillUsageCwdLabel } from '~/routing/usage/utils/skill-usage-labels';
-import { buildUsageSearch } from '~/routing/usage/utils/usage-search';
+import { skillUsageChipClass } from '~/routing/usage/utils/skillUsageChipClass';
 
 export interface UsageSkillUsageFiltersProps {
   /** SSR first page of branches: default branch first, then A–Z. */

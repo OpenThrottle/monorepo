@@ -2,7 +2,7 @@ import { Badge } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import { REPOSITORY_HOOK_TELEMETRY_COPY } from '~/routing/settings/repositories/data/data.copy';
-import type { HookTelemetryPresentation } from '~/routing/settings/repositories/utils/hook-telemetry';
+import type { HookTelemetryPresentation } from '~/routing/settings/repositories/utils/deriveHookTelemetry';
 
 export interface RepositoryHookTelemetryDetailsProps {
   telemetry: HookTelemetryPresentation;

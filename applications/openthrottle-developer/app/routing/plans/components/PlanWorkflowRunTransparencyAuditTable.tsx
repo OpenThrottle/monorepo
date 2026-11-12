@@ -19,9 +19,9 @@ import {
   PLAN_RUN_HISTORY_INITIAL_ROWS,
 } from '~/routing/plans/data/data.plan-run-history';
 import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
+import type { PlanRunMetricsEntry } from '~/routing/plans/utils/joinPlanRunJobMetrics';
+import { joinPlanRunJobMetrics } from '~/routing/plans/utils/joinPlanRunJobMetrics';
 import { selectHistoryRuns } from '~/routing/plans/utils/plan-run-sections';
-import type { PlanRunMetricsEntry } from '~/routing/plans/utils/plan-workflow-run-transparency';
-import { joinPlanRunJobMetrics } from '~/routing/plans/utils/plan-workflow-run-transparency';
 
 export type PlanRunAuditRow =
   PlanDetailRunHistoryQuery['planRunsByPlanId'][number];

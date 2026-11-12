@@ -10,14 +10,14 @@ import {
   subscribeClientLogSink,
 } from '~/routing/settings/client-log-sink';
 import { CLIENT_LOG_LEVELS } from '~/routing/settings/client-log-sink';
-import { isClientLogLevel } from '~/routing/settings/utils/is-client-log-level';
+import { getViewerEmptyReason } from '~/routing/settings/utils/getViewerEmptyReason';
+import { isClientLogLevel } from '~/routing/settings/utils/isClientLogLevel';
 import {
   copyText,
   entryToJsonRecord,
   formatEntryLine,
   getEmptyServerSnapshot,
 } from '~/routing/settings/utils/settings.support';
-import { getViewerEmptyReason } from '~/routing/settings/utils/viewer-empty-reason';
 
 export interface UseSettingsLogsPanelOptions {}
 

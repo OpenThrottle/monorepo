@@ -6,7 +6,7 @@ import { HeartHandshakeIcon } from 'lucide-react';
 import * as React from 'react';
 
 import type { JobDetailsCardFragment } from '~/__generated__/graphql';
-import { parseQueueJobDataString } from '~/routing/queues/utils/parse-queue-job-data';
+import { parseQueueJobDataString } from '~/routing/queues/utils/parseQueueJobDataString';
 
 export interface QueueJobPayloadProps {
   job: JobDetailsCardFragment;

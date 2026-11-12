@@ -10,7 +10,7 @@ import { CoreFormContext } from '../data/data.core-form-context';
 import { FORM_FIELDS } from '../data/data.form-fields';
 import type { CmsParsedSchema } from '../types/cms-json-schema';
 import type { CmsFormChildren, CmsFormContextValue } from '../types/cms-render';
-import { getFormFieldKind } from '../utils/form-field-kind';
+import { getFormFieldKind } from '../utils/getFormFieldKind';
 import { FormAccordion } from './FormAccordion';
 import { FormAccordionPane } from './FormAccordionPane';
 import { FormChildren } from './FormChildren';

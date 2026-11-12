@@ -12,7 +12,7 @@ import { usePlanDetailRoute } from '../usePlanDetailRoute';
 // No ws client → the plan-output-stream and lifecycle-revalidation
 // subscriptions never open a socket; these tests exercise the derived route
 // state, not live streaming.
-vi.mock('~/services/graphql-ws-client', () => ({
+vi.mock('~/services/getGraphqlWsClient', () => ({
   getGraphqlWsClient: () => null,
 }));
 

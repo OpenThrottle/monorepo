@@ -3,11 +3,11 @@ import { AlertTriangle, RefreshCw, X } from 'lucide-react';
 import * as React from 'react';
 
 import { ROOT_LOADER_FAILURE_SNIPPET_MAX } from '~/global/config/root-loader-failure-banner';
+import { buildRootLoaderFailureBannerCopy } from '~/global/utils/buildRootLoaderFailureBannerCopy';
 import type {
   RootLoaderDiagnostics,
   RootLoaderFailure,
 } from '~/global/utils/root-loader-diagnostics';
-import { buildRootLoaderFailureBannerCopy } from '~/global/utils/root-loader-failure-banner-copy';
 
 export interface GlobalRootLoaderFailureBannerProps {
   readonly diagnostics?: RootLoaderDiagnostics | null;

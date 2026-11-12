@@ -9,7 +9,7 @@ import {
 import { MoreHorizontalIcon } from 'lucide-react';
 import * as React from 'react';
 
-import { isGlobalPopoverConfirmSubmitAction } from '../utils/is-global-popover-confirm-submit-action';
+import { isGlobalPopoverConfirmSubmitAction } from '../utils/isGlobalPopoverConfirmSubmitAction';
 import { GlobalPopoverActionItem } from './GlobalPopoverActionItem';
 import { GlobalPopoverConfirmDialog } from './GlobalPopoverConfirmDialog';
 

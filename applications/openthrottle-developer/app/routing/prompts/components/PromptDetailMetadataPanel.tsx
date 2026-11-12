@@ -10,9 +10,9 @@ import { ChevronDown, ChevronRight, ExternalLink } from 'lucide-react';
 import * as React from 'react';
 
 import type { PromptDetailsFragment } from '~/__generated__/graphql';
-import { githubOpenThrottleMainBlob } from '~/routing/agents/constants/github-repo-paths';
-import { buildPromptMetadataRows } from '~/routing/prompts/utils/build-prompt-metadata-rows';
-import { buildPromptDebugSnapshotJson } from '~/routing/prompts/utils/prompt-debug-snapshot';
+import { githubOpenThrottleMainBlob } from '~/routing/agents/constants/githubOpenThrottleMainBlob';
+import { buildPromptDebugSnapshotJson } from '~/routing/prompts/utils/buildPromptDebugSnapshotJson';
+import { buildPromptMetadataRows } from '~/routing/prompts/utils/buildPromptMetadataRows';
 
 export interface PromptDetailMetadataPanelProps {
   contentLength: number;

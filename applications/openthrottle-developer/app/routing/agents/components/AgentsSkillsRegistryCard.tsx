@@ -10,7 +10,7 @@ import {
 import { ExternalLink } from 'lucide-react';
 import * as React from 'react';
 
-import { githubOpenThrottleMainBlob } from '~/routing/agents/constants/github-repo-paths';
+import { githubOpenThrottleMainBlob } from '~/routing/agents/constants/githubOpenThrottleMainBlob';
 import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
 import {
   SKILLS_MODEL_INVOCATION_COPY,

@@ -14,8 +14,8 @@ import { assertBlogEnabled } from '~/global/utils/blog-enabled';
 import { fetchPublicGraphql } from '~/services/graphql.server';
 
 import { BLOG_PAGE_SIZE } from '../config/blog-pagination';
-import { isInvalidBlogCursorError } from './blog-cursor';
 import { BLOG_BASE_PATH, buildBlogTagPath } from './blog-urls';
+import { isInvalidBlogCursorError } from './isInvalidBlogCursorError';
 
 /**
  * Loader-side data access for the public blog routes. Server-only (`.server`):

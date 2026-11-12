@@ -40,8 +40,8 @@ Plan: **Dynamic repo skills registry from `.agents/skills`** (`fca6f044-fcb2-48f
 React Router replaces `*.server.ts` modules with empty stubs in the **client** build. Filesystem discovery must live only in:
 
 - `resolve-monorepo-root.server.ts`
-- `discover-repo-skills.server.ts` (scanner)
-- `parse-skill-frontmatter.server.ts` (`name` / `description` from `---` blocks)
+- `discoverRepoSkills.server.ts` (scanner)
+- `parseSkillFrontmatter.server.ts` (`name` / `description` from `---` blocks)
 
 **Allowed imports:**
 
@@ -181,7 +181,7 @@ To change a lockfile-installed external skill, change it upstream and re-sync.
 
 ## Detail route (`/skills/:slug`) — read and update
 
-- **Loader** (`read-skill-file.server.ts`): resolve root → re-run discovery →
+- **Loader** (`readSkillFileBySlug.server.ts`): resolve root → re-run discovery →
   find entry by slug → read the raw SKILL.md. Unknown slug or null root ⇒ 404
   `Response` via the route ErrorBoundary. Returns `{ entry, content, editable }`
   with `editable = monorepoRoot !== null`. A personal skill reads exactly like
@@ -197,7 +197,7 @@ To change a lockfile-installed external skill, change it upstream and re-sync.
   lockfile-installed external skill, with its own tooltip (see "External skills
   are read-only (the personal tier is not)"). A personal skill edits like an
   authored one.
-- **Write-back** (`write-skill-file.server.ts`, invoked by the route action):
+- **Write-back** (`writeSkillFileBySlug.server.ts`, invoked by the route action):
   - The absolute target derives **only** from the discovered entry's
     `repoRelativePath` under the resolved root — never from client input.
   - A shared realpath allowlist

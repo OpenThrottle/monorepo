@@ -11,7 +11,7 @@ import * as React from 'react';
 import type { SearchChunk } from '~/__generated__/graphql';
 import { SearchWhyThisResult } from '~/routing/search/components/SearchWhyThisResult';
 import type { SearchRankMeta } from '~/routing/search/types/search-rank-meta';
-import { githubBlobHref } from '~/routing/search/utils/github-blob-href';
+import { githubBlobHref } from '~/routing/search/utils/githubBlobHref';
 
 export interface SearchDocumentationCardProps {
   className?: string;

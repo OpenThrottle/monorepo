@@ -18,7 +18,7 @@ import {
   toBlogPostSaveFieldErrors,
   validateBlogPostEditorValues,
 } from '~/routing/blog/utils/editor';
-import { resolveSaveError } from '~/routing/blog/utils/resolve-save-error';
+import { resolveSaveError } from '~/routing/blog/utils/resolveSaveError';
 
 export interface UseBlogPostEditorOptions {
   /** The caller holds `blog:write` (may edit posts that are not drafts). */

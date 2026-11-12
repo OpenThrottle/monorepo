@@ -5,7 +5,7 @@ import { ToggleGroup as ToggleGroupPrimitive } from 'radix-ui';
 import * as React from 'react';
 
 import { cn } from '../../utils/cn';
-import { ToggleGroupContext } from './toggle-group-context';
+import { ToggleGroupContext } from './ToggleGroupContext';
 import { toggleGroupItemVariants } from './toggleGroupItemVariants';
 
 export interface ToggleGroupItemProps

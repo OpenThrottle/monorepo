@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 import type { Route } from '@/app/routes/+types/calendar.list';
 import { CALENDAR_INTRO_COPY } from '~/routing/calendar/data/data.copy';
 import { CALENDAR_EVENTS } from '~/routing/calendar/data/data.events';
-import { buildRootMatch } from '~/testing/root-match-fixture';
+import { buildRootMatch } from '~/testing/buildRootMatch';
 
 import Component from '../calendar.list';
 

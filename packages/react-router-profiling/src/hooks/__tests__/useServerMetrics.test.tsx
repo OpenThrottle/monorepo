@@ -1,10 +1,10 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { fetchServerMetrics } from '../../utils/fetch-server-metrics';
+import { fetchServerMetrics } from '../../utils/fetchServerMetrics';
 import { useServerMetrics } from '../useServerMetrics';
 
-vi.mock('../../utils/fetch-server-metrics', () => ({
+vi.mock('../../utils/fetchServerMetrics', () => ({
   fetchServerMetrics: vi.fn(),
 }));
 

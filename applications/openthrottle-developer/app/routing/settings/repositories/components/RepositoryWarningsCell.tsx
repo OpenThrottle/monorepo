@@ -1,8 +1,8 @@
 import * as React from 'react';
 
 import type { RepositoryCheckoutRow } from '~/routing/settings/repositories/types';
-import type { CheckoutDrift } from '~/routing/settings/utils/drift-labels';
-import { driftLabels } from '~/routing/settings/utils/drift-labels';
+import type { CheckoutDrift } from '~/routing/settings/utils/driftLabels';
+import { driftLabels } from '~/routing/settings/utils/driftLabels';
 
 export interface RepositoryWarningsCellProps {
   driftByCheckoutId: Record<string, CheckoutDrift> | undefined;

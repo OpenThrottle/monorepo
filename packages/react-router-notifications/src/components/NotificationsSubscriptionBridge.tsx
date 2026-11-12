@@ -10,8 +10,8 @@ import {
   getSystemNotificationsPreference,
   showSystemNotification,
 } from '../utils/system-notification';
-import { toStorePayload } from '../utils/to-store-payload';
-import { toastForNotification } from '../utils/toast-for-notification';
+import { toastForNotification } from '../utils/toastForNotification';
+import { toStorePayload } from '../utils/toStorePayload';
 
 /**
  * @description Minimum shape the injected subscription document's payload must

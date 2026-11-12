@@ -11,7 +11,7 @@ import { Link } from 'react-router';
 import type { SearchChunk } from '~/__generated__/graphql';
 import { SearchWhyThisResult } from '~/routing/search/components/SearchWhyThisResult';
 import type { SearchRankMeta } from '~/routing/search/types/search-rank-meta';
-import { planOrTaskDetailHref } from '~/routing/search/utils/plan-or-task-detail-href';
+import { planOrTaskDetailHref } from '~/routing/search/utils/planOrTaskDetailHref';
 
 export interface SearchTaskCardProps {
   className?: string;

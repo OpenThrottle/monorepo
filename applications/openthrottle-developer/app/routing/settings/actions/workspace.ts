@@ -10,7 +10,7 @@ import {
   UpdateWorkspaceProfileDocument,
 } from '~/__generated__/graphql';
 import { UpdateWorkspaceProfileInputSchema } from '~/__generated__/schemas';
-import { formatEditorConfigApplyMessage } from '~/routing/settings/utils/format-editor-config-result';
+import { formatEditorConfigApplyMessage } from '~/routing/settings/utils/formatEditorConfigApplyMessage';
 import { parseEnabledEditorsFromFormData } from '~/routing/settings/utils/workspace-settings-action';
 
 export const updateProfile = async (

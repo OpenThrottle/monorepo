@@ -7,7 +7,7 @@ import { SKILLS_INDEX_USAGE_COPY } from '~/routing/skills/data/data.copy';
 import type { SkillsIndexUsageData } from '~/routing/skills/types';
 import { SkillUsageLeaderboard } from '~/routing/usage/components/SkillUsageLeaderboard';
 import { SKILL_USAGE_COPY } from '~/routing/usage/data/data.skill-usage-copy';
-import { partitionSkillUsageByPresence } from '~/routing/usage/utils/partition-skill-usage-by-presence';
+import { partitionSkillUsageByPresence } from '~/routing/usage/utils/partitionSkillUsageByPresence';
 
 export interface SkillsIndexUsageProps {
   className?: string;

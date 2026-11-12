@@ -2,8 +2,8 @@
 
 import * as React from 'react';
 
-import type { CarouselContextProps } from '../components/Carousel/carousel-context';
-import { CarouselContext } from '../components/Carousel/carousel-context';
+import type { CarouselContextProps } from '../components/Carousel/CarouselContext';
+import { CarouselContext } from '../components/Carousel/CarouselContext';
 
 export interface UseCarouselResult extends CarouselContextProps {}
 

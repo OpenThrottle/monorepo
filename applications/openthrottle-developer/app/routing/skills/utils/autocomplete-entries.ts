@@ -8,11 +8,11 @@ import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-regi
 import {
   mergeRepoSkillsWithProjectSkills,
   type ProjectSkillFlagRow,
-} from '~/routing/skills/utils/merge-project-skills';
+} from '~/routing/skills/utils/mergeRepoSkillsWithProjectSkills';
 import {
   mergeRepoSkillsWithSkillAvailability,
   type SkillAvailabilityRow,
-} from '~/routing/skills/utils/merge-skill-availability';
+} from '~/routing/skills/utils/mergeRepoSkillsWithSkillAvailability';
 
 /** One skill offered to the composer's `/`-command provider. */
 export interface SkillAutocompleteEntry {

@@ -25,8 +25,8 @@ import {
 } from '~/__generated__/graphql';
 import { INITIAL_TRANSCRIPTION_SNAPSHOT } from '~/routing/home/data/data.transcription';
 import type { TranscriptionSnapshot } from '~/routing/home/types';
-import { reduceTranscriptionChunk } from '~/routing/home/utils/reduce-transcription-chunk';
-import { getGraphqlWsClient } from '~/services/graphql-ws-client';
+import { reduceTranscriptionChunk } from '~/routing/home/utils/reduceTranscriptionChunk';
+import { getGraphqlWsClient } from '~/services/getGraphqlWsClient';
 
 export interface UseTranscriptionStreamResult {
   /** Start-mutation or stream error message; null while healthy. */

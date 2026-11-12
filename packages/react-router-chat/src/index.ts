@@ -36,7 +36,7 @@ export * from './hooks';
 // Legacy names for the hooks' renamed `Use<Name>Options` input interfaces.
 export type { UseAgenticChatTurnOptions as UseAgenticChatTurnConfig } from './hooks/useAgenticChatTurn';
 export type { UseConversationStreamOptions as UseConversationStreamArgs } from './hooks/useConversationStream';
-export * from './map-persisted-messages';
+export * from './mapPersistedAgentConversationMessages';
 export * from './run-phase';
 export * from './slash-commands';
 export * from './turn-events';
