@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { describe, expect, test, vi } from 'vitest';
 
+import { SUPERVISED_UNGATED_EDITS_DESCRIPTION } from '../../data/data.chat-permission-mode-meta';
 import type { ChatBackendCapabilities } from '../../types';
 import { ChatPermissionMode } from '../../types';
 import type { ChatPermissionModeControlProps } from '../ChatPermissionModeControl';
@@ -19,6 +20,7 @@ const ALL_MODES: ChatBackendCapabilities = {
   reasoningLevels: [],
   requiresRepository: true,
   serviceTiers: [],
+  supervisedGatesEdits: true,
   supportsModelFlag: false,
 };
 
@@ -56,6 +58,20 @@ describe('ChatPermissionModeControl Component', () => {
     expect(
       component.getByTestId('ChatPermissionModeControl-mode-fullAccess'),
     ).toBeInTheDocument();
+  });
+
+  test('describes Supervised as not gating edits when the backend does not gate them', async () => {
+    const user = userEvent.setup();
+    const component = renderControl({
+      capabilities: { ...ALL_MODES, supervisedGatesEdits: false },
+    });
+    await user.click(
+      component.getByTestId('ChatPermissionModeControl-trigger'),
+    );
+
+    expect(
+      component.getByTestId('ChatPermissionModeControl-mode-supervised'),
+    ).toHaveTextContent(SUPERVISED_UNGATED_EDITS_DESCRIPTION);
   });
 
   test('only renders capability-allowed modes', async () => {

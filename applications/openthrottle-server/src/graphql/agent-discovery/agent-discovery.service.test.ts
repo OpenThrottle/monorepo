@@ -26,6 +26,7 @@ const discoverAgentClisMock = vi.mocked(discoverAgentClis);
 const AUTH_STATE = { detail: null, status: 'unknown' } as const;
 const CAPABILITIES = {
   approvals: false,
+  editApprovals: false,
   imageInput: false,
   mcpInjection: false,
   replaysFullHistory: false,

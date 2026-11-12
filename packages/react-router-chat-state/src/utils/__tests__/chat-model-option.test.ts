@@ -152,6 +152,40 @@ describe('buildModelGroups', () => {
   });
 });
 
+describe('capabilitiesForChatOption runtime overlay', () => {
+  it('offers all three permission modes and edit gating when the CLI runs over ACP', () => {
+    const caps = capabilitiesForChatOption(decodeChatOption('cursor'), {
+      approvals: true,
+      authStatus: 'authenticated',
+      editApprovals: false,
+    });
+
+    expect(caps.permissionModes).toEqual([
+      ChatPermissionMode.supervised,
+      ChatPermissionMode.autoAcceptEdits,
+      ChatPermissionMode.fullAccess,
+    ]);
+    expect(caps.supervisedGatesEdits).toBe(false);
+  });
+
+  it('keeps the static descriptor without approvals or without a runtime', () => {
+    const withoutApprovals = capabilitiesForChatOption(
+      decodeChatOption('cursor'),
+      { approvals: false, authStatus: 'unknown', editApprovals: true },
+    );
+    const withoutRuntime = capabilitiesForChatOption(
+      decodeChatOption('cursor'),
+    );
+
+    expect(withoutApprovals.permissionModes).toEqual([
+      ChatPermissionMode.supervised,
+      ChatPermissionMode.fullAccess,
+    ]);
+    expect(withoutApprovals.supervisedGatesEdits).toBe(true);
+    expect(withoutRuntime).toEqual(withoutApprovals);
+  });
+});
+
 describe('capabilitiesForChatOption', () => {
   it('gives OpenAI endpoints a completion descriptor: reasoning best-effort, no repo/tier/permission', () => {
     const caps = capabilitiesForChatOption(

@@ -10,6 +10,7 @@ vi.mock('@openthrottle/nodejs-graphql', () => ({
 const AUTH_STATE = { detail: null, status: 'unknown' };
 const CAPABILITIES = {
   approvals: false,
+  editApprovals: false,
   imageInput: false,
   mcpInjection: false,
   replaysFullHistory: false,
@@ -134,6 +135,7 @@ describe('discoverAgentClisToolHandler', () => {
     };
     const capabilities = {
       approvals: true,
+      editApprovals: false,
       imageInput: true,
       mcpInjection: true,
       replaysFullHistory: false,

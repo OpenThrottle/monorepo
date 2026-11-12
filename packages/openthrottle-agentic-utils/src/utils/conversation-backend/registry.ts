@@ -37,7 +37,7 @@ import type { ConversationBackend } from './types.ts';
 export const CONVERSATION_CLI_BACKENDS: Readonly<
   Record<string, ConversationBackend>
 > = {
-  antigravity: antigravityConversationBackend,
+  antigravity: withAcpRouting('antigravity', antigravityConversationBackend),
   claude: claudeConversationBackend,
   codex: codexConversationBackend,
   cursor: withAcpRouting('cursor', cursorAgentConversationBackend),

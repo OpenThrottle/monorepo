@@ -6,6 +6,7 @@ import type { ChatOptionsResponse } from '../utils/chat-discovery-options';
  * from it keep their identity across renders.
  */
 export const EMPTY_CHAT_OPTIONS: ChatOptionsResponse = {
+  agentRuntimes: {},
   models: [],
   personas: [],
   repositories: [],

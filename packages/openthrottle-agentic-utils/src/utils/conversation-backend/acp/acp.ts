@@ -9,7 +9,8 @@
  *    method the agent advertises, then `session/load` the run's session id if
  *    the agent supports it, else `session/new`. A new id is surfaced as a
  *    `session` chunk so the server persists it for the next turn.
- * 2. Every turn: apply the model through the agent's `model` config option,
+ * 2. Every turn: put the session in the spec's mode for the run's permission
+ *    posture, apply the model through the agent's `model` config option,
  *    send `session/prompt`, stream `session/update`s until the prompt settles.
  *    Abort sends `session/cancel` — the process and session stay usable.
  * 3. Between turns the process idles in a pool; it is disposed after
@@ -31,6 +32,7 @@ import {
   type RequestPermissionRequest,
   type RequestPermissionResponse,
   type SessionConfigOption,
+  type SessionModeState,
   type SessionUpdate,
 } from '@agentclientprotocol/sdk';
 import { isRecord } from '@openthrottle/nodejs-utils';
@@ -103,6 +105,8 @@ interface LiveAcpSession {
   idleTimer: NodeJS.Timeout | null;
   readonly key: string;
   lastUsedAt: number;
+  /** The agent's legacy `modes` state, used when it has no `mode` config option. */
+  modes: SessionModeState | null;
   readonly routes: TurnRoutes;
   readonly sessionId: string;
   readonly stderrTail: () => string;
@@ -321,6 +325,7 @@ export function createAcpConversationBackend(
       const requested = run.sessionId ?? '';
       let sessionId: string | undefined;
       let configOptions: readonly SessionConfigOption[] = [];
+      let modes: SessionModeState | null = null;
 
       if (
         requested !== '' &&
@@ -334,6 +339,7 @@ export function createAcpConversationBackend(
           });
           sessionId = requested;
           configOptions = loaded.configOptions ?? [];
+          modes = loaded.modes ?? null;
         } catch {
           // Unknown or expired id (or a cursor create-chat id the ACP server
           // does not recognize): fall through and mint a new session.
@@ -348,6 +354,7 @@ export function createAcpConversationBackend(
         });
         sessionId = created.sessionId;
         configOptions = created.configOptions ?? [];
+        modes = created.modes ?? null;
       }
 
       const live: LiveAcpSession = {
@@ -357,6 +364,7 @@ export function createAcpConversationBackend(
         idleTimer: null,
         key: poolKey(cwd, sessionId),
         lastUsedAt: Date.now(),
+        modes,
         routes,
         sessionId,
         stderrTail: agentProcess.stderrTail,
@@ -429,6 +437,52 @@ export function createAcpConversationBackend(
       { configId: option.id, sessionId: live.sessionId, value },
     );
     live.configOptions = updated.configOptions;
+  };
+
+  /**
+   * Put the session in the spec's mode for the run's permission posture,
+   * through the agent's `mode` config option, else `session/set_mode` when
+   * the agent only advertises legacy `modes`. A mode the agent does not
+   * offer is left alone.
+   */
+  const applyMode = async (
+    live: LiveAcpSession,
+    run: ConversationBackendRun,
+  ): Promise<void> => {
+    const wanted = spec.sessionMode(run.permissionMode);
+    if (wanted === undefined) {
+      return;
+    }
+
+    const option = live.configOptions.find(
+      (candidate) => candidate.category === 'mode',
+    );
+    if (option !== undefined) {
+      const offered = selectValues(option).some(
+        (candidate) => candidate.value === wanted,
+      );
+      if (!offered || option.currentValue === wanted) {
+        return;
+      }
+      const updated = await live.connection.agent.request(
+        methods.agent.session.setConfigOption,
+        { configId: option.id, sessionId: live.sessionId, value: wanted },
+      );
+      live.configOptions = updated.configOptions;
+      return;
+    }
+
+    const modes = live.modes;
+    const offered =
+      modes?.availableModes.some((mode) => mode.id === wanted) ?? false;
+    if (modes === null || !offered || modes.currentModeId === wanted) {
+      return;
+    }
+    await live.connection.agent.request(methods.agent.session.setMode, {
+      modeId: wanted,
+      sessionId: live.sessionId,
+    });
+    live.modes = { ...modes, currentModeId: wanted };
   };
 
   async function* runTurn(
@@ -540,6 +594,7 @@ export function createAcpConversationBackend(
 
     const prompting = (async (): Promise<void> => {
       try {
+        await applyMode(live, run);
         await applyModel(live, run.model);
         const response = await agent.request(methods.agent.session.prompt, {
           prompt: [{ text: composePrompt(run, fresh), type: 'text' }],

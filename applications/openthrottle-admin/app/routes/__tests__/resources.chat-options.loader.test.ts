@@ -43,15 +43,19 @@ describe('routes/resources.chat-options loader (admin)', () => {
         label: 'm',
       },
     ]);
-    mockAgentClis.mockResolvedValue([
-      { description: 'cursor-agent', groupId: 'cursor', id: 'cursor', label: 'cursor-agent', subLabel: 'cursor-agent' }, // prettier-ignore
-    ]);
+    mockAgentClis.mockResolvedValue({
+      models: [
+        { description: 'cursor-agent', groupId: 'cursor', id: 'cursor', label: 'cursor-agent', subLabel: 'cursor-agent' }, // prettier-ignore
+      ],
+      runtimes: {},
+    });
     mockRepositories.mockResolvedValue([{ displayName: 'Repo', id: 'r1' }]);
     mockPersonas.mockResolvedValue([{ id: 'p1', label: 'Persona One' }]);
 
     const loaded = await loader(loaderArgs());
 
     expect(loaded).toEqual({
+      agentRuntimes: {},
       models: [
         {
           description: 'ollama',
@@ -68,12 +72,17 @@ describe('routes/resources.chat-options loader (admin)', () => {
 
   test('degrades to empty arrays when discovery yields nothing', async () => {
     mockDiscoveredModels.mockResolvedValue([]);
-    mockAgentClis.mockResolvedValue([]);
+    mockAgentClis.mockResolvedValue({ models: [], runtimes: {} });
     mockRepositories.mockResolvedValue([]);
     mockPersonas.mockResolvedValue([]);
 
     const loaded = await loader(loaderArgs());
 
-    expect(loaded).toEqual({ models: [], personas: [], repositories: [] });
+    expect(loaded).toEqual({
+      agentRuntimes: {},
+      models: [],
+      personas: [],
+      repositories: [],
+    });
   });
 });

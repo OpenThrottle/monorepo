@@ -747,6 +747,8 @@ export type ChatBackendCapabilitiesObject = {
   __typename?: 'ChatBackendCapabilitiesObject';
   /** Tool-use approvals surface to the user in supervised mode (true only on the ACP path). */
   approvals: Scalars['Boolean']['output'];
+  /** Supervised approvals cover file edits too. False where approvals exist but the agent applies edits unasked (cursor under ACP). */
+  editApprovals: Scalars['Boolean']['output'];
   /** The backend accepts image input in a prompt. */
   imageInput: Scalars['Boolean']['output'];
   /** The chat adapter injects the run's MCP servers (OT MCP) per run. */

@@ -9,8 +9,12 @@ const { executeGraphqlWithAuth } =
   await import('@openthrottle/react-router-graphql');
 const { DiscoverAgentClisDocument, DiscoverLocalModelsDocument } =
   await import('~/__generated__/graphql');
-const { loadComposerModels, loadDefaultAgent, loadRepositories } =
-  await import('../models.server');
+const {
+  loadComposerData,
+  loadComposerModels,
+  loadDefaultAgent,
+  loadRepositories,
+} = await import('../models.server');
 
 const mockExecute = vi.mocked(executeGraphqlWithAuth);
 
@@ -59,6 +63,50 @@ const request = (): Request => {
 function calledDocuments(): unknown[] {
   return mockExecute.mock.calls.map((call) => call[1]);
 }
+
+describe('loadComposerData', () => {
+  beforeEach(() => {
+    mockExecute.mockReset();
+  });
+
+  test('fetches each discovery query once and returns models plus agent runtimes', async () => {
+    mockExecute.mockResolvedValue({
+      ...BOTH_PAYLOAD,
+      discoverAgentClis: {
+        agents: [
+          {
+            ...AGENT_PAYLOAD.discoverAgentClis.agents[0],
+            authState: { status: 'unauthenticated' },
+            capabilities: { approvals: true, editApprovals: false },
+          },
+        ],
+      },
+    });
+
+    const data = await loadComposerData(request());
+
+    expect(mockExecute).toHaveBeenCalledTimes(2);
+    expect(data.models).toHaveLength(3);
+    expect(data.agentRuntimes).toEqual({
+      cursor: {
+        approvals: true,
+        authStatus: 'unauthenticated',
+        editApprovals: false,
+      },
+    });
+  });
+
+  test('returns empty runtimes when agent discovery fails', async () => {
+    mockExecute
+      .mockRejectedValueOnce(new Error('agent scan failed'))
+      .mockResolvedValueOnce(LOCAL_PAYLOAD);
+
+    const data = await loadComposerData(request());
+
+    expect(data.agentRuntimes).toEqual({});
+    expect(data.models).toHaveLength(1);
+  });
+});
 
 describe('loadComposerModels', () => {
   beforeEach(() => {

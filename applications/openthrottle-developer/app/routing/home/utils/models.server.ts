@@ -3,10 +3,14 @@ import type {
   ChatPersonaOption,
 } from '@openthrottle/react-router-chat';
 import { toCheckoutKind } from '@openthrottle/react-router-chat';
-import type { RepositoryOption } from '@openthrottle/react-router-chat-state';
+import type {
+  ChatAgentRuntime,
+  RepositoryOption,
+} from '@openthrottle/react-router-chat-state';
 import {
   composeModelOptions,
   toAgentChatOptions,
+  toAgentRuntimes,
   toChatModelOptions,
   toPersonaOptions,
 } from '@openthrottle/react-router-chat-state';
@@ -89,12 +93,19 @@ export async function loadDiscoveredModels(
  * backends (cursor-agent, …) for the composer dropdown. Empty on failure so the
  * composer still renders with local models only.
  */
-export async function loadAgentClis(
-  request: Request,
-): Promise<ChatModelOption[]> {
+export async function loadAgentClis(request: Request): Promise<{
+  readonly models: ChatModelOption[];
+  readonly runtimes: Readonly<Record<string, ChatAgentRuntime>>;
+}> {
   const agents = await fetchAgentClis(request);
+  if (agents == null) {
+    return { models: [], runtimes: {} };
+  }
 
-  return agents ? toAgentChatOptions(agents) : [];
+  return {
+    models: toAgentChatOptions(agents),
+    runtimes: toAgentRuntimes(agents),
+  };
 }
 
 /**
@@ -114,6 +125,27 @@ export async function loadComposerModels(
   ]);
 
   return composeModelOptions(localModels, agents);
+}
+
+/**
+ * @description Server-only loader helper for the home route: like
+ * {@link loadComposerModels} (ONE fetch of each discovery query) but also
+ * returns the per-agent runtime facts (`agentRuntimes`) the composer reads to
+ * gate permission modes by what the backend can actually do.
+ */
+export async function loadComposerData(request: Request): Promise<{
+  readonly agentRuntimes: Readonly<Record<string, ChatAgentRuntime>>;
+  readonly models: ChatModelOption[];
+}> {
+  const [agents, localModels] = await Promise.all([
+    fetchAgentClis(request),
+    fetchLocalModels(request),
+  ]);
+
+  return {
+    agentRuntimes: agents ? toAgentRuntimes(agents) : {},
+    models: composeModelOptions(localModels, agents),
+  };
 }
 
 /**

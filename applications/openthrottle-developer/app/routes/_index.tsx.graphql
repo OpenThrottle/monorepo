@@ -1,7 +1,14 @@
 query DiscoverAgentClis {
   discoverAgentClis {
     agents {
+      authState {
+        status
+      }
       backend
+      capabilities {
+        approvals
+        editApprovals
+      }
       chatCapable
       enabled
       label

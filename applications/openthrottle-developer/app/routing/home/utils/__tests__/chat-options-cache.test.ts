@@ -10,6 +10,7 @@ import {
 } from '../chat-options-cache';
 
 const SAMPLE: ChatOptionsResponse = {
+  agentRuntimes: {},
   models: [
     {
       description: 'ollama',

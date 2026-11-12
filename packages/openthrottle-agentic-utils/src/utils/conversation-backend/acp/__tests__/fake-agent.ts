@@ -12,6 +12,7 @@ import {
   methods,
   type PromptResponse,
   type SessionConfigOption,
+  type SessionModeState,
 } from '@agentclientprotocol/sdk';
 
 import type { AcpAgentSpec } from '../agent-specs.ts';
@@ -23,6 +24,7 @@ export interface FakeAgentLog {
   readonly cancels: string[];
   readonly configSets: Array<{ configId: string; value: string }>;
   readonly loads: string[];
+  readonly modeSets: string[];
   readonly news: Array<{ cwd: string; mcpServerNames: string[] }>;
   readonly prompts: string[];
 }
@@ -33,6 +35,8 @@ export interface FakeAgentScript {
   readonly configOptions: SessionConfigOption[];
   /** Session ids `session/load` accepts; undefined disables loadSession. */
   readonly loadable: readonly string[] | undefined;
+  /** Legacy `modes` returned by session/new|load; undefined advertises none. */
+  readonly modes: SessionModeState | undefined;
   readonly onPrompt: (turn: FakeTurn) => Promise<PromptResponse>;
 }
 
@@ -55,6 +59,7 @@ export interface FakeLauncher {
 /** A spec for tests; the launcher never reads its binary fields. */
 export const FAKE_SPEC: AcpAgentSpec = {
   args: ['acp'],
+  asksBeforeEdits: true,
   authMethodId: () => {
     return 'fake-login';
   },
@@ -65,6 +70,9 @@ export const FAKE_SPEC: AcpAgentSpec = {
   },
   id: 'fake',
   processGroup: false,
+  sessionMode: () => {
+    return undefined;
+  },
 };
 
 /** A select config option named `model` with the given values. */
@@ -92,6 +100,7 @@ export function createFakeLauncher(script: FakeAgentScript): FakeLauncher {
     cancels: [],
     configSets: [],
     loads: [],
+    modeSets: [],
     news: [],
     prompts: [],
   };
@@ -121,7 +130,11 @@ export function createFakeLauncher(script: FakeAgentScript): FakeLauncher {
           cwd: params.cwd,
           mcpServerNames: params.mcpServers.map((server) => server.name),
         });
-        return { configOptions: options, sessionId: `minted-${nextSession}` };
+        return {
+          configOptions: options,
+          modes: script.modes ?? null,
+          sessionId: `minted-${nextSession}`,
+        };
       })
       .onRequest(methods.agent.session.load, async ({ client, params }) => {
         log.loads.push(params.sessionId);
@@ -136,7 +149,11 @@ export function createFakeLauncher(script: FakeAgentScript): FakeLauncher {
             sessionUpdate: 'agent_message_chunk',
           },
         });
-        return { configOptions: options };
+        return { configOptions: options, modes: script.modes ?? null };
+      })
+      .onRequest(methods.agent.session.setMode, ({ params }) => {
+        log.modeSets.push(params.modeId);
+        return {};
       })
       .onRequest(methods.agent.session.setConfigOption, ({ params }) => {
         const value = 'value' in params ? String(params.value) : '';

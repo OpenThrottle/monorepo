@@ -526,6 +526,11 @@ export interface ChatBackendCapabilities {
   /** Service tiers the backend honors; empty hides the tier section. */
   readonly serviceTiers: readonly ChatServiceTier[];
   /**
+   * True when Supervised asks before file edits; false when the backend applies
+   * edits unasked and Supervised only gates commands and tools.
+   */
+  readonly supervisedGatesEdits: boolean;
+  /**
    * True when the backend accepts an explicit model selection (a `--model`
    * flag or equivalent). False for CLIs whose model is fixed.
    */

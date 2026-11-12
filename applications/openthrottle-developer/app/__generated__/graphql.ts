@@ -747,6 +747,8 @@ export type ChatBackendCapabilitiesObject = {
   __typename?: 'ChatBackendCapabilitiesObject';
   /** Tool-use approvals surface to the user in supervised mode (true only on the ACP path). */
   approvals: Scalars['Boolean']['output'];
+  /** Supervised approvals cover file edits too. False where approvals exist but the agent applies edits unasked (cursor under ACP). */
+  editApprovals: Scalars['Boolean']['output'];
   /** The backend accepts image input in a prompt. */
   imageInput: Scalars['Boolean']['output'];
   /** The chat adapter injects the run's MCP servers (OT MCP) per run. */
@@ -8038,6 +8040,12 @@ export type DiscoverAgentClisQuery = {
       label: string;
       supportsCustomBaseUrl: boolean;
       version?: string | null;
+      authState: { __typename?: 'AgentCliAuthStateObject'; status: string };
+      capabilities: {
+        __typename?: 'ChatBackendCapabilitiesObject';
+        approvals: boolean;
+        editApprovals: boolean;
+      };
       modelOptions: Array<{
         __typename?: 'AgentCliModelOption';
         enabled: boolean;
@@ -18541,7 +18549,37 @@ export const DiscoverAgentClisDocument = {
                     selections: [
                       {
                         kind: 'Field',
+                        name: { kind: 'Name', value: 'authState' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'status' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
                         name: { kind: 'Name', value: 'backend' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'capabilities' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'approvals' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'editApprovals' },
+                            },
+                          ],
+                        },
                       },
                       {
                         kind: 'Field',

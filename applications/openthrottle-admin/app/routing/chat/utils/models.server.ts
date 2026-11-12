@@ -2,7 +2,10 @@ import type {
   ChatModelOption,
   ChatPersonaOption,
 } from '@openthrottle/react-router-chat';
-import type { RepositoryOption } from '@openthrottle/react-router-chat-state';
+import type {
+  ChatAgentRuntime,
+  RepositoryOption,
+} from '@openthrottle/react-router-chat-state';
 import {
   toAgentChatOptions,
   toChatModelOptions,
@@ -47,18 +50,20 @@ export async function loadDiscoveredModels(
   }
 }
 
-export async function loadAgentClis(
-  request: Request,
-): Promise<ChatModelOption[]> {
+export async function loadAgentClis(request: Request): Promise<{
+  readonly models: ChatModelOption[];
+  readonly runtimes: Readonly<Record<string, ChatAgentRuntime>>;
+}> {
   try {
     const data = await executeGraphqlWithAuth(
       request,
       DiscoverAgentClisDocument,
     );
 
-    return toAgentChatOptions(data.discoverAgentClis);
+    // The admin query does not select the runtime fields, so there are none.
+    return { models: toAgentChatOptions(data.discoverAgentClis), runtimes: {} };
   } catch {
-    return [];
+    return { models: [], runtimes: {} };
   }
 }
 

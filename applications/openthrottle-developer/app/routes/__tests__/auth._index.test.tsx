@@ -9,6 +9,7 @@ import { renderRoutesStub } from '~/testing/route-fixtures';
 import AuthIndex from '../auth._index';
 
 const composerData = Promise.resolve({
+  agentRuntimes: {},
   defaultAgent: null,
   models: [{ id: 'model-1', label: 'GPT-4' }],
   personas: [{ id: 'persona-1', label: 'Engineer' }],

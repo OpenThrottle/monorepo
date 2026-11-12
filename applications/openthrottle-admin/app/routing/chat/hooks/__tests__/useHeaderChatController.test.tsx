@@ -29,7 +29,12 @@ const openaiModel = {
   label: 'llama3',
 };
 
-const chatOptions = { models: [openaiModel], personas: [], repositories: [] };
+const chatOptions = {
+  agentRuntimes: {},
+  models: [openaiModel],
+  personas: [],
+  repositories: [],
+};
 
 describe('useHeaderChatController (admin header chat surface)', () => {
   let actionSpy: ReturnType<

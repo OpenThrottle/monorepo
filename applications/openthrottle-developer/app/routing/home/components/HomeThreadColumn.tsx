@@ -12,7 +12,7 @@ import type { UseConversationListResult } from '~/routing/home/hooks/useConversa
 
 type ComposerData = Pick<
   HomeComposerProps,
-  'defaultAgent' | 'models' | 'personas' | 'repositories'
+  'agentRuntimes' | 'defaultAgent' | 'models' | 'personas' | 'repositories'
 >;
 
 export interface HomeThreadColumnProps {
@@ -99,6 +99,7 @@ export const HomeThreadColumn = (
           >
             {(data: ComposerData) => (
               <HomeComposer
+                agentRuntimes={data.agentRuntimes}
                 conversationList={conversationList}
                 defaultAgent={data.defaultAgent}
                 models={data.models}

@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
+import { AGENT_NOT_SIGNED_IN_SUFFIX } from '../../data/data.copy';
 import {
+  buildChatOptionsResponse,
   toAgentChatOptions,
+  toAgentRuntimes,
   toChatModelOptions,
   toDriverEndpointChatOptions,
 } from '../chat-discovery-options';
@@ -344,5 +347,110 @@ describe('toDriverEndpointChatOptions', () => {
     );
 
     expect(options).toEqual([]);
+  });
+});
+
+describe('toAgentChatOptions auth state', () => {
+  const base = {
+    backend: 'cursor',
+    chatCapable: true,
+    label: 'cursor-agent',
+  };
+
+  it('appends the not-signed-in suffix to the sub-label of an unauthenticated agent', () => {
+    const options = toAgentChatOptions({
+      agents: [
+        {
+          ...base,
+          authState: { status: 'unauthenticated' },
+          models: ['auto'],
+        },
+      ],
+    });
+
+    expect(options[0]?.subLabel).toBe(
+      `cursor-agent · ${AGENT_NOT_SIGNED_IN_SUFFIX}`,
+    );
+  });
+
+  it('applies the suffix to the bare-backend fallback too', () => {
+    const options = toAgentChatOptions({
+      agents: [{ ...base, authState: { status: 'unauthenticated' } }],
+    });
+
+    expect(options[0]?.subLabel).toBe(
+      `cursor-agent · ${AGENT_NOT_SIGNED_IN_SUFFIX}`,
+    );
+  });
+
+  it('leaves the sub-label alone for authenticated or unknown agents', () => {
+    const options = toAgentChatOptions({
+      agents: [
+        { ...base, authState: { status: 'authenticated' }, models: ['a'] },
+        { ...base, backend: 'claude', models: ['b'] },
+      ],
+    });
+
+    expect(options.map((option) => option.subLabel)).toEqual([
+      'cursor-agent',
+      'cursor-agent',
+    ]);
+  });
+});
+
+describe('toAgentRuntimes', () => {
+  it('projects approvals, edit approvals and auth status per backend', () => {
+    const runtimes = toAgentRuntimes({
+      agents: [
+        {
+          authState: { status: 'authenticated' },
+          backend: 'cursor',
+          capabilities: { approvals: true, editApprovals: false },
+          chatCapable: true,
+          label: 'cursor-agent',
+        },
+      ],
+    });
+
+    expect(runtimes).toEqual({
+      cursor: {
+        approvals: true,
+        authStatus: 'authenticated',
+        editApprovals: false,
+      },
+    });
+  });
+
+  it('defaults missing fields to no approvals and an unknown auth status', () => {
+    const runtimes = toAgentRuntimes({
+      agents: [{ backend: 'claude', chatCapable: true, label: 'Claude' }],
+    });
+
+    expect(runtimes).toEqual({
+      claude: { approvals: false, authStatus: 'unknown', editApprovals: false },
+    });
+  });
+});
+
+describe('buildChatOptionsResponse', () => {
+  it('spreads agent models after local models and passes runtimes through', async () => {
+    const runtimes = {
+      cursor: { approvals: true, authStatus: 'unknown', editApprovals: false },
+    };
+    const response = await buildChatOptionsResponse({
+      loadAgentClis: async () => ({
+        models: [{ id: 'cursor', label: 'Cursor' }],
+        runtimes,
+      }),
+      loadDiscoveredModels: async () => [{ id: 'a::m', label: 'm' }],
+      loadPersonas: async () => [],
+      loadRepositories: async () => [],
+    });
+
+    expect(response.agentRuntimes).toEqual(runtimes);
+    expect(response.models.map((model) => model.id)).toEqual([
+      'a::m',
+      'cursor',
+    ]);
   });
 });

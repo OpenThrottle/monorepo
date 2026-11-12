@@ -34,6 +34,7 @@ type AgentCliAuthState = {
 
 type AgentCliCapabilities = {
   approvals: boolean;
+  editApprovals: boolean;
   imageInput: boolean;
   mcpInjection: boolean;
   replaysFullHistory: boolean;
@@ -97,7 +98,7 @@ function describeAuth(agent: AgentCli): string[] {
 
 export const discoverAgentClisToolParameters = z.object({}).strict();
 
-export const discoverAgentClisToolDescription = `Discover agentic CLIs (claude, codex, cursor, …) available on the server host: --version, models, and chatCapable (has a streaming chat backend). Cached 60s; no arguments. Each agent reports \`authState\` (authenticated | unauthenticated | unknown) and chat \`capabilities\` (resume, approvals, steering, imageInput, mcpInjection, replaysFullHistory); read capabilities instead of branching on backend names. claude's \`auth\` adds account, plan and active credential from \`claude auth status\`; relay \`auth.warning\` (ANTHROPIC_API_KEY overriding the subscription) to the user. No credential contents are read. Reflects the server's host, not this MCP process's.`;
+export const discoverAgentClisToolDescription = `Discover agentic CLIs (claude, codex, cursor, …) available on the server host: --version, models, and chatCapable (has a streaming chat backend). Cached 60s; no arguments. Each agent reports \`authState\` (authenticated | unauthenticated | unknown) and chat \`capabilities\` (resume, approvals, editApprovals, steering, imageInput, mcpInjection, replaysFullHistory); read capabilities instead of branching on backend names. claude's \`auth\` adds account, plan and active credential from \`claude auth status\`; relay \`auth.warning\` (ANTHROPIC_API_KEY overriding the subscription) to the user. No credential contents are read. Reflects the server's host, not this MCP process's.`;
 
 export async function discoverAgentClisToolHandler(
   _args: z.infer<typeof discoverAgentClisToolParameters>,
@@ -120,6 +121,7 @@ export async function discoverAgentClisToolHandler(
         backend: agent.backend,
         capabilities: {
           approvals: agent.capabilities.approvals,
+          editApprovals: agent.capabilities.editApprovals,
           imageInput: agent.capabilities.imageInput,
           mcpInjection: agent.capabilities.mcpInjection,
           replaysFullHistory: agent.capabilities.replaysFullHistory,
