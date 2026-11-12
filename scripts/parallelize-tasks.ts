@@ -42,15 +42,26 @@ const logger = createLogger({ stream: process.stderr });
  * partitions everything, `testSelector` is the same chunk with the sharded
  * projects removed. Both round-trip through verifyShardSelection().
  *
- * Deliberately NOT parameterized by target: the workflow issues one Nx command
- * per class of work, so which targets run, and how, stays the workflow's
- * business. (Both of its invocations happen to run at Nx's default concurrency
- * of 3 — a bare `--parallel` is NOT "full", see the flag-semantics note in the
- * workflow. This script has never had an opinion either way.) Emitting every selector from ONE invocation rather
- * than taking a target argument also keeps this script to a single Nx graph
- * computation per box, which is the expensive part. The quoting hazard the old
- * single-line contract guarded against is unchanged: no emitted value can ever
- * contain a space, so nothing gets word-split on the way into a shell variable.
+ * ENV (required): NX_SHARD_TARGETS, the comma-joined union of the targets the
+ *   workflow's sharded `nx affected` commands run (e.g.
+ *   `lint,typecheck,bundle-hooks-check,test`). Since Nx 24's task-based
+ *   affected, `nx affected -t` runs only the tasks a change reaches, so the
+ *   list to deal is the projects that OWN such a task —
+ *   `nx show projects --affected -t <targets>` — not every affected project.
+ *   Dealing the project list instead could leave a project whose only affected
+ *   task is reached through a cross-project input on no box at all. Missing or
+ *   malformed, the script fails rather than guess.
+ *
+ * Still NOT parameterized per command: the workflow issues one Nx command per
+ * class of work, so which targets run, and how, stays the workflow's business —
+ * it hands over the union once, through the environment. (Both of its
+ * invocations happen to run at Nx's default concurrency of 3 — a bare
+ * `--parallel` is NOT "full", see the flag-semantics note in the workflow. This
+ * script has never had an opinion either way.) Emitting every selector from ONE
+ * invocation also keeps this script to a single Nx graph computation per box,
+ * which is the expensive part. The quoting hazard the old single-line contract
+ * guarded against is unchanged: no emitted value can ever contain a space, so
+ * nothing gets word-split on the way into a shell variable.
  *
  * Diagnostics go to stderr on purpose — stdout is the machine-read contract.
  */
@@ -75,7 +86,9 @@ const SUITE_SHARDED_PROJECTS: readonly string[] = ['openthrottle-developer'];
 /**
  * @description Packages are scope-prefixed (`@openthrottle/…`); applications are not.
  */
-const getIsPackage = (name: string): boolean => name.startsWith(PACKAGE_PREFIX);
+const getIsPackage = (name: string): boolean => {
+  return name.startsWith(PACKAGE_PREFIX);
+};
 
 /**
  * @description Partition the affected list into applications and packages so
@@ -162,7 +175,9 @@ const distributeEvenly = (
  * the runtime's default locale, and every shard must break ties identically or
  * they compute different partitions. Code-unit order is the same everywhere.
  */
-const byName = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
+const byName = (a: string, b: string): number => {
+  return a < b ? -1 : a > b ? 1 : 0;
+};
 
 const WEIGHTS_PATH = join(
   dirname(fileURLToPath(import.meta.url)),
@@ -188,8 +203,9 @@ const WEIGHTS_PATH = join(
  * Correctness lives in verifyShardSelection()'s Nx round-trip, which never
  * consults them, so a bad table can cost balance and can never drop a project.
  */
-const hasWeightsKey = (value: object): value is { weights: unknown } =>
-  'weights' in value;
+const hasWeightsKey = (value: object): value is { weights: unknown } => {
+  return 'weights' in value;
+};
 
 const loadWeights = (): Record<string, number> | undefined => {
   try {
@@ -249,7 +265,9 @@ const getWeight = (
   project: string,
   weights: Record<string, number>,
   fallback: number,
-): number => weights[project] ?? fallback;
+): number => {
+  return weights[project] ?? fallback;
+};
 
 /**
  * @description Longest-processing-time-first bin packing: sort heaviest-first,
@@ -308,10 +326,11 @@ const partitionProjects = (
   projects: string[],
   chunkCount: number,
   weights?: Record<string, number>,
-): string[][] =>
-  weights
+): string[][] => {
+  return weights
     ? packByWeight(projects, chunkCount, weights)
     : distributeEvenly(projects, chunkCount);
+};
 
 /**
  * @description Total projected cost of one chunk, for the CI log. Reading three
@@ -338,8 +357,9 @@ const getChunkWeight = (
  * affected list. A PR that does not touch the app returns [] and no box invents
  * work for it.
  */
-const getSuiteShardedProjects = (projects: string[]): string[] =>
-  projects.filter((project) => SUITE_SHARDED_PROJECTS.includes(project));
+const getSuiteShardedProjects = (projects: string[]): string[] => {
+  return projects.filter((project) => SUITE_SHARDED_PROJECTS.includes(project));
+};
 
 /**
  * @description This chunk with the suite-sharded projects removed — the set
@@ -351,8 +371,11 @@ const getSuiteShardedProjects = (projects: string[]): string[] =>
  * somewhere", and it is why verifyShardSelection() checks this selector
  * separately rather than letting the difference show up as round-trip noise.
  */
-const getTestGrouping = (grouping: string[]): string[] =>
-  grouping.filter((project) => !SUITE_SHARDED_PROJECTS.includes(project));
+const getTestGrouping = (grouping: string[]): string[] => {
+  return grouping.filter(
+    (project) => !SUITE_SHARDED_PROJECTS.includes(project),
+  );
+};
 
 /**
  * @description Build the Nx `--exclude` selector for one chunk.
@@ -372,8 +395,9 @@ const getTestGrouping = (grouping: string[]): string[] =>
  *
  * @external https://nx.dev/nx-api/nx/documents/affected#examples (dotnet example)
  */
-const getExcludeSelector = (grouping: string[]): string =>
-  grouping.map((project) => `!${project}`).join(',');
+const getExcludeSelector = (grouping: string[]): string => {
+  return grouping.map((project) => `!${project}`).join(',');
+};
 
 /**
  * @description The `--exclude` selector this shard should be run with.
@@ -436,13 +460,14 @@ const formatShardOutputs = (outputs: {
   suiteShard: string;
   suiteShardProjects: string;
   testSelector: string;
-}): string =>
-  [
+}): string => {
+  return [
     `selector=${outputs.selector}`,
     `suiteShard=${outputs.suiteShard}`,
     `suiteShardProjects=${outputs.suiteShardProjects}`,
     `testSelector=${outputs.testSelector}`,
   ].join('\n');
+};
 
 /**
  * @description Compare what the selector ACTUALLY resolves to against the chunk
@@ -477,12 +502,68 @@ const getShardSelectionErrors = (
   return errors;
 };
 
+/** @description The environment variable the workflow names the shard targets in. */
+const SHARD_TARGETS_ENV = 'NX_SHARD_TARGETS';
+
+/** @description One Nx target name: no spaces, commas or shell metacharacters. */
+const TARGET_NAME_PATTERN = /^[A-Za-z0-9][\w:.-]*$/;
+
+/**
+ * @description The outcome of reading NX_SHARD_TARGETS — the normalized
+ * comma-joined list, or why it cannot be used.
+ */
+type ShardTargetsResult =
+  | { readonly ok: true; readonly targets: string }
+  | { readonly ok: false; readonly error: string };
+
+/**
+ * @description Parse the workflow's shard-target union. Rejects an empty value
+ * and any name that could word-split or inject into the Nx command line.
+ */
+const parseShardTargets = (raw: string | undefined): ShardTargetsResult => {
+  const names = (raw ?? '')
+    .split(',')
+    .map((name) => name.trim())
+    .filter((name) => name !== '');
+
+  if (names.length === 0) {
+    return {
+      error: `${SHARD_TARGETS_ENV} is unset or empty; set it to the comma-joined targets the sharded \`nx affected\` steps run.`,
+      ok: false,
+    };
+  }
+
+  const invalid = names.filter((name) => !TARGET_NAME_PATTERN.test(name));
+
+  if (invalid.length > 0) {
+    return {
+      error: `${SHARD_TARGETS_ENV} has invalid target name(s): ${invalid.join(', ')}`,
+      ok: false,
+    };
+  }
+
+  return { ok: true, targets: names.join(',') };
+};
+
+/**
+ * @description The `nx show projects` call that lists the projects owning an
+ * affected task for `targets` — optionally narrowed by an `--exclude` selector.
+ */
+const getAffectedProjectsCommand = (
+  targets: string,
+  selector: string | undefined,
+): string => {
+  const exclude = selector === undefined ? '' : ` --exclude="*,${selector}"`;
+
+  return `pnpm nx show projects --affected -t ${targets}${exclude} --json --silent`;
+};
+
 /**
  * @description Read the affected project list from Nx, sorted so the partition
  * is stable across the shards of one run.
  */
-const getAffectedProjects = (): string[] => {
-  const affectedCMD = `pnpm nx show projects --affected --json --silent`;
+const getAffectedProjects = (targets: string): string[] => {
+  const affectedCMD = getAffectedProjectsCommand(targets, undefined);
   const affectedResult = execSync(affectedCMD, { env: process.env });
   const affectedStr = affectedResult.toString('utf-8');
   const affected: string[] = JSON.parse(affectedStr);
@@ -498,9 +579,13 @@ const getAffectedProjects = (): string[] => {
  * `label` names which selector is under test so a CI failure says whether the
  * partition or the test carve-out broke.
  */
-const verifySelection = (label: string, grouping: string[]): void => {
+const verifySelection = (
+  label: string,
+  grouping: string[],
+  targets: string,
+): void => {
   const selector = getExcludeSelector(grouping);
-  const verifyCMD = `pnpm nx show projects --affected --exclude="*,${selector}" --json --silent`;
+  const verifyCMD = getAffectedProjectsCommand(targets, selector);
   const resolved: string[] = JSON.parse(
     execSync(verifyCMD, { env: process.env }).toString('utf-8'),
   );
@@ -520,15 +605,15 @@ const verifySelection = (label: string, grouping: string[]): void => {
  * partition — an exception that widened `unexpected` would blunt exactly the
  * signal getShardSelectionErrors() exists to give.
  */
-const verifyShardSelection = (grouping: string[]): void => {
+const verifyShardSelection = (grouping: string[], targets: string): void => {
   const testGrouping = getTestGrouping(grouping);
 
   if (grouping.length > 0) {
-    verifySelection('partition', grouping);
+    verifySelection('partition', grouping, targets);
   }
 
   if (testGrouping.length > 0 && testGrouping.length !== grouping.length) {
-    verifySelection('test', testGrouping);
+    verifySelection('test', testGrouping, targets);
   }
 };
 
@@ -555,7 +640,15 @@ const main = (): void => {
     process.exit(1);
   }
 
-  const affected = getAffectedProjects();
+  const shardTargets = parseShardTargets(process.env[SHARD_TARGETS_ENV]);
+
+  if (!shardTargets.ok) {
+    logger.fail(`parallelize-tasks: ${shardTargets.error}`);
+    process.exit(1);
+  }
+
+  const { targets } = shardTargets;
+  const affected = getAffectedProjects(targets);
   const weights = loadWeights();
   const groups = partitionProjects(affected, jobCount, weights);
   const grouping = groups[jobIndex - 1] ?? [];
@@ -594,7 +687,7 @@ const main = (): void => {
     );
   }
 
-  verifyShardSelection(grouping);
+  verifyShardSelection(grouping, targets);
 
   console.log(formatShardOutputs(outputs));
 };
@@ -607,6 +700,7 @@ export {
   byName,
   distributeEvenly,
   formatShardOutputs,
+  getAffectedProjectsCommand,
   getChunkIndex,
   getChunkWeight,
   getExcludeSelector,
@@ -619,6 +713,7 @@ export {
   getTestGrouping,
   getWeight,
   packByWeight,
+  parseShardTargets,
   partitionProjects,
   splitProjects,
   SUITE_SHARDED_PROJECTS,
