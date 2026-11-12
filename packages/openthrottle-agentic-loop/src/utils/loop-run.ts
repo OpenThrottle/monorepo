@@ -11,14 +11,18 @@ import {
 } from '../data/data.constants.ts';
 import type { LoopRunContext } from './loop-run-context.ts';
 
-/** @description Plan-output narration; a narration failure never stops the loop. */
+/** @description Plan-output narration; task-scoped lines carry the tracker's attempt number; a narration failure never stops the loop. */
 export const narrate = async (
   ctx: LoopRunContext,
   message: string,
   taskId: string | undefined,
 ): Promise<void> => {
   try {
-    await ctx.deps.client.narrate({ message, taskId });
+    await ctx.deps.client.narrate({
+      attempt: taskId === undefined ? undefined : ctx.tracker.attempt,
+      message,
+      taskId,
+    });
   } catch {
     // Narration is best effort.
   }
@@ -160,11 +164,13 @@ export const guardWorker = async (
   });
 
   if (changedOthers.length > 0) {
-    const ids = changedOthers.map((entry) => entry.id).join(', ');
+    const titles = changedOthers
+      .map((entry) => `"${entry.title}" ${entry.status}`)
+      .join(', ');
 
     await narrate(
       ctx,
-      `warning: other task statuses changed during the attempt (${ids}); left as is`,
+      `warning: other task statuses changed during the attempt (${titles}); left as is`,
       task.id,
     );
   }

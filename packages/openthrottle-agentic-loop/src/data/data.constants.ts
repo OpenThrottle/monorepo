@@ -79,3 +79,9 @@ export const LOCKFILE_RUNNERS = [
 
 /** @description Runner used for the Nx default when no lockfile is found. */
 export const FALLBACK_RUNNER = 'npx';
+
+/** @description Lines of a failure tail that read as "the error" (docs § 10.1). */
+export const FAILURE_REASON_ERROR_PATTERN = /error|✗|failed|FAIL/i;
+
+/** @description Cap on the reason shown in an `attempt N failed` line. */
+export const FAILURE_REASON_MAX_CHARS = 160;

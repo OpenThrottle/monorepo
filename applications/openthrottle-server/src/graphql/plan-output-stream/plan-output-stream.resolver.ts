@@ -23,7 +23,11 @@ import {
   type PubSubEngine,
 } from '@openthrottle/nestjs-graphql';
 import type { PlanOutputStreamChunk } from '@openthrottle/nestjs-repositories';
-import { PlanOutputStreamService } from '@openthrottle/nestjs-repositories';
+import {
+  isPlanOutputStreamKind,
+  PLAN_OUTPUT_STREAM_KINDS,
+  PlanOutputStreamService,
+} from '@openthrottle/nestjs-repositories';
 
 import {
   AppendPlanOutputInput,
@@ -96,10 +100,18 @@ export class PlanOutputStreamResolver {
     @Args('input', { type: () => AppendPlanOutputInput })
     input: AppendPlanOutputInput,
   ): Promise<PlanOutputStreamChunk> {
+    const kind = input.kind ?? null;
+    if (kind !== null && !isPlanOutputStreamKind(kind)) {
+      throw new BadRequestException(
+        `Invalid plan output kind "${kind}". Allowed values: ${PLAN_OUTPUT_STREAM_KINDS.join(', ')}`,
+      );
+    }
+
     const repo = this.planOutputStreamService.getRepository();
     const entity = repo.create({
       content: input.content,
       iteration: input.iteration ?? null,
+      kind,
       planId: input.planId,
       taskId: input.taskId ?? null,
     });

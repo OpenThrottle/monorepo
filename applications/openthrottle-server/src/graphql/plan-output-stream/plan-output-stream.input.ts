@@ -47,6 +47,12 @@ export class AppendPlanOutputInput {
   })
   iteration!: number | null;
 
+  @Field(() => String, {
+    description: `Optional producer tag for the chunk: loop, worker, tool or validation. Omit for an untagged chunk.`,
+    nullable: true,
+  })
+  kind?: string | null;
+
   @Field(() => ID, {
     description: `Plan id to append output to`,
   })

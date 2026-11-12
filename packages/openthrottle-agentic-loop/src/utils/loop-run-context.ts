@@ -2,6 +2,8 @@ import type { LoopDeps } from '../contract/index.ts';
 
 /** @description Mutable per-run bookkeeping; never exposed outside the package. */
 export interface LoopRunTracker {
+  /** 1-based worker invocation count of the current task; `undefined` outside a task. */
+  attempt: number | undefined;
   readonly completedTaskIds: string[];
   currentTaskId: string | undefined;
   guidance: readonly string[];
