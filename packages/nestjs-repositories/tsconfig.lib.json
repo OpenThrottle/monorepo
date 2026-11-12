@@ -14,6 +14,9 @@
   ],
   "references": [
     {
+      "path": "../openthrottle-drivers/tsconfig.lib.json"
+    },
+    {
       "path": "../openthrottle-skills/tsconfig.lib.json"
     },
     {

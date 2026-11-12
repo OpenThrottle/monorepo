@@ -4,10 +4,8 @@
  * ids from the drivers registry, efforts from the conversation reasoning-effort list.
  */
 
-import {
-  isWorkflowRunnerId,
-  toConversationReasoningEffort,
-} from '@openthrottle/openthrottle-agentic-utils';
+import { toConversationReasoningEffort } from '@openthrottle/openthrottle-agentic-utils';
+import { isDriverId } from '@openthrottle/openthrottle-drivers';
 
 import type { WorkspaceEditorId } from '../workspace-settings/workspace-settings.types.ts';
 import { isWorkspaceEditorId } from '../workspace-settings/workspace-settings.utils.ts';
@@ -35,14 +33,6 @@ const fail = (
   message: string,
 ): UserPreferencesError => {
   return { message, ok: false, reason };
-};
-
-/**
- * @description `isDriverId` from `@openthrottle/openthrottle-drivers`, reached through the
- * agentic-utils re-export this package already depends on.
- */
-const isDriverId = (value: string): boolean => {
-  return isWorkflowRunnerId(value);
 };
 
 /**
