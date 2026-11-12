@@ -11,8 +11,7 @@
  * The working form is `pnpm nx run <project>:test -- <path>`.
  *
  * Tracked text files only (`git grep -I`). The `.jsonl` showroom snapshots are
- * recorded conversations, and `tools/ai-migrations/` holds Nx's own migration
- * prompts for older versions, so neither is documentation anyone follows here.
+ * recorded conversations, not documentation, so they are skipped.
  */
 import { createLogger, run } from './utils/index.ts';
 
@@ -26,7 +25,6 @@ export const EXCLUDED_PATHSPECS: readonly string[] = [
   ':!*.jsonl',
   ':!scripts/check-test-file-filter-docs.ts',
   ':!scripts/__tests__/check-test-file-filter-docs.test.ts',
-  ':!tools/ai-migrations/**',
 ];
 
 /** One offending line: `path:line:text`, as `git grep -n` prints it. */

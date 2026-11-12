@@ -21,6 +21,8 @@ repositories/*
 services/*
 storybook-static
 tmp
+# Nx AI-migration prompts: written by `nx migrate`, read once by `--run-migrations`.
+tools/ai-migrations
 videos
 
 #############################################################################

@@ -54,9 +54,8 @@ describe('check-test-file-filter-docs', () => {
   });
 
   describe('when the match is outside documentation', () => {
-    it('ignores .jsonl snapshots, Nx migration prompts and untracked files', () => {
+    it('ignores recorded .jsonl snapshots and untracked files', () => {
       write('data/conversation.jsonl', '{"text":"p:test --testFile=a.ts"}\n');
-      write('tools/ai-migrations/@nx/vite/1.0.0/a.md', '--testFile=a.ts\n');
       writeFileSync(join(repoRoot, 'scratch.md'), 'p:test --testFile=a.ts\n');
 
       expect(findRetiredFlagHits(repoRoot)).toEqual([]);
