@@ -3,8 +3,8 @@ import { ChatReasoningLevel } from '@openthrottle/react-router-chat';
 import { DEFAULT_CHAT_TOOLBAR_STATE } from '@openthrottle/react-router-chat-state';
 import { describe, expect, it } from 'vitest';
 
-import type { ComposerDefaultAgent } from '~/routing/home/utils/seed-composer-default-agent';
-import { seedComposerDefaultAgent } from '~/routing/home/utils/seed-composer-default-agent';
+import type { ComposerDefaultAgent } from '~/routing/home/utils/seedComposerDefaultAgent';
+import { seedComposerDefaultAgent } from '~/routing/home/utils/seedComposerDefaultAgent';
 
 const models: ChatModelOption[] = [
   { id: 'cursor', label: 'Cursor' },

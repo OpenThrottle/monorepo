@@ -88,10 +88,7 @@ export const createPlanRunDialogDraft = (input: {
     input;
   const hydrated = hydratePlanRunConfigUiState(planId, runConfigJson);
   const { otLoop, runner } = hydrated;
-  const workflowInput = seedPlanRunAgent(
-    hydrated.workflowInput,
-    defaultAgent,
-  );
+  const workflowInput = seedPlanRunAgent(hydrated.workflowInput, defaultAgent);
   const scheduledInstant =
     scheduledRunAt == null ? undefined : new Date(scheduledRunAt);
   const hasScheduledInstant =

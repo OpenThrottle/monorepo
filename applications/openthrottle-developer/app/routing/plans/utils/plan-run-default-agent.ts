@@ -6,7 +6,7 @@
 
 import type { ChatModelOption } from '@openthrottle/react-router-chat';
 
-import type { ComposerDefaultAgent } from '~/routing/home/utils/seed-composer-default-agent';
+import type { ComposerDefaultAgent } from '~/routing/home/utils/seedComposerDefaultAgent';
 import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/workflow-ralph-config';
 import {
   DEFAULT_RALPH_MODEL,

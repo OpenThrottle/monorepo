@@ -14,7 +14,7 @@ import type { UseAgenticChatTurnResult } from '~/routing/home/hooks/useAgenticCh
 import type { UseConversationListResult } from '~/routing/home/hooks/useConversationList';
 import { useHomeComposer } from '~/routing/home/hooks/useHomeComposer';
 import type { RepositoryOption } from '~/routing/home/utils/models.server';
-import type { ComposerDefaultAgent } from '~/routing/home/utils/seed-composer-default-agent';
+import type { ComposerDefaultAgent } from '~/routing/home/utils/seedComposerDefaultAgent';
 
 export interface HomeComposerProps {
   /** Sidebar-backing conversation list; the composer refreshes it on new persisted turns. */

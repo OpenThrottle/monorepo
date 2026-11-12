@@ -47,7 +47,7 @@ import {
 } from '~/routing/plans/actions/planId';
 import { PlanDetailRoute } from '~/routing/plans/components/PlanDetailRoute';
 import { PlanRunConfigStoreProvider } from '~/routing/plans/components/PlanRunConfigStoreProvider';
-import { PlanDefaultAgentContext } from '~/routing/plans/config/plan-default-agent-context';
+import { PlanDefaultAgentContext } from '~/routing/plans/config/PlanDefaultAgentContext';
 import { loadEnabledEditors } from '~/routing/plans/utils/loadEnabledEditors';
 import { resolvePlanRunDefaultAgent } from '~/routing/plans/utils/plan-run-default-agent';
 

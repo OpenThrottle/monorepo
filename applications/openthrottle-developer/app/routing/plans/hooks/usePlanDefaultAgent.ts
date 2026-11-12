@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-import { PlanDefaultAgentContext } from '~/routing/plans/config/plan-default-agent-context';
+import { PlanDefaultAgentContext } from '~/routing/plans/config/PlanDefaultAgentContext';
 import type { DefaultAgentDraft } from '~/routing/settings/utils/user-preferences';
 
 /**

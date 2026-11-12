@@ -285,6 +285,8 @@
     "./src/graphql/tags/tag.object.ts",
     "./src/graphql/tags/tags.input.ts",
     "./src/graphql/timeline/timeline.enum.ts",
+    "./src/graphql/user-preferences/user-preferences.input.ts",
+    "./src/graphql/user-preferences/user-preferences.object.ts",
     "./src/graphql/workspace-settings/apply-workspace-editor-configuration.input.ts",
     "./src/graphql/workspace-settings/discovered-worktrees.object.ts",
     "./src/graphql/workspace-settings/prune-worktree-checkouts.input.ts",

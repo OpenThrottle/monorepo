@@ -11,7 +11,7 @@ import * as React from 'react';
 import type { WorkspaceEditorId } from '~/__generated__/graphql';
 import { getWorkspaceEditorDeepLink } from '~/global/config/workspace-editor-deep-links';
 import { useDefaultEditor } from '~/global/hooks/useDefaultEditor';
-import { orderEditorsDefaultFirst } from '~/global/utils/order-editors-default-first';
+import { orderEditorsDefaultFirst } from '~/global/utils/orderEditorsDefaultFirst';
 import { PlanDeferredSection } from '~/routing/plans/components/PlanDeferredSection';
 import { PlanToolbarTagsSkeleton } from '~/routing/plans/components/PlanToolbarTagsSkeleton';
 import { PLAN_DEFERRED_SECTION_COPY } from '~/routing/plans/data/data.copy';

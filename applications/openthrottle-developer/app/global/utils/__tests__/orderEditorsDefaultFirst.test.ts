@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 
 import { WorkspaceEditorId } from '~/__generated__/graphql';
-import { orderEditorsDefaultFirst } from '~/global/utils/order-editors-default-first';
+import { orderEditorsDefaultFirst } from '~/global/utils/orderEditorsDefaultFirst';
 
 const ENABLED = [
   WorkspaceEditorId.Claude,

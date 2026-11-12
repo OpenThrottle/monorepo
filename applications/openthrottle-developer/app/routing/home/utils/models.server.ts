@@ -23,7 +23,7 @@ import {
   PersonaPromptsDocument,
   WorkspaceLocalRepositoriesDocument,
 } from '~/__generated__/graphql';
-import type { ComposerDefaultAgent } from '~/routing/home/utils/seed-composer-default-agent';
+import type { ComposerDefaultAgent } from '~/routing/home/utils/seedComposerDefaultAgent';
 
 /**
  * The registered-checkout option type is single-sourced in

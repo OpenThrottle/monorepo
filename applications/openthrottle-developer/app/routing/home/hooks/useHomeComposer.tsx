@@ -35,8 +35,8 @@ import {
   type UseVoiceInputResult,
 } from '~/routing/home/hooks/useVoiceInput';
 import type { RepositoryOption } from '~/routing/home/utils/models.server';
-import type { ComposerDefaultAgent } from '~/routing/home/utils/seed-composer-default-agent';
-import { seedComposerDefaultAgent } from '~/routing/home/utils/seed-composer-default-agent';
+import type { ComposerDefaultAgent } from '~/routing/home/utils/seedComposerDefaultAgent';
+import { seedComposerDefaultAgent } from '~/routing/home/utils/seedComposerDefaultAgent';
 
 export interface UseHomeComposerOptions {
   /** Sidebar-backing conversation list; the composer refreshes it on new persisted turns. */
