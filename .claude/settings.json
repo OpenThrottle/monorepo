@@ -115,20 +115,31 @@
     "additionalDirectories": [],
     "allow": [
       "Bash(gh issue *)",
+      "Bash(gh pr create *)",
       "Bash(gh pr list *)",
+      "Bash(gh pr ready *)",
       "Bash(gh pr view *)",
       "Bash(gh repo list *)",
       "Bash(gh search issues *)",
       "Bash(git branch *)",
       "Bash(git diff *)",
       "Bash(git log *)",
+      "Bash(git push --force-with-lease*)",
+      "Bash(git push -u origin:*)",
+      "Bash(git push origin:*)",
       "Bash(git show *)",
       "Bash(git status *)",
       "Bash(pnpm nx *)",
       "mcp__openthrottle-mcp__*"
     ],
     "ask": [],
-    "deny": []
+    "deny": [
+      "Bash(git push*main*)",
+      "Bash(git push*--force *)",
+      "Bash(git push*--force)",
+      "Bash(git push*-f *)",
+      "Bash(git push*+*)"
+    ]
   },
   "skillOverrides": {}
 }
