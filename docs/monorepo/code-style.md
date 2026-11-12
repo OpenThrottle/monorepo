@@ -39,8 +39,6 @@ lint but never had a rule file of their own:
 
 | Convention                                                                  | Enforcement                            | Mechanism                                                             |
 | --------------------------------------------------------------------------- | -------------------------------------- | --------------------------------------------------------------------- |
-| --------------------------------------------------------------------------- | -------------------------------------- | --------------------------------------------------------------------- |
-| --------------------------------------------------------------------------- | -------------------------------------- | --------------------------------------------------------------------- |
 | [No new enums](#no-new-enums)                                               | **Enforced**                           | `no-restricted-syntax` → `TSEnumDeclaration`                          |
 | [Component and data boundaries](#component-and-data-boundaries)             | **Enforced**                           | `openthrottle/component-primitive-shape` + `audit:component-shape`    |
 | [No default exports](#no-default-exports)                                   | **Enforced**                           | `import-x/no-default-export`                                          |
