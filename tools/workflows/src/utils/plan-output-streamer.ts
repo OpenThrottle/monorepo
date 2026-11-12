@@ -74,13 +74,13 @@ export function createPlanOutputStreamer(
       try {
         // Sequential by design: each chunk must finish (or exhaust retries) before
         // the next runs, so output stays in order.
-        // eslint-disable-next-line no-await-in-loop
+        // eslint-disable-next-line no-await-in-loop -- sequential by design: each retry must observe the previous attempt
         await append(content);
         return;
       } catch (error) {
         lastError = error;
         if (attempt < maxAttempts) {
-          // eslint-disable-next-line no-await-in-loop
+          // eslint-disable-next-line no-await-in-loop -- sequential by design: backoff between retry attempts
           await sleep(retryDelayMs);
         }
       }

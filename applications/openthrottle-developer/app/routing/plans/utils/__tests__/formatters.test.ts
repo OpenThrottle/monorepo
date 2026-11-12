@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 
 import {
   formatDateShort,
@@ -7,6 +7,12 @@ import {
   getRequirementsCount,
   parseRequirementsList,
 } from '../formatters';
+
+const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 describe('getRequirementsCount', () => {
   test('returns 0 for null', () => {
@@ -70,7 +76,9 @@ describe('formatUpdatedAt', () => {
   });
 
   test('returns relative time string for a valid date', () => {
-    const result = formatUpdatedAt(new Date().toISOString());
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(FIXED_NOW);
+    const result = formatUpdatedAt(FIXED_NOW.toISOString());
     expect(result).not.toBeNull();
     expect(result).toMatch(/ago|from now/);
   });

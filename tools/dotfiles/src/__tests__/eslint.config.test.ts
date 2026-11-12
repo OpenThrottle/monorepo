@@ -170,6 +170,65 @@ describe('eslintConfig flat config', () => {
     });
   });
 
+  it('errors on the anti-flake rules in colocated and __tests__ test files', () => {
+    const antiFlakeRules = [
+      'openthrottle/no-fire-event',
+      'openthrottle/no-per-test-timeout',
+      'openthrottle/no-test-sleep',
+      'openthrottle/no-wall-clock-in-tests',
+      'openthrottle/skip-requires-issue',
+    ];
+
+    antiFlakeRules.forEach((ruleName) => {
+      const entry = entries.find(
+        (candidate) =>
+          candidate.rules !== undefined && ruleName in candidate.rules,
+      );
+
+      expect(ruleSeverity(ruleName)).toBe('error');
+      expect(flattenFiles(entry?.files)).toContain('**/*.{test,spec}.{ts,tsx}');
+      expect(flattenFiles(entry?.files)).toContain('**/__tests__/**/*.ts');
+    });
+
+    [
+      'openthrottle/no-per-test-timeout',
+      'openthrottle/no-test-sleep',
+      'openthrottle/no-wall-clock-in-tests',
+    ].forEach((ruleName) => {
+      const clockEntry = entries.find(
+        (entry) => entry.rules !== undefined && ruleName in entry.rules,
+      );
+
+      expect(clockEntry?.ignores).toContain(
+        '**/*.integration.{test,spec}.{ts,tsx}',
+      );
+    });
+  });
+
+  it('errors on the agent-safety rules, exempting tests from the chokepoints', () => {
+    const entryFor = (ruleName: string): FlatConfigEntry | undefined => {
+      return entries.find(
+        (entry) => entry.rules !== undefined && ruleName in entry.rules,
+      );
+    };
+
+    expect(ruleSeverity('openthrottle/disable-requires-reason')).toBe('error');
+    expect(entryFor('openthrottle/disable-requires-reason')?.ignores).toBe(
+      undefined,
+    );
+
+    [
+      'openthrottle/agent-cli-spawn-chokepoint',
+      'openthrottle/mcp-tool-registration',
+    ].forEach((ruleName) => {
+      expect(ruleSeverity(ruleName)).toBe('error');
+      expect(entryFor(ruleName)?.ignores).toContain('**/__tests__/**');
+      expect(entryFor(ruleName)?.ignores).toContain(
+        '**/*.{test,spec}.{ts,tsx}',
+      );
+    });
+  });
+
   it('ignores node_modules and __generated__', () => {
     const ignoreEntry = entries.find((entry) => entry.ignores !== undefined);
 

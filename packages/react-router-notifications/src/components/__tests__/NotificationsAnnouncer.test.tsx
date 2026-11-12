@@ -10,6 +10,8 @@ import { beforeEach, describe, expect, test } from 'vitest';
 import { useNotificationsStore } from '../../hooks/useNotificationsStore';
 import { NotificationsStoreProvider } from '../NotificationsStoreProvider';
 
+const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
+
 function TestConsumer(props: {
   readonly payload: NotificationPayload;
 }): React.ReactElement {
@@ -52,7 +54,7 @@ describe('NotificationsAnnouncer (via NotificationsStoreProvider)', () => {
     const payload: NotificationPayload = {
       message: 'Plan finished running',
       severity: 'success',
-      timestamp: new Date().toISOString(),
+      timestamp: FIXED_NOW.toISOString(),
     };
 
     const { getByTestId } = render(
@@ -79,7 +81,7 @@ describe('NotificationsAnnouncer (via NotificationsStoreProvider)', () => {
     const payload: NotificationPayload = {
       message: 'Plan failed',
       severity: 'error',
-      timestamp: new Date().toISOString(),
+      timestamp: FIXED_NOW.toISOString(),
     };
 
     const { getByTestId } = render(

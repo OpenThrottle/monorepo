@@ -12,16 +12,24 @@ import pluginReactHooks from 'eslint-plugin-react-hooks';
 import pluginSimpleImportSort from 'eslint-plugin-simple-import-sort';
 import tslint from 'typescript-eslint';
 
+import { agentCliSpawnChokepoint } from './rules/agent-cli-spawn-chokepoint.ts';
 import { componentPrimitiveShape } from './rules/component-primitive-shape.ts';
 import { dataFileShape } from './rules/data-file-shape.ts';
+import { disableRequiresReason } from './rules/disable-requires-reason.ts';
 import { hookPrimitiveShape } from './rules/hook-primitive-shape.ts';
 import { longStringTemplateLiteral } from './rules/long-string-template-literal.ts';
+import { mcpToolRegistration } from './rules/mcp-tool-registration.ts';
 import { namedFunctionBlockBody } from './rules/named-function-block-body.ts';
 import { nestjsFileExports } from './rules/nestjs-file-exports.ts';
 import { nestjsFileNaming } from './rules/nestjs-file-naming.ts';
+import { noFireEvent } from './rules/no-fire-event.ts';
+import { noPerTestTimeout } from './rules/no-per-test-timeout.ts';
+import { noTestSleep } from './rules/no-test-sleep.ts';
+import { noWallClockInTests } from './rules/no-wall-clock-in-tests.ts';
 import { planTaskStatusChokepoint } from './rules/plan-task-status-chokepoint.ts';
 import { preHooksUnpack } from './rules/pre-hooks-unpack.ts';
 import { routePrimitiveShape } from './rules/route-primitive-shape.ts';
+import { skipRequiresIssue } from './rules/skip-requires-issue.ts';
 import { threeLineTernary } from './rules/three-line-ternary.ts';
 import { getDirname } from './vite-config.ts';
 
@@ -53,6 +61,7 @@ export {
   type CreateVitestConfigOptions,
   type TestEnvironment,
   VITEST_HOOK_TIMEOUT_MS,
+  VITEST_RETRY,
   VITEST_TEST_TIMEOUT_MS,
 } from './vitest-config.ts';
 
@@ -259,16 +268,24 @@ export const eslintConfig = tslint.config([
       jest: pluginJest,
       openthrottle: {
         rules: {
+          'agent-cli-spawn-chokepoint': agentCliSpawnChokepoint,
           'component-primitive-shape': componentPrimitiveShape,
           'data-file-shape': dataFileShape,
+          'disable-requires-reason': disableRequiresReason,
           'hook-primitive-shape': hookPrimitiveShape,
           'long-string-template-literal': longStringTemplateLiteral,
+          'mcp-tool-registration': mcpToolRegistration,
           'named-function-block-body': namedFunctionBlockBody,
           'nestjs-file-exports': nestjsFileExports,
           'nestjs-file-naming': nestjsFileNaming,
+          'no-fire-event': noFireEvent,
+          'no-per-test-timeout': noPerTestTimeout,
+          'no-test-sleep': noTestSleep,
+          'no-wall-clock-in-tests': noWallClockInTests,
           'plan-task-status-chokepoint': planTaskStatusChokepoint,
           'pre-hooks-unpack': preHooksUnpack,
           'route-primitive-shape': routePrimitiveShape,
+          'skip-requires-issue': skipRequiresIssue,
           'three-line-ternary': threeLineTernary,
         },
       },
@@ -463,6 +480,82 @@ export const eslintConfig = tslint.config([
           selector: `CallExpression[callee.type="MemberExpression"][callee.property.name="toThrowErrorMatchingInlineSnapshot"]`,
         },
       ],
+    },
+  },
+
+  /**
+   * Anti-flake test rules (docs/monorepo/code-style.md#anti-flake-test-rules):
+   * no real-clock sleeps, no wall-clock reads, no per-test timeout/retry
+   * overrides, skips cite an issue, `userEvent` over `fireEvent`.
+   *
+   * Dedicated `openthrottle/*` rules rather than more `no-restricted-syntax`
+   * entries: flat config replaces that rule's whole option array per block, so
+   * a test-file block adding selectors would silently drop the enum and
+   * snapshot restrictions above. The files glob covers colocated
+   * `*.test.ts` / `*.spec.ts` as well as `__tests__/`, which the snapshot block
+   * misses.
+   *
+   * All `error` since plan 0b6dfaf8 burned the existing sites down.
+   */
+  {
+    files: [
+      '**/*.{test,spec}.{ts,tsx}',
+      '**/__tests__/**/*.ts',
+      '**/__tests__/**/*.tsx',
+    ],
+    rules: {
+      'openthrottle/no-fire-event': 'error',
+      'openthrottle/skip-requires-issue': 'error',
+    },
+  },
+  /**
+   * The clock rules (timeouts, sleeps, wall-clock reads) are exempt in
+   * `*.integration.test.ts` suites. Those suites are env-gated, do real I/O
+   * against git, Postgres, BullMQ or child processes, and wait on real time
+   * by design.
+   */
+  {
+    files: [
+      '**/*.{test,spec}.{ts,tsx}',
+      '**/__tests__/**/*.ts',
+      '**/__tests__/**/*.tsx',
+    ],
+    ignores: ['**/*.integration.{test,spec}.{ts,tsx}'],
+    rules: {
+      'openthrottle/no-per-test-timeout': 'error',
+      'openthrottle/no-test-sleep': 'error',
+      'openthrottle/no-wall-clock-in-tests': 'error',
+    },
+  },
+
+  /**
+   * Agent-safety rules (docs/monorepo/code-style.md#agent-safety-rules).
+   *
+   * Every suppression states its reason, in every authored file, tests
+   * included: a bare `eslint-disable` is the cheapest way for an agent to turn
+   * lint green, and nothing about it can be reviewed.
+   */
+  {
+    files: ['**/*.{cjs,js,jsx,mjs,ts,tsx}'],
+    rules: {
+      'openthrottle/disable-requires-reason': 'error',
+    },
+  },
+  /**
+   * MCP tools register only through the openthrottle-mcp registry, and agent
+   * CLIs spawn only through openthrottle-drivers or the agentic-utils
+   * conversation backends. The allowed files are rule options matched on the
+   * absolute path, not `ignores` here, because `nx lint` runs with cwd at the
+   * project and a repo-relative glob would never match. Tests are exempt: they
+   * stub `registerTool` and spawn fake binaries on purpose.
+   *
+   */
+  {
+    files: ['**/*.{cjs,js,jsx,mjs,ts,tsx}'],
+    ignores: ['**/*.{test,spec}.{ts,tsx}', '**/__tests__/**', '**/tests/**'],
+    rules: {
+      'openthrottle/agent-cli-spawn-chokepoint': 'error',
+      'openthrottle/mcp-tool-registration': 'error',
     },
   },
 

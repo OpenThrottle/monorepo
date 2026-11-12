@@ -135,7 +135,7 @@ export class WorkflowLifecycleDispatcherFactory
             : {}),
         };
 
-        // eslint-disable-next-line no-await-in-loop
+        // eslint-disable-next-line no-await-in-loop -- sequential by design: hooks run in order, one job at a time
         const job = await this.lifecycleHooksQueue.add(
           PLAN_LIFECYCLE_HOOK_JOB_NAME,
           jobData,
@@ -147,7 +147,7 @@ export class WorkflowLifecycleDispatcherFactory
           },
         );
 
-        // eslint-disable-next-line no-await-in-loop
+        // eslint-disable-next-line no-await-in-loop -- sequential by design: the next hook waits for this one to finish
         const result = await job.waitUntilFinished(this.queueEvents);
 
         hookIndex += 1;

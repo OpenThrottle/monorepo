@@ -1,4 +1,5 @@
 import type { RenderResult } from '@testing-library/react';
+// eslint-disable-next-line openthrottle/no-fire-event -- HTML5 drag-and-drop (dragStart/dragOver/drop) needs a dataTransfer userEvent cannot supply
 import { fireEvent, render } from '@testing-library/react';
 import { createStore, Provider } from 'jotai';
 import * as React from 'react';

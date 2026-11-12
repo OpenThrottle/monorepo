@@ -10,6 +10,8 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { RepositoryCheckout } from '../repository-checkout.entity.ts';
 import { RepositoryCheckoutsService } from './repository-checkouts.service.ts';
 
+const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
+
 describe('RepositoryCheckoutsService', () => {
   const userId = '11111111-1111-4111-8111-111111111111';
   const checkoutId = '44444444-4444-4444-8444-444444444444';
@@ -249,7 +251,7 @@ describe('RepositoryCheckoutsService', () => {
       vi.mocked(mockOrmRepository.findOne).mockResolvedValue(null);
 
       await expect(
-        service.saveInspection(checkoutId, {}, new Date()),
+        service.saveInspection(checkoutId, {}, new Date(FIXED_NOW)),
       ).resolves.toBeNull();
     });
   });

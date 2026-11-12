@@ -161,7 +161,8 @@ describe('createLimiter', () => {
         limit(async () => {
           active += 1;
           peak = Math.max(peak, active);
-          await new Promise((resolve) => setTimeout(resolve, 5));
+          // Yield a macrotask so the in-flight tasks overlap.
+          await new Promise((resolve) => setTimeout(resolve, 0));
           active -= 1;
           return active;
         }),
@@ -179,7 +180,7 @@ describe('createLimiter', () => {
         limit(async () => {
           active += 1;
           peak = Math.max(peak, active);
-          await new Promise((resolve) => setTimeout(resolve, 1));
+          await new Promise((resolve) => setTimeout(resolve, 0));
           active -= 1;
         }),
       ),

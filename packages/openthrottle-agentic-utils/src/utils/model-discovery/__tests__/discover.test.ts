@@ -29,7 +29,10 @@ function routeFetch(
   );
 }
 
+const FIXED_NOW = new Date('2026-06-14T12:34:56.789Z');
+
 afterEach(() => {
+  vi.useRealTimers();
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
 });
@@ -105,12 +108,11 @@ describe('discoverModels', () => {
 
   it('defaults scannedAt to now when the caller omits it', async () => {
     routeFetch({});
-    const before = Date.now();
+    // Fake only `Date` so the probe's real setTimeout-based timeouts are untouched.
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(FIXED_NOW);
     const result = await discoverModels({ hosts: ['localhost'], ports: [] });
-    const after = Date.now();
-    const scannedAtMs = new Date(result.scannedAt).getTime();
-    expect(scannedAtMs).toBeGreaterThanOrEqual(before);
-    expect(scannedAtMs).toBeLessThanOrEqual(after);
+    expect(result.scannedAt).toBe(FIXED_NOW.toISOString());
   });
 
   it('returns an empty result when nothing is reachable', async () => {

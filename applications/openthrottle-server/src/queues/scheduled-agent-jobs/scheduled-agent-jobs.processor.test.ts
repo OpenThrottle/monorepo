@@ -13,7 +13,15 @@ import {
   RUN_AGENT_STATUS,
   type RunAgentPromptResult,
 } from '@openthrottle/openthrottle-drivers';
-import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  type Mock,
+  vi,
+} from 'vitest';
 
 import type { BullMqRunOutputRetentionService } from '../bullmq-run-output/retention/retention.service.ts';
 import type { ScheduledAgentJobCancellationService } from './cancellation/cancellation.service.ts';
@@ -26,6 +34,19 @@ import type { ScheduledAgentJobBullJob } from './scheduled-agent-jobs.types.ts';
 import { foldRunUsage, parseRunOutcome } from './scheduled-agent-jobs.utils.ts';
 import type { ScheduledAgentJobSchedulerService } from './scheduler/scheduler.service.ts';
 import type { ScheduledAgentJobUsageLimitResumeService } from './usage-limit-resume/usage-limit-resume.service.ts';
+
+const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
+
+// The processor gates misfires against the clock; pin Date only so timers and
+// promises stay real.
+beforeEach(() => {
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(FIXED_NOW);
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 const result = (
   overrides: Partial<RunAgentPromptResult>,
@@ -1008,7 +1029,7 @@ describe('ScheduledAgentJobsProcessor', () => {
       lateByMs: number,
       data: Partial<ScheduledAgentJobBullJob['data']> = {},
     ): { readonly job: ScheduledAgentJobBullJob; readonly slot: Date } => {
-      const slot = new Date(Date.now() - lateByMs);
+      const slot = new Date(FIXED_NOW.getTime() - lateByMs);
 
       return {
         job: createMock<ScheduledAgentJobBullJob>({
@@ -1131,7 +1152,7 @@ describe('ScheduledAgentJobsProcessor', () => {
     describe('when the job is the reconcile catch-up', () => {
       it('runs without re-gating, for the slot it names', async () => {
         givenPolicy('skip');
-        const slot = new Date(Date.now() - 2 * 60 * MINUTE);
+        const slot = new Date(FIXED_NOW.getTime() - 2 * 60 * MINUTE);
 
         await processor.process(
           makeJob({ catchUpForSlotMs: slot.getTime(), cwd: process.cwd() }),
@@ -1213,8 +1234,8 @@ describe('ScheduledAgentJobsProcessor', () => {
     describe('when an interval fire runs', () => {
       it('claims its slot and arms the next fire from completion', async () => {
         givenSchedule({ intervalMs: 30 * MINUTE, scheduleKind: 'interval' });
-        const slot = new Date(Date.now() - 1_000);
-        const next = new Date(Date.now() + 30 * MINUTE);
+        const slot = new Date(FIXED_NOW.getTime() - 1_000);
+        const next = new Date(FIXED_NOW.getTime() + 30 * MINUTE);
         vi.mocked(scheduler.armSelfScheduledFire).mockResolvedValue(next);
 
         await processor.process(fireFor(slot));
@@ -1239,7 +1260,7 @@ describe('ScheduledAgentJobsProcessor', () => {
         givenSchedule({ intervalMs: 30 * MINUTE, scheduleKind: 'interval' });
 
         await processor.process(
-          fireFor(new Date(Date.now() - 5 * 60 * MINUTE)),
+          fireFor(new Date(FIXED_NOW.getTime() - 5 * 60 * MINUTE)),
         );
 
         expect(jobsService.recordMissedRuns).not.toHaveBeenCalled();
@@ -1252,7 +1273,7 @@ describe('ScheduledAgentJobsProcessor', () => {
         givenSchedule({ intervalMs: 30 * MINUTE, scheduleKind: 'interval' });
         vi.mocked(jobsService.hasLiveScheduledRun).mockResolvedValue(true);
 
-        await processor.process(fireFor(new Date()));
+        await processor.process(fireFor(new Date(FIXED_NOW)));
 
         expect(jobsService.claimScheduledSlot).not.toHaveBeenCalled();
         expect(runner.run).not.toHaveBeenCalled();
@@ -1268,7 +1289,7 @@ describe('ScheduledAgentJobsProcessor', () => {
           scheduleKind: 'interval',
         });
 
-        await processor.process(fireFor(new Date()));
+        await processor.process(fireFor(new Date(FIXED_NOW)));
 
         expect(runner.run).not.toHaveBeenCalled();
       });
@@ -1278,7 +1299,7 @@ describe('ScheduledAgentJobsProcessor', () => {
       it('drops the fire', async () => {
         givenSchedule({ cronPattern: '0 9 * * *', scheduleKind: 'cron' });
 
-        await processor.process(fireFor(new Date()));
+        await processor.process(fireFor(new Date(FIXED_NOW)));
 
         expect(runner.run).not.toHaveBeenCalled();
       });
@@ -1286,7 +1307,7 @@ describe('ScheduledAgentJobsProcessor', () => {
 
     describe('when a once fire runs at its time', () => {
       it('runs and then disables the schedule', async () => {
-        const runAt = new Date(Date.now() - 1_000);
+        const runAt = new Date(FIXED_NOW.getTime() - 1_000);
         givenSchedule({ runAt, scheduleKind: 'once' });
 
         await processor.process(fireFor(runAt));
@@ -1307,11 +1328,11 @@ describe('ScheduledAgentJobsProcessor', () => {
     describe('when a once schedule was moved to another time', () => {
       it('drops the fire for the old time', async () => {
         givenSchedule({
-          runAt: new Date(Date.now() + 60 * MINUTE),
+          runAt: new Date(FIXED_NOW.getTime() + 60 * MINUTE),
           scheduleKind: 'once',
         });
 
-        await processor.process(fireFor(new Date()));
+        await processor.process(fireFor(new Date(FIXED_NOW)));
 
         expect(runner.run).not.toHaveBeenCalled();
       });
@@ -1325,7 +1346,7 @@ describe('ScheduledAgentJobsProcessor', () => {
         );
 
         await expect(
-          processor.process(fireFor(new Date())),
+          processor.process(fireFor(new Date(FIXED_NOW))),
         ).resolves.toBeUndefined();
 
         expect(jobsService.markRunFinished).toHaveBeenCalledWith(

@@ -17,14 +17,14 @@ describe('NestjsSlackModule', () => {
 
     it('throws when options are null (fail-fast at bootstrap)', () => {
       expect(() =>
-        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- deliberately passes invalid options to prove bootstrap fails fast
         NestjsSlackModule.forRoot(null as unknown as { webhookUrl: string }),
       ).toThrow(/options are required/);
     });
 
     it('throws when webhookUrl is missing (fail-fast at bootstrap)', () => {
       expect(() =>
-        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- deliberately omits the required webhookUrl to prove bootstrap fails fast
         NestjsSlackModule.forRoot({} as { webhookUrl: string }),
       ).toThrow(/webhookUrl is required/);
     });

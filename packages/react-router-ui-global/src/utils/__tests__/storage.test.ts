@@ -15,6 +15,8 @@ import {
   writeStoredMetricsCollapsed,
 } from '../storage';
 
+const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
+
 const CHART_HISTORY_STORAGE_KEY = `${APP_NAME}:global-metrics:v1`;
 
 const sample: MetricsChartDatum = {
@@ -150,7 +152,7 @@ describe('readStoredMetricsChartHistory / writeStoredMetricsChartHistory', () =>
   test('returns an empty array when the schema version does not match', () => {
     sessionStorage.setItem(
       CHART_HISTORY_STORAGE_KEY,
-      JSON.stringify({ samples: [sample], savedAt: Date.now(), v: 2 }),
+      JSON.stringify({ samples: [sample], savedAt: FIXED_NOW.getTime(), v: 2 }),
     );
 
     expect(readStoredMetricsChartHistory()).toEqual([]);

@@ -56,6 +56,8 @@ lint but never had a rule file of their own:
 | [Route primitive shape](#route-and-component-shape)                         | **Warned**                             | `openthrottle/route-primitive-shape`, `openthrottle/pre-hooks-unpack` |
 | [Hook primitive shape](#hook-shape)                                         | **Enforced**                           | `openthrottle/hook-primitive-shape` + `audit:hook-shape`              |
 | [Import order](#import-order)                                               | **Warned**                             | `simple-import-sort/imports`, `simple-import-sort/exports`            |
+| [Anti-flake test rules](#anti-flake-test-rules)                             | **Enforced**                           | `openthrottle/no-test-sleep` and four siblings; Vitest `retry: 0`     |
+| [Agent-safety rules](#agent-safety-rules)                                   | **Enforced**                           | `openthrottle/mcp-tool-registration` and two siblings                 |
 | [Discriminated unions](#discriminated-unions)                               | Honor system                           | —                                                                     |
 | [`interface extends` over `&`](#interface-extends-over-)                    | Honor system                           | —                                                                     |
 | [`readonly` by default](#readonly-properties)                               | Honor system                           | —                                                                     |
@@ -1228,6 +1230,58 @@ The React Router apps share one Vitest setup: `tests/setup.ts` is a single
 `setupReactRouterTest({ env: { APP_NAME: '<app>' } })` call from
 `@openthrottle/react-router-testing` (jsdom polyfills, `window.env` fixture, and a baked-in
 `afterEach(cleanup)`). Do not re-add those shared shims per app.
+
+### Anti-flake test rules
+
+**Enforced** — ESLint `error` since plan `0b6dfaf8` burned the existing sites down. They apply
+to `*.test.ts(x)`, `*.spec.ts(x)` and everything under `__tests__/`. The three clock rules
+(`no-test-sleep`, `no-wall-clock-in-tests`, `no-per-test-timeout`) skip `*.integration.test.ts`
+suites. Those are env-gated, do real I/O against git, Postgres, BullMQ or child processes, and
+wait on real time by design. A test that depends on the real clock or the machine's speed passes locally and
+fails on a loaded CI runner, so each rule names the deterministic replacement.
+
+| Rule                                  | Flags                                                                                        | Use instead                                                                                             |
+| ------------------------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `openthrottle/no-test-sleep`          | `new Promise((r) => setTimeout(r, N))`, `timers/promises`, same-file sleep helpers           | `vi.useFakeTimers()` + `vi.advanceTimersByTimeAsync()`; `vi.waitFor` / `expect.poll` for real OS events |
+| `openthrottle/no-wall-clock-in-tests` | `Date.now()`, no-argument `new Date()` / `Date()`, `performance.now()`                       | A fixed timestamp constant, or `vi.setSystemTime()`                                                     |
+| `openthrottle/no-per-test-timeout`    | A timeout argument or `{ timeout }` / `{ retry }` on a test or hook; `vi.setConfig` timeouts | Make the test faster, or move real I/O into a `*.integration.test.ts` suite (exempt)                    |
+| `openthrottle/skip-requires-issue`    | `.skip` / `.todo` / `xit` without a `#123`, issue URL or OT id in a comment above            | Cite the tracking issue, or delete the test. `skipIf` / `runIf` are allowed                             |
+| `openthrottle/no-fire-event`          | Importing `fireEvent` from `@testing-library/*` (one report per file)                        | `userEvent`; under fake timers, `userEvent.setup({ advanceTimers: vi.advanceTimersByTime })`            |
+
+`no-test-sleep` skips files that call `vi.useFakeTimers()`, and `no-wall-clock-in-tests` also
+skips files that call `vi.setSystemTime()`, because under a fake clock those calls are
+deterministic. A delay of `0` is a tick flush, not a sleep. Drag-and-drop with a `dataTransfer`
+and `<input type="color">` changes are the cases `userEvent` cannot drive. They keep
+`fireEvent` behind an inline disable that states the reason.
+
+Retries are pinned to `0` (`VITEST_RETRY` in `@tools/dotfiles`, mirrored in the configs that
+bypass the factory). A retry turns a flaky test green without fixing it.
+
+### Agent-safety rules
+
+**Enforced** — ESLint `error` since plan `0b6dfaf8` burned the existing sites down. Each one routes a sensitive operation
+through the code that already hardens it.
+
+| Rule                                      | Flags                                                                                                                                         | Use instead                                                                                                            |
+| ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `openthrottle/mcp-tool-registration`      | `server.registerTool(…)`, `server.tool('name', …)` and `@Tool` from `@rekog/mcp-nest`, outside openthrottle-mcp's registry                    | `defineTool` in `packages/openthrottle-mcp/src/tool-registry.ts`, mirrored on the Nest surface                         |
+| `openthrottle/agent-cli-spawn-chokepoint` | A `child_process` / `execa` / `cross-spawn` call naming an agent CLI (`claude`, `codex`, `cursor-agent`, `gemini`, `grok`, `opencode`, `agy`) | `runDriverSync` / `runDriverAsync` from `@openthrottle/openthrottle-drivers`, or an agentic-utils conversation backend |
+| `openthrottle/disable-requires-reason`    | An `eslint-disable`, `-line` or `-next-line` directive with no `-- reason`                                                                    | `// eslint-disable-next-line <rule> -- <why the rule is wrong here>`                                                   |
+
+Every MCP handler in the registry calls the OpenThrottle GraphQL API with the caller's token, so
+the server's auth guards decide what a tool can touch, and a parity test keeps the stdio and Nest
+surfaces identical. A tool registered anywhere else gets neither. The driver engine and the
+conversation backends pin the binary, scrub the environment, pass an argv array with no shell,
+and enforce idle and wall-clock timeouts with SIGTERM→SIGKILL teardown. A third spawn site gets
+none of that.
+
+Both chokepoint rules skip test files, which stub `registerTool` and spawn fake binaries on
+purpose. Their allowed files are rule options matched against the absolute path, because
+`nx lint` runs with cwd at the project. The spawn rule is syntactic, so it only sees a binary
+named in the file: a literal, a same-file `const`, or the first word of a shell string. A blanket
+`/* eslint-disable */` with no rule list hides every report after it, including the one
+`disable-requires-reason` would make, so that form cannot be caught. Only generated files use
+it, and the shared config ignores those.
 
 Server-side testing conventions — mocking NestJS providers in `beforeEach`, model factories
 from the repository and entity factories from the service — live in the

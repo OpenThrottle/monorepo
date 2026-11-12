@@ -63,7 +63,7 @@ async function main(): Promise<void> {
   if (dryRun) console.log('(dry-run: no updates will be written)\n');
 
   for (const nxName of nxProjectNames) {
-    // eslint-disable-next-line no-await-in-loop
+    // eslint-disable-next-line no-await-in-loop -- sequential by design: one-off script, avoids hammering the API
     await ensureProjectForNxName(config, nxName);
   }
 
@@ -77,11 +77,11 @@ async function main(): Promise<void> {
   let skipped = 0;
 
   for (const plan of completedPlans) {
-    // eslint-disable-next-line no-await-in-loop
+    // eslint-disable-next-line no-await-in-loop -- sequential by design: one-off script, avoids hammering the API
     const full = await getPlanById(config, plan.id);
     if (!full) continue;
 
-    // eslint-disable-next-line no-await-in-loop
+    // eslint-disable-next-line no-await-in-loop -- sequential by design: one-off script, avoids hammering the API
     const tasks = await getTasksByPlanId(config, plan.id);
     const taskTitles = tasks.map((t) => t.title);
     const content = buildPlanContent(
@@ -95,7 +95,7 @@ async function main(): Promise<void> {
 
     if (projectId) {
       if (!dryRun) {
-        // eslint-disable-next-line no-await-in-loop
+        // eslint-disable-next-line no-await-in-loop -- sequential by design: one-off script, avoids hammering the API
         const ok = await updatePlanProjectId(config, plan.id, projectId);
 
         if (ok) updated++;

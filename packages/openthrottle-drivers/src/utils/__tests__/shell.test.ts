@@ -68,7 +68,7 @@ describe('formatShellEnvPrefix', () => {
 
   it('emits KEY=value pairs in alphabetical key order with a trailing space', () => {
     // Deliberately out-of-order input to prove the function reorders keys.
-    // eslint-disable-next-line sort-keys
+    // eslint-disable-next-line sort-keys -- keys are deliberately out of order to prove the function sorts them
     expect(formatShellEnvPrefix({ ZED: 'z', ABE: 'a' })).toBe('ABE=a ZED=z ');
   });
 

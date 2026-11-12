@@ -22,6 +22,8 @@ import { CheckoutPathResolutionService } from '../checkout-path-resolution/check
 import { EffectiveUserResolutionService } from '../effective-user-resolution/effective-user-resolution.service.ts';
 import { PlanCreationService } from './plan-creation.service.ts';
 
+const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
+
 vi.mock('@openthrottle/node-client', async (importOriginal) => {
   const mod =
     await importOriginal<typeof import('@openthrottle/node-client')>();
@@ -186,7 +188,7 @@ describe('PlanCreationService', () => {
       author: 'fromenv',
       category: 'feature',
       completedAt: null,
-      createdAt: new Date(),
+      createdAt: new Date(FIXED_NOW),
       description: null,
       id: 'p1',
       project: null,
@@ -194,7 +196,7 @@ describe('PlanCreationService', () => {
       status: 'PENDING',
       summary: null,
       title: 'My plan',
-      updatedAt: new Date(),
+      updatedAt: new Date(FIXED_NOW),
     };
 
     planRepo.create.mockReturnValue(saved);
@@ -234,7 +236,7 @@ describe('PlanCreationService', () => {
       author: 'visormatt',
       category: 'feature',
       completedAt: null,
-      createdAt: new Date(),
+      createdAt: new Date(FIXED_NOW),
       description: null,
       id: 'p-run-config',
       project: null,
@@ -242,7 +244,7 @@ describe('PlanCreationService', () => {
       status: 'PENDING',
       summary: null,
       title: 'Plan',
-      updatedAt: new Date(),
+      updatedAt: new Date(FIXED_NOW),
     };
 
     planRepo.create.mockReturnValue(saved);
@@ -276,7 +278,7 @@ describe('PlanCreationService', () => {
       author: 'visormatt',
       category: 'feature',
       completedAt: null,
-      createdAt: new Date(),
+      createdAt: new Date(FIXED_NOW),
       description: null,
       id: 'p2',
       project: null,
@@ -284,7 +286,7 @@ describe('PlanCreationService', () => {
       status: 'PENDING',
       summary: null,
       title: 'Plan',
-      updatedAt: new Date(),
+      updatedAt: new Date(FIXED_NOW),
     };
 
     planRepo.create.mockReturnValue(saved);
@@ -723,7 +725,7 @@ describe('PlanCreationService', () => {
       author: 'visormatt',
       category: 'feature',
       completedAt: null,
-      createdAt: new Date(),
+      createdAt: new Date(FIXED_NOW),
       description: 'd',
       id: 'p3',
       project: null,
@@ -731,7 +733,7 @@ describe('PlanCreationService', () => {
       status: 'PENDING',
       summary: null,
       title: 'Plan',
-      updatedAt: new Date(),
+      updatedAt: new Date(FIXED_NOW),
     };
 
     const embeddingRow = { content: 'x', id: 'e1' };

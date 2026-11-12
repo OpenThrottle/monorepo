@@ -9,6 +9,8 @@ import {
   formatTaskRunMetricsSummary,
 } from './process-metrics.utils.ts';
 
+const FIXED_NOW_MS = Date.parse('2026-01-15T12:00:00.000Z');
+
 describe('formatTaskRunMetricsSummary', () => {
   const metrics: TaskRunMetrics = {
     atEnd: {
@@ -79,9 +81,9 @@ describe('formatEnhancedTaskRunMetricsSummary', () => {
         cpuSystemMs: 500,
         cpuTimeMs: 1500,
         cpuUserMs: 1000,
-        endTimestamp: Date.now(),
+        endTimestamp: FIXED_NOW_MS,
         interpretation: 'mixed',
-        startTimestamp: Date.now() - 45200,
+        startTimestamp: FIXED_NOW_MS - 45200,
         wallClockMs: 45200,
         wallClockToCpuRatio: 2.5,
       },
@@ -109,9 +111,9 @@ describe('formatEnhancedTaskRunMetricsSummary', () => {
         cpuSystemMs: 500,
         cpuTimeMs: 1500,
         cpuUserMs: 1000,
-        endTimestamp: Date.now(),
+        endTimestamp: FIXED_NOW_MS,
         interpretation: 'cpu_bound',
-        startTimestamp: Date.now() - 10000,
+        startTimestamp: FIXED_NOW_MS - 10000,
         wallClockMs: 10000,
         wallClockToCpuRatio: 1.2,
       },
@@ -143,7 +145,7 @@ describe('formatEnhancedTaskRunMetricsSummary', () => {
             some60s: null,
             someTotalUs: null,
           },
-          timestamp: Date.now(),
+          timestamp: FIXED_NOW_MS,
         },
         atStart: {
           loadAverage: {
@@ -163,7 +165,7 @@ describe('formatEnhancedTaskRunMetricsSummary', () => {
             some60s: null,
             someTotalUs: null,
           },
-          timestamp: Date.now() - 10000,
+          timestamp: FIXED_NOW_MS - 10000,
         },
         platform: 'darwin',
         pressureLevel: 'low',
@@ -175,9 +177,9 @@ describe('formatEnhancedTaskRunMetricsSummary', () => {
         cpuSystemMs: 500,
         cpuTimeMs: 1500,
         cpuUserMs: 1000,
-        endTimestamp: Date.now(),
+        endTimestamp: FIXED_NOW_MS,
         interpretation: 'mixed',
-        startTimestamp: Date.now() - 10000,
+        startTimestamp: FIXED_NOW_MS - 10000,
         wallClockMs: 10000,
         wallClockToCpuRatio: 2.0,
       },
@@ -194,9 +196,9 @@ describe('formatEnhancedTaskRunMetricsSummary', () => {
         cpuSystemMs: 500,
         cpuTimeMs: 1500,
         cpuUserMs: 1000,
-        endTimestamp: Date.now(),
+        endTimestamp: FIXED_NOW_MS,
         interpretation: 'mixed',
-        startTimestamp: Date.now() - 10000,
+        startTimestamp: FIXED_NOW_MS - 10000,
         wallClockMs: 10000,
         wallClockToCpuRatio: 2.0,
       },

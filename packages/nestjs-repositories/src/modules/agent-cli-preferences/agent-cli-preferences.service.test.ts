@@ -11,6 +11,7 @@ import { UserFavoriteAgentModel } from './user-favorite-agent-model.entity.ts';
 
 const userId = '11111111-1111-4111-8111-111111111111';
 const rowId = '22222222-2222-4222-8222-222222222222';
+const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
 
 describe('AgentCliPreferencesService', () => {
   type MockRepo = {
@@ -29,7 +30,7 @@ describe('AgentCliPreferencesService', () => {
       findOne: vi.fn().mockResolvedValue(null),
       save: vi.fn(async (entity: Record<string, unknown>) => ({
         ...entity,
-        createdAt: new Date(),
+        createdAt: new Date(FIXED_NOW),
         id: rowId,
       })),
     };

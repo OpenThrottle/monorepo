@@ -147,7 +147,7 @@ export class CodeVectorStore implements VectorStore {
 
       // Batches run sequentially on purpose: bounds concurrent writes so a large
       // workspace re-index doesn't exhaust the pg connection pool.
-      // eslint-disable-next-line no-await-in-loop
+      // eslint-disable-next-line no-await-in-loop -- sequential by design: bounds concurrent writes on the pg pool
       await this.dataSource.query(
         `INSERT INTO code_embeddings
            (id, workspace_root, path, start_line, end_line, content, content_hash, embedding)

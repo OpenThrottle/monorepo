@@ -14,7 +14,7 @@ const payload = {
   link: '/plans/24f3510f-6cc5-4f70-a01d-62ddbbdb3f94',
   message: 'Plan finished',
   severity: 'success' as const,
-  timestamp: new Date().toISOString(),
+  timestamp: '2026-01-15T12:00:00.000Z',
 };
 
 describe('showSystemNotification with the desktop bridge', () => {

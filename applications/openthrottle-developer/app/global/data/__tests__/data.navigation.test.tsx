@@ -42,7 +42,7 @@ const renderSidebar = (
       path: '/',
     },
     {
-      // eslint-disable-next-line react/no-multi-comp
+      // eslint-disable-next-line react/no-multi-comp -- inline route stub component, createRoutesStub needs a Component per route
       Component: () => <p>blog page</p>,
       path: '/blog',
     },

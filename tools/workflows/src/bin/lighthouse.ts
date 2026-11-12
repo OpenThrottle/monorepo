@@ -536,7 +536,7 @@ const runAuditsForAllDevices = async (url: string): Promise<void> => {
   // Sequential execution is intentional to avoid resource contention
   for (const deviceType of deviceTypes) {
     try {
-      // eslint-disable-next-line no-await-in-loop
+      // eslint-disable-next-line no-await-in-loop -- sequential by design: Lighthouse audits must not run concurrently
       await runAudit({ deviceType, url });
       console.log(''); // Add spacing between audits
     } catch (error) {
@@ -1367,11 +1367,11 @@ const runAuditsForAllUrlsAndDevices = async (
     try {
       if (deviceType && (deviceType === 'mobile' || deviceType === 'desktop')) {
         // Run audit for specific device type
-        // eslint-disable-next-line no-await-in-loop
+        // eslint-disable-next-line no-await-in-loop -- sequential by design: Lighthouse audits must not run concurrently
         await runAudit({ deviceType, url });
       } else {
         // Run audits for both device types
-        // eslint-disable-next-line no-await-in-loop
+        // eslint-disable-next-line no-await-in-loop -- sequential by design: Lighthouse audits must not run concurrently
         await runAuditsForAllDevices(url);
       }
     } catch (error) {

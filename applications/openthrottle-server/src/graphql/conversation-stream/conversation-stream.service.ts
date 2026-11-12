@@ -610,7 +610,7 @@ export class ConversationStreamService {
         try {
           // Racing next() against the idle timer is the whole point of this
           // backstop; the sequential await is intentional.
-          // eslint-disable-next-line no-await-in-loop
+          // eslint-disable-next-line no-await-in-loop -- sequential by design: each next() is raced against the idle timer
           outcome = await Promise.race([iterator.next(), idle]);
         } finally {
           if (idleTimer !== undefined) {

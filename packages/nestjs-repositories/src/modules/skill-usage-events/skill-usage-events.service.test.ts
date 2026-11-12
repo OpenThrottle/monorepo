@@ -16,6 +16,8 @@ import {
   type SkillUsageOutcomeValue,
 } from './skill-usage-outcomes.entity.ts';
 
+const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
+
 type QueryBuilderMock = {
   addGroupBy: ReturnType<typeof vi.fn>;
   addOrderBy: ReturnType<typeof vi.fn>;
@@ -143,7 +145,7 @@ describe('SkillUsageEventsService', () => {
         .fn()
         .mockReturnValue(insertBuilderMock([{ id: 'event-1' }]));
       const findOneByOrFail = vi.fn(({ id }: { id: string }) =>
-        Promise.resolve({ id, receivedAt: new Date() }),
+        Promise.resolve({ id, receivedAt: new Date(FIXED_NOW) }),
       );
       const service = await buildService({
         events: { create, createQueryBuilder, findOneByOrFail },
@@ -196,7 +198,7 @@ describe('SkillUsageEventsService', () => {
           .fn()
           .mockReturnValue(insertBuilderMock([{ id: 'event-2' }]));
         const findOneByOrFail = vi.fn(({ id }: { id: string }) =>
-          Promise.resolve({ id, receivedAt: new Date() }),
+          Promise.resolve({ id, receivedAt: new Date(FIXED_NOW) }),
         );
         const service = await buildService({
           events: { create, createQueryBuilder, findOneByOrFail },
@@ -237,7 +239,7 @@ describe('SkillUsageEventsService', () => {
           .fn()
           .mockReturnValue(insertBuilderMock([{ id: 'event-3' }]));
         const findOneByOrFail = vi.fn(({ id }: { id: string }) =>
-          Promise.resolve({ id, receivedAt: new Date() }),
+          Promise.resolve({ id, receivedAt: new Date(FIXED_NOW) }),
         );
         const service = await buildService({
           events: { create, createQueryBuilder, findOneByOrFail },
@@ -303,7 +305,11 @@ describe('SkillUsageEventsService', () => {
     it('maps outcome + duration and defaults scope to ours', async () => {
       const create = vi.fn((input: Partial<SkillUsageOutcome>) => input);
       const save = vi.fn((row: Partial<SkillUsageOutcome>) =>
-        Promise.resolve({ ...row, id: 'outcome-1', receivedAt: new Date() }),
+        Promise.resolve({
+          ...row,
+          id: 'outcome-1',
+          receivedAt: new Date(FIXED_NOW),
+        }),
       );
       const service = await buildService({ outcomes: { create, save } });
       const occurredAt = new Date('2026-07-31T12:05:00.000Z');
@@ -340,7 +346,11 @@ describe('SkillUsageEventsService', () => {
       it('nulls optional correlation/duration fields', async () => {
         const create = vi.fn((input: Partial<SkillUsageOutcome>) => input);
         const save = vi.fn((row: Partial<SkillUsageOutcome>) =>
-          Promise.resolve({ ...row, id: 'outcome-2', receivedAt: new Date() }),
+          Promise.resolve({
+            ...row,
+            id: 'outcome-2',
+            receivedAt: new Date(FIXED_NOW),
+          }),
         );
         const service = await buildService({ outcomes: { create, save } });
         const occurredAt = new Date('2026-07-31T12:06:00.000Z');
@@ -375,7 +385,11 @@ describe('SkillUsageEventsService', () => {
     ): Promise<unknown> => {
       const create = vi.fn((input: Partial<SkillUsageOutcome>) => input);
       const save = vi.fn((row: Partial<SkillUsageOutcome>) =>
-        Promise.resolve({ ...row, id: 'outcome-1', receivedAt: new Date() }),
+        Promise.resolve({
+          ...row,
+          id: 'outcome-1',
+          receivedAt: new Date(FIXED_NOW),
+        }),
       );
       const service = await buildService({ outcomes: { create, save } });
       await service.recordSkillUsageOutcome({

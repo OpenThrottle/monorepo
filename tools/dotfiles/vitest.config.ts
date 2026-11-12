@@ -31,6 +31,7 @@ export default (_config: ConfigEnv) => {
       hookTimeout: 15_000,
       include: ['**/*.test.(ts|tsx)'],
       reporters: ['default'],
+      retry: 0, // VITEST_RETRY in src/vitest-config.ts: a flake must fail, not retry
       silent: process.env.DEBUG !== 'true',
       testTimeout: 15_000,
     },

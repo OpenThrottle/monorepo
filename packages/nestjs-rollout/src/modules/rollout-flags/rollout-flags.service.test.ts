@@ -22,6 +22,7 @@ import {
 import { RolloutService } from './rollout-flags.service.ts';
 import { principalIdToBucket } from './rollout-flags.utils.ts';
 
+const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
 /** Last 8 hex → parseInt % 100 === 53 (`11111111`). */
 const userId = '11111111-1111-4111-8111-111111111111';
 /** Last 8 hex → parseInt % 100 === 6 (`22222222`). */
@@ -42,7 +43,7 @@ const serviceAccountPrincipal: AuthPrincipal = {
 
 function flag(overrides: Partial<RolloutFlag> = {}): RolloutFlag {
   return asMock<RolloutFlag>({
-    createdAt: new Date(),
+    createdAt: new Date(FIXED_NOW),
     description: null,
     enabled: true,
     fallthrough: ROLLOUT_BOOLEAN_DEFAULT_FALLTHROUGH,
@@ -51,7 +52,7 @@ function flag(overrides: Partial<RolloutFlag> = {}): RolloutFlag {
     kind: ROLLOUT_FLAG_KIND.BOOLEAN,
     offVariation: 0,
     targetRoles: [],
-    updatedAt: new Date(),
+    updatedAt: new Date(FIXED_NOW),
     variations: ROLLOUT_BOOLEAN_DEFAULT_VARIATIONS,
     ...overrides,
   });

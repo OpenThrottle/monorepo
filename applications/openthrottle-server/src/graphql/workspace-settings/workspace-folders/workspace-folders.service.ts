@@ -245,7 +245,7 @@ export class WorkspaceFoldersService {
     for (const root of roots) {
       let entries;
       try {
-        // eslint-disable-next-line no-await-in-loop
+        // eslint-disable-next-line no-await-in-loop -- sequential by design: roots are scanned one at a time to bound filesystem load
         entries = await readdir(root, { withFileTypes: true });
       } catch {
         continue;
@@ -770,9 +770,9 @@ export class WorkspaceFoldersService {
     >();
 
     for (const checkout of checkouts) {
-      // eslint-disable-next-line no-await-in-loop
+      // eslint-disable-next-line no-await-in-loop -- sequential by design: repositoryFor may create the repository that later checkouts reuse
       const repository = await this.repositoryFor(checkout);
-      // eslint-disable-next-line no-await-in-loop
+      // eslint-disable-next-line no-await-in-loop -- sequential by design: inspection shells out to git, one checkout at a time
       const snapshot = await this.resolveInspection(checkout);
       const group = groups.get(repository.id) ?? { checkouts: [], repository };
       group.checkouts.push(this.toCheckoutObject(checkout, snapshot));

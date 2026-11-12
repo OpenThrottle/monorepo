@@ -11,6 +11,8 @@ import { beforeAll, describe, expect, test, vi } from 'vitest';
 import { TaskEmbeddingsLoaders } from './loaders/loaders.service.ts';
 import { TaskEmbeddingsResolver } from './task-embeddings.resolver.ts';
 
+const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
+
 const taskEmbeddingsRepo = { find: vi.fn(), findOne: vi.fn() };
 
 const mockTaskEmbeddingsService = createMock<TaskEmbeddingsService>({
@@ -115,7 +117,7 @@ describe('TaskEmbeddingsResolver', () => {
     test('resolves the task through taskLoader when taskId is set', async () => {
       const parent = {
         content: 'chunk',
-        createdAt: new Date(),
+        createdAt: new Date(FIXED_NOW),
         id: 'embed-id',
         metadataJson: '{}',
         task: null,
@@ -138,7 +140,7 @@ describe('TaskEmbeddingsResolver', () => {
 
       const parent = {
         content: 'chunk',
-        createdAt: new Date(),
+        createdAt: new Date(FIXED_NOW),
         id: 'embed-id',
         metadataJson: '{}',
         task: null,
@@ -154,7 +156,7 @@ describe('TaskEmbeddingsResolver', () => {
     test('returns null when taskLoader resolves null', async () => {
       const parent = {
         content: 'chunk',
-        createdAt: new Date(),
+        createdAt: new Date(FIXED_NOW),
         id: 'embed-id',
         metadataJson: '{}',
         task: null,

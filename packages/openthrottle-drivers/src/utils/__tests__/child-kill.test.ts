@@ -13,7 +13,7 @@ class FakeChildProcess extends EventEmitter {
 function asChildProcess(fake: FakeChildProcess): ChildProcess {
   // FakeChildProcess deliberately implements only the subset of ChildProcess that
   // escalateKill touches (kill, killed, the 'close' event via EventEmitter).
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- the fake implements only the ChildProcess subset escalateKill touches
   return fake as unknown as ChildProcess;
 }
 

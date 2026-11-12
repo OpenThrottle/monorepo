@@ -10,6 +10,7 @@ import type { PlanRow, TaskRow } from '../../utils/openthrottle-ralph';
 const PLAN_ID = '970aecc7-c647-4948-aa20-410e1bd090fc';
 const TASK_ID = '9e4453e3-8b98-4df2-8cc5-d06afed67222';
 const BLOCKED_TASK_ID = 'a1b2c3d4-e5f6-4789-a012-3456789abcde';
+const FIXED_NOW_ISO = '2026-01-15T12:00:00.000Z';
 
 const mockConfig: WorkflowRalphConfig = {
   connectionString: 'postgres://localhost/openthrottle',
@@ -19,18 +20,18 @@ const mockConfig: WorkflowRalphConfig = {
 const mockPlan: PlanRow = {
   author: 'test',
   category: 'test',
-  createdAt: new Date().toISOString(),
+  createdAt: FIXED_NOW_ISO,
   description: null,
   id: PLAN_ID,
   status: 'IN_PROGRESS',
   summary: null,
   title: 'Test plan',
-  updatedAt: new Date().toISOString(),
+  updatedAt: FIXED_NOW_ISO,
 };
 
 const mockTask: TaskRow = {
   category: null,
-  createdAt: new Date().toISOString(),
+  createdAt: FIXED_NOW_ISO,
   description: null,
   id: TASK_ID,
   planId: PLAN_ID,
@@ -38,13 +39,13 @@ const mockTask: TaskRow = {
   sortOrder: 1000,
   status: 'IN_PROGRESS',
   title: 'Document current behavior',
-  updatedAt: new Date().toISOString(),
+  updatedAt: FIXED_NOW_ISO,
   wave: null,
 };
 
 const mockBlockedTask: TaskRow = {
   category: null,
-  createdAt: new Date().toISOString(),
+  createdAt: FIXED_NOW_ISO,
   description: null,
   id: BLOCKED_TASK_ID,
   planId: PLAN_ID,
@@ -52,7 +53,7 @@ const mockBlockedTask: TaskRow = {
   sortOrder: 2000,
   status: 'BLOCKED',
   title: 'Needs human decision',
-  updatedAt: new Date().toISOString(),
+  updatedAt: FIXED_NOW_ISO,
   wave: null,
 };
 

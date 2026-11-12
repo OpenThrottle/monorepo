@@ -1,4 +1,5 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
@@ -11,8 +12,9 @@ import {
 } from '../index';
 
 describe('ContextMenuSubTrigger', () => {
-  test('renders inside an open context menu', () => {
-    render(
+  test('renders inside an open context menu', async () => {
+    const user = userEvent.setup();
+    const component = render(
       <ContextMenu>
         <ContextMenuTrigger>Area</ContextMenuTrigger>
         <ContextMenuContent>
@@ -22,7 +24,10 @@ describe('ContextMenuSubTrigger', () => {
         </ContextMenuContent>
       </ContextMenu>,
     );
-    fireEvent.contextMenu(screen.getByText('Area'));
-    expect(screen.getByText('More')).toBeInTheDocument();
+    await user.pointer({
+      keys: '[MouseRight]',
+      target: component.getByText('Area'),
+    });
+    expect(component.getByText('More')).toBeInTheDocument();
   });
 });

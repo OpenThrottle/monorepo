@@ -6,6 +6,9 @@ import { describe, expect, it } from 'vitest';
 
 import { pruneKeyedRunOutputDirectory } from './keyed-run-output-retention.utils.ts';
 
+/** Far past any file mtime the suite can create, so every file reads as old. */
+const FAR_FUTURE_MS = Date.parse('2099-01-01T00:00:00.000Z');
+
 const mkBase = async (): Promise<string> => {
   return mkdtemp(path.join(os.tmpdir(), 'keyed-ret-'));
 };
@@ -92,7 +95,7 @@ describe('pruneKeyedRunOutputDirectory', () => {
     const r = await pruneKeyedRunOutputDirectory({
       baseDirectory: base,
       maxAgeMs: 1,
-      nowMs: Date.now() + 9_999_999,
+      nowMs: FAR_FUTURE_MS,
     });
 
     expect(r.deletedFileCount).toBe(0);

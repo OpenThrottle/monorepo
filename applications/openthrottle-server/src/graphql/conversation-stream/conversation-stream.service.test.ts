@@ -657,7 +657,7 @@ describe('ConversationStreamService', () => {
       for (let i = 0; i < 4; i += 1) {
         // Spacing the keepalives out in sequence is the whole point — each must
         // arrive before the prior idle window elapses; the awaits are ordered.
-        // eslint-disable-next-line no-await-in-loop
+        // eslint-disable-next-line no-await-in-loop -- sequential by design: keepalives are spaced out in order
         await sleep(4000);
         yield { delta: '', done: false, kind: 'keepalive' };
       }

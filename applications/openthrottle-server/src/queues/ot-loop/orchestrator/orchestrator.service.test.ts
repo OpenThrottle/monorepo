@@ -470,7 +470,9 @@ describe('OtLoopOrchestratorService', () => {
       expect(await cancel.isCancelled()).toBe(false);
       expect(readCancelRequested).toHaveBeenCalledWith(PLAN_ID);
 
-      readCancelRequested.mockResolvedValueOnce(asMock<CancelRead>(new Date()));
+      readCancelRequested.mockResolvedValueOnce(
+        asMock<CancelRead>(new Date('2026-01-15T12:00:00.000Z')),
+      );
       expect(await cancel.isCancelled()).toBe(true);
 
       readCancelRequested.mockRejectedValueOnce(new Error('db blip'));

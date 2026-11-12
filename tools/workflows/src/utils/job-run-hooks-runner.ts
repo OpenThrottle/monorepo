@@ -266,7 +266,7 @@ export const executeJobRunHooksPhase = async (
     const onFailure = resolveJobRunHookOnFailure(entry);
     const label = formatJobRunHookEntryLabel(entry);
 
-    // eslint-disable-next-line no-await-in-loop
+    // eslint-disable-next-line no-await-in-loop -- sequential by design: hooks run in order and output lines must stay ordered
     await params.deps.appendPlanOutput(
       `[job-run-hook] Starting ${label}\n`,
       null,
@@ -285,7 +285,7 @@ export const executeJobRunHooksPhase = async (
 
     const timeoutMs = resolveJobRunHookTimeoutSeconds(entry) * 1000;
 
-    // eslint-disable-next-line no-await-in-loop
+    // eslint-disable-next-line no-await-in-loop -- sequential by design: each hook runs to completion before the next starts
     const iterationResult = await params.deps.runHookIteration({
       agentPrompt,
       hookIndex,
@@ -299,7 +299,7 @@ export const executeJobRunHooksPhase = async (
     const policy = applyHookFailurePolicy(params.phase, onFailure, failed);
 
     if (iterationResult.output?.trim()) {
-      // eslint-disable-next-line no-await-in-loop
+      // eslint-disable-next-line no-await-in-loop -- sequential by design: output lines must stay in hook order
       await params.deps.appendPlanOutput(
         `${iterationResult.output.trim()}\n`,
         null,
@@ -312,13 +312,13 @@ export const executeJobRunHooksPhase = async (
         (iterationResult.cancelled
           ? 'Hook iteration cancelled'
           : 'Hook iteration failed');
-      // eslint-disable-next-line no-await-in-loop
+      // eslint-disable-next-line no-await-in-loop -- sequential by design: output lines must stay in hook order
       await params.deps.appendPlanOutput(
         `[job-run-hook] ${label} failed: ${errLine} (on_failure=${onFailure})\n`,
         null,
       );
     } else {
-      // eslint-disable-next-line no-await-in-loop
+      // eslint-disable-next-line no-await-in-loop -- sequential by design: output lines must stay in hook order
       await params.deps.appendPlanOutput(
         `[job-run-hook] Finished ${label}\n`,
         null,

@@ -29,6 +29,15 @@ export const VITEST_HOOK_TIMEOUT_MS = 15_000;
 export const VITEST_TEST_TIMEOUT_MS = 15_000;
 
 /**
+ * @description Workspace retry count, pinned to 0. Vitest's default is already
+ * 0; pinning it states the policy where the config lives: a retry turns a flaky
+ * test green without fixing it, so a flake must fail CI. Per-test `{ retry }`
+ * is flagged by `openthrottle/no-per-test-timeout`.
+ * @public
+ */
+export const VITEST_RETRY = 0;
+
+/**
  * @description Test environment type
  * @public
  */
@@ -134,6 +143,7 @@ const createBaseVitestConfig = (
       hookTimeout: VITEST_HOOK_TIMEOUT_MS,
       include: ['**/*.test.(ts|tsx)'],
       reporters: ['default'],
+      retry: VITEST_RETRY,
       setupFiles: setupFiles ? [...setupFiles] : undefined,
       silent: process.env.DEBUG !== 'true',
       testTimeout: VITEST_TEST_TIMEOUT_MS,

@@ -3,9 +3,15 @@ import { Test } from '@nestjs/testing';
 import type { IWorktreeTargetsTracker } from '@openthrottle/nestjs-worktrees';
 import { WORKTREE_TRACKER_TOKEN } from '@openthrottle/nestjs-worktrees';
 import * as os from 'os';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { SystemMetricsService } from './system-metrics.service.ts';
+
+const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 vi.mock('os', async () => {
   const actual = await vi.importActual('os');
@@ -101,12 +107,11 @@ describe('SystemMetricsService', () => {
     });
 
     test('returns timestamp', async () => {
-      const before = Date.now();
+      vi.useFakeTimers({ toFake: ['Date'] });
+      vi.setSystemTime(FIXED_NOW);
       const result = await service.getSystemSnapshot();
-      const after = Date.now();
 
-      expect(result.timestamp).toBeGreaterThanOrEqual(before);
-      expect(result.timestamp).toBeLessThanOrEqual(after);
+      expect(result.timestamp).toBe(FIXED_NOW.getTime());
     });
   });
 

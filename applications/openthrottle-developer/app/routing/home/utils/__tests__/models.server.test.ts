@@ -115,7 +115,8 @@ describe('loadComposerModels', () => {
   test('waits for a slow agent discovery rather than resolving local-only', async () => {
     mockExecute
       .mockImplementationOnce(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 50));
+        // Settles a macrotask after the local scan, so agents arrive last.
+        await new Promise((resolve) => setImmediate(resolve));
         return AGENT_PAYLOAD;
       })
       .mockResolvedValueOnce(LOCAL_PAYLOAD);

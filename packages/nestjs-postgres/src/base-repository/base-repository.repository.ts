@@ -96,7 +96,7 @@ export abstract class BaseRepository<
     await this.repository.manager.transaction(async (manager) => {
       for (let index = 0; index < entities.length; index += chunkSize) {
         // One transaction, and chunks must land in order, so they run sequentially.
-        // eslint-disable-next-line no-await-in-loop
+        // eslint-disable-next-line no-await-in-loop -- chunks share one transaction and must land in order
         await manager.insert(
           this.repository.target,
           toInsertRows(entities.slice(index, index + chunkSize)),

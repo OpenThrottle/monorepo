@@ -1,4 +1,5 @@
-import { fireEvent, render } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { getDefaultStore } from 'jotai/vanilla';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
@@ -83,7 +84,14 @@ describe('PlanWorkflowCommand Component', () => {
     );
   });
 
-  test('should copy canonical CLI when copy is activated', () => {
+  test('should copy canonical CLI when copy is activated', async () => {
+    const user = userEvent.setup();
+    // userEvent.setup() installs its own Clipboard stub; remove it again so the
+    // component takes the execCommand fallback this test asserts on.
+    vi.stubGlobal('navigator', {
+      ...globalThis.navigator,
+      clipboard: undefined,
+    });
     const line = `pnpm exec workflow-ralph --plan 0c2720a9-920f-4b16-865a-f803eb444e18`;
     const props: PlanWorkflowCommandProps = {
       command: line,
@@ -95,7 +103,7 @@ describe('PlanWorkflowCommand Component', () => {
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const { getByRole } = render(<RoutesStub />);
 
-    fireEvent.click(getByRole('button', { name: line }));
+    await user.click(getByRole('button', { name: line }));
 
     expect(document.execCommand).toHaveBeenCalledWith('copy');
     expect(lastCopiedViaExecCommand).toBe(line);

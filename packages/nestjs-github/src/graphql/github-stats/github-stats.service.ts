@@ -464,7 +464,7 @@ export class GitHubStatsService {
       if (mergedAt === null) continue;
 
       // Sequential to respect GitHub rate limits (one request per PR).
-      // eslint-disable-next-line no-await-in-loop
+      // eslint-disable-next-line no-await-in-loop -- sequential by design: one request per PR to respect GitHub rate limits
       const reviews = await this.githubService.getPullReviews(
         owner,
         repo,

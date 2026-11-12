@@ -114,7 +114,7 @@ describe('WorkspaceFoldersService', () => {
     ]);
 
     await mkdir(join(workspaceRoot, 'not-a-repo'), { recursive: true });
-  }, 30_000);
+  });
 
   afterAll(async () => {
     await rm(workspaceRoot, { force: true, recursive: true });
@@ -678,6 +678,18 @@ describe('WorkspaceFoldersService', () => {
   });
 
   describe('workspaceRepository', () => {
+    /** Inspection freshness is `Date.now() - scannedAt < TTL`, so pin "now". */
+    const FIXED_NOW = new Date('2026-07-26T00:00:00.000Z');
+
+    beforeEach(() => {
+      vi.useFakeTimers({ toFake: ['Date'] });
+      vi.setSystemTime(FIXED_NOW);
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
     const ownedCheckout = (repository: Repository): RepositoryCheckout => {
       return asMock<RepositoryCheckout>({
         displayName: 'monorepo',
@@ -693,7 +705,7 @@ describe('WorkspaceFoldersService', () => {
         },
         repository,
         repositoryId: repository.id,
-        scannedAt: new Date(),
+        scannedAt: new Date(FIXED_NOW),
         userId,
       });
     };
@@ -948,7 +960,7 @@ describe('WorkspaceFoldersService', () => {
         expect.objectContaining({ managed: true }),
       );
       expect(payload.checkout).toBeDefined();
-    }, 30_000);
+    });
 
     it('throws when OPENTHROTTLE_CHECKOUT_ROOT is unset', async () => {
       delete process.env[CHECKOUT_ROOT_ENV];
@@ -975,7 +987,7 @@ describe('WorkspaceFoldersService', () => {
 
       expect(existsSync(join(cloneRoot, 'does-not-exist-repo'))).toBe(false);
       expect(vi.mocked(mockCheckoutsService.create)).not.toHaveBeenCalled();
-    }, 30_000);
+    });
   });
 });
 

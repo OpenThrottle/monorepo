@@ -30,8 +30,10 @@ import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import { ROLLOUT_DEGRADED_ANONYMOUS_SUB } from './rollout.constants.ts';
 import { RolloutResolver } from './rollout.resolver.ts';
 
+const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
+
 const flag: RolloutFlag = {
-  createdAt: new Date(),
+  createdAt: new Date(FIXED_NOW),
   description: null,
   enabled: true,
   fallthrough: ROLLOUT_BOOLEAN_DEFAULT_FALLTHROUGH,
@@ -40,7 +42,7 @@ const flag: RolloutFlag = {
   kind: ROLLOUT_FLAG_KIND.BOOLEAN,
   offVariation: 0,
   targetRoles: [],
-  updatedAt: new Date(),
+  updatedAt: new Date(FIXED_NOW),
   variations: ROLLOUT_BOOLEAN_DEFAULT_VARIATIONS,
 };
 

@@ -85,7 +85,7 @@ async function recordAll(
 
   for (const scenario of SCENARIOS) {
     // Sequential: recordings share one login and rate limit per CLI.
-    // eslint-disable-next-line no-await-in-loop
+    // eslint-disable-next-line no-await-in-loop -- recordings share one login and rate limit per CLI
     const result = await recordScenario({
       model,
       outDir,
@@ -98,7 +98,7 @@ async function recordAll(
     }
   }
   for (const scenario of PLAN_RUN_SCENARIOS) {
-    // eslint-disable-next-line no-await-in-loop
+    // eslint-disable-next-line no-await-in-loop -- recordings share one login and rate limit per CLI
     const result = await recordPlanRunScenario({
       model,
       outDir,
@@ -250,7 +250,7 @@ async function main(): Promise<number> {
   const reports: BackendReport[] = [];
   for (const profile of profiles) {
     process.stderr.write(`checking ${profile.backend}…\n`);
-    // eslint-disable-next-line no-await-in-loop
+    // eslint-disable-next-line no-await-in-loop -- backends are checked one at a time so their stderr progress does not interleave
     reports.push(await checkBackend(profile));
   }
 

@@ -20,6 +20,8 @@ import { WorkLedgerCaptureService } from '../work-ledger/work-ledger-capture/wor
 import { TasksLoaders } from './loaders/loaders.service.ts';
 import { TasksResolver } from './tasks.resolver.ts';
 
+const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
+
 describe('TasksResolver', () => {
   let resolver: TasksResolver;
 
@@ -458,7 +460,7 @@ describe('TasksResolver', () => {
         assignee: null,
         author: 'visormatt',
         category: 'feature',
-        createdAt: new Date(),
+        createdAt: new Date(FIXED_NOW),
         description: null,
         id: mockTask.planId,
         project: null,
@@ -466,7 +468,7 @@ describe('TasksResolver', () => {
         status: 'IN_PROGRESS',
         summary: null,
         title: 'Test plan',
-        updatedAt: new Date(),
+        updatedAt: new Date(FIXED_NOW),
       };
 
       const planLoader = { load: vi.fn().mockResolvedValue(mockPlan) };

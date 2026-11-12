@@ -20,7 +20,7 @@ function HookProbe(props: {
   return null;
 }
 
-// eslint-disable-next-line react/no-multi-comp
+// eslint-disable-next-line react/no-multi-comp -- tiny route marker component local to this test
 function DashboardMarker(): React.ReactElement {
   return <div data-testid="on-dashboard" />;
 }
@@ -34,7 +34,7 @@ const renderCommanderOptions = (
   const value: { current: CommanderGroup[] | null } = { current: null };
   const Stub = createRoutesStub([
     {
-      // eslint-disable-next-line react/no-multi-comp
+      // eslint-disable-next-line react/no-multi-comp -- inline route stub component, createRoutesStub needs a Component per route
       Component: () => <HookProbe navigation={navigation} value={value} />,
       path: '/',
     },

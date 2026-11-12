@@ -8,6 +8,8 @@ import { useNotificationsStore } from '../../hooks/useNotificationsStore';
 import { NotificationBell } from '../NotificationBell';
 import { NotificationsStoreProvider } from '../NotificationsStoreProvider';
 
+const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
+
 // Single harness component (satisfies react/no-multi-comp): an add button that
 // drives a payload through the real store the same way the subscription bridge
 // does — via addNotification — so the reducer guard is exercised end-to-end
@@ -23,7 +25,7 @@ function BellHarness(props: { readonly message: string }): React.ReactElement {
           addNotification(NOTIFICATION_EVENT_NAMES.SYSTEM_ALERT, {
             message: props.message,
             severity: 'info',
-            timestamp: new Date().toISOString(),
+            timestamp: FIXED_NOW.toISOString(),
           })
         }
         type="button"

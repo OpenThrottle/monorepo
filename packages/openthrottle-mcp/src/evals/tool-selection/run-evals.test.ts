@@ -54,7 +54,8 @@ const scriptedSelector = (): ToolSelector & { readonly peak: () => number } => {
     select: async (prompt: string): Promise<Selection> => {
       inFlight += 1;
       peak = Math.max(peak, inFlight);
-      await new Promise((resolve) => setTimeout(resolve, 1));
+      // A macrotask yield lets other in-flight selections overlap this one.
+      await new Promise((resolve) => setTimeout(resolve, 0));
       inFlight -= 1;
       if (prompt === 'show plan') {
         planCalls += 1;

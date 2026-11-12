@@ -8,6 +8,8 @@ import { describe, expect, test, vi } from 'vitest';
 import type { WebsocketDebuggerSocket } from '../../components/websocket-debugger/types';
 import { useWebsocketDebuggerSocketSubscription } from '../useWebsocketDebuggerSocketSubscription';
 
+const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
+
 describe('useWebsocketDebuggerSocketSubscription', () => {
   test('uses subscribeToEvents instead of socket.on when provided', () => {
     const append = vi.fn();
@@ -30,7 +32,7 @@ describe('useWebsocketDebuggerSocketSubscription', () => {
           planId: 'p1',
           queuePosition: 1,
           severity: 'info',
-          timestamp: new Date().toISOString(),
+          timestamp: FIXED_NOW.toISOString(),
         });
 
         return vi.fn();
@@ -85,7 +87,7 @@ describe('useWebsocketDebuggerSocketSubscription', () => {
       planId: 'p2',
       queuePosition: 1,
       severity: 'info',
-      timestamp: new Date().toISOString(),
+      timestamp: FIXED_NOW.toISOString(),
     };
 
     firstHandler?.(payload);

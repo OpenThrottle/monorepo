@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // AUTH_COOKIE_NAME is computed from APP_NAME at import time, so set it first.
 process.env.APP_NAME = 'test-app';
@@ -128,7 +128,17 @@ describe('auth cookie header builders', () => {
 });
 
 describe('isJwtExpired', () => {
-  const nowSeconds = Math.floor(Date.now() / 1000);
+  const fixedNow = new Date('2026-01-15T12:00:00.000Z');
+  const nowSeconds = Math.floor(fixedNow.getTime() / 1000);
+
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(fixedNow);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
 
   it('returns false for a token whose exp is in the future', () => {
     expect(isJwtExpired(makeJwt({ exp: nowSeconds + 3600 }))).toBe(false);

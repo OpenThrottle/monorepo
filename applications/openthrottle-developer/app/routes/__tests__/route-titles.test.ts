@@ -98,19 +98,24 @@ const readTitle = async (name: string): Promise<string> => {
 
 /**
  * Titles resolved once up front. Importing ~80 route modules is far slower than
- * the default 5s per-test timeout allows, and every assertion below needs the
- * same map, so pay that cost a single time.
+ * the default per-test budget allows, and every assertion below needs the
+ * same map, so pay that cost a single time. The loaded-data describe at the
+ * bottom is nested here so it reuses the same warm module cache.
  */
 const titles = new Map<string, string>();
 
 describe('route titles', () => {
-  beforeAll(async () => {
-    const entries = await Promise.all(
-      routeNames.map(async (name) => [name, await readTitle(name)] as const),
-    );
+  beforeAll(
+    async () => {
+      const entries = await Promise.all(
+        routeNames.map(async (name) => [name, await readTitle(name)] as const),
+      );
 
-    entries.forEach(([name, title]) => titles.set(name, title));
-  }, 300_000);
+      entries.forEach(([name, title]) => titles.set(name, title));
+    },
+    // eslint-disable-next-line openthrottle/no-per-test-timeout -- one-time cold import of every route module's whole app graph; a CPU cost, not a wait
+    300_000,
+  );
 
   test('every route module is enumerated', () => {
     expect(routeNames.length).toBeGreaterThan(50);
@@ -145,34 +150,35 @@ describe('route titles', () => {
 
     expect(collisions).toStrictEqual([]);
   });
-});
 
-/**
- * Detail routes prefer the loaded entity name. The sweep above only exercises
- * the `loaderData: undefined` fallback (the error-boundary path), so these
- * spot-check the loaded branch of the same `meta` functions.
- */
-describe('detail route titles with loader data', () => {
-  test.each([
-    ['plans.$planId._index', { plan: { title: 'Ship it' } }, 'Ship it | Plans'],
-    [
-      'projects.$projectId._index',
-      { project: { name: 'Atlas' } },
-      'Atlas | Projects',
-    ],
-    [
-      'settings.mcp.$connectorId',
-      { connector: { name: 'Linear' } },
-      'Linear | MCP',
-    ],
-    [
-      'calendar.$eventId',
-      { event: { title: 'Standup' } },
-      'Standup | Calendar',
-    ],
-  ])(
-    '%s uses the entity name',
-    async (name, loaderData, expected) => {
+  /**
+   * Detail routes prefer the loaded entity name. The sweep above only exercises
+   * the `loaderData: undefined` fallback (the error-boundary path), so these
+   * spot-check the loaded branch of the same `meta` functions.
+   */
+  describe('detail route titles with loader data', () => {
+    test.each([
+      [
+        'plans.$planId._index',
+        { plan: { title: 'Ship it' } },
+        'Ship it | Plans',
+      ],
+      [
+        'projects.$projectId._index',
+        { project: { name: 'Atlas' } },
+        'Atlas | Projects',
+      ],
+      [
+        'settings.mcp.$connectorId',
+        { connector: { name: 'Linear' } },
+        'Linear | MCP',
+      ],
+      [
+        'calendar.$eventId',
+        { event: { title: 'Standup' } },
+        'Standup | Calendar',
+      ],
+    ])('%s uses the entity name', async (name, loaderData, expected) => {
       const loadModule = modules[`../${name}.tsx`];
       if (loadModule === undefined) {
         throw new Error(`no route module for ${name}`);
@@ -185,7 +191,6 @@ describe('detail route titles with loader data', () => {
       )?.title;
 
       expect(title).toBe(`${expected} | ${SITE_TITLE}`);
-    },
-    60_000,
-  );
+    });
+  });
 });

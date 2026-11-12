@@ -403,7 +403,7 @@ export const main = async (): Promise<void> => {
     // Kill arrived while idle between iterations: stop before starting a new agent.
     // Reset the previous iteration's task only if it was left in-flight (not completed).
     if (killRequested) {
-      // eslint-disable-next-line no-await-in-loop
+      // eslint-disable-next-line no-await-in-loop -- sequential by design: the kill cleanup must finish before the next iteration
       await finishKilledRun(
         lastIterationTaskCompleted ? undefined : lastIterationTaskId,
       );
@@ -415,7 +415,7 @@ export const main = async (): Promise<void> => {
 
     // Plan-centric: resume IN_PROGRESS task or pick first QUEUED/PENDING; set to IN_PROGRESS only when QUEUED or PENDING; include in prompt so agent outputs complete-task signal.
     if (!task) {
-      // eslint-disable-next-line no-await-in-loop
+      // eslint-disable-next-line no-await-in-loop -- sequential by design: each iteration re-reads task state left by the previous one
       const planTasks = await getTasksByPlanId(
         openthrottleConfig,
         effectivePlanId,
@@ -423,13 +423,13 @@ export const main = async (): Promise<void> => {
       const remaining = planTasks.filter(isRunnableRalphTask);
 
       if (remaining.length === 0) {
-        // eslint-disable-next-line no-await-in-loop
+        // eslint-disable-next-line no-await-in-loop -- sequential by design: plan is closed before the run is settled and the loop exits
         await updatePlanStatus(
           openthrottleConfig,
           effectivePlanId,
           'COMPLETED',
         );
-        // eslint-disable-next-line no-await-in-loop
+        // eslint-disable-next-line no-await-in-loop -- sequential by design: the run is settled before the process exits
         await settleCliRunSafely('COMPLETED');
         console.log(
           ` - 📋 Plan ${COLORS.green}${effectivePlanId}${COLORS.reset} has no remaining tasks; Ralph is exiting.`,
@@ -444,9 +444,9 @@ export const main = async (): Promise<void> => {
         const blockedTitles = remaining.map((blockedTask) => blockedTask.title);
         const titles = blockedTitles.map((title) => `"${title}"`).join(', ');
 
-        // eslint-disable-next-line no-await-in-loop
+        // eslint-disable-next-line no-await-in-loop -- sequential by design: plan is marked BLOCKED before the run is settled and the process exits
         await updatePlanStatus(openthrottleConfig, effectivePlanId, 'BLOCKED');
-        // eslint-disable-next-line no-await-in-loop
+        // eslint-disable-next-line no-await-in-loop -- sequential by design: the run is settled before the process exits
         await settleCliRunSafely('COMPLETED');
         console.log(
           ` - 📋 Plan ${COLORS.green}${effectivePlanId}${COLORS.reset} has only BLOCKED tasks left (${blockedTitles.length}): ${titles}. Unblock them and re-run to continue.`,
@@ -464,7 +464,7 @@ export const main = async (): Promise<void> => {
           taskForIteration.status === 'QUEUED'
         ) {
           try {
-            // eslint-disable-next-line no-await-in-loop
+            // eslint-disable-next-line no-await-in-loop -- sequential by design: task status writes are applied in order
             await updateTaskStatus(
               openthrottleConfig,
               taskForIteration.id,
@@ -559,7 +559,7 @@ export const main = async (): Promise<void> => {
       }
     } catch (error) {
       // Iteration threw (not an abort): settle the tracked run FAILED, then rethrow.
-      // eslint-disable-next-line no-await-in-loop
+      // eslint-disable-next-line no-await-in-loop -- sequential by design: the run must be settled before the error is rethrown
       await settleCliRunSafely('FAILED');
       throw error;
     }
@@ -567,7 +567,7 @@ export const main = async (): Promise<void> => {
     // The poll fired mid-iteration (marker set or superseded): abort the loop before
     // marking any task complete, reset task + plan to PENDING, settle CANCELLED, exit.
     if (killRequested) {
-      // eslint-disable-next-line no-await-in-loop
+      // eslint-disable-next-line no-await-in-loop -- sequential by design: the kill cleanup must finish before the loop exits
       await finishKilledRun(task ?? firstPendingForIteration);
     }
 
@@ -581,7 +581,7 @@ export const main = async (): Promise<void> => {
     // for a different kind of run on a different machine. The recorded reset time tells the human
     // when to re-run it.
     if (usageLimitHit.current !== null) {
-      // eslint-disable-next-line no-await-in-loop
+      // eslint-disable-next-line no-await-in-loop -- sequential by design: the usage-limit hand-back must finish before the loop exits
       await finishUsageLimitedRun(
         usageLimitHit.current,
         task ?? firstPendingForIteration,
@@ -644,7 +644,7 @@ export const main = async (): Promise<void> => {
 
     for (const taskId of completeTaskIds) {
       try {
-        // eslint-disable-next-line no-await-in-loop
+        // eslint-disable-next-line no-await-in-loop -- sequential by design: task completions are applied in order
         const updated = await updateTaskStatus(
           openthrottleConfig,
           taskId,
@@ -676,13 +676,13 @@ export const main = async (): Promise<void> => {
     // tracked run row first so a detached CLI run is never left IN_PROGRESS on those exits.
     const terminalFlags = getRalphOutputMarkerFlags(result);
     if (terminalFlags.hasPromiseComplete) {
-      // eslint-disable-next-line no-await-in-loop
+      // eslint-disable-next-line no-await-in-loop -- sequential by design: the run is settled before parseRalphResponse may exit
       await settleCliRunSafely('COMPLETED');
     } else if (
       terminalFlags.hasPromiseError ||
       terminalFlags.hasPromiseInputRequired
     ) {
-      // eslint-disable-next-line no-await-in-loop
+      // eslint-disable-next-line no-await-in-loop -- sequential by design: the run is settled before parseRalphResponse may exit
       await settleCliRunSafely('FAILED');
     }
 

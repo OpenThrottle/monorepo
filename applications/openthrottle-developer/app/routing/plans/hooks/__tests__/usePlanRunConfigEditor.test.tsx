@@ -29,7 +29,7 @@ function renderEditor(
     value.current = { hook, search };
     return null;
   }
-  // eslint-disable-next-line react/no-multi-comp
+  // eslint-disable-next-line react/no-multi-comp -- test-only probe component that exercises the hook under test
   function EditorProbe(): React.ReactElement {
     return (
       <PlanRunConfigStoreProvider

@@ -11,6 +11,7 @@ import { QueueJobLogsService } from './queue-job-logs.service.ts';
 
 const QUEUE = 'plans-queue';
 const JOB = 'job-1';
+const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
 
 const baseInput = (
   overrides: Partial<QueueJobLogsInput> = {},
@@ -206,7 +207,9 @@ describe('QueueJobLogsService', () => {
 
   it('rejects `since` and `after` together', async () => {
     await expect(
-      service.read(baseInput({ after: 'whatever', since: new Date() })),
+      service.read(
+        baseInput({ after: 'whatever', since: new Date(FIXED_NOW) }),
+      ),
     ).rejects.toThrow(/mutually exclusive/);
   });
 

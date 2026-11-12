@@ -1,4 +1,5 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
@@ -12,8 +13,9 @@ import {
 } from '../index';
 
 describe('ContextMenuSubContent', () => {
-  test('renders inside an open context menu', () => {
-    render(
+  test('renders inside an open context menu', async () => {
+    const user = userEvent.setup();
+    const component = render(
       <ContextMenu>
         <ContextMenuTrigger>Area</ContextMenuTrigger>
         <ContextMenuContent>
@@ -24,11 +26,14 @@ describe('ContextMenuSubContent', () => {
         </ContextMenuContent>
       </ContextMenu>,
     );
-    fireEvent.contextMenu(screen.getByText('Area'));
+    await user.pointer({
+      keys: '[MouseRight]',
+      target: component.getByText('Area'),
+    });
     // The submenu content is portalled and only mounts on real pointer
     // interaction in jsdom; assert the primitive composes and its trigger
     // renders inside the open menu.
     expect(ContextMenuSubContent).toBeDefined();
-    expect(screen.getByText('More')).toBeInTheDocument();
+    expect(component.getByText('More')).toBeInTheDocument();
   });
 });

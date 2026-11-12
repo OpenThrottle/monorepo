@@ -6900,7 +6900,7 @@
       "file": "packages/openthrottle-ide/src/data/watch.ts",
       "project": "packages/openthrottle-ide",
       "status": "tested",
-      "testFile": "packages/openthrottle-ide/src/data/__tests__/watch.test.ts"
+      "testFile": "packages/openthrottle-ide/src/data/__tests__/watch.integration.test.ts"
     },
     {
       "category": "data",

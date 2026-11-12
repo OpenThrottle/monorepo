@@ -2,7 +2,7 @@ import { render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { PLAN_RUN_RESCHEDULE_COPY } from '~/routing/plans/data/data.copy';
 
@@ -24,11 +24,11 @@ vi.mock('sonner', () => ({
 
 const COPY = PLAN_RUN_RESCHEDULE_COPY;
 
+const NOW = new Date('2026-11-02T20:00:00.000Z');
+
 // A whole-hour instant three days out: in range, and survives the picker's minute precision.
 const futureInstant = (): Date => {
-  const instant = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
-  instant.setMinutes(0, 0, 0);
-  return instant;
+  return new Date('2026-11-05T20:00:00.000Z');
 };
 
 const renderDialog = (
@@ -70,8 +70,13 @@ const renderDialog = (
 
 describe('PlanRunRescheduleDialog Component', () => {
   beforeEach(() => {
+    vi.useFakeTimers({ now: NOW, toFake: ['Date'] });
     toastError.mockClear();
     toastSuccess.mockClear();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   describe('when the run has a future fire time', () => {

@@ -1,8 +1,17 @@
+// `MarkdownRenderer` composes classes with `cn`, so the lazy import drags in
+// the whole `react-router-shadcn` barrel — ~4s to transform on a dev machine,
+// and past Vitest's 15s `hookTimeout` on a contended CI shard when it ran in a
+// `beforeAll`. Every sibling suite pays that cost at import time; this one
+// only reaches it through `React.lazy`, so import it eagerly here (module load
+// is not bounded by a test or hook timeout) and keep the `findBy` waits
+// measuring the render, not module loading.
+import '@openthrottle/react-router-markdown';
+
 import type { RenderResult } from '@testing-library/react';
 import { render } from '@testing-library/react';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
-import { beforeAll, beforeEach, describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, test } from 'vitest';
 
 import type { ChatMessageBodyProps } from '../ChatMessageBody';
 import { ChatMessageBody } from '../ChatMessageBody';
@@ -20,25 +29,9 @@ import { ChatMessageBody } from '../ChatMessageBody';
  */
 const LAZY_RENDERER_TIMEOUT_MS = 10_000;
 
-/**
- * The preload below transforms the whole `react-router-shadcn` barrel, which
- * has overrun Vitest's 15s `hookTimeout` on a contended CI shard. It is
- * transform-bound, not a hang, so it gets its own budget.
- */
-const PRELOAD_TIMEOUT_MS = 60_000;
-
 describe('ChatMessageBody Component', () => {
   let component: RenderResult;
   let props: ChatMessageBodyProps;
-
-  // `MarkdownRenderer` composes classes with `cn`, so the lazy import drags in
-  // the whole `react-router-shadcn` barrel — ~4s to transform on a dev machine,
-  // past the budget above on CI. Every sibling suite pays that cost at import
-  // time; this one only reaches it through `React.lazy`, so preload the module
-  // here and keep the `findBy` waits measuring the render, not module loading.
-  beforeAll(async () => {
-    await import('@openthrottle/react-router-markdown');
-  }, PRELOAD_TIMEOUT_MS);
 
   const renderBody = (p: ChatMessageBodyProps): RenderResult => {
     const Comp = () => {

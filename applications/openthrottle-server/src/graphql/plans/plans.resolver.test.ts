@@ -17,7 +17,15 @@ import {
 import { Task } from '@openthrottle/nestjs-repositories';
 import type { Queue } from 'bullmq';
 import type { SelectQueryBuilder } from 'typeorm';
-import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+import {
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  test,
+  vi,
+} from 'vitest';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import { NotificationsService } from '../../notifications/notifications.service.ts';
@@ -50,6 +58,12 @@ vi.mock('@openthrottle/node-client', () => ({
   getPostgresConfig: vi.fn(),
   searchPlansBySemanticQuery: vi.fn(),
 }));
+
+const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 const IN_PROGRESS_TRANSITION_FORBIDDEN_MESSAGE = `Cannot transition to IN_PROGRESS: only PENDING, QUEUED, SCHEDULED, or already IN_PROGRESS plans may enter this state.`;
 
@@ -1390,7 +1404,9 @@ describe('PlansResolver', () => {
     });
 
     test('derives isStale: fresh IN_PROGRESS false, stale IN_PROGRESS true, terminal false, non-heartbeating never', async () => {
-      const now = Date.now();
+      vi.useFakeTimers({ toFake: ['Date'] });
+      vi.setSystemTime(FIXED_NOW);
+      const now = FIXED_NOW.getTime();
       const baseRow = {
         bullmqJobId: null,
         executionBackend: 'claude',
@@ -1885,7 +1901,9 @@ describe('PlansResolver', () => {
   describe('recordPlanRunHeartbeat', () => {
     test('bumps the heartbeat by run id and maps the refreshed row', async () => {
       mockRecordHeartbeatById.mockClear();
-      const now = Date.now();
+      vi.useFakeTimers({ toFake: ['Date'] });
+      vi.setSystemTime(FIXED_NOW);
+      const now = FIXED_NOW.getTime();
       mockFindById.mockResolvedValueOnce({
         bullmqJobId: null,
         createdAt: new Date(now - 5_000),
@@ -2114,10 +2132,10 @@ describe('PlansResolver', () => {
       };
       const created: Plan = {
         ...mockPlan,
-        createdAt: new Date(),
+        createdAt: new Date(FIXED_NOW),
         id: 'new-id',
         title: input.title,
-        updatedAt: new Date(),
+        updatedAt: new Date(FIXED_NOW),
       };
       mockPlanCreationService.createPlanFromInput.mockResolvedValue(created);
 

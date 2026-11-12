@@ -61,7 +61,7 @@ describe('PostgresProfilingQueryLogger', () => {
       const [first, second] = await Promise.all([
         runWithQueryCapture(async () => {
           logger.logQuery('SELECT first');
-          await new Promise((resolve) => setTimeout(resolve, 5));
+          await new Promise((resolve) => setTimeout(resolve, 0));
           logger.logQuery('SELECT first_again');
         }),
         runWithQueryCapture(async () => {

@@ -127,7 +127,7 @@ describe('NestjsThrottlerModule (GraphQL integration)', () => {
 
     const messages: string[] = [];
     for (let i = 0; i < LIMIT * 4; i += 1) {
-      // eslint-disable-next-line no-await-in-loop
+      // eslint-disable-next-line no-await-in-loop -- sequential by design: the throttle window counts requests in order
       const { body } = await queryHealth(booted.url);
       messages.push(body.errors?.[0]?.message ?? body.data?.serverHealth ?? '');
     }
