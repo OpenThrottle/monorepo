@@ -63,6 +63,7 @@ const {
   registerCliPlanRunMock,
   resolveGitBranchFromCwdMock,
   runIterationAsyncMock,
+  runIterationMock,
   settleCliPlanRunMock,
   updatePlanStatusMock,
   updateTaskStatusMock,
@@ -81,6 +82,7 @@ const {
   registerCliPlanRunMock: vi.fn().mockResolvedValue('cli-run-1'),
   resolveGitBranchFromCwdMock: vi.fn((): string | null => null),
   runIterationAsyncMock: vi.fn().mockResolvedValue('agent output'),
+  runIterationMock: vi.fn().mockReturnValue('agent output'),
   settleCliPlanRunMock: vi.fn().mockResolvedValue(undefined),
   updatePlanStatusMock: vi.fn().mockResolvedValue(undefined),
   updateTaskStatusMock: vi
@@ -147,7 +149,7 @@ vi.mock('../../utils/projects', () => ({
 }));
 
 vi.mock('../run-iteration', () => ({
-  runIteration: vi.fn().mockReturnValue('agent output'),
+  runIteration: runIterationMock,
   runIterationAsync: runIterationAsyncMock,
 }));
 
@@ -285,7 +287,9 @@ describe('Ralph detached-CLI cancelable run', () => {
 
     expect(registerCliPlanRunMock).not.toHaveBeenCalled();
     expect(maybeRegisterPlanRunWorktreeCheckoutMock).not.toHaveBeenCalled();
-    expect(runIterationAsyncMock).toHaveBeenCalled();
+    // A TTY run iterates synchronously; only detached runs use runIterationAsync.
+    expect(runIterationMock).toHaveBeenCalled();
+    expect(runIterationAsyncMock).not.toHaveBeenCalled();
   });
 
   it('continues UN-TRACKED when register fails (no settle, real work not aborted)', async () => {

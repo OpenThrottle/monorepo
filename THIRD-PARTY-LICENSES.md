@@ -13,15 +13,15 @@ Platform-specific prebuilt binaries (packages that declare `os`/`cpu`, e.g.
 `@rollup/rollup-linux-x64-gnu`, `fsevents`) are omitted: which ones install depends on
 the host OS, and each shares the license of the cross-platform toolchain already listed.
 
-**2146** third-party packages.
+**2142** third-party packages.
 
 ## License summary
 
 | License | Packages |
 | --- | --- |
-| MIT | 1846 |
+| MIT | 1843 |
 | Apache-2.0 | 97 |
-| ISC | 80 |
+| ISC | 79 |
 | BSD-3-Clause | 59 |
 | BSD-2-Clause | 26 |
 | BlueOak-1.0.0 | 12 |
@@ -435,17 +435,17 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@nodelib/fs.scandir` | 2.1.5 | MIT | [source](https://github.com/nodelib/nodelib/tree/master#readme) |
 | `@nodelib/fs.stat` | 2.0.5 | MIT | [source](https://github.com/nodelib/nodelib/tree/master#readme) |
 | `@nodelib/fs.walk` | 1.2.8 | MIT | [source](https://github.com/nodelib/nodelib/tree/master#readme) |
-| `@nx/devkit` | 23.2.0 | MIT | [Victor Savkin](https://nx.dev) |
-| `@nx/eslint` | 23.2.0 | MIT | [Victor Savkin](https://nx.dev) |
-| `@nx/eslint-plugin` | 23.2.0 | MIT | [Victor Savkin](https://nx.dev) |
-| `@nx/jest` | 23.2.0 | MIT | [Victor Savkin](https://nx.dev) |
-| `@nx/js` | 23.2.0 | MIT | [source](https://nx.dev) |
-| `@nx/plugin` | 23.2.0 | MIT | [Nrwl](https://nx.dev) |
-| `@nx/react` | 23.2.0 | MIT | [Victor Savkin](https://nx.dev) |
-| `@nx/vite` | 23.2.0 | MIT | [Victor Savkin](https://nx.dev) |
-| `@nx/vitest` | 23.2.0 | MIT | [Victor Savkin](https://nx.dev) |
-| `@nx/web` | 23.2.0 | MIT | [Victor Savkin](https://nx.dev) |
-| `@nx/workspace` | 23.2.0 | MIT | [Victor Savkin](https://nx.dev) |
+| `@nx/devkit` | 23.3.1 | MIT | [Victor Savkin](https://nx.dev) |
+| `@nx/eslint` | 23.3.1 | MIT | [Victor Savkin](https://nx.dev) |
+| `@nx/eslint-plugin` | 23.3.1 | MIT | [Victor Savkin](https://nx.dev) |
+| `@nx/jest` | 23.3.1 | MIT | [Victor Savkin](https://nx.dev) |
+| `@nx/js` | 23.3.1 | MIT | [source](https://nx.dev) |
+| `@nx/plugin` | 23.3.1 | MIT | [Nrwl](https://nx.dev) |
+| `@nx/react` | 23.3.1 | MIT | [Victor Savkin](https://nx.dev) |
+| `@nx/vite` | 23.3.1 | MIT | [Victor Savkin](https://nx.dev) |
+| `@nx/vitest` | 23.3.1 | MIT | [Victor Savkin](https://nx.dev) |
+| `@nx/web` | 23.3.1 | MIT | [Victor Savkin](https://nx.dev) |
+| `@nx/workspace` | 23.3.1 | MIT | [Victor Savkin](https://nx.dev) |
 | `@opentelemetry/api` | 1.9.1 | Apache-2.0 | [OpenTelemetry Authors](https://github.com/open-telemetry/opentelemetry-js/tree/main/api) |
 | `@opentelemetry/api-logs` | 0.220.0 | Apache-2.0 | [OpenTelemetry Authors](https://github.com/open-telemetry/opentelemetry-js/tree/main/experimental/packages/api-logs) |
 | `@opentelemetry/core` | 2.10.0 | Apache-2.0 | [OpenTelemetry Authors](https://github.com/open-telemetry/opentelemetry-js/tree/main/packages/opentelemetry-core) |
@@ -762,13 +762,11 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@vercel/react-router` | 1.3.1 | Apache-2.0 | [source](https://github.com/vercel/vercel#readme) |
 | `@vercel/static-config` | 3.4.0 | Apache-2.0 | [source](https://github.com/vercel/vercel#readme) |
 | `@vitejs/plugin-react` | 6.0.5 | MIT | [Evan You](https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#readme) |
-| `@vitest/expect` | 3.2.4, 4.1.10 | MIT | [source](https://vitest.dev/api/expect) |
-| `@vitest/mocker` | 4.1.10 | MIT | [source](https://github.com/vitest-dev/vitest/tree/main/packages/mocker) |
-| `@vitest/pretty-format` | 3.2.4, 4.1.10 | MIT | [source](https://github.com/vitest-dev/vitest/tree/main/packages/pretty-format) |
-| `@vitest/runner` | 4.1.10 | MIT | [source](https://vitest.dev/api/advanced/runner) |
-| `@vitest/snapshot` | 4.1.10 | MIT | [source](https://vitest.dev/guide/snapshot) |
-| `@vitest/spy` | 3.2.4, 4.1.10 | MIT | [source](https://vitest.dev/api/mock) |
-| `@vitest/utils` | 3.2.4, 4.1.10 | MIT | [source](https://github.com/vitest-dev/vitest/tree/main/packages/utils) |
+| `@vitest/expect` | 3.2.4 | MIT | [source](https://github.com/vitest-dev/vitest/tree/main/packages/expect#readme) |
+| `@vitest/mocker` | 5.1.0 | MIT | [source](https://github.com/vitest-dev/vitest/tree/main/packages/mocker) |
+| `@vitest/pretty-format` | 3.2.4 | MIT | [source](https://github.com/vitest-dev/vitest/tree/main/packages/utils#readme) |
+| `@vitest/spy` | 3.2.4, 5.1.0 | MIT | [source](https://vitest.dev/api/mock) |
+| `@vitest/utils` | 3.2.4 | MIT | [source](https://github.com/vitest-dev/vitest/tree/main/packages/utils#readme) |
 | `@volar/language-core` | 2.4.28 | MIT | [source](https://github.com/volarjs/volar.js#readme) |
 | `@volar/source-map` | 2.4.28 | MIT | [source](https://github.com/volarjs/volar.js#readme) |
 | `@volar/typescript` | 2.4.28 | MIT | [source](https://github.com/volarjs/volar.js#readme) |
@@ -873,7 +871,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `available-typed-arrays` | 1.0.7 | MIT | [Jordan Harband](https://github.com/inspect-js/available-typed-arrays#readme) |
 | `aws4` | 1.13.2 | MIT | [Michael Hart](https://github.com/mhart/aws4#readme) |
 | `axe-core` | 4.12.1 | MPL-2.0 | [source](https://www.deque.com/axe/) |
-| `axios` | 1.18.0, 1.18.1 | MIT | [Matt Zabriskie](https://axios-http.com) |
+| `axios` | 1.18.0 | MIT | [Matt Zabriskie](https://axios-http.com) |
 | `b4a` | 1.8.1 | Apache-2.0 | [Holepunch](https://github.com/holepunchto/b4a#readme) |
 | `babel-dead-code-elimination` | 1.0.12 | MIT | [pcattori](https://github.com/pcattori/babel-dead-code-elimination#readme) |
 | `babel-jest` | 30.4.1 | MIT | [source](https://github.com/jestjs/jest#readme) |
@@ -909,7 +907,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `bole` | 5.0.29 | MIT | [Rod Vagg](https://github.com/rvagg/bole#readme) |
 | `boolbase` | 1.0.0 | ISC | [Felix Boehm](https://github.com/fb55/boolbase) |
 | `boolean` | 3.2.0 | MIT | [source](https://github.com/thenativeweb/boolean#readme) |
-| `brace-expansion` | 1.1.18, 2.1.4, 5.0.9 | MIT | [source](https://github.com/juliangruber/brace-expansion#readme) |
+| `brace-expansion` | 1.1.18, 2.1.4, 5.0.12 | MIT | [source](https://github.com/juliangruber/brace-expansion#readme) |
 | `braces` | 3.0.3 | MIT | [Jon Schlinkert](https://github.com/micromatch/braces) |
 | `browserslist` | 4.28.7 | MIT | [Andrey Sitnik](https://github.com/browserslist/browserslist#readme) |
 | `bser` | 2.1.1 | Apache-2.0 | [Wez Furlong](https://facebook.github.io/watchman/docs/bser.html) |
@@ -938,7 +936,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `caniuse-lite` | 1.0.30001806 | CC-BY-4.0 | [Ben Briggs](https://github.com/browserslist/caniuse-lite#readme) |
 | `capital-case` | 1.0.4 | MIT | [Blake Embrey](https://github.com/blakeembrey/change-case/tree/master/packages/capital-case#readme) |
 | `ccount` | 2.0.1 | MIT | [Titus Wormer](https://github.com/wooorm/ccount#readme) |
-| `chai` | 5.3.3, 6.2.2 | MIT | [Jake Luer](http://chaijs.com) |
+| `chai` | 5.3.3, 6.3.0 | MIT | [Jake Luer](http://chaijs.com) |
 | `chain-function` | 1.0.1 | MIT | [jquense](https://github.com/jquense/chain-function#readme) |
 | `chalk` | 4.1.2, 5.6.2 | MIT | [source](https://github.com/chalk/chalk#readme) |
 | `change-case` | 4.1.2 | MIT | [Blake Embrey](https://github.com/blakeembrey/change-case/tree/master/packages/camel-case#readme) |
@@ -1146,8 +1144,8 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `es-define-property` | 1.0.1 | MIT | [Jordan Harband](https://github.com/ljharb/es-define-property#readme) |
 | `es-errors` | 1.3.0 | MIT | [Jordan Harband](https://github.com/ljharb/es-errors#readme) |
 | `es-iterator-helpers` | 1.4.0 | MIT | [Jordan Harband](https://github.com/es-shims/iterator-helpers#readme) |
-| `es-module-lexer` | 2.3.1 | MIT | [Guy Bedford](https://github.com/guybedford/es-module-lexer#readme) |
-| `es-object-atoms` | 1.1.1, 1.1.2 | MIT | [Jordan Harband](https://github.com/ljharb/es-object-atoms#readme) |
+| `es-module-lexer` | 2.3.2 | MIT | [Guy Bedford](https://github.com/guybedford/es-module-lexer#readme) |
+| `es-object-atoms` | 1.1.2 | MIT | [Jordan Harband](https://github.com/ljharb/es-object-atoms#readme) |
 | `es-set-tostringtag` | 2.1.0 | MIT | [Jordan Harband](https://github.com/es-shims/es-set-tostringtag#readme) |
 | `es-shim-unscopables` | 1.1.0 | MIT | [Jordan Harband](https://github.com/ljharb/es-shim-unscopables#readme) |
 | `es-to-primitive` | 1.3.4 | MIT | [Jordan Harband](https://github.com/ljharb/es-to-primitive#readme) |
@@ -1239,7 +1237,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `flat-cache` | 6.1.23 | MIT | [Jared Wray](https://github.com/jaredwray/cacheable#readme) |
 | `flatted` | 3.4.4 | ISC | [Andrea Giammarchi](https://github.com/WebReflection/flatted#readme) |
 | `fn.name` | 1.1.0 | MIT | [Arnout Kazemier](https://github.com/3rd-Eden/fn.name) |
-| `follow-redirects` | 1.16.0, 1.16.2 | MIT | [Ruben Verborgh](https://github.com/follow-redirects/follow-redirects) |
+| `follow-redirects` | 1.16.2 | MIT | [Ruben Verborgh](https://github.com/follow-redirects/follow-redirects) |
 | `for-each` | 0.3.5 | MIT | [Raynos](https://github.com/Raynos/for-each) |
 | `foreground-child` | 3.3.1 | ISC | [Isaac Z. Schlueter](https://github.com/tapjs/foreground-child#readme) |
 | `fork-ts-checker-webpack-plugin` | 9.1.0 | MIT | [Piotr Oleś](https://github.com/TypeStrong/fork-ts-checker-webpack-plugin#readme) |
@@ -1341,7 +1339,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `iconv-lite` | 0.6.3, 0.7.3 | MIT | [Alexander Shtuchkin](https://github.com/pillarjs/iconv-lite) |
 | `identity-obj-proxy` | 3.0.0 | MIT | [Keyan Zhang](https://github.com/keyanzhang/identity-obj-proxy#readme) |
 | `ieee754` | 1.2.1 | BSD-3-Clause | [Feross Aboukhadijeh](https://github.com/feross/ieee754#readme) |
-| `ignore` | 5.3.2, 7.0.5, 7.0.6 | MIT | [kael](https://github.com/kaelzhang/node-ignore#readme) |
+| `ignore` | 5.3.2, 7.0.6 | MIT | [kael](https://github.com/kaelzhang/node-ignore#readme) |
 | `image-ssim` | 0.2.0 | MIT | [Jan Forst](https://github.com/darosh/image-ssim-js/issues) |
 | `immer` | 11.1.15 | MIT | [Michel Weststrate](https://github.com/immerjs/immer#readme) |
 | `immutable` | 5.1.9 | MIT | [Lee Byron](https://immutable-js.com) |
@@ -1670,7 +1668,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `normalize-url` | 6.1.0, 8.1.1 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/normalize-url#readme) |
 | `npm-run-path` | 4.0.1, 5.3.0, 6.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/npm-run-path#readme) |
 | `nth-check` | 2.1.1 | BSD-2-Clause | [Felix Boehm](https://github.com/fb55/nth-check) |
-| `nx` | 23.2.0 | MIT | [Victor Savkin](https://nx.dev) |
+| `nx` | 23.3.1 | MIT | [Victor Savkin](https://nx.dev) |
 | `oauth` | 0.10.2, 0.9.15 | MIT | [Ciaran Jessup](https://github.com/ciaranj/node-oauth#readme) |
 | `object-assign` | 4.1.1 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/object-assign#readme) |
 | `object-hash` | 3.0.0 | MIT | [Scott Puleo](https://github.com/puleos/object-hash) |
@@ -1680,7 +1678,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `object.entries` | 1.1.9 | MIT | [Jordan Harband](https://github.com/es-shims/Object.entries#readme) |
 | `object.fromentries` | 2.0.8 | MIT | [Jordan Harband](https://github.com/es-shims/Object.fromEntries#readme) |
 | `object.values` | 1.2.1 | MIT | [Jordan Harband](https://github.com/es-shims/Object.values#readme) |
-| `obug` | 2.1.4 | MIT | [Kevin Deng](https://github.com/sxzz/obug#readme) |
+| `obug` | 2.1.4, 3.0.0 | MIT | [Kevin Deng](https://github.com/sxzz/obug#readme) |
 | `ollama` | 0.6.3 | MIT | [Saul Boyd](https://github.com/ollama/ollama-js) |
 | `on-finished` | 2.4.1 | MIT | [source](https://github.com/jshttp/on-finished#readme) |
 | `on-headers` | 1.1.0 | MIT | [Douglas Christopher Wilson](https://github.com/jshttp/on-headers#readme) |
@@ -1906,7 +1904,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `secure-compare` | 3.0.1 | MIT | [Vadim Demedes](https://github.com/vdemedes/secure-compare) |
 | `seek-bzip` | 2.0.0 | MIT | [source](https://github.com/cscott/seek-bzip#readme) |
 | `semifies` | 1.0.0 | Apache-2.0 | [Holepunch Inc](https://github.com/holepunchto/semifies) |
-| `semver` | 5.7.2, 6.3.1, 7.7.4, 7.8.4, 7.8.5 | ISC | [GitHub Inc.](https://github.com/npm/node-semver#readme) |
+| `semver` | 5.7.2, 6.3.1, 7.7.4, 7.8.5 | ISC | [GitHub Inc.](https://github.com/npm/node-semver#readme) |
 | `semver-compare` | 1.0.0 | MIT | [James Halliday](https://github.com/substack/semver-compare) |
 | `semver-regex` | 4.0.5 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/semver-regex#readme) |
 | `semver-truncate` | 3.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/semver-truncate#readme) |
@@ -1928,14 +1926,13 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `side-channel-list` | 1.0.1 | MIT | [Jordan Harband](https://github.com/ljharb/side-channel-list#readme) |
 | `side-channel-map` | 1.0.1 | MIT | [Jordan Harband](https://github.com/ljharb/side-channel-map#readme) |
 | `side-channel-weakmap` | 1.0.2 | MIT | [Jordan Harband](https://github.com/ljharb/side-channel-weakmap#readme) |
-| `siginfo` | 2.0.0 | ISC | [Emil Bay](https://github.com/emilbayes/siginfo#readme) |
 | `signal-exit` | 3.0.7, 4.1.0 | ISC | [Ben Coe](https://github.com/tapjs/signal-exit#readme) |
 | `simple-update-notifier` | 2.0.0 | MIT | [alexbrazier](https://github.com/alexbrazier/simple-update-notifier.git) |
 | `sisteransi` | 1.0.5 | MIT | [Terkel Gjervig](https://github.com/terkelg/sisteransi#readme) |
 | `skin-tone` | 2.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/skin-tone#readme) |
 | `slash` | 3.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/slash#readme) |
 | `slice-ansi` | 7.1.2, 8.0.0 | MIT | [source](https://github.com/chalk/slice-ansi#readme) |
-| `smol-toml` | 1.6.1, 1.7.1 | BSD-3-Clause | [Cynthia Rey](https://github.com/squirrelchat/smol-toml#readme) |
+| `smol-toml` | 1.9.0 | BSD-3-Clause | [Cynthia Rey](https://github.com/squirrelchat/smol-toml#readme) |
 | `snake-case` | 3.0.4 | MIT | [Blake Embrey](https://github.com/blakeembrey/change-case/tree/master/packages/snake-case#readme) |
 | `socket.io` | 4.8.3 | MIT | [source](https://github.com/socketio/socket.io/tree/main/packages/socket.io#readme) |
 | `socket.io-adapter` | 2.5.8 | MIT | [source](https://github.com/socketio/socket.io/tree/main/packages/socket.io-adapter#readme) |
@@ -1956,13 +1953,12 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `stable-hash-x` | 0.2.0 | MIT | [Shu Ding](https://github.com/un-ts/stable-hash-x#readme) |
 | `stack-trace` | 0.0.10 | MIT | [Felix Geisendörfer](https://github.com/felixge/node-stack-trace) |
 | `stack-utils` | 2.0.6 | MIT | [James Talmage](https://github.com/tapjs/stack-utils#readme) |
-| `stackback` | 0.0.2 | MIT | [Roman Shtylman](https://github.com/shtylman/node-stackback#readme) |
 | `standard-as-callback` | 2.1.0 | MIT | [luin](https://github.com/luin/asCallback#readme) |
 | `standardwebhooks` | 1.1.1 | MIT | [Standard Webhooks](https://github.com/standard-webhooks/standard-webhooks/tree/main/libraries/javascript) |
 | `stat-mode` | 1.0.0 | MIT | [Nathan Rajlich](https://github.com/TooTallNate/stat-mode) |
 | `state-local` | 1.0.7 | MIT | [Suren Atoyan](https://github.com/suren-atoyan/state-local#readme) |
 | `statuses` | 2.0.2 | MIT | [source](https://github.com/jshttp/statuses#readme) |
-| `std-env` | 4.2.0 | MIT | [source](https://github.com/unjs/std-env#readme) |
+| `std-env` | 4.3.0 | MIT | [source](https://github.com/unjs/std-env#readme) |
 | `stdin-discarder` | 0.3.2 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/stdin-discarder#readme) |
 | `stop-iteration-iterator` | 1.1.0 | MIT | [Jordan Harband](https://github.com/ljharb/stop-iteration-iterator#readme) |
 | `storybook` | 10.5.7 | MIT | [source](https://storybook.js.org) |
@@ -2027,10 +2023,10 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `tiny-async-pool` | 1.3.0 | MIT | [Rafael Xavier de Souza](https://github.com/rxaviers/async-pool#readme) |
 | `tiny-invariant` | 1.3.3 | MIT | [Alex Reardon](https://github.com/alexreardon/tiny-invariant#readme) |
 | `tiny-warning` | 1.0.3 | MIT | [Alex Reardon](https://github.com/alexreardon/tiny-warning#readme) |
-| `tinybench` | 2.9.0 | MIT | [source](https://github.com/tinylibs/tinybench#readme) |
-| `tinyexec` | 1.2.4 | MIT | [James Garbutt](https://github.com/tinylibs/tinyexec#readme) |
+| `tinybench` | 6.2.3 | MIT | [source](https://github.com/tinylibs/tinybench#readme) |
+| `tinyexec` | 1.3.1 | MIT | [James Garbutt](https://github.com/tinylibs/tinyexec#readme) |
 | `tinyglobby` | 0.2.17 | MIT | [Superchupu](https://superchupu.dev/tinyglobby) |
-| `tinyrainbow` | 2.0.0, 3.1.1 | MIT | [source](https://github.com/tinylibs/tinyrainbow#readme) |
+| `tinyrainbow` | 2.0.0 | MIT | [source](https://github.com/tinylibs/tinyrainbow#readme) |
 | `tinyspy` | 4.0.4 | MIT | [source](https://github.com/tinylibs/tinyspy#readme) |
 | `title-case` | 3.0.3 | MIT | [Blake Embrey](https://github.com/blakeembrey/change-case/tree/master/packages/title-case#readme) |
 | `tldts` | 7.4.10 | MIT | [Rémi Berson](https://github.com/remusao/tldts#readme) |
@@ -2133,7 +2129,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `vite-node` | 6.0.0 | MIT | [Anthony Fu](https://github.com/antfu-collective/vite-node#readme) |
 | `vite-plugin-devtools-json` | 1.1.0 | MIT | [Benedikt Meurer](https://github.com/ChromeDevTools/vite-plugin-devtools-json#readme) |
 | `vite-plugin-dts` | 4.5.4 | MIT | [qmhc](https://github.com/qmhc/vite-plugin-dts#readme) |
-| `vitest` | 4.1.10 | MIT | [Anthony Fu](https://vitest.dev) |
+| `vitest` | 5.1.0 | MIT | [Anthony Fu](https://vitest.dev) |
 | `vscode-uri` | 3.1.0 | MIT | [Microsoft](https://github.com/microsoft/vscode-uri#readme) |
 | `w3c-xmlserializer` | 5.0.0 | MIT | [source](https://github.com/jsdom/w3c-xmlserializer#readme) |
 | `walk-up-path` | 4.0.0 | ISC | [Isaac Z. Schlueter](https://github.com/isaacs/walk-up-path#readme) |
@@ -2162,7 +2158,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `which-collection` | 1.0.2 | MIT | [Jordan Harband](https://github.com/inspect-js/which-collection#readme) |
 | `which-pm-runs` | 1.1.0 | MIT | [Zoltan Kochan](https://github.com/zkochan/packages/tree/main/which-pm-runs#readme) |
 | `which-typed-array` | 1.1.22 | MIT | [Jordan Harband](https://github.com/inspect-js/which-typed-array#readme) |
-| `why-is-node-running` | 2.3.0 | MIT | [Mathias Buus](https://github.com/mafintosh/why-is-node-running) |
+| `why-is-node-running` | 3.2.1 | MIT | [Mathias Buus](https://github.com/mafintosh/why-is-node-running) |
 | `winston` | 3.19.0 | MIT | [Charlie Robbins](https://github.com/winstonjs/winston#readme) |
 | `winston-transport` | 4.9.0 | MIT | [Charlie Robbins](https://github.com/winstonjs/winston-transport#readme) |
 | `word-wrap` | 1.2.5 | MIT | [Jon Schlinkert](https://github.com/jonschlinkert/word-wrap) |
