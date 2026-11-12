@@ -9,7 +9,7 @@ import type { Route } from '@/app/routes/+types/settings.preferences';
 import { WorkspaceEditorId } from '~/__generated__/graphql';
 import { MOCK_PLAN_RUN_MODELS } from '~/routing/plans/data/mock.plan-run-models';
 import { SETTINGS_PREFERENCES_COPY } from '~/routing/settings/data/data.copy';
-import { buildRootMatch } from '~/testing/root-match-fixture';
+import { buildRootMatch } from '~/testing/buildRootMatch';
 
 import Component from '../settings.preferences';
 

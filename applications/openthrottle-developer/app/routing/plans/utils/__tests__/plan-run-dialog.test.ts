@@ -49,6 +49,7 @@ describe('plan-run-dialog utils', () => {
   describe('createPlanRunDialogDraft runner', () => {
     const draftFor = (runConfigJson: string) => {
       return createPlanRunDialogDraft({
+        defaultAgent: null,
         mode: 'run',
         now: NOW,
         planId: 'plan-1',
