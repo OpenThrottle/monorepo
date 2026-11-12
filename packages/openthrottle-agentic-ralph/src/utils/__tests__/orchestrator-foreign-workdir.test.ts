@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -21,6 +22,8 @@ import { createWorkflowRalphOrchestrator } from '../orchestrator.ts';
 
 let otRoot: string;
 let foreignRoot: string;
+/** A linked worktree of {@link otRoot} at a path outside it, like a Ralph plan worktree. */
+let otWorktree: string;
 
 const ISO = '2026-05-30T12:00:00.000Z';
 const PLAN_ID = 'plan-foreign-1';
@@ -30,11 +33,37 @@ beforeAll(() => {
   otRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'ot-orch-foreign-'));
   fs.writeFileSync(path.join(otRoot, 'pnpm-workspace.yaml'), 'packages: []\n');
   foreignRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'foreign-orch-'));
+
+  execFileSync('git', ['init', '-q'], { cwd: otRoot, stdio: 'ignore' });
+  execFileSync(
+    'git',
+    [
+      '-c',
+      'user.email=test@example.com',
+      '-c',
+      'user.name=test',
+      'commit',
+      '-q',
+      '--allow-empty',
+      '-m',
+      'init',
+    ],
+    { cwd: otRoot, stdio: 'ignore' },
+  );
+  otWorktree = path.join(
+    fs.mkdtempSync(path.join(os.tmpdir(), 'ot-orch-worktrees-')),
+    'plan-a',
+  );
+  execFileSync('git', ['worktree', 'add', '-q', '--detach', otWorktree], {
+    cwd: otRoot,
+    stdio: 'ignore',
+  });
 });
 
 afterAll(() => {
   fs.rmSync(otRoot, { force: true, recursive: true });
   fs.rmSync(foreignRoot, { force: true, recursive: true });
+  fs.rmSync(path.dirname(otWorktree), { force: true, recursive: true });
 });
 
 const baseContext = (
@@ -166,6 +195,32 @@ describe('createWorkflowRalphOrchestrator foreign workingDirectory', () => {
     expect(runParams.agentPrompt).toContain('NOT the OpenThrottle monorepo');
     expect(runParams.agentPrompt).toContain(
       'Make file changes under this directory',
+    );
+  });
+
+  it('does not scope the prompt away from OpenThrottle for a worktree of the OpenThrottle repo', async () => {
+    const run = vi.fn<WorkflowRalphIterationRunner['run']>(
+      async () => '<promise>COMPLETE</promise>',
+    );
+
+    const orchestrator = createWorkflowRalphOrchestrator({
+      executeGraphqlV2: createForeignWorkdirMockExecute(),
+      iterationRunner: { run },
+    });
+
+    process.env[WORKFLOW_RALPH_OT_ROOT_ENV] = otRoot;
+
+    const result = await orchestrator.execute({
+      context: baseContext({ workingDirectory: otWorktree }),
+    });
+
+    expect(result.status).toBe('finished');
+
+    const runParams = run.mock.calls[0]![0];
+
+    expect(runParams.cwd).toBe(path.resolve(otWorktree));
+    expect(runParams.agentPrompt).not.toContain(
+      'NOT the OpenThrottle monorepo',
     );
   });
 });

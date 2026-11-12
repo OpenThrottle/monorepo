@@ -5,6 +5,7 @@
 
 import * as path from 'node:path';
 
+import { resolveGitCommonDirFromCwd } from './git.ts';
 import { getOpenThrottleRoot } from './workflow.ts';
 
 /**
@@ -27,17 +28,66 @@ export interface ForeignWorkspaceContext {
 }
 
 /**
+ * @description Returns the git common dir of a directory, or `undefined` when it has none (not a
+ * repository, or git is unavailable).
+ */
+export type GitCommonDirResolver = (dir: string) => string | undefined;
+
+/** @description Options for {@link resolveForeignWorkspaceContext}. */
+export interface ResolveForeignWorkspaceContextOptions {
+  /** Injectable so tests need no real git; defaults to `git rev-parse --git-common-dir`. */
+  readonly resolveGitCommonDir: GitCommonDirResolver;
+}
+
+const DEFAULT_RESOLVE_OPTIONS: ResolveForeignWorkspaceContextOptions = {
+  resolveGitCommonDir: resolveGitCommonDirFromCwd,
+};
+
+/**
+ * @description True when both directories resolve to the same git common dir — i.e. one is a
+ * linked worktree of the other's repository. False when either has no resolvable common dir.
+ */
+const sharesGitIdentity = (
+  left: string,
+  right: string,
+  resolveGitCommonDir: GitCommonDirResolver,
+): boolean => {
+  const leftCommonDir = resolveGitCommonDir(left);
+  if (leftCommonDir === undefined) {
+    return false;
+  }
+
+  return leftCommonDir === resolveGitCommonDir(right);
+};
+
+/**
  * @description Resolves whether the working directory is outside the OpenThrottle monorepo.
+ *
+ * A directory inside the OpenThrottle root is never foreign. Outside it, the directory is foreign
+ * unless it shares the root's git common dir — a plan worktree under
+ * `~/.openthrottle/worktrees/<org>/<repo>/<name>` is a checkout of the same repository, not a
+ * different one. When git cannot answer for either side, path containment alone decides.
  */
 export const resolveForeignWorkspaceContext = (
   cwd: string = process.cwd(),
   env: NodeJS.ProcessEnv = process.env,
+  options: ResolveForeignWorkspaceContextOptions = DEFAULT_RESOLVE_OPTIONS,
 ): ForeignWorkspaceContext => {
   const workingDirectory = path.resolve(cwd);
   const openThrottleRoot = getOpenThrottleRoot(env);
-  const isForeign =
-    openThrottleRoot !== undefined &&
-    !isWithinDir(openThrottleRoot, workingDirectory);
+
+  if (
+    openThrottleRoot === undefined ||
+    isWithinDir(openThrottleRoot, workingDirectory)
+  ) {
+    return { isForeign: false, openThrottleRoot, workingDirectory };
+  }
+
+  const isForeign = !sharesGitIdentity(
+    openThrottleRoot,
+    workingDirectory,
+    options.resolveGitCommonDir,
+  );
 
   return { isForeign, openThrottleRoot, workingDirectory };
 };
