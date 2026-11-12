@@ -183,9 +183,9 @@ component owns no state beyond its own open/closed popover. See each exported
 
 - `ChatModelPicker` — `groups`, `models`, `selectedModelId`, `onModelChange`, optional `onToggleFavorite`, `disabledModelIds` (capability gating).
 - `ChatReasoningTierControl` — `capabilities`, `reasoning`/`onReasoningChange`, `serviceTier`/`onServiceTierChange`.
-- `ChatPermissionModeControl` — `capabilities`, `permissionMode`/`onPermissionModeChange`.
+- `ChatPermissionModeControl` — `capabilities`, `permissionMode`/`onPermissionModeChange`, and optionally `rememberPermissionMode`/`onRememberPermissionModeChange`. With the handler supplied it shows a "Remember my choice" checkbox below the modes, only when the backend offers an elevated mode.
 - `ChatCheckoutSelector` — `checkouts`, `selectedCheckoutId`, `onCheckoutChange`.
-- `ChatComposerToolbar` — composes all of the above via additive props (`modelGroups`, `capabilities`, `checkouts`, `reasoning`, `serviceTier`, `permissionMode`, …); omit them and it renders exactly as before.
+- `ChatComposerToolbar` — composes all of the above via additive props (`modelGroups`, `capabilities`, `checkouts`, `reasoning`, `serviceTier`, `permissionMode`, `rememberPermissionMode`, …); omit them and it renders exactly as before. The capability-gated props are declared on `ChatComposerCapabilityProps`, which `ChatComposerToolbarProps` extends.
 
 Supporting types (`src/types.ts`, all `@public`):
 

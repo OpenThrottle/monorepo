@@ -21,6 +21,7 @@ import {
   decodeChatOption,
   reconcileChatToolbarState,
   toCheckoutOptions,
+  writeChatToolbarBackendPref,
 } from '@openthrottle/react-router-chat-state';
 import { useAtom } from 'jotai';
 import * as React from 'react';
@@ -66,6 +67,7 @@ export interface UseHomeComposerResult {
   readonly personaId: string | undefined;
   readonly personas: readonly ChatPersonaOption[];
   readonly reasoning: ChatReasoningLevel | undefined;
+  readonly rememberPermissionMode: boolean;
   readonly repositoryId: string | undefined;
   readonly repositoryIds: readonly string[];
   readonly serviceTier: ChatServiceTier | undefined;
@@ -76,6 +78,7 @@ export interface UseHomeComposerResult {
   readonly setPersist: (persist: boolean) => void;
   readonly setPersonaId: (personaId: string) => void;
   readonly setReasoning: (reasoning: ChatReasoningLevel) => void;
+  readonly setRememberPermissionMode: (remember: boolean) => void;
   readonly setRepositoryId: (repositoryId: string) => void;
   readonly setRepositoryIds: (repositoryIds: readonly string[]) => void;
   readonly setServiceTier: (serviceTier: ChatServiceTier) => void;
@@ -136,6 +139,7 @@ export const useHomeComposer = (
   const persist = effectiveToolbar.persist;
   const personaId = effectiveToolbar.personaId;
   const reasoning = effectiveToolbar.reasoning;
+  const rememberPermissionMode = effectiveToolbar.rememberPermissionMode;
   const repositoryIds = effectiveToolbar.repositoryIds;
   // @-mentions stay keyed on the PRIMARY checkout for v1: a multi-repo mention
   // needs repo-qualified paths or the agent cannot disambiguate them.
@@ -166,6 +170,9 @@ export const useHomeComposer = (
   const decodedOption = modelId ? decodeChatOption(modelId) : null;
   const isCliBackend =
     decodedOption !== null && decodedOption.backend !== 'openai';
+  // Capability-gated picks write per-backend AND global, like the header chat,
+  // so an older per-backend value can never shadow a pick made here.
+  const backendKey = decodedOption?.backend;
 
   // Capability descriptor for the selected backend gates the reasoning/tier,
   // permission, and checkout controls. Grouped model list + checkouts feed the
@@ -185,7 +192,9 @@ export const useHomeComposer = (
     return setToolbarState((previous) => ({ ...previous, modelId }));
   };
   const setPermissionMode = (permissionMode: ChatPermissionMode): void => {
-    return setToolbarState((previous) => ({ ...previous, permissionMode }));
+    return setToolbarState((previous) =>
+      writeChatToolbarBackendPref(previous, backendKey, { permissionMode }),
+    );
   };
   const setPersist = (persist: boolean): void => {
     return setToolbarState((previous) => ({ ...previous, persist }));
@@ -194,7 +203,15 @@ export const useHomeComposer = (
     return setToolbarState((previous) => ({ ...previous, personaId }));
   };
   const setReasoning = (reasoning: ChatReasoningLevel): void => {
-    return setToolbarState((previous) => ({ ...previous, reasoning }));
+    return setToolbarState((previous) =>
+      writeChatToolbarBackendPref(previous, backendKey, { reasoning }),
+    );
+  };
+  const setRememberPermissionMode = (remember: boolean): void => {
+    return setToolbarState((previous) => ({
+      ...previous,
+      rememberPermissionMode: remember,
+    }));
   };
   const setRepositoryId = (repositoryId: string): void => {
     return setToolbarState((previous) => ({
@@ -206,7 +223,9 @@ export const useHomeComposer = (
     return setToolbarState((previous) => ({ ...previous, repositoryIds }));
   };
   const setServiceTier = (serviceTier: ChatServiceTier): void => {
-    return setToolbarState((previous) => ({ ...previous, serviceTier }));
+    return setToolbarState((previous) =>
+      writeChatToolbarBackendPref(previous, backendKey, { serviceTier }),
+    );
   };
 
   const onSubmit = (message: string): void => {
@@ -286,6 +305,7 @@ export const useHomeComposer = (
     personaId,
     personas,
     reasoning,
+    rememberPermissionMode,
     repositoryId,
     repositoryIds,
     serviceTier,
@@ -296,6 +316,7 @@ export const useHomeComposer = (
     setPersist,
     setPersonaId,
     setReasoning,
+    setRememberPermissionMode,
     setRepositoryId,
     setRepositoryIds,
     setServiceTier,

@@ -23,7 +23,7 @@ describe('chat toolbar constants', () => {
     expect(CHAT_TOOLBAR_STORAGE_KEY).toMatch(/:chat:toolbar$/);
   });
 
-  test('DEFAULT_CHAT_TOOLBAR_STATE defaults to plan mode, persist on, everything else unset', () => {
+  test('DEFAULT_CHAT_TOOLBAR_STATE defaults to plan mode, persist on, remember off, everything else unset', () => {
     expect(DEFAULT_CHAT_TOOLBAR_STATE).toEqual({
       mode: ChatComposerMode.plan,
       modelId: undefined,
@@ -32,6 +32,7 @@ describe('chat toolbar constants', () => {
       persist: true,
       personaId: undefined,
       reasoning: undefined,
+      rememberPermissionMode: false,
       repositoryIds: [],
       serviceTier: undefined,
       version: CHAT_TOOLBAR_STATE_VERSION,
@@ -64,8 +65,8 @@ describe('normalizeChatToolbarState', () => {
     });
   });
 
-  describe('valid current-version (v3) blob', () => {
-    test('round-trips a fully-populated blob including perBackend and an explicit persist=false', () => {
+  describe('valid current-version blob', () => {
+    test('round-trips a fully-populated blob including perBackend, persist=false and rememberPermissionMode=true', () => {
       const blob = {
         mode: ChatComposerMode.build,
         modelId: 'http://localhost:11434/v1::llama3',
@@ -81,6 +82,7 @@ describe('normalizeChatToolbarState', () => {
         persist: false,
         personaId: 'persona-42',
         reasoning: ChatReasoningLevel.high,
+        rememberPermissionMode: true,
         repositoryIds: ['repo-7', 'repo-8'],
         serviceTier: ChatServiceTier.fast,
         version: CHAT_TOOLBAR_STATE_VERSION,
@@ -108,6 +110,7 @@ describe('normalizeChatToolbarState', () => {
       expect(normalizeChatToolbarState(v2Blob)).toEqual({
         ...rest,
         persist: true,
+        rememberPermissionMode: false,
         repositoryIds: [repositoryId],
         version: CHAT_TOOLBAR_STATE_VERSION,
       });
@@ -138,6 +141,7 @@ describe('normalizeChatToolbarState', () => {
         ...rest,
         perBackend: {},
         persist: true,
+        rememberPermissionMode: false,
         repositoryIds: [repositoryId],
         version: CHAT_TOOLBAR_STATE_VERSION,
       });
@@ -210,6 +214,27 @@ describe('normalizeChatToolbarState', () => {
     });
   });
 
+  describe('v4 → v5 migration (rememberPermissionMode)', () => {
+    test('seeds rememberPermissionMode=false on a v4 blob that predates the field', () => {
+      const result = normalizeChatToolbarState({
+        permissionMode: ChatPermissionMode.fullAccess,
+        version: 4,
+      });
+
+      expect(result.rememberPermissionMode).toBe(false);
+      expect(result.permissionMode).toBe(ChatPermissionMode.fullAccess);
+    });
+
+    test('treats a non-boolean rememberPermissionMode as off', () => {
+      expect(
+        normalizeChatToolbarState({
+          rememberPermissionMode: 'true',
+          version: CHAT_TOOLBAR_STATE_VERSION,
+        }).rememberPermissionMode,
+      ).toBe(false);
+    });
+  });
+
   describe('legacy / unversioned migration', () => {
     test('migrates an unversioned blob forward, preserving still-valid fields', () => {
       const legacy = {
@@ -228,6 +253,7 @@ describe('normalizeChatToolbarState', () => {
         ...rest,
         perBackend: {},
         persist: true,
+        rememberPermissionMode: false,
         repositoryIds: [repositoryId],
         version: CHAT_TOOLBAR_STATE_VERSION,
       });

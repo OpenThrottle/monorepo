@@ -2,16 +2,13 @@ import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import type {
-  ChatBackendCapabilities,
   ChatCheckoutOption,
+  ChatComposerCapabilityProps,
   ChatComposerMode,
   ChatContextSource,
   ChatModelGroup,
   ChatModelOption,
-  ChatPermissionMode,
   ChatPersonaOption,
-  ChatReasoningLevel,
-  ChatServiceTier,
 } from '../types';
 import { ChatComposerMicState } from '../types';
 import { ChatComposerAttachControl } from './ChatComposerAttachControl';
@@ -23,12 +20,8 @@ import { ChatComposerPersonaSelect } from './ChatComposerPersonaSelect';
 import { ChatPermissionModeControl } from './ChatPermissionModeControl';
 import { ChatReasoningTierControl } from './ChatReasoningTierControl';
 
-export interface ChatComposerToolbarProps {
-  /**
-   * Selected backend's capabilities. Gates the reasoning/tier, permission and
-   * checkout controls; omitting it renders none of them.
-   */
-  readonly capabilities?: ChatBackendCapabilities;
+/** Toolbar props; the capability-gated ones come from {@link ChatComposerCapabilityProps}. */
+export interface ChatComposerToolbarProps extends ChatComposerCapabilityProps {
   /** Checkouts for {@link ChatComposerCheckoutControl}, which gates on them. */
   readonly checkouts?: readonly ChatCheckoutOption[];
   readonly className?: string;
@@ -60,16 +53,11 @@ export interface ChatComposerToolbarProps {
   readonly onModelChange?: (modelId: string) => void;
   /** Forwarded to the grouped {@link ChatModelPicker} rail's gear; omit to hide it. */
   readonly onOpenSettings?: () => void;
-  readonly onPermissionModeChange?: (mode: ChatPermissionMode) => void;
   /** Renders the (never capability-gated) persist switch when supplied; omit to hide. Pair with {@link persist}. */
   readonly onPersistChange?: (persist: boolean) => void;
   readonly onPersonaChange?: (personaId: string) => void;
-  readonly onReasoningChange?: (level: ChatReasoningLevel) => void;
-  readonly onServiceTierChange?: (tier: ChatServiceTier) => void;
   /** Toggle a model's favorite flag; forwarded to {@link ChatModelPicker}. */
   readonly onToggleFavorite?: (modelId: string) => void;
-  /** Selected permission mode; pair with {@link capabilities}. */
-  readonly permissionMode?: ChatPermissionMode;
   /**
    * Whether turns are persisted (default true when the switch is shown). false
    * is Private mode — an ephemeral turn with a "not saved" affordance. Pair with
@@ -80,14 +68,10 @@ export interface ChatComposerToolbarProps {
   readonly personaId?: string;
   /** Selectable personas; omit to hide the persona control. */
   readonly personas?: readonly ChatPersonaOption[];
-  /** Selected reasoning level; pair with {@link capabilities}. */
-  readonly reasoning?: ChatReasoningLevel;
   /** Selected checkout id; pair with {@link checkouts}. */
   readonly selectedCheckoutId?: string;
   /** Primary-first selection (index 0 is the spawn cwd) for multi-select. */
   readonly selectedCheckoutIds?: readonly string[];
-  /** Selected service tier; pair with {@link capabilities}. */
-  readonly serviceTier?: ChatServiceTier;
 }
 
 /**
@@ -127,6 +111,7 @@ export const ChatComposerToolbar = (
     onPersistChange,
     onPersonaChange,
     onReasoningChange,
+    onRememberPermissionModeChange,
     onServiceTierChange,
     onToggleFavorite,
     permissionMode,
@@ -134,6 +119,7 @@ export const ChatComposerToolbar = (
     personaId,
     personas,
     reasoning,
+    rememberPermissionMode,
     selectedCheckoutId,
     selectedCheckoutIds,
     serviceTier,
@@ -180,7 +166,9 @@ export const ChatComposerToolbar = (
         <ChatPermissionModeControl
           capabilities={capabilities}
           onPermissionModeChange={onPermissionModeChange}
+          onRememberPermissionModeChange={onRememberPermissionModeChange}
           permissionMode={permissionMode}
+          rememberPermissionMode={rememberPermissionMode}
         />
       )}
       <ChatComposerCheckoutControl

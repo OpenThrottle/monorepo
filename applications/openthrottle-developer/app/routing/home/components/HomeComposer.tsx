@@ -60,6 +60,7 @@ export const HomeComposer = (props: HomeComposerProps): React.ReactElement => {
     personaId,
     personas: effectivePersonas,
     reasoning,
+    rememberPermissionMode,
     repositoryIds,
     serviceTier,
     setDraft,
@@ -69,6 +70,7 @@ export const HomeComposer = (props: HomeComposerProps): React.ReactElement => {
     setPersist,
     setPersonaId,
     setReasoning,
+    setRememberPermissionMode,
     setRepositoryId,
     setRepositoryIds,
     setServiceTier,
@@ -119,12 +121,14 @@ export const HomeComposer = (props: HomeComposerProps): React.ReactElement => {
         onPersistChange={setPersist}
         onPersonaChange={FEATURE_BETA_PREVIEW ? setPersonaId : undefined}
         onReasoningChange={setReasoning}
+        onRememberPermissionModeChange={setRememberPermissionMode}
         onServiceTierChange={setServiceTier}
         permissionMode={permissionMode}
         persist={persist}
         personaId={FEATURE_BETA_PREVIEW ? personaId : undefined}
         personas={FEATURE_BETA_PREVIEW ? effectivePersonas : undefined}
         reasoning={reasoning}
+        rememberPermissionMode={rememberPermissionMode}
         selectedCheckoutId={repositoryIds[0]}
         selectedCheckoutIds={repositoryIds}
         serviceTier={serviceTier}

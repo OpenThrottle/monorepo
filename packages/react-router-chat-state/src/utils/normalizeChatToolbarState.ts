@@ -138,6 +138,9 @@ function coerceChatToolbarState(
     reasoning: isChatReasoningLevel(record.reasoning)
       ? record.reasoning
       : undefined,
+    // Absent before v5 → false, so the safety decay stays on unless the user
+    // explicitly opted in. Anything but a real boolean true counts as off.
+    rememberPermissionMode: record.rememberPermissionMode === true,
     repositoryIds: coerceRepositoryIds(record),
     serviceTier: isChatServiceTier(record.serviceTier)
       ? record.serviceTier
@@ -151,7 +154,8 @@ function coerceChatToolbarState(
  * {@link ChatToolbarState}. Reads `version`, dispatches to the matching
  * migration, then coerces each field. Unversioned/legacy blobs (`version`
  * absent → treated as v0), v1 blobs (before `perBackend`), v2 blobs (before
- * `persist`) and v3 blobs (single `repositoryId`) all share a forward-compatible
+ * `persist`), v3 blobs (single `repositoryId`) and v4 blobs (before
+ * `rememberPermissionMode`, seeded false) all share a forward-compatible
  * field set, so they migrate forward — seeding `perBackend: {}`, `persist: true`
  * and widening `repositoryId` to `[id]` — while preserving still-valid picks (see {@link coerceChatToolbarState}). A newer/unknown version — or
  * malformed input — degrades to {@link DEFAULT_CHAT_TOOLBAR_STATE} rather than
@@ -171,6 +175,7 @@ export function normalizeChatToolbarState(raw: unknown): ChatToolbarState {
     case 1:
     case 2:
     case 3:
+    case 4:
     case CHAT_TOOLBAR_STATE_VERSION:
       return coerceChatToolbarState(raw);
     default:

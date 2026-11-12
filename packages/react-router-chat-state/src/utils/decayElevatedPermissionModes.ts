@@ -28,12 +28,17 @@ const isElevatedPermissionMode = (
  * untouched. A `perBackend` entry left with no remaining prefs is dropped so the
  * map never accumulates empty keys. Returns the SAME reference when nothing is
  * elevated, so callers can skip a redundant write. Idempotent — decaying an
- * already-safe state is a no-op.
+ * already-safe state is a no-op. Skipped entirely (same reference returned) when
+ * the user opted in with {@link ChatToolbarState.rememberPermissionMode}.
  * @public
  */
 export function decayElevatedPermissionModes(
   state: ChatToolbarState,
 ): ChatToolbarState {
+  if (state.rememberPermissionMode) {
+    return state;
+  }
+
   const clearGlobal = isElevatedPermissionMode(state.permissionMode);
 
   let perBackendChanged = false;

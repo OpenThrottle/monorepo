@@ -33,3 +33,9 @@ export const CHAT_PERMISSION_REQUEST_COPY = {
   heading: 'Permission requested',
   selectedPrefix: 'Answered:',
 } as const;
+
+/** Copy for {@link ChatPermissionModeControl}'s remember-my-choice opt-in. */
+export const CHAT_PERMISSION_REMEMBER_COPY = {
+  hint: `When off, Auto-accept edits and Full access reset to Supervised in each new session`,
+  label: 'Remember my choice',
+} as const;

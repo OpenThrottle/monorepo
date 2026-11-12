@@ -260,6 +260,8 @@ export function reconcileChatToolbarState(
     persist: persisted.persist,
     personaId,
     reasoning,
+    // A user preference, not a capability-gated pick: passes through unchanged.
+    rememberPermissionMode: persisted.rememberPermissionMode,
     repositoryIds,
     serviceTier,
     version: persisted.version,
