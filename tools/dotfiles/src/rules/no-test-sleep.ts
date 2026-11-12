@@ -30,8 +30,9 @@ const TIMERS_PROMISES: ReadonlySet<string> = new Set([
   'timers/promises',
 ]);
 
-const isZeroOrAbsent = (arg: TSESTree.Node | undefined): boolean =>
-  arg === undefined || (arg.type === 'Literal' && arg.value === 0);
+const isZeroOrAbsent = (arg: TSESTree.Node | undefined): boolean => {
+  return arg === undefined || (arg.type === 'Literal' && arg.value === 0);
+};
 
 const isGlobalSetTimeout = (callee: TSESTree.Node): boolean => {
   if (callee.type === 'Identifier') return callee.name === 'setTimeout';
@@ -154,14 +155,11 @@ export const noTestSleep = createAntiFlakeRule<[], MessageIds>({
   defaultOptions: [],
   meta: {
     docs: {
-      description:
-        'Disallow real-clock sleeps in tests; use fake timers, vi.waitFor or expect.poll.',
+      description: `Disallow real-clock sleeps in tests; use fake timers, vi.waitFor or expect.poll.`,
     },
     messages: {
-      sleep:
-        'Real-clock sleep in a test. Use `vi.useFakeTimers()` + `vi.advanceTimersByTimeAsync()`, or `vi.waitFor` / `expect.poll` when waiting on a real event.',
-      sleepHelper:
-        '`{{name}}()` sleeps on the real clock. Use `vi.useFakeTimers()` + `vi.advanceTimersByTimeAsync()`, or `vi.waitFor` / `expect.poll` when waiting on a real event.',
+      sleep: `Real-clock sleep in a test. Use \`vi.useFakeTimers()\` + \`vi.advanceTimersByTimeAsync()\`, or \`vi.waitFor\` / \`expect.poll\` when waiting on a real event.`,
+      sleepHelper: `\`{{name}}()\` sleeps on the real clock. Use \`vi.useFakeTimers()\` + \`vi.advanceTimersByTimeAsync()\`, or \`vi.waitFor\` / \`expect.poll\` when waiting on a real event.`,
     },
     schema: [],
     type: 'problem',

@@ -206,10 +206,11 @@ describe('eslintConfig flat config', () => {
   });
 
   it('errors on the agent-safety rules, exempting tests from the chokepoints', () => {
-    const entryFor = (ruleName: string): FlatConfigEntry | undefined =>
-      entries.find(
+    const entryFor = (ruleName: string): FlatConfigEntry | undefined => {
+      return entries.find(
         (entry) => entry.rules !== undefined && ruleName in entry.rules,
       );
+    };
 
     expect(ruleSeverity('openthrottle/disable-requires-reason')).toBe('error');
     expect(entryFor('openthrottle/disable-requires-reason')?.ignores).toBe(

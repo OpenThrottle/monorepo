@@ -85,8 +85,9 @@ const SPAWN_EXPORTS: ReadonlyMap<string, ReadonlySet<string>> = new Map([
 
 const MAX_RESOLVE_DEPTH = 4;
 
-const normalizeModule = (source: string): string =>
-  source.startsWith('node:') ? source.slice('node:'.length) : source;
+const normalizeModule = (source: string): string => {
+  return source.startsWith('node:') ? source.slice('node:'.length) : source;
+};
 
 /**
  * @description The statically known leading text of `node`: a string
@@ -222,12 +223,10 @@ export const agentCliSpawnChokepoint = createAgentSafetyRule<
   defaultOptions: [{ allowedFiles: DEFAULT_ALLOWED_FILES }],
   meta: {
     docs: {
-      description:
-        'Spawn agent CLIs only through openthrottle-drivers or the agentic-utils conversation backends.',
+      description: `Spawn agent CLIs only through openthrottle-drivers or the agentic-utils conversation backends.`,
     },
     messages: {
-      agentCliSpawn:
-        'Do not spawn `{{binary}}` directly. Agent CLIs launch through `@openthrottle/openthrottle-drivers` (`runDriverSync` / `runDriverAsync`) or an `@openthrottle/openthrottle-agentic-utils` conversation backend, which scrub the env, pin the binary, and enforce timeouts and teardown.',
+      agentCliSpawn: `Do not spawn \`{{binary}}\` directly. Agent CLIs launch through \`@openthrottle/openthrottle-drivers\` (\`runDriverSync\` / \`runDriverAsync\`) or an \`@openthrottle/openthrottle-agentic-utils\` conversation backend, which scrub the env, pin the binary, and enforce timeouts and teardown.`,
     },
     schema: [
       {

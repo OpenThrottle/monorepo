@@ -56,8 +56,7 @@ ruleTester.run('mcp-tool-registration', mcpToolRegistration, {
         '  ok() {}',
         '}',
       ].join('\n'),
-      filename:
-        '/repo/packages/openthrottle-mcp/src/nest/openthrottle-mcp-mcp-surface.ts',
+      filename: `/repo/packages/openthrottle-mcp/src/nest/openthrottle-mcp-mcp-surface.ts`,
     },
     {
       // A `@Tool` that is not the mcp-nest decorator.

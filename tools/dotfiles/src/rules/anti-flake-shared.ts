@@ -55,13 +55,19 @@ const FAKE_CLOCK_PATTERN =
  * check by design: under fake timers a `setTimeout` wait is virtual, and the
  * rule cannot know which `describe` the fake clock is scoped to.
  */
-export const usesFakeTimers = (sourceText: string): boolean =>
-  FAKE_TIMERS_PATTERN.test(sourceText);
+export const usesFakeTimers = (sourceText: string): boolean => {
+  return FAKE_TIMERS_PATTERN.test(sourceText);
+};
 
 /** @description As {@link usesFakeTimers}, also accepting `vi.setSystemTime`. */
-export const usesFakeClock = (sourceText: string): boolean =>
-  FAKE_CLOCK_PATTERN.test(sourceText);
+export const usesFakeClock = (sourceText: string): boolean => {
+  return FAKE_CLOCK_PATTERN.test(sourceText);
+};
 
 /** @description Whether `node` is a function expression or arrow. */
-export const isFunctionLike = (node: TSESTree.Node): boolean =>
-  node.type === 'ArrowFunctionExpression' || node.type === 'FunctionExpression';
+export const isFunctionLike = (node: TSESTree.Node): boolean => {
+  return (
+    node.type === 'ArrowFunctionExpression' ||
+    node.type === 'FunctionExpression'
+  );
+};

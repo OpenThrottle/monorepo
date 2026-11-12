@@ -23,9 +23,10 @@ export const matchesAnyPath = (
   patterns: readonly string[],
 ): boolean => {
   const normalized = filename.replaceAll('\\', '/');
-  return patterns.some((pattern) =>
-    pattern.endsWith('/')
-      ? normalized.includes(`/${pattern}`)
-      : normalized.endsWith(`/${pattern}`),
-  );
+  return patterns.some((pattern) => {
+    const suffix = `/${pattern}`;
+    return pattern.endsWith('/')
+      ? normalized.includes(suffix)
+      : normalized.endsWith(suffix);
+  });
 };

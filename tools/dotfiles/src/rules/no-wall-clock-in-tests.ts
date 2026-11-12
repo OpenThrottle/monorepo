@@ -18,16 +18,20 @@ const isMemberCall = (
   callee: TSESTree.Node,
   object: string,
   property: string,
-): boolean =>
-  callee.type === 'MemberExpression' &&
-  !callee.computed &&
-  callee.object.type === 'Identifier' &&
-  callee.object.name === object &&
-  callee.property.type === 'Identifier' &&
-  callee.property.name === property;
+): boolean => {
+  return (
+    callee.type === 'MemberExpression' &&
+    !callee.computed &&
+    callee.object.type === 'Identifier' &&
+    callee.object.name === object &&
+    callee.property.type === 'Identifier' &&
+    callee.property.name === property
+  );
+};
 
-const isBareDate = (node: TSESTree.Node): boolean =>
-  node.type === 'Identifier' && node.name === 'Date';
+const isBareDate = (node: TSESTree.Node): boolean => {
+  return node.type === 'Identifier' && node.name === 'Date';
+};
 
 export const noWallClockInTests = createAntiFlakeRule<[], MessageIds>({
   create(context) {
@@ -57,12 +61,10 @@ export const noWallClockInTests = createAntiFlakeRule<[], MessageIds>({
   defaultOptions: [],
   meta: {
     docs: {
-      description:
-        'Disallow reading the real clock in tests; use a fixed timestamp or vi.setSystemTime.',
+      description: `Disallow reading the real clock in tests; use a fixed timestamp or vi.setSystemTime.`,
     },
     messages: {
-      wallClock:
-        '`{{read}}` reads the real clock, so the test depends on when it runs. Use a fixed timestamp constant (e.g. `FIXED_NOW`), or `vi.useFakeTimers()` + `vi.setSystemTime()`.',
+      wallClock: `\`{{read}}\` reads the real clock, so the test depends on when it runs. Use a fixed timestamp constant (e.g. \`FIXED_NOW\`), or \`vi.useFakeTimers()\` + \`vi.setSystemTime()\`.`,
     },
     schema: [],
     type: 'problem',

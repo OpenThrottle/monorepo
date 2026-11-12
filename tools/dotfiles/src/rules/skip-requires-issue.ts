@@ -87,12 +87,10 @@ export const skipRequiresIssue = createAntiFlakeRule<[], MessageIds>({
   defaultOptions: [],
   meta: {
     docs: {
-      description:
-        'Require an unconditional test skip or todo to cite the issue tracking it.',
+      description: `Require an unconditional test skip or todo to cite the issue tracking it.`,
     },
     messages: {
-      skipWithoutIssue:
-        'Skipped test without a tracking reference. Add a comment above citing an issue (`#123`) or an OpenThrottle plan/task id, or delete the test. Use `skipIf`/`runIf` for environment gates.',
+      skipWithoutIssue: `Skipped test without a tracking reference. Add a comment above citing an issue (\`#123\`) or an OpenThrottle plan/task id, or delete the test. Use \`skipIf\`/\`runIf\` for environment gates.`,
     },
     schema: [],
     type: 'suggestion',

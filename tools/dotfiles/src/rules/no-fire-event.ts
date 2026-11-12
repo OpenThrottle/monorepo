@@ -38,8 +38,7 @@ export const noFireEvent = createAntiFlakeRule<[], MessageIds>({
       description: 'Disallow fireEvent in tests; use userEvent.',
     },
     messages: {
-      fireEvent:
-        'Use `userEvent` (`@testing-library/user-event`), not `fireEvent`. Under fake timers, `userEvent.setup({ advanceTimers: vi.advanceTimersByTime })`. Drag-and-drop with `dataTransfer` and `<input type="color">` may keep `fireEvent` behind an inline disable with the reason.',
+      fireEvent: `Use \`userEvent\` (\`@testing-library/user-event\`), not \`fireEvent\`. Under fake timers, \`userEvent.setup({ advanceTimers: vi.advanceTimersByTime })\`. Drag-and-drop with \`dataTransfer\` and \`<input type="color">\` may keep \`fireEvent\` behind an inline disable with the reason.`,
     },
     schema: [],
     type: 'suggestion',

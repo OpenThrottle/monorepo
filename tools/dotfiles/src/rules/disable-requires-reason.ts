@@ -63,12 +63,10 @@ export const disableRequiresReason = createAgentSafetyRule<[], MessageIds>({
   defaultOptions: [],
   meta: {
     docs: {
-      description:
-        'Require a `-- reason` on every eslint-disable directive comment.',
+      description: `Require a \`-- reason\` on every eslint-disable directive comment.`,
     },
     messages: {
-      missingReason:
-        'State why on this `{{directive}}`: append ` -- <reason>` (ESLint description syntax). A suppression without a reason cannot be reviewed.',
+      missingReason: `State why on this \`{{directive}}\`: append \` -- <reason>\` (ESLint description syntax). A suppression without a reason cannot be reviewed.`,
     },
     schema: [],
     type: 'suggestion',

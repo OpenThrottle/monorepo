@@ -44,12 +44,17 @@ const NEST_MCP_MODULE = '@rekog/mcp-nest';
  * @description The method name of `node`'s callee when it is a non-computed
  * member call, else `null`.
  */
-const memberCallName = (node: TSESTree.CallExpression): string | null =>
-  node.callee.type === 'MemberExpression' &&
-  !node.callee.computed &&
-  node.callee.property.type === 'Identifier'
-    ? node.callee.property.name
-    : null;
+const memberCallName = (node: TSESTree.CallExpression): string | null => {
+  const { callee } = node;
+  if (
+    callee.type !== 'MemberExpression' ||
+    callee.computed ||
+    callee.property.type !== 'Identifier'
+  ) {
+    return null;
+  }
+  return callee.property.name;
+};
 
 export const mcpToolRegistration = createAgentSafetyRule<
   [RuleOptions],
@@ -74,10 +79,9 @@ export const mcpToolRegistration = createAgentSafetyRule<
         }
       },
       Decorator(node): void {
-        const expression =
-          node.expression.type === 'CallExpression'
-            ? node.expression.callee
-            : node.expression;
+        const decorated = node.expression;
+        const isCall = decorated.type === 'CallExpression';
+        const expression = isCall ? decorated.callee : decorated;
         if (
           expression.type === 'Identifier' &&
           toolDecoratorNames.has(expression.name)
@@ -102,14 +106,11 @@ export const mcpToolRegistration = createAgentSafetyRule<
   defaultOptions: [{ allowedFiles: DEFAULT_ALLOWED_FILES }],
   meta: {
     docs: {
-      description:
-        'Register MCP tools only through the openthrottle-mcp tool registry.',
+      description: `Register MCP tools only through the openthrottle-mcp tool registry.`,
     },
     messages: {
-      decorator:
-        'Declare MCP tools on the Nest surface in openthrottle-mcp (src/nest/openthrottle-mcp-mcp-surface.ts), mirrored from src/tool-registry.ts. A `@Tool` elsewhere skips the registry parity test and the token-checked GraphQL path.',
-      registerTool:
-        'Register MCP tools only through `defineTool` in openthrottle-mcp src/tool-registry.ts. A tool registered elsewhere skips the registry parity test and the token-checked GraphQL path.',
+      decorator: `Declare MCP tools on the Nest surface in openthrottle-mcp (src/nest/openthrottle-mcp-mcp-surface.ts), mirrored from src/tool-registry.ts. A \`@Tool\` elsewhere skips the registry parity test and the token-checked GraphQL path.`,
+      registerTool: `Register MCP tools only through \`defineTool\` in openthrottle-mcp src/tool-registry.ts. A tool registered elsewhere skips the registry parity test and the token-checked GraphQL path.`,
     },
     schema: [
       {

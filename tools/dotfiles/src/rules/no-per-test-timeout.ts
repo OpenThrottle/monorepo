@@ -53,13 +53,16 @@ const findKey = (
 const TIMEOUT_KEY: ReadonlySet<string> = new Set(['timeout']);
 const RETRY_KEY: ReadonlySet<string> = new Set(['retry']);
 
-const isVitestSetConfig = (callee: TSESTree.Node): boolean =>
-  callee.type === 'MemberExpression' &&
-  !callee.computed &&
-  callee.object.type === 'Identifier' &&
-  callee.object.name === 'vi' &&
-  callee.property.type === 'Identifier' &&
-  callee.property.name === 'setConfig';
+const isVitestSetConfig = (callee: TSESTree.Node): boolean => {
+  return (
+    callee.type === 'MemberExpression' &&
+    !callee.computed &&
+    callee.object.type === 'Identifier' &&
+    callee.object.name === 'vi' &&
+    callee.property.type === 'Identifier' &&
+    callee.property.name === 'setConfig'
+  );
+};
 
 export const noPerTestTimeout = createAntiFlakeRule<[], MessageIds>({
   create(context) {
@@ -110,16 +113,12 @@ export const noPerTestTimeout = createAntiFlakeRule<[], MessageIds>({
   defaultOptions: [],
   meta: {
     docs: {
-      description:
-        'Disallow per-test timeout and retry overrides; the workspace Vitest config owns both.',
+      description: `Disallow per-test timeout and retry overrides; the workspace Vitest config owns both.`,
     },
     messages: {
-      perTestRetry:
-        'Per-test `retry` hides a flaky test. Fix the flake; the workspace pins `retry` to 0 (`VITEST_RETRY`).',
-      perTestTimeout:
-        'Per-test timeout override. The workspace budget is `VITEST_TEST_TIMEOUT_MS`; make the test faster (fake timers, mocks), or move real I/O to a `*.integration.test.ts` suite.',
-      setConfigTimeout:
-        '`vi.setConfig` timeout override. The workspace budget is `VITEST_TEST_TIMEOUT_MS`; make the test faster, or move real I/O to a `*.integration.test.ts` suite.',
+      perTestRetry: `Per-test \`retry\` hides a flaky test. Fix the flake; the workspace pins \`retry\` to 0 (\`VITEST_RETRY\`).`,
+      perTestTimeout: `Per-test timeout override. The workspace budget is \`VITEST_TEST_TIMEOUT_MS\`; make the test faster (fake timers, mocks), or move real I/O to a \`*.integration.test.ts\` suite.`,
+      setConfigTimeout: `\`vi.setConfig\` timeout override. The workspace budget is \`VITEST_TEST_TIMEOUT_MS\`; make the test faster, or move real I/O to a \`*.integration.test.ts\` suite.`,
     },
     schema: [],
     type: 'problem',
