@@ -55,10 +55,10 @@
       "dev": {
         "executor": "nx:run-commands",
         "metadata": {
-          "description": "Run the Electron shell in development with electron-vite (opens the app window)."
+          "description": "Run the Electron shell in development with electron-vite (opens the app window). install-electron first fetches the Electron binary (a no-op once it matches the locked version): electron-vite reads node_modules/electron/path.txt itself and never triggers electron's lazy download, so a clean install would fail with \"Error: Electron uninstall\"."
         },
         "options": {
-          "command": "electron-vite dev",
+          "command": "install-electron && electron-vite dev",
           "cwd": "{projectRoot}"
         },
         "continuous": true,
