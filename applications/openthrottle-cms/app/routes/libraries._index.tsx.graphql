@@ -1,0 +1,17 @@
+fragment CmsLibraryRow on CmsLibraryObject {
+  description
+  name
+  status
+  updatedAt
+  uuid
+}
+
+query CmsLibraries {
+  cmsLibraries(take: 100) {
+    hasNextPage
+    items {
+      ...CmsLibraryRow
+    }
+    totalCount
+  }
+}

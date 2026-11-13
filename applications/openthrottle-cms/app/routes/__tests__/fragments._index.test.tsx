@@ -1,19 +1,109 @@
+import { createTestRouterContext } from '@openthrottle/react-router-testing';
 import { render } from '@testing-library/react';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
-import { describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import Fragments from '../fragments._index';
+import type { Route } from '@/app/routes/+types/fragments._index';
+import { CmsFragmentsDocument } from '~/__generated__/graphql';
+
+const fetchPublicGraphql = vi.fn();
+
+vi.mock('~/global/utils/graphql.server', () => ({ fetchPublicGraphql }));
+
+const { default: Component, loader } = await import('../fragments._index');
+
+const buildLoaderArgs = (): Route.LoaderArgs => {
+  const url = new URL('http://localhost/fragments');
+
+  return {
+    context: createTestRouterContext(),
+    params: {},
+    pattern: '/fragments',
+    request: new Request(url),
+    url,
+  };
+};
+
+const buildPage = (items: readonly unknown[]) => {
+  return { hasNextPage: false, items, totalCount: items.length };
+};
+
+const renderRoute = () => {
+  const Stub = createRoutesStub([
+    {
+      Component,
+      loader: async () => loader(buildLoaderArgs()),
+      path: '/fragments',
+    },
+  ]);
+
+  return render(<Stub initialEntries={['/fragments']} />);
+};
 
 describe('routes/fragments._index.tsx', () => {
-  test('renders the page heading', async () => {
-    const Stub = createRoutesStub([
-      { Component: Fragments, path: '/fragments' },
-    ]);
-    const component = render(<Stub initialEntries={['/fragments']} />);
+  beforeEach(() => {
+    fetchPublicGraphql.mockReset();
+  });
 
-    expect(
-      await component.findByRole('heading', { level: 1 }),
-    ).toBeInTheDocument();
+  describe('loader', () => {
+    test('queries cmsFragments and returns the page', async () => {
+      const page = buildPage([
+        {
+          createdAt: '2026-11-01T00:00:00.000Z',
+          isSystem: false,
+          name: 'Hero heading',
+          typename: 'Heading',
+          updatedAt: '2026-11-02T00:00:00.000Z',
+          uuid: 'fragment-1',
+        },
+      ]);
+
+      fetchPublicGraphql.mockResolvedValue({ cmsFragments: page });
+
+      await expect(loader(buildLoaderArgs())).resolves.toEqual({
+        cmsFragments: page,
+      });
+      expect(fetchPublicGraphql).toHaveBeenCalledWith(CmsFragmentsDocument);
+    });
+  });
+
+  describe('with rows', () => {
+    test('renders the heading and a table row per item', async () => {
+      fetchPublicGraphql.mockResolvedValue({
+        cmsFragments: buildPage([
+          {
+            createdAt: '2026-11-01T00:00:00.000Z',
+            isSystem: false,
+            name: 'Hero heading',
+            typename: 'Heading',
+            updatedAt: '2026-11-02T00:00:00.000Z',
+            uuid: 'fragment-1',
+          },
+        ]),
+      });
+
+      const component = renderRoute();
+
+      expect(
+        await component.findByRole('heading', { level: 1 }),
+      ).toBeInTheDocument();
+      expect(component.getByText('Hero heading')).toBeInTheDocument();
+      expect(component.getAllByRole('row')).toHaveLength(2);
+    });
+  });
+
+  describe('without rows', () => {
+    test('renders the empty state', async () => {
+      fetchPublicGraphql.mockResolvedValue({ cmsFragments: buildPage([]) });
+
+      const component = renderRoute();
+
+      expect(
+        await component.findByRole('heading', { level: 1 }),
+      ).toBeInTheDocument();
+      expect(component.getAllByRole('row')).toHaveLength(2);
+      expect(component.getByTestId('GlobalTable')).toBeInTheDocument();
+    });
   });
 });

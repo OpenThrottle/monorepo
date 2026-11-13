@@ -1,0 +1,18 @@
+fragment CmsFragmentRow on CmsFragmentObject {
+  createdAt
+  isSystem
+  name
+  typename
+  updatedAt
+  uuid
+}
+
+query CmsFragments {
+  cmsFragments(take: 100) {
+    hasNextPage
+    items {
+      ...CmsFragmentRow
+    }
+    totalCount
+  }
+}

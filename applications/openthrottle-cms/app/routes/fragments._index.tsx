@@ -8,7 +8,11 @@ import { BookOpenIcon } from 'lucide-react';
 import * as React from 'react';
 
 import type { Route } from '@/app/routes/+types/fragments._index';
+import { CmsFragmentsDocument } from '~/__generated__/graphql';
+import { GlobalTable } from '~/global/components/GlobalTable';
 import { SITE_TITLE } from '~/global/config/settings';
+import { CMS_FRAGMENT_COLUMNS } from '~/global/data/data.cms-table-columns';
+import { fetchPublicGraphql } from '~/global/utils/graphql.server';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -18,7 +22,9 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
 };
 
 export const loader = async (_args: Route.LoaderArgs) => {
-  return {};
+  const { cmsFragments } = await fetchPublicGraphql(CmsFragmentsDocument);
+
+  return { cmsFragments };
 };
 
 export const links: Route.LinksFunction = () => {
@@ -32,7 +38,7 @@ export const meta = (_args: Route.MetaArgs) => {
 export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
-  const { actionData: _a, loaderData: _l, matches: _m, params: _p } = props;
+  const { actionData: _a, loaderData, matches: _m, params: _p } = props;
 
   // Hooks
 
@@ -59,6 +65,14 @@ export default function Component(
           Lorem ipsum, dolor sit amet consectetur adipisicing elit. Facilis,
           architecto ea?
         </p>
+
+        <GlobalTable
+          className="mt-6"
+          columns={CMS_FRAGMENT_COLUMNS}
+          emptyState="No fragments yet."
+          getRowId={(row) => row.uuid}
+          rows={loaderData.cmsFragments.items}
+        />
       </div>
     </GlobalScreen>
   );

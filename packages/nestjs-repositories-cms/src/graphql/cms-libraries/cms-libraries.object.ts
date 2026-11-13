@@ -75,3 +75,17 @@ export class CmsLibraryListResult {
   @Field(() => Int)
   totalCount!: number;
 }
+
+@ObjectType({
+  description: `One page of live cms library components, across every library, by typename.`,
+})
+export class CmsLibraryComponentListResult {
+  @Field(() => Boolean)
+  hasNextPage!: boolean;
+
+  @Field(() => [CmsLibraryComponentObject])
+  items!: CmsLibraryComponentObject[];
+
+  @Field(() => Int)
+  totalCount!: number;
+}

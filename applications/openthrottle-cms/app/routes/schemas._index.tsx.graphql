@@ -1,0 +1,18 @@
+fragment CmsSchemaRow on CmsSchemaObject {
+  createdAt
+  status
+  typename
+  updatedAt
+  uuid
+  version
+}
+
+query CmsSchemas {
+  cmsSchemas(take: 100) {
+    hasNextPage
+    items {
+      ...CmsSchemaRow
+    }
+    totalCount
+  }
+}

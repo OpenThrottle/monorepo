@@ -11,7 +11,10 @@ import {
   parseCmsStatus,
 } from '../cms-graphql/cms-graphql.utils.ts';
 import { toCmsLibraryComponentObject } from '../cms-libraries/cms-libraries.mapper.ts';
-import type { CmsLibraryComponentObject } from '../cms-libraries/cms-libraries.object.ts';
+import type {
+  CmsLibraryComponentListResult,
+  CmsLibraryComponentObject,
+} from '../cms-libraries/cms-libraries.object.ts';
 import { CmsSchemaValidationService } from '../cms-schema-validation/cms-schema-validation.service.ts';
 import type {
   CreateCmsLibraryComponentInput,
@@ -31,6 +34,25 @@ export class CmsLibraryComponentsService {
     private readonly libraryComponentsRepository: LibraryComponentsRepository,
     private readonly validation: CmsSchemaValidationService,
   ) {}
+
+  /**
+   * @description One bounded page of live components across every library, by typename.
+   */
+  async findPage(options: {
+    readonly skip: number;
+    readonly take: number;
+  }): Promise<CmsLibraryComponentListResult> {
+    const page = await this.libraryComponentsRepository.findByPaginated({
+      ...options,
+      order: { typename: 'ASC', uuid: 'ASC' },
+    });
+
+    return {
+      hasNextPage: page.pageInfo.hasNextPage,
+      items: page.data.map(toCmsLibraryComponentObject),
+      totalCount: page.pageInfo.totalCount,
+    };
+  }
 
   async create(
     input: CreateCmsLibraryComponentInput,

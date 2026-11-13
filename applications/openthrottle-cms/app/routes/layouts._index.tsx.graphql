@@ -1,0 +1,19 @@
+fragment CmsLayoutRow on CmsLayoutSummaryObject {
+  createdAt
+  name
+  slug
+  status
+  tags
+  updatedAt
+  uuid
+}
+
+query CmsLayouts {
+  cmsLayouts(take: 100) {
+    hasNextPage
+    items {
+      ...CmsLayoutRow
+    }
+    totalCount
+  }
+}
