@@ -163,6 +163,13 @@ jobs:
           fi
           server="${all}"; developer="${all}"
           has '^Dockerfile\.NestJS$' && server=true
+          # Migration-touching changes. Nx does not count databases/ as a
+          # server input, but the server leg's boot check is what proves a
+          # migration applies forward over the frozen ledgered install
+          # (boot-check.sh, databases/openthrottle/old-schema/). Forced on
+          # migration files, the fixture, the runner and its image only — a
+          # databases/ README or backup script alone does not pay for a build.
+          has '^(databases/[a-z_]+/migrations/[^/]+\.sql|databases/openthrottle/old-schema/.+|databases/(migrate|migration-runner|database-registry)\.ts|Dockerfile\.Migrations)$' && server=true
           has '^Dockerfile\.ReactRouter$' && developer=true
           echo "forced: server=${server} developer=${developer}"
           echo "server=${server}" >> "${GITHUB_OUTPUT}"
