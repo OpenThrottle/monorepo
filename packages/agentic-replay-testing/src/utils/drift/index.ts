@@ -5,4 +5,4 @@ export {
   type DriftKind,
   stdoutShape,
   type TranscriptComparison,
-} from './compare-transcripts.ts';
+} from './compareTranscripts.ts';

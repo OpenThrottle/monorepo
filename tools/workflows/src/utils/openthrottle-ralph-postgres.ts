@@ -21,7 +21,7 @@ import type {
   WorkflowRalphConfig,
 } from './openthrottle-ralph-types';
 import { taskRequirementsFromRow } from './openthrottle-ralph-types';
-import { ralphDebugLogger } from './ralph-debug-logger';
+import { ralphDebugLogger } from './ralphDebugLogger';
 
 /** Suffix for unreachable message (detail is interpolated). Used in thrown Error and README. */
 export const RALPH_FATAL_UNREACHABLE_SUFFIX = `\n   Check POSTGRES_URL (or POSTGRES_*) and network connectivity. See tools/workflows/README.md.\n`;

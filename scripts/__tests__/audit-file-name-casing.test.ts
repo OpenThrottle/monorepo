@@ -54,9 +54,11 @@ describe('findViolations', () => {
     write('packages/react-router-ui/src/utils/two-things.ts', 'export const a = 1; export const b = 2;'); // prettier-ignore
     write('packages/react-router-ui/src/utils/getBar.ts', 'export const getBar = 1;'); // prettier-ignore
     write('packages/nestjs-redis/src/get-baz.ts', 'export const getBaz = 1;'); // prettier-ignore
+    write('packages/react-router-ui/src/utils/resolve-qux.ts', `export const QUX_KINDS = ['a'] as const; export const resolveQux = () => { return 1; };`); // prettier-ignore
 
     expect(findViolations(root)).toEqual([
       { exportName: 'getFoo', file: 'packages/react-router-ui/src/utils/get-foo.ts', suggested: 'getFoo.ts' }, // prettier-ignore
+      { exportName: 'resolveQux', file: 'packages/react-router-ui/src/utils/resolve-qux.ts', suggested: 'resolveQux.ts' }, // prettier-ignore
     ]);
   });
 });

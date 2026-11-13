@@ -1,7 +1,7 @@
 /**
  * Canonical TypeScript shapes for `.workflow-ralph.json` (v1).
  * JSON Schema: `tools/workflows/schemas/workflow-ralph.defaults.schema.json`.
- * Loader merge and env mapping: {@link loadWorkflowRalphConfig} in `load-workflow-ralph-config.ts`.
+ * Loader merge and env mapping: {@link loadWorkflowRalphConfig} in `loadWorkflowRalphConfig.ts`.
  */
 
 import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';

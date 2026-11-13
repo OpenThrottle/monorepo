@@ -41,7 +41,7 @@ import {
   driveScenarioTurn,
   initialConversation,
 } from '../scenario/drive-turn.ts';
-import { transcriptStem } from '../scenario/scenario-run.ts';
+import { transcriptStem } from '../scenario/scenarioRun.ts';
 import { buildFixtureText } from './buildFixtureText.ts';
 
 const RECORDING_SHIM_PATH = fileURLToPath(

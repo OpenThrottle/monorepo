@@ -24,7 +24,7 @@ import type {
   ToolSelector,
   TrialGrade,
 } from './eval-case.ts';
-import { gradeCase } from './grade-case.ts';
+import { gradeCase } from './gradeCase.ts';
 import {
   selectionFromTrajectory,
   selectionToTrajectory,

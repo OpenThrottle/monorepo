@@ -20,8 +20,8 @@ import type { AtifStep, AtifTrajectory } from '../../types/atif.ts';
 import type { ConversationStreamChunk } from '../conversation-backend/types.ts';
 import { CONVERSATION_STREAM_CHUNK_KINDS } from '../conversation-backend/types.ts';
 import { createStructuredChunkReader } from '../structured-output/chunk-reader.ts';
-import { capTrajectory } from './cap-trajectory.ts';
-import { chunksToAtif } from './chunks-to-atif.ts';
+import { capTrajectory } from './capTrajectory.ts';
+import { chunksToAtif } from './chunksToAtif.ts';
 import { redactSecrets } from './redactSecrets.ts';
 import { TRAJECTORY_TRANSPORT_BYTES } from './trajectory-record.ts';
 

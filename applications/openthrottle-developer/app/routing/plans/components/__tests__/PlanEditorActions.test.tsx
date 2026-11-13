@@ -5,7 +5,7 @@ import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
 import { WorkspaceEditorId } from '~/__generated__/graphql';
-import { DefaultEditorContext } from '~/global/config/default-editor-context';
+import { DefaultEditorContext } from '~/global/config/DefaultEditorContext';
 import {
   PLAN_DEFERRED_SECTION_COPY,
   PLAN_EDITOR_ACTIONS_COPY,

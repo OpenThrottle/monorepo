@@ -11,7 +11,7 @@ import { usePlanDetailRouteData } from '~/routing/plans/hooks/usePlanDetailRoute
 import { usePlanManagedTaskIds } from '~/routing/plans/hooks/usePlanManagedTaskIds';
 import { buildPlanTabTasksColumns } from '~/routing/plans/utils/buildPlanTabTasksColumns';
 import { filterOutHookTasks } from '~/routing/plans/utils/hook-tasks';
-import { sortPlanTasksByListOrder } from '~/routing/plans/utils/sort-plan-tasks-by-list-order';
+import { sortPlanTasksByListOrder } from '~/routing/plans/utils/sortPlanTasksByListOrder';
 
 export interface PlanTabTasksProps {
   // className?: string;

@@ -354,7 +354,7 @@ const main = async (): Promise<void> => {
   //
   // When the token is self-loaded FROM a .env file, also record that file's
   // absolute path in OT_MCP_AUTH_TOKEN_ENV_FILE. The Node process re-reads it
-  // mid-session (packages/openthrottle-mcp/src/auth/get-auth-token.ts:
+  // mid-session (packages/openthrottle-mcp/src/auth/getAuthToken.ts:
   // refreshEnvAuthTokenFromFile) so a token ROTATED in .env is picked up
   // WITHOUT a relaunch. It is deliberately NOT set when the token came from
   // an exported shell var: that shell is then the source of truth.

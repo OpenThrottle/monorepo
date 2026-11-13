@@ -21,8 +21,8 @@ import {
 import {
   type ResolvedScenarioTurn,
   transcriptStem,
-} from '../scenario/scenario-run.ts';
-import { prepareReplay, replaySessionStart } from './prepare-replay.ts';
+} from '../scenario/scenarioRun.ts';
+import { prepareReplay, replaySessionStart } from './prepareReplay.ts';
 import type { ReplayReport } from './replay-bin.ts';
 
 /** @public */

@@ -2,11 +2,11 @@ import { cn, DataTable } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import type { RepoPersonaEntry } from '~/routing/agents/data/data.repo-personas-registry';
-import type { PersonasTableColumnValue } from '~/routing/personas/config/personas-table-columns';
+import type { PersonasTableColumnValue } from '~/routing/personas/config/personasTableColumns';
 import {
   getPersonasTableRowId,
   personasTableColumns,
-} from '~/routing/personas/config/personas-table-columns';
+} from '~/routing/personas/config/personasTableColumns';
 
 export interface PersonasTableProps {
   className?: string;

@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { Route } from '@/app/routes/+types/personas._index';
 import type { RepoPersonaEntry } from '~/routing/agents/data/data.repo-personas-registry';
 
-vi.mock('~/routing/agents/utils/discover-repo-personas.server', () => ({
+vi.mock('~/routing/agents/utils/discoverRepoPersonas.server', () => ({
   discoverRepoPersonas: vi.fn(),
 }));
 
@@ -14,7 +14,7 @@ vi.mock('~/routing/agents/utils/resolve-monorepo-root.server', () => ({
 }));
 
 const { discoverRepoPersonas } =
-  await import('~/routing/agents/utils/discover-repo-personas.server');
+  await import('~/routing/agents/utils/discoverRepoPersonas.server');
 const { getMonorepoRoot } =
   await import('~/routing/agents/utils/resolve-monorepo-root.server');
 const { loader } = await import('../personas._index');

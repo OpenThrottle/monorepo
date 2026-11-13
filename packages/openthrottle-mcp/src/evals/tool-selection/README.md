@@ -61,7 +61,7 @@ tools (`bash`, `read_file`, `edit_file`, `write_file`), and the server instructi
 injected the way an MCP client injects them. `tool_choice` is `auto`. Nothing is executed and there is no
 second turn: the first assistant turn is the selection, recorded as an ATIF trajectory with one agent step
 whose `tool_calls` are the selected calls (usage rides in its metrics). The `tool-selection` `code` grader
-reads that step and applies `grade-case.ts`:
+reads that step and applies `gradeCase.ts`:
 
 - A `call` case passes when **any** first-turn call names one of `expect.tools` and satisfies every
   matcher in `expect.args` (`equals`, case-insensitive `includes`, or `present`).
@@ -106,20 +106,20 @@ tool or argument that no longer exists, which would otherwise leave a case that 
 
 ## Files
 
-| File                                           | Role                                                                                        |
-| ---------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| `eval-case.ts`                                 | Case, selection and selector types                                                          |
-| `data/data.cases.ts`                           | The cases                                                                                   |
-| `data/data.dataset.ts`                         | Dataset target, grader id and version                                                       |
-| `data/data.harness-tools.ts`                   | Generic harness tools offered next to OT                                                    |
-| `tool-selection-core.ts`                       | Cases as a core `EvalDataset`, the iteration under test, and `gradeCase` as a `code` grader |
-| `selection-trajectory.ts`                      | Selection to and from an ATIF trajectory, usage included                                    |
-| `grade-case.ts`                                | Pure grading rules (unit-tested, runs in CI)                                                |
-| `run-evals.ts`                                 | `runEval` + aggregation back to baseline-shaped results and the core report                 |
-| `__tests__/run-evals.characterization.test.ts` | Literal per-case results; proof the port kept baselines compatible                          |
-| `compare-baseline.ts`                          | Same-model baseline comparison (format unchanged)                                           |
-| `anthropic-tool-selector.ts`                   | Messages API adapter (`@anthropic-ai/sdk` `client.messages.create`)                         |
-| `cli.ts`                                       | The Nx target's entry point                                                                 |
+| File                                          | Role                                                                                        |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `eval-case.ts`                                | Case, selection and selector types                                                          |
+| `data/data.cases.ts`                          | The cases                                                                                   |
+| `data/data.dataset.ts`                        | Dataset target, grader id and version                                                       |
+| `data/data.harness-tools.ts`                  | Generic harness tools offered next to OT                                                    |
+| `tool-selection-core.ts`                      | Cases as a core `EvalDataset`, the iteration under test, and `gradeCase` as a `code` grader |
+| `selection-trajectory.ts`                     | Selection to and from an ATIF trajectory, usage included                                    |
+| `gradeCase.ts`                                | Pure grading rules (unit-tested, runs in CI)                                                |
+| `runEvals.ts`                                 | `runEval` + aggregation back to baseline-shaped results and the core report                 |
+| `__tests__/runEvals.characterization.test.ts` | Literal per-case results; proof the port kept baselines compatible                          |
+| `compareBaseline.ts`                          | Same-model baseline comparison (format unchanged)                                           |
+| `anthropic-tool-selector.ts`                  | Messages API adapter (`@anthropic-ai/sdk` `client.messages.create`)                         |
+| `cli.ts`                                      | The Nx target's entry point                                                                 |
 
 The evals are not reachable from `bin.ts` or `bin-http.ts`, so the production esbuild bundle does not
 include them or the eval core. Keep it that way.

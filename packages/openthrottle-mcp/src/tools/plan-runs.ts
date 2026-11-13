@@ -30,7 +30,7 @@ import {
   RegisterPlanRunWorktreeCheckoutDocument,
   SettleCliPlanRunDocument,
 } from '../__generated__/graphql.js';
-import { getAuthToken } from '../auth/get-auth-token.ts';
+import { getAuthToken } from '../auth/getAuthToken.ts';
 import { resolveExecutionBackend } from '../config/execution-backend.ts';
 import {
   forgetPlanRunForBackstop,

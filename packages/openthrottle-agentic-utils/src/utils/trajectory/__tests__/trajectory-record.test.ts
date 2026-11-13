@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import type { AtifTrajectory } from '../../../types/atif.ts';
-import { ATIF_SCHEMA_VERSION } from '../chunks-to-atif.ts';
+import { ATIF_SCHEMA_VERSION } from '../chunksToAtif.ts';
 import { isAtifTrajectory, parseAtifTrajectoryJson } from '../parse-atif.ts';
 import {
   buildTrajectoryRecord,

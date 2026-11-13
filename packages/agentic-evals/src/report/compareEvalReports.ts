@@ -1,5 +1,5 @@
-import type { McNemarResult } from '../stats/paired-difference.ts';
-import { mcnemar } from '../stats/paired-difference.ts';
+import type { McNemarResult } from '../stats/pairedDifference.ts';
+import { mcnemar } from '../stats/pairedDifference.ts';
 import type { EvalReport } from './report-types.ts';
 
 /**

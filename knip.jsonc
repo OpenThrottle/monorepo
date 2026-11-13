@@ -422,7 +422,7 @@
       "entry": [
         "src/index.ts",
         "src/bin.ts",
-        "src/run-server.ts",
+        "src/runServer.ts",
         "src/nest-tool-handlers.ts",
         "src/nest/bootstrapMcpDeveloperApp.ts",
         // Run by the `measure-tool-surface` Nx target (tsx); also reaches
@@ -435,7 +435,7 @@
         // no in-repo importer, so knip cannot reach them via the import graph:
         // Dockerfile.NestJS `mcp-development` runs `tsx src/bin-http.ts`, and the
         // distroless `mcp` stage ships the bundle built from it. Declaring
-        // bin-http.ts here also covers run-server-http.ts and
+        // bin-http.ts here also covers runServerHttp.ts and
         // http/mcp-http-auth.middleware.ts, which it imports.
         "src/bin-http.ts",
         // Bundler for the above, run as `node esbuild.http.mjs` by the
@@ -479,8 +479,8 @@
         "src/bin/ralph.ts",
         "src/bin/link-merge.ts",
         "src/bin/lighthouse.ts",
-        "src/bin/run-iteration.ts",
-        "src/utils/ralph-debug-logger.ts",
+        "src/bin/runIteration.ts",
+        "src/utils/ralphDebugLogger.ts",
         "scripts/*.{ts,js}",
       ],
       "project": ["src/**/*.{ts,tsx}", "scripts/**/*.{ts,js}"],

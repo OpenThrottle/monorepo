@@ -20,7 +20,7 @@ import {
 import {
   isSkillSourceFilter,
   type SkillSourceFilter,
-} from '~/routing/skills/utils/filter-skills-by-source';
+} from '~/routing/skills/utils/filterSkillsBySource';
 
 export interface SkillsToolbarProps {
   className?: string;

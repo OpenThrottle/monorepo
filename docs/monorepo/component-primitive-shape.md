@@ -196,7 +196,7 @@ where they are discoverable and independently testable (and where the generator
 scaffolds them):
 
 - **Utilities / pure logic** (module-scope functions) → sibling `utils/`, then
-  imported back in. Example: `~/routing/plans/utils/group-plan-tasks-by-status.ts`
+  imported back in. Example: `~/routing/plans/utils/groupPlanTasksByStatus.ts`
   imported by `~/routing/plans/components/PlanTasksBoard.tsx`.
 - **Stateful / behavioral logic** (state, derived values, effects, handlers) →
   a co-located `use<Name>` hook in sibling `hooks/` (see [R7](#r7--keep-components-ui-focused--extract-logic-into-hooks)).

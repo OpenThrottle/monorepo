@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { requestAuthTokenStorage } from '../../auth/get-auth-token.ts';
+import { requestAuthTokenStorage } from '../../auth/getAuthToken.ts';
 import {
   extractBearerToken,
   mcpHttpAuthMiddleware,

@@ -11,7 +11,7 @@ import {
   defaultsFromCatalog,
   freezeResolvedValues,
   type RolloutResolvedValues,
-} from './defaults-from-catalog';
+} from './defaultsFromCatalog';
 import { parseRolloutValueJson } from './parseRolloutValueJson';
 
 export type MergeRolloutEvaluationsOptions = {

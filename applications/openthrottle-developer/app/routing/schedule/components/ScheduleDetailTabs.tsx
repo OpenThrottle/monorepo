@@ -13,7 +13,7 @@ import { ScheduleRunsTable } from '~/routing/schedule/components/ScheduleRunsTab
 import {
   parseScheduleDetailTab,
   SCHEDULE_DETAIL_TAB_SEARCH_PARAM,
-} from '~/routing/schedule/utils/parse-schedule-detail-tab';
+} from '~/routing/schedule/utils/parseScheduleDetailTab';
 
 export interface ScheduleDetailTabsProps {
   /** Scheduled job id; used to link each run row to its detail route. */

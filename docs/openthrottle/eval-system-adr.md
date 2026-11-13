@@ -20,7 +20,7 @@ OpenThrottle drives six agent CLIs (`antigravity`, `claude`, `codex`, `cursor`, 
 driver or model made a run better or worse. Two gaps are visible in the code:
 
 - **Run transcripts are thrown away.** Plan runs spawn agents through `runDriverAsync`
-  (`tools/workflows/src/bin/run-iteration.ts`, plus the scheduled-agent runner). Only
+  (`tools/workflows/src/bin/runIteration.ts`, plus the scheduled-agent runner). Only
   `drivers/claude.ts` implements `AgentDriver.parseOutput`, and it keeps only the final text and the
   usage-limit signal. The other five drivers run in plain-text mode. Nothing records tool calls,
   tokens, cost, duration and exit status together, and `agent_token_usage` has no `plan_run_id`.

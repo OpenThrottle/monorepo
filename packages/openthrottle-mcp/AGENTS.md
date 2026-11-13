@@ -56,7 +56,7 @@ set is a real choice). After changing a shared fragment, regenerate **both** con
 - `src/tool-registry.ts` + `src/tools/*.ts` — one file per tool family (plans, tasks, notes,
   activity, output, search, commit, agent-conversations, …); start here to add or change a tool.
 - `src/nest/McpDeveloperMcpSurface.ts` — the MCP surface wired into NestJS.
-- `src/auth/get-auth-token.ts` — bearer-token resolution, exported via the `./auth` subpath.
+- `src/auth/getAuthToken.ts` — bearer-token resolution, exported via the `./auth` subpath.
 - `src/graphql/**/*.graphql` → `src/__generated__/` — codegen output; edit documents, never `__generated__`.
 - `docs/verification-environment.md` — the canonical local services/env/smoke checklist.
 

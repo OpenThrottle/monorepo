@@ -1,7 +1,7 @@
 import * as React from 'react';
 
 import type { WorkspaceEditorId } from '~/__generated__/graphql';
-import { DefaultEditorContext } from '~/global/config/default-editor-context';
+import { DefaultEditorContext } from '~/global/config/DefaultEditorContext';
 
 /**
  * @description The user's default editor, or `null` for the system default.

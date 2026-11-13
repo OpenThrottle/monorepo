@@ -17,7 +17,7 @@ import {
 import { SCENARIOS } from '../../../data/data.scenarios.ts';
 import type { Scenario } from '../../../types/scenario.ts';
 import { placeholderUuid } from '../../sanitizer/sanitizer.ts';
-import { transcriptStem } from '../../scenario/scenario-run.ts';
+import { transcriptStem } from '../../scenario/scenarioRun.ts';
 import { parseTranscript } from '../../transcript/transcript.ts';
 import { recordScenario } from '../recordScenario.ts';
 

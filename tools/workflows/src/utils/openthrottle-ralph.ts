@@ -13,7 +13,7 @@ import { resolveWorkflowAuthTokenFromEnv } from '@openthrottle/openthrottle-agen
 import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
 import type { UsageLimit } from '@openthrottle/openthrottle-drivers';
 
-import { resolveWorkflowRalphTransport } from '../config/load-workflow-ralph-config.ts';
+import { resolveWorkflowRalphTransport } from '../config/loadWorkflowRalphConfig.ts';
 import {
   appendPlanOutputGraphql,
   bumpCliPlanRunHeartbeatGraphql,
@@ -70,7 +70,7 @@ import {
   formatPlanAndTasksForPrompt,
   taskRequirementsFromRow,
 } from './openthrottle-ralph-types';
-import { ralphDebugLogger } from './ralph-debug-logger';
+import { ralphDebugLogger } from './ralphDebugLogger';
 
 export type {
   CliPlanRunCancelMarker,

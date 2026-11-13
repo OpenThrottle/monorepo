@@ -30,12 +30,12 @@ import {
   STAGE_OUT_DIR,
 } from './data/data.stage.ts';
 import { buildStagePackageJson } from './utils/buildStagePackageJson.ts';
-import { findNearestSlot } from './utils/find-nearest-slot.ts';
 import { findNativeFiles } from './utils/findNativeFiles.ts';
-import { isEnvFile, isExcludedFile } from './utils/is-excluded-file.ts';
+import { findNearestSlot } from './utils/findNearestSlot.ts';
+import { isEnvFile, isExcludedFile } from './utils/isExcludedFile.ts';
 import { parseAppManifest } from './utils/parseAppManifest.ts';
-import type { StagePackage } from './utils/plan-stage-files.ts';
-import { isPackageLinkPath, planStageFiles } from './utils/plan-stage-files.ts';
+import type { StagePackage } from './utils/planStageFiles.ts';
+import { isPackageLinkPath, planStageFiles } from './utils/planStageFiles.ts';
 import { trimUnstagedDependencies } from './utils/trimUnstagedDependencies.ts';
 
 const PROJECT_ROOT = resolve(import.meta.dirname, '..');

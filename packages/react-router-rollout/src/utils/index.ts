@@ -2,11 +2,11 @@ export {
   assertRolloutFlagCatalog,
   isRolloutFlagValueForKind,
   type RolloutFlagCatalogInput,
-} from './assert-rollout-flag-catalog';
+} from './assertRolloutFlagCatalog';
 export {
   defaultsFromCatalog,
   type RolloutResolvedValues,
-} from './defaults-from-catalog';
+} from './defaultsFromCatalog';
 export { defineRolloutFlags } from './defineRolloutFlags';
 export {
   mergeRolloutEvaluations,

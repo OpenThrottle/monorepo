@@ -1485,7 +1485,7 @@ var createStructuredChunkReader = (driverId) => {
   }
 };
 
-// packages/openthrottle-agentic-utils/src/utils/trajectory/cap-trajectory.ts
+// packages/openthrottle-agentic-utils/src/utils/trajectory/capTrajectory.ts
 var DEFAULT_TRAJECTORY_LIMITS = {
   observationBytes: 16 * 1024,
   totalBytes: 4 * 1024 * 1024
@@ -1720,7 +1720,7 @@ var isToolResultError = (chunk) => {
   return hasChunkError || metadata.isError === true || typeof toolCall.error === "string" && toolCall.error !== "" || typeof exitCode === "number" && exitCode !== 0;
 };
 
-// packages/openthrottle-agentic-utils/src/utils/trajectory/chunks-to-atif.ts
+// packages/openthrottle-agentic-utils/src/utils/trajectory/chunksToAtif.ts
 var ATIF_SCHEMA_VERSION = "ATIF-v1.8";
 var emptyDraft = () => {
   return { calls: [], message: "", reasoning: "", results: [] };

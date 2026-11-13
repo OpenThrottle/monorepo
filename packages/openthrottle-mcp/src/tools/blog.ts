@@ -34,7 +34,7 @@ import {
   SetBlogPostTagsInputSchema,
   UpdateBlogPostInputSchema,
 } from '../__generated__/schemas.ts';
-import { getAuthToken } from '../auth/get-auth-token.ts';
+import { getAuthToken } from '../auth/getAuthToken.ts';
 import { getBlogPostEditorUrl } from '../config/developer-app-url.ts';
 import type { GenericResult } from '../types/index.ts';
 import { invalidArgsContent } from '../utils/errors.ts';

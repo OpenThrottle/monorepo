@@ -14,7 +14,7 @@
  */
 import type { IncomingMessage } from 'node:http';
 
-import { requestAuthTokenStorage } from '../auth/get-auth-token.ts';
+import { requestAuthTokenStorage } from '../auth/getAuthToken.ts';
 
 const BEARER_PREFIX = 'Bearer ';
 

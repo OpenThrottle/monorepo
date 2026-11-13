@@ -15,7 +15,7 @@ import {
 } from '../../../types/transcript.ts';
 import { serializeTranscript } from '../../transcript/transcript.ts';
 import { installReplayBin, type ReplayBin } from '../installReplayBin.ts';
-import { replayFixturePath } from '../prepare-replay.ts';
+import { replayFixturePath } from '../prepareReplay.ts';
 import {
   compareOutbound,
   REPLAY_MISMATCH_EXIT_CODE,

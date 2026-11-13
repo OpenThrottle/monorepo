@@ -18,7 +18,7 @@ import { PLAN_RUN_CANCEL_SCHEDULED_COPY } from '~/routing/plans/data/data.copy';
 import {
   cancelPlanRunToastTone,
   describeCancelPlanRunResult,
-} from '~/routing/plans/utils/describe-cancel-plan-run-result';
+} from '~/routing/plans/utils/describeCancelPlanRunResult';
 
 export interface PlanRunCancelScheduledDialogProps {
   /** Optional trigger (an `AlertDialogTrigger`); omit it to open the dialog only through `open`. */

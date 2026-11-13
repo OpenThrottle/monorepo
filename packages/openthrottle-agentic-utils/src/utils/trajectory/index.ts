@@ -2,8 +2,8 @@
  * Run trajectories: turn a run's structured chunks into an ATIF document, cap it, validate it and
  * summarize it.
  */
-export * from './cap-trajectory.ts';
-export * from './chunks-to-atif.ts';
+export * from './capTrajectory.ts';
+export * from './chunksToAtif.ts';
 export * from './claude-session.ts';
 export * from './normalizeUsage.ts';
 export * from './parse-atif.ts';

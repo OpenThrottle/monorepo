@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { applyWorkflowRalphDebugCli } from '../applyWorkflowRalphDebugCli';
-import { ralphDebugLogger, setRalphDebugLevel } from '../ralph-debug-logger';
+import { ralphDebugLogger, setRalphDebugLevel } from '../ralphDebugLogger';
 
 afterEach(() => {
   setRalphDebugLevel('off');

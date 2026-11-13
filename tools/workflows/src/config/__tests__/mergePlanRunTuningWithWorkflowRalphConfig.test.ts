@@ -4,7 +4,7 @@ import { join } from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { loadWorkflowRalphConfig } from '../load-workflow-ralph-config.ts';
+import { loadWorkflowRalphConfig } from '../loadWorkflowRalphConfig.ts';
 import { mergePlanRunTuningWithWorkflowRalphConfig } from '../mergePlanRunTuningWithWorkflowRalphConfig.ts';
 import { WORKFLOW_RALPH_DEFAULTS_FILENAME } from '../workflow-ralph-defaults.types.ts';
 

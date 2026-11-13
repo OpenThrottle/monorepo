@@ -4,13 +4,13 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { CursorAgentChunk } from '../../bin/run-iteration';
+import type { CursorAgentChunk } from '../../bin/runIteration';
 
 const runIterationAsyncMock = vi.hoisted(() =>
   vi.fn().mockResolvedValue('combined'),
 );
 
-vi.mock('../../bin/run-iteration', () => ({
+vi.mock('../../bin/runIteration', () => ({
   runIteration: vi.fn(),
   runIterationAsync: (...args: unknown[]) => runIterationAsyncMock(...args),
 }));

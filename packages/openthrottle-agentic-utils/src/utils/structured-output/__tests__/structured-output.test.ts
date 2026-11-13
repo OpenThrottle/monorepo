@@ -19,7 +19,7 @@ import {
   createStructuredLineRenderer,
   recoverStructuredText,
   withStructuredOutput,
-} from '../with-structured-output.ts';
+} from '../withStructuredOutput.ts';
 
 const FIXTURES = join(import.meta.dirname, 'fixtures');
 

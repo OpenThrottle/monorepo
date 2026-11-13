@@ -6,7 +6,7 @@ import { afterAll, describe, expect, it } from 'vitest';
 
 import { componentPrimitiveShape } from '../rules/componentPrimitiveShape.ts';
 import { hookPrimitiveShape } from '../rules/hookPrimitiveShape.ts';
-import { preHooksUnpack } from '../rules/pre-hooks-unpack.ts';
+import { preHooksUnpack } from '../rules/preHooksUnpack.ts';
 import { routePrimitiveShape } from '../rules/routePrimitiveShape.ts';
 
 /**

@@ -659,8 +659,11 @@ One selector per clause:
 
 **The file-name clause is enforced by an audit, not ESLint** — `naming-convention` operates on
 identifiers and cannot see file names. `pnpm run audit:file-name-casing:strict` (run in CI via
-`audit:strict`) fails on a single-export file in any application, package or tool that is not
-named for its export. Out of scope: the NestJS tier (`openthrottle-server`, `nestjs-*`), whose
+`audit:strict`) fails on a file in any application, package or tool that is named for one of its
+exports but not in that export's casing: a single-export file, or a multi-export file whose
+kebab stem names one of its non-constant exports (`resolve-skill-availability.ts` exporting
+`resolveSkillAvailability` and its `SKILL_AVAILABILITY_ENVIRONMENTS` → `resolveSkillAvailability.ts`).
+A multi-export file whose name is none of its exports is a bucket and stays kebab-case. Out of scope: the NestJS tier (`openthrottle-server`, `nestjs-*`), whose
 `<folder>.<kind>.ts` form is enforced separately, and `tools/nx-plugins`, whose files all export
 Nx's mandated `createNodesV2`. It reuses the codemod's definition, so
 the fix is always `tsx ./scripts/codemod-file-name-casing.ts --project=<dir> --write`. There is

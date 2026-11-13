@@ -29,7 +29,7 @@ export const loader = async (args: Route.LoaderArgs) => {
 
   const slug = decodeURIComponent(personaId);
   const { findRepoPersonaBySlug, readRepoPersonaFileContent } =
-    await import('~/routing/agents/utils/discover-repo-personas.server');
+    await import('~/routing/agents/utils/discoverRepoPersonas.server');
   const { getMonorepoRoot } =
     await import('~/routing/agents/utils/resolve-monorepo-root.server');
 

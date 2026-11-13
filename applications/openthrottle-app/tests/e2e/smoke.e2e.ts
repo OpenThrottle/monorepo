@@ -2,8 +2,8 @@ import type { Page } from 'playwright';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { E2E_SERVER_URL, E2E_USER } from './e2e-env.ts';
-import type { LaunchedApp } from './launch-app.ts';
-import { isServerReachable, launchApp } from './launch-app.ts';
+import type { LaunchedApp } from './launchApp.ts';
+import { isServerReachable, launchApp } from './launchApp.ts';
 
 const NAVIGATION_TIMEOUT_MS = 60_000;
 const UUID_PATH = /\/plans\/[0-9a-f-]{36}\/?$/;

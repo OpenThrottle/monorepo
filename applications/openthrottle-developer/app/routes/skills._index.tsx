@@ -30,12 +30,12 @@ import { SkillsToolbar } from '~/routing/skills/components/SkillsToolbar';
 import { SKILL_USAGE_RANGE_DAYS } from '~/routing/skills/config/skill-usage';
 import { SKILLS_ONBOARDING } from '~/routing/skills/data/data.copy';
 import type { SkillsIndexUsageData } from '~/routing/skills/types';
+import { filterSkillsByQuery } from '~/routing/skills/utils/filterSkillsByQuery';
 import {
   filterSkillsBySource,
   parseSkillSourceFilter,
   type SkillSourceFilter,
-} from '~/routing/skills/utils/filter-skills-by-source';
-import { filterSkillsByQuery } from '~/routing/skills/utils/filterSkillsByQuery';
+} from '~/routing/skills/utils/filterSkillsBySource';
 import { mergeRepoSkillsWithProjectSkills } from '~/routing/skills/utils/mergeRepoSkillsWithProjectSkills';
 import { mergeRepoSkillsWithSkillAvailability } from '~/routing/skills/utils/mergeRepoSkillsWithSkillAvailability';
 import {

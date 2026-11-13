@@ -19,7 +19,7 @@ import type { action as planDetailAction } from '~/routes/plans.$planId._index';
 import {
   cancelPlanRunToastTone,
   describeCancelPlanRunResult,
-} from '~/routing/plans/utils/describe-cancel-plan-run-result';
+} from '~/routing/plans/utils/describeCancelPlanRunResult';
 
 export interface KillPlanRunButtonProps {
   readonly planId: string;

@@ -19,7 +19,7 @@ import type { RunSkillPayload } from '~/routing/skills/types';
 import {
   parseSkillDetailTab,
   SKILLS_DETAIL_TAB_SEARCH_PARAM,
-} from '~/routing/skills/utils/parse-skill-detail-tab';
+} from '~/routing/skills/utils/parseSkillDetailTab';
 
 export interface SkillDetailTabsProps {
   /** SKILL.md body (frontmatter stripped) rendered in read mode; empty renders the unreadable-file notice. */

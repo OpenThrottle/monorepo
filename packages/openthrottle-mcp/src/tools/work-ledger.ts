@@ -25,14 +25,14 @@ import {
   RecordWorkArtifactDocument,
   WorkSessionsByPlanDocument,
 } from '../__generated__/graphql.js';
-import { getAuthToken } from '../auth/get-auth-token.ts';
+import { getAuthToken } from '../auth/getAuthToken.ts';
 import { resolveSessionModel } from '../config/client-identity.ts';
 import {
   beginScopedSession,
   closeCurrentSession,
   ensureWorkSession,
 } from '../session/current-session.ts';
-import { sessionHeaders } from '../session/session-headers.ts';
+import { sessionHeaders } from '../session/sessionHeaders.ts';
 import type { GenericResult } from '../types/index.ts';
 import { invalidArgsContent } from '../utils/errors.ts';
 import { runTool } from '../utils/runTool.ts';

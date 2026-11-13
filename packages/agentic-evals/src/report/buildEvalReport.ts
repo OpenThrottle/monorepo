@@ -1,6 +1,6 @@
 import { bootstrapCi } from '../stats/bootstrap.ts';
-import { detectionFloor } from '../stats/detection-floor.ts';
-import { costPerSuccess, passAtK, passHatK } from '../stats/pass-rate.ts';
+import { detectionFloor } from '../stats/detectionFloor.ts';
+import { costPerSuccess, passAtK, passHatK } from '../stats/passRate.ts';
 import type {
   BuildEvalReportInput,
   EvalReport,
@@ -13,7 +13,7 @@ import type {
   TrialExclusionReason,
   TrialVerdict,
 } from './report-types.ts';
-import { gradeCounts, trialVerdict } from './trial-verdict.ts';
+import { gradeCounts, trialVerdict } from './trialVerdict.ts';
 
 /**
  * @description The base rate the detection floor assumes when the observed pass rate is 0, 1 or

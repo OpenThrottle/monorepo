@@ -4,11 +4,11 @@ import * as React from 'react';
 import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
 import { SkillsEmpty } from '~/routing/skills/components/SkillsEmpty';
 import type { SkillTagVocabularyOption } from '~/routing/skills/components/SkillTagChips';
-import type { SkillsTableColumnValue } from '~/routing/skills/config/skills-table-columns';
+import type { SkillsTableColumnValue } from '~/routing/skills/config/skillsTableColumns';
 import {
   createSkillsTableColumns,
   getSkillsTableRowId,
-} from '~/routing/skills/config/skills-table-columns';
+} from '~/routing/skills/config/skillsTableColumns';
 
 export interface SkillsTableProps {
   className?: string;

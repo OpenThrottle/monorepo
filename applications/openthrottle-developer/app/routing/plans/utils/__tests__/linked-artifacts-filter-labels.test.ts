@@ -5,7 +5,7 @@ import {
   getTypeFilterLabel,
   getVerificationFilterLabel,
 } from '~/routing/plans/utils/linked-artifacts-filter-labels';
-import { ARTIFACT_FILTER_ALL } from '~/routing/plans/utils/summarize-linked-artifacts';
+import { ARTIFACT_FILTER_ALL } from '~/routing/plans/utils/summarizeLinkedArtifacts';
 
 describe('getVerificationFilterLabel', () => {
   describe('when the value is the all sentinel', () => {

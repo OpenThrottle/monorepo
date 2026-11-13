@@ -5,7 +5,7 @@ import { ResponsiveContainer } from 'recharts';
 
 import { cn } from '../../utils/cn';
 import type { ChartConfig } from '../chart-config';
-import { ChartConfigContext } from '../chart-config-context';
+import { ChartConfigContext } from '../ChartConfigContext';
 
 export interface ChartContainerProps extends React.HTMLAttributes<HTMLDivElement> {
   readonly config: ChartConfig;

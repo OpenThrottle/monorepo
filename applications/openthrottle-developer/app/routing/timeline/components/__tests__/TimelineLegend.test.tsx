@@ -14,7 +14,7 @@ import {
   TIMELINE_DISCLOSURE_COPY,
   TIMELINE_LEGEND_COPY,
 } from '~/routing/timeline/data/data.copy';
-import { markerKindPath } from '~/routing/timeline/utils/marker-glyph-path';
+import { markerKindPath } from '~/routing/timeline/utils/markerGlyphPath';
 
 import type { TimelineLegendProps } from '../TimelineLegend';
 import { TimelineLegend } from '../TimelineLegend';

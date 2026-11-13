@@ -1,7 +1,7 @@
 import {
   WORKFLOW_RALPH_CONFIG_ENV,
   WORKFLOW_RALPH_ENV,
-} from '../config/load-workflow-ralph-config';
+} from '../config/loadWorkflowRalphConfig';
 import { WORKFLOW_RALPH_CONFIG_PRECEDENCE } from '../config/workflow-ralph-defaults.types';
 import {
   OPENTHROTTLE_PLANS_SPAWN_DIAGNOSTICS_ENV,
@@ -11,7 +11,7 @@ import {
   RALPH_DEBUG_ENV,
   RALPH_DEBUG_ENV_LEGACY,
   RALPH_VERBOSE_ENV,
-} from '../utils/ralph-debug-logger';
+} from '../utils/ralphDebugLogger';
 import { WORKFLOW_RALPH_TRANSPORT_ENV } from '../utils/workflow-transport';
 import { ARTWORK_LINE, ARTWORK_THANK_YOU, COLORS } from './index';
 

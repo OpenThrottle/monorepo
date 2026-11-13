@@ -27,7 +27,7 @@ import { noPerTestTimeout } from './rules/noPerTestTimeout.ts';
 import { noTestSleep } from './rules/noTestSleep.ts';
 import { noWallClockInTests } from './rules/noWallClockInTests.ts';
 import { planTaskStatusChokepoint } from './rules/planTaskStatusChokepoint.ts';
-import { preHooksUnpack } from './rules/pre-hooks-unpack.ts';
+import { preHooksUnpack } from './rules/preHooksUnpack.ts';
 import { routePrimitiveShape } from './rules/routePrimitiveShape.ts';
 import { skipRequiresIssue } from './rules/skipRequiresIssue.ts';
 import { threeLineTernary } from './rules/threeLineTernary.ts';

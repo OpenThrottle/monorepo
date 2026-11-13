@@ -3,7 +3,7 @@
  */
 
 export { registerKnowledgeBaseResource } from './resources/index.ts';
-export { runServer, runServerLocal } from './run-server.ts';
+export { runServer, runServerLocal } from './runServer.ts';
 
 /**
  * @description Public `./auth` subpath — consumed via `@openthrottle/openthrottle-mcp/auth` and `@openthrottle/nestjs-mcp-developer`.
@@ -13,4 +13,4 @@ export {
   getAuthToken,
   withMcpDeveloperAuthToken,
   withMcpDeveloperAuthTokenAsync,
-} from './auth/get-auth-token.ts';
+} from './auth/getAuthToken.ts';

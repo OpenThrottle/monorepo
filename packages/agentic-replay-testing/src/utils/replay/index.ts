@@ -4,7 +4,7 @@ export {
   prepareReplay,
   replayFixturePath,
   replaySessionStart,
-} from './prepare-replay.ts';
+} from './prepareReplay.ts';
 export {
   compareOutbound,
   REPLAY_MISMATCH_EXIT_CODE,

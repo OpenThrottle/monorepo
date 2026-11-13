@@ -136,7 +136,7 @@ vi.mock('../../utils/projects', () => {
   };
 });
 
-vi.mock('../run-iteration', () => {
+vi.mock('../runIteration', () => {
   return {
     runIteration: (...args: unknown[]) => {
       return runIterationMock(...args);

@@ -18,7 +18,7 @@ import {
   type ResolvedScenarioTurn,
   type ScenarioMessage,
   scenarioRun,
-} from './scenario-run.ts';
+} from './scenarioRun.ts';
 
 /**
  * What one turn hands the next.

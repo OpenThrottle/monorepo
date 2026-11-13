@@ -11,7 +11,7 @@ import type {
   AgentAssetPromptType,
   AgentAssetResult,
 } from '~/routing/agent-search/types';
-import { discoverRepoPersonas } from '~/routing/agents/utils/discover-repo-personas.server';
+import { discoverRepoPersonas } from '~/routing/agents/utils/discoverRepoPersonas.server';
 import { discoverRepoSkills } from '~/routing/agents/utils/discoverRepoSkills.server';
 
 const SNIPPET_LENGTH = 240;

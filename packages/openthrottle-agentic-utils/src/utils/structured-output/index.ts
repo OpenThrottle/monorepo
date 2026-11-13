@@ -3,4 +3,4 @@
  * and switch a driver into that mode without changing what its consumers see.
  */
 export * from './chunk-reader.ts';
-export * from './with-structured-output.ts';
+export * from './withStructuredOutput.ts';

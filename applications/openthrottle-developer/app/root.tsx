@@ -76,7 +76,7 @@ import { PROTECTED_PATH_PREFIXES } from '~/global/config/config.app';
 import {
   DefaultEditorContext,
   USER_PREFERENCES_ROUTE_PATH,
-} from '~/global/config/default-editor-context';
+} from '~/global/config/DefaultEditorContext';
 import { SITE_TITLE } from '~/global/config/settings';
 import { CONFIG_STORAGE_KEY } from '~/global/data/data.appearance-config';
 import { configAtom } from '~/global/data/data.atom-config';

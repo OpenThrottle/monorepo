@@ -18,8 +18,8 @@ const SPAWN_MARKERS: readonly string[] = [
 
 /**
  * @description Stable workflow-ralph CLI / debug markers. The CLI prints orchestration
- * lines with these prefixes/emoji (see tools/workflows ralph.ts, run-iteration.ts,
- * ralph-debug-logger.ts). Everything not matched here (and not a spawn marker) is treated
+ * lines with these prefixes/emoji (see tools/workflows ralph.ts, runIteration.ts,
+ * ralphDebugLogger.ts). Everything not matched here (and not a spawn marker) is treated
  * as the agent dump ({@link RUN_OUTPUT_SOURCE.cursorAgent}), which is the bulk default.
  */
 const WORKFLOW_RALPH_MARKERS: readonly string[] = [

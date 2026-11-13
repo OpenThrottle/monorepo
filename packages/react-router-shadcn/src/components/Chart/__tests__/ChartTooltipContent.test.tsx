@@ -4,7 +4,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { ChartConfigContext } from '../../chart-config-context';
+import { ChartConfigContext } from '../../ChartConfigContext';
 import type { ChartTooltipContentProps } from '../ChartTooltipContent';
 import { ChartTooltipContent } from '../ChartTooltipContent';
 

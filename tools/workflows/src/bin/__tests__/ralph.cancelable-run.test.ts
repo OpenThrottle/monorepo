@@ -148,7 +148,7 @@ vi.mock('../../utils/projects', () => ({
   getNxProjectNames: vi.fn().mockResolvedValue([]),
 }));
 
-vi.mock('../run-iteration', () => ({
+vi.mock('../runIteration', () => ({
   runIteration: runIterationMock,
   runIterationAsync: runIterationAsyncMock,
 }));

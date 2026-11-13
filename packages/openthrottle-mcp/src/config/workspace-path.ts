@@ -3,7 +3,7 @@
  * `create_plan` can record which checkout a plan was written from.
  *
  * Why a captured module value rather than a `process.cwd()` read inside the tool handler: the tool
- * handlers are shared with the Nest/HTTP surface (`run-server-http.ts`, `nest/`), which runs INSIDE
+ * handlers are shared with the Nest/HTTP surface (`runServerHttp.ts`, `nest/`), which runs INSIDE
  * the OpenThrottle server process. There `process.cwd()` is the server's own directory and has
  * nothing to do with any caller's workspace. Only {@link runServerLocal} captures, so the HTTP
  * surface reads `null` and sends no path at all.

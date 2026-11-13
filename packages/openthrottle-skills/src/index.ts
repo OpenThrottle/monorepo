@@ -42,11 +42,11 @@ export type {
   ForeignSkillManifestEntry,
   ResolveForeignSkillManifestInput,
   ResolveForeignSkillManifestResult,
-} from './resolve-foreign-skill-manifest.ts';
+} from './resolveForeignSkillManifest.ts';
 export {
   FOREIGN_SKILL_LAYER,
   resolveForeignSkillManifest,
-} from './resolve-foreign-skill-manifest.ts';
+} from './resolveForeignSkillManifest.ts';
 
 /** @public */
 export type {
@@ -143,11 +143,11 @@ export type {
   SkillAvailabilityResult,
   SkillAvailabilityRule,
   SkillAvailabilityRuleSet,
-} from './resolve-skill-availability.ts';
+} from './resolveSkillAvailability.ts';
 export {
   resolveSkillAvailability,
   SKILL_AVAILABILITY_ENVIRONMENTS,
-} from './resolve-skill-availability.ts';
+} from './resolveSkillAvailability.ts';
 
 /** @public */
 export type {

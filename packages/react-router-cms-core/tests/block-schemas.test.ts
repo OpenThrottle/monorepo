@@ -9,7 +9,7 @@ import { describe, expect, test } from 'vitest';
 
 import * as CmsCore from '../src/index';
 import { getSchemaDefaults } from '../src/utils/getSchemaDefaults';
-import { isCmsJsonSchema } from '../src/utils/parse-cms-schema';
+import { isCmsJsonSchema } from '../src/utils/parseCmsSchema';
 
 /**
  * @description The committed output of `scripts/generate-cms-schemas.ts` for both block packages
