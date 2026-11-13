@@ -730,7 +730,17 @@ jobs:
             # is the ONE number separating "this box ran its third" from "this
             # box ran nothing and went green". The log file is printed in full
             # below and the summary line is echoed on its own.
-            NX_PROFILE=.nx/profiles/suite-shard.json pnpm exec nx run-many --projects="$suiteShardProjects" --target=test --shard="$suiteShard" --excludeTaskDependencies --outputStyle=stream ${{ env.OUTPUT_DEBUG }} >"$sharded_log" 2>&1 &
+            #
+            # `--maxWorkers=2` (OT plan 1d2f247c): at the config's CI value of 4
+            # this pool plus Nx's 3 slots oversubscribed the 4-vCPU box, and the
+            # overlap bought nothing. Over the heavy merge-queue runs either side
+            # of #724, the slowest shard's step went 12m16s/12m57s → 13m45s/12m32s.
+            # lint/typecheck stretched from 1.5–2.8 min to 3–5 min, and this suite
+            # from 140–195s to 165–533s. Two workers leave the foreground most of
+            # the box. The suite still finishes well inside the foreground's ~7–10
+            # min, so its own slowdown stays off the critical path. Forwarded to
+            # the Vitest CLI by nx:run-commands, the same route as `--shard`.
+            NX_PROFILE=.nx/profiles/suite-shard.json pnpm exec nx run-many --projects="$suiteShardProjects" --target=test --shard="$suiteShard" --maxWorkers=2 --excludeTaskDependencies --outputStyle=stream ${{ env.OUTPUT_DEBUG }} >"$sharded_log" 2>&1 &
             sharded_pid=$!
             trap '[ -n "$sharded_pid" ] && kill "$sharded_pid" 2>/dev/null || true' EXIT
           fi
@@ -1181,6 +1191,12 @@ jobs:
         uses: ./.github/actions/node-setup
         with:
           cache-suffix: model-facing-text
+          # 💰 Restore-only everywhere. This job adds no Nx task worth keeping,
+          # yet each save re-uploaded the whole restored ~215 MB Nx cache under
+          # its own key: one more entry per queue entry (a ref nothing can
+          # restore) and per main push (a duplicate of `warm`'s). It kept the
+          # repo over its 10 GB quota after #724 (OT plan 1d2f247c).
+          save-cache: 'false'
 
       - name: '🔤 Model-facing text byte budget'
         run: pnpm exec nx run monorepo:check-model-facing-text
@@ -1241,6 +1257,8 @@ jobs:
         uses: ./.github/actions/node-setup
         with:
           cache-suffix: database-seeds
+          # 💰 Restore-only everywhere, for the reason on `model-facing-text`.
+          save-cache: 'false'
 
       - name: '🌱 Migrate an empty database, then run every seed twice'
         run: scripts/check-database-seeds.sh
