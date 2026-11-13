@@ -53,6 +53,21 @@ describe('toChatModelOptions', () => {
   it('returns an empty list when nothing is discovered', () => {
     expect(toChatModelOptions({ endpoints: [] })).toEqual([]);
   });
+
+  it('drops embedding-only models, which cannot chat', () => {
+    const options = toChatModelOptions({
+      endpoints: [
+        {
+          baseUrl: 'http://localhost:11434/v1',
+          host: 'localhost',
+          models: ['all-minilm:latest', 'nomic-embed-text', 'llama3'],
+          provider: 'ollama',
+        },
+      ],
+    });
+
+    expect(options.map((option) => option.label)).toEqual(['llama3']);
+  });
 });
 
 describe('toAgentChatOptions', () => {
@@ -274,6 +289,21 @@ describe('toDriverEndpointChatOptions', () => {
         subLabel: 'opencode',
       },
     ]);
+  });
+
+  it('drops embedding-only models from the join', () => {
+    const options = toDriverEndpointChatOptions(agents, {
+      endpoints: [
+        {
+          baseUrl: 'http://localhost:11434/v1',
+          host: 'localhost',
+          models: ['mxbai-embed-large', 'llama3'],
+          provider: 'ollama',
+        },
+      ],
+    });
+
+    expect(options.map((option) => option.label)).toEqual(['llama3']);
   });
 
   it('flags a host.docker.internal endpoint as possibly unreachable', () => {

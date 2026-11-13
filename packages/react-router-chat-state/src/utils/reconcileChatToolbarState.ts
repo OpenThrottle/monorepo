@@ -8,6 +8,7 @@ import { capabilitiesForChatOption } from '../config/chat-capabilities';
 import type { ChatToolbarState } from '../data/data.chat-toolbar-state';
 import type { ChatAgentRuntime } from '../types';
 import { decodeChatOption } from './chat-model-option';
+import { isEmbeddingModelName } from './isEmbeddingModelName';
 
 /**
  * Minimal repository shape the reconciler matches persisted selections against —
@@ -38,6 +39,22 @@ export interface ReconcileChatToolbarOptions {
   readonly repositories: readonly ReconcileRepositoryOption[];
 }
 
+/**
+ * @description The first option that can chat — the seed when nothing persisted
+ * resolves. Skips embedding-only models so a discovery list led by one (Ollama's
+ * `all-minilm`) never preselects a model that cannot answer. Undefined when
+ * no option can chat — an empty selection beats an unusable one.
+ */
+function firstChatModelId(
+  models: readonly ChatModelOption[],
+): string | undefined {
+  const chatModel = models.find((model) => {
+    const name = decodeChatOption(model.id)?.model ?? model.label;
+    return !isEmbeddingModelName(name);
+  });
+  return chatModel?.id;
+}
+
 /** Hostname of a discovered endpoint `baseUrl`, ignoring port; null if unparseable. */
 function hostOf(baseUrl: string): string | null {
   try {
@@ -50,10 +67,10 @@ function hostOf(baseUrl: string): string | null {
 /**
  * @description Re-resolve a persisted `modelId` against the current options,
  * keeping the user's pick across endpoint churn instead of snapping to
- * `models[0]`. Precedence: exact id → (openai) same model name + same host
- * ignoring port → exactly one same-name candidate anywhere → `models[0]`; a
+ * the first chat model. Precedence: exact id → (openai) same model name + same host
+ * ignoring port → exactly one same-name candidate anywhere → first chat model; a
  * stale CLI model override (`cursor|gpt-5.2`) degrades to the bare backend
- * (`cursor`, or another same-backend override) before `models[0]`. Never guesses
+ * (`cursor`, or another same-backend override) before the first chat model. Never guesses
  * between multiple different-host endpoints serving the same model name.
  */
 function resolveModelId(
@@ -66,7 +83,7 @@ function resolveModelId(
 
   const decoded = decodeChatOption(persistedId);
   if (decoded == null) {
-    return models[0]?.id;
+    return firstChatModelId(models);
   }
 
   // `baseUrl != null` discriminates the openai variant (the CLI variant's
@@ -96,7 +113,7 @@ function resolveModelId(
       return sameModel[0]?.id;
     }
 
-    return models[0]?.id;
+    return firstChatModelId(models);
   }
 
   // A CLI backend with a now-stale model override → keep the backend, degrade.
@@ -118,7 +135,7 @@ function resolveModelId(
     }
   }
 
-  return models[0]?.id;
+  return firstChatModelId(models);
 }
 
 /**
@@ -162,7 +179,7 @@ function resolvePersistedModelId(
   models: readonly ChatModelOption[],
 ): string | undefined {
   if (persistedId == null) {
-    return models[0]?.id;
+    return firstChatModelId(models);
   }
   return resolveModelId(persistedId, models);
 }
@@ -200,7 +217,8 @@ function keepIfAllowed<T>(
  * Rules:
  * - `modelId`: kept when it exact-matches a current model id; otherwise
  *   re-resolved by {@link resolveModelId} (openai host+name churn, stale CLI
- *   overrides) before falling back to the first model.
+ *   overrides) before falling back to the first chat model (embedding-only
+ *   models are never seeded).
  * - `personaId`: kept when still present in the current list, else the first
  *   available (or undefined when the list is empty).
  * - `repositoryIds`: see {@link resolveRepositoryIds}.

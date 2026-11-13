@@ -79,6 +79,51 @@ describe('reconcileChatToolbarState', () => {
       expect(result.modelId).toBe('cursor');
     });
 
+    describe('when the options list is led by an embedding model', () => {
+      const embeddingModel: ChatModelOption = {
+        description: 'ollama',
+        groupId: 'openai:ollama',
+        id: 'http://localhost:11434/v1::all-minilm:latest',
+        label: 'all-minilm:latest',
+      };
+      const driverEmbeddingModel: ChatModelOption = {
+        description: 'opencode · ollama (local)',
+        groupId: 'opencode',
+        id: 'opencode|http://localhost:11434/v1::nomic-embed-text',
+        label: 'nomic-embed-text',
+      };
+
+      test('seeds the first chat-capable model instead', () => {
+        const result = reconcileChatToolbarState(persisted({}), {
+          models: [embeddingModel, driverEmbeddingModel, openaiModel, cliModel],
+          personas: [],
+          repositories: [],
+        });
+        expect(result.modelId).toBe(openaiModel.id);
+      });
+
+      test('skips it when a persisted id is gone too', () => {
+        const result = reconcileChatToolbarState(
+          persisted({ modelId: 'removed-endpoint::gpt' }),
+          {
+            models: [embeddingModel, cliModel],
+            personas: [],
+            repositories: [],
+          },
+        );
+        expect(result.modelId).toBe('cursor');
+      });
+
+      test('seeds nothing when every option is an embedding model', () => {
+        const result = reconcileChatToolbarState(persisted({}), {
+          models: [embeddingModel, driverEmbeddingModel],
+          personas: [],
+          repositories: [],
+        });
+        expect(result.modelId).toBeUndefined();
+      });
+    });
+
     test('is undefined when no models are discovered', () => {
       const result = reconcileChatToolbarState(
         persisted({ modelId: 'cursor' }),
