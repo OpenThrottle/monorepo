@@ -4356,7 +4356,7 @@ export type Query = {
   tasksByPlanId: Array<TaskObject>;
   /** List tasks for a project by project ID (FK). Optional limit/offset for pagination; when omitted returns all tasks and totalCount. */
   tasksByProjectId: TasksByProjectIdResultObject;
-  /** Per-turn token/cost usage for the authenticated user over [start, end] (inclusive, YYYY-MM-DD), optionally narrowed to one provider. Returns rows (newest first) + summed totals. */
+  /** Per-turn token/cost usage for the authenticated user over [start, end] (inclusive, YYYY-MM-DD), optionally narrowed to one provider and/or one agent account. Returns rows (newest first), summed totals, and the same range summed per agent account. */
   tokenUsage: TokenUsageResultObject;
   unverifiedWorkArtifacts: WorkArtifactListResult;
   /** Get a user by ID */
@@ -4764,6 +4764,7 @@ export type QueryTasksByProjectIdArgs = {
 };
 
 export type QueryTokenUsageArgs = {
+  accountId?: InputMaybe<Scalars['String']['input']>;
   end: Scalars['String']['input'];
   provider?: InputMaybe<Scalars['String']['input']>;
   start: Scalars['String']['input'];
@@ -5167,6 +5168,22 @@ export type RecordSkillUsageOutcomeInput = {
   toolUseId?: InputMaybe<Scalars['String']['input']>;
 };
 
+/** The agent account (login) a hook saw the turn billed to, as the agent CLI reported it. No credential value is ever sent. */
+export type RecordTokenUsageAccountInput = {
+  /** What the turn billed: api_key, subscription or unknown. Any other value is stored as unknown. */
+  credentialKind: Scalars['String']['input'];
+  /** Login email the CLI reported, when it reports one. */
+  email?: InputMaybe<Scalars['String']['input']>;
+  /** The provider's stable id for the login (for claude, <orgId>:<email>). The grouping key; a blank value leaves the row unattributed. */
+  externalAccountId: Scalars['String']['input'];
+  /** Provider organization or team id, when reported. */
+  orgId?: InputMaybe<Scalars['String']['input']>;
+  /** Provider organization or team name, when reported. */
+  orgName?: InputMaybe<Scalars['String']['input']>;
+  /** Subscription plan (for claude: pro, max, team, ...), when reported. */
+  plan?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type RecordTokenUsageInput = {
   /** Usage rows to ingest, at most 500 per call. The whole batch is rejected (BAD_REQUEST, naming the row index) if any row is invalid. */
   rows: Array<RecordTokenUsageRowInput>;
@@ -5181,6 +5198,8 @@ export type RecordTokenUsageResultObject = {
 };
 
 export type RecordTokenUsageRowInput = {
+  /** The agent account the turn was billed to, stamped by the hook at capture time. Null (or absent) leaves the row unattributed. Attribution never rejects a batch: an unusable account is ignored. */
+  account?: InputMaybe<RecordTokenUsageAccountInput>;
   /** Cache-read tokens for the turn, when reported. */
   cacheReadTokens?: InputMaybe<Scalars['Float']['input']>;
   /** Cache-creation (cache-write) tokens for the turn, when reported. */
@@ -6841,8 +6860,40 @@ export type TimelineSpanObject = {
   title: Scalars['String']['output'];
 };
 
+/** An agent-CLI login that usage was billed to (a subscription seat or an API key), as the CLI reported it. */
+export type TokenUsageAccountObject = {
+  __typename?: 'TokenUsageAccountObject';
+  /** What the account's runs bill: api_key, subscription or unknown. Subscription costs are list-price estimates, not invoiced dollars. */
+  credentialKind: Scalars['String']['output'];
+  /** Login email, when the CLI reports one (codex is identified by account id only). */
+  email?: Maybe<Scalars['String']['output']>;
+  /** Agent account id. */
+  id: Scalars['ID']['output'];
+  /** When a usage row was last stamped with this account. */
+  lastSeenAt: Scalars['DateTime']['output'];
+  /** Provider organization or team name, when reported. */
+  orgName?: Maybe<Scalars['String']['output']>;
+  /** Subscription plan (for claude: pro, max, team, ...), when reported. */
+  plan?: Maybe<Scalars['String']['output']>;
+  /** Driver id the account belongs to. */
+  provider: Scalars['String']['output'];
+};
+
+/** Usage over the range for one agent account on one provider. A null account is that provider's unattributed bucket. */
+export type TokenUsageByAccountObject = {
+  __typename?: 'TokenUsageByAccountObject';
+  /** The account, or null for usage no account was stamped on (rows from before accounts were recorded, and drivers that report no identity). */
+  account?: Maybe<TokenUsageAccountObject>;
+  /** Provider (driver id) of the bucket. */
+  provider: Scalars['String']['output'];
+  /** Summed usage + turn count for the bucket. */
+  totals: TokenUsageTotalsObject;
+};
+
 export type TokenUsageResultObject = {
   __typename?: 'TokenUsageResultObject';
+  /** The same filtered range summed per agent account and provider, costliest first, with an unattributed bucket per provider. */
+  byAccount: Array<TokenUsageByAccountObject>;
   /** Per-turn usage rows in the range, newest first. */
   items: Array<TokenUsageRowObject>;
   /** Summed usage + turn count over the same filtered range. */
@@ -6851,6 +6902,8 @@ export type TokenUsageResultObject = {
 
 export type TokenUsageRowObject = {
   __typename?: 'TokenUsageRowObject';
+  /** Agent account (login) the turn was billed to, stamped when the row was written. Null when it could not be identified, and for rows written before accounts were recorded. */
+  agentAccountId?: Maybe<Scalars['ID']['output']>;
   /** Cache-read tokens for the turn, when reported. */
   cacheReadTokens?: Maybe<Scalars['Float']['output']>;
   /** Cache-write tokens for the turn, when reported. */

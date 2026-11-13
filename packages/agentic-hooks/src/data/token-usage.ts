@@ -5,6 +5,7 @@
  */
 import type {
   HookFetch,
+  TokenUsageAccount,
   TokenUsageBatchResult,
   TokenUsageRecord,
 } from '../types.ts';
@@ -40,6 +41,24 @@ mutation RecordTokenUsage($input: RecordTokenUsageInput!) {
 }
 `;
 
+/** camelCase GraphQL `account` input for a record's account, or null. */
+const toRecordTokenUsageAccount = (
+  account: TokenUsageAccount | null | undefined,
+): Record<string, string | null> | null => {
+  if (account === null || account === undefined) {
+    return null;
+  }
+
+  return {
+    credentialKind: account.credential_kind,
+    email: account.email,
+    externalAccountId: account.external_account_id,
+    orgId: account.org_id,
+    orgName: account.org_name,
+    plan: account.plan,
+  };
+};
+
 /**
  * Map one buffered snake_case record to the camelCase GraphQL row.
  *
@@ -47,8 +66,9 @@ mutation RecordTokenUsage($input: RecordTokenUsageInput!) {
  */
 export const toRecordTokenUsageRow = (
   record: TokenUsageRecord,
-): Record<string, number | string | null> => {
+): Record<string, Record<string, string | null> | number | string | null> => {
   return {
+    account: toRecordTokenUsageAccount(record.agent_account),
     cacheReadTokens: record.cache_read_tokens,
     cacheWriteTokens: record.cache_write_tokens,
     costUsd: record.cost_usd,

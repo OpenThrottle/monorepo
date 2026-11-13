@@ -23,6 +23,7 @@ import {
   sweepAbandonedStarts,
   sweepTrajectoryUploadState,
 } from '../../index.ts';
+import { resolveClaudeTokenUsageAccount } from './account.ts';
 import { CLAUDE_SOURCE, normalizeClaudeStopPayload } from './payload.ts';
 import { captureSessionTrajectories } from './session-trajectory.ts';
 import { isShadowedByRepoHooks } from './shadow.ts';
@@ -78,9 +79,13 @@ const main = async (): Promise<void> => {
     // Per-request token usage from the transcript(s) since the last Stop.
     // Bounded per Stop (see MAX_TRANSCRIPT_BYTES_*); a capped read resumes at
     // the next Stop, and a missing or unreadable transcript is just no rows.
+    // Rows are stamped with the login `claude auth status` reports right now.
     await captureTranscriptUsage({
       agentTranscriptPath: normalized.agent_transcript_path,
       repoRoot,
+      resolveAccount: () => {
+        return resolveClaudeTokenUsageAccount(process.env);
+      },
       sessionId: normalized.session_id,
       transcriptPath: normalized.transcript_path,
     });

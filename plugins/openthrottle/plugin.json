@@ -6,5 +6,5 @@
   },
   "description": "Records which agent skills run under Claude Code, so OpenThrottle can report skill usage. Telemetry only — it never modifies your repository and never blocks a tool call.",
   "name": "openthrottle",
-  "version": "1.0.0"
+  "version": "1.1.0"
 }

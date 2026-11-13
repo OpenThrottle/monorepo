@@ -6,6 +6,7 @@
 import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
 import type { DataSourceOptions } from 'typeorm';
 
+import { AgentAccount } from './modules/agent-accounts/agent-accounts.entity.ts';
 import { UserDisabledAgentCli } from './modules/agent-cli-preferences/user-disabled-agent-cli.entity.ts';
 import { UserFavoriteAgentModel } from './modules/agent-cli-preferences/user-favorite-agent-model.entity.ts';
 import { AgentConversation } from './modules/agent-conversations/agent-conversation.entity.ts';
@@ -88,6 +89,7 @@ export function getTypeOrmOptions(): DataSourceOptions {
 
   return {
     entities: [
+      AgentAccount,
       AgentConversation,
       AgentConversationMessage,
       AgentTokenUsage,

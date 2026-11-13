@@ -14,6 +14,9 @@ import { skillUsageCwdLabel } from '~/routing/usage/utils/skill-usage-labels';
 import { skillUsageChipClass } from '~/routing/usage/utils/skillUsageChipClass';
 
 export interface UsageSkillUsageFiltersProps {
+  /** Current `?provider=` (token usage); preserved when skill filters change. */
+  /** `?account=` token-usage filter to preserve, or null. */
+  accountParam?: string | null;
   /** SSR first page of branches: default branch first, then A–Z. */
   branchOptions: readonly UsageBranchOption[];
   /** The SSR branch page was truncated, so the list is not exhaustive. */
@@ -22,7 +25,6 @@ export interface UsageSkillUsageFiltersProps {
   /** Range end (YYYY-MM-DD) the branch search runs over. */
   end: string;
   filterOptions: UsageSkillUsageFilterOptionsFragment;
-  /** Current `?provider=` (token usage); preserved when skill filters change. */
   providerParam: string | null;
   selectedCwd: string | null;
   selectedGitBranch: string | null;
@@ -40,6 +42,7 @@ export const UsageSkillUsageFilters = (
     className,
     end,
     filterOptions,
+    accountParam = null,
     providerParam,
     selectedCwd,
     selectedGitBranch,
@@ -85,6 +88,7 @@ export const UsageSkillUsageFilters = (
               className={skillUsageChipClass(active)}
               key={option.label}
               to={buildUsageSearch({
+                account: accountParam,
                 cwd: selectedCwd,
                 gitBranch: selectedGitBranch,
                 provider: providerParam,
@@ -99,6 +103,7 @@ export const UsageSkillUsageFilters = (
 
       <div className="mb-6 flex flex-col gap-3">
         <UsageBranchFilter
+          accountParam={accountParam}
           end={end}
           hasMore={branchesHaveMore}
           initialOptions={branchOptions}
@@ -119,6 +124,7 @@ export const UsageSkillUsageFilters = (
               aria-current={selectedCwd === null ? 'true' : undefined}
               className={skillUsageChipClass(selectedCwd === null)}
               to={buildUsageSearch({
+                account: accountParam,
                 cwd: null,
                 gitBranch: selectedGitBranch,
                 provider: providerParam,
@@ -137,6 +143,7 @@ export const UsageSkillUsageFilters = (
                   key={cwd}
                   title={cwd}
                   to={buildUsageSearch({
+                    account: accountParam,
                     cwd,
                     gitBranch: selectedGitBranch,
                     provider: providerParam,

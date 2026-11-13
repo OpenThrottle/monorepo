@@ -142,6 +142,7 @@ describe('AgentDiscoveryResolver', () => {
       apiKeyOverridesSubscription: true,
       authMethod: 'claude.ai',
       loggedIn: true,
+      organizationId: 'org-1',
       organizationName: 'Example Org',
       subscriptionType: 'team',
       warning: 'ANTHROPIC_API_KEY is set, so Claude runs bill the API key.',

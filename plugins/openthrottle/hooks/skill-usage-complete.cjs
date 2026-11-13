@@ -1018,8 +1018,22 @@ mutation RecordTokenUsage($input: RecordTokenUsageInput!) {
   }
 }
 `;
+var toRecordTokenUsageAccount = (account) => {
+  if (account === null || account === void 0) {
+    return null;
+  }
+  return {
+    credentialKind: account.credential_kind,
+    email: account.email,
+    externalAccountId: account.external_account_id,
+    orgId: account.org_id,
+    orgName: account.org_name,
+    plan: account.plan
+  };
+};
 var toRecordTokenUsageRow = (record) => {
   return {
+    account: toRecordTokenUsageAccount(record.agent_account),
     cacheReadTokens: record.cache_read_tokens,
     cacheWriteTokens: record.cache_write_tokens,
     costUsd: record.cost_usd,
@@ -1951,31 +1965,6 @@ var sweepTrajectoryUploadState = async ({
   }
 };
 
-// packages/agentic-hooks/src/adapters/claude/payload.ts
-var CLAUDE_SOURCE = "claude-code";
-var nonEmptyString = (value) => {
-  return typeof value === "string" && value.trim() !== "" ? value : null;
-};
-var normalizeClaudeStopPayload = (raw) => {
-  if (!isRecord(raw)) {
-    return null;
-  }
-  const sessionId = typeof raw.session_id === "string" ? raw.session_id.trim() : "";
-  if (!sessionId) {
-    return null;
-  }
-  return {
-    agent_transcript_path: nonEmptyString(raw.agent_transcript_path),
-    cwd: nonEmptyString(raw.cwd),
-    hook_event_name: typeof raw.hook_event_name === "string" ? raw.hook_event_name : "Stop",
-    session_id: sessionId,
-    transcript_path: nonEmptyString(raw.transcript_path)
-  };
-};
-
-// packages/agentic-hooks/src/adapters/claude/session-trajectory.ts
-var import_node_path9 = __toESM(require("node:path"), 1);
-
 // packages/openthrottle-drivers/src/registry/index.ts
 var DRIVERS = {
   antigravity: "antigravity",
@@ -2209,6 +2198,212 @@ function mapCursorEvent(event) {
     default:
       return null;
   }
+}
+
+// packages/openthrottle-agentic-utils/src/utils/conversation-backend/claude/auth-status.ts
+var import_node_child_process2 = require("node:child_process");
+
+// packages/openthrottle-agentic-utils/src/utils/conversation-backend/claude/config-dir.ts
+var CLAUDE_CONFIG_DIR_ENV = "OPENTHROTTLE_CLAUDE_CONFIG_DIR";
+var CLAUDE_CONFIG_DIR_KEY = "CLAUDE_CONFIG_DIR";
+var CLAUDE_HOST_ENV_KEYS = [
+  "HOME",
+  "LANG",
+  "LC_ALL",
+  "LOGNAME",
+  "PATH",
+  "TERM",
+  "TMPDIR",
+  "USER"
+];
+function resolveClaudeConfigDirOverride(env = process.env) {
+  const override = env[CLAUDE_CONFIG_DIR_ENV]?.trim();
+  return override !== void 0 && override !== "" ? override : void 0;
+}
+function resolveEffectiveClaudeConfigDir(env = process.env) {
+  const override = resolveClaudeConfigDirOverride(env);
+  if (override !== void 0) {
+    return override;
+  }
+  const inherited = env[CLAUDE_CONFIG_DIR_KEY]?.trim();
+  return inherited !== void 0 && inherited !== "" ? inherited : void 0;
+}
+
+// packages/openthrottle-agentic-utils/src/utils/conversation-backend/claude/data/data.copy.ts
+var CLAUDE_NOT_LOGGED_IN_WARNING = `Claude is not logged in and no API key is set. Run \`claude auth login\` (or set ANTHROPIC_API_KEY) before starting a Claude run.`;
+function claudeApiKeyOverrideWarning(subscriptionType, keySource) {
+  const typedPlan = `${subscriptionType} subscription`;
+  const plan = subscriptionType === null ? "subscription" : typedPlan;
+  return `${keySource} is set, so Claude runs bill the API key, not your ${plan}. Unset it to use the subscription.`;
+}
+
+// packages/openthrottle-agentic-utils/src/utils/conversation-backend/claude/auth-status.ts
+var CLAUDE_ACTIVE_CREDENTIALS = {
+  apiKey: "apiKey",
+  none: "none",
+  subscription: "subscription"
+};
+var API_KEY_ENV_NAME = "ANTHROPIC_API_KEY";
+var CLAUDE_AI_AUTH_METHOD = "claude.ai";
+function isRecord3(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+function readRecord(stdout) {
+  try {
+    const parsed = JSON.parse(stdout);
+    return isRecord3(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+function readString(record, key) {
+  const value = record[key];
+  return typeof value === "string" && value.trim() !== "" ? value.trim() : null;
+}
+function resolveActiveCredential(apiKeyActive, hasSubscription) {
+  if (apiKeyActive) {
+    return CLAUDE_ACTIVE_CREDENTIALS.apiKey;
+  }
+  if (hasSubscription) {
+    return CLAUDE_ACTIVE_CREDENTIALS.subscription;
+  }
+  return CLAUDE_ACTIVE_CREDENTIALS.none;
+}
+function parseClaudeAuthStatus(stdout, env) {
+  const record = readRecord(stdout) ?? {};
+  const loggedIn = record.loggedIn === true;
+  const authMethod = readString(record, "authMethod");
+  const subscriptionType = readString(record, "subscriptionType");
+  const apiKeySource = readString(record, "apiKeySource");
+  const reportedKeySource = apiKeySource !== null && apiKeySource !== "none" ? apiKeySource : null;
+  const hasSubscription = loggedIn && authMethod === CLAUDE_AI_AUTH_METHOD && subscriptionType !== null;
+  const apiKeyActive = env.hasAnthropicApiKey || reportedKeySource !== null;
+  const activeCredential = resolveActiveCredential(
+    apiKeyActive,
+    hasSubscription
+  );
+  const apiKeyOverridesSubscription = apiKeyActive && hasSubscription;
+  const cliKeySource = env.hasAnthropicApiKey ? null : reportedKeySource;
+  const keySource = cliKeySource ?? API_KEY_ENV_NAME;
+  let warning = null;
+  if (apiKeyOverridesSubscription) {
+    warning = claudeApiKeyOverrideWarning(subscriptionType, keySource);
+  } else if (activeCredential === CLAUDE_ACTIVE_CREDENTIALS.none) {
+    warning = CLAUDE_NOT_LOGGED_IN_WARNING;
+  }
+  return {
+    accountEmail: readString(record, "email"),
+    activeCredential,
+    apiKeyOverridesSubscription,
+    authMethod,
+    loggedIn,
+    organizationId: readString(record, "orgId"),
+    organizationName: readString(record, "orgName"),
+    subscriptionType,
+    warning
+  };
+}
+function probeClaudeAuthStatus(options) {
+  const { binary, env, timeoutMs } = options;
+  const configDir = resolveEffectiveClaudeConfigDir(env);
+  const apiKey = env[API_KEY_ENV_NAME];
+  const hasAnthropicApiKey = apiKey !== void 0 && apiKey.trim() !== "";
+  return new Promise((resolve) => {
+    let stdout = "";
+    const childEnv = {};
+    for (const key of CLAUDE_HOST_ENV_KEYS) {
+      if (env[key] !== void 0) {
+        childEnv[key] = env[key];
+      }
+    }
+    if (configDir !== void 0) {
+      childEnv[CLAUDE_CONFIG_DIR_KEY] = configDir;
+    }
+    const child = (0, import_node_child_process2.spawn)(binary, ["auth", "status", "--json"], {
+      env: childEnv,
+      stdio: ["ignore", "pipe", "ignore"]
+    });
+    const timer = setTimeout(() => {
+      child.kill("SIGKILL");
+      resolve(null);
+    }, timeoutMs);
+    child.stdout?.on("data", (data) => {
+      stdout += data.toString("utf8");
+    });
+    child.on("error", () => {
+      clearTimeout(timer);
+      resolve(null);
+    });
+    child.on("close", () => {
+      clearTimeout(timer);
+      if (readRecord(stdout) === null) {
+        resolve(null);
+        return;
+      }
+      resolve(parseClaudeAuthStatus(stdout, { hasAnthropicApiKey }));
+    });
+  });
+}
+
+// packages/openthrottle-agentic-utils/src/utils/conversation-backend/agent-account/types.ts
+var AGENT_ACCOUNT_CREDENTIAL_KINDS = {
+  apiKey: "api_key",
+  subscription: "subscription",
+  unknown: "unknown"
+};
+var AGENT_ACCOUNT_UNATTRIBUTED_REASONS = {
+  notLoggedIn: "not_logged_in",
+  probeFailed: "probe_failed",
+  unknownProvider: "unknown_provider",
+  unsupported: "unsupported"
+};
+var AGENT_ACCOUNT_API_KEY_ID = "api_key";
+
+// packages/openthrottle-agentic-utils/src/utils/conversation-backend/agent-account/parse.ts
+function apiKeyAccount(provider) {
+  return {
+    credentialKind: AGENT_ACCOUNT_CREDENTIAL_KINDS.apiKey,
+    email: null,
+    externalAccountId: AGENT_ACCOUNT_API_KEY_ID,
+    kind: "identified",
+    orgId: null,
+    orgName: null,
+    plan: null,
+    provider
+  };
+}
+function unattributed(provider, reason) {
+  return { kind: "unattributed", provider, reason };
+}
+function toClaudeAgentAccount(status) {
+  const provider = "claude";
+  if (status === null) {
+    return unattributed(
+      provider,
+      AGENT_ACCOUNT_UNATTRIBUTED_REASONS.probeFailed
+    );
+  }
+  if (status.activeCredential === CLAUDE_ACTIVE_CREDENTIALS.apiKey) {
+    return apiKeyAccount(provider);
+  }
+  const email = status.accountEmail?.toLowerCase() ?? null;
+  const key = [status.organizationId, email].filter((part) => part !== null).join(":");
+  if (!status.loggedIn || key === "") {
+    return unattributed(
+      provider,
+      AGENT_ACCOUNT_UNATTRIBUTED_REASONS.notLoggedIn
+    );
+  }
+  return {
+    credentialKind: AGENT_ACCOUNT_CREDENTIAL_KINDS.subscription,
+    email,
+    externalAccountId: key,
+    kind: "identified",
+    orgId: status.organizationId,
+    orgName: status.organizationName,
+    plan: status.subscriptionType,
+    provider
+  };
 }
 
 // packages/openthrottle-agentic-utils/src/utils/conversation-backend/antigravity/events.ts
@@ -4051,7 +4246,58 @@ var buildClaudeSessionTrajectory = (input) => {
   };
 };
 
+// packages/agentic-hooks/src/adapters/claude/account.ts
+var CLAUDE_ACCOUNT_PROBE_TIMEOUT_MS = 3e3;
+var CLAUDE_BIN_ENV = "OPENTHROTTLE_CLAUDE_BIN";
+var toTokenUsageAccount = (account) => {
+  return {
+    credential_kind: account.credentialKind,
+    email: account.email,
+    external_account_id: account.externalAccountId,
+    org_id: account.orgId,
+    org_name: account.orgName,
+    plan: account.plan
+  };
+};
+var resolveClaudeTokenUsageAccount = async (env) => {
+  try {
+    const override = env[CLAUDE_BIN_ENV]?.trim();
+    const status = await probeClaudeAuthStatus({
+      binary: override !== void 0 && override !== "" ? override : "claude",
+      env,
+      timeoutMs: CLAUDE_ACCOUNT_PROBE_TIMEOUT_MS
+    });
+    const account = toClaudeAgentAccount(status);
+    return account.kind === "identified" ? toTokenUsageAccount(account) : null;
+  } catch {
+    return null;
+  }
+};
+
+// packages/agentic-hooks/src/adapters/claude/payload.ts
+var CLAUDE_SOURCE = "claude-code";
+var nonEmptyString = (value) => {
+  return typeof value === "string" && value.trim() !== "" ? value : null;
+};
+var normalizeClaudeStopPayload = (raw) => {
+  if (!isRecord(raw)) {
+    return null;
+  }
+  const sessionId = typeof raw.session_id === "string" ? raw.session_id.trim() : "";
+  if (!sessionId) {
+    return null;
+  }
+  return {
+    agent_transcript_path: nonEmptyString(raw.agent_transcript_path),
+    cwd: nonEmptyString(raw.cwd),
+    hook_event_name: typeof raw.hook_event_name === "string" ? raw.hook_event_name : "Stop",
+    session_id: sessionId,
+    transcript_path: nonEmptyString(raw.transcript_path)
+  };
+};
+
 // packages/agentic-hooks/src/adapters/claude/session-trajectory.ts
+var import_node_path9 = __toESM(require("node:path"), 1);
 var SESSION_TRAJECTORY_SOURCE = "session_upload";
 var SESSION_TRAJECTORY_DRIVER = "claude";
 var MAX_SESSION_SCAN_BYTES_PER_STOP = 32 * 1024 * 1024;
@@ -4476,6 +4722,9 @@ var captureTranscriptUsage = async ({
   graphqlUrl,
   jsonlPath,
   repoRoot,
+  resolveAccount = async () => {
+    return null;
+  },
   sessionId,
   timeoutMs,
   transcriptPath
@@ -4523,12 +4772,17 @@ var captureTranscriptUsage = async ({
     }
     let advanced = true;
     if (records.length > 0) {
+      const account = await resolveAccount().catch(() => {
+        return null;
+      });
       const result = await persistTokenUsage({
         authToken,
         fetchImpl,
         graphqlUrl,
         jsonlPath,
-        records,
+        records: records.map((record) => {
+          return { ...record, agent_account: account };
+        }),
         repoRoot,
         timeoutMs
       });
@@ -4590,6 +4844,9 @@ var main = async () => {
     await captureTranscriptUsage({
       agentTranscriptPath: normalized.agent_transcript_path,
       repoRoot,
+      resolveAccount: () => {
+        return resolveClaudeTokenUsageAccount(process.env);
+      },
       sessionId: normalized.session_id,
       transcriptPath: normalized.transcript_path
     });

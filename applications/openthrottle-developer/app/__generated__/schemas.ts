@@ -113,6 +113,7 @@ import {
   RecordPlanRunHeartbeatInput,
   RecordSkillUsageInput,
   RecordSkillUsageOutcomeInput,
+  RecordTokenUsageAccountInput,
   RecordTokenUsageInput,
   RecordTokenUsageRowInput,
   RecordWorkArtifactInput,
@@ -1384,6 +1385,19 @@ export function RecordSkillUsageOutcomeInputSchema(): z.ZodObject<
   });
 }
 
+export function RecordTokenUsageAccountInputSchema(): z.ZodObject<
+  Properties<RecordTokenUsageAccountInput>
+> {
+  return z.object({
+    credentialKind: z.string().min(1),
+    email: z.string().nullish(),
+    externalAccountId: z.string().min(1),
+    orgId: z.string().nullish(),
+    orgName: z.string().nullish(),
+    plan: z.string().nullish(),
+  });
+}
+
 export function RecordTokenUsageInputSchema(): z.ZodObject<
   Properties<RecordTokenUsageInput>
 > {
@@ -1396,6 +1410,7 @@ export function RecordTokenUsageRowInputSchema(): z.ZodObject<
   Properties<RecordTokenUsageRowInput>
 > {
   return z.object({
+    account: z.lazy(() => RecordTokenUsageAccountInputSchema().nullish()),
     cacheReadTokens: z.number().nullish(),
     cacheWriteTokens: z.number().nullish(),
     costUsd: z.number().nullish(),

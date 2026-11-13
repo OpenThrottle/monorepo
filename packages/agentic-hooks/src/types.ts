@@ -127,7 +127,30 @@ export type PostResult = PostFailure | { id: string; ok: true };
  *
  * @public
  */
+/**
+ * The agent account (login) a producer saw its turns billed to, as the
+ * producer's own CLI reported it. No credential value is ever carried.
+ *
+ * @public
+ */
+export interface TokenUsageAccount {
+  /** `api_key`, `subscription` or `unknown`. */
+  readonly credential_kind: string;
+  readonly email: string | null;
+  /** The provider's stable id for the login; the grouping key. */
+  readonly external_account_id: string;
+  readonly org_id: string | null;
+  readonly org_name: string | null;
+  readonly plan: string | null;
+}
+
 export interface TokenUsageRecord {
+  /**
+   * The account the turn was billed to, stamped by the producer at capture
+   * time. Optional only because lines buffered before it existed lack it; a
+   * producer that cannot tell writes null.
+   */
+  readonly agent_account?: TokenUsageAccount | null;
   readonly cache_read_tokens: number | null;
   readonly cache_write_tokens: number | null;
   readonly cost_usd: number | null;

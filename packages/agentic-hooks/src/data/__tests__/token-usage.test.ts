@@ -188,6 +188,7 @@ describe('token usage', () => {
   describe('toRecordTokenUsageRow', () => {
     it('maps every snake_case field to its camelCase GraphQL key', () => {
       expect(toRecordTokenUsageRow(makeRecord(1))).toEqual({
+        account: null,
         cacheReadTokens: null,
         cacheWriteTokens: 3,
         costUsd: 0.25,
@@ -204,6 +205,31 @@ describe('token usage', () => {
         sessionId: 'sess-1',
         source: 'test-source',
         totalTokens: 33,
+      });
+    });
+  });
+
+  describe('toRecordTokenUsageRow with an account', () => {
+    it('maps the account to the camelCase account input', () => {
+      const record = {
+        ...makeRecord(1),
+        agent_account: {
+          credential_kind: 'subscription',
+          email: 'dev@example.com',
+          external_account_id: 'org-1:dev@example.com',
+          org_id: 'org-1',
+          org_name: 'Example',
+          plan: 'team',
+        },
+      };
+
+      expect(toRecordTokenUsageRow(record).account).toEqual({
+        credentialKind: 'subscription',
+        email: 'dev@example.com',
+        externalAccountId: 'org-1:dev@example.com',
+        orgId: 'org-1',
+        orgName: 'Example',
+        plan: 'team',
       });
     });
   });

@@ -44,6 +44,14 @@ export {
   type ResolvedListPagination,
 } from './list-pagination/list-pagination.types.ts';
 export { resolveListPagination } from './list-pagination/list-pagination.utils.ts';
+export { AGENT_ACCOUNT_CREDENTIAL_KINDS } from './modules/agent-accounts/agent-accounts.constants.ts';
+export { AgentAccount } from './modules/agent-accounts/agent-accounts.entity.ts';
+export { AgentAccountsModule } from './modules/agent-accounts/agent-accounts.module.ts';
+export { AgentAccountsService } from './modules/agent-accounts/agent-accounts.service.ts';
+export type {
+  AgentAccountCredentialKind,
+  UpsertAgentAccountInput,
+} from './modules/agent-accounts/agent-accounts.types.ts';
 export { AgentCliPreferencesModule } from './modules/agent-cli-preferences/agent-cli-preferences.module.ts';
 export { AgentCliPreferencesService } from './modules/agent-cli-preferences/agent-cli-preferences.service.ts';
 export type { ModelPreferenceMap } from './modules/agent-cli-preferences/agent-cli-preferences.types.ts';
@@ -91,8 +99,10 @@ export { AgentTokenUsageModule } from './modules/agent-token-usage/agent-token-u
 export { AgentTokenUsageService } from './modules/agent-token-usage/agent-token-usage.service.ts';
 export type {
   RecordTokenUsageInput,
+  TokenUsageAccountFilter,
   TokenUsageBatchResult,
   TokenUsageBatchRow,
+  TokenUsageByAccount,
   TokenUsageRangeQuery,
   TokenUsageTotals,
 } from './modules/agent-token-usage/agent-token-usage.types.ts';
