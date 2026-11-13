@@ -12,6 +12,17 @@
         "matcher": "Skill"
       }
     ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/skill-usage-heartbeat.cjs",
+            "statusMessage": "Telemetry coverage heartbeat (SessionStart)",
+            "type": "command"
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "hooks": [

@@ -500,6 +500,19 @@ export type {
   CreateTaskBatchItem,
   GroupedHooks,
 } from './modules/tasks/tasks.types.ts';
+export {
+  TELEMETRY_HEARTBEAT_DELIVERY_LEG_LIST,
+  TELEMETRY_HEARTBEAT_DELIVERY_LEGS,
+  TELEMETRY_HEARTBEAT_RECENT_TOTALS_LIMIT,
+} from './modules/telemetry-heartbeats/telemetry-heartbeats.constants.ts';
+export { TelemetryHeartbeat } from './modules/telemetry-heartbeats/telemetry-heartbeats.entity.ts';
+export { TelemetryHeartbeatsModule } from './modules/telemetry-heartbeats/telemetry-heartbeats.module.ts';
+export { TelemetryHeartbeatsService } from './modules/telemetry-heartbeats/telemetry-heartbeats.service.ts';
+export type {
+  TelemetryHeartbeatDeliveryLeg,
+  UpsertTelemetryHeartbeatInput,
+} from './modules/telemetry-heartbeats/telemetry-heartbeats.types.ts';
+export { isTelemetryHeartbeatDeliveryLeg } from './modules/telemetry-heartbeats/telemetry-heartbeats.utils.ts';
 export { USER_PREFERENCES_ERROR_REASONS } from './modules/user-preferences/user-preferences.constants.ts';
 export { UserPreferences } from './modules/user-preferences/user-preferences.entity.ts';
 export { UserPreferencesModule } from './modules/user-preferences/user-preferences.module.ts';

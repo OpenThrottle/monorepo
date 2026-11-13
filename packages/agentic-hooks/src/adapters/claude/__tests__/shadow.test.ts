@@ -101,4 +101,42 @@ describe('isShadowedByRepoHooks', () => {
       ).toBe(false);
     });
   });
+
+  describe('when checking for the heartbeat bundle', () => {
+    const heartbeatScript = `${pluginRoot}/hooks/skill-usage-heartbeat.cjs`;
+
+    it('stands down only when the repo registers the heartbeat hook', () => {
+      writeSettings(registered);
+      expect(
+        isShadowedByRepoHooks({
+          bundle: 'skill-usage-heartbeat',
+          env: { CLAUDE_PLUGIN_ROOT: pluginRoot },
+          repoRoot,
+          scriptPath: heartbeatScript,
+        }),
+      ).toBe(false);
+
+      writeSettings(
+        JSON.stringify({
+          hooks: {
+            SessionStart: [
+              {
+                hooks: [
+                  { command: './.claude/hooks/skill-usage-heartbeat.cjs' },
+                ],
+              },
+            ],
+          },
+        }),
+      );
+      expect(
+        isShadowedByRepoHooks({
+          bundle: 'skill-usage-heartbeat',
+          env: { CLAUDE_PLUGIN_ROOT: pluginRoot },
+          repoRoot,
+          scriptPath: heartbeatScript,
+        }),
+      ).toBe(true);
+    });
+  });
 });

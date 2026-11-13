@@ -74,18 +74,26 @@ Authoring lives in [`packages/agentic-hooks`](../../packages/agentic-hooks); the
 `.claude/hooks/*.cjs` and `.cursor/hooks/*.cjs` files are generated bundles
 (`pnpm nx run @openthrottle/agentic-hooks:bundle-hooks`). Do not edit the bundles.
 
-| Hook                               | Registered as                         | Emits                                                                     |
-| ---------------------------------- | ------------------------------------- | ------------------------------------------------------------------------- |
-| `skill-usage-capture.cjs`          | Claude `PreToolUse` (matcher `Skill`) | one event, `invocation_path='skill_tool'`                                 |
-| `skill-usage-capture.cjs`          | Claude `UserPromptExpansion`          | one event, `invocation_path='slash'`                                      |
-| `skill-usage-complete.cjs`         | Claude `Stop`                         | resolves open starts → `session_ended`; sweeps stale starts → `abandoned` |
-| `skill-usage-capture.cjs` (cursor) | Cursor `beforeSubmitPrompt`           | one event, `source='cursor'`                                              |
+| Hook                               | Registered as                         | Emits                                                                                                                                                                  |
+| ---------------------------------- | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `skill-usage-capture.cjs`          | Claude `PreToolUse` (matcher `Skill`) | one event, `invocation_path='skill_tool'`                                                                                                                              |
+| `skill-usage-capture.cjs`          | Claude `UserPromptExpansion`          | one event, `invocation_path='slash'`                                                                                                                                   |
+| `skill-usage-complete.cjs`         | Claude `Stop`                         | resolves open starts → `session_ended`; sweeps stale starts → `abandoned`                                                                                              |
+| `skill-usage-capture.cjs` (cursor) | Cursor `beforeSubmitPrompt`           | one event, `source='cursor'`                                                                                                                                           |
+| `skill-usage-heartbeat.cjs`        | Claude `SessionStart`                 | one coverage heartbeat per session, upserted into `telemetry_heartbeats` — no skill data ([contract §8](./child-repo-hook-telemetry-contract.md#8-coverage-heartbeat)) |
 
 Every write is fail-open: POST to OT GraphQL first, append to
-`.cache/skill-usage/{events,outcomes}.jsonl` on any failure, drained
-opportunistically later. `.cache/skill-usage/starts/` is **not** a buffer — it is
+`~/.openthrottle/skill-usage/{events,outcomes}.jsonl` on any failure, drained
+opportunistically later. `~/.openthrottle/skill-usage/starts/` is **not** a buffer — it is
 the per-session open-start correlation ledger, drained on `Stop`. Files sitting
-there mean sessions are in flight, not that the drain is broken.
+there mean sessions are in flight, not that the drain is broken. (These lived under each
+checkout's `.cache/skill-usage/` until the buffer moved out of every working tree; see the
+[telemetry contract §4](./child-repo-hook-telemetry-contract.md#4-buffering--nothing-is-written-into-a-foreign-working-tree).)
+
+**A missing row is not always a quiet week.** A session started by hand outside this repo
+records nothing unless the leg A plugin is installed, and a buffer behind an unreachable or
+rejecting server holds rows back. Check `/usage` → **Telemetry coverage** for which machines
+and repos are reporting, and run `pnpm run telemetry:doctor` on a machine to see why it is not.
 
 As of the baseline snapshot neither `events.jsonl` nor `outcomes.jsonl` exists in
 any checkout, i.e. every recorded event reached the server directly. The drain

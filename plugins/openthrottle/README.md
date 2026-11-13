@@ -30,6 +30,15 @@ outcome (`success` / `error` / `abandoned`) and a duration.
 Outside the OpenThrottle monorepo the default privacy level is `name-only`: skill
 **arguments are not collected at all**. A secret redactor runs regardless of level.
 
+Once per session start, a coverage heartbeat: a random machine id (generated once into
+`~/.openthrottle/machine-id`, never derived from your hostname), an optional machine label
+you set yourself with `OPENTHROTTLE_MACHINE_LABEL`, which way the hooks were delivered
+(`repo`, `plugin-dir` or `marketplace`), the normalized git remote of the repository
+(credentials stripped, no paths), this plugin's version, whether the marketplace plugin is
+installed, and counts of locally buffered records with the age of the oldest. It carries no
+email, hostname, username, path, token, skill name or argument. A heartbeat is never
+buffered; the last attempt is written to `~/.openthrottle/skill-usage/last-heartbeat.json`.
+
 ## Configuring the endpoint
 
 Values are resolved by WHERE they live, under one set of names. Highest first:
@@ -71,12 +80,30 @@ See `docs/monorepo/child-repo-hook-telemetry-contract.md` for the full contract.
 | `OPENTHROTTLE_TELEMETRY_OFFLINE=1` | buffers locally, never sends |
 | `/plugin uninstall openthrottle` | removes it entirely |
 
+## Diagnosing
+
+If skill usage is not showing up, run the doctor. It checks the plugin install, the
+endpoint and token, server reachability, the local buffer, the last heartbeat and the
+offline switch, then prints the exact fix for anything wrong. It is read-only and never
+prints your token.
+
+```bash
+# from an OpenThrottle checkout
+pnpm run telemetry:doctor
+
+# from anywhere, using the installed plugin
+node ~/.claude/plugins/cache/openthrottle/openthrottle/<version>/hooks/skill-usage-doctor.cjs
+```
+
+Add `--json` for machine-readable output, or `--strict` to exit 1 when any check fails.
+
 ## Hooks
 
 | event | handler |
 | --- | --- |
 | `PreToolUse` (matcher `Skill`) | `hooks/skill-usage-capture.cjs` |
 | `UserPromptExpansion` | `hooks/skill-usage-capture.cjs` |
+| `SessionStart` | `hooks/skill-usage-heartbeat.cjs` |
 | `Stop` | `hooks/skill-usage-complete.cjs` |
 
 The two capture events are complementary, not redundant: a skill invoked as a tool

@@ -33,6 +33,7 @@ export * from './data/persist.ts';
 export * from './data/plan-auto-close.ts';
 export * from './data/plan-runs.ts';
 export * from './data/read-new.ts';
+export * from './data/readBufferStats.ts';
 export * from './data/starts.ts';
 export * from './data/token-usage.ts';
 export * from './data/trajectories.ts';

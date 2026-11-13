@@ -49,6 +49,11 @@ export const UsageAnalyticsGaps = (
             <span className="text-foreground">Model token usage</span> above.
           </li>
           <li>
+            Sessions you start by hand outside the OpenThrottle repo are only
+            recorded when the marketplace plugin is installed — see{' '}
+            <span className="text-foreground">Telemetry coverage</span> above.
+          </li>
+          <li>
             No visibility into user-local skills (outside the repo) unless the
             harness invokes them via the Skill tool.
           </li>

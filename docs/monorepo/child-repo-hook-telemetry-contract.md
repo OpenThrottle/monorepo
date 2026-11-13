@@ -191,6 +191,79 @@ Three layers, each independently sufficient, in precedence order:
 Leg A users additionally have `/plugin uninstall`, which is why the payload README must say plainly
 what is collected and how to turn it off.
 
+## 8. Coverage heartbeat
+
+OT plan `c4ece7fe`. Telemetry used to fail **silently**: a machine with `~/.openthrottle/.env`
+configured correctly but no leg A plugin installed recorded nothing for any session started by
+hand outside this repo. `/usage` showed a quiet week, and nothing distinguished "nobody ran a skill"
+from "nobody was listening". Records stuck in the buffer behind an unreachable server were just as
+invisible. `captureHealth` could not catch either case, because it is keyed by `source`
+(`claude-code`, `cursor`): it knows _that_ Claude stopped reporting, never _which machine or repo_
+did, or that manual sessions were never covered at all.
+
+The heartbeat is the fix: one small record per session start that says which machine, through which
+delivery leg, in which repo, with what sitting in the buffer.
+
+### Cadence and storage
+
+- **`SessionStart` only.** It fires headless and interactive (overlay doc §4), once per session, so
+  it costs one POST per session rather than one per skill.
+- **Upserted, latest-wins**, on `(user, machine_id, repo_identity, delivery_leg, source)`. A machine
+  that opens the same repo through the same leg a thousand times is one row with a moving
+  `last_seen_at`, so the table stays small without a pruning job.
+- **Never buffered.** A heartbeat that cannot be delivered describes a moment that is already
+  stale. It is written to `~/.openthrottle/skill-usage/last-heartbeat.json` instead, so the doctor
+  can report the last attempt and its result. It does not join the JSONL drain, and it is never
+  replayed.
+- Every §5 rule applies unchanged: fail-open, exit 0, the 750ms post timeout, **silent** when no
+  endpoint resolves, and `OPENTHROTTLE_TELEMETRY_OFFLINE=1` posts nothing. The repo copy shadows
+  the plugin copy exactly as the capture hook does (`isShadowedByRepoHooks`), so the monorepo never
+  sends two.
+
+### Fields — and why each one is allowed
+
+| field                          | value                                                                   | why it is acceptable                                                                                                                                                                                                                                                                                                  |
+| ------------------------------ | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `machine_id`                   | random UUID, generated once into `~/.openthrottle/machine-id`           | Carries no information about the machine. A hostname hash was rejected: hostnames come from a tiny, guessable space (`<first-name>s-MacBook-Pro.local`), so an unsalted hash is a hostname with extra steps, and a salt stored beside it buys nothing.                                                                |
+| `machine_label`                | `OPENTHROTTLE_MACHINE_LABEL` from env / `~/.openthrottle/.env`, or null | Opt-in and typed by the operator, so the UI can say "work laptop" instead of `3f2a…`. Never defaulted from the hostname.                                                                                                                                                                                              |
+| `source`                       | `claude-code` (Cursor is a follow-up)                                   | Already sent on every event.                                                                                                                                                                                                                                                                                          |
+| `delivery_leg`                 | `repo` \| `plugin-dir` \| `marketplace`, per the table below            | A fact about the install, not about the user's work.                                                                                                                                                                                                                                                                  |
+| `repo_identity`                | normalized git remote (§3), or null                                     | §3's rule, applied for the first time: no raw paths, no remote means no identity. Normalized **client-side** with a zero-dep twin of the server's `normalizeRemoteUrl`, because a raw remote can carry `https://user:token@…`. The server normalizes again and drops anything that does not survive.                  |
+| `plugin_version`               | the running payload's `plugin.json` version, or null for `repo`         | Lets `/usage` flag an outdated install. Local file, no identity.                                                                                                                                                                                                                                                      |
+| `marketplace_plugin_installed` | boolean, plus `marketplace_plugin_version` when installed               | Read from `<claude config dir>/plugins/installed_plugins.json`, key `openthrottle@openthrottle`. **This is the signal that answers the original failure directly**: a `plugin-dir` or `repo` heartbeat from a machine without the plugin says so outright, so the warning does not have to be inferred from absences. |
+| buffer stats                   | per file: line count, oldest record time, dead-letter count             | Counts and one timestamp per file. No record content.                                                                                                                                                                                                                                                                 |
+| `occurred_at`                  | timestamp                                                               | —                                                                                                                                                                                                                                                                                                                     |
+
+**Never sent:** email, hostname, username, `cwd` or any other absolute path, the token, skill names,
+or args. The heartbeat adds no per-skill data, so the §6 `name-only` default is untouched.
+
+### Delivery-leg detection
+
+Checked in order. The first match wins.
+
+| condition                                                            | leg           | why                                                                                                                                                                                       |
+| -------------------------------------------------------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `OPENTHROTTLE_HOOK_DELIVERY=plugin-dir` in the process env           | `plugin-dir`  | Set by the driver wherever it appends `--plugin-dir`. The env describes the **session**, so if a marketplace copy also loaded in that run, it reports `plugin-dir` too, which is correct. |
+| `CLAUDE_PLUGIN_ROOT` lies under `<claude config dir>/plugins/cache/` | `marketplace` | Verified against a real install: `installPath` is `~/.claude/plugins/cache/openthrottle/openthrottle/<version>`. `<claude config dir>` honours `CLAUDE_CONFIG_DIR`.                       |
+| `CLAUDE_PLUGIN_ROOT` set anywhere else                               | `plugin-dir`  | A hand-passed `--plugin-dir` without the env stamp is still leg B in shape.                                                                                                               |
+| no `CLAUDE_PLUGIN_ROOT`                                              | `repo`        | Only a repository's own settings run the bundle without a plugin root.                                                                                                                    |
+
+### Coverage warnings (`telemetryCoverage`)
+
+Thresholds reuse `CAPTURE_HEALTH_STALE_AFTER_HOURS` (24h), so `/usage` has one definition of stale.
+
+| warning                     | fires when                                                                                                                                |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `MANUAL_SESSIONS_UNCOVERED` | the machine's newest heartbeat reports `marketplace_plugin_installed = false`. Sessions started by hand outside this repo record nothing. |
+| `PLUGIN_OUTDATED`           | `marketplace_plugin_version` is lower than the payload version the server ships.                                                          |
+| `BUFFER_STALE`              | the newest heartbeat's oldest buffered record is older than 24h.                                                                          |
+| `BUFFER_GROWING`            | buffered line count rose across the machine's last three heartbeats while the server was reachable enough to receive them.                |
+| `MACHINE_SILENT`            | the machine has heartbeats, but none within the query window.                                                                             |
+
+`BUFFER_GROWING` is the one that matters most: a heartbeat that _arrives_ while its own buffer
+grows proves the endpoint is reachable for small posts and the drain is failing anyway, which
+usually means the server is rejecting records into the dead-letter files.
+
 ---
 
 ## Summary — the foreign profile
@@ -206,6 +279,7 @@ what is collected and how to turn it off.
 | privacy default                   | `truncated` (args redacted, 256 cap)               | **`name-only`** (no args)             |
 | warning on unreachable endpoint   | per failure                                        | one per session                       |
 | writes inside the checkout        | **never**                                          | **never**                             |
+| coverage heartbeat (§8)           | `repo` leg, from the repo's own hooks              | `marketplace` or `plugin-dir` leg     |
 
 **Three rows that the draft split by profile are now identical for both.** The buffer is one flat
 `~/.openthrottle/skill-usage/` rather than `<repoRoot>/.cache/` at home and a `<repo-id>` subdirectory

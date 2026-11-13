@@ -860,6 +860,128 @@ var formatDrainReasons = (tally) => {
 var formatDrainFileResult = (label, tally) => {
   return `${label} sent=${tally.sent} retained=${tally.retained} dead-lettered=${tally.deadLettered} skipped=${tally.skipped} reasons: ${formatDrainReasons(tally)}`;
 };
+var formatBufferStats = (label, stats, nowMs) => {
+  const counts = stats.files.map((file) => `${file.label}=${file.lines}`).join(" ");
+  const oldestMs = stats.oldestAt === null ? Number.NaN : new Date(stats.oldestAt).getTime();
+  const hasOldest = stats.oldestAt !== null && !Number.isNaN(oldestMs);
+  const oldest = hasOldest ? `${stats.oldestAt} (${formatAge(nowMs - oldestMs)} ago)` : "none";
+  return `${label}: ${counts} dead-letter=${stats.totalDeadLetterLines} oldest=${oldest}`;
+};
+var formatAge = (ageMs) => {
+  const minutes = Math.max(0, Math.floor(ageMs / 6e4));
+  if (minutes < 60) {
+    return `${minutes}m`;
+  }
+  const hours = Math.floor(minutes / 60);
+  return hours < 48 ? `${hours}h` : `${Math.floor(hours / 24)}d`;
+};
+
+// packages/agentic-hooks/src/data/readBufferStats.ts
+var import_node_fs3 = __toESM(require("node:fs"), 1);
+var COUNT_CHUNK_BYTES = 64 * 1024;
+var HEAD_CAP_BYTES = 64 * 1024;
+var TIMESTAMP_FIELDS = [
+  "occurred_at",
+  "started_at",
+  "received_at",
+  "created_at",
+  "timestamp"
+];
+var readFileHead = (fd) => {
+  const buf = Buffer.alloc(HEAD_CAP_BYTES);
+  const read = import_node_fs3.default.readSync(fd, buf, 0, HEAD_CAP_BYTES, 0);
+  return buf.toString("utf8", 0, read);
+};
+var scanFile = (filePath) => {
+  try {
+    const fd = import_node_fs3.default.openSync(filePath, "r");
+    try {
+      const buf = Buffer.alloc(COUNT_CHUNK_BYTES);
+      let lines = 0;
+      let lineHasContent = false;
+      let position = 0;
+      for (; ; ) {
+        const read = import_node_fs3.default.readSync(fd, buf, 0, COUNT_CHUNK_BYTES, position);
+        if (read === 0) {
+          break;
+        }
+        position += read;
+        for (let i = 0; i < read; i += 1) {
+          const byte = buf[i];
+          if (byte === 10) {
+            if (lineHasContent) {
+              lines += 1;
+            }
+            lineHasContent = false;
+          } else if (byte !== 13 && byte !== 32 && byte !== 9) {
+            lineHasContent = true;
+          }
+        }
+      }
+      if (lineHasContent) {
+        lines += 1;
+      }
+      if (lines === 0) {
+        return { firstLine: null, lines: 0 };
+      }
+      const firstLine = readFileHead(fd).split("\n").find((line) => line.trim() !== "") ?? null;
+      return { firstLine, lines };
+    } finally {
+      import_node_fs3.default.closeSync(fd);
+    }
+  } catch {
+    return { firstLine: null, lines: 0 };
+  }
+};
+var isRecord2 = (value) => {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+};
+var timestampOfLine = (line) => {
+  if (line === null) {
+    return null;
+  }
+  try {
+    const parsed = JSON.parse(line);
+    if (!isRecord2(parsed)) {
+      return null;
+    }
+    for (const field of TIMESTAMP_FIELDS) {
+      const value = parsed[field];
+      if (typeof value === "string" || typeof value === "number") {
+        const ms = new Date(value).getTime();
+        return Number.isNaN(ms) ? null : new Date(ms).toISOString();
+      }
+    }
+    return null;
+  } catch {
+    return null;
+  }
+};
+var statsForFile = (label, filePath) => {
+  const live = scanFile(filePath);
+  const dead = scanFile(deadLetterPathFor(filePath));
+  return {
+    deadLetterLines: dead.lines,
+    label,
+    lines: live.lines,
+    oldestAt: timestampOfLine(live.firstLine)
+  };
+};
+var readBufferStats = () => {
+  const files = [
+    statsForFile("events", defaultJsonlPath()),
+    statsForFile("outcomes", defaultOutcomesJsonlPath()),
+    statsForFile("token-usage", defaultTokenUsageJsonlPath()),
+    statsForFile("trajectories", defaultTrajectoriesJsonlPath())
+  ];
+  const stamps = files.map((file) => file.oldestAt).filter((at) => at !== null).sort();
+  return {
+    files,
+    oldestAt: stamps[0] ?? null,
+    totalDeadLetterLines: files.reduce((n, f) => n + f.deadLetterLines, 0),
+    totalLines: files.reduce((n, f) => n + f.lines, 0)
+  };
+};
 
 // packages/agentic-hooks/src/data/trajectories.ts
 var DEFAULT_TRAJECTORY_POST_TIMEOUT_MS = 3e3;
@@ -948,6 +1070,10 @@ var main = async () => {
 `
       );
     }
+    process.stderr.write(
+      `[skill-usage-drain] ${formatBufferStats("buffered before", readBufferStats(), Date.now())}
+`
+    );
     const budgetRaw = parseArg("--budget-ms") || process.env.OPENTHROTTLE_TELEMETRY_DRAIN_BUDGET_MS || "";
     const budgetMs = budgetRaw === "" ? null : Number(budgetRaw) || null;
     const summary = await drainBufferedUsage({ budgetMs, repoRoot });
@@ -960,6 +1086,10 @@ var main = async () => {
 [skill-usage-drain] ${formatDrainFileResult("outcomes", summary.outcomes)}
 [skill-usage-drain] ${formatDrainFileResult("token-usage", summary.tokenUsage)}
 [skill-usage-drain] ${formatDrainFileResult("trajectories", trajectories)}
+`
+    );
+    process.stderr.write(
+      `[skill-usage-drain] ${formatBufferStats("buffered after", readBufferStats(), Date.now())}
 `
     );
   } catch (err) {

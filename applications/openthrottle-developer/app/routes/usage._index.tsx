@@ -25,7 +25,9 @@ import { UsageIntroduction } from '~/routing/usage/components/UsageIntroduction'
 import { UsageOverview } from '~/routing/usage/components/UsageOverview';
 import { UsageSkillUsage } from '~/routing/usage/components/UsageSkillUsage';
 import { UsageSnapshot } from '~/routing/usage/components/UsageSnapshot';
+import { UsageTelemetryCoverage } from '~/routing/usage/components/UsageTelemetryCoverage';
 import { UsageTokenUsage } from '~/routing/usage/components/UsageTokenUsage';
+import { fetchTelemetryCoverage } from '~/routing/usage/utils/fetchTelemetryCoverage';
 import { parseSkillScope } from '~/routing/usage/utils/parseSkillScope';
 
 type HandleData = Route.ComponentProps['loaderData'];
@@ -84,6 +86,7 @@ export const loader = async (args: Route.LoaderArgs) => {
     skillUsageResult,
     branchResult,
     captureHealthResult,
+    telemetryCoverage,
   ] = await Promise.all([
     executeGraphqlWithAuth(args.request, GetUsageDailyStatsDocument, {
       end: endIso,
@@ -113,6 +116,9 @@ export const loader = async (args: Route.LoaderArgs) => {
     // Per-source "last captured" signal: a silent capture outage looks
     // identical to a quiet week in the charts above.
     executeGraphqlWithAuth(args.request, GetUsageCaptureHealthDocument, {}),
+    // Which machines report and through which delivery leg. Resolves to null
+    // on failure so a coverage outage never blanks the rest of the page.
+    fetchTelemetryCoverage(args.request),
   ]);
 
   const dailyStats: DashboardDailyStatsCardFragment[] =
@@ -135,6 +141,7 @@ export const loader = async (args: Route.LoaderArgs) => {
     selectedSkillGitBranch,
     selectedSkillScope,
     skillUsage: skillUsageResult.skillUsage,
+    telemetryCoverage,
     tokenUsageByAccount: tokenUsageResult.tokenUsage.byAccount,
     tokenUsageItems: tokenUsageResult.tokenUsage.items,
     tokenUsageTotals: tokenUsageResult.tokenUsage.totals,
@@ -170,6 +177,7 @@ export default function Component(
     selectedSkillGitBranch,
     selectedSkillScope,
     skillUsage,
+    telemetryCoverage,
     tokenUsageByAccount,
     tokenUsageItems,
     tokenUsageTotals,
@@ -192,6 +200,10 @@ export default function Component(
       <UsageIntroduction rangeDays={rangeDays} />
       <UsageOverview rangeDays={rangeDays} />
       <UsageCaptureHealth nowIso={rangeEndIso} rows={captureHealth} />
+      <UsageTelemetryCoverage
+        coverage={telemetryCoverage}
+        nowIso={rangeEndIso}
+      />
       <UsageTokenUsage
         byAccount={tokenUsageByAccount}
         items={tokenUsageItems}

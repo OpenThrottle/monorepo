@@ -169,7 +169,7 @@
     "prompt/Job_Roadmap.md": 9571,
     "prompt/Job_RulesConformance.md": 14873,
     "prompt/Job_Security.md": 9531,
-    "prompt/Job_TestHealth.md": 8164,
+    "prompt/Job_TestHealth.md": 8163,
     "prompt/Job_WorkInFlight.md": 9928,
     "skill/agents-ralph": 13976,
     "skill/github-cleanup": 7233,
@@ -179,7 +179,7 @@
     "skill/ot-folders": 21335,
     "skill/ot-generators": 10250,
     "skill/ot-loop": 31597,
-    "skill/ot-onboarding": 24864,
+    "skill/ot-onboarding": 25509,
     "skill/ot-plans": 8964,
     "skill/ot-postgres": 7499,
     "skill/ot-skill-sync": 15488,
@@ -211,7 +211,7 @@
     "alwaysInjected": 41747,
     "mcpInstructions": 2138,
     "mcpTools": 34486,
-    "prompts": 127984,
-    "skills": 190591
+    "prompts": 127983,
+    "skills": 191236
   }
 }

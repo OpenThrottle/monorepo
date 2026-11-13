@@ -84,13 +84,47 @@ export interface RunDriverOptions {
 }
 
 /**
+ * @description Env var the plugin-dir delivery leg stamps on the child so the hooks inside it can
+ * report `plugin-dir` (docs/monorepo/child-repo-hook-telemetry-contract.md §8). Spelled the same as
+ * the reader in `@openthrottle/agentic-hooks`; this leaf package cannot import it.
+ */
+const HOOK_DELIVERY_ENV = 'OPENTHROTTLE_HOOK_DELIVERY';
+
+/**
+ * @description True when the command will actually carry at least one `--plugin-dir`: the driver
+ * advertises the capability and a non-blank directory was supplied (mirrors
+ * `appendPluginDirShellFlags`, which emits nothing otherwise).
+ */
+const carriesPluginDir = (
+  driver: AgentDriver,
+  config: DriverInvocationConfig,
+): boolean => {
+  return (
+    driver.capabilities.pluginDir &&
+    (config.pluginDirs ?? []).some((dir) => dir.trim() !== '')
+  );
+};
+
+/**
  * @description Child env: `undefined` (inherit `process.env`, the historical behavior) unless the
- * caller supplied extra variables, which are merged over the inherited set.
+ * caller supplied extra variables or the run carries `--plugin-dir`, in which case the child is
+ * stamped `OPENTHROTTLE_HOOK_DELIVERY=plugin-dir`. The stamp wins over `config.env`: the hooks must
+ * report the leg the run really used.
  */
 const mergeChildEnv = (
-  extra: Readonly<Record<string, string>> | undefined,
+  driver: AgentDriver,
+  config: DriverInvocationConfig,
 ): NodeJS.ProcessEnv | undefined => {
-  return extra === undefined ? undefined : { ...process.env, ...extra };
+  const stamped = carriesPluginDir(driver, config);
+  if (config.env === undefined && !stamped) {
+    return undefined;
+  }
+
+  return {
+    ...process.env,
+    ...config.env,
+    ...(stamped ? { [HOOK_DELIVERY_ENV]: 'plugin-dir' } : {}),
+  };
 };
 
 /**
@@ -139,7 +173,7 @@ export const runDriverSync = (
   const child = spawnSync(command, [], {
     cwd,
     encoding: 'utf-8',
-    env: mergeChildEnv(config.env),
+    env: mergeChildEnv(driver, config),
     shell: true,
     stdio: DRIVER_STDIO,
   });
@@ -202,7 +236,7 @@ export const runDriverAsync = (
 
     const child: ChildProcess = spawn(command, [], {
       cwd,
-      env: mergeChildEnv(config.env),
+      env: mergeChildEnv(driver, config),
       shell: true,
       stdio: DRIVER_STDIO,
     });

@@ -76,8 +76,16 @@ const BUNDLES: readonly BundleSpec[] = [
     outFile: '.claude/hooks/skill-usage-complete.cjs',
   },
   {
+    entry: 'adapters/claude/doctor.ts',
+    outFile: '.claude/hooks/skill-usage-doctor.cjs',
+  },
+  {
     entry: 'adapters/claude/drain.ts',
     outFile: '.claude/hooks/skill-usage-drain.cjs',
+  },
+  {
+    entry: 'adapters/claude/heartbeat.ts',
+    outFile: '.claude/hooks/skill-usage-heartbeat.cjs',
   },
   {
     entry: 'adapters/claude/memory-index-guard.ts',
@@ -155,8 +163,12 @@ interface PluginPayload {
   readonly bundles: readonly PluginEntry[];
   /** Closing note explaining the capture wiring, or null when there is none. */
   readonly captureNote: string | null;
+  /** README "Diagnosing" lines, verbatim; empty when the payload ships no doctor. */
+  readonly diagnosingLines: readonly string[];
   /** Extra "turning it off" README rows beyond the tool-neutral one. */
   readonly disableRows: readonly (readonly [string, string])[];
+  /** Extra README "What it collects" paragraphs for hooks beyond capture/complete; empty when none. */
+  readonly heartbeatCollects: readonly string[];
   /** README table rows: [event, handler file]. */
   readonly hookTableRows: readonly (readonly [string, string])[];
   /** README lines for the install section, verbatim. */
@@ -189,10 +201,16 @@ interface PluginEntry {
  * `plan-run-janitor` are manual CLIs (`node …drain.cjs --budget-ms 500`), wired
  * to no event. Shipping them would be dead weight in someone else's repo. The
  * buffer still flushes — the completion handler drains opportunistically.
+ *
+ * The one exception is `doctor`: also a manual CLI wired to no event, but it
+ * exists to diagnose a machine where the plugin may be the thing that is
+ * missing or stale, so it travels with the payload.
  */
 const CLAUDE_PLUGIN_ENTRIES: readonly PluginEntry[] = [
   { entry: 'adapters/claude/capture.ts', file: 'skill-usage-capture.cjs' },
   { entry: 'adapters/claude/complete.ts', file: 'skill-usage-complete.cjs' },
+  { entry: 'adapters/claude/doctor.ts', file: 'skill-usage-doctor.cjs' },
+  { entry: 'adapters/claude/heartbeat.ts', file: 'skill-usage-heartbeat.cjs' },
 ];
 
 const CURSOR_PLUGIN_ENTRIES: readonly PluginEntry[] = [
@@ -215,10 +233,39 @@ const PLUGIN_PAYLOADS: readonly PluginPayload[] = [
       'The two capture events are complementary, not redundant: a skill invoked as a tool',
       'raises `PreToolUse`, a skill invoked as a slash command raises `UserPromptExpansion`.',
     ].join('\n'),
+    diagnosingLines: [
+      'If skill usage is not showing up, run the doctor. It checks the plugin install, the',
+      'endpoint and token, server reachability, the local buffer, the last heartbeat and the',
+      'offline switch, then prints the exact fix for anything wrong. It is read-only and never',
+      'prints your token.',
+      '',
+      '```bash',
+      '# from an OpenThrottle checkout',
+      'pnpm run telemetry:doctor',
+      '',
+      '# from anywhere, using the installed plugin',
+      'node ~/.claude/plugins/cache/openthrottle/openthrottle/<version>/hooks/skill-usage-doctor.cjs',
+      '```',
+      '',
+      'Add `--json` for machine-readable output, or `--strict` to exit 1 when any check fails.',
+      '',
+    ],
     disableRows: [['`/plugin uninstall openthrottle`', 'removes it entirely']],
+    heartbeatCollects: [
+      'Once per session start, a coverage heartbeat: a random machine id (generated once into',
+      '`~/.openthrottle/machine-id`, never derived from your hostname), an optional machine label',
+      'you set yourself with `OPENTHROTTLE_MACHINE_LABEL`, which way the hooks were delivered',
+      '(`repo`, `plugin-dir` or `marketplace`), the normalized git remote of the repository',
+      "(credentials stripped, no paths), this plugin's version, whether the marketplace plugin is",
+      'installed, and counts of locally buffered records with the age of the oldest. It carries no',
+      'email, hostname, username, path, token, skill name or argument. A heartbeat is never',
+      'buffered; the last attempt is written to `~/.openthrottle/skill-usage/last-heartbeat.json`.',
+      '',
+    ],
     hookTableRows: [
       ['`PreToolUse` (matcher `Skill`)', '`hooks/skill-usage-capture.cjs`'],
       ['`UserPromptExpansion`', '`hooks/skill-usage-capture.cjs`'],
+      ['`SessionStart`', '`hooks/skill-usage-heartbeat.cjs`'],
       ['`Stop`', '`hooks/skill-usage-complete.cjs`'],
     ],
     installLines: [
@@ -240,6 +287,17 @@ const PLUGIN_PAYLOADS: readonly PluginPayload[] = [
               },
             ],
             matcher: 'Skill',
+          },
+        ],
+        SessionStart: [
+          {
+            hooks: [
+              {
+                command: command('skill-usage-heartbeat.cjs'),
+                statusMessage: 'Telemetry coverage heartbeat (SessionStart)',
+                type: 'command',
+              },
+            ],
           },
         ],
         Stop: [
@@ -276,12 +334,14 @@ const PLUGIN_PAYLOADS: readonly PluginPayload[] = [
       'which is why capture listens on `preToolUse`. Completion listens on `sessionEnd`, not',
       '`stop` — `stop` is the per-turn event and does not fire in headless runs at all.',
     ].join('\n'),
+    diagnosingLines: [],
     disableRows: [
       [
         '`cursor-agent plugin marketplace`',
         'manage or remove the installed plugin',
       ],
     ],
+    heartbeatCollects: [],
     hookTableRows: [
       ['`preToolUse`', '`hooks/skill-usage-capture.cjs`'],
       ['`beforeSubmitPrompt`', '`hooks/skill-usage-capture.cjs`'],
@@ -420,6 +480,7 @@ const renderPluginReadme = (payload: PluginPayload): string => {
     'Outside the OpenThrottle monorepo the default privacy level is `name-only`: skill',
     '**arguments are not collected at all**. A secret redactor runs regardless of level.',
     '',
+    ...payload.heartbeatCollects,
     '## Configuring the endpoint',
     '',
     'Values are resolved by WHERE they live, under one set of names. Highest first:',
@@ -470,6 +531,9 @@ const renderPluginReadme = (payload: PluginPayload): string => {
       ],
     ),
     '',
+    ...(payload.diagnosingLines.length === 0
+      ? []
+      : ['## Diagnosing', '', ...payload.diagnosingLines]),
     '## Hooks',
     '',
     ...renderTable(['event', 'handler'], payload.hookTableRows),

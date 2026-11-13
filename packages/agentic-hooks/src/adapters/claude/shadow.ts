@@ -12,7 +12,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-/** The bundle name both registrations point at. */
+/** The bundle name both registrations point at, unless the caller names another hook's. */
 const CAPTURE_BUNDLE = 'skill-usage-capture';
 
 /**
@@ -31,8 +31,8 @@ const runningFromPlugin = (
   return relative !== '' && !relative.startsWith('..');
 };
 
-/** True when the repo's own settings register the capture hook. */
-const repoRegistersCapture = (repoRoot: string): boolean => {
+/** True when the repo's own settings register the hook bundle `bundle`. */
+const repoRegistersBundle = (repoRoot: string, bundle: string): boolean => {
   try {
     const raw = fs.readFileSync(
       path.join(repoRoot, '.claude', 'settings.json'),
@@ -44,7 +44,7 @@ const repoRegistersCapture = (repoRoot: string): boolean => {
     if (typeof parsed !== 'object' || parsed === null || !('hooks' in parsed)) {
       return false;
     }
-    return JSON.stringify(parsed.hooks).includes(CAPTURE_BUNDLE);
+    return JSON.stringify(parsed.hooks).includes(bundle);
   } catch {
     return false;
   }
@@ -57,13 +57,18 @@ const repoRegistersCapture = (repoRoot: string): boolean => {
  * @public
  */
 export const isShadowedByRepoHooks = ({
+  bundle = CAPTURE_BUNDLE,
   env = process.env,
   repoRoot,
   scriptPath = process.argv[1],
 }: {
+  /** The hook bundle to look for in the repo's settings; defaults to capture. */
+  bundle?: string;
   env?: NodeJS.ProcessEnv;
   repoRoot: string;
   scriptPath?: string;
 }): boolean => {
-  return runningFromPlugin(env, scriptPath) && repoRegistersCapture(repoRoot);
+  return (
+    runningFromPlugin(env, scriptPath) && repoRegistersBundle(repoRoot, bundle)
+  );
 };

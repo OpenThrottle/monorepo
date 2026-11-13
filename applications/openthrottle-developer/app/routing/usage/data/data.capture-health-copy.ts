@@ -20,7 +20,7 @@ export const CAPTURE_HEALTH_COPY = {
   columnStream: `Stream`,
   freshStatus: `OK`,
   heading: `Capture health`,
-  intro: `When telemetry from each tool last reached the server. Quiet usage charts can mean nothing happened or that capture broke; this tells them apart.`,
+  intro: `When telemetry from each tool last reached the server. Quiet usage charts can mean nothing happened or that capture broke; this tells them apart. Which machines and repos are reporting is under Telemetry coverage below.`,
   noRowsDescription: `No skill or token telemetry has ever been received. If you have used an agent CLI with the OpenThrottle hooks installed, capture is not working.`,
   noRowsTitle: `Nothing has been captured`,
   staleDescription: (
