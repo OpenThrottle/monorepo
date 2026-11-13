@@ -16,8 +16,10 @@ import {
   defaultTrajectoriesJsonlPath,
   drainBufferedTrajectories,
   drainBufferedUsage,
+  formatBufferStats,
   formatDrainFileResult,
   logHookError,
+  readBufferStats,
   replayDeadLetter,
 } from '../../index.ts';
 
@@ -44,6 +46,10 @@ const main = async (): Promise<void> => {
       );
     }
 
+    process.stderr.write(
+      `[skill-usage-drain] ${formatBufferStats('buffered before', readBufferStats(), Date.now())}\n`,
+    );
+
     const budgetRaw =
       parseArg('--budget-ms') ||
       process.env.OPENTHROTTLE_TELEMETRY_DRAIN_BUDGET_MS ||
@@ -61,6 +67,9 @@ const main = async (): Promise<void> => {
         `[skill-usage-drain] ${formatDrainFileResult('outcomes', summary.outcomes)}\n` +
         `[skill-usage-drain] ${formatDrainFileResult('token-usage', summary.tokenUsage)}\n` +
         `[skill-usage-drain] ${formatDrainFileResult('trajectories', trajectories)}\n`,
+    );
+    process.stderr.write(
+      `[skill-usage-drain] ${formatBufferStats('buffered after', readBufferStats(), Date.now())}\n`,
     );
   } catch (err) {
     logHookError('drain CLI failed', err);

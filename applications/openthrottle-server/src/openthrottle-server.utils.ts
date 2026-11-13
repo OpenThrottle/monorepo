@@ -77,6 +77,8 @@ import { TagActionRulesGraphqlModule } from './graphql/tag-action-rules/tag-acti
 import { TagsGraphqlModule } from './graphql/tags/tags.module.ts';
 import { TaskEmbeddingsGraphqlModule } from './graphql/task-embeddings/task-embeddings.module.ts';
 import { TasksGraphqlModule } from './graphql/tasks/tasks.module.ts';
+import { TelemetryCoverageGraphqlModule } from './graphql/telemetry-coverage/telemetry-coverage.module.ts';
+import { TelemetryHeartbeatGraphqlModule } from './graphql/telemetry-heartbeat/telemetry-heartbeat.module.ts';
 import { TimelineGraphqlModule } from './graphql/timeline/timeline.module.ts';
 import { TokenUsageGraphqlModule } from './graphql/token-usage/token-usage.module.ts';
 import { TranscriptionStreamGraphqlModule } from './graphql/transcription-stream/transcription-stream.module.ts';
@@ -299,6 +301,8 @@ export const buildImports = (role: ProcessRole): AppModuleImports => {
       SkillTagsGraphqlModule,
       SkillUsageGraphqlModule,
       TagActionRulesGraphqlModule,
+      TelemetryCoverageGraphqlModule,
+      TelemetryHeartbeatGraphqlModule,
       TagsGraphqlModule,
       TaskEmbeddingsGraphqlModule,
       TasksGraphqlModule,

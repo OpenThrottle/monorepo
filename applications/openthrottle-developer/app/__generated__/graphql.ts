@@ -2845,6 +2845,8 @@ export type Mutation = {
   recordSkillUsage: SkillUsageEventObject;
   /** Record one opt-in outcome/duration enrichment for a skill we author. Correlates to a harness start by sessionId + skillName. Additive to PreToolUse capture — never a replacement. Missing outcomes are a valid state. */
   recordSkillUsageOutcome: SkillUsageOutcomeObject;
+  /** Record the per-session coverage heartbeat: which machine, delivery leg and repo, and what sits in the local telemetry buffer. Upserted latest-wins per (machine, repo, leg, source). Attributed to the human user the authenticated principal acts as; a userId is never accepted from the client. */
+  recordTelemetryHeartbeat: TelemetryHeartbeatObject;
   /** Batch-ingest hook-captured token usage rows (at most 500). Rows are attributed to the human user the authenticated principal acts as (human JWT, or a service account's acting user); a userId is never accepted from the client. Idempotent: rows whose (source, sessionId, requestId) already exist are skipped. created_at is the row's occurredAt, not ingest time. Any invalid row rejects the whole batch with BAD_REQUEST naming the row index. */
   recordTokenUsage: RecordTokenUsageResultObject;
   recordWorkArtifact: WorkArtifactObject;
@@ -3401,6 +3403,10 @@ export type MutationRecordSkillUsageArgs = {
 
 export type MutationRecordSkillUsageOutcomeArgs = {
   input: RecordSkillUsageOutcomeInput;
+};
+
+export type MutationRecordTelemetryHeartbeatArgs = {
+  input: RecordTelemetryHeartbeatInput;
 };
 
 export type MutationRecordTokenUsageArgs = {
@@ -4674,6 +4680,8 @@ export type Query = {
   tasksByPlanId: Array<TaskObject>;
   /** List tasks for a project by project ID (FK). Optional limit/offset for pagination; when omitted returns all tasks and totalCount. */
   tasksByProjectId: TasksByProjectIdResultObject;
+  /** Telemetry coverage for the requesting user: per machine, the repos and delivery legs seen in the window, the newest buffer snapshot, and coverage warnings. Machines are ordered by lastSeenAt descending. */
+  telemetryCoverage: TelemetryCoverageObject;
   /** Per-turn token/cost usage for the authenticated user over [start, end] (inclusive, YYYY-MM-DD), optionally narrowed to one provider and/or one agent account. Returns rows (newest first), summed totals, and the same range summed per agent account. */
   tokenUsage: TokenUsageResultObject;
   unverifiedWorkArtifacts: WorkArtifactListResult;
@@ -5143,6 +5151,10 @@ export type QueryTasksByProjectIdArgs = {
   input: TasksByProjectIdInput;
 };
 
+export type QueryTelemetryCoverageArgs = {
+  windowDays?: Scalars['Int']['input'];
+};
+
 export type QueryTokenUsageArgs = {
   accountId?: InputMaybe<Scalars['String']['input']>;
   end: Scalars['String']['input'];
@@ -5546,6 +5558,39 @@ export type RecordSkillUsageOutcomeInput = {
   source?: InputMaybe<Scalars['String']['input']>;
   /** Optional tool_use_id for tighter start↔outcome correlation. */
   toolUseId?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type RecordTelemetryHeartbeatInput = {
+  /** Skill-usage events buffered locally. */
+  bufferedEvents: Scalars['Int']['input'];
+  /** Skill-usage outcomes buffered locally. */
+  bufferedOutcomes: Scalars['Int']['input'];
+  /** Token-usage records buffered locally. */
+  bufferedTokenUsage: Scalars['Int']['input'];
+  /** Trajectories buffered locally. */
+  bufferedTrajectories: Scalars['Int']['input'];
+  /** Records across the local dead-letter files. */
+  deadLetterCount: Scalars['Int']['input'];
+  /** How the hooks reached the session: repo, plugin-dir or marketplace. */
+  deliveryLeg: Scalars['String']['input'];
+  /** Opaque random machine id (max 64 chars), never a hostname. */
+  machineId: Scalars['String']['input'];
+  /** Operator-chosen machine label; opt-in. */
+  machineLabel?: InputMaybe<Scalars['String']['input']>;
+  /** Whether the marketplace plugin is installed; null = unknown. */
+  marketplacePluginInstalled?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Installed marketplace plugin version. */
+  marketplacePluginVersion?: InputMaybe<Scalars['String']['input']>;
+  /** Client-reported heartbeat timestamp. */
+  occurredAt: Scalars['DateTime']['input'];
+  /** Timestamp of the oldest locally buffered record. */
+  oldestBufferedAt?: InputMaybe<Scalars['DateTime']['input']>;
+  /** Running payload version, or null for the repo leg. */
+  pluginVersion?: InputMaybe<Scalars['String']['input']>;
+  /** Git remote of the session's repository. The server re-normalizes it and stores null when it does not survive; absolute paths are rejected. */
+  repoIdentity?: InputMaybe<Scalars['String']['input']>;
+  /** Harness, e.g. claude-code. */
+  source: Scalars['String']['input'];
 };
 
 /** The agent account (login) a hook saw the turn billed to, as the agent CLI reported it. No credential value is ever sent. */
@@ -7130,6 +7175,85 @@ export type TasksByProjectIdResultObject = {
   __typename?: 'TasksByProjectIdResultObject';
   tasks: Array<TaskObject>;
   totalCount: Scalars['Int']['output'];
+};
+
+/** Buffer state from a machine's newest heartbeat. */
+export type TelemetryBufferSnapshotObject = {
+  __typename?: 'TelemetryBufferSnapshotObject';
+  bufferedEvents: Scalars['Int']['output'];
+  bufferedOutcomes: Scalars['Int']['output'];
+  bufferedTokenUsage: Scalars['Int']['output'];
+  bufferedTrajectories: Scalars['Int']['output'];
+  deadLetterCount: Scalars['Int']['output'];
+  oldestBufferedAt?: Maybe<Scalars['DateTime']['output']>;
+  totalBuffered: Scalars['Int']['output'];
+};
+
+/** Telemetry coverage for the requesting user: which machines report, through which delivery legs, and what is wrong. */
+export type TelemetryCoverageObject = {
+  __typename?: 'TelemetryCoverageObject';
+  currentPluginVersion?: Maybe<Scalars['String']['output']>;
+  generatedAt: Scalars['DateTime']['output'];
+  machines: Array<TelemetryMachineCoverageObject>;
+  windowDays: Scalars['Int']['output'];
+};
+
+/** A coverage warning. kind is one of MANUAL_SESSIONS_UNCOVERED, PLUGIN_OUTDATED, BUFFER_STALE, BUFFER_GROWING, MACHINE_SILENT. */
+export type TelemetryCoverageWarningObject = {
+  __typename?: 'TelemetryCoverageWarningObject';
+  kind: Scalars['String']['output'];
+  message: Scalars['String']['output'];
+};
+
+/** Latest coverage heartbeat for one (machine, repo, delivery leg, source) of the authenticated user. */
+export type TelemetryHeartbeatObject = {
+  __typename?: 'TelemetryHeartbeatObject';
+  bufferedEvents: Scalars['Int']['output'];
+  bufferedOutcomes: Scalars['Int']['output'];
+  bufferedTokenUsage: Scalars['Int']['output'];
+  bufferedTrajectories: Scalars['Int']['output'];
+  deadLetterCount: Scalars['Int']['output'];
+  deliveryLeg: Scalars['String']['output'];
+  firstSeenAt: Scalars['DateTime']['output'];
+  id: Scalars['ID']['output'];
+  lastSeenAt: Scalars['DateTime']['output'];
+  machineId: Scalars['String']['output'];
+  machineLabel?: Maybe<Scalars['String']['output']>;
+  marketplacePluginInstalled?: Maybe<Scalars['Boolean']['output']>;
+  marketplacePluginVersion?: Maybe<Scalars['String']['output']>;
+  oldestBufferedAt?: Maybe<Scalars['DateTime']['output']>;
+  pluginVersion?: Maybe<Scalars['String']['output']>;
+  repoIdentity?: Maybe<Scalars['String']['output']>;
+  source: Scalars['String']['output'];
+};
+
+/** Coverage state of one machine. */
+export type TelemetryMachineCoverageObject = {
+  __typename?: 'TelemetryMachineCoverageObject';
+  buffer: TelemetryBufferSnapshotObject;
+  deliveryLegsSeen: Array<Scalars['String']['output']>;
+  lastSeenAt: Scalars['DateTime']['output'];
+  machineId: Scalars['String']['output'];
+  machineLabel?: Maybe<Scalars['String']['output']>;
+  marketplacePluginInstalled?: Maybe<Scalars['Boolean']['output']>;
+  marketplacePluginVersion?: Maybe<Scalars['String']['output']>;
+  pluginVersion?: Maybe<Scalars['String']['output']>;
+  repos: Array<TelemetryRepoCoverageObject>;
+  warnings: Array<TelemetryCoverageWarningObject>;
+};
+
+/** A repo a machine opened a session in, and the delivery legs it came through. repoIdentity is null when the checkout has no remote. */
+export type TelemetryRepoCoverageObject = {
+  __typename?: 'TelemetryRepoCoverageObject';
+  deliveryLegs: Array<TelemetryRepoLegObject>;
+  repoIdentity?: Maybe<Scalars['String']['output']>;
+};
+
+/** One delivery leg seen for a repo on a machine. */
+export type TelemetryRepoLegObject = {
+  __typename?: 'TelemetryRepoLegObject';
+  deliveryLeg: Scalars['String']['output'];
+  lastSeenAt: Scalars['DateTime']['output'];
 };
 
 export type TimelineKindTruncationObject = {
@@ -14849,6 +14973,91 @@ export type GetUsageCaptureHealthQuery = {
   }>;
 };
 
+export type UsageTelemetryCoverageRepoFragment = {
+  __typename?: 'TelemetryRepoCoverageObject';
+  repoIdentity?: string | null;
+  deliveryLegs: Array<{
+    __typename?: 'TelemetryRepoLegObject';
+    deliveryLeg: string;
+    lastSeenAt: any;
+  }>;
+};
+
+export type UsageTelemetryCoverageMachineFragment = {
+  __typename?: 'TelemetryMachineCoverageObject';
+  deliveryLegsSeen: Array<string>;
+  lastSeenAt: any;
+  machineId: string;
+  machineLabel?: string | null;
+  marketplacePluginInstalled?: boolean | null;
+  marketplacePluginVersion?: string | null;
+  pluginVersion?: string | null;
+  buffer: {
+    __typename?: 'TelemetryBufferSnapshotObject';
+    deadLetterCount: number;
+    oldestBufferedAt?: any | null;
+    totalBuffered: number;
+  };
+  repos: Array<{
+    __typename?: 'TelemetryRepoCoverageObject';
+    repoIdentity?: string | null;
+    deliveryLegs: Array<{
+      __typename?: 'TelemetryRepoLegObject';
+      deliveryLeg: string;
+      lastSeenAt: any;
+    }>;
+  }>;
+  warnings: Array<{
+    __typename?: 'TelemetryCoverageWarningObject';
+    kind: string;
+    message: string;
+  }>;
+};
+
+export type GetUsageTelemetryCoverageQueryVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type GetUsageTelemetryCoverageQuery = {
+  __typename?: 'Query';
+  telemetryCoverage: {
+    __typename?: 'TelemetryCoverageObject';
+    currentPluginVersion?: string | null;
+    generatedAt: any;
+    windowDays: number;
+    machines: Array<{
+      __typename?: 'TelemetryMachineCoverageObject';
+      deliveryLegsSeen: Array<string>;
+      lastSeenAt: any;
+      machineId: string;
+      machineLabel?: string | null;
+      marketplacePluginInstalled?: boolean | null;
+      marketplacePluginVersion?: string | null;
+      pluginVersion?: string | null;
+      buffer: {
+        __typename?: 'TelemetryBufferSnapshotObject';
+        deadLetterCount: number;
+        oldestBufferedAt?: any | null;
+        totalBuffered: number;
+      };
+      repos: Array<{
+        __typename?: 'TelemetryRepoCoverageObject';
+        repoIdentity?: string | null;
+        deliveryLegs: Array<{
+          __typename?: 'TelemetryRepoLegObject';
+          deliveryLeg: string;
+          lastSeenAt: any;
+        }>;
+      }>;
+      warnings: Array<{
+        __typename?: 'TelemetryCoverageWarningObject';
+        kind: string;
+        message: string;
+      }>;
+    }>;
+  };
+};
+
 export type ScheduleFormAgentClisQueryVariables = Exact<{
   [key: string]: never;
 }>;
@@ -18223,6 +18432,137 @@ export const UsageCaptureHealthRowFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<UsageCaptureHealthRowFragment, unknown>;
+export const UsageTelemetryCoverageRepoFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UsageTelemetryCoverageRepo' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TelemetryRepoCoverageObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'deliveryLegs' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'deliveryLeg' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'lastSeenAt' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'repoIdentity' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<UsageTelemetryCoverageRepoFragment, unknown>;
+export const UsageTelemetryCoverageMachineFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UsageTelemetryCoverageMachine' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TelemetryMachineCoverageObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'buffer' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'deadLetterCount' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'oldestBufferedAt' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'totalBuffered' },
+                },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'deliveryLegsSeen' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'lastSeenAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'machineId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'machineLabel' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'marketplacePluginInstalled' },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'marketplacePluginVersion' },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'pluginVersion' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'repos' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'UsageTelemetryCoverageRepo' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'warnings' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UsageTelemetryCoverageRepo' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TelemetryRepoCoverageObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'deliveryLegs' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'deliveryLeg' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'lastSeenAt' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'repoIdentity' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<UsageTelemetryCoverageMachineFragment, unknown>;
 export const GetMyPermissionsDocument = {
   kind: 'Document',
   definitions: [
@@ -37257,6 +37597,151 @@ export const GetUsageCaptureHealthDocument = {
 } as unknown as DocumentNode<
   GetUsageCaptureHealthQuery,
   GetUsageCaptureHealthQueryVariables
+>;
+export const GetUsageTelemetryCoverageDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getUsageTelemetryCoverage' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'telemetryCoverage' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'currentPluginVersion' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'generatedAt' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'machines' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'FragmentSpread',
+                        name: {
+                          kind: 'Name',
+                          value: 'UsageTelemetryCoverageMachine',
+                        },
+                      },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'windowDays' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UsageTelemetryCoverageRepo' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TelemetryRepoCoverageObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'deliveryLegs' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'deliveryLeg' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'lastSeenAt' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'repoIdentity' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UsageTelemetryCoverageMachine' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TelemetryMachineCoverageObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'buffer' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'deadLetterCount' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'oldestBufferedAt' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'totalBuffered' },
+                },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'deliveryLegsSeen' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'lastSeenAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'machineId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'machineLabel' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'marketplacePluginInstalled' },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'marketplacePluginVersion' },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'pluginVersion' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'repos' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'UsageTelemetryCoverageRepo' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'warnings' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetUsageTelemetryCoverageQuery,
+  GetUsageTelemetryCoverageQueryVariables
 >;
 export const ScheduleFormAgentClisDocument = {
   kind: 'Document',

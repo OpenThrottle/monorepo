@@ -157,6 +157,12 @@ The payload ships **two** adapters, not all five. `drain`, `outcome`, and `scope
 wired to no event, and would be dead weight in someone else's repo. The buffer still flushes, because
 `complete` drains opportunistically on `Stop`.
 
+**Plan `c4ece7fe` adds a third, on `SessionStart`:** the coverage heartbeat. It exists because leg A
+can be missing with no symptom. A machine with the endpoint configured but no plugin installed
+recorded nothing for every session started by hand outside this repo, and nothing said so. Its
+fields, delivery-leg detection and privacy rules live in the
+[telemetry contract §8](./child-repo-hook-telemetry-contract.md#8-coverage-heartbeat).
+
 ### `--bare` skips hooks, LSP, and plugins
 
 Nothing in the real spawn path emits it — `packages/openthrottle-drivers/src/drivers/claude.ts`

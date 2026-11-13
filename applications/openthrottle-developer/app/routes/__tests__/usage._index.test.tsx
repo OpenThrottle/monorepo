@@ -106,6 +106,15 @@ const captureHealthResponse = {
   ],
 };
 
+const telemetryCoverageResponse = {
+  telemetryCoverage: {
+    currentPluginVersion: '1.3.0',
+    generatedAt: '2026-01-01T00:00:00.000Z',
+    machines: [],
+    windowDays: 14,
+  },
+};
+
 const runLoader = (url: string) => {
   const request = new Request(url);
 
@@ -121,15 +130,17 @@ const runLoader = (url: string) => {
 describe('routes/usage._index.tsx', () => {
   describe('loader', () => {
     beforeEach(() => {
-      // Five parallel calls: daily stats, token usage, skill usage, the first
-      // page of the branch dropdown, and per-source capture health.
+      // Six parallel calls: daily stats, token usage, skill usage, the first
+      // page of the branch dropdown, per-source capture health, and telemetry
+      // coverage.
       mockExecuteGraphqlWithAuth
         .mockReset()
         .mockResolvedValueOnce(dailyStatsResponse)
         .mockResolvedValueOnce(tokenUsageResponse)
         .mockResolvedValueOnce(skillUsageResponse)
         .mockResolvedValueOnce(branchSearchResponse)
-        .mockResolvedValueOnce(captureHealthResponse);
+        .mockResolvedValueOnce(captureHealthResponse)
+        .mockResolvedValueOnce(telemetryCoverageResponse);
     });
 
     test('returns daily stats + token usage + skill usage for a 30-day window', async () => {
@@ -156,6 +167,9 @@ describe('routes/usage._index.tsx', () => {
       );
       expect(result.branchesHaveMore).toBe(true);
       expect(result.captureHealth).toEqual(captureHealthResponse.captureHealth);
+      expect(result.telemetryCoverage).toEqual(
+        telemetryCoverageResponse.telemetryCoverage,
+      );
       // Disk-discovered slugs the leaderboard may link through to /skills/$slug.
       expect(Array.isArray(result.presentSkillSlugs)).toBe(true);
 
@@ -205,6 +219,29 @@ describe('routes/usage._index.tsx', () => {
         expect.anything(),
         {},
       );
+    });
+
+    test('still resolves the rest of the page when the coverage query fails', async () => {
+      const consoleError = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
+
+      mockExecuteGraphqlWithAuth
+        .mockReset()
+        .mockResolvedValueOnce(dailyStatsResponse)
+        .mockResolvedValueOnce(tokenUsageResponse)
+        .mockResolvedValueOnce(skillUsageResponse)
+        .mockResolvedValueOnce(branchSearchResponse)
+        .mockResolvedValueOnce(captureHealthResponse)
+        .mockRejectedValueOnce(new Error('coverage exploded'));
+
+      const result = await runLoader('http://localhost/usage');
+
+      expect(result.telemetryCoverage).toBeNull();
+      expect(result.captureHealth).toEqual(captureHealthResponse.captureHealth);
+      expect(result.skillUsage).toEqual(skillUsageResponse.skillUsage);
+
+      consoleError.mockRestore();
     });
 
     test('forwards ?provider= to the token usage query', async () => {

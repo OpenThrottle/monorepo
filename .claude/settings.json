@@ -78,6 +78,17 @@
         "matcher": "Edit|Write|MultiEdit|NotebookEdit"
       }
     ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "command": "./.claude/hooks/skill-usage-heartbeat.cjs",
+            "statusMessage": "Telemetry coverage heartbeat (SessionStart)",
+            "type": "command"
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "hooks": [

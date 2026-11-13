@@ -684,3 +684,97 @@ describe('binEnv override on the run path', () => {
     });
   });
 });
+
+describe('plugin-dir delivery stamp', () => {
+  const pluginDriver: AgentDriver = defineDriver({
+    ...testDriver,
+    capabilities: { ...testDriver.capabilities, pluginDir: true },
+    id: 'plugin',
+  });
+
+  beforeEach(() => {
+    vi.mocked(spawnSync).mockReset();
+    vi.mocked(spawnSync).mockReturnValue({
+      output: [''],
+      pid: 0,
+      signal: null,
+      status: 0,
+      stderr: '',
+      stdout: '',
+    });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  const spawnedEnv = (): NodeJS.ProcessEnv | undefined => {
+    return vi.mocked(spawnSync).mock.calls[0]?.[2]?.env;
+  };
+
+  describe('when a plugin dir is passed', () => {
+    it('stamps OPENTHROTTLE_HOOK_DELIVERY=plugin-dir over the inherited env', () => {
+      runDriverSync(pluginDriver, {
+        env: { EXTRA: '1', OPENTHROTTLE_HOOK_DELIVERY: 'repo' },
+        iteration: 1,
+        pluginDirs: ['/srv/plugins/openthrottle'],
+        prompt: 'hi',
+      });
+
+      expect(spawnedEnv()?.OPENTHROTTLE_HOOK_DELIVERY).toBe('plugin-dir');
+      expect(spawnedEnv()?.EXTRA).toBe('1');
+    });
+
+    it('stamps without any caller env', () => {
+      runDriverSync(pluginDriver, {
+        iteration: 1,
+        pluginDirs: ['/srv/plugins/openthrottle'],
+        prompt: 'hi',
+      });
+
+      expect(spawnedEnv()?.OPENTHROTTLE_HOOK_DELIVERY).toBe('plugin-dir');
+    });
+
+    it('stamps on the async path too', async () => {
+      const child = asChildProcess(new EventEmitter());
+      child.stdout = new PassThrough();
+      child.stderr = new PassThrough();
+      vi.mocked(spawn).mockReturnValue(child);
+
+      const promise = runDriverAsync(pluginDriver, {
+        iteration: 1,
+        pluginDirs: ['/srv/plugins/openthrottle'],
+        prompt: 'go',
+      });
+      child.emit('close', 0);
+      await promise;
+
+      expect(
+        vi.mocked(spawn).mock.calls.at(-1)?.[2]?.env
+          ?.OPENTHROTTLE_HOOK_DELIVERY,
+      ).toBe('plugin-dir');
+    });
+  });
+
+  describe('when no plugin dir is carried', () => {
+    it('leaves the env inherited for an empty or blank list', () => {
+      runDriverSync(pluginDriver, {
+        iteration: 1,
+        pluginDirs: ['  '],
+        prompt: 'hi',
+      });
+
+      expect(spawnedEnv()).toBeUndefined();
+    });
+
+    it('does not stamp a driver without the pluginDir capability', () => {
+      runDriverSync(testDriver, {
+        iteration: 1,
+        pluginDirs: ['/srv/plugins/openthrottle'],
+        prompt: 'hi',
+      });
+
+      expect(spawnedEnv()).toBeUndefined();
+    });
+  });
+});

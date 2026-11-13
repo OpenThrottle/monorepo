@@ -60,6 +60,15 @@ Everything in OpenThrottle flows through the **`openthrottle-mcp`** server — p
 
 Only once `health` is green across all four facets do you continue.
 
+### Then: check telemetry coverage (a warning, never a gate)
+
+Skill-usage telemetry is optional but fails **silently**: a session started by hand outside this
+repo records nothing without the `openthrottle@openthrottle` plugin. Run
+`node <ot-checkout>/.claude/hooks/skill-usage-doctor.cjs --json`, give each check one line, and relay
+its `fix` lines verbatim. The plugin install changes the user's global Claude setup: **offer** to run
+it, never unasked. Ongoing view: `/usage` → Telemetry coverage
+([contract §8](https://github.com/openthrottle/monorepo/blob/main/docs/monorepo/child-repo-hook-telemetry-contract.md#8-coverage-heartbeat)).
+
 ---
 
 ## 2. Second: make the OT-only rule durable (agent gate)

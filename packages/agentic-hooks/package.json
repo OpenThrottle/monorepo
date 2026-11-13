@@ -67,7 +67,9 @@
           "{workspaceRoot}/.claude/hooks/skill-usage-backfill.cjs",
           "{workspaceRoot}/.claude/hooks/skill-usage-capture.cjs",
           "{workspaceRoot}/.claude/hooks/skill-usage-complete.cjs",
+          "{workspaceRoot}/.claude/hooks/skill-usage-doctor.cjs",
           "{workspaceRoot}/.claude/hooks/skill-usage-drain.cjs",
+          "{workspaceRoot}/.claude/hooks/skill-usage-heartbeat.cjs",
           "{workspaceRoot}/.claude/hooks/skill-usage-outcome.cjs",
           "{workspaceRoot}/.claude/hooks/skill-usage-scope.cjs",
           "{workspaceRoot}/.codex/hooks/skill-usage-capture.cjs",
@@ -86,6 +88,8 @@
           "{workspaceRoot}/plugins/openthrottle/hooks/hooks.json",
           "{workspaceRoot}/plugins/openthrottle/hooks/skill-usage-capture.cjs",
           "{workspaceRoot}/plugins/openthrottle/hooks/skill-usage-complete.cjs",
+          "{workspaceRoot}/plugins/openthrottle/hooks/skill-usage-doctor.cjs",
+          "{workspaceRoot}/plugins/openthrottle/hooks/skill-usage-heartbeat.cjs",
           "{workspaceRoot}/plugins/openthrottle/plugin.json"
         ]
       },
@@ -110,7 +114,9 @@
           "{workspaceRoot}/.claude/hooks/skill-usage-backfill.cjs",
           "{workspaceRoot}/.claude/hooks/skill-usage-capture.cjs",
           "{workspaceRoot}/.claude/hooks/skill-usage-complete.cjs",
+          "{workspaceRoot}/.claude/hooks/skill-usage-doctor.cjs",
           "{workspaceRoot}/.claude/hooks/skill-usage-drain.cjs",
+          "{workspaceRoot}/.claude/hooks/skill-usage-heartbeat.cjs",
           "{workspaceRoot}/.claude/hooks/skill-usage-outcome.cjs",
           "{workspaceRoot}/.claude/hooks/skill-usage-scope.cjs",
           "{workspaceRoot}/.codex/hooks/skill-usage-capture.cjs",
@@ -129,6 +135,8 @@
           "{workspaceRoot}/plugins/openthrottle/hooks/hooks.json",
           "{workspaceRoot}/plugins/openthrottle/hooks/skill-usage-capture.cjs",
           "{workspaceRoot}/plugins/openthrottle/hooks/skill-usage-complete.cjs",
+          "{workspaceRoot}/plugins/openthrottle/hooks/skill-usage-doctor.cjs",
+          "{workspaceRoot}/plugins/openthrottle/hooks/skill-usage-heartbeat.cjs",
           "{workspaceRoot}/plugins/openthrottle/plugin.json"
         ],
         "metadata": {
@@ -171,7 +179,9 @@
     "./src/adapters/claude/bash-guard.ts",
     "./src/adapters/claude/capture.ts",
     "./src/adapters/claude/complete.ts",
+    "./src/adapters/claude/doctor.ts",
     "./src/adapters/claude/drain.ts",
+    "./src/adapters/claude/heartbeat.ts",
     "./src/adapters/claude/memory-index-guard.ts",
     "./src/adapters/claude/outcome.ts",
     "./src/adapters/claude/plan-auto-close.ts",
@@ -188,5 +198,5 @@
   ],
   "type": "module",
   "types": "./src/index.ts",
-  "version": "1.1.0"
+  "version": "1.2.0"
 }

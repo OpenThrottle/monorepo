@@ -40,6 +40,7 @@ import {
   sanitizeSessionId,
   startCorrelationKey,
 } from './jsonl.ts';
+import type { BufferStats } from './readBufferStats.ts';
 import { drainStartsForSession, listStartsForSession } from './starts.ts';
 import {
   chunkTokenUsage,
@@ -838,4 +839,37 @@ export const formatDrainFileResult = (
   tally: DrainFileResult,
 ): string => {
   return `${label} sent=${tally.sent} retained=${tally.retained} dead-lettered=${tally.deadLettered} skipped=${tally.skipped} reasons: ${formatDrainReasons(tally)}`;
+};
+
+/**
+ * One-line summary of the buffers, e.g.
+ * `buffered before: events=3 outcomes=1 token-usage=0 trajectories=0
+ * dead-letter=0 oldest=2026-11-12T10:00:00.000Z (26h ago)`.
+ *
+ * @public
+ */
+export const formatBufferStats = (
+  label: string,
+  stats: BufferStats,
+  nowMs: number,
+): string => {
+  const counts = stats.files
+    .map((file) => `${file.label}=${file.lines}`)
+    .join(' ');
+  const oldestMs =
+    stats.oldestAt === null ? Number.NaN : new Date(stats.oldestAt).getTime();
+  const hasOldest = stats.oldestAt !== null && !Number.isNaN(oldestMs);
+  const oldest = hasOldest
+    ? `${stats.oldestAt} (${formatAge(nowMs - oldestMs)} ago)`
+    : 'none';
+  return `${label}: ${counts} dead-letter=${stats.totalDeadLetterLines} oldest=${oldest}`;
+};
+
+const formatAge = (ageMs: number): string => {
+  const minutes = Math.max(0, Math.floor(ageMs / 60_000));
+  if (minutes < 60) {
+    return `${minutes}m`;
+  }
+  const hours = Math.floor(minutes / 60);
+  return hours < 48 ? `${hours}h` : `${Math.floor(hours / 24)}d`;
 };

@@ -793,7 +793,7 @@ var runningFromPlugin = (env, scriptPath) => {
   const relative = import_node_path5.default.relative(import_node_path5.default.resolve(pluginRoot), scriptPath);
   return relative !== "" && !relative.startsWith("..");
 };
-var repoRegistersCapture = (repoRoot) => {
+var repoRegistersBundle = (repoRoot, bundle) => {
   try {
     const raw = import_node_fs5.default.readFileSync(
       import_node_path5.default.join(repoRoot, ".claude", "settings.json"),
@@ -803,17 +803,18 @@ var repoRegistersCapture = (repoRoot) => {
     if (typeof parsed !== "object" || parsed === null || !("hooks" in parsed)) {
       return false;
     }
-    return JSON.stringify(parsed.hooks).includes(CAPTURE_BUNDLE);
+    return JSON.stringify(parsed.hooks).includes(bundle);
   } catch {
     return false;
   }
 };
 var isShadowedByRepoHooks = ({
+  bundle = CAPTURE_BUNDLE,
   env = process.env,
   repoRoot,
   scriptPath = process.argv[1]
 }) => {
-  return runningFromPlugin(env, scriptPath) && repoRegistersCapture(repoRoot);
+  return runningFromPlugin(env, scriptPath) && repoRegistersBundle(repoRoot, bundle);
 };
 
 // packages/agentic-hooks/src/adapters/claude/capture.ts

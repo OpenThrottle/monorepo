@@ -117,6 +117,7 @@ import {
   RecordPlanRunHeartbeatInput,
   RecordSkillUsageInput,
   RecordSkillUsageOutcomeInput,
+  RecordTelemetryHeartbeatInput,
   RecordTokenUsageAccountInput,
   RecordTokenUsageInput,
   RecordTokenUsageRowInput,
@@ -1431,6 +1432,28 @@ export function RecordSkillUsageOutcomeInputSchema(): z.ZodObject<
     skillName: z.string().min(1),
     source: z.string().nullish(),
     toolUseId: z.string().nullish(),
+  });
+}
+
+export function RecordTelemetryHeartbeatInputSchema(): z.ZodObject<
+  Properties<RecordTelemetryHeartbeatInput>
+> {
+  return z.object({
+    bufferedEvents: z.number(),
+    bufferedOutcomes: z.number(),
+    bufferedTokenUsage: z.number(),
+    bufferedTrajectories: z.number(),
+    deadLetterCount: z.number(),
+    deliveryLeg: z.string().min(1),
+    machineId: z.string().min(1),
+    machineLabel: z.string().nullish(),
+    marketplacePluginInstalled: z.boolean().nullish(),
+    marketplacePluginVersion: z.string().nullish(),
+    occurredAt: definedNonNullAnySchema,
+    oldestBufferedAt: definedNonNullAnySchema.nullish(),
+    pluginVersion: z.string().nullish(),
+    repoIdentity: z.string().nullish(),
+    source: z.string().min(1),
   });
 }
 

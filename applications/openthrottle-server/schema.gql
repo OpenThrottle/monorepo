@@ -4505,6 +4505,86 @@ type TaskEmbeddingObject {
   taskId: String!
 }
 
+"""One delivery leg seen for a repo on a machine."""
+type TelemetryRepoLegObject {
+  deliveryLeg: String!
+  lastSeenAt: DateTime!
+}
+
+"""
+A repo a machine opened a session in, and the delivery legs it came through. repoIdentity is null when the checkout has no remote.
+"""
+type TelemetryRepoCoverageObject {
+  deliveryLegs: [TelemetryRepoLegObject!]!
+  repoIdentity: String
+}
+
+"""Buffer state from a machine's newest heartbeat."""
+type TelemetryBufferSnapshotObject {
+  bufferedEvents: Int!
+  bufferedOutcomes: Int!
+  bufferedTokenUsage: Int!
+  bufferedTrajectories: Int!
+  deadLetterCount: Int!
+  oldestBufferedAt: DateTime
+  totalBuffered: Int!
+}
+
+"""
+A coverage warning. kind is one of MANUAL_SESSIONS_UNCOVERED, PLUGIN_OUTDATED, BUFFER_STALE, BUFFER_GROWING, MACHINE_SILENT.
+"""
+type TelemetryCoverageWarningObject {
+  kind: String!
+  message: String!
+}
+
+"""Coverage state of one machine."""
+type TelemetryMachineCoverageObject {
+  buffer: TelemetryBufferSnapshotObject!
+  deliveryLegsSeen: [String!]!
+  lastSeenAt: DateTime!
+  machineId: String!
+  machineLabel: String
+  marketplacePluginInstalled: Boolean
+  marketplacePluginVersion: String
+  pluginVersion: String
+  repos: [TelemetryRepoCoverageObject!]!
+  warnings: [TelemetryCoverageWarningObject!]!
+}
+
+"""
+Telemetry coverage for the requesting user: which machines report, through which delivery legs, and what is wrong.
+"""
+type TelemetryCoverageObject {
+  currentPluginVersion: String
+  generatedAt: DateTime!
+  machines: [TelemetryMachineCoverageObject!]!
+  windowDays: Int!
+}
+
+"""
+Latest coverage heartbeat for one (machine, repo, delivery leg, source) of the authenticated user.
+"""
+type TelemetryHeartbeatObject {
+  bufferedEvents: Int!
+  bufferedOutcomes: Int!
+  bufferedTokenUsage: Int!
+  bufferedTrajectories: Int!
+  deadLetterCount: Int!
+  deliveryLeg: String!
+  firstSeenAt: DateTime!
+  id: ID!
+  lastSeenAt: DateTime!
+  machineId: String!
+  machineLabel: String
+  marketplacePluginInstalled: Boolean
+  marketplacePluginVersion: String
+  oldestBufferedAt: DateTime
+  pluginVersion: String
+  repoIdentity: String
+  source: String!
+}
+
 type TimelineSpanObject {
   """
   Execution backend / tool name / driver id, when the source carries one.
@@ -6168,6 +6248,11 @@ type Query {
   """
   ruleApplications(planId: ID!): [RuleApplicationObject!]!
 
+  """
+  Telemetry coverage for the requesting user: per machine, the repos and delivery legs seen in the window, the newest buffer snapshot, and coverage warnings. Machines are ordered by lastSeenAt descending.
+  """
+  telemetryCoverage(windowDays: Int! = 14): TelemetryCoverageObject!
+
   """Get a task embedding by ID"""
   taskEmbedding(input: GetTaskEmbeddingInput!): TaskEmbeddingObject
 
@@ -7422,6 +7507,11 @@ type Mutation {
   Delete a tag→action rule (its ledger rows CASCADE). Returns false when absent.
   """
   deleteTagActionRule(input: DeleteTagActionRuleInput!): Boolean!
+
+  """
+  Record the per-session coverage heartbeat: which machine, delivery leg and repo, and what sits in the local telemetry buffer. Upserted latest-wins per (machine, repo, leg, source). Attributed to the human user the authenticated principal acts as; a userId is never accepted from the client.
+  """
+  recordTelemetryHeartbeat(input: RecordTelemetryHeartbeatInput!): TelemetryHeartbeatObject!
 
   """
   Attach a tag to a plan. The tag must be in the caller's skill-tag vocabulary; source is derived from the caller identity. At most one phase tag per plan (equal-or-lower provenance is replaced, higher rejects).
@@ -9513,6 +9603,55 @@ input UpsertTagActionRuleInput {
 input DeleteTagActionRuleInput {
   """Rule to delete (ledger rows CASCADE)."""
   id: ID!
+}
+
+input RecordTelemetryHeartbeatInput {
+  """Skill-usage events buffered locally."""
+  bufferedEvents: Int!
+
+  """Skill-usage outcomes buffered locally."""
+  bufferedOutcomes: Int!
+
+  """Token-usage records buffered locally."""
+  bufferedTokenUsage: Int!
+
+  """Trajectories buffered locally."""
+  bufferedTrajectories: Int!
+
+  """Records across the local dead-letter files."""
+  deadLetterCount: Int!
+
+  """How the hooks reached the session: repo, plugin-dir or marketplace."""
+  deliveryLeg: String!
+
+  """Opaque random machine id (max 64 chars), never a hostname."""
+  machineId: String!
+
+  """Operator-chosen machine label; opt-in."""
+  machineLabel: String
+
+  """Whether the marketplace plugin is installed; null = unknown."""
+  marketplacePluginInstalled: Boolean
+
+  """Installed marketplace plugin version."""
+  marketplacePluginVersion: String
+
+  """Client-reported heartbeat timestamp."""
+  occurredAt: DateTime!
+
+  """Timestamp of the oldest locally buffered record."""
+  oldestBufferedAt: DateTime
+
+  """Running payload version, or null for the repo leg."""
+  pluginVersion: String
+
+  """
+  Git remote of the session's repository. The server re-normalizes it and stores null when it does not survive; absolute paths are rejected.
+  """
+  repoIdentity: String
+
+  """Harness, e.g. claude-code."""
+  source: String!
 }
 
 input AddPlanTagInput {
