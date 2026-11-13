@@ -14,6 +14,7 @@ import {
   encodeModelOptionId,
   openaiGroupId,
 } from './chat-model-option';
+import { isEmbeddingModelName } from './isEmbeddingModelName';
 
 /**
  * @description Shared GraphQL-discovery → composer toolbar-option mappers and the
@@ -179,6 +180,11 @@ export interface ChatOptionsResponse {
   readonly repositories: readonly RepositoryOption[];
 }
 
+/** An endpoint's chat-capable models: embedding-only models cannot chat. */
+function chatModelsOf(endpoint: DiscoveredLocalEndpoint): readonly string[] {
+  return endpoint.models.filter((model) => !isEmbeddingModelName(model));
+}
+
 /**
  * Flatten discovered endpoints × models into composer toolbar options, grouped
  * (for the model picker) by provider/endpoint.
@@ -189,7 +195,7 @@ export function toChatModelOptions(
 ): ChatModelOption[] {
   return discovery.endpoints.flatMap((endpoint) => {
     const providerOrHost = endpoint.provider ?? endpoint.host;
-    return endpoint.models.map((model) => ({
+    return chatModelsOf(endpoint).map((model) => ({
       description: providerOrHost,
       groupId: openaiGroupId(providerOrHost),
       id: encodeModelOptionId(endpoint.baseUrl, model),
@@ -356,7 +362,7 @@ export function toDriverEndpointChatOptions(
         endpoint.host,
       );
 
-      return endpoint.models.map((model) => ({
+      return chatModelsOf(endpoint).map((model) => ({
         description,
         groupId: cliGroupId(agent.backend),
         id: encodeCliEndpointOptionId(agent.backend, endpoint.baseUrl, model),
