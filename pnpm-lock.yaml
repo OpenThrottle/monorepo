@@ -1307,6 +1307,9 @@ importers:
       '@openthrottle/graphql-codegen':
         specifier: workspace:^
         version: link:../../packages/graphql-codegen
+      '@openthrottle/react-router-auth':
+        specifier: workspace:^
+        version: link:../../packages/react-router-auth
       '@openthrottle/react-router-cms-core':
         specifier: workspace:^
         version: link:../../packages/react-router-cms-core

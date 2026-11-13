@@ -77,6 +77,15 @@ describe('cms seed file', () => {
     expect(sql).not.toMatch(/[\w.+-]+@[\w-]+\.[\w.]+/);
   });
 
+  it('writes no schemas of its own: fragments use the synced generated ones', () => {
+    expect(code).not.toMatch(/INSERT INTO schemas/i);
+    expect(code).toMatch(/s\.status = 'ACTIVE'/);
+  });
+
+  it('seeds a LayoutGrid container', () => {
+    expect(code).toContain("'LayoutGrid'");
+  });
+
   it('seeds the welcome layout', () => {
     expect(code).toContain("'welcome'");
   });

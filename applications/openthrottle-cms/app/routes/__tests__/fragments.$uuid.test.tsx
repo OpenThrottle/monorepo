@@ -175,6 +175,7 @@ describe('routes/fragments.$uuid.tsx', () => {
         issues: [{ message: 'must be string', path: '/text' }],
         message: FRAGMENT_EDITOR_COPY.invalid,
         ok: false,
+        requiresSignIn: false,
       });
     });
 
@@ -224,6 +225,7 @@ describe('routes/fragments.$uuid.tsx', () => {
         issues: [],
         message: FRAGMENT_EDITOR_COPY.invalidForm,
         ok: false,
+        requiresSignIn: false,
       });
       expect(fetchAuthGraphql).not.toHaveBeenCalled();
     });
@@ -246,6 +248,7 @@ describe('routes/fragments.$uuid.tsx', () => {
         issues: [],
         message: 'GraphQL errors: already a child',
         ok: false,
+        requiresSignIn: false,
       });
     });
 
@@ -265,6 +268,7 @@ describe('routes/fragments.$uuid.tsx', () => {
         issues: [],
         message: FRAGMENT_EDITOR_COPY.invalidForm,
         ok: false,
+        requiresSignIn: false,
       });
     });
   });

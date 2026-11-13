@@ -15,16 +15,25 @@ import {
   resolveDatabaseUrl,
 } from '../databases/database-registry.ts';
 import { postgresHostname } from './openthrottle-database-seed-blog.ts';
+import {
+  describeCmsSchemaSync,
+  readCmsSchemaEntries,
+  syncCmsSchemas,
+} from './openthrottle-database-sync-cms-schemas.ts';
 import { createLogger } from './utils/index.ts';
 
 const logger = createLogger();
 
 /**
- * @description Applies the DEV-ONLY synthetic CMS content in databases/cms/seeds/cms.sql (four
- * schemas, a Layout fragment with three children, the `welcome` layout, and one library with one
- * component). Idempotent: every row has a fixed uuid and every INSERT is ON CONFLICT DO NOTHING.
+ * @description Applies the DEV-ONLY synthetic CMS content in databases/cms/seeds/cms.sql (a
+ * root Layout fragment with four children — one a LayoutGrid of three Cards — the `welcome`
+ * layout, and one library with one component). Idempotent: every row has a fixed uuid and every INSERT is ON CONFLICT DO NOTHING.
  * Connects to the `cms` database the way `database:migrate` does — the primary's POSTGRES_* with
  * the database swapped, or CMS_POSTGRES_URL — and needs cms migrations 001-010.
+ *
+ * Before the sample rows it syncs the generated block schemas
+ * (scripts/openthrottle-database-sync-cms-schemas.ts), so the sample fragments can be pinned to
+ * them and every generated block has an ACTIVE schema to create fragments on.
  *
  * This is deliberately NOT a migration and is not reachable from `database:migrate`,
  * `monorepo:ensure-migrations`, CI or any deploy path. It refuses to run when
@@ -104,9 +113,13 @@ async function main(): Promise<void> {
       process.exit(1);
     }
 
+    // Schemas first: the sample fragments look their generated schema up by typename.
+    const schemas = readCmsSchemaEntries(process.cwd());
+    logger.info(describeCmsSchemaSync(schemas.length, await syncCmsSchemas(client, schemas))); // prettier-ignore
+
     // The file wraps itself in BEGIN/COMMIT, so a failure rolls back cleanly.
     await client.query(sql);
-    logger.success('CMS seed applied (layout "welcome", 4 fragments, 1 library); safe to re-run.'); // prettier-ignore
+    logger.success('CMS seed applied (layout "welcome", 8 fragments, 1 library); safe to re-run.'); // prettier-ignore
   } catch (error) {
     await client.query('ROLLBACK').catch(() => undefined);
     logger.fail(`CMS seed failed: ${error instanceof Error ? (error.stack ?? error.message) : String(error)}`); // prettier-ignore

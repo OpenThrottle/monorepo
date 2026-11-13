@@ -4,7 +4,8 @@
 # fails unless:
 #   - both runs exit 0 (the seed still matches the schema the migrations build),
 #   - the second run changes no row in any table (the seed is idempotent), and
-#   - the cms seed's `welcome` layout resolves by slug to its ordered child tree.
+#   - the cms seed's `welcome` layout resolves by slug to its ordered child tree, every seeded
+#     fragment sits on a generated ACTIVE schema, and the LayoutGrid holds its three cards.
 #
 # Why this exists: the seeds are plain SQL, so nothing type-checks them against
 # the migrations. A migration that renames or drops a column a seed writes would
@@ -97,10 +98,33 @@ welcome="$(run_psql "$CMS_DB" -c "
     WHERE fc.fragment_uuid = f.uuid), '')
   FROM layouts l JOIN fragments f ON f.uuid = l.fragment_uuid
   WHERE l.slug = 'welcome'")"
-expected='ACTIVE|Layout|Heading,Wysiwyg,Button'
+expected='ACTIVE|Layout|Heading,Wysiwyg,Button,LayoutGrid'
 
 if [ "$welcome" != "$expected" ]; then
   echo "❌ layout 'welcome' resolved to '${welcome}', expected '${expected}'"
+  failed=1
+fi
+
+# The seed pins every fragment to its typename's generated ACTIVE schema (synced first), and the
+# grid is a real container: a LayoutGrid schema with a children property, holding three cards.
+off_active="$(run_psql "$CMS_DB" -c "
+  SELECT count(*) FROM fragments f JOIN schemas s ON s.uuid = f.schema_uuid
+  WHERE f.uuid::text LIKE '5eed0000-%' AND s.status IS DISTINCT FROM 'ACTIVE'")"
+grid="$(run_psql "$CMS_DB" -c "
+  SELECT (s.json_schema->'properties' ? 'children')::text || '|' || (
+    SELECT string_agg(c.typename, ',' ORDER BY fc.sort_order)
+    FROM fragments_children fc JOIN fragments c ON c.uuid = fc.children_uuid
+    WHERE fc.fragment_uuid = f.uuid)
+  FROM fragments f JOIN schemas s ON s.uuid = f.schema_uuid
+  WHERE f.uuid = '5eed0000-0000-4000-8000-000000000205'")"
+
+if [ "$off_active" != '0' ]; then
+  echo "❌ ${off_active} seeded fragment(s) are not on an ACTIVE schema"
+  failed=1
+fi
+
+if [ "$grid" != 'true|Card,Card,Card' ]; then
+  echo "❌ the seeded LayoutGrid resolved to '${grid}', expected 'true|Card,Card,Card'"
   failed=1
 fi
 

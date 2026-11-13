@@ -1,14 +1,23 @@
+import {
+  buildAuthCookie,
+  getAuthTokenFromCookie,
+} from '@openthrottle/react-router-auth';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
-  GlobalHeading,
+  GlobalErrorBoundary,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import { BookOpenIcon } from 'lucide-react';
 import * as React from 'react';
+import { data, redirect, useNavigation } from 'react-router';
 
 import type { Route } from '@/app/routes/+types/auth.sign-in';
+import { CmsLoginDocument } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
+import { fetchPublicGraphql } from '~/global/utils/graphql.server';
+import { AuthSignInForm } from '~/routing/auth/components/AuthSignInForm';
+import { AUTH_COPY } from '~/routing/auth/data/data.copy';
+import { AUTH_ROUTES } from '~/routing/auth/data/data.routes';
+import { getSafeRedirect } from '~/routing/auth/utils/auth-redirect';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -17,8 +26,20 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   links: (_match) => [],
 };
 
-export const loader = async (_args: Route.LoaderArgs) => {
-  return {};
+/**
+ * @description Where to return to after signing in, from `?redirectTo=`. A visitor who already
+ * has a CMS session goes straight there.
+ */
+export const loader = async (args: Route.LoaderArgs) => {
+  const { request } = args;
+  const url = new URL(request.url);
+  const redirectTo = getSafeRedirect(url.searchParams.get(AUTH_ROUTES.redirectParam)); // prettier-ignore
+
+  if (getAuthTokenFromCookie(request.headers.get('cookie') ?? '')) {
+    return redirect(redirectTo);
+  }
+
+  return { redirectTo };
 };
 
 export const links: Route.LinksFunction = () => {
@@ -26,17 +47,19 @@ export const links: Route.LinksFunction = () => {
 };
 
 export const meta = (_args: Route.MetaArgs) => {
-  return [{ title: `Sign in | Auth | ${SITE_TITLE}` }];
+  return [{ title: `Sign in | ${SITE_TITLE}` }];
 };
 
 export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
-  const { actionData: _a, loaderData: _l, matches: _m, params: _p } = props;
+  const { actionData, loaderData, matches: _m, params: _p } = props;
 
   // Hooks
+  const navigation = useNavigation();
 
   // Setup
+  const isSubmitting = navigation.state === 'submitting';
 
   // Handlers
 
@@ -47,25 +70,49 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <GlobalScreen>
-      <div>
-        <GlobalHeading
-          className="mb-4"
-          heading="h1"
-          icon={BookOpenIcon}
-          title="Sign in"
-        />
-        <p className="text-muted-foreground text-sm">
-          Lorem ipsum, dolor sit amet consectetur adipisicing elit. Facilis,
-          architecto ea?
-        </p>
-      </div>
+    <GlobalScreen className="flex flex-1 items-center justify-center p-4">
+      <AuthSignInForm
+        className={undefined}
+        error={actionData?.error}
+        isSubmitting={isSubmitting}
+        redirectTo={loaderData.redirectTo}
+      />
     </GlobalScreen>
   );
 }
 
-export const action = async (_args: Route.ActionArgs) => {
-  return {};
+/**
+ * @description Signs in with the `login` mutation and sets the CMS auth cookie (named for this
+ * app, so it is separate from the developer app's session), then returns to `redirectTo`.
+ */
+export const action = async (args: Route.ActionArgs) => {
+  const formData = await args.request.formData();
+  const email = formData.get('email');
+  const password = formData.get('password');
+  const redirectTo = getSafeRedirect(formData.get(AUTH_ROUTES.redirectParam));
+
+  if (
+    typeof email !== 'string' ||
+    typeof password !== 'string' ||
+    email.trim() === '' ||
+    password === ''
+  ) {
+    return data({ error: AUTH_COPY.missingFields }, { status: 400 });
+  }
+
+  try {
+    const { login } = await fetchPublicGraphql(CmsLoginDocument, {
+      input: { email: email.trim(), password },
+    });
+
+    return redirect(redirectTo, {
+      headers: { 'Set-Cookie': buildAuthCookie(login.accessToken) },
+    });
+  } catch (error) {
+    console.error('🔴 cms sign-in failed', error);
+
+    return data({ error: AUTH_COPY.failed }, { status: 401 });
+  }
 };
 
 export const ErrorBoundary = GlobalErrorBoundary;

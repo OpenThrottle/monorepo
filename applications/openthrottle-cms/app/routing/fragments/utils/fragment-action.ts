@@ -43,7 +43,16 @@ const failure = (
   message: string,
   issues: readonly FragmentIssue[] = [],
 ): FragmentActionResult => {
-  return { issues, message, ok: false };
+  return { issues, message, ok: false, requiresSignIn: false };
+};
+
+const signInRequired = (): FragmentActionResult => {
+  return {
+    issues: [],
+    message: FRAGMENT_EDITOR_COPY.unauthenticated,
+    ok: false,
+    requiresSignIn: true,
+  };
 };
 
 /**
@@ -109,14 +118,15 @@ export const readChildOrder = (
 
 /**
  * @description The action result for a failed cms mutation: server validation issues for
- * `BAD_USER_INPUT`, a sign-in or permission message for an auth refusal, otherwise the error's
+ * `BAD_USER_INPUT`, a sign-in prompt (`requiresSignIn`) when nobody is signed in, a permission
+ * message for a signed-in user without `cms:write`, otherwise the error's
  * own message.
  */
 export const toFragmentActionFailure = (
   error: unknown,
 ): FragmentActionResult => {
   if (isAuthError(error)) {
-    return failure(FRAGMENT_EDITOR_COPY.unauthenticated);
+    return signInRequired();
   }
 
   if (!isGraphqlResponseError(error)) {
@@ -136,7 +146,7 @@ export const toFragmentActionFailure = (
     case 'FORBIDDEN':
       return failure(FRAGMENT_EDITOR_COPY.forbidden);
     case 'UNAUTHENTICATED':
-      return failure(FRAGMENT_EDITOR_COPY.unauthenticated);
+      return signInRequired();
     default:
       return failure(error.message);
   }

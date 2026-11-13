@@ -107,6 +107,7 @@ describe('FragmentEditor', () => {
         ],
         message: FRAGMENT_EDITOR_COPY.invalid,
         ok: false,
+        requiresSignIn: false,
       });
       const alert = component.getByRole('alert');
 
@@ -120,6 +121,27 @@ describe('FragmentEditor', () => {
         'aria-invalid',
         'false',
       );
+      expect(
+        component.queryByRole('link', { name: FRAGMENT_EDITOR_COPY.signIn }),
+      ).toBeNull();
+    });
+  });
+
+  describe('after a save refused for want of a sign-in', () => {
+    test('links to sign-in, returning to this page', () => {
+      const { component } = renderEditor(MOCK_FRAGMENT_EDITOR_RECORDS, {
+        issues: [],
+        message: FRAGMENT_EDITOR_COPY.unauthenticated,
+        ok: false,
+        requiresSignIn: true,
+      });
+
+      expect(component.getByRole('alert')).toHaveTextContent(
+        FRAGMENT_EDITOR_COPY.unauthenticated,
+      );
+      expect(
+        component.getByRole('link', { name: FRAGMENT_EDITOR_COPY.signIn }),
+      ).toHaveAttribute('href', '/auth/sign-in?redirectTo=%2F');
     });
   });
 

@@ -23,7 +23,12 @@ const isFragmentIntent = (value: unknown): value is FragmentIntent => {
 };
 
 const invalidForm = (): FragmentActionResult => {
-  return { issues: [], message: FRAGMENT_EDITOR_COPY.invalidForm, ok: false };
+  return {
+    issues: [],
+    message: FRAGMENT_EDITOR_COPY.invalidForm,
+    ok: false,
+    requiresSignIn: false,
+  };
 };
 
 /**
@@ -43,6 +48,7 @@ export const runFragmentAction = async (
       issues: [],
       message: FRAGMENT_EDITOR_COPY.unknownIntent,
       ok: false,
+      requiresSignIn: false,
     };
   }
 
