@@ -17,6 +17,26 @@ import Keyv from 'keyv';
 
 import { redisConfig } from '../config.constants';
 import type { RedisCacheLogger } from './redis.types.ts';
+
+/**
+ * @description Copy an `Error` into a plain object so JSON log formats keep
+ * its details. `message`, `name` and `stack` are non-enumerable on an `Error`,
+ * so winston's JSON output prints a bare `Error` (for example node-redis's
+ * `SocketClosedUnexpectedlyError` on a Redis restart) as `{}`. Enumerable own
+ * fields such as `code`, `errno` and `syscall` are kept. Non-`Error` values are
+ * returned unchanged.
+ */
+const serializeError = (error: unknown): unknown => {
+  if (!(error instanceof Error)) return error;
+
+  return {
+    ...error,
+    message: error.message,
+    name: error.name,
+    stack: error.stack,
+  };
+};
+
 /**
  * Tracks the Keyv stores backing every cache created by {@link getRedisCache}
  * so the owning module can close their underlying Redis clients on shutdown.
@@ -82,7 +102,7 @@ export const getRedisCache = (logger?: RedisCacheLogger) => {
   const logConnectionError = (source: string) => {
     return (error: unknown): void => {
       logger?.error(`Redis cache connection error (${source})`, {
-        error,
+        error: serializeError(error),
         namespace,
       });
     };

@@ -166,7 +166,48 @@ describe('redis cache', () => {
     expect(logger.error).toHaveBeenCalledTimes(1);
     expect(logger.error).toHaveBeenCalledWith(
       'Redis cache connection error (client)',
-      expect.objectContaining({ error }),
+      expect.objectContaining({
+        error: expect.objectContaining({
+          message: 'Socket closed unexpectedly',
+          name: 'Error',
+        }),
+      }),
+    );
+  });
+
+  it("keeps an Error's message and enumerable fields through JSON serialization", () => {
+    const logger = { error: vi.fn(), warn: vi.fn() };
+
+    getRedisCache(logger);
+
+    const error = Object.assign(new Error('read ECONNRESET'), {
+      code: 'ECONNRESET',
+    });
+    lastOf(fakeKeyvRedisInstances).client.emit('error', error);
+
+    // A bare Error stringifies to {}; the logged meta must not.
+    const meta: unknown = logger.error.mock.calls[0]?.[1];
+    const logged: unknown = JSON.parse(JSON.stringify(meta));
+    expect(logged).toMatchObject({
+      error: {
+        code: 'ECONNRESET',
+        message: 'read ECONNRESET',
+        name: 'Error',
+        stack: expect.any(String),
+      },
+    });
+  });
+
+  it('passes non-Error values through to the logger unchanged', () => {
+    const logger = { error: vi.fn(), warn: vi.fn() };
+
+    getRedisCache(logger);
+
+    lastOf(fakeKeyvRedisInstances).emit('error', 'connection lost');
+
+    expect(logger.error).toHaveBeenCalledWith(
+      'Redis cache connection error (store)',
+      expect.objectContaining({ error: 'connection lost' }),
     );
   });
 
