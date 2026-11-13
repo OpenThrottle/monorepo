@@ -1,5 +1,6 @@
 import type {
   CmsFragmentRowFragment,
+  CmsLayoutFragmentNodeFragment,
   CmsLayoutRowFragment,
   CmsLibraryComponentRowFragment,
   CmsLibraryRowFragment,
@@ -28,6 +29,20 @@ export const CMS_COMPONENT_COLUMNS: readonly GlobalTableColumn<CmsLibraryCompone
   ];
 
 /**
+ * @description `GlobalTable` columns for a library's components on its detail page (no Library column).
+ */
+export const CMS_LIBRARY_COMPONENT_COLUMNS: readonly GlobalTableColumn<CmsLibraryComponentRowFragment>[] =
+  [
+    { header: 'Name', key: 'name', kind: GLOBAL_TABLE_COLUMN_KIND.TEXT },
+    {
+      header: 'Typename',
+      key: 'typename',
+      kind: GLOBAL_TABLE_COLUMN_KIND.CODE,
+    },
+    { header: 'Status', key: 'status', kind: GLOBAL_TABLE_COLUMN_KIND.BADGE },
+  ];
+
+/**
  * @description `GlobalTable` columns for the fragments index (`/fragments`).
  */
 export const CMS_FRAGMENT_COLUMNS: readonly GlobalTableColumn<CmsFragmentRowFragment>[] =
@@ -39,6 +54,11 @@ export const CMS_FRAGMENT_COLUMNS: readonly GlobalTableColumn<CmsFragmentRowFrag
       kind: GLOBAL_TABLE_COLUMN_KIND.CODE,
     },
     {
+      header: 'System',
+      key: 'isSystem',
+      kind: GLOBAL_TABLE_COLUMN_KIND.BOOLEAN,
+    },
+    {
       header: 'Created',
       key: 'createdAt',
       kind: GLOBAL_TABLE_COLUMN_KIND.DATE,
@@ -48,6 +68,20 @@ export const CMS_FRAGMENT_COLUMNS: readonly GlobalTableColumn<CmsFragmentRowFrag
       key: 'updatedAt',
       kind: GLOBAL_TABLE_COLUMN_KIND.DATE,
     },
+  ];
+
+/**
+ * @description `GlobalTable` columns for a layout's fragment tree on its detail page.
+ */
+export const CMS_LAYOUT_FRAGMENT_COLUMNS: readonly GlobalTableColumn<CmsLayoutFragmentNodeFragment>[] =
+  [
+    { header: 'Name', key: 'name', kind: GLOBAL_TABLE_COLUMN_KIND.TEXT },
+    {
+      header: 'Typename',
+      key: 'typename',
+      kind: GLOBAL_TABLE_COLUMN_KIND.CODE,
+    },
+    { header: 'Depth', key: 'depth', kind: GLOBAL_TABLE_COLUMN_KIND.TEXT },
   ];
 
 /**

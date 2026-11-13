@@ -13,6 +13,7 @@ import { GlobalTable } from '~/global/components/GlobalTable';
 import { SITE_TITLE } from '~/global/config/settings';
 import { CMS_LAYOUT_COLUMNS } from '~/global/data/data.cms-table-columns';
 import { fetchPublicGraphql } from '~/global/utils/graphql.server';
+import { getLayoutRowHref } from '~/routing/layouts/utils/layout-rows';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -70,6 +71,7 @@ export default function Component(
           className="mt-6"
           columns={CMS_LAYOUT_COLUMNS}
           emptyState="No layouts yet."
+          getRowHref={getLayoutRowHref}
           getRowId={(row) => row.uuid}
           rows={loaderData.cmsLayouts.items}
         />

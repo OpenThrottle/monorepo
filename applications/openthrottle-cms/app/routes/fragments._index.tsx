@@ -13,6 +13,7 @@ import { GlobalTable } from '~/global/components/GlobalTable';
 import { SITE_TITLE } from '~/global/config/settings';
 import { CMS_FRAGMENT_COLUMNS } from '~/global/data/data.cms-table-columns';
 import { fetchPublicGraphql } from '~/global/utils/graphql.server';
+import { getFragmentRowHref } from '~/routing/fragments/utils/getFragmentRowHref';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -70,6 +71,7 @@ export default function Component(
           className="mt-6"
           columns={CMS_FRAGMENT_COLUMNS}
           emptyState="No fragments yet."
+          getRowHref={getFragmentRowHref}
           getRowId={(row) => row.uuid}
           rows={loaderData.cmsFragments.items}
         />

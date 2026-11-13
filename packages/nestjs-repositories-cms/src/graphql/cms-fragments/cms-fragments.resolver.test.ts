@@ -1,6 +1,8 @@
 import { createMock } from '@golevelup/ts-vitest';
 import { describe, expect, it, vi } from 'vitest';
 
+import { fragmentsFactory } from '../../modules/fragments/fragments.factory.ts';
+import { toCmsFragmentObject } from './cms-fragments.mapper.ts';
 import { CmsFragmentsResolver } from './cms-fragments.resolver.ts';
 import type { CmsFragmentsService } from './cms-fragments.service.ts';
 
@@ -42,6 +44,26 @@ describe('CmsFragmentsResolver', () => {
         take: 10,
         typename: 'Heading',
       });
+    });
+  });
+
+  describe('cmsFragment', () => {
+    it('returns the service result for a uuid', async () => {
+      const { resolver, service } = buildResolver();
+      const fragment = toCmsFragmentObject(fragmentsFactory.build());
+
+      vi.mocked(service.findByUuid).mockResolvedValue(fragment);
+
+      await expect(resolver.cmsFragment(fragment.uuid)).resolves.toBe(fragment);
+      expect(service.findByUuid).toHaveBeenCalledWith(fragment.uuid);
+    });
+
+    it('returns null when none matches', async () => {
+      const { resolver, service } = buildResolver();
+
+      vi.mocked(service.findByUuid).mockResolvedValue(null);
+
+      await expect(resolver.cmsFragment('missing')).resolves.toBeNull();
     });
   });
 });

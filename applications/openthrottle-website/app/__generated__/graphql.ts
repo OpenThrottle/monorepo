@@ -4423,6 +4423,8 @@ export type Query = {
   browseDirectory: WorkspaceDirectoryListingObject;
   /** When telemetry last arrived, per (stream, source): skill_events and skill_outcomes by source, token_usage by provider. A source that is absent has never captured; a stale lastCapturedAt means capture may be broken. */
   captureHealth: Array<CaptureHealthRowObject>;
+  /** A live cms fragment by uuid; null when none matches. */
+  cmsFragment?: Maybe<CmsFragmentObject>;
   /** One page of live cms fragments, oldest first, optionally narrowed by typename and isSystem (false also matches an unset flag). take is clamped to 1–100 (default 25). */
   cmsFragments: CmsFragmentListResult;
   /** A live cms layout by slug, with its fragment tree; null when none matches. */
@@ -4433,6 +4435,10 @@ export type Query = {
   cmsLayouts: CmsLayoutListResult;
   /** One page of live cms libraries with their components. take is clamped to 1–100 (default 25). */
   cmsLibraries: CmsLibraryListResult;
+  /** A live cms library by uuid, with its components; null when none matches. */
+  cmsLibrary?: Maybe<CmsLibraryObject>;
+  /** A live cms library component by uuid; null when none matches. */
+  cmsLibraryComponent?: Maybe<CmsLibraryComponentObject>;
   /** One page of live cms library components across every library, by typename. take is clamped to 1–100 (default 25). */
   cmsLibraryComponents: CmsLibraryComponentListResult;
   /** A live cms schema by uuid; null when none matches. */
@@ -4749,6 +4755,10 @@ export type QueryBrowseDirectoryArgs = {
   path?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type QueryCmsFragmentArgs = {
+  uuid: Scalars['String']['input'];
+};
+
 export type QueryCmsFragmentsArgs = {
   isSystem?: InputMaybe<Scalars['Boolean']['input']>;
   skip?: InputMaybe<Scalars['Int']['input']>;
@@ -4772,6 +4782,14 @@ export type QueryCmsLayoutsArgs = {
 export type QueryCmsLibrariesArgs = {
   skip?: InputMaybe<Scalars['Int']['input']>;
   take?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type QueryCmsLibraryArgs = {
+  uuid: Scalars['String']['input'];
+};
+
+export type QueryCmsLibraryComponentArgs = {
+  uuid: Scalars['String']['input'];
 };
 
 export type QueryCmsLibraryComponentsArgs = {

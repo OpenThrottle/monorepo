@@ -5561,6 +5561,9 @@ type Query {
   """
   cmsFragments(typename: String, isSystem: Boolean, skip: Int, take: Int): CmsFragmentListResult!
 
+  """A live cms fragment by uuid; null when none matches."""
+  cmsFragment(uuid: String!): CmsFragmentObject
+
   """
   One page of live cms layouts, without their trees. take is clamped to 1–100 (default 25).
   """
@@ -5587,9 +5590,17 @@ type Query {
   cmsLibraries(skip: Int, take: Int): CmsLibraryListResult!
 
   """
+  A live cms library by uuid, with its components; null when none matches.
+  """
+  cmsLibrary(uuid: String!): CmsLibraryObject
+
+  """
   One page of live cms library components across every library, by typename. take is clamped to 1–100 (default 25).
   """
   cmsLibraryComponents(skip: Int, take: Int): CmsLibraryComponentListResult!
+
+  """A live cms library component by uuid; null when none matches."""
+  cmsLibraryComponent(uuid: String!): CmsLibraryComponentObject
 
   """
   One page of live cms schemas, optionally filtered by status (ACTIVE | DISABLED | DRAFT) and typename. take is clamped to 1–100 (default 25).

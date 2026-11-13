@@ -13,6 +13,7 @@ import { GlobalTable } from '~/global/components/GlobalTable';
 import { SITE_TITLE } from '~/global/config/settings';
 import { CMS_LIBRARY_COLUMNS } from '~/global/data/data.cms-table-columns';
 import { fetchPublicGraphql } from '~/global/utils/graphql.server';
+import { getLibraryRowHref } from '~/routing/libraries/utils/getLibraryRowHref';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -70,6 +71,7 @@ export default function Component(
           className="mt-6"
           columns={CMS_LIBRARY_COLUMNS}
           emptyState="No libraries yet."
+          getRowHref={getLibraryRowHref}
           getRowId={(row) => row.uuid}
           rows={loaderData.cmsLibraries.items}
         />

@@ -2,7 +2,10 @@ import { Args, Int, Query, Resolver } from '@nestjs/graphql';
 import { Public } from '@openthrottle/nestjs-auth';
 
 import { toCmsPageOptions } from '../cms-graphql/cms-graphql.utils.ts';
-import { CmsLibraryListResult } from './cms-libraries.object.ts';
+import {
+  CmsLibraryListResult,
+  CmsLibraryObject,
+} from './cms-libraries.object.ts';
 import { CmsLibrariesService } from './cms-libraries.service.ts';
 
 /**
@@ -22,5 +25,15 @@ export class CmsLibrariesResolver {
     @Args('take', { nullable: true, type: () => Int }) take: number | null,
   ): Promise<CmsLibraryListResult> {
     return this.cmsLibrariesService.findPage(toCmsPageOptions(skip, take));
+  }
+
+  @Query(() => CmsLibraryObject, {
+    description: `A live cms library by uuid, with its components; null when none matches.`,
+    nullable: true,
+  })
+  async cmsLibrary(
+    @Args('uuid', { type: () => String }) uuid: string,
+  ): Promise<CmsLibraryObject | null> {
+    return this.cmsLibrariesService.findByUuid(uuid);
   }
 }

@@ -46,6 +46,16 @@ export const GlobalTableCell = (
   // Life Cycle
 
   // 🔌 Short Circuit
+  if (kind === GLOBAL_TABLE_COLUMN_KIND.BOOLEAN) {
+    if (typeof value !== 'boolean') return missing;
+
+    return (
+      <span className={cn(className)}>
+        {value ? GLOBAL_TABLE_COPY.yes : GLOBAL_TABLE_COPY.no}
+      </span>
+    );
+  }
+
   if (kind === GLOBAL_TABLE_COLUMN_KIND.DATE) {
     if (!isValidDate) return missing;
 

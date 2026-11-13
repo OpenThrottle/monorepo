@@ -43,6 +43,17 @@ export class CmsFragmentsResolver {
     });
   }
 
+  @Public()
+  @Query(() => CmsFragmentObject, {
+    description: `A live cms fragment by uuid; null when none matches.`,
+    nullable: true,
+  })
+  async cmsFragment(
+    @Args('uuid', { type: () => String }) uuid: string,
+  ): Promise<CmsFragmentObject | null> {
+    return this.cmsFragmentsService.findByUuid(uuid);
+  }
+
   @UseGuards(CmsWriteGuard)
   @Mutation(() => CmsFragmentObject, {
     description: `Copy a live fragment on its pinned schema version, optionally with a fresh copy of its live subtree, in one transaction. The copy has no parent. BAD_USER_INPUT when the subtree is past the tree cap.`,

@@ -88,6 +88,10 @@ describe('routes/libraries._index.tsx', () => {
       ).toBeInTheDocument();
       expect(component.getByText('Core blocks')).toBeInTheDocument();
       expect(component.getAllByRole('row')).toHaveLength(2);
+      expect(component.getByRole('link')).toHaveAttribute(
+        'href',
+        '/libraries/library-1',
+      );
     });
   });
 

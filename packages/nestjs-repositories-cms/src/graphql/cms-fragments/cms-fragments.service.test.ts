@@ -427,4 +427,35 @@ describe('CmsFragmentsService', () => {
       });
     });
   });
+
+  describe('findByUuid', () => {
+    it('returns null for a non-uuid without querying', async () => {
+      const { fragmentsRepository, service } = buildService();
+
+      await expect(service.findByUuid('nope')).resolves.toBeNull();
+      expect(fragmentsRepository.findOne).not.toHaveBeenCalled();
+    });
+
+    it('returns null when no live fragment matches', async () => {
+      const { fragmentsRepository, service } = buildService();
+
+      vi.mocked(fragmentsRepository.findOne).mockResolvedValue(null);
+
+      await expect(
+        service.findByUuid(fragmentsFactory.build().uuid),
+      ).resolves.toBeNull();
+    });
+
+    it('returns the mapped fragment', async () => {
+      const { fragmentsRepository, service } = buildService();
+      const fragment = fragmentsFactory.build();
+
+      vi.mocked(fragmentsRepository.findOne).mockResolvedValue(fragment);
+
+      await expect(service.findByUuid(fragment.uuid)).resolves.toMatchObject({
+        typename: fragment.typename,
+        uuid: fragment.uuid,
+      });
+    });
+  });
 });

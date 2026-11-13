@@ -7,6 +7,7 @@ import { LibraryComponentsRepository } from '../../modules/library-components/li
 import {
   assertCmsUuid,
   createCmsGraphqlError,
+  isCmsUuid,
   parseCmsJsonObject,
   parseCmsStatus,
 } from '../cms-graphql/cms-graphql.utils.ts';
@@ -52,6 +53,21 @@ export class CmsLibraryComponentsService {
       items: page.data.map(toCmsLibraryComponentObject),
       totalCount: page.pageInfo.totalCount,
     };
+  }
+
+  /**
+   * @description The live library component with this uuid, or null.
+   */
+  async findByUuid(uuid: string): Promise<CmsLibraryComponentObject | null> {
+    if (!isCmsUuid(uuid)) {
+      return null;
+    }
+
+    const component = await this.libraryComponentsRepository.findOne({
+      where: { uuid },
+    });
+
+    return component ? toCmsLibraryComponentObject(component) : null;
   }
 
   async create(

@@ -37,6 +37,17 @@ export class CmsLibraryComponentsResolver {
     );
   }
 
+  @Public()
+  @Query(() => CmsLibraryComponentObject, {
+    description: `A live cms library component by uuid; null when none matches.`,
+    nullable: true,
+  })
+  async cmsLibraryComponent(
+    @Args('uuid', { type: () => String }) uuid: string,
+  ): Promise<CmsLibraryComponentObject | null> {
+    return this.cmsLibraryComponentsService.findByUuid(uuid);
+  }
+
   @UseGuards(CmsWriteGuard)
   @Mutation(() => CmsLibraryComponentObject, {
     description: `Add a component to a live library. BAD_USER_INPUT when propsSchemaJson does not compile.`,

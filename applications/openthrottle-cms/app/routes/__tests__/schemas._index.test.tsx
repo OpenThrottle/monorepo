@@ -90,6 +90,11 @@ describe('routes/schemas._index.tsx', () => {
       ).toBeInTheDocument();
       expect(component.getByText('abc123')).toBeInTheDocument();
       expect(component.getAllByRole('row')).toHaveLength(2);
+      expect(
+        component
+          .getAllByRole('link')
+          .some((link) => link.getAttribute('href') === '/schemas/schema-1'),
+      ).toBe(true);
     });
   });
 

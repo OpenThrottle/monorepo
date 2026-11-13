@@ -1,5 +1,6 @@
 import { render } from '@testing-library/react';
 import * as React from 'react';
+import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 
 import { GlobalTable } from '~/global/components/GlobalTable';
@@ -37,6 +38,7 @@ describe('GlobalTable', () => {
           className={undefined}
           columns={columns}
           emptyState={undefined}
+          getRowHref={undefined}
           getRowId={getRowId}
           rows={rows}
         />,
@@ -60,6 +62,7 @@ describe('GlobalTable', () => {
           className={undefined}
           columns={columns}
           emptyState={undefined}
+          getRowHref={undefined}
           getRowId={getRowId}
           rows={[]}
         />,
@@ -74,12 +77,58 @@ describe('GlobalTable', () => {
           className={undefined}
           columns={columns}
           emptyState="No layouts"
+          getRowHref={undefined}
           getRowId={getRowId}
           rows={[]}
         />,
       );
 
       expect(component.getByText('No layouts')).toBeInTheDocument();
+    });
+  });
+
+  describe('with getRowHref', () => {
+    const renderLinked = (
+      getRowHref: ((row: DemoRow) => string | undefined) | undefined,
+    ) => {
+      return render(
+        <MemoryRouter>
+          <GlobalTable
+            className={undefined}
+            columns={columns}
+            emptyState={undefined}
+            getRowHref={getRowHref}
+            getRowId={getRowId}
+            rows={rows}
+          />
+        </MemoryRouter>,
+      );
+    };
+
+    it('links the first column of each row to its href', () => {
+      const component = renderLinked((row) => `/layouts/${row.uuid}`);
+
+      const links = component.getAllByRole('link');
+      expect(links.map((link) => link.getAttribute('href'))).toEqual([
+        '/layouts/a',
+        '/layouts/b',
+      ]);
+    });
+
+    it('renders no link when getRowHref is undefined', () => {
+      const component = renderLinked(undefined);
+
+      expect(component.queryAllByRole('link')).toHaveLength(0);
+    });
+
+    it('renders no link for a row whose href is undefined', () => {
+      const component = renderLinked((row) => {
+        return row.uuid === 'a' ? `/layouts/${row.uuid}` : undefined;
+      });
+
+      const links = component.getAllByRole('link');
+      expect(links).toHaveLength(1);
+      expect(links[0]?.getAttribute('href')).toBe('/layouts/a');
     });
   });
 });
