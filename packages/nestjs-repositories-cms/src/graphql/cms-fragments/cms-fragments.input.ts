@@ -37,3 +37,23 @@ export class UpdateCmsFragmentInput {
   @Field(() => String)
   uuid!: string;
 }
+
+@InputType({
+  description: `A copy of a live fragment on the same pinned schema version, optionally with a fresh copy of its live subtree.`,
+})
+export class CloneCmsFragmentInput {
+  @Field(() => Boolean, {
+    description: `Also copy every live descendant, with new edges in the same order. Defaults to false (the fragment alone).`,
+    nullable: true,
+  })
+  includeChildren!: boolean | null;
+
+  @Field(() => String, {
+    description: `Name of the copy. Defaults to the source name followed by " (copy)".`,
+    nullable: true,
+  })
+  name!: string | null;
+
+  @Field(() => String)
+  uuid!: string;
+}

@@ -287,6 +287,35 @@ describe.skipIf(!ENABLED)('NestjsRepositoriesCmsModule (live cms DB)', () => {
 
       expect(root?.is_system).toBe(true);
 
+      const draftTypename = `IntegrationDraft${Date.now()}`;
+      const deletedTypename = `IntegrationDeleted${Date.now()}`;
+
+      try {
+        await dataSource.query(
+          `INSERT INTO schemas (typename, version, status, is_deleted) VALUES
+             ($1, '1', 'DRAFT', false),
+             ($2, '1', 'ACTIVE', true),
+             ('Heading', $3, 'ACTIVE', false)`,
+          [draftTypename, deletedTypename, `integration-${Date.now()}`],
+        );
+
+        const available = await layouts.findAvailableTypenames(layout.uuid);
+
+        expect(available).toEqual(
+          expect.arrayContaining(['Button', 'Heading']),
+        );
+        expect(available).not.toContain('Layout');
+        expect(available).not.toContain(draftTypename);
+        expect(available).not.toContain(deletedTypename);
+        expect(new Set(available).size).toBe(available.length);
+        expect(available).toEqual([...available].sort());
+      } finally {
+        await dataSource.query(
+          `DELETE FROM schemas WHERE typename = ANY($1::text[]) OR version LIKE 'integration-%'`,
+          [[draftTypename, deletedTypename]],
+        );
+      }
+
       const heading = await fragments.create({
         name: 'h',
         propertiesJson: '{"copy":"Hi","heading":"h1"}',
@@ -330,6 +359,49 @@ describe.skipIf(!ENABLED)('NestjsRepositoriesCmsModule (live cms DB)', () => {
         button.uuid,
         heading.uuid,
       ]);
+
+      const copy = await fragments.clone({
+        includeChildren: true,
+        name: null,
+        uuid: layout.fragmentUuid,
+      });
+      const copyEdges: unknown = await dataSource.query(
+        `SELECT children_uuid FROM fragments_children WHERE fragment_uuid = $1`,
+        [copy.uuid],
+      );
+      const copyChildUuids = (Array.isArray(copyEdges) ? copyEdges : []).map(
+        (row) => String(Reflect.get(Object(row), 'children_uuid')),
+      );
+
+      created.push(copy.uuid, ...copyChildUuids);
+      expect(copy).toMatchObject({
+        isSystem: false,
+        name: 'Integration (copy)',
+        schemaUuid: tree?.fragments[0]?.schemaUuid,
+      });
+      expect(copyChildUuids).toHaveLength(2);
+      expect(copyChildUuids).not.toContain(heading.uuid);
+
+      const [copiedHeading] = await dataSource.query(
+        `SELECT f.properties FROM fragments_children c
+           JOIN fragments f ON f.uuid = c.children_uuid
+          WHERE c.fragment_uuid = $1 AND f.typename = 'Heading'`,
+        [copy.uuid],
+      );
+
+      expect(copiedHeading?.properties).toEqual({ copy: 'Hi', heading: 'h1' });
+
+      const headings = await fragments.findPage({
+        isSystem: false,
+        skip: 0,
+        take: 100,
+        typename: 'Heading',
+      });
+
+      expect(headings.items.map((item) => item.uuid)).toContain(heading.uuid);
+      expect(headings.items.every((item) => item.typename === 'Heading')).toBe(
+        true,
+      );
 
       await expect(fragments.delete(heading.uuid)).rejects.toMatchObject({
         extensions: { code: 'CONFLICT' },

@@ -1,22 +1,58 @@
 import { UseGuards } from '@nestjs/common';
-import { Args, Mutation, Resolver } from '@nestjs/graphql';
+import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Public } from '@openthrottle/nestjs-auth';
 
+import { toCmsPageOptions } from '../cms-graphql/cms-graphql.utils.ts';
 import { CmsWriteGuard } from '../cms-write-access/cms-write-access.guard.ts';
 import {
+  CloneCmsFragmentInput,
   CreateCmsFragmentInput,
   UpdateCmsFragmentInput,
 } from './cms-fragments.input.ts';
-import { CmsFragmentObject } from './cms-fragments.object.ts';
+import {
+  CmsFragmentListResult,
+  CmsFragmentObject,
+} from './cms-fragments.object.ts';
 import { CmsFragmentsService } from './cms-fragments.service.ts';
 
 /**
- * @description cms fragment mutations. Every mutation runs `CmsWriteGuard`: a signed-in caller the
- * host authorizes for cms writes (openthrottle-server: `cms:write`).
+ * @description cms fragments: a public list, and mutations that each run `CmsWriteGuard` (a
+ * signed-in caller the host authorizes for cms writes; openthrottle-server: `cms:write`).
  * @public
  */
 @Resolver(() => CmsFragmentObject)
 export class CmsFragmentsResolver {
   constructor(private readonly cmsFragmentsService: CmsFragmentsService) {}
+
+  @Public()
+  @Query(() => CmsFragmentListResult, {
+    description: `One page of live cms fragments, oldest first, optionally narrowed by typename and isSystem (false also matches an unset flag). take is clamped to 1–100 (default 25).`,
+  })
+  async cmsFragments(
+    @Args('typename', { nullable: true, type: () => String })
+    typename: string | null,
+    @Args('isSystem', { nullable: true, type: () => Boolean })
+    isSystem: boolean | null,
+    @Args('skip', { nullable: true, type: () => Int }) skip: number | null,
+    @Args('take', { nullable: true, type: () => Int }) take: number | null,
+  ): Promise<CmsFragmentListResult> {
+    return this.cmsFragmentsService.findPage({
+      ...toCmsPageOptions(skip, take),
+      isSystem: isSystem ?? null,
+      typename: typename ?? null,
+    });
+  }
+
+  @UseGuards(CmsWriteGuard)
+  @Mutation(() => CmsFragmentObject, {
+    description: `Copy a live fragment on its pinned schema version, optionally with a fresh copy of its live subtree, in one transaction. The copy has no parent. BAD_USER_INPUT when the subtree is past the tree cap.`,
+  })
+  async cloneCmsFragment(
+    @Args('input', { type: () => CloneCmsFragmentInput })
+    input: CloneCmsFragmentInput,
+  ): Promise<CmsFragmentObject> {
+    return this.cmsFragmentsService.clone(input);
+  }
 
   @UseGuards(CmsWriteGuard)
   @Mutation(() => CmsFragmentObject, {

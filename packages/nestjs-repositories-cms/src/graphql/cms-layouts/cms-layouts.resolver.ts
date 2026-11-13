@@ -57,6 +57,16 @@ export class CmsLayoutsResolver {
     return this.cmsLayoutsService.findByUuid(uuid);
   }
 
+  @Public()
+  @Query(() => [String], {
+    description: `Typenames an editor can add to a live layout: every live ACTIVE schema typename except the root "Layout", sorted. NOT_FOUND when the layout is missing or deleted.`,
+  })
+  async availableCmsTypenames(
+    @Args('layoutUuid', { type: () => String }) layoutUuid: string,
+  ): Promise<string[]> {
+    return this.cmsLayoutsService.findAvailableTypenames(layoutUuid);
+  }
+
   @UseGuards(CmsWriteGuard)
   @Mutation(() => CmsLayoutSummaryObject, {
     description: `Create a layout and its root fragment in one transaction. CONFLICT for a slug in use.`,

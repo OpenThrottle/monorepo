@@ -25,6 +25,7 @@ import {
   CancelPlanRunInput,
   ClaimPlanMessagesInput,
   CleanQueueInput,
+  CloneCmsFragmentInput,
   CloneRepositoryInput,
   CodeSemanticSearchInput,
   CommitsPerPrInput,
@@ -499,6 +500,16 @@ export function CleanQueueInputSchema(): z.ZodObject<
     limit: z.number().nullish(),
     queueName: z.string().min(1),
     state: z.string().min(1),
+  });
+}
+
+export function CloneCmsFragmentInputSchema(): z.ZodObject<
+  Properties<CloneCmsFragmentInput>
+> {
+  return z.object({
+    includeChildren: z.boolean().nullish(),
+    name: z.string().nullish(),
+    uuid: z.string().min(1),
   });
 }
 

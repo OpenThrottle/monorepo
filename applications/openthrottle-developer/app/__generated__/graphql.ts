@@ -831,6 +831,15 @@ export type CleanQueueResultObject = {
   success: Scalars['Boolean']['output'];
 };
 
+/** A copy of a live fragment on the same pinned schema version, optionally with a fresh copy of its live subtree. */
+export type CloneCmsFragmentInput = {
+  /** Also copy every live descendant, with new edges in the same order. Defaults to false (the fragment alone). */
+  includeChildren?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Name of the copy. Defaults to the source name followed by " (copy)". */
+  name?: InputMaybe<Scalars['String']['input']>;
+  uuid: Scalars['String']['input'];
+};
+
 /** Clone a git repository into the managed checkout root and register it. */
 export type CloneRepositoryInput = {
   /** Git clone URL (https or ssh). Cloned with ambient host credentials (SSH agent / gh); OT stores no secrets. */
@@ -846,6 +855,14 @@ export type CmsFragmentChildObject = {
   parentUuid: Scalars['String']['output'];
   /** Position among the parent's children. */
   sortOrder: Scalars['Int']['output'];
+};
+
+/** One page of live cms fragments, oldest first. */
+export type CmsFragmentListResult = {
+  __typename?: 'CmsFragmentListResult';
+  hasNextPage: Scalars['Boolean']['output'];
+  items: Array<CmsFragmentObject>;
+  totalCount: Scalars['Int']['output'];
 };
 
 /** One occurrence of a cms fragment in a layout tree. A fragment shared by two parents appears twice, with different keys. */
@@ -2656,6 +2673,8 @@ export type Mutation = {
   claimPlanMessages: ClaimPlanMessagesResultObject;
   /** Remove finished jobs (completed or failed only) from a queue. Destructive: requires confirm=true. Optional graceMs/limit bound which jobs are removed. */
   cleanQueue: CleanQueueResultObject;
+  /** Copy a live fragment on its pinned schema version, optionally with a fresh copy of its live subtree, in one transaction. The copy has no parent. BAD_USER_INPUT when the subtree is past the tree cap. */
+  cloneCmsFragment: CmsFragmentObject;
   /** Clone a git repository into OPENTHROTTLE_CHECKOUT_ROOT using ambient host credentials, then register it as a managed checkout via the same pipeline as addWorkspaceFolder. A failed clone leaves no rows and no partial directory; OT stores no credentials. */
   cloneRepository: AddWorkspaceFolderPayloadObject;
   /** Connect (or re-connect) a catalog connector for the authenticated user. For api_token connectors the token is stored as a bcrypt hash + masked hint; the raw token is never persisted. */
@@ -3082,6 +3101,10 @@ export type MutationClaimPlanMessagesArgs = {
 
 export type MutationCleanQueueArgs = {
   input: CleanQueueInput;
+};
+
+export type MutationCloneCmsFragmentArgs = {
+  input: CloneCmsFragmentInput;
 };
 
 export type MutationCloneRepositoryArgs = {
@@ -4372,6 +4395,8 @@ export type Query = {
   agentTrajectory?: Maybe<AgentTrajectory>;
   /** List every rater's label on an agent trajectory, most recently updated first. */
   agentTrajectoryLabels: Array<AgentTrajectoryLabel>;
+  /** Typenames an editor can add to a live layout: every live ACTIVE schema typename except the root "Layout", sorted. NOT_FOUND when the layout is missing or deleted. */
+  availableCmsTypenames: Array<Scalars['String']['output']>;
   /** Every blog author, ordered by display name. */
   blogAdminAuthors: Array<BlogAuthorObject>;
   /** One blog post in any state, by id or by slug (exactly one of the two is required, otherwise the query is rejected). BlogPostNotFoundError when no such post exists. */
@@ -4390,6 +4415,8 @@ export type Query = {
   browseDirectory: WorkspaceDirectoryListingObject;
   /** When telemetry last arrived, per (stream, source): skill_events and skill_outcomes by source, token_usage by provider. A source that is absent has never captured; a stale lastCapturedAt means capture may be broken. */
   captureHealth: Array<CaptureHealthRowObject>;
+  /** One page of live cms fragments, oldest first, optionally narrowed by typename and isSystem (false also matches an unset flag). take is clamped to 1–100 (default 25). */
+  cmsFragments: CmsFragmentListResult;
   /** A live cms layout by slug, with its fragment tree; null when none matches. */
   cmsLayout?: Maybe<CmsLayoutObject>;
   /** A live cms layout by uuid, with its fragment tree; null when none matches. */
@@ -4682,6 +4709,10 @@ export type QueryAgentTrajectoryLabelsArgs = {
   trajectoryId: Scalars['ID']['input'];
 };
 
+export type QueryAvailableCmsTypenamesArgs = {
+  layoutUuid: Scalars['String']['input'];
+};
+
 export type QueryBlogAdminPostArgs = {
   id?: InputMaybe<Scalars['ID']['input']>;
   slug?: InputMaybe<Scalars['String']['input']>;
@@ -4706,6 +4737,13 @@ export type QueryBlogPostsArgs = {
 
 export type QueryBrowseDirectoryArgs = {
   path?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type QueryCmsFragmentsArgs = {
+  isSystem?: InputMaybe<Scalars['Boolean']['input']>;
+  skip?: InputMaybe<Scalars['Int']['input']>;
+  take?: InputMaybe<Scalars['Int']['input']>;
+  typename?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type QueryCmsLayoutArgs = {

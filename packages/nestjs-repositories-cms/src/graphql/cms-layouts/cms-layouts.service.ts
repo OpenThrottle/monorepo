@@ -3,7 +3,7 @@ import { InjectDataSource } from '@nestjs/typeorm';
 import { GraphQLError } from 'graphql';
 import { DataSource } from 'typeorm';
 
-import { CMS_CONNECTION } from '../../config/config.constants.ts';
+import { CMS_CONNECTION, CMS_STATUS } from '../../config/config.constants.ts';
 import { Fragment } from '../../modules/fragments/fragment.entity.ts';
 import { FragmentsRepository } from '../../modules/fragments/fragments.repository.ts';
 import { Layout } from '../../modules/layouts/layout.entity.ts';
@@ -166,6 +166,29 @@ export class CmsLayoutsService {
     });
 
     return toCmsLayoutSummaryObject({ ...layout, isDeleted: true });
+  }
+
+  /**
+   * @description The typenames an editor can add to a live layout: every live ACTIVE schema's
+   * typename except the layout root's, distinct and sorted. The layout's libraries are not
+   * consulted (databases/cms/README.md § "Decision: what a layout's available typenames are").
+   * @throws GraphQLError NOT_FOUND when there is no live layout (a malformed uuid included).
+   */
+  async findAvailableTypenames(layoutUuid: string): Promise<string[]> {
+    await this.findLive(layoutUuid);
+
+    const rows: unknown = await this.dataSource.query(
+      `SELECT DISTINCT typename FROM schemas
+        WHERE status = $1 AND is_deleted IS NOT TRUE AND typename <> $2
+        ORDER BY typename`,
+      [CMS_STATUS.ACTIVE, CMS_LAYOUT_ROOT_TYPENAME],
+    );
+
+    return (Array.isArray(rows) ? rows : []).flatMap((row) => {
+      const typename: unknown = Reflect.get(Object(row), 'typename');
+
+      return typeof typename === 'string' ? [typename] : [];
+    });
   }
 
   /**
