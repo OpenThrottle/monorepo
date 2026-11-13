@@ -1,0 +1,15 @@
+fragment CmsSchemaDetail on CmsSchemaObject {
+  createdAt
+  jsonSchemaJson
+  status
+  typename
+  updatedAt
+  uuid
+  version
+}
+
+query CmsSchemaDetail($uuid: String!) {
+  cmsSchema(uuid: $uuid) {
+    ...CmsSchemaDetail
+  }
+}

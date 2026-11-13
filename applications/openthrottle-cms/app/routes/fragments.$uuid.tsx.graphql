@@ -1,0 +1,16 @@
+fragment CmsFragmentDetail on CmsFragmentObject {
+  createdAt
+  isSystem
+  name
+  propertiesJson
+  schemaUuid
+  typename
+  updatedAt
+  uuid
+}
+
+query CmsFragmentDetail($uuid: String!) {
+  cmsFragment(uuid: $uuid) {
+    ...CmsFragmentDetail
+  }
+}

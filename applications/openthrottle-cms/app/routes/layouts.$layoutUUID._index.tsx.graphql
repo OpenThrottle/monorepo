@@ -1,0 +1,26 @@
+fragment CmsLayoutDetail on CmsLayoutObject {
+  createdAt
+  fragments {
+    ...CmsLayoutFragmentNode
+  }
+  name
+  slug
+  status
+  tags
+  updatedAt
+  uuid
+}
+
+fragment CmsLayoutFragmentNode on CmsFragmentNodeObject {
+  depth
+  key
+  name
+  typename
+  uuid
+}
+
+query CmsLayoutDetail($uuid: String!) {
+  cmsLayoutByUuid(uuid: $uuid) {
+    ...CmsLayoutDetail
+  }
+}

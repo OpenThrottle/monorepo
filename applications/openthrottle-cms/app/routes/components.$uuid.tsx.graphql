@@ -1,0 +1,15 @@
+fragment CmsComponentDetail on CmsLibraryComponentObject {
+  code
+  libraryUuid
+  name
+  propsSchemaJson
+  status
+  typename
+  uuid
+}
+
+query CmsComponentDetail($uuid: String!) {
+  cmsLibraryComponent(uuid: $uuid) {
+    ...CmsComponentDetail
+  }
+}

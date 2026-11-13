@@ -5,6 +5,7 @@
  */
 export const GLOBAL_TABLE_COLUMN_KIND = {
   BADGE: 'badge',
+  BOOLEAN: 'boolean',
   CODE: 'code',
   DATE: 'date',
   LIST: 'list',
@@ -19,4 +20,6 @@ export const GLOBAL_TABLE_COLUMN_KIND = {
 export const GLOBAL_TABLE_COPY = {
   empty: `Nothing here yet.`,
   missing: `—`,
+  no: `No`,
+  yes: `Yes`,
 } as const;

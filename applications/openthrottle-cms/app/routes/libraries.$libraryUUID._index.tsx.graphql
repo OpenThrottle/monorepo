@@ -1,0 +1,17 @@
+fragment CmsLibraryDetail on CmsLibraryObject {
+  components {
+    ...CmsLibraryComponentRow
+  }
+  createdAt
+  description
+  name
+  status
+  updatedAt
+  uuid
+}
+
+query CmsLibraryDetail($uuid: String!) {
+  cmsLibrary(uuid: $uuid) {
+    ...CmsLibraryDetail
+  }
+}

@@ -90,6 +90,9 @@ describe('routes/fragments._index.tsx', () => {
       ).toBeInTheDocument();
       expect(component.getByText('Hero heading')).toBeInTheDocument();
       expect(component.getAllByRole('row')).toHaveLength(2);
+      expect(
+        component.getAllByRole('link').map((link) => link.getAttribute('href')),
+      ).toContain('/fragments/fragment-1');
     });
   });
 

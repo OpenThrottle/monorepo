@@ -15,6 +15,7 @@ import type { CmsFragmentTreeRow } from '../cms-fragment-tree/cms-fragment-tree.
 import {
   assertCmsUuid,
   createCmsGraphqlError,
+  isCmsUuid,
   parseCmsJsonObject,
 } from '../cms-graphql/cms-graphql.utils.ts';
 import { CmsSchemaValidationService } from '../cms-schema-validation/cms-schema-validation.service.ts';
@@ -80,6 +81,21 @@ export class CmsFragmentsService {
       items: page.data.map(toCmsFragmentObject),
       totalCount: page.pageInfo.totalCount,
     };
+  }
+
+  /**
+   * @description The live fragment with this uuid, or null.
+   */
+  async findByUuid(uuid: string): Promise<CmsFragmentObject | null> {
+    if (!isCmsUuid(uuid)) {
+      return null;
+    }
+
+    const fragment = await this.fragmentsRepository.findOne({
+      where: { uuid },
+    });
+
+    return fragment ? toCmsFragmentObject(fragment) : null;
   }
 
   /**

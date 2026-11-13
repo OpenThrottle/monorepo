@@ -73,4 +73,40 @@ describe('CmsLibrariesService', () => {
       expect(libraryComponentsRepository.findBy).not.toHaveBeenCalled();
     });
   });
+
+  describe('findByUuid', () => {
+    it('returns null for a non-uuid without querying', async () => {
+      const { librariesRepository, service } = buildService();
+
+      await expect(service.findByUuid('nope')).resolves.toBeNull();
+      expect(librariesRepository.findOne).not.toHaveBeenCalled();
+    });
+
+    it('returns null when no live library matches', async () => {
+      const { librariesRepository, libraryComponentsRepository, service } =
+        buildService();
+      const library = librariesFactory.build();
+
+      vi.mocked(librariesRepository.findOne).mockResolvedValue(null);
+
+      await expect(service.findByUuid(library.uuid)).resolves.toBeNull();
+      expect(libraryComponentsRepository.findBy).not.toHaveBeenCalled();
+    });
+
+    it('returns the library with its components', async () => {
+      const { librariesRepository, libraryComponentsRepository, service } =
+        buildService();
+      const library = librariesFactory.build();
+
+      vi.mocked(librariesRepository.findOne).mockResolvedValue(library);
+      vi.mocked(libraryComponentsRepository.findBy).mockResolvedValue([
+        libraryComponentsFactory.build({ libraryUuid: library.uuid }),
+      ]);
+
+      const found = await service.findByUuid(library.uuid);
+
+      expect(found?.uuid).toBe(library.uuid);
+      expect(found?.components).toHaveLength(1);
+    });
+  });
 });

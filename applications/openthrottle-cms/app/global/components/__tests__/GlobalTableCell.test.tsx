@@ -97,6 +97,42 @@ describe('GlobalTableCell', () => {
     });
   });
 
+  describe('boolean', () => {
+    it('renders Yes for true and No for false', () => {
+      const yes = render(
+        <GlobalTableCell
+          className={undefined}
+          kind={GLOBAL_TABLE_COLUMN_KIND.BOOLEAN}
+          value={true}
+        />,
+      );
+      const no = render(
+        <GlobalTableCell
+          className={undefined}
+          kind={GLOBAL_TABLE_COLUMN_KIND.BOOLEAN}
+          value={false}
+        />,
+      );
+
+      expect(yes.getByText(GLOBAL_TABLE_COPY.yes)).toBeInTheDocument();
+      expect(no.getByText(GLOBAL_TABLE_COPY.no)).toBeInTheDocument();
+    });
+
+    it('renders the placeholder for a non-boolean', () => {
+      const component = render(
+        <GlobalTableCell
+          className={undefined}
+          kind={GLOBAL_TABLE_COLUMN_KIND.BOOLEAN}
+          value="true"
+        />,
+      );
+
+      expect(
+        component.getByText(GLOBAL_TABLE_COPY.missing),
+      ).toBeInTheDocument();
+    });
+  });
+
   describe('code', () => {
     it('renders a code element', () => {
       const component = render(

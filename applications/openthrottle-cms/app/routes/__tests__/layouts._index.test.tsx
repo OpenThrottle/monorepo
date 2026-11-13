@@ -92,6 +92,10 @@ describe('routes/layouts._index.tsx', () => {
       ).toBeInTheDocument();
       expect(component.getByText('Welcome')).toBeInTheDocument();
       expect(component.getAllByRole('row')).toHaveLength(2);
+      expect(component.getByRole('link', { name: 'Welcome' })).toHaveAttribute(
+        'href',
+        '/layouts/layout-1',
+      );
     });
   });
 

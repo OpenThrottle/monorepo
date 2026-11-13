@@ -91,6 +91,30 @@ describe('routes/components._index.tsx', () => {
       expect(component.getByText('library-1')).toBeInTheDocument();
       expect(component.getAllByRole('row')).toHaveLength(2);
     });
+
+    test('links each row to its component detail route', async () => {
+      fetchPublicGraphql.mockResolvedValue({
+        cmsLibraryComponents: buildPage([
+          {
+            libraryUuid: 'library-1',
+            name: 'Heading',
+            status: 'ACTIVE',
+            typename: 'Heading',
+            uuid: 'component-1',
+          },
+        ]),
+      });
+
+      const component = renderRoute();
+
+      await component.findByRole('heading', { level: 1 });
+
+      const hrefs = component
+        .getAllByRole('link')
+        .map((link) => link.getAttribute('href'));
+
+      expect(hrefs).toContain('/components/component-1');
+    });
   });
 
   describe('without rows', () => {

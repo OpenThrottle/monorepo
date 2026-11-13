@@ -13,6 +13,7 @@ import { GlobalTable } from '~/global/components/GlobalTable';
 import { SITE_TITLE } from '~/global/config/settings';
 import { CMS_SCHEMA_COLUMNS } from '~/global/data/data.cms-table-columns';
 import { fetchPublicGraphql } from '~/global/utils/graphql.server';
+import { getSchemaRowHref } from '~/routing/schemas/utils/getSchemaRowHref';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -70,6 +71,7 @@ export default function Component(
           className="mt-6"
           columns={CMS_SCHEMA_COLUMNS}
           emptyState="No schemas yet."
+          getRowHref={getSchemaRowHref}
           getRowId={(row) => row.uuid}
           rows={loaderData.cmsSchemas.items}
         />
