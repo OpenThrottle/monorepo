@@ -1,5 +1,6 @@
 import {
   AddCmsFragmentChildDocument,
+  CreateCmsFragmentChildDocument,
   RemoveCmsFragmentChildDocument,
   ReorderCmsFragmentChildrenDocument,
   UpdateCmsFragmentDocument,
@@ -13,6 +14,7 @@ import {
   readChildOrder,
   readChildUuid,
   readFragmentUpdateForm,
+  readNewChildForm,
   toFragmentActionFailure,
 } from '~/routing/fragments/utils/fragment-action';
 
@@ -33,7 +35,8 @@ const invalidForm = (): FragmentActionResult => {
 
 /**
  * @description Runs one posted intent of the fragment route against `uuid` as the signed-in user:
- * an update (name + properties) or a child edge add, remove or reorder. Never throws; a refusal
+ * an update (name + properties), a child edge add, remove or reorder, or a new child created
+ * and attached. Never throws; a refusal
  * comes back as a failed {@link FragmentActionResult}.
  */
 export const runFragmentAction = async (
@@ -60,6 +63,23 @@ export const runFragmentAction = async (
         if (!childUuid) return invalidForm();
         await fetchAuthGraphql(request, AddCmsFragmentChildDocument, {
           childUuid,
+          parentUuid: uuid,
+        });
+        break;
+      }
+      case FRAGMENT_INTENT.CREATE_CHILD: {
+        const form = readNewChildForm(formData);
+
+        if (!form) return invalidForm();
+        // Two writes, not one transaction: a failed attach leaves a parentless fragment, which
+        // the fragments list still shows and a later add can attach.
+        const created = await fetchAuthGraphql(
+          request,
+          CreateCmsFragmentChildDocument,
+          { input: { ...form, propertiesJson: null } },
+        );
+        await fetchAuthGraphql(request, AddCmsFragmentChildDocument, {
+          childUuid: created.createCmsFragment.uuid,
           parentUuid: uuid,
         });
         break;

@@ -10,6 +10,9 @@ import {
   parseCmsSchema,
 } from '@openthrottle/react-router-cms-core';
 
+import type { CmsFragmentNodeInput } from '~/global/utils/toCmsFragments';
+import { toCmsFragments } from '~/global/utils/toCmsFragments';
+
 /**
  * @description Why a GraphQL record could not become a cms-core row.
  */
@@ -179,6 +182,8 @@ export interface CmsFragmentWithSchemaInput extends CmsFragmentObjectInput {
   readonly children?: readonly CmsFragmentObjectInput[] | null | undefined;
   /** Optional because codegen emits nullable GraphQL fields as optional members. */
   readonly schema?: CmsSchemaObjectInput | null | undefined;
+  /** The fragment's live subtree, root first; optional for the same codegen reason. */
+  readonly tree?: readonly CmsFragmentNodeInput[] | null | undefined;
 }
 
 /**
@@ -192,6 +197,8 @@ export interface CmsFragmentEditorRecords {
   readonly fragment: CmsFragmentRecord;
   /** Whether the schema has a `children` property, i.e. the fragment is a container. */
   readonly hasChildren: boolean;
+  /** The fragment's children for the preview, each with its own subtree. */
+  readonly previewChildren: readonly CmsFragment[];
   readonly schema: CmsParsedSchema;
 }
 
@@ -207,6 +214,36 @@ export type CmsFragmentEditorFailure = CmsRecordFailure | 'missing-schema';
 export type CmsFragmentEditorResult =
   | { readonly ok: false; readonly reason: CmsFragmentEditorFailure }
   | { readonly ok: true; readonly value: CmsFragmentEditorRecords };
+
+const isPropertyRecord = (
+  value: unknown,
+): value is Readonly<Record<string, unknown>> => {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+};
+
+/**
+ * @description The preview's children: the subtree under the `tree` root when it was loaded,
+ * otherwise the direct children alone (one level, no grandchildren).
+ */
+const toPreviewChildren = (
+  tree: readonly CmsFragmentNodeInput[],
+  children: readonly CmsFragmentRecord[],
+): readonly CmsFragment[] => {
+  const [root] = toCmsFragments(tree);
+
+  if (root) {
+    return root.children;
+  }
+
+  return children.map((child) => {
+    return {
+      children: [],
+      properties: isPropertyRecord(child.properties) ? child.properties : {},
+      typename: child.typename,
+      uuid: child.uuid,
+    };
+  });
+};
 
 /**
  * @description Adapts a `cmsFragment` with its pinned `schema` selected into the editor's records.
@@ -239,46 +276,34 @@ export const toCmsFragmentEditorRecords = (
     return getFormFieldKind(key, jsonSchema) === 'children';
   });
 
+  const children = (fragment.children ?? []).map(toCmsChildRecord);
+
   return {
     ok: true,
     value: {
-      children: (fragment.children ?? []).map(toCmsChildRecord),
+      children,
       draft: draft.value,
       fragment: record.value,
       hasChildren,
+      previewChildren: toPreviewChildren(fragment.tree ?? [], children),
       schema: schema.value,
     },
   };
 };
 
-const isPropertyRecord = (
-  value: unknown,
-): value is Readonly<Record<string, unknown>> => {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-};
-
 /**
- * @description The editor's fragment as the one-root tree the preview renders: its stored
- * properties (the preview merges the draft over them) and its direct children. Grandchildren are
- * not loaded, so a nested container previews empty.
+ * @description The edited fragment as the one-root tree the preview renders: its stored
+ * properties (the preview merges the draft over them, for this fragment only) and its children,
+ * each with its own subtree, so a container inside a container previews its grandchildren.
  */
 export const toCmsPreviewFragments = (
   records: CmsFragmentEditorRecords,
 ): readonly CmsFragment[] => {
-  const { children, draft, fragment } = records;
+  const { draft, fragment, previewChildren } = records;
 
   return [
     {
-      children: children.map((child) => {
-        return {
-          children: [],
-          properties: isPropertyRecord(child.properties)
-            ? child.properties
-            : {},
-          typename: child.typename,
-          uuid: child.uuid,
-        };
-      }),
+      children: previewChildren,
       properties: draft,
       typename: fragment.typename,
       uuid: fragment.uuid,

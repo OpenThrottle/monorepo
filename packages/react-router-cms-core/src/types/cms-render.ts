@@ -74,7 +74,13 @@ export interface CmsFormChildren {
   readonly addHref: string;
   readonly fragments: readonly CmsFragmentRecord[];
   readonly getFragmentHref: (fragment: CmsFragmentRecord) => string;
+  /** Called once per finished drag with the order it left: save the order here. */
+  readonly onDrop:
+    ((fragments: readonly CmsFragmentRecord[]) => void) | undefined;
   readonly onRemove: (fragment: CmsFragmentRecord) => void;
-  /** Called with the new order; the list is controlled, so apply it to `fragments`. */
+  /**
+   * Called with the new order on every hover swap; the list is controlled, so apply it to
+   * `fragments`. Do not save from here — that is one request per row crossed; use `onDrop`.
+   */
   readonly onReorder: (fragments: readonly CmsFragmentRecord[]) => void;
 }

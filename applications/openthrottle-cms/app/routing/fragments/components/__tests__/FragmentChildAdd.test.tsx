@@ -1,29 +1,30 @@
 import { render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
-import { createRoutesStub } from 'react-router';
+import { createRoutesStub, useLocation } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
 import { FRAGMENT_EDITOR_COPY } from '~/routing/fragments/data/data.copy';
 import { FRAGMENT_INTENT } from '~/routing/fragments/data/data.intents';
-import type { FragmentChildCandidate } from '~/routing/fragments/types/fragment-children';
+import { MOCK_FRAGMENT_CHILD_PICKER } from '~/routing/fragments/data/mock.fragment-editor';
+import type { FragmentChildPicker } from '~/routing/fragments/types/fragment-children';
 
 import { FragmentChildAdd } from '../FragmentChildAdd';
 
-const CANDIDATES: readonly FragmentChildCandidate[] = [
-  { name: 'Intro', typename: 'Heading', uuid: 'child-1' },
-  { name: '', typename: 'Button', uuid: 'child-2' },
-];
-
-const renderAdd = (candidates: readonly FragmentChildCandidate[]) => {
+const renderAdd = (picker: FragmentChildPicker, url = '/') => {
   const submitted: FormData[] = [];
   const Component = () => {
+    const location = useLocation();
+
     return (
-      <FragmentChildAdd
-        candidates={candidates}
-        className={undefined}
-        id="add-child"
-      />
+      <>
+        <FragmentChildAdd
+          className={undefined}
+          id="add-child"
+          picker={picker}
+        />
+        <output data-testid="search">{location.search}</output>
+      </>
     );
   };
   const action = async (args: { readonly request: Request }) => {
@@ -32,13 +33,16 @@ const renderAdd = (candidates: readonly FragmentChildCandidate[]) => {
   };
   const RoutesStub = createRoutesStub([{ Component, action, path: '/' }]);
 
-  return { component: render(<RoutesStub />), submitted };
+  return {
+    component: render(<RoutesStub initialEntries={[url]} />),
+    submitted,
+  };
 };
 
 describe('FragmentChildAdd', () => {
   describe('with candidates', () => {
     test('posts the chosen fragment with the addChild intent', async () => {
-      const { component, submitted } = renderAdd(CANDIDATES);
+      const { component, submitted } = renderAdd(MOCK_FRAGMENT_CHILD_PICKER);
 
       await userEvent.click(
         component.getByRole('combobox', {
@@ -60,7 +64,10 @@ describe('FragmentChildAdd', () => {
 
   describe('without candidates', () => {
     test('disables the picker and the button', () => {
-      const { component } = renderAdd([]);
+      const { component } = renderAdd({
+        ...MOCK_FRAGMENT_CHILD_PICKER,
+        candidates: [],
+      });
 
       expect(
         component.getByRole('button', { name: FRAGMENT_EDITOR_COPY.addChild }),
@@ -70,6 +77,62 @@ describe('FragmentChildAdd', () => {
           name: FRAGMENT_EDITOR_COPY.addChildHeading,
         }),
       ).toBeDisabled();
+    });
+  });
+
+  describe('paging', () => {
+    test('links to the next page, keeping the filter', () => {
+      const { component } = renderAdd(
+        { ...MOCK_FRAGMENT_CHILD_PICKER, typename: 'Heading' },
+        '/?childTypename=Heading',
+      );
+
+      expect(
+        component.getByRole('link', { name: FRAGMENT_EDITOR_COPY.nextPage }),
+      ).toHaveAttribute('href', '/?childTypename=Heading&childPage=1');
+      expect(
+        component.queryByRole('link', {
+          name: FRAGMENT_EDITOR_COPY.previousPage,
+        }),
+      ).toBeNull();
+    });
+
+    test('links back to the first page from page two', () => {
+      const { component } = renderAdd(
+        { ...MOCK_FRAGMENT_CHILD_PICKER, hasNextPage: false, page: 1 },
+        '/?childPage=1',
+      );
+
+      expect(
+        component.getByRole('link', {
+          name: FRAGMENT_EDITOR_COPY.previousPage,
+        }),
+      ).toHaveAttribute('href', '/');
+      expect(
+        component.queryByRole('link', { name: FRAGMENT_EDITOR_COPY.nextPage }),
+      ).toBeNull();
+    });
+  });
+
+  describe('filtering', () => {
+    test('navigates to the first page of the chosen typename', async () => {
+      const { component } = renderAdd(
+        { ...MOCK_FRAGMENT_CHILD_PICKER, page: 2 },
+        '/?childPage=2',
+      );
+
+      await userEvent.click(
+        component.getByRole('combobox', {
+          name: FRAGMENT_EDITOR_COPY.filterChildrenLabel,
+        }),
+      );
+      await userEvent.click(component.getByRole('option', { name: 'Button' }));
+
+      await waitFor(() => {
+        expect(component.getByTestId('search')).toHaveTextContent(
+          '?childTypename=Button',
+        );
+      });
     });
   });
 });

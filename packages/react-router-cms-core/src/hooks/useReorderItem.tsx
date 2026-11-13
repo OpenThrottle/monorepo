@@ -11,6 +11,8 @@ import { shouldReorderOnHover } from '../utils/shouldReorderOnHover';
 export interface UseReorderItemOptions {
   readonly id: string;
   readonly index: number;
+  /** Called once when a drag of this row ends, dropped or not — after every `onMove` it caused. */
+  readonly onDrop: (() => void) | undefined;
   readonly onMove: (dragIndex: number, hoverIndex: number) => void;
 }
 
@@ -27,13 +29,15 @@ export interface UseReorderItemResult {
 /**
  * @description Wires one row of a reorder group into react-dnd. Attach `rowRef` to the row (the
  * drop target and drag preview) and `handleRef` to its grab handle (the only drag source), so the
- * rest of the row stays clickable and selectable. Needs a `DndProvider` above it.
+ * rest of the row stays clickable and selectable. `onMove` fires on every hover swap; `onDrop`
+ * fires once when the drag ends, so a caller that persists the order saves once per drag. Needs a
+ * `DndProvider` above it.
  * @public
  */
 export const useReorderItem = (
   options: UseReorderItemOptions,
 ): UseReorderItemResult => {
-  const { id, index, onMove } = options;
+  const { id, index, onDrop, onMove } = options;
 
   // Hooks
   const rowNode = React.useRef<HTMLElement | null>(null);
@@ -71,6 +75,9 @@ export const useReorderItem = (
 
   const [{ isDragging }, drag, preview] = useDrag({
     collect: (monitor) => ({ isDragging: monitor.isDragging() }),
+    end: () => {
+      onDrop?.();
+    },
     item: () => ({ id, index }),
     type: CMS_REORDER_DRAG_TYPE,
   });

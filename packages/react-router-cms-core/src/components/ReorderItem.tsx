@@ -12,6 +12,8 @@ export interface ReorderItemProps {
   readonly className: string | undefined;
   readonly id: string;
   readonly index: number;
+  /** Called once when a drag of this row ends. */
+  readonly onDrop: (() => void) | undefined;
   readonly onMove: (dragIndex: number, hoverIndex: number) => void;
 }
 
@@ -21,12 +23,13 @@ export interface ReorderItemProps {
  * @public
  */
 export const ReorderItem = (props: ReorderItemProps): React.ReactElement => {
-  const { children, className, id, index, onMove } = props;
+  const { children, className, id, index, onDrop, onMove } = props;
 
   // Hooks
   const { handleRef, handlerId, isDragging, rowRef } = useReorderItem({
     id,
     index,
+    onDrop,
     onMove,
   });
 

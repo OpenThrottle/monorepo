@@ -27,6 +27,7 @@ const bindings: CmsFormChildren = {
   addHref: '/add',
   fragments: MOCK_FRAGMENT_RECORDS,
   getFragmentHref: (fragment) => `/edit/${fragment.uuid}`,
+  onDrop: undefined,
   onRemove: vi.fn(),
   onReorder: vi.fn(),
 };

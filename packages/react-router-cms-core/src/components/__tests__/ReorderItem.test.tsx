@@ -14,7 +14,13 @@ describe('ReorderItem', () => {
   beforeEach(() => {
     component = render(
       <DndProvider backend={HTML5Backend}>
-        <ReorderItem className={undefined} id="a" index={0} onMove={vi.fn()}>
+        <ReorderItem
+          className={undefined}
+          id="a"
+          index={0}
+          onDrop={undefined}
+          onMove={vi.fn()}
+        >
           Row content
         </ReorderItem>
       </DndProvider>,

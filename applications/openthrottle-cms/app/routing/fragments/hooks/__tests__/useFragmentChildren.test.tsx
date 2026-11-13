@@ -2,9 +2,8 @@ import type { CmsFragmentRecord } from '@openthrottle/react-router-cms-core';
 import { act, render, waitFor } from '@testing-library/react';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
-import { afterEach, describe, expect, test, vi } from 'vitest';
+import { describe, expect, test } from 'vitest';
 
-import { FRAGMENT_CHILDREN_REORDER_DELAY_MS } from '~/routing/fragments/data/data.children';
 import { FRAGMENT_INTENT } from '~/routing/fragments/data/data.intents';
 import { MOCK_CONTAINER_EDITOR_RECORDS } from '~/routing/fragments/data/mock.fragment-editor';
 
@@ -34,10 +33,6 @@ const renderBindings = (children: readonly CmsFragmentRecord[]) => {
 };
 
 describe('useFragmentChildren', () => {
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
   test('starts from the saved children and links each to its edit page', async () => {
     const { current } = renderBindings(CHILDREN);
 
@@ -51,8 +46,7 @@ describe('useFragmentChildren', () => {
     expect(current.bindings?.getFragmentHref(first)).toBe('/fragments/child-1');
   });
 
-  test('applies a new order at once and saves it once the drag settles', async () => {
-    vi.useFakeTimers({ shouldAdvanceTime: true });
+  test('applies each swap at once and saves once on drop', async () => {
     const { current, submitted } = renderBindings(CHILDREN);
     const reversed = [...CHILDREN].reverse();
 
@@ -60,6 +54,7 @@ describe('useFragmentChildren', () => {
       expect(current.bindings).toBeDefined();
     });
     act(() => {
+      current.bindings?.onReorder(reversed);
       current.bindings?.onReorder(CHILDREN);
       current.bindings?.onReorder(reversed);
     });
@@ -67,8 +62,8 @@ describe('useFragmentChildren', () => {
     expect(current.bindings?.fragments).toEqual(reversed);
     expect(submitted).toHaveLength(0);
 
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(FRAGMENT_CHILDREN_REORDER_DELAY_MS);
+    act(() => {
+      current.bindings?.onDrop?.(reversed);
     });
 
     await waitFor(() => {
@@ -76,5 +71,21 @@ describe('useFragmentChildren', () => {
     });
     expect(submitted[0]?.get('intent')).toBe(FRAGMENT_INTENT.REORDER_CHILDREN);
     expect(submitted[0]?.get('childUuids')).toBe('["child-2","child-1"]');
+  });
+
+  test('saves nothing for a drop that left the order unchanged', async () => {
+    const { current, submitted } = renderBindings(CHILDREN);
+
+    await waitFor(() => {
+      expect(current.bindings).toBeDefined();
+    });
+    act(() => {
+      current.bindings?.onDrop?.(CHILDREN);
+    });
+
+    await new Promise((resolve) => {
+      setTimeout(resolve, 0);
+    });
+    expect(submitted).toHaveLength(0);
   });
 });

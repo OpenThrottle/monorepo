@@ -6,7 +6,10 @@ import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
 import { FRAGMENT_PREVIEW_COPY } from '~/routing/fragments/data/data.copy';
-import { MOCK_FRAGMENT_EDITOR_RECORDS } from '~/routing/fragments/data/mock.fragment-editor';
+import {
+  MOCK_FRAGMENT_CHILD_PICKER,
+  MOCK_FRAGMENT_EDITOR_RECORDS,
+} from '~/routing/fragments/data/mock.fragment-editor';
 
 import { FragmentEditor } from '../FragmentEditor';
 import { FragmentPreview } from '../FragmentPreview';
@@ -17,7 +20,7 @@ const renderPair = () => {
     return (
       <Provider>
         <FragmentEditor
-          childCandidates={[]}
+          childPicker={MOCK_FRAGMENT_CHILD_PICKER}
           className={undefined}
           records={records}
           result={undefined}

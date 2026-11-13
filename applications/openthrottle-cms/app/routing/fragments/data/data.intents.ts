@@ -3,6 +3,7 @@
  */
 export const FRAGMENT_INTENT = {
   ADD_CHILD: 'addChild',
+  CREATE_CHILD: 'createChild',
   REMOVE_CHILD: 'removeChild',
   REORDER_CHILDREN: 'reorderChildren',
   UPDATE: 'updateFragment',

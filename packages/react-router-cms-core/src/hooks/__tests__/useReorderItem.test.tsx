@@ -13,7 +13,13 @@ const wrapper = (props: { readonly children: React.ReactNode }) => {
 describe('useReorderItem', () => {
   test('is idle before any drag starts', () => {
     const { result } = renderHook(
-      () => useReorderItem({ id: 'a', index: 0, onMove: vi.fn() }),
+      () =>
+        useReorderItem({
+          id: 'a',
+          index: 0,
+          onDrop: undefined,
+          onMove: vi.fn(),
+        }),
       { wrapper },
     );
 
@@ -23,7 +29,13 @@ describe('useReorderItem', () => {
 
   test('returns separate row and handle refs', () => {
     const { result } = renderHook(
-      () => useReorderItem({ id: 'a', index: 0, onMove: vi.fn() }),
+      () =>
+        useReorderItem({
+          id: 'a',
+          index: 0,
+          onDrop: undefined,
+          onMove: vi.fn(),
+        }),
       { wrapper },
     );
 

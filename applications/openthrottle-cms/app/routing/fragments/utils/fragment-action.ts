@@ -87,6 +87,36 @@ export const readChildUuid = (formData: FormData): string | undefined => {
 };
 
 /**
+ * @description The fields the create-child form posts.
+ */
+export interface FragmentNewChildForm {
+  readonly name: string;
+  readonly typename: string;
+}
+
+/**
+ * @description Reads a new child from the posted form: a `typename` is required; a blank `name`
+ * falls back to the typename, since the server requires one.
+ */
+export const readNewChildForm = (
+  formData: FormData,
+): FragmentNewChildForm | undefined => {
+  const typename = formData.get('typename');
+  const name = formData.get('name');
+
+  if (typeof typename !== 'string' || typename.trim() === '') {
+    return undefined;
+  }
+
+  const trimmed = typeof name === 'string' ? name.trim() : '';
+
+  return {
+    name: trimmed === '' ? typename.trim() : trimmed,
+    typename: typename.trim(),
+  };
+};
+
+/**
  * @description The posted `childUuids` (a JSON array of uuids, in the new order), or `undefined`
  * when it is not one.
  */

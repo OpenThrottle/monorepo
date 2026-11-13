@@ -46,6 +46,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   const canonical: string = url.href;
   const _header = request.headers.get('cookie');
   const env = {
+    API_URL_EXTERNAL: process.env.API_URL_EXTERNAL,
     APP_ENV: process.env.APP_ENV,
     APP_NAME: process.env.APP_NAME,
     APP_NAME_SHORT: process.env.APP_NAME_SHORT,

@@ -545,4 +545,87 @@ describe('CmsFragmentsService', () => {
       });
     });
   });
+
+  describe('findTree', () => {
+    it('returns [] for a non-uuid', async () => {
+      const { fragmentsRepository, service } = buildService();
+
+      await expect(service.findTree('nope')).resolves.toEqual([]);
+      expect(fragmentsRepository.findTreeRows).not.toHaveBeenCalled();
+    });
+
+    it('returns the subtree as pre-order nodes, grandchildren included', async () => {
+      const { fragmentsRepository, service } = buildService();
+      const [root, child, grandchild] = fragmentsFactory.buildList(3);
+
+      if (!root || !child || !grandchild) {
+        throw new Error('fragmentsFactory.buildList returned too few rows');
+      }
+
+      const row = {
+        edgeCreatedAt: null,
+        isSystem: false,
+        properties: { copy: 'x' },
+        schemaUuid: root.schemaUuid,
+        typename: 'Grid',
+      };
+
+      vi.mocked(fragmentsRepository.findTreeRows).mockResolvedValue({
+        ok: true,
+        rows: [
+          {
+            ...row,
+            depth: 0,
+            name: 'root',
+            path: [root.uuid],
+            position: 0,
+            uuid: root.uuid,
+          },
+          {
+            ...row,
+            depth: 1,
+            name: 'child',
+            path: [root.uuid, child.uuid],
+            position: 0,
+            uuid: child.uuid,
+          },
+          {
+            ...row,
+            depth: 2,
+            name: 'grandchild',
+            path: [root.uuid, child.uuid, grandchild.uuid],
+            position: 0,
+            uuid: grandchild.uuid,
+          },
+        ],
+      });
+
+      const nodes = await service.findTree(root.uuid);
+
+      expect(fragmentsRepository.findTreeRows).toHaveBeenCalledWith(root.uuid);
+      expect(nodes.map((node) => node.name)).toEqual([
+        'root',
+        'child',
+        'grandchild',
+      ]);
+      expect(nodes[0]?.parentKey).toBeNull();
+      expect(nodes[1]?.childKeys).toEqual([
+        `${root.uuid}/${child.uuid}/${grandchild.uuid}`,
+      ]);
+      expect(nodes[2]?.propertiesJson).toBe('{"copy":"x"}');
+    });
+
+    it('is CMS_TREE_TOO_LARGE past the node cap', async () => {
+      const { fragmentsRepository, service } = buildService();
+
+      vi.mocked(fragmentsRepository.findTreeRows).mockResolvedValue({
+        ok: false,
+        reason: 'too-large',
+      });
+
+      await expect(
+        service.findTree(fragmentsFactory.build().uuid),
+      ).rejects.toMatchObject({ extensions: { code: 'CMS_TREE_TOO_LARGE' } });
+    });
+  });
 });

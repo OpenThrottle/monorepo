@@ -11,6 +11,7 @@ import {
 import { Public } from '@openthrottle/nestjs-auth';
 
 import { toCmsPageOptions } from '../cms-graphql/cms-graphql.utils.ts';
+import { CmsFragmentNodeObject } from '../cms-layouts/cms-layouts.object.ts';
 import { CmsSchemaObject } from '../cms-schemas/cms-schemas.object.ts';
 import { CmsWriteGuard } from '../cms-write-access/cms-write-access.guard.ts';
 import {
@@ -70,6 +71,15 @@ export class CmsFragmentsResolver {
     @Parent() fragment: CmsFragmentObject,
   ): Promise<CmsFragmentObject[]> {
     return this.cmsFragmentsService.findChildren(fragment.uuid);
+  }
+
+  @ResolveField('tree', () => [CmsFragmentNodeObject], {
+    description: `The fragment's live subtree in pre-order, the same node shape as cmsLayout.fragments: this fragment first (depth 0, no parentKey), each node before its children. Cut below depth 10; soft-deleted fragments and their subtrees are left out; CMS_TREE_TOO_LARGE past the node cap. One query per fragment: select it on a single fragment, not across a list.`,
+  })
+  async tree(
+    @Parent() fragment: CmsFragmentObject,
+  ): Promise<CmsFragmentNodeObject[]> {
+    return this.cmsFragmentsService.findTree(fragment.uuid);
   }
 
   @ResolveField('schema', () => CmsSchemaObject, {
