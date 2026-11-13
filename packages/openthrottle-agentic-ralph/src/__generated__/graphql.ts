@@ -904,6 +904,8 @@ export type CmsFragmentObject = {
   schema?: Maybe<CmsSchemaObject>;
   /** The schema version the properties are validated against; fixed at creation. */
   schemaUuid: Scalars['String']['output'];
+  /** The fragment's live subtree in pre-order, the same node shape as cmsLayout.fragments: this fragment first (depth 0, no parentKey), each node before its children. Cut below depth 10; soft-deleted fragments and their subtrees are left out; CMS_TREE_TOO_LARGE past the node cap. One query per fragment: select it on a single fragment, not across a list. */
+  tree: Array<CmsFragmentNodeObject>;
   typename: Scalars['String']['output'];
   updatedAt: Scalars['DateTime']['output'];
   uuid: Scalars['String']['output'];

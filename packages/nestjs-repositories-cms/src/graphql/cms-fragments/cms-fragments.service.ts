@@ -13,12 +13,15 @@ import type { Schema } from '../../modules/schemas/schema.entity.ts';
 import { SchemasRepository } from '../../modules/schemas/schemas.repository.ts';
 import { CMS_FRAGMENT_TREE_MAX_NODES } from '../cms-fragment-tree/cms-fragment-tree.constants.ts';
 import type { CmsFragmentTreeRow } from '../cms-fragment-tree/cms-fragment-tree.types.ts';
+import { buildCmsFragmentTreeNodes } from '../cms-fragment-tree/cms-fragment-tree.utils.ts';
 import {
   assertCmsUuid,
   createCmsGraphqlError,
   isCmsUuid,
   parseCmsJsonObject,
 } from '../cms-graphql/cms-graphql.utils.ts';
+import { toCmsFragmentNodeObject } from '../cms-layouts/cms-layouts.mapper.ts';
+import type { CmsFragmentNodeObject } from '../cms-layouts/cms-layouts.object.ts';
 import { CmsSchemaValidationService } from '../cms-schema-validation/cms-schema-validation.service.ts';
 import { toCmsSchemaObject } from '../cms-schemas/cms-schemas.mapper.ts';
 import type { CmsSchemaObject } from '../cms-schemas/cms-schemas.object.ts';
@@ -128,6 +131,29 @@ export class CmsFragmentsService {
         ? [toCmsFragmentObject(edge.child)]
         : [];
     });
+  }
+
+  /**
+   * @description The fragment's live subtree as the flat pre-order node list `cmsLayout` serves:
+   * the fragment itself first (depth 0), each node before its children. `[]` for a non-uuid.
+   * @throws GraphQLError CMS_TREE_TOO_LARGE past the node cap — the read fails rather than
+   * truncating, as `cmsLayout` does.
+   */
+  async findTree(uuid: string): Promise<CmsFragmentNodeObject[]> {
+    if (!isCmsUuid(uuid)) {
+      return [];
+    }
+
+    const result = await this.fragmentsRepository.findTreeRows(uuid);
+
+    if (!result.ok) {
+      throw createCmsGraphqlError(
+        'CMS_TREE_TOO_LARGE',
+        `Fragment "${uuid}" has more than ${CMS_FRAGMENT_TREE_MAX_NODES} fragment occurrences`,
+      );
+    }
+
+    return buildCmsFragmentTreeNodes(result.rows).map(toCmsFragmentNodeObject);
   }
 
   /**

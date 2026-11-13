@@ -181,6 +181,11 @@ type CmsFragmentObject {
   children: [CmsFragmentObject!]!
 
   """
+  The fragment's live subtree in pre-order, the same node shape as cmsLayout.fragments: this fragment first (depth 0, no parentKey), each node before its children. Cut below depth 10; soft-deleted fragments and their subtrees are left out; CMS_TREE_TOO_LARGE past the node cap. One query per fragment: select it on a single fragment, not across a list.
+  """
+  tree: [CmsFragmentNodeObject!]!
+
+  """
   The schema version this fragment is pinned to, even when that version has since been soft-deleted; null only when the row is gone. One query per fragment: select it on a single fragment, not across a list.
   """
   schema: CmsSchemaObject
@@ -195,36 +200,6 @@ scalar DateTime
 type CmsFragmentListResult {
   hasNextPage: Boolean!
   items: [CmsFragmentObject!]!
-  totalCount: Int!
-}
-
-"""One version of the JSON Schema for a cms fragment typename."""
-type CmsSchemaObject {
-  createdAt: DateTime!
-
-  """
-  The JSON Schema as a JSON object string (repo convention: no JSON scalar).
-  """
-  jsonSchemaJson: String!
-
-  """
-  ACTIVE | DISABLED | DRAFT. At most one version per typename is meant to be ACTIVE.
-  """
-  status: String
-  typename: String!
-  updatedAt: DateTime!
-  uuid: String!
-
-  """
-  Content-hash version of the schema (16 hex characters for generated schemas).
-  """
-  version: String!
-}
-
-"""One page of live cms schemas, newest first, then by typename."""
-type CmsSchemaListResult {
-  hasNextPage: Boolean!
-  items: [CmsSchemaObject!]!
   totalCount: Int!
 }
 
@@ -315,6 +290,36 @@ type CmsLayoutSummaryObject {
 type CmsLayoutListResult {
   hasNextPage: Boolean!
   items: [CmsLayoutSummaryObject!]!
+  totalCount: Int!
+}
+
+"""One version of the JSON Schema for a cms fragment typename."""
+type CmsSchemaObject {
+  createdAt: DateTime!
+
+  """
+  The JSON Schema as a JSON object string (repo convention: no JSON scalar).
+  """
+  jsonSchemaJson: String!
+
+  """
+  ACTIVE | DISABLED | DRAFT. At most one version per typename is meant to be ACTIVE.
+  """
+  status: String
+  typename: String!
+  updatedAt: DateTime!
+  uuid: String!
+
+  """
+  Content-hash version of the schema (16 hex characters for generated schemas).
+  """
+  version: String!
+}
+
+"""One page of live cms schemas, newest first, then by typename."""
+type CmsSchemaListResult {
+  hasNextPage: Boolean!
+  items: [CmsSchemaObject!]!
   totalCount: Int!
 }
 

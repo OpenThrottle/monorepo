@@ -15,6 +15,7 @@ import { FRAGMENT_EDITOR_COPY } from '~/routing/fragments/data/data.copy';
 import { FRAGMENT_INTENT } from '~/routing/fragments/data/data.intents';
 import {
   MOCK_CONTAINER_EDITOR_RECORDS,
+  MOCK_FRAGMENT_CHILD_PICKER,
   MOCK_FRAGMENT_EDITOR_RECORDS,
 } from '~/routing/fragments/data/mock.fragment-editor';
 import type { FragmentActionResult } from '~/routing/fragments/types/fragment-action';
@@ -32,9 +33,12 @@ const renderEditor = (
       <DndProvider backend={HTML5Backend}>
         <Provider key={records.fragment.uuid}>
           <FragmentEditor
-            childCandidates={[
-              { name: 'Spare', typename: 'Heading', uuid: 'spare-1' },
-            ]}
+            childPicker={{
+              ...MOCK_FRAGMENT_CHILD_PICKER,
+              candidates: [
+                { name: 'Spare', typename: 'Heading', uuid: 'spare-1' },
+              ],
+            }}
             className={undefined}
             records={records}
             result={result}

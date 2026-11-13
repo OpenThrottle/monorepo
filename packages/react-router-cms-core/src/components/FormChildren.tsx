@@ -28,6 +28,7 @@ export const FormChildren = (props: FormChildrenProps): React.ReactElement => {
     className,
     fragments,
     getFragmentHref,
+    onDrop,
     onRemove,
     onReorder,
   } = props;
@@ -87,6 +88,7 @@ export const FormChildren = (props: FormChildrenProps): React.ReactElement => {
       <ReorderGroup<CmsFragmentRecord>
         className="px-4"
         getItemId={(fragment) => fragment.uuid}
+        onDrop={onDrop}
         renderItem={renderItem}
         source={{ items: fragments, kind: 'controlled', onReorder }}
       />

@@ -19,6 +19,15 @@ fragment CmsFragmentEditSchema on CmsSchemaObject {
   version
 }
 
+fragment CmsFragmentTreeNode on CmsFragmentNodeObject {
+  childKeys
+  key
+  parentKey
+  propertiesJson
+  typename
+  uuid
+}
+
 query CmsFragmentDetail($uuid: String!) {
   cmsFragment(uuid: $uuid) {
     children {
@@ -27,6 +36,9 @@ query CmsFragmentDetail($uuid: String!) {
     ...CmsFragmentDetail
     schema {
       ...CmsFragmentEditSchema
+    }
+    tree {
+      ...CmsFragmentTreeNode
     }
   }
 }
@@ -39,13 +51,26 @@ mutation UpdateCmsFragment($input: UpdateCmsFragmentInput!) {
   }
 }
 
-query CmsFragmentChildCandidates {
-  cmsFragments(take: 100) {
+query CmsFragmentChildCandidates($skip: Int, $take: Int, $typename: String) {
+  cmsFragments(skip: $skip, take: $take, typename: $typename) {
+    hasNextPage
     items {
       name
       typename
       uuid
     }
+  }
+  cmsSchemas(status: "ACTIVE", take: 100) {
+    items {
+      typename
+      uuid
+    }
+  }
+}
+
+mutation CreateCmsFragmentChild($input: CreateCmsFragmentInput!) {
+  createCmsFragment(input: $input) {
+    uuid
   }
 }
 

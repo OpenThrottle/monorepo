@@ -26,6 +26,7 @@ const renderChildren = (fragments: readonly CmsFragmentRecord[]) => {
           className={undefined}
           fragments={fragments}
           getFragmentHref={getFragmentHref}
+          onDrop={undefined}
           onRemove={onRemove}
           onReorder={onReorder}
         />

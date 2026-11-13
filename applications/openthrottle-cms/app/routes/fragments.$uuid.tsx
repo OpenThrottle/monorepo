@@ -32,6 +32,12 @@ import {
   FRAGMENT_EDITOR_UNAVAILABLE_COPY,
 } from '~/routing/fragments/data/data.copy';
 import type { FragmentActionResult } from '~/routing/fragments/types/fragment-action';
+import type { FragmentChildPicker } from '~/routing/fragments/types/fragment-children';
+import {
+  readChildPickerQuery,
+  toChildPickerPaging,
+  toChildTypenames,
+} from '~/routing/fragments/utils/fragment-child-picker';
 import { runFragmentAction } from '~/routing/fragments/utils/runFragmentAction.server';
 import { toCmsFragmentEditorRecords } from '~/routing/fragments/utils/to-cms-records';
 
@@ -53,19 +59,27 @@ export const loader = async (args: Route.LoaderArgs) => {
   const cmsFragment = requireRecord(result.cmsFragment, 'Fragment');
   const editor = toCmsFragmentEditorRecords(cmsFragment);
   const isContainer = editor.ok && editor.value.hasChildren;
-  // Only a container can take children, so only it pays for the candidate list.
+  const query = readChildPickerQuery(new URL(args.request.url).searchParams);
+  // Only a container can take children, so only it pays for the candidate page.
+  const variables = { ...toChildPickerPaging(query), typename: query.typename };
   const candidates = isContainer
-    ? await fetchPublicGraphql(CmsFragmentChildCandidatesDocument)
+    ? await fetchPublicGraphql(CmsFragmentChildCandidatesDocument, variables)
     : undefined;
   const taken = new Set([
     cmsFragment.uuid,
     ...(cmsFragment.children ?? []).map((child) => child.uuid),
   ]);
-  const childCandidates = (candidates?.cmsFragments.items ?? []).filter(
-    (candidate) => !taken.has(candidate.uuid),
-  );
+  const childPicker: FragmentChildPicker = {
+    candidates: (candidates?.cmsFragments.items ?? []).filter(
+      (candidate) => !taken.has(candidate.uuid),
+    ),
+    hasNextPage: candidates?.cmsFragments.hasNextPage ?? false,
+    page: query.page,
+    typename: query.typename,
+    typenames: toChildTypenames(candidates?.cmsSchemas.items ?? []),
+  };
 
-  return { childCandidates, cmsFragment, editor };
+  return { childPicker, cmsFragment, editor };
 };
 
 export const links: Route.LinksFunction = () => {
@@ -83,7 +97,7 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { actionData, loaderData, matches: _m, params: _p } = props;
-  const { childCandidates, cmsFragment, editor } = loaderData;
+  const { childPicker, cmsFragment, editor } = loaderData;
 
   // Hooks
 
@@ -106,7 +120,7 @@ export default function Component(
     <Provider key={cmsFragment.uuid}>
       <div className="grid items-start gap-6 xl:grid-cols-2">
         <FragmentEditor
-          childCandidates={childCandidates}
+          childPicker={childPicker}
           className={undefined}
           records={editor.value}
           result={actionData}

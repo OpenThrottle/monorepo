@@ -1,13 +1,16 @@
 import { describe, expect, it } from 'vitest';
 
+import type { CmsFragmentNodeInput } from '~/global/utils/toCmsFragments';
 import { MOCK_CONTAINER_EDITOR_RECORDS } from '~/routing/fragments/data/mock.fragment-editor';
 
 import type {
   CmsFragmentObjectInput,
+  CmsFragmentWithSchemaInput,
   CmsSchemaObjectInput,
 } from '../to-cms-records';
 import {
   toCmsChildRecord,
+  toCmsFragmentEditorRecords,
   toCmsFragmentRecord,
   toCmsParsedSchema,
   toCmsPreviewFragments,
@@ -149,7 +152,7 @@ describe('toCmsChildRecord', () => {
 });
 
 describe('toCmsPreviewFragments', () => {
-  it('roots the tree at the fragment, with its draft and direct children', () => {
+  it('roots the tree at the fragment, with its draft and nested children', () => {
     const [root] = toCmsPreviewFragments(MOCK_CONTAINER_EDITOR_RECORDS);
 
     expect(root).toMatchObject({
@@ -161,6 +164,80 @@ describe('toCmsPreviewFragments', () => {
       'child-1',
       'child-2',
     ]);
-    expect(root?.children[0]?.children).toEqual([]);
+    expect(root?.children[0]?.children[0]?.uuid).toBe('grandchild-1');
+  });
+
+  it('merges the draft over the edited fragment only', () => {
+    const [root] = toCmsPreviewFragments({
+      ...MOCK_CONTAINER_EDITOR_RECORDS,
+      draft: { className: 'draft' },
+    });
+
+    expect(root?.properties).toEqual({ className: 'draft' });
+    expect(root?.children[0]?.properties).toEqual({ className: 'inner' });
+  });
+});
+
+describe('toCmsFragmentEditorRecords', () => {
+  const container = (
+    overrides: Partial<CmsFragmentWithSchemaInput> = {},
+  ): CmsFragmentWithSchemaInput => {
+    return {
+      ...fragment({
+        propertiesJson: '{}',
+        typename: 'LayoutGrid',
+        uuid: 'grid-1',
+      }),
+      children: [fragment({ uuid: 'child-1' })],
+      schema: schema(),
+      ...overrides,
+    };
+  };
+  const node = (
+    key: string,
+    childKeys: readonly string[],
+    parentKey: string | null,
+  ): CmsFragmentNodeInput => {
+    return {
+      childKeys,
+      key,
+      parentKey,
+      propertiesJson: '{}',
+      typename: 'LayoutGrid',
+      uuid: key.split('/').at(-1) ?? key,
+    };
+  };
+
+  describe('when the tree is loaded', () => {
+    it('previews grandchildren', () => {
+      const result = toCmsFragmentEditorRecords(
+        container({
+          tree: [
+            node('grid-1', ['grid-1/child-1'], null),
+            node('grid-1/child-1', ['grid-1/child-1/leaf-1'], 'grid-1'),
+            node('grid-1/child-1/leaf-1', [], 'grid-1/child-1'),
+          ],
+        }),
+      );
+
+      expect(result.ok && result.value.previewChildren).toMatchObject([
+        { children: [{ uuid: 'leaf-1' }], uuid: 'child-1' },
+      ]);
+    });
+  });
+
+  describe('when the tree is missing', () => {
+    it('falls back to the direct children, one level deep', () => {
+      const result = toCmsFragmentEditorRecords(container({ tree: null }));
+
+      expect(result.ok && result.value.previewChildren).toEqual([
+        {
+          children: [],
+          properties: { title: 'Hello' },
+          typename: 'ContentHero',
+          uuid: 'child-1',
+        },
+      ]);
+    });
   });
 });

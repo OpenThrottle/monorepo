@@ -11,6 +11,7 @@ import {
   AddCmsFragmentChildDocument,
   CmsFragmentChildCandidatesDocument,
   CmsFragmentDetailDocument,
+  CreateCmsFragmentChildDocument,
   RemoveCmsFragmentChildDocument,
   ReorderCmsFragmentChildrenDocument,
   UpdateCmsFragmentDocument,
@@ -51,8 +52,11 @@ const buildActionArgs = (fields: Record<string, string>): Route.ActionArgs => {
   };
 };
 
-const buildLoaderArgs = (uuid = 'fragment-1'): Route.LoaderArgs => {
-  const url = new URL(`http://localhost/fragments/${uuid}`);
+const buildLoaderArgs = (
+  uuid = 'fragment-1',
+  search = '',
+): Route.LoaderArgs => {
+  const url = new URL(`http://localhost/fragments/${uuid}${search}`);
 
   return {
     context: createTestRouterContext(),
@@ -214,8 +218,42 @@ describe('routes/fragments.$uuid.tsx', () => {
       },
     );
 
+    test('creates a child and attaches it to the fragment', async () => {
+      fetchAuthGraphql.mockImplementation(async (_request, document) => {
+        return document === CreateCmsFragmentChildDocument
+          ? { createCmsFragment: { uuid: 'new-1' } }
+          : {};
+      });
+
+      const args = buildActionArgs({
+        intent: FRAGMENT_INTENT.CREATE_CHILD,
+        name: ' ',
+        typename: 'Heading',
+      });
+
+      await expect(action(args)).resolves.toEqual({
+        intent: FRAGMENT_INTENT.CREATE_CHILD,
+        ok: true,
+      });
+      expect(fetchAuthGraphql).toHaveBeenNthCalledWith(
+        1,
+        args.request,
+        CreateCmsFragmentChildDocument,
+        {
+          input: { name: 'Heading', propertiesJson: null, typename: 'Heading' },
+        },
+      );
+      expect(fetchAuthGraphql).toHaveBeenNthCalledWith(
+        2,
+        args.request,
+        AddCmsFragmentChildDocument,
+        { childUuid: 'new-1', parentUuid: 'fragment-1' },
+      );
+    });
+
     test.each([
       [FRAGMENT_INTENT.ADD_CHILD, {}],
+      [FRAGMENT_INTENT.CREATE_CHILD, { typename: '' }],
       [FRAGMENT_INTENT.REMOVE_CHILD, { childUuid: '' }],
       [FRAGMENT_INTENT.REORDER_CHILDREN, { childUuids: '{"not":"a list"}' }],
     ])('refuses %s with a malformed form', async (intent, fields) => {
@@ -297,7 +335,7 @@ describe('routes/fragments.$uuid.tsx', () => {
 
       const result = await loader(buildLoaderArgs());
 
-      expect(result.childCandidates).toEqual([]);
+      expect(result.childPicker.candidates).toEqual([]);
       expect(fetchPublicGraphql).toHaveBeenCalledTimes(1);
     });
 
@@ -320,10 +358,18 @@ describe('routes/fragments.$uuid.tsx', () => {
         if (document === CmsFragmentChildCandidatesDocument) {
           return {
             cmsFragments: {
+              hasNextPage: true,
               items: [
                 { name: 'Self', typename: 'Heading', uuid: 'fragment-1' },
                 { name: 'Child', typename: 'Heading', uuid: 'child-1' },
                 { name: 'Spare', typename: 'Heading', uuid: 'spare-1' },
+              ],
+            },
+            cmsSchemas: {
+              items: [
+                { typename: 'Heading', uuid: 's-2' },
+                { typename: 'Button', uuid: 's-1' },
+                { typename: 'Heading', uuid: 's-3' },
               ],
             },
           };
@@ -332,11 +378,21 @@ describe('routes/fragments.$uuid.tsx', () => {
         return { cmsFragment: grid };
       });
 
-      const result = await loader(buildLoaderArgs());
+      const result = await loader(
+        buildLoaderArgs('fragment-1', '?childPage=2&childTypename=Heading'),
+      );
 
-      expect(result.childCandidates.map((item) => item.uuid)).toEqual([
-        'spare-1',
-      ]);
+      expect(result.childPicker).toEqual({
+        candidates: [{ name: 'Spare', typename: 'Heading', uuid: 'spare-1' }],
+        hasNextPage: true,
+        page: 2,
+        typename: 'Heading',
+        typenames: ['Button', 'Heading'],
+      });
+      expect(fetchPublicGraphql).toHaveBeenCalledWith(
+        CmsFragmentChildCandidatesDocument,
+        { skip: 50, take: 25, typename: 'Heading' },
+      );
       expect(result.editor).toMatchObject({
         ok: true,
         value: { children: [{ uuid: 'child-1' }], hasChildren: true },

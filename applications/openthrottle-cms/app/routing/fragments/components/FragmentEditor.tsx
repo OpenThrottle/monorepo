@@ -16,17 +16,18 @@ import { Link, useLocation } from 'react-router';
 
 import { getSignInHref } from '~/routing/auth/utils/auth-redirect';
 import { FragmentChildAdd } from '~/routing/fragments/components/FragmentChildAdd';
+import { FragmentChildCreate } from '~/routing/fragments/components/FragmentChildCreate';
 import { FRAGMENT_EDITOR_COPY } from '~/routing/fragments/data/data.copy';
 import { FRAGMENT_INTENT } from '~/routing/fragments/data/data.intents';
 import { useFragmentChildren } from '~/routing/fragments/hooks/useFragmentChildren';
 import type { FragmentActionResult } from '~/routing/fragments/types/fragment-action';
-import type { FragmentChildCandidate } from '~/routing/fragments/types/fragment-children';
+import type { FragmentChildPicker } from '~/routing/fragments/types/fragment-children';
 import { toCmsFormIssues } from '~/routing/fragments/utils/fragment-action';
 import type { CmsFragmentEditorRecords } from '~/routing/fragments/utils/to-cms-records';
 
 export interface FragmentEditorProps {
-  /** Fragments that may be added as children; only used when the schema has a children field. */
-  readonly childCandidates: readonly FragmentChildCandidate[];
+  /** The child picker's page and filter; only used when the schema has a children field. */
+  readonly childPicker: FragmentChildPicker;
   readonly className: string | undefined;
   readonly records: CmsFragmentEditorRecords;
   /** The route action's last result, if any. */
@@ -42,7 +43,7 @@ export interface FragmentEditorProps {
 export const FragmentEditor = (
   props: FragmentEditorProps,
 ): React.ReactElement => {
-  const { childCandidates, className, records, result } = props;
+  const { childPicker, className, records, result } = props;
   const { children, draft, fragment, hasChildren, schema } = records;
 
   // Hooks
@@ -55,6 +56,7 @@ export const FragmentEditor = (
 
   // Setup
   const addChildId = `${fragment.uuid}-add-child`;
+  const createChildId = `${fragment.uuid}-create-child`;
   const nameId = `${fragment.uuid}-name`;
   const failed = result?.ok === false ? result : undefined;
   const issues = failed ? toCmsFormIssues(failed.issues) : undefined;
@@ -124,11 +126,18 @@ export const FragmentEditor = (
         schema={schema}
       />
       {hasChildren && (
-        <FragmentChildAdd
-          candidates={childCandidates}
-          className={undefined}
-          id={addChildId}
-        />
+        <>
+          <FragmentChildAdd
+            className={undefined}
+            id={addChildId}
+            picker={childPicker}
+          />
+          <FragmentChildCreate
+            className={undefined}
+            id={createChildId}
+            typenames={childPicker.typenames}
+          />
+        </>
       )}
     </div>
   );
