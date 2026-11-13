@@ -949,6 +949,14 @@ export type CmsLayoutSummaryObject = {
   uuid: Scalars['String']['output'];
 };
 
+/** One page of live cms library components, across every library, by typename. */
+export type CmsLibraryComponentListResult = {
+  __typename?: 'CmsLibraryComponentListResult';
+  hasNextPage: Scalars['Boolean']['output'];
+  items: Array<CmsLibraryComponentObject>;
+  totalCount: Scalars['Int']['output'];
+};
+
 /** The component that renders one fragment typename within a cms library. */
 export type CmsLibraryComponentObject = {
   __typename?: 'CmsLibraryComponentObject';
@@ -4425,6 +4433,8 @@ export type Query = {
   cmsLayouts: CmsLayoutListResult;
   /** One page of live cms libraries with their components. take is clamped to 1–100 (default 25). */
   cmsLibraries: CmsLibraryListResult;
+  /** One page of live cms library components across every library, by typename. take is clamped to 1–100 (default 25). */
+  cmsLibraryComponents: CmsLibraryComponentListResult;
   /** A live cms schema by uuid; null when none matches. */
   cmsSchema?: Maybe<CmsSchemaObject>;
   /** The live cms schema for a typename at a version; without a version, its newest ACTIVE version. Null when none matches. */
@@ -4760,6 +4770,11 @@ export type QueryCmsLayoutsArgs = {
 };
 
 export type QueryCmsLibrariesArgs = {
+  skip?: InputMaybe<Scalars['Int']['input']>;
+  take?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type QueryCmsLibraryComponentsArgs = {
   skip?: InputMaybe<Scalars['Int']['input']>;
   take?: InputMaybe<Scalars['Int']['input']>;
 };

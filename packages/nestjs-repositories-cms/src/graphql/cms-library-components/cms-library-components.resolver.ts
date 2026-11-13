@@ -1,7 +1,12 @@
 import { UseGuards } from '@nestjs/common';
-import { Args, Mutation, Resolver } from '@nestjs/graphql';
+import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Public } from '@openthrottle/nestjs-auth';
 
-import { CmsLibraryComponentObject } from '../cms-libraries/cms-libraries.object.ts';
+import { toCmsPageOptions } from '../cms-graphql/cms-graphql.utils.ts';
+import {
+  CmsLibraryComponentListResult,
+  CmsLibraryComponentObject,
+} from '../cms-libraries/cms-libraries.object.ts';
 import { CmsWriteGuard } from '../cms-write-access/cms-write-access.guard.ts';
 import {
   CreateCmsLibraryComponentInput,
@@ -10,7 +15,7 @@ import {
 import { CmsLibraryComponentsService } from './cms-library-components.service.ts';
 
 /**
- * @description cms library-component mutations. Every mutation runs `CmsWriteGuard` (host-authorized cms writes).
+ * @description cms library components: a public paged read, and mutations. Every mutation runs `CmsWriteGuard` (host-authorized cms writes).
  * @public
  */
 @Resolver(() => CmsLibraryComponentObject)
@@ -18,6 +23,19 @@ export class CmsLibraryComponentsResolver {
   constructor(
     private readonly cmsLibraryComponentsService: CmsLibraryComponentsService,
   ) {}
+
+  @Public()
+  @Query(() => CmsLibraryComponentListResult, {
+    description: `One page of live cms library components across every library, by typename. take is clamped to 1–100 (default 25).`,
+  })
+  async cmsLibraryComponents(
+    @Args('skip', { nullable: true, type: () => Int }) skip: number | null,
+    @Args('take', { nullable: true, type: () => Int }) take: number | null,
+  ): Promise<CmsLibraryComponentListResult> {
+    return this.cmsLibraryComponentsService.findPage(
+      toCmsPageOptions(skip, take),
+    );
+  }
 
   @UseGuards(CmsWriteGuard)
   @Mutation(() => CmsLibraryComponentObject, {
