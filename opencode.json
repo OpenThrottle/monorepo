@@ -18,7 +18,7 @@
     },
     "nx-mcp": {
       "command": ["npx", "nx", "mcp"],
-      "enabled": true,
+      "enabled": false,
       "type": "local"
     },
     "openthrottle-mcp": {
@@ -27,7 +27,7 @@
       "type": "local"
     },
     "openthrottle-mcp-docker": {
-      "enabled": true,
+      "enabled": false,
       "type": "remote",
       "url": "http://localhost:6026/mcp"
     },
@@ -38,6 +38,29 @@
     }
   },
   "permission": {
+    "bash": {
+      "gh issue *": "allow",
+      "gh pr create *": "allow",
+      "gh pr list *": "allow",
+      "gh pr ready *": "allow",
+      "gh pr view *": "allow",
+      "gh repo list *": "allow",
+      "gh search issues *": "allow",
+      "git branch *": "allow",
+      "git diff *": "allow",
+      "git log *": "allow",
+      "git push --force-with-lease*": "allow",
+      "git push -u origin *": "allow",
+      "git push origin *": "allow",
+      "git show *": "allow",
+      "git status *": "allow",
+      "pnpm nx *": "allow",
+      "git push*main*": "deny",
+      "git push*--force *": "deny",
+      "git push*--force": "deny",
+      "git push*-f *": "deny",
+      "git push*+*": "deny"
+    },
     "skill": {
       "*": "allow",
       "experimental-*": "ask",

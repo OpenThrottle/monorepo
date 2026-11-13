@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Shell(gh:issue *)",
+      "Shell(gh:pr create *)",
+      "Shell(gh:pr list *)",
+      "Shell(gh:pr ready *)",
+      "Shell(gh:pr view *)",
+      "Shell(gh:repo list *)",
+      "Shell(gh:search issues *)",
+      "Shell(git:branch *)",
+      "Shell(git:diff *)",
+      "Shell(git:log *)",
+      "Shell(git:push --force-with-lease*)",
+      "Shell(git:push -u origin *)",
+      "Shell(git:push origin *)",
+      "Shell(git:show *)",
+      "Shell(git:status *)",
+      "Shell(pnpm:nx *)",
+      "Mcp(openthrottle-mcp:*)"
+    ],
+    "deny": [
+      "Shell(git:push*main*)",
+      "Shell(git:push*--force *)",
+      "Shell(git:push*--force)",
+      "Shell(git:push*-f *)",
+      "Shell(git:push*+*)"
+    ]
+  }
+}

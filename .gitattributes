@@ -37,6 +37,17 @@
 .codex/hooks/*.cjs     -diff linguist-generated=true
 .cursor/hooks/*.cjs    -diff linguist-generated=true
 
+# Written by scripts/sync-agent-config.ts from .agents/agent-config.json and
+# drift-checked with --check. Explicit paths, not folder globs: .cursor/ and
+# .vscode/ also hold hand-authored files, and opencode.json and
+# .claude/settings.json are only partly generated, so they stay unmarked.
+.codex/config.toml     linguist-generated=true
+.codex/rules/default.rules linguist-generated=true
+.cursor/cli.json       linguist-generated=true
+.cursor/mcp.json       linguist-generated=true
+.mcp.json              linguist-generated=true
+.vscode/mcp.json       linguist-generated=true
+
 # CMS block JSON Schemas + manifest, written by scripts/generate-cms-schemas.ts
 # (`<project>:cms-schemas:write`) and drift-checked by `cms-schemas:check` in
 # CI. Review the props interface in the package's src/components/ instead.

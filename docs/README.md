@@ -72,6 +72,7 @@ How OpenThrottle reaches a repository that is not this monorepo — the two halv
 
 - [monorepo/foreign-workspace-skill-injection.md](./monorepo/foreign-workspace-skill-injection.md) — skills must be materialized into the target repo, and the per-CLI matrix that forces it.
 - [monorepo/child-repo-hook-overlay.md](./monorepo/child-repo-hook-overlay.md) — hooks never are: every supported CLI takes out-of-repo hook config.
+- [monorepo/agent-config-parity.md](./monorepo/agent-config-parity.md) — one source (`.agents/agent-config.json`) for every agent CLI's MCP servers and permission policy, its per-tool mapping and the gaps.
 - [monorepo/agent-cli-hook-capability-matrix.md](./monorepo/agent-cli-hook-capability-matrix.md) — per-CLI hook and plugin capabilities, measured by running the binaries.
 - [monorepo/child-repo-hook-telemetry-contract.md](./monorepo/child-repo-hook-telemetry-contract.md) — what a hook may do and report when it runs outside this repo.
 
