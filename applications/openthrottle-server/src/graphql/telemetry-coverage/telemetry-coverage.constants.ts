@@ -13,6 +13,7 @@ export const TELEMETRY_COVERAGE_MAX_WINDOW_DAYS = 365;
 export const TELEMETRY_COVERAGE_WARNING_KINDS = {
   BUFFER_GROWING: 'BUFFER_GROWING',
   BUFFER_STALE: 'BUFFER_STALE',
+  DEAD_LETTERED: 'DEAD_LETTERED',
   MACHINE_SILENT: 'MACHINE_SILENT',
   MANUAL_SESSIONS_UNCOVERED: 'MANUAL_SESSIONS_UNCOVERED',
   PLUGIN_OUTDATED: 'PLUGIN_OUTDATED',
@@ -22,6 +23,7 @@ export const TELEMETRY_COVERAGE_WARNING_KINDS = {
 export const TELEMETRY_COVERAGE_WARNING_MESSAGES = {
   BUFFER_GROWING: `Buffered records rose across the last three heartbeats.`,
   BUFFER_STALE: `The oldest buffered record is more than 24 hours old.`,
+  DEAD_LETTERED: `The server rejected records from this machine; they sit in dead-letter files and are missing from usage.`,
   MACHINE_SILENT: `No heartbeat from this machine within the window.`,
   MANUAL_SESSIONS_UNCOVERED: `The marketplace plugin is not installed, so manual sessions are not recorded.`,
   PLUGIN_OUTDATED: `The installed marketplace plugin is older than the current version.`,

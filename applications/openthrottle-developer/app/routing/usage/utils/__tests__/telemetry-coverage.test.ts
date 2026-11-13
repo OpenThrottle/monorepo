@@ -120,6 +120,7 @@ describe('groupTelemetryWarnings', () => {
       warnings: [
         { kind: 'BUFFER_GROWING', message: 'a' },
         { kind: 'BUFFER_GROWING', message: 'a again' },
+        { kind: 'DEAD_LETTERED', message: 'f' },
         { kind: 'MANUAL_SESSIONS_UNCOVERED', message: 'b' },
       ],
     });
@@ -138,6 +139,7 @@ describe('groupTelemetryWarnings', () => {
       'bbbbbbbb2:MACHINE_SILENT',
       'aaaaaaaa1:MANUAL_SESSIONS_UNCOVERED',
       'bbbbbbbb2:MANUAL_SESSIONS_UNCOVERED',
+      'aaaaaaaa1:DEAD_LETTERED',
       'aaaaaaaa1:BUFFER_GROWING',
       'bbbbbbbb2:SOMETHING_NEW',
     ]);

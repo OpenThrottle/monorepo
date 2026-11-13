@@ -174,6 +174,16 @@ var PERMANENT_GRAPHQL_CODES = [
   "GRAPHQL_PARSE_FAILED",
   "GRAPHQL_VALIDATION_FAILED"
 ];
+var SCHEMA_SKEW_MESSAGE_PATTERNS = [
+  /Field "[^"]+" is not defined by type "[^"]+"/,
+  /Cannot query field "[^"]+" on type "[^"]+"/,
+  /Unknown argument "[^"]+" on field "[^"]+"/,
+  /Unknown type "[^"]+"/,
+  /Value "[^"]+" does not exist in "[^"]+" enum/
+];
+var isSchemaSkewMessage = (message) => {
+  return SCHEMA_SKEW_MESSAGE_PATTERNS.some((pattern) => pattern.test(message));
+};
 var TRANSIENT_CLIENT_STATUSES = [401, 403, 408, 429];
 var isPermanentHttpStatus = (status) => {
   return status >= 400 && status < 500 && !TRANSIENT_CLIENT_STATUSES.includes(status);
@@ -195,7 +205,11 @@ var readGraphqlErrors = (payload) => {
     if (!isRecord(error)) {
       continue;
     }
-    messages.push(typeof error.message === "string" ? error.message : "");
+    const message = typeof error.message === "string" ? error.message : "";
+    messages.push(message);
+    if (isSchemaSkewMessage(message)) {
+      continue;
+    }
     const extensions = isRecord(error.extensions) ? error.extensions : {};
     const code = typeof extensions.code === "string" ? extensions.code : "";
     const status = readStatusCode(extensions);

@@ -7200,7 +7200,7 @@ export type TelemetryCoverageObject = {
   windowDays: Scalars['Int']['output'];
 };
 
-/** A coverage warning. kind is one of MANUAL_SESSIONS_UNCOVERED, PLUGIN_OUTDATED, BUFFER_STALE, BUFFER_GROWING, MACHINE_SILENT. */
+/** A coverage warning. kind is one of MANUAL_SESSIONS_UNCOVERED, PLUGIN_OUTDATED, BUFFER_STALE, BUFFER_GROWING, DEAD_LETTERED, MACHINE_SILENT. */
 export type TelemetryCoverageWarningObject = {
   __typename?: 'TelemetryCoverageWarningObject';
   kind: Scalars['String']['output'];

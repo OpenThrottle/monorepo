@@ -58,6 +58,8 @@ export const UsageTelemetryCoverageWarnings = (
         return copy.warningDescriptions.BUFFER_STALE(
           relative(buffer.oldestBufferedAt ?? lastSeenAt),
         );
+      case TELEMETRY_WARNING_KINDS.DEAD_LETTERED:
+        return copy.warningDescriptions.DEAD_LETTERED(buffer.deadLetterCount);
       case TELEMETRY_WARNING_KINDS.MACHINE_SILENT:
         return copy.warningDescriptions.MACHINE_SILENT(relative(lastSeenAt));
       case TELEMETRY_WARNING_KINDS.MANUAL_SESSIONS_UNCOVERED:
@@ -80,6 +82,8 @@ export const UsageTelemetryCoverageWarnings = (
         return copy.warningTitles.BUFFER_GROWING(name);
       case TELEMETRY_WARNING_KINDS.BUFFER_STALE:
         return copy.warningTitles.BUFFER_STALE(name);
+      case TELEMETRY_WARNING_KINDS.DEAD_LETTERED:
+        return copy.warningTitles.DEAD_LETTERED(name);
       case TELEMETRY_WARNING_KINDS.MACHINE_SILENT:
         return copy.warningTitles.MACHINE_SILENT(name);
       case TELEMETRY_WARNING_KINDS.MANUAL_SESSIONS_UNCOVERED:
@@ -95,7 +99,6 @@ export const UsageTelemetryCoverageWarnings = (
     entry: TelemetryCoverageWarningEntry,
   ): React.ReactElement | null => {
     const labels = copy.warningCommandsLabels;
-    const deadLetterCount = entry.machine.buffer.deadLetterCount;
 
     switch (entry.kind) {
       case TELEMETRY_WARNING_KINDS.MANUAL_SESSIONS_UNCOVERED:
@@ -120,23 +123,17 @@ export const UsageTelemetryCoverageWarnings = (
       case TELEMETRY_WARNING_KINDS.BUFFER_GROWING:
       case TELEMETRY_WARNING_KINDS.BUFFER_STALE:
         return (
-          <>
-            <UsageTelemetryCoverageCommand
-              command={TELEMETRY_COVERAGE_COMMANDS.drain}
-              label={labels.drain}
-            />
-            {deadLetterCount > 0 && (
-              <>
-                <p className="mt-2 text-xs">
-                  {copy.warningReplayHint(deadLetterCount)}
-                </p>
-                <UsageTelemetryCoverageCommand
-                  command={TELEMETRY_COVERAGE_COMMANDS.drainReplayDeadLetter}
-                  label={labels.drainReplayDeadLetter}
-                />
-              </>
-            )}
-          </>
+          <UsageTelemetryCoverageCommand
+            command={TELEMETRY_COVERAGE_COMMANDS.drain}
+            label={labels.drain}
+          />
+        );
+      case TELEMETRY_WARNING_KINDS.DEAD_LETTERED:
+        return (
+          <UsageTelemetryCoverageCommand
+            command={TELEMETRY_COVERAGE_COMMANDS.drainReplayDeadLetter}
+            label={labels.drainReplayDeadLetter}
+          />
         );
       default:
         return null;

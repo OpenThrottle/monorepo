@@ -150,7 +150,8 @@ bound the **skill** window only; tokens are not windowed. `--projects-dir <path>
 - **Backfilled rows are identifiable** by `invocation_path` ending in `:backfill`
   (`skill_tool:backfill`, `slash:backfill`) — that column is in no unique key.
 - A real run refuses to start with no endpoint (rather than buffering thousands of rows); transient
-  failures buffer for `skill-usage-drain`, permanent rejections are dead-lettered.
+  failures buffer for `skill-usage-drain`, permanent rejections are dead-lettered. A schema-skew
+  rejection (a server older than the hooks) is transient, never dead-lettered.
 
 ## Bundling
 
