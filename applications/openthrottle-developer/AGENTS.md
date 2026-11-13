@@ -38,12 +38,15 @@ for devtools/profiling/troubleshooting.
   (`app/routing/plans/hooks/usePlanRunConfigEditor`, `usePlanLifecycleRevalidation`) and utils, with
   presentational pieces like `PlanWorkflowConfigHookRow` split into `app/routing/plans/components/`.
   Keep new work in that shape; do not grow the route file back up.
-- **A deferred loader promise started before an `await` must be marked handled.** If the awaited
-  query throws (or a deferred one rejects while it is pending), nothing owns the deferred promise
-  and Node exits the whole server. Call `markDeferredHandled([...])` from
-  `app/global/utils/markDeferredHandled.ts` before the first `await`; the originals still reject
-  for their `errorElement`. There is deliberately no process-level `unhandledRejection` backstop —
-  the crash is what surfaced this bug (OT `a26a5be0`), and `openthrottle-server` also exits on one.
+- **Every deferred promise a loader returns must be marked handled** — not only those started
+  before an `await`. React Router takes ownership of a returned promise only once every loader in
+  the match has settled, the root loader included, so a deferred query that rejects first (the API
+  being down rejects in milliseconds) has no handler and Node exits the whole server. Call
+  `markDeferredHandled([...])` from `app/global/utils/markDeferredHandled.ts` on each returned
+  promise, before the first `await` if there is one; the originals still reject for their
+  `errorElement`. A promise already ending in `.catch(...)` is handled. There is deliberately no
+  process-level `unhandledRejection` backstop — the crash is what surfaced this bug (OT
+  `a26a5be0`, then `/dashboard` in OT `f058bb18`), and `openthrottle-server` also exits on one.
 - **Fresh worktrees fail Vitest at collection** until codegen runs — suites import from
   `app/__generated__/` (`graphql.ts`, `gql.ts`, and this app's unique `testing.ts` mock factory).
   Run `pnpm nx run openthrottle-developer:codegen-graphql` (or the workspace-wide codegen) first;

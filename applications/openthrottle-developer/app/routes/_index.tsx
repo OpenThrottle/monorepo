@@ -9,6 +9,7 @@ import { useSearchParams } from 'react-router';
 
 import type { Route } from '@/app/routes/+types/_index';
 import { SITE_TITLE } from '~/global/config/settings';
+import { markDeferredHandled } from '~/global/utils/markDeferredHandled';
 import { HomeConversationToolbar } from '~/routing/home/components/HomeConversationToolbar';
 import { HomeThreadColumn } from '~/routing/home/components/HomeThreadColumn';
 import { useAgenticChatTurn } from '~/routing/home/hooks/useAgenticChatTurn';
@@ -49,6 +50,10 @@ export const loader = (args: Route.LoaderArgs) => {
       repositories,
     }),
   );
+
+  // React Router owns it only after every loader in the match settles; until
+  // then a rejection would be unhandled and exit the server.
+  markDeferredHandled([composerData]);
 
   return { composerData };
 };

@@ -15,6 +15,7 @@ import {
   TriggerNotificationDocument,
 } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
+import { markDeferredHandled } from '~/global/utils/markDeferredHandled';
 import { callListAgentConversations } from '~/global/utils/utils.agents-chat';
 import { DashboardContentGrid } from '~/routing/dashboard/components/DashboardContentGrid';
 import { DashboardGetStartedSection } from '~/routing/dashboard/components/DashboardGetStartedSection';
@@ -101,6 +102,12 @@ export const loader = (args: Route.LoaderArgs) => {
   // activity chart. Resolves to ListAgentConversationsResult; a rejection is
   // handled downstream by the card's errorElement.
   const recentChats = callListAgentConversations(args.request, { limit: 3 });
+
+  // React Router owns these only once every loader in the match has settled, the
+  // root loader included. With the API down they reject first, so without a
+  // handler Node exits the dev server (OT f058bb18). The originals still reject
+  // into each card's errorElement.
+  markDeferredHandled([core, githubStats, onboarding, recentChats]);
 
   return { core, githubStats, onboarding, recentChats };
 };
