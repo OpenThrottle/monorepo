@@ -43,6 +43,7 @@ export const toSkillUsageEventObject = (
   object.privacyLevel = row.privacyLevel;
   object.promptId = row.promptId;
   object.receivedAt = row.receivedAt;
+  object.repoIdentity = row.repoIdentity;
   object.scope = row.scope;
   object.sessionId = row.sessionId;
   object.skillName = row.skillName;
@@ -125,6 +126,7 @@ export const toSkillUsageFilterOptionsObject = (
 
   object.cwds = [...options.cwds];
   object.gitBranches = [...options.gitBranches];
+  object.repoIdentities = [...options.repoIdentities];
 
   return object;
 };

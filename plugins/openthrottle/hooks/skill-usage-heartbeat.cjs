@@ -39,6 +39,7 @@ var import_node_fs6 = __toESM(require("node:fs"), 1);
 var import_node_path2 = __toESM(require("node:path"), 1);
 
 // packages/agentic-hooks/src/config/env.ts
+var import_node_child_process = require("node:child_process");
 var import_node_fs = __toESM(require("node:fs"), 1);
 var import_node_os = __toESM(require("node:os"), 1);
 var import_node_path = __toESM(require("node:path"), 1);
@@ -53,6 +54,27 @@ var logHookError = (message, err) => {
     );
   } catch {
   }
+};
+
+// packages/agentic-hooks/src/utils/normalizeRemoteUrl.ts
+var normalizeRemoteUrl = (raw) => {
+  const trimmed = raw.trim();
+  if (trimmed === "") {
+    return null;
+  }
+  let url = trimmed.replace(/^git@([^:/]+):/, "https://$1/").replace(/^ssh:\/\/(?:[^@/]+@)?/, "https://").replace(/^http:\/\//, "https://").replace(/^https:\/\/[^@/]+@/, "https://");
+  if (!/^https:\/\/[^/]+\/.+/.test(url)) {
+    return null;
+  }
+  url = url.replace(/\.git$/, "").replace(/\/+$/, "");
+  const withoutScheme = url.slice("https://".length);
+  const slashIndex = withoutScheme.indexOf("/");
+  if (slashIndex === -1) {
+    return null;
+  }
+  const host = withoutScheme.slice(0, slashIndex).toLowerCase();
+  const path7 = withoutScheme.slice(slashIndex);
+  return `https://${host}${path7}`;
 };
 
 // packages/agentic-hooks/src/config/env.ts
@@ -86,6 +108,31 @@ var isOpenThrottleCheckout = (repoRoot) => {
   }
   checkoutCache.set(repoRoot, match);
   return match;
+};
+var repoIdentityCache = /* @__PURE__ */ new Map();
+var resolveRepoIdentity = (repoRoot) => {
+  const cached = repoIdentityCache.get(repoRoot);
+  if (cached !== void 0) {
+    return cached;
+  }
+  let identity = null;
+  try {
+    const remote = (0, import_node_child_process.execFileSync)(
+      "git",
+      ["config", "--get", "remote.origin.url"],
+      {
+        cwd: repoRoot,
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "ignore"],
+        timeout: 1e3
+      }
+    );
+    identity = normalizeRemoteUrl(remote);
+  } catch {
+    identity = null;
+  }
+  repoIdentityCache.set(repoRoot, identity);
+  return identity;
 };
 var readEnvFile = (envPath) => {
   const out = {};
@@ -260,7 +307,8 @@ var transient = (reason) => {
     reason
   };
 };
-var postMutation = async ({
+var UNKNOWN_INPUT_FIELD = /Field "[^"]+" is not defined by type/;
+var postMutationOnce = async ({
   authToken,
   fetchImpl,
   graphqlUrl,
@@ -320,6 +368,14 @@ var postMutation = async ({
     };
   }
   return { data: readMutationData(payload, field), ok: true };
+};
+var postMutation = async (args) => {
+  const posted = await postMutationOnce(args);
+  const { legacyVariables } = args;
+  if (posted.ok || legacyVariables === void 0 || !UNKNOWN_INPUT_FIELD.test(posted.reason)) {
+    return posted;
+  }
+  return postMutationOnce({ ...args, variables: legacyVariables });
 };
 var postGraphqlMutation = async (args) => {
   const posted = await postMutation(args);
@@ -475,32 +531,10 @@ var readBufferStats = () => {
 };
 
 // packages/agentic-hooks/src/adapters/claude/heartbeat-run.ts
-var import_node_child_process = require("node:child_process");
 var import_node_crypto = __toESM(require("node:crypto"), 1);
 var import_node_fs4 = __toESM(require("node:fs"), 1);
 var import_node_os2 = __toESM(require("node:os"), 1);
 var import_node_path5 = __toESM(require("node:path"), 1);
-
-// packages/agentic-hooks/src/utils/normalizeRemoteUrl.ts
-var normalizeRemoteUrl = (raw) => {
-  const trimmed = raw.trim();
-  if (trimmed === "") {
-    return null;
-  }
-  let url = trimmed.replace(/^git@([^:/]+):/, "https://$1/").replace(/^ssh:\/\/(?:[^@/]+@)?/, "https://").replace(/^http:\/\//, "https://").replace(/^https:\/\/[^@/]+@/, "https://");
-  if (!/^https:\/\/[^/]+\/.+/.test(url)) {
-    return null;
-  }
-  url = url.replace(/\.git$/, "").replace(/\/+$/, "");
-  const withoutScheme = url.slice("https://".length);
-  const slashIndex = withoutScheme.indexOf("/");
-  if (slashIndex === -1) {
-    return null;
-  }
-  const host = withoutScheme.slice(0, slashIndex).toLowerCase();
-  const path7 = withoutScheme.slice(slashIndex);
-  return `https://${host}${path7}`;
-};
 
 // packages/agentic-hooks/src/adapters/claude/heartbeat-payload.ts
 var import_node_path4 = __toESM(require("node:path"), 1);
@@ -622,7 +656,6 @@ var CLAUDE_SOURCE = "claude-code";
 // packages/agentic-hooks/src/adapters/claude/heartbeat-run.ts
 var MACHINE_ID_BASENAME = "machine-id";
 var LAST_HEARTBEAT_BASENAME = "last-heartbeat.json";
-var GIT_TIMEOUT_MS = 1e3;
 var SAFE_MACHINE_ID = /^[A-Za-z0-9-]{8,64}$/;
 var readTextOrNull = (filePath) => {
   try {
@@ -643,23 +676,6 @@ var resolveMachineId = () => {
     import_node_fs4.default.writeFileSync(idPath, `${created}
 `, { mode: 384 });
     return created;
-  } catch {
-    return null;
-  }
-};
-var resolveRepoIdentity = (repoRoot) => {
-  try {
-    const remote = (0, import_node_child_process.execFileSync)(
-      "git",
-      ["config", "--get", "remote.origin.url"],
-      {
-        cwd: repoRoot,
-        encoding: "utf8",
-        stdio: ["ignore", "pipe", "ignore"],
-        timeout: GIT_TIMEOUT_MS
-      }
-    );
-    return normalizeRemoteUrl(remote);
   } catch {
     return null;
   }

@@ -16,6 +16,7 @@ const buildFilterOptions = (
   return {
     cwds: [],
     gitBranches: [],
+    repoIdentities: [],
     ...overrides,
   };
 };
@@ -38,6 +39,7 @@ const baseProps = (): UsageSkillUsageFiltersProps => {
     providerParam: null,
     selectedCwd: null,
     selectedGitBranch: null,
+    selectedRepo: null,
     selectedScope: null,
     start: '2026-07-01',
   };

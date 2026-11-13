@@ -65,6 +65,7 @@ const buildFilterOptions = (
   return {
     cwds: [],
     gitBranches: [],
+    repoIdentities: [],
     ...overrides,
   };
 };
@@ -92,6 +93,7 @@ const baseProps = (): UsageSkillUsageProps => {
     rangeDays: 30,
     selectedCwd: null,
     selectedGitBranch: null,
+    selectedRepo: null,
     selectedScope: null,
     start: '2026-07-01',
     totalCount: 0,

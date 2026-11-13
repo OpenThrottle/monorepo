@@ -4,13 +4,13 @@ import { Link } from 'react-router';
 
 import type { UsageSkillUsageFilterOptionsFragment } from '~/__generated__/graphql';
 import { UsageBranchFilter } from '~/routing/usage/components/UsageBranchFilter';
+import { UsageSkillUsageRepoFilter } from '~/routing/usage/components/UsageSkillUsageRepoFilter';
 import {
   SKILL_USAGE_SCOPES,
   type SkillUsageScopeFilter,
 } from '~/routing/usage/data/data.skill-usage-copy';
 import type { UsageBranchOption } from '~/routing/usage/types';
 import { buildUsageSearch } from '~/routing/usage/utils/buildUsageSearch';
-import { skillUsageCwdLabel } from '~/routing/usage/utils/skill-usage-labels';
 import { skillUsageChipClass } from '~/routing/usage/utils/skillUsageChipClass';
 
 export interface UsageSkillUsageFiltersProps {
@@ -28,6 +28,7 @@ export interface UsageSkillUsageFiltersProps {
   providerParam: string | null;
   selectedCwd: string | null;
   selectedGitBranch: string | null;
+  selectedRepo: string | null;
   selectedScope: SkillUsageScopeFilter;
   /** Range start (YYYY-MM-DD) the branch search runs over. */
   start: string;
@@ -46,6 +47,7 @@ export const UsageSkillUsageFilters = (
     providerParam,
     selectedCwd,
     selectedGitBranch,
+    selectedRepo,
     selectedScope,
     start,
   } = props;
@@ -92,6 +94,7 @@ export const UsageSkillUsageFilters = (
                 cwd: selectedCwd,
                 gitBranch: selectedGitBranch,
                 provider: providerParam,
+                repo: selectedRepo,
                 scope: option.id,
               })}
             >
@@ -110,52 +113,20 @@ export const UsageSkillUsageFilters = (
           providerParam={providerParam}
           selectedCwd={selectedCwd}
           selectedGitBranch={selectedGitBranch}
+          selectedRepo={selectedRepo}
           selectedScope={selectedScope}
           start={start}
         />
 
-        {filterOptions.cwds.length > 0 && (
-          <div
-            aria-label="Filter skill usage by project path"
-            className="flex flex-wrap gap-2"
-            role="group"
-          >
-            <Link
-              aria-current={selectedCwd === null ? 'true' : undefined}
-              className={skillUsageChipClass(selectedCwd === null)}
-              to={buildUsageSearch({
-                account: accountParam,
-                cwd: null,
-                gitBranch: selectedGitBranch,
-                provider: providerParam,
-                scope: selectedScope,
-              })}
-            >
-              All projects
-            </Link>
-            {filterOptions.cwds.map((cwd) => {
-              const active = cwd === selectedCwd;
-
-              return (
-                <Link
-                  aria-current={active ? 'true' : undefined}
-                  className={skillUsageChipClass(active)}
-                  key={cwd}
-                  title={cwd}
-                  to={buildUsageSearch({
-                    account: accountParam,
-                    cwd,
-                    gitBranch: selectedGitBranch,
-                    provider: providerParam,
-                    scope: selectedScope,
-                  })}
-                >
-                  {skillUsageCwdLabel(cwd)}
-                </Link>
-              );
-            })}
-          </div>
-        )}
+        <UsageSkillUsageRepoFilter
+          accountParam={accountParam}
+          filterOptions={filterOptions}
+          providerParam={providerParam}
+          selectedCwd={selectedCwd}
+          selectedGitBranch={selectedGitBranch}
+          selectedRepo={selectedRepo}
+          selectedScope={selectedScope}
+        />
       </div>
     </div>
   );

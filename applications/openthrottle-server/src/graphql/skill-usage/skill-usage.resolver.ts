@@ -14,6 +14,7 @@ import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 import {
   isSkillUsageOutcome,
   isSkillUsageScope,
+  normalizeRemoteUrl,
   SKILL_USAGE_OUTCOMES,
   SKILL_USAGE_PRIVACY_LEVELS,
   SKILL_USAGE_SCOPE_LIST,
@@ -122,6 +123,12 @@ export class SkillUsageResolver {
     const userId =
       await this.effectiveUserResolutionService.resolveEffectiveUserId(sub);
 
+    // Re-normalized server-side: a value that is not a git remote (a
+    // filesystem path included) does not survive and is stored as null.
+    const repoIdentity = input.repoIdentity
+      ? normalizeRemoteUrl(input.repoIdentity)
+      : null;
+
     const saved = await this.skillUsageEventsService.recordSkillUsage({
       agentId: input.agentId ?? null,
       agentType: input.agentType ?? null,
@@ -133,6 +140,7 @@ export class SkillUsageResolver {
       occurredAt,
       privacyLevel: privacyLevelRaw,
       promptId: input.promptId ?? null,
+      repoIdentity,
       scope: input.scope,
       sessionId: input.sessionId ?? null,
       skillName,
@@ -235,6 +243,7 @@ export class SkillUsageResolver {
     })
     gitBranch?: string | null,
     @Args('cwd', {
+      deprecationReason: `Paths are no longer sent from foreign repos. Filter by repoIdentity.`,
       description: `Restrict to one working directory (project path proxy); omit for all.`,
       nullable: true,
       type: () => String,
@@ -246,6 +255,12 @@ export class SkillUsageResolver {
       type: () => String,
     })
     skillName?: string | null,
+    @Args('repoIdentity', {
+      description: `Restrict to one repository by its normalized git remote (see filterOptions.repoIdentities); omit for all. Re-normalized; a value that does not normalize matches nothing.`,
+      nullable: true,
+      type: () => String,
+    })
+    repoIdentity?: string | null,
   ): Promise<SkillUsageResultObject> {
     assertYyyyMmDd('start', start);
     assertYyyyMmDd('end', end);
@@ -263,10 +278,18 @@ export class SkillUsageResolver {
       resolvedScope = scope;
     }
 
+    const trimmedRepoIdentity = toOptionalTrimmed(repoIdentity);
+    // A value that does not normalize is kept verbatim so it matches nothing,
+    // rather than silently widening the filter to every repository.
+    const resolvedRepoIdentity = trimmedRepoIdentity
+      ? (normalizeRemoteUrl(trimmedRepoIdentity) ?? trimmedRepoIdentity)
+      : null;
+
     const aggregation = await this.skillUsageEventsService.getUsageAggregation({
       cwd: cwd ?? null,
       end,
       gitBranch: gitBranch ?? null,
+      repoIdentity: resolvedRepoIdentity,
       scope: resolvedScope,
       skillName: resolvedSkillName,
       start,

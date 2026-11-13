@@ -18,6 +18,7 @@ import {
   MAX_TOKEN_USAGE_BATCH_BYTES,
   persistTokenUsage,
   postTokenUsageBatch,
+  scopeTokenUsageToRepo,
   toRecordTokenUsageRow,
 } from '../../index.ts';
 
@@ -206,6 +207,38 @@ describe('token usage', () => {
         source: 'test-source',
         totalTokens: 33,
       });
+    });
+  });
+
+  describe('repoIdentity on the wire', () => {
+    it('is omitted when the record has none, so older servers accept it', () => {
+      expect(toRecordTokenUsageRow(makeRecord(1))).not.toHaveProperty(
+        'repoIdentity',
+      );
+    });
+
+    it('is sent when the record carries one', () => {
+      const record = {
+        ...makeRecord(1),
+        repo_identity: 'https://github.com/org/repo',
+      };
+
+      expect(toRecordTokenUsageRow(record).repoIdentity).toBe(
+        'https://github.com/org/repo',
+      );
+    });
+  });
+
+  describe('scopeTokenUsageToRepo', () => {
+    it('drops the cwd and stamps a null identity for a foreign non-git root', () => {
+      const foreign = fs.mkdtempSync(path.join(os.tmpdir(), 'tu-foreign-'));
+      try {
+        expect(scopeTokenUsageToRepo([makeRecord(1)], foreign)).toEqual([
+          { ...makeRecord(1), cwd: null, repo_identity: null },
+        ]);
+      } finally {
+        fs.rmSync(foreign, { force: true, recursive: true });
+      }
     });
   });
 

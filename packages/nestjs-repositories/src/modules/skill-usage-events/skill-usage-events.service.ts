@@ -208,6 +208,7 @@ export class SkillUsageEventsService {
       occurredAt: input.occurredAt,
       privacyLevel: input.privacyLevel ?? SKILL_USAGE_PRIVACY_LEVELS.TRUNCATED,
       promptId: input.promptId ?? null,
+      repoIdentity: input.repoIdentity ?? null,
       scope: input.scope,
       sessionId: input.sessionId ?? null,
       skillName: input.skillName,
@@ -470,7 +471,7 @@ export class SkillUsageEventsService {
     readonly skillName?: string | null;
     readonly start: string;
   }): Promise<SkillUsageFilterOptions> {
-    const [branchRows, cwdRows] = await Promise.all([
+    const [branchRows, cwdRows, repoRows] = await Promise.all([
       this.withSkillName(this.dateRangeQuery(query), query.skillName)
         .select('DISTINCT e.git_branch', 'value')
         .andWhere('e.git_branch IS NOT NULL')
@@ -485,11 +486,18 @@ export class SkillUsageEventsService {
         .orderBy('e.cwd', 'ASC')
         .limit(FILTER_OPTIONS_LIMIT)
         .getRawMany<{ value: string }>(),
+      this.withSkillName(this.dateRangeQuery(query), query.skillName)
+        .select('DISTINCT e.repo_identity', 'value')
+        .andWhere('e.repo_identity IS NOT NULL')
+        .orderBy('e.repo_identity', 'ASC')
+        .limit(FILTER_OPTIONS_LIMIT)
+        .getRawMany<{ value: string }>(),
     ]);
 
     return {
       cwds: cwdRows.map((row) => row.value),
       gitBranches: branchRows.map((row) => row.value),
+      repoIdentities: repoRows.map((row) => row.value),
     };
   }
 
@@ -628,6 +636,15 @@ export class SkillUsageEventsService {
       qb.andWhere('o.cwd = :cwd', { cwd: query.cwd });
     }
 
+    // Outcomes carry no repo identity of their own, so they follow the start
+    // they correlate to — the documented sessionId + skillName key.
+    if (query.repoIdentity != null && query.repoIdentity !== '') {
+      qb.andWhere(
+        `EXISTS (SELECT 1 FROM skill_usage_events s WHERE s.session_id = o.session_id AND s.skill_name = o.skill_name AND s.repo_identity = :repoIdentity)`,
+        { repoIdentity: query.repoIdentity },
+      );
+    }
+
     if (query.skillName != null && query.skillName !== '') {
       qb.andWhere('o.skill_name = :skillName', { skillName: query.skillName });
     }
@@ -686,7 +703,7 @@ export class SkillUsageEventsService {
       .andWhere('e.duplicate_of_id IS NULL');
   }
 
-  /** Date window + optional scope / gitBranch / cwd filters. */
+  /** Date window + optional scope / gitBranch / cwd / repoIdentity filters. */
   private rangeQuery(
     query: SkillUsageRangeQuery,
   ): SelectQueryBuilder<SkillUsageEvent> {
@@ -702,6 +719,12 @@ export class SkillUsageEventsService {
 
     if (query.cwd != null && query.cwd !== '') {
       qb.andWhere('e.cwd = :cwd', { cwd: query.cwd });
+    }
+
+    if (query.repoIdentity != null && query.repoIdentity !== '') {
+      qb.andWhere('e.repo_identity = :repoIdentity', {
+        repoIdentity: query.repoIdentity,
+      });
     }
 
     if (query.skillName != null && query.skillName !== '') {

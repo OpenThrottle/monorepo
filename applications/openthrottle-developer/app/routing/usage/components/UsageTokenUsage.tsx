@@ -43,6 +43,7 @@ export interface UsageTokenUsageProps {
   /** Skill-usage search params to preserve when changing provider. */
   skillCwdParam?: string | null;
   skillGitBranchParam?: string | null;
+  skillRepoParam?: string | null;
   skillScopeParam?: string | null;
   /** Summed usage over the current selection. */
   totals: UsageTokenUsageTotalsFragment;
@@ -60,6 +61,7 @@ export const UsageTokenUsage = (
     selectedProvider,
     skillCwdParam = null,
     skillGitBranchParam = null,
+    skillRepoParam = null,
     skillScopeParam = null,
     totals,
   } = props;
@@ -88,6 +90,7 @@ export const UsageTokenUsage = (
       cwd: skillCwdParam,
       gitBranch: skillGitBranchParam,
       provider,
+      repo: skillRepoParam,
       scope: skillScopeParam,
     });
   };
@@ -151,6 +154,7 @@ export const UsageTokenUsage = (
         selectedProvider={selectedProvider}
         skillCwdParam={skillCwdParam}
         skillGitBranchParam={skillGitBranchParam}
+        skillRepoParam={skillRepoParam}
         skillScopeParam={skillScopeParam}
       />
 

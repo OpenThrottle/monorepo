@@ -11,6 +11,7 @@ export interface UsageTokenUsageFiltersProps {
   /** Skill-usage search params to preserve when changing provider. */
   skillCwdParam?: string | null;
   skillGitBranchParam?: string | null;
+  skillRepoParam?: string | null;
   skillScopeParam?: string | null;
 }
 
@@ -22,6 +23,7 @@ export const UsageTokenUsageFilters = (
     selectedProvider,
     skillCwdParam = null,
     skillGitBranchParam = null,
+    skillRepoParam = null,
     skillScopeParam = null,
   } = props;
 
@@ -68,6 +70,7 @@ export const UsageTokenUsageFilters = (
               cwd: skillCwdParam,
               gitBranch: skillGitBranchParam,
               provider: option.id,
+              repo: skillRepoParam,
               scope: skillScopeParam,
             })}
           >

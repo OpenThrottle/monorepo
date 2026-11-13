@@ -5112,6 +5112,7 @@ export type QuerySkillUsageArgs = {
   cwd?: InputMaybe<Scalars['String']['input']>;
   end: Scalars['String']['input'];
   gitBranch?: InputMaybe<Scalars['String']['input']>;
+  repoIdentity?: InputMaybe<Scalars['String']['input']>;
   scope?: InputMaybe<Scalars['String']['input']>;
   skillName?: InputMaybe<Scalars['String']['input']>;
   start: Scalars['String']['input'];
@@ -5511,7 +5512,10 @@ export type RecordSkillUsageInput = {
   agentType?: InputMaybe<Scalars['String']['input']>;
   /** Args after client privacy seam. Pass null for name-only. */
   args?: InputMaybe<Scalars['String']['input']>;
-  /** Working directory at invocation time. */
+  /**
+   * Working directory at invocation time.
+   * @deprecated Absolute paths leak the home-directory layout and foreign repos now send null (child-repo-hook-telemetry-contract §3). Use repoIdentity.
+   */
   cwd?: InputMaybe<Scalars['String']['input']>;
   /** Git branch at capture time. */
   gitBranch?: InputMaybe<Scalars['String']['input']>;
@@ -5525,6 +5529,8 @@ export type RecordSkillUsageInput = {
   privacyLevel?: InputMaybe<Scalars['String']['input']>;
   /** Harness prompt_id when present. */
   promptId?: InputMaybe<Scalars['String']['input']>;
+  /** Git remote of the repository the skill ran in. Re-normalized server-side with normalizeRemoteUrl; anything that does not normalize (a filesystem path included) is stored as null. */
+  repoIdentity?: InputMaybe<Scalars['String']['input']>;
   /** ours | injected | personal | third-party. */
   scope: Scalars['String']['input'];
   /** Harness session id when present. */
@@ -5633,7 +5639,10 @@ export type RecordTokenUsageRowInput = {
   cacheWriteTokens?: InputMaybe<Scalars['Float']['input']>;
   /** Dollar cost of the turn when the producer priced it. When null, the server estimates it at Anthropic list price if the request can be priced exactly. */
   costUsd?: InputMaybe<Scalars['Float']['input']>;
-  /** Working directory the harness reported. */
+  /**
+   * Working directory the harness reported.
+   * @deprecated Absolute paths leak the home-directory layout and foreign repos now send null (child-repo-hook-telemetry-contract §3). Use repoIdentity.
+   */
   cwd?: InputMaybe<Scalars['String']['input']>;
   /** Git branch the harness reported. */
   gitBranch?: InputMaybe<Scalars['String']['input']>;
@@ -5651,6 +5660,8 @@ export type RecordTokenUsageRowInput = {
   rawUsageJson?: InputMaybe<Scalars['String']['input']>;
   /** Reasoning tokens for the turn, when reported separately. */
   reasoningTokens?: InputMaybe<Scalars['Float']['input']>;
+  /** Git remote of the repository the turn ran in. Re-normalized server-side with normalizeRemoteUrl; anything that does not normalize (a filesystem path included) is stored as null. Absent on older senders. */
+  repoIdentity?: InputMaybe<Scalars['String']['input']>;
   /** Provider API request id. With source and sessionId it is the idempotency key: a re-sent row is skipped. A row without one is never deduplicated. */
   requestId?: InputMaybe<Scalars['String']['input']>;
   /** The agent harness's own session id. */
@@ -6728,7 +6739,10 @@ export type SkillUsageEventObject = {
   agentType?: Maybe<Scalars['String']['output']>;
   /** Skill args after client privacy seam. Null when privacyLevel is name-only. */
   args?: Maybe<Scalars['String']['output']>;
-  /** Working directory reported by the harness at invocation time. */
+  /**
+   * Working directory reported by the harness at invocation time.
+   * @deprecated Absolute paths leak the home-directory layout and foreign repos now send null (child-repo-hook-telemetry-contract §3). Use repoIdentity.
+   */
   cwd?: Maybe<Scalars['String']['output']>;
   /** Git branch at capture time (best-effort). */
   gitBranch?: Maybe<Scalars['String']['output']>;
@@ -6746,6 +6760,8 @@ export type SkillUsageEventObject = {
   promptId?: Maybe<Scalars['String']['output']>;
   /** Server receipt time (set on insert). */
   receivedAt: Scalars['DateTime']['output'];
+  /** Normalized https git remote of the repository the skill ran in, or null when unknown. Never a filesystem path. */
+  repoIdentity?: Maybe<Scalars['String']['output']>;
   /** ours | injected | personal | third-party — derived by the client: ours is authored under skills/, personal is linked from the invoking user's personal skills root outside the repo, injected is an OpenThrottle skill authored under another repository's skills/ and linked in by foreign skill injection, third-party is everything else. */
   scope: Scalars['String']['output'];
   /** Harness session id when present. */
@@ -6770,6 +6786,8 @@ export type SkillUsageFilterOptionsObject = {
    * @deprecated Unbounded and now capped at 50 — use the skillUsageGitBranches query, which searches lazily and pins the default branch first.
    */
   gitBranches: Array<Scalars['String']['output']>;
+  /** Distinct non-null repo identities (normalized git remotes) in the date window, capped at 50 — the repository filter. */
+  repoIdentities: Array<Scalars['String']['output']>;
 };
 
 export type SkillUsageGitBranchObject = {

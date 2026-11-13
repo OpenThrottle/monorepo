@@ -445,6 +445,7 @@ describe('TokenUsageResolver', () => {
             provider: 'claude',
             rawUsage: { service_tier: 'standard' },
             reasoningTokens: null,
+            repoIdentity: null,
             requestId: 'req-1',
             sessionId: 'sess-1',
             source: 'claude-code',
@@ -635,6 +636,35 @@ describe('TokenUsageResolver', () => {
             requestId: null,
             sessionId: 'sess-1',
           }),
+        ]);
+      });
+    });
+
+    describe('repoIdentity', () => {
+      it('re-normalizes a remote and nulls a path or an absent value', async () => {
+        resolveEffectiveUserId.mockResolvedValueOnce('user-1');
+        recordTokenUsageBatch.mockResolvedValueOnce({
+          inserted: 3,
+          skipped: 0,
+        });
+
+        await resolver.recordTokenUsage(
+          {
+            rows: [
+              buildRow({ repoIdentity: 'git@github.com:Org/Repo.git' }),
+              buildRow({ repoIdentity: '/Users/someone/repo' }),
+              buildRow(),
+            ],
+          },
+          'user-1',
+        );
+
+        expect(recordTokenUsageBatch.mock.calls[0]?.[1]).toEqual([
+          expect.objectContaining({
+            repoIdentity: 'https://github.com/Org/Repo',
+          }),
+          expect.objectContaining({ repoIdentity: null }),
+          expect.objectContaining({ repoIdentity: null }),
         ]);
       });
     });

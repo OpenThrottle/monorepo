@@ -8,6 +8,8 @@ export type UsageSearchParams = {
   readonly cwd?: string | null;
   readonly gitBranch?: string | null;
   readonly provider?: string | null;
+  /** Normalized git remote; supersedes `cwd` as the project filter. */
+  readonly repo?: string | null;
   readonly scope?: string | null;
 };
 
@@ -29,6 +31,9 @@ export const buildUsageSearch = (params: UsageSearchParams): string => {
   }
   if (params.cwd != null && params.cwd !== '') {
     search.set('skillCwd', params.cwd);
+  }
+  if (params.repo != null && params.repo !== '') {
+    search.set('skillRepo', params.repo);
   }
 
   const query = search.toString();

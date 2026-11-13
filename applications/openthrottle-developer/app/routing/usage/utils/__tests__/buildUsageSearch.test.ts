@@ -44,4 +44,10 @@ describe('buildUsageSearch', () => {
       buildUsageSearch({ account: 'unattributed', provider: 'grok' }),
     ).toBe('?provider=grok&account=unattributed');
   });
+
+  test('includes the repo filter after the cwd', () => {
+    expect(
+      buildUsageSearch({ repo: 'https://github.com/org/repo', scope: 'ours' }),
+    ).toBe('?skillScope=ours&skillRepo=https%3A%2F%2Fgithub.com%2Forg%2Frepo');
+  });
 });

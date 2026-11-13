@@ -37,6 +37,7 @@ import {
   readNewBytes,
   resolveAuthToken,
   resolveGraphqlUrl,
+  scopeTokenUsageToRepo,
 } from '../../index.ts';
 import { CLAUDE_SOURCE } from './payload.ts';
 import { parseTranscriptLines } from './transcript.ts';
@@ -296,7 +297,10 @@ export const scanBackfill = ({
       files += 1;
       projectFiles += 1;
 
-      for (const record of scan.records) {
+      for (const record of scopeTokenUsageToRepo(
+        scan.records,
+        project.checkout,
+      )) {
         records.push(record);
         projectTokens += 1;
         bump(tokenDays, dayOf(record.occurred_at));

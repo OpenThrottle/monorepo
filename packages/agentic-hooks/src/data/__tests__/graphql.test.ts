@@ -8,6 +8,7 @@ import type { HookFetch } from '../../index.ts';
 import {
   isPermanentHttpStatus,
   isSchemaSkewMessage,
+  omitField,
   postGraphqlMutation,
 } from '../../index.ts';
 
@@ -170,5 +171,76 @@ describe('isPermanentHttpStatus', () => {
 
   it.each([401, 403, 408, 429, 500, 503])('%i is not', (status) => {
     expect(isPermanentHttpStatus(status)).toBe(false);
+  });
+});
+
+describe('legacyVariables', () => {
+  const unknownField = {
+    data: null,
+    errors: [
+      {
+        extensions: { code: 'BAD_USER_INPUT' },
+        message: `Variable "$input" got invalid value; Field "repoIdentity" is not defined by type "RecordThingInput".`,
+      },
+    ],
+  };
+
+  /** A fetch that answers each call in turn and records what it was sent. */
+  const sequence = (
+    payloads: readonly unknown[],
+  ): { fetchImpl: HookFetch; sent: unknown[] } => {
+    const sent: unknown[] = [];
+    const fetchImpl: HookFetch = async (_url, init) => {
+      sent.push(JSON.parse(String(init?.body)).variables);
+      const payload = payloads[sent.length - 1];
+      return { json: async () => payload, ok: true, status: 200 };
+    };
+    return { fetchImpl, sent };
+  };
+
+  const postWithLegacy = (fetchImpl: HookFetch) => {
+    const input = { name: 'x', repoIdentity: 'https://github.com/org/repo' };
+    return postGraphqlMutation({
+      authToken: 'tok',
+      fetchImpl,
+      field: 'recordThing',
+      graphqlUrl: 'http://example.test/graphql',
+      legacyVariables: { input: omitField(input, 'repoIdentity') },
+      query: 'mutation { recordThing { id } }',
+      timeoutMs: 200,
+      variables: { input },
+    });
+  };
+
+  describe('when an older server does not define a sent field (transient skew)', () => {
+    it('re-sends once without it and reports that result', async () => {
+      const { fetchImpl, sent } = sequence([
+        unknownField,
+        { data: { recordThing: { id: 'x1' } } },
+      ]);
+
+      await expect(postWithLegacy(fetchImpl)).resolves.toEqual({
+        id: 'x1',
+        ok: true,
+      });
+      expect(sent).toEqual([
+        { input: { name: 'x', repoIdentity: 'https://github.com/org/repo' } },
+        { input: { name: 'x' } },
+      ]);
+    });
+  });
+
+  describe('when the rejection is about anything else', () => {
+    it('does not retry', async () => {
+      const { fetchImpl, sent } = sequence([
+        graphqlError({ code: 'BAD_REQUEST' }),
+      ]);
+
+      await expect(postWithLegacy(fetchImpl)).resolves.toMatchObject({
+        ok: false,
+        permanent: true,
+      });
+      expect(sent).toHaveLength(1);
+    });
   });
 });

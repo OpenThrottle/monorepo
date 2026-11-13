@@ -57,6 +57,27 @@ var logHookError = (message, err) => {
   }
 };
 
+// packages/agentic-hooks/src/utils/normalizeRemoteUrl.ts
+var normalizeRemoteUrl = (raw) => {
+  const trimmed = raw.trim();
+  if (trimmed === "") {
+    return null;
+  }
+  let url = trimmed.replace(/^git@([^:/]+):/, "https://$1/").replace(/^ssh:\/\/(?:[^@/]+@)?/, "https://").replace(/^http:\/\//, "https://").replace(/^https:\/\/[^@/]+@/, "https://");
+  if (!/^https:\/\/[^/]+\/.+/.test(url)) {
+    return null;
+  }
+  url = url.replace(/\.git$/, "").replace(/\/+$/, "");
+  const withoutScheme = url.slice("https://".length);
+  const slashIndex = withoutScheme.indexOf("/");
+  if (slashIndex === -1) {
+    return null;
+  }
+  const host = withoutScheme.slice(0, slashIndex).toLowerCase();
+  const path12 = withoutScheme.slice(slashIndex);
+  return `https://${host}${path12}`;
+};
+
 // packages/agentic-hooks/src/config/env.ts
 var userConfigDir = () => {
   return import_node_path.default.join(import_node_os.default.homedir(), ".openthrottle");
@@ -100,6 +121,37 @@ var resolveGitBranch = (repoRoot) => {
   } catch {
     return "";
   }
+};
+var repoIdentityCache = /* @__PURE__ */ new Map();
+var resolveRepoIdentity = (repoRoot) => {
+  const cached = repoIdentityCache.get(repoRoot);
+  if (cached !== void 0) {
+    return cached;
+  }
+  let identity = null;
+  try {
+    const remote = (0, import_node_child_process.execFileSync)(
+      "git",
+      ["config", "--get", "remote.origin.url"],
+      {
+        cwd: repoRoot,
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "ignore"],
+        timeout: 1e3
+      }
+    );
+    identity = normalizeRemoteUrl(remote);
+  } catch {
+    identity = null;
+  }
+  repoIdentityCache.set(repoRoot, identity);
+  return identity;
+};
+var resolveReportableCwd = (repoRoot, cwd) => {
+  if (!isOpenThrottleCheckout(repoRoot)) {
+    return null;
+  }
+  return cwd || null;
 };
 var readEnvFile = (envPath) => {
   const out = {};
@@ -608,7 +660,15 @@ var transient = (reason) => {
     reason
   };
 };
-var postMutation = async ({
+var UNKNOWN_INPUT_FIELD = /Field "[^"]+" is not defined by type/;
+var omitField = (record, field) => {
+  return Object.fromEntries(
+    Object.entries(record).filter(([key]) => {
+      return key !== field;
+    })
+  );
+};
+var postMutationOnce = async ({
   authToken,
   fetchImpl,
   graphqlUrl,
@@ -668,6 +728,14 @@ var postMutation = async ({
     };
   }
   return { data: readMutationData(payload, field), ok: true };
+};
+var postMutation = async (args) => {
+  const posted = await postMutationOnce(args);
+  const { legacyVariables } = args;
+  if (posted.ok || legacyVariables === void 0 || !UNKNOWN_INPUT_FIELD.test(posted.reason)) {
+    return posted;
+  }
+  return postMutationOnce({ ...args, variables: legacyVariables });
 };
 var postGraphqlMutation = async (args) => {
   const posted = await postMutation(args);
@@ -830,7 +898,7 @@ var buildOutcomeEvent = ({
     return null;
   }
   const scope = detectScope(name, repoRoot);
-  const resolvedCwd = cwd || repoRoot;
+  const resolvedCwd = resolveReportableCwd(repoRoot, cwd || repoRoot);
   const hasDuration = durationMs != null && !Number.isNaN(Number(durationMs));
   const roundedDuration = Math.max(0, Math.round(Number(durationMs)));
   const resolvedDuration = hasDuration ? roundedDuration : null;
@@ -868,6 +936,9 @@ var toRecordSkillUsageInput = (event) => {
   }
   if (event.cwd != null) {
     input.cwd = event.cwd;
+  }
+  if (event.repo_identity != null) {
+    input.repoIdentity = event.repo_identity;
   }
   if (event.git_branch != null && event.git_branch !== "") {
     input.gitBranch = event.git_branch;
@@ -1045,8 +1116,18 @@ var toRecordTokenUsageAccount = (account) => {
     plan: account.plan
   };
 };
+var scopeTokenUsageToRepo = (records, repoRoot) => {
+  const repoIdentity = resolveRepoIdentity(repoRoot);
+  return records.map((record) => {
+    return {
+      ...record,
+      cwd: resolveReportableCwd(repoRoot, record.cwd),
+      repo_identity: repoIdentity
+    };
+  });
+};
 var toRecordTokenUsageRow = (record) => {
-  return {
+  const row = {
     account: toRecordTokenUsageAccount(record.agent_account),
     cacheReadTokens: record.cache_read_tokens,
     cacheWriteTokens: record.cache_write_tokens,
@@ -1065,6 +1146,10 @@ var toRecordTokenUsageRow = (record) => {
     source: record.source,
     totalTokens: record.total_tokens
   };
+  if (record.repo_identity == null) {
+    return row;
+  }
+  return { ...row, repoIdentity: record.repo_identity };
 };
 var tokenUsageRowBytes = (record) => {
   return Buffer.byteLength(
@@ -1096,14 +1181,23 @@ var postTokenUsageBatch = async ({
       reason: `batch of ${records.length} exceeds ${MAX_TOKEN_USAGE_BATCH}`
     };
   }
+  const rows = records.map(toRecordTokenUsageRow);
   const posted = await postGraphqlMutationNode({
     authToken,
     fetchImpl,
     field: "recordTokenUsage",
     graphqlUrl,
+    // repoIdentity is newer than some servers still receiving these rows.
+    legacyVariables: {
+      input: {
+        rows: rows.map((row) => {
+          return omitField(row, "repoIdentity");
+        })
+      }
+    },
     query: RECORD_TOKEN_USAGE_MUTATION,
     timeoutMs,
-    variables: { input: { rows: records.map(toRecordTokenUsageRow) } }
+    variables: { input: { rows } }
   });
   if (!posted.ok) {
     return posted;
@@ -1132,14 +1226,17 @@ var postSkillUsageEvent = async ({
   timeoutMs = DEFAULT_POST_TIMEOUT_MS,
   fetchImpl = globalThis.fetch
 }) => {
+  const input = toRecordSkillUsageInput(event);
   return postGraphqlMutation({
     authToken,
     fetchImpl,
     field: "recordSkillUsage",
     graphqlUrl,
+    // repoIdentity is newer than some servers still receiving these events.
+    legacyVariables: { input: omitField(input, "repoIdentity") },
     query: RECORD_SKILL_USAGE_MUTATION,
     timeoutMs,
-    variables: { input: toRecordSkillUsageInput(event) }
+    variables: { input }
   });
 };
 var postSkillUsageOutcome = async ({
@@ -4789,7 +4886,7 @@ var captureTranscriptUsage = async ({
         fetchImpl,
         graphqlUrl,
         jsonlPath,
-        records: records.map((record) => {
+        records: scopeTokenUsageToRepo(records, repoRoot).map((record) => {
           return { ...record, agent_account: account };
         }),
         repoRoot,

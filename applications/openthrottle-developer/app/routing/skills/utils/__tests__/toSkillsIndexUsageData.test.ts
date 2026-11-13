@@ -11,7 +11,7 @@ const skillUsage = (
     byDay: [],
     byScope: [],
     bySkill: [],
-    filterOptions: { cwds: [], gitBranches: [] },
+    filterOptions: { cwds: [], gitBranches: [], repoIdentities: [] },
     totalCount: 0,
     ...overrides,
   };

@@ -123,6 +123,7 @@ export class AgentTokenUsageService {
             provider: row.provider,
             rawUsage,
             reasoningTokens: row.reasoningTokens,
+            repoIdentity: row.repoIdentity,
             requestId: row.requestId,
             sessionId: row.sessionId,
             source: row.source,

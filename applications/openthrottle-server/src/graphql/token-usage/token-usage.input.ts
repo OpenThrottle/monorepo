@@ -72,6 +72,7 @@ export class RecordTokenUsageRowInput {
   costUsd!: number | null;
 
   @Field(() => String, {
+    deprecationReason: `Absolute paths leak the home-directory layout and foreign repos now send null (child-repo-hook-telemetry-contract §3). Use repoIdentity.`,
     description: `Working directory the harness reported.`,
     nullable: true,
   })
@@ -124,6 +125,12 @@ export class RecordTokenUsageRowInput {
     nullable: true,
   })
   reasoningTokens!: number | null;
+
+  @Field(() => String, {
+    description: `Git remote of the repository the turn ran in. Re-normalized server-side with normalizeRemoteUrl; anything that does not normalize (a filesystem path included) is stored as null. Absent on older senders.`,
+    nullable: true,
+  })
+  repoIdentity?: string | null;
 
   @Field(() => String, {
     description: `Provider API request id. With source and sessionId it is the idempotency key: a re-sent row is skipped. A row without one is never deduplicated.`,

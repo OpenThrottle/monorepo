@@ -27,6 +27,7 @@ export class RecordSkillUsageInput {
   args?: string | null;
 
   @Field(() => String, {
+    deprecationReason: `Absolute paths leak the home-directory layout and foreign repos now send null (child-repo-hook-telemetry-contract §3). Use repoIdentity.`,
     description: `Working directory at invocation time.`,
     nullable: true,
   })
@@ -66,6 +67,12 @@ export class RecordSkillUsageInput {
     nullable: true,
   })
   promptId?: string | null;
+
+  @Field(() => String, {
+    description: `Git remote of the repository the skill ran in. Re-normalized server-side with normalizeRemoteUrl; anything that does not normalize (a filesystem path included) is stored as null.`,
+    nullable: true,
+  })
+  repoIdentity?: string | null;
 
   @Field(() => String, {
     description: `ours | injected | personal | third-party.`,

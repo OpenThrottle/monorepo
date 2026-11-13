@@ -11,6 +11,7 @@
  * `$HOME` is redirected at a tmpdir for the user-global layer; `os.homedir()`
  * follows it on POSIX and the module resolves the directory per call.
  */
+import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -24,6 +25,8 @@ import {
   readRepoEnvFile,
   resolveAuthToken,
   resolveGraphqlUrl,
+  resolveRepoIdentity,
+  resolveReportableCwd,
   TELEMETRY_CONFIG_SOURCES,
 } from '../../index.ts';
 
@@ -244,6 +247,63 @@ describe('config/env resolution by location', () => {
         'OPENTHROTTLE_MCP_AUTH_TOKEN=mcp\nOPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN=worker\n',
       );
       expect(resolveAuthToken(otRepo)).toBe('mcp');
+    });
+  });
+});
+
+describe('repo identity (contract §3)', () => {
+  let tmpRoot: string;
+
+  /** A git repo at `root`, with `remote` as origin when given. */
+  const makeGitRepo = (root: string, remote: string | null): void => {
+    fs.mkdirSync(root, { recursive: true });
+    execFileSync('git', ['init', '-q'], { cwd: root });
+    if (remote !== null) {
+      execFileSync('git', ['remote', 'add', 'origin', remote], { cwd: root });
+    }
+  };
+
+  beforeEach(() => {
+    tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'ot-hooks-identity-'));
+  });
+
+  afterEach(() => {
+    fs.rmSync(tmpRoot, { force: true, recursive: true });
+  });
+
+  describe('resolveRepoIdentity', () => {
+    it('normalizes the origin remote, dropping credentials', () => {
+      const repo = path.join(tmpRoot, 'with-remote');
+      makeGitRepo(repo, 'https://user:token@GitHub.com/Org/Repo.git');
+
+      expect(resolveRepoIdentity(repo)).toBe('https://github.com/Org/Repo');
+    });
+
+    it('is null, never the path, when there is no remote', () => {
+      const repo = path.join(tmpRoot, 'no-remote');
+      makeGitRepo(repo, null);
+
+      expect(resolveRepoIdentity(repo)).toBeNull();
+    });
+
+    it('is null outside a git repository', () => {
+      expect(resolveRepoIdentity(path.join(tmpRoot, 'missing'))).toBeNull();
+    });
+  });
+
+  describe('resolveReportableCwd', () => {
+    it('keeps the cwd in an OpenThrottle checkout', () => {
+      const otRepo = path.join(tmpRoot, 'ot');
+      makeOpenThrottleCheckout(otRepo);
+
+      expect(resolveReportableCwd(otRepo, '/work/ot')).toBe('/work/ot');
+    });
+
+    it('drops the cwd in a foreign repo', () => {
+      const foreignRepo = path.join(tmpRoot, 'foreign');
+      fs.mkdirSync(foreignRepo, { recursive: true });
+
+      expect(resolveReportableCwd(foreignRepo, '/home/me/foreign')).toBeNull();
     });
   });
 });

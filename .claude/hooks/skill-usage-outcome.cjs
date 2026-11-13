@@ -101,6 +101,12 @@ var resolveGitBranch = (repoRoot) => {
     return "";
   }
 };
+var resolveReportableCwd = (repoRoot, cwd) => {
+  if (!isOpenThrottleCheckout(repoRoot)) {
+    return null;
+  }
+  return cwd || null;
+};
 var readEnvFile = (envPath) => {
   const out = {};
   try {
@@ -282,7 +288,8 @@ var transient = (reason) => {
     reason
   };
 };
-var postMutation = async ({
+var UNKNOWN_INPUT_FIELD = /Field "[^"]+" is not defined by type/;
+var postMutationOnce = async ({
   authToken,
   fetchImpl,
   graphqlUrl,
@@ -342,6 +349,14 @@ var postMutation = async ({
     };
   }
   return { data: readMutationData(payload, field), ok: true };
+};
+var postMutation = async (args) => {
+  const posted = await postMutationOnce(args);
+  const { legacyVariables } = args;
+  if (posted.ok || legacyVariables === void 0 || !UNKNOWN_INPUT_FIELD.test(posted.reason)) {
+    return posted;
+  }
+  return postMutationOnce({ ...args, variables: legacyVariables });
 };
 var postGraphqlMutation = async (args) => {
   const posted = await postMutation(args);
@@ -492,7 +507,7 @@ var buildOutcomeEvent = ({
     return null;
   }
   const scope = detectScope(name, repoRoot);
-  const resolvedCwd = cwd || repoRoot;
+  const resolvedCwd = resolveReportableCwd(repoRoot, cwd || repoRoot);
   const hasDuration = durationMs != null && !Number.isNaN(Number(durationMs));
   const roundedDuration = Math.max(0, Math.round(Number(durationMs)));
   const resolvedDuration = hasDuration ? roundedDuration : null;

@@ -31,6 +31,7 @@ import {
   persistTokenUsage,
   readCheckpoint,
   readNewBytes,
+  scopeTokenUsageToRepo,
   sweepStaleCheckpoints,
   writeCheckpoint,
 } from '../../index.ts';
@@ -192,7 +193,7 @@ export const captureTranscriptUsage = async ({
         fetchImpl,
         graphqlUrl,
         jsonlPath,
-        records: records.map((record) => {
+        records: scopeTokenUsageToRepo(records, repoRoot).map((record) => {
           return { ...record, agent_account: account };
         }),
         repoRoot,

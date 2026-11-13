@@ -27,6 +27,7 @@ export class SkillUsageEventObject {
   args!: string | null;
 
   @Field(() => String, {
+    deprecationReason: `Absolute paths leak the home-directory layout and foreign repos now send null (child-repo-hook-telemetry-contract §3). Use repoIdentity.`,
     description: `Working directory reported by the harness at invocation time.`,
     nullable: true,
   })
@@ -73,6 +74,12 @@ export class SkillUsageEventObject {
     description: `Server receipt time (set on insert).`,
   })
   receivedAt!: Date;
+
+  @Field(() => String, {
+    description: `Normalized https git remote of the repository the skill ran in, or null when unknown. Never a filesystem path.`,
+    nullable: true,
+  })
+  repoIdentity!: string | null;
 
   @Field(() => String, {
     description: `ours | injected | personal | third-party — derived by the client: ours is authored under skills/, personal is linked from the invoking user's personal skills root outside the repo, injected is an OpenThrottle skill authored under another repository's skills/ and linked in by foreign skill injection, third-party is everything else.`,
@@ -284,6 +291,11 @@ export class SkillUsageFilterOptionsObject {
     description: `Distinct non-null git branch values in the date window.`,
   })
   gitBranches!: string[];
+
+  @Field(() => [String], {
+    description: `Distinct non-null repo identities (normalized git remotes) in the date window, capped at 50 — the repository filter.`,
+  })
+  repoIdentities!: string[];
 }
 
 @ObjectType()

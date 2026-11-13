@@ -28,6 +28,7 @@ export type AgentTokenUsageFactoryData = Pick<
   | 'provider'
   | 'rawUsage'
   | 'reasoningTokens'
+  | 'repoIdentity'
   | 'requestId'
   | 'sessionId'
   | 'source'
@@ -64,6 +65,7 @@ export const agentTokenUsageFactory =
       ]),
       rawUsage: null,
       reasoningTokens: faker.number.int({ max: 500, min: 0 }),
+      repoIdentity: null,
       requestId: null,
       sessionId: null,
       source: AGENT_TOKEN_USAGE_SOURCES.CHAT,

@@ -87,6 +87,27 @@ to its path.
 `git_branch` continues to be sent for both classes — it is already collected, and it is not sensitive in
 a way the remote URL is not.
 
+### As shipped (OT plan `010012e9`)
+
+Skill-usage events and token-usage rows carry `repoIdentity`, the checkout's `remote.origin.url` run
+through `packages/agentic-hooks/src/utils/normalizeRemoteUrl.ts` before it leaves the machine, and
+through the server's `normalizeRemoteUrl` again on arrival; anything that does not normalize — a path
+included — is stored as `NULL`. It lands in `skill_usage_events.repo_identity` and
+`agent_token_usage.repo_identity` (migration 161). The coverage heartbeat (§8) applied the same rule
+first.
+
+`cwd` is kept for the `home` class only. In a `foreign` repo every sender — skill starts, outcomes and
+token-usage rows alike — sends `cwd: null`, decided by the same fail-closed `isOpenThrottleCheckout`
+test as §2 (`resolveReportableCwd`). The column stays, deprecated in the schema rather than removed, and
+rows written before this are never rewritten.
+
+**Older servers keep receiving.** `repoIdentity` is omitted from the payload when it is unknown, and
+when a server rejects it as an undefined input field the sender re-sends once without it, so a new
+plugin talking to an old server delivers the record now, minus the identity. This is the one
+exception to the schema-skew rule in §8: skew normally keeps a line buffered until the server is
+upgraded, but `repoIdentity` is optional, and a foreign repo's operator may never upgrade the server
+it posts to.
+
 ### `detectScope` in a foreign repo
 
 `detectScope` currently answers "is this skill authored under `<repoRoot>/skills/`". In a foreign repo
@@ -270,6 +291,8 @@ argument, type or enum value the running server does not define yet — the drai
 buffered instead of dead-lettering it, so restarting the server onto the newer commit delivers it.
 Until then it shows as `BUFFER_STALE` / `BUFFER_GROWING`. On 2026-11-13 the old behavior
 dead-lettered 930 token rows in the three hours between #748 landing and the server restarting.
+An optional field a sender can drop is the exception: see `repoIdentity` in §3, which is re-sent
+without the field rather than held.
 
 ---
 
@@ -280,7 +303,8 @@ dead-lettered 930 token rows in the three hours between #748 landing and the ser
 | endpoint from `<repoRoot>/.env`   | yes                                                | **no**                                |
 | auth token from `<repoRoot>/.env` | yes                                                | **no**                                |
 | endpoint sources                  | repo `.env` → process env → `~/.openthrottle/.env` | process env → `~/.openthrottle/.env`  |
-| repo identity                     | monorepo                                           | normalized git remote URL, or none    |
+| repo identity                     | normalized git remote URL, or none                 | normalized git remote URL, or none    |
+| working directory (`cwd`)         | sent                                               | **never**                             |
 | scope detection                   | `<repoRoot>/skills/<name>`                         | injected/plugin skill set             |
 | buffer location                   | `~/.openthrottle/skill-usage/`                     | `~/.openthrottle/skill-usage/` (same) |
 | privacy default                   | `truncated` (args redacted, 256 cap)               | **`name-only`** (no args)             |
@@ -290,7 +314,7 @@ dead-lettered 930 token rows in the three hours between #748 landing and the ser
 
 **Three rows that the draft split by profile are now identical for both.** The buffer is one flat
 `~/.openthrottle/skill-usage/` rather than `<repoRoot>/.cache/` at home and a `<repo-id>` subdirectory
-away: repository identity already travels in every record's `cwd` and `git_branch`, so encoding it in
+away: repository identity already travels in every record's `repoIdentity` and `git_branch`, so encoding it in
 a path duplicated it, and a single directory gives the drain hook exactly one place to look regardless
 of where a session ran. The endpoint sources differ only in that the repo `.env` layer is _absent_ in
 a foreign repo — it is gated on `isOpenThrottleCheckout`, which fails closed, so the same code answers

@@ -162,6 +162,7 @@ describe('SkillUsageEventsService', () => {
         invocationPath: 'skill_tool',
         occurredAt,
         promptId: 'prompt-1',
+        repoIdentity: 'https://github.com/org/repo',
         scope: SKILL_USAGE_SCOPES.OURS,
         sessionId: 'session-1',
         skillName: 'ot-plans',
@@ -181,6 +182,7 @@ describe('SkillUsageEventsService', () => {
         occurredAt,
         privacyLevel: SKILL_USAGE_PRIVACY_LEVELS.TRUNCATED,
         promptId: 'prompt-1',
+        repoIdentity: 'https://github.com/org/repo',
         scope: SKILL_USAGE_SCOPES.OURS,
         sessionId: 'session-1',
         skillName: 'ot-plans',
@@ -222,6 +224,7 @@ describe('SkillUsageEventsService', () => {
           occurredAt,
           privacyLevel: SKILL_USAGE_PRIVACY_LEVELS.TRUNCATED,
           promptId: null,
+          repoIdentity: null,
           scope: SKILL_USAGE_SCOPES.THIRD_PARTY,
           sessionId: null,
           skillName: 'vercel:deploy',
@@ -705,6 +708,32 @@ describe('SkillUsageEventsService', () => {
     });
   });
 
+  describe('when a repoIdentity filter is set', () => {
+    it('matches starts directly and outcomes through their correlated start', async () => {
+      const eventsQb = createQueryBuilderMock();
+      const outcomesQb = createQueryBuilderMock();
+      const service = await buildService({
+        events: { createQueryBuilder: vi.fn().mockReturnValue(eventsQb) },
+        outcomes: { createQueryBuilder: vi.fn().mockReturnValue(outcomesQb) },
+      });
+
+      await service.listBySkill({
+        end: '2026-07-31',
+        repoIdentity: 'https://github.com/org/repo',
+        start: '2026-07-01',
+      });
+
+      expect(eventsQb.andWhere).toHaveBeenCalledWith(
+        'e.repo_identity = :repoIdentity',
+        { repoIdentity: 'https://github.com/org/repo' },
+      );
+      expect(outcomesQb.andWhere).toHaveBeenCalledWith(
+        expect.stringContaining('s.repo_identity = :repoIdentity'),
+        { repoIdentity: 'https://github.com/org/repo' },
+      );
+    });
+  });
+
   describe('when a skillName filter is set', () => {
     it('applies e.skill_name to starts and o.skill_name to outcomes', async () => {
       const eventsQb = createQueryBuilderMock();
@@ -776,7 +805,11 @@ describe('SkillUsageEventsService', () => {
       expect(result.byScope).toEqual([]);
       expect(result.byDay).toEqual([]);
       expect(result.totalCount).toBe(0);
-      expect(result.filterOptions).toEqual({ cwds: [], gitBranches: [] });
+      expect(result.filterOptions).toEqual({
+        cwds: [],
+        gitBranches: [],
+        repoIdentities: [],
+      });
     });
   });
 
@@ -1053,6 +1086,11 @@ describe('SkillUsageEventsService', () => {
       const cwdQb = createQueryBuilderMock({
         getRawMany: vi.fn().mockResolvedValue([{ value: '/repo' }]),
       });
+      const repoQb = createQueryBuilderMock({
+        getRawMany: vi
+          .fn()
+          .mockResolvedValue([{ value: 'https://github.com/org/repo' }]),
+      });
 
       const eventsCreateQueryBuilder = vi
         .fn()
@@ -1061,7 +1099,8 @@ describe('SkillUsageEventsService', () => {
         .mockReturnValueOnce(dayQb)
         .mockReturnValueOnce(countQb)
         .mockReturnValueOnce(branchQb)
-        .mockReturnValueOnce(cwdQb);
+        .mockReturnValueOnce(cwdQb)
+        .mockReturnValueOnce(repoQb);
 
       const service = await buildService({
         events: { createQueryBuilder: eventsCreateQueryBuilder },
@@ -1105,23 +1144,28 @@ describe('SkillUsageEventsService', () => {
       expect(result.filterOptions).toEqual({
         cwds: ['/repo'],
         gitBranches: ['main'],
+        repoIdentities: ['https://github.com/org/repo'],
       });
     });
   });
   describe('listFilterOptions', () => {
-    it('caps both option lists so the deprecated field stays bounded', async () => {
+    it('caps every option list so the deprecated fields stay bounded', async () => {
       const branchQb = createQueryBuilderMock({
         getRawMany: vi.fn().mockResolvedValue([{ value: 'main' }]),
       });
       const cwdQb = createQueryBuilderMock({
         getRawMany: vi.fn().mockResolvedValue([{ value: '/repo' }]),
       });
+      const repoQb = createQueryBuilderMock({
+        getRawMany: vi.fn().mockResolvedValue([]),
+      });
       const service = await buildService({
         events: {
           createQueryBuilder: vi
             .fn()
             .mockReturnValueOnce(branchQb)
-            .mockReturnValueOnce(cwdQb),
+            .mockReturnValueOnce(cwdQb)
+            .mockReturnValueOnce(repoQb),
         },
       });
 
@@ -1132,6 +1176,7 @@ describe('SkillUsageEventsService', () => {
 
       expect(branchQb.limit).toHaveBeenCalledWith(50);
       expect(cwdQb.limit).toHaveBeenCalledWith(50);
+      expect(repoQb.limit).toHaveBeenCalledWith(50);
     });
   });
 

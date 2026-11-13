@@ -44,6 +44,17 @@ export const skillUsageCwdLabel = (cwd: string): string => {
 };
 
 /**
+ * `org/repo` from a normalized `https://host/org/repo` identity, for compact
+ * filter chips (the full remote stays in the title). Falls back to the input.
+ */
+export const skillUsageRepoLabel = (repoIdentity: string): string => {
+  const withoutScheme = repoIdentity.replace(/^https:\/\//, '');
+  const slashIndex = withoutScheme.indexOf('/');
+
+  return slashIndex === -1 ? repoIdentity : withoutScheme.slice(slashIndex + 1);
+};
+
+/**
  * Format avg duration; "Not measured" when no samples.
  *
  * Not measured is the COMMON case by design. Only a deliberate reporter supplies a

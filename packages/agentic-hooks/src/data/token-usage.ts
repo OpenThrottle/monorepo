@@ -3,6 +3,7 @@
  * in `TokenUsageRecord`s, this module knows the `recordTokenUsage` wire shape
  * and nothing about where the records came from.
  */
+import { resolveRepoIdentity, resolveReportableCwd } from '../config/env.ts';
 import type {
   HookFetch,
   TokenUsageAccount,
@@ -10,7 +11,7 @@ import type {
   TokenUsageRecord,
 } from '../types.ts';
 import { chunkByBudget } from './chunk.ts';
-import { postGraphqlMutationNode } from './graphql.ts';
+import { omitField, postGraphqlMutationNode } from './graphql.ts';
 
 /**
  * The server accepts at most this many rows per call and rejects a larger
@@ -60,14 +61,38 @@ const toRecordTokenUsageAccount = (
 };
 
 /**
+ * Stamp records with the checkout's repo identity and drop the working
+ * directory outside an OpenThrottle checkout (contract §3), so every producer
+ * applies the same rule at the one place records meet their checkout.
+ *
+ * @public
+ */
+export const scopeTokenUsageToRepo = (
+  records: readonly TokenUsageRecord[],
+  repoRoot: string,
+): TokenUsageRecord[] => {
+  const repoIdentity = resolveRepoIdentity(repoRoot);
+
+  return records.map((record) => {
+    return {
+      ...record,
+      cwd: resolveReportableCwd(repoRoot, record.cwd),
+      repo_identity: repoIdentity,
+    };
+  });
+};
+
+/**
  * Map one buffered snake_case record to the camelCase GraphQL row.
+ * `repoIdentity` is sent only when known, so a row without one stays valid
+ * against a server that predates the field.
  *
  * @public
  */
 export const toRecordTokenUsageRow = (
   record: TokenUsageRecord,
 ): Record<string, Record<string, string | null> | number | string | null> => {
-  return {
+  const row = {
     account: toRecordTokenUsageAccount(record.agent_account),
     cacheReadTokens: record.cache_read_tokens,
     cacheWriteTokens: record.cache_write_tokens,
@@ -86,6 +111,11 @@ export const toRecordTokenUsageRow = (
     source: record.source,
     totalTokens: record.total_tokens,
   };
+  if (record.repo_identity == null) {
+    return row;
+  }
+
+  return { ...row, repoIdentity: record.repo_identity };
 };
 
 /**
@@ -150,14 +180,23 @@ export const postTokenUsageBatch = async ({
     };
   }
 
+  const rows = records.map(toRecordTokenUsageRow);
   const posted = await postGraphqlMutationNode({
     authToken,
     fetchImpl,
     field: 'recordTokenUsage',
     graphqlUrl,
+    // repoIdentity is newer than some servers still receiving these rows.
+    legacyVariables: {
+      input: {
+        rows: rows.map((row) => {
+          return omitField(row, 'repoIdentity');
+        }),
+      },
+    },
     query: RECORD_TOKEN_USAGE_MUTATION,
     timeoutMs,
-    variables: { input: { rows: records.map(toRecordTokenUsageRow) } },
+    variables: { input: { rows } },
   });
   if (!posted.ok) {
     return posted;
