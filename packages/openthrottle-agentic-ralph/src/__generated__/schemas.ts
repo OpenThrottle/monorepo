@@ -31,6 +31,9 @@ import {
   ConnectMcpConnectorInput,
   CreateAgentConversationInput,
   CreateBlogPostInput,
+  CreateCmsFragmentInput,
+  CreateCmsLayoutInput,
+  CreateCmsLibraryComponentInput,
   CreateCustomPromptInput,
   CreateEvalDatasetFromTrajectoriesInput,
   CreateNoteInput,
@@ -164,6 +167,9 @@ import {
   UnverifiedWorkArtifactsInput,
   UpdateAgentConversationTitleInput,
   UpdateBlogPostInput,
+  UpdateCmsFragmentInput,
+  UpdateCmsLayoutInput,
+  UpdateCmsLibraryComponentInput,
   UpdateCustomPromptInput,
   UpdateEvalRunStatusInput,
   UpdateNoteInput,
@@ -560,6 +566,38 @@ export function CreateBlogPostInputSchema(): z.ZodObject<
     seoTitle: z.string().nullish(),
     slug: z.string().min(1),
     title: z.string().min(1),
+  });
+}
+
+export function CreateCmsFragmentInputSchema(): z.ZodObject<
+  Properties<CreateCmsFragmentInput>
+> {
+  return z.object({
+    name: z.string().min(1),
+    propertiesJson: z.string().nullish(),
+    typename: z.string().min(1),
+  });
+}
+
+export function CreateCmsLayoutInputSchema(): z.ZodObject<
+  Properties<CreateCmsLayoutInput>
+> {
+  return z.object({
+    name: z.string().min(1),
+    slug: z.string().min(1),
+  });
+}
+
+export function CreateCmsLibraryComponentInputSchema(): z.ZodObject<
+  Properties<CreateCmsLibraryComponentInput>
+> {
+  return z.object({
+    code: z.string().min(1),
+    libraryUuid: z.string().min(1),
+    name: z.string().min(1),
+    propsSchemaJson: z.string().nullish(),
+    status: z.string().nullish(),
+    typename: z.string().min(1),
   });
 }
 
@@ -1869,6 +1907,42 @@ export function UpdateBlogPostInputSchema(): z.ZodObject<
     seoTitle: z.string().nullish(),
     slug: z.string().nullish(),
     title: z.string().nullish(),
+  });
+}
+
+export function UpdateCmsFragmentInputSchema(): z.ZodObject<
+  Properties<UpdateCmsFragmentInput>
+> {
+  return z.object({
+    name: z.string().nullish(),
+    propertiesJson: z.string().nullish(),
+    uuid: z.string().min(1),
+  });
+}
+
+export function UpdateCmsLayoutInputSchema(): z.ZodObject<
+  Properties<UpdateCmsLayoutInput>
+> {
+  return z.object({
+    metadataJson: z.string().nullish(),
+    name: z.string().nullish(),
+    slug: z.string().nullish(),
+    status: z.string().nullish(),
+    tags: z.array(z.string().min(1)).nullish(),
+    uuid: z.string().min(1),
+  });
+}
+
+export function UpdateCmsLibraryComponentInputSchema(): z.ZodObject<
+  Properties<UpdateCmsLibraryComponentInput>
+> {
+  return z.object({
+    code: z.string().nullish(),
+    name: z.string().nullish(),
+    propsSchemaJson: z.string().nullish(),
+    status: z.string().nullish(),
+    typename: z.string().nullish(),
+    uuid: z.string().min(1),
   });
 }
 

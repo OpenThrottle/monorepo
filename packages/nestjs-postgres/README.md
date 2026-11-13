@@ -2,8 +2,10 @@
 
 Postgres building blocks for TypeORM repositories in NestJS:
 
-- **`BaseModel`** — an abstract entity base class with a `uuidv7()` primary key and
+- **`BaseModel`** — an abstract entity base class with a `uuidv7()` `id` primary key and
   `created_at` / `updated_at` / `deleted_at` timestamps.
+- **`BaseUuidModel`** — its sibling for tables keyed on `uuid` (the table owns the default, e.g.
+  `gen_random_uuid()`) that soft delete with a nullable `is_deleted` flag.
 - **`BaseRepository`** — an abstract repository with typed CRUD, bounded pagination, chunked bulk
   inserts, bulk updates and soft delete.
 - **`@PostgresProfiling()`** — an opt-in method decorator that EXPLAINs the SQL a repository method
@@ -25,9 +27,30 @@ pnpm add @openthrottle/nestjs-postgres
 npm install @openthrottle/nestjs-postgres
 ```
 
+## Model conventions
+
+A model opts into one of two conventions by the base class it extends. `BaseRepository` reads the
+convention from the entity class (its static `modelConvention`), so the repository subclass
+declares nothing for it.
+
+| Base            | Key                               | Soft delete                                   | Live rows                | Default page order   | Used by                        |
+| --------------- | --------------------------------- | --------------------------------------------- | ------------------------ | -------------------- | ------------------------------ |
+| `BaseModel`     | `id uuid DEFAULT uuidv7()`        | `deleted_at timestamptz`                      | `deleted_at IS NULL`     | `id`                 | `openthrottle`, when it adopts |
+| `BaseUuidModel` | `uuid uuid` (table-owned default) | `is_deleted boolean DEFAULT false` (nullable) | `is_deleted IS NOT TRUE` | `created_at`, `uuid` | `cms`                          |
+
+- **The flag filter is `IS NOT TRUE`**, not `= false`: the column is nullable, and `NULL` reads as
+  live.
+- **Reads hide deleted rows either way.** TypeORM already filters `@DeleteDateColumn` rows out of
+  `find*`; for a flag model `BaseRepository` adds the condition itself to `findById`, `findOne`,
+  `findBy`, `findByPaginated`, `update` and the reload in `updateManyReturning`, on every branch of
+  an array `where`. `withDeleted: true` skips it, as TypeORM does for timestamps.
+- **A flag soft delete is an `UPDATE … SET is_deleted = true`**; TypeORM stamps `updated_at`
+  (`@UpdateDateColumn`) on it. A timestamp soft delete stays TypeORM's `softDelete()`.
+- `*ById` methods take the primary key, whichever column that is.
+
 ## BaseModel and BaseRepository
 
-Extend `BaseModel` for the entity and `BaseRepository` for its repository. The subclass declares
+Extend `BaseModel` (or `BaseUuidModel`) for the entity and `BaseRepository` for its repository. The subclass declares
 `tableName` (used in error messages) and, when the create input is not the entity's own shape,
 overrides `toEntityInput`.
 
@@ -66,9 +89,9 @@ What you get:
 | `findById(id, options?)`            | One live row, or `NotFoundException`.                                                                          |
 | `findOne(options)`                  | TypeORM `findOne` passthrough; `null` when nothing matches.                                                    |
 | `findBy(options?)`                  | **Unbounded** `find`. Server-side jobs only.                                                                   |
-| `findByPaginated(options?)`         | One page: `take` clamped to 1–100 (default 25), ordered by `id` unless `order` is given, with `pageInfo`.      |
+| `findByPaginated(options?)`         | One page: `take` clamped to 1–100 (default 25), in the convention's default order unless `order` is given.     |
 | `remove(id)`                        | Soft deletes one live row in one statement and returns it, or `NotFoundException`.                             |
-| `removeMany(where)`                 | Soft deletes every live match; already-deleted rows keep their `deleted_at`.                                   |
+| `removeMany(where)`                 | Soft deletes every live match; already-deleted rows are left untouched.                                        |
 | `update(id, input)`                 | Loads, assigns and saves one live row, or `NotFoundException`.                                                 |
 | `updateMany(where, input)`          | One `UPDATE` over every live match; returns only the count.                                                    |
 | `updateManyReturning(where, input)` | Updates up to 1,000 live matches and returns them reloaded; more is a `BadRequestException`.                   |
@@ -84,9 +107,10 @@ Choosing between the read and bulk-write pairs:
 
 The bulk methods (`removeMany`, `updateMany`, `updateManyReturning`) refuse an empty `where`.
 
-**Soft delete needs a column.** `BaseModel` maps `deletedAt` to `deleted_at timestamptz`, so a table
-must have that column before its repository can use the delete methods or the live-row filtering.
-Add it in a migration under `databases/<db>/migrations/` (see the `ot-postgres` skill).
+**Soft delete needs a column.** `BaseModel` maps `deletedAt` to `deleted_at timestamptz` and
+`BaseUuidModel` maps `isDeleted` to `is_deleted boolean`, so a table must have its base's column
+before its repository can use the delete methods or the live-row filtering. Add it in a migration
+under `databases/<db>/migrations/` (see the `ot-postgres` skill).
 
 ## Postgres profiling
 

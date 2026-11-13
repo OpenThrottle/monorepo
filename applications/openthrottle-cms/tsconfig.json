@@ -12,6 +12,15 @@
   "include": ["**/*", "**/*.json", ".react-router/types"],
   "references": [
     {
+      "path": "../../tools/dotfiles"
+    },
+    {
+      "path": "../../packages/graphql-codegen"
+    },
+    {
+      "path": "../../packages/react-router-cms-core"
+    },
+    {
       "path": "../../packages/react-router-shadcn"
     },
     {
@@ -21,13 +30,10 @@
       "path": "../../packages/react-router-testing"
     },
     {
-      "path": "../../tools/dotfiles"
-    },
-    {
-      "path": "../../packages/graphql-codegen"
-    },
-    {
       "path": "../../packages/react-router-ui-global"
+    },
+    {
+      "path": "../../packages/react-router-graphql"
     },
     {
       "path": "../../packages/react-router-utils"

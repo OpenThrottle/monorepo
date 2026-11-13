@@ -3,16 +3,16 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { CMS_CONNECTION } from '../../config/config.constants.ts';
 import { Fragment } from './fragment.entity.ts';
-import { FragmentsService } from './fragments.service.ts';
+import { FragmentsRepository } from './fragments.repository.ts';
 
 /**
  * @description Registers {@link Fragment} on the cms connection and provides
- * {@link FragmentsService}.
+ * {@link FragmentsRepository}.
  * @public
  */
 @Module({
-  exports: [FragmentsService],
+  exports: [FragmentsRepository],
   imports: [TypeOrmModule.forFeature([Fragment], CMS_CONNECTION)],
-  providers: [FragmentsService],
+  providers: [FragmentsRepository],
 })
 export class FragmentsModule {}

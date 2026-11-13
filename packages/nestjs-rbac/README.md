@@ -24,6 +24,7 @@ Roles and permissions are defined in the package and used by guards (see task â€
 | ---------------- | ------------------------------------------------------------------------------- |
 | `blog:draft`     | Create/edit DRAFT blog posts; read all blog posts, tags and authors.            |
 | `blog:write`     | Publish/unpublish/archive posts; edit non-draft posts; manage authors and tags. |
+| `cms:write`      | Create/update/delete cms content: fragments, their edges, layouts, components.  |
 | `flags:read`     | Read feature flags.                                                             |
 | `flags:write`    | Create/update/delete flags.                                                     |
 | `plans:read`     | Read plans.                                                                     |

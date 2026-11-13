@@ -3,16 +3,16 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { CMS_CONNECTION } from '../../config/config.constants.ts';
 import { Layout } from './layout.entity.ts';
-import { LayoutsService } from './layouts.service.ts';
+import { LayoutsRepository } from './layouts.repository.ts';
 
 /**
  * @description Registers {@link Layout} on the cms connection and provides
- * {@link LayoutsService}.
+ * {@link LayoutsRepository}.
  * @public
  */
 @Module({
-  exports: [LayoutsService],
+  exports: [LayoutsRepository],
   imports: [TypeOrmModule.forFeature([Layout], CMS_CONNECTION)],
-  providers: [LayoutsService],
+  providers: [LayoutsRepository],
 })
 export class LayoutsModule {}

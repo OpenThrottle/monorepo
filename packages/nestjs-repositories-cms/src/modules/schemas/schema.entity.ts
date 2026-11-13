@@ -4,14 +4,8 @@
  * @public
  */
 
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  Index,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { BaseUuidModel } from '@openthrottle/nestjs-postgres';
+import { Column, Entity, Index } from 'typeorm';
 
 import {
   CMS_STATUS,
@@ -21,18 +15,7 @@ import type { CmsStatus } from '../../config/config.types.ts';
 
 @Entity('schemas')
 @Index('idx_schemas_typename_version', ['typename', 'version'])
-export class Schema {
-  @CreateDateColumn({ name: 'created_at', type: 'timestamp with time zone' })
-  createdAt!: Date;
-
-  @Column({
-    default: false,
-    name: 'is_deleted',
-    nullable: true,
-    type: 'boolean',
-  })
-  isDeleted!: boolean | null;
-
+export class Schema extends BaseUuidModel {
   @Column({ default: () => "'{}'::jsonb", name: 'json_schema', type: 'jsonb' })
   jsonSchema!: Record<string, unknown>;
 
@@ -48,12 +31,6 @@ export class Schema {
 
   @Column({ name: 'typename', type: 'character varying' })
   typename!: string;
-
-  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp with time zone' })
-  updatedAt!: Date;
-
-  @PrimaryGeneratedColumn('uuid', { name: 'uuid' })
-  uuid!: string;
 
   @Column({ name: 'version', type: 'character varying' })
   version!: string;

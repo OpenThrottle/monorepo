@@ -148,6 +148,10 @@ case "${APP}" in
       "${IMAGE}"
 
     wait_for "http://${APP_CONTAINER}:3000/health" '"database":"ok"'
+    # The cms DataSource (NestjsRepositoriesCmsModule) derives its URL from
+    # POSTGRES_* with the database swapped for cms; the migrations image above
+    # created and migrated it. Health reports it separately.
+    wait_for "http://${APP_CONTAINER}:3000/health" '"cms":"ok"'
     ;;
 
   openthrottle-developer)

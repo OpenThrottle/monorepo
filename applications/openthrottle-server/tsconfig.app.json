@@ -62,6 +62,9 @@
       "path": "../../packages/nestjs-rollout/tsconfig.lib.json"
     },
     {
+      "path": "../../packages/nestjs-repositories-cms/tsconfig.lib.json"
+    },
+    {
       "path": "../../packages/nestjs-repositories/tsconfig.lib.json"
     },
     {

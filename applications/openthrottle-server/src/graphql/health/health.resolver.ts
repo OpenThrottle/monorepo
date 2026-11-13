@@ -35,7 +35,7 @@ export class HealthResolver {
    * @description Server health: API (ok when resolver runs), OpenThrottle DB, Redis (BullMQ), and WebSocket. Each component is ok, unconfigured, or unreachable.
    */
   @Query(() => ServerHealthObject, {
-    description: `Server health: API, OpenThrottle DB, Redis (BullMQ), and WebSocket. Each component is ok | unconfigured | unreachable.`,
+    description: `Server health: API, OpenThrottle DB, cms DB, Redis (BullMQ), and WebSocket. Each component is ok | unconfigured | unreachable.`,
   })
   async serverHealth(): Promise<ServerHealthObject> {
     return this.healthService.getServerHealth();

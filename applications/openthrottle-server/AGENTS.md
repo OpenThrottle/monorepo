@@ -62,6 +62,13 @@ apps, `packages/openthrottle-mcp`) consumes its schema through the committed
 - TypeORM entities live in `packages/nestjs-repositories`, not here; each entity's JSDoc names
   the `databases/openthrottle/migrations/` files it matches. A schema change means a new SQL migration in
   `databases/openthrottle/migrations/` plus the matching entity edit — this app has no TypeORM migrations.
+- A second, named TypeORM DataSource (`cms`, from `NestjsRepositoriesCmsModule` in
+  `packages/nestjs-repositories-cms`) runs beside the default one. Its entities and migrations live
+  in that package and `databases/cms/`; inject its repositories, never `@InjectRepository` without
+  `CMS_CONNECTION`. `serverHealth.cms` / `GET /health` report it. cms mutations are authorized
+  by `CmsWriteAuthorizerModule` (`src/services/cms-write-authorizer/`), which provides the
+  package's `CMS_WRITE_AUTHORIZER` and checks `cms:write` through `getPermissionsForPrincipal`;
+  drop it and every cms write is refused.
 - `rawBody: true` in `main.ts` is required for Stripe webhook signature verification
   (`req.rawBody`); don't drop it when touching bootstrap.
 - The custom `useBodyParser('json', { type: [...] })` in `main.ts` (CSP report parsing) is

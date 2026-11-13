@@ -19,6 +19,7 @@ export type ProfileFactoryData = Pick<
   | 'firstName'
   | 'isDeleted'
   | 'lastName'
+  | 'openthrottleUserId'
   | 'updatedAt'
   | 'username'
   | 'uuid'
@@ -37,6 +38,7 @@ export const profilesFactory = Factory.define<ProfileFactoryData>(() => ({
   firstName: faker.person.firstName(),
   isDeleted: false,
   lastName: faker.person.lastName(),
+  openthrottleUserId: null,
   updatedAt: faker.date.recent(),
   username: faker.internet.username(),
   uuid: faker.string.uuid(),

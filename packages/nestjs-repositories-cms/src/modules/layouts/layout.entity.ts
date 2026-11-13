@@ -5,16 +5,8 @@
  * @public
  */
 
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  Index,
-  JoinColumn,
-  OneToOne,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { BaseUuidModel } from '@openthrottle/nestjs-postgres';
+import { Column, Entity, Index, JoinColumn, OneToOne } from 'typeorm';
 
 import {
   CMS_STATUS,
@@ -24,10 +16,7 @@ import type { CmsStatus } from '../../config/config.types.ts';
 import { Fragment } from '../fragments/fragment.entity.ts';
 
 @Entity('layouts')
-export class Layout {
-  @CreateDateColumn({ name: 'created_at', type: 'timestamp with time zone' })
-  createdAt!: Date;
-
+export class Layout extends BaseUuidModel {
   /** Root of this layout's fragment tree; unique per layout. */
   @JoinColumn({
     foreignKeyConstraintName: 'layouts_fragment_uuid_fkey',
@@ -39,14 +28,6 @@ export class Layout {
   @Column({ name: 'fragment_uuid', type: 'uuid' })
   @Index('idx_layouts_fragment_uuid', { unique: true })
   fragmentUuid!: string;
-
-  @Column({
-    default: false,
-    name: 'is_deleted',
-    nullable: true,
-    type: 'boolean',
-  })
-  isDeleted!: boolean | null;
 
   @Column({ default: () => "'{}'::jsonb", name: 'metadata', type: 'jsonb' })
   metadata!: Record<string, unknown>;
@@ -75,10 +56,4 @@ export class Layout {
     type: 'character varying',
   })
   tags!: string[];
-
-  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp with time zone' })
-  updatedAt!: Date;
-
-  @PrimaryGeneratedColumn('uuid', { name: 'uuid' })
-  uuid!: string;
 }

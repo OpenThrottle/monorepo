@@ -34,7 +34,9 @@ const HEALTH_COMPONENT_KEYS = [
  * `ok`/`unreachable` pass through; everything else (including `unconfigured`,
  * empty, or unexpected strings) collapses to `unconfigured`.
  */
-const normalizeHealthStatus = (value: string | undefined): HealthStatus => {
+const normalizeHealthStatus = (
+  value: string | null | undefined,
+): HealthStatus => {
   if (value === 'ok') {
     return 'ok';
   }
@@ -93,7 +95,9 @@ export const healthStatusColorClass = (status: HealthStatus): string => {
  * `unreachable → red`, `unconfigured`/unknown → amber mapping as the folded
  * overall status, so both footers stay in agreement.
  */
-export const healthValueColorClass = (value: string | undefined): string => {
+export const healthValueColorClass = (
+  value: string | null | undefined,
+): string => {
   return healthStatusColorClass(normalizeHealthStatus(value));
 };
 

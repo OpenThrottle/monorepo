@@ -1300,9 +1300,15 @@ importers:
       '@openthrottle/graphql-codegen':
         specifier: workspace:^
         version: link:../../packages/graphql-codegen
+      '@openthrottle/react-router-cms-core':
+        specifier: workspace:^
+        version: link:../../packages/react-router-cms-core
       '@openthrottle/react-router-cms-ui':
         specifier: workspace:^
         version: link:../../packages/react-router-cms-ui
+      '@openthrottle/react-router-graphql':
+        specifier: workspace:^
+        version: link:../../packages/react-router-graphql
       '@openthrottle/react-router-shadcn':
         specifier: workspace:^
         version: link:../../packages/react-router-shadcn
@@ -1686,6 +1692,9 @@ importers:
       '@openthrottle/nestjs-repositories':
         specifier: workspace:^
         version: link:../../packages/nestjs-repositories
+      '@openthrottle/nestjs-repositories-cms':
+        specifier: workspace:^
+        version: link:../../packages/nestjs-repositories-cms
       '@openthrottle/nestjs-rollout':
         specifier: workspace:^
         version: link:../../packages/nestjs-rollout
@@ -2613,15 +2622,33 @@ importers:
       '@nestjs/common':
         specifier: 'catalog:'
         version: 12.0.1(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1)
+      '@nestjs/core':
+        specifier: 'catalog:'
+        version: 12.0.1(@nestjs/common@12.0.1(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/platform-express@12.0.1)(@nestjs/websockets@12.0.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/graphql':
+        specifier: 'catalog:'
+        version: 14.0.0(@nestjs/common@12.0.1(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.0.1)(graphql@16.14.2)(reflect-metadata@0.2.2)(ts-morph@28.0.0)
       '@nestjs/typeorm':
         specifier: 'catalog:'
         version: 12.0.1(@nestjs/common@12.0.1(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.0.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(typeorm@0.3.31(babel-plugin-macros@3.1.0)(ioredis@5.11.1(supports-color@8.1.1))(pg@8.21.0)(supports-color@8.1.1)(ts-node@10.9.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(@types/node@24.19.2)(@typescript/typescript6@6.0.2)))
+      '@openthrottle/nestjs-auth':
+        specifier: workspace:^
+        version: link:../nestjs-auth
+      '@openthrottle/nestjs-postgres':
+        specifier: workspace:^
+        version: link:../nestjs-postgres
       '@openthrottle/openthrottle-agentic-utils':
         specifier: workspace:^
         version: link:../openthrottle-agentic-utils
+      ajv:
+        specifier: 'catalog:'
+        version: 8.20.0
       fishery:
         specifier: 'catalog:'
         version: 2.4.0
+      graphql:
+        specifier: 'catalog:'
+        version: 16.14.2
       pg:
         specifier: 'catalog:'
         version: 8.21.0

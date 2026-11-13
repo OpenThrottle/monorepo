@@ -8,13 +8,19 @@ import { Field, ObjectType } from '@nestjs/graphql';
 export type ServerHealthStatus = 'ok' | 'unconfigured' | 'unreachable';
 
 @ObjectType({
-  description: `Server health: API reachability, OpenThrottle DB, Redis (BullMQ), and WebSocket. Each component is ok, unconfigured, or unreachable.`,
+  description: `Server health: API reachability, OpenThrottle DB, cms DB, Redis (BullMQ), and WebSocket. Each component is ok, unconfigured, or unreachable.`,
 })
 export class ServerHealthObject {
   @Field(() => String, {
     description: `API status. "ok" when the resolver runs.`,
   })
   api!: string;
+
+  @Field(() => String, {
+    description: `cms DB status: ok | unconfigured | unreachable. SELECT 1 on the named cms DataSource. Null from a server that does not serve the cms database.`,
+    nullable: true,
+  })
+  cms!: string | null;
 
   @Field(() => String, {
     description: `OpenThrottle DB status: ok | unconfigured | unreachable. Reuses existing databaseHealth logic.`,

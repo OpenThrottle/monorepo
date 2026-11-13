@@ -83,6 +83,7 @@ describe('HealthResolver', () => {
     test('returns object from HealthService.getServerHealth', async () => {
       vi.mocked(mockHealthService.getServerHealth).mockResolvedValueOnce({
         api: 'ok',
+        cms: 'ok',
         database: 'ok',
         redis: 'ok',
         websocket: 'ok',
@@ -92,6 +93,7 @@ describe('HealthResolver', () => {
 
       expect(result).toEqual({
         api: 'ok',
+        cms: 'ok',
         database: 'ok',
         redis: 'ok',
         websocket: 'ok',
@@ -101,6 +103,7 @@ describe('HealthResolver', () => {
     test('returns database unconfigured when service returns unconfigured', async () => {
       vi.mocked(mockHealthService.getServerHealth).mockResolvedValueOnce({
         api: 'ok',
+        cms: 'ok',
         database: 'unconfigured',
         redis: 'ok',
         websocket: 'ok',
@@ -117,6 +120,7 @@ describe('HealthResolver', () => {
     test('returns database unreachable when service returns unreachable', async () => {
       vi.mocked(mockHealthService.getServerHealth).mockResolvedValueOnce({
         api: 'ok',
+        cms: 'ok',
         database: 'unreachable',
         redis: 'ok',
         websocket: 'ok',
@@ -133,6 +137,7 @@ describe('HealthResolver', () => {
     test('returns redis unconfigured when service returns unconfigured', async () => {
       vi.mocked(mockHealthService.getServerHealth).mockResolvedValueOnce({
         api: 'ok',
+        cms: 'ok',
         database: 'ok',
         redis: 'unconfigured',
         websocket: 'ok',
@@ -149,6 +154,7 @@ describe('HealthResolver', () => {
     test('returns redis unreachable when service returns unreachable', async () => {
       vi.mocked(mockHealthService.getServerHealth).mockResolvedValueOnce({
         api: 'ok',
+        cms: 'ok',
         database: 'ok',
         redis: 'unreachable',
         websocket: 'ok',

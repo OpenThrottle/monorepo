@@ -3,6 +3,7 @@ import type { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { CMS_CONNECTION } from './config/config.constants.ts';
+import { CmsGraphqlModule } from './graphql/cms-graphql/cms-graphql.module.ts';
 import { FragmentsModule } from './modules/fragments/fragments.module.ts';
 import { FragmentsChildrenModule } from './modules/fragments-children/fragments-children.module.ts';
 import { LayoutsModule } from './modules/layouts/layouts.module.ts';
@@ -23,6 +24,7 @@ import { getCmsTypeOrmOptions } from './nestjs-repositories-cms.utils.ts';
  */
 @Module({
   exports: [
+    CmsGraphqlModule,
     FragmentsModule,
     FragmentsChildrenModule,
     LayoutsModule,
@@ -47,6 +49,7 @@ import { getCmsTypeOrmOptions } from './nestjs-repositories-cms.utils.ts';
         return result.options;
       },
     }),
+    CmsGraphqlModule,
     FragmentsModule,
     FragmentsChildrenModule,
     LayoutsModule,

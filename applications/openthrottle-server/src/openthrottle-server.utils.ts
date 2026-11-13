@@ -19,6 +19,7 @@ import { GlobalClsModule } from '@openthrottle/nestjs-modules';
 import { NestjsProfilingModule } from '@openthrottle/nestjs-profiling';
 import { NestjsRbacModule } from '@openthrottle/nestjs-rbac';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+import { NestjsRepositoriesCmsModule } from '@openthrottle/nestjs-repositories-cms';
 import { NestjsThrottlerModule } from '@openthrottle/nestjs-throttler';
 
 import { PROCESS_ROLES } from './config/config.constants.ts';
@@ -107,6 +108,7 @@ import { TaskPromotionQueueModule } from './queues/task-promotion/task-promotion
 import { WorkLedgerHarvestQueueModule } from './queues/work-ledger-harvest/work-ledger-harvest.module.ts';
 import { WorkLedgerSweepQueueModule } from './queues/work-ledger-sweep/work-ledger-sweep.module.ts';
 import { WorkLedgerVerifyQueueModule } from './queues/work-ledger-verify/work-ledger-verify.module.ts';
+import { CmsWriteAuthorizerModule } from './services/cms-write-authorizer/cms-write-authorizer.module.ts';
 
 type AppModuleImports = NonNullable<DynamicModule['imports']>;
 
@@ -187,6 +189,10 @@ export const buildImports = (role: ProcessRole): AppModuleImports => {
   imports.push(
     NestjsProfilingModule,
     NestjsRbacModule,
+    // CmsWriteAuthorizerModule supplies the cms package's CMS_WRITE_AUTHORIZER; without it
+    // every cms mutation is refused.
+    CmsWriteAuthorizerModule,
+    NestjsRepositoriesCmsModule,
     NestjsRepositoriesModule,
     NestjsThrottlerModule,
     NotificationsModule,

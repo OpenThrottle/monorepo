@@ -3,16 +3,16 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { CMS_CONNECTION } from '../../config/config.constants.ts';
 import { Tag } from './tag.entity.ts';
-import { TagsService } from './tags.service.ts';
+import { TagsRepository } from './tags.repository.ts';
 
 /**
  * @description Registers {@link Tag} on the cms connection and provides
- * {@link TagsService}.
+ * {@link TagsRepository}.
  * @public
  */
 @Module({
-  exports: [TagsService],
+  exports: [TagsRepository],
   imports: [TypeOrmModule.forFeature([Tag], CMS_CONNECTION)],
-  providers: [TagsService],
+  providers: [TagsRepository],
 })
 export class TagsModule {}

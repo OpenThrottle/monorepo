@@ -57,6 +57,18 @@ describe('roles', () => {
       }
     });
 
+    it('cms:write is admin-only: no other built-in role holds it', () => {
+      expect(ROLE_PERMISSIONS[ROLES.ADMIN]).toContain(PERMISSIONS.CMS_WRITE);
+      for (const role of [
+        ROLES.USER,
+        ROLES.VIEWER,
+        ROLES.MCP,
+        ROLES.WORKFLOW_RALPH,
+      ] as const) {
+        expect(ROLE_PERMISSIONS[role]).not.toContain(PERMISSIONS.CMS_WRITE);
+      }
+    });
+
     it('blog:draft is held by admin and mcp only', () => {
       expect(ROLE_PERMISSIONS[ROLES.ADMIN]).toContain(PERMISSIONS.BLOG_DRAFT);
       expect(ROLE_PERMISSIONS[ROLES.MCP]).toContain(PERMISSIONS.BLOG_DRAFT);

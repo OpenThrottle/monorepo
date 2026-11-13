@@ -1,7 +1,10 @@
 export { BaseModel } from './base-model/base-model.entity.ts';
 export type {
   BaseModelKeys,
+  BaseUuidModelKeys,
   CreateModelInput,
+  ModelManagedKeys,
+  PersistedModel,
   UpdateModelInput,
 } from './base-model/base-model.types.ts';
 export {
@@ -18,6 +21,18 @@ export type {
   RemoveManyResults,
   UpdateManyResults,
 } from './base-repository/base-repository.types.ts';
+export { BaseUuidModel } from './base-uuid-model/base-uuid-model.entity.ts';
+export {
+  ID_TIMESTAMP_MODEL_CONVENTION,
+  UUID_FLAG_MODEL_CONVENTION,
+} from './model-convention/model-convention.constants.ts';
+export type {
+  FlagSoftDelete,
+  ModelConvention,
+  ModelKeyProperty,
+  SoftDeleteConvention,
+  TimestampSoftDelete,
+} from './model-convention/model-convention.types.ts';
 export { flushPostgresProfiling } from './postgres-profiling/explain-tracking/explain-tracking.utils.ts';
 export {
   POSTGRES_PROFILING_ENV_VARS,

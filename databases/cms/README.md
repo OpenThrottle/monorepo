@@ -67,8 +67,12 @@ run errors, the second run changes any row, or `welcome` stops resolving by slug
 | `surveys`            | A named survey whose definition is in `data`                                              |
 | `tags`               | A tag vocabulary, not yet referenced by other tables                                      |
 
-Every content table carries `uuid`, `created_at`, `updated_at` and a soft-delete `is_deleted`.
-Nothing maintains `updated_at` yet: there is no trigger, so the writer sets it.
+Every content table carries `uuid`, `created_at`, `updated_at` and a soft-delete `is_deleted`
+(nullable; `NULL` reads as live). These are the `BaseUuidModel` columns of
+`@openthrottle/nestjs-postgres`, which the content entities in `@openthrottle/nestjs-repositories-cms`
+extend; the key and soft-delete shape stays as it is, and the library adapts to it (owner decision,
+2026-11-12). The join tables `fragments_children` and `layouts_libraries` have no `is_deleted` and
+stay plain entities. `updated_at` is maintained by the database (see the decision below).
 
 ```mermaid
 erDiagram
@@ -85,17 +89,43 @@ erDiagram
 `fragments.typename` and `library_components.typename` name the same content type, and no foreign
 key enforces that.
 
+## Decision: how `updated_at` is maintained
+
+**A trigger, as in the `openthrottle` database** (migration `011`, OT plan `18a3b88f`). Every cms
+table with an `updated_at` column (`fragments`, `layouts`, `libraries`, `library_components`,
+`profiles`, `schemas`, `surveys`, `tags`) has a `BEFORE UPDATE` trigger calling the shared
+`update_updated_at_column()` function, which sets it to `NOW()`.
+
+- Why not writer-sets: TypeORM's `@UpdateDateColumn` already stamps it on every `save` and every
+  `update` it builds, but raw SQL does not (the seed, ad-hoc psql fixes, the planned append-only
+  schema sync), and nothing would catch a missed stamp. The trigger costs one function call per
+  updated row and closes that gap. Keeping the same function name and trigger naming as the
+  `openthrottle` database means one convention across both.
+- The trigger always wins: an `UPDATE` that sets `updated_at` explicitly still gets `NOW()`.
+  `fragments_children` and `layouts_libraries` have no `updated_at`; an edge edit stamps its
+  parent fragment instead (the cms GraphQL edge mutations do).
+- `created_at` stays a column default; nothing updates it.
+
 ## Decision: what identifies a CMS profile
 
 **Profiles stand alone for now.** `profiles.uuid` is the CMS's own key. It is not an OpenThrottle
 user id, because Postgres cannot declare a foreign key into another database, and the Supabase link
 it replaced was exactly that kind of FK.
 
-When the CMS gets authentication, the plan is to link a profile to an OpenThrottle user **by value**:
-a nullable `openthrottle_user_id UUID` column with a unique index, written by the server that holds
-both connections, and checked by the application rather than by the database. The alternative, a
-`profiles` table in the `openthrottle` database, would put CMS data in the wrong ledger. That work is
-a follow-up OT plan, not part of this schema.
+**Done (migration `012`, OT plan `18a3b88f`):** a profile is linked to an OpenThrottle user **by
+value**: a nullable `openthrottle_user_id UUID` column with a unique index, written by the server
+that holds both connections, and checked by the application rather than by the database. The
+alternative, a `profiles` table in the `openthrottle` database, would put CMS data in the wrong
+ledger.
+
+- A profile is created the first time a user makes a cms write (`CmsWriteGuard` →
+  `CmsProfilesService.resolveForUser`), restored if it was soft deleted, and safe under concurrent
+  first writes (the unique index decides; the loser re-reads).
+- `profiles.email` is NOT NULL but `users.email` is nullable, so a user without one gets
+  `<user id>@openthrottle.invalid` (RFC 2606 reserved; it can never deliver).
+- Service accounts write without a profile.
+- Every cms mutation needs the `cms:write` permission (admin only, `openthrottle` migration `159`);
+  cms reads stay public.
 
 ## Entities
 
@@ -209,10 +239,12 @@ Rejected options:
 
 ## Not here yet
 
-- **Wiring the entities into an app, and GraphQL for these tables.** Nothing in the server reads them
-  yet. Importing the module into openthrottle-server is OT plan
-  `18a3b88f-50fe-4944-97a3-71835d45e393`, task `cc02a73b`. The read API is task `bdf7ade8` in the
-  same plan.
+Reads and writes are served: `openthrottle-server` imports `NestjsRepositoriesCmsModule`, whose
+`CmsGraphqlModule` answers `cmsLayout` / `cmsLayoutByUuid` (the fragment tree in one recursive query,
+cut at depth 10, cycles not followed), `cmsLayouts`, `cmsLibraries`, `cmsSchemas`, `cmsSchema` and
+`cmsSchemaByTypename`. Reads are public; writes (fragments and their edges, layouts, library
+components) need `cms:write`. What is left:
+
 - **Filling `schemas`** (OT plan `a608869b-407d-40a0-9dff-8d61fe578cf7`, task 5), as decided in
   [§ 3](#3-schema-sync-trigger-on-server-boot-in-the-package-plus-an-admin-mutation) and
   [§ 4](#4-how-the-server-reads-the-manifests-copied-into-the-packages-dist-at-build-time).

@@ -4,14 +4,8 @@
  * @public
  */
 
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  Index,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { BaseUuidModel } from '@openthrottle/nestjs-postgres';
+import { Column, Entity, Index } from 'typeorm';
 
 import {
   CMS_STATUS,
@@ -20,20 +14,9 @@ import {
 import type { CmsStatus } from '../../config/config.types.ts';
 
 @Entity('libraries')
-export class Library {
-  @CreateDateColumn({ name: 'created_at', type: 'timestamp with time zone' })
-  createdAt!: Date;
-
+export class Library extends BaseUuidModel {
   @Column({ name: 'description', nullable: true, type: 'text' })
   description!: string | null;
-
-  @Column({
-    default: false,
-    name: 'is_deleted',
-    nullable: true,
-    type: 'boolean',
-  })
-  isDeleted!: boolean | null;
 
   @Column({ name: 'name', type: 'character varying' })
   @Index('idx_libraries_name')
@@ -49,10 +32,4 @@ export class Library {
   })
   @Index('idx_libraries_status')
   status!: CmsStatus | null;
-
-  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp with time zone' })
-  updatedAt!: Date;
-
-  @PrimaryGeneratedColumn('uuid', { name: 'uuid' })
-  uuid!: string;
 }
