@@ -30,12 +30,18 @@ export class NestjsGraphqlModule {
    */
   static forRoot(options?: NestjsGraphqlModuleOptions): DynamicModule {
     const config = options ? buildDriverConfig(options) : DEFAULT_DRIVER_CONFIG;
+    // `forRoot` runs before the DI container exists, so the logger cannot be
+    // injected here. `LoggerService` has no constructor dependencies and writes
+    // to the app's shared winston instance, so constructing it directly routes
+    // Redis cache connection errors (connect/auth/reconnect, a Redis restart)
+    // to the same log stream as everything else instead of dropping them.
+    const cacheLogger = new LoggerService();
 
     return {
       imports: [
         GraphQLModule.forRoot<ApolloDriverConfig>({
           autoSchemaFile: resolveAutoSchemaFile(),
-          cache: getRedisCache(),
+          cache: getRedisCache(cacheLogger),
           ...config,
         }),
         LoggerModule,

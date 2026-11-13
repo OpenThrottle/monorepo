@@ -7,9 +7,12 @@ import {
 } from '../layout-rows';
 
 const NODE = {
+  childKeys: [],
   depth: 1,
   key: 'node-key-1',
   name: 'Hero',
+  parentKey: 'root-key',
+  propertiesJson: '{}',
   typename: 'Hero',
   uuid: 'fragment-1',
 };

@@ -1,4 +1,5 @@
 import type { ApolloDriverConfig } from '@nestjs/apollo';
+import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   HEADER_APP_NAME,
   HEADER_APP_VERSION,
@@ -6,11 +7,20 @@ import {
 import type { ValidationRule } from 'graphql';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { NestjsGraphqlModule } from './nestjs-graphql.module.ts';
 import {
   buildCachePlugins,
   buildDriverConfig,
 } from './nestjs-graphql.utils.ts';
 import { GRAPHQL_SCHEMA_FILE_ENV } from './schema/auto-schema-file/auto-schema-file.constants.ts';
+
+const { getRedisCache } = vi.hoisted(() => {
+  return { getRedisCache: vi.fn() };
+});
+
+vi.mock('@openthrottle/nestjs-redis', () => {
+  return { getRedisCache };
+});
 
 /**
  * Read the graphql-ws block off a built driver config, asserting the
@@ -247,5 +257,24 @@ describe('autoSchemaFile default — a boot never writes the schema', () => {
     process.env[GRAPHQL_SCHEMA_FILE_ENV] = '';
 
     expect(buildDriverConfig({}).autoSchemaFile).toBe(true);
+  });
+});
+
+describe('NestjsGraphqlModule.forRoot — Redis cache logging', () => {
+  beforeEach(() => {
+    getRedisCache.mockClear();
+  });
+
+  it('hands getRedisCache the app logger so connection errors are logged, not dropped', () => {
+    NestjsGraphqlModule.forRoot();
+
+    expect(getRedisCache).toHaveBeenCalledTimes(1);
+    expect(getRedisCache).toHaveBeenCalledWith(expect.any(LoggerService));
+  });
+
+  it('passes the logger when forRoot is given options too', () => {
+    NestjsGraphqlModule.forRoot({ maxDepth: 5 });
+
+    expect(getRedisCache).toHaveBeenCalledWith(expect.any(LoggerService));
   });
 });

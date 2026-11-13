@@ -12,9 +12,12 @@ fragment CmsLayoutDetail on CmsLayoutObject {
 }
 
 fragment CmsLayoutFragmentNode on CmsFragmentNodeObject {
+  childKeys
   depth
   key
   name
+  parentKey
+  propertiesJson
   typename
   uuid
 }
