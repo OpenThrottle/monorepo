@@ -33,7 +33,7 @@ import {
 } from './ralph-worktree-cli';
 import type { RalphDebugLevel } from './ralphDebugLogger';
 import { ralphDebugLogger, setRalphDebugLevel } from './ralphDebugLogger';
-import { sanitizeRalphShellNoise } from './sanitizeRalphShellNoise';
+import { sanitizeRalphShellNoise } from './run-output';
 
 /** RFC 4122 UUID v4 pattern: plan/task is OpenThrottle plan or task ID when matching */
 const RALPH_UUID_REGEX =

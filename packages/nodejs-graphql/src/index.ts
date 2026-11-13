@@ -7,14 +7,14 @@
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { print } from 'graphql';
 
+import { getGraphQLUrl } from './endpoint.ts';
 import {
-  buildTimeoutSignal,
-  getGraphQLUrl,
   parseDateTimeInResponse,
   parseGraphqlResponseBody,
-  rethrowAsTimeoutIfAborted,
-} from './utils.ts';
+} from './response.ts';
+import { buildTimeoutSignal, rethrowAsTimeoutIfAborted } from './timeout.ts';
 
+export { getGraphQLUrl } from './endpoint.ts';
 export type {
   ExecuteGraphqlOptionsV2,
   GraphqlResponseV2,
@@ -36,11 +36,11 @@ export type {
   GraphqlV2RetryOptions,
 } from './graphql-v2.ts';
 export { defaultRetryOn, executeGraphql_v2 } from './graphql-v2.ts';
-export { getGraphQLUrl, parseDateTimeInResponse } from './utils.ts';
+export { parseDateTimeInResponse } from './response.ts';
 export {
   DEFAULT_GRAPHQL_TIMEOUT_MS,
   GRAPHQL_TIMEOUT_ERROR_PREFIX,
-} from './utils.ts';
+} from './timeout.ts';
 
 /**
  * @description Standard GraphQL response shape from openthrottle-server.

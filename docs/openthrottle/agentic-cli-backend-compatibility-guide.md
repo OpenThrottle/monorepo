@@ -190,7 +190,7 @@ grep -i purple t2.ndjson && echo "CONTINUITY OK"
   turn, while the stream, the exit code, and the UI all report success. When
   probing a new CLI, deliberately resume a garbage id: if it does **not** error,
   your adapter must parse and validate the minted id rather than trusting
-  `stdout.trim()` (see `cursor-agent/parseCursorChatId.ts`).
+  `stdout.trim()` (see `cursor-agent/mint.ts`).
 - Also probe the _cold_ mint, not just a warm one. Note whether the create
   command touches the network or auth at all — cursor's does neither (it is
   `randomUUID()` plus a local SQLite write), which is what ruled out a whole

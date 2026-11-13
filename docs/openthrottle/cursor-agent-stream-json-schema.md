@@ -134,7 +134,7 @@ Note that in this plan-run recording the thinking deltas still carry `timestamp_
 
 ## 7. Sessions, errors, cancellation
 
-- The chat id is minted with `cursor-agent create-chat` (validated as a UUID by `parseCursorChatId.ts`,
+- The chat id is minted with `cursor-agent create-chat` (validated as a UUID by `mint.ts`,
   because `--resume` accepts any string and silently starts a fresh chat on a polluted id) and passed
   to `--resume`. `system.init.session_id` confirms it.
 - The turn ends on the `result` event or process exit. The adapter reads stderr and

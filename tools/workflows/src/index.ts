@@ -1,11 +1,6 @@
 export type { CursorAgentChunk, RunIterationConfig } from './bin/runIteration';
 export { runIteration, runIterationAsync } from './bin/runIteration';
 export {
-  applyWorkflowRalphOtRootFromConfig,
-  buildNestedWorkflowRalphSpawnEnv,
-  resolveWorkflowRalphConfigCwd,
-} from './config/buildNestedWorkflowRalphSpawnEnv';
-export {
   loadWorkflowRalphConfig,
   loadWorkflowRalphDefaultsFileV1,
   mapDefaultsDebugToRalphDebugLevel,
@@ -30,6 +25,11 @@ export {
   WORKFLOW_RALPH_DEFAULTS_EXAMPLE_FILENAME,
   WORKFLOW_RALPH_DEFAULTS_FILENAME,
 } from './config/workflow-ralph-defaults.types';
+export {
+  applyWorkflowRalphOtRootFromConfig,
+  buildNestedWorkflowRalphSpawnEnv,
+  resolveWorkflowRalphConfigCwd,
+} from './config/workflow-ralph-spawn-env';
 export type {
   JobRunHookConditions,
   JobRunHookEntry,
@@ -91,7 +91,6 @@ export type {
   WorktreeWorkflowOptions,
   WorktreeWorkflowResult,
 } from './types/worktree';
-export { applyWorkflowRalphDebugCli } from './utils/applyWorkflowRalphDebugCli';
 export { sampleChildProcess } from './utils/child-process-metrics';
 export type {
   CreateCursorWorkflowRalphIterationRunnerOptions,
@@ -180,6 +179,7 @@ export {
   WORKFLOW_RALPH_DEFAULTS_FILE,
   WORKFLOW_RALPH_ENV,
 } from './utils/ralph-runtime-config';
+export { applyWorkflowRalphDebugCli } from './utils/ralphDebugLogger';
 export { runWorktreeWorkflow } from './utils/workflow';
 export type { RalphNestedRunTuningInput } from './utils/workflow-ralph-nested-argv';
 export {

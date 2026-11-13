@@ -12,7 +12,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import type { HookFetch } from '../../../index.ts';
 import type { BackfillOptions } from '../backfill-args.ts';
-import { runBackfill } from '../runBackfill.ts';
+import { runBackfill } from '../backfill-run.ts';
 import { BACKFILL_PATH_SUFFIX, scanBackfill } from '../transcript-backfill.ts';
 import { claudeProjectSlug } from '../transcript-projects.ts';
 

@@ -7,7 +7,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import type { ToolSurface } from '../../../model-facing-text/listToolSurface.ts';
+import type { ToolSurface } from '../../../model-facing-text/surface.ts';
 import { TOOL_SELECTION_CASES } from '../data/data.cases.ts';
 import type {
   SelectedCall,

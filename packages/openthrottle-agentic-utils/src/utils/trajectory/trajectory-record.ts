@@ -10,8 +10,8 @@ import { isRecord } from '@openthrottle/nodejs-utils';
 
 import type { AtifTrajectory } from '../../types/atif.ts';
 import { readStructuredOutput } from '../structured-output/chunk-reader.ts';
-import { capTrajectory } from './capTrajectory.ts';
 import { chunksToAtif } from './chunksToAtif.ts';
+import { capTrajectory } from './sanitize.ts';
 
 /**
  * @description Total size a trajectory is capped to before it is sent. The server's JSON body limit

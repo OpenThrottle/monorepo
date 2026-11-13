@@ -9,13 +9,13 @@ import {
 } from '../../utils/cva-variants.ts';
 import { generateFilesSafely } from '../../utils/generateFilesSafely.ts';
 import { getCommonVariables, getGeneratorOverview } from '../../utils/index.ts';
+import { resolveReactDestination } from '../../utils/interactive.ts';
 import {
   getComponentNames,
   getConfigConfirmation,
   getReactComponentDestination,
   parsePossibleNames,
 } from '../../utils/questions.ts';
-import { resolveReactDestination } from '../../utils/resolveReactDestination.ts';
 import { throwInvalidDestinationError } from '../../utils/target-validation.ts';
 
 export interface ReactStoryGeneratorSchema {

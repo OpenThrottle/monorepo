@@ -23,7 +23,7 @@ import {
   runEval,
 } from '@openthrottle/agentic-evals';
 
-import type { ToolSurface } from '../../model-facing-text/listToolSurface.ts';
+import type { ToolSurface } from '../../model-facing-text/surface.ts';
 import type { CaseResult, RunResult } from './compareBaseline.ts';
 import {
   TOOL_SELECTION_GRADER_ID,

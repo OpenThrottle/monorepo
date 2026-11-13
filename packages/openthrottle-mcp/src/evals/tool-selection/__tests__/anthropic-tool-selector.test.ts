@@ -2,7 +2,7 @@ import type Anthropic from '@anthropic-ai/sdk';
 import { APIError } from '@anthropic-ai/sdk';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { ToolSurface } from '../../../model-facing-text/listToolSurface.ts';
+import type { ToolSurface } from '../../../model-facing-text/surface.ts';
 import type { AnthropicMessagesClient } from '../anthropic-tool-selector.ts';
 import {
   buildRequestBody,

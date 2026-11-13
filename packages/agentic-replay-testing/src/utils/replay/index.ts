@@ -17,6 +17,7 @@ export {
   replayFixture,
   type ReplayFixtureOptions,
   type ReplayFixtureResult,
-} from './replayFixture.ts';
+  replayPlanRun,
+  type ReplayPlanRunResult,
+} from './replayers.ts';
 export { replayPaths } from './replayPaths.ts';
-export { replayPlanRun, type ReplayPlanRunResult } from './replayPlanRun.ts';

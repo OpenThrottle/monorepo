@@ -50,8 +50,11 @@ import type { AcpAgentSpec } from './agent-specs.ts';
 import { AsyncQueue } from './AsyncQueue.ts';
 import { acpTerminalChunk, createAcpUpdateMapper } from './events.ts';
 import { type AcpLauncher, spawnAcpAgent } from './launcher.ts';
-import { awaitAcpPermission } from './permission-broker.ts';
-import { decideAcpPermission, isManagedMcpTool } from './permissions.ts';
+import {
+  awaitAcpPermission,
+  decideAcpPermission,
+  isManagedMcpTool,
+} from './permissions.ts';
 import { toAcpMcpServers } from './toAcpMcpServers.ts';
 
 /**

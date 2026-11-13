@@ -14,8 +14,8 @@ import {
   getTargetApplication,
   parsePossibleNames,
 } from '../../utils/questions.ts';
-import { REGEX_PASCAL_CASE } from '../../utils/regex.ts';
 import { throwInvalidFolderError } from '../../utils/target-validation.ts';
+import { REGEX_PASCAL_CASE } from '../../utils/validation.ts';
 
 export interface ReactRouterTableGeneratorSchema {
   readonly application?: string;

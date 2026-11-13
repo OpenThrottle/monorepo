@@ -3,10 +3,10 @@ import prompts from 'prompts';
 
 import { getMonorepoApplications } from './index.ts';
 import { MESSAGE_ON_CANCEL } from './messages.ts';
-import { ORGANIZATIONS } from './organizations.ts';
 import { getProjectsByTags } from './projects.ts';
 import { parseCommaSeparatedValues } from './strings.ts';
 import {
+  ORGANIZATIONS,
   validatePascalCase,
   validatePort,
   validateSlug,

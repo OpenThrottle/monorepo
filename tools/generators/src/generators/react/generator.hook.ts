@@ -5,12 +5,12 @@ import prompts from 'prompts';
 
 import { generateFilesSafely } from '../../utils/generateFilesSafely.ts';
 import { getCommonVariables, getGeneratorOverview } from '../../utils/index.ts';
+import { resolveReactDestination } from '../../utils/interactive.ts';
 import {
   getConfigConfirmation,
   getReactHookDestination,
   parsePossibleNames,
 } from '../../utils/questions.ts';
-import { resolveReactDestination } from '../../utils/resolveReactDestination.ts';
 import { throwInvalidDestinationError } from '../../utils/target-validation.ts';
 import { validateCamelCase } from '../../utils/validation.ts';
 

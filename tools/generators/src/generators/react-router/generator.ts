@@ -13,10 +13,12 @@ import {
 import {
   askWhenInteractive,
   isInteractiveArgPresent,
+  writeJsonToStdout,
 } from '../../utils/interactive.ts';
-import { writeJsonToStdout } from '../../utils/output.ts';
-import { assertReactRouterApplication } from '../../utils/target-validation.ts';
-import { throwGeneratorError } from '../../utils/throwGeneratorError.ts';
+import {
+  assertReactRouterApplication,
+  throwGeneratorError,
+} from '../../utils/target-validation.ts';
 import { generatorReactRouterApplication } from './generator.application.ts';
 import { generatorReactRouterComponent } from './generator.component.ts';
 import { generatorReactRouterForm } from './generator.form.ts';

@@ -6,8 +6,7 @@
  */
 import type { LoopOutcome, RunOtLoopOptions } from '../contract/index.ts';
 import { LOOP_TASK_STATUS } from '../contract/index.ts';
-import { clampMaxRetries } from './clampMaxRetries.ts';
-import { endTaskSession, narrate } from './loop-run.ts';
+import { clampMaxRetries, endTaskSession, narrate } from './loop-run.ts';
 import type { LoopRunContext } from './loop-run-context.ts';
 import { runTask } from './runTask.ts';
 import { closePlan, selectNextTask } from './tasks.ts';

@@ -13,16 +13,17 @@ import * as path from 'path';
 import prompts from 'prompts';
 
 import { getCommonVariables } from '../../utils/index.ts';
-import { isInteractiveArgPresent } from '../../utils/interactive.ts';
-import { ORGANIZATIONS } from '../../utils/organizations.ts';
-import { writeJsonToStdout } from '../../utils/output.ts';
+import {
+  isInteractiveArgPresent,
+  writeJsonToStdout,
+} from '../../utils/interactive.ts';
 import {
   getConfigConfirmation,
   getOrganizationName,
   getPackageName,
 } from '../../utils/questions.ts';
-import { REGEX_SLUG } from '../../utils/regex.ts';
-import { throwGeneratorError } from '../../utils/throwGeneratorError.ts';
+import { throwGeneratorError } from '../../utils/target-validation.ts';
+import { ORGANIZATIONS, REGEX_SLUG } from '../../utils/validation.ts';
 
 export interface PackageGeneratorSchema {
   readonly describe?: boolean;

@@ -16,14 +16,14 @@ import {
 import {
   askWhenInteractive,
   isInteractiveArgPresent,
+  writeJsonToStdout,
 } from '../../utils/interactive.ts';
-import { writeJsonToStdout } from '../../utils/output.ts';
 import {
   getConfigConfirmation,
   getTargetApplication,
 } from '../../utils/questions.ts';
-import { REGEX_SLUG } from '../../utils/regex.ts';
-import { throwGeneratorError } from '../../utils/throwGeneratorError.ts';
+import { throwGeneratorError } from '../../utils/target-validation.ts';
+import { REGEX_SLUG } from '../../utils/validation.ts';
 
 export interface FoldersGeneratorSchema {
   readonly application?: string;

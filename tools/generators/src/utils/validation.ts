@@ -1,4 +1,16 @@
-import { REGEX_CAMEL_CASE, REGEX_PASCAL_CASE_V2, REGEX_SLUG } from './regex.ts';
+export const REGEX_CAMEL_CASE = /^[a-z]+(?:[A-Z][a-z]+)*$/;
+export const REGEX_PASCAL_CASE = /^[A-Z][a-z]+(?:[A-Z][a-z]+)*$/;
+/** Allows PascalCase plus trailing version-style segments (e.g. HomeHeroV1). */
+export const REGEX_PASCAL_CASE_V2 = /^[A-Z][a-z]+(?:[A-Z](?:[a-z]+|[0-9]+))*$/;
+export const REGEX_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+/**
+ * The package organization scopes available across the workspace. This is the
+ * single source of truth shared by the package generator's `--describe` /
+ * `--list=organizations` output, its schema validation, and the interactive
+ * prompt — keep them in sync by importing from here.
+ */
+export const ORGANIZATIONS = ['@openthrottle', '@tools'] as const;
 
 export const validateSlug = (value: string): string | undefined => {
   if (value.length < 3) return 'Must be at least 3 characters';

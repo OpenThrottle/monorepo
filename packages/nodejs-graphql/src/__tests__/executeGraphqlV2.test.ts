@@ -4,7 +4,7 @@ import { type DocumentNode, parse } from 'graphql';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { executeGraphqlV2 } from '../executeGraphqlV2.ts';
-import { GRAPHQL_TIMEOUT_ERROR_PREFIX } from '../utils.ts';
+import { GRAPHQL_TIMEOUT_ERROR_PREFIX } from '../timeout.ts';
 
 // See graphql-v2.test.ts: the generic overload brands the parsed document with
 // the caller's result/variables types without a type assertion.

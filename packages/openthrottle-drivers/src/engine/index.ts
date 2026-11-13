@@ -22,9 +22,9 @@ import type {
 } from '../types/index.ts';
 import { resolveDriverBinary } from '../utils/binary.ts';
 import { escalateKill } from '../utils/child-kill.ts';
+import type { UsageLimit } from '../utils/claude-output.ts';
 import type { DriverLogger } from '../utils/logger.ts';
 import { noopDriverLogger } from '../utils/logger.ts';
-import type { UsageLimit } from '../utils/usage-limit.ts';
 
 /**
  * @description Child stdio for every driver run: no stdin (a driver never reads it — the prompt is

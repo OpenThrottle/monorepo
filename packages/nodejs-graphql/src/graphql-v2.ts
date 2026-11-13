@@ -45,7 +45,7 @@
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { print } from 'graphql';
 
-import { asGraphqlPayload, parseDateTimeInResponse } from './utils.ts';
+import { asGraphqlPayload, parseDateTimeInResponse } from './response.ts';
 
 /**
  * @description Wire-level GraphQL response (aligned with V1 {@link GraphqlResponse}).

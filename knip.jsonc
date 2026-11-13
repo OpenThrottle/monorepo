@@ -426,7 +426,7 @@
         "src/nest-tool-handlers.ts",
         "src/nest/bootstrapMcpDeveloperApp.ts",
         // Run by the `measure-tool-surface` Nx target (tsx); also reaches
-        // measureToolSurface.ts, which it imports.
+        // surface.ts, which it imports.
         "src/model-facing-text/writeToolSurface.ts",
         // Run by the on-demand `eval-tool-selection` Nx target (tsx); reaches
         // the rest of src/evals/tool-selection/, which it imports.

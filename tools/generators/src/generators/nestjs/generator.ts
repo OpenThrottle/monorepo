@@ -5,10 +5,10 @@ import prompts from 'prompts';
 import {
   askWhenInteractive,
   isInteractiveArgPresent,
+  writeJsonToStdout,
 } from '../../utils/interactive.ts';
-import { writeJsonToStdout } from '../../utils/output.ts';
 import { getProjectsByTags } from '../../utils/projects.ts';
-import { throwGeneratorError } from '../../utils/throwGeneratorError.ts';
+import { throwGeneratorError } from '../../utils/target-validation.ts';
 import { generatorNestJSAIAgent } from './generator.ai-agent.ts';
 import { generatorNestJSApplication } from './generator.application.ts';
 import { generatorNestJSGraphQLService } from './generator.graphql-service.ts';

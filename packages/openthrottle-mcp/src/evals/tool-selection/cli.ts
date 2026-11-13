@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 
 import { TOOLSET_NAMES } from '../../config/toolsets.ts';
-import { listToolSurface } from '../../model-facing-text/listToolSurface.ts';
+import { listToolSurface } from '../../model-facing-text/surface.ts';
 import { createAnthropicToolSelector } from './anthropic-tool-selector.ts';
 import type { BaselineComparison, RunResult } from './compareBaseline.ts';
 import { compareBaseline, passRate } from './compareBaseline.ts';

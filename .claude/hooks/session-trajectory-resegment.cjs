@@ -592,46 +592,6 @@ var parseResegmentArgs = ({
   };
 };
 
-// packages/agentic-hooks/src/adapters/claude/resegment-report.ts
-var taskLabel = (taskId) => {
-  return taskId === null ? "plan-level" : `task ${taskId}`;
-};
-var formatResegmentPlan = ({
-  dryRun,
-  plan
-}) => {
-  const lines = [
-    dryRun ? `session-trajectory-resegment: DRY RUN for ${plan.sessionId}, nothing will be written` : `session-trajectory-resegment: about to write for ${plan.sessionId}`,
-    `transcript: ${plan.transcriptPath}`,
-    `open (skipped) segments: ${plan.openSegments}; actions: ${plan.actions.length}`
-  ];
-  for (const action of plan.actions) {
-    if (action.action === "insert") {
-      lines.push(
-        `  INSERT  ${taskLabel(action.taskId)}  steps ${action.newStepCount}`
-      );
-      continue;
-    }
-    if (action.action === "skip") {
-      lines.push(
-        `  SKIP    ${taskLabel(action.taskId)}  id ${action.id}  steps ${action.oldStepCount} -> ${action.newStepCount}`
-      );
-      continue;
-    }
-    lines.push(
-      `  UPDATE  ${taskLabel(action.taskId)}  id ${action.id}  steps ${action.oldStepCount} -> ${action.newStepCount}`
-    );
-  }
-  return `${lines.join("\n")}
-`;
-};
-var formatResegmentResult = (result) => {
-  return `${[
-    `replaced ${result.replaced}, inserted ${result.inserted}, skipped (identical) ${result.skipped}, failed ${result.failed}`
-  ].join("\n")}
-`;
-};
-
 // packages/agentic-hooks/src/adapters/claude/resegment-session.ts
 var import_node_fs3 = __toESM(require("node:fs"), 1);
 var import_node_path4 = __toESM(require("node:path"), 1);
@@ -648,7 +608,7 @@ var DRIVERS = {
 var DRIVER_IDS = Object.values(DRIVERS);
 var DRIVER_ID_SET = new Set(DRIVER_IDS);
 
-// packages/openthrottle-drivers/src/utils/usage-limit.ts
+// packages/openthrottle-drivers/src/utils/claude-output.ts
 var isRecord2 = (value) => {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 };
@@ -1485,101 +1445,6 @@ var createStructuredChunkReader = (driverId) => {
   }
 };
 
-// packages/openthrottle-agentic-utils/src/utils/trajectory/capTrajectory.ts
-var DEFAULT_TRAJECTORY_LIMITS = {
-  observationBytes: 16 * 1024,
-  totalBytes: 4 * 1024 * 1024
-};
-var MARKER_RESERVE_BYTES = 40;
-var encoder = new TextEncoder();
-var decoder = new TextDecoder("utf-8", { fatal: false });
-var byteLength = (value) => {
-  return encoder.encode(value).length;
-};
-var elisionMarker = (elidedBytes) => {
-  return `
-…[${elidedBytes} bytes elided]…
-`;
-};
-var decodeWhole = (bytes) => {
-  return decoder.decode(bytes).replace(/^�+|�+$/g, "");
-};
-var capContent = (content, limit) => {
-  const bytes = encoder.encode(content);
-  if (bytes.length <= limit) return content;
-  const half = Math.max(0, Math.floor((limit - MARKER_RESERVE_BYTES) / 2));
-  const head = decodeWhole(bytes.subarray(0, half));
-  const tail = decodeWhole(bytes.subarray(bytes.length - half));
-  const elided = bytes.length - byteLength(head) - byteLength(tail);
-  return `${head}${elisionMarker(elided)}${tail}`;
-};
-var mapResults = (steps, transform) => {
-  return steps.map((step) => {
-    if (!step.observation) return step;
-    return {
-      ...step,
-      observation: { results: step.observation.results.map(transform) }
-    };
-  });
-};
-var withSteps = (trajectory, steps) => {
-  return { ...trajectory, steps };
-};
-var serializedBytes = (trajectory) => {
-  return byteLength(JSON.stringify(trajectory));
-};
-var capTrajectory = (trajectory, limits = DEFAULT_TRAJECTORY_LIMITS) => {
-  let truncated = false;
-  const perObservation = mapResults(trajectory.steps, (result) => {
-    const capped = capContent(result.content, limits.observationBytes);
-    if (capped !== result.content) truncated = true;
-    return capped === result.content ? result : { ...result, content: capped };
-  });
-  const current = withSteps(trajectory, perObservation);
-  let size = serializedBytes(current);
-  if (size <= limits.totalBytes) {
-    return { byteSize: size, trajectory: current, truncated };
-  }
-  const jsonBytes = (value) => {
-    return byteLength(JSON.stringify(value));
-  };
-  const elisions = /* @__PURE__ */ new Map();
-  const keyOf = (stepIndex, resultIndex) => {
-    return `${stepIndex}:${resultIndex}`;
-  };
-  current.steps.forEach((step, stepIndex) => {
-    (step.observation?.results ?? []).forEach((result, resultIndex) => {
-      if (size <= limits.totalBytes) return;
-      const marker = elisionMarker(byteLength(result.content));
-      const saved = jsonBytes(result.content) - jsonBytes(marker);
-      if (saved <= 0) return;
-      elisions.set(keyOf(stepIndex, resultIndex), marker);
-      size -= saved;
-    });
-  });
-  if (elisions.size === 0) {
-    return { byteSize: size, trajectory: current, truncated };
-  }
-  const elidedSteps = current.steps.map((step, stepIndex) => {
-    if (!step.observation) return step;
-    return {
-      ...step,
-      observation: {
-        results: step.observation.results.map((result, resultIndex) => {
-          const marker = elisions.get(keyOf(stepIndex, resultIndex));
-          return marker === void 0 ? result : { ...result, content: marker };
-        })
-      }
-    };
-  });
-  const elided = withSteps(current, elidedSteps);
-  return {
-    byteSize: serializedBytes(elided),
-    trajectory: elided,
-    truncated: true
-  };
-};
-
 // packages/openthrottle-agentic-utils/src/utils/trajectory/normalizeUsage.ts
 var EXCLUSIVE_CACHE_DRIVERS = /* @__PURE__ */ new Set([
   DRIVERS.claude,
@@ -1888,7 +1753,100 @@ var chunksToAtif = (input) => {
   };
 };
 
-// packages/openthrottle-agentic-utils/src/utils/trajectory/redactSecrets.ts
+// packages/openthrottle-agentic-utils/src/utils/trajectory/sanitize.ts
+var DEFAULT_TRAJECTORY_LIMITS = {
+  observationBytes: 16 * 1024,
+  totalBytes: 4 * 1024 * 1024
+};
+var MARKER_RESERVE_BYTES = 40;
+var encoder = new TextEncoder();
+var decoder = new TextDecoder("utf-8", { fatal: false });
+var byteLength = (value) => {
+  return encoder.encode(value).length;
+};
+var elisionMarker = (elidedBytes) => {
+  return `
+…[${elidedBytes} bytes elided]…
+`;
+};
+var decodeWhole = (bytes) => {
+  return decoder.decode(bytes).replace(/^�+|�+$/g, "");
+};
+var capContent = (content, limit) => {
+  const bytes = encoder.encode(content);
+  if (bytes.length <= limit) return content;
+  const half = Math.max(0, Math.floor((limit - MARKER_RESERVE_BYTES) / 2));
+  const head = decodeWhole(bytes.subarray(0, half));
+  const tail = decodeWhole(bytes.subarray(bytes.length - half));
+  const elided = bytes.length - byteLength(head) - byteLength(tail);
+  return `${head}${elisionMarker(elided)}${tail}`;
+};
+var mapResults = (steps, transform) => {
+  return steps.map((step) => {
+    if (!step.observation) return step;
+    return {
+      ...step,
+      observation: { results: step.observation.results.map(transform) }
+    };
+  });
+};
+var withSteps = (trajectory, steps) => {
+  return { ...trajectory, steps };
+};
+var serializedBytes = (trajectory) => {
+  return byteLength(JSON.stringify(trajectory));
+};
+var capTrajectory = (trajectory, limits = DEFAULT_TRAJECTORY_LIMITS) => {
+  let truncated = false;
+  const perObservation = mapResults(trajectory.steps, (result) => {
+    const capped = capContent(result.content, limits.observationBytes);
+    if (capped !== result.content) truncated = true;
+    return capped === result.content ? result : { ...result, content: capped };
+  });
+  const current = withSteps(trajectory, perObservation);
+  let size = serializedBytes(current);
+  if (size <= limits.totalBytes) {
+    return { byteSize: size, trajectory: current, truncated };
+  }
+  const jsonBytes = (value) => {
+    return byteLength(JSON.stringify(value));
+  };
+  const elisions = /* @__PURE__ */ new Map();
+  const keyOf = (stepIndex, resultIndex) => {
+    return `${stepIndex}:${resultIndex}`;
+  };
+  current.steps.forEach((step, stepIndex) => {
+    (step.observation?.results ?? []).forEach((result, resultIndex) => {
+      if (size <= limits.totalBytes) return;
+      const marker = elisionMarker(byteLength(result.content));
+      const saved = jsonBytes(result.content) - jsonBytes(marker);
+      if (saved <= 0) return;
+      elisions.set(keyOf(stepIndex, resultIndex), marker);
+      size -= saved;
+    });
+  });
+  if (elisions.size === 0) {
+    return { byteSize: size, trajectory: current, truncated };
+  }
+  const elidedSteps = current.steps.map((step, stepIndex) => {
+    if (!step.observation) return step;
+    return {
+      ...step,
+      observation: {
+        results: step.observation.results.map((result, resultIndex) => {
+          const marker = elisions.get(keyOf(stepIndex, resultIndex));
+          return marker === void 0 ? result : { ...result, content: marker };
+        })
+      }
+    };
+  });
+  const elided = withSteps(current, elidedSteps);
+  return {
+    byteSize: serializedBytes(elided),
+    trajectory: elided,
+    truncated: true
+  };
+};
 var SECRET_PATTERNS = [
   /\bBearer\s+[A-Za-z0-9._\-+=/]+/gi,
   /\bsk-[A-Za-z0-9]{8,}/gi,
@@ -3058,7 +3016,45 @@ var resolveBackfillEndpoint = ({
   };
 };
 
-// packages/agentic-hooks/src/adapters/claude/runResegment.ts
+// packages/agentic-hooks/src/adapters/claude/resegment-run.ts
+var taskLabel = (taskId) => {
+  return taskId === null ? "plan-level" : `task ${taskId}`;
+};
+var formatResegmentPlan = ({
+  dryRun,
+  plan
+}) => {
+  const lines = [
+    dryRun ? `session-trajectory-resegment: DRY RUN for ${plan.sessionId}, nothing will be written` : `session-trajectory-resegment: about to write for ${plan.sessionId}`,
+    `transcript: ${plan.transcriptPath}`,
+    `open (skipped) segments: ${plan.openSegments}; actions: ${plan.actions.length}`
+  ];
+  for (const action of plan.actions) {
+    if (action.action === "insert") {
+      lines.push(
+        `  INSERT  ${taskLabel(action.taskId)}  steps ${action.newStepCount}`
+      );
+      continue;
+    }
+    if (action.action === "skip") {
+      lines.push(
+        `  SKIP    ${taskLabel(action.taskId)}  id ${action.id}  steps ${action.oldStepCount} -> ${action.newStepCount}`
+      );
+      continue;
+    }
+    lines.push(
+      `  UPDATE  ${taskLabel(action.taskId)}  id ${action.id}  steps ${action.oldStepCount} -> ${action.newStepCount}`
+    );
+  }
+  return `${lines.join("\n")}
+`;
+};
+var formatResegmentResult = (result) => {
+  return `${[
+    `replaced ${result.replaced}, inserted ${result.inserted}, skipped (identical) ${result.skipped}, failed ${result.failed}`
+  ].join("\n")}
+`;
+};
 var pickEndpoint = (injected, repoRoot) => {
   if (injected === void 0) {
     return resolveBackfillEndpoint({ repoRoot });

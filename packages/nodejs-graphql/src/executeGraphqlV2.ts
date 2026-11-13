@@ -7,14 +7,12 @@
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { print } from 'graphql';
 
+import { getGraphQLToken, getGraphQLUrl } from './endpoint.ts';
 import {
-  buildTimeoutSignal,
-  getGraphQLToken,
-  getGraphQLUrl,
   parseDateTimeInResponse,
   parseGraphqlResponseBody,
-  rethrowAsTimeoutIfAborted,
-} from './utils.ts';
+} from './response.ts';
+import { buildTimeoutSignal, rethrowAsTimeoutIfAborted } from './timeout.ts';
 
 /**
  * @description Standard GraphQL response shape from openthrottle-server.

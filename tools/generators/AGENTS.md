@@ -15,7 +15,7 @@ Local Nx plugin holding the five workspace generators (`folders`, `nestjs`, `pac
 - `src/generators/<name>/generator.ts` — entry point; handles `--describe` / `--list` (machine-readable JSON, no writes) and dispatches `--subGenerator` to sibling `generator.<sub>.ts` files.
 - `src/generators/<name>/files/<sub>/` — templates emitted via `@nx/devkit` `generateFiles`.
 - `src/generators/package/files/{react,node,nestjs,tools}/` — full new-package scaffolds (`package.json`, tsconfigs, vite/vitest, eslint, `README.md`); these README templates define the repo-wide package README conventions. `files/common/LICENSE.md` is shared.
-- `src/utils/` — shared prompt/validation/project-graph helpers (`questions.ts`, `projects.ts`, `validation.ts`, `regex.ts`).
+- `src/utils/` — shared prompt/validation/project-graph helpers (`questions.ts`, `projects.ts`, `validation.ts`).
 - `src/generators/folders/CANONICAL_ROUTING_SUBTREE.md` — the routing-folder layout the `folders` generator emits.
 
 ## Template conventions

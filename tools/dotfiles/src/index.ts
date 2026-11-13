@@ -38,12 +38,12 @@ export type { Config as EslintFlatConfig } from 'eslint/config';
 /** @public */
 export {
   lintNestjsFileContract,
+  lintReadability,
   type NestjsContractLintInput,
-} from './lintNestjsFileContract.ts';
+  type ReadabilitySource,
+} from './lint-sources.ts';
 /** @public */
 export { prettierConfig } from './prettierConfig.ts';
-/** @public */
-export { lintReadability, type ReadabilitySource } from './lintReadability.ts';
 /** @public */
 export {
   createViteConfig,

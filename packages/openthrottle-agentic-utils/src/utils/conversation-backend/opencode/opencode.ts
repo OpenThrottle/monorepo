@@ -17,7 +17,7 @@
 
 import { spawn } from 'node:child_process';
 
-import { warnUnsupportedAdditionalDirectories } from '../additional-directories.ts';
+import { warnUnsupportedAdditionalDirectories } from '../capabilities.ts';
 import { NdjsonBuffer } from '../cursor-agent/ndjson.ts';
 import {
   resolveAgentTimeouts,

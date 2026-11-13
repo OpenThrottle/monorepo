@@ -9,7 +9,7 @@ import {
   resolveToolsets,
   TOOLSET_NAMES,
 } from '../config/toolsets.ts';
-import { listToolSurface } from '../model-facing-text/listToolSurface.ts';
+import { listToolSurface } from '../model-facing-text/surface.ts';
 import { McpDeveloperMcpSurface } from '../nest/McpDeveloperMcpSurface.ts';
 import {
   developerMcpToolDefinitions,

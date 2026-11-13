@@ -10,7 +10,7 @@ Fetch-based GraphQL client for React Router loaders/actions and Node scripts aga
 
 ## Layout
 
-- `src/index.ts` / `src/utils.ts` — V1 client + `getGraphQLUrl`, `parseDateTimeInResponse`.
+- `src/index.ts` — V1 client; `src/endpoint.ts` (`getGraphQLUrl`), `src/response.ts` (`parseDateTimeInResponse`), `src/timeout.ts`.
 - `src/graphql-v2.ts` / `src/executeGraphqlV2.ts` — V2 client, result/failure types, `mapFailure`.
 
 ## Invariants & gotchas

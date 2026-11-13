@@ -5,6 +5,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  applyWorkflowRalphDebugCli,
   createRalphDebugLogger,
   disableRalphDebug,
   noop,
@@ -88,5 +89,29 @@ describe('disableRalphDebug and syncRalphDebugFromEnv', () => {
     ralphDebugLogger.debug('from env');
     expect(spy).toHaveBeenCalledWith(RALPH_DEBUG_LOG_PREFIX, 'from env');
     spy.mockRestore();
+  });
+});
+
+describe('applyWorkflowRalphDebugCli', () => {
+  afterEach(() => {
+    setRalphDebugLevel('off');
+  });
+
+  it('maps omit to off', () => {
+    applyWorkflowRalphDebugCli('omit');
+
+    expect(ralphDebugLogger.level).toBe('off');
+  });
+
+  it('maps debug to debug', () => {
+    applyWorkflowRalphDebugCli('debug');
+
+    expect(ralphDebugLogger.level).toBe('debug');
+  });
+
+  it('maps verbose to verbose', () => {
+    applyWorkflowRalphDebugCli('verbose');
+
+    expect(ralphDebugLogger.level).toBe('verbose');
   });
 });

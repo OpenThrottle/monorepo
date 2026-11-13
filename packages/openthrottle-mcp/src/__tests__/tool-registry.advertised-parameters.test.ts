@@ -3,8 +3,8 @@ import 'reflect-metadata';
 import { beforeAll, describe, expect, it } from 'vitest';
 
 import { TOOLSET_NAMES } from '../config/toolsets.ts';
-import type { ToolSurface } from '../model-facing-text/listToolSurface.ts';
-import { listToolSurface } from '../model-facing-text/listToolSurface.ts';
+import type { ToolSurface } from '../model-facing-text/surface.ts';
+import { listToolSurface } from '../model-facing-text/surface.ts';
 import { developerMcpToolDefinitions } from '../tool-registry.ts';
 
 /**

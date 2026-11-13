@@ -21,7 +21,7 @@ import {
   REPLAY_MISMATCH_EXIT_CODE,
   wasTerminated,
 } from '../replay-bin.ts';
-import { replayFixture } from '../replayFixture.ts';
+import { replayFixture } from '../replayers.ts';
 
 /** ~1 MB of stdout: enough to outlast a 64 KB pipe buffer many times over. */
 const LONG_RECORDING_LINES = 30_000;

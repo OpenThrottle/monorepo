@@ -10,12 +10,11 @@ import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import type { HookFetch } from '../../../index.ts';
-import { formatResegmentPlan } from '../resegment-report.ts';
+import { formatResegmentPlan, runResegment } from '../resegment-run.ts';
 import {
   applySessionResegment,
   planSessionResegment,
 } from '../resegment-session.ts';
-import { runResegment } from '../runResegment.ts';
 
 const fixturesDir = path.join(
   path.dirname(fileURLToPath(import.meta.url)),

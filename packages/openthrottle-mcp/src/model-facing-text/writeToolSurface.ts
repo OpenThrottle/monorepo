@@ -7,7 +7,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 
-import { measureToolSurface } from './measureToolSurface.ts';
+import { measureToolSurface } from './surface.ts';
 
 /**
  * @description Measures the tool surface and writes it, pretty-printed, to `outputPath`.

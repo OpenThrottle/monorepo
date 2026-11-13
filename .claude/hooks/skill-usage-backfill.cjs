@@ -1845,7 +1845,7 @@ var parseBackfillArgs = ({
   };
 };
 
-// packages/agentic-hooks/src/adapters/claude/backfill-report.ts
+// packages/agentic-hooks/src/adapters/claude/backfill-run.ts
 var table = (counts, indent) => {
   const entries = Object.entries(counts).sort(
     ([left], [right]) => left.localeCompare(right)
@@ -1903,8 +1903,6 @@ var formatBackfillResult = (result) => {
   ].join("\n")}
 `;
 };
-
-// packages/agentic-hooks/src/adapters/claude/runBackfill.ts
 var pickEndpoint = (injected, repoRoot) => {
   if (injected === void 0) {
     return resolveBackfillEndpoint({ repoRoot });

@@ -1,5 +1,10 @@
 import type { GitHeadState, LoopTask } from '../contract/index.ts';
 import { LOOP_PLAN_STATUS, LOOP_TASK_STATUS } from '../contract/index.ts';
+import {
+  DEFAULT_MAX_RETRIES,
+  MAX_RETRIES_CEILING,
+  MAX_RETRIES_FLOOR,
+} from '../data/data.constants.ts';
 import type { LoopRunContext } from './loop-run-context.ts';
 
 /** @description Plan-output narration; a narration failure never stops the loop. */
@@ -102,4 +107,20 @@ export const guardWorker = async (
       task.id,
     );
   }
+};
+
+/**
+ * @description Resolves `maxRetries`: default 2 when absent or not finite, floored to an integer
+ * and clamped to 0..5.
+ * @public
+ */
+export const clampMaxRetries = (value: number | undefined): number => {
+  if (value === undefined || !Number.isFinite(value)) {
+    return DEFAULT_MAX_RETRIES;
+  }
+
+  return Math.min(
+    MAX_RETRIES_CEILING,
+    Math.max(MAX_RETRIES_FLOOR, Math.floor(value)),
+  );
 };

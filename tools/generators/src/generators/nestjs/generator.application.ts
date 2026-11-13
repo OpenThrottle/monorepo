@@ -5,7 +5,7 @@ import { join } from 'path';
 import { getGithubUsername } from '../../utils/index.ts';
 import { onApplicationSuccess } from '../../utils/messages.ts';
 import { getTargetName, getTargetPort } from '../../utils/questions.ts';
-import { REGEX_SLUG } from '../../utils/regex.ts';
+import { REGEX_SLUG } from '../../utils/validation.ts';
 
 export interface NestJSApplicationGeneratorSchema {
   readonly interactive?: boolean;

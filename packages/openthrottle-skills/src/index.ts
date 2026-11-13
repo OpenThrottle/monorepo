@@ -33,8 +33,8 @@ export {
 export type {
   DiscoveredSkill,
   DiscoverSkillDirsResult,
-} from './discoverSkillDirs.ts';
-export { discoverSkillDirs } from './discoverSkillDirs.ts';
+} from './skill-discovery.ts';
+export { discoverSkillDirs } from './skill-discovery.ts';
 
 /** @public */
 export type {
@@ -42,11 +42,11 @@ export type {
   ForeignSkillManifestEntry,
   ResolveForeignSkillManifestInput,
   ResolveForeignSkillManifestResult,
-} from './resolveForeignSkillManifest.ts';
+} from './skill-discovery.ts';
 export {
   FOREIGN_SKILL_LAYER,
   resolveForeignSkillManifest,
-} from './resolveForeignSkillManifest.ts';
+} from './skill-discovery.ts';
 
 /** @public */
 export type {

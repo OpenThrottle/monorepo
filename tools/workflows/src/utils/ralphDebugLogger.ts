@@ -10,6 +10,7 @@ import {
   WORKFLOW_RALPH_VERBOSE_ENV,
   type WorkflowDebugLevel,
 } from '@openthrottle/openthrottle-agentic-utils';
+import type { WorkflowConfigDebug } from '@openthrottle/openthrottle-agentic-workflow';
 
 /** @deprecated Import {@link WORKFLOW_RALPH_DEBUG_ENV} from `@openthrottle/openthrottle-agentic-utils` instead. */
 export const RALPH_DEBUG_ENV = WORKFLOW_RALPH_DEBUG_ENV;
@@ -159,3 +160,27 @@ export function syncRalphDebugFromEnv(
 ): void {
   applyRalphDebugLevel(readRalphDebugConfigFromEnv(env));
 }
+
+const mapDebugCliToLevel = (debug: WorkflowConfigDebug): RalphDebugLevel => {
+  switch (debug) {
+    case 'debug':
+      return 'debug';
+    case 'verbose':
+      return 'verbose';
+    case 'omit':
+      return 'off';
+    default: {
+      const _exhaustive: never = debug;
+      return _exhaustive;
+    }
+  }
+};
+
+/**
+ * @description Enables shim debug for in-process Ralph runs when tuning requests it.
+ */
+export const applyWorkflowRalphDebugCli = (
+  debug: WorkflowConfigDebug,
+): void => {
+  setRalphDebugLevel(mapDebugCliToLevel(debug));
+};

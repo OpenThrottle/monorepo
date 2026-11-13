@@ -6,12 +6,10 @@ export {
   recordPlanRunScenario,
   type RecordPlanRunScenarioOptions,
   type RecordPlanRunScenarioResult,
-} from './recordPlanRunScenario.ts';
-export {
   recordScenario,
   type RecordScenarioOptions,
   type RecordScenarioResult,
-} from './recordScenario.ts';
+} from './recorders.ts';
 export {
   type RecordingShimOptions,
   runRecordingShim,

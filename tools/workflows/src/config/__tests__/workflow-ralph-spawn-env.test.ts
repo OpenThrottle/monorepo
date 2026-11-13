@@ -7,13 +7,25 @@ import {
   OPENTHROTTLE_POSTGRES_URL_ENV,
   WORKFLOW_RALPH_OT_ROOT_ENV,
 } from '@openthrottle/openthrottle-agentic-utils';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest';
 
 import { WORKFLOW_RALPH_TRANSPORT_ENV } from '../../utils/workflow-transport.ts';
+import { WORKFLOW_RALPH_DEFAULTS_FILENAME } from '../workflow-ralph-defaults.types';
 import {
+  applyWorkflowRalphOtRootFromConfig,
   applyWorkflowRalphSpawnIdentityOverrides,
+  buildNestedWorkflowRalphSpawnEnv,
   buildWorkflowRalphSpawnEnv,
   resolveOpenThrottlePostgresConnectionStringFromEnv,
+  resolveWorkflowRalphConfigCwd,
   WORKFLOW_RALPH_SPAWN_HOME_ENV,
   WORKFLOW_RALPH_SPAWN_XDG_CONFIG_HOME_ENV,
 } from '../workflow-ralph-spawn-env.ts';
@@ -243,5 +255,96 @@ describe('applyWorkflowRalphSpawnIdentityOverrides', () => {
     });
     expect(result.XDG_CONFIG_HOME).toBe('/env/xdg');
     expect(result.HOME).toBeUndefined();
+  });
+});
+
+describe('resolveWorkflowRalphConfigCwd', () => {
+  it('prefers workingDirectory over WORKSPACE_ROOT and process cwd', () => {
+    expect(
+      resolveWorkflowRalphConfigCwd('/job/wt', {
+        WORKSPACE_ROOT: '/server/root',
+      }),
+    ).toBe('/job/wt');
+  });
+
+  it('falls back to WORKSPACE_ROOT when workingDirectory is blank', () => {
+    expect(
+      resolveWorkflowRalphConfigCwd('  ', { WORKSPACE_ROOT: '/server/root' }),
+    ).toBe('/server/root');
+  });
+});
+
+describe('buildNestedWorkflowRalphSpawnEnv', () => {
+  let dir: string;
+
+  afterEach(() => {
+    if (dir) {
+      fs.rmSync(dir, { force: true, recursive: true });
+    }
+    vi.unstubAllEnvs();
+  });
+
+  it('applies spawn.home from .workflow-ralph.json when env omits WORKFLOW_RALPH_SPAWN_HOME', () => {
+    dir = fs.mkdtempSync(path.join(os.tmpdir(), 'wr-nested-spawn-'));
+    fs.writeFileSync(
+      path.join(dir, WORKFLOW_RALPH_DEFAULTS_FILENAME),
+      JSON.stringify({ spawn: { home: '/from-file' } }),
+      'utf8',
+    );
+
+    const out = buildNestedWorkflowRalphSpawnEnv(dir, {
+      HOME: '/worker',
+      PATH: '/usr/bin',
+    });
+
+    expect(out.HOME).toBe('/from-file');
+    expect(out[WORKFLOW_RALPH_SPAWN_HOME_ENV]).toBeUndefined();
+  });
+
+  it('env spawn.home overrides file spawn.home', () => {
+    dir = fs.mkdtempSync(path.join(os.tmpdir(), 'wr-nested-spawn-env-'));
+    fs.writeFileSync(
+      path.join(dir, WORKFLOW_RALPH_DEFAULTS_FILENAME),
+      JSON.stringify({ spawn: { home: '/from-file' } }),
+      'utf8',
+    );
+
+    const out = buildNestedWorkflowRalphSpawnEnv(dir, {
+      HOME: '/worker',
+      PATH: '/usr/bin',
+      [WORKFLOW_RALPH_SPAWN_HOME_ENV]: '/from-env',
+    });
+
+    expect(out.HOME).toBe('/from-env');
+  });
+});
+
+describe('applyWorkflowRalphOtRootFromConfig', () => {
+  let dir: string;
+  const originalOtRoot = process.env[WORKFLOW_RALPH_OT_ROOT_ENV];
+
+  afterEach(() => {
+    if (dir) {
+      fs.rmSync(dir, { force: true, recursive: true });
+    }
+    if (originalOtRoot === undefined) {
+      delete process.env[WORKFLOW_RALPH_OT_ROOT_ENV];
+    } else {
+      process.env[WORKFLOW_RALPH_OT_ROOT_ENV] = originalOtRoot;
+    }
+  });
+
+  it('sets WORKFLOW_RALPH_OT_ROOT from spawn.otRoot in file when env unset', () => {
+    dir = fs.mkdtempSync(path.join(os.tmpdir(), 'wr-ot-root-file-'));
+    delete process.env[WORKFLOW_RALPH_OT_ROOT_ENV];
+    fs.writeFileSync(
+      path.join(dir, WORKFLOW_RALPH_DEFAULTS_FILENAME),
+      JSON.stringify({ spawn: { otRoot: dir } }),
+      'utf8',
+    );
+
+    applyWorkflowRalphOtRootFromConfig(dir, process.env);
+
+    expect(process.env[WORKFLOW_RALPH_OT_ROOT_ENV]).toBe(dir);
   });
 });
