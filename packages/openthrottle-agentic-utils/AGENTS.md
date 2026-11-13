@@ -66,7 +66,7 @@ Design: `docs/openthrottle/eval-system-adr.md` § Decision 4.
 - **`src/utils/trajectory/`:**
   - `chunksToAtif` builds the ATIF v1.8 document, with the types in `src/types/atif.ts`.
   - `tool-metadata.ts` is the single table of where each CLI keeps tool arguments and results.
-  - `usage-metrics.ts` handles token accounting. Claude, cursor and opencode report cache tokens
+  - `normalizeUsage.ts` handles token accounting. Claude, cursor and opencode report cache tokens
     alongside the input count; codex reports them as part of it.
 - **Fixtures:** `structured-output/__tests__/fixtures/` holds sanitized real recordings, with
   `*.synthetic.ndjson` marking the ones built by hand. Re-record with each CLI's plan-run command

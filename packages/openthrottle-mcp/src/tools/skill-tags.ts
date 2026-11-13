@@ -22,7 +22,7 @@ import {
 import { getAuthToken } from '../auth/get-auth-token.ts';
 import type { GenericResult } from '../types/index.ts';
 import { invalidArgsContent } from '../utils/errors.ts';
-import { runTool } from '../utils/tool-result.ts';
+import { runTool } from '../utils/runTool.ts';
 
 type SkillTag = {
   createdAt: string;

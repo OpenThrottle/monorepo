@@ -108,7 +108,7 @@ export function getGraphQLToken(): string | undefined {
  * rebuilds the value structurally but returns the same shape it was given (ISO
  * strings become `Date`), so callers on the trusted success path get their
  * `TData` back without an assertion. See the executors in `index.ts` /
- * `index-v2.ts` / `graphql-v2.ts`.
+ * `executeGraphqlV2.ts` / `graphql-v2.ts`.
  * @public
  */
 export function parseDateTimeInResponse<T>(value: T): T;

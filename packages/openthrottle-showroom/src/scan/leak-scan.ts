@@ -21,7 +21,7 @@ import { join } from 'node:path';
 import { getEpisode, resolveVariant } from '../episodes/registry.ts';
 import { captureDir, takeDir } from '../runner/format.ts';
 import type { ScanKind } from './rules.ts';
-import { scanText } from './scan-text.ts';
+import { scanText } from './scanText.ts';
 
 const argValue = (name: string): string | undefined => {
   const index = process.argv.indexOf(`--${name}`);

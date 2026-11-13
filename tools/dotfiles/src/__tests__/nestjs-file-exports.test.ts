@@ -1,7 +1,7 @@
 import { RuleTester } from '@typescript-eslint/rule-tester';
 import { afterAll, describe, it } from 'vitest';
 
-import { nestjsFileExports } from '../rules/nestjs-file-exports.ts';
+import { nestjsFileExports } from '../rules/nestjsFileExports.ts';
 
 // Wire the framework hooks the RuleTester calls to Vitest's.
 RuleTester.afterAll = afterAll;

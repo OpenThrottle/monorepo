@@ -1,3 +1,4 @@
+export { buildPlanRunWorktreeName } from './buildPlanRunWorktreeName.ts';
 export { buildPlanRunConfigSnapshot } from './plan-run-config-snapshot.build.ts';
 export { PLAN_RUN_CONFIG_SNAPSHOT_VERSION } from './plan-run-config-snapshot.constants.ts';
 export type {
@@ -61,4 +62,3 @@ export {
   planRunConfigFromPlanStorage,
   serializePlanRunConfigForGraphql,
 } from './plan-run-config-storage.validation.ts';
-export { buildPlanRunWorktreeName } from './plan-run-worktree-name.ts';

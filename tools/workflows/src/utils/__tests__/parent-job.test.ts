@@ -17,7 +17,7 @@ import {
   parentJobEnsureCommitBeforeRelease,
   slugifyForBranch,
 } from '../parent-job';
-import { WorktreeTargetsTracker } from '../worktree-targets';
+import { WorktreeTargetsTracker } from '../WorktreeTargetsTracker';
 
 /** Creates a temp dir with a git repo that has main and one commit. */
 function createTempGitRepo(): string {

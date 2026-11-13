@@ -39,7 +39,7 @@ import {
 } from './backends/fish-audio.ts';
 import { DEFAULT_PIPER_VOICE, piperBackend } from './backends/piper.ts';
 import { sayBackend } from './backends/say.ts';
-import { parseScript } from './parse-script.ts';
+import { parseScript } from './parseScript.ts';
 import {
   findCachedRender,
   renderCacheKey,

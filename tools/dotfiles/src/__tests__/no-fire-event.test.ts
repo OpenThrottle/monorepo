@@ -1,7 +1,7 @@
 import { RuleTester } from '@typescript-eslint/rule-tester';
 import { afterAll, describe, it } from 'vitest';
 
-import { noFireEvent } from '../rules/no-fire-event.ts';
+import { noFireEvent } from '../rules/noFireEvent.ts';
 
 RuleTester.afterAll = afterAll;
 RuleTester.describe = describe;

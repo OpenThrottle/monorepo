@@ -23,13 +23,16 @@ afterEach(() => {
 });
 
 describe('auditedProjects', () => {
-  it('covers the React Router tier and the Electron shell, not NestJS', () => {
+  it('covers every application, package and tool except the NestJS tier and the Nx plugins', () => {
     for (const directory of [
       'applications/openthrottle-app',
       'applications/openthrottle-developer',
       'applications/openthrottle-server',
       'packages/nestjs-redis',
+      'packages/openthrottle-mcp',
       'packages/react-router-ui',
+      'tools/dotfiles',
+      'tools/nx-plugins',
     ]) {
       mkdirSync(path.join(root, directory), { recursive: true });
     }
@@ -37,7 +40,9 @@ describe('auditedProjects', () => {
     expect(auditedProjects(root)).toEqual([
       'applications/openthrottle-app',
       'applications/openthrottle-developer',
+      'packages/openthrottle-mcp',
       'packages/react-router-ui',
+      'tools/dotfiles',
     ]);
   });
 });

@@ -13,7 +13,7 @@ import { z } from 'zod';
 
 import { DiscoverLocalModelsDocument } from '../__generated__/graphql.js';
 import type { GenericResult } from '../types/index.ts';
-import { runTool } from '../utils/tool-result.ts';
+import { runTool } from '../utils/runTool.ts';
 
 type ModelEndpoint = {
   baseUrl: string;

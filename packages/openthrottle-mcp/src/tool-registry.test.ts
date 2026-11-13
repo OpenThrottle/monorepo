@@ -9,8 +9,8 @@ import {
   resolveToolsets,
   TOOLSET_NAMES,
 } from './config/toolsets.ts';
-import { listToolSurface } from './model-facing-text/list-tool-surface.ts';
-import { McpDeveloperMcpSurface } from './nest/openthrottle-mcp-mcp-surface.ts';
+import { listToolSurface } from './model-facing-text/listToolSurface.ts';
+import { McpDeveloperMcpSurface } from './nest/McpDeveloperMcpSurface.ts';
 import {
   developerMcpToolDefinitions,
   developerMcpToolsIn,

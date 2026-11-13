@@ -33,8 +33,8 @@ export {
 export type {
   DiscoveredSkill,
   DiscoverSkillDirsResult,
-} from './discover-skill-dirs.ts';
-export { discoverSkillDirs } from './discover-skill-dirs.ts';
+} from './discoverSkillDirs.ts';
+export { discoverSkillDirs } from './discoverSkillDirs.ts';
 
 /** @public */
 export type {
@@ -53,8 +53,8 @@ export type {
   MatchedTagAction,
   TagActionEvaluationContext,
   TagActionRuleInput,
-} from './evaluate-tag-action-rules.ts';
-export { evaluateTagActionRules } from './evaluate-tag-action-rules.ts';
+} from './evaluateTagActionRules.ts';
+export { evaluateTagActionRules } from './evaluateTagActionRules.ts';
 
 /** @public */
 export type {
@@ -76,8 +76,8 @@ export {
 export type {
   SkillTagVocabularyEntry,
   SkillTagVocabularyViolation,
-} from './find-unknown-skill-tags.ts';
-export { findUnknownSkillTags } from './find-unknown-skill-tags.ts';
+} from './findUnknownSkillTags.ts';
+export { findUnknownSkillTags } from './findUnknownSkillTags.ts';
 
 /** @public */
 export {
@@ -88,11 +88,11 @@ export {
 export type {
   FrontmatterScalar,
   ParsedYamlFrontmatter,
-} from './frontmatter/parse-yaml-frontmatter.ts';
-export { parseYamlFrontmatter } from './frontmatter/parse-yaml-frontmatter.ts';
+} from './frontmatter/parseYamlFrontmatter.ts';
+export { parseYamlFrontmatter } from './frontmatter/parseYamlFrontmatter.ts';
 /** @public */
-export type { SplitFrontmatterResult } from './frontmatter/split-frontmatter.ts';
-export { splitFrontmatter } from './frontmatter/split-frontmatter.ts';
+export type { SplitFrontmatterResult } from './frontmatter/splitFrontmatter.ts';
+export { splitFrontmatter } from './frontmatter/splitFrontmatter.ts';
 
 /** @public */
 export type { SkillsLockEntry, SkillsLockMap } from './parse-skills-lock.ts';
@@ -139,15 +139,15 @@ export {
 } from './map-agent-assets-for-ingest.ts';
 
 /** @public */
-export type { CollectAgentAssetsForIngestResult } from './collect-agent-assets-for-ingest.ts';
-export { collectAgentAssetsForIngest } from './collect-agent-assets-for-ingest.ts';
+export type { CollectAgentAssetsForIngestResult } from './collectAgentAssetsForIngest.ts';
+export { collectAgentAssetsForIngest } from './collectAgentAssetsForIngest.ts';
 
 /** @public */
-export type { ProjectSkillInput } from './project-skill-inputs.ts';
-export { toProjectSkillInputs } from './project-skill-inputs.ts';
+export type { ProjectSkillInput } from './toProjectSkillInputs.ts';
+export { toProjectSkillInputs } from './toProjectSkillInputs.ts';
 
 /** @public */
-export { mergeSkillTags } from './skill-tag-overlays.ts';
+export { mergeSkillTags } from './mergeSkillTags.ts';
 
 /** @public */
 export type {
@@ -166,12 +166,12 @@ export {
 } from './resolve-skill-availability.ts';
 
 /** @public */
-export type { WalkAgentAssetsOptions } from './validate-agent-assets-on-disk.ts';
-export { validateAgentAssetsOnDisk } from './validate-agent-assets-on-disk.ts';
+export type { WalkAgentAssetsOptions } from './validateAgentAssetsOnDisk.ts';
+export { validateAgentAssetsOnDisk } from './validateAgentAssetsOnDisk.ts';
 
 /** @public */
 export type {
   AgentAssetFileEntry,
   WalkAgentAssetFilesResult,
-} from './walk-agent-assets-on-disk.ts';
-export { walkAgentAssetFiles } from './walk-agent-assets-on-disk.ts';
+} from './walkAgentAssetFiles.ts';
+export { walkAgentAssetFiles } from './walkAgentAssetFiles.ts';

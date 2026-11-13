@@ -7,7 +7,7 @@ import {
   mapAgentAssetFilesToIngestRecords,
   mapAgentAssetFileToIngestRecord,
 } from '../map-agent-assets-for-ingest.ts';
-import type { AgentAssetFileEntry } from '../walk-agent-assets-on-disk.ts';
+import type { AgentAssetFileEntry } from '../walkAgentAssetFiles.ts';
 
 const monorepoRoot = join(import.meta.dirname, '../../../..');
 

@@ -6,7 +6,7 @@ import { join } from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { parseWorkerResult } from '../parse-worker-result.ts';
+import { parseWorkerResult } from '../parseWorkerResult.ts';
 import {
   clearResultFile,
   prepareResultDir,

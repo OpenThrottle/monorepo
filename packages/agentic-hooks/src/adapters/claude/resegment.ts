@@ -14,7 +14,7 @@
  */
 import { logHookError } from '../../index.ts';
 import { parseResegmentArgs, RESEGMENT_USAGE } from './resegment-args.ts';
-import { runResegment } from './resegment-run.ts';
+import { runResegment } from './runResegment.ts';
 
 const main = async (): Promise<number> => {
   const parsed = parseResegmentArgs({

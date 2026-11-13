@@ -28,12 +28,12 @@ import {
   mergeRalphRuntimeSeed,
   resolveIterationTimeoutMs,
 } from './ralph-runtime-config';
-import { sanitizeRalphShellNoise } from './ralph-shell-misparse';
 import {
   RALPH_WORKTREE_FLAG_ONLY,
   type RalphWorktreeName,
   resolveRalphWorktreeName,
 } from './ralph-worktree-cli';
+import { sanitizeRalphShellNoise } from './sanitizeRalphShellNoise';
 
 /** RFC 4122 UUID v4 pattern: plan/task is OpenThrottle plan or task ID when matching */
 const RALPH_UUID_REGEX =

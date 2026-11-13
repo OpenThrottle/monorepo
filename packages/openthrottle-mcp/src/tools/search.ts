@@ -17,7 +17,7 @@ import {
 import { getAuthToken } from '../auth/get-auth-token.ts';
 import type { GenericResult } from '../types/index.ts';
 import { invalidArgsContent, SafeToolError } from '../utils/errors.ts';
-import { runTool } from '../utils/tool-result.ts';
+import { runTool } from '../utils/runTool.ts';
 
 const SEARCH_DEFAULT_LIMIT = 20;
 const SEARCH_MAX_LIMIT = 50;

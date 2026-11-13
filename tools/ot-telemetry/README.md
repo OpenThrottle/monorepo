@@ -210,11 +210,11 @@ tools/ot-telemetry
 │       ├── envelope.ts          # window resolution and the versioned envelope
 │       ├── format.ts            # number/duration/currency formatting and Markdown table primitives
 │       ├── git.ts               # actorKey (namespaced email hash) and repoSlug (org/repo from origin)
-│       ├── markdown-report.ts   # renders an envelope into report.md
+│       ├── renderMarkdownReport.ts # renders an envelope into report.md
 │       ├── postgres.ts          # read-only connection, capability probe, migration high-water mark
 │       └── metrics
 │           ├── registry.ts      # runs every satisfiable query, records a skip for the rest
-│           ├── window-count.ts  # daily_stats-first created/completed-in-window counting
+│           ├── countInWindow.ts # daily_stats-first created/completed-in-window counting
 │           ├── type-guards.ts   # narrows the envelope's metrics bag back to each family's type
 │           ├── plans.ts         # metrics.plans, metrics.plan_tags
 │           ├── tasks.ts         # metrics.tasks, metrics.task_tags

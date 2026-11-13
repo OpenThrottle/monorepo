@@ -144,7 +144,7 @@ Unknown `--backend` values fail at config parse time with a clear error. Nested 
 
 **Agent CLI worktree (`--worktree`):** Optional `-w` / `--worktree [name]` on **cursor-agent** and **claude** per iteration. Precedence: CLI → `WORKFLOW_RALPH_WORKTREE` → `.workflow-ralph.json` → BullMQ handoff `targetId` (when using `runChildJob`) → omit. Physical git worktrees (`WORKTREE_TARGETS`, `cwd`) are unchanged.
 
-**Embedded orchestrator (BullMQ / in-process):** Import **`createCursorWorkflowRalphIterationRunner`** from `@tools/workflows` to build a `WorkflowRalphIterationRunner`-compatible object for `createWorkflowRalphOrchestrator` (`@openthrottle/openthrottle-workflows`). It wraps **`runIterationAsync`** with the same field mapping as the plans queue worker; optional **`onChunk`** and **`appendPlanOutput`** (per-chunk text + iteration) forward stdout/stderr for logs or OpenThrottle `append_plan_output` while the resolved promise remains the full iteration string. See `src/utils/cursor-workflow-ralph-iteration-runner.ts`.
+**Embedded orchestrator (BullMQ / in-process):** Import **`createCursorWorkflowRalphIterationRunner`** from `@tools/workflows` to build a `WorkflowRalphIterationRunner`-compatible object for `createWorkflowRalphOrchestrator` (`@openthrottle/openthrottle-workflows`). It wraps **`runIterationAsync`** with the same field mapping as the plans queue worker; optional **`onChunk`** and **`appendPlanOutput`** (per-chunk text + iteration) forward stdout/stderr for logs or OpenThrottle `append_plan_output` while the resolved promise remains the full iteration string. See `src/utils/createCursorWorkflowRalphIterationRunner.ts`.
 
 ```bash
 # See the usage

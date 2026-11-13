@@ -3,7 +3,7 @@
  */
 
 /** @public */
-export { bootstrapMcpDeveloperApp } from './bootstrap-openthrottle-mcp-app.ts';
+export { bootstrapMcpDeveloperApp } from './bootstrapMcpDeveloperApp.ts';
 /** @public */
 export { McpTransportType } from '@rekog/mcp-nest';
 /** @public */
@@ -14,7 +14,7 @@ export { mcpToolsetPrunerProvider } from './mcp-toolset-pruner.provider.ts';
 /** @public */
 export { McpToolsetPrunerService } from './mcp-toolset-pruner.service.ts';
 /** @public */
-export { McpDeveloperMcpSurface } from './openthrottle-mcp-mcp-surface.ts';
+export { McpDeveloperMcpSurface } from './McpDeveloperMcpSurface.ts';
 /** @public */
 export { NestjsMcpDeveloperModule } from './nestjs-openthrottle-mcp.module.ts';
 /** @public */

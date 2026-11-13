@@ -1,0 +1,420 @@
+// @vitest-environment node
+import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+import { describe, expect, test } from 'vitest';
+
+import { extractFrontmatterBody } from '../extract-frontmatter-body.js';
+import { parseYamlFrontmatter } from '../parseYamlFrontmatter.js';
+
+/**
+ * Corpus-verified, not generically behavior-preserving (see
+ * docs/monorepo/skill-availability-design.md, "Tags"): the `yaml` package
+ * differs from the retired hand-rolled parser on edge cases the old parser's
+ * own docstring documented (trailing comments, quote escapes, block-scalar
+ * chomping). This test freezes a byte-for-byte copy of the *retired* parser
+ * logic as a reference implementation, runs it against every file in the
+ * actual current `.agents/` corpus alongside the new parser, and asserts the
+ * two agree — except for a short, explicit, named list of divergences that
+ * were found by running this exact comparison and are intentional per the
+ * design doc (see KNOWN_CONTENT_DIVERGENCES below). Each is asserted as a
+ * precise, content-derived relationship (not a hardcoded copy of the corpus
+ * text) so the test still fails loudly if the actual relationship ever
+ * changes. Any *other* divergence — anywhere else in the corpus — also fails
+ * the test loudly, rather than being silently absorbed.
+ */
+
+const monorepoRoot = join(import.meta.dirname, '../../../../..');
+
+// ---------------------------------------------------------------------------
+// FROZEN REFERENCE: byte-for-byte copy of the retired hand-rolled parser from
+// parse-yaml-frontmatter.ts as it existed before this migration. Do not "fix"
+// or improve this copy — its entire purpose is to reproduce the old,
+// pre-migration behavior for comparison. `extractFrontmatterBody` itself is
+// unchanged by this migration, so it is imported live rather than duplicated.
+// ---------------------------------------------------------------------------
+
+type OldFrontmatterScalar = string | boolean | undefined;
+
+const oldParseScalarValue = (rest: string): string | undefined => {
+  const trimmed = rest.trim();
+  if (!trimmed) {
+    return undefined;
+  }
+
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
+  ) {
+    return trimmed.slice(1, -1).trim();
+  }
+
+  return trimmed;
+};
+
+const oldParseBooleanScalar = (
+  value: string | undefined,
+): boolean | undefined => {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  const normalized = value.trim().toLowerCase();
+  if (normalized === 'true') {
+    return true;
+  }
+  if (normalized === 'false') {
+    return false;
+  }
+
+  return undefined;
+};
+
+const oldIsBlockContinuationLine = (line: string): boolean => {
+  return line.trim() === '' || /^\s{2,}/.test(line);
+};
+
+const oldStripBlockIndent = (line: string): string => {
+  return line.replace(/^\s{2,}/, '');
+};
+
+const oldParseIndentedBlock = (
+  lines: readonly string[],
+  startIndex: number,
+  joinWith: 'space' | 'newline',
+): { readonly nextIndex: number; readonly value: string } => {
+  const parts: string[] = [];
+  let index = startIndex;
+
+  while (
+    index < lines.length &&
+    oldIsBlockContinuationLine(lines[index] ?? '')
+  ) {
+    const line = lines[index] ?? '';
+    if (line.trim() === '') {
+      parts.push('');
+    } else {
+      parts.push(oldStripBlockIndent(line));
+    }
+    index += 1;
+  }
+
+  if (joinWith === 'newline') {
+    return { nextIndex: index, value: parts.join('\n').trim() };
+  }
+
+  let result = '';
+  for (const part of parts) {
+    if (part === '') {
+      result = `${result.trimEnd()}\n\n`;
+    } else if (result === '') {
+      result = part;
+    } else {
+      result = `${result.trimEnd()} ${part}`;
+    }
+  }
+
+  return { nextIndex: index, value: result.trim() };
+};
+
+const oldParseKeyLine = (
+  line: string,
+): { readonly key: string; readonly rest: string } | null => {
+  const match = /^([A-Za-z0-9_-]+):\s*(.*)$/.exec(line);
+  if (!match) {
+    return null;
+  }
+
+  return {
+    key: match[1] ?? '',
+    rest: match[2] ?? '',
+  };
+};
+
+const oldParseYamlFrontmatter = (
+  fileContent: string,
+): { readonly fields: Readonly<Record<string, OldFrontmatterScalar>> } => {
+  const body = extractFrontmatterBody(fileContent);
+  if (body === null) {
+    return { fields: {} };
+  }
+
+  const lines = body.split(/\r?\n/);
+  const fields: Record<string, OldFrontmatterScalar> = {};
+  let index = 0;
+
+  while (index < lines.length) {
+    const line = lines[index] ?? '';
+    const parsedKey = oldParseKeyLine(line);
+    if (!parsedKey) {
+      index += 1;
+      continue;
+    }
+
+    const { key, rest } = parsedKey;
+
+    if (/^>-?\s*$/.test(rest)) {
+      const block = oldParseIndentedBlock(lines, index + 1, 'space');
+      fields[key] = block.value;
+      index = block.nextIndex;
+      continue;
+    }
+
+    if (/^\|-?\s*$/.test(rest)) {
+      const block = oldParseIndentedBlock(lines, index + 1, 'newline');
+      fields[key] = block.value;
+      index = block.nextIndex;
+      continue;
+    }
+
+    const scalar = oldParseScalarValue(rest);
+    const booleanValue = oldParseBooleanScalar(scalar);
+    fields[key] = booleanValue ?? scalar ?? '';
+    index += 1;
+  }
+
+  return { fields };
+};
+
+// ---------------------------------------------------------------------------
+// Corpus walk: the real `.agents/skills/*/SKILL.md` and `.agents/personas/*.md`
+// files, per the design doc's stated scope.
+// ---------------------------------------------------------------------------
+
+const listSkillFiles = (): string[] => {
+  const skillsRoot = join(monorepoRoot, '.agents/skills');
+  const files: string[] = [];
+  for (const entry of readdirSync(skillsRoot, { withFileTypes: true })) {
+    if (!entry.isDirectory()) {
+      continue;
+    }
+    const skillMd = join(skillsRoot, entry.name, 'SKILL.md');
+    try {
+      readFileSync(skillMd, 'utf8');
+      files.push(skillMd);
+    } catch {
+      // No SKILL.md in this directory; not part of the corpus.
+    }
+  }
+  return files;
+};
+
+const listPersonaFiles = (): string[] => {
+  const personasRoot = join(monorepoRoot, '.agents/personas');
+  const files: string[] = [];
+  for (const entry of readdirSync(personasRoot, { withFileTypes: true })) {
+    if (entry.isFile() && entry.name.endsWith('.md')) {
+      files.push(join(personasRoot, entry.name));
+    }
+  }
+  return files;
+};
+
+const corpusFiles = [...listSkillFiles(), ...listPersonaFiles()];
+
+const toRepoRelativePath = (absolutePath: string): string => {
+  return absolutePath
+    .slice(monorepoRoot.length + 1)
+    .split('\\')
+    .join('/');
+};
+
+function assertIsString(value: unknown): asserts value is string {
+  if (typeof value !== 'string') {
+    throw new Error(`Expected a string frontmatter value, got ${typeof value}`);
+  }
+}
+
+interface KnownDivergence {
+  /** Asserts the exact, content-derived relationship between old and new. */
+  readonly assertRelationship: (oldValue: unknown, newValue: unknown) => void;
+  readonly field: string;
+  readonly path: string;
+}
+
+/**
+ * Explicit, named divergences discovered by running this exact comparison
+ * across the real corpus. Each corresponds to one of the real-YAML-edge
+ * categories the design doc calls out ("trailing comments", "quote
+ * escapes") plus block-scalar chomping — genuine content in these three
+ * files trips a real difference between the retired regex parser and real
+ * YAML semantics. Each assertion derives the expected relationship from the
+ * *actual* parsed values rather than a hardcoded copy of the corpus text, so
+ * it keeps verifying the true cause of the divergence even if the corpus
+ * file's wording changes later. Any divergence *not* listed here fails the
+ * test loudly instead of being silently absorbed.
+ */
+const KNOWN_CONTENT_DIVERGENCES: readonly KnownDivergence[] = [
+  // NOTE: `.agents/skills/github-squash/SKILL.md` used to diverge here (real
+  // YAML treats ` #` in a plain scalar as a comment start, truncating its
+  // `Closes #123` example; the retired parser kept the text verbatim). That
+  // was real content loss, so the corpus file's description is now
+  // single-quoted at the source and both parsers agree — any plain-scalar
+  // ` #` introduced in future frontmatter will fail this suite loudly, which
+  // is the correct prompt to quote the field.
+  {
+    // The retired parser stripped only the outer quotes of a single-quoted
+    // scalar, leaving a doubled `''` YAML escape sequence in the middle of
+    // the string; the `yaml` package correctly unescapes it to a literal
+    // `'`. So replacing the first `''` in the old value with `'` yields
+    // exactly the new value.
+    assertRelationship: (oldValue, newValue) => {
+      assertIsString(oldValue);
+      assertIsString(newValue);
+      expect(oldValue.includes("''")).toBe(true);
+      expect(oldValue.replace("''", "'")).toBe(newValue);
+    },
+    field: 'description',
+    path: '.agents/skills/link-workspace-packages/SKILL.md',
+  },
+  {
+    // This file's description uses a *clip*-chomped folded block scalar
+    // (`>`, not `>-`): real YAML keeps exactly one trailing newline, while
+    // the retired parser always `.trim()`ed the assembled block regardless
+    // of the chomping indicator. So the new value is exactly the old value
+    // plus one trailing `\n`. The skill is vendored and hash-locked in
+    // `skills-lock.json`, so the source can't be switched to `>-` here.
+    // (`.agents/skills/brag-sheet/SKILL.md` exercised this same divergence
+    // until it was removed in a57e40d9.)
+    assertRelationship: (oldValue, newValue) => {
+      assertIsString(oldValue);
+      assertIsString(newValue);
+      expect(`${oldValue}\n`).toBe(newValue);
+    },
+    field: 'description',
+    path: '.agents/skills/ub-mode/SKILL.md',
+  },
+  {
+    // This file declares `allowed-tools:` as a *block* sequence (`- item`
+    // lines). The retired regex parser had no block-sequence support at all
+    // and kept only the bare `allowed-tools:` line as an empty scalar; the
+    // `yaml`-backed parser correctly yields the string array. Same content,
+    // real shape fix — assert the old side collapsed to '' and the new side
+    // parsed a non-empty string list.
+    assertRelationship: (oldValue, newValue) => {
+      expect(oldValue).toBe('');
+      expect(Array.isArray(newValue)).toBe(true);
+      if (Array.isArray(newValue)) {
+        expect(newValue.length).toBeGreaterThan(0);
+        for (const item of newValue) {
+          expect(typeof item).toBe('string');
+        }
+      }
+    },
+    field: 'allowed-tools',
+    path: '.agents/skills/monitor-ci/SKILL.md',
+  },
+];
+
+/**
+ * The `tags` key is a YAML flow sequence (`tags: [git, github]`), added to the
+ * `.agents/skills` corpus by the curated tagging pass. The retired regex parser
+ * had no sequence support at all: it treated the whole `[git, github]` as an
+ * opaque scalar and kept the raw bracketed string verbatim. The new
+ * `yaml`-backed parser correctly yields a `string[]`. This is a
+ * representational difference of the *same content* (like the ''→absent change
+ * below), not content loss — the intended tags are identical. To compare real
+ * content rather than this known shape change, canonicalize *only* the `tags`
+ * key to an array on both sides: the new parser's value is already an array,
+ * and the retired parser's raw `[a, b]` string is parsed into the array it
+ * denotes. Any genuine difference in tag *content* (a tag present on one side
+ * but not the other) still yields unequal arrays and fails the comparison.
+ */
+const canonicalizeTagsValue = (value: unknown): unknown => {
+  if (Array.isArray(value)) {
+    return [...value];
+  }
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    const isBracketed = trimmed.startsWith('[') && trimmed.endsWith(']');
+    const inner = isBracketed ? trimmed.slice(1, -1) : trimmed;
+    return inner
+      .split(',')
+      .map((item) => item.trim())
+      .filter((item) => item.length > 0);
+  }
+  return value;
+};
+
+/**
+ * The retired parser represented "no value" (a bare `key:` with nothing
+ * after it) as an empty string; the new parser represents it as an absent
+ * key (`undefined`), per this migration's tri-state contract (absent /
+ * boolean / string). Every downstream consumer already normalizes an empty
+ * string the same way it normalizes `undefined` (see `toOptionalString` in
+ * `parse-skill-frontmatter.ts` and friends), so this is a deliberate,
+ * documented representational change, not a content difference. Fold it away
+ * before comparing so the assertion is about real content, not this known
+ * shape change. Because this drops '' independently on each side, a real
+ * asymmetric difference (one side '', the other side a real value) still
+ * surfaces as a mismatch below. The `tags` flow-sequence divergence is folded
+ * away the same way via `canonicalizeTagsValue` (see its docstring).
+ */
+const normalizeForComparison = (
+  fields: Readonly<Record<string, unknown>>,
+): Record<string, unknown> => {
+  const normalized: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(fields)) {
+    if (value === '') {
+      continue;
+    }
+    normalized[key] = key === 'tags' ? canonicalizeTagsValue(value) : value;
+  }
+  return normalized;
+};
+
+describe('parseYamlFrontmatter corpus regression', () => {
+  test('the current .agents corpus is non-empty (sanity check for the walk itself)', () => {
+    // Floor, not an exact count: assets get added over time, and this only
+    // guards against the walk silently collecting nothing. It was 36 while the
+    // retired `.agents/rules/**/*.mdc` tree contributed 24 bodies; those are
+    // gone, leaving skills + personas.
+    //
+    // Known blind spot (pre-existing, not introduced by dropping the rules
+    // walk): `listSkillFiles` skips any entry where `isDirectory()` is false,
+    // and ot-skill-sync links the repo's authored `skills/<slug>` dirs into
+    // `.agents/skills/` as symlinks — which report `isSymbolicLink()`, not
+    // `isDirectory()`. So this corpus only ever covered the *externally
+    // installed* real skill dirs, never the authored OT ones. Widening it is a
+    // behavior change (it would newly parse ~16 more files and may surface
+    // fresh divergences), so it is deliberately left alone here.
+    expect(corpusFiles.length).toBeGreaterThanOrEqual(10);
+  });
+
+  test('every known divergence is exercised by at least one corpus file', () => {
+    // Guards against the allowlist going stale (e.g. a referenced file is
+    // renamed/deleted) by requiring every entry to actually match a walked
+    // corpus path.
+    const walkedPaths = new Set(corpusFiles.map(toRepoRelativePath));
+    for (const divergence of KNOWN_CONTENT_DIVERGENCES) {
+      expect(walkedPaths.has(divergence.path)).toBe(true);
+    }
+  });
+
+  test.each(corpusFiles.map((file) => [toRepoRelativePath(file), file]))(
+    '%s parses identically to the retired parser (modulo known divergences)',
+    (relativePath, absolutePath) => {
+      const content = readFileSync(absolutePath, 'utf8');
+      const oldFields = oldParseYamlFrontmatter(content).fields;
+      const newFields = parseYamlFrontmatter(content).fields;
+
+      const divergences = KNOWN_CONTENT_DIVERGENCES.filter(
+        (divergence) => divergence.path === relativePath,
+      );
+
+      const oldForComparison = normalizeForComparison(oldFields);
+      const newForComparison = normalizeForComparison(newFields);
+
+      for (const divergence of divergences) {
+        divergence.assertRelationship(
+          oldFields[divergence.field],
+          newFields[divergence.field],
+        );
+        delete oldForComparison[divergence.field];
+        delete newForComparison[divergence.field];
+      }
+
+      expect(newForComparison).toEqual(oldForComparison);
+    },
+  );
+});

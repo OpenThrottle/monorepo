@@ -1,7 +1,7 @@
 import { RuleTester } from '@typescript-eslint/rule-tester';
 import { afterAll, describe, it } from 'vitest';
 
-import { noWallClockInTests } from '../rules/no-wall-clock-in-tests.ts';
+import { noWallClockInTests } from '../rules/noWallClockInTests.ts';
 
 RuleTester.afterAll = afterAll;
 RuleTester.describe = describe;

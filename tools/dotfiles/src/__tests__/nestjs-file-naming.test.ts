@@ -1,8 +1,8 @@
 import { RuleTester } from '@typescript-eslint/rule-tester';
 import { afterAll, describe, expect, it } from 'vitest';
 
-import { nestjsFileNaming } from '../rules/nestjs-file-naming.ts';
 import { FOLDER_KINDS, SUBJECT_KINDS } from '../rules/nestjs-file-shared.ts';
+import { nestjsFileNaming } from '../rules/nestjsFileNaming.ts';
 
 // Wire the framework hooks the RuleTester calls to Vitest's.
 RuleTester.afterAll = afterAll;

@@ -7,7 +7,7 @@ import type { UserConfig } from 'vite';
 import { defineConfig } from 'vite';
 import dts from 'vite-plugin-dts';
 
-import { calculateOutputDir } from './calculate-output-dir.ts';
+import { calculateOutputDir } from './calculateOutputDir.ts';
 
 /**
  * @description Gets the directory path in ESM modules (replacement for __dirname)

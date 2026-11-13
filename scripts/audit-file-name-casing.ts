@@ -10,14 +10,17 @@
  * rename but for a name collision) — the audit and the codemod share one
  * definition, so the gate can never demand a rename the codemod refuses.
  *
- * Scope: the React Router applications and `react-router-*` packages, plus the
- * Electron shell. The NestJS tier has its own enforced `<folder>.<kind>.ts`
- * form and is out of scope.
+ * Scope: every project under `applications/`, `packages/` and `tools/` except
+ * the NestJS tier (`openthrottle-server` and `nestjs-*`), which has its own
+ * enforced `<folder>.<kind>.ts` form, and `tools/nx-plugins`, whose plugin
+ * files all export Nx's mandated `createNodesV2` and so cannot be named for
+ * it.
  *
  * Usage: tsx ./scripts/audit-file-name-casing.ts [--json] [--strict]
  *   --json    emit the violations as JSON.
  *   --strict  exit non-zero on any violation. There is no allowlist: every
- *             file was renamed by OT plan bc5f6aa0, so a violation is new.
+ *             file was renamed by OT plans bc5f6aa0 and 3aca79fe, so a
+ *             violation is new.
  * Report-only (exit 0) otherwise.
  */
 
@@ -31,9 +34,9 @@ import { createLogger } from './utils/index.ts';
 
 const logger = createLogger();
 
-/** Project directories the rule is enforced in. */
+/** Project directories the rule is enforced in: everything but the NestJS tier and the Nx plugins. */
 export const AUDITED_PROJECT_PATTERN =
-  /^(?:applications\/openthrottle-(?:admin|app|cms|developer|website)|packages\/react-router-[a-z-]+)$/;
+  /^(?:applications|packages|tools)\/(?!openthrottle-server$|nestjs-|nx-plugins$)[a-z0-9-]+$/;
 
 /** A file that should carry its export's name and does not. */
 export interface FileNameCasingViolation {
@@ -46,7 +49,7 @@ export interface FileNameCasingViolation {
 export const auditedProjects = (workspaceRoot: string): string[] => {
   const projects: string[] = [];
 
-  for (const area of ['applications', 'packages']) {
+  for (const area of ['applications', 'packages', 'tools']) {
     const areaPath = path.join(workspaceRoot, area);
     if (!existsSync(areaPath)) continue;
 

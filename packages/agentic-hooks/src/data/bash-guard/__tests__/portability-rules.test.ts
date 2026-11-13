@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { bsdSedInPlaceRule, readSedInPlace } from '../bsd-sed-inplace.ts';
+import { readQuotedChars } from '../readQuotedChars.ts';
 import { evaluateBashGuard } from '../registry.ts';
-import { readQuotedChars } from '../shell-quoting.ts';
 import type { BashGuardContext, BashGuardRule, GlobMatcher } from '../types.ts';
 import { findUnquotedGlob, zshUnquotedGlobRule } from '../zsh-unquoted-glob.ts';
 import {

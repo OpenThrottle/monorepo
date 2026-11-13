@@ -448,7 +448,7 @@ var createFsGlobMatcher = (options = {
 // packages/agentic-hooks/src/data/bash-guard/gh-pr-lookup.ts
 var import_node_child_process = require("node:child_process");
 
-// packages/nodejs-utils/src/utils/is-record.ts
+// packages/nodejs-utils/src/utils/isRecord.ts
 var isRecord = (value) => {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 };
@@ -631,6 +631,55 @@ var evaluatePipeline = async (command) => {
 var maskedExitPipelineRule = {
   evaluate: evaluatePipeline,
   id: MASKED_EXIT_PIPELINE_RULE_ID
+};
+
+// packages/agentic-hooks/src/data/bash-guard/readQuotedChars.ts
+var readQuotedChars = (raw) => {
+  const chars = [];
+  let quote = null;
+  let index = 0;
+  while (index < raw.length) {
+    const char = raw.charAt(index);
+    const next = raw.charAt(index + 1);
+    if (quote === "single") {
+      if (char === "'") quote = null;
+      else chars.push({ char, quote: "single" });
+    } else if (quote === "ansi") {
+      if (char === "'") {
+        quote = null;
+      } else if (char === "\\" && next !== "") {
+        chars.push({ char: next, quote: "single" });
+        index += 1;
+      } else {
+        chars.push({ char, quote: "single" });
+      }
+    } else if (quote === "double") {
+      if (char === '"') {
+        quote = null;
+      } else if (char === "\\" && '"\\$`'.includes(next) && next !== "") {
+        chars.push({ char: next, quote: "escaped" });
+        index += 1;
+      } else {
+        chars.push({ char, quote: "double" });
+      }
+    } else if (char === "'") {
+      quote = "single";
+    } else if (char === "$" && next === "'") {
+      quote = "ansi";
+      index += 1;
+    } else if (char === '"') {
+      quote = "double";
+    } else if (char === "\\") {
+      if (next !== "" && next !== "\n") {
+        chars.push({ char: next, quote: "escaped" });
+      }
+      index += 1;
+    } else {
+      chars.push({ char, quote: "none" });
+    }
+    index += 1;
+  }
+  return chars;
 };
 
 // packages/agentic-hooks/src/data/bash-guard/stale-pr-write.ts
@@ -818,55 +867,6 @@ var evaluate = async (command, context) => {
 var stalePrWriteRule = {
   evaluate,
   id: STALE_PR_WRITE_RULE_ID
-};
-
-// packages/agentic-hooks/src/data/bash-guard/shell-quoting.ts
-var readQuotedChars = (raw) => {
-  const chars = [];
-  let quote = null;
-  let index = 0;
-  while (index < raw.length) {
-    const char = raw.charAt(index);
-    const next = raw.charAt(index + 1);
-    if (quote === "single") {
-      if (char === "'") quote = null;
-      else chars.push({ char, quote: "single" });
-    } else if (quote === "ansi") {
-      if (char === "'") {
-        quote = null;
-      } else if (char === "\\" && next !== "") {
-        chars.push({ char: next, quote: "single" });
-        index += 1;
-      } else {
-        chars.push({ char, quote: "single" });
-      }
-    } else if (quote === "double") {
-      if (char === '"') {
-        quote = null;
-      } else if (char === "\\" && '"\\$`'.includes(next) && next !== "") {
-        chars.push({ char: next, quote: "escaped" });
-        index += 1;
-      } else {
-        chars.push({ char, quote: "double" });
-      }
-    } else if (char === "'") {
-      quote = "single";
-    } else if (char === "$" && next === "'") {
-      quote = "ansi";
-      index += 1;
-    } else if (char === '"') {
-      quote = "double";
-    } else if (char === "\\") {
-      if (next !== "" && next !== "\n") {
-        chars.push({ char: next, quote: "escaped" });
-      }
-      index += 1;
-    } else {
-      chars.push({ char, quote: "none" });
-    }
-    index += 1;
-  }
-  return chars;
 };
 
 // packages/agentic-hooks/src/data/bash-guard/zsh-unquoted-glob.ts

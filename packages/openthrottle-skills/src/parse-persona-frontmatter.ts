@@ -1,4 +1,4 @@
-import { parseYamlFrontmatter } from './frontmatter/parse-yaml-frontmatter.ts';
+import { parseYamlFrontmatter } from './frontmatter/parseYamlFrontmatter.ts';
 import type { PersonaFrontmatter } from './schemas/agent-asset-frontmatter.schemas.ts';
 
 export interface ParsedPersonaFrontmatter {

@@ -1,7 +1,7 @@
 import { RuleTester } from '@typescript-eslint/rule-tester';
 import { afterAll, describe, it } from 'vitest';
 
-import { planTaskStatusChokepoint } from '../rules/plan-task-status-chokepoint.ts';
+import { planTaskStatusChokepoint } from '../rules/planTaskStatusChokepoint.ts';
 
 // Wire the framework hooks the RuleTester calls to Vitest's.
 RuleTester.afterAll = afterAll;

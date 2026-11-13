@@ -16,6 +16,8 @@ import type {
 } from '../../types/atif.ts';
 import type { ConversationStreamChunk } from '../conversation-backend/types.ts';
 import { CONVERSATION_STREAM_CHUNK_KINDS } from '../conversation-backend/types.ts';
+import type { NormalizedUsage } from './normalizeUsage.ts';
+import { normalizeUsage } from './normalizeUsage.ts';
 import {
   isToolResultError,
   toolArgumentsOf,
@@ -23,8 +25,6 @@ import {
   toolNameOf,
   toolResultContentOf,
 } from './tool-metadata.ts';
-import type { NormalizedUsage } from './usage-metrics.ts';
-import { normalizeUsage } from './usage-metrics.ts';
 
 /**
  * @description The ATIF version every OpenThrottle trajectory declares. Bump deliberately, with a

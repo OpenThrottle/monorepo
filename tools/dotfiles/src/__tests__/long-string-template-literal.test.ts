@@ -1,7 +1,7 @@
 import { RuleTester } from '@typescript-eslint/rule-tester';
 import { afterAll, describe, it } from 'vitest';
 
-import { longStringTemplateLiteral } from '../rules/long-string-template-literal.ts';
+import { longStringTemplateLiteral } from '../rules/longStringTemplateLiteral.ts';
 
 // Wire the framework hooks the RuleTester calls to Vitest's.
 RuleTester.afterAll = afterAll;

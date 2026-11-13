@@ -274,7 +274,7 @@ _None._
 | H6 — `use*` hook outside `hooks/`        | Audit                      | outside the ESLint rule's glob by definition                                                                                                         |
 
 - **ESLint rule** `openthrottle/hook-primitive-shape`, in
-  `tools/dotfiles/src/rules/hook-primitive-shape.ts`. It shares the marker list and the
+  `tools/dotfiles/src/rules/hookPrimitiveShape.ts`. It shares the marker list and the
   file-name helper with `component-primitive-shape` so the two cannot drift.
 - **Audit script** `pnpm run audit:hook-shape` (`scripts/audit-hook-shape.ts`).
   `audit:hook-shape:strict` runs as part of `audit:strict`.

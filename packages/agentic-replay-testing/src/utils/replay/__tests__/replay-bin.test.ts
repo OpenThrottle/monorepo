@@ -14,14 +14,14 @@ import {
   TRANSCRIPT_SURFACES,
 } from '../../../types/transcript.ts';
 import { serializeTranscript } from '../../transcript/transcript.ts';
-import { installReplayBin, type ReplayBin } from '../install-replay-bin.ts';
+import { installReplayBin, type ReplayBin } from '../installReplayBin.ts';
 import { replayFixturePath } from '../prepare-replay.ts';
 import {
   compareOutbound,
   REPLAY_MISMATCH_EXIT_CODE,
   wasTerminated,
 } from '../replay-bin.ts';
-import { replayFixture } from '../replay-fixture.ts';
+import { replayFixture } from '../replayFixture.ts';
 
 /** ~1 MB of stdout: enough to outlast a 64 KB pipe buffer many times over. */
 const LONG_RECORDING_LINES = 30_000;

@@ -4,7 +4,7 @@ import { join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { discoverSkillDirs } from '../discover-skill-dirs.ts';
+import { discoverSkillDirs } from '../discoverSkillDirs.ts';
 import {
   FOREIGN_SKILL_LAYER,
   resolveForeignSkillManifest,

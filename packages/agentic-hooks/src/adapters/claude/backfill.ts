@@ -14,7 +14,7 @@
  */
 import { logHookError } from '../../index.ts';
 import { BACKFILL_USAGE, parseBackfillArgs } from './backfill-args.ts';
-import { runBackfill } from './backfill-run.ts';
+import { runBackfill } from './runBackfill.ts';
 
 const main = async (): Promise<number> => {
   const parsed = parseBackfillArgs({

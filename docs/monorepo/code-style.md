@@ -659,8 +659,10 @@ One selector per clause:
 
 **The file-name clause is enforced by an audit, not ESLint** — `naming-convention` operates on
 identifiers and cannot see file names. `pnpm run audit:file-name-casing:strict` (run in CI via
-`audit:strict`) fails on a single-export file in a React Router app, a `react-router-*` package
-or `openthrottle-app` that is not named for its export. It reuses the codemod's definition, so
+`audit:strict`) fails on a single-export file in any application, package or tool that is not
+named for its export. Out of scope: the NestJS tier (`openthrottle-server`, `nestjs-*`), whose
+`<folder>.<kind>.ts` form is enforced separately, and `tools/nx-plugins`, whose files all export
+Nx's mandated `createNodesV2`. It reuses the codemod's definition, so
 the fix is always `tsx ./scripts/codemod-file-name-casing.ts --project=<dir> --write`. There is
 no allowlist.
 
@@ -669,7 +671,7 @@ no allowlist.
 `getFormFieldKind`. A kebab-case rule forced a hand rename to `form-field-kind.ts` after every
 run — drift between the generator and the rule — and broke the one-glance mapping from a file to
 the symbol it exports. Matching the export's casing, as components and hooks already did, removes
-both. Existing kebab-case single-export files are renamed by OT plan `bc5f6aa0` (a codemod plus a gate),
+both. Existing kebab-case single-export files are renamed by OT plans `bc5f6aa0` and `3aca79fe` (a codemod plus a gate),
 not opportunistically.
 
 `leadingUnderscore: 'allowSingleOrDouble'` on the function and variable selectors. Without

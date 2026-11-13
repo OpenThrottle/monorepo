@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import { bootstrapCi } from '../bootstrap-ci.ts';
-import { costPerSuccess } from '../cost-per-success.ts';
+import { costPerSuccess } from '../costPerSuccess.ts';
 import { erfc, normalQuantile } from '../normal.ts';
 import { passAtK, passHatK } from '../pass-at-k.ts';
-import { passRate } from '../pass-rate.ts';
+import { passRate } from '../passRate.ts';
 import { mulberry32 } from '../prng.ts';
 
 // Reference values below were computed independently with Python's stdlib

@@ -1,7 +1,7 @@
 import { RuleTester } from '@typescript-eslint/rule-tester';
 import { afterAll, describe, it } from 'vitest';
 
-import { mcpToolRegistration } from '../rules/mcp-tool-registration.ts';
+import { mcpToolRegistration } from '../rules/mcpToolRegistration.ts';
 
 RuleTester.afterAll = afterAll;
 RuleTester.describe = describe;
@@ -56,7 +56,7 @@ ruleTester.run('mcp-tool-registration', mcpToolRegistration, {
         '  ok() {}',
         '}',
       ].join('\n'),
-      filename: `/repo/packages/openthrottle-mcp/src/nest/openthrottle-mcp-mcp-surface.ts`,
+      filename: `/repo/packages/openthrottle-mcp/src/nest/McpDeveloperMcpSurface.ts`,
     },
     {
       // A `@Tool` that is not the mcp-nest decorator.

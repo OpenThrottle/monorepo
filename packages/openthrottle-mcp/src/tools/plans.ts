@@ -40,7 +40,7 @@ import {
   invalidArgsContent,
   toSanitizedClientMessage,
 } from '../utils/errors.ts';
-import { runTool } from '../utils/tool-result.ts';
+import { runTool } from '../utils/runTool.ts';
 
 interface PlanTagFailure {
   readonly reason: string;

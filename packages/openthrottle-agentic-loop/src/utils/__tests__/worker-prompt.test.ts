@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildWorkerPrompt } from '../build-worker-prompt.ts';
-import { parseRequirements } from '../parse-requirements.ts';
-import { tailForRetry } from '../tail-for-retry.ts';
+import { buildWorkerPrompt } from '../buildWorkerPrompt.ts';
+import { parseRequirements } from '../parseRequirements.ts';
+import { tailForRetry } from '../tailForRetry.ts';
 import { makeTask } from './loop-fakes.ts';
 
 describe('buildWorkerPrompt', () => {

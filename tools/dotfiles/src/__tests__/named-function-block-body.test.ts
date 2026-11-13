@@ -1,7 +1,7 @@
 import { RuleTester } from '@typescript-eslint/rule-tester';
 import { afterAll, describe, it } from 'vitest';
 
-import { namedFunctionBlockBody } from '../rules/named-function-block-body.ts';
+import { namedFunctionBlockBody } from '../rules/namedFunctionBlockBody.ts';
 
 // Wire the framework hooks the RuleTester calls to Vitest's.
 RuleTester.afterAll = afterAll;

@@ -41,7 +41,7 @@ Nx project name is the full `@openthrottle/openthrottle-mcp` (not the bare direc
 Plan/task/note/project operations are consumed cross-package from
 `packages/openthrottle-agentic-ralph/src/graphql/ralph/*.graphql`, and a tool result **is** the
 fragment's selection set passed through verbatim (`runTool<{ plan: GetPlanQuery['plan'] }>` →
-`src/utils/tool-result.ts`). A scalar the shared fragment does not select is therefore invisible to
+`src/utils/runTool.ts`). A scalar the shared fragment does not select is therefore invisible to
 every MCP caller, while codegen, typecheck and the drift guard all stay green — the field is simply
 absent. `get_plan` hid `runConfigJson` this way for months.
 
@@ -55,7 +55,7 @@ set is a real choice). After changing a shared fragment, regenerate **both** con
 
 - `src/tool-registry.ts` + `src/tools/*.ts` — one file per tool family (plans, tasks, notes,
   activity, output, search, commit, agent-conversations, …); start here to add or change a tool.
-- `src/nest/openthrottle-mcp-mcp-surface.ts` — the MCP surface wired into NestJS.
+- `src/nest/McpDeveloperMcpSurface.ts` — the MCP surface wired into NestJS.
 - `src/auth/get-auth-token.ts` — bearer-token resolution, exported via the `./auth` subpath.
 - `src/graphql/**/*.graphql` → `src/__generated__/` — codegen output; edit documents, never `__generated__`.
 - `docs/verification-environment.md` — the canonical local services/env/smoke checklist.

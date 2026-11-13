@@ -252,7 +252,7 @@ var appendDeadLetters = ({
   );
 };
 
-// packages/nodejs-utils/src/utils/is-record.ts
+// packages/nodejs-utils/src/utils/isRecord.ts
 var isRecord = (value) => {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 };
@@ -843,7 +843,7 @@ var persistTokenUsage = async ({
   }
 };
 
-// packages/agentic-hooks/src/data/read-new-bytes.ts
+// packages/agentic-hooks/src/data/readNewBytes.ts
 var import_node_fs5 = __toESM(require("node:fs"), 1);
 var NEWLINE = 10;
 var readNewBytes = ({
@@ -1904,7 +1904,7 @@ var formatBackfillResult = (result) => {
 `;
 };
 
-// packages/agentic-hooks/src/adapters/claude/backfill-run.ts
+// packages/agentic-hooks/src/adapters/claude/runBackfill.ts
 var pickEndpoint = (injected, repoRoot) => {
   if (injected === void 0) {
     return resolveBackfillEndpoint({ repoRoot });

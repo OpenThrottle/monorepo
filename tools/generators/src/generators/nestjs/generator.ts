@@ -2,11 +2,11 @@ import type { Tree } from '@nx/devkit';
 import type { Choice } from 'prompts';
 import prompts from 'prompts';
 
-import { askWhenInteractive } from '../../utils/ask-when-interactive.ts';
-import { throwGeneratorError } from '../../utils/generator-errors.ts';
-import { isInteractiveArgPresent } from '../../utils/nx-cli.ts';
+import { askWhenInteractive } from '../../utils/askWhenInteractive.ts';
+import { isInteractiveArgPresent } from '../../utils/isInteractiveArgPresent.ts';
 import { writeJsonToStdout } from '../../utils/output.ts';
 import { getProjectsByTags } from '../../utils/projects.ts';
+import { throwGeneratorError } from '../../utils/throwGeneratorError.ts';
 import { generatorNestJSAIAgent } from './generator.ai-agent.ts';
 import { generatorNestJSApplication } from './generator.application.ts';
 import { generatorNestJSGraphQLService } from './generator.graphql-service.ts';

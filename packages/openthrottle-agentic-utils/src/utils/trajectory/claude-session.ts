@@ -22,7 +22,7 @@ import { CONVERSATION_STREAM_CHUNK_KINDS } from '../conversation-backend/types.t
 import { createStructuredChunkReader } from '../structured-output/chunk-reader.ts';
 import { capTrajectory } from './cap-trajectory.ts';
 import { chunksToAtif } from './chunks-to-atif.ts';
-import { redactSecrets } from './redact-secrets.ts';
+import { redactSecrets } from './redactSecrets.ts';
 import { TRAJECTORY_TRANSPORT_BYTES } from './trajectory-record.ts';
 
 /** OpenThrottle MCP tool names end with these, whatever the server alias (`mcp__<alias>__<tool>`). */

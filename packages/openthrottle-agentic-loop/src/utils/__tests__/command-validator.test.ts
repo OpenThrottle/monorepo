@@ -7,10 +7,10 @@ import type {
   SpawnCommand,
   ValidationChunk,
 } from '../../contract/index.ts';
-import { createCommandValidator } from '../create-command-validator.ts';
-import { runOtLoop } from '../run-ot-loop.ts';
-import { spawnShellCommand } from '../spawn-shell-command.ts';
-import { systemScheduleClock } from '../system-schedule-clock.ts';
+import { createCommandValidator } from '../createCommandValidator.ts';
+import { runOtLoop } from '../runOtLoop.ts';
+import { spawnShellCommand } from '../spawnShellCommand.ts';
+import { systemScheduleClock } from '../systemScheduleClock.ts';
 import { done, makeTask, makeWorld, statusOf } from './loop-fakes.ts';
 
 interface FakeScript {

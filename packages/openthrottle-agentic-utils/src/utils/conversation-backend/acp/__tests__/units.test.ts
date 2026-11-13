@@ -10,9 +10,9 @@ import { describe, expect, it } from 'vitest';
 import type { ConversationPermissionMode } from '../../types.ts';
 import { ACP_AGENT_SPECS } from '../agent-specs.ts';
 import { acpTerminalChunk, createAcpUpdateMapper } from '../events.ts';
-import { toAcpMcpServers } from '../mcp-servers.ts';
 import { decideAcpPermission } from '../permissions.ts';
 import { CHAT_ACP_BACKENDS_ENV, isAcpChatEnabled } from '../routing.ts';
+import { toAcpMcpServers } from '../toAcpMcpServers.ts';
 
 describe('createAcpUpdateMapper', () => {
   it('maps message and thought chunks to text and thinking', () => {

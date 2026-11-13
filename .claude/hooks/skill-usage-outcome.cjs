@@ -215,7 +215,7 @@ var startCorrelationKey = (entry) => {
   return `${sid}::${skill}::${disc}`;
 };
 
-// packages/nodejs-utils/src/utils/is-record.ts
+// packages/nodejs-utils/src/utils/isRecord.ts
 var isRecord = (value) => {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 };
@@ -754,7 +754,7 @@ var persistOutcomeEvent = async ({
   }
 };
 
-// packages/agentic-hooks/src/adapters/claude/outcome-args.ts
+// packages/agentic-hooks/src/adapters/claude/parseOutcomeArgs.ts
 var parseOutcomeArgs = (argv) => {
   const out = {};
   for (let i = 0; i < argv.length; i += 1) {

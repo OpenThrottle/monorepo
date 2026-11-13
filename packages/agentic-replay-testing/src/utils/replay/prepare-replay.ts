@@ -25,7 +25,7 @@ import {
   resolveScenarioTurn,
   scenarioRun,
 } from '../scenario/scenario-run.ts';
-import { installReplayBin } from './install-replay-bin.ts';
+import { installReplayBin } from './installReplayBin.ts';
 import type { ReplayReport } from './replay-bin.ts';
 
 const FIXTURES_DIR = join(import.meta.dirname, '..', '..', '..', 'fixtures');

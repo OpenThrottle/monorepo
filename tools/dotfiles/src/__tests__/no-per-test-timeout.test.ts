@@ -1,7 +1,7 @@
 import { RuleTester } from '@typescript-eslint/rule-tester';
 import { afterAll, describe, it } from 'vitest';
 
-import { noPerTestTimeout } from '../rules/no-per-test-timeout.ts';
+import { noPerTestTimeout } from '../rules/noPerTestTimeout.ts';
 
 RuleTester.afterAll = afterAll;
 RuleTester.describe = describe;

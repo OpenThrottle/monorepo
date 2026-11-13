@@ -1,7 +1,7 @@
 import { RuleTester } from '@typescript-eslint/rule-tester';
 import { afterAll, describe, it } from 'vitest';
 
-import { agentCliSpawnChokepoint } from '../rules/agent-cli-spawn-chokepoint.ts';
+import { agentCliSpawnChokepoint } from '../rules/agentCliSpawnChokepoint.ts';
 
 RuleTester.afterAll = afterAll;
 RuleTester.describe = describe;

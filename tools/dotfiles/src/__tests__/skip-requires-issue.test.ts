@@ -1,7 +1,7 @@
 import { RuleTester } from '@typescript-eslint/rule-tester';
 import { afterAll, describe, it } from 'vitest';
 
-import { skipRequiresIssue } from '../rules/skip-requires-issue.ts';
+import { skipRequiresIssue } from '../rules/skipRequiresIssue.ts';
 
 RuleTester.afterAll = afterAll;
 RuleTester.describe = describe;

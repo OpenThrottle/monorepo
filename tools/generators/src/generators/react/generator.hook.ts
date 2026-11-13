@@ -3,14 +3,14 @@ import { formatFiles, logger } from '@nx/devkit';
 import { join } from 'path';
 import prompts from 'prompts';
 
-import { generateFilesSafely } from '../../utils/generate-files-safely.ts';
+import { generateFilesSafely } from '../../utils/generateFilesSafely.ts';
 import { getCommonVariables, getGeneratorOverview } from '../../utils/index.ts';
 import {
   getConfigConfirmation,
   getReactHookDestination,
   parsePossibleNames,
 } from '../../utils/questions.ts';
-import { resolveReactDestination } from '../../utils/resolve-react-destination.ts';
+import { resolveReactDestination } from '../../utils/resolveReactDestination.ts';
 import { throwInvalidDestinationError } from '../../utils/target-validation.ts';
 import { validateCamelCase } from '../../utils/validation.ts';
 

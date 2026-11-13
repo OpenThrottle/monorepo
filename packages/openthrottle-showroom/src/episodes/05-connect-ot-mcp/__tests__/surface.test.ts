@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { scanText } from '../../../scan/scan-text.ts';
+import { scanText } from '../../../scan/scanText.ts';
 import {
   CONNECT_OT_MCP_COMMANDS,
   CONNECT_OT_MCP_SURFACES,

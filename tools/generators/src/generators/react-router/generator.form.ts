@@ -4,8 +4,8 @@ import lodash from 'lodash';
 import { join } from 'path';
 import prompts from 'prompts';
 
-import { askWhenInteractive } from '../../utils/ask-when-interactive.ts';
-import { generateFilesSafely } from '../../utils/generate-files-safely.ts';
+import { askWhenInteractive } from '../../utils/askWhenInteractive.ts';
+import { generateFilesSafely } from '../../utils/generateFilesSafely.ts';
 import {
   getCommonVariables,
   getRemixRoutingFolders,

@@ -1,7 +1,7 @@
 import { RuleTester } from '@typescript-eslint/rule-tester';
 import { afterAll, describe, it } from 'vitest';
 
-import { noTestSleep } from '../rules/no-test-sleep.ts';
+import { noTestSleep } from '../rules/noTestSleep.ts';
 
 RuleTester.afterAll = afterAll;
 RuleTester.describe = describe;

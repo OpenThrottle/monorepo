@@ -14,7 +14,7 @@ import { z } from 'zod';
 import type { DiscoverAgentClisQuery } from '../__generated__/graphql.js';
 import { DiscoverAgentClisDocument } from '../__generated__/graphql.js';
 import type { GenericResult } from '../types/index.ts';
-import { runTool } from '../utils/tool-result.ts';
+import { runTool } from '../utils/runTool.ts';
 
 type AgentCliAuth = {
   accountEmail: string | null;

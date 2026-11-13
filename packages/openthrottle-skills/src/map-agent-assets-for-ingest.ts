@@ -2,7 +2,7 @@ import { basename } from 'node:path';
 
 import { parsePersonaFrontmatter } from './parse-persona-frontmatter.ts';
 import { parseSkillFrontmatter } from './parse-skill-frontmatter.ts';
-import type { AgentAssetFileEntry } from './walk-agent-assets-on-disk.ts';
+import type { AgentAssetFileEntry } from './walkAgentAssetFiles.ts';
 
 export type AgentAssetPromptType = 'personas' | 'prompts' | 'skills';
 

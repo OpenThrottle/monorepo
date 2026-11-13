@@ -11,7 +11,7 @@ universal **type guards** — starting with `isRecord`. Consumers span
 
 - [src/index.ts](src/index.ts) — public entry point. Export the package's public
   API here and tag exported public API with `@public` so Knip keeps it.
-- [src/utils/is-record.ts](src/utils/is-record.ts) — `isRecord` type guard
+- [src/utils/isRecord.ts](src/utils/isRecord.ts) — `isRecord` type guard
   (plain-object predicate). Canonical name for what used to be inlined as
   `isPlainRecord` / `isPlainObject` / `isObjectRecord` / `isJsonObject` /
   `isObjectValue` across the workspace.

@@ -2,7 +2,7 @@ import type { Tree } from '@nx/devkit';
 import { formatFiles, logger } from '@nx/devkit';
 import { join } from 'path';
 
-import { generateFilesSafely } from '../../utils/generate-files-safely.ts';
+import { generateFilesSafely } from '../../utils/generateFilesSafely.ts';
 import { getCommonVariables, getGeneratorOverview } from '../../utils/index.ts';
 import {
   getComponentNames,
@@ -10,7 +10,7 @@ import {
   getReactComponentDestination,
   parsePossibleNames,
 } from '../../utils/questions.ts';
-import { resolveReactDestination } from '../../utils/resolve-react-destination.ts';
+import { resolveReactDestination } from '../../utils/resolveReactDestination.ts';
 import { throwInvalidDestinationError } from '../../utils/target-validation.ts';
 
 export interface ReactComponentGeneratorSchema {

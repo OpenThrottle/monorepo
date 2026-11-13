@@ -1,11 +1,11 @@
 import type { Tree } from '@nx/devkit';
 import prompts from 'prompts';
 
-import { askWhenInteractive } from '../../utils/ask-when-interactive.ts';
-import { throwGeneratorError } from '../../utils/generator-errors.ts';
-import { isInteractiveArgPresent } from '../../utils/nx-cli.ts';
+import { askWhenInteractive } from '../../utils/askWhenInteractive.ts';
+import { isInteractiveArgPresent } from '../../utils/isInteractiveArgPresent.ts';
 import { writeJsonToStdout } from '../../utils/output.ts';
 import { getProjectsByTags } from '../../utils/projects.ts';
+import { throwGeneratorError } from '../../utils/throwGeneratorError.ts';
 import { componentGenerator } from './generator.component.ts';
 import { hookGenerator } from './generator.hook.ts';
 import { storyGenerator } from './generator.story.ts';

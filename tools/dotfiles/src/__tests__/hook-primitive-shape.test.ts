@@ -1,7 +1,7 @@
 import { RuleTester } from '@typescript-eslint/rule-tester';
 import { afterAll, describe, it } from 'vitest';
 
-import { hookPrimitiveShape } from '../rules/hook-primitive-shape.ts';
+import { hookPrimitiveShape } from '../rules/hookPrimitiveShape.ts';
 
 // Wire the framework hooks the RuleTester calls to Vitest's.
 RuleTester.afterAll = afterAll;

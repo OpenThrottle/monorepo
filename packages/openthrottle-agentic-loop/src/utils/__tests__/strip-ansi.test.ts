@@ -3,11 +3,11 @@ import { tmpdir } from 'node:os';
 import { describe, expect, it } from 'vitest';
 
 import type { SpawnCommand, ValidationChunk } from '../../contract/index.ts';
-import { createCommandValidator } from '../create-command-validator.ts';
-import { runCommandSequence } from '../run-command-sequence.ts';
-import { spawnShellCommand } from '../spawn-shell-command.ts';
+import { createCommandValidator } from '../createCommandValidator.ts';
+import { runCommandSequence } from '../runCommandSequence.ts';
+import { spawnShellCommand } from '../spawnShellCommand.ts';
 import { createAnsiStripStream, stripAnsi } from '../strip-ansi.ts';
-import { systemScheduleClock } from '../system-schedule-clock.ts';
+import { systemScheduleClock } from '../systemScheduleClock.ts';
 import { makeTask } from './loop-fakes.ts';
 
 const ESC = String.fromCharCode(27);

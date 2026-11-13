@@ -7,7 +7,7 @@
  */
 
 import type { DriverParsedOutput } from '../types/index.ts';
-import { formatToolLine } from './tool-argument.ts';
+import { formatToolLine } from './formatToolLine.ts';
 import type { UsageLimit } from './usage-limit.ts';
 import {
   isClaudeUsageLimitResult,

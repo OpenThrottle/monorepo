@@ -30,9 +30,9 @@ import {
 } from '@openthrottle/openthrottle-drivers';
 
 import { ARTWORK_LINE, COLORS } from '../config/index';
-import { resolveAgentVersion } from '../utils/agent-version';
 import { ralphDebugLogger } from '../utils/ralph-debug-logger';
 import type { RalphWorktreeCliOptions } from '../utils/ralph-worktree-cli';
+import { resolveAgentVersion } from '../utils/resolveAgentVersion';
 
 /**
  * @description Chunk from runner stdout or stderr when using async spawn.

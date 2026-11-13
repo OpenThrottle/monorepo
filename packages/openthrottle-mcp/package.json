@@ -128,7 +128,7 @@
           "description": "Measure the stdio MCP surface (instructions block + every tools/list entry, in UTF-8 bytes) over an in-memory client, both as an unconfigured client gets it (the default toolset) and in full with each tool's toolset, and write it to tmp/model-facing-text/tool-surface.json for monorepo:check-model-facing-text. Runs from source, so it needs codegen but not a build. Never cached: the tool schemas derive from gitignored __generated__ output that Nx cannot hash."
         },
         "options": {
-          "command": "tsx ./packages/openthrottle-mcp/src/model-facing-text/write-tool-surface.ts ./tmp/model-facing-text/tool-surface.json",
+          "command": "tsx ./packages/openthrottle-mcp/src/model-facing-text/writeToolSurface.ts ./tmp/model-facing-text/tool-surface.json",
           "cwd": "{workspaceRoot}"
         }
       },
@@ -171,11 +171,11 @@
     "./dist/src/bin-http.js",
     "./dist/src/bin.js",
     "./dist/src/evals/tool-selection/cli.js",
-    "./dist/src/model-facing-text/write-tool-surface.js",
+    "./dist/src/model-facing-text/writeToolSurface.js",
     "./src/bin-http.ts",
     "./src/bin.ts",
     "./src/evals/tool-selection/cli.ts",
-    "./src/model-facing-text/write-tool-surface.ts"
+    "./src/model-facing-text/writeToolSurface.ts"
   ],
   "type": "module",
   "types": "./dist/src/index.d.ts",

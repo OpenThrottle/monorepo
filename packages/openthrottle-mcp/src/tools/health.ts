@@ -15,7 +15,7 @@ import {
   TOOLSETS_ENV,
 } from '../config/toolsets.ts';
 import type { GenericResult } from '../types/index.ts';
-import { runTool } from '../utils/tool-result.ts';
+import { runTool } from '../utils/runTool.ts';
 
 type ToolsetReport = {
   disabled: { description: string; name: ToolsetName }[];

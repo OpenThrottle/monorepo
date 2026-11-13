@@ -38,7 +38,7 @@ import {
 } from '../config/plan-run-backstop.ts';
 import type { GenericResult } from '../types/index.ts';
 import { invalidArgsContent } from '../utils/errors.ts';
-import { runTool } from '../utils/tool-result.ts';
+import { runTool } from '../utils/runTool.ts';
 
 // ── register_plan_run ────────────────────────────────────────────────────────
 

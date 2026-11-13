@@ -3,7 +3,7 @@ import { join } from 'node:path';
 
 import type { ModelRoutingPolicyResult } from '../contract/index.ts';
 import { MODEL_ROUTING_POLICY_RELATIVE_PATH } from '../data/data.model-routing.ts';
-import { parseModelRoutingPolicy } from './parse-model-routing-policy.ts';
+import { parseModelRoutingPolicy } from './parseModelRoutingPolicy.ts';
 
 /**
  * @description Loads and schema-checks the routing policy by path. Pass the file path directly, or

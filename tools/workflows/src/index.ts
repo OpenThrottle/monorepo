@@ -17,7 +17,7 @@ export {
 export {
   mergePlanRunTuningWithWorkflowRalphConfig,
   type PlanRunTuningMergeInput,
-} from './config/merge-plan-run-tuning-with-config';
+} from './config/mergePlanRunTuningWithWorkflowRalphConfig';
 export type {
   WorkflowRalphDefaultsDebug,
   WorkflowRalphDefaultsDiagnosticsJson,
@@ -91,7 +91,7 @@ export type {
   WorktreeWorkflowOptions,
   WorktreeWorkflowResult,
 } from './types/worktree';
-export { applyWorkflowRalphDebugCli } from './utils/apply-workflow-ralph-debug-cli';
+export { applyWorkflowRalphDebugCli } from './utils/applyWorkflowRalphDebugCli';
 export { sampleChildProcess } from './utils/child-process-metrics';
 export type {
   CreateCursorWorkflowRalphIterationRunnerOptions,
@@ -99,8 +99,8 @@ export type {
   CursorWorkflowRalphIterationRunner,
   CursorWorkflowRalphIterationRunParams,
   CursorWorkflowRalphIterationStreamChunk,
-} from './utils/cursor-workflow-ralph-iteration-runner';
-export { createCursorWorkflowRalphIterationRunner } from './utils/cursor-workflow-ralph-iteration-runner';
+} from './utils/createCursorWorkflowRalphIterationRunner';
+export { createCursorWorkflowRalphIterationRunner } from './utils/createCursorWorkflowRalphIterationRunner';
 export type { MaterializedHookTask } from './utils/hook-task-to-job-run-hook';
 export {
   hookTaskPhase,
@@ -186,4 +186,4 @@ export {
   buildWorkflowRalphRunTuningArgv,
   mergeRalphNestedRunTuningWithExecutionBackend,
 } from './utils/workflow-ralph-nested-argv';
-export { WorktreeTargetsTracker } from './utils/worktree-targets';
+export { WorktreeTargetsTracker } from './utils/WorktreeTargetsTracker';

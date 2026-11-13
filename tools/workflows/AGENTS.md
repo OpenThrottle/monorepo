@@ -25,10 +25,10 @@ Moved out (edit there, not here):
 
 Still real logic here (OK to touch for fixes):
 
-- `src/bin/ralph.ts` — the `workflow-ralph` CLI (`--plan`/`--task`); `src/bin/run-iteration.ts` — the iteration runner the orchestrator borrows via `src/utils/cursor-workflow-ralph-iteration-runner.ts`.
+- `src/bin/ralph.ts` — the `workflow-ralph` CLI (`--plan`/`--task`); `src/bin/run-iteration.ts` — the iteration runner the orchestrator borrows via `src/utils/createCursorWorkflowRalphIterationRunner.ts`.
 - `src/bin/link-merge.ts` (`workflow-link-merge`) and `src/bin/lighthouse.ts` (`workflow-lighthouse`) — parked here until relocated to standalone tool packages (README § Target architecture).
 - `src/config/load-workflow-ralph-config.ts` — config resolution.
-- `src/utils/` — parent/child job + worktree workflow plumbing (`child-job.ts`, `parent-job.ts`, `worktree-targets.ts`).
+- `src/utils/` — parent/child job + worktree workflow plumbing (`child-job.ts`, `parent-job.ts`, `WorktreeTargetsTracker.ts`).
 
 New workflow, queue, orchestrator, or worktree behavior belongs in the `@openthrottle` packages above; changes here should be shims, bin fixes, or migration steps.
 

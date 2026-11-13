@@ -11,7 +11,7 @@ import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import { GetDocumentDocument } from '../__generated__/graphql.js';
 import { getAuthToken } from '../auth/get-auth-token.ts';
 import { toSanitizedClientMessage } from '../utils/errors.ts';
-import { firstStringParam } from '../utils/first-string-param.ts';
+import { firstStringParam } from '../utils/firstStringParam.ts';
 
 type ChunkResult = {
   contents: Array<{ text: string; type: 'text'; uri: string }>;

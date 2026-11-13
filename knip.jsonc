@@ -424,10 +424,10 @@
         "src/bin.ts",
         "src/run-server.ts",
         "src/nest-tool-handlers.ts",
-        "src/nest/bootstrap-openthrottle-mcp-app.ts",
+        "src/nest/bootstrapMcpDeveloperApp.ts",
         // Run by the `measure-tool-surface` Nx target (tsx); also reaches
-        // measure-tool-surface.ts, which it imports.
-        "src/model-facing-text/write-tool-surface.ts",
+        // measureToolSurface.ts, which it imports.
+        "src/model-facing-text/writeToolSurface.ts",
         // Run by the on-demand `eval-tool-selection` Nx target (tsx); reaches
         // the rest of src/evals/tool-selection/, which it imports.
         "src/evals/tool-selection/cli.ts",
@@ -446,7 +446,7 @@
       "project": ["src/**/*.ts"],
     },
     "packages/nodejs-graphql": {
-      "entry": ["src/index.ts", "src/index-v2.ts", "src/graphql-v2.ts"],
+      "entry": ["src/index.ts", "src/executeGraphqlV2.ts", "src/graphql-v2.ts"],
       "project": ["src/**/*.ts"],
     },
     "packages/graphql-codegen": {

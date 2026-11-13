@@ -162,7 +162,7 @@ var resolveAuthToken = (repoRoot, options) => {
   return resolveOtEnv(repoRoot, "OPENTHROTTLE_MCP_AUTH_TOKEN", options) || resolveOtEnv(repoRoot, "OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN", options) || "";
 };
 
-// packages/nodejs-utils/src/utils/is-record.ts
+// packages/nodejs-utils/src/utils/isRecord.ts
 var isRecord = (value) => {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 };
@@ -291,7 +291,7 @@ var postGraphqlField = async (args) => {
   return postMutation(args);
 };
 
-// packages/agentic-hooks/src/data/read-new-bytes.ts
+// packages/agentic-hooks/src/data/readNewBytes.ts
 var import_node_fs2 = __toESM(require("node:fs"), 1);
 var NEWLINE = 10;
 var readNewBytes = ({
@@ -1580,6 +1580,63 @@ var capTrajectory = (trajectory, limits = DEFAULT_TRAJECTORY_LIMITS) => {
   };
 };
 
+// packages/openthrottle-agentic-utils/src/utils/trajectory/normalizeUsage.ts
+var EXCLUSIVE_CACHE_DRIVERS = /* @__PURE__ */ new Set([
+  DRIVERS.claude,
+  DRIVERS.cursor,
+  DRIVERS.opencode
+]);
+var numberAt = (record, keys) => {
+  for (const key of keys) {
+    const value = record[key];
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return value;
+    }
+  }
+  return 0;
+};
+var flattenUsage = (usage) => {
+  if (!isRecord(usage)) {
+    return {};
+  }
+  const cache = isRecord(usage.cache) ? usage.cache : {};
+  return { ...usage, cacheRead: cache.read, cacheWrite: cache.write };
+};
+var costOf = (metadata) => {
+  const cost = metadata.totalCostUsd ?? metadata.cost;
+  return typeof cost === "number" && Number.isFinite(cost) ? cost : void 0;
+};
+var normalizeUsage = (driverId, chunk) => {
+  const metadata = chunk.metadata ?? {};
+  const raw = metadata.usage ?? metadata.tokens;
+  if (!isRecord(raw)) {
+    return void 0;
+  }
+  const usage = flattenUsage(raw);
+  const input = numberAt(usage, ["input_tokens", "inputTokens", "input"]);
+  const output = numberAt(usage, ["output_tokens", "outputTokens", "output"]);
+  const cacheRead = numberAt(usage, [
+    "cache_read_input_tokens",
+    "cached_input_tokens",
+    "cache_read_tokens",
+    "cacheReadTokens",
+    "cacheRead"
+  ]);
+  const cacheWrite = numberAt(usage, [
+    "cache_creation_input_tokens",
+    "cacheWriteTokens",
+    "cacheWrite"
+  ]);
+  const isExclusive = EXCLUSIVE_CACHE_DRIVERS.has(driverId);
+  return {
+    cachedTokens: cacheRead,
+    completionTokens: output,
+    costUsd: costOf(metadata),
+    promptTokens: isExclusive ? input + cacheRead + cacheWrite : input,
+    raw
+  };
+};
+
 // packages/openthrottle-agentic-utils/src/utils/trajectory/tool-metadata.ts
 var CODEX_ITEM_BOOKKEEPING = /* @__PURE__ */ new Set([
   "aggregated_output",
@@ -1661,63 +1718,6 @@ var isToolResultError = (chunk) => {
   const hasChunkError = typeof chunk.error === "string" && chunk.error !== "";
   const exitCode = codexItem(metadata)?.exit_code;
   return hasChunkError || metadata.isError === true || typeof toolCall.error === "string" && toolCall.error !== "" || typeof exitCode === "number" && exitCode !== 0;
-};
-
-// packages/openthrottle-agentic-utils/src/utils/trajectory/usage-metrics.ts
-var EXCLUSIVE_CACHE_DRIVERS = /* @__PURE__ */ new Set([
-  DRIVERS.claude,
-  DRIVERS.cursor,
-  DRIVERS.opencode
-]);
-var numberAt = (record, keys) => {
-  for (const key of keys) {
-    const value = record[key];
-    if (typeof value === "number" && Number.isFinite(value)) {
-      return value;
-    }
-  }
-  return 0;
-};
-var flattenUsage = (usage) => {
-  if (!isRecord(usage)) {
-    return {};
-  }
-  const cache = isRecord(usage.cache) ? usage.cache : {};
-  return { ...usage, cacheRead: cache.read, cacheWrite: cache.write };
-};
-var costOf = (metadata) => {
-  const cost = metadata.totalCostUsd ?? metadata.cost;
-  return typeof cost === "number" && Number.isFinite(cost) ? cost : void 0;
-};
-var normalizeUsage = (driverId, chunk) => {
-  const metadata = chunk.metadata ?? {};
-  const raw = metadata.usage ?? metadata.tokens;
-  if (!isRecord(raw)) {
-    return void 0;
-  }
-  const usage = flattenUsage(raw);
-  const input = numberAt(usage, ["input_tokens", "inputTokens", "input"]);
-  const output = numberAt(usage, ["output_tokens", "outputTokens", "output"]);
-  const cacheRead = numberAt(usage, [
-    "cache_read_input_tokens",
-    "cached_input_tokens",
-    "cache_read_tokens",
-    "cacheReadTokens",
-    "cacheRead"
-  ]);
-  const cacheWrite = numberAt(usage, [
-    "cache_creation_input_tokens",
-    "cacheWriteTokens",
-    "cacheWrite"
-  ]);
-  const isExclusive = EXCLUSIVE_CACHE_DRIVERS.has(driverId);
-  return {
-    cachedTokens: cacheRead,
-    completionTokens: output,
-    costUsd: costOf(metadata),
-    promptTokens: isExclusive ? input + cacheRead + cacheWrite : input,
-    raw
-  };
 };
 
 // packages/openthrottle-agentic-utils/src/utils/trajectory/chunks-to-atif.ts
@@ -1888,7 +1888,7 @@ var chunksToAtif = (input) => {
   };
 };
 
-// packages/openthrottle-agentic-utils/src/utils/trajectory/redact-secrets.ts
+// packages/openthrottle-agentic-utils/src/utils/trajectory/redactSecrets.ts
 var SECRET_PATTERNS = [
   /\bBearer\s+[A-Za-z0-9._\-+=/]+/gi,
   /\bsk-[A-Za-z0-9]{8,}/gi,
@@ -3058,7 +3058,7 @@ var resolveBackfillEndpoint = ({
   };
 };
 
-// packages/agentic-hooks/src/adapters/claude/resegment-run.ts
+// packages/agentic-hooks/src/adapters/claude/runResegment.ts
 var pickEndpoint = (injected, repoRoot) => {
   if (injected === void 0) {
     return resolveBackfillEndpoint({ repoRoot });

@@ -1,4 +1,4 @@
-import { discoverSkillDirs } from './discover-skill-dirs.ts';
+import { discoverSkillDirs } from './discoverSkillDirs.ts';
 
 /**
  * Source layer a resolved skill came from. The target repo is never a layer in

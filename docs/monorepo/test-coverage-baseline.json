@@ -6379,10 +6379,10 @@
     },
     {
       "category": "utils",
-      "file": "packages/nodejs-utils/src/utils/is-record.ts",
+      "file": "packages/nodejs-utils/src/utils/isRecord.ts",
       "project": "packages/nodejs-utils",
       "status": "tested",
-      "testFile": "packages/nodejs-utils/src/utils/__tests__/is-record.test.ts"
+      "testFile": "packages/nodejs-utils/src/utils/__tests__/isRecord.test.ts"
     },
     {
       "category": "utils",
@@ -6435,10 +6435,10 @@
     },
     {
       "category": "utils",
-      "file": "packages/openthrottle-agentic-utils/src/utils/cache/stale-while-revalidate.ts",
+      "file": "packages/openthrottle-agentic-utils/src/utils/cache/StaleWhileRevalidateCache.ts",
       "project": "packages/openthrottle-agentic-utils",
       "status": "tested",
-      "testFile": "packages/openthrottle-agentic-utils/src/utils/cache/__tests__/stale-while-revalidate.test.ts"
+      "testFile": "packages/openthrottle-agentic-utils/src/utils/cache/__tests__/StaleWhileRevalidateCache.test.ts"
     },
     {
       "category": "utils",
@@ -6582,10 +6582,10 @@
     },
     {
       "category": "utils",
-      "file": "packages/openthrottle-agentic-utils/src/utils/conversation-backend/cursor-agent/session-id.ts",
+      "file": "packages/openthrottle-agentic-utils/src/utils/conversation-backend/cursor-agent/parseCursorChatId.ts",
       "project": "packages/openthrottle-agentic-utils",
       "status": "tested",
-      "testFile": "packages/openthrottle-agentic-utils/src/utils/conversation-backend/cursor-agent/__tests__/session-id.test.ts"
+      "testFile": "packages/openthrottle-agentic-utils/src/utils/conversation-backend/cursor-agent/__tests__/parseCursorChatId.test.ts"
     },
     {
       "category": "utils",
@@ -6967,10 +6967,10 @@
     },
     {
       "category": "utils",
-      "file": "packages/openthrottle-mcp/src/utils/tool-result.ts",
+      "file": "packages/openthrottle-mcp/src/utils/runTool.ts",
       "project": "packages/openthrottle-mcp",
       "status": "tested",
-      "testFile": "packages/openthrottle-mcp/src/utils/tool-result.test.ts"
+      "testFile": "packages/openthrottle-mcp/src/utils/runTool.test.ts"
     },
     {
       "category": "utils",

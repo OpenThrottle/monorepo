@@ -10,7 +10,7 @@ import {
   createMutexWorktreeTargetsTracker,
   MutexWorktreeTargetsTracker,
 } from '../mutex-worktree-targets';
-import { WorktreeTargetsTracker } from '../worktree-targets';
+import { WorktreeTargetsTracker } from '../WorktreeTargetsTracker';
 
 describe('MutexWorktreeTargetsTracker', () => {
   describe('delegated read methods', () => {

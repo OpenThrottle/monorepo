@@ -12,25 +12,25 @@ import pluginReactHooks from 'eslint-plugin-react-hooks';
 import pluginSimpleImportSort from 'eslint-plugin-simple-import-sort';
 import tslint from 'typescript-eslint';
 
-import { agentCliSpawnChokepoint } from './rules/agent-cli-spawn-chokepoint.ts';
-import { componentPrimitiveShape } from './rules/component-primitive-shape.ts';
-import { dataFileShape } from './rules/data-file-shape.ts';
-import { disableRequiresReason } from './rules/disable-requires-reason.ts';
-import { hookPrimitiveShape } from './rules/hook-primitive-shape.ts';
-import { longStringTemplateLiteral } from './rules/long-string-template-literal.ts';
-import { mcpToolRegistration } from './rules/mcp-tool-registration.ts';
-import { namedFunctionBlockBody } from './rules/named-function-block-body.ts';
-import { nestjsFileExports } from './rules/nestjs-file-exports.ts';
-import { nestjsFileNaming } from './rules/nestjs-file-naming.ts';
-import { noFireEvent } from './rules/no-fire-event.ts';
-import { noPerTestTimeout } from './rules/no-per-test-timeout.ts';
-import { noTestSleep } from './rules/no-test-sleep.ts';
-import { noWallClockInTests } from './rules/no-wall-clock-in-tests.ts';
-import { planTaskStatusChokepoint } from './rules/plan-task-status-chokepoint.ts';
+import { agentCliSpawnChokepoint } from './rules/agentCliSpawnChokepoint.ts';
+import { componentPrimitiveShape } from './rules/componentPrimitiveShape.ts';
+import { dataFileShape } from './rules/dataFileShape.ts';
+import { disableRequiresReason } from './rules/disableRequiresReason.ts';
+import { hookPrimitiveShape } from './rules/hookPrimitiveShape.ts';
+import { longStringTemplateLiteral } from './rules/longStringTemplateLiteral.ts';
+import { mcpToolRegistration } from './rules/mcpToolRegistration.ts';
+import { namedFunctionBlockBody } from './rules/namedFunctionBlockBody.ts';
+import { nestjsFileExports } from './rules/nestjsFileExports.ts';
+import { nestjsFileNaming } from './rules/nestjsFileNaming.ts';
+import { noFireEvent } from './rules/noFireEvent.ts';
+import { noPerTestTimeout } from './rules/noPerTestTimeout.ts';
+import { noTestSleep } from './rules/noTestSleep.ts';
+import { noWallClockInTests } from './rules/noWallClockInTests.ts';
+import { planTaskStatusChokepoint } from './rules/planTaskStatusChokepoint.ts';
 import { preHooksUnpack } from './rules/pre-hooks-unpack.ts';
-import { routePrimitiveShape } from './rules/route-primitive-shape.ts';
-import { skipRequiresIssue } from './rules/skip-requires-issue.ts';
-import { threeLineTernary } from './rules/three-line-ternary.ts';
+import { routePrimitiveShape } from './rules/routePrimitiveShape.ts';
+import { skipRequiresIssue } from './rules/skipRequiresIssue.ts';
+import { threeLineTernary } from './rules/threeLineTernary.ts';
 import { getDirname } from './vite-config.ts';
 
 /** @public */
@@ -39,11 +39,11 @@ export type { Config as EslintFlatConfig } from 'eslint/config';
 export {
   lintNestjsFileContract,
   type NestjsContractLintInput,
-} from './nestjs-contract-lint.ts';
+} from './lintNestjsFileContract.ts';
 /** @public */
-export { prettierConfig } from './prettier-config.ts';
+export { prettierConfig } from './prettierConfig.ts';
 /** @public */
-export { lintReadability, type ReadabilitySource } from './readability-lint.ts';
+export { lintReadability, type ReadabilitySource } from './lintReadability.ts';
 /** @public */
 export {
   createViteConfig,

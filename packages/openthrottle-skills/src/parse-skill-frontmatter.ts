@@ -1,4 +1,4 @@
-import { parseYamlFrontmatter } from './frontmatter/parse-yaml-frontmatter.ts';
+import { parseYamlFrontmatter } from './frontmatter/parseYamlFrontmatter.ts';
 import type { SkillFrontmatter } from './schemas/agent-asset-frontmatter.schemas.ts';
 
 export interface ParsedSkillFrontmatter {
@@ -24,7 +24,7 @@ const toOptionalStringArray = (
 };
 
 /**
- * @description Parses `name`, `description`, optional `disable-model-invocation`, and optional `tags` from SKILL.md frontmatter. Provenance is NOT frontmatter — it is derived from the ot-skill-sync layout (see `walk-agent-assets-on-disk.ts` and `parse-skills-lock.ts`).
+ * @description Parses `name`, `description`, optional `disable-model-invocation`, and optional `tags` from SKILL.md frontmatter. Provenance is NOT frontmatter — it is derived from the ot-skill-sync layout (see `walkAgentAssetFiles.ts` and `parse-skills-lock.ts`).
  * @public
  */
 export const parseSkillFrontmatter = (

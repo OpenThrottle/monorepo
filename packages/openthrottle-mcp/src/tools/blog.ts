@@ -38,7 +38,7 @@ import { getAuthToken } from '../auth/get-auth-token.ts';
 import { getBlogPostEditorUrl } from '../config/developer-app-url.ts';
 import type { GenericResult } from '../types/index.ts';
 import { invalidArgsContent } from '../utils/errors.ts';
-import { runTool } from '../utils/tool-result.ts';
+import { runTool } from '../utils/runTool.ts';
 
 const LIST_DEFAULT_FIRST = 10;
 const LIST_MAX_FIRST = 50;

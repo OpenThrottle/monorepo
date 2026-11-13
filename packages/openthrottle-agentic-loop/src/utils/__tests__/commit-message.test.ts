@@ -4,9 +4,9 @@ import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { appendCommitFooters } from '../append-commit-footers.ts';
-import { buildFallbackCommitMessage } from '../build-fallback-commit-message.ts';
-import { createCommitlintLinter } from '../create-commitlint-linter.ts';
+import { appendCommitFooters } from '../appendCommitFooters.ts';
+import { buildFallbackCommitMessage } from '../buildFallbackCommitMessage.ts';
+import { createCommitlintLinter } from '../createCommitlintLinter.ts';
 import { createRecordingRunner } from './git-fixtures.ts';
 
 describe('buildFallbackCommitMessage', () => {

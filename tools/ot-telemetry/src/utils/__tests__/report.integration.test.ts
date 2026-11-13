@@ -15,7 +15,6 @@ import {
 } from '../../../tests/db/sentinel-fixture.ts';
 import type { MetricQuery } from '../../types/index.ts';
 import { buildEnvelope, resolveWindow } from '../envelope.ts';
-import { renderMarkdownReport } from '../markdown-report.ts';
 import {
   agentConversationsMetricQuery,
   planRunsMetricQuery,
@@ -35,6 +34,7 @@ import {
 } from '../metrics/skill-usage.ts';
 import { tasksMetricQuery, taskTagsMetricQuery } from '../metrics/tasks.ts';
 import { probeCapabilities, readMigrationHighWaterMark } from '../postgres.ts';
+import { renderMarkdownReport } from '../renderMarkdownReport.ts';
 
 /**
  * @description Runs the full ot-telemetry pipeline (the same metric queries

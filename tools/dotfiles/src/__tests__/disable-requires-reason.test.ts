@@ -1,7 +1,7 @@
 import { RuleTester } from '@typescript-eslint/rule-tester';
 import { afterAll, describe, it } from 'vitest';
 
-import { disableRequiresReason } from '../rules/disable-requires-reason.ts';
+import { disableRequiresReason } from '../rules/disableRequiresReason.ts';
 
 RuleTester.afterAll = afterAll;
 RuleTester.describe = describe;

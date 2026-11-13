@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
+import { buildToolSelectionDataset } from './buildToolSelectionDataset.ts';
+import { createToolSelectionGrader } from './createToolSelectionGrader.ts';
 import { TOOL_SELECTION_CASES } from './data/data.cases.ts';
 import type { Selection } from './eval-case.ts';
 import {
@@ -7,8 +9,6 @@ import {
   selectionToTrajectory,
   usageOfTrajectory,
 } from './selection-trajectory.ts';
-import { buildToolSelectionDataset } from './tool-selection-dataset.ts';
-import { createToolSelectionGrader } from './tool-selection-grader.ts';
 
 const selection: Extract<Selection, { kind: 'calls' }> = {
   calls: [{ input: { id: 'x' }, name: 'get_plan' }],

@@ -11,9 +11,9 @@ import { McpRegistryDiscoveryService, McpTransportType } from '@rekog/mcp-nest';
 import type { ToolsetName } from '../config/toolsets.ts';
 import { DEFAULT_TOOLSETS, TOOLSET_NAMES } from '../config/toolsets.ts';
 import { developerMcpToolsIn } from '../tool-registry.ts';
+import { McpDeveloperMcpSurface } from './McpDeveloperMcpSurface.ts';
 import { NestjsMcpDeveloperModule } from './nestjs-openthrottle-mcp.module.ts';
 import { NestjsMcpDeveloperService } from './nestjs-openthrottle-mcp.service.ts';
-import { McpDeveloperMcpSurface } from './openthrottle-mcp-mcp-surface.ts';
 
 const BASE_OPTIONS = {
   capabilities: { resources: {}, tools: {} },

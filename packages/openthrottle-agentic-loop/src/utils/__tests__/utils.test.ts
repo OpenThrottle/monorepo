@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { clampMaxRetries } from '../clamp-max-retries.ts';
-import { closePlan } from '../close-plan.ts';
-import { isThinTask } from '../is-thin-task.ts';
-import { selectNextTask } from '../select-next-task.ts';
+import { clampMaxRetries } from '../clampMaxRetries.ts';
+import { closePlan } from '../closePlan.ts';
+import { isThinTask } from '../isThinTask.ts';
+import { selectNextTask } from '../selectNextTask.ts';
 import { makeTask } from './loop-fakes.ts';
 
 describe('closePlan', () => {

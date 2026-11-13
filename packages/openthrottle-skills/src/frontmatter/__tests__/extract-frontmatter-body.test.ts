@@ -4,7 +4,7 @@ import {
   extractContentAfterFrontmatter,
   extractFrontmatterBody,
 } from '../extract-frontmatter-body.js';
-import { parseYamlFrontmatter } from '../parse-yaml-frontmatter.js';
+import { parseYamlFrontmatter } from '../parseYamlFrontmatter.js';
 
 describe('extractFrontmatterBody', () => {
   test('returns the body between the opening and closing delimiters', () => {

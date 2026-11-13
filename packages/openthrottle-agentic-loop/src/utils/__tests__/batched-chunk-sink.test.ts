@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { ScheduleClock } from '../../contract/index.ts';
-import { createBatchedChunkSink } from '../create-batched-chunk-sink.ts';
+import { createBatchedChunkSink } from '../createBatchedChunkSink.ts';
 
 const makeClock = () => {
   const timers: { callback: () => void; cancelled: boolean; ms: number }[] = [];

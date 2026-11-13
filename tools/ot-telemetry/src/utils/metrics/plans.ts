@@ -8,7 +8,7 @@ import type {
   TagCount,
   WindowCount,
 } from '../../types/index.ts';
-import { countInWindow } from './window-count.ts';
+import { countInWindow } from './countInWindow.ts';
 
 /**
  * @description Plan aggregate metrics (`metrics.plans`) and the plan tag

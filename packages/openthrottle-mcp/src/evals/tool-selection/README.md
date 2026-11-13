@@ -112,10 +112,10 @@ tool or argument that no longer exists, which would otherwise leave a case that 
 | `data/data.cases.ts`                 | The cases                                                                   |
 | `data/data.dataset.ts`               | Dataset target, grader id and version                                       |
 | `data/data.harness-tools.ts`         | Generic harness tools offered next to OT                                    |
-| `tool-selection-dataset.ts`          | Cases as a core `EvalDataset`                                               |
-| `tool-selection-iteration.ts`        | The system under test: one selector call as a core `RunEvalIteration`       |
+| `buildToolSelectionDataset.ts`       | Cases as a core `EvalDataset`                                               |
+| `createToolSelectionIteration.ts`    | The system under test: one selector call as a core `RunEvalIteration`       |
 | `selection-trajectory.ts`            | Selection to and from an ATIF trajectory, usage included                    |
-| `tool-selection-grader.ts`           | `gradeCase` as a core `code` grader                                         |
+| `createToolSelectionGrader.ts`       | `gradeCase` as a core `code` grader                                         |
 | `grade-case.ts`                      | Pure grading rules (unit-tested, runs in CI)                                |
 | `run-evals.ts`                       | `runEval` + aggregation back to baseline-shaped results and the core report |
 | `run-evals.characterization.test.ts` | Literal per-case results; proof the port kept baselines compatible          |
