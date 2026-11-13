@@ -203,6 +203,53 @@ describe('routes/dashboard._index.tsx', () => {
         { owner: 'openthrottle', repo: 'monorepo' },
       );
     });
+
+    // Regression (OT f058bb18): with the API down every deferred query rejects
+    // while React Router is still awaiting the root loader, before it owns the
+    // returned promises. Unhandled, that rejection exited the dev server.
+    describe('unhandled rejections', () => {
+      const unhandled: unknown[] = [];
+      const onUnhandled = (reason: unknown): void => {
+        unhandled.push(reason);
+      };
+
+      // Node reports unhandled rejections after the microtask queue drains, so
+      // give it a full macrotask — the window React Router holds the promises.
+      const flushRejectionTracking = async (): Promise<void> => {
+        await new Promise((resolve) => {
+          setImmediate(resolve);
+        });
+      };
+
+      beforeEach(() => {
+        unhandled.length = 0;
+        process.on('unhandledRejection', onUnhandled);
+        return () => {
+          process.off('unhandledRejection', onUnhandled);
+        };
+      });
+
+      test('an unreachable API leaves no deferred rejection unhandled', async () => {
+        mockExecute.mockRejectedValue(new TypeError('fetch failed'));
+
+        const request = new Request('http://localhost/dashboard');
+        const args: Route.LoaderArgs = {
+          context: createTestRouterContext(),
+          params: {},
+          pattern: '/dashboard',
+          request,
+          url: new URL(request.url),
+        };
+
+        const result = await loader(args);
+        await flushRejectionTracking();
+
+        expect(unhandled).toEqual([]);
+        // The originals still reject, so each card's errorElement still renders.
+        await expect(result.core).rejects.toThrow('fetch failed');
+        await expect(result.githubStats).rejects.toThrow('fetch failed');
+      });
+    });
   });
 
   test('renders the intro banner + grid scaffold synchronously', () => {
