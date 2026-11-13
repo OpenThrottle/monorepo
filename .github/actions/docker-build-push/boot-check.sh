@@ -14,6 +14,12 @@
 #   - developer: ERR_MODULE_NOT_FOUND for a runtime import declared only as a
 #                devDependency.
 #
+# The server boots twice: on a fresh database, and on the openthrottle database
+# frozen at an old migration with its schema_migrations ledger
+# (databases/openthrottle/old-schema/), upgraded by the migrations image. That
+# second boot is the path a deployed box takes, where a migration that cannot
+# apply forward over real old state breaks it.
+#
 # Each class needs the REAL runtime to surface: the pruned production
 # node_modules, the deployed hardening, and the app actually serving a request.
 # So the container runs with the same restrictions as
@@ -48,6 +54,10 @@ cleanup() {
     docker rm -f "${container}" > /dev/null 2>&1 || true
   done
   docker network rm "${NETWORK}" > /dev/null 2>&1 || true
+  if [[ -n "${MIGRATIONS_IMAGE:-}" ]]; then
+    docker rmi "${MIGRATIONS_IMAGE}" > /dev/null 2>&1 || true
+  fi
+  rm -f "${TMPDIR:-/tmp}/${RUN_ID}"-*.log
 }
 trap cleanup EXIT
 
@@ -103,55 +113,104 @@ wait_for() {
 
 docker network create "${NETWORK}" > /dev/null
 
+# Boot the server against one database state: a Postgres of its own, restored
+# from <dump> when one is given, then the migrations image, then the server.
+#
+#   boot_server <scenario> [dump]
+#
+# `fresh` (no dump) is a clean install. `old-schema` restores the frozen dump in
+# databases/openthrottle/old-schema/ — an install whose migrations image last ran
+# at an old migration N, ledger included — which is what every deployed box is
+# on upgrade. The runner reads that ledger and applies only the files after N,
+# so a new migration that assumes state a fresh database happens to have but an
+# old one does not passes `fresh` and fails here. cms postdates N, so this
+# scenario also creates cms from scratch, as an upgrading box does. See
+# freeze.sh for the fixture.
+boot_server() {
+  local scenario="$1" dump="${2:-}"
+  local postgres="${RUN_ID}-${scenario}-postgres"
+  local log="${TMPDIR:-/tmp}/${RUN_ID}-${scenario}-migrations.log"
+  APP_CONTAINER="${RUN_ID}-${scenario}-app"
+
+  # The real dependencies, versions pinned to the Hetzner compose template.
+  local postgres_env=(
+    -e POSTGRES_DB=openthrottle
+    -e "POSTGRES_HOST=${postgres}"
+    -e POSTGRES_PASSWORD=boot-check
+    -e POSTGRES_PORT=5432
+    -e POSTGRES_USER=openthrottle
+  )
+  start "${postgres}" "${postgres_env[@]}" pgvector/pgvector:0.8.2-pg18-trixie
+
+  local deadline=$((SECONDS + TIMEOUT_SECONDS))
+  # -h: the image's init phase serves the socket only; wait for the real server.
+  until docker exec "${postgres}" pg_isready -h localhost -U openthrottle -d openthrottle > /dev/null 2>&1; do
+    ((SECONDS < deadline)) || fail "${scenario}: postgres never became ready"
+    sleep 2
+  done
+
+  if [[ -n "${dump}" ]]; then
+    [[ -f "${dump}" ]] || fail "${scenario}: frozen dump ${dump} is missing"
+    docker exec -i "${postgres}" psql -q -v ON_ERROR_STOP=1 -U openthrottle -d openthrottle \
+      < "${dump}" > /dev/null || fail "${scenario}: restoring ${dump} failed"
+    echo "${scenario}: restored $(head -2 "${dump}" | tail -1 | sed 's/^-- //')"
+  fi
+
+  # Migrate first, exactly as the compose stack does (the server depends on
+  # migrations completing). The server does not tolerate an unmigrated
+  # database: a boot-time query on a missing table is an unhandled rejection.
+  if ! docker run --rm --network "${NETWORK}" "${postgres_env[@]}" "${MIGRATIONS_IMAGE}" \
+    > "${log}" 2>&1; then
+    echo "::error::${APP} ${scenario}: migrations failed to apply forward"
+    tail -40 "${log}"
+    exit 1
+  fi
+  # A restored dump without its ledger would silently take the one-time
+  # cut-over (re-apply every file) instead of the upgrade path under test.
+  if [[ -n "${dump}" ]] && grep -q 'cut-over' "${log}"; then
+    echo "::error::${APP} ${scenario}: ${dump} restored without its schema_migrations ledger"
+    cat "${log}"
+    exit 1
+  fi
+  echo "${scenario}: $(grep -c '^Running: ' "${log}" || true) migration(s) applied"
+
+  start "${APP_CONTAINER}" "${HARDENING[@]}" \
+    -e API_URL=http://localhost:3000 \
+    -e API_URL_EXTERNAL=http://localhost:3000 \
+    -e API_URL_INTERNAL=http://localhost:3000 \
+    -e APP_ENV=production \
+    -e APP_URL=http://localhost:3000 \
+    -e APP_URL_DEVELOPER=http://localhost:3001 \
+    -e CORS_ORIGINS=http://localhost:3001 \
+    -e JWT_SECRET=boot-check-not-a-secret-boot-check-not-a-secret \
+    -e PORT=3000 \
+    "${postgres_env[@]}" \
+    -e REDIS_HOST=redis \
+    -e REDIS_PORT=6379 \
+    "${IMAGE}"
+
+  wait_for "http://${APP_CONTAINER}:3000/health" '"database":"ok"'
+  # The cms DataSource (NestjsRepositoriesCmsModule) derives its URL from
+  # POSTGRES_* with the database swapped for cms; the migrations image above
+  # created and migrated it. Health reports it separately.
+  wait_for "http://${APP_CONTAINER}:3000/health" '"cms":"ok"'
+}
+
 case "${APP}" in
   openthrottle-server)
-    # The real dependencies, versions pinned to the Hetzner compose template.
-    POSTGRES_ENV=(
-      -e POSTGRES_DB=openthrottle
-      -e POSTGRES_HOST=postgres
-      -e POSTGRES_PASSWORD=boot-check
-      -e POSTGRES_PORT=5432
-      -e POSTGRES_USER=openthrottle
-    )
-    start "${RUN_ID}-postgres" --network-alias postgres "${POSTGRES_ENV[@]}" \
-      pgvector/pgvector:0.8.2-pg18-trixie
     start "${RUN_ID}-redis" --network-alias redis redis:8.8-alpine
 
-    deadline=$((SECONDS + TIMEOUT_SECONDS))
-    until docker exec "${RUN_ID}-postgres" pg_isready -U openthrottle -d openthrottle > /dev/null 2>&1; do
-      ((SECONDS < deadline)) || fail "postgres never became ready"
-      sleep 2
-    done
-
-    # Migrate first, exactly as the compose stack does (the server depends on
-    # migrations completing). The server does not tolerate an unmigrated
-    # database: a boot-time query on a missing table is an unhandled rejection.
     # Dockerfile.Migrations is cheap, so it is built here rather than borrowed
     # from the matrix leg that publishes it. Runs from the repository root.
-    docker build -q -f Dockerfile.Migrations -t "${RUN_ID}-migrations" . > /dev/null
-    docker run --rm --network "${NETWORK}" "${POSTGRES_ENV[@]}" "${RUN_ID}-migrations" | tail -1
-    docker rmi "${RUN_ID}-migrations" > /dev/null 2>&1 || true
+    MIGRATIONS_IMAGE="${RUN_ID}-migrations"
+    docker build -q -f Dockerfile.Migrations -t "${MIGRATIONS_IMAGE}" . > /dev/null
 
-    start "${APP_CONTAINER}" "${HARDENING[@]}" \
-      -e API_URL=http://localhost:3000 \
-      -e API_URL_EXTERNAL=http://localhost:3000 \
-      -e API_URL_INTERNAL=http://localhost:3000 \
-      -e APP_ENV=production \
-      -e APP_URL=http://localhost:3000 \
-      -e APP_URL_DEVELOPER=http://localhost:3001 \
-      -e CORS_ORIGINS=http://localhost:3001 \
-      -e JWT_SECRET=boot-check-not-a-secret-boot-check-not-a-secret \
-      -e PORT=3000 \
-      "${POSTGRES_ENV[@]}" \
-      -e REDIS_HOST=redis \
-      -e REDIS_PORT=6379 \
-      "${IMAGE}"
-
-    wait_for "http://${APP_CONTAINER}:3000/health" '"database":"ok"'
-    # The cms DataSource (NestjsRepositoriesCmsModule) derives its URL from
-    # POSTGRES_* with the database swapped for cms; the migrations image above
-    # created and migrated it. Health reports it separately.
-    wait_for "http://${APP_CONTAINER}:3000/health" '"cms":"ok"'
+    boot_server fresh
+    # Same images, upgrade path. Adds one restore + one migrate run + one boot
+    # (seconds) to a leg that already paid for the image build. The workflow's
+    # `plan` job forces this leg on migration-touching changes, so a migration
+    # PR is checked here even when Nx sees no server change.
+    boot_server old-schema databases/openthrottle/old-schema/old-schema.sql
     ;;
 
   openthrottle-developer)
