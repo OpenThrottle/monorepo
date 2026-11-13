@@ -24,10 +24,7 @@ import {
 } from '@openthrottle/agentic-evals';
 
 import type { ToolSurface } from '../../model-facing-text/listToolSurface.ts';
-import { buildToolSelectionDataset } from './buildToolSelectionDataset.ts';
 import type { CaseResult, RunResult } from './compare-baseline.ts';
-import { createToolSelectionGrader } from './createToolSelectionGrader.ts';
-import { createToolSelectionIteration } from './createToolSelectionIteration.ts';
 import {
   TOOL_SELECTION_GRADER_ID,
   TOOL_SELECTION_GRADER_VERSION,
@@ -39,6 +36,11 @@ import type {
   TrialGrade,
 } from './eval-case.ts';
 import { usageOfTrajectory } from './selection-trajectory.ts';
+import {
+  buildToolSelectionDataset,
+  createToolSelectionGrader,
+  createToolSelectionIteration,
+} from './tool-selection-core.ts';
 
 /**
  * @description Options for {@link runEvals}.

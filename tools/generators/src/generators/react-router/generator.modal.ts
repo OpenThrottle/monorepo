@@ -3,12 +3,12 @@ import { formatFiles, logger } from '@nx/devkit';
 import { join } from 'path';
 import prompts from 'prompts';
 
-import { askWhenInteractive } from '../../utils/askWhenInteractive.ts';
 import { generateFilesSafely } from '../../utils/generateFilesSafely.ts';
 import {
   getCommonVariables,
   getRemixRoutingFolders,
 } from '../../utils/index.ts';
+import { askWhenInteractive } from '../../utils/interactive.ts';
 import {
   getTargetApplication,
   parsePossibleNames,

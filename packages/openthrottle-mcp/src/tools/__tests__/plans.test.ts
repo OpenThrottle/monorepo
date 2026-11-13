@@ -1,0 +1,638 @@
+/**
+ * @description Handler tests for plan MCP tools (create and list/search groups) with mocked GraphQL.
+ */
+
+import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { captureCallerWorkspacePath } from '../../config/workspace-path.ts';
+import {
+  clearCurrentSession,
+  ensureWorkSession,
+} from '../../session/current-session.ts';
+import {
+  createPlansToolDescription,
+  createPlansToolHandler,
+  createPlanToolDescription,
+  createPlanToolHandler,
+  listPlansByStatusToolDescription,
+  listPlansByStatusToolHandler,
+  updatePlanToolDescription,
+  updatePlanToolHandler,
+} from '../plans.ts';
+
+vi.mock('@openthrottle/nodejs-graphql', () => ({
+  executeGraphqlWithAuth: vi.fn(),
+}));
+
+/**
+ * @description Puts the process-level work session into a known state. Mutating plan/task
+ * tools now attach the connection's ambient session to their GraphQL calls, so the first such
+ * call in a process also opens the session. Priming it here through the ordinary public path
+ * keeps that one-off out of each test's mock sequence, and stops the cached session leaking
+ * between tests, so each test goes on asserting only the call it cares about.
+ */
+const SESSION_ID = 'sess-test';
+const SESSION_OPTIONS = { headers: { 'X-OT-Session-Id': SESSION_ID } };
+
+async function primeWorkSession(): Promise<void> {
+  clearCurrentSession();
+  const mock = vi.mocked(executeGraphqlWithAuth);
+  mock.mockResolvedValueOnce({ startWorkSession: { id: SESSION_ID } });
+  await ensureWorkSession('prime-token');
+  // Reset AFTER priming: the session is cached in module state, not mock state, so the
+  // cache survives while the call history starts clean for the test's own assertions.
+  mock.mockReset();
+}
+
+describe('tool descriptions reflect the canonical status set', () => {
+  it('list_plans_by_status lists the uppercase canonical statuses, not the stale lowercase trio', () => {
+    for (const status of [
+      'BACKLOG',
+      'BLOCKED',
+      'CANCELED',
+      'COMPLETED',
+      'IN_PROGRESS',
+      'PENDING',
+      'PROMOTED',
+      'QUEUED',
+      'SKIPPED',
+    ]) {
+      expect(listPlansByStatusToolDescription).toContain(status);
+    }
+    // Stale lowercase examples must be gone.
+    expect(listPlansByStatusToolDescription).not.toContain('["pending"]');
+    expect(listPlansByStatusToolDescription).not.toContain('["in_progress"]');
+  });
+
+  it('create_plan documents the canonical status set', () => {
+    expect(createPlanToolDescription).toContain('IN_PROGRESS');
+    expect(createPlanToolDescription).toContain('CANCELED');
+  });
+
+  it('create_plan tells a follow-up filer to tag it and wave its tasks', () => {
+    expect(createPlanToolDescription).toContain('tags: ["follow-up"]');
+    expect(createPlanToolDescription).toContain('sortOrder and wave');
+  });
+
+  it('create_plan documents runConfigJson and workspacePath, which its schema already accepts', () => {
+    expect(createPlanToolDescription).toContain('runConfigJson');
+    expect(createPlanToolDescription).toContain('workspacePath');
+  });
+
+  it('both create tools say where the repository link lives, so project is not mistaken for it', () => {
+    for (const description of [
+      createPlanToolDescription,
+      createPlansToolDescription,
+    ]) {
+      expect(description).toContain('runConfigJson.workspace.repositoryId');
+      expect(description).toContain('does NOT link a plan to a repo');
+    }
+  });
+});
+
+describe('the captured workspace reaches create_plan / create_plans', () => {
+  const serviceAccountToken = '***REMOVED-OT-TOKEN***';
+  const WORKSPACE = '/Users/matt/Development/openthrottle';
+
+  /** The `input` variables the handler actually sent to GraphQL. */
+  const sentInput = (): unknown => {
+    return vi.mocked(executeGraphqlWithAuth).mock.calls[0]?.[2];
+  };
+
+  beforeEach(async () => {
+    await primeWorkSession();
+    vi.mocked(executeGraphqlWithAuth).mockResolvedValue({
+      createPlan: { id: 'plan-1' },
+      createPlans: { plans: [{ id: 'plan-1' }], totalCount: 1 },
+    });
+    process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = serviceAccountToken;
+  });
+
+  afterEach(() => {
+    captureCallerWorkspacePath(null);
+    delete process.env.OPENTHROTTLE_MCP_AUTH_TOKEN;
+  });
+
+  it('stamps the captured workspace on create_plan', async () => {
+    captureCallerWorkspacePath(WORKSPACE);
+
+    await createPlanToolHandler({
+      author: 'visormatt',
+      category: 'feature',
+      title: 'Plan',
+    });
+
+    expect(sentInput()).toMatchObject({
+      input: { workspacePath: WORKSPACE },
+    });
+  });
+
+  it('lets an explicit workspacePath beat the captured one', async () => {
+    captureCallerWorkspacePath(WORKSPACE);
+
+    await createPlanToolHandler({
+      author: 'visormatt',
+      category: 'feature',
+      title: 'Plan',
+      workspacePath: '/somewhere/else',
+    });
+
+    expect(sentInput()).toMatchObject({
+      input: { workspacePath: '/somewhere/else' },
+    });
+  });
+
+  it('omits the field entirely when the caller opts out with an empty string', async () => {
+    captureCallerWorkspacePath(WORKSPACE);
+
+    await createPlanToolHandler({
+      author: 'visormatt',
+      category: 'feature',
+      title: 'Plan',
+      workspacePath: '',
+    });
+
+    expect(sentInput()).not.toMatchObject({
+      input: { workspacePath: expect.anything() },
+    });
+  });
+
+  it('sends nothing on a surface that never captured (Nest/HTTP)', async () => {
+    await createPlanToolHandler({
+      author: 'visormatt',
+      category: 'feature',
+      title: 'Plan',
+    });
+
+    expect(sentInput()).not.toMatchObject({
+      input: { workspacePath: expect.anything() },
+    });
+  });
+
+  it('stamps every plan in a create_plans batch', async () => {
+    captureCallerWorkspacePath(WORKSPACE);
+
+    await createPlansToolHandler({
+      plans: [
+        { author: 'visormatt', category: 'feature', title: 'A' },
+        { author: 'visormatt', category: 'feature', title: 'B' },
+      ],
+    });
+
+    expect(sentInput()).toMatchObject({
+      input: {
+        plans: [
+          { title: 'A', workspacePath: WORKSPACE },
+          { title: 'B', workspacePath: WORKSPACE },
+        ],
+      },
+    });
+  });
+});
+
+describe('createPlanToolHandler', () => {
+  const serviceAccountToken = '***REMOVED-OT-TOKEN***';
+
+  beforeEach(async () => {
+    await primeWorkSession();
+    delete process.env.OPENTHROTTLE_MCP_AUTH_TOKEN;
+  });
+
+  afterEach(() => {
+    delete process.env.OPENTHROTTLE_MCP_AUTH_TOKEN;
+  });
+
+  describe('when args are invalid', () => {
+    it('returns an invalid-args error without calling GraphQL', async () => {
+      // Parsed from JSON: the args are deliberately invalid for the typed schema.
+      const result = await createPlanToolHandler(
+        JSON.parse(
+          '{"category":"maintenance","title":"Improve test coverage"}',
+        ),
+      );
+
+      expect(result).toMatchObject({
+        content: [
+          { text: expect.stringMatching(/Invalid arguments[\s\S]*author/i) },
+        ],
+        isError: true,
+      });
+      expect(executeGraphqlWithAuth).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when auth token is unset', () => {
+    it('returns an auth error without calling GraphQL', async () => {
+      const result = await createPlanToolHandler({
+        author: 'visormatt',
+        category: 'maintenance',
+        title: 'Improve test coverage',
+      });
+
+      expect(result).toMatchObject({
+        content: [
+          { text: expect.stringMatching(/OPENTHROTTLE_MCP_AUTH_TOKEN/) },
+        ],
+        isError: true,
+      });
+      expect(executeGraphqlWithAuth).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when GraphQL returns a plan', () => {
+    it('returns structured plan content', async () => {
+      process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = serviceAccountToken;
+      const plan = {
+        author: 'visormatt',
+        category: 'maintenance',
+        id: 'd37426aa-3d3e-469e-9d27-9f9bbbd1f13e',
+        status: 'PENDING',
+        title: 'Improve test coverage',
+      };
+      vi.mocked(executeGraphqlWithAuth).mockResolvedValue({ createPlan: plan });
+
+      const result = await createPlanToolHandler({
+        author: 'visormatt',
+        category: 'maintenance',
+        title: 'Improve test coverage',
+      });
+
+      expect(result).toMatchObject({
+        structuredContent: { plan },
+      });
+      expect(executeGraphqlWithAuth).toHaveBeenCalledWith(
+        serviceAccountToken,
+        expect.anything(),
+        {
+          input: {
+            author: 'visormatt',
+            category: 'maintenance',
+            title: 'Improve test coverage',
+          },
+        },
+        SESSION_OPTIONS,
+      );
+    });
+  });
+
+  describe('when tags are passed', () => {
+    it('creates the plan without them, then tags it', async () => {
+      process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = serviceAccountToken;
+      vi.mocked(executeGraphqlWithAuth)
+        .mockResolvedValueOnce({ createPlan: { id: 'plan-1' } })
+        .mockResolvedValueOnce({ addPlanTag: { tag: 'follow-up' } });
+
+      const result = await createPlanToolHandler({
+        author: 'visormatt',
+        category: 'maintenance',
+        tags: ['follow-up'],
+        title: 'Follow-up',
+      });
+
+      expect(result).toMatchObject({
+        structuredContent: { tagFailures: [], tags: ['follow-up'] },
+      });
+      expect(vi.mocked(executeGraphqlWithAuth).mock.calls[0]?.[2]).toEqual({
+        input: {
+          author: 'visormatt',
+          category: 'maintenance',
+          title: 'Follow-up',
+        },
+      });
+      expect(vi.mocked(executeGraphqlWithAuth).mock.calls[1]?.[2]).toEqual({
+        input: { planId: 'plan-1', tag: 'follow-up' },
+      });
+    });
+
+    it('reports a failed tag without failing the create', async () => {
+      process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = serviceAccountToken;
+      vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      vi.mocked(executeGraphqlWithAuth)
+        .mockResolvedValueOnce({ createPlan: { id: 'plan-1' } })
+        .mockRejectedValueOnce(new Error('Unknown tag "nope"'));
+
+      const result = await createPlanToolHandler({
+        author: 'visormatt',
+        category: 'maintenance',
+        tags: ['nope'],
+        title: 'Follow-up',
+      });
+
+      expect(result).toMatchObject({
+        structuredContent: {
+          plan: { id: 'plan-1' },
+          tagFailures: [{ tag: 'nope' }],
+          tags: [],
+        },
+      });
+    });
+  });
+
+  describe('when GraphQL returns no plan', () => {
+    it('returns a no-result error', async () => {
+      process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = serviceAccountToken;
+      vi.mocked(executeGraphqlWithAuth).mockResolvedValue({ createPlan: null });
+
+      const result = await createPlanToolHandler({
+        author: 'visormatt',
+        category: 'maintenance',
+        title: 'Improve test coverage',
+      });
+
+      expect(result).toEqual({
+        content: [{ text: 'create_plan returned no result', type: 'text' }],
+        isError: true,
+      });
+    });
+  });
+
+  describe('when GraphQL throws', () => {
+    it('returns a sanitized error result without leaking backend detail', async () => {
+      process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = serviceAccountToken;
+      vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      vi.mocked(executeGraphqlWithAuth).mockRejectedValue(
+        new Error('network down: connect ECONNREFUSED 127.0.0.1:6020'),
+      );
+
+      const result = await createPlanToolHandler({
+        author: 'visormatt',
+        category: 'maintenance',
+        title: 'Improve test coverage',
+      });
+
+      expect(result).toMatchObject({ isError: true });
+      const [content] = result.content;
+      if (content === undefined) {
+        throw new Error('expected tool result content');
+      }
+      expect(content.text).toBe(
+        'create_plan failed: Could not reach the OpenThrottle (OT) server. Confirm the server is running and reachable, then retry.',
+      );
+      expect(content.text).not.toContain('127.0.0.1');
+    });
+  });
+});
+
+describe('createPlansToolHandler', () => {
+  const serviceAccountToken = '***REMOVED-OT-TOKEN***';
+
+  beforeEach(async () => {
+    await primeWorkSession();
+    process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = serviceAccountToken;
+  });
+
+  afterEach(() => {
+    delete process.env.OPENTHROTTLE_MCP_AUTH_TOKEN;
+  });
+
+  describe('when args are invalid', () => {
+    it('returns an invalid-args error without calling GraphQL', async () => {
+      // Parsed from JSON: the args are deliberately invalid for the typed schema.
+      const result = await createPlansToolHandler(JSON.parse('{}'));
+
+      expect(result).toMatchObject({
+        content: [
+          { text: expect.stringMatching(/Invalid arguments[\s\S]*plans/i) },
+        ],
+        isError: true,
+      });
+      expect(executeGraphqlWithAuth).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when GraphQL creates plans', () => {
+    it('returns the created plans and totalCount from one atomic call', async () => {
+      const plans = [
+        {
+          author: 'visormatt',
+          category: 'maintenance',
+          id: 'd37426aa-3d3e-469e-9d27-9f9bbbd1f13e',
+          status: 'PENDING',
+          title: 'First plan',
+        },
+        {
+          author: 'visormatt',
+          category: 'feature',
+          id: 'c0c8c4ad-2fee-4706-8d59-84f7ed3981a8',
+          status: 'PENDING',
+          title: 'Second plan',
+        },
+      ];
+      vi.mocked(executeGraphqlWithAuth).mockResolvedValueOnce({
+        createPlans: { plans, totalCount: 2 },
+      });
+
+      const result = await createPlansToolHandler({
+        plans: [
+          { author: 'visormatt', category: 'maintenance', title: 'First plan' },
+          { author: 'visormatt', category: 'feature', title: 'Second plan' },
+        ],
+      });
+
+      expect(result).toMatchObject({
+        structuredContent: { plans, totalCount: 2 },
+      });
+      expect(executeGraphqlWithAuth).toHaveBeenCalledTimes(1);
+      expect(executeGraphqlWithAuth).toHaveBeenCalledWith(
+        serviceAccountToken,
+        expect.anything(),
+        {
+          input: {
+            plans: [
+              {
+                author: 'visormatt',
+                category: 'maintenance',
+                title: 'First plan',
+              },
+              {
+                author: 'visormatt',
+                category: 'feature',
+                title: 'Second plan',
+              },
+            ],
+          },
+        },
+        SESSION_OPTIONS,
+      );
+    });
+  });
+
+  describe('when GraphQL returns no result', () => {
+    it('returns a no-result error', async () => {
+      vi.mocked(executeGraphqlWithAuth).mockResolvedValueOnce({
+        createPlans: null,
+      });
+
+      const result = await createPlansToolHandler({
+        plans: [
+          { author: 'visormatt', category: 'maintenance', title: 'Only plan' },
+        ],
+      });
+
+      expect(result).toEqual({
+        content: [{ text: 'create_plans returned no result', type: 'text' }],
+        isError: true,
+      });
+    });
+  });
+});
+
+describe('listPlansByStatusToolHandler', () => {
+  const serviceAccountToken = '***REMOVED-OT-TOKEN***';
+
+  beforeEach(async () => {
+    await primeWorkSession();
+    process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = serviceAccountToken;
+  });
+
+  afterEach(() => {
+    delete process.env.OPENTHROTTLE_MCP_AUTH_TOKEN;
+  });
+
+  describe('when GraphQL returns plans', () => {
+    it('returns structured plans and totalCount', async () => {
+      const plans = [
+        {
+          id: 'd37426aa-3d3e-469e-9d27-9f9bbbd1f13e',
+          status: 'IN_PROGRESS',
+          title: 'Improve test coverage',
+        },
+      ];
+      vi.mocked(executeGraphqlWithAuth).mockResolvedValue({
+        listPlansByStatus: { plans, totalCount: 1 },
+      });
+
+      const result = await listPlansByStatusToolHandler({
+        statuses: ['in_progress'],
+      });
+
+      expect(result).toMatchObject({
+        structuredContent: { plans, totalCount: 1 },
+      });
+      expect(executeGraphqlWithAuth).toHaveBeenCalledWith(
+        serviceAccountToken,
+        expect.anything(),
+        { input: { statuses: ['in_progress'] } },
+      );
+    });
+  });
+
+  describe('when GraphQL returns no plans', () => {
+    it('returns empty plans with totalCount', async () => {
+      vi.mocked(executeGraphqlWithAuth).mockResolvedValue({
+        listPlansByStatus: { plans: [], totalCount: 0 },
+      });
+
+      const result = await listPlansByStatusToolHandler({
+        statuses: ['completed'],
+      });
+
+      expect(result).toMatchObject({
+        content: [{ text: expect.stringMatching(/No plans found/) }],
+        structuredContent: { plans: [], totalCount: 0 },
+      });
+    });
+  });
+
+  describe('when GraphQL returns no list result', () => {
+    it('returns a no-result error', async () => {
+      vi.mocked(executeGraphqlWithAuth).mockResolvedValue({
+        listPlansByStatus: null,
+      });
+
+      const result = await listPlansByStatusToolHandler({
+        statuses: ['pending'],
+      });
+
+      expect(result).toEqual({
+        content: [
+          { text: 'list_plans_by_status returned no result', type: 'text' },
+        ],
+        isError: true,
+      });
+    });
+  });
+});
+
+describe('update_plan and the server-written SCHEDULED status', () => {
+  beforeEach(async () => {
+    process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = 'test-token';
+    await primeWorkSession();
+  });
+
+  afterEach(() => {
+    delete process.env.OPENTHROTTLE_MCP_AUTH_TOKEN;
+    clearCurrentSession();
+  });
+
+  it('documents that SCHEDULED is server-written and that leaving it cancels the run', () => {
+    expect(listPlansByStatusToolDescription).toContain('SCHEDULED');
+    expect(updatePlanToolDescription).toContain('cannot be set directly');
+    expect(updatePlanToolDescription).toContain('cancels its scheduled run');
+  });
+
+  it('says the scheduled run was cancelled when a SCHEDULED plan moves on (D7)', async () => {
+    vi.mocked(executeGraphqlWithAuth)
+      .mockResolvedValueOnce({ plan: { id: 'plan-1', status: 'SCHEDULED' } })
+      .mockResolvedValueOnce({
+        updatePlan: { id: 'plan-1', status: 'COMPLETED' },
+      });
+
+    const result = await updatePlanToolHandler({
+      id: 'plan-1',
+      status: 'COMPLETED',
+    });
+
+    expect(result).toMatchObject({
+      content: [
+        { text: expect.stringContaining('cancelled its scheduled run') },
+      ],
+    });
+  });
+
+  it('adds no note for a plan that was not SCHEDULED', async () => {
+    vi.mocked(executeGraphqlWithAuth)
+      .mockResolvedValueOnce({ plan: { id: 'plan-1', status: 'PENDING' } })
+      .mockResolvedValueOnce({
+        updatePlan: { id: 'plan-1', status: 'COMPLETED' },
+      });
+
+    const result = await updatePlanToolHandler({
+      id: 'plan-1',
+      status: 'COMPLETED',
+    });
+
+    expect(result).toMatchObject({
+      content: [{ text: expect.not.stringContaining('scheduled run') }],
+    });
+  });
+
+  it('skips the status read when the update sets no status', async () => {
+    vi.mocked(executeGraphqlWithAuth).mockResolvedValueOnce({
+      updatePlan: { id: 'plan-1', status: 'PENDING' },
+    });
+
+    await updatePlanToolHandler({ id: 'plan-1', title: 'Renamed' });
+
+    expect(executeGraphqlWithAuth).toHaveBeenCalledOnce();
+  });
+
+  it('surfaces the server rejection of a manual SCHEDULED write verbatim (D1)', async () => {
+    const rejection = `Cannot set a plan to SCHEDULED directly: it is set by scheduling a run (schedulePlanRun) and cleared when that run fires or is cancelled.`;
+    vi.mocked(executeGraphqlWithAuth).mockRejectedValueOnce(
+      new Error(`GraphQL errors: ${rejection}`),
+    );
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+
+    const result = await updatePlanToolHandler({
+      id: 'plan-1',
+      status: 'SCHEDULED',
+    });
+
+    expect(result).toMatchObject({
+      content: [{ text: `update_plan failed: ${rejection}` }],
+      isError: true,
+    });
+  });
+});

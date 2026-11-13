@@ -18,10 +18,9 @@ import {
   LOOP_DIR_PREFIX,
   LOOP_PATCHES_DIR,
 } from '../data/data.git.ts';
-import { appendCommitFooters } from './appendCommitFooters.ts';
-import { buildFallbackCommitMessage } from './buildFallbackCommitMessage.ts';
-import type { CommitMessageLinter } from './createCommitlintLinter.ts';
-import { prepareResultDir } from './result-file.ts';
+import type { CommitMessageLinter } from './commit.ts';
+import { appendCommitFooters, buildFallbackCommitMessage } from './commit.ts';
+import { prepareResultDir } from './worker-result.ts';
 
 export interface CreateLoopGitOptions {
   readonly cwd: string;

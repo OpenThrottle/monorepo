@@ -12,7 +12,7 @@ import { getDriver, isDriverId } from '@openthrottle/openthrottle-drivers';
 
 import { PLAN_RUN_SCENARIOS } from '../../data/data.plan-run-scenarios.ts';
 import type { Transcript } from '../../types/transcript.ts';
-import { withPathPrepended, writePathAlias } from '../bin/path-bin.ts';
+import { withPathPrepended, writePathAlias } from '../bin/stub-bin.ts';
 import {
   runPlanRunScenario,
   type RunPlanRunScenarioResult,

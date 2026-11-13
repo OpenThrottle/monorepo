@@ -27,8 +27,11 @@ import {
   TRANSCRIPT_SCHEMA_VERSION,
   TRANSCRIPT_SURFACES,
 } from '../../types/transcript.ts';
-import { withPathPrepended, writePathAlias } from '../bin/path-bin.ts';
-import { writeNodeBin } from '../bin/writeNodeBin.ts';
+import {
+  withPathPrepended,
+  writeNodeBin,
+  writePathAlias,
+} from '../bin/stub-bin.ts';
 import { runPlanRunScenario } from '../plan-run/runPlanRunScenario.ts';
 import { replayPaths } from '../replay/replayPaths.ts';
 import { createSanitizer } from '../sanitizer/sanitizer.ts';

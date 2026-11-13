@@ -8,14 +8,14 @@
 
 import { defineDriver } from '../registry/index.ts';
 import type { DriverCapabilities, DriverModelListing } from '../types/index.ts';
-import { appendMcpShellFlags } from '../utils/mcp.ts';
 import { structuredOutputShellFlag } from '../utils/output-format.ts';
-import {
-  appendPluginDirShellFlags,
-  OPENTHROTTLE_CURSOR_PLUGIN_DIR_REL,
-} from '../utils/plugin-dir.ts';
 import { escapeForShellDoubleQuoted, escapeShellArg } from '../utils/shell.ts';
-import { appendWorktreeShellFlags } from '../utils/worktree.ts';
+import {
+  appendMcpShellFlags,
+  appendPluginDirShellFlags,
+  appendWorktreeShellFlags,
+  OPENTHROTTLE_CURSOR_PLUGIN_DIR_REL,
+} from '../utils/shell-flags.ts';
 
 /**
  * Flags that attach the workspace's configured MCP servers to a headless run, verified against

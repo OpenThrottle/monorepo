@@ -1,7 +1,7 @@
 import type { ProjectGraphProjectNode } from '@nx/devkit';
 import { createProjectGraphAsync } from '@nx/devkit';
 
-import { askWhenInteractive } from './askWhenInteractive.ts';
+import { askWhenInteractive } from './interactive.ts';
 
 /**
  * @description The Nx project a React generator writes into: the

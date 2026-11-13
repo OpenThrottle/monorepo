@@ -2,8 +2,10 @@ import type { Tree } from '@nx/devkit';
 import type { Choice } from 'prompts';
 import prompts from 'prompts';
 
-import { askWhenInteractive } from '../../utils/askWhenInteractive.ts';
-import { isInteractiveArgPresent } from '../../utils/isInteractiveArgPresent.ts';
+import {
+  askWhenInteractive,
+  isInteractiveArgPresent,
+} from '../../utils/interactive.ts';
 import { writeJsonToStdout } from '../../utils/output.ts';
 import { getProjectsByTags } from '../../utils/projects.ts';
 import { throwGeneratorError } from '../../utils/throwGeneratorError.ts';

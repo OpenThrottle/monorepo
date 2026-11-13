@@ -11,7 +11,7 @@ import type { ConversationStreamChunk } from '@openthrottle/openthrottle-agentic
 
 import type { ReplayProfile } from '../../config/config.backends.ts';
 import type { Transcript } from '../../types/transcript.ts';
-import { withBinEnv } from '../bin/withBinEnv.ts';
+import { withBinEnv } from '../bin/stub-bin.ts';
 import {
   advanceConversation,
   type ConversationState,

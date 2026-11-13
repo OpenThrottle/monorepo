@@ -9,11 +9,11 @@ base.
 ## Layout
 
 - `src/schemas/agent-asset-frontmatter.schemas.ts` — Zod schemas + `AgentAssetKind`.
-- `src/frontmatter/*` — YAML frontmatter extraction/parsing primitives.
-- `src/parse-*-frontmatter.ts` — per-kind parsers (skill / rule / persona).
-- `src/walkAgentAssetFiles.ts` / `src/validateAgentAssetsOnDisk.ts` — filesystem
+- `src/frontmatter/frontmatter.ts` — YAML frontmatter extraction/parsing primitives.
+- `src/agent-asset-frontmatter.ts` — per-kind parsers (skill / persona) + validation.
+- `src/agent-assets-disk.ts` — filesystem
   walk + validation entrypoints.
-- `src/map-agent-assets-for-ingest.ts` / `src/collectAgentAssetsForIngest.ts` — shape
+- `src/agent-assets-ingest.ts` — shape
   assets into ingest records (`AGENT_ASSET_INGEST_PATH_PREFIXES`).
 
 ## Invariants & gotchas

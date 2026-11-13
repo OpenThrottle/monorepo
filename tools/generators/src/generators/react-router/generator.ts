@@ -1,7 +1,6 @@
 import type { Tree } from '@nx/devkit';
 import prompts from 'prompts';
 
-import { askWhenInteractive } from '../../utils/askWhenInteractive.ts';
 import {
   assertFolderVocabulary,
   FOLDER_VOCABULARY_RESTRICTION,
@@ -11,7 +10,10 @@ import {
   getRemixRoutingFolders,
   getRemixServiceFolders,
 } from '../../utils/index.ts';
-import { isInteractiveArgPresent } from '../../utils/isInteractiveArgPresent.ts';
+import {
+  askWhenInteractive,
+  isInteractiveArgPresent,
+} from '../../utils/interactive.ts';
 import { writeJsonToStdout } from '../../utils/output.ts';
 import { assertReactRouterApplication } from '../../utils/target-validation.ts';
 import { throwGeneratorError } from '../../utils/throwGeneratorError.ts';

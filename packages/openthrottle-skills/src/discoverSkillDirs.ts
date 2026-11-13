@@ -2,7 +2,7 @@ import type { Dirent } from 'node:fs';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { parseSkillFrontmatterForValidation } from './parse-skill-frontmatter.ts';
+import { parseSkillFrontmatterForValidation } from './agent-asset-frontmatter.ts';
 import { skillFrontmatterSchema } from './schemas/agent-asset-frontmatter.schemas.ts';
 
 /**

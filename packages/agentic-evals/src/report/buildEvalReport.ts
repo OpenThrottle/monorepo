@@ -1,7 +1,6 @@
-import { bootstrapCi } from '../stats/bootstrap-ci.ts';
-import { costPerSuccess } from '../stats/costPerSuccess.ts';
+import { bootstrapCi } from '../stats/bootstrap.ts';
 import { detectionFloor } from '../stats/detection-floor.ts';
-import { passAtK, passHatK } from '../stats/pass-at-k.ts';
+import { costPerSuccess, passAtK, passHatK } from '../stats/pass-rate.ts';
 import type {
   BuildEvalReportInput,
   EvalReport,

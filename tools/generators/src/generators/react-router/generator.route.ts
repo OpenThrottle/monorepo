@@ -4,13 +4,15 @@ import { join } from 'path';
 import prompts from 'prompts';
 
 import { generateFilesSafely } from '../../utils/generateFilesSafely.ts';
-import { getRoutePathVariables } from '../../utils/getRoutePathVariables.ts';
-import { getRouteTitleVariables } from '../../utils/getRouteTitleVariables.ts';
 import { getCommonVariables } from '../../utils/index.ts';
 import {
   getTargetApplication,
   parsePossibleNames,
 } from '../../utils/questions.ts';
+import {
+  getRoutePathVariables,
+  getRouteTitleVariables,
+} from '../../utils/route-variables.ts';
 
 export interface ReactRouterRouteGeneratorSchema {
   readonly application?: string;

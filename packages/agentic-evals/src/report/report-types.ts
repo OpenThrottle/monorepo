@@ -1,4 +1,4 @@
-import type { BootstrapCi } from '../stats/bootstrap-ci.ts';
+import type { BootstrapCi } from '../stats/bootstrap.ts';
 
 /**
  * @description One stored grade, reduced to what the report reads.

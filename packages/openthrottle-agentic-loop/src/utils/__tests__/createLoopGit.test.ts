@@ -3,9 +3,9 @@ import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { createCommitlintLinter } from '../createCommitlintLinter.ts';
+import { createCommitlintLinter } from '../commit.ts';
 import { createLoopGit } from '../createLoopGit.ts';
-import { prepareResultDir } from '../result-file.ts';
+import { prepareResultDir } from '../worker-result.ts';
 import {
   createLocalRepo,
   createRecordingRunner,

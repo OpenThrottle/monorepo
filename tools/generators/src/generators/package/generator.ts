@@ -13,7 +13,7 @@ import * as path from 'path';
 import prompts from 'prompts';
 
 import { getCommonVariables } from '../../utils/index.ts';
-import { isInteractiveArgPresent } from '../../utils/isInteractiveArgPresent.ts';
+import { isInteractiveArgPresent } from '../../utils/interactive.ts';
 import { ORGANIZATIONS } from '../../utils/organizations.ts';
 import { writeJsonToStdout } from '../../utils/output.ts';
 import {

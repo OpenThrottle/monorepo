@@ -291,7 +291,7 @@ var postGraphqlField = async (args) => {
   return postMutation(args);
 };
 
-// packages/agentic-hooks/src/data/readNewBytes.ts
+// packages/agentic-hooks/src/data/read-new.ts
 var import_node_fs2 = __toESM(require("node:fs"), 1);
 var NEWLINE = 10;
 var readNewBytes = ({

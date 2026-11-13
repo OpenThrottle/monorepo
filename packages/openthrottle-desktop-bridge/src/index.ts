@@ -10,10 +10,7 @@ export type {
   DesktopOpenExternalResult,
   OpenThrottleDesktopBridge,
 } from './types/desktop-bridge.ts';
-export { findDeepLink } from './utils/findDeepLink.ts';
-export { getDesktopBridge } from './utils/getDesktopBridge.ts';
-export { isDesktopBridge } from './utils/isDesktopBridge.ts';
-export { mapDeepLink } from './utils/mapDeepLink.ts';
+export { findDeepLink, mapDeepLink, toPlanRoute } from './utils/deep-link.ts';
+export { getDesktopBridge, isDesktopBridge } from './utils/desktop-bridge.ts';
 export type { ParseNotifyInputResult } from './utils/parseNotifyInput.ts';
 export { parseNotifyInput } from './utils/parseNotifyInput.ts';
-export { toPlanRoute } from './utils/toPlanRoute.ts';

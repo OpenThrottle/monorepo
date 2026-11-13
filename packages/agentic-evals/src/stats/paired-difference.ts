@@ -1,5 +1,5 @@
-import type { BootstrapCi, BootstrapCiOptions } from './bootstrap-ci.ts';
-import { bootstrapCi } from './bootstrap-ci.ts';
+import type { BootstrapCi, BootstrapCiOptions } from './bootstrap.ts';
+import { bootstrapCi } from './bootstrap.ts';
 import { erfc } from './normal.ts';
 
 /**

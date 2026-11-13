@@ -8,7 +8,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import type { Transcript } from '../../types/transcript.ts';
-import { writeNodeBin } from '../bin/writeNodeBin.ts';
+import { writeNodeBin } from '../bin/stub-bin.ts';
 import { parseTranscript } from '../transcript/transcript.ts';
 import type { ReplayReport } from './replay-bin.ts';
 

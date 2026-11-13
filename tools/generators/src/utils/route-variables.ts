@@ -1,0 +1,179 @@
+import lodash from 'lodash';
+import pluralize from 'pluralize';
+
+/**
+ * @description Maps one flat-route filename segment to its URL segment, or
+ * `undefined` when the segment adds nothing to the URL (`_index`, a pathless
+ * `_layout`).
+ */
+const toPathSegment = (segment: string): string | undefined => {
+  if (segment === '_index' || segment.startsWith('_')) return undefined;
+
+  const withoutOptOut = segment.endsWith('_') ? segment.slice(0, -1) : segment;
+  const unescaped = withoutOptOut.replace(/\[(.+?)\]/g, '$1');
+
+  if (unescaped === '$') return '*';
+  if (unescaped.startsWith('$')) return `:${unescaped.slice(1)}`;
+
+  return unescaped;
+};
+
+export interface RoutePathVariables {
+  readonly routeEntry: string;
+  readonly routePath: string;
+}
+
+/**
+ * @description Derives the URL a flat route (React Router `@react-router/fs-routes`)
+ * serves, plus a concrete entry that matches it, so a generated spec can mount
+ * the route through `createRoutesStub` with no hand-edits.
+ *
+ * `overview._index`   -> `/overview`, `/overview`
+ * `components.$uuid`  -> `/components/:uuid`, `/components/test-uuid`
+ * `_auth.login`       -> `/login`, `/login`
+ *
+ * @public
+ */
+export const getRoutePathVariables = (name: string): RoutePathVariables => {
+  // A `.` inside `[...]` is an escaped literal, not a segment separator.
+  const segments = name
+    .split(/\.(?![^[]*\])/)
+    .filter(Boolean)
+    .map(toPathSegment)
+    .filter((segment): segment is string => {
+      return segment !== undefined;
+    });
+
+  const routePath = `/${segments.join('/')}`;
+  const routeEntry = `/${segments
+    .map((segment) => {
+      if (segment === '*') return 'test-splat';
+      if (segment.startsWith(':')) return `test-${segment.slice(1)}`;
+
+      return segment;
+    })
+    .join('/')}`;
+
+  return { routeEntry, routePath };
+};
+
+// lodash is CommonJS without static named exports, so native ESM can only
+// default-import it.
+const { startCase } = lodash;
+
+/**
+ * Product capitalization that survives sentence-casing verbatim.
+ * @see applications/openthrottle-developer/AGENTS.md (## Page titles)
+ */
+const RESERVED_WORDS: readonly string[] = ['api', 'faq', 'ide', 'mcp', 'pr'];
+
+/** Flat-route segments that carry no meaning in a page title. */
+const IGNORED_SEGMENTS: readonly string[] = ['_index', '_layout'];
+
+/** Leaf segments that read as an action against their parent section. */
+const ACTION_SEGMENTS: readonly string[] = ['create', 'edit', 'new'];
+
+/**
+ * Sentence-cases a flat-route segment: `pull-requests` -> `Pull requests`,
+ * `mcp` -> `MCP`.
+ */
+const humanizeSegment = (segment: string): string => {
+  const words = startCase(segment).split(' ');
+
+  return words
+    .map((word, index) => {
+      const lower = word.toLowerCase();
+
+      if (RESERVED_WORDS.includes(lower)) return lower.toUpperCase();
+
+      return index === 0 ? word : lower;
+    })
+    .join(' ');
+};
+
+/**
+ * Turns a route param segment into the entity it names: `$planId` -> `Plan`,
+ * `$repositoryId` -> `Repository`.
+ */
+const humanizeParamSegment = (segment: string): string => {
+  const withoutParam = segment.replace(/^\$/, '');
+  const withoutId = withoutParam.replace(/Id$/, '');
+
+  return humanizeSegment(withoutId === '' ? withoutParam : withoutId);
+};
+
+/**
+ * Param names that say nothing about the entity they identify; a route keyed
+ * on one is titled after its parent section instead (`components.$uuid` ->
+ * `Component`, not `Uuid`).
+ */
+const GENERIC_PARAM_NAMES: readonly string[] = ['id', 'key', 'slug', 'uuid'];
+
+const isGenericParamSegment = (segment: string): boolean => {
+  return GENERIC_PARAM_NAMES.includes(segment.replace(/^\$/, '').toLowerCase());
+};
+
+const isParamSegment = (segment: string) => {
+  return segment.startsWith('$');
+};
+
+/**
+ * Derives human-facing title parts from a flat-route filename, so a generated
+ * route is born with a readable browser-tab title instead of the PascalCase
+ * scaffold identifier.
+ *
+ * `settings.appearance`      -> `Appearance | Settings`
+ * `notifications._index`     -> `Notifications`
+ * `personas.create`          -> `Create persona | Personas`
+ * `plans.$planId._index`     -> `Plan | Plans`
+ * `components.$uuid`         -> `Component | Components`
+ *
+ * @public
+ */
+export const getRouteTitleVariables = (name: string) => {
+  const segments = name
+    .split('.')
+    .filter(Boolean)
+    .filter((segment) => !IGNORED_SEGMENTS.includes(segment));
+
+  const leafSegment = segments[segments.length - 1];
+
+  // No leaf segment means no segments at all — this replaces the separate
+  // `segments.length === 0` guard with one that also narrows the type.
+  if (leafSegment === undefined) {
+    return { nameTitle: 'Untitled', nameTitleLeaf: 'Untitled' } as const;
+  }
+
+  const ancestors = segments.slice(0, -1);
+  // Only a real (non-param) ancestor works as a section label.
+  const sectionCandidates = ancestors.filter(
+    (segment) => !isParamSegment(segment),
+  );
+  const sectionSegment = sectionCandidates[sectionCandidates.length - 1];
+
+  const section =
+    sectionSegment === undefined ? undefined : humanizeSegment(sectionSegment);
+
+  const isAction = ACTION_SEGMENTS.includes(leafSegment.toLowerCase());
+
+  const leaf = (() => {
+    if (isAction && section !== undefined) {
+      const entity = pluralize.singular(section).toLowerCase();
+
+      return `${humanizeSegment(leafSegment)} ${entity}`;
+    }
+
+    if (isGenericParamSegment(leafSegment) && section !== undefined) {
+      return pluralize.singular(section);
+    }
+
+    if (isParamSegment(leafSegment)) return humanizeParamSegment(leafSegment);
+
+    return humanizeSegment(leafSegment);
+  })();
+
+  const nameTitle =
+    section === undefined || section === leaf ? leaf : `${leaf} | ${section}`;
+
+  return { nameTitle, nameTitleLeaf: leaf } as const;
+};

@@ -19,7 +19,7 @@ import {
   FINALIZE_PRIOR_REASONS,
   SQUASH_FALLBACK_SUBJECT,
 } from '../data/data.git.ts';
-import { appendCommitFooters } from './appendCommitFooters.ts';
+import { appendCommitFooters } from './commit.ts';
 
 /** @public */
 export interface FinalizeOtLoopRunParams {

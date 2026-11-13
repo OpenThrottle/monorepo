@@ -1,0 +1,156 @@
+/**
+ * @description Capability-driven shell flag formatting shared by driver command builders: MCP
+ * attachment, worktree selection and `--plugin-dir`. Each helper is a no-op unless the driver
+ * advertises the matching capability, so a driver whose CLI lacks the feature contributes nothing.
+ */
+
+import type {
+  DriverCapabilities,
+  DriverWorktreeOptions,
+} from '../types/index.ts';
+import { escapeShellArg, WORKTREE_FLAG_ONLY } from './shell.ts';
+
+/*
+ * @description Capability-driven MCP flag formatting shared by driver command builders. Mirrors
+ * `appendWorktreeShellFlags`: the flags are emitted only when the driver advertises
+ * `capabilities.mcpAutoApprove`, so a driver whose CLI attaches MCP automatically — or has no MCP
+ * support at all — contributes nothing to the command string.
+ *
+ * The flags themselves are supplied by the calling driver rather than hardcoded here, because each
+ * CLI spells this differently (Cursor: `--approve-mcps --trust`). Flags are emitted verbatim and are
+ * therefore module constants only — never caller input, so there is nothing to escape.
+ */
+
+/**
+ * @description Appends a driver's MCP-enabling flags to a base command. Returns the command
+ * unchanged when the driver lacks the `mcpAutoApprove` capability or supplies no flags.
+ * @public
+ */
+export const appendMcpShellFlags = (
+  command: string,
+  capabilities: DriverCapabilities,
+  flags: readonly string[],
+): string => {
+  if (!capabilities.mcpAutoApprove || flags.length === 0) {
+    return command;
+  }
+
+  return `${command} ${flags.join(' ')}`;
+};
+
+/*
+ * @description Capability-driven worktree flag formatting shared by driver command builders.
+ * Generalizes tools/workflows' `appendRalphWorktreeShellFlags`: the base `-w` / `--worktree` flag is
+ * emitted whenever a driver advertises `capabilities.worktree`, and the Cursor-only extras
+ * (`--worktree-base`, `--skip-worktree-setup`) are gated on `capabilities.worktreeBase` /
+ * `capabilities.skipWorktreeSetup` instead of a hardcoded backend check.
+ */
+
+/**
+ * @description Appends worktree shell flags to a base command. Returns the command unchanged when
+ * the driver has no worktree capability or no worktree option was provided. `worktree: ''`
+ * (see {@link WORKTREE_FLAG_ONLY}) emits `-w` with no name.
+ * @public
+ */
+export const appendWorktreeShellFlags = (
+  command: string,
+  capabilities: DriverCapabilities,
+  worktree: DriverWorktreeOptions | undefined,
+): string => {
+  if (!capabilities.worktree || worktree?.worktree === undefined) {
+    return command;
+  }
+
+  const parts: string[] = [];
+  const name = worktree.worktree;
+
+  if (name === WORKTREE_FLAG_ONLY) {
+    parts.push('-w');
+  } else {
+    parts.push('-w', escapeShellArg(name));
+  }
+
+  if (capabilities.worktreeBase) {
+    const base = worktree.worktreeBase?.trim();
+    if (base !== undefined && base !== '') {
+      parts.push('--worktree-base', escapeShellArg(base));
+    }
+  }
+
+  if (capabilities.skipWorktreeSetup && worktree.skipWorktreeSetup === true) {
+    parts.push('--skip-worktree-setup');
+  }
+
+  return `${command} ${parts.join(' ')}`;
+};
+
+/*
+ * @description Capability-driven `--plugin-dir` formatting shared by driver command builders.
+ * Mirrors `appendWorktreeShellFlags` / `appendMcpShellFlags`: the flag is emitted only when the
+ * driver advertises `capabilities.pluginDir` and the caller actually supplied a directory.
+ *
+ * This is leg B of the child-repo hook overlay (see `docs/monorepo/child-repo-hook-overlay.md`):
+ * pointing an agent CLI at OT's plugin payload out-of-repo means an orchestrated run in ANY foreign
+ * checkout carries OT's hooks without a single byte being written into that checkout, and without
+ * the user having installed anything.
+ *
+ * Unlike the MCP flags, the values here are caller input rather than module constants — a payload
+ * path can contain spaces — so every directory goes through {@link escapeShellArg}.
+ *
+ * Resolving WHICH directory (existence, the container path bridge, the operator's kill switch) is
+ * deliberately not done here: this package is a dep-free leaf of pure descriptors and string
+ * builders that never touches the filesystem. The impure resolver lives in
+ * `@openthrottle/openthrottle-agentic-utils`, which already owns that boundary, and hands the
+ * resolved paths down through {@link DriverInvocationConfig.pluginDirs}.
+ */
+
+/**
+ * @description Workspace-relative location of OT's generated plugin payload for Claude Code,
+ * produced by `@openthrottle/agentic-hooks`' `bundle-hooks` target. Also the fallback for any
+ * driver that advertises `pluginDir` without naming its own payload. Exported so the resolver in
+ * agentic-utils and this package agree on one spelling of the path rather than two.
+ * @public
+ */
+export const OPENTHROTTLE_PLUGIN_DIR_REL = 'plugins/openthrottle';
+
+/**
+ * @description Workspace-relative location of the Cursor payload.
+ *
+ * A SEPARATE directory, not a shared one, because a plugin's hook config names its own tool's
+ * events and a payload has exactly one `hooks/hooks.json`. Cursor reads the Claude manifest layout
+ * happily (its lookup is `.cursor-plugin/plugin.json`, then `.claude-plugin/plugin.json`, then
+ * `plugin.json`) and even translates Claude's event names — but the translation drops precisely
+ * what this telemetry needs: `PreToolUse` with `matcher: "Skill"` has no Cursor tool to match,
+ * `UserPromptExpansion` has no Cursor equivalent, and `Stop` maps to an event that never fires in
+ * a headless run. Pointing Cursor at the Claude payload loads cleanly and records nothing.
+ * @public
+ */
+export const OPENTHROTTLE_CURSOR_PLUGIN_DIR_REL = 'plugins/openthrottle-cursor';
+
+/**
+ * @description Appends one repeatable `--plugin-dir <path>` per supplied directory. Returns the
+ * command unchanged when the driver lacks the `pluginDir` capability, when nothing was supplied, or
+ * when every entry is blank — so callers can pass a possibly-empty list unconditionally and a
+ * failed resolution degrades to a normal run rather than a broken one.
+ * @public
+ */
+export const appendPluginDirShellFlags = (
+  command: string,
+  capabilities: DriverCapabilities,
+  pluginDirs: readonly string[] | undefined,
+): string => {
+  if (!capabilities.pluginDir || pluginDirs === undefined) {
+    return command;
+  }
+
+  const parts = pluginDirs
+    .map((dir) => dir.trim())
+    .filter((dir) => dir !== '')
+    .map((dir) => `--plugin-dir ${escapeShellArg(dir)}`);
+
+  if (parts.length === 0) {
+    return command;
+  }
+
+  return `${command} ${parts.join(' ')}`;
+};

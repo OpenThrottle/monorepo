@@ -3,7 +3,6 @@ import { formatFiles, generateFiles, logger } from '@nx/devkit';
 import { join } from 'path';
 import prompts from 'prompts';
 
-import { askWhenInteractive } from '../../utils/askWhenInteractive.ts';
 import {
   assertFolderVocabulary,
   describeBannedFolder,
@@ -14,7 +13,10 @@ import {
   getCommonVariables,
   getMonorepoApplications,
 } from '../../utils/index.ts';
-import { isInteractiveArgPresent } from '../../utils/isInteractiveArgPresent.ts';
+import {
+  askWhenInteractive,
+  isInteractiveArgPresent,
+} from '../../utils/interactive.ts';
 import { writeJsonToStdout } from '../../utils/output.ts';
 import {
   getConfigConfirmation,

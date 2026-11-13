@@ -7,12 +7,10 @@
 import type { LoopOutcome, RunOtLoopOptions } from '../contract/index.ts';
 import { LOOP_TASK_STATUS } from '../contract/index.ts';
 import { clampMaxRetries } from './clampMaxRetries.ts';
-import { closePlan } from './closePlan.ts';
-import { endTaskSession } from './endTaskSession.ts';
+import { endTaskSession, narrate } from './loop-run.ts';
 import type { LoopRunContext } from './loop-run-context.ts';
-import { narrate } from './narrate.ts';
 import { runTask } from './runTask.ts';
-import { selectNextTask } from './selectNextTask.ts';
+import { closePlan, selectNextTask } from './tasks.ts';
 
 const cancelledOutcome = async (ctx: LoopRunContext): Promise<LoopOutcome> => {
   await endTaskSession(ctx);

@@ -18,7 +18,7 @@ import {
   formatModelFlag,
   formatShellEnvPrefix,
 } from '../utils/shell.ts';
-import { appendWorktreeShellFlags } from '../utils/worktree.ts';
+import { appendWorktreeShellFlags } from '../utils/shell-flags.ts';
 
 const capabilities: DriverCapabilities = {
   /**

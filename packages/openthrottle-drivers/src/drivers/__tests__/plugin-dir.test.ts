@@ -16,7 +16,7 @@ import {
   appendPluginDirShellFlags,
   OPENTHROTTLE_CURSOR_PLUGIN_DIR_REL,
   OPENTHROTTLE_PLUGIN_DIR_REL,
-} from '../../utils/plugin-dir.ts';
+} from '../../utils/shell-flags.ts';
 import {
   claudeDriver,
   codexDriver,

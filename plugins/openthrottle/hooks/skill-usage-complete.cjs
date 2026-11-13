@@ -33,7 +33,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 ));
 
 // packages/agentic-hooks/src/adapters/claude/complete.ts
-var import_node_fs14 = __toESM(require("node:fs"), 1);
+var import_node_fs13 = __toESM(require("node:fs"), 1);
 
 // packages/agentic-hooks/src/data/jsonl.ts
 var import_node_fs2 = __toESM(require("node:fs"), 1);
@@ -1576,7 +1576,7 @@ var readPlanRunIdForSession = ({
   return readPlanRunRecord(planRunFilePath(repoRoot, sid))?.planRunId;
 };
 
-// packages/agentic-hooks/src/data/readNewBytes.ts
+// packages/agentic-hooks/src/data/read-new.ts
 var import_node_fs9 = __toESM(require("node:fs"), 1);
 var NEWLINE = 10;
 var readNewBytes = ({
@@ -1629,10 +1629,6 @@ var readNewBytes = ({
     }
   }
 };
-
-// packages/agentic-hooks/src/data/readNewLines.ts
-var import_node_fs10 = __toESM(require("node:fs"), 1);
-var NEWLINE2 = 10;
 var readNewLines = ({
   filePath,
   maxBytes,
@@ -1645,8 +1641,8 @@ var readNewLines = ({
   };
   let fd = null;
   try {
-    fd = import_node_fs10.default.openSync(filePath, "r");
-    const { size } = import_node_fs10.default.fstatSync(fd);
+    fd = import_node_fs9.default.openSync(filePath, "r");
+    const { size } = import_node_fs9.default.fstatSync(fd);
     const start = offset > size || offset < 0 ? 0 : offset;
     if (size === start) {
       return { capped: false, lines: [], nextOffset: start };
@@ -1657,8 +1653,8 @@ var readNewLines = ({
     let lastNewline = -1;
     while (lastNewline < 0) {
       buffer = Buffer.alloc(window);
-      const bytesRead = import_node_fs10.default.readSync(fd, buffer, 0, window, start);
-      lastNewline = buffer.subarray(0, bytesRead).lastIndexOf(NEWLINE2);
+      const bytesRead = import_node_fs9.default.readSync(fd, buffer, 0, window, start);
+      lastNewline = buffer.subarray(0, bytesRead).lastIndexOf(NEWLINE);
       if (window >= remaining) {
         break;
       }
@@ -1670,7 +1666,7 @@ var readNewLines = ({
     const lines = [];
     let lineStart = 0;
     while (lineStart <= lastNewline) {
-      const lineEnd = buffer.indexOf(NEWLINE2, lineStart);
+      const lineEnd = buffer.indexOf(NEWLINE, lineStart);
       const text = buffer.subarray(lineStart, lineEnd).toString("utf8").replace(/\r$/, "");
       if (text.trim() !== "") {
         lines.push({ offset: start + lineStart, text });
@@ -1687,7 +1683,7 @@ var readNewLines = ({
   } finally {
     if (fd !== null) {
       try {
-        import_node_fs10.default.closeSync(fd);
+        import_node_fs9.default.closeSync(fd);
       } catch {
       }
     }
@@ -1831,7 +1827,7 @@ var drainBufferedTrajectories = async ({
 };
 
 // packages/agentic-hooks/src/data/trajectory-uploads.ts
-var import_node_fs11 = __toESM(require("node:fs"), 1);
+var import_node_fs10 = __toESM(require("node:fs"), 1);
 var import_node_path8 = __toESM(require("node:path"), 1);
 var stateFilePath = (dir, sessionId) => {
   return import_node_path8.default.join(dir, `${sanitizeSessionId(sessionId)}.json`);
@@ -1847,7 +1843,7 @@ var readTrajectoryUploadState = ({
   };
   try {
     const parsed = JSON.parse(
-      import_node_fs11.default.readFileSync(
+      import_node_fs10.default.readFileSync(
         stateFilePath(dir || defaultTrajectoryUploadsDir(), sessionId),
         "utf8"
       )
@@ -1880,8 +1876,8 @@ var writeTrajectoryUploadState = ({
       sessionId
     );
     const temp = `${target}.tmp.${process.pid}`;
-    import_node_fs11.default.mkdirSync(import_node_path8.default.dirname(target), { recursive: true });
-    import_node_fs11.default.writeFileSync(
+    import_node_fs10.default.mkdirSync(import_node_path8.default.dirname(target), { recursive: true });
+    import_node_fs10.default.writeFileSync(
       temp,
       `${JSON.stringify({
         planRunId: state.planRunId,
@@ -1891,7 +1887,7 @@ var writeTrajectoryUploadState = ({
 `,
       "utf8"
     );
-    import_node_fs11.default.renameSync(temp, target);
+    import_node_fs10.default.renameSync(temp, target);
     return true;
   } catch (err) {
     logHookError("writeTrajectoryUploadState failed", err);
@@ -1909,11 +1905,11 @@ var resolveTrajectoryStateTtlDays = () => {
 };
 var deleteIfOlder = async (filePath, cutoffMs) => {
   try {
-    const stat = await import_node_fs11.default.promises.stat(filePath);
+    const stat = await import_node_fs10.default.promises.stat(filePath);
     if (!stat.isFile() || stat.mtimeMs >= cutoffMs) {
       return false;
     }
-    await import_node_fs11.default.promises.unlink(filePath);
+    await import_node_fs10.default.promises.unlink(filePath);
     return true;
   } catch {
     return false;
@@ -1928,20 +1924,20 @@ var sweepTrajectoryUploadState = async ({
     const target = dir || defaultTrajectoryUploadsDir();
     const marker = import_node_path8.default.join(target, SWEEP_MARKER_BASENAME);
     try {
-      const { mtimeMs } = await import_node_fs11.default.promises.stat(marker);
+      const { mtimeMs } = await import_node_fs10.default.promises.stat(marker);
       if (nowMs - mtimeMs < MS_PER_DAY) {
         return { deleted: 0, skipped: true };
       }
     } catch {
     }
-    const names = await import_node_fs11.default.promises.readdir(target);
+    const names = await import_node_fs10.default.promises.readdir(target);
     const cutoffMs = nowMs - ttlDays * MS_PER_DAY;
     const results = await Promise.all(
       names.filter((name) => name.endsWith(".json")).map((name) => deleteIfOlder(import_node_path8.default.join(target, name), cutoffMs))
     );
-    await import_node_fs11.default.promises.writeFile(marker, `${new Date(nowMs).toISOString()}
+    await import_node_fs10.default.promises.writeFile(marker, `${new Date(nowMs).toISOString()}
 `);
-    await import_node_fs11.default.promises.utimes(marker, new Date(nowMs), new Date(nowMs));
+    await import_node_fs10.default.promises.utimes(marker, new Date(nowMs), new Date(nowMs));
     return { deleted: results.filter(Boolean).length, skipped: false };
   } catch (err) {
     if (!(err instanceof Error && "code" in err && err.code === "ENOENT")) {
@@ -4212,7 +4208,7 @@ var captureSessionTrajectories = async ({
 };
 
 // packages/agentic-hooks/src/adapters/claude/shadow.ts
-var import_node_fs12 = __toESM(require("node:fs"), 1);
+var import_node_fs11 = __toESM(require("node:fs"), 1);
 var import_node_path10 = __toESM(require("node:path"), 1);
 var CAPTURE_BUNDLE = "skill-usage-capture";
 var runningFromPlugin = (env, scriptPath) => {
@@ -4225,7 +4221,7 @@ var runningFromPlugin = (env, scriptPath) => {
 };
 var repoRegistersCapture = (repoRoot) => {
   try {
-    const raw = import_node_fs12.default.readFileSync(
+    const raw = import_node_fs11.default.readFileSync(
       import_node_path10.default.join(repoRoot, ".claude", "settings.json"),
       "utf8"
     );
@@ -4247,7 +4243,7 @@ var isShadowedByRepoHooks = ({
 };
 
 // packages/agentic-hooks/src/adapters/claude/transcript-usage.ts
-var import_node_fs13 = __toESM(require("node:fs"), 1);
+var import_node_fs12 = __toESM(require("node:fs"), 1);
 var import_node_path11 = __toESM(require("node:path"), 1);
 
 // packages/agentic-token-usage/src/usage.ts
@@ -4460,7 +4456,7 @@ var listSubagentTranscripts = (transcriptPath) => {
   const { dir, name } = import_node_path11.default.parse(transcriptPath);
   const subagentsDir = import_node_path11.default.join(dir, name, "subagents");
   try {
-    return import_node_fs13.default.readdirSync(subagentsDir).filter((entry) => SUBAGENT_FILE.test(entry)).sort().map((entry) => import_node_path11.default.join(subagentsDir, entry));
+    return import_node_fs12.default.readdirSync(subagentsDir).filter((entry) => SUBAGENT_FILE.test(entry)).sort().map((entry) => import_node_path11.default.join(subagentsDir, entry));
   } catch {
     return [];
   }
@@ -4558,7 +4554,7 @@ var main = async () => {
     if (isShadowedByRepoHooks({ repoRoot })) {
       return;
     }
-    const stdinBuf = import_node_fs14.default.readFileSync(0, "utf8");
+    const stdinBuf = import_node_fs13.default.readFileSync(0, "utf8");
     if (!stdinBuf || !stdinBuf.trim()) {
       return;
     }

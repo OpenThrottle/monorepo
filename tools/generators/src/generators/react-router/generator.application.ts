@@ -3,8 +3,8 @@ import { formatFiles, generateFiles, logger } from '@nx/devkit';
 import { join } from 'path';
 import prompts from 'prompts';
 
-import { askWhenInteractive } from '../../utils/askWhenInteractive.ts';
 import { getCommonVariables } from '../../utils/index.ts';
+import { askWhenInteractive } from '../../utils/interactive.ts';
 import { REGEX_SLUG } from '../../utils/regex.ts';
 
 export interface ReactRouterApplicationGeneratorSchema {

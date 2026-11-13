@@ -9,11 +9,9 @@ import type {
 } from '../contract/index.ts';
 import { LOOP_TASK_STATUS } from '../contract/index.ts';
 import { THIN_TASK_BLOCK_SUMMARY } from '../data/data.constants.ts';
-import { endTaskSession } from './endTaskSession.ts';
-import { guardWorker } from './guardWorker.ts';
-import { isThinTask } from './isThinTask.ts';
+import { endTaskSession, guardWorker, narrate } from './loop-run.ts';
 import type { LoopRunContext } from './loop-run-context.ts';
-import { narrate } from './narrate.ts';
+import { isThinTask } from './tasks.ts';
 
 /** @description What the task loop does after one task: go on, or stop the run with an outcome. */
 export type TaskStep =

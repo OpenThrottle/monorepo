@@ -32,8 +32,7 @@ import {
   TRANSCRIPT_SCHEMA_VERSION,
   TRANSCRIPT_SURFACES,
 } from '../../types/transcript.ts';
-import { withBinEnv } from '../bin/withBinEnv.ts';
-import { writeNodeBin } from '../bin/writeNodeBin.ts';
+import { withBinEnv, writeNodeBin } from '../bin/stub-bin.ts';
 import { replayPaths } from '../replay/replayPaths.ts';
 import { createSanitizer } from '../sanitizer/sanitizer.ts';
 import {
