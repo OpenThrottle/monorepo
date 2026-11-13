@@ -12,7 +12,9 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import { useHydrateAtoms } from 'jotai/utils';
 import * as React from 'react';
+import { Link, useLocation } from 'react-router';
 
+import { getSignInHref } from '~/routing/auth/utils/auth-redirect';
 import { FragmentChildAdd } from '~/routing/fragments/components/FragmentChildAdd';
 import { FRAGMENT_EDITOR_COPY } from '~/routing/fragments/data/data.copy';
 import { FRAGMENT_INTENT } from '~/routing/fragments/data/data.intents';
@@ -44,6 +46,7 @@ export const FragmentEditor = (
   const { children, draft, fragment, hasChildren, schema } = records;
 
   // Hooks
+  const location = useLocation();
   useHydrateAtoms(new Map([[atomFragmentDraft, draft]]));
   const childBindings = useFragmentChildren({
     addHref: `#${fragment.uuid}-add-child`,
@@ -56,6 +59,7 @@ export const FragmentEditor = (
   const failed = result?.ok === false ? result : undefined;
   const issues = failed ? toCmsFormIssues(failed.issues) : undefined;
   const saved = result?.ok === true ? result : undefined;
+  const signInHref = getSignInHref(`${location.pathname}${location.search}`);
 
   // Handlers
 
@@ -73,7 +77,14 @@ export const FragmentEditor = (
     <Alert className="mx-4 mt-4 w-auto" variant="destructive">
       <AlertTitle>{FRAGMENT_EDITOR_COPY.issuesTitle}</AlertTitle>
       <AlertDescription>
-        <p>{failed.message}</p>
+        <p>
+          {failed.message}{' '}
+          {failed.requiresSignIn && (
+            <Link className="font-medium underline" to={signInHref}>
+              {FRAGMENT_EDITOR_COPY.signIn}
+            </Link>
+          )}
+        </p>
         <ul className="list-disc pl-4">{issueItems}</ul>
       </AlertDescription>
     </Alert>

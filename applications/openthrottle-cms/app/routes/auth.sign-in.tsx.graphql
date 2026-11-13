@@ -1,0 +1,5 @@
+mutation cmsLogin($input: LoginInput!) {
+  login(input: $input) {
+    accessToken
+  }
+}

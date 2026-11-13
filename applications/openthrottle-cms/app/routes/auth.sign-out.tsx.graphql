@@ -1,0 +1,5 @@
+mutation cmsSignout {
+  signout {
+    success
+  }
+}

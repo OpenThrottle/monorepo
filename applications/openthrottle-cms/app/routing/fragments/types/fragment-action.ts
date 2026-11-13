@@ -17,5 +17,7 @@ export type FragmentActionResult =
       readonly issues: readonly FragmentIssue[];
       readonly message: string;
       readonly ok: false;
+      /** The server refused because nobody is signed in: offer a way to sign in. */
+      readonly requiresSignIn: boolean;
     }
   | { readonly intent: FragmentIntent; readonly ok: true };

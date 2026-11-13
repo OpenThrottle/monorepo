@@ -63,6 +63,7 @@ describe('toFragmentActionFailure', () => {
         ],
         message: FRAGMENT_EDITOR_COPY.invalid,
         ok: false,
+        requiresSignIn: false,
       });
     });
   });
@@ -77,6 +78,7 @@ describe('toFragmentActionFailure', () => {
         issues: [],
         message: 'GraphQL errors: bad uuid',
         ok: false,
+        requiresSignIn: false,
       });
     });
   });
@@ -96,7 +98,16 @@ describe('toFragmentActionFailure', () => {
 
       expect(toFragmentActionFailure(error)).toMatchObject({
         message: FRAGMENT_EDITOR_COPY.unauthenticated,
+        requiresSignIn: true,
       });
+    });
+
+    it('asks for a sign-in only when nobody is signed in', () => {
+      const unauthenticated = new GraphqlResponseError('no', { code: 'UNAUTHENTICATED' }); // prettier-ignore
+      const forbidden = new GraphqlResponseError('no', { code: 'FORBIDDEN' });
+
+      expect(toFragmentActionFailure(unauthenticated)).toMatchObject({ requiresSignIn: true }); // prettier-ignore
+      expect(toFragmentActionFailure(forbidden)).toMatchObject({ requiresSignIn: false }); // prettier-ignore
     });
   });
 
@@ -106,6 +117,7 @@ describe('toFragmentActionFailure', () => {
         issues: [],
         message: 'offline',
         ok: false,
+        requiresSignIn: false,
       });
     });
   });

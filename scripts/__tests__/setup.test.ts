@@ -31,6 +31,11 @@ describe('buildSetupSteps', () => {
       scripts.indexOf('database:bootstrap-service-accounts'),
     );
 
+    // The CMS seed (and its schema sync) needs the cms tables.
+    expect(scripts.indexOf('database:seed:cms')).toBeGreaterThan(
+      scripts.indexOf('database:migrate'),
+    );
+
     // The database must be running before it is migrated.
     expect(scripts.indexOf('database:start')).toBeLessThan(
       scripts.indexOf('database:migrate'),

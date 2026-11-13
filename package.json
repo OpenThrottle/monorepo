@@ -251,6 +251,7 @@
     "database:reset": "POSTGRES_HOST='localhost' tsx --env-file .env ./scripts/openthrottle-database-reset.ts",
     "database:seed:blog": "POSTGRES_HOST='localhost' NODE_ENV=\"${NODE_ENV:-development}\" tsx --env-file .env ./scripts/openthrottle-database-seed-blog.ts",
     "database:seed:cms": "POSTGRES_HOST='localhost' NODE_ENV=\"${NODE_ENV:-development}\" tsx --env-file .env ./scripts/openthrottle-database-seed-cms.ts",
+    "database:sync:cms-schemas": "POSTGRES_HOST='localhost' tsx --env-file .env ./scripts/openthrottle-database-sync-cms-schemas.ts",
     "database:start": "node --experimental-strip-types ./scripts/openthrottle-database-lifecycle.ts start",
     "database:stop": "node --experimental-strip-types ./scripts/openthrottle-database-lifecycle.ts stop",
     "dev:native": "pnpm nx run openthrottle-server:dev",

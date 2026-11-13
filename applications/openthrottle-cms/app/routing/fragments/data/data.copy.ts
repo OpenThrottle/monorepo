@@ -36,6 +36,7 @@ export const FRAGMENT_EDITOR_COPY = {
     reorderChildren: 'Order saved.',
     updateFragment: 'Saved.',
   },
+  signIn: 'Sign in',
   unauthenticated: `Sign in to save changes.`,
   unknownIntent: `That action is not supported on this page.`,
 } as const;

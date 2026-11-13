@@ -36,13 +36,24 @@ the same, with these changes:
 
 ## Local seed data
 
-`pnpm run database:seed:cms` loads [`seeds/cms.sql`](./seeds/cms.sql): four ACTIVE schemas
-(`Layout`, `Heading`, `Wysiwyg`, `Button`), a root `Layout` fragment with three ordered children, the
-`welcome` layout rooted at it, and one library (`Sample Library`) with one component, attached to
-that layout. It is synthetic — no profiles, no emails, no real people.
+`pnpm run database:seed:cms` loads [`seeds/cms.sql`](./seeds/cms.sql): a root `Layout` fragment
+with four ordered children (`Heading`, `Wysiwyg`, `Button` and a `LayoutGrid` holding three `Card`s),
+the `welcome` layout rooted at it, and one library (`Sample Library`) with one component, attached to
+that layout. Every fragment is pinned to its typename's generated ACTIVE schema, so the root and the
+grid are real containers in the editor. A database seeded before this moves the four original
+fragments off the old hand-written `1.0.0` schemas once. It is synthetic — no profiles, no emails, no real people.
 
-It is **not a migration** and is not reachable from `database:migrate`, `ensure-migrations`, setup
-or any deploy path; the script refuses `NODE_ENV=production` and any Postgres host other than
+Before the sample rows it **syncs the generated block schemas**
+([`scripts/openthrottle-database-sync-cms-schemas.ts`](../../scripts/openthrottle-database-sync-cms-schemas.ts)):
+every `packages/<pkg>/schemas/manifest.json` written by `cms-schemas:write` is upserted by
+`(typename, version)` — version being the schema's content hash — and that version is left the one
+ACTIVE schema per typename (older live versions go `DISABLED`; fragments pinned to them keep them).
+A stale manifest, or a typename two packages both generate, fails the sync. Re-running it with
+unchanged manifests touches no row. `pnpm run database:sync:cms-schemas` runs the sync alone; unlike
+the sample content it has no local-host guard, because it is real content.
+
+It is **not a migration** and is not reachable from `database:migrate`, `ensure-migrations` or any
+deploy path. `./scripts/setup.sh` (primary checkout) and `worktree:db isolate` run it; the script refuses `NODE_ENV=production` and any Postgres host other than
 `localhost`, `127.0.0.1`, `::1` or the compose service `postgres`. Every row has a fixed uuid and
 every insert is `ON CONFLICT DO NOTHING`, so re-running changes nothing (and leaves your local
 edits to seeded rows alone). It connects to the `cms` database the way the migration runner does,

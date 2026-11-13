@@ -33,16 +33,19 @@ export interface SetupStep {
  * The post-install step plan, as data so the sequence is unit-testable
  * without executing anything. Order is load-bearing — see the module doc.
  */
-export const buildSetupSteps = (): SetupStep[] => [
-  { args: ['run', 'build'], command: 'pnpm', title: 'Build the packages' },
-  { args: ['run', 'database:build'], command: 'pnpm', title: 'Build the database image' }, // prettier-ignore
-  { args: ['run', 'database:start'], command: 'pnpm', title: 'Start Postgres + Redis' }, // prettier-ignore
-  { args: ['run', 'database:migrate'], command: 'pnpm', title: 'Apply database migrations' }, // prettier-ignore
-  { args: ['run', 'database:bootstrap-service-accounts'], command: 'pnpm', title: 'Bootstrap service accounts' }, // prettier-ignore
-  { args: ['run', 'database:import-agent-assets'], command: 'pnpm', title: 'Import agent assets' }, // prettier-ignore
-  { args: ['run', 'database:bootstrap-default-user'], command: 'pnpm', title: 'Seed the default login user' }, // prettier-ignore
-  { args: ['run', 'check:bootstrap-secrets'], command: 'pnpm', title: 'Verify bootstrap secrets' }, // prettier-ignore
-];
+export const buildSetupSteps = (): SetupStep[] => {
+  return [
+    { args: ['run', 'build'], command: 'pnpm', title: 'Build the packages' },
+    { args: ['run', 'database:build'], command: 'pnpm', title: 'Build the database image' }, // prettier-ignore
+    { args: ['run', 'database:start'], command: 'pnpm', title: 'Start Postgres + Redis' }, // prettier-ignore
+    { args: ['run', 'database:migrate'], command: 'pnpm', title: 'Apply database migrations' }, // prettier-ignore
+    { args: ['run', 'database:bootstrap-service-accounts'], command: 'pnpm', title: 'Bootstrap service accounts' }, // prettier-ignore
+    { args: ['run', 'database:import-agent-assets'], command: 'pnpm', title: 'Import agent assets' }, // prettier-ignore
+    { args: ['run', 'database:bootstrap-default-user'], command: 'pnpm', title: 'Seed the default login user' }, // prettier-ignore
+    { args: ['run', 'database:seed:cms'], command: 'pnpm', title: 'Sync CMS schemas + seed sample CMS content' }, // prettier-ignore
+    { args: ['run', 'check:bootstrap-secrets'], command: 'pnpm', title: 'Verify bootstrap secrets' }, // prettier-ignore
+  ];
+};
 
 /** Run one step streaming to the terminal; false (after a banner) on failure. */
 const runStep = (step: SetupStep): boolean => {
