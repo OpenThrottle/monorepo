@@ -7,6 +7,10 @@ export default (config: ConfigEnv) => {
   const { mode } = config;
 
   const configuration = defineConfig({
+    // unplugin-swc disables Vite's transform with `esbuild: false`, which Vite 8
+    // ignores (with a warning) now that Oxc does that job. Without this, Oxc
+    // transforms the files as well as SWC.
+    oxc: false,
     plugins: [
       swc.vite({ module: { type: 'es6' } }), // This is required to build the test files with SWC
     ],

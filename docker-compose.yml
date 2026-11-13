@@ -51,7 +51,10 @@
 #############################################################################
 x-common: &common
   GITHUB_TOKEN: ${GITHUB_TOKEN}
-  NODE_ENV: ${NODE_ENV}
+  # Not set in the root .env: Nx loads that file into every task, where a
+  # production NODE_ENV flips Vite's resolve conditions for tests and dev
+  # servers. Compose is the only consumer, so the default lives here.
+  NODE_ENV: ${NODE_ENV:-production}
   NODE_VERSION: ${NODE_VERSION}
 
 x-developer: &developer

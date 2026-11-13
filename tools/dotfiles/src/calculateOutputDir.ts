@@ -32,9 +32,10 @@ export const calculateOutputDir = (
     );
   }
 
-  // Calculate depth: how many directories from package to workspace root.
-  // packages/openthrottle/react-hooks: length=3, baseIndex=0, depth=2 -> ../../
-  const depth = pathParts.length - baseIndex - 1;
+  // Depth: how many directories from the package up to the workspace root —
+  // the `packages`/`tools` segment itself plus every segment below it.
+  // packages/nestjs-github -> ../../; packages/openthrottle/react-hooks -> ../../../
+  const depth = pathParts.length - baseIndex;
   const relativeUp = '../'.repeat(depth);
 
   // Get the package path relative to packages/ or tools/

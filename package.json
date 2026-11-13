@@ -68,6 +68,7 @@
     "@types/sanitize-html": "catalog:",
     "@types/tmp": "catalog:",
     "@types/yargs": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
     "eslint": "catalog:",
     "husky": "catalog:",
     "knip": "catalog:",
