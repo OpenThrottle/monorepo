@@ -5,6 +5,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import type { PlanTaskRowFragment } from '~/__generated__/graphql';
 import { PLAN_INBOX_COPY } from '~/routing/plans/data/data.copy';
 
 import { PlanInboxComposer } from '../PlanInboxComposer';
@@ -18,14 +19,35 @@ vi.mock('sonner', () => ({
   toast: Object.assign(vi.fn(), { error: toastError, success: toastSuccess }),
 }));
 
+const makeTask = (id: string, status: string): PlanTaskRowFragment => {
+  return {
+    assignee: null,
+    category: null,
+    createdAt: '2026-11-03T00:00:00Z',
+    description: null,
+    hookRole: null,
+    id,
+    planId: 'p1',
+    projectRelation: null,
+    requirementsJson: '[]',
+    sortOrder: 1000,
+    status,
+    summary: null,
+    title: `Task ${id}`,
+    updatedAt: '2026-11-03T00:00:00Z',
+    wave: null,
+  };
+};
+
 type Posted = Record<string, FormDataEntryValue>;
 
 const renderComposer = (
   respond: (posted: Posted) => unknown,
+  tasks: readonly PlanTaskRowFragment[] = [],
 ): { component: RenderResult; posts: Posted[] } => {
   const posts: Posted[] = [];
   const Component = () => {
-    return <PlanInboxComposer planId="p1" />;
+    return <PlanInboxComposer planId="p1" tasks={tasks} />;
   };
   const RoutesStub = createRoutesStub([
     {
@@ -129,5 +151,43 @@ describe('PlanInboxComposer', () => {
     });
     expect(body).toHaveValue('Keep me');
     expect(toastSuccess).not.toHaveBeenCalled();
+  });
+
+  test('defaults "About task" to the in-progress task and posts its id', async () => {
+    const user = userEvent.setup();
+    const { component, posts } = renderComposer(
+      () => ({ postPlanMessage: { id: 'm1' } }),
+      [makeTask('a', 'PENDING'), makeTask('b', 'IN_PROGRESS')],
+    );
+
+    expect(
+      component.getByRole('combobox', { name: PLAN_INBOX_COPY.taskLabel }),
+    ).toHaveTextContent('Task b');
+    await user.type(component.getByLabelText(PLAN_INBOX_COPY.bodyLabel), 'Go');
+    await user.click(
+      component.getByRole('button', { name: PLAN_INBOX_COPY.sendLabel }),
+    );
+
+    await waitFor(() => {
+      expect(posts[0]?.taskId).toBe('b');
+    });
+  });
+
+  test('omits taskId when no task is in progress', async () => {
+    const user = userEvent.setup();
+    const { component, posts } = renderComposer(
+      () => ({ postPlanMessage: { id: 'm1' } }),
+      [makeTask('a', 'PENDING')],
+    );
+
+    await user.type(component.getByLabelText(PLAN_INBOX_COPY.bodyLabel), 'Go');
+    await user.click(
+      component.getByRole('button', { name: PLAN_INBOX_COPY.sendLabel }),
+    );
+
+    await waitFor(() => {
+      expect(posts).toHaveLength(1);
+    });
+    expect(posts[0]).not.toHaveProperty('taskId');
   });
 });

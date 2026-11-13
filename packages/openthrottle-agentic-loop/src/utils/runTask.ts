@@ -9,7 +9,12 @@ import type {
 } from '../contract/index.ts';
 import { LOOP_TASK_STATUS } from '../contract/index.ts';
 import { THIN_TASK_BLOCK_SUMMARY } from '../data/data.constants.ts';
-import { endTaskSession, guardWorker, narrate } from './loop-run.ts';
+import {
+  claimGuidance,
+  endTaskSession,
+  guardWorker,
+  narrate,
+} from './loop-run.ts';
 import type { LoopRunContext } from './loop-run-context.ts';
 import { isThinTask } from './tasks.ts';
 
@@ -190,6 +195,8 @@ const failAttempt = async (
     return cancelTask(ctx, scope);
   }
 
+  // Mid-task delivery: guidance posted while the failed attempt ran reaches the retry.
+  await claimGuidance(ctx, scope.task.id);
   await narrate(
     ctx,
     `attempt ${spec.retriesUsed + 1} failed; retrying`,

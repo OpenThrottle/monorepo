@@ -337,12 +337,12 @@ exactly what `startWorkSession({ model })` records.
 
 ## 9. Cancel, inbox, heartbeat, usage limits
 
-| Primitive               | Existing owner                                                                               | Where it fires in the loop                                                                                                                  |
-| ----------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| Heartbeat               | `PlansProcessor.startRunHeartbeat` (15 s timer)                                              | Unchanged. Independent of task progress, so a long worker attempt never looks stale.                                                        |
-| Cancel — signal         | `PlanRunCancellationService.attach(planId)` + `CancelChannelService` pub/sub → `AbortSignal` | Passed to `runDriverAsync({ signal })` and to every validation command, so a Kill interrupts mid-attempt.                                   |
-| Cancel — durable marker | `plan_runs.cancel_requested_at`, read via `planRunsService.readCancelRequested(planId)`      | Polled at **every task boundary** (before selecting the next task) **and between attempts** of one task, covering a missed pub/sub message. |
-| Inbox                   | `claimPlanMessages({ planId, planRunId, taskId })` GraphQL mutation                          | At every task boundary, **after** a clear cancel poll and **before** step 1 of the selected task, once.                                     |
+| Primitive               | Existing owner                                                                               | Where it fires in the loop                                                                                                                                                                                                             |
+| ----------------------- | -------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Heartbeat               | `PlansProcessor.startRunHeartbeat` (15 s timer)                                              | Unchanged. Independent of task progress, so a long worker attempt never looks stale.                                                                                                                                                   |
+| Cancel — signal         | `PlanRunCancellationService.attach(planId)` + `CancelChannelService` pub/sub → `AbortSignal` | Passed to `runDriverAsync({ signal })` and to every validation command, so a Kill interrupts mid-attempt.                                                                                                                              |
+| Cancel — durable marker | `plan_runs.cancel_requested_at`, read via `planRunsService.readCancelRequested(planId)`      | Polled at **every task boundary** (before selecting the next task) **and between attempts** of one task, covering a missed pub/sub message.                                                                                            |
+| Inbox                   | `claimPlanMessages({ planId, planRunId, taskId })` GraphQL mutation                          | At every task boundary, **after** a clear cancel poll and **before** step 1 of the selected task, once — and again **between attempts** of one task, after the cancel poll, so guidance posted while an attempt ran reaches the retry. |
 
 **On cancel** the job stops at once: a running worker or validation is killed through the signal,
 the current task's changes are saved as a patch (§ 5), the task returns to `PENDING` (it was not
@@ -361,6 +361,11 @@ diverges, explicitly:
   still reaches it.
 - The worker may answer guidance like "skip the UI task" with `status: "skipped"`, which the job
   honours only for an attempt whose prompt carried guidance.
+- **Mid-attempt delivery is not possible here.** The job only regains control between attempts, so
+  a message posted while the worker CLI runs waits for the retry or the next boundary. Reaching
+  the worker itself mid-attempt needs a hook inside the spawned CLI that knows its run; the bundled
+  `plan-inbox-claim` hook finds the run from an interactive transcript's `register_plan_run`, which
+  a headless worker never calls. Follow-up: OT plan `124a5d6c`.
 - "Stop after this one" is **not** honoured by the job; the UI's message composer says so and points
   at **Cancel**, which is.
 

@@ -116,6 +116,35 @@ describe('PlanInboxPanel', () => {
       ).toBeInTheDocument();
     });
 
+    test('shows when a waiting message was posted', () => {
+      const component = renderPanel({
+        isLive: true,
+        messages: [message({ id: 'waiting' })],
+      });
+
+      expect(component.getByTestId('plan-inbox-timing').textContent).toMatch(
+        /^Waiting since /,
+      );
+    });
+
+    test('shows post time, delivery time and latency once delivered', () => {
+      const component = renderPanel({
+        isLive: true,
+        messages: [
+          message({
+            createdAt: '2026-11-03T00:00:00Z',
+            deliveredAt: '2026-11-03T00:04:12Z',
+            id: 'delivered',
+            status: 'DELIVERED',
+          }),
+        ],
+      });
+      const timing = component.getByTestId('plan-inbox-timing').textContent;
+
+      expect(timing).toContain(PLAN_INBOX_COPY.deliveredAfter('4m 12s'));
+      expect(timing).toMatch(/^Posted .* · Delivered /);
+    });
+
     test('only a waiting message can be withdrawn, and withdraw posts its id', async () => {
       const user = userEvent.setup();
       const posts: Array<Record<string, FormDataEntryValue>> = [];

@@ -76,6 +76,17 @@
           }
         ],
         "matcher": "Edit|Write|MultiEdit|NotebookEdit"
+      },
+      {
+        "hooks": [
+          {
+            "command": "./.claude/hooks/plan-inbox-claim.cjs",
+            "statusMessage": "Plan inbox claim (PreToolUse)",
+            "timeout": 10,
+            "type": "command"
+          }
+        ],
+        "matcher": "Bash|Agent|Task"
       }
     ],
     "SessionStart": [

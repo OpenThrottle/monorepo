@@ -31,6 +31,9 @@ export const PLAN_INBOX_KIND_OPTIONS: readonly PlanInboxKindOption[] = [
   },
 ];
 
+/** Radix Select forbids an empty item value, so "no task" is a sentinel. */
+export const PLAN_INBOX_NO_TASK_VALUE = 'none';
+
 export interface PlanInboxStatusDisplay {
   readonly color: NonNullable<BadgeProps['color']>;
   readonly label: string;

@@ -13,6 +13,7 @@ import {
 } from '~/routing/plans/data/data.plan-inbox';
 import {
   formatDateShort,
+  formatDurationBetween,
   formatUpdatedAt,
 } from '~/routing/plans/utils/formatters';
 
@@ -60,6 +61,22 @@ export const PlanInboxMessageRow = (
     ? PLAN_INBOX_COPY.deliveredToTask(deliveredToTaskTitle)
     : PLAN_INBOX_COPY.deliveredUnknownTask;
   const deliveredNote = isDelivered ? deliveredTaskNote : null;
+  const postedAt = formatDateShort(message.createdAt);
+  const deliveredAtLabel = formatDateShort(message.deliveredAt);
+  const latency = formatDurationBetween(message.createdAt, message.deliveredAt);
+  const canShowWaiting = isPending && postedAt != null;
+  const waitingNote = canShowWaiting
+    ? PLAN_INBOX_COPY.waitingSince(postedAt)
+    : null;
+  const hasTiming = isDelivered && postedAt != null && deliveredAtLabel != null;
+  const timingNote = hasTiming
+    ? PLAN_INBOX_COPY.deliveredTiming(postedAt, deliveredAtLabel)
+    : null;
+  const latencyNote =
+    latency != null ? PLAN_INBOX_COPY.deliveredAfter(latency) : null;
+  const timingLine = [waitingNote, timingNote, latencyNote]
+    .filter((part) => part != null)
+    .join(' · ');
   const withdrawButtonLabel = isWithdrawing
     ? PLAN_INBOX_COPY.withdrawPendingLabel
     : PLAN_INBOX_COPY.withdrawLabel;
@@ -81,6 +98,15 @@ export const PlanInboxMessageRow = (
         {withdrawButtonLabel}
       </Button>
     </WithdrawForm>
+  );
+
+  const timingParagraph = (
+    <p
+      className="text-muted-foreground text-xs"
+      data-testid="plan-inbox-timing"
+    >
+      {timingLine}
+    </p>
   );
 
   // Life Cycle
@@ -122,6 +148,7 @@ export const PlanInboxMessageRow = (
         {isPending ? withdrawControl : null}
       </div>
       <p className="text-sm whitespace-pre-wrap">{message.body}</p>
+      {timingLine !== '' ? timingParagraph : null}
       {deliveredNote != null ? (
         <p className="text-muted-foreground text-xs">{deliveredNote}</p>
       ) : null}

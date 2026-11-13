@@ -6,6 +6,7 @@ import { Link } from 'react-router';
 
 import type { PlanTaskRowFragment } from '~/__generated__/graphql';
 import { PlanManagedTaskBadge } from '~/routing/plans/components/PlanManagedTaskBadge';
+import { PLAN_INBOX_COPY } from '~/routing/plans/data/data.copy';
 import {
   MOBILE_CARD_BLOCK_CLASS,
   MOBILE_CARD_TITLE_CLASS,
@@ -13,6 +14,8 @@ import {
 import { getRequirementsCount } from '~/routing/plans/utils/formatters';
 
 export interface PlanTasksTableCellTitleProps {
+  /** True when a waiting STEER message is about this in-flight task. */
+  hasSteerPending?: boolean;
   /** True when a tag→action rule manages this task's placement. */
   isManaged?: boolean;
   row: Row<PlanTaskRowFragment>;
@@ -21,7 +24,7 @@ export interface PlanTasksTableCellTitleProps {
 export const PlanTasksTableCellTitle = (
   props: PlanTasksTableCellTitleProps,
 ): React.ReactElement => {
-  const { isManaged = false, row } = props;
+  const { hasSteerPending = false, isManaged = false, row } = props;
 
   // Hooks
 
@@ -40,6 +43,16 @@ export const PlanTasksTableCellTitle = (
   // Handlers
 
   // Markup
+  const steerPendingBadge = (
+    <Badge
+      className="shrink-0"
+      color="violet"
+      data-testid="PlanSteerPendingBadge"
+      size="xs"
+    >
+      {PLAN_INBOX_COPY.steerPendingBadge}
+    </Badge>
+  );
 
   // Life Cycle
 
@@ -61,6 +74,7 @@ export const PlanTasksTableCellTitle = (
         </h2>
 
         {isManaged ? <PlanManagedTaskBadge className="shrink-0" /> : null}
+        {hasSteerPending ? steerPendingBadge : null}
       </div>
 
       {hasMeta && (

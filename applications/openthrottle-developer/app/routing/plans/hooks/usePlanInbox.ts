@@ -4,19 +4,25 @@ import * as React from 'react';
 import type {
   PlanInboxMessageFragment,
   PlanMessageChangedSubscription,
+  PlanTaskRowFragment,
 } from '~/__generated__/graphql';
 import { PlanMessageChangedDocument } from '~/__generated__/graphql';
+import { getSteerPendingTaskIds } from '~/routing/plans/utils/getSteerPendingTaskIds';
 import { getGraphqlWsClient } from '~/services/getGraphqlWsClient';
 
 export interface UsePlanInboxOptions {
   readonly planId: string;
   /** `undefined` until the deferred loader snapshot resolves — not "empty". */
   readonly seedMessages: readonly PlanInboxMessageFragment[] | undefined;
+  /** The plan's tasks, used to flag in-flight tasks with a waiting steer. */
+  readonly tasks: readonly PlanTaskRowFragment[];
 }
 
 export interface UsePlanInboxResult {
   /** STEER and QUEUE messages, oldest first. */
   readonly messages: readonly PlanInboxMessageFragment[];
+  /** IN_PROGRESS tasks a still-waiting STEER message is about. */
+  readonly steerPendingTaskIds: ReadonlySet<string>;
 }
 
 /**
@@ -31,7 +37,7 @@ export interface UsePlanInboxResult {
 export const usePlanInbox = (
   options: UsePlanInboxOptions,
 ): UsePlanInboxResult => {
-  const { planId, seedMessages } = options;
+  const { planId, seedMessages, tasks } = options;
 
   // Hooks
   const [byId, setById] = React.useState<
@@ -103,5 +109,10 @@ export const usePlanInbox = (
     [byId],
   );
 
-  return { messages };
+  const steerPendingTaskIds = React.useMemo(
+    () => getSteerPendingTaskIds(messages, tasks),
+    [messages, tasks],
+  );
+
+  return { messages, steerPendingTaskIds };
 };

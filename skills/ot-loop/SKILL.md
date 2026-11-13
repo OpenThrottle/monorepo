@@ -58,6 +58,7 @@ Each `/loop` iteration works exactly one task. Resume the lowest-`sortOrder` `IN
 
 1. **Start:** `update_task(taskId, { status: 'IN_PROGRESS' })`, then `begin_task_session({ planId, taskId, model })` to open a work session scoped to this task carrying the model that will do its work. (Precondition: no other task is `IN_PROGRESS` — see the invariant above.) Where `model` comes from is [§ Model routing](#model-routing); declare what will actually do the work, and omit it rather than guess — a session's model is fixed when it opens and cannot be corrected later.
 2. **Do the work** for that task, following the repo's rules (generators first, code style, no deep imports, etc.). Do it yourself, or hand it to a subagent on the routed model — [§ Model routing](#model-routing). **This is the only step that may be delegated.**
+   - **Claim the inbox before any destructive step** (delete, migrate, rewrite history, push) **and on both sides of a delegation** — [§ Mid-task claims](#mid-task-claims).
 3. **Validate** before completing — at minimum `pnpm nx affected --target=lint,typecheck,test` for the touched projects (run targets **sequentially**, not in parallel — they share the Nx cache). Don't mark a task done on red.
 4. **Complete — do this BEFORE starting any other task:** `update_task(taskId, { status: 'COMPLETED' })`. If the task genuinely can't be finished, set `BLOCKED` or `SKIPPED` instead — but never leave it `IN_PROGRESS` while you move on. Committing the work (step 5) is **not** a substitute for this flip. **On the plan's last open task, do step 6 first.**
 5. **Commit per task** with `/github-commit` — conventional commit, with `Plan-Id:` and `Task-Id:` footers for traceability. Do **not** record a work-ledger artifact for these per-task work commits; the footers carry the traceability. A task that changes no tracked file (verification-only, gitignored output like `/skill-sync`, OT-only) needs **no** commit — never make an empty or cosmetic one to carry the footer. Its step-4 `COMPLETED` flip is the record; the squash picks it up from OT ([`github-squash` § Footers](../github-squash/SKILL.md#footers)).
@@ -288,6 +289,28 @@ its step 1 — once per boundary, because claiming is delivery. Beyond the tool'
 
 An empty result is the common case. A failed claim, like a missed poll, only delays delivery — log
 it and keep going.
+
+### Mid-task claims
+
+A boundary claim reaches a mid-task `STEER` only after the task commits — after the step it
+questioned (plan `98e6be73`). So step 2 also claims, passing the **in-flight** `taskId`, right before:
+
+- deleting files or directories (`rm`, `git rm`, `git clean`, `worktree:remove`);
+- a migration or a write to a shared database;
+- a history rewrite (`reset --hard`, `rebase`, `--amend`, `branch -D`, squash) or a push;
+- handing step 2 to a subagent, and again after collecting its result, before keeping it.
+
+Ordinary edits are not claim points. Subagents never claim; the parent claims around them.
+
+A mid-task `STEER` leaves the task the one `IN_PROGRESS` task. It can **pause** (skip the step,
+re-plan, carry on — the default), **redirect** (change how this task is done; one about another task
+becomes a note or a `create_tasks` entry), or **abort** (skip the step, set the task `BLOCKED` with
+the `STEER` in `summary`, then continue or settle `CANCELLED`). Acknowledge it in `append_plan_output`
+with the in-flight `taskId`.
+
+Under Claude Code the `plan-inbox-claim` PreToolUse hook is a throttled backstop: during a
+registered run it claims before destructive `Bash` and `Agent` calls and denies once on a `STEER`.
+Other harnesses depend on the claim points above.
 
 > **Invariant — every exit path settles the run.** `settle_plan_run(planRunId, status)` with
 > `COMPLETED` when the PR opens, `CANCELLED` on a deliberate stop, `FAILED` when you give up or

@@ -90,7 +90,7 @@ export const PlanInboxPanel = (
           {isLive ? PLAN_INBOX_COPY.description : PLAN_INBOX_COPY.notLiveHint}
         </p>
       </header>
-      {isLive ? <PlanInboxComposer planId={planId} /> : null}
+      {isLive ? <PlanInboxComposer planId={planId} tasks={tasks} /> : null}
       {hasMessages ? messageList : emptyHint}
     </section>
   );

@@ -55,7 +55,10 @@ const renderWithRoutes = (
 };
 
 describe('buildPlanTabTasksColumns', () => {
-  const columns = buildPlanTabTasksColumns(new Set(['managed-task']));
+  const columns = buildPlanTabTasksColumns(
+    new Set(['managed-task']),
+    new Set(),
+  );
 
   test('defines the status, details, and actions columns in order', () => {
     expect(columns).toHaveLength(3);

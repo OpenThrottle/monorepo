@@ -2,6 +2,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 
 import {
   formatDateShort,
+  formatDurationBetween,
   formatPlanDate,
   formatUpdatedAt,
   getRequirementsCount,
@@ -115,5 +116,42 @@ describe('formatPlanDate', () => {
     const result = formatPlanDate('2025-01-02T12:00:00Z');
     expect(result).not.toBe('—');
     expect(result).toMatch(/\d/);
+  });
+});
+
+describe('formatDurationBetween', () => {
+  const start = '2026-01-15T12:00:00.000Z';
+
+  test('formats sub-minute gaps in seconds', () => {
+    expect(formatDurationBetween(start, '2026-01-15T12:00:45.000Z')).toBe(
+      '45s',
+    );
+    expect(formatDurationBetween(start, start)).toBe('0s');
+  });
+
+  test('formats minutes and seconds', () => {
+    expect(formatDurationBetween(start, '2026-01-15T12:04:12.000Z')).toBe(
+      '4m 12s',
+    );
+  });
+
+  test('drops a zero trailing unit', () => {
+    expect(formatDurationBetween(start, '2026-01-15T12:04:00.000Z')).toBe('4m');
+    expect(formatDurationBetween(start, '2026-01-15T14:00:30.000Z')).toBe('2h');
+  });
+
+  test('formats hours with minutes and days with hours', () => {
+    expect(formatDurationBetween(start, '2026-01-15T14:05:09.000Z')).toBe(
+      '2h 5m',
+    );
+    expect(formatDurationBetween(start, '2026-01-16T15:30:00.000Z')).toBe(
+      '1d 3h',
+    );
+  });
+
+  test('returns null for invalid input or a negative gap', () => {
+    expect(formatDurationBetween('nope', start)).toBeNull();
+    expect(formatDurationBetween(start, null)).toBeNull();
+    expect(formatDurationBetween(start, '2026-01-15T11:59:00.000Z')).toBeNull();
   });
 });

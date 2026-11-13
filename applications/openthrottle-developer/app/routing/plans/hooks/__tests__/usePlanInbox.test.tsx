@@ -46,7 +46,11 @@ const message = (
 function Harness(props: {
   readonly seed: readonly PlanInboxMessageFragment[] | undefined;
 }): React.ReactElement {
-  const { messages } = usePlanInbox({ planId: 'p1', seedMessages: props.seed });
+  const { messages } = usePlanInbox({
+    planId: 'p1',
+    seedMessages: props.seed,
+    tasks: [],
+  });
   return (
     <div data-testid="rows">
       {messages.map((m) => `${m.id}:${m.status}`).join(',')}
