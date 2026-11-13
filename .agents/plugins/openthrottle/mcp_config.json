@@ -1,0 +1,24 @@
+{
+  "mcpServers": {
+    "fetch": {
+      "args": ["mcp-server-fetch"],
+      "command": "uvx"
+    },
+    "github": {
+      "args": ["../../../scripts/run-github-mcp.sh"],
+      "command": "bash"
+    },
+    "maestro": {
+      "args": ["mcp"],
+      "command": "maestro"
+    },
+    "openthrottle-mcp": {
+      "args": ["../../../scripts/run-openthrottle-mcp.sh"],
+      "command": "bash"
+    },
+    "shadcn": {
+      "args": ["shadcn@latest", "mcp"],
+      "command": "npx"
+    }
+  }
+}

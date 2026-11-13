@@ -609,6 +609,60 @@ export const renderCodexConfig = (config: AgentConfig): string => {
   return `${[header.join('\n'), attribution.join('\n'), ...blocks].join('\n\n')}\n`;
 };
 
+// Antigravity: a workspace plugin
+
+/** Folder of the generated Antigravity plugin (agy loads `<workspace>/.agents/plugins/*`). */
+export const ANTIGRAVITY_PLUGIN_DIR = '.agents/plugins/openthrottle';
+
+/**
+ * agy starts a plugin's stdio servers with cwd = the plugin folder, so a
+ * repo-relative `./x` argument is rewritten to climb back to the repo root.
+ */
+const fromAntigravityPlugin = (arg: string): string => {
+  if (!arg.startsWith('./')) {
+    return arg;
+  }
+
+  const depth = ANTIGRAVITY_PLUGIN_DIR.split('/').length;
+
+  return `${'../'.repeat(depth)}${arg.slice(2)}`;
+};
+
+const antigravityServerEntry = (server: McpServer): JsonObject => {
+  if (server.transport === 'stdio') {
+    return {
+      args: server.args.map(fromAntigravityPlugin),
+      command: server.command,
+    };
+  }
+
+  return { url: server.url };
+};
+
+/** `.agents/plugins/openthrottle/plugin.json` — the marker agy needs to load the folder. */
+export const renderAntigravityPluginManifest = (): string => {
+  return toJson({
+    description: `GENERATED — DO NOT EDIT. The default MCP servers from ${SOURCE_PATH}; edit that file, then run ${REGENERATE_COMMAND}.`,
+    name: 'openthrottle',
+    version: '1.0.0',
+  });
+};
+
+/**
+ * `.agents/plugins/openthrottle/mcp_config.json` (whole file, default-on
+ * servers only: agy has no committable off switch). agy namespaces plugin
+ * servers as `<plugin>_<server>`, e.g. `openthrottle_openthrottle-mcp`.
+ */
+export const renderAntigravityMcpConfig = (config: AgentConfig): string => {
+  const mcpServers: JsonObject = {};
+
+  for (const server of defaultOnServers(config)) {
+    mcpServers[server.name] = antigravityServerEntry(server);
+  }
+
+  return toJson({ mcpServers });
+};
+
 // Output registry
 
 /** One file this generator owns. `render` gets the file's current text ('' if absent). */
@@ -618,6 +672,8 @@ export interface AgentConfigOutput {
 }
 
 export const OUTPUTS: readonly AgentConfigOutput[] = [
+  { path: `${ANTIGRAVITY_PLUGIN_DIR}/mcp_config.json`, render: renderAntigravityMcpConfig }, // prettier-ignore
+  { path: `${ANTIGRAVITY_PLUGIN_DIR}/plugin.json`, render: renderAntigravityPluginManifest }, // prettier-ignore
   { path: '.claude/settings.json', render: renderClaudeSettings },
   { path: '.codex/config.toml', render: renderCodexConfig },
   { path: '.codex/rules/default.rules', render: renderCodexRules },

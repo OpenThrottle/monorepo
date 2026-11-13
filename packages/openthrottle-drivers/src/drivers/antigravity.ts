@@ -43,8 +43,10 @@ const capabilities: DriverCapabilities = {
    * files. It keeps its config under `~/.gemini` —
    * servers live in `~/.gemini/config/mcp_config.json`.
    * The 1.1.21 binary shows no `.mcp.json` handling, so an OT checkout's committed `.mcp.json`
-   * cannot reach `openthrottle-mcp`. As with codex, reachability is a property of the
-   * host's own config, so surface it as "cannot be verified", not as "server missing".
+   * cannot reach `openthrottle-mcp`. Since 1.5.x agy also loads plugins from the workspace's
+   * `.agents/plugins/`, and the OT monorepo generates one with its default servers (verified live,
+   * 1.5.8). That is a property of a checkout that ships such a plugin, not of agy, so this stays
+   * `false`: surface it as "cannot be verified", not as "server missing".
    */
   attachesWorkspaceMcp: false,
   /**

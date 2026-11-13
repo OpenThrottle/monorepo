@@ -46,18 +46,18 @@ An entry has exactly one of `shell` or `mcpServer`. `allow` means "run without a
 
 ## Generated outputs
 
-| Tool        | File(s) written              | Ownership                                                                                                                |
-| ----------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| claude      | `.mcp.json`                  | Whole file                                                                                                               |
-| claude      | `.claude/settings.json`      | Only `enabledMcpjsonServers` and `permissions.{allow,deny}`. Hooks, `attribution` and every other key are hand-authored. |
-| cursor      | `.cursor/mcp.json`           | Whole file                                                                                                               |
-| cursor      | `.cursor/cli.json`           | Whole file. It may hold **only** `permissions`: any other key makes every `cursor-agent` run fail schema validation.     |
-| codex       | `.codex/config.toml`         | Whole file                                                                                                               |
-| codex       | `.codex/rules/default.rules` | Whole file                                                                                                               |
-| opencode    | `opencode.json`              | Only the `mcp` block and `permission.bash`. `permission.skill` and every other key are hand-authored.                    |
-| VS Code     | `.vscode/mcp.json`           | Whole file                                                                                                               |
-| grok        | none                         | Grok reads `.mcp.json` and `.claude/settings.json` permissions natively, so it gets the policy through Claude's files.   |
-| antigravity | none                         | No project-level MCP or permission file exists. See the gaps below.                                                      |
+| Tool        | File(s) written                                                                            | Ownership                                                                                                                |
+| ----------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------ |
+| claude      | `.mcp.json`                                                                                | Whole file                                                                                                               |
+| claude      | `.claude/settings.json`                                                                    | Only `enabledMcpjsonServers` and `permissions.{allow,deny}`. Hooks, `attribution` and every other key are hand-authored. |
+| cursor      | `.cursor/mcp.json`                                                                         | Whole file                                                                                                               |
+| cursor      | `.cursor/cli.json`                                                                         | Whole file. It may hold **only** `permissions`: any other key makes every `cursor-agent` run fail schema validation.     |
+| codex       | `.codex/config.toml`                                                                       | Whole file                                                                                                               |
+| codex       | `.codex/rules/default.rules`                                                               | Whole file                                                                                                               |
+| opencode    | `opencode.json`                                                                            | Only the `mcp` block and `permission.bash`. `permission.skill` and every other key are hand-authored.                    |
+| VS Code     | `.vscode/mcp.json`                                                                         | Whole file                                                                                                               |
+| grok        | none                                                                                       | Grok reads `.mcp.json` and `.claude/settings.json` permissions natively, so it gets the policy through Claude's files.   |
+| antigravity | `.agents/plugins/openthrottle/plugin.json`, `.agents/plugins/openthrottle/mcp_config.json` | Whole files. A workspace plugin: see [Antigravity: the workspace plugin](#antigravity-the-workspace-plugin).             |
 
 Whole-file outputs are marked `linguist-generated` in [`.gitattributes`](../../.gitattributes). Partly generated files are not, because their hand-authored keys still need review.
 
@@ -90,11 +90,35 @@ Notes on the translations that are not 1:1:
 
 ## Gaps: what a tool cannot express
 
-| Tool        | Gap                                                                                                                                                                                                |
-| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| antigravity | MCP servers and permission rules are user-level only (`~/.gemini/config/mcp_config.json`, `~/.gemini/antigravity-cli/settings.json`). No committed file can give a run the default set.            |
-| VS Code     | `chat.tools.terminal.autoApprove: false` makes a command prompt but cannot block it, and `.vscode/settings.json` is gitignored here. No permission policy is generated.                            |
-| codex       | Project config and rules load only for **trusted** projects (`[projects."<path>"] trust_level = "trusted"` in `~/.codex/config.toml`). `prefix_rule` cannot express "anywhere in argv".            |
-| cursor      | MCP approval is user-level (`~/.cursor/projects/<slug>/mcp-approvals.json`) or `--approve-mcps`. Agent attribution (`attributeCommitsToAgent`) is user-level only, in `~/.cursor/cli-config.json`. |
-| grok        | Repo MCP servers and project permission rules apply only in a trusted folder (`--trust` or `~/.grok/trusted_folders.toml`). A user-level `~/.claude.json` entry shadows the repo's.                |
-| claude      | Interactive sessions honour `enabledMcpjsonServers` only after the folder is trusted.                                                                                                              |
+| Tool        | Gap                                                                                                                                                                                                                                                |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| antigravity | MCP servers arrive only through the generated workspace plugin; `agy mcp list` does not show them. Permission rules have no committed home; `--settings` can carry them per run (unwired).                                                         |
+| VS Code     | `chat.tools.terminal.autoApprove: false` makes a command prompt but cannot block it, and `.vscode/settings.json` is gitignored here. No permission policy is generated.                                                                            |
+| codex       | Project config and rules load only for **trusted** projects (`[projects."<path>"] trust_level = "trusted"` in `~/.codex/config.toml`); see [Codex trust in worktrees](#codex-trust-in-worktrees). `prefix_rule` cannot express "anywhere in argv". |
+| cursor      | MCP approval is user-level (`~/.cursor/projects/<slug>/mcp-approvals.json`) or `--approve-mcps`. Agent attribution (`attributeCommitsToAgent`) is user-level only, in `~/.cursor/cli-config.json`.                                                 |
+| grok        | Repo MCP servers and project permission rules apply only in a trusted folder (`--trust` or `~/.grok/trusted_folders.toml`). A user-level `~/.claude.json` entry shadows the repo's.                                                                |
+| claude      | Interactive sessions honour `enabledMcpjsonServers` only after the folder is trusted.                                                                                                                                                              |
+
+## Antigravity: the workspace plugin
+
+`agy` (1.5.8) reads MCP servers from `~/.gemini/config/mcp_config.json` and from **plugins**, and `<workspace>/.agents/` is one of its customization roots. So the generator writes a plugin, `.agents/plugins/openthrottle/`, holding the default-on servers. Probed 2026-11-12 from an OT worktree:
+
+- A live `agy -p` session loads it: it listed `openthrottle_fetch`, `openthrottle_github`, `openthrottle_maestro`, `openthrottle_openthrottle-mcp` and `openthrottle_shadcn`, and the OT MCP `health` call returned `ok` for api, database, redis and websocket. agy prefixes plugin servers with `<plugin>_`.
+- `agy mcp list` and `agy plugin list` still print nothing. They only read user-level config, so use a live session to check.
+- agy starts a plugin's stdio servers **with cwd = the plugin folder**, so the generator rewrites `./scripts/…` arguments to `../../../scripts/…`. The launchers resolve the repo from their own path.
+- In headless `-p` without `--dangerously-skip-permissions`, MCP calls are denied until `permissions.allow` grants them (`mcp(*)` works; `mcp(openthrottle_openthrottle-mcp)` did not). The driver passes `--dangerously-skip-permissions`, so plan runs are not affected.
+
+`--settings '<json or path>'` validates its keys: `mcpServers` is rejected (`unknown setting`), so it cannot carry MCP servers. `permissions` (`allow` / `deny` / `ask` arrays of rules such as `command(git status)` and `mcp(*)`) is accepted and enforced (the `mcp(*)` allow above). Passing the push denies that way is not wired up yet, and a live check that a `deny` blocks a shell command is still owed.
+
+## Codex trust in worktrees
+
+Codex (0.167.0) reads `.codex/config.toml` and `.codex/rules/default.rules` only in a trusted project, and it resolves a linked worktree to its **primary checkout** before checking trust. So one `~/.codex/config.toml` entry for the primary checkout path covers every OT worktree. An entry for a parent directory covers nothing, and `-c 'projects."<path>".trust_level="trusted"'` is ignored.
+
+Worktree provisioning (`scripts/setup_worktree.ts`) and every heal (`scripts/heal_worktree.ts`) therefore make sure that one entry exists, via `scripts/utils/codex-trust.ts`. The rules it follows (owner-approved, OT plan `00beee78`):
+
+- It only adds. It never rewrites the file, and it leaves an existing entry for the path alone, including one set to something other than `"trusted"`; it warns instead.
+- It runs only when `codex` is on `PATH`. It honours `CODEX_HOME`.
+- Teardown never removes the entry. The primary checkout outlives its worktrees, so there is nothing per-worktree to clean up.
+- `OPENTHROTTLE_CODEX_TRUST=0` turns it off.
+
+Check it from a worktree with `codex mcp list` (the default servers are listed `enabled`) and `codex execpolicy check --rules .codex/rules/default.rules git push origin main` (`"decision":"forbidden"`).

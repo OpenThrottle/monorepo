@@ -4,6 +4,8 @@ import type { AgentConfig } from '../sync-agent-config.ts';
 import {
   checkClaudeAttribution,
   parseAgentConfig,
+  renderAntigravityMcpConfig,
+  renderAntigravityPluginManifest,
   renderClaudeMcpJson,
   renderClaudeSettings,
   renderCodexConfig,
@@ -110,6 +112,32 @@ describe('renderClaudeMcpJson', () => {
       },
     });
     expect(Object.keys(Object(parsed).mcpServers.on)).toEqual(['args', 'command', 'description']); // prettier-ignore
+  });
+});
+
+describe('renderAntigravityMcpConfig', () => {
+  it('lists default-on servers and re-roots ./ args at the plugin folder', () => {
+    const config = load({
+      off: http(),
+      on: stdio({ args: ['./scripts/run.sh', 'mcp'] }),
+      on2: http({ defaultOn: true }),
+    });
+
+    expect(JSON.parse(renderAntigravityMcpConfig(config))).toEqual({
+      mcpServers: {
+        on: { args: ['../../../scripts/run.sh', 'mcp'], command: 'tool' },
+        on2: { url: 'http://localhost:1/mcp' },
+      },
+    });
+  });
+});
+
+describe('renderAntigravityPluginManifest', () => {
+  it('names the plugin and marks it generated', () => {
+    const manifest: unknown = JSON.parse(renderAntigravityPluginManifest());
+
+    expect(manifest).toMatchObject({ name: 'openthrottle', version: '1.0.0' });
+    expect(Object(manifest).description).toContain('GENERATED');
   });
 });
 

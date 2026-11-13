@@ -26,7 +26,9 @@ const capabilities: DriverCapabilities = {
    * `approval_policy`, `sandbox_mode`, `commit_attribution`) and `.codex/rules/*.rules`, but ONLY when
    * the project is trusted (`[projects."<path>"] trust_level = "trusted"` in the user-scope
    * `~/.codex/config.toml`). Trust is host state, so reachability is still a property of the host,
-   * not the checkout. An untrusted checkout skips the project `.codex/` layer entirely.
+   * not the checkout. An untrusted checkout skips the project `.codex/` layer entirely. A linked
+   * worktree is trusted through its primary checkout; this repo's worktree provisioner records that
+   * entry (docs/monorepo/agent-config-parity.md § Codex trust in worktrees).
    */
   attachesWorkspaceMcp: false,
   chatStreaming: true,

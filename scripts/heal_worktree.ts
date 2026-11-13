@@ -10,7 +10,8 @@
  *
  * Then re-renders an existing docker-compose.worktree.yml for that mode, so a
  * worktree built by an older generator picks up its fixes. Never creates the
- * file and never touches Docker.
+ * file and never touches Docker. Finally ensures the primary checkout's codex
+ * trust entry (see utils/codex-trust.ts), for worktrees made before provision did.
  *
  * Discovered and exec'd directly by ot-worktree's heal action (heal hook rung
  * 3) and run by bare Node's native type stripping — no tsx, no dependencies.
@@ -18,6 +19,7 @@
  */
 import { fileURLToPath } from 'node:url';
 
+import { ensurePrimaryCheckoutCodexTrust } from './utils/codex-trust.ts';
 import { createLogger } from './utils/logger.ts';
 import { refreshWorktreeComposeOverride, WORKTREE_COMPOSE_FILE } from './utils/worktree-compose.ts'; // prettier-ignore
 import { backfillWorktreeDbMarker } from './utils/worktree-db.ts';
@@ -39,6 +41,14 @@ const main = (): void => {
 
   if (compose.kind === 'failed') {
     logger.warn(`could not refresh ${WORKTREE_COMPOSE_FILE}: ${compose.message}`); // prettier-ignore
+  }
+
+  // Backfill codex trust for worktrees provisioned before setup_worktree.ts
+  // learned it. A no-op once the primary checkout's entry exists.
+  const trust = ensurePrimaryCheckoutCodexTrust(process.cwd(), process.env);
+
+  if (trust !== undefined) {
+    logger[trust.level](trust.message);
   }
 };
 

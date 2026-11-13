@@ -17,6 +17,7 @@ import { basename, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { resetEnvironmentFiles } from './setup_environment.ts';
+import { ensurePrimaryCheckoutCodexTrust } from './utils/codex-trust.ts';
 import { firstEnvMatch, upsertEnvLine } from './utils/env.ts';
 import { run } from './utils/exec.ts';
 import { configureBlameIgnoreRevs, isLinkedWorktree } from './utils/git.ts';
@@ -157,6 +158,16 @@ const main = async (): Promise<void> => {
   //     share the primary checkout's config, so this is usually already set;
   //     it is idempotent, and a no-op on a branch that predates the file.
   configureBlameIgnoreRevs(process.cwd());
+
+  // 0c. Trust the PRIMARY checkout for codex, so codex runs here load the
+  //     committed .codex/config.toml + rules. Codex resolves a worktree to its
+  //     primary for trust, so this one entry covers every worktree and teardown
+  //     never removes it. Additive, codex-installed-only, best-effort.
+  const trust = ensurePrimaryCheckoutCodexTrust(process.cwd(), process.env);
+
+  if (trust !== undefined) {
+    logger[trust.level](trust.message);
+  }
 
   // 1. Create the environment file(s) — resets each .env to .env.default
   //    unconditionally: worktree provisioning always starts from the template
