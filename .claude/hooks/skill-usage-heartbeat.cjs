@@ -198,36 +198,6 @@ var isRecord = (value) => {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 };
 
-// packages/agentic-hooks/src/utils/checkout-root.ts
-var import_node_fs2 = __toESM(require("node:fs"), 1);
-var import_node_path3 = __toESM(require("node:path"), 1);
-var findGitAncestor = (dir) => {
-  if (import_node_fs2.default.existsSync(import_node_path3.default.join(dir, ".git"))) {
-    return dir;
-  }
-  const parent = import_node_path3.default.dirname(dir);
-  if (parent === dir) {
-    return null;
-  }
-  return findGitAncestor(parent);
-};
-var resolveCheckoutRoot = (dir) => {
-  if (dir === null || dir === "" || !import_node_path3.default.isAbsolute(dir)) {
-    return null;
-  }
-  try {
-    return findGitAncestor(import_node_path3.default.resolve(dir));
-  } catch {
-    return null;
-  }
-};
-var resolveHookRepoRoot = ({
-  payloadCwd,
-  projectDir
-}) => {
-  return resolveCheckoutRoot(projectDir) ?? resolveCheckoutRoot(payloadCwd) ?? projectDir;
-};
-
 // packages/agentic-hooks/src/data/graphql.ts
 var PERMANENT_GRAPHQL_CODES = [
   "BAD_REQUEST",
@@ -347,6 +317,36 @@ var postGraphqlMutation = async (args) => {
     return { id: String(node.id), ok: true };
   }
   return transient(`missing ${args.field}.id`);
+};
+
+// packages/agentic-hooks/src/utils/checkout-root.ts
+var import_node_fs2 = __toESM(require("node:fs"), 1);
+var import_node_path3 = __toESM(require("node:path"), 1);
+var findGitAncestor = (dir) => {
+  if (import_node_fs2.default.existsSync(import_node_path3.default.join(dir, ".git"))) {
+    return dir;
+  }
+  const parent = import_node_path3.default.dirname(dir);
+  if (parent === dir) {
+    return null;
+  }
+  return findGitAncestor(parent);
+};
+var resolveCheckoutRoot = (dir) => {
+  if (dir === null || dir === "" || !import_node_path3.default.isAbsolute(dir)) {
+    return null;
+  }
+  try {
+    return findGitAncestor(import_node_path3.default.resolve(dir));
+  } catch {
+    return null;
+  }
+};
+var resolveHookRepoRoot = ({
+  payloadCwd,
+  projectDir
+}) => {
+  return resolveCheckoutRoot(projectDir) ?? resolveCheckoutRoot(payloadCwd) ?? projectDir;
 };
 
 // packages/agentic-hooks/src/data/persist.ts

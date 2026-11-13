@@ -413,109 +413,6 @@ var isRecord = (value) => {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 };
 
-// packages/agentic-hooks/src/data/events.ts
-var RECORD_SKILL_USAGE_MUTATION = `
-mutation RecordSkillUsage($input: RecordSkillUsageInput!) {
-  recordSkillUsage(input: $input) {
-    id
-    skillName
-  }
-}
-`;
-var RECORD_SKILL_USAGE_OUTCOME_MUTATION = `
-mutation RecordSkillUsageOutcome($input: RecordSkillUsageOutcomeInput!) {
-  recordSkillUsageOutcome(input: $input) {
-    id
-    skillName
-    outcome
-    source
-  }
-}
-`;
-var SKILL_USAGE_OUTCOMES = Object.freeze({
-  ABANDONED: "abandoned",
-  ERROR: "error",
-  SESSION_ENDED: "session_ended",
-  SUCCESS: "success"
-});
-var SKILL_USAGE_QUALITY_OUTCOMES = Object.freeze([SKILL_USAGE_OUTCOMES.ERROR, SKILL_USAGE_OUTCOMES.SUCCESS]);
-var toRecordSkillUsageInput = (event) => {
-  const input = {
-    occurredAt: event.timestamp,
-    scope: event.scope,
-    skillName: event.skill_name
-  };
-  if (event.source != null) {
-    input.source = event.source;
-  }
-  if (event.args !== void 0) {
-    input.args = event.args;
-  }
-  if (event.cwd != null) {
-    input.cwd = event.cwd;
-  }
-  if (event.git_branch != null && event.git_branch !== "") {
-    input.gitBranch = event.git_branch;
-  }
-  if (event.session_id != null) {
-    input.sessionId = event.session_id;
-  }
-  if (event.privacy_level != null) {
-    input.privacyLevel = event.privacy_level;
-  }
-  if (event.invocation_path != null) {
-    input.invocationPath = event.invocation_path;
-  }
-  if (event.hook_event_name != null) {
-    input.hookEventName = event.hook_event_name;
-  }
-  if (event.agent_id != null) {
-    input.agentId = event.agent_id;
-  }
-  if (event.agent_type != null) {
-    input.agentType = event.agent_type;
-  }
-  if (event.tool_use_id != null) {
-    input.toolUseId = event.tool_use_id;
-  }
-  if (event.prompt_id != null) {
-    input.promptId = event.prompt_id;
-  }
-  return input;
-};
-var toRecordSkillUsageOutcomeInput = (event) => {
-  const input = {
-    occurredAt: event.timestamp,
-    outcome: event.outcome,
-    skillName: event.skill_name
-  };
-  if (event.source != null) {
-    input.source = event.source;
-  }
-  if (event.scope != null) {
-    input.scope = event.scope;
-  }
-  if (event.cwd != null) {
-    input.cwd = event.cwd;
-  }
-  if (event.git_branch != null && event.git_branch !== "") {
-    input.gitBranch = event.git_branch;
-  }
-  if (event.session_id != null) {
-    input.sessionId = event.session_id;
-  }
-  if (event.tool_use_id != null) {
-    input.toolUseId = event.tool_use_id;
-  }
-  if (event.duration_ms != null) {
-    input.durationMs = event.duration_ms;
-  }
-  if (event.deliberate === true) {
-    input.deliberate = true;
-  }
-  return input;
-};
-
 // packages/agentic-hooks/src/data/graphql.ts
 var PERMANENT_GRAPHQL_CODES = [
   "BAD_REQUEST",
@@ -645,6 +542,109 @@ var postGraphqlMutationNode = async (args) => {
     return transient(`missing ${args.field}`);
   }
   return { node: posted.data, ok: true };
+};
+
+// packages/agentic-hooks/src/data/events.ts
+var RECORD_SKILL_USAGE_MUTATION = `
+mutation RecordSkillUsage($input: RecordSkillUsageInput!) {
+  recordSkillUsage(input: $input) {
+    id
+    skillName
+  }
+}
+`;
+var RECORD_SKILL_USAGE_OUTCOME_MUTATION = `
+mutation RecordSkillUsageOutcome($input: RecordSkillUsageOutcomeInput!) {
+  recordSkillUsageOutcome(input: $input) {
+    id
+    skillName
+    outcome
+    source
+  }
+}
+`;
+var SKILL_USAGE_OUTCOMES = Object.freeze({
+  ABANDONED: "abandoned",
+  ERROR: "error",
+  SESSION_ENDED: "session_ended",
+  SUCCESS: "success"
+});
+var SKILL_USAGE_QUALITY_OUTCOMES = Object.freeze([SKILL_USAGE_OUTCOMES.ERROR, SKILL_USAGE_OUTCOMES.SUCCESS]);
+var toRecordSkillUsageInput = (event) => {
+  const input = {
+    occurredAt: event.timestamp,
+    scope: event.scope,
+    skillName: event.skill_name
+  };
+  if (event.source != null) {
+    input.source = event.source;
+  }
+  if (event.args !== void 0) {
+    input.args = event.args;
+  }
+  if (event.cwd != null) {
+    input.cwd = event.cwd;
+  }
+  if (event.git_branch != null && event.git_branch !== "") {
+    input.gitBranch = event.git_branch;
+  }
+  if (event.session_id != null) {
+    input.sessionId = event.session_id;
+  }
+  if (event.privacy_level != null) {
+    input.privacyLevel = event.privacy_level;
+  }
+  if (event.invocation_path != null) {
+    input.invocationPath = event.invocation_path;
+  }
+  if (event.hook_event_name != null) {
+    input.hookEventName = event.hook_event_name;
+  }
+  if (event.agent_id != null) {
+    input.agentId = event.agent_id;
+  }
+  if (event.agent_type != null) {
+    input.agentType = event.agent_type;
+  }
+  if (event.tool_use_id != null) {
+    input.toolUseId = event.tool_use_id;
+  }
+  if (event.prompt_id != null) {
+    input.promptId = event.prompt_id;
+  }
+  return input;
+};
+var toRecordSkillUsageOutcomeInput = (event) => {
+  const input = {
+    occurredAt: event.timestamp,
+    outcome: event.outcome,
+    skillName: event.skill_name
+  };
+  if (event.source != null) {
+    input.source = event.source;
+  }
+  if (event.scope != null) {
+    input.scope = event.scope;
+  }
+  if (event.cwd != null) {
+    input.cwd = event.cwd;
+  }
+  if (event.git_branch != null && event.git_branch !== "") {
+    input.gitBranch = event.git_branch;
+  }
+  if (event.session_id != null) {
+    input.sessionId = event.session_id;
+  }
+  if (event.tool_use_id != null) {
+    input.toolUseId = event.tool_use_id;
+  }
+  if (event.duration_ms != null) {
+    input.durationMs = event.duration_ms;
+  }
+  if (event.deliberate === true) {
+    input.deliberate = true;
+  }
+  return input;
 };
 
 // packages/agentic-hooks/src/data/token-usage.ts

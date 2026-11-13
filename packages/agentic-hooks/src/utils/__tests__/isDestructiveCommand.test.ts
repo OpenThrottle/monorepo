@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { isDestructiveCommand } from '../destructive-command.ts';
+import { isDestructiveCommand } from '../isDestructiveCommand.ts';
 
 describe('isDestructiveCommand', () => {
   it.each([

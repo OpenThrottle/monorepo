@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import type { HookFetch } from '../../types.ts';
-import { claimPlanInbox } from '../plan-inbox.ts';
+import { claimPlanInbox } from '../claimPlanInbox.ts';
 
 const target = { planId: 'p1', planRunId: 'r1', taskId: null };
 

@@ -182,32 +182,6 @@ var isRecord = (value) => {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 };
 
-// packages/agentic-hooks/src/data/data.destructive-commands.ts
-var AT_COMMAND = String.raw`(?:^|[;&|({\n]|\b(?:sudo|xargs|then|do|else))\s*`;
-var GIT = String.raw`git\s+(?:-[cC]\s+\S+\s+)*`;
-var ANY_ARGS = String.raw`[^;&|\n]*`;
-var DESTRUCTIVE_COMMAND_PATTERNS = [
-  new RegExp(`${AT_COMMAND}rm\\s`),
-  new RegExp(`${AT_COMMAND}rmdir\\s`),
-  new RegExp(`${AT_COMMAND}${GIT}rm\\s`),
-  new RegExp(`${AT_COMMAND}${GIT}clean\\b`),
-  new RegExp(`${AT_COMMAND}${GIT}reset\\b${ANY_ARGS}--hard\\b`),
-  new RegExp(`${AT_COMMAND}${GIT}rebase\\b`),
-  new RegExp(`${AT_COMMAND}${GIT}commit\\b${ANY_ARGS}--amend\\b`),
-  new RegExp(`${AT_COMMAND}${GIT}push\\b`),
-  new RegExp(`${AT_COMMAND}${GIT}branch\\s(?:${ANY_ARGS}\\s)?-D\\b`),
-  new RegExp(
-    `${AT_COMMAND}${GIT}branch\\s${ANY_ARGS}--delete\\b${ANY_ARGS}--force\\b`
-  ),
-  new RegExp(
-    `${AT_COMMAND}${GIT}branch\\s${ANY_ARGS}--force\\b${ANY_ARGS}--delete\\b`
-  ),
-  new RegExp(`${AT_COMMAND}gh\\s+pr\\s+create\\b`),
-  new RegExp(
-    `${AT_COMMAND}(?:pnpm|npm|yarn)\\s+(?:run\\s+)?(?:\\S+\\s+)*?(?:worktree:remove|database:migrate)\\b`
-  )
-];
-
 // packages/agentic-hooks/src/data/graphql.ts
 var PERMANENT_GRAPHQL_CODES = [
   "BAD_REQUEST",
@@ -328,7 +302,7 @@ var postGraphqlMutationNode = async (args) => {
   return { node: posted.data, ok: true };
 };
 
-// packages/agentic-hooks/src/data/plan-inbox.ts
+// packages/agentic-hooks/src/data/claimPlanInbox.ts
 var CLAIM_MUTATION = `
 mutation ClaimPlanMessagesFromHook($input: ClaimPlanMessagesInput!) {
   claimPlanMessages(input: $input) { messages { author body id kind } }
@@ -377,6 +351,32 @@ var claimPlanInbox = async ({
     return null;
   }
 };
+
+// packages/agentic-hooks/src/data/data.destructive-commands.ts
+var AT_COMMAND = String.raw`(?:^|[;&|({\n]|\b(?:sudo|xargs|then|do|else))\s*`;
+var GIT = String.raw`git\s+(?:-[cC]\s+\S+\s+)*`;
+var ANY_ARGS = String.raw`[^;&|\n]*`;
+var DESTRUCTIVE_COMMAND_PATTERNS = [
+  new RegExp(`${AT_COMMAND}rm\\s`),
+  new RegExp(`${AT_COMMAND}rmdir\\s`),
+  new RegExp(`${AT_COMMAND}${GIT}rm\\s`),
+  new RegExp(`${AT_COMMAND}${GIT}clean\\b`),
+  new RegExp(`${AT_COMMAND}${GIT}reset\\b${ANY_ARGS}--hard\\b`),
+  new RegExp(`${AT_COMMAND}${GIT}rebase\\b`),
+  new RegExp(`${AT_COMMAND}${GIT}commit\\b${ANY_ARGS}--amend\\b`),
+  new RegExp(`${AT_COMMAND}${GIT}push\\b`),
+  new RegExp(`${AT_COMMAND}${GIT}branch\\s(?:${ANY_ARGS}\\s)?-D\\b`),
+  new RegExp(
+    `${AT_COMMAND}${GIT}branch\\s${ANY_ARGS}--delete\\b${ANY_ARGS}--force\\b`
+  ),
+  new RegExp(
+    `${AT_COMMAND}${GIT}branch\\s${ANY_ARGS}--force\\b${ANY_ARGS}--delete\\b`
+  ),
+  new RegExp(`${AT_COMMAND}gh\\s+pr\\s+create\\b`),
+  new RegExp(
+    `${AT_COMMAND}(?:pnpm|npm|yarn)\\s+(?:run\\s+)?(?:\\S+\\s+)*?(?:worktree:remove|database:migrate)\\b`
+  )
+];
 
 // packages/agentic-hooks/src/data/read-new.ts
 var import_node_fs2 = __toESM(require("node:fs"), 1);
@@ -466,7 +466,7 @@ var tryTakeClaimSlot = ({
   }
 };
 
-// packages/agentic-hooks/src/utils/destructive-command.ts
+// packages/agentic-hooks/src/utils/isDestructiveCommand.ts
 var isDestructiveCommand = (command) => {
   return DESTRUCTIVE_COMMAND_PATTERNS.some((pattern) => pattern.test(command));
 };
