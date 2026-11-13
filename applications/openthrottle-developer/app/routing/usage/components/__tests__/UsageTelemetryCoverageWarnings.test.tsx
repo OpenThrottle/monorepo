@@ -100,11 +100,11 @@ describe('UsageTelemetryCoverageWarnings Component', () => {
   });
 
   describe('BUFFER_STALE', () => {
-    test('suggests the drain without replay when nothing was rejected', () => {
+    test('suggests the drain and leaves replay to DEAD_LETTERED', () => {
       const component = renderWarnings([
         withWarning('BUFFER_STALE', {
           buffer: {
-            deadLetterCount: 0,
+            deadLetterCount: 4,
             oldestBufferedAt: telemetryHoursAgo(30),
             totalBuffered: 12,
           },
@@ -125,24 +125,28 @@ describe('UsageTelemetryCoverageWarnings Component', () => {
       );
       expectDoctorLine(alert);
     });
+  });
 
-    test('mentions --replay-dead-letter when records were rejected', () => {
+  describe('DEAD_LETTERED', () => {
+    test('offers the replay command, the count and the doctor line', () => {
       const component = renderWarnings([
-        withWarning('BUFFER_STALE', {
-          buffer: {
-            deadLetterCount: 4,
-            oldestBufferedAt: telemetryHoursAgo(30),
-            totalBuffered: 12,
-          },
+        withWarning('DEAD_LETTERED', {
+          buffer: { deadLetterCount: 1300, totalBuffered: 0 },
         }),
       ]);
+      const alert = component.getByTestId('UsageTelemetryCoverageWarning');
 
+      expect(alert).toHaveAttribute('data-kind', 'DEAD_LETTERED');
       expect(
         component.getByText(TELEMETRY_COVERAGE_COMMANDS.drainReplayDeadLetter),
       ).toBeInTheDocument();
       expect(
-        component.getByText(TELEMETRY_COVERAGE_COPY.warningReplayHint(4)),
-      ).toBeInTheDocument();
+        component.queryByText(TELEMETRY_COVERAGE_COMMANDS.drain),
+      ).not.toBeInTheDocument();
+      expect(alert).toHaveTextContent(
+        TELEMETRY_COVERAGE_COPY.warningDescriptions.DEAD_LETTERED(1300),
+      );
+      expectDoctorLine(alert);
     });
   });
 

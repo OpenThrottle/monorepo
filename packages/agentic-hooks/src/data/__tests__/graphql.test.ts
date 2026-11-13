@@ -5,7 +5,11 @@
 import { describe, expect, it } from 'vitest';
 
 import type { HookFetch } from '../../index.ts';
-import { isPermanentHttpStatus, postGraphqlMutation } from '../../index.ts';
+import {
+  isPermanentHttpStatus,
+  isSchemaSkewMessage,
+  postGraphqlMutation,
+} from '../../index.ts';
 
 const respond = (status: number, payload: unknown): HookFetch => {
   return async () => ({ json: async () => payload, ok: status < 400, status });
@@ -66,6 +70,38 @@ describe('postGraphqlMutation', () => {
     });
   });
 
+  describe('when the server is older than the hooks (schema skew)', () => {
+    const skew = `Variable "$input" got invalid value { account: {} } at "input.rows[0]"; Field "account" is not defined by type "RecordTokenUsageRowInput".`;
+
+    it('is transient even with a permanent code and a 400', async () => {
+      await expect(
+        post(
+          respond(400, {
+            errors: [
+              {
+                extensions: { code: 'GRAPHQL_VALIDATION_FAILED' },
+                message: skew,
+              },
+            ],
+          }),
+        ),
+      ).resolves.toEqual({ ok: false, permanent: false, reason: skew });
+    });
+
+    it('stays permanent when a non-skew rejection rides along', async () => {
+      await expect(
+        post(
+          respond(200, {
+            errors: [
+              { extensions: { code: 'BAD_USER_INPUT' }, message: skew },
+              { extensions: { code: 'BAD_USER_INPUT' }, message: 'nope' },
+            ],
+          }),
+        ),
+      ).resolves.toMatchObject({ ok: false, permanent: true });
+    });
+  });
+
   describe('when the network fails', () => {
     it('is transient', async () => {
       const fetchImpl: HookFetch = async () => {
@@ -104,6 +140,26 @@ describe('postGraphqlMutation', () => {
         permanent: false,
       });
     });
+  });
+});
+
+describe('isSchemaSkewMessage', () => {
+  it.each([
+    'Field "account" is not defined by type "RecordTokenUsageRowInput".',
+    'Cannot query field "recordThing" on type "Mutation".',
+    'Unknown argument "scope" on field "Mutation.recordThing".',
+    'Unknown type "RecordThingInput".',
+    'Value "NEW" does not exist in "Status" enum.',
+  ])('recognizes %s', (message) => {
+    expect(isSchemaSkewMessage(message)).toBe(true);
+  });
+
+  it.each([
+    'Expected value of type "Float!", found "abc".',
+    'model must not be blank',
+    'plan run or task not found',
+  ])('does not treat %s as skew', (message) => {
+    expect(isSchemaSkewMessage(message)).toBe(false);
   });
 });
 

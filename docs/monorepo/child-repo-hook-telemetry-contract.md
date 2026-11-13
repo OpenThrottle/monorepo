@@ -258,11 +258,18 @@ Thresholds reuse `CAPTURE_HEALTH_STALE_AFTER_HOURS` (24h), so `/usage` has one d
 | `PLUGIN_OUTDATED`           | `marketplace_plugin_version` is lower than the payload version the server ships.                                                          |
 | `BUFFER_STALE`              | the newest heartbeat's oldest buffered record is older than 24h.                                                                          |
 | `BUFFER_GROWING`            | buffered line count rose across the machine's last three heartbeats while the server was reachable enough to receive them.                |
+| `DEAD_LETTERED`             | the newest heartbeat's `dead_letter_count` is above zero: records the server rejected outright, missing from usage until replayed.        |
 | `MACHINE_SILENT`            | the machine has heartbeats, but none within the query window.                                                                             |
 
 `BUFFER_GROWING` is the one that matters most: a heartbeat that _arrives_ while its own buffer
 grows proves the endpoint is reachable for small posts and the drain is failing anyway, which
 usually means the server is rejecting records into the dead-letter files.
+
+Schema skew is not a rejection. When the hooks are newer than the server they post to — a field,
+argument, type or enum value the running server does not define yet — the drain keeps the line
+buffered instead of dead-lettering it, so restarting the server onto the newer commit delivers it.
+Until then it shows as `BUFFER_STALE` / `BUFFER_GROWING`. On 2026-11-13 the old behavior
+dead-lettered 930 token rows in the three hours between #748 landing and the server restarting.
 
 ---
 

@@ -51,7 +51,7 @@ export class TelemetryBufferSnapshotObject {
 }
 
 @ObjectType({
-  description: `A coverage warning. kind is one of MANUAL_SESSIONS_UNCOVERED, PLUGIN_OUTDATED, BUFFER_STALE, BUFFER_GROWING, MACHINE_SILENT.`,
+  description: `A coverage warning. kind is one of MANUAL_SESSIONS_UNCOVERED, PLUGIN_OUTDATED, BUFFER_STALE, BUFFER_GROWING, DEAD_LETTERED, MACHINE_SILENT.`,
 })
 export class TelemetryCoverageWarningObject {
   @Field(() => String)

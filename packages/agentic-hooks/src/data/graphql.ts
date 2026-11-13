@@ -11,6 +11,13 @@
  * Auth failures are deliberately TRANSIENT. A missing or expired token is an
  * environment problem, and dead-lettering on it would discard every line
  * buffered while the token was wrong.
+ *
+ * Schema skew is TRANSIENT too, whatever its code. When the hooks are newer
+ * than the server they post to (a server not yet restarted onto the commit
+ * that added a field), the server rejects a field, argument, type or enum
+ * value it does not know yet. Restarting or upgrading the server makes the
+ * same bytes deliverable, so the line stays buffered: a stuck buffer raises
+ * BUFFER_STALE / BUFFER_GROWING, where a dead letter used to drop it silently.
  */
 import { isRecord } from '@openthrottle/nodejs-utils';
 
@@ -23,6 +30,28 @@ const PERMANENT_GRAPHQL_CODES: readonly string[] = [
   'GRAPHQL_PARSE_FAILED',
   'GRAPHQL_VALIDATION_FAILED',
 ];
+
+/**
+ * graphql-js messages for a name the server's schema does not define yet:
+ * an unknown input field, output field, argument, type or enum value.
+ */
+const SCHEMA_SKEW_MESSAGE_PATTERNS: readonly RegExp[] = [
+  /Field "[^"]+" is not defined by type "[^"]+"/,
+  /Cannot query field "[^"]+" on type "[^"]+"/,
+  /Unknown argument "[^"]+" on field "[^"]+"/,
+  /Unknown type "[^"]+"/,
+  /Value "[^"]+" does not exist in "[^"]+" enum/,
+];
+
+/**
+ * True when a GraphQL error message says the server's schema lacks a name the
+ * client sent — a server older than the hooks, not a bad payload.
+ *
+ * @public
+ */
+export const isSchemaSkewMessage = (message: string): boolean => {
+  return SCHEMA_SKEW_MESSAGE_PATTERNS.some((pattern) => pattern.test(message));
+};
 
 /** 4xx statuses that are about the environment, not the payload. */
 const TRANSIENT_CLIENT_STATUSES: readonly number[] = [401, 403, 408, 429];
@@ -48,7 +77,8 @@ const readStatusCode = (extensions: Record<string, unknown>): number | null => {
 
 /**
  * Read GraphQL `errors` from a JSON payload: null when there are none, else the
- * joined messages and whether ANY of them is a permanent rejection.
+ * joined messages and whether ANY of them is a permanent rejection. A schema
+ * skew error is never permanent, so a batch rejected only for skew is retried.
  *
  * @public
  */
@@ -69,7 +99,11 @@ export const readGraphqlErrors = (
     if (!isRecord(error)) {
       continue;
     }
-    messages.push(typeof error.message === 'string' ? error.message : '');
+    const message = typeof error.message === 'string' ? error.message : '';
+    messages.push(message);
+    if (isSchemaSkewMessage(message)) {
+      continue;
+    }
     const extensions = isRecord(error.extensions) ? error.extensions : {};
     const code = typeof extensions.code === 'string' ? extensions.code : '';
     const status = readStatusCode(extensions);

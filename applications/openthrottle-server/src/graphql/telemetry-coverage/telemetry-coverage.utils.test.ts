@@ -8,6 +8,7 @@ import {
   groupRepos,
   isBufferGrowing,
   isBufferStale,
+  isDeadLettered,
   isMachineSilent,
   isManualSessionsUncovered,
   isPluginOutdated,
@@ -120,6 +121,16 @@ describe('isBufferGrowing', () => {
   });
 });
 
+describe('isDeadLettered', () => {
+  test('fires when the newest heartbeat reports any dead letter', () => {
+    expect(isDeadLettered(row({ deadLetterCount: 1 }))).toBe(true);
+  });
+
+  test('does not fire at zero', () => {
+    expect(isDeadLettered(row({ deadLetterCount: 0 }))).toBe(false);
+  });
+});
+
 describe('isMachineSilent', () => {
   const windowStart = new Date(now.getTime() - 14 * 86_400_000);
 
@@ -162,6 +173,7 @@ describe('computeWarnings', () => {
   test('emits every rule in order with kind and message', () => {
     const rows = [
       row({
+        deadLetterCount: 1300,
         marketplacePluginInstalled: false,
         marketplacePluginVersion: '1.0.0',
         oldestBufferedAt: new Date(now.getTime() - 48 * 3_600_000),
@@ -174,7 +186,19 @@ describe('computeWarnings', () => {
       'PLUGIN_OUTDATED',
       'BUFFER_STALE',
       'BUFFER_GROWING',
+      'DEAD_LETTERED',
     ]);
+  });
+
+  test('reads dead letters from the newest row only', () => {
+    const rows = [
+      row({
+        deadLetterCount: 5,
+        lastSeenAt: new Date('2026-11-12T00:00:00.000Z'),
+      }),
+      row({ deadLetterCount: 0 }),
+    ];
+    expect(computeWarnings(rows, options)).toEqual([]);
   });
 
   test('flags a silent machine', () => {

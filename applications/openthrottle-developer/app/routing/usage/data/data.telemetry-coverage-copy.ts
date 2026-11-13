@@ -9,6 +9,7 @@
 export const TELEMETRY_WARNING_KINDS = {
   BUFFER_GROWING: `BUFFER_GROWING`,
   BUFFER_STALE: `BUFFER_STALE`,
+  DEAD_LETTERED: `DEAD_LETTERED`,
   MACHINE_SILENT: `MACHINE_SILENT`,
   MANUAL_SESSIONS_UNCOVERED: `MANUAL_SESSIONS_UNCOVERED`,
   PLUGIN_OUTDATED: `PLUGIN_OUTDATED`,
@@ -92,14 +93,14 @@ export const TELEMETRY_COVERAGE_COPY = {
       `${total} records are waiting to be delivered and the buffer keeps growing, so the server is not accepting what this machine sends.`,
     BUFFER_STALE: (relativeLabel: string): string =>
       `The oldest buffered record was captured ${relativeLabel} and has still not reached the server, so delivery is stuck.`,
+    DEAD_LETTERED: (count: number): string =>
+      `The server rejected ${count} records from this machine. They are kept in dead-letter files under ~/.openthrottle/skill-usage/ and are missing from usage until replayed. Fix the cause the doctor reports, then replay them; already-recorded token usage is not counted twice.`,
     MACHINE_SILENT: (relativeLabel: string): string =>
       `This machine was last seen ${relativeLabel}. If you have used it since, telemetry is not reaching the server.`,
     MANUAL_SESSIONS_UNCOVERED: `The marketplace plugin is not installed, so sessions you start by hand outside the OpenThrottle repo record nothing.`,
     PLUGIN_OUTDATED: (installed: string, current: string): string =>
       `The installed plugin is ${installed} and the server ships ${current}. Older hooks may miss newer telemetry.`,
   },
-  warningReplayHint: (count: number): string =>
-    `${count} records were rejected by the server; replay them with --replay-dead-letter.`,
   warningTitleUnknown: (machineName: string, kind: string): string =>
     `${machineName}: ${kind}`,
   warningTitles: {
@@ -107,6 +108,8 @@ export const TELEMETRY_COVERAGE_COPY = {
       `${machineName}: buffer is growing`,
     BUFFER_STALE: (machineName: string): string =>
       `${machineName}: buffered records are stuck`,
+    DEAD_LETTERED: (machineName: string): string =>
+      `${machineName}: records were rejected`,
     MACHINE_SILENT: (machineName: string): string =>
       `${machineName}: no recent heartbeat`,
     MANUAL_SESSIONS_UNCOVERED: (machineName: string): string =>

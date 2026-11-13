@@ -1,6 +1,6 @@
 /**
  * @description Pure coverage logic for telemetryCoverage: semver compare,
- * the five warning rules, and grouping heartbeat rows into machines/repos.
+ * the six warning rules, and grouping heartbeat rows into machines/repos.
  */
 
 import { readFileSync } from 'node:fs';
@@ -137,6 +137,14 @@ export function isBufferGrowing(
   return first < second && second < third;
 }
 
+/**
+ * @description True when the newest heartbeat reports any dead-lettered
+ * record: rows the server rejected outright, which never reach usage.
+ */
+export function isDeadLettered(newest: TelemetryHeartbeat): boolean {
+  return newest.deadLetterCount > 0;
+}
+
 export function isMachineSilent(
   rows: readonly TelemetryHeartbeat[],
   windowStart: Date,
@@ -194,6 +202,9 @@ export function computeWarnings(
   }
   if (isBufferGrowing(newest.recentBufferedTotals)) {
     warnings.push(warning(TELEMETRY_COVERAGE_WARNING_KINDS.BUFFER_GROWING));
+  }
+  if (isDeadLettered(newest)) {
+    warnings.push(warning(TELEMETRY_COVERAGE_WARNING_KINDS.DEAD_LETTERED));
   }
   if (isMachineSilent(rows, windowStart)) {
     warnings.push(warning(TELEMETRY_COVERAGE_WARNING_KINDS.MACHINE_SILENT));
