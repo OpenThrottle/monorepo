@@ -5,11 +5,13 @@ import { describe, expect, it } from 'vitest';
 
 import type { ModelRoutingPolicy } from '../../contract/index.ts';
 import { MODEL_ROUTING_REVIEW_TIER } from '../../data/data.model-routing.ts';
-import { createModelRouter } from '../create-model-router.ts';
-import { parseModelRoutingPolicy } from '../parse-model-routing-policy.ts';
-import { readModelRoutingPolicy } from '../read-model-routing-policy.ts';
-import { routeTaskModel } from '../route-task-model.ts';
-import { runOtLoop } from '../run-ot-loop.ts';
+import {
+  createModelRouter,
+  parseModelRoutingPolicy,
+  readModelRoutingPolicy,
+  routeTaskModel,
+} from '../model-routing.ts';
+import { runOtLoop } from '../runOtLoop.ts';
 import { makeTask, makeWorld } from './loop-fakes.ts';
 
 const POLICY_PATH = fileURLToPath(

@@ -17,7 +17,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import type { Transcript } from '../../types/transcript.ts';
 import { createSanitizer } from '../sanitizer/sanitizer.ts';
 import { parseTranscript } from '../transcript/transcript.ts';
-import { replayPaths } from './replay-paths.ts';
+import { replayPaths } from './replayPaths.ts';
 
 /**
  * Exit code of a replay whose outbound traffic did not match.

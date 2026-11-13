@@ -15,7 +15,7 @@ import type { McpRegistryDiscoveryService } from '@rekog/mcp-nest';
 
 import type { ToolsetName } from '../config/toolsets.ts';
 import { developerMcpToolDefinitions } from '../tool-registry.ts';
-import { McpDeveloperMcpSurface } from './openthrottle-mcp-mcp-surface.ts';
+import { McpDeveloperMcpSurface } from './McpDeveloperMcpSurface.ts';
 
 /**
  * @description Removes every {@link McpDeveloperMcpSurface} tool outside the enabled toolsets from

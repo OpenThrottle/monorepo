@@ -13,7 +13,7 @@ import { describe, expect, test } from 'vitest';
 
 import { getEpisode, resolveVariant } from '../../episodes/registry.ts';
 import type { VideoEpisode } from '../../episodes/types.ts';
-import { scanText } from '../../scan/scan-text.ts';
+import { scanText } from '../../scan/scanText.ts';
 import type { RenderFacts } from '../metadata.ts';
 import { buildMetadata } from '../metadata.ts';
 

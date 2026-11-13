@@ -189,7 +189,7 @@ Honest scope for task 3, so it is not discovered a layer at a time:
 | MCP              | `packages/openthrottle-mcp/src/tools/tasks.ts` — the generated zod schemas follow the GraphQL inputs automatically, but `createTasksItemSchema` is **hand-written** and must be updated by hand |
 | Ralph            | `packages/openthrottle-agentic-ralph/src/utils/plan-task-list-order.ts` and `src/graphql/ralph/fragments.graphql`                                                                               |
 | Workflows CLI    | `tools/workflows/src/utils/openthrottle-ralph-postgres.ts` — raw SQL with explicit column lists, which a new column does not reach on its own                                                   |
-| Developer UI     | `applications/openthrottle-developer/app/routes/plans.$planId._index.tsx.graphql` and `app/routing/plans/utils/sort-plan-tasks-by-list-order.ts`                                                |
+| Developer UI     | `applications/openthrottle-developer/app/routes/plans.$planId._index.tsx.graphql` and `app/routing/plans/utils/sortPlanTasksByListOrder.ts`                                                     |
 
 ## See also
 

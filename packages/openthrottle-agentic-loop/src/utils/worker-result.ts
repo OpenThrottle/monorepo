@@ -1,0 +1,233 @@
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import type {
+  LoopFollowUp,
+  WorkerResult,
+  WorkerResultRead,
+} from '../contract/index.ts';
+import {
+  RESULT_DIR_GITIGNORE,
+  RESULT_DIR_NAME,
+  RESULT_FILE_NAME,
+  RESULT_FOLLOW_UP_DESCRIPTION_MAX_CHARS,
+  RESULT_FOLLOW_UP_TITLE_MAX_CHARS,
+  RESULT_FOLLOW_UPS_MAX,
+  RESULT_REASON_MAX_CHARS,
+  RESULT_SCHEMA_VERSION,
+} from '../data/data.constants.ts';
+
+type Parsed<T> =
+  | { readonly error: string; readonly ok: false }
+  | { readonly ok: true; readonly value: T };
+
+const isRecord = (value: unknown): value is Record<string, unknown> => {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+};
+
+const fail = (error: string): { error: string; ok: false } => {
+  return { error, ok: false };
+};
+
+const parseStatus = (value: unknown): Parsed<WorkerResult['status']> => {
+  if (value === 'done' || value === 'blocked' || value === 'skipped') {
+    return { ok: true, value };
+  }
+
+  return fail(`status must be "done", "blocked" or "skipped"`);
+};
+
+const parseReason = (value: unknown): Parsed<string> => {
+  if (typeof value !== 'string') {
+    return fail(`reason must be a string`);
+  }
+
+  const trimmed = value.trim();
+
+  if (trimmed.length < 1 || trimmed.length > RESULT_REASON_MAX_CHARS) {
+    return fail(`reason must be 1-${RESULT_REASON_MAX_CHARS} characters`);
+  }
+
+  return { ok: true, value: trimmed };
+};
+
+const parseCommitMessage = (value: unknown): Parsed<string | null> => {
+  if (value === null || typeof value === 'string') {
+    return { ok: true, value };
+  }
+
+  return fail(`commitMessage must be a string or null`);
+};
+
+const parseFollowUp = (value: unknown, index: number): Parsed<LoopFollowUp> => {
+  const at = `followUps[${index}]`;
+
+  if (!isRecord(value)) {
+    return fail(`${at} must be an object`);
+  }
+
+  const { category, description, title } = value;
+
+  if (
+    typeof title !== 'string' ||
+    title.trim().length < 1 ||
+    title.length > RESULT_FOLLOW_UP_TITLE_MAX_CHARS
+  ) {
+    return fail(
+      `${at}.title must be a string of 1-${RESULT_FOLLOW_UP_TITLE_MAX_CHARS} characters`,
+    );
+  }
+
+  if (
+    typeof description !== 'string' ||
+    description.length > RESULT_FOLLOW_UP_DESCRIPTION_MAX_CHARS
+  ) {
+    return fail(
+      `${at}.description must be a string of at most ${RESULT_FOLLOW_UP_DESCRIPTION_MAX_CHARS} characters`,
+    );
+  }
+
+  if (category !== null && typeof category !== 'string') {
+    return fail(`${at}.category must be a string or null`);
+  }
+
+  return { ok: true, value: { category, description, title } };
+};
+
+const parseFollowUps = (value: unknown): Parsed<readonly LoopFollowUp[]> => {
+  if (!Array.isArray(value)) {
+    return fail(`followUps must be an array`);
+  }
+
+  if (value.length > RESULT_FOLLOW_UPS_MAX) {
+    return fail(`followUps must have at most ${RESULT_FOLLOW_UPS_MAX} items`);
+  }
+
+  const items: LoopFollowUp[] = [];
+
+  for (const [index, entry] of value.entries()) {
+    const parsed = parseFollowUp(entry, index);
+
+    if (!parsed.ok) {
+      return parsed;
+    }
+
+    items.push(parsed.value);
+  }
+
+  return { ok: true, value: items };
+};
+
+/**
+ * @description Parses the worker result file (docs/workflows/ot-loop-job.md § 5). Never throws:
+ * `undefined` is `missing`; bad JSON or a schema violation is `malformed` with a message naming the
+ * field. Unknown keys are ignored.
+ * @public
+ */
+export const parseWorkerResult = (
+  raw: string | undefined,
+): WorkerResultRead => {
+  if (raw === undefined) {
+    return { kind: 'missing' };
+  }
+
+  let json: unknown;
+
+  try {
+    json = JSON.parse(raw);
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+
+    return {
+      error: `result file is not valid JSON: ${detail}`,
+      kind: 'malformed',
+    };
+  }
+
+  if (!isRecord(json)) {
+    return { error: `result file must be a JSON object`, kind: 'malformed' };
+  }
+
+  if (json['version'] !== RESULT_SCHEMA_VERSION) {
+    return {
+      error: `version must be ${RESULT_SCHEMA_VERSION}`,
+      kind: 'malformed',
+    };
+  }
+
+  const status = parseStatus(json['status']);
+  const reason = parseReason(json['reason']);
+  const commitMessage = parseCommitMessage(json['commitMessage']);
+  const followUps = parseFollowUps(json['followUps']);
+
+  if (!status.ok) {
+    return { error: status.error, kind: 'malformed' };
+  }
+
+  if (!reason.ok) {
+    return { error: reason.error, kind: 'malformed' };
+  }
+
+  if (!commitMessage.ok) {
+    return { error: commitMessage.error, kind: 'malformed' };
+  }
+
+  if (!followUps.ok) {
+    return { error: followUps.error, kind: 'malformed' };
+  }
+
+  return {
+    kind: 'ok',
+    result: {
+      commitMessage: commitMessage.value,
+      followUps: followUps.value,
+      reason: reason.value,
+      status: status.value,
+    },
+  };
+};
+
+const resultFilePath = (worktreeRoot: string): string => {
+  return join(worktreeRoot, RESULT_DIR_NAME, RESULT_FILE_NAME);
+};
+
+/**
+ * @description Creates `.ot-loop/` with a self-ignoring `.gitignore` of `*` (§ 5).
+ * @public
+ */
+export const prepareResultDir = async (worktreeRoot: string): Promise<void> => {
+  const dir = join(worktreeRoot, RESULT_DIR_NAME);
+
+  await mkdir(dir, { recursive: true });
+  await writeFile(join(dir, '.gitignore'), RESULT_DIR_GITIGNORE, 'utf8');
+};
+
+/**
+ * @description Deletes any existing result file; run before every attempt.
+ * @public
+ */
+export const clearResultFile = async (worktreeRoot: string): Promise<void> => {
+  await rm(resultFilePath(worktreeRoot), { force: true });
+};
+
+/**
+ * @description Reads the result file (`undefined` when absent), then deletes it.
+ * @public
+ */
+export const readResultFile = async (
+  worktreeRoot: string,
+): Promise<string | undefined> => {
+  const path = resultFilePath(worktreeRoot);
+
+  try {
+    return await readFile(path, 'utf8');
+  } catch (error) {
+    if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
+      return undefined;
+    }
+
+    throw error;
+  } finally {
+    await rm(path, { force: true });
+  }
+};

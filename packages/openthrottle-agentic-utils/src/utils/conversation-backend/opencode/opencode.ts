@@ -17,13 +17,13 @@
 
 import { spawn } from 'node:child_process';
 
-import { warnUnsupportedAdditionalDirectories } from '../additional-directories.ts';
+import { warnUnsupportedAdditionalDirectories } from '../capabilities.ts';
 import { NdjsonBuffer } from '../cursor-agent/ndjson.ts';
 import {
   resolveAgentTimeouts,
   terminateChild,
 } from '../cursor-agent/teardown.ts';
-import { describeExit } from '../describe-exit.ts';
+import { describeExit } from '../describeExit.ts';
 import { withFileMentions } from '../file-mentions.ts';
 import { withKeepalive } from '../keepalive.ts';
 import {

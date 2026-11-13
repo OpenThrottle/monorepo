@@ -3,7 +3,7 @@ import type { Duplex } from 'node:stream';
 
 import { createProxyServer } from 'http-proxy-3';
 
-import { isGraphqlSocketPath, isProxiedPath } from './is-proxied-path.ts';
+import { isGraphqlSocketPath, isProxiedPath } from './isProxiedPath.ts';
 
 export interface OtProxy {
   /** Wires `/graphql` WebSocket upgrades onto the http server. */

@@ -26,8 +26,8 @@
 
 import { spawn } from 'node:child_process';
 
-import { warnUnsupportedAdditionalDirectories } from '../additional-directories.ts';
-import { describeExit } from '../describe-exit.ts';
+import { warnUnsupportedAdditionalDirectories } from '../capabilities.ts';
+import { describeExit } from '../describeExit.ts';
 import { withFileMentions } from '../file-mentions.ts';
 import { withKeepalive } from '../keepalive.ts';
 import {
@@ -41,10 +41,9 @@ import {
   CURSOR_AGENT_BIN_ENV,
   CURSOR_AGENT_DEFAULT_BIN,
 } from './argv.ts';
-import { formatCursorMintFailure } from './diagnostics.ts';
 import { mapCursorEvent } from './events.ts';
+import { formatCursorMintFailure, parseCursorChatId } from './mint.ts';
 import { NdjsonBuffer } from './ndjson.ts';
-import { parseCursorChatId } from './session-id.ts';
 import {
   resolveAgentTimeouts,
   resolveSessionCreateTimeoutMs,

@@ -47,12 +47,15 @@ import {
   type ConversationStreamChunk,
 } from '../types.ts';
 import type { AcpAgentSpec } from './agent-specs.ts';
-import { AsyncQueue } from './async-queue.ts';
+import { AsyncQueue } from './AsyncQueue.ts';
 import { acpTerminalChunk, createAcpUpdateMapper } from './events.ts';
 import { type AcpLauncher, spawnAcpAgent } from './launcher.ts';
-import { toAcpMcpServers } from './mcp-servers.ts';
-import { awaitAcpPermission } from './permission-broker.ts';
-import { decideAcpPermission, isManagedMcpTool } from './permissions.ts';
+import {
+  awaitAcpPermission,
+  decideAcpPermission,
+  isManagedMcpTool,
+} from './permissions.ts';
+import { toAcpMcpServers } from './toAcpMcpServers.ts';
 
 /**
  * Env var: milliseconds an idle live session is kept before its process is

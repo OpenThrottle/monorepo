@@ -9,7 +9,6 @@ import type { MetricQuery } from './types/index.ts';
 import { CliArgsError, parseCliArgs } from './utils/cli-args.ts';
 import { buildEnvelope, resolveWindow } from './utils/envelope.ts';
 import { deriveActorKey, deriveRepoSlug } from './utils/git.ts';
-import { renderMarkdownReport } from './utils/markdown-report.ts';
 import {
   agentConversationsMetricQuery,
   planRunsMetricQuery,
@@ -39,6 +38,7 @@ import {
   probeCapabilities,
   readMigrationHighWaterMark,
 } from './utils/postgres.ts';
+import { renderMarkdownReport } from './utils/renderMarkdownReport.ts';
 
 /**
  * @description ot-telemetry report CLI. Establishes the connection, capability probe, and

@@ -6,7 +6,7 @@ import {
   TIMELINE_MARKER_FILL_CLASS,
   TIMELINE_MARKER_KIND_LABEL,
 } from '~/routing/timeline/config/kinds';
-import { markerKindPath } from '~/routing/timeline/utils/marker-glyph-path';
+import { markerKindPath } from '~/routing/timeline/utils/markerGlyphPath';
 
 export interface TimelineMarkerGlyphProps {
   readonly className?: string;

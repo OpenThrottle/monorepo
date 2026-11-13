@@ -1,6 +1,6 @@
 /**
  * @description Shell-safety helpers shared by every driver's command builder. Ported verbatim from
- * tools/workflows (`run-iteration.ts` `escapeForShellDoubleQuoted` and `ralph-worktree-cli.ts`
+ * tools/workflows (`runIteration.ts` `escapeForShellDoubleQuoted` and `ralph-worktree-cli.ts`
  * `escapeShellArg`) so injected plan/task text can never trigger command/parameter substitution.
  */
 

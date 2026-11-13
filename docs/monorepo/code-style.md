@@ -659,8 +659,13 @@ One selector per clause:
 
 **The file-name clause is enforced by an audit, not ESLint** — `naming-convention` operates on
 identifiers and cannot see file names. `pnpm run audit:file-name-casing:strict` (run in CI via
-`audit:strict`) fails on a single-export file in a React Router app, a `react-router-*` package
-or `openthrottle-app` that is not named for its export. It reuses the codemod's definition, so
+`audit:strict`) fails on a file in any application, package or tool that is named for one of its
+exports but not in that export's casing: a single-export file, or a multi-export file whose
+kebab stem names one of its non-constant exports (`resolve-skill-availability.ts` exporting
+`resolveSkillAvailability` and its `SKILL_AVAILABILITY_ENVIRONMENTS` → `resolveSkillAvailability.ts`).
+A multi-export file whose name is none of its exports is a bucket and stays kebab-case. Out of scope: the NestJS tier (`openthrottle-server`, `nestjs-*`), whose
+`<folder>.<kind>.ts` form is enforced separately, and `tools/nx-plugins`, whose files all export
+Nx's mandated `createNodesV2`. It reuses the codemod's definition, so
 the fix is always `tsx ./scripts/codemod-file-name-casing.ts --project=<dir> --write`. There is
 no allowlist.
 
@@ -669,8 +674,23 @@ no allowlist.
 `getFormFieldKind`. A kebab-case rule forced a hand rename to `form-field-kind.ts` after every
 run — drift between the generator and the rule — and broke the one-glance mapping from a file to
 the symbol it exports. Matching the export's casing, as components and hooks already did, removes
-both. Existing kebab-case single-export files are renamed by OT plan `bc5f6aa0` (a codemod plus a gate),
+both. Existing kebab-case single-export files are renamed by OT plans `bc5f6aa0` and `3aca79fe` (a codemod plus a gate),
 not opportunistically.
+
+**Prefer a bucket over a file per function.** _(Honor system.)_ The casing rule says how to name
+a file that holds one thing; it does not ask for one file per function. When sibling functions
+share a subject, put them in one module named for that subject, kebab-case because it has
+several exports: `formatDate`, `formatDuration` and `formatBytes` belong in `format.ts`, and
+`appendCommitFooters`, `buildFallbackCommitMessage` and `createCommitlintLinter` belong in
+`commit.ts`. Bucket by subject first; a shared verb (`format*`, `parse*`) is a fine bucket when
+the functions also share a subject. Stay inside one directory, keep at least two members, never
+name a bucket `utils`/`helpers`/`common`/`misc`/`shared`, and split a bucket that grows past a
+few hundred lines into two subjects. A function with no natural sibling, or a large
+self-contained one (an orchestrator), keeps its own camelCase file. Never bucket classes,
+components, hooks, ESLint rule modules, NestJS `<folder>.<kind>.ts` files, `data/` files, or
+entry points that are loaded by path. The `react` generator's `util` sub-generator still emits
+one file per function; merge its output into the subject's bucket when one exists. OT plan
+`3aca79fe` applied this to the Node packages and `tools/`.
 
 `leadingUnderscore: 'allowSingleOrDouble'` on the function and variable selectors. Without
 it the rule rejects `__dirname`/`__filename` — the standard Node ESM idiom, in every
@@ -948,7 +968,7 @@ raised 2,227 warnings across the 72 lint targets when it landed; they were migra
 `eslint --fix`, which rewrites `=> expr` to `=> { return expr; }`, drops the parentheses
 around an object-literal body, and skips any site with a comment between the arrow and the
 body (fix those by hand). The generator templates are held to it by
-`tools/generators/src/generators/generated-readability.test.ts`, which lints a freshly
+`tools/generators/src/generators/__tests__/generated-readability.test.ts`, which lints a freshly
 generated component, hook and route with every readability rule.
 
 ### A ternary takes at most three lines
@@ -1212,6 +1232,13 @@ its own [conventions](../../packages/react-router-shadcn/README.md#conventions).
 **Honor system.**
 
 - Test all new components and functions.
+- **A test is named for the file it tests and lives in a sibling `__tests__/` folder**:
+  `src/utils/format.ts` → `src/utils/__tests__/format.test.ts`, never `src/utils/format.test.ts`.
+  A qualifier goes between the stem and `.test` (`format.integration.test.ts`). A bucket's
+  functions share the bucket's test, one `describe` per function. Only a suite that genuinely
+  spans several files (a parity, guard, replay or integration suite) takes a descriptive name.
+  The NestJS tier (`openthrottle-server`, `nestjs-*`) is the exception: its `<folder>.<kind>.test.ts`
+  sits beside the file it covers.
 - Use `component`, not `screen`, to get elements.
 - Use `userEvent`, not `fireEvent`, to simulate interactions.
 - Use `waitFor` for asynchronous DOM updates.

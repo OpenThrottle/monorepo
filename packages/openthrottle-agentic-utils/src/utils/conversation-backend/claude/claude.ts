@@ -21,7 +21,7 @@ import {
   resolveAgentTimeouts,
   terminateChild,
 } from '../cursor-agent/teardown.ts';
-import { describeExit } from '../describe-exit.ts';
+import { describeExit } from '../describeExit.ts';
 import { withFileMentions } from '../file-mentions.ts';
 import { withKeepalive } from '../keepalive.ts';
 import {

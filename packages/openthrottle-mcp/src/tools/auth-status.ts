@@ -14,7 +14,7 @@ import {
 import { z } from 'zod';
 
 import { ListSourcesDocument } from '../__generated__/graphql.js';
-import { getAuthToken } from '../auth/get-auth-token.ts';
+import { getAuthToken } from '../auth/getAuthToken.ts';
 import type { GenericResult } from '../types/index.ts';
 
 type AuthStatusStructured = {

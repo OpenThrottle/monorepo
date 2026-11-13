@@ -4,7 +4,7 @@
  * connection, so an agent's self-reported artifacts group under one session.
  *
  * State is a process-level singleton. The stdio server is one process per client
- * connection (run-server.ts), so this maps to one session per connection. For the
+ * connection (runServer.ts), so this maps to one session per connection. For the
  * embedded/multiplexed Nest path this would over-share — tracked in the propagation
  * follow-up (per-connection scoping there should use AsyncLocalStorage).
  *
@@ -141,7 +141,7 @@ async function closeCurrentSessionUnlocked(
     token,
     EndWorkSessionDocument,
     { input: { sessionId, summary: summary ?? null } },
-    // Inlined rather than imported from ./session-headers.ts, which already imports this
+    // Inlined rather than imported from ./sessionHeaders.ts, which already imports this
     // module for ensureWorkSession — a one-object literal is cheaper than an import cycle.
     { headers: { 'X-OT-Session-Id': sessionId } },
   );

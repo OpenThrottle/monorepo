@@ -15,8 +15,8 @@ import {
   parseRalphArgs,
   parseRalphCompleteTaskSignals,
 } from '../parsers';
-import { ralphDebugLogger, setRalphDebugLevel } from '../ralph-debug-logger';
 import { WORKFLOW_RALPH_DEFAULTS_FILE } from '../ralph-runtime-config';
+import { ralphDebugLogger, setRalphDebugLevel } from '../ralphDebugLogger';
 
 const PLAN_UUID = '77cb14a0-5eb0-4061-87ea-d618b85e8818';
 const TASK_UUID = '93fcbc19-1861-4931-9631-6393d33220a2';

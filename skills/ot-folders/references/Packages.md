@@ -142,7 +142,7 @@ tools/dotfiles
     ├── __tests__           # Tests in a folder here, not colocated
     ├── config.ts
     ├── index.ts
-    ├── prettier-config.ts
+    ├── prettierConfig.ts
     ├── rules               # The custom ESLint rules
     ├── types.d.ts
     ├── vite-config.ts

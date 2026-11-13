@@ -4,13 +4,13 @@ import lodash from 'lodash';
 import { join } from 'path';
 import prompts from 'prompts';
 
-import { askWhenInteractive } from '../../utils/ask-when-interactive.ts';
-import { generateFilesSafely } from '../../utils/generate-files-safely.ts';
+import { generateFilesSafely } from '../../utils/generateFilesSafely.ts';
 import {
   getCommonVariables,
   getRemixRoutingFolders,
   getRemixServiceFolders,
 } from '../../utils/index.ts';
+import { askWhenInteractive } from '../../utils/interactive.ts';
 import { MESSAGE_ON_CANCEL } from '../../utils/messages.ts';
 import {
   getTargetApplication,

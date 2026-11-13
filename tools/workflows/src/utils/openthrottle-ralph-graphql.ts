@@ -49,7 +49,7 @@ import type {
   TaskRow,
 } from './openthrottle-ralph-types';
 import { taskRequirementsFromRow } from './openthrottle-ralph-types';
-import { ralphDebugLogger } from './ralph-debug-logger';
+import { ralphDebugLogger } from './ralphDebugLogger';
 
 const normalizeStatus = (status: string): string => {
   return status.trim().toUpperCase();

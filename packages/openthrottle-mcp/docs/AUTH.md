@@ -172,7 +172,7 @@ JWTs expire (~24h). Prefer service accounts for MCP.
 
 ## Implementation
 
-- **Resolver:** `getAuthToken()` in `src/auth/get-auth-token.ts`. Tool handlers call it before `executeGraphqlWithAuth(token, document, variables)`.
+- **Resolver:** `getAuthToken()` in `src/auth/getAuthToken.ts`. Tool handlers call it before `executeGraphqlWithAuth(token, document, variables)`.
 - **No hardcoded tokens:** all auth is via per-request store or env.
 
 ## Related docs

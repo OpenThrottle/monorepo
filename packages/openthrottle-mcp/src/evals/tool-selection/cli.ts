@@ -11,15 +11,15 @@ import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 
 import { TOOLSET_NAMES } from '../../config/toolsets.ts';
-import { listToolSurface } from '../../model-facing-text/list-tool-surface.ts';
+import { listToolSurface } from '../../model-facing-text/surface.ts';
 import { createAnthropicToolSelector } from './anthropic-tool-selector.ts';
-import type { BaselineComparison, RunResult } from './compare-baseline.ts';
-import { compareBaseline, passRate } from './compare-baseline.ts';
+import type { BaselineComparison, RunResult } from './compareBaseline.ts';
+import { compareBaseline, passRate } from './compareBaseline.ts';
 import { TOOL_SELECTION_CASES } from './data/data.cases.ts';
 import { HARNESS_TOOLS } from './data/data.harness-tools.ts';
 import type { ToolSelectionCase } from './eval-case.ts';
-import type { ToolSelectionRun } from './run-evals.ts';
-import { runEvals } from './run-evals.ts';
+import type { ToolSelectionRun } from './runEvals.ts';
+import { runEvals } from './runEvals.ts';
 
 const BASELINE_DIR = join(dirname(fileURLToPath(import.meta.url)), 'baselines');
 const RESULTS_DIR = resolve('tmp/evals/tool-selection');

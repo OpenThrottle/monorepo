@@ -4,10 +4,10 @@ import { join } from 'node:path';
 import { RuleTester } from '@typescript-eslint/rule-tester';
 import { afterAll, describe, expect, it } from 'vitest';
 
-import { componentPrimitiveShape } from '../rules/component-primitive-shape.ts';
-import { hookPrimitiveShape } from '../rules/hook-primitive-shape.ts';
-import { preHooksUnpack } from '../rules/pre-hooks-unpack.ts';
-import { routePrimitiveShape } from '../rules/route-primitive-shape.ts';
+import { componentPrimitiveShape } from '../rules/componentPrimitiveShape.ts';
+import { hookPrimitiveShape } from '../rules/hookPrimitiveShape.ts';
+import { preHooksUnpack } from '../rules/preHooksUnpack.ts';
+import { routePrimitiveShape } from '../rules/routePrimitiveShape.ts';
 
 /**
  * Contract test: the `@tools/generators` component template MUST pass the

@@ -5,10 +5,10 @@ Cursor, Antigravity, Grok, OpenCode). One `defineDriver(...)` call describes a C
 execution engine runs it. Adding a new agent is a single module + test, not edits
 scattered across `tools/workflows` and the agentic packages.
 
-Extracted and generalized from `tools/workflows/src/bin/run-iteration.ts`. This is a
+Extracted and generalized from `tools/workflows/src/bin/runIteration.ts`. This is a
 **Node-only** library (uses `child_process`) — do not import it from browser code.
 
-**Consumed by:** `@tools/workflows` (`run-iteration.ts` adapter),
+**Consumed by:** `@tools/workflows` (`runIteration.ts` adapter),
 `@openthrottle/openthrottle-agentic-utils` and `@openthrottle/openthrottle-agentic-workflow`
 (runner-id re-exports), and transitively `openthrottle-server`.
 

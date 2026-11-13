@@ -6,12 +6,12 @@ import { join } from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { parseWorkerResult } from '../parse-worker-result.ts';
 import {
   clearResultFile,
+  parseWorkerResult,
   prepareResultDir,
   readResultFile,
-} from '../result-file.ts';
+} from '../worker-result.ts';
 
 const valid = {
   commitMessage: 'feat(x): y',

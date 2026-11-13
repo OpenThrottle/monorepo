@@ -3,7 +3,7 @@
 The OT-central contract for invoking agent CLIs (Claude Code, Codex, Cursor, Antigravity,
 Grok, OpenCode). Each CLI is one `defineDriver(...)` module; a shared engine
 (`runDriverSync`/`runDriverAsync`) runs it. Extracted from
-`tools/workflows/src/bin/run-iteration.ts`.
+`tools/workflows/src/bin/runIteration.ts`.
 
 **Consumed by:** `@tools/workflows` (run-iteration adapter),
 `@openthrottle/openthrottle-agentic-utils` + `@openthrottle/openthrottle-agentic-workflow`

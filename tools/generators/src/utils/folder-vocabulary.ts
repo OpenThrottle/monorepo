@@ -3,7 +3,7 @@ import {
   BANNED_FOLDER_NAMES,
   FOLDER_VOCABULARY_SKILL_POINTER,
 } from '../config/folder-vocabulary.ts';
-import { throwGeneratorError } from './generator-errors.ts';
+import { throwGeneratorError } from './target-validation.ts';
 
 const BANNED_NAMES: readonly string[] = Object.keys(BANNED_FOLDER_NAMES);
 

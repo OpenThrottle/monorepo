@@ -1,1 +1,1 @@
-export * from './stale-while-revalidate.ts';
+export * from './StaleWhileRevalidateCache.ts';

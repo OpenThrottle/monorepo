@@ -10,7 +10,7 @@ import { join } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 
 import { runWorktreeWorkflow } from '../workflow';
-import { WorktreeTargetsTracker } from '../worktree-targets';
+import { WorktreeTargetsTracker } from '../WorktreeTargetsTracker';
 
 function createTempGitRepo(): string {
   const dir = mkdtempSync(join(tmpdir(), 'workflow-git-'));
@@ -188,7 +188,7 @@ describe('runWorktreeWorkflow with throwing ensureCommit', () => {
 
     const { runWorktreeWorkflow: runWithMock } = await import('../workflow.ts');
     const { WorktreeTargetsTracker: TrackerWithMock } =
-      await import('../worktree-targets.ts');
+      await import('../WorktreeTargetsTracker.ts');
 
     const dir = createTempGitRepo();
     const tracker = new TrackerWithMock([{ id: 'wt1', path: dir }]);

@@ -9,7 +9,7 @@ import {
   SKILL_CREATE_SLUG_PATTERN,
 } from '~/routing/skills/config/skill-create';
 import { SKILL_CREATE_COPY } from '~/routing/skills/data/data.copy';
-import { buildSkillScaffold } from '~/routing/skills/utils/build-skill-scaffold';
+import { buildSkillScaffold } from '~/routing/skills/utils/buildSkillScaffold';
 import { splitTags } from '~/routing/skills/utils/splitTags';
 
 /** What the route action returns on a refusal. A success redirects instead. */

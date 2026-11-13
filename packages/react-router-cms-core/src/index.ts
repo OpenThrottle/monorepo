@@ -57,7 +57,7 @@ export * from './utils/getLayoutBreadcrumbs';
 export * from './utils/getSchemaDefaults';
 export * from './utils/getSortChildren';
 export * from './utils/moveListItem';
-export * from './utils/parse-cms-schema';
+export * from './utils/parseCmsSchema';
 export * from './utils/read-property';
 export * from './utils/registerComponent';
 export * from './utils/registry-props';

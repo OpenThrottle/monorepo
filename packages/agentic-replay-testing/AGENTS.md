@@ -46,8 +46,8 @@ service and backend with no agentic-utils mock (ids seeded, `Date` frozen).
 - **The sanitizer and transcript modules import only node built-ins.** The replay bin runs them
   directly under Node's type stripping, outside Vite and workspace resolution — a workspace import
   there breaks every replay.
-- **The bin-side modules import only node built-ins**: `replay-bin.ts`, `replay-paths.ts`,
-  `recording-shim.ts`, `sanitizer.ts`, `transcript.ts` and the `types/transcript.ts` they share.
+- **The bin-side modules import only node built-ins**: `replay-bin.ts`, `replayPaths.ts`,
+  `runRecordingShim.ts`, `sanitizer.ts`, `transcript.ts` and the `types/transcript.ts` they share.
 - **`withBinEnv` mutates `process.env`.** Never run two replays concurrently in one process.
 - **Paths are listed in every spelling** (`replayPaths`): macOS `/var` vs `/private/var` — a child's
   `process.cwd()` is resolved, a backend-built argv is not.
@@ -57,7 +57,7 @@ service and backend with no agentic-utils mock (ids seeded, `Date` frozen).
   bin goes in as a bare-name alias via `writePathAlias` + `withPathPrepended`.
 - **Plan-run prompts must be byte-identical**: placeholder ids from the start (`PLAN_RUN_PLAN_ID`,
   `planRunTaskId`), fixed timestamps, no hook plugin dirs, and the checkout path tokenized as
-  `<OT_ROOT>` (derived from `replay-paths.ts`'s own location). Changing any orchestrator prompt text
+  `<OT_ROOT>` (derived from `replayPaths.ts`'s own location). Changing any orchestrator prompt text
   makes the plan-run replays fail by design — re-record them.
 - **Profiles derive bin env, binary and version flags from the drivers registry** (`profileFor`).
   Adding a backend = one profile with its `sessionStrategy`, `redactKeys` and `dropStdoutLine`, then

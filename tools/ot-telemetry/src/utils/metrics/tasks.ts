@@ -9,7 +9,7 @@ import type {
   TagCount,
   WindowCount,
 } from '../../types/index.ts';
-import { countInWindow } from './window-count.ts';
+import { countInWindow } from './countInWindow.ts';
 
 /**
  * @description Task aggregate metrics (`metrics.tasks`) and the task tag

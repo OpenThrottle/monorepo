@@ -1,7 +1,7 @@
 /**
  * Pure builders for the host-written plan-run PR title and body — the deterministic fallback the
  * finalize step publishes when no agent-drafted body is available. All I/O (git, GraphQL, the
- * template file) happens in `finalize-plan-run.ts`; this module only shapes text so every rule is
+ * template file) happens in `finalizePlanRun.ts`; this module only shapes text so every rule is
  * unit-testable without a stub runner.
  */
 

@@ -1,6 +1,6 @@
 import { NOTIFICATIONS_MAX_PERSISTED } from '../config/index';
 import type { NotificationInstance } from '../types';
-import { isStoredNotification } from './is-stored-notification';
+import { isStoredNotification } from './isStoredNotification';
 
 /** @public */
 export function loadFromStorage(storageKey: string): NotificationInstance[] {

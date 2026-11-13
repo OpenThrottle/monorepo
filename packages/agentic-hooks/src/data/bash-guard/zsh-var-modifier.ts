@@ -13,7 +13,7 @@
  *
  * @public
  */
-import { readQuotedChars } from './shell-quoting.ts';
+import { readQuotedChars } from './readQuotedChars.ts';
 import {
   BASH_RULE_ALLOW,
   type BashGuardRule,

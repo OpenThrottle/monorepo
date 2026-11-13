@@ -44,7 +44,7 @@ see [tools/AGENTS.md](../../tools/AGENTS.md)).
 - Keep plan/task transport GraphQL-pure: the single non-plan GraphQL call allowed is the
   `getServerHealth` preflight. Never open a Postgres connection or spawn the agent CLI from here.
   The host-owned plan-end finalize step (push + PR via injectable `runCommand`) is the deliberate
-  exception — see `src/utils/finalize-plan-run.ts`.
+  exception — see `src/utils/finalizePlanRun.ts`.
 - **PR draft hand-off (agent drafts, host publishes).** On its final iteration the agent runs the
   `github-pull-request` skill in draft-only mode. The orchestrator marks that iteration explicitly:
   when the task it hands the agent is the plan's only workable one (`BLOCKED` tasks don't count),

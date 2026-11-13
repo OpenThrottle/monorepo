@@ -1,3 +1,7 @@
-export { withPathPrepended, writePathAlias } from './path-bin.ts';
-export { withBinEnv } from './with-bin-env.ts';
-export { writeNodeBin, type WriteNodeBinOptions } from './write-node-bin.ts';
+export {
+  withBinEnv,
+  withPathPrepended,
+  writeNodeBin,
+  type WriteNodeBinOptions,
+  writePathAlias,
+} from './stub-bin.ts';

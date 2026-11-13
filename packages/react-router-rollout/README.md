@@ -28,7 +28,7 @@ root.
 > `src/index.ts`).
 
 Reference consumer: `openthrottle-developer` (`DeveloperRolloutProvider`,
-`data.rollout-flags.ts`, `fetch-rollout-evaluations.ts`).
+`data.rollout-flags.ts`, `fetchRolloutEvaluations.ts`).
 
 ## Wire a second app
 
@@ -147,7 +147,7 @@ export const fetchRolloutEvaluations: RolloutFetchEvaluations = async (
 };
 ```
 
-See `applications/openthrottle-developer/app/global/utils/fetch-rollout-evaluations.ts`.
+See `applications/openthrottle-developer/app/global/utils/fetchRolloutEvaluations.ts`.
 
 ## Related
 

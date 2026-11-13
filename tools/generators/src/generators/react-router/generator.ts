@@ -1,20 +1,24 @@
 import type { Tree } from '@nx/devkit';
 import prompts from 'prompts';
 
-import { askWhenInteractive } from '../../utils/ask-when-interactive.ts';
 import {
   assertFolderVocabulary,
   FOLDER_VOCABULARY_RESTRICTION,
 } from '../../utils/folder-vocabulary.ts';
-import { throwGeneratorError } from '../../utils/generator-errors.ts';
 import {
   getMonorepoApplications,
   getRemixRoutingFolders,
   getRemixServiceFolders,
 } from '../../utils/index.ts';
-import { isInteractiveArgPresent } from '../../utils/nx-cli.ts';
-import { writeJsonToStdout } from '../../utils/output.ts';
-import { assertReactRouterApplication } from '../../utils/target-validation.ts';
+import {
+  askWhenInteractive,
+  isInteractiveArgPresent,
+  writeJsonToStdout,
+} from '../../utils/interactive.ts';
+import {
+  assertReactRouterApplication,
+  throwGeneratorError,
+} from '../../utils/target-validation.ts';
 import { generatorReactRouterApplication } from './generator.application.ts';
 import { generatorReactRouterComponent } from './generator.component.ts';
 import { generatorReactRouterForm } from './generator.form.ts';

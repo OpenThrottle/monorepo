@@ -12,4 +12,4 @@ export {
   scenarioRun,
   type ScenarioRunContext,
   transcriptStem,
-} from './scenario-run.ts';
+} from './scenarioRun.ts';

@@ -17,9 +17,15 @@
  *   form with its own rule (`<folder>.<kind>.ts`, `data.<name>.ts`,
  *   `mock.<name>.ts`, `*.test.ts`, `*.config.ts`, `*.d.ts`).
  * - It exports exactly one **value** (const, function, class, enum, or a
- *   named re-export). Type-only exports (interfaces, type aliases,
- *   `export type { … }`) do not count, so `useFoo` + `UseFooOptions` or a
- *   component + its props are still single-export.
+ *   named re-export), or several of which one is the file's own name: the
+ *   kebab stem, hyphens dropped, equals the export case-insensitively
+ *   (`resolve-skill-availability.ts` exporting `resolveSkillAvailability` plus
+ *   `SKILL_AVAILABILITY_ENVIRONMENTS`). That export is the file's primary
+ *   export and the one it is renamed for; the other exports are its helpers.
+ *   A multi-export file whose stem names none of its exports is a subject
+ *   bucket (`format.ts`, `commit.ts`) and keeps kebab-case. Type-only exports
+ *   (interfaces, type aliases, `export type { … }`) never count, so `useFoo` +
+ *   `UseFooOptions` or a component + its props are still single-export.
  * - It has no `export *`, `export default`, `export =`, exported namespace or
  *   destructured export — any of those makes the export set unknowable here.
  * - It does not live under an excluded directory: React Router route modules
@@ -272,6 +278,22 @@ export const matchesStem = (stem: string, exportName: string): boolean => {
   return stem.replaceAll('-', '').toLowerCase() === exportName.toLowerCase();
 };
 
+/**
+ * @description The export a file is named for: its only value export, or —
+ * among several — the non-constant one its stem names. `undefined` when a
+ * multi-export file names none of them (a subject bucket).
+ */
+export const primaryExport = (
+  stem: string,
+  names: readonly string[],
+): string | undefined => {
+  if (names.length === 1) return names[0];
+
+  return names.find((name) => {
+    return !isConstantName(name) && matchesStem(stem, name);
+  });
+};
+
 /** The file name a candidate should take. */
 export const targetFileName = (
   fileName: string,
@@ -363,13 +385,13 @@ export const planRenames = (
 
     const absolute = path.join(workspaceRoot, relativePath);
     const scan = scanExports(absolute, readFileSync(absolute, 'utf8'));
-    if (scan.kind === 'opaque' || scan.names.length !== 1) continue;
-
-    const exportName = scan.names[0];
-    if (exportName === undefined) continue;
+    if (scan.kind === 'opaque') continue;
 
     const fileName = path.basename(relativePath);
     const { stem, suffix } = splitFileName(fileName);
+    const exportName = primaryExport(stem, scan.names);
+    if (exportName === undefined) continue;
+
     const to = path.join(path.dirname(relativePath), targetFileName(fileName, exportName)); // prettier-ignore
     const companions = findCompanions(workspaceRoot, relativePath, `${exportName}${suffix}`); // prettier-ignore
     const targets = [to, ...companions.map((companion) => companion.to)];

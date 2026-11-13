@@ -1,1 +1,1 @@
-export * from './utils/is-record.ts';
+export * from './utils/isRecord.ts';

@@ -21,7 +21,7 @@ import type {
   DriverInvocationConfig,
   DriverWorktreeOptions,
 } from '../types/index.ts';
-import type { UsageLimit } from '../utils/usage-limit.ts';
+import type { UsageLimit } from '../utils/claude-output.ts';
 
 /**
  * @description The typed subset of driver tuning knobs a generic caller may set. Deliberately NOT a

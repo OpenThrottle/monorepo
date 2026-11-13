@@ -10,7 +10,7 @@ import type {
 import {
   cancelPlanRunToastTone,
   describeCancelPlanRunResult,
-} from '~/routing/plans/utils/describe-cancel-plan-run-result';
+} from '~/routing/plans/utils/describeCancelPlanRunResult';
 import { QueueCorrelationAndSupport } from '~/routing/queues/components/QueueCorrelationAndSupport';
 import { QueueJobLogConsole } from '~/routing/queues/components/QueueJobLogConsole';
 import { QueueJobMetrics } from '~/routing/queues/components/QueueJobMetrics';

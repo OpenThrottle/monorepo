@@ -1,6 +1,6 @@
 /**
  * Pure projections from each driver's identity source to an
- * {@link AgentAccountIdentity}. IO lives in `resolve-agent-account.ts`; these
+ * {@link AgentAccountIdentity}. IO lives in `resolveAgentAccount.ts`; these
  * take the raw text/JSON so every branch is unit-testable with fixtures.
  */
 

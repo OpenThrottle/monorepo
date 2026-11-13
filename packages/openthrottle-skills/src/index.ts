@@ -33,8 +33,8 @@ export {
 export type {
   DiscoveredSkill,
   DiscoverSkillDirsResult,
-} from './discover-skill-dirs.ts';
-export { discoverSkillDirs } from './discover-skill-dirs.ts';
+} from './skill-discovery.ts';
+export { discoverSkillDirs } from './skill-discovery.ts';
 
 /** @public */
 export type {
@@ -42,19 +42,19 @@ export type {
   ForeignSkillManifestEntry,
   ResolveForeignSkillManifestInput,
   ResolveForeignSkillManifestResult,
-} from './resolve-foreign-skill-manifest.ts';
+} from './skill-discovery.ts';
 export {
   FOREIGN_SKILL_LAYER,
   resolveForeignSkillManifest,
-} from './resolve-foreign-skill-manifest.ts';
+} from './skill-discovery.ts';
 
 /** @public */
 export type {
   MatchedTagAction,
   TagActionEvaluationContext,
   TagActionRuleInput,
-} from './evaluate-tag-action-rules.ts';
-export { evaluateTagActionRules } from './evaluate-tag-action-rules.ts';
+} from './tag-actions.ts';
+export { evaluateTagActionRules } from './tag-actions.ts';
 
 /** @public */
 export type {
@@ -62,7 +62,7 @@ export type {
   InjectTaskActionPayload,
   PromoteTaskToPlanActionPayload,
   TagActionType,
-} from './tag-action-payloads.ts';
+} from './tag-actions.ts';
 export {
   availabilityExceptionActionPayloadSchema,
   injectTaskActionPayloadSchema,
@@ -70,29 +70,28 @@ export {
   parseTagActionPayload,
   promoteTaskToPlanActionPayloadSchema,
   TAG_ACTION_TYPES,
-} from './tag-action-payloads.ts';
+} from './tag-actions.ts';
 
 /** @public */
 export type {
   SkillTagVocabularyEntry,
   SkillTagVocabularyViolation,
-} from './find-unknown-skill-tags.ts';
-export { findUnknownSkillTags } from './find-unknown-skill-tags.ts';
+} from './skill-tags.ts';
+export { findUnknownSkillTags, mergeSkillTags } from './skill-tags.ts';
 
 /** @public */
 export {
   extractContentAfterFrontmatter,
   extractFrontmatterBody,
-} from './frontmatter/extract-frontmatter-body.ts';
+  parseYamlFrontmatter,
+  splitFrontmatter,
+} from './frontmatter/frontmatter.ts';
 /** @public */
 export type {
   FrontmatterScalar,
   ParsedYamlFrontmatter,
-} from './frontmatter/parse-yaml-frontmatter.ts';
-export { parseYamlFrontmatter } from './frontmatter/parse-yaml-frontmatter.ts';
-/** @public */
-export type { SplitFrontmatterResult } from './frontmatter/split-frontmatter.ts';
-export { splitFrontmatter } from './frontmatter/split-frontmatter.ts';
+  SplitFrontmatterResult,
+} from './frontmatter/frontmatter.ts';
 
 /** @public */
 export type { SkillsLockEntry, SkillsLockMap } from './parse-skills-lock.ts';
@@ -103,51 +102,36 @@ export {
 } from './parse-skills-lock.ts';
 
 /** @public */
-export type { ParsedSkillFrontmatter } from './parse-skill-frontmatter.ts';
-export {
-  parseSkillFrontmatter,
-  parseSkillFrontmatterForValidation,
-} from './parse-skill-frontmatter.ts';
-
-/** @public */
-export type { ParsedPersonaFrontmatter } from './parse-persona-frontmatter.ts';
-export {
-  parsePersonaFrontmatter,
-  parsePersonaFrontmatterForValidation,
-} from './parse-persona-frontmatter.ts';
-
-/** @public */
 export type {
+  ParsedPersonaFrontmatter,
+  ParsedSkillFrontmatter,
   ValidateAgentAssetFrontmatterInput,
   ValidateAgentAssetFrontmatterResult,
   ValidateAgentAssetsResult,
-} from './validate-agent-asset-frontmatter.ts';
+} from './agent-asset-frontmatter.ts';
 export {
   mergeValidationResults,
+  parsePersonaFrontmatter,
+  parsePersonaFrontmatterForValidation,
+  parseSkillFrontmatter,
+  parseSkillFrontmatterForValidation,
   validateAgentAssetFrontmatter,
-} from './validate-agent-asset-frontmatter.ts';
+} from './agent-asset-frontmatter.ts';
 
 /** @public */
 export type {
   AgentAssetIngestRecord,
   AgentAssetPromptType,
-} from './map-agent-assets-for-ingest.ts';
+  CollectAgentAssetsForIngestResult,
+  ProjectSkillInput,
+} from './agent-assets-ingest.ts';
 export {
   AGENT_ASSET_INGEST_PATH_PREFIXES,
+  collectAgentAssetsForIngest,
   mapAgentAssetFilesToIngestRecords,
   mapAgentAssetFileToIngestRecord,
-} from './map-agent-assets-for-ingest.ts';
-
-/** @public */
-export type { CollectAgentAssetsForIngestResult } from './collect-agent-assets-for-ingest.ts';
-export { collectAgentAssetsForIngest } from './collect-agent-assets-for-ingest.ts';
-
-/** @public */
-export type { ProjectSkillInput } from './project-skill-inputs.ts';
-export { toProjectSkillInputs } from './project-skill-inputs.ts';
-
-/** @public */
-export { mergeSkillTags } from './skill-tag-overlays.ts';
+  toProjectSkillInputs,
+} from './agent-assets-ingest.ts';
 
 /** @public */
 export type {
@@ -159,19 +143,19 @@ export type {
   SkillAvailabilityResult,
   SkillAvailabilityRule,
   SkillAvailabilityRuleSet,
-} from './resolve-skill-availability.ts';
+} from './resolveSkillAvailability.ts';
 export {
   resolveSkillAvailability,
   SKILL_AVAILABILITY_ENVIRONMENTS,
-} from './resolve-skill-availability.ts';
-
-/** @public */
-export type { WalkAgentAssetsOptions } from './validate-agent-assets-on-disk.ts';
-export { validateAgentAssetsOnDisk } from './validate-agent-assets-on-disk.ts';
+} from './resolveSkillAvailability.ts';
 
 /** @public */
 export type {
   AgentAssetFileEntry,
   WalkAgentAssetFilesResult,
-} from './walk-agent-assets-on-disk.ts';
-export { walkAgentAssetFiles } from './walk-agent-assets-on-disk.ts';
+  WalkAgentAssetsOptions,
+} from './agent-assets-disk.ts';
+export {
+  validateAgentAssetsOnDisk,
+  walkAgentAssetFiles,
+} from './agent-assets-disk.ts';

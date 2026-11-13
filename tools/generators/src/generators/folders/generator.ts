@@ -3,25 +3,27 @@ import { formatFiles, generateFiles, logger } from '@nx/devkit';
 import { join } from 'path';
 import prompts from 'prompts';
 
-import { askWhenInteractive } from '../../utils/ask-when-interactive.ts';
 import {
   assertFolderVocabulary,
   describeBannedFolder,
   FOLDER_VOCABULARY_RESTRICTION,
   isBannedFolderName,
 } from '../../utils/folder-vocabulary.ts';
-import { throwGeneratorError } from '../../utils/generator-errors.ts';
 import {
   getCommonVariables,
   getMonorepoApplications,
 } from '../../utils/index.ts';
-import { isInteractiveArgPresent } from '../../utils/nx-cli.ts';
-import { writeJsonToStdout } from '../../utils/output.ts';
+import {
+  askWhenInteractive,
+  isInteractiveArgPresent,
+  writeJsonToStdout,
+} from '../../utils/interactive.ts';
 import {
   getConfigConfirmation,
   getTargetApplication,
 } from '../../utils/questions.ts';
-import { REGEX_SLUG } from '../../utils/regex.ts';
+import { throwGeneratorError } from '../../utils/target-validation.ts';
+import { REGEX_SLUG } from '../../utils/validation.ts';
 
 export interface FoldersGeneratorSchema {
   readonly application?: string;

@@ -37,7 +37,7 @@ The lesson worth keeping: **the span was lost in the gap between two components 
 A mutating tool call must carry the connection's ambient session:
 
 ```ts
-import { ambientSessionOptions } from '../session/session-headers.ts';
+import { ambientSessionOptions } from '../session/sessionHeaders.ts';
 
 const result = await executeGraphqlWithAuth(
   token,
@@ -153,5 +153,5 @@ Code and database comments no longer cite it. **One knowing exception:** the tex
 - `databases/openthrottle/migrations/068_create_work_ledger_tables.sql` — the original schema and its comments.
 - `databases/openthrottle/migrations/113_add_instant_to_work_sessions_closed_by.sql` — the `instant` value.
 - `databases/openthrottle/migrations/129_strip_design_doc_citations_from_work_ledger_comments.sql` — the current table and column comments.
-- `packages/openthrottle-mcp/src/session/session-headers.ts` — ambient session propagation.
+- `packages/openthrottle-mcp/src/session/sessionHeaders.ts` — ambient session propagation.
 - `applications/openthrottle-server/src/graphql/work-ledger/work-ledger-capture/work-ledger-capture.service.ts` — the server-side capture path.

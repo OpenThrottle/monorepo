@@ -61,7 +61,7 @@ tools (`bash`, `read_file`, `edit_file`, `write_file`), and the server instructi
 injected the way an MCP client injects them. `tool_choice` is `auto`. Nothing is executed and there is no
 second turn: the first assistant turn is the selection, recorded as an ATIF trajectory with one agent step
 whose `tool_calls` are the selected calls (usage rides in its metrics). The `tool-selection` `code` grader
-reads that step and applies `grade-case.ts`:
+reads that step and applies `gradeCase.ts`:
 
 - A `call` case passes when **any** first-turn call names one of `expect.tools` and satisfies every
   matcher in `expect.args` (`equals`, case-insensitive `includes`, or `present`).
@@ -94,34 +94,32 @@ delete it and add a new one instead.
 '<commit subject or PR>' }`. A case that never failed proves nothing about the fix. Initial coverage
    that passed as written is `origin: { kind: 'seed' }`.
 2. **Keep the controls.** At least a sixth of the suite must be `no-call` cases, and
-   `case-integrity.test.ts` enforces this. Controls catch the opposite failure: wording so eager that
+   `__tests__/case-integrity.test.ts` enforces this. Controls catch the opposite failure: wording so eager that
    agents call OT tools for ordinary coding requests.
 3. **Give the prompt everything the call needs** (UUIDs, author, category). The eval is single-turn, so
    the model cannot fetch first and act second.
 4. **Match key arguments only.** Assert the arguments that decide correctness (`status`, the id, the
    `follow-up` tag), not wording the model may paraphrase.
 
-`case-integrity.test.ts` checks the cases against the live surface offline. It fails when a case names a
+`__tests__/case-integrity.test.ts` checks the cases against the live surface offline. It fails when a case names a
 tool or argument that no longer exists, which would otherwise leave a case that can never pass.
 
 ## Files
 
-| File                                 | Role                                                                        |
-| ------------------------------------ | --------------------------------------------------------------------------- |
-| `eval-case.ts`                       | Case, selection and selector types                                          |
-| `data/data.cases.ts`                 | The cases                                                                   |
-| `data/data.dataset.ts`               | Dataset target, grader id and version                                       |
-| `data/data.harness-tools.ts`         | Generic harness tools offered next to OT                                    |
-| `tool-selection-dataset.ts`          | Cases as a core `EvalDataset`                                               |
-| `tool-selection-iteration.ts`        | The system under test: one selector call as a core `RunEvalIteration`       |
-| `selection-trajectory.ts`            | Selection to and from an ATIF trajectory, usage included                    |
-| `tool-selection-grader.ts`           | `gradeCase` as a core `code` grader                                         |
-| `grade-case.ts`                      | Pure grading rules (unit-tested, runs in CI)                                |
-| `run-evals.ts`                       | `runEval` + aggregation back to baseline-shaped results and the core report |
-| `run-evals.characterization.test.ts` | Literal per-case results; proof the port kept baselines compatible          |
-| `compare-baseline.ts`                | Same-model baseline comparison (format unchanged)                           |
-| `anthropic-tool-selector.ts`         | Messages API adapter (`@anthropic-ai/sdk` `client.messages.create`)         |
-| `cli.ts`                             | The Nx target's entry point                                                 |
+| File                                          | Role                                                                                        |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `eval-case.ts`                                | Case, selection and selector types                                                          |
+| `data/data.cases.ts`                          | The cases                                                                                   |
+| `data/data.dataset.ts`                        | Dataset target, grader id and version                                                       |
+| `data/data.harness-tools.ts`                  | Generic harness tools offered next to OT                                                    |
+| `tool-selection-core.ts`                      | Cases as a core `EvalDataset`, the iteration under test, and `gradeCase` as a `code` grader |
+| `selection-trajectory.ts`                     | Selection to and from an ATIF trajectory, usage included                                    |
+| `gradeCase.ts`                                | Pure grading rules (unit-tested, runs in CI)                                                |
+| `runEvals.ts`                                 | `runEval` + aggregation back to baseline-shaped results and the core report                 |
+| `__tests__/runEvals.characterization.test.ts` | Literal per-case results; proof the port kept baselines compatible                          |
+| `compareBaseline.ts`                          | Same-model baseline comparison (format unchanged)                                           |
+| `anthropic-tool-selector.ts`                  | Messages API adapter (`@anthropic-ai/sdk` `client.messages.create`)                         |
+| `cli.ts`                                      | The Nx target's entry point                                                                 |
 
 The evals are not reachable from `bin.ts` or `bin-http.ts`, so the production esbuild bundle does not
 include them or the eval core. Keep it that way.

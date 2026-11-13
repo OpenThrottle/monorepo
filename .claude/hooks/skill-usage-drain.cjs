@@ -408,7 +408,7 @@ var drainJsonlFileBatched = async ({
   });
 };
 
-// packages/nodejs-utils/src/utils/is-record.ts
+// packages/nodejs-utils/src/utils/isRecord.ts
 var isRecord = (value) => {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 };

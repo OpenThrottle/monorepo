@@ -8,9 +8,9 @@ import {
   setActiveToolsets,
 } from '../config/toolsets.ts';
 import { mcpToolsetPrunerProvider } from './mcp-toolset-pruner.provider.ts';
+import { McpDeveloperMcpSurface } from './McpDeveloperMcpSurface.ts';
 import { NestjsMcpDeveloperService } from './nestjs-openthrottle-mcp.service.ts';
 import type { NestjsMcpDeveloperBootstrapOptions } from './nestjs-openthrottle-mcp-bootstrap-options.interface.ts';
-import { McpDeveloperMcpSurface } from './openthrottle-mcp-mcp-surface.ts';
 
 const buildMcpRootOptions = (
   options: NestjsMcpDeveloperBootstrapOptions,

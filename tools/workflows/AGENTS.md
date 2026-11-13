@@ -21,20 +21,20 @@ README § [Which path runs when](./README.md#which-path-runs-when-canonical-deci
 Moved out (edit there, not here):
 
 - Orchestrator loop → `@openthrottle/openthrottle-agentic-ralph`; Nest DI + BullMQ queue wiring → `@openthrottle/nestjs-agentic-workflow`; worktree acquire/run/release → `@openthrottle/nestjs-worktrees`; transport-free contracts → `@openthrottle/openthrottle-agentic-workflow`; shared env/debug constants → `@openthrottle/openthrottle-agentic-utils`.
-- The "re-export shims" are `@deprecated` aliases inside remaining files (e.g. `src/utils/ralph-debug-logger.ts` re-exports `WORKFLOW_RALPH_DEBUG_ENV` from `openthrottle-agentic-utils` as `RALPH_DEBUG_ENV`), not a shim-only index — `src/index.ts` still exports real local code.
+- The "re-export shims" are `@deprecated` aliases inside remaining files (e.g. `src/utils/ralphDebugLogger.ts` re-exports `WORKFLOW_RALPH_DEBUG_ENV` from `openthrottle-agentic-utils` as `RALPH_DEBUG_ENV`), not a shim-only index — `src/index.ts` still exports real local code.
 
 Still real logic here (OK to touch for fixes):
 
-- `src/bin/ralph.ts` — the `workflow-ralph` CLI (`--plan`/`--task`); `src/bin/run-iteration.ts` — the iteration runner the orchestrator borrows via `src/utils/cursor-workflow-ralph-iteration-runner.ts`.
+- `src/bin/ralph.ts` — the `workflow-ralph` CLI (`--plan`/`--task`); `src/bin/runIteration.ts` — the iteration runner the orchestrator borrows via `src/utils/createCursorWorkflowRalphIterationRunner.ts`.
 - `src/bin/link-merge.ts` (`workflow-link-merge`) and `src/bin/lighthouse.ts` (`workflow-lighthouse`) — parked here until relocated to standalone tool packages (README § Target architecture).
-- `src/config/load-workflow-ralph-config.ts` — config resolution.
-- `src/utils/` — parent/child job + worktree workflow plumbing (`child-job.ts`, `parent-job.ts`, `worktree-targets.ts`).
+- `src/config/loadWorkflowRalphConfig.ts` — config resolution.
+- `src/utils/` — parent/child job + worktree workflow plumbing (`child-job.ts`, `parent-job.ts`, `WorktreeTargetsTracker.ts`).
 
 New workflow, queue, orchestrator, or worktree behavior belongs in the `@openthrottle` packages above; changes here should be shims, bin fixes, or migration steps.
 
 ## Config and debugging
 
-- Config precedence: built-in defaults < `.workflow-ralph.json` **in the cwd** < `WORKFLOW_RALPH_*` env vars < CLI/enqueue overrides (`src/config/load-workflow-ralph-config.ts`; filename constant `WORKFLOW_RALPH_DEFAULTS_FILENAME`).
+- Config precedence: built-in defaults < `.workflow-ralph.json` **in the cwd** < `WORKFLOW_RALPH_*` env vars < CLI/enqueue overrides (`src/config/loadWorkflowRalphConfig.ts`; filename constant `WORKFLOW_RALPH_DEFAULTS_FILENAME`).
 - `WORKFLOW_RALPH_DEBUG=1` enables debug logging (legacy alias `RALPH_DEBUG`); `WORKFLOW_RALPH_DEBUG=verbose` or `WORKFLOW_RALPH_VERBOSE` adds verbose lines. Debug output goes to stderr prefixed `[workflow-ralph:debug]`.
 
 ## Worktree checkout registration (run-start only)

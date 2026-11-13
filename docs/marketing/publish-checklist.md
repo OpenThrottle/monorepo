@@ -38,7 +38,7 @@ the scanner. In a frame the same string means something much worse: the recordin
 against the **real database instead of the demo one**, which is the single worst
 failure this pipeline can have.
 
-The rules are unit tested (`scan/__tests__/scan-text.test.ts`) against leaks this
+The rules are unit tested (`scan/__tests__/scanText.test.ts`) against leaks this
 project has actually had — including the hard-coded `/Users/matt/...` path that
 renders on the plan-create page. A gate nobody has seen fail is not a gate.
 

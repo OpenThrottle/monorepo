@@ -10,7 +10,7 @@ import {
   ARTIFACT_FILTER_ALL,
   filterLinkedArtifacts,
   summarizeLinkedArtifacts,
-} from '~/routing/plans/utils/summarize-linked-artifacts';
+} from '~/routing/plans/utils/summarizeLinkedArtifacts';
 
 export interface LinkedArtifactRow {
   // The GraphQL Date scalar arrives as epoch millis (number) or an ISO string.

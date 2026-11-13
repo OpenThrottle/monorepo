@@ -1,4 +1,4 @@
-export * from './build-eval-report.ts';
-export * from './compare-eval-reports.ts';
+export * from './buildEvalReport.ts';
+export * from './compareEvalReports.ts';
 export * from './report-types.ts';
-export * from './trial-verdict.ts';
+export * from './trialVerdict.ts';

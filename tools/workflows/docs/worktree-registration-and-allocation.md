@@ -108,7 +108,7 @@ This document defines how N worktree targets (or separate repos) are registered 
 ## 4. References
 
 - **Tracker interface and types:** `tools/workflows/src/types/worktree.ts` (`IWorktreeTargetsTracker`, `ParentJobHandoff`, `ParentJobAcquireOptions`).
-- **In-memory tracker:** `tools/workflows/src/utils/worktree-targets.ts` (`WorktreeTargetsTracker`, `register()`).
+- **In-memory tracker:** `tools/workflows/src/utils/WorktreeTargetsTracker.ts` (`WorktreeTargetsTracker`, `register()`).
 - **Env parsing:** `packages/nestjs-worktrees/src/nestjs-worktrees.utils.ts` (`getWorktreeTargetsFromEnv()`).
 - **Nest module:** [`packages/nestjs-worktrees/README.md`](../../../packages/nestjs-worktrees/README.md).
 - **Workflow:** `tools/workflows/src/utils/workflow.ts` (`runWorktreeWorkflow`); `parent-job.ts` (`parentJobAcquireAndCreateBranch`); `child-job.ts` (`runChildJob` with `cwd: worktreePath`).

@@ -9,6 +9,7 @@ import * as fs from 'node:fs';
 import {
   getOpenThrottleRoot,
   getPostgresUrl,
+  getWorkflowConfigCwd,
   OPENTHROTTLE_POSTGRES_URL_ENV,
   prependOpenThrottleBinToPath,
   WORKFLOW_RALPH_OT_ROOT_ENV,
@@ -18,6 +19,7 @@ import {
   WORKFLOW_RALPH_TRANSPORT_ENV,
   type WorkflowRalphTransport,
 } from '../utils/workflow-transport.ts';
+import { loadWorkflowRalphConfig } from './loadWorkflowRalphConfig.ts';
 
 /**
  * @description When set (non-empty after trim) on the BullMQ worker, nested `workflow-ralph` children receive this as `HOME` so Claude Code and similar CLIs resolve OAuth paths under a directory you control (e.g. bind-mount host credentials into `/var/ralph-home` and set this to that path).
@@ -275,3 +277,57 @@ export function buildWorkflowRalphSpawnEnv(
 
   return applyWorkflowRalphSpawnIdentityOverrides(withBinPath, merged);
 }
+
+/**
+ * @description Resolves Ralph config cwd for queue workers: job worktree, then `WORKSPACE_ROOT`, then process cwd.
+ * @deprecated Import {@link getWorkflowConfigCwd} from `@openthrottle/openthrottle-agentic-utils` instead.
+ */
+export function resolveWorkflowRalphConfigCwd(
+  workingDirectory: string | undefined,
+  env: NodeJS.ProcessEnv = process.env,
+): string {
+  return getWorkflowConfigCwd(workingDirectory, env);
+}
+
+/**
+ * @description Builds nested `workflow-ralph` child env with file + env precedence for spawn tuning.
+ */
+export const buildNestedWorkflowRalphSpawnEnv = (
+  spawnCwd: string,
+  workerEnv: NodeJS.ProcessEnv = process.env,
+  options?: BuildWorkflowRalphSpawnEnvOptions,
+): NodeJS.ProcessEnv => {
+  const merged = loadWorkflowRalphConfig(spawnCwd, workerEnv);
+
+  return buildWorkflowRalphSpawnEnv(workerEnv, {
+    ...options,
+    mergedDefaults: {
+      spawn: merged.spawn,
+      transport: merged.transport,
+    },
+  });
+};
+
+/**
+ * @description Sets {@link WORKFLOW_RALPH_OT_ROOT_ENV} from file, env, or module walk-up when unset.
+ */
+export const applyWorkflowRalphOtRootFromConfig = (
+  cwd: string,
+  env: NodeJS.ProcessEnv = process.env,
+): void => {
+  if ((env[WORKFLOW_RALPH_OT_ROOT_ENV]?.trim() ?? '') !== '') {
+    return;
+  }
+
+  const config = loadWorkflowRalphConfig(cwd, env);
+  const fromConfig = config.spawn.otRoot?.trim();
+  if (fromConfig !== undefined && fromConfig !== '') {
+    env[WORKFLOW_RALPH_OT_ROOT_ENV] = fromConfig;
+    return;
+  }
+
+  const resolved = getOpenThrottleRoot(env);
+  if (resolved !== undefined) {
+    env[WORKFLOW_RALPH_OT_ROOT_ENV] = resolved;
+  }
+};

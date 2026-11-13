@@ -4,9 +4,9 @@ This document describes how Node.js processes are spawned and how the worktree w
 
 ## Overview
 
-**Current code:** `ralph.ts` dispatches each iteration to **one** execution backend (`cursor` or `claude`) via `run-iteration.ts` — **cursor-agent** or **Claude Code** (`claude` CLI) — selected once per process by `--backend` / env / `.workflow-ralph.json` (no mixing backends within a single plan run). It uses **spawn** when non-interactive (no TTY) and `spawnSync` when interactive; `child-job.ts` uses **spawn** for **pnpm exec workflow-ralph**. `runWorktreeWorkflow` composes acquire → runLoop (e.g. Ralph) → ensureCommit (lint/test/typecheck) → release. Tracker is in-memory or Redis-backed; no HTTP/API server yet for orchestrating spawns.
+**Current code:** `ralph.ts` dispatches each iteration to **one** execution backend (`cursor` or `claude`) via `runIteration.ts` — **cursor-agent** or **Claude Code** (`claude` CLI) — selected once per process by `--backend` / env / `.workflow-ralph.json` (no mixing backends within a single plan run). It uses **spawn** when non-interactive (no TTY) and `spawnSync` when interactive; `child-job.ts` uses **spawn** for **pnpm exec workflow-ralph**. `runWorktreeWorkflow` composes acquire → runLoop (e.g. Ralph) → ensureCommit (lint/test/typecheck) → release. Tracker is in-memory or Redis-backed; no HTTP/API server yet for orchestrating spawns.
 
-- **Ralph CLI** (`src/bin/ralph.ts`): Runs in the current process; each iteration runs the configured runner (default **cursor-agent**) via `spawnSync` when interactive (TTY) and via `spawn` + Promise when non-interactive, with optional per-iteration timeout (`--iteration-timeout`) and optional `onChunk` for streaming. Implementation: `src/bin/run-iteration.ts`.
+- **Ralph CLI** (`src/bin/ralph.ts`): Runs in the current process; each iteration runs the configured runner (default **cursor-agent**) via `spawnSync` when interactive (TTY) and via `spawn` + Promise when non-interactive, with optional per-iteration timeout (`--iteration-timeout`) and optional `onChunk` for streaming. Implementation: `src/bin/runIteration.ts`.
 - **Child job** (`src/utils/child-job.ts`): Runs inside a parent (e.g. BullMQ worker); spawns **pnpm exec workflow-ralph** via `spawn` in a worktree (timeout, AbortSignal, streaming).
 - **Parent job** (`src/utils/parent-job.ts`): Uses `spawnSync` for git and for nx (lint/test/typecheck).
 - **Workflow** (`src/utils/workflow.ts`): Composes acquire → runLoop → ensureCommit → release; the loop is async (e.g. `runChildJob`), but all subprocess calls inside it are currently synchronous.
@@ -17,7 +17,7 @@ No HTTP/API server exists yet for orchestrating spawns; the tracker is in-memory
 
 ## 1. ralph.ts (CLI): spawning the iteration runner
 
-**Files:** `tools/workflows/src/bin/ralph.ts` (loop, OpenThrottle), `tools/workflows/src/bin/run-iteration.ts` (single iteration)
+**Files:** `tools/workflows/src/bin/ralph.ts` (loop, OpenThrottle), `tools/workflows/src/bin/runIteration.ts` (single iteration)
 
 - **What it spawns (one backend per run):** A shell command built from `--backend` (default `cursor`):
   - **`cursor`:** `cursor-agent --force -p "<agentPrompt>" [--model <model>]` (`cursor-agent` on PATH).

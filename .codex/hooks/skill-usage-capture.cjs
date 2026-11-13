@@ -208,7 +208,7 @@ var startsFilePathForSession = (startsDir, sessionId) => {
   return import_node_path2.default.join(startsDir, `${sanitizeSessionId(sessionId)}.jsonl`);
 };
 
-// packages/nodejs-utils/src/utils/is-record.ts
+// packages/nodejs-utils/src/utils/isRecord.ts
 var isRecord = (value) => {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 };

@@ -3,10 +3,10 @@ import { formatFiles, generateFiles, logger } from '@nx/devkit';
 import { join } from 'path';
 import prompts from 'prompts';
 
-import { askWhenInteractive } from '../../utils/ask-when-interactive.ts';
 import { getCommonVariables } from '../../utils/index.ts';
+import { askWhenInteractive } from '../../utils/interactive.ts';
 import { getGraphQLApplications } from '../../utils/projects.ts';
-import { REGEX_SLUG } from '../../utils/regex.ts';
+import { REGEX_SLUG } from '../../utils/validation.ts';
 
 export interface NestJSSimpleServiceGeneratorSchema {
   readonly application?: string;

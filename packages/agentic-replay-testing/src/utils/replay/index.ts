@@ -1,10 +1,10 @@
-export { installReplayBin, type ReplayBin } from './install-replay-bin.ts';
+export { installReplayBin, type ReplayBin } from './installReplayBin.ts';
 export {
   type PreparedReplay,
   prepareReplay,
   replayFixturePath,
   replaySessionStart,
-} from './prepare-replay.ts';
+} from './prepareReplay.ts';
 export {
   compareOutbound,
   REPLAY_MISMATCH_EXIT_CODE,
@@ -17,6 +17,7 @@ export {
   replayFixture,
   type ReplayFixtureOptions,
   type ReplayFixtureResult,
-} from './replay-fixture.ts';
-export { replayPaths } from './replay-paths.ts';
-export { replayPlanRun, type ReplayPlanRunResult } from './replay-plan-run.ts';
+  replayPlanRun,
+  type ReplayPlanRunResult,
+} from './replayers.ts';
+export { replayPaths } from './replayPaths.ts';

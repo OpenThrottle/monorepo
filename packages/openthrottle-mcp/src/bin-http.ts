@@ -3,7 +3,7 @@
  * Docker-native `mcp` service. Run via `tsx src/bin-http.ts` (dev image) or the
  * built output. For the stdio server (host launcher) see {@link ./bin.ts}.
  */
-import { runServerHttp } from './run-server-http.ts';
+import { runServerHttp } from './runServerHttp.ts';
 
 runServerHttp().catch((error: unknown) => {
   console.error('runServerHttp failed', error);

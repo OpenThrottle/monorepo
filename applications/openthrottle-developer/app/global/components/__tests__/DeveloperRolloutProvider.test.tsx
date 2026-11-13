@@ -17,7 +17,7 @@ const fetchRolloutEvaluationsMock = vi.hoisted(() =>
   vi.fn(async (): Promise<readonly RolloutEvaluation[]> => []),
 );
 
-vi.mock('~/global/utils/fetch-rollout-evaluations', () => ({
+vi.mock('~/global/utils/fetchRolloutEvaluations', () => ({
   fetchRolloutEvaluations: fetchRolloutEvaluationsMock,
 }));
 

@@ -15,7 +15,7 @@ import { SHELL_HEALTH_PATH } from '../main/data/data.server-env.ts';
 import {
   dropUndefined,
   withLocalOrigin,
-} from '../main/utils/build-server-env.ts';
+} from '../main/utils/buildServerEnv.ts';
 import { createOtProxy } from './utils/createOtProxy.ts';
 
 const buildDir = process.env['OPENTHROTTLE_DEVELOPER_BUILD_DIR'];

@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 
 import type { LabelPair } from '../agreement.ts';
 import { catchRate, cohensKappa, falseFailRate } from '../agreement.ts';
-import { detectionFloor, requiredSampleSize } from '../detection-floor.ts';
-import type { PairedOutcome } from '../paired-difference.ts';
-import { mcnemar, pairedDifference } from '../paired-difference.ts';
+import { detectionFloor, requiredSampleSize } from '../detectionFloor.ts';
+import type { PairedOutcome } from '../pairedDifference.ts';
+import { mcnemar, pairedDifference } from '../pairedDifference.ts';
 
 const repeat = (pair: LabelPair, times: number): readonly LabelPair[] => {
   return Array.from({ length: times }, () => pair);

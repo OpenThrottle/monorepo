@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildEvalReport } from '../build-eval-report.ts';
-import { compareEvalReports } from '../compare-eval-reports.ts';
+import { buildEvalReport } from '../buildEvalReport.ts';
+import { compareEvalReports } from '../compareEvalReports.ts';
 import type {
   BuildEvalReportInput,
   ReportCalibration,

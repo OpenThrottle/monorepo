@@ -135,7 +135,7 @@ UI (can consume `discoverLocalModels` later).
 - **`readWorkflowDebugLevelFromEnv`** in `src/utils/workflow.ts` is canonical: pure env parse for `off` | `debug` | `verbose`; no logger instance.
 - **`WORKFLOW_RALPH_DEBUG_ENV`**, **`WORKFLOW_RALPH_DEBUG_LEGACY_ENV`**, **`WORKFLOW_RALPH_VERBOSE_ENV`** — env var **names** unchanged (`WORKFLOW_RALPH_DEBUG`, `RALPH_DEBUG`, `WORKFLOW_RALPH_VERBOSE`).
 - **`isWorkflowVerboseEnvTruthy`** — helper for `WORKFLOW_RALPH_VERBOSE` truthiness.
-- **`@tools/workflows`** `ralph-debug-logger.ts` re-exports deprecated `readRalphDebugConfigFromEnv`, `RALPH_DEBUG_*` aliases, and `isVerboseTruthy`; global logger stays in workflows.
+- **`@tools/workflows`** `ralphDebugLogger.ts` re-exports deprecated `readRalphDebugConfigFromEnv`, `RALPH_DEBUG_*` aliases, and `isVerboseTruthy`; global logger stays in workflows.
 - **`@tools/workflows`** barrel re-exports the canonical symbols from this package.
 
 ## Overlap resolved (task 10)

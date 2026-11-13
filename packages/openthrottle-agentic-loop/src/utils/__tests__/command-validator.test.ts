@@ -7,10 +7,13 @@ import type {
   SpawnCommand,
   ValidationChunk,
 } from '../../contract/index.ts';
-import { createCommandValidator } from '../create-command-validator.ts';
-import { runOtLoop } from '../run-ot-loop.ts';
-import { spawnShellCommand } from '../spawn-shell-command.ts';
-import { systemScheduleClock } from '../system-schedule-clock.ts';
+import {
+  createCommandValidator,
+  runCommandSequence,
+} from '../command-validator.ts';
+import { systemScheduleClock } from '../node-adapters.ts';
+import { runOtLoop } from '../runOtLoop.ts';
+import { spawnShellCommand } from '../shell-command.ts';
 import { done, makeTask, makeWorld, statusOf } from './loop-fakes.ts';
 
 interface FakeScript {
@@ -289,5 +292,71 @@ describe('runOtLoop wired to the command validator', () => {
     expect(outcome.kind).toBe('tasks_blocked');
     expect(fake.started).toEqual(['lint', 'lint', 'lint']);
     expect(fake.maxInFlight()).toBe(1);
+  });
+});
+
+const ESC = String.fromCharCode(27);
+const GREEN_CHECK = `${ESC}[32m✔${ESC}[39m`;
+
+const scriptedSpawn = (
+  pieces: readonly string[],
+  exitCode = 1,
+): SpawnCommand => {
+  return ({ onOutput }) => {
+    pieces.forEach((piece) => {
+      onOutput(piece);
+    });
+
+    return {
+      done: Promise.resolve({ exitCode }),
+      kill: () => undefined,
+    };
+  };
+};
+
+describe('ANSI never reaches onChunk', () => {
+  it('strips the failure tail on red, including a split sequence', async () => {
+    const chunks: ValidationChunk[] = [];
+    const validator = createCommandValidator({
+      clock: systemScheduleClock,
+      commands: ['pnpm test'],
+      cwd: '/wt',
+      onChunk: (chunk) => chunks.push(chunk),
+      spawn: scriptedSpawn([
+        `${GREEN_CHECK} one\n${ESC}`,
+        '[3',
+        '1mred',
+        `${ESC}[39m\n`,
+      ]),
+      timeoutMs: 60_000,
+    });
+
+    await validator.validate({
+      signal: new AbortController().signal,
+      task: makeTask('1'),
+      taskStartSha: 'abc',
+    });
+
+    const text = chunks.map((chunk) => chunk.text).join('');
+
+    expect(text).toContain('✔ one\nred\n');
+    expect(text).not.toContain(ESC);
+  });
+
+  it('strips from runCommandSequence output (setup and final validation path)', async () => {
+    const texts: string[] = [];
+
+    await runCommandSequence({
+      clock: systemScheduleClock,
+      commands: ['setup'],
+      cwd: '/wt',
+      onOutput: ({ text }) => texts.push(text),
+      signal: new AbortController().signal,
+      spawn: scriptedSpawn([`${ESC}[1mbold${ESC}[22m\n`]),
+      timeoutMs: 60_000,
+    });
+
+    expect(texts.join('')).toContain('bold\n');
+    expect(texts.join('')).not.toContain(ESC);
   });
 });

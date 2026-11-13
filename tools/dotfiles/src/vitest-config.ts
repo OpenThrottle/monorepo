@@ -3,7 +3,7 @@ import swc from 'unplugin-swc';
 import type { UserConfig } from 'vite';
 import { defineConfig } from 'vitest/config';
 
-import { calculateOutputDir } from './calculate-output-dir.ts';
+import { calculateOutputDir } from './calculateOutputDir.ts';
 
 export { getDirname } from './vite-config.ts';
 

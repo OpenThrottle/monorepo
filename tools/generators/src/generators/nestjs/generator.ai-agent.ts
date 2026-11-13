@@ -5,7 +5,7 @@ import { join } from 'path';
 import { getCommonVariables } from '../../utils/index.ts';
 import { getNestJSApplication } from '../../utils/projects.ts';
 import { getTargetName } from '../../utils/questions.ts';
-import { REGEX_SLUG } from '../../utils/regex.ts';
+import { REGEX_SLUG } from '../../utils/validation.ts';
 
 export interface NestJSAIAgentGeneratorSchema {
   readonly application?: string;

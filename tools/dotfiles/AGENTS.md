@@ -9,7 +9,7 @@ Shared ESLint, Prettier, Vite, and Vitest configuration factories. Source-first 
 - `src/index.ts` — the ESLint flat config plus all public re-exports (`eslintConfig`, `prettierConfig`, config factories).
 - `src/vitest-config.ts` — `createVitestConfig`, `createVitestConfigJsdom`, `createVitestConfigHappyDom`, `createVitestConfigNode`.
 - `src/vite-config.ts` — `createViteConfig`, `getDirname`.
-- `src/prettier-config.ts` — the single source of truth for Prettier options; the root `.prettierrc.mjs` just re-exports it.
+- `src/prettierConfig.ts` — the single source of truth for Prettier options; the root `.prettierrc.mjs` just re-exports it.
 - `src/types.d.ts` — ambient `declare module` shims for ESLint plugins that ship no types (included via `tsconfig.lib.json`).
 
 ## Invariants & gotchas

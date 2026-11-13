@@ -15,7 +15,7 @@ export {
   type AcpLauncher,
   spawnAcpAgent,
 } from './launcher.ts';
-export { resolveAcpPermission } from './permission-broker.ts';
+export { resolveAcpPermission } from './permissions.ts';
 export {
   CHAT_ACP_BACKENDS_ENV,
   isAcpChatEnabled,

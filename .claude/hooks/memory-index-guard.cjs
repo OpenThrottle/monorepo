@@ -47,7 +47,7 @@ module.exports = __toCommonJS(memory_index_guard_exports);
 var import_node_fs = __toESM(require("node:fs"), 1);
 var import_node_path = __toESM(require("node:path"), 1);
 
-// packages/nodejs-utils/src/utils/is-record.ts
+// packages/nodejs-utils/src/utils/isRecord.ts
 var isRecord = (value) => {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 };

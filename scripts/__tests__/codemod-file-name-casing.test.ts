@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   isInScopePath,
   planRenames,
+  primaryExport,
   RENAME_STATUS,
   runCodemod,
   scanExports,
@@ -113,6 +114,21 @@ describe('scanExports', () => {
   });
 });
 
+describe('primaryExport', () => {
+  it('is the only value export', () => {
+    expect(primaryExport('anything', ['getFoo'])).toBe('getFoo');
+  });
+
+  it('is the non-constant export the stem names, among several', () => {
+    expect(primaryExport('resolve-thing', ['THING_KINDS', 'resolveThing', 'helper'])).toBe('resolveThing'); // prettier-ignore
+  });
+
+  it('is undefined for a bucket, and never a constant', () => {
+    expect(primaryExport('format', ['formatDate', 'formatBytes'])).toBeUndefined(); // prettier-ignore
+    expect(primaryExport('thing-kinds', ['THING_KINDS', 'other'])).toBeUndefined(); // prettier-ignore
+  });
+});
+
 describe('targetFileName', () => {
   it('mirrors the export exactly and keeps the suffix', () => {
     expect(targetFileName('get-url-parts.server.ts', 'getURLParts')).toBe('getURLParts.server.ts'); // prettier-ignore
@@ -135,6 +151,18 @@ describe('planRenames', () => {
     expect(byFrom.get('cms-status.ts')).toMatchObject({ status: RENAME_STATUS.constant }); // prettier-ignore
     expect(byFrom.get('do-bar.ts')).toMatchObject({ status: RENAME_STATUS.conflict }); // prettier-ignore
     expect(byFrom.has('two-things.ts')).toBe(false);
+  });
+
+  it('renames a multi-export file for the export its stem names, and leaves a bucket alone', () => {
+    write('packages/p/src/utils/resolve-thing.ts', `export const THING_KINDS = ['a'] as const; export const resolveThing = () => { return 1; }; export const helper = 2;`); // prettier-ignore
+    write('packages/p/src/utils/format.ts', 'export const formatDate = 1; export const formatBytes = 2;'); // prettier-ignore
+    write('packages/p/src/utils/thing-kinds.ts', `export const THING_KINDS = ['a'] as const; export const other = 1;`); // prettier-ignore
+
+    const byFrom = new Map(planRenames(root, 'packages/p').map((candidate) => [path.basename(candidate.from), candidate])); // prettier-ignore
+
+    expect(byFrom.get('resolve-thing.ts')).toMatchObject({ exportName: 'resolveThing', status: RENAME_STATUS.rename, to: 'packages/p/src/utils/resolveThing.ts' }); // prettier-ignore
+    expect(byFrom.has('format.ts')).toBe(false);
+    expect(byFrom.has('thing-kinds.ts')).toBe(false);
   });
 
   it('moves companions beside it and in __tests__', () => {

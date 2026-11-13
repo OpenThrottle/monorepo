@@ -1,0 +1,23 @@
+import { describe, expect, test } from 'vitest';
+
+import {
+  parseScheduleDetailTab,
+  SCHEDULE_DETAIL_TAB_SEARCH_PARAM,
+} from '../parseScheduleDetailTab';
+
+describe('parseScheduleDetailTab', () => {
+  test('uses the shared `tab` search param', () => {
+    expect(SCHEDULE_DETAIL_TAB_SEARCH_PARAM).toBe('tab');
+  });
+
+  test.each(['history', 'prompt'] as const)('accepts %p', (raw) => {
+    expect(parseScheduleDetailTab(raw)).toBe(raw);
+  });
+
+  test.each([null, '', 'bogus', 'History', 'runs'])(
+    'returns null for %p',
+    (raw) => {
+      expect(parseScheduleDetailTab(raw)).toBeNull();
+    },
+  );
+});

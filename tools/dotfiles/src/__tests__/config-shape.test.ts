@@ -1,7 +1,7 @@
 import { createViteConfig, prettierConfig } from '@tools/dotfiles';
 import { describe, expect, it } from 'vitest';
 
-import { calculateOutputDir } from '../calculate-output-dir.ts';
+import { calculateOutputDir } from '../calculateOutputDir.ts';
 
 describe('calculateOutputDir', () => {
   const cases: ReadonlyArray<{

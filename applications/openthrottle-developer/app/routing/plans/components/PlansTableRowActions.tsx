@@ -16,7 +16,7 @@ import { PLANS_ROW_ACTIONS_COPY } from '~/routing/plans/data/data.copy';
 import {
   cancelPlanRunToastTone,
   describeCancelPlanRunResult,
-} from '~/routing/plans/utils/describe-cancel-plan-run-result';
+} from '~/routing/plans/utils/describeCancelPlanRunResult';
 import { getPlanIsCancelable } from '~/routing/plans/utils/utils.plans';
 
 export interface PlansTableRowActionsProps {

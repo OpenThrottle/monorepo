@@ -6,11 +6,11 @@ import {
   getTypeFilterLabel,
   getVerificationFilterLabel,
 } from '~/routing/plans/utils/linked-artifacts-filter-labels';
-import type { LinkedArtifactsSummaryModel } from '~/routing/plans/utils/summarize-linked-artifacts';
+import type { LinkedArtifactsSummaryModel } from '~/routing/plans/utils/summarizeLinkedArtifacts';
 import {
   ARTIFACT_FILTER_ALL,
   ARTIFACT_VERIFICATIONS,
-} from '~/routing/plans/utils/summarize-linked-artifacts';
+} from '~/routing/plans/utils/summarizeLinkedArtifacts';
 
 export interface LinkedArtifactsSummaryProps {
   onTypeChange: (type: string) => void;

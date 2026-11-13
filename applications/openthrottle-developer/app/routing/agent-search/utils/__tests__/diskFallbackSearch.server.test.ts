@@ -15,14 +15,14 @@ vi.mock('~/routing/agents/utils/discoverRepoSkills.server', () => ({
   discoverRepoSkills: vi.fn(() => []),
 }));
 
-vi.mock('~/routing/agents/utils/discover-repo-personas.server', () => ({
+vi.mock('~/routing/agents/utils/discoverRepoPersonas.server', () => ({
   discoverRepoPersonas: vi.fn(() => []),
 }));
 
 const { discoverRepoSkills } =
   await import('~/routing/agents/utils/discoverRepoSkills.server');
 const { discoverRepoPersonas } =
-  await import('~/routing/agents/utils/discover-repo-personas.server');
+  await import('~/routing/agents/utils/discoverRepoPersonas.server');
 const { diskFallbackSearch } = await import('../diskFallbackSearch.server');
 
 const mockSkills = vi.mocked(discoverRepoSkills);

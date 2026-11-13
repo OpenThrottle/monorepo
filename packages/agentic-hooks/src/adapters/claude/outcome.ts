@@ -27,7 +27,7 @@ import {
   resolveHookRepoRoot,
   SKILL_USAGE_OUTCOMES,
 } from '../../index.ts';
-import { parseOutcomeArgs } from './outcome-args.ts';
+import { parseOutcomeArgs } from './parseOutcomeArgs.ts';
 import { CLAUDE_SOURCE } from './payload.ts';
 
 const main = async (): Promise<void> => {

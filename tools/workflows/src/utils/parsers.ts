@@ -9,11 +9,9 @@ import { COLORS } from '../config/index';
 import {
   loadWorkflowRalphConfig,
   mapDefaultsDebugToRalphDebugLevel,
-} from '../config/load-workflow-ralph-config';
+} from '../config/loadWorkflowRalphConfig';
 import { MESSAGE_OUTRO } from '../config/messages';
 import { showRalphUsage } from '../utils/index';
-import type { RalphDebugLevel } from './ralph-debug-logger';
-import { ralphDebugLogger, setRalphDebugLevel } from './ralph-debug-logger';
 import { parseRalphExecutionBackendId } from './ralph-execution-backend';
 import {
   formatRalphPromptFileProfileLabel,
@@ -28,12 +26,14 @@ import {
   mergeRalphRuntimeSeed,
   resolveIterationTimeoutMs,
 } from './ralph-runtime-config';
-import { sanitizeRalphShellNoise } from './ralph-shell-misparse';
 import {
   RALPH_WORKTREE_FLAG_ONLY,
   type RalphWorktreeName,
   resolveRalphWorktreeName,
 } from './ralph-worktree-cli';
+import type { RalphDebugLevel } from './ralphDebugLogger';
+import { ralphDebugLogger, setRalphDebugLevel } from './ralphDebugLogger';
+import { sanitizeRalphShellNoise } from './run-output';
 
 /** RFC 4122 UUID v4 pattern: plan/task is OpenThrottle plan or task ID when matching */
 const RALPH_UUID_REGEX =

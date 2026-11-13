@@ -1,6 +1,6 @@
 export * from './formatters';
 export * from './generateId';
-export * from './is-stored-notification';
+export * from './isStoredNotification';
 export * from './loadFromStorage';
 export * from './reducer';
 export * from './saveToStorage';

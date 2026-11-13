@@ -3,7 +3,7 @@
 import * as React from 'react';
 
 import { getChartColor, readUnknownRecordValue } from '../chart-config';
-import { useChartConfig } from '../chart-config-context';
+import { useChartConfig } from '../ChartConfigContext';
 
 export interface ChartTooltipContentProps {
   readonly active?: boolean;

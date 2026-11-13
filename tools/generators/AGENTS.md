@@ -6,7 +6,7 @@ Local Nx plugin holding the five workspace generators (`folders`, `nestjs`, `pac
 
 ## Commands
 
-- `pnpm nx run @tools/generators:test` — Vitest over `generator.<sub>.test.ts` files (`createTreeWithEmptyWorkspace` from `@nx/devkit/testing`, assert on the in-memory tree) plus `src/generators/template-conventions.test.ts`.
+- `pnpm nx run @tools/generators:test` — Vitest over `generator.<sub>.test.ts` files (`createTreeWithEmptyWorkspace` from `@nx/devkit/testing`, assert on the in-memory tree) plus `src/generators/__tests__/template-conventions.test.ts`.
 - `build` (`@nx/js:tsc` → `dist/`, cache disabled) exists but is not needed to run generators — `generators.json` factories point at `./src/...` TypeScript, which is why every invocation needs `NX_ISOLATE_PLUGINS=false` (see [NX_ISOLATE_PLUGINS.md](../../docs/tools/templates/NX_ISOLATE_PLUGINS.md)).
 
 ## Layout
@@ -15,17 +15,17 @@ Local Nx plugin holding the five workspace generators (`folders`, `nestjs`, `pac
 - `src/generators/<name>/generator.ts` — entry point; handles `--describe` / `--list` (machine-readable JSON, no writes) and dispatches `--subGenerator` to sibling `generator.<sub>.ts` files.
 - `src/generators/<name>/files/<sub>/` — templates emitted via `@nx/devkit` `generateFiles`.
 - `src/generators/package/files/{react,node,nestjs,tools}/` — full new-package scaffolds (`package.json`, tsconfigs, vite/vitest, eslint, `README.md`); these README templates define the repo-wide package README conventions. `files/common/LICENSE.md` is shared.
-- `src/utils/` — shared prompt/validation/project-graph helpers (`questions.ts`, `projects.ts`, `validation.ts`, `regex.ts`).
+- `src/utils/` — shared prompt/validation/project-graph helpers (`questions.ts`, `projects.ts`, `validation.ts`).
 - `src/generators/folders/CANONICAL_ROUTING_SUBTREE.md` — the routing-folder layout the `folders` generator emits.
 
 ## Template conventions
 
 - File/dir name substitution uses `__name__` (e.g. `files/component/__name__.tsx`, `__tests__/__name__.test.tsx`); file contents use EJS `<%= name %>`. There is no `.template` suffix convention in this repo.
 - Templates are never compiled or executed: `vitest.config.ts` adds `exclude: ['**/files/**']`. Type errors in templates surface only in generated output.
-- `src/generators/template-conventions.test.ts` is the guard for that gap — it reads React/React Router test templates off disk and asserts repo testing rules (no `fireEvent`, no global `screen`, queries via the returned `component`, `userEvent` for interaction). Adding or changing an emitted `__tests__` template means updating its template lists.
-- `src/generators/generated-readability.test.ts` generates a React Router component, hook and route into an in-memory tree and lints the output with the readability rules (`lintReadability` from `@tools/dotfiles`). A template that emits a concise named arrow or a wrapped ternary fails there.
-- `src/generators/generated-nestjs-contract.test.ts` generates a NestJS package and application and lints them with the NestJS file contract (`lintNestjsFileContract` from `@tools/dotfiles`), scoped by the generated project's own `eslint.config.ts` — so a template file not named `<folder>.<kind>.ts`, or a template config that stops spreading `nestjsEslintConfig`, fails there.
-- `src/generators/nestjs/generator.graphql-service.integration.test.ts` scaffolds into a disposable `openthrottle-server` graphql folder and runs a focused `tsc --noEmit`, so a missing module (e.g. `@openthrottle/nestjs-core`) fails the generators suite instead of the first real scaffold.
+- `src/generators/__tests__/template-conventions.test.ts` is the guard for that gap — it reads React/React Router test templates off disk and asserts repo testing rules (no `fireEvent`, no global `screen`, queries via the returned `component`, `userEvent` for interaction). Adding or changing an emitted `__tests__` template means updating its template lists.
+- `src/generators/__tests__/generated-readability.test.ts` generates a React Router component, hook and route into an in-memory tree and lints the output with the readability rules (`lintReadability` from `@tools/dotfiles`). A template that emits a concise named arrow or a wrapped ternary fails there.
+- `src/generators/__tests__/generated-nestjs-contract.test.ts` generates a NestJS package and application and lints them with the NestJS file contract (`lintNestjsFileContract` from `@tools/dotfiles`), scoped by the generated project's own `eslint.config.ts` — so a template file not named `<folder>.<kind>.ts`, or a template config that stops spreading `nestjsEslintConfig`, fails there.
+- `src/generators/nestjs/__tests__/generator.graphql-service.integration.test.ts` scaffolds into a disposable `openthrottle-server` graphql folder and runs a focused `tsc --noEmit`, so a missing module (e.g. `@openthrottle/nestjs-core`) fails the generators suite instead of the first real scaffold.
 - The React/React Router component templates carry the section-comment scaffold (`// Hooks`, `// Setup`, `// Handlers`, `// Markup`, `// Life Cycle`, `// 🔌 Short Circuit`). It is owned by [`docs/monorepo/component-primitive-shape.md`](../../docs/monorepo/component-primitive-shape.md) — keep it in templates even when sections are empty.
 
 ## Invariants & gotchas

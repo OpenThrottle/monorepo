@@ -5,9 +5,9 @@
  * package stays a leaf dependency.
  */
 
+import type { UsageLimit } from '../utils/claude-output.ts';
 import type { DriverOutputFormat } from '../utils/output-format.ts';
 import type { DriverReasoningEffort } from '../utils/reasoning-effort.ts';
-import type { UsageLimit } from '../utils/usage-limit.ts';
 
 /**
  * @description One chunk of subprocess output when a driver is run through the async engine.

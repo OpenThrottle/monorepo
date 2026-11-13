@@ -12,17 +12,18 @@ import { readFileSync } from 'fs';
 import * as path from 'path';
 import prompts from 'prompts';
 
-import { throwGeneratorError } from '../../utils/generator-errors.ts';
 import { getCommonVariables } from '../../utils/index.ts';
-import { isInteractiveArgPresent } from '../../utils/nx-cli.ts';
-import { ORGANIZATIONS } from '../../utils/organizations.ts';
-import { writeJsonToStdout } from '../../utils/output.ts';
+import {
+  isInteractiveArgPresent,
+  writeJsonToStdout,
+} from '../../utils/interactive.ts';
 import {
   getConfigConfirmation,
   getOrganizationName,
   getPackageName,
 } from '../../utils/questions.ts';
-import { REGEX_SLUG } from '../../utils/regex.ts';
+import { throwGeneratorError } from '../../utils/target-validation.ts';
+import { ORGANIZATIONS, REGEX_SLUG } from '../../utils/validation.ts';
 
 export interface PackageGeneratorSchema {
   readonly describe?: boolean;

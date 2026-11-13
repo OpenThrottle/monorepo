@@ -47,12 +47,12 @@ var logHookError = (message, err) => {
   }
 };
 
-// packages/nodejs-utils/src/utils/is-record.ts
+// packages/nodejs-utils/src/utils/isRecord.ts
 var isRecord = (value) => {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 };
 
-// packages/agentic-hooks/src/data/read-new-bytes.ts
+// packages/agentic-hooks/src/data/read-new.ts
 var import_node_fs = __toESM(require("node:fs"), 1);
 var NEWLINE = 10;
 var readNewBytes = ({

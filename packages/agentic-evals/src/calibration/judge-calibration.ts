@@ -1,7 +1,7 @@
 import type { LabelPair } from '../stats/agreement.ts';
 import { catchRate, cohensKappa, falseFailRate } from '../stats/agreement.ts';
-import type { BootstrapCiOptions } from '../stats/bootstrap-ci.ts';
-import { bootstrapStatisticCi } from '../stats/bootstrap-ci.ts';
+import type { BootstrapCiOptions } from '../stats/bootstrap.ts';
+import { bootstrapStatisticCi } from '../stats/bootstrap.ts';
 import type { GraderVerdict } from '../types/grader.ts';
 
 /**

@@ -1,19 +1,76 @@
 /**
- * The resegment CLI's control flow, separated from `process` so it can be
- * driven from a test: plan each session, print the old/new step counts, and
- * write only when this is not a dry run.
+ * The resegment CLI's control flow and its plain-text report, separated from
+ * `process` so they can be driven from a test: plan each session, print the
+ * old/new step counts, and write only when this is not a dry run.
  */
 import type { HookFetch } from '../../index.ts';
 import type { ResegmentOptions } from './resegment-args.ts';
-import {
-  formatResegmentPlan,
-  formatResegmentResult,
-} from './resegment-report.ts';
+import type {
+  ResegmentSessionPlan,
+  ResegmentSessionResult,
+} from './resegment-session.ts';
 import {
   applySessionResegment,
   planSessionResegment,
 } from './resegment-session.ts';
 import { resolveBackfillEndpoint } from './transcript-backfill.ts';
+
+const taskLabel = (taskId: string | null): string => {
+  return taskId === null ? 'plan-level' : `task ${taskId}`;
+};
+
+/**
+ * The counts a resegment is about to act on. Printed before anything is sent,
+ * and the whole output of `--dry-run`.
+ *
+ * @public
+ */
+export const formatResegmentPlan = ({
+  dryRun,
+  plan,
+}: {
+  dryRun: boolean;
+  plan: ResegmentSessionPlan;
+}): string => {
+  const lines = [
+    dryRun
+      ? `session-trajectory-resegment: DRY RUN for ${plan.sessionId}, nothing will be written`
+      : `session-trajectory-resegment: about to write for ${plan.sessionId}`,
+    `transcript: ${plan.transcriptPath}`,
+    `open (skipped) segments: ${plan.openSegments}; actions: ${plan.actions.length}`,
+  ];
+  for (const action of plan.actions) {
+    if (action.action === 'insert') {
+      lines.push(
+        `  INSERT  ${taskLabel(action.taskId)}  steps ${action.newStepCount}`,
+      );
+      continue;
+    }
+    if (action.action === 'skip') {
+      lines.push(
+        `  SKIP    ${taskLabel(action.taskId)}  id ${action.id}  steps ${action.oldStepCount} -> ${action.newStepCount}`,
+      );
+      continue;
+    }
+    lines.push(
+      `  UPDATE  ${taskLabel(action.taskId)}  id ${action.id}  steps ${action.oldStepCount} -> ${action.newStepCount}`,
+    );
+  }
+  return `${lines.join('\n')}\n`;
+};
+
+/**
+ * What a send did for one session.
+ *
+ * @public
+ */
+export const formatResegmentResult = (
+  result: ResegmentSessionResult,
+): string => {
+  return `${[
+    `replaced ${result.replaced}, inserted ${result.inserted}, skipped (identical) ${result.skipped}, failed ${result.failed}`,
+  ].join('\n')}\n`;
+};
 
 const pickEndpoint = (
   injected: { authToken: string; graphqlUrl: string } | null | undefined,

@@ -44,11 +44,11 @@ import {
   parseRalphResponse,
 } from '../utils/parsers';
 import { getNxProjectNames } from '../utils/projects';
-import { ralphDebugLogger } from '../utils/ralph-debug-logger';
-import type { RunIterationConfig } from './run-iteration';
-import { runIteration, runIterationAsync } from './run-iteration';
+import { ralphDebugLogger } from '../utils/ralphDebugLogger';
+import type { RunIterationConfig } from './runIteration';
+import { runIteration, runIterationAsync } from './runIteration';
 
-export type { CursorAgentChunk, RunIterationConfig } from './run-iteration';
+export type { CursorAgentChunk, RunIterationConfig } from './runIteration';
 
 /** Poll interval for the detached-CLI durable cancel marker (covers during- and between-iteration). */
 const CLI_CANCEL_POLL_INTERVAL_MS = 3000;

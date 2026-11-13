@@ -33,7 +33,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 ));
 
 // packages/agentic-hooks/src/adapters/claude/complete.ts
-var import_node_fs14 = __toESM(require("node:fs"), 1);
+var import_node_fs13 = __toESM(require("node:fs"), 1);
 
 // packages/agentic-hooks/src/data/jsonl.ts
 var import_node_fs2 = __toESM(require("node:fs"), 1);
@@ -438,7 +438,7 @@ var drainJsonlFileBatched = async ({
   });
 };
 
-// packages/nodejs-utils/src/utils/is-record.ts
+// packages/nodejs-utils/src/utils/isRecord.ts
 var isRecord = (value) => {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 };
@@ -1590,7 +1590,7 @@ var readPlanRunIdForSession = ({
   return readPlanRunRecord(planRunFilePath(repoRoot, sid))?.planRunId;
 };
 
-// packages/agentic-hooks/src/data/read-new-bytes.ts
+// packages/agentic-hooks/src/data/read-new.ts
 var import_node_fs9 = __toESM(require("node:fs"), 1);
 var NEWLINE = 10;
 var readNewBytes = ({
@@ -1643,10 +1643,6 @@ var readNewBytes = ({
     }
   }
 };
-
-// packages/agentic-hooks/src/data/read-new-lines.ts
-var import_node_fs10 = __toESM(require("node:fs"), 1);
-var NEWLINE2 = 10;
 var readNewLines = ({
   filePath,
   maxBytes,
@@ -1659,8 +1655,8 @@ var readNewLines = ({
   };
   let fd = null;
   try {
-    fd = import_node_fs10.default.openSync(filePath, "r");
-    const { size } = import_node_fs10.default.fstatSync(fd);
+    fd = import_node_fs9.default.openSync(filePath, "r");
+    const { size } = import_node_fs9.default.fstatSync(fd);
     const start = offset > size || offset < 0 ? 0 : offset;
     if (size === start) {
       return { capped: false, lines: [], nextOffset: start };
@@ -1671,8 +1667,8 @@ var readNewLines = ({
     let lastNewline = -1;
     while (lastNewline < 0) {
       buffer = Buffer.alloc(window);
-      const bytesRead = import_node_fs10.default.readSync(fd, buffer, 0, window, start);
-      lastNewline = buffer.subarray(0, bytesRead).lastIndexOf(NEWLINE2);
+      const bytesRead = import_node_fs9.default.readSync(fd, buffer, 0, window, start);
+      lastNewline = buffer.subarray(0, bytesRead).lastIndexOf(NEWLINE);
       if (window >= remaining) {
         break;
       }
@@ -1684,7 +1680,7 @@ var readNewLines = ({
     const lines = [];
     let lineStart = 0;
     while (lineStart <= lastNewline) {
-      const lineEnd = buffer.indexOf(NEWLINE2, lineStart);
+      const lineEnd = buffer.indexOf(NEWLINE, lineStart);
       const text = buffer.subarray(lineStart, lineEnd).toString("utf8").replace(/\r$/, "");
       if (text.trim() !== "") {
         lines.push({ offset: start + lineStart, text });
@@ -1701,7 +1697,7 @@ var readNewLines = ({
   } finally {
     if (fd !== null) {
       try {
-        import_node_fs10.default.closeSync(fd);
+        import_node_fs9.default.closeSync(fd);
       } catch {
       }
     }
@@ -1845,7 +1841,7 @@ var drainBufferedTrajectories = async ({
 };
 
 // packages/agentic-hooks/src/data/trajectory-uploads.ts
-var import_node_fs11 = __toESM(require("node:fs"), 1);
+var import_node_fs10 = __toESM(require("node:fs"), 1);
 var import_node_path8 = __toESM(require("node:path"), 1);
 var stateFilePath = (dir, sessionId) => {
   return import_node_path8.default.join(dir, `${sanitizeSessionId(sessionId)}.json`);
@@ -1861,7 +1857,7 @@ var readTrajectoryUploadState = ({
   };
   try {
     const parsed = JSON.parse(
-      import_node_fs11.default.readFileSync(
+      import_node_fs10.default.readFileSync(
         stateFilePath(dir || defaultTrajectoryUploadsDir(), sessionId),
         "utf8"
       )
@@ -1894,8 +1890,8 @@ var writeTrajectoryUploadState = ({
       sessionId
     );
     const temp = `${target}.tmp.${process.pid}`;
-    import_node_fs11.default.mkdirSync(import_node_path8.default.dirname(target), { recursive: true });
-    import_node_fs11.default.writeFileSync(
+    import_node_fs10.default.mkdirSync(import_node_path8.default.dirname(target), { recursive: true });
+    import_node_fs10.default.writeFileSync(
       temp,
       `${JSON.stringify({
         planRunId: state.planRunId,
@@ -1905,7 +1901,7 @@ var writeTrajectoryUploadState = ({
 `,
       "utf8"
     );
-    import_node_fs11.default.renameSync(temp, target);
+    import_node_fs10.default.renameSync(temp, target);
     return true;
   } catch (err) {
     logHookError("writeTrajectoryUploadState failed", err);
@@ -1923,11 +1919,11 @@ var resolveTrajectoryStateTtlDays = () => {
 };
 var deleteIfOlder = async (filePath, cutoffMs) => {
   try {
-    const stat = await import_node_fs11.default.promises.stat(filePath);
+    const stat = await import_node_fs10.default.promises.stat(filePath);
     if (!stat.isFile() || stat.mtimeMs >= cutoffMs) {
       return false;
     }
-    await import_node_fs11.default.promises.unlink(filePath);
+    await import_node_fs10.default.promises.unlink(filePath);
     return true;
   } catch {
     return false;
@@ -1942,20 +1938,20 @@ var sweepTrajectoryUploadState = async ({
     const target = dir || defaultTrajectoryUploadsDir();
     const marker = import_node_path8.default.join(target, SWEEP_MARKER_BASENAME);
     try {
-      const { mtimeMs } = await import_node_fs11.default.promises.stat(marker);
+      const { mtimeMs } = await import_node_fs10.default.promises.stat(marker);
       if (nowMs - mtimeMs < MS_PER_DAY) {
         return { deleted: 0, skipped: true };
       }
     } catch {
     }
-    const names = await import_node_fs11.default.promises.readdir(target);
+    const names = await import_node_fs10.default.promises.readdir(target);
     const cutoffMs = nowMs - ttlDays * MS_PER_DAY;
     const results = await Promise.all(
       names.filter((name) => name.endsWith(".json")).map((name) => deleteIfOlder(import_node_path8.default.join(target, name), cutoffMs))
     );
-    await import_node_fs11.default.promises.writeFile(marker, `${new Date(nowMs).toISOString()}
+    await import_node_fs10.default.promises.writeFile(marker, `${new Date(nowMs).toISOString()}
 `);
-    await import_node_fs11.default.promises.utimes(marker, new Date(nowMs), new Date(nowMs));
+    await import_node_fs10.default.promises.utimes(marker, new Date(nowMs), new Date(nowMs));
     return { deleted: results.filter(Boolean).length, skipped: false };
   } catch (err) {
     if (!(err instanceof Error && "code" in err && err.code === "ENOENT")) {
@@ -1977,7 +1973,7 @@ var DRIVERS = {
 var DRIVER_IDS = Object.values(DRIVERS);
 var DRIVER_ID_SET = new Set(DRIVER_IDS);
 
-// packages/openthrottle-drivers/src/utils/usage-limit.ts
+// packages/openthrottle-drivers/src/utils/claude-output.ts
 var isRecord2 = (value) => {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 };
@@ -3020,98 +3016,60 @@ var createStructuredChunkReader = (driverId) => {
   }
 };
 
-// packages/openthrottle-agentic-utils/src/utils/trajectory/cap-trajectory.ts
-var DEFAULT_TRAJECTORY_LIMITS = {
-  observationBytes: 16 * 1024,
-  totalBytes: 4 * 1024 * 1024
-};
-var MARKER_RESERVE_BYTES = 40;
-var encoder = new TextEncoder();
-var decoder = new TextDecoder("utf-8", { fatal: false });
-var byteLength = (value) => {
-  return encoder.encode(value).length;
-};
-var elisionMarker = (elidedBytes) => {
-  return `
-…[${elidedBytes} bytes elided]…
-`;
-};
-var decodeWhole = (bytes) => {
-  return decoder.decode(bytes).replace(/^�+|�+$/g, "");
-};
-var capContent = (content, limit) => {
-  const bytes = encoder.encode(content);
-  if (bytes.length <= limit) return content;
-  const half = Math.max(0, Math.floor((limit - MARKER_RESERVE_BYTES) / 2));
-  const head = decodeWhole(bytes.subarray(0, half));
-  const tail = decodeWhole(bytes.subarray(bytes.length - half));
-  const elided = bytes.length - byteLength(head) - byteLength(tail);
-  return `${head}${elisionMarker(elided)}${tail}`;
-};
-var mapResults = (steps, transform) => {
-  return steps.map((step) => {
-    if (!step.observation) return step;
-    return {
-      ...step,
-      observation: { results: step.observation.results.map(transform) }
-    };
-  });
-};
-var withSteps = (trajectory, steps) => {
-  return { ...trajectory, steps };
-};
-var serializedBytes = (trajectory) => {
-  return byteLength(JSON.stringify(trajectory));
-};
-var capTrajectory = (trajectory, limits = DEFAULT_TRAJECTORY_LIMITS) => {
-  let truncated = false;
-  const perObservation = mapResults(trajectory.steps, (result) => {
-    const capped = capContent(result.content, limits.observationBytes);
-    if (capped !== result.content) truncated = true;
-    return capped === result.content ? result : { ...result, content: capped };
-  });
-  const current = withSteps(trajectory, perObservation);
-  let size = serializedBytes(current);
-  if (size <= limits.totalBytes) {
-    return { byteSize: size, trajectory: current, truncated };
+// packages/openthrottle-agentic-utils/src/utils/trajectory/normalizeUsage.ts
+var EXCLUSIVE_CACHE_DRIVERS = /* @__PURE__ */ new Set([
+  DRIVERS.claude,
+  DRIVERS.cursor,
+  DRIVERS.opencode
+]);
+var numberAt = (record, keys) => {
+  for (const key of keys) {
+    const value = record[key];
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return value;
+    }
   }
-  const jsonBytes = (value) => {
-    return byteLength(JSON.stringify(value));
-  };
-  const elisions = /* @__PURE__ */ new Map();
-  const keyOf = (stepIndex, resultIndex) => {
-    return `${stepIndex}:${resultIndex}`;
-  };
-  current.steps.forEach((step, stepIndex) => {
-    (step.observation?.results ?? []).forEach((result, resultIndex) => {
-      if (size <= limits.totalBytes) return;
-      const marker = elisionMarker(byteLength(result.content));
-      const saved = jsonBytes(result.content) - jsonBytes(marker);
-      if (saved <= 0) return;
-      elisions.set(keyOf(stepIndex, resultIndex), marker);
-      size -= saved;
-    });
-  });
-  if (elisions.size === 0) {
-    return { byteSize: size, trajectory: current, truncated };
+  return 0;
+};
+var flattenUsage = (usage) => {
+  if (!isRecord(usage)) {
+    return {};
   }
-  const elidedSteps = current.steps.map((step, stepIndex) => {
-    if (!step.observation) return step;
-    return {
-      ...step,
-      observation: {
-        results: step.observation.results.map((result, resultIndex) => {
-          const marker = elisions.get(keyOf(stepIndex, resultIndex));
-          return marker === void 0 ? result : { ...result, content: marker };
-        })
-      }
-    };
-  });
-  const elided = withSteps(current, elidedSteps);
+  const cache = isRecord(usage.cache) ? usage.cache : {};
+  return { ...usage, cacheRead: cache.read, cacheWrite: cache.write };
+};
+var costOf = (metadata) => {
+  const cost = metadata.totalCostUsd ?? metadata.cost;
+  return typeof cost === "number" && Number.isFinite(cost) ? cost : void 0;
+};
+var normalizeUsage = (driverId, chunk) => {
+  const metadata = chunk.metadata ?? {};
+  const raw = metadata.usage ?? metadata.tokens;
+  if (!isRecord(raw)) {
+    return void 0;
+  }
+  const usage = flattenUsage(raw);
+  const input = numberAt(usage, ["input_tokens", "inputTokens", "input"]);
+  const output = numberAt(usage, ["output_tokens", "outputTokens", "output"]);
+  const cacheRead = numberAt(usage, [
+    "cache_read_input_tokens",
+    "cached_input_tokens",
+    "cache_read_tokens",
+    "cacheReadTokens",
+    "cacheRead"
+  ]);
+  const cacheWrite = numberAt(usage, [
+    "cache_creation_input_tokens",
+    "cacheWriteTokens",
+    "cacheWrite"
+  ]);
+  const isExclusive = EXCLUSIVE_CACHE_DRIVERS.has(driverId);
   return {
-    byteSize: serializedBytes(elided),
-    trajectory: elided,
-    truncated: true
+    cachedTokens: cacheRead,
+    completionTokens: output,
+    costUsd: costOf(metadata),
+    promptTokens: isExclusive ? input + cacheRead + cacheWrite : input,
+    raw
   };
 };
 
@@ -3198,64 +3156,7 @@ var isToolResultError = (chunk) => {
   return hasChunkError || metadata.isError === true || typeof toolCall.error === "string" && toolCall.error !== "" || typeof exitCode === "number" && exitCode !== 0;
 };
 
-// packages/openthrottle-agentic-utils/src/utils/trajectory/usage-metrics.ts
-var EXCLUSIVE_CACHE_DRIVERS = /* @__PURE__ */ new Set([
-  DRIVERS.claude,
-  DRIVERS.cursor,
-  DRIVERS.opencode
-]);
-var numberAt = (record, keys) => {
-  for (const key of keys) {
-    const value = record[key];
-    if (typeof value === "number" && Number.isFinite(value)) {
-      return value;
-    }
-  }
-  return 0;
-};
-var flattenUsage = (usage) => {
-  if (!isRecord(usage)) {
-    return {};
-  }
-  const cache = isRecord(usage.cache) ? usage.cache : {};
-  return { ...usage, cacheRead: cache.read, cacheWrite: cache.write };
-};
-var costOf = (metadata) => {
-  const cost = metadata.totalCostUsd ?? metadata.cost;
-  return typeof cost === "number" && Number.isFinite(cost) ? cost : void 0;
-};
-var normalizeUsage = (driverId, chunk) => {
-  const metadata = chunk.metadata ?? {};
-  const raw = metadata.usage ?? metadata.tokens;
-  if (!isRecord(raw)) {
-    return void 0;
-  }
-  const usage = flattenUsage(raw);
-  const input = numberAt(usage, ["input_tokens", "inputTokens", "input"]);
-  const output = numberAt(usage, ["output_tokens", "outputTokens", "output"]);
-  const cacheRead = numberAt(usage, [
-    "cache_read_input_tokens",
-    "cached_input_tokens",
-    "cache_read_tokens",
-    "cacheReadTokens",
-    "cacheRead"
-  ]);
-  const cacheWrite = numberAt(usage, [
-    "cache_creation_input_tokens",
-    "cacheWriteTokens",
-    "cacheWrite"
-  ]);
-  const isExclusive = EXCLUSIVE_CACHE_DRIVERS.has(driverId);
-  return {
-    cachedTokens: cacheRead,
-    completionTokens: output,
-    costUsd: costOf(metadata),
-    promptTokens: isExclusive ? input + cacheRead + cacheWrite : input,
-    raw
-  };
-};
-
-// packages/openthrottle-agentic-utils/src/utils/trajectory/chunks-to-atif.ts
+// packages/openthrottle-agentic-utils/src/utils/trajectory/chunksToAtif.ts
 var ATIF_SCHEMA_VERSION = "ATIF-v1.8";
 var emptyDraft = () => {
   return { calls: [], message: "", reasoning: "", results: [] };
@@ -3423,7 +3324,100 @@ var chunksToAtif = (input) => {
   };
 };
 
-// packages/openthrottle-agentic-utils/src/utils/trajectory/redact-secrets.ts
+// packages/openthrottle-agentic-utils/src/utils/trajectory/sanitize.ts
+var DEFAULT_TRAJECTORY_LIMITS = {
+  observationBytes: 16 * 1024,
+  totalBytes: 4 * 1024 * 1024
+};
+var MARKER_RESERVE_BYTES = 40;
+var encoder = new TextEncoder();
+var decoder = new TextDecoder("utf-8", { fatal: false });
+var byteLength = (value) => {
+  return encoder.encode(value).length;
+};
+var elisionMarker = (elidedBytes) => {
+  return `
+…[${elidedBytes} bytes elided]…
+`;
+};
+var decodeWhole = (bytes) => {
+  return decoder.decode(bytes).replace(/^�+|�+$/g, "");
+};
+var capContent = (content, limit) => {
+  const bytes = encoder.encode(content);
+  if (bytes.length <= limit) return content;
+  const half = Math.max(0, Math.floor((limit - MARKER_RESERVE_BYTES) / 2));
+  const head = decodeWhole(bytes.subarray(0, half));
+  const tail = decodeWhole(bytes.subarray(bytes.length - half));
+  const elided = bytes.length - byteLength(head) - byteLength(tail);
+  return `${head}${elisionMarker(elided)}${tail}`;
+};
+var mapResults = (steps, transform) => {
+  return steps.map((step) => {
+    if (!step.observation) return step;
+    return {
+      ...step,
+      observation: { results: step.observation.results.map(transform) }
+    };
+  });
+};
+var withSteps = (trajectory, steps) => {
+  return { ...trajectory, steps };
+};
+var serializedBytes = (trajectory) => {
+  return byteLength(JSON.stringify(trajectory));
+};
+var capTrajectory = (trajectory, limits = DEFAULT_TRAJECTORY_LIMITS) => {
+  let truncated = false;
+  const perObservation = mapResults(trajectory.steps, (result) => {
+    const capped = capContent(result.content, limits.observationBytes);
+    if (capped !== result.content) truncated = true;
+    return capped === result.content ? result : { ...result, content: capped };
+  });
+  const current = withSteps(trajectory, perObservation);
+  let size = serializedBytes(current);
+  if (size <= limits.totalBytes) {
+    return { byteSize: size, trajectory: current, truncated };
+  }
+  const jsonBytes = (value) => {
+    return byteLength(JSON.stringify(value));
+  };
+  const elisions = /* @__PURE__ */ new Map();
+  const keyOf = (stepIndex, resultIndex) => {
+    return `${stepIndex}:${resultIndex}`;
+  };
+  current.steps.forEach((step, stepIndex) => {
+    (step.observation?.results ?? []).forEach((result, resultIndex) => {
+      if (size <= limits.totalBytes) return;
+      const marker = elisionMarker(byteLength(result.content));
+      const saved = jsonBytes(result.content) - jsonBytes(marker);
+      if (saved <= 0) return;
+      elisions.set(keyOf(stepIndex, resultIndex), marker);
+      size -= saved;
+    });
+  });
+  if (elisions.size === 0) {
+    return { byteSize: size, trajectory: current, truncated };
+  }
+  const elidedSteps = current.steps.map((step, stepIndex) => {
+    if (!step.observation) return step;
+    return {
+      ...step,
+      observation: {
+        results: step.observation.results.map((result, resultIndex) => {
+          const marker = elisions.get(keyOf(stepIndex, resultIndex));
+          return marker === void 0 ? result : { ...result, content: marker };
+        })
+      }
+    };
+  });
+  const elided = withSteps(current, elidedSteps);
+  return {
+    byteSize: serializedBytes(elided),
+    trajectory: elided,
+    truncated: true
+  };
+};
 var SECRET_PATTERNS = [
   /\bBearer\s+[A-Za-z0-9._\-+=/]+/gi,
   /\bsk-[A-Za-z0-9]{8,}/gi,
@@ -4458,7 +4452,7 @@ var captureSessionTrajectories = async ({
 };
 
 // packages/agentic-hooks/src/adapters/claude/shadow.ts
-var import_node_fs12 = __toESM(require("node:fs"), 1);
+var import_node_fs11 = __toESM(require("node:fs"), 1);
 var import_node_path10 = __toESM(require("node:path"), 1);
 var CAPTURE_BUNDLE = "skill-usage-capture";
 var runningFromPlugin = (env, scriptPath) => {
@@ -4471,7 +4465,7 @@ var runningFromPlugin = (env, scriptPath) => {
 };
 var repoRegistersCapture = (repoRoot) => {
   try {
-    const raw = import_node_fs12.default.readFileSync(
+    const raw = import_node_fs11.default.readFileSync(
       import_node_path10.default.join(repoRoot, ".claude", "settings.json"),
       "utf8"
     );
@@ -4493,7 +4487,7 @@ var isShadowedByRepoHooks = ({
 };
 
 // packages/agentic-hooks/src/adapters/claude/transcript-usage.ts
-var import_node_fs13 = __toESM(require("node:fs"), 1);
+var import_node_fs12 = __toESM(require("node:fs"), 1);
 var import_node_path11 = __toESM(require("node:path"), 1);
 
 // packages/agentic-token-usage/src/usage.ts
@@ -4706,7 +4700,7 @@ var listSubagentTranscripts = (transcriptPath) => {
   const { dir, name } = import_node_path11.default.parse(transcriptPath);
   const subagentsDir = import_node_path11.default.join(dir, name, "subagents");
   try {
-    return import_node_fs13.default.readdirSync(subagentsDir).filter((entry) => SUBAGENT_FILE.test(entry)).sort().map((entry) => import_node_path11.default.join(subagentsDir, entry));
+    return import_node_fs12.default.readdirSync(subagentsDir).filter((entry) => SUBAGENT_FILE.test(entry)).sort().map((entry) => import_node_path11.default.join(subagentsDir, entry));
   } catch {
     return [];
   }
@@ -4812,7 +4806,7 @@ var main = async () => {
     if (isShadowedByRepoHooks({ repoRoot })) {
       return;
     }
-    const stdinBuf = import_node_fs14.default.readFileSync(0, "utf8");
+    const stdinBuf = import_node_fs13.default.readFileSync(0, "utf8");
     if (!stdinBuf || !stdinBuf.trim()) {
       return;
     }

@@ -38,7 +38,7 @@ All tools use the `agent_conversation_` prefix to disambiguate from plan/Ralph t
 | `agent_conversation_get`          | `getAgentConversation`         |
 | `agent_conversation_get_messages` | `getAgentConversationMessages` |
 
-Implementation files (follow-up tasks): `src/tools/agent-conversations.ts`, register in `run-server.ts`, `nest-tool-handlers.ts`, `nest/openthrottle-mcp-mcp-surface.ts`.
+Implementation files (follow-up tasks): `src/tools/agent-conversations.ts`, register in `runServer.ts`, `nest-tool-handlers.ts`, `nest/McpDeveloperMcpSurface.ts`.
 
 ## Tool: `agent_conversation_list`
 

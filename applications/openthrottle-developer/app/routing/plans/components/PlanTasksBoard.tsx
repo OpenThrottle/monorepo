@@ -15,7 +15,7 @@ import {
   groupPlanTasksByStatus,
   PLAN_TASK_BOARD_COLUMN_ORDER,
   type PlanTaskBoardGroupKey,
-} from '~/routing/plans/utils/group-plan-tasks-by-status';
+} from '~/routing/plans/utils/groupPlanTasksByStatus';
 import { filterOutHookTasks } from '~/routing/plans/utils/hook-tasks';
 import { isPlanStatusKey } from '~/routing/plans/utils/utils.plans';
 

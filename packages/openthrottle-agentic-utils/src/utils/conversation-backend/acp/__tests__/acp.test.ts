@@ -16,7 +16,7 @@ import type {
   ConversationStreamChunk,
 } from '../../types.ts';
 import { createAcpConversationBackend } from '../acp.ts';
-import { resolveAcpPermission } from '../permission-broker.ts';
+import { resolveAcpPermission } from '../permissions.ts';
 import {
   createFakeLauncher,
   FAKE_SPEC,

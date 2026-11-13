@@ -1,0 +1,37 @@
+import type { Tree } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { beforeEach, describe, expect, it } from 'vitest';
+
+import { generatorNestJSQueue } from '../generator.queue.ts';
+
+describe('nestjs "queue" generator', () => {
+  let tree: Tree;
+
+  const application = 'nestjs-api';
+  const name = 'example-queue';
+
+  beforeEach(() => {
+    tree = createTreeWithEmptyWorkspace({ formatter: 'prettier' });
+  });
+
+  it('should run successfully', async () => {
+    await generatorNestJSQueue(tree, { application, name });
+
+    const changes = tree.listChanges();
+    const files = changes.map((change) => change.path);
+
+    expect(files).toStrictEqual([
+      `.prettierrc`,
+      `package.json`,
+      `nx.json`,
+      `tsconfig.base.json`,
+
+      // scaffolds the following files:
+      `applications/${application}/src/queues/${name}/TODO.md`,
+      `applications/${application}/src/queues/${name}/${name}.constants.ts`,
+      `applications/${application}/src/queues/${name}/${name}.processor.test.ts`,
+      `applications/${application}/src/queues/${name}/${name}.processor.ts`,
+      `applications/${application}/src/queues/${name}/${name}.types.ts`,
+    ]);
+  });
+});

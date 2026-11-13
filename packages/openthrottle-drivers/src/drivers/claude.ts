@@ -12,17 +12,17 @@ import {
   parseClaudeStreamJsonOutput,
   renderClaudeStreamJsonLine,
 } from '../utils/claude-output.ts';
-import {
-  appendPluginDirShellFlags,
-  OPENTHROTTLE_PLUGIN_DIR_REL,
-} from '../utils/plugin-dir.ts';
 import { claudeEffortFlag } from '../utils/reasoning-effort.ts';
 import {
   escapeForShellDoubleQuoted,
   escapeShellArg,
   formatModelFlag,
 } from '../utils/shell.ts';
-import { appendWorktreeShellFlags } from '../utils/worktree.ts';
+import {
+  appendPluginDirShellFlags,
+  appendWorktreeShellFlags,
+  OPENTHROTTLE_PLUGIN_DIR_REL,
+} from '../utils/shell-flags.ts';
 
 const capabilities: DriverCapabilities = {
   /** Reads the workspace's `.mcp.json` automatically in headless `-p` mode (verified 2.1.232). */

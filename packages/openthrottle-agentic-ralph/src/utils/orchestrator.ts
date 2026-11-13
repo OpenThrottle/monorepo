@@ -49,7 +49,7 @@ import {
   preparePlanRunPrDraftDir,
   shouldFinalizePlanRun,
   shouldMarkPlanRunReady,
-} from '../utils/finalize-plan-run.ts';
+} from '../utils/finalizePlanRun.ts';
 import {
   formatPlanAndTasksForPrompt,
   isRalphTerminalStatus,
@@ -63,7 +63,7 @@ import {
   parseAgentOutput,
 } from '../utils/output.ts';
 import { PLAN_RUN_PR_DRAFT_DIR_ENV } from '../utils/plan-run-pr-draft.ts';
-import { recordIterationTrajectory } from './record-iteration-trajectory.ts';
+import { recordIterationTrajectory } from './recordIterationTrajectory.ts';
 
 /**
  * @description Clamps the iteration ceiling defensively. `WorkflowContext` is built by paths that

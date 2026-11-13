@@ -70,7 +70,7 @@ because `id` happens to be required.
 `.strict()` on all 68 exported `*ToolParameters`, at the **export site** in
 `src/tools/*.ts` — not at a registration chokepoint. Three reasons:
 
-1. `tool-registry.ts` (`defineTool`) and `nest/openthrottle-mcp-mcp-surface.ts`
+1. `tool-registry.ts` (`defineTool`) and `nest/McpDeveloperMcpSurface.ts`
    (`asMcpParameters`) both read the same exported constant, and `tool-registry.test.ts`
    asserts **reference identity** between them. Wrapping at either registration site
    would have created a second object and broken that parity — or required a memoizing
