@@ -52,6 +52,8 @@ export interface ClaudeAuthStatus {
   readonly authMethod: string | null;
   /** True when `claude auth status` reports a logged-in account. */
   readonly loggedIn: boolean;
+  /** Organization id (`orgId`), when reported. */
+  readonly organizationId: string | null;
   /** Organization name, when reported. */
   readonly organizationName: string | null;
   /** Subscription plan (`pro`, `max`, `team`, ...), when reported. */
@@ -167,6 +169,7 @@ export function parseClaudeAuthStatus(
     apiKeyOverridesSubscription,
     authMethod,
     loggedIn,
+    organizationId: readString(record, 'orgId'),
     organizationName: readString(record, 'orgName'),
     subscriptionType,
     warning,

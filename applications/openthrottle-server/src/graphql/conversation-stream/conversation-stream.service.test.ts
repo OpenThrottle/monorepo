@@ -7,6 +7,7 @@ import type {
 import { agentConversationMessagesFactory } from '@openthrottle/nestjs-repositories/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { AgentAccountStampingService } from '../../services/agent-account-stamping/agent-account-stamping.service.ts';
 import { ConversationStreamService } from './conversation-stream.service.ts';
 import type { StartConversationStreamRun } from './conversation-stream.types.ts';
 
@@ -88,6 +89,7 @@ function buildService(): {
   publish: ReturnType<typeof vi.fn>;
   recordTurnUsage: ReturnType<typeof vi.fn>;
   service: ConversationStreamService;
+  stampForRun: ReturnType<typeof vi.fn>;
 } {
   const conversations = createMock<AgentConversationsService>({
     appendMessages: vi.fn().mockResolvedValue([]),
@@ -95,6 +97,10 @@ function buildService(): {
   });
   const recordTurnUsage = vi.fn().mockResolvedValue(undefined);
   const tokenUsage = createMock<AgentTokenUsageService>({ recordTurnUsage });
+  const stampForRun = vi.fn().mockResolvedValue('account-1');
+  const accountStamping = createMock<AgentAccountStampingService>({
+    stampForRun,
+  });
   const publish = vi.fn().mockResolvedValue(undefined);
   // A live iterator that ends immediately, so subscribe() yields only its
   // replay buffer in these tests.
@@ -106,6 +112,7 @@ function buildService(): {
     conversations,
     createMock<LoggerService>(),
     tokenUsage,
+    accountStamping,
     {
       asyncIterator,
       publish,
@@ -113,7 +120,7 @@ function buildService(): {
       unsubscribe: vi.fn(),
     },
   );
-  return { conversations, publish, recordTurnUsage, service };
+  return { conversations, publish, recordTurnUsage, service, stampForRun };
 }
 
 beforeEach(() => {
@@ -311,7 +318,8 @@ describe('ConversationStreamService', () => {
       };
     }
     claudeStreamMock.mockImplementation(claudeWithUsage);
-    const { conversations, publish, recordTurnUsage, service } = buildService();
+    const { conversations, publish, recordTurnUsage, service, stampForRun } =
+      buildService();
 
     await service.runStream({
       ...baseRun,
@@ -363,9 +371,12 @@ describe('ConversationStreamService', () => {
         }),
       ],
     );
-    // And a durable normalized usage row is written for the turn.
+    // And a durable normalized usage row is written for the turn, stamped
+    // with the account the server-env login resolved to.
+    expect(stampForRun).toHaveBeenCalledWith('user-1', 'claude', process.env);
     expect(recordTurnUsage).toHaveBeenCalledTimes(1);
     expect(recordTurnUsage).toHaveBeenCalledWith({
+      agentAccountId: 'account-1',
       conversationId: 'conv-1',
       messageId: 'assistant-msg-1',
       model: 'claude-opus-4-8',
@@ -437,7 +448,9 @@ describe('ConversationStreamService', () => {
       yield { delta: '', done: true, kind: 'text' };
     }
     opencodeStreamMock.mockImplementation(opencodeWithUsage);
-    const { recordTurnUsage, service } = buildService();
+    const { recordTurnUsage, service, stampForRun } = buildService();
+    // opencode reports no account identity: the row is still written, unattributed.
+    stampForRun.mockResolvedValueOnce(null);
 
     await service.runStream({
       ...baseRun,
@@ -448,6 +461,7 @@ describe('ConversationStreamService', () => {
 
     expect(recordTurnUsage).toHaveBeenCalledTimes(1);
     expect(recordTurnUsage).toHaveBeenCalledWith({
+      agentAccountId: null,
       conversationId: 'conv-1',
       messageId: 'assistant-msg-1',
       model: 'sonnet',

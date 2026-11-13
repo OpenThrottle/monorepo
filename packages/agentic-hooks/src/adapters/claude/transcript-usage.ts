@@ -23,6 +23,7 @@ import path from 'node:path';
 import type {
   HookFetch,
   PersistTokenUsageResult,
+  TokenUsageAccount,
   TokenUsageRecord,
 } from '../../index.ts';
 import {
@@ -109,6 +110,9 @@ export const captureTranscriptUsage = async ({
   graphqlUrl,
   jsonlPath,
   repoRoot,
+  resolveAccount = async (): Promise<null> => {
+    return null;
+  },
   sessionId,
   timeoutMs,
   transcriptPath,
@@ -120,6 +124,12 @@ export const captureTranscriptUsage = async ({
   graphqlUrl?: string | null;
   jsonlPath?: string;
   repoRoot: string;
+  /**
+   * The account these rows are billed to, asked only when there are rows to
+   * send. Defaults to none (the rows go unattributed), which is what a
+   * historical backfill wants: today's login says nothing about last month's.
+   */
+  resolveAccount?: () => Promise<TokenUsageAccount | null>;
   sessionId: string;
   timeoutMs?: number;
   transcriptPath: string | null;
@@ -174,12 +184,17 @@ export const captureTranscriptUsage = async ({
 
     let advanced = true;
     if (records.length > 0) {
+      const account = await resolveAccount().catch(() => {
+        return null;
+      });
       const result = await persistTokenUsage({
         authToken,
         fetchImpl,
         graphqlUrl,
         jsonlPath,
-        records,
+        records: records.map((record) => {
+          return { ...record, agent_account: account };
+        }),
         repoRoot,
         timeoutMs,
       });

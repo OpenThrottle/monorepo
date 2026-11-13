@@ -56,6 +56,10 @@ export const loader = async (args: Route.LoaderArgs) => {
   const selectedProvider =
     providerParam !== null && providerParam !== '' ? providerParam : null;
 
+  const accountParam = searchParams.get('account');
+  const selectedAccount =
+    accountParam !== null && accountParam !== '' ? accountParam : null;
+
   const selectedSkillScope = parseSkillScope(searchParams.get('skillScope'));
   const skillBranchParam = searchParams.get('skillBranch');
   const hasSkillBranch = skillBranchParam !== null && skillBranchParam !== '';
@@ -86,6 +90,7 @@ export const loader = async (args: Route.LoaderArgs) => {
       start: startIso,
     }),
     executeGraphqlWithAuth(args.request, GetUsageTokenUsageDocument, {
+      accountId: selectedAccount,
       end: endDate,
       provider: selectedProvider,
       start: startDate,
@@ -124,11 +129,13 @@ export const loader = async (args: Route.LoaderArgs) => {
     rangeEndIso: endIso,
     rangeStartDate: startDate,
     rangeStartIso: startIso,
+    selectedAccount,
     selectedProvider,
     selectedSkillCwd,
     selectedSkillGitBranch,
     selectedSkillScope,
     skillUsage: skillUsageResult.skillUsage,
+    tokenUsageByAccount: tokenUsageResult.tokenUsage.byAccount,
     tokenUsageItems: tokenUsageResult.tokenUsage.items,
     tokenUsageTotals: tokenUsageResult.tokenUsage.totals,
   };
@@ -157,11 +164,13 @@ export default function Component(
     rangeEndIso,
     rangeStartDate,
     rangeStartIso,
+    selectedAccount,
     selectedProvider,
     selectedSkillCwd,
     selectedSkillGitBranch,
     selectedSkillScope,
     skillUsage,
+    tokenUsageByAccount,
     tokenUsageItems,
     tokenUsageTotals,
   } = loaderData;
@@ -184,8 +193,10 @@ export default function Component(
       <UsageOverview rangeDays={rangeDays} />
       <UsageCaptureHealth nowIso={rangeEndIso} rows={captureHealth} />
       <UsageTokenUsage
+        byAccount={tokenUsageByAccount}
         items={tokenUsageItems}
         rangeDays={rangeDays}
+        selectedAccount={selectedAccount}
         selectedProvider={selectedProvider}
         skillCwdParam={selectedSkillCwd}
         skillGitBranchParam={selectedSkillGitBranch}
@@ -193,6 +204,7 @@ export default function Component(
         totals={tokenUsageTotals}
       />
       <UsageSkillUsage
+        accountParam={selectedAccount}
         branchOptions={branchOptions}
         branchesHaveMore={branchesHaveMore}
         byDay={skillUsage.byDay}

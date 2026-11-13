@@ -25,6 +25,7 @@ import type {
 import { CLAUDE_BIN_ENV } from '@openthrottle/openthrottle-agentic-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { AgentAccountStampingService } from '../../services/agent-account-stamping/agent-account-stamping.service.ts';
 import { ConversationStreamService } from './conversation-stream.service.ts';
 import type { StartConversationStreamRun } from './conversation-stream.types.ts';
 
@@ -63,6 +64,9 @@ function buildHarness(): Harness {
     }),
     createMock<LoggerService>(),
     createMock<AgentTokenUsageService>({ recordTurnUsage }),
+    createMock<AgentAccountStampingService>({
+      stampForRun: vi.fn().mockResolvedValue(null),
+    }),
     {
       asyncIterator: vi.fn(),
       publish,

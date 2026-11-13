@@ -885,8 +885,22 @@ mutation RecordTokenUsage($input: RecordTokenUsageInput!) {
   }
 }
 `;
+var toRecordTokenUsageAccount = (account) => {
+  if (account === null || account === void 0) {
+    return null;
+  }
+  return {
+    credentialKind: account.credential_kind,
+    email: account.email,
+    externalAccountId: account.external_account_id,
+    orgId: account.org_id,
+    orgName: account.org_name,
+    plan: account.plan
+  };
+};
 var toRecordTokenUsageRow = (record) => {
   return {
+    account: toRecordTokenUsageAccount(record.agent_account),
     cacheReadTokens: record.cache_read_tokens,
     cacheWriteTokens: record.cache_write_tokens,
     costUsd: record.cost_usd,

@@ -13,6 +13,7 @@ const SUBSCRIPTION_JSON = JSON.stringify({
   authMethod: 'claude.ai',
   email: 'dev@example.com',
   loggedIn: true,
+  orgId: 'org-1',
   orgName: 'Example Org',
   subscriptionType: 'team',
 });
@@ -28,6 +29,7 @@ describe('parseClaudeAuthStatus', () => {
         apiKeyOverridesSubscription: false,
         authMethod: 'claude.ai',
         loggedIn: true,
+        organizationId: 'org-1',
         organizationName: 'Example Org',
         subscriptionType: 'team',
         warning: null,
@@ -141,6 +143,7 @@ describe('parseClaudeAuthStatus', () => {
         activeCredential: CLAUDE_ACTIVE_CREDENTIALS.none,
         authMethod: null,
         loggedIn: false,
+        organizationId: null,
         organizationName: null,
         subscriptionType: null,
         warning: CLAUDE_NOT_LOGGED_IN_WARNING,

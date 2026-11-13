@@ -10,13 +10,25 @@ import { ForbiddenException, UseGuards } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { type AuthPrincipal, CurrentUser } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
-import { AgentTokenUsageService } from '@openthrottle/nestjs-repositories';
+import type {
+  AgentAccount,
+  TokenUsageAccountFilter,
+  TokenUsageBatchRow,
+} from '@openthrottle/nestjs-repositories';
+import {
+  AgentAccountsService,
+  AgentTokenUsageService,
+} from '@openthrottle/nestjs-repositories';
+import type { IdentifiedAgentAccount } from '@openthrottle/openthrottle-agentic-utils';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { AgentAccountStampingService } from '../../services/agent-account-stamping/agent-account-stamping.service.ts';
 import { EffectiveUserResolutionService } from '../../services/effective-user-resolution/effective-user-resolution.service.ts';
 import { assertHumanAuthPrincipal } from '../service-accounts/service-accounts.utils.ts';
+import { TOKEN_USAGE_UNATTRIBUTED_ACCOUNT_ID } from './token-usage.constants.ts';
 import { RecordTokenUsageInput } from './token-usage.input.ts';
 import {
+  toTokenUsageByAccountObject,
   toTokenUsageRowObject,
   toTokenUsageTotalsObject,
 } from './token-usage.mapper.ts';
@@ -24,7 +36,29 @@ import {
   RecordTokenUsageResultObject,
   TokenUsageResultObject,
 } from './token-usage.object.ts';
-import { toTokenUsageBatchRows } from './token-usage-batch.mapper.ts';
+import {
+  toTokenUsageBatchRows,
+  toTokenUsageRowAccounts,
+} from './token-usage-batch.mapper.ts';
+
+/** The repository filter for the `accountId` argument; undefined = all accounts. */
+const toAccountFilter = (
+  accountId: string | null | undefined,
+): TokenUsageAccountFilter | undefined => {
+  const trimmed = accountId?.trim() ?? '';
+  if (trimmed === '') {
+    return undefined;
+  }
+  if (trimmed === TOKEN_USAGE_UNATTRIBUTED_ACCOUNT_ID) {
+    return { kind: 'unattributed' };
+  }
+
+  return { id: trimmed, kind: 'account' };
+};
+
+const accountKey = (account: IdentifiedAgentAccount): string => {
+  return `${account.provider}\u0000${account.externalAccountId}`;
+};
 
 // @authz-stance: tokenUsage query = authenticated human user, scoped to their
 // own rows. recordTokenUsage mutation = authenticated-only, like
@@ -34,6 +68,8 @@ import { toTokenUsageBatchRows } from './token-usage-batch.mapper.ts';
 @UseGuards(GqlPermissionsGuard)
 export class TokenUsageResolver {
   constructor(
+    private readonly accountStamping: AgentAccountStampingService,
+    private readonly agentAccountsService: AgentAccountsService,
     private readonly effectiveUserResolutionService: EffectiveUserResolutionService,
     private readonly tokenUsageService: AgentTokenUsageService,
   ) {}
@@ -58,7 +94,11 @@ export class TokenUsageResolver {
       );
     }
 
-    const rows = toTokenUsageBatchRows(input.rows);
+    const rows = await this.stampAccounts(
+      userId,
+      input.rows,
+      toTokenUsageBatchRows(input.rows),
+    );
     const { inserted, skipped } =
       await this.tokenUsageService.recordTokenUsageBatch(userId, rows);
 
@@ -70,8 +110,53 @@ export class TokenUsageResolver {
     return result;
   }
 
+  /**
+   * Upsert each distinct account the batch reports (once per account, not per
+   * row) and stamp its id on the rows that carry it. Unattributed rows, and any
+   * whose upsert fails, keep a null account. A re-sent row that already exists
+   * is skipped by the insert, so its stored account is never rewritten.
+   */
+  private async stampAccounts(
+    userId: string,
+    inputs: RecordTokenUsageInput['rows'],
+    rows: TokenUsageBatchRow[],
+  ): Promise<TokenUsageBatchRow[]> {
+    const accounts = toTokenUsageRowAccounts(inputs);
+    const distinct = new Map<string, IdentifiedAgentAccount>();
+    for (const account of accounts) {
+      if (account !== null) {
+        distinct.set(accountKey(account), account);
+      }
+    }
+    if (distinct.size === 0) {
+      return rows;
+    }
+
+    const stamped = await Promise.all(
+      [...distinct].map(
+        async ([key, account]): Promise<readonly [string, string | null]> => {
+          const id = await this.accountStamping.stampIdentity(userId, account);
+          return [key, id];
+        },
+      ),
+    );
+    const idByKey = new Map(stamped);
+
+    return rows.map((row, index) => {
+      const account = accounts[index] ?? null;
+      if (account === null) {
+        return row;
+      }
+
+      return {
+        ...row,
+        agentAccountId: idByKey.get(accountKey(account)) ?? null,
+      };
+    });
+  }
+
   @Query(() => TokenUsageResultObject, {
-    description: `Per-turn token/cost usage for the authenticated user over [start, end] (inclusive, YYYY-MM-DD), optionally narrowed to one provider. Returns rows (newest first) + summed totals.`,
+    description: `Per-turn token/cost usage for the authenticated user over [start, end] (inclusive, YYYY-MM-DD), optionally narrowed to one provider and/or one agent account. Returns rows (newest first), summed totals, and the same range summed per agent account.`,
   })
   @Permissions(PERMISSIONS.SETTINGS_READ)
   async tokenUsage(
@@ -86,17 +171,49 @@ export class TokenUsageResolver {
       type: () => String,
     })
     provider?: string | null,
+    @Args('accountId', {
+      description: `Restrict to one agent account id, or "${TOKEN_USAGE_UNATTRIBUTED_ACCOUNT_ID}" for rows no account was stamped on; omit for all accounts.`,
+      nullable: true,
+      type: () => String,
+    })
+    accountId?: string | null,
   ): Promise<TokenUsageResultObject> {
     const user = assertHumanAuthPrincipal(principal);
-    const query = { end, provider, start, userId: user.sub };
+    const query = {
+      account: toAccountFilter(accountId),
+      end,
+      provider,
+      start,
+      userId: user.sub,
+    };
 
-    const [rows, totals] = await Promise.all([
+    const [rows, totals, byAccount] = await Promise.all([
       this.tokenUsageService.listUsageInRange(query),
       this.tokenUsageService.getUsageTotalsInRange(query),
+      this.tokenUsageService.getUsageByAccountInRange(query),
     ]);
+    const accountIds = [
+      ...new Set(
+        byAccount
+          .map((bucket) => bucket.agentAccountId)
+          .filter((id): id is string => id !== null),
+      ),
+    ];
+    const accounts = await this.agentAccountsService.listByIds(
+      user.sub,
+      accountIds,
+    );
+    const accountById = new Map<string, AgentAccount>(
+      accounts.map((account) => [account.id, account]),
+    );
 
     const result = new TokenUsageResultObject();
 
+    result.byAccount = byAccount.map((bucket) => {
+      const account = accountById.get(bucket.agentAccountId ?? '') ?? null;
+
+      return toTokenUsageByAccountObject(bucket, account);
+    });
     result.items = rows.map(toTokenUsageRowObject);
     result.totals = toTokenUsageTotalsObject(totals);
 

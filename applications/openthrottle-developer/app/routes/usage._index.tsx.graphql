@@ -17,6 +17,7 @@ query getUsageDailyStats($start: String!, $end: String!) {
 }
 
 fragment UsageTokenUsageRow on TokenUsageRowObject {
+  agentAccountId
   cacheReadTokens
   cacheWriteTokens
   costUsd
@@ -42,8 +43,41 @@ fragment UsageTokenUsageTotals on TokenUsageTotalsObject {
   turnCount
 }
 
-query getUsageTokenUsage($start: String!, $end: String!, $provider: String) {
-  tokenUsage(start: $start, end: $end, provider: $provider) {
+fragment UsageTokenUsageAccount on TokenUsageAccountObject {
+  credentialKind
+  email
+  id
+  lastSeenAt
+  orgName
+  plan
+  provider
+}
+
+fragment UsageTokenUsageByAccount on TokenUsageByAccountObject {
+  account {
+    ...UsageTokenUsageAccount
+  }
+  provider
+  totals {
+    ...UsageTokenUsageTotals
+  }
+}
+
+query getUsageTokenUsage(
+  $start: String!
+  $end: String!
+  $provider: String
+  $accountId: String
+) {
+  tokenUsage(
+    start: $start
+    end: $end
+    provider: $provider
+    accountId: $accountId
+  ) {
+    byAccount {
+      ...UsageTokenUsageByAccount
+    }
     items {
       ...UsageTokenUsageRow
     }

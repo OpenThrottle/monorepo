@@ -4356,7 +4356,7 @@ export type Query = {
   tasksByPlanId: Array<TaskObject>;
   /** List tasks for a project by project ID (FK). Optional limit/offset for pagination; when omitted returns all tasks and totalCount. */
   tasksByProjectId: TasksByProjectIdResultObject;
-  /** Per-turn token/cost usage for the authenticated user over [start, end] (inclusive, YYYY-MM-DD), optionally narrowed to one provider. Returns rows (newest first) + summed totals. */
+  /** Per-turn token/cost usage for the authenticated user over [start, end] (inclusive, YYYY-MM-DD), optionally narrowed to one provider and/or one agent account. Returns rows (newest first), summed totals, and the same range summed per agent account. */
   tokenUsage: TokenUsageResultObject;
   unverifiedWorkArtifacts: WorkArtifactListResult;
   /** Get a user by ID */
@@ -4764,6 +4764,7 @@ export type QueryTasksByProjectIdArgs = {
 };
 
 export type QueryTokenUsageArgs = {
+  accountId?: InputMaybe<Scalars['String']['input']>;
   end: Scalars['String']['input'];
   provider?: InputMaybe<Scalars['String']['input']>;
   start: Scalars['String']['input'];
@@ -5167,6 +5168,22 @@ export type RecordSkillUsageOutcomeInput = {
   toolUseId?: InputMaybe<Scalars['String']['input']>;
 };
 
+/** The agent account (login) a hook saw the turn billed to, as the agent CLI reported it. No credential value is ever sent. */
+export type RecordTokenUsageAccountInput = {
+  /** What the turn billed: api_key, subscription or unknown. Any other value is stored as unknown. */
+  credentialKind: Scalars['String']['input'];
+  /** Login email the CLI reported, when it reports one. */
+  email?: InputMaybe<Scalars['String']['input']>;
+  /** The provider's stable id for the login (for claude, <orgId>:<email>). The grouping key; a blank value leaves the row unattributed. */
+  externalAccountId: Scalars['String']['input'];
+  /** Provider organization or team id, when reported. */
+  orgId?: InputMaybe<Scalars['String']['input']>;
+  /** Provider organization or team name, when reported. */
+  orgName?: InputMaybe<Scalars['String']['input']>;
+  /** Subscription plan (for claude: pro, max, team, ...), when reported. */
+  plan?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type RecordTokenUsageInput = {
   /** Usage rows to ingest, at most 500 per call. The whole batch is rejected (BAD_REQUEST, naming the row index) if any row is invalid. */
   rows: Array<RecordTokenUsageRowInput>;
@@ -5181,6 +5198,8 @@ export type RecordTokenUsageResultObject = {
 };
 
 export type RecordTokenUsageRowInput = {
+  /** The agent account the turn was billed to, stamped by the hook at capture time. Null (or absent) leaves the row unattributed. Attribution never rejects a batch: an unusable account is ignored. */
+  account?: InputMaybe<RecordTokenUsageAccountInput>;
   /** Cache-read tokens for the turn, when reported. */
   cacheReadTokens?: InputMaybe<Scalars['Float']['input']>;
   /** Cache-creation (cache-write) tokens for the turn, when reported. */
@@ -6841,8 +6860,40 @@ export type TimelineSpanObject = {
   title: Scalars['String']['output'];
 };
 
+/** An agent-CLI login that usage was billed to (a subscription seat or an API key), as the CLI reported it. */
+export type TokenUsageAccountObject = {
+  __typename?: 'TokenUsageAccountObject';
+  /** What the account's runs bill: api_key, subscription or unknown. Subscription costs are list-price estimates, not invoiced dollars. */
+  credentialKind: Scalars['String']['output'];
+  /** Login email, when the CLI reports one (codex is identified by account id only). */
+  email?: Maybe<Scalars['String']['output']>;
+  /** Agent account id. */
+  id: Scalars['ID']['output'];
+  /** When a usage row was last stamped with this account. */
+  lastSeenAt: Scalars['DateTime']['output'];
+  /** Provider organization or team name, when reported. */
+  orgName?: Maybe<Scalars['String']['output']>;
+  /** Subscription plan (for claude: pro, max, team, ...), when reported. */
+  plan?: Maybe<Scalars['String']['output']>;
+  /** Driver id the account belongs to. */
+  provider: Scalars['String']['output'];
+};
+
+/** Usage over the range for one agent account on one provider. A null account is that provider's unattributed bucket. */
+export type TokenUsageByAccountObject = {
+  __typename?: 'TokenUsageByAccountObject';
+  /** The account, or null for usage no account was stamped on (rows from before accounts were recorded, and drivers that report no identity). */
+  account?: Maybe<TokenUsageAccountObject>;
+  /** Provider (driver id) of the bucket. */
+  provider: Scalars['String']['output'];
+  /** Summed usage + turn count for the bucket. */
+  totals: TokenUsageTotalsObject;
+};
+
 export type TokenUsageResultObject = {
   __typename?: 'TokenUsageResultObject';
+  /** The same filtered range summed per agent account and provider, costliest first, with an unattributed bucket per provider. */
+  byAccount: Array<TokenUsageByAccountObject>;
   /** Per-turn usage rows in the range, newest first. */
   items: Array<TokenUsageRowObject>;
   /** Summed usage + turn count over the same filtered range. */
@@ -6851,6 +6902,8 @@ export type TokenUsageResultObject = {
 
 export type TokenUsageRowObject = {
   __typename?: 'TokenUsageRowObject';
+  /** Agent account (login) the turn was billed to, stamped when the row was written. Null when it could not be identified, and for rows written before accounts were recorded. */
+  agentAccountId?: Maybe<Scalars['ID']['output']>;
   /** Cache-read tokens for the turn, when reported. */
   cacheReadTokens?: Maybe<Scalars['Float']['output']>;
   /** Cache-write tokens for the turn, when reported. */
@@ -14151,6 +14204,7 @@ export type GetUsageDailyStatsQuery = {
 
 export type UsageTokenUsageRowFragment = {
   __typename?: 'TokenUsageRowObject';
+  agentAccountId?: string | null;
   cacheReadTokens?: number | null;
   cacheWriteTokens?: number | null;
   costUsd?: number | null;
@@ -14177,18 +14231,82 @@ export type UsageTokenUsageTotalsFragment = {
   turnCount: number;
 };
 
+export type UsageTokenUsageAccountFragment = {
+  __typename?: 'TokenUsageAccountObject';
+  credentialKind: string;
+  email?: string | null;
+  id: string;
+  lastSeenAt: any;
+  orgName?: string | null;
+  plan?: string | null;
+  provider: string;
+};
+
+export type UsageTokenUsageByAccountFragment = {
+  __typename?: 'TokenUsageByAccountObject';
+  provider: string;
+  account?: {
+    __typename?: 'TokenUsageAccountObject';
+    credentialKind: string;
+    email?: string | null;
+    id: string;
+    lastSeenAt: any;
+    orgName?: string | null;
+    plan?: string | null;
+    provider: string;
+  } | null;
+  totals: {
+    __typename?: 'TokenUsageTotalsObject';
+    cacheReadTokens: number;
+    cacheWriteTokens: number;
+    costUsd: number;
+    inputTokens: number;
+    outputTokens: number;
+    reasoningTokens: number;
+    totalTokens: number;
+    turnCount: number;
+  };
+};
+
 export type GetUsageTokenUsageQueryVariables = Exact<{
   start: Scalars['String']['input'];
   end: Scalars['String']['input'];
   provider?: InputMaybe<Scalars['String']['input']>;
+  accountId?: InputMaybe<Scalars['String']['input']>;
 }>;
 
 export type GetUsageTokenUsageQuery = {
   __typename?: 'Query';
   tokenUsage: {
     __typename?: 'TokenUsageResultObject';
+    byAccount: Array<{
+      __typename?: 'TokenUsageByAccountObject';
+      provider: string;
+      account?: {
+        __typename?: 'TokenUsageAccountObject';
+        credentialKind: string;
+        email?: string | null;
+        id: string;
+        lastSeenAt: any;
+        orgName?: string | null;
+        plan?: string | null;
+        provider: string;
+      } | null;
+      totals: {
+        __typename?: 'TokenUsageTotalsObject';
+        cacheReadTokens: number;
+        cacheWriteTokens: number;
+        costUsd: number;
+        inputTokens: number;
+        outputTokens: number;
+        reasoningTokens: number;
+        totalTokens: number;
+        turnCount: number;
+      };
+    }>;
     items: Array<{
       __typename?: 'TokenUsageRowObject';
+      agentAccountId?: string | null;
       cacheReadTokens?: number | null;
       cacheWriteTokens?: number | null;
       costUsd?: number | null;
@@ -17426,6 +17544,7 @@ export const UsageTokenUsageRowFragmentDoc = {
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'agentAccountId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'cacheReadTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'cacheWriteTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'costUsd' } },
@@ -17443,6 +17562,31 @@ export const UsageTokenUsageRowFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<UsageTokenUsageRowFragment, unknown>;
+export const UsageTokenUsageAccountFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UsageTokenUsageAccount' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TokenUsageAccountObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'credentialKind' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'lastSeenAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'orgName' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'plan' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'provider' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<UsageTokenUsageAccountFragment, unknown>;
 export const UsageTokenUsageTotalsFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -17469,6 +17613,92 @@ export const UsageTokenUsageTotalsFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<UsageTokenUsageTotalsFragment, unknown>;
+export const UsageTokenUsageByAccountFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UsageTokenUsageByAccount' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TokenUsageByAccountObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'account' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'UsageTokenUsageAccount' },
+                },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'provider' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'totals' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'UsageTokenUsageTotals' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UsageTokenUsageAccount' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TokenUsageAccountObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'credentialKind' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'lastSeenAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'orgName' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'plan' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'provider' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UsageTokenUsageTotals' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TokenUsageTotalsObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'cacheReadTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'cacheWriteTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'costUsd' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'inputTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'outputTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'reasoningTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'totalTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'turnCount' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<UsageTokenUsageByAccountFragment, unknown>;
 export const UsageSkillUsageBySkillFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -36113,6 +36343,14 @@ export const GetUsageTokenUsageDocument = {
           },
           type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
         },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'accountId' },
+          },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+        },
       ],
       selectionSet: {
         kind: 'SelectionSet',
@@ -36145,10 +36383,34 @@ export const GetUsageTokenUsageDocument = {
                   name: { kind: 'Name', value: 'provider' },
                 },
               },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'accountId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'accountId' },
+                },
+              },
             ],
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'byAccount' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'FragmentSpread',
+                        name: {
+                          kind: 'Name',
+                          value: 'UsageTokenUsageByAccount',
+                        },
+                      },
+                    ],
+                  },
+                },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'items' },
@@ -36183,26 +36445,21 @@ export const GetUsageTokenUsageDocument = {
     },
     {
       kind: 'FragmentDefinition',
-      name: { kind: 'Name', value: 'UsageTokenUsageRow' },
+      name: { kind: 'Name', value: 'UsageTokenUsageAccount' },
       typeCondition: {
         kind: 'NamedType',
-        name: { kind: 'Name', value: 'TokenUsageRowObject' },
+        name: { kind: 'Name', value: 'TokenUsageAccountObject' },
       },
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'cacheReadTokens' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'cacheWriteTokens' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'costUsd' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'credentialKind' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'email' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'inputTokens' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'model' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'outputTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'lastSeenAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'orgName' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'plan' } },
           { kind: 'Field', name: { kind: 'Name', value: 'provider' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'reasoningTokens' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'source' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'totalTokens' } },
         ],
       },
     },
@@ -36224,6 +36481,72 @@ export const GetUsageTokenUsageDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'reasoningTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'totalTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'turnCount' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UsageTokenUsageByAccount' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TokenUsageByAccountObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'account' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'UsageTokenUsageAccount' },
+                },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'provider' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'totals' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'UsageTokenUsageTotals' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UsageTokenUsageRow' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TokenUsageRowObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'agentAccountId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'cacheReadTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'cacheWriteTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'costUsd' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'inputTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'outputTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'provider' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'reasoningTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'source' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'totalTokens' } },
         ],
       },
     },

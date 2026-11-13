@@ -33,6 +33,7 @@ describe('AgentTokenUsageService', () => {
     const service = await buildService({ create, save });
 
     const saved = await service.recordTurnUsage({
+      agentAccountId: 'account-1',
       conversationId: 'conv-1',
       messageId: 'msg-1',
       model: 'claude-opus-4-8',
@@ -51,6 +52,7 @@ describe('AgentTokenUsageService', () => {
     });
 
     expect(create).toHaveBeenCalledWith({
+      agentAccountId: 'account-1',
       cachedReadTokens: 900,
       cachedWriteTokens: 300,
       conversationId: 'conv-1',
@@ -85,6 +87,7 @@ describe('AgentTokenUsageService', () => {
     const service = await buildService({ create, save });
 
     await service.recordTurnUsage({
+      agentAccountId: null,
       conversationId: null,
       messageId: null,
       model: null,
@@ -95,6 +98,7 @@ describe('AgentTokenUsageService', () => {
     });
 
     expect(create).toHaveBeenCalledWith({
+      agentAccountId: null,
       cachedReadTokens: null,
       cachedWriteTokens: null,
       conversationId: null,
@@ -115,6 +119,7 @@ describe('AgentTokenUsageService', () => {
   describe('recordTokenUsageBatch', () => {
     const occurredAt = new Date('2026-10-01T08:30:00.000Z');
     const batchRow = {
+      agentAccountId: 'account-1',
       cachedReadTokens: 900,
       cachedWriteTokens: 300,
       costUsd: null,
@@ -169,6 +174,7 @@ describe('AgentTokenUsageService', () => {
       expect(qb.execute).toHaveBeenCalledOnce();
       expect(qb.values).toHaveBeenCalledWith([
         {
+          agentAccountId: 'account-1',
           cachedReadTokens: 900,
           cachedWriteTokens: 300,
           costUsd: null,
@@ -336,6 +342,134 @@ describe('AgentTokenUsageService', () => {
         );
 
         await expect(service.listCaptureHealth()).resolves.toEqual([]);
+      });
+    });
+  });
+
+  describe('range reads by account', () => {
+    const range = { end: '2026-11-30', start: '2026-11-01', userId: 'user-1' };
+
+    const buildRangeService = async (
+      getRawMany: ReturnType<typeof vi.fn>,
+    ): Promise<{
+      qb: Record<string, ReturnType<typeof vi.fn>>;
+      service: AgentTokenUsageService;
+    }> => {
+      const qb: Record<string, ReturnType<typeof vi.fn>> = {
+        addGroupBy: vi.fn(),
+        addOrderBy: vi.fn(),
+        addSelect: vi.fn(),
+        andWhere: vi.fn(),
+        getRawMany,
+        groupBy: vi.fn(),
+        orderBy: vi.fn(),
+        select: vi.fn(),
+        where: vi.fn(),
+      };
+      for (const key of Object.keys(qb)) {
+        if (key !== 'getRawMany') {
+          qb[key]?.mockReturnValue(qb);
+        }
+      }
+      const service = await buildService({
+        create: vi.fn(),
+        createQueryBuilder: vi.fn().mockReturnValue(qb),
+        save: vi.fn(),
+      });
+
+      return { qb, service };
+    };
+
+    it('sums per (account, provider) and keeps a null account as the unattributed bucket', async () => {
+      const { qb, service } = await buildRangeService(
+        vi.fn().mockResolvedValue([
+          {
+            agentAccountId: 'account-1',
+            cachedReadTokens: '10',
+            cachedWriteTokens: '0',
+            costUsd: '1.5',
+            inputTokens: '100',
+            outputTokens: '20',
+            provider: 'claude',
+            reasoningTokens: '0',
+            totalTokens: '120',
+            turnCount: '3',
+          },
+          {
+            agentAccountId: null,
+            cachedReadTokens: null,
+            cachedWriteTokens: null,
+            costUsd: null,
+            inputTokens: '5',
+            outputTokens: '5',
+            provider: 'grok',
+            reasoningTokens: null,
+            totalTokens: '10',
+            turnCount: '1',
+          },
+        ]),
+      );
+
+      await expect(service.getUsageByAccountInRange(range)).resolves.toEqual([
+        {
+          agentAccountId: 'account-1',
+          cachedReadTokens: 10,
+          cachedWriteTokens: 0,
+          costUsd: 1.5,
+          inputTokens: 100,
+          outputTokens: 20,
+          provider: 'claude',
+          reasoningTokens: 0,
+          totalTokens: 120,
+          turnCount: 3,
+        },
+        {
+          agentAccountId: null,
+          cachedReadTokens: 0,
+          cachedWriteTokens: 0,
+          costUsd: 0,
+          inputTokens: 5,
+          outputTokens: 5,
+          provider: 'grok',
+          reasoningTokens: 0,
+          totalTokens: 10,
+          turnCount: 1,
+        },
+      ]);
+      expect(qb.groupBy).toHaveBeenCalledWith('u.agent_account_id');
+      expect(qb.addGroupBy).toHaveBeenCalledWith('u.provider');
+    });
+
+    describe('when narrowed to one account', () => {
+      it('filters on that account id', async () => {
+        const { qb, service } = await buildRangeService(
+          vi.fn().mockResolvedValue([]),
+        );
+
+        await service.getUsageByAccountInRange({
+          ...range,
+          account: { id: 'account-1', kind: 'account' },
+        });
+
+        expect(qb.andWhere).toHaveBeenCalledWith(
+          'u.agent_account_id = :agentAccountId',
+          { agentAccountId: 'account-1' },
+        );
+      });
+    });
+
+    describe('when narrowed to unattributed rows', () => {
+      it('filters on a null account', async () => {
+        const { qb, service } = await buildRangeService(
+          vi.fn().mockResolvedValue([]),
+        );
+
+        await service.getUsageByAccountInRange({
+          ...range,
+          account: { kind: 'unattributed' },
+        });
+
+        expect(qb.andWhere).toHaveBeenCalledWith('u.agent_account_id IS NULL');
       });
     });
   });

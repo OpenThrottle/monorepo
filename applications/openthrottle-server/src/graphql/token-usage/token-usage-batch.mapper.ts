@@ -1,7 +1,15 @@
 import { BadRequestException } from '@nestjs/common';
 import type { TokenUsageBatchRow } from '@openthrottle/nestjs-repositories';
+import type {
+  AgentAccountCredentialKind,
+  IdentifiedAgentAccount,
+} from '@openthrottle/openthrottle-agentic-utils';
+import { AGENT_ACCOUNT_CREDENTIAL_KINDS } from '@openthrottle/openthrottle-agentic-utils';
 
-import type { RecordTokenUsageRowInput } from './token-usage.input.ts';
+import type {
+  RecordTokenUsageAccountInput,
+  RecordTokenUsageRowInput,
+} from './token-usage.input.ts';
 
 /** Largest batch one recordTokenUsage call accepts. */
 export const MAX_TOKEN_USAGE_BATCH_SIZE = 500;
@@ -104,6 +112,7 @@ const toBatchRow = (
   index: number,
 ): TokenUsageBatchRow => {
   return {
+    agentAccountId: null,
     cachedReadTokens: toTokenCount(
       index,
       'cacheReadTokens',
@@ -150,4 +159,49 @@ export const toTokenUsageBatchRows = (
   }
 
   return rows.map(toBatchRow);
+};
+
+const CREDENTIAL_KINDS: ReadonlySet<string> = new Set(
+  Object.values(AGENT_ACCOUNT_CREDENTIAL_KINDS),
+);
+
+const isCredentialKind = (
+  value: string,
+): value is AgentAccountCredentialKind => {
+  return CREDENTIAL_KINDS.has(value);
+};
+
+const toAccountIdentity = (
+  provider: string,
+  account: RecordTokenUsageAccountInput | null | undefined,
+): IdentifiedAgentAccount | null => {
+  const externalAccountId = toOptionalTrimmed(account?.externalAccountId);
+  if (account == null || externalAccountId == null) {
+    return null;
+  }
+  const kind = account.credentialKind.trim().toLowerCase();
+
+  return {
+    credentialKind: isCredentialKind(kind)
+      ? kind
+      : AGENT_ACCOUNT_CREDENTIAL_KINDS.unknown,
+    email: toOptionalTrimmed(account.email)?.toLowerCase() ?? null,
+    externalAccountId,
+    kind: 'identified',
+    orgId: toOptionalTrimmed(account.orgId),
+    orgName: toOptionalTrimmed(account.orgName),
+    plan: toOptionalTrimmed(account.plan),
+    provider: provider.trim().toLowerCase(),
+  };
+};
+
+/**
+ * The agent account each row reports, index-aligned with the batch, or null
+ * where a row carries none. Lenient by design: attribution decorates a row and
+ * must never reject the batch, so an unusable account is simply null.
+ */
+export const toTokenUsageRowAccounts = (
+  rows: readonly RecordTokenUsageRowInput[],
+): Array<IdentifiedAgentAccount | null> => {
+  return rows.map((row) => toAccountIdentity(row.provider, row.account));
 };

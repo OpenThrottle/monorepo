@@ -3,6 +3,7 @@
  * OpenAI-compatible endpoint and spawned agentic CLIs (e.g. cursor-agent).
  */
 export * from './acp/index.ts';
+export * from './agent-account/index.ts';
 export * from './agent-discovery.ts';
 export * from './agent-setup-executor.ts';
 export * from './antigravity/index.ts';

@@ -7,15 +7,21 @@ import {
   type AuthPrincipal,
 } from '@openthrottle/nestjs-auth';
 import {
+  AgentAccountsService,
   AgentTokenUsageService,
   RolesService,
   type TokenUsageTotals,
 } from '@openthrottle/nestjs-repositories';
-import { agentTokenUsageFactory } from '@openthrottle/nestjs-repositories/testing';
+import {
+  agentAccountFactory,
+  agentTokenUsageFactory,
+} from '@openthrottle/nestjs-repositories/testing';
 import { beforeAll, beforeEach, describe, expect, it, test, vi } from 'vitest';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { AgentAccountStampingService } from '../../services/agent-account-stamping/agent-account-stamping.service.ts';
 import { EffectiveUserResolutionService } from '../../services/effective-user-resolution/effective-user-resolution.service.ts';
+import { TOKEN_USAGE_UNATTRIBUTED_ACCOUNT_ID } from './token-usage.constants.ts';
 import type { RecordTokenUsageRowInput } from './token-usage.input.ts';
 import { TokenUsageResolver } from './token-usage.resolver.ts';
 
@@ -33,8 +39,11 @@ describe('TokenUsageResolver', () => {
 
   const listUsageInRange = vi.fn();
   const getUsageTotalsInRange = vi.fn();
+  const getUsageByAccountInRange = vi.fn().mockResolvedValue([]);
+  const listByIds = vi.fn().mockResolvedValue([]);
   const recordTokenUsageBatch = vi.fn();
   const resolveEffectiveUserId = vi.fn();
+  const stampIdentity = vi.fn();
 
   const totals: TokenUsageTotals = {
     cachedReadTokens: 900,
@@ -54,10 +63,19 @@ describe('TokenUsageResolver', () => {
         {
           provide: AgentTokenUsageService,
           useValue: createMock<AgentTokenUsageService>({
+            getUsageByAccountInRange,
             getUsageTotalsInRange,
             listUsageInRange,
             recordTokenUsageBatch,
           }),
+        },
+        {
+          provide: AgentAccountsService,
+          useValue: createMock<AgentAccountsService>({ listByIds }),
+        },
+        {
+          provide: AgentAccountStampingService,
+          useValue: createMock<AgentAccountStampingService>({ stampIdentity }),
         },
         {
           provide: EffectiveUserResolutionService,
@@ -134,6 +152,95 @@ describe('TokenUsageResolver', () => {
     });
   });
 
+  describe('per-account breakdown', () => {
+    const bucket = {
+      cachedReadTokens: 0,
+      cachedWriteTokens: 0,
+      costUsd: 1.25,
+      inputTokens: 100,
+      outputTokens: 20,
+      reasoningTokens: 0,
+      totalTokens: 120,
+      turnCount: 3,
+    };
+
+    test('resolves each bucket to its account, keeping the unattributed bucket', async () => {
+      const account = agentAccountFactory.build({
+        email: 'dev@example.com',
+        id: 'account-1',
+        orgName: 'Example',
+        plan: 'team',
+        provider: 'claude',
+      });
+      listUsageInRange.mockResolvedValueOnce([]);
+      getUsageTotalsInRange.mockResolvedValueOnce(totals);
+      getUsageByAccountInRange.mockResolvedValueOnce([
+        { ...bucket, agentAccountId: 'account-1', provider: 'claude' },
+        { ...bucket, agentAccountId: null, provider: 'grok' },
+      ]);
+      listByIds.mockResolvedValueOnce([account]);
+
+      const result = await resolver.tokenUsage(
+        humanPrincipal,
+        '2026-07-01',
+        '2026-07-31',
+      );
+
+      expect(listByIds).toHaveBeenCalledWith('user-1', ['account-1']);
+      expect(result.byAccount).toHaveLength(2);
+      expect(result.byAccount[0]).toMatchObject({
+        account: {
+          email: 'dev@example.com',
+          id: 'account-1',
+          orgName: 'Example',
+          plan: 'team',
+        },
+        provider: 'claude',
+        totals: { costUsd: 1.25, turnCount: 3 },
+      });
+      expect(result.byAccount[1]).toMatchObject({
+        account: null,
+        provider: 'grok',
+      });
+    });
+
+    test('narrows to one account', async () => {
+      listUsageInRange.mockResolvedValueOnce([]);
+      getUsageTotalsInRange.mockResolvedValueOnce(totals);
+
+      await resolver.tokenUsage(
+        humanPrincipal,
+        '2026-07-01',
+        '2026-07-31',
+        null,
+        'account-1',
+      );
+
+      expect(listUsageInRange).toHaveBeenCalledWith(
+        expect.objectContaining({
+          account: { id: 'account-1', kind: 'account' },
+        }),
+      );
+    });
+
+    test('narrows to unattributed rows with the sentinel id', async () => {
+      listUsageInRange.mockResolvedValueOnce([]);
+      getUsageTotalsInRange.mockResolvedValueOnce(totals);
+
+      await resolver.tokenUsage(
+        humanPrincipal,
+        '2026-07-01',
+        '2026-07-31',
+        null,
+        TOKEN_USAGE_UNATTRIBUTED_ACCOUNT_ID,
+      );
+
+      expect(getUsageByAccountInRange).toHaveBeenCalledWith(
+        expect.objectContaining({ account: { kind: 'unattributed' } }),
+      );
+    });
+  });
+
   test('narrows to a single provider when supplied', async () => {
     listUsageInRange.mockResolvedValueOnce([]);
     getUsageTotalsInRange.mockResolvedValueOnce({
@@ -162,6 +269,7 @@ describe('TokenUsageResolver', () => {
       overrides: Partial<RecordTokenUsageRowInput> = {},
     ): RecordTokenUsageRowInput => {
       return {
+        account: null,
         cacheReadTokens: 900,
         cacheWriteTokens: 300,
         costUsd: null,
@@ -185,6 +293,105 @@ describe('TokenUsageResolver', () => {
     beforeEach(() => {
       recordTokenUsageBatch.mockReset();
       resolveEffectiveUserId.mockReset();
+      stampIdentity.mockReset();
+    });
+
+    describe('when rows carry the agent account', () => {
+      const account = {
+        credentialKind: 'subscription',
+        email: 'Dev@Example.com',
+        externalAccountId: 'org-1:dev@example.com',
+        orgId: 'org-1',
+        orgName: 'Example',
+        plan: 'team',
+      };
+
+      beforeEach(() => {
+        resolveEffectiveUserId.mockResolvedValueOnce('user-1');
+        recordTokenUsageBatch.mockResolvedValueOnce({
+          inserted: 2,
+          skipped: 0,
+        });
+      });
+
+      it('upserts each distinct account once and stamps its id on its rows', async () => {
+        stampIdentity.mockResolvedValueOnce('account-1');
+
+        await resolver.recordTokenUsage(
+          {
+            rows: [
+              buildRow({ account, requestId: 'req-1' }),
+              buildRow({ account, requestId: 'req-2' }),
+              buildRow({ requestId: 'req-3' }),
+            ],
+          },
+          'user-1',
+        );
+
+        expect(stampIdentity).toHaveBeenCalledOnce();
+        expect(stampIdentity).toHaveBeenCalledWith('user-1', {
+          credentialKind: 'subscription',
+          email: 'dev@example.com',
+          externalAccountId: 'org-1:dev@example.com',
+          kind: 'identified',
+          orgId: 'org-1',
+          orgName: 'Example',
+          plan: 'team',
+          provider: 'claude',
+        });
+        expect(
+          recordTokenUsageBatch.mock.calls[0]?.[1].map(
+            (row: { agentAccountId: string | null }) => row.agentAccountId,
+          ),
+        ).toEqual(['account-1', 'account-1', null]);
+      });
+
+      it('stores an unrecognised credential kind as unknown', async () => {
+        stampIdentity.mockResolvedValueOnce('account-1');
+
+        await resolver.recordTokenUsage(
+          {
+            rows: [
+              buildRow({ account: { ...account, credentialKind: 'oauth' } }),
+            ],
+          },
+          'user-1',
+        );
+
+        expect(stampIdentity).toHaveBeenCalledWith(
+          'user-1',
+          expect.objectContaining({ credentialKind: 'unknown' }),
+        );
+      });
+
+      it('leaves the row unattributed, without rejecting, when the account id is blank', async () => {
+        await resolver.recordTokenUsage(
+          {
+            rows: [
+              buildRow({ account: { ...account, externalAccountId: ' ' } }),
+            ],
+          },
+          'user-1',
+        );
+
+        expect(stampIdentity).not.toHaveBeenCalled();
+        expect(recordTokenUsageBatch.mock.calls[0]?.[1][0].agentAccountId).toBe(
+          null,
+        );
+      });
+
+      it('leaves the row unattributed when the upsert yields no id', async () => {
+        stampIdentity.mockResolvedValueOnce(null);
+
+        await resolver.recordTokenUsage(
+          { rows: [buildRow({ account })] },
+          'user-1',
+        );
+
+        expect(recordTokenUsageBatch.mock.calls[0]?.[1][0].agentAccountId).toBe(
+          null,
+        );
+      });
     });
 
     describe('when no user resolves from the principal', () => {
@@ -225,6 +432,7 @@ describe('TokenUsageResolver', () => {
         expect(resolveEffectiveUserId).toHaveBeenCalledWith('user-1');
         expect(recordTokenUsageBatch).toHaveBeenCalledWith('user-1', [
           {
+            agentAccountId: null,
             cachedReadTokens: 900,
             cachedWriteTokens: 300,
             costUsd: null,

@@ -48,9 +48,14 @@ const buildTotals = (
   };
 };
 
-const renderComponent = (props: UsageTokenUsageProps): RenderResult => {
+type AccountProps = Pick<UsageTokenUsageProps, 'byAccount' | 'selectedAccount'>;
+
+const renderComponent = (
+  props: Omit<UsageTokenUsageProps, keyof AccountProps>,
+  accountProps: AccountProps = { byAccount: [], selectedAccount: null },
+): RenderResult => {
   const Component = (): React.ReactElement => {
-    return <UsageTokenUsage {...props} />;
+    return <UsageTokenUsage {...props} {...accountProps} />;
   };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
@@ -195,5 +200,47 @@ describe('UsageTokenUsage Component', () => {
     ).toBeInTheDocument();
     expect(component.getByText('claude-opus-4-8')).toBeInTheDocument();
     expect(component.getByText('claude-sonnet-4-5')).toBeInTheDocument();
+  });
+
+  describe('with per-account buckets', () => {
+    test('renders the account breakdown', () => {
+      const component = renderComponent(
+        {
+          items: [buildRow({ id: 'a', totalTokens: 100 })],
+          rangeDays: 30,
+          selectedProvider: null,
+          totals: buildTotals({ totalTokens: 100, turnCount: 1 }),
+        },
+        {
+          byAccount: [
+            {
+              account: null,
+              provider: 'claude',
+              totals: buildTotals({ totalTokens: 100, turnCount: 1 }),
+            },
+          ],
+          selectedAccount: null,
+        },
+      );
+
+      expect(
+        component.getByTestId('UsageTokenUsageAccounts'),
+      ).toBeInTheDocument();
+    });
+  });
+
+  describe('without per-account buckets', () => {
+    test('omits the account breakdown', () => {
+      const component = renderComponent({
+        items: [],
+        rangeDays: 30,
+        selectedProvider: null,
+        totals: buildTotals({}),
+      });
+
+      expect(
+        component.queryByTestId('UsageTokenUsageAccounts'),
+      ).not.toBeInTheDocument();
+    });
   });
 });

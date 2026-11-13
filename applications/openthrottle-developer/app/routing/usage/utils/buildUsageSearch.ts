@@ -4,6 +4,7 @@
  */
 
 export type UsageSearchParams = {
+  readonly account?: string | null;
   readonly cwd?: string | null;
   readonly gitBranch?: string | null;
   readonly provider?: string | null;
@@ -16,6 +17,9 @@ export const buildUsageSearch = (params: UsageSearchParams): string => {
 
   if (params.provider != null && params.provider !== '') {
     search.set('provider', params.provider);
+  }
+  if (params.account != null && params.account !== '') {
+    search.set('account', params.account);
   }
   if (params.scope != null && params.scope !== '') {
     search.set('skillScope', params.scope);
