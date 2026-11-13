@@ -1,0 +1,8 @@
+/* GENERATED — DO NOT EDIT. Regenerate with `pnpm nx run @openthrottle/react-router-shadcn:test -- -u buildThemeSafelist` (src/themes/buildThemeSafelist.ts). */
+
+@source inline(
+  '{accent,bg,border,caret,decoration,divide,fill,outline,placeholder,ring,stroke,text}-{accent,accent-foreground,background,border,brand,card,card-foreground,chart-1,chart-2,chart-3,chart-4,chart-5,destructive,destructive-foreground,foreground,input,muted,muted-foreground,overlay-background,popover,popover-foreground,primary,primary-foreground,ring,secondary,secondary-foreground,sidebar,sidebar-accent,sidebar-accent-foreground,sidebar-border,sidebar-foreground,sidebar-primary,sidebar-primary-foreground,sidebar-ring}'
+);
+@source inline(
+  'hover:{bg,border,text}-{accent,accent-foreground,background,border,brand,card,card-foreground,chart-1,chart-2,chart-3,chart-4,chart-5,destructive,destructive-foreground,foreground,input,muted,muted-foreground,overlay-background,popover,popover-foreground,primary,primary-foreground,ring,secondary,secondary-foreground,sidebar,sidebar-accent,sidebar-accent-foreground,sidebar-border,sidebar-foreground,sidebar-primary,sidebar-primary-foreground,sidebar-ring}'
+);
