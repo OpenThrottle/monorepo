@@ -1,12 +1,17 @@
+import { randomUUID } from 'node:crypto';
+
 import { Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import type { FindOptionsWhere } from 'typeorm';
+import { DataSource, Equal, IsNull, Or } from 'typeorm';
 
 import { CMS_CONNECTION, CMS_STATUS } from '../../config/config.constants.ts';
-import type { Fragment } from '../../modules/fragments/fragment.entity.ts';
+import { Fragment } from '../../modules/fragments/fragment.entity.ts';
 import { FragmentsRepository } from '../../modules/fragments/fragments.repository.ts';
 import type { Schema } from '../../modules/schemas/schema.entity.ts';
 import { SchemasRepository } from '../../modules/schemas/schemas.repository.ts';
+import { CMS_FRAGMENT_TREE_MAX_NODES } from '../cms-fragment-tree/cms-fragment-tree.constants.ts';
+import type { CmsFragmentTreeRow } from '../cms-fragment-tree/cms-fragment-tree.types.ts';
 import {
   assertCmsUuid,
   createCmsGraphqlError,
@@ -14,11 +19,16 @@ import {
 } from '../cms-graphql/cms-graphql.utils.ts';
 import { CmsSchemaValidationService } from '../cms-schema-validation/cms-schema-validation.service.ts';
 import type {
+  CloneCmsFragmentInput,
   CreateCmsFragmentInput,
   UpdateCmsFragmentInput,
 } from './cms-fragments.input.ts';
 import { toCmsFragmentObject } from './cms-fragments.mapper.ts';
-import type { CmsFragmentObject } from './cms-fragments.object.ts';
+import type {
+  CmsFragmentListResult,
+  CmsFragmentObject,
+} from './cms-fragments.object.ts';
+import { planCmsFragmentClone } from './cms-fragments.utils.ts';
 
 /**
  * @description Writes cms fragments. Properties are validated server-side against the schema
@@ -35,6 +45,100 @@ export class CmsFragmentsService {
     private readonly schemasRepository: SchemasRepository,
     private readonly validation: CmsSchemaValidationService,
   ) {}
+
+  /**
+   * @description One bounded page of live fragments, oldest first, optionally narrowed to one
+   * typename and/or to system (`true`) or editor (`false`) fragments. `is_system` is nullable,
+   * and NULL counts as not system.
+   */
+  async findPage(options: {
+    readonly isSystem: boolean | null;
+    readonly skip: number;
+    readonly take: number;
+    readonly typename: string | null;
+  }): Promise<CmsFragmentListResult> {
+    const where: FindOptionsWhere<Fragment> = {};
+
+    if (options.typename !== null) {
+      where.typename = options.typename;
+    }
+
+    if (options.isSystem !== null) {
+      where.isSystem = options.isSystem
+        ? Equal(true)
+        : Or(Equal(false), IsNull());
+    }
+
+    const page = await this.fragmentsRepository.findByPaginated({
+      skip: options.skip,
+      take: options.take,
+      where,
+    });
+
+    return {
+      hasNextPage: page.pageInfo.hasNextPage,
+      items: page.data.map(toCmsFragmentObject),
+      totalCount: page.pageInfo.totalCount,
+    };
+  }
+
+  /**
+   * @description Copies a live fragment onto the same pinned schema version (never the newest),
+   * with its properties as stored, and with `includeChildren` a fresh copy of its live subtree
+   * (new fragments, new edges, same order), all in one transaction. The copy is never
+   * `is_system` and has no parent; attach it with `addCmsFragmentChild`.
+   * @throws GraphQLError NOT_FOUND for a missing fragment, BAD_USER_INPUT for a subtree larger
+   * than the tree cap.
+   */
+  async clone(input: CloneCmsFragmentInput): Promise<CmsFragmentObject> {
+    const source = await this.findLive(input.uuid);
+    const rows = await this.findCloneRows(
+      source,
+      input.includeChildren === true,
+    );
+    const plan = planCmsFragmentClone(
+      rows,
+      input.name ?? `${source.name} (copy)`,
+      randomUUID,
+    );
+
+    if (!plan) {
+      throw createCmsGraphqlError('NOT_FOUND', `No fragment "${input.uuid}"`);
+    }
+
+    const copy = await this.dataSource.transaction(async (manager) => {
+      await manager.query(
+        `INSERT INTO fragments (uuid, name, is_system, properties, schema_uuid, typename)
+         SELECT * FROM unnest($1::uuid[], $2::varchar[], $3::boolean[], $4::jsonb[], $5::uuid[], $6::varchar[])`,
+        [
+          plan.fragments.map((fragment) => fragment.uuid),
+          plan.fragments.map((fragment) => fragment.name),
+          plan.fragments.map((fragment) => fragment.isSystem),
+          plan.fragments.map((fragment) => JSON.stringify(fragment.properties)),
+          plan.fragments.map((fragment) => fragment.schemaUuid),
+          plan.fragments.map((fragment) => fragment.typename),
+        ],
+      );
+
+      if (plan.edges.length > 0) {
+        await manager.query(
+          `INSERT INTO fragments_children (fragment_uuid, children_uuid, sort_order)
+           SELECT * FROM unnest($1::uuid[], $2::uuid[], $3::int[])`,
+          [
+            plan.edges.map((edge) => edge.parentUuid),
+            plan.edges.map((edge) => edge.childUuid),
+            plan.edges.map((edge) => edge.sortOrder),
+          ],
+        );
+      }
+
+      return manager.findOneOrFail(Fragment, {
+        where: { uuid: plan.rootUuid },
+      });
+    });
+
+    return toCmsFragmentObject(copy);
+  }
 
   /**
    * @description The newest ACTIVE live schema for `typename`.
@@ -184,6 +288,43 @@ export class CmsFragmentsService {
     }
 
     return fragment;
+  }
+
+  /**
+   * @description The rows a clone copies: the source alone, or its live tree (cut at the depth
+   * cap, cycles not followed).
+   */
+  private async findCloneRows(
+    source: Fragment,
+    includeChildren: boolean,
+  ): Promise<readonly CmsFragmentTreeRow[]> {
+    if (!includeChildren) {
+      return [
+        {
+          depth: 0,
+          edgeCreatedAt: null,
+          isSystem: source.isSystem === true,
+          name: source.name,
+          path: [source.uuid],
+          position: 0,
+          properties: source.properties,
+          schemaUuid: source.schemaUuid,
+          typename: source.typename,
+          uuid: source.uuid,
+        },
+      ];
+    }
+
+    const tree = await this.fragmentsRepository.findTreeRows(source.uuid);
+
+    if (!tree.ok) {
+      throw createCmsGraphqlError(
+        'BAD_USER_INPUT',
+        `Fragment "${source.uuid}" has a subtree past the ${CMS_FRAGMENT_TREE_MAX_NODES}-node tree cap`,
+      );
+    }
+
+    return tree.rows;
   }
 
   private assertValid(

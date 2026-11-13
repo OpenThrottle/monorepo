@@ -127,6 +127,33 @@ ledger.
 - Every cms mutation needs the `cms:write` permission (admin only, `openthrottle` migration `159`);
   cms reads stay public.
 
+## Decision: what a layout's available typenames are
+
+**Every ACTIVE schema typename, except the layout root's `Layout`** (OT plan `4a977e20`, task 1).
+`availableCmsTypenames(layoutUuid)` answers "what can an editor add to this layout?" from the
+`schemas` table alone; `libraries` and `layouts_libraries` are not consulted.
+
+RocketCMS answered it from `layouts_libraries` → `libraries` → `library_components.typename`,
+because there a library component's `code` was what rendered a typename. Here it is not: the
+renderer is the code registry (`CORE_COMPONENTS` in `@openthrottle/react-router-cms-core`), and the
+`schemas` rows are synced from those same packages' manifests. An ACTIVE schema is therefore exactly
+"a typename the renderer can draw and the server can validate", which is the question being asked.
+
+- **Why not (b), the layout's libraries as a named grouping of typenames.** It makes availability
+  depend on data that nothing renders from. A typename listed by a library but with no ACTIVE schema
+  could be offered and then refused on create; a layout with no library attached (every layout
+  `createCmsLayout` makes) would offer nothing. It only becomes the right answer once a library's
+  components are what renders, which is the deferred DB-stored component code.
+- **Why not (c), dropping `libraries` / `layouts_libraries`.** Their read and write surface shipped in
+  plan `18a3b88f` (`cmsLibraries`, the library-component mutations), the seed uses them, and they are
+  the natural home for DB-stored components if that is ever picked up. A migration to remove them buys
+  nothing today. They stay as they are: stored, served, and not part of availability.
+- **`Layout` is excluded** because it is the `is_system` root typename `createCmsLayout` uses; an
+  editor never adds one as a child.
+- **`layoutUuid` is still the argument.** The layout must exist and be live (`NOT_FOUND` otherwise),
+  so the API keeps its shape if availability ever narrows per layout. Today every live layout gets
+  the same list, sorted by typename.
+
 ## Entities
 
 The TypeORM entities for these tables live in
@@ -241,7 +268,7 @@ Rejected options:
 
 Reads and writes are served: `openthrottle-server` imports `NestjsRepositoriesCmsModule`, whose
 `CmsGraphqlModule` answers `cmsLayout` / `cmsLayoutByUuid` (the fragment tree in one recursive query,
-cut at depth 10, cycles not followed), `cmsLayouts`, `cmsLibraries`, `cmsSchemas`, `cmsSchema` and
+cut at depth 10, cycles not followed), `cmsLayouts`, `cmsFragments`, `cmsLibraries`, `cmsSchemas`, `cmsSchema` and
 `cmsSchemaByTypename`. Reads are public; writes (fragments and their edges, layouts, library
 components) need `cms:write`. What is left:
 
