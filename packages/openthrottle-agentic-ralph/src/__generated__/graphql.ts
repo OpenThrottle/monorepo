@@ -893,11 +893,15 @@ export type CmsFragmentNodeObject = {
 /** A stored cms fragment: a named, typed piece of content whose properties conform to its pinned schema. */
 export type CmsFragmentObject = {
   __typename?: 'CmsFragmentObject';
+  /** The fragment's live children in sortOrder. One query per fragment: select it on a single fragment, not across a list (the layout tree is cmsLayout's job). */
+  children: Array<CmsFragmentObject>;
   createdAt: Scalars['DateTime']['output'];
   isSystem: Scalars['Boolean']['output'];
   name: Scalars['String']['output'];
   /** The fragment's properties as a JSON object string. */
   propertiesJson: Scalars['String']['output'];
+  /** The schema version this fragment is pinned to, even when that version has since been soft-deleted; null only when the row is gone. One query per fragment: select it on a single fragment, not across a list. */
+  schema?: Maybe<CmsSchemaObject>;
   /** The schema version the properties are validated against; fixed at creation. */
   schemaUuid: Scalars['String']['output'];
   typename: Scalars['String']['output'];

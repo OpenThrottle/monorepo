@@ -8,6 +8,7 @@ import { DataSource, Equal, IsNull, Or } from 'typeorm';
 import { CMS_CONNECTION, CMS_STATUS } from '../../config/config.constants.ts';
 import { Fragment } from '../../modules/fragments/fragment.entity.ts';
 import { FragmentsRepository } from '../../modules/fragments/fragments.repository.ts';
+import { FragmentChild } from '../../modules/fragments-children/fragment-child.entity.ts';
 import type { Schema } from '../../modules/schemas/schema.entity.ts';
 import { SchemasRepository } from '../../modules/schemas/schemas.repository.ts';
 import { CMS_FRAGMENT_TREE_MAX_NODES } from '../cms-fragment-tree/cms-fragment-tree.constants.ts';
@@ -19,6 +20,8 @@ import {
   parseCmsJsonObject,
 } from '../cms-graphql/cms-graphql.utils.ts';
 import { CmsSchemaValidationService } from '../cms-schema-validation/cms-schema-validation.service.ts';
+import { toCmsSchemaObject } from '../cms-schemas/cms-schemas.mapper.ts';
+import type { CmsSchemaObject } from '../cms-schemas/cms-schemas.object.ts';
 import type {
   CloneCmsFragmentInput,
   CreateCmsFragmentInput,
@@ -96,6 +99,52 @@ export class CmsFragmentsService {
     });
 
     return fragment ? toCmsFragmentObject(fragment) : null;
+  }
+
+  /**
+   * @description The live children of `parentUuid`, in `sort_order` (then edge age). Soft-deleted
+   * children are skipped; `delete` refuses a fragment a live parent still references, so in
+   * practice that is every edge.
+   */
+  async findChildren(parentUuid: string): Promise<CmsFragmentObject[]> {
+    if (!isCmsUuid(parentUuid)) {
+      return [];
+    }
+
+    const edges = await this.dataSource.getRepository(FragmentChild).find({
+      relations: { child: true },
+      where: { fragmentUuid: parentUuid },
+    });
+    // Sorted here: TypeORM orders by `order`'s key order, which alphabetized keys would invert.
+    const ordered = [...edges].sort((a, b) => {
+      return (
+        a.sortOrder - b.sortOrder ||
+        a.createdAt.getTime() - b.createdAt.getTime()
+      );
+    });
+
+    return ordered.flatMap((edge) => {
+      return edge.child && edge.child.isDeleted !== true
+        ? [toCmsFragmentObject(edge.child)]
+        : [];
+    });
+  }
+
+  /**
+   * @description The schema version a fragment is pinned to, soft-deleted or not: a fragment
+   * keeps validating against its own version, so its editor must keep reading that version too.
+   */
+  async findPinnedSchema(schemaUuid: string): Promise<CmsSchemaObject | null> {
+    if (!isCmsUuid(schemaUuid)) {
+      return null;
+    }
+
+    const schema = await this.schemasRepository.findOne({
+      where: { uuid: schemaUuid },
+      withDeleted: true,
+    });
+
+    return schema ? toCmsSchemaObject(schema) : null;
   }
 
   /**

@@ -66,4 +66,28 @@ describe('CmsFragmentsResolver', () => {
       await expect(resolver.cmsFragment('missing')).resolves.toBeNull();
     });
   });
+  describe('schema', () => {
+    it('resolves the pinned schema of the parent fragment', async () => {
+      const { resolver, service } = buildResolver();
+      const fragment = toCmsFragmentObject(fragmentsFactory.build());
+
+      vi.mocked(service.findPinnedSchema).mockResolvedValue(null);
+
+      await expect(resolver.schema(fragment)).resolves.toBeNull();
+      expect(service.findPinnedSchema).toHaveBeenCalledWith(
+        fragment.schemaUuid,
+      );
+    });
+  });
+  describe('children', () => {
+    it('resolves the live children of the parent fragment', async () => {
+      const { resolver, service } = buildResolver();
+      const fragment = toCmsFragmentObject(fragmentsFactory.build());
+
+      vi.mocked(service.findChildren).mockResolvedValue([]);
+
+      await expect(resolver.children(fragment)).resolves.toEqual([]);
+      expect(service.findChildren).toHaveBeenCalledWith(fragment.uuid);
+    });
+  });
 });

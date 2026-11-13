@@ -1348,12 +1348,21 @@ importers:
       isbot:
         specifier: 'catalog:'
         version: 5.2.1
+      jotai:
+        specifier: 'catalog:'
+        version: 2.20.2(@babel/core@7.29.7(supports-color@8.1.1))(@babel/template@7.29.7)(@types/react@19.2.7)(react@19.2.4)
       lucide-react:
         specifier: 'catalog:'
         version: 1.29.0(react@19.2.4)
       react:
         specifier: 19.2.4
         version: 19.2.4
+      react-dnd:
+        specifier: 'catalog:'
+        version: 16.0.1(@types/hoist-non-react-statics@3.3.7(@types/react@19.2.7))(@types/node@24.19.2)(@types/react@19.2.7)(react@19.2.4)
+      react-dnd-html5-backend:
+        specifier: 'catalog:'
+        version: 16.0.1
       react-dom:
         specifier: 19.2.4
         version: 19.2.4(react@19.2.4)

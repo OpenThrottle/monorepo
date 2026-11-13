@@ -9,7 +9,11 @@ import { CORE_FORM_COPY } from '../data/data.copy';
 import { CoreFormContext } from '../data/data.core-form-context';
 import { FORM_FIELDS } from '../data/data.form-fields';
 import type { CmsParsedSchema } from '../types/cms-json-schema';
-import type { CmsFormChildren, CmsFormContextValue } from '../types/cms-render';
+import type {
+  CmsFormChildren,
+  CmsFormContextValue,
+  CmsFormIssues,
+} from '../types/cms-render';
 import { getFormFieldKind } from '../utils/getFormFieldKind';
 import { FormAccordion } from './FormAccordion';
 import { FormAccordionPane } from './FormAccordionPane';
@@ -23,8 +27,12 @@ export interface CoreFormRendererProps {
   readonly children: CmsFormChildren | undefined;
   readonly className: string | undefined;
   readonly fragmentUuid: string;
+  /** Extra fields the app posts with this form (e.g. a name input), rendered above the panes. */
+  readonly header: React.ReactNode;
   /** Posted as `intent`, so the route action can tell this submit from others. */
   readonly intent: string;
+  /** Validation messages to show against each property's pane. */
+  readonly issues: CmsFormIssues | undefined;
   readonly schema: CmsParsedSchema;
 }
 
@@ -37,7 +45,8 @@ export interface CoreFormRendererProps {
 export const CoreFormRenderer = (
   props: CoreFormRendererProps,
 ): React.ReactElement => {
-  const { children, className, fragmentUuid, intent, schema } = props;
+  const { children, className, fragmentUuid, header, intent, issues, schema } =
+    props;
 
   // Hooks
   const draft = useAtomValue(atomFragmentDraft);
@@ -76,6 +85,7 @@ export const CoreFormRenderer = (
     return (
       <FormAccordionPane
         className={undefined}
+        errors={issues?.[key] ?? []}
         key={key}
         label={key}
         required={jsonSchema.required?.includes(key) ?? false}
@@ -96,6 +106,8 @@ export const CoreFormRenderer = (
         <input name="fragment_uuid" type="hidden" value={fragmentUuid} />
         <input name="properties" type="hidden" value={JSON.stringify(draft)} />
         <input name="typename" type="hidden" value={schema.typename} />
+
+        {header}
 
         <FormAccordion className={undefined} defaultOpen={keys[0]}>
           {panes}

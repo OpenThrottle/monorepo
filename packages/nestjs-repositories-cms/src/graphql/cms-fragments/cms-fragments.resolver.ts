@@ -1,8 +1,17 @@
 import { UseGuards } from '@nestjs/common';
-import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
+import {
+  Args,
+  Int,
+  Mutation,
+  Parent,
+  Query,
+  ResolveField,
+  Resolver,
+} from '@nestjs/graphql';
 import { Public } from '@openthrottle/nestjs-auth';
 
 import { toCmsPageOptions } from '../cms-graphql/cms-graphql.utils.ts';
+import { CmsSchemaObject } from '../cms-schemas/cms-schemas.object.ts';
 import { CmsWriteGuard } from '../cms-write-access/cms-write-access.guard.ts';
 import {
   CloneCmsFragmentInput,
@@ -52,6 +61,25 @@ export class CmsFragmentsResolver {
     @Args('uuid', { type: () => String }) uuid: string,
   ): Promise<CmsFragmentObject | null> {
     return this.cmsFragmentsService.findByUuid(uuid);
+  }
+
+  @ResolveField('children', () => [CmsFragmentObject], {
+    description: `The fragment's live children in sortOrder. One query per fragment: select it on a single fragment, not across a list (the layout tree is cmsLayout's job).`,
+  })
+  async children(
+    @Parent() fragment: CmsFragmentObject,
+  ): Promise<CmsFragmentObject[]> {
+    return this.cmsFragmentsService.findChildren(fragment.uuid);
+  }
+
+  @ResolveField('schema', () => CmsSchemaObject, {
+    description: `The schema version this fragment is pinned to, even when that version has since been soft-deleted; null only when the row is gone. One query per fragment: select it on a single fragment, not across a list.`,
+    nullable: true,
+  })
+  async schema(
+    @Parent() fragment: CmsFragmentObject,
+  ): Promise<CmsSchemaObject | null> {
+    return this.cmsFragmentsService.findPinnedSchema(fragment.schemaUuid);
   }
 
   @UseGuards(CmsWriteGuard)
