@@ -308,10 +308,10 @@
       }
     },
     "check-migration-hygiene": {
-      "cache": true,
+      "cache": false,
       "executor": "nx:run-commands",
       "metadata": {
-        "description": "Static lint for databases/openthrottle/migrations/: no inline REFERENCES under an IF NOT EXISTS guard, and no new duplicate numeric prefixes."
+        "description": "Static lint for databases/openthrottle/migrations/: no inline REFERENCES under an IF NOT EXISTS guard, and no new duplicate numeric prefixes. Never cached: rule 1 reads the merge-base diff and rule 2 the tip of the base ref, neither of which an `inputs` glob can hash. The root `monorepo` project owns 0 files, so a cached run hashed nothing and replayed a stale pass for a branch that added a migration (OT plan 373869cc)."
       },
       "options": {
         "command": "tsx ./scripts/check-migration-hygiene.ts",
@@ -319,10 +319,10 @@
       }
     },
     "check-migration-table-comments": {
-      "cache": true,
+      "cache": false,
       "executor": "nx:run-commands",
       "metadata": {
-        "description": "Verify every migration table/column carries COMMENT ON metadata via scripts/check-migration-table-comments.ts."
+        "description": "Verify every migration table/column carries COMMENT ON metadata via scripts/check-migration-table-comments.ts. Never cached: which files it lints comes from `git diff <merge-base>...HEAD`, and neither HEAD nor the base ref can be an `inputs` glob. The root `monorepo` project owns 0 files, so a cached run hashed nothing and replayed \"no changed files\" for a branch that added an uncommented migration (OT plan 373869cc)."
       },
       "options": {
         "command": "tsx ./scripts/check-migration-table-comments.ts",
