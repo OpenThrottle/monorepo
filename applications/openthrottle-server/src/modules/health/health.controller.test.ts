@@ -22,9 +22,10 @@ describe('HealthController', () => {
   });
 
   describe('check', () => {
-    test('returns server health from HealthService (api, database, redis, websocket)', async () => {
+    test('returns server health from HealthService (api, cms, database, redis, websocket)', async () => {
       vi.mocked(mockHealthService.getServerHealth).mockResolvedValueOnce({
         api: 'ok',
+        cms: 'ok',
         database: 'ok',
         redis: 'ok',
         websocket: 'ok',
@@ -34,6 +35,7 @@ describe('HealthController', () => {
 
       expect(result).toEqual({
         api: 'ok',
+        cms: 'ok',
         database: 'ok',
         redis: 'ok',
         websocket: 'ok',

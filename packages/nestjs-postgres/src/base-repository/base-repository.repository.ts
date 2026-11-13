@@ -8,8 +8,11 @@ import {
   type Repository,
 } from 'typeorm';
 
-import type { BaseModel } from '../base-model/base-model.entity.ts';
-import type { UpdateModelInput } from '../base-model/base-model.types.ts';
+import type {
+  PersistedModel,
+  UpdateModelInput,
+} from '../base-model/base-model.types.ts';
+import type { ModelConvention } from '../model-convention/model-convention.types.ts';
 import { PostgresProfiling } from '../postgres-profiling/postgres-profiling.decorator.ts';
 import {
   POSTGRES_DEFAULT_PAGE_SIZE,
@@ -25,10 +28,15 @@ import type {
 } from './base-repository.types.ts';
 import {
   buildDefaultOrder,
-  buildIdWhere,
-  buildWhereWithIds,
+  buildFlagSoftDeleteValues,
+  buildKeySelect,
+  buildKeyWhere,
   isRawRow,
   mapRawRowToEntityInput,
+  readModelKey,
+  resolveModelConvention,
+  scopeReadOptions,
+  scopeReadWhere,
   toInsertRows,
   toUpdateValues,
   withLiveRows,
@@ -36,20 +44,30 @@ import {
 
 /**
  * @public
- * @description Typed CRUD over a `BaseModel` table: soft deletes, bounded reads, and bulk
- * writes that respect Postgres statement limits. Extend it per entity, declare `tableName`
- * (used in error messages) and, when the create input differs from the entity shape,
- * override `toEntityInput`. Methods throw NestJS HTTP exceptions on purpose, since they are
- * called from request handlers.
+ * @description Typed CRUD over a `BaseModel` or `BaseUuidModel` table: soft deletes,
+ * bounded reads, and bulk writes that respect Postgres statement limits. Extend it per
+ * entity, declare `tableName` (used in error messages) and, when the create input differs
+ * from the entity shape, override `toEntityInput`. The key and soft-delete convention come
+ * from the entity's base class (its static `modelConvention`), so a subclass declares
+ * nothing for them. `*ById` methods take the primary key, whichever column that is.
+ * Methods throw NestJS HTTP exceptions on purpose, since they are called from request
+ * handlers.
  */
 export abstract class BaseRepository<
-  TEntity extends BaseModel,
+  TEntity extends PersistedModel,
   TCreateInput extends DeepPartial<TEntity>,
   TUpdateInput extends object = UpdateModelInput<TEntity>,
 > {
   protected abstract readonly tableName: string;
 
-  constructor(protected readonly repository: Repository<TEntity>) {}
+  /**
+   * @description The entity's key and soft-delete convention, read once from its class.
+   */
+  protected readonly convention: ModelConvention;
+
+  constructor(protected readonly repository: Repository<TEntity>) {
+    this.convention = resolveModelConvention(repository.target);
+  }
 
   /**
    * @description Maps a create input to the entity shape TypeORM persists. Identity by
@@ -118,7 +136,10 @@ export abstract class BaseRepository<
   ): Promise<TEntity> {
     const entity = await this.repository.findOne({
       ...options,
-      where: buildIdWhere<TEntity>(id),
+      where: scopeReadWhere(
+        this.convention,
+        buildKeyWhere<TEntity>(this.convention, id),
+      ),
     });
 
     if (!entity) {
@@ -135,7 +156,7 @@ export abstract class BaseRepository<
    */
   @PostgresProfiling()
   async findOne(options: FindOneOptions<TEntity>): Promise<TEntity | null> {
-    return this.repository.findOne(options);
+    return this.repository.findOne(scopeReadOptions(this.convention, options));
   }
 
   /**
@@ -145,13 +166,15 @@ export abstract class BaseRepository<
    */
   @PostgresProfiling()
   async findBy(options?: FindManyOptions<TEntity>): Promise<TEntity[]> {
-    return this.repository.find(options);
+    return this.repository.find(
+      scopeReadOptions<TEntity>(this.convention, options),
+    );
   }
 
   /**
    * @description One bounded page. `take` is clamped to 1..`POSTGRES_MAX_PAGE_SIZE`
    * (default `POSTGRES_DEFAULT_PAGE_SIZE`), `skip` is floored at 0, and rows are ordered by
-   * id unless `order` is given.
+   * the convention's default (`id`, or `created_at` then `uuid`) unless `order` is given.
    */
   @PostgresProfiling()
   async findByPaginated(
@@ -162,13 +185,10 @@ export abstract class BaseRepository<
       Math.max(1, options?.take ?? POSTGRES_DEFAULT_PAGE_SIZE),
     );
     const skip = Math.max(0, options?.skip ?? 0);
-    const order = options?.order ?? buildDefaultOrder<TEntity>();
-    const [data, totalCount] = await this.repository.findAndCount({
-      ...options,
-      order,
-      skip,
-      take,
-    });
+    const order = options?.order ?? buildDefaultOrder<TEntity>(this.convention);
+    const [data, totalCount] = await this.repository.findAndCount(
+      scopeReadOptions(this.convention, { ...options, order, skip, take }),
+    );
 
     return {
       data,
@@ -187,12 +207,16 @@ export abstract class BaseRepository<
    */
   @PostgresProfiling()
   async remove(id: string): Promise<TEntity> {
-    const result = await this.repository
-      .createQueryBuilder()
-      .softDelete()
-      .where(withLiveRows(buildIdWhere<TEntity>(id)))
-      .returning('*')
-      .execute();
+    const where = withLiveRows(
+      this.convention,
+      buildKeyWhere<TEntity>(this.convention, id),
+    );
+    const builder = this.repository.createQueryBuilder();
+    const isTimestamp = this.convention.softDelete.kind === 'timestamp';
+    const deletion = isTimestamp
+      ? builder.softDelete()
+      : builder.update().set(buildFlagSoftDeleteValues<TEntity>());
+    const result = await deletion.where(where).returning('*').execute();
     const row: unknown = Array.isArray(result.raw) ? result.raw[0] : undefined;
 
     if (!result.affected || !isRawRow(row)) {
@@ -212,7 +236,7 @@ export abstract class BaseRepository<
 
   /**
    * @description Soft deletes every live row matching `where`. Rows that are already
-   * deleted keep their original `deletedAt`.
+   * deleted are left untouched (a timestamp model keeps its original `deletedAt`).
    * @throws BadRequestException when `where` is empty.
    */
   @PostgresProfiling()
@@ -221,7 +245,8 @@ export abstract class BaseRepository<
   ): Promise<RemoveManyResults> {
     this.assertNonEmptyWhere(where, 'removeMany');
 
-    const result = await this.repository.softDelete(withLiveRows(where));
+    const liveWhere = withLiveRows(this.convention, where);
+    const result = await this.softDeleteWhere(liveWhere);
 
     return { removedCount: result.affected ?? 0 };
   }
@@ -233,7 +258,10 @@ export abstract class BaseRepository<
   @PostgresProfiling()
   async update(id: string, input: TUpdateInput): Promise<TEntity> {
     const entity = await this.repository.findOne({
-      where: buildIdWhere<TEntity>(id),
+      where: scopeReadWhere(
+        this.convention,
+        buildKeyWhere<TEntity>(this.convention, id),
+      ),
     });
 
     if (!entity) {
@@ -261,7 +289,7 @@ export abstract class BaseRepository<
     this.assertNonEmptyWhere(where, 'updateMany');
 
     const result = await this.repository.update(
-      withLiveRows(where),
+      withLiveRows(this.convention, where),
       toUpdateValues<TEntity>(input),
     );
 
@@ -283,9 +311,9 @@ export abstract class BaseRepository<
     this.assertNonEmptyWhere(where, 'updateManyReturning');
 
     const matches = await this.repository.find({
-      select: ['id'],
+      select: buildKeySelect<TEntity>(this.convention),
       take: POSTGRES_MAX_RETURNING_ROWS + 1,
-      where: withLiveRows(where),
+      where: withLiveRows(this.convention, where),
     });
 
     if (matches.length > POSTGRES_MAX_RETURNING_ROWS) {
@@ -298,16 +326,33 @@ export abstract class BaseRepository<
       return { data: [], updateCount: 0 };
     }
 
-    const idWhere = buildWhereWithIds<TEntity>(
-      In(matches.map((match) => match.id)),
+    const idWhere = buildKeyWhere<TEntity>(
+      this.convention,
+      In(
+        matches.map((match) => {
+          return readModelKey(this.convention, match);
+        }),
+      ),
     );
     const result = await this.repository.update(
       idWhere,
       toUpdateValues<TEntity>(input),
     );
-    const data = await this.repository.find({ where: idWhere });
+    const data = await this.repository.find({
+      where: scopeReadWhere(this.convention, idWhere),
+    });
 
     return { data, updateCount: result.affected ?? data.length };
+  }
+
+  private async softDeleteWhere(
+    where: FindOptionsWhere<TEntity>,
+  ): Promise<{ readonly affected?: number | undefined }> {
+    if (this.convention.softDelete.kind === 'timestamp') {
+      return this.repository.softDelete(where);
+    }
+
+    return this.repository.update(where, buildFlagSoftDeleteValues<TEntity>());
   }
 
   private assertNonEmptyWhere(

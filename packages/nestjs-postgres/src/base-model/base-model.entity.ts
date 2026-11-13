@@ -5,6 +5,8 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
+import { ID_TIMESTAMP_MODEL_CONVENTION } from '../model-convention/model-convention.constants.ts';
+
 /**
  * @description The columns every table behind a `BaseRepository` shares: a uuidv7
  * primary key, insert and update timestamps, and a `deleted_at` soft-delete marker. Extend
@@ -12,6 +14,12 @@ import {
  * @public
  */
 export abstract class BaseModel {
+  /**
+   * @description Tells `BaseRepository` to key on `id` and soft delete through
+   * `deleted_at`.
+   */
+  static readonly modelConvention = ID_TIMESTAMP_MODEL_CONVENTION;
+
   // Declared first so `id` is the first column of every table. It deliberately carries no
   // column comment: TypeORM copies a referenced column's comment onto the FK columns that
   // `@ManyToOne` creates, and `@JoinColumn` cannot override it, so a comment here would

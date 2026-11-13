@@ -1,3 +1,4 @@
+import { PostgresProfilingQueryLogger } from '@openthrottle/nestjs-postgres';
 import { describe, expect, it } from 'vitest';
 
 import { CMS_CONNECTION } from './config/config.constants.ts';
@@ -22,6 +23,14 @@ describe('getCmsTypeOrmOptions', () => {
       });
     });
 
+    it('logs through the postgres profiling query logger', () => {
+      const result = getCmsTypeOrmOptions({ POSTGRES_URL: PRIMARY_URL });
+
+      expect(result.ok && result.options.logger).toBeInstanceOf(
+        PostgresProfilingQueryLogger,
+      );
+    });
+
     it('sets maxQueryExecutionTime from POSTGRES_SLOW_QUERY_MS', () => {
       const result = getCmsTypeOrmOptions({
         POSTGRES_SLOW_QUERY_MS: '250',
@@ -42,8 +51,11 @@ describe('getCmsTypeOrmOptions', () => {
   });
 
   describe('when no connection is configured', () => {
-    it('returns an error result', () => {
-      expect(getCmsTypeOrmOptions({}).ok).toBe(false);
+    it('returns an error result that names the variables to set', () => {
+      const result = getCmsTypeOrmOptions({});
+
+      expect(result.ok).toBe(false);
+      expect(!result.ok && result.error).toMatch(/CMS_POSTGRES_URL/);
     });
   });
 });

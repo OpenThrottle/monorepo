@@ -3,16 +3,16 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { CMS_CONNECTION } from '../../config/config.constants.ts';
 import { Profile } from './profile.entity.ts';
-import { ProfilesService } from './profiles.service.ts';
+import { ProfilesRepository } from './profiles.repository.ts';
 
 /**
  * @description Registers {@link Profile} on the cms connection and provides
- * {@link ProfilesService}.
+ * {@link ProfilesRepository}.
  * @public
  */
 @Module({
-  exports: [ProfilesService],
+  exports: [ProfilesRepository],
   imports: [TypeOrmModule.forFeature([Profile], CMS_CONNECTION)],
-  providers: [ProfilesService],
+  providers: [ProfilesRepository],
 })
 export class ProfilesModule {}

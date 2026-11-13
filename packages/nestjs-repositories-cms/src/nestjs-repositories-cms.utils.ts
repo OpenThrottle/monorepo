@@ -3,7 +3,9 @@
  * Used by NestjsRepositoriesCmsModule to register its named connection.
  */
 
+import { createPostgresProfilingQueryLogger } from '@openthrottle/nestjs-postgres';
 import { getCmsPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
+import type { LoggerOptions } from 'typeorm';
 
 import { CMS_CONNECTION } from './config/config.constants.ts';
 import { Fragment } from './modules/fragments/fragment.entity.ts';
@@ -34,7 +36,9 @@ function parsePositiveIntEnv(raw: string | undefined): number | undefined {
  * an error when no connection is configured. The SQL migrations under
  * `databases/cms/migrations` own the schema, so `synchronize` is off and no
  * TypeORM migrations run. `POSTGRES_SLOW_QUERY_MS` sets
- * `maxQueryExecutionTime`, as in `@openthrottle/nestjs-repositories`.
+ * `maxQueryExecutionTime`, as in `@openthrottle/nestjs-repositories`. The
+ * logger is wrapped by `createPostgresProfilingQueryLogger` so repository
+ * methods can be EXPLAINed under `POSTGRES_PROFILING=true`.
  * @public
  */
 export function getCmsTypeOrmOptions(
@@ -42,10 +46,14 @@ export function getCmsTypeOrmOptions(
 ): CmsTypeOrmOptionsResult {
   const url = getCmsPostgresUrl(env);
   if (!url.ok) {
-    return url;
+    return {
+      error: `cms database connection is not configured: ${url.error}. Set CMS_POSTGRES_URL, or the primary POSTGRES_URL / POSTGRES_* (the cms URL is derived from it, database CMS_POSTGRES_DB, default "cms").`,
+      ok: false,
+    };
   }
 
   const slowQueryMs = parsePositiveIntEnv(env.POSTGRES_SLOW_QUERY_MS);
+  const logging: LoggerOptions = ['error', 'warn', 'info'];
 
   return {
     ok: true,
@@ -62,8 +70,11 @@ export function getCmsTypeOrmOptions(
         Survey,
         Tag,
       ],
-      logger: 'advanced-console',
-      logging: ['error', 'warn', 'info'],
+      // The profiling wrapper only captures SQL for @PostgresProfiling(); it
+      // logs exactly what 'advanced-console' did, and is inert unless
+      // POSTGRES_PROFILING=true.
+      logger: createPostgresProfilingQueryLogger('advanced-console', logging),
+      logging,
       ...(slowQueryMs != null && { maxQueryExecutionTime: slowQueryMs }),
       migrations: [],
       migrationsRun: false,

@@ -20,6 +20,7 @@ export const ROLES = {
 export const PERMISSIONS = {
   BLOG_DRAFT: 'blog:draft',
   BLOG_WRITE: 'blog:write',
+  CMS_WRITE: 'cms:write',
   FLAGS_READ: 'flags:read',
   FLAGS_WRITE: 'flags:write',
   PLANS_READ: 'plans:read',

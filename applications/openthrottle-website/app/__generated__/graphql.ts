@@ -839,6 +839,159 @@ export type CloneRepositoryInput = {
   name?: InputMaybe<Scalars['String']['input']>;
 };
 
+/** One parent → child edge in the cms fragment tree. */
+export type CmsFragmentChildObject = {
+  __typename?: 'CmsFragmentChildObject';
+  childUuid: Scalars['String']['output'];
+  parentUuid: Scalars['String']['output'];
+  /** Position among the parent's children. */
+  sortOrder: Scalars['Int']['output'];
+};
+
+/** One occurrence of a cms fragment in a layout tree. A fragment shared by two parents appears twice, with different keys. */
+export type CmsFragmentNodeObject = {
+  __typename?: 'CmsFragmentNodeObject';
+  /** Keys of this occurrence's children, ordered by fragments_children.sort_order. Always a list; empty for a leaf. */
+  childKeys: Array<Scalars['String']['output']>;
+  /** 0 for the layout's root fragment. */
+  depth: Scalars['Int']['output'];
+  isSystem: Scalars['Boolean']['output'];
+  /** Unique per occurrence: the uuid path from the root, joined by "/". */
+  key: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  /** Key of the parent occurrence; null for the root. */
+  parentKey?: Maybe<Scalars['String']['output']>;
+  /** sort_order of the edge from the parent; 0 for the root. */
+  position: Scalars['Int']['output'];
+  /** The fragment's properties as a JSON object string (repo convention: no JSON scalar). */
+  propertiesJson: Scalars['String']['output'];
+  /** The schema the properties validate against. */
+  schemaUuid: Scalars['String']['output'];
+  /** Content type; selects the component that renders the fragment. */
+  typename: Scalars['String']['output'];
+  /** The fragment's uuid. */
+  uuid: Scalars['String']['output'];
+};
+
+/** A stored cms fragment: a named, typed piece of content whose properties conform to its pinned schema. */
+export type CmsFragmentObject = {
+  __typename?: 'CmsFragmentObject';
+  createdAt: Scalars['DateTime']['output'];
+  isSystem: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  /** The fragment's properties as a JSON object string. */
+  propertiesJson: Scalars['String']['output'];
+  /** The schema version the properties are validated against; fixed at creation. */
+  schemaUuid: Scalars['String']['output'];
+  typename: Scalars['String']['output'];
+  updatedAt: Scalars['DateTime']['output'];
+  uuid: Scalars['String']['output'];
+};
+
+/** One page of live cms layouts, oldest first. */
+export type CmsLayoutListResult = {
+  __typename?: 'CmsLayoutListResult';
+  hasNextPage: Scalars['Boolean']['output'];
+  items: Array<CmsLayoutSummaryObject>;
+  totalCount: Scalars['Int']['output'];
+};
+
+/** A cms layout: a publishable page addressed by slug, with its fragment tree. */
+export type CmsLayoutObject = {
+  __typename?: 'CmsLayoutObject';
+  createdAt: Scalars['DateTime']['output'];
+  /** uuid of the root fragment. */
+  fragmentUuid: Scalars['String']['output'];
+  /** The live fragment tree in pre-order (root first, each node before its children). Cut below depth 10; soft-deleted fragments and their subtrees are left out. */
+  fragments: Array<CmsFragmentNodeObject>;
+  /** Layout metadata as a JSON object string. */
+  metadataJson: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  slug: Scalars['String']['output'];
+  /** ACTIVE | DISABLED | DRAFT */
+  status?: Maybe<Scalars['String']['output']>;
+  tags: Array<Scalars['String']['output']>;
+  updatedAt: Scalars['DateTime']['output'];
+  uuid: Scalars['String']['output'];
+};
+
+/** A cms layout without its fragment tree, for lists and write results. */
+export type CmsLayoutSummaryObject = {
+  __typename?: 'CmsLayoutSummaryObject';
+  createdAt: Scalars['DateTime']['output'];
+  /** uuid of the root fragment. */
+  fragmentUuid: Scalars['String']['output'];
+  /** Layout metadata as a JSON object string. */
+  metadataJson: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  slug: Scalars['String']['output'];
+  /** ACTIVE | DISABLED | DRAFT */
+  status?: Maybe<Scalars['String']['output']>;
+  tags: Array<Scalars['String']['output']>;
+  updatedAt: Scalars['DateTime']['output'];
+  uuid: Scalars['String']['output'];
+};
+
+/** The component that renders one fragment typename within a cms library. */
+export type CmsLibraryComponentObject = {
+  __typename?: 'CmsLibraryComponentObject';
+  /** Component source code. */
+  code: Scalars['String']['output'];
+  libraryUuid: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  /** JSON Schema of the component's props, as a JSON object string. */
+  propsSchemaJson: Scalars['String']['output'];
+  /** ACTIVE | DISABLED | DRAFT */
+  status?: Maybe<Scalars['String']['output']>;
+  typename: Scalars['String']['output'];
+  uuid: Scalars['String']['output'];
+};
+
+/** One page of live cms libraries, oldest first. */
+export type CmsLibraryListResult = {
+  __typename?: 'CmsLibraryListResult';
+  hasNextPage: Scalars['Boolean']['output'];
+  items: Array<CmsLibraryObject>;
+  totalCount: Scalars['Int']['output'];
+};
+
+/** A named set of renderable cms components. */
+export type CmsLibraryObject = {
+  __typename?: 'CmsLibraryObject';
+  /** The library's live components, by typename. */
+  components: Array<CmsLibraryComponentObject>;
+  createdAt: Scalars['DateTime']['output'];
+  description?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  /** ACTIVE | DISABLED | DRAFT */
+  status?: Maybe<Scalars['String']['output']>;
+  updatedAt: Scalars['DateTime']['output'];
+  uuid: Scalars['String']['output'];
+};
+
+/** One page of live cms schemas, newest first, then by typename. */
+export type CmsSchemaListResult = {
+  __typename?: 'CmsSchemaListResult';
+  hasNextPage: Scalars['Boolean']['output'];
+  items: Array<CmsSchemaObject>;
+  totalCount: Scalars['Int']['output'];
+};
+
+/** One version of the JSON Schema for a cms fragment typename. */
+export type CmsSchemaObject = {
+  __typename?: 'CmsSchemaObject';
+  createdAt: Scalars['DateTime']['output'];
+  /** The JSON Schema as a JSON object string (repo convention: no JSON scalar). */
+  jsonSchemaJson: Scalars['String']['output'];
+  /** ACTIVE | DISABLED | DRAFT. At most one version per typename is meant to be ACTIVE. */
+  status?: Maybe<Scalars['String']['output']>;
+  typename: Scalars['String']['output'];
+  updatedAt: Scalars['DateTime']['output'];
+  uuid: Scalars['String']['output'];
+  /** Content-hash version of the schema (16 hex characters for generated schemas). */
+  version: Scalars['String']['output'];
+};
+
 export type CodeIndexStatusObject = {
   __typename?: 'CodeIndexStatusObject';
   /** Number of indexed code chunks for the repository (0 when not indexed). */
@@ -964,6 +1117,34 @@ export type CreateBlogPostResult =
   | BlogPostAdminObject
   | BlogReferenceNotFoundError
   | BlogSlugConflictError;
+
+/** A new fragment of a typename, on that typename's newest ACTIVE schema. */
+export type CreateCmsFragmentInput = {
+  name: Scalars['String']['input'];
+  /** Properties as a JSON object string, merged over the schema's defaults. Omit to start from the defaults alone. */
+  propertiesJson?: InputMaybe<Scalars['String']['input']>;
+  typename: Scalars['String']['input'];
+};
+
+/** A new layout. Its root fragment is created with it, on the newest ACTIVE "Layout" schema. */
+export type CreateCmsLayoutInput = {
+  name: Scalars['String']['input'];
+  /** Unique across every layout, deleted ones included. */
+  slug: Scalars['String']['input'];
+};
+
+/** A new component in a live cms library. */
+export type CreateCmsLibraryComponentInput = {
+  /** Component source code. */
+  code: Scalars['String']['input'];
+  libraryUuid: Scalars['String']['input'];
+  name: Scalars['String']['input'];
+  /** JSON Schema of the component's props, as a JSON object string. Must compile under strict Ajv. Omit for an empty schema. */
+  propsSchemaJson?: InputMaybe<Scalars['String']['input']>;
+  /** ACTIVE | DISABLED | DRAFT (default DRAFT) */
+  status?: InputMaybe<Scalars['String']['input']>;
+  typename: Scalars['String']['input'];
+};
 
 /** Input for creating a new custom prompt */
 export type CreateCustomPromptInput = {
@@ -2428,6 +2609,8 @@ export type ModelEndpointObject = {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  /** Add a child under a parent fragment, at sortOrder or last. BAD_USER_INPUT for a cycle or a tree deeper than 10; CONFLICT if the edge exists. */
+  addCmsFragmentChild: CmsFragmentChildObject;
   /** Attach a lifecycle hook to a plan (anchorTaskId omitted → beforeAll/afterAll, or beforeEach/afterEach with scope 'each') or to a task (anchorTaskId set → per-task before/after). The hook is materialized as a task row carrying hook_role/scope/source. */
   addHook: TaskObject;
   /** Add a permission to a role */
@@ -2481,6 +2664,12 @@ export type Mutation = {
   createAgentConversation: AgentConversationObject;
   /** Create a blog post as a DRAFT. Returns BlogSlugConflictError when the slug is taken, BlogCoverAltRequiredError when a cover image has no alt text, and BlogReferenceNotFoundError for an unknown authorSlug. */
   createBlogPost: CreateBlogPostResult;
+  /** Create a fragment on its typename's newest ACTIVE schema, prefilled with that schema's defaults and validated against it. BAD_USER_INPUT (with extensions.issues) when invalid. */
+  createCmsFragment: CmsFragmentObject;
+  /** Create a layout and its root fragment in one transaction. CONFLICT for a slug in use. */
+  createCmsLayout: CmsLayoutSummaryObject;
+  /** Add a component to a live library. BAD_USER_INPUT when propsSchemaJson does not compile. */
+  createCmsLibraryComponent: CmsLibraryComponentObject;
   /** Create a new custom prompt */
   createCustomPrompt: CustomPromptObject;
   /** Create an eval dataset from recorded trajectories: each selected trajectory (typically a real failure) becomes a case with its gold answer. Re-using a name in the repository creates the next version. The creator is taken from your identity, never from input. */
@@ -2518,6 +2707,12 @@ export type Mutation = {
   createWorkspaceLocalRepository: WorkspaceLocalRepositoryObject;
   /** Soft-delete an owned agent conversation (status=deleted; row + messages retained, hidden from the default list, reversible). */
   deleteAgentConversation: AgentConversationObject;
+  /** Soft delete a fragment. CONFLICT while a live parent or layout still references it. */
+  deleteCmsFragment: CmsFragmentObject;
+  /** Soft delete a layout and its root fragment together. */
+  deleteCmsLayout: CmsLayoutSummaryObject;
+  /** Soft delete a library component. */
+  deleteCmsLibraryComponent: CmsLibraryComponentObject;
   /** Soft delete a custom prompt by ID */
   deleteCustomPrompt: Scalars['Boolean']['output'];
   /** Delete a note by ID */
@@ -2632,6 +2827,8 @@ export type Mutation = {
   registerPlanRunWorktreeCheckout?: Maybe<PlanRunObject>;
   /** Remove your own label on an agent trajectory. Returns false when you had none; other raters' labels are never touched. */
   removeAgentTrajectoryLabel: Scalars['Boolean']['output'];
+  /** Remove a child from a parent fragment. The child fragment itself is kept. */
+  removeCmsFragmentChild: CmsFragmentChildObject;
   /** Remove a permission from a role */
   removePermissionFromRole: Scalars['Boolean']['output'];
   /** Remove one server-provisioned plan-run worktree from disk through the ot-worktree destroy action (destroy.sh, never a pnpm script, so it works in any repo): the repo's teardown hook runs, the directory and its checkout record go, and the branch is kept. Never forced — a primary checkout, a worktree OpenThrottle did not provision, a dirty or unpushed tree, or one an unsettled run still points at is kept and the outcome says why. */
@@ -2658,6 +2855,8 @@ export type Mutation = {
   removeTaskTag: Scalars['Boolean']['output'];
   /** Rename a tag in the authenticated user's skill-tag vocabulary. */
   renameSkillTag: SkillTagObject;
+  /** Reorder a parent's children. childUuids must list exactly the current children. */
+  reorderCmsFragmentChildren: Array<CmsFragmentChildObject>;
   /** Reorder tasks within a plan. Renumbers sortOrder 1000, 2000, … in taskIds order atomically. */
   reorderPlanTasks: Array<TaskObject>;
   /** Replace the ATIF document on an existing trajectory in place, keeping its id so human labels keyed by trajectory id survive. Used by the session re-segment operator when a task's boundaries change. The document is validated and capped the same way as recordAgentTrajectory. */
@@ -2724,6 +2923,12 @@ export type Mutation = {
   updateAgentConversationTitle: AgentConversationObject;
   /** Partially update a blog post. A caller holding only blog:draft may edit DRAFT posts; for any other post it gets BlogPostPublishPermissionRequiredError. Also returns BlogPostNotFoundError, BlogSlugConflictError, BlogCoverAltRequiredError, BlogReferenceNotFoundError (unknown authorSlug) and, when expectedUpdatedAt no longer matches, BlogPostStaleWriteError. */
   updateBlogPost: UpdateBlogPostResult;
+  /** Rename a fragment and/or replace its properties, validated against the fragment's pinned schema version. */
+  updateCmsFragment: CmsFragmentObject;
+  /** Change a layout's name, slug, status, tags or metadata. */
+  updateCmsLayout: CmsLayoutSummaryObject;
+  /** Change a library component. */
+  updateCmsLibraryComponent: CmsLibraryComponentObject;
   /** Update an existing custom prompt */
   updateCustomPrompt?: Maybe<CustomPromptObject>;
   /** Move an eval run to a new status. startedAt is stamped the first time it runs; finishedAt on completed, failed or cancelled, and cleared when a paused run resumes. */
@@ -2778,6 +2983,12 @@ export type Mutation = {
   workflowPlanRun: EnqueuePlanRunResultObject;
   /** Write a custom prompt to the file system at its configured filePath */
   writeCustomPromptToFileSystem: Scalars['Boolean']['output'];
+};
+
+export type MutationAddCmsFragmentChildArgs = {
+  childUuid: Scalars['String']['input'];
+  parentUuid: Scalars['String']['input'];
+  sortOrder?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type MutationAddHookArgs = {
@@ -2889,6 +3100,18 @@ export type MutationCreateBlogPostArgs = {
   input: CreateBlogPostInput;
 };
 
+export type MutationCreateCmsFragmentArgs = {
+  input: CreateCmsFragmentInput;
+};
+
+export type MutationCreateCmsLayoutArgs = {
+  input: CreateCmsLayoutInput;
+};
+
+export type MutationCreateCmsLibraryComponentArgs = {
+  input: CreateCmsLibraryComponentInput;
+};
+
 export type MutationCreateCustomPromptArgs = {
   input: CreateCustomPromptInput;
 };
@@ -2955,6 +3178,18 @@ export type MutationCreateWorkspaceLocalRepositoryArgs = {
 
 export type MutationDeleteAgentConversationArgs = {
   input: DeleteAgentConversationInput;
+};
+
+export type MutationDeleteCmsFragmentArgs = {
+  uuid: Scalars['String']['input'];
+};
+
+export type MutationDeleteCmsLayoutArgs = {
+  uuid: Scalars['String']['input'];
+};
+
+export type MutationDeleteCmsLibraryComponentArgs = {
+  uuid: Scalars['String']['input'];
 };
 
 export type MutationDeleteCustomPromptArgs = {
@@ -3161,6 +3396,11 @@ export type MutationRemoveAgentTrajectoryLabelArgs = {
   trajectoryId: Scalars['ID']['input'];
 };
 
+export type MutationRemoveCmsFragmentChildArgs = {
+  childUuid: Scalars['String']['input'];
+  parentUuid: Scalars['String']['input'];
+};
+
 export type MutationRemovePermissionFromRoleArgs = {
   input: RemovePermissionFromRoleInput;
 };
@@ -3212,6 +3452,11 @@ export type MutationRemoveTaskTagArgs = {
 
 export type MutationRenameSkillTagArgs = {
   input: RenameSkillTagInput;
+};
+
+export type MutationReorderCmsFragmentChildrenArgs = {
+  childUuids: Array<Scalars['String']['input']>;
+  parentUuid: Scalars['String']['input'];
 };
 
 export type MutationReorderPlanTasksArgs = {
@@ -3336,6 +3581,18 @@ export type MutationUpdateAgentConversationTitleArgs = {
 
 export type MutationUpdateBlogPostArgs = {
   input: UpdateBlogPostInput;
+};
+
+export type MutationUpdateCmsFragmentArgs = {
+  input: UpdateCmsFragmentInput;
+};
+
+export type MutationUpdateCmsLayoutArgs = {
+  input: UpdateCmsLayoutInput;
+};
+
+export type MutationUpdateCmsLibraryComponentArgs = {
+  input: UpdateCmsLibraryComponentInput;
 };
 
 export type MutationUpdateCustomPromptArgs = {
@@ -4133,6 +4390,20 @@ export type Query = {
   browseDirectory: WorkspaceDirectoryListingObject;
   /** When telemetry last arrived, per (stream, source): skill_events and skill_outcomes by source, token_usage by provider. A source that is absent has never captured; a stale lastCapturedAt means capture may be broken. */
   captureHealth: Array<CaptureHealthRowObject>;
+  /** A live cms layout by slug, with its fragment tree; null when none matches. */
+  cmsLayout?: Maybe<CmsLayoutObject>;
+  /** A live cms layout by uuid, with its fragment tree; null when none matches. */
+  cmsLayoutByUuid?: Maybe<CmsLayoutObject>;
+  /** One page of live cms layouts, without their trees. take is clamped to 1–100 (default 25). */
+  cmsLayouts: CmsLayoutListResult;
+  /** One page of live cms libraries with their components. take is clamped to 1–100 (default 25). */
+  cmsLibraries: CmsLibraryListResult;
+  /** A live cms schema by uuid; null when none matches. */
+  cmsSchema?: Maybe<CmsSchemaObject>;
+  /** The live cms schema for a typename at a version; without a version, its newest ACTIVE version. Null when none matches. */
+  cmsSchemaByTypename?: Maybe<CmsSchemaObject>;
+  /** One page of live cms schemas, optionally filtered by status (ACTIVE | DISABLED | DRAFT) and typename. take is clamped to 1–100 (default 25). */
+  cmsSchemas: CmsSchemaListResult;
   /** Index status for a registered repository: unavailable, indexing, ready, or notIndexed. */
   codeIndexStatus: CodeIndexStatusObject;
   /** Natural-language code semantic search over a registered repository's indexed code. available=false when no embeddings provider is configured. */
@@ -4318,7 +4589,7 @@ export type Query = {
   searchAgentAssets: AgentAssetSearchResult;
   /** Semantic search over plans/tasks (vector similarity). Requires OPENAI_API_KEY or Ollama for query embedding. Returns plans matching the query, deduped by plan id. */
   searchPlans: ListPlansByStatusResultObject;
-  /** Server health: API, OpenThrottle DB, Redis (BullMQ), and WebSocket. Each component is ok | unconfigured | unreachable. */
+  /** Server health: API, OpenThrottle DB, cms DB, Redis (BullMQ), and WebSocket. Each component is ok | unconfigured | unreachable. */
   serverHealth: ServerHealthObject;
   /** Current process CPU and memory snapshot. Memory in MB; CPU in ms (cumulative). Same data as REST GET /metrics. */
   serverMetrics: ServerMetricsObject;
@@ -4435,6 +4706,40 @@ export type QueryBlogPostsArgs = {
 
 export type QueryBrowseDirectoryArgs = {
   path?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type QueryCmsLayoutArgs = {
+  slug: Scalars['String']['input'];
+};
+
+export type QueryCmsLayoutByUuidArgs = {
+  uuid: Scalars['String']['input'];
+};
+
+export type QueryCmsLayoutsArgs = {
+  skip?: InputMaybe<Scalars['Int']['input']>;
+  take?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type QueryCmsLibrariesArgs = {
+  skip?: InputMaybe<Scalars['Int']['input']>;
+  take?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type QueryCmsSchemaArgs = {
+  uuid: Scalars['String']['input'];
+};
+
+export type QueryCmsSchemaByTypenameArgs = {
+  typename: Scalars['String']['input'];
+  version?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type QueryCmsSchemasArgs = {
+  skip?: InputMaybe<Scalars['Int']['input']>;
+  status?: InputMaybe<Scalars['String']['input']>;
+  take?: InputMaybe<Scalars['Int']['input']>;
+  typename?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type QueryCodeIndexStatusArgs = {
@@ -6000,11 +6305,13 @@ export type SearchResult = {
   chunks: Array<SearchChunk>;
 };
 
-/** Server health: API reachability, OpenThrottle DB, Redis (BullMQ), and WebSocket. Each component is ok, unconfigured, or unreachable. */
+/** Server health: API reachability, OpenThrottle DB, cms DB, Redis (BullMQ), and WebSocket. Each component is ok, unconfigured, or unreachable. */
 export type ServerHealthObject = {
   __typename?: 'ServerHealthObject';
   /** API status. "ok" when the resolver runs. */
   api: Scalars['String']['output'];
+  /** cms DB status: ok | unconfigured | unreachable. SELECT 1 on the named cms DataSource. Null from a server that does not serve the cms database. */
+  cms?: Maybe<Scalars['String']['output']>;
   /** OpenThrottle DB status: ok | unconfigured | unreachable. Reuses existing databaseHealth logic. */
   database: Scalars['String']['output'];
   /** Redis (BullMQ) status: ok | unconfigured | unreachable. From Redis PING. */
@@ -7010,6 +7317,36 @@ export type UpdateBlogPostResult =
   | BlogPostStaleWriteError
   | BlogReferenceNotFoundError
   | BlogSlugConflictError;
+
+/** Changes to a fragment. Omitted fields are left as they are. */
+export type UpdateCmsFragmentInput = {
+  name?: InputMaybe<Scalars['String']['input']>;
+  /** The full new properties as a JSON object string, validated against the fragment's own (pinned) schema. */
+  propertiesJson?: InputMaybe<Scalars['String']['input']>;
+  uuid: Scalars['String']['input'];
+};
+
+/** Changes to a layout. Omitted fields are left as they are. */
+export type UpdateCmsLayoutInput = {
+  /** Layout metadata as a JSON object string. */
+  metadataJson?: InputMaybe<Scalars['String']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  slug?: InputMaybe<Scalars['String']['input']>;
+  /** ACTIVE | DISABLED | DRAFT */
+  status?: InputMaybe<Scalars['String']['input']>;
+  tags?: InputMaybe<Array<Scalars['String']['input']>>;
+  uuid: Scalars['String']['input'];
+};
+
+/** Changes to a library component. Omitted fields are left as they are. */
+export type UpdateCmsLibraryComponentInput = {
+  code?: InputMaybe<Scalars['String']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  propsSchemaJson?: InputMaybe<Scalars['String']['input']>;
+  status?: InputMaybe<Scalars['String']['input']>;
+  typename?: InputMaybe<Scalars['String']['input']>;
+  uuid: Scalars['String']['input'];
+};
 
 /** Input for updating an existing custom prompt */
 export type UpdateCustomPromptInput = {

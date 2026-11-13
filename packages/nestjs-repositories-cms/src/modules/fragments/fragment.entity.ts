@@ -5,32 +5,13 @@
  * @public
  */
 
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  Index,
-  JoinColumn,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { BaseUuidModel } from '@openthrottle/nestjs-postgres';
+import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 
 import { Schema } from '../schemas/schema.entity.ts';
 
 @Entity('fragments')
-export class Fragment {
-  @CreateDateColumn({ name: 'created_at', type: 'timestamp with time zone' })
-  createdAt!: Date;
-
-  @Column({
-    default: false,
-    name: 'is_deleted',
-    nullable: true,
-    type: 'boolean',
-  })
-  isDeleted!: boolean | null;
-
+export class Fragment extends BaseUuidModel {
   /** True for fragments the CMS itself owns, such as a layout's root. */
   @Column({
     default: false,
@@ -62,10 +43,4 @@ export class Fragment {
   @Column({ name: 'typename', type: 'character varying' })
   @Index('idx_fragments_typename')
   typename!: string;
-
-  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp with time zone' })
-  updatedAt!: Date;
-
-  @PrimaryGeneratedColumn('uuid', { name: 'uuid' })
-  uuid!: string;
 }

@@ -1,12 +1,19 @@
 /**
- * @description Service for server health checks: OpenThrottle DB (via existing logic) and Redis (BullMQ PING).
+ * @description Service for server health checks: OpenThrottle DB (via existing logic), the cms DB
+ * (its named DataSource) and Redis (BullMQ PING).
  */
 import { Inject, Injectable } from '@nestjs/common';
+import { InjectDataSource } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { REDIS_CLIENT } from '@openthrottle/nestjs-redis';
 import { PlansService } from '@openthrottle/nestjs-repositories';
-import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
+import { CMS_CONNECTION } from '@openthrottle/nestjs-repositories-cms';
+import {
+  getCmsPostgresUrl,
+  getPostgresUrl,
+} from '@openthrottle/openthrottle-agentic-utils';
 import type { Redis } from 'ioredis';
+import { DataSource } from 'typeorm';
 
 import type { ServerHealthResponse } from './health.types.ts';
 import type { ServerHealthStatus } from './server-health.object.ts';
@@ -18,7 +25,32 @@ export class HealthService {
     private readonly redis: Redis | null,
     private readonly plansService: PlansService,
     private readonly logger: LoggerService,
+    @InjectDataSource(CMS_CONNECTION)
+    private readonly cmsDataSource: DataSource,
   ) {}
+
+  /**
+   * @description cms DB status: ok if its DataSource answers SELECT 1, unconfigured if no cms URL
+   * resolves, unreachable on error.
+   */
+  async getCmsStatus(): Promise<ServerHealthStatus> {
+    if (!getCmsPostgresUrl().ok) {
+      return 'unconfigured';
+    }
+
+    try {
+      await this.cmsDataSource.query('SELECT 1');
+
+      return 'ok';
+    } catch (error: unknown) {
+      this.logger.warn(
+        `cms database health check failed: ${error instanceof Error ? error.message : String(error)}`,
+        HealthService.name,
+      );
+
+      return 'unreachable';
+    }
+  }
 
   /**
    * @description Database status: ok if reachable, unconfigured if no config, unreachable on error.
@@ -74,10 +106,11 @@ export class HealthService {
   }
 
   /**
-   * @description Returns server health: API (ok when invoked), OpenThrottle DB, Redis, and WebSocket. Same shape as GraphQL serverHealth and REST GET /health.
+   * @description Returns server health: API (ok when invoked), OpenThrottle DB, cms DB, Redis, and WebSocket. Same shape as GraphQL serverHealth and REST GET /health.
    */
   async getServerHealth(): Promise<ServerHealthResponse> {
-    const [database, redis, websocket] = await Promise.all([
+    const [cms, database, redis, websocket] = await Promise.all([
+      this.getCmsStatus(),
       this.getDatabaseStatus(),
       this.getRedisStatus(),
       this.getWebsocketStatus(),
@@ -85,6 +118,7 @@ export class HealthService {
 
     return {
       api: 'ok',
+      cms,
       database,
       redis,
       websocket,

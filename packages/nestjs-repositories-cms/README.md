@@ -27,9 +27,16 @@ The tables are created by the SQL migrations in [`databases/cms/migrations`](../
 
 ### Usage
 
-Import `NestjsRepositoriesCmsModule` once, then inject a service (for example `LayoutsService`) and
-call `getRepository()`. Services are a thin data-access layer: callers own ordering, pagination
-and filtering out soft-deleted (`is_deleted`) rows.
+Import `NestjsRepositoriesCmsModule` once, then inject a repository (for example
+`LayoutsRepository`). Every table keyed on `uuid` with an `is_deleted` flag has a repository that
+extends `BaseRepository` from `@openthrottle/nestjs-postgres` (its entity extends `BaseUuidModel`):
+bounded pagination, soft delete through `is_deleted`, and reads that skip soft-deleted rows
+(`is_deleted IS NOT TRUE`, so `NULL` is live). The two join tables, `fragments_children` and
+`layouts_libraries`, have no `is_deleted` (and `fragments_children` has a composite key), so they
+keep a thin service whose `getRepository()` returns the raw TypeORM repository.
+
+Set `POSTGRES_PROFILING=true` to EXPLAIN what the repositories run; the cms DataSource already logs
+through `createPostgresProfilingQueryLogger`.
 
 ### Live schema check
 

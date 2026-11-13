@@ -6,16 +6,8 @@
  * @public
  */
 
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  Index,
-  JoinColumn,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { BaseUuidModel } from '@openthrottle/nestjs-postgres';
+import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 
 import {
   CMS_STATUS,
@@ -25,21 +17,10 @@ import type { CmsStatus } from '../../config/config.types.ts';
 import { Library } from '../libraries/library.entity.ts';
 
 @Entity('library_components')
-export class LibraryComponent {
+export class LibraryComponent extends BaseUuidModel {
   /** Component source code, rendered for fragments of this typename. */
   @Column({ name: 'code', type: 'text' })
   code!: string;
-
-  @CreateDateColumn({ name: 'created_at', type: 'timestamp with time zone' })
-  createdAt!: Date;
-
-  @Column({
-    default: false,
-    name: 'is_deleted',
-    nullable: true,
-    type: 'boolean',
-  })
-  isDeleted!: boolean | null;
 
   @JoinColumn({
     foreignKeyConstraintName: 'library_components_library_uuid_fkey',
@@ -75,10 +56,4 @@ export class LibraryComponent {
   @Column({ name: 'typename', type: 'character varying' })
   @Index('idx_library_components_typename')
   typename!: string;
-
-  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp with time zone' })
-  updatedAt!: Date;
-
-  @PrimaryGeneratedColumn('uuid', { name: 'uuid' })
-  uuid!: string;
 }
