@@ -2,6 +2,7 @@
 @import 'tw-animate-css';
 
 @import '@openthrottle/react-router-shadcn/src/theme.css';
+@import '@openthrottle/react-router-shadcn/src/theme-safelist.css';
 
 @source '../../../packages/**/*.{css,ts,tsx}';
 

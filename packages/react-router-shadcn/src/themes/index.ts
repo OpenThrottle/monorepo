@@ -1,3 +1,4 @@
+export * from './buildThemeSafelist';
 export * from './buildThemeStylesheet';
 export * from './cursor-themes';
 export * from './registry';

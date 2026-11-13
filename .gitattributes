@@ -54,6 +54,11 @@
 # CI. Review the props interface in the package's src/components/ instead.
 packages/*/schemas/*.json linguist-generated=true
 
+# Tailwind `@source inline()` safelists built from a package's TS data (the
+# theme-token safelist: src/themes/buildThemeSafelist.ts), written and
+# drift-checked by a file snapshot in that package's `test` target.
+packages/*/src/*-safelist.css linguist-generated=true
+
 # The agentic-hooks esbuild bundles again (see .claude/hooks/ above), written
 # into each plugin by the same bundle-hooks target.
 plugins/*/hooks/*.cjs  -diff linguist-generated=true

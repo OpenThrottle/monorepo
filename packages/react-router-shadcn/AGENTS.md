@@ -37,6 +37,12 @@ theme for all React Router apps. The base layer of the `react-router-*` UI stack
   matchMedia / scrollIntoView stubs), not `@openthrottle/react-router-testing`.
   [vitest.config.ts](vitest.config.ts) aliases `@openthrottle/react-router-shadcn` to `src/index.ts`,
   so tests import the public entry — an un-exported component fails its own test.
+- [src/theme-safelist.css](src/theme-safelist.css) is generated from `THEME_TOKEN_NAMES` by
+  [buildThemeSafelist.ts](src/themes/buildThemeSafelist.ts) and drift-checked by a file snapshot in
+  its test. After changing a token, its `@theme` mapping or the prefix list in
+  `themes/data/data.theme-safelist.ts`, regenerate with
+  `pnpm nx run @openthrottle/react-router-shadcn:test -- -u buildThemeSafelist`. A token with no
+  `--color-*` in `theme.css` `@theme` safelists a class Tailwind never generates.
 - Theme changes ripple to every app and UI package at once; tokens and dark-mode overrides are
   documented in [docs/Theming.md](docs/Theming.md).
 
