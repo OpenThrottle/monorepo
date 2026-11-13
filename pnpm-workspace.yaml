@@ -229,7 +229,10 @@ catalog:
   'electron-vite': '^6.0.0'
   'embla-carousel-react': '^8.6.0'
   'enhanced-resolve': '^5.18.4'
-  'esbuild': '^0.24.0'
+  # Kept on the line vite/tsx/storybook already resolve: a direct 0.24 dep made vite's
+  # optional esbuild peer — and so vitest — resolve to a second peer variant in the two
+  # projects that declare it (agentic-hooks, openthrottle-mcp).
+  'esbuild': '^0.28.1'
   'eslint': '^10.10.0'
   # The maintained fork of eslint-plugin-import, and a drop-in for the one rule this repo
   # uses (no-default-export). Taken over eslint-plugin-import@2.32.0 because it peers
@@ -442,6 +445,13 @@ overrides:
   'react': 'catalog:'
   'react-dom': 'catalog:'
   'shadcn>zod': '3.25.76'
+  # debug's optional supports-color peer resolved to 7.2.0 or 8.1.1 depending on which
+  # copy an importer's graph happened to contain, splitting vitest (via jsdom > debug)
+  # into two peer variants. With two copies of vitest, the runner and the test files can
+  # load different ones (`rejects.toThrow` then sees ''). 8.1.1 satisfies every declared
+  # range (chalk 4's ^7 is API-compatible; jest-worker requires ^8). Drop this when the
+  # lockfile has one supports-color without it.
+  'supports-color': '8.1.1'
   'zod': 'catalog:'
   'zod-to-json-schema': 'catalog:'
 

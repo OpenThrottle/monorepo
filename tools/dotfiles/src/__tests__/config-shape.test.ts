@@ -1,4 +1,5 @@
 import { createViteConfig, prettierConfig } from '@tools/dotfiles';
+import { posix } from 'path';
 import { describe, expect, it } from 'vitest';
 
 import { calculateOutputDir } from '../calculateOutputDir.ts';
@@ -10,23 +11,23 @@ describe('calculateOutputDir', () => {
     readonly packagePath: string;
   }> = [
     {
-      expected: '../../node_modules/.vite/packages/x/y',
+      expected: '../../../node_modules/.vite/packages/x/y',
       outputBase: 'node_modules/.vite',
       packagePath: '/repo/packages/x/y',
     },
     {
-      expected: '../node_modules/.vite/packages/foo',
+      expected: '../../node_modules/.vite/packages/foo',
       outputBase: 'node_modules/.vite',
       packagePath: '/repo/packages/foo',
     },
     {
-      expected: '../coverage/tools/dotfiles',
+      expected: '../../coverage/tools/dotfiles',
       outputBase: 'coverage',
       packagePath: '/repo/tools/dotfiles',
     },
     {
       // Deeper nesting walks up one `../` per intermediate directory.
-      expected: '../../../node_modules/.vite/packages/a/b/c',
+      expected: '../../../../node_modules/.vite/packages/a/b/c',
       outputBase: 'node_modules/.vite',
       packagePath: '/repo/packages/a/b/c',
     },
@@ -36,12 +37,21 @@ describe('calculateOutputDir', () => {
     it(`maps ${packagePath} -> ${expected}`, () => {
       expect(calculateOutputDir(packagePath, outputBase)).toBe(expected);
     });
+
+    it(`resolves ${packagePath} back to the workspace root`, () => {
+      const output = calculateOutputDir(packagePath, outputBase);
+      const relative = packagePath.slice('/repo/'.length);
+
+      expect(posix.resolve(packagePath, output)).toBe(
+        `/repo/${outputBase}/${relative}`,
+      );
+    });
   });
 
   it('prefers the last packages/tools segment when nested', () => {
     expect(
       calculateOutputDir('/repo/packages/tools/inner', 'node_modules/.vite'),
-    ).toBe('../node_modules/.vite/tools/inner');
+    ).toBe('../../node_modules/.vite/tools/inner');
   });
 
   it('throws when neither packages nor tools is present in the path', () => {
@@ -82,7 +92,7 @@ describe('createViteConfig', () => {
       packageType: 'node',
     });
 
-    expect(config.cacheDir).toBe('../../node_modules/.vite/packages/x/y');
+    expect(config.cacheDir).toBe('../../../node_modules/.vite/packages/x/y');
     expect(config.root).toBe('/repo/packages/x/y');
     expect(config.build?.lib).toBeDefined();
     const lib = config.build?.lib;

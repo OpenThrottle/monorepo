@@ -13,13 +13,13 @@ Platform-specific prebuilt binaries (packages that declare `os`/`cpu`, e.g.
 `@rollup/rollup-linux-x64-gnu`, `fsevents`) are omitted: which ones install depends on
 the host OS, and each shares the license of the cross-platform toolchain already listed.
 
-**2131** third-party packages.
+**2137** third-party packages.
 
 ## License summary
 
 | License | Packages |
 | --- | --- |
-| MIT | 1836 |
+| MIT | 1842 |
 | Apache-2.0 | 97 |
 | ISC | 78 |
 | BSD-3-Clause | 56 |
@@ -202,6 +202,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@babel/template` | 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-template) |
 | `@babel/traverse` | 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-traverse) |
 | `@babel/types` | 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-types) |
+| `@bcoe/v8-coverage` | 1.0.2 | MIT | [Charles Samborski](https://github.com/bcoe/v8-coverage#readme) |
 | `@bkrem/react-transition-group` | 1.3.5 | BSD-3-Clause | [source](https://github.com/bkrem/react-transition-group#readme) |
 | `@borewit/text-codec` | 0.2.2 | MIT | [Borewit](https://github.com/Borewit/text-codec#readme) |
 | `@bramus/specificity` | 2.4.2 | MIT | [Bramus Van Damme](https://github.com/bramus/specificity#readme) |
@@ -759,7 +760,10 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@vercel/react-router` | 1.3.1 | Apache-2.0 | [source](https://github.com/vercel/vercel#readme) |
 | `@vercel/static-config` | 3.4.0 | Apache-2.0 | [source](https://github.com/vercel/vercel#readme) |
 | `@vitejs/plugin-react` | 6.0.5 | MIT | [Evan You](https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#readme) |
+| `@vitest/coverage-v8` | 5.1.0 | MIT | [Anthony Fu](https://vitest.dev/guide/coverage) |
 | `@vitest/expect` | 3.2.4 | MIT | [source](https://github.com/vitest-dev/vitest/tree/main/packages/expect#readme) |
+| `@vitest/istanbul-lib-coverage` | 2.1.0 | MIT | [Vitest Team](https://vitest.dev/) |
+| `@vitest/istanbul-lib-report` | 2.1.0 | MIT | [Vitest Team](https://vitest.dev) |
 | `@vitest/mocker` | 5.1.0 | MIT | [source](https://github.com/vitest-dev/vitest/tree/main/packages/mocker) |
 | `@vitest/pretty-format` | 3.2.4 | MIT | [source](https://github.com/vitest-dev/vitest/tree/main/packages/utils#readme) |
 | `@vitest/spy` | 3.2.4, 5.1.0 | MIT | [source](https://vitest.dev/api/mock) |
@@ -854,6 +858,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `asn1js` | 3.1.0 | BSD-3-Clause | [Yury Strozhevsky](https://github.com/PeculiarVentures/ASN1.js#readme) |
 | `assertion-error` | 2.0.1 | MIT | [Jake Luer](https://github.com/chaijs/assertion-error#readme) |
 | `ast-types` | 0.16.1 | MIT | [Ben Newman](http://github.com/benjamn/ast-types) |
+| `ast-v8-to-istanbul` | 1.0.7 | MIT | [Ari Perkkiö](https://github.com/AriPerkkio/ast-v8-to-istanbul) |
 | `astring` | 1.9.0 | MIT | [David Bonnet](https://github.com/davidbonnet/astring#readme) |
 | `async` | 3.2.6 | MIT | [Caolan McMahon](https://caolan.github.io/async/) |
 | `async-exit-hook` | 2.0.1 | MIT | [Tapani Moilanen](https://github.com/tapppi/async-exit-hook#readme) |
@@ -1150,7 +1155,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `es6-error` | 4.1.1 | MIT | [Ben Youngblood](https://github.com/bjyoungblood/es6-error) |
 | `esast-util-from-estree` | 2.0.0 | MIT | [Titus Wormer](https://github.com/syntax-tree/esast-util-from-estree#readme) |
 | `esast-util-from-js` | 2.0.1 | MIT | [Titus Wormer](https://github.com/syntax-tree/esast-util-from-js#readme) |
-| `esbuild` | 0.24.2, 0.28.1 | MIT | [source](https://github.com/evanw/esbuild#readme) |
+| `esbuild` | 0.28.1 | MIT | [source](https://github.com/evanw/esbuild#readme) |
 | `escalade` | 3.2.0 | MIT | [Luke Edwards](https://github.com/lukeed/escalade#readme) |
 | `escape-html` | 1.0.3 | MIT | [source](https://github.com/component/escape-html#readme) |
 | `escape-string-regexp` | 1.0.5, 2.0.0, 4.0.0, 5.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/escape-string-regexp#readme) |
@@ -1451,7 +1456,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `jpeg-js` | 0.4.4 | BSD-3-Clause | [Eugene Ware](https://github.com/eugeneware/jpeg-js#readme) |
 | `js-library-detector` | 6.7.0 | MIT | [John Michel](https://github.com/johnmichel/Library-Detector-for-Chrome#readme) |
 | `js-tiktoken` | 1.0.21 | MIT | [source](https://github.com/dqbd/tiktoken#readme) |
-| `js-tokens` | 4.0.0 | MIT | [Simon Lydell](https://github.com/lydell/js-tokens#readme) |
+| `js-tokens` | 10.0.0, 4.0.0 | MIT | [Simon Lydell](https://github.com/lydell/js-tokens#readme) |
 | `js-yaml` | 3.15.0, 4.3.0, 5.2.2 | MIT | [Vladimir Zapparov](https://github.com/nodeca/js-yaml#readme) |
 | `jsdom` | 28.1.0 | MIT | [source](https://github.com/jsdom/jsdom#readme) |
 | `jsesc` | 3.1.0 | MIT | [Mathias Bynens](https://mths.be/jsesc) |
@@ -1531,6 +1536,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `luxon` | 3.7.2 | MIT | [Isaac Cambron](https://github.com/moment/luxon#readme) |
 | `lz-string` | 1.5.0 | MIT | [pieroxy](http://pieroxy.net/blog/pages/lz-string/index.html) |
 | `magic-string` | 0.30.21, 1.0.0, 1.4.5 | MIT | [Rich Harris](https://github.com/Rich-Harris/magic-string#readme) |
+| `magicast` | 0.5.5 | MIT | [source](https://github.com/unjs/magicast#readme) |
 | `make-asynchronous` | 1.1.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/make-asynchronous#readme) |
 | `make-error` | 1.3.6 | ISC | [Julien Fontanet](https://github.com/JsCommunity/make-error) |
 | `makeerror` | 1.0.12 | BSD-3-Clause | [Naitik Shah](https://github.com/daaku/nodejs-makeerror#readme) |
@@ -1984,7 +1990,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `style-to-object` | 1.0.14 | MIT | [Mark](https://github.com/remarkablemark/style-to-object#readme) |
 | `sumchecker` | 3.0.1 | Apache-2.0 | [Mark Lee](https://github.com/malept/sumchecker#readme) |
 | `super-regex` | 1.1.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/super-regex#readme) |
-| `supports-color` | 7.2.0, 8.1.1 | MIT | [Sindre Sorhus](https://github.com/chalk/supports-color#readme) |
+| `supports-color` | 8.1.1 | MIT | [Sindre Sorhus](https://github.com/chalk/supports-color#readme) |
 | `supports-preserve-symlinks-flag` | 1.0.0 | MIT | [Jordan Harband](https://github.com/inspect-js/node-supports-preserve-symlinks-flag#readme) |
 | `swap-case` | 2.0.2 | MIT | [Blake Embrey](https://github.com/blakeembrey/change-case/tree/master/packages/swap-case#readme) |
 | `symbol-tree` | 3.2.4 | MIT | [Joris van der Wel](https://github.com/jsdom/js-symbol-tree#symbol-tree) |
@@ -2016,7 +2022,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `tinybench` | 6.2.3 | MIT | [source](https://github.com/tinylibs/tinybench#readme) |
 | `tinyexec` | 1.3.1 | MIT | [James Garbutt](https://github.com/tinylibs/tinyexec#readme) |
 | `tinyglobby` | 0.2.17 | MIT | [Superchupu](https://superchupu.dev/tinyglobby) |
-| `tinyrainbow` | 2.0.0 | MIT | [source](https://github.com/tinylibs/tinyrainbow#readme) |
+| `tinyrainbow` | 2.0.0, 3.2.0 | MIT | [source](https://github.com/tinylibs/tinyrainbow#readme) |
 | `tinyspy` | 4.0.4 | MIT | [source](https://github.com/tinylibs/tinyspy#readme) |
 | `title-case` | 3.0.3 | MIT | [Blake Embrey](https://github.com/blakeembrey/change-case/tree/master/packages/title-case#readme) |
 | `tldts` | 7.4.10 | MIT | [Rémi Berson](https://github.com/remusao/tldts#readme) |

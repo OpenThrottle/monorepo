@@ -1,5 +1,12 @@
 {
   "extends": "../../tsconfig.esm.json",
+  // Decorator flags live here, not in tsconfig.lib.json: the test-time SWC
+  // transform (unplugin-swc) reads the nearest tsconfig.json, and without them
+  // it cannot parse the NestJS surface's decorators. lib and test inherit them.
+  "compilerOptions": {
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true
+  },
   "files": [],
   "include": [],
   "references": [{ "path": "./tsconfig.lib.json" }]
