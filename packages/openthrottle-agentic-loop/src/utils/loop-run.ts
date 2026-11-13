@@ -20,6 +20,29 @@ export const narrate = async (
   }
 };
 
+/**
+ * @description Claims the plan inbox once for `taskId`; claimed bodies join the run-scoped guidance
+ * list for good. Called at every task boundary and again before each retry of a task, so a message
+ * posted while an attempt ran reaches the next attempt rather than waiting for the next task.
+ */
+export const claimGuidance = async (
+  ctx: LoopRunContext,
+  taskId: string,
+): Promise<void> => {
+  const bodies = await ctx.deps.client.claimInbox({ taskId });
+
+  if (bodies.length === 0) {
+    return;
+  }
+
+  ctx.tracker.guidance = [...ctx.tracker.guidance, ...bodies];
+  await Promise.all(
+    bodies.map((body) =>
+      narrate(ctx, `operator guidance claimed: ${body}`, taskId),
+    ),
+  );
+};
+
 /** @description Ends the tracked per-task session (never the processor's run session). */
 export const endTaskSession = async (ctx: LoopRunContext): Promise<void> => {
   const { sessionId } = ctx.tracker;

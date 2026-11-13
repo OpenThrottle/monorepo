@@ -6,7 +6,12 @@
  */
 import type { LoopOutcome, RunOtLoopOptions } from '../contract/index.ts';
 import { LOOP_TASK_STATUS } from '../contract/index.ts';
-import { clampMaxRetries, endTaskSession, narrate } from './loop-run.ts';
+import {
+  claimGuidance,
+  clampMaxRetries,
+  endTaskSession,
+  narrate,
+} from './loop-run.ts';
 import type { LoopRunContext } from './loop-run-context.ts';
 import { runTask } from './runTask.ts';
 import { closePlan, selectNextTask } from './tasks.ts';
@@ -15,25 +20,6 @@ const cancelledOutcome = async (ctx: LoopRunContext): Promise<LoopOutcome> => {
   await endTaskSession(ctx);
 
   return { kind: 'cancelled', taskId: undefined };
-};
-
-/** Claims the inbox once; claimed bodies join the run-scoped guidance list for good. */
-const claimGuidance = async (
-  ctx: LoopRunContext,
-  taskId: string,
-): Promise<void> => {
-  const bodies = await ctx.deps.client.claimInbox({ taskId });
-
-  if (bodies.length === 0) {
-    return;
-  }
-
-  ctx.tracker.guidance = [...ctx.tracker.guidance, ...bodies];
-  await Promise.all(
-    bodies.map((body) =>
-      narrate(ctx, `operator guidance claimed: ${body}`, taskId),
-    ),
-  );
 };
 
 /**

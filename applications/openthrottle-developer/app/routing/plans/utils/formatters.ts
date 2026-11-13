@@ -97,3 +97,49 @@ export function formatPlanDate(value: string | number | unknown): string {
   // ? '—'
   // : format(date, 'MMM d, yyyy h:mm a', {});
 }
+
+/**
+ * @description Formats the elapsed time between two instants as a short human
+ * duration using its two largest units ("45s", "4m 12s", "2h 5m", "1d 3h"); a
+ * zero second unit is dropped. Returns null if either value is invalid or the
+ * end precedes the start.
+ */
+export function formatDurationBetween(
+  start: unknown,
+  end: unknown,
+): string | null {
+  const from = toValidDate(start);
+  const to = toValidDate(end);
+  if (from === null || to === null) return null;
+
+  const totalSeconds = Math.floor((to.getTime() - from.getTime()) / 1000);
+  if (totalSeconds < 0) return null;
+
+  const days = Math.floor(totalSeconds / 86_400);
+  const hours = Math.floor((totalSeconds % 86_400) / 3_600);
+  const minutes = Math.floor((totalSeconds % 3_600) / 60);
+  const seconds = totalSeconds % 60;
+
+  let units: ReadonlyArray<readonly [number, string]> = [[seconds, 's']];
+  if (days > 0) {
+    units = [
+      [days, 'd'],
+      [hours, 'h'],
+    ];
+  } else if (hours > 0) {
+    units = [
+      [hours, 'h'],
+      [minutes, 'm'],
+    ];
+  } else if (minutes > 0) {
+    units = [
+      [minutes, 'm'],
+      [seconds, 's'],
+    ];
+  }
+
+  return units
+    .filter(([value], index) => index === 0 || value > 0)
+    .map(([value, unit]) => `${value}${unit}`)
+    .join(' ');
+}

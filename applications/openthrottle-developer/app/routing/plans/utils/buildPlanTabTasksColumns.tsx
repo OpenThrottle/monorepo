@@ -16,6 +16,7 @@ import { isPlanStatusKey } from '~/routing/plans/utils/utils.plans';
 
 export const buildPlanTabTasksColumns = (
   managedTaskIds: ReadonlySet<string>,
+  steerPendingTaskIds: ReadonlySet<string>,
 ): ColumnDef<PlanTaskRowFragment, string | null | undefined>[] => {
   return [
     {
@@ -39,6 +40,7 @@ export const buildPlanTabTasksColumns = (
       cell: ({ row }) => (
         <div className="p-2 max-sm:contents">
           <PlanTasksTableCellTitle
+            hasSteerPending={steerPendingTaskIds.has(row.original.id)}
             isManaged={managedTaskIds.has(row.original.id)}
             row={row}
           />

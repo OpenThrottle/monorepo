@@ -177,4 +177,16 @@ describe('PlanTasksTableCellTitle Component', () => {
     expect(component.queryByText('   ')).not.toBeInTheDocument();
     expect(component.queryByText('    ')).not.toBeInTheDocument();
   });
+
+  test('flags the task when a steer is pending', () => {
+    expect(
+      component.queryByTestId('PlanSteerPendingBadge'),
+    ).not.toBeInTheDocument();
+
+    props = { hasSteerPending: true, row: createMockRow() };
+    component.unmount();
+    renderComponent();
+
+    expect(component.getByTestId('PlanSteerPendingBadge')).toBeInTheDocument();
+  });
 });

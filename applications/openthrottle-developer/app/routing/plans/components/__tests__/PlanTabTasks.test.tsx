@@ -32,7 +32,7 @@ function renderTabTasks(tasks: PlanTaskRowFragment[]) {
   return renderWithPlanDetailRouteData(
     <TooltipProvider>
       <Tabs value="tasks">
-        <PlanTabTasks />
+        <PlanTabTasks steerPendingTaskIds={new Set()} />
       </Tabs>
     </TooltipProvider>,
     buildPlanDetailLoaderData({

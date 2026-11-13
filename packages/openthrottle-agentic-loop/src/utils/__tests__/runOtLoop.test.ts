@@ -435,6 +435,22 @@ describe('runOtLoop inbox', () => {
       ['first', 'second'],
     ]);
   });
+
+  it('claims again before a retry, so mid-task guidance reaches the next attempt', async () => {
+    const world = makeWorld({
+      inbox: [[], ['mid-task']],
+      tasks: [makeTask('1')],
+      validations: [red],
+    });
+
+    await run(world);
+
+    expect(world.log.filter((entry) => entry === 'claim:1')).toHaveLength(2);
+    expect(world.workerInputs.map((input) => input.guidance)).toEqual([
+      [],
+      ['mid-task'],
+    ]);
+  });
 });
 
 describe('runOtLoop worker guards', () => {

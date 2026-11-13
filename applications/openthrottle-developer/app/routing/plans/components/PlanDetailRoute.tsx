@@ -82,9 +82,10 @@ export const PlanDetailRoute = (
     repositories: loaderData.workspaceRepositories,
   });
   const inboxSnapshot = usePlanDeferredValue(loaderData.inboxMessages);
-  const { messages: inboxMessages } = usePlanInbox({
+  const { messages: inboxMessages, steerPendingTaskIds } = usePlanInbox({
     planId: plan.id,
     seedMessages: inboxSnapshot,
+    tasks,
   });
 
   // Setup
@@ -105,8 +106,7 @@ export const PlanDetailRoute = (
     <>
       <GlobalScreen className="-max-w-5xl flex h-full w-full flex-col gap-4 p-4 md:gap-8 md:p-8 lg:gap-12 lg:p-12">
         <PlanDetailRouteHeader plan={plan} status={status} />
-        {/* No `editors` here: the editor deep links live in the tab row below
-            (PlanDetailTabsList), and rendering them in both places duplicated them. */}
+        {/* No `editors` here: they live in the tab row below (PlanDetailTabsList). */}
         {showToolbar && (
           <PlanToolbar
             branch={branch}
@@ -176,7 +176,7 @@ export const PlanDetailRoute = (
             fullscreen={fullscreen}
             setFullscreen={setFullscreen}
           />
-          <PlanTabTasks />
+          <PlanTabTasks steerPendingTaskIds={steerPendingTaskIds} />
           <PlanTabOutput chunks={planOutputChunks} />
           {showToolbar && (
             <PlanTabConfiguration

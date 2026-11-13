@@ -100,6 +100,10 @@ const BUNDLES: readonly BundleSpec[] = [
     outFile: '.claude/hooks/plan-auto-close.cjs',
   },
   {
+    entry: 'adapters/claude/plan-inbox-claim.ts',
+    outFile: '.claude/hooks/plan-inbox-claim.cjs',
+  },
+  {
     entry: 'adapters/claude/plan-run-janitor.ts',
     outFile: '.claude/hooks/plan-run-janitor.cjs',
   },

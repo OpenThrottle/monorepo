@@ -14,10 +14,13 @@ import { filterOutHookTasks } from '~/routing/plans/utils/hook-tasks';
 import { sortPlanTasksByListOrder } from '~/routing/plans/utils/sortPlanTasksByListOrder';
 
 export interface PlanTabTasksProps {
-  // className?: string;
+  /** In-flight tasks with a waiting STEER message (see usePlanInbox). */
+  readonly steerPendingTaskIds: ReadonlySet<string>;
 }
 
-export const PlanTabTasks = (_props: PlanTabTasksProps): React.ReactElement => {
+export const PlanTabTasks = (props: PlanTabTasksProps): React.ReactElement => {
+  const { steerPendingTaskIds } = props;
+
   // Hooks
   const { tasks } = usePlanDetailRouteData();
   const managedTaskIds = usePlanManagedTaskIds();
@@ -26,8 +29,8 @@ export const PlanTabTasks = (_props: PlanTabTasksProps): React.ReactElement => {
     [tasks],
   );
   const columns = React.useMemo(
-    () => buildPlanTabTasksColumns(managedTaskIds),
-    [managedTaskIds],
+    () => buildPlanTabTasksColumns(managedTaskIds, steerPendingTaskIds),
+    [managedTaskIds, steerPendingTaskIds],
   );
 
   // Setup
