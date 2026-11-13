@@ -275,6 +275,22 @@ OT_MCP_RESOLVE_ONLY=1 bash scripts/run-openthrottle-mcp.sh
 
 For `openthrottle-mcp-docker`, update the committed `url` port to this worktree's `OPENTHROTTLE_MCP_PORT` (base+6) after `pnpm run worktree:new`.
 
+### A user-scope entry shadows the repo's
+
+If you once ran `claude mcp add openthrottle-mcp -s user …` (or `claude mcp add-json … -s user`), `~/.claude.json` holds a **user-scope** `openthrottle-mcp` pointing at one checkout's launcher, usually the main one. Inside the monorepo that entry collides with the committed `.mcp.json` entry of the same name:
+
+- **Claude Code** reports `Conflicting scopes` for `openthrottle-mcp` in `/mcp` and `claude mcp list`.
+- **Grok** reads `~/.claude.json` too, and the user-scope entry wins over the repo's.
+- Either way, a session in a **worktree** starts the main checkout's launcher instead of its own. It still works, because the launcher resolves the shared server, but the worktree-aware identity above is lost and a launcher change on your branch is never exercised.
+
+Fix: remove the user-scope entry while you work inside the monorepo, so the repo's `.mcp.json` is the only definition:
+
+```bash
+claude mcp remove openthrottle-mcp -s user
+```
+
+Keep a user-level registration only for a [secondary workspace](#secondary-workspace), where no repo `.mcp.json` defines the server. The repo entry and its generator are covered in [agent-editor-folders.md § 7 Cross-agent parity](../monorepo/agent-editor-folders.md#7-cross-agent-parity).
+
 ### A separate database per worktree
 
 Optional, and off by default — worktrees share the main Postgres. To split them, set `POSTGRES_*` (or `POSTGRES_URL`) in each worktree's `.env` with a different port or database name; openthrottle-server reads those at runtime. `openthrottle-mcp` reaches OT over GraphQL, so point it at the matching API URL too (see `OT_MCP_TARGET` above).

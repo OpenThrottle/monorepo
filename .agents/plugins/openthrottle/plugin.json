@@ -1,0 +1,5 @@
+{
+  "description": "GENERATED — DO NOT EDIT. The default MCP servers from .agents/agent-config.json; edit that file, then run pnpm exec tsx scripts/sync-agent-config.ts.",
+  "name": "openthrottle",
+  "version": "1.0.0"
+}

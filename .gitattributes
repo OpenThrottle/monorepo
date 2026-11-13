@@ -41,6 +41,7 @@
 # drift-checked with --check. Explicit paths, not folder globs: .cursor/ and
 # .vscode/ also hold hand-authored files, and opencode.json and
 # .claude/settings.json are only partly generated, so they stay unmarked.
+.agents/plugins/openthrottle/*.json linguist-generated=true
 .codex/config.toml     linguist-generated=true
 .codex/rules/default.rules linguist-generated=true
 .cursor/cli.json       linguist-generated=true
