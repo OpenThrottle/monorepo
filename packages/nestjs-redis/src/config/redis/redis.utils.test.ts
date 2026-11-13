@@ -7,9 +7,11 @@ import { disconnectRedisCaches, getRedisCache } from './redis.utils';
 /**
  * Fake Keyv/KeyvRedis stand-ins. Both real classes are EventEmitters that emit
  * `error` on connection failures and expose `disconnect()`, so the fakes mirror
- * that surface without opening a real Redis connection.
+ * that surface without opening a real Redis connection. KeyvRedis also exposes
+ * its node-redis `client`, a separate emitter whose errors it does not forward.
  */
 class FakeStore extends EventEmitter {
+  client = new EventEmitter();
   disconnect = vi.fn(async () => undefined);
 }
 
@@ -130,9 +132,12 @@ describe('redis cache', () => {
     });
   });
 
-  it('attaches error listeners to both the store and the keyv wrapper', () => {
+  it('attaches error listeners to the client, the store and the keyv wrapper', () => {
     getRedisCache();
 
+    expect(lastOf(fakeKeyvRedisInstances).client.listenerCount('error')).toBe(
+      1,
+    );
     expect(lastOf(fakeKeyvRedisInstances).listenerCount('error')).toBe(1);
     expect(lastOf(fakeKeyvInstances).listenerCount('error')).toBe(1);
   });
@@ -146,6 +151,23 @@ describe('redis cache', () => {
     // Without a registered listener this would throw as an unhandled 'error'.
     expect(() => store.emit('error', new Error('ECONNREFUSED'))).not.toThrow();
     expect(logger.error).toHaveBeenCalledTimes(1);
+  });
+
+  it('routes errors emitted on the underlying redis client to the logger', () => {
+    const logger = { error: vi.fn(), warn: vi.fn() };
+
+    getRedisCache(logger);
+
+    const { client } = lastOf(fakeKeyvRedisInstances);
+    // @keyv/redis does not forward client errors, so a Redis restart's
+    // SocketClosedUnexpectedlyError would otherwise be an unhandled 'error'.
+    const error = new Error('Socket closed unexpectedly');
+    expect(() => client.emit('error', error)).not.toThrow();
+    expect(logger.error).toHaveBeenCalledTimes(1);
+    expect(logger.error).toHaveBeenCalledWith(
+      'Redis cache connection error (client)',
+      expect.objectContaining({ error }),
+    );
   });
 
   it('handles connection errors even when no logger is provided', () => {

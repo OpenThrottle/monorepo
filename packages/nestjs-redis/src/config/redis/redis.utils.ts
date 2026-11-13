@@ -30,13 +30,15 @@ const liveStores = new Set<Keyv>();
  * @description Simple helper function that connects to our Redis instance
  * and returns a KeyvAdapter instance which is used by Apollo Server.
  *
- * Connection-level errors (connect/auth/reconnect failures) are emitted as
- * `error` events on the underlying ioredis client and on the Keyv wrapper. An
- * unhandled `error` event can crash the Node process, and unlike cache *fetch*
- * errors these are NOT swallowed by `ErrorsAreMissesCache`. We attach `error`
- * listeners on both the store and the wrapper so they are logged rather than
- * thrown, and register the store for graceful shutdown via
- * {@link disconnectRedisCaches}.
+ * Connection-level errors (connect/auth/reconnect failures, a Redis restart's
+ * `SocketClosedUnexpectedlyError`) are emitted as `error` events on the
+ * underlying node-redis client. `@keyv/redis` does NOT forward those to its own
+ * emitter — it only relays `connect`/`disconnect`/`reconnecting` — so a listener
+ * on the store alone leaves the client's `error` unhandled, and an unhandled
+ * `error` event crashes the Node process. Unlike cache *fetch* errors these are
+ * NOT swallowed by `ErrorsAreMissesCache`. We attach `error` listeners on the
+ * client, the store and the wrapper so they are logged rather than thrown, and
+ * register the store for graceful shutdown via {@link disconnectRedisCaches}.
  *
  * @param logger Optional logger used to record connection-level errors. When
  * omitted, errors are still handled (preventing a crash) but not logged.
@@ -86,6 +88,8 @@ export const getRedisCache = (logger?: RedisCacheLogger) => {
     };
   };
 
+  // The client is the emitter a Redis restart actually fires on; see above.
+  cacheRedis.client.on('error', logConnectionError('client'));
   cacheRedis.on('error', logConnectionError('store'));
   cacheKV.on('error', logConnectionError('keyv'));
 
