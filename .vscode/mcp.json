@@ -20,10 +20,6 @@
       "command": "bash",
       "type": "stdio"
     },
-    "openthrottle-mcp-docker": {
-      "type": "http",
-      "url": "http://localhost:6026/mcp"
-    },
     "shadcn": {
       "args": ["shadcn@latest", "mcp"],
       "command": "npx",

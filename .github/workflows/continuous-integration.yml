@@ -968,6 +968,14 @@ jobs:
       - name: '📋 Agent assets frontmatter validation (D5)'
         run: pnpm exec nx run monorepo:validate-agent-assets-frontmatter
 
+      # Static and build-free. Fails when a generated agent config file (MCP
+      # servers + permission policy for every agent CLI) no longer matches
+      # .agents/agent-config.json, and prints the diff. Fix with
+      # `pnpm exec tsx scripts/sync-agent-config.ts`. Design:
+      # docs/monorepo/agent-config-parity.md.
+      - name: '🤝 Agent config parity (MCP + permissions drift guard)'
+        run: pnpm exec nx run monorepo:check-agent-config-parity
+
       # Whole-tree `git ls-files` scan, so a `gates` job step like its neighbours.
       # Fails when a tracked path sits under a lib/, helpers/, common/, shared/ or
       # misc/ directory — ot-folders rule 4. Pre-commit checks only newly added

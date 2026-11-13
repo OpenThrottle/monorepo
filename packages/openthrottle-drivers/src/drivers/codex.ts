@@ -21,23 +21,28 @@ import {
 
 const capabilities: DriverCapabilities = {
   /**
-   * Reads ONLY the user-scope `~/.codex/config.toml`; it has no project-config concept at all, so no
-   * workspace file can grant it MCP access (verified codex-cli 0.147.0). Reachability is a property
-   * of the host, not the checkout.
+   * Stays `false`: no workspace file is guaranteed to reach a codex run. Since codex-cli 0.167.0
+   * (verified 2026-11-12) Codex does load a project `.codex/config.toml` (`[mcp_servers.*]`,
+   * `approval_policy`, `sandbox_mode`, `commit_attribution`) and `.codex/rules/*.rules`, but ONLY when
+   * the project is trusted (`[projects."<path>"] trust_level = "trusted"` in the user-scope
+   * `~/.codex/config.toml`). Trust is host state, so reachability is still a property of the host,
+   * not the checkout. An untrusted checkout skips the project `.codex/` layer entirely.
    */
   attachesWorkspaceMcp: false,
   chatStreaming: true,
   /**
-   * No flag exists, and none would help — verified against codex-cli 0.147.0. Codex resolves MCP
-   * servers exclusively from the `[mcp_servers.*]` tables in the USER-scope `~/.codex/config.toml`.
-   * It has no notion of a project-level config: `codex mcp add` writes to that same user file, and
-   * `codex mcp --help` exposes no project/scope option. The repo's `.mcp.json` / `.cursor/mcp.json`
-   * are simply never read.
+   * No auto-approve flag exists. Codex resolves MCP servers from `[mcp_servers.*]` tables in the
+   * USER-scope `~/.codex/config.toml` and, since codex-cli 0.167.0 (verified 2026-11-12), from a
+   * TRUSTED project's `.codex/config.toml` — which this repo generates from
+   * `.agents/agent-config.json`. `codex mcp add` still writes only the user file and exposes no
+   * scope option, and the repo's `.mcp.json` / `.cursor/mcp.json` are never read. (The earlier
+   * "no project-level config at all" note was measured on 0.147.0.)
    *
-   * Consequence: whether codex can reach `openthrottle-mcp` is a property of the HOST, not of the
-   * workspace or of this command string. On a host where it is not registered in `config.toml`, a
-   * codex run has no OT tools and an MCP-dependent scheduled job cannot succeed — see plan
-   * a08e7d24 for the run-outcome signal that makes such a run stop reporting as a clean success.
+   * Consequence: whether codex can reach `openthrottle-mcp` is a property of the HOST (registered
+   * in the user `config.toml`, or this project marked trusted), not of this command string. On a
+   * host with neither, a codex run has no OT tools and an MCP-dependent scheduled job cannot
+   * succeed — see plan a08e7d24 for the run-outcome signal that makes such a run stop reporting as
+   * a clean success.
    *
    * A `-c mcp_servers.openthrottle-mcp.command=…` override could inject it from here, but that
    * would hardcode OT-specific server wiring into a leaf driver package whose whole point is to

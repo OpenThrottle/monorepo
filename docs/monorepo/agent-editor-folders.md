@@ -180,3 +180,36 @@ Generated skill/rule links are symlinks. On Windows, enable symlink support (`gi
 | **[AGENT_USAGE.md](../tools/templates/AGENT_USAGE.md)**                  | What agents load: the rule set, generator commands, discoverability  | Physical folder tree                          |
 
 When onboarding agents: point them at **[AGENT_USAGE.md](../tools/templates/AGENT_USAGE.md)** for _what to load_ and **this doc** for _where files live_. When changing behavior: author skills in `skills/` (or install external ones with the CLI) — never the generated trees — and change code style in `AGENTS.md` § Code style plus [code-style.md](./code-style.md).
+
+## 7. Cross-agent parity
+
+We aim to support **all** our agents/drivers across the board (antigravity, claude, codex, cursor, grok, opencode, plus VS Code): the same MCP servers and the same tracked permission policy, kept consistent. A change to one tool's MCP set or permission policy lands for every tool in the same PR, or the gap is recorded here. (The `gemini` driver was removed in PR #739.)
+
+- **Source of truth and generator:** [`.agents/agent-config.json`](../../.agents/agent-config.json), fanned out by `pnpm exec tsx scripts/sync-agent-config.ts` (`--check` fails on drift). Edit that file, never the per-tool outputs. Schema, mapping tables and the generated-file list live in [agent-config-parity.md](./agent-config-parity.md); this section does not restate them.
+- **Registration, tokens, launchers, per-editor config files:** [mcp-registration.md](../openthrottle/mcp-registration.md). **Hook support per CLI:** [agent-cli-hook-capability-matrix.md](./agent-cli-hook-capability-matrix.md).
+- **Default-on servers:** `fetch`, `github`, `maestro`, `openthrottle-mcp`, `shadcn`. `openthrottle-mcp-docker` and `nx-mcp` are defined but **off by default everywhere**: emitted with `enabled: false` only where the tool has an off switch (`opencode.json`, `.codex/config.toml`) and omitted from the rest. `nx-mcp` stays off because the `nx-workspace` skill and Nx Console already cover it and it adds a process plus tool schemas to every session; opt in at user level.
+
+### Capability matrix
+
+Measured 2026-11-12 on claude 2.1.322, cursor-agent 2026.11.11, codex 0.167.0, opencode 1.19.5, grok 1.0.77, agy 1.5.7 (VS Code per its docs, not probed).
+
+Legend: **P** = project level, committable. **U** = user-level only. **X** = unsupported. **F** = per-invocation flag only.
+
+| Surface         | MCP config                                     | Enabled out of the gate, committable?                              | Permissions; can it deny `git push origin main` / `--force`?              | `./scripts/` launcher from a subdir | Attribution off at project level                    |
+| --------------- | ---------------------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------- | ----------------------------------- | --------------------------------------------------- |
+| **claude**      | P: `.mcp.json`                                 | P after trust (`enabledMcpjsonServers`; `-p` loads all)            | P: `.claude/settings.json`; yes (bypassable)                              | Works (cwd = repo root)             | P: `attribution` in settings                        |
+| **cursor**      | P: `.cursor/mcp.json`                          | U/F: approval in `~/.cursor/projects/<slug>/`, or `--approve-mcps` | P: `.cursor/cli.json` (`permissions` only); yes, `Shell(git:push*main*)`  | Root only                           | U: `~/.cursor/cli-config.json`                      |
+| **codex**       | P (trusted projects): `.codex/config.toml`     | P (trusted): `enabled` default true; trust is user-level           | P (trusted): `.codex/rules/*.rules`; partial, token prefixes only         | Unverified; set `cwd`               | P on paper: `commit_attribution`                    |
+| **opencode**    | P: `opencode.json` `mcp`                       | P: `enabled: false` disables                                       | P: `permission.bash`; yes (last match wins)                               | Root only                           | X (n/a)                                             |
+| **grok**        | P: `.grok/config.toml`; also reads `.mcp.json` | P (trusted folder): user-level trust or `--trust`                  | P (trusted): `.grok/config.toml`; also reads `.claude/settings.json`; yes | Root only                           | X                                                   |
+| **antigravity** | X at repo level (global `~/.gemini/config/`)   | U: `agy mcp enable/disable` mutates global config                  | U: `~/.gemini/antigravity-cli/settings.json`; F: `--settings`             | n/a                                 | X                                                   |
+| **VS Code**     | P: `.vscode/mcp.json`                          | Partial: no enable field, per-user UI                              | Approval only: `chat.tools.terminal.autoApprove`; **cannot hard-deny**    | Works (`cwd` = workspace)           | P likely: `git.addAICoAuthor` (gitignored settings) |
+
+### Cross-cutting findings
+
+- **Relative `./scripts/…` launchers** work from a subdirectory only in Claude Code and VS Code. Cursor, OpenCode and Grok spawn with the session cwd, and Codex's behavior is undocumented, so a driver run from a subdir fails. Run from the checkout root.
+- **Rule-based denies are bypassable** in every tool (`git -C . push`, `HEAD:main` refspecs, flag reordering). The `bash-guard` hooks and the Husky `pre-push` hook remain the real gate for pushes to `main` and force pushes.
+- **Cursor `.cursor/cli.json` may hold only `permissions`.** Any other key (for example `attribution`) makes every `cursor-agent` run fail schema validation.
+- **Codex project config and rules load only for trusted projects** (`[projects."<path>"] trust_level = "trusted"` in `~/.codex/config.toml`). Grok and interactive Claude sessions likewise gate repo MCP servers on a trusted folder.
+- **Grok reads `.mcp.json` and `.claude/settings.json` natively**, so it needs no file of its own; a user-level `~/.claude.json` entry shadows the repo's `openthrottle-mcp`.
+- **Gaps, not fixable by a committed file:** antigravity (no project MCP or permission file), VS Code (no deny), Cursor MCP approval. Recorded in [agent-config-parity.md § Gaps](./agent-config-parity.md#gaps-what-a-tool-cannot-express).

@@ -224,6 +224,29 @@
         "parallel": false
       }
     },
+    "check-agent-config-parity": {
+      "cache": true,
+      "description": "Fail when a generated agent config file (.mcp.json, .cursor/mcp.json, .cursor/cli.json, .vscode/mcp.json, .codex/config.toml, .codex/rules/default.rules, and the generated keys of opencode.json and .claude/settings.json) no longer matches .agents/agent-config.json, via `scripts/sync-agent-config.ts --check`. It prints each drifted file's diff. Fix by editing .agents/agent-config.json and running `pnpm exec tsx scripts/sync-agent-config.ts`, never by hand-editing an output. `inputs` are explicit {workspaceRoot} globs because the root project owns no files.",
+      "executor": "nx:run-commands",
+      "inputs": [
+        "{workspaceRoot}/.agents/agent-config.json",
+        "{workspaceRoot}/.claude/settings.json",
+        "{workspaceRoot}/.codex/config.toml",
+        "{workspaceRoot}/.codex/rules/default.rules",
+        "{workspaceRoot}/.cursor/cli.json",
+        "{workspaceRoot}/.cursor/mcp.json",
+        "{workspaceRoot}/.mcp.json",
+        "{workspaceRoot}/.prettierrc*",
+        "{workspaceRoot}/.vscode/mcp.json",
+        "{workspaceRoot}/opencode.json",
+        "{workspaceRoot}/scripts/sync-agent-config.ts",
+        "{workspaceRoot}/scripts/utils/**/*.ts"
+      ],
+      "options": {
+        "command": "tsx ./scripts/sync-agent-config.ts --check",
+        "cwd": "{workspaceRoot}"
+      }
+    },
     "check-claude-config-json": {
       "cache": true,
       "description": "Fail when a tracked file Claude Code reads (.claude/*.json, .mcp.json, .claude-plugin/*.json, plugins/*/hooks/hooks.json) is not strict JSON, via scripts/check-claude-config-json.ts. Claude Code skips an unparseable settings file entirely, so a single `//` comment silently disables every project hook in it — the cause of the 2026-09-23 skill-capture blackout. `inputs` are explicit {workspaceRoot} globs because the root project owns no files.",

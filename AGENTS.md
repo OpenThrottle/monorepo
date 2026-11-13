@@ -37,6 +37,8 @@ When working inside a project, read its own `AGENTS.md` first, then its area fil
 
 For **where** agent- and editor-specific config lives (`.cursor/`, `.claude/`, `.agents/`, `skills/`, duplication strategy, where to edit for common tasks), see [docs/monorepo/agent-editor-folders.md](docs/monorepo/agent-editor-folders.md). **This file** covers cross-editor handbook topics (Nx, OT, workflow CLI); **that doc** covers physical layout and canonical ownership.
 
+**Cross-agent parity:** we aim to support all our agents/drivers across the board (MCP servers and tracked permissions) and keep them consistent. A change to one tool's MCP set or permission policy lands for every tool in the same PR, or the gap is recorded; edit [`.agents/agent-config.json`](./.agents/agent-config.json), never the per-tool files ([design](docs/monorepo/agent-config-parity.md), [matrix](docs/monorepo/agent-editor-folders.md#7-cross-agent-parity)).
+
 ### Git worktrees (tool-agnostic)
 
 Worktrees are handled by the portable [`ot-worktree`](skills/ot-worktree/SKILL.md) skill, which exposes **three composable actions**:

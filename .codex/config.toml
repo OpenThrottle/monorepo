@@ -1,0 +1,64 @@
+# GENERATED — DO NOT EDIT
+# Source: .agents/agent-config.json.
+# Edit that file, then run pnpm exec tsx scripts/sync-agent-config.ts
+# Servers with enabled = false are defined but off by default.
+
+# Agent attribution off (AGENTS.md § No agent attribution).
+commit_attribution = ""
+
+# Generic URL fetch. Requires uvx (uv) on PATH. No token.
+[mcp_servers.fetch]
+command = "uvx"
+args = ["mcp-server-fetch"]
+enabled = true
+
+# GitHub MCP server. Launcher self-loads GITHUB_TOKEN from root .env when the shell that launched the
+# client didn't export it (no direnv here), mirroring run-openthrottle-mcp.sh. No env block: an
+# unexpanded ${GITHUB_TOKEN} placeholder is what triggers the client's 'Failed to replace env in
+# config' warning, and the launcher handles both exported and .env token sources.
+[mcp_servers.github]
+command = "bash"
+args = ["./scripts/run-github-mcp.sh"]
+enabled = true
+
+# Maestro E2E testing (maestro.dev). Drive the openthrottle-developer app: list_devices,
+# inspect_screen, take_screenshot, run flows, cheat_sheet, and Maestro Cloud tools. Requires the
+# Maestro CLI on PATH and a running app/device.
+[mcp_servers.maestro]
+command = "maestro"
+args = ["mcp"]
+enabled = true
+
+# Nx workspace graph, generators, docs and task running. Off by default: the nx-workspace skill and Nx
+# Console already cover it, and it adds a process plus its tool schemas to every session. Opt in per
+# tool at user level.
+[mcp_servers.nx-mcp]
+command = "npx"
+args = ["nx", "mcp"]
+enabled = false
+
+# OpenThrottle (OT) plans knowledge base (Postgres + GraphQL). Plans, tasks, notes, commit links,
+# activity, output stream, semantic search, health. No env block, for the same reason as the github
+# entry: an unexpanded ${VAR} placeholder is what triggers the client's 'Missing environment
+# variables' / 'Failed to replace env in config' warning, and the launcher already owns resolution.
+# API_URL and API_URL_INTERNAL would be discarded regardless (the launcher probes for a live server
+# and exports both itself); ANTHROPIC_API_KEY is read nowhere in openthrottle-mcp; and
+# OPENTHROTTLE_MCP_AUTH_TOKEN is inherited from the launching shell when exported, else self-loaded
+# from this worktree's .env or the root checkout's.
+[mcp_servers.openthrottle-mcp]
+command = "bash"
+args = ["./scripts/run-openthrottle-mcp.sh"]
+enabled = true
+
+# HTTP transport for the containerized OT MCP server (docker --profile prod up mcp). Off by default:
+# it fails to connect unless that container is running. Claude Code needs "type": "http" on a url
+# entry or it skips the entry silently; the generator always writes it.
+[mcp_servers.openthrottle-mcp-docker]
+url = "http://localhost:6026/mcp"
+enabled = false
+
+# shadcn/ui component registry browsing/adding. No token.
+[mcp_servers.shadcn]
+command = "npx"
+args = ["shadcn@latest", "mcp"]
+enabled = true

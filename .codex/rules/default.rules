@@ -1,0 +1,17 @@
+# GENERATED — DO NOT EDIT
+# Source: .agents/agent-config.json.
+# Edit that file, then run pnpm exec tsx scripts/sync-agent-config.ts
+
+prefix_rule(pattern=["git", "push", "origin", "main"], decision="forbidden", justification="git push*main* (from .agents/agent-config.json)")
+
+prefix_rule(pattern=["git", "push", "origin", "HEAD:main"], decision="forbidden", justification="git push*main* (from .agents/agent-config.json)")
+
+prefix_rule(pattern=["git", "push", "-u", "origin", "main"], decision="forbidden", justification="git push*main* (from .agents/agent-config.json)")
+
+prefix_rule(pattern=["git", "push", "--force"], decision="forbidden", justification="git push*--force * (from .agents/agent-config.json)")
+
+prefix_rule(pattern=["git", "push", "origin", "--force"], decision="forbidden", justification="git push*--force * (from .agents/agent-config.json)")
+
+prefix_rule(pattern=["git", "push", "-f"], decision="forbidden", justification="git push*-f * (from .agents/agent-config.json)")
+
+prefix_rule(pattern=["git", "push", "origin", "-f"], decision="forbidden", justification="git push*-f * (from .agents/agent-config.json)")

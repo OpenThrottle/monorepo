@@ -27,7 +27,7 @@ Two rows now have their own primary record, far more detailed than this table:
 | ---------------- | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
 | **claude**       | yes                                   | user / project / local settings + every installed plugin, merged additively                                       | `--settings`, `--plugin-dir`, `--plugin-url`                | plugins + marketplace (`/plugin install`)                               | **shipped** — legs A and B both verified end-to-end                                           |
 | **cursor-agent** | yes                                   | nine sources merged additively, including `.claude/settings.json` and `.claude/settings.local.json`               | **`--plugin-dir`** (repeatable), confirmed on 2026.09.10    | plugins + `plugin marketplace`                                          | **shipped** — capture, completion and leg B verified; needs its OWN payload, see below        |
-| **codex**        | yes                                   | `~/.codex/config.toml` (home, **not** the repo), `$CODEX_HOME/<name>.config.toml`                                 | `-c hooks.…`, `--profile`, `CODEX_HOME`                     | `codex plugin` installs from marketplaces; **no `--plugin-dir` flag**   | **shipped, partially** — needs no injection at all; capture is slash-commands-only, see below |
+| **codex**        | yes                                   | `~/.codex/config.toml`, `$CODEX_HOME/<name>.config.toml`; since 0.167.0 also a **trusted** project's `.codex/`    | `-c hooks.…`, `--profile`, `CODEX_HOME`                     | `codex plugin` installs from marketplaces; **no `--plugin-dir` flag**   | **shipped, partially** — needs no injection at all; capture is slash-commands-only, see below |
 | **grok**         | yes (`PreToolUse`, session lifecycle) | `.grok/hooks/`, plus `[[hooks.<Event>]]` in `~/.grok/config.toml` and other config layers, combined additively    | config layers are out-of-repo; **no per-invocation flag**   | durable `grok plugin install <git-url\|path>`; **reads Claude plugins** | **partial** — see below                                                                       |
 | **opencode**     | via plugins (JS module hook API)      | project `opencode.json` + global config; `--pure` disables                                                        | global config is out-of-repo                                | `opencode plugin <npm-module>` (npm, not a directory)                   | **viable, different shape** — npm-published module, not a payload directory                   |
 | **antigravity**  | yes (unverified)                      | `~/.gemini/antigravity-cli/hooks.json` and `~/.gemini/config/hooks.json` (paths recovered from the 1.1.21 binary) | both paths are out-of-repo; per-invocation flag **unknown** | unknown; `~/.gemini/config/skills/` exists, plugin surface unprobed     | **unprobed** — `agy` is not installed here; nothing in this row is measured                   |
@@ -103,8 +103,18 @@ be taken as coverage.
 
 ### codex needs no injection mechanism at all
 
-Codex reads hooks from `~/.codex/config.toml` — home directory, never the repo. An operator
-configures it once and it applies everywhere, with no per-repo or per-invocation work. `-c hooks.…`
+Codex reads hooks from `~/.codex/config.toml` in the home directory. An operator configures it
+once and it applies everywhere, with no per-repo or per-invocation work.
+
+**Correction, 2026-11-12 (codex-cli 0.167.0):** this section was measured on 0.145.0 as "home
+directory, never the repo", and that no longer holds. Codex now loads a project-scoped `.codex/`
+layer (`config.toml`, hooks and `rules/`), but **only when the project is trusted**
+(`[projects."<path>"] trust_level = "trusted"` in `~/.codex/config.toml`). An untrusted project's
+`.codex/` is skipped entirely. A probe confirmed that `codex mcp list` shows a project
+`[mcp_servers.*]` entry only after trust is set. This repo now generates `.codex/config.toml` and
+`.codex/rules/default.rules` from [`.agents/agent-config.json`](../../.agents/agent-config.json),
+see [agent-config-parity.md](./agent-config-parity.md). The home-directory route below still works,
+and it is the only one that reaches an untrusted foreign repo. `-c hooks.…`
 overrides and `CODEX_HOME` provide per-invocation control if wanted. Confirmed 2026-09-11: there is
 **no `--plugin-dir` flag**; `codex plugin` installs from marketplaces instead. So delivery is
 documentation, and the copy-pasteable block lives in `packages/agentic-hooks/README.md`.

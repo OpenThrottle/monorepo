@@ -1,0 +1,104 @@
+{
+  "_readme": [
+    "Hand-authored single source of truth for the MCP servers and the permission policy every agent CLI and editor in this repo gets.",
+    "Edit THIS file, then run `pnpm exec tsx scripts/sync-agent-config.ts` to regenerate every tool's config; `--check` fails on drift.",
+    "Schema, per-tool mapping rules and the gaps each tool cannot express: docs/monorepo/agent-config-parity.md."
+  ],
+  "mcpServers": {
+    "fetch": {
+      "args": ["mcp-server-fetch"],
+      "command": "uvx",
+      "defaultOn": true,
+      "description": "Generic URL fetch. Requires uvx (uv) on PATH. No token.",
+      "transport": "stdio"
+    },
+    "github": {
+      "args": ["./scripts/run-github-mcp.sh"],
+      "command": "bash",
+      "defaultOn": true,
+      "description": "GitHub MCP server. Launcher self-loads GITHUB_TOKEN from root .env when the shell that launched the client didn't export it (no direnv here), mirroring run-openthrottle-mcp.sh. No env block: an unexpanded ${GITHUB_TOKEN} placeholder is what triggers the client's 'Failed to replace env in config' warning, and the launcher handles both exported and .env token sources.",
+      "transport": "stdio"
+    },
+    "maestro": {
+      "args": ["mcp"],
+      "command": "maestro",
+      "defaultOn": true,
+      "description": "Maestro E2E testing (maestro.dev). Drive the openthrottle-developer app: list_devices, inspect_screen, take_screenshot, run flows, cheat_sheet, and Maestro Cloud tools. Requires the Maestro CLI on PATH and a running app/device.",
+      "transport": "stdio"
+    },
+    "nx-mcp": {
+      "args": ["nx", "mcp"],
+      "command": "npx",
+      "defaultOn": false,
+      "description": "Nx workspace graph, generators, docs and task running. Off by default: the nx-workspace skill and Nx Console already cover it, and it adds a process plus its tool schemas to every session. Opt in per tool at user level.",
+      "transport": "stdio"
+    },
+    "openthrottle-mcp": {
+      "args": ["./scripts/run-openthrottle-mcp.sh"],
+      "command": "bash",
+      "defaultOn": true,
+      "description": "OpenThrottle (OT) plans knowledge base (Postgres + GraphQL). Plans, tasks, notes, commit links, activity, output stream, semantic search, health. No env block, for the same reason as the github entry: an unexpanded ${VAR} placeholder is what triggers the client's 'Missing environment variables' / 'Failed to replace env in config' warning, and the launcher already owns resolution. API_URL and API_URL_INTERNAL would be discarded regardless (the launcher probes for a live server and exports both itself); ANTHROPIC_API_KEY is read nowhere in openthrottle-mcp; and OPENTHROTTLE_MCP_AUTH_TOKEN is inherited from the launching shell when exported, else self-loaded from this worktree's .env or the root checkout's.",
+      "transport": "stdio"
+    },
+    "openthrottle-mcp-docker": {
+      "defaultOn": false,
+      "description": "HTTP transport for the containerized OT MCP server (docker --profile prod up mcp). Off by default: it fails to connect unless that container is running. Claude Code needs \"type\": \"http\" on a url entry or it skips the entry silently; the generator always writes it.",
+      "transport": "http",
+      "url": "http://localhost:6026/mcp"
+    },
+    "shadcn": {
+      "args": ["shadcn@latest", "mcp"],
+      "command": "npx",
+      "defaultOn": true,
+      "description": "shadcn/ui component registry browsing/adding. No token.",
+      "transport": "stdio"
+    }
+  },
+  "permissions": {
+    "allow": [
+      { "shell": "gh issue *" },
+      { "shell": "gh pr create *" },
+      { "shell": "gh pr list *" },
+      { "shell": "gh pr ready *" },
+      { "shell": "gh pr view *" },
+      { "shell": "gh repo list *" },
+      { "shell": "gh search issues *" },
+      { "shell": "git branch *" },
+      { "shell": "git diff *" },
+      { "shell": "git log *" },
+      { "shell": "git push --force-with-lease*" },
+      { "shell": "git push -u origin *" },
+      { "shell": "git push origin *" },
+      { "shell": "git show *" },
+      { "shell": "git status *" },
+      { "shell": "pnpm nx *" },
+      { "mcpServer": "openthrottle-mcp" }
+    ],
+    "deny": [
+      {
+        "codexPrefixes": [
+          ["git", "push", "origin", "main"],
+          ["git", "push", "origin", "HEAD:main"],
+          ["git", "push", "-u", "origin", "main"]
+        ],
+        "shell": "git push*main*"
+      },
+      {
+        "codexPrefixes": [
+          ["git", "push", "--force"],
+          ["git", "push", "origin", "--force"]
+        ],
+        "shell": "git push*--force *"
+      },
+      { "shell": "git push*--force" },
+      {
+        "codexPrefixes": [
+          ["git", "push", "-f"],
+          ["git", "push", "origin", "-f"]
+        ],
+        "shell": "git push*-f *"
+      },
+      { "shell": "git push*+*" }
+    ]
+  }
+}
