@@ -103,16 +103,116 @@ The TypeORM entities for these tables live in
 [`@openthrottle/nestjs-repositories-cms`](../../packages/nestjs-repositories-cms/README.md), on a
 named `cms` DataSource. A schema change here is two edits: the migration and its entity.
 
+## Decision: where the CMS API lives
+
+Recorded by OT plan `6a17d99b-8c04-41b6-a1e1-47d812bb7658`. Points 1 and 2 were already decided
+elsewhere and are written down here, not reopened. Points 3 and 4 were decided by that plan.
+
+### 1. Placement: openthrottle-server, through the package
+
+The CMS API lives in **openthrottle-server**. The server imports `NestjsRepositoriesCmsModule` from
+[`@openthrottle/nestjs-repositories-cms`](../../packages/nestjs-repositories-cms/README.md), and the
+CMS GraphQL resolvers live in that package, not in the server's own `src/`. The owner made this call
+in OT plan `18a3b88f-50fe-4944-97a3-71835d45e393` ("Why a server import, not the CMS app").
+
+- [`openthrottle-cms`](../../applications/openthrottle-cms/README.md) is a React Router client. It
+  reads the committed `applications/openthrottle-server/schema.gql` like every other consumer, and
+  it has no database connection of its own.
+- If a dedicated CMS server is ever split out, it imports the same module unchanged. Keeping the
+  resolvers in the package is what keeps that move cheap.
+
+### 2. Connection: the named `CMS_CONNECTION` DataSource
+
+The module registers a TypeORM DataSource named `CMS_CONNECTION`. Its URL comes from
+`getCmsPostgresUrl` in
+[`packages/openthrottle-agentic-utils/src/utils/postgres.ts`](../../packages/openthrottle-agentic-utils/src/utils/postgres.ts),
+which resolves in the same order as the `cms` entry in
+[`databases/database-registry.ts`](../database-registry.ts):
+
+1. `CMS_POSTGRES_URL`, when it is set.
+2. Otherwise the primary's `POSTGRES_*` settings, with the database swapped for `CMS_POSTGRES_DB`
+   (default `cms`).
+
+`getCmsPostgresUrl` returns a result type, and the module throws when the result is a failure. A
+server that imports the module but cannot resolve a URL fails at boot, rather than starting and
+failing on the first CMS query.
+
+### 3. Schema sync trigger: on server boot, in the package, plus an admin mutation
+
+The sync that fills `schemas` from the block manifests (OT plan
+`a608869b-407d-40a0-9dff-8d61fe578cf7`, task 5) runs in two places. Both are in
+`@openthrottle/nestjs-repositories-cms`:
+
+- An **`onApplicationBootstrap` hook** in the module. It runs once each time the server starts.
+- An **admin-only `syncCmsSchemas` mutation**. It runs the same code on demand, and it is how you
+  retry after a failed boot sync.
+
+It is not a step in `monorepo:ensure-migrations`. That gate is a pre-boot `tsx` script that runs only
+on the host `dev` path. In production, migrations run from the separate `Dockerfile.Migrations` image,
+which copies only `databases/` and has no block packages. A script step would need two homes and a
+copy of the manifests in the migrations image. The boot hook runs wherever the server runs (dev, a
+worktree, the production image), and it uses the `CMS_CONNECTION` and entities the module already
+has.
+
+What the sync has to guarantee:
+
+- **Append-only.** A `(typename, version)` missing from the table inserts one row. Nothing is updated
+  or deleted, and fragments keep the `schema_uuid` they were created with.
+- **Safe with more than one replica.** Today `(typename, version)` has only a plain index
+  (`idx_schemas_typename_version`, migration 001), so two servers booting together could insert the
+  same row twice. Task 5 adds a migration that makes the pair unique, and the sync inserts with
+  `ON CONFLICT (typename, version) DO NOTHING`.
+- **Never blocks the API.** A failed sync logs an error and the server keeps serving. Fragment writes
+  against a typename with no row then fail on their own, and the rest of OpenThrottle stays up.
+
+### 4. How the server reads the manifests: copied into the package's `dist/` at build time
+
+The manifests are committed under `packages/react-router-cms-ui/schemas/` and
+`packages/react-router-cms-core/schemas/` (`manifest.json` plus `<Typename>.schema.json`, written by
+`cms-schemas:write`). The server reads them as **JSON files**, never through those packages'
+source-first TypeScript entries.
+
+**Decision:** the `build` target of `@openthrottle/nestjs-repositories-cms` copies both folders into
+its own output, using the `@nx/js:tsc` `assets` option (the
+[package generator template](../../tools/generators/src/generators/package/files/tools/package.json)
+already uses it):
+
+```text
+packages/react-router-cms-ui/schemas/*.json   → packages/nestjs-repositories-cms/dist/schemas/react-router-cms-ui/
+packages/react-router-cms-core/schemas/*.json → packages/nestjs-repositories-cms/dist/schemas/react-router-cms-core/
+```
+
+At runtime the sync finds them relative to its own compiled file, with
+`new URL('…/schemas/', import.meta.url)`. It never uses a path from the repository root and never
+resolves either React package. The build's `inputs` name both `schemas/` folders, so editing a block
+schema invalidates the Nx cache and the copy cannot go stale.
+
+Why this survives the production image: `Dockerfile.NestJS` builds every package, then ships only the
+`pnpm --filter openthrottle-server --prod deploy` tree. The server resolves
+`@openthrottle/nestjs-repositories-cms` through its `exports`, which point at `dist/`. Once the
+server imports the module (plan `18a3b88f`), that `dist/` must be in the image or the server cannot
+boot, so the manifests ride inside a directory the image already has to ship.
+[`boot-check.sh`](../../.github/actions/docker-build-push/boot-check.sh) boots that image with a
+read-only root before it is pushed, so a missing folder shows up there as a logged sync error.
+
+In dev, `openthrottle-server:dev` runs `^build` first, so the copy exists before the server starts.
+After `cms-schemas:write`, rebuild the package (or restart `dev`) and run `syncCmsSchemas`.
+
+Rejected options:
+
+- **Resolve the React packages at runtime** (`require.resolve` of their `package.json`). The server
+  would need both packages as **production** dependencies. `pnpm deploy` would then put their whole
+  React tree (react, react-router, the shadcn package, lucide, jotai, react-dnd) into the server
+  image, all to read a few JSON files.
+- **An `exports` subpath `./schemas/*`** on the React packages. Same dependency problem, and it adds
+  a server-facing entry to client packages whose entries deliberately point at `src`.
+
 ## Not here yet
 
-Tracked in OT plan `18a3b88f-50fe-4944-97a3-71835d45e393`:
-
-- GraphQL for these tables, and wiring the entities into an app. Nothing in the server reads them
-  yet.
-- Filling `schemas` (OT plan `a608869b-407d-40a0-9dff-8d61fe578cf7`, task 5). The rows come from
-  the block JSON Schemas committed under `packages/react-router-cms-ui/schemas/` and
-  `packages/react-router-cms-core/schemas/`, where each `manifest.json` gives every block's
-  `typename` and a content-hash `version`. The sync is append-only by design: a new
-  `(typename, version)` inserts a row, nothing is updated or deleted, and fragments keep the
-  `schema_uuid` they were created with.
-- Seed data for local development.
+- **Wiring the entities into an app, and GraphQL for these tables.** Nothing in the server reads them
+  yet. Importing the module into openthrottle-server is OT plan
+  `18a3b88f-50fe-4944-97a3-71835d45e393`, task `cc02a73b`. The read API is task `bdf7ade8` in the
+  same plan.
+- **Filling `schemas`** (OT plan `a608869b-407d-40a0-9dff-8d61fe578cf7`, task 5), as decided in
+  [§ 3](#3-schema-sync-trigger-on-server-boot-in-the-package-plus-an-admin-mutation) and
+  [§ 4](#4-how-the-server-reads-the-manifests-copied-into-the-packages-dist-at-build-time).
