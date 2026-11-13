@@ -12,7 +12,7 @@ import { CORE_FORM_COPY, FORM_CHILDREN_COPY } from '../../data/data.copy';
 import { MOCK_FORM_SCHEMA } from '../../data/mock.form-schema';
 import { MOCK_FRAGMENT_RECORDS } from '../../data/mock.fragment-records';
 import type { CmsParsedSchema } from '../../types/cms-json-schema';
-import type { CmsFormChildren } from '../../types/cms-render';
+import type { CmsFormChildren, CmsFormIssues } from '../../types/cms-render';
 import { CoreFormRenderer } from '../CoreFormRenderer';
 
 const withChildren: CmsParsedSchema = {
@@ -34,6 +34,7 @@ const bindings: CmsFormChildren = {
 const renderForm = (
   schema: CmsParsedSchema,
   children: CmsFormChildren | undefined,
+  issues: CmsFormIssues | undefined = undefined,
 ) => {
   const store = createStore();
   store.set(atomFragmentDraft, { title: 'Hello' });
@@ -46,7 +47,9 @@ const renderForm = (
             children={children}
             className={undefined}
             fragmentUuid="fragment-1"
+            header={<input defaultValue="Hero" name="name" />}
             intent="updateFragment"
+            issues={issues}
             schema={schema}
           />
         </DndProvider>
@@ -100,6 +103,22 @@ describe('CoreFormRenderer', () => {
     expect(data?.get('fragment_uuid')).toBe('fragment-1');
     expect(data?.get('properties')).toBe(JSON.stringify({ title: 'Hello' }));
     expect(data?.get('typename')).toBe('Mock');
+    expect(data?.get('name')).toBe('Hero');
+  });
+
+  test('flags the pane of a property with issues', async () => {
+    const { component } = renderForm(MOCK_FORM_SCHEMA, undefined, {
+      size: ['must be equal to one of the allowed values'],
+    });
+    const trigger = component.getByRole('button', { name: /^size/ });
+
+    expect(trigger).toHaveAttribute('aria-invalid', 'true');
+
+    await userEvent.click(trigger);
+
+    expect(
+      component.getByText('must be equal to one of the allowed values'),
+    ).toBeVisible();
   });
 
   describe('for a children property', () => {

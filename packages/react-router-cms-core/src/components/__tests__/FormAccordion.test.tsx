@@ -10,10 +10,20 @@ import { FormAccordionPane } from '../FormAccordionPane';
 const renderAccordion = () => {
   return render(
     <FormAccordion className={undefined} defaultOpen="title">
-      <FormAccordionPane className={undefined} label="title" required={true}>
+      <FormAccordionPane
+        className={undefined}
+        errors={[]}
+        label="title"
+        required={true}
+      >
         <p>title field</p>
       </FormAccordionPane>
-      <FormAccordionPane className={undefined} label="copy" required={false}>
+      <FormAccordionPane
+        className={undefined}
+        errors={['must be string']}
+        label="copy"
+        required={false}
+      >
         <p>copy field</p>
       </FormAccordionPane>
     </FormAccordion>,
@@ -29,6 +39,21 @@ describe('FormAccordion', () => {
     expect(component.getAllByText(FORM_FIELD_COPY.requiredMark)).toHaveLength(
       1,
     );
+  });
+
+  test('flags a pane with errors and lists them when open', async () => {
+    const component = renderAccordion();
+    const trigger = component.getByRole('button', { name: 'copy' });
+
+    expect(trigger).toHaveAttribute('aria-invalid', 'true');
+    expect(component.getByRole('button', { name: /^title/ })).toHaveAttribute(
+      'aria-invalid',
+      'false',
+    );
+
+    await userEvent.click(trigger);
+
+    expect(component.getByText('must be string')).toBeVisible();
   });
 
   test('keeps one pane open at a time', async () => {

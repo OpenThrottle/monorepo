@@ -7,7 +7,15 @@ export default (config: ConfigEnv) => {
   const configuration = defineConfig({
     cacheDir: '../../node_modules/.vite/applications/openthrottle-cms',
     resolve: {
-      dedupe: ['react', 'react-dom', '@testing-library/react'],
+      // jotai and react-dnd are context libraries: cms-core's hooks must read the Provider the
+      // app mounts, and pnpm can install two physical copies (peer-variant suffixes) of each.
+      dedupe: [
+        '@testing-library/react',
+        'jotai',
+        'react',
+        'react-dnd',
+        'react-dom',
+      ],
       // Vite 8 resolves tsconfig.json `paths` aliases natively (discovers the
       // tsconfig at `root`), replacing the vite-tsconfig-paths plugin.
       tsconfigPaths: true,

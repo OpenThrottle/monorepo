@@ -1,0 +1,75 @@
+import type { CmsFragmentEditorRecords } from '~/routing/fragments/utils/to-cms-records';
+
+/**
+ * @description A Heading fragment and its pinned schema, as the editor receives them. Specs only.
+ */
+export const MOCK_FRAGMENT_EDITOR_RECORDS: CmsFragmentEditorRecords = {
+  children: [],
+  draft: { copy: 'Hello', heading: 'h2' },
+  fragment: {
+    created_at: '2026-11-01T00:00:00.000Z',
+    is_deleted: false,
+    is_system: false,
+    name: 'Hero heading',
+    properties: { copy: 'Hello', heading: 'h2' },
+    schema_uuid: 'schema-1',
+    typename: 'Heading',
+    updated_at: '2026-11-02T00:00:00.000Z',
+    uuid: 'fragment-1',
+  },
+  hasChildren: false,
+  schema: {
+    created_at: '2026-11-01T00:00:00.000Z',
+    is_deleted: false,
+    json_schema: {
+      properties: {
+        copy: { type: 'string' },
+        heading: { enum: ['h1', 'h2'], type: 'string' },
+      },
+      required: ['copy'],
+      type: 'object',
+    },
+    status: 'ACTIVE',
+    typename: 'Heading',
+    updated_at: '2026-11-01T00:00:00.000Z',
+    uuid: 'schema-1',
+    version: 'abc',
+  },
+};
+
+const CHILD = {
+  ...MOCK_FRAGMENT_EDITOR_RECORDS.fragment,
+  schema_uuid: 'schema-1',
+};
+
+/**
+ * @description A LayoutGrid container with two children, as the editor receives it. Specs only.
+ */
+export const MOCK_CONTAINER_EDITOR_RECORDS: CmsFragmentEditorRecords = {
+  children: [
+    { ...CHILD, name: 'First child', uuid: 'child-1' },
+    { ...CHILD, name: 'Second child', uuid: 'child-2' },
+  ],
+  draft: { className: 'grid' },
+  fragment: {
+    ...MOCK_FRAGMENT_EDITOR_RECORDS.fragment,
+    name: 'Grid',
+    properties: { className: 'grid' },
+    schema_uuid: 'schema-grid',
+    typename: 'LayoutGrid',
+    uuid: 'grid-1',
+  },
+  hasChildren: true,
+  schema: {
+    ...MOCK_FRAGMENT_EDITOR_RECORDS.schema,
+    json_schema: {
+      properties: {
+        children: { type: 'array', 'x-cms-widget': 'children' },
+        className: { type: 'string', 'x-cms-widget': 'className' },
+      },
+      type: 'object',
+    },
+    typename: 'LayoutGrid',
+    uuid: 'schema-grid',
+  },
+};

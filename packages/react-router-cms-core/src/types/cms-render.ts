@@ -48,6 +48,13 @@ export type CmsRenderUnknown = (
 export type CmsFragmentDraft = Readonly<Record<string, unknown>>;
 
 /**
+ * @description Validation messages for a fragment form, keyed by top-level property name. The app
+ * maps its server's issues into this; the package only displays them.
+ * @public
+ */
+export type CmsFormIssues = Readonly<Record<string, readonly string[]>>;
+
+/**
  * @description What {@link CoreFormContext} supplies to the fields of one fragment form.
  * @public
  */

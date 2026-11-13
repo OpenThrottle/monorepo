@@ -1,11 +1,12 @@
 import { createMock } from '@golevelup/ts-vitest';
-import type { DataSource, EntityManager } from 'typeorm';
+import type { DataSource, EntityManager, Repository } from 'typeorm';
 import { Equal, IsNull, Or } from 'typeorm';
 import { describe, expect, it, vi } from 'vitest';
 
 import { CMS_STATUS } from '../../config/config.constants.ts';
 import { fragmentsFactory } from '../../modules/fragments/fragments.factory.ts';
 import type { FragmentsRepository } from '../../modules/fragments/fragments.repository.ts';
+import type { FragmentChild } from '../../modules/fragments-children/fragment-child.entity.ts';
 import { schemasFactory } from '../../modules/schemas/schemas.factory.ts';
 import type { SchemasRepository } from '../../modules/schemas/schemas.repository.ts';
 import { CmsSchemaValidationService } from '../cms-schema-validation/cms-schema-validation.service.ts';
@@ -455,6 +456,92 @@ describe('CmsFragmentsService', () => {
       await expect(service.findByUuid(fragment.uuid)).resolves.toMatchObject({
         typename: fragment.typename,
         uuid: fragment.uuid,
+      });
+    });
+  });
+  describe('findPinnedSchema', () => {
+    it('returns null for a non-uuid without querying', async () => {
+      const { schemasRepository, service } = buildService();
+
+      await expect(service.findPinnedSchema('nope')).resolves.toBeNull();
+      expect(schemasRepository.findOne).not.toHaveBeenCalled();
+    });
+
+    it('returns null when the schema row is gone', async () => {
+      const { schemasRepository, service } = buildService();
+
+      vi.mocked(schemasRepository.findOne).mockResolvedValue(null);
+
+      await expect(
+        service.findPinnedSchema(schemasFactory.build().uuid),
+      ).resolves.toBeNull();
+    });
+
+    it('reads the pinned version including a soft-deleted one', async () => {
+      const { active, schemasRepository, service } = buildService();
+
+      vi.mocked(schemasRepository.findOne).mockResolvedValue(active);
+
+      await expect(
+        service.findPinnedSchema(active.uuid),
+      ).resolves.toMatchObject({
+        jsonSchemaJson: JSON.stringify(active.jsonSchema),
+        uuid: active.uuid,
+      });
+      expect(schemasRepository.findOne).toHaveBeenCalledWith({
+        where: { uuid: active.uuid },
+        withDeleted: true,
+      });
+    });
+  });
+  describe('findChildren', () => {
+    it('returns [] for a non-uuid', async () => {
+      const { dataSource, service } = buildService();
+
+      await expect(service.findChildren('nope')).resolves.toEqual([]);
+      expect(dataSource.getRepository).not.toHaveBeenCalled();
+    });
+
+    it('returns live children in sortOrder, then edge age', async () => {
+      const { dataSource, service } = buildService();
+      const parent = fragmentsFactory.build();
+      const first = fragmentsFactory.build({ name: 'first' });
+      const second = fragmentsFactory.build({ name: 'second' });
+      const third = fragmentsFactory.build({ name: 'third' });
+      const deleted = fragmentsFactory.build({ isDeleted: true });
+      const edge = (
+        child: FragmentChild['child'],
+        sortOrder: number,
+        createdAt: string,
+      ): FragmentChild => {
+        return {
+          child,
+          childrenUuid: child?.uuid ?? '',
+          createdAt: new Date(createdAt),
+          fragmentUuid: parent.uuid,
+          sortOrder,
+        };
+      };
+      const repository = createMock<Repository<FragmentChild>>();
+
+      vi.mocked(repository.find).mockResolvedValue([
+        edge(third, 2, '2026-01-01'),
+        edge(second, 1, '2026-01-02'),
+        edge(deleted, 0, '2026-01-01'),
+        edge(first, 1, '2026-01-01'),
+      ]);
+      vi.mocked(dataSource.getRepository).mockReturnValue(repository);
+
+      const children = await service.findChildren(parent.uuid);
+
+      expect(children.map((child) => child.name)).toEqual([
+        'first',
+        'second',
+        'third',
+      ]);
+      expect(repository.find).toHaveBeenCalledWith({
+        relations: { child: true },
+        where: { fragmentUuid: parent.uuid },
       });
     });
   });

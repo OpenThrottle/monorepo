@@ -38,6 +38,10 @@ export default (config: ConfigEnv) => {
       tailwindcss(),
     ],
     resolve: {
+      // Context libraries shared with @openthrottle/react-router-cms-core: its hooks must read the
+      // jotai store and react-dnd manager this app provides, and pnpm can install two physical
+      // copies (peer-variant suffixes) of each.
+      dedupe: ['jotai', 'react-dnd'],
       // Vite 8 resolves tsconfig.json `paths` aliases natively (discovers the
       // tsconfig at `root`), replacing the vite-tsconfig-paths plugin.
       tsconfigPaths: true,

@@ -9,8 +9,67 @@ fragment CmsFragmentDetail on CmsFragmentObject {
   uuid
 }
 
+fragment CmsFragmentEditSchema on CmsSchemaObject {
+  createdAt
+  jsonSchemaJson
+  status
+  typename
+  updatedAt
+  uuid
+  version
+}
+
 query CmsFragmentDetail($uuid: String!) {
   cmsFragment(uuid: $uuid) {
+    children {
+      ...CmsFragmentDetail
+    }
     ...CmsFragmentDetail
+    schema {
+      ...CmsFragmentEditSchema
+    }
+  }
+}
+
+mutation UpdateCmsFragment($input: UpdateCmsFragmentInput!) {
+  updateCmsFragment(input: $input) {
+    name
+    updatedAt
+    uuid
+  }
+}
+
+query CmsFragmentChildCandidates {
+  cmsFragments(take: 100) {
+    items {
+      name
+      typename
+      uuid
+    }
+  }
+}
+
+mutation AddCmsFragmentChild($childUuid: String!, $parentUuid: String!) {
+  addCmsFragmentChild(childUuid: $childUuid, parentUuid: $parentUuid) {
+    childUuid
+    parentUuid
+    sortOrder
+  }
+}
+
+mutation RemoveCmsFragmentChild($childUuid: String!, $parentUuid: String!) {
+  removeCmsFragmentChild(childUuid: $childUuid, parentUuid: $parentUuid) {
+    childUuid
+    parentUuid
+  }
+}
+
+mutation ReorderCmsFragmentChildren(
+  $childUuids: [String!]!
+  $parentUuid: String!
+) {
+  reorderCmsFragmentChildren(childUuids: $childUuids, parentUuid: $parentUuid) {
+    childUuid
+    sortOrder
   }
 }
