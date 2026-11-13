@@ -8,9 +8,9 @@ import type { RenderCmsLayoutQuery } from '~/__generated__/graphql';
 import { RenderCmsLayoutDocument } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
 import { fetchPublicGraphql } from '~/global/utils/graphql.server';
+import { toCmsFragments } from '~/global/utils/toCmsFragments';
 import { CmsLayoutPage } from '~/routing/render/components/CmsLayoutPage';
 import { RENDER_COPY } from '~/routing/render/data/data.copy';
-import { toCmsFragments } from '~/routing/render/utils/toCmsFragments';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

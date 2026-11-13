@@ -34,7 +34,6 @@ export const CmsLayoutPage = (
 
   return (
     <div className={cn(className)} data-testid="CmsLayoutPage">
-      <pre>{JSON.stringify(fragments, null, 2)}</pre>
       <CoreRenderer
         className={undefined}
         componentRegistry={CORE_COMPONENTS}

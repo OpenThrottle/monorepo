@@ -1,10 +1,16 @@
+import { CorePreviewFrame } from '@openthrottle/react-router-cms-core';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+} from '@openthrottle/react-router-shadcn';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalErrorBoundary,
   GlobalHeading,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import { BookOpenIcon } from 'lucide-react';
+import { BookOpenIcon, EyeIcon } from 'lucide-react';
 import * as React from 'react';
 
 import type { Route } from '@/app/routes/+types/layouts.$layoutUUID._index';
@@ -16,11 +22,13 @@ import { CMS_LAYOUT_DETAIL_FIELDS } from '~/global/data/data.cms-detail-fields';
 import { CMS_LAYOUT_FRAGMENT_COLUMNS } from '~/global/data/data.cms-table-columns';
 import { fetchPublicGraphql } from '~/global/utils/graphql.server';
 import { requireRecord } from '~/global/utils/requireRecord';
+import { toCmsFragments } from '~/global/utils/toCmsFragments';
 import { LAYOUT_DETAIL_COPY } from '~/routing/layouts/data/data.copy';
 import {
   getLayoutFragmentRowHref,
   getLayoutFragmentRowId,
 } from '~/routing/layouts/utils/layout-rows';
+import { CmsLayoutPage } from '~/routing/render/components/CmsLayoutPage';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -37,7 +45,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   });
   const cmsLayout = requireRecord(result.cmsLayoutByUuid, 'Layout');
 
-  return { cmsLayout };
+  return { cmsLayout, fragments: toCmsFragments(cmsLayout.fragments) };
 };
 
 export const links: Route.LinksFunction = () => {
@@ -55,15 +63,29 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { actionData: _a, loaderData, matches: _m, params: _p } = props;
-  const { cmsLayout } = loaderData;
+  const { cmsLayout, fragments } = loaderData;
 
   // Hooks
 
   // Setup
+  const hasFragments = fragments.length > 0;
 
   // Handlers
 
   // Markup
+  const previewEmpty = (
+    <Empty className="border" data-testid="LayoutPreviewEmpty">
+      <EmptyHeader>
+        <EmptyDescription>{LAYOUT_DETAIL_COPY.previewEmpty}</EmptyDescription>
+      </EmptyHeader>
+    </Empty>
+  );
+  const previewFrame = (
+    <CorePreviewFrame className="border-border rounded-lg p-4">
+      <CmsLayoutPage className={undefined} fragments={fragments} />
+    </CorePreviewFrame>
+  );
+  const preview = hasFragments ? previewFrame : previewEmpty;
 
   // Life Cycle
 
@@ -98,6 +120,14 @@ export default function Component(
           getRowId={getLayoutFragmentRowId}
           rows={cmsLayout.fragments}
         />
+
+        <GlobalHeading
+          className="mt-8 mb-4"
+          heading="h2"
+          icon={EyeIcon}
+          title={LAYOUT_DETAIL_COPY.previewHeading}
+        />
+        {preview}
       </div>
     </GlobalScreen>
   );
