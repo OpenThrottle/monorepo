@@ -188,6 +188,32 @@ describe('OpenThrottleCommander Component', () => {
       expect(component.queryByRole('dialog')).not.toBeInTheDocument();
     });
 
+    test('renders an empty-state extra trailing node beside its label', async () => {
+      const user = userEvent.setup();
+      component = renderCommander({
+        ...props,
+        emptyStateExtras: () => [
+          {
+            id: 'jump-plan-abc123',
+            label: 'Open plan: Ship it (abc123…)',
+            onSelect: () => {},
+            trailing: <span data-testid="status-badge">In progress</span>,
+            value: 'abc123 open plan',
+          },
+        ],
+        groups: [],
+      });
+      const dialog = await openCommandPalette(user, component);
+      await user.type(getCommandInput(component, dialog), 'abc123');
+
+      const trailing = await within(dialog).findByTestId(
+        'CommanderItemRow-trailing',
+      );
+      expect(trailing).toContainElement(
+        within(dialog).getByTestId('status-badge'),
+      );
+    });
+
     test('should render UUID debug jumps when emptyStateExtras returns items', async () => {
       const user = userEvent.setup();
       const planId = 'c65fb0f7-56ae-43bb-b516-dfd41fda7985';

@@ -16,11 +16,9 @@ export interface AudioPlaybackState {
 
 /**
  * @public
- * @description A minimal plan reference returned by the `resolvePlanRef` query
- * (mirrors the server `PlanRefObject`). Enough to render a confident ⌘K redirect
- * row and resolve a short fragment to its full id.
+ * @description Fields every resolved id ref carries, whichever entity it names.
  */
-export interface PlanRefMatch {
+export interface IdRefMatchBase {
   readonly id: string;
   readonly status: string;
   readonly title: string;
@@ -28,11 +26,37 @@ export interface PlanRefMatch {
 
 /**
  * @public
- * @description Payload a resolver resource route returns for a lookup. `prefix`
- * echoes the normalized fragment the matches were resolved for, so the hook can
- * ignore data that belongs to a stale keystroke.
+ * @description An id that resolved to a plan.
  */
-export interface PlanRefResolverData {
-  readonly matches: readonly PlanRefMatch[];
-  readonly prefix: string;
+export interface PlanIdRefMatch extends IdRefMatchBase {
+  readonly kind: 'PLAN';
+}
+
+/**
+ * @public
+ * @description An id that resolved to a task; carries its owning plan so a row
+ * can name it and link to `/plans/<planId>/tasks/<id>`.
+ */
+export interface TaskIdRefMatch extends IdRefMatchBase {
+  readonly kind: 'TASK';
+  readonly planId: string;
+  readonly planTitle: string | null;
+}
+
+/**
+ * @public
+ * @description One `resolveIdRef` result (mirrors the server `IdRefObject`),
+ * discriminated on `kind`.
+ */
+export type IdRefMatch = PlanIdRefMatch | TaskIdRefMatch;
+
+/**
+ * @public
+ * @description Payload an id-ref resolver resource route returns. `ref` echoes
+ * the normalized hex the matches were resolved for, so the hook can drop data
+ * that belongs to a stale keystroke.
+ */
+export interface IdRefResolverData {
+  readonly matches: readonly IdRefMatch[];
+  readonly ref: string;
 }

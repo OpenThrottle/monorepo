@@ -12,10 +12,10 @@ import {
   THEMES,
   Toaster,
 } from '@openthrottle/react-router-shadcn';
-import type { PlanRefResolverData } from '@openthrottle/react-router-ui';
+import type { IdRefResolverData } from '@openthrottle/react-router-ui';
 import {
   OpenThrottleCommander,
-  usePlanRefResolver,
+  useIdRefResolver,
 } from '@openthrottle/react-router-ui';
 import type { GlobalLayoutHeaderSearchEvent } from '@openthrottle/react-router-ui-global';
 import {
@@ -122,6 +122,8 @@ import {
   clearHomeComposerCache,
   isComposerNeutralAction,
 } from '~/routing/home/utils/home-composer-cache';
+import { PlanStatusBadge } from '~/routing/plans/components/PlanStatusBadge';
+import { isPlanStatusKey } from '~/routing/plans/utils/utils.plans';
 import { queueJobDetailPath } from '~/routing/queues/utils/queueJobDetailPath';
 import stylesheet from '~/styles.css?url';
 
@@ -508,7 +510,7 @@ export default function App(): React.ReactElement {
   const data = useLoaderData();
   const revalidator = useRevalidator();
   const fetcher = useFetcher();
-  const planRefFetcher = useFetcher<PlanRefResolverData>();
+  const idRefFetcher = useFetcher<IdRefResolverData>();
   const permissions = usePermissions();
   const navigation = React.useMemo(() => {
     if (data?.user) {
@@ -600,41 +602,48 @@ export default function App(): React.ReactElement {
   );
 
   /**
-   * Debounced short-id-prefix resolver: when the palette query is a short hex
-   * fragment (e.g. `f5e40886`), resolve it to matching plan(s) via the
-   * `/resources/resolve-plan-ref` loader (server-side `resolvePlanRef`). Full
-   * UUIDs and non-id text never trigger a lookup.
+   * Debounced id resolver: when the palette query is a short hex fragment
+   * (e.g. `f5e40886`) or a full UUID, resolve it to the matching plan(s) and
+   * task(s) via the `/resources/resolve-id-ref` loader (server-side
+   * `resolveIdRef`). Non-id text never triggers a lookup.
    */
-  const loadPlanRef = React.useCallback(
-    (prefix: string) => {
-      planRefFetcher.load(
-        `/resources/resolve-plan-ref?prefix=${encodeURIComponent(prefix)}`,
+  const loadIdRef = React.useCallback(
+    (ref: string) => {
+      idRefFetcher.load(
+        `/resources/resolve-id-ref?ref=${encodeURIComponent(ref)}`,
       );
     },
-    [planRefFetcher],
+    [idRefFetcher],
   );
 
-  const { loading: planRefLoading, matches: planRefMatches } =
-    usePlanRefResolver({
-      data: planRefFetcher.data,
-      load: loadPlanRef,
-      query: commanderQuery,
-      state: planRefFetcher.state,
-    });
+  const { loading: idRefLoading, matches: idRefMatches } = useIdRefResolver({
+    data: idRefFetcher.data,
+    debounceMs: undefined,
+    load: loadIdRef,
+    query: commanderQuery,
+    state: idRefFetcher.state,
+  });
+
+  /** A resolved ref's status as the commander row's trailing badge. */
+  const renderIdRefStatus = React.useCallback((status: string) => {
+    return isPlanStatusKey(status) ? <PlanStatusBadge status={status} /> : null;
+  }, []);
 
   /**
    * When the palette query matches no static commands, offer POST-backed jumps
    * (plan, queue, generator, queue/job, plan/task, indexes, workspace search)
-   * plus confident `Open plan` rows for a resolved short id fragment.
+   * plus confident `Open plan` / `Open task` rows, with status badges, for a
+   * resolved id.
    */
   const commanderEmptyExtras = React.useCallback(
     (query: string) =>
       buildCommanderEmptyStateExtras(query, {
-        planRefLoading,
-        planRefMatches,
+        idRefLoading,
+        idRefMatches,
+        renderStatus: renderIdRefStatus,
         submitCommanderSearch,
       }),
-    [planRefLoading, planRefMatches, submitCommanderSearch],
+    [idRefLoading, idRefMatches, renderIdRefStatus, submitCommanderSearch],
   );
 
   // Markup

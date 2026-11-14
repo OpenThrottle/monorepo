@@ -147,26 +147,38 @@ _Last updated for plan “Trigger commander from GlobalLayoutHeader search” (d
 
 ---
 
-## Short-UUID plan detection (⌘K quick redirect)
+## Id lookup with status (⌘K quick redirect)
 
-Typing a short leading hex fragment of a plan id (e.g. `f5e40886`) into the
-palette resolves it to the real plan and offers a confident one-keystroke
-redirect to `/plans/<full-id>`. Full UUIDs, `queueId/jobId` pairs, and
-plan-task pairs keep their existing behavior.
+Typing an id into the palette, either a short leading hex fragment (e.g.
+`f5e40886`) or a full UUID, resolves it to the matching plans **and tasks** and
+offers a confident one-keystroke redirect. Each resolved row shows the plan's or
+task's status as a badge, so the palette answers "what state is it in?"
+without opening the page. A plan row opens `/plans/<id>`; a task row names its
+plan and opens `/plans/<planId>/tasks/<taskId>`. For a full UUID the resolved
+rows come first, followed by the queue / generator / search fallbacks (the
+resolver does not cover queues or generators). `queueId/jobId` and plan-task
+pairs keep their existing behavior.
 
 **How it is wired in `openthrottle-developer`**
 
-1. Server: `resolvePlanRef(prefix: String!): [PlanRefObject!]!` (openthrottle-server
-   `PlansResolver`) normalizes the prefix (trim/lowercase/strip hyphens),
-   short-circuits to `[]` below 6 hex chars or on non-hex input, and matches
-   `REPLACE(id::text,'-','') ILIKE :pattern` (bounded, `updatedAt DESC`, top 6).
-2. Client transport: `/resources/resolve-plan-ref?prefix=<hex>` — a loader-only
-   resource route that calls `resolvePlanRef` via `executeGraphqlWithAuth`
-   (client GraphQL is server-only) and echoes the normalized prefix.
+1. Server: `resolveIdRef(ref: String!): [IdRefObject!]!` (openthrottle-server
+   `graphql/id-refs`) normalizes the input (trim/lowercase/strip hyphens) and
+   returns `[]` below 6 hex chars, above 32, or on non-hex input. A full UUID is
+   an exact `id =` match; a fragment matches
+   `REPLACE(id::text,'-','') ILIKE :pattern`. Plans and tasks are queried in
+   parallel and merged plans-first (`updatedAt DESC`, top 8). Each ref carries
+   `kind` (`PLAN` | `TASK`), `status`, `title` and, for tasks, `planId` and
+   `planTitle`. `resolvePlanRef` (plans only) is deprecated in its favor.
+2. Client transport: `/resources/resolve-id-ref?ref=<hex>`, a loader-only
+   resource route that calls `resolveIdRef` via `executeGraphqlWithAuth`
+   (client GraphQL is server-only), maps the result to the `IdRefMatch` union
+   and echoes the normalized ref.
 3. `root.tsx` observes the palette query via `OpenThrottleCommander`'s
-   `onSearchChange`, feeds it to the debounced `usePlanRefResolver`
-   (`@openthrottle/react-router-ui`), and passes matches to
-   `buildCommanderEmptyStateExtras`.
+   `onSearchChange`, feeds it to the debounced `useIdRefResolver`
+   (`@openthrottle/react-router-ui`), and passes the matches plus a
+   `renderStatus` callback (the app's `PlanStatusBadge`) to
+   `buildCommanderEmptyStateExtras`. The badge renders in the row's
+   `CommanderItem.trailing` slot.
 
 **Reusing in another app (e.g. `openthrottle-admin`)**
 
@@ -174,17 +186,16 @@ The recognition + resolution logic is factored into shared packages so any app
 that hosts `OpenThrottleCommander` can adopt it without re-implementing a
 full-UUID gate:
 
-- `@openthrottle/react-router-utils` — `classifyIdInput` / `isShortIdFragment` /
+- `@openthrottle/react-router-utils`: `classifyIdInput` / `isShortIdFragment` /
   `normalizeIdFragment` / `REGEX_UUID` / `MIN_ID_FRAGMENT_LENGTH`.
-- `@openthrottle/react-router-ui` — `usePlanRefResolver` hook +
-  `PlanRefMatch` / `PlanRefResolverData` types, and the `onSearchChange` prop.
+- `@openthrottle/react-router-ui`: the `useIdRefResolver` hook, the
+  `IdRefMatch` / `IdRefResolverData` types, `CommanderItem.trailing`, and the
+  `onSearchChange` prop.
 
-To adopt: author a `resolvePlanRef` GraphQL document + a
-`/resources/resolve-plan-ref` loader in that app (copy the developer app's
-route), then wire `onSearchChange` → `usePlanRefResolver` → the app's commander
-empty-state builder. As of this plan, **`openthrottle-developer` is the only
-app that renders `OpenThrottleCommander`**; `openthrottle-admin` has no command
-palette yet, so there is nothing to wire there until it gains one — the shared
-pieces above are the entire adoption surface when it does.
+To adopt: author a `resolveIdRef` GraphQL document + a
+`/resources/resolve-id-ref` loader in that app (copy the developer app's
+route), then wire `onSearchChange` → `useIdRefResolver` → the app's commander
+empty-state builder. **`openthrottle-developer` is the only app that renders
+`OpenThrottleCommander`**; `openthrottle-admin` has no command palette yet.
 
 _Short-UUID detection added by plan “Commander: short-UUID plan detection + quick redirect”._

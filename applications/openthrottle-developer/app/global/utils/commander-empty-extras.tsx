@@ -1,7 +1,4 @@
-import type {
-  CommanderItem,
-  PlanRefMatch,
-} from '@openthrottle/react-router-ui';
+import type { CommanderItem, IdRefMatch } from '@openthrottle/react-router-ui';
 import {
   isShortIdFragment,
   REGEX_UUID,
@@ -43,13 +40,17 @@ export type CommanderSearchFields = {
  */
 interface CommanderEmptyStateExtrasHandlers {
   /**
-   * @description True while a short-fragment plan lookup is in flight (drives the "Resolving…" row).
+   * @description True while an id lookup (short fragment or full UUID) is in flight; drives the "Resolving…" row.
    */
-  readonly planRefLoading?: boolean;
+  readonly idRefLoading?: boolean;
   /**
-   * @description Resolved plan matches for a typed short id fragment (from {@link usePlanRefResolver}). Empty until a fragment resolves.
+   * @description Plans and tasks the typed id resolved to (from `useIdRefResolver`). Empty until the lookup resolves.
    */
-  readonly planRefMatches?: readonly PlanRefMatch[];
+  readonly idRefMatches?: readonly IdRefMatch[];
+  /**
+   * @description Renders a resolved ref's status as the row's trailing badge. Injected by the caller so `global/` never imports a `routing/` component.
+   */
+  readonly renderStatus?: (status: string) => React.ReactNode;
   /**
    * @description Submit debug navigation via root action — same redirect rules as the loader-tested action map.
    */
@@ -121,7 +122,7 @@ const buildNonUuidDebugIndexItems = (
 
 /**
  * @description Workspace full-text search escape, always offered alongside the
- * short-fragment plan rows so there is an action even when nothing resolves.
+ * short-fragment id rows so there is an action even when nothing resolves.
  */
 const buildWorkspaceSearchItem = (
   q: string,
@@ -139,50 +140,131 @@ const buildWorkspaceSearchItem = (
 };
 
 /**
- * @description Rows for a typed short id fragment: a confident `Open plan` row
- * per resolved match (redirecting to the resolved FULL id via the existing
- * commander-search POST), a "Resolving…" indicator while the lookup is in
- * flight, plus a workspace-search escape. Returns `null` when the fragment has
- * resolved to nothing and is idle, so the caller falls through to the generic
- * browse shortcuts.
+ * @description One confident row per resolved id ref. A plan opens its detail
+ * page; a task opens `/plans/<planId>/tasks/<taskId>` and names its plan. Each
+ * row carries the ref's status as a trailing badge, so the palette answers
+ * "what state is it in?" without navigating.
  */
-const buildPlanRefFragmentItems = (
+const buildIdRefMatchItem = (
   q: string,
-  matches: readonly PlanRefMatch[],
-  loading: boolean,
-  submit: CommanderEmptyStateExtrasHandlers['submitCommanderSearch'],
-): readonly CommanderItem[] | null => {
-  if (matches.length > 0) {
-    const planRows = matches.map((match) => {
-      const preview = match.id.slice(0, 8);
+  match: IdRefMatch,
+  handlers: CommanderEmptyStateExtrasHandlers,
+): CommanderItem => {
+  const { renderStatus, submitCommanderSearch: submit } = handlers;
+  const preview = match.id.slice(0, 8);
+  const trailing = renderStatus?.(match.status);
 
-      return {
-        icon: <MapIcon aria-hidden={true} className={ICON_SM} />,
-        id: `jump-plan-ref-${match.id}`,
-        label: `Open plan: ${match.title} (${preview}…)`,
-        onSelect: () => {
-          submit({ id: match.id, jump: 'plan-detail' });
-        },
-        value: `${q} open plan ${match.title} ${match.id}`,
-      };
-    });
+  if (match.kind === 'TASK') {
+    const planContext = match.planTitle ? ` · ${match.planTitle}` : '';
 
-    return [...planRows, buildWorkspaceSearchItem(q, submit)];
+    return {
+      icon: <ClipboardListIcon aria-hidden={true} className={ICON_SM} />,
+      id: `jump-task-ref-${match.id}`,
+      label: `Open task: ${match.title} (${preview}…)${planContext}`,
+      onSelect: () => {
+        submit({ id: match.planId, id2: match.id, jump: 'plan-task' });
+      },
+      trailing,
+      value: `${q} open task ${match.title} ${match.id}`,
+    };
   }
 
-  if (loading) {
+  return {
+    icon: <MapIcon aria-hidden={true} className={ICON_SM} />,
+    id: `jump-plan-ref-${match.id}`,
+    label: `Open plan: ${match.title} (${preview}…)`,
+    onSelect: () => {
+      submit({ id: match.id, jump: 'plan-detail' });
+    },
+    trailing,
+    value: `${q} open plan ${match.title} ${match.id}`,
+  };
+};
+
+/**
+ * @description Rows for a typed id (short fragment or full UUID): a confident
+ * row per resolved plan or task, or a "Resolving…" indicator while the lookup
+ * is in flight. Returns `null` when the id resolved to nothing and is idle, so
+ * the caller decides what to fall back to.
+ */
+const buildIdRefItems = (
+  q: string,
+  handlers: CommanderEmptyStateExtrasHandlers,
+): readonly CommanderItem[] | null => {
+  const { idRefLoading = false, idRefMatches = [] } = handlers;
+
+  if (idRefMatches.length > 0) {
+    return idRefMatches.map((match) => {
+      return buildIdRefMatchItem(q, match, handlers);
+    });
+  }
+
+  if (idRefLoading) {
     return [
       {
         icon: <Loader2Icon aria-hidden={true} className={ICON_SM} />,
-        id: `resolving-plan-ref-${q}`,
-        label: `Resolving plan “${q}…”`,
-        value: `${q} resolving plan`,
+        id: `resolving-id-ref-${q}`,
+        label: `Resolving “${q.slice(0, 8)}…”`,
+        value: `${q} resolving id`,
       },
-      buildWorkspaceSearchItem(q, submit),
     ];
   }
 
   return null;
+};
+
+/**
+ * @description Blind jumps for a full UUID the resolver could not place: it may
+ * be a queue or generator (which `resolveIdRef` does not cover), or a plan the
+ * lookup missed. The plan row is dropped once the id resolved to a plan or
+ * task, since the confident row above already covers it.
+ */
+const buildUuidFallbackItems = (
+  q: string,
+  isResolved: boolean,
+  submit: CommanderEmptyStateExtrasHandlers['submitCommanderSearch'],
+): readonly CommanderItem[] => {
+  const preview = q.slice(0, 8);
+  const planItem: CommanderItem = {
+    icon: <MapIcon aria-hidden={true} className={ICON_SM} />,
+    id: `jump-plan-${q}`,
+    label: `Open plan (${preview}…)`,
+    onSelect: () => {
+      submit({ id: q, jump: 'plan-detail' });
+    },
+    value: `${q} open plan`,
+  };
+  const otherItems: readonly CommanderItem[] = [
+    {
+      icon: <ChartLineIcon aria-hidden={true} className={ICON_SM} />,
+      id: `jump-queue-${q}`,
+      label: `Open queue (${preview}…)`,
+      onSelect: () => {
+        submit({ id: q, jump: 'queue-detail' });
+      },
+      value: `${q} open queue`,
+    },
+    {
+      icon: <BotIcon aria-hidden={true} className={ICON_SM} />,
+      id: `jump-generator-${q}`,
+      label: `Open generator (${preview}…)`,
+      onSelect: () => {
+        submit({ id: q, jump: 'generator-detail' });
+      },
+      value: `${q} open generator`,
+    },
+    {
+      icon: <SearchIcon aria-hidden={true} className={ICON_SM} />,
+      id: `jump-search-uuid-${q}`,
+      label: `Search workspace for “${preview}…” (tasks, plans, chunks)`,
+      onSelect: () => {
+        submit({ q });
+      },
+      value: `${q} search workspace uuid`,
+    },
+  ];
+
+  return isResolved ? otherItems : [planItem, ...otherItems];
 };
 
 /**
@@ -192,11 +274,7 @@ export const buildCommanderEmptyStateExtras = (
   query: string,
   handlers: CommanderEmptyStateExtrasHandlers,
 ): readonly CommanderItem[] => {
-  const {
-    planRefLoading = false,
-    planRefMatches = [],
-    submitCommanderSearch: submit,
-  } = handlers;
+  const { submitCommanderSearch: submit } = handlers;
 
   const q = query.trim();
   if (q.length === 0) {
@@ -230,57 +308,17 @@ export const buildCommanderEmptyStateExtras = (
   }
 
   if (REGEX_UUID.test(q)) {
-    const preview = q.slice(0, 8);
-    return [
-      {
-        icon: <MapIcon aria-hidden={true} className={ICON_SM} />,
-        id: `jump-plan-${q}`,
-        label: `Open plan (${preview}…)`,
-        onSelect: () => {
-          submit({ id: q, jump: 'plan-detail' });
-        },
-        value: `${q} open plan`,
-      },
-      {
-        icon: <ChartLineIcon aria-hidden={true} className={ICON_SM} />,
-        id: `jump-queue-${q}`,
-        label: `Open queue (${preview}…)`,
-        onSelect: () => {
-          submit({ id: q, jump: 'queue-detail' });
-        },
-        value: `${q} open queue`,
-      },
-      {
-        icon: <BotIcon aria-hidden={true} className={ICON_SM} />,
-        id: `jump-generator-${q}`,
-        label: `Open generator (${preview}…)`,
-        onSelect: () => {
-          submit({ id: q, jump: 'generator-detail' });
-        },
-        value: `${q} open generator`,
-      },
-      {
-        icon: <SearchIcon aria-hidden={true} className={ICON_SM} />,
-        id: `jump-search-uuid-${q}`,
-        label: `Search workspace for “${preview}…” (tasks, plans, chunks)`,
-        onSelect: () => {
-          submit({ q });
-        },
-        value: `${q} search workspace uuid`,
-      },
-    ];
+    const idRefItems = buildIdRefItems(q, handlers) ?? [];
+    const isResolved = (handlers.idRefMatches?.length ?? 0) > 0;
+
+    return [...idRefItems, ...buildUuidFallbackItems(q, isResolved, submit)];
   }
 
   if (isShortIdFragment(q)) {
-    const fragmentItems = buildPlanRefFragmentItems(
-      q,
-      planRefMatches,
-      planRefLoading,
-      submit,
-    );
+    const idRefItems = buildIdRefItems(q, handlers);
 
-    if (fragmentItems) {
-      return fragmentItems;
+    if (idRefItems) {
+      return [...idRefItems, buildWorkspaceSearchItem(q, submit)];
     }
   }
 
