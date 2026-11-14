@@ -29,6 +29,7 @@ export * from './data/claimPlanInbox.ts';
 export * from './data/data.destructive-commands.ts';
 export * from './data/events.ts';
 export * from './data/graphql.ts';
+export * from './data/heartbeat.ts';
 export * from './data/jsonl.ts';
 export * from './data/kickoff.ts';
 export * from './data/persist.ts';

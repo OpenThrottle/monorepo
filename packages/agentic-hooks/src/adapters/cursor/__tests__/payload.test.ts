@@ -21,6 +21,7 @@ import {
   cursorOutcomeForFinalStatus,
   normalizeCursorPayload,
   normalizeCursorSessionEndPayload,
+  readCursorPayloadCwd,
 } from '../payload.ts';
 
 const fixturesDir = path.join(
@@ -159,6 +160,23 @@ describe('normalizeCursorSessionEndPayload', () => {
     expect(
       normalizeCursorSessionEndPayload({ hook_event_name: 'sessionEnd' }),
     ).toBeNull();
+  });
+});
+
+describe('readCursorPayloadCwd', () => {
+  describe('when the payload is a captured sessionStart', () => {
+    it('reads workspace_roots[0]', () => {
+      expect(readCursorPayloadCwd(fixture('session-start'))).toBe(
+        '/tmp/probe-repo',
+      );
+    });
+  });
+
+  describe('when the payload is not an object', () => {
+    it('is null', () => {
+      expect(readCursorPayloadCwd(null)).toBeNull();
+      expect(readCursorPayloadCwd('nope')).toBeNull();
+    });
   });
 });
 

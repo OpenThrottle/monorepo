@@ -14,6 +14,11 @@
       {
         "command": "${CURSOR_PLUGIN_ROOT}/hooks/skill-usage-complete.cjs"
       }
+    ],
+    "sessionStart": [
+      {
+        "command": "${CURSOR_PLUGIN_ROOT}/hooks/skill-usage-heartbeat.cjs"
+      }
     ]
   },
   "version": 1

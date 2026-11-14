@@ -72,6 +72,10 @@ Two rows carry caveats worth stating rather than smoothing over:
   normalizer that guesses cannot tell "not a skill invocation" from "the shape changed underneath
   us", which is exactly the bug `cursor` carried.
 
+Every one of these, and **`antigravity`**, also sends the coverage heartbeat on its session-start
+event (contract §8). For antigravity that is the only hook: it ships in the generated workspace
+plugin `.agents/plugins/openthrottle/`, with no skill capture or completion yet.
+
 Tools with no row yet are not necessarily unreachable; see
 [agent-cli-hook-capability-matrix.md](../../docs/monorepo/agent-cli-hook-capability-matrix.md) for
 what each CLI's hook and plugin surface actually supports, measured against installed binaries.
@@ -112,7 +116,17 @@ command = "/absolute/path/to/openthrottle/.codex/hooks/skill-usage-capture.cjs"
 [[hooks.SessionEnd.hooks]]
 type = "command"
 command = "/absolute/path/to/openthrottle/.codex/hooks/skill-usage-complete.cjs"
+
+[[hooks.SessionStart]]
+[[hooks.SessionStart.hooks]]
+type = "command"
+command = "/absolute/path/to/openthrottle/.codex/hooks/skill-usage-heartbeat.cjs"
 ```
+
+The `SessionStart` entry sends the coverage heartbeat
+([contract §8](../../docs/monorepo/child-repo-hook-telemetry-contract.md#8-coverage-heartbeat)), so
+`/usage` → Telemetry coverage can list the machine. A bundle that lives outside the session's
+repository, as it does here, reports the `plugin-dir` leg.
 
 `codex doctor` reports whether the file parsed. `-c hooks.…=…` and `CODEX_HOME` give per-invocation
 control.

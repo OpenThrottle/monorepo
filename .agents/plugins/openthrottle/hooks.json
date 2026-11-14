@@ -11,5 +11,13 @@
         "matcher": "run_command"
       }
     ]
+  },
+  "openthrottle-telemetry": {
+    "SessionStart": [
+      {
+        "command": "node ./hooks/skill-usage-heartbeat.cjs",
+        "timeout": 10
+      }
+    ]
   }
 }

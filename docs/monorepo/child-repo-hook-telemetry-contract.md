@@ -240,6 +240,20 @@ delivery leg, in which repo, with what sitting in the buffer.
   endpoint resolves, and `OPENTHROTTLE_TELEMETRY_OFFLINE=1` posts nothing. The repo copy shadows
   the plugin copy exactly as the capture hook does (`isShadowedByRepoHooks`), so the monorepo never
   sends two.
+- **Cursor** sends its heartbeat on `sessionStart`, the once-per-session event that fires headless
+  (`agent-cli-hook-capability-matrix.md` § Session-start event). Its plugin copy stands down when the
+  repository's `.cursor/hooks.json` registers the heartbeat too. Cursor's marketplace install
+  location is unmeasured, so a Cursor heartbeat reports `marketplace_plugin_installed` as null
+  (unknown, which raises no `MANUAL_SESSIONS_UNCOVERED`) and a marketplace install as `plugin-dir`.
+  Its leg is decided by where the running script lives, not by `CURSOR_PLUGIN_ROOT` alone: Cursor
+  can hand a project hook another plugin's root.
+- **Codex and Antigravity** have no plugin-root variable, so their leg is read from where the
+  running script lives (`detectDeliveryLegFromScript`): inside the session's repository is `repo`,
+  anywhere else — codex's `~/.codex/config.toml` pointing at a checkout's `.codex/hooks/` — is
+  `plugin-dir`, and the driver stamp still wins. Neither has a marketplace record, so both report
+  it as null. Antigravity's heartbeat ships in the generated workspace plugin
+  `.agents/plugins/openthrottle/`, so it is `repo` there; codex's is delivered by the home-config
+  block in `packages/agentic-hooks/README.md`.
 
 ### Fields — and why each one is allowed
 
@@ -247,7 +261,7 @@ delivery leg, in which repo, with what sitting in the buffer.
 | ------------------------------ | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `machine_id`                   | random UUID, generated once into `~/.openthrottle/machine-id`           | Carries no information about the machine. A hostname hash was rejected: hostnames come from a tiny, guessable space (`<first-name>s-MacBook-Pro.local`), so an unsalted hash is a hostname with extra steps, and a salt stored beside it buys nothing.                                                                |
 | `machine_label`                | `OPENTHROTTLE_MACHINE_LABEL` from env / `~/.openthrottle/.env`, or null | Opt-in and typed by the operator, so the UI can say "work laptop" instead of `3f2a…`. Never defaulted from the hostname.                                                                                                                                                                                              |
-| `source`                       | `claude-code` (Cursor is a follow-up)                                   | Already sent on every event.                                                                                                                                                                                                                                                                                          |
+| `source`                       | `claude-code`, `cursor`, `codex` or `antigravity`                       | Already sent on every event.                                                                                                                                                                                                                                                                                          |
 | `delivery_leg`                 | `repo` \| `plugin-dir` \| `marketplace`, per the table below            | A fact about the install, not about the user's work.                                                                                                                                                                                                                                                                  |
 | `repo_identity`                | normalized git remote (§3), or null                                     | §3's rule, applied for the first time: no raw paths, no remote means no identity. Normalized **client-side** with a zero-dep twin of the server's `normalizeRemoteUrl`, because a raw remote can carry `https://user:token@…`. The server normalizes again and drops anything that does not survive.                  |
 | `plugin_version`               | the running payload's `plugin.json` version, or null for `repo`         | Lets `/usage` flag an outdated install. Local file, no identity.                                                                                                                                                                                                                                                      |
