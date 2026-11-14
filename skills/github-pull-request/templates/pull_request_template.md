@@ -9,7 +9,7 @@
 
 ## Review focus
 
-**TODO:** Where to look hardest — decisions made, anything uncertain, what breaks if this is wrong and how to roll it back. "Nothing unusual" is a fine answer.
+<!-- Where to look hardest: decisions made, anything uncertain, what breaks if this is wrong and how to roll it back. "Nothing unusual" is a fine answer. -->
 
 ## Follow-ups
 

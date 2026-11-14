@@ -69,7 +69,10 @@ see [tools/AGENTS.md](../../tools/AGENTS.md)).
   template `**TODO:**` text, replaces every `Plan-Id:`/`Task-Id:` line with the OT footer set, wraps
   the body in `<!-- ot:plan-run-body -->` markers plus a sha256 digest line, and runs
   `.agents/skills/github-pull-request/scripts/check-pr-attribution.sh` (the github-pull-request skill's guard, present via the skill fan-out here and
-  via injection in other repos). If a check fails it falls back to `plan-run-pr-body.ts`; either way a
+  via injection in other repos). If a check fails it falls back to `plan-run-pr-body.ts`, which fills the repo's
+  `.github/pull_request_template.md`, else the skill's bundled
+  `.agents/skills/github-pull-request/templates/pull_request_template.md`, else writes Summary and
+  Testing itself (its first `**TODO:**` line is the Summary prompt); either way a
   plan_output line names the source. On an existing PR it refreshes title + body
   (`gh pr edit`, REST `PATCH` fallback) only when `locatePlanRunPrBody` says `empty` or `host`.
   Ownership is decided by the marked region alone: `host` means exactly one well-formed

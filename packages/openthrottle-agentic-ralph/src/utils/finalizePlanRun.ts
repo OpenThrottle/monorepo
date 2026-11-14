@@ -21,7 +21,6 @@ import {
   locatePlanRunPrBody,
   parseOnelineLog,
   parseTaskIdTrailers,
-  PR_TEMPLATE_FALLBACK,
   replacePlanRunPrBodyRegion,
   resolvePlanRunPrTitle,
   selectFooterTaskIds,
@@ -331,15 +330,36 @@ const loadPlanAndTasks = async (params: {
   return { plan, tasks };
 };
 
-const readPrTemplate = async (cwd: string): Promise<string> => {
+const readOptionalFile = async (path: string): Promise<string | undefined> => {
   try {
-    return await readFile(
-      join(cwd, '.github', 'pull_request_template.md'),
-      'utf8',
-    );
+    return await readFile(path, 'utf8');
   } catch {
-    return PR_TEMPLATE_FALLBACK;
+    return undefined;
   }
+};
+
+/**
+ * @description The repository's own `.github/pull_request_template.md`, else the
+ * github-pull-request skill's bundled template from `.agents/skills/` (the skill fan-out here,
+ * injection elsewhere), else an empty template — {@link buildPlanRunPrBody} adds the Summary and
+ * Testing sections itself when a template has none.
+ */
+const readPrTemplate = async (cwd: string): Promise<string> => {
+  const [repoTemplate, bundledTemplate] = await Promise.all([
+    readOptionalFile(join(cwd, '.github', 'pull_request_template.md')),
+    readOptionalFile(
+      join(
+        cwd,
+        '.agents',
+        'skills',
+        'github-pull-request',
+        'templates',
+        'pull_request_template.md',
+      ),
+    ),
+  ]);
+
+  return repoTemplate ?? bundledTemplate ?? '';
 };
 
 /**
@@ -496,14 +516,6 @@ export const preparePlanRunPrDraftDir = async (params: {
   );
 
   return draftDir;
-};
-
-const readOptionalFile = async (path: string): Promise<string | undefined> => {
-  try {
-    return await readFile(path, 'utf8');
-  } catch {
-    return undefined;
-  }
 };
 
 /**

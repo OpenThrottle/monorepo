@@ -61,9 +61,15 @@ const ok = (stdout = ''): WorkflowRalphCommandResult => {
   };
 };
 
-const createCwdWithTemplate = async (): Promise<string> => {
+const BUNDLED_TEMPLATE = `# Summary\n\n**TODO:** What changed and why.\n\n## Testing\n\n- [ ] **TODO:** Steps to verify\n\n## Bundled follow-ups\n\n- [ ] Learnings fed back\n`;
+
+/** Where the fixture repo keeps its PR template: its own, only the skill's bundled one, or none. */
+type TemplateLocation = 'bundled' | 'none' | 'repo';
+
+const createCwdWithTemplate = async (
+  templateAt: TemplateLocation = 'repo',
+): Promise<string> => {
   const cwd = await mkdtemp(join(tmpdir(), 'ralph-finalize-'));
-  await mkdir(join(cwd, '.github'), { recursive: true });
   const guardDir = join(
     cwd,
     '.agents',
@@ -72,11 +78,29 @@ const createCwdWithTemplate = async (): Promise<string> => {
     'scripts',
   );
   await mkdir(guardDir, { recursive: true });
-  await writeFile(
-    join(cwd, '.github', 'pull_request_template.md'),
-    TEMPLATE,
-    'utf8',
-  );
+  if (templateAt === 'repo') {
+    await mkdir(join(cwd, '.github'), { recursive: true });
+    await writeFile(
+      join(cwd, '.github', 'pull_request_template.md'),
+      TEMPLATE,
+      'utf8',
+    );
+  }
+  if (templateAt === 'bundled') {
+    const templatesDir = join(
+      cwd,
+      '.agents',
+      'skills',
+      'github-pull-request',
+      'templates',
+    );
+    await mkdir(templatesDir, { recursive: true });
+    await writeFile(
+      join(templatesDir, 'pull_request_template.md'),
+      BUNDLED_TEMPLATE,
+      'utf8',
+    );
+  }
   await writeFile(
     join(guardDir, 'check-pr-attribution.sh'),
     '#!/bin/sh\nexit 0\n',
@@ -467,8 +491,8 @@ describe('finalizePlanRun', () => {
   });
 
   describe('when no PR exists', () => {
-    const run = async () => {
-      const cwd = await createCwdWithTemplate();
+    const run = async (templateAt: TemplateLocation = 'repo') => {
+      const cwd = await createCwdWithTemplate(templateAt);
       const created: { body: string; title: string } = { body: '', title: '' };
       const runCommand = createRunCommand({ aheadCount: '1' }, (args) => {
         if (args[1] === 'create') {
@@ -652,6 +676,25 @@ describe('finalizePlanRun', () => {
       expect(created.body).toContain('### Not delivered');
       expect(created.body).toContain('- Rotate the token (BLOCKED)');
       expect(created.body).toContain('- [ ] Check Settle the repo:');
+      expect(created.body).toContain('- [ ] Pipelines should be passing');
+      expect(created.body).not.toContain('TODO');
+    });
+
+    it("falls back to the github-pull-request skill's bundled template", async () => {
+      const { created } = await run('bundled');
+
+      expect(created.body).toContain('**Settle the repo after a plan run**');
+      expect(created.body).toContain('## Bundled follow-ups');
+      expect(created.body).toContain('- [ ] Check Settle the repo:');
+      expect(created.body).not.toContain('TODO');
+    });
+
+    it('builds Summary and Testing itself when there is no template at all', async () => {
+      const { created } = await run('none');
+
+      expect(created.body).toContain('## Summary');
+      expect(created.body).toContain('**Settle the repo after a plan run**');
+      expect(created.body).toContain('## Testing');
       expect(created.body).toContain('- [ ] Pipelines should be passing');
       expect(created.body).not.toContain('TODO');
     });
