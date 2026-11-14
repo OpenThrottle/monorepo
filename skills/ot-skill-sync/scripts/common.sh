@@ -34,7 +34,7 @@ LOCKFILE_NAME="skills-lock.json"
 # .agents/skills/ in-repo, so stage 1 alone never reaches them.
 #   .claude/skills  → Claude Code (only .claude/skills), and also read by Cursor + Grok
 # Antigravity (agy) needs no fan-out — it reads <workspace>/.agents/skills/ natively,
-# so stage 1 already covers it. See SKILL.md § "Which CLI reads what" for the
+# so stage 1 already covers it. See references/cli-matrix.md for the
 # verified matrix, including the two CLIs no in-repo dir reaches (codex, opencode).
 # Override per repo (survives skill updates) with a space-separated env var, e.g.:
 #   AGENT_SKILL_DIRS=".claude/skills .opencode/skill"
@@ -57,7 +57,7 @@ AGENT_SKILL_DIRS="${AGENT_SKILL_DIRS:-$AGENT_SKILL_DIRS_DEFAULT}"
 # The default path and the override variable name are a CONTRACT shared with the
 # TypeScript injection path (resolvePersonalSkillsRoot in
 # packages/openthrottle-agentic-utils). Change one, change both — a test asserts
-# they agree. See docs/monorepo/foreign-workspace-skill-injection.md §7.
+# they agree. See https://github.com/openthrottle/monorepo/blob/main/docs/monorepo/foreign-workspace-skill-injection.md (§7).
 PERSONAL_SKILLS_DIR_ENV="OPENTHROTTLE_PERSONAL_SKILLS_DIR"
 PERSONAL_SKILLS_DIR_DEFAULT="${HOME:-}/.openthrottle/skills"
 

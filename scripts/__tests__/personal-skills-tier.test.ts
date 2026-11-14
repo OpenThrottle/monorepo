@@ -364,13 +364,24 @@ describe('personal skills tier', () => {
       ).toContain('name: my-experiment');
     });
 
-    it('names the docs touchpoints and the right commit scope', () => {
+    it('names the docs touchpoints and the right commit scope in an OpenThrottle repo', () => {
+      mkdirSync(join(sandbox.repo, 'docs'), { recursive: true });
+      writeFileSync(join(sandbox.repo, 'docs', 'Skills.md'), '# Skills\n');
       personal(sandbox, ['new', 'my-experiment']);
 
       const result = personal(sandbox, ['promote', 'my-experiment']);
 
       expect(result.output).toContain('docs/Skills.md');
       expect(result.output).toContain('feat(monorepo)');
+      expect(result.output).toContain('demote my-experiment');
+    });
+
+    it('omits the OpenThrottle-only hints outside an OpenThrottle repo', () => {
+      personal(sandbox, ['new', 'my-experiment']);
+
+      const result = personal(sandbox, ['promote', 'my-experiment']);
+
+      expect(result.output).not.toContain('docs/Skills.md');
       expect(result.output).toContain('demote my-experiment');
     });
 

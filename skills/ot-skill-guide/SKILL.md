@@ -9,7 +9,7 @@ description: >-
 metadata:
   author: openthrottle
   last-reviewed: '2026-11-14'
-  version: '1.0.0'
+  version: '1.1.0'
 name: ot-skill-guide
 ---
 

@@ -52,6 +52,17 @@ usage() {
   exit 2
 }
 
+# -h/--help: print the header (up to the exit-codes line) and stop. Only when it is the sole argument,
+# so no existing flag's behaviour changes.
+if [ $# -eq 1 ]; then
+  case "$1" in
+    -h | --help)
+      sed -n '2,/^# Exits 0/p' "$0" | sed 's/^# \{0,1\}//'
+      exit 0
+      ;;
+  esac
+fi
+
 title_file=""
 body_file=""
 message_files=""

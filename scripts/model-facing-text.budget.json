@@ -7,12 +7,7 @@
     "skillBody": 32768,
     "skillDescription": 1024
   },
-  "perItemOverrides": {
-    "skill/ot-loop": {
-      "cap": 37888,
-      "reason": "ot-loop is the canonical per-task discipline for running a plan. It deliberately keeps the loop, model routing, fan-out, run-row and finishing rules in one file, so agents never need a second read mid-run. At 30762 B (94% of the 32768 B class cap) any edit tripped the gate. Capped at measured x 1.2 per the headroom policy; it loads only when /ot-loop runs."
-    }
-  },
+  "perItemOverrides": {},
   "totals": {
     "alwaysInjected": 49152,
     "mcpInstructions": 3072,

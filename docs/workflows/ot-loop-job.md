@@ -103,7 +103,7 @@ downward. So the guard is two layers:
 Built from the task row only, plus the job's own operating instructions. No slash command, no MCP
 instruction, no skill reference, so it works on every registered driver (claude, codex, cursor,
 gemini, opencode, grok, antigravity). Derived from the skill's
-[The delegation prompt must stand alone](../../skills/ot-loop/SKILL.md#the-delegation-prompt-must-stand-alone).
+[The delegation prompt must stand alone](../../skills/ot-loop/references/model-routing.md#the-delegation-prompt-must-stand-alone).
 
 ```text
 You are working one task from a plan, inside a git worktree at the repository root.

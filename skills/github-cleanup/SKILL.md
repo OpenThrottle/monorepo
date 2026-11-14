@@ -1,7 +1,11 @@
 ---
 name: github-cleanup
-description: 'Find local branches whose work already reached the default branch (including squash merges), confirm with the user, then delete them and their worktrees. USE WHEN the user runs /github-cleanup, or asks to clean up, prune or delete merged/stale local branches or worktrees. Not for remote branches or for rewriting history (see github-squash).'
-disable-model-invocation: false
+compatibility: 'git, gh (authenticated), jq; the github-pull-request resolver is optional'
+description: 'Find local branches whose work already reached the default branch (including squash merges), confirm with the user, then delete them and their worktrees. USE WHEN the user runs /github-cleanup, or asks to clean up, prune or delete merged, stale or leftover local branches or orphaned worktrees. Not for remote branches, rewriting history (github-squash) or removing one specific worktree (ot-worktree).'
+metadata:
+  author: openthrottle
+  last-reviewed: '2026-11-14'
+  version: '1.1.0'
 ---
 
 # github-cleanup
@@ -23,23 +27,25 @@ bash <skill-dir>/scripts/classify-branches.sh            # TSV: VERDICT BRANCH P
 bash <skill-dir>/scripts/classify-branches.sh --explain <branch>   # files that never reached the default branch
 ```
 
-The classifier finds the remote and default branch itself through the `github-pull-request`
-skill's resolver, `.agents/skills/github-pull-request/scripts/resolve-repo-context.sh` (`origin`, else the first remote; the remote's own default
-branch, whatever it is named), so it works the same in any repo. Run the resolver yourself once
-too — its `WORKTREE_REMOVE` line decides step 3.1:
+The classifier finds the remote and default branch itself (`origin`, else the first remote; the
+remote's own default branch, whatever it is named). It uses the `github-pull-request` skill's
+resolver when installed, else plain `git remote` and `symbolic-ref`. Run the resolver yourself once
+too if it exists — its `WORKTREE_REMOVE` line decides step 3.1; without it, use `pnpm worktree:remove`
+only if `package.json` defines that script, else `git worktree remove`:
 
 ```bash
 bash "$(git rev-parse --show-toplevel)/.agents/skills/github-pull-request/scripts/resolve-repo-context.sh"
 ```
 
-It needs `git`, `jq` and an authenticated `gh`. If `gh` is unavailable, stop and say so — PR
+The classifier exits 0 on success, 1 for `--explain` on a branch with no shared history, 2 on
+usage errors, a missing tool, no remote or an unresolvable default branch. It needs `git`, `jq` and an authenticated `gh`. If `gh` is unavailable, stop and say so — PR
 state is what separates "open PR" from "merged", and guessing it is how work gets lost.
 
-| Verdict    | Meaning                                                                                                                                                                                                                                              |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **SAFE**   | Tip is on the default branch, or contained in a merged PR's head, or every file the branch changed reached the default branch with exactly that content (how a squash shows up). Backup / pre-squash snapshot branches of merged work land here too. |
-| **REVIEW** | Some but not all of the branch's file contents reached the default branch — usually a squash that picked up fixups, sometimes real leftover work.                                                                                                    |
-| **KEEP**   | Open PR, checked out in the current worktree, shares no history with the default branch (a branch from another remote), or work found nowhere else. Never offer these for deletion.                                                                  |
+| Verdict    | Meaning                                                                                                                                                                                                                                                                             |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **SAFE**   | Tip is on the default branch, or contained in a merged PR's head, or every file the branch changed reached the default branch with exactly that content (how a squash shows up). Backup / pre-squash snapshot branches (`backup/<branch>-pre-squash`) of merged work land here too. |
+| **REVIEW** | Some but not all of the branch's file contents reached the default branch — usually a squash that picked up fixups, sometimes real leftover work.                                                                                                                                   |
+| **KEEP**   | Open PR, checked out in the current worktree, shares no history with the default branch (a branch from another remote), or work found nowhere else. Never offer these for deletion.                                                                                                 |
 
 **Resolve every REVIEW row before you report.** Run `--explain <branch>` and, for each listed
 file, `git diff <remote>/<default> <branch> -- <file>`. A file is explained when the default branch
@@ -82,14 +88,9 @@ removal must be named in the question; a plain "yes" does not cover a `--force` 
 
 ## 4. Housekeeping (offer, separate yes)
 
-Offer these after the deletions, as their own question:
-
-| Step                            | Why                                                                                                                                                                                                 |
-| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `git worktree prune`            | Drops admin entries for worktree folders deleted by hand.                                                                                                                                           |
-| `git remote prune <remote>`     | Already done — the classifier's `fetch --prune` removes stale remote-tracking refs.                                                                                                                 |
-| `git maintenance run --task=gc` | Repacks and expires loose objects on git's safe defaults (unreachable objects older than two weeks). Better still: `git maintenance start` once, and git does this in the background on a schedule. |
-| `git stash list`                | Report only — old stashes are work the user forgot about, not garbage. Never drop one unasked.                                                                                                      |
+Offer these after the deletions, as their own question: `git worktree prune` (drops entries for
+worktree folders deleted by hand) and `git maintenance run --task=gc` or a one-time
+`git maintenance start`. Report `git stash list` only; never drop a stash unasked.
 
 **Do not run `git gc --aggressive --prune=now` by default.** `--prune=now` deletes unreachable
 objects immediately, which throws away the undo SHAs from step 3, and it races any git command

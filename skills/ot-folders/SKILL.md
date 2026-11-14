@@ -13,33 +13,22 @@ description: >-
   ot-generators first, then use this skill to place and shape it.
 metadata:
   author: OpenThrottle
-  version: '2.1'
+  last-reviewed: '2026-11-14'
+  version: '2.2'
 ---
 
 # OpenThrottle Folders
 
-Where code goes, what it is called, what shape it must have, and how to prove it
-before you commit. This codebase evolves quickly; machines write more and more of
-it, but humans still have to maintain it — consistent placement is what keeps that
-possible.
-
 Scaffold the file with **ot-generators** first, then use this skill to place and
 shape it.
 
-## How this fits other skills (no duplication)
+## Neighbouring skills
 
 | Need                                                       | Use                                                  |
 | ---------------------------------------------------------- | ---------------------------------------------------- |
-| **Where code goes, naming, folder shape, shape rules**     | **this skill**                                       |
 | Scaffolding a new app, package, component or route         | **ot-generators** — needs `NX_ISOLATE_PLUGINS=false` |
 | Project list, graph, targets, `affected`, running any task | **nx-workspace**                                     |
-| SQL migrations, table and column comments                  | **ot-postgres**                                      |
 | `openthrottle-server` / `-developer` / GraphQL internals   | **ot-stack**                                         |
-| Plans, tasks, `Plan-Id` / `Task-Id`                        | **ot-plans**                                         |
-| Wiring a dependency between workspace packages             | **link-workspace-packages**                          |
-
-This skill never tells you how to scaffold or how to run a task. If you find
-yourself wanting a generator command here, you want `ot-generators`.
 
 ## Reference files
 
@@ -47,6 +36,7 @@ yourself wanting a generator command here, you want `ot-generators`.
 - `references/NestJS_Application.md` — the `openthrottle-server` tree
 - `references/Packages.md` — the package flavours and the `src/index.ts` barrel rule
 - `references/Enforcement.md` — every rule and audit, the six markers, allowed route exports, opt-out pragmas
+- `references/verification.md` — the four verification tiers and what blocks a merge
 
 ## Technology buckets
 
@@ -134,12 +124,6 @@ is a package, and that is the whole test.
    | "it's reusable library code" | a package — scaffold it with `ot-generators`                                 |
    | a tool's own specific term   | fine — Maestro `subflows/` is specific; vagueness is the problem             |
 
-   **No exceptions remain.** `scripts/utils/` used to be `scripts/lib/`; `.husky/lib`,
-   `nestjs-repositories/src/common` and the e2e `helpers/` were renamed the same
-   way. `git ls-files | grep -E '(^|/)(lib|helpers|common|shared|misc)/'` returns only
-   `tools/generators/**/files/common/`, which is generator template input, not a
-   source folder.
-
 ## The folder vocabulary
 
 - **`components`** — the building blocks of the UI, the smallest unit worth
@@ -163,58 +147,16 @@ is a package, and that is the whole test.
   - good: `parseXxxx(param1)`, `formatYyyy(param1, param2)`, `validateZzzzz({ ... })`
   - bad: `must_get_this_done(param1, param2, param3, param4)`
 - **Use a configuration object once the parameters exceed 3.**
-- **One exported component per file, and its name must match the file name.** The
+- **A component file's export name matches its file name.** The
   `component-primitive-shape` rule computes the expected name as the basename
   without extension — except for `index.tsx`/`index.ts`, where it resolves to the
-  **parent directory name**. So `plans/components/PlanCard.tsx` must export
-  `PlanCard`, and `plans/components/PlanCard/index.tsx` must too.
-- The component's props type is its name plus `Props` (`PlanCardProps`).
-- **One hook per file, named after the file, in a `hooks/` folder.** `useFoo` lives
-  in `hooks/useFoo.ts(x)` — camelCase, never `use-foo.ts`. It exports only the hook,
-  `UseFooOptions` and `UseFooResult`; every other type, helper or constant goes to
-  `types.ts`, `utils/`, `data/` or `config/`, and nothing else lives at module scope.
-  Full contract: `docs/monorepo/hook-primitive-shape.md` (H1–H6), enforced by
-  `openthrottle/hook-primitive-shape` and `pnpm run audit:hook-shape:strict`.
-- **A NestJS file is `<folder>.<kind>.ts`.** In `queues/usage-limit/` the files are
-  `usage-limit.service.ts`, `usage-limit.types.ts`, `usage-limit.utils.ts`,
-  `usage-limit.constants.ts`. Module, service, processor, resolver, controller, types,
-  constants and utils take the folder's name; a **second** module or service in a folder
-  moves to its own sub-folder (`queues/plans/cancel-channel/cancel-channel.service.ts`),
-  never a qualified name beside the first. Subject kinds (`.object.ts`, `.input.ts`,
-  `.entity.ts`, `.guard.ts`, …) keep their own stem. The kind states the exports: a
-  `.service.ts` exports one `@Injectable()` class and nothing else, so its types go to
-  `.types.ts` and its exported helpers to `.utils.ts`. Enforced by
-  `openthrottle/nestjs-file-naming` and `openthrottle/nestjs-file-exports`; the full
-  contract is in
-  [`docs/monorepo/code-style.md`](../../docs/monorepo/code-style.md#nestjs-file-names).
+  **parent directory name**. So `plans/components/PlanCard/index.tsx` must export
+  `PlanCard`.
 
-### What a component file may export, and what belongs in `data/`
-
-A file under `components/` exports **only** its component and the props generated with it
-(`Foo` + `FooProps`). Infrequently it may export one extra closely-related type — but
-**never** constants, hardcoded data, lists, mock data, or user-facing copy. Those go to the
-nearest `data/` folder, named so one file can carry many related values:
-
-| Kind                       | File                                           |
-| -------------------------- | ---------------------------------------------- |
-| User-facing copy           | `data.copy.ts`                                 |
-| Mock fixtures              | `mock.<name>.ts`                               |
-| Other static data or lists | `data.<name>.ts` (`.tsx` only if it needs JSX) |
-
-**Every `.ts` file directly under `data/` is `data.<name>.ts` (or `mock.<name>.ts`), and it
-exports values, never functions.** `mcp-connectors.data.ts`, `url-matrix-rows.ts` and
-`chat-run-phase-copy.ts` are all misnamed — they are `data.mcp-connectors.ts`,
-`data.url-matrix-rows.ts` and `data.copy.ts`. A merge, filter, formatter or row builder that
-reads the data lives in the sibling `utils/`, not beside it. Specs under `__tests__/` are
-exempt, and a `data/index.ts` barrel keeps its name. Enforced by `openthrottle/data-file-shape`
-in the React Router apps and `react-router-*` packages (they spread `dataFolderEslintConfig`);
-rationale in
-[`code-style.md` § Data files hold data](https://github.com/openthrottle/monorepo/blob/main/docs/monorepo/code-style.md#data-files-hold-data).
-
-The component imports them via the `~/routing/<area>/data/…` alias. Because that is a real
-cross-module use reachable from a route entry, Knip treats the export as used — no `@public`
-tag needed. Rationale, and when a data file does or does not warrant its own spec:
-[`docs/monorepo/code-style.md`](../../docs/monorepo/code-style.md#component-and-data-boundaries).
+Component, hook, NestJS file and `data/` naming and export rules are normative in
+[AGENTS.md § Code style](https://github.com/openthrottle/monorepo/blob/main/AGENTS.md#code-style); rationale in
+[`code-style.md`](https://github.com/openthrottle/monorepo/blob/main/docs/monorepo/code-style.md).
+Hook contract: [hook-primitive-shape.md](https://github.com/openthrottle/monorepo/blob/main/docs/monorepo/hook-primitive-shape.md).
 
 ## Tags decide what may import what
 
@@ -223,16 +165,15 @@ it is tagged, and its tags decide who is allowed to import it. Tags live in the
 project's `project.json` / `package.json` `nx.tags` and are validated by
 `pnpm run nx:validate-tags` (source: `scripts/nx-validate-tags.ts`).
 
-| Tag           | Cardinality                                           | Values                                                                                                              |
-| ------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `type:`       | **exactly one**, required                             | `application`, `infrastructure`, `package`, `tool`                                                                  |
-| `technology:` | one or more, required                                 | `electron`, `llm`, `nestjs`, `nodejs`, `python`, `react-native`, `react-router`, `react`, `terraform`, `typescript` |
-| `production:` | exactly one, required                                 | `true`, `false`                                                                                                     |
-| `publish:`    | exactly one — **`type:package` and `type:tool` only** | `true`, `false`                                                                                                     |
+| Tag           | Cardinality                                           | Values                                             |
+| ------------- | ----------------------------------------------------- | -------------------------------------------------- |
+| `type:`       | **exactly one**, required                             | `application`, `infrastructure`, `package`, `tool` |
+| `technology:` | one or more, required                                 | see `VALID_TECHNOLOGY_TAGS` below                  |
+| `production:` | exactly one, required                                 | `true`, `false`                                    |
+| `publish:`    | exactly one — **`type:package` and `type:tool` only** | `true`, `false`                                    |
 
-The `technology:` set is closed and lives in `VALID_TECHNOLOGY_TAGS`. Verify it
-against the script when you tag a project rather than trusting this table — the
-set moves.
+The `technology:` set is closed; the values are `VALID_TECHNOLOGY_TAGS` in
+`scripts/nx-validate-tags.ts`.
 
 Projects also carry a `name:` tag by convention (`name:@openthrottle/nestjs-rbac`).
 It is used for filtering and release scoping but is **not** validated by
@@ -271,70 +212,20 @@ the project.
 
 ## Verify before you commit
 
-Cheapest first. Stop at the tier that covers what you touched.
+Cheapest first; stop at the tier that covers what you touched:
+`pnpm exec eslint <file>`, then the shape audits (`pnpm run audit:component-shape:strict`,
+`audit:route-shape:strict`, `pnpm nx run monorepo:check-folder-vocabulary`), then
+`pnpm run nx:validate-tags` for new or retagged projects, then `pnpm run check:local`
+before a PR. Blocking gates: component and hook shape, the component `max-lines` cap,
+module boundaries, tag validation. Route shape and `pre-hooks-unpack` are `warn` but
+not optional.
 
-**1 — Just this file.** Picks up all three custom rules and the `max-lines` cap.
+Read [references/verification.md](references/verification.md) when you need the exact
+commands per tier or what each audit gates.
 
-```bash
-pnpm exec eslint applications/openthrottle-developer/app/routing/plans/components/AddHookDialog.tsx
-```
+## Gotchas
 
-Exits 0 on warnings, non-zero on errors — so a `route-primitive-shape` or
-`pre-hooks-unpack` warning will _not_ fail this. Read the output, don't just check
-the exit code.
-
-**2 — The shape audits.** Repo-wide inventory plus the CI gate.
-
-```bash
-pnpm run audit:component-shape:strict
-pnpm run audit:component-shape:shadcn:strict
-pnpm run audit:route-shape:strict
-pnpm nx run monorepo:check-folder-vocabulary
-```
-
-`check-folder-vocabulary` fails on any tracked path under a rule-4 junk-drawer
-folder and names the replacement; `check:local` and the CI `gates` job run it too.
-`pnpm run check:local:audit` runs the three shape audits. Note what `--strict` actually gates:
-the component audit exits non-zero on **R4/R5/R6** (hoist violations,
-multi-component files, and authored components over the 210-line cap). Its R6
-count matches ESLint's `max-lines` exactly, and it repeats that cap on purpose:
-lint-staged runs `eslint --fix` before `prettier --write`, so prettier can reflow
-a file past 210 after lint has passed. The shadcn profile's VR6 cap stays
-report-only.
-
-**3 — New project, moved package, changed tags.**
-
-```bash
-pnpm run nx:validate-tags
-pnpm run check:local:package-entrypoints
-```
-
-`pnpm run nx:validate` also runs `nx:validate-projects` and
-`nx:validate-configurations`; the latter currently exits 1 in a clean checkout
-when `.cursor/plans/` is absent — the audit itself passes and only the report
-write fails, so read the output rather than trusting the exit code there.
-
-**4 — The full local gate.** The slow one — affected lint, typecheck and test
-across the workspace, plus every check above. Run it before opening a PR, not
-after every edit.
-
-```bash
-pnpm run check:local
-```
-
-### What actually blocks a merge
-
-See `docs/monorepo/CI-quality-gates.md`. In short:
-
-- **Blocking today:** `component-primitive-shape` (both profiles) and
-  `hook-primitive-shape` at `error`, `audit:hook-shape:strict`, the component
-  `max-lines` cap, `@nx/enforce-module-boundaries`,
-  `@nx/dependency-checks`, tag validation, and package entrypoints.
-- **Advisory today:** `route-primitive-shape`, `pre-hooks-unpack`, and the route
-  `max-lines` cap are all `warn` — the warn-first rollout. Each application
-  ratchets its own routes to `error` in its `eslint.config.ts` once they are
-  clean. `audit-templates-compliance` and `audit-test-coverage` are report-only.
-
-Advisory is not optional — write new code to the standard. The warnings exist
-because remediating the existing violations was out of scope, not because the
-shape is negotiable.
+- `eslint` exits 0 on warnings: `route-primitive-shape` and `pre-hooks-unpack` will not
+  fail it. Read the output, not the exit code.
+- lint-staged runs `eslint --fix` before `prettier --write`, so prettier can reflow a
+  component past the 210-line cap after lint passed. Check the line count after formatting.

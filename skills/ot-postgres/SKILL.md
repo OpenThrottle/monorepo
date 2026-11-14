@@ -7,18 +7,15 @@ description: >-
   patterns. USE WHEN adding or editing SQL migrations, schema changes, table
   comments, or Postgres work under databases/ — not for routine OT plan CRUD
   (see ot-plans) or NestJS entity wiring alone (see ot-stack).
+metadata:
+  author: openthrottle
+  last-reviewed: '2026-11-14'
+  version: '1.1.0'
 ---
 
 # OpenThrottle Postgres (migrations and table comments)
 
-## When to read this skill
-
-- You add or edit files under **`databases/<db>/migrations/`** (`openthrottle` or `cms`).
-- You design new tables, indexes, or constraints for OpenThrottle Postgres.
-- You backfill **`COMMENT ON TABLE`** / **`COMMENT ON COLUMN`** for existing tables.
-- You need migration workflow or naming — start here, then read **`databases/openthrottle/README.md`** for full detail.
-
-Use **ot-stack** for embeddings, ingest scripts, and server/entity sync. Use **ot-plans** for plans/tasks MCP — not this skill.
+Use **ot-stack** for embeddings, ingest scripts, and server/entity sync. Use **ot-plans** for plans/tasks MCP.
 
 ## Which database? (decide first)
 
@@ -29,9 +26,9 @@ next number from **that database's** folder on `main`.
 
 ## Table comment rules (required)
 
-1. **Every new table** must have **`COMMENT ON TABLE`** in the **same migration file** as **`CREATE TABLE`**. Follow the tone in `databases/openthrottle/migrations/038_create_plan_runs_table.sql`: short, purpose-focused prose; use **"OpenThrottle"** in new comments (**"OpenThrottle CMS"** in the `cms` database).
-2. **`COMMENT ON COLUMN`** is **optional** — add it for non-obvious fields (enums, JSONB shapes, snapshot columns, check-constraint semantics). See `038_create_plan_runs_table.sql` (`execution_backend`).
-3. **Batch comment-only migrations** (e.g. `039_comment_on_openthrottle_tables_batch_a.sql` … `041_…_batch_c.sql`, and `050_comment_on_openthrottle_tables_batch_a.sql`) are for **backfill or rename debt only** — **≤10 tables per file**. Do not split new table DDL from its table comment across files.
+1. **Every new table** must have **`COMMENT ON TABLE`** in the **same migration file** as **`CREATE TABLE`**. Follow the tone of the `create_plan_runs_table` migration: short, purpose-focused prose; use **"OpenThrottle"** in new comments (**"OpenThrottle CMS"** in the `cms` database).
+2. **`COMMENT ON COLUMN`** is **optional** — add it for non-obvious fields (enums, JSONB shapes, snapshot columns, check-constraint semantics). See `execution_backend` in the same migration.
+3. **Batch comment-only migrations** (the `comment_on_openthrottle_tables_batch_*` files) are for **backfill or rename debt only** — **≤10 tables per file**. Do not split new table DDL from its table comment across files.
 4. **Do not edit applied migrations in place** to add comments; add a new numbered batch file instead (audit: `databases/openthrottle/TABLE_COMMENTS_AUDIT.md`).
 
 ## Migration workflow (pointer)
@@ -47,13 +44,20 @@ Canonical commands and schema overview: **`databases/openthrottle/README.md`**.
 
 **Enforcement:** Changed migration files that introduce **`CREATE TABLE`** must include matching **`COMMENT ON TABLE`** for each created table in the **same file**. Base ref: `main` (override with `MIGRATION_COMMENT_LINT_BASE`).
 
-## Foreign keys (required)
+**Naming:** `snake_case` tables and columns; migration prefix `NNN_` zero-padded.
 
-**Never put an inline `REFERENCES` inside a statement guarded by `IF NOT EXISTS`.** Enforced by `pnpm nx run monorepo:check-migration-hygiene` (in `check:local` **and** in CI since 2026-09-10).
+## Gotchas
 
-`CREATE TABLE IF NOT EXISTS` / `ADD COLUMN IF NOT EXISTS` are all-or-nothing: if the table or column already exists the guard skips the **whole statement**, so the column is present but its constraint never lands — and the `schema_migrations` ledger still records the migration as applied. The 2026-08-21 health sweep found 15 foreign keys missing this way on the live database, with orphan rows behind them.
+- **Never put an inline `REFERENCES` inside a statement guarded by `IF NOT EXISTS`.** The guard skips the whole statement when the table or column exists, so the constraint never lands while the ledger still records the migration as applied. Enforced by `pnpm nx run monorepo:check-migration-hygiene` (in `check:local` and CI).
+- **One migration per `NNN_` prefix.** `check-migration-hygiene` judges collisions against the tip of the base ref, not your merge-base, so pick your number from `main`. `pnpm exec tsx ./scripts/check-migration-hygiene.ts --all` judges the whole tree.
+- **Never renumber a migration that has been applied anywhere.** `schema_migrations` keys on `filename`, so a rename makes the runner re-run the file as unapplied.
+- **Editing an applied migration in place** changes its checksum, which the runner reports as drift (warn-only). Add a new numbered file instead.
+- Repairing existing tables: prefer `ADD CONSTRAINT ... NOT VALID` then `VALIDATE CONSTRAINT`, which avoids a blocking scan.
+- Do not switch from numeric to timestamp prefixes on your own initiative; see `databases/openthrottle/README.md` § One migration per numeric prefix.
 
-Create the shape first, then add the constraint in its own statement guarded on `pg_constraint`:
+## Patterns
+
+Create the shape first, then add the foreign key in its own statement guarded on `pg_constraint`:
 
 ```sql
 CREATE TABLE IF NOT EXISTS tasks (
@@ -71,48 +75,12 @@ END
 $$;
 ```
 
-Repairing existing tables: prefer `ADD CONSTRAINT ... NOT VALID` then `VALIDATE CONSTRAINT` — the first takes a brief lock without scanning, the second scans under `SHARE UPDATE EXCLUSIVE` and does not block reads or writes.
-
-### One migration per `NNN_` prefix
-
-A prefix must identify exactly one file. `check-migration-hygiene` fails on any collision **your branch is adding**, judged against the **tip of the base ref** rather than your merge-base — so pick your number by looking at `main`, not at your own branch. Two branches that each grab the next free number without rebasing are the exact case this catches, and it will fail you even when your diff touches no migration at all.
-
-`pnpm exec tsx ./scripts/check-migration-hygiene.ts --all` judges the whole tree with no base comparison. CI runs that form on `push: main`, as the post-merge pass.
-
-**Never renumber a migration that has been applied anywhere.** `schema_migrations` declares `filename TEXT PRIMARY KEY`, so a rename makes the runner treat the file as unapplied and re-run it, while the original row survives forever naming a file that no longer exists. Applied duplicates are grandfathered instead — seven prefixes are, in two cohorts. Editing an applied migration in place fails too: the runner checksums them.
-
-The numeric scheme was weighed against timestamp prefixes on 2026-09-10 and deliberately kept; the reasoning and the conditions that would reopen it are in `databases/openthrottle/README.md`. Do not switch schemes on your own initiative.
-
-Full detail: `databases/openthrottle/README.md` § One migration per numeric prefix.
-
-## Patterns appendix (idempotent DDL)
-
-Summarized from existing migrations — see **`databases/openthrottle/README.md`** for workflow; do not duplicate full README here.
+Reuse the shared `updated_at` trigger function:
 
 ```sql
--- Table + comment (038 pattern)
-CREATE TABLE IF NOT EXISTS example_table (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
-);
-
-COMMENT ON TABLE example_table IS 'One-line purpose for OpenThrottle agents and DB explorers.';
-
--- Optional column comment
-COMMENT ON COLUMN example_table.id IS 'Surrogate key.';
-
--- Indexes
-CREATE INDEX IF NOT EXISTS idx_example_table_created_at ON example_table (created_at DESC);
-
--- Triggers (reuse shared function)
 DROP TRIGGER IF EXISTS update_example_table_updated_at ON example_table;
 CREATE TRIGGER update_example_table_updated_at
   BEFORE UPDATE ON example_table
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
-
--- Batch backfill only (no CREATE TABLE in same file)
-COMMENT ON TABLE legacy_table IS 'Updated OpenThrottle prose after OpenThrottle rename.';
 ```
-
-**Naming:** `snake_case` tables and columns; migration prefix `NNN_` zero-padded; prefer `CREATE TABLE IF NOT EXISTS` and `CREATE INDEX IF NOT EXISTS` for re-runnable local dev.

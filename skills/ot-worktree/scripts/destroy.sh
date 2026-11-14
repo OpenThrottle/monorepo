@@ -35,6 +35,18 @@ OPENTHROTTLE_WORKTREE_SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd -P)"
 # shellcheck source=skills/ot-worktree/scripts/deregister.sh
 . "$OPENTHROTTLE_WORKTREE_SCRIPT_DIR/deregister.sh"
 
+usage() {
+  cat <<'USAGE'
+Usage: destroy.sh [<name>|<path>] [--dry-run] [--force|-f] [--delete-branch] [-h|--help]
+
+Run the teardown hook, remove a linked worktree and prune. With no target, run
+inside a linked worktree to remove it. The primary checkout is always refused.
+
+Exit codes: 0 removed (or dry run); 1 refused or failed (bad flag, not a linked
+worktree, dirty tree without --force, teardown hook or git failure).
+USAGE
+}
+
 DRY_RUN=0
 FORCE=0
 DELETE_BRANCH=0
@@ -42,6 +54,7 @@ TARGET=""
 
 while [ $# -gt 0 ]; do
   case "$1" in
+    -h | --help) usage; exit 0 ;;
     --dry-run) DRY_RUN=1 ;;
     --force | -f) FORCE=1 ;;
     --delete-branch) DELETE_BRANCH=1 ;;
