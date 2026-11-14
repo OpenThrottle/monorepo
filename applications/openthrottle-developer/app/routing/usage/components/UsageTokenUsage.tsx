@@ -9,7 +9,6 @@ import {
   CardTitle,
   cn,
 } from '@openthrottle/react-router-shadcn';
-import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import * as React from 'react';
 
 import type {
@@ -21,10 +20,7 @@ import { UsageTokenUsageAccounts } from '~/routing/usage/components/UsageTokenUs
 import { UsageTokenUsageFilters } from '~/routing/usage/components/UsageTokenUsageFilters';
 import { UsageTokenUsageSources } from '~/routing/usage/components/UsageTokenUsageSources';
 import { UsageTokenUsageTable } from '~/routing/usage/components/UsageTokenUsageTable';
-import {
-  TOKEN_USAGE_COPY,
-  TOKEN_USAGE_STATS,
-} from '~/routing/usage/data/data.token-usage-copy';
+import { TOKEN_USAGE_STATS } from '~/routing/usage/data/data.token-usage-copy';
 import { buildUsageSearch } from '~/routing/usage/utils/buildUsageSearch';
 import { groupTokenUsage } from '~/routing/usage/utils/groupTokenUsage';
 import { tokenUsageEmptyMessage } from '~/routing/usage/utils/tokenUsageEmptyMessage';
@@ -35,7 +31,6 @@ export interface UsageTokenUsageProps {
   className?: string;
   /** Per-turn rows for the current selection (already provider-filtered server-side). */
   items: readonly UsageTokenUsageRowFragment[];
-  rangeDays: number;
   /** Account filter from `?account=`, or null for every account. */
   selectedAccount: string | null;
   /** Provider id from `?provider=`, or null for all providers. */
@@ -51,7 +46,6 @@ export const UsageTokenUsage = (
     byAccount,
     className,
     items,
-    rangeDays,
     selectedAccount,
     selectedProvider,
     totals,
@@ -101,14 +95,6 @@ export const UsageTokenUsage = (
 
   return (
     <div className={cn('mt-8', className)} data-testid="UsageTokenUsage">
-      <GlobalHeading
-        className="mb-4"
-        heading="h2"
-        title={TOKEN_USAGE_COPY.heading}
-      />
-      <p className="text-muted-foreground mb-4 text-sm md:mb-6">
-        {TOKEN_USAGE_COPY.intro(rangeDays)}
-      </p>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {TOKEN_USAGE_STATS.map((stat) => {
           const value = totals[stat.field];

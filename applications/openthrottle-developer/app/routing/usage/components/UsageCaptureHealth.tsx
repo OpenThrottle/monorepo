@@ -42,33 +42,24 @@ export const UsageCaptureHealth = (
     nowMs,
     CAPTURE_HEALTH_STALE_AFTER_MS,
   );
-  const staleEntries = entries.filter((entry) => entry.stale);
+  const staleSources = [
+    ...new Set(
+      entries.filter((entry) => entry.stale).map((entry) => entry.source),
+    ),
+  ];
 
   // Handlers
 
   // Markup
-  const hasStaleEntries = staleEntries.length > 0;
-  const staleAlerts = (
-    <div className="mb-4 flex flex-col gap-2">
-      {staleEntries.map((entry) => {
-        const streamLabel = captureHealthStreamLabel(entry.stream);
-
-        return (
-          <Alert key={entry.key} variant="destructive">
-            <AlertTitle>
-              {CAPTURE_HEALTH_COPY.staleTitle(streamLabel, entry.source)}
-            </AlertTitle>
-            <AlertDescription>
-              {CAPTURE_HEALTH_COPY.staleDescription(
-                streamLabel,
-                entry.source,
-                formatRelativeChatTimestamp(entry.lastCapturedAt, nowMs),
-              )}
-            </AlertDescription>
-          </Alert>
-        );
-      })}
-    </div>
+  const hasStaleSources = staleSources.length > 0;
+  const staleNotice = (
+    <p
+      className="text-muted-foreground mb-4 text-sm"
+      data-testid="UsageCaptureHealthStaleNotice"
+      role="status"
+    >
+      {CAPTURE_HEALTH_COPY.staleNotice(staleSources)}
+    </p>
   );
 
   // Life Cycle
@@ -103,7 +94,7 @@ export const UsageCaptureHealth = (
         {CAPTURE_HEALTH_COPY.intro}
       </p>
 
-      {hasStaleEntries ? staleAlerts : null}
+      {hasStaleSources ? staleNotice : null}
 
       <div className="overflow-x-auto">
         <Table>
@@ -132,7 +123,7 @@ export const UsageCaptureHealth = (
                   </time>
                 </TableCell>
                 <TableCell
-                  className={cn(entry.stale && 'text-destructive font-medium')}
+                  className={cn(entry.stale && 'text-muted-foreground')}
                 >
                   {entry.stale
                     ? CAPTURE_HEALTH_COPY.staleStatus

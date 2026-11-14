@@ -175,8 +175,8 @@ describe('buildCommanderGroupsFromNavigation', () => {
     expect(items.map((item) => item.id)).toEqual(
       expect.arrayContaining([
         'nav-usage',
-        'nav-usage-skills',
         'nav-usage-agents',
+        'nav-usage-skills',
         'nav-usage-telemetry',
       ]),
     );
@@ -184,6 +184,24 @@ describe('buildCommanderGroupsFromNavigation', () => {
 
     skills?.onSelect?.();
     expect(options.navigate).toHaveBeenCalledWith('/usage/skills');
+  });
+
+  test('lists usage sub-links alphabetically after the overview', () => {
+    const groups = buildCommanderGroupsFromNavigation(
+      dataNavigationV2,
+      buildOptions(),
+    );
+
+    const usageSubIds = groups
+      .flatMap((group) => group.items)
+      .map((item) => item.id)
+      .filter((id) => id.startsWith('nav-usage-'));
+
+    expect(usageSubIds).toEqual([
+      'nav-usage-agents',
+      'nav-usage-skills',
+      'nav-usage-telemetry',
+    ]);
   });
 
   test('onSelect navigates to the link path', () => {
