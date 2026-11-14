@@ -5,12 +5,15 @@ import {
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import { BotIcon } from 'lucide-react';
 import * as React from 'react';
 
 import type { Route } from '@/app/routes/+types/usage.agents';
 import { GetUsageTokenUsageDocument } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
+import { UsagePageIntroduction } from '~/routing/usage/components/UsagePageIntroduction';
 import { UsageTokenUsage } from '~/routing/usage/components/UsageTokenUsage';
+import { TOKEN_USAGE_COPY } from '~/routing/usage/data/data.token-usage-copy';
 import { getUsageRange } from '~/routing/usage/utils/getUsageRange';
 
 type HandleData = Route.ComponentProps['loaderData'];
@@ -88,10 +91,12 @@ export default function Component(
 
   return (
     <GlobalScreen>
+      <UsagePageIntroduction icon={BotIcon} title={TOKEN_USAGE_COPY.heading}>
+        {TOKEN_USAGE_COPY.intro(rangeDays)}
+      </UsagePageIntroduction>
       <UsageTokenUsage
         byAccount={tokenUsageByAccount}
         items={tokenUsageItems}
-        rangeDays={rangeDays}
         selectedAccount={selectedAccount}
         selectedProvider={selectedProvider}
         totals={tokenUsageTotals}

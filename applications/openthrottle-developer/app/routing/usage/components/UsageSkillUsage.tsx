@@ -37,7 +37,6 @@ export interface UsageSkillUsageProps {
    * which table it lands in.
    */
   presentSlugs: readonly string[];
-  rangeDays: number;
   selectedCwd: string | null;
   selectedGitBranch: string | null;
   selectedRepo: string | null;
@@ -60,7 +59,6 @@ export const UsageSkillUsage = (
     end,
     filterOptions,
     presentSlugs,
-    rangeDays,
     selectedCwd,
     selectedGitBranch,
     selectedRepo,
@@ -124,15 +122,6 @@ export const UsageSkillUsage = (
 
   return (
     <div className={cn('mt-8', className)} data-testid="UsageSkillUsage">
-      <GlobalHeading
-        className="mb-4"
-        heading="h2"
-        title={SKILL_USAGE_COPY.heading}
-      />
-      <p className="text-muted-foreground mb-4 text-sm md:mb-6">
-        {SKILL_USAGE_COPY.intro(rangeDays)}
-      </p>
-
       <UsageSkillUsageFilters
         branchOptions={branchOptions}
         branchesHaveMore={branchesHaveMore}

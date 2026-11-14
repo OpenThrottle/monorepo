@@ -188,14 +188,14 @@ export const dataNavigationV2: Record<string, PermissionGatedNavigationLink[]> =
             to: '/usage',
           },
           {
-            children: 'Skills',
-            icon: BrainCircuitIcon,
-            to: '/usage/skills',
-          },
-          {
             children: 'Agents',
             icon: BotIcon,
             to: '/usage/agents',
+          },
+          {
+            children: 'Skills',
+            icon: BrainCircuitIcon,
+            to: '/usage/skills',
           },
           {
             children: 'Telemetry',

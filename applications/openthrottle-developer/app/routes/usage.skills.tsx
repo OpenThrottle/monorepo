@@ -5,6 +5,7 @@ import {
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import { BrainCircuitIcon } from 'lucide-react';
 import * as React from 'react';
 
 import type { Route } from '@/app/routes/+types/usage.skills';
@@ -13,7 +14,9 @@ import {
   GetUsageSkillUsageDocument,
 } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
+import { UsagePageIntroduction } from '~/routing/usage/components/UsagePageIntroduction';
 import { UsageSkillUsage } from '~/routing/usage/components/UsageSkillUsage';
+import { SKILL_USAGE_COPY } from '~/routing/usage/data/data.skill-usage-copy';
 import { getUsageRange } from '~/routing/usage/utils/getUsageRange';
 import { parseSkillScope } from '~/routing/usage/utils/parseSkillScope';
 
@@ -128,6 +131,12 @@ export default function Component(
 
   return (
     <GlobalScreen>
+      <UsagePageIntroduction
+        icon={BrainCircuitIcon}
+        title={SKILL_USAGE_COPY.heading}
+      >
+        {SKILL_USAGE_COPY.intro(rangeDays)}
+      </UsagePageIntroduction>
       <UsageSkillUsage
         branchOptions={branchOptions}
         branchesHaveMore={branchesHaveMore}
@@ -137,7 +146,6 @@ export default function Component(
         end={rangeEndDate}
         filterOptions={skillUsage.filterOptions}
         presentSlugs={presentSkillSlugs}
-        rangeDays={rangeDays}
         selectedCwd={selectedSkillCwd}
         selectedGitBranch={selectedSkillGitBranch}
         selectedRepo={selectedSkillRepo}

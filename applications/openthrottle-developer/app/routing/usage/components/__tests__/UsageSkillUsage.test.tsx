@@ -89,7 +89,6 @@ const baseProps = (): UsageSkillUsageProps => {
     end: '2026-07-31',
     filterOptions: buildFilterOptions(),
     presentSlugs: [],
-    rangeDays: 30,
     selectedCwd: null,
     selectedGitBranch: null,
     selectedRepo: null,
@@ -100,12 +99,12 @@ const baseProps = (): UsageSkillUsageProps => {
 };
 
 describe('UsageSkillUsage Component', () => {
-  test('renders heading, scope split tiles, and empty state', () => {
+  test('renders scope split tiles and empty state, leaving the page heading to the route', () => {
     const component = renderComponent(baseProps());
 
     expect(
-      component.getByRole('heading', { name: SKILL_USAGE_COPY.heading }),
-    ).toBeInTheDocument();
+      component.queryByRole('heading', { name: SKILL_USAGE_COPY.heading }),
+    ).not.toBeInTheDocument();
     expect(component.getByTestId('UsageSkillUsageEmpty')).toHaveTextContent(
       SKILL_USAGE_COPY.empty,
     );

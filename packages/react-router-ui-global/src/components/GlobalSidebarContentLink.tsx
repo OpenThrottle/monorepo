@@ -132,7 +132,9 @@ export const GlobalSidebarContentLink = (
         </NavLink>
       </SidebarMenuButton>
       {showSubLinks && (
-        <SidebarMenuSub>{visibleSubLinks.map(renderSubLink)}</SidebarMenuSub>
+        <SidebarMenuSub className="mt-1 mr-0 pr-0">
+          {visibleSubLinks.map(renderSubLink)}
+        </SidebarMenuSub>
       )}
     </SidebarMenuItem>
   );
