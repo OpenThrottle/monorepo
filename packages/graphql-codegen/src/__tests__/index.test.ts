@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { defineCodegen } from './index';
+import { defineCodegen } from '../index';
 
 /**
  * `defineCodegen` builds a config object without touching the filesystem or a

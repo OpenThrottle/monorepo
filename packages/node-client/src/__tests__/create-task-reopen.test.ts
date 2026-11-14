@@ -11,7 +11,7 @@ const { planRepo, taskRepo } = vi.hoisted(() => ({
   taskRepo: { create: vi.fn(), save: vi.fn() },
 }));
 
-vi.mock('./data-source.js', () => ({
+vi.mock('../data-source.js', () => ({
   getOrCreateDataSource: vi.fn(async () => ({
     getRepository: (entity: { name: string }) =>
       entity.name === 'Plan' ? planRepo : taskRepo,
@@ -19,7 +19,7 @@ vi.mock('./data-source.js', () => ({
   runQuery: vi.fn(),
 }));
 
-const { createTask } = await import('./openthrottle-client.js');
+const { createTask } = await import('../openthrottle-client.js');
 
 beforeEach(() => {
   planRepo.findOne.mockReset();

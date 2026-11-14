@@ -1,17 +1,25 @@
 /**
  * @description Fails when a tracked test file under `applications/`,
- * `packages/` or `tools/` uses the `*.spec.*` suffix.
+ * `packages/` or `tools/` uses the `*.spec.*` suffix, or is a `*.test.*` file
+ * colocated with source instead of in a sibling `__tests__/`.
  *
  * Tests are `*.test.*` in a sibling `__tests__/` folder (AGENTS.md § Code
  * style → Testing). Nothing enforced the suffix, so `openthrottle-app` drifted
- * to 39 colocated `*.spec.ts` files before it was migrated (OT plan 8dd14e61).
- * ESLint cannot see file names, so this is a tree check like
- * `audit-file-name-casing.ts`.
+ * to 39 colocated `*.spec.ts` files before it was migrated (OT plan 8dd14e61);
+ * the placement half followed in OT plan f5625772. ESLint cannot see file
+ * names, so this is a tree check like `audit-file-name-casing.ts`.
+ *
+ * Placement exemptions — each a location where a colocated test is the
+ * convention, not drift:
+ *   - the NestJS tier (`openthrottle-server`, `nestjs-*`), whose
+ *     `<folder>.<kind>.test.ts` sits beside its file and whose names
+ *     `openthrottle/nestjs-file-naming` already checks;
+ *   - the generator templates that emit NestJS-tier files;
+ *   - a project-root `tests/` folder — the package generator's test root,
+ *     which holds suites spanning several files and no source.
  *
  * Tracked files only (`git ls-files`), so build output and `node_modules` are
- * never read. Colocated `*.test.*` files outside `__tests__/` are not gated
- * here: hundreds exist, most of them the NestJS tier's sanctioned
- * `<folder>.<kind>.test.ts`.
+ * never read.
  */
 import { basename, dirname, join } from 'node:path';
 
@@ -29,6 +37,23 @@ export const GATED_ROOTS: readonly string[] = [
 
 /** `foo.spec.ts`, `foo.integration.spec.tsx`, … — the suffix this gate rejects. */
 const SPEC_FILE_PATTERN = /\.spec\.(ts|tsx|js|jsx|mts|cts)$/;
+
+/** `foo.test.ts`, `foo.integration.test.tsx`, … — the suffix placement is checked for. */
+const TEST_FILE_PATTERN = /\.test\.(ts|tsx|js|jsx|mts|cts)$/;
+
+/**
+ * The NestJS tier's project directories — the same set `audit-file-name-casing.ts`
+ * excludes as having its own enforced `<folder>.<kind>.ts` form.
+ */
+const NESTJS_TIER_PROJECT =
+  /^(?:applications\/openthrottle-server|packages\/nestjs-[a-z0-9-]+)\//;
+
+/** Generator template trees that emit NestJS-tier files, colocated tests included. */
+const NESTJS_TEMPLATE_TREE =
+  /^tools\/generators\/src\/generators\/(?:nestjs\/files|package\/files\/nestjs)\//;
+
+/** A project-root `tests/` folder: `packages/<name>/tests/…`. */
+const PROJECT_TESTS_ROOT = /^(?:applications|packages|tools)\/[^/]+\/tests\//;
 
 /** Path segments that never hold source, even if something there is tracked. */
 const IGNORED_SEGMENTS: ReadonlySet<string> = new Set([
@@ -65,14 +90,52 @@ const isIgnored = (path: string): boolean => {
   });
 };
 
-/** Every tracked `*.spec.*` file under the gated roots. */
-export const findSpecFiles = (cwd: string): SpecFileViolation[] => {
+/** A `*.test.*` file colocated with source, and the `__tests__/` path it should move to. */
+export interface PlacementViolation {
+  readonly path: string;
+  readonly suggestion: string;
+}
+
+const trackedFiles = (cwd: string): string[] => {
   const result = run('git', ['ls-files', '-z', '--', ...GATED_ROOTS], { cwd });
 
-  return result.stdout
-    .split('\0')
+  return result.stdout.split('\0').filter((path) => {
+    return path !== '' && !isIgnored(path);
+  });
+};
+
+/**
+ * @description True for a `*.test.*` file that must live under `__tests__/`
+ * and does not — i.e. outside every placement exemption.
+ */
+export const isMisplacedTest = (path: string): boolean => {
+  if (!TEST_FILE_PATTERN.test(path)) return false;
+  if (path.split('/').includes('__tests__')) return false;
+
+  return ![NESTJS_TIER_PROJECT, NESTJS_TEMPLATE_TREE, PROJECT_TESTS_ROOT].some(
+    (pattern) => {
+      return pattern.test(path);
+    },
+  );
+};
+
+/** Every tracked `*.test.*` file colocated with source outside the exemptions. */
+export const findMisplacedTests = (cwd: string): PlacementViolation[] => {
+  return trackedFiles(cwd)
+    .filter(isMisplacedTest)
+    .map((path) => {
+      return {
+        path,
+        suggestion: join(dirname(path), '__tests__', basename(path)),
+      };
+    });
+};
+
+/** Every tracked `*.spec.*` file under the gated roots. */
+export const findSpecFiles = (cwd: string): SpecFileViolation[] => {
+  return trackedFiles(cwd)
     .filter((path) => {
-      return SPEC_FILE_PATTERN.test(path) && !isIgnored(path);
+      return SPEC_FILE_PATTERN.test(path);
     })
     .map((path) => {
       return { path, suggestion: suggestTestPath(path) };
@@ -80,17 +143,29 @@ export const findSpecFiles = (cwd: string): SpecFileViolation[] => {
 };
 
 export const main = (cwd: string = process.cwd()): number => {
-  const violations = findSpecFiles(cwd);
+  const specFiles = findSpecFiles(cwd);
+  const misplaced = findMisplacedTests(cwd);
 
-  if (violations.length === 0) {
-    logger.success('Test file names: no *.spec.* files');
+  if (specFiles.length === 0 && misplaced.length === 0) {
+    logger.success(
+      'Test file names: no *.spec.* files, every test under __tests__/',
+    );
 
     return 0;
   }
 
-  logger.fail(`${violations.length} test file(s) use the *.spec.* suffix — tests are *.test.* in a sibling __tests__/:`); // prettier-ignore
-  for (const violation of violations) {
-    logger.info(`  ${violation.path} -> ${violation.suggestion}`);
+  if (specFiles.length > 0) {
+    logger.fail(`${specFiles.length} test file(s) use the *.spec.* suffix — tests are *.test.* in a sibling __tests__/:`); // prettier-ignore
+    for (const violation of specFiles) {
+      logger.info(`  ${violation.path} -> ${violation.suggestion}`);
+    }
+  }
+
+  if (misplaced.length > 0) {
+    logger.fail(`${misplaced.length} test file(s) colocated with source — tests live in a sibling __tests__/ (the NestJS tier and project-root tests/ are exempt):`); // prettier-ignore
+    for (const violation of misplaced) {
+      logger.info(`  ${violation.path} -> ${violation.suggestion}`);
+    }
   }
 
   logger.blank();

@@ -3,8 +3,8 @@ import { describe, expect, test } from 'vitest';
 import {
   AGENTS_CHAT_LOW_CONFIDENCE_THRESHOLD,
   buildAgentsChatAssistantFooter,
-} from './agents-chat-footer';
-import type { ChatTurnResult } from './types';
+} from '../agents-chat-footer';
+import type { ChatTurnResult } from '../types';
 
 const baseTurn = (): ChatTurnResult => {
   return {

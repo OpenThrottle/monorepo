@@ -16,7 +16,7 @@ const { embedQuery, query, runQuery } = vi.hoisted(() => ({
   runQuery: vi.fn(),
 }));
 
-vi.mock('./data-source.js', () => ({
+vi.mock('../data-source.js', () => ({
   getOrCreateDataSource: vi.fn(async () => ({
     query,
     // Run the callback with a manager stub; runQuery is mocked, so the stub is never queried.
@@ -26,7 +26,7 @@ vi.mock('./data-source.js', () => ({
   runQuery,
 }));
 
-vi.mock('./embedding.js', () => ({
+vi.mock('../embedding.js', () => ({
   embedQuery,
 }));
 
@@ -38,7 +38,7 @@ const {
   runSemanticSearch,
   searchAgentAssets,
   searchPlansBySemanticQuery,
-} = await import('./openthrottle-client.js');
+} = await import('../openthrottle-client.js');
 
 const EMBEDDING = Array.from({ length: 1536 }, () => 0);
 

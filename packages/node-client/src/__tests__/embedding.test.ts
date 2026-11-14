@@ -14,7 +14,7 @@ const ollama = vi.hoisted(() => ({
 
 const openaiCreate = vi.hoisted(() => vi.fn());
 
-vi.mock('./ollama-embedding.js', () => ({
+vi.mock('../ollama-embedding.js', () => ({
   embedWithOllama: ollama.embedWithOllama,
   isOllamaEmbeddingConfigured: ollama.isOllamaEmbeddingConfigured,
 }));
@@ -25,7 +25,7 @@ vi.mock('openai', () => ({
   },
 }));
 
-const { embedQuery } = await import('./embedding.js');
+const { embedQuery } = await import('../embedding.js');
 
 beforeEach(() => {
   ollama.embedWithOllama.mockReset();

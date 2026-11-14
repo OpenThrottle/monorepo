@@ -429,7 +429,7 @@
     },
     "check-test-file-names": {
       "cache": false,
-      "description": "Fail when a tracked file under applications/, packages/ or tools/ uses the *.spec.* test suffix, via scripts/check-test-file-names.ts — tests are *.test.* in a sibling __tests__/ (OT plan 8dd14e61). ESLint cannot see file names, so this is a tree check. Never cached: the input is the whole tracked tree, like check-folder-vocabulary.",
+      "description": "Fail when a tracked file under applications/, packages/ or tools/ uses the *.spec.* test suffix, or is a *.test.* colocated with source outside __tests__/ (NestJS tier and project-root tests/ exempt), via scripts/check-test-file-names.ts — tests are *.test.* in a sibling __tests__/ (OT plans 8dd14e61, f5625772). ESLint cannot see file names, so this is a tree check. Never cached: the input is the whole tracked tree, like check-folder-vocabulary.",
       "executor": "nx:run-commands",
       "options": {
         "command": "tsx ./scripts/check-test-file-names.ts",

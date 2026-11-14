@@ -986,7 +986,8 @@ jobs:
 
       # Whole-tree, static. Tests are *.test.* in a sibling __tests__/; nothing
       # enforced the suffix, so openthrottle-app drifted to 39 *.spec.ts files.
-      - name: '🧪 No *.spec.* test files'
+      # Also fails a *.test.* colocated with source (NestJS tier exempt).
+      - name: '🧪 Test files are *.test.* under __tests__/'
         run: pnpm exec nx run monorepo:check-test-file-names
 
       # Static and build-free, so one shard is enough. Catches the `exports`
