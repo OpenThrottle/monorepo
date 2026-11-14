@@ -5,14 +5,15 @@
 # `grep -E -i`) matching any tool/model attribution line we refuse to carry in
 # commit messages, PR titles or PR bodies.
 #
-# Keep this the single definition across every consumer so the guard a commit
-# sees is the same one CI sees:
-#   - .husky/commit-msg   (strips matching lines from the commit message)
+# This is the single definition. It lives in the github-pull-request skill so
+# the skill's PR guard works in any repo the skill is synced into, and every
+# OpenThrottle monorepo consumer sources it from here:
+#   - .husky/commit-msg              (strips matching lines from the commit message)
+#   - .husky/utils/attribution-push-gate.sh  (fails a push that carries one)
+#   - check-pr-attribution.sh beside this file, also reached as
+#     scripts/check-pr-attribution.sh (the drafted PR title and body)
 #   - .github/workflows/continuous-integration.yml, job "attribution-guard"
 #     (fails a PR whose title, body or commits carry one)
-#   - skills/github-pull-request/scripts/attribution-patterns.sh, a byte-identical
-#     copy so the skill's bundled guard works in repos without this file
-#     (scripts/check-vendored-skill-files.sh fails when the two drift)
 #
 # Deliberately emitter-agnostic: it is not about any one tool. Claude Code,
 # Cursor, Copilot and whatever comes next all emit some variation, and every

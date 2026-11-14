@@ -311,7 +311,7 @@ jobs:
   # land. Failing here ejects the PR before the commit becomes immutable history.
   #
   # The pattern set is NOT restated here — it is sourced from
-  # .husky/utils/attribution-patterns.sh, the same file the hook sources, so the
+  # skills/github-pull-request/scripts/attribution-patterns.sh, the same file the hook sources, so the
   # two cannot drift. Same arrangement as .husky/utils/component-shape-gate.sh.
   #
   # 💰 No Nx, no install, no cache, no full clone: a sparse depth-1 checkout of
@@ -332,7 +332,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 1
-          sparse-checkout: .husky/utils/attribution-patterns.sh
+          sparse-checkout: skills/github-pull-request/scripts/attribution-patterns.sh
           sparse-checkout-cone-mode: false
 
       - name: '🚫 No tool or model attribution'
@@ -349,7 +349,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          . .husky/utils/attribution-patterns.sh
+          . skills/github-pull-request/scripts/attribution-patterns.sh
 
           work="$(mktemp -d)"
           failed=0
@@ -409,7 +409,7 @@ jobs:
             echo "   and push again (a queued PR has been ejected; re-enqueue it)."
             echo ""
             echo "   Rule:  AGENTS.md § No agent attribution"
-            echo "   Guard: .husky/utils/attribution-patterns.sh (shared with the commit-msg hook)"
+            echo "   Guard: skills/github-pull-request/scripts/attribution-patterns.sh (shared with the commit-msg hook)"
             exit 1
           fi
 

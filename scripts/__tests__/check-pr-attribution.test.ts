@@ -6,13 +6,15 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 /**
- * Integration coverage for `scripts/check-pr-attribution.sh` — the local
+ * Integration coverage for `scripts/check-pr-attribution.sh` — a symlink to
+ * `skills/github-pull-request/scripts/check-pr-attribution.sh`, so this also proves the guard
+ * resolves its pattern file through the link. It is the local
  * backstop that inspects a drafted PR title/body for agent-attribution lines
  * BEFORE `gh pr create`/`gh pr edit` ever publishes them, closing the gap the
  * CI `attribution-guard` job cannot: it only ever sees a PR body after GitHub
  * already has it (PR #554, body line 39).
  *
- * The pattern set itself (`.husky/utils/attribution-patterns.sh`) is exercised
+ * The pattern set itself (`skills/github-pull-request/scripts/attribution-patterns.sh`) is exercised
  * indirectly here — this suite is about the script's own plumbing (arg
  * parsing, title vs. body pattern selection, exit codes, message shape), not
  * a re-test of the shared regex. Same split as `personal-skills-tier.test.ts`
@@ -33,8 +35,9 @@ interface ExecFailure {
   readonly stdout?: unknown;
 }
 
-const isExecFailure = (error: unknown): error is ExecFailure =>
-  typeof error === 'object' && error !== null;
+const isExecFailure = (error: unknown): error is ExecFailure => {
+  return typeof error === 'object' && error !== null;
+};
 
 const run = (args: readonly string[]): RunResult => {
   try {
@@ -97,8 +100,10 @@ describe('check-pr-attribution.sh', () => {
     expect(result.output).toContain(
       '🤖 Generated with [Claude Code](https://claude.com/claude-code)',
     );
-    expect(result.output).toContain('AGENTS.md § No agent attribution');
-    expect(result.output).toContain('.husky/utils/attribution-patterns.sh');
+    expect(result.output).toContain('No agent attribution');
+    expect(result.output).toContain(
+      'skills/github-pull-request/scripts/attribution-patterns.sh',
+    );
   });
 
   it('rejects Co-Authored-By regardless of casing', () => {

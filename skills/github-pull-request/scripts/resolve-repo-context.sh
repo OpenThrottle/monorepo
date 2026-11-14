@@ -20,7 +20,6 @@
 #   COMMIT_MSG_HOOK        path of an active commit-msg hook, or `none`
 #   ATTRIBUTION_GUARD      path of a POSIX sh script that checks a PR title/body for tool
 #                          attribution (run it as `sh "<path>"`), or `none`
-#   ATTRIBUTION_GUARD_SOURCE  repo | bundled | none
 #   WORKTREE_REMOVE        `pnpm worktree:remove` when the repo defines it, else `git worktree remove`
 #   PLAN_IDS               space-separated unique Plan-Id footers in BASE_REF..HEAD, or `none`
 #
@@ -191,17 +190,12 @@ fi
 emit COMMIT_MSG_HOOK "$hook"
 
 # --- attribution guard ------------------------------------------------------------------
-# Prefer the repo's own guard only when its pattern file is there too (the monorepo's
-# script sources .husky/utils/attribution-patterns.sh and dies without it).
-if [ -x scripts/check-pr-attribution.sh ] && [ -f .husky/utils/attribution-patterns.sh ]; then
-  emit ATTRIBUTION_GUARD "$root/scripts/check-pr-attribution.sh"
-  emit ATTRIBUTION_GUARD_SOURCE repo
-elif [ -f "$script_dir/check-pr-attribution.sh" ]; then
+# The guard ships with the github-pull-request skill and is the only copy, in this repo too
+# (scripts/check-pr-attribution.sh is a symlink to it), so there is no repo-vs-skill choice.
+if [ -f "$script_dir/check-pr-attribution.sh" ]; then
   emit ATTRIBUTION_GUARD "$script_dir/check-pr-attribution.sh"
-  emit ATTRIBUTION_GUARD_SOURCE bundled
 else
   emit ATTRIBUTION_GUARD none
-  emit ATTRIBUTION_GUARD_SOURCE none
 fi
 
 # --- worktree removal -------------------------------------------------------------------

@@ -1,25 +1,55 @@
 #!/usr/bin/env sh
 
-# Bundled PR attribution guard for github-pull-request, for repos that have no guard of their own.
+# PR attribution guard, run BEFORE `gh pr create`/`gh pr edit` publishes a PR title or body.
 #
-# Fails when a drafted PR title or body credits a tool, model or assistant ("Generated with …",
-# "Made with …", a Co-authored-by line, a robot emoji). Run it BEFORE `gh pr create`/`gh pr edit`:
-# a published PR body cannot be un-published.
+# Fails when a drafted title or body credits a tool, model or assistant ("Generated with …",
+# "Made with …", a Co-authored-by line, a robot emoji). This is the only copy of the guard: the
+# github-pull-request skill runs it in any repo it is synced into, and the OpenThrottle monorepo
+# reaches it as scripts/check-pr-attribution.sh, a symlink to this file, which is what the
+# plan-run host (finalizePlanRun) calls before it publishes.
 #
-# The pattern set lives in the sibling attribution-patterns.sh, a byte-identical copy of the
-# OpenThrottle monorepo's .husky/utils/attribution-patterns.sh. Shell and POSIX grep only, so it
-# needs no install and runs in any checkout.
+# Why this exists: `gh pr create --body-file <f>` publishes whatever it is handed, and the first
+# thing that ever inspected that text used to be the `attribution-guard` CI job — which only runs
+# once the PR already exists and is visible. A commit message can be silently rewritten by a
+# commit-msg hook before it is ever pushed; a published PR body cannot be un-published the same
+# way. PR #554 shipped `🤖 Generated with [Claude Code](...)` on body line 39 and only CI caught
+# it. This script is the check on this side of that gap.
+#
+# The pattern set is NOT restated here — it is sourced from attribution-patterns.sh beside this
+# file, the same file the monorepo's commit-msg hook, pre-push gate and CI job source.
+#
+# Shell, not tsx, deliberately:
+#   1. The ANCHOR does not port, and fails silently. `^[[:space:]]*` is a POSIX bracket
+#      expression; JS reads it as a character class of `[ : s p a c e` followed by a literal
+#      `]`, so a ported pattern compiles without a throw and then matches nothing. A guard that
+#      waves everything through while reporting ✅ is worse than no guard.
+#   2. The CI job sparse-checks out the pattern file alone — no install, no Node — so the
+#      pattern file has to be shell either way.
+#   3. No runtime at the call site. This runs right before `gh pr create`, often in a fresh
+#      worktree or a repo that is not ours; `sh` and `grep` are always there, `tsx` is not.
 #
 # Usage:
 #   sh check-pr-attribution.sh --title-file <path> --body-file <path>
 #   sh check-pr-attribution.sh --body-file <path>          # title optional
 #   printf '%s' "$body" | sh check-pr-attribution.sh --body-file -
 #
-# Exits 0 when clean, 1 naming the offending line(s) when not, 2 on bad usage.
+# Exits 0 when clean, 1 naming the offending line(s) when not, 2 on bad usage. Mirrors the CI
+# job's own messaging so a failure here reads the same way a CI failure would.
 
 set -eu
 
-SCRIPT_DIR=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
+# Resolve this file's real directory, following symlinks, so the sibling pattern file is found
+# when the guard is reached through scripts/check-pr-attribution.sh.
+self=$0
+while [ -L "$self" ]; do
+  link_dir=$(CDPATH='' cd -P -- "$(dirname -- "$self")" && pwd)
+  self=$(readlink -- "$self")
+  case $self in
+    /*) ;;
+    *) self="$link_dir/$self" ;;
+  esac
+done
+SCRIPT_DIR=$(CDPATH='' cd -P -- "$(dirname -- "$self")" && pwd)
 
 # shellcheck source=./attribution-patterns.sh
 . "$SCRIPT_DIR/attribution-patterns.sh"
@@ -56,6 +86,8 @@ fi
 
 failed=0
 
+# Report every offending line with its source and line number, so the author sees what to
+# delete rather than just a red exit code.
 check() {
   label="$1"
   file="$2"
@@ -83,7 +115,8 @@ check() {
 }
 
 # A title is one line, so attribution lands at its end — unanchored pattern. A body is prose and
-# keeps the line-anchored one, so "a library made with care" does not trip it.
+# keeps the line-anchored one, so "a library made with care" does not trip it. Same split as
+# the CI job.
 [ -n "$title_file" ] && check "PR title" "$title_file" "$OT_ATTRIBUTION_PATTERN_INLINE"
 [ -n "$body_file" ] && check "PR body" "$body_file" "$OT_ATTRIBUTION_PATTERN"
 
@@ -92,6 +125,9 @@ if [ "$failed" -ne 0 ]; then
   echo "🚫 Attribution to a tool, model or assistant is not allowed in a PR"
   echo "   title or body. Remove the line(s) above before running"
   echo "   \`gh pr create\`/\`gh pr edit\`."
+  echo ""
+  echo "   Rule:  No agent attribution — a PR credits the logged-in GitHub user only"
+  echo "   Guard: skills/github-pull-request/scripts/attribution-patterns.sh"
   exit 1
 fi
 

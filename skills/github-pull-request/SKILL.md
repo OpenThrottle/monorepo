@@ -24,7 +24,7 @@ values everywhere below instead of assuming a file or branch exists:
 
 - `BASE_REF` — The base the branch is compared against (`git log BASE_REF..HEAD`, `git diff BASE_REF..HEAD`). `DEFAULT_BRANCH` is the name to pass to `gh pr create --base`. Never hardcode `main`.
 - `PR_TEMPLATE` — The template the body starts from — see [PR body](#pr-body). `choose` means the repo has several (`PR_TEMPLATE_CHOICES`); pick the one whose name fits the change, and ask the user only when none clearly does.
-- `ATTRIBUTION_GUARD` — The guard script for the drafted title and body, run as `sh "<ATTRIBUTION_GUARD>"` — see [Attribution](#attribution). `ATTRIBUTION_GUARD_SOURCE=bundled` means the repo has no guard of its own and the skill's copy runs instead.
+- `ATTRIBUTION_GUARD` — The guard script for the drafted title and body, run as `sh "<ATTRIBUTION_GUARD>"` — see [Attribution](#attribution). It is always the guard this skill ships, in every repo.
 - `PLAN_IDS` — Whether this is OpenThrottle work. `none` means no `Plan-Id:` footer on the branch: skip [Traceability](#traceability) entirely and write no trailer. Otherwise check OT with the openthrottle-mcp `health` tool; if OT is unreachable, use the git-only footer fallback.
 
 In the OpenThrottle monorepo every key resolves to the repo's own files, so the output is the same
@@ -205,16 +205,12 @@ the way `.husky/commit-msg` rewrites a commit message; by the time CI objects, t
 been published and is visible to anyone watching the repo.
 
 The guard closes that gap by running the pattern set locally, before `gh pr create`/`gh pr edit` is
-ever called. The resolver picks which one runs:
-
-- **The repo's own** (`ATTRIBUTION_GUARD_SOURCE=repo`) — in the OpenThrottle monorepo,
-  `scripts/check-pr-attribution.sh`, which sources the same
-  `.husky/utils/attribution-patterns.sh` the commit-msg hook and the CI job use.
-- **The bundled one** (`ATTRIBUTION_GUARD_SOURCE=bundled`) everywhere else —
-  [`scripts/check-pr-attribution.sh`](./scripts/check-pr-attribution.sh) in this skill, reading
-  [`scripts/attribution-patterns.sh`](./scripts/attribution-patterns.sh), a byte-identical copy of
-  the monorepo's pattern file that its skills gate keeps from drifting. A repo with no hooks and no
-  CI job still gets the check; it is the only one that repo has, so it matters more there, not less.
+ever called. It ships with this skill —
+[`scripts/check-pr-attribution.sh`](./scripts/check-pr-attribution.sh), reading
+[`scripts/attribution-patterns.sh`](./scripts/attribution-patterns.sh) — and that is the only copy:
+the OpenThrottle monorepo's commit-msg hook, pre-push gate and CI job source the same pattern file,
+and its `scripts/check-pr-attribution.sh` is a symlink to this guard. A repo with no hooks and no CI
+job still gets the check; it is the only one that repo has, so it matters more there, not less.
 
 **ALWAYS**, right before the `gh pr create`/`gh pr edit` call:
 

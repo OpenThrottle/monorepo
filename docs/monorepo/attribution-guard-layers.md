@@ -5,7 +5,9 @@ same way: two rewrite, two refuse. This page records which is which and why, so 
 decision rather than as an inconsistency.
 
 Decided for OT plan `40838811-e230-4c3b-a36a-04029792ddd4` task `f80c530d`. The pattern set itself
-lives in exactly one file, [`.husky/utils/attribution-patterns.sh`](../../.husky/utils/attribution-patterns.sh),
+lives in exactly one file, [`skills/github-pull-request/scripts/attribution-patterns.sh`](../../skills/github-pull-request/scripts/attribution-patterns.sh),
+which ships with the `github-pull-request` skill so the skill's PR guard works in repos that have
+none of these layers,
 and every layer below sources it rather than restating it.
 
 ## The layers

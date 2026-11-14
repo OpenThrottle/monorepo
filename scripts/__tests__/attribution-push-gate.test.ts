@@ -23,6 +23,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 const REPO_ROOT = join(import.meta.dirname, '..', '..');
 const HUSKY_UTILS = join(REPO_ROOT, '.husky', 'utils');
+const PATTERNS_DIR = join('skills', 'github-pull-request', 'scripts');
 const ZERO = '0'.repeat(40);
 
 interface RunResult {
@@ -37,11 +38,15 @@ interface ExecFailure {
   readonly stdout?: unknown;
 }
 
-const isExecFailure = (error: unknown): error is ExecFailure =>
-  typeof error === 'object' && error !== null;
+const isExecFailure = (error: unknown): error is ExecFailure => {
+  return typeof error === 'object' && error !== null;
+};
 
-const git = (repo: string, ...args: readonly string[]): string =>
-  execFileSync('git', ['-C', repo, ...args], { encoding: 'utf8' }).trim();
+const git = (repo: string, ...args: readonly string[]): string => {
+  return execFileSync('git', ['-C', repo, ...args], {
+    encoding: 'utf8',
+  }).trim();
+};
 
 /** Commit without touching the worktree, bypassing hooks the fixture has none of. */
 const commit = (repo: string, message: string): string => {
@@ -94,12 +99,15 @@ describe('attribution-push-gate.sh', () => {
     repo = mkdtempSync(join(tmpdir(), 'ot-attr-push-'));
 
     mkdirSync(join(repo, '.husky', 'utils'), { recursive: true });
-    for (const file of [
-      'attribution-patterns.sh',
-      'attribution-push-gate.sh',
-    ]) {
-      cpSync(join(HUSKY_UTILS, file), join(repo, '.husky', 'utils', file));
-    }
+    mkdirSync(join(repo, PATTERNS_DIR), { recursive: true });
+    cpSync(
+      join(HUSKY_UTILS, 'attribution-push-gate.sh'),
+      join(repo, '.husky', 'utils', 'attribution-push-gate.sh'),
+    );
+    cpSync(
+      join(REPO_ROOT, PATTERNS_DIR, 'attribution-patterns.sh'),
+      join(repo, PATTERNS_DIR, 'attribution-patterns.sh'),
+    );
 
     execFileSync('git', ['-C', repo, 'init', '-q', '-b', 'main']);
     git(repo, 'config', 'user.email', 'fixture@example.invalid');
