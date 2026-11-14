@@ -89,8 +89,10 @@ export const OpenThrottleCommander = (
     extraItems,
     handleEmptyStateSearch,
     handleSelect,
+    highlighted,
     open,
     search,
+    setHighlighted,
     setOpen,
     setSearch,
     showEmptyEscapeHatch,
@@ -153,8 +155,10 @@ export const OpenThrottleCommander = (
       data-testid="OpenThrottleCommander"
       modal={true}
       onOpenChange={setOpen}
+      onValueChange={setHighlighted}
       open={open}
       translate="no"
+      value={highlighted}
     >
       <CommandInput
         className="border-border! flex-1 border-b! p-4 pb-4 text-sm! leading-none"

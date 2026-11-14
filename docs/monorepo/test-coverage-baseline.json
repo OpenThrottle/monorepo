@@ -10614,13 +10614,6 @@
     },
     {
       "category": "components",
-      "file": "packages/react-router-ui/src/components/OpenThrottlePlanStatusBadge.tsx",
-      "project": "packages/react-router-ui",
-      "status": "tested",
-      "testFile": "packages/react-router-ui/src/components/__tests__/OpenThrottlePlanStatusBadge.test.tsx"
-    },
-    {
-      "category": "components",
       "file": "packages/react-router-ui/src/components/OpenThrottleProductAbout.tsx",
       "project": "packages/react-router-ui",
       "status": "tested",
@@ -12413,8 +12406,8 @@
       "project": "packages/react-router-ui",
       "stub": 0,
       "stubFiles": [],
-      "tested": 31,
-      "total": 31
+      "tested": 30,
+      "total": 30
     },
     {
       "category": "config",
