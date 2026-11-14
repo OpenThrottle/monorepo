@@ -170,6 +170,21 @@ export const TOOL_SELECTION_CASES: readonly ToolSelectionCase[] = [
   {
     area: 'task-crud',
     expect: {
+      args: { id: equals(TASK_ID), status: equals('BLOCKED') },
+      kind: 'call',
+      tools: ['update_task'],
+    },
+    forbid: DESTRUCTIVE,
+    id: 'task-block',
+    origin: {
+      fixedBy: `fix(openthrottle-mcp): name the task status values and their casing`,
+      kind: 'regression',
+    },
+    prompt: `Task ${TASK_ID} is blocked until the API review lands. Set its status to blocked.`,
+  },
+  {
+    area: 'task-crud',
+    expect: {
       args: { planId: equals(PLAN_ID) },
       kind: 'call',
       tools: ['get_remaining_tasks_for_plan', 'get_tasks_by_plan_id'],

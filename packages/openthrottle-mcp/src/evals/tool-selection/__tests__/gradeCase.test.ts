@@ -166,7 +166,61 @@ describe('gradeCase', () => {
       );
       expect(grade).toEqual({
         pass: false,
-        reason: 'update_task args did not match: status',
+        reason: `update_task args did not match: status (got "IN_PROGRESS", expected equals "COMPLETED")`,
+      });
+    });
+
+    it('shows the received value, so a casing miss is visible', () => {
+      const grade = gradeCase(
+        callCase,
+        calls({
+          input: { id: 't1', status: 'completed' },
+          name: 'update_task',
+        }),
+        OT_TOOLS,
+      );
+      expect(grade).toEqual({
+        pass: false,
+        reason: `update_task args did not match: status (got "completed", expected equals "COMPLETED")`,
+      });
+    });
+
+    it('describes includes and present matchers', () => {
+      const matcherCase: ToolSelectionCase = {
+        ...callCase,
+        expect: {
+          args: {
+            id: { kind: 'present' },
+            title: { kind: 'includes', value: 'astro' },
+          },
+          kind: 'call',
+          tools: ['update_task'],
+        },
+      };
+      const grade = gradeCase(
+        matcherCase,
+        calls({ input: { id: null, title: 42 }, name: 'update_task' }),
+        OT_TOOLS,
+      );
+      expect(grade).toEqual({
+        pass: false,
+        reason: `update_task args did not match: id (got null, expected present), title (got 42, expected includes "astro")`,
+      });
+    });
+
+    it('truncates a long received value', () => {
+      const grade = gradeCase(
+        callCase,
+        calls({
+          input: { id: 't1', status: 'x'.repeat(200) },
+          name: 'update_task',
+        }),
+        OT_TOOLS,
+      );
+      const expected = `"${'x'.repeat(79)}…`;
+      expect(grade).toEqual({
+        pass: false,
+        reason: `update_task args did not match: status (got ${expected}, expected equals "COMPLETED")`,
       });
     });
 
@@ -178,7 +232,7 @@ describe('gradeCase', () => {
       );
       expect(grade).toEqual({
         pass: false,
-        reason: 'update_task args did not match: id, status',
+        reason: `update_task args did not match: id (got undefined, expected equals "t1"), status (got undefined, expected equals "COMPLETED")`,
       });
     });
   });

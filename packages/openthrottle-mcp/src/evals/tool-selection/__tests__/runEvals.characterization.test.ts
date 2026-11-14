@@ -196,7 +196,7 @@ describe('runEvals characterization (parity with the pre-port run loop)', () => 
         },
         {
           failures: [
-            'list_plans_by_status args did not match: statuses',
+            `list_plans_by_status args did not match: statuses (got ["COMPLETED"], expected includes "IN_PROGRESS")`,
             'error: HTTP 500: upstream',
           ],
           id: 'plan-list-in-progress',
