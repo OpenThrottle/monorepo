@@ -30,6 +30,16 @@ one-way: cms-ui must never import cms-core.
 
 ## Invariants & gotchas
 
+- **`src/cms-safelist.css` is generated** from [src/data/data.cms-safelist.ts](src/data/data.cms-safelist.ts)
+  by [src/utils/buildCmsSafelist.ts](src/utils/buildCmsSafelist.ts) and drift-checked by its
+  `toMatchFileSnapshot` spec — never hand-edit it; regenerate with
+  `pnpm nx run @openthrottle/react-router-cms-core:test -- -u buildCmsSafelist`. Why it exists and
+  what it costs: [applications/openthrottle-cms/AGENTS.md](../../applications/openthrottle-cms/AGENTS.md).
+- **`FormClassName` warns on classes outside both safelists** via `getSafelistedClasses()`
+  ([src/utils/safelist.ts](src/utils/safelist.ts)), which brace-expands the same patterns the two
+  generated stylesheets emit (`getThemeSafelistPatterns()` from react-router-shadcn plus
+  `CMS_SAFELIST_GROUPS`). Never hand-keep a second class list; add to a safelist's data file and the
+  widget follows. It warns rather than blocks: checked-in code may still generate the class.
 - Source-first, no build target — see [packages/AGENTS.md](../AGENTS.md).
 - **Consumers must render reorder components (and `FormChildren`, and a `CoreFormRenderer` whose
   schema has a `children` property) under a `DndProvider`** (`react-dnd-html5-backend`). The

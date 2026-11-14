@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildThemeSafelist, getThemeColorNames } from '../buildThemeSafelist';
+import {
+  buildThemeSafelist,
+  getThemeColorNames,
+  getThemeSafelistPatterns,
+} from '../buildThemeSafelist';
 import { THEME_TOKEN_NAMES } from '../theme-contract';
 
 describe('getThemeColorNames', () => {
@@ -33,5 +37,17 @@ describe('buildThemeSafelist', () => {
     await expect(buildThemeSafelist()).toMatchFileSnapshot(
       '../../theme-safelist.css',
     );
+  });
+});
+
+describe('getThemeSafelistPatterns', () => {
+  it('returns the base and hover patterns the stylesheet emits', () => {
+    const css = buildThemeSafelist();
+    const patterns = getThemeSafelistPatterns();
+
+    expect(patterns).toHaveLength(2);
+    for (const pattern of patterns) {
+      expect(css).toContain(`'${pattern}'`);
+    }
   });
 });
