@@ -87,7 +87,7 @@ jobs:
 
       - name: '🏷️ Version and changelog'
         id: prepare
-        run: pnpm run release:applications prepare --body-file="${RUNNER_TEMP}/release-pr-body.md"
+        run: pnpm run release:applications prepare --push-baselines --body-file="${RUNNER_TEMP}/release-pr-body.md"
 
       - name: '🚀 Open or update the release PR'
         if: steps.prepare.outputs.has_release == 'true'

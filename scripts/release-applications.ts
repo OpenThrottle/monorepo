@@ -11,7 +11,10 @@
  *   versions from tags instead of walking all of history. Run once, on the
  *   commit that introduced this release config. Dry-run unless `--apply`
  *   (create locally) or `--push` (create and push to origin).
- * - `prepare [--body-file=<path>] [--dry-run]` — run Nx version + changelog
+ * - `prepare [--body-file=<path>] [--dry-run] [--push-baselines]` — refuse
+ *   until the group has baseline tags; tag any project added since at the
+ *   commit that introduced it (pushed with `--push-baselines`); then run Nx
+ *   version + changelog
  *   for the group (writing package.json versions and CHANGELOG.md files, no
  *   git), add the version table to the product changelog, and write the
  *   release PR body. Reports `has_release`, `title` and `version` on
@@ -48,6 +51,7 @@ import {
   isReleaseCommit,
   planBaselineTags,
   PRODUCT_PROJECT,
+  readBaselineStatus,
   readGroupPatterns,
   readManifestVersion,
   RELEASE_GROUP,
@@ -153,6 +157,62 @@ const writeOutputs = (outputs: Readonly<Record<string, string>>): void => {
   }
 };
 
+const versionAt = (ref: string, root: string): string | undefined => {
+  const result = run('git', ['show', `${ref}:${join(root, 'package.json')}`], { allowFailure: true }); // prettier-ignore
+
+  return result.exitCode === 0 ? readManifestVersion(result.stdout) : undefined;
+};
+
+/**
+ * Refuses to version before the first `baseline` (returns false), and tags any
+ * project added since then at the commit that introduced its package.json, so
+ * a new app's first release starts at its creation rather than walking all of
+ * history. `push` sends those tags to origin (the release workflow passes it).
+ */
+const baselineNewProjects = (
+  projects: readonly ReleaseProject[],
+  dryRun: boolean,
+  push: boolean,
+): boolean => {
+  const status = readBaselineStatus(projects, existingReleaseTags());
+
+  if (!status.groupBaselined) {
+    logger.warn('No release tags yet: run `pnpm run release:applications baseline --ref=<sha> --push` first'); // prettier-ignore
+
+    return false;
+  }
+
+  const created: string[] = [];
+
+  for (const project of status.untagged) {
+    const manifest = join(project.root, 'package.json');
+    const added = run('git', ['log', '--diff-filter=A', '--format=%H', '--', manifest]).stdout.split('\n').at(-1) ?? ''; // prettier-ignore
+    const version = added === '' ? undefined : versionAt(added, project.root);
+
+    if (version === undefined) {
+      logger.warn(`${project.name}: cannot find the commit that added ${manifest}; baseline it by hand`); // prettier-ignore
+      continue;
+    }
+
+    const tag = releaseTagName(project.name, version);
+
+    if (dryRun) {
+      logger.step(`would baseline new project ${tag} at ${added.slice(0, 9)}`);
+      continue;
+    }
+
+    run('git', ['tag', tag, added]);
+    created.push(tag);
+    logger.success(`baselined new project ${tag} at ${added.slice(0, 9)}`);
+  }
+
+  if (push && created.length > 0) {
+    run('git', ['push', 'origin', ...created.map((tag) => `refs/tags/${tag}`)]);
+  }
+
+  return true;
+};
+
 const prepare = async (args: readonly string[]): Promise<number> => {
   const dryRun = hasFlag('dry-run', [...args]);
   const bodyFile = flagValue('body-file', [...args]);
@@ -160,6 +220,14 @@ const prepare = async (args: readonly string[]): Promise<number> => {
   const product = projects.find((project) => project.name === PRODUCT_PROJECT);
 
   logger.heading(`Preparing the ${RELEASE_GROUP} release${dryRun ? ' (dry run)' : ''}`); // prettier-ignore
+
+  if (
+    !baselineNewProjects(projects, dryRun, hasFlag('push-baselines', [...args]))
+  ) {
+    writeOutputs({ has_release: 'false' });
+
+    return 0;
+  }
 
   const versionResult = await releaseVersion({ dryRun, groups: [RELEASE_GROUP], verbose: false }); // prettier-ignore
   const changes = collectVersionChanges(versionResult.projectsVersionData);
@@ -198,12 +266,6 @@ const prepare = async (args: readonly string[]): Promise<number> => {
   writeOutputs({ has_release: 'true', title: releasePrTitle(productVersion), version: productVersion }); // prettier-ignore
 
   return 0;
-};
-
-const versionAt = (ref: string, root: string): string | undefined => {
-  const result = run('git', ['show', `${ref}:${join(root, 'package.json')}`], { allowFailure: true }); // prettier-ignore
-
-  return result.exitCode === 0 ? readManifestVersion(result.stdout) : undefined;
 };
 
 const releaseExists = (tag: string): boolean => {

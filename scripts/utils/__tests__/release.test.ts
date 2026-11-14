@@ -6,6 +6,7 @@ import {
   insertVersionTable,
   isReleaseCommit,
   planBaselineTags,
+  readBaselineStatus,
   readGroupPatterns,
   readManifestVersion,
   releasePrTitle,
@@ -141,5 +142,24 @@ describe('releaseTitle', () => {
 
   it('uses the tag for an application', () => {
     expect(releaseTitle('openthrottle-server', '1.4.0')).toBe('openthrottle-server@1.4.0'); // prettier-ignore
+  });
+});
+
+describe('readBaselineStatus', () => {
+  it('reports an unbaselined group when no project has a tag', () => {
+    expect(readBaselineStatus(PROJECTS, new Set()).groupBaselined).toBe(false);
+  });
+
+  it('lists only projects that have never been tagged', () => {
+    const status = readBaselineStatus(PROJECTS, new Set(['monorepo@4.5.0', 'monorepo@4.6.0'])); // prettier-ignore
+
+    expect(status).toEqual({ groupBaselined: true, untagged: [PROJECTS[1]] });
+  });
+
+  it('does not count another project with a shared prefix as tagged', () => {
+    const projects = [{ name: 'openthrottle-app', root: 'applications/openthrottle-app', version: '1.0.0' }]; // prettier-ignore
+    const status = readBaselineStatus([...PROJECTS, ...projects], new Set(['openthrottle-app-extra@1.0.0', 'monorepo@4.5.0'])); // prettier-ignore
+
+    expect(status.untagged.map((project) => project.name)).toEqual(['openthrottle-server', 'openthrottle-app']); // prettier-ignore
   });
 });

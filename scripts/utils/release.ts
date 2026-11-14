@@ -239,3 +239,26 @@ export const releaseTitle = (project: string, version: string): string => {
 
   return releaseTagName(project, version);
 };
+
+export interface BaselineStatus {
+  /** Whether any project in the group has a release tag yet. */
+  readonly groupBaselined: boolean;
+  /** Projects with no `<project>@*` tag at all — new since the baseline. */
+  readonly untagged: readonly ReleaseProject[];
+}
+
+/**
+ * Which projects have never been tagged. Before the first `baseline` no project
+ * has a tag, and versioning then would walk all of history, so callers stop.
+ */
+export const readBaselineStatus = (
+  projects: readonly ReleaseProject[],
+  existingTags: ReadonlySet<string>,
+): BaselineStatus => {
+  const tags = [...existingTags];
+  const untagged = projects.filter((project) => {
+    return !tags.some((tag) => tag.startsWith(`${project.name}@`));
+  });
+
+  return { groupBaselined: untagged.length < projects.length, untagged };
+};
