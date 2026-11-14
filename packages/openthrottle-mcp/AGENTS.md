@@ -27,16 +27,7 @@ Nx project name is the full `@openthrottle/openthrottle-mcp` (not the bare direc
   caps live in `scripts/model-facing-text.budget.json`. This package's `measure-tool-surface`
   target feeds it.
 
-- `pnpm nx run @openthrottle/openthrottle-mcp:eval-tool-selection` — **on demand only, spends API
-  tokens** (`ANTHROPIC_API_KEY`). Checks that agents pick the right tool and key arguments for each case
-  in `src/evals/tool-selection/data/data.cases.ts`, compared against the same-model baseline. Run it
-  after rewording a tool description or the instructions block. A fix case must fail before its fix
-  lands. `--driver claude,codex` runs the same cases through those CLIs against the sandboxed MCP in
-  `src/evals/sandbox/` (spends subscription usage; a call the sandbox did not serve stops the run, exit 3).
-  Never wire it into CI; only its grader unit tests run there. It runs on the
-  `@openthrottle/agentic-evals` core and keeps the evals out of the bin entry points (the production
-  esbuild bundle must not grow). See [docs/openthrottle/evals-running-suites.md](../../docs/openthrottle/evals-running-suites.md) and
-  [src/evals/tool-selection/README.md](src/evals/tool-selection/README.md).
+- The tool-selection eval and its sandboxed MCP live in [`@openthrottle/openthrottle-mcp-evals`](../openthrottle-mcp-evals/AGENTS.md), reading this package's surface through the public `./tool-surface` subpath — keep that subpath free of bin and side-effect imports.
 
 ## Fragment coverage (why a tool result can be missing a field)
 

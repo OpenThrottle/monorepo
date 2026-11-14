@@ -21,6 +21,7 @@
     "@openthrottle/openthrottle-agentic-loop": "workspace:^",
     "@openthrottle/openthrottle-agentic-utils": "workspace:^",
     "@openthrottle/openthrottle-desktop-bridge": "workspace:^",
+    "@openthrottle/openthrottle-mcp-evals": "workspace:^",
     "@openthrottle/openthrottle-skills": "workspace:^",
     "@openthrottle/react-router-cms-core": "workspace:^",
     "@openthrottle/react-router-cms-editor": "workspace:^",

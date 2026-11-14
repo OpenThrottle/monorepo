@@ -11,15 +11,15 @@ are required, and results compare against a same-model baseline. CI runs only th
 The suite runs on the shared eval core, `@openthrottle/agentic-evals`, so there is one harness for every
 eval. How suites run in general (the `eval-<suite>` target convention, running across drivers, what CI
 does and does not run) is in
-[docs/openthrottle/evals-running-suites.md](../../../../../docs/openthrottle/evals-running-suites.md).
+[docs/openthrottle/evals-running-suites.md](../../../../docs/openthrottle/evals-running-suites.md).
 
 ## Run it (on demand, never in CI)
 
 ```bash
-ANTHROPIC_API_KEY=… pnpm nx run @openthrottle/openthrottle-mcp:eval-tool-selection
-pnpm nx run @openthrottle/openthrottle-mcp:eval-tool-selection -- --case follow-up,task-start --trials 3
-pnpm nx run @openthrottle/openthrottle-mcp:eval-tool-selection -- --model claude-sonnet-5-5 --write-baseline
-pnpm nx run @openthrottle/openthrottle-mcp:eval-tool-selection -- --driver claude,codex --case control,task-start
+ANTHROPIC_API_KEY=… pnpm nx run @openthrottle/openthrottle-mcp-evals:eval-tool-selection
+pnpm nx run @openthrottle/openthrottle-mcp-evals:eval-tool-selection -- --case follow-up,task-start --trials 3
+pnpm nx run @openthrottle/openthrottle-mcp-evals:eval-tool-selection -- --model claude-sonnet-5-5 --write-baseline
+pnpm nx run @openthrottle/openthrottle-mcp-evals:eval-tool-selection -- --driver claude,codex --case control,task-start
 ```
 
 | Flag               | Default           | Meaning                                                       |
@@ -42,7 +42,7 @@ token totals, the overall pass rate with its bootstrap 95% CI, and the detection
 regressed against the baseline, 2 on a usage error, 3 when a CLI reached an OpenThrottle server other
 than the sandbox, and 0 otherwise.
 
-Running it in CI was rejected on cost ([docs/monorepo/ci-cost.md](../../../../../docs/monorepo/ci-cost.md)).
+Running it in CI was rejected on cost ([docs/monorepo/ci-cost.md](../../../../docs/monorepo/ci-cost.md)).
 CI runs only what is free: the grader, baseline comparison, adapter, runner and case-integrity unit tests,
 through the package's ordinary `test` target.
 
@@ -63,7 +63,7 @@ trajectory, with that call's arguments taken from the sandbox log. An OpenThrott
 server is a **leak**: the run stops and exits 3. A call to the sandbox's name that never reached its log
 failed in transit and errors only that trial. Runs are sequential, one per driver, and spend
 subscription usage (the subscription-terms warning in
-[evals-running-suites.md](../../../../../docs/openthrottle/evals-running-suites.md) applies). Results are
+[evals-running-suites.md](../../../../docs/openthrottle/evals-running-suites.md) applies). Results are
 recorded as `<driver>/<model>`, with `cli-default` when `--model` is omitted. That name keys the result
 file and the baseline, so a CLI is only ever compared with itself.
 

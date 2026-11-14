@@ -16,8 +16,8 @@
 
 import Anthropic, { APIError } from '@anthropic-ai/sdk';
 import type { Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { ToolSurface } from '@openthrottle/openthrottle-mcp/tool-surface';
 
-import type { ToolSurface } from '../../model-facing-text/surface.ts';
 import type {
   SelectedCall,
   Selection,

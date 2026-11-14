@@ -1,8 +1,8 @@
 import type Anthropic from '@anthropic-ai/sdk';
 import { APIError } from '@anthropic-ai/sdk';
+import type { ToolSurface } from '@openthrottle/openthrottle-mcp/tool-surface';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { ToolSurface } from '../../../model-facing-text/surface.ts';
 import type { AnthropicMessagesClient } from '../anthropic-tool-selector.ts';
 import {
   buildRequestBody,

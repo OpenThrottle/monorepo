@@ -26,9 +26,6 @@
       "path": "../agentic-hooks/tsconfig.lib.json"
     },
     {
-      "path": "../agentic-evals/tsconfig.lib.json"
-    },
-    {
       "path": "../../tools/dotfiles/tsconfig.lib.json"
     },
     {

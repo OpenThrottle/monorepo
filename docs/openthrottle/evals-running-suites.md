@@ -21,14 +21,14 @@ and graders. It runs on the eval core, `@openthrottle/agentic-evals`:
   detection floor for the dataset size, and cost per success. An `errored` or `usage_limited` trial is
   excluded from the pass rate, never counted as a fail.
 
-Today there is one suite: [MCP tool selection](../../packages/openthrottle-mcp/src/evals/tool-selection/README.md).
+Today there is one suite: [MCP tool selection](../../packages/openthrottle-mcp-evals/src/tool-selection/README.md).
 
 ## One on-demand Nx target per suite
 
 Every suite exposes exactly one Nx target, named `eval-<suite>`, on the project that owns it:
 
 ```bash
-pnpm nx run @openthrottle/openthrottle-mcp:eval-tool-selection -- --trials 3
+pnpm nx run @openthrottle/openthrottle-mcp-evals:eval-tool-selection -- --trials 3
 ```
 
 The target is `cache: false`, runs a CLI through `nx:run-commands`, and passes everything after `--`
@@ -88,10 +88,10 @@ answers it the way each harness actually injects MCP tools: the real CLI runs th
 **sandboxed MCP** attached in place of the real server.
 
 ```bash
-pnpm nx run @openthrottle/openthrottle-mcp:eval-tool-selection -- --driver claude,codex --case plan-create-basic,task-start,control-git-log
+pnpm nx run @openthrottle/openthrottle-mcp-evals:eval-tool-selection -- --driver claude,codex --case plan-create-basic,task-start,control-git-log
 ```
 
-The sandbox ([`src/evals/sandbox/`](../../packages/openthrottle-mcp/src/evals/sandbox/)) serves the identical
+The sandbox ([`src/sandbox/`](../../packages/openthrottle-mcp-evals/src/sandbox/)) serves the identical
 surface: the same instructions, names, descriptions and input schemas, every toolset. It records each
 call and answers with a canned success, and nothing behind it touches GraphQL. A CLI with the real
 server attached would **execute** `create_plan` or `delete_task`, which is why the sandbox has to
