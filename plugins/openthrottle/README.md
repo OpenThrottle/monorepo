@@ -88,8 +88,8 @@ See `docs/monorepo/child-repo-hook-telemetry-contract.md` for the full contract.
 
 If skill usage is not showing up, run the doctor. It checks the plugin install, the
 endpoint and token, server reachability, the local buffer, the last heartbeat and the
-offline switch, then prints the exact fix for anything wrong. It is read-only and never
-prints your token.
+offline switch, then prints the exact fix for anything wrong. It is read-only unless you
+pass `--fix`, and never prints your token.
 
 ```bash
 # from an OpenThrottle checkout
@@ -100,6 +100,10 @@ node ~/.claude/plugins/cache/openthrottle/openthrottle/<version>/hooks/skill-usa
 ```
 
 Add `--json` for machine-readable output, or `--strict` to exit 1 when any check fails.
+
+Add `--fix` to have it offer to install or update the plugin for you: it shows the exact
+`claude plugin …` commands and runs them only after you answer yes. It needs an interactive
+terminal and is ignored with `--json`.
 
 ## Hooks
 

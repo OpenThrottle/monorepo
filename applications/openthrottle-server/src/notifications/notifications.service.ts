@@ -314,11 +314,14 @@ export class NotificationsService {
    */
   emitSystemAlert(payload: {
     code?: string;
+    /** App-relative click-through path (e.g. `/usage`). */
+    link?: string;
     message: string;
     severity?: NotificationSeverity;
   }): void {
     const data: SystemAlertPayload = {
       code: payload.code,
+      link: payload.link,
       message: payload.message,
       severity: payload.severity ?? 'info',
       timestamp: isoNow(),

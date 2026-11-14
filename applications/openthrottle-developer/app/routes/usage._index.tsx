@@ -28,6 +28,7 @@ import { UsageSnapshot } from '~/routing/usage/components/UsageSnapshot';
 import { UsageTelemetryCoverage } from '~/routing/usage/components/UsageTelemetryCoverage';
 import { UsageTokenUsage } from '~/routing/usage/components/UsageTokenUsage';
 import { fetchTelemetryCoverage } from '~/routing/usage/utils/fetchTelemetryCoverage';
+import { forgetTelemetryMachine } from '~/routing/usage/utils/forgetTelemetryMachine';
 import { parseSkillScope } from '~/routing/usage/utils/parseSkillScope';
 
 type HandleData = Route.ComponentProps['loaderData'];
@@ -256,8 +257,8 @@ export default function Component(
   );
 }
 
-export const action = async (_args: Route.ActionArgs) => {
-  return {};
+export const action = async (args: Route.ActionArgs) => {
+  return forgetTelemetryMachine(args.request);
 };
 
 export const ErrorBoundary = GlobalErrorBoundary;

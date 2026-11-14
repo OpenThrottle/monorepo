@@ -2807,6 +2807,8 @@ export type Mutation = {
   evaluatePlanRules: EvaluatePlanRulesResultObject;
   /** Force-settle an UNSUPERVISED plan run to STALE — the human escape hatch for a run whose agent is gone. Kill does not help here: cancelling an interactive run only stamps the cancel marker and waits for the agent to poll it, so a dead agent leaves the row IN_PROGRESS forever, reading as live and holding its worktree busy. Refused for a run that heartbeats (it has a sweeper of its own and may be genuinely live) and for one already terminal. Always writes STALE — 'contact lost' is what a human clicking this actually knows. Never touches plan or task status. Returns null when the run did not match. */
   forceSettlePlanRun?: Maybe<PlanRunObject>;
+  /** Forget a machine on the telemetry coverage view: delete every heartbeat row the requesting user has for machineId (all repos, delivery legs and sources), so a retired machine stops raising MACHINE_SILENT. Returns the number of rows deleted (0 when there were none). A later heartbeat from the machine re-adds it. */
+  forgetTelemetryMachine: Scalars['Int']['output'];
   /** Permanently delete a custom prompt by ID */
   hardDeleteCustomPrompt: Scalars['Boolean']['output'];
   /** Enqueue a full re-index of a registered repository's code. Returns indexing, or unavailable when no embeddings provider is configured. */
@@ -2847,7 +2849,7 @@ export type Mutation = {
   recordSkillUsage: SkillUsageEventObject;
   /** Record one opt-in outcome/duration enrichment for a skill we author. Correlates to a harness start by sessionId + skillName. Additive to PreToolUse capture — never a replacement. Missing outcomes are a valid state. */
   recordSkillUsageOutcome: SkillUsageOutcomeObject;
-  /** Record the per-session coverage heartbeat: which machine, delivery leg and repo, and what sits in the local telemetry buffer. Upserted latest-wins per (machine, repo, leg, source). Attributed to the human user the authenticated principal acts as; a userId is never accepted from the client. */
+  /** Record the per-session coverage heartbeat: which machine, delivery leg and repo, and what sits in the local telemetry buffer. Upserted latest-wins per (machine, repo, leg, source). Attributed to the human user the authenticated principal acts as; a userId is never accepted from the client. A coverage warning this heartbeat newly raises for its machine is pushed once as a system.alert linking to /usage. */
   recordTelemetryHeartbeat: TelemetryHeartbeatObject;
   /** Batch-ingest hook-captured token usage rows (at most 500). Rows are attributed to the human user the authenticated principal acts as (human JWT, or a service account's acting user); a userId is never accepted from the client. Idempotent: rows whose (source, sessionId, requestId) already exist are skipped. created_at is the row's occurredAt, not ingest time. Any invalid row rejects the whole batch with BAD_REQUEST naming the row index. */
   recordTokenUsage: RecordTokenUsageResultObject;
@@ -3333,6 +3335,10 @@ export type MutationEvaluatePlanRulesArgs = {
 
 export type MutationForceSettlePlanRunArgs = {
   input: ForceSettlePlanRunInput;
+};
+
+export type MutationForgetTelemetryMachineArgs = {
+  machineId: Scalars['String']['input'];
 };
 
 export type MutationHardDeleteCustomPromptArgs = {
@@ -15079,6 +15085,15 @@ export type GetUsageTelemetryCoverageQuery = {
       }>;
     }>;
   };
+};
+
+export type ForgetUsageTelemetryMachineMutationVariables = Exact<{
+  machineId: Scalars['String']['input'];
+}>;
+
+export type ForgetUsageTelemetryMachineMutation = {
+  __typename?: 'Mutation';
+  forgetTelemetryMachine: number;
 };
 
 export type ScheduleFormAgentClisQueryVariables = Exact<{
@@ -37783,6 +37798,54 @@ export const GetUsageTelemetryCoverageDocument = {
 } as unknown as DocumentNode<
   GetUsageTelemetryCoverageQuery,
   GetUsageTelemetryCoverageQueryVariables
+>;
+export const ForgetUsageTelemetryMachineDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'forgetUsageTelemetryMachine' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'machineId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'String' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'forgetTelemetryMachine' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'machineId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'machineId' },
+                },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  ForgetUsageTelemetryMachineMutation,
+  ForgetUsageTelemetryMachineMutationVariables
 >;
 export const ScheduleFormAgentClisDocument = {
   kind: 'Document',

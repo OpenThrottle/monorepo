@@ -1,11 +1,11 @@
 /**
  * @description GraphQL resolver for the telemetry coverage view on /usage:
- * per machine, which delivery legs report and what is wrong. Scoped to the
- * requesting user and guarded like captureHealth.
+ * per machine, which delivery legs report and what is wrong — plus forgetting a
+ * retired machine. Scoped to the requesting user and guarded like captureHealth.
  */
 
 import { BadRequestException, UseGuards } from '@nestjs/common';
-import { Args, Int, Query, Resolver } from '@nestjs/graphql';
+import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { CurrentUser } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 import { TelemetryHeartbeatsService } from '@openthrottle/nestjs-repositories';
@@ -38,6 +38,26 @@ export class TelemetryCoverageResolver {
     private readonly telemetryHeartbeatsService: TelemetryHeartbeatsService,
   ) {}
 
+  @Mutation(() => Int, {
+    description: `Forget a machine on the telemetry coverage view: delete every heartbeat row the requesting user has for machineId (all repos, delivery legs and sources), so a retired machine stops raising MACHINE_SILENT. Returns the number of rows deleted (0 when there were none). A later heartbeat from the machine re-adds it.`,
+  })
+  @Permissions(PERMISSIONS.SETTINGS_WRITE)
+  async forgetTelemetryMachine(
+    @Args('machineId', { type: () => String }) machineId: string,
+    @CurrentUser('sub') sub?: string,
+  ): Promise<number> {
+    const trimmed = machineId.trim();
+    if (trimmed === '') {
+      throw new BadRequestException('machineId is required');
+    }
+    const userId = await this.requireUserId(sub);
+
+    return this.telemetryHeartbeatsService.deleteForUserMachine(
+      userId,
+      trimmed,
+    );
+  }
+
   @Query(() => TelemetryCoverageObject, {
     description: `Telemetry coverage for the requesting user: per machine, the repos and delivery legs seen in the window, the newest buffer snapshot, and coverage warnings. Machines are ordered by lastSeenAt descending.`,
   })
@@ -55,13 +75,7 @@ export class TelemetryCoverageResolver {
         `windowDays must be between 1 and ${TELEMETRY_COVERAGE_MAX_WINDOW_DAYS}`,
       );
     }
-    const userId =
-      await this.effectiveUserResolutionService.resolveEffectiveUserId(sub);
-    if (userId === null || userId === undefined) {
-      throw new BadRequestException(
-        'telemetry coverage requires an authenticated user principal',
-      );
-    }
+    const userId = await this.requireUserId(sub);
 
     const now = new Date();
     // 2x the window so a machine silent for the window is still listed.
@@ -80,5 +94,17 @@ export class TelemetryCoverageResolver {
       }),
       windowDays,
     };
+  }
+
+  private async requireUserId(sub: string | undefined): Promise<string> {
+    const userId =
+      await this.effectiveUserResolutionService.resolveEffectiveUserId(sub);
+    if (userId === null || userId === undefined) {
+      throw new BadRequestException(
+        'telemetry coverage requires an authenticated user principal',
+      );
+    }
+
+    return userId;
   }
 }

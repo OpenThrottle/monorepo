@@ -1,17 +1,20 @@
 import { createMock } from '@golevelup/ts-vitest';
 import { BadRequestException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
+import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   type TelemetryHeartbeat,
   TelemetryHeartbeatsService,
 } from '@openthrottle/nestjs-repositories';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { NotificationsService } from '../../notifications/notifications.service.ts';
 import { EffectiveUserResolutionService } from '../../services/effective-user-resolution/effective-user-resolution.service.ts';
 import type { RecordTelemetryHeartbeatInput } from './telemetry-heartbeat.input.ts';
 import { TelemetryHeartbeatResolver } from './telemetry-heartbeat.resolver.ts';
 
 const userId = '11111111-1111-4111-8111-111111111111';
+const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
 
 const validInput: RecordTelemetryHeartbeatInput = {
   bufferedEvents: 1,
@@ -34,6 +37,8 @@ const validInput: RecordTelemetryHeartbeatInput = {
 describe('TelemetryHeartbeatResolver', () => {
   let resolver: TelemetryHeartbeatResolver;
   const upsertHeartbeat = vi.fn();
+  const listForUser = vi.fn();
+  const emitSystemAlert = vi.fn();
   const resolveEffectiveUserId = vi.fn();
 
   beforeEach(async () => {
@@ -42,13 +47,22 @@ describe('TelemetryHeartbeatResolver', () => {
     upsertHeartbeat.mockResolvedValue(
       createMock<TelemetryHeartbeat>({ id: 'hb-1' }),
     );
+    listForUser.mockResolvedValue([]);
     const app = await Test.createTestingModule({
       providers: [
         TelemetryHeartbeatResolver,
         {
           provide: TelemetryHeartbeatsService,
-          useValue: createMock<TelemetryHeartbeatsService>({ upsertHeartbeat }),
+          useValue: createMock<TelemetryHeartbeatsService>({
+            listForUser,
+            upsertHeartbeat,
+          }),
         },
+        {
+          provide: NotificationsService,
+          useValue: createMock<NotificationsService>({ emitSystemAlert }),
+        },
+        { provide: LoggerService, useValue: createMock<LoggerService>() },
         {
           provide: EffectiveUserResolutionService,
           useValue: { resolveEffectiveUserId },
@@ -147,6 +161,83 @@ describe('TelemetryHeartbeatResolver', () => {
         resolver.recordTelemetryHeartbeat(validInput, 'sub-1'),
       ).rejects.toThrow(BadRequestException);
       expect(upsertHeartbeat).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('coverage notifications', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+      vi.setSystemTime(FIXED_NOW);
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    const row = (
+      overrides: Partial<TelemetryHeartbeat>,
+    ): TelemetryHeartbeat => {
+      return createMock<TelemetryHeartbeat>({
+        bufferedEvents: 0,
+        bufferedOutcomes: 0,
+        bufferedTokenUsage: 0,
+        bufferedTrajectories: 0,
+        deadLetterCount: 0,
+        deliveryLeg: 'marketplace',
+        lastSeenAt: FIXED_NOW,
+        machineId: 'machine-1',
+        machineLabel: 'work-laptop',
+        marketplacePluginInstalled: true,
+        marketplacePluginVersion: null,
+        oldestBufferedAt: null,
+        pluginVersion: null,
+        recentBufferedTotals: [],
+        repoIdentity: null,
+        ...overrides,
+      });
+    };
+
+    test('alerts once for a warning the heartbeat newly raised', async () => {
+      listForUser.mockResolvedValueOnce([row({})]).mockResolvedValueOnce([
+        row({ deadLetterCount: 2 }),
+        row({
+          machineId: 'other-machine',
+          marketplacePluginInstalled: false,
+        }),
+      ]);
+
+      await resolver.recordTelemetryHeartbeat(validInput, 'sub-1');
+
+      expect(emitSystemAlert).toHaveBeenCalledTimes(1);
+      expect(emitSystemAlert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          code: 'telemetry-coverage.DEAD_LETTERED',
+          link: '/usage',
+          message: expect.stringContaining('work-laptop'),
+          severity: 'warning',
+        }),
+      );
+    });
+
+    test('stays quiet while a warning stays raised', async () => {
+      const uncovered = row({ marketplacePluginInstalled: false });
+      listForUser
+        .mockResolvedValueOnce([uncovered])
+        .mockResolvedValueOnce([uncovered]);
+
+      await resolver.recordTelemetryHeartbeat(validInput, 'sub-1');
+
+      expect(emitSystemAlert).not.toHaveBeenCalled();
+    });
+
+    test('still records the heartbeat when the rows cannot be read', async () => {
+      listForUser.mockRejectedValue(new Error('db down'));
+
+      await expect(
+        resolver.recordTelemetryHeartbeat(validInput, 'sub-1'),
+      ).resolves.toBeDefined();
+      expect(upsertHeartbeat).toHaveBeenCalled();
+      expect(emitSystemAlert).not.toHaveBeenCalled();
     });
   });
 });
