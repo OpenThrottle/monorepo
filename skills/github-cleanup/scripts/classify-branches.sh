@@ -21,11 +21,13 @@
 # fetches merged PR heads into refs/github-cleanup/*, which it deletes again on exit.
 #
 # Usage: classify-branches.sh [--remote <name>] [--no-fetch] [--explain <branch>]
+#   --remote defaults to the sibling resolve-repo-context.sh's REMOTE (origin, else the first
+#   remote), and the default branch to its DEFAULT_BRANCH, so neither origin nor main is assumed.
 # Requires: git, gh (authenticated, for PR state), jq.
 
 set -euo pipefail
 
-remote=origin
+remote=
 fetch=1
 explain=
 while [ $# -gt 0 ]; do
@@ -42,7 +44,21 @@ for bin in git gh jq; do
   command -v "$bin" >/dev/null || { echo "missing required tool: $bin" >&2; exit 2; }
 done
 
+script_dir=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 cd "$(git rev-parse --show-toplevel)"
+
+# ctx_value <key>: one value from the resolver's KEY=VALUE output.
+ctx=$(bash "$script_dir/resolve-repo-context.sh")
+ctx_value() {
+  printf '%s\n' "$ctx" | sed -n "s/^$1=//p" | head -n 1
+}
+
+remote_given=1
+if [ -z "$remote" ]; then
+  remote_given=0
+  remote=$(ctx_value REMOTE)
+fi
+[ -n "$remote" ] && [ "$remote" != none ] || { echo "no git remote to compare against" >&2; exit 2; }
 
 work=$(mktemp -d "${TMPDIR:-/tmp}/github-cleanup.XXXXXX")
 cleanup() {
@@ -55,7 +71,16 @@ trap cleanup EXIT
 
 [ "$fetch" = 0 ] || git fetch "$remote" --prune --quiet
 
-default=$(git symbolic-ref --quiet --short "refs/remotes/$remote/HEAD" 2>/dev/null | sed "s#^$remote/##" || true)
+# The resolver answered for its own remote; an explicit --remote resolves its default here.
+if [ "$remote_given" = 0 ]; then
+  default=$(ctx_value DEFAULT_BRANCH)
+else
+  default=$(git symbolic-ref --quiet --short "refs/remotes/$remote/HEAD" 2>/dev/null | sed "s#^$remote/##" || true)
+  for candidate in main master; do
+    [ -z "$default" ] || break
+    git rev-parse --verify --quiet "refs/remotes/$remote/$candidate" >/dev/null && default=$candidate
+  done
+fi
 [ -n "$default" ] || default=main
 base="$remote/$default"
 git rev-parse --verify --quiet "$base" >/dev/null || { echo "cannot resolve $base" >&2; exit 2; }

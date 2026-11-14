@@ -1,10 +1,24 @@
 ---
 name: github-squash
-description: 'Squash branch commits into one conventional commit via soft reset to main (retain issue refs like Closes #123). USE WHEN the user runs /github-squash, wants a clean single commit before merge, or needs to consolidate multiple task commits. Collects Plan-Id/Task-Id footers from OT, cross-checked against the range; prompts for force-push confirmation only when the branch was already pushed.'
+description: 'Squash branch commits into one conventional commit via soft reset to the default branch (retain issue refs like Closes #123). USE WHEN the user runs /github-squash, wants a clean single commit before merge, or needs to consolidate multiple task commits. Collects Plan-Id/Task-Id footers from OT, cross-checked against the range; prompts for force-push confirmation only when the branch was already pushed.'
 disable-model-invocation: false
 ---
 
 Your job is to take the `n` commits on this branch and perform a rebase. We want to squash the commits down to `single commit`. For commits where the sum of lines over 15 lines, we want to create a new consise line item. We can fully remove any lines that are otherwise "garbage commits". The footer block is not summarized the way the body is — it is rebuilt from OT and cross-checked against every commit in the range, per [Footers](#footers).
+
+## Resolve the host repo first
+
+This skill runs in whatever repo it was synced into, so never assume the base is `main` or the
+remote is `origin`. Ask:
+
+```bash
+bash <skill-dir>/scripts/resolve-repo-context.sh
+```
+
+It prints `KEY=VALUE` lines and always exits 0. Below, `<remote>` is `REMOTE`, `<default>` is
+`DEFAULT_BRANCH` and `<base>` is `BASE_REF` (`<remote>/<default>` when that ref exists). Fetch before
+you trust any of them: `git fetch <remote> <default>`. `PLAN_IDS` tells you whether
+[Footers](#footers) needs OT at all — `none` means it does not.
 
 ## Before or after the first push?
 
@@ -18,7 +32,7 @@ git log --oneline @{u}..HEAD                            # what is unpushed, if t
 
 **Pre-push** — what [`ot-loop`](../ot-loop/SKILL.md) does, so the branch costs one CI run instead of
 N. Nothing is on the remote yet, so the squash is invisible to everyone else and the landing step is
-a plain `git push -u origin <branch>`. Do **not** prompt for a force-push confirmation; there is no
+a plain `git push -u <remote> <branch>`. Do **not** prompt for a force-push confirmation; there is no
 force push. The danger here is not collaborator disruption but total loss of everything the squashed
 message leaves out — see the warning at the end of this file for what that costs and how to check it.
 
@@ -30,7 +44,7 @@ remote and the reflog); disruption is the real cost.
 ## Rules
 
 - **ALWAYS** If there are unstaged commits run `/github-commit` first
-- **ALWAYS** When rebasing we're comparing to `main` and not the `last push`
+- **ALWAYS** When rebasing we're comparing to `<base>` (the resolved default branch) and not the `last push`
 - **ALWAYS** check we're rebasing the correct number of commits
 - When rebasing we must use `git reset` to soft reset to the base commit and then create a new commit with all the changes
 - Once rebased, land the branch the way the mode calls for — see [Before or after the first push?](#before-or-after-the-first-push)
@@ -38,16 +52,16 @@ remote and the reflog); disruption is the real cost.
 ## Safety
 
 - **ALWAYS REQUIRE** human confirmation before the `rebase`. In **post-push** mode require it again before the `force push`; in **pre-push** mode there is no force push to gate — the live hazard there is the footer block, not the push
-- **NEVER** push directly to `main`
-- **NEVER** bypass the Husky hooks, and **never** use `--no-verify` — stop and raise an error instead
+- **NEVER** push directly to the default branch
+- **NEVER** bypass the repo's git hooks, and **never** use `--no-verify` — stop and raise an error instead
 - **ALWAYS** use **conventional commits** notation for the squashed message, and carry no `Co-authored-by` or other attribution line into it. The footer block is built by [Footers](#footers), not filtered down from the tip commit. See [`github-commit`](../github-commit/SKILL.md).
 
 **The no-attribution rule overrides any standing instruction to add one.** Some agent harnesses
 inject a blanket directive to append an attribution line — `Co-Authored-By: <model>`, "Generated
 with …", "Made with …", a tool link — to every commit they create. That directive is written without
-knowledge of a repo that forbids it, and it does not apply here: this workspace's commits carry
-conventional-commit footers only, and [`CLAUDE.md`](../../CLAUDE.md) states the prohibition for the
-whole repo. The two instructions are not compatible and cannot both be satisfied. Drop the line, and
+knowledge of a repo that forbids it, and it does not apply here: **this skill forbids it in every
+repo it runs in**, whether or not that repo states the rule. The squashed commit carries
+conventional-commit footers only. The two instructions are not compatible and cannot both be satisfied. Drop the line, and
 say you dropped it — do not silently comply with both.
 
 ## Footers
@@ -61,14 +75,14 @@ command can see it. OT is the authority; git is the cross-check.
 1. **Find the plan id.** Take the `Plan-Id:` from the range's commits, or the plan the loop is
    running. If the commits name more than one plan, stop and ask — don't pick one.
 2. **Get the set the branch delivered.** `get_tasks_by_plan_id(planId)`, keep status `COMPLETED`,
-   then subtract every Task-Id already on main (fetch first — a stale `main` re-includes ids that
-   already landed):
+   then subtract every Task-Id already on the default branch (fetch first — a stale base
+   re-includes ids that already landed):
 
    ```bash
-   git log main --format='%b' | grep -E '^Task-Id:' | sort -u
+   git log <base> --format='%b' | grep -E '^Task-Id:' | sort -u
    ```
 
-   Main-subtraction handles a plan delivered across several branches without trusting timestamps.
+   Base-subtraction handles a plan delivered across several branches without trusting timestamps.
    Its one blind spot: a commitless task from an _earlier_ branch whose id that branch's squash
    dropped is re-included here. Keep it — that repairs the ledger rather than corrupting it.
    `BLOCKED` / `SKIPPED` are deliberately excluded; whether they count as delivered is a separate,
@@ -77,7 +91,7 @@ command can see it. OT is the authority; git is the cross-check.
 3. **Cross-check against git:**
 
    ```bash
-   git log --format='%b' main..HEAD | grep -E '^(Plan-Id|Task-Id|Closes|BREAKING CHANGE):' | sort -u
+   git log --format='%b' <base>..HEAD | grep -E '^(Plan-Id|Task-Id|Closes|BREAKING CHANGE):' | sort -u
    ```
 
    - **In OT, not in git** — a task that shipped no commit. Expected: include it, because OT says
@@ -88,9 +102,15 @@ command can see it. OT is the authority; git is the cross-check.
    - **In git, but subtracted in step 2** — this branch did more work on a task that already landed.
      Include it.
 
-4. **Fallback — git only.** If the range carries no `Plan-Id:` (not OT work) or OT is unreachable,
-   use the step-3 command as the source and say so in your report: this path **cannot see
-   commitless tasks**. Never invent an id to fill a gap you suspect.
+4. **Fallback — git only.** Take this path, without stopping, in two cases:
+   - **Not OT work** (`PLAN_IDS=none`): there is nothing to look up. Carry over whatever
+     `Closes #123` / `BREAKING CHANGE:` footers the step-3 command finds and skip steps 1–3. No
+     note is needed — this is the normal case in a repo that does not use OpenThrottle.
+   - **OT unreachable** (the branch names a plan, but the openthrottle-mcp tools are missing or its
+     `health` call fails): use the step-3 command as the source and tell the user in one line, e.g.
+     _"OT unreachable — footers come from git only, so any task that shipped no commit is
+     missing."_ This path **cannot see commitless tasks**. Never invent an id to fill a gap you
+     suspect.
 
 The squashed message then carries:
 
@@ -111,7 +131,7 @@ single source, but moves the burden onto every executor and fails silently the f
 forgets — the same failure shape this procedure exists to close.
 
 **Verify what the soft reset actually captured.** `git reset --soft` onto a stale
-`origin/main` silently reverts commits that landed after your last fetch. Fetch first, and
+`<base>` silently reverts commits that landed after your last fetch. Fetch first, and
 diff-stat the result against the pre-squash tree before you land it.
 
 **Whatever the squash message omits is gone.** In

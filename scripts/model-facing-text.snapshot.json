@@ -172,10 +172,10 @@
     "prompt/Job_TestHealth.md": 8163,
     "prompt/Job_WorkInFlight.md": 9928,
     "skill/agents-ralph": 14464,
-    "skill/github-cleanup": 7233,
-    "skill/github-commit": 3112,
-    "skill/github-pull-request": 14403,
-    "skill/github-squash": 8977,
+    "skill/github-cleanup": 7799,
+    "skill/github-commit": 5216,
+    "skill/github-pull-request": 17692,
+    "skill/github-squash": 10125,
     "skill/ot-folders": 21335,
     "skill/ot-generators": 10250,
     "skill/ot-loop": 33067,
@@ -189,7 +189,7 @@
     "skillDescription/github-cleanup": 342,
     "skillDescription/github-commit": 240,
     "skillDescription/github-pull-request": 254,
-    "skillDescription/github-squash": 391,
+    "skillDescription/github-squash": 405,
     "skillDescription/ot-folders": 631,
     "skillDescription/ot-generators": 359,
     "skillDescription/ot-loop": 256,
@@ -208,10 +208,10 @@
     "mcpToolsFull": 59365
   },
   "totals": {
-    "alwaysInjected": 41747,
+    "alwaysInjected": 41761,
     "mcpInstructions": 2138,
     "mcpTools": 34486,
     "prompts": 127983,
-    "skills": 193194
+    "skills": 200301
   }
 }

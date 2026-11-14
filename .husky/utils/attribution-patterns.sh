@@ -10,6 +10,9 @@
 #   - .husky/commit-msg   (strips matching lines from the commit message)
 #   - .github/workflows/continuous-integration.yml, job "attribution-guard"
 #     (fails a PR whose title, body or commits carry one)
+#   - skills/github-pull-request/scripts/attribution-patterns.sh, a byte-identical
+#     copy so the skill's bundled guard works in repos without this file
+#     (scripts/check-vendored-skill-files.sh fails when the two drift)
 #
 # Deliberately emitter-agnostic: it is not about any one tool. Claude Code,
 # Cursor, Copilot and whatever comes next all emit some variation, and every
