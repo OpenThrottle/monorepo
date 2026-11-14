@@ -156,9 +156,12 @@ describe('useAgenticChatTurn restore/reset', () => {
     const user = userEvent.setup();
     const component = renderTurn(pageLoader);
 
-    await waitFor(() => expect(pageLoads).toBe(1));
+    // The loader counts on entry, before the route renders: wait for the
+    // harness itself, not just the load, or the click races an empty tree.
+    const restore = await component.findByRole('button', { name: 'Restore' });
+    expect(pageLoads).toBe(1);
 
-    await user.click(component.getByRole('button', { name: 'Restore' }));
+    await user.click(restore);
     await waitFor(() =>
       expect(component.getByTestId('message-count')).toHaveTextContent('2'),
     );
