@@ -12,8 +12,11 @@ This skill runs in whatever repo it was synced into, so never assume the base is
 remote is `origin`. Ask:
 
 ```bash
-bash <skill-dir>/scripts/resolve-repo-context.sh
+bash "$(git rev-parse --show-toplevel)/.agents/skills/github-pull-request/scripts/resolve-repo-context.sh"
 ```
+
+It lives in the `github-pull-request` skill and is reached through `.agents/skills/`, which the
+skill fan-out builds in the OpenThrottle repo and skill injection builds in every other repo.
 
 It prints `KEY=VALUE` lines and always exits 0. Below, `<remote>` is `REMOTE`, `<default>` is
 `DEFAULT_BRANCH` and `<base>` is `BASE_REF` (`<remote>/<default>` when that ref exists). Fetch before

@@ -21,7 +21,7 @@
 # fetches merged PR heads into refs/github-cleanup/*, which it deletes again on exit.
 #
 # Usage: classify-branches.sh [--remote <name>] [--no-fetch] [--explain <branch>]
-#   --remote defaults to the sibling resolve-repo-context.sh's REMOTE (origin, else the first
+#   --remote defaults to the github-pull-request skill's resolver REMOTE (origin, else the first
 #   remote), and the default branch to its DEFAULT_BRANCH, so neither origin nor main is assumed.
 # Requires: git, gh (authenticated, for PR state), jq.
 
@@ -44,11 +44,11 @@ for bin in git gh jq; do
   command -v "$bin" >/dev/null || { echo "missing required tool: $bin" >&2; exit 2; }
 done
 
-script_dir=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 cd "$(git rev-parse --show-toplevel)"
 
 # ctx_value <key>: one value from the resolver's KEY=VALUE output.
-ctx=$(bash "$script_dir/resolve-repo-context.sh")
+# The resolver ships with github-pull-request; .agents/skills/ holds it in every repo.
+ctx=$(bash .agents/skills/github-pull-request/scripts/resolve-repo-context.sh)
 ctx_value() {
   printf '%s\n' "$ctx" | sed -n "s/^$1=//p" | head -n 1
 }

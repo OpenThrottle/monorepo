@@ -23,13 +23,13 @@ bash <skill-dir>/scripts/classify-branches.sh            # TSV: VERDICT BRANCH P
 bash <skill-dir>/scripts/classify-branches.sh --explain <branch>   # files that never reached the default branch
 ```
 
-The classifier finds the remote and default branch itself through the bundled
-`scripts/resolve-repo-context.sh` (`origin`, else the first remote; the remote's own default
+The classifier finds the remote and default branch itself through the `github-pull-request`
+skill's resolver, `.agents/skills/github-pull-request/scripts/resolve-repo-context.sh` (`origin`, else the first remote; the remote's own default
 branch, whatever it is named), so it works the same in any repo. Run the resolver yourself once
 too — its `WORKTREE_REMOVE` line decides step 3.1:
 
 ```bash
-bash <skill-dir>/scripts/resolve-repo-context.sh
+bash "$(git rev-parse --show-toplevel)/.agents/skills/github-pull-request/scripts/resolve-repo-context.sh"
 ```
 
 It needs `git`, `jq` and an authenticated `gh`. If `gh` is unavailable, stop and say so — PR

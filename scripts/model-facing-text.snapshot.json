@@ -172,10 +172,10 @@
     "prompt/Job_TestHealth.md": 8163,
     "prompt/Job_WorkInFlight.md": 9928,
     "skill/agents-ralph": 14464,
-    "skill/github-cleanup": 7799,
-    "skill/github-commit": 5216,
-    "skill/github-pull-request": 17406,
-    "skill/github-squash": 10125,
+    "skill/github-cleanup": 7924,
+    "skill/github-commit": 5465,
+    "skill/github-pull-request": 17994,
+    "skill/github-squash": 10374,
     "skill/ot-folders": 21335,
     "skill/ot-generators": 10250,
     "skill/ot-loop": 33067,
@@ -212,6 +212,6 @@
     "mcpInstructions": 2138,
     "mcpTools": 34486,
     "prompts": 127983,
-    "skills": 200015
+    "skills": 201226
   }
 }

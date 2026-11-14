@@ -33,12 +33,10 @@
 # OT reachability is NOT checked here — a shell cannot reach the MCP. PLAN_IDS says whether
 # the branch is OT work; the skill checks OT itself (openthrottle-mcp `health`) when it is.
 #
-# This is the only copy. github-commit, github-squash and github-cleanup reach it through a
-# relative git symlink in their own scripts/ folder, so there is one file to edit. Foreign-repo
-# injection either symlinks the whole skill folder (the inner link still resolves against this
-# source) or copies it with symlinks dereferenced, so every skill ends up with a working file.
+# This is the only copy. Every github-* skill runs it from .agents/skills/github-pull-request/,
+# which the skill fan-out builds in the OpenThrottle repo and skill injection builds elsewhere.
 #
-# Usage: bash <skill-dir>/scripts/resolve-repo-context.sh
+# Usage: bash "$(git rev-parse --show-toplevel)/.agents/skills/github-pull-request/scripts/resolve-repo-context.sh"
 
 set -u
 

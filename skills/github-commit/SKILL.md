@@ -12,8 +12,11 @@ This skill runs in whatever repo it was synced into. Ask the repo what it enforc
 the message:
 
 ```bash
-bash <skill-dir>/scripts/resolve-repo-context.sh
+bash "$(git rev-parse --show-toplevel)/.agents/skills/github-pull-request/scripts/resolve-repo-context.sh"
 ```
+
+It lives in the `github-pull-request` skill and is reached through `.agents/skills/`, which the
+skill fan-out builds in the OpenThrottle repo and skill injection builds in every other repo.
 
 It prints `KEY=VALUE` lines and always exits 0. Three keys matter here:
 

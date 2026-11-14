@@ -1,1 +1,0 @@
-../../github-pull-request/scripts/resolve-repo-context.sh

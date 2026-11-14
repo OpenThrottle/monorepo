@@ -125,11 +125,17 @@ host at all.
     text to publish.
   - **The bundled default** (`PR_TEMPLATE_SOURCE=bundled`,
     [`templates/pull_request_template.md`](./templates/pull_request_template.md)) when the repo has
-    none. Its `<!-- -->` comments say what each section is for; replace them with content and
-    remove them.
+    none. Its `**TODO:**` lines say what each section needs; replace every one with content.
   - **Neither** (`none`, only possible if the skill was copied without its `templates/` folder): use
     a `# Summary` section and a `## Testing` checklist, which is what the default contains.
 - **ALWAYS** write testing steps as things that **should be done**, not a list of things already done
+- **ALWAYS** fill **Review focus** when the template has one: the one or two places a reviewer should
+  look hardest — a judgment call, something you are unsure of, what breaks if it is wrong. Say
+  "nothing unusual" rather than padding it; a reviewer skimming many agent PRs reads this first
+- **ALWAYS** make **Follow-ups** true: link each out-of-scope item you filed (an OT plan here, an issue
+  elsewhere), and name what you fed back — the skill, `AGENTS.md` line, lint rule or test you changed
+  because something tripped you up. Tick a box only when it is done; leave it unticked and say why
+  otherwise
 - **NEVER** add a `Files Modified` section — it is redundant with the diff
 - **ALWAYS** analyze both the commit messages **and** the actual diff to write an accurate summary
 - **ALWAYS** group related changes together (all UI changes, all API changes, and so on)
