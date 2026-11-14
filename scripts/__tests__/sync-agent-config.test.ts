@@ -4,6 +4,8 @@ import type { AgentConfig } from '../sync-agent-config.ts';
 import {
   checkClaudeAttribution,
   parseAgentConfig,
+  renderAntigravityDenyRules,
+  renderAntigravityHooks,
   renderAntigravityMcpConfig,
   renderAntigravityPluginManifest,
   renderClaudeMcpJson,
@@ -138,6 +140,47 @@ describe('renderAntigravityPluginManifest', () => {
 
     expect(manifest).toMatchObject({ name: 'openthrottle', version: '1.0.0' });
     expect(Object(manifest).description).toContain('GENERATED');
+  });
+});
+
+describe('renderAntigravityDenyRules', () => {
+  it('lists only the shell deny globs, in SSOT order', () => {
+    const config = load(
+      { x: stdio() },
+      {
+        allow: [{ shell: 'git status *' }],
+        deny: [
+          { shell: 'git push*main*' },
+          { mcpServer: 'x' },
+          { shell: 'git push*+*' },
+        ],
+      },
+    );
+    const rules: unknown = JSON.parse(renderAntigravityDenyRules(config));
+
+    expect(rules).toMatchObject({ deny: ['git push*main*', 'git push*+*'] });
+    expect(Object(rules)._readme).toContain('GENERATED');
+  });
+});
+
+describe('renderAntigravityHooks', () => {
+  it('runs the repo deny hook on run_command from the plugin folder', () => {
+    expect(JSON.parse(renderAntigravityHooks())).toEqual({
+      'openthrottle-deny': {
+        PreToolUse: [
+          {
+            hooks: [
+              {
+                command:
+                  'node --experimental-strip-types ../../../scripts/antigravity-deny-hook.ts',
+                timeout: 10,
+              },
+            ],
+            matcher: 'run_command',
+          },
+        ],
+      },
+    });
   });
 });
 
