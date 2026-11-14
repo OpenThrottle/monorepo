@@ -1,6 +1,6 @@
+import type { ToolSurface } from '@openthrottle/openthrottle-mcp/tool-surface';
 import { describe, expect, it } from 'vitest';
 
-import type { ToolSurface } from '../../../model-facing-text/surface.ts';
 import type {
   Selection,
   ToolSelectionCase,

@@ -16,8 +16,8 @@ import type {
   RunEvalIteration,
 } from '@openthrottle/agentic-evals';
 import { runEval } from '@openthrottle/agentic-evals';
+import type { ToolSurface } from '@openthrottle/openthrottle-mcp/tool-surface';
 
-import type { ToolSurface } from '../../model-facing-text/surface.ts';
 import {
   createCliRunState,
   createCliToolSelectionGrader,

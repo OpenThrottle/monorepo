@@ -10,10 +10,13 @@
 import { appendFileSync } from 'node:fs';
 
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import {
+  getServerName,
+  SERVER_VERSION,
+} from '@openthrottle/openthrottle-mcp/tool-surface';
+import { TOOLSET_NAMES } from '@openthrottle/openthrottle-mcp/tool-surface';
+import { listToolSurface } from '@openthrottle/openthrottle-mcp/tool-surface';
 
-import { getServerName, SERVER_VERSION } from '../../config/index.ts';
-import { TOOLSET_NAMES } from '../../config/toolsets.ts';
-import { listToolSurface } from '../../model-facing-text/surface.ts';
 import { createSandboxMcpServer } from './createSandboxMcpServer.ts';
 
 /**

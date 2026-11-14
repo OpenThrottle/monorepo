@@ -1,10 +1,10 @@
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
+import type { ToolSurface } from '@openthrottle/openthrottle-mcp/tool-surface';
+import { TOOLSET_NAMES } from '@openthrottle/openthrottle-mcp/tool-surface';
+import { listToolSurface } from '@openthrottle/openthrottle-mcp/tool-surface';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { TOOLSET_NAMES } from '../../../config/toolsets.ts';
-import type { ToolSurface } from '../../../model-facing-text/surface.ts';
-import { listToolSurface } from '../../../model-facing-text/surface.ts';
 import { surfaceSha256 } from '../../tool-selection/runEvals.ts';
 import type { SandboxToolCall } from '../createSandboxMcpServer.ts';
 import {

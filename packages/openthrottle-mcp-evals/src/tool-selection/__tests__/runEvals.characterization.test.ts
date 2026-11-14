@@ -5,9 +5,9 @@
  * `compareBaseline` read, so any drift here is a baseline-compatibility break.
  */
 
+import type { ToolSurface } from '@openthrottle/openthrottle-mcp/tool-surface';
 import { describe, expect, it } from 'vitest';
 
-import type { ToolSurface } from '../../../model-facing-text/surface.ts';
 import { TOOL_SELECTION_CASES } from '../data/data.cases.ts';
 import type {
   SelectedCall,

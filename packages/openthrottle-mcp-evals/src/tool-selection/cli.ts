@@ -16,10 +16,10 @@ import { parseArgs } from 'node:util';
 
 import type { EvalAuthMode, EvalRunConfig } from '@openthrottle/agentic-evals';
 import { runDriverIteration } from '@openthrottle/agentic-evals';
+import type { ToolSurface } from '@openthrottle/openthrottle-mcp/tool-surface';
+import { TOOLSET_NAMES } from '@openthrottle/openthrottle-mcp/tool-surface';
+import { listToolSurface } from '@openthrottle/openthrottle-mcp/tool-surface';
 
-import { TOOLSET_NAMES } from '../../config/toolsets.ts';
-import type { ToolSurface } from '../../model-facing-text/surface.ts';
-import { listToolSurface } from '../../model-facing-text/surface.ts';
 import { SANDBOX_CALL_LOG_ENV } from '../sandbox/bin-sandbox.ts';
 import { createAnthropicToolSelector } from './anthropic-tool-selector.ts';
 import type { BaselineComparison, RunResult } from './compareBaseline.ts';

@@ -255,6 +255,9 @@
     },
     {
       "path": "./packages/openthrottle-agentic-loop"
+    },
+    {
+      "path": "./packages/openthrottle-mcp-evals"
     }
   ]
 }

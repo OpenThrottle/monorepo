@@ -16,8 +16,7 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
-
-import type { ToolSurface } from '../../model-facing-text/surface.ts';
+import type { ToolSurface } from '@openthrottle/openthrottle-mcp/tool-surface';
 
 /**
  * @description One `tools/call` the sandbox received, as written to the call log.

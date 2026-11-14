@@ -52,6 +52,7 @@
     "@openthrottle/openthrottle-drivers": 17527,
     "@openthrottle/openthrottle-ide": 28894,
     "@openthrottle/openthrottle-mcp": 54654,
+    "@openthrottle/openthrottle-mcp-evals": 12000,
     "@openthrottle/openthrottle-notifications": 13129,
     "@openthrottle/openthrottle-plan-config": 13682,
     "@openthrottle/openthrottle-showroom": 35410,

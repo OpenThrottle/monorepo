@@ -3,11 +3,11 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { runDriverIteration } from '@openthrottle/agentic-evals';
+import type { ToolSurface } from '@openthrottle/openthrottle-mcp/tool-surface';
+import { TOOLSET_NAMES } from '@openthrottle/openthrottle-mcp/tool-surface';
+import { listToolSurface } from '@openthrottle/openthrottle-mcp/tool-surface';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { TOOLSET_NAMES } from '../../../config/toolsets.ts';
-import type { ToolSurface } from '../../../model-facing-text/surface.ts';
-import { listToolSurface } from '../../../model-facing-text/surface.ts';
 import type { ToolSelectionCase } from '../eval-case.ts';
 import { runCliEvals } from '../runCliEvals.ts';
 
