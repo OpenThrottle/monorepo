@@ -106,19 +106,17 @@ describe('chunksToAtif', () => {
     });
   });
 
-  describe('a CLI that reports a tool only once it finishes', () => {
+  describe('codex, whose finished item opens and resolves its call at once', () => {
     const call = trajectoryOf('codex', 'codex.synthetic').steps[1]
       ?.tool_calls?.[0];
 
-    it('synthesizes the call from the result and says so', () => {
-      expect(call?.extra).toEqual({ synthesized_from_result: true });
+    it('records a real call keyed by the item id, not a synthesized one', () => {
+      expect(call?.extra).toBeUndefined();
       expect(call?.tool_call_id).toBe('i1');
     });
 
-    it('keeps the command and drops the item bookkeeping', () => {
-      expect(call?.arguments).toEqual({
-        command: "bash -lc 'echo hi > hello.txt'",
-      });
+    it('keeps the command without its login-shell wrapper', () => {
+      expect(call?.arguments).toEqual({ command: 'echo hi > hello.txt' });
     });
   });
 

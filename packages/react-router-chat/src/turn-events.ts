@@ -22,6 +22,7 @@ import type {
 } from './types';
 import { ChatToolStatus } from './types';
 import { hasUsageCounts, normalizeUsage, sumUsage } from './usage';
+import { readLegacyCodexItem } from './utils/readLegacyCodexItem';
 
 const asString = (value: unknown): string | null => {
   return typeof value === 'string' ? value : null;
@@ -332,6 +333,11 @@ export interface ParsedChunkMetadata {
   readonly partialJson: string | null;
   /** True when the server clipped this chunk's payload to fit the persisted cap. */
   readonly payloadTruncated: boolean;
+  /**
+   * Arguments a `tool_result` chunk carries for the card it opens when no call
+   * preceded it — only a legacy codex chunk (`{ item }` metadata) has them.
+   */
+  readonly resultArgsJson: string | null;
   readonly sessionId: string | null;
   /**
    * The `toolCall` payload as display text: a string payload as-is (a tool
@@ -351,6 +357,7 @@ const EMPTY_METADATA: ParsedChunkMetadata = {
   isError: false,
   partialJson: null,
   payloadTruncated: false,
+  resultArgsJson: null,
   sessionId: null,
   toolCallJson: null,
   toolName: FALLBACK_TOOL_NAME,
@@ -411,18 +418,26 @@ const normalizeMetadata = (
     return EMPTY_METADATA;
   }
 
+  // Legacy codex chunks carried the whole item and nothing the fold reads.
+  const codex = readLegacyCodexItem(parsed);
   // Legacy claude chunks named the call `toolUseId` rather than `callId`.
-  const callId = asString(parsed.callId) ?? asString(parsed.toolUseId);
+  const callId =
+    asString(parsed.callId) ??
+    asString(parsed.toolUseId) ??
+    codex?.callId ??
+    null;
   const toolName = extractToolName(parsed);
 
   return {
     callId,
     hasToolIdentity: toolName !== null || callId !== null,
-    isError: parsed.isError === true,
+    isError: parsed.isError === true || codex?.isError === true,
     partialJson: asString(parsed.partialJson),
     payloadTruncated: parsed[PAYLOAD_TRUNCATED_KEY] === true,
+    resultArgsJson: codex?.argsJson ?? null,
     sessionId: asString(parsed.sessionId),
-    toolCallJson: toPayloadText(parsed.toolCall),
+    toolCallJson:
+      codex === null ? toPayloadText(parsed.toolCall) : codex.resultJson,
     toolName: toolName ?? FALLBACK_TOOL_NAME,
     toolResultBlocks: parseToolResultBlocks(parsed.toolResults),
     usageJson: stringifyOrNull(parsed.usage),
@@ -576,6 +591,8 @@ export const applyTurnToolCall = (
 
 /** One result to resolve, from a canonical chunk or a legacy block. */
 interface ToolResultInput {
+  /** Arguments for a card this result has to open itself (legacy codex). */
+  readonly argsJson: string | null;
   readonly callId: string | null;
   readonly isError: boolean;
   /** An id-less result names a tool, so it must not adopt another's card. */
@@ -619,7 +636,7 @@ const resolveToolResult = (
   return [
     ...events,
     {
-      argsJson: null,
+      argsJson: input.argsJson,
       callId: input.callId,
       kind: 'tool',
       name: input.toolName,
@@ -650,6 +667,7 @@ export const applyTurnToolResult = (
           folded,
           {
             ...block,
+            argsJson: null,
             namesTool: false,
             payloadTruncated: false,
             positionalFallback: true,
@@ -664,6 +682,7 @@ export const applyTurnToolResult = (
   return resolveToolResult(
     events,
     {
+      argsJson: meta.resultArgsJson,
       callId: meta.callId,
       isError: meta.isError,
       namesTool: meta.hasToolIdentity,

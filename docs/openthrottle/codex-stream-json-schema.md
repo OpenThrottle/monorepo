@@ -57,34 +57,39 @@ command is the plain text form. The plan-run command pins `--sandbox workspace-w
 JSONL on stdout, one object per line, discriminated by a dot-namespaced `type`. Unlike claude there
 is no nested envelope: every event is top-level.
 
-| type             | Fields the mapper reads | Notes                                                           |
-| ---------------- | ----------------------- | --------------------------------------------------------------- |
-| `thread.started` | `thread_id`             | Minted thread id; the resume id.                                |
-| `turn.started`   | none                    | Lifecycle marker. Skipped.                                      |
-| `item.started`   | not read                | Lifecycle. Skipped (see [section 3](#3-assistant-text--items)). |
-| `item.updated`   | not read                | Lifecycle. Skipped.                                             |
-| `item.completed` | `item` (record)         | Carries the full finished item.                                 |
-| `turn.completed` | `usage`                 | Terminal success. Passed through verbatim.                      |
-| `turn.failed`    | `error.message`         | Terminal failure.                                               |
-| `error`          | `message`               | Bare stream error, for example an auth failure.                 |
+| type             | Fields the mapper reads | Notes                                                                                   |
+| ---------------- | ----------------------- | --------------------------------------------------------------------------------------- |
+| `thread.started` | `thread_id`             | Minted thread id; the resume id.                                                        |
+| `turn.started`   | none                    | Lifecycle marker. Skipped.                                                              |
+| `item.started`   | `item` (record)         | Opens a tool item's card; skipped for text (see [section 3](#3-assistant-text--items)). |
+| `item.updated`   | not read                | Lifecycle. Skipped.                                                                     |
+| `item.completed` | `item` (record)         | Carries the full finished item.                                                         |
+| `turn.completed` | `usage`                 | Terminal success. Passed through verbatim.                                              |
+| `turn.failed`    | `error.message`         | Terminal failure.                                                                       |
+| `error`          | `message`               | Bare stream error, for example an auth failure.                                         |
 
 Item discriminant: the mapper reads `item.item_type`, falling back to `item.type`, because the
 serde spelling could not be confirmed against a live success run. Item kinds named in the mapper:
 `agent_message`, `reasoning`, `command_execution`, `mcp_tool_call`, `file_change`, `web_search`,
-`todo_list`. Field sets beyond `item.text` are not observed live.
+`todo_list`. A live `command_execution` (conversation `479cf7c4`, 2026-11-13) is
+`{id, type, status, command, exit_code, aggregated_output}`, with `command` wrapped in the login
+shell (`/bin/zsh -lc '…'`) and `status` `failed` on a non-zero exit. Other kinds' field sets are
+read defensively.
 
 ## 3. Assistant text & items
 
-Only `item.completed` is mapped, and each such event carries the **full** item (the whole assistant
+For text items only `item.completed` is mapped, and it carries the **full** item (the whole assistant
 message in `item.text`). Mapping `item.started` or `item.updated` too would double-count, so they are
-skipped. There is no incremental text delta: text arrives once per message, after it is complete.
+skipped for text. There is no incremental text delta: text arrives once per message, after it is complete.
 
 ## 4. Thinking & tool calls
 
 - `reasoning` items carry the full reasoning text in `item.text`.
-- Tools are reported **only as completed items** (`command_execution`, `mcp_tool_call`,
-  `file_change`, `web_search`, `todo_list`). There is no started/call event, so there is no
-  `tool_call` and no live "running" state.
+- Tool items (`command_execution`, `mcp_tool_call`, `file_change`, `web_search`, `todo_list`, …)
+  map like every other backend's tools: a `tool_call` chunk (`callId` = `item.id`, `toolCall` = the
+  arguments) opens the card on `item.started`, and a `tool_result` chunk (`toolCall` = the result,
+  `isError`) resolves it on `item.completed`. An item seen only as `item.completed` gets both at
+  once, so no card has a result without arguments. Per-kind readers: `codex/tool-items.ts`.
 - codex has no tool name of its own. The item kind is what the activity was, so the mapper uses it
   as `toolName`.
 
@@ -115,21 +120,25 @@ driver concerns and not covered here.
 
 ## 9. Event to ConversationStreamChunk mapping
 
-`mapCodexEvent` is stateless and returns one chunk or `null`.
+`createCodexEventMapper()` returns a per-stream mapper whose `map(event)` returns zero or more chunks;
+its only state is the set of item ids whose card is already open.
 
-| CLI event                                      | Chunk         | Notes                                                                                  |
-| ---------------------------------------------- | ------------- | -------------------------------------------------------------------------------------- |
-| `thread.started`                               | `session`     | `metadata.sessionId` = `thread_id` (or `null`).                                        |
-| `item.completed`, `agent_message`              | `text`        | `delta` = `item.text`.                                                                 |
-| `item.completed`, `reasoning`                  | `thinking`    | `delta` = `item.text`.                                                                 |
-| `item.completed`, any other kind               | `tool_result` | `metadata` = `{item, itemType, toolName}`; `toolName` = the item kind. No `tool_call`. |
-| `item.completed`, no kind or non-record item   | none          | Skipped.                                                                               |
-| `turn.completed`                               | `usage`       | `done: true`, `error: null`, `metadata.usage` = event `usage` (or `null`).             |
-| `turn.failed`                                  | `text`        | `done: true`, `error` = `error.message` or `codex reported a failed turn`.             |
-| `error`                                        | `text`        | `done: true`, `error` = `message` or `codex reported an error`.                        |
-| `turn.started`, `item.started`, `item.updated` | none          | Skipped.                                                                               |
+| CLI event                                           | Chunk         | Notes                                                                                                                        |
+| --------------------------------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `thread.started`                                    | `session`     | `metadata.sessionId` = `thread_id` (or `null`).                                                                              |
+| `item.completed`, `agent_message`                   | `text`        | `delta` = `item.text`.                                                                                                       |
+| `item.completed`, `reasoning`                       | `thinking`    | `delta` = `item.text`.                                                                                                       |
+| `item.started`, a tool kind                         | `tool_call`   | `metadata` = `{callId, itemType, toolCall: args, toolName}`; once per id.                                                    |
+| `item.completed`, a tool kind                       | `tool_result` | `metadata` = `{callId, isError, itemType, toolCall: result, toolName}`; preceded by a `tool_call` when the id never started. |
+| `item.completed`, no kind or non-record item        | none          | Skipped.                                                                                                                     |
+| `turn.completed`                                    | `usage`       | `done: true`, `error: null`, `metadata.usage` = event `usage` (or `null`).                                                   |
+| `turn.failed`                                       | `text`        | `done: true`, `error` = `error.message` or `codex reported a failed turn`.                                                   |
+| `error`                                             | `text`        | `done: true`, `error` = `message` or `codex reported an error`.                                                              |
+| `turn.started`, `item.updated`, text `item.started` | none          | Skipped.                                                                                                                     |
 
-No `usage_limit` chunk is produced for codex.
+No `usage_limit` chunk is produced for codex. Conversations persisted before this mapping carry
+`tool_result` chunks whose metadata is only `{item, itemType, toolName}`; the chat fold reads those
+directly.
 
 ### Example (synthetic, illustrative)
 

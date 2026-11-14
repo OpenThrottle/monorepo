@@ -10,7 +10,7 @@ import { DRIVERS } from '@openthrottle/openthrottle-drivers';
 
 import { createAntigravityEventMapper } from '../conversation-backend/antigravity/events.ts';
 import { mapClaudeEvent } from '../conversation-backend/claude/events.ts';
-import { mapCodexEvent } from '../conversation-backend/codex/events.ts';
+import { createCodexEventMapper } from '../conversation-backend/codex/events.ts';
 import { mapCursorEvent } from '../conversation-backend/cursor-agent/events.ts';
 import { mapGrokEvent } from '../conversation-backend/grok/events.ts';
 import { createOpencodeEventMapper } from '../conversation-backend/opencode/events.ts';
@@ -98,10 +98,13 @@ export const createStructuredChunkReader = (
       return createAntigravityEventMapper();
     case DRIVERS.claude:
       return withConsolidatedText(mapClaudeEvent);
-    case DRIVERS.codex:
+    case DRIVERS.codex: {
+      const mapper = createCodexEventMapper();
+
       return (event) => {
-        return listOf(mapCodexEvent(event));
+        return mapper.map(event);
       };
+    }
     case DRIVERS.cursor:
       return withConsolidatedText((event) => {
         return listOf(mapCursorEvent(event));

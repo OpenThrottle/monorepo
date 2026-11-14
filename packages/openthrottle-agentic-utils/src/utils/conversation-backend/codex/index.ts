@@ -5,4 +5,5 @@
  */
 export { CODEX_BIN_ENV, CODEX_DEFAULT_BIN } from './argv.ts';
 export { codexConversationBackend } from './codex.ts';
-export { mapCodexEvent } from './events.ts';
+export type { CodexEventMapper } from './events.ts';
+export { createCodexEventMapper } from './events.ts';

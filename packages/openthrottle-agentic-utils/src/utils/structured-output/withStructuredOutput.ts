@@ -39,8 +39,9 @@ const toolNameOf = (chunk: ConversationStreamChunk): string => {
 
 /**
  * The tool's arguments, where the CLI's event clearly carries them: `metadata.toolCall` (claude,
- * cursor, gemini, antigravity, opencode) or, for codex, the finished `item` (its `command`). grok
- * maps no tool events, so its lines have nothing to show.
+ * cursor, gemini, antigravity, opencode, codex) or, for codex runs logged before its mapper emitted
+ * `tool_call` chunks, the finished `item` (its `command`). grok maps no tool events, so its lines
+ * have nothing to show.
  */
 const toolInputOf = (chunk: ConversationStreamChunk): unknown => {
   const metadata = chunk.metadata ?? {};
@@ -129,7 +130,7 @@ const renderChunk = (
     case CONVERSATION_STREAM_CHUNK_KINDS.toolCall:
       return toolLineOf(chunk);
     case CONVERSATION_STREAM_CHUNK_KINDS.toolResult:
-      // codex reports a tool only once it finishes (no call event), so its result is the one line.
+      // A driver that emitted no call event (grok, legacy codex logs) gets its result as the line.
       return hasSeenToolCall ? null : toolLineOf(chunk);
     case CONVERSATION_STREAM_CHUNK_KINDS.usageLimit:
       return 'Usage limit reached';

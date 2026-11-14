@@ -5,11 +5,12 @@
  * docs/openthrottle/codex-stream-json-schema.md §9.
  *
  * codex emits discrete, top-level (dot-namespaced) events — unlike claude's
- * nested `stream_event` envelope. Only `item.completed` items are mapped (each
- * carries the FULL item, e.g. the whole assistant message), so mapping the
- * `item.started`/`item.updated` lifecycle events too would double-count — they
- * are skipped. The terminal chunk is `turn.completed` (usage) or the first
- * `error`/`turn.failed` (whichever the driver sees first).
+ * nested `stream_event` envelope. Text items (`agent_message`, `reasoning`) map
+ * from `item.completed` only (it carries the FULL text; the lifecycle events
+ * would double-count). Tool items map from `item.started` (opens the card) and
+ * `item.completed` (resolves it) — see {@link createCodexEventMapper}. The
+ * terminal chunk is `turn.completed` (usage) or the first `error`/`turn.failed`
+ * (whichever the driver sees first).
  *
  * NOTE: the success path (`item.completed` + `turn.completed`) could not be
  * captured live — the host codex credentials were expired during authoring
@@ -23,6 +24,7 @@ import { isRecord } from '@openthrottle/nodejs-utils';
 
 import type { ConversationStreamChunk } from '../types.ts';
 import { CONVERSATION_STREAM_CHUNK_KINDS } from '../types.ts';
+import { readCodexToolItem } from './tool-items.ts';
 
 const asString = (value: unknown): string | undefined => {
   const isString = typeof value === 'string';
@@ -35,67 +37,168 @@ const itemType = (item: Record<string, unknown>): string | undefined => {
   return asString(item.item_type) ?? asString(item.type);
 };
 
+/** Item kinds that carry assistant prose rather than a tool activity. */
+const TEXT_ITEM_KINDS = new Set(['agent_message', 'reasoning']);
+
 /**
- * `item.completed` → a chunk for the completed item. `agent_message` → text,
- * `reasoning` → thinking (both carry the full text in `item.text`); every other
- * item kind (`command_execution`, `mcp_tool_call`, `file_change`, `web_search`,
- * `todo_list`, …) → a tool_result carrying the raw item. Unknown/empty items
- * are skipped.
+ * The `tool_call` chunk that opens (or, on a repeat id, fills in) a codex
+ * item's card. codex has no tool name of its own — the item kind
+ * (`command_execution`, `file_change`, …) IS what the activity was, so it
+ * doubles as the name.
  */
-function mapItemCompleted(
-  event: Record<string, unknown>,
-): ConversationStreamChunk | null {
-  const item = event.item;
-  if (!isRecord(item)) {
-    return null;
-  }
-
-  const kind = itemType(item);
-
-  if (kind === 'agent_message') {
-    return {
-      delta: asString(item.text) ?? '',
-      done: false,
-      kind: CONVERSATION_STREAM_CHUNK_KINDS.text,
-    };
-  }
-
-  if (kind === 'reasoning') {
-    return {
-      delta: asString(item.text) ?? '',
-      done: false,
-      kind: CONVERSATION_STREAM_CHUNK_KINDS.thinking,
-    };
-  }
-
-  if (kind === undefined) {
-    return null;
-  }
-
+function toolCallChunk(
+  callId: string | null,
+  kind: string,
+  args: unknown,
+): ConversationStreamChunk {
   return {
     delta: '',
     done: false,
-    kind: CONVERSATION_STREAM_CHUNK_KINDS.toolResult,
-    // codex has no tool name of its own — the item kind (`command_execution`,
-    // `file_change`, …) IS what the activity was, so it doubles as the name.
-    metadata: { item, itemType: kind, toolName: kind },
+    kind: CONVERSATION_STREAM_CHUNK_KINDS.toolCall,
+    metadata: { callId, itemType: kind, toolCall: args, toolName: kind },
   };
 }
 
 /**
- * Map a single codex event to a chunk, or null to skip it.
- *
- * - `thread.started` → a `session` chunk carrying the minted `thread_id`
- *   (surfaced BEFORE any terminal chunk so the service persists it for resume).
- * - `item.completed` → see {@link mapItemCompleted}.
- * - `turn.completed` → the terminal `usage` chunk (`done:true`, no error).
- * - `turn.failed` → the terminal error chunk (`done:true`, `error` message).
- * - `error` → a terminal error chunk (a bare stream error, e.g. auth failure).
- * - everything else (`turn.started`, `item.started`, `item.updated`) → skipped.
+ * `item.completed` for a text item → text/thinking (the full text is in
+ * `item.text`).
+ */
+function mapTextItem(
+  kind: string,
+  item: Record<string, unknown>,
+): ConversationStreamChunk {
+  const isReasoning = kind === 'reasoning';
+
+  return {
+    delta: asString(item.text) ?? '',
+    done: false,
+    kind: isReasoning
+      ? CONVERSATION_STREAM_CHUNK_KINDS.thinking
+      : CONVERSATION_STREAM_CHUNK_KINDS.text,
+  };
+}
+
+/**
+ * A stateful codex event → chunk mapper. Call {@link CodexEventMapper.map} per
+ * parsed JSONL object; it returns zero or more chunks.
  *
  * @public
  */
-export function mapCodexEvent(event: unknown): ConversationStreamChunk | null {
+export interface CodexEventMapper {
+  map(event: unknown): ConversationStreamChunk[];
+}
+
+/**
+ * Create a fresh mapper (per stream — it remembers which item ids already
+ * opened a card).
+ *
+ * Tool items map the way the shared chat fold reads every other backend: a
+ * `tool_call` chunk (`callId` + `toolCall` = the arguments) opens the card and
+ * a `tool_result` chunk (`callId` + `toolCall` = the result, `isError`)
+ * resolves it. `item.started` opens it while the command runs; an item that
+ * arrives only as `item.completed` gets both chunks at once, so a card never
+ * has a result but no arguments. The item id is the `callId`, keeping parallel
+ * items on their own card. The raw item is not forwarded: it repeats the output
+ * the result already carries, and the persisted turn is capped.
+ *
+ * @public
+ */
+export function createCodexEventMapper(): CodexEventMapper {
+  const startedCallIds = new Set<string>();
+
+  const mapToolItem = (
+    eventType: string,
+    kind: string,
+    item: Record<string, unknown>,
+  ): ConversationStreamChunk[] => {
+    const callId = asString(item.id) ?? null;
+    const read = readCodexToolItem(kind, item);
+    const isStarted = callId !== null && startedCallIds.has(callId);
+
+    if (eventType === 'item.started') {
+      if (isStarted) {
+        return [];
+      }
+      if (callId !== null) {
+        startedCallIds.add(callId);
+      }
+
+      return [toolCallChunk(callId, kind, read.args)];
+    }
+
+    // An id-less result cannot be paired with its call, so it stands alone.
+    const needsOpening = !isStarted && callId !== null;
+    const opening = needsOpening
+      ? [toolCallChunk(callId, kind, read.args)]
+      : [];
+
+    return [
+      ...opening,
+      {
+        delta: '',
+        done: false,
+        kind: CONVERSATION_STREAM_CHUNK_KINDS.toolResult,
+        metadata: {
+          callId,
+          isError: read.isError,
+          itemType: kind,
+          toolCall: read.result,
+          toolName: kind,
+        },
+      },
+    ];
+  };
+
+  const mapItem = (
+    event: Record<string, unknown>,
+  ): ConversationStreamChunk[] => {
+    const item = event.item;
+    const eventType = asString(event.type) ?? '';
+    const kind = isRecord(item) ? itemType(item) : undefined;
+
+    if (!isRecord(item) || kind === undefined) {
+      return [];
+    }
+
+    if (TEXT_ITEM_KINDS.has(kind)) {
+      // Only the completed item carries the full text; mapping its lifecycle
+      // events too would double-count it.
+      return eventType === 'item.completed' ? [mapTextItem(kind, item)] : [];
+    }
+
+    return mapToolItem(eventType, kind, item);
+  };
+
+  return {
+    map(event: unknown): ConversationStreamChunk[] {
+      if (!isRecord(event)) {
+        return [];
+      }
+
+      if (event.type === 'item.started' || event.type === 'item.completed') {
+        return mapItem(event);
+      }
+
+      const chunk = mapTurnEvent(event);
+
+      return chunk === null ? [] : [chunk];
+    },
+  };
+}
+
+/**
+ * Map a single non-item codex event to a chunk, or null to skip it. Items
+ * (`item.started`/`item.completed`) need per-stream state and go through
+ * {@link createCodexEventMapper}.
+ *
+ * - `thread.started` → a `session` chunk carrying the minted `thread_id`
+ *   (surfaced BEFORE any terminal chunk so the service persists it for resume).
+ * - `turn.completed` → the terminal `usage` chunk (`done:true`, no error).
+ * - `turn.failed` → the terminal error chunk (`done:true`, `error` message).
+ * - `error` → a terminal error chunk (a bare stream error, e.g. auth failure).
+ * - everything else (`turn.started`, `item.*`) → skipped.
+ */
+function mapTurnEvent(event: unknown): ConversationStreamChunk | null {
   if (!isRecord(event)) {
     return null;
   }
@@ -108,9 +211,6 @@ export function mapCodexEvent(event: unknown): ConversationStreamChunk | null {
         kind: CONVERSATION_STREAM_CHUNK_KINDS.session,
         metadata: { sessionId: asString(event.thread_id) ?? null },
       };
-
-    case 'item.completed':
-      return mapItemCompleted(event);
 
     case 'turn.completed':
       return {

@@ -2,9 +2,9 @@
  * @description Turns one run's structured chunks into an ATIF v1.8 trajectory. Chunk streams carry
  * no per-inference boundaries, so steps are cut at the one boundary every CLI exposes: an agent
  * step collects text, reasoning and tool calls until its tools have answered, and the next text or
- * call after that opens a new step. CLIs that only report a tool once it finishes (codex, and
- * opencode's completed parts) have the call synthesized from the result, so every observation in
- * the document has a matching `tool_call_id`.
+ * call after that opens a new step. A result with no call before it (an id-less tool, or a codex
+ * run logged before its mapper emitted calls) has the call synthesized from the result, so every
+ * observation in the document has a matching `tool_call_id`.
  */
 
 import type {
