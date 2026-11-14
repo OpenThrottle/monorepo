@@ -85,8 +85,10 @@ const isServerInstalled = (configPath: string): boolean => {
   try {
     const parsed: unknown = JSON.parse(readFileSync(configPath, 'utf8'));
     const isObject = typeof parsed === 'object' && parsed !== null;
-    const servers = isObject ? parsed.mcpServers : undefined;
-    return Boolean(servers && SERVER_NAME in servers);
+    const servers = isObject ? Reflect.get(parsed, 'mcpServers') : undefined;
+    return Boolean(
+      typeof servers === 'object' && servers !== null && SERVER_NAME in servers,
+    );
   } catch {
     return false;
   }

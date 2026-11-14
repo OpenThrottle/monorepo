@@ -7,7 +7,7 @@
  * Requires migrations 026/031/034 and a running OpenThrottle Postgres.
  */
 
-import type { LoggerService } from '@openthrottle/nestjs-modules';
+import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   getOpenThrottleTypeOrmOptions,
   Role,
@@ -18,7 +18,7 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import { DataSource } from 'typeorm';
 
-import { upsertLocalSecrets } from './local-secrets-file';
+import { upsertLocalSecrets } from './local-secrets-file.ts';
 import { createLogger } from './utils/logger.ts';
 
 const logger = createLogger();
@@ -147,17 +147,43 @@ async function linkActingUser(
   /* eslint-enable no-await-in-loop */
 }
 
+/** Silent sink for the Nest services' own logging; script output goes through the CLI `logger`. */
+class SilentLoggerService extends LoggerService {
+  override debug(): void {
+    return undefined;
+  }
+
+  override error(): void {
+    return undefined;
+  }
+
+  override fatal(): void {
+    return undefined;
+  }
+
+  override info(): void {
+    return undefined;
+  }
+
+  override log(): void {
+    return undefined;
+  }
+
+  override verbose(): void {
+    return undefined;
+  }
+
+  override warn(): void {
+    return undefined;
+  }
+}
+
 async function main(): Promise<void> {
   const dataSource = new DataSource(getOpenThrottleTypeOrmOptions());
   await dataSource.initialize();
 
   try {
-    const serviceLogger: LoggerService = {
-      debug: () => undefined,
-      error: () => undefined,
-      log: () => undefined,
-      warn: () => undefined,
-    };
+    const serviceLogger = new SilentLoggerService();
 
     const userRepository = dataSource.getRepository(User);
     const roleRepository = dataSource.getRepository(Role);

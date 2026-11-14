@@ -117,8 +117,8 @@ export const teardownComposeArgs = (params: {
 /** True when a docker CLI exists AND its daemon answers — the only state in which `down` can work. */
 const isDockerUsable = (): boolean => {
   return (
-    run('docker', ['info'], { allowFailure: true, stdio: 'pipe' }).exitCode ===
-    0
+    run('docker', ['info'], { allowFailure: true, stdio: 'capture' })
+      .exitCode === 0
   );
 };
 
@@ -193,7 +193,7 @@ const stopComposeProject = (worktreePath: string, logger: Logger): boolean => {
   const result = run('docker', teardownComposeArgs({ isolated, project }), {
     allowFailure: true,
     cwd: worktreePath,
-    stdio: 'pipe',
+    stdio: 'capture',
   });
 
   if (result.exitCode !== 0) {

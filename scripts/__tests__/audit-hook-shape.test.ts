@@ -75,8 +75,7 @@ describe('findViolations', () => {
   it('flags a kebab-case hook file', () => {
     expect(
       run({
-        'packages/x/src/hooks/use-foo.ts':
-          'export const useFoo = (): void => {};',
+        'packages/x/src/hooks/use-foo.ts': `export const useFoo = (): void => {};`,
       }),
     ).toEqual(['H6-file-name|packages/x/src/hooks/use-foo.ts|']);
   });
@@ -85,8 +84,7 @@ describe('findViolations', () => {
     expect(
       run({
         [HOOK]: 'export const useFoo = (): void => {};',
-        'packages/x/src/utils/csp.ts':
-          'export const useNonce = (): void => {};',
+        'packages/x/src/utils/csp.ts': `export const useNonce = (): void => {};`,
       }),
     ).toEqual(['H6-hook-outside-hooks|packages/x/src/utils/csp.ts|']);
   });
@@ -94,12 +92,9 @@ describe('findViolations', () => {
   it('flags a hook-file value imported elsewhere, including via a namespace', () => {
     expect(
       run({
-        [HOOK]:
-          'export const LIMIT = 3;\nexport const OTHER = 4;\nexport const UNUSED = 5;\nexport const useFoo = (): void => {};',
-        'packages/x/src/components/A.tsx':
-          "import { LIMIT } from '../hooks/useFoo';",
-        'packages/x/src/components/B.tsx':
-          "import * as foo from '../hooks/useFoo';\nconsole.log(foo.OTHER);",
+        [HOOK]: `export const LIMIT = 3;\nexport const OTHER = 4;\nexport const UNUSED = 5;\nexport const useFoo = (): void => {};`,
+        'packages/x/src/components/A.tsx': `import { LIMIT } from '../hooks/useFoo';`,
+        'packages/x/src/components/B.tsx': `import * as foo from '../hooks/useFoo';\nconsole.log(foo.OTHER);`,
       }),
     ).toEqual([
       `H3-imported-constant|${HOOK}|LIMIT`,
@@ -110,8 +105,7 @@ describe('findViolations', () => {
   it('skips an opted-out file', () => {
     expect(
       run({
-        'packages/x/src/hooks/use-foo.ts':
-          '/* hook-shape: opt-out — upstream copy */\nexport const useFoo = (): void => {};',
+        'packages/x/src/hooks/use-foo.ts': `/* hook-shape: opt-out — upstream copy */\nexport const useFoo = (): void => {};`,
       }),
     ).toEqual([]);
   });

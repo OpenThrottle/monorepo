@@ -70,13 +70,15 @@ const parseNonNegativeInt = (value: string | undefined): number | undefined => {
 /** Connection settings from `REDIS_*` env, defaulting to the primary's `localhost:6011`. */
 export const redisConnectionFromEnv = (
   env: Readonly<Record<string, string | undefined>>,
-): RedisConnection => ({
-  db: parseNonNegativeInt(env.REDIS_DB) ?? 0,
-  host: env.REDIS_HOST?.trim() || DEFAULT_REDIS_HOST,
-  password: env.REDIS_PASSWORD || undefined,
-  port: parseNonNegativeInt(env.REDIS_PORT) ?? DEFAULT_REDIS_PORT,
-  username: env.REDIS_USERNAME || undefined,
-});
+): RedisConnection => {
+  return {
+    db: parseNonNegativeInt(env.REDIS_DB) ?? 0,
+    host: env.REDIS_HOST?.trim() || DEFAULT_REDIS_HOST,
+    password: env.REDIS_PASSWORD || undefined,
+    port: parseNonNegativeInt(env.REDIS_PORT) ?? DEFAULT_REDIS_PORT,
+    username: env.REDIS_USERNAME || undefined,
+  };
+};
 
 type RespValue = string | number | null | RespValue[];
 
@@ -132,10 +134,11 @@ export const parseRespReply = (
 };
 
 /** Encodes a command as a RESP2 array of bulk strings. */
-export const encodeRespCommand = (args: readonly string[]): string =>
-  `*${args.length}\r\n${args
+export const encodeRespCommand = (args: readonly string[]): string => {
+  return `*${args.length}\r\n${args
     .map((arg) => `$${Buffer.byteLength(arg)}\r\n${arg}\r\n`)
     .join('')}`;
+};
 
 type Send = (args: readonly string[]) => Promise<RespValue>;
 
@@ -181,8 +184,8 @@ const withRedis = async <T>(
     socket.destroy(new Error(`Redis did not answer within ${timeoutMs}ms`));
   }, timeoutMs);
 
-  const send: Send = (args) =>
-    new Promise<RespValue>((resolve, reject) => {
+  const send: Send = (args) => {
+    return new Promise<RespValue>((resolve, reject) => {
       if (failure !== undefined) {
         reject(failure);
         return;
@@ -190,6 +193,7 @@ const withRedis = async <T>(
       waiting = { reject, resolve };
       socket.write(encodeRespCommand(args));
     });
+  };
 
   try {
     return await work(send);
@@ -199,12 +203,15 @@ const withRedis = async <T>(
   }
 };
 
-const isScanReply = (reply: RespValue): reply is [string, string[]] =>
-  Array.isArray(reply) &&
-  reply.length === 2 &&
-  typeof reply[0] === 'string' &&
-  Array.isArray(reply[1]) &&
-  reply[1].every((key) => typeof key === 'string');
+const isScanReply = (reply: RespValue): reply is [string, string[]] => {
+  return (
+    Array.isArray(reply) &&
+    reply.length === 2 &&
+    typeof reply[0] === 'string' &&
+    Array.isArray(reply[1]) &&
+    reply[1].every((key) => typeof key === 'string')
+  );
+};
 
 /** AUTH and SELECT for a fresh connection, when the settings ask for them. */
 const selectDatabase = async (

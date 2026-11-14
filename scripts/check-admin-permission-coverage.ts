@@ -60,7 +60,9 @@ const statements = (sql: string): string[] => {
 
 const permissionLiterals = (fragment: string): string[] => {
   const names = new Set<string>();
-  for (const [, name] of fragment.matchAll(PERMISSION_LITERAL)) names.add(name);
+  for (const [, name] of fragment.matchAll(PERMISSION_LITERAL)) {
+    if (name !== undefined) names.add(name);
+  }
   return [...names];
 };
 
@@ -87,7 +89,9 @@ export const adminGrantInStatement = (
   if (!/r\.name\s*=\s*'admin'/i.test(statement)) return null;
 
   const inList = statement.match(/p\.name\s+in\s*\(([^)]*)\)/i);
-  if (inList) return { blanket: false, names: permissionLiterals(inList[1]) };
+  if (inList) {
+    return { blanket: false, names: permissionLiterals(inList[1] ?? '') };
+  }
 
   if (/cross\s+join\s+permissions\b/i.test(statement)) {
     return { blanket: true, names: [] };

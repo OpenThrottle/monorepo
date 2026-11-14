@@ -61,7 +61,7 @@ const waitHttp = async (
 
   /* eslint-disable no-await-in-loop -- polling: each probe must finish before the next */
   for (let attempt = 1; attempt <= tries; attempt += 1) {
-    let status = 0;
+    let status: number;
     try {
       const response = await fetch(url, {
         redirect: follow ? 'follow' : 'manual',

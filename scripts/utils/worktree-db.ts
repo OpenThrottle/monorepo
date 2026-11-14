@@ -50,7 +50,9 @@ export const resolveWorktreeDbMode = (
 /** The mode from a process environment (the server reads this; scripts add the .env file). */
 export const worktreeDbModeFromEnv = (
   env: Readonly<Record<string, string | undefined>>,
-): WorktreeDbMode => resolveWorktreeDbMode(env[WORKTREE_DB_ENV_KEY]);
+): WorktreeDbMode => {
+  return resolveWorktreeDbMode(env[WORKTREE_DB_ENV_KEY]);
+};
 
 /**
  * The mode for the checkout at `root`: the process environment first (an
@@ -60,17 +62,19 @@ export const worktreeDbModeFromEnv = (
 export const readWorktreeDbMode = (
   root: string,
   env: Readonly<Record<string, string | undefined>> = process.env,
-): WorktreeDbMode =>
-  resolveWorktreeDbMode(
+): WorktreeDbMode => {
+  return resolveWorktreeDbMode(
     env[WORKTREE_DB_ENV_KEY] ??
       readEnvFile(join(root, '.env'))[WORKTREE_DB_ENV_KEY],
   );
+};
 
 /** `.env` files under `root` that actually exist. */
-const existingEnvFiles = (root: string): string[] =>
-  WORKTREE_DB_ENV_FILES.map((relative) => join(root, relative)).filter((path) =>
-    existsSync(path),
+const existingEnvFiles = (root: string): string[] => {
+  return WORKTREE_DB_ENV_FILES.map((relative) => join(root, relative)).filter(
+    (path) => existsSync(path),
   );
+};
 
 /**
  * Write `OT_WORKTREE_DB=<marker>` into the root and server .env under `root`,

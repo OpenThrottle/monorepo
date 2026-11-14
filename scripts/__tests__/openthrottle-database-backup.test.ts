@@ -8,14 +8,14 @@ import { DATABASES } from '../../databases/database-registry.ts';
 import type {
   ComposeProjectRef,
   RunDockerPs,
-} from '../openthrottle-database-backup';
+} from '../openthrottle-database-backup.ts';
 import {
   backupsDirFor,
   resolveBackupRetentionCount,
   resolveComposeProject,
   selectBackupsToPrune,
   selectPostgresContainerId,
-} from '../openthrottle-database-backup';
+} from '../openthrottle-database-backup.ts';
 
 interface FakeContainer {
   readonly id: string;
@@ -176,7 +176,7 @@ describe('selectPostgresContainerId', () => {
   test('returns null rather than another project when this one has no postgres', () => {
     expect(
       selectPostgresContainerId(
-        'openthrottle-shared-wt',
+        { name: 'openthrottle-shared-wt', workingDir: '/worktrees/shared-wt' },
         fakeDockerPs(RUNNING),
       ),
     ).toBeNull();

@@ -1,3 +1,4 @@
+import type { ExecFileSyncOptionsWithStringEncoding } from 'node:child_process';
 import { execFileSync } from 'node:child_process';
 import { cpSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -30,11 +31,15 @@ interface ExecFailure {
   readonly stdout?: unknown;
 }
 
-const isExecFailure = (error: unknown): error is ExecFailure =>
-  typeof error === 'object' && error !== null;
+const isExecFailure = (error: unknown): error is ExecFailure => {
+  return typeof error === 'object' && error !== null;
+};
 
-const git = (repo: string, ...args: readonly string[]): string =>
-  execFileSync('git', ['-C', repo, ...args], { encoding: 'utf8' }).trim();
+const git = (repo: string, ...args: readonly string[]): string => {
+  return execFileSync('git', ['-C', repo, ...args], {
+    encoding: 'utf8',
+  }).trim();
+};
 
 /** Commit without touching the worktree, bypassing hooks the fixture has none of. */
 const commit = (repo: string, message: string): string => {
@@ -57,7 +62,7 @@ const runGate = (
     encoding: 'utf8',
     env: { ...process.env, ...env, OT_PUSH_REFS: pushRefs },
     stdio: ['ignore', 'pipe', 'pipe'],
-  } as const;
+  } satisfies ExecFileSyncOptionsWithStringEncoding;
 
   try {
     return {

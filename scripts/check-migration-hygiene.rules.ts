@@ -5,8 +5,9 @@
  */
 
 /** Strips `--` line comments so keywords inside prose never trip the checks. */
-export const stripComments = (sql: string): string =>
-  sql.replace(/--[^\n]*/g, '');
+export const stripComments = (sql: string): string => {
+  return sql.replace(/--[^\n]*/g, '');
+};
 
 /**
  * @description Splits SQL into top-level statements.
@@ -66,12 +67,14 @@ export const hasGuardedForeignKey = (statement: string): boolean => {
  */
 export const findGuardedForeignKeyStatements = (
   sql: string,
-): readonly string[] =>
-  splitStatements(stripComments(sql)).filter(hasGuardedForeignKey);
+): readonly string[] => {
+  return splitStatements(stripComments(sql)).filter(hasGuardedForeignKey);
+};
 
 /** @description Numeric prefix of a migration filename (`097_foo.sql` -> `097`). */
-export const migrationPrefix = (filename: string): string =>
-  filename.split('_')[0] ?? '';
+export const migrationPrefix = (filename: string): string => {
+  return filename.split('_')[0] ?? '';
+};
 
 /**
  * @description Where a duplicate-prefix judgement is being made from.

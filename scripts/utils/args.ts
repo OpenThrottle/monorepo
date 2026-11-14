@@ -10,14 +10,15 @@
  */
 
 /** The script's own arguments (everything after the script path). */
-export const scriptArgs = (argv: string[] = process.argv): string[] =>
-  argv.slice(2);
+export const scriptArgs = (argv: string[] = process.argv): string[] => {
+  return argv.slice(2);
+};
 
 /** True when the boolean flag is present (`--strict`). */
 export const hasFlag = (
   name: string,
   args: string[] = scriptArgs(),
-): boolean => args.includes(`--${name}`) || args.some((arg) => arg.startsWith(`--${name}=`)); // prettier-ignore
+): boolean => { return args.includes(`--${name}`) || args.some((arg) => arg.startsWith(`--${name}=`)); }; // prettier-ignore
 
 /**
  * The value of a `--name=value` or `--name value` flag, or undefined when
@@ -54,6 +55,10 @@ export const positionals = (
 
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index];
+
+    if (arg === undefined) {
+      continue;
+    }
 
     if (arg.startsWith('--')) {
       continue;

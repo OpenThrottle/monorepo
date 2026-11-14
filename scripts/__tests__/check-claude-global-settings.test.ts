@@ -15,7 +15,7 @@ import {
   resolveClaudeSettingsPath,
   runClaudeGlobalSettingsCheck,
 } from '../check-claude-global-settings.ts';
-import type { Logger } from '../lib/index.ts';
+import type { Logger } from '../utils/logger.ts';
 
 /** A settings document with the AGENTS.md option set to `instructionFiles`. */
 function settingsWith(instructionFiles: unknown): string {
@@ -29,11 +29,11 @@ function settingsWith(instructionFiles: unknown): string {
 /** A logger whose every method records `<method>: <message>`. */
 function recordingLogger(): { lines: string[]; logger: Logger } {
   const lines: string[] = [];
-  const record =
-    (method: string) =>
-    (message: string): void => {
+  const record = (method: string) => {
+    return (message: string): void => {
       lines.push(`${method}: ${message}`);
     };
+  };
 
   return {
     lines,

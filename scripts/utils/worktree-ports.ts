@@ -78,15 +78,17 @@ export interface WorktreeDbPorts {
 }
 
 /** The seven app ports for a block base, preserving the canonical offsets. */
-export const portsForBase = (base: number): Record<AppPortName, number> => ({
-  admin: base + 2,
-  cms: base + 3,
-  developer: base,
-  email: base + 4,
-  mcp: base + 6,
-  server: base + 1,
-  website: base + 5,
-});
+export const portsForBase = (base: number): Record<AppPortName, number> => {
+  return {
+    admin: base + 2,
+    cms: base + 3,
+    developer: base,
+    email: base + 4,
+    mcp: base + 6,
+    server: base + 1,
+    website: base + 5,
+  };
+};
 
 /**
  * POSIX `cksum` CRC (ISO/IEC 8802-3 CRC-32, MSB-first, length appended,
@@ -119,13 +121,18 @@ export const posixCksum = (input: string): number => {
 };
 
 /** The deterministic block base for a worktree name (before collision bump). */
-export const deriveBase = (name: string): number =>
-  PORT_BASE_MIN + (posixCksum(name) % PORT_BLOCKS) * PORT_BLOCK_SIZE;
+export const deriveBase = (name: string): number => {
+  return PORT_BASE_MIN + (posixCksum(name) % PORT_BLOCKS) * PORT_BLOCK_SIZE;
+};
 
 /** True when a TCP port has a LISTENing socket on this host. */
-export const isPortListening = (port: number): boolean =>
-  run('lsof', ['-nP', `-iTCP:${port}`, '-sTCP:LISTEN'], { allowFailure: true })
-    .exitCode === 0;
+export const isPortListening = (port: number): boolean => {
+  return (
+    run('lsof', ['-nP', `-iTCP:${port}`, '-sTCP:LISTEN'], {
+      allowFailure: true,
+    }).exitCode === 0
+  );
+};
 
 export interface ResolvePortsOptions {
   /** Injectable port probe, for tests; defaults to lsof. */
@@ -210,10 +217,12 @@ export const resolveWorktreePorts = (
 };
 
 /** The isolated-database ports of a block: base+8 (Postgres) and base+9 (Redis). */
-export const dbPortsForBase = (base: number): WorktreeDbPorts => ({
-  postgres: base + DB_PORT_OFFSETS.postgres,
-  redis: base + DB_PORT_OFFSETS.redis,
-});
+export const dbPortsForBase = (base: number): WorktreeDbPorts => {
+  return {
+    postgres: base + DB_PORT_OFFSETS.postgres,
+    redis: base + DB_PORT_OFFSETS.redis,
+  };
+};
 
 /**
  * Allocate an isolated worktree's Postgres/Redis host ports from its existing

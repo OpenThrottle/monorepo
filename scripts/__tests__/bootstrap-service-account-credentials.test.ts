@@ -23,11 +23,11 @@ vi.mock('../local-secrets-file.ts', () => ({
   upsertLocalSecrets: vi.fn(),
 }));
 
-import { readLocalSecrets, upsertLocalSecrets } from '../local-secrets-file.ts';
 import {
   BOOTSTRAP_ACCOUNTS,
   provisionAccount,
 } from '../bootstrap-service-account-credentials.ts';
+import { readLocalSecrets, upsertLocalSecrets } from '../local-secrets-file.ts';
 
 const readLocalSecretsMock = vi.mocked(readLocalSecrets);
 const upsertLocalSecretsMock = vi.mocked(upsertLocalSecrets);

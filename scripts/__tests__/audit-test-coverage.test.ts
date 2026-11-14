@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
+
 import {
   analyzeCoverage,
   classify,
-  hasStrictFailure,
-  rollup,
   type CoverageEntry,
   type CoverageStatus,
+  hasStrictFailure,
+  rollup,
 } from '../audit-test-coverage.ts';
 
 const STUB = "test('FIXME: should be defined', () => {});";
@@ -14,15 +15,16 @@ const STUB = "test('FIXME: should be defined', () => {});";
  * Build a readFile over an in-memory content map so the pure core can be driven
  * without the filesystem. Unlisted paths read as empty (no pragma, no stub).
  */
-const reader =
-  (contents: Record<string, string> = {}) =>
-  (relativePath: string): string =>
-    contents[relativePath] ?? '';
+const reader = (contents: Record<string, string> = {}) => {
+  return (relativePath: string): string => contents[relativePath] ?? '';
+};
 
 const statusOf = (
   entries: readonly CoverageEntry[],
   file: string,
-): CoverageStatus => entries.find((e) => e.file === file)?.status ?? 'missing';
+): CoverageStatus => {
+  return entries.find((e) => e.file === file)?.status ?? 'missing';
+};
 
 describe('classify', () => {
   it('classifies each enforced category by on-disk location', () => {
@@ -149,11 +151,13 @@ describe('analyzeCoverage', () => {
 
   it('honors the first-line opt-out pragma (excluded from missing)', () => {
     const paths = ['packages/pkg-a/src/utils/legacy.ts'];
-    const entries = analyzeCoverage(paths, (p) =>
-      p.endsWith('legacy.ts')
-        ? '// test-coverage: opt-out — vendored\nexport const x = 1;'
-        : '',
-    );
+    const entries = analyzeCoverage(paths, (p) => {
+      if (p.endsWith('legacy.ts')) {
+        return '// test-coverage: opt-out — vendored\nexport const x = 1;';
+      }
+
+      return '';
+    });
     expect(statusOf(entries, 'packages/pkg-a/src/utils/legacy.ts')).toBe(
       'opt-out',
     );

@@ -25,6 +25,7 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+
 import { globSync } from 'glob';
 
 const ROOT = process.cwd();
@@ -107,18 +108,22 @@ export interface CoverageInventory {
   readonly rollups: readonly CategoryRollup[];
 }
 
-const toPosix = (p: string): string => p.split(path.sep).join('/');
+const toPosix = (p: string): string => {
+  return p.split(path.sep).join('/');
+};
 
 const projectOf = (relativePath: string): string => {
   const match = relativePath.match(/^(applications|packages)\/([^/]+)/);
   return match ? `${match[1]}/${match[2]}` : 'unknown';
 };
 
-const isCategory = (value: string): value is Category =>
-  CATEGORIES.some((category) => category === value);
+const isCategory = (value: string): value is Category => {
+  return CATEGORIES.some((category) => category === value);
+};
 
-const escapeRegExp = (value: string): string =>
-  value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const escapeRegExp = (value: string): string => {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+};
 
 /**
  * Classify a repo-relative path into exactly one category, or null when it is
@@ -145,7 +150,11 @@ export const classify = (relativePath: string): Category | null => {
   let found: Category | null = null;
   for (let i = 0; i < segments.length - 1; i += 1) {
     const segment = segments[i];
-    if (isCategory(segment) && CATEGORY_FOLDERS.includes(segment)) {
+    if (
+      segment !== undefined &&
+      isCategory(segment) &&
+      CATEGORY_FOLDERS.includes(segment)
+    ) {
       found = segment;
     }
   }
@@ -155,10 +164,11 @@ export const classify = (relativePath: string): Category | null => {
   return found;
 };
 
-const testBasenameMatches = (base: string, testBasename: string): boolean =>
-  new RegExp(`^${escapeRegExp(base)}(?:\\..+)?\\.test\\.(?:ts|tsx)$`).test(
-    testBasename,
-  );
+const testBasenameMatches = (base: string, testBasename: string): boolean => {
+  return new RegExp(
+    `^${escapeRegExp(base)}(?:\\..+)?\\.test\\.(?:ts|tsx)$`,
+  ).test(testBasename);
+};
 
 /**
  * Core analysis. Pure over its inputs so it is unit-testable without the disk:
@@ -286,10 +296,13 @@ export const rollup = (entries: readonly CoverageEntry[]): CategoryRollup[] => {
 };
 
 /** True when any enforced-category file is missing a spec (the --strict gate). */
-export const hasStrictFailure = (entries: readonly CoverageEntry[]): boolean =>
-  entries.some(
+export const hasStrictFailure = (
+  entries: readonly CoverageEntry[],
+): boolean => {
+  return entries.some(
     (e) => ENFORCED_CATEGORIES.includes(e.category) && e.status === 'missing',
   );
+};
 
 const parseCategories = (argv: readonly string[]): Set<Category> => {
   const flag = argv.find((a) => a.startsWith('--categories='));
@@ -331,8 +344,9 @@ const run = (): void => {
     return;
   }
 
-  const pct = (tested: number, total: number): string =>
-    total === 0 ? '—' : `${Math.round((tested / total) * 100)}%`;
+  const pct = (tested: number, total: number): string => {
+    return total === 0 ? '—' : `${Math.round((tested / total) * 100)}%`;
+  };
 
   console.log('Test-coverage audit (report-only)');
   console.log(
@@ -361,8 +375,9 @@ const run = (): void => {
   for (const category of CATEGORIES) {
     const cat = rollups.filter((r) => r.category === category);
     if (cat.length === 0) continue;
-    const sum = (pick: (r: CategoryRollup) => number): number =>
-      cat.reduce((n, r) => n + pick(r), 0);
+    const sum = (pick: (r: CategoryRollup) => number): number => {
+      return cat.reduce((n, r) => n + pick(r), 0);
+    };
     const total = sum((r) => r.total);
     const tested = sum((r) => r.tested);
     const enforced = ENFORCED_CATEGORIES.includes(category);

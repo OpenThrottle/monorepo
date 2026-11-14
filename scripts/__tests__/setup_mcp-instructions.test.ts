@@ -19,7 +19,7 @@ describe('buildPayloads', () => {
     const { launcher, claudeConfig, cursorConfig } = buildPayloads(ROOT);
     expect(launcher).toBe(LAUNCHER);
     expect(claudeConfig.args).toEqual([LAUNCHER]);
-    expect(cursorConfig.mcpServers['openthrottle-mcp'].args).toEqual([
+    expect(cursorConfig.mcpServers['openthrottle-mcp']?.args).toEqual([
       LAUNCHER,
     ]);
   });
@@ -52,7 +52,7 @@ describe('buildPayloads', () => {
 
     expect(claudeConfig.description).toMatch(/^OpenThrottle \(OT\)/);
     expect(claudeConfig.command).toBe('bash');
-    expect(cursorConfig.mcpServers['openthrottle-mcp'].command).toBe('bash');
+    expect(cursorConfig.mcpServers['openthrottle-mcp']?.command).toBe('bash');
   });
 });
 

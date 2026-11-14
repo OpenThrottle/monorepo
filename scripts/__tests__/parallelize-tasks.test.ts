@@ -28,7 +28,11 @@ const APPS = [
   'openthrottle-developer',
   'openthrottle-server',
 ];
-const [SHARDED_APP] = SUITE_SHARDED_PROJECTS;
+const SHARDED_APP = SUITE_SHARDED_PROJECTS[0];
+
+if (SHARDED_APP === undefined) {
+  throw new Error('Expected at least one suite-sharded project');
+}
 const PACKAGES = [
   '@openthrottle/nestjs-auth',
   '@openthrottle/react-router-chat',
@@ -129,7 +133,7 @@ describe('distributeEvenly', () => {
 
   it('does not alias chunks — pushing into one chunk must not affect the others', () => {
     const chunks = distributeEvenly([], 3);
-    chunks[0].push('openthrottle-server');
+    chunks[0]?.push('openthrottle-server');
 
     expect(chunks[1]).toEqual([]);
     expect(chunks[2]).toEqual([]);

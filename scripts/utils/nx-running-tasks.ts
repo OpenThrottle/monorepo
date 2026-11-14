@@ -34,8 +34,9 @@ export interface RunningTaskRow {
 /** Worktree-relative directory holding the Nx workspace database. */
 export const NX_DATA_DIR = '.nx/workspace-data';
 
-const field = (value: object, key: string): unknown =>
-  Object.entries(value).find(([name]) => name === key)?.[1];
+const field = (value: object, key: string): unknown => {
+  return Object.entries(value).find(([name]) => name === key)?.[1];
+};
 
 /** Parse `sqlite3 -json` output of `select task_id, pid, cwd from running_tasks`. */
 export const parseRunningTaskRows = (output: string): RunningTaskRow[] => {
@@ -93,12 +94,13 @@ export const nxDatabaseFiles = (root: string): string[] => {
 };
 
 /** All `running_tasks` rows under `root`; empty when there is no database or no sqlite3. */
-export const readRunningTasks = (root: string): RunningTaskRow[] =>
-  nxDatabaseFiles(root).flatMap((database) =>
+export const readRunningTasks = (root: string): RunningTaskRow[] => {
+  return nxDatabaseFiles(root).flatMap((database) =>
     parseRunningTaskRows(
       run('sqlite3', ['-json', database, 'select task_id, pid, cwd from running_tasks'], { allowFailure: true }).stdout, // prettier-ignore
     ),
   );
+};
 
 /** Delete `root`'s rows owned by the given (now dead) pids; best effort. */
 export const deleteRunningTaskRows = (
@@ -152,7 +154,9 @@ export const orphanedNxOwners = (
 export const tasksHeldBy = (
   rows: readonly RunningTaskRow[],
   pid: number,
-): string[] => rows.filter((row) => row.pid === pid).map((row) => row.taskId);
+): string[] => {
+  return rows.filter((row) => row.pid === pid).map((row) => row.taskId);
+};
 
 /** What to tell the user when a start is blocked by someone else's lock on `taskId`. */
 export const describeNxLock = (

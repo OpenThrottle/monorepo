@@ -1,5 +1,7 @@
 import { chmod, readFile, writeFile } from 'node:fs/promises';
+
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import {
   LOCAL_SECRETS_FILENAME,
   readLocalSecrets,
@@ -28,7 +30,7 @@ function enoent(): NodeJS.ErrnoException {
 function lastWritten(): string {
   const calls = writeFileMock.mock.calls;
 
-  return String(calls[calls.length - 1][1]);
+  return String(calls[calls.length - 1]?.[1]);
 }
 
 /** The `KEY=VALUE` lines of a rendered file, in order (comments dropped). */

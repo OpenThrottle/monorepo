@@ -87,8 +87,9 @@ export const planDatabaseAction = (input: DatabasePlanInput): DatabasePlan => {
 };
 
 /** Compose's project-name normalization: lowercase, only `[a-z0-9_-]`. */
-const normalizeProjectName = (name: string): string =>
-  name.toLowerCase().replace(/[^a-z0-9_-]/g, '');
+const normalizeProjectName = (name: string): string => {
+  return name.toLowerCase().replace(/[^a-z0-9_-]/g, '');
+};
 
 /**
  * The primary's compose project, resolved the way compose does for a
@@ -116,19 +117,21 @@ export const resolvePrimaryComposeProject = (input: {
 export const primaryStartArgs = (
   primaryDir: string,
   project: string,
-): string[] => [
-  'compose',
-  '-f',
-  join(primaryDir, 'docker-compose.yml'),
-  '--project-directory',
-  primaryDir,
-  '-p',
-  project,
-  'up',
-  '-d',
-  'redis',
-  'postgres',
-];
+): string[] => {
+  return [
+    'compose',
+    '-f',
+    join(primaryDir, 'docker-compose.yml'),
+    '--project-directory',
+    primaryDir,
+    '-p',
+    project,
+    'up',
+    '-d',
+    'redis',
+    'postgres',
+  ];
+};
 
 const parsePort = (value: string | undefined, fallback: number): number => {
   const port = Number(value);
@@ -137,8 +140,8 @@ const parsePort = (value: string | undefined, fallback: number): number => {
 };
 
 /** True when something accepts a TCP connection on 127.0.0.1:`port` (docker publishes on loopback). */
-const isReachable = (port: number, timeoutMs = 1500): Promise<boolean> =>
-  new Promise((resolve) => {
+const isReachable = (port: number, timeoutMs = 1500): Promise<boolean> => {
+  return new Promise((resolve) => {
     const socket = createConnection({ host: '127.0.0.1', port });
     const finish = (reachable: boolean): void => {
       socket.destroy();
@@ -149,6 +152,7 @@ const isReachable = (port: number, timeoutMs = 1500): Promise<boolean> =>
     socket.once('connect', () => finish(true));
     socket.once('error', () => finish(false));
   });
+};
 
 const dockerCompose = (args: readonly string[]): number => {
   const outcome = spawnSync('docker', [...args], { stdio: 'inherit' });
@@ -175,10 +179,10 @@ export const runDatabaseAction = async (
   const postgresPort = parsePort(process.env.POSTGRES_PORT ?? envFile.POSTGRES_PORT, DEFAULT_POSTGRES_PORT); // prettier-ignore
   const redisPort = parsePort(process.env.REDIS_PORT ?? envFile.REDIS_PORT, DEFAULT_REDIS_PORT); // prettier-ignore
 
-  const sharedReachable =
-    mode === 'shared' && action === 'start'
-      ? (await Promise.all([isReachable(postgresPort), isReachable(redisPort)])).every(Boolean) // prettier-ignore
-      : false;
+  const shouldProbeShared = mode === 'shared' && action === 'start';
+  const sharedReachable = shouldProbeShared
+    ? (await Promise.all([isReachable(postgresPort), isReachable(redisPort)])).every(Boolean) // prettier-ignore
+    : false;
 
   const plan = planDatabaseAction({ action, mode, sharedReachable });
   const ports = `postgres :${postgresPort} / redis :${redisPort}`;
@@ -235,8 +239,9 @@ export const runDatabaseAction = async (
 /** Narrow a CLI argument to a database action. */
 export const parseDatabaseAction = (
   value: string | undefined,
-): DatabaseAction | undefined =>
-  value === 'start' || value === 'stop' ? value : undefined;
+): DatabaseAction | undefined => {
+  return value === 'start' || value === 'stop' ? value : undefined;
+};
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const action = parseDatabaseAction(process.argv[2]);
