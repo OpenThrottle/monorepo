@@ -192,6 +192,48 @@ has not trusted unless the run passes `--dangerously-bypass-hook-trust`. Also, `
 `-p --dangerously-skip-permissions "…"` — `-p` takes the next argument as its prompt — so flags go
 before `-p`.
 
+### Marketplace install records, for the coverage heartbeat
+
+The heartbeat's `marketplacePluginInstalled` / `marketplacePluginVersion` fields and its
+`marketplace` delivery leg need two facts per tool: **where a marketplace install unpacks** (so a
+hook running from there reads as `marketplace`) and **what a hook can read to say whether the
+OpenThrottle plugin is installed, at which version**. Measured 2026-11-14 (OT plan `6b0fb4c4`).
+Every install went into a throwaway home (`CODEX_HOME=…`, `HOME=…`) from a local git marketplace
+holding one probe plugin, so no real config was touched; Cursor's row is read off the existing
+installs on the probe machine, because its CLI cannot install.
+
+| CLI              | version            | install location                                                           | install record a hook can read                                                                                                                                                                                                                                                                        | evidence                                                                                                                                                                                                                                                                                                                                                    |
+| ---------------- | ------------------ | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **claude**       | —                  | `<config dir>/plugins/cache/<marketplace>/<plugin>/<version>/`             | `<config dir>/plugins/installed_plugins.json` → `plugins["openthrottle@openthrottle"][0].version`                                                                                                                                                                                                     | already shipped (`adapters/claude/heartbeat-payload.ts`)                                                                                                                                                                                                                                                                                                    |
+| **cursor-agent** | 2026.11.13-eacade1 | `~/.cursor/plugins/cache/<marketplace>/<plugin>/<git sha>/`                | **none readable.** The real record is the IDE's sqlite store (`state.vscdb`, key `cursor.plugins.installedIds.<userId>\|<workspace>` → `[{id, sources}]`, numeric server ids). The cache directory is the best signal: a finished unpack carries a `.cache-complete` marker and the plugin's manifest | `cursor-agent plugin` has only `marketplace add\|list\|remove\|update` — **no install command**; installing happens in the IDE. Two existing installs (`cursor-public/cursor-team-kit/3dbd22ff…/`, `cursor-public/datadog/dde3591e…/`) both carry `.cache-complete` + `.cursor-plugin/plugin.json`. Whether an IDE uninstall prunes the cache is unmeasured |
+| **codex**        | codex-cli 0.167.0  | `$CODEX_HOME/plugins/cache/<marketplace>/<plugin>/<version>/`              | `$CODEX_HOME/config.toml` table `[plugins."<plugin>@<marketplace>"]` with `enabled = true\|false`; the version is the cache directory name and its manifest                                                                                                                                           | `codex plugin marketplace add <dir>` + `codex plugin add ot-probe@ot-probe-mp` wrote both; `codex plugin remove` deleted the table **and** the cache directory. It installs a **Claude-format** marketplace too: this repo's `.claude-plugin/marketplace.json` installed as `openthrottle@openthrottle` at `…/cache/openthrottle/openthrottle/1.3.0/`       |
+| **antigravity**  | agy 1.5.9          | `~/.gemini/config/plugins/<dir>/` (flat — no marketplace or version level) | `~/.gemini/config/plugins/<dir>/plugin.json` (`version`); `~/.gemini/config/config.json` `plugins.<dir>.enabled` (absent until first toggled, meaning enabled); `~/.gemini/config/import_manifest.json` lists `{name, source, importedAt, components}` with no version                                | `agy plugin install <dir>` and `agy plugin import claude` both land here; `disable` / `enable` flip `config.json`; `uninstall` deletes the directory and the manifest entry. `plugin@marketplace` resolves only against two catalogs compiled into the binary (`antigravity-plugins-official`, `-partners`), so OpenThrottle cannot be installed that way   |
+
+Three findings change what the heartbeat can claim, and the third is a coverage gap rather than a
+detail:
+
+- **Codex runs a marketplace plugin's hooks**, with `PLUGIN_ROOT` and `CLAUDE_PLUGIN_ROOT` both set
+  to the install directory and cwd = the session's cwd — but only once the hooks are trusted
+  (`--dangerously-bypass-hook-trust` in the probe; without it the `SessionStart` hook did not run).
+  `codex features list` reports `plugin_hooks` as `removed`: that is the retired flag, not the
+  behavior.
+- **agy rewrites `${CLAUDE_PLUGIN_ROOT}/…` to `./…`** when it imports a Claude plugin, and runs hooks
+  with cwd = the plugin folder. It drops what it cannot map (`PreToolUse` on `Skill`,
+  `UserPromptExpansion`) with a warning — the same loss as Cursor's translation, but said out loud.
+- **All three run the Claude plugin's bundles, which report themselves as `claude-code`.**
+  cursor-agent ran the machine's _Claude-installed_ `openthrottle` plugin's `SessionStart` hook
+  during a plain `cursor-agent -p` in a scratch repo — reproduced twice, the receipt in
+  `~/.openthrottle/skill-usage/last-heartbeat.json` stamped inside each run's window with
+  `source: claude-code`, `deliveryLeg: marketplace`. Codex and agy, installing this repo's
+  marketplace, get the same `skill-usage-heartbeat.cjs`. So a marketplace install reached through
+  any of them is counted as a Claude Code session, and the per-tool heartbeat adapters only ever run
+  from a repo or `--plugin-dir` registration.
+
+Re-check of the 2026.11.13 side observation: in this run cursor-agent did **not** leak
+`CURSOR_PLUGIN_ROOT` / `CLAUDE_PLUGIN_ROOT` into a project `.cursor/hooks.json` hook (an `env` dump
+came back empty), so the leak is intermittent at best. The Cursor adapter's script-location check
+stays.
+
 ### Session kickoff guard
 
 The plan-first kickoff rule (follow-up work starts as `/ot-loop <planUuid>`; see the

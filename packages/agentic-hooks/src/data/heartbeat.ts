@@ -166,10 +166,13 @@ export const detectDeliveryLeg = ({
  */
 export const detectDeliveryLegFromScript = ({
   env,
+  marketplaceCacheDir,
   repoRoot,
   scriptPath,
 }: {
   readonly env: NodeJS.ProcessEnv;
+  /** Where the tool unpacks marketplace installs; a script under it is `marketplace`. */
+  readonly marketplaceCacheDir: string | null;
   readonly repoRoot: string;
   readonly scriptPath: string | undefined;
 }): DeliveryLeg => {
@@ -177,7 +180,7 @@ export const detectDeliveryLegFromScript = ({
     scriptPath !== undefined && !isPathInside(repoRoot, scriptPath);
   return detectDeliveryLeg({
     env,
-    marketplaceCacheDir: null,
+    marketplaceCacheDir,
     pluginRoot: outsideRepo ? path.dirname(scriptPath) : null,
   });
 };
@@ -260,6 +263,53 @@ export const readFirstManifestVersion = (
     }
   }
   return null;
+};
+
+/**
+ * True when `dirPath` is a directory this process can list.
+ *
+ * @public
+ */
+export const isReadableDirectory = (dirPath: string): boolean => {
+  try {
+    fs.readdirSync(dirPath);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * The directories directly inside `dirPath`, most recently modified first; empty when `dirPath`
+ * cannot be listed. A tool that keeps one directory per installed version or commit unpacks the
+ * current one last, so the head of this list is the live install.
+ *
+ * @public
+ */
+export const listSubdirectoriesNewestFirst = (
+  dirPath: string,
+): readonly string[] => {
+  let names: readonly string[];
+  try {
+    names = fs.readdirSync(dirPath);
+  } catch {
+    return [];
+  }
+  const dirs: { readonly dir: string; readonly mtimeMs: number }[] = [];
+  for (const name of names) {
+    const dir = path.join(dirPath, name);
+    try {
+      const stat = fs.statSync(dir);
+      if (stat.isDirectory()) {
+        dirs.push({ dir, mtimeMs: stat.mtimeMs });
+      }
+    } catch {
+      // A directory removed mid-listing is simply not an install.
+    }
+  }
+  return dirs
+    .sort((left, right) => right.mtimeMs - left.mtimeMs)
+    .map((entry) => entry.dir);
 };
 
 /**

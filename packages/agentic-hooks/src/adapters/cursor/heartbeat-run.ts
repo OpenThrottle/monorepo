@@ -4,11 +4,12 @@
  *
  * The delivery leg is decided by the SCRIPT'S location, not by `CURSOR_PLUGIN_ROOT` alone: measured
  * on cursor-agent 2026.11.13, a project hook can run with `CURSOR_PLUGIN_ROOT` still pointing at
- * some other installed plugin, so its mere presence proves nothing. Cursor's marketplace install
- * location is unmeasured, so a marketplace install reads as `plugin-dir` and its install record as
- * unknown — honest nulls rather than a guessed path.
+ * some other installed plugin, so its mere presence proves nothing. A plugin root under Cursor's
+ * marketplace cache (`~/.cursor/plugins/cache/`) is `marketplace`, and the install itself is read
+ * from that cache — see `marketplace-install.ts`.
  */
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 
 import {
@@ -17,10 +18,13 @@ import {
   isPathInside,
   readFirstManifestVersion,
   sendHeartbeat,
-  UNKNOWN_MARKETPLACE_INSTALL,
 } from '../../data/heartbeat.ts';
 import { DEFAULT_POST_TIMEOUT_MS } from '../../data/persist.ts';
 import type { HookFetch } from '../../types.ts';
+import {
+  readCursorMarketplaceInstall,
+  resolveCursorMarketplaceCacheDir,
+} from './marketplace-install.ts';
 import { CURSOR_SOURCE } from './payload.ts';
 
 /** The bundle name both the repo's and the plugin's registration point at. */
@@ -95,6 +99,7 @@ export const isCursorHeartbeatShadowed = ({
 export const runCursorHeartbeat = async ({
   env = process.env,
   fetchImpl = globalThis.fetch,
+  homeDir = os.homedir(),
   now = () => new Date(),
   repoRoot,
   scriptPath = process.argv[1],
@@ -102,21 +107,23 @@ export const runCursorHeartbeat = async ({
 }: {
   readonly env?: NodeJS.ProcessEnv;
   readonly fetchImpl?: HookFetch;
+  readonly homeDir?: string;
   readonly now?: () => Date;
   readonly repoRoot: string;
   readonly scriptPath?: string;
   readonly timeoutMs?: number;
 }): Promise<HeartbeatReceipt | null> => {
   const pluginRoot = resolveOwnPluginRoot(env, scriptPath);
+  const marketplaceCacheDir = resolveCursorMarketplaceCacheDir(homeDir);
   return sendHeartbeat({
     deliveryLeg: detectDeliveryLeg({
       env,
-      marketplaceCacheDir: null,
+      marketplaceCacheDir,
       pluginRoot,
     }),
     env,
     fetchImpl,
-    marketplace: UNKNOWN_MARKETPLACE_INSTALL,
+    marketplace: readCursorMarketplaceInstall(marketplaceCacheDir),
     now,
     pluginVersion: resolvePluginVersion(pluginRoot),
     repoRoot,

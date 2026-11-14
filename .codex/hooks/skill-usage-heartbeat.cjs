@@ -32,6 +32,10 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
+// packages/agentic-hooks/src/adapters/codex/heartbeat.ts
+var import_node_os2 = __toESM(require("node:os"), 1);
+var import_node_path6 = __toESM(require("node:path"), 1);
+
 // packages/agentic-hooks/src/data/jsonl.ts
 var import_node_path2 = __toESM(require("node:path"), 1);
 
@@ -70,8 +74,8 @@ var normalizeRemoteUrl = (raw) => {
     return null;
   }
   const host = withoutScheme.slice(0, slashIndex).toLowerCase();
-  const path5 = withoutScheme.slice(slashIndex);
-  return `https://${host}${path5}`;
+  const path7 = withoutScheme.slice(slashIndex);
+  return `https://${host}${path7}`;
 };
 
 // packages/agentic-hooks/src/config/env.ts
@@ -572,13 +576,14 @@ var detectDeliveryLeg = ({
 };
 var detectDeliveryLegFromScript = ({
   env,
+  marketplaceCacheDir,
   repoRoot,
   scriptPath
 }) => {
   const outsideRepo = scriptPath !== void 0 && !isPathInside(repoRoot, scriptPath);
   return detectDeliveryLeg({
     env,
-    marketplaceCacheDir: null,
+    marketplaceCacheDir,
     pluginRoot: outsideRepo ? import_node_path4.default.dirname(scriptPath) : null
   });
 };
@@ -603,12 +608,53 @@ var sanitizeMachineLabel = (raw) => {
   const trimmed = raw.trim().slice(0, MAX_MACHINE_LABEL_LENGTH).trim();
   return trimmed === "" ? null : trimmed;
 };
+var readVersionField = (rawJson) => {
+  try {
+    const parsed = JSON.parse(rawJson);
+    if (!isRecord(parsed) || typeof parsed.version !== "string") {
+      return null;
+    }
+    return parsed.version.trim() || null;
+  } catch {
+    return null;
+  }
+};
 var readTextOrNull = (filePath) => {
   try {
     return import_node_fs4.default.readFileSync(filePath, "utf8");
   } catch {
     return null;
   }
+};
+var readFirstManifestVersion = (manifestPaths) => {
+  for (const manifest of manifestPaths) {
+    const raw = readTextOrNull(manifest);
+    const version = raw === null ? null : readVersionField(raw);
+    if (version !== null) {
+      return version;
+    }
+  }
+  return null;
+};
+var listSubdirectoriesNewestFirst = (dirPath) => {
+  let names;
+  try {
+    names = import_node_fs4.default.readdirSync(dirPath);
+  } catch {
+    return [];
+  }
+  const dirs = [];
+  for (const name of names) {
+    const dir = import_node_path4.default.join(dirPath, name);
+    try {
+      const stat = import_node_fs4.default.statSync(dir);
+      if (stat.isDirectory()) {
+        dirs.push({ dir, mtimeMs: stat.mtimeMs });
+      }
+    } catch {
+    }
+  }
+  return dirs.sort((left, right) => right.mtimeMs - left.mtimeMs).map((entry) => entry.dir);
 };
 var buildHeartbeatInput = ({
   bufferStats,
@@ -740,6 +786,69 @@ var sendHeartbeat = async ({
   }
 };
 
+// packages/agentic-hooks/src/adapters/codex/marketplace-install.ts
+var import_node_path5 = __toESM(require("node:path"), 1);
+var MARKETPLACE_NAME = "openthrottle";
+var PLUGIN_NAME = "openthrottle";
+var PLUGIN_TABLE_HEADER = /^\s*\[\s*plugins\s*\.\s*(["'])openthrottle@openthrottle\1\s*\]\s*(#.*)?$/;
+var ANY_TABLE_HEADER = /^\s*\[/;
+var ENABLED_LINE = /^\s*enabled\s*=\s*(true|false)\s*(#.*)?$/;
+var resolveCodexHome = (env, homeDir) => {
+  const configured = env.CODEX_HOME?.trim();
+  return configured ? import_node_path5.default.resolve(configured) : import_node_path5.default.join(homeDir, ".codex");
+};
+var resolveCodexMarketplaceCacheDir = (codexHome) => {
+  return import_node_path5.default.join(codexHome, "plugins", "cache");
+};
+var parseCodexPluginEnabled = (configToml) => {
+  if (configToml === null) {
+    return null;
+  }
+  const lines = configToml.split(/\r?\n/);
+  const headerIndex = lines.findIndex((line) => {
+    return PLUGIN_TABLE_HEADER.test(line);
+  });
+  if (headerIndex === -1) {
+    return false;
+  }
+  for (const line of lines.slice(headerIndex + 1)) {
+    if (ANY_TABLE_HEADER.test(line)) {
+      break;
+    }
+    const match = ENABLED_LINE.exec(line);
+    if (match !== null) {
+      return match[1] === "true";
+    }
+  }
+  return true;
+};
+var readCodexMarketplaceInstall = ({
+  cacheDir,
+  configToml
+}) => {
+  const enabled = parseCodexPluginEnabled(configToml);
+  if (enabled === null) {
+    return UNKNOWN_MARKETPLACE_INSTALL;
+  }
+  if (!enabled) {
+    return { installed: false, version: null };
+  }
+  const [newest] = listSubdirectoriesNewestFirst(
+    import_node_path5.default.join(cacheDir, MARKETPLACE_NAME, PLUGIN_NAME)
+  );
+  if (newest === void 0) {
+    return { installed: true, version: null };
+  }
+  return {
+    installed: true,
+    version: readFirstManifestVersion([
+      import_node_path5.default.join(newest, ".codex-plugin", "plugin.json"),
+      import_node_path5.default.join(newest, ".claude-plugin", "plugin.json"),
+      import_node_path5.default.join(newest, "plugin.json")
+    ])
+  };
+};
+
 // packages/agentic-hooks/src/adapters/codex/payload.ts
 var CODEX_SOURCE = "codex";
 
@@ -750,13 +859,19 @@ var main = async () => {
       payloadCwd: readHookPayloadCwd(readHookStdin()),
       projectDir: process.env.OPEN_THROTTLE_REPO_ROOT || process.cwd()
     });
+    const codexHome = resolveCodexHome(process.env, import_node_os2.default.homedir());
+    const marketplaceCacheDir = resolveCodexMarketplaceCacheDir(codexHome);
     await sendHeartbeat({
       deliveryLeg: detectDeliveryLegFromScript({
         env: process.env,
+        marketplaceCacheDir,
         repoRoot,
         scriptPath: process.argv[1]
       }),
-      marketplace: UNKNOWN_MARKETPLACE_INSTALL,
+      marketplace: readCodexMarketplaceInstall({
+        cacheDir: marketplaceCacheDir,
+        configToml: readTextOrNull(import_node_path6.default.join(codexHome, "config.toml"))
+      }),
       pluginVersion: null,
       repoRoot,
       source: CODEX_SOURCE
