@@ -749,7 +749,7 @@ var sendHeartbeat = async ({
   }
 };
 
-// packages/agentic-hooks/src/adapters/claude/heartbeat-run.ts
+// packages/agentic-hooks/src/adapters/claude/runHeartbeat.ts
 var import_node_os2 = __toESM(require("node:os"), 1);
 var import_node_path6 = __toESM(require("node:path"), 1);
 
@@ -806,7 +806,7 @@ var parseMarketplaceInstall = (rawJson) => {
 // packages/agentic-hooks/src/adapters/claude/payload.ts
 var CLAUDE_SOURCE = "claude-code";
 
-// packages/agentic-hooks/src/adapters/claude/heartbeat-run.ts
+// packages/agentic-hooks/src/adapters/claude/runHeartbeat.ts
 var resolvePluginVersion = (env) => {
   const pluginRoot = env.CLAUDE_PLUGIN_ROOT?.trim();
   if (!pluginRoot) {

@@ -6,7 +6,7 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { HookFetch } from '../../../types.ts';
-import { runHeartbeat } from '../heartbeat-run.ts';
+import { runHeartbeat } from '../runHeartbeat.ts';
 
 const git = (cwd: string, ...args: string[]): string => {
   return execFileSync('git', args, { cwd, encoding: 'utf8' });

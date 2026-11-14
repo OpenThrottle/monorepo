@@ -10,7 +10,7 @@ import {
   readHookStdin,
   resolveHookRepoRoot,
 } from '../../index.ts';
-import { runHeartbeat } from './heartbeat-run.ts';
+import { runHeartbeat } from './runHeartbeat.ts';
 import { isShadowedByRepoHooks } from './shadow.ts';
 
 const main = async (): Promise<void> => {
