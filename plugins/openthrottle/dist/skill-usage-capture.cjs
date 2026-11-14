@@ -34,7 +34,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 
 // packages/agentic-hooks/src/adapters/claude/capture.ts
 var import_node_fs6 = __toESM(require("node:fs"), 1);
-var import_node_path6 = __toESM(require("node:path"), 1);
+var import_node_path10 = __toESM(require("node:path"), 1);
 
 // packages/agentic-hooks/src/data/jsonl.ts
 var import_node_fs2 = __toESM(require("node:fs"), 1);
@@ -75,8 +75,8 @@ var normalizeRemoteUrl = (raw) => {
     return null;
   }
   const host = withoutScheme.slice(0, slashIndex).toLowerCase();
-  const path7 = withoutScheme.slice(slashIndex);
-  return `https://${host}${path7}`;
+  const path11 = withoutScheme.slice(slashIndex);
+  return `https://${host}${path11}`;
 };
 
 // packages/agentic-hooks/src/config/env.ts
@@ -720,6 +720,9 @@ var toRecordSkillUsageInput = (event) => {
   return input;
 };
 
+// packages/agentic-hooks/src/data/heartbeat.ts
+var import_node_path5 = __toESM(require("node:path"), 1);
+
 // packages/agentic-hooks/src/data/starts.ts
 var recordSkillStart = ({
   sessionId,
@@ -845,6 +848,49 @@ var persistUsageEvent = async ({
   }
 };
 
+// packages/agentic-hooks/src/data/heartbeat.ts
+var UNKNOWN_MARKETPLACE_INSTALL = Object.freeze({
+  installed: null,
+  version: null
+});
+var isPathInside = (parent, child) => {
+  const relative = import_node_path5.default.relative(import_node_path5.default.resolve(parent), import_node_path5.default.resolve(child));
+  return relative !== "" && !relative.startsWith("..") && !import_node_path5.default.isAbsolute(relative);
+};
+
+// packages/agentic-hooks/src/adapters/claude/bundle-host.ts
+var import_node_os3 = __toESM(require("node:os"), 1);
+var import_node_path8 = __toESM(require("node:path"), 1);
+
+// packages/agentic-hooks/src/adapters/antigravity/marketplace-install.ts
+var import_node_path6 = __toESM(require("node:path"), 1);
+var resolveAntigravityPluginsDir = (homeDir) => {
+  return import_node_path6.default.join(homeDir, ".gemini", "config", "plugins");
+};
+
+// packages/agentic-hooks/src/adapters/antigravity/payload.ts
+var ANTIGRAVITY_SOURCE = "antigravity";
+
+// packages/agentic-hooks/src/adapters/codex/marketplace-install.ts
+var import_node_path7 = __toESM(require("node:path"), 1);
+var resolveCodexHome = (env, homeDir) => {
+  const configured = env.CODEX_HOME?.trim();
+  return configured ? import_node_path7.default.resolve(configured) : import_node_path7.default.join(homeDir, ".codex");
+};
+var resolveCodexMarketplaceCacheDir = (codexHome) => {
+  return import_node_path7.default.join(codexHome, "plugins", "cache");
+};
+
+// packages/agentic-hooks/src/adapters/codex/payload.ts
+var CODEX_SOURCE = "codex";
+
+// packages/agentic-hooks/src/adapters/cursor/payload.ts
+var CURSOR_SOURCE = "cursor";
+var CURSOR_INVOCATION_PATHS = Object.freeze({
+  SKILL_READ: "skill_read",
+  SLASH: "slash"
+});
+
 // packages/agentic-hooks/src/adapters/claude/payload.ts
 var CLAUDE_SOURCE = "claude-code";
 var normalizeClaudePayload = (raw) => {
@@ -907,22 +953,62 @@ var normalizeClaudePayload = (raw) => {
   return null;
 };
 
+// packages/agentic-hooks/src/adapters/claude/bundle-host.ts
+var scriptIsInside = (dir, scriptPath) => {
+  const root = dir?.trim();
+  if (!root || !scriptPath) {
+    return false;
+  }
+  return isPathInside(root, scriptPath);
+};
+var isCursorHost = ({
+  env,
+  scriptPath
+}) => {
+  const cursorRoot = env.CURSOR_PLUGIN_ROOT?.trim();
+  const claudeRoot = env.CLAUDE_PLUGIN_ROOT?.trim();
+  if (!cursorRoot || !claudeRoot) {
+    return false;
+  }
+  return import_node_path8.default.resolve(cursorRoot) === import_node_path8.default.resolve(claudeRoot) && scriptIsInside(cursorRoot, scriptPath);
+};
+var detectClaudeBundleHost = ({
+  env = process.env,
+  homeDir = import_node_os3.default.homedir(),
+  scriptPath = process.argv[1]
+} = {}) => {
+  const context = { env, homeDir, scriptPath };
+  if (scriptIsInside(resolveAntigravityPluginsDir(homeDir), scriptPath)) {
+    return ANTIGRAVITY_SOURCE;
+  }
+  const codexCache = resolveCodexMarketplaceCacheDir(
+    resolveCodexHome(env, homeDir)
+  );
+  if (scriptIsInside(codexCache, scriptPath)) {
+    return CODEX_SOURCE;
+  }
+  if (isCursorHost(context)) {
+    return CURSOR_SOURCE;
+  }
+  return CLAUDE_SOURCE;
+};
+
 // packages/agentic-hooks/src/adapters/claude/shadow.ts
 var import_node_fs5 = __toESM(require("node:fs"), 1);
-var import_node_path5 = __toESM(require("node:path"), 1);
+var import_node_path9 = __toESM(require("node:path"), 1);
 var CAPTURE_BUNDLE = "skill-usage-capture";
 var runningFromPlugin = (env, scriptPath) => {
   const pluginRoot = env.CLAUDE_PLUGIN_ROOT?.trim();
   if (!pluginRoot || !scriptPath) {
     return false;
   }
-  const relative = import_node_path5.default.relative(import_node_path5.default.resolve(pluginRoot), scriptPath);
+  const relative = import_node_path9.default.relative(import_node_path9.default.resolve(pluginRoot), scriptPath);
   return relative !== "" && !relative.startsWith("..");
 };
 var repoRegistersBundle = (repoRoot, bundle) => {
   try {
     const raw = import_node_fs5.default.readFileSync(
-      import_node_path5.default.join(repoRoot, ".claude", "settings.json"),
+      import_node_path9.default.join(repoRoot, ".claude", "settings.json"),
       "utf8"
     );
     const parsed = JSON.parse(raw);
@@ -946,6 +1032,9 @@ var isShadowedByRepoHooks = ({
 // packages/agentic-hooks/src/adapters/claude/capture.ts
 var main = async () => {
   try {
+    if (detectClaudeBundleHost() !== "claude-code") {
+      return;
+    }
     const projectDir = process.env.CLAUDE_PROJECT_DIR || process.env.OPEN_THROTTLE_REPO_ROOT || process.cwd();
     if (isShadowedByRepoHooks({ repoRoot: projectDir })) {
       return;
@@ -987,7 +1076,7 @@ var main = async () => {
     const outPath = defaultJsonlPath();
     await persistUsageEvent({
       event,
-      jsonlPath: import_node_path6.default.resolve(outPath),
+      jsonlPath: import_node_path10.default.resolve(outPath),
       repoRoot
     });
   } catch (err) {

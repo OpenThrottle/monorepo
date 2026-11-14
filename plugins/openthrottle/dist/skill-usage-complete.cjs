@@ -74,8 +74,8 @@ var normalizeRemoteUrl = (raw) => {
     return null;
   }
   const host = withoutScheme.slice(0, slashIndex).toLowerCase();
-  const path12 = withoutScheme.slice(slashIndex);
-  return `https://${host}${path12}`;
+  const path16 = withoutScheme.slice(slashIndex);
+  return `https://${host}${path16}`;
 };
 
 // packages/agentic-hooks/src/config/env.ts
@@ -1002,6 +1002,9 @@ var toRecordSkillUsageOutcomeInput = (event) => {
   return input;
 };
 
+// packages/agentic-hooks/src/data/heartbeat.ts
+var import_node_path7 = __toESM(require("node:path"), 1);
+
 // packages/agentic-hooks/src/data/persist.ts
 var import_node_fs7 = __toESM(require("node:fs"), 1);
 var import_node_path6 = __toESM(require("node:path"), 1);
@@ -1657,21 +1660,31 @@ var formatDrainReasons = (tally) => {
   return entries.length ? entries.map(([reason, count]) => `${reason} ×${count}`).join("; ") : "none";
 };
 
+// packages/agentic-hooks/src/data/heartbeat.ts
+var UNKNOWN_MARKETPLACE_INSTALL = Object.freeze({
+  installed: null,
+  version: null
+});
+var isPathInside = (parent, child) => {
+  const relative = import_node_path7.default.relative(import_node_path7.default.resolve(parent), import_node_path7.default.resolve(child));
+  return relative !== "" && !relative.startsWith("..") && !import_node_path7.default.isAbsolute(relative);
+};
+
 // packages/agentic-hooks/src/data/plan-runs.ts
 var import_node_crypto = require("node:crypto");
 var import_node_fs8 = __toESM(require("node:fs"), 1);
-var import_node_path7 = __toESM(require("node:path"), 1);
+var import_node_path8 = __toESM(require("node:path"), 1);
 var PLAN_RUNS_DIR_BASENAME = "plan-runs";
 var PLAN_RUN_ABANDONED_MS = 6 * 60 * 60 * 1e3;
 var planRunsDir = (repoRoot) => {
-  const repoKey = (0, import_node_crypto.createHash)("sha256").update(import_node_path7.default.resolve(repoRoot)).digest("hex").slice(0, 16);
-  return import_node_path7.default.join(resolveTelemetryDir(), PLAN_RUNS_DIR_BASENAME, repoKey);
+  const repoKey = (0, import_node_crypto.createHash)("sha256").update(import_node_path8.default.resolve(repoRoot)).digest("hex").slice(0, 16);
+  return import_node_path8.default.join(resolveTelemetryDir(), PLAN_RUNS_DIR_BASENAME, repoKey);
 };
 var sanitizeSessionId2 = (sessionId) => {
   return String(sessionId).replace(/[^A-Za-z0-9._-]/g, "-");
 };
 var planRunFilePath = (repoRoot, sessionId) => {
-  return import_node_path7.default.join(
+  return import_node_path8.default.join(
     planRunsDir(repoRoot),
     `${sanitizeSessionId2(sessionId)}.json`
   );
@@ -1955,9 +1968,9 @@ var drainBufferedTrajectories = async ({
 
 // packages/agentic-hooks/src/data/trajectory-uploads.ts
 var import_node_fs10 = __toESM(require("node:fs"), 1);
-var import_node_path8 = __toESM(require("node:path"), 1);
+var import_node_path9 = __toESM(require("node:path"), 1);
 var stateFilePath = (dir, sessionId) => {
-  return import_node_path8.default.join(dir, `${sanitizeSessionId(sessionId)}.json`);
+  return import_node_path9.default.join(dir, `${sanitizeSessionId(sessionId)}.json`);
 };
 var readTrajectoryUploadState = ({
   dir,
@@ -2003,7 +2016,7 @@ var writeTrajectoryUploadState = ({
       sessionId
     );
     const temp = `${target}.tmp.${process.pid}`;
-    import_node_fs10.default.mkdirSync(import_node_path8.default.dirname(target), { recursive: true });
+    import_node_fs10.default.mkdirSync(import_node_path9.default.dirname(target), { recursive: true });
     import_node_fs10.default.writeFileSync(
       temp,
       `${JSON.stringify({
@@ -2049,7 +2062,7 @@ var sweepTrajectoryUploadState = async ({
 } = {}) => {
   try {
     const target = dir || defaultTrajectoryUploadsDir();
-    const marker = import_node_path8.default.join(target, SWEEP_MARKER_BASENAME);
+    const marker = import_node_path9.default.join(target, SWEEP_MARKER_BASENAME);
     try {
       const { mtimeMs } = await import_node_fs10.default.promises.stat(marker);
       if (nowMs - mtimeMs < MS_PER_DAY) {
@@ -2060,7 +2073,7 @@ var sweepTrajectoryUploadState = async ({
     const names = await import_node_fs10.default.promises.readdir(target);
     const cutoffMs = nowMs - ttlDays * MS_PER_DAY;
     const results = await Promise.all(
-      names.filter((name) => name.endsWith(".json")).map((name) => deleteIfOlder(import_node_path8.default.join(target, name), cutoffMs))
+      names.filter((name) => name.endsWith(".json")).map((name) => deleteIfOlder(import_node_path9.default.join(target, name), cutoffMs))
     );
     await import_node_fs10.default.promises.writeFile(marker, `${new Date(nowMs).toISOString()}
 `);
@@ -4520,6 +4533,39 @@ var resolveClaudeTokenUsageAccount = async (env) => {
   }
 };
 
+// packages/agentic-hooks/src/adapters/claude/bundle-host.ts
+var import_node_os3 = __toESM(require("node:os"), 1);
+var import_node_path12 = __toESM(require("node:path"), 1);
+
+// packages/agentic-hooks/src/adapters/antigravity/marketplace-install.ts
+var import_node_path10 = __toESM(require("node:path"), 1);
+var resolveAntigravityPluginsDir = (homeDir) => {
+  return import_node_path10.default.join(homeDir, ".gemini", "config", "plugins");
+};
+
+// packages/agentic-hooks/src/adapters/antigravity/payload.ts
+var ANTIGRAVITY_SOURCE = "antigravity";
+
+// packages/agentic-hooks/src/adapters/codex/marketplace-install.ts
+var import_node_path11 = __toESM(require("node:path"), 1);
+var resolveCodexHome = (env, homeDir) => {
+  const configured = env.CODEX_HOME?.trim();
+  return configured ? import_node_path11.default.resolve(configured) : import_node_path11.default.join(homeDir, ".codex");
+};
+var resolveCodexMarketplaceCacheDir = (codexHome) => {
+  return import_node_path11.default.join(codexHome, "plugins", "cache");
+};
+
+// packages/agentic-hooks/src/adapters/codex/payload.ts
+var CODEX_SOURCE = "codex";
+
+// packages/agentic-hooks/src/adapters/cursor/payload.ts
+var CURSOR_SOURCE = "cursor";
+var CURSOR_INVOCATION_PATHS = Object.freeze({
+  SKILL_READ: "skill_read",
+  SLASH: "slash"
+});
+
 // packages/agentic-hooks/src/adapters/claude/payload.ts
 var CLAUDE_SOURCE = "claude-code";
 var nonEmptyString = (value) => {
@@ -4542,8 +4588,48 @@ var normalizeClaudeStopPayload = (raw) => {
   };
 };
 
+// packages/agentic-hooks/src/adapters/claude/bundle-host.ts
+var scriptIsInside = (dir, scriptPath) => {
+  const root = dir?.trim();
+  if (!root || !scriptPath) {
+    return false;
+  }
+  return isPathInside(root, scriptPath);
+};
+var isCursorHost = ({
+  env,
+  scriptPath
+}) => {
+  const cursorRoot = env.CURSOR_PLUGIN_ROOT?.trim();
+  const claudeRoot = env.CLAUDE_PLUGIN_ROOT?.trim();
+  if (!cursorRoot || !claudeRoot) {
+    return false;
+  }
+  return import_node_path12.default.resolve(cursorRoot) === import_node_path12.default.resolve(claudeRoot) && scriptIsInside(cursorRoot, scriptPath);
+};
+var detectClaudeBundleHost = ({
+  env = process.env,
+  homeDir = import_node_os3.default.homedir(),
+  scriptPath = process.argv[1]
+} = {}) => {
+  const context = { env, homeDir, scriptPath };
+  if (scriptIsInside(resolveAntigravityPluginsDir(homeDir), scriptPath)) {
+    return ANTIGRAVITY_SOURCE;
+  }
+  const codexCache = resolveCodexMarketplaceCacheDir(
+    resolveCodexHome(env, homeDir)
+  );
+  if (scriptIsInside(codexCache, scriptPath)) {
+    return CODEX_SOURCE;
+  }
+  if (isCursorHost(context)) {
+    return CURSOR_SOURCE;
+  }
+  return CLAUDE_SOURCE;
+};
+
 // packages/agentic-hooks/src/adapters/claude/session-trajectory.ts
-var import_node_path9 = __toESM(require("node:path"), 1);
+var import_node_path13 = __toESM(require("node:path"), 1);
 var SESSION_TRAJECTORY_SOURCE = "session_upload";
 var SESSION_TRAJECTORY_DRIVER = "claude";
 var MAX_SESSION_SCAN_BYTES_PER_STOP = 32 * 1024 * 1024;
@@ -4568,8 +4654,8 @@ var firstVersionOf = (events) => {
   return "unknown";
 };
 var loadSubagents = (transcriptPath, sessionId, agentIds) => {
-  const subagentsDir = import_node_path9.default.join(
-    import_node_path9.default.dirname(transcriptPath),
+  const subagentsDir = import_node_path13.default.join(
+    import_node_path13.default.dirname(transcriptPath),
     sessionId,
     "subagents"
   );
@@ -4578,7 +4664,7 @@ var loadSubagents = (transcriptPath, sessionId, agentIds) => {
       return [];
     }
     const { lines } = readNewBytes({
-      filePath: import_node_path9.default.join(subagentsDir, `agent-${agentId}.jsonl`),
+      filePath: import_node_path13.default.join(subagentsDir, `agent-${agentId}.jsonl`),
       maxBytes: MAX_SUBAGENT_TRANSCRIPT_BYTES,
       offset: 0
     });
@@ -4705,20 +4791,20 @@ var captureSessionTrajectories = async ({
 
 // packages/agentic-hooks/src/adapters/claude/shadow.ts
 var import_node_fs11 = __toESM(require("node:fs"), 1);
-var import_node_path10 = __toESM(require("node:path"), 1);
+var import_node_path14 = __toESM(require("node:path"), 1);
 var CAPTURE_BUNDLE = "skill-usage-capture";
 var runningFromPlugin = (env, scriptPath) => {
   const pluginRoot = env.CLAUDE_PLUGIN_ROOT?.trim();
   if (!pluginRoot || !scriptPath) {
     return false;
   }
-  const relative = import_node_path10.default.relative(import_node_path10.default.resolve(pluginRoot), scriptPath);
+  const relative = import_node_path14.default.relative(import_node_path14.default.resolve(pluginRoot), scriptPath);
   return relative !== "" && !relative.startsWith("..");
 };
 var repoRegistersBundle = (repoRoot, bundle) => {
   try {
     const raw = import_node_fs11.default.readFileSync(
-      import_node_path10.default.join(repoRoot, ".claude", "settings.json"),
+      import_node_path14.default.join(repoRoot, ".claude", "settings.json"),
       "utf8"
     );
     const parsed = JSON.parse(raw);
@@ -4741,7 +4827,7 @@ var isShadowedByRepoHooks = ({
 
 // packages/agentic-hooks/src/adapters/claude/transcript-usage.ts
 var import_node_fs12 = __toESM(require("node:fs"), 1);
-var import_node_path11 = __toESM(require("node:path"), 1);
+var import_node_path15 = __toESM(require("node:path"), 1);
 
 // packages/agentic-token-usage/src/usage.ts
 var asFiniteNumber = (value) => {
@@ -4950,10 +5036,10 @@ var MAX_TRANSCRIPT_BYTES_PER_FILE = 4 * 1024 * 1024;
 var MAX_TRANSCRIPT_BYTES_PER_STOP = 16 * 1024 * 1024;
 var SUBAGENT_FILE = /^agent-.+\.jsonl$/;
 var listSubagentTranscripts = (transcriptPath) => {
-  const { dir, name } = import_node_path11.default.parse(transcriptPath);
-  const subagentsDir = import_node_path11.default.join(dir, name, "subagents");
+  const { dir, name } = import_node_path15.default.parse(transcriptPath);
+  const subagentsDir = import_node_path15.default.join(dir, name, "subagents");
   try {
-    return import_node_fs12.default.readdirSync(subagentsDir).filter((entry) => SUBAGENT_FILE.test(entry)).sort().map((entry) => import_node_path11.default.join(subagentsDir, entry));
+    return import_node_fs12.default.readdirSync(subagentsDir).filter((entry) => SUBAGENT_FILE.test(entry)).sort().map((entry) => import_node_path15.default.join(subagentsDir, entry));
   } catch {
     return [];
   }
@@ -5055,6 +5141,9 @@ var captureTranscriptUsage = async ({
 // packages/agentic-hooks/src/adapters/claude/complete.ts
 var main = async () => {
   try {
+    if (detectClaudeBundleHost() !== "claude-code") {
+      return;
+    }
     const repoRoot = process.env.CLAUDE_PROJECT_DIR || process.env.OPEN_THROTTLE_REPO_ROOT || process.cwd();
     if (isShadowedByRepoHooks({ repoRoot })) {
       return;

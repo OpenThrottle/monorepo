@@ -70,8 +70,8 @@ var normalizeRemoteUrl = (raw) => {
     return null;
   }
   const host = withoutScheme.slice(0, slashIndex).toLowerCase();
-  const path8 = withoutScheme.slice(slashIndex);
-  return `https://${host}${path8}`;
+  const path14 = withoutScheme.slice(slashIndex);
+  return `https://${host}${path14}`;
 };
 
 // packages/agentic-hooks/src/config/env.ts
@@ -619,6 +619,34 @@ var readFirstManifestVersion = (manifestPaths) => {
   }
   return null;
 };
+var isReadableDirectory = (dirPath) => {
+  try {
+    import_node_fs4.default.readdirSync(dirPath);
+    return true;
+  } catch {
+    return false;
+  }
+};
+var listSubdirectoriesNewestFirst = (dirPath) => {
+  let names;
+  try {
+    names = import_node_fs4.default.readdirSync(dirPath);
+  } catch {
+    return [];
+  }
+  const dirs = [];
+  for (const name of names) {
+    const dir = import_node_path4.default.join(dirPath, name);
+    try {
+      const stat = import_node_fs4.default.statSync(dir);
+      if (stat.isDirectory()) {
+        dirs.push({ dir, mtimeMs: stat.mtimeMs });
+      }
+    } catch {
+    }
+  }
+  return dirs.sort((left, right) => right.mtimeMs - left.mtimeMs).map((entry) => entry.dir);
+};
 var buildHeartbeatInput = ({
   bufferStats,
   deliveryLeg,
@@ -749,16 +777,266 @@ var sendHeartbeat = async ({
   }
 };
 
-// packages/agentic-hooks/src/adapters/claude/runHeartbeat.ts
+// packages/agentic-hooks/src/adapters/claude/bundle-host.ts
 var import_node_os2 = __toESM(require("node:os"), 1);
+var import_node_path7 = __toESM(require("node:path"), 1);
+
+// packages/agentic-hooks/src/adapters/antigravity/marketplace-install.ts
+var import_node_path5 = __toESM(require("node:path"), 1);
+var PLUGIN_DIR_NAME = "openthrottle";
+var resolveAntigravityPluginsDir = (homeDir) => {
+  return import_node_path5.default.join(homeDir, ".gemini", "config", "plugins");
+};
+var parseAntigravityPluginEnabled = (configJson) => {
+  if (configJson === null) {
+    return true;
+  }
+  try {
+    const parsed = JSON.parse(configJson);
+    if (!isRecord(parsed) || !isRecord(parsed.plugins)) {
+      return true;
+    }
+    const entry = parsed.plugins[PLUGIN_DIR_NAME];
+    return !(isRecord(entry) && entry.enabled === false);
+  } catch {
+    return true;
+  }
+};
+var readAntigravityMarketplaceInstall = ({
+  configJson,
+  pluginsDir
+}) => {
+  if (!isReadableDirectory(pluginsDir)) {
+    return isReadableDirectory(import_node_path5.default.dirname(pluginsDir)) ? { installed: false, version: null } : UNKNOWN_MARKETPLACE_INSTALL;
+  }
+  const pluginDir = import_node_path5.default.join(pluginsDir, PLUGIN_DIR_NAME);
+  if (!isReadableDirectory(pluginDir) || !parseAntigravityPluginEnabled(configJson)) {
+    return { installed: false, version: null };
+  }
+  return {
+    installed: true,
+    version: readFirstManifestVersion([
+      import_node_path5.default.join(pluginDir, "plugin.json"),
+      import_node_path5.default.join(pluginDir, ".claude-plugin", "plugin.json")
+    ])
+  };
+};
+
+// packages/agentic-hooks/src/adapters/antigravity/payload.ts
+var ANTIGRAVITY_SOURCE = "antigravity";
+
+// packages/agentic-hooks/src/adapters/codex/marketplace-install.ts
 var import_node_path6 = __toESM(require("node:path"), 1);
+var MARKETPLACE_NAME = "openthrottle";
+var PLUGIN_NAME = "openthrottle";
+var PLUGIN_TABLE_HEADER = /^\s*\[\s*plugins\s*\.\s*(["'])openthrottle@openthrottle\1\s*\]\s*(#.*)?$/;
+var ANY_TABLE_HEADER = /^\s*\[/;
+var ENABLED_LINE = /^\s*enabled\s*=\s*(true|false)\s*(#.*)?$/;
+var resolveCodexHome = (env, homeDir) => {
+  const configured = env.CODEX_HOME?.trim();
+  return configured ? import_node_path6.default.resolve(configured) : import_node_path6.default.join(homeDir, ".codex");
+};
+var resolveCodexMarketplaceCacheDir = (codexHome) => {
+  return import_node_path6.default.join(codexHome, "plugins", "cache");
+};
+var parseCodexPluginEnabled = (configToml) => {
+  if (configToml === null) {
+    return null;
+  }
+  const lines = configToml.split(/\r?\n/);
+  const headerIndex = lines.findIndex((line) => {
+    return PLUGIN_TABLE_HEADER.test(line);
+  });
+  if (headerIndex === -1) {
+    return false;
+  }
+  for (const line of lines.slice(headerIndex + 1)) {
+    if (ANY_TABLE_HEADER.test(line)) {
+      break;
+    }
+    const match = ENABLED_LINE.exec(line);
+    if (match !== null) {
+      return match[1] === "true";
+    }
+  }
+  return true;
+};
+var readCodexMarketplaceInstall = ({
+  cacheDir,
+  configToml
+}) => {
+  const enabled = parseCodexPluginEnabled(configToml);
+  if (enabled === null) {
+    return UNKNOWN_MARKETPLACE_INSTALL;
+  }
+  if (!enabled) {
+    return { installed: false, version: null };
+  }
+  const [newest] = listSubdirectoriesNewestFirst(
+    import_node_path6.default.join(cacheDir, MARKETPLACE_NAME, PLUGIN_NAME)
+  );
+  if (newest === void 0) {
+    return { installed: true, version: null };
+  }
+  return {
+    installed: true,
+    version: readFirstManifestVersion([
+      import_node_path6.default.join(newest, ".codex-plugin", "plugin.json"),
+      import_node_path6.default.join(newest, ".claude-plugin", "plugin.json"),
+      import_node_path6.default.join(newest, "plugin.json")
+    ])
+  };
+};
+
+// packages/agentic-hooks/src/adapters/codex/payload.ts
+var CODEX_SOURCE = "codex";
+
+// packages/agentic-hooks/src/adapters/cursor/payload.ts
+var CURSOR_SOURCE = "cursor";
+var CURSOR_INVOCATION_PATHS = Object.freeze({
+  SKILL_READ: "skill_read",
+  SLASH: "slash"
+});
+
+// packages/agentic-hooks/src/adapters/claude/payload.ts
+var CLAUDE_SOURCE = "claude-code";
+
+// packages/agentic-hooks/src/adapters/claude/bundle-host.ts
+var scriptIsInside = (dir, scriptPath) => {
+  const root = dir?.trim();
+  if (!root || !scriptPath) {
+    return false;
+  }
+  return isPathInside(root, scriptPath);
+};
+var isCursorHost = ({
+  env,
+  scriptPath
+}) => {
+  const cursorRoot = env.CURSOR_PLUGIN_ROOT?.trim();
+  const claudeRoot = env.CLAUDE_PLUGIN_ROOT?.trim();
+  if (!cursorRoot || !claudeRoot) {
+    return false;
+  }
+  return import_node_path7.default.resolve(cursorRoot) === import_node_path7.default.resolve(claudeRoot) && scriptIsInside(cursorRoot, scriptPath);
+};
+var detectClaudeBundleHost = ({
+  env = process.env,
+  homeDir = import_node_os2.default.homedir(),
+  scriptPath = process.argv[1]
+} = {}) => {
+  const context = { env, homeDir, scriptPath };
+  if (scriptIsInside(resolveAntigravityPluginsDir(homeDir), scriptPath)) {
+    return ANTIGRAVITY_SOURCE;
+  }
+  const codexCache = resolveCodexMarketplaceCacheDir(
+    resolveCodexHome(env, homeDir)
+  );
+  if (scriptIsInside(codexCache, scriptPath)) {
+    return CODEX_SOURCE;
+  }
+  if (isCursorHost(context)) {
+    return CURSOR_SOURCE;
+  }
+  return CLAUDE_SOURCE;
+};
+var resolveBundleHostProjectDir = (host, env = process.env) => {
+  if (host === CLAUDE_SOURCE) {
+    return env.CLAUDE_PROJECT_DIR || env.OPEN_THROTTLE_REPO_ROOT || process.cwd();
+  }
+  if (host === CURSOR_SOURCE && env.CURSOR_PROJECT_DIR) {
+    return env.CURSOR_PROJECT_DIR;
+  }
+  return env.OPEN_THROTTLE_REPO_ROOT || process.cwd();
+};
+
+// packages/agentic-hooks/src/adapters/claude/foreign-host-heartbeat.ts
+var import_node_fs7 = __toESM(require("node:fs"), 1);
+var import_node_os3 = __toESM(require("node:os"), 1);
+var import_node_path11 = __toESM(require("node:path"), 1);
+
+// packages/agentic-hooks/src/adapters/cursor/heartbeat-run.ts
+var import_node_fs6 = __toESM(require("node:fs"), 1);
+var import_node_path9 = __toESM(require("node:path"), 1);
+
+// packages/agentic-hooks/src/adapters/cursor/marketplace-install.ts
+var import_node_fs5 = __toESM(require("node:fs"), 1);
+var import_node_path8 = __toESM(require("node:path"), 1);
+var MARKETPLACE_NAME2 = "openthrottle";
+var PLUGIN_NAME2 = "openthrottle";
+var CACHE_COMPLETE_MARKER = ".cache-complete";
+var resolveCursorMarketplaceCacheDir = (homeDir) => {
+  return import_node_path8.default.join(homeDir, ".cursor", "plugins", "cache");
+};
+var readCursorMarketplaceInstall = (cacheDir) => {
+  if (!isReadableDirectory(cacheDir)) {
+    return isReadableDirectory(import_node_path8.default.dirname(cacheDir)) ? { installed: false, version: null } : UNKNOWN_MARKETPLACE_INSTALL;
+  }
+  const [newest] = listSubdirectoriesNewestFirst(
+    import_node_path8.default.join(cacheDir, MARKETPLACE_NAME2, PLUGIN_NAME2)
+  ).filter((dir) => import_node_fs5.default.existsSync(import_node_path8.default.join(dir, CACHE_COMPLETE_MARKER)));
+  if (newest === void 0) {
+    return { installed: false, version: null };
+  }
+  return {
+    installed: true,
+    version: readFirstManifestVersion([
+      import_node_path8.default.join(newest, ".cursor-plugin", "plugin.json"),
+      import_node_path8.default.join(newest, ".claude-plugin", "plugin.json"),
+      import_node_path8.default.join(newest, "plugin.json")
+    ])
+  };
+};
+
+// packages/agentic-hooks/src/adapters/cursor/heartbeat-run.ts
+var HEARTBEAT_BUNDLE = "skill-usage-heartbeat";
+var resolveOwnPluginRoot = (env, scriptPath) => {
+  const pluginRoot = env.CURSOR_PLUGIN_ROOT?.trim();
+  if (!pluginRoot || !scriptPath) {
+    return null;
+  }
+  return isPathInside(pluginRoot, scriptPath) ? pluginRoot : null;
+};
+var repoHeartbeatRegistrations = (repoRoot) => {
+  try {
+    const parsed = JSON.parse(
+      import_node_fs6.default.readFileSync(import_node_path9.default.join(repoRoot, ".cursor", "hooks.json"), "utf8")
+    );
+    if (typeof parsed !== "object" || parsed === null || !("hooks" in parsed)) {
+      return [];
+    }
+    const commands = [];
+    JSON.stringify(parsed.hooks, (key, value) => {
+      if (key === "command" && typeof value === "string") {
+        commands.push(value);
+      }
+      return value;
+    });
+    return commands.filter((command) => command.includes(HEARTBEAT_BUNDLE)).map((command) => import_node_path9.default.resolve(repoRoot, command));
+  } catch {
+    return [];
+  }
+};
+var isCursorHeartbeatShadowed = ({
+  env = process.env,
+  repoRoot,
+  scriptPath = process.argv[1]
+}) => {
+  const pluginRoot = resolveOwnPluginRoot(env, scriptPath);
+  if (pluginRoot === null) {
+    return false;
+  }
+  return repoHeartbeatRegistrations(repoRoot).some(
+    (registered) => !isPathInside(pluginRoot, registered)
+  );
+};
 
 // packages/agentic-hooks/src/adapters/claude/heartbeat-payload.ts
-var import_node_path5 = __toESM(require("node:path"), 1);
+var import_node_path10 = __toESM(require("node:path"), 1);
 var MARKETPLACE_PLUGIN_KEY = "openthrottle@openthrottle";
 var resolveClaudeConfigDir = (env, homeDir) => {
   const configured = env.CLAUDE_CONFIG_DIR?.trim();
-  return configured ? import_node_path5.default.resolve(configured) : import_node_path5.default.join(homeDir, ".claude");
+  return configured ? import_node_path10.default.resolve(configured) : import_node_path10.default.join(homeDir, ".claude");
 };
 var detectDeliveryLeg2 = ({
   env,
@@ -766,7 +1044,7 @@ var detectDeliveryLeg2 = ({
 }) => {
   return detectDeliveryLeg({
     env,
-    marketplaceCacheDir: import_node_path5.default.join(
+    marketplaceCacheDir: import_node_path10.default.join(
       resolveClaudeConfigDir(env, homeDir),
       "plugins",
       "cache"
@@ -803,18 +1081,178 @@ var parseMarketplaceInstall = (rawJson) => {
   return { installed: true, version: hasVersion ? entryVersion : null };
 };
 
-// packages/agentic-hooks/src/adapters/claude/payload.ts
-var CLAUDE_SOURCE = "claude-code";
+// packages/agentic-hooks/src/adapters/claude/foreign-host-heartbeat.ts
+var HEARTBEAT_BUNDLE2 = "skill-usage-heartbeat";
+var fileNamesHeartbeat = (filePath) => {
+  return readTextOrNull(filePath)?.includes(HEARTBEAT_BUNDLE2) ?? false;
+};
+var repoAgentsPluginRegistersHeartbeat = (repoRoot) => {
+  const pluginsDir = import_node_path11.default.join(repoRoot, ".agents", "plugins");
+  let names;
+  try {
+    names = import_node_fs7.default.readdirSync(pluginsDir);
+  } catch {
+    return false;
+  }
+  return names.some((name) => {
+    return fileNamesHeartbeat(import_node_path11.default.join(pluginsDir, name, "hooks.json"));
+  });
+};
+var isForeignHostHeartbeatShadowed = ({
+  env = process.env,
+  homeDir = import_node_os3.default.homedir(),
+  host,
+  repoRoot,
+  scriptPath = process.argv[1]
+}) => {
+  if (host === "cursor") {
+    return isCursorHeartbeatShadowed({ env, repoRoot, scriptPath });
+  }
+  if (host === "codex") {
+    return fileNamesHeartbeat(
+      import_node_path11.default.join(resolveCodexHome(env, homeDir), "config.toml")
+    ) || fileNamesHeartbeat(import_node_path11.default.join(repoRoot, ".codex", "config.toml"));
+  }
+  return repoAgentsPluginRegistersHeartbeat(repoRoot);
+};
+var resolveCursorInstall = ({
+  env,
+  homeDir
+}) => {
+  const pluginRoot = env.CURSOR_PLUGIN_ROOT?.trim() || null;
+  const claudeCache = import_node_path11.default.join(
+    resolveClaudeConfigDir(env, homeDir),
+    "plugins",
+    "cache"
+  );
+  if (pluginRoot !== null && isPathInside(claudeCache, pluginRoot)) {
+    return {
+      deliveryLeg: detectDeliveryLeg({
+        env,
+        marketplaceCacheDir: claudeCache,
+        pluginRoot
+      }),
+      marketplace: parseMarketplaceInstall(
+        readTextOrNull(
+          import_node_path11.default.join(import_node_path11.default.dirname(claudeCache), "installed_plugins.json")
+        )
+      ),
+      pluginRoot
+    };
+  }
+  const cursorCache = resolveCursorMarketplaceCacheDir(homeDir);
+  return {
+    deliveryLeg: detectDeliveryLeg({
+      env,
+      marketplaceCacheDir: cursorCache,
+      pluginRoot
+    }),
+    marketplace: readCursorMarketplaceInstall(cursorCache),
+    pluginRoot
+  };
+};
+var resolveCodexInstall = ({
+  env,
+  homeDir,
+  scriptPath
+}) => {
+  const codexHome = resolveCodexHome(env, homeDir);
+  const cacheDir = resolveCodexMarketplaceCacheDir(codexHome);
+  const pluginRoot = env.CLAUDE_PLUGIN_ROOT?.trim() || env.PLUGIN_ROOT?.trim() || (scriptPath ? import_node_path11.default.dirname(import_node_path11.default.dirname(scriptPath)) : null);
+  return {
+    deliveryLeg: detectDeliveryLeg({
+      env,
+      marketplaceCacheDir: cacheDir,
+      pluginRoot
+    }),
+    marketplace: readCodexMarketplaceInstall({
+      cacheDir,
+      configToml: readTextOrNull(import_node_path11.default.join(codexHome, "config.toml"))
+    }),
+    pluginRoot
+  };
+};
+var resolveAntigravityInstall = ({
+  env,
+  homeDir,
+  scriptPath
+}) => {
+  const pluginsDir = resolveAntigravityPluginsDir(homeDir);
+  const pluginRoot = scriptPath ? import_node_path11.default.dirname(import_node_path11.default.dirname(scriptPath)) : null;
+  return {
+    deliveryLeg: detectDeliveryLeg({
+      env,
+      marketplaceCacheDir: pluginsDir,
+      pluginRoot
+    }),
+    marketplace: readAntigravityMarketplaceInstall({
+      configJson: readTextOrNull(
+        import_node_path11.default.join(import_node_path11.default.dirname(pluginsDir), "config.json")
+      ),
+      pluginsDir
+    }),
+    pluginRoot
+  };
+};
+var resolveDeliveringInstall = (context) => {
+  if (context.host === "cursor") {
+    return resolveCursorInstall(context);
+  }
+  if (context.host === "codex") {
+    return resolveCodexInstall(context);
+  }
+  return resolveAntigravityInstall(context);
+};
+var resolvePluginVersion = (pluginRoot) => {
+  if (pluginRoot === null) {
+    return null;
+  }
+  return readFirstManifestVersion([
+    import_node_path11.default.join(pluginRoot, ".claude-plugin", "plugin.json"),
+    import_node_path11.default.join(pluginRoot, "plugin.json")
+  ]);
+};
+var runForeignHostHeartbeat = async ({
+  env = process.env,
+  fetchImpl = globalThis.fetch,
+  homeDir = import_node_os3.default.homedir(),
+  host,
+  now = () => /* @__PURE__ */ new Date(),
+  repoRoot,
+  scriptPath = process.argv[1],
+  timeoutMs = DEFAULT_POST_TIMEOUT_MS
+}) => {
+  const install = resolveDeliveringInstall({
+    env,
+    homeDir,
+    host,
+    repoRoot,
+    scriptPath
+  });
+  return sendHeartbeat({
+    deliveryLeg: install.deliveryLeg,
+    env,
+    fetchImpl,
+    marketplace: install.marketplace,
+    now,
+    pluginVersion: resolvePluginVersion(install.pluginRoot),
+    repoRoot,
+    source: host,
+    timeoutMs
+  });
+};
 
 // packages/agentic-hooks/src/adapters/claude/runHeartbeat.ts
-var resolvePluginVersion = (env) => {
+var import_node_os4 = __toESM(require("node:os"), 1);
+var import_node_path12 = __toESM(require("node:path"), 1);
+var resolvePluginVersion2 = (env) => {
   const pluginRoot = env.CLAUDE_PLUGIN_ROOT?.trim();
   if (!pluginRoot) {
     return null;
   }
   return readFirstManifestVersion([
-    import_node_path6.default.join(pluginRoot, ".claude-plugin", "plugin.json"),
-    import_node_path6.default.join(pluginRoot, "plugin.json")
+    import_node_path12.default.join(pluginRoot, ".claude-plugin", "plugin.json"),
+    import_node_path12.default.join(pluginRoot, "plugin.json")
   ]);
 };
 var runHeartbeat = async ({
@@ -824,9 +1262,9 @@ var runHeartbeat = async ({
   repoRoot,
   timeoutMs = DEFAULT_POST_TIMEOUT_MS
 }) => {
-  const homeDir = import_node_os2.default.homedir();
+  const homeDir = import_node_os4.default.homedir();
   const marketplaceRaw = readTextOrNull(
-    import_node_path6.default.join(
+    import_node_path12.default.join(
       resolveClaudeConfigDir(env, homeDir),
       "plugins",
       "installed_plugins.json"
@@ -838,7 +1276,7 @@ var runHeartbeat = async ({
     fetchImpl,
     marketplace: parseMarketplaceInstall(marketplaceRaw),
     now,
-    pluginVersion: resolvePluginVersion(env),
+    pluginVersion: resolvePluginVersion2(env),
     repoRoot,
     source: CLAUDE_SOURCE,
     timeoutMs
@@ -846,21 +1284,21 @@ var runHeartbeat = async ({
 };
 
 // packages/agentic-hooks/src/adapters/claude/shadow.ts
-var import_node_fs5 = __toESM(require("node:fs"), 1);
-var import_node_path7 = __toESM(require("node:path"), 1);
+var import_node_fs8 = __toESM(require("node:fs"), 1);
+var import_node_path13 = __toESM(require("node:path"), 1);
 var CAPTURE_BUNDLE = "skill-usage-capture";
 var runningFromPlugin = (env, scriptPath) => {
   const pluginRoot = env.CLAUDE_PLUGIN_ROOT?.trim();
   if (!pluginRoot || !scriptPath) {
     return false;
   }
-  const relative = import_node_path7.default.relative(import_node_path7.default.resolve(pluginRoot), scriptPath);
+  const relative = import_node_path13.default.relative(import_node_path13.default.resolve(pluginRoot), scriptPath);
   return relative !== "" && !relative.startsWith("..");
 };
 var repoRegistersBundle = (repoRoot, bundle) => {
   try {
-    const raw = import_node_fs5.default.readFileSync(
-      import_node_path7.default.join(repoRoot, ".claude", "settings.json"),
+    const raw = import_node_fs8.default.readFileSync(
+      import_node_path13.default.join(repoRoot, ".claude", "settings.json"),
       "utf8"
     );
     const parsed = JSON.parse(raw);
@@ -884,7 +1322,18 @@ var isShadowedByRepoHooks = ({
 // packages/agentic-hooks/src/adapters/claude/heartbeat.ts
 var main = async () => {
   try {
-    const projectDir = process.env.CLAUDE_PROJECT_DIR || process.env.OPEN_THROTTLE_REPO_ROOT || process.cwd();
+    const host = detectClaudeBundleHost();
+    const projectDir = resolveBundleHostProjectDir(host);
+    if (host !== "claude-code") {
+      const repoRoot2 = resolveHookRepoRoot({
+        payloadCwd: readHookPayloadCwd(readHookStdin()),
+        projectDir
+      });
+      if (!isForeignHostHeartbeatShadowed({ host, repoRoot: repoRoot2 })) {
+        await runForeignHostHeartbeat({ host, repoRoot: repoRoot2 });
+      }
+      return;
+    }
     if (isShadowedByRepoHooks({
       bundle: "skill-usage-heartbeat",
       repoRoot: projectDir
