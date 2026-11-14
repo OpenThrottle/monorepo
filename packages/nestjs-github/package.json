@@ -8,8 +8,8 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
-    "@apollo/cache-control-types": "catalog:",
     "@nestjs/graphql": "catalog:",
+    "@openthrottle/nestjs-graphql": "workspace:^",
     "@openthrottle/nodejs-utils": "workspace:^",
     "graphql": "catalog:"
   },

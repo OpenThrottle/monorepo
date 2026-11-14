@@ -33,7 +33,7 @@ discoverLocalModels(): Promise<DiscoverLocalModelsResult> { ... }
 
 Two consequences worth internalising:
 
-1. **Every field in a cacheable document must be hinted.** Reference implementation: `GithubResolver` in `@openthrottle/nestjs-github`, where each `@Query` takes `@Info()` and calls a local `setCacheHint(info, maxAge)` helper. Its test suite enumerates the resolver prototype and asserts every query sets a positive `maxAge`, so a new un-hinted query fails CI.
+1. **Every field in a cacheable document must be hinted.** Reference implementation: `GithubResolver` in `@openthrottle/nestjs-github`, where each `@Query` carries `@CacheHint(...)` with a shared constant from `graphql.constants.ts`. Its test suite builds the schema with `GraphQLSchemaFactory` and asserts every `Query` field's `extensions` carry a positive `maxAge`, so a new un-hinted query fails CI.
 2. **A short hint is as contagious as a missing one.** Because the policy is a minimum, selecting a 30s field alongside an expensive 1h field caps the whole operation at 30s. Keep short-lived fields (env flags, liveness booleans) in their own documents rather than bundling them with expensive ones.
 
 To check a response's actual policy, read the `Cache-Control` response header: an uncacheable operation returns `no-store`, a cacheable one returns e.g. `max-age=3600, public` (plus `age` once served from cache).
