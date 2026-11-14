@@ -1,8 +1,5 @@
 import { isRecord } from '@openthrottle/nodejs-utils';
-import {
-  AGENT_CONVERSATIONS_ACTION,
-  CONVERSATION_STREAM_ACTION,
-} from '@openthrottle/react-router-chat';
+import { isChatConversationAction } from '@openthrottle/react-router-chat-state';
 
 import type {
   loadComposerData,
@@ -199,14 +196,5 @@ export function clearHomeComposerCache(): void {
 export function isComposerNeutralAction(
   formAction: string | undefined,
 ): boolean {
-  if (formAction === undefined) {
-    return false;
-  }
-
-  const pathname = formAction.split('?')[0];
-
-  return (
-    pathname === CONVERSATION_STREAM_ACTION ||
-    pathname === AGENT_CONVERSATIONS_ACTION
-  );
+  return isChatConversationAction(formAction);
 }

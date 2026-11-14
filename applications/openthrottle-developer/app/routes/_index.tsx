@@ -18,11 +18,7 @@ import {
   clearConversationIdParam,
   writeConversationIdParam,
 } from '~/routing/home/utils/conversation-url';
-import {
-  clearHomeComposerCache,
-  isComposerNeutralAction,
-  loadHomeComposer,
-} from '~/routing/home/utils/home-composer-cache';
+import { loadHomeComposer } from '~/routing/home/utils/home-composer-cache';
 import {
   loadComposerData,
   loadDefaultAgent,
@@ -76,20 +72,17 @@ export const clientLoader = (args: Route.ClientLoaderArgs) => {
   };
 };
 
-// Same-path `?…` navigations never re-probe; a non-chat submission may have
-// changed repositories or personas, so it drops the cache first.
+// Same-path `?…` navigations never re-probe. Submissions keep the default;
+// root's shouldRevalidate (matched on every route) drops the composer cache
+// first for any non-chat one, so an edit made on another route is seen too.
 export const shouldRevalidate: ShouldRevalidateFunction = ({
   currentUrl,
   defaultShouldRevalidate,
-  formAction,
   formMethod,
   nextUrl,
 }) => {
   if (formMethod === undefined && currentUrl.pathname === nextUrl.pathname) {
     return false;
-  }
-  if (formMethod !== undefined && !isComposerNeutralAction(formAction)) {
-    clearHomeComposerCache();
   }
 
   return defaultShouldRevalidate;

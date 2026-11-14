@@ -9,7 +9,7 @@ import {
   writeHomeComposerCache,
 } from '~/routing/home/utils/home-composer-cache';
 
-import { clientLoader, shouldRevalidate } from '../_index';
+import { clientLoader } from '../_index';
 
 const SAMPLE: HomeComposerData = {
   agentRuntimes: {},
@@ -109,37 +109,5 @@ describe('routes/_index clientLoader', () => {
       await expect(result.composerData).resolves.toEqual(SAMPLE);
       expect(readHomeComposerCache()).toBeNull();
     });
-  });
-});
-
-describe('routes/_index shouldRevalidate cache invalidation', () => {
-  const submit = (formAction: string): boolean => {
-    return shouldRevalidate({
-      currentParams: {},
-      currentUrl: new URL('http://localhost/'),
-      defaultShouldRevalidate: true,
-      formAction,
-      formMethod: 'POST',
-      nextParams: {},
-      nextUrl: new URL('http://localhost/'),
-    });
-  };
-
-  beforeEach(() => {
-    writeHomeComposerCache(SAMPLE);
-  });
-
-  afterEach(() => {
-    clearHomeComposerCache();
-  });
-
-  test('keeps the cache for a chat-turn submission', () => {
-    expect(submit('/resources/conversation-stream')).toBe(true);
-    expect(readHomeComposerCache()).toEqual(SAMPLE);
-  });
-
-  test('drops the cache for any other submission', () => {
-    expect(submit('/resources/repositories')).toBe(true);
-    expect(readHomeComposerCache()).toBeNull();
   });
 });
