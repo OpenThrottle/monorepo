@@ -236,6 +236,47 @@ Re-check of the 2026.11.13 side observation: in this run cursor-agent did **not*
 came back empty), so the leak is intermittent at best. The Cursor adapter's script-location check
 stays.
 
+### Which tool is running the Claude bundles
+
+Decided 2026-11-14 (OT plan `8f9ce368`): **the Claude bundles detect the tool running them** and
+act for it, rather than shipping one marketplace per tool. Per-tool marketplaces cannot fix the
+measured case: cursor-agent runs whatever the user installed through _Claude_, whatever else we
+publish; agy cannot install from our marketplace at all (`plugin@marketplace` only resolves its two
+compiled-in catalogs); and codex would still accept the Claude-format one.
+
+What each tool hands a Claude-format plugin hook. Cursor re-measured 2026-11-14 on 2026.11.13-eacade1
+(an `env` dump from a probe plugin passed with `--plugin-dir`, run from a scratch repo); codex and
+agy are the plan `6b0fb4c4` measurements in the section above:
+
+| host             | marker the bundle reads                                                                  | other facts                                                                                                                                                                  |
+| ---------------- | ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **cursor-agent** | `CURSOR_PLUGIN_ROOT` set, equal to `CLAUDE_PLUGIN_ROOT`, and the running script under it | also sets `CURSOR_PROJECT_DIR`, `CLAUDE_PROJECT_DIR` (both the session's repo), `CURSOR_VERSION`, `CURSOR_INVOKED_AS=cursor-agent`, `CURSOR_USER_EMAIL`; cwd = plugin folder |
+| **codex**        | `CLAUDE_PLUGIN_ROOT` (and `PLUGIN_ROOT`) under `$CODEX_HOME/plugins/cache/`              | cwd = the session's cwd                                                                                                                                                      |
+| **antigravity**  | the running script under `~/.gemini/config/plugins/` (agy rewrites the root to `./`)     | cwd = plugin folder; the repo comes from the payload's `cwd`                                                                                                                 |
+| **claude**       | none of the above                                                                        | Claude Code never sets `CURSOR_PLUGIN_ROOT` and never unpacks under codex's or agy's directories                                                                             |
+
+Only per-hook variables count. A hook inherits its host's whole environment, so `CLAUDECODE=1` and
+the rest of `CLAUDE_CODE_*` reach a cursor-agent hook whenever cursor-agent was itself started from
+a Claude Code session (the probe above was), and are no evidence of the host.
+
+What the bundles do once the host is known:
+
+- **Heartbeat: sent, as the host.** `source` is the host's id (`cursor`, `codex`, `antigravity`);
+  the delivery leg and the marketplace fields describe the install that delivered this copy — a
+  Claude-installed plugin under Cursor reads Claude's `installed_plugins.json`, a codex install its
+  `config.toml`, an agy copy its plugins directory.
+- **Heartbeat: stands down when the host's own registration will send one.** That is the
+  double-heartbeat guard. cursor: the repo's `.cursor/hooks.json` registers `skill-usage-heartbeat`
+  (this repo does); codex: `$CODEX_HOME/config.toml` or the repo's `.codex/config.toml` does; agy:
+  a workspace plugin under `.agents/plugins/` does (this repo's does). The Claude-host check —
+  `.claude/settings.json` — is wrong under the other hosts: cursor-agent `-p` did **not** run a
+  repo's `.claude/settings.json` `SessionStart` hook in either probe (with and without a
+  `.cursor/hooks.json`), so this repo avoided a double only because it registers both.
+- **Capture and completion: stand down.** Their parsers read Claude payloads. Under cursor and agy
+  the events they key on are dropped anyway; under codex a `Stop` would feed a codex transcript to
+  the Claude token-usage reader and stamp the `claude auth status` login on it. The host's own
+  adapter is the only correct producer, so there is nothing to attribute.
+
 ### Session kickoff guard
 
 The plan-first kickoff rule (follow-up work starts as `/ot-loop <planUuid>`; see the

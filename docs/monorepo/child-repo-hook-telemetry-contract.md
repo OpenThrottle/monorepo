@@ -308,11 +308,18 @@ delivery leg, in which repo, with what sitting in the buffer.
   installed. A disabled install reads as not installed everywhere it is recorded, because it runs
   nothing.
 
-  **Known gap:** the marketplace plugin's hooks are the Claude bundles, and cursor-agent, codex and
-  agy all run them — measured for cursor-agent, which ran the Claude-installed plugin's heartbeat in
-  a plain `cursor-agent -p`. That heartbeat reports `source: claude-code`, so a marketplace install
-  reached through another tool is counted as a Claude Code session, and the per-tool adapters above
-  run only from a repo or `--plugin-dir` registration.
+  **The Claude bundles under another tool.** The marketplace plugin's hooks are the Claude bundles,
+  and cursor-agent, codex and agy all run them (cursor-agent runs whatever the user installed
+  through Claude). Since plugin 1.3.1 (OT plan `8f9ce368`) the bundles detect the host —
+  `adapters/claude/bundle-host.ts`; markers in `agent-cli-hook-capability-matrix.md` § Which tool is
+  running the Claude bundles. The heartbeat then goes out with the host's `source`, the delivery
+  leg and marketplace fields of the install that delivered it, and stands down when the host's own
+  registration of the heartbeat runs in that session (cursor `.cursor/hooks.json`, codex
+  `config.toml`, agy `.agents/plugins/`), so a repository registering both sends one. Capture and
+  completion stand down under any other host: their parsers read Claude payloads. Verified live on
+  cursor-agent 2026.11.13: a scratch repo sent one `source: cursor`, `deliveryLeg: marketplace`
+  heartbeat, and a repo with this monorepo's `.cursor/` registration sent exactly one, the repo
+  copy's. Plugin versions up to 1.3.0 still report such sessions as `claude-code`.
 
 ### Fields — and why each one is allowed
 
