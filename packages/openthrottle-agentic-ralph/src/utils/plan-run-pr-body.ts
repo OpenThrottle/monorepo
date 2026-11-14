@@ -20,10 +20,6 @@ export const PLAN_RUN_BODY_OPEN_MARKER = '<!-- ot:plan-run-body -->';
  */
 export const PLAN_RUN_BODY_CLOSE_MARKER = '<!-- /ot:plan-run-body -->';
 
-/** Used when the repository has no `.github/pull_request_template.md`. */
-export const PR_TEMPLATE_FALLBACK = `# Summary\n\n**TODO:** Describe the changes in this PR.\n\n## Testing\n\n- [ ] Pipelines should be passing\n`;
-
-const SUMMARY_TODO = '**TODO:** Describe the changes in this PR.';
 const TODO_MARKER = '**TODO:**';
 const DESCRIPTION_EXCERPT_MAX = 600;
 const LINE_EXCERPT_MAX = 200;
@@ -336,9 +332,17 @@ export const buildPlanRunPrBody = (
   const { footerTaskIds, planId, tasks, template } = params;
   const summary = buildSummarySection(params);
 
-  const withSummary = template.includes(SUMMARY_TODO)
-    ? template.replace(SUMMARY_TODO, summary)
-    : `${template.trimEnd()}\n\n## Summary\n\n${summary}\n`;
+  // The template's first TODO line is its Summary prompt, whatever it says: the repository's own
+  // template and the github-pull-request skill's bundled one word it differently.
+  const lines = template.split('\n');
+  const summaryIndex = lines.findIndex((line) => line.includes(TODO_MARKER));
+  const filledInPlace = [
+    ...lines.slice(0, summaryIndex),
+    summary,
+    ...lines.slice(summaryIndex + 1),
+  ].join('\n');
+  const appended = `${template.trimEnd()}\n\n## Summary\n\n${summary}\n`;
+  const withSummary = summaryIndex === -1 ? appended : filledInPlace;
 
   const filled = fillTesting(withSummary, buildTestingSteps(tasks));
   const footer = buildPlanRunPrFooter({ footerTaskIds, planId });

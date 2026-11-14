@@ -5,11 +5,11 @@
 # `grep -E -i`) matching any tool/model attribution line we refuse to carry in
 # commit messages, PR titles or PR bodies.
 #
-# Keep this the single definition across every consumer so the guard a commit
-# sees is the same one CI sees:
-#   - .husky/commit-msg   (strips matching lines from the commit message)
-#   - .github/workflows/continuous-integration.yml, job "attribution-guard"
-#     (fails a PR whose title, body or commits carry one)
+# This is the single definition. It lives in the github-pull-request skill so
+# it travels with the skill into every repo, and the only thing that sources it
+# is check-attribution.sh beside it. Everything else runs that guard: the
+# github-* skills, the plan-run host, and in the OpenThrottle repo
+# .husky/commit-msg (strip), .husky/pre-push and the CI "attribution-guard" job.
 #
 # Deliberately emitter-agnostic: it is not about any one tool. Claude Code,
 # Cursor, Copilot and whatever comes next all emit some variation, and every

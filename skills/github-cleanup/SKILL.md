@@ -23,6 +23,15 @@ bash <skill-dir>/scripts/classify-branches.sh            # TSV: VERDICT BRANCH P
 bash <skill-dir>/scripts/classify-branches.sh --explain <branch>   # files that never reached the default branch
 ```
 
+The classifier finds the remote and default branch itself through the `github-pull-request`
+skill's resolver, `.agents/skills/github-pull-request/scripts/resolve-repo-context.sh` (`origin`, else the first remote; the remote's own default
+branch, whatever it is named), so it works the same in any repo. Run the resolver yourself once
+too — its `WORKTREE_REMOVE` line decides step 3.1:
+
+```bash
+bash "$(git rev-parse --show-toplevel)/.agents/skills/github-pull-request/scripts/resolve-repo-context.sh"
+```
+
 It needs `git`, `jq` and an authenticated `gh`. If `gh` is unavailable, stop and say so — PR
 state is what separates "open PR" from "merged", and guessing it is how work gets lost.
 
@@ -56,11 +65,16 @@ removal must be named in the question; a plain "yes" does not cover a `--force` 
 
 ## 3. Act
 
-1. **Worktrees first** — git refuses to delete a branch that a worktree has checked out. If the
-   repo defines a `worktree:remove` script (ot-worktree), use it so teardown hooks run:
-   `pnpm worktree:remove <worktree-dir-name>`; otherwise `git worktree remove <path>`. Add
-   `--force` only where the user approved it. If a removal is refused or blocked, skip that
+1. **Worktrees first** — git refuses to delete a branch that a worktree has checked out. Use the
+   resolver's `WORKTREE_REMOVE`:
+   - `pnpm worktree:remove` — the repo defines that script (the ot-worktree skill), so use it and
+     its teardown hooks run: `pnpm worktree:remove <worktree-dir-name>`.
+   - `git worktree remove` — the repo has no such script: `git worktree remove <path>`, then one
+     `git worktree prune` after the last removal.
+
+   Add `--force` only where the user approved it. If a removal is refused or blocked, skip that
    branch, carry on with the rest, and report it with the command for the user to run.
+
 2. **Branches** — one `git branch -D <b1> <b2> …` (`-D`, because squash-merged branches fail
    `-d`). Keep the printed `(was <sha>)` lines: they are the undo
    (`git branch <name> <sha>`) until the objects are pruned.

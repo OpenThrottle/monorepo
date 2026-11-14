@@ -4,18 +4,19 @@
 same way: two rewrite, two refuse. This page records which is which and why, so the split reads as a
 decision rather than as an inconsistency.
 
-Decided for OT plan `40838811-e230-4c3b-a36a-04029792ddd4` task `f80c530d`. The pattern set itself
-lives in exactly one file, [`.husky/utils/attribution-patterns.sh`](../../.husky/utils/attribution-patterns.sh),
-and every layer below sources it rather than restating it.
+Decided for OT plan `40838811-e230-4c3b-a36a-04029792ddd4` task `f80c530d`. Every layer runs one
+guard, [`skills/github-pull-request/scripts/check-attribution.sh`](../../skills/github-pull-request/scripts/check-attribution.sh), with the pattern set in
+`attribution-patterns.sh` beside it. Both ship with the `github-pull-request` skill, so a repo that
+has none of these layers still gets the check from the skills, and nothing below restates either.
 
 ## The layers
 
-| layer                             | when                                        | behavior                                        |
-| --------------------------------- | ------------------------------------------- | ----------------------------------------------- |
-| `.husky/commit-msg`               | as a commit message is written              | **strips**, and says so                         |
-| `.husky/pre-push`                 | before a push leaves the machine            | **fails the push**                              |
-| `scripts/check-pr-attribution.sh` | before `gh pr create`/`gh pr edit`          | **fails locally**                               |
-| `attribution-guard` (CI)          | after the PR exists, and in the merge queue | **fails the PR** / **ejects it from the queue** |
+| layer                                                         | when                                        | behavior                                        |
+| ------------------------------------------------------------- | ------------------------------------------- | ----------------------------------------------- |
+| `.husky/commit-msg`                                           | as a commit message is written              | **strips**, and says so                         |
+| `.husky/pre-push`                                             | before a push leaves the machine            | **fails the push**                              |
+| the guard, run by the `github-*` skills and the plan-run host | before a commit, push or `gh pr create`     | **fails locally**                               |
+| `attribution-guard` (CI)                                      | after the PR exists, and in the merge queue | **fails the PR** / **ejects it from the queue** |
 
 The dividing line is **publication**. Text that is still local and still rewritable gets rewritten.
 Text that is about to become someone else's — or already has — gets refused.
@@ -58,17 +59,17 @@ against a PR that already existed.
 if any carries an attribution line, pointing at `git rebase -i` as the fix. A push is the last moment
 the history is still private and still cheap to rewrite, which is exactly where a refusal belongs.
 
-The gate lives in [`.husky/utils/attribution-push-gate.sh`](../../.husky/utils/attribution-push-gate.sh)
-and is _sourced_ by the hook so its `exit 1` aborts the push — the same arrangement
-`component-shape-gate.sh` already uses for the primitive-shape audit.
+The hook pipes its push refs to the guard's `--push-refs -` mode and stops the push on a non-zero
+exit. `.husky/commit-msg` calls the same guard's `--strip` mode, so the rewrite and the refusal read
+one pattern set through one script.
 
 Two implementation notes that are easy to get wrong:
 
 - **The push refs are read once, at the top of the hook.** Git hands them to `pre-push` on stdin, and
-  stdin can only be consumed once. The hook reads them into `OT_PUSH_REFS` before sourcing any gate,
+  stdin can only be consumed once. The hook reads them into `OT_PUSH_REFS` before running any gate,
   so a gate that needs them does not starve the next one.
 - **A new branch has no range to diff.** Git reports the all-zero remote sha for a branch the remote
-  has never seen, so the gate falls back to `git rev-list <head> --not --remotes` rather than
+  has never seen, so the guard falls back to `git rev-list <head> --not --remotes` rather than
   assuming a base branch it may not have forked from.
 
 `--no-verify` on the push itself still bypasses this, as it bypasses every hook. That is what the
@@ -80,7 +81,7 @@ A PR body is the first artifact in this chain that cannot be quietly fixed. `gh 
 publishes whatever it is handed, and once published the text is visible to anyone watching the repo —
 there is no equivalent of rewriting a commit message before anyone sees it.
 
-So [`scripts/check-pr-attribution.sh`](../../scripts/check-pr-attribution.sh) refuses, naming the rule
+So the guard refuses, naming the rule
 and the offending line, and the author edits the draft. It checks the title with the unanchored
 pattern and the body with the anchored one, matching the CI job's own split, so a local pass and a CI
 pass mean the same thing.

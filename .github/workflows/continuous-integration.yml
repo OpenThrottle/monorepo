@@ -310,12 +310,12 @@ jobs:
   # the queue fast-forwards `main` to head_sha, so those exact messages are what
   # land. Failing here ejects the PR before the commit becomes immutable history.
   #
-  # The pattern set is NOT restated here — it is sourced from
-  # .husky/utils/attribution-patterns.sh, the same file the hook sources, so the
-  # two cannot drift. Same arrangement as .husky/utils/component-shape-gate.sh.
+  # The check itself is NOT restated here — it is the github-pull-request skill's
+  # guard, skills/github-pull-request/scripts/check-attribution.sh, the same one
+  # the commit-msg and pre-push hooks run, so none of them can drift.
   #
   # 💰 No Nx, no install, no cache, no full clone: a sparse depth-1 checkout of
-  # one shell file plus one paginated API call. Runs on draft PRs too, unlike
+  # the guard's two shell files plus one paginated API call. Runs on draft PRs too, unlike
   # `build` — catching this before review costs nothing and catching it after
   # the squash costs an immutable commit on main.
   attribution-guard:
@@ -328,11 +328,13 @@ jobs:
       contents: read
       pull-requests: read
     steps:
-      - name: '📦 Checkout the shared pattern set'
+      - name: '📦 Checkout the attribution guard'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 1
-          sparse-checkout: .husky/utils/attribution-patterns.sh
+          sparse-checkout: |
+            skills/github-pull-request/scripts/attribution-patterns.sh
+            skills/github-pull-request/scripts/check-attribution.sh
           sparse-checkout-cone-mode: false
 
       - name: '🚫 No tool or model attribution'
@@ -349,29 +351,12 @@ jobs:
         run: |
           set -euo pipefail
 
-          . .husky/utils/attribution-patterns.sh
-
           work="$(mktemp -d)"
-          failed=0
+          args=""
 
-          # Report every offending line with its source and line number, so the
-          # author sees what to delete rather than just a red X.
-          check () {
-            label="$1"
-            file="$2"
-            pattern="${3:-$OT_ATTRIBUTION_PATTERN}"
-
-            if hits="$(grep -inE "$pattern" "$file")"; then
-              failed=1
-              echo "❌ $label"
-              echo "$hits" | sed 's/^/     line /'
-            fi
-          }
-
-          # A PR title is one line, so attribution lands at its end rather than on
-          # a line of its own — it needs the unanchored pattern. Bodies and commit
-          # messages are prose and keep the anchored one (a squash subject is the
-          # PR title, which the PR run already checked unanchored).
+          # The guard picks the pattern per input: unanchored for the one-line PR
+          # title, line-anchored for the body and commit messages (a squash subject
+          # is the PR title, which the PR run already checked unanchored).
           if [ "$EVENT_NAME" = "merge_group" ]; then
             # The squash commits the queue built, i.e. exactly what will land.
             # The compare API needs no clone; --paginate covers a deep group.
@@ -380,8 +365,7 @@ jobs:
           else
             printf '%s' "$PR_TITLE" > "$work/title"
             printf '%s' "$PR_BODY" > "$work/body"
-            check "PR title" "$work/title" "$OT_ATTRIBUTION_PATTERN_INLINE"
-            check "PR body" "$work/body"
+            args="--title-file $work/title --body-file $work/body"
 
             # One paginated call; the message is base64'd so multi-line bodies
             # survive being paired with their SHA on a single line.
@@ -396,24 +380,15 @@ jobs:
             exit 1
           fi
 
+          # One file per commit, named for its sha so the guard's report names it.
           while read -r sha encoded; do
-            printf '%s' "$encoded" | base64 -d > "$work/message"
-            check "commit $sha" "$work/message"
+            printf '%s' "$encoded" | base64 -d > "$work/$sha"
+            args="$args --message-file $work/$sha"
           done < "$work/commits"
 
-          if [ "$failed" -ne 0 ]; then
-            echo ""
-            echo "🚫 Attribution to a tool, model or assistant is not allowed in a PR"
-            echo "   title, a PR body, or any commit in the range — including the"
-            echo "   squash commit the merge queue composes. Remove the lines above"
-            echo "   and push again (a queued PR has been ejected; re-enqueue it)."
-            echo ""
-            echo "   Rule:  AGENTS.md § No agent attribution"
-            echo "   Guard: .husky/utils/attribution-patterns.sh (shared with the commit-msg hook)"
-            exit 1
-          fi
-
-          echo "✅ No attribution found in the PR title, body, or commits"
+          # $args holds only mktemp paths and flags, never PR text, so splitting it is safe.
+          # shellcheck disable=SC2086
+          sh skills/github-pull-request/scripts/check-attribution.sh $args
 
   build:
     needs: changes

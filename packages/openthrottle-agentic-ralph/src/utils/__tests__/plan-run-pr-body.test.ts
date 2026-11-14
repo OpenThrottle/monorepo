@@ -9,7 +9,6 @@ import {
   parseTaskIdTrailers,
   PLAN_RUN_BODY_CLOSE_MARKER,
   PLAN_RUN_BODY_OPEN_MARKER,
-  PR_TEMPLATE_FALLBACK,
   replacePlanRunPrBodyRegion,
   resolvePlanRunPrTitle,
   selectFooterTaskIds,
@@ -137,7 +136,21 @@ describe('resolvePlanRunPrTitle', () => {
 });
 
 describe('buildPlanRunPrBody', () => {
-  const template = `${PR_TEMPLATE_FALLBACK}- [ ] **TODO:** Provide steps to test the changes fully\n`;
+  const template = `# Summary\n\n**TODO:** Describe the changes in this PR.\n\n## Testing\n\n- [ ] Pipelines should be passing\n- [ ] **TODO:** Provide steps to test the changes fully\n`;
+
+  it('fills the first TODO line as the summary, whatever it says', () => {
+    const body = buildPlanRunPrBody({
+      commits: [],
+      footerTaskIds: [],
+      plan: PLAN,
+      planId: PLAN_ID,
+      tasks: [],
+      template: `# Summary\n\n**TODO:** What changed and why.\n\n## Testing\n\n- [ ] Pipelines should be passing\n`,
+    });
+
+    expect(body).not.toContain('TODO');
+    expect(body.match(/^#+ Summary$/gm)).toHaveLength(1);
+  });
 
   it('drops the testing TODO and keeps the pipelines line when no task has a summary', () => {
     const body = buildPlanRunPrBody({

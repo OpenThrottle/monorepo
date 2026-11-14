@@ -21,7 +21,6 @@ import {
   locatePlanRunPrBody,
   parseOnelineLog,
   parseTaskIdTrailers,
-  PR_TEMPLATE_FALLBACK,
   replacePlanRunPrBodyRegion,
   resolvePlanRunPrTitle,
   selectFooterTaskIds,
@@ -331,15 +330,36 @@ const loadPlanAndTasks = async (params: {
   return { plan, tasks };
 };
 
-const readPrTemplate = async (cwd: string): Promise<string> => {
+const readOptionalFile = async (path: string): Promise<string | undefined> => {
   try {
-    return await readFile(
-      join(cwd, '.github', 'pull_request_template.md'),
-      'utf8',
-    );
+    return await readFile(path, 'utf8');
   } catch {
-    return PR_TEMPLATE_FALLBACK;
+    return undefined;
   }
+};
+
+/**
+ * @description The repository's own `.github/pull_request_template.md`, else the
+ * github-pull-request skill's bundled template from `.agents/skills/` (the skill fan-out here,
+ * injection elsewhere), else an empty template — {@link buildPlanRunPrBody} adds the Summary and
+ * Testing sections itself when a template has none.
+ */
+const readPrTemplate = async (cwd: string): Promise<string> => {
+  const [repoTemplate, bundledTemplate] = await Promise.all([
+    readOptionalFile(join(cwd, '.github', 'pull_request_template.md')),
+    readOptionalFile(
+      join(
+        cwd,
+        '.agents',
+        'skills',
+        'github-pull-request',
+        'templates',
+        'pull_request_template.md',
+      ),
+    ),
+  ]);
+
+  return repoTemplate ?? bundledTemplate ?? '';
 };
 
 /**
@@ -498,14 +518,6 @@ export const preparePlanRunPrDraftDir = async (params: {
   return draftDir;
 };
 
-const readOptionalFile = async (path: string): Promise<string | undefined> => {
-  try {
-    return await readFile(path, 'utf8');
-  } catch {
-    return undefined;
-  }
-};
-
 /**
  * @description The title and body to publish: the agent's draft when it exists and validates
  * (with the host footer and markers applied), otherwise the deterministic fallback. Logs which
@@ -581,7 +593,23 @@ const commandDetail = (
 };
 
 /**
- * @description Writes the title and body to a temp dir and runs `check-pr-attribution.sh` on them.
+ * @description The github-pull-request skill's attribution guard, from `.agents/skills/` — the
+ * fan-out `sync.sh` builds in the OpenThrottle repo and foreign-skill injection builds in every
+ * other repo, so the path is the same in both.
+ */
+const attributionGuardPath = (cwd: string): string => {
+  return join(
+    cwd,
+    '.agents',
+    'skills',
+    'github-pull-request',
+    'scripts',
+    'check-attribution.sh',
+  );
+};
+
+/**
+ * @description Writes the title and body to a temp dir and runs the attribution guard on them.
  */
 const writeAndGuardPrFiles = async (params: {
   readonly body: string;
@@ -621,7 +649,7 @@ const writeAndGuardPrFiles = async (params: {
 
   const attribution = await runCommand({
     args: [
-      join(cwd, 'scripts', 'check-pr-attribution.sh'),
+      attributionGuardPath(cwd),
       '--title-file',
       titlePath,
       '--body-file',
@@ -943,6 +971,28 @@ export const finalizePlanRun = async (
       headSha: undefined,
       prNumber: undefined,
       reason: priorReason,
+    });
+  }
+
+  // A repo with no pre-push hook has nothing else between an attribution line in a commit and
+  // the remote, so check every commit the push would add before pushing it.
+  const commitAttribution = await runCommand({
+    args: [attributionGuardPath(cwd), '--commits', 'HEAD'],
+    command: 'bash',
+    cwd,
+  });
+
+  if (commitAttribution.exitCode !== 0) {
+    return finalizeHandoffOwed({
+      cwd,
+      detail: commandDetail(
+        commitAttribution,
+        'commit attribution check failed',
+      ),
+      executeGraphqlV2,
+      onChunk,
+      owedStep: 'commit-attribution',
+      planId,
     });
   }
 

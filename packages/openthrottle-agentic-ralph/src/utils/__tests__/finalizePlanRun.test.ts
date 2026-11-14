@@ -61,17 +61,48 @@ const ok = (stdout = ''): WorkflowRalphCommandResult => {
   };
 };
 
-const createCwdWithTemplate = async (): Promise<string> => {
+const BUNDLED_TEMPLATE = `# Summary\n\n**TODO:** What changed and why.\n\n## Testing\n\n- [ ] **TODO:** Steps to verify\n\n## Bundled follow-ups\n\n- [ ] Learnings fed back\n`;
+
+/** Where the fixture repo keeps its PR template: its own, only the skill's bundled one, or none. */
+type TemplateLocation = 'bundled' | 'none' | 'repo';
+
+const createCwdWithTemplate = async (
+  templateAt: TemplateLocation = 'repo',
+): Promise<string> => {
   const cwd = await mkdtemp(join(tmpdir(), 'ralph-finalize-'));
-  await mkdir(join(cwd, '.github'), { recursive: true });
-  await mkdir(join(cwd, 'scripts'), { recursive: true });
-  await writeFile(
-    join(cwd, '.github', 'pull_request_template.md'),
-    TEMPLATE,
-    'utf8',
+  const guardDir = join(
+    cwd,
+    '.agents',
+    'skills',
+    'github-pull-request',
+    'scripts',
   );
+  await mkdir(guardDir, { recursive: true });
+  if (templateAt === 'repo') {
+    await mkdir(join(cwd, '.github'), { recursive: true });
+    await writeFile(
+      join(cwd, '.github', 'pull_request_template.md'),
+      TEMPLATE,
+      'utf8',
+    );
+  }
+  if (templateAt === 'bundled') {
+    const templatesDir = join(
+      cwd,
+      '.agents',
+      'skills',
+      'github-pull-request',
+      'templates',
+    );
+    await mkdir(templatesDir, { recursive: true });
+    await writeFile(
+      join(templatesDir, 'pull_request_template.md'),
+      BUNDLED_TEMPLATE,
+      'utf8',
+    );
+  }
   await writeFile(
-    join(cwd, 'scripts', 'check-pr-attribution.sh'),
+    join(guardDir, 'check-attribution.sh'),
     '#!/bin/sh\nexit 0\n',
     'utf8',
   );
@@ -142,6 +173,8 @@ interface StubOptions {
   readonly attribution?: WorkflowRalphCommandResult;
   /** @description Collects each body the attribution guard is shown. */
   readonly attributionBodies?: string[];
+  /** @description What the guard's `--commits HEAD` check returns before the push. */
+  readonly commitAttribution?: WorkflowRalphCommandResult;
   readonly existingPrs?: string;
   readonly push?: WorkflowRalphCommandResult;
   readonly remoteBase?: boolean;
@@ -196,7 +229,10 @@ const createRunCommand = (
           : ok(`${[BRANCH_COMMIT, ...BASE_COMMITS].join('\n')}\n`);
       }
     }
-    if (command === 'bash' && args[0]?.endsWith('check-pr-attribution.sh')) {
+    if (command === 'bash' && args[0]?.endsWith('check-attribution.sh')) {
+      if (args.includes('--commits')) {
+        return options.commitAttribution ?? ok();
+      }
       const bodyFile = args[args.indexOf('--body-file') + 1];
       if (options.attributionBodies !== undefined && bodyFile !== undefined) {
         options.attributionBodies.push(await readFile(bodyFile, 'utf8'));
@@ -460,8 +496,8 @@ describe('finalizePlanRun', () => {
   });
 
   describe('when no PR exists', () => {
-    const run = async () => {
-      const cwd = await createCwdWithTemplate();
+    const run = async (templateAt: TemplateLocation = 'repo') => {
+      const cwd = await createCwdWithTemplate(templateAt);
       const created: { body: string; title: string } = { body: '', title: '' };
       const runCommand = createRunCommand({ aheadCount: '1' }, (args) => {
         if (args[1] === 'create') {
@@ -645,6 +681,25 @@ describe('finalizePlanRun', () => {
       expect(created.body).toContain('### Not delivered');
       expect(created.body).toContain('- Rotate the token (BLOCKED)');
       expect(created.body).toContain('- [ ] Check Settle the repo:');
+      expect(created.body).toContain('- [ ] Pipelines should be passing');
+      expect(created.body).not.toContain('TODO');
+    });
+
+    it("falls back to the github-pull-request skill's bundled template", async () => {
+      const { created } = await run('bundled');
+
+      expect(created.body).toContain('**Settle the repo after a plan run**');
+      expect(created.body).toContain('## Bundled follow-ups');
+      expect(created.body).toContain('- [ ] Check Settle the repo:');
+      expect(created.body).not.toContain('TODO');
+    });
+
+    it('builds Summary and Testing itself when there is no template at all', async () => {
+      const { created } = await run('none');
+
+      expect(created.body).toContain('## Summary');
+      expect(created.body).toContain('**Settle the repo after a plan run**');
+      expect(created.body).toContain('## Testing');
       expect(created.body).toContain('- [ ] Pipelines should be passing');
       expect(created.body).not.toContain('TODO');
     });
@@ -952,6 +1007,41 @@ describe('finalizePlanRun', () => {
       status: 'finished',
     });
     expect(JSON.stringify(appendCalls)).toContain('git-push');
+  });
+
+  it('never pushes when a commit carries attribution, and records the owed step', async () => {
+    const cwd = await createCwdWithTemplate();
+    const appendCalls: unknown[] = [];
+    const runCommand = createRunCommand({
+      aheadCount: '1',
+      commitAttribution: {
+        exitCode: 1,
+        stderr: '',
+        stdout: '❌ commit abc1234  feat: x\n',
+      },
+    });
+
+    const result = await finalizePlanRun({
+      baseBranch: 'main',
+      cwd,
+      draftDir: undefined,
+      executeGraphqlV2: createExecuteGraphqlV2(appendCalls),
+      markReady: shouldMarkPlanRunReady('workflow_complete'),
+      onChunk: undefined,
+      planId: PLAN_ID,
+      priorReason: 'workflow_complete',
+      runCommand,
+    });
+
+    expect(result).toEqual({
+      exitCode: 0,
+      reason: 'workflow_complete_handoff_owed',
+      status: 'finished',
+    });
+    expect(JSON.stringify(appendCalls)).toContain('commit-attribution');
+    expect(runCommand).not.toHaveBeenCalledWith(
+      expect.objectContaining({ args: expect.arrayContaining(['push']) }),
+    );
   });
 
   it('returns workflow_complete_handoff_owed when attribution check fails', async () => {
