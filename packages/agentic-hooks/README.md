@@ -92,7 +92,10 @@ file from the drift gate — the bundle exists, and nothing ever notices when it
    [scripts/bundle-hooks.ts](scripts/bundle-hooks.ts).
 3. **Register the outputs in `package.json` — BOTH targets.** The new `.cjs` path must appear in the
    `outputs` array of `bundle-hooks` _and_ in the `inputs` array of `bundle-hooks-check`. The first
-   makes Nx cache it; the second makes CI fail when it drifts.
+   makes Nx cache it; the second makes CI fail when it drifts. Add the entrypoint's `src/` path to
+   `sideEffects` too — it runs `main()` on import, and `check-side-effects` fails without it.
+   A bundle in a **new folder** also needs that folder's glob in `.gitattributes` and
+   `.prettierignore`, or `check:local` fails on the generated file.
 4. **Wire the tool's own hook config** to the generated `.cjs`, using the tool's real event names.
 5. **Regenerate:** `pnpm nx run @openthrottle/agentic-hooks:bundle-hooks`, and commit the output.
 
