@@ -90,6 +90,7 @@ worktree. The machinery behind that script is [`ot-worktree/`](./ot-worktree/) b
 
 **Infrastructure:**
 
+- [`ot-skill-guide/`](./ot-skill-guide/) — author and review skills against the [Agent Skills specification](https://agentskills.io/specification): author and review modes, a severity-graded checklist, and `scripts/check.sh`. The rolling review runs as `Job_SkillReview`.
 - [`ot-skill-sync/`](./ot-skill-sync/) — manages this whole architecture in any repo: consistent installs, deterministic fan-out, and the CI drift check.
 
 **Repo-specific skills:**

@@ -73,7 +73,7 @@ Ours to author and edit; fanned out by ot-skill-sync:
   resolves the host repo first and falls back to defaults it ships with (a PR template, an
   attribution guard, plain Conventional Commits) where this repo's files are missing.
 - **OpenThrottle:** ot-folders, ot-generators, ot-onboarding, ot-plans, ot-postgres, ot-stack, ot-worktree
-- **Infra:** ot-skill-sync
+- **Infra:** ot-skill-guide, ot-skill-sync
 
 ## Personal skills (`~/.openthrottle/skills`)
 
