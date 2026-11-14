@@ -2798,47 +2798,186 @@ function mapClaudeEvent(event) {
   }
 }
 
-// packages/openthrottle-agentic-utils/src/utils/conversation-backend/codex/events.ts
+// packages/openthrottle-agentic-utils/src/utils/conversation-backend/codex/tool-items.ts
 var asString4 = (value) => {
   const isString = typeof value === "string";
   return isString ? value : void 0;
 };
-var itemType = (item) => {
-  return asString4(item.item_type) ?? asString4(item.type);
+var SHELL_WRAPPER = /^\S*\b(?:ba|z)?sh\s+-l?c\s+(?:'([\s\S]*)'|"((?:[^"\\]|\\[\s\S])*)"|(\S+))$/;
+var unwrapShellCommand = (command) => {
+  const match = SHELL_WRAPPER.exec(command.trim());
+  const singleQuoted = match?.[1]?.replace(/'\\''/g, `'`);
+  const doubleQuoted = match?.[2]?.replace(/\\(["\\$`])/g, "$1");
+  return singleQuoted ?? doubleQuoted ?? match?.[3] ?? command;
 };
-function mapItemCompleted(event) {
-  const item = event.item;
-  if (!isRecord(item)) {
-    return null;
+var commandOf = (item) => {
+  const command = item.command;
+  if (Array.isArray(command)) {
+    return command.filter((part) => typeof part === "string").join(" ");
   }
-  const kind = itemType(item);
-  if (kind === "agent_message") {
-    return {
-      delta: asString4(item.text) ?? "",
-      done: false,
-      kind: CONVERSATION_STREAM_CHUNK_KINDS.text
-    };
+  return asString4(command);
+};
+var commandExecution = (item) => {
+  const command = commandOf(item);
+  const exitCode = typeof item.exit_code === "number" ? item.exit_code : null;
+  const isNonZeroExit = exitCode !== null && exitCode !== 0;
+  const isError = item.status === "failed" || isNonZeroExit;
+  const output = asString4(item.aggregated_output) ?? "";
+  const exitText = exitCode === null ? "" : `Exited with code ${exitCode}.`;
+  return {
+    args: command === void 0 ? null : { command: unwrapShellCommand(command) },
+    isError,
+    result: output === "" && isError ? exitText : output
+  };
+};
+var mcpToolCall = (item) => {
+  const error = isRecord(item.error) ? asString4(item.error.message) : void 0;
+  const isError = item.status === "failed" || error !== void 0;
+  return {
+    args: {
+      arguments: item.arguments ?? null,
+      server: item.server ?? null,
+      tool: item.tool ?? null
+    },
+    isError,
+    result: isError ? error ?? "MCP tool call failed." : item.result ?? null
+  };
+};
+var fileChange = (item) => {
+  const changes = Array.isArray(item.changes) ? item.changes : [];
+  return {
+    args: { changes },
+    isError: item.status === "failed",
+    result: item.status ?? null
+  };
+};
+var webSearch = (item) => {
+  return {
+    args: { query: item.query ?? null },
+    isError: false,
+    result: item.action ?? item.query ?? null
+  };
+};
+var todoList = (item) => {
+  return {
+    args: null,
+    isError: false,
+    result: item.items ?? null
+  };
+};
+var errorItem = (item) => {
+  return {
+    args: null,
+    isError: true,
+    result: asString4(item.message) ?? "codex reported an error."
+  };
+};
+var unknownItem = (item) => {
+  return { args: null, isError: item.status === "failed", result: item };
+};
+var readCodexToolItem = (kind, item) => {
+  switch (kind) {
+    case "command_execution":
+      return commandExecution(item);
+    case "error":
+      return errorItem(item);
+    case "file_change":
+      return fileChange(item);
+    case "mcp_tool_call":
+      return mcpToolCall(item);
+    case "todo_list":
+      return todoList(item);
+    case "web_search":
+      return webSearch(item);
+    default:
+      return unknownItem(item);
   }
-  if (kind === "reasoning") {
-    return {
-      delta: asString4(item.text) ?? "",
-      done: false,
-      kind: CONVERSATION_STREAM_CHUNK_KINDS.thinking
-    };
-  }
-  if (kind === void 0) {
-    return null;
-  }
+};
+
+// packages/openthrottle-agentic-utils/src/utils/conversation-backend/codex/events.ts
+var asString5 = (value) => {
+  const isString = typeof value === "string";
+  return isString ? value : void 0;
+};
+var itemType = (item) => {
+  return asString5(item.item_type) ?? asString5(item.type);
+};
+var TEXT_ITEM_KINDS = /* @__PURE__ */ new Set(["agent_message", "reasoning"]);
+function toolCallChunk(callId, kind, args) {
   return {
     delta: "",
     done: false,
-    kind: CONVERSATION_STREAM_CHUNK_KINDS.toolResult,
-    // codex has no tool name of its own — the item kind (`command_execution`,
-    // `file_change`, …) IS what the activity was, so it doubles as the name.
-    metadata: { item, itemType: kind, toolName: kind }
+    kind: CONVERSATION_STREAM_CHUNK_KINDS.toolCall,
+    metadata: { callId, itemType: kind, toolCall: args, toolName: kind }
   };
 }
-function mapCodexEvent(event) {
+function mapTextItem(kind, item) {
+  const isReasoning = kind === "reasoning";
+  return {
+    delta: asString5(item.text) ?? "",
+    done: false,
+    kind: isReasoning ? CONVERSATION_STREAM_CHUNK_KINDS.thinking : CONVERSATION_STREAM_CHUNK_KINDS.text
+  };
+}
+function createCodexEventMapper() {
+  const startedCallIds = /* @__PURE__ */ new Set();
+  const mapToolItem = (eventType, kind, item) => {
+    const callId = asString5(item.id) ?? null;
+    const read = readCodexToolItem(kind, item);
+    const isStarted = callId !== null && startedCallIds.has(callId);
+    if (eventType === "item.started") {
+      if (isStarted) {
+        return [];
+      }
+      if (callId !== null) {
+        startedCallIds.add(callId);
+      }
+      return [toolCallChunk(callId, kind, read.args)];
+    }
+    const needsOpening = !isStarted && callId !== null;
+    const opening = needsOpening ? [toolCallChunk(callId, kind, read.args)] : [];
+    return [
+      ...opening,
+      {
+        delta: "",
+        done: false,
+        kind: CONVERSATION_STREAM_CHUNK_KINDS.toolResult,
+        metadata: {
+          callId,
+          isError: read.isError,
+          itemType: kind,
+          toolCall: read.result,
+          toolName: kind
+        }
+      }
+    ];
+  };
+  const mapItem = (event) => {
+    const item = event.item;
+    const eventType = asString5(event.type) ?? "";
+    const kind = isRecord(item) ? itemType(item) : void 0;
+    if (!isRecord(item) || kind === void 0) {
+      return [];
+    }
+    if (TEXT_ITEM_KINDS.has(kind)) {
+      return eventType === "item.completed" ? [mapTextItem(kind, item)] : [];
+    }
+    return mapToolItem(eventType, kind, item);
+  };
+  return {
+    map(event) {
+      if (!isRecord(event)) {
+        return [];
+      }
+      if (event.type === "item.started" || event.type === "item.completed") {
+        return mapItem(event);
+      }
+      const chunk = mapTurnEvent(event);
+      return chunk === null ? [] : [chunk];
+    }
+  };
+}
+function mapTurnEvent(event) {
   if (!isRecord(event)) {
     return null;
   }
@@ -2848,10 +2987,8 @@ function mapCodexEvent(event) {
         delta: "",
         done: false,
         kind: CONVERSATION_STREAM_CHUNK_KINDS.session,
-        metadata: { sessionId: asString4(event.thread_id) ?? null }
+        metadata: { sessionId: asString5(event.thread_id) ?? null }
       };
-    case "item.completed":
-      return mapItemCompleted(event);
     case "turn.completed":
       return {
         delta: "",
@@ -2865,7 +3002,7 @@ function mapCodexEvent(event) {
       return {
         delta: "",
         done: true,
-        error: asString4(error?.message) ?? "codex reported a failed turn",
+        error: asString5(error?.message) ?? "codex reported a failed turn",
         kind: CONVERSATION_STREAM_CHUNK_KINDS.text
       };
     }
@@ -2873,7 +3010,7 @@ function mapCodexEvent(event) {
       return {
         delta: "",
         done: true,
-        error: asString4(event.message) ?? "codex reported an error",
+        error: asString5(event.message) ?? "codex reported an error",
         kind: CONVERSATION_STREAM_CHUNK_KINDS.text
       };
     default:
@@ -2882,7 +3019,7 @@ function mapCodexEvent(event) {
 }
 
 // packages/openthrottle-agentic-utils/src/utils/conversation-backend/grok/events.ts
-var asString5 = (value) => {
+var asString6 = (value) => {
   const isString = typeof value === "string";
   return isString ? value : void 0;
 };
@@ -2894,7 +3031,7 @@ function mapGrokEvent(event) {
     case "thought":
       return [
         {
-          delta: asString5(event.data) ?? "",
+          delta: asString6(event.data) ?? "",
           done: false,
           kind: CONVERSATION_STREAM_CHUNK_KINDS.thinking
         }
@@ -2902,14 +3039,14 @@ function mapGrokEvent(event) {
     case "text":
       return [
         {
-          delta: asString5(event.data) ?? "",
+          delta: asString6(event.data) ?? "",
           done: false,
           kind: CONVERSATION_STREAM_CHUNK_KINDS.text
         }
       ];
     case "end": {
       const chunks = [];
-      const sessionId = asString5(event.sessionId);
+      const sessionId = asString6(event.sessionId);
       if (sessionId !== void 0 && sessionId !== "") {
         chunks.push({
           delta: "",
@@ -2926,7 +3063,7 @@ function mapGrokEvent(event) {
         metadata: {
           modelUsage: event.modelUsage ?? null,
           numTurns: event.num_turns ?? null,
-          stopReason: asString5(event.stopReason) ?? null,
+          stopReason: asString6(event.stopReason) ?? null,
           usage: event.usage ?? null
         }
       });
@@ -2937,7 +3074,7 @@ function mapGrokEvent(event) {
         {
           delta: "",
           done: true,
-          error: asString5(event.message) ?? "grok reported an error",
+          error: asString6(event.message) ?? "grok reported an error",
           kind: CONVERSATION_STREAM_CHUNK_KINDS.text
         }
       ];
@@ -2947,13 +3084,13 @@ function mapGrokEvent(event) {
 }
 
 // packages/openthrottle-agentic-utils/src/utils/conversation-backend/opencode/events.ts
-var asString6 = (value) => {
+var asString7 = (value) => {
   const isString = typeof value === "string";
   return isString ? value : void 0;
 };
 function mapText(part, emittedLen) {
-  const id = asString6(part.id);
-  const full = asString6(part.text);
+  const id = asString7(part.id);
+  const full = asString7(part.text);
   if (id === void 0 || full === void 0) {
     return null;
   }
@@ -2971,9 +3108,9 @@ function mapText(part, emittedLen) {
 var TOOL_EVENT_TYPES = /* @__PURE__ */ new Set(["tool", "tool_use"]);
 function mapTool(part, startedCallIds) {
   const state = isRecord(part.state) ? part.state : void 0;
-  const status = asString6(state?.status);
-  const callId = asString6(part.callID) ?? null;
-  const toolName = asString6(part.tool) ?? null;
+  const status = asString7(state?.status);
+  const callId = asString7(part.callID) ?? null;
+  const toolName = asString7(part.tool) ?? null;
   const metadata = {
     callId,
     tool: toolName,
@@ -2995,7 +3132,7 @@ function mapTool(part, startedCallIds) {
   }
   if (isTerminal) {
     const isError = status === "error";
-    const errorText = isError ? asString6(state?.error) ?? "tool error" : null;
+    const errorText = isError ? asString7(state?.error) ?? "tool error" : null;
     chunks.push({
       delta: "",
       done: false,
@@ -3028,7 +3165,7 @@ function createOpencodeEventMapper() {
         return [];
       }
       const chunks = [];
-      const sessionId = asString6(event.sessionID);
+      const sessionId = asString7(event.sessionID);
       if (!sessionEmitted && sessionId !== void 0 && sessionId !== "") {
         sessionEmitted = true;
         chunks.push({
@@ -3095,10 +3232,12 @@ var createStructuredChunkReader = (driverId) => {
       return createAntigravityEventMapper();
     case DRIVERS.claude:
       return withConsolidatedText(mapClaudeEvent);
-    case DRIVERS.codex:
+    case DRIVERS.codex: {
+      const mapper = createCodexEventMapper();
       return (event) => {
-        return listOf2(mapCodexEvent(event));
+        return mapper.map(event);
       };
+    }
     case DRIVERS.cursor:
       return withConsolidatedText((event) => {
         return listOf2(mapCursorEvent(event));

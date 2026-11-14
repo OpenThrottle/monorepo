@@ -54,7 +54,7 @@ const SUCCESSFUL_RUNS = [
   { driverId: 'claude', line: '→ Write fixture/hello.txt', name: 'claude' },
   {
     driverId: 'codex',
-    line: "→ command_execution bash -lc 'echo hi > hello.txt'",
+    line: '→ command_execution echo hi > hello.txt',
     name: 'codex.synthetic',
   },
   { driverId: 'cursor', line: '→ edit fixture/hello.txt', name: 'cursor' },
@@ -184,10 +184,10 @@ describe('createStructuredLineRenderer', () => {
     });
   });
 
-  describe('codex, which reports a tool only once it finishes', () => {
-    it('renders the result as the tool line', () => {
+  describe('codex, whose finished item opens and resolves its card at once', () => {
+    it('renders one tool line with the unwrapped command', () => {
       expect(render('codex', 'codex.synthetic')[0]).toBe(
-        `→ command_execution bash -lc 'echo hi > hello.txt'`,
+        `→ command_execution echo hi > hello.txt`,
       );
     });
   });

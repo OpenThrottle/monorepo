@@ -34,7 +34,8 @@ import {
   type ConversationStreamChunk,
 } from '../types.ts';
 import { buildCodexArgv, CODEX_BIN_ENV, CODEX_DEFAULT_BIN } from './argv.ts';
-import { mapCodexEvent } from './events.ts';
+import type { CodexEventMapper } from './events.ts';
+import { createCodexEventMapper } from './events.ts';
 
 /** Env vars the child is allowed to inherit (host login + locale), nothing else. */
 const ALLOWED_ENV_KEYS = [
@@ -101,13 +102,16 @@ function composePrompt(run: ConversationBackendRun): string {
 }
 
 /**
- * Parse one JSONL line into a chunk, tolerating non-JSON lines (skipped).
+ * Parse one JSONL line into chunks, tolerating non-JSON lines (skipped).
  */
-function lineToChunk(line: string): ConversationStreamChunk | null {
+function lineToChunks(
+  mapper: CodexEventMapper,
+  line: string,
+): ConversationStreamChunk[] {
   try {
-    return mapCodexEvent(JSON.parse(line));
+    return mapper.map(JSON.parse(line));
   } catch {
-    return null;
+    return [];
   }
 }
 
@@ -184,13 +188,13 @@ async function* streamCodex(
   );
 
   const buffer = new NdjsonBuffer();
+  const mapper = createCodexEventMapper();
   let sawTerminal = false;
   const emit = function* (
     lines: readonly string[],
   ): Generator<ConversationStreamChunk> {
     for (const line of lines) {
-      const chunk = lineToChunk(line);
-      if (chunk !== null) {
+      for (const chunk of lineToChunks(mapper, line)) {
         if (chunk.done) {
           sawTerminal = true;
         }

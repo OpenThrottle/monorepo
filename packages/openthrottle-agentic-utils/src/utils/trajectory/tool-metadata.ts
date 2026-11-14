@@ -10,7 +10,8 @@
  * | cursor      | `toolCall` (args, on the call)     | `toolCall` (outcome, on the result) |
  * | cursor, old | `toolCall.<name>ToolCall.args`     | `toolCall.<name>ToolCall.result`   |
  * | opencode    | `toolCall` (on the call)           | `toolCall` (on the result)         |
- * | codex       | `item` minus bookkeeping           | `item.aggregated_output`           |
+ * | codex       | `toolCall` (on the call)           | `toolCall` (on the result)         |
+ * | codex, old  | `item` minus bookkeeping           | `item.aggregated_output`           |
  */
 
 import { isRecord } from '@openthrottle/nodejs-utils';
