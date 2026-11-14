@@ -34,6 +34,7 @@
 # on a bundle line names whoever last ran bundle-hooks, not whoever changed the
 # behavior. The same bundles also land in plugins/*/hooks/ below.
 .claude/hooks/*.cjs    -diff linguist-generated=true
+.agents/plugins/*/hooks/*.cjs -diff linguist-generated=true
 .codex/hooks/*.cjs     -diff linguist-generated=true
 .cursor/hooks/*.cjs    -diff linguist-generated=true
 

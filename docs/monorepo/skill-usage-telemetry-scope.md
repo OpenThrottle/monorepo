@@ -74,13 +74,16 @@ Authoring lives in [`packages/agentic-hooks`](../../packages/agentic-hooks); the
 `.claude/hooks/*.cjs` and `.cursor/hooks/*.cjs` files are generated bundles
 (`pnpm nx run @openthrottle/agentic-hooks:bundle-hooks`). Do not edit the bundles.
 
-| Hook                               | Registered as                         | Emits                                                                                                                                                                  |
-| ---------------------------------- | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `skill-usage-capture.cjs`          | Claude `PreToolUse` (matcher `Skill`) | one event, `invocation_path='skill_tool'`                                                                                                                              |
-| `skill-usage-capture.cjs`          | Claude `UserPromptExpansion`          | one event, `invocation_path='slash'`                                                                                                                                   |
-| `skill-usage-complete.cjs`         | Claude `Stop`                         | resolves open starts → `session_ended`; sweeps stale starts → `abandoned`                                                                                              |
-| `skill-usage-capture.cjs` (cursor) | Cursor `beforeSubmitPrompt`           | one event, `source='cursor'`                                                                                                                                           |
-| `skill-usage-heartbeat.cjs`        | Claude `SessionStart`                 | one coverage heartbeat per session, upserted into `telemetry_heartbeats` — no skill data ([contract §8](./child-repo-hook-telemetry-contract.md#8-coverage-heartbeat)) |
+| Hook                                 | Registered as                                 | Emits                                                                                                                                                                  |
+| ------------------------------------ | --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `skill-usage-capture.cjs`            | Claude `PreToolUse` (matcher `Skill`)         | one event, `invocation_path='skill_tool'`                                                                                                                              |
+| `skill-usage-capture.cjs`            | Claude `UserPromptExpansion`                  | one event, `invocation_path='slash'`                                                                                                                                   |
+| `skill-usage-complete.cjs`           | Claude `Stop`                                 | resolves open starts → `session_ended`; sweeps stale starts → `abandoned`                                                                                              |
+| `skill-usage-capture.cjs` (cursor)   | Cursor `beforeSubmitPrompt`                   | one event, `source='cursor'`                                                                                                                                           |
+| `skill-usage-heartbeat.cjs`          | Claude `SessionStart`                         | one coverage heartbeat per session, upserted into `telemetry_heartbeats` — no skill data ([contract §8](./child-repo-hook-telemetry-contract.md#8-coverage-heartbeat)) |
+| `skill-usage-heartbeat.cjs` (cursor) | Cursor `sessionStart`                         | the same heartbeat, `source='cursor'`                                                                                                                                  |
+| `skill-usage-heartbeat.cjs` (codex)  | Codex `SessionStart` (home config)            | the same heartbeat, `source='codex'`                                                                                                                                   |
+| `skill-usage-heartbeat.cjs` (agy)    | Antigravity `SessionStart` (workspace plugin) | the same heartbeat, `source='antigravity'`                                                                                                                             |
 
 Every write is fail-open: POST to OT GraphQL first, append to
 `~/.openthrottle/skill-usage/{events,outcomes}.jsonl` on any failure, drained
@@ -218,8 +221,11 @@ that say how far to trust them.
    `source='cursor'` row exists in the entire dataset — that is the ceiling of
    what this wiring can see, not a measure of Cursor usage.
 
-4. **Codex / OpenCode / other harnesses under `.agents/`.** No adapter exists.
-   Zero rows, by construction.
+4. **Codex, Antigravity, OpenCode and other harnesses.** Codex has slash-command capture,
+   completion and the coverage heartbeat, but only on a machine whose `~/.codex/config.toml`
+   registers them (`packages/agentic-hooks/README.md`); nothing in this repo does. Antigravity
+   sends only the coverage heartbeat, from the workspace plugin — no skill capture. OpenCode and
+   the rest have no adapter: zero rows, by construction.
 
 5. **Five legacy rows** predate the `source` stamp (`source IS NULL`).
 

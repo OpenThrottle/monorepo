@@ -2,14 +2,10 @@ import path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import type { BufferStats } from '../../../data/readBufferStats.ts';
 import {
-  buildHeartbeatInput,
   detectDeliveryLeg,
   parseMarketplaceInstall,
-  readVersionField,
   resolveClaudeConfigDir,
-  sanitizeMachineLabel,
 } from '../heartbeat-payload.ts';
 
 const HOME = '/home/someone';
@@ -156,69 +152,6 @@ describe('parseMarketplaceInstall', () => {
       expect(
         parseMarketplaceInstall(file({ 'openthrottle@openthrottle': 'yes' })),
       ).toEqual(unknown);
-    });
-  });
-});
-
-describe('sanitizeMachineLabel', () => {
-  it('trims, caps at 64 characters and nulls blanks', () => {
-    expect(sanitizeMachineLabel('  work laptop ')).toBe('work laptop');
-    expect(sanitizeMachineLabel('x'.repeat(100))).toHaveLength(64);
-    expect(sanitizeMachineLabel('   ')).toBeNull();
-    expect(sanitizeMachineLabel('')).toBeNull();
-  });
-});
-
-describe('readVersionField', () => {
-  it('reads a string version and rejects everything else', () => {
-    expect(readVersionField('{"version":"1.2.0"}')).toBe('1.2.0');
-    expect(readVersionField('{"version":3}')).toBeNull();
-    expect(readVersionField('nope')).toBeNull();
-  });
-});
-
-describe('buildHeartbeatInput', () => {
-  const stats: BufferStats = {
-    files: [
-      { deadLetterLines: 1, label: 'events', lines: 4, oldestAt: null },
-      { deadLetterLines: 0, label: 'outcomes', lines: 2, oldestAt: null },
-      { deadLetterLines: 0, label: 'token-usage', lines: 7, oldestAt: null },
-      { deadLetterLines: 2, label: 'trajectories', lines: 1, oldestAt: null },
-    ],
-    oldestAt: '2026-11-01T00:00:00.000Z',
-    totalDeadLetterLines: 3,
-    totalLines: 14,
-  };
-
-  it('maps buffer stats and facts onto the mutation input', () => {
-    expect(
-      buildHeartbeatInput({
-        bufferStats: stats,
-        deliveryLeg: 'repo',
-        machineId: 'abc-12345678',
-        machineLabel: null,
-        marketplace: { installed: false, version: null },
-        now: new Date('2026-11-13T10:00:00.000Z'),
-        pluginVersion: null,
-        repoIdentity: 'https://github.com/org/repo',
-        source: 'claude-code',
-      }),
-    ).toEqual({
-      bufferedEvents: 4,
-      bufferedOutcomes: 2,
-      bufferedTokenUsage: 7,
-      bufferedTrajectories: 1,
-      deadLetterCount: 3,
-      deliveryLeg: 'repo',
-      machineId: 'abc-12345678',
-      machineLabel: null,
-      marketplacePluginInstalled: false,
-      marketplacePluginVersion: null,
-      occurredAt: '2026-11-13T10:00:00.000Z',
-      oldestBufferedAt: '2026-11-01T00:00:00.000Z',
-      pluginVersion: null,
-      repoIdentity: 'https://github.com/org/repo',
-      source: 'claude-code',
     });
   });
 });

@@ -5,8 +5,8 @@
  */
 import { isRecord } from '@openthrottle/nodejs-utils';
 
+import type { MarketplaceInstall } from '../../data/heartbeat.ts';
 import { isOlderVersion, PLUGIN_ID } from './doctor-checks.ts';
-import type { MarketplaceInstall } from './heartbeat-payload.ts';
 
 /** The marketplace's name, as recorded in `known_marketplaces.json`. */
 const MARKETPLACE_NAME = 'openthrottle';

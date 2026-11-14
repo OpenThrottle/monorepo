@@ -49,6 +49,7 @@ import { EvalReportsGraphqlModule } from './graphql/eval-reports/eval-reports.mo
 import { EvalRunsGraphqlModule } from './graphql/eval-runs/eval-runs.module.ts';
 import { GeneratorsGraphqlModule } from './graphql/generators/generators.module.ts';
 import { HealthGraphqlModule } from './graphql/health/health.module.ts';
+import { IdRefsGraphqlModule } from './graphql/id-refs/id-refs.module.ts';
 import { McpConnectorsGraphqlModule } from './graphql/mcp-connectors/mcp-connectors.module.ts';
 import { MetricsGraphqlModule } from './graphql/metrics/metrics.module.ts';
 import { ModelDiscoveryGraphqlModule } from './graphql/model-discovery/model-discovery.module.ts';
@@ -278,6 +279,7 @@ export const buildImports = (role: ProcessRole): AppModuleImports => {
       GeneratorsGraphqlModule,
       GithubGraphqlModule,
       HealthGraphqlModule,
+      IdRefsGraphqlModule,
       McpConnectorsGraphqlModule,
       MetricsGraphqlModule,
       ModelDiscoveryGraphqlModule,

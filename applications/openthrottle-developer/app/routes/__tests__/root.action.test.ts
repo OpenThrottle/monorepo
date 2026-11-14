@@ -247,7 +247,7 @@ describe('root action: commander-search', () => {
 
   test('jumps to the resolved plan when the commander submits a full id resolved from a short fragment', async () => {
     // The ⌘K commander resolves a short fragment (e.g. "80864bba") to the full
-    // plan id client-side via resolvePlanRef, then POSTs the FULL id here.
+    // plan id client-side via resolveIdRef, then POSTs the FULL id here.
     const result = await action(
       actionArgs({
         id: UUID_A,

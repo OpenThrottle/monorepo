@@ -5,8 +5,8 @@
  */
 import { isRecord } from '@openthrottle/nodejs-utils';
 
+import type { MarketplaceInstall } from '../../data/heartbeat.ts';
 import type { BufferStats } from '../../data/readBufferStats.ts';
-import type { MarketplaceInstall } from './heartbeat-payload.ts';
 
 /**
  * The marketplace plugin id, as typed into `/plugin install`.
@@ -43,6 +43,7 @@ export type CheckId =
   | 'heartbeat'
   | 'offline'
   | 'plugin'
+  | 'privacy'
   | 'reachability'
   | 'token';
 
@@ -482,6 +483,43 @@ export const checkOffline = ({
     fix: 'unset OPENTHROTTLE_TELEMETRY_OFFLINE (and remove it from your shell profile or ~/.openthrottle/.env)',
     id: 'offline',
     status: CHECK_STATUS.WARN,
+  };
+};
+
+/**
+ * Check 7: which foreign repos does the per-repo opt-in raise to `truncated`? Unparsable entries
+ * match nothing and are flagged.
+ *
+ * @public
+ */
+export const checkPrivacyOptIns = ({
+  invalid,
+  repos,
+}: {
+  readonly invalid: readonly string[];
+  readonly repos: readonly string[];
+}): DoctorCheck => {
+  if (invalid.length > 0) {
+    return {
+      detail: `${invalid.length} entry(ies) do not normalize and match nothing: ${invalid.join(', ')}`,
+      fix: 'Fix or remove them in OPENTHROTTLE_TELEMETRY_TRUNCATED_REPOS in ~/.openthrottle/.env (use the remote URL from `git remote -v`).',
+      id: 'privacy',
+      status: CHECK_STATUS.WARN,
+    };
+  }
+  if (repos.length === 0) {
+    return {
+      detail: 'no foreign repo is opted in; they all stay name-only',
+      fix: null,
+      id: 'privacy',
+      status: CHECK_STATUS.PASS,
+    };
+  }
+  return {
+    detail: `${repos.length} foreign repo(s) opted in to truncated args: ${repos.join(', ')}`,
+    fix: null,
+    id: 'privacy',
+    status: CHECK_STATUS.PASS,
   };
 };
 

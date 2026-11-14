@@ -29,6 +29,7 @@ THIRD-PARTY-LICENSES.md
 # folder rather than by name prefix: a new adapter is generated output the moment
 # it is added, and naming it explicitly is a step everyone forgets until the gate
 # fails (as it did for plan-run-janitor.cjs).
+.agents/plugins/*/hooks/*.cjs
 .claude/hooks/*.cjs
 .codex/hooks/*.cjs
 .cursor/hooks/*.cjs

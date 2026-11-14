@@ -197,8 +197,47 @@ Aligned with `91679bbf` rather than re-decided:
 `isOpenThrottleCheckout` test that gates the `.env` layer in §2, so a repo is ours for both purposes or
 neither. Adapters no longer pin a level, so passing the `home` default cannot accidentally opt a foreign
 repo back into arg collection. Covered by `utils/__tests__/privacy.test.ts`, including the path through
-`buildUsageEvent`. The opt-in in the second bullet is **not** implemented: there is currently no way to
-raise a foreign repo above `name-only`.
+`buildUsageEvent`.
+
+### The per-repo opt-in (OT plan `d8d53c85`)
+
+The second bullet is one line in `~/.openthrottle/.env`:
+
+```dotenv
+OPENTHROTTLE_TELEMETRY_TRUNCATED_REPOS=git@github.com:acme/widgets.git, https://gitlab.com/me/tool
+```
+
+A foreign repo whose normalized remote appears in that list resolves to `truncated`; every other
+foreign repo stays `name-only`. Each decision, and why:
+
+- **Key: the normalized `remote.origin.url`, exact match.** It is the identity §3 already computes and
+  sends, so the opt-in names a repo the same way the telemetry does. Each list entry is passed through
+  the same `normalizeRemoteUrl`, so the ssh, `ssh://`, `http://` and credentialed forms of one remote
+  all match, and an operator can paste whatever `git remote -v` prints. Matching is exact — no
+  wildcards, no prefix or org-level match — because a pattern is how one line quietly opts in a
+  hundred repos the operator never thought about. An entry that does not normalize matches nothing.
+- **A repo without a remote is never opted in.** Its identity is null, and null equals no entry. The
+  alternative key, the checkout path, was rejected for the reason §3 rejects it as an identity: it is
+  machine-specific, and it is exactly what moves when someone clones the same repo twice.
+- **Place: the user-global file only — not the process environment, not the repo.** This is the
+  load-bearing rule, and it is why the opt-in is _not_ read through `resolveOtEnv`. A foreign repo
+  controls the environment of the shell it is opened in more often than it looks — `direnv`'s
+  `.envrc`, `mise`, a devcontainer, a `Makefile` that exports — so a value honoured from
+  `process.env` is a value the repo can set on itself. Reading only `~/.openthrottle/.env` makes the
+  opt-in something only the operator's own home directory can say. The repo `.env` layer is moot
+  either way: it is read only in an OpenThrottle checkout, which is already `truncated`.
+- **A line in `~/.openthrottle/.env`, not a separate file.** It is the one machine-global file this
+  package already reads, documents and parses (§2); a second file would be a second path to advertise,
+  and the `hooks.json` episode in §2 is what an advertised-but-unread path costs. The trade-off is
+  readability of a long list on one line, which a comma-separated, whitespace-tolerant value keeps
+  tolerable.
+- **`truncated` only, never `full`.** The goal is to let skill args back in at the size the home
+  profile already ships. The variable name carries the level so a later `full` opt-in would be a
+  second, separately-argued key rather than a value that silently widens this one.
+- **The secret redactor still runs.** An opted-in repo goes through `applyPrivacy` like a home repo:
+  redacted, then capped at 256 characters.
+- **Visible.** `skill-usage-doctor` reports the repos the line opts in, and flags entries that do not
+  normalize, so an opt-in is never something an operator has forgotten they made.
 
 ## 7. Kill switch
 
@@ -240,6 +279,20 @@ delivery leg, in which repo, with what sitting in the buffer.
   endpoint resolves, and `OPENTHROTTLE_TELEMETRY_OFFLINE=1` posts nothing. The repo copy shadows
   the plugin copy exactly as the capture hook does (`isShadowedByRepoHooks`), so the monorepo never
   sends two.
+- **Cursor** sends its heartbeat on `sessionStart`, the once-per-session event that fires headless
+  (`agent-cli-hook-capability-matrix.md` § Session-start event). Its plugin copy stands down when the
+  repository's `.cursor/hooks.json` registers the heartbeat too. Cursor's marketplace install
+  location is unmeasured, so a Cursor heartbeat reports `marketplace_plugin_installed` as null
+  (unknown, which raises no `MANUAL_SESSIONS_UNCOVERED`) and a marketplace install as `plugin-dir`.
+  Its leg is decided by where the running script lives, not by `CURSOR_PLUGIN_ROOT` alone: Cursor
+  can hand a project hook another plugin's root.
+- **Codex and Antigravity** have no plugin-root variable, so their leg is read from where the
+  running script lives (`detectDeliveryLegFromScript`): inside the session's repository is `repo`,
+  anywhere else — codex's `~/.codex/config.toml` pointing at a checkout's `.codex/hooks/` — is
+  `plugin-dir`, and the driver stamp still wins. Neither has a marketplace record, so both report
+  it as null. Antigravity's heartbeat ships in the generated workspace plugin
+  `.agents/plugins/openthrottle/`, so it is `repo` there; codex's is delivered by the home-config
+  block in `packages/agentic-hooks/README.md`.
 
 ### Fields — and why each one is allowed
 
@@ -247,7 +300,7 @@ delivery leg, in which repo, with what sitting in the buffer.
 | ------------------------------ | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `machine_id`                   | random UUID, generated once into `~/.openthrottle/machine-id`           | Carries no information about the machine. A hostname hash was rejected: hostnames come from a tiny, guessable space (`<first-name>s-MacBook-Pro.local`), so an unsalted hash is a hostname with extra steps, and a salt stored beside it buys nothing.                                                                |
 | `machine_label`                | `OPENTHROTTLE_MACHINE_LABEL` from env / `~/.openthrottle/.env`, or null | Opt-in and typed by the operator, so the UI can say "work laptop" instead of `3f2a…`. Never defaulted from the hostname.                                                                                                                                                                                              |
-| `source`                       | `claude-code` (Cursor is a follow-up)                                   | Already sent on every event.                                                                                                                                                                                                                                                                                          |
+| `source`                       | `claude-code`, `cursor`, `codex` or `antigravity`                       | Already sent on every event.                                                                                                                                                                                                                                                                                          |
 | `delivery_leg`                 | `repo` \| `plugin-dir` \| `marketplace`, per the table below            | A fact about the install, not about the user's work.                                                                                                                                                                                                                                                                  |
 | `repo_identity`                | normalized git remote (§3), or null                                     | §3's rule, applied for the first time: no raw paths, no remote means no identity. Normalized **client-side** with a zero-dep twin of the server's `normalizeRemoteUrl`, because a raw remote can carry `https://user:token@…`. The server normalizes again and drops anything that does not survive.                  |
 | `plugin_version`               | the running payload's `plugin.json` version, or null for `repo`         | Lets `/usage` flag an outdated install. Local file, no identity.                                                                                                                                                                                                                                                      |
@@ -298,19 +351,19 @@ without the field rather than held.
 
 ## Summary — the foreign profile
 
-| axis                              | `home`                                             | `foreign`                             |
-| --------------------------------- | -------------------------------------------------- | ------------------------------------- |
-| endpoint from `<repoRoot>/.env`   | yes                                                | **no**                                |
-| auth token from `<repoRoot>/.env` | yes                                                | **no**                                |
-| endpoint sources                  | repo `.env` → process env → `~/.openthrottle/.env` | process env → `~/.openthrottle/.env`  |
-| repo identity                     | normalized git remote URL, or none                 | normalized git remote URL, or none    |
-| working directory (`cwd`)         | sent                                               | **never**                             |
-| scope detection                   | `<repoRoot>/skills/<name>`                         | injected/plugin skill set             |
-| buffer location                   | `~/.openthrottle/skill-usage/`                     | `~/.openthrottle/skill-usage/` (same) |
-| privacy default                   | `truncated` (args redacted, 256 cap)               | **`name-only`** (no args)             |
-| warning on unreachable endpoint   | per failure                                        | one per session                       |
-| writes inside the checkout        | **never**                                          | **never**                             |
-| coverage heartbeat (§8)           | `repo` leg, from the repo's own hooks              | `marketplace` or `plugin-dir` leg     |
+| axis                              | `home`                                             | `foreign`                                                    |
+| --------------------------------- | -------------------------------------------------- | ------------------------------------------------------------ |
+| endpoint from `<repoRoot>/.env`   | yes                                                | **no**                                                       |
+| auth token from `<repoRoot>/.env` | yes                                                | **no**                                                       |
+| endpoint sources                  | repo `.env` → process env → `~/.openthrottle/.env` | process env → `~/.openthrottle/.env`                         |
+| repo identity                     | normalized git remote URL, or none                 | normalized git remote URL, or none                           |
+| working directory (`cwd`)         | sent                                               | **never**                                                    |
+| scope detection                   | `<repoRoot>/skills/<name>`                         | injected/plugin skill set                                    |
+| buffer location                   | `~/.openthrottle/skill-usage/`                     | `~/.openthrottle/skill-usage/` (same)                        |
+| privacy default                   | `truncated` (args redacted, 256 cap)               | **`name-only`** (no args); `truncated` only by the §6 opt-in |
+| warning on unreachable endpoint   | per failure                                        | one per session                                              |
+| writes inside the checkout        | **never**                                          | **never**                                                    |
+| coverage heartbeat (§8)           | `repo` leg, from the repo's own hooks              | `marketplace` or `plugin-dir` leg                            |
 
 **Three rows that the draft split by profile are now identical for both.** The buffer is one flat
 `~/.openthrottle/skill-usage/` rather than `<repoRoot>/.cache/` at home and a `<repo-id>` subdirectory

@@ -168,6 +168,30 @@ establishes the paths exist in the binary, **not** that hooks fire, what their p
 whether a per-invocation override exists. Treat the row as a starting point for a probe, not a
 finding.
 
+### Session-start event, for the coverage heartbeat
+
+The coverage heartbeat (contract §8 of
+[`child-repo-hook-telemetry-contract.md`](./child-repo-hook-telemetry-contract.md)) needs one event
+that fires **once per session, in a headless run**. Measured 2026-11-14 (OT plan `47305386`) in a
+scratch git repo, each CLI wired to a recorder that appends raw stdin to a JSONL file, prompted with
+"Reply with the single word PONG.":
+
+| CLI              | version            | headless invocation                                                                    | session-start event                | evidence                                                                                                                                                                                               |
+| ---------------- | ------------------ | -------------------------------------------------------------------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **claude**       | —                  | `claude -p`                                                                            | `SessionStart`                     | already shipped (plan `c4ece7fe`)                                                                                                                                                                      |
+| **cursor-agent** | 2026.11.11-b912975 | `cursor-agent -p --force --trust` with `.cursor/hooks.json`                            | `sessionStart`                     | fired once, before the turn; `sessionEnd` once after; `stop` did not fire. Carries `session_id`, `workspace_roots`, `model`, `cursor_version` — **and `user_email`**, which must never be forwarded    |
+| **codex**        | codex-cli 0.167.0  | `codex exec --dangerously-bypass-hook-trust -c 'hooks.SessionStart=[…]'`               | `SessionStart` (`source: startup`) | fired once, before the turn; then `Stop` per turn and `SessionEnd` (`reason: other`). Carries `session_id`, `cwd`, `model`, `transcript_path`                                                          |
+| **antigravity**  | agy 1.5.9          | `agy --dangerously-skip-permissions -p '…'` with a workspace plugin `.agents/plugins/` | `SessionStart`                     | fired once, before `PreInvocation` and `Stop`. **camelCase** envelope: `conversationId`, `cwd`, `workspacePaths`, `modelName`, `hookEventName` — **and `lastUserInput`** (the prompt), never forwarded |
+
+Every one of the three has a usable event: the heartbeat's gap was adapters, not events, and all
+three now send it (plan `47305386`; contract §8 of the telemetry contract says how each one's
+delivery leg is read). Two
+caveats carry over from the sections above: an `agy` turn resumed with `session/load` fires no
+`SessionStart` (right for a heartbeat — it is the same session), and codex skips a hook source it
+has not trusted unless the run passes `--dangerously-bypass-hook-trust`. Also, `agy` refuses
+`-p --dangerously-skip-permissions "…"` — `-p` takes the next argument as its prompt — so flags go
+before `-p`.
+
 ### Session kickoff guard
 
 The plan-first kickoff rule (follow-up work starts as `/ot-loop <planUuid>`; see the
@@ -224,6 +248,7 @@ The honest split: assert what we control, date and re-probe what we do not.
 - **grok and opencode** stay on option D (server-side transcript derivation) for now: grok because
   trust and the missing `Skill` tool block it structurally, opencode because it needs a published npm
   package. Neither is blocked by a _lack_ of out-of-repo config.
-- **antigravity** needs installing and probing before it can be placed at all.
+- **antigravity** has hooks verified in-repo (a workspace plugin) and sends the coverage heartbeat
+  from there; skill capture and the out-of-repo route are still unprobed.
 
 Nothing here requires writing into a target repository for any of the seven.

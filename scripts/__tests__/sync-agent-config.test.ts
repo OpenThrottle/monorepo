@@ -164,20 +164,24 @@ describe('renderAntigravityDenyRules', () => {
 });
 
 describe('renderAntigravityHooks', () => {
-  it('runs the repo deny hook on run_command from the plugin folder', () => {
+  it('runs the repo deny hook on run_command and the heartbeat on SessionStart, from the plugin folder', () => {
     expect(JSON.parse(renderAntigravityHooks())).toEqual({
       'openthrottle-deny': {
         PreToolUse: [
           {
             hooks: [
               {
-                command:
-                  'node --experimental-strip-types ../../../scripts/antigravity-deny-hook.ts',
+                command: `node --experimental-strip-types ../../../scripts/antigravity-deny-hook.ts`,
                 timeout: 10,
               },
             ],
             matcher: 'run_command',
           },
+        ],
+      },
+      'openthrottle-telemetry': {
+        SessionStart: [
+          { command: 'node ./hooks/skill-usage-heartbeat.cjs', timeout: 10 },
         ],
       },
     });

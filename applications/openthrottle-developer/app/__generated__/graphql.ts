@@ -2264,6 +2264,27 @@ export type GitHubRepoInput = {
   state: Scalars['String']['input'];
 };
 
+/** Which entity an id ref resolved to: a plan or a task. */
+export const IdRefKind = {
+  Plan: 'PLAN',
+  Task: 'TASK',
+} as const;
+
+export type IdRefKind = (typeof IdRefKind)[keyof typeof IdRefKind];
+export type IdRefObject = {
+  __typename?: 'IdRefObject';
+  /** Full UUID of the plan or task the ref resolved to. */
+  id: Scalars['String']['output'];
+  /** Whether this ref is a plan or a task. */
+  kind: IdRefKind;
+  /** Owning plan id for a TASK ref; null for a PLAN ref. */
+  planId?: Maybe<Scalars['String']['output']>;
+  /** Owning plan title for a TASK ref; null for a PLAN ref. */
+  planTitle?: Maybe<Scalars['String']['output']>;
+  status: Scalars['String']['output'];
+  title: Scalars['String']['output'];
+};
+
 export type IndexCodeRepositoryResult = {
   __typename?: 'IndexCodeRepositoryResult';
   /** Registered repository id. */
@@ -4614,7 +4635,12 @@ export type Query = {
   remainingTasksByPlanId: Array<TaskObject>;
   /** List repeatable (scheduled) jobs for a queue. Use the returned key with removeRepeatableJob to remove one. Job types (e.g. run-plan) and future workflow extensibility are documented on JobObject and RepeatableJobObject. */
   repeatableJobs: Array<RepeatableJobObject>;
-  /** Resolve a short plan-id fragment (leading hex of a full UUID, e.g. "f5e40886") to matching plan refs. Normalizes the prefix (trim/lowercase/strip hyphens); prefixes shorter than 6 hex chars or containing non-hex characters return []. A unique match powers a confident ⌘K redirect; multiple matches (up to 6) are listed for disambiguation. */
+  /** Resolve an id to the plans and tasks it names. Accepts a short fragment (the leading hex of a UUID, e.g. "f5e40886", at least 6 hex chars) or a full UUID (32 hex chars, hyphens optional; matched exactly). Input is trimmed, lowercased and hyphen-stripped; non-hex input returns []. Plans come first, then tasks. */
+  resolveIdRef: Array<IdRefObject>;
+  /**
+   * Resolve a short plan-id fragment (leading hex of a full UUID, e.g. "f5e40886") to matching plan refs. Normalizes the prefix (trim/lowercase/strip hyphens); prefixes shorter than 6 hex chars or containing non-hex characters return []. A unique match powers a confident ⌘K redirect; multiple matches (up to 6) are listed for disambiguation.
+   * @deprecated Use resolveIdRef, which also resolves tasks and full UUIDs.
+   */
   resolvePlanRef: Array<PlanRefObject>;
   /** Review cycle time for merged PRs: median and P90 of days from last CHANGES_REQUESTED to first subsequent APPROVED or merge. Optional period buckets by week/month (UTC). Lists merged PRs across pages up to 1000 (10 pages) and paginates reviews; maxPrs caps the per-PR review requests. */
   reviewCycleTime: Array<ReviewCycleTimeObject>;
@@ -5031,6 +5057,10 @@ export type QueryRemainingTasksByPlanIdArgs = {
 
 export type QueryRepeatableJobsArgs = {
   input: RepeatableJobsInput;
+};
+
+export type QueryResolveIdRefArgs = {
+  ref: Scalars['String']['input'];
 };
 
 export type QueryResolvePlanRefArgs = {
@@ -12015,15 +12045,18 @@ export type UpdateAgentCliMutation = {
   };
 };
 
-export type ResolvePlanRefQueryVariables = Exact<{
-  prefix: Scalars['String']['input'];
+export type ResolveIdRefQueryVariables = Exact<{
+  ref: Scalars['String']['input'];
 }>;
 
-export type ResolvePlanRefQuery = {
+export type ResolveIdRefQuery = {
   __typename?: 'Query';
-  resolvePlanRef: Array<{
-    __typename?: 'PlanRefObject';
+  resolveIdRef: Array<{
+    __typename?: 'IdRefObject';
     id: string;
+    kind: IdRefKind;
+    planId?: string | null;
+    planTitle?: string | null;
     status: string;
     title: string;
   }>;
@@ -29478,20 +29511,17 @@ export const UpdateAgentCliDocument = {
   UpdateAgentCliMutation,
   UpdateAgentCliMutationVariables
 >;
-export const ResolvePlanRefDocument = {
+export const ResolveIdRefDocument = {
   kind: 'Document',
   definitions: [
     {
       kind: 'OperationDefinition',
       operation: 'query',
-      name: { kind: 'Name', value: 'resolvePlanRef' },
+      name: { kind: 'Name', value: 'resolveIdRef' },
       variableDefinitions: [
         {
           kind: 'VariableDefinition',
-          variable: {
-            kind: 'Variable',
-            name: { kind: 'Name', value: 'prefix' },
-          },
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'ref' } },
           type: {
             kind: 'NonNullType',
             type: {
@@ -29506,14 +29536,14 @@ export const ResolvePlanRefDocument = {
         selections: [
           {
             kind: 'Field',
-            name: { kind: 'Name', value: 'resolvePlanRef' },
+            name: { kind: 'Name', value: 'resolveIdRef' },
             arguments: [
               {
                 kind: 'Argument',
-                name: { kind: 'Name', value: 'prefix' },
+                name: { kind: 'Name', value: 'ref' },
                 value: {
                   kind: 'Variable',
-                  name: { kind: 'Name', value: 'prefix' },
+                  name: { kind: 'Name', value: 'ref' },
                 },
               },
             ],
@@ -29521,6 +29551,9 @@ export const ResolvePlanRefDocument = {
               kind: 'SelectionSet',
               selections: [
                 { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'planTitle' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'status' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'title' } },
               ],
@@ -29530,7 +29563,7 @@ export const ResolvePlanRefDocument = {
       },
     },
   ],
-} as unknown as DocumentNode<ResolvePlanRefQuery, ResolvePlanRefQueryVariables>;
+} as unknown as DocumentNode<ResolveIdRefQuery, ResolveIdRefQueryVariables>;
 export const GetUsageBranchSearchDocument = {
   kind: 'Document',
   definitions: [

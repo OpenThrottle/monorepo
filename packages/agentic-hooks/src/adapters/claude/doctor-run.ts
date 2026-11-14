@@ -16,14 +16,20 @@ import {
   resolveAuthToken,
   resolveGraphqlUrl,
 } from '../../config/env.ts';
+import {
+  LAST_HEARTBEAT_BASENAME,
+  readVersionField,
+} from '../../data/heartbeat.ts';
 import { resolveTelemetryDir } from '../../data/jsonl.ts';
 import { readBufferStats } from '../../data/readBufferStats.ts';
+import { readTruncatedRepoOptIns } from '../../utils/privacy.ts';
 import {
   checkBuffer,
   checkEndpoint,
   checkHeartbeat,
   checkOffline,
   checkPlugin,
+  checkPrivacyOptIns,
   checkReachability,
   checkToken,
   type DoctorCheck,
@@ -33,10 +39,8 @@ import {
 } from './doctor-checks.ts';
 import {
   parseMarketplaceInstall,
-  readVersionField,
   resolveClaudeConfigDir,
 } from './heartbeat-payload.ts';
-import { LAST_HEARTBEAT_BASENAME } from './heartbeat-run.ts';
 
 /** How long `/health` gets before the server counts as unreachable. */
 const HEALTH_TIMEOUT_MS = 2000;
@@ -268,5 +272,6 @@ export const collectChecks = async ({
     checkOffline({
       offline: process.env.OPENTHROTTLE_TELEMETRY_OFFLINE === '1',
     }),
+    checkPrivacyOptIns(readTruncatedRepoOptIns()),
   ];
 };

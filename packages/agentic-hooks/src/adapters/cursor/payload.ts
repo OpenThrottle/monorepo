@@ -214,3 +214,13 @@ export const cursorOutcomeForFinalStatus = (
   }
   return SKILL_USAGE_OUTCOMES.ABANDONED;
 };
+
+/**
+ * The working directory a Cursor hook payload reports — `cwd` where the event carries one, else
+ * `workspace_roots[0]` — or null when the payload is unparsable or carries neither.
+ *
+ * @public
+ */
+export const readCursorPayloadCwd = (raw: unknown): string | null => {
+  return isRecord(raw) ? resolveCwd(raw) : null;
+};

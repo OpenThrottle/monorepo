@@ -1,6 +1,6 @@
 # Recurring agent jobs (`Job_*` prompts)
 
-Twelve standalone audit prompts live in [`.agents/prompts/`](../../.agents/prompts/). Each one sweeps a single dimension — most sweep repository health, `Job_Issue_Reporting` sweeps the inbound GitHub issue queue — is **read-only on source code**, and has exactly one side effect: it files an OpenThrottle plan with prioritized, self-contained tasks. Nothing merges without a human starting that plan.
+Thirteen standalone audit prompts live in [`.agents/prompts/`](../../.agents/prompts/). Each one sweeps a single dimension — most sweep repository health, `Job_Issue_Reporting` sweeps the inbound GitHub issue queue — is **read-only on source code**, and has exactly one side effect: it files an OpenThrottle plan with prioritized, self-contained tasks. Nothing merges without a human starting that plan.
 
 They are invoked two ways:
 
@@ -17,7 +17,7 @@ A scheduled run goes `ScheduledAgentJobsProcessor` → `ScheduledAgentRunnerServ
 
 > **Not `workflow-ralph`.** That CLI _executes_ an existing plan and requires `--plan <uuid>` or `--task <uuid>`. These prompts _author_ a plan, so there is no id to pass, and `--prompt-file` overrides a plan run's layer-1 prompt rather than standing in for the plan. `pnpm exec workflow-ralph --prompt-file .agents/prompts/Job_DeadCode.md` exits with `--plan is required`.
 
-## The twelve jobs
+## The thirteen jobs
 
 | Job                                                                       | Sweeps                                                                 | Cadence  | Cap             |
 | ------------------------------------------------------------------------- | ---------------------------------------------------------------------- | -------- | --------------- |
@@ -32,6 +32,7 @@ A scheduled run goes `ScheduledAgentJobsProcessor` → `ScheduledAgentRunnerServ
 | [`Job_Performance`](../../.agents/prompts/Job_Performance.md)             | Bundle growth, waterfalls, server hot paths, CI wall-clock             | weekly   | 10              |
 | [`Job_DatabaseHealth`](../../.agents/prompts/Job_DatabaseHealth.md)       | Migrations, `COMMENT ON`, indexes, entity drift, N+1                   | biweekly | 12              |
 | [`Job_ArchitectureDrift`](../../.agents/prompts/Job_ArchitectureDrift.md) | Nx tags, boundaries, deep imports, structural erosion                  | biweekly | 12              |
+| [`Job_SkillReview`](../../.agents/prompts/Job_SkillReview.md)             | The 3 least-recently-reviewed agent skills, via `ot-skill-guide`       | weekly   | 3 skills        |
 | [`Job_Roadmap`](../../.agents/prompts/Job_Roadmap.md)                     | Monthly large-change and product-bet proposals                         | monthly  | 3               |
 
 Every job states its own finding cap so an unattended run cannot file a 200-task plan, and every job dedupes against open OT plans before filing.
@@ -53,6 +54,7 @@ Cron patterns are staggered so the weekly jobs never fire on the same day — a 
 | `Job_RulesConformance`  | `0 14 * * 5`    | Fridays 14:00           | claude | `sonnet` |
 | `Job_Performance`       | `0 14 * * 6`    | Saturdays 14:00         | claude | `fable`  |
 | `Job_ReplayDrift`       | `0 14 * * 0`    | Sundays 14:00           | claude | `sonnet` |
+| `Job_SkillReview`       | `0 15 * * 1`    | Mondays 15:00           | claude | `sonnet` |
 | `Job_DatabaseHealth`    | `0 15 1,15 * *` | 1st and 15th, 15:00     | claude | `fable`  |
 | `Job_ArchitectureDrift` | `0 15 8,22 * *` | 8th and 22nd, 15:00     | claude | `fable`  |
 | `Job_Roadmap`           | `0 16 1 * *`    | 1st of the month, 16:00 | claude | `fable`  |

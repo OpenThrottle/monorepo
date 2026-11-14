@@ -2388,6 +2388,28 @@ type ServerMetricsObject {
   cpuSystemMs: Float!
 }
 
+type IdRefObject {
+  """Full UUID of the plan or task the ref resolved to."""
+  id: String!
+
+  """Whether this ref is a plan or a task."""
+  kind: IdRefKind!
+
+  """Owning plan id for a TASK ref; null for a PLAN ref."""
+  planId: String
+
+  """Owning plan title for a TASK ref; null for a PLAN ref."""
+  planTitle: String
+  status: String!
+  title: String!
+}
+
+"""Which entity an id ref resolved to: a plan or a task."""
+enum IdRefKind {
+  PLAN
+  TASK
+}
+
 type McpConnectorObject {
   """Auth mechanism: api_token or oauth."""
   authType: String!
@@ -5951,6 +5973,11 @@ type Query {
   """
   commitsPerPr(input: CommitsPerPrInput!): [CommitsPerPrRowObject!]!
 
+  """
+  Resolve an id to the plans and tasks it names. Accepts a short fragment (the leading hex of a UUID, e.g. "f5e40886", at least 6 hex chars) or a full UUID (32 hex chars, hyphens optional; matched exactly). Input is trimmed, lowercased and hyphen-stripped; non-hex input returns []. Plans come first, then tasks.
+  """
+  resolveIdRef(ref: String!): [IdRefObject!]!
+
   """The curated MCP connector catalog (static server-side seed)."""
   mcpConnectors: [McpConnectorObject!]!
 
@@ -6021,7 +6048,7 @@ type Query {
   """
   Resolve a short plan-id fragment (leading hex of a full UUID, e.g. "f5e40886") to matching plan refs. Normalizes the prefix (trim/lowercase/strip hyphens); prefixes shorter than 6 hex chars or containing non-hex characters return []. A unique match powers a confident ⌘K redirect; multiple matches (up to 6) are listed for disambiguation.
   """
-  resolvePlanRef(prefix: String!): [PlanRefObject!]!
+  resolvePlanRef(prefix: String!): [PlanRefObject!]! @deprecated(reason: "Use resolveIdRef, which also resolves tasks and full UUIDs.")
 
   """
   List plans, newest first. Capped at 100 by default (max 500); pass limit to override. Use listPlansByStatus for full pagination/filtering.

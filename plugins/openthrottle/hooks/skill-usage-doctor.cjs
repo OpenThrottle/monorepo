@@ -53,6 +53,27 @@ var logHookError = (message, err) => {
   }
 };
 
+// packages/agentic-hooks/src/utils/normalizeRemoteUrl.ts
+var normalizeRemoteUrl = (raw) => {
+  const trimmed = raw.trim();
+  if (trimmed === "") {
+    return null;
+  }
+  let url = trimmed.replace(/^git@([^:/]+):/, "https://$1/").replace(/^ssh:\/\/(?:[^@/]+@)?/, "https://").replace(/^http:\/\//, "https://").replace(/^https:\/\/[^@/]+@/, "https://");
+  if (!/^https:\/\/[^/]+\/.+/.test(url)) {
+    return null;
+  }
+  url = url.replace(/\.git$/, "").replace(/\/+$/, "");
+  const withoutScheme = url.slice("https://".length);
+  const slashIndex = withoutScheme.indexOf("/");
+  if (slashIndex === -1) {
+    return null;
+  }
+  const host = withoutScheme.slice(0, slashIndex).toLowerCase();
+  const path7 = withoutScheme.slice(slashIndex);
+  return `https://${host}${path7}`;
+};
+
 // packages/agentic-hooks/src/config/env.ts
 var userConfigDir = () => {
   return import_node_path.default.join(import_node_os.default.homedir(), ".openthrottle");
@@ -197,6 +218,38 @@ var isRecord = (value) => {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 };
 
+// packages/agentic-hooks/src/utils/privacy.ts
+var PRIVACY_LEVELS = Object.freeze({
+  FULL: "full",
+  NAME_ONLY: "name-only",
+  TRUNCATED: "truncated"
+});
+var DEFAULT_PRIVACY_LEVEL = PRIVACY_LEVELS.TRUNCATED;
+var FOREIGN_PRIVACY_LEVEL = PRIVACY_LEVELS.NAME_ONLY;
+var TRUNCATED_REPOS_ENV_KEY = `OPENTHROTTLE_TELEMETRY_TRUNCATED_REPOS`;
+var readTruncatedRepoOptIns = () => {
+  try {
+    const raw = readUserEnvFile()[TRUNCATED_REPOS_ENV_KEY] ?? "";
+    const repos = [];
+    const invalid = [];
+    for (const entry of raw.split(",")) {
+      const trimmed = entry.trim();
+      if (trimmed === "") {
+        continue;
+      }
+      const normalized = normalizeRemoteUrl(trimmed);
+      if (normalized === null) {
+        invalid.push(trimmed);
+      } else if (!repos.includes(normalized)) {
+        repos.push(normalized);
+      }
+    }
+    return { invalid, repos };
+  } catch {
+    return { invalid: [], repos: [] };
+  }
+};
+
 // packages/agentic-hooks/src/utils/checkout-root.ts
 var import_node_fs2 = __toESM(require("node:fs"), 1);
 var import_node_path3 = __toESM(require("node:path"), 1);
@@ -332,6 +385,24 @@ var readBufferStats = () => {
     totalDeadLetterLines: files.reduce((n, f) => n + f.deadLetterLines, 0),
     totalLines: files.reduce((n, f) => n + f.lines, 0)
   };
+};
+
+// packages/agentic-hooks/src/data/heartbeat.ts
+var LAST_HEARTBEAT_BASENAME = "last-heartbeat.json";
+var UNKNOWN_MARKETPLACE_INSTALL = Object.freeze({
+  installed: null,
+  version: null
+});
+var readVersionField = (rawJson) => {
+  try {
+    const parsed = JSON.parse(rawJson);
+    if (!isRecord(parsed) || typeof parsed.version !== "string") {
+      return null;
+    }
+    return parsed.version.trim() || null;
+  } catch {
+    return null;
+  }
 };
 
 // packages/agentic-hooks/src/adapters/claude/doctor-checks.ts
@@ -626,6 +697,33 @@ var checkOffline = ({
     status: CHECK_STATUS.WARN
   };
 };
+var checkPrivacyOptIns = ({
+  invalid,
+  repos
+}) => {
+  if (invalid.length > 0) {
+    return {
+      detail: `${invalid.length} entry(ies) do not normalize and match nothing: ${invalid.join(", ")}`,
+      fix: "Fix or remove them in OPENTHROTTLE_TELEMETRY_TRUNCATED_REPOS in ~/.openthrottle/.env (use the remote URL from `git remote -v`).",
+      id: "privacy",
+      status: CHECK_STATUS.WARN
+    };
+  }
+  if (repos.length === 0) {
+    return {
+      detail: "no foreign repo is opted in; they all stay name-only",
+      fix: null,
+      id: "privacy",
+      status: CHECK_STATUS.PASS
+    };
+  }
+  return {
+    detail: `${repos.length} foreign repo(s) opted in to truncated args: ${repos.join(", ")}`,
+    fix: null,
+    id: "privacy",
+    status: CHECK_STATUS.PASS
+  };
+};
 var summarizeChecks = (checks) => {
   const count = (status) => {
     return checks.filter((check) => check.status === status).length;
@@ -692,25 +790,24 @@ var resolveClaudeConfigDir = (env, homeDir) => {
   return configured ? import_node_path4.default.resolve(configured) : import_node_path4.default.join(homeDir, ".claude");
 };
 var parseMarketplaceInstall = (rawJson) => {
-  const unknown = { installed: null, version: null };
   if (rawJson === null) {
-    return unknown;
+    return UNKNOWN_MARKETPLACE_INSTALL;
   }
   let parsed;
   try {
     parsed = JSON.parse(rawJson);
   } catch {
-    return unknown;
+    return UNKNOWN_MARKETPLACE_INSTALL;
   }
   if (!isRecord(parsed) || !isRecord(parsed.plugins)) {
-    return unknown;
+    return UNKNOWN_MARKETPLACE_INSTALL;
   }
   const entries = parsed.plugins[MARKETPLACE_PLUGIN_KEY];
   if (entries === void 0) {
     return { installed: false, version: null };
   }
   if (!Array.isArray(entries)) {
-    return unknown;
+    return UNKNOWN_MARKETPLACE_INSTALL;
   }
   const [first] = entries;
   if (first === void 0) {
@@ -720,20 +817,6 @@ var parseMarketplaceInstall = (rawJson) => {
   const hasVersion = typeof entryVersion === "string" && entryVersion !== "";
   return { installed: true, version: hasVersion ? entryVersion : null };
 };
-var readVersionField = (rawJson) => {
-  try {
-    const parsed = JSON.parse(rawJson);
-    if (!isRecord(parsed) || typeof parsed.version !== "string") {
-      return null;
-    }
-    return parsed.version.trim() || null;
-  } catch {
-    return null;
-  }
-};
-
-// packages/agentic-hooks/src/adapters/claude/heartbeat-run.ts
-var LAST_HEARTBEAT_BASENAME = "last-heartbeat.json";
 
 // packages/agentic-hooks/src/adapters/claude/doctor-run.ts
 var HEALTH_TIMEOUT_MS = 2e3;
@@ -896,7 +979,8 @@ var collectChecks = async ({
     }),
     checkOffline({
       offline: process.env.OPENTHROTTLE_TELEMETRY_OFFLINE === "1"
-    })
+    }),
+    checkPrivacyOptIns(readTruncatedRepoOptIns())
   ];
 };
 

@@ -156,8 +156,8 @@ describe('useAgenticChatTurn restore/reset', () => {
     const user = userEvent.setup();
     const component = renderTurn(pageLoader);
 
-    // The loader counts on entry, before the route renders: wait for the
-    // harness itself, not just the load, or the click races an empty tree.
+    // The loader settles before the route element renders, so wait for the
+    // element itself rather than racing it with getByRole.
     const restore = await component.findByRole('button', { name: 'Restore' });
     expect(pageLoads).toBe(1);
 
