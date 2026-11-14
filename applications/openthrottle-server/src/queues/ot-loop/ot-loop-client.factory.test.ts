@@ -6,6 +6,7 @@ import {
   GetTasksByPlanIdDocument,
   RalphAttachWorkSessionSubjectDocument,
   RalphClaimPlanMessagesDocument,
+  RalphDeliveredPlanMessagesDocument,
   RalphEndWorkSessionDocument,
   RalphStartWorkSessionDocument,
   UpdatePlanDocument,
@@ -48,6 +49,16 @@ describe('createOtLoopClient', () => {
       };
     }
 
+    if (document === RalphDeliveredPlanMessagesDocument) {
+      return {
+        planMessages: [
+          { body: 'job claim', id: 'm1', planRunId: 'run-1' },
+          { body: 'other run', id: 'm3', planRunId: 'run-0' },
+          { body: 'hook claim', id: 'm4', planRunId: 'run-1' },
+        ],
+      };
+    }
+
     if (document === RalphStartWorkSessionDocument) {
       return { startWorkSession: { id: 'session-1' } };
     }
@@ -87,13 +98,14 @@ describe('createOtLoopClient', () => {
   };
   const buildClient = (
     workSessionId: string | null = 'run-session',
+    planRunId: string | null = 'run-1',
   ): ReturnType<typeof createOtLoopClient> => {
     return createOtLoopClient({
       executeGraphqlV2: asMock<OtLoopExecuteGraphql>(execute),
       externalRef: 'job-9',
       output,
       planId: PLAN_ID,
-      planRunId: 'run-1',
+      planRunId: planRunId ?? undefined,
       workSessionId,
     });
   };
@@ -106,13 +118,35 @@ describe('createOtLoopClient', () => {
     written.length = 0;
   });
 
-  it('claims the inbox for the run and task and returns the bodies in delivery order', async () => {
-    const bodies = await buildClient().claimInbox({ taskId: 't1' });
+  it('claims the inbox for the run and task and returns the messages in delivery order', async () => {
+    const messages = await buildClient().claimInbox({ taskId: 't1' });
 
-    expect(bodies).toEqual(['use the helper', 'also add docs']);
+    expect(messages).toEqual([
+      { body: 'use the helper', id: 'm1' },
+      { body: 'also add docs', id: 'm2' },
+    ]);
     expect(callsTo(RalphClaimPlanMessagesDocument)[0]?.variables).toEqual({
       input: { planId: PLAN_ID, planRunId: 'run-1', taskId: 't1' },
     });
+  });
+
+  it('lists the messages delivered to this run only', async () => {
+    const messages = await buildClient().listRunDeliveredMessages();
+
+    expect(messages).toEqual([
+      { body: 'job claim', id: 'm1' },
+      { body: 'hook claim', id: 'm4' },
+    ]);
+    expect(callsTo(RalphDeliveredPlanMessagesDocument)[0]?.variables).toEqual({
+      input: { planId: PLAN_ID, statuses: ['DELIVERED'] },
+    });
+  });
+
+  it('lists nothing, without a query, when the run has no row', async () => {
+    expect(
+      await buildClient('run-session', null).listRunDeliveredMessages(),
+    ).toEqual([]);
+    expect(callsTo(RalphDeliveredPlanMessagesDocument)).toHaveLength(0);
   });
 
   it('opens a per-task session declaring the model, then attaches the task as its subject', async () => {

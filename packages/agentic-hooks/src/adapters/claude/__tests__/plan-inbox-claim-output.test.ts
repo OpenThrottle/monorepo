@@ -79,9 +79,11 @@ const run = (
     target: PlanInboxClaimTarget,
   ) => Promise<readonly PlanInboxMessage[] | null>,
   nowMs = 1_000,
+  env: Readonly<Record<string, string | undefined>> = {},
 ) => {
   return decideClaudePlanInboxClaim(raw, {
     claim,
+    env,
     nowMs: () => nowMs,
     readEvents: () => events,
     stateDir,
@@ -213,6 +215,73 @@ describe('decideClaudePlanInboxClaim', () => {
     expect(claim).toHaveBeenCalledTimes(1);
     expect(await run(raw, events, claim, 21_001)).not.toBeNull();
     expect(claim).toHaveBeenCalledTimes(2);
+  });
+
+  describe('run identity from the env (headless worker)', () => {
+    const env = {
+      OPENTHROTTLE_PLAN_ID: 'plan-env',
+      OPENTHROTTLE_PLAN_RUN_ID: 'run-env',
+      OPENTHROTTLE_TASK_ID: 'task-env',
+    };
+
+    it('claims for the env run when the transcript registered none', async () => {
+      const claim = vi.fn(async () => [steer]);
+      const out = await run(bashPayload('rm -rf x'), [], claim, 1_000, env);
+      expect(claim).toHaveBeenCalledWith({
+        planId: 'plan-env',
+        planRunId: 'run-env',
+        taskId: 'task-env',
+      });
+      expect(
+        JSON.parse(out ?? '{}').hookSpecificOutput.permissionDecision,
+      ).toBe('deny');
+    });
+
+    it('passes null run and task ids the orchestrator left blank', async () => {
+      const claim = vi.fn(async () => []);
+      await run(bashPayload('git push'), [], claim, 1_000, {
+        OPENTHROTTLE_PLAN_ID: 'plan-env',
+        OPENTHROTTLE_PLAN_RUN_ID: '',
+        OPENTHROTTLE_TASK_ID: '',
+      });
+      expect(claim).toHaveBeenCalledWith({
+        planId: 'plan-env',
+        planRunId: null,
+        taskId: null,
+      });
+    });
+
+    it('prefers the transcript run over the env', async () => {
+      const claim = vi.fn(async () => []);
+      await run(
+        bashPayload('git push'),
+        [...register, start],
+        claim,
+        1_000,
+        env,
+      );
+      expect(claim).toHaveBeenCalledWith({
+        planId: PLAN_ID,
+        planRunId: RUN_ID,
+        taskId: 'task-9',
+      });
+    });
+
+    it('keeps the tool filter and the throttle', async () => {
+      const claim = vi.fn(async () => [queue]);
+      expect(await run(bashPayload('ls'), [], claim, 1_000, env)).toBeNull();
+      expect(claim).not.toHaveBeenCalled();
+      const raw = bashPayload('git push');
+      expect(await run(raw, [], claim, 1_000, env)).not.toBeNull();
+      expect(await run(raw, [], claim, 10_000, env)).toBeNull();
+      expect(claim).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not claim with neither source', async () => {
+      const claim = vi.fn(async () => [steer]);
+      expect(await run(bashPayload('rm -rf x'), [], claim)).toBeNull();
+      expect(claim).not.toHaveBeenCalled();
+    });
   });
 
   it('prints nothing when the claim throws', async () => {

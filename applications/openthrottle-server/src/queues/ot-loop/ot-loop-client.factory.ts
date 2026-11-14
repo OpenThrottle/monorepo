@@ -8,8 +8,10 @@ import {
   CreateTasksDocument,
   GetPlanDocument,
   GetTasksByPlanIdDocument,
+  PlanMessageStatus,
   RalphAttachWorkSessionSubjectDocument,
   RalphClaimPlanMessagesDocument,
+  RalphDeliveredPlanMessagesDocument,
   RalphEndWorkSessionDocument,
   RalphStartWorkSessionDocument,
   UpdatePlanDocument,
@@ -30,7 +32,7 @@ import {
 /**
  * @description The OT Loop `LoopClient` over the worker-scoped GraphQL executor Ralph uses, mirroring
  * its calls: the same `getTasksByPlanId`, `updateTask`, `updatePlan`, `createTasks` and
- * `appendPlanOutput` documents, plus work-session start/attach/end and the inbox claim. Status
+ * `appendPlanOutput` documents, plus work-session start/attach/end, the inbox claim and the run's delivered messages. Status
  * writes carry the processor's run session in `X-OT-Session-Id` (as Ralph's do); the per-task
  * sessions opened here are separate rows and are the only ones this client ever ends.
  */
@@ -49,8 +51,28 @@ export const createOtLoopClient = (
       },
     });
 
-    return result.claimPlanMessages.messages.map((message) => message.body);
+    return result.claimPlanMessages.messages.map(({ body, id }) => ({
+      body,
+      id,
+    }));
   };
+
+  // No run row means nothing can be attributed to this run, so there is nothing to fold in.
+  const listRunDeliveredMessages: LoopClient['listRunDeliveredMessages'] =
+    async () => {
+      if (planRunId === undefined) {
+        return [];
+      }
+
+      const result = await executeGraphqlV2(
+        RalphDeliveredPlanMessagesDocument,
+        { input: { planId, statuses: [PlanMessageStatus.Delivered] } },
+      );
+
+      return result.planMessages
+        .filter((message) => message.planRunId === planRunId)
+        .map(({ body, id }) => ({ body, id }));
+    };
 
   const createFollowUps = async (input: {
     readonly followUps: readonly LoopFollowUp[];
@@ -138,6 +160,7 @@ export const createOtLoopClient = (
 
       return result.plan.status;
     },
+    listRunDeliveredMessages,
     listTasks: async (id) => {
       const result = await executeGraphqlV2(GetTasksByPlanIdDocument, {
         input: { planId: id },

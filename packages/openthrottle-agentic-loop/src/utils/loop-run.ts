@@ -1,4 +1,8 @@
-import type { GitHeadState, LoopTask } from '../contract/index.ts';
+import type {
+  GitHeadState,
+  LoopInboxMessage,
+  LoopTask,
+} from '../contract/index.ts';
 import { LOOP_PLAN_STATUS, LOOP_TASK_STATUS } from '../contract/index.ts';
 import {
   DEFAULT_MAX_RETRIES,
@@ -20,27 +24,75 @@ export const narrate = async (
   }
 };
 
+/** Appends the messages not yet in the guidance list; returns the bodies it added. */
+const adoptGuidance = (
+  ctx: LoopRunContext,
+  messages: readonly LoopInboxMessage[],
+): readonly string[] => {
+  const { guidanceMessageIds } = ctx.tracker;
+  const fresh = messages.filter(
+    (message) => !guidanceMessageIds.has(message.id),
+  );
+
+  if (fresh.length === 0) {
+    return [];
+  }
+
+  const bodies = fresh.map((message) => message.body);
+
+  fresh.forEach((message) => guidanceMessageIds.add(message.id));
+  ctx.tracker.guidance = [...ctx.tracker.guidance, ...bodies];
+
+  return bodies;
+};
+
+/** Messages delivered to this run so far; a read failure is narrated and reads as none. */
+const readRunDelivered = async (
+  ctx: LoopRunContext,
+  taskId: string,
+): Promise<readonly LoopInboxMessage[]> => {
+  try {
+    return await ctx.deps.client.listRunDeliveredMessages();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+
+    await narrate(
+      ctx,
+      `warning: could not read the messages delivered to this run: ${message}`,
+      taskId,
+    );
+
+    return [];
+  }
+};
+
 /**
  * @description Claims the plan inbox once for `taskId`; claimed bodies join the run-scoped guidance
  * list for good. Called at every task boundary and again before each retry of a task, so a message
  * posted while an attempt ran reaches the next attempt rather than waiting for the next task.
+ *
+ * First it folds in what the in-worker hook claimed for this run mid-attempt: those messages are
+ * already DELIVERED, so the claim below never returns them, yet later task prompts must still carry
+ * them. Message ids keep the job's own earlier claims from being added twice.
  */
 export const claimGuidance = async (
   ctx: LoopRunContext,
   taskId: string,
 ): Promise<void> => {
-  const bodies = await ctx.deps.client.claimInbox({ taskId });
+  const folded = adoptGuidance(ctx, await readRunDelivered(ctx, taskId));
+  const claimed = adoptGuidance(
+    ctx,
+    await ctx.deps.client.claimInbox({ taskId }),
+  );
 
-  if (bodies.length === 0) {
-    return;
-  }
-
-  ctx.tracker.guidance = [...ctx.tracker.guidance, ...bodies];
-  await Promise.all(
-    bodies.map((body) =>
+  await Promise.all([
+    ...folded.map((body) =>
+      narrate(ctx, `operator guidance claimed in-worker: ${body}`, taskId),
+    ),
+    ...claimed.map((body) =>
       narrate(ctx, `operator guidance claimed: ${body}`, taskId),
     ),
-  );
+  ]);
 };
 
 /** @description Ends the tracked per-task session (never the processor's run session). */

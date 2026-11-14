@@ -273,6 +273,7 @@ export class OtLoopOrchestratorService {
       effort: toEffort(tuning.effort),
       output,
       planId,
+      planRunId: run?.id,
       runCommand,
       runModel,
       say,
@@ -346,6 +347,7 @@ export class OtLoopOrchestratorService {
     readonly effort: DriverReasoningEffort | undefined;
     readonly output: PlanOutputWriter;
     readonly planId: string;
+    readonly planRunId: string | undefined;
     readonly runCommand: ReturnType<
       typeof createDefaultWorkflowRalphCommandRunner
     >;
@@ -403,6 +405,8 @@ export class OtLoopOrchestratorService {
           input.usage.current = usageLimit;
         },
         output,
+        planId,
+        planRunId: input.planRunId,
         runDriver: runDriverAsync,
         timeoutMs: input.timeoutMs,
       }),

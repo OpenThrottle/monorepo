@@ -10,7 +10,10 @@ import {
   isWorkableRalphTask,
   pickRalphTaskForIteration,
 } from '@openthrottle/openthrottle-agentic-ralph';
-import { resolveGitBranchFromCwd } from '@openthrottle/openthrottle-agentic-utils';
+import {
+  buildRunIdentityEnv,
+  resolveGitBranchFromCwd,
+} from '@openthrottle/openthrottle-agentic-utils';
 import type { UsageLimit } from '@openthrottle/openthrottle-drivers';
 
 import { ARTWORK_RALPH, ARTWORK_THANK_YOU, COLORS } from '../config/index';
@@ -524,6 +527,13 @@ export const main = async (): Promise<void> => {
       agentPrompt,
       backend: parsedArgs.backend,
       effort: parsedArgs.effort,
+      // Run identity for in-worker hooks (the plan-inbox claim): the agent never registers this run
+      // itself, so its transcript cannot name it. Untracked runs and unpicked tasks export blanks.
+      env: buildRunIdentityEnv({
+        planId: effectivePlanId,
+        planRunId,
+        taskId: task ?? firstPendingForIteration,
+      }),
       iteration,
       model: parsedArgs.model,
       onUsageLimit: (limit) => {
