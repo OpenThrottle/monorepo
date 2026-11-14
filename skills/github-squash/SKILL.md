@@ -1,13 +1,13 @@
 ---
 name: github-squash
-description: 'Squash branch commits into one conventional commit via soft reset to the default branch, keeping Closes refs and Plan-Id/Task-Id footers. USE WHEN the user runs /github-squash or wants a single clean commit before merge. Not for a plain commit (github-commit).'
+description: 'Squash branch commits into one conventional commit via a soft reset to the merge-base then a rebase onto the default branch, keeping Closes refs and Plan-Id/Task-Id footers. USE WHEN the user runs /github-squash or wants a single clean commit before merge. Not for a plain commit (github-commit).'
 metadata:
   author: openthrottle
   last-reviewed: '2026-11-14'
-  version: '1.1.0'
+  version: '1.2.0'
 ---
 
-Squash the `n` commits on this branch into a single conventional commit using a soft reset to the base. Fold small commits into the body; summarize any commit that changes more than 15 lines as one concise line item; drop garbage commits. The footer block is not summarized — it is rebuilt from OT and cross-checked against every commit in the range, per [Footers](#footers).
+Squash the `n` commits on this branch into a single conventional commit using a soft reset to the branch's merge-base with the base, then a rebase onto the base. Fold small commits into the body; summarize any commit that changes more than 15 lines as one concise line item; drop garbage commits. The footer block is not summarized — it is rebuilt from OT and cross-checked against every commit in the range, per [Footers](#footers).
 
 ## Resolve the host repo first
 
@@ -46,12 +46,20 @@ landing is a `git push --force-with-lease` behind explicit human confirmation. L
 ## Procedure
 
 1. If there is uncommitted work, run `/github-commit` first.
-2. Fetch: `git fetch <remote> <default>`. A stale base makes the soft reset silently revert commits that landed after your last fetch.
+2. Fetch: `git fetch <remote> <default>`, then take the fork point: `mb=$(git merge-base HEAD <base>)`. Squash onto `$mb`, **never onto `<base>`**: when the base has moved since the branch forked, `git reset --soft <base>` keeps the branch's old tree, so the squash commit silently reverts every commit that landed in between.
 3. Confirm the count: `git rev-list --count <base>..HEAD` is the `n` you expect. Compare against `<base>`, not the last push.
 4. Build the footer block, per [Footers](#footers). Write the whole message to a file, then run the `github-pull-request` skill's attribution guard on it: `sh "$ATTRIBUTION_GUARD" --message-file <file>`. The soft reset is where an attribution line from any squashed commit gets carried forward.
-5. **Get human confirmation** before the reset.
+5. **Get human confirmation** before the reset and the rebase in step 7. One confirmation covers both.
 6. Make the backup ref: `git branch backup/<branch>-pre-squash HEAD`. The soft reset orphans the original commits; this keeps them reachable. The `github-cleanup` skill treats such backup branches of merged work as safe to prune.
-7. `git reset --soft <base>`, then commit with the message file (conventional commits; see the `github-commit` skill). Diff-stat the result against the backup to confirm nothing was captured or dropped unexpectedly.
+7. `git reset --soft "$mb"`, then commit with the message file (conventional commits; see the `github-commit` skill). If `$mb` is not `<base>`, `git rebase <base>`. That replays one commit, so there is at most one round of conflicts. Then compare the patch, not the diff-stat. A diff-stat against the backup cannot catch the revert, because the backup lacks the landed commits too:
+
+   ```bash
+   diff <(git diff -U0 "$mb" backup/<branch>-pre-squash | grep -v '^index \|^@@') \
+        <(git diff -U0 <base> HEAD | grep -v '^index \|^@@')
+   ```
+
+   The output must be empty. `-U0` and the `grep` drop context, blob ids and hunk offsets, which legitimately change when the base touched the same files elsewhere. Any remaining line is either a conflict you resolved in the rebase (confirm it) or the squash capturing or reverting something (stop, `git reset --hard backup/<branch>-pre-squash` and redo). `git diff --name-only <base> HEAD` naming a file the branch never touched is the revert signature.
+
 8. Run the attribution guard again on `--commits HEAD` before landing.
 9. Land the branch the way the mode calls for. In post-push mode require human confirmation again before the force push. **Never** push directly to the default branch.
 
