@@ -72,6 +72,10 @@ Two rows carry caveats worth stating rather than smoothing over:
   normalizer that guesses cannot tell "not a skill invocation" from "the shape changed underneath
   us", which is exactly the bug `cursor` carried.
 
+Every one of these, and **`antigravity`**, also sends the coverage heartbeat on its session-start
+event (contract §8). For antigravity that is the only hook: it ships in the generated workspace
+plugin `.agents/plugins/openthrottle/`, with no skill capture or completion yet.
+
 Tools with no row yet are not necessarily unreachable; see
 [agent-cli-hook-capability-matrix.md](../../docs/monorepo/agent-cli-hook-capability-matrix.md) for
 what each CLI's hook and plugin surface actually supports, measured against installed binaries.
@@ -88,7 +92,10 @@ file from the drift gate — the bundle exists, and nothing ever notices when it
    [scripts/bundle-hooks.ts](scripts/bundle-hooks.ts).
 3. **Register the outputs in `package.json` — BOTH targets.** The new `.cjs` path must appear in the
    `outputs` array of `bundle-hooks` _and_ in the `inputs` array of `bundle-hooks-check`. The first
-   makes Nx cache it; the second makes CI fail when it drifts.
+   makes Nx cache it; the second makes CI fail when it drifts. Add the entrypoint's `src/` path to
+   `sideEffects` too — it runs `main()` on import, and `check-side-effects` fails without it.
+   A bundle in a **new folder** also needs that folder's glob in `.gitattributes` and
+   `.prettierignore`, or `check:local` fails on the generated file.
 4. **Wire the tool's own hook config** to the generated `.cjs`, using the tool's real event names.
 5. **Regenerate:** `pnpm nx run @openthrottle/agentic-hooks:bundle-hooks`, and commit the output.
 
@@ -112,7 +119,17 @@ command = "/absolute/path/to/openthrottle/.codex/hooks/skill-usage-capture.cjs"
 [[hooks.SessionEnd.hooks]]
 type = "command"
 command = "/absolute/path/to/openthrottle/.codex/hooks/skill-usage-complete.cjs"
+
+[[hooks.SessionStart]]
+[[hooks.SessionStart.hooks]]
+type = "command"
+command = "/absolute/path/to/openthrottle/.codex/hooks/skill-usage-heartbeat.cjs"
 ```
+
+The `SessionStart` entry sends the coverage heartbeat
+([contract §8](../../docs/monorepo/child-repo-hook-telemetry-contract.md#8-coverage-heartbeat)), so
+`/usage` → Telemetry coverage can list the machine. A bundle that lives outside the session's
+repository, as it does here, reports the `plugin-dir` leg.
 
 `codex doctor` reports whether the file parsed. `-c hooks.…=…` and `CODEX_HOME` give per-invocation
 control.

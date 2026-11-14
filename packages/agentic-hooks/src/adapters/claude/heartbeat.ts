@@ -4,33 +4,14 @@
  * local telemetry buffer (docs/monorepo/child-repo-hook-telemetry-contract.md §8). Fail-open:
  * always exits 0, silent when no endpoint resolves.
  */
-import fs from 'node:fs';
-
-import { logHookError, resolveHookRepoRoot } from '../../index.ts';
-import { runHeartbeat } from './heartbeat-run.ts';
+import {
+  logHookError,
+  readHookPayloadCwd,
+  readHookStdin,
+  resolveHookRepoRoot,
+} from '../../index.ts';
+import { runHeartbeat } from './runHeartbeat.ts';
 import { isShadowedByRepoHooks } from './shadow.ts';
-
-/** The `cwd` a SessionStart payload reports, or null when absent or unparsable. */
-const readPayloadCwd = (stdin: string): string | null => {
-  try {
-    const parsed: unknown = JSON.parse(stdin);
-    if (typeof parsed === 'object' && parsed !== null && 'cwd' in parsed) {
-      return typeof parsed.cwd === 'string' && parsed.cwd ? parsed.cwd : null;
-    }
-  } catch {
-    // An empty or malformed payload just means no cwd; the heartbeat does not need one.
-  }
-  return null;
-};
-
-/** Whole stdin, or '' when there is none to read. */
-const readStdin = (): string => {
-  try {
-    return fs.readFileSync(0, 'utf8');
-  } catch {
-    return '';
-  }
-};
 
 const main = async (): Promise<void> => {
   try {
@@ -50,7 +31,7 @@ const main = async (): Promise<void> => {
     }
 
     const repoRoot = resolveHookRepoRoot({
-      payloadCwd: readPayloadCwd(readStdin()),
+      payloadCwd: readHookPayloadCwd(readHookStdin()),
       projectDir,
     });
 

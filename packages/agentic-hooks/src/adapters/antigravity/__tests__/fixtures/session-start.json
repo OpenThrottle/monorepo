@@ -1,0 +1,10 @@
+{
+  "artifactDirectoryPath": "/home/probe/.gemini/antigravity-cli/brain/560cdd35-d605-480e-a2aa-60735516bcf9",
+  "conversationId": "560cdd35-d605-480e-a2aa-60735516bcf9",
+  "cwd": "/tmp/probe-repo",
+  "hookEventName": "SessionStart",
+  "lastUserInput": "Reply with the single word PONG.",
+  "modelName": "gemini-3.8-flash-high",
+  "transcriptPath": "/home/probe/.gemini/antigravity-cli/brain/560cdd35-d605-480e-a2aa-60735516bcf9/.system_generated/logs/transcript_full.jsonl",
+  "workspacePaths": ["/tmp/probe-repo"]
+}

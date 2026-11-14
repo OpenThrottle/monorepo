@@ -35,6 +35,16 @@ No filesystem path is sent from your repository either: the working directory is
 reported only inside an OpenThrottle checkout, and the git remote identifies the
 repository everywhere else.
 
+Once per session start, a coverage heartbeat: a random machine id (generated once into
+`~/.openthrottle/machine-id`, never derived from your hostname), an optional machine label
+you set yourself with `OPENTHROTTLE_MACHINE_LABEL`, which way the hooks were delivered
+(`repo` or `plugin-dir`), the normalized git remote of the repository (credentials
+stripped, no paths), this plugin's version, and counts of locally buffered records with the
+age of the oldest. Cursor's session payload carries your account email; the heartbeat reads
+only the working directory from it and sends no email, hostname, username, path, token,
+skill name or argument. A heartbeat is never buffered; the last attempt is written to
+`~/.openthrottle/skill-usage/last-heartbeat.json`.
+
 ## Configuring the endpoint
 
 Values are resolved by WHERE they live, under one set of names. Highest first:
@@ -82,6 +92,7 @@ See `docs/monorepo/child-repo-hook-telemetry-contract.md` for the full contract.
 | --- | --- |
 | `preToolUse` | `hooks/skill-usage-capture.cjs` |
 | `beforeSubmitPrompt` | `hooks/skill-usage-capture.cjs` |
+| `sessionStart` | `hooks/skill-usage-heartbeat.cjs` |
 | `sessionEnd` | `hooks/skill-usage-complete.cjs` |
 
 Cursor has no `Skill` tool: a skill invocation is a `Read` of the skill's `SKILL.md`,

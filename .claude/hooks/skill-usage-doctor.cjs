@@ -334,6 +334,24 @@ var readBufferStats = () => {
   };
 };
 
+// packages/agentic-hooks/src/data/heartbeat.ts
+var LAST_HEARTBEAT_BASENAME = "last-heartbeat.json";
+var UNKNOWN_MARKETPLACE_INSTALL = Object.freeze({
+  installed: null,
+  version: null
+});
+var readVersionField = (rawJson) => {
+  try {
+    const parsed = JSON.parse(rawJson);
+    if (!isRecord(parsed) || typeof parsed.version !== "string") {
+      return null;
+    }
+    return parsed.version.trim() || null;
+  } catch {
+    return null;
+  }
+};
+
 // packages/agentic-hooks/src/adapters/claude/doctor-checks.ts
 var PLUGIN_ID = "openthrottle@openthrottle";
 var STALE_BUFFER_MS = 24 * 60 * 60 * 1e3;
@@ -692,25 +710,24 @@ var resolveClaudeConfigDir = (env, homeDir) => {
   return configured ? import_node_path4.default.resolve(configured) : import_node_path4.default.join(homeDir, ".claude");
 };
 var parseMarketplaceInstall = (rawJson) => {
-  const unknown = { installed: null, version: null };
   if (rawJson === null) {
-    return unknown;
+    return UNKNOWN_MARKETPLACE_INSTALL;
   }
   let parsed;
   try {
     parsed = JSON.parse(rawJson);
   } catch {
-    return unknown;
+    return UNKNOWN_MARKETPLACE_INSTALL;
   }
   if (!isRecord(parsed) || !isRecord(parsed.plugins)) {
-    return unknown;
+    return UNKNOWN_MARKETPLACE_INSTALL;
   }
   const entries = parsed.plugins[MARKETPLACE_PLUGIN_KEY];
   if (entries === void 0) {
     return { installed: false, version: null };
   }
   if (!Array.isArray(entries)) {
-    return unknown;
+    return UNKNOWN_MARKETPLACE_INSTALL;
   }
   const [first] = entries;
   if (first === void 0) {
@@ -720,20 +737,6 @@ var parseMarketplaceInstall = (rawJson) => {
   const hasVersion = typeof entryVersion === "string" && entryVersion !== "";
   return { installed: true, version: hasVersion ? entryVersion : null };
 };
-var readVersionField = (rawJson) => {
-  try {
-    const parsed = JSON.parse(rawJson);
-    if (!isRecord(parsed) || typeof parsed.version !== "string") {
-      return null;
-    }
-    return parsed.version.trim() || null;
-  } catch {
-    return null;
-  }
-};
-
-// packages/agentic-hooks/src/adapters/claude/heartbeat-run.ts
-var LAST_HEARTBEAT_BASENAME = "last-heartbeat.json";
 
 // packages/agentic-hooks/src/adapters/claude/doctor-run.ts
 var HEALTH_TIMEOUT_MS = 2e3;

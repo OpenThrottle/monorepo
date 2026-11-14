@@ -16,6 +16,10 @@ import {
   resolveAuthToken,
   resolveGraphqlUrl,
 } from '../../config/env.ts';
+import {
+  LAST_HEARTBEAT_BASENAME,
+  readVersionField,
+} from '../../data/heartbeat.ts';
 import { resolveTelemetryDir } from '../../data/jsonl.ts';
 import { readBufferStats } from '../../data/readBufferStats.ts';
 import {
@@ -33,10 +37,8 @@ import {
 } from './doctor-checks.ts';
 import {
   parseMarketplaceInstall,
-  readVersionField,
   resolveClaudeConfigDir,
 } from './heartbeat-payload.ts';
-import { LAST_HEARTBEAT_BASENAME } from './heartbeat-run.ts';
 
 /** How long `/health` gets before the server counts as unreachable. */
 const HEALTH_TIMEOUT_MS = 2000;

@@ -5,8 +5,8 @@
  */
 import { isRecord } from '@openthrottle/nodejs-utils';
 
+import type { MarketplaceInstall } from '../../data/heartbeat.ts';
 import type { BufferStats } from '../../data/readBufferStats.ts';
-import type { MarketplaceInstall } from './heartbeat-payload.ts';
 
 /**
  * The marketplace plugin id, as typed into `/plugin install`.
