@@ -33,7 +33,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 ));
 
 // packages/agentic-hooks/src/adapters/claude/doctor.ts
-var import_node_fs5 = __toESM(require("node:fs"), 1);
+var import_node_fs6 = __toESM(require("node:fs"), 1);
 var import_node_os3 = __toESM(require("node:os"), 1);
 
 // packages/agentic-hooks/src/config/env.ts
@@ -637,57 +637,46 @@ var summarizeChecks = (checks) => {
   };
 };
 
-// packages/agentic-hooks/src/adapters/claude/doctor-render.ts
-var MIN_SCRUBBED_TOKEN_LENGTH = 6;
-var MIN_SCRUBBED_HOSTNAME_LENGTH = 4;
-var EMAIL_PATTERN = /[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+/g;
-var ID_COLUMN_WIDTH = 14;
-var STATUS_COLUMN_WIDTH = 4;
-var scrubText = (text, scrubber) => {
-  let out = text;
-  if (scrubber.token !== null && scrubber.token.length >= MIN_SCRUBBED_TOKEN_LENGTH) {
-    out = out.split(scrubber.token).join("<token>");
+// packages/agentic-hooks/src/adapters/claude/doctor-fix-run.ts
+var import_node_child_process = require("node:child_process");
+var import_node_fs5 = __toESM(require("node:fs"), 1);
+var import_node_path6 = __toESM(require("node:path"), 1);
+var import_promises = __toESM(require("node:readline/promises"), 1);
+
+// packages/agentic-hooks/src/adapters/claude/doctor-fix.ts
+var MARKETPLACE_NAME = "openthrottle";
+var MARKETPLACE_SOURCE = "OpenThrottle/monorepo";
+var parseMarketplaceKnown = (rawJson) => {
+  if (rawJson === null) {
+    return false;
   }
-  const homes = [...scrubber.homeDirs].filter((home) => home.length > 1).sort((a, b) => b.length - a.length);
-  for (const home of homes) {
-    out = out.split(home).join("~");
+  try {
+    const parsed = JSON.parse(rawJson);
+    return isRecord(parsed) && isRecord(parsed[MARKETPLACE_NAME]);
+  } catch {
+    return false;
   }
-  out = out.replace(EMAIL_PATTERN, "<email>");
-  const host = scrubber.hostname;
-  if (host !== null && host.length >= MIN_SCRUBBED_HOSTNAME_LENGTH && host !== "localhost") {
-    out = out.split(host).join("<host>");
+};
+var planPluginFix = ({
+  install,
+  marketplaceKnown,
+  payloadVersion
+}) => {
+  if (install.installed !== true) {
+    const addMarketplace = marketplaceKnown ? [] : [["plugin", "marketplace", "add", MARKETPLACE_SOURCE]];
+    return {
+      commands: [...addMarketplace, ["plugin", "install", PLUGIN_ID]],
+      kind: "install"
+    };
   }
-  return out;
+  if (install.version !== null && payloadVersion !== null && isOlderVersion(install.version, payloadVersion)) {
+    return { commands: [["plugin", "update", PLUGIN_ID]], kind: "update" };
+  }
+  return { kind: "none" };
 };
-var scrubCheck = (check, scrubber) => {
-  return {
-    detail: scrubText(check.detail, scrubber),
-    fix: check.fix === null ? null : scrubText(check.fix, scrubber),
-    id: check.id,
-    status: check.status
-  };
-};
-var renderDoctorJson = (checks, scrubber) => {
-  const clean = checks.map((check) => scrubCheck(check, scrubber));
-  return `${JSON.stringify({ checks: clean, summary: summarizeChecks(clean) }, null, 2)}
-`;
-};
-var renderDoctorHuman = (checks, scrubber) => {
-  const clean = checks.map((check) => scrubCheck(check, scrubber));
-  const lines = clean.map((check) => {
-    const status = check.status.padEnd(STATUS_COLUMN_WIDTH);
-    return `${status}  ${check.id.padEnd(ID_COLUMN_WIDTH)}${check.detail}`;
-  });
-  const withFix = clean.filter((check) => check.fix !== null);
-  const fixes = withFix.flatMap((check) => {
-    const body = (check.fix ?? "").split("\n").map((line) => `    ${line}`);
-    return [`  ${check.id}`, ...body];
-  });
-  const summary = summarizeChecks(clean);
-  const tally = `${summary.pass} pass, ${summary.warn} warn, ${summary.fail} fail`;
-  const tail = fixes.length === 0 ? [] : ["", "Fixes", ...fixes];
-  return `${[...lines, "", tally, ...tail].join("\n")}
-`;
+var formatPluginFixCommand = (binary, command) => {
+  const shownBinary = /\s/.test(binary) ? `"${binary}"` : binary;
+  return [shownBinary, ...command].join(" ");
 };
 
 // packages/agentic-hooks/src/adapters/claude/doctor-run.ts
@@ -911,9 +900,169 @@ var collectChecks = async ({
   ];
 };
 
+// packages/agentic-hooks/src/adapters/claude/doctor-fix-run.ts
+var CLAUDE_BIN_ENV = "OPENTHROTTLE_CLAUDE_BIN";
+var PLUGIN_FIX_OUTCOME = {
+  APPLIED: "applied",
+  DECLINED: "declined",
+  FAILED: "failed",
+  NOTHING_TO_FIX: "nothing-to-fix",
+  NO_TTY: "no-tty"
+};
+var readTextOrNull2 = (filePath) => {
+  try {
+    return import_node_fs5.default.readFileSync(filePath, "utf8");
+  } catch {
+    return null;
+  }
+};
+var resolveClaudeBinary = (env) => {
+  const override = env[CLAUDE_BIN_ENV]?.trim();
+  return override !== void 0 && override !== "" ? override : "claude";
+};
+var resolvePluginFixPlan = ({
+  env,
+  homeDir,
+  scriptPath
+}) => {
+  const pluginsDir = import_node_path6.default.join(resolveClaudeConfigDir(env, homeDir), "plugins");
+  return planPluginFix({
+    install: parseMarketplaceInstall(
+      readTextOrNull2(import_node_path6.default.join(pluginsDir, "installed_plugins.json"))
+    ),
+    marketplaceKnown: parseMarketplaceKnown(
+      readTextOrNull2(import_node_path6.default.join(pluginsDir, "known_marketplaces.json"))
+    ),
+    payloadVersion: resolvePayloadVersion(scriptPath)
+  });
+};
+var spawnInherited = (binary, args) => {
+  const result = (0, import_node_child_process.spawnSync)(binary, [...args], { stdio: "inherit" });
+  return result.status ?? 1;
+};
+var createTerminalFixIo = () => {
+  return {
+    ask: async (question) => {
+      const rl = import_promises.default.createInterface({
+        input: process.stdin,
+        output: process.stdout
+      });
+      try {
+        return await rl.question(question);
+      } finally {
+        rl.close();
+      }
+    },
+    isInteractive: process.stdin.isTTY === true && process.stdout.isTTY === true,
+    run: spawnInherited,
+    write: (text) => {
+      process.stdout.write(text);
+    }
+  };
+};
+var isYes = (answer) => {
+  const normalized = answer.trim().toLowerCase();
+  return normalized === "y" || normalized === "yes";
+};
+var runPluginFix = async ({
+  binary,
+  io,
+  plan
+}) => {
+  if (plan.kind === "none") {
+    io.write("\n--fix: the plugin is installed and current; nothing to run.\n");
+    return PLUGIN_FIX_OUTCOME.NOTHING_TO_FIX;
+  }
+  const shown = plan.commands.map(
+    (command) => `    ${formatPluginFixCommand(binary, command)}`
+  );
+  io.write(
+    `
+--fix will ${plan.kind} the openthrottle plugin in your Claude Code setup:
+${shown.join("\n")}
+`
+  );
+  if (!io.isInteractive) {
+    io.write(
+      "--fix needs an interactive terminal to ask first; run the commands above yourself.\n"
+    );
+    return PLUGIN_FIX_OUTCOME.NO_TTY;
+  }
+  if (!isYes(await io.ask("Run these now? [y/N] "))) {
+    io.write("Nothing was changed.\n");
+    return PLUGIN_FIX_OUTCOME.DECLINED;
+  }
+  for (const command of plan.commands) {
+    const status = io.run(binary, command);
+    if (status !== 0) {
+      io.write(
+        `\`${formatPluginFixCommand(binary, command)}\` exited ${status}; stopped.
+`
+      );
+      return PLUGIN_FIX_OUTCOME.FAILED;
+    }
+  }
+  io.write("Done. Restart Claude Code to load the plugin.\n");
+  return PLUGIN_FIX_OUTCOME.APPLIED;
+};
+
+// packages/agentic-hooks/src/adapters/claude/doctor-render.ts
+var MIN_SCRUBBED_TOKEN_LENGTH = 6;
+var MIN_SCRUBBED_HOSTNAME_LENGTH = 4;
+var EMAIL_PATTERN = /[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+/g;
+var ID_COLUMN_WIDTH = 14;
+var STATUS_COLUMN_WIDTH = 4;
+var scrubText = (text, scrubber) => {
+  let out = text;
+  if (scrubber.token !== null && scrubber.token.length >= MIN_SCRUBBED_TOKEN_LENGTH) {
+    out = out.split(scrubber.token).join("<token>");
+  }
+  const homes = [...scrubber.homeDirs].filter((home) => home.length > 1).sort((a, b) => b.length - a.length);
+  for (const home of homes) {
+    out = out.split(home).join("~");
+  }
+  out = out.replace(EMAIL_PATTERN, "<email>");
+  const host = scrubber.hostname;
+  if (host !== null && host.length >= MIN_SCRUBBED_HOSTNAME_LENGTH && host !== "localhost") {
+    out = out.split(host).join("<host>");
+  }
+  return out;
+};
+var scrubCheck = (check, scrubber) => {
+  return {
+    detail: scrubText(check.detail, scrubber),
+    fix: check.fix === null ? null : scrubText(check.fix, scrubber),
+    id: check.id,
+    status: check.status
+  };
+};
+var renderDoctorJson = (checks, scrubber) => {
+  const clean = checks.map((check) => scrubCheck(check, scrubber));
+  return `${JSON.stringify({ checks: clean, summary: summarizeChecks(clean) }, null, 2)}
+`;
+};
+var renderDoctorHuman = (checks, scrubber) => {
+  const clean = checks.map((check) => scrubCheck(check, scrubber));
+  const lines = clean.map((check) => {
+    const status = check.status.padEnd(STATUS_COLUMN_WIDTH);
+    return `${status}  ${check.id.padEnd(ID_COLUMN_WIDTH)}${check.detail}`;
+  });
+  const withFix = clean.filter((check) => check.fix !== null);
+  const fixes = withFix.flatMap((check) => {
+    const body = (check.fix ?? "").split("\n").map((line) => `    ${line}`);
+    return [`  ${check.id}`, ...body];
+  });
+  const summary = summarizeChecks(clean);
+  const tally = `${summary.pass} pass, ${summary.warn} warn, ${summary.fail} fail`;
+  const tail = fixes.length === 0 ? [] : ["", "Fixes", ...fixes];
+  return `${[...lines, "", tally, ...tail].join("\n")}
+`;
+};
+
 // packages/agentic-hooks/src/adapters/claude/parseDoctorArgs.ts
 var parseDoctorArgs = (argv) => {
   return {
+    fix: argv.includes("--fix"),
     json: argv.includes("--json"),
     strict: argv.includes("--strict")
   };
@@ -922,7 +1071,7 @@ var parseDoctorArgs = (argv) => {
 // packages/agentic-hooks/src/adapters/claude/doctor.ts
 var realpathOrNull = (target) => {
   try {
-    return import_node_fs5.default.realpathSync(target);
+    return import_node_fs6.default.realpathSync(target);
   } catch {
     return null;
   }
@@ -938,6 +1087,25 @@ var buildScrubber = (repoRoot) => {
     token: resolveAuthToken(repoRoot) || null
   };
 };
+var runFix = async (scriptPath, scrubber) => {
+  const terminal = createTerminalFixIo();
+  const outcome = await runPluginFix({
+    binary: resolveClaudeBinary(process.env),
+    io: {
+      ...terminal,
+      write: (text) => {
+        terminal.write(scrubText(text, scrubber));
+      }
+    },
+    plan: resolvePluginFixPlan({
+      env: process.env,
+      homeDir: import_node_os3.default.homedir(),
+      scriptPath
+    })
+  });
+  const failed = outcome === PLUGIN_FIX_OUTCOME.NO_TTY || outcome === PLUGIN_FIX_OUTCOME.FAILED;
+  return failed ? 1 : 0;
+};
 var main = async () => {
   try {
     const args = parseDoctorArgs(process.argv.slice(2));
@@ -945,16 +1113,22 @@ var main = async () => {
       payloadCwd: null,
       projectDir: process.env.CLAUDE_PROJECT_DIR || process.env.OPEN_THROTTLE_REPO_ROOT || process.cwd()
     });
-    const checks = await collectChecks({
-      repoRoot,
-      scriptPath: process.argv[1] ?? ""
-    });
+    const scriptPath = process.argv[1] ?? "";
+    const checks = await collectChecks({ repoRoot, scriptPath });
     const scrubber = buildScrubber(repoRoot);
     process.stdout.write(
       args.json ? renderDoctorJson(checks, scrubber) : renderDoctorHuman(checks, scrubber)
     );
     const hasFail = checks.some((check) => check.status === CHECK_STATUS.FAIL);
-    return args.strict && hasFail ? 1 : 0;
+    const checksCode = args.strict && hasFail ? 1 : 0;
+    if (!args.fix) {
+      return checksCode;
+    }
+    if (args.json) {
+      process.stderr.write("--fix is ignored with --json; nothing was run.\n");
+      return checksCode;
+    }
+    return Math.max(checksCode, await runFix(scriptPath, scrubber));
   } catch (err) {
     logHookError("doctor failed", err);
     return 0;

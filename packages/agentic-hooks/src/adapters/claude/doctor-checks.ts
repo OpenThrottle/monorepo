@@ -8,8 +8,12 @@ import { isRecord } from '@openthrottle/nodejs-utils';
 import type { BufferStats } from '../../data/readBufferStats.ts';
 import type { MarketplaceInstall } from './heartbeat-payload.ts';
 
-/** The marketplace plugin id, as typed into `/plugin install`. */
-const PLUGIN_ID = 'openthrottle@openthrottle';
+/**
+ * The marketplace plugin id, as typed into `/plugin install`.
+ *
+ * @public
+ */
+export const PLUGIN_ID = 'openthrottle@openthrottle';
 
 /** A buffer whose oldest record is older than this is not draining. */
 const STALE_BUFFER_MS = 24 * 60 * 60 * 1000;

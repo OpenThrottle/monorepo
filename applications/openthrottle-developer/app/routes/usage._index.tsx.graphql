@@ -203,3 +203,7 @@ query getUsageTelemetryCoverage {
     windowDays
   }
 }
+
+mutation forgetUsageTelemetryMachine($machineId: String!) {
+  forgetTelemetryMachine(machineId: $machineId)
+}

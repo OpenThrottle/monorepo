@@ -7529,7 +7529,12 @@ type Mutation {
   deleteTagActionRule(input: DeleteTagActionRuleInput!): Boolean!
 
   """
-  Record the per-session coverage heartbeat: which machine, delivery leg and repo, and what sits in the local telemetry buffer. Upserted latest-wins per (machine, repo, leg, source). Attributed to the human user the authenticated principal acts as; a userId is never accepted from the client.
+  Forget a machine on the telemetry coverage view: delete every heartbeat row the requesting user has for machineId (all repos, delivery legs and sources), so a retired machine stops raising MACHINE_SILENT. Returns the number of rows deleted (0 when there were none). A later heartbeat from the machine re-adds it.
+  """
+  forgetTelemetryMachine(machineId: String!): Int!
+
+  """
+  Record the per-session coverage heartbeat: which machine, delivery leg and repo, and what sits in the local telemetry buffer. Upserted latest-wins per (machine, repo, leg, source). Attributed to the human user the authenticated principal acts as; a userId is never accepted from the client. A coverage warning this heartbeat newly raises for its machine is pushed once as a system.alert linking to /usage.
   """
   recordTelemetryHeartbeat(input: RecordTelemetryHeartbeatInput!): TelemetryHeartbeatObject!
 

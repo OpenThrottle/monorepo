@@ -50,4 +50,14 @@ describe('NotificationsService PubSub fanout', () => {
       expect.arrayContaining(['notifications:all', 'system:alert']),
     );
   });
+
+  it('carries an optional link on system.alert', () => {
+    const service = makeService();
+    service.emitSystemAlert({ link: '/usage', message: 'coverage' });
+    const [, envelope] = publish.mock.calls[0] ?? [];
+    expect(envelope.event).toMatchObject({
+      event: 'system.alert',
+      link: '/usage',
+    });
+  });
 });

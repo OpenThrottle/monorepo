@@ -31,6 +31,7 @@ describe('TelemetryHeartbeatsService', () => {
   let service: TelemetryHeartbeatsService;
   const query = vi.fn();
   const find = vi.fn();
+  const remove = vi.fn();
   const findOneByOrFail = vi.fn();
 
   beforeEach(async () => {
@@ -41,11 +42,30 @@ describe('TelemetryHeartbeatsService', () => {
         { provide: LoggerService, useValue: createMock<LoggerService>() },
         {
           provide: getRepositoryToken(TelemetryHeartbeat),
-          useValue: { find, findOneByOrFail, query },
+          useValue: { delete: remove, find, findOneByOrFail, query },
         },
       ],
     }).compile();
     service = app.get(TelemetryHeartbeatsService);
+  });
+
+  describe('deleteForUserMachine', () => {
+    it("deletes only the user's rows for that machine and returns the count", async () => {
+      remove.mockResolvedValue({ affected: 3, raw: [] });
+
+      await expect(
+        service.deleteForUserMachine(userId, 'machine-1'),
+      ).resolves.toBe(3);
+      expect(remove).toHaveBeenCalledWith({ machineId: 'machine-1', userId });
+    });
+
+    it('returns 0 when the driver reports no affected count', async () => {
+      remove.mockResolvedValue({ raw: [] });
+
+      await expect(
+        service.deleteForUserMachine(userId, 'machine-1'),
+      ).resolves.toBe(0);
+    });
   });
 
   describe('upsertHeartbeat', () => {

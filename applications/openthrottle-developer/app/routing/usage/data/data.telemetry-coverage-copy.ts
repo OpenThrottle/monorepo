@@ -41,6 +41,9 @@ export const TELEMETRY_COVERAGE_COMMANDS = {
   pluginUpdate: `claude plugin update openthrottle@openthrottle`,
 } as const;
 
+/** The `intent` field the row's "Forget machine" action posts to the /usage action. */
+export const FORGET_TELEMETRY_MACHINE_INTENT = 'forgetTelemetryMachine';
+
 export const TELEMETRY_COVERAGE_COPY = {
   bufferDeadLetter: (count: number): string => `${count} dead-lettered`,
   bufferEmpty: `Empty`,
@@ -56,7 +59,7 @@ export const TELEMETRY_COVERAGE_COPY = {
   columnStatus: `Status`,
   copyLabel: `Copy`,
   detailsAriaLabel: (machineName: string): string =>
-    `Repos reported by ${machineName}`,
+    `Repos and actions for ${machineName}`,
   detailsHeading: `Repos`,
   detailsNoRemote: `No git remote`,
   detailsNoRepos: `No repos reported`,
@@ -71,6 +74,12 @@ export const TELEMETRY_COVERAGE_COPY = {
   emptyDoctorLabel: `Check a machine`,
   emptyEnvLabel: `Endpoint lines for ~/.openthrottle/.env`,
   emptyTitle: `No machines are reporting`,
+  forgetCancel: `Cancel`,
+  forgetConfirm: `Forget machine`,
+  forgetDescription: (machineName: string): string =>
+    `Removes every heartbeat ${machineName} has reported, so it stops showing here and stops raising warnings. Use it for a machine you no longer use. Nothing on the machine changes; if it sends another heartbeat, it comes back.`,
+  forgetLabel: `Forget machine`,
+  forgetTitle: (machineName: string): string => `Forget ${machineName}?`,
   heading: `Telemetry coverage`,
   intro: (windowDays: number): string =>
     `Which machines and repos are reporting telemetry to this server, and whether sessions you start by hand outside the OpenThrottle repo are recorded. Showing activity from the last ${windowDays} days.`,

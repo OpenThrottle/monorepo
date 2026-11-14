@@ -4,7 +4,10 @@ import { GlobalPopover } from '@openthrottle/react-router-ui-global';
 import * as React from 'react';
 
 import type { UsageTelemetryCoverageMachineFragment } from '~/__generated__/graphql';
-import { TELEMETRY_COVERAGE_COPY } from '~/routing/usage/data/data.telemetry-coverage-copy';
+import {
+  FORGET_TELEMETRY_MACHINE_INTENT,
+  TELEMETRY_COVERAGE_COPY,
+} from '~/routing/usage/data/data.telemetry-coverage-copy';
 import {
   machineDisplayName,
   repoDisplayName,
@@ -62,7 +65,25 @@ export const UsageTelemetryCoverageRowDetails = (
     label: copy.detailsNoRepos,
     onSelect: noop,
   };
-  const actions = repoActions.length > 0 ? repoActions : [emptyAction];
+  const forgetAction: GlobalPopoverAction = {
+    confirm: {
+      cancelLabel: copy.forgetCancel,
+      confirmLabel: copy.forgetConfirm,
+      description: copy.forgetDescription(machineName),
+      title: copy.forgetTitle(machineName),
+    },
+    destructive: true,
+    fields: {
+      intent: FORGET_TELEMETRY_MACHINE_INTENT,
+      machineId: machine.machineId,
+    },
+    id: 'forgetMachine',
+    kind: 'submit',
+    label: copy.forgetLabel,
+    separatorBefore: true,
+  };
+  const listedRepos = repoActions.length > 0 ? repoActions : [emptyAction];
+  const actions = [...listedRepos, forgetAction];
 
   // Life Cycle
 

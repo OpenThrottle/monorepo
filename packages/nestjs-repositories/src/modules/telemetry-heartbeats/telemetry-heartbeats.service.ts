@@ -64,6 +64,22 @@ export class TelemetryHeartbeatsService {
   }
 
   /**
+   * @description Delete every heartbeat row a user has for one machine — all
+   * repos, legs and sources — so a retired machine stops raising coverage
+   * warnings. Scoped to the user: another user's rows for the same machine id
+   * are untouched. Returns how many rows went; a later heartbeat from the
+   * machine simply recreates them.
+   */
+  async deleteForUserMachine(
+    userId: string,
+    machineId: string,
+  ): Promise<number> {
+    const result = await this.repository.delete({ machineId, userId });
+
+    return result.affected ?? 0;
+  }
+
+  /**
    * @description Heartbeats for a user, newest first. `sinceDate` keeps only
    * rows last seen at or after it; null returns every row.
    */

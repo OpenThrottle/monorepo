@@ -19,6 +19,7 @@ const userId = '11111111-1111-4111-8111-111111111111';
 describe('TelemetryCoverageResolver', () => {
   let resolver: TelemetryCoverageResolver;
   const listForUser = vi.fn();
+  const deleteForUserMachine = vi.fn();
   const resolveEffectiveUserId = vi.fn();
 
   afterEach(() => {
@@ -36,7 +37,10 @@ describe('TelemetryCoverageResolver', () => {
         TelemetryCoverageResolver,
         {
           provide: TelemetryHeartbeatsService,
-          useValue: createMock<TelemetryHeartbeatsService>({ listForUser }),
+          useValue: createMock<TelemetryHeartbeatsService>({
+            deleteForUserMachine,
+            listForUser,
+          }),
         },
         {
           provide: EffectiveUserResolutionService,
@@ -116,6 +120,46 @@ describe('TelemetryCoverageResolver', () => {
       await expect(resolver.telemetryCoverage(9999, 'sub-1')).rejects.toThrow(
         BadRequestException,
       );
+    });
+  });
+
+  describe('forgetTelemetryMachine', () => {
+    test('requires SETTINGS_WRITE', () => {
+      const permissions = Reflect.getMetadata(
+        PERMISSIONS_KEY,
+        TelemetryCoverageResolver.prototype.forgetTelemetryMachine,
+      );
+
+      expect(permissions).toEqual([PERMISSIONS.SETTINGS_WRITE]);
+    });
+
+    test("deletes the resolved user's rows for the trimmed machine id", async () => {
+      deleteForUserMachine.mockResolvedValue(2);
+
+      await expect(
+        resolver.forgetTelemetryMachine(' m1 ', 'sub-1'),
+      ).resolves.toBe(2);
+      expect(deleteForUserMachine).toHaveBeenCalledWith(userId, 'm1');
+    });
+
+    describe('when the machine id is blank', () => {
+      test('rejects without deleting', async () => {
+        await expect(
+          resolver.forgetTelemetryMachine('  ', 'sub-1'),
+        ).rejects.toThrow(BadRequestException);
+        expect(deleteForUserMachine).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when there is no user principal', () => {
+      test('rejects without deleting', async () => {
+        resolveEffectiveUserId.mockResolvedValue(null);
+
+        await expect(
+          resolver.forgetTelemetryMachine('m1', undefined),
+        ).rejects.toThrow(BadRequestException);
+        expect(deleteForUserMachine).not.toHaveBeenCalled();
+      });
     });
   });
 });
