@@ -17,18 +17,20 @@ largest — hosting — is the smallest.
 
 This is the bill that exists right now, with nothing deployed.
 
-| Line item                                      | Category    |         Monthly | What sponsorship covers                                                        |
-| ---------------------------------------------- | ----------- | --------------: | ------------------------------------------------------------------------------ |
-| Claude subscription — the agents that build it | development |        **$100** | The coding-agent seat OpenThrottle is developed with. Likely $200 soon (below) |
-| Vercel — hosts all four React Router apps      | SaaS        |          _TODO_ | The public website, docs, and app previews                                     |
-| Blacksmith — CI runners                        | CI          |          _TODO_ | Lint, typecheck, tests, and codegen-drift checks on every PR                   |
-| GitHub — org plan                              | SaaS        |          _TODO_ | The repository, issues, and Actions                                            |
-| **Out of pocket today**                        |             | **$100 + TODO** | **Development and CI, before anything is hosted**                              |
+| Line item                                      | Category    |  Monthly | What sponsorship covers                                                        |
+| ---------------------------------------------- | ----------- | -------: | ------------------------------------------------------------------------------ |
+| Claude subscription — the agents that build it | development | **$100** | The coding-agent seat OpenThrottle is developed with. Likely $200 soon (below) |
+| Vercel Pro — hosts all four React Router apps  | SaaS        |  **$20** | The public website, docs, and app previews                                     |
+| GitHub Pro                                     | SaaS        |   **$5** | The account the repository, issues, and project work run under                 |
+| GitHub Actions — CI runners                    | CI          |   **$0** | Lint, typecheck, tests, and codegen-drift checks on every PR                   |
+| **Out of pocket today**                        |             | **$125** | **Development and CI, before anything is hosted**                              |
 
-> **The Claude figure is the owner's real plan amount.** OpenThrottle is built agent-first, so
-> the agent seat is a large recurring cost, and heavier use moves it to the
-> **$200/month** plan. The three SaaS rows still need amounts read off their billing pages;
-> this page will not carry invented numbers in the meantime.
+> **Every figure is the owner's real billing amount.** OpenThrottle is built agent-first, so
+> the agent seat is the largest recurring cost, and heavier use moves it to the
+> **$200/month** plan. CI is free because it runs on GitHub's standard runners, which cost
+> nothing on a public repository. Paid runners such as Blacksmith are not in use. Bringing one
+> back means pricing it first ([docs/monorepo/ci-cost.md](docs/monorepo/ci-cost.md)), and if
+> the repository ever goes private, every CI minute starts billing.
 
 ### 2. Hosting it — the floor
 
@@ -65,7 +67,7 @@ next step up adds **$49.31/month** on its own.
 
 Moving the four React Router apps off Vercel costs roughly **$57.67/month** on Cloud Run
 before request-time compute, and gives up preview deployments, which the PR review workflow
-depends on. So Vercel, Blacksmith, GitHub, and the Claude seat are **ongoing** costs under
+depends on. So Vercel, GitHub, and the Claude seat are **ongoing** costs under
 every hosting option — sponsorship helps carry them; no migration retires them. Math in
 [`infra/estimates/gcp-apps-on-cloud-run-2026-08-17.csv`](infra/estimates/gcp-apps-on-cloud-run-2026-08-17.csv).
 
