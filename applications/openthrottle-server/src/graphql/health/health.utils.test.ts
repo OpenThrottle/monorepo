@@ -9,7 +9,7 @@ import { join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { readServerVersion } from './server-info.utils.ts';
+import { readServerVersion } from './health.utils.ts';
 
 describe('readServerVersion', () => {
   let root: string;

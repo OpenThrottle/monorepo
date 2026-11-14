@@ -15,9 +15,10 @@ import {
 import type { Redis } from 'ioredis';
 import { DataSource } from 'typeorm';
 
-import { getServerVersion } from '../server-info/server-info.utils.ts';
 import type { ServerHealthResponse } from './health.types.ts';
+import { getServerVersion } from './health.utils.ts';
 import type { ServerHealthStatus } from './server-health.object.ts';
+import type { ServerInfoObject } from './server-info.object.ts';
 
 @Injectable()
 export class HealthService {
@@ -125,5 +126,12 @@ export class HealthService {
       version: getServerVersion(),
       websocket,
     };
+  }
+
+  /**
+   * @description Static facts about the running build: no database or Redis round trip, unlike getServerHealth.
+   */
+  getServerInfo(): ServerInfoObject {
+    return { version: getServerVersion() };
   }
 }

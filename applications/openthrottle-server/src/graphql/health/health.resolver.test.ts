@@ -16,6 +16,7 @@ describe('HealthResolver', () => {
   const mockHealthService = createMock<HealthService>({
     getDatabaseStatus: vi.fn(),
     getServerHealth: vi.fn(),
+    getServerInfo: vi.fn().mockReturnValue({ version: '9.9.9' }),
   });
 
   const mockSnapshot = {
@@ -189,6 +190,12 @@ describe('HealthResolver', () => {
         heapUsedMb: expect.any(Number),
         rssMb: expect.any(Number),
       });
+    });
+  });
+
+  describe('serverInfo', () => {
+    test('returns the server info from HealthService', () => {
+      expect(resolver.serverInfo()).toEqual({ version: '9.9.9' });
     });
   });
 });

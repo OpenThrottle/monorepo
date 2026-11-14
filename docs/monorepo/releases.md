@@ -16,7 +16,7 @@ released:
 | `openthrottle-developer`, `-admin`, `-cms`, `-website`, `-app` (Electron) | that application                     | `<project>@<version>`       |
 
 The selector is `monorepo` plus `tag:type:application` minus `tag:production:false`, so a new
-production application joins automatically and the workbench never does. Packages are not
+production application joins automatically and the workbench never does. Apps from the `react-router` generator come release-ready: the version define and its test, plus a direct `graphql` dependency the Docker image needs. A new app has no tag yet, so `prepare` tags it at the commit that added its `package.json` and pushes that tag; its first release covers only what changed since it was created. Packages are not
 released: every package is `publish:false`. When one becomes publishable, give it its own
 `packages` group. Nx refuses a group that matches no project, so don't add an empty one in advance.
 
@@ -119,7 +119,8 @@ tab: it runs at the release commit, and `release-tags` tags it.
   `RELEASE_APP_CLIENT_ID` (the App's Client ID) and `RELEASE_APP_PRIVATE_KEY` (a generated private
   key). Only `main` is protected, so the App needs no ruleset bypass.
 - **Baseline tags, once.** Without a tag, Nx falls back to the version on disk and reads all of
-  history. Tag the commit that introduced this setup:
+  history, so `prepare` refuses to version anything (and opens no release PR) until at least one
+  project in the group is tagged. Tag the commit that introduced this setup:
 
   ```bash
   pnpm run release:applications baseline --ref=<landed sha>   # dry run: lists the tags

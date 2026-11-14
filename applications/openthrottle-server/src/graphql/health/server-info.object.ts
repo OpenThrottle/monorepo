@@ -1,5 +1,5 @@
 /**
- * @description GraphQL ObjectType for serverInfo. Hand-written @ObjectType class — there is no
+ * @description GraphQL ObjectType for serverInfo, served by HealthResolver. Hand-written @ObjectType class — there is no
  * Result / ListResult factory.
  */
 

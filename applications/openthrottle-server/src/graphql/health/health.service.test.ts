@@ -13,8 +13,8 @@ import { CMS_CONNECTION } from '@openthrottle/nestjs-repositories-cms';
 import type { Redis } from 'ioredis';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { getServerVersion } from '../server-info/server-info.utils.ts';
 import { HealthService } from './health.service.ts';
+import { getServerVersion } from './health.utils.ts';
 
 const getPostgresUrl = vi.fn<() => string | undefined>();
 const getCmsPostgresUrl = vi.fn<() => { readonly ok: boolean }>();
@@ -141,6 +141,12 @@ describe('HealthService', () => {
   describe('getWebsocketStatus', () => {
     test('always returns ok', async () => {
       await expect(service.getWebsocketStatus()).resolves.toBe('ok');
+    });
+  });
+
+  describe('getServerInfo', () => {
+    test('returns the server package.json version', () => {
+      expect(service.getServerInfo()).toEqual({ version: getServerVersion() });
     });
   });
 
