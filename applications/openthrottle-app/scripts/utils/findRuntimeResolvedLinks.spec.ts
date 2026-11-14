@@ -14,7 +14,7 @@ describe('findRuntimeResolvedLinks', () => {
         'node_modules/.pnpm/@vscode+ripgrep@1.18.0/node_modules/@vscode/ripgrep/package.json',
       ],
       [RIPGREP],
-      'darwin-arm64',
+      ['darwin-arm64'],
     );
 
     expect(links).toEqual([
@@ -25,12 +25,27 @@ describe('findRuntimeResolvedLinks', () => {
     ]);
   });
 
+  it('adds one link per target for a universal build', () => {
+    const links = findRuntimeResolvedLinks(
+      [
+        'node_modules/.pnpm/@vscode+ripgrep@1.18.0/node_modules/@vscode/ripgrep/lib/index.js',
+      ],
+      [RIPGREP],
+      ['darwin-x64', 'darwin-arm64'],
+    );
+
+    expect(links.map((entry) => entry.link)).toEqual([
+      'node_modules/.pnpm/@vscode+ripgrep@1.18.0/node_modules/@vscode/ripgrep-darwin-arm64',
+      'node_modules/.pnpm/@vscode+ripgrep@1.18.0/node_modules/@vscode/ripgrep-darwin-x64',
+    ]);
+  });
+
   it('adds nothing when the dependent was not traced', () => {
     expect(
       findRuntimeResolvedLinks(
         ['node_modules/.pnpm/zod@4.0.0/node_modules/zod/index.js'],
         [RIPGREP],
-        'darwin-arm64',
+        ['darwin-arm64'],
       ),
     ).toEqual([]);
   });
@@ -42,7 +57,7 @@ describe('findRuntimeResolvedLinks', () => {
           'node_modules/.pnpm/@vscode+ripgrep-x@1.0.0/node_modules/@vscode/ripgrep-x/index.js',
         ],
         [RIPGREP],
-        'darwin-arm64',
+        ['darwin-arm64'],
       ),
     ).toEqual([]);
   });

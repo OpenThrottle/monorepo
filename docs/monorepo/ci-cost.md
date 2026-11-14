@@ -556,6 +556,28 @@ shell step was audited against the real image:
 
 ---
 
+## macOS release runner (`openthrottle-app-release.yml`)
+
+The one job that does not run on `ubuntu-26.04`. It builds, smoke-tests and (later) signs and
+notarizes the desktop app, and electron-builder can only produce a `.app` on macOS. Approved by
+the owner on 2026-11-13 (OT plan `333b0695`, task 1).
+
+- **Label: `macos-15`, the standard GitHub-hosted macOS runner.** It is free on this public repo,
+  like `ubuntu-26.04`. Larger macOS labels (`-large`, `-xlarge`) are never free; do not switch to
+  one without pricing it here.
+- **If the repo went private** it would bill at GitHub's macOS per-minute rate (10× Linux), about
+  **$0.93 for one ~15 minute release**. Low, because of the next point.
+- **Tag and dispatch only.** It runs on a pushed `openthrottle-app@<version>` tag or a manual
+  dispatch, never on PRs, pushes to `main` or a schedule, so its volume equals the number of
+  releases.
+- **No caches are saved.** A tag ref's cache saves can never be restored by anything else, and
+  Linux entries miss on macOS, so the job runs `node-setup` with `save-cache: 'false'` and installs
+  cold. The universal zip is uploaded as a 14-day workflow artifact rather than cached. `package`
+  itself stays `cache: false` (its output is hundreds of MB and the tracer reads the pnpm store,
+  which Nx does not hash).
+
+---
+
 ## Checklist: before you add a workflow or job
 
 - [ ] **`runs-on: ubuntu-26.04`**, the pinned standard label, unless you can state, in a comment, why a larger or managed runner is worth real money. Never add a Blacksmith or larger-runner label without pricing it here first.

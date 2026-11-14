@@ -84,3 +84,15 @@ export const EXPECTED_NATIVE_FILES: readonly string[] = [
   'node_modules/@vscode/ripgrep-darwin-arm64/bin/rg',
   'node_modules/@vscode/ripgrep-darwin-x64/bin/rg',
 ];
+
+/**
+ * The `--arch` values `stage-app.ts` accepts, and the `<platform>-<arch>`
+ * targets each stages {@link RUNTIME_RESOLVED_PACKAGES} for. `universal` stages
+ * both, so the arm64 and x64 halves electron-builder merges carry identical
+ * app.asar contents (`@electron/universal` requires that).
+ */
+export const STAGE_ARCH_TARGETS = {
+  arm64: ['darwin-arm64'],
+  universal: ['darwin-arm64', 'darwin-x64'],
+  x64: ['darwin-x64'],
+} as const;

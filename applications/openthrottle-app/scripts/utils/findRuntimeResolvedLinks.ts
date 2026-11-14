@@ -19,18 +19,17 @@ const STORE_DIR = /^(node_modules\/\.pnpm\/[^/]+\/node_modules)\//u;
  * name (e.g. `@vscode/ripgrep` → `@vscode/ripgrep-darwin-arm64`), returns the
  * pnpm store symlink where that sibling sits beside it. The tracer reports
  * the dependent's files but never the sibling, so the stage adds the link and
- * the listed files itself. A dependent that was not traced adds nothing.
+ * the listed files itself, once per target (a universal build stages both
+ * macOS arches). A dependent that was not traced adds nothing.
  */
 export const findRuntimeResolvedLinks = (
   traced: readonly string[],
   packages: readonly RuntimeResolvedPackage[],
-  target: string,
+  targets: readonly string[],
 ): readonly RuntimeResolvedLink[] => {
   const links = new Map<string, RuntimeResolvedLink>();
 
   for (const pkg of packages) {
-    const name = pkg.name.replace('{target}', target);
-
     for (const path of traced) {
       const storeDir = STORE_DIR.exec(path)?.[1];
 
@@ -38,9 +37,11 @@ export const findRuntimeResolvedLinks = (
         storeDir !== undefined &&
         path.startsWith(`${storeDir}/${pkg.dependent}/`)
       ) {
-        const link = `${storeDir}/${name}`;
+        for (const target of targets) {
+          const link = `${storeDir}/${pkg.name.replace('{target}', target)}`;
 
-        links.set(link, { files: pkg.files, link });
+          links.set(link, { files: pkg.files, link });
+        }
       }
     }
   }

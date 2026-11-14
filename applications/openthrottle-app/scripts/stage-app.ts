@@ -5,8 +5,10 @@
 //   dist/stage/developer/        the developer build (server/ + client/)
 //   dist/stage/node_modules/     the TRACED runtime closure, flat, no .env
 //
-// Run with `pnpm exec tsx scripts/stage-app.ts` from the project root (the
-// `package` target does). It never reads a `.env` file and never copies one.
+// Run with `pnpm exec tsx scripts/stage-app.ts [--arch arm64|x64|universal]`
+// from the project root (the `package` target does; its `universal`
+// configuration passes `--arch universal`). Without `--arch` it stages for the
+// host. It never reads a `.env` file and never copies one.
 import {
   cp,
   mkdir,
@@ -38,6 +40,7 @@ import { isEnvFile, isExcludedFile } from './utils/isExcludedFile.ts';
 import { parseAppManifest } from './utils/parseAppManifest.ts';
 import type { StagePackage } from './utils/planStageFiles.ts';
 import { isPackageLinkPath, planStageFiles } from './utils/planStageFiles.ts';
+import { resolveStageTargets } from './utils/resolveStageTargets.ts';
 import { trimUnstagedDependencies } from './utils/trimUnstagedDependencies.ts';
 
 const PROJECT_ROOT = resolve(import.meta.dirname, '..');
@@ -150,6 +153,12 @@ const run = async (): Promise<void> => {
     return fail(manifestResult.reason);
   }
 
+  const stageTargets = resolveStageTargets(process.argv.slice(2), process.arch);
+
+  if (!stageTargets.ok) {
+    return fail(stageTargets.reason);
+  }
+
   const electronVersion = await readElectronVersion();
 
   await rm(STAGE_ROOT, { force: true, recursive: true });
@@ -169,11 +178,11 @@ const run = async (): Promise<void> => {
     findRuntimeResolvedLinks(
       traced,
       RUNTIME_RESOLVED_PACKAGES,
-      `${process.platform}-${process.arch}`,
+      stageTargets.targets,
     ).map(async ({ files, link }) => {
       const target = await realpath(join(REPO_ROOT, link)).catch(() => {
         return fail(
-          `${link} is missing; is the optional dependency installed for ${process.platform}-${process.arch}?`,
+          `${link} is missing. pnpm installs only the host's platform packages; for --arch ${stageTargets.arch} run \`pnpm install --frozen-lockfile --cpu=arm64 --cpu=x64\` first.`,
         );
       });
       const dir = relative(REPO_ROOT, target);
@@ -250,6 +259,7 @@ const run = async (): Promise<void> => {
   process.stdout.write(
     `${JSON.stringify(
       {
+        arch: stageTargets.arch,
         excludedTracedFiles: plan.excluded.length,
         nativeFiles: native,
         packagesPlaced: plan.packages.length,

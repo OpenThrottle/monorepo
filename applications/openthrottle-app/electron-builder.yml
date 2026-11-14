@@ -55,6 +55,13 @@ mac:
   target:
     - dir
     - zip
+  # Universal builds (`package --configuration=universal`): @electron/universal
+  # lipo-merges Mach-O files that differ between the arm64 and x64 halves, and
+  # refuses a single-arch Mach-O that is IDENTICAL in both unless it is listed
+  # here. Both ripgrep binaries are staged into both halves (identical asars
+  # are a requirement), and ripgrep picks `ripgrep-<platform>-<arch>` by
+  # process.arch at runtime, so each runs only on its own arch.
+  x64ArchFiles: '**/node_modules/@vscode/ripgrep-darwin-*/bin/rg'
 # Electron fuses, flipped at package time. runAsNode is safe to disable: the
 # embedded server runs in a utilityProcess, which Electron's fuses docs name as
 # the replacement for ELECTRON_RUN_AS_NODE (only child_process.fork breaks).

@@ -75,7 +75,7 @@
       "package": {
         "executor": "nx:run-commands",
         "metadata": {
-          "description": "Stage the traced runtime closure (scripts/stage-app.ts), then package an unsigned OpenThrottle.app and zip with electron-builder into {projectRoot}/dist/release. Not cached: the output is hundreds of MB and the tracer reads the pnpm store, which Nx does not hash."
+          "description": "Stage the traced runtime closure (scripts/stage-app.ts), then package an ad-hoc-signed OpenThrottle.app and zip with electron-builder into {projectRoot}/dist/release (dist/release/mac-arm64 on Apple silicon). `--configuration=universal` builds one arm64+x64 bundle into dist/release/mac-universal instead; it needs both arches' ripgrep packages, so run `pnpm install --frozen-lockfile --cpu=arm64 --cpu=x64` first. Not cached: the output is hundreds of MB and the tracer reads the pnpm store, which Nx does not hash."
         },
         "options": {
           "commands": [
@@ -91,18 +91,34 @@
         ],
         "outputs": [
           "{projectRoot}/dist"
-        ]
+        ],
+        "configurations": {
+          "universal": {
+            "commands": [
+              "tsx scripts/stage-app.ts --arch universal",
+              "electron-builder --mac --universal --publish never --projectDir dist/stage --config ../../electron-builder.yml"
+            ]
+          }
+        }
       },
       "smoke-package": {
         "executor": "nx:run-commands",
         "metadata": {
-          "description": "Opt-in smoke test of the PACKAGED app (scripts/smoke-packaged-app.ts): ditto dist/release/mac-arm64/OpenThrottle.app to a temp dir, launch it with an empty env (only OPENTHROTTLE_SERVER_URL, pointed at a stub OT server) and a fresh --user-data-dir, read the embedded port from stderr, check /__shell/health, GET /auth and POST /graphql through the proxy, then kill it. Exits non-zero on any failure so the release job can gate on it. Does not depend on package (run package first); macOS only; not cached; not run by CI."
+          "description": "Opt-in smoke test of the PACKAGED app (scripts/smoke-packaged-app.ts): ditto dist/release/mac-arm64/OpenThrottle.app to a temp dir, launch it with an empty env (only OPENTHROTTLE_SERVER_URL, pointed at a stub OT server) and a fresh --user-data-dir, read the embedded port from stderr, check /__shell/health, GET /auth and POST /graphql through the proxy, then kill it. Exits non-zero on any failure so the release job can gate on it. Does not depend on package (run package first); macOS only. `--configuration=universal` smokes dist/release/mac-universal natively; `--configuration=universal-x64` launches its x64 slice under Rosetta (`--arch x64`). Not cached; run by the release workflow (.github/workflows/openthrottle-app-release.yml), never by PR CI."
         },
         "options": {
           "command": "tsx scripts/smoke-packaged-app.ts",
           "cwd": "{projectRoot}"
         },
-        "cache": false
+        "cache": false,
+        "configurations": {
+          "universal": {
+            "command": "tsx scripts/smoke-packaged-app.ts dist/release/mac-universal/OpenThrottle.app"
+          },
+          "universal-x64": {
+            "command": "tsx scripts/smoke-packaged-app.ts dist/release/mac-universal/OpenThrottle.app --arch x64"
+          }
+        }
       },
       "test": {
         "dependsOn": []

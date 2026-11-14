@@ -26,6 +26,21 @@ export const SMOKE_TIMEOUTS = {
 } as const;
 
 /**
+ * Budgets for the x64 slice under Rosetta (`--arch x64`). Measured on an M-series
+ * Mac: on a cold translation cache (every CI run) the first SSR and proxy
+ * requests took over 10 s, and with the machine under load the app printed
+ * nothing for 60 s; on a warm cache the whole run took ~78 s. These are upper
+ * bounds, not expected times.
+ */
+export const SMOKE_TIMEOUTS_ROSETTA = {
+  boot: 240_000,
+  health: 120_000,
+  healthInterval: 500,
+  request: 60_000,
+  shutdown: 20_000,
+} as const;
+
+/**
  * What the stub OT server answers to the `serverHealth` probe. Main probes the
  * configured server before it starts the embedded child, so a smoke run needs
  * an OT server; this stub stands in for one, so no Postgres or Redis is needed.
