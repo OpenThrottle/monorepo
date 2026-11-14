@@ -34,9 +34,10 @@
 # OT reachability is NOT checked here — a shell cannot reach the MCP. PLAN_IDS says whether
 # the branch is OT work; the skill checks OT itself (openthrottle-mcp `health`) when it is.
 #
-# This file is vendored, byte-identical, into every github-* skill so each skill stands alone
-# once synced into another repo. The canonical copy is skills/github-pull-request/scripts/;
-# `scripts/check-vendored-skill-files.sh` fails the monorepo gate when a copy drifts.
+# This is the only copy. github-commit, github-squash and github-cleanup reach it through a
+# relative git symlink in their own scripts/ folder, so there is one file to edit. Foreign-repo
+# injection either symlinks the whole skill folder (the inner link still resolves against this
+# source) or copies it with symlinks dereferenced, so every skill ends up with a working file.
 #
 # Usage: bash <skill-dir>/scripts/resolve-repo-context.sh
 
