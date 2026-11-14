@@ -1,6 +1,16 @@
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { constants } from 'node:fs';
+import {
+  access,
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+
+import { getOpenThrottleRoot } from '@openthrottle/openthrottle-agentic-utils';
 
 import {
   AppendPlanOutputDocument,
@@ -339,27 +349,66 @@ const readOptionalFile = async (path: string): Promise<string | undefined> => {
 };
 
 /**
+ * @description Where a github-pull-request skill file can live, most specific first: the target
+ * repo's `.agents/skills/` (the `sync.sh` fan-out in the OpenThrottle repo, foreign-skill
+ * injection elsewhere), then the OpenThrottle install's authored `skills/`. Injection is opt-in, so
+ * a foreign repo without it has only the second.
+ */
+const githubPullRequestSkillCandidates = (
+  cwd: string,
+  relativePath: readonly string[],
+): readonly string[] => {
+  const inRepo = join(
+    cwd,
+    '.agents',
+    'skills',
+    'github-pull-request',
+    ...relativePath,
+  );
+  const otRoot = getOpenThrottleRoot(process.env);
+  if (otRoot === undefined) {
+    return [inRepo];
+  }
+
+  return [
+    inRepo,
+    join(otRoot, 'skills', 'github-pull-request', ...relativePath),
+  ];
+};
+
+const isReadable = async (path: string): Promise<boolean> => {
+  try {
+    await access(path, constants.R_OK);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+/**
  * @description The repository's own `.github/pull_request_template.md`, else the
- * github-pull-request skill's bundled template from `.agents/skills/` (the skill fan-out here,
- * injection elsewhere), else an empty template — {@link buildPlanRunPrBody} adds the Summary and
- * Testing sections itself when a template has none.
+ * github-pull-request skill's bundled template (see {@link githubPullRequestSkillCandidates}),
+ * else an empty template — {@link buildPlanRunPrBody} adds the Summary and Testing sections itself
+ * when a template has none.
  */
 const readPrTemplate = async (cwd: string): Promise<string> => {
-  const [repoTemplate, bundledTemplate] = await Promise.all([
+  const [repoTemplate, ...bundledTemplates] = await Promise.all([
     readOptionalFile(join(cwd, '.github', 'pull_request_template.md')),
-    readOptionalFile(
-      join(
-        cwd,
-        '.agents',
-        'skills',
-        'github-pull-request',
-        'templates',
-        'pull_request_template.md',
-      ),
-    ),
+    ...githubPullRequestSkillCandidates(cwd, [
+      'templates',
+      'pull_request_template.md',
+    ]).map((path) => {
+      return readOptionalFile(path);
+    }),
   ]);
 
-  return repoTemplate ?? bundledTemplate ?? '';
+  return (
+    repoTemplate ??
+    bundledTemplates.find((template) => {
+      return template !== undefined;
+    }) ??
+    ''
+  );
 };
 
 /**
@@ -593,19 +642,26 @@ const commandDetail = (
 };
 
 /**
- * @description The github-pull-request skill's attribution guard, from `.agents/skills/` — the
- * fan-out `sync.sh` builds in the OpenThrottle repo and foreign-skill injection builds in every
- * other repo, so the path is the same in both.
+ * @description The github-pull-request skill's attribution guard: the first readable
+ * {@link githubPullRequestSkillCandidates} copy. With none readable it returns the in-repo path
+ * anyway, so `bash` fails on it and the caller records the owed step rather than skipping the
+ * guard.
  */
-const attributionGuardPath = (cwd: string): string => {
-  return join(
-    cwd,
-    '.agents',
-    'skills',
-    'github-pull-request',
+const attributionGuardPath = async (cwd: string): Promise<string> => {
+  const candidates = githubPullRequestSkillCandidates(cwd, [
     'scripts',
     'check-attribution.sh',
+  ]);
+  const readable = await Promise.all(
+    candidates.map((path) => {
+      return isReadable(path);
+    }),
   );
+  const found = candidates.find((_path, index) => {
+    return readable[index] === true;
+  });
+
+  return found ?? candidates[0] ?? '';
 };
 
 /**
@@ -649,7 +705,7 @@ const writeAndGuardPrFiles = async (params: {
 
   const attribution = await runCommand({
     args: [
-      attributionGuardPath(cwd),
+      await attributionGuardPath(cwd),
       '--title-file',
       titlePath,
       '--body-file',
@@ -977,7 +1033,7 @@ export const finalizePlanRun = async (
   // A repo with no pre-push hook has nothing else between an attribution line in a commit and
   // the remote, so check every commit the push would add before pushing it.
   const commitAttribution = await runCommand({
-    args: [attributionGuardPath(cwd), '--commits', 'HEAD'],
+    args: [await attributionGuardPath(cwd), '--commits', 'HEAD'],
     command: 'bash',
     cwd,
   });

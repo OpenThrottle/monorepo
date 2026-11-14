@@ -7,8 +7,9 @@
 # This is the only copy. It ships with the github-pull-request skill so every repo the skill is
 # synced into gets it, hooks or no hooks. Callers:
 #   - github-pull-request / github-commit / github-squash, before they commit, push or publish
-#   - the plan-run host (finalizePlanRun), from .agents/skills/github-pull-request/scripts/,
-#     before it pushes and before it publishes a PR
+#   - the plan-run host (finalizePlanRun), from the target repo's
+#     .agents/skills/github-pull-request/scripts/, else the OpenThrottle install's
+#     skills/github-pull-request/scripts/, before it pushes and before it publishes a PR
 #   - in the OpenThrottle repo: .husky/commit-msg (--strip), .husky/pre-push (--push-refs) and the
 #     CI attribution-guard job (--title-file / --body-file / --message-file)
 # The pattern set is sourced from attribution-patterns.sh beside this file, never restated.
