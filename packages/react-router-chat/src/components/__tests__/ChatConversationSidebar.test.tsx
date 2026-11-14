@@ -191,4 +191,35 @@ describe('ChatConversationSidebar', () => {
       ).not.toBeInTheDocument();
     });
   });
+
+  describe('when the list failed to load', () => {
+    test('renders the failure, not "No conversations yet"', async () => {
+      const onRetry = vi.fn();
+      const component = renderSidebar({
+        conversations: [],
+        errorMessage: 'Missing permission: settings:read',
+        onRetry,
+        totalCount: 0,
+      });
+
+      expect(
+        component.queryByTestId('ChatConversationSidebar-empty'),
+      ).not.toBeInTheDocument();
+      expect(component.getByRole('alert')).toHaveTextContent(
+        'Missing permission: settings:read',
+      );
+
+      await userEvent.setup().click(component.getByText('Retry'));
+      expect(onRetry).toHaveBeenCalledTimes(1);
+    });
+
+    test('keeps already-loaded rows when a later page fails', () => {
+      const component = renderSidebar({ errorMessage: 'boom' });
+
+      expect(component.queryByRole('alert')).not.toBeInTheDocument();
+      expect(
+        component.getByText('Refactor the auth guard'),
+      ).toBeInTheDocument();
+    });
+  });
 });

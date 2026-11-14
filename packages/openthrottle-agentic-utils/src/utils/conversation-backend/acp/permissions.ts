@@ -94,6 +94,61 @@ export function decideAcpPermission(
   return select(request, 'reject_once');
 }
 
+const CANCELLED: RequestPermissionResponse = {
+  outcome: { outcome: 'cancelled' },
+};
+
+/** Option kinds that persist a rule into the agent's own config. */
+const PERSISTENT_OPTION_KINDS: ReadonlySet<PermissionOptionKind> = new Set([
+  'allow_always',
+  'reject_always',
+]);
+
+/**
+ * The options a human is offered in chat for `request`. The `*_always` kinds
+ * are dropped: picking one makes the agent write a durable rule into its own
+ * config (cursor appends the command to `~/.cursor/cli-config.json`), a change
+ * outside OpenThrottle that outlives the conversation and that the card cannot
+ * show or undo — the same reason {@link decideAcpPermission} never grants it.
+ * Falls back to everything offered if the agent sent only persistent kinds,
+ * so a request is never left unanswerable.
+ *
+ * @public
+ */
+export function humanPermissionOptions(
+  request: RequestPermissionRequest,
+): RequestPermissionRequest['options'] {
+  const offered = request.options.filter((option) => {
+    return !PERSISTENT_OPTION_KINDS.has(option.kind);
+  });
+
+  return offered.length > 0 ? offered : request.options;
+}
+
+/**
+ * A human's answer, restricted to what {@link humanPermissionOptions} offered:
+ * an option id the card never showed (a stale or hand-crafted client sending
+ * the agent's `allow_always` id) settles as cancelled instead of reaching the
+ * agent.
+ *
+ * @public
+ */
+export function restrictToOffered(
+  response: RequestPermissionResponse,
+  offered: RequestPermissionRequest['options'],
+): RequestPermissionResponse {
+  const { outcome } = response;
+  if (outcome.outcome !== 'selected') {
+    return response;
+  }
+
+  const isOffered = offered.some((option) => {
+    return option.optionId === outcome.optionId;
+  });
+
+  return isOffered ? response : CANCELLED;
+}
+
 /**
  * Broker: rendezvous between an ACP `session/request_permission` (the agent blocks
  * until the client answers) and a human's decision arriving later through the
@@ -104,10 +159,6 @@ export function decideAcpPermission(
  * A multi-instance deployment would need to route the answer to the owning
  * instance, or move this state into a shared store.
  */
-
-const CANCELLED: RequestPermissionResponse = {
-  outcome: { outcome: 'cancelled' },
-};
 
 const pending = new Map<
   string,

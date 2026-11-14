@@ -42,6 +42,7 @@ vi.mock('~/routing/home/hooks/useAgenticChatTurn', () => ({
 vi.mock('~/routing/home/hooks/useConversationList', () => ({
   useConversationList: () => ({
     conversations: [],
+    errorMessage: null,
     isLoading: false,
     isLoadingMore: false,
     loadMore: vi.fn(),

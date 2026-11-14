@@ -79,6 +79,7 @@ const makeConversationList = (
 ): UseConversationListResult => {
   return {
     conversations: [],
+    errorMessage: null,
     isLoading: false,
     isLoadingMore: false,
     loadMore: vi.fn(),

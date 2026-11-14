@@ -10,6 +10,7 @@ import * as React from 'react';
 import { STATUS_CONFIG } from '../data/data.chat-tool-call-status-config';
 import type { TurnTimelineActivityGroup } from '../turn-tool-groups';
 import { activeToolOf } from '../turn-tool-groups';
+import { ChatPermissionRequest } from './ChatPermissionRequest';
 import { ChatThinkingBlock } from './ChatThinkingBlock';
 import { ChatToolCall } from './ChatToolCall';
 import { ChatToolCallGroup } from './ChatToolCallGroup';
@@ -114,6 +115,15 @@ export const ChatActivityGroup = (
           }
 
           const { event } = item;
+
+          if (event.kind === 'permission') {
+            return (
+              <ChatPermissionRequest
+                event={event}
+                key={`permission-${event.sortOrder}`}
+              />
+            );
+          }
 
           if (event.kind !== 'thinking') {
             return null;

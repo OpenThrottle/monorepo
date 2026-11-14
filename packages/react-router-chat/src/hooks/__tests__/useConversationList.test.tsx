@@ -205,4 +205,37 @@ describe('useConversationList', () => {
     });
     expect(latest.current?.totalCount).toBe(0);
   });
+
+  test('surfaces a failed list instead of reading it as an empty one', async () => {
+    let call = 0;
+    const { getByTestId, latest } = renderConversationList(() => {
+      call += 1;
+      if (call === 1) {
+        return {
+          conversations: [],
+          errorMessage: 'Missing permission: settings:read',
+          totalCount: 0,
+        };
+      }
+      return {
+        conversations: conversationsPage(0, 1),
+        errorMessage: null,
+        totalCount: 1,
+      };
+    });
+
+    await waitFor(() => {
+      expect(latest.current?.errorMessage).toBe(
+        'Missing permission: settings:read',
+      );
+    });
+    expect(latest.current?.conversations).toHaveLength(0);
+
+    await userEvent.setup().click(getByTestId('refresh'));
+
+    await waitFor(() => {
+      expect(latest.current?.conversations).toHaveLength(1);
+    });
+    expect(latest.current?.errorMessage).toBeNull();
+  });
 });
