@@ -86,16 +86,30 @@ have to build yourself to evaluate. Concretely, it buys three things:
 
 ## Tiers
 
-Each tier maps to a real bill, not to invented perks.
+Each tier maps to a real bill, not to invented perks. The one exception says so.
 
-| Tier               | Monthly | What it actually funds                                                                         |
-| ------------------ | ------: | ---------------------------------------------------------------------------------------------- |
-| Keep a box running |     $10 | The Hetzner floor (€7.09) — OpenThrottle deployed and reachable                                |
-| Fund the agents    |    $100 | The Claude subscription OpenThrottle is built with today                                       |
-| Build and host it  |    $200 | The $200 agent plan heavier development needs — or the floor plus the start of managed hosting |
+### Monthly
+
+| Tier                | Monthly | What it actually funds                                                                                  |
+| ------------------- | ------: | ------------------------------------------------------------------------------------------------------- |
+| Support open source |      $5 | No single bill — it backs the project generally, in the same pot as every tier, starting with the floor |
+| Keep a box running  |     $10 | The Hetzner floor (€7.09) — OpenThrottle deployed and reachable                                         |
+| Fund the agents     |    $100 | The Claude subscription OpenThrottle is built with today                                                |
+| Build and host it   |    $200 | The $200 agent plan heavier development needs — or the floor plus the start of managed hosting          |
 
 Past $200, sponsorship goes toward managed GCP: $98.52/month for one environment,
 $431.55/month for staging plus production.
+
+### One-time
+
+| Tier                              | One time | What it actually funds                                                |
+| --------------------------------- | -------: | --------------------------------------------------------------------- |
+| Three months of the hosting floor |      $25 | About three months of the Hetzner floor (3 × €7.09)                   |
+| A month of the agents             |     $100 | One month of the Claude subscription OpenThrottle is built with today |
+| A month of hosting it properly    |     $500 | One month of managed GCP, staging plus production (estimated $431.55) |
+
+Custom amounts are accepted for both monthly and one-time sponsorship; they go into the same
+pot as the tiers above.
 
 ## What sponsorship does not include
 
