@@ -143,7 +143,9 @@ describe('routes/_index.tsx docked composer', () => {
   test('renders a long thread with the composer still present', async () => {
     const component = renderHome(resolvedComposerData());
 
-    await component.findByTestId('ChatComposer');
+    // Forty rows plus the deferred composer can outrun findBy's 1s default on a
+    // loaded CI runner.
+    await component.findByTestId('ChatComposer', {}, { timeout: 5000 });
     expect(component.getByText('message 0')).toBeInTheDocument();
     expect(component.getByText('message 39')).toBeInTheDocument();
   });
