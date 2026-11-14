@@ -123,4 +123,6 @@ PR review workflow depends on. Full math in
 [`gcp-apps-on-cloud-run-2026-08-17.csv`](gcp-apps-on-cloud-run-2026-08-17.csv).
 
 The consequence for the funding table: **Vercel is an ongoing cost**, not one a GCP migration
-retires. So is Blacksmith, and so is GitHub. Sponsorship covers them; it does not replace them.
+retires. So is GitHub. Sponsorship covers them; it does not replace them. CI is not on this
+list: it runs on GitHub's free standard runners, and paid runners such as Blacksmith are not in
+use ([`docs/monorepo/ci-cost.md`](../../docs/monorepo/ci-cost.md)).
