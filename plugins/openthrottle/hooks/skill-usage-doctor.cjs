@@ -53,6 +53,27 @@ var logHookError = (message, err) => {
   }
 };
 
+// packages/agentic-hooks/src/utils/normalizeRemoteUrl.ts
+var normalizeRemoteUrl = (raw) => {
+  const trimmed = raw.trim();
+  if (trimmed === "") {
+    return null;
+  }
+  let url = trimmed.replace(/^git@([^:/]+):/, "https://$1/").replace(/^ssh:\/\/(?:[^@/]+@)?/, "https://").replace(/^http:\/\//, "https://").replace(/^https:\/\/[^@/]+@/, "https://");
+  if (!/^https:\/\/[^/]+\/.+/.test(url)) {
+    return null;
+  }
+  url = url.replace(/\.git$/, "").replace(/\/+$/, "");
+  const withoutScheme = url.slice("https://".length);
+  const slashIndex = withoutScheme.indexOf("/");
+  if (slashIndex === -1) {
+    return null;
+  }
+  const host = withoutScheme.slice(0, slashIndex).toLowerCase();
+  const path7 = withoutScheme.slice(slashIndex);
+  return `https://${host}${path7}`;
+};
+
 // packages/agentic-hooks/src/config/env.ts
 var userConfigDir = () => {
   return import_node_path.default.join(import_node_os.default.homedir(), ".openthrottle");
@@ -195,6 +216,38 @@ var deadLetterPathFor = (filePath) => {
 // packages/nodejs-utils/src/utils/isRecord.ts
 var isRecord = (value) => {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+};
+
+// packages/agentic-hooks/src/utils/privacy.ts
+var PRIVACY_LEVELS = Object.freeze({
+  FULL: "full",
+  NAME_ONLY: "name-only",
+  TRUNCATED: "truncated"
+});
+var DEFAULT_PRIVACY_LEVEL = PRIVACY_LEVELS.TRUNCATED;
+var FOREIGN_PRIVACY_LEVEL = PRIVACY_LEVELS.NAME_ONLY;
+var TRUNCATED_REPOS_ENV_KEY = `OPENTHROTTLE_TELEMETRY_TRUNCATED_REPOS`;
+var readTruncatedRepoOptIns = () => {
+  try {
+    const raw = readUserEnvFile()[TRUNCATED_REPOS_ENV_KEY] ?? "";
+    const repos = [];
+    const invalid = [];
+    for (const entry of raw.split(",")) {
+      const trimmed = entry.trim();
+      if (trimmed === "") {
+        continue;
+      }
+      const normalized = normalizeRemoteUrl(trimmed);
+      if (normalized === null) {
+        invalid.push(trimmed);
+      } else if (!repos.includes(normalized)) {
+        repos.push(normalized);
+      }
+    }
+    return { invalid, repos };
+  } catch {
+    return { invalid: [], repos: [] };
+  }
 };
 
 // packages/agentic-hooks/src/utils/checkout-root.ts
@@ -644,6 +697,33 @@ var checkOffline = ({
     status: CHECK_STATUS.WARN
   };
 };
+var checkPrivacyOptIns = ({
+  invalid,
+  repos
+}) => {
+  if (invalid.length > 0) {
+    return {
+      detail: `${invalid.length} entry(ies) do not normalize and match nothing: ${invalid.join(", ")}`,
+      fix: "Fix or remove them in OPENTHROTTLE_TELEMETRY_TRUNCATED_REPOS in ~/.openthrottle/.env (use the remote URL from `git remote -v`).",
+      id: "privacy",
+      status: CHECK_STATUS.WARN
+    };
+  }
+  if (repos.length === 0) {
+    return {
+      detail: "no foreign repo is opted in; they all stay name-only",
+      fix: null,
+      id: "privacy",
+      status: CHECK_STATUS.PASS
+    };
+  }
+  return {
+    detail: `${repos.length} foreign repo(s) opted in to truncated args: ${repos.join(", ")}`,
+    fix: null,
+    id: "privacy",
+    status: CHECK_STATUS.PASS
+  };
+};
 var summarizeChecks = (checks) => {
   const count = (status) => {
     return checks.filter((check) => check.status === status).length;
@@ -899,7 +979,8 @@ var collectChecks = async ({
     }),
     checkOffline({
       offline: process.env.OPENTHROTTLE_TELEMETRY_OFFLINE === "1"
-    })
+    }),
+    checkPrivacyOptIns(readTruncatedRepoOptIns())
   ];
 };
 

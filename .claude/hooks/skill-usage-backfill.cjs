@@ -478,8 +478,45 @@ var PRIVACY_LEVELS = Object.freeze({
 });
 var DEFAULT_PRIVACY_LEVEL = PRIVACY_LEVELS.TRUNCATED;
 var FOREIGN_PRIVACY_LEVEL = PRIVACY_LEVELS.NAME_ONLY;
+var TRUNCATED_REPOS_ENV_KEY = `OPENTHROTTLE_TELEMETRY_TRUNCATED_REPOS`;
+var readTruncatedRepoOptIns = () => {
+  try {
+    const raw = readUserEnvFile()[TRUNCATED_REPOS_ENV_KEY] ?? "";
+    const repos = [];
+    const invalid = [];
+    for (const entry of raw.split(",")) {
+      const trimmed = entry.trim();
+      if (trimmed === "") {
+        continue;
+      }
+      const normalized = normalizeRemoteUrl(trimmed);
+      if (normalized === null) {
+        invalid.push(trimmed);
+      } else if (!repos.includes(normalized)) {
+        repos.push(normalized);
+      }
+    }
+    return { invalid, repos };
+  } catch {
+    return { invalid: [], repos: [] };
+  }
+};
+var isOptedInForeignRepo = (repoRoot) => {
+  if (!repoRoot) {
+    return false;
+  }
+  try {
+    const identity = resolveRepoIdentity(repoRoot);
+    return identity !== null && readTruncatedRepoOptIns().repos.includes(identity);
+  } catch {
+    return false;
+  }
+};
 var resolvePrivacyLevel = (repoRoot) => {
-  return isOpenThrottleCheckout(repoRoot) ? DEFAULT_PRIVACY_LEVEL : FOREIGN_PRIVACY_LEVEL;
+  if (isOpenThrottleCheckout(repoRoot) || isOptedInForeignRepo(repoRoot)) {
+    return DEFAULT_PRIVACY_LEVEL;
+  }
+  return FOREIGN_PRIVACY_LEVEL;
 };
 var DEFAULT_ARGS_MAX_LEN = 256;
 var SECRET_PATTERNS = [

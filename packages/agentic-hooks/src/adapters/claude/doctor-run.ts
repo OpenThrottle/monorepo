@@ -22,12 +22,14 @@ import {
 } from '../../data/heartbeat.ts';
 import { resolveTelemetryDir } from '../../data/jsonl.ts';
 import { readBufferStats } from '../../data/readBufferStats.ts';
+import { readTruncatedRepoOptIns } from '../../utils/privacy.ts';
 import {
   checkBuffer,
   checkEndpoint,
   checkHeartbeat,
   checkOffline,
   checkPlugin,
+  checkPrivacyOptIns,
   checkReachability,
   checkToken,
   type DoctorCheck,
@@ -270,5 +272,6 @@ export const collectChecks = async ({
     checkOffline({
       offline: process.env.OPENTHROTTLE_TELEMETRY_OFFLINE === '1',
     }),
+    checkPrivacyOptIns(readTruncatedRepoOptIns()),
   ];
 };
