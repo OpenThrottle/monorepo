@@ -59,9 +59,40 @@ export const IGNORED_TRACED_PATTERNS = [
 ] as const;
 
 /**
- * Native or executable files the stage is allowed to contain, relative to the
- * stage root; each must also be in `asarUnpack`. The traced closure has none
- * (`@vscode/ripgrep` ships its `rg` binary from a postinstall that does not
- * run here, and the IDE engine falls back without it).
+ * Packages a traced dependency loads at runtime by a computed name, which the
+ * tracer cannot follow. `@vscode/ripgrep` resolves its binary as
+ * `@vscode/ripgrep-<platform>-<arch>/bin/rg` (an optionalDependency) and THROWS
+ * at import when it is missing, which takes down every IDE route. `{target}`
+ * is `<platform>-<arch>` of the machine that stages; `files` are copied from
+ * the package as resolved next to `dependent` in the pnpm store.
  */
-export const EXPECTED_NATIVE_FILES: readonly string[] = [];
+export const RUNTIME_RESOLVED_PACKAGES = [
+  {
+    dependent: '@vscode/ripgrep',
+    files: ['package.json', 'bin/rg'],
+    name: '@vscode/ripgrep-{target}',
+  },
+] as const;
+
+/**
+ * Native or executable files the stage is allowed to contain, relative to the
+ * stage root; each must also be in `asarUnpack` (electron-builder.yml), since
+ * asar cannot execute them. Both macOS ripgrep arches are listed so an x64 or
+ * universal build stages cleanly.
+ */
+export const EXPECTED_NATIVE_FILES: readonly string[] = [
+  'node_modules/@vscode/ripgrep-darwin-arm64/bin/rg',
+  'node_modules/@vscode/ripgrep-darwin-x64/bin/rg',
+];
+
+/**
+ * The `--arch` values `stage-app.ts` accepts, and the `<platform>-<arch>`
+ * targets each stages {@link RUNTIME_RESOLVED_PACKAGES} for. `universal` stages
+ * both, so the arm64 and x64 halves electron-builder merges carry identical
+ * app.asar contents (`@electron/universal` requires that).
+ */
+export const STAGE_ARCH_TARGETS = {
+  arm64: ['darwin-arm64'],
+  universal: ['darwin-arm64', 'darwin-x64'],
+  x64: ['darwin-x64'],
+} as const;
