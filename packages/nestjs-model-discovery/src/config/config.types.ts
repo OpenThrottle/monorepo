@@ -25,4 +25,9 @@ export interface ModelDiscoveryConfig {
   readonly ports: readonly number[];
   /** `/v1/models` probe timeout, ms. */
   readonly probeTimeoutMs: number;
+  /**
+   * Whether to run one scan in the background right after the app boots, so
+   * the first chat load finds a warm cache. Never blocks bootstrap.
+   */
+  readonly warmOnBoot: boolean;
 }

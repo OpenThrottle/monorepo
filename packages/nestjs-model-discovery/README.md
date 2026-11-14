@@ -50,15 +50,16 @@ the exported `configValidationSchema` on every config build, so a malformed valu
 to its default. The schema is also exported so a consumer can compose it into a
 top-level `ConfigModule.forRoot({ validationSchema })`.
 
-| Env var                                            | Purpose                                             | Default                               |
-| -------------------------------------------------- | --------------------------------------------------- | ------------------------------------- |
-| `LLM_HOSTS`                                        | Comma/space list; **replaces** the default host set | `localhost`, `host.docker.internal`   |
-| `LLM_PORTS`                                        | Comma/space list; **replaces** the default port set | `8000-8020`, `1234`, `11434`, `11435` |
-| `OLLAMA_BASE_URL` / `OLLAMA_URL` / `LM_STUDIO_URL` | host+port parsed and **merged** into the scan set   | —                                     |
-| `LLM_PROBE_TIMEOUT_MS`                             | `/v1/models` probe timeout                          | `3000`                                |
-| `LLM_FINGERPRINT_TIMEOUT_MS`                       | provider fingerprint timeout                        | `1500`                                |
-| `LLM_DISCOVERY_CONCURRENCY`                        | max in-flight probes                                | `50`                                  |
-| `LLM_DISCOVERY_CACHE_TTL_MS`                       | in-process cache TTL; `0` disables caching          | `60000`                               |
+| Env var                                            | Purpose                                                                                                                 | Default                               |
+| -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
+| `LLM_HOSTS`                                        | Comma/space list; **replaces** the default host set                                                                     | `localhost`, `host.docker.internal`   |
+| `LLM_PORTS`                                        | Comma/space list; **replaces** the default port set                                                                     | `8000-8020`, `1234`, `11434`, `11435` |
+| `OLLAMA_BASE_URL` / `OLLAMA_URL` / `LM_STUDIO_URL` | host+port parsed and **merged** into the scan set                                                                       | —                                     |
+| `LLM_PROBE_TIMEOUT_MS`                             | `/v1/models` probe timeout                                                                                              | `3000`                                |
+| `LLM_FINGERPRINT_TIMEOUT_MS`                       | provider fingerprint timeout                                                                                            | `1500`                                |
+| `LLM_DISCOVERY_CONCURRENCY`                        | max in-flight probes                                                                                                    | `50`                                  |
+| `LLM_DISCOVERY_CACHE_TTL_MS`                       | in-process cache TTL; `0` disables caching                                                                              | `60000`                               |
+| `LLM_DISCOVERY_WARM_ON_BOOT`                       | one non-blocking scan at app bootstrap; `0`/`false`/`no`/`off` disables, unset is off under `NODE_ENV=test` or `VITEST` | on                                    |
 
 ## Snapshot vs live
 

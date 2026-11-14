@@ -19,6 +19,11 @@ import {
   writeConversationIdParam,
 } from '~/routing/home/utils/conversation-url';
 import {
+  clearHomeComposerCache,
+  isComposerNeutralAction,
+  loadHomeComposer,
+} from '~/routing/home/utils/home-composer-cache';
+import {
   loadComposerData,
   loadDefaultAgent,
   loadPersonas,
@@ -62,19 +67,29 @@ export const loader = (args: Route.LoaderArgs) => {
   return { composerData };
 };
 
-// The composer discovery data is route-stable, and both the server (SWR cache)
-// and the header chat (client cache) already keep repeat loads cheap. Skip
-// re-running this loader for same-path navigations (e.g. search-param changes
-// from opening a dialog) so a churn of `?…` updates doesn't re-probe. A form
-// submission or a navigation from a different route still revalidates.
+// Five-minute client cache for the composer bundle (SSR still runs first).
+export const clientLoader = (args: Route.ClientLoaderArgs) => {
+  return {
+    composerData: loadHomeComposer(async () => {
+      return (await args.serverLoader()).composerData;
+    }),
+  };
+};
+
+// Same-path `?…` navigations never re-probe; a non-chat submission may have
+// changed repositories or personas, so it drops the cache first.
 export const shouldRevalidate: ShouldRevalidateFunction = ({
   currentUrl,
   defaultShouldRevalidate,
+  formAction,
   formMethod,
   nextUrl,
 }) => {
   if (formMethod === undefined && currentUrl.pathname === nextUrl.pathname) {
     return false;
+  }
+  if (formMethod !== undefined && !isComposerNeutralAction(formAction)) {
+    clearHomeComposerCache();
   }
 
   return defaultShouldRevalidate;
