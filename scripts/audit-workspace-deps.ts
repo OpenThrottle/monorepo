@@ -181,8 +181,9 @@ interface Finding {
   readonly projectDirectory: string;
 }
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
+const isRecord = (value: unknown): value is Record<string, unknown> => {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+};
 
 /**
  * @description The workspace's project globs, read from `pnpm-workspace.yaml`
@@ -212,8 +213,10 @@ const workspaceGlobs = (): readonly string[] => {
   return globs;
 };
 
-const readDeclared = (manifest: Record<string, unknown>): ReadonlySet<string> =>
-  new Set(
+const readDeclared = (
+  manifest: Record<string, unknown>,
+): ReadonlySet<string> => {
+  return new Set(
     [
       'dependencies',
       'devDependencies',
@@ -225,6 +228,7 @@ const readDeclared = (manifest: Record<string, unknown>): ReadonlySet<string> =>
       return isRecord(value) ? Object.keys(value) : [];
     }),
   );
+};
 
 /**
  * @description A tsconfig parsed through TypeScript's own reader, so comments
@@ -257,12 +261,10 @@ const aliasPrefixesIn = (configPath: string, depth = 0): readonly string[] => {
   if (config === undefined) return [];
 
   const { compilerOptions } = config;
-  const own =
-    isRecord(compilerOptions) && isRecord(compilerOptions.paths)
-      ? Object.keys(compilerOptions.paths).map((key) =>
-          key.replace(/\/\*$/, ''),
-        )
-      : [];
+  const paths = isRecord(compilerOptions) ? compilerOptions.paths : undefined;
+  const own = isRecord(paths)
+    ? Object.keys(paths).map((key) => key.replace(/\/\*$/, ''))
+    : [];
 
   const extended = config.extends;
 
@@ -314,11 +316,13 @@ const listProjects = (
   const directories = manifestPaths
     .map((manifestPath) => path.posix.dirname(manifestPath))
     .filter((directory) =>
-      globs.some((glob) =>
-        glob.endsWith('/*')
-          ? path.posix.dirname(directory) === glob.slice(0, -2)
-          : directory === glob.replace(/\/$/, ''),
-      ),
+      globs.some((glob) => {
+        if (glob.endsWith('/*')) {
+          return path.posix.dirname(directory) === glob.slice(0, -2);
+        }
+
+        return directory === glob.replace(/\/$/, '');
+      }),
     );
 
   return directories
@@ -338,14 +342,15 @@ const listProjects = (
  * the index rather than a directory walk means gitignored build output is
  * excluded by construction.
  */
-const listTrackedFiles = (): readonly string[] =>
-  execFileSync('git', ['ls-files', '-z'], {
+const listTrackedFiles = (): readonly string[] => {
+  return execFileSync('git', ['ls-files', '-z'], {
     cwd: ROOT,
     encoding: 'utf8',
     maxBuffer: 64 * 1024 * 1024,
   })
     .split('\0')
     .filter(Boolean);
+};
 
 const isScannable = (relativePath: string): boolean => {
   if (!SOURCE_EXTENSIONS.has(path.posix.extname(relativePath))) return false;
@@ -365,9 +370,12 @@ const isExemptInFile = (
   packageName: string,
   relativePath: string,
   projectDirectory: string,
-): boolean =>
-  packageName === TOOLING_PACKAGE &&
-  TOOLING_CONFIG.test(relativePath.slice(projectDirectory.length + 1));
+): boolean => {
+  return (
+    packageName === TOOLING_PACKAGE &&
+    TOOLING_CONFIG.test(relativePath.slice(projectDirectory.length + 1))
+  );
+};
 
 /**
  * @description The package a specifier names, or undefined when it names none.
@@ -388,10 +396,11 @@ const packageOf = (specifier: string): string | undefined => {
 const matchesAlias = (
   specifier: string,
   aliasPrefixes: ReadonlySet<string>,
-): boolean =>
-  [...aliasPrefixes].some(
+): boolean => {
+  return [...aliasPrefixes].some(
     (prefix) => specifier === prefix || specifier.startsWith(`${prefix}/`),
   );
+};
 
 /**
  * @description Whether a specifier names a package this mode reports on.
@@ -428,10 +437,11 @@ const specifiersIn = (
   relativePath: string,
   contents: string,
 ): readonly string[] => {
-  const matchAll = (pattern: RegExp): readonly string[] =>
-    [...contents.matchAll(pattern)]
+  const matchAll = (pattern: RegExp): readonly string[] => {
+    return [...contents.matchAll(pattern)]
       .map((match) => match[1])
       .filter((specifier): specifier is string => specifier !== undefined);
+  };
 
   if (path.posix.extname(relativePath) === '.css') {
     return matchAll(CSS_IMPORT);
@@ -553,16 +563,14 @@ const COPY: Readonly<
     heading: 'Third-party dependency audit',
     noun: 'third-party',
     scriptName: 'audit-third-party-deps',
-    subtitle:
-      'Source imports of a third-party package that the importing project does not declare.',
+    subtitle: `Source imports of a third-party package that the importing project does not declare.`,
   },
   workspace: {
     fix: 'pnpm --filter <project> add <package>@workspace:^  (see the link-workspace-packages skill)',
     heading: 'Workspace dependency audit',
     noun: 'workspace',
     scriptName: 'audit-workspace-deps',
-    subtitle:
-      'Source imports of a sibling workspace package that the importing project does not declare.',
+    subtitle: `Source imports of a sibling workspace package that the importing project does not declare.`,
   },
 };
 

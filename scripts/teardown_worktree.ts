@@ -97,22 +97,28 @@ export const resolveWorktreeComposeProject = (params: {
 export const teardownComposeArgs = (params: {
   readonly isolated: boolean;
   readonly project: string;
-}): string[] => [
-  'compose',
-  '-p',
-  params.project,
-  '-f',
-  BASE_COMPOSE_FILE,
-  '-f',
-  WORKTREE_COMPOSE_FILE,
-  'down',
-  '--remove-orphans',
-  ...(params.isolated ? ['--volumes'] : []),
-];
+}): string[] => {
+  return [
+    'compose',
+    '-p',
+    params.project,
+    '-f',
+    BASE_COMPOSE_FILE,
+    '-f',
+    WORKTREE_COMPOSE_FILE,
+    'down',
+    '--remove-orphans',
+    ...(params.isolated ? ['--volumes'] : []),
+  ];
+};
 
 /** True when a docker CLI exists AND its daemon answers — the only state in which `down` can work. */
-const isDockerUsable = (): boolean =>
-  run('docker', ['info'], { allowFailure: true, stdio: 'pipe' }).exitCode === 0;
+const isDockerUsable = (): boolean => {
+  return (
+    run('docker', ['info'], { allowFailure: true, stdio: 'pipe' }).exitCode ===
+    0
+  );
+};
 
 /** Upper bound on the whole Redis exchange, so a wedged Redis cannot stall the removal. */
 const REDIS_CLEANUP_TIMEOUT_MS = 3000;

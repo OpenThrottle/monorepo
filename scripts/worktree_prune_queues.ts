@@ -46,12 +46,13 @@ export interface OrphanedQueuePrefix {
 }
 
 /** Worktree paths from `git worktree list --porcelain` (the primary checkout included). */
-export const parseWorktreeListPorcelain = (output: string): string[] =>
-  output
+export const parseWorktreeListPorcelain = (output: string): string[] => {
+  return output
     .split('\n')
     .filter((line) => line.startsWith('worktree '))
     .map((line) => line.slice('worktree '.length).trim())
     .filter((path) => path !== '');
+};
 
 /**
  * The worktree queue prefix a BullMQ key belongs to (`bull:wt-<slug>:<Queue>:meta` →
@@ -107,10 +108,12 @@ export const findOrphanedQueuePrefixes = (params: {
     .sort((left, right) => left.prefix.localeCompare(right.prefix));
 };
 
-const readCheckoutEnv = (checkoutPath: string): Record<string, string> => ({
-  ...readEnvFile(join(checkoutPath, '.env')),
-  ...readEnvFile(join(checkoutPath, SERVER_ENV_PATH)),
-});
+const readCheckoutEnv = (checkoutPath: string): Record<string, string> => {
+  return {
+    ...readEnvFile(join(checkoutPath, '.env')),
+    ...readEnvFile(join(checkoutPath, SERVER_ENV_PATH)),
+  };
+};
 
 const logger = createLogger();
 

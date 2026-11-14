@@ -62,8 +62,7 @@ export interface AllowlistEntry {
 export const ALLOWLIST: readonly AllowlistEntry[] = [
   {
     pattern: 'tools/generators/**/files/**',
-    reason:
-      "generator template input — the folder name is the generated output's, not ours",
+    reason: `generator template input — the folder name is the generated output's, not ours`,
   },
 ];
 
@@ -76,11 +75,13 @@ export interface BannedFolderHit {
   readonly segment: BannedFolderName;
 }
 
-const isBannedName = (segment: string): segment is BannedFolderName =>
-  Object.hasOwn(BANNED_FOLDER_NAMES, segment);
+const isBannedName = (segment: string): segment is BannedFolderName => {
+  return Object.hasOwn(BANNED_FOLDER_NAMES, segment);
+};
 
-const escapeRegExp = (text: string): string =>
-  text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const escapeRegExp = (text: string): string => {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+};
 
 /** `a/**\/b/**` → a regex matching `a/<any depth>/b/<anything>`. */
 const allowlistPattern = (pattern: string): RegExp => {
@@ -99,8 +100,9 @@ const ALLOWLIST_PATTERNS = ALLOWLIST.map((entry) =>
 );
 
 /** True when an allowlist entry covers the path. */
-export const isAllowlisted = (path: string): boolean =>
-  ALLOWLIST_PATTERNS.some((pattern) => pattern.test(path));
+export const isAllowlisted = (path: string): boolean => {
+  return ALLOWLIST_PATTERNS.some((pattern) => pattern.test(path));
+};
 
 /**
  * Every directory in `paths` that carries a banned segment. The basename is
@@ -139,23 +141,27 @@ export const findBannedFolders = (
 };
 
 /** The failure line for one hit: the path, then what to use instead. */
-export const formatHit = (hit: BannedFolderHit): string =>
-  `  ${hit.path}/ — "${hit.segment}" is a junk-drawer name; use ${hit.hint}`;
+export const formatHit = (hit: BannedFolderHit): string => {
+  return `  ${hit.path}/ — "${hit.segment}" is a junk-drawer name; use ${hit.hint}`;
+};
 
-const splitNulSeparated = (stdout: string): string[] =>
-  stdout.split('\0').filter((path) => path !== '');
+const splitNulSeparated = (stdout: string): string[] => {
+  return stdout.split('\0').filter((path) => path !== '');
+};
 
 /** Every tracked path, including intent-to-add ones. */
-export const listTrackedPaths = (cwd: string): string[] =>
-  splitNulSeparated(run('git', ['ls-files', '-z'], { cwd }).stdout);
+export const listTrackedPaths = (cwd: string): string[] => {
+  return splitNulSeparated(run('git', ['ls-files', '-z'], { cwd }).stdout);
+};
 
 /** Paths the index adds, or renames to — never a rename's source. */
-export const listStagedPaths = (cwd: string): string[] =>
-  splitNulSeparated(
+export const listStagedPaths = (cwd: string): string[] => {
+  return splitNulSeparated(
     run('git', ['diff', '--cached', '--name-only', '--diff-filter=AR', '-z'], {
       cwd,
     }).stdout,
   );
+};
 
 export const main = (
   cwd: string = process.cwd(),

@@ -47,8 +47,9 @@ interface FileManifest {
  * @description A dependency spec is allowed when it uses the `catalog:` protocol or a
  * `workspace:` reference; everything else is a literal version and a violation.
  */
-export const isAllowedSpec = (spec: string): boolean =>
-  spec.startsWith('catalog:') || spec.startsWith('workspace:');
+export const isAllowedSpec = (spec: string): boolean => {
+  return spec.startsWith('catalog:') || spec.startsWith('workspace:');
+};
 
 /**
  * @description Pure violation collector — given parsed manifests, returns every checked

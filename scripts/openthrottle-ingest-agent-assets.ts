@@ -103,10 +103,15 @@ const formatIssue = (issue: {
   readonly field: string;
   readonly message: string;
   readonly path: string;
-}): string => `${issue.path}: [${issue.field}] ${issue.message}`;
+}): string => {
+  return `${issue.path}: [${issue.field}] ${issue.message}`;
+};
 
-const hasEmbeddingProvider = (): boolean =>
-  Boolean(process.env.OPENAI_API_KEY?.trim()) || isOllamaEmbeddingConfigured();
+const hasEmbeddingProvider = (): boolean => {
+  return (
+    Boolean(process.env.OPENAI_API_KEY?.trim()) || isOllamaEmbeddingConfigured()
+  );
+};
 
 /**
  * @description Resolves (find-or-create) the dogfood project keyed by
@@ -183,22 +188,23 @@ const reconcileDogfoodProjectSkills = async (
   }
 
   const keepSlugs = inputs.map((input) => input.slug);
-  const staleResult =
-    keepSlugs.length > 0
-      ? await client.query<{ slug: string }>(
-          `UPDATE project_skills
-           SET orphaned_at = COALESCE(orphaned_at, NOW()), updated_at = NOW()
-           WHERE project_id = $1 AND slug <> ALL($2::text[])
-           RETURNING slug`,
-          [projectId, keepSlugs],
-        )
-      : await client.query<{ slug: string }>(
-          `UPDATE project_skills
+  let staleSql = `UPDATE project_skills
            SET orphaned_at = COALESCE(orphaned_at, NOW()), updated_at = NOW()
            WHERE project_id = $1
-           RETURNING slug`,
-          [projectId],
-        );
+           RETURNING slug`;
+  let staleParams: unknown[] = [projectId];
+  if (keepSlugs.length > 0) {
+    staleSql = `UPDATE project_skills
+           SET orphaned_at = COALESCE(orphaned_at, NOW()), updated_at = NOW()
+           WHERE project_id = $1 AND slug <> ALL($2::text[])
+           RETURNING slug`;
+    staleParams = [projectId, keepSlugs];
+  }
+
+  const staleResult = await client.query<{ slug: string }>(
+    staleSql,
+    staleParams,
+  );
 
   const staleSlugs = staleResult.rows
     .map((row) => row.slug)

@@ -55,8 +55,9 @@ export interface DocsIndexReport {
 }
 
 /** Every link target in a markdown body, unresolved and unfiltered. */
-export const extractLinks = (markdown: string): readonly string[] =>
-  [...markdown.matchAll(LINK_PATTERN)].map((match) => match[1]);
+export const extractLinks = (markdown: string): readonly string[] => {
+  return [...markdown.matchAll(LINK_PATTERN)].map((match) => match[1]);
+};
 
 /**
  * A link target resolved to a repo-relative `docs/**\/*.md` path, or null when
@@ -80,8 +81,9 @@ export const resolveDocLink = (
   return resolved.startsWith(`${DOCS_DIR}/`) ? resolved : null;
 };
 
-const isReadme = (docPath: string): boolean =>
-  path.basename(docPath) === 'README.md';
+const isReadme = (docPath: string): boolean => {
+  return path.basename(docPath) === 'README.md';
+};
 
 /**
  * Walks the seeds outward and reports which docs no reader can find. `tree`

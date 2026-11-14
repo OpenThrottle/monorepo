@@ -155,8 +155,9 @@ const analyze = (absPath: string): FileReport => {
   };
 };
 
-const hasViolation = (r: FileReport): boolean =>
-  r.disallowedExports.length > 0 || r.moduleScopeDecls.length > 0;
+const hasViolation = (r: FileReport): boolean => {
+  return r.disallowedExports.length > 0 || r.moduleScopeDecls.length > 0;
+};
 
 const run = (): void => {
   const json = process.argv.includes('--json');

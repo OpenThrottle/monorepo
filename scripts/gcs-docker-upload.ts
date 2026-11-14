@@ -58,7 +58,9 @@ export const resolveProjectId = (
   return { error: `Invalid PRODUCTION='${env.PRODUCTION}' (use true or false).` }; // prettier-ignore
 };
 
-const dryRun = (): boolean => process.env.OPENTHROTTLE_DRY_RUN === '1';
+const dryRun = (): boolean => {
+  return process.env.OPENTHROTTLE_DRY_RUN === '1';
+};
 
 const runCmd = (command: string, args: string[]): void => {
   if (dryRun()) {

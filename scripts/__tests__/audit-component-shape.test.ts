@@ -115,15 +115,15 @@ describe('analyzeComponentSource — R6 line cap', () => {
   });
 });
 
-const forwardRefPart = (
-  name: string,
-): string => `export interface ${name}Props {}
+const forwardRefPart = (name: string): string => {
+  return `export interface ${name}Props {}
 
 export const ${name} = React.forwardRef<HTMLDivElement, ${name}Props>(
   (props, ref): React.ReactElement => <div ref={ref} {...props} />,
 );
 
 ${name}.displayName = '${name}';`;
+};
 
 describe('analyzePrimitiveSource', () => {
   it('accepts a conformant forwardRef primitive', () => {

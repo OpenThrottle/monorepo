@@ -12,7 +12,9 @@ const formatIssue = (issue: {
   readonly field: string;
   readonly message: string;
   readonly path: string;
-}): string => `${issue.path}: [${issue.field}] ${issue.message}`;
+}): string => {
+  return `${issue.path}: [${issue.field}] ${issue.message}`;
+};
 
 const run = (): void => {
   const monorepoRoot = process.cwd();

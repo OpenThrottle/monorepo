@@ -47,11 +47,14 @@ const WORKSPACE_GLOBS = [
 ];
 
 /** A target whose name signals it is intentionally disabled, not a real runnable target. */
-const isDisabledMarker = (target: string): boolean =>
-  /^_|_{3,}|DISABLED/i.test(target);
+const isDisabledMarker = (target: string): boolean => {
+  return /^_|_{3,}|DISABLED/i.test(target);
+};
 
 /** A targetDefaults key is executor-keyed (vs name-keyed) when it looks like `@scope/pkg:exec`. */
-const isExecutorKey = (key: string): boolean => key.includes(':');
+const isExecutorKey = (key: string): boolean => {
+  return key.includes(':');
+};
 
 interface TargetRecord {
   covered: boolean;
@@ -69,19 +72,25 @@ type NxTargetConfig =
     }
   | undefined;
 
-const readJson = async (file: string): Promise<Record<string, unknown>> =>
-  JSON.parse(await readFile(join(process.cwd(), file), 'utf8'));
+const readJson = async (file: string): Promise<Record<string, unknown>> => {
+  return JSON.parse(await readFile(join(process.cwd(), file), 'utf8'));
+};
 
-const isNonEmptyString = (value: unknown): boolean =>
-  typeof value === 'string' && value.trim().length > 0;
+const isNonEmptyString = (value: unknown): boolean => {
+  return typeof value === 'string' && value.trim().length > 0;
+};
 
 /** A target is described by either the legacy top-level key or Nx's `metadata.description`. */
-const hasDescription = (config: NxTargetConfig): boolean =>
-  isNonEmptyString(config?.description) ||
-  isNonEmptyString(config?.metadata?.description);
+const hasDescription = (config: NxTargetConfig): boolean => {
+  return (
+    isNonEmptyString(config?.description) ||
+    isNonEmptyString(config?.metadata?.description)
+  );
+};
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
+const isRecord = (value: unknown): value is Record<string, unknown> => {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+};
 
 /**
  * One `targetDefaults` entry. A key holds either a single object or — Nx's array form — a
@@ -108,15 +117,14 @@ const toTargetDefaultEntry = (
   }
 
   const { metadata } = value;
+  const executor =
+    typeof value.executor === 'string' ? value.executor : undefined;
 
   return {
     described:
       isNonEmptyString(value.description) ||
       (isRecord(metadata) && isNonEmptyString(metadata.description)),
-    narrowedToExecutor:
-      isArrayForm && typeof value.executor === 'string'
-        ? value.executor
-        : undefined,
+    narrowedToExecutor: isArrayForm ? executor : undefined,
     scoped: value.projects !== undefined || value.filter !== undefined,
   };
 };
@@ -135,7 +143,9 @@ export const toTargetDefaultEntries = (
 /** A `targetDefaults` key is described only when every one of its entries is. */
 export const isTargetDefaultDescribed = (
   entries: readonly TargetDefaultEntry[],
-): boolean => entries.length > 0 && entries.every((entry) => entry.described);
+): boolean => {
+  return entries.length > 0 && entries.every((entry) => entry.described);
+};
 
 /**
  * Whether a `targetDefaults` key passes a description down to a declared target. Only an
@@ -146,14 +156,15 @@ export const isTargetDefaultDescribed = (
 export const coversTarget = (
   entries: readonly TargetDefaultEntry[],
   targetExecutor: string | undefined,
-): boolean =>
-  entries.some(
+): boolean => {
+  return entries.some(
     (entry) =>
       entry.described &&
       !entry.scoped &&
       (entry.narrowedToExecutor === undefined ||
         entry.narrowedToExecutor === targetExecutor),
   );
+};
 
 interface Defaults {
   byExecutor: Map<string, readonly TargetDefaultEntry[]>;

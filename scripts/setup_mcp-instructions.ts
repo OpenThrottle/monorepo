@@ -84,10 +84,8 @@ interface InstallStatus {
 const isServerInstalled = (configPath: string): boolean => {
   try {
     const parsed: unknown = JSON.parse(readFileSync(configPath, 'utf8'));
-    const servers =
-      typeof parsed === 'object' && parsed !== null
-        ? parsed.mcpServers
-        : undefined;
+    const isObject = typeof parsed === 'object' && parsed !== null;
+    const servers = isObject ? parsed.mcpServers : undefined;
     return Boolean(servers && SERVER_NAME in servers);
   } catch {
     return false;
@@ -95,10 +93,12 @@ const isServerInstalled = (configPath: string): boolean => {
 };
 
 /** Resolve install state for every client from its on-disk config. */
-const detectInstallStatus = (): InstallStatus => ({
-  claude: isServerInstalled(clientConfigPaths.claude),
-  cursor: isServerInstalled(clientConfigPaths.cursor),
-});
+const detectInstallStatus = (): InstallStatus => {
+  return {
+    claude: isServerInstalled(clientConfigPaths.claude),
+    cursor: isServerInstalled(clientConfigPaths.cursor),
+  };
+};
 
 interface Payloads {
   /** The full `claude mcp add-json ... --scope user '<json>'` command line. */
@@ -167,44 +167,46 @@ const renderInstructions = (
   const fileCursor = chalk.blueBright.bold('~/.cursor/mcp.json');
   const mcpName = chalk.blueBright.bold('OpenThrottle MCP');
 
-  const heading = (label: string): string => `${chalk.bold.red(`▶ ${label}`)}`;
-  const done = (label: string): string =>
-    `${chalk.bold.green(`${SYMBOLS.success} ${label}`)} ${chalk.dim('— already installed, nothing to do.')}`;
+  const heading = (label: string): string => {
+    return `${chalk.bold.red(`▶ ${label}`)}`;
+  };
+  const done = (label: string): string => {
+    return `${chalk.bold.green(`${SYMBOLS.success} ${label}`)} ${chalk.dim('— already installed, nothing to do.')}`;
+  };
 
-  const claudeBlock =
-    status.claude && !showInstructions
-      ? [done('Claude Code')]
-      : [
-          heading('Claude Code'),
-          chalk.dim(
-            `Install it globally for all your Claude Code instances by running:`,
-          ),
-          claudeCommand,
-        ];
+  const claudeSetup = [
+    heading('Claude Code'),
+    chalk.dim(
+      `Install it globally for all your Claude Code instances by running:`,
+    ),
+    claudeCommand,
+  ];
+  const isClaudeDone = status.claude && !showInstructions;
+  const claudeBlock = isClaudeDone ? [done('Claude Code')] : claudeSetup;
 
-  const cursorBlock =
-    status.cursor && !showInstructions
-      ? [done('Cursor')]
-      : [
-          heading('Cursor'),
-          chalk.dim(
-            `Install it globally across all Cursor instances by adding this to ${fileCursor}:`,
-          ),
-          cursorJson,
-        ];
+  const cursorSetup = [
+    heading('Cursor'),
+    chalk.dim(
+      `Install it globally across all Cursor instances by adding this to ${fileCursor}:`,
+    ),
+    cursorJson,
+  ];
+  const isCursorDone = status.cursor && !showInstructions;
+  const cursorBlock = isCursorDone ? [done('Cursor')] : cursorSetup;
 
-  const intro =
-    status.claude && status.cursor && !showInstructions
-      ? chalk.dim(`The ${mcpName} is already set up in every client. 🎉`)
-      : chalk.dim(
-          `Installing the ${mcpName} globally looks a bit different in each client. Take a look at the instructions below for each client that still needs setup.`,
-        );
+  const doneIntro = chalk.dim(
+    `The ${mcpName} is already set up in every client. 🎉`,
+  );
+  const setupIntro = chalk.dim(
+    `Installing the ${mcpName} globally looks a bit different in each client. Take a look at the instructions below for each client that still needs setup.`,
+  );
+  const isAllDone = status.claude && status.cursor && !showInstructions;
+  const intro = isAllDone ? doneIntro : setupIntro;
 
-  const outro = !showInstructions
-    ? chalk.dim(
-        `To show the instructions again, run: ${chalk.bold.blue(`pnpm run setup:mcp-instructions --show`)}`,
-      )
-    : chalk.dim(``);
+  const reshowHint = chalk.dim(
+    `To show the instructions again, run: ${chalk.bold.blue(`pnpm run setup:mcp-instructions --show`)}`,
+  );
+  const outro = showInstructions ? chalk.dim(``) : reshowHint;
 
   return [
     ``,

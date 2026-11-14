@@ -200,8 +200,9 @@ interface PackageInfo {
   readonly targetNames: readonly string[];
 }
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
+const isRecord = (value: unknown): value is Record<string, unknown> => {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+};
 
 /**
  * @description Flattens an `exports` map into one entry per declared string target
@@ -219,11 +220,13 @@ const collectExportTargets = (
     return [];
   }
 
-  return Object.entries(value).flatMap(([key, nested]) =>
-    key.startsWith('.')
-      ? collectExportTargets(nested, key, condition)
-      : collectExportTargets(nested, subpath, key),
-  );
+  return Object.entries(value).flatMap(([key, nested]) => {
+    if (key.startsWith('.')) {
+      return collectExportTargets(nested, key, condition);
+    }
+
+    return collectExportTargets(nested, subpath, key);
+  });
 };
 
 /**
@@ -302,8 +305,8 @@ const readPackageInfo = (directory: string): PackageInfo | undefined => {
   };
 };
 
-const listPackages = (): readonly PackageInfo[] =>
-  WORKSPACE_DIRS.flatMap((workspaceDir) => {
+const listPackages = (): readonly PackageInfo[] => {
+  return WORKSPACE_DIRS.flatMap((workspaceDir) => {
     const absolute = path.join(ROOT, workspaceDir);
 
     if (!existsSync(absolute)) return [];
@@ -313,6 +316,7 @@ const listPackages = (): readonly PackageInfo[] =>
       .map((entry) => readPackageInfo(path.join(absolute, entry.name)))
       .filter((info): info is PackageInfo => info !== undefined);
   });
+};
 
 /**
  * @description Asks git which of the given repo-relative paths are ignored
@@ -336,8 +340,9 @@ const partitionIgnored = (
   }
 };
 
-const pointsAtSource = (entry: string | undefined): boolean =>
-  entry !== undefined && entry.replace(/^\.\//, '').startsWith('src/');
+const pointsAtSource = (entry: string | undefined): boolean => {
+  return entry !== undefined && entry.replace(/^\.\//, '').startsWith('src/');
+};
 
 /**
  * @description True when a declared target names TypeScript source rather than
@@ -345,8 +350,11 @@ const pointsAtSource = (entry: string | undefined): boolean =>
  * literal `src/` prefix and so misses a subpath map's `./*.ts`. Declarations
  * (`.d.ts`) are build output, not source.
  */
-const namesTypeScriptSource = (entry: string | undefined): boolean =>
-  entry !== undefined && /\.tsx?$/.test(entry) && !entry.endsWith('.d.ts');
+const namesTypeScriptSource = (entry: string | undefined): boolean => {
+  return (
+    entry !== undefined && /\.tsx?$/.test(entry) && !entry.endsWith('.d.ts')
+  );
+};
 
 /**
  * @description Enforces the blanket `technology:nestjs` shape — built entry
@@ -374,34 +382,39 @@ const collectNestjsViolations = (
       `Point main/module at ./dist/src/index.js, types at ./dist/src/index.d.ts, every "exports" condition at built output, and rename any "__build" placeholder back to "${BUILD_TARGET}". ` +
       `Source-first is the workspace default everywhere else, and this tier will NOT join it: Node's loader is strip-only, so decorators and constructor parameter properties require emitted code. That is a property of the loader, not of the module format — the tier moved to ESM in NestJS 12 and still cannot be source-first.`;
 
-    const fieldViolation =
-      sourceFields.length === 0
-        ? []
-        : [
-            `${info.name}: ${sourceFields.map((entry) => `${entry.field} → ${entry.value}`).join(', ')} names TypeScript source. ${remediation}`,
-          ];
+    const declaredTargets =
+      info.targetNames.length === 0 ? 'none' : info.targetNames.join(', ');
 
-    const conditionViolation =
-      sourceConditions.length === 0
-        ? []
-        : [
-            `${info.name}: ${sourceConditions.map((entry) => `exports["${entry.subpath}"].${entry.condition} → ${entry.target}`).join(', ')} names TypeScript source. ${remediation}`,
-          ];
+    const fieldViolation: string[] = [];
+    if (sourceFields.length > 0) {
+      fieldViolation.push(
+        `${info.name}: ${sourceFields.map((entry) => `${entry.field} → ${entry.value}`).join(', ')} names TypeScript source. ${remediation}`,
+      );
+    }
 
-    const targetViolation = info.targetNames.includes(BUILD_TARGET)
-      ? []
-      : [
-          `${info.name}: declares no live "${BUILD_TARGET}" target (has ${info.targetNames.length === 0 ? 'none' : info.targetNames.join(', ')}). ` +
-            `A "${NESTJS_TAG}" package must emit the build its own entry fields name, or consumers resolve into a directory nothing populates. ${remediation}`,
-        ];
+    const conditionViolation: string[] = [];
+    if (sourceConditions.length > 0) {
+      conditionViolation.push(
+        `${info.name}: ${sourceConditions.map((entry) => `exports["${entry.subpath}"].${entry.condition} → ${entry.target}`).join(', ')} names TypeScript source. ${remediation}`,
+      );
+    }
 
-    const devViolation = info.targetNames.includes(DEV_TARGET)
-      ? []
-      : [
-          `${info.name}: declares no live "${DEV_TARGET}" target (has ${info.targetNames.length === 0 ? 'none' : info.targetNames.join(', ')}). ` +
-            `"openthrottle-server:dev" cascades "^dev", so without one this package gets no watcher and the dist/ its own entry fields name goes stale under you while the server serves the old build. ` +
-            `Rename the "__${DEV_TARGET}" placeholder back to "${DEV_TARGET}".`,
-        ];
+    const targetViolation: string[] = [];
+    if (!info.targetNames.includes(BUILD_TARGET)) {
+      targetViolation.push(
+        `${info.name}: declares no live "${BUILD_TARGET}" target (has ${declaredTargets}). ` +
+          `A "${NESTJS_TAG}" package must emit the build its own entry fields name, or consumers resolve into a directory nothing populates. ${remediation}`,
+      );
+    }
+
+    const devViolation: string[] = [];
+    if (!info.targetNames.includes(DEV_TARGET)) {
+      devViolation.push(
+        `${info.name}: declares no live "${DEV_TARGET}" target (has ${declaredTargets}). ` +
+          `"openthrottle-server:dev" cascades "^dev", so without one this package gets no watcher and the dist/ its own entry fields name goes stale under you while the server serves the old build. ` +
+          `Rename the "__${DEV_TARGET}" placeholder back to "${DEV_TARGET}".`,
+      );
+    }
 
     return [
       ...fieldViolation,
@@ -479,10 +492,10 @@ const run = (): void => {
   const describe = (entry: (typeof offenders)[number]): string => {
     const { condition, subpath, target } = entry.exportTarget;
 
-    const resolver =
-      condition === 'types'
-        ? 'TypeScript resolves the "types" condition under NodeNext'
-        : `Vite and Vitest resolve the "${condition}" condition`;
+    const isTypes = condition === 'types';
+    const resolver = isTypes
+      ? 'TypeScript resolves the "types" condition under NodeNext'
+      : `Vite and Vitest resolve the "${condition}" condition`;
 
     return (
       `${entry.info.name}: exports["${subpath}"].${condition} → ${target} is gitignored, but main/module → ${entry.info.main}. ` +
@@ -492,10 +505,11 @@ const run = (): void => {
     );
   };
 
-  const isRuntimeCondition = (entry: (typeof offenders)[number]): boolean =>
-    RUNTIME_CONDITIONS.some(
+  const isRuntimeCondition = (entry: (typeof offenders)[number]): boolean => {
+    return RUNTIME_CONDITIONS.some(
       (condition) => condition === entry.exportTarget.condition,
     );
+  };
 
   const offendingPackages = new Set(offenders.map((entry) => entry.info.name));
 
@@ -513,10 +527,11 @@ const run = (): void => {
     // Retained as diagnosis only — see the module JSDoc. A self-importing
     // package is already failing its own test suite shard-dependently, and this
     // sentence is the difference between an author knowing why and not.
-    const selfImport =
-      first.info.importsItselfByName && entries.some(isRuntimeCondition)
-        ? " This package's own src/ imports it by name, so its test target — which never depends on its own build — fails whenever no other project on the shard built it first."
-        : '';
+    const importsItself =
+      first.info.importsItselfByName && entries.some(isRuntimeCondition);
+    const selfImport = importsItself
+      ? " This package's own src/ imports it by name, so its test target — which never depends on its own build — fails whenever no other project on the shard built it first."
+      : '';
 
     return `${describe(first)}${selfImport}`;
   });
