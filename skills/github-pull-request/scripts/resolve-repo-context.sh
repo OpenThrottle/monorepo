@@ -18,8 +18,9 @@
 #   PR_TEMPLATE_CHOICES    `|`-separated paths when PR_TEMPLATE=choose, else empty
 #   COMMITLINT_CONFIG      path of the commitlint config (or `package.json`), or `none`
 #   COMMIT_MSG_HOOK        path of an active commit-msg hook, or `none`
-#   ATTRIBUTION_GUARD      path of a POSIX sh script that checks a PR title/body for tool
-#                          attribution (run it as `sh "<path>"`), or `none`
+#   ATTRIBUTION_GUARD      path of the POSIX sh guard that checks PR text, commit messages and
+#                          unpushed commits for tool attribution (run it as `sh "<path>"`),
+#                          or `none`
 #   WORKTREE_REMOVE        `pnpm worktree:remove` when the repo defines it, else `git worktree remove`
 #   PLAN_IDS               space-separated unique Plan-Id footers in BASE_REF..HEAD, or `none`
 #
@@ -190,8 +191,8 @@ emit COMMIT_MSG_HOOK "$hook"
 # --- attribution guard ------------------------------------------------------------------
 # The guard ships with the github-pull-request skill and is the only copy, in the OpenThrottle
 # repo too, so there is no repo-vs-skill choice.
-if [ -f "$script_dir/check-pr-attribution.sh" ]; then
-  emit ATTRIBUTION_GUARD "$script_dir/check-pr-attribution.sh"
+if [ -f "$script_dir/check-attribution.sh" ]; then
+  emit ATTRIBUTION_GUARD "$script_dir/check-attribution.sh"
 else
   emit ATTRIBUTION_GUARD none
 fi

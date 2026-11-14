@@ -50,6 +50,7 @@ remote and the reflog); disruption is the real cost.
 - **ALWAYS** When rebasing we're comparing to `<base>` (the resolved default branch) and not the `last push`
 - **ALWAYS** check we're rebasing the correct number of commits
 - When rebasing we must use `git reset` to soft reset to the base commit and then create a new commit with all the changes
+- **ALWAYS** run the `github-pull-request` skill's guard on the squashed message before you commit it — `sh "$ATTRIBUTION_GUARD" --message-file <file>` — and on `--commits HEAD` before you land it; the soft reset is exactly where an attribution line from any squashed commit gets carried forward
 - Once rebased, land the branch the way the mode calls for — see [Before or after the first push?](#before-or-after-the-first-push)
 
 ## Safety

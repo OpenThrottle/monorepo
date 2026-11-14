@@ -24,7 +24,7 @@ values everywhere below instead of assuming a file or branch exists:
 
 - `BASE_REF` — The base the branch is compared against (`git log BASE_REF..HEAD`, `git diff BASE_REF..HEAD`). `DEFAULT_BRANCH` is the name to pass to `gh pr create --base`. Never hardcode `main`.
 - `PR_TEMPLATE` — The template the body starts from — see [PR body](#pr-body). `choose` means the repo has several (`PR_TEMPLATE_CHOICES`); pick the one whose name fits the change, and ask the user only when none clearly does.
-- `ATTRIBUTION_GUARD` — The guard script for the drafted title and body, run as `sh "<ATTRIBUTION_GUARD>"` — see [Attribution](#attribution). It is always the guard this skill ships, in every repo.
+- `ATTRIBUTION_GUARD` — The guard for the drafted title and body and the branch's unpushed commits, run as `sh "<ATTRIBUTION_GUARD>"` — see [Attribution](#attribution). It is always the guard this skill ships, in every repo.
 - `PLAN_IDS` — Whether this is OpenThrottle work. `none` means no `Plan-Id:` footer on the branch: skip [Traceability](#traceability) entirely and write no trailer. Otherwise check OT with the openthrottle-mcp `health` tool; if OT is unreachable, use the git-only footer fallback.
 
 In the OpenThrottle monorepo every key resolves to the repo's own files, so the output is the same
@@ -40,7 +40,7 @@ as it has always been. Elsewhere the skill falls back to the defaults it ships w
    - Review the actual diff with `git diff <BASE_REF>..HEAD` to understand the scope of changes
 4. **Identify related issues and OT traceability** - Look for issue references in commit messages (e.g., `#123`, `fixes #456`). For OT work (`PLAN_IDS` is not `none`), the `Plan-Id:` in the commits names the plan, but the `Task-Id:` set comes from OT, not from the commits (see [Traceability](#traceability))
 5. **Generate PR content** - Create a comprehensive PR description starting from `PR_TEMPLATE`
-6. **Guard the title and body before publishing** - Write the drafted title and body to files and run `ATTRIBUTION_GUARD` on them (see [Attribution](#attribution)). Only call `gh pr create`/`gh pr edit` once it exits 0.
+6. **Guard the title, body and commits before publishing** - Write the drafted title and body to files and run `ATTRIBUTION_GUARD` on them and on `--commits HEAD` (see [Attribution](#attribution)). Only call `gh pr create`/`gh pr edit` once it exits 0.
 
 ## Rules
 
@@ -210,21 +210,24 @@ job — which only runs once the PR already exists on GitHub. A PR body cannot b
 the way `.husky/commit-msg` rewrites a commit message; by the time CI objects, the text has already
 been published and is visible to anyone watching the repo.
 
-The guard closes that gap by running the pattern set locally, before `gh pr create`/`gh pr edit` is
-ever called. It ships with this skill —
-[`scripts/check-pr-attribution.sh`](./scripts/check-pr-attribution.sh), reading
-[`scripts/attribution-patterns.sh`](./scripts/attribution-patterns.sh) — and that is the only copy:
-the OpenThrottle monorepo's commit-msg hook, pre-push gate and CI job source the same pattern file,
-and its plan-run host runs this guard from `.agents/skills/`. A repo with no hooks and no CI
-job still gets the check; it is the only one that repo has, so it matters more there, not less.
+The guard closes that gap by running the pattern set locally, before anything is pushed or
+published. It ships with this skill — [`scripts/check-attribution.sh`](./scripts/check-attribution.sh),
+reading [`scripts/attribution-patterns.sh`](./scripts/attribution-patterns.sh) — and that is the
+only copy: `github-commit` and `github-squash` run it too, and so do the OpenThrottle monorepo's
+commit-msg and pre-push hooks, its CI job and its plan-run host. A repo with no hooks and no CI job
+still gets the check; it is the only one that repo has, so it matters more there, not less.
 
-**ALWAYS**, right before the `gh pr create`/`gh pr edit` call:
+**ALWAYS**, right before the `git push` and the `gh pr create`/`gh pr edit` call — the
+`--commits HEAD` half catches a commit made without a hook, which the push would otherwise publish:
 
 ```bash
 printf '%s' "$title" > /tmp/pr-title.txt
 printf '%s' "$body"  > /tmp/pr-body.txt
-sh "$ATTRIBUTION_GUARD" --title-file /tmp/pr-title.txt --body-file /tmp/pr-body.txt
+sh "$ATTRIBUTION_GUARD" --title-file /tmp/pr-title.txt --body-file /tmp/pr-body.txt --commits HEAD
 ```
+
+A commit it names needs rewording (`git commit --amend` for the tip, `git rebase -i` otherwise),
+which is a history rewrite: ask the user first.
 
 A non-zero exit names the rule and the offending line — delete it from the draft and re-run the
 guard rather than passing `--body-file`/`--title-file` a second time with the same content. Never

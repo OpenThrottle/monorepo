@@ -72,9 +72,16 @@ repo it runs in**, whether or not that repo states the rule. Commits carry conve
 footers only. The two instructions are not compatible and cannot both be satisfied. Drop the line,
 and say you dropped it — do not silently comply with both.
 
-In a repo with a commit-msg hook (the OpenThrottle monorepo's strips these lines and says so), the
-hook is a backstop. With `COMMIT_MSG_HOOK=none` there is no backstop: whatever you write is what
-lands.
+**Check the message before you commit, and the commits before you push**, with the
+`github-pull-request` skill's guard (the resolver's `ATTRIBUTION_GUARD`):
+
+```bash
+sh "$ATTRIBUTION_GUARD" --message-file <file-holding-the-message>   # before `git commit -F`
+sh "$ATTRIBUTION_GUARD" --commits HEAD                               # before `git push`
+```
+
+In a repo with a commit-msg hook (the OpenThrottle monorepo's runs this guard's `--strip`), the
+hook is a backstop. With `COMMIT_MSG_HOOK=none` the guard is the only check there is.
 
 ## Report the outcome
 

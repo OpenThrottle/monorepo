@@ -102,7 +102,7 @@ const createCwdWithTemplate = async (
     );
   }
   await writeFile(
-    join(guardDir, 'check-pr-attribution.sh'),
+    join(guardDir, 'check-attribution.sh'),
     '#!/bin/sh\nexit 0\n',
     'utf8',
   );
@@ -173,6 +173,8 @@ interface StubOptions {
   readonly attribution?: WorkflowRalphCommandResult;
   /** @description Collects each body the attribution guard is shown. */
   readonly attributionBodies?: string[];
+  /** @description What the guard's `--commits HEAD` check returns before the push. */
+  readonly commitAttribution?: WorkflowRalphCommandResult;
   readonly existingPrs?: string;
   readonly push?: WorkflowRalphCommandResult;
   readonly remoteBase?: boolean;
@@ -227,7 +229,10 @@ const createRunCommand = (
           : ok(`${[BRANCH_COMMIT, ...BASE_COMMITS].join('\n')}\n`);
       }
     }
-    if (command === 'bash' && args[0]?.endsWith('check-pr-attribution.sh')) {
+    if (command === 'bash' && args[0]?.endsWith('check-attribution.sh')) {
+      if (args.includes('--commits')) {
+        return options.commitAttribution ?? ok();
+      }
       const bodyFile = args[args.indexOf('--body-file') + 1];
       if (options.attributionBodies !== undefined && bodyFile !== undefined) {
         options.attributionBodies.push(await readFile(bodyFile, 'utf8'));
@@ -1002,6 +1007,41 @@ describe('finalizePlanRun', () => {
       status: 'finished',
     });
     expect(JSON.stringify(appendCalls)).toContain('git-push');
+  });
+
+  it('never pushes when a commit carries attribution, and records the owed step', async () => {
+    const cwd = await createCwdWithTemplate();
+    const appendCalls: unknown[] = [];
+    const runCommand = createRunCommand({
+      aheadCount: '1',
+      commitAttribution: {
+        exitCode: 1,
+        stderr: '',
+        stdout: '❌ commit abc1234  feat: x\n',
+      },
+    });
+
+    const result = await finalizePlanRun({
+      baseBranch: 'main',
+      cwd,
+      draftDir: undefined,
+      executeGraphqlV2: createExecuteGraphqlV2(appendCalls),
+      markReady: shouldMarkPlanRunReady('workflow_complete'),
+      onChunk: undefined,
+      planId: PLAN_ID,
+      priorReason: 'workflow_complete',
+      runCommand,
+    });
+
+    expect(result).toEqual({
+      exitCode: 0,
+      reason: 'workflow_complete_handoff_owed',
+      status: 'finished',
+    });
+    expect(JSON.stringify(appendCalls)).toContain('commit-attribution');
+    expect(runCommand).not.toHaveBeenCalledWith(
+      expect.objectContaining({ args: expect.arrayContaining(['push']) }),
+    );
   });
 
   it('returns workflow_complete_handoff_owed when attribution check fails', async () => {

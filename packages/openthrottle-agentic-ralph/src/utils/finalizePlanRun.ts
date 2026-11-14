@@ -593,10 +593,23 @@ const commandDetail = (
 };
 
 /**
- * @description Writes the title and body to a temp dir and runs the github-pull-request skill's
- * `check-pr-attribution.sh` on them, from `.agents/skills/` — the fan-out `sync.sh` builds in the
- * OpenThrottle repo and foreign-skill injection builds in every other repo, so the path is the same
- * in both.
+ * @description The github-pull-request skill's attribution guard, from `.agents/skills/` — the
+ * fan-out `sync.sh` builds in the OpenThrottle repo and foreign-skill injection builds in every
+ * other repo, so the path is the same in both.
+ */
+const attributionGuardPath = (cwd: string): string => {
+  return join(
+    cwd,
+    '.agents',
+    'skills',
+    'github-pull-request',
+    'scripts',
+    'check-attribution.sh',
+  );
+};
+
+/**
+ * @description Writes the title and body to a temp dir and runs the attribution guard on them.
  */
 const writeAndGuardPrFiles = async (params: {
   readonly body: string;
@@ -636,14 +649,7 @@ const writeAndGuardPrFiles = async (params: {
 
   const attribution = await runCommand({
     args: [
-      join(
-        cwd,
-        '.agents',
-        'skills',
-        'github-pull-request',
-        'scripts',
-        'check-pr-attribution.sh',
-      ),
+      attributionGuardPath(cwd),
       '--title-file',
       titlePath,
       '--body-file',
@@ -965,6 +971,28 @@ export const finalizePlanRun = async (
       headSha: undefined,
       prNumber: undefined,
       reason: priorReason,
+    });
+  }
+
+  // A repo with no pre-push hook has nothing else between an attribution line in a commit and
+  // the remote, so check every commit the push would add before pushing it.
+  const commitAttribution = await runCommand({
+    args: [attributionGuardPath(cwd), '--commits', 'HEAD'],
+    command: 'bash',
+    cwd,
+  });
+
+  if (commitAttribution.exitCode !== 0) {
+    return finalizeHandoffOwed({
+      cwd,
+      detail: commandDetail(
+        commitAttribution,
+        'commit attribution check failed',
+      ),
+      executeGraphqlV2,
+      onChunk,
+      owedStep: 'commit-attribution',
+      planId,
     });
   }
 
