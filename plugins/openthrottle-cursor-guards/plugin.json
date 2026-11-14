@@ -1,0 +1,9 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "author": {
+    "name": "OpenThrottle",
+    "url": "https://github.com/OpenThrottle"
+  },
+  "description": "Guards for Cursor: catches shell commands that fail invisibly (zsh globs and modifiers, BSD sed, masked exit status, gh writes to closed PRs). Works with or without an OpenThrottle server.",
+  "name": "openthrottle-guards"
+}

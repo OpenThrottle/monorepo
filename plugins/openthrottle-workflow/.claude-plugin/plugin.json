@@ -1,0 +1,11 @@
+{
+  "author": {
+    "name": "OpenThrottle",
+    "url": "https://github.com/OpenThrottle"
+  },
+  "dependencies": [
+    "openthrottle"
+  ],
+  "description": "OpenThrottle plan-run workflow hooks for Claude Code: delivers plan inbox messages before destructive steps, warns on edits with no task in progress, reports plan auto-close, settles abandoned runs, and requires an OT plan for session kickoffs.",
+  "name": "openthrottle-workflow"
+}

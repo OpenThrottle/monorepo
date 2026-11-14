@@ -1,0 +1,25 @@
+{
+  "hooks": {
+    "beforeSubmitPrompt": [
+      {
+        "command": "${CURSOR_PLUGIN_ROOT}/hooks/skill-usage-capture.cjs"
+      }
+    ],
+    "preToolUse": [
+      {
+        "command": "${CURSOR_PLUGIN_ROOT}/hooks/skill-usage-capture.cjs"
+      }
+    ],
+    "sessionEnd": [
+      {
+        "command": "${CURSOR_PLUGIN_ROOT}/hooks/skill-usage-complete.cjs"
+      }
+    ],
+    "sessionStart": [
+      {
+        "command": "${CURSOR_PLUGIN_ROOT}/hooks/skill-usage-heartbeat.cjs"
+      }
+    ]
+  },
+  "version": 1
+}
