@@ -31,7 +31,7 @@ import {
   readLocalSecrets,
   upsertLocalSecrets,
 } from './local-secrets-file';
-import { createLogger } from './utils/index.ts';
+import { createLogger } from './utils/logger.ts';
 
 const logger = createLogger();
 
@@ -49,8 +49,7 @@ export const BOOTSTRAP_ACCOUNTS = [
 ] as const;
 
 /** Copy-pasteable command that emits a valid `ot_sa_<prefix>_<secret>` token. */
-const TOKEN_GENERATION_HINT =
-  "node -e \"const c=require('node:crypto');const a='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';const r=n=>Array.from(c.randomBytes(n),b=>a[b%a.length]).join('');console.log('ot_sa_'+r(12)+'_'+r(32))\"";
+const TOKEN_GENERATION_HINT = `node -e "const c=require('node:crypto');const a='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';const r=n=>Array.from(c.randomBytes(n),b=>a[b%a.length]).join('');console.log('ot_sa_'+r(12)+'_'+r(32))"`;
 
 type ProvisionOutcome =
   'created' | 'minted' | 'noop' | 'rotated' | 'skipped' | 'updated';
@@ -87,10 +86,10 @@ async function upsertBootstrapCredentialFromEnv(
       process.exit(1);
     }
 
-    const detail =
-      result.action === 'noop'
-        ? 'credential already matches (no change)'
-        : `${result.action} credential`;
+    const isNoop = result.action === 'noop';
+    const detail = isNoop
+      ? 'credential already matches (no change)'
+      : `${result.action} credential`;
 
     logger.info(`${account.name}: ${detail} from ${account.envVar}.`);
 

@@ -10,7 +10,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
 import { DATABASES } from '../databases/database-registry.ts';
-import { createLogger } from './utils/index.ts';
+import { createLogger } from './utils/logger.ts';
 import {
   changedMigrationPaths,
   migrationDiffArgs,

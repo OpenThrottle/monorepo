@@ -4,7 +4,7 @@ import { glob, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { createLogger } from './utils/index.ts';
+import { createLogger } from './utils/logger.ts';
 
 const logger = createLogger();
 
@@ -47,8 +47,9 @@ interface FileManifest {
  * @description A dependency spec is allowed when it uses the `catalog:` protocol or a
  * `workspace:` reference; everything else is a literal version and a violation.
  */
-export const isAllowedSpec = (spec: string): boolean =>
-  spec.startsWith('catalog:') || spec.startsWith('workspace:');
+export const isAllowedSpec = (spec: string): boolean => {
+  return spec.startsWith('catalog:') || spec.startsWith('workspace:');
+};
 
 /**
  * @description Pure violation collector — given parsed manifests, returns every checked

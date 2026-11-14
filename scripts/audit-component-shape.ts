@@ -29,7 +29,8 @@ import { fileURLToPath } from 'node:url';
 import { globSync } from 'glob';
 import ts from 'typescript';
 
-import { countLines, createLogger } from './utils/index.ts';
+import { countLines } from './utils/lines.ts';
+import { createLogger } from './utils/logger.ts';
 
 const logger = createLogger();
 
@@ -71,7 +72,9 @@ const projectOf = (relativePath: string): string => {
   return match ? `${match[1]}/${match[2]}` : 'unknown';
 };
 
-const isPascalCase = (name: string): boolean => /^[A-Z]/.test(name);
+const isPascalCase = (name: string): boolean => {
+  return /^[A-Z]/.test(name);
+};
 
 const initFunction = (
   init: ts.Expression | undefined,
@@ -111,11 +114,12 @@ const countHookSignals = (
   const visit = (node: ts.Node): void => {
     if (ts.isCallExpression(node)) {
       const callee = node.expression;
-      const text = ts.isPropertyAccessExpression(callee)
-        ? callee.name.text
-        : ts.isIdentifier(callee)
-          ? callee.text
-          : '';
+      let text = '';
+      if (ts.isPropertyAccessExpression(callee)) {
+        text = callee.name.text;
+      } else if (ts.isIdentifier(callee)) {
+        text = callee.text;
+      }
 
       if (/^use[A-Z]/.test(text)) hookCalls += 1;
       if (text === 'useState') useStateCount += 1;
@@ -430,14 +434,18 @@ const runShadcn = (): void => {
   }
 };
 
-const hasHoistViolation = (r: FileReport): boolean =>
-  !r.optOut && (r.helperDecls > 0 || r.dataDecls > 0);
-const hasMultiComponent = (r: FileReport): boolean =>
-  !r.optOut && r.exportedComponents > 1;
-const isHookHeavy = (r: FileReport): boolean =>
-  !r.optOut && (r.useStateCount >= 8 || r.statements >= 30);
-const hasViolation = (r: FileReport): boolean =>
-  hasHoistViolation(r) || hasMultiComponent(r) || r.overCap;
+const hasHoistViolation = (r: FileReport): boolean => {
+  return !r.optOut && (r.helperDecls > 0 || r.dataDecls > 0);
+};
+const hasMultiComponent = (r: FileReport): boolean => {
+  return !r.optOut && r.exportedComponents > 1;
+};
+const isHookHeavy = (r: FileReport): boolean => {
+  return !r.optOut && (r.useStateCount >= 8 || r.statements >= 30);
+};
+const hasViolation = (r: FileReport): boolean => {
+  return hasHoistViolation(r) || hasMultiComponent(r) || r.overCap;
+};
 
 const run = (): void => {
   // The shadcn primitive-variant profile is a separate, report-only scan.

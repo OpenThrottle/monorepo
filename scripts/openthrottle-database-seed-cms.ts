@@ -20,7 +20,7 @@ import {
   readCmsSchemaEntries,
   syncCmsSchemas,
 } from './openthrottle-database-sync-cms-schemas.ts';
-import { createLogger } from './utils/index.ts';
+import { createLogger } from './utils/logger.ts';
 
 const logger = createLogger();
 

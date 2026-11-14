@@ -9,13 +9,16 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { readEnvFile } from './utils/env.ts';
-import { createLogger } from './utils/index.ts';
+import { createLogger } from './utils/logger.ts';
 
 const logger = createLogger();
 
 /** True when a .env map carries a usable embedding provider config. */
-export const hasEmbeddingConfig = (env: Record<string, string>): boolean =>
-  (env.OPENAI_API_KEY ?? '') !== '' || (env.OLLAMA_BASE_URL ?? '') !== '';
+export const hasEmbeddingConfig = (env: Record<string, string>): boolean => {
+  return (
+    (env.OPENAI_API_KEY ?? '') !== '' || (env.OLLAMA_BASE_URL ?? '') !== ''
+  );
+};
 
 export type AuthSmokeVerdict = 'inconclusive' | 'ok' | 'rejected';
 
@@ -104,10 +107,10 @@ const main = async (): Promise<void> => {
       method: 'POST',
     });
 
-    const verdict =
-      smoke === undefined
-        ? 'inconclusive'
-        : classifyAuthSmoke(smoke.status, smoke.body);
+    const hasSmoke = smoke !== undefined;
+    const verdict = hasSmoke
+      ? classifyAuthSmoke(smoke.status, smoke.body)
+      : 'inconclusive';
 
     if (verdict === 'rejected') {
       logger.fail('authenticated GraphQL rejected the token — revoked, wrong server, or missing plans:* role'); // prettier-ignore

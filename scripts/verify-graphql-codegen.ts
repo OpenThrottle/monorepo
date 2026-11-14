@@ -40,7 +40,9 @@ import {
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
-import { createLogger, flagValue, run } from './utils/index.ts';
+import { flagValue } from './utils/args.ts';
+import { run } from './utils/exec.ts';
+import { createLogger } from './utils/logger.ts';
 
 const logger = createLogger();
 

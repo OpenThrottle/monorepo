@@ -34,7 +34,8 @@ import { join, relative, resolve } from 'node:path';
 import * as prettier from 'prettier';
 import ts from 'typescript';
 
-import { createLogger, flagValue, hasFlag } from './utils/index.ts';
+import { flagValue, hasFlag } from './utils/args.ts';
+import { createLogger } from './utils/logger.ts';
 
 const logger = createLogger();
 

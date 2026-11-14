@@ -47,7 +47,8 @@ import { join } from 'node:path';
 
 import { parseYamlFrontmatter } from '@openthrottle/openthrottle-skills';
 
-import { createLogger, flagValue, hasFlag } from './utils/index.ts';
+import { flagValue, hasFlag } from './utils/args.ts';
+import { createLogger } from './utils/logger.ts';
 
 const logger = createLogger();
 

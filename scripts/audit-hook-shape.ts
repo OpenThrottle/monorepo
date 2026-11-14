@@ -30,7 +30,7 @@ import type {
   HookShapeRule,
 } from './audit-hook-shape.allowlist.ts';
 import { HOOK_SHAPE_ALLOWLIST } from './audit-hook-shape.allowlist.ts';
-import { createLogger } from './utils/index.ts';
+import { createLogger } from './utils/logger.ts';
 
 const logger = createLogger();
 
@@ -69,11 +69,13 @@ export interface HookFileFacts {
   readonly optOut: boolean;
 }
 
-const isInHooksFolder = (file: string): boolean =>
-  file.split('/').slice(0, -1).includes('hooks');
+const isInHooksFolder = (file: string): boolean => {
+  return file.split('/').slice(0, -1).includes('hooks');
+};
 
-const baseNameOf = (file: string): string =>
-  path.basename(file).replace(/\.tsx?$/, '');
+const baseNameOf = (file: string): string => {
+  return path.basename(file).replace(/\.tsx?$/, '');
+};
 
 const hasModifier = (node: ts.Node, kind: ts.SyntaxKind): boolean => {
   const modifiers = ts.canHaveModifiers(node)
@@ -83,14 +85,15 @@ const hasModifier = (node: ts.Node, kind: ts.SyntaxKind): boolean => {
   return modifiers?.some((m) => m.kind === kind) ?? false;
 };
 
-const parse = (file: string, content: string): ts.SourceFile =>
-  ts.createSourceFile(
+const parse = (file: string, content: string): ts.SourceFile => {
+  return ts.createSourceFile(
     file,
     content,
     ts.ScriptTarget.Latest,
     true,
     file.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
   );
+};
 
 /** Names a statement declares at module scope, as `[name, isType]` pairs. */
 const declaredNames = (
@@ -229,10 +232,10 @@ export const collectImports = (
       ts.isStringLiteral(statement.moduleSpecifier)
     ) {
       const clause = statement.exportClause;
-      const names =
-        clause !== undefined && ts.isNamedExports(clause)
-          ? clause.elements.map((e) => (e.propertyName ?? e.name).text)
-          : [ALL_EXPORTS];
+      const isNamed = clause !== undefined && ts.isNamedExports(clause);
+      const names = isNamed
+        ? clause.elements.map((e) => (e.propertyName ?? e.name).text)
+        : [ALL_EXPORTS];
 
       facts.push({
         importer: file,
@@ -262,11 +265,12 @@ export const resolveSpecifier = (
   specifier: string,
   inScope: ReadonlySet<string>,
 ): string | undefined => {
-  const base = specifier.startsWith('.')
-    ? path.posix.join(path.posix.dirname(importer), specifier)
-    : specifier.startsWith('~/')
-      ? path.posix.join(appRootOf(importer) ?? '', specifier.slice(2))
-      : undefined;
+  let base: string | undefined;
+  if (specifier.startsWith('.')) {
+    base = path.posix.join(path.posix.dirname(importer), specifier);
+  } else if (specifier.startsWith('~/')) {
+    base = path.posix.join(appRootOf(importer) ?? '', specifier.slice(2));
+  }
 
   if (base === undefined) return undefined;
 
@@ -284,9 +288,12 @@ export const resolveSpecifier = (
  * that merely exports a hook next to other things (`chat-context.tsx`) is the
  * placement check's finding, not a bad name.
  */
-const isHookFile = (facts: HookFileFacts): boolean =>
-  baseNameOf(facts.file).startsWith('use') &&
-  (isInHooksFolder(facts.file) || facts.exportedHooks.length > 0);
+const isHookFile = (facts: HookFileFacts): boolean => {
+  return (
+    baseNameOf(facts.file).startsWith('use') &&
+    (isInHooksFolder(facts.file) || facts.exportedHooks.length > 0)
+  );
+};
 
 /** Compute every violation from the per-file facts and the import graph. */
 export const findViolations = (
@@ -368,7 +375,9 @@ const keyOf = (entry: {
   readonly file: string;
   readonly rule: string;
   readonly symbol: string | undefined;
-}): string => `${entry.rule}|${entry.file}|${entry.symbol ?? ''}`;
+}): string => {
+  return `${entry.rule}|${entry.file}|${entry.symbol ?? ''}`;
+};
 
 export interface StrictResult {
   /** Allowlist entries whose violation is gone — delete them. */
@@ -406,8 +415,7 @@ const readInScope = (): readonly { content: string; file: string }[] => {
 };
 
 const RULE_TITLES: Readonly<Record<HookShapeRule, string>> = {
-  'H3-imported-constant':
-    'H3 — hook-file values imported elsewhere (move to data/ or config/)',
+  'H3-imported-constant': `H3 — hook-file values imported elsewhere (move to data/ or config/)`,
   'H6-file-name': 'H6 — hook file name is not camelCase useFoo.ts(x)',
   'H6-hook-outside-hooks': 'H6 — exported use* hook outside a hooks/ folder',
 };

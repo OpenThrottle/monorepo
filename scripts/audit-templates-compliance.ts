@@ -9,7 +9,7 @@ import { readFileSync } from 'fs';
 import { globSync } from 'glob';
 import path from 'path';
 
-import { createLogger } from './utils/index.ts';
+import { createLogger } from './utils/logger.ts';
 
 const logger = createLogger();
 
@@ -86,16 +86,14 @@ function run(): void {
       if (hasDisallowedDefaultExport(content, file)) {
         flags.push({
           file: relativePath,
-          reason:
-            'default export in component-like path (use a named export — code-style.md#no-default-exports)',
+          reason: `default export in component-like path (use a named export — code-style.md#no-default-exports)`,
         });
       }
 
       if (missingReactImport(content)) {
         flags.push({
           file: relativePath,
-          reason:
-            "JSX present but missing `import * as React from 'react'` (code-style.md#general)",
+          reason: `JSX present but missing \`import * as React from 'react'\` (code-style.md#general)`,
         });
       }
     }

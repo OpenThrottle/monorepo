@@ -50,7 +50,7 @@ import {
   findDuplicatePrefixCollisions,
   findGuardedForeignKeyStatements,
 } from './check-migration-hygiene.rules';
-import { createLogger } from './utils/index.ts';
+import { createLogger } from './utils/logger.ts';
 import {
   changedMigrationPaths,
   migrationDiffArgs,
