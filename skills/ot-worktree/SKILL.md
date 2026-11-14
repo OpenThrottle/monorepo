@@ -1,8 +1,10 @@
 ---
-description: Create, heal and destroy git worktrees in any repo — the portable worktree machinery behind `worktree:new`, `worktree:heal` and `worktree:remove`. Use when creating a worktree, provisioning or self-healing a worktree, removing/deleting/tearing down a worktree, or when OPENTHROTTLE_WORKTREE_ROOT, `.worktree/provision.sh` or `.worktree/teardown.sh` are involved.
+compatibility: Requires git, a POSIX sh and bash; curl is optional (OpenThrottle deregistration); jq for hook payloads; Node 22.18+ only to run a repo's `.ts` provision hook. Hook contract in references/contract.md.
+description: Create, heal and destroy git worktrees in any repo — the portable worktree machinery behind `worktree:new`, `worktree:heal` and `worktree:remove`. Use when creating a worktree, spinning up a worktree for a branch or task, provisioning or self-healing a worktree, removing/deleting/tearing down/cleaning up a worktree, or when OPENTHROTTLE_WORKTREE_ROOT, `.worktree/provision.sh` or `.worktree/teardown.sh` are involved. Not for pruning many merged branches (see `github-cleanup`).
 metadata:
   author: openthrottle
-  version: '1.0.0'
+  last-reviewed: '2026-11-14'
+  version: '1.1.0'
 name: ot-worktree
 ---
 
@@ -10,28 +12,25 @@ name: ot-worktree
 
 Git worktrees are how you run several branches of one repo side by side. Creating one is
 `git worktree add`; making it _usable_ — dependencies, `.env`, ports, containers — is repo-specific
-work git has no hook for. This skill owns the generic half and delegates the repo-specific half.
-
-Because openthrottle skills are synced into any repo (`skills/` → `.agents/skills/` → `.claude/skills/`
-via [`ot-skill-sync`](../ot-skill-sync/SKILL.md)), every repo that has this skill creates, heals and
-destroys worktrees the same way.
+work git has no hook for. This skill owns the generic half and delegates the repo-specific half, so
+every repo that has it creates, heals and destroys worktrees the same way.
 
 ## Three composable actions
 
-Each verb is usable standalone and callable from the others.
+Each verb is usable standalone and callable from the others. All three accept `-h`/`--help`.
 
-| Action      | Script               | Entrypoints                                                      | Job                                                   |
-| ----------- | -------------------- | ---------------------------------------------------------------- | ----------------------------------------------------- |
-| **create**  | `scripts/create.sh`  | `pnpm worktree:new <name>`, Claude `WorktreeCreate` hook, Cursor | Create the worktree, then provision it                |
-| **heal**    | `scripts/heal.sh`    | `pnpm worktree:heal`, nx `monorepo:ensure-worktree`              | Lazily provision a worktree created outside the skill |
-| **destroy** | `scripts/destroy.sh` | `pnpm worktree:remove [name\|path]`                              | Run teardown, remove the worktree, prune admin dirs   |
+| Action      | Script               | Job                                                   |
+| ----------- | -------------------- | ----------------------------------------------------- |
+| **create**  | `scripts/create.sh`  | Create the worktree, then provision it                |
+| **heal**    | `scripts/heal.sh`    | Lazily provision a worktree created outside the skill |
+| **destroy** | `scripts/destroy.sh` | Run teardown, remove the worktree, prune admin dirs   |
 
 Shared internals: `scripts/common.sh` (logging, linked-worktree detection, name sanitization, target
 validation), `scripts/root.sh` (the root ladder), `scripts/provision.sh` (repo-hook delegation).
 
 ## create — three invocation modes, auto-detected
 
-1. **CLI** — name as `$1` (`pnpm worktree:new <name>`). Never reads stdin.
+1. **CLI** — name as `$1`. Never reads stdin.
 2. **Hook payload** — no name arg and stdin is a pipe: the Claude Code `WorktreeCreate` JSON payload.
    The name comes from `.name // .worktree_name // .worktreeName // .worktree // .branch // .slug`,
    falling back to `wt-<first 8 of session_id>`. The raw payload is logged to `$TMPDIR`.
@@ -44,156 +43,89 @@ rather than failing.
 
 ### What the new branch forks from
 
-A worktree you make to test something should not quietly inherit whatever you were mid-way through
-on your primary checkout. So the base is resolved on its own ladder, highest rung first:
+Highest rung first:
 
-1. `--base <ref>` or `OPENTHROTTLE_WORKTREE_BASE` — explicit. `--base HEAD` opts back into forking
-   from the primary checkout's current branch, which is what you want when stacking on your own work.
-   A ref that does not resolve is a hard failure, never a silent fallback.
+1. `--base <ref>` or `OPENTHROTTLE_WORKTREE_BASE` — explicit. `--base HEAD` forks from the primary
+   checkout's current branch (to stack on your own work). A ref that does not resolve is a hard failure.
 2. **The remote's default branch** — `refs/remotes/<remote>/HEAD` (remote from
-   `OPENTHROTTLE_WORKTREE_REMOTE`, default `origin`, matching the org segment in `root.sh`). Clones
-   made before the remote had commits have no such symref, so `<remote>/main` then `<remote>/master`
-   are tried as a purely local fallback.
-3. `HEAD` — no remote, or no nameable default. The old behaviour, now only a last resort.
+   `OPENTHROTTLE_WORKTREE_REMOTE`, default `origin`); `<remote>/main` then `<remote>/master` as a local fallback.
+3. `HEAD` — no remote, or no nameable default.
 
-**No fetch happens.** Rung 2 is your last-fetched ref, so create stays fast, works offline, and can
-never fail on a network hiccup — the Claude `WorktreeCreate` hook blocks on this script. `git pull`
-inside the worktree if you need newer than your last fetch.
-
-The branch is created with `--no-track`: cut from `origin/main`, it would otherwise take `main` as
-its upstream and aim a later `git push` at the wrong branch. `--base` is ignored, with a warning,
-when the branch already exists or when provisioning in place — in both cases there is nothing to fork.
+**No fetch happens**: rung 2 is your last-fetched ref, so create stays fast and offline-safe (the
+`WorktreeCreate` hook blocks on it). The branch is created `--no-track`. `--base` is ignored, with a
+warning, when the branch already exists or when provisioning in place.
 
 ### Provision options
 
-`create.sh` passes repo-agnostic switches to the repo's provisioner as exported environment variables — the
-hook contract has no argv channel. `--own-db` sets `OPENTHROTTLE_WORKTREE_OWN_DB=1`, asking for the worktree's
-own database instead of the primary's; a provisioner that does not know it ignores it. In this repo it runs
-the same code as `pnpm worktree:db isolate`.
+`--own-db` sets `OPENTHROTTLE_WORKTREE_OWN_DB=1` for the repo's provisioner (the hook contract has no
+argv channel); a provisioner that does not know it ignores it.
 
 **Stdout contract:** `create.sh` prints _only_ the worktree's absolute path. Everything else is stderr.
-Claude's `WorktreeCreate` hook depends on this — any extra stdout line breaks worktree creation.
+Claude's `WorktreeCreate` hook depends on this.
+
+Stdin is read only when it is a pipe or file, line by line with a 2s idle timeout, so an open pipe
+that never closes cannot hang create.
 
 ## Where worktrees live
 
-Two parts: a **root** holding every repo's worktrees, and the `<org>/<repo>` OpenThrottle always
-organizes beneath it.
+A **root** holding every repo's worktrees, with `<org>/<repo>` always organized beneath it:
 
 ```
 ~/.openthrottle/worktrees/acme/monorepo/feature-x
 └──────── root ─────────┘└─ org/repo ─┘└─ worktree ─┘
 ```
 
-The root, highest rung wins:
+The root, highest rung wins: `OPENTHROTTLE_WORKTREE_ROOT` in the environment; the same variable in
+the target repo's `.env`; default `~/.openthrottle/worktrees`. There is deliberately no settings file.
 
-1. `OPENTHROTTLE_WORKTREE_ROOT` in the environment.
-2. `OPENTHROTTLE_WORKTREE_ROOT` in the target repo's `.env` — how a repo customizes where **its**
-   worktrees go. The same variable, read from the repo instead of the shell.
-3. **Default: `~/.openthrottle/worktrees`**, documented in `.env.default`.
-
-One variable, two places it can come from, one default. There is deliberately no settings file and
-no third channel: a second source of truth for the same answer is what lets a CLI and a server
-disagree about where they put things.
-
-**The root is a root, not a final destination.** OT appends `<org>/<repo>` whatever supplied it —
-configured or default — the same shape `OPENTHROTTLE_CHECKOUT_ROOT` uses for clones. Organizing
-unconditionally is what keeps the layout predictable; a root used verbatim would pile every repo's
-worktrees into one directory.
-
-The org comes from the repo's **git remote**, not its directory name, so two checkouts of different
-orgs' `monorepo` cannot collide. By the time this runs git is unambiguously present — every action
-here shells out to it. A repo with no remote falls back to just `<repo>`, its directory name. Remote
-segments are sanitized to `[A-Za-z0-9._-]`, and `.`/`..` are refused, so a malformed remote cannot
-walk out of the root.
-
-A leading `~`/`~/` is expanded, trailing slashes stripped, and a non-absolute root is **rejected**
-rather than guessed at.
-
-Worktrees created before this changed stay where they are — they are registered in
-`git worktree list`, so every action here still finds them by path.
+The org comes from the repo's **git remote**, not its directory name (no remote: just `<repo>`).
+Segments are sanitized to `[A-Za-z0-9._-]` and `.`/`..` are refused. A leading `~` is expanded,
+trailing slashes stripped, and a non-absolute root is **rejected**. Worktrees created at an older
+location are still found: every action reads `git worktree list`.
 
 ## The repo hook contract
 
-The skill never knows how to set your repo up. It looks for a provisioner, and runs it if found:
+The skill never knows how to set your repo up; it runs a repo-provided hook if one exists:
 
-1. `$OPENTHROTTLE_WORKTREE_PROVISION` (absolute, or relative to the worktree)
-2. `<worktree>/.worktree/provision.sh`
-3. `<worktree>/scripts/setup_worktree.ts`
-4. `<worktree>/scripts/setup_worktree.sh` (legacy — branches that predate the `.ts`)
+- **provision:** `$OPENTHROTTLE_WORKTREE_PROVISION`, then `.worktree/provision.sh`, then `scripts/setup_worktree.ts`, then `scripts/setup_worktree.sh`.
+- **heal hook** (optional, idempotent, failure never fatal): `$OPENTHROTTLE_WORKTREE_HEAL`, then `.worktree/heal.sh`, then `scripts/heal_worktree.ts`.
+- **teardown:** `$OPENTHROTTLE_WORKTREE_TEARDOWN`, then `.worktree/teardown.sh`.
+- Hooks run with cwd = the worktree, stdin closed, stdout redirected to stderr, and `OPENTHROTTLE_SOURCE_REPO` / `OPENTHROTTLE_WORKTREE_NAME` / `OPENTHROTTLE_WORKTREE_PATH` exported.
+- Nothing found: log and no-op. A non-zero exit is a failure: provisioning aborts creation, teardown aborts removal.
 
-Heal also runs an optional **heal hook** on every already-provisioned worktree, to backfill state onto
-worktrees an older provisioner built: `$OPENTHROTTLE_WORKTREE_HEAL`, then `<worktree>/.worktree/heal.sh`, then
-`<worktree>/scripts/heal_worktree.ts`. It must be idempotent and cheap, and a failing heal hook is logged but
-never fatal (heal runs before every `dev`).
-
-Teardown mirrors it: `$OPENTHROTTLE_WORKTREE_TEARDOWN`, then `<worktree>/.worktree/teardown.sh` (no `scripts/`
-fallback). Nothing found → log and no-op; a plain `git worktree add`/`remove` is a perfectly valid
-outcome in a repo with no setup needs.
-
-Hooks run with cwd = the worktree, stdin closed, stdout redirected to stderr, and
-`OPENTHROTTLE_SOURCE_REPO` / `OPENTHROTTLE_WORKTREE_NAME` / `OPENTHROTTLE_WORKTREE_PATH` exported. **A non-zero exit is a failure**:
-provisioning aborts creation, teardown aborts removal (that is where a repo stops a container or
-releases a port lease — removing anyway would leak it).
-
-Full details, including the provisioned-marker scheme heal reads: [references/contract.md](references/contract.md).
+Read [references/contract.md](references/contract.md) when writing or debugging a hook.
 
 ## destroy — safety defaults
-
-Destroying a worktree is the one action here that can eat real work, so the defaults are conservative:
 
 - **Refuses the primary checkout.** The target must be a registered _linked_ worktree of this repo.
 - **Refuses a dirty tree** — prints what is dirty and requires an explicit `--force`.
 - **Branch-preserving.** `--delete-branch` deletes it only if merged; `--delete-branch --force` otherwise.
 - **`--dry-run`** prints exactly what would happen and removes nothing.
 - Runs the teardown hook _before_ removal, then `git worktree prune`.
-- **Deregisters the OpenThrottle checkout record** after a successful removal
-  (`scripts/deregister.sh`), so the repositories page stops listing a worktree that is gone. It
-  calls `deregisterWorktreeCheckout` with the path, resolving the endpoint and token by the same
-  location ladder the agentic hooks use — the _primary_ checkout's `.env` (only in an OpenThrottle
-  checkout), then the ambient environment, then `~/.openthrottle/.env`. Strictly fail-open: no
-  `curl`, no endpoint or token, a server that is down, or a refused request each log one line and
-  the removal still succeeds. The server keeps the record while an unsettled plan run points at it,
-  so settle a run before tearing down its worktree. `OPENTHROTTLE_WORKTREE_DEREGISTER=0` skips it.
 
 With no argument, run from inside a linked worktree, it removes itself (chdir'ing to the primary
-checkout first).
+checkout first). Exit codes: 0 success, 1 refused or failed.
 
-Removal that bypasses this script — `git worktree remove`, an editor's own cleanup — leaves the
-record behind. The repositories page flags such records "Missing on disk" and prunes them.
+## Gotchas
 
-## Adopting this in another repo
+- The hook is read from the **worktree's** checkout, not the primary one: a worktree on a branch predating the hook will not run it.
+- Heal runs before every `dev`, so a heal hook must stay cheap and idempotent.
+- `create.sh` stdout must be only the path; log to stderr, in the script and in any hook.
+- Removal that bypasses `destroy.sh` (`git worktree remove`, an editor's cleanup) leaves an OpenThrottle checkout record behind.
 
-1. Sync the skills (`./skills/ot-skill-sync/scripts/sync.sh`, or `/ot-skill-sync`).
-2. Optionally add `.worktree/provision.sh` (and `.worktree/teardown.sh`) — anything the repo needs to
-   make a fresh checkout usable. Skip it entirely if `git worktree add` is already enough.
-3. Optionally add the human entrypoints to `package.json`. Copy these verbatim — they resolve the
-   skill wherever it lives, so there is nothing to adjust per repo:
-   ```json
-   "worktree:new": "sh -c 'd=skills/ot-worktree/scripts; [ -x \"$d/create.sh\" ] || d=.agents/skills/ot-worktree/scripts; exec \"$d/create.sh\" \"$@\"' --",
-   "worktree:heal": "sh -c 'd=skills/ot-worktree/scripts; [ -x \"$d/heal.sh\" ] || d=.agents/skills/ot-worktree/scripts; exec \"$d/heal.sh\" \"$@\"' --",
-   "worktree:remove": "sh -c 'd=skills/ot-worktree/scripts; [ -x \"$d/destroy.sh\" ] || d=.agents/skills/ot-worktree/scripts; exec \"$d/destroy.sh\" \"$@\"' --"
-   ```
-   **Why a ladder and not a path.** The skill lives at `skills/` in the repo that _authors_ it
-   (OpenThrottle) and at `.agents/skills/` in a repo that _installed_ it with `npx skills`. Neither
-   path is right everywhere, and in OpenThrottle `.agents/skills/*` is gitignored — the authored
-   entries there are symlinks that a fresh clone does not have — so the installed-repo path is not a
-   safe universal default. The ladder prefers the authoring path, falls back to the installed one, and
-   `exec`s, so no extra process sits between the caller and the script's stdout. That matters: the
-   `WorktreeCreate` hook reads `create.sh`'s stdout as the worktree path.
-4. Optionally wire the Claude `WorktreeCreate` hook in `.claude/settings.json` and Cursor's
-   `.cursor/worktrees.json` provision-in-place command at the same scripts, using the same ladder.
+## In OpenThrottle repos
 
-OpenThrottle itself needs no `.worktree/provision.sh`: its `scripts/setup_worktree.ts` is discovered
-by rung 3 and run by bare Node (native type stripping, so no tsx and no `node_modules` needed). It _does_ ship `.worktree/teardown.sh` (teardown has no `scripts/` rung), which
-stops the worktree's own docker compose project before removal.
+Only relevant where the OpenThrottle server and its `package.json` scripts exist.
 
-Note the hook is read from the **worktree's** checkout, not the primary one — so a worktree on a
-branch predating the hook will not run it.
+- **Entrypoints:** `pnpm worktree:new <name>`, `pnpm worktree:heal` (also nx `monorepo:ensure-worktree`), `pnpm worktree:remove [name|path]`; the Claude `WorktreeCreate` hook and Cursor call the same scripts.
+- **Provisioner:** OpenThrottle needs no `.worktree/provision.sh`: its `scripts/setup_worktree.ts` is found by rung 3 and run by bare Node (native type stripping). It ships `.worktree/teardown.sh`, which stops the worktree's docker compose project before removal.
+- **Checkout record:** after a successful removal `scripts/deregister.sh` calls `deregisterWorktreeCheckout` with the path, resolving endpoint and token from the _primary_ checkout's `.env`, then the ambient environment, then `~/.openthrottle/.env`. Strictly fail-open: no `curl`, no endpoint or token, a server that is down, or a refused request each log one line and removal still succeeds. The server keeps the record while an unsettled plan run points at it, so settle a run before tearing down its worktree. `OPENTHROTTLE_WORKTREE_DEREGISTER=0` skips it. The repositories page flags records left by other removals "Missing on disk" and prunes them.
+- **Outcome telemetry:** once, at the end — `error` if the action exited non-zero, `abandoned` if called off ([why](https://github.com/openthrottle/monorepo/blob/main/docs/monorepo/skill-usage-telemetry-scope.md#reporting-an-outcome-from-a-skill)):
 
-## Report the outcome
+  ```bash
+  r="$(git rev-parse --show-toplevel)/.claude/hooks/skill-usage-outcome.cjs"; if [ -f "$r" ]; then node "$r" --skill ot-worktree --outcome success; fi
+  ```
 
-Once, at the end — `error` if the action exited non-zero, `abandoned` if called off ([why](../../docs/monorepo/skill-usage-telemetry-scope.md#reporting-an-outcome-from-a-skill)):
+## Adopting in another repo
 
-```bash
-r="$(git rev-parse --show-toplevel)/.claude/hooks/skill-usage-outcome.cjs"; if [ -f "$r" ]; then node "$r" --skill ot-worktree --outcome success; fi
-```
+Read [references/adopting.md](references/adopting.md) when wiring this skill into a repo that did not author it: syncing the skills, optional provision/teardown hooks, `package.json` entrypoints and the hook wiring.

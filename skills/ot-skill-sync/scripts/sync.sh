@@ -20,12 +20,15 @@
 # Usage:
 #   sync.sh                  # sync the repo you're currently in
 #   sync.sh --check          # validate only (no writes); exit 1 on any drift
+#   sync.sh --help           # print this usage; exit 0
 #   sync.sh --allow-shadow   # let a personal skill deliberately shadow a
 #                            # committed one of the same name
 #
 # There is no side-ledger: generated links are exactly the symlinks under
 # .agents/skills/ and the agent fan-out dirs, and a single static .gitignore
 # block keeps them out of git.
+#
+# Exit codes: 0 = ok, 1 = drift (--check) or usage/setup error.
 
 set -euo pipefail
 
@@ -38,6 +41,9 @@ while [ $# -gt 0 ]; do
   case "$1" in
     --allow-shadow) ALLOW_SHADOW=true ;;
     --check) CHECK_MODE=true ;;
+    -h | --help)
+      sed -n '2,/^$/p' "$0" | sed -e '/^$/d' -e 's/^# \{0,1\}//'
+      exit 0 ;;
     *)
       echo "Usage: $0 [--check] [--allow-shadow]" >&2
       exit 1 ;;

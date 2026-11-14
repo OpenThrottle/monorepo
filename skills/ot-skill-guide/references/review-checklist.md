@@ -28,6 +28,8 @@ them by eye.
 - [ ] ⚙ Top-level keys outside the spec's six (`name`, `description`, `license`, `compatibility`,
       `metadata`, `allowed-tools`) are reported. A key one client reads (for example a Claude Code
       invocation flag) may stay, but only with a reason. Anything else goes in `metadata`. [S]
+- [ ] ⚙ `allowed-tools`, if present, is a space-separated string, not a YAML list. The field is
+      experimental, so a list is `quality`, not `spec`. [S]
 
 **Budget**
 

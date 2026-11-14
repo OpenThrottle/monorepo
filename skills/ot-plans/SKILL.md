@@ -7,6 +7,10 @@ description: >-
   ledger, or the user mentions OT, a plan or task UUID, or git–OT traceability.
   Plans live in OT only — never fall back to Markdown. To execute a plan see
   ot-loop.
+metadata:
+  author: openthrottle
+  last-reviewed: '2026-11-14'
+  version: '1.1.0'
 ---
 
 # OpenThrottle plans and MCP traceability
@@ -28,7 +32,7 @@ plan creation.
 
 **The free-text `project` field is a label and does NOT link a plan to a repository** — the trap
 worth knowing, because setting it looks like it should.
-[Detail](../../docs/openthrottle/authoring-plans-via-mcp.md#the-plan-remembers-the-workspace-it-was-created-in).
+[Detail](https://github.com/openthrottle/monorepo/blob/main/docs/openthrottle/authoring-plans-via-mcp.md#the-plan-remembers-the-workspace-it-was-created-in).
 
 `author` / `assignee` come from `GITHUB_USER` when set — why they are already right unprompted.
 
@@ -42,14 +46,14 @@ injection and every list tool sort by `sortOrder ASC, createdAt ASC`.
 - **Insert mid-list:** `update_task` takes `sortOrder`; the 1000-wide gaps exist so you can land
   between two tasks without renumbering.
 - **Renumber:** `reorder_plan_tasks` assigns `1000, 2000, …` in the task-id order you give.
-- Schema: `databases/openthrottle/README.md` § Task sort_order.
+- Schema: [`databases/openthrottle/README.md`](https://github.com/openthrottle/monorepo/blob/main/databases/openthrottle/README.md) § Task sort_order.
 
 ## Task wave (concurrency layer) — set it while you author
 
 `wave` is a nullable integer, `>= 1`, that groups a contiguous `sortOrder` run as the plan's claim
 that those tasks **may** be worked concurrently. It is not a dependency graph, it does not reorder
 anything, and nothing executes tasks in parallel from it today — see
-[docs/openthrottle/task-wave-encoding.md](../../docs/openthrottle/task-wave-encoding.md).
+[docs/openthrottle/task-wave-encoding.md](https://github.com/openthrottle/monorepo/blob/main/docs/openthrottle/task-wave-encoding.md).
 
 - **Set it in the same `create_tasks` call, or it will likely never get set.** `create_tasks` is one
   atomic batch — the tasks in it have no ids yet, so there is no cheap second pass. Decide grouping
@@ -69,7 +73,7 @@ anything, and nothing executes tasks in parallel from it today — see
 - **"What did I work on yesterday / last 7 days"** → `get_activity_by_date`, taking either `date`
   (`YYYY-MM-DD`) for one day or `daysBack` (1–365) for a window.
 - **"The backlog" means `PENDING`** — default `list_plans_by_status` to it when no status is named.
-- **`PROMOTED` is written by `promote_task`, never by hand** — "not finished here; the work continued as its own plan". It is resolved and terminal but not complete, so do not count it as delivered work. [Semantics](../../docs/openthrottle/authoring-plans-via-mcp.md#what-promoted-means).
+- **`PROMOTED` is written by `promote_task`, never by hand** — "not finished here; the work continued as its own plan". It is resolved and terminal but not complete, so do not count it as delivered work. [Semantics](https://github.com/openthrottle/monorepo/blob/main/docs/openthrottle/authoring-plans-via-mcp.md#what-promoted-means).
 
 ## Authoring vs running
 
@@ -78,47 +82,15 @@ fits. Report created ids so the user can act on them.
 
 **Never start executing a plan or task unless explicitly told to** — authoring and running are
 separate requests. The per-task discipline, when you are told to run one, is canonical in
-[`ot-loop`](../ot-loop/SKILL.md) § The loop; do not restate it here.
+the `ot-loop` skill § The loop; do not restate it here.
 
 ## Follow-ups and session kickoff
 
-AGENTS.md and CLAUDE.md state the rule (follow-ups are plans, kickoffs run from a plan). This is
-the how.
+CLAUDE.md states the rule (follow-ups are `PENDING` plans tagged `follow-up`; a kickoff brief is `/ot-loop <planUuid>`). What it omits:
 
-**Filing a follow-up plan.**
-
-- `create_plan` with `status: 'PENDING'`. The description names the **originating plan id** (if
-  there is one) and the **evidence** that motivated it — the file and line, the failing output, the
-  review comment. A follow-up with no evidence is a hunch, and the next session cannot check it.
-- Author its tasks in **one** `create_tasks` call with `sortOrder` and `wave` decided per item (see
-  § Task wave above — there is no cheap second pass).
-- Tag it in the same call: `create_plan({ ..., tags: ['follow-up'] })` (or `add_plan_tag(planId,
-'follow-up')` after the fact, which needs the MCP `admin` toolset). `follow-up` is a platform system tag, accepted from any caller
-  without being in your skill-tag vocabulary — do not `add_skill_tag` it (an agent token lacks
-  `settings:write`). Best-effort: a tag that fails comes back in `tagFailures` and never blocks filing.
-- Report the plan id. Filing is not starting: [§ Authoring vs running](#authoring-vs-running) still
-  holds.
-
-**Offering a kickoff.** When the harness lets you propose or hand off a session (a "New task" card,
-a background agent, a handoff), the brief is the plan:
-
-```
-/ot-loop <planUuid>
-<at most one line of context the plan does not carry>
-```
-
-Line 1 is exactly that. Everything else belongs in the plan's description and tasks, not the brief:
-a prose brief that restates or replaces the plan drifts from it the moment either is edited. The
-session that picks it up starts at [`ot-loop` § Setup](../ot-loop/SKILL.md#setup-once-before-the-loop)
-step 1.
-
-**What checks you.** The rule binds every tool; the checks differ by tool. Where a harness gives
-the agent a tool for starting a separate session, a hook denies a brief that is not
-`/ot-loop <planUuid>` — today that is only the Claude desktop app's session tools. Cursor and Codex
-have no such tool (their subagents work inside the current task and are exempt), so nothing blocks
-there. Under every tool, `git push` lists commits with no `Plan-Id:` footer — a warning, never a
-block. Per-tool detail:
-[capability matrix § Session kickoff guard](../../docs/monorepo/agent-cli-hook-capability-matrix.md#session-kickoff-guard).
+- **Evidence goes in the description.** Name the originating plan id (if any) and what motivated the follow-up — the file and line, the failing output, the review comment. A follow-up with no evidence is a hunch, and the next session cannot check it.
+- **`follow-up` is a platform system tag**, accepted from any caller without being in your skill-tag vocabulary — do not `add_skill_tag` it (an agent token lacks `settings:write`). `add_plan_tag(planId, 'follow-up')` after the fact needs the MCP `admin` toolset. Best-effort: a tag that fails comes back in `tagFailures` and never blocks filing.
+- **Filing is not starting:** [§ Authoring vs running](#authoring-vs-running) still holds.
 
 **When to do it here instead.** If the follow-up acts directly on what this session just found and
 nothing else is in flight here (no unfinished change, no open PR for other work), doing it in this
@@ -128,21 +100,16 @@ commits carry `Plan-Id:` / `Task-Id:`.
 
 ## Work ledger
 
-**Nothing to call.** Pass `headSha` and `prNumber` to `settle_plan_run` when the PR opens; the
-server resolves `owner/repo` from the run's checkout and writes the `git_commit` and
-`pull_request` artifacts itself. An hourly harvest of `Plan-Id:` trailers on each default branch
-backstops a run that died before opening a PR. Two things the injected mechanics omit:
+This section owns the work-ledger text; `ot-loop` points here.
 
-- **The artifact lands `unverified`**; the git verifier promotes it to `landed`/`verified`, and the
-  activity tools align with **landed** commits. A fresh artifact not yet landed is the expected
-  intermediate state, not a reason to re-record it.
-- **`attach_session_subject` + `record_artifact` are the manual fallback only.** Do not reach for
-  `workflow-link-merge` — it lives in the deprecated `@tools/workflows` package.
-
-(`link_commit` and `commit_links` are retired — work-ledger epic.)
+- **On COMPLETED:** pass `headSha` and `prNumber` to `settle_plan_run` when the PR opens. The server resolves `owner/repo` from the run's checkout and writes the `git_commit` and `pull_request` artifacts itself.
+- **The artifact lands `unverified`.** After merge a verifier maps the branch sha to the landed squash commit and promotes it to `landed`/`verified`; the activity tools align with **landed** commits. A fresh artifact not yet landed is the expected intermediate state, not a reason to re-record it.
+- **Backstop:** an hourly harvest adopts work from `Plan-Id:` footers on each default branch, covering a run that died before opening a PR.
+- **Manual fallback only:** `attach_session_subject` (planId, optional taskId), then `record_artifact` (`git_commit`, `{repo, sha}`) under an open session — one artifact per merged commit. Do not reach for `workflow-link-merge`; it lives in the deprecated `@tools/workflows` package.
+- **Merge queue:** `gh pr merge --auto` only enqueues. Do not call a PR merged until `gh pr view <n> --json mergedAt,mergeCommit` shows `mergedAt`. With the manual fallback, record the landed squash sha, never the pushed branch head.
 
 ## Cross-links
 
-- **Commits:** [`github-commit`](../github-commit/SKILL.md) · **Execution:** [`ot-loop`](../ot-loop/SKILL.md), [`agents-ralph`](../agents-ralph/SKILL.md)
-- **Skill-usage telemetry:** [`docs/monorepo/skill-usage-telemetry-scope.md`](../../docs/monorepo/skill-usage-telemetry-scope.md)
-- **Code style:** [`docs/monorepo/code-style.md`](../../docs/monorepo/code-style.md) · **DB / ingest:** `databases/openthrottle/README.md`
+- **Commits:** `github-commit` · **Execution:** `ot-loop`, `agents-ralph`
+- **Skill-usage telemetry:** [`docs/monorepo/skill-usage-telemetry-scope.md`](https://github.com/openthrottle/monorepo/blob/main/docs/monorepo/skill-usage-telemetry-scope.md)
+- **Code style:** [`docs/monorepo/code-style.md`](https://github.com/openthrottle/monorepo/blob/main/docs/monorepo/code-style.md) · **DB / ingest:** [`databases/openthrottle/README.md`](https://github.com/openthrottle/monorepo/blob/main/databases/openthrottle/README.md)

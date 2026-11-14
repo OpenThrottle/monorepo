@@ -41,6 +41,13 @@
 
 set -u
 
+case "${1:-}" in
+  -h | --help)
+    sed -n '2,/^# Usage:/p' "$0" | sed 's/^# \{0,1\}//'
+    exit 0
+    ;;
+esac
+
 script_dir=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 skill_dir=$(dirname -- "$script_dir")
 

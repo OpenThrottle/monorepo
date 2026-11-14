@@ -23,7 +23,12 @@
 # Usage: classify-branches.sh [--remote <name>] [--no-fetch] [--explain <branch>]
 #   --remote defaults to the github-pull-request skill's resolver REMOTE (origin, else the first
 #   remote), and the default branch to its DEFAULT_BRANCH, so neither origin nor main is assumed.
-# Requires: git, gh (authenticated, for PR state), jq.
+#   Without that resolver installed, it uses `origin` (else the first remote) and the remote's
+#   HEAD symref (else main, then master).
+# Requires: git, gh (authenticated, for PR state), jq. The resolver is optional.
+#
+# Exit codes: 0 done; 1 --explain on a branch that shares no history with the default branch;
+#   2 usage error, missing tool, no remote, or an unresolvable default branch.
 
 set -euo pipefail
 
@@ -32,10 +37,10 @@ fetch=1
 explain=
 while [ $# -gt 0 ]; do
   case "$1" in
-    --remote) remote="$2"; shift 2 ;;
+    --remote) [ $# -ge 2 ] || { echo "--remote needs a remote name" >&2; exit 2; }; remote="$2"; shift 2 ;;
     --no-fetch) fetch=0; shift ;;
-    --explain) explain="$2"; shift 2 ;;
-    -h|--help) sed -n '2,25p' "$0"; exit 0 ;;
+    --explain) [ $# -ge 2 ] || { echo "--explain needs a branch name" >&2; exit 2; }; explain="$2"; shift 2 ;;
+    -h|--help) awk 'NR == 1 { next } /^#/ { sub(/^# ?/, ""); print; next } { exit }' "$0"; exit 0 ;;
     *) echo "unknown argument: $1" >&2; exit 2 ;;
   esac
 done
@@ -47,16 +52,21 @@ done
 cd "$(git rev-parse --show-toplevel)"
 
 # ctx_value <key>: one value from the resolver's KEY=VALUE output.
-# The resolver ships with github-pull-request; .agents/skills/ holds it in every repo.
-ctx=$(bash .agents/skills/github-pull-request/scripts/resolve-repo-context.sh)
+# The resolver ships with github-pull-request and is optional: without it, ctx stays empty
+# and the remote and default branch come from git alone.
+ctx=
+resolver=.agents/skills/github-pull-request/scripts/resolve-repo-context.sh
+[ ! -f "$resolver" ] || ctx=$(bash "$resolver")
 ctx_value() {
   printf '%s\n' "$ctx" | sed -n "s/^$1=//p" | head -n 1
 }
 
 remote_given=1
-if [ -z "$remote" ]; then
+if [ -z "$remote" ] && [ -n "$ctx" ]; then
   remote_given=0
   remote=$(ctx_value REMOTE)
+elif [ -z "$remote" ]; then
+  git remote | grep -qx origin && remote=origin || remote=$(git remote | head -n 1)
 fi
 [ -n "$remote" ] && [ "$remote" != none ] || { echo "no git remote to compare against" >&2; exit 2; }
 
@@ -71,7 +81,7 @@ trap cleanup EXIT
 
 [ "$fetch" = 0 ] || git fetch "$remote" --prune --quiet
 
-# The resolver answered for its own remote; an explicit --remote resolves its default here.
+# The resolver answered for its own remote; an explicit --remote, or no resolver, resolves the default here.
 if [ "$remote_given" = 0 ]; then
   default=$(ctx_value DEFAULT_BRANCH)
 else

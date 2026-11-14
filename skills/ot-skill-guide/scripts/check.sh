@@ -15,7 +15,8 @@ Checks per skill:
            description 1-1024 chars (after YAML folding); compatibility <= 500;
            metadata values quoted strings; relative links resolve
   quality  SKILL.md < 500 lines (warn past 400) and ~5000 tokens; unknown top-level
-           frontmatter keys; links escaping the skill directory (../)
+           frontmatter keys; allowed-tools given as a YAML list; links escaping the
+           skill directory (../)
   info     metadata.last-reviewed (or "never")
 
 Output: one block per skill on stdout, then a summary line.
@@ -150,6 +151,15 @@ for dir in "${SKILLS[@]}"; do
       *) findings+=("quality  top-level key '$key' is not in the spec; keep it only with a reason, else move it to metadata") ;;
     esac
   done < <(printf '%s\n' "$fm" | awk '/^[A-Za-z0-9_-]+:/ { k = $0; sub(/:.*/, "", k); print k }')
+
+  # allowed-tools is a space-separated string in the spec; a YAML list parses but is not it.
+  if printf '%s\n' "$fm" | awk '
+    /^allowed-tools:[ \t]*$/ { open = 1; next }
+    open && /^[ \t]*-[ \t]/ { found = 1; exit }
+    open && /^[^ \t]/ { exit }
+    END { exit !found }'; then
+    findings+=("quality  allowed-tools is a YAML list; the spec wants a space-separated string (e.g. allowed-tools: Bash Read)")
+  fi
 
   lines="$(wc -l <"$file" | tr -d ' ')"
   tokens=$(( $(wc -c <"$file" | tr -d ' ') / 4 ))

@@ -10,11 +10,12 @@
 # So this resolves rather than pattern-matches. A relative link is checked from
 # the directory of the file that contains it — which is the only question worth
 # asking, needs no allowlist to maintain, and keeps working after any path
-# convention changes. Deliberately NOT a denylist of banned path prefixes; see
-# the skill body, § What --check validates, for why that was rejected.
+# convention changes. Deliberately NOT a denylist of banned path prefixes (it needs an
+# allowlist for files that describe those paths, and goes stale).
 #
 # Usage:
 #   check-links.sh           # exit 1 and list every unresolved target
+#   check-links.sh --help    # print this usage; exit 0
 #
 # Skipped by design: absolute URLs, mailto:, bare `#anchor` links, and anything
 # inside a fenced code block (those are examples, not pointers). Fragments and
@@ -25,6 +26,12 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 source "$SCRIPT_DIR/common.sh"
+
+case "${1:-}" in
+  -h | --help)
+    sed -n '2,/^$/p' "$0" | sed -e '/^$/d' -e 's/^# \{0,1\}//'
+    exit 0 ;;
+esac
 
 detect_repo_root
 
