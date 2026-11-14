@@ -30,8 +30,10 @@ fi
 
 # Catch an attribution line in any commit this push would add. `commit-msg`
 # strips these as a commit is written, so anything reaching here got past that
-# hook — which is precisely the --no-verify path that put one on PR #554.
-. "$(dirname "$0")/utils/attribution-push-gate.sh"
+# hook — which is precisely the --no-verify path that put one on PR #554. The
+# guard lives in the github-pull-request skill so other repos get it too.
+echo "🚫 Attribution gate (pushed commits)"
+printf '%s\n' "$OT_PUSH_REFS" | sh "$(dirname "$0")/../skills/github-pull-request/scripts/check-attribution.sh" --push-refs - || exit 1
 
 # Flag pushed commits with no Plan-Id: footer. Warn only — it never stops a
 # push; it is the plan-first check that applies under every agent tool.

@@ -6,14 +6,10 @@
 # commit messages, PR titles or PR bodies.
 #
 # This is the single definition. It lives in the github-pull-request skill so
-# the skill's PR guard works in any repo the skill is synced into, and every
-# OpenThrottle monorepo consumer sources it from here:
-#   - .husky/commit-msg              (strips matching lines from the commit message)
-#   - .husky/utils/attribution-push-gate.sh  (fails a push that carries one)
-#   - check-pr-attribution.sh beside this file (the drafted PR title and body;
-#     the plan-run host runs it from .agents/skills/github-pull-request/scripts/)
-#   - .github/workflows/continuous-integration.yml, job "attribution-guard"
-#     (fails a PR whose title, body or commits carry one)
+# it travels with the skill into every repo, and the only thing that sources it
+# is check-attribution.sh beside it. Everything else runs that guard: the
+# github-* skills, the plan-run host, and in the OpenThrottle repo
+# .husky/commit-msg (strip), .husky/pre-push and the CI "attribution-guard" job.
 #
 # Deliberately emitter-agnostic: it is not about any one tool. Claude Code,
 # Cursor, Copilot and whatever comes next all emit some variation, and every

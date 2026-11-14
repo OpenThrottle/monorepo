@@ -152,7 +152,7 @@ direction.
 ## Relationship to the local PR-body guard
 
 The sibling task in this plan added the local PR-body guard (now
-`skills/github-pull-request/scripts/check-pr-attribution.sh`), which checks the drafted PR
+`skills/github-pull-request/scripts/check-attribution.sh`), which checks the drafted PR
 title and body against the shared pattern set _before_ `gh pr create` publishes them. That guard means
 the specific failure behind this plan — `attribution-guard` failing on a PR body — can no longer reach
 CI at all.
