@@ -32,8 +32,8 @@ export const TELEMETRY_DELIVERY_LEG_LABELS: Readonly<Record<string, string>> = {
 /** Commands the section offers to copy. */
 export const TELEMETRY_COVERAGE_COMMANDS = {
   doctor: `pnpm run telemetry:doctor`,
-  drain: `node <ot-checkout>/.claude/hooks/skill-usage-drain.cjs`,
-  drainReplayDeadLetter: `node <ot-checkout>/.claude/hooks/skill-usage-drain.cjs --replay-dead-letter`,
+  drain: `pnpm run telemetry:drain`,
+  drainReplayDeadLetter: `pnpm run telemetry:drain --replay-dead-letter`,
   envGraphqlUrl: `OPENTHROTTLE_GRAPHQL_URL=…`,
   envMcpAuthToken: `OPENTHROTTLE_MCP_AUTH_TOKEN=…`,
   pluginInstall: `claude plugin install openthrottle@openthrottle`,

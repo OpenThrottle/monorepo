@@ -4,7 +4,7 @@
  * retaining anything that still can't be sent and dead-lettering anything the
  * server rejects outright. Idempotent and safe to re-run. Fail-open.
  *
- * Usage: node .claude/hooks/skill-usage-drain.cjs [--budget-ms <n>] [--replay-dead-letter]
+ * Usage: skill-usage-drain.cjs [--budget-ms <n>] [--replay-dead-letter]
  *
  * `--replay-dead-letter` moves dead-lettered lines back into the live buffers
  * first — run it once after fixing whatever the server was rejecting.

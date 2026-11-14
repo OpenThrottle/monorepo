@@ -165,5 +165,5 @@ gh api "repos/<owner>/<repo>/pulls" -f title="$(cat "$title_file")" -f head="<br
 Once, at the end — `error` if no PR URL came back, `abandoned` if called off ([why](https://github.com/openthrottle/monorepo/blob/main/docs/monorepo/skill-usage-telemetry-scope.md#reporting-an-outcome-from-a-skill)):
 
 ```bash
-r="$(git rev-parse --show-toplevel)/.claude/hooks/skill-usage-outcome.cjs"; if [ -f "$r" ]; then node "$r" --skill github-pull-request --outcome success; fi
+r="$(command -v skill-usage-outcome.cjs || echo "$(git rev-parse --show-toplevel 2>/dev/null)/plugins/openthrottle/bin/skill-usage-outcome.cjs")"; if [ -f "$r" ]; then node "$r" --skill github-pull-request --outcome success; fi
 ```

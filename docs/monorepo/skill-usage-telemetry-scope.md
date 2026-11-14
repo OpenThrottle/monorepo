@@ -71,8 +71,9 @@ from a skill that reported its own work.
 ## Where the rows come from
 
 Authoring lives in [`packages/agentic-hooks`](../../packages/agentic-hooks); the
-`.claude/hooks/*.cjs` and `.cursor/hooks/*.cjs` files are generated bundles
-(`pnpm nx run @openthrottle/agentic-hooks:bundle-hooks`). Do not edit the bundles.
+hook files are generated plugin payloads under `plugins/*/` (stubs in `hooks/` and `bin/`,
+bundles in the gitignored `dist/`; see [hook-plugin-distribution.md](./hook-plugin-distribution.md)).
+Build them with `pnpm run build:hooks`. Do not edit them.
 
 | Hook                                 | Registered as                                 | Emits                                                                                                                                                                  |
 | ------------------------------------ | --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -150,7 +151,7 @@ it finished, supplies a duration.
 This is the only path that may claim quality or report a duration:
 
 ```bash
-node .claude/hooks/skill-usage-outcome.cjs --skill ot-plans --outcome error
+skill-usage-outcome.cjs --skill ot-plans --outcome error   # on the Bash PATH via the openthrottle plugin
 ```
 
 `--outcome` accepts `success` | `abandoned` | `error`. It deliberately **rejects** `session_ended`:

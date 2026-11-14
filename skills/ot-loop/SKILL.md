@@ -192,7 +192,7 @@ and harness coverage: [references/backstops.md](./references/backstops.md).
    Then report the outcome **once per run, never per task** (`COMPLETED` → `success`, `FAILED` → `error`, `CANCELLED` → `abandoned`; same on every exit path):
 
    ```bash
-   r="$(git rev-parse --show-toplevel)/.claude/hooks/skill-usage-outcome.cjs"; if [ -f "$r" ]; then node "$r" --skill ot-loop --outcome success; fi
+   r="$(command -v skill-usage-outcome.cjs || echo "$(git rev-parse --show-toplevel 2>/dev/null)/plugins/openthrottle/bin/skill-usage-outcome.cjs")"; if [ -f "$r" ]; then node "$r" --skill ot-loop --outcome success; fi
    ```
 
 7. **Stop the loop** once the PR is open. Do **not** merge.

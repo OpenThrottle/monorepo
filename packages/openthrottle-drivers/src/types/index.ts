@@ -287,12 +287,14 @@ export interface AgentDriver {
    */
   readonly parseOutput?: (stdout: string) => DriverParsedOutput;
   /**
-   * Workspace-relative path of the hook plugin payload THIS CLI should be pointed at, for drivers
-   * that advertise `capabilities.pluginDir`. Per-driver rather than global because a payload's
-   * hook config names one tool's events; a shared payload loads under a second tool and records
-   * nothing. Omitted ⇒ the resolver falls back to `OPENTHROTTLE_PLUGIN_DIR_REL`.
+   * Workspace-relative paths of the hook plugin payloads THIS CLI should be pointed at, for
+   * drivers that advertise `capabilities.pluginDir` — one `--plugin-dir` each, in order. OT ships
+   * telemetry, workflow and guards as separate plugins, so a driver typically names several.
+   * Per-driver rather than global because a payload's hook config names one tool's events; a
+   * shared payload loads under a second tool and records nothing. Omitted ⇒ the resolver falls
+   * back to `[OPENTHROTTLE_PLUGIN_DIR_REL]`.
    */
-  readonly pluginDirRel?: string;
+  readonly pluginDirRels?: readonly string[];
   /**
    * Optional live renderer, the streaming counterpart of {@link parseOutput}. When set, the async
    * engine line-buffers STDOUT and forwards to `config.onChunk` only what this returns for each

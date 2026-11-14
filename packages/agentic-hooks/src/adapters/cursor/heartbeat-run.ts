@@ -54,18 +54,30 @@ const resolvePluginVersion = (pluginRoot: string | null): string | null => {
   ]);
 };
 
-/** True when the repository's own `.cursor/hooks.json` registers the heartbeat bundle. */
-const repoRegistersHeartbeat = (repoRoot: string): boolean => {
+/**
+ * The heartbeat commands the repository's own `.cursor/hooks.json` registers, resolved against the
+ * repository root. Empty when it registers none or the file is unreadable.
+ */
+const repoHeartbeatRegistrations = (repoRoot: string): readonly string[] => {
   try {
     const parsed: unknown = JSON.parse(
       fs.readFileSync(path.join(repoRoot, '.cursor', 'hooks.json'), 'utf8'),
     );
     if (typeof parsed !== 'object' || parsed === null || !('hooks' in parsed)) {
-      return false;
+      return [];
     }
-    return JSON.stringify(parsed.hooks).includes(HEARTBEAT_BUNDLE);
+    const commands: string[] = [];
+    JSON.stringify(parsed.hooks, (key, value: unknown) => {
+      if (key === 'command' && typeof value === 'string') {
+        commands.push(value);
+      }
+      return value;
+    });
+    return commands
+      .filter((command) => command.includes(HEARTBEAT_BUNDLE))
+      .map((command) => path.resolve(repoRoot, command));
   } catch {
-    return false;
+    return [];
   }
 };
 
@@ -84,9 +96,16 @@ export const isCursorHeartbeatShadowed = ({
   readonly repoRoot: string;
   readonly scriptPath?: string;
 }): boolean => {
-  return (
-    resolveOwnPluginRoot(env, scriptPath) !== null &&
-    repoRegistersHeartbeat(repoRoot)
+  const pluginRoot = resolveOwnPluginRoot(env, scriptPath);
+  if (pluginRoot === null) {
+    return false;
+  }
+  // A repository may register the very payload it is also loaded from — this repo's own
+  // `.cursor/hooks.json` points into `plugins/openthrottle-cursor/`. Then both runs are the same
+  // file under the same plugin root and cannot tell themselves apart, so standing down would send
+  // nothing. Only a registration OUTSIDE this plugin root shadows it.
+  return repoHeartbeatRegistrations(repoRoot).some(
+    (registered) => !isPathInside(pluginRoot, registered),
   );
 };
 

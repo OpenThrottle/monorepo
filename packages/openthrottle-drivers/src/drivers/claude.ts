@@ -21,7 +21,7 @@ import {
 import {
   appendPluginDirShellFlags,
   appendWorktreeShellFlags,
-  OPENTHROTTLE_PLUGIN_DIR_REL,
+  OPENTHROTTLE_CLAUDE_PLUGIN_DIR_RELS,
 } from '../utils/shell-flags.ts';
 
 const capabilities: DriverCapabilities = {
@@ -110,7 +110,7 @@ export const claudeDriver = defineDriver({
   },
   label: 'claude-code',
   parseOutput: parseClaudeStreamJsonOutput,
-  pluginDirRel: OPENTHROTTLE_PLUGIN_DIR_REL,
+  pluginDirRels: OPENTHROTTLE_CLAUDE_PLUGIN_DIR_RELS,
   renderOutputLine: renderClaudeStreamJsonLine,
   update: { argv: ['update'], method: 'command' },
   versionArgs: ['--version'],

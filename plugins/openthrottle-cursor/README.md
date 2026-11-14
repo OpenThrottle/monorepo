@@ -16,11 +16,11 @@ cursor-agent --plugin-dir /path/to/plugins/openthrottle-cursor -p "…"
 ```
 
 Installing once applies it in every repository you open — nothing is written into any of
-them. OT-orchestrated runs do not need this: the driver passes `--plugin-dir` at spawn time,
-so an orchestrated run carries the same hooks whether or not you have installed anything.
+them. Where the CLI has a `--plugin-dir` flag (Claude Code, Cursor), OT-orchestrated runs
+pass it at spawn time and do not need this install.
 
-The plugin version tracks `@openthrottle/agentic-hooks`, so a version bump there is what
-users see.
+The payload published to the `plugins-dist` branch carries no `version`, so every publish is
+an update for installed copies.
 
 ## What it collects
 

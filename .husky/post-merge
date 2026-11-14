@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+
+# Rebuild the hook plugin bundles (plugins/*/dist/, gitignored) so this
+# checkout's own plugins run the code it just checked out. Nx caches the
+# target, so an unchanged source tree costs about a second. Never fails the
+# git operation: a checkout with no node_modules yet (a fresh worktree) just
+# skips it, and provisioning builds them later.
+if [ -d node_modules ]; then
+  pnpm run --silent build:hooks >/dev/null 2>&1 || true
+fi

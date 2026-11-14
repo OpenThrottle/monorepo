@@ -1,0 +1,84 @@
+name: '🔌 Publish hook plugins'
+
+# Builds the OpenThrottle hook plugins and publishes them to the generated
+# `plugins-dist` branch, which the public marketplace (.claude-plugin/
+# marketplace.json on main) installs from via git-subdir sources. Main never
+# commits a bundle, so a PR that only touches the hook core no longer rewrites
+# thousands of generated lines. See docs/monorepo/hook-plugin-distribution.md §4.
+#
+# 💰 Cost (docs/monorepo/ci-cost.md checklist): one standard runner, push to
+# main only, path-gated to the sources the bundles inline, ~2 min per run.
+# Not a required check, so the path gate cannot hang a PR. The branch is
+# pushed with GITHUB_TOKEN; protect it from human pushes in repo settings.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.claude-plugin/**'
+      - '.github/workflows/publish-plugins.yml'
+      - 'packages/agentic-hooks/**'
+      - 'packages/agentic-token-usage/src/**'
+      - 'packages/nodejs-utils/src/**'
+      - 'packages/openthrottle-agentic-utils/src/**'
+      - 'plugins/**'
+      - 'pnpm-lock.yaml'
+  workflow_dispatch:
+
+concurrency:
+  # Never cancel a publish mid-push; queue the next one behind it instead.
+  cancel-in-progress: false
+  group: publish-plugins
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 15
+    steps:
+      - name: '📦 Checkout the code'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # 💰 No history needed: the bundles are built from this tree alone.
+          fetch-depth: 1
+
+      - name: '🤖 Node Setup'
+        uses: ./.github/actions/node-setup
+
+      - name: '🔨 Build the hook plugins'
+        run: pnpm run build:hooks
+
+      - name: '🚚 Publish to plugins-dist'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/plugins-dist"
+          remote="https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+
+          # Keep the branch's own history (one commit per publish that changed
+          # something) instead of force-pushing an orphan every time.
+          if git ls-remote --exit-code --heads origin plugins-dist >/dev/null; then
+            git clone --quiet --depth 1 --branch plugins-dist "$remote" "$out"
+          else
+            mkdir -p "$out"
+            git -C "$out" init --quiet --initial-branch plugins-dist
+            git -C "$out" remote add origin "$remote"
+          fi
+
+          find "$out" -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          pnpm exec tsx packages/agentic-hooks/scripts/assemble-plugins-dist.ts "$out"
+
+          cd "$out"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "plugins-dist is already current; nothing to publish."
+            exit 0
+          fi
+          git -c user.name="github-actions[bot]" \
+            -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit --quiet -m "chore(plugins): publish from ${GITHUB_SHA::12}"
+          git push --quiet origin plugins-dist
+          echo "Published plugins-dist from ${GITHUB_SHA}."

@@ -8,7 +8,7 @@ const _toRelativePath = (filePath) => {
 
 // lint-staged resolves its config from this file's default export, so the
 // repo-wide named-exports rule cannot apply here.
-// eslint-disable-next-line import-x/no-default-export
+// eslint-disable-next-line import-x/no-default-export -- lint-staged reads the default export
 export default {
   // Mirrors the extension list in monorepo:format:check's prettier glob. `cjs`
   // and `mjs` belong here: without them a staged .mjs skips both eslint and
@@ -19,18 +19,19 @@ export default {
     // parse error. @tools/dotfiles ignores them for `nx run <p>:lint`, but that
     // does not take effect for every template tree when eslint is invoked from
     // the repo root the way lint-staged invokes it, so they are excluded here.
-    // Generated hook bundles (`.claude/hooks/*.cjs`, `.cursor/`, `.codex/`, and
-    // the `plugins/*/hooks/` copies) are esbuild output banner-marked GENERATED
+    // Generated hook files (the `plugins/*/{bin,dist,hooks}/` payload files, and
+    // the retired `.claude/`, `.cursor/`, `.codex/` hook folders) are esbuild output banner-marked GENERATED
     // — DO NOT EDIT. They are not lint-clean and never were: they carry
     // `require()` calls, unused consts and empty blocks straight from the
     // bundler. Worse, `eslint --fix` would REWRITE a generated file, and the
     // next `bundle-hooks` run reverts it — leaving `bundle-hooks-check`
     // failing. Authoring lives in @openthrottle/agentic-hooks/src, which is
     // linted normally; lint the source, not the bundle.
-    const isGeneratedHookBundle = (file) =>
-      /(^|\/)(\.claude|\.cursor|\.codex|plugins\/[^/]+)\/hooks\/[^/]+\.cjs$/.test(
+    const isGeneratedHookBundle = (file) => {
+      return /(^|\/)((\.claude|\.cursor|\.codex)\/hooks|plugins\/[^/]+\/(bin|dist|hooks))\/[^/]+\.cjs$/.test(
         file.replace(/\\/g, '/'),
       );
+    };
 
     const files = allFiles.filter(
       (file) =>

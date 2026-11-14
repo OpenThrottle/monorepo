@@ -13,7 +13,7 @@
  * is freed in hours rather than half a day.
  *
  * The reader is `@openthrottle/agentic-hooks` (`src/data/plan-runs.ts`, bundled to
- * `.claude/hooks/plan-run-janitor.cjs`). The JSON file on disk stays the contract
+ * the `openthrottle-workflow` plugin's `plan-run-janitor.cjs`). The JSON file on disk stays the contract
  * between them, and always will: the janitor is a separate esbuild-bundled process with
  * no `node_modules` to resolve, so the file is cross-process IPC that no import can
  * replace.

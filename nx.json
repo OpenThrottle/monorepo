@@ -281,9 +281,6 @@
         "cwd": "{workspaceRoot}"
       },
       "inputs": [
-        "{workspaceRoot}/.claude/hooks/*.cjs",
-        "{workspaceRoot}/.codex/hooks/*.cjs",
-        "{workspaceRoot}/.cursor/hooks/*.cjs",
         "{workspaceRoot}/.gitattributes",
         "{workspaceRoot}/applications/*/schema.gql",
         "{workspaceRoot}/packages/*/schemas/*.json",

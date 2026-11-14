@@ -14,7 +14,7 @@
  * `$CLAUDE_CODE_SESSION_ID`.
  *
  * Usage:
- *   node .claude/hooks/skill-usage-outcome.cjs --skill ot-plans --outcome success
+ *   skill-usage-outcome.cjs --skill ot-plans --outcome success
  */
 import path from 'node:path';
 

@@ -30,6 +30,7 @@
  * @public
  */
 
+import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -37,8 +38,9 @@ import { isRecord } from '@openthrottle/nodejs-utils';
 
 import { resolveAuthToken, resolveGraphqlUrl } from '../config/env.ts';
 import { logHookError } from '../utils/logging.ts';
+import { resolveTelemetryDir } from './jsonl.ts';
 
-const PLAN_RUNS_DIR_REL = path.join('.cache', 'plan-runs');
+const PLAN_RUNS_DIR_BASENAME = 'plan-runs';
 
 /**
  * How long a session's state file must go untouched before its run is treated as
@@ -68,9 +70,23 @@ export interface PlanRunRecord {
   readonly sessionId: string;
 }
 
-/** @public */
+/**
+ * @description Where this repository's plan-run notes live: under the telemetry
+ * directory in the operator's home, never inside the checkout. The writer (the OT
+ * MCP, at `register_plan_run`) and this reader both run in repositories OpenThrottle
+ * does not own, and a foreign-repo run must leave `git status` clean.
+ *
+ * Partitioned by a hash of the resolved repo root, so a janitor only ever settles runs
+ * recorded from the same checkout, against the endpoint that checkout resolves — the
+ * same scoping the old `<repoRoot>/.cache/plan-runs/` gave for free.
+ * @public
+ */
 export const planRunsDir = (repoRoot: string): string => {
-  return path.join(repoRoot, PLAN_RUNS_DIR_REL);
+  const repoKey = createHash('sha256')
+    .update(path.resolve(repoRoot))
+    .digest('hex')
+    .slice(0, 16);
+  return path.join(resolveTelemetryDir(), PLAN_RUNS_DIR_BASENAME, repoKey);
 };
 
 const sanitizeSessionId = (sessionId: string): string => {

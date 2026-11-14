@@ -203,6 +203,24 @@ describe('isCursorHeartbeatShadowed', () => {
     });
   });
 
+  describe('when the repo registers this same plugin payload', () => {
+    it('keeps sending, since standing down would leave no copy to send', () => {
+      registerInRepo(pluginScript());
+
+      expect(
+        isCursorHeartbeatShadowed({
+          env: { CURSOR_PLUGIN_ROOT: pluginRoot },
+          repoRoot: repo,
+          scriptPath: path.join(
+            pluginRoot,
+            'dist',
+            'skill-usage-heartbeat.cjs',
+          ),
+        }),
+      ).toBe(false);
+    });
+  });
+
   describe('when the running copy is the repo registration', () => {
     it('keeps sending', () => {
       registerInRepo('.cursor/hooks/skill-usage-heartbeat.cjs');

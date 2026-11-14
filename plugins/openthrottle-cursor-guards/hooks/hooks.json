@@ -1,0 +1,11 @@
+{
+  "hooks": {
+    "beforeShellExecution": [
+      {
+        "command": "${CURSOR_PLUGIN_ROOT}/hooks/bash-guard.cjs",
+        "timeout": 10
+      }
+    ]
+  },
+  "version": 1
+}

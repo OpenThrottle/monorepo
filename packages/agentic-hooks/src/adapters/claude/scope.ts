@@ -1,7 +1,7 @@
 /**
  * CLI wrapper for scope-detection (ours | personal | third-party).
  *
- * Usage: node .claude/hooks/skill-usage-scope.cjs <skill_name> [repo_root]
+ * Usage: pnpm run telemetry:scope <skill_name> [repo_root]
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -15,7 +15,7 @@ const repoRoot = process.argv[3] || process.cwd();
 
 if (!skillName) {
   process.stderr.write(
-    'usage: skill-usage-scope.cjs <skill_name> [repo_root]\n',
+    'usage: pnpm run telemetry:scope <skill_name> [repo_root]\n',
   );
   process.exit(2);
 }

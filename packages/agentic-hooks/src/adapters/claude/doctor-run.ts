@@ -163,9 +163,10 @@ const displayUrl = (graphqlUrl: string): string => {
 };
 
 /**
- * The version of the payload this bundle ships in: `<bundle dir>/../.claude-plugin/plugin.json`
- * when run from a plugin, else the repo's own `plugins/openthrottle` payload when run from
- * `.claude/hooks/`. Null when neither is readable, which skips the comparison.
+ * The version of the payload this bundle ships in: `<bundle dir>/../.claude-plugin/plugin.json`,
+ * which holds for the plugin's `dist/` (where the `bin/` stub points `argv[1]`). The second
+ * candidate is the repo's own `plugins/openthrottle` payload, for a bundle run from a tool hook
+ * folder such as `.claude/hooks/`. Null when neither is readable, which skips the comparison.
  *
  * @public
  */

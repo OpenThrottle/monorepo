@@ -4,7 +4,7 @@
       {
         "hooks": [
           {
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/skill-usage-capture.cjs",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/skill-usage-capture.cjs\"",
             "statusMessage": "Skill usage capture (PreToolUse)",
             "type": "command"
           }
@@ -16,7 +16,7 @@
       {
         "hooks": [
           {
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/skill-usage-heartbeat.cjs",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/skill-usage-heartbeat.cjs\"",
             "statusMessage": "Telemetry coverage heartbeat (SessionStart)",
             "type": "command"
           }
@@ -27,7 +27,7 @@
       {
         "hooks": [
           {
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/skill-usage-complete.cjs",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/skill-usage-complete.cjs\"",
             "statusMessage": "Skill usage complete (Stop)",
             "type": "command"
           }
@@ -38,7 +38,7 @@
       {
         "hooks": [
           {
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/skill-usage-capture.cjs",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/skill-usage-capture.cjs\"",
             "statusMessage": "Skill usage capture (UserPromptExpansion)",
             "type": "command"
           }
