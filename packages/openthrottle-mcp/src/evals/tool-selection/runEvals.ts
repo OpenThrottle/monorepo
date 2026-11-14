@@ -217,6 +217,38 @@ export async function runEvals(
     workspace: noopWorkspaceFactory,
   });
 
+  return toToolSelectionRun({
+    cases,
+    effort: options.effort,
+    model: selector.model,
+    run,
+    surface,
+    trials: options.trials,
+  });
+}
+
+/**
+ * @description Inputs for {@link toToolSelectionRun}.
+ */
+export interface ToToolSelectionRunOptions {
+  readonly cases: readonly ToolSelectionCase[];
+  readonly effort: string;
+  readonly model: string;
+  readonly run: EvalRunResult;
+  readonly surface: ToolSurface;
+  readonly trials: number;
+}
+
+/**
+ * @description Folds a core run back into the baseline-shaped {@link RunResult} and builds the core report. Shared
+ * by the Messages API run and the CLI-driven run, so both are graded and aggregated identically.
+ * @public
+ */
+export function toToolSelectionRun(
+  options: ToToolSelectionRunOptions,
+): ToolSelectionRun {
+  const { cases, run, surface } = options;
+
   return {
     report: buildEvalReport({
       calibrations: [],
@@ -233,7 +265,7 @@ export async function runEvals(
         return caseResultOf(testCase, run);
       }),
       effort: options.effort,
-      model: selector.model,
+      model: options.model,
       surfaceSha256: surfaceSha256(surface),
       usage: run.trials.reduce(addUsage, ZERO_USAGE),
     },

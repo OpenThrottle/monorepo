@@ -78,24 +78,56 @@ driver on the same dataset. Per run:
 > suite on a subscription-backed CLI is a risk you accept per suite; prefer API-key auth for anything
 > large (ADR Decision 8).
 
-No suite is driver-backed yet, so no `--driver` list exists to copy. The core supports it today:
-`runEval` takes a `config.driverId`, and a suite CLI loops over the requested drivers with one
-`runEval` call each.
+Tool selection is the first driver-backed suite (`--driver claude,codex`); see the next section.
 
-## Why tool selection is `api`-only today
+## Tool selection through agent CLIs, against a sandboxed MCP
 
-Tool selection asks which tool an agent reaches for on its first turn. It does that with one Messages
-API request that offers the OpenThrottle tools and never executes any of them. Its CLI therefore takes
-`--driver api` (the default) and **exits 2 for any CLI driver**.
+Tool selection asks which tool an agent reaches for. `--driver api` (the default) answers that with one
+Messages API request that offers the OpenThrottle tools and executes none of them. `--driver claude,codex`
+answers it the way each harness actually injects MCP tools: the real CLI runs the case, with a
+**sandboxed MCP** attached in place of the real server.
 
-A CLI driver with the real OpenThrottle MCP attached would run the tools it picks, so a case like
-"create a plan titled X" would call `create_plan` against whatever server the MCP points at. CLI-driven
-tool selection needs a **sandboxed MCP** first: a server that records the call and returns a canned
-result, with no database behind it. Until that exists, comparing tool selection across CLIs is out of
-scope.
+```bash
+pnpm nx run @openthrottle/openthrottle-mcp:eval-tool-selection -- --driver claude,codex --case plan-create-basic,task-start,control-git-log
+```
+
+The sandbox ([`src/evals/sandbox/`](../../packages/openthrottle-mcp/src/evals/sandbox/)) serves the identical
+surface: the same instructions, names, descriptions and input schemas, every toolset. It records each
+call and answers with a canned success, and nothing behind it touches GraphQL. A CLI with the real
+server attached would **execute** `create_plan` or `delete_task`, which is why the sandbox has to
+**replace** that server rather than sit beside it:
+
+| Driver                                      | How the sandbox is attached                                                                                                                                                                                                                                                            |
+| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `claude`                                    | `--strict-mcp-config --mcp-config <sandbox>`: every other MCP source (user, project, local) is ignored                                                                                                                                                                                 |
+| `codex`                                     | `-c mcp_servers.openthrottle-mcp.*` overrides replace a same-named user-scope server; the cwd is an untrusted temp dir, so no project config loads. They also set `default_tools_approval_mode = "approve"`, without which `codex exec` (approval policy `never`) fails every MCP call |
+| `cursor`, `grok`, `opencode`, `antigravity` | **Refused** (exit 2): none has a way to provably shadow a host-configured OpenThrottle server                                                                                                                                                                                          |
+
+Each is injected through a wrapper installed at the driver's binary env var (`OPENTHROTTLE_CLAUDE_BIN`,
+`OPENTHROTTLE_CODEX_BIN`), so the driver packages stay workspace-agnostic.
+
+The first OpenThrottle call is read from the trial's ATIF trajectory and **cross-checked against the
+sandbox call log**, and the arguments come from the log, since that is what the server received. If the
+trajectory shows an OpenThrottle call on a server other than the sandbox, that server answered it. That
+is a **leak**: the trial errors, no later trial launches, and the CLI exits 3. Fix that CLI's MCP
+configuration before running it again. A call to the sandbox's own name that never reached its log
+failed in transit (an approval gate, a startup failure). That makes the trial errored, not a leak.
+
+What a CLI run records differs from an `api` run:
+
+- **Sequential, concurrency 1.** `--concurrency` applies to `api` only.
+- **Each trial runs in an empty temp directory**, not a git worktree, so no repo `.mcp.json` or trusted
+  project config is in reach.
+- **The auth mode is recorded** from `--auth-mode` (`subscription` by default, or `api_key`).
+- **The model is `<driver>/<model>`**, or `<driver>/cli-default` without `--model`. So the result file
+  and baseline are `<driver>-<model>.json`, and a CLI baseline is never compared with another driver's
+  or with the `api` one.
+- **Harness tool names are the CLI's own** (`Write`, `Bash`), not the `api` run's generic `write_file`.
+  A `forbid` entry naming a generic harness tool therefore only bites in `api` runs.
 
 ## Baselines
 
-A suite may keep per-model baselines (tool selection does: `baselines/<model>.json`). Compare a run
-only with a baseline for the same model, and re-record the baseline (`--write-baseline`) when you
+A suite may keep per-model baselines (tool selection does: `baselines/<model>.json`, and
+`baselines/<driver>-<model>.json` for a CLI run). Compare a run only with a baseline for the same driver
+and model, and re-record the baseline (`--write-baseline`) when you
 change the wording or the cases on purpose. The baseline diff is the review.
