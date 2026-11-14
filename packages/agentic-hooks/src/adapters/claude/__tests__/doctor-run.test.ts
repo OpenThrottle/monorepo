@@ -272,6 +272,26 @@ describe('doctor against a fixture HOME', () => {
     });
   });
 
+  describe('privacy opt-ins', () => {
+    it('reports opted-in repos and flags invalid entries', async () => {
+      writeUserEnv([
+        'OPENTHROTTLE_TELEMETRY_TRUNCATED_REPOS=git@github.com:acme/widgets.git, bogus',
+      ]);
+      const check = (await run()).privacy;
+      expect(check?.status).toBe('WARN');
+      expect(check?.detail).toContain('bogus');
+    });
+
+    it('lists the normalized repo when all entries are valid', async () => {
+      writeUserEnv([
+        'OPENTHROTTLE_TELEMETRY_TRUNCATED_REPOS=git@github.com:acme/widgets.git',
+      ]);
+      const check = (await run()).privacy;
+      expect(check?.status).toBe('PASS');
+      expect(check?.detail).toContain('https://github.com/acme/widgets');
+    });
+  });
+
   describe('privacy of rendered output', () => {
     it('never contains the token, an email or the HOME path', async () => {
       writeUserEnv([
