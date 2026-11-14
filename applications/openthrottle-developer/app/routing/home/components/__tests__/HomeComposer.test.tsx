@@ -20,6 +20,7 @@ import { HomeComposer } from '../HomeComposer';
 const buildConversationList = (): UseConversationListResult => {
   return {
     conversations: [],
+    errorMessage: null,
     isLoading: false,
     isLoadingMore: false,
     loadMore: vi.fn(),

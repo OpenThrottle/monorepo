@@ -15,6 +15,10 @@ import { HomeThreadColumn } from '~/routing/home/components/HomeThreadColumn';
 import { useAgenticChatTurn } from '~/routing/home/hooks/useAgenticChatTurn';
 import { useConversationList } from '~/routing/home/hooks/useConversationList';
 import {
+  clearConversationIdParam,
+  writeConversationIdParam,
+} from '~/routing/home/utils/conversation-url';
+import {
   loadComposerData,
   loadDefaultAgent,
   loadPersonas,
@@ -119,10 +123,15 @@ export default function Component(
   // Handlers
   const onNewChat = (): void => {
     turn.reset();
+    // Drop the live-synced id so a reload after New chat is a blank composer.
+    clearConversationIdParam();
   };
 
   const onSelectConversation = (conversationId: string): void => {
     turn.restore({ conversationId });
+    // A listed conversation always has a row, so it is reloadable even with
+    // the composer's Private toggle on (which gates the live-turn write).
+    writeConversationIdParam(conversationId);
   };
 
   // Markup

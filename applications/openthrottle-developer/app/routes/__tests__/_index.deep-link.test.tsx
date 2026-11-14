@@ -1,5 +1,6 @@
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { render, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -29,6 +30,7 @@ vi.mock('~/routing/home/hooks/useAgenticChatTurn', () => ({
 vi.mock('~/routing/home/hooks/useConversationList', () => ({
   useConversationList: () => ({
     conversations: [],
+    errorMessage: null,
     isLoading: false,
     isLoadingMore: false,
     loadMore: vi.fn(),
@@ -105,5 +107,21 @@ describe('routes/_index.tsx deep-link (?conversationId=)', () => {
       ).toBeInTheDocument();
     });
     expect(hoisted.restoreSpy).not.toHaveBeenCalled();
+  });
+
+  test('New chat resets the thread and drops the conversationId param', async () => {
+    const user = userEvent.setup();
+    window.history.replaceState(null, '', '/?conversationId=abc');
+    const component = renderAt('/?conversationId=abc');
+
+    await user.click(
+      await component.findByTestId('ChatConversationSheet-trigger'),
+    );
+    await user.click(
+      await component.findByRole('button', { name: /new chat/i }),
+    );
+
+    expect(hoisted.resetSpy).toHaveBeenCalledTimes(1);
+    expect(window.location.search).toBe('');
   });
 });

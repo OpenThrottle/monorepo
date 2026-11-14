@@ -34,6 +34,14 @@ export const HomeConversationToolbar = (
   // Setup
 
   // Handlers
+  // The list loads once on mount; a failure then (expired session, server
+  // still booting) would otherwise stick until reload. Opening the sheet after
+  // a failure re-requests it.
+  const handleOpenChange = (open: boolean): void => {
+    if (open && conversationList.errorMessage != null) {
+      conversationList.refresh();
+    }
+  };
 
   // Markup
 
@@ -49,12 +57,15 @@ export const HomeConversationToolbar = (
       <ChatConversationSheet
         activeConversationId={activeConversationId}
         conversations={conversationList.conversations}
+        errorMessage={conversationList.errorMessage}
         isLoading={conversationList.isLoading}
         isLoadingMore={conversationList.isLoadingMore}
         onDelete={conversationList.remove}
         onLoadMore={conversationList.loadMore}
         onNewChat={onNewChat}
+        onOpenChange={handleOpenChange}
         onRename={conversationList.rename}
+        onRetry={conversationList.refresh}
         onSelect={onSelectConversation}
         side="left"
         totalCount={conversationList.totalCount}

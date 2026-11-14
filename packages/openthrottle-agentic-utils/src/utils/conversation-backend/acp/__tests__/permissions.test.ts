@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import {
   awaitAcpPermission,
   decideAcpPermission,
+  humanPermissionOptions,
   resolveAcpPermission,
 } from '../permissions.ts';
 
@@ -123,5 +124,38 @@ describe('permission broker', () => {
         awaitAcpPermission('r5', controller.signal),
       ).resolves.toEqual({ outcome: { outcome: 'cancelled' } });
     });
+  });
+});
+
+describe('humanPermissionOptions', () => {
+  const request = (
+    options: RequestPermissionRequest['options'],
+  ): RequestPermissionRequest => {
+    return {
+      options,
+      sessionId: 's',
+      toolCall: { kind: 'execute', title: 'whoami', toolCallId: 't' },
+    };
+  };
+
+  it('drops the kinds that persist a rule into the agent config', () => {
+    expect(
+      humanPermissionOptions(
+        request([
+          { kind: 'allow_once', name: 'Once', optionId: 'once' },
+          { kind: 'allow_always', name: 'Always', optionId: 'always' },
+          { kind: 'reject_once', name: 'No', optionId: 'no' },
+          { kind: 'reject_always', name: 'Never', optionId: 'never' },
+        ]),
+      ).map((option) => option.optionId),
+    ).toEqual(['once', 'no']);
+  });
+
+  it('keeps everything when only persistent kinds were offered', () => {
+    expect(
+      humanPermissionOptions(
+        request([{ kind: 'allow_always', name: 'Always', optionId: 'always' }]),
+      ).map((option) => option.optionId),
+    ).toEqual(['always']);
   });
 });

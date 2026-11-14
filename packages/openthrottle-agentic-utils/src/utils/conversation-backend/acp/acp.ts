@@ -53,7 +53,9 @@ import { type AcpLauncher, spawnAcpAgent } from './launcher.ts';
 import {
   awaitAcpPermission,
   decideAcpPermission,
+  humanPermissionOptions,
   isManagedMcpTool,
+  restrictToOffered,
 } from './permissions.ts';
 import { toAcpMcpServers } from './toAcpMcpServers.ts';
 
@@ -512,12 +514,13 @@ export function createAcpConversationBackend(
       request: RequestPermissionRequest,
     ): Promise<RequestPermissionResponse> => {
       const requestId = randomUUID();
+      const offered = humanPermissionOptions(request);
       queue.push({
         delta: '',
         done: false,
         kind: CONVERSATION_STREAM_CHUNK_KINDS.permissionRequest,
         metadata: {
-          options: request.options.map((option) => {
+          options: offered.map((option) => {
             return {
               kind: option.kind,
               name: option.name,
@@ -538,7 +541,10 @@ export function createAcpConversationBackend(
       }, PERMISSION_KEEPALIVE_MS);
       keepalive.unref();
       try {
-        const response = await awaitAcpPermission(requestId, run.signal);
+        const response = restrictToOffered(
+          await awaitAcpPermission(requestId, run.signal),
+          offered,
+        );
         const { outcome } = response;
         queue.push({
           delta: '',

@@ -29,6 +29,7 @@ import * as React from 'react';
 
 import type { UseAgenticChatTurnResult } from '~/routing/home/hooks/useAgenticChatTurn';
 import type { UseConversationListResult } from '~/routing/home/hooks/useConversationList';
+import { useConversationUrlSync } from '~/routing/home/hooks/useConversationUrlSync';
 import { useFileMentionProvider } from '~/routing/home/hooks/useFileMentionProvider';
 import { useSkillCommandProvider } from '~/routing/home/hooks/useSkillCommandProvider';
 import {
@@ -290,6 +291,8 @@ export const useHomeComposer = (
   // Markup
 
   // Life Cycle
+  useConversationUrlSync({ conversationId: turn.conversationId, persist });
+
   // When a turn creates a NEW persisted conversation (an id not already in the
   // list), refresh the sidebar so it shows up. Skipped in Private mode (no row)
   // and on restore (the id is already listed); the ref dedupes to one refresh.

@@ -577,6 +577,92 @@ describe('createAcpConversationBackend', () => {
         );
       });
 
+      describe('persistent options', () => {
+        // cursor offers allow_always, which writes the command into the host's
+        // ~/.cursor/cli-config.json allowlist — a durable change outside OT.
+        const askWithAlways = async (
+          turn: FakeTurn,
+        ): Promise<PromptResponse> => {
+          const response = await turn.client.request(
+            methods.client.session.requestPermission,
+            {
+              options: [
+                { kind: 'allow_once', name: 'Allow once', optionId: 'once' },
+                {
+                  kind: 'allow_always',
+                  name: 'Allow always',
+                  optionId: 'always',
+                },
+                { kind: 'reject_once', name: 'Reject', optionId: 'no' },
+              ],
+              sessionId: turn.sessionId,
+              toolCall: { kind: 'execute', title: 'whoami', toolCallId: 't3' },
+            },
+          );
+          await say(turn, JSON.stringify(response.outcome));
+          return END_TURN;
+        };
+
+        const streamAnswering = async (
+          optionId: string,
+        ): Promise<ConversationStreamChunk[]> => {
+          const fake = createFakeLauncher({
+            authMethods: [],
+            configOptions: [],
+            loadable: [],
+            modes: undefined,
+            onPrompt: askWithAlways,
+          });
+          const backend = createAcpConversationBackend(FAKE_SPEC, {
+            launch: fake.launch,
+          });
+          const chunks: ConversationStreamChunk[] = [];
+          for await (const chunk of backend.stream(
+            run({ permissionMode: 'supervised' }),
+          )) {
+            chunks.push(chunk);
+            const requestId = chunk.metadata?.['requestId'];
+            if (
+              chunk.kind === 'permission_request' &&
+              typeof requestId === 'string' &&
+              chunk.metadata?.['resolution'] === undefined
+            ) {
+              resolveAcpPermission(requestId, optionId);
+            }
+          }
+          return chunks;
+        };
+
+        it('does not offer allow_always on the card', async () => {
+          const chunks = await streamAnswering('once');
+          const request = chunks.find((chunk) => {
+            return chunk.kind === 'permission_request';
+          });
+
+          expect(request?.metadata?.['options']).toEqual([
+            { kind: 'allow_once', name: 'Allow once', optionId: 'once' },
+            { kind: 'reject_once', name: 'Reject', optionId: 'no' },
+          ]);
+          expect(chunks.map((chunk) => chunk.delta).join('')).toBe(
+            '{"optionId":"once","outcome":"selected"}',
+          );
+        });
+
+        it('cancels instead of relaying an allow_always id the card never showed', async () => {
+          const chunks = await streamAnswering('always');
+
+          expect(chunks.map((chunk) => chunk.delta).join('')).toBe(
+            '{"outcome":"cancelled"}',
+          );
+          const resolution = chunks.find((chunk) => {
+            return chunk.metadata?.['resolution'] !== undefined;
+          });
+          expect(resolution?.metadata).toMatchObject({
+            resolution: { optionId: null, outcome: 'cancelled' },
+          });
+        });
+      });
+
       it('settles a pending request as cancelled when the turn aborts', async () => {
         const controller = new AbortController();
         const chunks: ConversationStreamChunk[] = [];

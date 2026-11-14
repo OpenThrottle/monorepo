@@ -6,7 +6,11 @@ import {
   buildTurnTimeline,
   foldTurnActivity,
 } from '../turn-tool-groups';
-import type { ChatTurnEvent, ChatTurnToolEvent } from '../types';
+import type {
+  ChatTurnEvent,
+  ChatTurnPermissionEvent,
+  ChatTurnToolEvent,
+} from '../types';
 
 const tool = (
   overrides: Partial<ChatTurnToolEvent> = {},
@@ -29,6 +33,21 @@ const text = (sortOrder: number): ChatTurnEvent => {
     kind: 'text',
     sortOrder,
     text: 'hi',
+  };
+};
+
+const permission = (
+  sortOrder: number,
+  resolution: ChatTurnPermissionEvent['resolution'],
+): ChatTurnPermissionEvent => {
+  return {
+    kind: 'permission',
+    options: [],
+    requestId: `request-${sortOrder}`,
+    resolution,
+    sortOrder,
+    toolKind: 'execute',
+    toolTitle: 'whoami',
   };
 };
 
@@ -261,5 +280,46 @@ describe('foldTurnActivity', () => {
 
   test('empty input yields no slots', () => {
     expect(foldTurnActivity([])).toEqual([]);
+  });
+
+  describe('permission requests', () => {
+    // The cursor-over-ACP shape: think → tool → answered permission → think →
+    // reply. The answered card must not split the run and strand the last
+    // thought as a lone "Thinking" directly above the reply.
+    test('an answered request folds with the activity around it', () => {
+      const slots = foldTurnActivity(
+        buildTurnTimeline([
+          thinking(0),
+          tool({ name: 'whoami', sortOrder: 1 }),
+          permission(2, { optionId: 'allow-once', outcome: 'selected' }),
+          thinking(3),
+          text(4),
+        ]),
+      );
+
+      expect(slots.map((slot) => slot.kind)).toEqual(['activity', 'event']);
+      const [group, reply] = slots;
+      expect(group?.kind === 'activity' && group).toMatchObject({
+        thinkingCount: 2,
+        toolCount: 1,
+      });
+      expect(reply?.kind === 'event' && reply.event.kind).toBe('text');
+    });
+
+    test('a pending request stays outside the fold', () => {
+      const slots = foldTurnActivity(
+        buildTurnTimeline([
+          thinking(0),
+          tool({ name: 'whoami', sortOrder: 1 }),
+          permission(2, null),
+        ]),
+      );
+
+      expect(slots.map((slot) => slot.kind)).toEqual(['activity', 'event']);
+      const pending = slots[1];
+      expect(pending?.kind === 'event' && pending.event.kind).toBe(
+        'permission',
+      );
+    });
   });
 });

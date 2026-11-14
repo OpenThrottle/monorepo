@@ -87,8 +87,9 @@ export const activeToolOf = (
 };
 
 /**
- * A run of two or more adjacent tool groups / thinking blocks — everything an
- * agent did between two pieces of visible prose — folded into one row.
+ * A run of two or more adjacent tool groups, thinking blocks and answered
+ * permission requests — everything an agent did between two pieces of visible
+ * prose — folded into one row.
  *
  * @public
  */
@@ -116,8 +117,25 @@ export type TurnTimelineSlot = TurnTimelineActivityGroup | TurnTimelineItem;
  */
 export const ACTIVITY_GROUP_MIN_SLOTS = 2;
 
+// An answered permission request is part of what the agent did, so it folds
+// with the tools and thinking around it; left outside, it splits the run and
+// strands the last thought as a lone "Thinking" right above the reply. A
+// pending one stays outside — it is waiting on the user.
 const isActivitySlot = (item: TurnTimelineItem): boolean => {
-  return item.kind === 'tools' || item.event.kind === 'thinking';
+  if (item.kind === 'tools') {
+    return true;
+  }
+
+  const { event } = item;
+  if (event.kind === 'permission') {
+    return event.resolution !== null;
+  }
+
+  return event.kind === 'thinking';
+};
+
+const isThinkingSlot = (item: TurnTimelineItem): boolean => {
+  return item.kind === 'event' && item.event.kind === 'thinking';
 };
 
 // A thinking event with no reasoning renders nothing (see ChatThinkingBlock),
@@ -141,7 +159,7 @@ const toolsOf = (items: readonly TurnTimelineItem[]): ChatTurnToolEvent[] => {
  * tool groups and thinking blocks — i.e. everything between two text/usage/
  * session events — collapses into one {@link TurnTimelineActivityGroup}, so a
  * long agentic turn reads as a single "activity" row rather than an endless
- * stack. Text, usage and session slots break the run and pass through
+ * stack. Text, usage, session and still-pending permission slots break the run and pass through
  * unchanged, as do runs shorter than {@link ACTIVITY_GROUP_MIN_SLOTS}. Pure and
  * render-time only.
  *
@@ -160,7 +178,7 @@ export const foldTurnActivity = (
         items: run,
         kind: 'activity',
         status: aggregateToolStatus(tools),
-        thinkingCount: run.filter((item) => item.kind === 'event').length,
+        thinkingCount: run.filter(isThinkingSlot).length,
         toolCount: tools.length,
       });
     } else {

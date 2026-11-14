@@ -11,8 +11,9 @@ hooks into a repository **without writing into that repository** — and if so, 
 Everything below was established by running the installed binaries, not read off a docs site.
 
 > **Measured 2026-09-11** against `claude` 2.1.267, `cursor-agent` 2026.09.10-fd3934a, `codex-cli`
-> 0.145.0, `grok` 1.0.5, and `opencode` 1.18.16. `antigravity` (`agy`) is **not
-> installed on this machine** and its row is carried over from the 1.1.21 dossier, unverified here.
+> 0.145.0, `grok` 1.0.5, and `opencode` 1.18.16. The `antigravity` (`agy`) row was re-measured on
+> 1.5.8 on 2026-11-13 (OT plan `ab30bcff`) — hooks only; its plugin and out-of-repo columns are
+> still partly unprobed.
 > **Re-probe whenever any of these CLIs ships a release** — hook and plugin surfaces move fast, and
 > this matrix goes stale silently rather than loudly. See
 > [What is machine-checked and what is not](#what-is-machine-checked-and-what-is-not).
@@ -23,16 +24,43 @@ Two rows now have their own primary record, far more detailed than this table:
 
 ## The matrix
 
-| CLI              | hooks?                                | hook config read from                                                                                             | out-of-repo override                                        | plugin mechanism                                                        | verdict for the overlay                                                                       |
-| ---------------- | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| **claude**       | yes                                   | user / project / local settings + every installed plugin, merged additively                                       | `--settings`, `--plugin-dir`, `--plugin-url`                | plugins + marketplace (`/plugin install`)                               | **shipped** — legs A and B both verified end-to-end                                           |
-| **cursor-agent** | yes                                   | nine sources merged additively, including `.claude/settings.json` and `.claude/settings.local.json`               | **`--plugin-dir`** (repeatable), confirmed on 2026.09.10    | plugins + `plugin marketplace`                                          | **shipped** — capture, completion and leg B verified; needs its OWN payload, see below        |
-| **codex**        | yes                                   | `~/.codex/config.toml`, `$CODEX_HOME/<name>.config.toml`; since 0.167.0 also a **trusted** project's `.codex/`    | `-c hooks.…`, `--profile`, `CODEX_HOME`                     | `codex plugin` installs from marketplaces; **no `--plugin-dir` flag**   | **shipped, partially** — needs no injection at all; capture is slash-commands-only, see below |
-| **grok**         | yes (`PreToolUse`, session lifecycle) | `.grok/hooks/`, plus `[[hooks.<Event>]]` in `~/.grok/config.toml` and other config layers, combined additively    | config layers are out-of-repo; **no per-invocation flag**   | durable `grok plugin install <git-url\|path>`; **reads Claude plugins** | **partial** — see below                                                                       |
-| **opencode**     | via plugins (JS module hook API)      | project `opencode.json` + global config; `--pure` disables                                                        | global config is out-of-repo                                | `opencode plugin <npm-module>` (npm, not a directory)                   | **viable, different shape** — npm-published module, not a payload directory                   |
-| **antigravity**  | yes (unverified)                      | `~/.gemini/antigravity-cli/hooks.json` and `~/.gemini/config/hooks.json` (paths recovered from the 1.1.21 binary) | both paths are out-of-repo; per-invocation flag **unknown** | unknown; `~/.gemini/config/skills/` exists, plugin surface unprobed     | **unprobed** — `agy` is not installed here; nothing in this row is measured                   |
+| CLI              | hooks?                                | hook config read from                                                                                           | out-of-repo override                                        | plugin mechanism                                                        | verdict for the overlay                                                                       |
+| ---------------- | ------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| **claude**       | yes                                   | user / project / local settings + every installed plugin, merged additively                                     | `--settings`, `--plugin-dir`, `--plugin-url`                | plugins + marketplace (`/plugin install`)                               | **shipped** — legs A and B both verified end-to-end                                           |
+| **cursor-agent** | yes                                   | nine sources merged additively, including `.claude/settings.json` and `.claude/settings.local.json`             | **`--plugin-dir`** (repeatable), confirmed on 2026.09.10    | plugins + `plugin marketplace`                                          | **shipped** — capture, completion and leg B verified; needs its OWN payload, see below        |
+| **codex**        | yes                                   | `~/.codex/config.toml`, `$CODEX_HOME/<name>.config.toml`; since 0.167.0 also a **trusted** project's `.codex/`  | `-c hooks.…`, `--profile`, `CODEX_HOME`                     | `codex plugin` installs from marketplaces; **no `--plugin-dir` flag**   | **shipped, partially** — needs no injection at all; capture is slash-commands-only, see below |
+| **grok**         | yes (`PreToolUse`, session lifecycle) | `.grok/hooks/`, plus `[[hooks.<Event>]]` in `~/.grok/config.toml` and other config layers, combined additively  | config layers are out-of-repo; **no per-invocation flag**   | durable `grok plugin install <git-url\|path>`; **reads Claude plugins** | **partial** — see below                                                                       |
+| **opencode**     | via plugins (JS module hook API)      | project `opencode.json` + global config; `--pure` disables                                                      | global config is out-of-repo                                | `opencode plugin <npm-module>` (npm, not a directory)                   | **viable, different shape** — npm-published module, not a payload directory                   |
+| **antigravity**  | yes — measured on 1.5.8 (2026-11-13)  | a workspace plugin, `<cwd>/.agents/plugins/<name>/{plugin.json,hooks.json}`; fires under `-p` **and** `agy acp` | `--settings` (session-only JSON) exists; unprobed for hooks | `agy plugin install` / `validate`, plus workspace `.agents/plugins/`    | **hooks verified in-repo only** — the out-of-repo route is still unprobed, see below          |
 
 ## What is worth knowing beyond the table
+
+### antigravity: the hook shape, as `agy plugin validate` accepts it
+
+Measured on `agy` 1.5.8 with a throwaway plugin in a scratch workspace. `hooks.json` is a map of
+hook-set name → event → entries; tool events take a `matcher` and a nested `hooks` list:
+
+```json
+{
+  "probe": {
+    "PreInvocation": [{ "command": "echo PreInvocation >> /tmp/hooks.log" }],
+    "PreToolUse": [
+      {
+        "hooks": [{ "command": "echo PreToolUse >> /tmp/hooks.log" }],
+        "matcher": "*"
+      }
+    ],
+    "SessionStart": [{ "command": "echo SessionStart >> /tmp/hooks.log" }],
+    "Stop": [{ "command": "echo Stop >> /tmp/hooks.log" }]
+  }
+}
+```
+
+Events: `SessionStart`, `PreInvocation`, `PostInvocation`, `Stop`, `PreToolUse`, `PostToolUse`. Over
+`agy acp` a new session fired `SessionStart`, then `PreInvocation` / `PreToolUse` per step, then
+`Stop`; a turn resumed with `session/load` in a fresh process fired `PreInvocation` and `Stop` but
+no `SessionStart`. The 1.1.21-era home paths (`~/.gemini/antigravity-cli/hooks.json`,
+`~/.gemini/config/hooks.json`) were not re-probed.
 
 ### Every one of the seven has an out-of-repo path
 

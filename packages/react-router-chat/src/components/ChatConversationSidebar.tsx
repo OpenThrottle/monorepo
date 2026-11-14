@@ -12,6 +12,7 @@ import { CHAT_CONVERSATION_SIDEBAR_COPY } from '../data/data.chat-conversation-s
 import { useChatConversationSidebar } from '../hooks/useChatConversationSidebar';
 import type { AgentConversationListItem } from '../types';
 import { ChatConversationDeleteDialog } from './ChatConversationDeleteDialog';
+import { ChatConversationListError } from './ChatConversationListError';
 import { ChatConversationRow } from './ChatConversationRow';
 
 export interface ChatConversationSidebarProps {
@@ -20,11 +21,9 @@ export interface ChatConversationSidebarProps {
   readonly className?: string;
   /** The conversations to list (already paginated by the consumer). */
   readonly conversations: readonly AgentConversationListItem[];
-  /**
-   * Suppress the built-in header row (title + New chat). Set when a wrapper —
-   * e.g. {@link ChatConversationSheet} — supplies its own header/title so the
-   * two don't duplicate.
-   */
+  /** Why the list failed to load; replaces the empty state when no rows loaded. */
+  readonly errorMessage?: string | null;
+  /** Suppress the built-in header row when a wrapper (e.g. {@link ChatConversationSheet}) supplies its own. */
   readonly hideHeader?: boolean;
   /** True while the first page loads — renders skeleton rows instead of the list. */
   readonly isLoading?: boolean;
@@ -38,6 +37,8 @@ export interface ChatConversationSidebarProps {
   readonly onNewChat: () => void;
   /** Commit an inline rename (only fired with a non-empty, trimmed title). */
   readonly onRename: (conversationId: string, title: string) => void;
+  /** Re-request the list; shown as a Retry action in the error state. */
+  readonly onRetry?: () => void;
   /** Open a conversation (restore its thread). */
   readonly onSelect: (conversationId: string) => void;
   /**
@@ -65,6 +66,7 @@ export const ChatConversationSidebar = (
     activeConversationId,
     className,
     conversations,
+    errorMessage,
     hideHeader = false,
     isLoading = false,
     isLoadingMore = false,
@@ -72,6 +74,7 @@ export const ChatConversationSidebar = (
     onLoadMore,
     onNewChat,
     onRename,
+    onRetry,
     onSelect,
     totalCount,
   } = props;
@@ -93,6 +96,7 @@ export const ChatConversationSidebar = (
   // Setup
   const copy = CHAT_CONVERSATION_SIDEBAR_COPY;
   const isEmpty = !isLoading && conversations.length === 0;
+  const hasError = errorMessage != null;
   const hasMore =
     onLoadMore != null &&
     conversations.length < (totalCount ?? conversations.length);
@@ -157,7 +161,10 @@ export const ChatConversationSidebar = (
   ));
 
   const list = <div className="flex flex-col gap-px pb-1">{rows}</div>;
-  const listOrEmpty = isEmpty ? empty : list;
+  const failed = hasError ? (
+    <ChatConversationListError errorMessage={errorMessage} onRetry={onRetry} />
+  ) : null;
+  const listOrEmpty = isEmpty ? (failed ?? empty) : list;
 
   const loadMore = (
     <div className="px-2 py-1">

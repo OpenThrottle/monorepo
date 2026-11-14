@@ -11,6 +11,12 @@ import type {
 /** @public */
 export interface UseConversationListResult {
   readonly conversations: readonly AgentConversationListItem[];
+  /**
+   * Why the last list request failed (auth, permission, server down), or null.
+   * A failed list returns zero rows, so without this the sidebar would read the
+   * failure as "No conversations yet".
+   */
+  readonly errorMessage: string | null;
   /** True while the first page is loading (nothing shown yet). */
   readonly isLoading: boolean;
   /** True while a subsequent page is loading. */
@@ -44,6 +50,7 @@ export function useConversationList(): UseConversationListResult {
     AgentConversationListItem[]
   >([]);
   const [totalCount, setTotalCount] = React.useState(0);
+  const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const loadedOnce = React.useRef(false);
 
   // Setup
@@ -118,6 +125,11 @@ export function useConversationList(): UseConversationListResult {
       return;
     }
 
+    setErrorMessage(data.errorMessage ?? null);
+    if (data.errorMessage != null) {
+      return;
+    }
+
     setTotalCount(data.totalCount);
     setConversations((previous) => {
       const seen = new Set(previous.map((conversation) => conversation.id));
@@ -136,6 +148,7 @@ export function useConversationList(): UseConversationListResult {
 
   return {
     conversations,
+    errorMessage,
     isLoading,
     isLoadingMore,
     loadMore,
