@@ -23,7 +23,8 @@ import { fileURLToPath } from 'node:url';
 import { globSync } from 'glob';
 import ts from 'typescript';
 
-import { countLines, createLogger } from './utils/index.ts';
+import { countLines } from './utils/lines.ts';
+import { createLogger } from './utils/logger.ts';
 
 const logger = createLogger();
 

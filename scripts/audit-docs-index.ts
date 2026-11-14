@@ -32,7 +32,8 @@ import { fileURLToPath } from 'node:url';
 import { globSync } from 'glob';
 
 import { ALLOWLIST } from './audit-docs-index.rules.ts';
-import { createLogger, hasFlag } from './utils/index.ts';
+import { hasFlag } from './utils/args.ts';
+import { createLogger } from './utils/logger.ts';
 
 const logger = createLogger();
 

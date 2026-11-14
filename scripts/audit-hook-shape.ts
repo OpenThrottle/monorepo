@@ -30,7 +30,7 @@ import type {
   HookShapeRule,
 } from './audit-hook-shape.allowlist.ts';
 import { HOOK_SHAPE_ALLOWLIST } from './audit-hook-shape.allowlist.ts';
-import { createLogger } from './utils/index.ts';
+import { createLogger } from './utils/logger.ts';
 
 const logger = createLogger();
 

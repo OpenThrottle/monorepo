@@ -18,8 +18,9 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import type { Logger } from './utils/index.ts';
-import { createLogger, hasFlag } from './utils/index.ts';
+import { hasFlag } from './utils/args.ts';
+import type { Logger } from './utils/logger.ts';
+import { createLogger } from './utils/logger.ts';
 
 /** The `instructionFiles` value that makes Claude Code load AGENTS.md files. */
 export const REQUIRED_INSTRUCTION_FILES = 'claude-md-and-agents-md';

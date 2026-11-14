@@ -5,7 +5,7 @@ import {
   analyzeComponentSource,
   analyzePrimitiveSource,
 } from '../audit-component-shape.ts';
-import { countLines } from '../utils/index.ts';
+import { countLines } from '../utils/lines.ts';
 
 /** A conformant component padded with comment lines to exactly `lines` lines. */
 const componentOfLines = (

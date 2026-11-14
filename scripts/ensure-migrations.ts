@@ -14,7 +14,7 @@ import {
   connectClient,
   guardSharedMigrations,
 } from './openthrottle-database-migrations.ts';
-import { createLogger } from './utils/index.ts';
+import { createLogger } from './utils/logger.ts';
 
 const logger = createLogger();
 

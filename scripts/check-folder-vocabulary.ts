@@ -37,7 +37,9 @@ import {
   FOLDER_VOCABULARY_SKILL_POINTER,
 } from '@tools/generators';
 
-import { createLogger, hasFlag, run } from './utils/index.ts';
+import { hasFlag } from './utils/args.ts';
+import { run } from './utils/exec.ts';
+import { createLogger } from './utils/logger.ts';
 
 const logger = createLogger();
 

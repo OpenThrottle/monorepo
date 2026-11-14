@@ -1,7 +1,8 @@
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
-import { createLogger, flagValue, hasFlag } from './utils/index.ts';
+import { flagValue, hasFlag } from './utils/args.ts';
+import { createLogger } from './utils/logger.ts';
 
 /**
  * @description Median CI timings for `continuous-integration.yml`, read from

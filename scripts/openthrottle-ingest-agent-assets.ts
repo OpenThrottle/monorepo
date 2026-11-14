@@ -23,7 +23,7 @@ import {
 } from '@openthrottle/openthrottle-skills';
 import { Client } from 'pg';
 
-import { createLogger } from './utils/index.ts';
+import { createLogger } from './utils/logger.ts';
 
 const logger = createLogger();
 

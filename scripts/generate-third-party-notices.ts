@@ -4,7 +4,8 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { createLogger, hasFlag } from './utils/index.ts';
+import { hasFlag } from './utils/args.ts';
+import { createLogger } from './utils/logger.ts';
 import {
   collectPlatformSpecificPackages,
   type LicensePolicy,

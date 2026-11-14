@@ -10,7 +10,7 @@ import {
 } from '@openthrottle/openthrottle-agentic-utils';
 import { Client } from 'pg';
 
-import { createLogger } from './utils/index.ts';
+import { createLogger } from './utils/logger.ts';
 
 const logger = createLogger();
 

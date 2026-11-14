@@ -22,8 +22,9 @@
 import { basename, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { hasFlag } from './utils/args.ts';
+import { readEnvFile } from './utils/env.ts';
 import { gitOutput, primaryCheckoutDir } from './utils/git.ts';
-import { hasFlag, readEnvFile } from './utils/index.ts';
 import { createLogger } from './utils/logger.ts';
 import {
   deleteKeysMatching,

@@ -31,7 +31,7 @@ import {
   readLocalSecrets,
   upsertLocalSecrets,
 } from './local-secrets-file';
-import { createLogger } from './utils/index.ts';
+import { createLogger } from './utils/logger.ts';
 
 const logger = createLogger();
 

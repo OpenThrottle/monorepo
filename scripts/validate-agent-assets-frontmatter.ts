@@ -4,7 +4,7 @@
 
 import { validateAgentAssetsOnDisk } from '@openthrottle/openthrottle-skills';
 
-import { createLogger } from './utils/index.ts';
+import { createLogger } from './utils/logger.ts';
 
 const logger = createLogger();
 

@@ -16,7 +16,7 @@ import {
   createPgDatabaseMigrator,
   migrateDatabases,
 } from '../databases/migration-runner.ts';
-import { createLogger } from './utils/index.ts';
+import { createLogger } from './utils/logger.ts';
 import type { MigrationGuardResult } from './utils/migration-guard.ts';
 import { checkMigrationGuard } from './utils/migration-guard.ts';
 import { readWorktreeDbMode } from './utils/worktree-db.ts';

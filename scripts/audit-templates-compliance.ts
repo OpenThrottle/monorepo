@@ -9,7 +9,7 @@ import { readFileSync } from 'fs';
 import { globSync } from 'glob';
 import path from 'path';
 
-import { createLogger } from './utils/index.ts';
+import { createLogger } from './utils/logger.ts';
 
 const logger = createLogger();
 

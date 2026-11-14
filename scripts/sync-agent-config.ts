@@ -22,7 +22,9 @@ import { dirname, join } from 'node:path';
 
 import * as prettier from 'prettier';
 
-import { createLogger, hasFlag, run } from './utils/index.ts';
+import { hasFlag } from './utils/args.ts';
+import { run } from './utils/exec.ts';
+import { createLogger } from './utils/logger.ts';
 
 const logger = createLogger();
 

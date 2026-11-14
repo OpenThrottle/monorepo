@@ -40,8 +40,10 @@ import { existsSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import type { Logger } from './utils/index.ts';
-import { createLogger, readEnvFile, readEnvValue, run } from './utils/index.ts';
+import { readEnvFile, readEnvValue } from './utils/env.ts';
+import { run } from './utils/exec.ts';
+import type { Logger } from './utils/logger.ts';
+import { createLogger } from './utils/logger.ts';
 import {
   resolveWorktreeDbMode,
   WORKTREE_DB_ENV_KEY,

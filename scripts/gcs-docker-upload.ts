@@ -18,7 +18,8 @@
  */
 import { fileURLToPath } from 'node:url';
 
-import { createLogger, run } from './utils/index.ts';
+import { run } from './utils/exec.ts';
+import { createLogger } from './utils/logger.ts';
 
 const logger = createLogger();
 
