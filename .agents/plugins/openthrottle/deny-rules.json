@@ -1,0 +1,10 @@
+{
+  "_readme": "GENERATED — DO NOT EDIT. Shell deny globs from .agents/agent-config.json, enforced by ./scripts/antigravity-deny-hook.ts; edit the source, then run pnpm exec tsx scripts/sync-agent-config.ts.",
+  "deny": [
+    "git push*main*",
+    "git push*--force *",
+    "git push*--force",
+    "git push*-f *",
+    "git push*+*"
+  ]
+}

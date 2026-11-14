@@ -642,7 +642,7 @@ const antigravityServerEntry = (server: McpServer): JsonObject => {
 /** `.agents/plugins/openthrottle/plugin.json` — the marker agy needs to load the folder. */
 export const renderAntigravityPluginManifest = (): string => {
   return toJson({
-    description: `GENERATED — DO NOT EDIT. The default MCP servers from ${SOURCE_PATH}; edit that file, then run ${REGENERATE_COMMAND}.`,
+    description: `GENERATED — DO NOT EDIT. The default MCP servers and the shell deny hook from ${SOURCE_PATH}; edit that file, then run ${REGENERATE_COMMAND}.`,
     name: 'openthrottle',
     version: '1.0.0',
   });
@@ -663,6 +663,47 @@ export const renderAntigravityMcpConfig = (config: AgentConfig): string => {
   return toJson({ mcpServers });
 };
 
+/** The hand-authored hook that `hooks.json` runs, relative to the repo root. */
+export const ANTIGRAVITY_DENY_HOOK = './scripts/antigravity-deny-hook.ts';
+
+/**
+ * `.agents/plugins/openthrottle/hooks.json` — a PreToolUse hook on
+ * `run_command` that enforces the shell deny rules. agy runs hook commands
+ * with cwd = the plugin folder, so the script path climbs to the repo root.
+ * The hook spec has no free-text key, hence no GENERATED banner here.
+ */
+export const renderAntigravityHooks = (): string => {
+  const script = fromAntigravityPlugin(ANTIGRAVITY_DENY_HOOK);
+
+  return toJson({
+    'openthrottle-deny': {
+      PreToolUse: [
+        {
+          hooks: [
+            {
+              command: `node --experimental-strip-types ${script}`,
+              timeout: 10,
+            },
+          ],
+          matcher: 'run_command',
+        },
+      ],
+    },
+  });
+};
+
+/**
+ * `.agents/plugins/openthrottle/deny-rules.json` — the shell deny globs the
+ * hook reads. Globs, not agy `command(...)` rules: agy's own rules are token
+ * prefixes and cannot express `git push*--force`.
+ */
+export const renderAntigravityDenyRules = (config: AgentConfig): string => {
+  return toJson({
+    _readme: `GENERATED — DO NOT EDIT. Shell deny globs from ${SOURCE_PATH}, enforced by ${ANTIGRAVITY_DENY_HOOK}; edit the source, then run ${REGENERATE_COMMAND}.`,
+    deny: shellRules(config.permissions.deny).map(globOf),
+  });
+};
+
 // Output registry
 
 /** One file this generator owns. `render` gets the file's current text ('' if absent). */
@@ -672,6 +713,8 @@ export interface AgentConfigOutput {
 }
 
 export const OUTPUTS: readonly AgentConfigOutput[] = [
+  { path: `${ANTIGRAVITY_PLUGIN_DIR}/deny-rules.json`, render: renderAntigravityDenyRules }, // prettier-ignore
+  { path: `${ANTIGRAVITY_PLUGIN_DIR}/hooks.json`, render: renderAntigravityHooks }, // prettier-ignore
   { path: `${ANTIGRAVITY_PLUGIN_DIR}/mcp_config.json`, render: renderAntigravityMcpConfig }, // prettier-ignore
   { path: `${ANTIGRAVITY_PLUGIN_DIR}/plugin.json`, render: renderAntigravityPluginManifest }, // prettier-ignore
   { path: '.claude/settings.json', render: renderClaudeSettings },

@@ -1,0 +1,15 @@
+{
+  "openthrottle-deny": {
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "command": "node --experimental-strip-types ../../../scripts/antigravity-deny-hook.ts",
+            "timeout": 10
+          }
+        ],
+        "matcher": "run_command"
+      }
+    ]
+  }
+}
