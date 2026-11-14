@@ -102,7 +102,10 @@ interface RecoverOptions {
  * payload; this hook owns the turn lifecycle so the home route and the global
  * header — across both the developer and admin apps — share one code path. The
  * host injects its ws client + generated subscription document via {@link
- * UseAgenticChatTurnOptions}.
+ * UseAgenticChatTurnOptions}. Every submit passes `defaultShouldRevalidate:
+ * false`: a chat turn or message load changes nothing a page loader shows, and
+ * without it React Router re-ran every matched loader (git/fs scans on
+ * `/settings/repositories`) after each one.
  * @public
  */
 export function useAgenticChatTurn(
@@ -267,7 +270,11 @@ export function useAgenticChatTurn(
         message,
         ...fields,
       },
-      { action: CONVERSATION_STREAM_ACTION, method: 'post' },
+      {
+        action: CONVERSATION_STREAM_ACTION,
+        defaultShouldRevalidate: false,
+        method: 'post',
+      },
     );
   };
 
@@ -305,7 +312,11 @@ export function useAgenticChatTurn(
     if (recoverOptions.cancelFirst && conversationId) {
       cancelFetcher.submit(
         { conversationId, intent: 'cancel' },
-        { action: CONVERSATION_STREAM_ACTION, method: 'post' },
+        {
+          action: CONVERSATION_STREAM_ACTION,
+          defaultShouldRevalidate: false,
+          method: 'post',
+        },
       );
     }
 
@@ -316,7 +327,11 @@ export function useAgenticChatTurn(
         message: lastTurn.message,
         ...lastTurn.fields,
       },
-      { action: CONVERSATION_STREAM_ACTION, method: 'post' },
+      {
+        action: CONVERSATION_STREAM_ACTION,
+        defaultShouldRevalidate: false,
+        method: 'post',
+      },
     );
   };
 
@@ -344,7 +359,11 @@ export function useAgenticChatTurn(
         optionId: optionId ?? '',
         requestId,
       },
-      { action: CONVERSATION_STREAM_ACTION, method: 'post' },
+      {
+        action: CONVERSATION_STREAM_ACTION,
+        defaultShouldRevalidate: false,
+        method: 'post',
+      },
     );
   };
 
@@ -364,7 +383,11 @@ export function useAgenticChatTurn(
 
     cancelFetcher.submit(
       { conversationId, intent: 'cancel' },
-      { action: CONVERSATION_STREAM_ACTION, method: 'post' },
+      {
+        action: CONVERSATION_STREAM_ACTION,
+        defaultShouldRevalidate: false,
+        method: 'post',
+      },
     );
   };
 
@@ -381,7 +404,11 @@ export function useAgenticChatTurn(
     setConversationId(params.conversationId);
     restoreFetcher.submit(
       { conversationId: params.conversationId, intent: 'load-messages' },
-      { action: AGENT_CONVERSATIONS_ACTION, method: 'post' },
+      {
+        action: AGENT_CONVERSATIONS_ACTION,
+        defaultShouldRevalidate: false,
+        method: 'post',
+      },
     );
   };
 

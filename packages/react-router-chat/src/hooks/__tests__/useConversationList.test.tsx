@@ -59,6 +59,7 @@ function Harness({ onRender }: HarnessProps): React.ReactElement {
 
 function renderConversationList(
   action: (args: { request: Request }) => Promise<unknown> | unknown,
+  pageLoader: (() => null) | undefined = undefined,
 ): {
   readonly getByTestId: (testId: string) => HTMLElement;
   readonly latest: { current: UseConversationListResult | null };
@@ -77,6 +78,7 @@ function renderConversationList(
           }}
         />
       ),
+      loader: pageLoader,
       path: '/',
     },
     {
@@ -204,6 +206,35 @@ describe('useConversationList', () => {
       expect(latest.current?.conversations).toHaveLength(0);
     });
     expect(latest.current?.totalCount).toBe(0);
+  });
+
+  test('a list read does not re-run the page loader, a rename does', async () => {
+    let pageLoads = 0;
+    const pageLoader = (): null => {
+      pageLoads += 1;
+      return null;
+    };
+    const { getByTestId, latest } = renderConversationList(
+      async ({ request }) => {
+        const body = await request.formData();
+        if (body.get('intent') === 'rename') {
+          return { ok: true };
+        }
+        return { conversations: conversationsPage(0, 2), totalCount: 2 };
+      },
+      pageLoader,
+    );
+
+    await waitFor(() => {
+      expect(latest.current?.conversations).toHaveLength(2);
+    });
+    expect(pageLoads).toBe(1);
+
+    await userEvent.click(getByTestId('rename'));
+
+    await waitFor(() => {
+      expect(pageLoads).toBe(2);
+    });
   });
 
   test('surfaces a failed list instead of reading it as an empty one', async () => {
