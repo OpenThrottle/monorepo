@@ -24,8 +24,8 @@ driver or model made a run better or worse. Two gaps are visible in the code:
   `drivers/claude.ts` implements `AgentDriver.parseOutput`, and it keeps only the final text and the
   usage-limit signal. The other five drivers run in plain-text mode. Nothing records tool calls,
   tokens, cost, duration and exit status together, and `agent_token_usage` has no `plan_run_id`.
-- **One eval exists and it is narrow.** `packages/openthrottle-mcp/src/evals/tool-selection/`
-  grades first-turn MCP tool selection with trials, per-model baselines and a regression exit code.
+- **One eval exists and it is narrow.** `packages/openthrottle-mcp-evals/src/tool-selection/`
+  (its own package, `@openthrottle/openthrottle-mcp-evals`) grades first-turn MCP tool selection with trials, per-model baselines and a regression exit code.
   It is the pattern to generalize, not a home for agent evals.
 
 The article's method is adopted wholesale as the acceptance bar. In short: gold cases split into a
