@@ -1,10 +1,17 @@
 import { execFile } from 'node:child_process';
-import { mkdir, mkdtemp, readdir, readFile, writeFile } from 'node:fs/promises';
+import {
+  access,
+  mkdir,
+  mkdtemp,
+  readdir,
+  readFile,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   AppendPlanOutputDocument,
@@ -68,6 +75,7 @@ type TemplateLocation = 'bundled' | 'none' | 'repo';
 
 const createCwdWithTemplate = async (
   templateAt: TemplateLocation = 'repo',
+  withGuard = true,
 ): Promise<string> => {
   const cwd = await mkdtemp(join(tmpdir(), 'ralph-finalize-'));
   const guardDir = join(
@@ -101,13 +109,44 @@ const createCwdWithTemplate = async (
       'utf8',
     );
   }
+  if (withGuard) {
+    await writeFile(
+      join(guardDir, 'check-attribution.sh'),
+      '#!/bin/sh\nexit 0\n',
+      'utf8',
+    );
+  }
+
+  return cwd;
+};
+
+/** An OpenThrottle install root holding the authored github-pull-request skill. */
+const createOtRoot = async (): Promise<string> => {
+  const root = await mkdtemp(join(tmpdir(), 'ralph-ot-root-'));
+  const skillDir = join(root, 'skills', 'github-pull-request');
+  await mkdir(join(skillDir, 'scripts'), { recursive: true });
+  await mkdir(join(skillDir, 'templates'), { recursive: true });
   await writeFile(
-    join(guardDir, 'check-attribution.sh'),
+    join(skillDir, 'scripts', 'check-attribution.sh'),
     '#!/bin/sh\nexit 0\n',
     'utf8',
   );
+  await writeFile(
+    join(skillDir, 'templates', 'pull_request_template.md'),
+    BUNDLED_TEMPLATE,
+    'utf8',
+  );
 
-  return cwd;
+  return root;
+};
+
+const fileExists = async (path: string): Promise<boolean> => {
+  try {
+    await access(path);
+    return true;
+  } catch {
+    return false;
+  }
 };
 
 const createExecuteGraphqlV2 = (appendCalls: unknown[]) => {
@@ -230,6 +269,13 @@ const createRunCommand = (
       }
     }
     if (command === 'bash' && args[0]?.endsWith('check-attribution.sh')) {
+      if (!(await fileExists(args[0]))) {
+        return {
+          exitCode: 127,
+          stderr: `bash: ${args[0]}: No such file or directory\n`,
+          stdout: '',
+        };
+      }
       if (args.includes('--commits')) {
         return options.commitAttribution ?? ok();
       }
@@ -382,6 +428,18 @@ describe('preparePlanRunPrDraftDir', () => {
 });
 
 describe('finalizePlanRun', () => {
+  // Pin the OpenThrottle root to an empty dir, so no test reads this checkout's real skill.
+  beforeEach(async () => {
+    vi.stubEnv(
+      'WORKFLOW_RALPH_OT_ROOT',
+      await mkdtemp(join(tmpdir(), 'ralph-empty-ot-root-')),
+    );
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   it('skips push and PR when the branch has no commits ahead of the base', async () => {
     const cwd = await createCwdWithTemplate();
     const appendCalls: unknown[] = [];
@@ -1074,5 +1132,110 @@ describe('finalizePlanRun', () => {
       status: 'finished',
     });
     expect(JSON.stringify(appendCalls)).toContain('pr-attribution');
+  });
+
+  describe('when the target repo has no github-pull-request skill copy', () => {
+    const run = async (params: {
+      readonly otRoot: string | undefined;
+      readonly withGuard: boolean;
+    }) => {
+      if (params.otRoot !== undefined) {
+        vi.stubEnv('WORKFLOW_RALPH_OT_ROOT', params.otRoot);
+      }
+      const cwd = await createCwdWithTemplate('none', params.withGuard);
+      const appendCalls: unknown[] = [];
+      const runCommand = createRunCommand({ aheadCount: '1' }, (args) => {
+        if (args[1] === 'create') {
+          return ok('https://github.com/acme/widgets/pull/7\n');
+        }
+        if (args[1] === 'view') {
+          return ok('7\n');
+        }
+        if (args[1] === 'ready') {
+          return ok();
+        }
+        return undefined;
+      });
+
+      const result = await finalizePlanRun({
+        baseBranch: 'main',
+        cwd,
+        draftDir: undefined,
+        executeGraphqlV2: createExecuteGraphqlV2(appendCalls),
+        markReady: shouldMarkPlanRunReady('workflow_tasks_exhausted'),
+        onChunk: undefined,
+        planId: PLAN_ID,
+        priorReason: 'workflow_tasks_exhausted',
+        runCommand,
+      });
+      const guardPaths = runCommand.mock.calls
+        .filter(([call]) => call.command === 'bash')
+        .map(([call]) => call.args[0]);
+      const createCall = runCommand.mock.calls.find(
+        ([call]) => call.command === 'gh' && call.args[1] === 'create',
+      );
+      const bodyFile =
+        createCall?.[0].args[createCall[0].args.indexOf('--body-file') + 1];
+      const body =
+        bodyFile === undefined ? '' : await readFile(bodyFile, 'utf8');
+
+      return { appendCalls, body, cwd, guardPaths, result };
+    };
+
+    it("runs the OpenThrottle install's guard and publishes the PR", async () => {
+      const otRoot = await createOtRoot();
+      const { body, guardPaths, result } = await run({
+        otRoot,
+        withGuard: false,
+      });
+      const otGuard = join(
+        otRoot,
+        'skills',
+        'github-pull-request',
+        'scripts',
+        'check-attribution.sh',
+      );
+
+      expect(result).toEqual({
+        exitCode: 0,
+        headSha: HEAD_SHA,
+        prNumber: 7,
+        reason: 'workflow_tasks_exhausted',
+        status: 'finished',
+      });
+      expect(guardPaths).toEqual([otGuard, otGuard]);
+      expect(body).toContain('## Bundled follow-ups');
+    });
+
+    it("prefers the target repo's own copy when it has one", async () => {
+      const { cwd, guardPaths } = await run({
+        otRoot: await createOtRoot(),
+        withGuard: true,
+      });
+      const repoGuard = join(
+        cwd,
+        '.agents',
+        'skills',
+        'github-pull-request',
+        'scripts',
+        'check-attribution.sh',
+      );
+
+      expect(guardPaths).toEqual([repoGuard, repoGuard]);
+    });
+
+    it('records the owed step, never skipping the guard, when neither has it', async () => {
+      const { appendCalls, result } = await run({
+        otRoot: undefined,
+        withGuard: false,
+      });
+
+      expect(result).toEqual({
+        exitCode: 0,
+        reason: 'workflow_complete_handoff_owed',
+        status: 'finished',
+      });
+      expect(JSON.stringify(appendCalls)).toContain('commit-attribution');
+    });
   });
 });
