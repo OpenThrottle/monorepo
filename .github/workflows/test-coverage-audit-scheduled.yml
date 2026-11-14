@@ -2,8 +2,10 @@
 #
 #   Test-coverage guard-rail — WARNING MODE ONLY (report-only).
 #
-#   Surfaces routes/components/hooks/utils missing a co-located spec so
-#   remediation plans can carve from the committed baseline.
+#   Surfaces routes/components/hooks/utils missing a co-located spec, and
+#   uploads the full JSON inventory as an artifact so remediation plans can
+#   carve from a fresh snapshot. The inventory is never committed: a committed
+#   copy drifted with every rename (see docs/monorepo/test-coverage-audit.md).
 #
 #   💰 Why this is a schedule and not a step in Continuous Integration:
 #   the audit is `continue-on-error` and is deliberately EXCLUDED from the
@@ -67,3 +69,15 @@ jobs:
       - name: '🧪 Test-coverage audit (warn-only)'
         continue-on-error: true
         run: pnpm run audit:test-coverage
+
+      - name: '🧾 Write the JSON inventory'
+        continue-on-error: true
+        run: pnpm run --silent audit:test-coverage:json > test-coverage-baseline.json
+
+      - name: '📤 Upload the JSON inventory'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          if-no-files-found: warn
+          name: test-coverage-baseline-${{ github.run_number }}
+          path: test-coverage-baseline.json
+          retention-days: 90 # Long enough to plan a remediation round from
