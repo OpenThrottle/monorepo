@@ -32,7 +32,7 @@ const {
   executeGraphqlWithAuth,
   isAuthError,
   isTimeoutError,
-} = await import('./index');
+} = await import('../index');
 
 const document: TypedDocumentNode<unknown, Record<string, unknown>> = {
   definitions: [],
