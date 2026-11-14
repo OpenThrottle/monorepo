@@ -110,7 +110,7 @@
         ],
         "executor": "nx:run-commands",
         "metadata": {
-          "description": "On-demand MCP tool-selection eval: runs every case in src/evals/tool-selection/data/data.cases.ts against the Claude Messages API (needs ANTHROPIC_API_KEY; spends tokens) and compares with the same-model baseline in src/evals/tool-selection/baselines/. Runs on the @openthrottle/agentic-evals core. Flags after `--`: --driver (api only), --model, --effort, --trials, --case <id|area,...>, --tolerance, --concurrency, --write-baseline. Exits 1 on a regression. Never wired into CI or check:local — only its grader unit tests run there, through `test`."
+          "description": "On-demand MCP tool-selection eval: runs every case in src/evals/tool-selection/data/data.cases.ts against the Claude Messages API (--driver api, the default; needs ANTHROPIC_API_KEY; spends tokens) or through agent CLIs (--driver claude,codex; spends subscription usage) with a sandboxed MCP attached in place of the real server, and compares with the same driver+model baseline in src/evals/tool-selection/baselines/. Runs on the @openthrottle/agentic-evals core. Flags after `--`: --driver, --model, --effort, --trials, --case <id|area,...>, --tolerance, --concurrency (api only; CLI runs are sequential), --auth-mode (CLI), --timeout-ms (CLI), --write-baseline. Exits 1 on a regression, 3 if a CLI reached a server other than the sandbox. Never wired into CI or check:local — only its grader unit tests run there, through `test`."
         },
         "options": {
           "command": "tsx ./packages/openthrottle-mcp/src/evals/tool-selection/cli.ts",
@@ -170,10 +170,12 @@
   "sideEffects": [
     "./dist/src/bin-http.js",
     "./dist/src/bin.js",
+    "./dist/src/evals/sandbox/bin-sandbox.js",
     "./dist/src/evals/tool-selection/cli.js",
     "./dist/src/model-facing-text/writeToolSurface.js",
     "./src/bin-http.ts",
     "./src/bin.ts",
+    "./src/evals/sandbox/bin-sandbox.ts",
     "./src/evals/tool-selection/cli.ts",
     "./src/model-facing-text/writeToolSurface.ts"
   ],

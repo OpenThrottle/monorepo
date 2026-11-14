@@ -19,36 +19,53 @@ does and does not run) is in
 ANTHROPIC_API_KEY=… pnpm nx run @openthrottle/openthrottle-mcp:eval-tool-selection
 pnpm nx run @openthrottle/openthrottle-mcp:eval-tool-selection -- --case follow-up,task-start --trials 3
 pnpm nx run @openthrottle/openthrottle-mcp:eval-tool-selection -- --model claude-sonnet-5-5 --write-baseline
+pnpm nx run @openthrottle/openthrottle-mcp:eval-tool-selection -- --driver claude,codex --case control,task-start
 ```
 
 | Flag               | Default           | Meaning                                                       |
 | ------------------ | ----------------- | ------------------------------------------------------------- |
-| `--driver`         | `api`             | `api` only; any CLI driver exits 2 (see below)                |
-| `--model`          | `claude-opus-5-5` | Model under test; also picks the baseline file                |
-| `--effort`         | `medium`          | `output_config.effort`                                        |
+| `--driver`         | `api`             | `api`, or a comma list of `claude`, `codex` (see below)       |
+| `--model`          | `claude-opus-5-5` | Model under test (CLI: the CLI's default); picks the baseline |
+| `--effort`         | `medium`          | `output_config.effort` (CLI: the CLI's default)               |
+| `--auth-mode`      | `subscription`    | CLI only: recorded on the run (`subscription` or `api_key`)   |
+| `--timeout-ms`     | `300000`          | CLI only: per-trial wall-clock limit                          |
 | `--trials`         | `1`               | Attempts per case; a case's score is its pass rate            |
 | `--case`           | all               | Comma list of case ids and/or areas                           |
 | `--tolerance`      | `0`               | Allowed pass-rate drop before a case counts as regressed      |
-| `--concurrency`    | `4`               | Requests in flight                                            |
+| `--concurrency`    | `4`               | `api` only: requests in flight (CLI runs are sequential)      |
 | `--write-baseline` | off               | Record this run as `baselines/<model>.json` (full suite only) |
 
 Every run spends tokens: one request per case per trial. The ~60 KB tool surface sits behind a
 prompt-cache breakpoint, so after the first request most input tokens are cache reads. The run prints its
 token totals, the overall pass rate with its bootstrap 95% CI, and the detection floor for the suite size
 (errored trials are excluded from those core stats but count as failures against the baseline). Results land in `tmp/evals/tool-selection/<model>.json`. The exit code is 1 when any case
-regressed against the baseline, 2 on a usage error, and 0 otherwise.
+regressed against the baseline, 2 on a usage error, 3 when a CLI reached an OpenThrottle server other
+than the sandbox, and 0 otherwise.
 
 Running it in CI was rejected on cost ([docs/monorepo/ci-cost.md](../../../../../docs/monorepo/ci-cost.md)).
 CI runs only what is free: the grader, baseline comparison, adapter, runner and case-integrity unit tests,
 through the package's ordinary `test` target.
 
-### Why `--driver` takes only `api`
+### Through agent CLIs (`--driver claude,codex`)
 
-`--driver claude`, `--driver codex,cursor` and the rest exit 2. A CLI driver with the real OpenThrottle
-MCP attached would **execute** the tool it picks, so a case like `plan-create-basic` would call
-`create_plan` on a live server. Driving CLIs needs a **sandboxed MCP** first: a server that records the
-call and returns a canned result, with no database behind it. Until it exists, this suite measures the
-Messages API only.
+A CLI driver with the real OpenThrottle MCP attached would **execute** the tool it picks, so a case like
+`plan-create-basic` would call `create_plan` on a live server. CLI runs therefore attach the **sandboxed
+MCP** in [`../sandbox/`](../sandbox/) instead. It serves the identical surface (every toolset), records each
+call to a JSONL log, and answers with a canned success without touching GraphQL. It replaces the real
+server rather than sitting beside it: claude runs with `--strict-mcp-config`, and codex gets
+`mcp_servers.openthrottle-mcp` overrides in an untrusted temp cwd. Both are injected by a wrapper at the
+driver's `OPENTHROTTLE_*_BIN`. `cursor`, `grok`, `opencode` and `antigravity` exit 2, because none of them
+can provably shadow a host-configured server.
+
+The CLI then runs the case for real, possibly over several turns, since the sandbox answers. The graded
+selection is the harness calls up to and including the **first OpenThrottle call** in the trial's ATIF
+trajectory, with that call's arguments taken from the sandbox log. An OpenThrottle call on any other
+server is a **leak**: the run stops and exits 3. A call to the sandbox's name that never reached its log
+failed in transit and errors only that trial. Runs are sequential, one per driver, and spend
+subscription usage (the subscription-terms warning in
+[evals-running-suites.md](../../../../../docs/openthrottle/evals-running-suites.md) applies). Results are
+recorded as `<driver>/<model>`, with `cli-default` when `--model` is omitted. That name keys the result
+file and the baseline, so a CLI is only ever compared with itself.
 
 ## How a trial works
 
@@ -120,6 +137,12 @@ tool or argument that no longer exists, which would otherwise leave a case that 
 | `compareBaseline.ts`                          | Same-model baseline comparison (format unchanged)                                           |
 | `anthropic-tool-selector.ts`                  | Messages API adapter (`@anthropic-ai/sdk` `client.messages.create`)                         |
 | `cli.ts`                                      | The Nx target's entry point                                                                 |
+| `runCliEvals.ts`                              | One CLI driver's run against the sandbox, sequential, folded into the same result shape     |
+| `cli-tool-selection-core.ts`                  | The CLI iteration (wrapper + call log per trial) and its grader, with the leak stop         |
+| `cli-selection.ts`                            | First OT call from a CLI trajectory, cross-checked against the sandbox call log             |
+| `sandbox-attachment.ts`                       | Per-CLI wrapper scripts that attach the sandbox in place of the real server                 |
+| `data/data.cli-drivers.ts`                    | Supported and refused CLIs, the sandbox server name, CLI defaults                           |
 
-The evals are not reachable from `bin.ts` or `bin-http.ts`, so the production esbuild bundle does not
-include them or the eval core. Keep it that way.
+The evals, the sandbox included, are not reachable from `bin.ts` or `bin-http.ts`, so the production
+esbuild bundle does not include them or the eval core. The sandbox is not a package `bin` either; the eval
+harness launches it with `tsx`. Keep it that way.

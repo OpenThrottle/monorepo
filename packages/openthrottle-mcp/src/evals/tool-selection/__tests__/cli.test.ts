@@ -20,19 +20,48 @@ describe('main', () => {
     });
   });
 
-  describe('when a CLI driver is requested', () => {
-    it.each(['claude', 'codex', 'claude,codex,cursor'])(
-      'exits 2 for --driver %s before touching the network',
+  describe('when a CLI driver cannot be sandboxed', () => {
+    it.each(['cursor', 'grok', 'opencode', 'antigravity', 'claude,cursor'])(
+      'exits 2 for --driver %s before launching anything',
       async (driver) => {
-        vi.stubEnv('ANTHROPIC_API_KEY', 'k');
         const stderr = vi.spyOn(process.stderr, 'write').mockReturnValue(true);
         const fetchSpy = vi.spyOn(globalThis, 'fetch');
 
         expect(await main(['--driver', driver])).toBe(2);
-        expect(String(stderr.mock.calls[0]?.[0])).toContain('sandboxed MCP');
+        expect(String(stderr.mock.calls[0]?.[0])).toContain(
+          'not supported against the sandboxed MCP',
+        );
         expect(fetchSpy).not.toHaveBeenCalled();
       },
     );
+  });
+
+  describe('when api is combined with a CLI driver', () => {
+    it('exits 2', async () => {
+      const stderr = vi.spyOn(process.stderr, 'write').mockReturnValue(true);
+
+      expect(await main(['--driver', 'api,claude'])).toBe(2);
+      expect(String(stderr.mock.calls[0]?.[0])).toContain('cannot be combined');
+    });
+  });
+
+  describe('when a CLI driver gets an unknown --auth-mode', () => {
+    it('exits 2 before launching the CLI', async () => {
+      vi.spyOn(process.stdout, 'write').mockReturnValue(true);
+      const stderr = vi.spyOn(process.stderr, 'write').mockReturnValue(true);
+
+      expect(
+        await main([
+          '--driver',
+          'claude',
+          '--auth-mode',
+          'oauth',
+          '--case',
+          'control',
+        ]),
+      ).toBe(2);
+      expect(String(stderr.mock.calls[0]?.[0])).toContain('--auth-mode');
+    });
   });
 
   describe('when --write-baseline is combined with --case', () => {
