@@ -1545,6 +1545,9 @@ importers:
       framer-motion:
         specifier: 'catalog:'
         version: 12.43.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      graphql:
+        specifier: 'catalog:'
+        version: 16.14.2
       isbot:
         specifier: 'catalog:'
         version: 5.2.1
