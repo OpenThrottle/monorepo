@@ -87,10 +87,15 @@
   "release": {
     "changelog": {
       "automaticFromRef": true,
-      "enabled": true,
-      "file": "CHANGELOG.md",
+      "git": {
+        "commit": false,
+        "push": false,
+        "stageChanges": false,
+        "tag": false
+      },
       "projectChangelogs": {
-        "createRelease": "github",
+        "createRelease": false,
+        "file": "{projectRoot}/CHANGELOG.md",
         "renderOptions": {
           "authors": true,
           "applyUsernameToAuthors": true,
@@ -102,43 +107,68 @@
     },
     "conventionalCommits": {
       "types": {
-        "build": true,
+        "build": {
+          "semverBump": "none"
+        },
         "chore": {
-          "semverBump": "patch"
+          "semverBump": "none"
         },
-        "ci": true,
+        "ci": {
+          "semverBump": "none"
+        },
         "docs": {
+          "semverBump": "none"
+        },
+        "feat": {
+          "semverBump": "minor"
+        },
+        "fix": {
           "semverBump": "patch"
         },
-        "feat": true,
-        "fix": true,
-        "perf": true,
-        "refactor": true,
-        "revert": true,
-        "test": true,
-        "style": {
+        "perf": {
           "semverBump": "patch"
+        },
+        "refactor": {
+          "semverBump": "none"
+        },
+        "revert": {
+          "semverBump": "patch"
+        },
+        "style": {
+          "semverBump": "none"
+        },
+        "test": {
+          "semverBump": "none"
+        }
+      },
+      "useCommitScope": false
+    },
+    "groups": {
+      "applications": {
+        "projects": [
+          "monorepo",
+          "tag:type:application",
+          "!tag:production:false"
+        ],
+        "projectsRelationship": "independent",
+        "releaseTag": {
+          "pattern": "{projectName}@{version}"
         }
       }
     },
-    "git": {
-      "commit": true,
-      "commitMessage": "chore(monorepo): [skip ci] release {version}"
-    },
-    "projects": ["tag:publish:true", "!tag:production:false"],
-    "projectsRelationship": "independent",
     "version": {
-      "conventionalCommits": true,
-      "preVersionCommand": "nx run-many -t build-package",
+      "currentVersionResolver": "git-tag",
       "fallbackCurrentVersionResolver": "disk",
+      "git": {
+        "commit": false,
+        "push": false,
+        "stageChanges": false,
+        "tag": false
+      },
+      "specifierSource": "conventional-commits",
       "versionActionsOptions": {
-        "gitCommit": true,
-        "gitCommitMessage": "chore(version): [skip ci] {version}",
         "skipLockFileUpdate": true
       }
-    },
-    "releaseTag": {
-      "pattern": "{projectName}@{version}"
     }
   },
   "sync": {

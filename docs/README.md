@@ -51,6 +51,7 @@ Along the way:
 - **Docs contract:** [../CONTRIBUTING.md#documentation](../CONTRIBUTING.md#documentation) — what a doc in `docs/` is for, and the `audit:docs-index` reachability gate.
 - **Folders & conventions:** the `ot-folders` skill (`.agents/skills/ot-folders/SKILL.md`) — where code goes, what it is named, what shape it must have, and how to prove it; [MONOREPO.md § Naming Conventions](../MONOREPO.md#naming-conventions)
 - **CI quality gates:** [monorepo/CI-quality-gates.md](./monorepo/CI-quality-gates.md)
+- **Releases:** [monorepo/releases.md](./monorepo/releases.md) — SemVer for the applications and the product from PR titles: the release PR, tags, image versions, rollback.
 - **Attribution guards:** [monorepo/attribution-guard-layers.md](./monorepo/attribution-guard-layers.md) — the four layers enforcing `AGENTS.md` § No agent attribution, and why the two local-and-rewritable ones strip while the two published ones refuse.
 - **Dead-code (Knip):** [monorepo/Knip.md](./monorepo/Knip.md)
 - **Source-first packages:** [monorepo/source-first-packages-and-strip-only.md](./monorepo/source-first-packages-and-strip-only.md) — why a package whose `exports` name `./src/` cannot use parameter properties, enums, decorators or namespaces, and how `erasableSyntaxOnly` and ESLint enforce it.

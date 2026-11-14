@@ -6,6 +6,12 @@ import { OpenThrottleClientEnv } from '@openthrottle/react-router-utils';
  * appease the types.
  */
 declare global {
+  /**
+   * Injected at build time by Vite `define` (see `createAppVersionDefine` in
+   * `@tools/dotfiles/app-version`) from this app's package.json `version`.
+   */
+  const __APP_VERSION__: string;
+
   // eslint-disable-next-line no-var, @typescript-eslint/no-explicit-any
   var deferredPrompt: any | undefined;
 

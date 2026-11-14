@@ -3980,6 +3980,14 @@ type ListSourcesResultObject {
   plans: [ListPlanSourceObject!]!
 }
 
+"""Static facts about the running server build."""
+type ServerInfoObject {
+  """
+  The server's own package.json version (applications/openthrottle-server), as bumped by release automation.
+  """
+  version: String!
+}
+
 type ServiceAccountCredentialObject {
   createdAt: DateTime!
   expiresAt: DateTime
@@ -6135,6 +6143,11 @@ type Query {
   Aggregate run counts across ALL scheduled agent jobs: live in-flight totals plus terminal outcomes since `since` (default: 24h ago). no_op is counted separately and is NOT a failure.
   """
   scheduledAgentJobRunStats(since: DateTime): ScheduledAgentJobRunStatsObject!
+
+  """
+  Static facts about the running server build, currently its package.json version.
+  """
+  serverInfo: ServerInfoObject!
 
   """List all service accounts (admin, human only)."""
   serviceAccounts: [ServiceAccountObject!]!

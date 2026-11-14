@@ -69,6 +69,7 @@ import { RolesGraphqlModule } from './graphql/roles/roles.module.ts';
 import { RolloutGraphqlModule } from './graphql/rollout/rollout.module.ts';
 import { ScheduledAgentJobsGraphqlModule } from './graphql/scheduled-agent-jobs/scheduled-agent-jobs.module.ts';
 import { SearchGraphqlModule } from './graphql/search/search.module.ts';
+import { ServerInfoGraphqlModule } from './graphql/server-info/server-info.module.ts';
 import { ServiceAccountsGraphqlModule } from './graphql/service-accounts/service-accounts.module.ts';
 import { SkillAvailabilityGraphqlModule } from './graphql/skill-availability/skill-availability.module.ts';
 import { SkillTagsGraphqlModule } from './graphql/skill-tags/skill-tags.module.ts';
@@ -295,6 +296,7 @@ export const buildImports = (role: ProcessRole): AppModuleImports => {
       RolesGraphqlModule,
       RolloutGraphqlModule,
       ScheduledAgentJobsGraphqlModule,
+      ServerInfoGraphqlModule,
       ServiceAccountsGraphqlModule,
       SearchGraphqlModule,
       SkillAvailabilityGraphqlModule,

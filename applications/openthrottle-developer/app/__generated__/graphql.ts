@@ -4652,6 +4652,8 @@ export type Query = {
   searchPlans: ListPlansByStatusResultObject;
   /** Server health: API, OpenThrottle DB, cms DB, Redis (BullMQ), and WebSocket. Each component is ok | unconfigured | unreachable. */
   serverHealth: ServerHealthObject;
+  /** Static facts about the running server build, currently its package.json version. */
+  serverInfo: ServerInfoObject;
   /** Current process CPU and memory snapshot. Memory in MB; CPU in ms (cumulative). Same data as REST GET /metrics. */
   serverMetrics: ServerMetricsObject;
   /** Get a service account by ID (admin, human only). */
@@ -6457,6 +6459,13 @@ export type ServerHealthObject = {
   redis: Scalars['String']['output'];
   /** WebSocket (Socket.IO) status: ok when server process is running. */
   websocket: Scalars['String']['output'];
+};
+
+/** Static facts about the running server build. */
+export type ServerInfoObject = {
+  __typename?: 'ServerInfoObject';
+  /** The server's own package.json version (applications/openthrottle-server), as bumped by release automation. */
+  version: Scalars['String']['output'];
 };
 
 /** Current process metrics: memory (RSS, heap, external in MB) and CPU (user/system in ms). */

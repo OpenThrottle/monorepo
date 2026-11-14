@@ -27,4 +27,15 @@ describe('buildStagePackageJson', () => {
   it('is named OpenThrottle', () => {
     expect(result.productName).toBe('OpenThrottle');
   });
+
+  it('carries the app manifest version, which app.getVersion() reports', () => {
+    const bumped = buildStagePackageJson(
+      { author: 'A', description: 'd', license: 'MIT', version: '4.5.6' },
+      {},
+      '45.2.1',
+    );
+
+    expect(result.version).toBe('1.2.3');
+    expect(bumped.version).toBe('4.5.6');
+  });
 });

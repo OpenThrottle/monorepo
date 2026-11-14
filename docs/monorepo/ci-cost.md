@@ -31,18 +31,18 @@ Two corollaries:
 
 Nine workflows had triggers when this was measured (`cache-cleanup.yml` came later); **one** consumes runners.
 
-| Workflow                               | Runs (30d) | Runners consumed            |
-| -------------------------------------- | ---------- | --------------------------- |
-| `continuous-integration.yml`           | **739**    | ✅ the only live spender    |
-| `vercel-deploy.yml`                    | 734        | none — both jobs `skipped`  |
-| `openthrottle-docker.yml`              | 608        | none — `skipped`            |
-| `secret-scan.yml`                      | 440        | none — `skipped`            |
-| `docs-watch.yml`                       | 45         | none — `skipped`            |
-| `daily-merged-prs-summary.yml`         | 30         | none — `skipped`            |
-| `terraform-validate.yml`               | 13         | minimal                     |
-| `dependency-graph-scheduled.yml`       | 5          | none — `skipped`            |
-| `nx-release.yml`                       | 0          | none                        |
-| `cache-cleanup.yml` (added 2026-11-10) | —          | one `gh` call per closed PR |
+| Workflow                               | Runs (30d) | Runners consumed                                                |
+| -------------------------------------- | ---------- | --------------------------------------------------------------- |
+| `continuous-integration.yml`           | **739**    | ✅ the only live spender                                        |
+| `vercel-deploy.yml`                    | 734        | none — both jobs `skipped`                                      |
+| `openthrottle-docker.yml`              | 608        | none — `skipped`                                                |
+| `secret-scan.yml`                      | 440        | none — `skipped`                                                |
+| `docs-watch.yml`                       | 45         | none — `skipped`                                                |
+| `daily-merged-prs-summary.yml`         | 30         | none — `skipped`                                                |
+| `terraform-validate.yml`               | 13         | minimal                                                         |
+| `dependency-graph-scheduled.yml`       | 5          | none — `skipped`                                                |
+| `cache-cleanup.yml` (added 2026-11-10) | —          | one `gh` call per closed PR                                     |
+| `release.yml` (added 2026-11-13)       | —          | one short job per push to `main` ([releases.md](./releases.md)) |
 
 A high trigger count is **not** a cost. A job whose `if:` evaluates false reports `skipped` and bills nothing. That is why disabling more workflows was explicitly a non-goal of the cost plan — that ground was already worked.
 
@@ -114,7 +114,6 @@ All estimates assume the standard `ubuntu-26.04` runner (free minutes on this pu
 | **`dependency-graph-scheduled.yml`**  | `if: false`, weekly cron                                                         | **Low** — one graph generation, 15-min ceiling, commits a snapshot to `docs/nx/dependency-graphs/`. Each snapshot grows the repo, which raises every clone's cost.                                                                                                                                          | none                                                                                                                                    |
 | **`daily-merged-prs-summary.yml`**    | `if: false`, daily cron                                                          | **Negligible** — a GitHub API query writing a job summary.                                                                                                                                                                                                                                                  | none                                                                                                                                    |
 | **`docs-watch.yml`**                  | dispatch-gated                                                                   | **Negligible** — one `git diff-tree` (now at `fetch-depth: 2`).                                                                                                                                                                                                                                             | none                                                                                                                                    |
-| **`nx-release.yml`**                  | dispatch-only                                                                    | **Low–moderate** — depends on how many packages become `publish: true`. Nothing is published today.                                                                                                                                                                                                         | GitHub Packages storage                                                                                                                 |
 | **`nx-dependency-graph`** (job in CI) | `workflow_dispatch`-only                                                         | **Low** — 10-min ceiling, uploads an artifact (30-day retention).                                                                                                                                                                                                                                           | none                                                                                                                                    |
 
 ### Recommended re-enable order

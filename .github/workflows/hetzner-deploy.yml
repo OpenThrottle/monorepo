@@ -61,7 +61,7 @@ on:
   workflow_dispatch:
     inputs:
       image_tag:
-        description: "Image tag to deploy (e.g. sha-abc123). Defaults to this run's SHA."
+        description: "Image tag to deploy: a release (v4.6.0, the product version every image carries) or a build (sha-abc123). Defaults to this run's SHA."
         required: false
         type: string
   workflow_run:

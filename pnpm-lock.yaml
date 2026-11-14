@@ -224,6 +224,9 @@ catalogs:
     '@graphql-eslint/eslint-plugin':
       specifier: ^4.4.1
       version: 4.4.1
+    '@graphql-inspector/core':
+      specifier: ^8.0.1
+      version: 8.0.1
     '@graphql-typed-document-node/core':
       specifier: ^3.2.0
       version: 3.2.0
@@ -966,6 +969,9 @@ importers:
       '@commitlint/config-nx-scopes':
         specifier: 'catalog:'
         version: 21.0.2(nx@24.0.4(@swc-node/register@1.11.1(@swc/core@1.15.47(@swc/helpers@0.5.23))(@swc/types@0.1.28)(@typescript/typescript6@6.0.2)(supports-color@8.1.1))(@swc/core@1.15.47(@swc/helpers@0.5.23)))
+      '@graphql-inspector/core':
+        specifier: 'catalog:'
+        version: 8.0.1(graphql@16.14.2)
       '@nx/devkit':
         specifier: 'catalog:'
         version: 24.0.4(nx@24.0.4(@swc-node/register@1.11.1(@swc/core@1.15.47(@swc/helpers@0.5.23))(@swc/types@0.1.28)(@typescript/typescript6@6.0.2)(supports-color@8.1.1))(@swc/core@1.15.47(@swc/helpers@0.5.23)))
@@ -1053,6 +1059,9 @@ importers:
       eslint:
         specifier: 'catalog:'
         version: 10.10.0(jiti@2.7.0)(supports-color@8.1.1)
+      graphql:
+        specifier: 'catalog:'
+        version: 16.14.2
       husky:
         specifier: 'catalog:'
         version: 9.1.7
@@ -5734,6 +5743,12 @@ packages:
   '@graphql-hive/signal@2.0.0':
     resolution: {integrity: sha512-Pz8wB3K0iU6ae9S1fWfsmJX24CcGeTo6hE7T44ucmV/ALKRj+bxClmqrYcDT7v3f0d12Rh4FAXBb6gon+WkDpQ==}
     engines: {node: '>=20.0.0'}
+
+  '@graphql-inspector/core@8.0.1':
+    resolution: {integrity: sha512-0inTtDb7TDp9QTK8PtVMy14FCZu1yvacoZPFo0NnKcY1e+kyeTdndet/NtfApzo5hopJZ6nWzI7MUvft9pdxpg==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      graphql: ^16.0.0 || ^17.0.0
 
   '@graphql-tools/apollo-engine-loader@8.0.34':
     resolution: {integrity: sha512-pxmrIbUtpiH2/Dx0093EQ0x7dXWdlfAZ97uSY280CkUxIB8EYZeNeV2pvk6HksZzBtHrprLRysrjnegLOmQBRA==}
@@ -19320,6 +19335,13 @@ snapshots:
       - utf-8-validate
 
   '@graphql-hive/signal@2.0.0': {}
+
+  '@graphql-inspector/core@8.0.1(graphql@16.14.2)':
+    dependencies:
+      dependency-graph: 1.0.0
+      graphql: 16.14.2
+      object-inspect: 1.13.4
+      tslib: 2.6.3
 
   '@graphql-tools/apollo-engine-loader@8.0.34(graphql@16.14.2)':
     dependencies:
