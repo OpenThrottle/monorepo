@@ -17,6 +17,7 @@
     "@vercel/analytics": "catalog:",
     "@vercel/react-router": "catalog:",
     "dotenv": "catalog:",
+    "graphql": "catalog:",
     "isbot": "catalog:",
     "lucide-react": "catalog:",
     "react": "catalog:",

@@ -21,6 +21,7 @@ const generatorsRoot = join(import.meta.dirname, '..');
 // Every emitted React/React-Router test template — the `fireEvent`/`screen`
 // guards apply to all of them.
 const emittedTestTemplates = [
+  'react-router/files/application/app/global/config/__tests__/app-version.test.ts',
   'react-router/files/component/__tests__/__name__.test.tsx',
   'react-router/files/form/components/__tests__/__name__.test.tsx',
   'react-router/files/modal/__tests__/__name__.test.tsx',

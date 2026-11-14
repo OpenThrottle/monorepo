@@ -39,6 +39,10 @@
     ".": {
       "types": "./src/index.ts",
       "default": "./src/index.ts"
+    },
+    "./app-version": {
+      "types": "./src/app-version.ts",
+      "default": "./src/app-version.ts"
     }
   },
   "nx": {

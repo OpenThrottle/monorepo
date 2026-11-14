@@ -46,6 +46,7 @@
     "date-fns": "catalog:",
     "dotenv": "catalog:",
     "framer-motion": "catalog:",
+    "graphql": "catalog:",
     "isbot": "catalog:",
     "jotai": "catalog:",
     "lucide-react": "catalog:",

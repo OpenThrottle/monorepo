@@ -1,3 +1,4 @@
+import { createAppVersionDefine } from '@tools/dotfiles/app-version';
 import type { ConfigEnv } from 'vite';
 import { defineConfig, loadEnv } from 'vite';
 
@@ -6,6 +7,7 @@ export default (config: ConfigEnv) => {
 
   const configuration = defineConfig({
     cacheDir: '../../node_modules/.vite/applications/openthrottle-cms',
+    define: createAppVersionDefine(__dirname),
     resolve: {
       // jotai and react-dnd are context libraries: cms-core's hooks must read the Provider the
       // app mounts, and pnpm can install two physical copies (peer-variant suffixes) of each.

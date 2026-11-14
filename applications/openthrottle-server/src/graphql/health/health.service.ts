@@ -16,7 +16,9 @@ import type { Redis } from 'ioredis';
 import { DataSource } from 'typeorm';
 
 import type { ServerHealthResponse } from './health.types.ts';
+import { getServerVersion } from './health.utils.ts';
 import type { ServerHealthStatus } from './server-health.object.ts';
+import type { ServerInfoObject } from './server-info.object.ts';
 
 @Injectable()
 export class HealthService {
@@ -106,7 +108,7 @@ export class HealthService {
   }
 
   /**
-   * @description Returns server health: API (ok when invoked), OpenThrottle DB, cms DB, Redis, and WebSocket. Same shape as GraphQL serverHealth and REST GET /health.
+   * @description Returns server health: API (ok when invoked), OpenThrottle DB, cms DB, Redis, WebSocket, and the server package.json version. Same shape as GraphQL serverHealth and REST GET /health.
    */
   async getServerHealth(): Promise<ServerHealthResponse> {
     const [cms, database, redis, websocket] = await Promise.all([
@@ -121,7 +123,15 @@ export class HealthService {
       cms,
       database,
       redis,
+      version: getServerVersion(),
       websocket,
     };
+  }
+
+  /**
+   * @description Static facts about the running build: no database or Redis round trip, unlike getServerHealth.
+   */
+  getServerInfo(): ServerInfoObject {
+    return { version: getServerVersion() };
   }
 }
