@@ -44,6 +44,7 @@ export interface UsageSkillUsageProps {
   rangeDays: number;
   selectedCwd: string | null;
   selectedGitBranch: string | null;
+  selectedRepo: string | null;
   selectedScope: SkillUsageScopeFilter;
   /** Range start (YYYY-MM-DD) the branch search runs over. */
   start: string;
@@ -68,6 +69,7 @@ export const UsageSkillUsage = (
     rangeDays,
     selectedCwd,
     selectedGitBranch,
+    selectedRepo,
     selectedScope,
     start,
     totalCount,
@@ -81,7 +83,10 @@ export const UsageSkillUsage = (
     [bySkill, presentSlugs],
   );
   const hasFilters =
-    selectedScope != null || selectedGitBranch != null || selectedCwd != null;
+    selectedScope != null ||
+    selectedGitBranch != null ||
+    selectedCwd != null ||
+    selectedRepo != null;
   // Keyed off the ranked bucket, not the raw row count: a scope/branch/cwd
   // filter can legitimately narrow the window down to nothing but missing rows,
   // and that must still explain itself rather than leave a bare heading over an
@@ -143,6 +148,7 @@ export const UsageSkillUsage = (
         providerParam={providerParam}
         selectedCwd={selectedCwd}
         selectedGitBranch={selectedGitBranch}
+        selectedRepo={selectedRepo}
         selectedScope={selectedScope}
         start={start}
       />

@@ -101,6 +101,12 @@ var resolveGitBranch = (repoRoot) => {
     return "";
   }
 };
+var resolveReportableCwd = (repoRoot, cwd) => {
+  if (!isOpenThrottleCheckout(repoRoot)) {
+    return null;
+  }
+  return cwd || null;
+};
 var readEnvFile = (envPath) => {
   const out = {};
   try {
@@ -475,7 +481,15 @@ var transient = (reason) => {
     reason
   };
 };
-var postMutation = async ({
+var UNKNOWN_INPUT_FIELD = /Field "[^"]+" is not defined by type/;
+var omitField = (record, field) => {
+  return Object.fromEntries(
+    Object.entries(record).filter(([key]) => {
+      return key !== field;
+    })
+  );
+};
+var postMutationOnce = async ({
   authToken,
   fetchImpl,
   graphqlUrl,
@@ -535,6 +549,14 @@ var postMutation = async ({
     };
   }
   return { data: readMutationData(payload, field), ok: true };
+};
+var postMutation = async (args) => {
+  const posted = await postMutationOnce(args);
+  const { legacyVariables } = args;
+  if (posted.ok || legacyVariables === void 0 || !UNKNOWN_INPUT_FIELD.test(posted.reason)) {
+    return posted;
+  }
+  return postMutationOnce({ ...args, variables: legacyVariables });
 };
 var postGraphqlMutation = async (args) => {
   const posted = await postMutation(args);
@@ -697,7 +719,7 @@ var buildOutcomeEvent = ({
     return null;
   }
   const scope = detectScope(name, repoRoot);
-  const resolvedCwd = cwd || repoRoot;
+  const resolvedCwd = resolveReportableCwd(repoRoot, cwd || repoRoot);
   const hasDuration = durationMs != null && !Number.isNaN(Number(durationMs));
   const roundedDuration = Math.max(0, Math.round(Number(durationMs)));
   const resolvedDuration = hasDuration ? roundedDuration : null;
@@ -735,6 +757,9 @@ var toRecordSkillUsageInput = (event) => {
   }
   if (event.cwd != null) {
     input.cwd = event.cwd;
+  }
+  if (event.repo_identity != null) {
+    input.repoIdentity = event.repo_identity;
   }
   if (event.git_branch != null && event.git_branch !== "") {
     input.gitBranch = event.git_branch;
@@ -913,7 +938,7 @@ var toRecordTokenUsageAccount = (account) => {
   };
 };
 var toRecordTokenUsageRow = (record) => {
-  return {
+  const row = {
     account: toRecordTokenUsageAccount(record.agent_account),
     cacheReadTokens: record.cache_read_tokens,
     cacheWriteTokens: record.cache_write_tokens,
@@ -932,6 +957,10 @@ var toRecordTokenUsageRow = (record) => {
     source: record.source,
     totalTokens: record.total_tokens
   };
+  if (record.repo_identity == null) {
+    return row;
+  }
+  return { ...row, repoIdentity: record.repo_identity };
 };
 var postTokenUsageBatch = async ({
   records,
@@ -950,14 +979,23 @@ var postTokenUsageBatch = async ({
       reason: `batch of ${records.length} exceeds ${MAX_TOKEN_USAGE_BATCH}`
     };
   }
+  const rows = records.map(toRecordTokenUsageRow);
   const posted = await postGraphqlMutationNode({
     authToken,
     fetchImpl,
     field: "recordTokenUsage",
     graphqlUrl,
+    // repoIdentity is newer than some servers still receiving these rows.
+    legacyVariables: {
+      input: {
+        rows: rows.map((row) => {
+          return omitField(row, "repoIdentity");
+        })
+      }
+    },
     query: RECORD_TOKEN_USAGE_MUTATION,
     timeoutMs,
-    variables: { input: { rows: records.map(toRecordTokenUsageRow) } }
+    variables: { input: { rows } }
   });
   if (!posted.ok) {
     return posted;
@@ -986,14 +1024,17 @@ var postSkillUsageEvent = async ({
   timeoutMs = DEFAULT_POST_TIMEOUT_MS,
   fetchImpl = globalThis.fetch
 }) => {
+  const input = toRecordSkillUsageInput(event);
   return postGraphqlMutation({
     authToken,
     fetchImpl,
     field: "recordSkillUsage",
     graphqlUrl,
+    // repoIdentity is newer than some servers still receiving these events.
+    legacyVariables: { input: omitField(input, "repoIdentity") },
     query: RECORD_SKILL_USAGE_MUTATION,
     timeoutMs,
-    variables: { input: toRecordSkillUsageInput(event) }
+    variables: { input }
   });
 };
 var postSkillUsageOutcome = async ({

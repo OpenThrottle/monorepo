@@ -23,6 +23,7 @@ const baseProps = (): UsageBranchFilterProps => {
     providerParam: null,
     selectedCwd: null,
     selectedGitBranch: null,
+    selectedRepo: null,
     selectedScope: null,
     start: '2026-07-01',
   };

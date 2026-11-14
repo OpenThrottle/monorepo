@@ -37,9 +37,10 @@ const main = async (): Promise<void> => {
       return;
     }
 
+    const eventRepoRoot = normalized.cwd || repoRoot;
     const event = buildUsageEvent({
       normalized,
-      repoRoot: normalized.cwd || repoRoot,
+      repoRoot: eventRepoRoot,
       source: CODEX_SOURCE,
     });
     if (!event) {
@@ -59,7 +60,7 @@ const main = async (): Promise<void> => {
     await persistUsageEvent({
       event,
       jsonlPath: path.resolve(outPath),
-      repoRoot: event.cwd,
+      repoRoot: eventRepoRoot,
     });
   } catch (err) {
     logHookError('capture failed', err);

@@ -8,7 +8,6 @@
  * buffered — it would describe a moment that is already stale. Nothing is written inside the
  * repository: the machine id and the receipt live under `~/.openthrottle/`.
  */
-import { execFileSync } from 'node:child_process';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -18,6 +17,7 @@ import {
   resolveAuthToken,
   resolveGraphqlUrl,
   resolveOtEnv,
+  resolveRepoIdentity,
   userConfigDir,
 } from '../../config/env.ts';
 import { postGraphqlMutation } from '../../data/graphql.ts';
@@ -26,7 +26,6 @@ import { DEFAULT_POST_TIMEOUT_MS } from '../../data/persist.ts';
 import { readBufferStats } from '../../data/readBufferStats.ts';
 import type { HookFetch } from '../../types.ts';
 import { logHookError } from '../../utils/logging.ts';
-import { normalizeRemoteUrl } from '../../utils/normalizeRemoteUrl.ts';
 import {
   buildHeartbeatInput,
   detectDeliveryLeg,
@@ -41,7 +40,6 @@ import { CLAUDE_SOURCE } from './payload.ts';
 
 const MACHINE_ID_BASENAME = 'machine-id';
 export const LAST_HEARTBEAT_BASENAME = 'last-heartbeat.json';
-const GIT_TIMEOUT_MS = 1000;
 const SAFE_MACHINE_ID = /^[A-Za-z0-9-]{8,64}$/;
 
 /**
@@ -81,25 +79,6 @@ export const resolveMachineId = (): string | null => {
     const created = crypto.randomUUID();
     fs.writeFileSync(idPath, `${created}\n`, { mode: 0o600 });
     return created;
-  } catch {
-    return null;
-  }
-};
-
-/** `remote.origin.url` of the checkout, normalized client-side; null when absent or unusable. */
-const resolveRepoIdentity = (repoRoot: string): string | null => {
-  try {
-    const remote = execFileSync(
-      'git',
-      ['config', '--get', 'remote.origin.url'],
-      {
-        cwd: repoRoot,
-        encoding: 'utf8',
-        stdio: ['ignore', 'pipe', 'ignore'],
-        timeout: GIT_TIMEOUT_MS,
-      },
-    );
-    return normalizeRemoteUrl(remote);
   } catch {
     return null;
   }

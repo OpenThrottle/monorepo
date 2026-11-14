@@ -4148,7 +4148,7 @@ type SkillUsageEventObject {
   args: String
 
   """Working directory reported by the harness at invocation time."""
-  cwd: String
+  cwd: String @deprecated(reason: "Absolute paths leak the home-directory layout and foreign repos now send null (child-repo-hook-telemetry-contract §3). Use repoIdentity.")
 
   """Git branch at capture time (best-effort)."""
   gitBranch: String
@@ -4175,6 +4175,11 @@ type SkillUsageEventObject {
 
   """Server receipt time (set on insert)."""
   receivedAt: DateTime!
+
+  """
+  Normalized https git remote of the repository the skill ran in, or null when unknown. Never a filesystem path.
+  """
+  repoIdentity: String
 
   """
   ours | injected | personal | third-party — derived by the client: ours is authored under skills/, personal is linked from the invoking user's personal skills root outside the repo, injected is an OpenThrottle skill authored under another repository's skills/ and linked in by foreign skill injection, third-party is everything else.
@@ -4322,6 +4327,11 @@ type SkillUsageFilterOptionsObject {
 
   """Distinct non-null git branch values in the date window."""
   gitBranches: [String!]! @deprecated(reason: "Unbounded and now capped at 50 — use the skillUsageGitBranches query, which searches lazily and pins the default branch first.")
+
+  """
+  Distinct non-null repo identities (normalized git remotes) in the date window, capped at 50 — the repository filter.
+  """
+  repoIdentities: [String!]!
 }
 
 type SkillUsageGitBranchObject {
@@ -6208,12 +6218,17 @@ type Query {
     gitBranch: String
 
     """Restrict to one working directory (project path proxy); omit for all."""
-    cwd: String
+    cwd: String @deprecated(reason: "Paths are no longer sent from foreign repos. Filter by repoIdentity.")
 
     """
     Restrict every aggregate to a single skill (detail view); omit for all skills. Trimmed; empty string is treated as omitted.
     """
     skillName: String
+
+    """
+    Restrict to one repository by its normalized git remote (see filterOptions.repoIdentities); omit for all. Re-normalized; a value that does not normalize matches nothing.
+    """
+    repoIdentity: String
   ): SkillUsageResultObject!
 
   """
@@ -9497,7 +9512,7 @@ input RecordSkillUsageInput {
   args: String
 
   """Working directory at invocation time."""
-  cwd: String
+  cwd: String @deprecated(reason: "Absolute paths leak the home-directory layout and foreign repos now send null (child-repo-hook-telemetry-contract §3). Use repoIdentity.")
 
   """Git branch at capture time."""
   gitBranch: String
@@ -9518,6 +9533,11 @@ input RecordSkillUsageInput {
 
   """Harness prompt_id when present."""
   promptId: String
+
+  """
+  Git remote of the repository the skill ran in. Re-normalized server-side with normalizeRemoteUrl; anything that does not normalize (a filesystem path included) is stored as null.
+  """
+  repoIdentity: String
 
   """ours | injected | personal | third-party."""
   scope: String!
@@ -9895,7 +9915,7 @@ input RecordTokenUsageRowInput {
   costUsd: Float
 
   """Working directory the harness reported."""
-  cwd: String
+  cwd: String @deprecated(reason: "Absolute paths leak the home-directory layout and foreign repos now send null (child-repo-hook-telemetry-contract §3). Use repoIdentity.")
 
   """Git branch the harness reported."""
   gitBranch: String
@@ -9924,6 +9944,11 @@ input RecordTokenUsageRowInput {
 
   """Reasoning tokens for the turn, when reported separately."""
   reasoningTokens: Float
+
+  """
+  Git remote of the repository the turn ran in. Re-normalized server-side with normalizeRemoteUrl; anything that does not normalize (a filesystem path included) is stored as null. Absent on older senders.
+  """
+  repoIdentity: String
 
   """
   Provider API request id. With source and sessionId it is the idempotency key: a re-sent row is skipped. A row without one is never deduplicated.

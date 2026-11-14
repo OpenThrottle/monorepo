@@ -27,7 +27,7 @@ import {
   toRecordSkillUsageInput,
   toRecordSkillUsageOutcomeInput,
 } from './events.ts';
-import { postGraphqlMutation } from './graphql.ts';
+import { omitField, postGraphqlMutation } from './graphql.ts';
 import {
   appendDeadLetters,
   appendJsonl,
@@ -89,14 +89,18 @@ export const postSkillUsageEvent = async ({
   graphqlUrl: string | null;
   timeoutMs?: number;
 }): Promise<PostResult> => {
+  const input = toRecordSkillUsageInput(event);
+
   return postGraphqlMutation({
     authToken,
     fetchImpl,
     field: 'recordSkillUsage',
     graphqlUrl,
+    // repoIdentity is newer than some servers still receiving these events.
+    legacyVariables: { input: omitField(input, 'repoIdentity') },
     query: RECORD_SKILL_USAGE_MUTATION,
     timeoutMs,
-    variables: { input: toRecordSkillUsageInput(event) },
+    variables: { input },
   });
 };
 

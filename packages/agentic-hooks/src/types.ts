@@ -65,12 +65,18 @@ export interface UsageEvent {
   agent_id?: string;
   agent_type?: string;
   args: string | null;
-  cwd: string;
+  /** Null in a foreign repo (contract §3); see `repo_identity`. */
+  cwd: string | null;
   git_branch: string;
   hook_event_name?: string;
   invocation_path: string | null;
   privacy_level: PrivacyLevel;
   prompt_id?: string;
+  /**
+   * Normalized git remote of the checkout, or null. Optional only because
+   * lines buffered before it existed lack it.
+   */
+  repo_identity?: string | null;
   scope: Scope;
   session_id: string | null;
   skill_name: string;
@@ -85,7 +91,8 @@ export interface UsageEvent {
  * @public
  */
 export interface OutcomeEvent {
-  cwd: string;
+  /** Null in a foreign repo (contract §3). */
+  cwd: string | null;
   /**
    * True when a deliberate reporter (the `skill-usage-outcome` helper, or an
    * adapter relaying a harness-observed failure) emitted a success/error
@@ -165,6 +172,12 @@ export interface TokenUsageRecord {
   /** The producer's raw usage object, JSON-stringified; null when absent. */
   readonly raw_usage_json: string | null;
   readonly reasoning_tokens: number | null;
+  /**
+   * Normalized git remote of the checkout, or null. Optional only because
+   * lines buffered before it existed lack it; stamped by
+   * `scopeTokenUsageToRepo`.
+   */
+  readonly repo_identity?: string | null;
   /** Producer request id; with `source` + `session_id` it is the dedupe key. */
   readonly request_id: string | null;
   readonly session_id: string | null;

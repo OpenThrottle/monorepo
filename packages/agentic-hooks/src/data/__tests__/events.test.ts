@@ -4,6 +4,7 @@
  * owns its own spec. Also exercises `appendJsonl` (`data/jsonl`) as the
  * build→persist integration for `buildUsageEvent`.
  */
+import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -83,7 +84,74 @@ describe('buildUsageEvent + appendJsonl', () => {
   });
 });
 
+describe('buildUsageEvent in a foreign repo', () => {
+  let foreignRoot: string;
+
+  beforeAll(() => {
+    foreignRoot = fs.mkdtempSync(
+      path.join(os.tmpdir(), 'skill-usage-foreign-'),
+    );
+    execFileSync('git', ['init', '-q'], { cwd: foreignRoot });
+    execFileSync(
+      'git',
+      ['remote', 'add', 'origin', 'git@github.com:someone/their-repo.git'],
+      { cwd: foreignRoot },
+    );
+  });
+
+  afterAll(() => {
+    fs.rmSync(foreignRoot, { force: true, recursive: true });
+  });
+
+  it('sends the normalized remote and no working directory', () => {
+    const event = buildUsageEvent({
+      gitBranch: 'main',
+      normalized: { cwd: foreignRoot, skill_name: 'vercel:deploy' },
+      repoRoot: foreignRoot,
+      source: 'claude-code',
+    });
+
+    expect(event?.repo_identity).toBe('https://github.com/someone/their-repo');
+    expect(event?.cwd).toBeNull();
+    if (!event) {
+      return;
+    }
+    const input = toRecordSkillUsageInput(event);
+    expect(input).not.toHaveProperty('cwd');
+    expect(input.repoIdentity).toBe('https://github.com/someone/their-repo');
+  });
+
+  it('drops the working directory from an outcome too', () => {
+    const event = buildOutcomeEvent({
+      cwd: foreignRoot,
+      gitBranch: 'main',
+      outcome: SKILL_USAGE_OUTCOMES.SESSION_ENDED,
+      repoRoot: foreignRoot,
+      skillName: 'vercel:deploy',
+    });
+
+    expect(event?.cwd).toBeNull();
+  });
+});
+
 describe('toRecordSkillUsageInput', () => {
+  it('omits repoIdentity when the event has none, for older servers', () => {
+    const event: UsageEvent = {
+      args: null,
+      cwd: '/tmp',
+      git_branch: 'main',
+      invocation_path: null,
+      privacy_level: 'name-only',
+      repo_identity: null,
+      scope: 'ours',
+      session_id: null,
+      skill_name: 'ot-plans',
+      timestamp: '2026-08-01T00:00:00.000Z',
+    };
+
+    expect(toRecordSkillUsageInput(event)).not.toHaveProperty('repoIdentity');
+  });
+
   it('maps snake_case JSONL event to camelCase GraphQL input', () => {
     const event: UsageEvent = {
       agent_id: 'a1',
@@ -95,6 +163,7 @@ describe('toRecordSkillUsageInput', () => {
       invocation_path: 'skill_tool',
       privacy_level: 'truncated',
       prompt_id: 'p1',
+      repo_identity: 'https://github.com/org/repo',
       scope: 'ours',
       session_id: 'sess',
       skill_name: 'ot-plans',
@@ -113,6 +182,7 @@ describe('toRecordSkillUsageInput', () => {
       occurredAt: '2026-08-01T00:00:00.000Z',
       privacyLevel: 'truncated',
       promptId: 'p1',
+      repoIdentity: 'https://github.com/org/repo',
       scope: 'ours',
       sessionId: 'sess',
       skillName: 'ot-plans',

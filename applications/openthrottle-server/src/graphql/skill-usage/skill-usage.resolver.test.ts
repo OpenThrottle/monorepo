@@ -49,6 +49,7 @@ describe('SkillUsageResolver', () => {
     privacyLevel: SKILL_USAGE_PRIVACY_LEVELS.TRUNCATED,
     promptId: null,
     receivedAt: new Date('2026-07-31T12:00:01.000Z'),
+    repoIdentity: null,
     scope: SKILL_USAGE_SCOPES.OURS,
     sessionId: 'session-1',
     skillName: 'ot-plans',
@@ -103,6 +104,7 @@ describe('SkillUsageResolver', () => {
         occurredAt: new Date('2026-07-31T12:00:00.000Z'),
         privacyLevel: SKILL_USAGE_PRIVACY_LEVELS.TRUNCATED,
         promptId: null,
+        repoIdentity: null,
         scope: SKILL_USAGE_SCOPES.OURS,
         sessionId: 'session-1',
         skillName: 'ot-plans',
@@ -265,6 +267,30 @@ describe('SkillUsageResolver', () => {
             skillName: 'ot-plans',
           }),
         ).rejects.toBeInstanceOf(BadRequestException);
+      });
+    });
+
+    describe('repoIdentity', () => {
+      test.each([
+        ['git@GitHub.com:org/repo.git', 'https://github.com/org/repo'],
+        ['https://github.com/org/repo', 'https://github.com/org/repo'],
+        ['/Users/someone/repo', null],
+        ['   ', null],
+        [null, null],
+      ])('stores %j re-normalized as %j', async (raw, expected) => {
+        recordSkillUsage.mockResolvedValue(savedRow);
+        resolveEffectiveUserId.mockResolvedValue(null);
+
+        await resolver.recordSkillUsage({
+          occurredAt: new Date('2026-07-31T12:00:00.000Z'),
+          repoIdentity: raw,
+          scope: SKILL_USAGE_SCOPES.OURS,
+          skillName: 'ot-plans',
+        });
+
+        expect(recordSkillUsage).toHaveBeenLastCalledWith(
+          expect.objectContaining({ repoIdentity: expected }),
+        );
       });
     });
 
@@ -443,7 +469,11 @@ describe('SkillUsageResolver', () => {
             successCount: 1,
           },
         ],
-        filterOptions: { cwds: ['/repo'], gitBranches: ['main'] },
+        filterOptions: {
+          cwds: ['/repo'],
+          gitBranches: ['main'],
+          repoIdentities: ['https://github.com/org/repo'],
+        },
         totalCount: 6,
       });
 
@@ -459,6 +489,7 @@ describe('SkillUsageResolver', () => {
         cwd: null,
         end: '2026-07-31',
         gitBranch: null,
+        repoIdentity: null,
         scope: null,
         skillName: null,
         start: '2026-07-01',
@@ -470,6 +501,9 @@ describe('SkillUsageResolver', () => {
       expect(result.byDay[0]?.personalCount).toBe(3);
       expect(result.byDay[0]?.injectedCount).toBe(4);
       expect(result.filterOptions.gitBranches).toEqual(['main']);
+      expect(result.filterOptions.repoIdentities).toEqual([
+        'https://github.com/org/repo',
+      ]);
     });
 
     describe('when scope/gitBranch/cwd are provided', () => {
@@ -478,7 +512,7 @@ describe('SkillUsageResolver', () => {
           byDay: [],
           byScope: [],
           bySkill: [],
-          filterOptions: { cwds: [], gitBranches: [] },
+          filterOptions: { cwds: [], gitBranches: [], repoIdentities: [] },
           totalCount: 0,
         });
 
@@ -494,10 +528,42 @@ describe('SkillUsageResolver', () => {
           cwd: '/repo',
           end: '2026-07-31',
           gitBranch: 'example-usage-tracking',
+          repoIdentity: null,
           scope: SKILL_USAGE_SCOPES.OURS,
           skillName: null,
           start: '2026-07-01',
         });
+      });
+    });
+
+    describe('when repoIdentity is provided', () => {
+      test.each([
+        ['git@github.com:Org/Repo.git', 'https://github.com/Org/Repo'],
+        ['  https://github.com/org/repo  ', 'https://github.com/org/repo'],
+        ['not-a-remote', 'not-a-remote'],
+        ['   ', null],
+      ])('forwards %j as %j', async (raw, expected) => {
+        getUsageAggregation.mockResolvedValue({
+          byDay: [],
+          byScope: [],
+          bySkill: [],
+          filterOptions: { cwds: [], gitBranches: [], repoIdentities: [] },
+          totalCount: 0,
+        });
+
+        await resolver.skillUsage(
+          '2026-07-01',
+          '2026-07-31',
+          null,
+          null,
+          null,
+          null,
+          raw,
+        );
+
+        expect(getUsageAggregation).toHaveBeenLastCalledWith(
+          expect.objectContaining({ repoIdentity: expected }),
+        );
       });
     });
 
@@ -507,7 +573,7 @@ describe('SkillUsageResolver', () => {
           byDay: [],
           byScope: [],
           bySkill: [],
-          filterOptions: { cwds: [], gitBranches: [] },
+          filterOptions: { cwds: [], gitBranches: [], repoIdentities: [] },
           totalCount: 0,
         });
 
@@ -532,7 +598,7 @@ describe('SkillUsageResolver', () => {
           byDay: [],
           byScope: [],
           bySkill: [],
-          filterOptions: { cwds: [], gitBranches: [] },
+          filterOptions: { cwds: [], gitBranches: [], repoIdentities: [] },
           totalCount: 0,
         });
 

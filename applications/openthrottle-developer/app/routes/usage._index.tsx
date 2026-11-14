@@ -69,6 +69,9 @@ export const loader = async (args: Route.LoaderArgs) => {
   const skillCwdParam = searchParams.get('skillCwd');
   const selectedSkillCwd =
     skillCwdParam !== null && skillCwdParam !== '' ? skillCwdParam : null;
+  const skillRepoParam = searchParams.get('skillRepo');
+  const selectedSkillRepo =
+    skillRepoParam !== null && skillRepoParam !== '' ? skillRepoParam : null;
 
   const end = new Date();
   const endIso = end.toISOString();
@@ -102,6 +105,7 @@ export const loader = async (args: Route.LoaderArgs) => {
       cwd: selectedSkillCwd,
       end: endDate,
       gitBranch: selectedSkillGitBranch,
+      repoIdentity: selectedSkillRepo,
       scope: selectedSkillScope,
       start: startDate,
     }),
@@ -139,6 +143,7 @@ export const loader = async (args: Route.LoaderArgs) => {
     selectedProvider,
     selectedSkillCwd,
     selectedSkillGitBranch,
+    selectedSkillRepo,
     selectedSkillScope,
     skillUsage: skillUsageResult.skillUsage,
     telemetryCoverage,
@@ -175,6 +180,7 @@ export default function Component(
     selectedProvider,
     selectedSkillCwd,
     selectedSkillGitBranch,
+    selectedSkillRepo,
     selectedSkillScope,
     skillUsage,
     telemetryCoverage,
@@ -212,6 +218,7 @@ export default function Component(
         selectedProvider={selectedProvider}
         skillCwdParam={selectedSkillCwd}
         skillGitBranchParam={selectedSkillGitBranch}
+        skillRepoParam={selectedSkillRepo}
         skillScopeParam={selectedSkillScope}
         totals={tokenUsageTotals}
       />
@@ -229,6 +236,7 @@ export default function Component(
         rangeDays={rangeDays}
         selectedCwd={selectedSkillCwd}
         selectedGitBranch={selectedSkillGitBranch}
+        selectedRepo={selectedSkillRepo}
         selectedScope={selectedSkillScope}
         start={rangeStartDate}
         totalCount={skillUsage.totalCount}

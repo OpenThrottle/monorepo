@@ -24,11 +24,15 @@ users see.
 ## What it collects
 
 Per skill invocation: the skill name, whether the skill is OpenThrottle-authored or
-third-party, a timestamp, the session id, the git branch, and — on completion — an
-outcome (`success` / `error` / `abandoned`) and a duration.
+third-party, a timestamp, the session id, the git branch, the normalized git remote of
+the repository (credentials stripped; nothing when there is no remote), and — on
+completion — an outcome (`success` / `error` / `abandoned`) and a duration.
 
 Outside the OpenThrottle monorepo the default privacy level is `name-only`: skill
 **arguments are not collected at all**. A secret redactor runs regardless of level.
+No filesystem path is sent from your repository either: the working directory is
+reported only inside an OpenThrottle checkout, and the git remote identifies the
+repository everywhere else.
 
 Once per session start, a coverage heartbeat: a random machine id (generated once into
 `~/.openthrottle/machine-id`, never derived from your hostname), an optional machine label

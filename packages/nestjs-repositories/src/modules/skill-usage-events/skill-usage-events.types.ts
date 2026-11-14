@@ -19,6 +19,8 @@ export interface RecordSkillUsageInput {
   readonly occurredAt: Date;
   readonly privacyLevel?: SkillUsagePrivacyLevel;
   readonly promptId?: string | null;
+  /** Normalized git remote (normalizeRemoteUrl output), or null. */
+  readonly repoIdentity?: string | null;
   readonly scope: SkillUsageScope;
   readonly sessionId?: string | null;
   readonly skillName: string;
@@ -60,9 +62,12 @@ export interface RecordSkillUsageOutcomeInput {
  * days (UTC). Optional filters narrow by scope, git branch, or working dir.
  */
 export interface SkillUsageRangeQuery {
+  /** Deprecated path filter; prefer {@link SkillUsageRangeQuery.repoIdentity}. */
   readonly cwd?: string | null;
   readonly end: string;
   readonly gitBranch?: string | null;
+  /** Normalized git remote; narrows events, and outcomes via their start. */
+  readonly repoIdentity?: string | null;
   readonly scope?: SkillUsageScope | null;
   /** Restrict every aggregate to a single skill (detail view); omit for all. */
   readonly skillName?: string | null;
@@ -117,6 +122,7 @@ export interface SkillUsageByDayRow {
 export interface SkillUsageFilterOptions {
   readonly cwds: readonly string[];
   readonly gitBranches: readonly string[];
+  readonly repoIdentities: readonly string[];
 }
 
 /** One git branch seen in the window, with its invocation count. */

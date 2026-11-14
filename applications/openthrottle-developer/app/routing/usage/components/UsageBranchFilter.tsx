@@ -26,6 +26,7 @@ export interface UsageBranchFilterProps {
   providerParam: string | null;
   selectedCwd: string | null;
   selectedGitBranch: string | null;
+  selectedRepo: string | null;
   selectedScope: SkillUsageScopeFilter;
   /** Range start (YYYY-MM-DD) the branch search runs over. */
   start: string;
@@ -43,6 +44,7 @@ export const UsageBranchFilter = (
     providerParam,
     selectedCwd,
     selectedGitBranch,
+    selectedRepo,
     selectedScope,
     start,
   } = props;
@@ -86,6 +88,7 @@ export const UsageBranchFilter = (
         cwd: selectedCwd,
         gitBranch: value === BRANCH_FILTER_ALL_VALUE ? null : value,
         provider: providerParam,
+        repo: selectedRepo,
         scope: selectedScope,
       }),
     );

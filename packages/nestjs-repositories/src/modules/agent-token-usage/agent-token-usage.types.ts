@@ -38,6 +38,8 @@ export interface TokenUsageBatchRow {
   readonly provider: string;
   readonly rawUsage: Record<string, unknown> | null;
   readonly reasoningTokens: number | null;
+  /** Normalized git remote (normalizeRemoteUrl output), or null. */
+  readonly repoIdentity: string | null;
   readonly requestId: string | null;
   readonly sessionId: string | null;
   readonly source: string;

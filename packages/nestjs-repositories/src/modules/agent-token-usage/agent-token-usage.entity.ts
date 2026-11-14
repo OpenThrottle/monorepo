@@ -60,6 +60,7 @@ export interface AgentTokenUsageData {
   readonly provider: string;
   readonly rawUsage: Record<string, unknown> | null;
   readonly reasoningTokens: number | null;
+  readonly repoIdentity: string | null;
   readonly requestId: string | null;
   readonly sessionId: string | null;
   readonly source: string | null;
@@ -177,8 +178,17 @@ export class AgentTokenUsage {
   @Column({ name: 'request_id', nullable: true, type: 'text' })
   requestId!: string | null;
 
+  /**
+   * @description Raw working directory. Deprecated in favour of
+   * {@link AgentTokenUsage.repoIdentity}; foreign-repo senders send null
+   * (docs/monorepo/child-repo-hook-telemetry-contract.md §3).
+   */
   @Column({ name: 'cwd', nullable: true, type: 'text' })
   cwd!: string | null;
+
+  /** Normalized https git remote, or null — never a filesystem path. */
+  @Column({ name: 'repo_identity', nullable: true, type: 'text' })
+  repoIdentity!: string | null;
 
   @Column({ name: 'git_branch', nullable: true, type: 'text' })
   gitBranch!: string | null;

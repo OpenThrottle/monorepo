@@ -21,6 +21,7 @@ import os from 'node:os';
 import path from 'node:path';
 
 import { logHookError } from '../utils/logging.ts';
+import { normalizeRemoteUrl } from '../utils/normalizeRemoteUrl.ts';
 
 /**
  * The user-global config directory. Also the home of the buffered telemetry
@@ -104,6 +105,62 @@ export const resolveGitBranch = (repoRoot: string): string => {
   } catch {
     return '';
   }
+};
+
+const repoIdentityCache = new Map<string, string | null>();
+
+/**
+ * The checkout's `remote.origin.url`, normalized client-side with
+ * `normalizeRemoteUrl` so a credential in the remote never leaves the machine.
+ * Null when there is no remote or it does not normalize — never the path
+ * (docs/monorepo/child-repo-hook-telemetry-contract.md §3). Cached per root,
+ * since every event in a hook invocation asks for the same one. Fail-open.
+ *
+ * @public
+ */
+export const resolveRepoIdentity = (repoRoot: string): string | null => {
+  const cached = repoIdentityCache.get(repoRoot);
+  if (cached !== undefined) {
+    return cached;
+  }
+
+  let identity: string | null = null;
+  try {
+    const remote = execFileSync(
+      'git',
+      ['config', '--get', 'remote.origin.url'],
+      {
+        cwd: repoRoot,
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'ignore'],
+        timeout: 1000,
+      },
+    );
+    identity = normalizeRemoteUrl(remote);
+  } catch {
+    identity = null;
+  }
+
+  repoIdentityCache.set(repoRoot, identity);
+  return identity;
+};
+
+/**
+ * The working directory a record may carry for `repoRoot`: the observed one in
+ * an OpenThrottle checkout, null in a foreign repo, whose absolute path would
+ * leak the user's home-directory layout (contract §3). Fails closed with
+ * `isOpenThrottleCheckout`.
+ *
+ * @public
+ */
+export const resolveReportableCwd = (
+  repoRoot: string,
+  cwd: string | null | undefined,
+): string | null => {
+  if (!isOpenThrottleCheckout(repoRoot)) {
+    return null;
+  }
+  return cwd || null;
 };
 
 /**

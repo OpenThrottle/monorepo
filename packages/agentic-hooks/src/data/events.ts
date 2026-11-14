@@ -2,7 +2,11 @@
  * Event construction + GraphQL input mapping. Tool-neutral: an adapter hands in
  * a NormalizedInvocation and gets back the durable event shape.
  */
-import { resolveGitBranch } from '../config/env.ts';
+import {
+  resolveGitBranch,
+  resolveRepoIdentity,
+  resolveReportableCwd,
+} from '../config/env.ts';
 import type {
   NormalizedInvocation,
   OutcomeEvent,
@@ -79,7 +83,7 @@ export const buildUsageEvent = ({
     return null;
   }
 
-  const cwd = normalized.cwd || repoRoot;
+  const cwd = resolveReportableCwd(repoRoot, normalized.cwd || repoRoot);
   const scope = detectScope(normalized.skill_name, repoRoot);
   // Resolved from the checkout when the caller does not pin one, so an adapter
   // cannot accidentally opt a foreign repo back into arg collection by passing
@@ -94,6 +98,7 @@ export const buildUsageEvent = ({
     git_branch: gitBranch ?? resolveGitBranch(repoRoot),
     invocation_path: normalized.invocation_path ?? null,
     privacy_level: level,
+    repo_identity: resolveRepoIdentity(repoRoot),
     scope,
     session_id: normalized.session_id ?? null,
     skill_name: normalized.skill_name,
@@ -170,7 +175,7 @@ export const buildOutcomeEvent = ({
   }
 
   const scope = detectScope(name, repoRoot);
-  const resolvedCwd = cwd || repoRoot;
+  const resolvedCwd = resolveReportableCwd(repoRoot, cwd || repoRoot);
   const hasDuration = durationMs != null && !Number.isNaN(Number(durationMs));
   const roundedDuration = Math.max(0, Math.round(Number(durationMs)));
   const resolvedDuration = hasDuration ? roundedDuration : null;
@@ -223,6 +228,9 @@ export const toRecordSkillUsageInput = (
   }
   if (event.cwd != null) {
     input.cwd = event.cwd;
+  }
+  if (event.repo_identity != null) {
+    input.repoIdentity = event.repo_identity;
   }
   if (event.git_branch != null && event.git_branch !== '') {
     input.gitBranch = event.git_branch;

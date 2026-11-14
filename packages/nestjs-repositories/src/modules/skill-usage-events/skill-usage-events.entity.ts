@@ -105,6 +105,7 @@ export interface SkillUsageEventData {
   readonly privacyLevel: SkillUsagePrivacyLevel;
   readonly promptId: string | null;
   readonly receivedAt: Date;
+  readonly repoIdentity: string | null;
   readonly scope: SkillUsageScope;
   readonly sessionId: string | null;
   readonly skillName: string;
@@ -127,8 +128,17 @@ export class SkillUsageEvent {
   @Column({ name: 'session_id', nullable: true, type: 'text' })
   sessionId!: string | null;
 
+  /**
+   * @description Raw working directory. Deprecated in favour of
+   * {@link SkillUsageEvent.repoIdentity}; foreign-repo senders send null
+   * (docs/monorepo/child-repo-hook-telemetry-contract.md §3).
+   */
   @Column({ name: 'cwd', nullable: true, type: 'text' })
   cwd!: string | null;
+
+  /** Normalized https git remote, or null — never a filesystem path. */
+  @Column({ name: 'repo_identity', nullable: true, type: 'text' })
+  repoIdentity!: string | null;
 
   @Column({ name: 'git_branch', nullable: true, type: 'text' })
   gitBranch!: string | null;

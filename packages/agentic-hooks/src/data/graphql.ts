@@ -143,17 +143,41 @@ export interface PostMutationArgs {
   fetchImpl: HookFetch;
   field: string;
   graphqlUrl: string | null;
+  /**
+   * The same variables minus every OPTIONAL field newer than the oldest server
+   * we still deliver to. Sent once, only when the server rejects `variables`
+   * for naming an input field it does not define. Schema skew alone is
+   * transient (the line would stay buffered until the server is upgraded), but
+   * for a field the server can do without, delivering the record now beats
+   * holding it for a server that may never be upgraded — a foreign repo's
+   * operator may pin an older one.
+   */
+  legacyVariables?: Record<string, unknown>;
   query: string;
   timeoutMs: number;
   variables: Record<string, unknown>;
 }
 
+/** The validation message for an input field the server's schema lacks. */
+const UNKNOWN_INPUT_FIELD = /Field "[^"]+" is not defined by type/;
+
 /**
- * The mutation POST every stream shares: transport, timeout, and the one
- * failure classification. On success it hands back `data.<field>` unread, so a
- * caller picks the shape it needs (an id, a counts object).
+ * A shallow copy of `record` without `field`, for building `legacyVariables`.
+ *
+ * @public
  */
-const postMutation = async ({
+export const omitField = (
+  record: Record<string, unknown>,
+  field: string,
+): Record<string, unknown> => {
+  return Object.fromEntries(
+    Object.entries(record).filter(([key]) => {
+      return key !== field;
+    }),
+  );
+};
+
+const postMutationOnce = async ({
   authToken,
   fetchImpl,
   graphqlUrl,
@@ -222,6 +246,27 @@ const postMutation = async ({
   }
 
   return { data: readMutationData(payload, field), ok: true };
+};
+
+/**
+ * The mutation POST every stream shares: transport, timeout, and the one
+ * failure classification. On success it hands back `data.<field>` unread, so a
+ * caller picks the shape it needs (an id, a counts object).
+ */
+const postMutation = async (
+  args: PostMutationArgs,
+): Promise<PostFailure | { data: unknown; ok: true }> => {
+  const posted = await postMutationOnce(args);
+  const { legacyVariables } = args;
+  if (
+    posted.ok ||
+    legacyVariables === undefined ||
+    !UNKNOWN_INPUT_FIELD.test(posted.reason)
+  ) {
+    return posted;
+  }
+
+  return postMutationOnce({ ...args, variables: legacyVariables });
 };
 
 /**

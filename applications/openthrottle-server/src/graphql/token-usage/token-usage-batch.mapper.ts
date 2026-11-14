@@ -1,5 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 import type { TokenUsageBatchRow } from '@openthrottle/nestjs-repositories';
+import { normalizeRemoteUrl } from '@openthrottle/nestjs-repositories';
 import type {
   AgentAccountCredentialKind,
   IdentifiedAgentAccount,
@@ -137,6 +138,9 @@ const toBatchRow = (
       'reasoningTokens',
       row.reasoningTokens,
     ),
+    repoIdentity: row.repoIdentity
+      ? normalizeRemoteUrl(row.repoIdentity)
+      : null,
     requestId: toOptionalTrimmed(row.requestId),
     sessionId: toOptionalTrimmed(row.sessionId),
     source: requireNonBlank(index, 'source', row.source),

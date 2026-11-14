@@ -26,6 +26,7 @@ export type SkillUsageEventFactoryData = Pick<
   | 'privacyLevel'
   | 'promptId'
   | 'receivedAt'
+  | 'repoIdentity'
   | 'scope'
   | 'sessionId'
   | 'skillName'
@@ -53,6 +54,7 @@ export const skillUsageEventsFactory =
       privacyLevel: SKILL_USAGE_PRIVACY_LEVELS.TRUNCATED,
       promptId: null,
       receivedAt: occurredAt,
+      repoIdentity: null,
       scope: faker.helpers.arrayElement([
         SKILL_USAGE_SCOPES.OURS,
         SKILL_USAGE_SCOPES.THIRD_PARTY,
