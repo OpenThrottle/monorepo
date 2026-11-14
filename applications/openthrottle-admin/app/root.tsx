@@ -242,6 +242,7 @@ export default function App(): React.ReactElement {
     <>
       <GlobalProviders chat={headerChatSurface}>
         <GlobalLayout
+          appVersion={__APP_VERSION__}
           data={dataNavigation}
           health={data?.serverHealth}
           overrides={{ footer: isFooterHidden }}

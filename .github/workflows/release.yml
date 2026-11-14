@@ -1,0 +1,120 @@
+################################################################################
+#
+#   🏷️ Release — versions the `applications` Nx release group (the production
+#   apps plus the root `monorepo` project, whose version is the product
+#   version) from the conventional-commit squash titles on `main`.
+#
+#   On every push to main, one job, two steps in this order:
+#     publish  For every merged release PR (`chore(release): openthrottle
+#              <v>`) among the last 30 commits on main, tag each project whose
+#              version it changed and create its GitHub release. Idempotent,
+#              and a scan rather than HEAD because GitHub cancels a pending
+#              run when a newer push queues behind it.
+#     prepare  Run `release:applications prepare` (Nx version + changelog, no
+#              git), commit the result to the `release/next` bot branch and
+#              open or update ONE release PR. Nothing releasable → close it.
+#              Runs after publish so it versions from the tags just created.
+#
+#   The PR is opened with a GitHub App token, not GITHUB_TOKEN: events created
+#   by GITHUB_TOKEN start no workflows, so CI would never run on the release PR
+#   and the merge queue would never accept it. Secrets: RELEASE_APP_CLIENT_ID,
+#   RELEASE_APP_PRIVATE_KEY (see docs/monorepo/releases.md).
+#
+#   💰 One short job per push to main (owner decision, OT plan 36d1ca31); the
+#   pnpm store and Nx caches are restore-only here.
+#
+################################################################################
+name: '🏷️ Release'
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+# Never cancel: a cancelled run can leave release/next half-written. Runs queue.
+concurrency:
+  cancel-in-progress: false
+  group: release
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    name: '🏷️ Publish and prepare'
+    outputs:
+      tags: ${{ steps.publish.outputs.tags }}
+    runs-on: ubuntu-26.04
+    timeout-minutes: 15
+    steps:
+      - name: '🔑 Mint the release App token'
+        id: app-token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ secrets.RELEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+
+      - name: '📦 Checkout the code'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Nx versions from `<project>@<version>` tags and reads commit
+          # metadata since each; blobs of old commits are never needed.
+          fetch-depth: 0
+          filter: 'blob:none'
+          ref: main
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: '🤖 Node Setup'
+        uses: ./.github/actions/node-setup
+        with:
+          save-cache: 'false'
+
+      - name: '🐙 Configure the bot identity'
+        env:
+          APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          set -euo pipefail
+          user_id="$(gh api "/users/${APP_SLUG}[bot]" --jq .id)"
+          git config user.name "${APP_SLUG}[bot]"
+          git config user.email "${user_id}+${APP_SLUG}[bot]@users.noreply.github.com"
+
+      - name: '🚢 Publish a merged release'
+        id: publish
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: pnpm run release:applications publish --scan=30
+
+      - name: '🏷️ Version and changelog'
+        id: prepare
+        run: pnpm run release:applications prepare --body-file="${RUNNER_TEMP}/release-pr-body.md"
+
+      - name: '🚀 Open or update the release PR'
+        if: steps.prepare.outputs.has_release == 'true'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          TITLE: ${{ steps.prepare.outputs.title }}
+        run: |
+          set -euo pipefail
+          git switch --create release/next
+          git add --all
+          git commit --message "${TITLE}"
+          # release/next is the bot's own branch, rebuilt from main every run.
+          git push --force origin release/next
+          number="$(gh pr list --head release/next --base main --state open --json number --jq '.[0].number // empty')"
+          if [ -n "${number}" ]; then
+            gh pr edit "${number}" --title "${TITLE}" --body-file "${RUNNER_TEMP}/release-pr-body.md"
+          else
+            gh pr create --base main --head release/next --title "${TITLE}" --body-file "${RUNNER_TEMP}/release-pr-body.md"
+          fi
+
+      - name: '🧹 Close a stale release PR'
+        if: steps.prepare.outputs.has_release != 'true'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          set -euo pipefail
+          number="$(gh pr list --head release/next --base main --state open --json number --jq '.[0].number // empty')"
+          if [ -n "${number}" ]; then
+            gh pr close "${number}" --delete-branch --comment "Nothing left to release on main."
+          fi

@@ -25,7 +25,7 @@ Recorded from the Nx implementation audit:
   - **Trade-off.** The Actions cache is 10 GB per repo with LRU eviction, shared across all branches and workflows, and entries untouched for 7 days are evicted. That is more eviction pressure than the old 2.19 GB bucket with a 90-day lifecycle, so cross-branch hit rate may drop somewhat.
   - **The poisoned-cache hazard follows the cache, not the backend.** Gitignored `__generated__` output is invisible to Nx hashing, so a cache entry can be poisoned regardless of where it is stored. Keep the codegen-before-affected step ordering in `continuous-integration.yml`, and keep the runbook — now retargeted at the Actions cache, where recovery is deleting entries via `gh cache delete` instead of `gcloud storage rm`. Truncated-dist integrity (a separate class from CREEP) is still guarded by `verify-dist-complete` (plan 935ea415 / PR #308).
 - **Nx Cloud — not adopted.** The workspace stays on the local cache plus the free Actions cache. CI sharding does **not** depend on it: `scripts/parallelize-tasks.ts` splits the affected projects across a 3-box GitHub Actions matrix (live since OT plan `b19377d1`; see [ci-cost.md](./ci-cost.md) § CI sharding). `main` lands PRs through GitHub's merge queue (see [ci-cost.md](./ci-cost.md) § Merge queue on `main`): each entry runs this same workflow on the `merge_group` event against GitHub's synthetic `gh-readonly-queue/...` ref, affected-scoped by `nrwl/nx-set-shas` — none of which implies Nx Cloud. Nx Cloud's distributed task execution, the test atomizer, flaky-task retries, and self-healing CI remain unavailable. The `monitor-ci` agent skill depends on Nx Cloud; it self-detects the missing connection (its "Step 0") and reports itself inoperable here, so it is a no-op until/unless Nx Cloud is adopted.
-- **Releases — manual only.** `nx release` stays invocable via the `workflow_dispatch`-only `nx-release.yml`; the duplicate commented-out release job in `continuous-integration.yml` has been removed. Nothing is `publish:true` today (nothing is being published), so there is no automated release on `main`. Flip a package to `publish:true` and revisit if publishing resumes.
+- **Releases — the applications, through a release PR.** The `applications` group in `nx.json` versions the production apps and the root `monorepo` project (the product version) from the project graph and the PR titles; `release.yml` keeps one release PR open and tags what it ships. The old `workflow_dispatch` `nx-release.yml` is gone: no package is `publish:true`, so it had nothing to release. See [releases.md](./releases.md).
 
 **Features:**
 
@@ -165,24 +165,11 @@ NODE_ENV=development nx migrate --run-migrations --create-commits
 
 ## 🚀 Releases
 
-We're making use of the `nx release` command to publish our npm packages. Right now these packages are published to Github packages, but we're working on getting them published to NPM as well.
+The applications and the monorepo are versioned with `nx release` through the `applications` release group, driven by [`scripts/release-applications.ts`](../../scripts/release-applications.ts) and [`release.yml`](../../.github/workflows/release.yml). How versions are chosen, the release PR, tags, images and rollback: [releases.md](./releases.md).
 
-Release commits **must not bypass Husky hooks**. The CI `🚀 NX Release` workflow runs `nx release` and relies on the same repository checks (commitlint, lint-staged/typecheck/lint) to keep release commits safe.
+No package is published today (every package is `publish:false`). To publish one, flip it to `publish:true` and add a `packages` group to `nx.json` — Nx refuses a group that matches no project. `scripts/pnpm-package.ts {projectRoot}` transforms a package.json for publishing.
 
-**Resources:**
-
-- [Automated npm package publishing with Nx](https://www.epicweb.dev/tutorials/versioning-and-releasing-npm-packages-with-nx/nx/automated-npm-package-publishing-with-nx)
-- [pnpm publishConfig](https://pnpm.io/package_json#publishconfig)
-- [Keep Nx Versions in Sync](https://nx.dev/recipes/tips-n-tricks/keep-nx-versions-in-sync)
-
-**Scratch Pad:**
-
-```bash
-nx release publish -p @visormatt/tester
-
-# Take the package.json file and transform it for publishing
-node --experimental-strip-types ./scripts/pnpm-package.ts {projectRoot}
-```
+Release commits **must not bypass Husky hooks**: the release workflow commits and pushes with the repository hooks active.
 
 ## 🤖 Generators
 

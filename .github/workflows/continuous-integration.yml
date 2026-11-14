@@ -937,6 +937,22 @@ jobs:
         run: |
           pnpm exec nx run-many --target=verify-graphql-codegen --projects=@openthrottle/openthrottle-agentic-ralph,@openthrottle/openthrottle-mcp
 
+      # 💰 A `gates` step, not a job: `gates` already has the node setup and a
+      # full-history checkout, so `origin/<base>` is local. PR-only (a push has no
+      # base). Diffs applications/openthrottle-server/schema.gql against the base
+      # branch and fails on a breaking change unless the PR title carries `!`
+      # (`feat(scope)!: ...`); a `@deprecated` field is not breaking. Skips cleanly
+      # when schema.gql is unchanged. Run locally:
+      # `BASE_REF=origin/main PR_TITLE='feat: x' pnpm run check:graphql-breaking-changes`.
+      - name: '💥 GraphQL breaking-change gate (schema.gql vs base, `!` in PR title)'
+        if: github.event_name == 'pull_request'
+        env:
+          # Via env, never `${{ }}` inside the script: a PR title is
+          # attacker-controlled text and would otherwise be shell-injected.
+          BASE_REF: origin/${{ github.base_ref }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: pnpm exec tsx ./scripts/check-graphql-breaking-changes.ts
+
       - name: '🔗 Agent assets SSOT (symlink drift guard)'
         run: pnpm exec nx run monorepo:check-agent-assets-ssot
 

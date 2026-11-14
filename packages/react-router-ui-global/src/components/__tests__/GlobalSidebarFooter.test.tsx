@@ -8,7 +8,7 @@ import { GlobalProviders } from '../GlobalProviders';
 import type { GlobalSidebarFooterProps } from '../GlobalSidebarFooter';
 import { GlobalSidebarFooter } from '../GlobalSidebarFooter';
 
-const renderSidebarFooter = (props: GlobalSidebarFooterProps = {}): void => {
+const renderSidebarFooter = (props: GlobalSidebarFooterProps = {}) => {
   const Component = () => {
     return (
       <GlobalProviders>
@@ -17,7 +17,7 @@ const renderSidebarFooter = (props: GlobalSidebarFooterProps = {}): void => {
     );
   };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-  render(<RoutesStub />);
+  return render(<RoutesStub />);
 };
 
 /**
@@ -48,6 +48,22 @@ describe('GlobalSidebarFooter Component', () => {
     expect(
       screen.getByRole('link', { name: /System Status/i }),
     ).toHaveAttribute('href', expect.stringContaining('/health'));
+  });
+
+  test('renders the app version when one is supplied', () => {
+    const component = renderSidebarFooter({ appVersion: '3.2.1' });
+
+    expect(
+      component.getByTestId('GlobalSidebarFooterVersion'),
+    ).toHaveTextContent('Version 3.2.1');
+  });
+
+  test('renders no version line when none is supplied', () => {
+    const component = renderSidebarFooter();
+
+    expect(
+      component.queryByTestId('GlobalSidebarFooterVersion'),
+    ).not.toBeInTheDocument();
   });
 
   test('shows the green dot only when every component is ok', () => {

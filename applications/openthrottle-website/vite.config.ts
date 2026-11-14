@@ -1,5 +1,6 @@
 import { reactRouter } from '@react-router/dev/vite';
 import tailwindcss from '@tailwindcss/vite';
+import { createAppVersionDefine } from '@tools/dotfiles/app-version';
 import { reactRouterDevTools } from 'react-router-devtools';
 import type { ConfigEnv } from 'vite';
 import { defineConfig, loadEnv } from 'vite';
@@ -26,6 +27,8 @@ export default (config: ConfigEnv) => {
     css: {
       postcss: './postcss.config.mjs',
     },
+    // Injects this app's package.json version as `__APP_VERSION__` (release automation bumps it).
+    define: createAppVersionDefine(__dirname),
     logLevel: 'info',
     optimizeDeps: {
       include: [],
