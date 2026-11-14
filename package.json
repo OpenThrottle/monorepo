@@ -147,14 +147,53 @@
       "ingest-agent-assets": {},
       "knip": {},
       "lint": {
-        "executor": "nx:noop"
+        "executor": "nx:run-commands",
+        "inputs": [
+          "{workspaceRoot}/eslint.config.ts",
+          "{workspaceRoot}/scripts/**/*",
+          "^noMarkdown"
+        ],
+        "metadata": {
+          "description": "Lint scripts/ with the workspace eslint.config.ts. Scoped to scripts/ because the root project's root is `.`, and the default `eslint .` from {projectRoot} would lint the whole repo. `inputs` MUST be explicit {workspaceRoot} globs — the root `monorepo` project owns 0 files, so the default {projectRoot} input would hash nothing and cache-hit forever. `^noMarkdown` carries @tools/dotfiles, which holds the ESLint config and the custom rules."
+        },
+        "options": {
+          "command": "pnpm exec eslint -c ./eslint.config.ts scripts",
+          "cwd": "{workspaceRoot}"
+        }
       },
       "test": {
         "outputs": [
           "{workspaceRoot}/coverage/monorepo"
         ]
       },
-      "typecheck": {},
+      "typecheck": {
+        "dependsOn": [
+          "^build",
+          "^codegen-graphql"
+        ],
+        "executor": "nx:run-commands",
+        "inputs": [
+          "{workspaceRoot}/scripts/**/*",
+          "{workspaceRoot}/tsconfig.base.json",
+          "^production",
+          {
+            "env": "OPENTHROTTLE_TSC_BIN"
+          },
+          {
+            "externalDependencies": [
+              "typescript",
+              "typescript7"
+            ]
+          }
+        ],
+        "metadata": {
+          "description": "Type-check scripts/ (source and tests) with scripts/tsconfig.json: nodenext, noEmit, extending tsconfig.base.json. `^build` is load-bearing: nestjs-modules, nestjs-repositories and nestjs-testing resolve through dist. `^typecheck` is left out on purpose, since the root depends on 18 projects and their typechecks prove nothing about scripts/. The compiler follows the same knob as the inferred typecheck targets (`$OPENTHROTTLE_TSC_BIN`, defaulting to the workspace's `tsc`, which is TypeScript 7). `inputs` MUST be explicit {workspaceRoot} globs — the root `monorepo` project owns 0 files, so the default {projectRoot} input would hash nothing and cache-hit forever."
+        },
+        "options": {
+          "command": "${OPENTHROTTLE_TSC_BIN:-tsc} -p scripts/tsconfig.json",
+          "cwd": "{workspaceRoot}"
+        }
+      },
       "validate-agent-assets-frontmatter": {},
       "validate-licenses": {}
     }

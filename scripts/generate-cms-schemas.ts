@@ -160,15 +160,19 @@ const toJsonValue = (value: unknown): JsonValue | undefined => {
   }
 
   if (typeof value === 'object') {
-    const entries = Object.entries(value).map(([key, entry]) => {
-      return [key, toJsonValue(entry)] as const;
-    });
+    const result: Record<string, JsonValue> = {};
 
-    if (entries.some(([, entry]) => entry === undefined)) {
-      return undefined;
+    for (const [key, entry] of Object.entries(value)) {
+      const converted = toJsonValue(entry);
+
+      if (converted === undefined) {
+        return undefined;
+      }
+
+      result[key] = converted;
     }
 
-    return Object.fromEntries(entries);
+    return result;
   }
 
   return undefined;
@@ -237,11 +241,15 @@ const definedParts = (type: ts.Type): readonly ts.Type[] => {
   return parts.filter((part) => !isUndefinedType(part));
 };
 
+const isTypeReference = (type: ts.Type): type is ts.TypeReference => {
+  return 'target' in type && 'objectFlags' in type;
+};
+
 const arrayElementType = (
   type: ts.Type,
   checker: ts.TypeChecker,
 ): ts.Type | undefined => {
-  if (!checker.isArrayType(type)) {
+  if (!checker.isArrayType(type) || !isTypeReference(type)) {
     return undefined;
   }
 

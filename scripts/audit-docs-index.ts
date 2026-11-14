@@ -57,7 +57,7 @@ export interface DocsIndexReport {
 
 /** Every link target in a markdown body, unresolved and unfiltered. */
 export const extractLinks = (markdown: string): readonly string[] => {
-  return [...markdown.matchAll(LINK_PATTERN)].map((match) => match[1]);
+  return [...markdown.matchAll(LINK_PATTERN)].map((match) => match[1] ?? '');
 };
 
 /**
@@ -69,7 +69,7 @@ export const resolveDocLink = (
   fromDoc: string,
   href: string,
 ): string | null => {
-  const target = href.split('#')[0].split('?')[0].trim();
+  const target = (href.split('#')[0] ?? '').split('?')[0]?.trim() ?? '';
 
   if (target === '' || /^[a-z][a-z0-9+.-]*:/i.test(target)) return null;
   if (!target.endsWith('.md')) return null;

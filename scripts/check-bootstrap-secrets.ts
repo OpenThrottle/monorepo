@@ -13,7 +13,10 @@
 
 import { fileURLToPath } from 'node:url';
 
-import { LOCAL_SECRETS_FILENAME, readLocalSecrets } from './local-secrets-file';
+import {
+  LOCAL_SECRETS_FILENAME,
+  readLocalSecrets,
+} from './local-secrets-file.ts';
 import { createLogger } from './utils/logger.ts';
 
 const logger = createLogger();

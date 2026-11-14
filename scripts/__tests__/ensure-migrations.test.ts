@@ -12,14 +12,16 @@ import {
   preflightAndMigrate,
   waitForReachable,
   type WaitOptions,
-} from '../ensure-migrations';
+} from '../ensure-migrations.ts';
 
 const noSleep = async (): Promise<void> => {};
 
-const opts = (attempts: number, delayMs = 1): WaitOptions => ({
-  attempts,
-  delayMs,
-});
+const opts = (attempts: number, delayMs = 1): WaitOptions => {
+  return {
+    attempts,
+    delayMs,
+  };
+};
 
 /** A probe that rejects its first `failures` calls, then resolves — models a DB coming up mid-window. */
 const flakyProbe = (failures: number): (() => Promise<void>) => {
@@ -56,10 +58,12 @@ class FakeStore implements MigrationStore {
   }
 }
 
-const source = (files: string[]): MigrationSource => ({
-  list: async () => [...files],
-  read: async (f) => `-- sql for ${f}`,
-});
+const source = (files: string[]): MigrationSource => {
+  return {
+    list: async () => [...files],
+    read: async (f) => `-- sql for ${f}`,
+  };
+};
 
 const FILES = ['002_b.sql', '001_a.sql', 'README.md'];
 const SORTED = ['001_a.sql', '002_b.sql'];

@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { DatabaseDefinition } from '../../databases/database-registry.ts';
-import { guardSharedMigrations } from '../openthrottle-database-migrations';
+import { guardSharedMigrations } from '../openthrottle-database-migrations.ts';
 import {
   branchMigrationsMessage,
   checkMigrationGuard,

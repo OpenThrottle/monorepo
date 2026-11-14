@@ -14,8 +14,10 @@ const collector = (): { lines: () => string; stream: PassThrough } => {
 };
 
 // Strip ANSI escapes so assertions hold whether or not chalk colorizes.
-// eslint-disable-next-line no-control-regex -- ANSI escape bytes are the point
-const plain = (text: string): string => text.replace(/\[[0-9;]*m/g, '');
+const plain = (text: string): string => {
+  // eslint-disable-next-line no-control-regex -- ANSI escape bytes are the point
+  return text.replace(/\[[0-9;]*m/g, '');
+};
 
 describe('createLogger', () => {
   it('writes every level to the provided stream, nothing elsewhere', () => {

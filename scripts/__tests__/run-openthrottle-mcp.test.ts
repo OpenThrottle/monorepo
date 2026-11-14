@@ -533,8 +533,7 @@ describe('ot_resolve_node', () => {
 describe('the shim runs the launcher on the Node it resolved', () => {
   const SYSTEM_PATH = '/usr/bin:/bin';
 
-  const runShim = (env: Readonly<Record<string, string>>) =>
-    spawnSync(BASH, [SHIM], { encoding: 'utf8', env: { ...env }, input: '', timeout: 20_000 }); // prettier-ignore
+  const runShim = (env: Readonly<Record<string, string>>) => { return spawnSync(BASH, [SHIM], { encoding: 'utf8', env: { ...env }, input: '', timeout: 20_000 }); }; // prettier-ignore
 
   it('picks the .nvmrc version even with an old node first on PATH', () => {
     const nvm = makeTempDir();

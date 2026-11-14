@@ -17,7 +17,7 @@
 
 import { fileURLToPath } from 'node:url';
 
-import type { LoggerService } from '@openthrottle/nestjs-modules';
+import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   getOpenThrottleTypeOrmOptions,
   ServiceAccount,
@@ -30,7 +30,7 @@ import {
   LOCAL_SECRETS_FILENAME,
   readLocalSecrets,
   upsertLocalSecrets,
-} from './local-secrets-file';
+} from './local-secrets-file.ts';
 import { createLogger } from './utils/logger.ts';
 
 const logger = createLogger();
@@ -255,6 +255,37 @@ export async function provisionAccount(
   );
 }
 
+/** Silent sink for the Nest services' own logging; script output goes through the CLI `logger`. */
+class SilentLoggerService extends LoggerService {
+  override debug(): void {
+    return undefined;
+  }
+
+  override error(): void {
+    return undefined;
+  }
+
+  override fatal(): void {
+    return undefined;
+  }
+
+  override info(): void {
+    return undefined;
+  }
+
+  override log(): void {
+    return undefined;
+  }
+
+  override verbose(): void {
+    return undefined;
+  }
+
+  override warn(): void {
+    return undefined;
+  }
+}
+
 async function main(): Promise<void> {
   const dataSource = new DataSource(getOpenThrottleTypeOrmOptions());
   await dataSource.initialize();
@@ -262,12 +293,7 @@ async function main(): Promise<void> {
   try {
     // Silent sink for the Nest service's own logging; script output goes
     // through the CLI `logger` above, so don't shadow it here.
-    const nestLogger: LoggerService = {
-      debug: () => undefined,
-      error: () => undefined,
-      log: () => undefined,
-      warn: () => undefined,
-    };
+    const nestLogger = new SilentLoggerService();
 
     const serviceAccountsService = new ServiceAccountsService(
       nestLogger,

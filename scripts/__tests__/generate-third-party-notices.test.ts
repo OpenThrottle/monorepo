@@ -1,8 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type {
-  LicensePolicy,
-  PnpmLicensesOutput,
-} from '../validate-license-compliance.ts';
+
 import {
   type Attribution,
   collectAttributions,
@@ -13,6 +10,10 @@ import {
   packageNamesFromLines,
   renderThirdPartyNotices,
 } from '../generate-third-party-notices.ts';
+import type {
+  LicensePolicy,
+  PnpmLicensesOutput,
+} from '../validate-license-compliance.ts';
 
 const policy: LicensePolicy = {
   allow: ['Apache-2.0', 'MIT'],
@@ -94,7 +95,7 @@ describe('collectAttributions', () => {
       ],
     };
     const rows = collectAttributions(output, policy);
-    expect(rows[0].license).toBe('Apache-2.0');
+    expect(rows[0]?.license).toBe('Apache-2.0');
   });
 
   it('uses a waiver license over pnpm Unknown for excepted packages', () => {
@@ -117,7 +118,7 @@ describe('collectAttributions', () => {
       ],
     };
     const rows = collectAttributions(output, waived);
-    expect(rows[0].license).toBe('LicenseRef-PolyForm-Shield-1.0.0');
+    expect(rows[0]?.license).toBe('LicenseRef-PolyForm-Shield-1.0.0');
   });
 });
 

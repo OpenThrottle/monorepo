@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  // Type-checks scripts/ for the root `monorepo` project's `typecheck` target.
+  // Same nodenext rules as every package; noEmit because tsx runs the sources.
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "incremental": false,
+    "noEmit": true,
+    "types": ["node", "vitest/globals"]
+  },
+  "include": ["**/*.json", "**/*.mts", "**/*.ts"]
+}

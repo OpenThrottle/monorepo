@@ -19,8 +19,9 @@ const write = (relativePath: string, contents: string): void => {
   writeFileSync(full, contents);
 };
 
-const read = (relativePath: string): string =>
-  readFileSync(path.join(root, relativePath), 'utf8');
+const read = (relativePath: string): string => {
+  return readFileSync(path.join(root, relativePath), 'utf8');
+};
 
 beforeEach(() => {
   root = mkdtempSync(path.join(tmpdir(), 'codemod-'));

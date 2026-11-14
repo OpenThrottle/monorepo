@@ -480,7 +480,7 @@ describe('personal skills tier', () => {
 
       expect(shellRoot(env)).toBe(
         resolvePersonalSkillsRoot({
-          HOME: env.HOME,
+          HOME: process.env.HOME,
           OPENTHROTTLE_PERSONAL_SKILLS_DIR: '',
         }),
       );
@@ -692,7 +692,7 @@ describe('personal skills tier', () => {
       const end = rest.indexOf('\n## ');
       const body = end === -1 ? rest : rest.slice(0, end);
       return [...body.matchAll(/\b([a-z][a-z0-9]*(?:-[a-z0-9]+)+)\b/g)].map(
-        (match) => match[1],
+        (match) => match[1] ?? '',
       );
     };
 

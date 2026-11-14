@@ -26,7 +26,9 @@ interface Palette {
   dim: (text: string) => string;
 }
 
-const identity = (text: string): string => text;
+const identity = (text: string): string => {
+  return text;
+};
 
 const loadPalette = async (): Promise<Palette> => {
   try {

@@ -92,13 +92,15 @@ const STOP_GRACE_MS = 10_000;
 /** How long an `Waiting for ... in another nx process` line may sit before it is called a stuck lock. */
 const LOCK_GRACE_MS = 3_000;
 
-const sleep = (ms: number): Promise<void> =>
-  new Promise((resolve) => {
+const sleep = (ms: number): Promise<void> => {
+  return new Promise((resolve) => {
     setTimeout(resolve, ms);
   });
+};
 
-const isErrnoException = (error: unknown): error is NodeJS.ErrnoException =>
-  error instanceof Error && 'code' in error;
+const isErrnoException = (error: unknown): error is NodeJS.ErrnoException => {
+  return error instanceof Error && 'code' in error;
+};
 
 /** True when `pid` exists (EPERM still means it exists). */
 export const isAlive = (pid: number): boolean => {
@@ -128,8 +130,7 @@ const processCwd = (pid: number): string | undefined => {
   return result.exitCode === 0 ? parseLsofCwd(result.stdout) : undefined;
 };
 
-const processCommand = (pid: number): string =>
-  run('ps', ['-o', 'command=', '-p', String(pid)], { allowFailure: true }).stdout; // prettier-ignore
+const processCommand = (pid: number): string => { return run('ps', ['-o', 'command=', '-p', String(pid)], { allowFailure: true }).stdout; }; // prettier-ignore
 
 /**
  * True when `pid` demonstrably belongs to the worktree at `root`: its working
@@ -147,11 +148,9 @@ export const ownedByWorktree = (pid: number, root: string): boolean => {
   return processCommand(pid).includes(`${root}/`);
 };
 
-const listenerPids = (port: number): number[] =>
-  parsePids(run('lsof', ['-ti', `tcp:${port}`, '-sTCP:LISTEN'], { allowFailure: true }).stdout); // prettier-ignore
+const listenerPids = (port: number): number[] => { return parsePids(run('lsof', ['-ti', `tcp:${port}`, '-sTCP:LISTEN'], { allowFailure: true }).stdout); }; // prettier-ignore
 
-const processTable = (): ReturnType<typeof parseProcessTable> =>
-  parseProcessTable(run('ps', ['-axo', 'pid=,ppid=,pgid=,command='], { allowFailure: true }).stdout); // prettier-ignore
+const processTable = (): ReturnType<typeof parseProcessTable> => { return parseProcessTable(run('ps', ['-axo', 'pid=,ppid=,pgid=,command='], { allowFailure: true }).stdout); }; // prettier-ignore
 
 const readPidRecord = (
   root: string,

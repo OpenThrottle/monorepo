@@ -352,7 +352,13 @@ const mapWithConcurrency = async <T, TResult>(
     if (current >= items.length) {
       return;
     }
-    results[current] = await fn(items[current]);
+    const item = items[current];
+
+    if (item === undefined) {
+      return;
+    }
+
+    results[current] = await fn(item);
     return worker();
   };
   await Promise.all(

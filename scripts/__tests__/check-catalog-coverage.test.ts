@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import {
   findCatalogViolations,
   isAllowedSpec,
@@ -95,7 +96,7 @@ describe('findCatalogViolations', () => {
     const violations = findCatalogViolations([
       {
         file: 'packages/empty/package.json',
-        manifest: { name: 'empty' },
+        manifest: {},
       },
     ]);
 

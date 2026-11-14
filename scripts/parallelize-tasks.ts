@@ -157,14 +157,14 @@ const distributeEvenly = (
     const app = apps.shift();
     const insertInto = getChunkIndex(chunks, chunkCount);
 
-    if (app) chunks[insertInto].push(app);
+    if (app) chunks[insertInto]?.push(app);
   }
 
   while (packages.length) {
     const pkg = packages.shift();
     const insertInto = getChunkIndex(chunks, chunkCount);
 
-    if (pkg) chunks[insertInto].push(pkg);
+    if (pkg) chunks[insertInto]?.push(pkg);
   }
 
   return chunks;

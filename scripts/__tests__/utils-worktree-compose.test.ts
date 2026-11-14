@@ -33,8 +33,9 @@ const makeWorktree = (
   return root;
 };
 
-const readOverride = (root: string): string =>
-  readFileSync(join(root, WORKTREE_COMPOSE_FILE), 'utf8');
+const readOverride = (root: string): string => {
+  return readFileSync(join(root, WORKTREE_COMPOSE_FILE), 'utf8');
+};
 
 describe('refreshWorktreeComposeOverride', () => {
   describe('when a shared worktree has a stale override', () => {
