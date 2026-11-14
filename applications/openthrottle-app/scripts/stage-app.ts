@@ -25,6 +25,7 @@ import {
   DEVELOPER_BUILD_DIRS,
   EXPECTED_NATIVE_FILES,
   OUT_BUNDLE_DIRS,
+  RUNTIME_RESOLVED_PACKAGES,
   STAGE_DEVELOPER_DIR,
   STAGE_DIR,
   STAGE_OUT_DIR,
@@ -32,6 +33,7 @@ import {
 import { buildStagePackageJson } from './utils/buildStagePackageJson.ts';
 import { findNativeFiles } from './utils/findNativeFiles.ts';
 import { findNearestSlot } from './utils/findNearestSlot.ts';
+import { findRuntimeResolvedLinks } from './utils/findRuntimeResolvedLinks.ts';
 import { isEnvFile, isExcludedFile } from './utils/isExcludedFile.ts';
 import { parseAppManifest } from './utils/parseAppManifest.ts';
 import type { StagePackage } from './utils/planStageFiles.ts';
@@ -161,6 +163,26 @@ const run = async (): Promise<void> => {
     processCwd: PROJECT_ROOT,
   });
   const traced = [...trace.fileList];
+  // Packages loaded by a computed name (the ripgrep binary) are invisible to
+  // the tracer: add their store link and files as if it had walked them.
+  const runtimeResolved = await Promise.all(
+    findRuntimeResolvedLinks(
+      traced,
+      RUNTIME_RESOLVED_PACKAGES,
+      `${process.platform}-${process.arch}`,
+    ).map(async ({ files, link }) => {
+      const target = await realpath(join(REPO_ROOT, link)).catch(() => {
+        return fail(
+          `${link} is missing; is the optional dependency installed for ${process.platform}-${process.arch}?`,
+        );
+      });
+      const dir = relative(REPO_ROOT, target);
+
+      return [link, ...files.map((file) => `${dir}/${file}`)];
+    }),
+  );
+
+  traced.push(...runtimeResolved.flat());
   // The tracer also reports the dependency symlinks it walked through; their
   // real targets say which version each package resolves to.
   const links = await Promise.all(

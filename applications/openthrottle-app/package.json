@@ -93,6 +93,17 @@
           "{projectRoot}/dist"
         ]
       },
+      "smoke-package": {
+        "executor": "nx:run-commands",
+        "metadata": {
+          "description": "Opt-in smoke test of the PACKAGED app (scripts/smoke-packaged-app.ts): ditto dist/release/mac-arm64/OpenThrottle.app to a temp dir, launch it with an empty env (only OPENTHROTTLE_SERVER_URL, pointed at a stub OT server) and a fresh --user-data-dir, read the embedded port from stderr, check /__shell/health, GET /auth and POST /graphql through the proxy, then kill it. Exits non-zero on any failure so the release job can gate on it. Does not depend on package (run package first); macOS only; not cached; not run by CI."
+        },
+        "options": {
+          "command": "tsx scripts/smoke-packaged-app.ts",
+          "cwd": "{projectRoot}"
+        },
+        "cache": false
+      },
       "test": {
         "dependsOn": []
       },

@@ -26,10 +26,12 @@ asar: true
 # never auto-detect a GitHub publisher (it also writes app-update.yml).
 npmRebuild: false
 publish: null
-# Anything executable must be listed here (asar cannot run it). The traced
-# closure has no native module or binary; scripts/stage-app.ts fails if one
-# appears, so add its glob here AND to EXPECTED_NATIVE_FILES.
-asarUnpack: []
+# Anything executable must be listed here (asar cannot run it), AND in
+# EXPECTED_NATIVE_FILES (scripts/data/data.stage.ts); stage-app.ts fails on an
+# unlisted one. The only binary is ripgrep's `rg`, which the IDE engine
+# execFile()s; Electron runs it from app.asar.unpacked.
+asarUnpack:
+  - node_modules/@vscode/ripgrep-*/bin/rg
 # Registers openthrottle:// (macOS CFBundleURLTypes, Windows registry, Linux
 # desktop entry). The main process maps openthrottle://plans/<uuid> only.
 protocols:

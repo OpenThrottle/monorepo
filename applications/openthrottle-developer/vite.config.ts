@@ -66,9 +66,15 @@ export default (config: ConfigEnv) => {
         its runtime lookup for the platform-specific `rg` binary next to the SSR
         output, where the optional dependency is not reachable, and it threw at
         module load — taking down every IDE route on a production build.
+
+        `date-fns` is the opposite case: bundled, so the SSR chunk keeps only
+        the functions the app calls. External, Node loaded both barrels at
+        runtime: `date-fns` (every function) and `date-fns/locale` (all ~190
+        locales, for react-day-picker's single `enUS`), which also put 5 MB in
+        the desktop app's traced closure (OT plan 333b0695).
       */
       external: ['@vscode/ripgrep', 'ts-morph'],
-      noExternal: ['@phosphor-icons/react'],
+      noExternal: ['@phosphor-icons/react', 'date-fns'],
     },
   });
 };
