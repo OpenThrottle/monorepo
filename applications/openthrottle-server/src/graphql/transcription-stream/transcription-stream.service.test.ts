@@ -164,6 +164,16 @@ describe('TranscriptionStreamService', () => {
     });
   });
 
+  it('handshakes with tiny.en when WHISPER_MODEL is unset', async () => {
+    vi.stubEnv('WHISPER_MODEL', '');
+    const { service } = buildService();
+
+    const { socket } = await startReadySession(service);
+
+    const handshake = JSON.parse(expectString(socket.sent[0]));
+    expect(handshake).toMatchObject({ model: 'tiny.en' });
+  });
+
   it('fails start with an errorMessage when the socket errors before ready', async () => {
     const { service } = buildService();
 

@@ -48,6 +48,13 @@ const STOP_FLUSH_POLL_MS = 250;
 /** How long to wait for the socket to open + SERVER_READY before failing start. */
 const CONNECT_TIMEOUT_MS = 15_000;
 
+/**
+ * Model requested when WHISPER_MODEL is unset. tiny.en is the only model the
+ * voice spike (OT 197756b3) measured inside the ≤2s first-partial gate on
+ * Docker CPU; base.en lags realtime and truncates.
+ */
+const DEFAULT_WHISPER_MODEL = 'tiny.en';
+
 /** WhisperLive end-of-utterance marker — MUST go out as a binary frame. */
 const END_OF_AUDIO = new TextEncoder().encode('END_OF_AUDIO');
 
@@ -285,7 +292,7 @@ export class TranscriptionStreamService {
         socket.send(
           JSON.stringify({
             language: 'en',
-            model: process.env.WHISPER_MODEL?.trim() || 'base.en',
+            model: process.env.WHISPER_MODEL?.trim() || DEFAULT_WHISPER_MODEL,
             task: 'transcribe',
             uid: session.id,
             use_vad: true,
