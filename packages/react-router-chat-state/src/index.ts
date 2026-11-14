@@ -35,6 +35,7 @@ export * from './types';
 export * from './utils/buildChatTurnFields';
 export * from './utils/chat-discovery-options';
 export * from './utils/chat-model-option';
+export * from './utils/chat-options-revalidation';
 export * from './utils/decayElevatedPermissionModes';
 export * from './utils/normalizeChatToolbarState';
 export * from './utils/reconcileChatToolbarState';

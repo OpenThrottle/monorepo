@@ -118,6 +118,10 @@ import { fetchMyDefaultEditor } from '~/global/utils/utils.default-editor.server
 import { filterNavigationByPermission } from '~/global/utils/utils.permissions';
 import { fetchMyPermissions } from '~/global/utils/utils.permissions.server';
 import { useHeaderChatController } from '~/routing/home/hooks/useHeaderChatController';
+import {
+  clearHomeComposerCache,
+  isComposerNeutralAction,
+} from '~/routing/home/utils/home-composer-cache';
 import { queueJobDetailPath } from '~/routing/queues/utils/queueJobDetailPath';
 import stylesheet from '~/styles.css?url';
 
@@ -127,12 +131,20 @@ import stylesheet from '~/styles.css?url';
  * is already taken care of by the auth routes. So we don't need to revalidate
  * (refetch) to data at this level — except after a save on the preferences
  * route, so editor links pick up a new default without a full reload.
+ *
+ * Root is matched on every route, so this is also where the `/` composer cache
+ * is invalidated: any mutation other than a chat turn or conversation-list edit
+ * may have changed repositories, personas, agent CLIs or the default agent, and
+ * `/` itself is not mounted to notice when the edit happens elsewhere.
  */
 export const shouldRevalidate: ShouldRevalidateFunction = (args) => {
   const { formAction, formMethod } = args;
 
   if (formMethod == null || formMethod.toUpperCase() === 'GET') {
     return false;
+  }
+  if (!isComposerNeutralAction(formAction)) {
+    clearHomeComposerCache();
   }
 
   return formAction?.split('?')[0] === USER_PREFERENCES_ROUTE_PATH;

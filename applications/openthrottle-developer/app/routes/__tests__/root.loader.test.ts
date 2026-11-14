@@ -2,7 +2,7 @@
 import { buildAuthCookie } from '@openthrottle/react-router-auth';
 import * as graphqlWithAuth from '@openthrottle/react-router-graphql';
 import { createLoaderArgs } from '@openthrottle/react-router-testing';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { Route } from '@/app/+types/root';
 import {
@@ -12,6 +12,12 @@ import {
   GetRootHealthDocument,
   WorkspaceEditorId,
 } from '~/__generated__/graphql';
+import type { HomeComposerData } from '~/routing/home/utils/home-composer-cache';
+import {
+  clearHomeComposerCache,
+  readHomeComposerCache,
+  writeHomeComposerCache,
+} from '~/routing/home/utils/home-composer-cache';
 
 import { loader, shouldRevalidate } from '../../root';
 
@@ -319,5 +325,55 @@ describe('root shouldRevalidate', () => {
     expect(
       shouldRevalidate(revalidateArgs('/settings/preferences', 'POST')),
     ).toBe(true);
+  });
+});
+
+describe('root shouldRevalidate home composer cache invalidation', () => {
+  const COMPOSER: HomeComposerData = {
+    agentRuntimes: {},
+    defaultAgent: null,
+    models: [
+      {
+        description: 'ollama',
+        groupId: 'openai:ollama',
+        id: 'http://localhost:11434/v1::llama3',
+        label: 'llama3',
+      },
+    ],
+    personas: [],
+    repositories: [],
+  };
+
+  beforeEach(() => {
+    writeHomeComposerCache(COMPOSER);
+  });
+
+  afterEach(() => {
+    clearHomeComposerCache();
+  });
+
+  test('keeps the cache for a plain navigation', () => {
+    shouldRevalidate(revalidateArgs(undefined, undefined));
+
+    expect(readHomeComposerCache()).toEqual(COMPOSER);
+  });
+
+  test('keeps the cache for a chat turn or conversation-list edit', () => {
+    shouldRevalidate(revalidateArgs('/resources/conversation-stream', 'POST'));
+    shouldRevalidate(revalidateArgs('/resources/agent-conversations', 'POST'));
+
+    expect(readHomeComposerCache()).toEqual(COMPOSER);
+  });
+
+  test('drops the cache after a repository edit on another route', () => {
+    shouldRevalidate(revalidateArgs('/settings/repositories?index', 'POST'));
+
+    expect(readHomeComposerCache()).toBeNull();
+  });
+
+  test('drops the cache after a persona edit on another route', () => {
+    shouldRevalidate(revalidateArgs('/personas/abc', 'POST'));
+
+    expect(readHomeComposerCache()).toBeNull();
   });
 });

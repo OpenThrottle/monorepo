@@ -1,6 +1,7 @@
 import {
   buildChatOptionsResponse,
   type ChatOptionsResponse,
+  shouldRevalidateChatOptions,
 } from '@openthrottle/react-router-chat-state';
 
 import type { Route } from '@/app/routes/+types/resources.chat-options';
@@ -39,3 +40,10 @@ export const loader = async (
     loadRepositories: () => loadRepositories(args.request),
   });
 };
+
+/**
+ * Chat turns and conversation-list fetches never change discovery data, so the
+ * header ChatDialog's fetcher skips revalidating after them; other submissions
+ * keep the default. Shared so the developer and admin routes cannot drift.
+ */
+export const shouldRevalidate = shouldRevalidateChatOptions;
