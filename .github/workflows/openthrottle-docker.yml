@@ -119,6 +119,7 @@ jobs:
     timeout-minutes: 10
     outputs:
       matrix: ${{ steps.matrix.outputs.matrix }}
+      release-version: ${{ steps.forced.outputs.release-version }}
 
     steps:
       - name: '📦 Checkout'
@@ -157,6 +158,15 @@ jobs:
           echo "${changed}" | sed 's/^/  changed: /'
           has() { grep -qE "$1" <<< "${changed}"; }
           all=false
+          # A merged release PR (release.yml) builds every image, so each one
+          # has a sha-<release commit> image for `release-tags` to version.
+          release_version=""
+          if [[ "${GITHUB_EVENT_NAME}" == "push" && "$(git log -1 --format=%s "${NX_HEAD}")" == "chore(release): openthrottle "* ]]; then
+            all=true
+            release_version="$(node -p "require('./package.json').version")"
+          fi
+          echo "release: ${release_version:-none}"
+          echo "release-version=${release_version}" >> "${GITHUB_OUTPUT}"
           if [[ "${BUILD_ALL_INPUT}" == "true" ]] \
             || has '^\.github/(workflows/openthrottle-docker\.yml|actions/(docker-build-push|nx-affected-docker-apps)/)'; then
             all=true
@@ -354,3 +364,76 @@ jobs:
             docker push "${IMAGE}"
             docker push "${GHCR_IMAGE}"
           fi
+
+  # 🏷️ Version tags for a merged release PR. Adds `v<product version>` to every
+  # image built for the release commit, and the app's own `x.y.z`, `x.y`, `x`
+  # to the server and developer images — registry-side retags of the
+  # sha-<release commit> images (`imagetools create`), never a rebuild. Hetzner
+  # deploys one tag across all images, so `v<product version>` is the deployable
+  # one: `gh workflow run hetzner-deploy.yml -f image_tag=v4.6.0`, and rollback
+  # is deploying the previous `v…`.
+  #
+  # ⚠️ GitHub keeps one pending run per concurrency group, so a merge that lands
+  # while this workflow is busy can supersede the release commit's run and its
+  # images are never built. Remedy: re-run that cancelled run from the Actions
+  # tab — it runs at the release commit and this job tags it.
+  release-tags:
+    name: '🏷️ Version tags'
+    needs: [plan, build]
+    if: github.ref == 'refs/heads/main' && needs.plan.outputs.release-version != ''
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    # Same scoping as `build` — see the 🙈 note there.
+    env:
+      GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS_PRODUCTION }}
+      GOOGLE_PROJECT_ID: ${{ vars.GOOGLE_PROJECT_ID_PRODUCTION }}
+
+    steps:
+      - name: '📦 Checkout'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: '🌥️ GCP and Docker (Artifact Registry)'
+        uses: ./.github/actions/google-cloud
+        with:
+          branch: ${{ env.BRANCH_NAME }}
+          credentials_json: ${{ env.GOOGLE_CREDENTIALS }}
+          google_cloud_project: ${{ env.GOOGLE_PROJECT_ID }}
+
+      - name: '🐳 Configure Docker for Artifact Registry'
+        run: |
+          gcloud auth configure-docker ${ARTIFACT_REGISTRY_REGION}-docker.pkg.dev -q
+
+      - name: '🐳 Login to GHCR'
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
+        with:
+          password: ${{ secrets.GITHUB_TOKEN }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+
+      - name: '🏷️ Add version tags'
+        shell: bash
+        env:
+          MATRIX: ${{ needs.plan.outputs.matrix }}
+          PRODUCT_VERSION: ${{ needs.plan.outputs.release-version }}
+          REPOSITORY_OWNER: ${{ github.repository_owner }}
+        run: |
+          set -euo pipefail
+          registries=(
+            "${ARTIFACT_REGISTRY_REGION}-docker.pkg.dev/${GOOGLE_PROJECT_ID}/openthrottle"
+            "ghcr.io/${REPOSITORY_OWNER,,}"
+          )
+          for image in $(jq -r '.include[].image' <<< "${MATRIX}"); do
+            tags=("v${PRODUCT_VERSION}")
+            if [[ -f "applications/${image}/package.json" ]]; then
+              version="$(jq -r .version "applications/${image}/package.json")"
+              tags+=("${version}" "${version%.*}" "${version%%.*}")
+            fi
+            for registry in "${registries[@]}"; do
+              args=()
+              for tag in "${tags[@]}"; do
+                args+=(--tag "${registry}/${image}:${tag}")
+              done
+              docker buildx imagetools create "${args[@]}" "${registry}/${image}:sha-${GITHUB_SHA}"
+              echo "  ${registry}/${image}: ${tags[*]}"
+            done
+          done

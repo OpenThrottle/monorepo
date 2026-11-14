@@ -10,3 +10,27 @@ export { renderCommand, run } from './exec.ts';
 export { countLines } from './lines.ts';
 export type { Logger, LoggerOptions } from './logger.ts';
 export { createLogger, SYMBOLS } from './logger.ts';
+export type {
+  BaselinePlan,
+  ProjectVersionData,
+  ReleaseProject,
+  VersionChange,
+} from './release.ts';
+export {
+  collectVersionChanges,
+  extractChangelogSection,
+  insertVersionTable,
+  isReleaseCommit,
+  planBaselineTags,
+  PRODUCT_PROJECT,
+  readGroupPatterns,
+  readManifestVersion,
+  RELEASE_BRANCH,
+  RELEASE_GROUP,
+  releasePrTitle,
+  releaseTagName,
+  releaseTitle,
+  renderReleasePrBody,
+  renderVersionTable,
+  resolveProductVersion,
+} from './release.ts';

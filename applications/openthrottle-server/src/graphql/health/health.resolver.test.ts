@@ -86,6 +86,7 @@ describe('HealthResolver', () => {
         cms: 'ok',
         database: 'ok',
         redis: 'ok',
+        version: '1.2.3',
         websocket: 'ok',
       });
 
@@ -96,6 +97,7 @@ describe('HealthResolver', () => {
         cms: 'ok',
         database: 'ok',
         redis: 'ok',
+        version: '1.2.3',
         websocket: 'ok',
       });
     });
@@ -106,6 +108,7 @@ describe('HealthResolver', () => {
         cms: 'ok',
         database: 'unconfigured',
         redis: 'ok',
+        version: '1.2.3',
         websocket: 'ok',
       });
 
@@ -123,6 +126,7 @@ describe('HealthResolver', () => {
         cms: 'ok',
         database: 'unreachable',
         redis: 'ok',
+        version: '1.2.3',
         websocket: 'ok',
       });
 
@@ -140,6 +144,7 @@ describe('HealthResolver', () => {
         cms: 'ok',
         database: 'ok',
         redis: 'unconfigured',
+        version: '1.2.3',
         websocket: 'ok',
       });
 
@@ -157,6 +162,7 @@ describe('HealthResolver', () => {
         cms: 'ok',
         database: 'ok',
         redis: 'unreachable',
+        version: '1.2.3',
         websocket: 'ok',
       });
 

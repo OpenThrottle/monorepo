@@ -13,6 +13,7 @@ import { CMS_CONNECTION } from '@openthrottle/nestjs-repositories-cms';
 import type { Redis } from 'ioredis';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { getServerVersion } from '../server-info/server-info.utils.ts';
 import { HealthService } from './health.service.ts';
 
 const getPostgresUrl = vi.fn<() => string | undefined>();
@@ -150,6 +151,7 @@ describe('HealthService', () => {
         cms: 'ok',
         database: 'ok',
         redis: 'ok',
+        version: getServerVersion(),
         websocket: 'ok',
       });
     });
@@ -164,6 +166,7 @@ describe('HealthService', () => {
         cms: 'unreachable',
         database: 'unconfigured',
         redis: 'unreachable',
+        version: getServerVersion(),
         websocket: 'ok',
       });
     });

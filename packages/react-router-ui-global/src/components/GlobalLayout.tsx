@@ -16,6 +16,8 @@ import { GlobalSidebarFooter } from './GlobalSidebarFooter';
 import { GlobalSidebarHeader } from './GlobalSidebarHeader';
 
 export interface GlobalLayoutProps {
+  /** The consuming app's package.json version, shown in the sidebar footer. */
+  readonly appVersion?: string;
   readonly authenticated?: boolean;
   readonly children: React.ReactNode;
   readonly className?: string;
@@ -36,6 +38,7 @@ export interface GlobalLayoutProps {
  */
 export const GlobalLayout = (props: GlobalLayoutProps): React.ReactElement => {
   const {
+    appVersion,
     authenticated = false,
     children,
     className,
@@ -79,7 +82,9 @@ export const GlobalLayout = (props: GlobalLayoutProps): React.ReactElement => {
             Workspace: authenticated ? false : true,
           }}
         />
-        {!hideFooter ? <GlobalSidebarFooter health={health} /> : null}
+        {!hideFooter ? (
+          <GlobalSidebarFooter appVersion={appVersion} health={health} />
+        ) : null}
         {!hideRail ? <SidebarRail /> : null}
       </Sidebar>
       <div

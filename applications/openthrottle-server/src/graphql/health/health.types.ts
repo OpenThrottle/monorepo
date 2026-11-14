@@ -5,5 +5,6 @@ export interface ServerHealthResponse {
   readonly cms: ServerHealthStatus;
   readonly database: ServerHealthStatus;
   readonly redis: ServerHealthStatus;
+  readonly version: string;
   readonly websocket: ServerHealthStatus;
 }

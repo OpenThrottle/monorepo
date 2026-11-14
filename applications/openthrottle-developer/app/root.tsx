@@ -652,6 +652,7 @@ export default function App(): React.ReactElement {
                 chatPersist={data?.user != null}
               >
                 <GlobalLayout
+                  appVersion={__APP_VERSION__}
                   authenticated={data?.user !== null}
                   data={navigation}
                   health={data?.serverHealth}
