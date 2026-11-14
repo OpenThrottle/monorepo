@@ -1,0 +1,60 @@
+/* GENERATED — DO NOT EDIT. Regenerate with `pnpm nx run @openthrottle/react-router-cms-core:test -- -u buildCmsSafelist` (src/utils/buildCmsSafelist.ts). */
+
+/* borders */
+@source inline('border-{0,2,4,8}');
+@source inline('border-{t,b,l,r,x,y}');
+
+/* effects */
+@source inline('opacity-{0,10,20,30,40,50,60,70,80,90,100}');
+@source inline('shadow-{xs,sm,md,lg,xl,2xl,none}');
+
+/* layout */
+@source inline(
+  '{block,inline-block,inline,flex,inline-flex,grid,inline-grid,hidden,contents}'
+);
+@source inline(
+  'flex-{row,row-reverse,col,col-reverse,wrap,nowrap,1,auto,initial,none}'
+);
+@source inline('{grow,shrink-0}');
+@source inline('grid-cols-{1,2,3,4,5,6,7,8,9,10,11,12}');
+@source inline('col-span-{1,2,3,4,5,6,7,8,9,10,11,12,full}');
+@source inline('justify-{start,end,center,between,around,evenly}');
+@source inline('items-{start,end,center,baseline,stretch}');
+@source inline('self-{auto,start,end,center,stretch}');
+@source inline('content-{start,end,center,between}');
+@source inline('w-{full,auto,screen,fit,1/2,1/3,2/3,1/4,3/4}');
+@source inline('h-{full,auto,screen,fit}');
+@source inline(
+  'max-w-{xs,sm,md,lg,xl,2xl,3xl,4xl,5xl,6xl,7xl,full,prose,none}'
+);
+@source inline('{relative,absolute,sticky,overflow-hidden,overflow-auto}');
+@source inline('{md,lg}:{block,flex,grid,hidden}');
+@source inline('{md,lg}:flex-{row,col}');
+@source inline('{md,lg}:grid-cols-{1,2,3,4,5,6,12}');
+@source inline('{md,lg}:col-span-{1,2,3,4,5,6,12}');
+
+/* radius */
+@source inline('rounded');
+@source inline('rounded-{none,xs,sm,md,lg,xl,2xl,3xl,4xl,full}');
+@source inline('rounded-{t,r,b,l}-{none,sm,md,lg,xl,2xl,full}');
+
+/* spacing */
+@source inline(
+  '{p,px,py,pt,pr,pb,pl,m,mx,my,mt,mr,mb,ml,gap,gap-x,gap-y,space-x,space-y}-{0,1,2,3,4,6,8,10,12,16,20,24,32}'
+);
+@source inline('{m,mx,my,mt,mr,mb,ml}-auto');
+
+/* typography */
+@source inline('text-{xs,sm,base,lg,xl,2xl,3xl,4xl,5xl,6xl,7xl,8xl,9xl}');
+@source inline(
+  'font-{thin,extralight,light,normal,medium,semibold,bold,extrabold,black}'
+);
+@source inline('font-{sans,serif,mono}');
+@source inline(
+  'leading-{none,tight,snug,normal,relaxed,loose,3,4,5,6,7,8,9,10}'
+);
+@source inline('tracking-{tighter,tight,normal,wide,wider,widest}');
+@source inline('text-{left,center,right,justify,start,end}');
+@source inline(
+  '{uppercase,lowercase,capitalize,normal-case,italic,not-italic,underline,line-through,no-underline,truncate,text-balance,text-pretty,whitespace-nowrap,break-words}'
+);

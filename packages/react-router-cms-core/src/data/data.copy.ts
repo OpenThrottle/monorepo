@@ -24,6 +24,7 @@ export const FORM_FIELD_COPY = {
   arrayAdd: 'Add item',
   arrayEmpty: 'No items yet.',
   arrayRemove: 'Remove item',
+  classNameUnsupported: `Not in the CMS safelist, so these may not render:`,
   objectInvalid: 'Not valid JSON — the last valid value is kept.',
   requiredMark: '*',
   selectPlaceholder: 'Select an option',

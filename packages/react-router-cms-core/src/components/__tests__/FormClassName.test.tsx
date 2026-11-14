@@ -39,4 +39,27 @@ describe('FormClassName', () => {
       className: 'p-4 m-2',
     });
   });
+
+  test('shows no warning when every class is safelisted', () => {
+    const { component } = renderField({ className: 'p-4 bg-primary' });
+
+    expect(
+      component.queryByTestId('form-class-name-unsupported'),
+    ).not.toBeInTheDocument();
+    expect(
+      component.getByRole('textbox', { name: 'className' }),
+    ).not.toHaveAttribute('aria-describedby');
+  });
+
+  test('lists classes outside the safelist under the input', async () => {
+    const { component } = renderField({ className: 'p-4' });
+    const input = component.getByRole('textbox', { name: 'className' });
+
+    await userEvent.type(input, ' p-5 bg-primary/20');
+
+    const warning = component.getByTestId('form-class-name-unsupported');
+    expect(warning).toHaveTextContent('p-5 bg-primary/20');
+    expect(warning).not.toHaveTextContent('p-4 ');
+    expect(input).toHaveAttribute('aria-describedby', warning.id);
+  });
 });

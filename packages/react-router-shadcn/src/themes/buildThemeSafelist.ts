@@ -26,16 +26,26 @@ export const getThemeColorNames = (): readonly string[] => {
 
 /**
  * @public
+ * @description The Tailwind v4 brace patterns `theme-safelist.css` forces — the base color
+ * utilities and their `hover:` variants for every theme token. Exposed so a consumer (the CMS
+ * className widget) can check a class against the same set the stylesheet generates.
+ */
+export const getThemeSafelistPatterns = (): readonly string[] => {
+  const colors = braces(getThemeColorNames());
+  const prefixes = braces(THEME_SAFELIST_PREFIXES);
+  const hoverPrefixes = braces(THEME_SAFELIST_HOVER_PREFIXES);
+
+  return [`${prefixes}-${colors}`, `hover:${hoverPrefixes}-${colors}`];
+};
+
+/**
+ * @public
  * @description Builds `theme-safelist.css`: Tailwind v4 `@source inline()`
  * rules that force a color utility for every theme token, so classes authored
  * as data (CMS content) generate even though no source file mentions them.
  * Import the committed file after `tailwindcss` in an app stylesheet.
  */
 export const buildThemeSafelist = (): string => {
-  const colors = braces(getThemeColorNames());
-  const prefixes = braces(THEME_SAFELIST_PREFIXES);
-  const hoverPrefixes = braces(THEME_SAFELIST_HOVER_PREFIXES);
-
   // Prettier's shape (single quotes, one argument per line), so the format
   // hook leaves the committed file byte-identical to this output.
   const rule = (pattern: string): string => {
@@ -45,8 +55,7 @@ export const buildThemeSafelist = (): string => {
   return [
     `/* ${THEME_SAFELIST_BANNER} */`,
     '',
-    rule(`${prefixes}-${colors}`),
-    rule(`hover:${hoverPrefixes}-${colors}`),
+    ...getThemeSafelistPatterns().map(rule),
     '',
   ].join('\n');
 };

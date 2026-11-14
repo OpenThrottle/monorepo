@@ -3,6 +3,7 @@
 
 @import '@openthrottle/react-router-shadcn/src/theme.css';
 @import '@openthrottle/react-router-shadcn/src/theme-safelist.css';
+@import '@openthrottle/react-router-cms-core/src/cms-safelist.css';
 
 @source '../../../packages/**/*.{css,ts,tsx}';
 
