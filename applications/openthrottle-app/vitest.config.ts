@@ -15,10 +15,9 @@ export default defineConfig({
     environment: 'node',
     globals: true,
     include: [
-      'scripts/**/*.spec.ts',
-      'src/**/*.spec.ts',
-      'src/**/*.test.tsx',
-      'tests/**/*.spec.ts',
+      'scripts/**/*.test.ts',
+      'src/**/*.test.{ts,tsx}',
+      'tests/**/*.test.ts',
     ],
     passWithNoTests: false,
   },

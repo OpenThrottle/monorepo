@@ -1239,6 +1239,10 @@ its own [conventions](../../packages/react-router-shadcn/README.md#conventions).
   spans several files (a parity, guard, replay or integration suite) takes a descriptive name.
   The NestJS tier (`openthrottle-server`, `nestjs-*`) is the exception: its `<folder>.<kind>.test.ts`
   sits beside the file it covers.
+- **The suffix is `.test`, never `.spec`.** _(Enforced, via `monorepo:check-test-file-names` in
+  CI and `check:local`: any tracked `*.spec.*` under `applications/`, `packages/` or `tools/` fails,
+  naming the `__tests__/<name>.test.<ext>` it should become.)_ The `__tests__/` placement itself
+  stays honor system — hundreds of colocated tests predate it.
 - Use `component`, not `screen`, to get elements.
 - Use `userEvent`, not `fireEvent`, to simulate interactions.
 - Use `waitFor` for asynchronous DOM updates.
