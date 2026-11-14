@@ -23,6 +23,20 @@ describe('configValidationSchema', () => {
     expect(error).toBeUndefined();
   });
 
+  it('accepts on/off style values for LLM_DISCOVERY_WARM_ON_BOOT', () => {
+    const { error } = configValidationSchema.validate({
+      LLM_DISCOVERY_WARM_ON_BOOT: 'Off',
+    });
+    expect(error).toBeUndefined();
+  });
+
+  it('rejects an unrecognised LLM_DISCOVERY_WARM_ON_BOOT value', () => {
+    const { error } = configValidationSchema.validate({
+      LLM_DISCOVERY_WARM_ON_BOOT: 'maybe',
+    });
+    expect(error?.message).toMatch(/LLM_DISCOVERY_WARM_ON_BOOT/);
+  });
+
   it('ignores unknown keys', () => {
     const { error } = configValidationSchema.validate({
       SOME_UNRELATED_ENV: 'whatever',
@@ -62,6 +76,32 @@ describe('buildModelDiscoveryConfig', () => {
   it('falls back to defaults when knobs are absent', () => {
     const config = buildModelDiscoveryConfig({});
     expect(config.cacheTtlMs).toBe(DEFAULT_CACHE_TTL_MS);
+  });
+
+  it('warms on boot by default outside a test runner', () => {
+    expect(buildModelDiscoveryConfig({}).warmOnBoot).toBe(true);
+  });
+
+  it('does not warm on boot under a test runner', () => {
+    expect(buildModelDiscoveryConfig({ VITEST: 'true' }).warmOnBoot).toBe(
+      false,
+    );
+    expect(buildModelDiscoveryConfig({ NODE_ENV: 'test' }).warmOnBoot).toBe(
+      false,
+    );
+  });
+
+  it('lets an explicit LLM_DISCOVERY_WARM_ON_BOOT win', () => {
+    expect(
+      buildModelDiscoveryConfig({
+        LLM_DISCOVERY_WARM_ON_BOOT: '1',
+        VITEST: 'true',
+      }).warmOnBoot,
+    ).toBe(true);
+    expect(
+      buildModelDiscoveryConfig({ LLM_DISCOVERY_WARM_ON_BOOT: 'off' })
+        .warmOnBoot,
+    ).toBe(false);
   });
 
   it('honours a provided cache ttl of 0', () => {

@@ -1,3 +1,5 @@
+export * from './config/cache-hint/cache-hint.types.ts';
+export * from './config/cache-hint/cache-hint.utils.ts';
 export * from './config/format-error/format-error.types.ts';
 export * from './config/format-error/format-error.utils.ts';
 export * from './config/query-depth-limit/query-depth-limit.utils.ts';
