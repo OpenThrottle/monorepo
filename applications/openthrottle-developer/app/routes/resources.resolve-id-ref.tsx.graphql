@@ -1,0 +1,10 @@
+query resolveIdRef($ref: String!) {
+  resolveIdRef(ref: $ref) {
+    id
+    kind
+    planId
+    planTitle
+    status
+    title
+  }
+}

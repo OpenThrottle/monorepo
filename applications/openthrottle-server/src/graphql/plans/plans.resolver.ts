@@ -738,6 +738,7 @@ export class PlansResolver {
 
   // @ProfileResponseTime('PlansResolver.resolvePlanRef')
   @Query(() => [PlanRefObject], {
+    deprecationReason: `Use resolveIdRef, which also resolves tasks and full UUIDs.`,
     description: `Resolve a short plan-id fragment (leading hex of a full UUID, e.g. "f5e40886") to matching plan refs. Normalizes the prefix (trim/lowercase/strip hyphens); prefixes shorter than ${MIN_PLAN_REF_PREFIX_LEN} hex chars or containing non-hex characters return []. A unique match powers a confident ⌘K redirect; multiple matches (up to ${MAX_PLAN_REF_MATCHES}) are listed for disambiguation.`,
   })
   async resolvePlanRef(

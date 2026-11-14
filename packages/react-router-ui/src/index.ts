@@ -1,4 +1,5 @@
 // 🧩 React Components
+export * from './components/CommanderItemRow';
 export * from './components/OpenThrottleAuthForm';
 export * from './components/OpenThrottleBreadcrumbs';
 export * from './components/OpenThrottleCalendar';
@@ -37,11 +38,13 @@ export * from './data/data.taglines';
 export * from './utils/getRandomIntroduction';
 
 // 🏷️ Types
-export type { UsePlanRefResolverOptions as UsePlanRefResolverArgs } from './hooks/usePlanRefResolver';
 export type {
   AudioCaptureStatus,
-  PlanRefMatch,
-  PlanRefResolverData,
+  IdRefMatch,
+  IdRefMatchBase,
+  IdRefResolverData,
+  PlanIdRefMatch,
+  TaskIdRefMatch,
 } from './types';
 
 // 🪝 React Hooks
@@ -49,7 +52,7 @@ export * from './hooks/fetchServerMetrics';
 export * from './hooks/useAudio';
 export * from './hooks/useAudioCapture';
 export * from './hooks/useDebouncedSearchParam';
-export * from './hooks/usePlanRefResolver';
+export * from './hooks/useIdRefResolver';
 export * from './hooks/usePollServerMetrics';
 export * from './hooks/useShare';
 export * from './hooks/useUrlSyncedTabValue';
