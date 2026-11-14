@@ -5,5 +5,5 @@
   },
   "description": "Guards for Cursor: catches shell commands that fail invisibly (zsh globs and modifiers, BSD sed, masked exit status, gh writes to closed PRs). Works with or without an OpenThrottle server.",
   "name": "openthrottle-guards",
-  "version": "1.3.0"
+  "version": "1.3.1"
 }

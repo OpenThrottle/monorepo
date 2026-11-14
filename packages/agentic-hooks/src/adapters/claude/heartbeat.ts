@@ -10,15 +10,34 @@ import {
   readHookStdin,
   resolveHookRepoRoot,
 } from '../../index.ts';
+import {
+  detectClaudeBundleHost,
+  resolveBundleHostProjectDir,
+} from './bundle-host.ts';
+import {
+  isForeignHostHeartbeatShadowed,
+  runForeignHostHeartbeat,
+} from './foreign-host-heartbeat.ts';
 import { runHeartbeat } from './runHeartbeat.ts';
 import { isShadowedByRepoHooks } from './shadow.ts';
 
 const main = async (): Promise<void> => {
   try {
-    const projectDir =
-      process.env.CLAUDE_PROJECT_DIR ||
-      process.env.OPEN_THROTTLE_REPO_ROOT ||
-      process.cwd();
+    const host = detectClaudeBundleHost();
+    const projectDir = resolveBundleHostProjectDir(host);
+
+    // Another tool is running this bundle (a marketplace install it picked up): report as that
+    // tool, unless its own registration of the heartbeat is about to send the one heartbeat.
+    if (host !== 'claude-code') {
+      const repoRoot = resolveHookRepoRoot({
+        payloadCwd: readHookPayloadCwd(readHookStdin()),
+        projectDir,
+      });
+      if (!isForeignHostHeartbeatShadowed({ host, repoRoot })) {
+        await runForeignHostHeartbeat({ host, repoRoot });
+      }
+      return;
+    }
 
     // The repository registers this same hook; let that copy send the one heartbeat.
     if (
