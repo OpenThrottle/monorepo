@@ -47,6 +47,10 @@ export const ChatToolCall = (props: ChatToolCallProps): React.ReactElement => {
   const startOpen = defaultOpen ?? event.status === ChatToolStatus.failed;
   const hasNoPayload = args === null && result === null;
   const isRunning = event.status === ChatToolStatus.running;
+  const isSucceeded = event.status === ChatToolStatus.succeeded;
+  // A call that finished with arguments but no result says so, rather than leaving the reader to
+  // guess whether the Result pane is missing or the tool returned nothing.
+  const hasNoOutput = isSucceeded && args !== null && result === null;
   const emptyLabel = isRunning ? 'Awaiting result…' : 'No payload.';
   const spinClassName = 'animate-spin motion-reduce:animate-none';
   const iconClassName = status.spin ? spinClassName : undefined;
@@ -100,6 +104,14 @@ export const ChatToolCall = (props: ChatToolCallProps): React.ReactElement => {
         {result !== null && <ToolPayload content={result} label="Result" />}
         {hasNoPayload && (
           <p className="text-muted-foreground text-xs italic">{emptyLabel}</p>
+        )}
+        {hasNoOutput && (
+          <p
+            className="text-muted-foreground text-xs italic"
+            data-testid="ChatToolCall-no-output"
+          >
+            {CHAT_TOOL_CALL_COPY.noOutputReported}
+          </p>
         )}
         {event.payloadTruncated === true && (
           <p

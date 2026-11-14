@@ -158,12 +158,34 @@ describe('createAntigravityEventMapper', () => {
     expect(done[0]?.kind).toBe(CONVERSATION_STREAM_CHUNK_KINDS.toolResult);
     expect(done[0]?.metadata).toEqual({
       callId: '2',
-      toolCall: {
-        error: null,
-        output: '3 lines, 11 bytes',
-        status: 'DONE',
-      },
+      isError: false,
+      toolCall: '3 lines, 11 bytes',
       toolName: 'view_file',
+    });
+  });
+
+  it('reports no output, never the arguments, when a DONE step carries none', () => {
+    const map = createAntigravityEventMapper();
+
+    // Captured from agy 1.5.9: a read of a missing file comes back DONE with no `output` key.
+    const [chunk] = map(
+      step({
+        state: 'DONE',
+        step_index: 6,
+        step_type: 'tool',
+        tool_info: {
+          name: 'read_file',
+          parameters: { Path: '/tmp/does-not-exist/missing.txt' },
+        },
+        tool_name: 'read_file',
+      }),
+    );
+
+    expect(chunk?.metadata).toEqual({
+      callId: '6',
+      isError: false,
+      toolCall: null,
+      toolName: 'read_file',
     });
   });
 
@@ -186,26 +208,83 @@ describe('createAntigravityEventMapper', () => {
     });
   });
 
-  it('reports a step-level ERROR on the tool result without ending the turn', () => {
+  it('marks an ERROR tool step failed with its own message, without ending the turn', () => {
     const map = createAntigravityEventMapper();
 
+    // Captured verbatim from agy 1.5.9: the message nests under `tool_info.error`.
     const chunks = map(
+      step({
+        duration_seconds: 0.166592,
+        state: 'ERROR',
+        step_index: 4,
+        step_type: 'tool',
+        tool_info: {
+          error: { message: 'file does not exist', type: 'TOOL_ERROR' },
+          name: 'read_file',
+          parameters: { Path: '/tmp/agycap/missing.txt' },
+        },
+        tool_name: 'read_file',
+      }),
+    );
+
+    // A failed step may be retried under a new step_index, so this must not terminate the
+    // stream — only `result` is authoritative.
+    expect(chunks).toEqual([
+      {
+        delta: '',
+        done: false,
+        kind: CONVERSATION_STREAM_CHUNK_KINDS.toolResult,
+        metadata: {
+          callId: '4',
+          isError: true,
+          toolCall: 'file does not exist',
+          toolName: 'read_file',
+        },
+      },
+    ]);
+  });
+
+  it.each([
+    ['a step with no tool_info', {}],
+    ['a tool_info with no error', { tool_info: { name: 'run_command' } }],
+    ['a blank error message', { tool_info: { error: { message: ' ' } } }],
+  ])('falls back to a generic failure for %s', (_label, extra) => {
+    const map = createAntigravityEventMapper();
+
+    const [chunk] = map(
       step({
         state: 'ERROR',
         step_index: 2,
         step_type: 'tool',
         tool_name: 'write_to_file',
+        ...extra,
       }),
     );
 
-    // Captured behavior: the tool failed at index 2 and was retried at index 4, so this must not
-    // terminate the stream — only `result` is authoritative.
-    expect(chunks).toHaveLength(1);
-    expect(chunks[0]?.done).toBe(false);
-    expect(chunks[0]?.metadata).toMatchObject({
+    expect(chunk?.metadata).toEqual({
       callId: '2',
-      toolCall: { error: 'ERROR', status: 'ERROR' },
+      isError: true,
+      toolCall: 'Tool step failed',
       toolName: 'write_to_file',
+    });
+  });
+
+  it('reads a bare string error on the step itself', () => {
+    const map = createAntigravityEventMapper();
+
+    const [chunk] = map(
+      step({
+        error: 'permission denied',
+        state: 'ERROR',
+        step_index: 3,
+        step_type: 'tool',
+        tool_name: 'run_command',
+      }),
+    );
+
+    expect(chunk?.metadata).toMatchObject({
+      isError: true,
+      toolCall: 'permission denied',
     });
   });
 
