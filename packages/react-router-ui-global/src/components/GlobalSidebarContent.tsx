@@ -1,5 +1,4 @@
 import {
-  cn,
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
@@ -8,26 +7,31 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
 } from '@openthrottle/react-router-shadcn';
 import {
   FEATURE_BETA_PREVIEW,
   FEATURE_CHARLIE_PREVIEW,
 } from '@openthrottle/react-router-utils';
-import { ChevronDown, StarIcon } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import * as React from 'react';
 import type { NavLinkProps } from 'react-router';
-import { NavLink, useLocation } from 'react-router';
+import { useLocation } from 'react-router';
 
 import { useCloseMobileSidebar } from '../hooks/useCloseMobileSidebar';
 import { resolveSectionDefaultOpen } from '../utils/resolveSectionDefaultOpen';
+import { hasActiveSidebarLink } from '../utils/sidebar-links';
 import { getPathFromTo } from '../utils/utils.global';
+import { GlobalSidebarContentLink } from './GlobalSidebarContentLink';
 
 export interface GlobalSidebarContentLinkProps extends NavLinkProps {
   beta?: boolean;
   disabled?: boolean;
   icon: React.ComponentType<{ className?: string }>;
+  /**
+   * @description Nested links rendered under this link, only while this link
+   * is active. Optional so existing navigation data needs no change.
+   */
+  subLinks?: readonly GlobalSidebarContentLinkProps[];
 }
 
 export interface GlobalSidebarContentProps {
@@ -61,76 +65,19 @@ export const GlobalSidebarContent = (
   const isCharlieEnabled = FEATURE_CHARLIE_PREVIEW;
 
   // Handlers
-  const isLinkActive = (item: GlobalSidebarContentLinkProps): boolean => {
-    const toPath = getPathFromTo(item.to);
-    const isExact = item.end === true;
-
-    return isExact
-      ? location.pathname === toPath
-      : location.pathname.startsWith(toPath);
-  };
 
   // Markup
   const renderLink = (item: GlobalSidebarContentLinkProps, index: number) => {
-    const { children, icon: IconComponent, to } = item;
-
-    const toPath = getPathFromTo(to);
-    const key = `${toPath}-${index}`;
-
-    const isExact = item.end === true;
-    const isActive = isExact
-      ? location.pathname === toPath
-      : location.pathname.startsWith(toPath);
-
-    if (item.beta && !isBetaEnabled) {
-      return null;
-    }
-
     return (
-      <SidebarMenuItem
-        className="m-0"
-        key={key}
-        ref={isActive ? activeItemRef : undefined}
-        style={{ margin: 0 }}
-      >
-        <SidebarMenuButton
-          asChild={true}
-          isActive={isActive}
-          tooltip={String(children)}
-        >
-          <NavLink
-            className={cn('text-xs! [&.pending]:animate-pulse', {
-              'text-muted-foreground pointer-events-none':
-                item.disabled && !isCharlieEnabled,
-            })}
-            onClick={closeMobileSidebar}
-            prefetch={item.prefetch}
-            to={item.to}
-            viewTransition={true}
-          >
-            <IconComponent
-              className={cn('size-4 shrink-0', {
-                'text-accent': isActive,
-                'text-muted-foreground': !isActive,
-              })}
-            />
-            <span className={cn('', { 'text-accent': isActive })}>
-              {item.children?.toString()}
-            </span>
-            {item.beta && (
-              <span className="text-muted-foreground flex w-full flex-1 items-center justify-end text-right">
-                <StarIcon
-                  className={cn('size-3', {
-                    'text-accent': isActive,
-                    'text-muted-foreground': !isActive,
-                  })}
-                  fill={isActive ? 'currentColor' : 'none'}
-                />
-              </span>
-            )}
-          </NavLink>
-        </SidebarMenuButton>
-      </SidebarMenuItem>
+      <GlobalSidebarContentLink
+        activeItemRef={activeItemRef}
+        isBetaEnabled={isBetaEnabled}
+        isCharlieEnabled={isCharlieEnabled}
+        item={item}
+        key={`${getPathFromTo(item.to)}-${index}`}
+        onNavigate={closeMobileSidebar}
+        pathname={location.pathname}
+      />
     );
   };
 
@@ -165,7 +112,9 @@ export const GlobalSidebarContent = (
     <SidebarContent className="h-full" title="Global Sidebar Content">
       {sections.map((section) => {
         const items = data?.[section] ?? [];
-        const hasActiveLinkInSection = items.some(isLinkActive);
+        const hasActiveLinkInSection = items.some((item) => {
+          return hasActiveSidebarLink(item, location.pathname);
+        });
 
         const defaultOpen = resolveSectionDefaultOpen(
           sectionDefaultExpanded?.[section],

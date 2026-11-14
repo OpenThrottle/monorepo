@@ -31,19 +31,12 @@ describe('UsageTokenUsageFilters Component', () => {
     expect(claudeLink).toHaveAttribute('aria-current', 'true');
   });
 
-  test('preserves skill-usage search params when changing provider', () => {
-    const component = renderComponent({
-      selectedProvider: null,
-      skillCwdParam: '/Users/matt/openthrottle',
-      skillGitBranchParam: 'example-usage-tracking',
-      skillScopeParam: 'ours',
-    });
+  test('provider links carry only the provider param', () => {
+    const component = renderComponent({ selectedProvider: null });
 
-    const claudeLink = component.getByRole('link', { name: 'Claude' });
-    const href = claudeLink.getAttribute('href') ?? '';
-    expect(href).toContain('provider=claude');
-    expect(href).toContain('skillScope=ours');
-    expect(href).toContain('skillBranch=example-usage-tracking');
-    expect(href).toContain('skillCwd=');
+    const href = component
+      .getByRole('link', { name: 'Claude' })
+      .getAttribute('href');
+    expect(href).toBe('/?provider=claude');
   });
 });

@@ -15,4 +15,21 @@ describe('UsageIntroduction Component', () => {
       screen.getByText(/Usage metrics for this portal over the last 14 days/),
     ).toBeInTheDocument();
   });
+
+  test('links to the usage sub-pages', () => {
+    renderRoutesStub(<UsageIntroduction rangeDays={14} />);
+
+    expect(screen.getByRole('link', { name: 'Skills' })).toHaveAttribute(
+      'href',
+      '/usage/skills',
+    );
+    expect(screen.getByRole('link', { name: 'Agents' })).toHaveAttribute(
+      'href',
+      '/usage/agents',
+    );
+    expect(screen.getByRole('link', { name: 'Telemetry' })).toHaveAttribute(
+      'href',
+      '/usage/telemetry',
+    );
+  });
 });

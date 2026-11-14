@@ -1,0 +1,63 @@
+fragment UsageSkillUsageBySkill on SkillUsageBySkillObject {
+  abandonedCount
+  avgDurationMs
+  count
+  errorCount
+  outcomeCount
+  scope
+  sessionEndedCount
+  skillName
+  successCount
+}
+
+fragment UsageSkillUsageByScope on SkillUsageByScopeObject {
+  count
+  scope
+}
+
+fragment UsageSkillUsageByDay on SkillUsageByDayObject {
+  date
+  injectedCount
+  oursCount
+  personalCount
+  thirdPartyCount
+  totalCount
+}
+
+fragment UsageSkillUsageFilterOptions on SkillUsageFilterOptionsObject {
+  cwds
+  gitBranches
+  repoIdentities
+}
+
+query getUsageSkillUsage(
+  $start: String!
+  $end: String!
+  $scope: String
+  $gitBranch: String
+  $cwd: String
+  $repoIdentity: String
+) {
+  skillUsage(
+    start: $start
+    end: $end
+    scope: $scope
+    gitBranch: $gitBranch
+    cwd: $cwd
+    repoIdentity: $repoIdentity
+  ) {
+    byDay {
+      ...UsageSkillUsageByDay
+    }
+    byScope {
+      ...UsageSkillUsageByScope
+    }
+    bySkill {
+      ...UsageSkillUsageBySkill
+    }
+    filterOptions {
+      ...UsageSkillUsageFilterOptions
+    }
+    totalCount
+  }
+}

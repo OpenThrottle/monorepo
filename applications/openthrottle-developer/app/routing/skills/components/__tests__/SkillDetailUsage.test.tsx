@@ -49,12 +49,12 @@ describe('SkillDetailUsage Component', () => {
     expect(
       component.queryByTestId('SkillDetailUsageStats'),
     ).not.toBeInTheDocument();
-    // Back-link to /usage closes the loop even in the degraded state.
+    // Back-link to /usage/skills closes the loop even in the degraded state.
     expect(
       component.getByRole('link', {
         name: SKILL_USAGE_DETAIL_COPY.backToUsage,
       }),
-    ).toHaveAttribute('href', '/usage');
+    ).toHaveAttribute('href', '/usage/skills');
   });
 
   test('renders the empty state for a skill with no invocations in range', () => {

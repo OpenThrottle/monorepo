@@ -8,24 +8,12 @@ import { buildUsageSearch } from '~/routing/usage/utils/buildUsageSearch';
 export interface UsageTokenUsageFiltersProps {
   className?: string;
   selectedProvider: string | null;
-  /** Skill-usage search params to preserve when changing provider. */
-  skillCwdParam?: string | null;
-  skillGitBranchParam?: string | null;
-  skillRepoParam?: string | null;
-  skillScopeParam?: string | null;
 }
 
 export const UsageTokenUsageFilters = (
   props: UsageTokenUsageFiltersProps,
 ): React.ReactElement => {
-  const {
-    className,
-    selectedProvider,
-    skillCwdParam = null,
-    skillGitBranchParam = null,
-    skillRepoParam = null,
-    skillScopeParam = null,
-  } = props;
+  const { className, selectedProvider } = props;
 
   // Hooks
 
@@ -66,13 +54,7 @@ export const UsageTokenUsageFilters = (
                 : 'text-muted-foreground hover:text-foreground border-border',
             )}
             key={option.label}
-            to={buildUsageSearch({
-              cwd: skillCwdParam,
-              gitBranch: skillGitBranchParam,
-              provider: option.id,
-              repo: skillRepoParam,
-              scope: skillScopeParam,
-            })}
+            to={buildUsageSearch({ provider: option.id })}
           >
             {option.label}
           </Link>
