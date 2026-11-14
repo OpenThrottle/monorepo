@@ -8,7 +8,7 @@ import path from 'node:path';
 import { defaultClaudeProjectsDir } from './transcript-projects.ts';
 
 /** The CLI's usage line, printed on `--help` and after a bad flag. @public */
-export const RESEGMENT_USAGE = `node .claude/hooks/session-trajectory-resegment.cjs --session <id> [--session <id> ...] [--dry-run] [--projects-dir <path>] [--repo-root <path>] [--timeout-ms <n>]`;
+export const RESEGMENT_USAGE = `pnpm run telemetry:resegment --session <id> [--session <id> ...] [--dry-run] [--projects-dir <path>] [--repo-root <path>] [--timeout-ms <n>]`;
 
 /**
  * A validated resegment invocation.

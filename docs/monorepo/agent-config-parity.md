@@ -42,7 +42,7 @@ Two ordered lists, `allow` and `deny`. Each entry is one rule:
 
 An entry has exactly one of `shell` or `mcpServer`. `allow` means "run without asking". `deny` means "refuse", and it wins over `allow` in every tool that has both.
 
-**These rules are advisory, not a security boundary.** Every tool's matcher can be dodged by reshaping the command (`git -C . push`, `git -c x=y push`, `HEAD:main` refspecs, flag reordering). The `bash-guard` hooks (`.claude/hooks/`, `.cursor/hooks/`) and the Husky `pre-push` hook remain the real enforcement for pushes to `main` and force pushes.
+**These rules are advisory, not a security boundary.** Every tool's matcher can be dodged by reshaping the command (`git -C . push`, `git -c x=y push`, `HEAD:main` refspecs, flag reordering). The `bash-guard` hooks (the `openthrottle-guards` and `openthrottle-cursor-guards` plugins under `plugins/`) and the Husky `pre-push` hook remain the real enforcement for pushes to `main` and force pushes.
 
 ## Generated outputs
 

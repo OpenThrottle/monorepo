@@ -31,14 +31,15 @@ let payloadDir: string;
 const warn = vi.fn();
 
 /** Writes a payload whose manifest exists — the marker the resolver actually checks. */
-const writePayload = (root: string): string => {
-  const dir = path.join(root, 'plugins', 'openthrottle');
+const writePayload = (root: string, name = 'openthrottle'): string => {
+  const dir = path.join(root, 'plugins', name);
   fs.mkdirSync(path.join(dir, '.claude-plugin'), { recursive: true });
   fs.writeFileSync(
     path.join(dir, '.claude-plugin', 'plugin.json'),
     '{"name":"openthrottle"}',
     'utf8',
   );
+  fs.mkdirSync(path.join(dir, 'dist'), { recursive: true });
   return dir;
 };
 
@@ -58,6 +59,35 @@ describe('resolveHookPluginDirs', () => {
   it('resolves the payload under the OpenThrottle root by default', () => {
     expect(resolveHookPluginDirs({ env: {}, warn })).toEqual([payloadDir]);
     expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('resolves every named payload, in order', () => {
+    const workflowDir = writePayload(tmpRoot, 'openthrottle-workflow');
+    expect(
+      resolveHookPluginDirs({
+        env: {},
+        payloadRels: ['plugins/openthrottle', 'plugins/openthrottle-workflow'],
+        warn,
+      }),
+    ).toEqual([payloadDir, workflowDir]);
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('skips a missing payload but still loads the rest', () => {
+    expect(
+      resolveHookPluginDirs({
+        env: {},
+        payloadRels: ['plugins/openthrottle', 'plugins/openthrottle-guards'],
+        warn,
+      }),
+    ).toEqual([payloadDir]);
+    expect(warn).toHaveBeenCalledTimes(1);
+  });
+
+  it('still loads an unbuilt payload but warns that its hooks will not run', () => {
+    fs.rmSync(path.join(payloadDir, 'dist'), { force: true, recursive: true });
+    expect(resolveHookPluginDirs({ env: {}, warn })).toEqual([payloadDir]);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('is not built'));
   });
 
   it('honors an explicit payload override', () => {

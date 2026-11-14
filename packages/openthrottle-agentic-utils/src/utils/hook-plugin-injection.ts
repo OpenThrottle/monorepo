@@ -73,11 +73,12 @@ let warned = false;
 export interface ResolveHookPluginDirsOptions {
   readonly env?: NodeJS.ProcessEnv;
   /**
-   * Workspace-relative payload directory for the driver being spawned — pass a driver's
-   * `pluginDirRel`. Per-driver because a payload's hook config names one tool's events, so the
-   * wrong payload loads without error and records nothing. Omitted ⇒ the Claude payload.
+   * Workspace-relative payload directories for the driver being spawned — pass a driver's
+   * `pluginDirRels`. Per-driver because a payload's hook config names one tool's events, so the
+   * wrong payload loads without error and records nothing. Omitted ⇒ the Claude telemetry
+   * payload alone. Each one that is missing is skipped; the rest still load.
    */
-  readonly payloadRel?: string;
+  readonly payloadRels?: readonly string[];
   readonly warn?: (message: string) => void;
 }
 
@@ -139,17 +140,27 @@ export const resolveHookPluginDirs = (
     );
   }
 
-  const payload = path.join(
-    otRoot,
-    options.payloadRel ?? OPENTHROTTLE_PLUGIN_DIR_REL,
+  const payloads = (options.payloadRels ?? [OPENTHROTTLE_PLUGIN_DIR_REL]).map(
+    (rel) => path.join(otRoot, rel),
   );
-  if (isPluginPayload(payload)) {
-    return [payload];
+  const present = payloads.filter((payload) => isPluginPayload(payload));
+  const missing = payloads.filter((payload) => !present.includes(payload));
+  if (missing.length > 0) {
+    warnOnce(
+      `no plugin payload at ${missing.join(', ')}; skipping it. Run: pnpm nx run @openthrottle/agentic-hooks:bundle-hooks`,
+    );
   }
-
-  return warnOnce(
-    `no plugin payload at ${payload}; skipping hook injection. Run: pnpm nx run @openthrottle/agentic-hooks:bundle-hooks`,
+  // A payload whose `dist/` was never built still loads — its hook stubs exit 0
+  // without a word — so the run is unobserved rather than broken. Say so once.
+  const unbuilt = present.filter(
+    (payload) => !fs.existsSync(path.join(payload, 'dist')),
   );
+  if (unbuilt.length > 0) {
+    warnOnce(
+      `plugin payload ${unbuilt.join(', ')} is not built, so its hooks will not run. Run: pnpm run build:hooks`,
+    );
+  }
+  return present;
 };
 
 /**

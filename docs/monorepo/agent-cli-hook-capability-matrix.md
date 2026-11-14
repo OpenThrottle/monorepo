@@ -86,8 +86,9 @@ silently.** The translation drops exactly what this telemetry needs: `PreToolUse
 `matcher: "Skill"` has no Cursor tool to match, `UserPromptExpansion` has no Cursor equivalent at
 all, and `Stop` maps to an event that never fires in a headless run. Pointing Cursor at the Claude
 payload loads cleanly, reports nothing wrong, and records nothing. Hence
-`plugins/openthrottle-cursor/` as a separate committed payload, and `AgentDriver.pluginDirRel`
-naming one per driver.
+`plugins/openthrottle-cursor/` (and `openthrottle-cursor-guards`) as separate payloads, and
+`AgentDriver.pluginDirRels` naming a driver's payloads (Claude 3, Cursor 2). How payloads are
+built, hosted and consumed: [hook-plugin-distribution.md](./hook-plugin-distribution.md).
 
 This is the same shape of half-truth as grok below. Both are recorded rather than smoothed over
 because "tool X reads Claude plugins" reads as coverage and is not.
@@ -145,11 +146,12 @@ see [agent-config-parity.md](./agent-config-parity.md). The home-directory route
 and it is the only one that reaches an untrusted foreign repo. `-c hooks.…`
 overrides and `CODEX_HOME` provide per-invocation control if wanted. Confirmed 2026-09-11: there is
 **no `--plugin-dir` flag**; `codex plugin` installs from marketplaces instead. So delivery is
-documentation, and the copy-pasteable block lives in `packages/agentic-hooks/README.md`.
+documentation: the `config.toml` snippet lives in the README of `plugins/openthrottle-codex/`
+(that payload ships no `hooks.json`) and in `packages/agentic-hooks/README.md`.
 
 Codex gates hook execution on trust, with `--dangerously-bypass-hook-trust` as the automation escape
 hatch. The name is a fair warning: it is right for OT's own orchestrated runs, whose bundles are
-generated here and drift-checked byte-for-byte, and wrong as an interactive convenience.
+built from this repo's source, and wrong as an interactive convenience.
 
 ### opencode is the odd one out
 
@@ -243,17 +245,17 @@ sees. In-task subagents are exempt by design — `ot-loop` treats them as worker
 they are not that hook point. Measured 2026-10-31 by reading `cursor-agent` 2026.10.22-27dcf5f's
 shipped bundle and the strings of `codex-cli` 0.145.0; no payload was captured live.
 
-| CLI              | separate-session tool the agent calls                                                                                                                                                                                   | guard                                                     |
-| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| **claude**       | the desktop app's `start_session` / `hand_off_to_session` (brief in `prompt` / `remaining_plan`)                                                                                                                        | **shipped** — `.claude/hooks/require-ot-plan-kickoff.cjs` |
-| **cursor-agent** | **none.** `Task` is an in-task subagent. Background agents are started by a person; their `sessionStart` carries `is_background_agent: true` and no prompt, and can return `env` / `additional_context` but cannot deny | nothing to block; `AGENTS.md` already carries the rule    |
-| **codex**        | **none.** `spawn_agent` / `send_input` / `wait_agent` / `close_agent` manage sub-agents under the current task (`/root/task1/task_3`); `codex cloud` is a person's command                                              | nothing to block                                          |
-| others           | unprobed                                                                                                                                                                                                                | —                                                         |
+| CLI              | separate-session tool the agent calls                                                                                                                                                                                   | guard                                                                    |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| **claude**       | the desktop app's `start_session` / `hand_off_to_session` (brief in `prompt` / `remaining_plan`)                                                                                                                        | **shipped** — `openthrottle-workflow` plugin's `require-ot-plan-kickoff` |
+| **cursor-agent** | **none.** `Task` is an in-task subagent. Background agents are started by a person; their `sessionStart` carries `is_background_agent: true` and no prompt, and can return `env` / `additional_context` but cannot deny | nothing to block; `AGENTS.md` already carries the rule                   |
+| **codex**        | **none.** `spawn_agent` / `send_input` / `wait_agent` / `close_agent` manage sub-agents under the current task (`/root/task1/task_3`); `codex cloud` is a person's command                                              | nothing to block                                                         |
+| others           | unprobed                                                                                                                                                                                                                | —                                                                        |
 
 Two things follow. First, the session guard is Claude-only because only Claude has the thing it
 guards, not because the other adapters are missing; the decision itself is tool-neutral
 (`packages/agentic-hooks/src/data/kickoff.ts`), so a CLI that grows such a tool needs only an adapter.
-Second, cursor-agent reads `.claude/settings.json`, so it may load the Claude registration — that is
+Second, cursor-agent reads `.claude/settings.json` and Claude plugins' hooks, so it may load the Claude registration — that is
 harmless: the adapter checks the tool name itself and allows anything that is not a kickoff tool,
 whether or not Cursor applies the `matcher`. The layer that reaches every CLI, and every person, is
 git: the pre-push `Plan-Id:` check.

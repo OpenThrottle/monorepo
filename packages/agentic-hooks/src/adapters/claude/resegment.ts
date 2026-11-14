@@ -3,7 +3,7 @@
  * NOT a hook: nothing registers it, and it is not shipped in the plugin
  * payload.
  *
- * Usage: node .claude/hooks/session-trajectory-resegment.cjs --session <id>
+ * Usage: pnpm run telemetry:resegment --session <id>
  *   [--session <id> ...] [--dry-run] [--projects-dir <path>]
  *   [--repo-root <path>] [--timeout-ms <n>]
  *

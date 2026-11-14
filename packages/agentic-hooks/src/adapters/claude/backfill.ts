@@ -3,7 +3,7 @@
  * from THIS repository's Claude Code transcripts. NOT a hook: nothing registers
  * it, and it is not shipped in the plugin payload.
  *
- * Usage: node .claude/hooks/skill-usage-backfill.cjs [--dry-run] [--since <ISO>]
+ * Usage: pnpm run telemetry:backfill [--dry-run] [--since <ISO>]
  *   [--until <ISO>] [--projects-dir <path>] [--repo-root <path>] [--no-worktrees]
  *   [--timeout-ms <n>]
  *

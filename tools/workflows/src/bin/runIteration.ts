@@ -135,9 +135,9 @@ const toDriverConfig = (
     // The payload is per-driver: a plugin's hook config names one tool's events, so pointing a
     // CLI at another tool's payload loads cleanly and records nothing.
     pluginDirs: resolveHookPluginDirs(
-      driver.pluginDirRel === undefined
+      driver.pluginDirRels === undefined
         ? {}
-        : { payloadRel: driver.pluginDirRel },
+        : { payloadRels: driver.pluginDirRels },
     ),
     prompt: config.agentPrompt,
     signal: config.signal,

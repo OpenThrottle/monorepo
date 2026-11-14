@@ -18,6 +18,7 @@ import { fileURLToPath } from 'node:url';
 
 import { runClaudeGlobalSettingsCheck } from './check-claude-global-settings.ts';
 import { interactiveConfirm, resetEnvironmentFiles } from './setup_environment.ts'; // prettier-ignore
+import { ensureCheckoutClaudePlugins } from './utils/claude-plugins.ts';
 import { configureBlameIgnoreRevs, isLinkedWorktree } from './utils/git.ts';
 import { createLogger } from './utils/logger.ts';
 
@@ -36,6 +37,7 @@ export interface SetupStep {
 export const buildSetupSteps = (): SetupStep[] => {
   return [
     { args: ['run', 'build'], command: 'pnpm', title: 'Build the packages' },
+    { args: ['run', 'build:hooks'], command: 'pnpm', title: 'Build the hook plugins' }, // prettier-ignore
     { args: ['run', 'database:build'], command: 'pnpm', title: 'Build the database image' }, // prettier-ignore
     { args: ['run', 'database:start'], command: 'pnpm', title: 'Start Postgres + Redis' }, // prettier-ignore
     { args: ['run', 'database:migrate'], command: 'pnpm', title: 'Apply database migrations' }, // prettier-ignore
@@ -113,6 +115,14 @@ const main = async (): Promise<void> => {
     if (!runStep(step)) {
       process.exit(1);
     }
+  }
+
+  // The repo's hooks ship as Claude Code plugins; enable them for this
+  // checkout. Best-effort: a machine without `claude` just skips it.
+  logger.heading('Claude Code plugins 🔌');
+  const plugins = ensureCheckoutClaudePlugins(process.cwd(), process.env);
+  if (plugins !== undefined) {
+    logger[plugins.level](plugins.message);
   }
 
   outro();

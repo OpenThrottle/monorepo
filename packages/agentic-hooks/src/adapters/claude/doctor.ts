@@ -3,7 +3,7 @@
  * for each problem. Operator-run, registered as no hook; ships in the plugin payload so it can be
  * run from any directory, even when the plugin is the thing that is missing.
  *
- * Usage: node .claude/hooks/skill-usage-doctor.cjs [--json] [--strict] [--fix]
+ * Usage: skill-usage-doctor.cjs [--json] [--strict] [--fix]
  *
  * Read-only unless `--fix`, which offers to run the `claude plugin …` commands that install or
  * update the plugin — shown first, run only on an interactive yes, refused without a TTY and

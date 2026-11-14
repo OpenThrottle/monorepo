@@ -144,18 +144,22 @@ The rules are grouped by **who catches you**. The honor-system ones lead, becaus
 
 ## Committed generator output
 
-Generated payloads are committed (hooks must run from a bare checkout) and gated
-byte-for-byte, so they cannot be gitignored — instead the root
-[`.gitattributes`](.gitattributes) tells git and GitHub what they are.
+Most generated payloads are committed and gated byte-for-byte, so they cannot be
+gitignored — instead the root [`.gitattributes`](.gitattributes) tells git and
+GitHub what they are. The exception is hook bundles: they are **not** committed on
+`main`. Each `plugins/<payload>/dist/` is gitignored and built by
+`pnpm run build:hooks`; what is committed is the fixed stubs in `hooks/` and
+`bin/`, manifests, `hooks.json` and READMEs, all written by
+`@openthrottle/agentic-hooks:bundle-hooks`. `.github/workflows/publish-plugins.yml`
+publishes the built payloads to the `plugins-dist` branch. See
+[`docs/monorepo/hook-plugin-distribution.md`](docs/monorepo/hook-plugin-distribution.md)
+and [`packages/agentic-hooks/AGENTS.md`](packages/agentic-hooks/AGENTS.md).
 
 - Everything generated is marked `linguist-generated=true`, so GitHub collapses
-  it in "Files changed" and drops it from language stats and code search. Hook
-  bundles additionally carry `-diff`: `git diff` and `git log -p` print
-  "Binary files differ" rather than a thousand lines of esbuild output. That is
+  it in "Files changed" and drops it from language stats and code search. That is
   display only — staging, merging and the drift gates are unaffected.
-- **`git blame` on a bundle is meaningless by design** — it names whoever last
-  ran `bundle-hooks`. Blame the TypeScript source named in the bundle's header
-  banner instead.
+- A published hook bundle's `git blame` is meaningless: blame the TypeScript source
+  named in its header banner instead.
 - `applications/openthrottle-server/schema.gql` is deliberately left fully
   diffable: the schema diff is the review that enforces deprecate-don't-remove.
 - Vendored third-party skills (`.agents/skills/**`) are `linguist-vendored`,
@@ -163,8 +167,9 @@ byte-for-byte, so they cannot be gitignored — instead the root
   because a changed third-party prompt is supply-chain input. `pnpm-lock.yaml`
   needs no line — GitHub's Linguist already treats it as generated.
 - **Adding a new committed payload directory? Add its glob in the same commit**
-  — a folder glob (`.codex/hooks/*.cjs`), never a file name, which is how
-  `plan-run-janitor.cjs` slipped past `.prettierignore`. _(Enforced.)_
+  — a folder glob (`plugins/*/hooks/*.cjs`), never a file name, which is how
+  `plan-run-janitor.cjs` slipped past `.prettierignore`. A new `plugins/<payload>/`
+  also needs its own `.prettierignore` entry. _(Enforced.)_
   `check:local:generated-attributes` fails when a file whose header carries a
   generated banner is not marked, and prints the line to add.
 - Landing a **noise-only** mass rewrite (a repo-wide reformat, a re-bundle after

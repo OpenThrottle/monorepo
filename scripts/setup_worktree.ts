@@ -17,6 +17,7 @@ import { basename, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { resetEnvironmentFiles } from './setup_environment.ts';
+import { ensureCheckoutClaudePlugins } from './utils/claude-plugins.ts';
 import { ensurePrimaryCheckoutCodexTrust } from './utils/codex-trust.ts';
 import { firstEnvMatch, upsertEnvLine } from './utils/env.ts';
 import { run } from './utils/exec.ts';
@@ -169,6 +170,16 @@ const main = async (): Promise<void> => {
     logger[trust.level](trust.message);
   }
 
+  // 0d. Load this repo's own Claude Code plugins in this worktree: the hooks
+  //     ship as plugins, not as .claude/settings.json registrations. Adds the
+  //     marketplace (pointed at the PRIMARY checkout) only when it is absent,
+  //     then records a local-scope install for this path. Best-effort.
+  const plugins = ensureCheckoutClaudePlugins(process.cwd(), process.env);
+
+  if (plugins !== undefined) {
+    logger[plugins.level](plugins.message);
+  }
+
   // 1. Create the environment file(s) — resets each .env to .env.default
   //    unconditionally: worktree provisioning always starts from the template
   //    (ports and tokens are layered back on below).
@@ -245,8 +256,10 @@ const main = async (): Promise<void> => {
   // 2. Install the dependencies.
   step('pnpm', ['install']);
 
-  // 3. Build our packages.
+  // 3. Build our packages, then the hook plugin bundles (plugins/*/dist/ is
+  //    gitignored; leg B and `claude --plugin-dir ./plugins/<p>` need it).
   step('pnpm', ['build']);
+  step('pnpm', ['run', 'build:hooks']);
 
   // 3b. Own database: start the worktree's containers, migrate, seed the default user.
   if (isolatedPorts !== undefined) {

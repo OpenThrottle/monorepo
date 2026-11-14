@@ -43,10 +43,10 @@ front of the running agent.
 Delivery comes in three shapes, and which one a tool supports is a property of the tool, not a choice
 we make:
 
-- **in-repo hooks** — this repo's own hook config points at `.<tool>/hooks/*.cjs`. Covers work in
-  this repo only.
-- **plugin payload** — a generated directory passed as a per-invocation directory flag, or installed
-  once from a marketplace. Reaches repositories whose config we can never write.
+- **in-repo hooks** — this repo loads its own payloads in place (Claude through the generated dev
+  marketplace, Cursor through `.cursor/hooks.json`). Covers work in this repo only.
+- **plugin payload** — a directory under `plugins/` passed as a per-invocation directory flag, or
+  installed once from a marketplace. Reaches repositories whose config we can never write.
 - **home-dir config** — the tool reads hooks from the operator's home directory, so there is nothing
   to inject at all; delivery is documentation.
 
@@ -82,22 +82,19 @@ what each CLI's hook and plugin surface actually supports, measured against inst
 
 ## Adding a producer
 
-Five steps, in order. Step 3 is the one that is easy to miss, and missing it silently drops the new
-file from the drift gate — the bundle exists, and nothing ever notices when it rots.
+Four steps, in order.
 
 1. **Write the adapter.** `src/adapters/<tool>/payload.ts` exporting a `<TOOL>_SOURCE` producer id
    and a normalizer returning `NormalizedInvocation | null`, plus `src/adapters/<tool>/capture.ts` as
    the entrypoint. Add a completion entrypoint too if the tool exposes a usable session-end event.
-2. **Register the bundle.** Add a `BundleSpec` row to
-   [scripts/bundle-hooks.ts](scripts/bundle-hooks.ts).
-3. **Register the outputs in `package.json` — BOTH targets.** The new `.cjs` path must appear in the
-   `outputs` array of `bundle-hooks` _and_ in the `inputs` array of `bundle-hooks-check`. The first
-   makes Nx cache it; the second makes CI fail when it drifts. Add the entrypoint's `src/` path to
+2. **Register the bundle.** Add a `PluginEntry` row to a payload in
+   [scripts/bundle-hooks.ts](scripts/bundle-hooks.ts). That is the only registration: the Nx
+   `outputs` and `inputs` are globs over `plugins/`. Add the entrypoint's `src/` path to
    `sideEffects` too — it runs `main()` on import, and `check-side-effects` fails without it.
-   A bundle in a **new folder** also needs that folder's glob in `.gitattributes` and
-   `.prettierignore`, or `check:local` fails on the generated file.
-4. **Wire the tool's own hook config** to the generated `.cjs`, using the tool's real event names.
-5. **Regenerate:** `pnpm nx run @openthrottle/agentic-hooks:bundle-hooks`, and commit the output.
+3. **Wire the tool's hook config** (the payload's `renderHooks`) to the new handler, using the
+   tool's real event names.
+4. **Regenerate:** `pnpm nx run @openthrottle/agentic-hooks:bundle-hooks`, and commit the stub,
+   manifest, `hooks.json` and README it writes. The bundle goes to the gitignored `dist/`.
 
 Write tests against **captured real payloads**, including negative cases. A normalizer written
 against a guessed shape cannot tell "not a skill invocation" from "the shape changed underneath us",
@@ -113,17 +110,17 @@ nothing to inject — delivery is this block, run once:
 [[hooks.UserPromptSubmit]]
 [[hooks.UserPromptSubmit.hooks]]
 type = "command"
-command = "/absolute/path/to/openthrottle/.codex/hooks/skill-usage-capture.cjs"
+command = "/absolute/path/to/openthrottle/plugins/openthrottle-codex/hooks/skill-usage-capture.cjs"
 
 [[hooks.SessionEnd]]
 [[hooks.SessionEnd.hooks]]
 type = "command"
-command = "/absolute/path/to/openthrottle/.codex/hooks/skill-usage-complete.cjs"
+command = "/absolute/path/to/openthrottle/plugins/openthrottle-codex/hooks/skill-usage-complete.cjs"
 
 [[hooks.SessionStart]]
 [[hooks.SessionStart.hooks]]
 type = "command"
-command = "/absolute/path/to/openthrottle/.codex/hooks/skill-usage-heartbeat.cjs"
+command = "/absolute/path/to/openthrottle/plugins/openthrottle-codex/hooks/skill-usage-heartbeat.cjs"
 ```
 
 The `SessionStart` entry sends the coverage heartbeat
@@ -138,20 +135,20 @@ control.
 `--dangerously-bypass-hook-trust` skips that check for one invocation, and the help text means what
 it says: "DANGEROUS. Intended only for automation that already vets hook sources."
 
-Use it for **OT's own orchestrated runs**, where the hook bundles are generated here, committed, and
-drift-checked byte-for-byte — the source is vetted by construction. Do **not** reach for it as a
+Use it for **OT's own orchestrated runs**, where the hook bundles are built from this repo's own
+source by `pnpm run build:hooks` — the source is vetted by construction. Do **not** reach for it as a
 convenience in an interactive shell, or anywhere the hook commands could come from somewhere
 unaudited. Trusting once, interactively, is the cheap and correct thing there.
 
 ## Backfilling from transcripts
 
-`skill-usage-backfill.cjs` is a one-off, **operator-run** CLI (no hook registers it, and the plugin
-payloads do not ship it) that recovers what live capture missed from this repository's Claude Code
+`pnpm run telemetry:backfill` is a one-off, **operator-run** CLI (no hook registers it, and no plugin
+payload ships it; `resegment` and `scope` are the same, run as `pnpm run telemetry:<name>`) that recovers what live capture missed from this repository's Claude Code
 transcripts: skill invocations in a time window, and per-request token usage.
 
 ```bash
-node .claude/hooks/skill-usage-backfill.cjs --dry-run   # counts per stream, day and project; sends nothing
-node .claude/hooks/skill-usage-backfill.cjs             # send; re-running is a no-op
+pnpm run telemetry:backfill --dry-run   # counts per stream, day and project; sends nothing
+pnpm run telemetry:backfill             # send; re-running is a no-op
 ```
 
 Flags: `--since <ISO>` (default `2026-09-23`, inclusive) and `--until <ISO>` (default now, exclusive)
@@ -174,23 +171,29 @@ bound the **skill** window only; tokens are not windowed. `--projects-dir <path>
 
 Everything ships through `bundle-hooks`, which esbuild-bundles each adapter into a **self-contained
 CommonJS file that requires nothing outside node builtins**. That is what lets a hook run as bare
-`node x.cjs` in a fresh checkout or worktree with no `node_modules` present.
+`node x.cjs` with no `node_modules` present.
+
+Bundles are **not committed on `main`**. They land in each payload's gitignored
+`plugins/<payload>/dist/`; what is committed is a fixed stub in `hooks/` and `bin/` that requires
+`dist/<file>` and exits 0 if it is unbuilt, plus the manifest, `hooks.json` and README. Design and
+measurements: [hook-plugin-distribution.md](../../docs/monorepo/hook-plugin-distribution.md).
 
 ```bash
-pnpm nx run @openthrottle/agentic-hooks:bundle-hooks        # regenerate everything
-pnpm nx run @openthrottle/agentic-hooks:bundle-hooks-check  # drift gate (runs in check:local)
+pnpm run build:hooks                                          # build dist/ (setup, worktree provisioning, server dev, husky post-merge/post-checkout run it)
+pnpm nx run @openthrottle/agentic-hooks:bundle-hooks          # the target behind it; also rewrites committed stubs and manifests
+pnpm nx run @openthrottle/agentic-hooks:bundle-hooks-check    # drift gate (runs in check:local); diffs committed files only
 ```
 
-Generated output is committed and diffed **byte-for-byte**, so the bundler is pinned and
-deterministic: fixed esbuild version, `minify: false`, no sourcemap, and a banner with no timestamp.
-Never hand-edit a generated `.cjs` or anything under a generated payload directory — edit `src/` and
-regenerate.
+`.github/workflows/publish-plugins.yml` publishes the built payloads, manifests without a `version`,
+to the `plugins-dist` branch that the root `.claude-plugin/marketplace.json` installs from.
 
-The root [`.gitattributes`](../../.gitattributes) marks every payload path `-diff
-linguist-generated=true`: git reports them as binary and GitHub collapses them in "Files changed",
-so review lands on the source rather than the bundle. For the same reason **`git blame` on a `.cjs`
-is meaningless** — it names whoever last ran `bundle-hooks`. Blame the `Source:` path in the
-bundle's header banner.
+The bundler is pinned and deterministic: fixed esbuild version, `minify: false`, no sourcemap, and a
+banner with no timestamp. Never hand-edit a stub, a README or a `dist/` file — edit `src/` or the
+generator and regenerate. Plugin READMEs are rendered from `scripts/bundle-hooks.ts`.
+
+The root [`.gitattributes`](../../.gitattributes) marks the committed generated files
+`linguist-generated=true`, so GitHub collapses them in "Files changed". `git blame` on a stub says
+nothing useful, and a published bundle's header banner names its `Source:` path.
 
 ## Fail-open is the whole posture
 
@@ -221,10 +224,11 @@ Tool-neutral, applies to every producer:
 
 Delivery-specific, and only meaningful where that delivery leg exists:
 
-| how                                  | scope            | effect                                 |
-| ------------------------------------ | ---------------- | -------------------------------------- |
-| `OPENTHROTTLE_HOOK_PLUGIN_ENABLED=0` | plugin payload   | OT drivers stop passing `--plugin-dir` |
-| `/plugin uninstall openthrottle`     | Claude Code only | removes the installed plugin entirely  |
+| how                                  | scope            | effect                                  |
+| ------------------------------------ | ---------------- | --------------------------------------- |
+| `OPENTHROTTLE_HOOK_PLUGIN_ENABLED=0` | plugin payload   | OT drivers stop passing `--plugin-dir`  |
+| `/plugin uninstall openthrottle`     | Claude Code only | removes the installed plugin entirely   |
+| `OPENTHROTTLE_CLAUDE_PLUGINS=0`      | this repo        | setup skips the dev-marketplace install |
 
 ## Where the standards are
 

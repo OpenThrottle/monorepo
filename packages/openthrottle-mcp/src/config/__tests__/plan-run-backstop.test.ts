@@ -1,7 +1,8 @@
+import { planRunFilePath } from '@openthrottle/agentic-hooks';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   forgetPlanRunForBackstop,
@@ -20,10 +21,12 @@ describe('plan-run backstop note', () => {
     previousSessionId = process.env.CLAUDE_CODE_SESSION_ID;
     process.env.CLAUDE_CODE_SESSION_ID = SESSION_ID;
     captureCallerWorkspacePath(repoRoot);
+    vi.stubEnv('OPENTHROTTLE_TELEMETRY_DIR', path.join(repoRoot, '.telemetry'));
   });
 
   afterEach(() => {
     captureCallerWorkspacePath(null);
+    vi.unstubAllEnvs();
     if (previousSessionId === undefined) {
       delete process.env.CLAUDE_CODE_SESSION_ID;
     } else {
@@ -33,7 +36,7 @@ describe('plan-run backstop note', () => {
   });
 
   const notePath = (sessionId = SESSION_ID): string => {
-    return path.join(repoRoot, '.cache', 'plan-runs', `${sessionId}.json`);
+    return planRunFilePath(repoRoot, sessionId);
   };
 
   it('writes the note where the janitor looks, in the shape it reads', () => {

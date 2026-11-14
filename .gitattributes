@@ -28,16 +28,6 @@
 # diff occasionally reveals a schema change nobody intended.
 **/__generated__/**    linguist-generated=true
 
-# esbuild bundles of packages/agentic-hooks/src/adapters/**, drift-gated
-# byte-for-byte by @openthrottle/agentic-hooks:bundle-hooks-check. Review the
-# TypeScript source named in each bundle's header banner instead — `git blame`
-# on a bundle line names whoever last ran bundle-hooks, not whoever changed the
-# behavior. The same bundles also land in plugins/*/hooks/ below.
-.claude/hooks/*.cjs    -diff linguist-generated=true
-.agents/plugins/*/hooks/*.cjs -diff linguist-generated=true
-.codex/hooks/*.cjs     -diff linguist-generated=true
-.cursor/hooks/*.cjs    -diff linguist-generated=true
-
 # Written by scripts/sync-agent-config.ts from .agents/agent-config.json and
 # drift-checked with --check. Explicit paths, not folder globs: .cursor/ and
 # .vscode/ also hold hand-authored files, and opencode.json and
@@ -60,9 +50,12 @@ packages/*/schemas/*.json linguist-generated=true
 # drift-checked by a file snapshot in that package's `test` target.
 packages/*/src/*-safelist.css linguist-generated=true
 
-# The agentic-hooks esbuild bundles again (see .claude/hooks/ above), written
-# into each plugin by the same bundle-hooks target.
-plugins/*/hooks/*.cjs  -diff linguist-generated=true
+# The fixed stubs a tool actually runs (plugins/*/bin/, plugins/*/hooks/). Each
+# names only its own file and requires ../dist/<file>, so it never changes when a
+# bundle does. Left diffable: a stub diff means the launcher itself changed.
+.agents/plugins/*/hooks/*.cjs linguist-generated=true
+plugins/*/bin/*.cjs    linguist-generated=true
+plugins/*/hooks/*.cjs  linguist-generated=true
 
 # Plugin READMEs are rendered by the same bundle-hooks target that writes the
 # payloads beside them (renderPluginReadme). Left diffable — the install

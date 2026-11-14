@@ -117,6 +117,10 @@
             "target": "ensure-migrations",
             "projects": "monorepo"
           },
+          {
+            "target": "bundle-hooks",
+            "projects": "@openthrottle/agentic-hooks"
+          },
           "^build",
           "^typecheck",
           "^dev"

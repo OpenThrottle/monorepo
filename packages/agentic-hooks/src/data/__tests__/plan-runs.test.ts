@@ -28,6 +28,9 @@ describe('plan-run janitor', () => {
 
   beforeEach(() => {
     repoRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'plan-runs-'));
+    // Notes live under the telemetry dir in the operator's home; keep them in the
+    // test's own tree so nothing touches the real ~/.openthrottle.
+    vi.stubEnv('OPENTHROTTLE_TELEMETRY_DIR', path.join(repoRoot, '.telemetry'));
     // The janitor ages records against the clock; pin Date only so aged
     // mtimes seeded below line up with it.
     vi.useFakeTimers({ toFake: ['Date'] });
@@ -36,6 +39,7 @@ describe('plan-run janitor', () => {
 
   afterEach(() => {
     vi.useRealTimers();
+    vi.unstubAllEnvs();
     fs.rmSync(repoRoot, { force: true, recursive: true });
   });
 
@@ -53,6 +57,17 @@ describe('plan-run janitor', () => {
     }
     return filePath;
   };
+
+  it('keeps the note out of the checkout, in a per-repo partition', () => {
+    const filePath = seed('sess-1', 'run-1');
+    expect(
+      filePath.startsWith(path.join(repoRoot, '.telemetry', 'plan-runs')),
+    ).toBe(true);
+    expect(fs.existsSync(path.join(repoRoot, '.cache'))).toBe(false);
+
+    const otherRepo = path.join(repoRoot, 'other');
+    expect(planRunFilePath(otherRepo, 'sess-1')).not.toBe(filePath);
+  });
 
   it('records a run for a session and clears it again', () => {
     const filePath = seed('sess-1', 'run-1');

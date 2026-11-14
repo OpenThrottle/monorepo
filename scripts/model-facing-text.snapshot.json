@@ -174,19 +174,19 @@
     "prompt/Job_WorkInFlight.md": 9928,
     "skill/agents-ralph": 10550,
     "skill/github-cleanup": 7327,
-    "skill/github-commit": 5946,
-    "skill/github-pull-request": 11588,
-    "skill/github-squash": 4985,
+    "skill/github-commit": 6017,
+    "skill/github-pull-request": 11659,
+    "skill/github-squash": 5056,
     "skill/ot-folders": 14757,
     "skill/ot-generators": 5788,
-    "skill/ot-loop": 20153,
-    "skill/ot-onboarding": 19163,
+    "skill/ot-loop": 20224,
+    "skill/ot-onboarding": 19235,
     "skill/ot-plans": 8244,
     "skill/ot-postgres": 5099,
     "skill/ot-skill-guide": 11047,
     "skill/ot-skill-sync": 9963,
     "skill/ot-stack": 6507,
-    "skill/ot-worktree": 8738,
+    "skill/ot-worktree": 8809,
     "skillDescription/agents-ralph": 323,
     "skillDescription/github-cleanup": 402,
     "skillDescription/github-commit": 309,
@@ -215,6 +215,6 @@
     "mcpInstructions": 2069,
     "mcpTools": 34809,
     "prompts": 133419,
-    "skills": 149855
+    "skills": 150282
   }
 }

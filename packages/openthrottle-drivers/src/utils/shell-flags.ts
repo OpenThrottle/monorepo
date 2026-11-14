@@ -128,6 +128,46 @@ export const OPENTHROTTLE_PLUGIN_DIR_REL = 'plugins/openthrottle';
 export const OPENTHROTTLE_CURSOR_PLUGIN_DIR_REL = 'plugins/openthrottle-cursor';
 
 /**
+ * @description The Claude Code workflow plugin: OT plan-run hooks (inbox claims, the task guard,
+ * the auto-close report, the abandoned-run janitor) and the plan-less kickoff guard.
+ * @public
+ */
+export const OPENTHROTTLE_WORKFLOW_PLUGIN_DIR_REL = `plugins/openthrottle-workflow`;
+
+/**
+ * @description The Claude Code guards plugin: the bash guard and the memory-index guard. Useful
+ * with or without OT, and the only plugin that can deny a tool call.
+ * @public
+ */
+export const OPENTHROTTLE_GUARDS_PLUGIN_DIR_REL = 'plugins/openthrottle-guards';
+
+/**
+ * @description The Cursor guards plugin: the bash guard on `beforeShellExecution`. Cursor has no
+ * workflow plugin — no plan-run adapter exists for it yet.
+ * @public
+ */
+export const OPENTHROTTLE_CURSOR_GUARDS_PLUGIN_DIR_REL = `plugins/openthrottle-cursor-guards`;
+
+/**
+ * @description Every payload an OT-driven Claude Code run loads, telemetry first.
+ * @public
+ */
+export const OPENTHROTTLE_CLAUDE_PLUGIN_DIR_RELS: readonly string[] = [
+  OPENTHROTTLE_PLUGIN_DIR_REL,
+  OPENTHROTTLE_WORKFLOW_PLUGIN_DIR_REL,
+  OPENTHROTTLE_GUARDS_PLUGIN_DIR_REL,
+];
+
+/**
+ * @description Every payload an OT-driven Cursor run loads, telemetry first.
+ * @public
+ */
+export const OPENTHROTTLE_CURSOR_PLUGIN_DIR_RELS: readonly string[] = [
+  OPENTHROTTLE_CURSOR_PLUGIN_DIR_REL,
+  OPENTHROTTLE_CURSOR_GUARDS_PLUGIN_DIR_REL,
+];
+
+/**
  * @description Appends one repeatable `--plugin-dir <path>` per supplied directory. Returns the
  * command unchanged when the driver lacks the `pluginDir` capability, when nothing was supplied, or
  * when every entry is blank — so callers can pass a possibly-empty list unconditionally and a

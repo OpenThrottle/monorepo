@@ -60,7 +60,8 @@ Only once `health` is green across all four facets do you continue.
 
 Skill-usage telemetry is optional but fails **silently**: a session started by hand outside this
 repo records nothing without the `openthrottle@openthrottle` plugin. Run
-`node <ot-checkout>/.claude/hooks/skill-usage-doctor.cjs --json`, give each check one line, and relay
+`skill-usage-doctor.cjs --json` (on the Bash PATH when the plugin is installed; from an OT
+checkout, `pnpm run telemetry:doctor --json`), give each check one line, and relay
 its `fix` lines verbatim. The plugin install changes the user's global Claude setup: **ask first**, never unasked. Ongoing view: `/usage` → Telemetry coverage
 ([contract §8](https://github.com/openthrottle/monorepo/blob/main/docs/monorepo/child-repo-hook-telemetry-contract.md#8-coverage-heartbeat)).
 
