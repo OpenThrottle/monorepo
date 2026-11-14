@@ -984,6 +984,11 @@ jobs:
       - name: '🎯 Single-spec test docs use -- <path>'
         run: pnpm exec nx run monorepo:check-test-file-filter-docs
 
+      # Whole-tree, static. Tests are *.test.* in a sibling __tests__/; nothing
+      # enforced the suffix, so openthrottle-app drifted to 39 *.spec.ts files.
+      - name: '🧪 No *.spec.* test files'
+        run: pnpm exec nx run monorepo:check-test-file-names
+
       # Static and build-free, so one shard is enough. Catches the `exports`
       # condition pointing into a gitignored build dir on a package whose own
       # sources import it by name — the mismatch that made shard assignment,

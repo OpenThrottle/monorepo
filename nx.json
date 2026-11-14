@@ -427,6 +427,15 @@
         "cwd": "{workspaceRoot}"
       }
     },
+    "check-test-file-names": {
+      "cache": false,
+      "description": "Fail when a tracked file under applications/, packages/ or tools/ uses the *.spec.* test suffix, via scripts/check-test-file-names.ts — tests are *.test.* in a sibling __tests__/ (OT plan 8dd14e61). ESLint cannot see file names, so this is a tree check. Never cached: the input is the whole tracked tree, like check-folder-vocabulary.",
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsx ./scripts/check-test-file-names.ts",
+        "cwd": "{workspaceRoot}"
+      }
+    },
     "cms-schemas": {
       "cache": false,
       "configurations": {
