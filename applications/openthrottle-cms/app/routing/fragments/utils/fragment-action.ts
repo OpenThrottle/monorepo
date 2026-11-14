@@ -1,14 +1,6 @@
 import type { CmsFormIssues } from '@openthrottle/react-router-cms-core';
-import {
-  isAuthError,
-  isGraphqlResponseError,
-} from '@openthrottle/react-router-graphql';
 
-import { FRAGMENT_EDITOR_COPY } from '~/routing/fragments/data/data.copy';
-import type {
-  FragmentActionResult,
-  FragmentIssue,
-} from '~/routing/fragments/types/fragment-action';
+import type { CmsActionIssue } from '~/global/types/cms-action';
 
 /**
  * @description The fields the fragment form posts for an update.
@@ -17,43 +9,6 @@ export interface FragmentUpdateForm {
   readonly name: string | undefined;
   readonly propertiesJson: string;
 }
-
-const isRecord = (
-  value: unknown,
-): value is Readonly<Record<string, unknown>> => {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-};
-
-const readIssues = (value: unknown): readonly FragmentIssue[] => {
-  if (!Array.isArray(value)) {
-    return [];
-  }
-
-  return value.flatMap((item: unknown) => {
-    if (!isRecord(item)) return [];
-    const { instancePath, message } = item;
-    if (typeof message !== 'string') return [];
-    const path = typeof instancePath === 'string' ? instancePath : '';
-
-    return [{ message, path }];
-  });
-};
-
-const failure = (
-  message: string,
-  issues: readonly FragmentIssue[] = [],
-): FragmentActionResult => {
-  return { issues, message, ok: false, requiresSignIn: false };
-};
-
-const signInRequired = (): FragmentActionResult => {
-  return {
-    issues: [],
-    message: FRAGMENT_EDITOR_COPY.unauthenticated,
-    ok: false,
-    requiresSignIn: true,
-  };
-};
 
 /**
  * @description Reads an update from the posted form: `properties` (the draft as JSON) is
@@ -147,47 +102,11 @@ export const readChildOrder = (
 };
 
 /**
- * @description The action result for a failed cms mutation: server validation issues for
- * `BAD_USER_INPUT`, a sign-in prompt (`requiresSignIn`) when nobody is signed in, a permission
- * message for a signed-in user without `cms:write`, otherwise the error's
- * own message.
- */
-export const toFragmentActionFailure = (
-  error: unknown,
-): FragmentActionResult => {
-  if (isAuthError(error)) {
-    return signInRequired();
-  }
-
-  if (!isGraphqlResponseError(error)) {
-    return failure(error instanceof Error ? error.message : String(error));
-  }
-
-  const { code, issues } = error.extensions;
-
-  switch (code) {
-    case 'BAD_USER_INPUT': {
-      const read = readIssues(issues);
-
-      return read.length > 0
-        ? failure(FRAGMENT_EDITOR_COPY.invalid, read)
-        : failure(error.message);
-    }
-    case 'FORBIDDEN':
-      return failure(FRAGMENT_EDITOR_COPY.forbidden);
-    case 'UNAUTHENTICATED':
-      return signInRequired();
-    default:
-      return failure(error.message);
-  }
-};
-
-/**
  * @description Groups issues by the top-level property their path points into (`/items/0/title` →
  * `items`), for the form's panes. An issue on the fragment as a whole has no pane.
  */
 export const toCmsFormIssues = (
-  issues: readonly FragmentIssue[],
+  issues: readonly CmsActionIssue[],
 ): CmsFormIssues => {
   const grouped = new Map<string, string[]>();
 

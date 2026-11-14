@@ -13,3 +13,10 @@ query CmsComponentDetail($uuid: String!) {
     ...CmsComponentDetail
   }
 }
+
+mutation UpdateCmsLibraryComponent($input: UpdateCmsLibraryComponentInput!) {
+  updateCmsLibraryComponent(input: $input) {
+    name
+    uuid
+  }
+}
