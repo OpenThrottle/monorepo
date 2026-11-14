@@ -80,6 +80,7 @@ describe('detectDeliveryLegFromScript', () => {
       expect(
         detectDeliveryLegFromScript({
           env: {},
+          marketplaceCacheDir: null,
           repoRoot,
           scriptPath: '/work/repo/.tool/hooks/skill-usage-heartbeat.cjs',
         }),
@@ -92,10 +93,24 @@ describe('detectDeliveryLegFromScript', () => {
       expect(
         detectDeliveryLegFromScript({
           env: {},
+          marketplaceCacheDir: null,
           repoRoot,
           scriptPath: '/home/me/ot/.tool/hooks/skill-usage-heartbeat.cjs',
         }),
       ).toBe('plugin-dir');
+    });
+  });
+
+  describe('when the script lives under the tool’s marketplace cache', () => {
+    it('is marketplace', () => {
+      expect(
+        detectDeliveryLegFromScript({
+          env: {},
+          marketplaceCacheDir: '/home/me/.codex/plugins/cache',
+          repoRoot,
+          scriptPath: `/home/me/.codex/plugins/cache/openthrottle/openthrottle/1.3.0/hooks/x.cjs`,
+        }),
+      ).toBe('marketplace');
     });
   });
 
@@ -104,6 +119,7 @@ describe('detectDeliveryLegFromScript', () => {
       expect(
         detectDeliveryLegFromScript({
           env: { OPENTHROTTLE_HOOK_DELIVERY: 'plugin-dir' },
+          marketplaceCacheDir: null,
           repoRoot,
           scriptPath: '/work/repo/x.cjs',
         }),
@@ -116,6 +132,7 @@ describe('detectDeliveryLegFromScript', () => {
       expect(
         detectDeliveryLegFromScript({
           env: {},
+          marketplaceCacheDir: null,
           repoRoot,
           scriptPath: undefined,
         }),

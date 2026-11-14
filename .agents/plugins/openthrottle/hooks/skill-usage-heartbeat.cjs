@@ -32,6 +32,10 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
+// packages/agentic-hooks/src/adapters/antigravity/heartbeat.ts
+var import_node_os2 = __toESM(require("node:os"), 1);
+var import_node_path6 = __toESM(require("node:path"), 1);
+
 // packages/agentic-hooks/src/data/jsonl.ts
 var import_node_path2 = __toESM(require("node:path"), 1);
 
@@ -70,8 +74,8 @@ var normalizeRemoteUrl = (raw) => {
     return null;
   }
   const host = withoutScheme.slice(0, slashIndex).toLowerCase();
-  const path5 = withoutScheme.slice(slashIndex);
-  return `https://${host}${path5}`;
+  const path7 = withoutScheme.slice(slashIndex);
+  return `https://${host}${path7}`;
 };
 
 // packages/agentic-hooks/src/config/env.ts
@@ -572,13 +576,14 @@ var detectDeliveryLeg = ({
 };
 var detectDeliveryLegFromScript = ({
   env,
+  marketplaceCacheDir,
   repoRoot,
   scriptPath
 }) => {
   const outsideRepo = scriptPath !== void 0 && !isPathInside(repoRoot, scriptPath);
   return detectDeliveryLeg({
     env,
-    marketplaceCacheDir: null,
+    marketplaceCacheDir,
     pluginRoot: outsideRepo ? import_node_path4.default.dirname(scriptPath) : null
   });
 };
@@ -603,11 +608,40 @@ var sanitizeMachineLabel = (raw) => {
   const trimmed = raw.trim().slice(0, MAX_MACHINE_LABEL_LENGTH).trim();
   return trimmed === "" ? null : trimmed;
 };
+var readVersionField = (rawJson) => {
+  try {
+    const parsed = JSON.parse(rawJson);
+    if (!isRecord(parsed) || typeof parsed.version !== "string") {
+      return null;
+    }
+    return parsed.version.trim() || null;
+  } catch {
+    return null;
+  }
+};
 var readTextOrNull = (filePath) => {
   try {
     return import_node_fs4.default.readFileSync(filePath, "utf8");
   } catch {
     return null;
+  }
+};
+var readFirstManifestVersion = (manifestPaths) => {
+  for (const manifest of manifestPaths) {
+    const raw = readTextOrNull(manifest);
+    const version = raw === null ? null : readVersionField(raw);
+    if (version !== null) {
+      return version;
+    }
+  }
+  return null;
+};
+var isReadableDirectory = (dirPath) => {
+  try {
+    import_node_fs4.default.readdirSync(dirPath);
+    return true;
+  } catch {
+    return false;
   }
 };
 var buildHeartbeatInput = ({
@@ -740,6 +774,47 @@ var sendHeartbeat = async ({
   }
 };
 
+// packages/agentic-hooks/src/adapters/antigravity/marketplace-install.ts
+var import_node_path5 = __toESM(require("node:path"), 1);
+var PLUGIN_DIR_NAME = "openthrottle";
+var resolveAntigravityPluginsDir = (homeDir) => {
+  return import_node_path5.default.join(homeDir, ".gemini", "config", "plugins");
+};
+var parseAntigravityPluginEnabled = (configJson) => {
+  if (configJson === null) {
+    return true;
+  }
+  try {
+    const parsed = JSON.parse(configJson);
+    if (!isRecord(parsed) || !isRecord(parsed.plugins)) {
+      return true;
+    }
+    const entry = parsed.plugins[PLUGIN_DIR_NAME];
+    return !(isRecord(entry) && entry.enabled === false);
+  } catch {
+    return true;
+  }
+};
+var readAntigravityMarketplaceInstall = ({
+  configJson,
+  pluginsDir
+}) => {
+  if (!isReadableDirectory(pluginsDir)) {
+    return isReadableDirectory(import_node_path5.default.dirname(pluginsDir)) ? { installed: false, version: null } : UNKNOWN_MARKETPLACE_INSTALL;
+  }
+  const pluginDir = import_node_path5.default.join(pluginsDir, PLUGIN_DIR_NAME);
+  if (!isReadableDirectory(pluginDir) || !parseAntigravityPluginEnabled(configJson)) {
+    return { installed: false, version: null };
+  }
+  return {
+    installed: true,
+    version: readFirstManifestVersion([
+      import_node_path5.default.join(pluginDir, "plugin.json"),
+      import_node_path5.default.join(pluginDir, ".claude-plugin", "plugin.json")
+    ])
+  };
+};
+
 // packages/agentic-hooks/src/adapters/antigravity/payload.ts
 var ANTIGRAVITY_SOURCE = "antigravity";
 
@@ -750,13 +825,20 @@ var main = async () => {
       payloadCwd: readHookPayloadCwd(readHookStdin()),
       projectDir: process.env.OPEN_THROTTLE_REPO_ROOT || process.cwd()
     });
+    const pluginsDir = resolveAntigravityPluginsDir(import_node_os2.default.homedir());
     await sendHeartbeat({
       deliveryLeg: detectDeliveryLegFromScript({
         env: process.env,
+        marketplaceCacheDir: pluginsDir,
         repoRoot,
         scriptPath: process.argv[1]
       }),
-      marketplace: UNKNOWN_MARKETPLACE_INSTALL,
+      marketplace: readAntigravityMarketplaceInstall({
+        configJson: readTextOrNull(
+          import_node_path6.default.join(import_node_path6.default.dirname(pluginsDir), "config.json")
+        ),
+        pluginsDir
+      }),
       pluginVersion: null,
       repoRoot,
       source: ANTIGRAVITY_SOURCE

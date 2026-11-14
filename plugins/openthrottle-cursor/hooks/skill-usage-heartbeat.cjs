@@ -70,8 +70,8 @@ var normalizeRemoteUrl = (raw) => {
     return null;
   }
   const host = withoutScheme.slice(0, slashIndex).toLowerCase();
-  const path6 = withoutScheme.slice(slashIndex);
-  return `https://${host}${path6}`;
+  const path7 = withoutScheme.slice(slashIndex);
+  return `https://${host}${path7}`;
 };
 
 // packages/agentic-hooks/src/config/env.ts
@@ -609,6 +609,34 @@ var readFirstManifestVersion = (manifestPaths) => {
   }
   return null;
 };
+var isReadableDirectory = (dirPath) => {
+  try {
+    import_node_fs4.default.readdirSync(dirPath);
+    return true;
+  } catch {
+    return false;
+  }
+};
+var listSubdirectoriesNewestFirst = (dirPath) => {
+  let names;
+  try {
+    names = import_node_fs4.default.readdirSync(dirPath);
+  } catch {
+    return [];
+  }
+  const dirs = [];
+  for (const name of names) {
+    const dir = import_node_path4.default.join(dirPath, name);
+    try {
+      const stat = import_node_fs4.default.statSync(dir);
+      if (stat.isDirectory()) {
+        dirs.push({ dir, mtimeMs: stat.mtimeMs });
+      }
+    } catch {
+    }
+  }
+  return dirs.sort((left, right) => right.mtimeMs - left.mtimeMs).map((entry) => entry.dir);
+};
 var buildHeartbeatInput = ({
   bufferStats,
   deliveryLeg,
@@ -740,8 +768,38 @@ var sendHeartbeat = async ({
 };
 
 // packages/agentic-hooks/src/adapters/cursor/heartbeat-run.ts
+var import_node_fs6 = __toESM(require("node:fs"), 1);
+var import_node_os2 = __toESM(require("node:os"), 1);
+var import_node_path6 = __toESM(require("node:path"), 1);
+
+// packages/agentic-hooks/src/adapters/cursor/marketplace-install.ts
 var import_node_fs5 = __toESM(require("node:fs"), 1);
 var import_node_path5 = __toESM(require("node:path"), 1);
+var MARKETPLACE_NAME = "openthrottle";
+var PLUGIN_NAME = "openthrottle";
+var CACHE_COMPLETE_MARKER = ".cache-complete";
+var resolveCursorMarketplaceCacheDir = (homeDir) => {
+  return import_node_path5.default.join(homeDir, ".cursor", "plugins", "cache");
+};
+var readCursorMarketplaceInstall = (cacheDir) => {
+  if (!isReadableDirectory(cacheDir)) {
+    return isReadableDirectory(import_node_path5.default.dirname(cacheDir)) ? { installed: false, version: null } : UNKNOWN_MARKETPLACE_INSTALL;
+  }
+  const [newest] = listSubdirectoriesNewestFirst(
+    import_node_path5.default.join(cacheDir, MARKETPLACE_NAME, PLUGIN_NAME)
+  ).filter((dir) => import_node_fs5.default.existsSync(import_node_path5.default.join(dir, CACHE_COMPLETE_MARKER)));
+  if (newest === void 0) {
+    return { installed: false, version: null };
+  }
+  return {
+    installed: true,
+    version: readFirstManifestVersion([
+      import_node_path5.default.join(newest, ".cursor-plugin", "plugin.json"),
+      import_node_path5.default.join(newest, ".claude-plugin", "plugin.json"),
+      import_node_path5.default.join(newest, "plugin.json")
+    ])
+  };
+};
 
 // packages/agentic-hooks/src/adapters/cursor/payload.ts
 var CURSOR_SOURCE = "cursor";
@@ -781,15 +839,15 @@ var resolvePluginVersion = (pluginRoot) => {
     return null;
   }
   return readFirstManifestVersion([
-    import_node_path5.default.join(pluginRoot, ".cursor-plugin", "plugin.json"),
-    import_node_path5.default.join(pluginRoot, ".claude-plugin", "plugin.json"),
-    import_node_path5.default.join(pluginRoot, "plugin.json")
+    import_node_path6.default.join(pluginRoot, ".cursor-plugin", "plugin.json"),
+    import_node_path6.default.join(pluginRoot, ".claude-plugin", "plugin.json"),
+    import_node_path6.default.join(pluginRoot, "plugin.json")
   ]);
 };
 var repoRegistersHeartbeat = (repoRoot) => {
   try {
     const parsed = JSON.parse(
-      import_node_fs5.default.readFileSync(import_node_path5.default.join(repoRoot, ".cursor", "hooks.json"), "utf8")
+      import_node_fs6.default.readFileSync(import_node_path6.default.join(repoRoot, ".cursor", "hooks.json"), "utf8")
     );
     if (typeof parsed !== "object" || parsed === null || !("hooks" in parsed)) {
       return false;
@@ -809,21 +867,23 @@ var isCursorHeartbeatShadowed = ({
 var runCursorHeartbeat = async ({
   env = process.env,
   fetchImpl = globalThis.fetch,
+  homeDir = import_node_os2.default.homedir(),
   now = () => /* @__PURE__ */ new Date(),
   repoRoot,
   scriptPath = process.argv[1],
   timeoutMs = DEFAULT_POST_TIMEOUT_MS
 }) => {
   const pluginRoot = resolveOwnPluginRoot(env, scriptPath);
+  const marketplaceCacheDir = resolveCursorMarketplaceCacheDir(homeDir);
   return sendHeartbeat({
     deliveryLeg: detectDeliveryLeg({
       env,
-      marketplaceCacheDir: null,
+      marketplaceCacheDir,
       pluginRoot
     }),
     env,
     fetchImpl,
-    marketplace: UNKNOWN_MARKETPLACE_INSTALL,
+    marketplace: readCursorMarketplaceInstall(marketplaceCacheDir),
     now,
     pluginVersion: resolvePluginVersion(pluginRoot),
     repoRoot,

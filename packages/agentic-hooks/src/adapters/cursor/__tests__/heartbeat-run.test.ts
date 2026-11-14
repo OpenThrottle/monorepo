@@ -99,6 +99,42 @@ describe('runCursorHeartbeat', () => {
     });
   });
 
+  describe('when the script runs from Cursor’s marketplace cache', () => {
+    it('reports the marketplace leg and the installed version', async () => {
+      const installRoot = path.join(
+        home,
+        '.cursor',
+        'plugins',
+        'cache',
+        'openthrottle',
+        'openthrottle',
+        '3dbd22ff',
+      );
+      fs.mkdirSync(path.join(installRoot, '.cursor-plugin'), {
+        recursive: true,
+      });
+      fs.writeFileSync(path.join(installRoot, '.cache-complete'), '');
+      fs.writeFileSync(
+        path.join(installRoot, '.cursor-plugin', 'plugin.json'),
+        JSON.stringify({ name: 'openthrottle', version: '1.3.0' }),
+      );
+
+      const receipt = await runCursorHeartbeat({
+        env: { ...offline, CURSOR_PLUGIN_ROOT: installRoot },
+        homeDir: home,
+        repoRoot: repo,
+        scriptPath: path.join(installRoot, 'hooks', 'x.cjs'),
+      });
+
+      expect(receipt?.payload).toMatchObject({
+        deliveryLeg: 'marketplace',
+        marketplacePluginInstalled: true,
+        marketplacePluginVersion: '1.3.0',
+        pluginVersion: '1.3.0',
+      });
+    });
+  });
+
   describe('when the driver stamped OPENTHROTTLE_HOOK_DELIVERY=plugin-dir', () => {
     it('reports the plugin-dir leg', async () => {
       const receipt = await runCursorHeartbeat({
