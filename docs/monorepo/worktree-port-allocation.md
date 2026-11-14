@@ -201,6 +201,26 @@ with it, and if `git worktree list` cannot be read it refuses rather than treati
 prefix as orphaned. Redis is the primary checkout's (`REDIS_*` from its `.env`), whichever
 checkout you run it from.
 
+## Shared whisper
+
+The opt-in voice service (`whisper`, `WHISPER_PORT=6030`) is **shared by every worktree**, whatever
+its database mode, and is not in the port block. It is stateless per session (the model is chosen
+per client), and its model cache is a named volume that compose scopes per project, so a
+per-worktree container would only re-download the model and fight `:6030`.
+
+`pnpm run voice:start|stop|logs` (`scripts/openthrottle-voice-lifecycle.ts`) reads the
+`OT_WORKTREE_DB` marker. The primary checkout runs its original `docker compose --profile voice …`
+commands. Any worktree (`shared` or `isolated`):
+
+- `voice:start` runs `up -d --wait whisper` against the **primary's** compose file, project
+  directory and project, so a healthy container is left alone and a stopped one is started.
+- `voice:stop` never stops the shared container.
+- `voice:logs` follows the primary's container.
+
+A worktree server needs nothing extra: `WHISPER_SERVICE_URL="ws://localhost:6030"` in
+`applications/openthrottle-server/.env.default` is outside the remapped `6020`–`6025` range, so it
+already points at the shared container.
+
 ## Running the stack: `pnpm worktree:serve`
 
 A worktree runs its own server and developer app on its own port block. To run one from an
@@ -298,6 +318,7 @@ a plan run is decided by the per-checkout BullMQ queue prefix
 - `scripts/worktree_db.ts` / `scripts/utils/worktree-db-isolate.ts` — `pnpm worktree:db isolate` (also run by `worktree:new --own-db`).
 - `scripts/utils/migration-guard.ts` — the shared-mode migration guard behind `database:migrate` and `ensure-migrations`.
 - `scripts/worktree_prune_queues.ts` / `scripts/utils/worktree-queue-keys.ts` — `pnpm worktree:prune-queues`; the util also backs teardown's queue-key cleanup.
+- `scripts/openthrottle-voice-lifecycle.ts` — `voice:start` / `voice:stop` / `voice:logs`, shared-whisper aware.
 - `scripts/worktree_serve.ts` / `scripts/utils/worktree-serve.ts` — `pnpm worktree:serve` (run, wait, probe, stop).
 - `scripts/utils/worktree-compose.ts` — the generated `docker-compose.worktree.yml` (shared vs isolated).
 - `scripts/setup_worktree.ts` — **OpenThrottle's provisioner** (executable, run by bare Node with native type stripping), found by the skill's third discovery rung. Allocates the port block, rewrites `.env`, writes the compose vars, generates the override.
