@@ -20,9 +20,6 @@ import type { UsageBranchOption } from '~/routing/usage/types';
 import { partitionSkillUsageByPresence } from '~/routing/usage/utils/partitionSkillUsageByPresence';
 
 export interface UsageSkillUsageProps {
-  /** Current `?provider=` (token usage); preserved when skill filters change. */
-  /** `?account=` token-usage filter to preserve, or null. */
-  accountParam?: string | null;
   /** SSR first page of branches: default branch first, then A–Z. */
   branchOptions: readonly UsageBranchOption[];
   /** The SSR branch page was truncated, so the list is not exhaustive. */
@@ -40,7 +37,6 @@ export interface UsageSkillUsageProps {
    * which table it lands in.
    */
   presentSlugs: readonly string[];
-  providerParam: string | null;
   rangeDays: number;
   selectedCwd: string | null;
   selectedGitBranch: string | null;
@@ -64,8 +60,6 @@ export const UsageSkillUsage = (
     end,
     filterOptions,
     presentSlugs,
-    accountParam = null,
-    providerParam,
     rangeDays,
     selectedCwd,
     selectedGitBranch,
@@ -140,12 +134,10 @@ export const UsageSkillUsage = (
       </p>
 
       <UsageSkillUsageFilters
-        accountParam={accountParam}
         branchOptions={branchOptions}
         branchesHaveMore={branchesHaveMore}
         end={end}
         filterOptions={filterOptions}
-        providerParam={providerParam}
         selectedCwd={selectedCwd}
         selectedGitBranch={selectedGitBranch}
         selectedRepo={selectedRepo}

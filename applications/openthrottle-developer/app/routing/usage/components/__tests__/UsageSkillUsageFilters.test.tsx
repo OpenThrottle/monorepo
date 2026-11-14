@@ -36,7 +36,6 @@ const baseProps = (): UsageSkillUsageFiltersProps => {
     branchesHaveMore: false,
     end: '2026-07-31',
     filterOptions: buildFilterOptions(),
-    providerParam: null,
     selectedCwd: null,
     selectedGitBranch: null,
     selectedRepo: null,
@@ -90,13 +89,12 @@ describe('UsageSkillUsageFilters Component', () => {
     );
   });
 
-  test('cwd filters preserve provider and mark active chips', () => {
+  test('cwd filters carry only skill params and mark active chips', () => {
     const component = renderComponent({
       ...baseProps(),
       filterOptions: buildFilterOptions({
         cwds: ['/Users/matt/openthrottle'],
       }),
-      providerParam: 'claude',
       selectedCwd: '/Users/matt/openthrottle',
       selectedGitBranch: 'example-usage-tracking',
       selectedScope: SKILL_USAGE_SCOPES.THIRD_PARTY,
@@ -105,7 +103,7 @@ describe('UsageSkillUsageFilters Component', () => {
     const cwdLink = component.getByRole('link', { name: 'openthrottle' });
     expect(cwdLink).toHaveAttribute('aria-current', 'true');
     expect(cwdLink).toHaveAttribute('title', '/Users/matt/openthrottle');
-    expect(cwdLink.getAttribute('href')).toContain('provider=claude');
+    expect(cwdLink.getAttribute('href')).not.toContain('provider=');
     expect(cwdLink.getAttribute('href')).toContain('skillScope=third-party');
     expect(cwdLink.getAttribute('href')).toContain(
       'skillBranch=example-usage-tracking',

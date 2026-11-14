@@ -32,6 +32,25 @@ const navigation: PermissionGatedNavigation = {
   ],
 };
 
+const navigationWithSubLinks: PermissionGatedNavigation = {
+  Agents: [
+    {
+      children: 'Usage',
+      icon: Icon,
+      subLinks: [
+        { children: 'Overview', icon: Icon, to: '/usage' },
+        {
+          children: 'Telemetry',
+          icon: Icon,
+          requiredPermission: PERMISSIONS.BLOG_DRAFT,
+          to: '/usage/telemetry',
+        },
+      ],
+      to: '/usage',
+    },
+  ],
+};
+
 describe('hasPermission', () => {
   test('is true only when the permission is listed', () => {
     expect(hasPermission(['blog:draft'], PERMISSIONS.BLOG_DRAFT)).toBe(true);
@@ -55,6 +74,27 @@ describe('filterNavigationByPermission', () => {
     expect(result['Workspace']?.map((link) => link.to)).toEqual([
       '/notes',
       '/blog',
+    ]);
+  });
+});
+
+describe('filterNavigationByPermission sub-links', () => {
+  test('drops gated sub-links the viewer cannot access', () => {
+    const result = filterNavigationByPermission(navigationWithSubLinks, []);
+
+    expect(result['Agents']?.[0]?.subLinks?.map((link) => link.to)).toEqual([
+      '/usage',
+    ]);
+  });
+
+  test('keeps gated sub-links when the permission is held', () => {
+    const result = filterNavigationByPermission(navigationWithSubLinks, [
+      'blog:draft',
+    ]);
+
+    expect(result['Agents']?.[0]?.subLinks?.map((link) => link.to)).toEqual([
+      '/usage',
+      '/usage/telemetry',
     ]);
   });
 });

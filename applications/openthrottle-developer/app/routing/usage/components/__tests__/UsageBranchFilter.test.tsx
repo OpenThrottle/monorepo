@@ -20,7 +20,6 @@ const baseProps = (): UsageBranchFilterProps => {
     end: '2026-07-31',
     hasMore: false,
     initialOptions: BRANCH_OPTIONS,
-    providerParam: null,
     selectedCwd: null,
     selectedGitBranch: null,
     selectedRepo: null,
@@ -106,11 +105,10 @@ describe('UsageBranchFilter Component', () => {
   });
 
   describe('when a branch is selected', () => {
-    test('navigates preserving provider, skillScope, and skillCwd', async () => {
+    test('navigates preserving skillScope and skillCwd', async () => {
       const user = userEvent.setup();
       const rendered = renderComponent({
         ...baseProps(),
-        providerParam: 'claude',
         selectedCwd: '/Users/matt/openthrottle',
         selectedScope: SKILL_USAGE_SCOPES.THIRD_PARTY,
       });
@@ -121,7 +119,7 @@ describe('UsageBranchFilter Component', () => {
       await waitFor(() => {
         expect(rendered.location.current).toContain('skillBranch=main');
       });
-      expect(rendered.location.current).toContain('provider=claude');
+      expect(rendered.location.current).not.toContain('provider=');
       expect(rendered.location.current).toContain('skillScope=third-party');
       expect(rendered.location.current).toContain('skillCwd=');
       expect(listbox).toBeDefined();
@@ -129,11 +127,10 @@ describe('UsageBranchFilter Component', () => {
   });
 
   describe('when All branches is selected', () => {
-    test('clears skillBranch but keeps the sibling params', async () => {
+    test('clears skillBranch', async () => {
       const user = userEvent.setup();
       const rendered = renderComponent({
         ...baseProps(),
-        providerParam: 'claude',
         selectedGitBranch: 'main',
       });
       await openListbox(rendered);
@@ -143,7 +140,7 @@ describe('UsageBranchFilter Component', () => {
       await waitFor(() => {
         expect(rendered.location.current).not.toContain('skillBranch');
       });
-      expect(rendered.location.current).toContain('provider=claude');
+      expect(rendered.location.current).not.toContain('provider=');
     });
   });
 

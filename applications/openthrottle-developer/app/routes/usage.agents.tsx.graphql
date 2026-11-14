@@ -1,0 +1,70 @@
+fragment UsageTokenUsageRow on TokenUsageRowObject {
+  agentAccountId
+  cacheReadTokens
+  cacheWriteTokens
+  costUsd
+  createdAt
+  id
+  inputTokens
+  model
+  outputTokens
+  provider
+  reasoningTokens
+  source
+  totalTokens
+}
+
+fragment UsageTokenUsageTotals on TokenUsageTotalsObject {
+  cacheReadTokens
+  cacheWriteTokens
+  costUsd
+  inputTokens
+  outputTokens
+  reasoningTokens
+  totalTokens
+  turnCount
+}
+
+fragment UsageTokenUsageAccount on TokenUsageAccountObject {
+  credentialKind
+  email
+  id
+  lastSeenAt
+  orgName
+  plan
+  provider
+}
+
+fragment UsageTokenUsageByAccount on TokenUsageByAccountObject {
+  account {
+    ...UsageTokenUsageAccount
+  }
+  provider
+  totals {
+    ...UsageTokenUsageTotals
+  }
+}
+
+query getUsageTokenUsage(
+  $start: String!
+  $end: String!
+  $provider: String
+  $accountId: String
+) {
+  tokenUsage(
+    start: $start
+    end: $end
+    provider: $provider
+    accountId: $accountId
+  ) {
+    byAccount {
+      ...UsageTokenUsageByAccount
+    }
+    items {
+      ...UsageTokenUsageRow
+    }
+    totals {
+      ...UsageTokenUsageTotals
+    }
+  }
+}

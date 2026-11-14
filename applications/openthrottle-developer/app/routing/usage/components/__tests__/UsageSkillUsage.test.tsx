@@ -89,7 +89,6 @@ const baseProps = (): UsageSkillUsageProps => {
     end: '2026-07-31',
     filterOptions: buildFilterOptions(),
     presentSlugs: [],
-    providerParam: null,
     rangeDays: 30,
     selectedCwd: null,
     selectedGitBranch: null,
@@ -304,14 +303,13 @@ describe('UsageSkillUsage Component', () => {
     );
   });
 
-  test('renders the branch dropdown and cwd chips, preserving provider', () => {
+  test('renders the branch dropdown and cwd chips', () => {
     const component = renderComponent({
       ...baseProps(),
       branchOptions: [{ branch: 'example-usage-tracking', count: 3 }],
       filterOptions: buildFilterOptions({
         cwds: ['/Users/matt/openthrottle'],
       }),
-      providerParam: 'claude',
       selectedCwd: '/Users/matt/openthrottle',
       selectedGitBranch: 'example-usage-tracking',
       selectedScope: SKILL_USAGE_SCOPES.THIRD_PARTY,
@@ -324,7 +322,7 @@ describe('UsageSkillUsage Component', () => {
     const cwdLink = component.getByRole('link', { name: 'openthrottle' });
     expect(cwdLink).toHaveAttribute('aria-current', 'true');
     expect(cwdLink).toHaveAttribute('title', '/Users/matt/openthrottle');
-    expect(cwdLink.getAttribute('href')).toContain('provider=claude');
+    expect(cwdLink.getAttribute('href')).not.toContain('provider=');
     expect(cwdLink.getAttribute('href')).toContain(
       'skillBranch=example-usage-tracking',
     );

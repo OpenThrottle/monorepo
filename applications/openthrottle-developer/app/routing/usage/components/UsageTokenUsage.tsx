@@ -40,11 +40,6 @@ export interface UsageTokenUsageProps {
   selectedAccount: string | null;
   /** Provider id from `?provider=`, or null for all providers. */
   selectedProvider: string | null;
-  /** Skill-usage search params to preserve when changing provider. */
-  skillCwdParam?: string | null;
-  skillGitBranchParam?: string | null;
-  skillRepoParam?: string | null;
-  skillScopeParam?: string | null;
   /** Summed usage over the current selection. */
   totals: UsageTokenUsageTotalsFragment;
 }
@@ -59,10 +54,6 @@ export const UsageTokenUsage = (
     rangeDays,
     selectedAccount,
     selectedProvider,
-    skillCwdParam = null,
-    skillGitBranchParam = null,
-    skillRepoParam = null,
-    skillScopeParam = null,
     totals,
   } = props;
 
@@ -87,11 +78,7 @@ export const UsageTokenUsage = (
   ): string => {
     return buildUsageSearch({
       account,
-      cwd: skillCwdParam,
-      gitBranch: skillGitBranchParam,
       provider,
-      repo: skillRepoParam,
-      scope: skillScopeParam,
     });
   };
 
@@ -152,10 +139,6 @@ export const UsageTokenUsage = (
       <UsageTokenUsageFilters
         className="mt-6"
         selectedProvider={selectedProvider}
-        skillCwdParam={skillCwdParam}
-        skillGitBranchParam={skillGitBranchParam}
-        skillRepoParam={skillRepoParam}
-        skillScopeParam={skillScopeParam}
       />
 
       <p className="text-muted-foreground mt-3 text-xs">

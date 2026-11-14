@@ -14,9 +14,6 @@ import { buildUsageSearch } from '~/routing/usage/utils/buildUsageSearch';
 import { skillUsageChipClass } from '~/routing/usage/utils/skillUsageChipClass';
 
 export interface UsageSkillUsageFiltersProps {
-  /** Current `?provider=` (token usage); preserved when skill filters change. */
-  /** `?account=` token-usage filter to preserve, or null. */
-  accountParam?: string | null;
   /** SSR first page of branches: default branch first, then A–Z. */
   branchOptions: readonly UsageBranchOption[];
   /** The SSR branch page was truncated, so the list is not exhaustive. */
@@ -25,7 +22,6 @@ export interface UsageSkillUsageFiltersProps {
   /** Range end (YYYY-MM-DD) the branch search runs over. */
   end: string;
   filterOptions: UsageSkillUsageFilterOptionsFragment;
-  providerParam: string | null;
   selectedCwd: string | null;
   selectedGitBranch: string | null;
   selectedRepo: string | null;
@@ -43,8 +39,6 @@ export const UsageSkillUsageFilters = (
     className,
     end,
     filterOptions,
-    accountParam = null,
-    providerParam,
     selectedCwd,
     selectedGitBranch,
     selectedRepo,
@@ -90,10 +84,8 @@ export const UsageSkillUsageFilters = (
               className={skillUsageChipClass(active)}
               key={option.label}
               to={buildUsageSearch({
-                account: accountParam,
                 cwd: selectedCwd,
                 gitBranch: selectedGitBranch,
-                provider: providerParam,
                 repo: selectedRepo,
                 scope: option.id,
               })}
@@ -106,11 +98,9 @@ export const UsageSkillUsageFilters = (
 
       <div className="mb-6 flex flex-col gap-3">
         <UsageBranchFilter
-          accountParam={accountParam}
           end={end}
           hasMore={branchesHaveMore}
           initialOptions={branchOptions}
-          providerParam={providerParam}
           selectedCwd={selectedCwd}
           selectedGitBranch={selectedGitBranch}
           selectedRepo={selectedRepo}
@@ -119,9 +109,7 @@ export const UsageSkillUsageFilters = (
         />
 
         <UsageSkillUsageRepoFilter
-          accountParam={accountParam}
           filterOptions={filterOptions}
-          providerParam={providerParam}
           selectedCwd={selectedCwd}
           selectedGitBranch={selectedGitBranch}
           selectedRepo={selectedRepo}

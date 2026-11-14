@@ -1,6 +1,8 @@
 /**
- * @description Shared Usage-route search-param builders so token-usage and
- * skill-usage filters preserve each other's selections across navigation.
+ * @description Search-param builder for the Usage sub-routes. The result is a bare
+ * `?query`, so a link resolves against the route that renders it and carries
+ * only the params its caller passes (skills: scope/branch/repo/cwd; agents:
+ * provider/account).
  */
 
 export type UsageSearchParams = {

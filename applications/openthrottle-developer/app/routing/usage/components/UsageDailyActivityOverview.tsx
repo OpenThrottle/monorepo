@@ -1,5 +1,6 @@
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import * as React from 'react';
+import { Link } from 'react-router';
 
 import {
   USAGE_COMPLETION_ATTRIBUTION_CAVEAT,
@@ -37,8 +38,11 @@ export const UsageDailyActivityOverview = (
         Daily counts are aggregated in OpenThrottle for each calendar day over
         the last {rangeDays} days. They reflect OpenThrottle plan and task
         activity surfaced through the developer portal and automation—not
-        IDE-only runs. Model token and cost usage is tracked separately in the
-        Model token usage section above.
+        IDE-only runs. Model token and cost usage is tracked separately on the{' '}
+        <Link className="underline" to="/usage/agents">
+          Agents usage
+        </Link>{' '}
+        page.
       </p>
       <p className="text-muted-foreground mb-4 text-xs md:mb-8">
         {USAGE_COMPLETION_ATTRIBUTION_CAVEAT}

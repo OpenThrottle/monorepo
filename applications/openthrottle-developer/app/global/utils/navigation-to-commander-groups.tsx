@@ -89,11 +89,14 @@ const isLinkVisible = (
 const toCommanderItem = (
   link: GlobalSidebarContentLinkProps,
   options: NavigationCommanderOptions,
+  parentLabel: string | undefined = undefined,
 ): CommanderItem => {
   const { children, icon: IconComponent, to } = link;
 
   const path = getPathFromTo(to);
-  const label = String(children ?? path);
+  const ownLabel = String(children ?? path);
+  const label =
+    parentLabel === undefined ? ownLabel : `${parentLabel} › ${ownLabel}`;
 
   return {
     icon: <IconComponent className={ICON_SM} />,
@@ -105,6 +108,25 @@ const toCommanderItem = (
     /** Include label + path so cmdk matches "plans" and "/plans", not only the id. */
     value: `${label} ${path}`,
   };
+};
+
+/**
+ * @description Maps a link plus its visible sub-links to commander rows.
+ * Sub-links read "Parent › Child"; one that targets the parent's own path
+ * (an "Overview" entry) is skipped, since the parent row already reaches it.
+ */
+const toCommanderItems = (
+  link: GlobalSidebarContentLinkProps,
+  options: NavigationCommanderOptions,
+): CommanderItem[] => {
+  const parentPath = getPathFromTo(link.to);
+  const parentLabel = String(link.children ?? parentPath);
+  const subItems = (link.subLinks ?? [])
+    .filter((subLink) => isLinkVisible(subLink, options))
+    .filter((subLink) => getPathFromTo(subLink.to) !== parentPath)
+    .map((subLink) => toCommanderItem(subLink, options, parentLabel));
+
+  return [toCommanderItem(link, options), ...subItems];
 };
 
 /**
@@ -121,7 +143,7 @@ export const buildCommanderGroupsFromNavigation = (
     (groups, [heading, links]) => {
       const items = links
         .filter((link) => isLinkVisible(link, options))
-        .map((link) => toCommanderItem(link, options));
+        .flatMap((link) => toCommanderItems(link, options));
 
       if (items.length === 0) {
         return groups;

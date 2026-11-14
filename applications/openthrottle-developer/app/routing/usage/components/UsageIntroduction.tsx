@@ -1,6 +1,7 @@
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { ChartAreaIcon } from 'lucide-react';
 import * as React from 'react';
+import { Link } from 'react-router';
 
 export interface UsageIntroductionProps {
   className?: string;
@@ -33,7 +34,20 @@ export const UsageIntroduction = (
         title="Usage"
       />
       <p className="text-muted-foreground text-sm">
-        Usage metrics for this portal over the last {rangeDays} days.
+        Usage metrics for this portal over the last {rangeDays} days. Skill,
+        agent token and telemetry detail live on{' '}
+        <Link className="underline" to="/usage/skills">
+          Skills
+        </Link>
+        ,{' '}
+        <Link className="underline" to="/usage/agents">
+          Agents
+        </Link>{' '}
+        and{' '}
+        <Link className="underline" to="/usage/telemetry">
+          Telemetry
+        </Link>
+        .
       </p>
     </div>
   );

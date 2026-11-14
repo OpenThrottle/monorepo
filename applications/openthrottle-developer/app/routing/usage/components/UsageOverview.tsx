@@ -49,10 +49,21 @@ export const UsageOverview = (
           Plan and task counts come from OpenThrottle daily stats (last{' '}
           {rangeDays} days). They approximate automation load from Ralph,
           workflows, and manual work in the portal. Model token and cost usage
-          is in the <span className="text-foreground">Model token usage</span>{' '}
-          section; harness-captured skill invocations (ours and third-party) are
-          in <span className="text-foreground">Skill usage</span>. Per-prompt
-          billing is still not tracked. For prompt-level debugging, use{' '}
+          is on the{' '}
+          <Link className="underline" to="/usage/agents">
+            Agents usage
+          </Link>{' '}
+          page; harness-captured skill invocations (ours and third-party) are on
+          the{' '}
+          <Link className="underline" to="/usage/skills">
+            Skills usage
+          </Link>{' '}
+          page, and capture health is on{' '}
+          <Link className="underline" to="/usage/telemetry">
+            Telemetry
+          </Link>
+          . Per-prompt billing is still not tracked. For prompt-level debugging,
+          use{' '}
           <Link className="underline" to="/prompts">
             Prompts
           </Link>{' '}
