@@ -3,203 +3,203 @@
     {
       "failures": [],
       "id": "plan-create-basic",
-      "passes": 1,
-      "trials": 1
+      "passes": 3,
+      "trials": 3
     },
     {
       "failures": [],
       "id": "plan-create-not-markdown",
-      "passes": 1,
-      "trials": 1
+      "passes": 3,
+      "trials": 3
     },
     {
       "failures": [],
       "id": "plan-create-batch",
-      "passes": 1,
-      "trials": 1
+      "passes": 3,
+      "trials": 3
     },
     {
       "failures": [],
       "id": "plan-get",
-      "passes": 1,
-      "trials": 1
+      "passes": 3,
+      "trials": 3
     },
     {
       "failures": [],
       "id": "plan-update-status",
-      "passes": 1,
-      "trials": 1
+      "passes": 3,
+      "trials": 3
     },
     {
       "failures": [],
       "id": "plan-list-in-progress",
-      "passes": 1,
-      "trials": 1
+      "passes": 3,
+      "trials": 3
     },
     {
       "failures": [],
       "id": "plan-delete",
-      "passes": 1,
-      "trials": 1
+      "passes": 3,
+      "trials": 3
     },
     {
       "failures": [],
       "id": "task-create",
-      "passes": 1,
-      "trials": 1
+      "passes": 3,
+      "trials": 3
     },
     {
       "failures": [],
       "id": "task-create-batch",
-      "passes": 1,
-      "trials": 1
+      "passes": 3,
+      "trials": 3
     },
     {
       "failures": [],
       "id": "task-start",
-      "passes": 1,
-      "trials": 1
+      "passes": 3,
+      "trials": 3
     },
     {
       "failures": [],
       "id": "task-complete",
-      "passes": 1,
-      "trials": 1
+      "passes": 3,
+      "trials": 3
     },
     {
       "failures": [],
       "id": "task-block",
-      "passes": 1,
-      "trials": 1
+      "passes": 3,
+      "trials": 3
     },
     {
       "failures": [],
       "id": "task-list-remaining",
-      "passes": 1,
-      "trials": 1
+      "passes": 3,
+      "trials": 3
     },
     {
       "failures": [],
       "id": "task-reorder",
-      "passes": 1,
-      "trials": 1
+      "passes": 3,
+      "trials": 3
     },
     {
       "failures": [],
       "id": "task-get",
-      "passes": 1,
-      "trials": 1
+      "passes": 3,
+      "trials": 3
     },
     {
       "failures": [],
       "id": "search-prior-work",
-      "passes": 1,
-      "trials": 1
+      "passes": 3,
+      "trials": 3
     },
     {
       "failures": [],
       "id": "search-ask-ot",
-      "passes": 1,
-      "trials": 1
+      "passes": 3,
+      "trials": 3
     },
     {
       "failures": [],
       "id": "search-list-sources",
-      "passes": 1,
-      "trials": 1
+      "passes": 3,
+      "trials": 3
     },
     {
       "failures": [],
       "id": "search-get-document",
-      "passes": 1,
-      "trials": 1
+      "passes": 3,
+      "trials": 3
     },
     {
       "failures": [],
       "id": "follow-up-file-plan",
-      "passes": 1,
-      "trials": 1
+      "passes": 3,
+      "trials": 3
     },
     {
       "failures": [],
       "id": "follow-up-tag-plan",
-      "passes": 1,
-      "trials": 1
+      "passes": 3,
+      "trials": 3
     },
     {
       "failures": [],
       "id": "follow-up-tag-task",
-      "passes": 1,
-      "trials": 1
+      "passes": 3,
+      "trials": 3
     },
     {
       "failures": [],
       "id": "output-append-progress",
-      "passes": 1,
-      "trials": 1
+      "passes": 3,
+      "trials": 3
     },
     {
       "failures": [],
       "id": "output-read-iteration-log",
-      "passes": 1,
-      "trials": 1
+      "passes": 3,
+      "trials": 3
     },
     {
       "failures": [],
       "id": "output-last-activity",
-      "passes": 1,
-      "trials": 1
+      "passes": 3,
+      "trials": 3
     },
     {
       "failures": [],
       "id": "output-shipped-yesterday",
-      "passes": 1,
-      "trials": 1
+      "passes": 3,
+      "trials": 3
     },
     {
       "failures": [],
       "id": "control-rename-variable",
-      "passes": 1,
-      "trials": 1
+      "passes": 3,
+      "trials": 3
     },
     {
       "failures": [],
       "id": "control-general-question",
-      "passes": 1,
-      "trials": 1
+      "passes": 3,
+      "trials": 3
     },
     {
       "failures": [],
       "id": "control-git-log",
-      "passes": 1,
-      "trials": 1
+      "passes": 3,
+      "trials": 3
     },
     {
       "failures": [],
       "id": "control-edit-docs",
-      "passes": 1,
-      "trials": 1
+      "passes": 3,
+      "trials": 3
     },
     {
       "failures": [],
       "id": "control-run-tests",
-      "passes": 1,
-      "trials": 1
+      "passes": 3,
+      "trials": 3
     },
     {
       "failures": [],
       "id": "control-delete-file",
-      "passes": 1,
-      "trials": 1
+      "passes": 3,
+      "trials": 3
     }
   ],
   "effort": "medium",
   "model": "claude-opus-5-5",
   "surfaceSha256": "f7dc67e8a8254a7f4c73be98d4ca4107020afe7bba9482b0bd593e1f6d813a51",
   "usage": {
-    "cacheReadInputTokens": 727944,
-    "cacheWriteInputTokens": 103992,
-    "inputTokens": 3878,
-    "outputTokens": 4906
+    "cacheReadInputTokens": 2495808,
+    "cacheWriteInputTokens": 0,
+    "inputTokens": 11634,
+    "outputTokens": 14380
   }
 }
