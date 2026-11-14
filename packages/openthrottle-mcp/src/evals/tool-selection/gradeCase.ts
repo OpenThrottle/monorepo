@@ -50,7 +50,39 @@ export function matchesArg(value: unknown, matcher: ArgMatcher): boolean {
 }
 
 /**
- * @description The names of the matchers a call fails, empty when it satisfies all of them.
+ * @description Longest rendering of a received value kept in a failure reason; longer ones are cut with `…`.
+ */
+const MAX_VALUE_LENGTH = 80;
+
+/**
+ * @description Renders a value for a failure reason: JSON where possible, so a string keeps its quotes and
+ * `"in_progress"` reads differently from `"IN_PROGRESS"`; `undefined` when the arg was not sent at all.
+ */
+const describeValue = (value: unknown): string => {
+  if (value === undefined) {
+    return 'undefined';
+  }
+  const rendered = JSON.stringify(value) ?? String(value);
+
+  return rendered.length > MAX_VALUE_LENGTH
+    ? `${rendered.slice(0, MAX_VALUE_LENGTH)}…`
+    : rendered;
+};
+
+const describeMatcher = (matcher: ArgMatcher): string => {
+  switch (matcher.kind) {
+    case 'equals':
+      return `equals ${JSON.stringify(matcher.value)}`;
+    case 'includes':
+      return `includes ${JSON.stringify(matcher.value)}`;
+    case 'present':
+      return 'present';
+  }
+};
+
+/**
+ * @description One entry per matcher a call fails — the arg, what was received and what was expected — empty
+ * when the call satisfies all of them.
  */
 const failedArgs = (
   call: SelectedCall,
@@ -60,7 +92,9 @@ const failedArgs = (
 
   return Object.entries(args)
     .filter(([key, matcher]) => !matchesArg(input[key], matcher))
-    .map(([key]) => key);
+    .map(([key, matcher]) => {
+      return `${key} (got ${describeValue(input[key])}, expected ${describeMatcher(matcher)})`;
+    });
 };
 
 const describeCalls = (calls: readonly SelectedCall[]): string => {

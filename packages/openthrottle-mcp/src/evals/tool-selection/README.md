@@ -67,6 +67,21 @@ subscription usage (the subscription-terms warning in
 recorded as `<driver>/<model>`, with `cli-default` when `--model` is omitted. That name keys the result
 file and the baseline, so a CLI is only ever compared with itself.
 
+A CLI run is not the Messages API run with a different transport, so expect different results on
+the same wording:
+
+- **The agent may read before it writes.** claude defers MCP tool schemas behind `ToolSearch`, and
+  after loading them it often calls `get_task` before `update_task`. On a terse prompt (`task-complete`:
+  "Task … is done.") that read is its first OpenThrottle call, so the trial fails with
+  `expected update_task, got ToolSearch, get_task` even though the agent was heading for the right tool.
+  This is a property of the harness, not the wording, which is why CLI results are never compared with
+  the API baseline.
+- **It follows the wording more literally.** claude CLI sent lowercase `"in_progress"` on every
+  `task-start` trial while the API passed it, on both its default model and `--model opus` (plan
+  `aa9cffee`). The server upper-cases task status, so this was not a live failure. The cause was the
+  wording: the instructions gave `in_progress → completed` as the example, and `update_task` named no
+  status values. `task-block` is the regression case for that fix.
+
 ## How a trial works
 
 `cli.ts` lists the live surface through `listToolSurface()`, the same path the byte-budget measurement uses,
