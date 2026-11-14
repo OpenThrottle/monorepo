@@ -5,9 +5,17 @@ import type {
 import { describe, expect, it } from 'vitest';
 
 import type { SandboxToolCall } from '../../sandbox/createSandboxMcpServer.ts';
-import { cliSelectionOf, otCallOf } from '../cli-selection.ts';
+import {
+  cliGradeBoundaryOf,
+  cliSelectionOf,
+  isReadOnlyOtTool,
+  otCallOf,
+} from '../cli-selection.ts';
+import { TOOL_SELECTION_CASES } from '../data/data.cases.ts';
+import type { CaseExpectation } from '../eval-case.ts';
+import { gradeCase } from '../gradeCase.ts';
 
-const OT = new Set(['create_plan', 'get_plan']);
+const OT = new Set(['create_plan', 'get_plan', 'get_task', 'update_task']);
 
 const call = (
   name: string,
@@ -66,6 +74,7 @@ describe('cliSelectionOf', () => {
         ]),
         [served('create_plan', { title: 'from-log' }), served('get_plan')],
         OT,
+        'first-ot-call',
       );
 
       expect(outcome).toMatchObject({
@@ -83,7 +92,12 @@ describe('cliSelectionOf', () => {
 
   describe('when no OT tool was called', () => {
     it('returns every harness call, so a control case can pass', () => {
-      const outcome = cliSelectionOf(trajectory([call('Read')]), [], OT);
+      const outcome = cliSelectionOf(
+        trajectory([call('Read')]),
+        [],
+        OT,
+        'first-ot-call',
+      );
 
       expect(outcome).toMatchObject({
         kind: 'selection',
@@ -98,6 +112,7 @@ describe('cliSelectionOf', () => {
         trajectory([call('mcp__openthrottle__create_plan')]),
         [],
         OT,
+        'first-ot-call',
       );
 
       expect(outcome.kind).toBe('leak');
@@ -113,6 +128,7 @@ describe('cliSelectionOf', () => {
         ]),
         [served('create_plan')],
         OT,
+        'first-ot-call',
       );
 
       expect(outcome.kind).toBe('mismatch');
@@ -125,6 +141,7 @@ describe('cliSelectionOf', () => {
         trajectory([call('mcp__openthrottle-mcp__create_plan')]),
         [served('get_plan')],
         OT,
+        'first-ot-call',
       );
 
       expect(outcome.kind).toBe('mismatch');
@@ -132,8 +149,158 @@ describe('cliSelectionOf', () => {
 
     it('is a mismatch when only the sandbox saw a call', () => {
       expect(
-        cliSelectionOf(trajectory([]), [served('get_plan')], OT).kind,
+        cliSelectionOf(
+          trajectory([]),
+          [served('get_plan')],
+          OT,
+          'first-ot-call',
+        ).kind,
       ).toBe('mismatch');
+    });
+  });
+});
+
+const found = TOOL_SELECTION_CASES.find((testCase) => {
+  return testCase.id === 'task-complete';
+});
+if (found === undefined) {
+  throw new Error('the task-complete case is missing from data.cases.ts');
+}
+const taskComplete = found;
+const { prompt } = taskComplete;
+const TASK_ID = /[0-9a-f-]{36}/.exec(prompt)?.[0] ?? '';
+
+const readThenWrite = trajectory([
+  call('ToolSearch', { query: 'select:mcp__openthrottle-mcp__update_task' }),
+  call('mcp__openthrottle-mcp__get_task', { id: TASK_ID }),
+  call('mcp__openthrottle-mcp__update_task', {
+    id: TASK_ID,
+    status: 'COMPLETED',
+  }),
+]);
+
+const readThenWriteLog = [
+  served('get_task', { id: TASK_ID }),
+  served('update_task', { id: TASK_ID, status: 'COMPLETED' }),
+];
+
+describe('isReadOnlyOtTool', () => {
+  it('treats get_*, list_* and semantic_search as reads', () => {
+    expect(
+      ['get_task', 'list_sources', 'semantic_search'].every(isReadOnlyOtTool),
+    ).toBe(true);
+  });
+
+  it('treats everything else as a write', () => {
+    expect(
+      ['update_task', 'create_plan', 'claim_plan_messages'].some(
+        isReadOnlyOtTool,
+      ),
+    ).toBe(false);
+  });
+});
+
+describe('cliGradeBoundaryOf', () => {
+  it('grades a case expecting only writes to the first write', () => {
+    expect(cliGradeBoundaryOf(taskComplete.expect)).toBe('first-write');
+  });
+
+  it('grades a case expecting a read to the first OT call', () => {
+    const expectation: CaseExpectation = {
+      args: {},
+      kind: 'call',
+      tools: ['get_remaining_tasks_for_plan', 'get_tasks_by_plan_id'],
+    };
+
+    expect(cliGradeBoundaryOf(expectation)).toBe('first-ot-call');
+  });
+
+  it('grades a control case to the first OT call', () => {
+    expect(cliGradeBoundaryOf({ kind: 'no-call' })).toBe('first-ot-call');
+  });
+});
+
+describe('cliSelectionOf with a first-write boundary', () => {
+  describe('when the agent reads before it writes', () => {
+    it('keeps the read and ends at the write, so task-complete passes', () => {
+      const outcome = cliSelectionOf(
+        readThenWrite,
+        readThenWriteLog,
+        OT,
+        'first-write',
+      );
+
+      expect(outcome).toMatchObject({
+        kind: 'selection',
+        selection: {
+          calls: [
+            { name: 'ToolSearch' },
+            { input: { id: TASK_ID }, name: 'get_task' },
+            {
+              input: { id: TASK_ID, status: 'COMPLETED' },
+              name: 'update_task',
+            },
+          ],
+        },
+      });
+      if (outcome.kind !== 'selection') {
+        throw new Error(`expected a selection, got ${outcome.kind}`);
+      }
+      expect(gradeCase(taskComplete, outcome.selection, OT)).toEqual({
+        pass: true,
+      });
+    });
+
+    it('still fails at the first OT call under the first-ot-call boundary', () => {
+      const outcome = cliSelectionOf(
+        readThenWrite,
+        readThenWriteLog,
+        OT,
+        'first-ot-call',
+      );
+      if (outcome.kind !== 'selection') {
+        throw new Error(`expected a selection, got ${outcome.kind}`);
+      }
+
+      expect(gradeCase(taskComplete, outcome.selection, OT)).toEqual({
+        pass: false,
+        reason: 'expected update_task, got ToolSearch, get_task',
+      });
+    });
+  });
+
+  describe('when the agent only reads', () => {
+    it('grades every call and fails task-complete', () => {
+      const outcome = cliSelectionOf(
+        trajectory([
+          call('ToolSearch'),
+          call('mcp__openthrottle-mcp__get_task', { id: TASK_ID }),
+        ]),
+        [served('get_task', { id: TASK_ID })],
+        OT,
+        'first-write',
+      );
+      if (outcome.kind !== 'selection') {
+        throw new Error(`expected a selection, got ${outcome.kind}`);
+      }
+
+      expect(gradeCase(taskComplete, outcome.selection, OT)).toEqual({
+        pass: false,
+        reason: 'expected update_task, got ToolSearch, get_task',
+      });
+    });
+  });
+
+  describe('when a graded read disagrees with the sandbox log', () => {
+    it('is a mismatch', () => {
+      const outcome = cliSelectionOf(
+        readThenWrite,
+        [served('get_plan'), served('update_task')],
+        OT,
+        'first-write',
+      );
+
+      expect(outcome.kind).toBe('mismatch');
     });
   });
 });

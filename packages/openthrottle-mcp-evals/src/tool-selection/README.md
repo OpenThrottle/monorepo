@@ -59,7 +59,10 @@ can provably shadow a host-configured server.
 
 The CLI then runs the case for real, possibly over several turns, since the sandbox answers. The graded
 selection is the harness calls up to and including the **first OpenThrottle call** in the trial's ATIF
-trajectory, with that call's arguments taken from the sandbox log. An OpenThrottle call on any other
+trajectory, with each OT call's arguments taken from the sandbox log. When a case expects only write
+tools, the selection instead runs to the **first OT call that writes**, keeping any read-only OT calls
+(`get_*`, `list_*`, `semantic_search`, `health`, `auth_status`) before it. A case that expects a read, and
+a control case, still stop at the first OT call. An OpenThrottle call on any other
 server is a **leak**: the run stops and exits 3. A call to the sandbox's name that never reached its log
 failed in transit and errors only that trial. Runs are sequential, one per driver, and spend
 subscription usage (the subscription-terms warning in
@@ -72,10 +75,10 @@ the same wording:
 
 - **The agent may read before it writes.** claude defers MCP tool schemas behind `ToolSearch`, and
   after loading them it often calls `get_task` before `update_task`. On a terse prompt (`task-complete`:
-  "Task … is done.") that read is its first OpenThrottle call, so the trial fails with
-  `expected update_task, got ToolSearch, get_task` even though the agent was heading for the right tool.
-  This is a property of the harness, not the wording, which is why CLI results are never compared with
-  the API baseline.
+  "Task … is done.") that read was its first OpenThrottle call, so the trial failed 0/5 with
+  `expected update_task, got ToolSearch, get_task` even though the agent was heading for the right tool
+  (plan `aa9cffee`). That is why a write case grades to the first write. A trial that only reads still
+  fails it. The API run is single-turn, so its grading is unchanged.
 - **It follows the wording more literally.** claude CLI sent lowercase `"in_progress"` on every
   `task-start` trial while the API passed it, on both its default model and `--model opus` (plan
   `aa9cffee`). The server upper-cases task status, so this was not a live failure. The cause was the
@@ -154,7 +157,7 @@ tool or argument that no longer exists, which would otherwise leave a case that 
 | `cli.ts`                                      | The Nx target's entry point                                                                 |
 | `runCliEvals.ts`                              | One CLI driver's run against the sandbox, sequential, folded into the same result shape     |
 | `cli-tool-selection-core.ts`                  | The CLI iteration (wrapper + call log per trial) and its grader, with the leak stop         |
-| `cli-selection.ts`                            | First OT call from a CLI trajectory, cross-checked against the sandbox call log             |
+| `cli-selection.ts`                            | Graded OT calls from a CLI trajectory, cross-checked against the sandbox call log           |
 | `sandbox-attachment.ts`                       | Per-CLI wrapper scripts that attach the sandbox in place of the real server                 |
 | `data/data.cli-drivers.ts`                    | Supported and refused CLIs, the sandbox server name, CLI defaults                           |
 

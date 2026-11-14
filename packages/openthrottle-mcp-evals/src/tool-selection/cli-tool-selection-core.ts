@@ -1,8 +1,8 @@
 /**
  * @description The CLI-driven system under test and its grader, in eval-core terms. Each trial runs a real agent
  * CLI through the core's driver iteration with the sandboxed MCP attached in place of the real server; the
- * grader reads the first OpenThrottle call from the trial's ATIF trajectory, cross-checks it against the sandbox
- * call log, and applies the unchanged {@link gradeCase} rules.
+ * grader reads the graded OpenThrottle calls from the trial's ATIF trajectory (see {@link cliGradeBoundaryOf}),
+ * cross-checks them against the sandbox call log, and applies the unchanged {@link gradeCase} rules.
  *
  * Safety: a trajectory showing an OpenThrottle call the sandbox did not serve is a **leak** — some other server
  * answered — and every later trial in the run is refused before its CLI launches.
@@ -21,7 +21,7 @@ import type {
 } from '@openthrottle/agentic-evals';
 
 import type { SandboxToolCall } from '../sandbox/createSandboxMcpServer.ts';
-import { cliSelectionOf } from './cli-selection.ts';
+import { cliGradeBoundaryOf, cliSelectionOf } from './cli-selection.ts';
 import {
   TOOL_SELECTION_GRADER_ID,
   TOOL_SELECTION_GRADER_VERSION,
@@ -193,6 +193,7 @@ export const createCliToolSelectionGrader = (
         trial.trajectory.trajectory,
         state.callLogs.get(trialKey(trial.caseId, trial.attempt)) ?? [],
         otToolNames,
+        cliGradeBoundaryOf(testCase.expect),
       );
       if (outcome.kind !== 'selection') {
         if (outcome.kind === 'leak') {
@@ -208,7 +209,7 @@ export const createCliToolSelectionGrader = (
       onGrade(evalCase.id, grade);
 
       return grade.pass
-        ? { evidence: 'matched the expected first OT call', kind: 'pass' }
+        ? { evidence: 'matched the expected OT call', kind: 'pass' }
         : { evidence: grade.reason, kind: 'fail' };
     },
     id: TOOL_SELECTION_GRADER_ID,
