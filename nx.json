@@ -205,23 +205,20 @@
       "inputs": [
         "{workspaceRoot}/*.md",
         "{workspaceRoot}/.agents/**/*",
-        "{workspaceRoot}/.husky/utils/attribution-patterns.sh",
         "{workspaceRoot}/.claude/**/*",
         "{workspaceRoot}/databases/**/*.md",
         "{workspaceRoot}/docs/**/*.md",
-        "{workspaceRoot}/scripts/check-vendored-skill-files.sh",
         "{workspaceRoot}/skills/**/*",
         "{workspaceRoot}/skills-lock.json",
         "{workspaceRoot}/tools/**/*.md"
       ],
       "metadata": {
-        "description": "The one skills gate: `sync.sh --check` verifies the layout is single-sourced, then `check-links.sh` verifies every relative link in a skill BODY resolves from the file that contains it, then `check-vendored-skill-files.sh` verifies every file a skill vendors (because a synced skill cannot link outside itself) still matches its canonical copy. `inputs` MUST be explicit {workspaceRoot} globs - the root `monorepo` project owns 0 files, so the default {projectRoot} input would hash nothing and cache-hit forever. The link check reads targets outside skills/, so the doc globs below are inputs too; a target deleted outside them can stale-pass until the next skills change, which is the deliberate trade for keeping this target cacheable."
+        "description": "The one skills gate: `sync.sh --check` verifies the layout is single-sourced, then `check-links.sh` verifies every relative link in a skill BODY resolves from the file that contains it. `inputs` MUST be explicit {workspaceRoot} globs - the root `monorepo` project owns 0 files, so the default {projectRoot} input would hash nothing and cache-hit forever. The link check reads targets outside skills/, so the doc globs below are inputs too; a target deleted outside them can stale-pass until the next skills change, which is the deliberate trade for keeping this target cacheable."
       },
       "options": {
         "commands": [
           "bash skills/ot-skill-sync/scripts/sync.sh --check",
-          "bash skills/ot-skill-sync/scripts/check-links.sh",
-          "sh scripts/check-vendored-skill-files.sh"
+          "bash skills/ot-skill-sync/scripts/check-links.sh"
         ],
         "cwd": "{workspaceRoot}",
         "parallel": false

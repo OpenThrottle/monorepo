@@ -174,7 +174,7 @@
     "skill/agents-ralph": 14464,
     "skill/github-cleanup": 7799,
     "skill/github-commit": 5216,
-    "skill/github-pull-request": 17692,
+    "skill/github-pull-request": 17406,
     "skill/github-squash": 10125,
     "skill/ot-folders": 21335,
     "skill/ot-generators": 10250,
@@ -212,6 +212,6 @@
     "mcpInstructions": 2138,
     "mcpTools": 34486,
     "prompts": 127983,
-    "skills": 200301
+    "skills": 200015
   }
 }
