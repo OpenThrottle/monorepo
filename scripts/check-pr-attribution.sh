@@ -1,1 +1,0 @@
-../skills/github-pull-request/scripts/check-pr-attribution.sh

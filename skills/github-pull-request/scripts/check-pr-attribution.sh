@@ -4,9 +4,9 @@
 #
 # Fails when a drafted title or body credits a tool, model or assistant ("Generated with …",
 # "Made with …", a Co-authored-by line, a robot emoji). This is the only copy of the guard: the
-# github-pull-request skill runs it in any repo it is synced into, and the OpenThrottle monorepo
-# reaches it as scripts/check-pr-attribution.sh, a symlink to this file, which is what the
-# plan-run host (finalizePlanRun) calls before it publishes.
+# github-pull-request skill runs it in any repo it is synced into, and the plan-run host
+# (finalizePlanRun) runs it from <repo>/.agents/skills/github-pull-request/scripts/ before it
+# publishes — the skill fan-out in the OpenThrottle repo, the injected overlay everywhere else.
 #
 # Why this exists: `gh pr create --body-file <f>` publishes whatever it is handed, and the first
 # thing that ever inspected that text used to be the `attribution-guard` CI job — which only runs
@@ -38,18 +38,7 @@
 
 set -eu
 
-# Resolve this file's real directory, following symlinks, so the sibling pattern file is found
-# when the guard is reached through scripts/check-pr-attribution.sh.
-self=$0
-while [ -L "$self" ]; do
-  link_dir=$(CDPATH='' cd -P -- "$(dirname -- "$self")" && pwd)
-  self=$(readlink -- "$self")
-  case $self in
-    /*) ;;
-    *) self="$link_dir/$self" ;;
-  esac
-done
-SCRIPT_DIR=$(CDPATH='' cd -P -- "$(dirname -- "$self")" && pwd)
+SCRIPT_DIR=$(CDPATH='' cd -P -- "$(dirname -- "$0")" && pwd)
 
 # shellcheck source=./attribution-patterns.sh
 . "$SCRIPT_DIR/attribution-patterns.sh"

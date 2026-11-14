@@ -581,7 +581,10 @@ const commandDetail = (
 };
 
 /**
- * @description Writes the title and body to a temp dir and runs `check-pr-attribution.sh` on them.
+ * @description Writes the title and body to a temp dir and runs the github-pull-request skill's
+ * `check-pr-attribution.sh` on them, from `.agents/skills/` — the fan-out `sync.sh` builds in the
+ * OpenThrottle repo and foreign-skill injection builds in every other repo, so the path is the same
+ * in both.
  */
 const writeAndGuardPrFiles = async (params: {
   readonly body: string;
@@ -621,7 +624,14 @@ const writeAndGuardPrFiles = async (params: {
 
   const attribution = await runCommand({
     args: [
-      join(cwd, 'scripts', 'check-pr-attribution.sh'),
+      join(
+        cwd,
+        '.agents',
+        'skills',
+        'github-pull-request',
+        'scripts',
+        'check-pr-attribution.sh',
+      ),
       '--title-file',
       titlePath,
       '--body-file',

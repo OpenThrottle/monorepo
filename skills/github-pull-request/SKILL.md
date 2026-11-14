@@ -209,7 +209,7 @@ ever called. It ships with this skill —
 [`scripts/check-pr-attribution.sh`](./scripts/check-pr-attribution.sh), reading
 [`scripts/attribution-patterns.sh`](./scripts/attribution-patterns.sh) — and that is the only copy:
 the OpenThrottle monorepo's commit-msg hook, pre-push gate and CI job source the same pattern file,
-and its `scripts/check-pr-attribution.sh` is a symlink to this guard. A repo with no hooks and no CI
+and its plan-run host runs this guard from `.agents/skills/`. A repo with no hooks and no CI
 job still gets the check; it is the only one that repo has, so it matters more there, not less.
 
 **ALWAYS**, right before the `gh pr create`/`gh pr edit` call:

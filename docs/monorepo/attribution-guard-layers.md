@@ -12,12 +12,12 @@ and every layer below sources it rather than restating it.
 
 ## The layers
 
-| layer                             | when                                        | behavior                                        |
-| --------------------------------- | ------------------------------------------- | ----------------------------------------------- |
-| `.husky/commit-msg`               | as a commit message is written              | **strips**, and says so                         |
-| `.husky/pre-push`                 | before a push leaves the machine            | **fails the push**                              |
-| `scripts/check-pr-attribution.sh` | before `gh pr create`/`gh pr edit`          | **fails locally**                               |
-| `attribution-guard` (CI)          | after the PR exists, and in the merge queue | **fails the PR** / **ejects it from the queue** |
+| layer                                                        | when                                        | behavior                                        |
+| ------------------------------------------------------------ | ------------------------------------------- | ----------------------------------------------- |
+| `.husky/commit-msg`                                          | as a commit message is written              | **strips**, and says so                         |
+| `.husky/pre-push`                                            | before a push leaves the machine            | **fails the push**                              |
+| `skills/github-pull-request/scripts/check-pr-attribution.sh` | before `gh pr create`/`gh pr edit`          | **fails locally**                               |
+| `attribution-guard` (CI)                                     | after the PR exists, and in the merge queue | **fails the PR** / **ejects it from the queue** |
 
 The dividing line is **publication**. Text that is still local and still rewritable gets rewritten.
 Text that is about to become someone else's — or already has — gets refused.
@@ -82,7 +82,8 @@ A PR body is the first artifact in this chain that cannot be quietly fixed. `gh 
 publishes whatever it is handed, and once published the text is visible to anyone watching the repo —
 there is no equivalent of rewriting a commit message before anyone sees it.
 
-So [`scripts/check-pr-attribution.sh`](../../scripts/check-pr-attribution.sh) refuses, naming the rule
+So the `github-pull-request` skill's guard,
+[`skills/github-pull-request/scripts/check-pr-attribution.sh`](../../skills/github-pull-request/scripts/check-pr-attribution.sh), refuses, naming the rule
 and the offending line, and the author edits the draft. It checks the title with the unanchored
 pattern and the body with the anchored one, matching the CI job's own split, so a local pass and a CI
 pass mean the same thing.

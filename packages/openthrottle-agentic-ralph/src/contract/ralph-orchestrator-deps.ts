@@ -108,7 +108,7 @@ export interface WorkflowRalphCommandResult {
 
 /**
  * @description Injectable host command runner for the plan-end finalize step (`git`, `gh`, and
- * `scripts/check-pr-attribution.sh`). Unit tests supply a fake; production uses
+ * the github-pull-request skill's `check-pr-attribution.sh`). Unit tests supply a fake; production uses
  * {@link createDefaultWorkflowRalphCommandRunner}. Never shells — argv is passed as an array.
  * @public
  */

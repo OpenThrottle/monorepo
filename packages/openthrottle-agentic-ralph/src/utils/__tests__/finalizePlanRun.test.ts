@@ -64,14 +64,21 @@ const ok = (stdout = ''): WorkflowRalphCommandResult => {
 const createCwdWithTemplate = async (): Promise<string> => {
   const cwd = await mkdtemp(join(tmpdir(), 'ralph-finalize-'));
   await mkdir(join(cwd, '.github'), { recursive: true });
-  await mkdir(join(cwd, 'scripts'), { recursive: true });
+  const guardDir = join(
+    cwd,
+    '.agents',
+    'skills',
+    'github-pull-request',
+    'scripts',
+  );
+  await mkdir(guardDir, { recursive: true });
   await writeFile(
     join(cwd, '.github', 'pull_request_template.md'),
     TEMPLATE,
     'utf8',
   );
   await writeFile(
-    join(cwd, 'scripts', 'check-pr-attribution.sh'),
+    join(guardDir, 'check-pr-attribution.sh'),
     '#!/bin/sh\nexit 0\n',
     'utf8',
   );

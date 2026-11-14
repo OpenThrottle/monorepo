@@ -6,9 +6,7 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 /**
- * Integration coverage for `scripts/check-pr-attribution.sh` — a symlink to
- * `skills/github-pull-request/scripts/check-pr-attribution.sh`, so this also proves the guard
- * resolves its pattern file through the link. It is the local
+ * Integration coverage for `skills/github-pull-request/scripts/check-pr-attribution.sh` — the local
  * backstop that inspects a drafted PR title/body for agent-attribution lines
  * BEFORE `gh pr create`/`gh pr edit` ever publishes them, closing the gap the
  * CI `attribution-guard` job cannot: it only ever sees a PR body after GitHub
@@ -21,7 +19,15 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
  * uses for the staging guard.
  */
 
-const SCRIPT = join(import.meta.dirname, '..', 'check-pr-attribution.sh');
+const SCRIPT = join(
+  import.meta.dirname,
+  '..',
+  '..',
+  'skills',
+  'github-pull-request',
+  'scripts',
+  'check-pr-attribution.sh',
+);
 
 interface RunResult {
   readonly output: string;

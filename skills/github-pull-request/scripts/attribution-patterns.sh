@@ -10,8 +10,8 @@
 # OpenThrottle monorepo consumer sources it from here:
 #   - .husky/commit-msg              (strips matching lines from the commit message)
 #   - .husky/utils/attribution-push-gate.sh  (fails a push that carries one)
-#   - check-pr-attribution.sh beside this file, also reached as
-#     scripts/check-pr-attribution.sh (the drafted PR title and body)
+#   - check-pr-attribution.sh beside this file (the drafted PR title and body;
+#     the plan-run host runs it from .agents/skills/github-pull-request/scripts/)
 #   - .github/workflows/continuous-integration.yml, job "attribution-guard"
 #     (fails a PR whose title, body or commits carry one)
 #

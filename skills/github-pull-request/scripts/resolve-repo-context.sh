@@ -190,8 +190,8 @@ fi
 emit COMMIT_MSG_HOOK "$hook"
 
 # --- attribution guard ------------------------------------------------------------------
-# The guard ships with the github-pull-request skill and is the only copy, in this repo too
-# (scripts/check-pr-attribution.sh is a symlink to it), so there is no repo-vs-skill choice.
+# The guard ships with the github-pull-request skill and is the only copy, in the OpenThrottle
+# repo too, so there is no repo-vs-skill choice.
 if [ -f "$script_dir/check-pr-attribution.sh" ]; then
   emit ATTRIBUTION_GUARD "$script_dir/check-pr-attribution.sh"
 else

@@ -68,7 +68,8 @@ see [tools/AGENTS.md](../../tools/AGENTS.md)).
   draft as untrusted (`plan-run-pr-draft.ts`): it checks the conventional title and the absence of
   template `**TODO:**` text, replaces every `Plan-Id:`/`Task-Id:` line with the OT footer set, wraps
   the body in `<!-- ot:plan-run-body -->` markers plus a sha256 digest line, and runs
-  `check-pr-attribution.sh`. If a check fails it falls back to `plan-run-pr-body.ts`; either way a
+  `.agents/skills/github-pull-request/scripts/check-pr-attribution.sh` (the github-pull-request skill's guard, present via the skill fan-out here and
+  via injection in other repos). If a check fails it falls back to `plan-run-pr-body.ts`; either way a
   plan_output line names the source. On an existing PR it refreshes title + body
   (`gh pr edit`, REST `PATCH` fallback) only when `locatePlanRunPrBody` says `empty` or `host`.
   Ownership is decided by the marked region alone: `host` means exactly one well-formed

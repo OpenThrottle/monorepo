@@ -7,7 +7,7 @@
 # definition:
 #   - .husky/commit-msg   (strips, and says what it stripped)
 #   - .husky/pre-push     (this gate — fails the push)
-#   - scripts/check-pr-attribution.sh  (the drafted PR title and body)
+#   - skills/github-pull-request/scripts/check-pr-attribution.sh  (the drafted PR title and body)
 #   - .github/workflows/continuous-integration.yml, job "attribution-guard"
 #
 # Why a push-time gate exists at all, given commit-msg already strips: the strip
