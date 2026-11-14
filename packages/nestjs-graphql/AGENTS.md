@@ -51,8 +51,15 @@ and the subscription topic-name helpers.
   errors in production — overriding it re-opens the leak.
 - Default response-cache `sessionId` is derived from the verified user id (hashed), not the raw
   Authorization header (`response-cache-session.ts`).
+- `@CacheHint` is applied by `createCacheHintPlugin`, which `buildCachePlugins` lists **before**
+  `ApolloServerPluginCacheControl` on purpose: Apollo runs `willResolveField` hooks in reverse plugin
+  order, and listed after it the plugin never sees `info.cacheControl`, so every hint silently becomes
+  `no-store`. `cache-hint.decorator.test.ts` boots a real app and fails if the order flips. It is an
+  Apollo plugin rather than an interceptor because a `@ResolveField` only runs interceptors under
+  `fieldResolverEnhancers: ['interceptors']`, which would put every global interceptor on every
+  field call (OT task ce216c98).
 - Built package (`build` via `@nx/js:tsc`, `exports` → `dist/`) — see [../AGENTS.md](../AGENTS.md).
 
 ## Pointers
 
-- [README.md](./README.md) — cache-plugin options and re-exported helpers.
+- [README.md](./README.md) — cache-plugin options, `@CacheHint` vs `setCacheHint`, and re-exported helpers.

@@ -11,9 +11,25 @@ Use `NestjsGraphqlModule.forRoot({ cachePlugins: { ... } })` to enable Apollo Ca
 
 Re-exported helpers: `ApolloServerPluginCacheControl`, `createResponseCachePlugin`, and their option types from the package entrypoint.
 
+### Cache hints: `@CacheHint` or `setCacheHint`
+
+Two ways to hint a field, one code path: the decorator stores the hint in the field's `extensions`, and a plugin hands it to `setCacheHint` while the field resolves, so both behave identically (including the no-op when the cache-control plugin is absent).
+
+- **`@CacheHint({ maxAge, scope })`** — the hint is known when you write the field (the common case). No `@Info()` parameter needed.
+- **`setCacheHint(info, { maxAge, scope })`** — the hint is computed while resolving (from the result, or from the user).
+
+```ts
+@Query(() => DiscoverLocalModelsResult)
+@CacheHint({ maxAge: 60, scope: 'PRIVATE' })
+discoverLocalModels(): Promise<DiscoverLocalModelsResult> { ... }
+```
+
+- **Object-typed child fields default to `maxAge: 0`, so each one needs its own hint.** Put `@CacheHint` on the object type's `@Field` property. On a `@ResolveField` whose object type already declares that `@Field`, Nest silently drops the resolver method's hint (it keeps the model field's extensions), so hint the `@Field` instead. Scalar fields inherit their parent's hint and need none.
+- **Nothing applies without `cachePlugins.cacheControl`.** That option registers both Apollo's cache-control plugin and the plugin that reads `@CacheHint`.
+
 ### ⚠️ One un-hinted field makes a whole operation uncacheable
 
-`cacheControl: true` means `ApolloServerPluginCacheControl({})`, whose `defaultMaxAge` is **0**, and Apollo derives an operation's cache policy from its **most restrictive field**. So a single field that never calls `setCacheHint` drops the entire response to `maxAge 0`, and the response-cache plugin refuses to store it — with no error and no warning. The only visible symptom is a query that is always slow.
+`cacheControl: true` means `ApolloServerPluginCacheControl({})`, whose `defaultMaxAge` is **0**, and Apollo derives an operation's cache policy from its **most restrictive field**. So a single root or object-typed field without a hint drops the entire response to `maxAge 0`, and the response-cache plugin refuses to store it — with no error and no warning. The only visible symptom is a query that is always slow.
 
 Two consequences worth internalising:
 
