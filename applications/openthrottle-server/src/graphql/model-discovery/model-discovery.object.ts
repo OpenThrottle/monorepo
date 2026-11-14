@@ -5,6 +5,9 @@
  */
 
 import { Field, Int, ObjectType } from '@nestjs/graphql';
+import { CacheHint } from '@openthrottle/nestjs-graphql';
+
+import { MODEL_DISCOVERY_CACHE_HINT } from './model-discovery.constants.ts';
 
 @ObjectType()
 export class ModelEndpointObject {
@@ -35,9 +38,12 @@ export class ModelEndpointObject {
 
 @ObjectType()
 export class DiscoverLocalModelsResult {
+  // An object-typed field defaults to maxAge 0, which would make the whole
+  // discoverLocalModels operation uncacheable without its own hint.
   @Field(() => [ModelEndpointObject], {
     description: `De-duplicated reachable endpoints, stably sorted by (host, port).`,
   })
+  @CacheHint(MODEL_DISCOVERY_CACHE_HINT)
   endpoints!: ModelEndpointObject[];
 
   @Field(() => String, {

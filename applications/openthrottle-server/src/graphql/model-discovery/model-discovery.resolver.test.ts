@@ -1,26 +1,23 @@
 /**
  * @description Tests for ModelDiscoveryResolver: maps the cached DiscoveryResult from the injected
  * NestjsModelDiscoveryService into the ListResult-style payload (endpoints + totalCount +
- * scannedHosts/scannedAt). The service is mocked — no network.
+ * scannedHosts/scannedAt), and declares the cache hints that keep the operation cacheable. The
+ * service is mocked — no network.
  */
 
 import { createMock } from '@golevelup/ts-vitest';
+import {
+  GraphQLSchemaBuilderModule,
+  GraphQLSchemaFactory,
+} from '@nestjs/graphql';
+import { Test } from '@nestjs/testing';
 import type { NestjsModelDiscoveryService } from '@openthrottle/nestjs-model-discovery';
 import type { DiscoveryResult } from '@openthrottle/openthrottle-agentic-utils';
-import type { GraphQLResolveInfo } from 'graphql';
-import type { Mock } from 'vitest';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { GraphQLSchema } from 'graphql';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { MODEL_DISCOVERY_CACHE_HINT } from './model-discovery.constants.ts';
-import type { DiscoverLocalModelsResult } from './model-discovery.object.ts';
 import { ModelDiscoveryResolver } from './model-discovery.resolver.ts';
-
-/** Resolve info carrying Apollo's cacheControl, as the cache-control plugin sets it. */
-function buildInfo(setCacheHint: Mock): GraphQLResolveInfo {
-  const info = createMock<GraphQLResolveInfo>();
-  Reflect.set(info, 'cacheControl', { setCacheHint });
-  return info;
-}
 
 const SNAPSHOT: DiscoveryResult = {
   endpoints: [
@@ -43,6 +40,31 @@ const SNAPSHOT: DiscoveryResult = {
   scannedHosts: ['localhost', 'host.docker.internal'],
 };
 
+/**
+ * The extension values of a field off a built schema, failing the test when it
+ * is missing. Checked structurally: `isObjectType` from this test's `graphql`
+ * copy rejects types built by Nest's copy ("from another module or realm").
+ */
+const getFieldExtensionValues = (
+  schema: GraphQLSchema,
+  typeName: string,
+  fieldName: string,
+): unknown[] => {
+  const type = schema.getType(typeName);
+
+  if (type === undefined || !('getFields' in type)) {
+    throw new Error(`expected ${typeName} to be an object type`);
+  }
+
+  const field = type.getFields()[fieldName];
+
+  if (field === undefined) {
+    throw new Error(`expected ${typeName}.${fieldName} to exist`);
+  }
+
+  return Object.values(field.extensions);
+};
+
 describe('ModelDiscoveryResolver', () => {
   let service: NestjsModelDiscoveryService;
   let resolver: ModelDiscoveryResolver;
@@ -54,7 +76,7 @@ describe('ModelDiscoveryResolver', () => {
   });
 
   it('reads the cached snapshot (no forceRefresh) and maps the payload', async () => {
-    const result = await resolver.discoverLocalModels(buildInfo(vi.fn()));
+    const result = await resolver.discoverLocalModels();
     expect(service.discover).toHaveBeenCalledWith();
     expect(result.totalCount).toBe(2);
     expect(result.scannedAt).toBe('2026-06-14T00:00:00.000Z');
@@ -76,32 +98,41 @@ describe('ModelDiscoveryResolver', () => {
       scannedAt: '2026-06-14T00:00:00.000Z',
       scannedHosts: ['localhost'],
     });
-    const result = await resolver.discoverLocalModels(buildInfo(vi.fn()));
+    const result = await resolver.discoverLocalModels();
     expect(result.totalCount).toBe(0);
     expect(result.endpoints).toEqual([]);
   });
 
-  it('hints the query as cacheable for 60s, per user', async () => {
-    const setHint = vi.fn();
-    await resolver.discoverLocalModels(buildInfo(setHint));
-    expect(setHint).toHaveBeenCalledWith({ maxAge: 60, scope: 'PRIVATE' });
-    expect(MODEL_DISCOVERY_CACHE_HINT).toEqual({
-      maxAge: 60,
-      scope: 'PRIVATE',
-    });
-  });
+  describe('cache hints', () => {
+    let schema: GraphQLSchema;
 
-  it('hints the object-typed endpoints field so the operation stays cacheable', async () => {
-    const setHint = vi.fn();
-    const payload: DiscoverLocalModelsResult = {
-      endpoints: [],
-      scannedAt: '2026-06-14T00:00:00.000Z',
-      scannedHosts: [],
-      totalCount: 0,
-    };
-    expect(resolver.endpoints(payload, buildInfo(setHint))).toBe(
-      payload.endpoints,
-    );
-    expect(setHint).toHaveBeenCalledWith(MODEL_DISCOVERY_CACHE_HINT);
+    beforeAll(async () => {
+      const moduleRef = await Test.createTestingModule({
+        imports: [GraphQLSchemaBuilderModule],
+      }).compile();
+      schema = await moduleRef
+        .get(GraphQLSchemaFactory)
+        .create([ModelDiscoveryResolver]);
+    });
+
+    it('hints the query as cacheable for 60s, per user', () => {
+      expect(MODEL_DISCOVERY_CACHE_HINT).toEqual({
+        maxAge: 60,
+        scope: 'PRIVATE',
+      });
+      expect(
+        getFieldExtensionValues(schema, 'Query', 'discoverLocalModels'),
+      ).toContainEqual(MODEL_DISCOVERY_CACHE_HINT);
+    });
+
+    it('hints the object-typed endpoints field so the operation stays cacheable', () => {
+      expect(
+        getFieldExtensionValues(
+          schema,
+          'DiscoverLocalModelsResult',
+          'endpoints',
+        ),
+      ).toContainEqual(MODEL_DISCOVERY_CACHE_HINT);
+    });
   });
 });

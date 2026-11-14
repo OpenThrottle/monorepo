@@ -142,8 +142,9 @@ describe('buildDriverConfig — plugin assembly order', () => {
       plugins: [userPlugin],
     });
 
-    // 1 landing-page default + 2 cache plugins + 1 user plugin.
-    expect(config.plugins).toHaveLength(4);
+    // 1 landing-page default + 3 cache plugins (cache-hint, cache-control,
+    // response-cache) + 1 user plugin.
+    expect(config.plugins).toHaveLength(5);
     // User plugin is appended last, after the cache plugins.
     expect(config.plugins?.[config.plugins.length - 1]).toBe(userPlugin);
   });
@@ -154,8 +155,8 @@ describe('buildCachePlugins', () => {
     expect(buildCachePlugins({})).toHaveLength(0);
   });
 
-  it('returns only the cache-control plugin when only cacheControl is enabled', () => {
-    expect(buildCachePlugins({ cacheControl: true })).toHaveLength(1);
+  it('returns the cache-hint plugin then cache-control when only cacheControl is enabled', () => {
+    expect(buildCachePlugins({ cacheControl: true })).toHaveLength(2);
   });
 
   it('returns only the response-cache plugin when only responseCache is enabled', () => {
@@ -168,7 +169,7 @@ describe('buildCachePlugins', () => {
       responseCache: true,
     });
 
-    expect(plugins).toHaveLength(2);
+    expect(plugins).toHaveLength(3);
   });
 });
 

@@ -2301,6 +2301,12 @@ importers:
         specifier: 'catalog:'
         version: 9.0.3
     devDependencies:
+      '@nestjs/platform-express':
+        specifier: 'catalog:'
+        version: 12.0.1(@nestjs/common@12.0.1(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.0.1)(supports-color@8.1.1)
+      '@nestjs/testing':
+        specifier: 'catalog:'
+        version: 12.0.1(@nestjs/common@12.0.1(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.0.1)(@nestjs/platform-express@12.0.1)
       '@types/jsonwebtoken':
         specifier: 'catalog:'
         version: 9.0.10
