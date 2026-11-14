@@ -4,14 +4,7 @@
 
 This folder holds **[Agent Skills](https://agentskills.io/)** — the open standard (folder + `SKILL.md` with YAML `name` / `description`, optional `scripts/` / `references/` / `assets/`, progressive disclosure). Follow that spec. Do **not** invent a parallel format, frontmatter dialect, or directory layout.
 
-Authoring references (load these; do not restate them here):
-
-- [Specification](https://agentskills.io/specification) — layout, required frontmatter, optional dirs, 500-line `SKILL.md` budget
-- [Best practices](https://agentskills.io/skill-creation/best-practices) — scope, token budget, templates, checklists
-- [Optimizing descriptions](https://agentskills.io/skill-creation/optimizing-descriptions) — what + when, trigger keywords
-- [Using scripts](https://agentskills.io/skill-creation/using-scripts) — bundled executables
-
-Need a machine check? [`skills-ref validate`](https://github.com/agentskills/agentskills/tree/main/skills-ref) against the skill directory — a format check, not a production dependency.
+**Authoring or reviewing a skill? Load [`ot-skill-guide`](./ot-skill-guide/SKILL.md).** It owns the authoring guidance, links every spec and best-practice page, and ships the review checklist and `scripts/check.sh` (the mechanical check, alongside [`skills-ref validate`](https://github.com/agentskills/agentskills/tree/main/skills-ref)). Do not restate its rules here.
 
 This folder is both OpenThrottle-wide workflow skills (the `github-*` family: `github-cleanup`, `github-commit`, `github-pull-request`, `github-squash`) and repo-specific ones like [`ot-onboarding/`](./ot-onboarding/) (the new-user orientation on-ramp). Other OpenThrottle repos install these via `npx skills add openthrottle/monorepo --agent universal`.
 

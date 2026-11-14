@@ -169,6 +169,7 @@
     "prompt/Job_Roadmap.md": 9571,
     "prompt/Job_RulesConformance.md": 14873,
     "prompt/Job_Security.md": 9531,
+    "prompt/Job_SkillReview.md": 5436,
     "prompt/Job_TestHealth.md": 8163,
     "prompt/Job_WorkInFlight.md": 9928,
     "skill/agents-ralph": 14464,
@@ -182,6 +183,7 @@
     "skill/ot-onboarding": 25509,
     "skill/ot-plans": 8964,
     "skill/ot-postgres": 7499,
+    "skill/ot-skill-guide": 11047,
     "skill/ot-skill-sync": 15488,
     "skill/ot-stack": 10184,
     "skill/ot-worktree": 12709,
@@ -196,6 +198,7 @@
     "skillDescription/ot-onboarding": 517,
     "skillDescription/ot-plans": 390,
     "skillDescription/ot-postgres": 387,
+    "skillDescription/ot-skill-guide": 497,
     "skillDescription/ot-skill-sync": 365,
     "skillDescription/ot-stack": 336,
     "skillDescription/ot-worktree": 364
@@ -208,10 +211,10 @@
     "mcpToolsFull": 59688
   },
   "totals": {
-    "alwaysInjected": 42084,
+    "alwaysInjected": 42581,
     "mcpInstructions": 2138,
     "mcpTools": 34809,
-    "prompts": 127983,
-    "skills": 202177
+    "prompts": 133419,
+    "skills": 213224
   }
 }

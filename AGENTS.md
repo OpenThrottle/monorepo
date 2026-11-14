@@ -81,6 +81,7 @@ OT-owned skills are authored under [`skills/`](./skills/) and surfaced to every 
 - **ot-plans** — openthrottle-mcp, plans/tasks, `Plan-Id` / `Task-Id`, post-merge work-ledger commit recording: [`skills/ot-plans/SKILL.md`](./skills/ot-plans/SKILL.md)
 - **agents-ralph** — the Ralph loop prompt: one task at a time, status sync, commit cadence: [`skills/agents-ralph/SKILL.md`](./skills/agents-ralph/SKILL.md)
 - **github-commit** — conventional commits, staging, `Plan-Id` / `Task-Id` footers: [`skills/github-commit/SKILL.md`](./skills/github-commit/SKILL.md)
+- **ot-skill-guide** — authoring and reviewing skills against the agentskills.io spec: [`skills/ot-skill-guide/SKILL.md`](./skills/ot-skill-guide/SKILL.md)
 - For the Ralph **CLI**, queue spawn vs orchestrator, and BullMQ wiring there is no skill — read [`tools/workflows/README.md`](./tools/workflows/README.md).
 
 ## Workflow CLI (@tools/workflows)
