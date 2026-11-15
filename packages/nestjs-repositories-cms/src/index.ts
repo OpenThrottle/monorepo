@@ -23,6 +23,7 @@ export * from './graphql/cms-schemas/cms-schemas.object.ts';
 export * from './graphql/cms-schemas/cms-schemas.service.ts';
 export * from './graphql/cms-write-access/cms-write-access.constants.ts';
 export * from './graphql/cms-write-access/cms-write-access.guard.ts';
+export * from './graphql/cms-write-access/cms-write-access.service.ts';
 export type * from './graphql/cms-write-access/cms-write-access.types.ts';
 export * from './modules/fragments/fragment.entity.ts';
 export * from './modules/fragments/fragments.module.ts';

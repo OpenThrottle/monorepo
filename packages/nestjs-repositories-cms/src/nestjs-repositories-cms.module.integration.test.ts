@@ -226,7 +226,7 @@ describe.skipIf(!ENABLED)('NestjsRepositoriesCmsModule (live cms DB)', () => {
         [root, extraUuid],
       );
 
-      const read = await layouts.findBySlug(layout.slug);
+      const read = await layouts.findBySlug(layout.slug, 'editor');
       const fragments = read?.fragments ?? [];
       const keys = new Set(fragments.map((node) => node.key));
 
@@ -248,7 +248,7 @@ describe.skipIf(!ENABLED)('NestjsRepositoriesCmsModule (live cms DB)', () => {
         `UPDATE fragments SET is_deleted = true WHERE uuid = $1`,
         [extraUuid],
       );
-      const afterDelete = await layouts.findByUuid(layout.uuid);
+      const afterDelete = await layouts.findByUuid(layout.uuid, 'editor');
 
       expect(
         afterDelete?.fragments.some((node) => node.uuid === extraUuid),
@@ -352,7 +352,10 @@ describe.skipIf(!ENABLED)('NestjsRepositoriesCmsModule (live cms DB)', () => {
 
       await children.reorder(layout.fragmentUuid, [button.uuid, heading.uuid]);
 
-      const tree = await layouts.findBySlug(slug);
+      const tree = await layouts.findBySlug(slug, 'editor');
+
+      // A new layout is DRAFT (the column default), so the public cannot read it.
+      await expect(layouts.findBySlug(slug, 'public')).resolves.toBeNull();
 
       expect(tree?.fragments.map((node) => node.uuid)).toEqual([
         layout.fragmentUuid,
@@ -412,7 +415,7 @@ describe.skipIf(!ENABLED)('NestjsRepositoriesCmsModule (live cms DB)', () => {
       });
 
       await layouts.delete(layout.uuid);
-      await expect(layouts.findBySlug(slug)).resolves.toBeNull();
+      await expect(layouts.findBySlug(slug, 'editor')).resolves.toBeNull();
 
       const [rootAfter] = await dataSource.query(
         `SELECT is_deleted FROM fragments WHERE uuid = $1`,

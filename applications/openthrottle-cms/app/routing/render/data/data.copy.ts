@@ -8,6 +8,6 @@
 export const RENDER_COPY = {
   apiError: `The CMS API could not be reached, so this layout cannot be shown right now.`,
   breadcrumb: `Render`,
-  notFound: `No layout has this slug, or it was deleted.`,
+  notFound: `No published layout has this slug.`,
   title: `Render`,
 } as const;

@@ -4466,11 +4466,11 @@ export type Query = {
   cmsFragment?: Maybe<CmsFragmentObject>;
   /** One page of live cms fragments, oldest first, optionally narrowed by typename and isSystem (false also matches an unset flag). take is clamped to 1–100 (default 25). */
   cmsFragments: CmsFragmentListResult;
-  /** A live cms layout by slug, with its fragment tree; null when none matches. */
+  /** A live cms layout by slug, with its fragment tree; null when none matches. A DRAFT or DISABLED layout is null unless the caller may write cms content. */
   cmsLayout?: Maybe<CmsLayoutObject>;
-  /** A live cms layout by uuid, with its fragment tree; null when none matches. */
+  /** A live cms layout by uuid, with its fragment tree; null when none matches. A DRAFT or DISABLED layout is null unless the caller may write cms content. */
   cmsLayoutByUuid?: Maybe<CmsLayoutObject>;
-  /** One page of live cms layouts, without their trees. take is clamped to 1–100 (default 25). */
+  /** One page of live cms layouts, without their trees: ACTIVE ones only, unless the caller may write cms content. take is clamped to 1–100 (default 25). */
   cmsLayouts: CmsLayoutListResult;
   /** One page of live cms libraries with their components. take is clamped to 1–100 (default 25). */
   cmsLibraries: CmsLibraryListResult;

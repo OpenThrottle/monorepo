@@ -165,6 +165,32 @@ renderer is the code registry (`CORE_COMPONENTS` in `@openthrottle/react-router-
   so the API keeps its shape if availability ever narrows per layout. Today every live layout gets
   the same list, sorted by typename.
 
+## Decision: who sees unpublished layouts
+
+**The public sees only ACTIVE layouts; a caller allowed to write cms content also sees DRAFT and
+DISABLED ones** (OT plan `1ccc14dd`, option (a)). `layouts.status` defaults to `DRAFT` (migration
+`004`), so before this every new layout was public by slug from the moment it was created.
+
+- **One rule, applied by the server to every layout read.** `cmsLayout(slug)`, `cmsLayoutByUuid`
+  and the `cmsLayouts` list stay `@Public()`, but each asks `CmsWriteAccessService` whether the
+  caller may write (the same host `CMS_WRITE_AUTHORIZER` check `CmsWriteGuard` makes for mutations;
+  openthrottle-server: `cms:write`). Yes: every status. No, or signed out: `status = ACTIVE` only,
+  and an unpublished layout reads as `null`, exactly like an unknown slug. openthrottle-server's
+  global guard soft-authenticates `@Public()` handlers, so a signed-in editor's token still arrives.
+- **Why the list matters too.** `cmsLayouts` is public and listed every slug, drafts included, so
+  hiding drafts behind an unguessable slug (option (b)) protected nothing.
+- **Preview is the same URL.** `/render/:slug` (and the editor's layout pages) forward the visitor's
+  sign-in, so an editor opening a draft's slug sees it rendered and everyone else gets the 404. A
+  non-ACTIVE render is sent `Cache-Control: private, no-store`, so no shared cache can hand an
+  editor's preview to the public.
+- **Why not a separate `cmsLayoutPreview` / `cmsPublishedLayout` query (option (c)).** Two queries
+  for one layout means every consumer picks the right one, and the editor surfaces (which read
+  `cmsLayouts` and `cmsLayoutByUuid`) would need new queries too. One rule on the existing reads
+  keeps the schema unchanged and makes the safe answer the default for anyone not signed in.
+- **Not covered: fragment reads.** Fragments have no status of their own, and `cmsFragments` /
+  `cmsFragment(uuid)` are still public, so the content of a draft layout's tree can still be read by
+  browsing fragments. Closing that is follow-up plan `834541c7`.
+
 ## Entities
 
 The TypeORM entities for these tables live in

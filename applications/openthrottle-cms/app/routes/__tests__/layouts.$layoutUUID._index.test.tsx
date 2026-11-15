@@ -7,9 +7,9 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { Route } from '@/app/routes/+types/layouts.$layoutUUID._index';
 import { CmsLayoutDetailDocument } from '~/__generated__/graphql';
 
-const fetchPublicGraphql = vi.fn();
+const fetchAuthGraphql = vi.fn();
 
-vi.mock('~/global/utils/graphql.server', () => ({ fetchPublicGraphql }));
+vi.mock('~/global/utils/graphql.server', () => ({ fetchAuthGraphql }));
 
 const { default: Component, loader } =
   await import('../layouts.$layoutUUID._index');
@@ -74,14 +74,14 @@ const renderRoute = () => {
 
 describe('routes/layouts.$layoutUUID._index.tsx', () => {
   beforeEach(() => {
-    fetchPublicGraphql.mockReset();
+    fetchAuthGraphql.mockReset();
   });
 
   describe('loader', () => {
     test('queries the layout by uuid and returns it with its fragment tree', async () => {
       const cmsLayout = buildLayout();
 
-      fetchPublicGraphql.mockResolvedValue({ cmsLayoutByUuid: cmsLayout });
+      fetchAuthGraphql.mockResolvedValue({ cmsLayoutByUuid: cmsLayout });
 
       await expect(loader(buildLoaderArgs())).resolves.toEqual({
         cmsLayout,
@@ -101,13 +101,15 @@ describe('routes/layouts.$layoutUUID._index.tsx', () => {
           },
         ],
       });
-      expect(fetchPublicGraphql).toHaveBeenCalledWith(CmsLayoutDetailDocument, {
-        uuid: 'layout-1',
-      });
+      expect(fetchAuthGraphql).toHaveBeenCalledWith(
+        expect.any(Request),
+        CmsLayoutDetailDocument,
+        { uuid: 'layout-1' },
+      );
     });
 
     test('throws a 404 when the layout does not exist', async () => {
-      fetchPublicGraphql.mockResolvedValue({ cmsLayoutByUuid: null });
+      fetchAuthGraphql.mockResolvedValue({ cmsLayoutByUuid: null });
 
       const thrown = await loader(buildLoaderArgs()).catch(
         (error: unknown) => error,
@@ -119,7 +121,7 @@ describe('routes/layouts.$layoutUUID._index.tsx', () => {
 
   describe('with a layout', () => {
     test('renders the heading, detail list and fragment links', async () => {
-      fetchPublicGraphql.mockResolvedValue({ cmsLayoutByUuid: buildLayout() });
+      fetchAuthGraphql.mockResolvedValue({ cmsLayoutByUuid: buildLayout() });
 
       const component = renderRoute();
 
@@ -136,7 +138,7 @@ describe('routes/layouts.$layoutUUID._index.tsx', () => {
     });
 
     test('previews the fragment tree with the core renderer', async () => {
-      fetchPublicGraphql.mockResolvedValue({ cmsLayoutByUuid: buildLayout() });
+      fetchAuthGraphql.mockResolvedValue({ cmsLayoutByUuid: buildLayout() });
 
       const component = renderRoute();
 
@@ -149,7 +151,7 @@ describe('routes/layouts.$layoutUUID._index.tsx', () => {
 
   describe('with a layout that has no fragments', () => {
     test('shows the preview empty state instead of the renderer', async () => {
-      fetchPublicGraphql.mockResolvedValue({
+      fetchAuthGraphql.mockResolvedValue({
         cmsLayoutByUuid: { ...buildLayout(), fragments: [] },
       });
 
