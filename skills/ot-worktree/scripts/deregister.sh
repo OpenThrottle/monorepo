@@ -5,7 +5,9 @@
 # OpenThrottle registers a worktree as a repository_checkouts row when a plan run
 # works in it. Removing the directory does not remove that row, so without this the
 # repositories page keeps listing worktrees that no longer exist. destroy.sh calls
-# deregister_worktree_checkout right after `git worktree remove` succeeds.
+# deregister_worktree_checkout right after `git worktree remove` succeeds, with the
+# same attribution fields removal-log.sh writes locally (input.audit), so the server
+# can attribute the removal on its own.
 #
 # The same request, made while the worktree still exists, is destroy.sh's
 # pre-removal active-run check (worktree_has_active_plan_run, below).
@@ -93,11 +95,14 @@ _ot_auth_token() {
 # (PRUNED, NOT_FOUND, SKIPPED_ACTIVE_RUN, SKIPPED_LIVE, SKIPPED_PRIMARY), or
 # nothing when it answered without one. Returns 1 — after logging why — when
 # there is no curl, no endpoint, no token or no reachable server.
-# $1 = worktree path, $2 = primary checkout, $3 = what the caller is doing (for logs).
+# $1 = worktree path, $2 = primary checkout, $3 = what the caller is doing (for logs),
+# $4 = optional WorktreeRemovalAuditInput JSON object (already escaped), sent as
+#      input.audit so the server records who removed the worktree.
 _ot_deregister_request() {
   _dr_wt="$1"
   _dr_src="$2"
   _dr_doing="$3"
+  _dr_audit="${4:-}"
 
   if ! command -v curl >/dev/null 2>&1; then
     log "ℹ️  curl not found — skipping $_dr_doing"
@@ -112,11 +117,16 @@ _ot_deregister_request() {
     return 1
   fi
 
-  # JSON-escape the only interpolated value; the rest of the body is a constant.
+  # JSON-escape the path; the audit object arrives escaped from removal-log.sh,
+  # and the rest of the body is a constant.
   _dr_path=$(printf '%s' "$_dr_wt" | sed 's/\\/\\\\/g; s/"/\\"/g')
+  _dr_audit_field=""
+  case "$_dr_audit" in
+    '{'*'}') _dr_audit_field=",\"audit\":$_dr_audit" ;;
+  esac
   # The $input in the body is a GraphQL variable, not shell.
   # shellcheck disable=SC2016
-  _dr_body=$(printf '{"query":"mutation DeregisterWorktreeCheckout($input: DeregisterWorktreeCheckoutInput!) { deregisterWorktreeCheckout(input: $input) { outcome } }","variables":{"input":{"filesystemPath":"%s"}}}' "$_dr_path")
+  _dr_body=$(printf '{"query":"mutation DeregisterWorktreeCheckout($input: DeregisterWorktreeCheckoutInput!) { deregisterWorktreeCheckout(input: $input) { outcome } }","variables":{"input":{"filesystemPath":"%s"%s}}}' "$_dr_path" "$_dr_audit_field")
 
   if ! _dr_response=$(curl -sS --max-time 5 -X POST \
     -H 'Content-Type: application/json' \
@@ -166,17 +176,19 @@ worktree_has_active_plan_run() {
   [ "$_ar_outcome" = "SKIPPED_ACTIVE_RUN" ]
 }
 
-# $1 = the removed worktree's absolute path, $2 = primary checkout. Always returns 0.
+# $1 = the removed worktree's absolute path, $2 = primary checkout, $3 = optional
+# removal audit JSON (worktree_removal_audit_json). Always returns 0.
 deregister_worktree_checkout() {
   _dw_wt="$1"
   _dw_src="$2"
+  _dw_audit="${3:-}"
 
   if [ "${OPENTHROTTLE_WORKTREE_DEREGISTER:-1}" = "0" ]; then
     log "ℹ️  OPENTHROTTLE_WORKTREE_DEREGISTER=0 — leaving the OpenThrottle checkout record alone"
     return 0
   fi
 
-  _dw_outcome=$(_ot_deregister_request "$_dw_wt" "$_dw_src" "checkout deregistration") || return 0
+  _dw_outcome=$(_ot_deregister_request "$_dw_wt" "$_dw_src" "checkout deregistration" "$_dw_audit") || return 0
 
   case "$_dw_outcome" in
     PRUNED) log "🧹 removed the worktree's OpenThrottle checkout record" ;;

@@ -9,6 +9,8 @@ import { createMock } from '@golevelup/ts-vitest';
 import type {
   RepositoryCheckout,
   RepositoryCheckoutsService,
+  WorktreeRemoval,
+  WorktreeRemovalsService,
 } from '@openthrottle/nestjs-repositories';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -30,12 +32,14 @@ const ROOT = '/Users/matt/Development/openthrottle-worktrees';
 const build = (
   result: WorktreeActivityResult,
   discoverAndClassify = vi.fn().mockResolvedValue(result),
+  findLatestByUserAndPaths = vi.fn().mockResolvedValue([]),
 ): DiscoveredWorktreesResolver => {
   return new DiscoveredWorktreesResolver(
     createMock<WorktreeActivityService>({ discoverAndClassify }),
     createMock<RepositoryCheckoutsService>(),
     createMock<WorktreeCheckoutPruneService>(),
     createMock<PlanRunWorktreeTeardownService>(),
+    createMock<WorktreeRemovalsService>({ findLatestByUserAndPaths }),
   );
 };
 
@@ -180,7 +184,67 @@ describe('DiscoveredWorktreesResolver', () => {
 
     const payload = await resolver.discoveredWorktrees('user-1');
 
-    expect(payload.missingCheckouts).toEqual([missing]);
+    expect(payload.missingCheckouts).toEqual([
+      { ...missing, lastRemoval: null },
+    ]);
+  });
+
+  describe('when a removal was reported for a missing checkout', () => {
+    const missing = {
+      checkoutId: 'checkout-gone',
+      path: `${ROOT}/wt-gone`,
+      reason: MISSING_CHECKOUT_REASON.PATH_GONE,
+      repositoryId: 'repo-1',
+    };
+    const scan: WorktreeActivityResult = {
+      ...EMPTY,
+      missingCheckouts: [missing],
+    };
+    const removal = createMock<WorktreeRemoval>({
+      agentSession: 'session-1',
+      ancestry: '10 claude',
+      branch: 'feat/x',
+      createdAt: new Date('2026-11-15T17:00:05Z'),
+      filesystemPath: missing.path,
+      id: 'removal-1',
+      outcome: PRUNE_WORKTREE_CHECKOUT_OUTCOME.SKIPPED_ACTIVE_RUN,
+      parentCommand: 'pnpm worktree:remove wt-gone',
+      removedAt: new Date('2026-11-15T17:00:00Z'),
+      result: 'removed',
+    });
+
+    it('attaches it as lastRemoval, looked up by the missing paths', async () => {
+      const findLatestByUserAndPaths = vi.fn().mockResolvedValue([removal]);
+      const resolver = build(scan, undefined, findLatestByUserAndPaths);
+
+      const payload = await resolver.discoveredWorktrees('user-1');
+
+      expect(findLatestByUserAndPaths).toHaveBeenCalledWith('user-1', [
+        missing.path,
+      ]);
+      expect(payload.missingCheckouts[0]?.lastRemoval).toEqual({
+        agentSession: 'session-1',
+        ancestry: '10 claude',
+        branch: 'feat/x',
+        createdAt: new Date('2026-11-15T17:00:05Z'),
+        id: 'removal-1',
+        outcome: 'skipped-active-run',
+        parentCommand: 'pnpm worktree:remove wt-gone',
+        removedAt: new Date('2026-11-15T17:00:00Z'),
+        result: 'removed',
+      });
+    });
+
+    it('reads as no removal when the lookup fails', async () => {
+      const findLatestByUserAndPaths = vi
+        .fn()
+        .mockRejectedValue(new Error('db down'));
+      const resolver = build(scan, undefined, findLatestByUserAndPaths);
+
+      const payload = await resolver.discoveredWorktrees('user-1');
+
+      expect(payload.missingCheckouts[0]?.lastRemoval).toBeNull();
+    });
   });
 
   it('renders an empty list when no root could be resolved', async () => {
@@ -225,6 +289,7 @@ describe('DiscoveredWorktreesResolver', () => {
         createMock<RepositoryCheckoutsService>(),
         createMock<WorktreeCheckoutPruneService>({ pruneByIds }),
         createMock<PlanRunWorktreeTeardownService>(),
+        createMock<WorktreeRemovalsService>(),
       );
 
       const payload = await resolver.pruneWorktreeCheckouts('user-1', {
@@ -280,6 +345,7 @@ describe('DiscoveredWorktreesResolver', () => {
           resolveBaseCheckoutPath: vi.fn().mockResolvedValue('/repo'),
           teardown,
         }),
+        createMock<WorktreeRemovalsService>(),
       );
       return { invalidate, resolver, teardown };
     };

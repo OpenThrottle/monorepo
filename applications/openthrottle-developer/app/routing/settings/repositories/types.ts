@@ -83,6 +83,11 @@ export interface RepositoriesView {
 export type MissingWorktreeCheckout =
   DiscoveredWorktreesResult['missingCheckouts'][number];
 
+/** @description One reported worktree removal, as attached to a missing checkout. */
+export type WorktreeRemoval = NonNullable<
+  MissingWorktreeCheckout['lastRemoval']
+>;
+
 /**
  * @description One directory the scan looked in — a repository's `<root>/<org>/<repo>`
  * folder — carrying the configured `baseRoot` above it and the rung that set it.
@@ -137,6 +142,11 @@ export interface RepositoryCheckoutRow {
   /** Stable row identity: the checkout id, or `worktree:<path>` when unregistered. */
   id: string;
   isWorktree: boolean;
+  /**
+   * The latest removal ot-worktree reported for a {@link missing} row's path — who removed it and
+   * how — or null when none was reported (or the row is not missing).
+   */
+  lastRemoval: WorktreeRemoval | null;
   /**
    * A registered worktree checkout the last scan could not match to a live worktree — the row
    * outlived the directory. Hidden by default and prunable; always false for a primary checkout.

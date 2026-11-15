@@ -10,6 +10,7 @@ import {
   mockDiscoveredWorktree,
   mockMissingCheckout,
   mockRepository,
+  mockWorktreeRemoval,
 } from '~/routing/settings/repositories/testing/mock-repositories';
 
 import { buildRepositoryRows } from '../rows';
@@ -163,6 +164,50 @@ describe('deriveWorktreeBadges', () => {
       expect(husk?.title).toBe(
         REPOSITORIES_TABLE_COPY.missingBadgeTitleNotAWorktree,
       );
+    });
+
+    describe('when ot-worktree reported removing it', () => {
+      test('adds a removal badge after the missing one, naming who and when', () => {
+        const badges = deriveWorktreeBadges(
+          missingRow({ lastRemoval: mockWorktreeRemoval() }),
+        );
+
+        expect(badges.map((badge) => badge.id)).toEqual([
+          'missing',
+          'last-removal',
+        ]);
+        expect(badges[1]).toEqual(
+          expect.objectContaining({
+            label: REPOSITORIES_TABLE_COPY.removalBadge('2026-11-15 17:00 UTC'),
+            tone: 'cleanup',
+          }),
+        );
+        expect(badges[1]?.title).toContain('session-1');
+        expect(badges[1]?.title).toContain('pnpm worktree:remove wt-gone');
+      });
+
+      test('falls back to the server receipt time when the client sent none', () => {
+        const badges = deriveWorktreeBadges(
+          missingRow({
+            lastRemoval: mockWorktreeRemoval({
+              createdAt: '2026-11-15T18:30:00.000Z',
+              removedAt: null,
+            }),
+          }),
+        );
+
+        expect(badges[1]?.label).toBe(
+          REPOSITORIES_TABLE_COPY.removalBadge('2026-11-15 18:30 UTC'),
+        );
+      });
+    });
+
+    describe('when no removal was reported', () => {
+      test('shows only the missing badge', () => {
+        const badges = deriveWorktreeBadges(missingRow({ lastRemoval: null }));
+
+        expect(badges.map((badge) => badge.id)).toEqual(['missing']);
+      });
     });
   });
 

@@ -10,6 +10,7 @@ import type {
   MissingWorktreeCheckout,
   RepositoryCheckout,
   ScannedWorktreeRoot,
+  WorktreeRemoval,
 } from '~/routing/settings/repositories/types';
 
 export interface MockCheckoutOverrides {
@@ -195,6 +196,7 @@ export const mockMissingCheckout = (
 ): MissingWorktreeCheckout => {
   return {
     checkoutId: 'worktree-1',
+    lastRemoval: null,
     path: '/Users/dev/.openthrottle/worktrees/monorepo/wt-gone',
     reason: MissingWorktreeCheckoutReason.PathGone,
     repositoryId: 'repo-1',
@@ -234,6 +236,25 @@ export const mockDiscoveredWorktrees = (
     scannedAt: '2026-08-24T00:00:00.000Z',
     scannedRoots: [mockScannedRoot()],
     worktrees: [],
+    ...overrides,
+  };
+};
+
+/**
+ * @description A removal ot-worktree reported for the missing worktree: removed by an agent
+ * session, record kept because a plan run still pointed at it.
+ */
+export const mockWorktreeRemoval = (
+  overrides: Partial<WorktreeRemoval> = {},
+): WorktreeRemoval => {
+  return {
+    agentSession: 'session-1',
+    createdAt: '2026-11-15T17:00:05.000Z',
+    id: 'removal-1',
+    outcome: 'skipped-active-run',
+    parentCommand: 'pnpm worktree:remove wt-gone',
+    removedAt: '2026-11-15T17:00:00.000Z',
+    result: 'removed',
     ...overrides,
   };
 };

@@ -1528,6 +1528,8 @@ export type DeleteTaskInput = {
 
 /** The worktree path a teardown just removed. */
 export type DeregisterWorktreeCheckoutInput = {
+  /** Who removed the worktree and how. When present the server records the removal (whatever the outcome) so it can be attributed without the client's local log; omitted by the pre-removal active-run probe, which records nothing. */
+  audit?: InputMaybe<WorktreeRemovalAuditInput>;
   /** Absolute filesystem path of the removed worktree. Matched as given and by its real path. */
   filesystemPath: Scalars['String']['input'];
 };
@@ -2669,6 +2671,8 @@ export type MissingWorktreeCheckoutObject = {
   __typename?: 'MissingWorktreeCheckoutObject';
   /** The orphaned repository_checkouts row. */
   checkoutId: Scalars['ID']['output'];
+  /** The latest removal ot-worktree reported for this path, or null when none was (removed by hand, by an older teardown, or while the server was unreachable). Usually the row survived because an unsettled plan run still pointed at it. */
+  lastRemoval?: Maybe<WorktreeRemovalObject>;
   /** The path as registered. It no longer resolves, so it is not symlink-resolved. */
   path: Scalars['String']['output'];
   /** Whether the path is gone or merely is not a worktree. */
@@ -8264,6 +8268,50 @@ export type WorktreeDiscoveryProblemObject = {
   path?: Maybe<Scalars['String']['output']>;
   /** Set only when the problem is attributable to one registered repository, so the UI can report it on that row instead of page-wide. */
   repositoryId?: Maybe<Scalars['ID']['output']>;
+};
+
+/** Who removed a worktree and how: the fields ot-worktree's destroy.sh writes to its local removal log. Every field is untrusted, optional and truncated server-side; a malformed value is dropped rather than failing the deregistration. */
+export type WorktreeRemovalAuditInput = {
+  /** Calling agent's session id when its harness exports one (Claude Code: CLAUDE_CODE_SESSION_ID). */
+  agentSession?: InputMaybe<Scalars['String']['input']>;
+  /** A few levels of "pid command" above the parent process, joined by " <- ". */
+  ancestry?: InputMaybe<Scalars['String']['input']>;
+  /** Branch the worktree had checked out. */
+  branch?: InputMaybe<Scalars['String']['input']>;
+  /** Command line of destroy.sh's parent process. */
+  parent?: InputMaybe<Scalars['String']['input']>;
+  /** destroy.sh process id on the client machine. */
+  pid?: InputMaybe<Scalars['Int']['input']>;
+  /** Parent process id of destroy.sh on the client machine. */
+  ppid?: InputMaybe<Scalars['Int']['input']>;
+  /** Outcome of destroy.sh's pre-removal active-run probe. */
+  probe?: InputMaybe<Scalars['String']['input']>;
+  /** destroy.sh's own result for the invocation, e.g. removed. */
+  result?: InputMaybe<Scalars['String']['input']>;
+  /** Client-side ISO-8601 timestamp of the removal. Ignored when unparseable. */
+  ts?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** One worktree removal reported by ot-worktree's destroy.sh with its deregistration: who removed it, how, and what the server did with the checkout record. Client-supplied fields are untrusted. */
+export type WorktreeRemovalObject = {
+  __typename?: 'WorktreeRemovalObject';
+  /** The calling agent's session id, when its harness exported one. */
+  agentSession?: Maybe<Scalars['String']['output']>;
+  /** A few levels of "pid command" above the parent process. */
+  ancestry?: Maybe<Scalars['String']['output']>;
+  /** Branch the worktree had checked out. */
+  branch?: Maybe<Scalars['String']['output']>;
+  /** When the server recorded the removal. */
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['ID']['output'];
+  /** What the server did with the checkout record (a PruneWorktreeCheckoutOutcome value, lower-kebab: pruned, not-found, skipped-active-run, skipped-live, skipped-primary). */
+  outcome: Scalars['String']['output'];
+  /** Command line of destroy.sh's parent process. */
+  parentCommand?: Maybe<Scalars['String']['output']>;
+  /** When the client says the removal happened, or null when it sent no usable time. */
+  removedAt?: Maybe<Scalars['DateTime']['output']>;
+  /** destroy.sh's own result, e.g. removed. */
+  result?: Maybe<Scalars['String']['output']>;
 };
 
 /** Which rung of the shared worktree-root ladder resolved the scanned root. The same ladder skills/ot-worktree/scripts/root.sh applies, so the page can never disagree with where the script writes. */

@@ -23,7 +23,8 @@
 # cannot be reached). The branch is left alone unless asked for.
 #
 # After a successful removal, the worktree's OpenThrottle checkout record is
-# deregistered best-effort (deregister.sh). That step can only log, never fail.
+# deregistered best-effort (deregister.sh), carrying the removal-log fields so the
+# server can attribute the removal too. That step can only log, never fail.
 #
 # Every invocation that gets past flag parsing — removal, dry run or refusal —
 # appends one line to ~/.openthrottle/logs/worktree-removals.log (removal-log.sh),
@@ -217,8 +218,10 @@ git -C "$SRC" worktree prune >&2
 # The worktree is gone: whatever happens to the branch below, that is the result.
 RESULT=removed
 
-# The directory is gone; drop the record that still points at it. Fail-open.
-deregister_worktree_checkout "$WTREE" "$SRC"
+# The directory is gone; drop the record that still points at it, and tell the
+# server who removed it. Fail-open.
+deregister_worktree_checkout "$WTREE" "$SRC" \
+  "$(worktree_removal_audit_json "$RESULT" "$BRANCH" "$OT_ACTIVE_RUN_PROBE")"
 
 if [ "$DELETE_BRANCH" = "1" ] && [ -n "$BRANCH" ] && [ "$BRANCH" != "HEAD" ]; then
   if [ "$FORCE" = "1" ]; then

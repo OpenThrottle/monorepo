@@ -21,6 +21,10 @@
 # refused-not-registered, refused-not-a-repo, refused-teardown-failed, or failed
 # (anything that exited non-zero past the guards, e.g. `git worktree remove`).
 #
+# worktree_removal_audit_json prints the same attribution fields as the
+# `audit` object deregister.sh sends with the post-removal deregisterWorktreeCheckout
+# call, so the server keeps a copy that survives a lost laptop log.
+#
 # Strictly best-effort: nothing here may fail or block a removal. Every write is
 # in a subshell with errors swallowed. Override the file with
 # OPENTHROTTLE_WORKTREE_REMOVAL_LOG; set it to 0 to switch the log off.
@@ -98,5 +102,33 @@ record_worktree_removal() {
       "$(_rl_json "${CLAUDE_CODE_SESSION_ID:-}")" \
       >>"$_rl_file"
   ) 2>/dev/null || true
+  return 0
+}
+
+# A pid as a JSON number, or null when it is not a plain positive integer.
+_rl_json_pid() {
+  case "$1" in
+    '' | *[!0-9]*) printf 'null' ;;
+    *) printf '%s' "$1" ;;
+  esac
+}
+
+# The removal-log attribution fields as a WorktreeRemovalAuditInput JSON object,
+# for deregister.sh. Prints `{}` if anything goes wrong; never fails.
+# $1 result, $2 branch, $3 active-run probe outcome.
+worktree_removal_audit_json() {
+  (
+    _ra_ppid="${PPID:-}"
+    printf '{"result":"%s","branch":"%s","probe":"%s","pid":%s,"ppid":%s,"parent":"%s","ancestry":"%s","agentSession":"%s","ts":"%s"}' \
+      "$(_rl_json "$1")" \
+      "$(_rl_json "$2")" \
+      "$(_rl_json "$3")" \
+      "$(_rl_json_pid "$$")" \
+      "$(_rl_json_pid "$_ra_ppid")" \
+      "$(_rl_json "$(_rl_command_of "$_ra_ppid")")" \
+      "$(_rl_json "$(_rl_ancestry "$_ra_ppid")")" \
+      "$(_rl_json "${CLAUDE_CODE_SESSION_ID:-}")" \
+      "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  ) 2>/dev/null || printf '{}'
   return 0
 }

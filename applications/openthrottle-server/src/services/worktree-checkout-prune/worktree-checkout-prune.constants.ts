@@ -19,3 +19,9 @@ export const PRUNE_WORKTREE_CHECKOUT_OUTCOME = {
   SKIPPED_LIVE: 'skipped-live',
   SKIPPED_PRIMARY: 'skipped-primary',
 } as const;
+
+/** Cap on a short audit value (result, probe, branch, agent session). */
+export const MAX_REMOVAL_AUDIT_SHORT_LENGTH = 256;
+
+/** Cap on a command-line audit value (parent, ancestry). The client already caps near this. */
+export const MAX_REMOVAL_AUDIT_COMMAND_LENGTH = 2000;

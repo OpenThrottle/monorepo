@@ -573,6 +573,10 @@ export {
 } from './modules/workspace-settings/workspace-settings.constants.ts';
 export type { WorkspaceEditorId } from './modules/workspace-settings/workspace-settings.types.ts';
 export { isWorkspaceEditorId } from './modules/workspace-settings/workspace-settings.utils.ts';
+export { WorktreeRemoval } from './modules/worktree-removals/worktree-removal.entity.ts';
+export { WorktreeRemovalsModule } from './modules/worktree-removals/worktree-removals.module.ts';
+export { WorktreeRemovalsService } from './modules/worktree-removals/worktree-removals.service.ts';
+export type { RecordWorktreeRemovalInput } from './modules/worktree-removals/worktree-removals.types.ts';
 export { NestjsRepositoriesModule } from './nestjs-repositories.module.ts';
 export { getTypeOrmOptions as getOpenThrottleTypeOrmOptions } from './nestjs-repositories.utils.ts';
 export { vectorTransformer } from './vector-transformer/vector-transformer.constants.ts';
