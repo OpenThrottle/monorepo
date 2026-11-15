@@ -95,9 +95,16 @@ function withDatabaseName(baseUrl: string, database: string): string {
  * pre-existing, never-checked type errors into this package's build. Shelling
  * out keeps the same behavior (a populated `schema_migrations` ledger, exactly
  * like a real dev DB) without that coupling.
+ *
+ * `--database openthrottle` keeps the run on the scratch database: the runner
+ * derives every other registered database (`cms`) from the primary URL by name,
+ * which would land on the server's real `cms` database. Aimed only at the
+ * scratch name, the run also passes the shared-DB worktree guard, which
+ * protects the shared database rather than every database on the server.
  */
 async function migrateScratchDatabase(connectionString: string): Promise<void> {
-  await execFileAsync('pnpm', ['exec', 'tsx', MIGRATIONS_RUNNER], {
+  const args = ['exec', 'tsx', MIGRATIONS_RUNNER, '--database', 'openthrottle'];
+  await execFileAsync('pnpm', args, {
     cwd: REPO_ROOT,
     env: {
       ...process.env,

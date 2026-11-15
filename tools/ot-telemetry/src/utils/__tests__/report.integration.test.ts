@@ -74,28 +74,37 @@ if (!reachable) {
 }
 
 describe.runIf(reachable)('ot-telemetry against a real Postgres', () => {
-  let scratch: ScratchDatabase;
+  let scratch: ScratchDatabase | undefined;
+
+  /** The suite's scratch database; throws when `beforeAll` failed to create it. */
+  const scratchPool = (): ScratchDatabase['pool'] => {
+    if (!scratch) {
+      throw new Error('the scratch database was never created: see beforeAll');
+    }
+    return scratch.pool;
+  };
 
   beforeAll(async () => {
     scratch = await createScratchDatabase();
-    await seedSentinelFixture(scratch.pool);
+    await seedSentinelFixture(scratchPool());
   }, 120_000);
 
   afterAll(async () => {
-    await scratch.drop();
+    // A failed `beforeAll` never assigns it; its own error is the one to read.
+    await scratch?.drop();
   }, 60_000);
 
   it('runs every registered query without error, and every query it issues is SELECT-only', async () => {
-    const recorder = recordQueries(scratch.pool);
+    const recorder = recordQueries(scratchPool());
 
     try {
-      const probe = await probeCapabilities(scratch.pool);
+      const probe = await probeCapabilities(scratchPool());
       const window = resolveWindow({});
 
       const [migration, metricRun] = await Promise.all([
-        readMigrationHighWaterMark(scratch.pool, probe),
+        readMigrationHighWaterMark(scratchPool(), probe),
         runMetricQueries(METRIC_QUERIES, {
-          client: scratch.pool,
+          client: scratchPool(),
           probe,
           window,
         }),
@@ -149,13 +158,13 @@ describe.runIf(reachable)('ot-telemetry against a real Postgres', () => {
   }, 120_000);
 
   it('never leaks a sentinel string planted in every free-text column into the default (aggregate) JSON or Markdown output', async () => {
-    const probe = await probeCapabilities(scratch.pool);
+    const probe = await probeCapabilities(scratchPool());
     const window = resolveWindow({});
 
     const [migration, metricRun] = await Promise.all([
-      readMigrationHighWaterMark(scratch.pool, probe),
+      readMigrationHighWaterMark(scratchPool(), probe),
       runMetricQueries(METRIC_QUERIES, {
-        client: scratch.pool,
+        client: scratchPool(),
         probe,
         window,
       }),

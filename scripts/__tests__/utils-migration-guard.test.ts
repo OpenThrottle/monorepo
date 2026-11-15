@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { DatabaseDefinition } from '../../databases/database-registry.ts';
+import { DATABASES } from '../../databases/database-registry.ts';
 import { guardSharedMigrations } from '../openthrottle-database-migrations.ts';
 import {
   branchMigrationsMessage,
@@ -281,6 +282,79 @@ describe('guardSharedMigrations (the CLI entrypoints share it)', () => {
         }),
       }),
     ).resolves.toEqual({ kind: 'allowed' });
+  });
+
+  describe('a run aimed away from the shared database', () => {
+    const SHARED_URL = 'postgresql://u:p@host.docker.internal:6010/openthrottle'; // prettier-ignore
+    const SCRATCH_URL = 'postgresql://u:p@localhost:6010/ot_telemetry_test_abc'; // prettier-ignore
+    const branchOnly = sourcesFor({
+      cms: ['001_create_schemas.sql'],
+      openthrottle: ['001_a.sql', '099_branch.sql'],
+    });
+
+    /** A shared worktree whose own .env points at the shared database. */
+    const sharedRepo = (): string => {
+      const repo = makeRepo(['001_a.sql']);
+      writeFileSync(
+        join(repo, '.env'),
+        `OT_WORKTREE_DB=shared\nPOSTGRES_URL="${SHARED_URL}" # ✏️ CHANGE THIS ✏️\n`,
+      );
+      return repo;
+    };
+
+    it('allows a scratch database the run targets by URL override', async () => {
+      const repo = sharedRepo();
+
+      await expect(
+        guardSharedMigrations({
+          cwd: repo,
+          databases: DATABASES.filter((database) => database.primary),
+          env: { OPENTHROTTLE_POSTGRES_URL: SCRATCH_URL, POSTGRES_URL: SHARED_URL }, // prettier-ignore
+          sourceFor: branchOnly,
+        }),
+      ).resolves.toEqual({ kind: 'allowed' });
+    });
+
+    it('still refuses the shared database, whatever host alias reaches it', async () => {
+      const repo = sharedRepo();
+
+      await expect(
+        guardSharedMigrations({
+          cwd: repo,
+          databases: DATABASES.filter((database) => database.primary),
+          env: { POSTGRES_URL: SHARED_URL.replace('host.docker.internal', 'localhost') }, // prettier-ignore
+          sourceFor: branchOnly,
+        }),
+      ).resolves.toMatchObject({ kind: 'refused' });
+    });
+
+    it('still refuses a derived database the scratch URL lands on (cms)', async () => {
+      const repo = sharedRepo();
+
+      await expect(
+        guardSharedMigrations({
+          cwd: repo,
+          env: { OPENTHROTTLE_POSTGRES_URL: SCRATCH_URL },
+          sourceFor: branchOnly,
+        }),
+      ).resolves.toEqual({
+        kind: 'refused',
+        message: branchMigrationsMessage(['001_create_schemas.sql'], 'cms'),
+      });
+    });
+
+    it('fails closed when the run resolves no connection', async () => {
+      const repo = sharedRepo();
+
+      await expect(
+        guardSharedMigrations({
+          cwd: repo,
+          databases: DATABASES.filter((database) => database.primary),
+          env: {},
+          sourceFor: branchOnly,
+        }),
+      ).resolves.toMatchObject({ kind: 'refused' });
+    });
   });
 
   it('allows an isolated worktree', async () => {
