@@ -154,6 +154,25 @@ var resolveReportableCwd = (repoRoot, cwd) => {
   }
   return cwd || null;
 };
+var parseEnvLine = (line) => {
+  const trimmed = line.trim();
+  if (!trimmed || trimmed.startsWith("#")) {
+    return null;
+  }
+  const eq = trimmed.indexOf("=");
+  if (eq <= 0) {
+    return null;
+  }
+  const key = trimmed.slice(0, eq).trim();
+  if (!key) {
+    return null;
+  }
+  let value = trimmed.slice(eq + 1).trim();
+  if (value.startsWith('"') && value.endsWith('"') || value.startsWith("'") && value.endsWith("'")) {
+    value = value.slice(1, -1);
+  }
+  return { key, value };
+};
 var readEnvFile = (envPath) => {
   const out = {};
   try {
@@ -162,23 +181,10 @@ var readEnvFile = (envPath) => {
     }
     const text = import_node_fs.default.readFileSync(envPath, "utf8");
     for (const line of text.split("\n")) {
-      const trimmed = line.trim();
-      if (!trimmed || trimmed.startsWith("#")) {
-        continue;
+      const assignment = parseEnvLine(line);
+      if (assignment) {
+        out[assignment.key] = assignment.value;
       }
-      const eq = trimmed.indexOf("=");
-      if (eq <= 0) {
-        continue;
-      }
-      const key = trimmed.slice(0, eq).trim();
-      if (!key) {
-        continue;
-      }
-      let value = trimmed.slice(eq + 1).trim();
-      if (value.startsWith('"') && value.endsWith('"') || value.startsWith("'") && value.endsWith("'")) {
-        value = value.slice(1, -1);
-      }
-      out[key] = value;
     }
   } catch (err) {
     logHookError("readEnvFile failed", err);
