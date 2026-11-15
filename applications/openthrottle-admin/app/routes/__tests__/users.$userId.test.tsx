@@ -83,21 +83,22 @@ describe('routes/users.$userId.tsx', () => {
       expect(executeGraphqlWithAuth).not.toHaveBeenCalled();
     });
 
-    test('redirects to / on an auth error', async () => {
+    test('redirects to /auth, clearing the cookie, on an auth error', async () => {
       executeGraphqlWithAuth.mockRejectedValue(
         new GraphqlAuthError('Forbidden', 403),
       );
 
       const response = await RouteModule.loader(
         createLoaderArgs({ userId: 'user-1' }),
-      );
+      ).catch((thrown: unknown) => thrown);
 
       expect(response).toBeInstanceOf(Response);
       if (!(response instanceof Response)) {
         throw new Error('Expected a redirect Response');
       }
       expect(response.status).toBe(302);
-      expect(response.headers.get('Location')).toBe('/');
+      expect(response.headers.get('Location')).toBe('/auth');
+      expect(response.headers.get('Set-Cookie')).toContain('Max-Age=0');
     });
   });
 

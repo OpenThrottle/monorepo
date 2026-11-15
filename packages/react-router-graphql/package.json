@@ -15,6 +15,7 @@
     "graphql": "catalog:",
     "graphql-ws": "catalog:",
     "react": "catalog:",
+    "react-router": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

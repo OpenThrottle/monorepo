@@ -1,6 +1,6 @@
 import {
   executeGraphqlWithAuth,
-  isAuthError,
+  redirectOnAuthError,
 } from '@openthrottle/react-router-graphql';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
@@ -11,7 +11,6 @@ import {
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { KeyRoundIcon } from 'lucide-react';
 import * as React from 'react';
-import { redirect } from 'react-router';
 
 import type { Route } from '@/app/routes/+types/permissions._index';
 import { GetPermissionsDocument } from '~/__generated__/graphql';
@@ -33,9 +32,7 @@ export const loader = async (args: Route.LoaderArgs) => {
 
     return { permissions: data.permissions };
   } catch (error) {
-    if (isAuthError(error)) {
-      return redirect('/');
-    }
+    redirectOnAuthError(error);
 
     throw error;
   }

@@ -5,7 +5,10 @@ import {
   getAuthTokenFromCookie,
   getClearAuthCookieHeader,
 } from '@openthrottle/react-router-auth';
-import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import {
+  executeGraphqlWithAuth,
+  redirectOnAuthError,
+} from '@openthrottle/react-router-graphql';
 import { NotificationsStoreProvider } from '@openthrottle/react-router-notifications';
 import {
   buildThemeStylesheet,
@@ -266,6 +269,14 @@ export const loader = async (args: Route.LoaderArgs) => {
       return null;
     } catch (error) {
       diagnostics.userLatencyMs = Date.now() - t0;
+
+      // The cookie holds a token the server rejected (revoked, or minted by
+      // another stack). On a protected page that session is unusable: send the
+      // caller to /auth with the cookie cleared instead of rendering a banner.
+      if (isProtected) {
+        redirectOnAuthError(error);
+      }
+
       console.error('🚨 root loader: GetMyUser failed', error);
 
       user = null;

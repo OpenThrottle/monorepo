@@ -244,9 +244,15 @@ describe('routing/blog/actions/postId', () => {
 
     mockExecute.mockRejectedValueOnce(authError);
 
-    await expect(
-      runBlogPostEditorAction(buildArgs(saveRequest())),
-    ).rejects.toBe(authError);
+    const rejection = await runBlogPostEditorAction(
+      buildArgs(saveRequest()),
+    ).catch((thrown: unknown) => thrown);
+
+    expect(rejection).toBeInstanceOf(Response);
+
+    if (rejection instanceof Response) {
+      expect(rejection.headers.get('Location')).toBe('/auth');
+    }
   });
 });
 
@@ -397,8 +403,14 @@ describe('routing/blog/actions/postId lifecycle intents', () => {
 
     mockExecute.mockRejectedValueOnce(authError);
 
-    await expect(
-      runBlogPostEditorAction(buildArgs({ intent: 'unpublish' })),
-    ).rejects.toBe(authError);
+    const rejection = await runBlogPostEditorAction(
+      buildArgs({ intent: 'unpublish' }),
+    ).catch((thrown: unknown) => thrown);
+
+    expect(rejection).toBeInstanceOf(Response);
+
+    if (rejection instanceof Response) {
+      expect(rejection.headers.get('Location')).toBe('/auth');
+    }
   });
 });

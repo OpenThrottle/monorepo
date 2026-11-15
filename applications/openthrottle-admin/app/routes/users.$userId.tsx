@@ -1,6 +1,6 @@
 import {
   executeGraphqlWithAuth,
-  isAuthError,
+  redirectOnAuthError,
 } from '@openthrottle/react-router-graphql';
 import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
@@ -11,7 +11,7 @@ import {
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { UserIcon } from 'lucide-react';
 import * as React from 'react';
-import { redirect, useFetcher } from 'react-router';
+import { useFetcher } from 'react-router';
 
 import type { Route } from '@/app/routes/+types/users.$userId';
 import {
@@ -62,9 +62,7 @@ export const loader = async (args: Route.LoaderArgs) => {
       user: userResult.user ?? null,
     };
   } catch (error) {
-    if (isAuthError(error)) {
-      return redirect('/');
-    }
+    redirectOnAuthError(error);
 
     throw error;
   }
