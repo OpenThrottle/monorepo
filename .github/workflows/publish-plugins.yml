@@ -46,6 +46,14 @@ jobs:
 
       - name: '🤖 Node Setup'
         uses: ./.github/actions/node-setup
+        with:
+          # 💰 Restore-only. This job only builds the hook bundles; no Nx
+          # task it runs is worth keeping. Saving it put
+          # an unsuffixed ~226 MB Nx entry on main for every push, beside the
+          # `-warm` entry continuous-integration.yml's `warm-cache` job already
+          # saves for the same commit. It kept the repo over its 10 GB quota
+          # (OT plan 1d2f247c).
+          save-cache: 'false'
 
       - name: '🔨 Build the hook plugins'
         run: pnpm run build:hooks
