@@ -71,7 +71,7 @@ describe('structured output', () => {
   });
 
   describe('reportsToolCalls', () => {
-    it('is false only for grok, whose headless stream has no tool events', () => {
+    it('is true for every driver (grok since its 1.x tool_call events)', () => {
       const silent = [
         antigravityDriver,
         claudeDriver,
@@ -83,7 +83,7 @@ describe('structured output', () => {
         .filter((driver) => !driver.capabilities.reportsToolCalls)
         .map((driver) => driver.id);
 
-      expect(silent).toEqual(['grok']);
+      expect(silent).toEqual([]);
     });
   });
 });

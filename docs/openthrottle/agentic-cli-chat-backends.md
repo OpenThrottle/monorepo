@@ -201,12 +201,12 @@ The gate (see `conversation-stream.resolver.ts` + the cursor-agent adapter):
 
 - **Allowlist only.** `AGENT_CLI_ALLOWLIST` is **derived from the
   `@openthrottle/openthrottle-drivers` registry** (`ALL_DRIVERS`), so it can't
-  drift from the driver set — discovery probes **every** driver (today `claude`,
-  `codex`, `cursor`, `grok`, `opencode`). The chat resolver, however, accepts
-  `openai` plus only the **chat-capable** drivers (those with a
-  `ConversationBackend` adapter — `capabilities.chatStreaming`: `cursor`,
-  `claude`, `opencode`) and rejects the plan-run-only drivers (`codex`, `grok`),
-  which are discoverable but have no streaming adapter yet. Each adapter spawns
+  drift from the driver set — discovery probes **every** driver (today
+  `antigravity`, `claude`, `codex`, `cursor`, `grok`, `opencode`). The chat
+  resolver accepts `openai` plus only the **chat-capable** drivers (those with a
+  `ConversationBackend` adapter — `capabilities.chatStreaming`), which is every
+  registered driver today; a future plan-run-only driver would be discoverable
+  but rejected. Each adapter spawns
   only its own registry binary; the safety invariant (only registry binaries are
   ever spawned) is now guaranteed by construction.
 - **No shell.** `child_process.spawn` with an **argument array** — the prompt is

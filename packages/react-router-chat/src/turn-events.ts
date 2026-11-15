@@ -347,6 +347,8 @@ export interface ParsedChunkMetadata {
   readonly toolName: string;
   /** Legacy claude `toolResults` blocks, each resolved by its own id. */
   readonly toolResultBlocks: readonly ParsedToolResultBlock[];
+  /** The turn's terminal error, as the server persists it on the usage payload. */
+  readonly usageError: string | null;
   readonly usageJson: string | null;
   readonly usageResult: string | null;
 }
@@ -362,6 +364,7 @@ const EMPTY_METADATA: ParsedChunkMetadata = {
   toolCallJson: null,
   toolName: FALLBACK_TOOL_NAME,
   toolResultBlocks: [],
+  usageError: null,
   usageJson: null,
   usageResult: null,
 };
@@ -440,6 +443,7 @@ const normalizeMetadata = (
       codex === null ? toPayloadText(parsed.toolCall) : codex.resultJson,
     toolName: toolName ?? FALLBACK_TOOL_NAME,
     toolResultBlocks: parseToolResultBlocks(parsed.toolResults),
+    usageError: asString(parsed.error),
     usageJson: stringifyOrNull(parsed.usage),
     usageResult: asString(parsed.result),
   };
@@ -726,7 +730,7 @@ export const applyTurnUsage = (
   const usageField = hasUsageCounts(mergedUsage) ? mergedUsage : undefined;
 
   const merged: ChatTurnUsageEvent = {
-    error: terminal?.error ?? existing?.error ?? null,
+    error: terminal?.error ?? meta.usageError ?? existing?.error ?? null,
     kind: 'usage',
     result: meta.usageResult ?? existing?.result ?? null,
     sortOrder: Math.max(existing?.sortOrder ?? sortOrder, sortOrder),

@@ -1,8 +1,35 @@
 import { describe, expect, it } from 'vitest';
 
-import { mapGrokEvent } from '../events.ts';
+import type { ConversationStreamChunk } from '../../types.ts';
+import { createGrokEventMapper } from '../events.ts';
+import {
+  GROK_1_PARALLEL_TOOL_CALL_EVENTS,
+  GROK_1_PERMISSION_CANCELLED_EVENTS,
+} from './grok-1-tool-calls.fixture.ts';
 
-describe('mapGrokEvent', () => {
+/** Map one event through a fresh mapper (the stateless events need no history). */
+const mapGrokEvent = (event: unknown): ConversationStreamChunk[] => {
+  return createGrokEventMapper().map(event);
+};
+
+/** Map a whole captured stream through ONE mapper, as a run does. */
+const mapStream = (events: readonly unknown[]): ConversationStreamChunk[] => {
+  const mapper = createGrokEventMapper();
+
+  return events.flatMap((event) => {
+    return mapper.map(event);
+  });
+};
+
+const toolChunks = (
+  chunks: readonly ConversationStreamChunk[],
+): ConversationStreamChunk[] => {
+  return chunks.filter((chunk) => {
+    return chunk.kind === 'tool_call' || chunk.kind === 'tool_result';
+  });
+};
+
+describe('createGrokEventMapper', () => {
   it('maps a thought event to a thinking delta', () => {
     expect(mapGrokEvent({ data: 'hmm', type: 'thought' })).toEqual([
       { delta: 'hmm', done: false, kind: 'thinking' },
@@ -90,7 +117,7 @@ describe('mapGrokEvent', () => {
       },
     ];
 
-    const chunks = raw.flatMap(mapGrokEvent);
+    const chunks = mapStream(raw);
 
     expect(chunks.map((c) => c.kind)).toEqual([
       'thinking',
@@ -105,5 +132,178 @@ describe('mapGrokEvent', () => {
     );
     const terminal = chunks.at(-1);
     expect(terminal).toMatchObject({ done: true, error: null });
+  });
+
+  describe('grok 1.x tool calls (captured stream)', () => {
+    const PWD = 'call-eed840fc-58e4-45ad-9164-9e984ae89b86-0';
+    const READ = 'call-eed840fc-58e4-45ad-9164-9e984ae89b86-1';
+    const MISSING = 'call-eed840fc-58e4-45ad-9164-9e984ae89b86-2';
+
+    it('opens each parallel call once, then closes each once, keyed by its own id', () => {
+      const tools = toolChunks(mapStream(GROK_1_PARALLEL_TOOL_CALL_EVENTS));
+
+      expect(
+        tools.map((chunk) => {
+          return [chunk.kind, chunk.metadata?.callId];
+        }),
+      ).toEqual([
+        ['tool_call', PWD],
+        ['tool_call', READ],
+        ['tool_call', MISSING],
+        ['tool_result', MISSING],
+        ['tool_result', READ],
+        ['tool_result', PWD],
+      ]);
+    });
+
+    it('carries the rawInput as the arguments and the toolName as the name', () => {
+      const tools = toolChunks(mapStream(GROK_1_PARALLEL_TOOL_CALL_EVENTS));
+
+      expect(tools[0]?.metadata).toEqual({
+        callId: PWD,
+        toolCall: {
+          command: 'pwd',
+          description: 'Print the current working directory',
+        },
+        toolName: 'run_terminal_command',
+      });
+      expect(tools[1]?.metadata?.toolCall).toEqual({
+        limit: 3,
+        target_file: 'package.json',
+      });
+    });
+
+    it('uses the terminal content text as the result, not the description', () => {
+      const result = toolChunks(
+        mapStream(GROK_1_PARALLEL_TOOL_CALL_EVENTS),
+      ).find((chunk) => {
+        return chunk.kind === 'tool_result' && chunk.metadata?.callId === PWD;
+      });
+
+      expect(result).toMatchObject({
+        error: null,
+        metadata: { isError: false, toolCall: '/repo\n' },
+      });
+    });
+
+    it('marks a failed call isError with its error text', () => {
+      const result = toolChunks(
+        mapStream(GROK_1_PARALLEL_TOOL_CALL_EVENTS),
+      ).find((chunk) => {
+        return (
+          chunk.kind === 'tool_result' && chunk.metadata?.callId === MISSING
+        );
+      });
+
+      expect(result?.metadata?.isError).toBe(true);
+      expect(result?.error).toContain('missing.txt does not exist');
+      expect(result?.metadata?.toolCall).toBe(result?.error);
+    });
+
+    it('maps the permission-cancelled call as failed', () => {
+      const results = toolChunks(
+        mapStream(GROK_1_PERMISSION_CANCELLED_EVENTS),
+      ).filter((chunk) => {
+        return chunk.kind === 'tool_result';
+      });
+
+      expect(
+        results.map((chunk) => {
+          return chunk.metadata?.isError;
+        }),
+      ).toEqual([true, false]);
+      expect(results[0]?.error).toBe(
+        'User cancelled the execution for tool `run_terminal_command`',
+      );
+    });
+
+    it('ends a permission-cancelled turn with an error naming the blocked tool', () => {
+      const terminal = mapStream(GROK_1_PERMISSION_CANCELLED_EVENTS).at(-1);
+
+      expect(terminal).toMatchObject({
+        done: true,
+        kind: 'usage',
+        metadata: { stopReason: 'cancelled' },
+      });
+      expect(terminal?.error).toContain(
+        '`run_terminal_command` needed approval',
+      );
+      expect(terminal?.error).toContain('Permissions');
+    });
+
+    it('keeps a cancelled turn with no blocked tool generic', () => {
+      expect(
+        mapGrokEvent({ stopReason: 'cancelled', type: 'end' })[0]?.error,
+      ).toBe('grok cancelled the turn before it finished.');
+    });
+
+    it('leaves a normal end_turn error-free', () => {
+      expect(mapStream(GROK_1_PARALLEL_TOOL_CALL_EVENTS).at(-1)).toMatchObject({
+        done: true,
+        error: null,
+        kind: 'usage',
+      });
+    });
+
+    it('ignores available_commands and the per-request usage event', () => {
+      expect(
+        mapGrokEvent({ tools: ['read_file'], type: 'available_commands' }),
+      ).toEqual([]);
+      expect(mapGrokEvent({ type: 'usage', usage: {} })).toEqual([]);
+    });
+
+    it('unwraps an MCP call result, which carries no content', () => {
+      const mapper = createGrokEventMapper();
+      mapper.map({
+        rawInput: { tool_input: {}, tool_name: 'openthrottle-mcp__health' },
+        status: 'pending',
+        toolCallId: 'm1',
+        toolName: 'use_tool',
+        type: 'tool_call',
+      });
+
+      expect(
+        mapper.map({
+          content: [],
+          rawOutput: { output: { OkayOutput: 'api: ok' }, type: 'MCP' },
+          status: 'completed',
+          toolCallId: 'm1',
+          type: 'tool_call_update',
+        })[0]?.metadata,
+      ).toEqual({
+        callId: 'm1',
+        isError: false,
+        toolCall: 'api: ok',
+        toolName: 'use_tool',
+      });
+    });
+
+    it('opens a card for a terminal update whose call was never announced', () => {
+      expect(
+        createGrokEventMapper()
+          .map({
+            content: [],
+            status: 'completed',
+            toolCallId: 'orphan',
+            type: 'tool_call_update',
+          })
+          .map((chunk) => {
+            return chunk.kind;
+          }),
+      ).toEqual(['tool_call', 'tool_result']);
+    });
+
+    it('emits nothing for a repeated terminal update', () => {
+      const mapper = createGrokEventMapper();
+      const update = {
+        content: [],
+        status: 'completed',
+        toolCallId: 'x',
+        type: 'tool_call_update',
+      };
+      mapper.map(update);
+
+      expect(mapper.map(update)).toEqual([]);
+    });
   });
 });

@@ -5,11 +5,15 @@ The headless event stream the `grok` chat backend
 driver (`packages/openthrottle-drivers/src/drivers/grok.ts`) are built against. grok calls the format
 `streaming-json` (JSONL).
 
-> **Provenance, stated honestly.** Two sources, and they do not cover the same ground.
+> **Provenance, stated honestly.** Three sources, and they do not cover the same ground.
 >
-> - **Mapper rules** (`thought`, `text`, `end`): the mapper header says they were captured from live
->   runs of grok **0.2.112**. That capture is not in the repo, so those event shapes are taken from
->   `events.ts` and its tests, not re-verified here.
+> - **Live grok 1.x captures** (`conversation-backend/grok/__tests__/grok-1-tool-calls.fixture.ts`):
+>   grok **1.0.77**, model grok-4.7, the chat argv with no `--permission-mode`, captured 2026-11-14.
+>   One turn runs three parallel tool calls (two complete, one fails); the other hits a call that needs
+>   approval and ends `cancelled`. These are the source for every tool, `usage`, `available_commands`
+>   and `end` shape below, and they re-verify `thought` / `text` on 1.x.
+> - **Mapper rules first written against grok 0.2.112** (`thought`, `text`, `end`). 0.2.112 emitted no
+>   tool events at all.
 > - **Recorded fixture** (`structured-output/__tests__/fixtures/grok.ndjson`): grok **1.0.5**,
 >   `-p … --output-format streaming-json`. That run produced only `available_commands` events and then
 >   an `error`, because the API **rejected the CLI version with HTTP 426** (it required 1.0.13 or
@@ -53,17 +57,19 @@ form of `--single`. A local endpoint, when configured, is passed through environ
 
 JSONL on stdout, one flat object per line, discriminated by `type`.
 
-| type                 | Fields                                                            | Source                                 |
-| -------------------- | ----------------------------------------------------------------- | -------------------------------------- |
-| `thought`            | `data` (string delta)                                             | mapper, 0.2.112                        |
-| `text`               | `data` (string delta)                                             | mapper, 0.2.112                        |
-| `end`                | `sessionId`, `usage`, `modelUsage`, `num_turns`, `stopReason`     | mapper, 0.2.112                        |
-| `error`              | `message`                                                         | mapper (defensive) and 1.0.5 recording |
-| `available_commands` | `tools` (empty array in the recording), `commands` (string array) | 1.0.5 recording; not mapped            |
+| type                 | Fields                                                                                                                  | Source                                 |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| `thought`            | `data` (string delta)                                                                                                   | 1.0.77 capture                         |
+| `text`               | `data` (string delta)                                                                                                   | 1.0.77 capture                         |
+| `tool_call`          | `toolCallId`, `toolName`, `title`, `kind`, `status: 'pending'`, `rawInput`, `content: []`, `locations`                  | 1.0.77 capture                         |
+| `tool_call_update`   | `toolCallId`, `status` (`null` / `in_progress` / `completed` / `failed`), `content`, `rawOutput`, `locations`           | 1.0.77 capture                         |
+| `usage`              | `usage` (per-request token counts), `signature`                                                                         | 1.0.77 capture; not mapped             |
+| `end`                | `sessionId`, `stopReason` (`end_turn` / `cancelled`), `usage`, `modelUsage`, `num_turns`, `total_cost_usd`, `requestId` | 1.0.77 capture                         |
+| `error`              | `message`                                                                                                               | mapper (defensive) and 1.0.5 recording |
+| `available_commands` | `tools` (the tool names), `commands` (string array)                                                                     | 1.0.5 recording, 1.0.77 capture        |
 
-The 1.0.5 recording emits `available_commands` twice (slash commands and skills installed on the
-host, which this doc does not reproduce), then the `error`. `usage`, `modelUsage` and `num_turns`
-shapes are forwarded raw and not observed here.
+`available_commands` arrives before the first request and again after each tool round. A `usage`
+event follows each model request; the terminal `end` carries the turn's totals.
 
 ## 3. Assistant text
 
@@ -72,8 +78,23 @@ shapes are forwarded raw and not observed here.
 
 ## 4. Thinking & tool calls
 
-`thought` events carry reasoning deltas. **Headless mode emits no tool events** (only `thought`,
-`text`, `end`), so there is no `tool_call` or `tool_result`. The driver capability notes the same.
+`thought` events carry reasoning deltas. Since 1.x every tool call streams as one `tool_call`
+followed by `tool_call_update`s with the same `toolCallId`. Parallel calls interleave:
+
+```
+{"type":"tool_call","toolCallId":"call-…-0","toolName":"run_terminal_command","kind":"execute","status":"pending","rawInput":{"command":"pwd","description":"Print the current working directory"},"content":[],"locations":[]}
+{"type":"tool_call_update","toolCallId":"call-…-0","status":null,"content":[{"type":"content","content":{"type":"text","text":"Print the current working directory"}}],"rawOutput":null,"locations":[]}
+{"type":"tool_call_update","toolCallId":"call-…-0","status":"in_progress","content":[…],"rawOutput":{"type":"Bash","exit_code":0,"command":"pwd",…}}
+{"type":"tool_call_update","toolCallId":"call-…-0","status":"completed","content":[{"type":"content","content":{"type":"text","text":"/repo\n"}}],"rawOutput":{"type":"Bash",…}}
+```
+
+- The first `status: null` update's `content` is the call's **description**, not its output.
+- Only the terminal `completed` / `failed` update's `content` text is the result. A failed read carries
+  the error text (`Error: <path> does not exist.`).
+- `rawOutput` is tool-specific: Bash has `output` as a **byte array** plus `exit_code`; `ReadFile` has
+  `FileContent` or `FileNotFound`; an MCP call (`toolName: 'use_tool'`, `rawInput:
+{tool_name, tool_input}`) has **empty `content`** and its result in `rawOutput.output.OkayOutput`.
+- Tools seen: `run_terminal_command`, `read_file`, `search_tool`, `use_tool` (MCP).
 
 ## 5. System prompt / persona
 
@@ -86,6 +107,19 @@ grok mints the session id on turn one and echoes it as `end.sessionId`. The next
 yields no id to persist.
 
 ## 7. Errors, exit codes, cancellation
+
+**Permission-cancelled turns.** Without `--permission-mode` (and under `default`), a call that needs
+approval cannot be approved headlessly. grok then:
+
+1. fails that call: `tool_call_update` `status: 'failed'`, content text
+   ``User cancelled the execution for tool `run_terminal_command` ``;
+2. writes ``permission required: Execute `rm -f …` was not run, as a headless run cannot ask for
+approval`` to **stderr**;
+3. lets calls already running finish, then ends with `{"type":"end","stopReason":"cancelled",…}`,
+   **without writing a reply**. It still exits 0.
+
+Read-only calls (`pwd`, `read_file`, an MCP tool already approved on the host) ran without approval
+in the captures; an `rm` did not.
 
 The recorded 1.0.5 failure is a single `error` event:
 
@@ -108,24 +142,31 @@ spawn. Update with `grok update`.
 
 ## 9. Event to ConversationStreamChunk mapping
 
-`mapGrokEvent` is stateless and returns an array (possibly empty).
+`createGrokEventMapper()` returns a per-stream mapper (it correlates calls by `toolCallId`, so a
+mapper is never shared between runs). Each `map(event)` returns an array, possibly empty.
 
-| CLI event                   | Chunks                                   | Notes                                                                                                                                                     |
-| --------------------------- | ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `thought`                   | `thinking`                               | `delta` = `data`.                                                                                                                                         |
-| `text`                      | `text`                                   | `delta` = `data`.                                                                                                                                         |
-| `end`                       | `session` (if `sessionId`), then `usage` | `session` is `done: false` so the id is persisted; `usage` is `done: true`, `error: null`, with `metadata` = `{modelUsage, numTurns, stopReason, usage}`. |
-| `error`                     | `text`                                   | `done: true`, `error` = `message` or `grok reported an error`.                                                                                            |
-| `available_commands`, other | none                                     | Skipped.                                                                                                                                                  |
+| CLI event                                 | Chunks                                   | Notes                                                                                                                                                                                                                                                                                  |
+| ----------------------------------------- | ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `thought`                                 | `thinking`                               | `delta` = `data`.                                                                                                                                                                                                                                                                      |
+| `text`                                    | `text`                                   | `delta` = `data`.                                                                                                                                                                                                                                                                      |
+| `tool_call`                               | `tool_call`                              | Once per `toolCallId`; `metadata` = `{callId, toolCall: rawInput, toolName}`.                                                                                                                                                                                                          |
+| `tool_call_update` `completed` / `failed` | `tool_result`                            | Once per `toolCallId`; `metadata` = `{callId, isError, toolCall, toolName}`, where `toolCall` is the `content` text (an MCP call's `OkayOutput`). `failed` sets `isError` and the chunk `error`. An update for a call never announced first opens a card.                              |
+| `tool_call_update` `null` / `in_progress` | none                                     | Their `content` is the description or partial output.                                                                                                                                                                                                                                  |
+| `end`                                     | `session` (if `sessionId`), then `usage` | `session` is `done: false` so the id is persisted; `usage` is `done: true` with `metadata` = `{modelUsage, numTurns, stopReason, usage}`. `error` is `null`, except `stopReason: 'cancelled'`, which gets an error naming the blocked tool(s) and pointing at the Permissions setting. |
+| `error`                                   | `text`                                   | `done: true`, `error` = `message` or `grok reported an error`.                                                                                                                                                                                                                         |
+| `available_commands`, `usage`, other      | none                                     | Skipped.                                                                                                                                                                                                                                                                               |
+
+The chat adapter (`grok.ts`) also adds grok's own `permission required: …` stderr lines to a
+terminal error, because they name the exact command that was blocked. The server persists that
+error on the turn's usage payload, so a reloaded conversation still shows it.
 
 No `usage_limit` chunk is produced for grok.
 
 ## 10. Known gaps
 
-- **No tool events** in headless mode, so no `tool_call` or `tool_result`.
-- The success-path shapes come from grok 0.2.112 per the mapper header and are **not re-verified on
-  1.0.x**; the only 1.0.5 recording is the 426 failure.
-- `available_commands` is ignored, as is any event type the mapper does not name.
+- The same probe under Full access (`bypassPermissions`) is not captured.
+- The `kind` of a tool call (`execute`, `read`, `use_tool`, …) is not forwarded.
+- `available_commands` and `usage` are ignored, as is any event type the mapper does not name.
 - `usage`, `modelUsage` and `num_turns` are forwarded without validation.
 - Plan-run reads the stream with the same mapper, with no extra handling
   (`structured-output/chunk-reader.ts`).
@@ -138,4 +179,8 @@ grok update            # 1.0.13 or later is needed to avoid the 426
 S=$(mktemp -d); cd "$S"
 grok --single="Reply with exactly: pong" --output-format streaming-json --cwd "$S" > out.ndjson
 jq -r '.type' out.ndjson | sort | uniq -c
+# tool events: ask for parallel calls, one of which fails or needs approval
+grok --single='In parallel, run `pwd` and read does-not-exist.txt, then summarise.' \
+  --output-format streaming-json --cwd "$S" > tools.ndjson 2> tools.err
+jq -c 'select(.type|startswith("tool_call"))' tools.ndjson
 ```

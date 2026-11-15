@@ -198,7 +198,7 @@ describe('grok driver', () => {
       mcpAutoApprove: false,
       permissionMode: true,
       pluginDir: false,
-      reportsToolCalls: false,
+      reportsToolCalls: true,
       skipWorktreeSetup: false,
       supportsCustomBaseUrl: true,
       supportsModelFlag: true,

@@ -4,5 +4,5 @@
  * module-private to the adapter.
  */
 export { GROK_BIN_ENV, GROK_DEFAULT_BIN } from './argv.ts';
-export { mapGrokEvent } from './events.ts';
+export { createGrokEventMapper, type GrokEventMapper } from './events.ts';
 export { grokConversationBackend } from './grok.ts';
