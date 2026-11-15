@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
@@ -11,12 +11,11 @@ describe('ProjectsEmpty Component', () => {
       return <ProjectsEmpty />;
     };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    render(<RoutesStub />);
+    const component = render(<RoutesStub />);
 
-    expect(screen.getByText('No projects yet')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'New project' })).toHaveAttribute(
-      'href',
-      '/projects/create',
-    );
+    expect(component.getByText('No projects yet')).toBeInTheDocument();
+    expect(
+      component.getByRole('link', { name: 'New project' }),
+    ).toHaveAttribute('href', '/projects/create');
   });
 });

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
@@ -8,16 +8,16 @@ import { CommandList } from '../CommandList';
 
 describe('Command', () => {
   test('renders the cmdk root and its children', () => {
-    const { container } = render(
+    const component = render(
       <Command className="custom-command">
         <CommandList>
           <CommandItem>Apple</CommandItem>
         </CommandList>
       </Command>,
     );
-    const root = container.querySelector('[cmdk-root]');
+    const root = component.container.querySelector('[cmdk-root]');
     expect(root).toBeInTheDocument();
     expect(root).toHaveClass('custom-command');
-    expect(screen.getByText('Apple')).toBeInTheDocument();
+    expect(component.getByText('Apple')).toBeInTheDocument();
   });
 });

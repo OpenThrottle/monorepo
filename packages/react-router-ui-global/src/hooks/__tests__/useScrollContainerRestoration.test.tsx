@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import {
@@ -89,23 +89,23 @@ describe('useScrollContainerRestoration', () => {
       },
     ]);
 
-    render(<RoutesStub initialEntries={['/a']} />);
+    const component = render(<RoutesStub initialEntries={['/a']} />);
 
-    const container = screen.getByTestId('scroll-container');
+    const container = component.getByTestId('scroll-container');
     container.scrollTop = 480;
     expect(container.scrollTop).toBe(480);
 
-    await user.click(screen.getByRole('link', { name: 'Go to B' }));
+    await user.click(component.getByRole('link', { name: 'Go to B' }));
 
     await waitFor(() => {
-      expect(screen.getByTestId('page-b')).toBeInTheDocument();
+      expect(component.getByTestId('page-b')).toBeInTheDocument();
     });
     expect(container.scrollTop).toBe(0);
 
-    await user.click(screen.getByRole('button', { name: 'Go back' }));
+    await user.click(component.getByRole('button', { name: 'Go back' }));
 
     await waitFor(() => {
-      expect(screen.getByTestId('page-a')).toBeInTheDocument();
+      expect(component.getByTestId('page-a')).toBeInTheDocument();
     });
     expect(container.scrollTop).toBe(480);
   });
@@ -120,18 +120,18 @@ describe('useScrollContainerRestoration', () => {
       },
     ]);
 
-    render(<RoutesStub initialEntries={['/tabs']} />);
+    const component = render(<RoutesStub initialEntries={['/tabs']} />);
 
-    const container = screen.getByTestId('scroll-container');
+    const container = component.getByTestId('scroll-container');
     container.scrollTop = 480;
     expect(container.scrollTop).toBe(480);
 
-    await user.click(screen.getByRole('link', { name: 'Go to tab two' }));
+    await user.click(component.getByRole('link', { name: 'Go to tab two' }));
 
     // The search param changed (a push on the same pathname), so the tab
     // switched but the scroll position must be left untouched.
     await waitFor(() => {
-      expect(screen.getByTestId('page-tabs')).toHaveTextContent('Tab: two');
+      expect(component.getByTestId('page-tabs')).toHaveTextContent('Tab: two');
     });
     expect(container.scrollTop).toBe(480);
   });

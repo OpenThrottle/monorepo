@@ -1,4 +1,3 @@
-import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 
@@ -24,12 +23,12 @@ const getPanelRoot = (trigger: HTMLElement): HTMLElement | null => {
 
 describe('AccordionContent', () => {
   it('exposes the panel as a region linked to the trigger (aria-controls / aria-labelledby)', () => {
-    renderComposedSingleAccordion({
+    const component = renderComposedSingleAccordion({
       panelChildren: PANEL_TEXT,
       triggerLabel: TRIGGER_LABEL,
     });
 
-    const trigger = screen.getByRole('button', { name: TRIGGER_LABEL });
+    const trigger = component.getByRole('button', { name: TRIGGER_LABEL });
     const panel = getPanelRoot(trigger);
 
     expect(panel).not.toBeNull();
@@ -47,52 +46,52 @@ describe('AccordionContent', () => {
   it('shows children in the panel when open and hides them from view when closed', async () => {
     const user = userEvent.setup();
 
-    renderComposedSingleAccordion({
+    const component = renderComposedSingleAccordion({
       panelChildren: PANEL_TEXT,
       triggerLabel: TRIGGER_LABEL,
     });
 
-    const trigger = screen.getByRole('button', { name: TRIGGER_LABEL });
+    const trigger = component.getByRole('button', { name: TRIGGER_LABEL });
     const panel = getPanelRoot(trigger);
 
     expect(panel).not.toBeNull();
     expect(panel).toHaveAttribute('data-state', 'closed');
     // Radix unmounts panel body when closed; text is not in the document.
-    expect(screen.queryByText(PANEL_TEXT)).not.toBeInTheDocument();
+    expect(component.queryByText(PANEL_TEXT)).not.toBeInTheDocument();
 
     await user.click(trigger);
     expect(panel).toHaveAttribute('data-state', 'open');
-    expect(screen.getByText(PANEL_TEXT)).toBeVisible();
+    expect(component.getByText(PANEL_TEXT)).toBeVisible();
 
     await user.click(trigger);
     expect(panel).toHaveAttribute('data-state', 'closed');
-    expect(screen.queryByText(PANEL_TEXT)).not.toBeInTheDocument();
+    expect(component.queryByText(PANEL_TEXT)).not.toBeInTheDocument();
   });
 
   it('renders the panel open when the accordion defaultValue includes the item', () => {
-    renderComposedSingleAccordion({
+    const component = renderComposedSingleAccordion({
       defaultOpen: true,
       panelChildren: PANEL_TEXT,
       triggerLabel: TRIGGER_LABEL,
     });
 
-    const trigger = screen.getByRole('button', { name: TRIGGER_LABEL });
+    const trigger = component.getByRole('button', { name: TRIGGER_LABEL });
     const panel = getPanelRoot(trigger);
 
     expect(panel).not.toBeNull();
     expect(panel).toHaveAttribute('data-state', 'open');
-    expect(screen.getByText(PANEL_TEXT)).toBeVisible();
+    expect(component.getByText(PANEL_TEXT)).toBeVisible();
   });
 
   it('merges className onto the inner wrapper around children', () => {
-    renderComposedSingleAccordion({
+    const component = renderComposedSingleAccordion({
       classNames: { content: 'content-custom-class' },
       defaultOpen: true,
       panelChildren: PANEL_TEXT,
       triggerLabel: TRIGGER_LABEL,
     });
 
-    const trigger = screen.getByRole('button', { name: TRIGGER_LABEL });
+    const trigger = component.getByRole('button', { name: TRIGGER_LABEL });
     const panel = getPanelRoot(trigger);
 
     expect(panel).not.toBeNull();

@@ -1,4 +1,5 @@
-import { render, screen } from '@testing-library/react';
+import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
@@ -15,6 +16,7 @@ const StubIcon = (iconProps: { className?: string }) => {
 };
 
 describe('GlobalSidebar Component', () => {
+  let component: RenderResult;
   let props: GlobalSidebarProps;
 
   beforeEach(() => {
@@ -44,18 +46,18 @@ describe('GlobalSidebar Component', () => {
       { Component: () => <div>Dashboard page</div>, path: '/dashboard' },
     ]);
 
-    render(<RoutesStub />);
+    component = render(<RoutesStub />);
   });
 
   test('should render navigation link and icon for section data', () => {
-    const link = screen.getByRole('link');
+    const link = component.getByRole('link');
     expect(link).toHaveAttribute('href', '/dashboard');
-    expect(screen.getByTestId('sidebar-stub-icon')).toBeInTheDocument();
+    expect(component.getByTestId('sidebar-stub-icon')).toBeInTheDocument();
   });
 
   test('should navigate when link is activated', async () => {
     const user = userEvent.setup();
-    await user.click(screen.getByRole('link'));
-    expect(await screen.findByText('Dashboard page')).toBeInTheDocument();
+    await user.click(component.getByRole('link'));
+    expect(await component.findByText('Dashboard page')).toBeInTheDocument();
   });
 });

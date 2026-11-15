@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
@@ -23,8 +23,8 @@ describe('PromptSortDropdown Component', () => {
       return <PromptSortDropdown {...props} />;
     };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    render(<RoutesStub />);
-    expect(screen.getByTestId('PromptSortDropdown')).toBeInTheDocument();
+    const component = render(<RoutesStub />);
+    expect(component.getByTestId('PromptSortDropdown')).toBeInTheDocument();
   });
 
   test('should have aria-label', () => {
@@ -33,9 +33,9 @@ describe('PromptSortDropdown Component', () => {
       return <PromptSortDropdown {...props} />;
     };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    render(<RoutesStub />);
+    const component = render(<RoutesStub />);
     expect(
-      screen.getByRole('combobox', { name: 'Sort prompts' }),
+      component.getByRole('combobox', { name: 'Sort prompts' }),
     ).toBeInTheDocument();
   });
 
@@ -45,9 +45,9 @@ describe('PromptSortDropdown Component', () => {
       return <PromptSortDropdown {...props} />;
     };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    render(<RoutesStub />);
+    const component = render(<RoutesStub />);
     expect(
-      screen.getByRole('combobox', { name: 'Sort prompts' }),
+      component.getByRole('combobox', { name: 'Sort prompts' }),
     ).toHaveTextContent('Recently updated');
   });
 
@@ -63,10 +63,10 @@ describe('PromptSortDropdown Component', () => {
       return <PromptSortDropdown {...props} />;
     };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    render(<RoutesStub />);
+    const component = render(<RoutesStub />);
 
-    await user.click(screen.getByRole('combobox', { name: 'Sort prompts' }));
-    await user.click(screen.getByRole('option', { name: 'Title A-Z' }));
+    await user.click(component.getByRole('combobox', { name: 'Sort prompts' }));
+    await user.click(component.getByRole('option', { name: 'Title A-Z' }));
 
     expect(props.onChange).toHaveBeenCalledWith('title', 'asc');
   });

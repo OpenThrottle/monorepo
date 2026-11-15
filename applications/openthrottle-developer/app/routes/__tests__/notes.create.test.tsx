@@ -1,6 +1,5 @@
 import * as graphqlWithAuth from '@openthrottle/react-router-graphql';
 import { createTestRouterContext } from '@openthrottle/react-router-testing';
-import { screen } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, test, vi } from 'vitest';
 
@@ -50,7 +49,7 @@ const loaderArgs = (): Route.LoaderArgs => {
 
 describe('routes/notes.create.tsx', () => {
   test('renders note form in create mode', () => {
-    renderRoutesStub(
+    const component = renderRoutesStub(
       <CreateNote
         actionData={undefined}
         loaderData={{ authorName: null }}
@@ -59,15 +58,15 @@ describe('routes/notes.create.tsx', () => {
       />,
     );
 
-    expect(screen.getByTestId('NoteForm')).toBeInTheDocument();
-    expect(screen.getByLabelText('Content')).toBeRequired();
+    expect(component.getByTestId('NoteForm')).toBeInTheDocument();
+    expect(component.getByLabelText('Content')).toBeRequired();
     expect(
-      screen.getByRole('button', { name: /create note/i }),
+      component.getByRole('button', { name: /create note/i }),
     ).toBeInTheDocument();
   });
 
   test('attributes the note to the signed-in user, with no author input', () => {
-    renderRoutesStub(
+    const component = renderRoutesStub(
       <CreateNote
         actionData={undefined}
         loaderData={{ authorName: 'visormatt' }}
@@ -76,13 +75,13 @@ describe('routes/notes.create.tsx', () => {
       />,
     );
 
-    expect(screen.getByText('Author: visormatt')).toBeInTheDocument();
+    expect(component.getByText('Author: visormatt')).toBeInTheDocument();
     // Attribution replaces the input outright — nothing to type, nothing to spoof.
-    expect(screen.queryByLabelText(/author/i)).toBeNull();
+    expect(component.queryByLabelText(/author/i)).toBeNull();
   });
 
   test('renders no attribution when the loader found no user', () => {
-    renderRoutesStub(
+    const component = renderRoutesStub(
       <CreateNote
         actionData={undefined}
         loaderData={{ authorName: null }}
@@ -91,7 +90,7 @@ describe('routes/notes.create.tsx', () => {
       />,
     );
 
-    expect(screen.queryByText(/^Author:/)).toBeNull();
+    expect(component.queryByText(/^Author:/)).toBeNull();
   });
 });
 

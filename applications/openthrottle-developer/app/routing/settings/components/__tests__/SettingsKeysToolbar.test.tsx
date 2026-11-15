@@ -1,9 +1,9 @@
 import type { RenderResult } from '@testing-library/react';
-import { cleanup, render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
-import { afterEach, describe, expect, test, vi } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 
 import type { ServiceAccountListItemFragment } from '~/__generated__/graphql';
 
@@ -32,52 +32,48 @@ const renderToolbar = (props: SettingsKeysToolbarProps = {}): RenderResult => {
 };
 
 describe('SettingsKeysToolbar Component', () => {
-  afterEach(() => {
-    cleanup();
-  });
-
   describe('when no service accounts', () => {
     test('shows empty message and disables create', () => {
-      renderToolbar({ serviceAccounts: [] });
+      const component = renderToolbar({ serviceAccounts: [] });
 
-      expect(screen.getByTestId('SettingsKeysToolbar')).toBeInTheDocument();
+      expect(component.getByTestId('SettingsKeysToolbar')).toBeInTheDocument();
       expect(
-        screen.getByTestId('SettingsKeysToolbar-no-accounts'),
+        component.getByTestId('SettingsKeysToolbar-no-accounts'),
       ).toBeInTheDocument();
       expect(
-        screen.getByTestId('SettingsKeysToolbar-create-button'),
+        component.getByTestId('SettingsKeysToolbar-create-button'),
       ).toBeDisabled();
     });
   });
 
   describe('when create is not allowed', () => {
     test('disables create button even when accounts exist', () => {
-      renderToolbar({
+      const component = renderToolbar({
         canCreate: false,
         selectedServiceAccountId: 'sa-1',
         serviceAccounts: [account({ id: 'sa-1', name: 'openthrottle-mcp' })],
       });
 
       expect(
-        screen.getByTestId('SettingsKeysToolbar-create-button'),
+        component.getByTestId('SettingsKeysToolbar-create-button'),
       ).toBeDisabled();
     });
   });
 
   describe('when one service account', () => {
     test('shows account name without select and enables create', () => {
-      renderToolbar({
+      const component = renderToolbar({
         canCreate: true,
         selectedServiceAccountId: 'sa-1',
         serviceAccounts: [account({ id: 'sa-1', name: 'openthrottle-mcp' })],
       });
 
-      expect(screen.getByText(/openthrottle-mcp/)).toBeInTheDocument();
+      expect(component.getByText(/openthrottle-mcp/)).toBeInTheDocument();
       expect(
-        screen.queryByTestId('SettingsKeysToolbar-account-select'),
+        component.queryByTestId('SettingsKeysToolbar-account-select'),
       ).not.toBeInTheDocument();
       expect(
-        screen.getByTestId('SettingsKeysToolbar-create-button'),
+        component.getByTestId('SettingsKeysToolbar-create-button'),
       ).toBeEnabled();
     });
   });
@@ -87,7 +83,7 @@ describe('SettingsKeysToolbar Component', () => {
     const onCreateDialogOpenChange = vi.fn();
 
     test('renders account select', () => {
-      renderToolbar({
+      const component = renderToolbar({
         canCreate: true,
         onCreateDialogOpenChange,
         onServiceAccountChange,
@@ -99,13 +95,13 @@ describe('SettingsKeysToolbar Component', () => {
       });
 
       expect(
-        screen.getByTestId('SettingsKeysToolbar-account-select'),
+        component.getByTestId('SettingsKeysToolbar-account-select'),
       ).toBeInTheDocument();
     });
 
     test('calls onServiceAccountChange when account changes', async () => {
       onServiceAccountChange.mockClear();
-      renderToolbar({
+      const component = renderToolbar({
         canCreate: true,
         onServiceAccountChange,
         selectedServiceAccountId: 'sa-1',
@@ -117,16 +113,18 @@ describe('SettingsKeysToolbar Component', () => {
 
       const user = userEvent.setup();
       await user.click(
-        screen.getByTestId('SettingsKeysToolbar-account-select'),
+        component.getByTestId('SettingsKeysToolbar-account-select'),
       );
-      await user.click(screen.getByRole('option', { name: 'workflow-ralph' }));
+      await user.click(
+        component.getByRole('option', { name: 'workflow-ralph' }),
+      );
 
       expect(onServiceAccountChange).toHaveBeenCalledWith('sa-2');
     });
 
     test('opens create dialog via onCreateDialogOpenChange', async () => {
       onCreateDialogOpenChange.mockClear();
-      renderToolbar({
+      const component = renderToolbar({
         canCreate: true,
         onCreateDialogOpenChange,
         selectedServiceAccountId: 'sa-1',
@@ -137,7 +135,9 @@ describe('SettingsKeysToolbar Component', () => {
       });
 
       const user = userEvent.setup();
-      await user.click(screen.getByTestId('SettingsKeysToolbar-create-button'));
+      await user.click(
+        component.getByTestId('SettingsKeysToolbar-create-button'),
+      );
 
       expect(onCreateDialogOpenChange).toHaveBeenCalledWith(true);
     });

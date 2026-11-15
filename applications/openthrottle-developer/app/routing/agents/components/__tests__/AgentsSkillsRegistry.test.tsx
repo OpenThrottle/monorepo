@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
@@ -38,11 +38,11 @@ describe('AgentsSkillsRegistry', () => {
       },
     ]);
 
-    render(<RoutesStub />);
+    const component = render(<RoutesStub />);
 
-    expect(screen.getByText(/0 skills under/i)).toBeInTheDocument();
+    expect(component.getByText(/0 skills under/i)).toBeInTheDocument();
 
-    const emptyMessages = screen.getAllByText(
+    const emptyMessages = component.getAllByText(
       /No matching entries in this section/i,
     );
     expect(emptyMessages).toHaveLength(1);
@@ -57,11 +57,11 @@ describe('AgentsSkillsRegistry', () => {
       },
     ]);
 
-    render(<RoutesStub />);
+    const component = render(<RoutesStub />);
 
-    expect(screen.getByText(/2 skills under/i)).toBeInTheDocument();
-    expect(screen.getByText('unique-alpha')).toBeInTheDocument();
-    expect(screen.getByText('unique-beta')).toBeInTheDocument();
+    expect(component.getByText(/2 skills under/i)).toBeInTheDocument();
+    expect(component.getByText('unique-alpha')).toBeInTheDocument();
+    expect(component.getByText('unique-beta')).toBeInTheDocument();
   });
 
   test('filters entries by slug, path, or summary (case-insensitive)', async () => {
@@ -74,16 +74,16 @@ describe('AgentsSkillsRegistry', () => {
       },
     ]);
 
-    render(<RoutesStub />);
+    const component = render(<RoutesStub />);
 
-    const filter = screen.getByRole('searchbox', {
+    const filter = component.getByRole('searchbox', {
       name: /Filter by slug, path, or summary/i,
     });
 
     await user.type(filter, 'UNIQUE-BETA');
 
-    expect(screen.queryByText('unique-alpha')).not.toBeInTheDocument();
-    expect(screen.getByText('unique-beta')).toBeInTheDocument();
+    expect(component.queryByText('unique-alpha')).not.toBeInTheDocument();
+    expect(component.getByText('unique-beta')).toBeInTheDocument();
   });
 
   test('GitHub links point at main-branch blob URLs for repo-relative paths', () => {
@@ -95,9 +95,9 @@ describe('AgentsSkillsRegistry', () => {
       },
     ]);
 
-    render(<RoutesStub />);
+    const component = render(<RoutesStub />);
 
-    const githubLinks = screen.getAllByRole('link', {
+    const githubLinks = component.getAllByRole('link', {
       name: /View on GitHub/i,
     });
     expect(githubLinks).toHaveLength(2);
@@ -121,9 +121,11 @@ describe('AgentsSkillsRegistry', () => {
       },
     ]);
 
-    render(<RoutesStub />);
+    const component = render(<RoutesStub />);
 
-    const copyButtons = screen.getAllByRole('button', { name: /^Copy path$/i });
+    const copyButtons = component.getAllByRole('button', {
+      name: /^Copy path$/i,
+    });
     expect(copyButtons).toHaveLength(2);
   });
 

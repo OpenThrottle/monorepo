@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
@@ -11,14 +11,14 @@ describe('PromptsStats Component', () => {
       return <PromptsStats countAgents={2} countSkills={5} total={12} />;
     };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    render(<RoutesStub />);
+    const component = render(<RoutesStub />);
 
-    expect(screen.getByTestId('PromptsStats')).toBeInTheDocument();
-    expect(screen.getByText('Agents-type prompts')).toBeInTheDocument();
-    expect(screen.getByText('Skills-type prompts')).toBeInTheDocument();
-    expect(screen.getByText('Total (this list)')).toBeInTheDocument();
-    expect(screen.getByText(/^2$/)).toBeInTheDocument();
-    expect(screen.getByText(/^5$/)).toBeInTheDocument();
-    expect(screen.getByText(/^12$/)).toBeInTheDocument();
+    expect(component.getByTestId('PromptsStats')).toBeInTheDocument();
+    expect(component.getByText('Agents-type prompts')).toBeInTheDocument();
+    expect(component.getByText('Skills-type prompts')).toBeInTheDocument();
+    expect(component.getByText('Total (this list)')).toBeInTheDocument();
+    expect(component.getByText(/^2$/)).toBeInTheDocument();
+    expect(component.getByText(/^5$/)).toBeInTheDocument();
+    expect(component.getByText(/^12$/)).toBeInTheDocument();
   });
 });

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, it } from 'vitest';
 
@@ -11,7 +11,7 @@ import {
 
 describe('AlertDialogDescription', () => {
   it('renders body copy with muted styles and merged className', () => {
-    render(
+    const component = render(
       <AlertDialog defaultOpen={true}>
         <AlertDialogContent>
           <AlertDialogTitle>Heading</AlertDialogTitle>
@@ -22,7 +22,9 @@ describe('AlertDialogDescription', () => {
       </AlertDialog>,
     );
 
-    const description = screen.getByText('Supporting details for the alert.');
+    const description = component.getByText(
+      'Supporting details for the alert.',
+    );
     expect(description).toBeInTheDocument();
     expect(description).toHaveClass('desc-extra');
     expect(description).toHaveClass('text-sm', 'text-muted-foreground');
@@ -31,7 +33,7 @@ describe('AlertDialogDescription', () => {
   it('forwards ref to the description element', () => {
     const ref = React.createRef<HTMLParagraphElement>();
 
-    render(
+    const component = render(
       <AlertDialog defaultOpen={true}>
         <AlertDialogContent>
           <AlertDialogTitle>T</AlertDialogTitle>
@@ -40,6 +42,6 @@ describe('AlertDialogDescription', () => {
       </AlertDialog>,
     );
 
-    expect(ref.current).toBe(screen.getByText('D'));
+    expect(ref.current).toBe(component.getByText('D'));
   });
 });

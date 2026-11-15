@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
@@ -22,7 +22,7 @@ const matches: Route.ComponentProps['matches'] = [
 
 describe('routes/settings._index.tsx', () => {
   test('should render', () => {
-    render(
+    const component = render(
       <MemoryRouter>
         <SettingsIndex
           actionData={undefined}
@@ -34,10 +34,10 @@ describe('routes/settings._index.tsx', () => {
     );
 
     expect(
-      screen.getByRole('heading', { name: 'Settings' }),
+      component.getByRole('heading', { name: 'Settings' }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/Controls for the OpenThrottle Developer portal/i),
+      component.getByText(/Controls for the OpenThrottle Developer portal/i),
     ).toBeInTheDocument();
   });
 });

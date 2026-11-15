@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
@@ -8,14 +8,16 @@ import { CommandList } from '../CommandList';
 
 describe('CommandList', () => {
   test('renders the cmdk list wrapping its items', () => {
-    const { container } = render(
+    const component = render(
       <Command>
         <CommandList>
           <CommandItem>Banana</CommandItem>
         </CommandList>
       </Command>,
     );
-    expect(container.querySelector('[cmdk-list]')).toBeInTheDocument();
-    expect(screen.getByText('Banana')).toBeInTheDocument();
+    expect(
+      component.container.querySelector('[cmdk-list]'),
+    ).toBeInTheDocument();
+    expect(component.getByText('Banana')).toBeInTheDocument();
   });
 });

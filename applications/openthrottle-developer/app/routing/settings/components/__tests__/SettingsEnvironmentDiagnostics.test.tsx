@@ -1,5 +1,5 @@
 import type { OpenThrottleEnv } from '@openthrottle/react-router-utils';
-import { render, screen, within } from '@testing-library/react';
+import { render, within } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
@@ -38,18 +38,18 @@ function renderDiagnostics(
 
 describe('SettingsEnvironmentDiagnostics', () => {
   it('renders build metadata, Vite profiling card, and URL matrix', () => {
-    renderDiagnostics({
+    const component = renderDiagnostics({
       env: baseEnv,
       supportBundle: { ROLLBAR_TOKEN: 'xxxx…xxxx (masked)' },
     });
 
-    expect(screen.getByText('openthrottle-developer')).toBeInTheDocument();
-    expect(screen.getByText('test-version')).toBeInTheDocument();
-    expect(screen.getByText('Local Vite profiling')).toBeInTheDocument();
-    expect(screen.getByText('http://api-int.test')).toBeInTheDocument();
-    expect(screen.getByText('http://localhost:6022')).toBeInTheDocument();
-    expect(screen.getByText('APP_ENV')).toBeInTheDocument();
-    expect(screen.getByText('NODE_ENV')).toBeInTheDocument();
+    expect(component.getByText('openthrottle-developer')).toBeInTheDocument();
+    expect(component.getByText('test-version')).toBeInTheDocument();
+    expect(component.getByText('Local Vite profiling')).toBeInTheDocument();
+    expect(component.getByText('http://api-int.test')).toBeInTheDocument();
+    expect(component.getByText('http://localhost:6022')).toBeInTheDocument();
+    expect(component.getByText('APP_ENV')).toBeInTheDocument();
+    expect(component.getByText('NODE_ENV')).toBeInTheDocument();
   });
 
   it('copies support bundle JSON to clipboard', async () => {
@@ -59,13 +59,13 @@ describe('SettingsEnvironmentDiagnostics', () => {
 
     const supportBundle = { APP_NAME: 'openthrottle-developer' };
 
-    renderDiagnostics({
+    const component = renderDiagnostics({
       env: baseEnv,
       supportBundle,
     });
 
     await user.click(
-      screen.getByRole('button', { name: /copy support bundle/i }),
+      component.getByRole('button', { name: /copy support bundle/i }),
     );
 
     expect(writeText).toHaveBeenCalledWith(
@@ -87,8 +87,8 @@ describe('SettingsEnvironmentDiagnostics', () => {
   });
 
   it('links quick reference to monorepo doc anchor', () => {
-    renderDiagnostics({ env: baseEnv, supportBundle: {} });
-    const link = screen.getByRole('link', {
+    const component = renderDiagnostics({ env: baseEnv, supportBundle: {} });
+    const link = component.getByRole('link', {
       name: /^quick reference$/i,
     });
     expect(link).toHaveAttribute('href', VITE_DEVTOOLS_DOC_QUICK_REF_HREF);
@@ -96,8 +96,8 @@ describe('SettingsEnvironmentDiagnostics', () => {
   });
 
   it('links to ports & API troubleshooting on Settings → Debug', () => {
-    renderDiagnostics({ env: baseEnv, supportBundle: {} });
-    const link = screen.getByRole('link', {
+    const component = renderDiagnostics({ env: baseEnv, supportBundle: {} });
+    const link = component.getByRole('link', {
       name: /settings → debug: ports & api troubleshooting/i,
     });
     expect(link).toHaveAttribute(

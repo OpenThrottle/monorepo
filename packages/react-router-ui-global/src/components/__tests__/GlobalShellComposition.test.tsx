@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
@@ -26,10 +26,10 @@ describe('Global shell composition', () => {
 
     const RoutesStub = createRoutesStub([{ Component: ShellRoute, path: '/' }]);
 
-    render(<RoutesStub />);
+    const component = render(<RoutesStub />);
 
-    expect(screen.getByText('Shell smoke content')).toBeInTheDocument();
+    expect(component.getByText('Shell smoke content')).toBeInTheDocument();
     /** SidebarInset and GlobalScreen both render `main`; assert at least one landmark exists. */
-    expect(screen.getAllByRole('main').length).toBeGreaterThanOrEqual(1);
+    expect(component.getAllByRole('main').length).toBeGreaterThanOrEqual(1);
   });
 });

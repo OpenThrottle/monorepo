@@ -1,6 +1,6 @@
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { getPublicEnv } from '@openthrottle/react-router-utils';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { createRoutesStub, useSearchParams } from 'react-router';
@@ -144,13 +144,13 @@ describe('routes/plans.$planId.tsx', () => {
       (await component.findAllByText('Plan description')).length,
     ).toBeGreaterThan(0);
 
-    await user.click(screen.getByRole('tab', { name: /Tasks/ }));
+    await user.click(component.getByRole('tab', { name: /Tasks/ }));
 
     // Tasks tab content only renders once the search-param navigation settles.
     expect(await component.findByText('Test Task')).toBeInTheDocument();
 
     const paramsAfterTasks = new URLSearchParams(
-      screen.getByTestId('plan-detail-search-params').textContent ?? '',
+      component.getByTestId('plan-detail-search-params').textContent ?? '',
     );
     expect(paramsAfterTasks.get(PLANS_DETAIL_TAB_SEARCH_PARAM)).toBe('tasks');
     expect(paramsAfterTasks.get('view')).toBe('table');
@@ -177,7 +177,7 @@ describe('routes/plans.$planId.tsx', () => {
     // The plan title header plus the overview tab's "Summary" heading.
     expect(component.getAllByTestId('GlobalHeading').length).toBeGreaterThan(0);
 
-    await user.click(screen.getByRole('tab', { name: /Tasks/ }));
+    await user.click(component.getByRole('tab', { name: /Tasks/ }));
 
     expect(
       await component.findByText(PLAN_TASKS_EMPTY_COPY.title),
@@ -222,7 +222,7 @@ describe('routes/plans.$planId.tsx', () => {
       plan: mockPlan,
       tasks: [mockTask],
     });
-    renderWithPlanDetailRouteData(
+    const component = renderWithPlanDetailRouteData(
       <TooltipProvider>
         <PlanDetailSearchParamsProbe />
         <PlanDetail
@@ -238,21 +238,21 @@ describe('routes/plans.$planId.tsx', () => {
       },
     );
 
-    const tasksTab = screen.getByRole('tab', { name: /Tasks/ });
+    const tasksTab = component.getByRole('tab', { name: /Tasks/ });
     expect(tasksTab).toHaveAttribute('data-state', 'active');
 
-    await user.click(screen.getByRole('tab', { name: 'Details' }));
+    await user.click(component.getByRole('tab', { name: 'Details' }));
 
     // The tab→search-param navigation is async (loader revalidation); wait for it.
     await waitFor(() => {
       const params = new URLSearchParams(
-        screen.getByTestId('plan-detail-search-params').textContent ?? '',
+        component.getByTestId('plan-detail-search-params').textContent ?? '',
       );
       expect(params.get(PLANS_DETAIL_TAB_SEARCH_PARAM)).toBeNull();
     });
 
     const paramsAfterDetails = new URLSearchParams(
-      screen.getByTestId('plan-detail-search-params').textContent ?? '',
+      component.getByTestId('plan-detail-search-params').textContent ?? '',
     );
     expect(paramsAfterDetails.get('view')).toBe('table');
   });
@@ -262,7 +262,7 @@ describe('routes/plans.$planId.tsx', () => {
       plan: mockPlan,
       tasks: [],
     });
-    renderWithPlanDetailRouteData(
+    const component = renderWithPlanDetailRouteData(
       <TooltipProvider>
         <PlanDetail
           actionData={undefined}
@@ -277,7 +277,7 @@ describe('routes/plans.$planId.tsx', () => {
       },
     );
 
-    expect(screen.getByRole('tab', { name: 'Details' })).toHaveAttribute(
+    expect(component.getByRole('tab', { name: 'Details' })).toHaveAttribute(
       'data-state',
       'active',
     );

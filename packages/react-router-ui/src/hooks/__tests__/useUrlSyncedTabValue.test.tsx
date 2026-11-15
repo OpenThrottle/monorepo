@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { createRoutesStub, useSearchParams } from 'react-router';
@@ -65,18 +65,20 @@ describe('useUrlSyncedTabValue', () => {
   test('reads defaultValue when param is absent', () => {
     const RoutesStub = createRoutesStub([{ Component: TabHarness, path: '/' }]);
 
-    render(<RoutesStub initialEntries={['/']} />);
+    const component = render(<RoutesStub initialEntries={['/']} />);
 
-    expect(screen.getByTestId('active-tab')).toHaveTextContent('overview');
-    expect(screen.getByTestId(DISPLAY_ID)).toHaveTextContent('');
+    expect(component.getByTestId('active-tab')).toHaveTextContent('overview');
+    expect(component.getByTestId(DISPLAY_ID)).toHaveTextContent('');
   });
 
   test('reads tab value from the URL', () => {
     const RoutesStub = createRoutesStub([{ Component: TabHarness, path: '/' }]);
 
-    render(<RoutesStub initialEntries={[`/?${PARAM}=tasks`]} />);
+    const component = render(
+      <RoutesStub initialEntries={[`/?${PARAM}=tasks`]} />,
+    );
 
-    expect(screen.getByTestId('active-tab')).toHaveTextContent('tasks');
+    expect(component.getByTestId('active-tab')).toHaveTextContent('tasks');
   });
 
   describe('when parse is provided', () => {
@@ -86,9 +88,11 @@ describe('useUrlSyncedTabValue', () => {
         { Component: () => <TabHarness withParse={true} />, path: '/' },
       ]);
 
-      render(<RoutesStub initialEntries={[`/?${PARAM}=nope`]} />);
+      const component = render(
+        <RoutesStub initialEntries={[`/?${PARAM}=nope`]} />,
+      );
 
-      expect(screen.getByTestId('active-tab')).toHaveTextContent('overview');
+      expect(component.getByTestId('active-tab')).toHaveTextContent('overview');
     });
 
     test('onValueChange sets param for non-default tab', async () => {
@@ -98,12 +102,12 @@ describe('useUrlSyncedTabValue', () => {
         { Component: () => <TabHarness withParse={true} />, path: '/' },
       ]);
 
-      render(<RoutesStub initialEntries={['/']} />);
+      const component = render(<RoutesStub initialEntries={['/']} />);
 
-      await user.click(screen.getByTestId('select-tasks'));
+      await user.click(component.getByTestId('select-tasks'));
 
-      expect(screen.getByTestId('active-tab')).toHaveTextContent('tasks');
-      expect(screen.getByTestId(DISPLAY_ID).textContent).toContain(
+      expect(component.getByTestId('active-tab')).toHaveTextContent('tasks');
+      expect(component.getByTestId(DISPLAY_ID).textContent).toContain(
         `${PARAM}=tasks`,
       );
     });
@@ -115,12 +119,14 @@ describe('useUrlSyncedTabValue', () => {
         { Component: () => <TabHarness withParse={true} />, path: '/' },
       ]);
 
-      render(<RoutesStub initialEntries={[`/?${PARAM}=tasks`]} />);
+      const component = render(
+        <RoutesStub initialEntries={[`/?${PARAM}=tasks`]} />,
+      );
 
-      await user.click(screen.getByTestId('select-overview'));
+      await user.click(component.getByTestId('select-overview'));
 
-      expect(screen.getByTestId('active-tab')).toHaveTextContent('overview');
-      expect(screen.getByTestId(DISPLAY_ID)).toHaveTextContent('');
+      expect(component.getByTestId('active-tab')).toHaveTextContent('overview');
+      expect(component.getByTestId(DISPLAY_ID)).toHaveTextContent('');
     });
 
     test('onValueChange treats invalid next as default and clears param', async () => {
@@ -130,12 +136,14 @@ describe('useUrlSyncedTabValue', () => {
         { Component: () => <TabHarness withParse={true} />, path: '/' },
       ]);
 
-      render(<RoutesStub initialEntries={[`/?${PARAM}=tasks`]} />);
+      const component = render(
+        <RoutesStub initialEntries={[`/?${PARAM}=tasks`]} />,
+      );
 
-      await user.click(screen.getByTestId('select-invalid'));
+      await user.click(component.getByTestId('select-invalid'));
 
-      expect(screen.getByTestId('active-tab')).toHaveTextContent('overview');
-      expect(screen.getByTestId(DISPLAY_ID)).toHaveTextContent('');
+      expect(component.getByTestId('active-tab')).toHaveTextContent('overview');
+      expect(component.getByTestId(DISPLAY_ID)).toHaveTextContent('');
     });
   });
 
@@ -146,12 +154,12 @@ describe('useUrlSyncedTabValue', () => {
         { Component: TabHarness, path: '/' },
       ]);
 
-      render(<RoutesStub initialEntries={['/']} />);
+      const component = render(<RoutesStub initialEntries={['/']} />);
 
-      await user.click(screen.getByTestId('select-tasks'));
+      await user.click(component.getByTestId('select-tasks'));
 
-      expect(screen.getByTestId('active-tab')).toHaveTextContent('tasks');
-      expect(screen.getByTestId(DISPLAY_ID).textContent).toContain(
+      expect(component.getByTestId('active-tab')).toHaveTextContent('tasks');
+      expect(component.getByTestId(DISPLAY_ID).textContent).toContain(
         `${PARAM}=tasks`,
       );
     });

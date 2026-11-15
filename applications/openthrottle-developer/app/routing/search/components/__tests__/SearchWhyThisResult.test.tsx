@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { render, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
@@ -35,15 +35,15 @@ describe('SearchWhyThisResult', () => {
       return <SearchWhyThisResult result={chunk} />;
     };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    render(<RoutesStub />);
+    const component = render(<RoutesStub />);
 
-    const details = screen.getByTestId('SearchWhyThisResult');
+    const details = component.getByTestId('SearchWhyThisResult');
     expect(details).toBeInTheDocument();
     expect(within(details).getByText(/Why this result\?/i)).toBeInTheDocument();
 
-    await user.click(screen.getByText(/Why this result\?/i));
-    expect(screen.getByText(/Chunk id: chunk-id-1/)).toBeInTheDocument();
-    expect(screen.getByText(/88%/, { exact: false })).toBeInTheDocument();
+    await user.click(component.getByText(/Why this result\?/i));
+    expect(component.getByText(/Chunk id: chunk-id-1/)).toBeInTheDocument();
+    expect(component.getByText(/88%/, { exact: false })).toBeInTheDocument();
   });
 
   test('should start open when defaultOpen is true', () => {
@@ -53,9 +53,9 @@ describe('SearchWhyThisResult', () => {
       return <SearchWhyThisResult defaultOpen={true} result={chunk} />;
     };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    render(<RoutesStub />);
+    const component = render(<RoutesStub />);
 
-    const details = screen.getByTestId('SearchWhyThisResult');
+    const details = component.getByTestId('SearchWhyThisResult');
     expect(details).toHaveAttribute('open');
   });
 
@@ -78,11 +78,11 @@ describe('SearchWhyThisResult', () => {
       );
     };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    render(<RoutesStub />);
+    const component = render(<RoutesStub />);
 
-    expect(screen.getByText(/Result 1 of 3/)).toBeInTheDocument();
-    expect(screen.getByText(/Plan id: p-1/)).toBeInTheDocument();
-    expect(screen.getByText(/Task id: t-1/)).toBeInTheDocument();
+    expect(component.getByText(/Result 1 of 3/)).toBeInTheDocument();
+    expect(component.getByText(/Plan id: p-1/)).toBeInTheDocument();
+    expect(component.getByText(/Task id: t-1/)).toBeInTheDocument();
   });
 
   test('should list documentation metadata when source is documentation', async () => {
@@ -98,12 +98,14 @@ describe('SearchWhyThisResult', () => {
       return <SearchWhyThisResult result={chunk} />;
     };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    render(<RoutesStub />);
+    const component = render(<RoutesStub />);
 
-    await user.click(screen.getByText(/Why this result\?/i));
-    expect(screen.getByText(/Repo: visormatt\/monorepo/)).toBeInTheDocument();
-    expect(screen.getByText(/Path: docs\/foo.md/)).toBeInTheDocument();
-    expect(screen.getByText(/SHA: abc1234/)).toBeInTheDocument();
+    await user.click(component.getByText(/Why this result\?/i));
+    expect(
+      component.getByText(/Repo: visormatt\/monorepo/),
+    ).toBeInTheDocument();
+    expect(component.getByText(/Path: docs\/foo.md/)).toBeInTheDocument();
+    expect(component.getByText(/SHA: abc1234/)).toBeInTheDocument();
   });
 
   test('should surface quick open links for plan and task when ids exist', () => {
@@ -117,12 +119,12 @@ describe('SearchWhyThisResult', () => {
       return <SearchWhyThisResult defaultOpen={true} result={chunk} />;
     };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    render(<RoutesStub />);
+    const component = render(<RoutesStub />);
 
-    const planLink = screen.getByTestId('SearchWhyThisResult-planJumpLink');
+    const planLink = component.getByTestId('SearchWhyThisResult-planJumpLink');
     expect(planLink).toHaveAttribute('href', '/plans/plan-z');
 
-    const taskLink = screen.getByTestId('SearchWhyThisResult-taskJumpLink');
+    const taskLink = component.getByTestId('SearchWhyThisResult-taskJumpLink');
     expect(taskLink).toHaveAttribute('href', '/plans/plan-z#task-task-z');
   });
 
@@ -138,9 +140,9 @@ describe('SearchWhyThisResult', () => {
       return <SearchWhyThisResult defaultOpen={true} result={chunk} />;
     };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    render(<RoutesStub />);
+    const component = render(<RoutesStub />);
 
-    const ext = screen.getByTestId('SearchWhyThisResult-docGithubLink');
+    const ext = component.getByTestId('SearchWhyThisResult-docGithubLink');
     expect(ext).toHaveAttribute(
       'href',
       'https://github.com/org/repo/blob/deadbeef/docs/foo.md',

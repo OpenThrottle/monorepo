@@ -4,7 +4,8 @@ import {
   type NotificationPayload,
 } from '@openthrottle/openthrottle-notifications';
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
-import { render, screen, within } from '@testing-library/react';
+import type { RenderResult } from '@testing-library/react';
+import { render, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
@@ -68,21 +69,21 @@ describe('OpenThrottleWebsocketDebugger Component', () => {
     return render(<RoutesStub />);
   };
 
-  const getLogRegion = () => {
-    return within(screen.getByTestId('OpenThrottleWebsocketDebugger-log'));
+  const getLogRegion = (component: RenderResult) => {
+    return within(component.getByTestId('OpenThrottleWebsocketDebugger-log'));
   };
 
   test('renders connection status and log entries from initialEntries', () => {
-    renderDebugger();
+    const component = renderDebugger();
 
     expect(
-      screen.getByTestId('OpenThrottleWebsocketDebugger'),
+      component.getByTestId('OpenThrottleWebsocketDebugger'),
     ).toBeInTheDocument();
     expect(
-      screen.getByTestId('OpenThrottleWebsocketDebugger-status'),
+      component.getByTestId('OpenThrottleWebsocketDebugger-status'),
     ).toHaveTextContent('connected');
 
-    const log = getLogRegion();
+    const log = getLogRegion(component);
 
     expect(log.getByText(/test alert/i)).toBeInTheDocument();
     expect(log.getByText(/"planId": "plan-1"/)).toBeInTheDocument();
@@ -113,16 +114,16 @@ describe('OpenThrottleWebsocketDebugger Component', () => {
     const RoutesStub = createRoutesStub([
       { Component: ControlledFilter, path: '/' },
     ]);
-    render(<RoutesStub />);
+    const component = render(<RoutesStub />);
 
-    const log = getLogRegion();
+    const log = getLogRegion(component);
 
     expect(log.getByText(/no events yet/i)).toBeInTheDocument();
     expect(log.queryByText(/test alert/i)).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: /filter events/i }));
+    await user.click(component.getByRole('button', { name: /filter events/i }));
 
-    const planOption = screen.getByRole('option', { name: 'Plan updated' });
+    const planOption = component.getByRole('option', { name: 'Plan updated' });
     await user.click(planOption);
 
     expect(log.getByText(/"planId": "plan-1"/)).toBeInTheDocument();
@@ -131,13 +132,13 @@ describe('OpenThrottleWebsocketDebugger Component', () => {
 
   test('clear button removes entries from the feed', async () => {
     const user = userEvent.setup();
-    renderDebugger();
+    const component = renderDebugger();
 
-    const log = getLogRegion();
+    const log = getLogRegion(component);
 
     expect(log.getByText(/test alert/i)).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'Clear' }));
+    await user.click(component.getByRole('button', { name: 'Clear' }));
 
     expect(log.getByText(/no events yet/i)).toBeInTheDocument();
     expect(log.queryByText(/test alert/i)).not.toBeInTheDocument();

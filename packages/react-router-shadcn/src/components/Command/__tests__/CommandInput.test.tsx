@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
@@ -7,11 +7,13 @@ import { CommandInput } from '../CommandInput';
 
 describe('CommandInput', () => {
   test('renders the search input with its placeholder', () => {
-    render(
+    const component = render(
       <Command>
         <CommandInput placeholder="Search commands" />
       </Command>,
     );
-    expect(screen.getByPlaceholderText('Search commands')).toBeInTheDocument();
+    expect(
+      component.getByPlaceholderText('Search commands'),
+    ).toBeInTheDocument();
   });
 });

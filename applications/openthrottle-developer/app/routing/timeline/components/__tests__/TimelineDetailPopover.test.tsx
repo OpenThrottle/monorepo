@@ -1,5 +1,5 @@
 import type { RenderResult } from '@testing-library/react';
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
@@ -44,52 +44,56 @@ const renderPopover = (
 
 describe('TimelineDetailPopover Component', () => {
   test('should render nothing when nothing is selected', () => {
-    renderPopover();
+    const component = renderPopover();
 
-    expect(screen.queryByTestId('TimelineDetailPopover')).toBeNull();
+    expect(component.queryByTestId('TimelineDetailPopover')).toBeNull();
   });
 
   test('should open with a span selected', () => {
-    renderPopover({ span: spanById('session-a') });
+    const component = renderPopover({ span: spanById('session-a') });
 
-    expect(screen.getByTestId('TimelineDetailPopover')).toBeInTheDocument();
+    expect(component.getByTestId('TimelineDetailPopover')).toBeInTheDocument();
   });
 
   test('should show start, end and duration for a span', () => {
-    renderPopover({ span: spanById('session-a') });
+    const component = renderPopover({ span: spanById('session-a') });
 
-    expect(screen.getByText(TIMELINE_DETAIL_COPY.startedLabel)).toBeVisible();
-    expect(screen.getByText(TIMELINE_DETAIL_COPY.endedLabel)).toBeVisible();
-    expect(screen.getByText(TIMELINE_DETAIL_COPY.durationLabel)).toBeVisible();
+    expect(
+      component.getByText(TIMELINE_DETAIL_COPY.startedLabel),
+    ).toBeVisible();
+    expect(component.getByText(TIMELINE_DETAIL_COPY.endedLabel)).toBeVisible();
+    expect(
+      component.getByText(TIMELINE_DETAIL_COPY.durationLabel),
+    ).toBeVisible();
   });
 
   test('should disclose a derived end next to the duration it qualifies', () => {
-    renderPopover({ span: spanById('run-a') });
+    const component = renderPopover({ span: spanById('run-a') });
 
     expect(
-      screen.getByTestId('TimelineDetailPopoverDerived'),
+      component.getByTestId('TimelineDetailPopoverDerived'),
     ).toHaveTextContent(TIMELINE_SPAN_TOOLTIP_COPY.derivedEnd);
   });
 
   test('should not claim a derived end for a measured span', () => {
-    renderPopover({ span: spanById('session-a') });
+    const component = renderPopover({ span: spanById('session-a') });
 
-    expect(screen.queryByTestId('TimelineDetailPopoverDerived')).toBeNull();
+    expect(component.queryByTestId('TimelineDetailPopoverDerived')).toBeNull();
   });
 
   test('should deep link to the plan when the span has one', () => {
-    renderPopover({ span: spanById('run-a') });
+    const component = renderPopover({ span: spanById('run-a') });
 
     expect(
-      screen.getByRole('link', { name: TIMELINE_DETAIL_COPY.openPlan }),
+      component.getByRole('link', { name: TIMELINE_DETAIL_COPY.openPlan }),
     ).toHaveAttribute('href', '/plans/plan-1');
   });
 
   test('should omit the plan link for a subjectless span', () => {
-    renderPopover({ span: spanById('session-open') });
+    const component = renderPopover({ span: spanById('session-open') });
 
     expect(
-      screen.queryByRole('link', { name: TIMELINE_DETAIL_COPY.openPlan }),
+      component.queryByRole('link', { name: TIMELINE_DETAIL_COPY.openPlan }),
     ).toBeNull();
   });
 
@@ -98,7 +102,7 @@ describe('TimelineDetailPopover Component', () => {
       (marker) => marker.kind === TimelineMarkerKind.GitCommit,
     );
 
-    renderPopover({
+    const component = renderPopover({
       cluster: {
         at: commits[0]?.at ?? '',
         kind: TimelineMarkerKind.GitCommit,
@@ -107,9 +111,9 @@ describe('TimelineDetailPopover Component', () => {
     });
 
     // Expanding the cluster is the whole point of collapsing it in the chart.
-    expect(screen.getAllByTestId('TimelineDetailPopoverMarker')).toHaveLength(
-      commits.length,
-    );
+    expect(
+      component.getAllByTestId('TimelineDetailPopoverMarker'),
+    ).toHaveLength(commits.length);
   });
 
   test('should link a pull request marker to its external URL', () => {
@@ -118,7 +122,7 @@ describe('TimelineDetailPopover Component', () => {
     );
     if (pr === undefined) throw new Error('fixture pull request is missing');
 
-    renderPopover({
+    const component = renderPopover({
       cluster: {
         at: pr.at,
         kind: TimelineMarkerKind.PullRequest,
@@ -127,7 +131,9 @@ describe('TimelineDetailPopover Component', () => {
     });
 
     expect(
-      screen.getByRole('link', { name: TIMELINE_DETAIL_COPY.openPullRequest }),
+      component.getByRole('link', {
+        name: TIMELINE_DETAIL_COPY.openPullRequest,
+      }),
     ).toHaveAttribute('href', pr.url);
   });
 });

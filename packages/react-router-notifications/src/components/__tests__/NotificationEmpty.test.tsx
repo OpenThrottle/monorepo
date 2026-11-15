@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
@@ -11,9 +11,9 @@ describe('NotificationEmpty Component', () => {
       return <NotificationEmpty />;
     };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    render(<RoutesStub />);
+    const component = render(<RoutesStub />);
 
-    expect(screen.getByTestId('NotificationEmpty')).toBeInTheDocument();
-    expect(screen.getByText('No notifications')).toBeInTheDocument();
+    expect(component.getByTestId('NotificationEmpty')).toBeInTheDocument();
+    expect(component.getByText('No notifications')).toBeInTheDocument();
   });
 });

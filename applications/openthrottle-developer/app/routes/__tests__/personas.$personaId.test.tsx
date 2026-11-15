@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
@@ -12,7 +12,7 @@ function stubMatches(): unknown {
 
 describe('routes/personas.$personaId.tsx', () => {
   test('renders persona detail heading', () => {
-    render(
+    const component = render(
       <MemoryRouter>
         <PersonaDetail
           actionData={undefined}
@@ -31,7 +31,7 @@ describe('routes/personas.$personaId.tsx', () => {
     );
 
     expect(
-      screen.getByRole('heading', { name: 'architect' }),
+      component.getByRole('heading', { name: 'architect' }),
     ).toBeInTheDocument();
   });
 });

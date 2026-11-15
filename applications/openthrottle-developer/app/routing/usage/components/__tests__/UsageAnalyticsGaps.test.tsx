@@ -1,4 +1,3 @@
-import { screen } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
@@ -8,45 +7,45 @@ import { UsageAnalyticsGaps } from '../UsageAnalyticsGaps';
 
 describe('UsageAnalyticsGaps Component', () => {
   test('renders analytics gaps heading and limitation bullets', () => {
-    renderRoutesStub(<UsageAnalyticsGaps />);
+    const component = renderRoutesStub(<UsageAnalyticsGaps />);
 
     expect(
-      screen.getByRole('heading', {
+      component.getByRole('heading', {
         name: 'Analytics gaps (by design today)',
       }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/these are the gaps that remain/i),
+      component.getByText(/these are the gaps that remain/i),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/No per-prompt or per-command invocation counts/i),
+      component.getByText(/No per-prompt or per-command invocation counts/i),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/Skill invocations are captured at the harness/i),
+      component.getByText(/Skill invocations are captured at the harness/i),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/opt-in enrichment for skills we author/i),
+      component.getByText(/opt-in enrichment for skills we author/i),
     ).toBeInTheDocument();
   });
 
   test('no longer claims latency/outcome metrics are missing or references Phase 4', () => {
-    renderRoutesStub(<UsageAnalyticsGaps />);
+    const component = renderRoutesStub(<UsageAnalyticsGaps />);
 
-    expect(screen.queryByText(/Phase 4/i)).not.toBeInTheDocument();
+    expect(component.queryByText(/Phase 4/i)).not.toBeInTheDocument();
     expect(
-      screen.queryByText(/No latency or outcome metrics yet/i),
+      component.queryByText(/No latency or outcome metrics yet/i),
     ).not.toBeInTheDocument();
-    expect(screen.queryByText(/\.cursor\/skills/i)).not.toBeInTheDocument();
+    expect(component.queryByText(/\.cursor\/skills/i)).not.toBeInTheDocument();
   });
 
   test('links to Prompts and Skills for deeper debugging', () => {
-    renderRoutesStub(<UsageAnalyticsGaps />);
+    const component = renderRoutesStub(<UsageAnalyticsGaps />);
 
-    expect(screen.getByRole('link', { name: 'Prompts' })).toHaveAttribute(
+    expect(component.getByRole('link', { name: 'Prompts' })).toHaveAttribute(
       'href',
       '/prompts',
     );
-    expect(screen.getByRole('link', { name: 'Skills' })).toHaveAttribute(
+    expect(component.getByRole('link', { name: 'Skills' })).toHaveAttribute(
       'href',
       '/skills',
     );

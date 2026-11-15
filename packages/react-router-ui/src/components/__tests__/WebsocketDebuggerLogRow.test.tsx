@@ -2,7 +2,7 @@ import {
   NOTIFICATION_EVENT_NAMES,
   type NotificationPayload,
 } from '@openthrottle/openthrottle-notifications';
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
@@ -25,15 +25,15 @@ describe('WebsocketDebuggerLogRow Component', () => {
       receivedAt: '2026-05-29T12:00:01.000Z',
     };
 
-    render(<WebsocketDebuggerLogRow entry={entry} />);
+    const component = render(<WebsocketDebuggerLogRow entry={entry} />);
 
-    const article = screen.getByTestId(
+    const article = component.getByTestId(
       'OpenThrottleWebsocketDebugger-entry-entry-1',
     );
     expect(article).toBeVisible();
-    expect(screen.getByText('Plan updated')).toBeVisible();
+    expect(component.getByText('Plan updated')).toBeVisible();
     expect(
-      screen.getByText(NOTIFICATION_EVENT_NAMES.PLAN_UPDATED),
+      component.getByText(NOTIFICATION_EVENT_NAMES.PLAN_UPDATED),
     ).toBeVisible();
     expect(article.textContent).toContain('"planId": "plan-1"');
   });
@@ -50,11 +50,11 @@ describe('WebsocketDebuggerLogRow Component', () => {
       receivedAt: '2026-05-29T12:00:02.000Z',
     };
 
-    render(<WebsocketDebuggerLogRow entry={entry} />);
+    const component = render(<WebsocketDebuggerLogRow entry={entry} />);
 
     expect(
-      screen.getByTestId('OpenThrottleWebsocketDebugger-entry-entry-2'),
+      component.getByTestId('OpenThrottleWebsocketDebugger-entry-entry-2'),
     ).toBeVisible();
-    expect(screen.getByText('System alerts')).toBeVisible();
+    expect(component.getByText('System alerts')).toBeVisible();
   });
 });

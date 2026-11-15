@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { render, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
@@ -15,9 +15,9 @@ const renderLinks = (): ReturnType<typeof render> => {
 
 describe('GlobalLayoutHeaderLinks Component', () => {
   test('every inline icon-only link has an accessible name', () => {
-    renderLinks();
+    const component = renderLinks();
 
-    const inline = screen.getByTestId('GlobalLayoutHeaderLinksInline');
+    const inline = component.getByTestId('GlobalLayoutHeaderLinksInline');
 
     const links = within(inline).getAllByRole('link');
     expect(links).toHaveLength(3);
@@ -32,42 +32,41 @@ describe('GlobalLayoutHeaderLinks Component', () => {
   });
 
   test('inline links are hidden below sm and the overflow trigger is hidden from sm', () => {
-    renderLinks();
+    const component = renderLinks();
 
-    const inline = screen.getByTestId('GlobalLayoutHeaderLinksInline');
+    const inline = component.getByTestId('GlobalLayoutHeaderLinksInline');
     expect(inline).toHaveClass('hidden');
     expect(
-      screen.getByRole('button', { name: 'More actions' }).closest('div'),
+      component.getByRole('button', { name: 'More actions' }).closest('div'),
     ).toHaveClass('sm:hidden');
   });
 
   test('overflow menu exposes the same destinations', async () => {
     const user = userEvent.setup();
-    renderLinks();
+    const component = renderLinks();
 
-    await user.click(screen.getByRole('button', { name: 'More actions' }));
+    await user.click(component.getByRole('button', { name: 'More actions' }));
 
     expect(
-      await screen.findByRole('menuitem', { name: 'GitHub' }),
+      await component.findByRole('menuitem', { name: 'GitHub' }),
     ).toHaveAttribute('href', expect.stringContaining('/monorepo'));
     expect(
-      screen.getByRole('menuitem', { name: 'Report a bug' }),
+      component.getByRole('menuitem', { name: 'Report a bug' }),
     ).toHaveAttribute('href', expect.stringContaining('/issues/new/choose'));
-    expect(screen.getByRole('menuitem', { name: 'Sign out' })).toHaveAttribute(
-      'href',
-      '/auth/logout',
-    );
+    expect(
+      component.getByRole('menuitem', { name: 'Sign out' }),
+    ).toHaveAttribute('href', '/auth/logout');
   });
 
   test('overflow trigger and inline links grow to 44px on coarse pointers', () => {
-    renderLinks();
+    const component = renderLinks();
 
-    expect(screen.getByRole('button', { name: 'More actions' })).toHaveClass(
+    expect(component.getByRole('button', { name: 'More actions' })).toHaveClass(
       'size-6',
       'pointer-coarse:size-11',
     );
 
-    const inline = screen.getByTestId('GlobalLayoutHeaderLinksInline');
+    const inline = component.getByTestId('GlobalLayoutHeaderLinksInline');
     within(inline)
       .getAllByRole('link')
       .forEach((link) => {

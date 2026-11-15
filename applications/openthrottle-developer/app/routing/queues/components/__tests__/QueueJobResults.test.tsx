@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
@@ -42,13 +42,13 @@ describe('QueueJobResults Component', () => {
   });
 
   test('renders failure reason when job failed', () => {
-    renderResults({
+    const component = renderResults({
       ...baseJob(),
       failedReason: 'Worker crashed',
       state: 'failed',
     });
 
-    expect(screen.getByText('Failure reason')).toBeInTheDocument();
-    expect(screen.getByText('Worker crashed')).toBeInTheDocument();
+    expect(component.getByText('Failure reason')).toBeInTheDocument();
+    expect(component.getByText('Worker crashed')).toBeInTheDocument();
   });
 });

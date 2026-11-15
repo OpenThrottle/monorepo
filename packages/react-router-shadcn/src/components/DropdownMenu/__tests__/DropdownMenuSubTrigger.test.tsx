@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
@@ -12,7 +12,7 @@ import {
 
 describe('DropdownMenuSubTrigger', () => {
   test('renders inside an open dropdown menu', () => {
-    render(
+    const component = render(
       <DropdownMenu defaultOpen={true}>
         <DropdownMenuTrigger>Open</DropdownMenuTrigger>
         <DropdownMenuContent>
@@ -22,6 +22,6 @@ describe('DropdownMenuSubTrigger', () => {
         </DropdownMenuContent>
       </DropdownMenu>,
     );
-    expect(screen.getByText('More')).toBeInTheDocument();
+    expect(component.getByText('More')).toBeInTheDocument();
   });
 });

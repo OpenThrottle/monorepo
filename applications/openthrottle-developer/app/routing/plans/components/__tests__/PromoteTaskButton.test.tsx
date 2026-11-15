@@ -1,4 +1,5 @@
-import { screen, waitFor, within } from '@testing-library/react';
+import type { RenderResult } from '@testing-library/react';
+import { waitFor, within } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
@@ -11,10 +12,13 @@ const renderButton = (
   isPromoted: boolean,
   planIsRunning = false,
   planIsTerminal = false,
-): { submitted: (FormDataEntryValue | null)[] } => {
+): {
+  component: RenderResult;
+  submitted: (FormDataEntryValue | null)[];
+} => {
   const submitted: (FormDataEntryValue | null)[] = [];
 
-  renderRouteHarness([
+  const component = renderRouteHarness([
     {
       Component: (): React.ReactElement => (
         <PromoteTaskButton
@@ -34,23 +38,25 @@ const renderButton = (
     },
   ]);
 
-  return { submitted };
+  return { component, submitted };
 };
 
 describe('PromoteTaskButton', () => {
   test('does not submit until the confirm dialog is accepted', async () => {
     const user = userEvent.setup();
-    const { submitted } = renderButton(false);
+    const { component, submitted } = renderButton(false);
 
     // Opening the dialog does not submit.
-    await user.click(screen.getByRole('button', { name: /promote to plan/i }));
+    await user.click(
+      component.getByRole('button', { name: /promote to plan/i }),
+    );
     expect(
-      await screen.findByText('Promote task to a plan?'),
+      await component.findByText('Promote task to a plan?'),
     ).toBeInTheDocument();
     expect(submitted).toHaveLength(0);
 
     // Confirming submits the promoteTask intent.
-    const dialog = screen.getByRole('alertdialog');
+    const dialog = component.getByRole('alertdialog');
     await user.click(
       within(dialog).getByRole('button', { name: /^promote$/i }),
     );
@@ -59,42 +65,42 @@ describe('PromoteTaskButton', () => {
 
   test('renders a disabled control that cannot open the dialog when already promoted', async () => {
     const user = userEvent.setup();
-    const { submitted } = renderButton(true);
+    const { component, submitted } = renderButton(true);
 
-    const button = screen.getByRole('button', { name: /promote to plan/i });
+    const button = component.getByRole('button', { name: /promote to plan/i });
     expect(button).toBeDisabled();
 
     await user.click(button);
     expect(
-      screen.queryByText('Promote task to a plan?'),
+      component.queryByText('Promote task to a plan?'),
     ).not.toBeInTheDocument();
     expect(submitted).toHaveLength(0);
   });
 
   test('renders a disabled control that cannot open the dialog while the plan run is active', async () => {
     const user = userEvent.setup();
-    const { submitted } = renderButton(false, true);
+    const { component, submitted } = renderButton(false, true);
 
-    const button = screen.getByRole('button', { name: /promote to plan/i });
+    const button = component.getByRole('button', { name: /promote to plan/i });
     expect(button).toBeDisabled();
 
     await user.click(button);
     expect(
-      screen.queryByText('Promote task to a plan?'),
+      component.queryByText('Promote task to a plan?'),
     ).not.toBeInTheDocument();
     expect(submitted).toHaveLength(0);
   });
 
   test('renders a disabled control that cannot open the dialog while the plan is terminal', async () => {
     const user = userEvent.setup();
-    const { submitted } = renderButton(false, false, true);
+    const { component, submitted } = renderButton(false, false, true);
 
-    const button = screen.getByRole('button', { name: /promote to plan/i });
+    const button = component.getByRole('button', { name: /promote to plan/i });
     expect(button).toBeDisabled();
 
     await user.click(button);
     expect(
-      screen.queryByText('Promote task to a plan?'),
+      component.queryByText('Promote task to a plan?'),
     ).not.toBeInTheDocument();
     expect(submitted).toHaveLength(0);
   });

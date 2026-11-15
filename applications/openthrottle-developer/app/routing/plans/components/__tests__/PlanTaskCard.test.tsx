@@ -1,4 +1,5 @@
-import { render, screen } from '@testing-library/react';
+import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
@@ -24,6 +25,7 @@ const mockTask: PlanTaskCardProps['task'] = {
 };
 
 describe('PlanTaskCard Component', () => {
+  let component: RenderResult;
   let props: PlanTaskCardProps;
 
   beforeEach(() => {
@@ -36,18 +38,18 @@ describe('PlanTaskCard Component', () => {
     };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
-    render(<RoutesStub />);
+    component = render(<RoutesStub />);
   });
 
   test('renders title link to the task route', () => {
-    const titleLink = screen.getByRole('link', {
+    const titleLink = component.getByRole('link', {
       name: /open task: first task/i,
     });
     expect(titleLink).toHaveAttribute('href', '/plans/plan-1/tasks/task-1');
   });
 
   test('renders View link to the in-page task anchor', () => {
-    const viewLink = screen.getByRole('link', {
+    const viewLink = component.getByRole('link', {
       name: /view task: first task/i,
     });
     expect(viewLink.getAttribute('href')).toMatch(/#task-task-1$/);

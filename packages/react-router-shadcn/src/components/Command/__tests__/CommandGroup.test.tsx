@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
@@ -9,7 +9,7 @@ import { CommandList } from '../CommandList';
 
 describe('CommandGroup', () => {
   test('renders a cmdk group with a heading', () => {
-    const { container } = render(
+    const component = render(
       <Command>
         <CommandList>
           <CommandGroup heading="Fruits">
@@ -18,7 +18,9 @@ describe('CommandGroup', () => {
         </CommandList>
       </Command>,
     );
-    expect(container.querySelector('[cmdk-group]')).toBeInTheDocument();
-    expect(screen.getByText('Fruits')).toBeInTheDocument();
+    expect(
+      component.container.querySelector('[cmdk-group]'),
+    ).toBeInTheDocument();
+    expect(component.getByText('Fruits')).toBeInTheDocument();
   });
 });

@@ -1,6 +1,6 @@
 import { usePollServerMetrics } from '@openthrottle/react-router-ui';
 import type { RenderResult } from '@testing-library/react';
-import { cleanup, render, screen, within } from '@testing-library/react';
+import { cleanup, render, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
@@ -158,7 +158,7 @@ describe('GlobalMetrics Component', () => {
     const user = userEvent.setup();
     const select = component.getByTestId('GlobalMetrics-poll-interval');
     await user.click(select);
-    await user.click(await screen.findByRole('option', { name: '15s' }));
+    await user.click(await component.findByRole('option', { name: '15s' }));
     expect(select).toHaveTextContent('15s');
     expect(localStorageStub[GLOBAL_METRICS_STORAGE_KEY]).toBe('15000');
     expect(mockUsePollServerMetrics).toHaveBeenLastCalledWith(
@@ -190,11 +190,13 @@ describe('GlobalMetrics Component', () => {
       );
     };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    render(<RoutesStub />);
+    const chartComponent = render(<RoutesStub />);
 
-    expect(screen.getByTestId('GlobalMetrics-chart-card')).toBeInTheDocument();
     expect(
-      screen.getByTestId('GlobalMetrics-info-trigger'),
+      chartComponent.getByTestId('GlobalMetrics-chart-card'),
+    ).toBeInTheDocument();
+    expect(
+      chartComponent.getByTestId('GlobalMetrics-info-trigger'),
     ).toBeInTheDocument();
   });
 
@@ -340,11 +342,13 @@ describe('GlobalMetrics Component', () => {
       expect(
         component.queryByTestId('GlobalMetricsInfoModal'),
       ).not.toBeInTheDocument();
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(component.queryByRole('dialog')).not.toBeInTheDocument();
     });
   });
 
   describe('when the URL contains modal=ServerMetricsInfo and definitionsHref is passed', () => {
+    let modalComponent: RenderResult;
+
     beforeEach(() => {
       cleanup();
       // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
@@ -356,16 +360,20 @@ describe('GlobalMetrics Component', () => {
         );
       };
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-      render(<RoutesStub initialEntries={['/?modal=ServerMetricsInfo']} />);
+      modalComponent = render(
+        <RoutesStub initialEntries={['/?modal=ServerMetricsInfo']} />,
+      );
     });
 
     test('should mount the modal content', () => {
-      expect(screen.getByTestId('GlobalMetricsInfoModal')).toBeInTheDocument();
-      expect(screen.getByRole('dialog')).toBeInTheDocument();
+      expect(
+        modalComponent.getByTestId('GlobalMetricsInfoModal'),
+      ).toBeInTheDocument();
+      expect(modalComponent.getByRole('dialog')).toBeInTheDocument();
     });
 
     test('should thread definitionsHref from GlobalMetrics → GlobalMetricsInfoModal as a deep link', () => {
-      const dialog = screen.getByRole('dialog');
+      const dialog = modalComponent.getByRole('dialog');
       const link = within(dialog).getByTestId(
         'GlobalMetricsInfoModal-definitions-link',
       );
@@ -378,6 +386,8 @@ describe('GlobalMetrics Component', () => {
   });
 
   describe('when the URL contains modal=ServerMetricsInfo but no definitionsHref is passed', () => {
+    let modalComponent: RenderResult;
+
     beforeEach(() => {
       cleanup();
       // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
@@ -389,13 +399,15 @@ describe('GlobalMetrics Component', () => {
         );
       };
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-      render(<RoutesStub initialEntries={['/?modal=ServerMetricsInfo']} />);
+      modalComponent = render(
+        <RoutesStub initialEntries={['/?modal=ServerMetricsInfo']} />,
+      );
     });
 
     test('should mount the modal content without the Settings deep link', () => {
-      expect(screen.getByRole('dialog')).toBeInTheDocument();
+      expect(modalComponent.getByRole('dialog')).toBeInTheDocument();
       expect(
-        screen.queryByTestId('GlobalMetricsInfoModal-definitions-link'),
+        modalComponent.queryByTestId('GlobalMetricsInfoModal-definitions-link'),
       ).not.toBeInTheDocument();
     });
   });

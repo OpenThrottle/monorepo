@@ -1,4 +1,5 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import type { RenderResult } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
@@ -67,6 +68,7 @@ type LoaderData = {
 const renderRoute = (
   loaderData: LoaderData,
 ): {
+  component: RenderResult;
   submitted: {
     intent: FormDataEntryValue | null;
     tag: FormDataEntryValue | null;
@@ -93,77 +95,79 @@ const renderRoute = (
     },
   ]);
 
-  render(<RoutesStub initialEntries={['/projects/proj-detail-1']} />);
-  return { submitted };
+  const component = render(
+    <RoutesStub initialEntries={['/projects/proj-detail-1']} />,
+  );
+  return { component, submitted };
 };
 
 describe('routes/projects.$projectId._index.tsx', () => {
   test('should render project detail when project exists', async () => {
-    renderRoute(defaultLoaderData);
+    const { component } = renderRoute(defaultLoaderData);
     expect(
-      await screen.findByRole('tablist', { name: 'Project sections' }),
+      await component.findByRole('tablist', { name: 'Project sections' }),
     ).toBeInTheDocument();
-    expect(screen.getAllByText('Test Project').length).toBeGreaterThanOrEqual(
-      1,
-    );
-    expect(screen.getByText('Test project description')).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: 'proj-detail-1' }),
+      component.getAllByText('Test Project').length,
+    ).toBeGreaterThanOrEqual(1);
+    expect(component.getByText('Test project description')).toBeInTheDocument();
+    expect(
+      component.getByRole('button', { name: 'proj-detail-1' }),
     ).toBeInTheDocument();
   });
 
   test('should render Overview and Tasks tabs', async () => {
-    renderRoute(defaultLoaderData);
+    const { component } = renderRoute(defaultLoaderData);
     expect(
-      await screen.findByRole('tab', { name: 'Overview' }),
+      await component.findByRole('tab', { name: 'Overview' }),
     ).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: 'Tasks' })).toBeInTheDocument();
+    expect(component.getByRole('tab', { name: 'Tasks' })).toBeInTheDocument();
   });
 
   test('should show tasks tab content with empty state when no tasks', async () => {
     const user = userEvent.setup();
-    renderRoute(defaultLoaderData);
-    await user.click(await screen.findByRole('tab', { name: 'Tasks' }));
-    expect(screen.getByText('No tasks')).toBeInTheDocument();
+    const { component } = renderRoute(defaultLoaderData);
+    await user.click(await component.findByRole('tab', { name: 'Tasks' }));
+    expect(component.getByText('No tasks')).toBeInTheDocument();
     expect(
-      screen.getByText('This project has no tasks yet.'),
+      component.getByText('This project has no tasks yet.'),
     ).toBeInTheDocument();
   });
 
   test('should show ProjectTasksTable when projectTasks are provided', async () => {
     const user = userEvent.setup();
-    renderRoute({
+    const { component } = renderRoute({
       ...defaultLoaderData,
       projectTasks: [mockProjectTask],
       totalTaskCount: 1,
     });
-    await user.click(await screen.findByRole('tab', { name: 'Tasks' }));
-    expect(screen.getByText('A project task')).toBeInTheDocument();
-    expect(screen.getByTestId('ProjectTasksTable')).toBeInTheDocument();
+    await user.click(await component.findByRole('tab', { name: 'Tasks' }));
+    expect(component.getByText('A project task')).toBeInTheDocument();
+    expect(component.getByTestId('ProjectTasksTable')).toBeInTheDocument();
   });
 
   test('should render OpenThrottlePagination when totalTaskCount > limit', async () => {
     const user = userEvent.setup();
-    renderRoute({
+    const { component } = renderRoute({
       ...defaultLoaderData,
       limit: 2,
       projectTasks: [mockProjectTask, { ...mockProjectTask, id: 'task-2' }],
       totalTaskCount: 25,
     });
-    await user.click(await screen.findByRole('tab', { name: 'Tasks' }));
-    expect(screen.getByTestId('OpenThrottlePagination')).toBeInTheDocument();
-    expect(screen.getByText('Showing 1-2 of 25 tasks')).toBeInTheDocument();
+    await user.click(await component.findByRole('tab', { name: 'Tasks' }));
+    expect(component.getByTestId('OpenThrottlePagination')).toBeInTheDocument();
+    expect(component.getByText('Showing 1-2 of 25 tasks')).toBeInTheDocument();
   });
 
   test('should render empty state when project is not found', async () => {
-    renderRoute({ ...defaultLoaderData, project: null });
+    const { component } = renderRoute({ ...defaultLoaderData, project: null });
     expect(
-      await screen.findByText(PROJECT_NOT_FOUND_COPY.title),
+      await component.findByText(PROJECT_NOT_FOUND_COPY.title),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(PROJECT_NOT_FOUND_COPY.description),
+      component.getByText(PROJECT_NOT_FOUND_COPY.description),
     ).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Projects' })).toHaveAttribute(
+    expect(component.getByRole('link', { name: 'Projects' })).toHaveAttribute(
       'href',
       '/projects',
     );
@@ -171,16 +175,16 @@ describe('routes/projects.$projectId._index.tsx', () => {
 
   describe('tag editor', () => {
     test('renders existing project tags', async () => {
-      renderRoute(defaultLoaderData);
-      expect(await screen.findByTestId('PlanTagChips')).toBeInTheDocument();
-      expect(screen.getByText('backend')).toBeInTheDocument();
+      const { component } = renderRoute(defaultLoaderData);
+      expect(await component.findByTestId('PlanTagChips')).toBeInTheDocument();
+      expect(component.getByText('backend')).toBeInTheDocument();
     });
 
     test('removing a tag submits the removeProjectTag intent', async () => {
       const user = userEvent.setup();
-      const { submitted } = renderRoute(defaultLoaderData);
+      const { component, submitted } = renderRoute(defaultLoaderData);
       await user.click(
-        await screen.findByRole('button', { name: 'Remove tag backend' }),
+        await component.findByRole('button', { name: 'Remove tag backend' }),
       );
       await waitFor(() => expect(submitted).toHaveLength(1));
       expect(submitted[0]).toEqual({
@@ -191,12 +195,12 @@ describe('routes/projects.$projectId._index.tsx', () => {
 
     test('adding a tag submits the addProjectTag intent', async () => {
       const user = userEvent.setup();
-      const { submitted } = renderRoute(defaultLoaderData);
+      const { component, submitted } = renderRoute(defaultLoaderData);
       await user.selectOptions(
-        await screen.findByRole('combobox', { name: 'Add a tag' }),
+        await component.findByRole('combobox', { name: 'Add a tag' }),
         'design',
       );
-      await user.click(screen.getByRole('button', { name: 'Add' }));
+      await user.click(component.getByRole('button', { name: 'Add' }));
       await waitFor(() => expect(submitted).toHaveLength(1));
       expect(submitted[0]).toEqual({ intent: 'addProjectTag', tag: 'design' });
     });

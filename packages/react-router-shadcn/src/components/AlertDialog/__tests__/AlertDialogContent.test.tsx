@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, it } from 'vitest';
 
@@ -11,7 +11,7 @@ import {
 
 describe('AlertDialogContent', () => {
   it('renders the dialog panel with role alertdialog and merges className', () => {
-    render(
+    const component = render(
       <AlertDialog defaultOpen={true}>
         <AlertDialogContent className="my-panel">
           <AlertDialogTitle>Title</AlertDialogTitle>
@@ -20,7 +20,7 @@ describe('AlertDialogContent', () => {
       </AlertDialog>,
     );
 
-    const dialog = screen.getByRole('alertdialog');
+    const dialog = component.getByRole('alertdialog');
     expect(dialog).toBeInTheDocument();
     expect(dialog).toHaveClass('my-panel');
     expect(dialog).toHaveClass('fixed', 'left-[50%]', 'top-[50%]', 'z-50');
@@ -31,7 +31,7 @@ describe('AlertDialogContent', () => {
   it('forwards ref to the content element', () => {
     const ref = React.createRef<HTMLDivElement>();
 
-    render(
+    const component = render(
       <AlertDialog defaultOpen={true}>
         <AlertDialogContent ref={ref}>
           <AlertDialogTitle>T</AlertDialogTitle>
@@ -40,6 +40,6 @@ describe('AlertDialogContent', () => {
       </AlertDialog>,
     );
 
-    expect(ref.current).toBe(screen.getByRole('alertdialog'));
+    expect(ref.current).toBe(component.getByRole('alertdialog'));
   });
 });

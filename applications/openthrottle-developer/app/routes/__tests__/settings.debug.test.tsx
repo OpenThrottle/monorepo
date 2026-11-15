@@ -1,4 +1,3 @@
-import { screen } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
@@ -8,7 +7,7 @@ import { renderWithMemoryRouter } from '~/testing/route-fixtures';
 
 describe('routes/settings.debug.tsx', () => {
   test('SettingsDebugPanel surfaces diagnostics sections', () => {
-    renderWithMemoryRouter([
+    const component = renderWithMemoryRouter([
       {
         element: (
           <SettingsDebugPanel
@@ -31,22 +30,24 @@ describe('routes/settings.debug.tsx', () => {
     ]);
 
     expect(
-      screen.getByText(/Client-side diagnostics for this shell/i),
+      component.getByText(/Client-side diagnostics for this shell/i),
     ).toBeInTheDocument();
-    expect(screen.getByText(/Feature flags/i)).toBeInTheDocument();
-    expect(screen.getByText(/Sanitized env snapshot/i)).toBeInTheDocument();
+    expect(component.getByText(/Feature flags/i)).toBeInTheDocument();
+    expect(component.getByText(/Sanitized env snapshot/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/React Router \/ Vite devtools/i),
+      component.getByText(/React Router \/ Vite devtools/i),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/Local dev: ports, hosts & API URLs/i),
+      component.getByText(/Local dev: ports, hosts & API URLs/i),
     ).toBeInTheDocument();
-    expect(screen.getByText(/Storage: local & session/i)).toBeInTheDocument();
-    expect(screen.getByText(/GraphQL endpoint health/i)).toBeInTheDocument();
+    expect(
+      component.getByText(/Storage: local & session/i),
+    ).toBeInTheDocument();
+    expect(component.getByText(/GraphQL endpoint health/i)).toBeInTheDocument();
   });
 
   test('Vite devtools card links to quick reference doc anchor', () => {
-    renderWithMemoryRouter([
+    const component = renderWithMemoryRouter([
       {
         element: (
           <SettingsDebugPanel
@@ -62,7 +63,7 @@ describe('routes/settings.debug.tsx', () => {
       },
     ]);
 
-    const link = screen.getByRole('link', {
+    const link = component.getByRole('link', {
       name: /quick reference \(when to enable what\)/i,
     });
     expect(link).toHaveAttribute('href', VITE_DEVTOOLS_DOC_QUICK_REF_HREF);

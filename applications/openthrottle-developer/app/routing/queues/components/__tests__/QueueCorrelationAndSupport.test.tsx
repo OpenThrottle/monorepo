@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
@@ -37,22 +37,22 @@ const renderCorrelation = (
 
 describe('QueueCorrelationAndSupport Component', () => {
   test('renders queue name and job correlation id', () => {
-    renderCorrelation(baseJob(), 'workflow-jobs');
+    const component = renderCorrelation(baseJob(), 'workflow-jobs');
 
-    expect(screen.getByText('workflow-jobs')).toBeInTheDocument();
-    expect(screen.getByTestId('queue-job-correlation-id')).toHaveTextContent(
+    expect(component.getByText('workflow-jobs')).toBeInTheDocument();
+    expect(component.getByTestId('queue-job-correlation-id')).toHaveTextContent(
       'bull-job-1',
     );
   });
 
   test('links to plan when payload includes planId', () => {
     const planId = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee';
-    renderCorrelation({
+    const component = renderCorrelation({
       ...baseJob(),
       data: JSON.stringify({ planId }),
     });
 
-    expect(screen.getByRole('link', { name: planId })).toHaveAttribute(
+    expect(component.getByRole('link', { name: planId })).toHaveAttribute(
       'href',
       `/plans/${planId}`,
     );

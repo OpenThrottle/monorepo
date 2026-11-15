@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { describe, expect, it, vi } from 'vitest';
@@ -10,7 +10,7 @@ describe('GlobalRootLoaderFailureBanner', () => {
     const user = userEvent.setup();
     const longMessage = `GraphQL errors: ${'x'.repeat(400)}`;
 
-    render(
+    const component = render(
       <GlobalRootLoaderFailureBanner
         failure={{
           kind: 'graphql',
@@ -23,22 +23,24 @@ describe('GlobalRootLoaderFailureBanner', () => {
     );
 
     expect(
-      screen.getByText(/Failed while loading: Current user session/i),
+      component.getByText(/Failed while loading: Current user session/i),
     ).toBeInTheDocument();
 
-    const details = screen.getByText('Full error message').closest('details');
+    const details = component
+      .getByText('Full error message')
+      .closest('details');
     if (details === null) {
       throw new Error('Expected a <details> ancestor');
     }
     expect(details.open).toBe(false);
 
-    await user.click(screen.getByText('Full error message'));
+    await user.click(component.getByText('Full error message'));
     expect(details.open).toBe(true);
-    expect(screen.getByText(longMessage)).toBeInTheDocument();
+    expect(component.getByText(longMessage)).toBeInTheDocument();
   });
 
   it('disables retry while revalidating', () => {
-    render(
+    const component = render(
       <GlobalRootLoaderFailureBanner
         failure={{
           kind: 'transport',
@@ -51,11 +53,11 @@ describe('GlobalRootLoaderFailureBanner', () => {
       />,
     );
 
-    expect(screen.getByRole('button', { name: /Retrying/i })).toBeDisabled();
+    expect(component.getByRole('button', { name: /Retrying/i })).toBeDisabled();
   });
 
   it('shows HTTP status badge and GraphQL base when provided', () => {
-    render(
+    const component = render(
       <GlobalRootLoaderFailureBanner
         diagnostics={{
           graphQlRequestBaseUrl: 'http://localhost:6021',
@@ -71,7 +73,7 @@ describe('GlobalRootLoaderFailureBanner', () => {
       />,
     );
 
-    expect(screen.getByText('HTTP 503')).toBeInTheDocument();
-    expect(screen.getByText('http://localhost:6021')).toBeInTheDocument();
+    expect(component.getByText('HTTP 503')).toBeInTheDocument();
+    expect(component.getByText('http://localhost:6021')).toBeInTheDocument();
   });
 });

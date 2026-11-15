@@ -24,6 +24,7 @@ import { nestjsFileExports } from './rules/nestjsFileExports.ts';
 import { nestjsFileNaming } from './rules/nestjsFileNaming.ts';
 import { noFireEvent } from './rules/noFireEvent.ts';
 import { noPerTestTimeout } from './rules/noPerTestTimeout.ts';
+import { noScreen } from './rules/noScreen.ts';
 import { noTestSleep } from './rules/noTestSleep.ts';
 import { noWallClockInTests } from './rules/noWallClockInTests.ts';
 import { planTaskStatusChokepoint } from './rules/planTaskStatusChokepoint.ts';
@@ -280,6 +281,7 @@ export const eslintConfig = tslint.config([
           'nestjs-file-naming': nestjsFileNaming,
           'no-fire-event': noFireEvent,
           'no-per-test-timeout': noPerTestTimeout,
+          'no-screen': noScreen,
           'no-test-sleep': noTestSleep,
           'no-wall-clock-in-tests': noWallClockInTests,
           'plan-task-status-chokepoint': planTaskStatusChokepoint,
@@ -486,7 +488,8 @@ export const eslintConfig = tslint.config([
   /**
    * Anti-flake test rules (docs/monorepo/code-style.md#anti-flake-test-rules):
    * no real-clock sleeps, no wall-clock reads, no per-test timeout/retry
-   * overrides, skips cite an issue, `userEvent` over `fireEvent`.
+   * overrides, skips cite an issue, `userEvent` over `fireEvent`, the render
+   * result over `screen`.
    *
    * Dedicated `openthrottle/*` rules rather than more `no-restricted-syntax`
    * entries: flat config replaces that rule's whole option array per block, so
@@ -505,6 +508,7 @@ export const eslintConfig = tslint.config([
     ],
     rules: {
       'openthrottle/no-fire-event': 'error',
+      'openthrottle/no-screen': 'error',
       'openthrottle/skip-requires-issue': 'error',
     },
   },

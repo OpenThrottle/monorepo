@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { createRoutesStub, useSearchParams } from 'react-router';
@@ -51,10 +51,10 @@ describe('useUrlSyncedOverlay', () => {
       { Component: ClosedHarness, path: '/' },
     ]);
 
-    render(<RoutesStub initialEntries={['/']} />);
+    const component = render(<RoutesStub initialEntries={['/']} />);
 
-    expect(screen.getByTestId('open')).toHaveTextContent('no');
-    expect(screen.getByTestId('qs')).toHaveTextContent('');
+    expect(component.getByTestId('open')).toHaveTextContent('no');
+    expect(component.getByTestId('qs')).toHaveTextContent('');
   });
 
   test('reports open when param equals the open token', () => {
@@ -62,9 +62,9 @@ describe('useUrlSyncedOverlay', () => {
       { Component: ClosedHarness, path: '/' },
     ]);
 
-    render(<RoutesStub initialEntries={['/?sheet=open']} />);
+    const component = render(<RoutesStub initialEntries={['/?sheet=open']} />);
 
-    expect(screen.getByTestId('open')).toHaveTextContent('yes');
+    expect(component.getByTestId('open')).toHaveTextContent('yes');
   });
 
   test('onOpenChange updates the query string', async () => {
@@ -73,12 +73,14 @@ describe('useUrlSyncedOverlay', () => {
       { Component: ClosedHarness, path: '/' },
     ]);
 
-    render(<RoutesStub initialEntries={['/']} />);
+    const component = render(<RoutesStub initialEntries={['/']} />);
 
-    await user.click(screen.getByRole('button', { name: 'open via change' }));
+    await user.click(
+      component.getByRole('button', { name: 'open via change' }),
+    );
 
-    expect(screen.getByTestId('open')).toHaveTextContent('yes');
-    expect(screen.getByTestId('qs')).toHaveTextContent('sheet=open');
+    expect(component.getByTestId('open')).toHaveTextContent('yes');
+    expect(component.getByTestId('qs')).toHaveTextContent('sheet=open');
   });
 
   test('setOpen(false) clears the overlay param and configured child keys', async () => {
@@ -87,14 +89,20 @@ describe('useUrlSyncedOverlay', () => {
       { Component: ClosedHarness, path: '/' },
     ]);
 
-    render(<RoutesStub initialEntries={['/?sheet=open&child=1&keep=x']} />);
+    const component = render(
+      <RoutesStub initialEntries={['/?sheet=open&child=1&keep=x']} />,
+    );
 
-    expect(screen.getByTestId('open')).toHaveTextContent('yes');
+    expect(component.getByTestId('open')).toHaveTextContent('yes');
 
-    await user.click(screen.getByRole('button', { name: 'close via setOpen' }));
+    await user.click(
+      component.getByRole('button', { name: 'close via setOpen' }),
+    );
 
-    expect(screen.getByTestId('open')).toHaveTextContent('no');
-    const qs = new URLSearchParams(screen.getByTestId('qs').textContent ?? '');
+    expect(component.getByTestId('open')).toHaveTextContent('no');
+    const qs = new URLSearchParams(
+      component.getByTestId('qs').textContent ?? '',
+    );
     expect(qs.has('sheet')).toBe(false);
     expect(qs.has('child')).toBe(false);
     expect(qs.get('keep')).toBe('x');
@@ -106,11 +114,15 @@ describe('useUrlSyncedOverlay', () => {
       { Component: ClosedHarness, path: '/' },
     ]);
 
-    render(<RoutesStub initialEntries={['/']} />);
+    const component = render(<RoutesStub initialEntries={['/']} />);
 
-    await user.click(screen.getByRole('button', { name: 'open with entity' }));
+    await user.click(
+      component.getByRole('button', { name: 'open with entity' }),
+    );
 
-    const qs = new URLSearchParams(screen.getByTestId('qs').textContent ?? '');
+    const qs = new URLSearchParams(
+      component.getByTestId('qs').textContent ?? '',
+    );
     expect(qs.get('sheet')).toBe('open');
     expect(qs.get('entityId')).toBe('42');
   });

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
@@ -11,13 +11,13 @@ describe('NotificationPermissionUnsupported Component', () => {
       return <NotificationPermissionUnsupported />;
     };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    render(<RoutesStub />);
+    const component = render(<RoutesStub />);
 
     expect(
-      screen.getByTestId('NotificationPermissionUnsupported'),
+      component.getByTestId('NotificationPermissionUnsupported'),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(
+      component.getByText(
         'Desktop notifications require HTTPS or a supported browser.',
       ),
     ).toBeInTheDocument();

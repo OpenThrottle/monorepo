@@ -1,4 +1,3 @@
-import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
@@ -14,12 +13,12 @@ describe('SettingsStorage Component', () => {
   });
 
   test('renders empty storage sections before refresh', () => {
-    renderRoutesStub(<SettingsStorage />);
+    const component = renderRoutesStub(<SettingsStorage />);
 
-    expect(screen.getByText('Storage: local & session')).toBeInTheDocument();
-    expect(screen.getByText('Local storage')).toBeInTheDocument();
-    expect(screen.getByText('Session storage')).toBeInTheDocument();
-    expect(screen.getAllByText('No keys.')).toHaveLength(2);
+    expect(component.getByText('Storage: local & session')).toBeInTheDocument();
+    expect(component.getByText('Local storage')).toBeInTheDocument();
+    expect(component.getByText('Session storage')).toBeInTheDocument();
+    expect(component.getAllByText('No keys.')).toHaveLength(2);
   });
 
   test('lists local and session keys after Refresh', async () => {
@@ -27,13 +26,13 @@ describe('SettingsStorage Component', () => {
     window.localStorage.setItem('ot-pref', 'enabled');
     window.sessionStorage.setItem('ot-tab', 'debug');
 
-    renderRoutesStub(<SettingsStorage />);
+    const component = renderRoutesStub(<SettingsStorage />);
 
-    await user.click(screen.getByRole('button', { name: 'Refresh' }));
+    await user.click(component.getByRole('button', { name: 'Refresh' }));
 
-    expect(screen.getByText('ot-pref')).toBeInTheDocument();
-    expect(screen.getByText('enabled')).toBeInTheDocument();
-    expect(screen.getByText('ot-tab')).toBeInTheDocument();
-    expect(screen.getByText('debug')).toBeInTheDocument();
+    expect(component.getByText('ot-pref')).toBeInTheDocument();
+    expect(component.getByText('enabled')).toBeInTheDocument();
+    expect(component.getByText('ot-tab')).toBeInTheDocument();
+    expect(component.getByText('debug')).toBeInTheDocument();
   });
 });

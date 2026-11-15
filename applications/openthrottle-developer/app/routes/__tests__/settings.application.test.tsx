@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
@@ -16,7 +16,7 @@ function stubMatches(): unknown {
 
 describe('routes/settings.application.tsx', () => {
   test('should render', () => {
-    render(
+    const component = render(
       <MemoryRouter>
         <SettingsApplication
           actionData={undefined}
@@ -28,7 +28,7 @@ describe('routes/settings.application.tsx', () => {
     );
 
     expect(
-      screen.getByRole('heading', { name: 'Application' }),
+      component.getByRole('heading', { name: 'Application' }),
     ).toBeInTheDocument();
   });
 });

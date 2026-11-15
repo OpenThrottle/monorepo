@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, it } from 'vitest';
 
@@ -23,12 +23,12 @@ describe('Drawer', () => {
   });
 
   it('should render DrawerContent with expected content', () => {
-    render(
+    const component = render(
       <Drawer open={true}>
         <DrawerContent>Content</DrawerContent>
       </Drawer>,
     );
-    expect(screen.getByText('Content')).toBeInTheDocument();
+    expect(component.getByText('Content')).toBeInTheDocument();
   });
 
   it('should render DrawerHeader, DrawerTitle, DrawerDescription', () => {

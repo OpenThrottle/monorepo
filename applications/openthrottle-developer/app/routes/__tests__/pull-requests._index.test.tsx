@@ -1,4 +1,3 @@
-import { screen } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
@@ -31,7 +30,7 @@ function stubMatches(): unknown {
 
 describe('routes/pull-requests._index.tsx', () => {
   test('renders pull requests introduction and toolbar', () => {
-    renderRoutesStub(
+    const component = renderRoutesStub(
       <PullRequestsIndex
         actionData={undefined}
         loaderData={mockLoaderData}
@@ -41,8 +40,10 @@ describe('routes/pull-requests._index.tsx', () => {
     );
 
     expect(
-      screen.getByRole('heading', { name: 'Pull requests' }),
+      component.getByRole('heading', { name: 'Pull requests' }),
     ).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Apply' })).toBeInTheDocument();
+    expect(
+      component.getByRole('button', { name: 'Apply' }),
+    ).toBeInTheDocument();
   });
 });

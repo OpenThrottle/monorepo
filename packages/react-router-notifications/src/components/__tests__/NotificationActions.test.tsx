@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
@@ -23,14 +23,14 @@ describe('NotificationActions Component', () => {
       return <NotificationActions {...props} />;
     };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    render(<RoutesStub />);
+    const component = render(<RoutesStub />);
 
-    expect(screen.getByTestId('NotificationActions')).toBeInTheDocument();
+    expect(component.getByTestId('NotificationActions')).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: 'Mark all read' }),
+      component.getByRole('button', { name: 'Mark all read' }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: 'Dismiss all' }),
+      component.getByRole('button', { name: 'Dismiss all' }),
     ).toBeInTheDocument();
   });
 });

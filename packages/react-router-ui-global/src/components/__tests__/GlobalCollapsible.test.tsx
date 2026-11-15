@@ -1,4 +1,5 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
+import type { RenderResult } from '@testing-library/react';
+import { render, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
@@ -8,6 +9,7 @@ import type { GlobalCollapsibleProps } from '../GlobalCollapsible';
 import { GlobalCollapsible } from '../GlobalCollapsible';
 
 describe('GlobalCollapsible Component', () => {
+  let component: RenderResult;
   let props: GlobalCollapsibleProps;
 
   beforeEach(() => {
@@ -21,33 +23,33 @@ describe('GlobalCollapsible Component', () => {
     };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
-    render(<RoutesStub />);
+    component = render(<RoutesStub />);
   });
 
   test('should render title and panel body', () => {
-    expect(screen.getByTestId('GlobalCollapsible')).toBeInTheDocument();
-    expect(screen.getByText('Section title')).toBeInTheDocument();
-    expect(screen.getByText('Collapsible body content')).toBeInTheDocument();
+    expect(component.getByTestId('GlobalCollapsible')).toBeInTheDocument();
+    expect(component.getByText('Section title')).toBeInTheDocument();
+    expect(component.getByText('Collapsible body content')).toBeInTheDocument();
   });
 
   test('should toggle panel content when trigger is activated', async () => {
     const user = userEvent.setup();
-    expect(screen.getByText('Collapsible body content')).toBeVisible();
+    expect(component.getByText('Collapsible body content')).toBeVisible();
 
-    const trigger = within(screen.getByTestId('GlobalCollapsible')).getByRole(
-      'button',
-    );
+    const trigger = within(
+      component.getByTestId('GlobalCollapsible'),
+    ).getByRole('button');
     await user.click(trigger);
 
     await waitFor(() => {
       expect(
-        screen.queryByText('Collapsible body content'),
+        component.queryByText('Collapsible body content'),
       ).not.toBeInTheDocument();
     });
 
     await user.click(trigger);
     await waitFor(() => {
-      expect(screen.getByText('Collapsible body content')).toBeVisible();
+      expect(component.getByText('Collapsible body content')).toBeVisible();
     });
   });
 });

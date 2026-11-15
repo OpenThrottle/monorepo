@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
@@ -18,12 +18,12 @@ describe('GlobalLayout Component', () => {
       );
     };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    render(<RoutesStub />);
+    const component = render(<RoutesStub />);
 
-    expect(screen.getByTestId('GlobalSidebarHeader')).toBeInTheDocument();
-    expect(screen.getByText('layout-child')).toBeInTheDocument();
+    expect(component.getByTestId('GlobalSidebarHeader')).toBeInTheDocument();
+    expect(component.getByText('layout-child')).toBeInTheDocument();
     expect(
-      screen.getByRole('link', { name: /System Status/i }),
+      component.getByRole('link', { name: /System Status/i }),
     ).toHaveAttribute('href', expect.stringContaining('/health'));
   });
 });

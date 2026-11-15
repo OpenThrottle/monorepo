@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
@@ -36,13 +36,13 @@ const renderMetrics = (
 
 describe('QueueJobMetrics Component', () => {
   test('shows empty metrics message when task metrics are missing', () => {
-    renderMetrics(baseJob());
+    const component = renderMetrics(baseJob());
 
-    expect(screen.getByText(/No metrics recorded/i)).toBeInTheDocument();
+    expect(component.getByText(/No metrics recorded/i)).toBeInTheDocument();
   });
 
   test('renders RSS summary lines when metrics exist', () => {
-    renderMetrics({
+    const component = renderMetrics({
       ...baseJob(),
       taskRunMetrics: {
         __typename: 'TaskRunMetrics',
@@ -59,7 +59,7 @@ describe('QueueJobMetrics Component', () => {
       },
     });
 
-    expect(screen.getByText(/Start RSS: 100\.0 MB/)).toBeInTheDocument();
-    expect(screen.getByText(/End RSS: 120\.0 MB/)).toBeInTheDocument();
+    expect(component.getByText(/Start RSS: 100\.0 MB/)).toBeInTheDocument();
+    expect(component.getByText(/End RSS: 120\.0 MB/)).toBeInTheDocument();
   });
 });

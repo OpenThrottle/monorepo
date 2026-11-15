@@ -1,4 +1,5 @@
-import { render, screen } from '@testing-library/react';
+import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 
@@ -6,15 +7,15 @@ import { toast, Toaster } from '../Sonner';
 
 describe('Sonner', () => {
   it('should render Toaster', () => {
-    render(<Toaster />);
+    const component = render(<Toaster />);
     expect(
-      screen.getByRole('region', { name: /notifications/i }),
+      component.getByRole('region', { name: /notifications/i }),
     ).toBeInTheDocument();
   });
 
   it('should render with custom position', () => {
-    render(<Toaster position="top-right" />);
-    const region = screen.getByRole('region', { name: /notifications/i });
+    const component = render(<Toaster position="top-right" />);
+    const region = component.getByRole('region', { name: /notifications/i });
     expect(region).toBeInTheDocument();
   });
 });
@@ -79,8 +80,11 @@ describe('toast per-type color classNames', () => {
     toast.dismiss();
   });
 
-  const toastElementFor = async (message: string): Promise<Element> => {
-    const body = await screen.findByText(message);
+  const toastElementFor = async (
+    component: RenderResult,
+    message: string,
+  ): Promise<Element> => {
+    const body = await component.findByText(message);
     const el = body.closest('[data-sonner-toast]');
     if (!el) {
       throw new Error(`No [data-sonner-toast] ancestor for "${message}"`);
@@ -89,51 +93,51 @@ describe('toast per-type color classNames', () => {
   };
 
   it('applies the red hue to error toasts', async () => {
-    render(<Toaster />);
+    const component = render(<Toaster />);
     toast.error('error toast');
-    expect(await toastElementFor('error toast')).toHaveClass(
+    expect(await toastElementFor(component, 'error toast')).toHaveClass(
       'border-red-500/50!',
       'bg-card/80!',
     );
   });
 
   it('applies the amber hue to warning toasts', async () => {
-    render(<Toaster />);
+    const component = render(<Toaster />);
     toast.warning('warning toast');
-    expect(await toastElementFor('warning toast')).toHaveClass(
+    expect(await toastElementFor(component, 'warning toast')).toHaveClass(
       'border-amber-500/50!',
       'bg-card/80!',
     );
   });
 
   it('applies the green hue to success toasts', async () => {
-    render(<Toaster />);
+    const component = render(<Toaster />);
     toast.success('success toast');
-    expect(await toastElementFor('success toast')).toHaveClass(
+    expect(await toastElementFor(component, 'success toast')).toHaveClass(
       'border-green-500/50!',
       'bg-card/80!',
     );
   });
 
   it('applies the sky hue to info toasts', async () => {
-    render(<Toaster />);
+    const component = render(<Toaster />);
     toast.info('info toast');
-    expect(await toastElementFor('info toast')).toHaveClass(
+    expect(await toastElementFor(component, 'info toast')).toHaveClass(
       'border-sky-500/50!',
       'bg-card/80!',
     );
   });
 
   it('leaves loading and message toasts neutral', async () => {
-    render(<Toaster />);
+    const component = render(<Toaster />);
     toast.loading('loading toast');
     toast.message('message toast');
     const hueSurface = /(?:bg|border)-(?:red|amber|green|sky)-500\/(?:20|50)!/;
-    expect((await toastElementFor('loading toast')).className).not.toMatch(
-      hueSurface,
-    );
-    expect((await toastElementFor('message toast')).className).not.toMatch(
-      hueSurface,
-    );
+    expect(
+      (await toastElementFor(component, 'loading toast')).className,
+    ).not.toMatch(hueSurface);
+    expect(
+      (await toastElementFor(component, 'message toast')).className,
+    ).not.toMatch(hueSurface);
   });
 });

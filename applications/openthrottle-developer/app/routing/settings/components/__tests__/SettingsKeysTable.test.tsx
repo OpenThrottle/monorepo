@@ -1,9 +1,9 @@
 import type { RenderResult } from '@testing-library/react';
-import { cleanup, render, screen, within } from '@testing-library/react';
+import { render, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
-import { afterEach, describe, expect, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
 
 import type { ServiceAccountCredentialFieldsFragment } from '~/__generated__/graphql';
 
@@ -76,10 +76,6 @@ describe('getSettingsKeysCredentialStatus', () => {
 });
 
 describe('SettingsKeysTable Component', () => {
-  afterEach(() => {
-    cleanup();
-  });
-
   test('should render empty state', () => {
     const component = renderTable();
     expect(
@@ -89,10 +85,12 @@ describe('SettingsKeysTable Component', () => {
 
   describe('when credentials are empty', () => {
     test('shows action error when provided', () => {
-      renderTable({ actionError: 'Failed to revoke credential.' });
+      const component = renderTable({
+        actionError: 'Failed to revoke credential.',
+      });
 
       expect(
-        screen.getByTestId('SettingsKeysTable-action-error'),
+        component.getByTestId('SettingsKeysTable-action-error'),
       ).toHaveTextContent('Failed to revoke credential.');
     });
   });
@@ -116,37 +114,39 @@ describe('SettingsKeysTable Component', () => {
     });
 
     test('renders rows and status badges', () => {
-      renderTable({
+      const component = renderTable({
         credentials: [activeCredential, revokedCredential, expiredCredential],
       });
 
-      expect(screen.getByText('CI deploy')).toBeInTheDocument();
-      expect(screen.getByText('Expired key')).toBeInTheDocument();
-      expect(screen.getAllByText('ot_sa_abc').length).toBeGreaterThanOrEqual(1);
+      expect(component.getByText('CI deploy')).toBeInTheDocument();
+      expect(component.getByText('Expired key')).toBeInTheDocument();
+      expect(component.getAllByText('ot_sa_abc').length).toBeGreaterThanOrEqual(
+        1,
+      );
       expect(
-        screen.getByTestId('SettingsKeysTable-status-cred-active'),
+        component.getByTestId('SettingsKeysTable-status-cred-active'),
       ).toHaveTextContent('Active');
       expect(
-        screen.getByTestId('SettingsKeysTable-status-cred-revoked'),
+        component.getByTestId('SettingsKeysTable-status-cred-revoked'),
       ).toHaveTextContent('Revoked');
       expect(
-        screen.getByTestId('SettingsKeysTable-status-cred-expired'),
+        component.getByTestId('SettingsKeysTable-status-cred-expired'),
       ).toHaveTextContent('Expired');
     });
 
     describe('revoke flow', () => {
       test('active row shows revoke dialog with correct intent fields', async () => {
-        renderTable({
+        const component = renderTable({
           canRevoke: true,
           credentials: [activeCredential],
         });
 
         const user = userEvent.setup();
         await user.click(
-          screen.getByTestId('SettingsKeysTable-revoke-trigger-cred-active'),
+          component.getByTestId('SettingsKeysTable-revoke-trigger-cred-active'),
         );
 
-        const dialog = screen.getByRole('alertdialog');
+        const dialog = component.getByRole('alertdialog');
         expect(
           within(dialog).getByText(/Revoke credential\?/),
         ).toBeInTheDocument();
@@ -161,24 +161,26 @@ describe('SettingsKeysTable Component', () => {
       });
 
       test('revoked row has no revoke trigger', () => {
-        renderTable({
+        const component = renderTable({
           canRevoke: true,
           credentials: [revokedCredential],
         });
 
         expect(
-          screen.queryByTestId('SettingsKeysTable-revoke-trigger-cred-revoked'),
+          component.queryByTestId(
+            'SettingsKeysTable-revoke-trigger-cred-revoked',
+          ),
         ).not.toBeInTheDocument();
       });
 
       test('disables revoke when canRevoke is false', () => {
-        renderTable({
+        const component = renderTable({
           canRevoke: false,
           credentials: [activeCredential],
         });
 
         expect(
-          screen.getByTestId('SettingsKeysTable-revoke-trigger-cred-active'),
+          component.getByTestId('SettingsKeysTable-revoke-trigger-cred-active'),
         ).toBeDisabled();
       });
     });

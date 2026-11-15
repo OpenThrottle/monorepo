@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
@@ -11,8 +11,10 @@ describe('GlobalHeading Component', () => {
       return <GlobalHeading title="Page title" />;
     };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    render(<RoutesStub />);
+    const component = render(<RoutesStub />);
 
-    expect(screen.getByTestId('GlobalHeading')).toHaveTextContent('Page title');
+    expect(component.getByTestId('GlobalHeading')).toHaveTextContent(
+      'Page title',
+    );
   });
 });

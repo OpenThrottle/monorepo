@@ -1,11 +1,5 @@
 import type { RenderResult } from '@testing-library/react';
-import {
-  cleanup,
-  render,
-  screen,
-  waitFor,
-  within,
-} from '@testing-library/react';
+import { cleanup, render, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { createRoutesStub, useSearchParams } from 'react-router';
@@ -62,30 +56,36 @@ describe('GlobalMetricsInfoModal Component', () => {
   });
 
   describe('when the URL has no modal param', () => {
+    let component: RenderResult;
+
     beforeEach(() => {
-      renderHarness({}, ['/']);
+      component = renderHarness({}, ['/']).component;
     });
 
     test('does not render the dialog content', () => {
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(component.queryByRole('dialog')).not.toBeInTheDocument();
       expect(
-        screen.queryByText('What you are looking at'),
+        component.queryByText('What you are looking at'),
       ).not.toBeInTheDocument();
     });
   });
 
   describe('when the URL has modal=ServerMetricsInfo', () => {
+    let component: RenderResult;
+
     beforeEach(() => {
-      renderHarness({}, ['/?modal=ServerMetricsInfo']);
+      component = renderHarness({}, ['/?modal=ServerMetricsInfo']).component;
     });
 
     test('renders the dialog content (data-testid=GlobalMetricsInfoModal) in the document', () => {
-      expect(screen.getByTestId('GlobalMetricsInfoModal')).toBeInTheDocument();
-      expect(screen.getByRole('dialog')).toBeInTheDocument();
+      expect(
+        component.getByTestId('GlobalMetricsInfoModal'),
+      ).toBeInTheDocument();
+      expect(component.getByRole('dialog')).toBeInTheDocument();
     });
 
     test('renders the dialog with the heading and intro copy', () => {
-      const dialog = screen.getByRole('dialog');
+      const dialog = component.getByRole('dialog');
       expect(dialog).toBeInTheDocument();
       expect(
         within(dialog).getByText('What you are looking at'),
@@ -96,7 +96,7 @@ describe('GlobalMetricsInfoModal Component', () => {
     });
 
     test('renders the inline <code>serverMetrics</code> element in the intro copy', () => {
-      const dialog = screen.getByRole('dialog');
+      const dialog = component.getByRole('dialog');
       const inlineCode = within(dialog).getByText('serverMetrics', {
         selector: 'code',
       });
@@ -106,7 +106,7 @@ describe('GlobalMetricsInfoModal Component', () => {
     });
 
     test('renders all three section headings ("What you are looking at", "Stat cards", "Poll & chart")', () => {
-      const dialog = screen.getByRole('dialog');
+      const dialog = component.getByRole('dialog');
       expect(
         within(dialog).getByText('What you are looking at'),
       ).toBeInTheDocument();
@@ -115,7 +115,7 @@ describe('GlobalMetricsInfoModal Component', () => {
     });
 
     test('renders each title and body from GLOBAL_METRICS_STAT_CARD_DOCS', () => {
-      const dialog = screen.getByRole('dialog');
+      const dialog = component.getByRole('dialog');
       expect(within(dialog).getByText('Stat cards')).toBeInTheDocument();
 
       for (const doc of GLOBAL_METRICS_STAT_CARD_DOCS) {
@@ -127,7 +127,7 @@ describe('GlobalMetricsInfoModal Component', () => {
     });
 
     test('renders Poll & chart bullets', () => {
-      const dialog = screen.getByRole('dialog');
+      const dialog = component.getByRole('dialog');
       expect(within(dialog).getByText(/Poll & chart/)).toBeInTheDocument();
       expect(within(dialog).getByText('Poll interval')).toBeInTheDocument();
       expect(within(dialog).getByText('Metrics over time')).toBeInTheDocument();
@@ -135,26 +135,28 @@ describe('GlobalMetricsInfoModal Component', () => {
   });
 
   describe('when the URL has modal set to a non-matching value', () => {
+    let component: RenderResult;
+
     beforeEach(() => {
-      renderHarness({}, ['/?modal=SomethingElse']);
+      component = renderHarness({}, ['/?modal=SomethingElse']).component;
     });
 
     test('does not render the dialog content (exact-match on openValue)', () => {
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(component.queryByRole('dialog')).not.toBeInTheDocument();
       expect(
-        screen.queryByTestId('GlobalMetricsInfoModal'),
+        component.queryByTestId('GlobalMetricsInfoModal'),
       ).not.toBeInTheDocument();
     });
   });
 
   describe('when definitionsHref is provided', () => {
     test('renders the Settings deep link with the supplied href', () => {
-      renderHarness(
+      const { component } = renderHarness(
         { definitionsHref: '/settings/debug#server-metrics-definitions' },
         ['/?modal=ServerMetricsInfo'],
       );
 
-      const link = screen.getByTestId(
+      const link = component.getByTestId(
         'GlobalMetricsInfoModal-definitions-link',
       );
       expect(link).toBeInTheDocument();
@@ -166,12 +168,12 @@ describe('GlobalMetricsInfoModal Component', () => {
     });
 
     test('wraps the Settings deep link in a bordered footer paragraph', () => {
-      renderHarness(
+      const { component } = renderHarness(
         { definitionsHref: '/settings/debug#server-metrics-definitions' },
         ['/?modal=ServerMetricsInfo'],
       );
 
-      const link = screen.getByTestId(
+      const link = component.getByTestId(
         'GlobalMetricsInfoModal-definitions-link',
       );
       const footer = link.closest('p');
@@ -188,36 +190,38 @@ describe('GlobalMetricsInfoModal Component', () => {
 
   describe('when definitionsHref is omitted', () => {
     test('does not render the Settings deep link', () => {
-      renderHarness({}, ['/?modal=ServerMetricsInfo']);
+      const { component } = renderHarness({}, ['/?modal=ServerMetricsInfo']);
 
       expect(
-        screen.queryByTestId('GlobalMetricsInfoModal-definitions-link'),
+        component.queryByTestId('GlobalMetricsInfoModal-definitions-link'),
       ).not.toBeInTheDocument();
     });
   });
 
   describe('when the trigger button is clicked from a closed state', () => {
     test('updates the URL to include modal=ServerMetricsInfo and opens the dialog', async () => {
-      const { user } = renderHarness({}, ['/?keep=value']);
+      const { component, user } = renderHarness({}, ['/?keep=value']);
 
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(component.queryByRole('dialog')).not.toBeInTheDocument();
 
-      await user.click(screen.getByTestId('GlobalMetrics-info-trigger'));
+      await user.click(component.getByTestId('GlobalMetrics-info-trigger'));
 
       const qs = new URLSearchParams(
-        screen.getByTestId('current-search').textContent ?? '',
+        component.getByTestId('current-search').textContent ?? '',
       );
       expect(qs.get('modal')).toBe('ServerMetricsInfo');
       expect(qs.get('keep')).toBe('value');
-      expect(screen.getByRole('dialog')).toBeInTheDocument();
+      expect(component.getByRole('dialog')).toBeInTheDocument();
     });
   });
 
   describe('when the open dialog is closed', () => {
     test('via the close button removes the modal param from the URL', async () => {
-      const { user } = renderHarness({}, ['/?modal=ServerMetricsInfo&keep=v']);
+      const { component, user } = renderHarness({}, [
+        '/?modal=ServerMetricsInfo&keep=v',
+      ]);
 
-      const dialog = screen.getByRole('dialog');
+      const dialog = component.getByRole('dialog');
       const closeButton = within(dialog).getByRole('button', {
         name: 'Close',
       });
@@ -225,26 +229,28 @@ describe('GlobalMetricsInfoModal Component', () => {
       await user.click(closeButton);
 
       const qs = new URLSearchParams(
-        screen.getByTestId('current-search').textContent ?? '',
+        component.getByTestId('current-search').textContent ?? '',
       );
       expect(qs.has('modal')).toBe(false);
       expect(qs.get('keep')).toBe('v');
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(component.queryByRole('dialog')).not.toBeInTheDocument();
     });
 
     test('via the Escape key removes only the modal param and preserves sibling params', async () => {
-      const { user } = renderHarness({}, ['/?modal=ServerMetricsInfo&foo=bar']);
+      const { component, user } = renderHarness({}, [
+        '/?modal=ServerMetricsInfo&foo=bar',
+      ]);
 
-      expect(screen.getByRole('dialog')).toBeInTheDocument();
+      expect(component.getByRole('dialog')).toBeInTheDocument();
 
       await user.keyboard('{Escape}');
 
       await waitFor(() => {
-        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+        expect(component.queryByRole('dialog')).not.toBeInTheDocument();
       });
 
       const qs = new URLSearchParams(
-        screen.getByTestId('current-search').textContent ?? '',
+        component.getByTestId('current-search').textContent ?? '',
       );
       expect(qs.has('modal')).toBe(false);
       expect(qs.get('foo')).toBe('bar');
@@ -352,9 +358,9 @@ describe('GlobalMetricsInfoModal Accessibility', () => {
 
   describe('when the dialog is opened via the URL', () => {
     test('exposes role="dialog" on the Radix content with an accessible name from the title', () => {
-      renderHarness({}, ['/?modal=ServerMetricsInfo']);
+      const { component } = renderHarness({}, ['/?modal=ServerMetricsInfo']);
 
-      const dialog = screen.getByRole('dialog');
+      const dialog = component.getByRole('dialog');
 
       expect(dialog).toBeInTheDocument();
       expect(dialog).toHaveAttribute('role', 'dialog');
@@ -365,9 +371,9 @@ describe('GlobalMetricsInfoModal Accessibility', () => {
     });
 
     test('moves focus into the dialog (focus is on the dialog or a descendant)', async () => {
-      renderHarness({}, ['/?modal=ServerMetricsInfo']);
+      const { component } = renderHarness({}, ['/?modal=ServerMetricsInfo']);
 
-      const dialog = screen.getByRole('dialog');
+      const dialog = component.getByRole('dialog');
 
       await waitFor(() => {
         const active = document.activeElement;
@@ -379,18 +385,20 @@ describe('GlobalMetricsInfoModal Accessibility', () => {
 
   describe('when the user presses Escape while the dialog is open', () => {
     test('closes the dialog and removes the modal param from the URL', async () => {
-      const { user } = renderHarness({}, ['/?modal=ServerMetricsInfo']);
+      const { component, user } = renderHarness({}, [
+        '/?modal=ServerMetricsInfo',
+      ]);
 
-      expect(screen.getByRole('dialog')).toBeInTheDocument();
+      expect(component.getByRole('dialog')).toBeInTheDocument();
 
       await user.keyboard('{Escape}');
 
       await waitFor(() => {
-        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+        expect(component.queryByRole('dialog')).not.toBeInTheDocument();
       });
 
       const qs = new URLSearchParams(
-        screen.getByTestId('current-search').textContent ?? '',
+        component.getByTestId('current-search').textContent ?? '',
       );
       expect(qs.has('modal')).toBe(false);
     });
@@ -398,9 +406,9 @@ describe('GlobalMetricsInfoModal Accessibility', () => {
 
   describe('close button accessibility', () => {
     test('exposes an accessible name of "Close"', () => {
-      renderHarness({}, ['/?modal=ServerMetricsInfo']);
+      const { component } = renderHarness({}, ['/?modal=ServerMetricsInfo']);
 
-      const dialog = screen.getByRole('dialog');
+      const dialog = component.getByRole('dialog');
       const closeButton = within(dialog).getByRole('button', {
         name: 'Close',
       });
@@ -410,9 +418,9 @@ describe('GlobalMetricsInfoModal Accessibility', () => {
     });
 
     test('is reachable via the keyboard (focusable, not tabindex="-1")', async () => {
-      renderHarness({}, ['/?modal=ServerMetricsInfo']);
+      const { component } = renderHarness({}, ['/?modal=ServerMetricsInfo']);
 
-      const dialog = screen.getByRole('dialog');
+      const dialog = component.getByRole('dialog');
       const closeButton = within(dialog).getByRole('button', {
         name: 'Close',
       });
@@ -429,39 +437,39 @@ describe('GlobalMetricsInfoModal Accessibility', () => {
 
   describe('keyboard activation of the trigger button', () => {
     test('pressing Enter while the trigger has focus opens the dialog', async () => {
-      const { user } = renderHarness({}, ['/']);
+      const { component, user } = renderHarness({}, ['/']);
 
-      const trigger = screen.getByTestId('GlobalMetrics-info-trigger');
+      const trigger = component.getByTestId('GlobalMetrics-info-trigger');
       trigger.focus();
       expect(trigger).toHaveFocus();
 
       await user.keyboard('{Enter}');
 
       await waitFor(() => {
-        expect(screen.getByRole('dialog')).toBeInTheDocument();
+        expect(component.getByRole('dialog')).toBeInTheDocument();
       });
 
       const qs = new URLSearchParams(
-        screen.getByTestId('current-search').textContent ?? '',
+        component.getByTestId('current-search').textContent ?? '',
       );
       expect(qs.get('modal')).toBe('ServerMetricsInfo');
     });
 
     test('pressing Space while the trigger has focus opens the dialog', async () => {
-      const { user } = renderHarness({}, ['/']);
+      const { component, user } = renderHarness({}, ['/']);
 
-      const trigger = screen.getByTestId('GlobalMetrics-info-trigger');
+      const trigger = component.getByTestId('GlobalMetrics-info-trigger');
       trigger.focus();
       expect(trigger).toHaveFocus();
 
       await user.keyboard(' ');
 
       await waitFor(() => {
-        expect(screen.getByRole('dialog')).toBeInTheDocument();
+        expect(component.getByRole('dialog')).toBeInTheDocument();
       });
 
       const qs = new URLSearchParams(
-        screen.getByTestId('current-search').textContent ?? '',
+        component.getByTestId('current-search').textContent ?? '',
       );
       expect(qs.get('modal')).toBe('ServerMetricsInfo');
     });
@@ -478,15 +486,17 @@ describe('GlobalMetricsInfoModal Accessibility', () => {
      * user can re-engage it.
      */
     test('removes focus trap and leaves the trigger focusable after closing via Escape', async () => {
-      const { user } = renderHarness({}, ['/?modal=ServerMetricsInfo']);
+      const { component, user } = renderHarness({}, [
+        '/?modal=ServerMetricsInfo',
+      ]);
 
-      const dialog = screen.getByRole('dialog');
+      const dialog = component.getByRole('dialog');
       expect(dialog).toBeInTheDocument();
 
       await user.keyboard('{Escape}');
 
       await waitFor(() => {
-        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+        expect(component.queryByRole('dialog')).not.toBeInTheDocument();
       });
 
       // The previously-focused content (the close button inside the dialog)
@@ -495,7 +505,7 @@ describe('GlobalMetricsInfoModal Accessibility', () => {
       expect(dialog.contains(document.activeElement)).toBe(false);
 
       // The trigger is still mounted and accepts focus.
-      const trigger = screen.getByTestId('GlobalMetrics-info-trigger');
+      const trigger = component.getByTestId('GlobalMetrics-info-trigger');
       expect(trigger).toBeInTheDocument();
       trigger.focus();
       expect(trigger).toHaveFocus();

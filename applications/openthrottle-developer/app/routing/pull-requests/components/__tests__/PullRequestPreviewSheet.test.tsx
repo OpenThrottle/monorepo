@@ -1,5 +1,5 @@
 import type { PullRequestCardFragment } from '@openthrottle/openthrottle-developer-codegen';
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { createRoutesStub, useSearchParams } from 'react-router';
@@ -73,12 +73,14 @@ describe('PullRequestPreviewSheet', () => {
       },
     ]);
 
-    render(<RoutesStub initialEntries={['/pull-requests?pr=42']} />);
+    const component = render(
+      <RoutesStub initialEntries={['/pull-requests?pr=42']} />,
+    );
 
     expect(
-      screen.getByTestId('PullRequestPreviewSheet-body'),
+      component.getByTestId('PullRequestPreviewSheet-body'),
     ).toBeInTheDocument();
-    expect(screen.getByText('Fix the thing')).toBeInTheDocument();
+    expect(component.getByText('Fix the thing')).toBeInTheDocument();
   });
 
   test('renders missing state when pr is set but the PR is not in the filtered list', () => {
@@ -96,13 +98,15 @@ describe('PullRequestPreviewSheet', () => {
       },
     ]);
 
-    render(<RoutesStub initialEntries={['/pull-requests']} />);
+    const component = render(
+      <RoutesStub initialEntries={['/pull-requests']} />,
+    );
 
     expect(
-      screen.getByTestId('PullRequestPreviewSheet-missing'),
+      component.getByTestId('PullRequestPreviewSheet-missing'),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/PR #404 is not in the current filtered list/i),
+      component.getByText(/PR #404 is not in the current filtered list/i),
     ).toBeInTheDocument();
   });
 
@@ -122,19 +126,19 @@ describe('PullRequestPreviewSheet', () => {
       },
     ]);
 
-    render(
+    const component = render(
       <RoutesStub
         initialEntries={['/pull-requests?owner=acme&repo=demo&pr=42']}
       />,
     );
 
-    expect(screen.getByTestId('search-string')).toHaveTextContent(
+    expect(component.getByTestId('search-string')).toHaveTextContent(
       'owner=acme&repo=demo&pr=42',
     );
 
-    await user.click(screen.getByRole('button', { name: 'Close' }));
+    await user.click(component.getByRole('button', { name: 'Close' }));
 
-    expect(screen.getByTestId('search-string')).toHaveTextContent(
+    expect(component.getByTestId('search-string')).toHaveTextContent(
       'owner=acme&repo=demo',
     );
   });

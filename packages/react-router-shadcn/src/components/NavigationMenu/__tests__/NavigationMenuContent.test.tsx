@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
@@ -12,7 +12,7 @@ import {
 
 describe('NavigationMenuContent', () => {
   test('renders content for the active menu item', () => {
-    render(
+    const component = render(
       <NavigationMenu defaultValue="products">
         <NavigationMenuList>
           <NavigationMenuItem value="products">
@@ -22,6 +22,6 @@ describe('NavigationMenuContent', () => {
         </NavigationMenuList>
       </NavigationMenu>,
     );
-    expect(screen.getByText('Product list')).toBeInTheDocument();
+    expect(component.getByText('Product list')).toBeInTheDocument();
   });
 });

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
@@ -21,7 +21,7 @@ const matches: Route.ComponentProps['matches'] = [
 
 describe('routes/about.tsx', () => {
   test('renders about heading and primary links', () => {
-    render(
+    const component = render(
       <MemoryRouter>
         <About
           actionData={undefined}
@@ -32,13 +32,17 @@ describe('routes/about.tsx', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByRole('heading', { name: 'About' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'OpenThrottle' })).toHaveAttribute(
+    expect(
+      component.getByRole('heading', { name: 'About' }),
+    ).toBeInTheDocument();
+    expect(
+      component.getByRole('link', { name: 'OpenThrottle' }),
+    ).toHaveAttribute(
       'href',
       'https://github.com/OpenThrottle?ref=openthrottle',
     );
     expect(
-      screen.getByRole('heading', { name: 'Matthew Scholta' }),
+      component.getByRole('heading', { name: 'Matthew Scholta' }),
     ).toBeInTheDocument();
   });
 });

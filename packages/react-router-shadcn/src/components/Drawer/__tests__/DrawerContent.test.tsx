@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
@@ -7,11 +7,11 @@ import { DrawerContent } from '../DrawerContent';
 
 describe('DrawerContent', () => {
   test('renders its content when the drawer is open', () => {
-    render(
+    const component = render(
       <Drawer open={true}>
         <DrawerContent>Panel body</DrawerContent>
       </Drawer>,
     );
-    expect(screen.getByText('Panel body')).toBeInTheDocument();
+    expect(component.getByText('Panel body')).toBeInTheDocument();
   });
 });

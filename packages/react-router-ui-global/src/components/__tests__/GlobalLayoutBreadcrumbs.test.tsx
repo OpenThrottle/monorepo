@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
@@ -11,9 +11,11 @@ describe('GlobalLayoutBreadcrumbs Component', () => {
       return <GlobalLayoutBreadcrumbs />;
     };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    render(<RoutesStub />);
+    const component = render(<RoutesStub />);
 
-    expect(screen.getByTestId('OpenThrottleBreadcrumbs')).toBeInTheDocument();
-    expect(screen.getByRole('navigation')).toBeInTheDocument();
+    expect(
+      component.getByTestId('OpenThrottleBreadcrumbs'),
+    ).toBeInTheDocument();
+    expect(component.getByRole('navigation')).toBeInTheDocument();
   });
 });

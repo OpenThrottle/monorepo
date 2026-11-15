@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
@@ -12,7 +12,7 @@ describe('TabsContent Component', () => {
   test('renders tab panel content inside Tabs context', () => {
     const props: TabsContentProps = { value: 'a' };
 
-    render(
+    const component = render(
       <Tabs defaultValue="a">
         <TabsList>
           <TabsTrigger value="a">Tab</TabsTrigger>
@@ -21,6 +21,6 @@ describe('TabsContent Component', () => {
       </Tabs>,
     );
 
-    expect(screen.getByRole('tabpanel')).toHaveTextContent('Panel body');
+    expect(component.getByRole('tabpanel')).toHaveTextContent('Panel body');
   });
 });

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
@@ -21,13 +21,13 @@ describe('PersonasIntroduction Component', () => {
       );
     };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    render(<RoutesStub />);
+    const component = render(<RoutesStub />);
 
     expect(
-      screen.getByRole('heading', { name: 'Personas' }),
+      component.getByRole('heading', { name: 'Personas' }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/Disk-backed Ralph prompt profiles/i),
+      component.getByText(/Disk-backed Ralph prompt profiles/i),
     ).toBeInTheDocument();
   });
 });

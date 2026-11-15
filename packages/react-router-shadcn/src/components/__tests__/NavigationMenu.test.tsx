@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, it } from 'vitest';
 
@@ -31,7 +31,7 @@ describe('NavigationMenu', () => {
   });
 
   it('should render NavigationMenuList as a styled list inside the navigation landmark', () => {
-    const { container } = render(
+    const component = render(
       <NavigationMenu>
         <NavigationMenuList>
           <NavigationMenuItem>
@@ -41,9 +41,9 @@ describe('NavigationMenu', () => {
       </NavigationMenu>,
     );
     expect(
-      screen.getByRole('navigation', { name: 'Main' }),
+      component.getByRole('navigation', { name: 'Main' }),
     ).toBeInTheDocument();
-    const list = container.querySelector('ul');
+    const list = component.container.querySelector('ul');
     expect(list).toBeInTheDocument();
     expect(list).toHaveClass(
       'group',

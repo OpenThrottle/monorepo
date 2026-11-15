@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
@@ -11,11 +11,11 @@ describe('PlanWorkflowConfigHooksEmpty Component', () => {
       return <PlanWorkflowConfigHooksEmpty />;
     };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    render(<RoutesStub />);
+    const component = render(<RoutesStub />);
 
     expect(
-      screen.getByTestId('PlanWorkflowConfigHooksEmpty'),
+      component.getByTestId('PlanWorkflowConfigHooksEmpty'),
     ).toBeInTheDocument();
-    expect(screen.getByText(/No hooks configured/i)).toBeInTheDocument();
+    expect(component.getByText(/No hooks configured/i)).toBeInTheDocument();
   });
 });
