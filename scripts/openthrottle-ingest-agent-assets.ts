@@ -1,17 +1,15 @@
 /**
- * @description Ingests `.agents/` skills, rules, personas, and prompts into `custom_prompts` + `custom_prompt_embeddings`.
+ * @description Ingests `.agents/` skills, rules, personas, and prompts into `custom_prompts`.
+ * Content only: openthrottle-server embeds the rows (its embeddings reconciler picks up raw-SQL
+ * writes like these within one interval — 15 minutes by default — or on its next boot).
  * Idempotent per (file_path, prompt_type). D5: hard-fail on skill/persona validation errors; warn-only on rules.
  */
 
-/* eslint-disable no-await-in-loop -- sequential per-file upsert + embedding refresh is intentional */
+/* eslint-disable no-await-in-loop -- sequential per-file upsert is intentional */
 
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import {
-  embedQuery,
-  isOllamaEmbeddingConfigured,
-} from '@openthrottle/node-client';
 import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
 import type { SkillsLockMap } from '@openthrottle/openthrottle-skills';
 import {
@@ -27,8 +25,6 @@ import { createLogger } from './utils/logger.ts';
 
 const logger = createLogger();
 
-const EMBEDDING_DIM = 1536;
-
 /**
  * nx_project_name of the dogfood project the monorepo's own skills reconcile
  * into. `project_skills` rows for this project are the skill universe the
@@ -38,79 +34,12 @@ const EMBEDDING_DIM = 1536;
  */
 const DOGFOOD_NX_PROJECT_NAME = 'OpenThrottle/monorepo';
 
-/** ~3 chars/token; text-embedding-3-small max is 8192 tokens. */
-const MAX_EMBEDDING_CHARS = 24_000;
-
-/**
- * @description Splits text into chunks under MAX_EMBEDDING_CHARS for the embedding model.
- */
-const chunkTextForEmbedding = (text: string): string[] => {
-  if (text.length <= MAX_EMBEDDING_CHARS) {
-    return [text];
-  }
-
-  const chunks: string[] = [];
-  const paragraphs = text.split(/\n\n+/);
-  let current = '';
-
-  for (const paragraph of paragraphs) {
-    const next = current ? `${current}\n\n${paragraph}` : paragraph;
-
-    if (next.length <= MAX_EMBEDDING_CHARS) {
-      current = next;
-    } else {
-      if (current) {
-        chunks.push(current);
-        current = '';
-      }
-
-      if (paragraph.length <= MAX_EMBEDDING_CHARS) {
-        current = paragraph;
-      } else {
-        for (const line of paragraph.split(/\n/)) {
-          const lineBlock = current ? `${current}\n${line}` : line;
-
-          if (lineBlock.length <= MAX_EMBEDDING_CHARS) {
-            current = lineBlock;
-          } else {
-            if (current) {
-              chunks.push(current);
-            }
-
-            if (line.length <= MAX_EMBEDDING_CHARS) {
-              current = line;
-            } else {
-              for (let i = 0; i < line.length; i += MAX_EMBEDDING_CHARS) {
-                chunks.push(line.slice(i, i + MAX_EMBEDDING_CHARS));
-              }
-
-              current = '';
-            }
-          }
-        }
-      }
-    }
-  }
-
-  if (current) {
-    chunks.push(current);
-  }
-
-  return chunks;
-};
-
 const formatIssue = (issue: {
   readonly field: string;
   readonly message: string;
   readonly path: string;
 }): string => {
   return `${issue.path}: [${issue.field}] ${issue.message}`;
-};
-
-const hasEmbeddingProvider = (): boolean => {
-  return (
-    Boolean(process.env.OPENAI_API_KEY?.trim()) || isOllamaEmbeddingConfigured()
-  );
 };
 
 /**
@@ -255,16 +184,7 @@ const main = async (): Promise<void> => {
 
   const ingestedPaths = new Set(records.map((record) => record.filePath));
   let promptsUpserted = 0;
-  let embeddingsInserted = 0;
   const errors: string[] = [];
-  const embedEnabled = hasEmbeddingProvider();
-
-  if (!embedEnabled) {
-    logger.warn(
-      'OPENAI_API_KEY and Ollama embedding env not set; skipping custom_prompt_embeddings.',
-    );
-  }
-
   try {
     for (const record of records) {
       try {
@@ -301,48 +221,6 @@ const main = async (): Promise<void> => {
         }
 
         promptsUpserted += 1;
-
-        await client.query(
-          'DELETE FROM custom_prompt_embeddings WHERE custom_prompt_id = $1',
-          [promptId],
-        );
-
-        if (embedEnabled && record.content.trim()) {
-          const chunks = chunkTextForEmbedding(record.content.trim());
-
-          for (let i = 0; i < chunks.length; i += 1) {
-            const chunk = chunks[i];
-            if (!chunk) {
-              continue;
-            }
-
-            try {
-              const vec = await embedQuery(chunk);
-              if (vec && vec.length === EMBEDDING_DIM) {
-                await client.query(
-                  `INSERT INTO custom_prompt_embeddings (
-                     custom_prompt_id, content, embedding, metadata
-                   )
-                   VALUES ($1, $2, $3::vector, $4::jsonb)`,
-                  [
-                    promptId,
-                    chunk,
-                    `[${vec.join(',')}]`,
-                    JSON.stringify({
-                      chunkIndex: i,
-                      filePath: record.filePath,
-                    }),
-                  ],
-                );
-                embeddingsInserted += 1;
-              }
-            } catch (error) {
-              errors.push(
-                `${record.filePath} embedding chunk ${i}: ${String(error)}`,
-              );
-            }
-          }
-        }
 
         logger.step(`Ingested: ${record.filePath}`);
       } catch (error) {
@@ -403,9 +281,9 @@ const main = async (): Promise<void> => {
 
     logger.heading('Done.');
     logger.detail(`custom_prompts upserted: ${promptsUpserted}`);
-    if (embedEnabled) {
-      logger.detail(`custom_prompt_embeddings: ${embeddingsInserted}`);
-    }
+    logger.detail(
+      'Embeddings: openthrottle-server embeds these rows (reconciler, within 15 minutes or on next boot).',
+    );
     if (errors.length > 0) {
       logger.fail(`Errors: ${errors.length}`);
       for (const error of errors) {

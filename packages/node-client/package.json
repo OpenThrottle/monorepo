@@ -5,14 +5,14 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
+    "@huggingface/transformers": "catalog:",
     "@openthrottle/nestjs-repositories": "workspace:^",
     "@openthrottle/nodejs-utils": "workspace:^",
     "@openthrottle/openthrottle-agentic-utils": "workspace:^",
-    "openai": "catalog:",
     "pg": "catalog:",
     "typeorm": "catalog:"
   },
-  "description": "Node-only OpenThrottle data client: Postgres vector search, plan/task/note CRUD, and embeddings (OpenAI/Ollama).",
+  "description": "Node-only OpenThrottle data client: Postgres vector search, plan/task/note CRUD, and the single embedder (local nomic-embed-text-v1.5 or Ollama).",
   "devDependencies": {
     "vitest": "catalog:"
   },

@@ -435,9 +435,9 @@ const main = async (): Promise<void> => {
     }
   }
 
-  // Semantic search embeddings are configured on openthrottle-server
-  // (OPENAI_API_KEY or OLLAMA_* in applications/openthrottle-server/.env),
-  // not in this launcher. See docs/monorepo/Ollama.md § Embeddings for OpenThrottle.
+  // Semantic search embeddings run on openthrottle-server (its local model, or
+  // EMBEDDING_PROVIDER=ollama), never in this launcher.
+  // See docs/monorepo/Ollama.md § Embeddings for OpenThrottle.
   // Forward the launcher's own arguments (e.g. `--toolsets=blog`) so an MCP config's `args` reach the server.
   const outcome = spawnSync('node', ['packages/openthrottle-mcp/dist/src/bin.js', ...process.argv.slice(2)], { cwd: root, env, stdio: 'inherit' }); // prettier-ignore
 

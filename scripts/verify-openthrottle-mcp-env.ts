@@ -1,23 +1,58 @@
 /**
  * @description Verifies local prerequisites for OpenThrottle MCP
- * (@openthrottle/openthrottle-mcp): openthrottle-server reachable, embedding
- * config hint, optional auth token smoke, and the streamable-HTTP transport
+ * (@openthrottle/openthrottle-mcp): openthrottle-server reachable, the server's
+ * embeddings status (serverHealth.embeddings), optional auth token smoke, and the streamable-HTTP transport
  * probe. Exit codes match the shell version: hard-fail on unreachable server,
  * rejected token, or missing token (unless OT_MCP_ALLOW_NO_TOKEN=1).
  */
-import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { readEnvFile } from './utils/env.ts';
 import { createLogger } from './utils/logger.ts';
 
 const logger = createLogger();
 
-/** True when a .env map carries a usable embedding provider config. */
-export const hasEmbeddingConfig = (env: Record<string, string>): boolean => {
-  return (
-    (env.OPENAI_API_KEY ?? '') !== '' || (env.OLLAMA_BASE_URL ?? '') !== ''
-  );
+export interface EmbeddingsStatus {
+  readonly detail: string | null;
+  readonly status: string;
+}
+
+/**
+ * Read `serverHealth.embeddings` out of a GraphQL response body. Undefined when
+ * the body is not JSON or the server predates the field — the caller warns
+ * rather than guessing from env keys, because only the server knows whether its
+ * model weights loaded.
+ */
+export const readEmbeddingsStatus = (
+  body: string,
+): EmbeddingsStatus | undefined => {
+  let parsed: unknown;
+
+  try {
+    parsed = JSON.parse(body);
+  } catch {
+    return undefined;
+  }
+
+  const embeddings: unknown = [
+    'data',
+    'serverHealth',
+    'embeddings',
+  ].reduce<unknown>((node, key) => {
+    return typeof node === 'object' && node !== null ? Reflect.get(node, key) : undefined; // prettier-ignore
+  }, parsed);
+
+  if (typeof embeddings !== 'object' || embeddings === null) {
+    return undefined;
+  }
+
+  const status: unknown = Reflect.get(embeddings, 'status');
+  const detail: unknown = Reflect.get(embeddings, 'detail');
+
+  if (typeof status !== 'string') {
+    return undefined;
+  }
+
+  return { detail: typeof detail === 'string' ? detail : null, status };
 };
 
 export type AuthSmokeVerdict = 'inconclusive' | 'ok' | 'rejected';
@@ -66,7 +101,6 @@ const fetchWithTimeout = async (
 };
 
 const main = async (): Promise<void> => {
-  const root = join(dirname(fileURLToPath(import.meta.url)), '..');
   const base = (process.env.API_URL_INTERNAL ?? 'http://localhost:6021').replace(/\/$/, ''); // prettier-ignore
 
   logger.info('OpenThrottle MCP verification — environment check');
@@ -83,14 +117,22 @@ const main = async (): Promise<void> => {
 
   logger.success(`GET ${base}/health`);
 
-  const rootEnv = readEnvFile(join(root, '.env'));
-  const serverEnv = readEnvFile(join(root, 'applications/openthrottle-server/.env')); // prettier-ignore
+  const embeddingsResponse = await fetchWithTimeout(`${base}/graphql`, 15_000, {
+    body: JSON.stringify({ query: '{ serverHealth { embeddings { detail status } } }' }), // prettier-ignore
+    headers: { 'content-type': 'application/json' },
+    method: 'POST',
+  });
+  const embeddings = readEmbeddingsStatus(embeddingsResponse?.body ?? '');
 
-  if (hasEmbeddingConfig(rootEnv) || hasEmbeddingConfig(serverEnv)) {
-    logger.success('embedding provider configured (OPENAI_API_KEY or OLLAMA_BASE_URL in root .env and/or server .env)'); // prettier-ignore
+  if (embeddings?.status === 'ok') {
+    logger.success(
+      'server embeddings ok (semantic_search answers semantically)',
+    );
+  } else if (embeddings) {
+    logger.warn(`server embeddings ${embeddings.status}: ${embeddings.detail ?? 'see MCP health for coverage'}`); // prettier-ignore
+    logger.detail('semantic_search still answers, lexically — run pnpm run embeddings:download-model -- --verify and see docs/monorepo/Ollama.md'); // prettier-ignore
   } else {
-    logger.warn('no OPENAI_API_KEY or OLLAMA_BASE_URL in root .env or applications/openthrottle-server/.env'); // prettier-ignore
-    logger.detail('MCP starts without a launcher key; semantic_search needs server-side embeddings — see docs/monorepo/Ollama.md'); // prettier-ignore
+    logger.warn('could not read serverHealth.embeddings (older server, or the request failed)'); // prettier-ignore
   }
 
   const token = process.env.OPENTHROTTLE_MCP_AUTH_TOKEN ?? '';

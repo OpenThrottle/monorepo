@@ -73,6 +73,40 @@ describe('semanticSearchToolHandler', () => {
     });
   });
 
+  describe('when the server answered lexically', () => {
+    it('surfaces mode and reason in structured content and text', async () => {
+      vi.mocked(executeGraphqlWithAuth).mockResolvedValue({
+        search: {
+          chunks: [
+            {
+              content: 'Plan body',
+              id: chunkId,
+              planTitle: 'Guaranteed embeddings',
+              similarity: 0.42,
+              source: 'plan',
+              taskTitle: null,
+            },
+          ],
+          mode: 'lexical',
+          reason: 'embedder_unconfigured',
+        },
+      });
+
+      const result = await semanticSearchToolHandler({ query: 'embeddings' });
+
+      expect(result).toMatchObject({
+        content: [
+          {
+            text: expect.stringContaining(
+              'Mode: lexical (full-text fallback; reason: embedder_unconfigured)',
+            ),
+          },
+        ],
+        structuredContent: { mode: 'lexical', reason: 'embedder_unconfigured' },
+      });
+    });
+  });
+
   describe('when GraphQL returns no chunks', () => {
     it('returns an empty result message', async () => {
       vi.mocked(executeGraphqlWithAuth).mockResolvedValue({

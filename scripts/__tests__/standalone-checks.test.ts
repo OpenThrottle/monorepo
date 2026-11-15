@@ -4,7 +4,7 @@ import { parseMode } from '../docker-smoke-test.ts';
 import { resolveProjectId } from '../gcs-docker-upload.ts';
 import { OLLAMA_MODELS } from '../ollama.ts';
 import { snapshotMessage } from '../sync-subtree.ts';
-import { classifyAuthSmoke, hasEmbeddingConfig } from '../verify-openthrottle-mcp-env.ts'; // prettier-ignore
+import { classifyAuthSmoke, readEmbeddingsStatus } from '../verify-openthrottle-mcp-env.ts'; // prettier-ignore
 
 describe('classifyAuthSmoke', () => {
   it('rejects any body carrying an errors array (the HTTP-200 trap)', () => {
@@ -24,12 +24,16 @@ describe('classifyAuthSmoke', () => {
   });
 });
 
-describe('hasEmbeddingConfig', () => {
-  it('accepts either provider key, rejects empties', () => {
-    expect(hasEmbeddingConfig({ OPENAI_API_KEY: 'sk-x' })).toBe(true);
-    expect(hasEmbeddingConfig({ OLLAMA_BASE_URL: 'http://localhost:11434' })).toBe(true); // prettier-ignore
-    expect(hasEmbeddingConfig({ OPENAI_API_KEY: '' })).toBe(false);
-    expect(hasEmbeddingConfig({})).toBe(false);
+describe('readEmbeddingsStatus', () => {
+  it('reads status and detail from serverHealth.embeddings', () => {
+    const body = JSON.stringify({ data: { serverHealth: { embeddings: { detail: 'no weights', status: 'unconfigured' } } } }); // prettier-ignore
+
+    expect(readEmbeddingsStatus(body)).toEqual({ detail: 'no weights', status: 'unconfigured' }); // prettier-ignore
+  });
+
+  it('is undefined for a server without the field or a non-JSON body', () => {
+    expect(readEmbeddingsStatus(JSON.stringify({ data: { serverHealth: {} } }))).toBeUndefined(); // prettier-ignore
+    expect(readEmbeddingsStatus('<html>')).toBeUndefined();
   });
 });
 

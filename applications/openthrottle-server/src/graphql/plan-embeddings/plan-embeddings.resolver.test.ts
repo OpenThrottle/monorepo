@@ -47,8 +47,11 @@ describe('PlanEmbeddingsResolver', () => {
 
   const mockPlanEmbedding: PlanEmbedding = {
     content: 'Plan content chunk for embedding',
+    contentHash: null,
     createdAt: new Date('2026-02-01T22:00:00.000Z'),
     embedding: null,
+    embeddingDims: null,
+    embeddingModel: null,
     id: 'd201e2d3-111b-431e-abd6-45b6c7fda643',
     metadata: { source: 'plan' },
     plan: {

@@ -11,6 +11,7 @@ import { PlanRulesQueueProducerModule } from '../../queues/plan-rules/producer/p
 import { PlansQueueProducerModule } from '../../queues/plans/producer/producer.module.ts';
 import { TaggingQueueProducerModule } from '../../queues/tagging/producer/producer.module.ts';
 import { EffectiveUserResolutionModule } from '../../services/effective-user-resolution/effective-user-resolution.module.ts';
+import { EmbedderModule } from '../../services/embedder/embedder.module.ts';
 import { PlanCreationModule } from '../../services/plan-creation/plan-creation.module.ts';
 import { PlanRunWorktreeCheckoutModule } from '../../services/plan-run-worktree-checkout/plan-run-worktree-checkout.module.ts';
 import { WorktreeCheckoutPruneModule } from '../../services/worktree-checkout-prune/worktree-checkout-prune.module.ts';
@@ -25,6 +26,7 @@ import { PlansResolver } from './plans.resolver.ts';
 @Module({
   imports: [
     EffectiveUserResolutionModule,
+    EmbedderModule,
     LoggerModule,
     NestjsRepositoriesModule,
     NotificationsModule,

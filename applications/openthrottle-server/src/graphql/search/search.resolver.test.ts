@@ -1,27 +1,42 @@
 import { Test } from '@nestjs/testing';
 import {
-  embedQuery,
   getChunkById,
   listSources,
+  runLexicalSearch,
   runSemanticSearch,
 } from '@openthrottle/node-client';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { EmbedderService } from '../../services/embedder/embedder.service.ts';
 import { SearchResolver } from './search.resolver.ts';
 
 vi.mock('@openthrottle/node-client', () => ({
-  embedQuery: vi.fn(),
   getChunkById: vi.fn(),
   listSources: vi.fn(),
+  runLexicalSearch: vi.fn(),
   runSemanticSearch: vi.fn(),
 }));
+
+const embed = vi.fn();
+
+function embedded(vector: number[]): unknown {
+  return {
+    dims: vector.length,
+    model: 'nomic-embed-text-v1.5',
+    ok: true,
+    vectors: [vector],
+  };
+}
 
 describe('SearchResolver', () => {
   let resolver: SearchResolver;
 
   beforeAll(async () => {
     const app = await Test.createTestingModule({
-      providers: [SearchResolver],
+      providers: [
+        SearchResolver,
+        { provide: EmbedderService, useValue: { embed } },
+      ],
     }).compile();
 
     resolver = app.get<SearchResolver>(SearchResolver);
@@ -38,25 +53,45 @@ describe('SearchResolver', () => {
         query: '   ',
       });
 
-      expect(result).toEqual({ chunks: [] });
-      expect(embedQuery).not.toHaveBeenCalled();
+      expect(result).toEqual({ chunks: [], mode: 'semantic', reason: null });
+      expect(embed).not.toHaveBeenCalled();
     });
 
-    test('returns empty chunks when embedQuery returns undefined', async () => {
-      vi.mocked(embedQuery).mockResolvedValue(undefined);
+    test('answers lexically, with the reason, when the embedder is unconfigured', async () => {
+      vi.mocked(runLexicalSearch).mockResolvedValue([
+        {
+          content: 'Plan body',
+          id: 'plan-1',
+          metadata: {},
+          planId: 'plan-1',
+          planTitle: 'Plan One',
+          similarity: 0.4,
+          source: 'plan',
+        },
+      ]);
+      embed.mockResolvedValue({
+        detail: 'no weights',
+        ok: false,
+        reason: 'unconfigured',
+      });
 
       const result = await resolver.search({
         limit: 10,
         query: 'test',
       });
 
-      expect(result).toEqual({ chunks: [] });
-      expect(embedQuery).toHaveBeenCalledWith('test');
+      expect(result.mode).toBe('lexical');
+      expect(result.reason).toBe('embedder_unconfigured');
+      expect(result.chunks).toEqual([
+        expect.objectContaining({ id: 'plan-1', planTitle: 'Plan One' }),
+      ]);
+      expect(embed).toHaveBeenCalledWith(['test'], 'query');
+      expect(runLexicalSearch).toHaveBeenCalledWith('test', 10);
       expect(runSemanticSearch).not.toHaveBeenCalled();
     });
 
     test('returns mapped chunks when embed and search succeed', async () => {
-      vi.mocked(embedQuery).mockResolvedValue([0.1, 0.2]);
+      embed.mockResolvedValue(embedded([0.1, 0.2]));
       vi.mocked(runSemanticSearch).mockResolvedValue([
         {
           content: 'Plan chunk text',
@@ -85,8 +120,14 @@ describe('SearchResolver', () => {
         query: 'find plans about auth',
       });
 
-      expect(embedQuery).toHaveBeenCalledWith('find plans about auth');
-      expect(runSemanticSearch).toHaveBeenCalledWith([0.1, 0.2], 5);
+      expect(embed).toHaveBeenCalledWith(['find plans about auth'], 'query');
+      expect(runSemanticSearch).toHaveBeenCalledWith(
+        [0.1, 0.2],
+        5,
+        'nomic-embed-text-v1.5',
+      );
+      expect(result.mode).toBe('semantic');
+      expect(result.reason).toBeNull();
       expect(result.chunks).toHaveLength(2);
       expect(result.chunks[0]).toMatchObject({
         content: 'Plan chunk text',
@@ -110,8 +151,22 @@ describe('SearchResolver', () => {
       });
     });
 
+    test('falls back to lexical with no_embeddings when no vector matches the model', async () => {
+      embed.mockResolvedValue(embedded([0.1]));
+      vi.mocked(runSemanticSearch).mockResolvedValue([]);
+      vi.mocked(runLexicalSearch).mockResolvedValue([]);
+
+      const result = await resolver.search({ limit: 5, query: 'anything' });
+
+      expect(result).toEqual({
+        chunks: [],
+        mode: 'lexical',
+        reason: 'no_embeddings',
+      });
+    });
+
     test('clamps limit to max 50', async () => {
-      vi.mocked(embedQuery).mockResolvedValue([0.1]);
+      embed.mockResolvedValue(embedded([0.1]));
       vi.mocked(runSemanticSearch).mockResolvedValue([]);
 
       await resolver.search({
@@ -119,11 +174,15 @@ describe('SearchResolver', () => {
         query: 'test',
       });
 
-      expect(runSemanticSearch).toHaveBeenCalledWith([0.1], 50);
+      expect(runSemanticSearch).toHaveBeenCalledWith(
+        [0.1],
+        50,
+        'nomic-embed-text-v1.5',
+      );
     });
 
     test('uses default limit 20 when limit is null', async () => {
-      vi.mocked(embedQuery).mockResolvedValue([0.1]);
+      embed.mockResolvedValue(embedded([0.1]));
       vi.mocked(runSemanticSearch).mockResolvedValue([]);
 
       await resolver.search({
@@ -131,11 +190,15 @@ describe('SearchResolver', () => {
         query: 'test',
       });
 
-      expect(runSemanticSearch).toHaveBeenCalledWith([0.1], 20);
+      expect(runSemanticSearch).toHaveBeenCalledWith(
+        [0.1],
+        20,
+        'nomic-embed-text-v1.5',
+      );
     });
 
     test('maps documentation chunks with sourcePath, sourceRepo, sourceSha', async () => {
-      vi.mocked(embedQuery).mockResolvedValue([0.1]);
+      embed.mockResolvedValue(embedded([0.1]));
       vi.mocked(runSemanticSearch).mockResolvedValue([
         {
           content: 'Doc chunk text',
@@ -169,7 +232,7 @@ describe('SearchResolver', () => {
     });
 
     test('sets sourcePath/sourceRepo/sourceSha to null for non-documentation chunks', async () => {
-      vi.mocked(embedQuery).mockResolvedValue([0.1]);
+      embed.mockResolvedValue(embedded([0.1]));
       vi.mocked(runSemanticSearch).mockResolvedValue([
         {
           content: 'Plan chunk',

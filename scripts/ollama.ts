@@ -3,10 +3,10 @@
  * the Ollama app (https://ollama.com/download) — we run Ollama via the app to
  * take full advantage of the GPU.
  *
- * For local embeddings (node-client, openthrottle:import): set
- * OLLAMA_BASE_URL (default http://localhost:11434) and/or
- * OLLAMA_EMBEDDING_MODEL (e.g. nomic-embed-text). When set, Ollama is used;
- * when not set, OpenAI is used. When using Caddy (tools/caddy), set
+ * Semantic search does not need Ollama: openthrottle-server embeds in-process
+ * by default. To run its model through Ollama instead, set
+ * EMBEDDING_PROVIDER=ollama and OLLAMA_BASE_URL (nomic-embed-text, pulled
+ * below). When using Caddy (tools/caddy), set
  * OLLAMA_BASE_URL to the proxied URL and OLLAMA_ORIGINS so CORS allows
  * requests — see docs/monorepo/Ollama.md; for Caddy HTTPS without cert
  * errors, run `caddy trust` (see tools/caddy/README.md).
@@ -19,13 +19,10 @@ import { createLogger } from './utils/logger.ts';
 const logger = createLogger();
 
 /**
- * The model catalog, by role. Embedding models are used when
- * OLLAMA_EMBEDDING_MODEL / OLLAMA_BASE_URL are set for node-client and
- * openthrottle:import. For the OpenThrottle schema (vector 1536) use a model
- * that outputs 1536 dimensions; these output other sizes (all-minilm 384,
- * mxbai-embed-large 1024, nomic-embed-text 768) — for 1536-dim OpenThrottle
- * embeddings use OpenAI, or an Ollama model that outputs 1536 when available.
- * See databases/openthrottle/README.md § Embedding dimension strategy.
+ * The model catalog, by role. Semantic search uses nomic-embed-text (768
+ * dims) only, and only with EMBEDDING_PROVIDER=ollama; the other embedding
+ * models serve the code index (OLLAMA_EMBEDDING_MODEL). See
+ * databases/openthrottle/README.md § Embedding dimension strategy.
  */
 export const OLLAMA_MODELS = {
   chat: ['llama4'],

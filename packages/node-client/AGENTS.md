@@ -2,7 +2,8 @@
 
 The **Node-only** OpenThrottle data client: pgvector similarity search over
 `plan_embeddings` / `task_embeddings` / `documentation_embeddings`, plan/task/note
-CRUD, and the env-driven embedding provider (OpenAI or Ollama). It wraps a cached
+CRUD, and the single embedder (local nomic-embed-text-v1.5 in a worker thread, or the same
+model via Ollama). It wraps a cached
 TypeORM `DataSource` around the entities owned by `@openthrottle/nestjs-repositories`
 and exposes a small, framework-free surface that both the GraphQL server and the
 agentic tooling call.
@@ -19,26 +20,33 @@ agent-asset search, plan-creation) and `@openthrottle/openthrottle-agentic-utils
 - `src/data-source.ts` — cached `getOrCreateDataSource()` (one initialized `DataSource`
   per connection string, for pooling) registering `Plan`, `Task`, `PlanEmbedding`,
   `TaskEmbedding`, `Project`, `CommitLink`, `PlanOutputStreamChunk`.
-- `src/embedding.ts` — `embedQuery` abstraction; provider is env-driven (Ollama when
-  `OLLAMA_BASE_URL`/`OLLAMA_EMBEDDING_MODEL` set, otherwise OpenAI via `OPENAI_API_KEY`).
-- `src/ollama-embedding.ts` — local Ollama path (`POST /api/embeddings`); defaults
-  `nomic-embed-text` @ `http://localhost:11434`.
+- `src/embedding-config.ts` — `resolveEmbeddingConfig()` from `EMBEDDING_PROVIDER`
+  (`local` default | `ollama`; `openai`/`gemini` reserved and refused), `EMBEDDING_MODEL`,
+  `EMBEDDING_DIMS`, `EMBEDDING_MODELS_DIR`, `OLLAMA_BASE_URL`, plus the per-model spec
+  (dims, Hugging Face id, Ollama name, task prefixes).
+- `src/embedding.ts` — `createEmbedder(config)`: prefixing (`search_document: ` /
+  `search_query: `), truncation, batching and the dimension check over a provider backend.
+  Returns an `EmbedResult` (`ok: true` with vectors + model + dims, or `ok: false` with
+  `unconfigured` | `dimension_mismatch` | `provider_error`) — never `undefined`.
+- `src/local-embedding.ts` — transformers.js in an eval'd worker thread, loading quantized
+  ONNX weights from `EMBEDDING_MODELS_DIR` only (remote downloads disabled).
+- `src/embedWithOllama.ts` — Ollama batch path (`POST /api/embed`), same model.
 - `src/embedding-content.ts` — builds the text blob fed to the embedder for a plan/task.
 - `src/config.ts` — `getPostgresConfig()` (returns `undefined` when Postgres isn't configured).
-- `src/constants.ts` — `EMBEDDING_MAX_INPUT_CHARS` (8191), shared across both providers so
-  truncation is provider-agnostic.
+- `src/constants.ts` — `EMBEDDING_MAX_INPUT_CHARS` (8191, prefix included), shared across both
+  providers so truncation — and therefore `content_hash` — is provider-agnostic.
 
 ## Invariants & gotchas
 
 - **Node-only.** This package opens Postgres connections and reads `process.env`; never
   import it into browser/UI code. Server code that only needs types uses
   `import type { … } from '@openthrottle/node-client'` (see the plans/search resolvers).
-- **Embeddings are 1536-dim** (`text-embedding-3-small`). `embedQuery` returns `undefined`
-  rather than throwing when no provider is configured or a request fails — callers must
-  handle the `undefined` (skip embedding, degrade search), not assume a vector.
-- **Provider selection is silent + env-driven.** Setting either `OLLAMA_*` var flips the
-  whole path to Ollama; an Ollama model with a different dimensionality will not match the
-  stored 1536-dim OpenAI vectors. Keep the ingest provider and the query provider aligned.
+- **One model, 768 dims** (nomic-embed-text-v1.5). Both providers run the same model, so their
+  vectors are comparable; an unsupported model or a mismatched `EMBEDDING_DIMS` is refused at
+  config time rather than written. Every row records its `embedding_model` so a model switch
+  is a re-embed, never silent corruption.
+- **Never call `createEmbedder` per request in the server.** `openthrottle-server`'s
+  `EmbedderService` owns the one instance (and its worker thread) per process.
 - **Entities are borrowed, not owned.** Schema changes live in `nestjs-repositories` +
   the SQL migration under `databases/openthrottle/migrations/`; this package only registers those
   entities on its `DataSource`. If a new entity is needed for a query, add it to the

@@ -1,0 +1,187 @@
+/**
+ * @description The embeddings guarantee and backfill (OT plan 165e86ef). Each cycle — on boot
+ * and every 15 minutes — walks plans, tasks, documentation and custom prompts in keyset pages
+ * (100 ids by default) and enqueues every row whose vector is missing, from another model, or
+ * hashed from text that has since changed. Writes the entity subscriber cannot see (raw-SQL
+ * ingest, documentation) and jobs that failed or were lost are caught here. A cycle is skipped,
+ * not failed, while the embedder is unconfigured: re-enqueueing work that can only re-delay
+ * would just grow the queue.
+ */
+
+import { Processor, WorkerHost } from '@nestjs/bullmq';
+import type { OnApplicationShutdown } from '@nestjs/common';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { defaultWorkerOptions } from '@openthrottle/nestjs-bullmq';
+import { LoggerService } from '@openthrottle/nestjs-modules';
+import { EMBEDDING_MAX_INPUT_CHARS } from '@openthrottle/node-client';
+import { DataSource } from 'typeorm';
+
+import { EmbedderService } from '../../services/embedder/embedder.service.ts';
+import {
+  EMBEDDABLE_ENTITIES,
+  EMBEDDING_SOURCES,
+} from '../embeddings/embeddings.constants.ts';
+import type { EmbeddableEntity } from '../embeddings/embeddings.types.ts';
+import { readEntityId } from '../embeddings/embeddings.utils.ts';
+import { EmbeddingsProducerService } from '../embeddings/producer/producer.service.ts';
+import {
+  EMBEDDINGS_RECONCILE_QUEUE_NAME,
+  MIN_UUID,
+} from './embeddings-reconcile.constants.ts';
+import type {
+  EmbeddingsReconcileEntitySummary,
+  EmbeddingsReconcileJob,
+  EmbeddingsReconcileSummary,
+} from './embeddings-reconcile.types.ts';
+import {
+  buildPruneOrphansSql,
+  buildStaleRowsSql,
+  resolveEmbeddingsReconcileConfig,
+} from './embeddings-reconcile.utils.ts';
+
+@Processor(EMBEDDINGS_RECONCILE_QUEUE_NAME, {
+  ...defaultWorkerOptions,
+  concurrency: 1,
+})
+export class EmbeddingsReconcileProcessor
+  extends WorkerHost
+  implements OnApplicationShutdown
+{
+  constructor(
+    private readonly logger: LoggerService,
+    private readonly embedder: EmbedderService,
+    private readonly producer: EmbeddingsProducerService,
+    @InjectDataSource()
+    private readonly dataSource: DataSource,
+  ) {
+    super();
+  }
+
+  async onApplicationShutdown(): Promise<void> {
+    await this.worker.close();
+  }
+
+  async process(
+    job: EmbeddingsReconcileJob,
+  ): Promise<EmbeddingsReconcileSummary> {
+    const config = this.embedder.getConfig();
+    const status = this.embedder.getStatus();
+
+    if (
+      !config ||
+      status.state === 'unconfigured' ||
+      status.state === 'dimension_mismatch'
+    ) {
+      const reason = `embedder ${status.state}: ${status.detail ?? 'not configured'}`;
+
+      this.logger.warn(
+        `Embeddings reconcile skipped (job ${job.id ?? '?'}): ${reason}`,
+        EmbeddingsReconcileProcessor.name,
+      );
+
+      return { reason, skipped: true };
+    }
+
+    const { batchSize } = resolveEmbeddingsReconcileConfig();
+    const entities: Partial<
+      Record<EmbeddableEntity, EmbeddingsReconcileEntitySummary>
+    > = {};
+
+    // Entities run one after another so a cycle holds at most one page in memory.
+    for (const entity of EMBEDDABLE_ENTITIES) {
+      // eslint-disable-next-line no-await-in-loop -- sequential by design, see above
+      entities[entity] = await this.reconcileEntity(
+        entity,
+        config.spec.documentPrefix,
+        config.model,
+        batchSize,
+      );
+    }
+
+    const summary = {
+      custom_prompt: entities.custom_prompt ?? { enqueued: 0, pruned: 0 },
+      documentation: entities.documentation ?? { enqueued: 0, pruned: 0 },
+      plan: entities.plan ?? { enqueued: 0, pruned: 0 },
+      task: entities.task ?? { enqueued: 0, pruned: 0 },
+    };
+
+    this.logger.info(
+      `Embeddings reconcile: ${EMBEDDABLE_ENTITIES.map((entity) => {
+        return `${entity} +${summary[entity].enqueued}/-${summary[entity].pruned}`;
+      }).join(', ')}`,
+      EmbeddingsReconcileProcessor.name,
+    );
+
+    return { entities: summary, skipped: false };
+  }
+
+  private async reconcileEntity(
+    entity: EmbeddableEntity,
+    documentPrefix: string,
+    model: string,
+    batchSize: number,
+  ): Promise<EmbeddingsReconcileEntitySummary> {
+    const source = EMBEDDING_SOURCES[entity];
+    const pruned = await this.prune(buildPruneOrphansSql(source));
+    const staleSql = buildStaleRowsSql(source);
+    let after = MIN_UUID;
+    let enqueued = 0;
+
+    // Keyset walk: each page starts after the last id of the previous one, so rows that are
+    // still stale while their jobs run are never re-read within the same cycle.
+    for (;;) {
+      // eslint-disable-next-line no-await-in-loop -- each page depends on the previous one's last id
+      const rows: unknown = await this.dataSource.query(staleSql, [
+        documentPrefix,
+        EMBEDDING_MAX_INPUT_CHARS,
+        model,
+        after,
+        batchSize,
+      ]);
+      const ids = readIds(rows);
+      const last = ids[ids.length - 1];
+
+      if (!last) {
+        break;
+      }
+
+      // eslint-disable-next-line no-await-in-loop -- enqueue before reading the next page
+      enqueued += await this.producer.enqueue(
+        ids.map((id) => {
+          return { entity, id };
+        }),
+      );
+
+      if (ids.length < batchSize) {
+        break;
+      }
+
+      after = last;
+    }
+
+    return { enqueued, pruned };
+  }
+
+  private async prune(sql: string): Promise<number> {
+    const result: unknown = await this.dataSource.query(sql);
+
+    // node-postgres DELETE through TypeORM resolves to [rows, affectedCount].
+    if (Array.isArray(result) && typeof result[1] === 'number') {
+      return result[1];
+    }
+
+    return 0;
+  }
+}
+
+function readIds(rows: unknown): string[] {
+  if (!Array.isArray(rows)) {
+    return [];
+  }
+
+  return rows.flatMap((row: unknown) => {
+    const id = readEntityId(row);
+
+    return id ? [id] : [];
+  });
+}

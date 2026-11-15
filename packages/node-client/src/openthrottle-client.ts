@@ -11,16 +11,13 @@ import type {
 import {
   Plan,
   PLAN_TASK_LIST_ORDER,
-  PlanEmbedding,
   resolveCompletedAtForStatusChange,
   Task,
-  TaskEmbedding,
 } from '@openthrottle/nestjs-repositories';
 import { isRecord } from '@openthrottle/nodejs-utils';
 import { In } from 'typeorm';
 
 import { getOrCreateDataSource, runQuery } from './data-source.ts';
-import { embedQuery } from './embedding.ts';
 
 /** Raw plan row (snake_case) as returned by plans table SELECT. Used to type ds.query results before mapping to {@link PlanData}. */
 interface PlanRawRow {
@@ -107,12 +104,17 @@ interface DocumentationEmbeddingSearchRow {
  * `ORDER BY similarity LIMIT $limit` — the latter trims the merge to one slice but still scans all
  * three indexes, so it does not reduce the HNSW scan count. Keep `limit` modest on hot paths.
  *
- * @param embedding 1536-dim query embedding (e.g. from OpenAI text-embedding-3-small).
+ * Only vectors written by `model` are compared: a row embedded by another model (or with no
+ * recorded model) is stale and would produce a meaningless similarity.
+ *
+ * @param embedding Query vector from the configured embedder (`inputType: 'query'`).
  * @param limit Max number of chunks to return per table before the merged result is sliced to `limit`.
+ * @param model The configured embedding model; only rows with this `embedding_model` are searched.
  */
 export async function runSemanticSearch(
   embedding: number[],
   limit: number,
+  model: string,
 ): Promise<SemanticSearchChunk[]> {
   const vectorStr = `[${embedding.join(',')}]`;
   const ds = await getOrCreateDataSource();
@@ -122,9 +124,10 @@ export async function runSemanticSearch(
               1 - (pe.embedding <=> $1::vector) AS similarity
        FROM plan_embeddings pe
        JOIN plans p ON pe.plan_id = p.id
+       WHERE pe.embedding_model = $3
        ORDER BY pe.embedding <=> $1::vector
        LIMIT $2`,
-    [vectorStr, limit],
+    [vectorStr, limit, model],
   );
 
   const taskRowsRaw = await ds.query<TaskEmbeddingSearchRow>(
@@ -134,9 +137,10 @@ export async function runSemanticSearch(
        FROM task_embeddings te
        JOIN tasks t ON te.task_id = t.id
        JOIN plans p ON t.plan_id = p.id
+       WHERE te.embedding_model = $3
        ORDER BY te.embedding <=> $1::vector
        LIMIT $2`,
-    [vectorStr, limit],
+    [vectorStr, limit, model],
   );
 
   const docRowsRaw = await ds.query<DocumentationEmbeddingSearchRow>(
@@ -145,9 +149,10 @@ export async function runSemanticSearch(
               1 - (de.embedding <=> $1::vector) AS similarity
        FROM documentation_embeddings de
        JOIN documentation d ON de.documentation_id = d.id
+       WHERE de.embedding_model = $3
        ORDER BY de.embedding <=> $1::vector
        LIMIT $2`,
-    [vectorStr, limit],
+    [vectorStr, limit, model],
   );
 
   const { rows: planRowsList } =
@@ -238,23 +243,28 @@ const AGENT_ASSET_CANDIDATE_CAP = 200;
  * joined to custom_prompts for display metadata. Over-fetches candidates then de-dupes by custom_prompt_id keeping
  * the best-scoring chunk so each asset appears once. Optionally filtered by prompt types and project id.
  * Uses raw SQL so the pgvector `<=>` operator and HNSW index are preserved.
- * @param embedding 1536-dim query embedding (e.g. OpenAI text-embedding-3-small).
+ * @param embedding Query vector from the configured embedder (`inputType: 'query'`).
  * @param limit Max number of distinct assets to return.
  * @param promptTypes Optional prompt_type filter (e.g. ['skills','rules','personas']); empty/undefined = all types.
  * @param projectId Optional project_id filter (multi-repo scoping).
+ * @param model The configured embedding model; only rows with this `embedding_model` are searched.
  */
 export async function searchAgentAssets(
   embedding: number[],
   limit: number,
-  promptTypes?: readonly string[],
-  projectId?: string | null,
+  promptTypes: readonly string[] | undefined,
+  projectId: string | null | undefined,
+  model: string,
 ): Promise<AgentAssetSearchChunk[]> {
   const vectorStr = `[${embedding.join(',')}]`;
   const ds = await getOrCreateDataSource();
 
-  const conditions: string[] = ['cp.deleted_at IS NULL'];
-  const params: (string | number | string[])[] = [vectorStr];
-  let paramIndex = 2;
+  const conditions: string[] = [
+    'cp.deleted_at IS NULL',
+    'cpe.embedding_model = $2',
+  ];
+  const params: (string | number | string[])[] = [vectorStr, model];
+  let paramIndex = 3;
 
   if (promptTypes && promptTypes.length > 0) {
     conditions.push(`cp.prompt_type = ANY($${paramIndex++})`);
@@ -431,26 +441,230 @@ export async function getChunkById(
     };
   }
 
-  return null;
+  return getSourceChunkById(id);
+}
+
+/** Raw row from the lexical (full-text) search over plans, tasks and documentation. */
+interface LexicalSearchRow {
+  authors: unknown;
+  content: string;
+  id: string;
+  path: string | null;
+  plan_id: string | null;
+  plan_title: string | null;
+  pr_number: number | null;
+  rank: string;
+  repo: string | null;
+  sha: string | null;
+  source: 'documentation' | 'plan' | 'task';
+  task_id: string | null;
+  task_title: string | null;
+}
+
+const LEXICAL_SOURCES_SQL = `
+  SELECT 'plan' AS source, s.id, concat_ws(E'\\n', s.title, s.description, s.summary) AS content,
+         s.id AS plan_id, s.title AS plan_title, NULL::uuid AS task_id, NULL AS task_title,
+         NULL AS path, NULL AS repo, NULL AS sha, NULL::int AS pr_number, NULL::jsonb AS authors,
+         s.search_tsv
+    FROM plans s
+  UNION ALL
+  SELECT 'task', s.id, concat_ws(E'\\n', s.title, s.description, s.summary),
+         s.plan_id, p.title, s.id, s.title, NULL, NULL, NULL, NULL, NULL, s.search_tsv
+    FROM tasks s JOIN plans p ON p.id = s.plan_id
+  UNION ALL
+  SELECT 'documentation', s.id, s.content, NULL, NULL, NULL, NULL,
+         s.path, s.repo, s.sha, s.pr_number, s.authors, s.search_tsv
+    FROM documentation s`;
+
+function mapLexicalRow(
+  r: LexicalSearchRow,
+  similarity: number,
+): SemanticSearchChunk {
+  if (r.source === 'documentation') {
+    return {
+      authors: Array.isArray(r.authors) ? r.authors : [],
+      content: r.content,
+      documentationId: r.id,
+      id: r.id,
+      metadata: {},
+      path: r.path ?? undefined,
+      prNumber: r.pr_number,
+      repo: r.repo ?? undefined,
+      sha: r.sha ?? undefined,
+      similarity,
+      source: 'documentation',
+    };
+  }
+
+  return {
+    content: r.content,
+    id: r.id,
+    metadata: {},
+    planId: r.plan_id ?? undefined,
+    planTitle: r.plan_title ?? undefined,
+    similarity,
+    source: r.source,
+    taskId: r.task_id ?? undefined,
+    taskTitle: r.task_title ?? undefined,
+  };
+}
+
+/**
+ * @description Postgres full-text search over the generated `search_tsv` columns of plans, tasks
+ * and documentation (`websearch_to_tsquery` + `ts_rank`, titles weighted highest). The fallback
+ * semantic search answers with when the embedder is unconfigured or failing, so a search is
+ * never silently empty. Chunk ids are the SOURCE row ids (there may be no embedding row);
+ * {@link getChunkById} resolves them too. `similarity` carries the ts_rank.
+ */
+export async function runLexicalSearch(
+  query: string,
+  limit: number,
+): Promise<SemanticSearchChunk[]> {
+  const ds = await getOrCreateDataSource();
+  const raw = await ds.query<LexicalSearchRow>(
+    `SELECT u.source, u.id, u.content, u.plan_id, u.plan_title, u.task_id, u.task_title,
+            u.path, u.repo, u.sha, u.pr_number, u.authors,
+            ts_rank(u.search_tsv, q) AS rank
+       FROM (${LEXICAL_SOURCES_SQL}) u, websearch_to_tsquery('english', $1) q
+      WHERE u.search_tsv @@ q
+      ORDER BY rank DESC
+      LIMIT $2`,
+    [query, limit],
+  );
+  const { rows } = normalizeQueryResult<LexicalSearchRow>(raw);
+
+  return rows.map((r) => {
+    return mapLexicalRow(r, Number(r.rank));
+  });
+}
+
+/**
+ * @description Resolves a source-row id (as returned by {@link runLexicalSearch}) to a chunk.
+ */
+async function getSourceChunkById(
+  id: string,
+): Promise<SemanticSearchChunk | null> {
+  const ds = await getOrCreateDataSource();
+  const raw = await ds.query<LexicalSearchRow>(
+    `SELECT u.source, u.id, u.content, u.plan_id, u.plan_title, u.task_id, u.task_title,
+            u.path, u.repo, u.sha, u.pr_number, u.authors, 1 AS rank
+       FROM (${LEXICAL_SOURCES_SQL}) u
+      WHERE u.id = $1
+      LIMIT 1`,
+    [id],
+  );
+  const row = normalizeQueryResult<LexicalSearchRow>(raw).rows[0];
+
+  return row ? mapLexicalRow(row, 1) : null;
+}
+
+/** Raw row from the lexical agent-asset search over custom_prompts. */
+interface CustomPromptLexicalRow {
+  content: string;
+  description: string | null;
+  file_path: string | null;
+  id: string;
+  labels: string[];
+  project_id: string | null;
+  prompt_type: string;
+  rank: string;
+  title: string;
+}
+
+/**
+ * @description Full-text fallback for {@link searchAgentAssets}: `custom_prompts.search_tsv`
+ * ranked by `ts_rank`, with the same prompt-type and project filters. One row per asset; `id` and
+ * `customPromptId` are both the prompt id.
+ */
+export async function searchAgentAssetsLexically(
+  query: string,
+  limit: number,
+  promptTypes: readonly string[] | undefined,
+  projectId: string | null | undefined,
+): Promise<AgentAssetSearchChunk[]> {
+  const ds = await getOrCreateDataSource();
+  const conditions: string[] = ['cp.deleted_at IS NULL', 'cp.search_tsv @@ q'];
+  const params: (string | number | string[])[] = [query];
+  let paramIndex = 2;
+
+  if (promptTypes && promptTypes.length > 0) {
+    conditions.push(`cp.prompt_type = ANY($${paramIndex++})`);
+    params.push([...promptTypes]);
+  }
+  if (projectId != null && projectId !== '') {
+    conditions.push(`cp.project_id = $${paramIndex++}`);
+    params.push(projectId);
+  }
+
+  params.push(limit);
+
+  const raw = await ds.query<CustomPromptLexicalRow>(
+    `SELECT cp.id, cp.content, cp.title, cp.prompt_type, cp.file_path, cp.project_id,
+            cp.description, cp.labels, ts_rank(cp.search_tsv, q) AS rank
+       FROM custom_prompts cp, websearch_to_tsquery('english', $1) q
+      WHERE ${conditions.join(' AND ')}
+      ORDER BY rank DESC
+      LIMIT $${paramIndex}`,
+    params,
+  );
+
+  return normalizeQueryResult<CustomPromptLexicalRow>(raw).rows.map((r) => {
+    return {
+      content: r.content,
+      customPromptId: r.id,
+      description: r.description,
+      filePath: r.file_path,
+      id: r.id,
+      labels: Array.isArray(r.labels) ? r.labels : [],
+      projectId: r.project_id,
+      promptType: r.prompt_type,
+      similarity: Number(r.rank),
+      title: r.title,
+    };
+  });
 }
 
 const DEFAULT_SEMANTIC_SEARCH_LIMIT = 20;
 
 /**
- * @description Search plans by semantic similarity to a query string. Embeds the query via OpenAI, runs vector search, and returns matching plans (deduped by plan id, in relevance order). Requires OPENAI_API_KEY.
- * @param query Free-text search query.
+ * @description Search plans by semantic similarity to an already-embedded query: runs vector
+ * search and returns matching plans (deduped by plan id, in relevance order). The caller embeds
+ * the query with the server's embedder (`inputType: 'query'`).
+ * @param embedding Query vector.
  * @param limit Max number of plans to return (default 20).
- * @returns List of plans matching the query, or empty if embedding fails or no matches.
  */
 export async function searchPlansBySemanticQuery(
+  embedding: number[],
+  limit: number,
+  model: string,
+): Promise<ListPlansByStatusResult> {
+  const chunks = await runSemanticSearch(
+    embedding,
+    Math.min(limit * 2, 50),
+    model,
+  );
+
+  return searchPlansFromChunks(chunks, limit);
+}
+
+/**
+ * @description Search plans by Postgres full-text search over `plans`/`tasks`/`documentation`
+ * `search_tsv` — the fallback when the embedder is unavailable. Same result shape as
+ * {@link searchPlansBySemanticQuery}.
+ */
+export async function searchPlansByLexicalQuery(
   query: string,
   limit: number = DEFAULT_SEMANTIC_SEARCH_LIMIT,
 ): Promise<ListPlansByStatusResult> {
-  const embedding = await embedQuery(query.trim());
-  if (!embedding) {
-    return { plans: [], totalCount: 0 };
-  }
-  const chunks = await runSemanticSearch(embedding, Math.min(limit * 2, 50));
+  const chunks = await runLexicalSearch(query, Math.min(limit * 2, 50));
+
+  return searchPlansFromChunks(chunks, limit);
+}
+
+async function searchPlansFromChunks(
+  chunks: readonly SemanticSearchChunk[],
+  limit: number,
+): Promise<ListPlansByStatusResult> {
   const seen = new Set<string>();
   const planIds: string[] = [];
   for (const c of chunks) {
@@ -2017,77 +2231,4 @@ export async function deleteNote(id: string): Promise<boolean> {
 
   const res = await runQuery(ds, 'DELETE FROM notes WHERE id = $1', [id]);
   return res.rowCount > 0;
-}
-
-// ---------------------------------------------------------------------------
-// Plan and task embeddings (vectorization for semantic search)
-// Uses TypeORM DataSource; raw SQL for pgvector (<=>, ::vector) and CRUD so indexes and behavior stay consistent.
-// ---------------------------------------------------------------------------
-
-/**
- * @description Deletes all embedding rows for a plan. Use before replacing plan embedding (e.g. on update).
- */
-export async function deletePlanEmbeddings(planId: string): Promise<number> {
-  const ds = await getOrCreateDataSource();
-
-  const res = await runQuery(
-    ds,
-    'DELETE FROM plan_embeddings WHERE plan_id = $1',
-    [planId],
-  );
-  return res.rowCount;
-}
-
-/**
- * @description Deletes all embedding rows for a task. Use before replacing task embedding (e.g. on update).
- */
-export async function deleteTaskEmbeddings(taskId: string): Promise<number> {
-  const ds = await getOrCreateDataSource();
-
-  const res = await runQuery(
-    ds,
-    'DELETE FROM task_embeddings WHERE task_id = $1',
-    [taskId],
-  );
-  return res.rowCount;
-}
-
-/**
- * @description Inserts a plan embedding row for semantic search. Embedding must be 1536-dim (e.g. OpenAI text-embedding-3-small).
- */
-export async function insertPlanEmbedding(
-  planId: string,
-  content: string,
-  embedding: number[],
-  metadata: Record<string, unknown> = {},
-): Promise<void> {
-  const ds = await getOrCreateDataSource();
-  const repo = ds.getRepository(PlanEmbedding);
-  const entity = repo.create({
-    content,
-    embedding,
-    metadata,
-    planId,
-  });
-  await repo.save(entity);
-}
-
-/**
- * @description Inserts a task embedding row for semantic search. Embedding must be 1536-dim (e.g. OpenAI text-embedding-3-small).
- */
-export async function insertTaskEmbedding(
-  taskId: string,
-  content: string,
-  embedding: number[],
-  metadata: Record<string, unknown> = {},
-): Promise<void> {
-  const ds = await getOrCreateDataSource();
-  const repo = ds.getRepository(TaskEmbedding);
-  const entity = repo.create({
-    content,
-    embedding,
-    metadata,
-    taskId,
-  });
-  await repo.save(entity);
 }

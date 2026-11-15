@@ -261,6 +261,10 @@ const main = async (): Promise<void> => {
   step('pnpm', ['build']);
   step('pnpm', ['run', 'build:hooks']);
 
+  // 3a. Semantic-search embedding model: every worktree shares ~/.openthrottle/models, so this
+  //     only downloads on a machine's first run; --verify proves the embedder answers 768 dims.
+  step('pnpm', ['run', 'embeddings:download-model', '--', '--verify']);
+
   // 3b. Own database: start the worktree's containers, migrate, seed the default user.
   if (isolatedPorts !== undefined) {
     const failure = seedIsolatedDatabase(process.cwd(), isolatedPorts);

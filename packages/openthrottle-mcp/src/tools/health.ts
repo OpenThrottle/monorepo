@@ -5,7 +5,10 @@
 import { executeGraphql } from '@openthrottle/nodejs-graphql';
 import { z } from 'zod';
 
-import { GetServerHealthDocument } from '../__generated__/graphql.js';
+import {
+  GetServerHealthWithEmbeddingsDocument,
+  type GetServerHealthWithEmbeddingsQuery,
+} from '../__generated__/graphql.js';
 import type { ToolsetName } from '../config/toolsets.ts';
 import {
   disabledToolsets,
@@ -23,14 +26,39 @@ type ToolsetReport = {
   enabled: ToolsetName[];
 };
 
+type ServerHealth = GetServerHealthWithEmbeddingsQuery['serverHealth'];
+
 type HealthStructured = {
-  serverHealth: {
-    api: string;
-    database: string;
-    redis: string;
-    websocket: string;
-  };
+  serverHealth: ServerHealth;
   toolsets: ToolsetReport;
+};
+
+/**
+ * @description Human-readable embeddings lines: status, model, backlog, then one coverage line
+ * per table — so "semantic search is down" is visible from `health`, not from an empty search.
+ */
+const describeEmbeddings = (
+  embeddings: ServerHealth['embeddings'] | undefined,
+): string[] => {
+  if (!embeddings) {
+    return [];
+  }
+
+  const model = embeddings.model
+    ? `${embeddings.provider} ${embeddings.model}, ${embeddings.dims ?? '?'} dims`
+    : embeddings.provider;
+  const lines = [
+    `  embeddings: ${embeddings.status} (${model}) — queue ${embeddings.queueDepth ?? 'unknown'}, stale ${embeddings.staleCount}`,
+    ...embeddings.coverage.map((table) => {
+      return `    ${table.table}: ${table.embedded}/${table.total}${table.stale > 0 ? ` (${table.stale} stale)` : ''}`;
+    }),
+  ];
+
+  if (embeddings.detail) {
+    lines.push(`    detail: ${embeddings.detail}`);
+  }
+
+  return lines;
 };
 
 /**
@@ -52,20 +80,23 @@ const reportToolsets = (): ToolsetReport => {
 
 export const healthToolParameters = z.object({}).strict();
 
-export const healthToolDescription = `Health check via GraphQL: returns server health (api, database, redis, websocket) and which MCP toolsets are loaded. No arguments. No direct Postgres; uses getServerHealth query only.`;
+export const healthToolDescription = `Health check via GraphQL: server health (api, database, redis, websocket, embeddings coverage) and which MCP toolsets are loaded. No arguments.`;
 
 export async function healthToolHandler(
   _args: z.infer<typeof healthToolParameters>,
 ): Promise<GenericResult<HealthStructured>> {
   return runTool<HealthStructured>('health', async () => {
-    const result = await executeGraphql(GetServerHealthDocument, {});
+    const result = await executeGraphql(
+      GetServerHealthWithEmbeddingsDocument,
+      {},
+    );
 
     const serverHealth = result?.serverHealth;
     if (!serverHealth) {
       return null;
     }
 
-    const { api, database, redis, websocket } = serverHealth;
+    const { api, database, embeddings, redis, websocket } = serverHealth;
     const toolsets = reportToolsets();
     const off = toolsets.disabled.map((t) => `${t.name} (${t.description})`);
     const lines = [
@@ -74,6 +105,7 @@ export async function healthToolHandler(
       `  database: ${database}`,
       `  redis: ${redis}`,
       `  websocket: ${websocket}`,
+      ...describeEmbeddings(embeddings),
       `MCP toolsets loaded: ${toolsets.enabled.join(', ')}`,
     ];
     if (off.length > 0) {

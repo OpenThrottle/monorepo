@@ -38,6 +38,7 @@ export const buildSetupSteps = (): SetupStep[] => {
   return [
     { args: ['run', 'build'], command: 'pnpm', title: 'Build the packages' },
     { args: ['run', 'build:hooks'], command: 'pnpm', title: 'Build the hook plugins' }, // prettier-ignore
+    { args: ['run', 'embeddings:download-model', '--', '--verify'], command: 'pnpm', title: 'Fetch + verify the embedding model' }, // prettier-ignore
     { args: ['run', 'database:build'], command: 'pnpm', title: 'Build the database image' }, // prettier-ignore
     { args: ['run', 'database:start'], command: 'pnpm', title: 'Start Postgres + Redis' }, // prettier-ignore
     { args: ['run', 'database:migrate'], command: 'pnpm', title: 'Apply database migrations' }, // prettier-ignore

@@ -20,7 +20,9 @@ export const GlobalFooter = (props: GlobalFooterProps): React.ReactElement => {
   // Handlers
 
   // Markup
-  const renderStatus = (key: keyof ServerHealthObject) => {
+  const renderStatus = (
+    key: Exclude<keyof ServerHealthObject, 'embeddings'>,
+  ) => {
     const color = healthValueColorClass(health?.[key]);
 
     return (

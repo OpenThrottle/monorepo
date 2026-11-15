@@ -1,95 +1,228 @@
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 
-/**
- * Tests for the embedder provider-selection branch in embedding.ts: Ollama is
- * used when OLLAMA_BASE_URL or OLLAMA_EMBEDDING_MODEL is set, otherwise OpenAI.
- * The OpenAI SDK and the Ollama HTTP call are both mocked, so no network or API
- * key is required.
- */
+import { EMBEDDING_MAX_INPUT_CHARS } from '../constants.ts';
+import type { EmbeddingBackend } from '../embedding.ts';
+import {
+  checkEmbeddingDimensions,
+  createEmbedder,
+  EMBEDDING_BATCH_SIZE,
+  prepareEmbeddingInput,
+  truncateCodePoints,
+} from '../embedding.ts';
+import type { EmbeddingConfig } from '../embedding-config.ts';
+import { resolveEmbeddingConfig } from '../embedding-config.ts';
 
-const ollama = vi.hoisted(() => ({
-  embedWithOllama: vi.fn(),
-  isOllamaEmbeddingConfigured: vi.fn(),
-}));
+function localConfig(): EmbeddingConfig {
+  const result = resolveEmbeddingConfig({});
 
-const openaiCreate = vi.hoisted(() => vi.fn());
+  if (!result.ok) {
+    throw new Error(result.detail);
+  }
 
-vi.mock('../ollama-embedding.js', () => ({
-  embedWithOllama: ollama.embedWithOllama,
-  isOllamaEmbeddingConfigured: ollama.isOllamaEmbeddingConfigured,
-}));
+  return result.config;
+}
 
-vi.mock('openai', () => ({
-  default: class {
-    embeddings = { create: openaiCreate };
-  },
-}));
+function fakeBackend(dims: number): EmbeddingBackend & {
+  readonly embed: ReturnType<typeof vi.fn<EmbeddingBackend['embed']>>;
+} {
+  return {
+    close: vi.fn(() => {
+      return Promise.resolve();
+    }),
+    embed: vi.fn<EmbeddingBackend['embed']>((texts) => {
+      return Promise.resolve({
+        ok: true,
+        vectors: texts.map(() => {
+          return Array.from({ length: dims }, () => {
+            return 0.5;
+          });
+        }),
+      });
+    }),
+  };
+}
 
-const { embedQuery } = await import('../embedding.js');
+describe('prepareEmbeddingInput', () => {
+  const config = localConfig();
 
-beforeEach(() => {
-  ollama.embedWithOllama.mockReset();
-  ollama.isOllamaEmbeddingConfigured.mockReset();
-  openaiCreate.mockReset();
-});
-
-afterEach(() => {
-  vi.unstubAllEnvs();
-});
-
-describe('embedQuery provider selection', () => {
-  test('uses the Ollama provider when Ollama is configured', async () => {
-    ollama.isOllamaEmbeddingConfigured.mockReturnValue(true);
-    ollama.embedWithOllama.mockResolvedValue([1, 2, 3]);
-
-    const result = await embedQuery('hello');
-
-    expect(result).toEqual([1, 2, 3]);
-    expect(ollama.embedWithOllama).toHaveBeenCalledWith('hello');
-    expect(openaiCreate).not.toHaveBeenCalled();
+  test('prefixes stored content with search_document:', () => {
+    expect(prepareEmbeddingInput(config, 'hello', 'document')).toBe(
+      'search_document: hello',
+    );
   });
 
-  test('uses the OpenAI provider when Ollama is not configured', async () => {
-    ollama.isOllamaEmbeddingConfigured.mockReturnValue(false);
-    vi.stubEnv('OPENAI_API_KEY', 'sk-test');
-    openaiCreate.mockResolvedValue({
-      data: [{ embedding: Array.from({ length: 1536 }, () => 0.1) }],
+  test('prefixes queries with search_query:', () => {
+    expect(prepareEmbeddingInput(config, 'hello', 'query')).toBe(
+      'search_query: hello',
+    );
+  });
+
+  test('truncates prefix + text to the shared input cap', () => {
+    const prepared = prepareEmbeddingInput(
+      config,
+      'x'.repeat(20_000),
+      'document',
+    );
+
+    expect(prepared).toHaveLength(EMBEDDING_MAX_INPUT_CHARS);
+    expect(prepared.startsWith('search_document: ')).toBe(true);
+  });
+});
+
+describe('truncateCodePoints', () => {
+  test('counts code points like Postgres left(), not UTF-16 units', () => {
+    expect(truncateCodePoints('a😀b😀c', 3)).toBe('a😀b');
+  });
+
+  test('returns short text unchanged', () => {
+    expect(truncateCodePoints('abc', 10)).toBe('abc');
+  });
+});
+
+describe('checkEmbeddingDimensions', () => {
+  test('passes when every vector matches', () => {
+    expect(
+      checkEmbeddingDimensions(
+        [
+          [1, 2],
+          [3, 4],
+        ],
+        2,
+        'm',
+      ),
+    ).toBeUndefined();
+  });
+
+  test('reports the first mismatched length', () => {
+    expect(checkEmbeddingDimensions([[1, 2], [3]], 2, 'm')).toMatchObject({
+      ok: false,
+      reason: 'dimension_mismatch',
     });
+  });
+});
 
-    const result = await embedQuery('hello');
+describe('createEmbedder', () => {
+  describe('when the backend answers with the configured dimension', () => {
+    test('returns vectors with model and dims provenance', async () => {
+      const backend = fakeBackend(768);
+      const embedder = createEmbedder(localConfig(), {
+        backend,
+        local: undefined,
+      });
 
-    expect(result).toHaveLength(1536);
-    expect(openaiCreate).toHaveBeenCalledTimes(1);
-    expect(ollama.embedWithOllama).not.toHaveBeenCalled();
+      const result = await embedder.embed(['a', 'b'], 'query');
+
+      expect(result).toMatchObject({
+        dims: 768,
+        model: 'nomic-embed-text-v1.5',
+        ok: true,
+      });
+      expect(result.ok && result.vectors).toHaveLength(2);
+      expect(backend.embed).toHaveBeenCalledWith([
+        'search_query: a',
+        'search_query: b',
+      ]);
+    });
   });
 
-  test('returns undefined on the OpenAI path when OPENAI_API_KEY is missing', async () => {
-    ollama.isOllamaEmbeddingConfigured.mockReturnValue(false);
-    vi.stubEnv('OPENAI_API_KEY', '');
+  describe('when there are more texts than one batch', () => {
+    test('splits them into batches and keeps input order', async () => {
+      const backend = fakeBackend(768);
+      const embedder = createEmbedder(localConfig(), {
+        backend,
+        local: undefined,
+      });
+      const texts = Array.from(
+        { length: EMBEDDING_BATCH_SIZE + 3 },
+        (_, index) => {
+          return String(index);
+        },
+      );
 
-    const result = await embedQuery('hello');
+      const result = await embedder.embed(texts, 'document');
 
-    expect(result).toBeUndefined();
-    expect(openaiCreate).not.toHaveBeenCalled();
+      expect(backend.embed).toHaveBeenCalledTimes(2);
+      expect(backend.embed.mock.calls[1]?.[0]).toEqual([
+        `search_document: ${EMBEDDING_BATCH_SIZE}`,
+        `search_document: ${EMBEDDING_BATCH_SIZE + 1}`,
+        `search_document: ${EMBEDDING_BATCH_SIZE + 2}`,
+      ]);
+      expect(result.ok && result.vectors).toHaveLength(
+        EMBEDDING_BATCH_SIZE + 3,
+      );
+    });
   });
 
-  test('returns undefined when the OpenAI embedding has an unexpected dimension', async () => {
-    ollama.isOllamaEmbeddingConfigured.mockReturnValue(false);
-    vi.stubEnv('OPENAI_API_KEY', 'sk-test');
-    openaiCreate.mockResolvedValue({ data: [{ embedding: [0.1, 0.2] }] });
+  describe('when the backend returns the wrong dimension', () => {
+    test('fails with dimension_mismatch', async () => {
+      const embedder = createEmbedder(localConfig(), {
+        backend: fakeBackend(1536),
+        local: undefined,
+      });
 
-    const result = await embedQuery('hello');
+      const result = await embedder.embed(['a'], 'document');
 
-    expect(result).toBeUndefined();
+      expect(result).toMatchObject({ ok: false, reason: 'dimension_mismatch' });
+    });
   });
 
-  test('returns undefined when the OpenAI request throws', async () => {
-    ollama.isOllamaEmbeddingConfigured.mockReturnValue(false);
-    vi.stubEnv('OPENAI_API_KEY', 'sk-test');
-    openaiCreate.mockRejectedValue(new Error('rate limited'));
+  describe('when the backend fails', () => {
+    test('passes the failure through and stops batching', async () => {
+      const backend = fakeBackend(768);
 
-    const result = await embedQuery('hello');
+      backend.embed.mockResolvedValueOnce({
+        detail: 'down',
+        ok: false,
+        reason: 'provider_error',
+      });
+      const embedder = createEmbedder(localConfig(), {
+        backend,
+        local: undefined,
+      });
 
-    expect(result).toBeUndefined();
+      const result = await embedder.embed(
+        Array.from({ length: EMBEDDING_BATCH_SIZE * 2 }, () => {
+          return 'x';
+        }),
+        'document',
+      );
+
+      expect(result).toEqual({
+        detail: 'down',
+        ok: false,
+        reason: 'provider_error',
+      });
+      expect(backend.embed).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('when the provider is ollama', () => {
+    test('calls the Ollama batch endpoint with the same model', async () => {
+      const result = resolveEmbeddingConfig({ EMBEDDING_PROVIDER: 'ollama' });
+
+      if (!result.ok) throw new Error(result.detail);
+      const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            embeddings: [Array.from({ length: 768 }, () => 0)],
+          }),
+        ),
+      );
+      const embedder = createEmbedder(result.config);
+
+      const embedded = await embedder.embed(['a'], 'query');
+
+      expect(embedded.ok).toBe(true);
+      expect(fetchMock).toHaveBeenCalledWith(
+        'http://localhost:11434/api/embed',
+        expect.objectContaining({
+          body: JSON.stringify({
+            input: ['search_query: a'],
+            model: 'nomic-embed-text',
+          }),
+        }),
+      );
+      fetchMock.mockRestore();
+    });
   });
 });

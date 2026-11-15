@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for OpenThrottle task_embeddings table. Matches databases/openthrottle/migrations (005). Uses pgvector vector(1536).
+ * @description TypeORM entity for OpenThrottle task_embeddings table. Matches databases/openthrottle/migrations (005, 163). Uses pgvector vector(768) with per-row provenance (embedding_model, embedding_dims, content_hash); one row per source row.
  */
 
 import {
@@ -33,8 +33,17 @@ export class TaskEmbedding {
   })
   embedding!: number[] | null;
 
+  @Column({ name: 'embedding_dims', nullable: true, type: 'integer' })
+  embeddingDims!: number | null;
+
+  @Column({ name: 'embedding_model', nullable: true, type: 'text' })
+  embeddingModel!: string | null;
+
   @Column({ default: () => "'{}'::jsonb", name: 'metadata', type: 'jsonb' })
   metadata!: Record<string, unknown>;
+
+  @Column({ name: 'content_hash', nullable: true, type: 'text' })
+  contentHash!: string | null;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp with time zone' })
   createdAt!: Date;

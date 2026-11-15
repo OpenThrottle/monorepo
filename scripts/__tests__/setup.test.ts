@@ -36,6 +36,13 @@ describe('buildSetupSteps', () => {
       scripts.indexOf('database:migrate'),
     );
 
+    // The embedding model is fetched (and verified) before the database step, so a
+    // fresh checkout's server can embed from its first boot.
+    expect(scripts).toContain('embeddings:download-model');
+    expect(scripts.indexOf('embeddings:download-model')).toBeLessThan(
+      scripts.indexOf('database:start'),
+    );
+
     // The database must be running before it is migrated.
     expect(scripts.indexOf('database:start')).toBeLessThan(
       scripts.indexOf('database:migrate'),

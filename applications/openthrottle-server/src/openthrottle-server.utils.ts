@@ -100,6 +100,9 @@ import { CodeIndexQueueModule } from './queues/code-index/code-index.module.ts';
 import { DailyStatsQueueModule } from './queues/daily-stats/daily-stats.module.ts';
 import { DataRetentionQueueModule } from './queues/data-retention/data-retention.module.ts';
 import { DatabaseBackupQueueModule } from './queues/database-backup/database-backup.module.ts';
+import { EmbeddingsQueueModule } from './queues/embeddings/embeddings.module.ts';
+import { EmbeddingsSubscriberModule } from './queues/embeddings/subscriber/subscriber.module.ts';
+import { EmbeddingsReconcileQueueModule } from './queues/embeddings-reconcile/embeddings-reconcile.module.ts';
 import { PlanLifecycleHooksQueueModule } from './queues/plan-lifecycle-hooks/plan-lifecycle-hooks.module.ts';
 import { PlanRulesQueueModule } from './queues/plan-rules/plan-rules.module.ts';
 import { PlanRunWorktreeReaperQueueModule } from './queues/plan-run-worktree-reaper/plan-run-worktree-reaper.module.ts';
@@ -195,6 +198,8 @@ export const buildImports = (role: ProcessRole): AppModuleImports => {
     // CmsWriteAuthorizerModule supplies the cms package's CMS_WRITE_AUTHORIZER; without it
     // every cms mutation is refused.
     CmsWriteAuthorizerModule,
+    // Every role writes plans/tasks, so every role registers the embeddings subscriber.
+    EmbeddingsSubscriberModule,
     NestjsRepositoriesCmsModule,
     NestjsRepositoriesModule,
     NestjsThrottlerModule,
@@ -226,6 +231,8 @@ export const buildImports = (role: ProcessRole): AppModuleImports => {
       DailyStatsQueueModule,
       DatabaseBackupQueueModule,
       DataRetentionQueueModule,
+      EmbeddingsQueueModule,
+      EmbeddingsReconcileQueueModule,
     );
   }
 

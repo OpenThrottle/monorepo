@@ -4,6 +4,8 @@
 
 import { Field, Float, ObjectType } from '@nestjs/graphql';
 
+import type { SearchMode } from './search.types.ts';
+
 @ObjectType()
 export class SearchChunk {
   @Field(() => String, {
@@ -75,6 +77,17 @@ export class SearchResult {
     description: `Ranked search chunks (plans and tasks) by similarity.`,
   })
   chunks!: SearchChunk[];
+
+  @Field(() => String, {
+    description: `How the result was ranked: "semantic" (vector similarity with the configured embedding model) or "lexical" (Postgres full-text search, used when semantic search is unavailable).`,
+  })
+  mode!: SearchMode;
+
+  @Field(() => String, {
+    description: `Why the result is lexical, or null when it is semantic: embedder_unconfigured | embedder_dimension_mismatch | embedder_provider_error | no_embeddings.`,
+    nullable: true,
+  })
+  reason!: string | null;
 }
 
 /**

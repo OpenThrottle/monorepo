@@ -6,11 +6,9 @@ import {
   getDefaultPlanRunConfigStorage,
   parsePlanRunConfigJson,
   Plan,
-  PlanEmbeddingsService,
   PlansService,
   UserPreferencesService,
 } from '@openthrottle/nestjs-repositories';
-import { embedQuery } from '@openthrottle/node-client';
 
 import type { CreatePlanInput } from '../../graphql/plans/plan.input.ts';
 import { CheckoutPathResolutionService } from '../checkout-path-resolution/checkout-path-resolution.service.ts';
@@ -31,23 +29,6 @@ function normalizeAssignee(value: string | null | undefined): string | null {
 }
 
 /**
- * @description Builds searchable text for a plan row (aligned with {@link buildPlanContentForEmbedding} in @openthrottle/node-client).
- */
-function buildPlanEmbeddingContent(
-  plan: Pick<Plan, 'author' | 'category' | 'description' | 'summary' | 'title'>,
-): string {
-  const parts = [
-    plan.title,
-    plan.description ?? '',
-    plan.summary ?? '',
-    plan.author,
-    plan.category,
-  ];
-
-  return parts.filter(Boolean).join('\n');
-}
-
-/**
  * @description Canonical server-side plan creation so GraphQL and MCP callers share one code path (see OpenThrottle plan align UI vs MCP).
  */
 @Injectable()
@@ -59,7 +40,6 @@ export class PlanCreationService {
     private readonly agentCliPreferencesService: AgentCliPreferencesService,
     private readonly checkoutPathResolutionService: CheckoutPathResolutionService,
     private readonly effectiveUserResolutionService: EffectiveUserResolutionService,
-    private readonly planEmbeddingsService: PlanEmbeddingsService,
     private readonly plansService: PlansService,
     private readonly userPreferencesService: UserPreferencesService,
   ) {
@@ -282,19 +262,14 @@ export class PlanCreationService {
       await this.resolvePlanCreateFields(input, userId),
     );
 
-    const saved = await repo.save(entity);
-
-    await this.maybeInsertPlanEmbedding(saved);
-
-    return saved;
+    return repo.save(entity);
   }
 
   /**
    * @description Atomically create many plans in one transaction. Every input is validated/normalized
    * up front (same rules as {@link createPlanFromInput}); a single bad input throws before anything is
-   * persisted, and any DB failure rolls back the whole batch. Embeddings are inserted best-effort after
-   * commit (failures never roll back the plans), matching the single-create path. Returns saved plans in
-   * input order.
+   * persisted, and any DB failure rolls back the whole batch. Embedding happens off the write path (the
+   * embeddings queue's entity subscriber). Returns saved plans in input order.
    */
   async createPlansFromInput(
     inputs: readonly CreatePlanInput[],
@@ -307,45 +282,11 @@ export class PlanCreationService {
     );
 
     const repo = this.plansService.getRepository();
-    const saved = await repo.manager.transaction(async (manager) => {
+    return repo.manager.transaction(async (manager) => {
       const planRepo = manager.getRepository(Plan);
       const entities = fieldsList.map((fields) => planRepo.create(fields));
 
       return planRepo.save(entities);
     });
-
-    await Promise.all(saved.map((plan) => this.maybeInsertPlanEmbedding(plan)));
-
-    return saved;
-  }
-
-  /**
-   * @description Inserts a plan_embeddings row when an embedder is configured; failures do not roll back the plan.
-   */
-  private async maybeInsertPlanEmbedding(plan: Plan): Promise<void> {
-    const content = buildPlanEmbeddingContent(plan);
-    if (content.trim() === '') {
-      return;
-    }
-
-    try {
-      const embedding = await embedQuery(content);
-      if (embedding == null || embedding.length === 0) {
-        return;
-      }
-
-      const embedRepo = this.planEmbeddingsService.getRepository();
-      await embedRepo.save(
-        embedRepo.create({
-          content,
-          embedding,
-          metadata: {},
-          planId: plan.id,
-        }),
-      );
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      this.logger.warn(`${this.name}: plan embedding skipped: ${message}`);
-    }
   }
 }

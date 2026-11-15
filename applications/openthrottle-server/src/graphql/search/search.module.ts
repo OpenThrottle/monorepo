@@ -4,9 +4,11 @@
 
 import { Module } from '@nestjs/common';
 
+import { EmbedderModule } from '../../services/embedder/embedder.module.ts';
 import { SearchResolver } from './search.resolver.ts';
 
 @Module({
+  imports: [EmbedderModule],
   providers: [SearchResolver],
 })
 export class SearchGraphqlModule {}
