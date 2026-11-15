@@ -1,4 +1,3 @@
-import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
 import { Badge, cn } from '@openthrottle/react-router-shadcn';
 import type { Row } from '@tanstack/react-table';
 import * as React from 'react';
@@ -7,10 +6,7 @@ import { Link } from 'react-router';
 import type { PlanTaskRowFragment } from '~/__generated__/graphql';
 import { PlanManagedTaskBadge } from '~/routing/plans/components/PlanManagedTaskBadge';
 import { PLAN_INBOX_COPY } from '~/routing/plans/data/data.copy';
-import {
-  MOBILE_CARD_BLOCK_CLASS,
-  MOBILE_CARD_TITLE_CLASS,
-} from '~/routing/plans/data/data.mobile-card';
+import { MOBILE_CARD_TITLE_CLASS } from '~/routing/plans/data/data.mobile-card';
 import { getRequirementsCount } from '~/routing/plans/utils/formatters';
 
 export interface PlanTasksTableCellTitleProps {
@@ -33,12 +29,9 @@ export const PlanTasksTableCellTitle = (
   const anchor = `/plans/${task.planId}/tasks/${task.id}`;
 
   const title = task.title ?? 'Untitled';
-  const description = task.description?.trim() ?? '';
-  const summary = task.summary?.trim() ?? '';
   const category = task.category?.trim() ?? '';
   const requirementsCount = getRequirementsCount(task.requirementsJson);
-  const hasMeta =
-    category !== '' || requirementsCount > 0 || task.assignee != null;
+  const hasMeta = category !== '' || requirementsCount > 0;
 
   // Handlers
 
@@ -58,19 +51,18 @@ export const PlanTasksTableCellTitle = (
 
   // 🔌 Short Circuit
 
+  // The whole cell is one link to the task. Its badges are non-interactive
+  // (the managed badge's tooltip trigger is a span), so nothing nests an <a>.
   return (
-    <div className="space-y-4 overflow-hidden max-sm:contents max-sm:space-y-0">
+    <Link
+      aria-label={`Scroll to task: ${title}`}
+      className="hover:text-primary block space-y-2 overflow-hidden max-sm:contents max-sm:space-y-0"
+      to={anchor}
+      viewTransition={true}
+    >
       <div className={cn('flex items-center gap-2', MOBILE_CARD_TITLE_CLASS)}>
         <h2 className="line-clamp-2 min-w-0 text-sm font-medium text-ellipsis">
-          {row.index + 1}.{' '}
-          <Link
-            aria-label={`Scroll to task: ${title}`}
-            className="hover:text-primary underline underline-offset-2"
-            to={anchor}
-            viewTransition={true}
-          >
-            {title}
-          </Link>
+          {row.index + 1}. <span>{title}</span>
         </h2>
 
         {isManaged ? <PlanManagedTaskBadge className="shrink-0" /> : null}
@@ -99,25 +91,8 @@ export const PlanTasksTableCellTitle = (
               {requirementsCount === 1 ? 'requirement' : 'requirements'}
             </span>
           )}
-          {task.assignee && (
-            <span className="max-sm:order-3">Assigned to {task.assignee}</span>
-          )}
         </div>
       )}
-
-      <div
-        className={cn(
-          'pre-wrap flex flex-col gap-2 overflow-hidden',
-          MOBILE_CARD_BLOCK_CLASS.description,
-        )}
-      >
-        <MarkdownRenderer
-          className="line-clamp-5 overflow-hidden [&_p]:!mb-0 [&_p]:!text-xs"
-          source={description || summary}
-          // className="!whitespace-wrap m-0 line-clamp-2 overflow-hidden [&_p]:!mb-0"
-          // source={summary || description}
-        />
-      </div>
-    </div>
+    </Link>
   );
 };

@@ -74,21 +74,10 @@ describe('PlanTasksTableCellTitle Component', () => {
     expect(titleLink).toHaveAttribute('href', '/plans/plan-1/tasks/task-1');
   });
 
-  test('renders assignee and prefers the description over the summary', () => {
-    expect(component.getByText('Assigned to visormatt')).toBeInTheDocument();
-    expect(component.getByText('Short description')).toBeInTheDocument();
+  test('omits the assignee, description and summary', () => {
+    expect(component.queryByText(/assigned to/i)).not.toBeInTheDocument();
+    expect(component.queryByText('Short description')).not.toBeInTheDocument();
     expect(component.queryByText('Short summary')).not.toBeInTheDocument();
-  });
-
-  test('falls back to the summary when there is no description', () => {
-    props = {
-      row: createMockRow({ description: '   ' }),
-    };
-
-    component.unmount();
-    renderComponent();
-
-    expect(component.getByText('Short summary')).toBeInTheDocument();
   });
 
   test('folds category and requirements count into the title cell', () => {
@@ -108,16 +97,15 @@ describe('PlanTasksTableCellTitle Component', () => {
     expect(component.getByLabelText('3 requirements')).toHaveTextContent(
       '3 requirements',
     );
+    // The metadata is part of the task link, so the whole cell is clickable.
+    expect(
+      component.getByRole('link', { name: /scroll to task: task title/i }),
+    ).toContainElement(component.getByLabelText('Category: implementation'));
   });
 
-  test('falls back to Untitled and hides empty metadata', () => {
+  test('falls back to Untitled', () => {
     props = {
-      row: createMockRow({
-        assignee: undefined,
-        description: '   ',
-        summary: undefined,
-        title: undefined,
-      }),
+      row: createMockRow({ title: undefined }),
     };
 
     component.unmount();
@@ -126,56 +114,6 @@ describe('PlanTasksTableCellTitle Component', () => {
     expect(
       component.getByRole('link', { name: /scroll to task: untitled/i }),
     ).toHaveTextContent('Untitled');
-    expect(component.queryByText(/assigned to/i)).not.toBeInTheDocument();
-    expect(component.queryByText('Short description')).not.toBeInTheDocument();
-    expect(component.queryByText('Short summary')).not.toBeInTheDocument();
-  });
-
-  test('renders a long description in full, clamped by CSS only', () => {
-    const longDescription = 'd'.repeat(130);
-
-    props = {
-      row: createMockRow({
-        description: longDescription,
-        summary: 's'.repeat(130),
-      }),
-    };
-
-    component.unmount();
-    renderComponent();
-
-    // Markdown rendering replaced the JS truncation; overflow is now handled by
-    // the `line-clamp-5` class rather than a slice plus a title tooltip.
-    expect(component.getByText(longDescription)).not.toHaveAttribute('title');
-  });
-
-  test('renders a short description without tooltip attributes', () => {
-    props = {
-      row: createMockRow({
-        description: 'Short details',
-        summary: 'Short recap',
-      }),
-    };
-
-    component.unmount();
-    renderComponent();
-
-    expect(component.getByText('Short details')).not.toHaveAttribute('title');
-  });
-
-  test('trims whitespace-only description and summary content', () => {
-    props = {
-      row: createMockRow({
-        description: '   ',
-        summary: '    ',
-      }),
-    };
-
-    component.unmount();
-    renderComponent();
-
-    expect(component.queryByText('   ')).not.toBeInTheDocument();
-    expect(component.queryByText('    ')).not.toBeInTheDocument();
   });
 
   test('flags the task when a steer is pending', () => {
