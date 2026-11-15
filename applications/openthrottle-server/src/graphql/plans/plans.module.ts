@@ -8,6 +8,7 @@ import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 
 import { NotificationsModule } from '../../notifications/notifications.module.ts';
 import { PlanRulesQueueProducerModule } from '../../queues/plan-rules/producer/producer.module.ts';
+import { PlanRunScheduleModule } from '../../queues/plans/plan-run-schedule/plan-run-schedule.module.ts';
 import { PlansQueueProducerModule } from '../../queues/plans/producer/producer.module.ts';
 import { TaggingQueueProducerModule } from '../../queues/tagging/producer/producer.module.ts';
 import { EffectiveUserResolutionModule } from '../../services/effective-user-resolution/effective-user-resolution.module.ts';
@@ -20,6 +21,7 @@ import { WorkLedgerGraphqlModule } from '../work-ledger/work-ledger.module.ts';
 import { PlansLoaders } from './loaders/loaders.service.ts';
 import { PlanEnqueueModule } from './plan-enqueue/plan-enqueue.module.ts';
 import { PlanRunObjectResolver } from './plan-run-object/plan-run-object.resolver.ts';
+import { PlanRunSchedulesResolver } from './plan-run-schedules/plan-run-schedules.resolver.ts';
 import { PlanStatusModule } from './plan-status/plan-status.module.ts';
 import { PlansResolver } from './plans.resolver.ts';
 
@@ -33,6 +35,7 @@ import { PlansResolver } from './plans.resolver.ts';
     PlanCreationModule,
     PlanEnqueueModule,
     PlanRulesQueueProducerModule,
+    PlanRunScheduleModule,
     PlanRunWorktreeCheckoutModule,
     PlanStatusModule,
     PlansQueueProducerModule,
@@ -41,6 +44,11 @@ import { PlansResolver } from './plans.resolver.ts';
     WorkLedgerGraphqlModule,
     WorktreeCheckoutPruneModule,
   ],
-  providers: [PlanRunObjectResolver, PlansLoaders, PlansResolver],
+  providers: [
+    PlanRunObjectResolver,
+    PlanRunSchedulesResolver,
+    PlansLoaders,
+    PlansResolver,
+  ],
 })
 export class PlansGraphqlModule {}

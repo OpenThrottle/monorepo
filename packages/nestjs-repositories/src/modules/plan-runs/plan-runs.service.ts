@@ -43,6 +43,8 @@ interface RecordQueuedPlanRunInput {
   /** Resolved agent model id (queryable projection of run_config_snapshot.ralph.model). */
   readonly model?: string | null;
   readonly planId: string;
+  /** The recurring schedule (migration 163) that materialized this run; omit/null otherwise. */
+  readonly planRunScheduleId?: string | null;
   readonly queueName: string;
   /** The usage-limited run this run continues (migration 138); omit/null for an ordinary run. */
   readonly resumeOfRunId?: string | null;
@@ -162,6 +164,7 @@ export class PlanRunsService {
       executionBackend: input.executionBackend,
       model: input.model ?? null,
       planId: input.planId,
+      planRunScheduleId: input.planRunScheduleId ?? null,
       queueName: input.queueName,
       resumeOfRunId: input.resumeOfRunId ?? null,
       runConfigSnapshot,
@@ -367,6 +370,19 @@ export class PlanRunsService {
       order: { createdAt: 'DESC' },
       take: limit,
       where: { planId },
+    });
+  }
+
+  /**
+   * @description The SCHEDULED run a recurring schedule currently has pending (earliest
+   * `scheduledFor` if more than one), or null when none is materialized.
+   */
+  findScheduledByScheduleId(
+    planRunScheduleId: string,
+  ): Promise<PlanRun | null> {
+    return this.getRepository().findOne({
+      order: { scheduledFor: 'ASC' },
+      where: { planRunScheduleId, status: PLAN_RUN_STATUS.SCHEDULED },
     });
   }
 

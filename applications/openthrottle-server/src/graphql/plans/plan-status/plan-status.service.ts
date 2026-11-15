@@ -41,6 +41,7 @@ import type {
   ApplyStatusChangeResult,
   CancelPlanRunOutcome,
   ReleaseScheduledPlanParams,
+  SetStatusOutcome,
   StatusChangeActor,
   WriteGuardedStatusParams,
 } from './plan-status.types.ts';
@@ -404,6 +405,25 @@ export class PlanStatusService {
     requestedStatus: string,
     actor: StatusChangeActor,
   ): Promise<Plan | null> {
+    const outcome = await this.setStatusWithOutcome(
+      planId,
+      requestedStatus,
+      actor,
+    );
+
+    return outcome === null ? null : outcome.plan;
+  }
+
+  /**
+   * @description {@link setStatus} that also reports the SCHEDULED runs the change cancelled (D7), so
+   * a caller can resume a recurring schedule's chain after the write committed. Null when the plan
+   * does not exist.
+   */
+  async setStatusWithOutcome(
+    planId: string,
+    requestedStatus: string,
+    actor: StatusChangeActor,
+  ): Promise<SetStatusOutcome | null> {
     const repo = this.plansService.getRepository();
 
     return repo.manager.transaction(async (manager) => {
@@ -423,9 +443,14 @@ export class PlanStatusService {
         throwOnForbiddenInProgress: true,
       });
 
-      if (!result.applied) return entity;
+      if (!result.applied) {
+        return { cancelledScheduledRunIds: [], plan: entity };
+      }
 
-      return planRepo.save(entity);
+      return {
+        cancelledScheduledRunIds: result.cancelledScheduledRunIds,
+        plan: await planRepo.save(entity),
+      };
     });
   }
 

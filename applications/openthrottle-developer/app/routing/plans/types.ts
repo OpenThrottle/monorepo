@@ -2,11 +2,13 @@ import type { PlanRunConfigRunner } from '@openthrottle/openthrottle-plan-config
 import type { useRouteLoaderData } from 'react-router';
 
 import type {
+  PlanDetailCreatePlanRunScheduleMutation,
   PlanDetailEnqueuePlanRunMutation,
   PlanDetailSchedulePlanRunMutation,
   PlanTaskStatus,
 } from '~/__generated__/graphql';
 import type { loader } from '~/routes/plans.$planId._index';
+import type { PLAN_RUN_REPEAT_COPY } from '~/routing/plans/data/data.copy';
 import type { WorkflowRalphExecutionBackendUi } from '~/routing/plans/utils/workflow-ralph-config';
 
 /**
@@ -61,6 +63,12 @@ export type PlanDetailRouteData = NonNullable<
 export type PlanRunDialogMode = 'run' | 'schedule';
 
 /**
+ * @description How a scheduled run recurs: `none` is today's one-off schedule; the rest create a
+ * recurring schedule (`custom` takes the user's own cron).
+ */
+export type PlanRunRepeat = keyof typeof PLAN_RUN_REPEAT_COPY.optionLabels;
+
+/**
  * @description Everything the Run dialog lets the user edit. Rebuilt from the plan's
  * `runConfigJson` each time the dialog opens, so nothing carries over between opens.
  * `iterationsText` is the raw field (this run only); backend, model and effort are
@@ -68,6 +76,8 @@ export type PlanRunDialogMode = 'run' | 'schedule';
  */
 export interface PlanRunDialogDraft {
   readonly backend: WorkflowRalphExecutionBackendUi;
+  /** @description Raw cron text, read only when `repeat` is `custom`. */
+  readonly customCron: string;
   readonly effort: string;
   readonly iterationsText: string;
   readonly mode: PlanRunDialogMode;
@@ -76,6 +86,8 @@ export interface PlanRunDialogDraft {
   readonly otLoopMaxRetriesText: string;
   /** @description One validation command per line; OT Loop only. Blank = repo file / Nx default. */
   readonly otLoopValidationText: string;
+  /** @description Schedule tab only: `none` keeps the one-off schedule. */
+  readonly repeat: PlanRunRepeat;
   /** @description Saved to the plan's run config and sent as `runner` at enqueue. */
   readonly runner: PlanRunConfigRunner;
   readonly scheduleDate: Date | undefined;
@@ -95,7 +107,29 @@ export type PlanRunDialogSubmission =
   | {
       readonly mode: 'schedule';
       readonly result: PlanDetailSchedulePlanRunMutation['schedulePlanRun'];
+    }
+  | {
+      readonly mode: 'repeat';
+      readonly result: PlanDetailCreatePlanRunScheduleMutation['createPlanRunSchedule'];
     };
+
+/**
+ * @description The Repeat control of the Run dialog's Schedule tab, as one bag so the tab and
+ * the control take a single prop.
+ */
+export interface PlanRunDialogRepeatState {
+  /** @description Why the cron cannot be used (custom only); `undefined` when fine. */
+  readonly cronError: string | undefined;
+  /** @description Cron text for `custom`, as typed. */
+  readonly customCron: string;
+  /** @description Why Repeat cannot be changed (the plan already repeats); `undefined` when it can. */
+  readonly disabledReason: string | undefined;
+  readonly onCustomCronChange: (text: string) => void;
+  readonly onRepeatChange: (repeat: PlanRunRepeat) => void;
+  readonly repeat: PlanRunRepeat;
+  /** @description "Repeats at 09:00 AM, Monday through Friday"; `undefined` for a one-off or bad cron. */
+  readonly summary: string | undefined;
+}
 
 /**
  * @description The runner choice and OT Loop fields of the Run dialog, as one bag the

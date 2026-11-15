@@ -34,6 +34,15 @@ fragment ProjectDetails on ProjectObject {
   name
 }
 
+fragment PlanRunScheduleFields on PlanRunSchedule {
+  cronPattern
+  enabled
+  id
+  nextOccurrenceAt
+  pendingPlanRunId
+  timezone
+}
+
 fragment PlanTagChip on PlanTagObject {
   confidence
   dimension
@@ -63,6 +72,9 @@ fragment PlanDetails on PlanObject {
   }
   runConfigJson
   runnableTaskCount
+  runSchedules {
+    ...PlanRunScheduleFields
+  }
   scheduledRunAt
   scheduledRunId
   status
@@ -118,6 +130,24 @@ mutation PlanDetailReschedulePlanRun($input: ReschedulePlanRunInput!) {
     planId
     planRunId
     scheduledFor
+  }
+}
+
+# Makes a plan recur (cron + IANA timezone). The server materializes the first
+# occurrence itself, so this is used INSTEAD of schedulePlanRun for a repeat.
+mutation PlanDetailCreatePlanRunSchedule($input: CreatePlanRunScheduleInput!) {
+  createPlanRunSchedule(input: $input) {
+    ...PlanRunScheduleFields
+  }
+}
+
+# Pauses (enabled: false, "Stop repeating") or resumes a recurring schedule; a
+# pause also cancels its pending occurrence.
+mutation PlanDetailSetPlanRunScheduleEnabled(
+  $input: SetPlanRunScheduleEnabledInput!
+) {
+  setPlanRunScheduleEnabled(input: $input) {
+    ...PlanRunScheduleFields
   }
 }
 

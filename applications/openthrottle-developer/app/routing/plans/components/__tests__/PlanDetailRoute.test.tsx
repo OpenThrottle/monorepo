@@ -47,6 +47,7 @@ const plan: PlanDetailRouteProps['plan'] = {
   projectId: null,
   projectRelation: null,
   runConfigJson: '{}',
+  runSchedules: [],
   runnableTaskCount: 1,
   status: 'PENDING',
   tags: [],

@@ -124,6 +124,7 @@ export const PlanRunRescheduleDialog = (
             error={scheduleError}
             onDateChange={setDate}
             onTimeChange={setTime}
+            repeat={undefined}
             summary={scheduleSummary}
             time={time}
             timeZone={timeZone}

@@ -16,12 +16,15 @@ import {
 } from 'vitest';
 
 import {
+  PLAN_RUN_REPEAT_COPY,
   PLAN_RUN_RUNNER_COPY,
   PLAN_SCHEDULE_CONFIRM_COPY,
 } from '~/routing/plans/data/data.copy';
+import { PLAN_DETAIL_ROUTE_ID } from '~/routing/plans/data/data.plan-detail-route-id';
 import { formatPlanScheduledFor } from '~/routing/plans/utils/formatPlanScheduledFor';
 
 import { buildPlanRunConfigJson } from '../../testing/buildPlanRunConfigJson';
+import { buildPlanRunSchedule } from '../../testing/buildPlanRunSchedule';
 import type { PlanRunDialogProps } from '../PlanRunDialog';
 import { PlanRunDialog } from '../PlanRunDialog';
 
@@ -38,6 +41,7 @@ type SubmittedForm = Record<string, string>;
 interface RenderOptions {
   readonly actionResult?: unknown;
   readonly props?: Partial<PlanRunDialogProps>;
+  readonly schedules?: readonly ReturnType<typeof buildPlanRunSchedule>[];
 }
 
 describe('PlanRunDialog Component', () => {
@@ -70,6 +74,7 @@ describe('PlanRunDialog Component', () => {
         </TooltipProvider>
       );
     };
+    const loaderData = { plan: { runSchedules: options.schedules ?? [] } };
     const RoutesStub = createRoutesStub([
       {
         Component: Harness,
@@ -86,11 +91,17 @@ describe('PlanRunDialog Component', () => {
 
           return options.actionResult ?? null;
         },
+        id: PLAN_DETAIL_ROUTE_ID,
+        loader: () => loaderData,
         path: '/',
       },
     ]);
 
-    const component = render(<RoutesStub />);
+    const component = render(
+      <RoutesStub
+        hydrationData={{ loaderData: { [PLAN_DETAIL_ROUTE_ID]: loaderData } }}
+      />,
+    );
 
     // Let the deferred model list resolve inside act before any assertion.
     await component.findByTestId('PlanRunModelPicker');
@@ -176,6 +187,130 @@ describe('PlanRunDialog Component', () => {
 
       expect(component.queryByTestId('PlanRunDialogSchedule')).toBeNull();
       expect(field(component, 'intent')).toBe('runPlan');
+    });
+  });
+
+  describe('repeat', () => {
+    const chooseRepeat = async (
+      component: RenderResult,
+      name: string,
+    ): Promise<void> => {
+      const user = userEvent.setup();
+
+      await user.click(
+        component.getByRole('combobox', { name: PLAN_RUN_REPEAT_COPY.label }),
+      );
+      await user.click(await component.findByRole('option', { name }));
+    };
+
+    test('Does not repeat keeps the one-off schedulePlanRun flow', async () => {
+      const component = await renderDialog({ props: { mode: 'schedule' } });
+
+      expect(field(component, 'intent')).toBe('schedulePlanRun');
+      expect(field(component, 'scheduledFor')).not.toBeNull();
+      expect(field(component, 'cronPattern')).toBeNull();
+    });
+
+    test('Daily submits createPlanRunSchedule with the cron from the picked time and the browser zone', async () => {
+      const component = await renderDialog({ props: { mode: 'schedule' } });
+
+      await chooseRepeat(component, PLAN_RUN_REPEAT_COPY.optionLabels.daily);
+
+      expect(field(component, 'intent')).toBe('createPlanRunSchedule');
+      expect(field(component, 'cronPattern')).toBe('0 13 * * *');
+      expect(field(component, 'timezone')).toBe(
+        Intl.DateTimeFormat().resolvedOptions().timeZone,
+      );
+      expect(field(component, 'scheduledFor')).toBeNull();
+      expect(field(component, 'branch')).toBe('feat/run-dialog');
+    });
+
+    test('Weekdays and Weekly derive their day-of-week field', async () => {
+      const component = await renderDialog({ props: { mode: 'schedule' } });
+
+      await chooseRepeat(component, PLAN_RUN_REPEAT_COPY.optionLabels.weekdays);
+      expect(field(component, 'cronPattern')).toBe('0 13 * * 1-5');
+
+      await chooseRepeat(component, PLAN_RUN_REPEAT_COPY.optionLabels.weekly);
+      // The default pick is Monday 2 November.
+      expect(field(component, 'cronPattern')).toBe('0 13 * * 1');
+    });
+
+    test('Custom cron sends the typed pattern and blocks submit until it has five fields', async () => {
+      const user = userEvent.setup();
+      const component = await renderDialog({ props: { mode: 'schedule' } });
+
+      await chooseRepeat(component, PLAN_RUN_REPEAT_COPY.optionLabels.custom);
+      expect(
+        component.getByRole('button', { name: 'Schedule run' }),
+      ).toBeDisabled();
+
+      await user.type(
+        component.getByRole('textbox', {
+          name: PLAN_RUN_REPEAT_COPY.customCronLabel,
+        }),
+        '30 6 * * 1',
+      );
+
+      expect(field(component, 'cronPattern')).toBe('30 6 * * 1');
+      expect(
+        component.getByRole('button', { name: 'Schedule run' }),
+      ).toBeEnabled();
+    });
+
+    test('submitting a repeat posts createPlanRunSchedule and reports it', async () => {
+      const user = userEvent.setup();
+      const created = buildPlanRunSchedule();
+      const component = await renderDialog({
+        actionResult: { createPlanRunSchedule: created },
+        props: { mode: 'schedule' },
+      });
+
+      await chooseRepeat(component, PLAN_RUN_REPEAT_COPY.optionLabels.daily);
+      await user.click(component.getByRole('button', { name: 'Schedule run' }));
+
+      await waitFor(() => {
+        expect(props.onSubmitted).toHaveBeenCalledWith({
+          mode: 'repeat',
+          result: created,
+        });
+      });
+      expect(submitted[0]).toMatchObject({
+        cronPattern: '0 13 * * *',
+        intent: 'createPlanRunSchedule',
+      });
+    });
+
+    test('shows the server message when the schedule is rejected', async () => {
+      const user = userEvent.setup();
+      const component = await renderDialog({
+        actionResult: {
+          createPlanRunScheduleError: 'Runs are too close together',
+        },
+        props: { mode: 'schedule' },
+      });
+
+      await chooseRepeat(component, PLAN_RUN_REPEAT_COPY.optionLabels.daily);
+      await user.click(component.getByRole('button', { name: 'Schedule run' }));
+
+      expect(
+        await component.findByText('Runs are too close together'),
+      ).toBeInTheDocument();
+    });
+
+    test('disables Repeat and names the rule when the plan already repeats', async () => {
+      const component = await renderDialog({
+        props: { mode: 'schedule' },
+        schedules: [buildPlanRunSchedule()],
+      });
+
+      expect(
+        component.getByRole('combobox', { name: PLAN_RUN_REPEAT_COPY.label }),
+      ).toBeDisabled();
+      expect(
+        component.getByTestId('PlanRunDialogRepeat-disabled-reason'),
+      ).toHaveTextContent(/Monday through Friday/);
+      expect(field(component, 'intent')).toBe('schedulePlanRun');
     });
   });
 

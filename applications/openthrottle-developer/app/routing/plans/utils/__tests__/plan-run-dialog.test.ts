@@ -299,12 +299,14 @@ describe('plan-run-dialog utils', () => {
     const base = {
       branch: 'feat/x',
       checkoutId: 'checkout-1',
+      cronPattern: undefined,
       draft,
       iterations: 4,
       jobRunHooksJson: '',
       ralphTuningJson: '{"iterations":2}',
       repositoryId: '',
       scheduledFor: new Date('2026-11-02T23:00:00.000Z'),
+      timeZone: 'America/Los_Angeles',
       workingDirectory: '',
     };
 

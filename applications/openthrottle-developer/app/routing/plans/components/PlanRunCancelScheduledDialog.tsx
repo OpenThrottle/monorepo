@@ -15,10 +15,12 @@ import { useFetcher, useRevalidator } from 'react-router';
 
 import type { action as planDetailAction } from '~/routes/plans.$planId._index';
 import { PLAN_RUN_CANCEL_SCHEDULED_COPY } from '~/routing/plans/data/data.copy';
+import { usePlanRunSchedules } from '~/routing/plans/hooks/usePlanRunSchedules';
 import {
   cancelPlanRunToastTone,
   describeCancelPlanRunResult,
 } from '~/routing/plans/utils/describeCancelPlanRunResult';
+import { selectScheduleForRun } from '~/routing/plans/utils/plan-run-repeat';
 
 export interface PlanRunCancelScheduledDialogProps {
   /** Optional trigger (an `AlertDialogTrigger`); omit it to open the dialog only through `open`. */
@@ -47,12 +49,17 @@ export const PlanRunCancelScheduledDialog = (
   const busyRef = React.useRef(false);
   const fetcher = useFetcher<typeof planDetailAction>();
   const revalidator = useRevalidator();
+  const { schedules } = usePlanRunSchedules({});
 
   // Setup
   const CancelForm = fetcher.Form;
   const isSubmitting = fetcher.state !== 'idle';
-  const { confirmLabel, dialogBody, dialogTitle, keepLabel, pendingLabel } =
-    PLAN_RUN_CANCEL_SCHEDULED_COPY;
+  const copy = PLAN_RUN_CANCEL_SCHEDULED_COPY;
+  const isOccurrence = selectScheduleForRun(schedules, planRunId) !== undefined;
+  const { confirmLabel, dialogBody, dialogTitle } = isOccurrence
+    ? copy.occurrence
+    : copy;
+  const { keepLabel, pendingLabel } = copy;
 
   // Handlers
 

@@ -552,6 +552,11 @@ type PlanObject {
   runConfigJson: String!
 
   """
+  The plan's recurring schedules, oldest first. Resolved through a batched loader (one query for a whole list of plans).
+  """
+  runSchedules: [PlanRunSchedule!]!
+
+  """
   Plan-level before-hooks (beforeAll, or beforeEach when scope='each'), in execution order.
   """
   beforeHooks: [TaskObject!]!
@@ -618,6 +623,11 @@ type PlanRunObject {
   """
   pid: Int
   planId: String!
+
+  """
+  The recurring schedule (PlanRunSchedule.id) that materialized this run. Null for runs started by hand or scheduled once.
+  """
+  planRunScheduleId: String
   queueName: String!
 
   """
@@ -3417,6 +3427,53 @@ type WorkLedgerCompletenessResult {
 
   """Plans the ledger knows have git work (see the denominator caveat)"""
   totalCount: Int!
+}
+
+type PlanRunSchedule {
+  """
+  Who created the schedule (GitHub username or principal id). Null for system schedules.
+  """
+  createdBy: String
+  createdAt: DateTime!
+
+  """
+  Cron pattern (5 fields, evaluated in timezone). Render it for humans on the client.
+  """
+  cronPattern: String!
+
+  """
+  False while the schedule is paused: no occurrence is materialized and the pending one was cancelled.
+  """
+  enabled: Boolean!
+  id: ID!
+
+  """
+  What happens to an occurrence the server missed: skip (drop it) or run_once (fire a single catch-up run).
+  """
+  misfirePolicy: String!
+
+  """
+  When the next occurrence fires: scheduledFor of the pending SCHEDULED run. Null when the schedule is disabled or has no pending occurrence. Resolved through a batched loader.
+  """
+  nextOccurrenceAt: DateTime
+
+  """
+  The id of the pending SCHEDULED plan run behind nextOccurrenceAt; null when none is waiting.
+  """
+  pendingPlanRunId: ID
+  planId: ID!
+
+  """
+  JSON object of per-schedule run overrides applied to every materialized run (keys: branch, effort, iterations, model). '{}' means none.
+  """
+  runOverridesJson: String!
+
+  """Schedule kind. Only 'cron' exists today."""
+  scheduleKind: String!
+
+  """IANA timezone the cron pattern is evaluated in. Null means UTC."""
+  timezone: String
+  updatedAt: DateTime!
 }
 
 """The outcome for one requested checkout id."""
@@ -7419,6 +7476,21 @@ type Mutation {
   deletePlanOutput(input: DeletePlanOutputInput!): DeletePlanOutputResult!
 
   """
+  Create a recurring schedule for a plan and materialize its first occurrence as a SCHEDULED run. Rejects a cron pattern or timezone the scheduler cannot honour (extensions: BAD_REQUEST with the reason), an unknown misfirePolicy and run overrides other than branch / effort / iterations / model.
+  """
+  createPlanRunSchedule(input: CreatePlanRunScheduleInput!): PlanRunSchedule!
+
+  """
+  Edit a schedule. Validated like createPlanRunSchedule against the merged rule. When the cron pattern or timezone changed, the pending occurrence is cancelled and the next slot of the new rule is materialized (an enabled schedule only).
+  """
+  updatePlanRunSchedule(input: UpdatePlanRunScheduleInput!): PlanRunSchedule!
+
+  """
+  Pause or resume a schedule. Disabling cancels the pending occurrence (and nothing re-materializes it while disabled); enabling materializes the next slot.
+  """
+  setPlanRunScheduleEnabled(input: SetPlanRunScheduleEnabledInput!): PlanRunSchedule!
+
+  """
   Register a detached workflow-ralph CLI run as a first-class plan_runs row (bullmqJobId NULL, runKind 'orchestrator', status IN_PROGRESS) so cancelPlanRun has a row to stamp the durable cancel marker on. Creates NO BullMQ job. The CLI calls this on start, polls the marker each iteration boundary, and settles the row via settleCliPlanRun on exit.
   """
   registerCliPlanRun(input: RegisterCliPlanRunInput!): PlanRunObject!
@@ -8814,6 +8886,58 @@ input DeletePlanOutputInput {
   When clearing (chunkId omitted), scope the clear to chunks attributed to this task id.
   """
   taskId: ID
+}
+
+input CreatePlanRunScheduleInput {
+  """
+  REQUIRED cron pattern (5 fields). Consecutive runs must be at least the minimum interval apart; the server rejects anything else with the reason.
+  """
+  cronPattern: String!
+
+  """Optional misfire policy: skip (default) or run_once."""
+  misfirePolicy: String
+
+  """The plan to recur."""
+  planId: ID!
+
+  """
+  Optional JSON object of run overrides; only branch, effort, iterations and model are accepted.
+  """
+  runOverridesJson: String
+
+  """
+  Optional IANA timezone name (e.g. America/New_York). Omitted means UTC.
+  """
+  timezone: String
+}
+
+input UpdatePlanRunScheduleInput {
+  """
+  New cron pattern. Changing it (or the timezone) cancels the pending occurrence and materializes the next slot of the new rule.
+  """
+  cronPattern: String
+
+  """The schedule to update."""
+  id: ID!
+  misfirePolicy: String
+
+  """
+  Replaces the run overrides (JSON object; branch, effort, iterations, model). Applies from the next materialized occurrence.
+  """
+  runOverridesJson: String
+
+  """
+  New IANA timezone. Send an empty string to reset to UTC; omit or null to leave it unchanged.
+  """
+  timezone: String
+}
+
+input SetPlanRunScheduleEnabledInput {
+  """
+  False pauses the schedule and cancels its pending occurrence; true resumes it and materializes the next slot.
+  """
+  enabled: Boolean!
+  id: ID!
 }
 
 input RegisterCliPlanRunInput {

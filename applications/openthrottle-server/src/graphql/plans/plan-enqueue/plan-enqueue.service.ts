@@ -18,6 +18,7 @@ import {
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
   PlanRunExecutionBackend,
+  PlanRunSchedule,
   PlanRunStatus,
   ScheduledRunRef,
 } from '@openthrottle/nestjs-repositories';
@@ -26,6 +27,7 @@ import {
   PLAN_RUN_STATUS,
   PLAN_STATUS,
   PlanRun,
+  planRunConfigFromPlanStorage,
   PlanRunsService,
   PlansService,
   RepositoryCheckoutsService,
@@ -71,14 +73,17 @@ import type { StatusChangeActor } from '../plan-status/plan-status.types.ts';
 import { PLAN_SCHEDULE_CONFLICT_CODE } from './plan-enqueue.constants.ts';
 import type {
   EnqueueOutcome,
+  MaterializeOccurrenceOutcome,
   ScheduledRunFireOutcome,
   ScheduleOutcome,
 } from './plan-enqueue.types.ts';
 import {
+  buildScheduledRunRalphTuning,
   createPlanScheduleConflictError,
   decidePlanSchedulability,
   isOneScheduledRunViolation,
   resolveRequestedRunner,
+  resolveScheduledRunBranch,
 } from './plan-enqueue.utils.ts';
 import { ENQUEUE_TASK_STATUSES_TO_RESET } from './runnable-tasks/runnable-tasks.constants.ts';
 import { countRunnablePlanTasks } from './runnable-tasks/runnable-tasks.utils.ts';
@@ -222,6 +227,13 @@ interface ResolvedWorkspace {
   readonly checkoutId: string | null;
   readonly repositoryId: string | null;
   readonly workingDirectory: string | null | undefined;
+}
+
+/** @description What {@link PlanEnqueueService.prepareOrchestratorRun} resolved: the run's job payload and workspace. */
+interface PreparedOrchestratorRun {
+  readonly jobData: ReturnType<typeof buildRunPlanOrchestratorJobData>;
+  readonly resolvedBranch: string;
+  readonly resolvedWorkspace: ResolvedWorkspace;
 }
 
 /**
@@ -563,6 +575,252 @@ export class PlanEnqueueService {
   }
 
   /**
+   * @description Materializes ONE occurrence of a recurring schedule: a SCHEDULED `plan_runs` row
+   * (`plan_run_schedule_id` set, `scheduled_for` = `scheduledFor`) plus its delayed BullMQ job, under
+   * the deterministic job id `scheduled-plan-run-sched-<scheduleId>-<slotEpochMs>`. Deliberately NOT
+   * routed through {@link schedulePlanRun}'s public conflict checks: once an occurrence has fired the
+   * plan is QUEUED / IN_PROGRESS, which {@link lockSchedulablePlan} rejects with `PLAN_ACTIVE`, yet the
+   * next occurrence must still be queued up behind it (when it fires on a still-active plan it settles
+   * SUPERSEDED, like any collision). It reuses the same internals instead: the run is resolved by
+   * {@link prepareOrchestratorRun} (in `lenient` mode: no branch, empty plans allowed), frozen into a
+   * `runConfigSnapshot`, committed in one transaction under the plan row lock, and the job is added
+   * after the commit.
+   *
+   * The run's configuration is the plan's stored `runConfig` mapped with
+   * {@link buildScheduledRunRalphTuning}, with `schedule.runOverrides` laid over it (only `effort`,
+   * `iterations` and `model` apply; `branch` sets `plan_runs.branch`). The plan moves to SCHEDULED
+   * only when {@link decidePlanSchedulability} says it is schedulable (PENDING / BACKLOG); an active
+   * or terminal plan keeps its status. Checkout references resolve as the checkout's own user, so no
+   * request principal is needed; a bare `repositoryId` resolves as `schedule.createdBy`.
+   *
+   * Never throws for an expected condition (see {@link MaterializeOccurrenceOutcome}): a plan that
+   * already holds a SCHEDULED run (a user one-off; the migration 152 index backs the check) is a
+   * logged no-op result, a slot past {@link SCHEDULED_PLAN_RUN_MAX_HORIZON_DAYS} is skipped, and a run
+   * that cannot be resolved is `unpreparable`. Only an unexpected database or Redis error throws. If
+   * the BullMQ add fails after the commit the row is left SCHEDULED for the boot reconcile to re-add.
+   */
+  async materializeScheduleOccurrence(params: {
+    readonly actorKind: string | undefined;
+    readonly actorSub: string | undefined;
+    readonly now?: Date;
+    readonly schedule: PlanRunSchedule;
+    readonly scheduledFor: Date;
+  }): Promise<MaterializeOccurrenceOutcome> {
+    const { actorKind, actorSub, schedule, scheduledFor } = params;
+    const { planId } = schedule;
+    const nowMs = (params.now ?? new Date()).getTime();
+    const scheduledForMs = scheduledFor.getTime();
+
+    if (Number.isNaN(scheduledForMs) || scheduledForMs <= nowMs) {
+      return { kind: 'not_future' };
+    }
+    if (scheduledForMs - nowMs > SCHEDULED_PLAN_RUN_MAX_HORIZON_MS) {
+      this.logger.info(
+        `Schedule ${schedule.id}: slot ${scheduledFor.toISOString()} is past the ${SCHEDULED_PLAN_RUN_MAX_HORIZON_DAYS}-day scheduling horizon; not materialized yet.`,
+        PlanEnqueueService.name,
+      );
+
+      return { kind: 'beyond_horizon' };
+    }
+
+    const jobId = `${SCHEDULED_PLAN_RUN_JOB_ID_PREFIX}sched-${schedule.id}-${scheduledForMs}`;
+    const normalizedJobId = normalizeIdempotencyKey(jobId);
+    if ('error' in normalizedJobId) {
+      return { kind: 'unpreparable', reason: normalizedJobId.error };
+    }
+
+    const existing = await this.planRunsService.findByQueueNameAndBullmqJobId(
+      PLANS_QUEUE_NAME,
+      jobId,
+    );
+    if (existing !== null) {
+      return { kind: 'already_materialized', planRunId: existing.id };
+    }
+
+    const plan = await this.plansService
+      .getRepository()
+      .findOne({ where: { id: planId } });
+    if (!plan) {
+      return { kind: 'plan_not_found' };
+    }
+
+    const [heldScheduledRun] =
+      await this.planRunsService.findScheduledByPlanId(planId);
+    if (heldScheduledRun) {
+      return this.logPlanHasScheduledRun(schedule, heldScheduledRun.id);
+    }
+
+    const config = planRunConfigFromPlanStorage(plan.runConfig, { planId });
+    let prepared: PreparedOrchestratorRun;
+    try {
+      prepared = await this.prepareOrchestratorRun({
+        actorUserId: await this.resolveScheduleActorUserId(
+          config.workspace.checkoutId,
+          schedule.createdBy,
+        ),
+        branch: resolveScheduledRunBranch(config, schedule.runOverrides) ?? '',
+        checkoutId: config.workspace.checkoutId,
+        lenient: true,
+        mode: null,
+        planId,
+        ralph: buildScheduledRunRalphTuning(config, schedule.runOverrides),
+        repositoryId: config.workspace.repositoryId,
+        taskId: null,
+        workingDirectory: config.workspace.workingDirectory,
+      });
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : String(error);
+      this.logger.warn(
+        `Schedule ${schedule.id}: could not resolve the run for slot ${scheduledFor.toISOString()}: ${reason}`,
+        PlanEnqueueService.name,
+      );
+
+      return { kind: 'unpreparable', reason };
+    }
+
+    const { jobData, resolvedWorkspace } = prepared;
+    const runConfigSnapshot = buildPlanRunConfigSnapshotFromJobData(jobData, {
+      checkoutId: resolvedWorkspace.checkoutId,
+      repositoryId: resolvedWorkspace.repositoryId,
+    });
+    const executionBackend = jobData.executionBackend ?? 'cursor';
+
+    let committed: {
+      readonly planStatusMoved: boolean;
+      readonly planRun: PlanRun;
+    } | null;
+    try {
+      committed = await this.plansService
+        .getRepository()
+        .manager.transaction(async (manager) => {
+          const lockedPlan = await manager.getRepository(Plan).findOne({
+            lock: { mode: 'pessimistic_write' },
+            where: { id: planId },
+          });
+          const scheduledRun = await manager
+            .getRepository(PlanRun)
+            .findOne({ where: { planId, status: PLAN_RUN_STATUS.SCHEDULED } });
+
+          if (lockedPlan === null || scheduledRun !== null) {
+            return null;
+          }
+
+          const planRun = await this.planRunsService.recordQueuedRun(
+            {
+              actorUserId: null,
+              branch: resolveScheduledRunBranch(config, schedule.runOverrides),
+              bullmqJobId: jobId,
+              checkoutId: resolvedWorkspace.checkoutId,
+              executionBackend,
+              model: runConfigSnapshot.ralph.model ?? null,
+              planId,
+              planRunScheduleId: schedule.id,
+              queueName: PLANS_QUEUE_NAME,
+              runConfigSnapshot,
+              runKind: 'orchestrator',
+              scheduledFor,
+              status: PLAN_RUN_STATUS.SCHEDULED,
+            },
+            manager,
+          );
+          let planStatusMoved = false;
+
+          // Only an idle plan reads SCHEDULED for its waiting occurrence; an active plan keeps its
+          // status (the occurrence will settle SUPERSEDED if it is still active when it fires).
+          if (
+            decidePlanSchedulability(lockedPlan.status).kind === 'schedulable'
+          ) {
+            const change = await this.planStatusService.applyStatusChange(
+              manager,
+              {
+                actorKind,
+                actorSub,
+                captureFailureIsFatal: false,
+                entity: lockedPlan,
+                requestedStatus: PLAN_STATUS.SCHEDULED,
+                throwOnForbiddenInProgress: false,
+              },
+            );
+            planStatusMoved = change.applied;
+            await manager.getRepository(Plan).save(lockedPlan);
+          }
+
+          return { planRun, planStatusMoved };
+        });
+    } catch (error) {
+      if (isOneScheduledRunViolation(error)) {
+        return this.logPlanHasScheduledRun(schedule, null);
+      }
+
+      throw error;
+    }
+
+    if (committed === null) {
+      const [nowHeld] =
+        await this.planRunsService.findScheduledByPlanId(planId);
+
+      return nowHeld
+        ? this.logPlanHasScheduledRun(schedule, nowHeld.id)
+        : { kind: 'plan_not_found' };
+    }
+
+    const enqueueResult = await this.queuesService.enqueuePlanRalphOrchestrator(
+      {
+        delayMs: scheduledForMs - nowMs,
+        idempotencyKey: jobId,
+        jobData,
+        priority: PLAN_JOB_PRIORITY_DEFAULT,
+      },
+    );
+    if ('error' in enqueueResult) {
+      this.logger.warn(
+        `Schedule ${schedule.id}: run ${committed.planRun.id} is SCHEDULED but its delayed job could not be added (${enqueueResult.error}); the next boot reconcile re-adds it.`,
+        PlanEnqueueService.name,
+      );
+    }
+
+    return {
+      executionBackend,
+      jobId,
+      kind: 'materialized',
+      planId,
+      planRunId: committed.planRun.id,
+      planStatusMoved: committed.planStatusMoved,
+      scheduledFor,
+    };
+  }
+
+  /** @description Logs and returns the `plan_has_scheduled_run` no-op of {@link materializeScheduleOccurrence}. */
+  private logPlanHasScheduledRun(
+    schedule: PlanRunSchedule,
+    planRunId: string | null,
+  ): MaterializeOccurrenceOutcome {
+    this.logger.info(
+      `Schedule ${schedule.id}: plan ${schedule.planId} already holds a SCHEDULED run${planRunId === null ? '' : ` (${planRunId})`}; not materializing another. The chain resumes when it settles.`,
+      PlanEnqueueService.name,
+    );
+
+    return { kind: 'plan_has_scheduled_run', planRunId };
+  }
+
+  /**
+   * @description The user a recurring run resolves its checkout references as: the owner of the
+   * stored `checkoutId` (the plan's config references it authoritatively), else the schedule's
+   * creator (needed to pick a bare `repositoryId`'s single checkout), else null.
+   */
+  private async resolveScheduleActorUserId(
+    checkoutId: string,
+    createdBy: string | null,
+  ): Promise<string | null> {
+    if (checkoutId.trim() === '') {
+      return createdBy;
+    }
+    const checkout = await this.repositoryCheckoutsService.findById(checkoutId);
+
+    return checkout?.userId ?? createdBy;
+  }
+
+  /**
    * @description Validates and resolves the parts of an orchestrator run every enqueue shares — the
    * branch, the plan, the workspace, the lifecycle hooks and the run's job payload — before anything
    * is written. Shared by {@link enqueueOrchestrator} and {@link schedulePlanRun} so the two cannot
@@ -581,6 +839,12 @@ export class PlanEnqueueService {
     readonly branch: string;
     readonly checkoutId?: string | null;
     readonly jobRunHooksJson?: string | null;
+    /**
+     * True for a recurring schedule's materialized run: no human named a branch (an empty one is
+     * allowed and returned as '') and an empty plan is not refused, since a plan whose tasks are all
+     * done must still keep its chain going (the occurrence settles SKIPPED when it fires).
+     */
+    readonly lenient?: boolean;
     readonly mode?: 'plan' | 'task' | null;
     readonly planId: string;
     readonly ralph?: RalphPlanRunTuningInput | null;
@@ -588,16 +852,13 @@ export class PlanEnqueueService {
     readonly runner?: string | null;
     readonly taskId?: string | null;
     readonly workingDirectory?: string | null;
-  }): Promise<{
-    readonly jobData: ReturnType<typeof buildRunPlanOrchestratorJobData>;
-    readonly resolvedBranch: string;
-    readonly resolvedWorkspace: ResolvedWorkspace;
-  }> {
+  }): Promise<PreparedOrchestratorRun> {
     const {
       actorUserId,
       branch,
       checkoutId,
       jobRunHooksJson,
+      lenient,
       mode,
       planId,
       ralph,
@@ -611,7 +872,7 @@ export class PlanEnqueueService {
     // loud rather than infer it late. Rejects a missing or whitespace-only value
     // so plan_runs.branch is always meaningful for new runs.
     const resolvedBranch = branch?.trim() ?? '';
-    if (resolvedBranch === '') {
+    if (resolvedBranch === '' && lenient !== true) {
       throw new BadRequestException(
         'branch is required to enqueue a plan run (pass the git branch this run operates on)',
       );
@@ -627,7 +888,7 @@ export class PlanEnqueueService {
     // A whole-plan run (mode 'plan' or unset) with nothing to pick up would start an orchestrator
     // that immediately finds nothing; refuse it here instead. A task-targeted run is exempt, see
     // the method JSDoc.
-    if (mode !== 'task') {
+    if (mode !== 'task' && lenient !== true) {
       const runnableTaskCount = await countRunnablePlanTasks(
         repo.manager,
         planId,

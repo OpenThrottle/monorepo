@@ -36,6 +36,7 @@ import { AgenticRalphOrchestratorService } from '../agentic-ralph/orchestrator/o
 import { BullMqRunOutputRetentionService } from '../bullmq-run-output/retention/retention.service.ts';
 import { OtLoopOrchestratorService } from '../ot-loop/orchestrator/orchestrator.service.ts';
 import { WorkflowLifecycleDispatcherFactory } from '../plan-lifecycle-hooks/workflow-lifecycle-dispatcher/workflow-lifecycle-dispatcher.service.ts';
+import { PlanRunScheduleService } from './plan-run-schedule/plan-run-schedule.service.ts';
 import {
   PLANS_QUEUE_NAME,
   PLANS_WORKER_LOCK_DURATION_MS,
@@ -338,6 +339,13 @@ describe('PlansProcessor', () => {
         // The real fire-time/boot-reconcile service, over a mocked enqueue pipeline: the processor
         // tests below see the whole fire path (decision -> notification -> no side effects).
         ScheduledPlanRunService,
+        {
+          provide: PlanRunScheduleService,
+          useValue: createMock<PlanRunScheduleService>({
+            onScheduledRunSettled: vi.fn().mockResolvedValue([]),
+            reconcileOnStartup: vi.fn().mockResolvedValue([]),
+          }),
+        },
         {
           provide: PlanEnqueueService,
           useValue: createMock<PlanEnqueueService>({

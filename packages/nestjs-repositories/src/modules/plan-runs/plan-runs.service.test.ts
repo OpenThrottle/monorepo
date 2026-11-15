@@ -28,6 +28,7 @@ const buildRun = (overrides: Partial<PlanRun> = {}): PlanRun => {
     model: null,
     pid: null,
     planId: 'plan-1',
+    planRunScheduleId: null,
     queueName: 'plans',
     resumeOfRunId: null,
     runConfigSnapshot: null,
@@ -164,6 +165,25 @@ describe('PlanRunsService', () => {
           checkoutId: '44444444-4444-4444-8444-444444444444',
           model: 'claude-fable-5',
         }),
+      );
+    });
+
+    it('passes planRunScheduleId through and defaults it to null', async () => {
+      repo.findOne.mockResolvedValue(null);
+
+      await service.recordQueuedRun({
+        ...enqueueInput,
+        planRunScheduleId: 'schedule-1',
+      });
+      await service.recordQueuedRun(enqueueInput);
+
+      expect(repo.create).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({ planRunScheduleId: 'schedule-1' }),
+      );
+      expect(repo.create).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({ planRunScheduleId: null }),
       );
     });
 
@@ -707,6 +727,26 @@ describe('PlanRunsService', () => {
         where: { planId: 'plan-1', status: 'SCHEDULED' },
       });
       expect(rows).toHaveLength(1);
+    });
+  });
+
+  describe('findScheduledByScheduleId', () => {
+    it('reads the earliest SCHEDULED run for the schedule', async () => {
+      repo.findOne.mockResolvedValueOnce(buildRun({ status: 'SCHEDULED' }));
+
+      const row = await service.findScheduledByScheduleId('schedule-1');
+
+      expect(repo.findOne).toHaveBeenCalledWith({
+        order: { scheduledFor: 'ASC' },
+        where: { planRunScheduleId: 'schedule-1', status: 'SCHEDULED' },
+      });
+      expect(row?.status).toBe('SCHEDULED');
+    });
+
+    it('returns null when no run is materialized', async () => {
+      repo.findOne.mockResolvedValueOnce(null);
+
+      await expect(service.findScheduledByScheduleId('s')).resolves.toBeNull();
     });
   });
 

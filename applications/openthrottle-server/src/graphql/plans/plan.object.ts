@@ -182,6 +182,12 @@ export class PlanRunObject implements PlanRunData {
   @Field(() => String)
   planId!: string;
 
+  @Field(() => String, {
+    description: `The recurring schedule (PlanRunSchedule.id) that materialized this run. Null for runs started by hand or scheduled once.`,
+    nullable: true,
+  })
+  planRunScheduleId!: string | null;
+
   @Field(() => String)
   queueName!: string;
 

@@ -1,12 +1,17 @@
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { FEATURE_BETA_PREVIEW } from '@openthrottle/react-router-utils';
-import { NotebookTextIcon } from 'lucide-react';
+import { NotebookTextIcon, RepeatIcon } from 'lucide-react';
 import * as React from 'react';
 
 import type { PlanDetailsFragment } from '~/__generated__/graphql';
 import { PlanStatusBadge } from '~/routing/plans/components/PlanStatusBadge';
 import { PlanUnscheduleAction } from '~/routing/plans/components/PlanUnscheduleAction';
+import { PLAN_RUN_REPEAT_COPY } from '~/routing/plans/data/data.copy';
 import type { PlanStatusKey } from '~/routing/plans/types';
+import {
+  describeRunSchedule,
+  selectEnabledSchedule,
+} from '~/routing/plans/utils/plan-run-repeat';
 
 export interface PlanDetailRouteHeaderProps {
   readonly plan: PlanDetailsFragment;
@@ -36,11 +41,21 @@ export const PlanDetailRouteHeader = (
   // "unassigned" placeholder that would sit on every other plan header.
   const title = plan.title ?? 'Untitled';
   const _project = plan.projectRelation;
+  const enabledSchedule = selectEnabledSchedule(plan.runSchedules);
   const showUnschedule = !FEATURE_BETA_PREVIEW && status === 'SCHEDULED';
 
   // Handlers
 
   // Markup
+  const repeatLine = enabledSchedule && (
+    <span
+      className="flex items-center gap-1"
+      data-testid="PlanDetailRouteHeader-repeats"
+    >
+      <RepeatIcon aria-hidden={true} className="size-3.5" />
+      {PLAN_RUN_REPEAT_COPY.headerLabel(describeRunSchedule(enabledSchedule))}
+    </span>
+  );
   const assigneeSuffix = plan.assignee ? ` → ${plan.assignee}` : '';
   const authorLabel = `${plan.author}${assigneeSuffix}`;
   const authorLine = plan.author && (
@@ -74,6 +89,8 @@ export const PlanDetailRouteHeader = (
               scheduledRunAt={plan.scheduledRunAt}
             />
           )}
+
+          {repeatLine}
 
           {/* {project ? (
             <Badge

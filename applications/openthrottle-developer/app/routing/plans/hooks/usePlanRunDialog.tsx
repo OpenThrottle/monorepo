@@ -13,16 +13,20 @@ import type { action } from '~/routes/plans.$planId._index';
 import { PLAN_RUN_DIALOG_CLOCK_TICK_MS } from '~/routing/plans/config/defaults';
 import {
   PLAN_RUN_DIALOG_COPY,
+  PLAN_RUN_REPEAT_COPY,
   PLAN_RUN_RUNNER_COPY,
 } from '~/routing/plans/data/data.copy';
 import { usePlanDefaultAgent } from '~/routing/plans/hooks/usePlanDefaultAgent';
 import type { UsePlanRunDialogConfirmResult } from '~/routing/plans/hooks/usePlanRunDialogConfirm';
 import { usePlanRunDialogConfirm } from '~/routing/plans/hooks/usePlanRunDialogConfirm';
+import { usePlanRunSchedules } from '~/routing/plans/hooks/usePlanRunSchedules';
 import type {
   PlanRunDialogDraft,
   PlanRunDialogMode,
+  PlanRunDialogRepeatState,
   PlanRunDialogRunnerSettings,
   PlanRunDialogSubmission,
+  PlanRunRepeat,
 } from '~/routing/plans/types';
 import { getPlanRunDialogScheduleFeedback } from '~/routing/plans/utils/getPlanRunDialogScheduleFeedback';
 import {
@@ -36,6 +40,11 @@ import {
 import type { PlanRunModelSelection } from '~/routing/plans/utils/plan-run-model-effort';
 import { reconcilePlanRunEffort } from '~/routing/plans/utils/plan-run-model-effort';
 import { parseOtLoopMaxRetriesText } from '~/routing/plans/utils/plan-run-ot-loop';
+import {
+  buildRepeatCronPattern,
+  describeCronPattern,
+  getRepeatDisabledReason,
+} from '~/routing/plans/utils/plan-run-repeat';
 import {
   getLocalTimeZone,
   getScheduleInstantError,
@@ -88,6 +97,8 @@ export interface UsePlanRunDialogResult {
   readonly onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
   /** @description The plan's configured iterations, for the "resets to" hint. */
   readonly planIterations: number;
+  /** @description The Schedule tab's Repeat control. */
+  readonly repeat: PlanRunDialogRepeatState;
   /** @description The runner choice and OT Loop fields, spread onto the settings section. */
   readonly runnerSettings: PlanRunDialogRunnerSettings;
   readonly scheduleError: string | null;
@@ -123,6 +134,7 @@ export const usePlanRunDialog = (
   // The user's default agent seeds a plan whose own agent is unset (D3); the
   // plan's explicit run config always wins.
   const defaultAgent = usePlanDefaultAgent();
+  const { schedules } = usePlanRunSchedules({});
   const [now, setNow] = React.useState(() => new Date());
   const [draft, setDraft] = React.useState(() =>
     createPlanRunDialogDraft({
@@ -153,9 +165,23 @@ export const usePlanRunDialog = (
     ? PLAN_RUN_RUNNER_COPY.maxRetriesInvalid(MAX_PLAN_RUN_OT_LOOP_RETRIES)
     : undefined;
   const isScheduleMode = draft.mode === 'schedule';
+  const timeZone = getLocalTimeZone();
+  const isRepeat = isScheduleMode && draft.repeat !== 'none';
+  const cronPattern = buildRepeatCronPattern({
+    customCron: draft.customCron,
+    instant,
+    repeat: isScheduleMode ? draft.repeat : 'none',
+  });
+  const isCustomRepeat = isRepeat && draft.repeat === 'custom';
+  const isCronMissing = isCustomRepeat && cronPattern === undefined;
+  const cronError = isCronMissing
+    ? PLAN_RUN_REPEAT_COPY.customCronInvalid
+    : undefined;
+  const repeatRule = cronPattern && describeCronPattern(cronPattern);
+  // A custom cron has no picked instant, so the one-off instant rule does not apply to it.
   const { scheduleError, scheduleSummary } = getPlanRunDialogScheduleFeedback({
     instant,
-    isScheduleMode,
+    isScheduleMode: isScheduleMode && !isCustomRepeat,
     now,
   });
   const blockedReason =
@@ -168,16 +194,19 @@ export const usePlanRunDialog = (
     }) ??
     iterationsError ??
     otLoopMaxRetriesError ??
+    cronError ??
     scheduleError;
   const fields = buildPlanRunDialogFields({
     branch,
     checkoutId,
+    cronPattern,
     draft,
     iterations,
     jobRunHooksJson,
     ralphTuningJson,
     repositoryId,
     scheduledFor: instant,
+    timeZone,
     workingDirectory,
   });
 
@@ -192,7 +221,9 @@ export const usePlanRunDialog = (
   const runError =
     data != null && 'runPlanError' in data ? data.runPlanError : undefined;
   const scheduleActionError = readActionError(data, 'schedulePlanRunError');
-  const modeError = isScheduleMode ? scheduleActionError : runError;
+  const repeatActionError = readActionError(data, 'createPlanRunScheduleError');
+  const scheduleModeError = isRepeat ? repeatActionError : scheduleActionError;
+  const modeError = isScheduleMode ? scheduleModeError : runError;
   const errorMessage = attempted ? modeError : undefined;
 
   // Handlers
@@ -232,7 +263,8 @@ export const usePlanRunDialog = (
     }
 
     // A scheduled plan asks before anything posts; "yes" posts via the confirm hook.
-    if (confirm.requestConfirm()) {
+    // A repeat never replaces a one-off: the server names the clash if there is one.
+    if (!isRepeat && confirm.requestConfirm()) {
       event.preventDefault();
 
       return;
@@ -292,6 +324,12 @@ export const usePlanRunDialog = (
       } else if ('schedulePlanRun' in data && data.schedulePlanRun != null) {
         onSubmitted({ mode: 'schedule', result: data.schedulePlanRun });
         onOpenChange(false);
+      } else if (
+        'createPlanRunSchedule' in data &&
+        data.createPlanRunSchedule != null
+      ) {
+        onSubmitted({ mode: 'repeat', result: data.createPlanRunSchedule });
+        onOpenChange(false);
       }
     }
 
@@ -317,6 +355,17 @@ export const usePlanRunDialog = (
     onScheduleTimeChange: (scheduleTime) => patchDraft({ scheduleTime }),
     onSubmit,
     planIterations: getPlanConfiguredIterations(planId, runConfigJson),
+    repeat: {
+      cronError: draft.customCron.trim() === '' ? undefined : cronError,
+      customCron: draft.customCron,
+      disabledReason: getRepeatDisabledReason(schedules),
+      onCustomCronChange: (customCron) => patchDraft({ customCron }),
+      onRepeatChange: (repeat: PlanRunRepeat) => patchDraft({ repeat }),
+      repeat: draft.repeat,
+      summary: repeatRule
+        ? PLAN_RUN_REPEAT_COPY.headerLabel(repeatRule)
+        : undefined,
+    },
     runnerSettings: {
       onOtLoopMaxRetriesChange: (otLoopMaxRetriesText) =>
         patchDraft({ otLoopMaxRetriesText }),
@@ -330,6 +379,6 @@ export const usePlanRunDialog = (
     },
     scheduleError,
     scheduleSummary,
-    timeZone: getLocalTimeZone(),
+    timeZone,
   };
 };

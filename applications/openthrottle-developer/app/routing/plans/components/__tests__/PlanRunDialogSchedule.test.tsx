@@ -20,6 +20,7 @@ describe('PlanRunDialogSchedule Component', () => {
       error: null,
       onDateChange: vi.fn(),
       onTimeChange: vi.fn(),
+      repeat: undefined,
       summary: 'fires 1:00 PM PST, in about 1 hour',
       time: '13:00',
       timeZone: 'America/Los_Angeles',

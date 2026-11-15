@@ -7,12 +7,14 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
   PlanRun,
+  PlanRunSchedule,
   PlanRunsService,
   PlansService,
   RepositoryCheckoutsService,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
 import {
+  getDefaultPlanRunConfigStorage,
   type Plan,
   PlanRun as PlanRunEntity,
   type RepositoryCheckout,
@@ -140,10 +142,12 @@ describe('PlanEnqueueService', () => {
   const mockFindRunById = vi.fn().mockResolvedValue(null);
   const mockRescheduleScheduledRun = vi.fn().mockResolvedValue(true);
   const mockCancelScheduledRunsForPlan = vi.fn().mockResolvedValue([]);
+  const mockFindScheduledByPlanId = vi.fn().mockResolvedValue([]);
   const mockPlanRunsService = createMock<PlanRunsService>({
     cancelScheduledRunsForPlan: mockCancelScheduledRunsForPlan,
     findById: mockFindRunById,
     findByQueueNameAndBullmqJobId: mockFindByQueueNameAndBullmqJobId,
+    findScheduledByPlanId: mockFindScheduledByPlanId,
     hasActiveRun: mockHasActiveRun,
     recordQueuedRun: mockRecordQueuedRun,
     rescheduleScheduledRun: mockRescheduleScheduledRun,
@@ -257,6 +261,7 @@ describe('PlanEnqueueService', () => {
     mockReleaseScheduledPlanStandalone.mockReset().mockResolvedValue(true);
     mockRemoveScheduledRunJobs.mockReset().mockResolvedValue(undefined);
     mockCancelScheduledRunsForPlan.mockReset().mockResolvedValue([]);
+    mockFindScheduledByPlanId.mockReset().mockResolvedValue([]);
   });
 
   /** Asserts `promise` rejects with a D8 conflict GraphQLError and returns its extensions. */
@@ -2231,6 +2236,247 @@ describe('PlanEnqueueService', () => {
       await expect(
         service.reprojectScheduledRun({ delayMs: 0, run }),
       ).rejects.toThrow('redis down');
+    });
+  });
+
+  describe('materializeScheduleOccurrence (recurring schedule occurrences)', () => {
+    const now = new Date('2026-11-14T12:00:00.000Z');
+    const slot = new Date('2026-11-15T09:00:00.000Z');
+    const schedule: PlanRunSchedule = {
+      createdAt: new Date('2026-11-01T00:00:00.000Z'),
+      createdBy: null,
+      cronPattern: '0 9 * * *',
+      enabled: true,
+      id: 'sched-1',
+      misfirePolicy: 'skip',
+      planId: mockPlan.id,
+      runOverrides: {},
+      scheduleKind: 'cron',
+      timezone: null,
+      updatedAt: new Date('2026-11-01T00:00:00.000Z'),
+    };
+    const actor = { actorKind: 'service_account', actorSub: 'system' };
+    const jobIdFor = (at: Date): string => {
+      return `scheduled-plan-run-sched-sched-1-${at.getTime()}`;
+    };
+    const materialize = (
+      overrides: Partial<PlanRunSchedule> = {},
+      scheduledFor: Date = slot,
+    ) => {
+      return service.materializeScheduleOccurrence({
+        ...actor,
+        now,
+        schedule: { ...schedule, ...overrides },
+        scheduledFor,
+      });
+    };
+
+    beforeEach(() => {
+      mockRecordQueuedRun.mockResolvedValue({ id: 'run-occ-1' });
+    });
+
+    test('records a SCHEDULED run tied to the schedule under the deterministic job id, and adds the delayed job after the commit', async () => {
+      const outcome = await materialize();
+
+      expect(outcome).toMatchObject({
+        jobId: jobIdFor(slot),
+        kind: 'materialized',
+        planRunId: 'run-occ-1',
+        scheduledFor: slot,
+      });
+      expect(mockRecordQueuedRun).toHaveBeenCalledWith(
+        expect.objectContaining({
+          bullmqJobId: jobIdFor(slot),
+          planId: mockPlan.id,
+          planRunScheduleId: 'sched-1',
+          scheduledFor: slot,
+          status: 'SCHEDULED',
+        }),
+        expect.anything(),
+      );
+      expect(mockEnqueuePlanRalphOrchestrator).toHaveBeenCalledWith(
+        expect.objectContaining({
+          delayMs: slot.getTime() - now.getTime(),
+          idempotencyKey: jobIdFor(slot),
+        }),
+      );
+      const recordOrder = mockRecordQueuedRun.mock.invocationCallOrder[0] ?? 0;
+      const enqueueOrder =
+        mockEnqueuePlanRalphOrchestrator.mock.invocationCallOrder[0] ?? 0;
+      expect(enqueueOrder).toBeGreaterThan(recordOrder);
+    });
+
+    test('a PENDING plan moves to SCHEDULED', async () => {
+      repo.findOne.mockResolvedValue({ ...mockPlan, status: 'PENDING' });
+
+      const outcome = await materialize();
+
+      expect(outcome).toMatchObject({
+        kind: 'materialized',
+        planStatusMoved: true,
+      });
+      expect(mockApplyStatusChange).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          actorKind: 'service_account',
+          actorSub: 'system',
+          requestedStatus: 'SCHEDULED',
+        }),
+      );
+    });
+
+    test.each(['IN_PROGRESS', 'QUEUED', 'COMPLETED'])(
+      'a %s plan keeps its status',
+      async (status) => {
+        repo.findOne.mockResolvedValue({ ...mockPlan, status });
+
+        const outcome = await materialize();
+
+        expect(outcome).toMatchObject({
+          kind: 'materialized',
+          planStatusMoved: false,
+        });
+        expect(mockApplyStatusChange).not.toHaveBeenCalled();
+        expect(mockRecordQueuedRun).toHaveBeenCalledTimes(1);
+      },
+    );
+
+    test('lays only the known runOverrides over the plan config, and records the branch override', async () => {
+      await materialize({
+        runOverrides: {
+          branch: 'release/weekly',
+          effort: 'high',
+          iterations: 3,
+          model: 'opus',
+          unknown: 'ignored',
+        },
+      });
+
+      const jobData =
+        mockEnqueuePlanRalphOrchestrator.mock.calls[0]?.[0]?.jobData;
+
+      expect(jobData?.ralph).toMatchObject({
+        effort: 'high',
+        iterations: 3,
+        model: 'opus',
+      });
+      expect(mockRecordQueuedRun).toHaveBeenCalledWith(
+        expect.objectContaining({ branch: 'release/weekly', model: 'opus' }),
+        expect.anything(),
+      );
+    });
+
+    test('a plan that already holds a SCHEDULED run (a user one-off) is a no-op result, not an error', async () => {
+      mockFindScheduledByPlanId.mockResolvedValue([{ id: 'one-off' }]);
+
+      await expect(materialize()).resolves.toEqual({
+        kind: 'plan_has_scheduled_run',
+        planRunId: 'one-off',
+      });
+      expect(mockRecordQueuedRun).not.toHaveBeenCalled();
+      expect(mockEnqueuePlanRalphOrchestrator).not.toHaveBeenCalled();
+    });
+
+    test('a SCHEDULED run that appears under the plan lock still wins (per-plan unique index)', async () => {
+      planRunRepo.findOne.mockResolvedValue({ id: 'raced' });
+      mockFindScheduledByPlanId
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([{ id: 'raced' }]);
+
+      await expect(materialize()).resolves.toEqual({
+        kind: 'plan_has_scheduled_run',
+        planRunId: 'raced',
+      });
+      expect(mockRecordQueuedRun).not.toHaveBeenCalled();
+      expect(mockEnqueuePlanRalphOrchestrator).not.toHaveBeenCalled();
+    });
+
+    test('a violation of the one-SCHEDULED-run index is mapped to the same no-op result', async () => {
+      mockRecordQueuedRun.mockRejectedValueOnce(
+        new QueryFailedError(
+          'INSERT',
+          [],
+          Object.assign(new Error('duplicate key'), {
+            code: '23505',
+            constraint: 'plan_runs_one_scheduled_per_plan_idx',
+          }),
+        ),
+      );
+
+      await expect(materialize()).resolves.toEqual({
+        kind: 'plan_has_scheduled_run',
+        planRunId: null,
+      });
+      expect(mockEnqueuePlanRalphOrchestrator).not.toHaveBeenCalled();
+    });
+
+    test('a slot past the 30-day horizon is skipped, not thrown', async () => {
+      const far = new Date(now.getTime() + 31 * 24 * 60 * 60 * 1_000);
+
+      await expect(materialize({}, far)).resolves.toEqual({
+        kind: 'beyond_horizon',
+      });
+      expect(mockRecordQueuedRun).not.toHaveBeenCalled();
+    });
+
+    test('a slot that is not strictly in the future is rejected as a result', async () => {
+      await expect(materialize({}, now)).resolves.toEqual({
+        kind: 'not_future',
+      });
+      expect(mockRecordQueuedRun).not.toHaveBeenCalled();
+    });
+
+    test('a slot whose job id already has a run is not materialized twice', async () => {
+      mockFindByQueueNameAndBullmqJobId.mockResolvedValue({ id: 'existing' });
+
+      await expect(materialize()).resolves.toEqual({
+        kind: 'already_materialized',
+        planRunId: 'existing',
+      });
+      expect(mockRecordQueuedRun).not.toHaveBeenCalled();
+    });
+
+    test('a plan that no longer exists is a result', async () => {
+      repo.findOne.mockResolvedValue(null);
+
+      await expect(materialize()).resolves.toEqual({ kind: 'plan_not_found' });
+    });
+
+    test('an empty plan still materializes (the occurrence settles SKIPPED at fire time)', async () => {
+      taskRepo.count.mockResolvedValue(0);
+
+      await expect(materialize()).resolves.toMatchObject({
+        kind: 'materialized',
+      });
+    });
+
+    test('a run that cannot be resolved is reported as unpreparable', async () => {
+      // A stored repositoryId with no creator to resolve checkouts as.
+      repo.findOne.mockResolvedValue({
+        ...mockPlan,
+        runConfig: {
+          ...getDefaultPlanRunConfigStorage(),
+          workspace: {
+            checkoutId: '',
+            repositoryId: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+            workingDirectory: '',
+          },
+        },
+      });
+
+      await expect(materialize()).resolves.toMatchObject({
+        kind: 'unpreparable',
+      });
+    });
+
+    test('a delayed-job add failure after the commit leaves the SCHEDULED row for the boot reconcile', async () => {
+      mockEnqueuePlanRalphOrchestrator.mockResolvedValue({
+        error: 'redis down',
+      });
+
+      await expect(materialize()).resolves.toMatchObject({
+        kind: 'materialized',
+      });
     });
   });
 });

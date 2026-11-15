@@ -1,11 +1,14 @@
+import { getDefaultPlanRunConfigStorage } from '@openthrottle/nestjs-repositories';
 import { QueryFailedError } from 'typeorm';
 import { describe, expect, test } from 'vitest';
 
 import {
+  buildScheduledRunRalphTuning,
   createPlanScheduleConflictError,
   decidePlanSchedulability,
   isOneScheduledRunViolation,
   resolveRequestedRunner,
+  resolveScheduledRunBranch,
 } from './plan-enqueue.utils.ts';
 
 describe('decidePlanSchedulability (D2)', () => {
@@ -104,5 +107,69 @@ describe('resolveRequestedRunner', () => {
     expect(() => resolveRequestedRunner('turbo', undefined)).toThrow(
       /Invalid runner: turbo/,
     );
+  });
+});
+
+describe('buildScheduledRunRalphTuning', () => {
+  const base = getDefaultPlanRunConfigStorage();
+  const configWith = (ralph: Partial<typeof base.ralph>) => {
+    return { ...base, ralph: { ...base.ralph, ...ralph } };
+  };
+
+  test('maps the stored Ralph config and leaves unset keys null', () => {
+    const tuning = buildScheduledRunRalphTuning(
+      configWith({ iterations: 4, model: 'sonnet' }),
+      {},
+    );
+
+    expect(tuning).toMatchObject({
+      iterations: 4,
+      model: 'sonnet',
+      worktree: null,
+    });
+  });
+
+  test('lays the known overrides (model, effort, iterations) over the stored config', () => {
+    const tuning = buildScheduledRunRalphTuning(
+      configWith({ iterations: 4, model: 'sonnet' }),
+      { effort: 'high', iterations: 2, model: 'opus' },
+    );
+
+    expect(tuning).toMatchObject({
+      effort: 'high',
+      iterations: 2,
+      model: 'opus',
+    });
+  });
+
+  test('ignores unknown, wrongly-typed and empty overrides', () => {
+    const tuning = buildScheduledRunRalphTuning(
+      configWith({ model: 'sonnet' }),
+      { iterations: '3', model: ' ', prompt: 'x', worktree: 'w' },
+    );
+
+    expect(tuning).toMatchObject({
+      iterations: null,
+      model: 'sonnet',
+      prompt: null,
+      worktree: null,
+    });
+  });
+});
+
+describe('resolveScheduledRunBranch', () => {
+  const base = getDefaultPlanRunConfigStorage();
+
+  test('prefers the override, then the stored worktree base, else null', () => {
+    const withBase = {
+      ...base,
+      ralph: { ...base.ralph, worktreeBase: 'main' },
+    };
+
+    expect(resolveScheduledRunBranch(withBase, { branch: 'release' })).toBe(
+      'release',
+    );
+    expect(resolveScheduledRunBranch(withBase, {})).toBe('main');
+    expect(resolveScheduledRunBranch(base, {})).toBeNull();
   });
 });

@@ -1,8 +1,13 @@
 import { BadRequestException } from '@nestjs/common';
-import type { PlanRunConfigRunner } from '@openthrottle/nestjs-repositories';
+import type {
+  PlanRunConfigRunner,
+  PlanRunConfigStorage,
+} from '@openthrottle/nestjs-repositories';
+import { buildRalphPlanRunTuningFromPlanRunConfig } from '@openthrottle/nestjs-repositories';
 import { GraphQLError } from 'graphql';
 import { QueryFailedError } from 'typeorm';
 
+import type { RalphPlanRunTuningInput } from '../plan.input.ts';
 import {
   ACTIVE_PLAN_STATUSES,
   ONE_SCHEDULED_RUN_INDEX,
@@ -123,4 +128,80 @@ export const resolveRequestedRunner = (
   }
 
   return trimmed;
+};
+
+const stringOrNull = (value: unknown): string | null => {
+  if (typeof value !== 'string' || value.trim() === '') {
+    return null;
+  }
+
+  return value.trim();
+};
+
+const positiveIntegerOrNull = (value: unknown): number | null => {
+  if (typeof value !== 'number' || !Number.isInteger(value) || value <= 0) {
+    return null;
+  }
+
+  return value;
+};
+
+const debugCliOrNull = (
+  value: unknown,
+): NonNullable<RalphPlanRunTuningInput['ralphDebugCli']> | null => {
+  if (value === 'debug' || value === 'omit' || value === 'verbose') {
+    return value;
+  }
+
+  return null;
+};
+
+/**
+ * @description The Ralph tuning a recurring schedule's materialized run carries: the plan's stored
+ * run config mapped through {@link buildRalphPlanRunTuningFromPlanRunConfig} (the same mapping the UI
+ * applies when it enqueues from the Configuration tab), with the schedule's `runOverrides` laid over
+ * it. Only the known override keys `effort`, `iterations` and `model` are applied; a value of the
+ * wrong type or an empty string is ignored rather than rejected, since the overrides are free-form
+ * JSON.
+ * A stored named worktree (`worktreeCli: 'named'`) still applies; otherwise the run derives its own.
+ */
+export const buildScheduledRunRalphTuning = (
+  config: PlanRunConfigStorage,
+  runOverrides: Readonly<Record<string, unknown>>,
+): RalphPlanRunTuningInput => {
+  const stored = buildRalphPlanRunTuningFromPlanRunConfig(config) ?? {};
+
+  return {
+    backend: stringOrNull(stored.backend),
+    effort: stringOrNull(runOverrides.effort) ?? stringOrNull(stored.effort),
+    iterationTimeoutSeconds: positiveIntegerOrNull(
+      stored.iterationTimeoutSeconds,
+    ),
+    iterations:
+      positiveIntegerOrNull(runOverrides.iterations) ??
+      positiveIntegerOrNull(stored.iterations),
+    model: stringOrNull(runOverrides.model) ?? stringOrNull(stored.model),
+    project: stringOrNull(stored.project),
+    prompt: stringOrNull(stored.prompt),
+    promptFile: stringOrNull(stored.promptFile),
+    ralphDebugCli: debugCliOrNull(stored.ralphDebugCli),
+    skipWorktreeSetup: stored.skipWorktreeSetup === true ? true : null,
+    worktree: stringOrNull(stored.worktree),
+    worktreeBase: stringOrNull(stored.worktreeBase),
+  };
+};
+
+/**
+ * @description The git branch recorded on a recurring schedule's materialized run: the schedule's
+ * `runOverrides.branch` when set, else the stored `ralph.worktreeBase`, else null (the column is
+ * nullable; a recurring run is not kicked off by a human who could name one, and the server never
+ * infers a branch).
+ */
+export const resolveScheduledRunBranch = (
+  config: PlanRunConfigStorage,
+  runOverrides: Readonly<Record<string, unknown>>,
+): string | null => {
+  return (
+    stringOrNull(runOverrides.branch) ?? stringOrNull(config.ralph.worktreeBase)
+  );
 };

@@ -7,7 +7,9 @@ import {
 import { ClockIcon } from 'lucide-react';
 import * as React from 'react';
 
+import { PlanRunDialogRepeat } from '~/routing/plans/components/PlanRunDialogRepeat';
 import { PLAN_RUN_DIALOG_COPY } from '~/routing/plans/data/data.copy';
+import type { PlanRunDialogRepeatState } from '~/routing/plans/types';
 
 export interface PlanRunDialogScheduleProps {
   readonly className?: string;
@@ -17,6 +19,9 @@ export interface PlanRunDialogScheduleProps {
   readonly error: string | null;
   readonly onDateChange: (date: Date | undefined) => void;
   readonly onTimeChange: (time: string) => void;
+
+  /** @description The Repeat control (`custom` swaps the date and time for a cron field); `undefined` hides it, as when rescheduling one run. */
+  readonly repeat: PlanRunDialogRepeatState | undefined;
 
   /** @description Plain-language echo of the picked instant, once it is in the future. */
   readonly summary: string | undefined;
@@ -42,6 +47,7 @@ export const PlanRunDialogSchedule = (
     error,
     onDateChange,
     onTimeChange,
+    repeat,
     summary,
     time,
     timeZone,
@@ -56,6 +62,30 @@ export const PlanRunDialogSchedule = (
   // Handlers
 
   // Markup
+  const dateTimeFields = (
+    <div className="flex flex-wrap items-end gap-3">
+      <div className="flex flex-col gap-1.5">
+        <Label>{copy.scheduleDateLabel}</Label>
+        <DatePicker
+          className="w-48"
+          onSelect={onDateChange}
+          placeholder={copy.scheduleDatePlaceholder}
+          value={date}
+        />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor={timeId}>{copy.scheduleTimeLabel}</Label>
+        <Input
+          aria-invalid={error !== null}
+          className="w-32"
+          id={timeId}
+          onChange={(event) => onTimeChange(event.target.value)}
+          type="time"
+          value={time}
+        />
+      </div>
+    </div>
+  );
 
   // Life Cycle
 
@@ -73,28 +103,8 @@ export const PlanRunDialogSchedule = (
         <ClockIcon aria-hidden={true} className="size-3.5" />
         {copy.scheduleTimeZoneLabel(timeZone)}
       </p>
-      <div className="flex flex-wrap items-end gap-3">
-        <div className="flex flex-col gap-1.5">
-          <Label>{copy.scheduleDateLabel}</Label>
-          <DatePicker
-            className="w-48"
-            onSelect={onDateChange}
-            placeholder={copy.scheduleDatePlaceholder}
-            value={date}
-          />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor={timeId}>{copy.scheduleTimeLabel}</Label>
-          <Input
-            aria-invalid={error !== null}
-            className="w-32"
-            id={timeId}
-            onChange={(event) => onTimeChange(event.target.value)}
-            type="time"
-            value={time}
-          />
-        </div>
-      </div>
+      {repeat?.repeat !== 'custom' && dateTimeFields}
+      {repeat !== undefined && <PlanRunDialogRepeat repeat={repeat} />}
       {summary !== undefined && (
         <p
           aria-live="polite"

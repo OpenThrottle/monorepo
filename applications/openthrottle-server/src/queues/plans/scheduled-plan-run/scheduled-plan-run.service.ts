@@ -15,6 +15,7 @@ import { PlanEnqueueService } from '../../../graphql/plans/plan-enqueue/plan-enq
 import type { ScheduledRunFireOutcome } from '../../../graphql/plans/plan-enqueue/plan-enqueue.types.ts';
 import { StatusChangeSystemAccountService } from '../../../graphql/work-ledger/status-change-system-account/status-change-system-account.service.ts';
 import { NotificationsService } from '../../../notifications/notifications.service.ts';
+import { PlanRunScheduleService } from '../plan-run-schedule/plan-run-schedule.service.ts';
 import {
   PLANS_QUEUE_NAME,
   SCHEDULED_PLAN_RUN_RECONCILE_LIMIT,
@@ -67,6 +68,7 @@ export class ScheduledPlanRunService {
     private readonly notifications: NotificationsService,
     private readonly planEnqueueService: PlanEnqueueService,
     private readonly planOutputStreamService: PlanOutputStreamService,
+    private readonly planRunScheduleService: PlanRunScheduleService,
     private readonly planRunsService: PlanRunsService,
     @InjectQueue(PLANS_QUEUE_NAME)
     private readonly plansQueue: Queue<RunPlanJobData, PlanRunJobResult | void>,
@@ -141,6 +143,18 @@ export class ScheduledPlanRunService {
           'warning',
         );
         break;
+    }
+
+    // Every settle except `not_scheduled` continues the plan's recurring schedule(s). `not_scheduled`
+    // means a concurrent cancel already settled the run; the cancel path hooks the chain itself
+    // (PlansResolver.cancelPlanRun), so hooking here too would race it for nothing. Best-effort and
+    // after the settle transaction committed: it never throws.
+    if (outcome.kind !== 'not_scheduled') {
+      await this.planRunScheduleService.onScheduledRunSettled(run.planId, now, {
+        missedRunScheduleId:
+          outcome.kind === 'missed' ? run.planRunScheduleId : null,
+        settledSlot: run.scheduledFor,
+      });
     }
 
     return outcome;
@@ -231,6 +245,16 @@ export class ScheduledPlanRunService {
           run,
           `Scheduled plan run missed: it was due at ${scheduledFor.toISOString()} and ${decision.reason} when the server came back, so it was not started.`,
           'warning',
+        );
+        // A MISSED occurrence ends its slot: continue the plan's schedule (a run_once schedule
+        // fires its one catch-up here). Best-effort; never throws.
+        await this.planRunScheduleService.onScheduledRunSettled(
+          run.planId,
+          now,
+          {
+            missedRunScheduleId: run.planRunScheduleId,
+            settledSlot: scheduledFor,
+          },
         );
 
         return 'missed';

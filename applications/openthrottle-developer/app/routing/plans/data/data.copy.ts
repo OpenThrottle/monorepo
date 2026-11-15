@@ -522,9 +522,46 @@ export const PLAN_RUN_CANCEL_SCHEDULED_COPY = {
   dialogTitle: `Cancel scheduled run?`,
   keepLabel: `Keep it scheduled`,
   menuItemLabel: `Cancel scheduled run`,
+  occurrence: {
+    ariaLabel: `Skip this occurrence`,
+    confirmLabel: `Skip occurrence`,
+    dialogBody: `This occurrence will not fire. The schedule keeps repeating and the next occurrence is created for you.`,
+    dialogTitle: `Skip this occurrence?`,
+    triggerLabel: `Skip this occurrence`,
+    triggerTitle: `Skip this occurrence; the plan keeps repeating after it.`,
+  },
   pendingLabel: `Cancelling…`,
   triggerLabel: `Cancel`,
   triggerTitle: `Cancel this scheduled run before it fires.`,
+} as const;
+
+/**
+ * @description Repeat (recurring schedule) copy: the Run dialog's Schedule tab control, the
+ * Upcoming badge, Stop repeating and the plan header line.
+ */
+export const PLAN_RUN_REPEAT_COPY = {
+  badgeAriaLabel: (rule: string): string => `Repeat rule: ${rule}`,
+  customCronHint: `Five fields: minute hour day-of-month month day-of-week.`,
+  customCronInvalid: `Enter a five-field cron expression, such as 0 9 * * 1-5.`,
+  customCronLabel: `Cron expression`,
+  customCronPlaceholder: `0 9 * * 1-5`,
+  existingHint: (rule: string): string =>
+    `This plan already repeats: ${rule}. Stop repeating it before choosing a new rule.`,
+  headerLabel: (rule: string): string => `Repeats ${rule}`,
+  label: `Repeat`,
+  optionLabels: {
+    custom: `Custom cron`,
+    daily: `Daily`,
+    none: `Does not repeat`,
+    weekdays: `Weekdays`,
+    weekly: `Weekly`,
+  },
+  repeatScheduledToast: `Repeating run scheduled`,
+  stopAriaLabel: `Stop repeating`,
+  stopLabel: `Stop repeating`,
+  stopPendingLabel: `Stopping…`,
+  stopTitle: `Stop this plan repeating. Its pending occurrence is cancelled.`,
+  stoppedToast: `Stopped repeating`,
 } as const;
 
 /**

@@ -6,6 +6,8 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { PLAN_RUN_CANCEL_SCHEDULED_COPY } from '~/routing/plans/data/data.copy';
 
+import { buildPlanRunSchedule } from '../../testing/buildPlanRunSchedule';
+import { renderWithPlanRunSchedules } from '../../testing/renderWithPlanRunSchedules';
 import { PlanRunCancelScheduledButton } from '../PlanRunCancelScheduledButton';
 
 const { toastError, toastInfo, toastSuccess } = vi.hoisted(() => ({
@@ -134,6 +136,45 @@ describe('PlanRunCancelScheduledButton Component', () => {
 
     await waitFor(() => {
       expect(toastError).toHaveBeenCalledWith('Failed to cancel plan run.');
+    });
+  });
+
+  describe('on an occurrence of a repeating plan', () => {
+    const OCCURRENCE = COPY.occurrence;
+
+    test('reads Skip this occurrence and posts the same cancelPlanRun for that run, keeping the chain', async () => {
+      const user = userEvent.setup();
+      const submissions: FormData[] = [];
+      const component = renderWithPlanRunSchedules(
+        <PlanRunCancelScheduledButton planId="plan-1" planRunId="run-9" />,
+        {
+          action: (form) => {
+            submissions.push(form);
+
+            return {
+              cancelPlanRun: { outcome: 'RUN_CANCELLED', removedJobIds: [] },
+            };
+          },
+          schedules: [buildPlanRunSchedule()],
+        },
+      );
+
+      expect(
+        component.queryByRole('button', { name: COPY.ariaLabel }),
+      ).not.toBeInTheDocument();
+      await user.click(
+        component.getByRole('button', { name: OCCURRENCE.ariaLabel }),
+      );
+      await user.click(
+        component.getByRole('button', { name: OCCURRENCE.confirmLabel }),
+      );
+
+      await waitFor(() => {
+        expect(toastSuccess).toHaveBeenCalledTimes(1);
+      });
+      expect(submissions[0]?.get('intent')).toBe('cancelPlanRun');
+      expect(submissions[0]?.get('planRunId')).toBe('run-9');
+      expect(submissions[0]?.has('scheduleId')).toBe(false);
     });
   });
 });

@@ -21,6 +21,7 @@ import { NotesModule } from './modules/notes/notes.module.ts';
 import { PlanEmbeddingsModule } from './modules/plan-embeddings/plan-embeddings.module.ts';
 import { PlanMessagesModule } from './modules/plan-messages/plan-messages.module.ts';
 import { PlanOutputStreamModule } from './modules/plan-output-stream/plan-output-stream.module.ts';
+import { PlanRunSchedulesModule } from './modules/plan-run-schedules/plan-run-schedules.module.ts';
 import { PlanRunsModule } from './modules/plan-runs/plan-runs.module.ts';
 import { PlansModule } from './modules/plans/plans.module.ts';
 import { ProjectSkillsModule } from './modules/project-skills/project-skills.module.ts';
@@ -67,6 +68,7 @@ import { getTypeOrmOptions } from './nestjs-repositories.utils.ts';
     PlanEmbeddingsModule,
     PlanMessagesModule,
     PlanOutputStreamModule,
+    PlanRunSchedulesModule,
     PlanRunsModule,
     PlansModule,
     ProjectSkillsModule,
@@ -119,6 +121,7 @@ import { getTypeOrmOptions } from './nestjs-repositories.utils.ts';
     PlanEmbeddingsModule,
     PlanMessagesModule,
     PlanOutputStreamModule,
+    PlanRunSchedulesModule,
     PlanRunsModule,
     PlansModule,
     ProjectSkillsModule,

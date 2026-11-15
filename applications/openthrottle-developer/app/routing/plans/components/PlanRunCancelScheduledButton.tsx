@@ -3,6 +3,8 @@ import * as React from 'react';
 
 import { PlanRunCancelScheduledDialog } from '~/routing/plans/components/PlanRunCancelScheduledDialog';
 import { PLAN_RUN_CANCEL_SCHEDULED_COPY } from '~/routing/plans/data/data.copy';
+import { usePlanRunSchedules } from '~/routing/plans/hooks/usePlanRunSchedules';
+import { selectScheduleForRun } from '~/routing/plans/utils/plan-run-repeat';
 
 export interface PlanRunCancelScheduledButtonProps {
   readonly planId: string;
@@ -22,10 +24,15 @@ export const PlanRunCancelScheduledButton = (
 
   // Hooks
   const [open, setOpen] = React.useState(false);
+  const { schedules } = usePlanRunSchedules({});
 
   // Setup
-  const { ariaLabel, triggerLabel, triggerTitle } =
-    PLAN_RUN_CANCEL_SCHEDULED_COPY;
+  // An occurrence of a repeating plan is skipped, not cancelled: the chain continues.
+  const isOccurrence = selectScheduleForRun(schedules, planRunId) !== undefined;
+  const copy = PLAN_RUN_CANCEL_SCHEDULED_COPY;
+  const { ariaLabel, triggerLabel, triggerTitle } = isOccurrence
+    ? copy.occurrence
+    : copy;
 
   // Handlers
 

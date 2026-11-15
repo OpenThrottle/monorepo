@@ -7,6 +7,8 @@ import {
   createEntityByIdLoader,
   createGroupedCountLoader,
   type GroupedHooks,
+  type PlanRunSchedule,
+  PlanRunSchedulesService,
   PlanRunsService,
   type Project,
   ProjectsService,
@@ -36,7 +38,15 @@ const RESOLVED_TASK_STATUSES = [
 export class PlansLoaders {
   readonly planHooksByPlanIdLoader: DataLoader<string, GroupedHooks>;
   readonly projectLoader: DataLoader<string, Project | null>;
+  readonly runSchedulesByPlanIdLoader: DataLoader<
+    string,
+    readonly PlanRunSchedule[]
+  >;
   readonly runnableTaskCountByPlanIdLoader: DataLoader<string, number>;
+  readonly scheduledRunByScheduleIdLoader: DataLoader<
+    string,
+    ScheduledPlanRun | null
+  >;
   readonly scheduledRunByPlanIdLoader: DataLoader<
     string,
     ScheduledPlanRun | null
@@ -45,6 +55,7 @@ export class PlansLoaders {
   readonly tasksCompletedCountByPlanIdLoader: DataLoader<string, number>;
 
   constructor(
+    planRunSchedulesService: PlanRunSchedulesService,
     planRunsService: PlanRunsService,
     projectsService: ProjectsService,
     tasksService: TasksService,
@@ -86,6 +97,38 @@ export class PlansLoaders {
         await planRunsService.findEarliestScheduledForByPlanIds(planIds);
 
       return planIds.map((planId) => byPlanId.get(planId) ?? null);
+    });
+
+    // One query for every listed plan's recurring schedules.
+    this.runSchedulesByPlanIdLoader = new DataLoader<
+      string,
+      readonly PlanRunSchedule[]
+    >(async (planIds) => {
+      const schedules = await planRunSchedulesService.findByPlanIds(planIds);
+
+      return planIds.map((planId) => {
+        return schedules.filter((schedule) => schedule.planId === planId);
+      });
+    });
+
+    // A schedule's pending occurrence. Schedules per plan are few, so one lookup per schedule
+    // (in parallel) is acceptable; nextOccurrenceAt and pendingPlanRunId share the cached result.
+    this.scheduledRunByScheduleIdLoader = new DataLoader<
+      string,
+      ScheduledPlanRun | null
+    >(async (scheduleIds) => {
+      return Promise.all(
+        scheduleIds.map(async (scheduleId) => {
+          const run =
+            await planRunsService.findScheduledByScheduleId(scheduleId);
+
+          if (run === null || run.scheduledFor === null) {
+            return null;
+          }
+
+          return { id: run.id, scheduledFor: run.scheduledFor };
+        }),
+      );
     });
 
     /*
