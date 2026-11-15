@@ -1,8 +1,6 @@
 #!/usr/bin/env node
 
-import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { parseEnv } from 'node:util';
 
 import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
 import { Client } from 'pg';
@@ -22,6 +20,7 @@ import {
   createPgDatabaseMigrator,
   migrateDatabases,
 } from '../databases/migration-runner.ts';
+import { readEnvFile } from './utils/env.ts';
 import { createLogger } from './utils/logger.ts';
 import type { MigrationGuardResult } from './utils/migration-guard.ts';
 import { checkMigrationGuard } from './utils/migration-guard.ts';
@@ -75,19 +74,6 @@ const targetDatabaseName = (
 };
 
 /**
- * `path` parsed the way `--env-file` and `process.loadEnvFile` parse it, which
- * is how every migration entrypoint loads its connection (inline `#` comments
- * included, which `utils/env.ts` does not strip). A missing file reads as `{}`.
- */
-const readDotenv = (path: string): NodeJS.ProcessEnv => {
-  try {
-    return parseEnv(readFileSync(path, 'utf8'));
-  } catch {
-    return {};
-  }
-};
-
-/**
  * Whether a run connecting with `env` would migrate `database` in the shared
  * database: the one this worktree's own `.env` files point at. A run aimed
  * elsewhere (a throwaway scratch database a test just created) is not what the
@@ -103,7 +89,7 @@ export function targetsSharedDatabase(
   const target = targetDatabaseName(database, env);
   const shared = new Set(
     WORKTREE_DB_ENV_FILES.map((relative) => {
-      return targetDatabaseName(database, readDotenv(join(cwd, relative)));
+      return targetDatabaseName(database, readEnvFile(join(cwd, relative)));
     }).filter((name) => name !== undefined),
   );
 
