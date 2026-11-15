@@ -66,14 +66,83 @@ describe('createAcpUpdateMapper', () => {
       {
         delta: '',
         done: false,
+        error: null,
         kind: 'tool_result',
         metadata: {
           callId: 'c1',
+          isError: false,
           toolCall: { output: { ok: true }, status: 'completed' },
           toolName: 'Edit File',
         },
       },
     ]);
+  });
+
+  it('marks a failed call isError with its content text as the result', () => {
+    const map = createAcpUpdateMapper();
+    map({
+      rawInput: { command: 'cat missing.txt' },
+      sessionUpdate: 'tool_call',
+      status: 'pending',
+      title: 'Shell',
+      toolCallId: 'c3',
+    });
+
+    const failed = map({
+      content: [
+        {
+          content: { text: 'cat: missing.txt: No such file', type: 'text' },
+          type: 'content',
+        },
+        { terminalId: 't1', type: 'terminal' },
+      ],
+      rawOutput: { exitCode: 1, stdout: [99, 97, 116] },
+      sessionUpdate: 'tool_call_update',
+      status: 'failed',
+      toolCallId: 'c3',
+    });
+
+    expect(failed).toEqual([
+      {
+        delta: '',
+        done: false,
+        error: 'cat: missing.txt: No such file',
+        kind: 'tool_result',
+        metadata: {
+          callId: 'c3',
+          isError: true,
+          toolCall: 'cat: missing.txt: No such file',
+          toolName: 'Shell',
+        },
+      },
+    ]);
+  });
+
+  it('falls back to a string rawOutput, then a generic message, on failure', () => {
+    const map = createAcpUpdateMapper();
+    map({ sessionUpdate: 'tool_call', title: 'Edit', toolCallId: 'c4' });
+    map({ sessionUpdate: 'tool_call', title: 'Edit', toolCallId: 'c5' });
+
+    const [stringOutput] = map({
+      rawOutput: 'permission denied',
+      sessionUpdate: 'tool_call_update',
+      status: 'failed',
+      toolCallId: 'c4',
+    }).filter((chunk) => chunk.kind === 'tool_result');
+    const [noOutput] = map({
+      rawOutput: { code: 13 },
+      sessionUpdate: 'tool_call_update',
+      status: 'failed',
+      toolCallId: 'c5',
+    }).filter((chunk) => chunk.kind === 'tool_result');
+
+    expect(stringOutput?.error).toBe('permission denied');
+    expect(stringOutput?.metadata).toMatchObject({ isError: true });
+    expect(noOutput?.error).toBe('The agent reported a failed tool call.');
+    expect(noOutput?.metadata).toMatchObject({
+      isError: true,
+      toolCall: 'The agent reported a failed tool call.',
+    });
   });
 
   it('emits the call when it starts running even without input', () => {
