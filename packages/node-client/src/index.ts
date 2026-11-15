@@ -10,6 +10,6 @@ export * from './data-source.ts';
 export * from './embedding.ts';
 export * from './embedding-config.ts';
 export * from './embedding-content.ts';
+export * from './embedWithOllama.ts';
 export * from './local-embedding.ts';
-export * from './ollama-embedding.ts';
 export * from './openthrottle-client.ts';

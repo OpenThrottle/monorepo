@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 
-import { embedWithOllama } from '../ollama-embedding.ts';
+import { embedWithOllama } from '../embedWithOllama.ts';
 
 const TARGET = { baseUrl: 'http://ollama.test', model: 'nomic-embed-text' };
 

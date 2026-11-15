@@ -7,9 +7,9 @@
 
 import { EMBEDDING_MAX_INPUT_CHARS } from './constants.ts';
 import type { EmbeddingConfig } from './embedding-config.ts';
+import { embedWithOllama } from './embedWithOllama.ts';
 import type { LocalEmbeddingBackendOptions } from './local-embedding.ts';
 import { createLocalEmbeddingBackend } from './local-embedding.ts';
-import { embedWithOllama } from './ollama-embedding.ts';
 
 /**
  * @description What the text is for. nomic-embed-text was trained with a task prefix per side:

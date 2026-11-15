@@ -30,7 +30,7 @@ agent-asset search, plan-creation) and `@openthrottle/openthrottle-agentic-utils
   `unconfigured` | `dimension_mismatch` | `provider_error`) — never `undefined`.
 - `src/local-embedding.ts` — transformers.js in an eval'd worker thread, loading quantized
   ONNX weights from `EMBEDDING_MODELS_DIR` only (remote downloads disabled).
-- `src/ollama-embedding.ts` — Ollama batch path (`POST /api/embed`), same model.
+- `src/embedWithOllama.ts` — Ollama batch path (`POST /api/embed`), same model.
 - `src/embedding-content.ts` — builds the text blob fed to the embedder for a plan/task.
 - `src/config.ts` — `getPostgresConfig()` (returns `undefined` when Postgres isn't configured).
 - `src/constants.ts` — `EMBEDDING_MAX_INPUT_CHARS` (8191, prefix included), shared across both
