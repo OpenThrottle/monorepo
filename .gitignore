@@ -108,12 +108,12 @@ CLAUDE.local.md
 plugins/*/dist/
 .agents/plugins/*/dist/
 
+# Test-coverage audit inventory — regenerated on demand, never committed (it
+# drifted with every rename). See docs/monorepo/test-coverage-audit.md § Baseline.
+docs/monorepo/test-coverage-baseline.json
+
 # Start 🔄 Managed by OpenThrottle ot-skill-sync
 .agents/skills/*
 !.agents/skills/*/
 .claude/skills/
 # End 🔄 Managed by OpenThrottle ot-skill-sync
-
-# Test-coverage audit inventory — regenerated on demand, never committed (it
-# drifted with every rename). See docs/monorepo/test-coverage-audit.md § Baseline.
-docs/monorepo/test-coverage-baseline.json
