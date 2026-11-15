@@ -163,6 +163,45 @@ export const resolveReportableCwd = (
   return cwd || null;
 };
 
+/** One `KEY=value` assignment parsed out of a `.env` line. @public */
+export interface EnvLineAssignment {
+  readonly key: string;
+  readonly value: string;
+}
+
+/**
+ * Parse one `.env` line. Null for a blank line, a comment, or anything that is
+ * not `KEY=value`. Surrounding single or double quotes are stripped; an inline
+ * `# …` after the value is NOT a comment — it stays part of the value.
+ *
+ * The one parser both the reader ({@link readEnvFile}) and the user-env writer
+ * use, so the two cannot disagree about which line sets which key.
+ *
+ * @public
+ */
+export const parseEnvLine = (line: string): EnvLineAssignment | null => {
+  const trimmed = line.trim();
+  if (!trimmed || trimmed.startsWith('#')) {
+    return null;
+  }
+  const eq = trimmed.indexOf('=');
+  if (eq <= 0) {
+    return null;
+  }
+  const key = trimmed.slice(0, eq).trim();
+  if (!key) {
+    return null;
+  }
+  let value = trimmed.slice(eq + 1).trim();
+  if (
+    (value.startsWith('"') && value.endsWith('"')) ||
+    (value.startsWith("'") && value.endsWith("'"))
+  ) {
+    value = value.slice(1, -1);
+  }
+  return { key, value };
+};
+
 /**
  * Parse a `.env` file into a plain object (no process.env mutation). Missing or
  * unreadable files yield an empty map.
@@ -177,26 +216,10 @@ export const readEnvFile = (envPath: string): Record<string, string> => {
     }
     const text = fs.readFileSync(envPath, 'utf8');
     for (const line of text.split('\n')) {
-      const trimmed = line.trim();
-      if (!trimmed || trimmed.startsWith('#')) {
-        continue;
+      const assignment = parseEnvLine(line);
+      if (assignment) {
+        out[assignment.key] = assignment.value;
       }
-      const eq = trimmed.indexOf('=');
-      if (eq <= 0) {
-        continue;
-      }
-      const key = trimmed.slice(0, eq).trim();
-      if (!key) {
-        continue;
-      }
-      let value = trimmed.slice(eq + 1).trim();
-      if (
-        (value.startsWith('"') && value.endsWith('"')) ||
-        (value.startsWith("'") && value.endsWith("'"))
-      ) {
-        value = value.slice(1, -1);
-      }
-      out[key] = value;
     }
   } catch (err) {
     logHookError('readEnvFile failed', err);

@@ -1,8 +1,11 @@
 import './load-env.ts';
 
+import { existsSync } from 'node:fs';
+
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
+import { ensureUserEnvEntries } from '@openthrottle/agentic-hooks';
 import { resolveQueuePrefix } from '@openthrottle/nestjs-bullmq';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
@@ -16,6 +19,7 @@ import { AppModule } from './app.module.ts';
 import { PROCESS_ROLES } from './config/config.constants.ts';
 import type { ProcessRole } from './config/config.types.ts';
 import { resolveProcessRole } from './config/config.utils.ts';
+import { ensureUserEnvFileOnBoot } from './services/user-env-file/user-env-file.utils.ts';
 import { WorkerAppModule } from './worker-app/worker-app.module.ts';
 
 /**
@@ -125,6 +129,18 @@ async function bootstrap(role: 'all' | 'api'): Promise<void> {
   app.useLogger(logger);
 
   await app.listen(port);
+
+  /**
+   * Fill in `~/.openthrottle/.env` so hooks in every checkout on this machine can
+   * reach this server. Primary, non-container servers only; fail-open.
+   */
+  ensureUserEnvFileOnBoot({
+    ensure: ensureUserEnvEntries,
+    env: process.env,
+    fileExists: existsSync,
+    logger,
+    port,
+  });
 
   logger.info(
     `\n\n\n  🚀 Application is running on: ${url} (PROCESS_ROLE=${role}) \n\n`,

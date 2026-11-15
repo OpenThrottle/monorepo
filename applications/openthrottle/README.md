@@ -16,6 +16,8 @@ Bring the full stack up from published images — you need only Docker and this 
 2. **Start** — `docker compose up -d` (brings up postgres, redis, migrations, server, developer).
 3. **Provision + log in** — `docker compose run --rm bootstrap` (creates the default user on a clean volume), then open **http://localhost:9020** and sign in with `developer@openthrottle.ai` / `FullThrottle2026!`.
 
+**Skill-usage telemetry needs no setup.** Once `OPENTHROTTLE_MCP_AUTH_TOKEN` is set (below), the server fills its URL and that token into your `~/.openthrottle/.env` on boot (bind-mounted into the container), so agent hooks in every checkout on this machine record skill usage instead of buffering locally. A value you set there yourself is never overwritten. On Linux Docker Engine, `mkdir -p ~/.openthrottle` before the first `up`.
+
 Verify the API: `curl http://localhost:9021/health` → `{"api":"ok","database":"ok","redis":"ok","websocket":"ok"}`.
 
 **Optional — MCP for AI agents.** Bring the server up, then point your AI client at it:

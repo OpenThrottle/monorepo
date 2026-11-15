@@ -186,7 +186,9 @@ export const REPOSITORIES_ONBOARDING: GlobalFeatureOnboardingContent = {
  * leaving the page. That is the point of the feature: a cursor-agent run once
  * captured a skill invocation correctly, resolved no endpoint, wrote the record
  * to a local buffer, and nothing in the product said so — the missing value was
- * a single line in `~/.openthrottle/.env`.
+ * a single line in `~/.openthrottle/.env`. A local server now writes that line
+ * itself on boot, so on a local install a negative state means the server is not
+ * running (or has no token) rather than a step the user skipped.
  *
  * `notWired` is deliberately not phrased as breakage. An OpenThrottle-
  * orchestrated run passes `--plugin-dir` at spawn time and records from any
@@ -195,7 +197,7 @@ export const REPOSITORIES_ONBOARDING: GlobalFeatureOnboardingContent = {
  */
 export const REPOSITORY_HOOK_TELEMETRY_COPY = {
   bufferingLabel: `Buffering locally`,
-  bufferingRemediation: `Add your OpenThrottle server to ~/.openthrottle/.env — one line, and it applies to every repository on this machine:`,
+  bufferingRemediation: `Start or restart the OpenThrottle server on this machine — on boot it fills in ~/.openthrottle/.env for every repository here. Using a hosted server instead? Add it to that file yourself:`,
   bufferingSummary: `Skill invocations are captured here, but no OpenThrottle endpoint resolves, so records are written to a local file instead of being sent.`,
   columnLabel: `Telemetry`,
   endpointSourceLabels: {
@@ -207,7 +209,7 @@ export const REPOSITORY_HOOK_TELEMETRY_COPY = {
   envSnippet: `OPENTHROTTLE_GRAPHQL_URL=https://your-openthrottle-server/graphql`,
   heading: `Skill-usage telemetry`,
   missingTokenLabel: `Buffering locally`,
-  missingTokenRemediation: `An endpoint is configured but no auth token is. A server that requires authentication rejects these records and they buffer instead — add the token alongside the URL in ~/.openthrottle/.env:`,
+  missingTokenRemediation: `An endpoint is configured but no auth token is, so the server rejects these records and they buffer instead. Restart the OpenThrottle server on this machine with OPENTHROTTLE_MCP_AUTH_TOKEN set and it adds the token for you; it leaves a URL you set yourself alone. For a hosted server, add the token alongside the URL in ~/.openthrottle/.env:`,
   missingTokenSnippet: `OPENTHROTTLE_MCP_AUTH_TOKEN=your-token`,
   missingTokenSummary: `An endpoint resolves but no auth token does, so records are rejected with Unauthorized and buffered locally.`,
   notInspectedLabel: `Not inspected`,

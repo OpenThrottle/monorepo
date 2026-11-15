@@ -10,6 +10,7 @@
  * `@public` JSDoc tag so Knip retains it.
  */
 export * from './config/describe.ts';
+export * from './config/ensureUserEnvEntries.ts';
 export * from './config/env.ts';
 export * from './data/bash-guard/bsd-sed-inplace.ts';
 export * from './data/bash-guard/fs-glob-matcher.ts';

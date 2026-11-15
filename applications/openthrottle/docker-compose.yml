@@ -84,6 +84,14 @@ x-server: &server
   # Host execution bridge (identity when OPENTHROTTLE_WORKSPACES_DIR is unset).
   OPENTHROTTLE_CONTAINER_WORKSPACES_DIR: /workspaces
   OPENTHROTTLE_HOST_WORKSPACES_DIR: ${OPENTHROTTLE_WORKSPACES_DIR:-/tmp/workspaces}
+  # Zero-config skill-usage telemetry: on boot the server fills in the HOST's
+  # ~/.openthrottle/.env (bind-mounted at /host-openthrottle by the server
+  # service) with http://127.0.0.1:<OPENTHROTTLE_SERVER_PORT>/graphql and this
+  # token, so agent hooks in every checkout on this machine record skill usage.
+  # Lines it writes carry a `# managed by openthrottle-server` marker; a value
+  # you set yourself is never touched. Empty token = nothing written.
+  OPENTHROTTLE_MCP_AUTH_TOKEN: ${OPENTHROTTLE_MCP_AUTH_TOKEN}
+  OPENTHROTTLE_USER_CONFIG_DIR: /host-openthrottle
   # Service-to-service over the compose network (container ports).
   POSTGRES_HOST: postgres
   POSTGRES_PORT: 5432
@@ -219,6 +227,14 @@ services:
     restart: always
     volumes:
       - '${OPENTHROTTLE_WORKSPACES_DIR:-/tmp/workspaces}:/workspaces'
+      # The host's user config dir, so the server can write the telemetry
+      # endpoint + token where agent hooks on this machine read them (see
+      # OPENTHROTTLE_USER_CONFIG_DIR above). Docker Desktop (macOS/Windows) maps
+      # ownership to you. On Linux Docker Engine, `mkdir -p ~/.openthrottle`
+      # BEFORE the first `up` (otherwise Docker creates it root-owned) and make
+      # it writable by the container user; if the write fails the server logs
+      # one warning and boots anyway, and you can paste the two lines yourself.
+      - '${OPENTHROTTLE_HOST_CONFIG_DIR:-${HOME}/.openthrottle}:/host-openthrottle'
 
   #############################################################################
   #
