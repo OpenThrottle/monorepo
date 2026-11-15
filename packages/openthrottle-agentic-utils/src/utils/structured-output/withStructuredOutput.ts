@@ -39,9 +39,8 @@ const toolNameOf = (chunk: ConversationStreamChunk): string => {
 
 /**
  * The tool's arguments, where the CLI's event clearly carries them: `metadata.toolCall` (claude,
- * cursor, gemini, antigravity, opencode, codex) or, for codex runs logged before its mapper emitted
- * `tool_call` chunks, the finished `item` (its `command`). grok maps no tool events, so its lines
- * have nothing to show.
+ * cursor, gemini, antigravity, opencode, codex, grok) or, for codex runs logged before its mapper
+ * emitted `tool_call` chunks, the finished `item` (its `command`).
  */
 const toolInputOf = (chunk: ConversationStreamChunk): unknown => {
   const metadata = chunk.metadata ?? {};

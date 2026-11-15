@@ -177,9 +177,9 @@ export interface DriverCapabilities {
   readonly pluginDir: boolean;
   /**
    * In structured output mode, the CLI's stream carries discrete tool-call events, so a run
-   * transcript can record what the agent did and not only what it said. `false` for grok, whose
-   * headless `streaming-json` emits only `thought` / `text` / `end`; its transcripts are marked
-   * incomplete rather than stored with an empty tool-call list.
+   * transcript can record what the agent did and not only what it said. A driver whose stream
+   * carries none has its transcripts marked incomplete rather than stored with an empty tool-call
+   * list. Every driver reports them today (grok since 1.x).
    */
   readonly reportsToolCalls: boolean;
   /** Emits `--skip-worktree-setup` (Cursor-only today). */

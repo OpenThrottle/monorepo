@@ -51,8 +51,11 @@ const capabilities: DriverCapabilities = {
   mcpAutoApprove: false,
   permissionMode: true,
   pluginDir: false,
-  /** Headless `streaming-json` has no tool events (only `thought` / `text` / `end`). */
-  reportsToolCalls: false,
+  /**
+   * grok 1.x `streaming-json` carries `tool_call` / `tool_call_update` events (verified against
+   * grok 1.0.77); 0.2.112 emitted only `thought` / `text` / `end`.
+   */
+  reportsToolCalls: true,
   skipWorktreeSetup: false,
   supportsCustomBaseUrl: true,
   supportsModelFlag: true,

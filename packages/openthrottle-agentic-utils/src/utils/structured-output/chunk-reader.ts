@@ -1,7 +1,7 @@
 /**
  * @description One uniform reader over the chat path's per-CLI event mappers, so a plan run's
- * structured stdout is parsed by exactly the code the chat composer already trusts. Three of the
- * mappers are stateless functions and three are factories holding per-stream state (tool names,
+ * structured stdout is parsed by exactly the code the chat composer already trusts. Two of the
+ * mappers are stateless functions and four are factories holding per-stream state (tool names,
  * emitted lengths), so a reader is created per run and must never be shared between runs.
  */
 
@@ -12,7 +12,7 @@ import { createAntigravityEventMapper } from '../conversation-backend/antigravit
 import { mapClaudeEvent } from '../conversation-backend/claude/events.ts';
 import { createCodexEventMapper } from '../conversation-backend/codex/events.ts';
 import { mapCursorEvent } from '../conversation-backend/cursor-agent/events.ts';
-import { mapGrokEvent } from '../conversation-backend/grok/events.ts';
+import { createGrokEventMapper } from '../conversation-backend/grok/events.ts';
 import { createOpencodeEventMapper } from '../conversation-backend/opencode/events.ts';
 import type { ConversationStreamChunk } from '../conversation-backend/types.ts';
 import { CONVERSATION_STREAM_CHUNK_KINDS } from '../conversation-backend/types.ts';
@@ -109,8 +109,13 @@ export const createStructuredChunkReader = (
       return withConsolidatedText((event) => {
         return listOf(mapCursorEvent(event));
       });
-    case DRIVERS.grok:
-      return mapGrokEvent;
+    case DRIVERS.grok: {
+      const mapper = createGrokEventMapper();
+
+      return (event) => {
+        return mapper.map(event);
+      };
+    }
     case DRIVERS.opencode: {
       const mapper = createOpencodeEventMapper();
 

@@ -496,12 +496,33 @@ describe('ConversationStreamService', () => {
       };
     }
     claudeStreamMock.mockImplementation(claudeError);
-    const { publish, service } = buildService();
+    const { conversations, publish, service } = buildService();
 
     await service.runStream({ ...baseRun, backend: 'claude', cwd: '/repo' });
 
     const last = publish.mock.calls.at(-1)?.[1].conversationStreamChunkAdded;
     expect(last).toMatchObject({ done: true, error: 'model_not_found' });
+    // The error rides the persisted usage payload, so a reload still shows it.
+    expect(conversations.appendMessages).toHaveBeenCalledWith(
+      'user-1',
+      'conv-1',
+      [
+        expect.objectContaining({
+          toolMetadata: {
+            events: [
+              {
+                delta: '',
+                kind: 'usage',
+                metadata: {
+                  error: 'model_not_found',
+                  result: 'model_not_found',
+                },
+              },
+            ],
+          },
+        }),
+      ],
+    );
   });
 
   it('publishes a non-retryable usageLimit terminal marker and keeps usage_limit chunks in the transcript events', async () => {

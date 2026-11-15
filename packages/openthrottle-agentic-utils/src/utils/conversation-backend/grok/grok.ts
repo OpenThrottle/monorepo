@@ -35,7 +35,7 @@ import {
   type ConversationStreamChunk,
 } from '../types.ts';
 import { buildGrokArgv, GROK_BIN_ENV, GROK_DEFAULT_BIN } from './argv.ts';
-import { mapGrokEvent } from './events.ts';
+import { createGrokEventMapper } from './events.ts';
 
 /** Env vars the child is allowed to inherit (host login + locale), nothing else. */
 const ALLOWED_ENV_KEYS = [
@@ -49,6 +49,41 @@ const ALLOWED_ENV_KEYS = [
   'USER',
   'XAI_API_KEY',
 ] as const;
+
+/** The stderr line grok prints for each tool a headless run could not approve. */
+const PERMISSION_REQUIRED_PREFIX = 'permission required:';
+
+/**
+ * Add grok's own `permission required: …` stderr lines (which name the exact
+ * command, not just the tool) to a terminal error, so the user sees what was
+ * blocked. Anything without such a line is returned unchanged.
+ */
+function withPermissionDetail(
+  chunk: ConversationStreamChunk,
+  stderr: string,
+): ConversationStreamChunk {
+  if (!chunk.done || chunk.error === undefined || chunk.error === null) {
+    return chunk;
+  }
+
+  const detail = stderr
+    .split('\n')
+    .map((line) => {
+      return line.trim();
+    })
+    .filter((line) => {
+      return line.startsWith(PERMISSION_REQUIRED_PREFIX);
+    });
+
+  if (detail.length === 0) {
+    return chunk;
+  }
+
+  return {
+    ...chunk,
+    error: `${chunk.error}\n\ngrok: ${detail.join('\ngrok: ')}`,
+  };
+}
 
 /**
  * Resolve the binary: explicit env override, else `grok` off PATH.
@@ -202,6 +237,7 @@ async function* streamGrok(
   );
 
   const buffer = new NdjsonBuffer();
+  const mapper = createGrokEventMapper();
   let sawTerminal = false;
   const emit = function* (
     lines: readonly string[],
@@ -213,11 +249,11 @@ async function* streamGrok(
       } catch {
         continue;
       }
-      for (const chunk of mapGrokEvent(parsed)) {
+      for (const chunk of mapper.map(parsed)) {
         if (chunk.done) {
           sawTerminal = true;
         }
-        yield chunk;
+        yield withPermissionDetail(chunk, stderr);
       }
     }
   };

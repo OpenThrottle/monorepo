@@ -42,6 +42,23 @@ const errorBin = (): string => {
   );
 };
 
+// A permission-gated turn (grok 1.x): the blocked call fails, grok prints the
+// `permission required:` line to stderr, then ends the turn `cancelled`.
+const cancelledBin = (): string => {
+  return writeFakeBin(
+    'grok-cancelled.js',
+    `process.stderr.write('permission required: Execute \`rm -f x\` was not run, as a headless run cannot ask for approval\\n');
+    setTimeout(() => {
+      const lines = [
+        JSON.stringify({ type: 'tool_call', toolCallId: 'c1', toolName: 'run_terminal_command', status: 'pending', rawInput: { command: 'rm -f x' } }),
+        JSON.stringify({ type: 'tool_call_update', toolCallId: 'c1', status: 'failed', content: [{ type: 'content', content: { type: 'text', text: 'User cancelled the execution for tool \`run_terminal_command\`' } }] }),
+        JSON.stringify({ type: 'end', sessionId: 'ses_2', stopReason: 'cancelled', usage: {} }),
+      ];
+      process.stdout.write(lines.join('\\n') + '\\n');
+    }, 100);`,
+  );
+};
+
 // Emits one event, then hangs (no further output) until killed.
 const hangBin = (): string => {
   return writeFakeBin(
@@ -200,5 +217,22 @@ describe('grokConversationBackend', () => {
     const terminal = chunks.at(-1);
     expect(terminal).toMatchObject({ done: true });
     expect(terminal?.error).toContain('cancelled');
+  });
+
+  it("names the blocked tool and grok's own stderr reason on a cancelled turn", async () => {
+    process.env[GROK_BIN_ENV] = cancelledBin();
+
+    const chunks = await collect({
+      cwd: dir,
+      messages: [{ content: 'hi', role: 'user' }],
+      model: 'grok-4.7',
+    });
+    const terminal = chunks.at(-1);
+
+    expect(terminal?.done).toBe(true);
+    expect(terminal?.error).toContain('`run_terminal_command` needed approval');
+    expect(terminal?.error).toContain(
+      'grok: permission required: Execute `rm -f x` was not run',
+    );
   });
 });

@@ -89,6 +89,27 @@ describe('foldPersistedTurnEvents', () => {
     expect(result.some((e) => e.kind === 'text')).toBe(false);
   });
 
+  it('replays a terminal error persisted on the usage payload', () => {
+    const result = foldPersistedTurnEvents(
+      persisted([
+        {
+          delta: '',
+          kind: 'usage',
+          metadata: {
+            error: 'grok stopped before replying',
+            stopReason: 'cancelled',
+          },
+        },
+      ]),
+      '',
+    );
+
+    expect(result.at(-1)).toMatchObject({
+      error: 'grok stopped before replying',
+      kind: 'usage',
+    });
+  });
+
   it('keeps a session event from persisted metadata', () => {
     const result = foldPersistedTurnEvents(
       persisted([

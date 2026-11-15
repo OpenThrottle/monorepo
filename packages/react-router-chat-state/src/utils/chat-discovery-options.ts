@@ -269,8 +269,8 @@ function resolveAgentModels(
 
 /**
  * Map discovered agent CLIs into composer toolbar options. Only chat-capable
- * drivers the user has NOT disabled are offered (plan-run-only drivers like
- * codex/grok are discoverable but have no streaming chat adapter; a disabled
+ * drivers the user has NOT disabled are offered (a driver without a streaming
+ * chat adapter — none today — would be discoverable but not offered; a disabled
  * agent is hidden here and its models drop out transitively). Each of a driver's
  * ENABLED models becomes its own option (id `backend|model`, e.g. `cursor|gpt-5.2`),
  * favorited models flagged (`favorite: true`) and ordered first; a driver with no

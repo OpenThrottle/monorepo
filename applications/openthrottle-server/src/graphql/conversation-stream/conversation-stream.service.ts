@@ -448,10 +448,17 @@ export class ConversationStreamService {
           // dropped when the loop broke). opencode reports usage mid-stream
           // (done:false) so it already flows through below — unaffected.
           if (chunk.metadata !== undefined) {
+            // A terminal error rides the persisted usage payload too, so a
+            // reloaded turn still shows why it stopped (the live terminal
+            // chunk below is never persisted).
+            const hasError = chunk.error !== undefined && chunk.error !== null;
+            const metadata = hasError
+              ? { ...chunk.metadata, error: chunk.error }
+              : chunk.metadata;
             toolEvents.push({
               delta: chunk.delta,
               kind: CONVERSATION_STREAM_CHUNK_KINDS.usage,
-              metadata: chunk.metadata,
+              metadata,
             });
 
             await this.publishChunk({
