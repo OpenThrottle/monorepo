@@ -36,6 +36,7 @@ import { PlanRunWorktreeTeardownService } from './plan-run-worktree-teardown.ser
 /** The env keys this test overrides, restored after each case. */
 const OVERRIDDEN_ENV_KEYS = [
   'OPENTHROTTLE_WORKTREE_PROVISION',
+  'OPENTHROTTLE_WORKTREE_REMOVAL_LOG',
   'OPENTHROTTLE_WORKTREE_ROOT',
   'PATH',
 ] as const;
@@ -85,6 +86,11 @@ describe('plan-run worktree lifecycle in a foreign repo', () => {
       OVERRIDDEN_ENV_KEYS.map((key) => [key, process.env[key]]),
     );
     delete process.env.OPENTHROTTLE_WORKTREE_PROVISION;
+    // destroy.sh logs every removal under $HOME; keep this test's out of the developer's log.
+    process.env.OPENTHROTTLE_WORKTREE_REMOVAL_LOG = join(
+      scratch,
+      'worktree-removals.log',
+    );
     process.env.OPENTHROTTLE_WORKTREE_ROOT = worktreeRoot;
     process.env.PATH = `${stubBin}:${process.env.PATH ?? ''}`;
   });

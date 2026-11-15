@@ -70,6 +70,12 @@ describe('parseServeArgs', () => {
     expect(parseServeArgs(['developer', '--stop'])).toEqual({ kind: 'stop', target: 'developer' }); // prettier-ignore
   });
 
+  it('parses --orphans, alone', () => {
+    expect(parseServeArgs(['--orphans'])).toEqual({ kind: 'orphans' });
+    expect(parseServeArgs(['--orphans', 'server'])).toMatchObject({ kind: 'usage', message: expect.stringMatching(/no other arguments/) }); // prettier-ignore
+    expect(parseServeArgs(['--stop', '--orphans'])).toMatchObject({ kind: 'usage' }); // prettier-ignore
+  });
+
   it('answers a usage error for anything it does not understand', () => {
     const usage = (args: string[]): string | undefined => {
       const command = parseServeArgs(args);

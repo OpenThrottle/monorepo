@@ -26,6 +26,13 @@
  * forever. Teardown deletes exactly `bull:wt-<slug>:*` (`scripts/utils/worktree-queue-keys.ts`),
  * best-effort: Redis being down warns and moves on, it never blocks the removal.
  *
+ * Servers started by `pnpm worktree:serve` are detached on purpose, so removing the directory does
+ * not stop them either: two once ran for 9 and 13 days after their worktrees went, writing hundreds
+ * of MB of log. When a `.worktree/logs/<target>.pid` names a live process, teardown runs
+ * `worktree:serve --stop` and REFUSES the removal if any of those processes survives it — the same
+ * policy as a failed `docker compose down`. `pnpm worktree:serve --orphans` finds the ones that
+ * got away before this existed.
+ *
  * Nothing else needs undoing: ports are derived deterministically from the worktree name
  * (`scripts/utils/worktree-ports.ts`), not leased from a registry, so there is no allocation to
  * release. `.env` and the compose override die with the directory.
@@ -36,8 +43,8 @@
  * where there is provably nothing to leak, so those exit 0.
  */
 
-import { existsSync } from 'node:fs';
-import { basename, join } from 'node:path';
+import { existsSync, readFileSync } from 'node:fs';
+import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { readEnvFile, readEnvValue } from './utils/env.ts';
@@ -54,6 +61,12 @@ import {
   resolveWorktreeQueuePrefix,
   worktreeQueueKeyPattern,
 } from './utils/worktree-queue-keys.ts';
+import {
+  parseLsofCwd,
+  parsePidRecord,
+  pidfilePath,
+  SERVE_TARGETS,
+} from './utils/worktree-serve.ts';
 
 /** The compose override setup_worktree.ts generates; its presence proves this worktree was provisioned. */
 const WORKTREE_COMPOSE_FILE = 'docker-compose.worktree.yml';
@@ -162,6 +175,63 @@ const clearSharedQueueKeys = async (
   }
 };
 
+/** True when `pid` exists (EPERM still means it exists). */
+const isAlive = (pid: number): boolean => {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (error) {
+    return error instanceof Error && 'code' in error && error.code === 'EPERM';
+  }
+};
+
+/** True when `pid` runs from inside the worktree — the guard against a recycled pidfile pid. */
+const runsFrom = (pid: number, worktreePath: string): boolean => {
+  const result = run('lsof', ['-a', '-p', String(pid), '-d', 'cwd', '-Fn'], { allowFailure: true, stdio: 'capture' }); // prettier-ignore
+  const cwd = result.exitCode === 0 ? parseLsofCwd(result.stdout) : undefined;
+  return cwd !== undefined && (cwd === worktreePath || cwd.startsWith(`${worktreePath}/`)); // prettier-ignore
+};
+
+/** The live pids `worktree:serve` pidfiles in this worktree name. */
+const servedPids = (worktreePath: string): number[] => {
+  return SERVE_TARGETS.flatMap((target) => {
+    try {
+      const record = parsePidRecord(readFileSync(pidfilePath(worktreePath, target), 'utf8')); // prettier-ignore
+      return record !== undefined && isAlive(record.pid) ? [record.pid] : [];
+    } catch {
+      return [];
+    }
+  });
+};
+
+/**
+ * Stops anything `worktree:serve` started here. Returns false — removal must abort — when a served
+ * process that belongs to this worktree is still alive afterwards.
+ */
+const stopServedProcesses = (worktreePath: string, logger: Logger): boolean => {
+  const before = servedPids(worktreePath).filter((pid) => runsFrom(pid, worktreePath)); // prettier-ignore
+
+  if (before.length === 0) {
+    return true;
+  }
+
+  logger.info(`teardown: stopping worktree:serve processes (pid ${before.join(', ')})`); // prettier-ignore
+
+  // The CLI owns the scoped, group-aware kill; run THIS checkout's copy of it from inside the worktree.
+  const serve = join(dirname(fileURLToPath(import.meta.url)), 'worktree_serve.ts'); // prettier-ignore
+  run(process.execPath, ['--experimental-strip-types', serve, '--stop'], { allowFailure: true, cwd: worktreePath, stdio: 'capture' }); // prettier-ignore
+
+  const survivors = before.filter((pid) => isAlive(pid) && runsFrom(pid, worktreePath)); // prettier-ignore
+
+  if (survivors.length > 0) {
+    logger.fail(`teardown: worktree:serve process(es) ${survivors.join(', ')} are still running after "pnpm worktree:serve --stop". Refusing to remove the worktree — they would keep running from a directory that no longer exists. Stop them by hand (kill -TERM -<pid>), then retry.`); // prettier-ignore
+    return false;
+  }
+
+  logger.success('teardown: stopped worktree:serve processes');
+  return true;
+};
+
 /** Brings the worktree's compose project down. Returns false when it failed and removal must abort. */
 const stopComposeProject = (worktreePath: string, logger: Logger): boolean => {
   const envPath = join(worktreePath, '.env');
@@ -212,6 +282,11 @@ const main = async (): Promise<void> => {
   // Stdout belongs to the skill's path contract; every diagnostic goes to stderr.
   const logger = createLogger({ stream: process.stderr });
   const worktreePath = process.env.OPENTHROTTLE_WORKTREE_PATH ?? process.cwd();
+
+  if (!stopServedProcesses(worktreePath, logger)) {
+    process.exitCode = 1;
+    return;
+  }
 
   if (!stopComposeProject(worktreePath, logger)) {
     process.exitCode = 1;

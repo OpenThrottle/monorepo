@@ -5,6 +5,7 @@
  *
  *   pnpm worktree:serve <server|developer> [--api-only] [--timeout=<seconds>]
  *   pnpm worktree:serve --stop [server|developer]
+ *   pnpm worktree:serve --orphans
  *
  * Why a helper: a `dev` backgrounded from an agent's shell is reaped with that
  * shell (even under `nohup` + `disown`), there is no clean wait-until-listening,
@@ -27,6 +28,10 @@
  *   signal is scoped: to the pidfile's group or to a pid whose cwd is inside
  *   this worktree. There is no process-name pkill anywhere.
  * - Idempotent: a target that is already up reports its port and pid.
+ * - `--orphans` lists processes still running from a worktree git no longer
+ *   registers (removed, pruned, or deleted by hand), with their log sizes and
+ *   the `kill` line that stops them. It signals nothing, and runs from any
+ *   checkout of the repo, the primary included. Exit 1 when it finds any.
  *
  * Runs under bare Node (native type stripping). A process supervisor is out of
  * scope; this only launches, waits, probes and stops.
@@ -34,17 +39,20 @@
 import { spawn } from 'node:child_process';
 import {
   closeSync,
+  existsSync,
   mkdirSync,
   openSync,
   readFileSync,
   rmSync,
+  statSync,
   writeFileSync,
 } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { readEnvValue } from './utils/env.ts';
 import { run } from './utils/exec.ts';
+import { primaryCheckoutDir } from './utils/git.ts';
 import { createLogger } from './utils/logger.ts';
 import {
   deleteRunningTaskRows,
@@ -53,6 +61,13 @@ import {
   readRunningTasks,
   tasksHeldBy,
 } from './utils/nx-running-tasks.ts';
+import type { OrphanWorktree } from './utils/worktree-orphans.ts';
+import {
+  findOrphanWorktrees,
+  formatBytes,
+  parseLsofCwds,
+  parseWorktreeList,
+} from './utils/worktree-orphans.ts';
 import { isPortListening } from './utils/worktree-ports.ts';
 import type { PidRecord, ServeTarget } from './utils/worktree-serve.ts';
 import {
@@ -568,6 +583,122 @@ export const stop = async (
   return failed ? 1 : 0;
 };
 
+/** How many processes `--orphans` prints per worktree before summarizing the rest. */
+const ORPHAN_PROCESSES_SHOWN = 5;
+
+/**
+ * This repo's worktree directory (`<root>/<org>/<repo>`), asked of the ot-worktree skill's own
+ * root ladder so the answer can never drift from where `worktree:new` puts them.
+ */
+const worktreeBaseDir = (primary: string): string | undefined => {
+  const repo = join(dirname(fileURLToPath(import.meta.url)), '..');
+  const scriptsDir = [
+    join(repo, 'skills/ot-worktree/scripts'),
+    join(repo, '.agents/skills/ot-worktree/scripts'),
+  ].find((dir) => existsSync(join(dir, 'root.sh')));
+
+  if (scriptsDir === undefined) {
+    return undefined;
+  }
+
+  const result = run('sh', ['-c', '. "$1/common.sh"; . "$1/root.sh"; resolve_worktree_root "$2"', 'sh', scriptsDir, primary], { allowFailure: true }); // prettier-ignore
+
+  return result.exitCode === 0 && result.stdout !== '' ? result.stdout : undefined; // prettier-ignore
+};
+
+/** Elapsed time per pid, as `ps -o etime=` prints it (`[[dd-]hh:]mm:ss`). */
+const elapsedTimes = (pids: readonly number[]): Map<number, string> => {
+  const times = new Map<number, string>();
+
+  if (pids.length === 0) {
+    return times;
+  }
+
+  const output = run('ps', ['-o', 'pid=,etime=', '-p', pids.join(',')], { allowFailure: true }).stdout; // prettier-ignore
+
+  for (const line of output.split('\n')) {
+    const [pid, etime] = line.trim().split(/\s+/);
+
+    if (pid !== undefined && etime !== undefined) {
+      times.set(Number(pid), etime);
+    }
+  }
+
+  return times;
+};
+
+/** `server.log 245.0 MB, developer.log 1.2 kB`, for the logs still on disk. */
+const logSizes = (path: string): string => {
+  return SERVE_TARGETS.flatMap((target) => {
+    try {
+      return [`${target}.log ${formatBytes(statSync(logPath(path, target)).size)}`]; // prettier-ignore
+    } catch {
+      return [];
+    }
+  }).join(', ');
+};
+
+const printOrphan = (orphan: OrphanWorktree): void => {
+  const onDisk = existsSync(orphan.path);
+  const times = elapsedTimes(orphan.processes.map((entry) => entry.pid));
+  const logs = onDisk ? logSizes(orphan.path) : '';
+
+  logger.warn(`${orphan.path} — ${onDisk ? 'still on disk, not registered with git' : 'directory is gone'}; ${orphan.processes.length} process(es)`); // prettier-ignore
+
+  if (logs !== '') {
+    logger.detail(`logs: ${logs}`);
+  }
+
+  for (const entry of orphan.processes.slice(0, ORPHAN_PROCESSES_SHOWN)) {
+    logger.detail(`pid ${entry.pid} (pgid ${entry.pgid}, up ${times.get(entry.pid) ?? '?'}): ${entry.command.slice(0, 120)}`); // prettier-ignore
+  }
+
+  if (orphan.processes.length > ORPHAN_PROCESSES_SHOWN) {
+    logger.detail(`… and ${orphan.processes.length - ORPHAN_PROCESSES_SHOWN} more`); // prettier-ignore
+  }
+
+  logger.info(`stop: kill -TERM ${orphan.pgids.map((pgid) => `-${pgid}`).join(' ')}`); // prettier-ignore
+};
+
+/**
+ * Report processes still running from worktrees git no longer registers. Signals nothing.
+ * Returns 1 when it finds any, so a script can gate on it.
+ */
+export const orphans = (cwd: string): number => {
+  const primary = primaryCheckoutDir(cwd);
+  const baseDir = primary === undefined ? undefined : worktreeBaseDir(primary);
+
+  if (primary === undefined || baseDir === undefined) {
+    logger.fail('could not resolve this repo\'s worktree directory (not in a git checkout, or the ot-worktree skill is missing)'); // prettier-ignore
+
+    return 2;
+  }
+
+  const found = findOrphanWorktrees(
+    {
+      baseDir,
+      cwds: parseLsofCwds(run('lsof', ['-d', 'cwd', '-Fpn'], { allowFailure: true }).stdout), // prettier-ignore
+      registered: parseWorktreeList(run('git', ['-C', primary, 'worktree', 'list', '--porcelain'], { allowFailure: true }).stdout), // prettier-ignore
+      table: processTable(),
+    },
+    process.pid,
+  );
+
+  if (found.length === 0) {
+    logger.success(`no processes running from removed worktrees under ${baseDir}`); // prettier-ignore
+
+    return 0;
+  }
+
+  logger.warn(`${found.length} removed worktree(s) under ${baseDir} still have processes running:`); // prettier-ignore
+
+  for (const orphan of found) {
+    printOrphan(orphan);
+  }
+
+  return 1;
+};
+
 /** The checkout containing `cwd` (git's top level); `cwd` itself outside a repo. */
 const checkoutRoot = (cwd: string): string => {
   const result = run('git', ['rev-parse', '--show-toplevel'], {
@@ -586,6 +717,10 @@ const main = async (args: readonly string[]): Promise<number> => {
     logger.info(USAGE);
 
     return 2;
+  }
+
+  if (command.kind === 'orphans') {
+    return orphans(process.cwd());
   }
 
   const root = checkoutRoot(process.cwd());

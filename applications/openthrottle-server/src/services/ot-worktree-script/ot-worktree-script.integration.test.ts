@@ -11,6 +11,9 @@
  * configurable outcome, so the scripts' endpoint ladder is exercised over real HTTP. HOME points at
  * the scratch dir, so a developer's own `~/.openthrottle/.env` is never read.
  *
+ * destroy.sh also appends one JSON line per invocation to `$HOME/.openthrottle/logs/
+ * worktree-removals.log`; with HOME in the scratch dir, each test reads back exactly its own lines.
+ *
  * Scripts are spawned with the async `execFile`: the stub server lives in this process, and a
  * synchronous spawn would block the event loop it answers on.
  */
@@ -21,6 +24,7 @@ import {
   existsSync,
   mkdirSync,
   mkdtempSync,
+  readFileSync,
   realpathSync,
   rmSync,
   writeFileSync,
@@ -46,6 +50,21 @@ interface ScriptResult {
   readonly exitCode: number;
   readonly stderr: string;
   readonly stdout: string;
+}
+
+interface RemovalLogLine {
+  readonly agent_session: string;
+  readonly ancestry: string;
+  readonly branch: string;
+  readonly dry_run: boolean;
+  readonly force: boolean;
+  readonly parent: string;
+  readonly path: string;
+  readonly pid: number;
+  readonly ppid: number;
+  readonly probe: string;
+  readonly result: string;
+  readonly ts: string;
 }
 
 interface StubServer {
@@ -135,9 +154,25 @@ describe('guards against removing a live plan-run worktree', () => {
     );
   };
 
+  const removalLog = (): unknown[] => {
+    const file = join(scratch, '.openthrottle/logs/worktree-removals.log');
+    if (!existsSync(file)) {
+      return [];
+    }
+    return readFileSync(file, 'utf8')
+      .split('\n')
+      .filter((line) => {
+        return line.length > 0;
+      })
+      .map((line): unknown => {
+        return JSON.parse(line);
+      });
+  };
+
   /** Only what the scripts need: no developer token, endpoint or home-dir .env leaks in. */
   const scriptEnv = (extra: NodeJS.ProcessEnv): NodeJS.ProcessEnv => {
     return {
+      CLAUDE_CODE_SESSION_ID: 'session-under-test',
       GIT_CONFIG_NOSYSTEM: '1',
       HOME: scratch,
       OPENTHROTTLE_WORKTREE_ROOT: join(scratch, 'worktrees'),
@@ -222,6 +257,19 @@ describe('guards against removing a live plan-run worktree', () => {
       expect(existsSync(join(worktreePath, 'README.md'))).toBe(true);
       expect(isRegistered()).toBe(true);
       expect(stub.requests[0]).toContain(worktreePath);
+      expect(removalLog()).toEqual([
+        expect.objectContaining({
+          branch: WORKTREE_BRANCH,
+          force: false,
+          path: worktreePath,
+          probe: 'SKIPPED_ACTIVE_RUN',
+          result: 'refused-active-run',
+        }),
+        expect.objectContaining({
+          force: true,
+          result: 'refused-active-run',
+        }),
+      ]);
     }, 60_000);
 
     it('reports the refusal on --dry-run too', async () => {
@@ -253,6 +301,85 @@ describe('guards against removing a live plan-run worktree', () => {
       expect(isRegistered()).toBe(false);
       // The pre-removal probe, then the post-removal deregistration.
       expect(stub.requests).toHaveLength(2);
+      const [line, ...rest] = removalLog();
+      expect(rest).toHaveLength(0);
+      expect(line).toEqual(
+        expect.objectContaining<Partial<RemovalLogLine>>({
+          agent_session: 'session-under-test',
+          branch: WORKTREE_BRANCH,
+          dry_run: false,
+          path: worktreePath,
+          probe: 'SKIPPED_LIVE',
+          result: 'removed',
+        }),
+      );
+      // Attribution: who called it, and the chain above that.
+      expect(line).toEqual(
+        expect.objectContaining({
+          ancestry: expect.any(String),
+          parent: expect.any(String),
+          pid: expect.any(Number),
+          ppid: expect.any(Number),
+          ts: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/),
+        }),
+      );
+    }, 60_000);
+
+    it('logs a dirty refusal and a dry run', async () => {
+      writeFileSync(join(worktreePath, 'scratch.txt'), 'uncommitted\n');
+      const env = scriptEnv({ OPENTHROTTLE_WORKTREE_ACTIVE_RUN_GUARD: '0' });
+
+      const refused = await runScript(DESTROY_SCRIPT, [worktreePath], {
+        cwd: checkout,
+        env,
+      });
+      const dryRun = await runScript(
+        DESTROY_SCRIPT,
+        [worktreePath, '--dry-run'],
+        { cwd: checkout, env },
+      );
+
+      expect(refused.exitCode).toBe(1);
+      expect(dryRun.exitCode).toBe(0);
+      expect(isRegistered()).toBe(true);
+      expect(removalLog()).toEqual([
+        expect.objectContaining({ probe: 'not-run', result: 'refused-dirty' }),
+        expect.objectContaining({
+          dry_run: true,
+          probe: 'disabled',
+          result: 'dry-run',
+        }),
+      ]);
+    }, 60_000);
+
+    it('logs a target that is not a registered worktree', async () => {
+      const result = await runScript(
+        DESTROY_SCRIPT,
+        [join(scratch, 'nowhere')],
+        { cwd: checkout, env: scriptEnv({}) },
+      );
+
+      expect(result.exitCode).toBe(1);
+      expect(removalLog()).toEqual([
+        expect.objectContaining({ result: 'refused-not-registered' }),
+      ]);
+    }, 60_000);
+
+    it('never fails a removal when the log cannot be written', async () => {
+      // A regular file where the log directory should be: mkdir -p fails.
+      writeFileSync(join(scratch, 'blocker'), '');
+
+      const result = await runScript(DESTROY_SCRIPT, [worktreePath], {
+        cwd: checkout,
+        env: scriptEnv({
+          OPENTHROTTLE_WORKTREE_ACTIVE_RUN_GUARD: '0',
+          OPENTHROTTLE_WORKTREE_DEREGISTER: '0',
+          OPENTHROTTLE_WORKTREE_REMOVAL_LOG: join(scratch, 'blocker/x.log'),
+        }),
+      });
+
+      expect(result.exitCode).toBe(0);
+      expect(isRegistered()).toBe(false);
     }, 60_000);
 
     it('fails open when OpenThrottle cannot be reached', async () => {
@@ -266,6 +393,9 @@ describe('guards against removing a live plan-run worktree', () => {
 
       expect(result.exitCode).toBe(0);
       expect(isRegistered()).toBe(false);
+      expect(removalLog()).toEqual([
+        expect.objectContaining({ probe: 'unavailable', result: 'removed' }),
+      ]);
     }, 60_000);
 
     it('skips the check when OPENTHROTTLE_WORKTREE_ACTIVE_RUN_GUARD=0', async () => {
@@ -283,6 +413,9 @@ describe('guards against removing a live plan-run worktree', () => {
       expect(isRegistered()).toBe(false);
       // Only the post-removal deregistration was sent.
       expect(stub.requests).toHaveLength(1);
+      expect(removalLog()).toEqual([
+        expect.objectContaining({ probe: 'disabled', result: 'removed' }),
+      ]);
     }, 60_000);
   });
 

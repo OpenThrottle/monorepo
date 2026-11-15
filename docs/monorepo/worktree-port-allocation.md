@@ -232,6 +232,7 @@ pnpm worktree:serve server                 # openthrottle-server:dev, detached; 
 pnpm worktree:serve server --api-only      # openthrottle-server:dev-api (no processors)
 pnpm worktree:serve developer              # openthrottle-developer:dev
 pnpm worktree:serve --stop [server|developer]
+pnpm worktree:serve --orphans              # processes still running from removed worktrees (any checkout)
 ```
 
 It logs to `.worktree/logs/<target>.log` with a pidfile beside it, waits for the worktree's
@@ -242,6 +243,14 @@ process group and processes whose cwd is inside the worktree, and reaps a stale 
 `Waiting for … in another nx process` lock. It refuses in the primary checkout (no
 `OT_WORKTREE_DB` marker). Verify a worktree's server and UI through the URLs it prints, not
 the primary's `6020`/`6021`.
+
+The launch is detached on purpose, so removing a worktree does not stop what it served. The
+teardown hook (`scripts/teardown_worktree.ts`, run by `pnpm worktree:remove`) therefore runs
+`--stop` whenever a pidfile names a live process, and refuses the removal if one survives.
+Removal that skips the hook (`git worktree remove`, `git worktree prune`, `rm -rf`) leaves them
+running: `--orphans` finds every process whose cwd is under this repo's worktree directory but
+in no worktree git still registers, prints its uptime and log size, and the `kill -TERM -<pgid>`
+line that stops it. It signals nothing itself and exits 1 when it finds any.
 
 Caveat: running `developer` dirties the tracked `applications/openthrottle-developer/app/__generated__/*`
 (codegen-watch output is unformatted). Unless your change is meant to alter generated output,

@@ -1,3 +1,14 @@
+import { execFileSync } from 'node:child_process';
+import {
+  mkdirSync,
+  mkdtempSync,
+  realpathSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -9,6 +20,7 @@ import {
   resolveWorktreeQueuePrefix,
   worktreeQueueKeyPattern,
 } from '../utils/worktree-queue-keys.ts';
+import { pidfilePath, renderPidRecord } from '../utils/worktree-serve.ts';
 
 /**
  * The guard rail these tests exist for: teardown runs `docker compose down`, and the one thing it
@@ -178,4 +190,56 @@ describe('worktreeQueueKeyPattern', () => {
       expect(worktreeQueueKeyPattern(prefix)).toBeNull();
     },
   );
+});
+
+describe('teardown stops worktree:serve processes', () => {
+  const TEARDOWN = join(import.meta.dirname, '../teardown_worktree.ts');
+
+  const isAlive = (pid: number): boolean => {
+    try {
+      process.kill(pid, 0);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  it('stops a live served process group before the worktree is removed', () => {
+    const worktree = realpathSync(
+      mkdtempSync(join(tmpdir(), 'ot-teardown-serve-')),
+    );
+    // Isolated: no shared-Redis cleanup to reach for; no compose override: no docker.
+    writeFileSync(join(worktree, '.env'), 'OT_WORKTREE_DB=isolated\n');
+    mkdirSync(join(worktree, '.worktree/logs'), { recursive: true });
+
+    // Like a worktree:serve launch whose CLI has exited: the process leads its own group and is
+    // reparented to init, so it is reaped the moment it dies. A direct child of this test would
+    // linger as a zombie and keep --stop waiting out its whole grace period.
+    const pid = Number(
+      execFileSync(
+        'sh',
+        [
+          '-c',
+          'perl -e \'setpgrp(0, 0); exec "sleep", 120\' >/dev/null 2>&1 & echo $!',
+        ],
+        { cwd: worktree, encoding: 'utf8' },
+      ).trim(),
+    );
+
+    try {
+      writeFileSync(
+        pidfilePath(worktree, 'server'),
+        renderPidRecord({ apiOnly: true, pid, port: 65_000, startedAt: '2026-11-15T00:00:00.000Z', task: 'openthrottle-server:dev-api' }), // prettier-ignore
+      );
+
+      execFileSync(process.execPath, ['--experimental-strip-types', TEARDOWN], { cwd: worktree, stdio: 'pipe' }); // prettier-ignore
+
+      expect(isAlive(pid)).toBe(false);
+    } finally {
+      if (isAlive(pid)) {
+        process.kill(-pid, 'SIGKILL');
+      }
+      rmSync(worktree, { force: true, recursive: true });
+    }
+  });
 });
