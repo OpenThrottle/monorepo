@@ -64,6 +64,7 @@ import { WorkArtifact } from './modules/work-ledger/work-artifact.entity.ts';
 import { WorkSession } from './modules/work-ledger/work-session.entity.ts';
 import { WorkSessionSubject } from './modules/work-ledger/work-session-subject.entity.ts';
 import { UserWorkspaceSettings } from './modules/workspace-settings/user-workspace-settings.entity.ts';
+import { WorktreeRemoval } from './modules/worktree-removals/worktree-removal.entity.ts';
 
 /**
  * @description Resolves a positive integer from an env var, or undefined when
@@ -148,6 +149,7 @@ export function getTypeOrmOptions(): DataSourceOptions {
       WorkArtifact,
       WorkSession,
       WorkSessionSubject,
+      WorktreeRemoval,
     ],
 
     // logger?: "advanced-console" | "simple-console" | "formatted-console" | "file" | "debug" | Logger;

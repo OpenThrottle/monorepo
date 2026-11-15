@@ -23,6 +23,7 @@ import type { RepositoryCheckout } from '@openthrottle/nestjs-repositories';
 import {
   PlanRunsService,
   RepositoryCheckoutsService,
+  WorktreeRemovalsService,
 } from '@openthrottle/nestjs-repositories';
 
 import { realPath } from '../paths/real-path/real-path.utils.ts';
@@ -32,7 +33,9 @@ import { PRUNE_WORKTREE_CHECKOUT_OUTCOME } from './worktree-checkout-prune.const
 import type {
   DeregisterWorktreeCheckoutResult,
   PruneWorktreeCheckoutResult,
+  WorktreeRemovalAudit,
 } from './worktree-checkout-prune.types.ts';
+import { normalizeWorktreeRemovalAudit } from './worktree-checkout-prune.utils.ts';
 
 const WORKTREE_KIND = 'worktree';
 
@@ -44,6 +47,7 @@ export class WorktreeCheckoutPruneService {
     private readonly logger: LoggerService,
     private readonly checkoutsService: RepositoryCheckoutsService,
     private readonly planRunsService: PlanRunsService,
+    private readonly worktreeRemovalsService: WorktreeRemovalsService,
   ) {
     this.logger.debug(`🧩 ${this.name} 🧩`);
   }
@@ -84,11 +88,30 @@ export class WorktreeCheckoutPruneService {
    * path as given and by its real path, since registration may have stored either; then pruned
    * through exactly the same guards as {@link pruneByIds}, so a teardown can never delete a row a
    * live worktree or an unsettled run still needs.
+   *
+   * When the teardown sent a removal audit, it is recorded in worktree_removals whatever the
+   * outcome, so the removal can be attributed from the server alone. Recording is strictly
+   * best-effort: a failure is logged and never changes the result.
    */
-  async pruneByPath(
+  async deregisterByPath(
     userId: string,
     filesystemPath: string,
+    audit: WorktreeRemovalAudit | null,
   ): Promise<DeregisterWorktreeCheckoutResult> {
+    const { checkout, result } = await this.pruneAtPath(userId, filesystemPath);
+    if (audit !== null) {
+      await this.recordRemoval(userId, checkout, result, audit);
+    }
+    return result;
+  }
+
+  private async pruneAtPath(
+    userId: string,
+    filesystemPath: string,
+  ): Promise<{
+    readonly checkout: RepositoryCheckout | null;
+    readonly result: DeregisterWorktreeCheckoutResult;
+  }> {
     const candidates = [...new Set([filesystemPath, realPath(filesystemPath)])];
     const matches = await Promise.all(
       candidates.map((path) =>
@@ -99,18 +122,47 @@ export class WorktreeCheckoutPruneService {
 
     if (checkout === null) {
       return {
-        checkoutId: null,
-        outcome: PRUNE_WORKTREE_CHECKOUT_OUTCOME.NOT_FOUND,
-        path: filesystemPath,
+        checkout: null,
+        result: {
+          checkoutId: null,
+          outcome: PRUNE_WORKTREE_CHECKOUT_OUTCOME.NOT_FOUND,
+          path: filesystemPath,
+        },
       };
     }
 
-    const [result] = await this.pruneByIds(userId, [checkout.id]);
+    const [pruned] = await this.pruneByIds(userId, [checkout.id]);
     return {
-      checkoutId: checkout.id,
-      outcome: result?.outcome ?? PRUNE_WORKTREE_CHECKOUT_OUTCOME.NOT_FOUND,
-      path: checkout.filesystemPath,
+      checkout,
+      result: {
+        checkoutId: checkout.id,
+        outcome: pruned?.outcome ?? PRUNE_WORKTREE_CHECKOUT_OUTCOME.NOT_FOUND,
+        path: checkout.filesystemPath,
+      },
     };
+  }
+
+  private async recordRemoval(
+    userId: string,
+    checkout: RepositoryCheckout | null,
+    result: DeregisterWorktreeCheckoutResult,
+    audit: WorktreeRemovalAudit,
+  ): Promise<void> {
+    try {
+      await this.worktreeRemovalsService.record({
+        ...normalizeWorktreeRemovalAudit(audit),
+        checkoutId: result.checkoutId,
+        filesystemPath: result.path,
+        outcome: result.outcome,
+        repositoryId: checkout?.repositoryId ?? null,
+        userId,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.warn(
+        `could not record the removal audit for ${result.path}: ${message}`,
+      );
+    }
   }
 
   private async pruneOne(

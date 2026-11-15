@@ -19,13 +19,18 @@ import { NotFoundException, UseGuards } from '@nestjs/common';
 import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { CurrentUser } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
-import { RepositoryCheckoutsService } from '@openthrottle/nestjs-repositories';
+import type { WorktreeRemoval } from '@openthrottle/nestjs-repositories';
+import {
+  RepositoryCheckoutsService,
+  WorktreeRemovalsService,
+} from '@openthrottle/nestjs-repositories';
 
 import { GqlPermissionsGuard } from '../../../guards/gql-permissions.guard.ts';
 import { PLAN_RUN_WORKTREE_TEARDOWN_OUTCOME } from '../../../services/plan-run-worktree-teardown/plan-run-worktree-teardown.constants.ts';
 import { PlanRunWorktreeTeardownService } from '../../../services/plan-run-worktree-teardown/plan-run-worktree-teardown.service.ts';
 import { WorktreeActivityService } from '../../../services/worktree-activity/worktree-activity.service.ts';
 import { WorktreeCheckoutPruneService } from '../../../services/worktree-checkout-prune/worktree-checkout-prune.service.ts';
+import type { WorktreeRemovalObject } from '../discovered-worktrees.object.ts';
 import { DiscoveredWorktreesObject } from '../discovered-worktrees.object.ts';
 import { PruneWorktreeCheckoutsInput } from '../prune-worktree-checkouts.input.ts';
 import { PruneWorktreeCheckoutsPayloadObject } from '../prune-worktree-checkouts.object.ts';
@@ -39,6 +44,7 @@ export class DiscoveredWorktreesResolver {
     private readonly checkoutsService: RepositoryCheckoutsService,
     private readonly pruneService: WorktreeCheckoutPruneService,
     private readonly teardownService: PlanRunWorktreeTeardownService,
+    private readonly removalsService: WorktreeRemovalsService,
   ) {}
 
   @Query(() => DiscoveredWorktreesObject, {
@@ -58,11 +64,16 @@ export class DiscoveredWorktreesResolver {
     const result = await this.activityService.discoverAndClassify(userId, {
       fresh: refresh === true,
     });
+    const removals = await this.latestRemovalsByPath(
+      userId,
+      result.missingCheckouts.map((entry) => entry.path),
+    );
 
     return {
       droppedCount: result.droppedCount,
       missingCheckouts: result.missingCheckouts.map((entry) => ({
         checkoutId: entry.checkoutId,
+        lastRemoval: removals.get(entry.path) ?? null,
         path: entry.path,
         reason: entry.reason,
         repositoryId: entry.repositoryId,
@@ -174,5 +185,34 @@ export class DiscoveredWorktreesResolver {
       outcome: result.outcome,
       path,
     };
+  }
+
+  /**
+   * @description The latest reported removal per missing path. Best-effort: discovery never
+   * throws, so a failed lookup reads as "no removal reported" rather than failing the scan.
+   */
+  private async latestRemovalsByPath(
+    userId: string,
+    paths: readonly string[],
+  ): Promise<Map<string, WorktreeRemovalObject>> {
+    const rows = await this.removalsService
+      .findLatestByUserAndPaths(userId, paths)
+      .catch((): WorktreeRemoval[] => []);
+    return new Map(
+      rows.map((row) => [
+        row.filesystemPath,
+        {
+          agentSession: row.agentSession,
+          ancestry: row.ancestry,
+          branch: row.branch,
+          createdAt: row.createdAt,
+          id: row.id,
+          outcome: row.outcome,
+          parentCommand: row.parentCommand,
+          removedAt: row.removedAt,
+          result: row.result,
+        },
+      ]),
+    );
   }
 }

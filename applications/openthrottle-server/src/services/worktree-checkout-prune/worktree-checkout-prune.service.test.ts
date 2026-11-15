@@ -10,6 +10,7 @@ import type {
   PlanRunsService,
   RepositoryCheckout,
   RepositoryCheckoutsService,
+  WorktreeRemovalsService,
 } from '@openthrottle/nestjs-repositories';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -59,11 +60,16 @@ const withDisk = (live: readonly string[]): void => {
 const build = (options: {
   readonly checkouts: readonly RepositoryCheckout[];
   readonly deleted?: boolean;
+  readonly recordFails?: boolean;
   readonly unsettledRuns?: readonly PlanRun[];
 }): {
   readonly deleteWorktreeCheckout: ReturnType<typeof vi.fn>;
+  readonly record: ReturnType<typeof vi.fn>;
   readonly service: WorktreeCheckoutPruneService;
 } => {
+  const record = options.recordFails
+    ? vi.fn().mockRejectedValue(new Error('db down'))
+    : vi.fn().mockResolvedValue({});
   const deleteWorktreeCheckout = vi
     .fn()
     .mockResolvedValue(options.deleted ?? true);
@@ -88,9 +94,10 @@ const build = (options: {
         .fn()
         .mockResolvedValue([...(options.unsettledRuns ?? [])]),
     }),
+    createMock<WorktreeRemovalsService>({ record }),
   );
 
-  return { deleteWorktreeCheckout, service };
+  return { deleteWorktreeCheckout, record, service };
 };
 
 describe('WorktreeCheckoutPruneService', () => {
@@ -160,7 +167,11 @@ describe('WorktreeCheckoutPruneService', () => {
         unsettledRuns: [createMock<PlanRun>({ checkoutId: busy.id })],
       });
 
-      const result = await service.pruneByPath(USER, busy.filesystemPath);
+      const result = await service.deregisterByPath(
+        USER,
+        busy.filesystemPath,
+        null,
+      );
 
       expect(result.outcome).toBe(
         PRUNE_WORKTREE_CHECKOUT_OUTCOME.SKIPPED_ACTIVE_RUN,
@@ -255,7 +266,7 @@ describe('WorktreeCheckoutPruneService', () => {
     await expect(service.pruneByIds(USER, ids)).rejects.toThrow(/at most 200/);
   });
 
-  describe('pruneByPath', () => {
+  describe('deregisterByPath', () => {
     describe('when a worktree checkout is registered at the removed path', () => {
       it('prunes it through the same guards and reports its id', async () => {
         const gone = worktree('wt-gone');
@@ -264,7 +275,7 @@ describe('WorktreeCheckoutPruneService', () => {
         });
 
         await expect(
-          service.pruneByPath(USER, gone.filesystemPath),
+          service.deregisterByPath(USER, gone.filesystemPath, null),
         ).resolves.toEqual({
           checkoutId: gone.id,
           outcome: PRUNE_WORKTREE_CHECKOUT_OUTCOME.PRUNED,
@@ -280,7 +291,11 @@ describe('WorktreeCheckoutPruneService', () => {
         );
         const { service } = build({ checkouts: [gone] });
 
-        const result = await service.pruneByPath(USER, '/symlinked/wt-gone');
+        const result = await service.deregisterByPath(
+          USER,
+          '/symlinked/wt-gone',
+          null,
+        );
 
         expect(result.checkoutId).toBe(gone.id);
       });
@@ -292,7 +307,11 @@ describe('WorktreeCheckoutPruneService', () => {
           unsettledRuns: [createMock<PlanRun>({ checkoutId: busy.id })],
         });
 
-        const result = await service.pruneByPath(USER, busy.filesystemPath);
+        const result = await service.deregisterByPath(
+          USER,
+          busy.filesystemPath,
+          null,
+        );
 
         expect(result.outcome).toBe(
           PRUNE_WORKTREE_CHECKOUT_OUTCOME.SKIPPED_ACTIVE_RUN,
@@ -306,12 +325,101 @@ describe('WorktreeCheckoutPruneService', () => {
         const { service } = build({ checkouts: [] });
 
         await expect(
-          service.pruneByPath(USER, `${ROOT}/never-registered`),
+          service.deregisterByPath(USER, `${ROOT}/never-registered`, null),
         ).resolves.toEqual({
           checkoutId: null,
           outcome: PRUNE_WORKTREE_CHECKOUT_OUTCOME.NOT_FOUND,
           path: `${ROOT}/never-registered`,
         });
+      });
+    });
+  });
+
+  describe('deregisterByPath with a removal audit', () => {
+    const audit = {
+      agentSession: 'session-1',
+      ancestry: '10 pnpm worktree:remove',
+      branch: 'feat/x',
+      parent: 'sh destroy.sh',
+      pid: 42,
+      ppid: 41,
+      probe: 'NOT_FOUND',
+      result: 'removed',
+      ts: '2026-11-15T17:00:00Z',
+    };
+
+    describe('when a checkout was registered and pruned', () => {
+      it('records the audit with the checkout, repository and outcome', async () => {
+        const gone = worktree('wt-audited');
+        const { record, service } = build({ checkouts: [gone] });
+
+        const result = await service.deregisterByPath(
+          USER,
+          gone.filesystemPath,
+          audit,
+        );
+
+        expect(result.outcome).toBe(PRUNE_WORKTREE_CHECKOUT_OUTCOME.PRUNED);
+        expect(record).toHaveBeenCalledWith({
+          agentSession: 'session-1',
+          ancestry: '10 pnpm worktree:remove',
+          branch: 'feat/x',
+          checkoutId: gone.id,
+          filesystemPath: gone.filesystemPath,
+          outcome: PRUNE_WORKTREE_CHECKOUT_OUTCOME.PRUNED,
+          parentCommand: 'sh destroy.sh',
+          pid: 42,
+          ppid: 41,
+          probe: 'NOT_FOUND',
+          removedAt: new Date('2026-11-15T17:00:00Z'),
+          repositoryId: 'repo-1',
+          result: 'removed',
+          userId: USER,
+        });
+      });
+    });
+
+    describe('when nothing was registered at the path', () => {
+      it('still records the removal, with no checkout or repository', async () => {
+        const { record, service } = build({ checkouts: [] });
+        const path = `${ROOT}/never-registered`;
+
+        await service.deregisterByPath(USER, path, audit);
+
+        expect(record).toHaveBeenCalledWith(
+          expect.objectContaining({
+            checkoutId: null,
+            filesystemPath: path,
+            outcome: PRUNE_WORKTREE_CHECKOUT_OUTCOME.NOT_FOUND,
+            repositoryId: null,
+          }),
+        );
+      });
+    });
+
+    describe('when recording fails', () => {
+      it('returns the prune result anyway', async () => {
+        const gone = worktree('wt-record-fails');
+        const { service } = build({ checkouts: [gone], recordFails: true });
+
+        await expect(
+          service.deregisterByPath(USER, gone.filesystemPath, audit),
+        ).resolves.toEqual({
+          checkoutId: gone.id,
+          outcome: PRUNE_WORKTREE_CHECKOUT_OUTCOME.PRUNED,
+          path: gone.filesystemPath,
+        });
+      });
+    });
+
+    describe('when no audit was sent', () => {
+      it('records nothing', async () => {
+        const gone = worktree('wt-probe');
+        const { record, service } = build({ checkouts: [gone] });
+
+        await service.deregisterByPath(USER, gone.filesystemPath, null);
+
+        expect(record).not.toHaveBeenCalled();
       });
     });
   });

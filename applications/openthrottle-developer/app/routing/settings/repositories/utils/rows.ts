@@ -37,6 +37,7 @@ const toRow = (
     foreignSkillInjectionEnabled,
     id: checkout.id,
     isWorktree: checkout.kind === WORKTREE_CHECKOUT_KIND,
+    lastRemoval: missing?.lastRemoval ?? null,
     missing: missing !== null,
     missingReason: missing?.reason ?? null,
     notAGitRepository,
@@ -72,6 +73,7 @@ const toDiscoveredRow = (
     foreignSkillInjectionEnabled,
     id: `${UNREGISTERED_ROW_ID_PREFIX}${discovered.path}`,
     isWorktree: true,
+    lastRemoval: null,
     // Found on disk, so by definition not missing from it.
     missing: false,
     missingReason: null,

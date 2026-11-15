@@ -1,6 +1,12 @@
 import { MissingWorktreeCheckoutReason } from '~/__generated__/graphql';
-import { REPOSITORIES_TABLE_COPY } from '~/routing/settings/repositories/data/data.copy';
-import type { RepositoryCheckoutRow } from '~/routing/settings/repositories/types';
+import {
+  REPOSITORIES_TABLE_COPY,
+  WORKTREE_REMOVAL_OUTCOME_COPY,
+} from '~/routing/settings/repositories/data/data.copy';
+import type {
+  RepositoryCheckoutRow,
+  WorktreeRemoval,
+} from '~/routing/settings/repositories/types';
 
 /** One badge to render: a label plus the hover text that explains what it means. */
 export interface WorktreeBadge {
@@ -51,6 +57,56 @@ const UNVERIFIED_RUNNING_BADGE = {
 } as const;
 
 /**
+ * A GraphQL DateTime as `YYYY-MM-DD HH:MM UTC`, or null when it does not parse. UTC on purpose:
+ * the same string renders on the server and in the browser, so it cannot cause a hydration
+ * mismatch.
+ */
+const formatUtcMinute = (value: unknown): string | null => {
+  if (typeof value !== 'string' && !(value instanceof Date)) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return `${date.toISOString().slice(0, 16).replace('T', ' ')} UTC`;
+};
+
+/** `Label: value`, or null when the value was not reported. */
+const labelled = (
+  label: string,
+  value: string | null | undefined,
+): string | null => {
+  if (value === null || value === undefined) return null;
+  return `${label}: ${value}`;
+};
+
+/** The hover text for a removal badge: one fact per line, only the ones that were reported. */
+const describeRemoval = (removal: WorktreeRemoval): string => {
+  const outcome =
+    WORKTREE_REMOVAL_OUTCOME_COPY[removal.outcome] ?? removal.outcome;
+  const lines = [
+    REPOSITORIES_TABLE_COPY.removalTitleLead,
+    labelled(REPOSITORIES_TABLE_COPY.removalResult, removal.result),
+    labelled(REPOSITORIES_TABLE_COPY.removalAgentSession, removal.agentSession),
+    labelled(REPOSITORIES_TABLE_COPY.removalParent, removal.parentCommand),
+    outcome,
+  ];
+  return lines.filter((line): line is string => line !== null).join('\n');
+};
+
+/** The removal badge for a missing row, or null when no usable removal was reported. */
+const removalBadge = (
+  removal: WorktreeRemoval | null,
+): WorktreeBadge | null => {
+  if (removal === null) return null;
+  const when = formatUtcMinute(removal.removedAt ?? removal.createdAt);
+  if (when === null) return null;
+  return {
+    id: 'last-removal',
+    label: REPOSITORIES_TABLE_COPY.removalBadge(when),
+    title: describeRemoval(removal),
+    tone: 'cleanup',
+  };
+};
+
+/**
  * @description Derive the worktree badges for a row: its activity (only when the
  * server actually classified this path — a row with no `activity` was not found on
  * disk by the last scan and gets no badge rather than a misleading "Idle"), plus a
@@ -77,6 +133,9 @@ export const deriveWorktreeBadges = (
       title: isNotAWorktree ? notAWorktreeTitle : pathGoneTitle,
       tone: 'missing',
     });
+
+    const removal = removalBadge(row.lastRemoval);
+    if (removal !== null) badges.push(removal);
   }
 
   if (row.activity != null) {

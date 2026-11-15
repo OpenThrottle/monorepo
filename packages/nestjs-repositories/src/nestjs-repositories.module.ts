@@ -43,6 +43,7 @@ import { UserPreferencesModule } from './modules/user-preferences/user-preferenc
 import { UsersModule } from './modules/users/users.module.ts';
 import { WorkLedgerModule } from './modules/work-ledger/work-ledger.module.ts';
 import { WorkspaceSettingsModule } from './modules/workspace-settings/workspace-settings.module.ts';
+import { WorktreeRemovalsModule } from './modules/worktree-removals/worktree-removals.module.ts';
 import { getTypeOrmOptions } from './nestjs-repositories.utils.ts';
 
 @Module({
@@ -88,6 +89,7 @@ import { getTypeOrmOptions } from './nestjs-repositories.utils.ts';
     UsersModule,
     WorkLedgerModule,
     WorkspaceSettingsModule,
+    WorktreeRemovalsModule,
   ],
   imports: [
     TypeOrmModule.forRootAsync({
@@ -140,6 +142,7 @@ import { getTypeOrmOptions } from './nestjs-repositories.utils.ts';
     UsersModule,
     WorkLedgerModule,
     WorkspaceSettingsModule,
+    WorktreeRemovalsModule,
   ],
   providers: [],
 })

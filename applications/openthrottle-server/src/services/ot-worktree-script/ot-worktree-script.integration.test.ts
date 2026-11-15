@@ -323,6 +323,37 @@ describe('guards against removing a live plan-run worktree', () => {
           ts: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/),
         }),
       );
+      // The probe carries no audit; the deregistration carries the log's attribution fields.
+      const [probe, deregistration] = stub.requests.map((body): unknown =>
+        JSON.parse(body),
+      );
+      expect(probe).toEqual(
+        expect.objectContaining({
+          variables: { input: { filesystemPath: worktreePath } },
+        }),
+      );
+      expect(deregistration).toEqual(
+        expect.objectContaining({
+          variables: {
+            input: {
+              audit: {
+                agentSession: 'session-under-test',
+                ancestry: expect.any(String),
+                branch: WORKTREE_BRANCH,
+                parent: expect.any(String),
+                pid: expect.any(Number),
+                ppid: expect.any(Number),
+                probe: 'SKIPPED_LIVE',
+                result: 'removed',
+                ts: expect.stringMatching(
+                  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/,
+                ),
+              },
+              filesystemPath: worktreePath,
+            },
+          },
+        }),
+      );
     }, 60_000);
 
     it('logs a dirty refusal and a dry run', async () => {

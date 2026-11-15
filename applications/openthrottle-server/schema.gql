@@ -5329,9 +5329,48 @@ type RepositoryObject {
 }
 
 """
+One worktree removal reported by ot-worktree's destroy.sh with its deregistration: who removed it, how, and what the server did with the checkout record. Client-supplied fields are untrusted.
+"""
+type WorktreeRemovalObject {
+  """The calling agent's session id, when its harness exported one."""
+  agentSession: String
+
+  """A few levels of "pid command" above the parent process."""
+  ancestry: String
+
+  """Branch the worktree had checked out."""
+  branch: String
+
+  """When the server recorded the removal."""
+  createdAt: DateTime!
+  id: ID!
+
+  """
+  What the server did with the checkout record (a PruneWorktreeCheckoutOutcome value, lower-kebab: pruned, not-found, skipped-active-run, skipped-live, skipped-primary).
+  """
+  outcome: String!
+
+  """Command line of destroy.sh's parent process."""
+  parentCommand: String
+
+  """
+  When the client says the removal happened, or null when it sent no usable time.
+  """
+  removedAt: DateTime
+
+  """destroy.sh's own result, e.g. removed."""
+  result: String
+}
+
+"""
 A registered repository_checkouts row of kind worktree that discovery could not match to a live worktree. Reported only — removing the row is the explicit pruneWorktreeCheckouts mutation.
 """
 type MissingWorktreeCheckoutObject {
+  """
+  The latest removal ot-worktree reported for this path, or null when none was (removed by hand, by an older teardown, or while the server was unreachable). Usually the row survived because an unsettled plan run still pointed at it.
+  """
+  lastRemoval: WorktreeRemovalObject
+
   """The orphaned repository_checkouts row."""
   checkoutId: ID!
 
@@ -8932,9 +8971,52 @@ input RegisterPlanRunWorktreeCheckoutInput {
 """The worktree path a teardown just removed."""
 input DeregisterWorktreeCheckoutInput {
   """
+  Who removed the worktree and how. When present the server records the removal (whatever the outcome) so it can be attributed without the client's local log; omitted by the pre-removal active-run probe, which records nothing.
+  """
+  audit: WorktreeRemovalAuditInput
+
+  """
   Absolute filesystem path of the removed worktree. Matched as given and by its real path.
   """
   filesystemPath: String!
+}
+
+"""
+Who removed a worktree and how: the fields ot-worktree's destroy.sh writes to its local removal log. Every field is untrusted, optional and truncated server-side; a malformed value is dropped rather than failing the deregistration.
+"""
+input WorktreeRemovalAuditInput {
+  """
+  Calling agent's session id when its harness exports one (Claude Code: CLAUDE_CODE_SESSION_ID).
+  """
+  agentSession: String
+
+  """
+  A few levels of "pid command" above the parent process, joined by " <- ".
+  """
+  ancestry: String
+
+  """Branch the worktree had checked out."""
+  branch: String
+
+  """Command line of destroy.sh's parent process."""
+  parent: String
+
+  """destroy.sh process id on the client machine."""
+  pid: Int
+
+  """Parent process id of destroy.sh on the client machine."""
+  ppid: Int
+
+  """Outcome of destroy.sh's pre-removal active-run probe."""
+  probe: String
+
+  """destroy.sh's own result for the invocation, e.g. removed."""
+  result: String
+
+  """
+  Client-side ISO-8601 timestamp of the removal. Ignored when unparseable.
+  """
+  ts: String
 }
 
 input CreatePlanInput {

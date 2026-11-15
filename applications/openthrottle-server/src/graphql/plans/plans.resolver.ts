@@ -717,9 +717,10 @@ export class PlansResolver {
       };
     }
 
-    const result = await this.worktreeCheckoutPruneService.pruneByPath(
+    const result = await this.worktreeCheckoutPruneService.deregisterByPath(
       actorUserId,
       input.filesystemPath,
+      input.audit ?? null,
     );
     return {
       checkoutId: result.checkoutId,

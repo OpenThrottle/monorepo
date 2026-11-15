@@ -31,6 +31,11 @@ export const REPOSITORIES_TABLE_COPY = {
   noResults: `No repositories match this search.`,
   notAGitRepositoryBadge: `Not a git repository`,
   notAGitRepositoryTitle: `This folder is registered but is not a git checkout, so nothing can be planned or run in it. Removing the checkout here leaves the folder on disk untouched.`,
+  removalAgentSession: `Agent session`,
+  removalBadge: (when: string): string => `Removed ${when}`,
+  removalParent: `Called by`,
+  removalResult: `Result`,
+  removalTitleLead: `ot-worktree reported removing this worktree.`,
   repositoryColumn: `Repository / checkout`,
   safeToRemoveBadge: `Safe to remove`,
   safeToRemoveBadgeTitle: `A plan-run worktree with nothing uncommitted or unpushed and no live run. Removing it keeps its branch.`,
@@ -71,6 +76,17 @@ export const REPOSITORIES_ROW_ACTIONS_COPY = {
   removeTitle: `Remove this checkout?`,
   worktreeMenuAriaLabelPrefix: `Actions for the worktree`,
 } as const;
+
+/**
+ * Why the server kept a removed worktree's record, keyed by the reported
+ * `WorktreeRemovalObject.outcome`. An outcome not listed here is shown verbatim.
+ */
+export const WORKTREE_REMOVAL_OUTCOME_COPY: Readonly<Record<string, string>> = {
+  'not-found': `OpenThrottle had no record at that path when it was removed.`,
+  'skipped-active-run': `The record was kept: a plan run that had not been settled still pointed at it.`,
+  'skipped-live': `The record was kept: the path was still a live worktree when OpenThrottle checked.`,
+  'skipped-primary': `The record was kept: it is a primary checkout.`,
+};
 
 /**
  * @description Copy for cleaning up registered worktrees whose folders are gone: the

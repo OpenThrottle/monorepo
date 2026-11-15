@@ -205,6 +205,7 @@ import {
   WorkstreamTimelineInput,
   WorktreeActivity,
   WorktreeDiscoveryProblemKind,
+  WorktreeRemovalAuditInput,
   WorktreeRootSource,
 } from './graphql.js';
 
@@ -886,6 +887,7 @@ export function DeregisterWorktreeCheckoutInputSchema(): z.ZodObject<
   Properties<DeregisterWorktreeCheckoutInput>
 > {
   return z.object({
+    audit: z.lazy(() => WorktreeRemovalAuditInputSchema().nullish()),
     filesystemPath: z.string().min(1),
   });
 }
@@ -2307,5 +2309,21 @@ export function WorkstreamTimelineInputSchema(): z.ZodObject<
     planId: z.string().nullish(),
     spanKinds: z.array(TimelineSpanKindSchema).nullish(),
     to: definedNonNullAnySchema,
+  });
+}
+
+export function WorktreeRemovalAuditInputSchema(): z.ZodObject<
+  Properties<WorktreeRemovalAuditInput>
+> {
+  return z.object({
+    agentSession: z.string().nullish(),
+    ancestry: z.string().nullish(),
+    branch: z.string().nullish(),
+    parent: z.string().nullish(),
+    pid: z.number().nullish(),
+    ppid: z.number().nullish(),
+    probe: z.string().nullish(),
+    result: z.string().nullish(),
+    ts: z.string().nullish(),
   });
 }

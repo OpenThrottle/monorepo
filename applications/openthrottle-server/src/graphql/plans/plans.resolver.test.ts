@@ -246,9 +246,11 @@ describe('PlansResolver', () => {
       resolveEffectiveUserId: mockResolveEffectiveUserId,
     });
 
-  const mockPruneByPath = vi.fn();
+  const mockDeregisterByPath = vi.fn();
   const mockWorktreeCheckoutPruneService =
-    createMock<WorktreeCheckoutPruneService>({ pruneByPath: mockPruneByPath });
+    createMock<WorktreeCheckoutPruneService>({
+      deregisterByPath: mockDeregisterByPath,
+    });
 
   const mockRegisterWorktreeCheckout = vi.fn().mockResolvedValue(null);
   const mockPlanRunWorktreeCheckoutService =
@@ -2105,12 +2107,12 @@ describe('PlansResolver', () => {
 
     beforeEach(() => {
       mockResolveEffectiveUserId.mockReset();
-      mockPruneByPath.mockReset();
+      mockDeregisterByPath.mockReset();
     });
 
     test('prunes by path for the acting user of a service-account token', async () => {
       mockResolveEffectiveUserId.mockResolvedValue(userId);
-      mockPruneByPath.mockResolvedValueOnce({
+      mockDeregisterByPath.mockResolvedValueOnce({
         checkoutId: 'checkout-gone',
         outcome: PRUNE_WORKTREE_CHECKOUT_OUTCOME.PRUNED,
         path: filesystemPath,
@@ -2122,7 +2124,11 @@ describe('PlansResolver', () => {
       );
 
       expect(mockResolveEffectiveUserId).toHaveBeenCalledWith('sa-1');
-      expect(mockPruneByPath).toHaveBeenCalledWith(userId, filesystemPath);
+      expect(mockDeregisterByPath).toHaveBeenCalledWith(
+        userId,
+        filesystemPath,
+        null,
+      );
       expect(result).toEqual({
         checkoutId: 'checkout-gone',
         outcome: 'pruned',
@@ -2139,7 +2145,7 @@ describe('PlansResolver', () => {
         'sa-unlinked',
       );
 
-      expect(mockPruneByPath).not.toHaveBeenCalled();
+      expect(mockDeregisterByPath).not.toHaveBeenCalled();
       expect(result).toEqual({
         checkoutId: null,
         outcome: 'not-found',

@@ -114,9 +114,67 @@ registerEnumType(MissingWorktreeCheckoutReasonEnum, {
 });
 
 @ObjectType({
+  description: `One worktree removal reported by ot-worktree's destroy.sh with its deregistration: who removed it, how, and what the server did with the checkout record. Client-supplied fields are untrusted.`,
+})
+export class WorktreeRemovalObject {
+  @Field(() => String, {
+    description: `The calling agent's session id, when its harness exported one.`,
+    nullable: true,
+  })
+  agentSession!: string | null;
+
+  @Field(() => String, {
+    description: `A few levels of "pid command" above the parent process.`,
+    nullable: true,
+  })
+  ancestry!: string | null;
+
+  @Field(() => String, {
+    description: `Branch the worktree had checked out.`,
+    nullable: true,
+  })
+  branch!: string | null;
+
+  @Field(() => Date, { description: `When the server recorded the removal.` })
+  createdAt!: Date;
+
+  @Field(() => ID)
+  id!: string;
+
+  @Field(() => String, {
+    description: `What the server did with the checkout record (a PruneWorktreeCheckoutOutcome value, lower-kebab: pruned, not-found, skipped-active-run, skipped-live, skipped-primary).`,
+  })
+  outcome!: string;
+
+  @Field(() => String, {
+    description: `Command line of destroy.sh's parent process.`,
+    nullable: true,
+  })
+  parentCommand!: string | null;
+
+  @Field(() => Date, {
+    description: `When the client says the removal happened, or null when it sent no usable time.`,
+    nullable: true,
+  })
+  removedAt!: Date | null;
+
+  @Field(() => String, {
+    description: `destroy.sh's own result, e.g. removed.`,
+    nullable: true,
+  })
+  result!: string | null;
+}
+
+@ObjectType({
   description: `A registered repository_checkouts row of kind worktree that discovery could not match to a live worktree. Reported only — removing the row is the explicit pruneWorktreeCheckouts mutation.`,
 })
 export class MissingWorktreeCheckoutObject {
+  @Field(() => WorktreeRemovalObject, {
+    description: `The latest removal ot-worktree reported for this path, or null when none was (removed by hand, by an older teardown, or while the server was unreachable). Usually the row survived because an unsettled plan run still pointed at it.`,
+    nullable: true,
+  })
+  lastRemoval!: WorktreeRemovalObject | null;
+
   @Field(() => ID, { description: `The orphaned repository_checkouts row.` })
   checkoutId!: string;
 

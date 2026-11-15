@@ -101,6 +101,15 @@ query getSettingsRepositoriesDiscovery {
     droppedCount
     missingCheckouts {
       checkoutId
+      lastRemoval {
+        agentSession
+        createdAt
+        id
+        outcome
+        parentCommand
+        removedAt
+        result
+      }
       path
       reason
       repositoryId
