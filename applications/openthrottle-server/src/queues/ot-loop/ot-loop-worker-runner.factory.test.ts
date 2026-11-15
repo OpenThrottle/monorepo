@@ -56,6 +56,7 @@ describe('createOtLoopWorkerRunner', () => {
       output,
       planId: 'plan-1',
       planRunId: 'run-1',
+      pluginDirs: ['/ot/plugins/openthrottle-workflow'],
       runDriver,
       timeoutMs: 5000,
     });
@@ -112,6 +113,7 @@ describe('createOtLoopWorkerRunner', () => {
       cwd,
       effort: 'high',
       model: 'sonnet',
+      pluginDirs: ['/ot/plugins/openthrottle-workflow'],
       signal: controller.signal,
       timeoutMs: 5000,
     });

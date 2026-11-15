@@ -363,7 +363,7 @@ diverges, explicitly:
   honours only for an attempt whose prompt carried guidance.
 - **Mid-attempt delivery goes through a hook in the worker.** The job only regains control between
   attempts, so it cannot deliver a message posted while the worker CLI runs. The spawned CLI can:
-  the worker runner exports the run identity (`OPENTHROTTLE_PLAN_ID`, `OPENTHROTTLE_PLAN_RUN_ID`,
+  the worker runner loads OT's hook payloads (`--plugin-dir`, the same set Ralph loads) and exports the run identity (`OPENTHROTTLE_PLAN_ID`, `OPENTHROTTLE_PLAN_RUN_ID`,
   `OPENTHROTTLE_TASK_ID`) into every attempt's env, and the `plan-inbox-claim` PreToolUse hook falls
   back to it when the transcript shows no `register_plan_run` (a headless worker never calls it).
   The hook claims before a destructive `Bash` call or a delegation and denies the call on a `STEER`.

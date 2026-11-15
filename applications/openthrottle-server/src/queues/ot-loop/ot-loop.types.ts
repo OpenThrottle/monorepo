@@ -55,6 +55,8 @@ export interface OtLoopWorkerRunnerOptions {
   readonly planId: string;
   /** Exported to the CLI with the plan and task ids, so an in-worker hook can claim the inbox. */
   readonly planRunId: string | undefined;
+  /** OT's hook payloads for this driver (`--plugin-dir` for Claude); empty loads none. */
+  readonly pluginDirs: readonly string[];
   readonly runDriver: OtLoopRunDriver;
   /** Per-attempt wall-clock limit; `undefined` means none. */
   readonly timeoutMs: number | undefined;
