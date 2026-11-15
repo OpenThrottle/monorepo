@@ -20,6 +20,12 @@
  *   sources, so `/plugin marketplace add OpenThrottle/monorepo#plugins-dist`
  *   also works without going back through main.
  *
+ * It also writes a `vercel.json` that disables Git deployments at the root and
+ * in every `applications/<app>/` folder. Vercel's Git integration deploys every
+ * pushed branch and reads `vercel.json` from the deployed branch's Root
+ * Directory, so without these stubs each publish fails with "Root Directory
+ * does not exist" on every Vercel project linked to this repo.
+ *
  * Refuses to run when a payload has no `dist/`: publishing stubs with nothing
  * behind them would ship hooks that silently do nothing.
  */
@@ -57,6 +63,19 @@ const payloadNames = (): readonly string[] => {
     .filter((entry) => entry.isDirectory() && !entry.name.startsWith('.'))
     .map((entry) => entry.name)
     .sort();
+};
+
+const writeVercelSkipStubs = (outDir: string): void => {
+  const skip = { git: { deploymentEnabled: false } };
+  const appDirs = readdirSync(path.join(workspaceRoot, 'applications'), {
+    withFileTypes: true,
+  })
+    .filter((entry) => entry.isDirectory() && !entry.name.startsWith('.'))
+    .map((entry) => path.join(outDir, 'applications', entry.name));
+  for (const dir of [outDir, ...appDirs]) {
+    mkdirSync(dir, { recursive: true });
+    writeJson(path.join(dir, 'vercel.json'), skip);
+  }
 };
 
 const assemble = (outDir: string): void => {
@@ -104,6 +123,8 @@ const assemble = (outDir: string): void => {
       };
     }),
   });
+
+  writeVercelSkipStubs(outDir);
 
   writeFileSync(
     path.join(outDir, 'README.md'),

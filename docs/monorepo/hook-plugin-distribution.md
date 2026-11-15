@@ -147,6 +147,16 @@ not say.
 | Antigravity    | Its workspace plugin under `.agents/plugins/` points at the built payload.        |
 | grok, opencode | Out of scope, as today.                                                           |
 
+**Vercel must skip `plugins-dist`.** Vercel's Git integration deploys every pushed branch, and it
+reads `vercel.json` from the deployed branch's Root Directory, not from `main`. `plugins-dist` has
+no `applications/` folders, so before this was handled every publish produced a failed preview
+("Root Directory … does not exist") on each Vercel project linked to the repo. The `main` copy of
+`git.deploymentEnabled` cannot prevent that. `assemble-plugins-dist.ts` therefore writes
+`{"git":{"deploymentEnabled":false}}` to the branch root and to every `applications/<app>/`
+folder, derived from `main`'s `applications/` directory so a new app is covered automatically.
+Vercel then finds the Root Directory and skips the branch. The stubs sit outside `plugins/`, so
+marketplace installs never see them.
+
 ## 5. Dogfooding — this repo consumes its own plugins
 
 - **Claude.**
