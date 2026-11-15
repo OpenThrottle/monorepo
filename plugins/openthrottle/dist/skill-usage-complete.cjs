@@ -3060,68 +3060,166 @@ function mapTurnEvent(event) {
 }
 
 // packages/openthrottle-agentic-utils/src/utils/conversation-backend/grok/events.ts
+var CANCELLED_TOOL_PATTERN = /^User cancelled the execution for tool `([^`]+)`/;
+function cancelledTurnError(blockedTools) {
+  if (blockedTools.length === 0) {
+    return "grok cancelled the turn before it finished.";
+  }
+  const names = blockedTools.map((name) => {
+    return `\`${name}\``;
+  }).join(", ");
+  return `grok stopped before replying: ${names} needed approval, which a headless run cannot ask for. Choose a more permissive Permissions setting (Full access runs every tool) and send the message again.`;
+}
 var asString6 = (value) => {
   const isString = typeof value === "string";
   return isString ? value : void 0;
 };
-function mapGrokEvent(event) {
-  if (!isRecord(event)) {
-    return [];
+function contentText(content) {
+  if (!Array.isArray(content)) {
+    return "";
   }
-  switch (event.type) {
-    case "thought":
-      return [
-        {
-          delta: asString6(event.data) ?? "",
-          done: false,
-          kind: CONVERSATION_STREAM_CHUNK_KINDS.thinking
-        }
-      ];
-    case "text":
-      return [
-        {
-          delta: asString6(event.data) ?? "",
-          done: false,
-          kind: CONVERSATION_STREAM_CHUNK_KINDS.text
-        }
-      ];
-    case "end": {
-      const chunks = [];
-      const sessionId = asString6(event.sessionId);
-      if (sessionId !== void 0 && sessionId !== "") {
-        chunks.push({
-          delta: "",
-          done: false,
-          kind: CONVERSATION_STREAM_CHUNK_KINDS.session,
-          metadata: { sessionId }
-        });
-      }
-      chunks.push({
-        delta: "",
-        done: true,
-        error: null,
-        kind: CONVERSATION_STREAM_CHUNK_KINDS.usage,
-        metadata: {
-          modelUsage: event.modelUsage ?? null,
-          numTurns: event.num_turns ?? null,
-          stopReason: asString6(event.stopReason) ?? null,
-          usage: event.usage ?? null
-        }
-      });
-      return chunks;
+  return content.map((block) => {
+    const inner = isRecord(block) ? block.content : void 0;
+    return isRecord(inner) ? asString6(inner.text) ?? "" : "";
+  }).join("");
+}
+function toolResultOf(event) {
+  const text = contentText(event.content);
+  if (text !== "") {
+    return text;
+  }
+  const rawOutput = isRecord(event.rawOutput) ? event.rawOutput : void 0;
+  const output = isRecord(rawOutput?.output) ? rawOutput.output : void 0;
+  return asString6(output?.OkayOutput) ?? event.rawOutput ?? null;
+}
+function toolCallChunk2(callId, toolName, input) {
+  return {
+    delta: "",
+    done: false,
+    kind: CONVERSATION_STREAM_CHUNK_KINDS.toolCall,
+    metadata: { callId, toolCall: input ?? null, toolName }
+  };
+}
+function endChunks(event, blockedTools) {
+  const chunks = [];
+  const sessionId = asString6(event.sessionId);
+  if (sessionId !== void 0 && sessionId !== "") {
+    chunks.push({
+      delta: "",
+      done: false,
+      kind: CONVERSATION_STREAM_CHUNK_KINDS.session,
+      metadata: { sessionId }
+    });
+  }
+  const stopReason = asString6(event.stopReason) ?? null;
+  const error = stopReason === "cancelled" ? cancelledTurnError(blockedTools) : null;
+  chunks.push({
+    delta: "",
+    done: true,
+    error,
+    kind: CONVERSATION_STREAM_CHUNK_KINDS.usage,
+    metadata: {
+      modelUsage: event.modelUsage ?? null,
+      numTurns: event.num_turns ?? null,
+      stopReason,
+      usage: event.usage ?? null
     }
-    case "error":
-      return [
-        {
-          delta: "",
-          done: true,
-          error: asString6(event.message) ?? "grok reported an error",
-          kind: CONVERSATION_STREAM_CHUNK_KINDS.text
-        }
-      ];
-    default:
+  });
+  return chunks;
+}
+function createGrokEventMapper() {
+  const calls = /* @__PURE__ */ new Map();
+  const blockedTools = [];
+  const openCall = (event) => {
+    const callId = asString6(event.toolCallId);
+    if (callId === void 0 || calls.has(callId)) {
       return [];
-  }
+    }
+    const toolName = asString6(event.toolName) ?? asString6(event.title) ?? null;
+    calls.set(callId, { finished: false, toolName });
+    return [toolCallChunk2(callId, toolName, event.rawInput)];
+  };
+  const updateCall = (event) => {
+    const callId = asString6(event.toolCallId);
+    const status = asString6(event.status);
+    const isTerminal = status === "completed" || status === "failed";
+    if (callId === void 0 || !isTerminal) {
+      return [];
+    }
+    const chunks = [];
+    let state = calls.get(callId);
+    if (state === void 0) {
+      state = { finished: false, toolName: null };
+      calls.set(callId, state);
+      chunks.push(toolCallChunk2(callId, null, null));
+    }
+    if (state.finished) {
+      return [];
+    }
+    state.finished = true;
+    const isError = status === "failed";
+    const result = toolResultOf(event);
+    const blocked = CANCELLED_TOOL_PATTERN.exec(asString6(result) ?? "")?.[1];
+    if (isError && blocked !== void 0 && !blockedTools.includes(blocked)) {
+      blockedTools.push(blocked);
+    }
+    const errorText = isError ? asString6(result) ?? "grok reported a failed tool call" : null;
+    chunks.push({
+      delta: "",
+      done: false,
+      error: errorText,
+      kind: CONVERSATION_STREAM_CHUNK_KINDS.toolResult,
+      metadata: {
+        callId,
+        isError,
+        toolCall: errorText ?? result,
+        toolName: state.toolName
+      }
+    });
+    return chunks;
+  };
+  return {
+    map(event) {
+      if (!isRecord(event)) {
+        return [];
+      }
+      switch (event.type) {
+        case "thought":
+          return [
+            {
+              delta: asString6(event.data) ?? "",
+              done: false,
+              kind: CONVERSATION_STREAM_CHUNK_KINDS.thinking
+            }
+          ];
+        case "text":
+          return [
+            {
+              delta: asString6(event.data) ?? "",
+              done: false,
+              kind: CONVERSATION_STREAM_CHUNK_KINDS.text
+            }
+          ];
+        case "tool_call":
+          return openCall(event);
+        case "tool_call_update":
+          return updateCall(event);
+        case "end":
+          return endChunks(event, blockedTools);
+        case "error":
+          return [
+            {
+              delta: "",
+              done: true,
+              error: asString6(event.message) ?? "grok reported an error",
+              kind: CONVERSATION_STREAM_CHUNK_KINDS.text
+            }
+          ];
+        default:
+          return [];
+      }
+    }
+  };
 }
 
 // packages/openthrottle-agentic-utils/src/utils/conversation-backend/opencode/events.ts
@@ -3283,8 +3381,12 @@ var createStructuredChunkReader = (driverId) => {
       return withConsolidatedText((event) => {
         return listOf2(mapCursorEvent(event));
       });
-    case DRIVERS.grok:
-      return mapGrokEvent;
+    case DRIVERS.grok: {
+      const mapper = createGrokEventMapper();
+      return (event) => {
+        return mapper.map(event);
+      };
+    }
     case DRIVERS.opencode: {
       const mapper = createOpencodeEventMapper();
       return (event) => {
