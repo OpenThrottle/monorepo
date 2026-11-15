@@ -27,7 +27,6 @@
 # and drift-checked in CI. Collapsed in review but still diffable — a codegen
 # diff occasionally reveals a schema change nobody intended.
 **/__generated__/** linguist-generated=true
-**/schema.gql linguist-generated=true
 
 # Written by scripts/sync-agent-config.ts from .agents/agent-config.json and
 # drift-checked with --check. Explicit paths, not folder globs: .cursor/ and
