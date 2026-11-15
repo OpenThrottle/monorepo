@@ -52,16 +52,45 @@ const toolArgumentsOf = (toolInfo: unknown): unknown => {
   return toolInfo ?? null;
 };
 
+/** Shown when an ERROR step carries no message of its own. */
+const TOOL_STEP_FAILED = 'Tool step failed';
+
 /**
- * The tool's own output when `tool_info` reports one, else its arguments — an ERROR step often
- * carries no output, and the arguments are more use there than an empty pane.
+ * The tool's own output, or `null` when `tool_info` reports none. NEVER the arguments: echoing them
+ * under RESULT made every card read as if the tool had returned its own input. agy 1.5.9 reports
+ * `output` on most DONE steps (a shell transcript, or a summary like `3 lines, 17 bytes` for a
+ * read) but omits it on some — a read of a missing file comes back DONE with no output at all.
  */
 const toolOutputOf = (toolInfo: unknown): unknown => {
   if (isRecord(toolInfo) && toolInfo.output !== undefined) {
     return toolInfo.output;
   }
 
-  return toolArgumentsOf(toolInfo);
+  return null;
+};
+
+/**
+ * An ERROR step's own message. agy 1.5.9 nests it as `tool_info.error: { type, message }`; a bare
+ * string, or the same shape on the step itself, is accepted too. Falls back to
+ * {@link TOOL_STEP_FAILED}.
+ */
+const toolErrorOf = (payload: Record<string, unknown>): string => {
+  const candidates = [
+    isRecord(payload.tool_info) ? payload.tool_info.error : undefined,
+    payload.error,
+  ];
+
+  for (const candidate of candidates) {
+    const message = isRecord(candidate)
+      ? asString(candidate.message)
+      : asString(candidate);
+
+    if (message !== undefined && message.trim() !== '') {
+      return message;
+    }
+  }
+
+  return TOOL_STEP_FAILED;
 };
 
 /**
@@ -129,6 +158,25 @@ export function createAntigravityEventMapper(): (
         ];
       }
 
+      // A step-level ERROR is not a turn failure (see rule 3): the card fails, `result.status`
+      // decides the turn. The fold marks a card failed only on `isError`, and reads the failure
+      // text from `toolCall` — the same contract as the opencode mapper.
+      if (state === 'ERROR') {
+        return [
+          {
+            delta: '',
+            done: false,
+            kind: CONVERSATION_STREAM_CHUNK_KINDS.toolResult,
+            metadata: {
+              callId,
+              isError: true,
+              toolCall: toolErrorOf(payload),
+              toolName: name,
+            },
+          },
+        ];
+      }
+
       return [
         {
           delta: '',
@@ -136,13 +184,10 @@ export function createAntigravityEventMapper(): (
           kind: CONVERSATION_STREAM_CHUNK_KINDS.toolResult,
           metadata: {
             callId,
-            toolCall: {
-              // A step-level ERROR is not a turn failure (see rule 3) — surface it on the tool
-              // result and let `result.status` decide the turn.
-              error: state === 'ERROR' ? state : null,
-              output: toolOutputOf(payload.tool_info),
-              status: state,
-            },
+            isError: false,
+            // The output alone: the card already shows the status, so a `{error, output, status}`
+            // wrapper only buried the one field worth reading.
+            toolCall: toolOutputOf(payload.tool_info),
             toolName: name,
           },
         },

@@ -216,6 +216,30 @@ from agy 1.1.22):
 A consumer must therefore UNWRAP `tool_info.parameters` before rendering the arguments; nesting
 `tool_info` under a `parameters` key of its own shows the name and the wrapper twice each.
 
+**Terminal tool steps, captured from agy 1.5.9** (`gemini-3.8-flash-medium`, default
+`request-review` posture, 2026-11-14). Abridged:
+
+```json
+{"step_index":2,"state":"DONE","step_type":"tool","tool_name":"run_command","tool_info":{"name":"run_command","parameters":{"CommandLine":"pwd"},"output":"Created At: …\nCompleted At: …\nCommand exited with code 0.\n\nCommand output:\n/abs/path\r\n"}}
+{"step_index":3,"state":"DONE","step_type":"tool","tool_name":"read_file","tool_info":{"name":"read_file","parameters":{"Path":"/abs/sample.txt"},"output":"3 lines, 17 bytes"}}
+{"step_index":4,"state":"ERROR","step_type":"tool","tool_name":"read_file","tool_info":{"name":"read_file","parameters":{"Path":"/abs/missing.txt"},"error":{"type":"TOOL_ERROR","message":"file does not exist"}}}
+{"step_index":5,"state":"ERROR","step_type":"tool","tool_name":"call_mcp_tool","tool_info":{"name":"call_mcp_tool","parameters":{"ServerName":"…","ToolName":"health","Arguments":{}},"error":{"type":"TOOL_ERROR","message":"permission check failed for mcp …"}}}
+{"step_index":6,"state":"DONE","step_type":"tool","tool_name":"read_file","tool_info":{"name":"read_file","parameters":{"Path":"/abs/does-not-exist/missing.txt"}}}
+```
+
+- **`output`** is a string on most DONE steps. For a shell command it is a transcript with the exit
+  code and the command's output. For a file read it is only a size summary: agy hands the contents to
+  the model, not to the stream.
+- **A DONE step can carry no `output` at all.** The last line above is a read of a missing file. In
+  the same run another missing-file read came back as `ERROR`. A non-zero shell exit is also DONE,
+  with the code in `output`.
+- **An ERROR step carries `tool_info.error: { type, message }`** and no `output`.
+
+The mapper therefore sends `output` alone as the result, `null` when there is none, and never the
+arguments. An ERROR step becomes a failed card that shows `error.message`. On agy 1.5.1 (the
+2026-11-06 probe, conversation `66179a75`), no step carried `output` and ERROR steps had no
+message. The old fallback to the arguments is why every RESULT pane showed the arguments.
+
 **`text_delta` IS A DELTA, NOT CUMULATIVE.** The same `step_index` emits multiple
 `step_update`s and each carries only the newly produced text; the full assistant message is the
 concatenation of that step's deltas. A `user_input` step emits no text at all.
@@ -255,6 +279,27 @@ is `result.status` alone.
 `status`: `SUCCESS` verified; `ERROR` verified (see §3b) and carries an `error` string with an empty
 `response`. `usage` totals for the turn; `thinking_tokens` exists as a field but was 0 in every
 captured sample (no thinking-specific event or step_type was observed at these effort levels).
+
+**A permission denial ends the turn with no answer text** (agy 1.5.9, 2026-11-14, default
+`request-review` posture). The 5-call parallel tool-card probe was run twice. Both times one call
+was refused (`call_mcp_tool` → ERROR `permission check failed … user denied permission`), and both
+times the run ended like this:
+
+```json
+{
+  "status": "SUCCESS",
+  "num_turns": 1,
+  "response": "",
+  "denied_actions": [{ "action": "mcp", "display_name": "McpTool" }],
+  "usage": { "output_tokens": 738, "thinking_tokens": 522, "…": "…" }
+}
+```
+
+That run emits no `agent_response` step after the tools and no `text_delta` anywhere. A plain
+`TOOL_ERROR` such as a missing file does not do this: the sequential probe went on to stream
+~1k chars of answer. So an empty assistant message after a denial is what the CLI sent, not
+something the mapper dropped. Most of `output_tokens` there is `thinking_tokens`. `denied_actions` appears only when
+something was denied.
 
 ## 4. Driver capabilities
 

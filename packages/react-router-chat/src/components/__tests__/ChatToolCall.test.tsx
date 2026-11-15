@@ -146,6 +146,36 @@ describe('ChatToolCall Component', () => {
 
       expect(component.getByText('Awaiting result…')).toBeInTheDocument();
     });
+
+    test('says no output was reported when a finished call has arguments but no result', () => {
+      const component = renderToolCall({
+        defaultOpen: true,
+        event: toolEvent({
+          argsJson: JSON.stringify({ Path: 'missing.txt' }),
+          status: 'succeeded',
+        }),
+      });
+
+      expect(
+        component.getByTestId('ChatToolCall-no-output'),
+      ).toBeInTheDocument();
+      expect(component.queryByText('Result')).not.toBeInTheDocument();
+    });
+
+    test('shows no empty state when a result is present', () => {
+      const component = renderToolCall({
+        defaultOpen: true,
+        event: toolEvent({
+          argsJson: JSON.stringify({ Path: 'a.txt' }),
+          resultJson: '3 lines, 17 bytes',
+          status: 'succeeded',
+        }),
+      });
+
+      expect(
+        component.queryByTestId('ChatToolCall-no-output'),
+      ).not.toBeInTheDocument();
+    });
   });
 
   describe('collapse behavior', () => {
