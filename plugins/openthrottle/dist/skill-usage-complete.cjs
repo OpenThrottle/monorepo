@@ -1695,6 +1695,12 @@ var planRunFilePath = (repoRoot, sessionId) => {
     `${sanitizeSessionId2(sessionId)}.json`
   );
 };
+var readPid = (value) => {
+  if (typeof value !== "number" || !Number.isInteger(value) || value <= 0) {
+    return null;
+  }
+  return value;
+};
 var readPlanRunRecord = (filePath) => {
   try {
     const parsed = JSON.parse(import_node_fs8.default.readFileSync(filePath, "utf8"));
@@ -1702,6 +1708,8 @@ var readPlanRunRecord = (filePath) => {
       return null;
     }
     return {
+      hostname: typeof parsed.hostname === "string" ? parsed.hostname : null,
+      pid: readPid(parsed.pid),
       planId: typeof parsed.planId === "string" ? parsed.planId : "",
       planRunId: parsed.planRunId,
       recordedAt: typeof parsed.recordedAt === "string" ? parsed.recordedAt : "",

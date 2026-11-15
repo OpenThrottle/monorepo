@@ -188,23 +188,61 @@ var isRecord = (value) => {
 // packages/agentic-hooks/src/data/plan-runs.ts
 var import_node_crypto = require("node:crypto");
 var import_node_fs2 = __toESM(require("node:fs"), 1);
+var import_node_os2 = __toESM(require("node:os"), 1);
 var import_node_path3 = __toESM(require("node:path"), 1);
 var PLAN_RUNS_DIR_BASENAME = "plan-runs";
 var PLAN_RUN_ABANDONED_MS = 6 * 60 * 60 * 1e3;
-var SETTLE_CLI_PLAN_RUN_MUTATION = `
-mutation SettlePlanRunFromHook($input: SettleCliPlanRunInput!) {
-  settleCliPlanRun(input: $input) {
+var FORCE_SETTLE_PLAN_RUN_MUTATION = `
+mutation ForceSettlePlanRunFromHook($input: ForceSettlePlanRunInput!) {
+  forceSettlePlanRun(input: $input) {
     id
     status
   }
 }
 `;
+var PLAN_RUN_JANITOR_SETTLED_REASON = `Claude Code Stop janitor: the session's run record was untouched past the abandonment threshold and its MCP process was gone.`;
 var planRunsDir = (repoRoot) => {
   const repoKey = (0, import_node_crypto.createHash)("sha256").update(import_node_path3.default.resolve(repoRoot)).digest("hex").slice(0, 16);
   return import_node_path3.default.join(resolveTelemetryDir(), PLAN_RUNS_DIR_BASENAME, repoKey);
 };
 var sanitizeSessionId = (sessionId) => {
   return String(sessionId).replace(/[^A-Za-z0-9._-]/g, "-");
+};
+var planRunFilePath = (repoRoot, sessionId) => {
+  return import_node_path3.default.join(
+    planRunsDir(repoRoot),
+    `${sanitizeSessionId(sessionId)}.json`
+  );
+};
+var touchPlanRunForSession = ({
+  now = Date.now(),
+  repoRoot,
+  sessionId
+}) => {
+  const sid = sessionId.trim();
+  if (sid === "") return false;
+  const filePath = planRunFilePath(repoRoot, sid);
+  try {
+    const at = new Date(now);
+    import_node_fs2.default.utimesSync(filePath, at, at);
+    return true;
+  } catch {
+    return false;
+  }
+};
+var defaultIsProcessAlive = (pid) => {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (err) {
+    return isRecord(err) && err.code === "EPERM";
+  }
+};
+var readPid = (value) => {
+  if (typeof value !== "number" || !Number.isInteger(value) || value <= 0) {
+    return null;
+  }
+  return value;
 };
 var readPlanRunRecord = (filePath) => {
   try {
@@ -213,6 +251,8 @@ var readPlanRunRecord = (filePath) => {
       return null;
     }
     return {
+      hostname: typeof parsed.hostname === "string" ? parsed.hostname : null,
+      pid: readPid(parsed.pid),
       planId: typeof parsed.planId === "string" ? parsed.planId : "",
       planRunId: parsed.planRunId,
       recordedAt: typeof parsed.recordedAt === "string" ? parsed.recordedAt : "",
@@ -233,8 +273,10 @@ var postSettle = async ({
   try {
     const response = await fetchImpl(graphqlUrl, {
       body: JSON.stringify({
-        query: SETTLE_CLI_PLAN_RUN_MUTATION,
-        variables: { input: { planRunId, status: "FAILED" } }
+        query: FORCE_SETTLE_PLAN_RUN_MUTATION,
+        variables: {
+          input: { planRunId, reason: PLAN_RUN_JANITOR_SETTLED_REASON }
+        }
       }),
       headers: {
         "Content-Type": "application/json",
@@ -256,11 +298,16 @@ var settleAbandonedPlanRuns = async ({
   currentSessionId,
   fetchImpl,
   graphqlUrl: graphqlUrlOverride,
+  hostname = import_node_os2.default.hostname(),
+  isProcessAlive = defaultIsProcessAlive,
   maxAgeMs = PLAN_RUN_ABANDONED_MS,
   now = Date.now(),
   repoRoot,
   timeoutMs = 750
 }) => {
+  if (typeof currentSessionId === "string") {
+    touchPlanRunForSession({ now, repoRoot, sessionId: currentSessionId });
+  }
   const dir = planRunsDir(repoRoot);
   let files;
   try {
@@ -294,6 +341,8 @@ var settleAbandonedPlanRuns = async ({
       import_node_fs2.default.rmSync(filePath, { force: true });
       continue;
     }
+    const isOwnerAlive = record.pid !== null && record.hostname === hostname && isProcessAlive(record.pid);
+    if (isOwnerAlive) continue;
     candidates.push({ filePath, record });
   }
   const outcomes = await Promise.all(
