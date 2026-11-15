@@ -67,6 +67,20 @@ export const PLAN_RUN_STATUS = {
   USAGE_LIMITED: 'USAGE_LIMITED',
 } as const;
 /**
+ * The `plan_runs.settled_reason` each BACKSTOP writes when it settles a run the agent never
+ * settled itself. Every backstop settles to STALE, so the status alone cannot say which one
+ * fired; the reason does, which is what an operator needs when a live run is settled under them.
+ * The agent's own `settleCliPlanRun` writes none: its status is the report.
+ * @public
+ */
+export const PLAN_RUN_SETTLED_REASON = {
+  FORCE_SETTLED: `Force-settled to STALE: contact with the agent was reported lost.`,
+  HEARTBEAT_LOST: `No heartbeat within the stale cutoff; the stale sweep settled it.`,
+  SUPERSEDED: `A newer interactive run registered on this plan; settle-on-next-register settled this one.`,
+  UNSUPERVISED_AGE: `Unsettled past the unsupervised age cutoff; the age sweep settled it.`,
+} as const;
+
+/**
  * The statuses a worker may claim a run from (`markRunStarted`): QUEUED on first pickup, IN_PROGRESS
  * when BullMQ retries or recovers a stalled job. Every other status is either not yet startable
  * (SCHEDULED — the fire-time policy claims it to QUEUED first) or settled, and a settled row is never

@@ -278,6 +278,7 @@ export type {
 export { PlanRun } from './modules/plan-runs/plan-run.entity.ts';
 export {
   HEARTBEAT_INTERVAL_MS,
+  PLAN_RUN_SETTLED_REASON,
   PLAN_RUN_STARTABLE_STATUSES,
   PLAN_RUN_STATUS,
   STALE_CUTOFF_MS,

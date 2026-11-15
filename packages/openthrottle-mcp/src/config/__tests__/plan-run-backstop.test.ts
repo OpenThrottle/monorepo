@@ -46,6 +46,9 @@ describe('plan-run backstop note', () => {
 
     const parsed: unknown = JSON.parse(fs.readFileSync(notePath(), 'utf8'));
     expect(parsed).toMatchObject({
+      // The janitor's liveness check: this stdio process lives as long as the session.
+      hostname: os.hostname(),
+      pid: process.pid,
       planId: 'plan-1',
       planRunId: 'run-1',
       sessionId: SESSION_ID,

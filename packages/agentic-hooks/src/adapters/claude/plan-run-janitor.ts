@@ -1,8 +1,9 @@
 /**
  * Claude Code plan-run janitor (Stop hook).
  *
- * Settles FAILED any `plan_runs` row opened by an interactive loop whose session is
- * provably gone. This is the backstop for the exemption the server makes for runs
+ * Settles STALE any `plan_runs` row opened by an interactive loop whose session is
+ * provably gone, and refreshes the current session's own record so a loop paused on a
+ * human gate never reads as abandoned. This is the backstop for the exemption the server makes for runs
  * that cannot heartbeat: those rows are excluded from the stale sweep — deliberately,
  * because sweeping one would reset the plan and its IN_PROGRESS tasks to PENDING
  * under live work — which means nothing server-side will ever settle them.

@@ -636,8 +636,10 @@ export class PlansResolver {
     @Args('input', { type: () => ForceSettlePlanRunInput })
     input: ForceSettlePlanRunInput,
   ): Promise<PlanRunObject | null> {
+    const reason = input.reason?.trim();
     const run = await this.planRunsService.forceSettleUnsupervisedRun(
       input.planRunId,
+      reason ? reason : undefined,
     );
 
     return run ? this.mapPlanRunObject(run) : null;

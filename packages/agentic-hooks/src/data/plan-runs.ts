@@ -19,9 +19,18 @@
  * was closed.
  *
  * The safety property is that it can only ever settle a run whose session is
- * provably not the one running now, and whose state file has been untouched for
- * longer than any plausible agent turn. It is structurally incapable of racing live
- * work: the current session is excluded by id before age is even considered.
+ * provably not the one running now, whose state file has been untouched for longer
+ * than any plausible agent turn, and whose MCP process is no longer alive. It is
+ * structurally incapable of racing live work: the current session is excluded by id
+ * before age is even considered.
+ *
+ * "Untouched" has to mean the owning session went quiet, not merely that the run is
+ * old, so every Stop first refreshes the CURRENT session's own record. A loop that
+ * pauses on a human gate ends its turn on a question; that Stop is exactly what keeps
+ * its record fresh. Without it a run older than {@link PLAN_RUN_ABANDONED_MS} was
+ * settled by whichever OTHER session in the checkout ended a turn next, even while the
+ * loop was alive and waiting (OT plan 6cad3e93). The pid check covers the gap the touch
+ * cannot: a human who takes longer than the threshold to answer.
  *
  * Same shape as `./starts.ts`, for the same reason: `Stop` fires on EVERY turn and
  * is not a session-end signal, so a dead session is always cleaned up by a LATER
@@ -32,6 +41,7 @@
 
 import { createHash } from 'node:crypto';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 
 import { isRecord } from '@openthrottle/nodejs-utils';
@@ -53,17 +63,33 @@ const PLAN_RUNS_DIR_BASENAME = 'plan-runs';
  */
 export const PLAN_RUN_ABANDONED_MS = 6 * 60 * 60 * 1000;
 
-const SETTLE_CLI_PLAN_RUN_MUTATION = `
-mutation SettlePlanRunFromHook($input: SettleCliPlanRunInput!) {
-  settleCliPlanRun(input: $input) {
+/**
+ * STALE via `forceSettlePlanRun`, never FAILED via `settleCliPlanRun`: the janitor knows
+ * contact was lost, not how the work ended, and the agent's honest-report statuses stay
+ * the agent's to claim. The mutation is also guarded server-side to unsupervised
+ * IN_PROGRESS rows, so it cannot clobber a run that settled itself in the meantime.
+ */
+const FORCE_SETTLE_PLAN_RUN_MUTATION = `
+mutation ForceSettlePlanRunFromHook($input: ForceSettlePlanRunInput!) {
+  forceSettlePlanRun(input: $input) {
     id
     status
   }
 }
 `;
 
+/**
+ * Written to `plan_runs.settled_reason`, so a settled run says which backstop fired.
+ * @public
+ */
+export const PLAN_RUN_JANITOR_SETTLED_REASON = `Claude Code Stop janitor: the session's run record was untouched past the abandonment threshold and its MCP process was gone.`;
+
 /** @public */
 export interface PlanRunRecord {
+  /** Host the recording MCP process ran on; null for records written before it existed. */
+  readonly hostname: string | null;
+  /** The recording MCP stdio process — it lives exactly as long as its agent session. */
+  readonly pid: number | null;
   readonly planId: string;
   readonly planRunId: string;
   readonly recordedAt: string;
@@ -111,11 +137,15 @@ export const planRunFilePath = (
  * @public
  */
 export const recordPlanRunForSession = ({
+  hostname,
+  pid,
   planId,
   planRunId,
   repoRoot,
   sessionId,
 }: {
+  readonly hostname: string | null;
+  readonly pid: number | null;
   readonly planId: string;
   readonly planRunId: string;
   readonly repoRoot: string;
@@ -126,6 +156,8 @@ export const recordPlanRunForSession = ({
     if (sid === '' || planRunId.trim() === '') return false;
 
     const record: PlanRunRecord = {
+      hostname,
+      pid,
       planId,
       planRunId,
       recordedAt: new Date().toISOString(),
@@ -139,6 +171,52 @@ export const recordPlanRunForSession = ({
   } catch (err) {
     logHookError('recordPlanRunForSession failed', err);
     return false;
+  }
+};
+
+/**
+ * @description Marks the session's recorded run as still owned, by bumping its record's
+ * mtime — the clock the janitor ages records on. Called on every Stop of the session
+ * that owns the record, which is what keeps a loop paused on a human gate (its turn
+ * ended on a question) from reading as abandoned. Returns whether a record was touched;
+ * a session with no record is the common case and touches nothing.
+ * @public
+ */
+export const touchPlanRunForSession = ({
+  now = Date.now(),
+  repoRoot,
+  sessionId,
+}: {
+  readonly now?: number;
+  readonly repoRoot: string;
+  readonly sessionId: string;
+}): boolean => {
+  const sid = sessionId.trim();
+  if (sid === '') return false;
+
+  const filePath = planRunFilePath(repoRoot, sid);
+  try {
+    const at = new Date(now);
+    fs.utimesSync(filePath, at, at);
+
+    return true;
+  } catch {
+    // No record for this session (ENOENT) is normal: it opened no run.
+    return false;
+  }
+};
+
+/**
+ * @description `process.kill(pid, 0)` delivers no signal; it only asks whether the pid
+ * exists. EPERM means it exists under another user — alive. Anything else means gone.
+ */
+const defaultIsProcessAlive = (pid: number): boolean => {
+  try {
+    process.kill(pid, 0);
+
+    return true;
+  } catch (err) {
+    return isRecord(err) && err.code === 'EPERM';
   }
 };
 
@@ -168,6 +246,14 @@ export const clearPlanRunForSession = ({
   }
 };
 
+const readPid = (value: unknown): number | null => {
+  if (typeof value !== 'number' || !Number.isInteger(value) || value <= 0) {
+    return null;
+  }
+
+  return value;
+};
+
 const readPlanRunRecord = (filePath: string): PlanRunRecord | null => {
   try {
     const parsed: unknown = JSON.parse(fs.readFileSync(filePath, 'utf8'));
@@ -180,6 +266,8 @@ const readPlanRunRecord = (filePath: string): PlanRunRecord | null => {
     }
 
     return {
+      hostname: typeof parsed.hostname === 'string' ? parsed.hostname : null,
+      pid: readPid(parsed.pid),
       planId: typeof parsed.planId === 'string' ? parsed.planId : '',
       planRunId: parsed.planRunId,
       recordedAt:
@@ -229,8 +317,10 @@ const postSettle = async ({
   try {
     const response = await fetchImpl(graphqlUrl, {
       body: JSON.stringify({
-        query: SETTLE_CLI_PLAN_RUN_MUTATION,
-        variables: { input: { planRunId, status: 'FAILED' } },
+        query: FORCE_SETTLE_PLAN_RUN_MUTATION,
+        variables: {
+          input: { planRunId, reason: PLAN_RUN_JANITOR_SETTLED_REASON },
+        },
       }),
       headers: {
         'Content-Type': 'application/json',
@@ -251,9 +341,11 @@ const postSettle = async ({
 };
 
 /**
- * @description Settles FAILED every recorded run whose session is provably gone —
- * not the session running now, and untouched for longer than {@link
- * PLAN_RUN_ABANDONED_MS}. Clears each record it settles. Returns how many it settled.
+ * @description First refreshes the current session's own record ({@link
+ * touchPlanRunForSession}), then settles STALE every recorded run whose session is
+ * provably gone — not the session running now, untouched for longer than {@link
+ * PLAN_RUN_ABANDONED_MS}, and whose recording MCP process is no longer alive on this
+ * host. Clears each record it settles. Returns how many it settled.
  *
  * Fail-open throughout: this is a janitor, and a janitor that throws is worse than
  * one that misses a turn. State it cannot settle is left on disk for the next Stop.
@@ -264,6 +356,8 @@ export const settleAbandonedPlanRuns = async ({
   currentSessionId,
   fetchImpl,
   graphqlUrl: graphqlUrlOverride,
+  hostname = os.hostname(),
+  isProcessAlive = defaultIsProcessAlive,
   maxAgeMs = PLAN_RUN_ABANDONED_MS,
   now = Date.now(),
   repoRoot,
@@ -273,11 +367,19 @@ export const settleAbandonedPlanRuns = async ({
   readonly currentSessionId?: string | null;
   readonly fetchImpl?: typeof globalThis.fetch;
   readonly graphqlUrl?: string | null;
+  readonly hostname?: string;
+  readonly isProcessAlive?: (pid: number) => boolean;
   readonly maxAgeMs?: number;
   readonly now?: number;
   readonly repoRoot: string;
   readonly timeoutMs?: number;
 }): Promise<{ settled: number }> => {
+  // This Stop is proof the current session is alive, so its own record must not age —
+  // above all when the turn ended on a question to the human.
+  if (typeof currentSessionId === 'string') {
+    touchPlanRunForSession({ now, repoRoot, sessionId: currentSessionId });
+  }
+
   const dir = planRunsDir(repoRoot);
 
   let files: string[];
@@ -327,6 +429,15 @@ export const settleAbandonedPlanRuns = async ({
       fs.rmSync(filePath, { force: true });
       continue;
     }
+
+    // A live MCP process means its agent session is still open — idle, perhaps waiting
+    // on a human for longer than the threshold, but not gone. Only checkable on the host
+    // that recorded it; a record without a pid falls back to age alone.
+    const isOwnerAlive =
+      record.pid !== null &&
+      record.hostname === hostname &&
+      isProcessAlive(record.pid);
+    if (isOwnerAlive) continue;
 
     candidates.push({ filePath, record });
   }

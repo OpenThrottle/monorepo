@@ -607,6 +607,12 @@ export class ForceSettlePlanRunInput {
     description: `Plan-run row id to force-settle to STALE. Must be an IN_PROGRESS run that does not heartbeat; anything else is refused.`,
   })
   planRunId!: string;
+
+  @Field(() => String, {
+    description: `Why the run is being settled, written to settledReason. Omit for a human's "contact lost"; an automated backstop (the Claude Code Stop janitor) names itself and its evidence.`,
+    nullable: true,
+  })
+  reason!: string | null;
 }
 
 /** Input for {@link PlansResolver.recordPlanRunHeartbeat}: bump a detached-CLI run's liveness. */
