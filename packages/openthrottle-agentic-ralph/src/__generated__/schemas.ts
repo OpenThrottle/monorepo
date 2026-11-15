@@ -662,6 +662,7 @@ export function CreatePlanInputSchema(): z.ZodObject<
     author: z.string().min(1),
     category: z.string().min(1),
     description: z.string().nullish(),
+    id: z.string().nullish(),
     project: z.string().nullish(),
     projectId: z.string().nullish(),
     runConfigJson: z.string().nullish(),

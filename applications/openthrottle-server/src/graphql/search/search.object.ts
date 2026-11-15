@@ -90,7 +90,7 @@ export class SearchResult {
   mode!: SearchMode;
 
   @Field(() => String, {
-    description: `Why the result is lexical, or null when it is hybrid or semantic: embedder_unconfigured | embedder_dimension_mismatch | embedder_provider_error | no_embeddings.`,
+    description: `Why the result is lexical, or null when it is hybrid or semantic: embedder_unconfigured | embedder_dimension_mismatch | embedder_provider_error | embedder_busy | no_embeddings.`,
     nullable: true,
   })
   reason!: string | null;

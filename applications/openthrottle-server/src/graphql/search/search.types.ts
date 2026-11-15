@@ -13,8 +13,12 @@ export type SearchMode = 'hybrid' | 'lexical' | 'semantic';
 /** @description The ranking a caller may request; `lexical` is only ever a fallback. */
 export type RequestedSearchMode = Exclude<SearchMode, 'lexical'>;
 
-/** @description Why a search answered lexically instead of semantically. */
+/**
+ * @description Why a search answered lexically instead of semantically. `embedder_busy`: the query
+ * embed did not finish within `SEARCH_EMBED_BUDGET_MS` (e.g. behind a large re-embed).
+ */
 export type LexicalFallbackReason =
+  | 'embedder_busy'
   | 'embedder_dimension_mismatch'
   | 'embedder_provider_error'
   | 'embedder_unconfigured'

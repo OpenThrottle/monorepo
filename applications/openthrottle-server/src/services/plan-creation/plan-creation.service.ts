@@ -13,7 +13,11 @@ import {
 import type { CreatePlanInput } from '../../graphql/plans/plan.input.ts';
 import { CheckoutPathResolutionService } from '../checkout-path-resolution/checkout-path-resolution.service.ts';
 import { EffectiveUserResolutionService } from '../effective-user-resolution/effective-user-resolution.service.ts';
-import { applyDefaultAgentToRunConfig } from './plan-creation.utils.ts';
+import {
+  applyDefaultAgentToRunConfig,
+  isUniqueViolation,
+  readClientPlanId,
+} from './plan-creation.utils.ts';
 
 /** @description Same GitHub-login rule as assignee normalization in @openthrottle/node-client openthrottle-client. */
 const GITHUB_USERNAME_REGEX =
@@ -258,11 +262,67 @@ export class PlanCreationService {
     userId?: string,
   ): Promise<Plan> {
     const repo = this.plansService.getRepository();
-    const entity = repo.create(
-      await this.resolvePlanCreateFields(input, userId),
-    );
+    const clientId = readClientPlanId(input.id);
 
-    return repo.save(entity);
+    if (!clientId.ok) {
+      throw new BadRequestException('id must be a UUID.');
+    }
+
+    const fields = await this.resolvePlanCreateFields(input, userId);
+
+    if (clientId.id === undefined) {
+      return repo.save(repo.create(fields));
+    }
+
+    // Idempotent create (OT plan ca13e543): a caller that timed out re-sends the same id, and
+    // gets back the plan its first call already wrote instead of a second one.
+    const id = clientId.id;
+    const replayed = await this.findReplayedPlan(id, fields.title);
+
+    if (replayed) {
+      return replayed;
+    }
+
+    try {
+      return await repo.save(repo.create({ ...fields, id }));
+    } catch (error: unknown) {
+      const winner = isUniqueViolation(error)
+        ? await this.findReplayedPlan(id, fields.title)
+        : undefined;
+
+      if (winner) {
+        return winner;
+      }
+
+      throw error;
+    }
+  }
+
+  /**
+   * @description The plan an earlier call with this client id created, or undefined when there is
+   * none. An id already taken by a plan with another title is a client bug, not a replay.
+   */
+  private async findReplayedPlan(
+    id: string,
+    title: string,
+  ): Promise<Plan | undefined> {
+    const existing = await this.plansService
+      .getRepository()
+      .findOne({ where: { id } });
+
+    if (!existing) {
+      return undefined;
+    }
+
+    if (existing.title !== title) {
+      throw new BadRequestException(
+        `id ${id} already belongs to another plan.`,
+      );
+    }
+
+    this.logger.debug(`${this.name}: replayed create for plan ${id}`);
+
+    return existing;
   }
 
   /**

@@ -27,18 +27,19 @@ import {
   CODE_EMBEDDINGS_TABLE,
   EMBED_ENTITY_UNCONFIGURED_DELAY_MS,
   EMBEDDING_SOURCES,
-  EMBEDDINGS_CONCURRENCY,
   EMBEDDINGS_QUEUE_NAME,
 } from './embeddings.constants.ts';
 import type {
   EmbedCodeChunksJobData,
   EmbeddingsJob,
   EmbeddingSource,
+  EmbeddingsWorkerSettings,
   EmbedEntityJobResult,
 } from './embeddings.types.ts';
 import {
   isCodeChunksJobData,
   isEmbeddableEntity,
+  resolveEmbeddingsWorkerSettings,
   sha256Hex,
 } from './embeddings.utils.ts';
 
@@ -51,9 +52,19 @@ interface CodeChunkRow {
   readonly model: string | undefined;
 }
 
+/** @description Read once at load: the decorator below is evaluated with the module. */
+const WORKER_SETTINGS = resolveEmbeddingsWorkerSettings(process.env);
+
+function describeLimiter(settings: EmbeddingsWorkerSettings): string {
+  const { limiter } = settings;
+
+  return limiter ? `${limiter.max}/${limiter.duration}ms` : 'off';
+}
+
 @Processor(EMBEDDINGS_QUEUE_NAME, {
   ...defaultWorkerOptions,
-  concurrency: EMBEDDINGS_CONCURRENCY,
+  concurrency: WORKER_SETTINGS.concurrency,
+  ...(WORKER_SETTINGS.limiter ? { limiter: WORKER_SETTINGS.limiter } : {}),
 })
 export class EmbeddingsProcessor
   extends WorkerHost
@@ -70,7 +81,7 @@ export class EmbeddingsProcessor
 
   onModuleInit(): void {
     this.logger.info(
-      `Embeddings queue worker started (concurrency=${EMBEDDINGS_CONCURRENCY})`,
+      `Embeddings queue worker started (concurrency=${WORKER_SETTINGS.concurrency}, limiter=${describeLimiter(WORKER_SETTINGS)})`,
       EmbeddingsProcessor.name,
     );
   }

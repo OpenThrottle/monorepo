@@ -2,8 +2,12 @@
  * @description Helpers shared by the semantic-search resolvers (OT plans 165e86ef, e5397271).
  */
 
-import type { EmbedFailureReason } from '@openthrottle/node-client';
+import type {
+  EmbedFailureReason,
+  EmbedResult,
+} from '@openthrottle/node-client';
 
+import { DEFAULT_SEARCH_EMBED_BUDGET_MS } from './search.constants.ts';
 import type {
   LexicalFallbackReason,
   RankedSearchChunk,
@@ -19,6 +23,38 @@ import type {
  * both lists rank highly.
  */
 const RRF_K = 60;
+
+/** @description `SEARCH_EMBED_BUDGET_MS`, or the default when unset or not a positive integer. */
+export function resolveSearchEmbedBudgetMs(env: NodeJS.ProcessEnv): number {
+  const raw = env.SEARCH_EMBED_BUDGET_MS?.trim();
+  const value = raw ? Number(raw) : Number.NaN;
+
+  return Number.isInteger(value) && value > 0
+    ? value
+    : DEFAULT_SEARCH_EMBED_BUDGET_MS;
+}
+
+/**
+ * @description Runs the query embed against the budget. `'busy'` when it is still running at the
+ * deadline; the embed keeps going and its late result is dropped.
+ */
+export async function embedWithinBudget(
+  embed: () => Promise<EmbedResult>,
+  budgetMs: number,
+): Promise<EmbedResult | 'busy'> {
+  let timer: NodeJS.Timeout | undefined;
+  const deadline = new Promise<'busy'>((resolve) => {
+    timer = setTimeout(() => {
+      resolve('busy');
+    }, budgetMs);
+  });
+
+  try {
+    return await Promise.race([embed(), deadline]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 /**
  * @description Merges ranked lists by reciprocal rank fusion: each entity scores `Σ 1 / (RRF_K + rank)`
@@ -74,12 +110,23 @@ function unfused<TChunk>(
  * @description Hybrid search: vector and full-text retrieval run together and merge by
  * {@link fuseByReciprocalRank}, so exact identifiers embeddings rank poorly still surface. `mode: 'semantic'`
  * returns the vector ranking alone. The fallback is {@link searchWithFallback}'s: lexical with a reason when
- * the embedder fails or nothing is embedded for its model.
+ * the embedder fails, misses its budget, or nothing is embedded for its model.
  */
 export async function searchHybrid<TChunk>(
   options: SearchHybridOptions<TChunk>,
 ): Promise<SearchHybridResult<TChunk>> {
-  const embedded = await options.embed();
+  const embedded = await embedWithinBudget(
+    options.embed,
+    resolveSearchEmbedBudgetMs(process.env),
+  );
+
+  if (embedded === 'busy') {
+    return {
+      chunks: unfused(await options.lexical(), options.limit),
+      mode: 'lexical',
+      reason: 'embedder_busy',
+    };
+  }
 
   if (!embedded.ok) {
     return {
@@ -144,14 +191,25 @@ export function lexicalFallbackReason(
 }
 
 /**
- * @description Semantic search when the embedder answers and vectors exist for its model;
- * otherwise Postgres full-text search, with the reason. A search is never silently empty
+ * @description Semantic search when the embedder answers within its budget and vectors exist for
+ * its model; otherwise Postgres full-text search, with the reason. A search is never silently empty
  * because the embedder is missing.
  */
 export async function searchWithFallback<TChunk>(
   options: SearchWithFallbackOptions<TChunk>,
 ): Promise<SearchWithFallbackResult<TChunk>> {
-  const embedded = await options.embed();
+  const embedded = await embedWithinBudget(
+    options.embed,
+    resolveSearchEmbedBudgetMs(process.env),
+  );
+
+  if (embedded === 'busy') {
+    return {
+      chunks: await options.lexical(),
+      mode: 'lexical',
+      reason: 'embedder_busy',
+    };
+  }
 
   if (!embedded.ok) {
     return {

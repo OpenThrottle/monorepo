@@ -54,6 +54,12 @@ export class CreatePlanInput {
   @Field(() => String, { nullable: true })
   description?: string | null;
 
+  @Field(() => ID, {
+    description: `Optional client-chosen plan id (UUID) that makes the create idempotent. Re-sending a create with the same id and title returns the plan the first call created instead of inserting a second, so a caller whose request timed out can retry safely. A different title under an existing id is refused.`,
+    nullable: true,
+  })
+  id?: string | null;
+
   @Field(() => String, { nullable: true })
   project?: string | null;
 

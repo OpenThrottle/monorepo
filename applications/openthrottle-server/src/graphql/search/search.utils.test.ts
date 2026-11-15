@@ -1,10 +1,13 @@
 import type { EmbedResult } from '@openthrottle/node-client';
 import { describe, expect, test, vi } from 'vitest';
 
+import { DEFAULT_SEARCH_EMBED_BUDGET_MS } from './search.constants.ts';
 import type { SearchHybridOptions } from './search.types.ts';
 import {
+  embedWithinBudget,
   fuseByReciprocalRank,
   lexicalFallbackReason,
+  resolveSearchEmbedBudgetMs,
   searchHybrid,
   searchWithFallback,
 } from './search.utils.ts';
@@ -231,5 +234,107 @@ describe('searchHybrid', () => {
         reason: 'embedder_provider_error',
       });
     });
+  });
+});
+
+describe('resolveSearchEmbedBudgetMs', () => {
+  describe('when SEARCH_EMBED_BUDGET_MS is a positive integer', () => {
+    test('uses it', () => {
+      expect(
+        resolveSearchEmbedBudgetMs({ SEARCH_EMBED_BUDGET_MS: '500' }),
+      ).toBe(500);
+    });
+  });
+
+  describe('when it is unset or invalid', () => {
+    test.each([undefined, '', '0', '-1', '1.5', 'soon'])(
+      'uses the default for %j',
+      (raw) => {
+        expect(
+          resolveSearchEmbedBudgetMs({ SEARCH_EMBED_BUDGET_MS: raw }),
+        ).toBe(DEFAULT_SEARCH_EMBED_BUDGET_MS);
+      },
+    );
+  });
+});
+
+describe('embedWithinBudget', () => {
+  describe('when the embed answers in time', () => {
+    test('returns its result', async () => {
+      await expect(
+        embedWithinBudget(() => {
+          return Promise.resolve(OK);
+        }, 1000),
+      ).resolves.toEqual(OK);
+    });
+  });
+
+  describe('when the embed is still running at the deadline', () => {
+    test('returns busy', async () => {
+      vi.useFakeTimers();
+
+      try {
+        const result = embedWithinBudget(() => {
+          return new Promise<EmbedResult>(() => {
+            return undefined;
+          });
+        }, 1000);
+
+        await vi.advanceTimersByTimeAsync(1000);
+
+        await expect(result).resolves.toBe('busy');
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+  });
+});
+
+describe('when the query embed misses its budget', () => {
+  const stuck = (): Promise<EmbedResult> => {
+    return new Promise(() => {
+      return undefined;
+    });
+  };
+
+  test('searchWithFallback answers lexically with embedder_busy', async () => {
+    vi.stubEnv('SEARCH_EMBED_BUDGET_MS', '10');
+
+    try {
+      const opts = { ...options(OK, ['semantic-hit']), embed: stuck };
+
+      await expect(searchWithFallback(opts)).resolves.toEqual({
+        chunks: ['lexical-hit'],
+        mode: 'lexical',
+        reason: 'embedder_busy',
+      });
+      expect(opts.semantic).not.toHaveBeenCalled();
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
+  test('searchHybrid answers lexically with embedder_busy', async () => {
+    vi.stubEnv('SEARCH_EMBED_BUDGET_MS', '10');
+
+    try {
+      const opts: SearchHybridOptions<string> = {
+        ...options(OK, ['semantic-hit']),
+        embed: stuck,
+        key: (chunk) => {
+          return chunk;
+        },
+        limit: 5,
+        mode: 'hybrid',
+      };
+
+      await expect(searchHybrid(opts)).resolves.toEqual({
+        chunks: [{ chunk: 'lexical-hit', fusedScore: null }],
+        mode: 'lexical',
+        reason: 'embedder_busy',
+      });
+    } finally {
+      vi.unstubAllEnvs();
+    }
   });
 });

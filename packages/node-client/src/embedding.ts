@@ -178,6 +178,38 @@ function chunk<T>(items: readonly T[], size: number): T[][] {
 }
 
 /**
+ * @description Input indexes ordered by text length, shortest first (stable). A batch is padded to
+ * its longest text, so grouping similar lengths stops one long chunk from making every short one
+ * in its batch cost as much as itself. Results are put back in input order by {@link restoreOrder}.
+ */
+function orderByLength(inputs: readonly string[]): number[] {
+  return inputs
+    .map((_, index) => {
+      return index;
+    })
+    .sort((a, b) => {
+      return (inputs[a]?.length ?? 0) - (inputs[b]?.length ?? 0) || a - b;
+    });
+}
+
+function restoreOrder(
+  order: readonly number[],
+  sortedVectors: readonly number[][],
+): number[][] {
+  const vectors: number[][] = [];
+
+  order.forEach((inputIndex, sortedIndex) => {
+    const vector = sortedVectors[sortedIndex];
+
+    if (vector) {
+      vectors[inputIndex] = vector;
+    }
+  });
+
+  return vectors;
+}
+
+/**
  * @description Creates the embedder for a resolved config. The local backend starts its worker
  * thread lazily on the first embed, so creating an embedder is cheap; call `close()` on shutdown.
  */
@@ -194,11 +226,15 @@ export function createEmbedder(
     const inputs = texts.map((text) => {
       return prepareEmbeddingInput(config, text, inputType);
     });
-    const vectors: number[][] = [];
+    const order = orderByLength(inputs);
+    const sorted = order.map((index) => {
+      return inputs[index] ?? '';
+    });
+    const sortedVectors: number[][] = [];
 
     // Batches run sequentially on purpose: the local backend is one worker thread, so
     // concurrent batches would only queue there while holding every batch's memory at once.
-    for (const batch of chunk(inputs, EMBEDDING_BATCH_SIZE)) {
+    for (const batch of chunk(sorted, EMBEDDING_BATCH_SIZE)) {
       // eslint-disable-next-line no-await-in-loop -- sequential by design, see above
       const result = await backend.embed(batch, inputType);
 
@@ -206,8 +242,18 @@ export function createEmbedder(
         return result;
       }
 
-      vectors.push(...result.vectors);
+      sortedVectors.push(...result.vectors);
     }
+
+    if (sortedVectors.length !== inputs.length) {
+      return {
+        detail: `${config.model} returned ${sortedVectors.length} vectors for ${inputs.length} inputs.`,
+        ok: false,
+        reason: 'provider_error',
+      };
+    }
+
+    const vectors = restoreOrder(order, sortedVectors);
 
     const mismatch = checkEmbeddingDimensions(
       vectors,

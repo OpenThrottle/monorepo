@@ -4,11 +4,17 @@
 
 import { createHash } from 'node:crypto';
 
-import { EMBEDDABLE_ENTITIES } from './embeddings.constants.ts';
+import {
+  DEFAULT_EMBEDDINGS_CONCURRENCY,
+  DEFAULT_EMBEDDINGS_RATE_LIMIT_DURATION_MS,
+  DEFAULT_EMBEDDINGS_RATE_LIMIT_MAX,
+  EMBEDDABLE_ENTITIES,
+} from './embeddings.constants.ts';
 import type {
   EmbedCodeChunksJobData,
   EmbeddableEntity,
   EmbeddingSource,
+  EmbeddingsWorkerSettings,
 } from './embeddings.types.ts';
 
 /**
@@ -88,4 +94,53 @@ export function readEntityId(value: unknown): string | undefined {
   }
 
   return typeof value.id === 'string' ? value.id : undefined;
+}
+
+function readInteger(
+  env: NodeJS.ProcessEnv,
+  name: string,
+  fallback: number,
+  min: number,
+): number {
+  const raw = env[name]?.trim();
+
+  if (!raw) {
+    return fallback;
+  }
+
+  const value = Number(raw);
+
+  return Number.isInteger(value) && value >= min ? value : fallback;
+}
+
+/**
+ * @description Reads the Embeddings worker's pace (OT plan ca13e543): `EMBEDDINGS_CONCURRENCY`
+ * (default 1), and a limiter of `EMBEDDINGS_RATE_LIMIT_MAX` jobs (default 120, 0 = off) per
+ * `EMBEDDINGS_RATE_LIMIT_DURATION_MS` (default 60000). An invalid value falls back to its default.
+ */
+export function resolveEmbeddingsWorkerSettings(
+  env: NodeJS.ProcessEnv,
+): EmbeddingsWorkerSettings {
+  const max = readInteger(
+    env,
+    'EMBEDDINGS_RATE_LIMIT_MAX',
+    DEFAULT_EMBEDDINGS_RATE_LIMIT_MAX,
+    0,
+  );
+  const duration = readInteger(
+    env,
+    'EMBEDDINGS_RATE_LIMIT_DURATION_MS',
+    DEFAULT_EMBEDDINGS_RATE_LIMIT_DURATION_MS,
+    1,
+  );
+
+  return {
+    concurrency: readInteger(
+      env,
+      'EMBEDDINGS_CONCURRENCY',
+      DEFAULT_EMBEDDINGS_CONCURRENCY,
+      1,
+    ),
+    limiter: max === 0 ? undefined : { duration, max },
+  };
 }

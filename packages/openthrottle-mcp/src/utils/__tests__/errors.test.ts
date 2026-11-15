@@ -1,9 +1,11 @@
+import { GRAPHQL_TIMEOUT_ERROR_PREFIX } from '@openthrottle/nodejs-graphql';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
   classifyError,
   errorCategory,
   extractApplicationErrorDetail,
+  GRAPHQL_TIMEOUT_MESSAGE_PREFIX,
   sanitizedMessageForCategory,
   toSanitizedClientMessage,
 } from '../errors.ts';
@@ -34,6 +36,23 @@ describe('classifyError', () => {
     expect(classifyError(new Error('fetch failed'))).toBe(
       errorCategory.transport,
     );
+  });
+
+  it('classifies the client request timeout on its own, not as internal', () => {
+    expect(
+      classifyError(
+        new Error(
+          'openthrottle-server GraphQL request timed out after 15000ms',
+        ),
+      ),
+    ).toBe(errorCategory.timeout);
+    expect(sanitizedMessageForCategory(errorCategory.timeout)).toContain(
+      'may still finish',
+    );
+  });
+
+  it('matches the prefix nodejs-graphql actually throws', () => {
+    expect(GRAPHQL_TIMEOUT_MESSAGE_PREFIX).toBe(GRAPHQL_TIMEOUT_ERROR_PREFIX);
   });
 
   it('falls back to unknown', () => {
