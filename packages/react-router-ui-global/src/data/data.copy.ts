@@ -61,9 +61,12 @@ export const GLOBAL_LAYOUT_HEADER_LINKS_COPY = {
 
 /**
  * @public
- * Copy for {@link GlobalSidebarFooter}. `versionLabel` prefixes the app version
- * (its package.json `version`, injected by each app at build time).
+ * Copy for {@link GlobalSidebarFooter}. `versionPrefix` prefixes the app version
+ * (its package.json `version`, injected by each app at build time) in the badge;
+ * `versionLinkLabel` is the badge link's accessible name.
  */
 export const GLOBAL_SIDEBAR_FOOTER_COPY = {
-  versionLabel: `Version`,
+  systemStatus: `System Status`,
+  versionLinkLabel: `Release notes for version`,
+  versionPrefix: `v`,
 } as const;
