@@ -512,8 +512,8 @@ jobs:
         uses: ./.github/actions/node-setup
         with:
           cache-suffix: shard-${{ matrix.jobIndex }}
-          # 💰 Restore-only in the merge queue: its ref is unique per entry, so
-          # nothing could ever restore a save from it (see node-setup).
+          # 💰 Saves (see node-setup's `save-cache`), except in the merge queue:
+          # its ref is unique per entry, so nothing could restore a save from it.
           save-cache: ${{ github.event_name != 'merge_group' }}
 
       # ot-skill-sync's .agents/skills → skills/ symlinks (and the editor fan-out) are
@@ -899,8 +899,8 @@ jobs:
         uses: ./.github/actions/node-setup
         with:
           cache-suffix: gates
-          # 💰 Restore-only in the merge queue: its ref is unique per entry, so
-          # nothing could ever restore a save from it (see node-setup).
+          # 💰 Saves (see node-setup's `save-cache`), except in the merge queue:
+          # its ref is unique per entry, so nothing could restore a save from it.
           save-cache: ${{ github.event_name != 'merge_group' }}
 
       # check-agent-assets-ssot and the frontmatter validator read the
@@ -1196,12 +1196,6 @@ jobs:
         uses: ./.github/actions/node-setup
         with:
           cache-suffix: model-facing-text
-          # 💰 Restore-only everywhere. This job adds no Nx task worth keeping,
-          # yet each save re-uploaded the whole restored ~215 MB Nx cache under
-          # its own key: one more entry per queue entry (a ref nothing can
-          # restore) and per main push (a duplicate of `warm`'s). It kept the
-          # repo over its 10 GB quota after #724 (OT plan 1d2f247c).
-          save-cache: 'false'
 
       - name: '🔤 Model-facing text byte budget'
         run: pnpm exec nx run monorepo:check-model-facing-text
@@ -1262,8 +1256,6 @@ jobs:
         uses: ./.github/actions/node-setup
         with:
           cache-suffix: database-seeds
-          # 💰 Restore-only everywhere, for the reason on `model-facing-text`.
-          save-cache: 'false'
 
       - name: '🌱 Migrate an empty database, then run every seed twice'
         run: scripts/check-database-seeds.sh
@@ -1320,6 +1312,9 @@ jobs:
         uses: ./.github/actions/node-setup
         with:
           cache-suffix: warm
+          # 💰 One of the three jobs that save (see node-setup's `save-cache`):
+          # this is the `main` entry every PR restores from.
+          save-cache: 'true'
 
       - name: "🕵️‍♂️ NX Setup SHA's"
         uses: nrwl/nx-set-shas@e602fada7ad5987b0f7b1905e7a99ea1c661514c # v5.1.0
