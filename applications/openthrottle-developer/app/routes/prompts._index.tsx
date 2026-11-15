@@ -137,10 +137,10 @@ export default function Component(
         className="mt-8"
         limit={limit}
         page={page}
+        // The `?type=` filter is not in the extras contract, so clone the live
+        // query string to keep it (and search/sort) across a page change.
+        preserveSearchParams={true}
         resultLabel="prompts"
-        search={search ?? undefined}
-        sortBy={sortBy}
-        sortOrder={sortOrder}
         total={total}
       />
     </div>

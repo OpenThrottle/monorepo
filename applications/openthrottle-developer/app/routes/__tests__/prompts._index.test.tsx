@@ -187,4 +187,42 @@ describe('routes/prompts._index.tsx', () => {
     expect(href).toContain('page=2');
     expect(href).toContain('limit=10');
   });
+
+  test('keeps the type filter, search and sort in the page links', () => {
+    const view = renderWithMemoryRouter(
+      [
+        {
+          element: (
+            <Index
+              actionData={undefined}
+              loaderData={{
+                ...mockLoaderDataWithPrompts,
+                limit: 10,
+                page: 1,
+                total: 25,
+                totalPages: 3,
+              }}
+              matches={matches}
+              params={{}}
+            />
+          ),
+          path: '/prompts',
+        },
+      ],
+      {
+        initialEntries: [
+          '/prompts?type=agents&type=commands&q=review&sortBy=name&sortOrder=desc',
+        ],
+      },
+    );
+
+    const href = view.getByRole('link', { name: '2' }).getAttribute('href');
+    const params = new URLSearchParams(href?.split('?')[1]);
+    expect(href).toMatch(/^\/prompts\?/);
+    expect(params.getAll('type')).toEqual(['agents', 'commands']);
+    expect(params.get('q')).toBe('review');
+    expect(params.get('sortBy')).toBe('name');
+    expect(params.get('sortOrder')).toBe('desc');
+    expect(params.get('page')).toBe('2');
+  });
 });

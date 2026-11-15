@@ -161,13 +161,14 @@ export default function Component(
         <PlansTable plans={plans} statusFilterUrls={statusFilterUrls} />
       </div>
       <OpenThrottlePagination
-        assignees={assignees}
         basePath="/plans"
         className="mt-8"
         limit={limit}
         page={page}
+        // Sort (`sortBy`/`sortOrder`) and `view` live only in the URL here, so
+        // clone the live query string rather than rebuilding it from extras.
+        preserveSearchParams={true}
         resultLabel="plans"
-        statuses={statuses}
         total={totalCount}
       />
     </>
