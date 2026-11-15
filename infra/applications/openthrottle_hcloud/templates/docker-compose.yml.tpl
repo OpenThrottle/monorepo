@@ -72,7 +72,7 @@ services:
     # origin, and APP_NAME names its logs and cache namespaces.
     environment:
       APP_NAME: openthrottle-developer
-      APP_NAME_SHORT: OpenThrottle
+      APP_NAME_SHORT: Dev
       APP_URL: https://${developer_domain}
     healthcheck:
       # Published images are the distroless `production` target (see
@@ -114,7 +114,7 @@ services:
     # service "__UNKNOWN_SERVICE__".
     environment:
       APP_NAME: openthrottle-server
-      APP_NAME_SHORT: Server
+      APP_NAME_SHORT: API
     healthcheck:
       interval: 30s
       retries: 3
