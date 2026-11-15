@@ -58,12 +58,14 @@ export const isServeTarget = (
 /** What the command line asked for. */
 export type ServeCommand =
   | { readonly kind: 'start'; readonly apiOnly: boolean; readonly target: ServeTarget; readonly timeoutSeconds: number } // prettier-ignore
+  | { readonly kind: 'orphans' }
   | { readonly kind: 'stop'; readonly target: ServeTarget | undefined }
   | { readonly kind: 'usage'; readonly message: string };
 
 export const USAGE =
   'usage: pnpm worktree:serve <server|developer> [--api-only] [--timeout=<seconds>]\n' +
-  '       pnpm worktree:serve --stop [server|developer]';
+  `       pnpm worktree:serve --stop [server|developer]\n` +
+  `       pnpm worktree:serve --orphans   (list processes left running from removed worktrees)`;
 
 const usage = (message: string): ServeCommand => {
   return { kind: 'usage', message };
@@ -88,13 +90,22 @@ const parseTimeout = (
 export const parseServeArgs = (args: readonly string[]): ServeCommand => {
   const known = (arg: string): boolean => {
     return (
-      arg === '--api-only' || arg === '--stop' || arg.startsWith('--timeout=')
+      arg === '--api-only' ||
+      arg === '--orphans' ||
+      arg === '--stop' ||
+      arg.startsWith('--timeout=')
     );
   };
   const unknownFlag = args.find((arg) => arg.startsWith('--') && !known(arg));
 
   if (unknownFlag !== undefined) {
     return usage(`unknown flag ${unknownFlag}`);
+  }
+
+  if (args.includes('--orphans')) {
+    return args.length === 1
+      ? { kind: 'orphans' }
+      : usage('--orphans takes no other arguments');
   }
 
   const positionals = args.filter((arg) => !arg.startsWith('--'));

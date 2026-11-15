@@ -186,7 +186,7 @@
     "skill/ot-skill-guide": 11206,
     "skill/ot-skill-sync": 9963,
     "skill/ot-stack": 6507,
-    "skill/ot-worktree": 9105,
+    "skill/ot-worktree": 9479,
     "skillDescription/agents-ralph": 323,
     "skillDescription/github-cleanup": 402,
     "skillDescription/github-commit": 309,
@@ -215,6 +215,6 @@
     "mcpInstructions": 2069,
     "mcpTools": 34742,
     "prompts": 133419,
-    "skills": 152463
+    "skills": 152837
   }
 }

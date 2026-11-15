@@ -145,13 +145,24 @@ _ot_deregister_request() {
 # Fail-open, like deregistration: no curl, endpoint, token or server answers 1
 # (not busy), so a foreign repo or an offline laptop keeps its old behaviour. Set
 # OPENTHROTTLE_WORKTREE_ACTIVE_RUN_GUARD=0 to skip the probe.
+#
+# Leaves what the probe saw in OT_ACTIVE_RUN_PROBE for destroy.sh's removal log:
+# `disabled`, `unavailable` (no curl, endpoint, token or server), `no-outcome`, or
+# the server's outcome (SKIPPED_ACTIVE_RUN, SKIPPED_LIVE, ...). Call it directly,
+# never in a command substitution, or the value is lost with the subshell.
 # $1 = worktree path, $2 = primary checkout.
+# shellcheck disable=SC2034 # OT_ACTIVE_RUN_PROBE is read by destroy.sh
 worktree_has_active_plan_run() {
   if [ "${OPENTHROTTLE_WORKTREE_ACTIVE_RUN_GUARD:-1}" = "0" ]; then
+    OT_ACTIVE_RUN_PROBE=disabled
     log "ℹ️  OPENTHROTTLE_WORKTREE_ACTIVE_RUN_GUARD=0 — not asking OpenThrottle whether a plan run is using this worktree"
     return 1
   fi
-  _ar_outcome=$(_ot_deregister_request "$1" "$2" "the active-plan-run check") || return 1
+  if ! _ar_outcome=$(_ot_deregister_request "$1" "$2" "the active-plan-run check"); then
+    OT_ACTIVE_RUN_PROBE=unavailable
+    return 1
+  fi
+  OT_ACTIVE_RUN_PROBE="${_ar_outcome:-no-outcome}"
   [ "$_ar_outcome" = "SKIPPED_ACTIVE_RUN" ]
 }
 

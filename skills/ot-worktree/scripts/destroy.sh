@@ -24,6 +24,10 @@
 #
 # After a successful removal, the worktree's OpenThrottle checkout record is
 # deregistered best-effort (deregister.sh). That step can only log, never fail.
+#
+# Every invocation that gets past flag parsing — removal, dry run or refusal —
+# appends one line to ~/.openthrottle/logs/worktree-removals.log (removal-log.sh),
+# so a removal can be attributed after the fact. Best-effort; it never fails one.
 
 set -euo pipefail
 
@@ -36,6 +40,8 @@ OPENTHROTTLE_WORKTREE_SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd -P)"
 . "$OPENTHROTTLE_WORKTREE_SCRIPT_DIR/provision.sh"
 # shellcheck source=skills/ot-worktree/scripts/deregister.sh
 . "$OPENTHROTTLE_WORKTREE_SCRIPT_DIR/deregister.sh"
+# shellcheck source=skills/ot-worktree/scripts/removal-log.sh
+. "$OPENTHROTTLE_WORKTREE_SCRIPT_DIR/removal-log.sh"
 
 usage() {
   cat <<'USAGE'
@@ -76,11 +82,33 @@ while [ $# -gt 0 ]; do
 done
 
 # ---------------------------------------------------------------------------
+# 0. The removal log. RESULT is set right before each exit; an exit that never
+#    set one (set -e tripping on `git worktree remove`, say) is logged `failed`.
+# ---------------------------------------------------------------------------
+RESULT=""
+SRC=""
+WTREE="${TARGET:-$(pwd -P)}"
+BRANCH=""
+OT_ACTIVE_RUN_PROBE=not-run
+
+on_exit() {
+  _oe_status=$?
+  if [ -z "$RESULT" ]; then
+    if [ "$_oe_status" = "0" ]; then RESULT=removed; else RESULT=failed; fi
+  fi
+  record_worktree_removal "$RESULT" "$WTREE" "$BRANCH" "$SRC" \
+    "$OT_ACTIVE_RUN_PROBE" "$FORCE" "$DRY_RUN"
+  exit "$_oe_status"
+}
+trap on_exit EXIT
+
+# ---------------------------------------------------------------------------
 # 1. Resolve the primary checkout and the worktree to remove.
 # ---------------------------------------------------------------------------
 SRC="$(primary_checkout || true)"
 if [ -z "$SRC" ]; then
   log "🔴 ot-worktree destroy: not inside a git repository."
+  RESULT=refused-not-a-repo
   exit 1
 fi
 
@@ -89,6 +117,7 @@ if [ -z "$TARGET" ]; then
   if ! is_linked_worktree; then
     log "🔴 ot-worktree destroy: no target given and not inside a linked worktree."
     log "    usage: pnpm worktree:remove <name|path> [--dry-run] [--force] [--delete-branch]"
+    RESULT=refused-not-registered
     exit 1
   fi
   WTREE="$(git rev-parse --show-toplevel)"
@@ -116,6 +145,7 @@ if ! is_registered_worktree "$SRC" "$WTREE"; then
   log "🔴 ot-worktree destroy: '$WTREE' is not a registered linked worktree of $SRC"
   log "    refusing to remove anything. Registered worktrees:"
   git -C "$SRC" worktree list >&2 || true
+  RESULT=refused-not-registered
   exit 1
 fi
 
@@ -132,6 +162,7 @@ if [ -n "$DIRTY" ] && [ "$FORCE" != "1" ] && [ "$DRY_RUN" != "1" ]; then
   log "🔴 worktree has uncommitted changes — refusing to remove it:"
   printf '%s\n' "$DIRTY" >&2
   log "    commit/stash them, or re-run with --force to discard them."
+  RESULT=refused-dirty
   exit 1
 fi
 
@@ -145,6 +176,7 @@ if worktree_has_active_plan_run "$WTREE" "$SRC"; then
   log "🔴 an OpenThrottle plan run that has not been settled is using this worktree — refusing to remove it."
   log "    let the run finish, or settle it (settle_plan_run CANCELLED / FAILED), then retry."
   log "    to skip this check deliberately: OPENTHROTTLE_WORKTREE_ACTIVE_RUN_GUARD=0"
+  RESULT=refused-active-run
   exit 1
 fi
 
@@ -156,6 +188,7 @@ if [ "$DRY_RUN" = "1" ]; then
   [ "$DELETE_BRANCH" = "1" ] && log "    would delete branch '${BRANCH:-(detached)}'"
   log "    would run: git worktree prune"
   log "    would deregister its OpenThrottle checkout record (best-effort)"
+  RESULT=dry-run
   exit 0
 fi
 
@@ -165,6 +198,7 @@ fi
 # ---------------------------------------------------------------------------
 if ! teardown_worktree "$WTREE" "$SRC"; then
   log "🔴 teardown hook failed — leaving the worktree in place."
+  RESULT=refused-teardown-failed
   exit 1
 fi
 
@@ -180,6 +214,8 @@ else
 fi
 
 git -C "$SRC" worktree prune >&2
+# The worktree is gone: whatever happens to the branch below, that is the result.
+RESULT=removed
 
 # The directory is gone; drop the record that still points at it. Fail-open.
 deregister_worktree_checkout "$WTREE" "$SRC"

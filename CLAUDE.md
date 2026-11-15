@@ -18,7 +18,7 @@ Always run tasks through Nx, prefixed with pnpm (`pnpm nx ...`), never the under
 ./scripts/setup.sh                                  # full environment setup/reset (also seeds the default login user)
 pnpm run worktree:new <name>                        # create + provision a git worktree (the ONE entrypoint; Claude/Cursor use it too). A plain `git worktree add` self-heals on first `:dev`
 pnpm run worktree:db isolate                        # give THIS worktree its own Postgres/Redis (base+8/+9) + migrate + seed; a shared-DB worktree refuses branch-only migrations until you do. `worktree:new <name> --own-db` does it at create time
-pnpm run worktree:serve <server|developer>          # IN A WORKTREE: run its own server/UI detached, wait for the port, print a probe (`--api-only`, `--stop`). See docs/monorepo/worktree-port-allocation.md
+pnpm run worktree:serve <server|developer>          # IN A WORKTREE: run its own server/UI detached, wait for the port, print a probe (`--api-only`, `--stop`; `--orphans` lists servers left running from removed worktrees). See docs/monorepo/worktree-port-allocation.md
 pnpm run database:start                             # Postgres + Redis via docker compose (a worktree reuses the primary's: OT_WORKTREE_DB=shared)
 pnpm run database:migrate                           # apply pending migrations manually (run-once/idempotent via schema_migrations ledger; safe to re-run, no data re-stamp; does NOT back up)
 pnpm nx run openthrottle-server:dev                 # NestJS GraphQL API (auto-applies pending migrations first via monorepo:ensure-migrations; fails fast if Postgres is down)
