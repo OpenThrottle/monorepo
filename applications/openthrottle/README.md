@@ -39,7 +39,7 @@ OpenThrottle can run **entirely locally** with Open Source models and software�
 - **Embeddings (semantic search, plans knowledge base):** For **local-only** use set **Ollama** (`EMBEDDING_PROVIDER=ollama` + `OLLAMA_BASE_URL`). The MCP and OpenThrottle ingest then use Ollama for embeddings; no API key required. See root `.env.default`, `databases/openthrottle/README.md` (embedding dimension strategy), and `docs/monorepo/Ollama.md`.
 - **Optional — OpenAI:** If you prefer cloud embeddings, set `OPENAI_API_KEY` and leave Ollama unset; the stack uses OpenAI (e.g. `text-embedding-3-small`) for embeddings. Not required for local-only.
 
-Details and copy for website or docs: `docs/openthrottle/features.md` § Runs entirely locally on Open Source.
+Product copy for the website and docs comes from the typed registry in [`@openthrottle/openthrottle-product`](../../packages/openthrottle-product/README.md) (feature `local-first`).
 
 ## Work as history
 
@@ -116,4 +116,4 @@ The admin / CMS / email / website apps are not part of this consumer install.
 - **Run entirely locally:** Prefer Ollama for embeddings when you don’t want to use OpenAI; see `docs/monorepo/Ollama.md` § Embeddings for OpenThrottle and `databases/openthrottle/README.md` (embedding dimension strategy).
 - **Docker Compose:** For a single-command stack (Postgres, Redis, server, developer app), run Compose from the monorepo root as in [Run from monorepo root](#run-from-monorepo-root); ensure `.env` is populated per [Required `.env`](#required-env).
 - **Ralph / workflows:** Use `pnpm exec workflow-ralph --plan <plan-id>` for agentic execution against plans; see `tools/workflows/README.md` and `AGENTS.md`.
-- **Docs:** More copy and architecture: `docs/openthrottle/` (e.g. `features.md`, `work-as-history.md`, `docker-image-build-strategy.md`).
+- **Docs:** More copy and architecture: `docs/openthrottle/` (e.g. `work-as-history.md`, `docker-image-build-strategy.md`).

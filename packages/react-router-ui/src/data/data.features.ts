@@ -1,14 +1,28 @@
-import { OPENTHROTTLE_GITHUB_URL } from '@openthrottle/react-router-utils';
 import {
-  BookOpenTextIcon,
+  getFeatureLink,
+  getPublicFeatures,
+  isLandedFeature,
+  PRODUCT_FEATURES,
+} from '@openthrottle/openthrottle-product';
+import { OPENTHROTTLE_GITHUB_URL_MONOREPO } from '@openthrottle/react-router-utils';
+import {
   BotIcon,
   BotMessageSquareIcon,
+  CalendarClockIcon,
   Code2Icon,
+  FlaskConicalIcon,
   GaugeCircleIcon,
+  GaugeIcon,
+  GitBranchIcon,
+  GitCommitHorizontalIcon,
+  HouseIcon,
   InfinityIcon,
   ListIcon,
+  MessageSquareIcon,
+  MonitorIcon,
   NotepadTextIcon,
   SearchIcon,
+  TerminalIcon,
 } from 'lucide-react';
 
 export interface DataFeature {
@@ -18,66 +32,45 @@ export interface DataFeature {
   title: string;
 }
 
-export const FEATURES_DOC_URL = `${OPENTHROTTLE_GITHUB_URL}/blob/main/docs/openthrottle/features.md`;
-export const FEATURES: DataFeature[] = [
-  {
-    description: `Agentic skills, rules, and commands all in one place, available any sized organization.`,
-    icon: BotIcon,
-    link: `https://github.com/OpenThrottle/monorepo/tree/main/packages/openthrottle-mcp#readme`,
-    title: 'Agentic Tooling',
-  },
-  {
-    description: `Turn an idea or PRD into a plan and tasks in OpenThrottle, then execute one task at a time. Progress lives in OpenThrottle; commit with Plan-Id and Task-Id.`,
-    icon: InfinityIcon,
-    link: `https://github.com/OpenThrottle/monorepo/tree/main/packages/openthrottle-agentic-workflow#readme`,
-    title: 'Agentic Workflows',
-  },
-  {
-    description: `openthrottle-mcp in VSCode or Cursor: ask OpenThrottle, list plans by status, create or edit plans and tasks, semantic search, activity by date, output stream, commit links.`,
-    icon: BotMessageSquareIcon,
-    link: `https://github.com/OpenThrottle/monorepo/tree/main/packages/openthrottle-mcp#readme`,
-    title: 'IDE (MCP) integration',
-  },
-  {
-    description: `Create and manage plans with tasks; track status (pending, in progress, completed, blocked, skipped). List by status and see remaining tasks per plan.`,
-    icon: ListIcon,
-    link: `https://github.com/OpenThrottle/monorepo/tree/main/packages/openthrottle-mcp#readme`,
-    title: 'Plans, tasks, and requirements',
-  },
-  {
-    description: `Semantic search over plans and tasks with pgvector. Ask questions in natural language and get relevant plan and task content.`,
-    icon: SearchIcon,
-    link: `https://github.com/OpenThrottle/monorepo/tree/main/packages/openthrottle-mcp#readme`,
-    title: 'Semantic search',
-  },
-  {
-    description: `Ingest docs and NX project READMEs; search documentation semantically.`,
-    icon: BookOpenTextIcon,
-    link: `https://github.com/OpenThrottle/monorepo/tree/main/packages/openthrottle-mcp#readme`,
-    title: 'Documentation search',
-  },
-  {
-    description: `Activity by date: see what was worked on or shipped. Commit links associate a git commit with a plan and optional task.`,
-    icon: ListIcon,
-    link: `https://github.com/OpenThrottle/monorepo/tree/main/packages/openthrottle-mcp#readme`,
-    title: 'Activity and commit links',
-  },
-  {
-    description: `Web app: view plans (all, in progress), plan counts by status, remaining tasks per plan, recent activity. Sign in and work from the browser.`,
-    icon: GaugeCircleIcon,
-    link: `https://github.com/OpenThrottle/monorepo/tree/main/packages/openthrottle-mcp#readme`,
-    title: 'Dashboard',
-  },
-  {
-    description: `Generate code predictable code with a single command and guide the Agent through the process.`,
-    icon: Code2Icon,
-    link: `https://github.com/OpenThrottle/monorepo/tree/main/tools/generators#readme`,
-    title: 'Generators',
-  },
-  {
-    description: `Quick notes (unstructured thoughts) with optional author; foundation for planning (e.g. create plan from note). Exposed via MCP.`,
-    icon: NotepadTextIcon,
-    link: `https://github.com/OpenThrottle/monorepo/tree/main/packages/nestjs-repositories#readme`,
-    title: 'Notes',
-  },
-] as const;
+/**
+ * @description Icons stay in the UI layer, keyed by registry feature `id`, so
+ * `@openthrottle/openthrottle-product` stays dependency-free. An id missing
+ * here renders {@link BotIcon}.
+ */
+const FEATURE_ICONS: Readonly<Record<string, React.ElementType>> = {
+  'agent-clis': TerminalIcon,
+  'desktop-app': MonitorIcon,
+  'developer-app': GaugeCircleIcon,
+  evals: FlaskConicalIcon,
+  generators: Code2Icon,
+  'knowledge-search': SearchIcon,
+  'local-first': HouseIcon,
+  mcp: BotMessageSquareIcon,
+  notes: NotepadTextIcon,
+  'plan-runners': InfinityIcon,
+  'plans-and-tasks': ListIcon,
+  'scheduled-runs': CalendarClockIcon,
+  skills: BotIcon,
+  'steer-runs': MessageSquareIcon,
+  'token-usage': GaugeIcon,
+  'work-ledger': GitCommitHorizontalIcon,
+  'worktree-isolation': GitBranchIcon,
+};
+
+/**
+ * @description The public, landed (shipped or preview) entries of the feature
+ * registry, shaped for `OpenThrottleProductFeatures`. The registry in
+ * `@openthrottle/openthrottle-product` is the source of truth; never add an
+ * entry here.
+ * @public
+ */
+export const FEATURES: DataFeature[] = getPublicFeatures(PRODUCT_FEATURES)
+  .filter(isLandedFeature)
+  .map((feature) => {
+    return {
+      description: feature.oneLiner,
+      icon: FEATURE_ICONS[feature.id] ?? BotIcon,
+      link: getFeatureLink(feature, OPENTHROTTLE_GITHUB_URL_MONOREPO),
+      title: feature.name,
+    };
+  });

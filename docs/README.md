@@ -19,7 +19,7 @@ Along the way:
 
 ## What OpenThrottle is
 
-- [features.md](./openthrottle/features.md) — product overview: plans, tasks, semantic search, agentic execution (Ralph), dashboard.
+- [@openthrottle/openthrottle-product](../packages/openthrottle-product/README.md) — product overview: the positioning canon and the typed feature registry every public surface is built from.
 - [monorepo-architecture.md](./openthrottle/monorepo-architecture.md) — how the apps and packages fit together (diagrams).
 - [../databases/openthrottle/README.md](../databases/openthrottle/README.md) — Postgres schema, migrations, embeddings, imports.
 
@@ -27,6 +27,7 @@ Along the way:
 
 - **Local services:** [monorepo/local-services-and-ports.md](./monorepo/local-services-and-ports.md), [Docker_Compose.md](./Docker_Compose.md)
 - **Worktrees:** [monorepo/worktree-port-allocation.md](./monorepo/worktree-port-allocation.md)
+- **Running and scheduling plans:** [openthrottle/running-and-scheduling-plans.md](./openthrottle/running-and-scheduling-plans.md)
 - **Nx:** [monorepo/NX.md](./monorepo/NX.md), [monorepo/nx-graph.md](./monorepo/nx-graph.md) — the one graph doc, [monorepo/NX/tags.md](./monorepo/NX/tags.md)
 - **Generators:** [tools/templates/](./tools/templates/AGENT_USAGE.md) — scaffold routes, components, packages, services.
 - **Skills:** [Skills.md](./Skills.md) — the agent-skills policy and `ot-skill-sync`.

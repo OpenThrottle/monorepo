@@ -20,7 +20,7 @@ describe('root.tsx', () => {
         url: new URL(request.url),
       });
 
-      expect(data.repo).toBe('openthrottle/openthrottle');
+      expect(data.repo).toBe('OpenThrottle/monorepo');
     });
 
     test('injects a serializable env object for the client script', async () => {
@@ -52,7 +52,7 @@ describe('root.tsx', () => {
         url: new URL(request.url),
       });
 
-      expect(data.repo).toBe('openthrottle/openthrottle');
+      expect(data.repo).toBe('OpenThrottle/monorepo');
     });
 
     test('does not throw when the request carries no cookie header', async () => {

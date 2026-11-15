@@ -12,9 +12,6 @@
   "include": ["**/*", "**/*.json", ".react-router/types"],
   "references": [
     {
-      "path": "../../packages/react-router-markdown"
-    },
-    {
       "path": "../../packages/react-router-docs"
     },
     {
@@ -27,7 +24,13 @@
       "path": "../../packages/react-router-graphql"
     },
     {
+      "path": "../../packages/openthrottle-product"
+    },
+    {
       "path": "../../packages/react-router-shadcn"
+    },
+    {
+      "path": "../../packages/react-router-markdown"
     },
     {
       "path": "../../packages/react-router-testing"

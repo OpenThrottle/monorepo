@@ -6,8 +6,21 @@ export const OPENTHROTTLE_CONTACT_PORTFOLIO_REF = `https://mattscholta.com?ref=o
 
 export const OPENTHROTTLE_DOCKER_URL = `https://hub.docker.com/repositories/openthrottle`;
 export const OPENTHROTTLE_GITHUB_URL = `https://github.com/OpenThrottle`;
+/**
+ * @description The canonical repository, `OpenThrottle/monorepo`, as an
+ * `owner/name` slug (for the GitHub API, star counts) and as a URL. Every repo
+ * link and star count goes through these two constants.
+ * @public
+ */
+export const OPENTHROTTLE_GITHUB_URL_MONOREPO = `${OPENTHROTTLE_GITHUB_URL}/monorepo`;
+export const OPENTHROTTLE_GITHUB_REPOSITORY = new URL(
+  OPENTHROTTLE_GITHUB_URL_MONOREPO,
+).pathname.slice(1);
 export const OPENTHROTTLE_GITHUB_URL_DISCUSSIONS = `https://github.com/orgs/OpenThrottle/discussions`;
 export const OPENTHROTTLE_GITHUB_URL_TEAM = `https://github.com/orgs/OpenThrottle/people`;
+
+/** @public The public marketing site. */
+export const OPENTHROTTLE_WEBSITE_URL = `https://openthrottle.ai`;
 
 /**
  * @description Shared Legal / Privacy / Terms site-posture paragraph

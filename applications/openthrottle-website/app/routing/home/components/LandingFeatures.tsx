@@ -1,25 +1,30 @@
-import { cn } from '@openthrottle/react-router-shadcn';
+import { Badge, cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { LANDING_SURFACES } from '~/routing/home/data/data.landing';
+import { LANDING_FEATURES } from '~/routing/home/data/data.landing';
 
-export interface LandingSurfacesProps {
+export interface LandingFeaturesProps {
   className?: string;
 }
 
-export const LandingSurfaces = (
-  props: LandingSurfacesProps,
+export const LandingFeatures = (
+  props: LandingFeaturesProps,
 ): React.ReactElement => {
   const { className } = props;
 
   // Hooks
 
   // Setup
-  const { cards, kicker, lede, title } = LANDING_SURFACES;
+  const { cards, kicker, lede, previewLabel, title } = LANDING_FEATURES;
 
   // Handlers
 
   // Markup
+  const previewBadge = (
+    <Badge color="violet" size="xs">
+      {previewLabel}
+    </Badge>
+  );
 
   // Life Cycle
 
@@ -33,8 +38,8 @@ export const LandingSurfaces = (
         'snap-start',
         className,
       )}
-      data-testid="LandingSurfaces"
-      id="surfaces"
+      data-testid="LandingFeatures"
+      id="features"
     >
       <div className="mx-auto w-[min(68rem,100%)]">
         <div>
@@ -47,13 +52,16 @@ export const LandingSurfaces = (
           <p className="landing-reveal text-muted-foreground mt-3">{lede}</p>
         </div>
 
-        <div className="landing-reveal mt-10 grid gap-6 md:grid-cols-3 md:gap-8">
+        <div className="landing-reveal mt-10 grid gap-6 sm:grid-cols-2 md:gap-8 lg:grid-cols-4">
           {cards.map((card) => (
             <article
               className="landing-ink-line border-t pt-4"
               key={card.title}
             >
-              <h3 className="my-4 text-xl">{card.title}</h3>
+              <h3 className="my-4 flex items-center gap-2 text-xl">
+                <span>{card.title}</span>
+                {card.isPreview ? previewBadge : null}
+              </h3>
               <p className="text-muted-foreground text-[0.975rem]">
                 {card.body}
               </p>

@@ -449,6 +449,17 @@
         "cwd": "{workspaceRoot}"
       }
     },
+    "check-surfaces": {
+      "cache": false,
+      "executor": "nx:run-commands",
+      "metadata": {
+        "description": "Product-registry drift gate: fails when the root README.md features section is stale, when the registry breaks a static rule (oneLiner over 120 chars, canon lengths, duplicate ids, unknown pillars, malformed dates or plan UUIDs), when a shipped/preview entry cites an unmerged PR, or when an in-flight/planned entry cites a CANCELED or missing OpenThrottle plan. The PR and plan checks need gh and the OpenThrottle GraphQL API (OPENTHROTTLE_GRAPHQL_URL, OPENTHROTTLE_MCP_AUTH_TOKEN) and are skipped with a warning when unreachable; --offline skips them outright."
+      },
+      "options": {
+        "command": "pnpm exec tsx ./src/scripts/check-surfaces.ts",
+        "cwd": "{projectRoot}"
+      }
+    },
     "check-test-file-filter-docs": {
       "cache": false,
       "description": "Fail when a tracked file documents the retired `--testFile` flag on a test target, via scripts/check-test-file-filter-docs.ts. Test targets run the vitest CLI through nx:run-commands since Nx 24 removed @nx/vitest:test, so a single spec is `:test -- <path>` and `--testFile` fails with Vitest's `Unknown option` (OT plans 407bedcd, e3606c61). Never cached: the input is the whole tracked tree, like check-folder-vocabulary.",
@@ -594,6 +605,17 @@
       "options": {
         "command": "prettier --check .",
         "cwd": "{workspaceRoot}"
+      }
+    },
+    "generate-surfaces": {
+      "cache": false,
+      "executor": "nx:run-commands",
+      "metadata": {
+        "description": "Build every text surface from the typed product registry: the features section of the root README.md, the org profile README (out/org-profile/README.md) and a LinkedIn paste block (out/linkedin.md). Stats are computed with gh api and nx show projects. Pass --offline to skip the network. Never pushes; check-surfaces is the drift gate."
+      },
+      "options": {
+        "command": "pnpm exec tsx ./src/scripts/generate-surfaces.ts",
+        "cwd": "{projectRoot}"
       }
     },
     "generate-third-party-notices": {

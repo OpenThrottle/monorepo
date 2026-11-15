@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@openthrottle/openthrottle-notifications": "workspace:^",
+    "@openthrottle/openthrottle-product": "workspace:^",
     "@openthrottle/react-router-shadcn": "workspace:^",
     "@openthrottle/react-router-utils": "workspace:^",
     "@phosphor-icons/react": "catalog:",

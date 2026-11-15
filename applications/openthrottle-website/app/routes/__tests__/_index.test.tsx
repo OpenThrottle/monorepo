@@ -34,7 +34,8 @@ describe('routes/_index.tsx', () => {
     expect(component.getByTestId('LandingHero')).toBeInTheDocument();
     expect(component.getByTestId('LandingPromise')).toBeInTheDocument();
     expect(component.getByTestId('LandingFlow')).toBeInTheDocument();
-    expect(component.getByTestId('LandingSurfaces')).toBeInTheDocument();
+    expect(component.getByTestId('LandingFeatures')).toBeInTheDocument();
+    expect(component.getByTestId('LandingRoadmap')).toBeInTheDocument();
     expect(component.getByTestId('LandingClose')).toBeInTheDocument();
   });
 

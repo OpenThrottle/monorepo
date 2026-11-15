@@ -1,0 +1,54 @@
+{
+  "author": {
+    "email": "matthew.scholta@gmail.com",
+    "name": "Matthew Scholta",
+    "url": "https://mattscholta.com"
+  },
+  "dependencies": {},
+  "description": "OpenThrottle positioning canon and feature registry: the typed, source-first source of truth every public surface is built from.",
+  "devDependencies": {
+    "@openthrottle/openthrottle-drivers": "workspace:^",
+    "@openthrottle/react-router-utils": "workspace:^",
+    "vitest": "catalog:"
+  },
+  "exports": {
+    ".": {
+      "default": "./src/index.ts",
+      "types": "./src/index.ts"
+    }
+  },
+  "main": "./src/index.ts",
+  "name": "@openthrottle/openthrottle-product",
+  "nx": {
+    "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
+    "projectType": "library",
+    "sourceRoot": "./",
+    "tags": [
+      "name:@openthrottle/openthrottle-product",
+      "production:true",
+      "publish:false",
+      "technology:nodejs",
+      "type:package"
+    ],
+    "targets": {
+      "__build": {},
+      "__build-package": {},
+      "check-surfaces": {},
+      "generate-surfaces": {},
+      "lint": {},
+      "test": {},
+      "typecheck": {}
+    }
+  },
+  "peerDependencies": {},
+  "private": true,
+  "repository": "git://github.com/OpenThrottle/monorepo.git",
+  "scripts": {},
+  "sideEffects": [
+    "./src/scripts/check-surfaces.ts",
+    "./src/scripts/generate-surfaces.ts"
+  ],
+  "type": "module",
+  "types": "./src/index.ts",
+  "version": "1.0.0"
+}

@@ -14,6 +14,9 @@
   ],
   "references": [
     {
+      "path": "../openthrottle-product/tsconfig.lib.json"
+    },
+    {
       "path": "../react-router-utils/tsconfig.lib.json"
     },
     {

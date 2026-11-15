@@ -988,6 +988,18 @@ jobs:
       - name: '🫥 Generated-payload .gitattributes coverage'
         run: pnpm exec nx run monorepo:check-generated-attributes
 
+      # Whole-tree and build-free, like its neighbours. Fails when the root
+      # README.md features section drifts from the typed product registry
+      # (packages/openthrottle-product), when the registry breaks a static rule,
+      # or when a shipped entry cites an unmerged PR. GH_TOKEN lets gh read PR
+      # state; the OpenThrottle API is not reachable from CI, so the live-plan
+      # check skips with a warning here. It runs wherever
+      # OPENTHROTTLE_MCP_AUTH_TOKEN is exported (check:local in an MCP shell).
+      - name: '🏷️ Product registry drift guard'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: pnpm exec nx run @openthrottle/openthrottle-product:check-surfaces
+
       # Whole-tree, static. Claude Code skips an unparseable settings file
       # entirely, so one `//` comment in .claude/settings.json disabled every
       # project hook for five weeks (2026-09-23) with no visible error.
