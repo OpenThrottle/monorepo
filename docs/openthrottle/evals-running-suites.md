@@ -21,7 +21,10 @@ and graders. It runs on the eval core, `@openthrottle/agentic-evals`:
   detection floor for the dataset size, and cost per success. An `errored` or `usage_limited` trial is
   excluded from the pass rate, never counted as a fail.
 
-Today there is one suite: [MCP tool selection](../../packages/openthrottle-mcp-evals/src/tool-selection/README.md).
+Today there are two suites: [MCP tool selection](../../packages/openthrottle-mcp-evals/src/tool-selection/README.md)
+and [semantic_search ranking](../../packages/openthrottle-mcp-evals/src/search-ranking/README.md). The ranking
+suite calls no model, but it needs a live server on the knowledge base its cases were labelled against, so it
+stays on-demand like the others.
 
 ## One on-demand Nx target per suite
 

@@ -1,6 +1,6 @@
 /**
- * @description GraphQL resolver for semantic search over plan/task (and optionally documentation) embeddings.
- * Accepts a text query and optional limit; returns ranked document chunks.
+ * @description GraphQL resolver for search over plans, tasks and documentation: hybrid (vector + full-text,
+ * reciprocal rank fusion) by default, vector-only on request, full-text when the embedder cannot answer.
  * Also exposes getDocument(chunkId) and listSources() for MCP parity.
  */
 
@@ -12,6 +12,7 @@ import {
   runLexicalSearch,
   runSemanticSearch,
 } from '@openthrottle/node-client';
+import { GraphQLError } from 'graphql';
 
 import { EmbedderService } from '../../services/embedder/embedder.service.ts';
 import { SearchInput } from './search.input.ts';
@@ -22,15 +23,50 @@ import {
   SearchChunk,
   SearchResult,
 } from './search.object.ts';
-import { searchWithFallback } from './search.utils.ts';
+import type { RequestedSearchMode } from './search.types.ts';
+import { searchHybrid } from './search.utils.ts';
 
 const DEFAULT_SEARCH_LIMIT = 20;
 const MAX_SEARCH_LIMIT = 50;
+/** Each retriever over-fetches so fusion has candidates past the cut (2x the limit, at most 100). */
+const HYBRID_CANDIDATE_FACTOR = 2;
 
-function mapChunkToObject(chunk: SemanticSearchChunk): SearchChunk {
+/** The entity a chunk belongs to: several vector chunks of one plan, task or doc fuse into one result. */
+function chunkEntityKey(chunk: SemanticSearchChunk): string {
+  if (chunk.source === 'documentation') {
+    return `documentation:${chunk.documentationId ?? chunk.id}`;
+  }
+
+  if (chunk.source === 'task') {
+    return `task:${chunk.taskId ?? chunk.id}`;
+  }
+
+  return `plan:${chunk.planId ?? chunk.id}`;
+}
+
+function requestedMode(mode: string | null): RequestedSearchMode {
+  if (mode === null || mode === 'hybrid') {
+    return 'hybrid';
+  }
+
+  if (mode === 'semantic') {
+    return 'semantic';
+  }
+
+  throw new GraphQLError(
+    `Unknown search mode "${mode}"; expected "hybrid" or "semantic".`,
+    { extensions: { code: 'BAD_USER_INPUT' } },
+  );
+}
+
+function mapChunkToObject(
+  chunk: SemanticSearchChunk,
+  fusedScore: number | null,
+): SearchChunk {
   const obj = new SearchChunk();
 
   obj.content = chunk.content;
+  obj.fusedScore = fusedScore;
   obj.id = chunk.id;
   obj.planId = chunk.planId ?? null;
   obj.planTitle = chunk.planTitle ?? null;
@@ -53,7 +89,7 @@ export class SearchResolver {
   constructor(private readonly embedder: EmbedderService) {}
 
   @Query(() => SearchResult, {
-    description: `Semantic search over plan, task and documentation embeddings. Embeds the query with the server embedder (local nomic-embed-text-v1.5 by default) and returns ranked chunks; when the embedder is unavailable or nothing is embedded yet, answers with Postgres full-text search instead — see mode and reason.`,
+    description: `Search over plans, tasks and documentation. By default hybrid: vector similarity (the server embedder, local nomic-embed-text-v1.5 by default) and Postgres full-text search run together and merge by reciprocal rank fusion, so exact identifiers still surface. Pass mode "semantic" for the vector ranking alone. When the embedder is unavailable or nothing is embedded yet, answers with full-text search only — see mode and reason.`,
   })
   async search(
     @Args('input', { type: () => SearchInput }) input: SearchInput,
@@ -63,25 +99,36 @@ export class SearchResolver {
       MAX_SEARCH_LIMIT,
     );
 
+    const mode = requestedMode(input.mode ?? null);
     const query = input.query?.trim() ?? '';
     if (!query) {
-      return { chunks: [], mode: 'semantic', reason: null };
+      return { chunks: [], mode, reason: null };
     }
 
-    const found = await searchWithFallback({
+    const hybridCandidates = Math.min(
+      limit * HYBRID_CANDIDATE_FACTOR,
+      MAX_SEARCH_LIMIT * HYBRID_CANDIDATE_FACTOR,
+    );
+    const candidates = mode === 'hybrid' ? hybridCandidates : limit;
+    const found = await searchHybrid({
       embed: () => {
         return this.embedder.embed([query], 'query');
       },
+      key: chunkEntityKey,
       lexical: () => {
-        return runLexicalSearch(query, limit);
+        return runLexicalSearch(query, candidates);
       },
+      limit,
+      mode,
       semantic: (vector, model) => {
-        return runSemanticSearch(vector, limit, model);
+        return runSemanticSearch(vector, candidates, model);
       },
     });
     const result = new SearchResult();
 
-    result.chunks = found.chunks.map(mapChunkToObject);
+    result.chunks = found.chunks.map((ranked) => {
+      return mapChunkToObject(ranked.chunk, ranked.fusedScore);
+    });
     result.mode = found.mode;
     result.reason = found.reason;
 
@@ -99,7 +146,7 @@ export class SearchResolver {
     if (!chunk) {
       return null;
     }
-    return mapChunkToObject(chunk);
+    return mapChunkToObject(chunk, null);
   }
 
   @Query(() => ListSourcesResultObject, {

@@ -54,7 +54,7 @@ export const getDocumentToolDescription = `Fetch a single document chunk by id (
 
 export const listSourcesToolDescription = `List knowledge-base sources (plan, task, documentation) and plan titles. Use to discover available collections and plans.`;
 
-export const semanticSearchToolDescription = `Search plans, tasks and docs by meaning (vector search). If the server's embedder is down it falls back to full-text: see mode (semantic|lexical) and reason.`;
+export const semanticSearchToolDescription = `Search plans, tasks and docs by meaning and exact terms (hybrid). If the server's embedder is down it falls back to full-text: see mode and reason.`;
 
 export async function getDocumentToolHandler(
   args: z.infer<typeof getDocumentToolParameters>,
@@ -115,6 +115,18 @@ export async function listSourcesToolHandler(
   });
 }
 
+function searchModeHeader(mode: string, reason: string | null): string {
+  if (mode === 'lexical') {
+    return `Mode: lexical (full-text fallback; reason: ${reason ?? 'unknown'}). Similarity is a ts_rank, not a cosine score.\n\n`;
+  }
+
+  if (mode === 'hybrid') {
+    return `Mode: hybrid (vector + full-text, ranked by reciprocal rank fusion). Similarity is the retriever's own score.\n\n`;
+  }
+
+  return '';
+}
+
 export async function semanticSearchToolHandler(
   args: z.infer<typeof semanticSearchToolParameters>,
 ): Promise<SemanticSearchResult> {
@@ -148,10 +160,7 @@ export async function semanticSearchToolHandler(
       )
       .join('\n\n---\n\n');
 
-    const isLexical = mode === 'lexical';
-    const header = isLexical
-      ? `Mode: lexical (full-text fallback; reason: ${reason ?? 'unknown'}). Similarity is a ts_rank, not a cosine score.\n\n`
-      : '';
+    const header = searchModeHeader(mode, reason);
 
     return {
       structuredContent: { chunks, mode, reason },

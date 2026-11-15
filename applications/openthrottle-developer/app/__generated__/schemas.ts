@@ -1767,6 +1767,7 @@ export function SchedulePlanRunInputSchema(): z.ZodObject<
 export function SearchInputSchema(): z.ZodObject<Properties<SearchInput>> {
   return z.object({
     limit: z.number().nullish(),
+    mode: z.string().nullish(),
     query: z.string().min(1),
   });
 }

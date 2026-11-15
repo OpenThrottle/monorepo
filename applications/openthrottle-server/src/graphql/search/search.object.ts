@@ -13,6 +13,12 @@ export class SearchChunk {
   })
   content!: string;
 
+  @Field(() => Float, {
+    description: `Reciprocal-rank-fusion score when the search mode is "hybrid" (results are ordered by it); null otherwise.`,
+    nullable: true,
+  })
+  fusedScore!: number | null;
+
   @Field(() => String, {
     description: `Chunk UUID from plan_embeddings or task_embeddings.`,
   })
@@ -31,7 +37,7 @@ export class SearchChunk {
   planTitle!: string | null;
 
   @Field(() => Float, {
-    description: `Cosine similarity score (0–1, higher is more relevant).`,
+    description: `The retriever's own score for this chunk: cosine similarity (0–1) from vector search, or a ts_rank when only full-text search found it. In hybrid mode, order by fusedScore instead.`,
   })
   similarity!: number;
 
@@ -74,17 +80,17 @@ export class SearchChunk {
 @ObjectType()
 export class SearchResult {
   @Field(() => [SearchChunk], {
-    description: `Ranked search chunks (plans and tasks) by similarity.`,
+    description: `Ranked search chunks (plans, tasks and documentation): by fusedScore in hybrid mode, otherwise by similarity.`,
   })
   chunks!: SearchChunk[];
 
   @Field(() => String, {
-    description: `How the result was ranked: "semantic" (vector similarity with the configured embedding model) or "lexical" (Postgres full-text search, used when semantic search is unavailable).`,
+    description: `How the result was ranked: "hybrid" (vector similarity and Postgres full-text search merged by reciprocal rank fusion), "semantic" (vector similarity with the configured embedding model) or "lexical" (full-text search only, used when semantic search is unavailable).`,
   })
   mode!: SearchMode;
 
   @Field(() => String, {
-    description: `Why the result is lexical, or null when it is semantic: embedder_unconfigured | embedder_dimension_mismatch | embedder_provider_error | no_embeddings.`,
+    description: `Why the result is lexical, or null when it is hybrid or semantic: embedder_unconfigured | embedder_dimension_mismatch | embedder_provider_error | no_embeddings.`,
     nullable: true,
   })
   reason!: string | null;

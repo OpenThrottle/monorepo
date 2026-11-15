@@ -50,10 +50,11 @@ describe('SearchResolver', () => {
     test('returns empty chunks when query is empty after trim', async () => {
       const result = await resolver.search({
         limit: null,
+        mode: null,
         query: '   ',
       });
 
-      expect(result).toEqual({ chunks: [], mode: 'semantic', reason: null });
+      expect(result).toEqual({ chunks: [], mode: 'hybrid', reason: null });
       expect(embed).not.toHaveBeenCalled();
     });
 
@@ -77,6 +78,7 @@ describe('SearchResolver', () => {
 
       const result = await resolver.search({
         limit: 10,
+        mode: null,
         query: 'test',
       });
 
@@ -86,7 +88,7 @@ describe('SearchResolver', () => {
         expect.objectContaining({ id: 'plan-1', planTitle: 'Plan One' }),
       ]);
       expect(embed).toHaveBeenCalledWith(['test'], 'query');
-      expect(runLexicalSearch).toHaveBeenCalledWith('test', 10);
+      expect(runLexicalSearch).toHaveBeenCalledWith('test', 20);
       expect(runSemanticSearch).not.toHaveBeenCalled();
     });
 
@@ -117,6 +119,7 @@ describe('SearchResolver', () => {
 
       const result = await resolver.search({
         limit: 5,
+        mode: 'semantic',
         query: 'find plans about auth',
       });
 
@@ -156,7 +159,11 @@ describe('SearchResolver', () => {
       vi.mocked(runSemanticSearch).mockResolvedValue([]);
       vi.mocked(runLexicalSearch).mockResolvedValue([]);
 
-      const result = await resolver.search({ limit: 5, query: 'anything' });
+      const result = await resolver.search({
+        limit: 5,
+        mode: null,
+        query: 'anything',
+      });
 
       expect(result).toEqual({
         chunks: [],
@@ -171,6 +178,7 @@ describe('SearchResolver', () => {
 
       await resolver.search({
         limit: 100,
+        mode: 'semantic',
         query: 'test',
       });
 
@@ -187,6 +195,7 @@ describe('SearchResolver', () => {
 
       await resolver.search({
         limit: null,
+        mode: 'semantic',
         query: 'test',
       });
 
@@ -214,6 +223,7 @@ describe('SearchResolver', () => {
 
       const result = await resolver.search({
         limit: 10,
+        mode: 'semantic',
         query: 'notifications',
       });
 
@@ -247,12 +257,90 @@ describe('SearchResolver', () => {
 
       const result = await resolver.search({
         limit: 10,
+        mode: 'semantic',
         query: 'plan',
       });
 
       expect(result.chunks[0]?.sourcePath).toBeNull();
       expect(result.chunks[0]?.sourceRepo).toBeNull();
       expect(result.chunks[0]?.sourceSha).toBeNull();
+    });
+
+    describe('when the mode is hybrid (the default)', () => {
+      test('fuses vector and full-text hits by entity, fetching 2x candidates', async () => {
+        embed.mockResolvedValue(embedded([0.1]));
+        vi.mocked(runSemanticSearch).mockResolvedValue([
+          {
+            content: 'Plan A chunk 1',
+            id: 'pe-a-1',
+            metadata: {},
+            planId: 'plan-a',
+            planTitle: 'A',
+            similarity: 0.9,
+            source: 'plan',
+          },
+          {
+            content: 'Plan A chunk 2',
+            id: 'pe-a-2',
+            metadata: {},
+            planId: 'plan-a',
+            planTitle: 'A',
+            similarity: 0.85,
+            source: 'plan',
+          },
+          {
+            content: 'Plan B chunk',
+            id: 'pe-b',
+            metadata: {},
+            planId: 'plan-b',
+            planTitle: 'B',
+            similarity: 0.8,
+            source: 'plan',
+          },
+        ]);
+        vi.mocked(runLexicalSearch).mockResolvedValue([
+          {
+            content: 'Plan B row',
+            id: 'plan-b',
+            metadata: {},
+            planId: 'plan-b',
+            planTitle: 'B',
+            similarity: 0.5,
+            source: 'plan',
+          },
+        ]);
+
+        const result = await resolver.search({
+          limit: 5,
+          mode: null,
+          query: 'B-only identifier',
+        });
+
+        expect(runSemanticSearch).toHaveBeenCalledWith(
+          [0.1],
+          10,
+          'nomic-embed-text-v1.5',
+        );
+        expect(runLexicalSearch).toHaveBeenCalledWith('B-only identifier', 10);
+        expect(result.mode).toBe('hybrid');
+        expect(result.reason).toBeNull();
+        expect(result.chunks.map((chunk) => chunk.id)).toEqual([
+          'pe-b',
+          'pe-a-1',
+        ]);
+        expect(result.chunks[0]?.fusedScore).toBeCloseTo(1 / 62 + 1 / 61);
+      });
+    });
+
+    describe('when the mode is unknown', () => {
+      test('rejects it as bad user input', async () => {
+        await expect(
+          resolver.search({ limit: 5, mode: 'lexical', query: 'q' }),
+        ).rejects.toMatchObject({
+          extensions: { code: 'BAD_USER_INPUT' },
+        });
+        expect(embed).not.toHaveBeenCalled();
+      });
     });
   });
 
