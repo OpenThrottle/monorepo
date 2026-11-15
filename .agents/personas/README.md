@@ -1,6 +1,26 @@
 # Agent personas (`.agents/personas/`)
 
-**Personas** are lightweight **layer-1 prompt profiles** for Ralph and Cursor: they steer tone, priorities, and review lens for a run. They do **not** replace repo rules, skills, backend selection, or the OpenThrottle plan/task workflow.
+**Personas** are lightweight **layer-1 prompt profiles** for agent runs: they steer tone, priorities, and review lens for a run. They do **not** replace repo rules, skills, backend selection, or the OpenThrottle plan/task workflow.
+
+## The personas
+
+| id                            | Lens                                        | Reach for it when                                                          |
+| ----------------------------- | ------------------------------------------- | -------------------------------------------------------------------------- |
+| [`architect`](./architect.md) | System design, boundaries, schema evolution | New modules or packages, cross-package refactors, GraphQL schema changes   |
+| [`growth`](./growth.md)       | Adoption, docs, messaging                   | Shipping a CLI or MCP feature, writing docs, error messages, release notes |
+| [`legal`](./legal.md)         | Licensing, privacy, secrets, compliance     | External integrations, auth or license-key flows, data collection          |
+| [`product`](./product.md)     | Developer UX, scope, acceptance criteria    | Scoping UI/UX, onboarding or plan/task workflow changes before building    |
+| [`qa`](./qa.md)               | Test strategy, edge cases, CI parity        | Review before merge, bug fixes, regression risk, flaky tests               |
+
+Each file's frontmatter `description` carries the full **USE WHEN** triggers.
+
+## Who reads them today
+
+- **The Ralph runner** — `workflow-ralph --prompt-file .agents/personas/<id>.md` (below). Ralph is slated for retirement in favour of OT Loop.
+- **You, by hand** — attach the file in Claude Code or Cursor (`@.agents/personas/architect.md`) for a review pass.
+- **The OT database** — `pnpm run database:import-agent-assets` copies each persona into `custom_prompts` (this README and `_template.md` are skipped). That is an index for search, not a runtime input.
+
+**OT Loop does not read personas.** Neither `skills/ot-loop/SKILL.md` nor the headless job (`packages/openthrottle-agentic-loop`, [design](../../docs/workflows/ot-loop-job.md)) takes a persona or prompt file. The likely future consumer is the per-task critic panel in OT plan `012fa4b0` (correctness / conventions / taste / security lenses); until that lands, do not document persona wiring for OT Loop.
 
 ## Personas vs skills vs Ralph
 
@@ -39,7 +59,7 @@ pnpm exec workflow-ralph --plan <plan-uuid> \
 
 Precedence: **CLI → env → `.workflow-ralph.json` → built-ins**. See [tools/workflows/README.md](../../tools/workflows/README.md).
 
-### Cursor (interactive)
+### Claude Code or Cursor (interactive)
 
 1. Open or attach the persona file (e.g. `@.agents/personas/architect.md`) for a chat or review.
 2. For Ralph-driven OT work, keep **`/agents-ralph`** (or `skills/agents-ralph/SKILL.md` via `--prompt-file`) as the execution prompt unless you intentionally substitute a persona-only profile.
@@ -54,8 +74,6 @@ Do **not** duplicate persona bodies into code or shadow copies elsewhere; this f
 | One persona per file                       | `.agents/personas/<id>.md`                                    |
 | Shared template                            | [`_template.md`](./_template.md) — copy when adding a persona |
 | Index                                      | This `README.md`                                              |
-
-Planned first-pass personas: **architect**, **product**, **qa**, **legal**, **growth**.
 
 ## Persona file format
 
