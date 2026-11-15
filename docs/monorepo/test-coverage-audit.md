@@ -14,8 +14,9 @@ written contract; `scripts/audit-test-coverage.ts` is the enforcer.
 > easy-to-work-with files and moved a lot around: great for maintainability, but
 > it opened a large test gap. This audit exists to _surface_ that gap, not to
 > block on it yet. It ships **report-only** (exit 0) and runs in CI as a
-> **non-blocking annotation**. A committed baseline JSON snapshots the current
-> gap; separate remediation plans carve from it. Only once a category's gap
+> **non-blocking annotation**. A JSON inventory, regenerated on demand and
+> never committed, snapshots the current gap; separate remediation plans carve
+> from it. Only once a category's gap
 > closes do we flip _that category_ to `--strict` (and, later, into the husky
 > three-surface gate the way the component-shape gate is mirrored). Never flip a
 > category with an open gap.
@@ -198,13 +199,29 @@ Once a category's gap is closed:
 
 ## Baseline
 
-The current gap is snapshotted at
-[`docs/monorepo/test-coverage-baseline.json`](./test-coverage-baseline.json).
-Regenerate it with:
+The current gap is the output of the audit itself — there is **no committed
+baseline**. Generate the full inventory (grouped by project and category, with
+the complete `missing` and `stub` file lists) when you need one:
 
 ```bash
-pnpm run audit:test-coverage:json > docs/monorepo/test-coverage-baseline.json
+pnpm run --silent audit:test-coverage:json > docs/monorepo/test-coverage-baseline.json
 ```
 
-That file is the **source of truth remediation plans carve from** — grouped by
-project and category, with the full `missing` and `stub` file lists.
+That path is gitignored, so a local regen never lands in a diff. The weekly
+[scheduled audit](../../.github/workflows/test-coverage-audit-scheduled.yml)
+also uploads the same JSON as a `test-coverage-baseline-<run>` artifact (kept
+90 days), so remediation planning can start from a snapshot without a local run.
+
+### Why it is not committed
+
+A committed copy used to live at that path. Nothing gated it, so it rotted: by
+November 2026 it listed 97 files under names the data-file and NestJS naming
+renames had retired, and was missing 866 newer files. Every rename PR had to
+hand-patch entries and rollups that no reader relied on.
+
+A drift gate was the alternative and was rejected. The inventory changes with
+every added, renamed or newly tested file, so a gate comparing the regen with a
+committed copy would fail most UI PRs and force a regen commit on each — a
+blocking tax on an audit whose whole operating principle is report-only until a
+category's gap closes. When a category does flip to `--strict`, the strict run
+is the gate; it needs no snapshot to compare against.
