@@ -494,6 +494,28 @@ var isDestructiveCommand = (command) => {
   return DESTRUCTIVE_COMMAND_PATTERNS.some((pattern) => pattern.test(command));
 };
 
+// packages/openthrottle-agentic-utils/src/utils/run-identity-env.ts
+var RUN_IDENTITY_ENV = {
+  planId: "OPENTHROTTLE_PLAN_ID",
+  planRunId: "OPENTHROTTLE_PLAN_RUN_ID",
+  taskId: "OPENTHROTTLE_TASK_ID"
+};
+var presentOrNull = (value) => {
+  const trimmed = value?.trim() ?? "";
+  return trimmed === "" ? null : trimmed;
+};
+var readRunIdentityEnv = (env) => {
+  const planId = presentOrNull(env[RUN_IDENTITY_ENV.planId]);
+  if (planId === null) {
+    return null;
+  }
+  return {
+    planId,
+    planRunId: presentOrNull(env[RUN_IDENTITY_ENV.planRunId]),
+    taskId: presentOrNull(env[RUN_IDENTITY_ENV.taskId])
+  };
+};
+
 // packages/openthrottle-agentic-utils/src/utils/trajectory/claude-session.ts
 var REGISTER_RUN_TOOL = "__register_plan_run";
 var SUBAGENT_TRANSPORT_BYTES = 160 * 1024;
@@ -698,12 +720,18 @@ var renderInboxOutput = (messages, taskId) => {
   return `${JSON.stringify({ hookSpecificOutput })}
 `;
 };
+var resolveActivePlanRun = (events, env) => {
+  return findActivePlanRun(events) ?? readRunIdentityEnv(env);
+};
 var decideClaudePlanInboxClaim = async (raw, deps) => {
   try {
     const candidate = readCandidate(raw);
     if (candidate === null) return null;
     const readEvents = deps.readEvents ?? readTranscriptTail;
-    const run = findActivePlanRun(readEvents(candidate.transcriptPath));
+    const run = resolveActivePlanRun(
+      readEvents(candidate.transcriptPath),
+      deps.env ?? process.env
+    );
     if (run === null) return null;
     const hasSlot = tryTakeClaimSlot({
       nowMs: deps.nowMs(),
