@@ -56,8 +56,14 @@ Values are resolved by WHERE they live, under one set of names. Highest first:
 | the process environment | always |
 | `~/.openthrottle/.env` | always — this is the one to use |
 
-So to record from your own repository, put this in `~/.openthrottle/.env` and
-nothing anywhere else:
+A local OpenThrottle server writes this for you: on boot it fills its own URL and
+token into `~/.openthrottle/.env`, marking each line `# managed by openthrottle-server`
+and never touching a value you set yourself. Start or restart it and every checkout on
+the machine records. Worktree and containerized servers do not write it (the Docker
+install bind-mounts the host's `~/.openthrottle` so its server can).
+
+For a hosted server, put this in `~/.openthrottle/.env` yourself and nothing anywhere
+else:
 
 ```sh
 OPENTHROTTLE_GRAPHQL_URL=https://your-openthrottle-server/graphql
