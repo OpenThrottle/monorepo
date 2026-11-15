@@ -60,24 +60,17 @@ filled in the same call that creates the tasks.
 
 ## Who populates it
 
-| Who                                          | When                    | How                                                                  |
-| -------------------------------------------- | ----------------------- | -------------------------------------------------------------------- |
-| **The authoring agent** (primary)            | At plan creation        | `wave` per item in `create_tasks` / `create_task`                    |
-| **A human**                                  | Any time after          | `update_task`, or the plan detail route in `openthrottle-developer`  |
-| **The `improve` skill** (upstream, indirect) | When it proposes a plan | Its "dependency ordering" output becomes waves at transcription time |
-| **A server-side inference pass**             | Not in v1               | —                                                                    |
+| Who                               | When             | How                                                                 |
+| --------------------------------- | ---------------- | ------------------------------------------------------------------- |
+| **The authoring agent** (primary) | At plan creation | `wave` per item in `create_tasks` / `create_task`                   |
+| **A human**                       | Any time after   | `update_task`, or the plan detail route in `openthrottle-developer` |
+| **A server-side inference pass**  | Not in v1        | —                                                                   |
 
 **The authoring agent, at create time, is the answer.** The instruction belongs next to the
 `sortOrder` guidance it sits beside — `skills/ot-plans/SKILL.md` § Task sortOrder and
 [authoring-plans-via-mcp.md](./authoring-plans-via-mcp.md) § `sortOrder` is the canonical execution
 order — so an author who is already deciding order decides grouping in the same breath, in the same
 `create_tasks` array. Anything that requires a second pass after creation will be skipped.
-
-**The `improve` skill already produces the input but cannot write it.** It surfaces dependency
-ordering when proposing plans ("characterization tests for module X must land before the refactor
-of X"), which is exactly the raw material for a wave assignment. It writes Markdown plan files
-rather than OT rows, though, so it hands that ordering to whoever transcribes the plan into OT; it
-is not itself a write path for `wave`.
 
 **No server-side inference in v1, deliberately.** Inferring waves means guessing which tasks touch
 disjoint files before any of them has run, from titles and descriptions. A wrong guess here does not

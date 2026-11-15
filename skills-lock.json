@@ -13,12 +13,6 @@
       "skillPath": "skills/productivity/grilling/SKILL.md",
       "computedHash": "368d3dd7251247c69f3656d93dc83c8f1577792eacac2111f1e7981db2ece49b"
     },
-    "improve": {
-      "source": "shadcn/improve",
-      "sourceType": "github",
-      "skillPath": "skills/improve/SKILL.md",
-      "computedHash": "39a9358732dcff385e9e4d3e60b4547856f834e54a58b35e455aa9bd49928c13"
-    },
     "link-workspace-packages": {
       "source": "nrwl/nx-ai-agents-config",
       "sourceType": "github",

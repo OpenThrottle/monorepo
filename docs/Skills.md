@@ -61,7 +61,6 @@ Source of truth: `skills-lock.json`. Grouped by upstream:
 | -------------------------- | ------------------------------------------------- |
 | `steipete/agent-scripts`   | frontend-design                                   |
 | `mattpocock/skills`        | grilling                                          |
-| `shadcn/improve`           | improve                                           |
 | `nrwl/nx-ai-agents-config` | link-workspace-packages, monitor-ci, nx-workspace |
 
 ## OT-owned skills (`skills/`)
@@ -108,8 +107,8 @@ inventories, flag lists and tool enumerations belong in the body, where they cos
 skill is actually opened. See [`skills/README.md`](../skills/README.md) § Writing a skill that earns
 its context.
 
-Keep OT-owned descriptions under ~400 chars. The four still above it
-(`link-workspace-packages`, `improve`, `nx-workspace`, `monitor-ci`) are **vendored** — the adoption
+Keep OT-owned descriptions under ~400 chars. The three still above it
+(`link-workspace-packages`, `nx-workspace`, `monitor-ci`) are **vendored** — the adoption
 policy above forbids hand-editing them, so their length is the price of installing them 1:1.
 
 **Your personal skills do count — against your own budget, not the team's.** The CLI loads them
