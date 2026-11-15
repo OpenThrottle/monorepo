@@ -5,6 +5,8 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
+import { GLOBAL_SIDEBAR_FOOTER_COPY } from '../../data/data.copy';
+import { buildAppReleaseHref } from '../../utils/buildAppReleaseHref';
 import { GlobalProviders } from '../GlobalProviders';
 import type { GlobalSidebarFooterProps } from '../GlobalSidebarFooter';
 import { GlobalSidebarFooter } from '../GlobalSidebarFooter';
@@ -27,7 +29,9 @@ const renderSidebarFooter = (props: GlobalSidebarFooterProps = {}) => {
  * accessible name, then assert its Tailwind color class.
  */
 const getStatusDot = (component: RenderResult): Element => {
-  const link = component.getByRole('link', { name: /System Status/i });
+  const link = component.getByRole('link', {
+    name: GLOBAL_SIDEBAR_FOOTER_COPY.systemStatus,
+  });
   const dot = link.querySelector('div.rounded-full');
   if (dot == null) {
     throw new Error('Expected a status dot inside the System Status link');
@@ -43,28 +47,46 @@ const okHealth: ServerHealthObject = {
 };
 
 describe('GlobalSidebarFooter Component', () => {
-  test('renders system status link', () => {
+  test('renders the system status link to the health endpoint in a new tab', () => {
     const component = renderSidebarFooter();
 
-    expect(
-      component.getByRole('link', { name: /System Status/i }),
-    ).toHaveAttribute('href', expect.stringContaining('/health'));
+    const link = component.getByRole('link', {
+      name: GLOBAL_SIDEBAR_FOOTER_COPY.systemStatus,
+    });
+    expect(link).toHaveAttribute('href', 'http://localhost/api/health');
+    expect(link).toHaveAttribute('target', '_blank');
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer');
   });
 
-  test('renders the app version when one is supplied', () => {
-    const component = renderSidebarFooter({ appVersion: '3.2.1' });
+  describe('when an app version is supplied', () => {
+    test('renders the version badge as a link to its release', () => {
+      const component = renderSidebarFooter({ appVersion: '3.2.1' });
 
-    expect(
-      component.getByTestId('GlobalSidebarFooterVersion'),
-    ).toHaveTextContent('Version 3.2.1');
+      const badge = component.getByRole('link', {
+        name: `${GLOBAL_SIDEBAR_FOOTER_COPY.versionLinkLabel} 3.2.1`,
+      });
+      expect(badge).toHaveAttribute(
+        'href',
+        buildAppReleaseHref('test-app', '3.2.1'),
+      );
+      expect(badge).toHaveAttribute('target', '_blank');
+      expect(badge).toHaveAttribute('rel', 'noopener noreferrer');
+      expect(badge).toHaveAttribute('data-slot', 'badge');
+      expect(badge).toHaveTextContent(
+        `${GLOBAL_SIDEBAR_FOOTER_COPY.versionPrefix}3.2.1`,
+      );
+    });
   });
 
-  test('renders no version line when none is supplied', () => {
-    const component = renderSidebarFooter();
+  describe('when no app version is supplied', () => {
+    test('renders no version badge', () => {
+      const component = renderSidebarFooter();
 
-    expect(
-      component.queryByTestId('GlobalSidebarFooterVersion'),
-    ).not.toBeInTheDocument();
+      expect(
+        component.queryByTestId('GlobalSidebarFooterVersion'),
+      ).not.toBeInTheDocument();
+      expect(component.getAllByRole('link')).toHaveLength(1);
+    });
   });
 
   test('shows the green dot only when every component is ok', () => {
