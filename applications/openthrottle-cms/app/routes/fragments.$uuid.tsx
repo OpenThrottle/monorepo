@@ -61,18 +61,17 @@ export const loader = async (args: Route.LoaderArgs) => {
   const isContainer = editor.ok && editor.value.hasChildren;
   const query = readChildPickerQuery(new URL(args.request.url).searchParams);
   // Only a container can take children, so only it pays for the candidate page.
-  const variables = { ...toChildPickerPaging(query), typename: query.typename };
+  // The server leaves out the fragment, its ancestors (a cycle) and its current children.
+  const variables = {
+    ...toChildPickerPaging(query),
+    childCandidatesOf: cmsFragment.uuid,
+    typename: query.typename,
+  };
   const candidates = isContainer
     ? await fetchPublicGraphql(CmsFragmentChildCandidatesDocument, variables)
     : undefined;
-  const taken = new Set([
-    cmsFragment.uuid,
-    ...(cmsFragment.children ?? []).map((child) => child.uuid),
-  ]);
   const childPicker: FragmentChildPicker = {
-    candidates: (candidates?.cmsFragments.items ?? []).filter(
-      (candidate) => !taken.has(candidate.uuid),
-    ),
+    candidates: candidates?.cmsFragments.items ?? [],
     hasNextPage: candidates?.cmsFragments.hasNextPage ?? false,
     page: query.page,
     typename: query.typename,

@@ -66,9 +66,9 @@ export const FragmentChildAdd = (
   // Markup
   const items = candidates.map((candidate) => {
     return (
-      <SelectItem key={candidate.uuid} value={candidate.uuid}>
+      <SelectItem className="group" key={candidate.uuid} value={candidate.uuid}>
         {candidate.name || candidate.typename}
-        <span className="text-muted-foreground ml-2 text-xs">
+        <span className="text-muted-foreground group-focus:text-accent-foreground ml-2 text-xs">
           {candidate.typename}
         </span>
       </SelectItem>

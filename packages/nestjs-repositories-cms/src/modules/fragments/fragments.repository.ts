@@ -100,4 +100,36 @@ export class FragmentsRepository extends BaseRepository<
 
     return { ok: true, rows };
   }
+
+  /**
+   * @description The fragments that can never become a new child of `parentUuid`: the parent
+   * itself and every ancestor (adding one would close a cycle), plus its current children (the
+   * edge already exists). The ancestor walk is path-guarded and bounded one past
+   * {@link CMS_FRAGMENT_TREE_MAX_DEPTH}, so stored cycles terminate.
+   */
+  @PostgresProfiling()
+  async findChildExclusions(parentUuid: string): Promise<string[]> {
+    const raw: unknown = await this.repository.query(
+      `WITH RECURSIVE ancestors AS (
+         SELECT $1::uuid AS uuid, 0 AS depth, ARRAY[$1::uuid] AS path
+         UNION ALL
+         SELECT c.fragment_uuid, a.depth + 1, a.path || c.fragment_uuid
+           FROM ancestors a
+           JOIN fragments_children c ON c.children_uuid = a.uuid
+          WHERE a.depth < $2
+            AND NOT c.fragment_uuid = ANY (a.path)
+       )
+       SELECT uuid::text AS uuid FROM ancestors
+       UNION
+       SELECT children_uuid::text FROM fragments_children WHERE fragment_uuid = $1`,
+      [parentUuid, CMS_FRAGMENT_TREE_MAX_DEPTH + 1],
+    );
+    const list: unknown[] = Array.isArray(raw) ? raw : [];
+
+    return list.flatMap((row) => {
+      const uuid: unknown = Reflect.get(Object(row), 'uuid');
+
+      return typeof uuid === 'string' ? [uuid] : [];
+    });
+  }
 }

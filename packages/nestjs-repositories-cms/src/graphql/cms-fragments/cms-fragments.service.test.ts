@@ -1,6 +1,6 @@
 import { createMock } from '@golevelup/ts-vitest';
 import type { DataSource, EntityManager, Repository } from 'typeorm';
-import { Equal, IsNull, Or } from 'typeorm';
+import { Equal, In, IsNull, Not, Or } from 'typeorm';
 import { describe, expect, it, vi } from 'vitest';
 
 import { CMS_STATUS } from '../../config/config.constants.ts';
@@ -84,7 +84,13 @@ describe('CmsFragmentsService', () => {
       });
 
       await expect(
-        service.findPage({ isSystem: null, skip: 0, take: 1, typename: null }),
+        service.findPage({
+          childCandidatesOf: null,
+          isSystem: null,
+          skip: 0,
+          take: 1,
+          typename: null,
+        }),
       ).resolves.toMatchObject({
         hasNextPage: true,
         items: [{ uuid: fragment.uuid }],
@@ -106,6 +112,7 @@ describe('CmsFragmentsService', () => {
       });
 
       await service.findPage({
+        childCandidatesOf: null,
         isSystem: false,
         skip: 5,
         take: 10,
@@ -128,6 +135,7 @@ describe('CmsFragmentsService', () => {
       });
 
       await service.findPage({
+        childCandidatesOf: null,
         isSystem: true,
         skip: 0,
         take: 25,
@@ -139,6 +147,52 @@ describe('CmsFragmentsService', () => {
         take: 25,
         where: { isSystem: Equal(true) },
       });
+    });
+
+    it('leaves out the parent, its ancestors and its children for childCandidatesOf', async () => {
+      const { fragmentsRepository, service } = buildService();
+      const parentUuid = '5eed0000-0000-4000-8000-000000000205';
+      const excluded = [parentUuid, '5eed0000-0000-4000-8000-000000000201'];
+
+      vi.mocked(fragmentsRepository.findChildExclusions).mockResolvedValue(
+        excluded,
+      );
+      vi.mocked(fragmentsRepository.findByPaginated).mockResolvedValue({
+        data: [],
+        pageInfo: { currentPage: 1, hasNextPage: false, totalCount: 0 },
+      });
+
+      await service.findPage({
+        childCandidatesOf: parentUuid,
+        isSystem: null,
+        skip: 0,
+        take: 25,
+        typename: null,
+      });
+
+      expect(fragmentsRepository.findChildExclusions).toHaveBeenCalledWith(
+        parentUuid,
+      );
+      expect(fragmentsRepository.findByPaginated).toHaveBeenCalledWith({
+        skip: 0,
+        take: 25,
+        where: { uuid: Not(In(excluded)) },
+      });
+    });
+
+    it('reports a childCandidatesOf that is not a uuid as NOT_FOUND', async () => {
+      const { fragmentsRepository, service } = buildService();
+
+      await expect(
+        service.findPage({
+          childCandidatesOf: 'not-a-uuid',
+          isSystem: null,
+          skip: 0,
+          take: 25,
+          typename: null,
+        }),
+      ).rejects.toMatchObject({ extensions: { code: 'NOT_FOUND' } });
+      expect(fragmentsRepository.findByPaginated).not.toHaveBeenCalled();
     });
   });
 

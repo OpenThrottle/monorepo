@@ -4848,6 +4848,7 @@ export type QueryCmsFragmentArgs = {
 };
 
 export type QueryCmsFragmentsArgs = {
+  childCandidatesOf?: InputMaybe<Scalars['String']['input']>;
   isSystem?: InputMaybe<Scalars['Boolean']['input']>;
   skip?: InputMaybe<Scalars['Int']['input']>;
   take?: InputMaybe<Scalars['Int']['input']>;
