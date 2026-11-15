@@ -58,16 +58,17 @@ describe('RepositoriesSection Component', () => {
   let component: RenderResult;
   let props: RepositoriesSectionProps;
 
-  const renderSection = (): RenderResult => {
+  const renderSection = (initialPath = '/'): RenderResult => {
     component?.unmount();
-    const RoutesStub = createRoutesStub([
-      {
-        Component: () => <RepositoriesSection {...props} />,
-        action: () => null,
-        path: '/',
-      },
-    ]);
-    return render(<RoutesStub />);
+    const Component = () => {
+      return <RepositoriesSection {...props} />;
+    };
+    const RoutesStub = createRoutesStub(
+      ['/', '/settings/repositories'].map((path) => {
+        return { Component, action: () => null, path };
+      }),
+    );
+    return render(<RoutesStub initialEntries={[initialPath]} />);
   };
 
   beforeEach(() => {
@@ -301,6 +302,28 @@ describe('RepositoriesSection Component', () => {
       expect(
         component.getByText(WORKTREE_DISCOVERY_COPY.rejectedBody),
       ).toBeInTheDocument();
+    });
+  });
+
+  describe('when the list spans more than one page', () => {
+    test('links each page to /settings/repositories, keeping the live params', () => {
+      props = {
+        ...props,
+        view: { ...POPULATED_VIEW, limit: 10, page: 1, totalCount: 25 },
+      };
+      component = renderSection(
+        '/settings/repositories?showMissing=1&search=mono&sortBy=name&sortOrder=desc',
+      );
+
+      const href = component
+        .getByRole('link', { name: '2' })
+        .getAttribute('href');
+      const params = new URLSearchParams(href?.split('?')[1]);
+      expect(href).toMatch(/^\/settings\/repositories\?/);
+      expect(params.get('page')).toBe('2');
+      expect(params.get('showMissing')).toBe('1');
+      expect(params.get('search')).toBe('mono');
+      expect(params.get('sortOrder')).toBe('desc');
     });
   });
 });

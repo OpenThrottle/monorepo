@@ -155,13 +155,13 @@ export const RepositoriesSection = (
         status={discoveryStatus}
       />
       <OpenThrottlePagination
+        basePath="/settings/repositories"
         className="mt-8"
         limit={limit}
         page={page}
+        // Clone the live query so route-local `?showMissing=1` survives.
+        preserveSearchParams={true}
         resultLabel="repositories"
-        search={search}
-        sortBy={sortBy}
-        sortOrder={sortOrder}
         total={totalCount}
       />
     </div>
