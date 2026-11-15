@@ -29,6 +29,8 @@
  * the run.
  */
 
+import { hostname as osHostname } from 'node:os';
+
 import {
   clearPlanRunForSession,
   recordPlanRunForSession,
@@ -61,7 +63,11 @@ export const rememberPlanRunForBackstop = (
 
   // Fail-open inside: a write failure is logged to stderr and reported by the return
   // value, never thrown. A missing backstop is a degraded backstop, not a failed run.
+  // This stdio process lives exactly as long as its agent session, so its pid is what
+  // lets the janitor tell "idle, waiting on a human" from "gone".
   recordPlanRunForSession({
+    hostname: osHostname(),
+    pid: process.pid,
     planId,
     planRunId,
     repoRoot: target.repoRoot,

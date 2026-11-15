@@ -982,6 +982,7 @@ export function ForceSettlePlanRunInputSchema(): z.ZodObject<
 > {
   return z.object({
     planRunId: z.string().min(1),
+    reason: z.string().nullish(),
   });
 }
 

@@ -6,6 +6,7 @@ import type {
   TasksService,
 } from '@openthrottle/nestjs-repositories';
 import type { PlanRun } from '@openthrottle/nestjs-repositories';
+import { PLAN_RUN_SETTLED_REASON } from '@openthrottle/nestjs-repositories';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { PlanStatusService } from '../../graphql/plans/plan-status/plan-status.service.ts';
@@ -162,7 +163,10 @@ describe('PlanRunsStaleSweepProcessor', () => {
 
     await processor.process(job);
 
-    expect(settleStaleRun).toHaveBeenCalledWith('run-1');
+    expect(settleStaleRun).toHaveBeenCalledWith(
+      'run-1',
+      PLAN_RUN_SETTLED_REASON.HEARTBEAT_LOST,
+    );
     // Routed through the applyStatusChange chokepoint (PlanStatusService.writeGuardedStatus),
     // attributed to the status-change-system service account, in place of the old bare
     // planRepo.update.
@@ -210,7 +214,10 @@ describe('PlanRunsStaleSweepProcessor', () => {
 
     await processor.process(job);
 
-    expect(settleStaleRun).toHaveBeenCalledWith('run-old');
+    expect(settleStaleRun).toHaveBeenCalledWith(
+      'run-old',
+      PLAN_RUN_SETTLED_REASON.HEARTBEAT_LOST,
+    );
     expect(writeGuardedStatus).not.toHaveBeenCalled();
     expect(taskManagerTransaction).not.toHaveBeenCalled();
   });
@@ -230,7 +237,10 @@ describe('PlanRunsStaleSweepProcessor', () => {
 
     await processor.process(job);
 
-    expect(settleStaleRun).toHaveBeenCalledWith('run-1');
+    expect(settleStaleRun).toHaveBeenCalledWith(
+      'run-1',
+      PLAN_RUN_SETTLED_REASON.HEARTBEAT_LOST,
+    );
     expect(writeGuardedStatus).not.toHaveBeenCalled();
     expect(taskManagerTransaction).not.toHaveBeenCalled();
   });
@@ -276,7 +286,10 @@ describe('PlanRunsStaleSweepProcessor', () => {
 
     await processor.process(job);
 
-    expect(settleStaleRun).toHaveBeenCalledWith('run-abandoned');
+    expect(settleStaleRun).toHaveBeenCalledWith(
+      'run-abandoned',
+      PLAN_RUN_SETTLED_REASON.UNSUPERVISED_AGE,
+    );
     expect(writeGuardedStatus).not.toHaveBeenCalled();
     expect(taskManagerTransaction).not.toHaveBeenCalled();
   });

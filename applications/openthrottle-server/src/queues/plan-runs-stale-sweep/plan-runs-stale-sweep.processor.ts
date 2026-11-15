@@ -4,6 +4,7 @@ import { AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT } from '@openthrottle/nestjs-auth';
 import { defaultWorkerOptions } from '@openthrottle/nestjs-bullmq';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
+  PLAN_RUN_SETTLED_REASON,
   PLAN_RUN_STATUS,
   PlanRunsService,
   PlansService,
@@ -108,7 +109,10 @@ export class PlanRunsStaleSweepProcessor
 
     for (const run of staleRuns) {
       // eslint-disable-next-line no-await-in-loop -- sequential DB writes, one stale run at a time
-      const settled = await this.planRunsService.settleStaleRun(run.id);
+      const settled = await this.planRunsService.settleStaleRun(
+        run.id,
+        PLAN_RUN_SETTLED_REASON.HEARTBEAT_LOST,
+      );
       if (settled?.status === PLAN_RUN_STATUS.STALE) {
         swept += 1;
         affectedPlanIds.add(run.planId);
@@ -160,7 +164,10 @@ export class PlanRunsStaleSweepProcessor
     let unsupervisedSwept = 0;
     for (const run of runs) {
       // eslint-disable-next-line no-await-in-loop -- sequential DB writes, one stale run at a time
-      const settled = await this.planRunsService.settleStaleRun(run.id);
+      const settled = await this.planRunsService.settleStaleRun(
+        run.id,
+        PLAN_RUN_SETTLED_REASON.UNSUPERVISED_AGE,
+      );
       if (settled?.status === PLAN_RUN_STATUS.STALE) {
         unsupervisedSwept += 1;
         this.logger.info(

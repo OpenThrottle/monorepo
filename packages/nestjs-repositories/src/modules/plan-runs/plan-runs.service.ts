@@ -12,6 +12,7 @@ import type {
 } from './plan-run.entity.ts';
 import { PlanRun } from './plan-run.entity.ts';
 import {
+  PLAN_RUN_SETTLED_REASON,
   PLAN_RUN_STARTABLE_STATUSES,
   PLAN_RUN_STATUS,
   STALE_CUTOFF_MS,
@@ -1013,6 +1014,7 @@ export class PlanRunsService {
       .set({
         hostname: null,
         pid: null,
+        settledReason: PLAN_RUN_SETTLED_REASON.SUPERSEDED,
         status: PLAN_RUN_STATUS.STALE,
         workerId: null,
       })
@@ -1223,10 +1225,16 @@ export class PlanRunsService {
    * lost, not how the work ended, and `settleCliPlanRun`'s honest-report statuses must stay the
    * agent's to claim. Deliberately does NOT touch plan or task status — same invariant as the sweep.
    *
+   * `settledReason` names who settled it; a caller that knows more than "a human clicked it" (the
+   * Claude Code Stop janitor) passes its own.
+   *
    * Returns the updated run, or null when the row did not match the guard (already terminal, or
    * heartbeating) — the caller distinguishes the two by reading the row back.
    */
-  async forceSettleUnsupervisedRun(planRunId: string): Promise<PlanRun | null> {
+  async forceSettleUnsupervisedRun(
+    planRunId: string,
+    settledReason: string = PLAN_RUN_SETTLED_REASON.FORCE_SETTLED,
+  ): Promise<PlanRun | null> {
     const repo = this.getRepository();
     const result = await repo
       .createQueryBuilder()
@@ -1234,6 +1242,7 @@ export class PlanRunsService {
       .set({
         hostname: null,
         pid: null,
+        settledReason,
         status: PLAN_RUN_STATUS.STALE,
         workerId: null,
       })
@@ -1256,7 +1265,10 @@ export class PlanRunsService {
    * row that already reached a terminal status. Idempotent. Returns the updated run, or
    * null when the row no longer matched (already settled elsewhere).
    */
-  async settleStaleRun(planRunId: string): Promise<PlanRun | null> {
+  async settleStaleRun(
+    planRunId: string,
+    settledReason: string,
+  ): Promise<PlanRun | null> {
     const repo = this.getRepository();
 
     await repo.update(
@@ -1264,6 +1276,7 @@ export class PlanRunsService {
       {
         hostname: null,
         pid: null,
+        settledReason,
         status: PLAN_RUN_STATUS.STALE,
         workerId: null,
       },

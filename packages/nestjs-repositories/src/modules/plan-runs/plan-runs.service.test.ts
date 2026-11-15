@@ -7,6 +7,7 @@ import { In, Not } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PlanRun } from './plan-run.entity.ts';
+import { PLAN_RUN_SETTLED_REASON } from './plan-runs.constants.ts';
 import { PlanRunsService } from './plan-runs.service.ts';
 
 const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
@@ -1368,6 +1369,7 @@ describe('PlanRunsService', () => {
       expect(qb.set).toHaveBeenCalledWith({
         hostname: null,
         pid: null,
+        settledReason: PLAN_RUN_SETTLED_REASON.SUPERSEDED,
         status: 'STALE',
         workerId: null,
       });
@@ -1450,9 +1452,27 @@ describe('PlanRunsService', () => {
       // STALE, never COMPLETED/CANCELLED/FAILED: a human knows contact was lost, not
       // how the work ended.
       expect(qb.set).toHaveBeenCalledWith(
-        expect.objectContaining({ status: 'STALE' }),
+        expect.objectContaining({
+          settledReason: PLAN_RUN_SETTLED_REASON.FORCE_SETTLED,
+          status: 'STALE',
+        }),
       );
       expect(result?.status).toBe('STALE');
+    });
+
+    it('forceSettleUnsupervisedRun records the caller-supplied reason', async () => {
+      // The Stop janitor knows more than "a human clicked it"; its reason must survive.
+      qbExecute.mockResolvedValueOnce({ affected: 1 });
+      repo.findOne.mockResolvedValueOnce(
+        buildRun({ heartbeatExpected: false, id: 'run-1', status: 'STALE' }),
+      );
+
+      await service.forceSettleUnsupervisedRun('run-1', 'janitor reason');
+      const qb = repo.createQueryBuilder.mock.results[0]?.value;
+
+      expect(qb.set).toHaveBeenCalledWith(
+        expect.objectContaining({ settledReason: 'janitor reason' }),
+      );
     });
 
     it('forceSettleUnsupervisedRun returns null without reading the row back when nothing matched', async () => {
@@ -1524,11 +1544,20 @@ describe('PlanRunsService', () => {
         buildRun({ id: 'run-stale', status: 'STALE' }),
       );
 
-      const result = await service.settleStaleRun('run-stale');
+      const result = await service.settleStaleRun(
+        'run-stale',
+        PLAN_RUN_SETTLED_REASON.HEARTBEAT_LOST,
+      );
 
       expect(repo.update).toHaveBeenCalledWith(
         { id: 'run-stale', status: 'IN_PROGRESS' },
-        { hostname: null, pid: null, status: 'STALE', workerId: null },
+        {
+          hostname: null,
+          pid: null,
+          settledReason: PLAN_RUN_SETTLED_REASON.HEARTBEAT_LOST,
+          status: 'STALE',
+          workerId: null,
+        },
       );
       expect(result?.status).toBe('STALE');
     });
@@ -1540,7 +1569,10 @@ describe('PlanRunsService', () => {
         buildRun({ id: 'run-done', status: 'COMPLETED' }),
       );
 
-      const result = await service.settleStaleRun('run-done');
+      const result = await service.settleStaleRun(
+        'run-done',
+        PLAN_RUN_SETTLED_REASON.HEARTBEAT_LOST,
+      );
 
       expect(result?.status).toBe('COMPLETED');
     });
