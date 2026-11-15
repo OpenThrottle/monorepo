@@ -29,7 +29,9 @@ import { DataSource } from 'typeorm';
 
 const USER_EMAIL: string = process.env.OPENTHROTTLE_BOOTSTRAP_USER_EMAIL?.trim() || 'developer@openthrottle.ai'; // prettier-ignore
 const USER_GITHUB: string = process.env.OPENTHROTTLE_BOOTSTRAP_USER_GITHUB?.trim() || 'openthrottle-developer'; // prettier-ignore
-const USER_PASSWORD: string = process.env.OPENTHROTTLE_BOOTSTRAP_USER_PASSWORD?.trim() || 'FullThrottle2026!'; // prettier-ignore
+// No source default for the password: a literal here would be a known admin
+// login for every Docker-native install that forgot to set one.
+const USER_PASSWORD: string = process.env.OPENTHROTTLE_BOOTSTRAP_USER_PASSWORD?.trim() ?? ''; // prettier-ignore
 
 const ROLE_NAMES = ['admin', 'user', 'viewer'] as const;
 
@@ -130,6 +132,12 @@ async function provisionServiceAccount(
 }
 
 async function main(): Promise<void> {
+  if (USER_PASSWORD === '') {
+    throw new Error(
+      `OPENTHROTTLE_BOOTSTRAP_USER_PASSWORD is not set. Set it in .env (env_file for the compose bootstrap service), then re-run.`,
+    );
+  }
+
   const dataSource = new DataSource(getOpenThrottleTypeOrmOptions());
   await dataSource.initialize();
 

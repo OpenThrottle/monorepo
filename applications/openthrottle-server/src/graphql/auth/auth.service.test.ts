@@ -10,6 +10,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
 import { UsersService } from '@openthrottle/nestjs-repositories';
 import { usersFactory } from '@openthrottle/nestjs-repositories/testing';
+import { GraphQLError } from 'graphql';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { AuthService } from './auth.service.ts';
@@ -219,6 +220,76 @@ describe('AuthService', () => {
       });
 
       expect(result.email).toBe('fallback@example.com');
+    });
+  });
+
+  describe('register gate', () => {
+    const withConfig = (values: Readonly<Record<string, string>>): void => {
+      vi.mocked(configService.get).mockImplementation((key: string) => {
+        return values[key];
+      });
+    };
+
+    const registerInput = { email: 'new@example.com', password: 'pw' };
+
+    test('rejects registration in production when the flag is unset', async () => {
+      withConfig({ NODE_ENV: 'production' });
+
+      const error = await service
+        .register(registerInput)
+        .catch((e: unknown) => {
+          return e;
+        });
+
+      expect(error).toBeInstanceOf(GraphQLError);
+      if (!(error instanceof GraphQLError)) {
+        throw new Error('expected a GraphQLError');
+      }
+      expect(error.extensions).toEqual({
+        code: 'FORBIDDEN',
+        reason: 'REGISTRATION_DISABLED',
+      });
+      expect(usersService.findByEmail).not.toHaveBeenCalled();
+      expect(usersService.create).not.toHaveBeenCalled();
+    });
+
+    test('rejects registration anywhere when the flag is false', async () => {
+      withConfig({
+        NODE_ENV: 'development',
+        OPENTHROTTLE_REGISTRATION_ENABLED: 'false',
+      });
+
+      await expect(service.register(registerInput)).rejects.toBeInstanceOf(
+        GraphQLError,
+      );
+      expect(usersService.create).not.toHaveBeenCalled();
+    });
+
+    test('allows registration in production when the flag is true', async () => {
+      withConfig({
+        NODE_ENV: 'production',
+        OPENTHROTTLE_REGISTRATION_ENABLED: ' TRUE ',
+      });
+      vi.mocked(jwtService.sign).mockReturnValue('signed-jwt');
+      vi.mocked(usersService.findByEmail).mockResolvedValue(null);
+      vi.mocked(usersService.hashPassword).mockResolvedValue('hashed');
+      vi.mocked(usersService.create).mockResolvedValue(mockUser);
+
+      await expect(service.register(registerInput)).resolves.toMatchObject({
+        accessToken: 'signed-jwt',
+      });
+    });
+
+    test('allows registration outside production by default', async () => {
+      withConfig({ NODE_ENV: 'development' });
+      vi.mocked(jwtService.sign).mockReturnValue('signed-jwt');
+      vi.mocked(usersService.findByEmail).mockResolvedValue(null);
+      vi.mocked(usersService.hashPassword).mockResolvedValue('hashed');
+      vi.mocked(usersService.create).mockResolvedValue(mockUser);
+
+      await expect(service.register(registerInput)).resolves.toMatchObject({
+        id: mockUser.id,
+      });
     });
   });
 });

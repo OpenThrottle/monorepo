@@ -12,6 +12,9 @@ import { ENV_SOURCE } from '@openthrottle/react-router-utils';
  * production `API_URL_EXTERNAL` is absent until openthrottle-server ships,
  * so the builder degrades to `connect-src 'self'` with no report directives;
  * preview/local (where the API URL exists) is the observation surface.
+ *
+ * Enforcing in production since the 2026-11 security sweep (plan 9807f277):
+ * the home and download pages hydrate under it with no violations.
  */
 export const getCspOptions = (): BuildCspOptions => {
   return {
@@ -20,6 +23,6 @@ export const getCspOptions = (): BuildCspOptions => {
     additionalImgSrc: [],
     additionalScriptSrc: [],
     apiUrl: ENV_SOURCE.API_URL_EXTERNAL,
-    reportOnly: true,
+    reportOnly: false,
   };
 };

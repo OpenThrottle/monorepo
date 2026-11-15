@@ -91,11 +91,15 @@ describe('getCorsOptions', () => {
   });
 
   describe('when CORS_CREDENTIALS is set', () => {
-    it('honors explicit CORS_CREDENTIALS=true even with allow-all origin', () => {
+    it('refuses explicit CORS_CREDENTIALS=true with an allow-all origin', () => {
       withEnv({ [CORS_CREDENTIALS]: 'true', [CORS_ORIGINS]: '*' }, () => {
-        const opts = getCorsOptions();
-        expect(opts.origin).toBe(true);
-        expect(opts.credentials).toBe(true);
+        expect(() => getCorsOptions()).toThrow(/allow-all origin/);
+      });
+    });
+
+    it('refuses CORS_CREDENTIALS=true when CORS_ORIGINS is unset', () => {
+      withEnv({ [CORS_CREDENTIALS]: 'true', [CORS_ORIGINS]: undefined }, () => {
+        expect(() => getCorsOptions()).toThrow(/allow-all origin/);
       });
     });
 
@@ -107,10 +111,51 @@ describe('getCorsOptions', () => {
     });
 
     it('returns credentials true when CORS_CREDENTIALS is "true"', () => {
-      withEnv({ [CORS_CREDENTIALS]: 'true' }, () => {
-        const opts = getCorsOptions();
-        expect(opts.credentials).toBe(true);
+      withEnv(
+        { [CORS_CREDENTIALS]: 'true', [CORS_ORIGINS]: 'https://a.com' },
+        () => {
+          const opts = getCorsOptions();
+          expect(opts.credentials).toBe(true);
+        },
+      );
+    });
+  });
+
+  describe('when NODE_ENV is production', () => {
+    it('refuses an allow-all origin', () => {
+      withEnv({ [CORS_ORIGINS]: '*', NODE_ENV: 'production' }, () => {
+        expect(() => getCorsOptions()).toThrow(/in production/);
       });
+    });
+
+    it('refuses an unset origin', () => {
+      withEnv({ [CORS_ORIGINS]: undefined, NODE_ENV: 'production' }, () => {
+        expect(() => getCorsOptions()).toThrow(/in production/);
+      });
+    });
+
+    it('allows allow-all with CORS_ALLOW_ALL_ORIGINS=true', () => {
+      withEnv(
+        {
+          CORS_ALLOW_ALL_ORIGINS: 'true',
+          [CORS_ORIGINS]: '*',
+          NODE_ENV: 'production',
+        },
+        () => {
+          const opts = getCorsOptions();
+          expect(opts.origin).toBe(true);
+          expect(opts.credentials).toBe(false);
+        },
+      );
+    });
+
+    it('accepts an explicit allowlist', () => {
+      withEnv(
+        { [CORS_ORIGINS]: 'https://a.com', NODE_ENV: 'production' },
+        () => {
+          expect(getCorsOptions().origin).toEqual(['https://a.com']);
+        },
+      );
     });
   });
 

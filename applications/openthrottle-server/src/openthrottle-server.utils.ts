@@ -90,6 +90,7 @@ import { WorkspaceSettingsGraphqlModule } from './graphql/workspace-settings/wor
 import { MetricsModule } from './metrics/metrics.module.ts';
 import { CspReportsModule } from './modules/csp-reports/csp-reports.module.ts';
 import { DevelopmentModule } from './modules/development/development.module.ts';
+import { isDevelopmentGraphqlEnabled } from './modules/development/development.utils.ts';
 import { GeneratorsModule } from './modules/generators/generators.module.ts';
 import { HealthModule } from './modules/health/health.module.ts';
 import { McpDeveloperModule } from './modules/mcp-developer/mcp-developer.module.ts';
@@ -236,7 +237,8 @@ export const buildImports = (role: ProcessRole): AppModuleImports => {
     );
   }
 
-  if (isApiLike) {
+  // Dev-only test mutations: off in production unless OT_ENABLE_DEV_GRAPHQL=true.
+  if (isApiLike && isDevelopmentGraphqlEnabled(process.env)) {
     imports.push(DevelopmentModule);
   }
 

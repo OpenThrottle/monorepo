@@ -31,8 +31,43 @@ const resolveCredentials = (
 };
 
 /**
+ * @description Refuses CORS settings that let any website make requests with
+ * the user's credentials. Throws (at boot, from main.ts) because a server must
+ * not start with them:
+ * - allow-all origin plus an explicit `CORS_CREDENTIALS=true`, in any
+ *   environment — the middleware would reflect every Origin with credentials;
+ * - allow-all origin under `NODE_ENV=production`, unless
+ *   `CORS_ALLOW_ALL_ORIGINS=true` says it is deliberate.
+ */
+const assertSafeCorsConfig = (
+  originIsAllowAll: boolean,
+  credentials: boolean,
+): void => {
+  if (!originIsAllowAll) {
+    return;
+  }
+
+  if (credentials) {
+    throw new Error(
+      `CORS: CORS_CREDENTIALS=true with an allow-all origin (CORS_ORIGINS unset, empty or "*") lets any site make credentialed requests. Set CORS_ORIGINS to an explicit comma-separated allowlist.`,
+    );
+  }
+
+  const isProduction = process.env.NODE_ENV === 'production';
+  const allowAllOptIn =
+    process.env.CORS_ALLOW_ALL_ORIGINS?.trim().toLowerCase() === 'true';
+
+  if (isProduction && !allowAllOptIn) {
+    throw new Error(
+      `CORS: CORS_ORIGINS is unset, empty or "*" in production. Set it to an explicit comma-separated allowlist, or CORS_ALLOW_ALL_ORIGINS=true if allow-all is intended.`,
+    );
+  }
+};
+
+/**
  * @description Builds CORS options from environment variables for use with app.enableCors().
- * Env: CORS_ORIGINS (comma-separated origins; omit or "*" for allow-all), CORS_CREDENTIALS (true|false), CORS_ALLOWED_METHODS (comma-separated; optional).
+ * Env: CORS_ORIGINS (comma-separated origins; omit or "*" for allow-all), CORS_CREDENTIALS (true|false), CORS_ALLOWED_METHODS (comma-separated; optional), CORS_ALLOW_ALL_ORIGINS (true to permit allow-all in production).
+ * Throws on unsafe combinations — see {@link assertSafeCorsConfig}.
  */
 export function getCorsOptions(): CorsOptions {
   const originsRaw = process.env.CORS_ORIGINS?.trim();
@@ -55,6 +90,8 @@ export function getCorsOptions(): CorsOptions {
   // explicit CORS_CREDENTIALS=true opt-in to enable credentials when the origin
   // is allow-all. With an explicit origin allowlist, credentials default to true.
   const credentials = resolveCredentials(credentialsRaw, originIsAllowAll);
+
+  assertSafeCorsConfig(originIsAllowAll, credentials);
 
   const methods = splitCsv(methodsRaw, (m) => m.trim().toUpperCase());
 

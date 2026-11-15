@@ -14,8 +14,9 @@
 #
 #     The bootstrap step is REQUIRED on a clean volume: the published postgres
 #     image ships the schema but NO login user, and migrations don't create one.
-#     The one-shot `bootstrap` seeds the default user (developer@openthrottle.ai /
-#     FullThrottle2026!, override via OPENTHROTTLE_BOOTSTRAP_USER_*) and provisions
+#     The one-shot `bootstrap` seeds the login user (OPENTHROTTLE_BOOTSTRAP_USER_EMAIL,
+#     default developer@openthrottle.ai; OPENTHROTTLE_BOOTSTRAP_USER_PASSWORD is
+#     required — set it in .env first) and provisions
 #     the MCP service-account credential. Idempotent — safe to re-run.
 #
 #     First boot: the `migrations` service applies the schema + incremental
@@ -242,9 +243,9 @@ services:
   #
   #     NEVER runs on `docker compose up` (own profile; nothing depends on it) —
   #     but REQUIRED once on a clean volume: there is no baked login user, and
-  #     migrations don't create one. Seeds the default user
-  #     (developer@openthrottle.ai / FullThrottle2026!, override via
-  #     OPENTHROTTLE_BOOTSTRAP_USER_*) and, when OPENTHROTTLE_MCP_AUTH_TOKEN is set,
+  #     migrations don't create one. Seeds the login user from
+  #     OPENTHROTTLE_BOOTSTRAP_USER_EMAIL / _PASSWORD (the password is required; it
+  #     fails fast without one) and, when OPENTHROTTLE_MCP_AUTH_TOKEN is set,
   #     upserts the matching `ot_sa` credential the mcp service needs. Idempotent:
   #
   #         docker compose run --rm bootstrap
@@ -261,6 +262,8 @@ services:
         condition: service_healthy
     environment:
       <<: *common
+      OPENTHROTTLE_BOOTSTRAP_USER_EMAIL: ${OPENTHROTTLE_BOOTSTRAP_USER_EMAIL:-}
+      OPENTHROTTLE_BOOTSTRAP_USER_PASSWORD: ${OPENTHROTTLE_BOOTSTRAP_USER_PASSWORD:-}
       OPENTHROTTLE_MCP_AUTH_TOKEN: ${OPENTHROTTLE_MCP_AUTH_TOKEN}
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_HOST: postgres

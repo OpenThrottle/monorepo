@@ -2,6 +2,7 @@ import {
   buildAuthCookie,
   getAuthTokenFromCookie,
 } from '@openthrottle/react-router-auth';
+import { parseFormData } from '@openthrottle/react-router-graphql';
 import { cn } from '@openthrottle/react-router-shadcn';
 import {
   OpenThrottleAuthForm,
@@ -16,6 +17,7 @@ import type { ShouldRevalidateFunction } from 'react-router';
 import { data, redirect, useFetcher } from 'react-router';
 
 import type { Route } from '@/app/routes/+types/_index';
+import { LoginInputSchema } from '~/__generated__/schemas';
 import { SITE_SUBDOMAIN, SITE_TITLE } from '~/global/config/settings';
 import { REDUCED_MOTION_MODES } from '~/global/data/data.appearance-config';
 import { configAtom } from '~/global/data/data.atom-config';
@@ -190,15 +192,18 @@ export default function Component(
 
 export const action = async (args: Route.ActionArgs) => {
   const formData = await args.request.formData();
-  const email = formData.get('email');
-  const password = formData.get('password');
-
-  if (typeof email !== 'string' || typeof password !== 'string') {
-    return data<AuthFetcherData>({ error: 'Email and password are required' });
+  const parsed = parseFormData(formData, LoginInputSchema());
+  if (!parsed.success) {
+    return data<AuthFetcherData>({ error: parsed.error });
   }
 
+  // parseFormData trims values; the password is sent exactly as typed.
+  const rawPassword = formData.get('password');
+  const password =
+    typeof rawPassword === 'string' ? rawPassword : parsed.data.password;
+
   try {
-    const token = await callLoginMutation(email.trim(), password);
+    const token = await callLoginMutation(parsed.data.email, password);
     if (!token) {
       return data<AuthFetcherData>({ error: 'Login failed' });
     }

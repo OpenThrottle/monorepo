@@ -108,7 +108,6 @@ catalog:
   '@nestjs/common': '^12.0.1'
   '@nestjs/config': '^12.0.0'
   '@nestjs/core': '^12.0.1'
-  '@nestjs/devtools-integration': '^12.0.0'
   '@nestjs/graphql': '^14.0.0'
   '@nestjs/jwt': '^12.0.1'
   '@nestjs/passport': '^12.0.0'
@@ -444,6 +443,11 @@ overrides:
   '@tanstack/query-sync-storage-persister': 'catalog:'
   '@tanstack/react-query': 'catalog:'
   '@tanstack/react-query-persist-client': 'catalog:'
+  # fast-uri < 3.1.9 carries host-confusion and parsing advisories
+  # (GHSA-7p8r-x3mc-p8w7 and later). ajv ^8 (via @modelcontextprotocol/sdk,
+  # @rekog/mcp-nest and build tooling) allows ^3.0.1 but the lockfile held
+  # 3.1.4. Drop this once the lockfile resolves >= 3.1.9 without it.
+  'fast-uri@<3.1.9': '^3.1.9'
   'graphql-request': 'catalog:'
   'react': 'catalog:'
   'react-dom': 'catalog:'

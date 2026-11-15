@@ -246,7 +246,6 @@
         "@modelcontextprotocol/sdk",
         "@nestjs/apollo",
         "@nestjs/cli",
-        "@nestjs/devtools-integration",
         "@nestjs/swagger",
         "@nestjs/testing",
         "@nestjs/throttler",

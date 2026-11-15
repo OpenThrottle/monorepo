@@ -2,9 +2,8 @@
  * @description GraphQL module for development/testing flows (e.g. websocket notification).
  * Exposes queries and mutations so the web app can trigger test flows on button click.
  *
- * NOTE: Guards to restrict access (e.g. NODE_ENV checks, role-based access) are not implemented
- * yet and are out of scope for now. Restricting this module to non-production or authorized
- * users is a future concern.
+ * Loaded only when `isDevelopmentGraphqlEnabled` (development.utils.ts) allows it: off
+ * when NODE_ENV=production unless OT_ENABLE_DEV_GRAPHQL=true. See openthrottle-server.utils.ts.
  */
 
 import { Module } from '@nestjs/common';

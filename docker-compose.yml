@@ -95,6 +95,10 @@ x-server: &server
   CORS_CREDENTIALS: ${OPENTHROTTLE_SERVER_CORS_CREDENTIALS}
   CORS_ORIGINS: ${OPENTHROTTLE_SERVER_CORS_ORIGINS}
   JWT_SECRET: ${OPENTHROTTLE_DEVELOPER_JWT_SECRET}
+  # This stack is local-only but runs NODE_ENV=production, where the server
+  # refuses the JWT secret committed in .env.default. Allow it here only; the
+  # standalone install (applications/openthrottle) does not set this.
+  OPENTHROTTLE_ALLOW_DEFAULT_JWT_SECRET: ${OPENTHROTTLE_ALLOW_DEFAULT_JWT_SECRET:-true}
   PORT: ${OPENTHROTTLE_SERVER_PORT}
 
 #############################################################################

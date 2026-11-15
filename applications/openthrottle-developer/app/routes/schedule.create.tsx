@@ -1,4 +1,7 @@
-import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import {
+  executeGraphqlWithAuth,
+  parseFormData,
+} from '@openthrottle/react-router-graphql';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalErrorBoundary,
@@ -20,10 +23,8 @@ import {
 } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
 import { ScheduleForm } from '~/routing/schedule/components/ScheduleForm';
-import {
-  missingScheduleTiming,
-  parseScheduleForm,
-} from '~/routing/schedule/utils/parse-form';
+import { missingScheduleTiming } from '~/routing/schedule/utils/parse-form';
+import { ScheduleFormSchema } from '~/routing/schedule/utils/ScheduleFormSchema';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -97,12 +98,12 @@ export default function Component(
 
 export const action = async (args: Route.ActionArgs) => {
   const form = await args.request.formData();
-  const parsed = parseScheduleForm(form);
-
-  if (!parsed.name || !parsed.prompt || !parsed.driverId) {
-    return { error: 'Name, prompt, provider, and schedule are required.' };
+  const result = parseFormData(form, ScheduleFormSchema);
+  if (!result.success) {
+    return { error: result.error };
   }
 
+  const parsed = result.data;
   const missingTiming = missingScheduleTiming(parsed);
   if (missingTiming !== null) {
     return { error: missingTiming };
