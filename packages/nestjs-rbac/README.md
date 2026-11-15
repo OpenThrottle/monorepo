@@ -119,8 +119,12 @@ app.enableCors(getCorsOptions());
 
 Environment variables (all optional):
 
-- **CORS_ORIGINS** – Comma-separated allowed origins; omit or `*` for allow-all.
-- **CORS_CREDENTIALS** – `true` or `false`. When unset, defaults to `true` if an explicit `CORS_ORIGINS` allowlist is provided, and `false` when the origin is allow-all (omitted/empty/`*`). This avoids the unsafe "allow any origin with credentials" default; set `CORS_CREDENTIALS=true` to opt in explicitly.
+- **CORS_ORIGINS** – Comma-separated allowed origins; omit or `*` for allow-all. Allow-all is refused when `NODE_ENV=production` unless `CORS_ALLOW_ALL_ORIGINS=true`.
+- **CORS_CREDENTIALS** – `true` or `false`. When unset, defaults to `true` if an explicit `CORS_ORIGINS` allowlist is provided, and `false` when the origin is allow-all (omitted/empty/`*`). `CORS_CREDENTIALS=true` with an allow-all origin is refused in every environment, because it would let any site make credentialed requests.
+- **CORS_ALLOW_ALL_ORIGINS** – `true` to permit an allow-all origin in production (credentials stay off).
+
+`getCorsOptions()` throws on a refused combination, so the server fails at boot rather than starting with an unsafe policy.
+
 - **CORS_ALLOWED_METHODS** – Comma-separated HTTP methods; defaults to `GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS`.
 
 ## Installation

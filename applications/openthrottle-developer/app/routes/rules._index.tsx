@@ -1,4 +1,7 @@
-import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import {
+  executeGraphqlWithAuth,
+  parseFormData,
+} from '@openthrottle/react-router-graphql';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalErrorBoundary,
@@ -30,6 +33,7 @@ import {
   parseRulesEnabledFilterFromSearchParams,
   parseRulesSearchFromSearchParams,
 } from '~/routing/rules/utils/parsers';
+import { RulesActionFormSchema } from '~/routing/rules/utils/RulesActionFormSchema';
 
 export const handle: GlobalLayoutBreadcrumbsHandle = {
   breadcrumb: () => 'Rules',
@@ -134,52 +138,45 @@ export default function Component(
 
 export const action = async (args: Route.ActionArgs) => {
   const formData = await args.request.formData();
-  const intent = formData.get('intent');
+  const parsed = parseFormData(formData, RulesActionFormSchema, {
+    allow: [],
+  });
+  if (!parsed.success) {
+    return { ruleError: parsed.error };
+  }
 
   try {
-    if (intent === 'deleteRule') {
-      const id = formData.get('id');
-      if (typeof id !== 'string' || id === '') {
-        return { ruleError: 'Rule id is required.' };
-      }
+    if (parsed.data.intent === 'deleteRule') {
       await executeGraphqlWithAuth(
         args.request,
         RulesDeleteTagActionRuleDocument,
-        { input: { id } },
+        { input: { id: parsed.data.id } },
       );
       return { ruleSaved: true };
     }
 
-    if (intent === 'toggleEnabled') {
-      const raw = formData.get('rule');
-      if (typeof raw !== 'string' || raw === '') {
-        return { ruleError: 'Rule payload is required.' };
-      }
-      const value: TagActionRuleRowData = JSON.parse(raw);
-      await executeGraphqlWithAuth(
-        args.request,
-        RulesUpsertTagActionRuleDocument,
-        {
-          input: {
-            actionPayloadJson: value.actionPayloadJson,
-            actionType: value.actionType,
-            enabled: !value.enabled,
-            environment: value.environment,
-            id: value.id,
-            status: value.status,
-            tagAll: value.tagAll,
-            title: value.title,
-          },
+    const value = parsed.data.rule;
+    await executeGraphqlWithAuth(
+      args.request,
+      RulesUpsertTagActionRuleDocument,
+      {
+        input: {
+          actionPayloadJson: value.actionPayloadJson,
+          actionType: value.actionType,
+          enabled: !value.enabled,
+          environment: value.environment,
+          id: value.id,
+          status: value.status,
+          tagAll: value.tagAll,
+          title: value.title,
         },
-      );
-      return { ruleSaved: true };
-    }
+      },
+    );
+    return { ruleSaved: true };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     return { ruleError: message };
   }
-
-  return { ruleError: `Unknown intent "${String(intent)}".` };
 };
 
 export const ErrorBoundary = GlobalErrorBoundary;

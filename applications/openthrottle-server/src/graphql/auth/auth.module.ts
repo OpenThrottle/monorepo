@@ -11,6 +11,7 @@ import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 
 import { AuthResolver } from './auth.resolver.ts';
 import { AuthService } from './auth.service.ts';
+import { assertJwtSecretAllowed } from './auth.utils.ts';
 import { GqlLocalAuthGuard } from './guards/gql-local-auth.guard.ts';
 import { GqlLocalCredentialsGuard } from './guards/gql-local-credentials.guard.ts';
 import { LocalStrategy } from './strategies/local.strategy.ts';
@@ -24,8 +25,18 @@ import { SubscriptionTokenResolver } from './subscription-token/subscription-tok
       useFactory: (config: ConfigService) => {
         const audience = config.get<string>('JWT_AUDIENCE');
         const issuer = config.get<string>('JWT_ISSUER');
+        const secret = config.get<string>('JWT_SECRET');
+
+        assertJwtSecretAllowed({
+          allowDefault: config.get<string>(
+            'OPENTHROTTLE_ALLOW_DEFAULT_JWT_SECRET',
+          ),
+          nodeEnv: config.get<string>('NODE_ENV'),
+          secret,
+        });
+
         return {
-          secret: config.get<string>('JWT_SECRET'),
+          secret,
           signOptions: {
             algorithm: 'HS256',
             expiresIn: '24h',

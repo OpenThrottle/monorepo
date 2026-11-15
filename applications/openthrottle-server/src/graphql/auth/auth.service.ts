@@ -10,6 +10,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import type { User } from '@openthrottle/nestjs-repositories';
 import { UsersService } from '@openthrottle/nestjs-repositories';
+import { GraphQLError } from 'graphql';
 
 import type { RegisterInput } from './register.input.ts';
 import type { RegisterResultObject } from './register-result.object.ts';
@@ -67,6 +68,12 @@ export class AuthService {
    * @throws ConflictException if email is already registered
    */
   async register(input: RegisterInput): Promise<RegisterResultObject> {
+    if (!this.isRegistrationEnabled()) {
+      throw new GraphQLError('Registration is disabled on this server', {
+        extensions: { code: 'FORBIDDEN', reason: 'REGISTRATION_DISABLED' },
+      });
+    }
+
     const existing = await this.usersService.findByEmail(input.email);
     if (existing) {
       throw new ConflictException('Email already registered');
@@ -92,5 +99,29 @@ export class AuthService {
       email: user.email ?? input.email,
       id: user.id,
     };
+  }
+
+  /**
+   * @description Open self-registration mints a JWT for anyone who can reach
+   * GraphQL, and most mutations are authenticated-only (Path A, ADR
+   * 18e16dfc). So it is on by default only outside production; production
+   * needs an explicit `OPENTHROTTLE_REGISTRATION_ENABLED=true`, and any
+   * environment can turn it off with `false`.
+   */
+  private isRegistrationEnabled(): boolean {
+    const flag = this.configService
+      .get<string>('OPENTHROTTLE_REGISTRATION_ENABLED')
+      ?.trim()
+      .toLowerCase();
+
+    if (flag === 'true') {
+      return true;
+    }
+
+    if (flag === 'false') {
+      return false;
+    }
+
+    return this.configService.get<string>('NODE_ENV') !== 'production';
   }
 }

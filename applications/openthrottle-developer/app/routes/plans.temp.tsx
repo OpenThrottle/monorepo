@@ -1,4 +1,7 @@
-import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import {
+  executeGraphqlWithAuth,
+  parseFormData,
+} from '@openthrottle/react-router-graphql';
 import { Button, Input, Label } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleBreadcrumbs } from '@openthrottle/react-router-ui';
 import { GlobalScreen } from '@openthrottle/react-router-ui-global';
@@ -13,6 +16,7 @@ import {
   TestWorkflowDocument,
 } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
+import { PlanTempFormSchema } from '~/routing/plans/utils/PlanTempFormSchema';
 
 export const loader = async (_args: Route.LoaderArgs) => {
   return {};
@@ -85,31 +89,21 @@ export default function Component(
 export const action = async (args: Route.ActionArgs) => {
   const formData = await args.request.formData();
 
-  console.log('action', formData);
+  const parsed = parseFormData(formData, PlanTempFormSchema);
+  if (!parsed.success) {
+    return { error: parsed.error };
+  }
+  const { branch, planId } = parsed.data;
 
-  const planIdEntry = formData.get('planId');
-  const planId = typeof planIdEntry === 'string' ? planIdEntry : '';
-
-  const branchEntry = formData.get('branch');
-  const trimmedBranch =
-    typeof branchEntry === 'string' ? branchEntry.trim() : '';
-  const branch = trimmedBranch === '' ? 'main' : trimmedBranch;
-
-  const result = await executeGraphqlWithAuth(
-    args.request,
-    TestWorkflowDocument,
-    {
-      input: {
-        branch,
-        planId,
-        ralph: {
-          ralphDebugCli: RalphNestedDebugCli.Verbose,
-        },
+  await executeGraphqlWithAuth(args.request, TestWorkflowDocument, {
+    input: {
+      branch,
+      planId,
+      ralph: {
+        ralphDebugCli: RalphNestedDebugCli.Verbose,
       },
     },
-  );
-
-  console.log('result', result);
+  });
 
   return {};
 };

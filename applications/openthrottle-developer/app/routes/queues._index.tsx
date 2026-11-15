@@ -1,4 +1,7 @@
-import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import {
+  executeGraphqlWithAuth,
+  parseFormData,
+} from '@openthrottle/react-router-graphql';
 import { Button } from '@openthrottle/react-router-shadcn';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
@@ -25,6 +28,7 @@ import { QueuesStats } from '~/routing/queues/components/QueuesStats';
 import { QueuesTable } from '~/routing/queues/components/QueuesTable';
 import { QueueStateChart } from '~/routing/queues/components/QueueStateChart';
 import { QueueStatRow } from '~/routing/queues/components/QueueStatRow';
+import { QueueControlFormSchema } from '~/routing/queues/utils/QueueControlFormSchema';
 import { summarizeQueues } from '~/routing/queues/utils/summarizeQueues';
 
 type HandleData = Route.ComponentProps['loaderData'];
@@ -124,13 +128,14 @@ export default function Component(
 
 export const action = async (args: Route.ActionArgs) => {
   const formData = await args.request.formData();
-  const intent = formData.get('intent');
-  const queueNameRaw = formData.get('queueName');
-  const queueName = typeof queueNameRaw === 'string' ? queueNameRaw.trim() : '';
-
-  if (queueName === '') {
-    return { error: 'Queue name is required.' };
+  const parsed = parseFormData(formData, QueueControlFormSchema, {
+    allow: [],
+  });
+  if (!parsed.success) {
+    return { error: parsed.error };
   }
+
+  const { intent, queueName } = parsed.data;
 
   if (intent === 'pauseQueue') {
     const { pauseQueue } = await executeGraphqlWithAuth(
@@ -146,21 +151,17 @@ export const action = async (args: Route.ActionArgs) => {
     return { paused: pauseQueue.queueName ?? queueName };
   }
 
-  if (intent === 'resumeQueue') {
-    const { resumeQueue } = await executeGraphqlWithAuth(
-      args.request,
-      QueuesResumeQueueDocument,
-      { input: { queueName } },
-    );
+  const { resumeQueue } = await executeGraphqlWithAuth(
+    args.request,
+    QueuesResumeQueueDocument,
+    { input: { queueName } },
+  );
 
-    if (!resumeQueue?.success) {
-      return { error: resumeQueue?.error ?? 'Failed to resume queue.' };
-    }
-
-    return { resumed: resumeQueue.queueName ?? queueName };
+  if (!resumeQueue?.success) {
+    return { error: resumeQueue?.error ?? 'Failed to resume queue.' };
   }
 
-  return {};
+  return { resumed: resumeQueue.queueName ?? queueName };
 };
 
 export const ErrorBoundary = GlobalErrorBoundary;

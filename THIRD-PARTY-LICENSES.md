@@ -1218,7 +1218,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `fast-sha256` | 1.3.0 | Unlicense | [Dmitry Chestnykh](https://github.com/dchest/fast-sha256-js#readme) |
 | `fast-string-truncated-width` | 3.0.3 | MIT | [source](https://github.com/fabiospampinato/fast-string-truncated-width#readme) |
 | `fast-string-width` | 3.0.2 | MIT | [source](https://github.com/fabiospampinato/fast-string-width#readme) |
-| `fast-uri` | 3.1.4 | BSD-3-Clause | [Vincent Le Goff](https://github.com/fastify/fast-uri) |
+| `fast-uri` | 3.1.9 | BSD-3-Clause | [Vincent Le Goff](https://github.com/fastify/fast-uri) |
 | `fast-wrap-ansi` | 0.2.0, 0.2.2 | MIT | [James Garbutt](https://github.com/43081j/fast-wrap-ansi#readme) |
 | `fast-xml-builder` | 1.3.0 | MIT | [Amit Gupta](https://github.com/NaturalIntelligence/fast-xml-builder#readme) |
 | `fast-xml-parser` | 5.10.1 | MIT | [Amit Gupta](https://github.com/NaturalIntelligence/fast-xml-parser#readme) |

@@ -8,9 +8,11 @@ import {
   TestWorkflowDocument,
 } from '~/__generated__/graphql';
 
-vi.mock('@openthrottle/react-router-graphql', () => ({
-  executeGraphqlWithAuth: vi.fn(),
-}));
+vi.mock('@openthrottle/react-router-graphql', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('@openthrottle/react-router-graphql')>();
+  return { ...actual, executeGraphqlWithAuth: vi.fn() };
+});
 
 const { executeGraphqlWithAuth } =
   await import('@openthrottle/react-router-graphql');
@@ -100,5 +102,12 @@ describe('routes/plans.temp action', () => {
     const result = await action(buildActionArgs({ planId: 'plan-1' }));
 
     expect(result).toEqual({});
+  });
+
+  test('returns a structured error when the plan id is missing', async () => {
+    const result = await action(buildActionArgs({ branch: 'main' }));
+
+    expect(result).toEqual({ error: expect.any(String) });
+    expect(mockExecute).not.toHaveBeenCalled();
   });
 });

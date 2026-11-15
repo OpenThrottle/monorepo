@@ -23,10 +23,11 @@ import { createLogger } from './utils/logger.ts';
 
 const logger = createLogger();
 
-// Overridable for shared / real installs via OPENTHROTTLE_BOOTSTRAP_USER_EMAIL
-// / _PASSWORD (see .env.default); defaults to the known local dev account.
+// Email defaults to the known local dev account. The password has NO source
+// default: a literal here would be a known admin login for any database this
+// ran against. Local setup gets it from `.env` (copied from `.env.default`).
 const USER_EMAIL: string = process.env.OPENTHROTTLE_BOOTSTRAP_USER_EMAIL?.trim() || 'developer@openthrottle.ai'; // prettier-ignore
-const USER_PASSWORD: string = process.env.OPENTHROTTLE_BOOTSTRAP_USER_PASSWORD?.trim() || 'FullThrottle2026!'; // prettier-ignore
+const USER_PASSWORD: string = process.env.OPENTHROTTLE_BOOTSTRAP_USER_PASSWORD?.trim() ?? ''; // prettier-ignore
 const USER_GITHUB: string = process.env.OPENTHROTTLE_BOOTSTRAP_USER_GITHUB?.trim() || 'openthrottle-developer'; // prettier-ignore
 
 const DEFAULT_USER = {
@@ -179,6 +180,14 @@ class SilentLoggerService extends LoggerService {
 }
 
 async function main(): Promise<void> {
+  if (USER_PASSWORD === '') {
+    logger.fail(
+      `OPENTHROTTLE_BOOTSTRAP_USER_PASSWORD is not set. Set it in .env (local setup copies it from .env.default) or the environment, then re-run.`,
+    );
+
+    process.exit(1);
+  }
+
   const dataSource = new DataSource(getOpenThrottleTypeOrmOptions());
   await dataSource.initialize();
 
