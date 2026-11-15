@@ -44,3 +44,16 @@ export type CmsWriteDecision =
 export interface CmsWriteAuthorizer {
   authorize(principal: AuthPrincipal): Promise<CmsWriteDecision>;
 }
+
+/**
+ * @description Whether the caller behind a request may write cms content: the writer when it
+ * may, otherwise the error code a mutation fails with and why.
+ * @public
+ */
+export type CmsWriteAccess =
+  | {
+      readonly code: 'FORBIDDEN' | 'UNAUTHENTICATED';
+      readonly ok: false;
+      readonly reason: string;
+    }
+  | { readonly ok: true; readonly writer: CmsWriter };

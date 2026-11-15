@@ -9,6 +9,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { CmsProfilesService } from '../cms-profiles/cms-profiles.service.ts';
 import { CmsWriteGuard } from './cms-write-access.guard.ts';
+import { CmsWriteAccessService } from './cms-write-access.service.ts';
 import type { CmsWriteAuthorizer } from './cms-write-access.types.ts';
 
 const buildContext = (
@@ -39,7 +40,10 @@ const buildGuard = (authorizer: CmsWriteAuthorizer | null) => {
 
   return {
     cmsProfilesService,
-    guard: new CmsWriteGuard(moduleRef, cmsProfilesService),
+    guard: new CmsWriteGuard(
+      new CmsWriteAccessService(moduleRef),
+      cmsProfilesService,
+    ),
   };
 };
 

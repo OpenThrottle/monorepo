@@ -33,7 +33,8 @@ export async function fetchPublicGraphql<
 /**
  * @description Server-side GraphQL request as the signed-in user: forwards the auth cookie on
  * `request` as a bearer token (unauthenticated when there is none). For cms mutations, which
- * `CmsWriteGuard` refuses without a user allowed `cms:write`. Route actions only.
+ * `CmsWriteGuard` refuses without a user allowed `cms:write`, and for layout reads, which show
+ * DRAFT and DISABLED layouts only to such a user. Route loaders and actions only.
  *
  * @returns The `data` portion of the response. Rejects like {@link fetchPublicGraphql}; a GraphQL
  * error rejects with a `GraphqlResponseError` carrying the server's `extensions`.

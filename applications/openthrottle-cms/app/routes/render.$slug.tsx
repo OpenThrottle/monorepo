@@ -1,3 +1,4 @@
+import { CMS_STATUS } from '@openthrottle/react-router-cms-core';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import * as React from 'react';
@@ -7,7 +8,7 @@ import type { Route } from '@/app/routes/+types/render.$slug';
 import type { RenderCmsLayoutQuery } from '~/__generated__/graphql';
 import { RenderCmsLayoutDocument } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
-import { fetchPublicGraphql } from '~/global/utils/graphql.server';
+import { fetchAuthGraphql } from '~/global/utils/graphql.server';
 import { toCmsFragments } from '~/global/utils/toCmsFragments';
 import { CmsLayoutPage } from '~/routing/render/components/CmsLayoutPage';
 import { RENDER_COPY } from '~/routing/render/data/data.copy';
@@ -20,16 +21,19 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
 };
 
 /**
- * @description Loads the live layout for `slug` from openthrottle-server's public `cmsLayout`
- * query. Throws a 404 response for an unknown or soft-deleted slug and a 502 when the API fails,
- * both rendered by the error boundary.
+ * @description Loads the layout for `slug` from openthrottle-server's public `cmsLayout` query,
+ * forwarding the visitor's sign-in. The server returns only ACTIVE layouts unless the caller may
+ * write cms content, so a DRAFT or DISABLED slug is a 404 for the public and a preview for an
+ * editor; a preview is sent `Cache-Control: private, no-store` so no shared cache keeps it.
+ * Throws a 404 response for an unknown, unpublished or soft-deleted slug and a 502 when the API
+ * fails, both rendered by the error boundary.
  */
 export const loader = async (args: Route.LoaderArgs) => {
-  const { params } = args;
+  const { params, request } = args;
   let layout: RenderCmsLayoutQuery['cmsLayout'];
 
   try {
-    const result = await fetchPublicGraphql(RenderCmsLayoutDocument, {
+    const result = await fetchAuthGraphql(request, RenderCmsLayoutDocument, {
       slug: params.slug,
     });
 
@@ -47,11 +51,21 @@ export const loader = async (args: Route.LoaderArgs) => {
     throw data(RENDER_COPY.notFound, { status: 404, statusText: 'Not Found' });
   }
 
-  return {
+  const page = {
     fragments: toCmsFragments(layout.fragments),
     name: layout.name,
     slug: layout.slug,
   };
+
+  if (layout.status !== CMS_STATUS.ACTIVE) {
+    return data(page, { headers: { 'Cache-Control': 'private, no-store' } });
+  }
+
+  return data(page);
+};
+
+export const headers: Route.HeadersFunction = (args) => {
+  return args.loaderHeaders;
 };
 
 export const links: Route.LinksFunction = () => {

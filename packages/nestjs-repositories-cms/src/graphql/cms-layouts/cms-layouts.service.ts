@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { GraphQLError } from 'graphql';
+import type { FindOptionsWhere } from 'typeorm';
 import { DataSource } from 'typeorm';
 
 import { CMS_CONNECTION, CMS_STATUS } from '../../config/config.constants.ts';
@@ -31,6 +32,7 @@ import type {
   CmsLayoutObject,
   CmsLayoutSummaryObject,
 } from './cms-layouts.object.ts';
+import type { CmsLayoutAudience } from './cms-layouts.types.ts';
 
 /** The typename a layout's root fragment is created with. */
 const CMS_LAYOUT_ROOT_TYPENAME = 'Layout';
@@ -52,13 +54,16 @@ export class CmsLayoutsService {
   ) {}
 
   /**
-   * @description One bounded page of live layouts, without their trees.
+   * @description One bounded page of live layouts the audience may see, without their trees.
    */
-  async findPage(options: {
-    readonly skip: number;
-    readonly take: number;
-  }): Promise<CmsLayoutListResult> {
-    const page = await this.layoutsRepository.findByPaginated(options);
+  async findPage(
+    options: { readonly skip: number; readonly take: number },
+    audience: CmsLayoutAudience,
+  ): Promise<CmsLayoutListResult> {
+    const page = await this.layoutsRepository.findByPaginated({
+      ...options,
+      where: toAudienceWhere(audience, {}),
+    });
 
     return {
       hasNextPage: page.pageInfo.hasNextPage,
@@ -192,23 +197,35 @@ export class CmsLayoutsService {
   }
 
   /**
-   * @description The live layout with this slug, or null.
+   * @description The live layout with this slug, or null, including when the audience may not
+   * see it (an unpublished layout reads as missing to the public).
    */
-  async findBySlug(slug: string): Promise<CmsLayoutObject | null> {
-    const layout = await this.layoutsRepository.findOne({ where: { slug } });
+  async findBySlug(
+    slug: string,
+    audience: CmsLayoutAudience,
+  ): Promise<CmsLayoutObject | null> {
+    const layout = await this.layoutsRepository.findOne({
+      where: toAudienceWhere(audience, { slug }),
+    });
 
     return layout ? this.withTree(layout) : null;
   }
 
   /**
-   * @description The live layout with this uuid, or null.
+   * @description The live layout with this uuid, or null, including when the audience may not
+   * see it.
    */
-  async findByUuid(uuid: string): Promise<CmsLayoutObject | null> {
+  async findByUuid(
+    uuid: string,
+    audience: CmsLayoutAudience,
+  ): Promise<CmsLayoutObject | null> {
     if (!isCmsUuid(uuid)) {
       return null;
     }
 
-    const layout = await this.layoutsRepository.findOne({ where: { uuid } });
+    const layout = await this.layoutsRepository.findOne({
+      where: toAudienceWhere(audience, { uuid }),
+    });
 
     return layout ? this.withTree(layout) : null;
   }
@@ -260,4 +277,19 @@ export class CmsLayoutsService {
 
     return toCmsLayoutObject(layout, buildCmsFragmentTreeNodes(result.rows));
   }
+}
+
+/**
+ * @description Narrows a layout `where` to what the audience may see: the public only ACTIVE
+ * layouts, an editor every status.
+ */
+function toAudienceWhere(
+  audience: CmsLayoutAudience,
+  where: FindOptionsWhere<Layout>,
+): FindOptionsWhere<Layout> {
+  if (audience === 'editor') {
+    return where;
+  }
+
+  return { ...where, status: CMS_STATUS.ACTIVE };
 }

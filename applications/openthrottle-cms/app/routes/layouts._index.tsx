@@ -12,7 +12,7 @@ import { CmsLayoutsDocument } from '~/__generated__/graphql';
 import { GlobalTable } from '~/global/components/GlobalTable';
 import { SITE_TITLE } from '~/global/config/settings';
 import { CMS_LAYOUT_COLUMNS } from '~/global/data/data.cms-table-columns';
-import { fetchPublicGraphql } from '~/global/utils/graphql.server';
+import { fetchAuthGraphql } from '~/global/utils/graphql.server';
 import { getLayoutRowHref } from '~/routing/layouts/utils/layout-rows';
 
 type HandleData = Route.ComponentProps['loaderData'];
@@ -22,8 +22,15 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   links: (_match) => [],
 };
 
-export const loader = async (_args: Route.LoaderArgs) => {
-  const { cmsLayouts } = await fetchPublicGraphql(CmsLayoutsDocument);
+/**
+ * @description Lists layouts as the signed-in user: an editor (`cms:write`) sees every status,
+ * anyone else only ACTIVE layouts.
+ */
+export const loader = async (args: Route.LoaderArgs) => {
+  const { cmsLayouts } = await fetchAuthGraphql(
+    args.request,
+    CmsLayoutsDocument,
+  );
 
   return { cmsLayouts };
 };

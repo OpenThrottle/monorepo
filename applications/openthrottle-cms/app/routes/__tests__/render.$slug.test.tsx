@@ -7,9 +7,9 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { Route } from '@/app/routes/+types/render.$slug';
 import { RenderCmsLayoutDocument } from '~/__generated__/graphql';
 
-const fetchPublicGraphql = vi.fn();
+const fetchAuthGraphql = vi.fn();
 
-vi.mock('~/global/utils/graphql.server', () => ({ fetchPublicGraphql }));
+vi.mock('~/global/utils/graphql.server', () => ({ fetchAuthGraphql }));
 
 const { default: Component, loader } = await import('../render.$slug');
 
@@ -46,36 +46,56 @@ const SEEDED_LAYOUT = {
   ],
   name: 'Welcome',
   slug: 'welcome',
+  status: 'ACTIVE',
   uuid: 'layout',
 };
 
 describe('routes/render.$slug.tsx', () => {
   beforeEach(() => {
-    fetchPublicGraphql.mockReset();
+    fetchAuthGraphql.mockReset();
   });
 
   describe('loader', () => {
-    describe('when the layout exists', () => {
-      test('queries cmsLayout by slug and returns the fragment tree', async () => {
-        fetchPublicGraphql.mockResolvedValue({ cmsLayout: SEEDED_LAYOUT });
+    describe('when an ACTIVE layout has the slug', () => {
+      test('queries cmsLayout as the visitor and returns the fragment tree, cacheable', async () => {
+        fetchAuthGraphql.mockResolvedValue({ cmsLayout: SEEDED_LAYOUT });
 
         const result = await loader(buildLoaderArgs('welcome'));
 
-        expect(fetchPublicGraphql).toHaveBeenCalledWith(
+        expect(fetchAuthGraphql).toHaveBeenCalledWith(
+          expect.any(Request),
           RenderCmsLayoutDocument,
           { slug: 'welcome' },
         );
-        expect(result.fragments).toHaveLength(1);
-        expect(result.fragments[0]?.children[0]).toMatchObject({
+        expect(result.data.fragments).toHaveLength(1);
+        expect(result.data.fragments[0]?.children[0]).toMatchObject({
           properties: { copy: 'Hello', heading: 'h1' },
           typename: 'Heading',
+        });
+        expect(result.init).toBeNull();
+      });
+    });
+
+    describe('when an editor previews a DRAFT layout', () => {
+      test('renders it and keeps it out of shared caches', async () => {
+        fetchAuthGraphql.mockResolvedValue({
+          cmsLayout: { ...SEEDED_LAYOUT, status: 'DRAFT' },
+        });
+
+        const result = await loader(buildLoaderArgs('welcome'));
+
+        expect(result.data.fragments).toHaveLength(1);
+        expect(result.init).toMatchObject({
+          headers: { 'Cache-Control': 'private, no-store' },
         });
       });
     });
 
-    describe('when no live layout has the slug', () => {
+    describe('when no layout the visitor may see has the slug', () => {
+      // The server returns null for a DRAFT or DISABLED slug unless the caller may write cms
+      // content, so the public gets the same 404 as for an unknown slug.
       test('throws a 404 response', async () => {
-        fetchPublicGraphql.mockResolvedValue({ cmsLayout: null });
+        fetchAuthGraphql.mockResolvedValue({ cmsLayout: null });
 
         await expect(loader(buildLoaderArgs('missing'))).rejects.toMatchObject({
           init: { status: 404 },
@@ -85,7 +105,7 @@ describe('routes/render.$slug.tsx', () => {
 
     describe('when the API fails', () => {
       test('throws a 502 response', async () => {
-        fetchPublicGraphql.mockRejectedValue(new Error('ECONNREFUSED'));
+        fetchAuthGraphql.mockRejectedValue(new Error('ECONNREFUSED'));
 
         await expect(loader(buildLoaderArgs('welcome'))).rejects.toMatchObject({
           init: { status: 502 },
@@ -96,7 +116,7 @@ describe('routes/render.$slug.tsx', () => {
 
   describe('Component', () => {
     test('renders the layout blocks', async () => {
-      fetchPublicGraphql.mockResolvedValue({ cmsLayout: SEEDED_LAYOUT });
+      fetchAuthGraphql.mockResolvedValue({ cmsLayout: SEEDED_LAYOUT });
       const loaderData = await loader(buildLoaderArgs('welcome'));
       const Stub = createRoutesStub([
         { Component, loader: () => loaderData, path: '/render/:slug' },

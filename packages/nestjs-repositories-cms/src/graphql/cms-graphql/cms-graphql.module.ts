@@ -23,10 +23,12 @@ import { CmsSchemaValidationService } from '../cms-schema-validation/cms-schema-
 import { CmsSchemasResolver } from '../cms-schemas/cms-schemas.resolver.ts';
 import { CmsSchemasService } from '../cms-schemas/cms-schemas.service.ts';
 import { CmsWriteGuard } from '../cms-write-access/cms-write-access.guard.ts';
+import { CmsWriteAccessService } from '../cms-write-access/cms-write-access.service.ts';
 
 /**
  * @description The cms GraphQL API: code-first resolvers over the cms repositories. Reads are
- * `@Public()`; every mutation runs `CmsWriteGuard`, which needs the host to provide
+ * `@Public()`, but layout reads show unpublished (DRAFT, DISABLED) layouts only to a caller
+ * `CmsWriteAccessService` lets write; every mutation runs `CmsWriteGuard`, which needs the host to provide
  * `CMS_WRITE_AUTHORIZER` (without it, writes are refused). Lives here,
  * next to the data layer, by owner decision; imported by `NestjsRepositoriesCmsModule`, so an
  * app that imports that module and runs `GraphQLModule` serves it. Without `GraphQLModule` the
@@ -43,6 +45,7 @@ import { CmsWriteGuard } from '../cms-write-access/cms-write-access.guard.ts';
     CmsProfilesService,
     CmsSchemaValidationService,
     CmsSchemasService,
+    CmsWriteAccessService,
   ],
   imports: [
     FragmentsModule,
@@ -67,6 +70,7 @@ import { CmsWriteGuard } from '../cms-write-access/cms-write-access.guard.ts';
     CmsSchemaValidationService,
     CmsSchemasResolver,
     CmsSchemasService,
+    CmsWriteAccessService,
     CmsWriteGuard,
   ],
 })

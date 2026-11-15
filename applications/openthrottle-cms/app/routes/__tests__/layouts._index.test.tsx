@@ -7,9 +7,9 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { Route } from '@/app/routes/+types/layouts._index';
 import { CmsLayoutsDocument } from '~/__generated__/graphql';
 
-const fetchPublicGraphql = vi.fn();
+const fetchAuthGraphql = vi.fn();
 
-vi.mock('~/global/utils/graphql.server', () => ({ fetchPublicGraphql }));
+vi.mock('~/global/utils/graphql.server', () => ({ fetchAuthGraphql }));
 
 const { default: Component, loader } = await import('../layouts._index');
 
@@ -43,11 +43,11 @@ const renderRoute = () => {
 
 describe('routes/layouts._index.tsx', () => {
   beforeEach(() => {
-    fetchPublicGraphql.mockReset();
+    fetchAuthGraphql.mockReset();
   });
 
   describe('loader', () => {
-    test('queries cmsLayouts and returns the page', async () => {
+    test('queries cmsLayouts as the signed-in user and returns the page', async () => {
       const page = buildPage([
         {
           createdAt: '2026-11-01T00:00:00.000Z',
@@ -60,18 +60,21 @@ describe('routes/layouts._index.tsx', () => {
         },
       ]);
 
-      fetchPublicGraphql.mockResolvedValue({ cmsLayouts: page });
+      fetchAuthGraphql.mockResolvedValue({ cmsLayouts: page });
 
       await expect(loader(buildLoaderArgs())).resolves.toEqual({
         cmsLayouts: page,
       });
-      expect(fetchPublicGraphql).toHaveBeenCalledWith(CmsLayoutsDocument);
+      expect(fetchAuthGraphql).toHaveBeenCalledWith(
+        expect.any(Request),
+        CmsLayoutsDocument,
+      );
     });
   });
 
   describe('with rows', () => {
     test('renders the heading and a table row per item', async () => {
-      fetchPublicGraphql.mockResolvedValue({
+      fetchAuthGraphql.mockResolvedValue({
         cmsLayouts: buildPage([
           {
             createdAt: '2026-11-01T00:00:00.000Z',
@@ -101,7 +104,7 @@ describe('routes/layouts._index.tsx', () => {
 
   describe('without rows', () => {
     test('renders the empty state', async () => {
-      fetchPublicGraphql.mockResolvedValue({ cmsLayouts: buildPage([]) });
+      fetchAuthGraphql.mockResolvedValue({ cmsLayouts: buildPage([]) });
 
       const component = renderRoute();
 

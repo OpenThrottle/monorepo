@@ -20,7 +20,7 @@ import { GlobalTable } from '~/global/components/GlobalTable';
 import { SITE_TITLE } from '~/global/config/settings';
 import { CMS_LAYOUT_DETAIL_FIELDS } from '~/global/data/data.cms-detail-fields';
 import { CMS_LAYOUT_FRAGMENT_COLUMNS } from '~/global/data/data.cms-table-columns';
-import { fetchPublicGraphql } from '~/global/utils/graphql.server';
+import { fetchAuthGraphql } from '~/global/utils/graphql.server';
 import { requireRecord } from '~/global/utils/requireRecord';
 import { toCmsFragments } from '~/global/utils/toCmsFragments';
 import { LAYOUT_DETAIL_COPY } from '~/routing/layouts/data/data.copy';
@@ -39,8 +39,12 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   links: (_match) => [],
 };
 
+/**
+ * @description Loads the layout as the signed-in user: an editor (`cms:write`) sees a DRAFT or
+ * DISABLED layout, anyone else gets a 404 for one.
+ */
 export const loader = async (args: Route.LoaderArgs) => {
-  const result = await fetchPublicGraphql(CmsLayoutDetailDocument, {
+  const result = await fetchAuthGraphql(args.request, CmsLayoutDetailDocument, {
     uuid: args.params.layoutUUID,
   });
   const cmsLayout = requireRecord(result.cmsLayoutByUuid, 'Layout');
