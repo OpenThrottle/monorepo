@@ -24,6 +24,7 @@ import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 
 import type { StatusChangeSystemAccountService } from '../../graphql/work-ledger/status-change-system-account/status-change-system-account.service.ts';
 import type { WorkLedgerCaptureService } from '../../graphql/work-ledger/work-ledger-capture/work-ledger-capture.service.ts';
+import type { NotificationsService } from '../../notifications/notifications.service.ts';
 import { ActionExecutorRegistry } from './action-executor-registry/action-executor-registry.service.ts';
 import type { ActionExecutor } from './action-executor-registry/action-executor-registry.types.ts';
 import { PlanRulesProcessor } from './plan-rules.processor.ts';
@@ -77,6 +78,9 @@ describe('PlanRulesProcessor.process', () => {
   let resolveStatusChangeSystemAccountId: Mock<
     StatusChangeSystemAccountService['resolveId']
   >;
+  let emitTaskStatusChanged: Mock<
+    NotificationsService['emitTaskStatusChanged']
+  >;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -117,9 +121,12 @@ describe('PlanRulesProcessor.process', () => {
       .fn()
       .mockResolvedValue('status-change-system-account-id');
 
+    emitTaskStatusChanged = vi.fn();
+
     processor = new PlanRulesProcessor(
       registry,
       createMock<LoggerService>(),
+      createMock<NotificationsService>({ emitTaskStatusChanged }),
       plansService,
       ruleApplicationsService,
       createMock<StatusChangeSystemAccountService>({
@@ -306,6 +313,20 @@ describe('PlanRulesProcessor.process', () => {
       taskId: 'orphaned-task-1',
       to: 'SKIPPED',
     });
+    // Published once the orphaning transaction has returned, never from inside it.
+    expect(emitTaskStatusChanged).toHaveBeenCalledWith({
+      planId,
+      status: 'SKIPPED',
+      taskId: 'orphaned-task-1',
+    });
+  });
+
+  it('publishes nothing when no task was soft-closed', async () => {
+    registry.register(executor);
+
+    await processor.process(buildJob());
+
+    expect(emitTaskStatusChanged).not.toHaveBeenCalled();
   });
 
   it('logs (does not throw) when the orphaned-task capture fails — non-fatal', async () => {

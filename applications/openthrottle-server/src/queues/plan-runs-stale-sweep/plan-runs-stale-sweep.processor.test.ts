@@ -12,6 +12,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { PlanStatusService } from '../../graphql/plans/plan-status/plan-status.service.ts';
 import type { StatusChangeSystemAccountService } from '../../graphql/work-ledger/status-change-system-account/status-change-system-account.service.ts';
 import type { WorkLedgerCaptureService } from '../../graphql/work-ledger/work-ledger-capture/work-ledger-capture.service.ts';
+import type { NotificationsService } from '../../notifications/notifications.service.ts';
 import { PlanRunsStaleSweepProcessor } from './plan-runs-stale-sweep.processor.ts';
 import type { PlanRunsStaleSweepJob } from './plan-runs-stale-sweep.types.ts';
 
@@ -45,6 +46,8 @@ describe('PlanRunsStaleSweepProcessor', () => {
   let processor: PlanRunsStaleSweepProcessor;
 
   const findStaleInProgressRuns = vi.fn();
+  const emitPlanStatusChanged = vi.fn();
+  const emitTaskStatusChanged = vi.fn();
   const findStaleUnsupervisedRuns = vi.fn();
   const settleStaleRun = vi.fn();
   const findRecentByPlanId = vi.fn();
@@ -84,6 +87,8 @@ describe('PlanRunsStaleSweepProcessor', () => {
 
   beforeEach(() => {
     findStaleInProgressRuns.mockReset().mockResolvedValue([]);
+    emitPlanStatusChanged.mockReset();
+    emitTaskStatusChanged.mockReset();
     findStaleUnsupervisedRuns.mockReset().mockResolvedValue([]);
     // settleStaleRun echoes a STALE row by default (successful settle).
     settleStaleRun
@@ -133,6 +138,10 @@ describe('PlanRunsStaleSweepProcessor', () => {
 
     processor = new PlanRunsStaleSweepProcessor(
       createMock<LoggerService>(),
+      createMock<NotificationsService>({
+        emitPlanStatusChanged,
+        emitTaskStatusChanged,
+      }),
       planRunsService,
       plansService,
       planStatusService,
@@ -203,6 +212,16 @@ describe('PlanRunsStaleSweepProcessor', () => {
         to: 'PENDING',
       }),
     );
+    // Published after both writes, so an open /plans* view drops the stranded run.
+    expect(emitPlanStatusChanged).toHaveBeenCalledWith({
+      planId: 'plan-1',
+      status: 'PENDING',
+    });
+    expect(emitTaskStatusChanged).toHaveBeenCalledWith({
+      planId: 'plan-1',
+      status: 'PENDING',
+      taskId: 'task-1',
+    });
   });
 
   it('does NOT reset a plan that still has a live (IN_PROGRESS) run', async () => {
@@ -270,6 +289,8 @@ describe('PlanRunsStaleSweepProcessor', () => {
 
     expect(writeGuardedStatus).toHaveBeenCalledTimes(1);
     expect(taskManagerTransaction).not.toHaveBeenCalled();
+    expect(emitPlanStatusChanged).not.toHaveBeenCalled();
+    expect(emitTaskStatusChanged).not.toHaveBeenCalled();
   });
 
   it('settles an over-age unsupervised run and NEVER touches plan or task status', async () => {

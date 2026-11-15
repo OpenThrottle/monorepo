@@ -17,6 +17,7 @@ import { PlanStatusService } from '../../graphql/plans/plan-status/plan-status.s
 import { applyBulkTaskStatusChange } from '../../graphql/work-ledger/bulk-task-status-change/bulk-task-status-change.utils.ts';
 import { StatusChangeSystemAccountService } from '../../graphql/work-ledger/status-change-system-account/status-change-system-account.service.ts';
 import { WorkLedgerCaptureService } from '../../graphql/work-ledger/work-ledger-capture/work-ledger-capture.service.ts';
+import { NotificationsService } from '../../notifications/notifications.service.ts';
 import {
   PLAN_RUNS_STALE_SWEEP_BATCH_SIZE,
   PLAN_RUNS_STALE_SWEEP_QUEUE_NAME,
@@ -58,6 +59,7 @@ export class PlanRunsStaleSweepProcessor
 {
   constructor(
     private readonly logger: LoggerService,
+    private readonly notifications: NotificationsService,
     private readonly planRunsService: PlanRunsService,
     private readonly plansService: PlansService,
     private readonly planStatusService: PlanStatusService,
@@ -239,19 +241,32 @@ export class PlanRunsStaleSweepProcessor
     // one status_change artifact per row (from='IN_PROGRESS' here, but read off the row rather
     // than assumed — see applyBulkTaskStatusChange). Same system-account/non-fatal attribution as
     // the plan-row reset immediately above: a ledger hiccup must not block the reset itself.
-    await this.tasksService.getRepository().manager.transaction((manager) =>
-      applyBulkTaskStatusChange({
-        actorKind: AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
-        actorSub: actorSub ?? undefined,
-        captureFailureIsFatal: false,
-        fromStatuses: ['IN_PROGRESS'],
-        logger: this.logger,
-        manager,
+    const resetTasks = await this.tasksService
+      .getRepository()
+      .manager.transaction((manager) =>
+        applyBulkTaskStatusChange({
+          actorKind: AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
+          actorSub: actorSub ?? undefined,
+          captureFailureIsFatal: false,
+          fromStatuses: ['IN_PROGRESS'],
+          logger: this.logger,
+          manager,
+          planId,
+          toStatus: 'PENDING',
+          workLedgerCapture: this.workLedgerCapture,
+        }),
+      );
+
+    // Publish after both transactions commit, so an open /plans* view refreshes off the reset
+    // instead of showing a run that no longer exists.
+    this.notifications.emitPlanStatusChanged({ planId, status: 'PENDING' });
+    for (const task of resetTasks) {
+      this.notifications.emitTaskStatusChanged({
         planId,
-        toStatus: 'PENDING',
-        workLedgerCapture: this.workLedgerCapture,
-      }),
-    );
+        status: 'PENDING',
+        taskId: task.taskId,
+      });
+    }
 
     this.logger.info(
       `Reset stranded plan ${planId} (+ IN_PROGRESS tasks) to PENDING after sweeping a stale run`,

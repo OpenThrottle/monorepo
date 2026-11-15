@@ -3,6 +3,7 @@ import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 
 import { WorkLedgerGraphqlModule } from '../../graphql/work-ledger/work-ledger.module.ts';
+import { NotificationsModule } from '../../notifications/notifications.module.ts';
 import { PlanContextAvailabilityModule } from '../../services/plan-context-availability/plan-context-availability.module.ts';
 import { TaskPromotionQueueModule } from '../task-promotion/task-promotion.module.ts';
 import { ActionExecutorRegistry } from './action-executor-registry/action-executor-registry.service.ts';
@@ -26,6 +27,7 @@ import { PromoteTaskToPlanExecutor } from './promote-task-to-plan.executor.ts';
   imports: [
     LoggerModule,
     NestjsRepositoriesModule,
+    NotificationsModule,
     PlanContextAvailabilityModule,
     PlanRulesQueueProducerModule,
     TaskPromotionQueueModule,

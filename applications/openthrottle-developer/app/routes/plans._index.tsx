@@ -26,6 +26,7 @@ import { PlansTable } from '~/routing/plans/components/PlansTable';
 import { PlansToolbar } from '~/routing/plans/components/PlansToolbar';
 import { parseStatusesFromSearchParams } from '~/routing/plans/config/status-options';
 import { PLANS_ONBOARDING } from '~/routing/plans/data/data.copy';
+import { usePlansIndexRevalidation } from '~/routing/plans/hooks/usePlansIndexRevalidation';
 import {
   buildStatusFilterUrls,
   hasActivePlansFilters,
@@ -111,6 +112,8 @@ export default function Component(
     () => buildStatusFilterUrls(searchParams),
     [searchParams],
   );
+  // Refresh the list when any plan or task changes status, from any writer.
+  usePlansIndexRevalidation();
 
   // Setup
   const isCard = searchParams.get('view') === 'card';

@@ -45,6 +45,7 @@ import {
 import { StatusChangeSystemAccountService } from '../../graphql/work-ledger/status-change-system-account/status-change-system-account.service.ts';
 import { WORK_LEDGER_CAPTURE_FAILED_MARKER } from '../../graphql/work-ledger/work-ledger.constants.ts';
 import { WorkLedgerCaptureService } from '../../graphql/work-ledger/work-ledger-capture/work-ledger-capture.service.ts';
+import { NotificationsService } from '../../notifications/notifications.service.ts';
 import { ActionExecutorRegistry } from './action-executor-registry/action-executor-registry.service.ts';
 import {
   PLAN_RULES_QUEUE_NAME,
@@ -66,6 +67,7 @@ export class PlanRulesProcessor
   constructor(
     private readonly executorRegistry: ActionExecutorRegistry,
     private readonly logger: LoggerService,
+    private readonly notifications: NotificationsService,
     private readonly plansService: PlansService,
     private readonly ruleApplicationsService: RuleApplicationsService,
     private readonly statusChangeSystemAccount: StatusChangeSystemAccountService,
@@ -294,12 +296,26 @@ export class PlanRulesProcessor
       Promise.resolve(),
     );
     const reinjected = reinjectable.length;
+    // The capture runs inside orphanUnmatchedApplications' transaction, so only collect there and
+    // publish once it has committed: a rollback must never announce a soft-close.
+    const softClosedTaskIds: string[] = [];
     const orphaned =
       await this.ruleApplicationsService.orphanUnmatchedApplications(
         planId,
         matched.map((action) => action.ruleId),
-        (capture) => this.captureOrphanedTaskStatusChange(capture),
+        async (capture) => {
+          await this.captureOrphanedTaskStatusChange(capture);
+          softClosedTaskIds.push(capture.taskId);
+        },
       );
+
+    for (const taskId of softClosedTaskIds) {
+      this.notifications.emitTaskStatusChanged({
+        planId,
+        status: SOFT_CLOSED_TASK_STATUS,
+        taskId,
+      });
+    }
 
     if (orphaned > 0) {
       this.logger.info(

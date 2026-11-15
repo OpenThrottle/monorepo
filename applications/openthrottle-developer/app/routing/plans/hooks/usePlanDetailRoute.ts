@@ -26,6 +26,7 @@ import {
   workspaceRepositoriesReadyAtom,
 } from '~/routing/plans/data/data.atom-plan';
 import { PLAN_RUN_GATING_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_DETAIL_REVALIDATE_EVENTS } from '~/routing/plans/data/data.plan-lifecycle-events';
 import { usePlanDeferredValue } from '~/routing/plans/hooks/usePlanDeferredValue';
 import { usePlanLifecycleRevalidation } from '~/routing/plans/hooks/usePlanLifecycleRevalidation';
 import { usePlanOutputStream } from '~/routing/plans/hooks/usePlanOutputStream';
@@ -232,7 +233,10 @@ export const usePlanDetailRoute = (
 
   // Revalidate plan detail when a plan/task lifecycle notification arrives over
   // the GraphQL subscription (server-side topic routing by planId).
-  usePlanLifecycleRevalidation(planId);
+  usePlanLifecycleRevalidation(planId, {
+    events: PLAN_DETAIL_REVALIDATE_EVENTS,
+    taskId: undefined,
+  });
 
   // 🔌 Short Circuit
   const editorWorkingDirectory = resolvePlanWorkingDirectory({
