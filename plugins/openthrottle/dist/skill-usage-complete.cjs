@@ -2141,6 +2141,7 @@ var CONVERSATION_STREAM_CHUNK_KINDS = {
   usage: "usage",
   usageLimit: "usage_limit"
 };
+var CONVERSATION_DENIED_ACTIONS_KEY = "deniedActions";
 
 // packages/openthrottle-agentic-utils/src/utils/conversation-backend/cursor-agent/events.ts
 var asString = (value) => {
@@ -2545,6 +2546,19 @@ var toolArgumentsOf = (toolInfo) => {
   }
   return toolInfo ?? null;
 };
+var deniedActionsOf = (value) => {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  const labels = /* @__PURE__ */ new Set();
+  for (const entry of value) {
+    const label = isRecord(entry) ? asString2(entry.display_name) ?? asString2(entry.action) : asString2(entry);
+    if (label !== void 0 && label.trim() !== "") {
+      labels.add(label);
+    }
+  }
+  return [...labels];
+};
 var TOOL_STEP_FAILED = "Tool step failed";
 var toolOutputOf = (toolInfo) => {
   if (isRecord(toolInfo) && toolInfo.output !== void 0) {
@@ -2666,13 +2680,20 @@ function createAntigravityEventMapper() {
     if (name === "result" && isRecord(payload)) {
       const failed = asString2(payload.status) !== "SUCCESS";
       const errorMessage = asString2(payload.error);
+      const deniedActions = deniedActionsOf(payload.denied_actions);
+      const usageMetadata = {
+        model: model ?? null,
+        usage: payload.usage ?? null
+      };
+      const hasDenials = deniedActions.length > 0;
+      const metadata = hasDenials ? { ...usageMetadata, [CONVERSATION_DENIED_ACTIONS_KEY]: deniedActions } : usageMetadata;
       return [
         {
           delta: "",
           done: true,
           error: failed ? errorMessage ?? "antigravity reported an error" : null,
           kind: CONVERSATION_STREAM_CHUNK_KINDS.usage,
-          metadata: { model: model ?? null, usage: payload.usage ?? null }
+          metadata
         }
       ];
     }
