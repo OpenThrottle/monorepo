@@ -17,6 +17,6 @@ on disk_. Sweep your own memory/rules store the same way — and remember `.agen
 here wrote them.
 
 **Report.** Show the user **every** hit as `file:line` with the offending text quoted. Never edit
-anything found this way before showing it. A known live example, so you know what a real hit looks
-like: the vendored `improve` skill instructs writing plans to `plans/NNN-short-slug.md` with a
-`plans/README.md` index — directly against the rule.
+anything found this way before showing it. What a real hit looks like: an external skill that
+instructs writing plans to `plans/NNN-short-slug.md` with a `plans/README.md` index — directly
+against the rule. (The vendored `improve` skill did exactly this until it was uninstalled.)

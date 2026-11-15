@@ -11,9 +11,6 @@ pnpm dlx skills add https://github.com/nrwl/nx-ai-agents-config --skill link-wor
 # https://github.com/steipete/agent-scripts#agent-scripts
 pnpm dlx skills add https://github.com/steipete/agent-scripts --skill frontend-design --agent universal
 
-# https://github.com/shadcn/improve#improve
-pnpm dlx skills add https://github.com/shadcn/improve --skill improve --agent universal
-
 # https://github.com/mattpocock/skills?tab=readme-ov-file
 pnpm dlx skills add https://github.com/mattpocock/skills --skill grilling --agent universal
 
