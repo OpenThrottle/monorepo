@@ -1,20 +1,33 @@
 ################################################################################
 #
-#   Vercel deploy via GitHub Actions (OT plan fc12183a).
+#   Vercel deploy via GitHub Actions (OT plans fc12183a, 4d1f8955).
 #
 #   Owns Vercel build+deploy in-repo instead of Vercel's dashboard Git
-#   integration: `vercel pull` -> Nx build with VERCEL=1 (so vercelPreset()
-#   emits .vercel/output, reusing the Nx cache + affected) ->
-#   `vercel deploy --prebuilt`. Preview on PRs, production on push to main.
-#   See docs/deploy/vercel-github-actions-design.md.
+#   integration: `vercel pull` -> `vercel build` -> `vercel deploy --prebuilt`.
+#
+#   Today it runs on MANUAL DISPATCH ONLY. Automatic deploys still go through
+#   the dashboard Git integration, so the push/pull_request triggers are kept
+#   but both jobs skip on them (see the 💰 notes on each job). To deploy:
+#
+#     Actions → "🔼 Vercel Deploy" → Run workflow, then pick
+#       - "Use workflow from": the branch to deploy (no branch input on purpose;
+#         the ref picker keeps the code and the workflow file in step)
+#       - app:          openthrottle-website | openthrottle-developer
+#       - environment:  preview (default) | production — refused off main
+#
+#     gh workflow run vercel-deploy.yml --ref <branch> \
+#       -f app=openthrottle-website -f environment=preview
+#
+#   The deployment URL lands in the run's job summary.
 #
 #   Build uses `vercel build` (not the Nx build): @vercel/react-router's
 #   preset only emits a manifest from `react-router build`, so `vercel build`
 #   is what produces the `.vercel/output` that `vercel deploy --prebuilt`
 #   consumes. It honors the project's Root Directory pulled by `vercel pull`.
-#   `nrwl/nx-set-shas` runs before the affected step so `nx show projects
-#   --affected` resolves NX_BASE/NX_HEAD on PRs (matching the docker + CI
-#   workflows); without it the affected set comes back empty and deploy skips.
+#   On push/pull_request, `nrwl/nx-set-shas` runs before the affected step so
+#   `nx show projects --affected` resolves NX_BASE/NX_HEAD (matching the
+#   docker + CI workflows); without it the affected set comes back empty and
+#   deploy skips. A manual run skips all of that: its matrix is the input.
 #
 #   Required GitHub config:
 #     secrets: VERCEL_TOKEN, VERCEL_ORG_ID,
@@ -23,8 +36,8 @@
 #
 #
 #   💰 Both jobs run on `ubuntu-26.04` (free, unlimited on this PUBLIC repo).
-#   They are currently `if: false`, but the runner label is kept correct so that
-#   re-enabling the workflow does not silently reintroduce paid runners.
+#   Keep that label when re-enabling push/pull_request, so it does not silently
+#   reintroduce paid runners.
 #   See docs/monorepo/ci-cost.md before changing `runs-on`.
 #
 ################################################################################
@@ -42,10 +55,33 @@ on:
     paths-ignore:
       - 'docs/**'
       - '**/*.md'
+  # Manual deploy. The branch is the native "Use workflow from" picker (or
+  # `gh workflow run --ref <branch>`), deliberately not an input: a free-text
+  # branch would let the code deployed diverge from the workflow file running.
+  workflow_dispatch:
+    inputs:
+      app:
+        description: 'Vercel app to deploy'
+        required: true
+        type: choice
+        options:
+          - openthrottle-website
+          - openthrottle-developer
+      environment:
+        description: 'Vercel environment (production is refused off main)'
+        required: true
+        default: preview
+        type: choice
+        options:
+          - preview
+          - production
 
 concurrency:
-  cancel-in-progress: true
-  group: vercel-deploy-${{ github.ref }}
+  # Per event + app + ref, so a manual deploy of one app never cancels another
+  # app's deploy or an automatic run. Manual deploys queue rather than cancel:
+  # a second click should not kill a deploy that is already uploading.
+  cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' }}
+  group: vercel-deploy-${{ github.event_name }}-${{ inputs.app || 'affected' }}-${{ github.ref }}
 
 permissions:
   actions: read # nx-set-shas queries the last successful run on `main` for push events
@@ -63,14 +99,17 @@ env:
   NX_SWC: 'true'
 
 jobs:
-  # Which Vercel apps are affected by this change? Emits a job matrix; empty
-  # include => the deploy job is skipped (nothing to deploy).
+  # Which Vercel apps should deploy? On a manual run, exactly the chosen app;
+  # otherwise the affected set. Emits a job matrix; empty include => the
+  # deploy job is skipped (nothing to deploy).
   compute-affected:
-    # 💰 Disabled — deploys currently run through Vercel's own dashboard Git
-    # integration. Re-enable this workflow only as a REPLACEMENT for that, never
-    # alongside it, or every push pays for two builds. Priced (per-app matrix,
-    # Vercel build minutes + bandwidth) in docs/monorepo/ci-cost.md.
-    if: false
+    # 💰 Manual runs only — automatic deploys currently run through Vercel's own
+    # dashboard Git integration. A manual run is one on-demand extra build, safe
+    # alongside it. Re-enable push/pull_request only as a REPLACEMENT for that
+    # integration, never alongside it, or every push pays for two builds.
+    # Priced (per-app matrix, Vercel build minutes + bandwidth) in
+    # docs/monorepo/ci-cost.md.
+    if: github.event_name == 'workflow_dispatch'
     # # Dependabot-triggered runs receive no repository secrets, so the deploy
     # # job can never authenticate — skip at the root instead of failing (and
     # # save the runner minutes). Scoped to pull_request events so a push to
@@ -80,9 +119,21 @@ jobs:
     #   (github.event.pull_request.draft == false && github.actor != 'dependabot[bot]')
     runs-on: ubuntu-26.04
     outputs:
-      matrix-json: ${{ steps.affected.outputs.matrix-json }}
+      matrix-json: ${{ steps.dispatch.outputs.matrix-json || steps.affected.outputs.matrix-json }}
     steps:
+      # A manual run names its app, so it needs no checkout, install or affected
+      # calc — the matrix is the input.
+      - name: '🎯 Matrix from the dispatch input'
+        id: dispatch
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        env:
+          APP: ${{ inputs.app }}
+        run: |
+          set -euo pipefail
+          echo "matrix-json=$(jq -cn --arg app "$APP" '{include: [{app: $app}]}')" >> "$GITHUB_OUTPUT"
+
       - name: '📦 Checkout the code'
+        if: ${{ github.event_name != 'workflow_dispatch' }}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # 💰 Partial clone — history and trees for `nx affected` / nx-set-shas,
@@ -90,19 +141,18 @@ jobs:
           fetch-depth: 0
           filter: 'blob:none'
 
-      # cache-suffix: this job is a per-app matrix, so every leg shares one commit
-      # and would otherwise race a single exact Nx cache key — all but the first
-      # save gets dropped. See .github/actions/node-setup/action.yml.
+      # No cache-suffix: this job is not a matrix (the deploy job is).
       - name: '🤖 Node setup'
+        if: ${{ github.event_name != 'workflow_dispatch' }}
         uses: ./.github/actions/node-setup
-        with:
-          cache-suffix: ${{ matrix.app }}
 
       - name: "🕵️ NX Set SHA's"
+        if: ${{ github.event_name != 'workflow_dispatch' }}
         uses: nrwl/nx-set-shas@e602fada7ad5987b0f7b1905e7a99ea1c661514c # v5.1.0
 
       - name: '📋 Compute affected Vercel apps'
         id: affected
+        if: ${{ github.event_name != 'workflow_dispatch' }}
         uses: ./.github/actions/nx-affected-docker-apps
         with:
           apps: 'openthrottle-website'
@@ -110,10 +160,10 @@ jobs:
 
   deploy:
     needs: compute-affected
-    # FIXME: running through Vercel for now
-    if: false
-    # # Skip cleanly when nothing is affected (empty matrix include).
-    # if: ${{ fromJSON(needs.compute-affected.outputs.matrix-json).include[0] != null }}
+    # 💰 Manual runs only, as compute-affected above. Skips cleanly when nothing
+    # is affected (empty matrix include). To re-enable automatic deploys, drop
+    # the event check — see the compute-affected note first.
+    if: ${{ github.event_name == 'workflow_dispatch' && fromJSON(needs.compute-affected.outputs.matrix-json).include[0] != null }}
     runs-on: ubuntu-26.04
     strategy:
       fail-fast: false
@@ -128,9 +178,18 @@ jobs:
       # one (the `secrets` context can't be indexed dynamically in expressions).
       VERCEL_PROJECT_ID_OPENTHROTTLE_DEVELOPER: ${{ secrets.VERCEL_PROJECT_ID_OPENTHROTTLE_DEVELOPER }}
       VERCEL_PROJECT_ID_OPENTHROTTLE_WEBSITE: ${{ secrets.VERCEL_PROJECT_ID_OPENTHROTTLE_WEBSITE }}
-      # production on main, preview elsewhere
-      IS_PRODUCTION: ${{ github.ref_name == 'main' && github.event_name == 'push' }}
+      # Manual run: the `environment` input (guarded to main below). Otherwise
+      # production on a push to main, preview elsewhere.
+      IS_PRODUCTION: ${{ github.event_name == 'workflow_dispatch' && inputs.environment == 'production' || github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     steps:
+      # Fail before any checkout, install or Vercel call: production only ever
+      # deploys what is on main.
+      - name: '🛡️ Refuse production off main'
+        if: ${{ env.IS_PRODUCTION == 'true' && github.ref != 'refs/heads/main' }}
+        run: |
+          echo "::error::Production deploys run from main only; this run is on ${{ github.ref }}. Re-run with environment=preview, or pick main in \"Use workflow from\"."
+          exit 1
+
       - name: '📦 Checkout the code'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -169,10 +228,19 @@ jobs:
             --environment=${{ env.IS_PRODUCTION == 'true' && 'production' || 'preview' }} \
             --token="${{ env.VERCEL_TOKEN }}"
 
+      # Drift check: committed __generated__ output must match the schema. A
+      # manual run checks the app it deploys (there is no meaningful base to
+      # diff a dispatched ref against); automatic runs check the affected set.
       - name: '🧩 Codegen Tasks'
+        env:
+          APP: ${{ matrix.app }}
         run: |
-          # pnpm nx run @tools/dotfiles:build --parallel ${{ env.OUTPUT_DEBUG }}
-          pnpm nx affected --target=codegen-graphql,codegen-react-router --parallel ${{ env.OUTPUT_DEBUG }}
+          set -euo pipefail
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            pnpm nx run-many --target=codegen-graphql,codegen-react-router --projects="$APP" --parallel ${{ env.OUTPUT_DEBUG }}
+          else
+            pnpm nx affected --target=codegen-graphql,codegen-react-router --parallel ${{ env.OUTPUT_DEBUG }}
+          fi
           git diff --exit-code
 
       # `react-router build` + @vercel/react-router only emits a manifest
@@ -199,6 +267,23 @@ jobs:
           fi
           echo "url=$url" >> "$GITHUB_OUTPUT"
           echo "Deployed ${{ matrix.app }} -> $url"
+
+      # The PR comment below only fires on pull_request; this is where a manual
+      # run (or a push) reports its URL.
+      - name: '📝 Deployment summary'
+        env:
+          APP: ${{ matrix.app }}
+          URL: ${{ steps.deploy.outputs.url }}
+          TARGET: ${{ env.IS_PRODUCTION == 'true' && 'production' || 'preview' }}
+        run: |
+          {
+            echo "### 🔼 ${APP} → ${TARGET}"
+            echo ""
+            echo "| | |"
+            echo "| --- | --- |"
+            echo "| Ref | \`${{ github.ref_name }}\` (\`${GITHUB_SHA::9}\`) |"
+            echo "| URL | ${URL} |"
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: '💬 Comment preview URL on PR'
         if: ${{ github.event_name == 'pull_request' }}
