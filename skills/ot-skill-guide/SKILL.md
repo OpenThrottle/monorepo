@@ -8,8 +8,8 @@ description: >-
   syncing skills into agent folders.
 metadata:
   author: openthrottle
-  last-reviewed: '2026-11-14'
-  version: '1.1.0'
+  last-reviewed: '2026-11-15'
+  version: '1.1.1'
 name: ot-skill-guide
 ---
 
@@ -173,5 +173,8 @@ Skip this section when the files it names do not exist.
 - Descriptions follow the house shape: capability, then `USE WHEN …` triggers, then a "Not for …"
   line naming the neighbouring skill.
 - Vendored skills are the real directories in `.agents/skills/` tracked by `skills-lock.json`.
+- Install a vendored skill with `npx skills add <owner>/<repo> --skill <name> --agent universal`,
+  always with `--agent universal`, so it lands only in `.agents/skills/`; then run `ot-skill-sync`.
+  Default agent detection writes per-agent copies that `sync.sh --check` rejects.
 - Review findings are filed as one follow-up plan in OpenThrottle, never as a Markdown file. The
   scheduled rolling review is the `Job_SkillReview` prompt in `.agents/prompts/`.
