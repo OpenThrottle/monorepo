@@ -9,6 +9,7 @@ import { APP_NAME_SHORT } from '@openthrottle/react-router-utils';
 import * as React from 'react';
 
 import { useScrollContainerRestoration } from '../hooks/useScrollContainerRestoration';
+import type { GlobalBackgroundActivity } from '../utils/background-activity';
 import { GLOBAL_SCROLL_CONTAINER_ATTRIBUTE } from '../utils/global-scroll-container';
 import type { GlobalSidebarContentLinkProps } from './GlobalSidebarContent';
 import { GlobalSidebarContent } from './GlobalSidebarContent';
@@ -19,6 +20,8 @@ export interface GlobalLayoutProps {
   /** The consuming app's package.json version, shown in the sidebar footer. */
   readonly appVersion?: string;
   readonly authenticated?: boolean;
+  /** Long-running server work, shown as a progress bar in the sidebar footer. */
+  readonly backgroundActivities?: readonly GlobalBackgroundActivity[];
   readonly children: React.ReactNode;
   readonly className?: string;
   readonly data?: Record<string, GlobalSidebarContentLinkProps[]>;
@@ -40,6 +43,7 @@ export const GlobalLayout = (props: GlobalLayoutProps): React.ReactElement => {
   const {
     appVersion,
     authenticated = false,
+    backgroundActivities,
     children,
     className,
     data,
@@ -57,6 +61,13 @@ export const GlobalLayout = (props: GlobalLayoutProps): React.ReactElement => {
   // Handlers
 
   // Markup
+  const footerMarkup = !hideFooter && (
+    <GlobalSidebarFooter
+      appVersion={appVersion}
+      backgroundActivities={backgroundActivities}
+      health={health}
+    />
+  );
 
   // Life Cycle
   useScrollContainerRestoration(refScrollableContent);
@@ -82,9 +93,7 @@ export const GlobalLayout = (props: GlobalLayoutProps): React.ReactElement => {
             Workspace: authenticated ? false : true,
           }}
         />
-        {!hideFooter ? (
-          <GlobalSidebarFooter appVersion={appVersion} health={health} />
-        ) : null}
+        {footerMarkup}
         {!hideRail ? <SidebarRail /> : null}
       </Sidebar>
       <div

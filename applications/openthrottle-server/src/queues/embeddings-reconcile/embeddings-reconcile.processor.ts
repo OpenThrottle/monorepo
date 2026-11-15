@@ -17,13 +17,22 @@ import { LoggerService } from '@openthrottle/nestjs-modules';
 import { EMBEDDING_MAX_INPUT_CHARS } from '@openthrottle/node-client';
 import { DataSource } from 'typeorm';
 
+import { BACKGROUND_ACTIVITY_KINDS } from '../../services/background-activity-registry/background-activity-registry.constants.ts';
+import { BackgroundActivityRegistryService } from '../../services/background-activity-registry/background-activity-registry.service.ts';
 import { EmbedderService } from '../../services/embedder/embedder.service.ts';
 import {
   EMBEDDABLE_ENTITIES,
   EMBEDDING_SOURCES,
+  EMBEDDINGS_BACKFILL_LABELS,
 } from '../embeddings/embeddings.constants.ts';
-import type { EmbeddableEntity } from '../embeddings/embeddings.types.ts';
-import { readEntityId } from '../embeddings/embeddings.utils.ts';
+import type {
+  EmbeddableEntity,
+  EmbeddingBackfillSource,
+} from '../embeddings/embeddings.types.ts';
+import {
+  embeddingsBackfillActivityId,
+  readEntityId,
+} from '../embeddings/embeddings.utils.ts';
 import { EmbeddingsProducerService } from '../embeddings/producer/producer.service.ts';
 import {
   EMBEDDINGS_RECONCILE_QUEUE_NAME,
@@ -53,6 +62,7 @@ export class EmbeddingsReconcileProcessor
     private readonly logger: LoggerService,
     private readonly embedder: EmbedderService,
     private readonly producer: EmbeddingsProducerService,
+    private readonly activities: BackgroundActivityRegistryService,
     @InjectDataSource()
     private readonly dataSource: DataSource,
   ) {
@@ -131,6 +141,7 @@ export class EmbeddingsReconcileProcessor
     const source = EMBEDDING_SOURCES[entity];
     const pruned = await this.prune(buildPruneOrphansSql(source));
     const staleSql = buildStaleRowsSql(source);
+    const backlog = this.trackBacklog(entity);
     let after = MIN_UUID;
     let enqueued = 0;
 
@@ -152,10 +163,12 @@ export class EmbeddingsReconcileProcessor
         break;
       }
 
+      // eslint-disable-next-line no-await-in-loop -- the page joins the total before its jobs can finish
+      await backlog.found(ids.length);
       // eslint-disable-next-line no-await-in-loop -- enqueue before reading the next page
       enqueued += await this.producer.enqueue(
         ids.map((id) => {
-          return { entity, id };
+          return { backfill: true, entity, id };
         }),
       );
 
@@ -165,6 +178,8 @@ export class EmbeddingsReconcileProcessor
 
       after = last;
     }
+
+    await backlog.close();
 
     return { enqueued, pruned };
   }
@@ -180,6 +195,7 @@ export class EmbeddingsReconcileProcessor
     batchSize: number,
   ): Promise<EmbeddingsReconcileEntitySummary> {
     const staleSql = buildStaleCodeChunksSql();
+    const backlog = this.trackBacklog('code');
     let after = '';
     let enqueued = 0;
 
@@ -199,6 +215,8 @@ export class EmbeddingsReconcileProcessor
         break;
       }
 
+      // eslint-disable-next-line no-await-in-loop -- the page joins the total before its job can finish
+      await backlog.found(ids.length);
       // eslint-disable-next-line no-await-in-loop -- enqueue before reading the next page
       const accepted = await this.producer.enqueueCodeChunks(ids);
 
@@ -211,7 +229,52 @@ export class EmbeddingsReconcileProcessor
       after = last;
     }
 
+    await backlog.close();
+
     return { enqueued, pruned: 0 };
+  }
+
+  /**
+   * @description Reports one source's walk to its `embeddings_backfill` activity (OT plan
+   * 5767e798). The first stale page opens the activity; while this cycle owns a new activity each
+   * page joins its total before being enqueued, so the processor can never finish it early. When
+   * the activity was already running (a previous cycle's backlog), the total is re-measured at the
+   * end as done + what is still stale — re-found rows whose jobs are still queued are not counted
+   * twice. A walk that found nothing finishes the activity: the backlog drained.
+   */
+  private trackBacklog(source: EmbeddingBackfillSource): {
+    readonly close: () => Promise<void>;
+    readonly found: (count: number) => Promise<void>;
+  } {
+    const id = embeddingsBackfillActivityId(source);
+    let created: boolean | undefined;
+    let found = 0;
+
+    return {
+      close: async (): Promise<void> => {
+        if (found === 0) {
+          await this.activities.finish(id);
+        } else if (created === false) {
+          await this.activities.rebase(id, found);
+        }
+      },
+      found: async (count: number): Promise<void> => {
+        found += count;
+
+        if (created === undefined) {
+          created = await this.activities.start({
+            id,
+            kind: BACKGROUND_ACTIVITY_KINDS.embeddingsBackfill,
+            label: EMBEDDINGS_BACKFILL_LABELS[source],
+            total: 0,
+          });
+        }
+
+        if (created) {
+          await this.activities.grow(id, count);
+        }
+      },
+    };
   }
 
   private async prune(sql: string): Promise<number> {

@@ -1424,6 +1424,43 @@ type SignoutResultObject {
   success: Boolean!
 }
 
+"""
+Long-running server work in progress (e.g. an embeddings backfill). Listed only while it runs.
+"""
+type BackgroundActivityObject {
+  """Units of work finished so far, never more than total."""
+  done: Int!
+
+  """
+  Seconds left at the smoothed throughput. Null until there is enough signal, while stalled, or when total is unknown.
+  """
+  etaSeconds: Int
+
+  """Stable id, e.g. embeddings_backfill:code."""
+  id: String!
+
+  """
+  What kind of work this is: embeddings_backfill (more kinds, e.g. app_update, may follow).
+  """
+  kind: String!
+
+  """Human-readable description, e.g. "Re-embedding code chunks"."""
+  label: String!
+
+  """When the work was first seen."""
+  startedAt: DateTime!
+
+  """
+  running while progress keeps arriving; stalled after five minutes without any.
+  """
+  status: String!
+
+  """
+  Units of work in all. Null when the size is unknown (an indeterminate bar).
+  """
+  total: Int
+}
+
 type BlogAuthorObject {
   avatarUrl: String
   bio: String
@@ -5966,6 +6003,11 @@ type Query {
 
   """List a task's agent trajectories, oldest first."""
   agentTrajectoriesByTask(taskId: ID!): [AgentTrajectory!]!
+
+  """
+  Long-running server work in progress, oldest first; empty when the server is idle. Served from Redis without counting database rows, so it is cheap to poll.
+  """
+  backgroundActivities: [BackgroundActivityObject!]!
 
   """
   Every blog post in any state, most recently edited first, with cursor pagination. Optionally filtered to one or more derived states and to a case-insensitive title / slug search.

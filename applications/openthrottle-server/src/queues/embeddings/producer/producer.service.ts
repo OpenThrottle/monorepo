@@ -54,7 +54,9 @@ export class EmbeddingsProducerService {
       const jobs = await this.queue.addBulk(
         items.map((item) => {
           return {
-            data: { entity: item.entity, id: item.id },
+            data: item.backfill
+              ? { backfill: true, entity: item.entity, id: item.id }
+              : { entity: item.entity, id: item.id },
             name: EMBED_ENTITY_JOB_NAME,
             opts: {
               ...RETRY_OPTIONS,

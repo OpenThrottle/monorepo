@@ -34,6 +34,7 @@ export * from './data/data.copy';
 export * from './hooks/usePrefersReducedMotion';
 export * from './hooks/useScrollContainerRestoration';
 export * from './hooks/useUrlSyncedOverlay';
+export type { GlobalBackgroundActivity } from './utils/background-activity';
 export * from './utils/global-scroll-container';
 export * from './utils/search-param';
 // export * from './data';

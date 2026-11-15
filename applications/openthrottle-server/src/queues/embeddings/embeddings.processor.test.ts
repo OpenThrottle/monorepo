@@ -9,6 +9,8 @@ import { DelayedError } from 'bullmq';
 import type { DataSource } from 'typeorm';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import type { BackgroundActivityRegistryService } from '../../services/background-activity-registry/background-activity-registry.service.ts';
+import type { BackgroundActivityProgress } from '../../services/background-activity-registry/background-activity-registry.types.ts';
 import type { EmbedderService } from '../../services/embedder/embedder.service.ts';
 import { EmbeddingsProcessor } from './embeddings.processor.ts';
 import type { EmbeddingsJob, EmbedEntityJob } from './embeddings.types.ts';
@@ -29,7 +31,30 @@ const VECTOR = Array.from({ length: 768 }, () => {
   return 0.25;
 });
 
+interface ActivityMocks {
+  readonly finish: ReturnType<
+    typeof vi.fn<BackgroundActivityRegistryService['finish']>
+  >;
+  readonly progress: ReturnType<
+    typeof vi.fn<BackgroundActivityRegistryService['progress']>
+  >;
+}
+
+function activityMocks(
+  progress: BackgroundActivityProgress | null = null,
+): ActivityMocks {
+  return {
+    finish: vi.fn<BackgroundActivityRegistryService['finish']>(() => {
+      return Promise.resolve();
+    }),
+    progress: vi.fn<BackgroundActivityRegistryService['progress']>(() => {
+      return Promise.resolve(progress);
+    }),
+  };
+}
+
 interface Harness {
+  readonly activities: ActivityMocks;
   readonly embed: ReturnType<typeof vi.fn<() => Promise<EmbedResult>>>;
   readonly processor: EmbeddingsProcessor;
   readonly query: ReturnType<
@@ -38,6 +63,7 @@ interface Harness {
 }
 
 function harness(options: {
+  readonly activities?: ActivityMocks;
   readonly content: string | undefined;
   readonly stored:
     | { readonly content_hash: string; readonly embedding_model: string }
@@ -70,22 +96,26 @@ function harness(options: {
       return CONFIG;
     },
   });
+  const activities = options.activities ?? activityMocks();
   const processor = new EmbeddingsProcessor(
     createMock<LoggerService>(),
     embedder,
+    createMock<BackgroundActivityRegistryService>(activities),
     createMock<DataSource>({ query }),
   );
 
-  return { embed, processor, query };
+  return { activities, embed, processor, query };
 }
 
-function job(): EmbedEntityJob & {
+function job(backfill: boolean = false): EmbedEntityJob & {
   readonly moveToDelayed: ReturnType<typeof vi.fn>;
 } {
   return createMock<
     EmbedEntityJob & { readonly moveToDelayed: ReturnType<typeof vi.fn> }
   >({
-    data: { entity: 'plan', id: 'plan-1' },
+    data: backfill
+      ? { backfill: true, entity: 'plan', id: 'plan-1' }
+      : { entity: 'plan', id: 'plan-1' },
     id: 'plan.plan-1',
     moveToDelayed: vi.fn(() => {
       return Promise.resolve();
@@ -200,6 +230,69 @@ describe('EmbeddingsProcessor', () => {
         'token',
       );
     });
+
+    test('does not count a re-delayed backfill job as progress', async () => {
+      const { activities, embed, processor } = harness({
+        content: CONTENT,
+        stored: undefined,
+      });
+
+      embed.mockResolvedValue({
+        detail: 'no weights',
+        ok: false,
+        reason: 'unconfigured',
+      });
+
+      await expect(
+        processor.process(job(true), 'token'),
+      ).rejects.toBeInstanceOf(DelayedError);
+      expect(activities.progress).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('background activity', () => {
+    test('counts a finished backfill job toward its source', async () => {
+      const activities = activityMocks({ done: 3, total: 10 });
+      const { processor } = harness({
+        activities,
+        content: CONTENT,
+        stored: { content_hash: CURRENT_HASH, embedding_model: CONFIG.model },
+      });
+
+      await processor.process(job(true), 'token');
+
+      expect(activities.progress).toHaveBeenCalledWith(
+        'embeddings_backfill:plan',
+        1,
+      );
+      expect(activities.finish).not.toHaveBeenCalled();
+    });
+
+    test('finishes the activity once its total is reached', async () => {
+      const activities = activityMocks({ done: 10, total: 10 });
+      const { processor } = harness({
+        activities,
+        content: CONTENT,
+        stored: { content_hash: CURRENT_HASH, embedding_model: CONFIG.model },
+      });
+
+      await processor.process(job(true), 'token');
+
+      expect(activities.finish).toHaveBeenCalledWith(
+        'embeddings_backfill:plan',
+      );
+    });
+
+    test('ignores jobs from ordinary writes', async () => {
+      const { activities, processor } = harness({
+        content: CONTENT,
+        stored: { content_hash: CURRENT_HASH, embedding_model: CONFIG.model },
+      });
+
+      await processor.process(job(), 'token');
+
+      expect(activities.progress).not.toHaveBeenCalled();
+    });
   });
 
   describe('when the provider errors', () => {
@@ -238,7 +331,10 @@ describe('EmbeddingsProcessor code chunks', () => {
     readonly id: string;
   }
 
-  function codeHarness(rows: readonly ChunkRow[]): Harness {
+  function codeHarness(
+    rows: readonly ChunkRow[],
+    activities: ActivityMocks = activityMocks(),
+  ): Harness {
     const query = vi.fn((sql: string) => {
       return Promise.resolve(sql.startsWith('SELECT id, content') ? rows : []);
     });
@@ -258,10 +354,11 @@ describe('EmbeddingsProcessor code chunks', () => {
           return CONFIG;
         },
       }),
+      createMock<BackgroundActivityRegistryService>(activities),
       createMock<DataSource>({ query }),
     );
 
-    return { embed, processor, query };
+    return { activities, embed, processor, query };
   }
 
   function codeJob(): EmbeddingsJob {
@@ -344,5 +441,19 @@ describe('EmbeddingsProcessor code chunks', () => {
     await expect(processor.process(codeJob(), 'token')).rejects.toThrow(
       /code chunk\(s\) failed: worker crashed/u,
     );
+  });
+
+  test('counts every chunk in the page toward the code backfill', async () => {
+    const activities = activityMocks({ done: 2, total: 2 });
+    const { processor } = codeHarness([], activities);
+
+    await expect(processor.process(codeJob(), 'token')).resolves.toEqual({
+      outcome: 'unchanged',
+    });
+    expect(activities.progress).toHaveBeenCalledWith(
+      'embeddings_backfill:code',
+      2,
+    );
+    expect(activities.finish).toHaveBeenCalledWith('embeddings_backfill:code');
   });
 });

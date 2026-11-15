@@ -65,6 +65,21 @@ export const GLOBAL_LAYOUT_HEADER_LINKS_COPY = {
  * (its package.json `version`, injected by each app at build time) in the badge;
  * `versionLinkLabel` is the badge link's accessible name.
  */
+/**
+ * @description Copy for the background-activity bar, ring and tooltip in the
+ * sidebar footer (OT plan 5767e798). Lines are composed as
+ * `{done} / {total} · started {elapsed} ago · ~{eta} left`.
+ */
+export const GLOBAL_BACKGROUND_ACTIVITY_COPY = {
+  ago: `ago`,
+  estimating: `estimating time left`,
+  label: `Background work in progress`,
+  left: `left`,
+  separator: ` · `,
+  stalled: `no progress lately`,
+  started: `started`,
+} as const;
+
 export const GLOBAL_SIDEBAR_FOOTER_COPY = {
   systemStatus: `System Status`,
   versionLinkLabel: `Release notes for version`,
