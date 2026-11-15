@@ -5,9 +5,13 @@ adapter that turns that tool's native hook payload into a `NormalizedInvocation`
 everything else. Adapters are esbuild-bundled into self-contained `.cjs` hooks that require nothing
 outside node builtins.
 
-**Consumed by:** this repo's in-repo hook configs (`.claude/settings.json`, `.cursor/hooks.json`),
-the distributable plugin payload under `plugins/openthrottle/`, and OT's drivers, which pass that
-payload as `--plugin-dir` for orchestrated runs.
+**Consumed by:** the plugin payloads under `plugins/` (Claude `openthrottle`, `openthrottle-workflow`,
+`openthrottle-guards`; Cursor `openthrottle-cursor`, `openthrottle-cursor-guards`; Codex
+`openthrottle-codex`). This repo loads them in place through the generated dev marketplace and
+`.cursor/hooks.json`, OT's drivers pass them as `--plugin-dir` (`pluginDirRels`), and the public
+marketplace installs them from `plugins-dist`. Hooks ship nowhere else: there are no
+`.claude/hooks/`, `.cursor/hooks/` or `.codex/hooks/` bundles. Design:
+[hook-plugin-distribution.md](../../docs/monorepo/hook-plugin-distribution.md).
 
 ## Layout
 
@@ -21,7 +25,7 @@ payload as `--plugin-dir` for orchestrated runs.
   I/O) and `transcript-usage.ts` (checkpointed read at `Stop`; also reads the session's
   `subagents/agent-*.jsonl`, so `SubagentStop` need not be registered). The file offsets,
   checkpoints and sending stay in `src/data/`. The one-off operator backfill (`backfill.ts`, bundled
-  to `.claude/hooks/skill-usage-backfill.cjs`, registered as no hook) reuses that reader through
+  by no payload, run as `pnpm run telemetry:backfill`, registered as no hook) reuses that reader through
   `transcript-backfill.ts`, `transcript-skills.ts` and `transcript-projects.ts`; see the README's
   "Backfilling from transcripts".
 - `src/utils/` — `scope.ts` (ours | personal | third-party), `privacy.ts` (truncation + secret redaction),
@@ -30,12 +34,14 @@ payload as `--plugin-dir` for orchestrated runs.
   predicate, git branch, the disable switches.
 - `src/data/` — `events.ts` (event construction + GraphQL inputs), `persist.ts` (POST → JSONL
   fallback, correlation, drain), `starts.ts` (identifiers-only start records used to compute
-  duration), `jsonl.ts`, `plan-runs.ts`. Token usage: `token-usage.ts` (row mapping + batch POST,
+  duration), `jsonl.ts`, `plan-runs.ts` (backstop notes under `~/.openthrottle/skill-usage/plan-runs/<repo-hash>/`, never `<repo>/.cache/`). Token usage: `token-usage.ts` (row mapping + batch POST,
   `persistTokenUsage` in `persist.ts`, buffered to `token-usage.jsonl`), `checkpoints.ts` (per-session
   byte offsets, `checkpoints/<session>.json`) and `read-new.ts` (complete-lines-only readers).
   Keep the word "cursor" out of the core: the neutrality test bans it.
-- `scripts/bundle-hooks.ts` — the deterministic esbuild bundler and the generator for the plugin
-  payload. Its `BUNDLES` list is the single source of truth for what gets bundled where.
+- `scripts/bundle-hooks.ts` — the deterministic esbuild bundler and the generator for every plugin
+  payload (stubs, manifests, `hooks.json`, READMEs, the dev marketplace). Its payload definitions and
+  their `PluginEntry` rows are the single source of truth for what gets bundled where.
+- `scripts/assemble-plugins-dist.ts` — builds the tree `publish-plugins.yml` pushes to `plugins-dist`.
 
 ## Invariants & gotchas
 
@@ -69,20 +75,27 @@ Each of these is a rule you can fail, not a description.
 - **Every hook is fail-open and exits 0.** Swallow every error, bound every network call, and never
   let a failure surface to the tool. A hook that can break the work it observes is worse than no
   hook.
-- **Bundles are generated and diffed byte-for-byte. Never hand-edit them.** That covers every `.cjs`
-  under a tool hook folder (`.claude/hooks/`, `.cursor/hooks/`, …) and everything under
-  `plugins/openthrottle/`. Edit `src/`, then run
-  `pnpm nx run @openthrottle/agentic-hooks:bundle-hooks`.
-- **`git blame` on a bundle is meaningless by design** — every line names whoever last ran
-  `bundle-hooks`. Blame the `Source:` path in the bundle's header banner instead. The root
-  `.gitattributes` marks these paths `-diff linguist-generated=true`, so `git diff` and `git log -p`
-  report them as binary and GitHub collapses them in review; a _new_ payload directory must get its
-  own glob there in the same commit, or `check:local:generated-attributes` fails.
-- **Adding a bundle means THREE edits, not one.** (1) the adapter under `src/adapters/<tool>/`,
-  (2) a `BUNDLES` row in `scripts/bundle-hooks.ts`, (3) the new path in the `outputs` array of
-  `bundle-hooks` **and** the `inputs` array of `bundle-hooks-check` in `package.json`. Miss the
-  third and the file is generated but never drift-checked — it exists, and nothing notices when it
-  rots.
+- **Everything under `plugins/` is generated. Never hand-edit it.** That is the committed stubs in
+  `hooks/` and `bin/`, manifests, `hooks.json`, READMEs and the dev marketplace, plus the
+  gitignored `dist/` bundles. Edit `src/` or `scripts/bundle-hooks.ts`, then run
+  `pnpm nx run @openthrottle/agentic-hooks:bundle-hooks` (or `pnpm run build:hooks` for `dist/`).
+  `bundle-hooks-check` diffs committed files only; it still builds every bundle in memory.
+- **Bundles are not committed on `main`.** `dist/` is gitignored and `build:hooks` fills it; the
+  stubs require `dist/<file>` and exit 0 if it is missing, so an unbuilt checkout is fail-open. A
+  hook change that needs a built bundle to take effect needs `pnpm run build:hooks` first.
+  `publish-plugins.yml` publishes built payloads to `plugins-dist`, manifests without `version`.
+- **Adding a bundle is ONE edit in the generator, plus the adapter.** (1) the adapter under
+  `src/adapters/<tool>/`, (2) a `PluginEntry` row in the right payload in `scripts/bundle-hooks.ts`.
+  The Nx `outputs` and `inputs` are `plugins/**` globs, so `package.json` needs no change. A _new
+  payload directory_ also needs its own entry in `.prettierignore` in the same commit (the
+  `.gitattributes` globs already cover `plugins/*/`); add it to the driver's `pluginDirRels` if
+  orchestrated runs should load it.
+- **Payload hooks never double-fire in this repo.** Committed `.claude/settings.json` enables the
+  `@openthrottle-dev` plugin ids and disables the public `@openthrottle` ones. Test a branch's own
+  hooks with `claude --plugin-dir ./plugins/<p>`.
+- **Operator CLIs:** `doctor`, `drain` and `outcome` ship in the telemetry plugin's `bin/`;
+  `backfill`, `resegment` and `scope` are bundled nowhere and run from source
+  (`pnpm run telemetry:<name>`).
 - **The bundler is pinned and deterministic** — catalog-pinned esbuild, `minify: false`, no
   sourcemap, `legalComments: 'none'`, and a banner with no date. Do not add anything time-, path-,
   or environment-varying to the banner or to generated output; the drift gate diffs bytes.

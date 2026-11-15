@@ -13,6 +13,14 @@ export const DEFAULT_CACHE_TTL_MS = 60_000;
  * scan so an idle process never serves arbitrarily stale data.
  */
 export const DEFAULT_HARD_TTL_MULTIPLIER = 10;
+/** `LLM_DISCOVERY_WARM_ON_BOOT` values that switch the boot warm-up off. */
+export const FALSY_WARM_ON_BOOT_VALUES: readonly string[] = [
+  '0',
+  'false',
+  'no',
+  'off',
+];
+
 /**
  * Joi schema for the env knobs this package reads (all optional). Applied by
  * {@link buildModelDiscoveryConfig} on every config build, so malformed values
@@ -27,6 +35,11 @@ export const configValidationSchema = Joi.object({
   LLM_DISCOVERY_CACHE_TTL_MS: Joi.number().integer().min(0).optional(),
   LLM_DISCOVERY_CONCURRENCY: Joi.number().integer().min(1).optional(),
   LLM_DISCOVERY_HARD_TTL_MS: Joi.number().integer().min(0).optional(),
+  LLM_DISCOVERY_WARM_ON_BOOT: Joi.string()
+    .trim()
+    .lowercase()
+    .valid('', '0', '1', 'false', 'no', 'off', 'on', 'true', 'yes')
+    .optional(),
   LLM_FINGERPRINT_TIMEOUT_MS: Joi.number().integer().min(1).optional(),
   LLM_HOSTS: Joi.string().optional(),
   LLM_PORTS: Joi.string().optional(),

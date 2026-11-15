@@ -19,8 +19,12 @@ export interface UseOpenThrottleCommanderResult {
   readonly extraItems: readonly CommanderItem[];
   readonly handleEmptyStateSearch: () => void;
   readonly handleSelect: (item: CommanderItem) => void;
+  /** Controlled cmdk `value` (the highlighted row); pass to `Command`. */
+  readonly highlighted: string;
   readonly open: boolean;
   readonly search: string;
+  /** cmdk `onValueChange`: arrow keys, pointer and cmdk's own filter reset. */
+  readonly setHighlighted: (value: string) => void;
   readonly setOpen: (value: boolean) => void;
   readonly setSearch: (value: string) => void;
   readonly showEmptyEscapeHatch: boolean;
@@ -46,6 +50,7 @@ export const useOpenThrottleCommander = (
   // Hooks
   const [internalOpen, setInternalOpen] = React.useState(defaultOpen);
   const [search, setSearch] = React.useState('');
+  const [highlighted, setHighlighted] = React.useState('');
 
   // Setup
   const isControlled = openProp !== undefined && onOpenChange !== undefined;
@@ -63,6 +68,8 @@ export const useOpenThrottleCommander = (
     Boolean(onEmptyStateSearch) && trimmedSearch.length > 0;
   const showUuidExtras = trimmedSearch.length > 0 && extraItems.length > 0;
   const showEmptyEscapeHatch = showSearchEscape || showUuidExtras;
+  const firstExtra = extraItems[0];
+  const firstExtraValue = (firstExtra?.value ?? firstExtra?.id)?.trim();
 
   // Handlers
   const handleSelect = React.useCallback(
@@ -90,6 +97,16 @@ export const useOpenThrottleCommander = (
     }
   }, [open]);
 
+  // Extras (e.g. resolved id rows) arrive after an async lookup, and cmdk only
+  // auto-selects a newly mounted item when nothing is selected — so without
+  // this Enter does nothing. Re-target only when the first extra changes (a new
+  // result set), so a row the user arrowed to keeps the highlight.
+  React.useEffect(() => {
+    if (firstExtraValue) {
+      setHighlighted(firstExtraValue);
+    }
+  }, [firstExtraValue]);
+
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent): void => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
@@ -115,8 +132,10 @@ export const useOpenThrottleCommander = (
     extraItems,
     handleEmptyStateSearch,
     handleSelect,
+    highlighted,
     open,
     search,
+    setHighlighted,
     setOpen,
     setSearch,
     showEmptyEscapeHatch,

@@ -7,6 +7,7 @@ import {
   checkHeartbeat,
   checkOffline,
   checkPlugin,
+  checkPrivacyOptIns,
   checkReachability,
   checkToken,
   formatAge,
@@ -320,6 +321,27 @@ describe('checkOffline', () => {
 
   it('passes when it is off', () => {
     expect(checkOffline({ offline: false }).status).toBe('PASS');
+  });
+});
+
+describe('checkPrivacyOptIns', () => {
+  it('passes and lists opted-in repos', () => {
+    const result = checkPrivacyOptIns({
+      invalid: [],
+      repos: ['https://github.com/acme/widgets'],
+    });
+    expect(result.status).toBe('PASS');
+    expect(result.detail).toContain('https://github.com/acme/widgets');
+  });
+
+  it('passes with nothing opted in', () => {
+    expect(checkPrivacyOptIns({ invalid: [], repos: [] }).status).toBe('PASS');
+  });
+
+  it('warns on entries that do not normalize', () => {
+    const result = checkPrivacyOptIns({ invalid: ['nonsense'], repos: [] });
+    expect(result.status).toBe('WARN');
+    expect(result.detail).toContain('nonsense');
   });
 });
 

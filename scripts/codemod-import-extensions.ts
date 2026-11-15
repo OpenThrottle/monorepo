@@ -240,10 +240,10 @@ const main = (): void => {
   const only = flagValue('project');
   const workspaceRoot = path.resolve(import.meta.dirname, '..');
 
-  const projects =
-    only === undefined
-      ? findCommonjsProjects(workspaceRoot)
-      : [path.resolve(workspaceRoot, only)];
+  const isWholeWorkspace = only === undefined;
+  const projects = isWholeWorkspace
+    ? findCommonjsProjects(workspaceRoot)
+    : [path.resolve(workspaceRoot, only)];
 
   const reports = projects.map((projectRoot) =>
     codemodProject(projectRoot, { write }),

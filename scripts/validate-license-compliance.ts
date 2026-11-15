@@ -5,7 +5,7 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { createLogger } from './utils/index.ts';
+import { createLogger } from './utils/logger.ts';
 
 const logger = createLogger();
 
@@ -74,11 +74,12 @@ const LICENSE_TOKEN = /\s+|(?=[()])|(?<=[()])/;
  * @description Tokenize an SPDX license expression into ids, parentheses, and the
  * `AND`/`OR`/`WITH` operators. Empty tokens are dropped.
  */
-export const tokenizeSpdx = (expression: string): string[] =>
-  expression
+export const tokenizeSpdx = (expression: string): string[] => {
+  return expression
     .split(LICENSE_TOKEN)
     .map((token) => token.trim())
     .filter((token) => token.length > 0);
+};
 
 /**
  * @description Evaluate an SPDX license expression against the allowlist. Implements the
@@ -98,8 +99,12 @@ export const isExpressionAllowed = (
 
   let position = 0;
 
-  const peek = (): string | undefined => tokens[position];
-  const next = (): string | undefined => tokens[position++];
+  const peek = (): string | undefined => {
+    return tokens[position];
+  };
+  const next = (): string | undefined => {
+    return tokens[position++];
+  };
 
   const parseLeaf = (): boolean => {
     const token = next();
@@ -279,10 +284,10 @@ export const formatReport = (result: ComplianceResult): string => {
     const versions =
       violation.versions.length > 0 ? `@${violation.versions.join(', ')}` : '';
     const homepage = violation.homepage ? ` — ${violation.homepage}` : '';
-    const hint =
-      violation.reason === 'unknown'
-        ? 'undetected license: verify the bundled LICENSE text, then add it to resolvedUnknowns or exceptions'
-        : 'license not on the allowlist';
+    const isUnknown = violation.reason === 'unknown';
+    const hint = isUnknown
+      ? 'undetected license: verify the bundled LICENSE text, then add it to resolvedUnknowns or exceptions'
+      : 'license not on the allowlist';
     lines.push(
       `  ${violation.package}${versions}: "${violation.license}" (${hint})${homepage}`,
     );
@@ -322,10 +327,13 @@ export const readInstalledLicenses = (cwd: string): PnpmLicensesOutput => {
  * Both the license gate and the NOTICE manifest exclude them for OS-independence; their
  * license matches the cross-platform parent package that stays checked. Exported for reuse.
  */
-export const hasPlatformConstraints = (manifest: unknown): boolean =>
-  typeof manifest === 'object' &&
-  manifest !== null &&
-  ('os' in manifest || 'cpu' in manifest);
+export const hasPlatformConstraints = (manifest: unknown): boolean => {
+  return (
+    typeof manifest === 'object' &&
+    manifest !== null &&
+    ('os' in manifest || 'cpu' in manifest)
+  );
+};
 
 /**
  * @description Map over items with a fixed-size worker pool so reading thousands of
@@ -344,7 +352,13 @@ const mapWithConcurrency = async <T, TResult>(
     if (current >= items.length) {
       return;
     }
-    results[current] = await fn(items[current]);
+    const item = items[current];
+
+    if (item === undefined) {
+      return;
+    }
+
+    results[current] = await fn(item);
     return worker();
   };
   await Promise.all(

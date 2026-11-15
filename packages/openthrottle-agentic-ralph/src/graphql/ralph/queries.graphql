@@ -274,3 +274,13 @@ query getProject($id: ID!) {
     ...Project
   }
 }
+
+# The OT Loop job folds messages an in-worker hook claimed for its run into its guidance list
+# (docs/workflows/ot-loop-job.md § 9).
+query ralphDeliveredPlanMessages($input: ListPlanMessagesInput!) {
+  planMessages(input: $input) {
+    body
+    id
+    planRunId
+  }
+}

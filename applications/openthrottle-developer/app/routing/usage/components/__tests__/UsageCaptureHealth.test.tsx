@@ -35,7 +35,7 @@ const renderComponent = (
 
 describe('UsageCaptureHealth Component', () => {
   describe('when every source captured within 24 hours', () => {
-    test('lists one table row per stream and source with no warning', () => {
+    test('lists one table row per stream and source with no notice', () => {
       const component = renderComponent({
         rows: [
           buildRow({ source: 'claude-code' }),
@@ -52,6 +52,7 @@ describe('UsageCaptureHealth Component', () => {
       expect(component.getByRole('table')).toBeInTheDocument();
       expect(component.getAllByTestId('UsageCaptureHealthRow')).toHaveLength(3);
       expect(component.queryByRole('alert')).not.toBeInTheDocument();
+      expect(component.queryByRole('status')).not.toBeInTheDocument();
     });
 
     test('renders each last-captured time as a machine-readable time element', () => {
@@ -69,7 +70,7 @@ describe('UsageCaptureHealth Component', () => {
   });
 
   describe('when a source has not captured for more than 24 hours', () => {
-    test('raises one alert per stale source and marks only its row stale', () => {
+    test('shows one quiet status notice, no alerts, and marks only stale rows', () => {
       const component = renderComponent({
         rows: [
           buildRow({ source: 'claude-code' }),
@@ -80,22 +81,44 @@ describe('UsageCaptureHealth Component', () => {
           }),
           buildRow({
             lastCapturedAt: hoursAgo(24 * 35),
+            source: 'cursor',
+            stream: 'skill_outcomes',
+          }),
+          buildRow({
+            lastCapturedAt: hoursAgo(24 * 35),
             source: 'claude',
             stream: 'token_usage',
           }),
         ],
       });
 
-      const alerts = component.getAllByRole('alert');
       const rows = component.getAllByTestId('UsageCaptureHealthRow');
 
-      expect(alerts).toHaveLength(2);
+      expect(component.queryByRole('alert')).not.toBeInTheDocument();
+      expect(component.getAllByRole('status')).toHaveLength(1);
       expect(rows.filter((row) => row.dataset.stale === 'true')).toHaveLength(
-        2,
+        3,
       );
       expect(rows.filter((row) => row.dataset.stale === 'false')).toHaveLength(
         1,
       );
+    });
+
+    test('names each stale source once in the notice', () => {
+      const component = renderComponent({
+        rows: [
+          buildRow({ lastCapturedAt: hoursAgo(25), source: 'cursor' }),
+          buildRow({
+            lastCapturedAt: hoursAgo(25),
+            source: 'cursor',
+            stream: 'skill_outcomes',
+          }),
+        ],
+      });
+
+      const notice = component.getByTestId('UsageCaptureHealthStaleNotice');
+
+      expect(notice.textContent?.match(/cursor/g)).toHaveLength(1);
     });
 
     test('lists stale rows before fresh ones', () => {
@@ -119,7 +142,9 @@ describe('UsageCaptureHealth Component', () => {
         rows: [buildRow({ lastCapturedAt: hoursAgo(24) })],
       });
 
-      expect(component.queryByRole('alert')).not.toBeInTheDocument();
+      expect(
+        component.queryByTestId('UsageCaptureHealthStaleNotice'),
+      ).not.toBeInTheDocument();
     });
   });
 

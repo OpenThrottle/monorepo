@@ -10,7 +10,8 @@ import {
   mergeWeights,
   weighRun,
 } from './shard-weights-from-ci.ts';
-import { createLogger, flagValue, hasFlag } from './utils/index.ts';
+import { flagValue, hasFlag } from './utils/args.ts';
+import { createLogger } from './utils/logger.ts';
 
 /**
  * @description Regenerate `scripts/shard-weights.json` — the measured

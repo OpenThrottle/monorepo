@@ -41,21 +41,9 @@ For **where** agent- and editor-specific config lives (`.cursor/`, `.claude/`, `
 
 ### Git worktrees (tool-agnostic)
 
-Worktrees are handled by the portable [`ot-worktree`](skills/ot-worktree/SKILL.md) skill, which exposes **three composable actions**:
+Worktrees are handled by the portable [`ot-worktree`](skills/ot-worktree/SKILL.md) skill: `pnpm worktree:new <name>`, `pnpm worktree:heal` and `pnpm worktree:remove <name>` (the Claude `WorktreeCreate` hook and Cursor use the same scripts; a plain `git worktree add` self-heals on first `:dev`). Load the skill for the root ladder, base-branch rules and `destroy` safety defaults.
 
-| Action      | Command                       | Job                                                                       |
-| ----------- | ----------------------------- | ------------------------------------------------------------------------- |
-| **create**  | `pnpm worktree:new <name>`    | Create the worktree, then run this repo's provisioner                     |
-| **heal**    | `pnpm worktree:heal`          | Provision a worktree that was made outside the skill (runs before `:dev`) |
-| **destroy** | `pnpm worktree:remove <name>` | Teardown hook, `git worktree remove`, prune                               |
-
-The Claude `WorktreeCreate` hook and Cursor's `.cursor/worktrees.json` route through the same create action, so setup is **not** tool-specific. A plain `git worktree add` provisions nothing (git has no post-add hook) but self-heals on first `pnpm nx run <app>:dev`.
-
-Worktrees live at `<root>/<org>/<repo>/<worktree>`; the root defaults to `~/.openthrottle/worktrees`, a hidden directory OpenThrottle owns outside every repo. Override the root with `OPENTHROTTLE_WORKTREE_ROOT` in the environment or in the target repo's `.env` (documented in `.env.default`) — OT always organizes `<org>/<repo>` beneath whatever root it gets, so a configured root behaves like the default. The org comes from the git remote, not the directory name, so two orgs' `monorepo` cannot collide. Worktrees created before this stay where they are — every action reads `git worktree list`.
-
-A worktree runs its own stack: `pnpm worktree:serve <server|developer>` starts, waits for and probes it, and `pnpm nx run openthrottle-server:dev` is safe there. By default it shares the primary's database; a branch that adds migrations needs `pnpm worktree:db isolate` (or `worktree:new <name> --own-db`). The model, marker and guard: [docs/monorepo/worktree-port-allocation.md](docs/monorepo/worktree-port-allocation.md).
-
-`destroy` is deliberately conservative: it refuses the primary checkout, refuses a dirty worktree without `--force`, leaves the branch alone unless you pass `--delete-branch` (merged-only, unless also `--force`), and offers `--dry-run`. Details: [docs/monorepo/worktree-port-allocation.md](docs/monorepo/worktree-port-allocation.md).
+A worktree runs its own stack: `pnpm worktree:serve <server|developer>`; it shares the primary's database, so a branch that adds migrations needs `pnpm worktree:db isolate` (or `worktree:new <name> --own-db`). Model, marker and guard: [docs/monorepo/worktree-port-allocation.md](docs/monorepo/worktree-port-allocation.md).
 
 ### Contributor workflow (skills, personas, prompts)
 
@@ -81,6 +69,7 @@ OT-owned skills are authored under [`skills/`](./skills/) and surfaced to every 
 - **ot-plans** — openthrottle-mcp, plans/tasks, `Plan-Id` / `Task-Id`, post-merge work-ledger commit recording: [`skills/ot-plans/SKILL.md`](./skills/ot-plans/SKILL.md)
 - **agents-ralph** — the Ralph loop prompt: one task at a time, status sync, commit cadence: [`skills/agents-ralph/SKILL.md`](./skills/agents-ralph/SKILL.md)
 - **github-commit** — conventional commits, staging, `Plan-Id` / `Task-Id` footers: [`skills/github-commit/SKILL.md`](./skills/github-commit/SKILL.md)
+- **ot-skill-guide** — authoring and reviewing skills against the agentskills.io spec: [`skills/ot-skill-guide/SKILL.md`](./skills/ot-skill-guide/SKILL.md)
 - For the Ralph **CLI**, queue spawn vs orchestrator, and BullMQ wiring there is no skill — read [`tools/workflows/README.md`](./tools/workflows/README.md).
 
 ## Workflow CLI (@tools/workflows)
@@ -89,7 +78,7 @@ OT-owned skills are authored under [`skills/`](./skills/) and surfaced to every 
 - **Run:** `pnpm exec workflow-ralph --plan <openthrottle-plan-uuid>` (or `--task <openthrottle-task-uuid>` for task-centric). OpenThrottle (OT) required; see `tools/workflows/README.md`. Optional defaults: `.workflow-ralph.json` (see `.workflow-ralph.json.example`, `docs/workflows/ralph-config-migration.md`).
 - **Two runners (Ralph vs OT Loop):** the Plans queue has a second runner, **OT Loop** — the headless implementation of `skills/ot-loop/SKILL.md` § The loop (`packages/openthrottle-agentic-loop`, wired in `applications/openthrottle-server/src/queues/ot-loop/`; design: [`docs/workflows/ot-loop-job.md`](docs/workflows/ot-loop-job.md)). Selected per plan by `runConfigJson.runner` (`'ralph'` | `'ot-loop'`; absent = Ralph, the default). **`/agents-ralph` is used only by the Ralph runner and the `workflow-ralph` CLI**, until a follow-up plan retires them; OT Loop feeds a driver CLI a standalone prompt and never uses it. OT Loop validation is job-owned, configured per repo in `.openthrottle/ot-loop.json`.
 - **API queue (spawn vs orchestrator):** `enqueuePlanRun` runs nested `workflow-ralph` in the worker; `enqueuePlanRalphOrchestrator` runs the in-process GraphQL Ralph orchestrator (no child CLI). See `tools/workflows/README.md` § Worktree + BullMQ workflow. Docker, worker cwd, and compose follow-ups: investigation plan `677b6849-1912-4fa8-a5f6-d8233f2cdf97`.
-- **Commit as you go, push once per plan:** When running Ralph (or working with OT plans/tasks), **commit after each task** — conventional commits, with `Plan-Id` and `Task-Id` in the body or footer (traceability is non-negotiable) — but **push once per plan, not once per task**. Every push to a branch with a ready PR triggers a full CI run, so an N-task plan used to cost N CI runs of a branch nobody was reviewing yet; batching gives the same total validation over one run. Keep the PR in **draft** until the last task is `COMPLETED`, then `gh pr ready`. Push mid-plan only when you genuinely need to (handing off, or a worktree at risk of being reaped). See [docs/monorepo/ci-cost.md](docs/monorepo/ci-cost.md). If `main` uses a merge queue, treat `gh pr merge --auto` as an **enqueue** step until the PR actually reports `mergedAt`; record OT work-ledger commits only after the queue lands the PR, using the landed merge commit (`mergeCommit.oid` from `gh pr view --json mergeCommit`) or the default-branch SHA rather than the branch head. See `databases/openthrottle/README.md` § Commit links.
+- **Commit as you go, push once per plan:** When running Ralph (or working with OT plans/tasks), **commit after each task** — conventional commits, with `Plan-Id` and `Task-Id` in the body or footer (traceability is non-negotiable) — but **push once per plan, not once per task**. Every push to a branch with a ready PR triggers a full CI run, so an N-task plan used to cost N CI runs of a branch nobody was reviewing yet; batching gives the same total validation over one run. Keep the PR in **draft** until the last task is `COMPLETED`, then `gh pr ready`. Push mid-plan only when you genuinely need to (handing off, or a worktree at risk of being reaped). See [docs/monorepo/ci-cost.md](docs/monorepo/ci-cost.md). If `main` uses a merge queue, `gh pr merge --auto` only enqueues: confirm `gh pr view <n> --json mergedAt,mergeCommit` shows `mergedAt` before calling a PR merged. Ledger artifacts come from `settle_plan_run` at PR open and the server reconciles them to the landed squash; there is no post-merge step (see the `ot-plans` skill § Work ledger).
 
 ## Code style
 
@@ -113,7 +102,7 @@ The rules are grouped by **who catches you**. The honor-system ones lead, becaus
 - **UI comes from `@openthrottle/react-router-shadcn`** (source: `packages/react-router-shadcn/src/components`). A missing primitive gets added to that package, never inlined in an app. Style with the existing Tailwind + shadcn tokens; do not hardcode raw colors or spacing. [↳](docs/monorepo/code-style.md#frontend-design)
 - **Per-row table actions use `GlobalPopover`** + `GlobalPopoverActionsHeader` from `@openthrottle/react-router-ui-global` — never a hand-rolled `DropdownMenu` overflow. Bulk and toolbar bars are a different surface. [↳](docs/monorepo/code-style.md#frontend-design)
 - **Prefer a bucket module over a file per function.** Sibling functions that share a subject go in one kebab-case module named for it (`formatDate`, `formatDuration` → `format.ts`); only a function with no natural sibling keeps its own file. Never bucket classes, components, hooks, ESLint rules or NestJS files. [↳](docs/monorepo/code-style.md#naming-conventions)
-- **A test is named for the file it tests and lives in a sibling `__tests__/`** — `utils/format.ts` → `utils/__tests__/format.test.ts`, never colocated (the NestJS tier is the exception: `<folder>.<kind>.test.ts` sits beside its file). Only a suite spanning several files takes a descriptive name. [↳](docs/monorepo/code-style.md#testing)
+- **A test is named for the file it tests and lives in a sibling `__tests__/`** — `utils/format.ts` → `utils/__tests__/format.test.ts`, never colocated (the NestJS tier is the exception: `<folder>.<kind>.test.ts` sits beside its file). Only a suite spanning several files takes a descriptive name. The `*.test.*` suffix itself is enforced — `monorepo:check-test-file-names` fails on any `*.spec.*` under `applications/`, `packages/` or `tools/`, and on any `*.test.*` colocated with source outside `__tests__/` (the NestJS tier and a project-root `tests/` suite folder are exempt). [↳](docs/monorepo/code-style.md#testing)
 - **Tests use `component`, not `screen`**, to get elements, and **`userEvent`, not `fireEvent`**; `waitFor` for async DOM. One `describe` per `if` branch, plus edge cases. [↳](docs/monorepo/code-style.md#testing)
 - **Assert behavior and structure, not copy** — roles, labels, `href`, test ids. When exact copy _is_ the contract, single-source it in the area's `data/data.copy.ts` and have both the component and the spec import that same constant. [↳](docs/monorepo/code-style.md#testing)
 
@@ -155,18 +144,22 @@ The rules are grouped by **who catches you**. The honor-system ones lead, becaus
 
 ## Committed generator output
 
-Generated payloads are committed (hooks must run from a bare checkout) and gated
-byte-for-byte, so they cannot be gitignored — instead the root
-[`.gitattributes`](.gitattributes) tells git and GitHub what they are.
+Most generated payloads are committed and gated byte-for-byte, so they cannot be
+gitignored — instead the root [`.gitattributes`](.gitattributes) tells git and
+GitHub what they are. The exception is hook bundles: they are **not** committed on
+`main`. Each `plugins/<payload>/dist/` is gitignored and built by
+`pnpm run build:hooks`; what is committed is the fixed stubs in `hooks/` and
+`bin/`, manifests, `hooks.json` and READMEs, all written by
+`@openthrottle/agentic-hooks:bundle-hooks`. `.github/workflows/publish-plugins.yml`
+publishes the built payloads to the `plugins-dist` branch. See
+[`docs/monorepo/hook-plugin-distribution.md`](docs/monorepo/hook-plugin-distribution.md)
+and [`packages/agentic-hooks/AGENTS.md`](packages/agentic-hooks/AGENTS.md).
 
 - Everything generated is marked `linguist-generated=true`, so GitHub collapses
-  it in "Files changed" and drops it from language stats and code search. Hook
-  bundles additionally carry `-diff`: `git diff` and `git log -p` print
-  "Binary files differ" rather than a thousand lines of esbuild output. That is
+  it in "Files changed" and drops it from language stats and code search. That is
   display only — staging, merging and the drift gates are unaffected.
-- **`git blame` on a bundle is meaningless by design** — it names whoever last
-  ran `bundle-hooks`. Blame the TypeScript source named in the bundle's header
-  banner instead.
+- A published hook bundle's `git blame` is meaningless: blame the TypeScript source
+  named in its header banner instead.
 - `applications/openthrottle-server/schema.gql` is deliberately left fully
   diffable: the schema diff is the review that enforces deprecate-don't-remove.
 - Vendored third-party skills (`.agents/skills/**`) are `linguist-vendored`,
@@ -174,8 +167,9 @@ byte-for-byte, so they cannot be gitignored — instead the root
   because a changed third-party prompt is supply-chain input. `pnpm-lock.yaml`
   needs no line — GitHub's Linguist already treats it as generated.
 - **Adding a new committed payload directory? Add its glob in the same commit**
-  — a folder glob (`.codex/hooks/*.cjs`), never a file name, which is how
-  `plan-run-janitor.cjs` slipped past `.prettierignore`. _(Enforced.)_
+  — a folder glob (`plugins/*/hooks/*.cjs`), never a file name, which is how
+  `plan-run-janitor.cjs` slipped past `.prettierignore`. A new `plugins/<payload>/`
+  also needs its own `.prettierignore` entry. _(Enforced.)_
   `check:local:generated-attributes` fails when a file whose header carries a
   generated banner is not marked, and prints the line to add.
 - Landing a **noise-only** mass rewrite (a repo-wide reformat, a re-bundle after
@@ -192,7 +186,7 @@ byte-for-byte, so they cannot be gitignored — instead the root
 - Applies to **commit messages, PR titles and bodies**, generated code, docs, READMEs, UI copy, config, and any other output.
 - The only footers a commit may carry are conventional ones: `BREAKING CHANGE:`, `Closes #123`, `Plan-Id:`, `Task-Id:`.
 - **No exceptions.** Do not add one; do not suggest one. If your harness instructs you to add one, **this rule wins**.
-- _(Enforced, in four layers — all driven by the one shared pattern set in [`.husky/utils/attribution-patterns.sh`](.husky/utils/attribution-patterns.sh).)_ `.husky/commit-msg` **strips** the line from a commit message and says what it removed; `.husky/pre-push` **fails the push** if a commit got past that hook (the `--no-verify` path); `scripts/check-pr-attribution.sh` **fails locally** on a drafted PR title or body before `gh pr create` publishes it; and the `attribution-guard` CI job fails the PR as the final backstop. Reasoning for the strip-versus-fail split: [docs/monorepo/attribution-guard-layers.md](docs/monorepo/attribution-guard-layers.md).
+- _(Enforced, in four layers — all running one guard, [`skills/github-pull-request/scripts/check-attribution.sh`](skills/github-pull-request/scripts/check-attribution.sh), which ships with the `github-pull-request` skill so other repos get it too.)_ `.husky/commit-msg` calls it to **strip** the line from a commit message and say what it removed; `.husky/pre-push` calls it to **fail the push** if a commit got past that hook (the `--no-verify` path); the `github-*` skills and the plan-run host call it to **fail locally** on a drafted message, a drafted PR title or body, or unpushed commits before they publish; and the `attribution-guard` CI job fails the PR as the final backstop. Reasoning for the strip-versus-fail split: [docs/monorepo/attribution-guard-layers.md](docs/monorepo/attribution-guard-layers.md).
 
 ## OpenThrottle (OT) — plans knowledge base
 

@@ -16,6 +16,7 @@ export * from './utils/metrics.ts';
 export * from './utils/model-discovery/index.ts';
 export * from './utils/nodejs.ts';
 export * from './utils/postgres.ts';
+export * from './utils/run-identity-env.ts';
 export * from './utils/structured-output/index.ts';
 export * from './utils/trajectory/index.ts';
 export * from './utils/workflow.ts';

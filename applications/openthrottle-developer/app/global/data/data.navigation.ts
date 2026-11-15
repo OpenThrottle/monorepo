@@ -1,10 +1,12 @@
 import type { GlobalSidebarLinkProps } from '@openthrottle/react-router-ui-global';
 import { FEATURE_BETA_PREVIEW } from '@openthrottle/react-router-utils';
 import {
+  ActivityIcon,
   BellIcon,
   BinaryIcon,
   BlocksIcon,
   BookOpenIcon,
+  BotIcon,
   BrainCircuitIcon,
   BrainIcon,
   BugIcon,
@@ -19,6 +21,7 @@ import {
   GitPullRequest,
   HatGlassesIcon,
   KeyRoundIcon,
+  LayoutDashboardIcon,
   ListOrderedIcon,
   LogInIcon,
   MessageCircleCode,
@@ -177,6 +180,29 @@ export const dataNavigationV2: Record<string, PermissionGatedNavigationLink[]> =
       {
         children: 'Usage',
         icon: ChartAreaIcon,
+        subLinks: [
+          {
+            children: 'Overview',
+            end: true,
+            icon: LayoutDashboardIcon,
+            to: '/usage',
+          },
+          {
+            children: 'Agents',
+            icon: BotIcon,
+            to: '/usage/agents',
+          },
+          {
+            children: 'Skills',
+            icon: BrainCircuitIcon,
+            to: '/usage/skills',
+          },
+          {
+            children: 'Telemetry',
+            icon: ActivityIcon,
+            to: '/usage/telemetry',
+          },
+        ],
         to: '/usage',
       },
     ],

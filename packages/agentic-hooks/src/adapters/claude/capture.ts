@@ -15,11 +15,19 @@ import {
   recordSkillStart,
   resolveHookRepoRoot,
 } from '../../index.ts';
+import { detectClaudeBundleHost } from './bundle-host.ts';
 import { CLAUDE_SOURCE, normalizeClaudePayload } from './payload.ts';
 import { isShadowedByRepoHooks } from './shadow.ts';
 
 const main = async (): Promise<void> => {
   try {
+    // Another tool is running this bundle. Its payloads are not Claude's, and its own adapter is
+    // the only correct producer (agent-cli-hook-capability-matrix.md § Which tool is running the
+    // Claude bundles).
+    if (detectClaudeBundleHost() !== 'claude-code') {
+      return;
+    }
+
     const projectDir =
       process.env.CLAUDE_PROJECT_DIR ||
       process.env.OPEN_THROTTLE_REPO_ROOT ||

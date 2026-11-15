@@ -6,6 +6,7 @@ import {
   UpdateCmsFragmentDocument,
 } from '~/__generated__/graphql';
 import { fetchAuthGraphql } from '~/global/utils/graphql.server';
+import { toCmsActionFailure } from '~/global/utils/toCmsActionFailure';
 import { FRAGMENT_EDITOR_COPY } from '~/routing/fragments/data/data.copy';
 import type { FragmentIntent } from '~/routing/fragments/data/data.intents';
 import { FRAGMENT_INTENT } from '~/routing/fragments/data/data.intents';
@@ -15,7 +16,6 @@ import {
   readChildUuid,
   readFragmentUpdateForm,
   readNewChildForm,
-  toFragmentActionFailure,
 } from '~/routing/fragments/utils/fragment-action';
 
 const INTENTS: readonly string[] = Object.values(FRAGMENT_INTENT);
@@ -115,7 +115,7 @@ export const runFragmentAction = async (
       }
     }
   } catch (error) {
-    return toFragmentActionFailure(error);
+    return toCmsActionFailure(error, FRAGMENT_EDITOR_COPY);
   }
 
   return { intent, ok: true };

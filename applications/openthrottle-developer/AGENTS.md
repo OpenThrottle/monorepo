@@ -66,6 +66,21 @@ for devtools/profiling/troubleshooting.
 - **Voice input** (#142): push-to-talk on the home commander via `app/routing/home/hooks/useVoiceInput.tsx`
   - `useTranscriptionStream.tsx`, streaming to a local WhisperLive instance — a dev-only external
     dependency; the feature degrades when it is unreachable.
+  - **The mic only renders with `FEATURE_BETA_PREVIEW=true`** (`HomeComposer.tsx`).
+  - **Running it locally:** `pnpm run voice:start` (detached, returns once healthy), then
+    `voice:logs` / `voice:stop`. The **server** reads `WHISPER_SERVICE_URL` (its `.env.default` ships `ws://localhost:6030`);
+    `WHISPER_MODEL` is also read by the server (default `tiny.en`), never by the container. The first
+    session downloads the model (~75MB) into the `whisper_model_cache` volume.
+  - "Transcription service is unreachable" in the composer means the container is down, not
+    misconfigured. Check `docker compose ps -a whisper`. Expected log lines that are not errors:
+    `Single model mode currently only works with custom models` (the model is chosen per client),
+    `onnxruntime cpuid_info warning: Unknown CPU vendor` (arm64 Docker; the VAD still works), the
+    three-line healthcheck connect/close every minute, and
+    `[ERROR]: Sending data to client: sent 1000 (OK)` at the end of each session.
+  - Shared across worktrees, like the default shared DB: in a worktree `voice:start` starts (or
+    leaves running) the **primary's** container, `voice:stop` never stops it, and the worktree
+    server's `:6030` URL already points at it. See
+    [worktree-port-allocation.md § Shared whisper](../../docs/monorepo/worktree-port-allocation.md#shared-whisper).
 - `tests/setup.ts` keeps app-local jsdom shims (no-op WebGL2 context + a `visualViewport`
   stand-in for `@paper-design/shaders` on the auth screen); these stay here, not in the shared
   testing package.

@@ -105,12 +105,24 @@ const Harness = (): React.ReactElement => {
   );
 };
 
-const renderTurn = (): RenderResult => {
+// Counts POSTs to the conversation-stream action registered by renderTurn.
+let turnPosts = 0;
+
+const renderTurn = (
+  pageLoader: (() => null) | undefined = undefined,
+): RenderResult => {
   const RoutesStub = createRoutesStub([
-    { Component: Harness, path: '/' },
+    { Component: Harness, loader: pageLoader, path: '/' },
     {
       action: () => RESTORED,
       path: '/resources/agent-conversations',
+    },
+    {
+      action: () => {
+        turnPosts += 1;
+        return { assistantMessageId: 'a1', conversationId: 'conv-42' };
+      },
+      path: '/resources/conversation-stream',
     },
   ]);
 
@@ -133,6 +145,35 @@ describe('useAgenticChatTurn restore/reset', () => {
     await waitFor(() =>
       expect(component.getByTestId('message-count')).toHaveTextContent('2'),
     );
+  });
+
+  test('neither a restore nor a chat turn re-runs the page loader', async () => {
+    let pageLoads = 0;
+    const pageLoader = (): null => {
+      pageLoads += 1;
+      return null;
+    };
+    const user = userEvent.setup();
+    const component = renderTurn(pageLoader);
+
+    // The loader settles before the route element renders, so wait for the
+    // element itself rather than racing it with getByRole.
+    const restore = await component.findByRole('button', { name: 'Restore' });
+    expect(pageLoads).toBe(1);
+
+    await user.click(restore);
+    await waitFor(() =>
+      expect(component.getByTestId('message-count')).toHaveTextContent('2'),
+    );
+    const postsBefore = turnPosts;
+    await user.click(component.getByRole('button', { name: 'Submit' }));
+    await waitFor(() => expect(turnPosts).toBe(postsBefore + 1));
+    // Give a revalidation the action would have triggered time to start.
+    await new Promise((resolve) => {
+      setTimeout(resolve, 50);
+    });
+
+    expect(pageLoads).toBe(1);
   });
 
   test('reset clears the conversation id and thread', async () => {

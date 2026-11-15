@@ -19,6 +19,7 @@ import {
   type GetTasksByPlanIdQuery,
   GetTasksDocument,
   type GetTasksQuery,
+  PlanTaskStatus,
   PromoteTaskToPlanDocument,
   type PromoteTaskToPlanMutation,
   ReorderPlanTasksDocument,
@@ -136,9 +137,18 @@ export const listTasksByCategoryToolParameters = z
   })
   .strict();
 
-export const createTaskToolDescription = `Create a new task in OpenThrottle. Requires planId and title; optional description, category, status (default: PENDING), requirements (JSON string), summary, assignee (e.g. GitHub username), project, projectId, sortOrder (execution order within plan; auto-assigned when omitted), wave (coarse concurrency layer >= 1; tasks sharing a wave may be worked concurrently; omit/null = unassigned, runs sequentially. Not consumed for execution yet.).`;
+/**
+ * @description Task status labels, derived from the generated PlanTaskStatus enum (the SSOT). SCHEDULED is
+ * plans-only. Spelled out because an unlisted status let agents send lowercase (`in_progress`) — the server
+ * upper-cases it, but the canonical value is what every reader and grader compares against.
+ */
+const TASK_STATUS_VALUES = Object.values(PlanTaskStatus)
+  .filter((status) => status !== PlanTaskStatus.Scheduled)
+  .join(', ');
 
-export const createTasksToolDescription = `Create multiple tasks for a plan in one call. Requires planId and tasks (array of objects with title; optional description, category, status, requirements, summary, assignee, project, projectId, sortOrder, wave). When sortOrder is omitted per item, tasks append after the plan max sortOrder (1000, 2000, …) preserving array order. Explicit sortOrder per item is respected. wave (integer >= 1) groups a contiguous sortOrder run into a concurrency layer the author is asserting may run in parallel; omit/null leaves a task unassigned (sequential, in sortOrder position) — set it in this same call, since a second create_tasks pass cannot retrofit ids that did not exist yet. Not consumed for execution yet. Returns created task ids and titles.`;
+export const createTaskToolDescription = `Create a new task in OpenThrottle. Requires planId and title; optional description, category, status (one of: ${TASK_STATUS_VALUES}; uppercase; default: PENDING), requirements (JSON string), summary, assignee (e.g. GitHub username), project, projectId, sortOrder (execution order within plan; auto-assigned when omitted), wave (coarse concurrency layer >= 1; tasks sharing a wave may be worked concurrently; omit/null = unassigned, runs sequentially. Not consumed for execution yet.).`;
+
+export const createTasksToolDescription = `Create multiple tasks for a plan in one call. Requires planId and tasks (array of objects with title; optional description, category, status (one of: ${TASK_STATUS_VALUES}; uppercase), requirements, summary, assignee, project, projectId, sortOrder, wave). When sortOrder is omitted per item, tasks append after the plan max sortOrder (1000, 2000, …) preserving array order. Explicit sortOrder per item is respected. wave (integer >= 1) groups a contiguous sortOrder run into a concurrency layer the author is asserting may run in parallel; omit/null leaves a task unassigned (sequential, in sortOrder position) — set it in this same call, since a second create_tasks pass cannot retrofit ids that did not exist yet. Not consumed for execution yet. Returns created task ids and titles.`;
 
 export const deleteTaskToolDescription = `Delete a task by id. Returns whether a row was deleted.`;
 
@@ -152,7 +162,7 @@ export const listTasksByCategoryToolDescription = `List tasks filtered by catego
 
 export const reorderPlanTasksToolDescription = `Reorder tasks within a plan. Requires planId and taskIds (array of task UUIDs in desired order). Renumbers sortOrder to 1000, 2000, … atomically. Prefer this over delete-and-recreate when fixing task execution order.`;
 
-export const updateTaskToolDescription = `Update a task by id. Pass id and any of: title, description, status, category, assignee, planId, project, projectId, requirements, summary, sortOrder (execution order within plan; gap-based insert e.g. 1500 between 1000 and 2000), wave (coarse concurrency layer >= 1; null clears it back to unassigned; omit to leave unchanged. Not consumed for execution yet.).`;
+export const updateTaskToolDescription = `Update a task by id. Pass id and any of: title, description, status (one of: ${TASK_STATUS_VALUES}; uppercase), category, assignee, planId, project, projectId, requirements, summary, sortOrder (execution order within plan; gap-based insert e.g. 1500 between 1000 and 2000), wave (coarse concurrency layer >= 1; null clears it back to unassigned; omit to leave unchanged. Not consumed for execution yet.).`;
 
 export const promoteTaskToolDescription = `Promote a task into a new, first-class plan. Validates the task is promotable (exists, not a lifecycle hook, not already promoted) then enqueues an async promotion job: it creates a new plan from the task (carrying its title, description, and tags), seeds an initial "Break down and scope this plan" task, and closes out the source task (status PROMOTED + \`promoted\` tag; the work continued as its own plan, unlike SKIPPED). Requires taskId; optional idempotencyKey (re-submitting the same key enqueues at most one job). Returns the accepted job id; the new plan is created asynchronously.`;
 

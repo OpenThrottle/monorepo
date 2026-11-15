@@ -138,6 +138,7 @@ export function Layout({
       <body>
         <GlobalProviders>
           <GlobalLayout
+            appVersion={__APP_VERSION__}
             data={{
               Content: [
                 {

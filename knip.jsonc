@@ -418,6 +418,17 @@
       "entry": ["src/index.ts", "src/nestjs-typeorm.module.ts"],
       "project": ["src/**/*.ts"],
     },
+    "packages/openthrottle-mcp-evals": {
+      "entry": [
+        "src/index.ts",
+        // Run by the on-demand `eval-tool-selection` Nx target (tsx); reaches
+        // the rest of src/tool-selection/, which it imports.
+        "src/tool-selection/cli.ts",
+        // Spawned by cli.ts as a stdio child through a `new URL(...)` path,
+        // not an import, so knip cannot reach it from the graph.
+        "src/sandbox/bin-sandbox.ts",
+      ],
+    },
     "packages/openthrottle-mcp": {
       "entry": [
         "src/index.ts",
@@ -428,9 +439,8 @@
         // Run by the `measure-tool-surface` Nx target (tsx); also reaches
         // surface.ts, which it imports.
         "src/model-facing-text/writeToolSurface.ts",
-        // Run by the on-demand `eval-tool-selection` Nx target (tsx); reaches
-        // the rest of src/evals/tool-selection/, which it imports.
-        "src/evals/tool-selection/cli.ts",
+        // Public `./tool-surface` subpath, consumed by openthrottle-mcp-evals.
+        "src/tool-surface.ts",
         // Streamable-HTTP MCP surface. Shell-invoked container entrypoints with
         // no in-repo importer, so knip cannot reach them via the import graph:
         // Dockerfile.NestJS `mcp-development` runs `tsx src/bin-http.ts`, and the

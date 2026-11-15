@@ -1,0 +1,56 @@
+fragment UsageCaptureHealthRow on CaptureHealthRowObject {
+  lastCapturedAt
+  source
+  stream
+}
+
+query getUsageCaptureHealth {
+  captureHealth {
+    ...UsageCaptureHealthRow
+  }
+}
+
+fragment UsageTelemetryCoverageRepo on TelemetryRepoCoverageObject {
+  deliveryLegs {
+    deliveryLeg
+    lastSeenAt
+  }
+  repoIdentity
+}
+
+fragment UsageTelemetryCoverageMachine on TelemetryMachineCoverageObject {
+  buffer {
+    deadLetterCount
+    oldestBufferedAt
+    totalBuffered
+  }
+  deliveryLegsSeen
+  lastSeenAt
+  machineId
+  machineLabel
+  marketplacePluginInstalled
+  marketplacePluginVersion
+  pluginVersion
+  repos {
+    ...UsageTelemetryCoverageRepo
+  }
+  warnings {
+    kind
+    message
+  }
+}
+
+query getUsageTelemetryCoverage {
+  telemetryCoverage {
+    currentPluginVersion
+    generatedAt
+    machines {
+      ...UsageTelemetryCoverageMachine
+    }
+    windowDays
+  }
+}
+
+mutation forgetUsageTelemetryMachine($machineId: String!) {
+  forgetTelemetryMachine(machineId: $machineId)
+}

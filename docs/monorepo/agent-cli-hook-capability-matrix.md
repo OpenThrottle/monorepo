@@ -86,8 +86,9 @@ silently.** The translation drops exactly what this telemetry needs: `PreToolUse
 `matcher: "Skill"` has no Cursor tool to match, `UserPromptExpansion` has no Cursor equivalent at
 all, and `Stop` maps to an event that never fires in a headless run. Pointing Cursor at the Claude
 payload loads cleanly, reports nothing wrong, and records nothing. Hence
-`plugins/openthrottle-cursor/` as a separate committed payload, and `AgentDriver.pluginDirRel`
-naming one per driver.
+`plugins/openthrottle-cursor/` (and `openthrottle-cursor-guards`) as separate payloads, and
+`AgentDriver.pluginDirRels` naming a driver's payloads (Claude 3, Cursor 2). How payloads are
+built, hosted and consumed: [hook-plugin-distribution.md](./hook-plugin-distribution.md).
 
 This is the same shape of half-truth as grok below. Both are recorded rather than smoothed over
 because "tool X reads Claude plugins" reads as coverage and is not.
@@ -145,11 +146,12 @@ see [agent-config-parity.md](./agent-config-parity.md). The home-directory route
 and it is the only one that reaches an untrusted foreign repo. `-c hooks.…`
 overrides and `CODEX_HOME` provide per-invocation control if wanted. Confirmed 2026-09-11: there is
 **no `--plugin-dir` flag**; `codex plugin` installs from marketplaces instead. So delivery is
-documentation, and the copy-pasteable block lives in `packages/agentic-hooks/README.md`.
+documentation: the `config.toml` snippet lives in the README of `plugins/openthrottle-codex/`
+(that payload ships no `hooks.json`) and in `packages/agentic-hooks/README.md`.
 
 Codex gates hook execution on trust, with `--dangerously-bypass-hook-trust` as the automation escape
 hatch. The name is a fair warning: it is right for OT's own orchestrated runs, whose bundles are
-generated here and drift-checked byte-for-byte, and wrong as an interactive convenience.
+built from this repo's source, and wrong as an interactive convenience.
 
 ### opencode is the odd one out
 
@@ -168,6 +170,113 @@ establishes the paths exist in the binary, **not** that hooks fire, what their p
 whether a per-invocation override exists. Treat the row as a starting point for a probe, not a
 finding.
 
+### Session-start event, for the coverage heartbeat
+
+The coverage heartbeat (contract §8 of
+[`child-repo-hook-telemetry-contract.md`](./child-repo-hook-telemetry-contract.md)) needs one event
+that fires **once per session, in a headless run**. Measured 2026-11-14 (OT plan `47305386`) in a
+scratch git repo, each CLI wired to a recorder that appends raw stdin to a JSONL file, prompted with
+"Reply with the single word PONG.":
+
+| CLI              | version            | headless invocation                                                                    | session-start event                | evidence                                                                                                                                                                                               |
+| ---------------- | ------------------ | -------------------------------------------------------------------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **claude**       | —                  | `claude -p`                                                                            | `SessionStart`                     | already shipped (plan `c4ece7fe`)                                                                                                                                                                      |
+| **cursor-agent** | 2026.11.11-b912975 | `cursor-agent -p --force --trust` with `.cursor/hooks.json`                            | `sessionStart`                     | fired once, before the turn; `sessionEnd` once after; `stop` did not fire. Carries `session_id`, `workspace_roots`, `model`, `cursor_version` — **and `user_email`**, which must never be forwarded    |
+| **codex**        | codex-cli 0.167.0  | `codex exec --dangerously-bypass-hook-trust -c 'hooks.SessionStart=[…]'`               | `SessionStart` (`source: startup`) | fired once, before the turn; then `Stop` per turn and `SessionEnd` (`reason: other`). Carries `session_id`, `cwd`, `model`, `transcript_path`                                                          |
+| **antigravity**  | agy 1.5.9          | `agy --dangerously-skip-permissions -p '…'` with a workspace plugin `.agents/plugins/` | `SessionStart`                     | fired once, before `PreInvocation` and `Stop`. **camelCase** envelope: `conversationId`, `cwd`, `workspacePaths`, `modelName`, `hookEventName` — **and `lastUserInput`** (the prompt), never forwarded |
+
+Every one of the three has a usable event: the heartbeat's gap was adapters, not events, and all
+three now send it (plan `47305386`; contract §8 of the telemetry contract says how each one's
+delivery leg is read). Two
+caveats carry over from the sections above: an `agy` turn resumed with `session/load` fires no
+`SessionStart` (right for a heartbeat — it is the same session), and codex skips a hook source it
+has not trusted unless the run passes `--dangerously-bypass-hook-trust`. Also, `agy` refuses
+`-p --dangerously-skip-permissions "…"` — `-p` takes the next argument as its prompt — so flags go
+before `-p`.
+
+### Marketplace install records, for the coverage heartbeat
+
+The heartbeat's `marketplacePluginInstalled` / `marketplacePluginVersion` fields and its
+`marketplace` delivery leg need two facts per tool: **where a marketplace install unpacks** (so a
+hook running from there reads as `marketplace`) and **what a hook can read to say whether the
+OpenThrottle plugin is installed, at which version**. Measured 2026-11-14 (OT plan `6b0fb4c4`).
+Every install went into a throwaway home (`CODEX_HOME=…`, `HOME=…`) from a local git marketplace
+holding one probe plugin, so no real config was touched; Cursor's row is read off the existing
+installs on the probe machine, because its CLI cannot install.
+
+| CLI              | version            | install location                                                           | install record a hook can read                                                                                                                                                                                                                                                                        | evidence                                                                                                                                                                                                                                                                                                                                                    |
+| ---------------- | ------------------ | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **claude**       | —                  | `<config dir>/plugins/cache/<marketplace>/<plugin>/<version>/`             | `<config dir>/plugins/installed_plugins.json` → `plugins["openthrottle@openthrottle"][0].version`                                                                                                                                                                                                     | already shipped (`adapters/claude/heartbeat-payload.ts`)                                                                                                                                                                                                                                                                                                    |
+| **cursor-agent** | 2026.11.13-eacade1 | `~/.cursor/plugins/cache/<marketplace>/<plugin>/<git sha>/`                | **none readable.** The real record is the IDE's sqlite store (`state.vscdb`, key `cursor.plugins.installedIds.<userId>\|<workspace>` → `[{id, sources}]`, numeric server ids). The cache directory is the best signal: a finished unpack carries a `.cache-complete` marker and the plugin's manifest | `cursor-agent plugin` has only `marketplace add\|list\|remove\|update` — **no install command**; installing happens in the IDE. Two existing installs (`cursor-public/cursor-team-kit/3dbd22ff…/`, `cursor-public/datadog/dde3591e…/`) both carry `.cache-complete` + `.cursor-plugin/plugin.json`. Whether an IDE uninstall prunes the cache is unmeasured |
+| **codex**        | codex-cli 0.167.0  | `$CODEX_HOME/plugins/cache/<marketplace>/<plugin>/<version>/`              | `$CODEX_HOME/config.toml` table `[plugins."<plugin>@<marketplace>"]` with `enabled = true\|false`; the version is the cache directory name and its manifest                                                                                                                                           | `codex plugin marketplace add <dir>` + `codex plugin add ot-probe@ot-probe-mp` wrote both; `codex plugin remove` deleted the table **and** the cache directory. It installs a **Claude-format** marketplace too: this repo's `.claude-plugin/marketplace.json` installed as `openthrottle@openthrottle` at `…/cache/openthrottle/openthrottle/1.3.0/`       |
+| **antigravity**  | agy 1.5.9          | `~/.gemini/config/plugins/<dir>/` (flat — no marketplace or version level) | `~/.gemini/config/plugins/<dir>/plugin.json` (`version`); `~/.gemini/config/config.json` `plugins.<dir>.enabled` (absent until first toggled, meaning enabled); `~/.gemini/config/import_manifest.json` lists `{name, source, importedAt, components}` with no version                                | `agy plugin install <dir>` and `agy plugin import claude` both land here; `disable` / `enable` flip `config.json`; `uninstall` deletes the directory and the manifest entry. `plugin@marketplace` resolves only against two catalogs compiled into the binary (`antigravity-plugins-official`, `-partners`), so OpenThrottle cannot be installed that way   |
+
+Three findings change what the heartbeat can claim, and the third is a coverage gap rather than a
+detail:
+
+- **Codex runs a marketplace plugin's hooks**, with `PLUGIN_ROOT` and `CLAUDE_PLUGIN_ROOT` both set
+  to the install directory and cwd = the session's cwd — but only once the hooks are trusted
+  (`--dangerously-bypass-hook-trust` in the probe; without it the `SessionStart` hook did not run).
+  `codex features list` reports `plugin_hooks` as `removed`: that is the retired flag, not the
+  behavior.
+- **agy rewrites `${CLAUDE_PLUGIN_ROOT}/…` to `./…`** when it imports a Claude plugin, and runs hooks
+  with cwd = the plugin folder. It drops what it cannot map (`PreToolUse` on `Skill`,
+  `UserPromptExpansion`) with a warning — the same loss as Cursor's translation, but said out loud.
+- **All three run the Claude plugin's bundles, which report themselves as `claude-code`.**
+  cursor-agent ran the machine's _Claude-installed_ `openthrottle` plugin's `SessionStart` hook
+  during a plain `cursor-agent -p` in a scratch repo — reproduced twice, the receipt in
+  `~/.openthrottle/skill-usage/last-heartbeat.json` stamped inside each run's window with
+  `source: claude-code`, `deliveryLeg: marketplace`. Codex and agy, installing this repo's
+  marketplace, get the same `skill-usage-heartbeat.cjs`. So a marketplace install reached through
+  any of them is counted as a Claude Code session, and the per-tool heartbeat adapters only ever run
+  from a repo or `--plugin-dir` registration.
+
+Re-check of the 2026.11.13 side observation: in this run cursor-agent did **not** leak
+`CURSOR_PLUGIN_ROOT` / `CLAUDE_PLUGIN_ROOT` into a project `.cursor/hooks.json` hook (an `env` dump
+came back empty), so the leak is intermittent at best. The Cursor adapter's script-location check
+stays.
+
+### Which tool is running the Claude bundles
+
+Decided 2026-11-14 (OT plan `8f9ce368`): **the Claude bundles detect the tool running them** and
+act for it, rather than shipping one marketplace per tool. Per-tool marketplaces cannot fix the
+measured case: cursor-agent runs whatever the user installed through _Claude_, whatever else we
+publish; agy cannot install from our marketplace at all (`plugin@marketplace` only resolves its two
+compiled-in catalogs); and codex would still accept the Claude-format one.
+
+What each tool hands a Claude-format plugin hook. Cursor re-measured 2026-11-14 on 2026.11.13-eacade1
+(an `env` dump from a probe plugin passed with `--plugin-dir`, run from a scratch repo); codex and
+agy are the plan `6b0fb4c4` measurements in the section above:
+
+| host             | marker the bundle reads                                                                  | other facts                                                                                                                                                                  |
+| ---------------- | ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **cursor-agent** | `CURSOR_PLUGIN_ROOT` set, equal to `CLAUDE_PLUGIN_ROOT`, and the running script under it | also sets `CURSOR_PROJECT_DIR`, `CLAUDE_PROJECT_DIR` (both the session's repo), `CURSOR_VERSION`, `CURSOR_INVOKED_AS=cursor-agent`, `CURSOR_USER_EMAIL`; cwd = plugin folder |
+| **codex**        | `CLAUDE_PLUGIN_ROOT` (and `PLUGIN_ROOT`) under `$CODEX_HOME/plugins/cache/`              | cwd = the session's cwd                                                                                                                                                      |
+| **antigravity**  | the running script under `~/.gemini/config/plugins/` (agy rewrites the root to `./`)     | cwd = plugin folder; the repo comes from the payload's `cwd`                                                                                                                 |
+| **claude**       | none of the above                                                                        | Claude Code never sets `CURSOR_PLUGIN_ROOT` and never unpacks under codex's or agy's directories                                                                             |
+
+Only per-hook variables count. A hook inherits its host's whole environment, so `CLAUDECODE=1` and
+the rest of `CLAUDE_CODE_*` reach a cursor-agent hook whenever cursor-agent was itself started from
+a Claude Code session (the probe above was), and are no evidence of the host.
+
+What the bundles do once the host is known:
+
+- **Heartbeat: sent, as the host.** `source` is the host's id (`cursor`, `codex`, `antigravity`);
+  the delivery leg and the marketplace fields describe the install that delivered this copy — a
+  Claude-installed plugin under Cursor reads Claude's `installed_plugins.json`, a codex install its
+  `config.toml`, an agy copy its plugins directory.
+- **Heartbeat: stands down when the host's own registration will send one.** That is the
+  double-heartbeat guard. cursor: the repo's `.cursor/hooks.json` registers `skill-usage-heartbeat`
+  (this repo does); codex: `$CODEX_HOME/config.toml` or the repo's `.codex/config.toml` does; agy:
+  a workspace plugin under `.agents/plugins/` does (this repo's does). The Claude-host check —
+  `.claude/settings.json` — is wrong under the other hosts: cursor-agent `-p` did **not** run a
+  repo's `.claude/settings.json` `SessionStart` hook in either probe (with and without a
+  `.cursor/hooks.json`), so this repo avoided a double only because it registers both.
+- **Capture and completion: stand down.** Their parsers read Claude payloads. Under cursor and agy
+  the events they key on are dropped anyway; under codex a `Stop` would feed a codex transcript to
+  the Claude token-usage reader and stamp the `claude auth status` login on it. The host's own
+  adapter is the only correct producer, so there is nothing to attribute.
+
 ### Session kickoff guard
 
 The plan-first kickoff rule (follow-up work starts as `/ot-loop <planUuid>`; see the
@@ -177,17 +286,17 @@ sees. In-task subagents are exempt by design — `ot-loop` treats them as worker
 they are not that hook point. Measured 2026-10-31 by reading `cursor-agent` 2026.10.22-27dcf5f's
 shipped bundle and the strings of `codex-cli` 0.145.0; no payload was captured live.
 
-| CLI              | separate-session tool the agent calls                                                                                                                                                                                   | guard                                                     |
-| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| **claude**       | the desktop app's `start_session` / `hand_off_to_session` (brief in `prompt` / `remaining_plan`)                                                                                                                        | **shipped** — `.claude/hooks/require-ot-plan-kickoff.cjs` |
-| **cursor-agent** | **none.** `Task` is an in-task subagent. Background agents are started by a person; their `sessionStart` carries `is_background_agent: true` and no prompt, and can return `env` / `additional_context` but cannot deny | nothing to block; `AGENTS.md` already carries the rule    |
-| **codex**        | **none.** `spawn_agent` / `send_input` / `wait_agent` / `close_agent` manage sub-agents under the current task (`/root/task1/task_3`); `codex cloud` is a person's command                                              | nothing to block                                          |
-| others           | unprobed                                                                                                                                                                                                                | —                                                         |
+| CLI              | separate-session tool the agent calls                                                                                                                                                                                   | guard                                                                    |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| **claude**       | the desktop app's `start_session` / `hand_off_to_session` (brief in `prompt` / `remaining_plan`)                                                                                                                        | **shipped** — `openthrottle-workflow` plugin's `require-ot-plan-kickoff` |
+| **cursor-agent** | **none.** `Task` is an in-task subagent. Background agents are started by a person; their `sessionStart` carries `is_background_agent: true` and no prompt, and can return `env` / `additional_context` but cannot deny | nothing to block; `AGENTS.md` already carries the rule                   |
+| **codex**        | **none.** `spawn_agent` / `send_input` / `wait_agent` / `close_agent` manage sub-agents under the current task (`/root/task1/task_3`); `codex cloud` is a person's command                                              | nothing to block                                                         |
+| others           | unprobed                                                                                                                                                                                                                | —                                                                        |
 
 Two things follow. First, the session guard is Claude-only because only Claude has the thing it
 guards, not because the other adapters are missing; the decision itself is tool-neutral
 (`packages/agentic-hooks/src/data/kickoff.ts`), so a CLI that grows such a tool needs only an adapter.
-Second, cursor-agent reads `.claude/settings.json`, so it may load the Claude registration — that is
+Second, cursor-agent reads `.claude/settings.json` and Claude plugins' hooks, so it may load the Claude registration — that is
 harmless: the adapter checks the tool name itself and allows anything that is not a kickoff tool,
 whether or not Cursor applies the `matcher`. The layer that reaches every CLI, and every person, is
 git: the pre-push `Plan-Id:` check.
@@ -224,6 +333,7 @@ The honest split: assert what we control, date and re-probe what we do not.
 - **grok and opencode** stay on option D (server-side transcript derivation) for now: grok because
   trust and the missing `Skill` tool block it structurally, opencode because it needs a published npm
   package. Neither is blocked by a _lack_ of out-of-repo config.
-- **antigravity** needs installing and probing before it can be placed at all.
+- **antigravity** has hooks verified in-repo (a workspace plugin) and sends the coverage heartbeat
+  from there; skill capture and the out-of-repo route are still unprobed.
 
 Nothing here requires writing into a target repository for any of the seven.

@@ -36,8 +36,9 @@ export interface RunResult {
 }
 
 /** Render an argv array for human-facing messages. */
-export const renderCommand = (command: string, args: string[]): string =>
-  [command, ...args].join(' ');
+export const renderCommand = (command: string, args: string[]): string => {
+  return [command, ...args].join(' ');
+};
 
 /**
  * Run a command synchronously. Throws on non-zero exit (or spawn failure)

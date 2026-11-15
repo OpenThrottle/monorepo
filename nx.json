@@ -87,10 +87,15 @@
   "release": {
     "changelog": {
       "automaticFromRef": true,
-      "enabled": true,
-      "file": "CHANGELOG.md",
+      "git": {
+        "commit": false,
+        "push": false,
+        "stageChanges": false,
+        "tag": false
+      },
       "projectChangelogs": {
-        "createRelease": "github",
+        "createRelease": false,
+        "file": "{projectRoot}/CHANGELOG.md",
         "renderOptions": {
           "authors": true,
           "applyUsernameToAuthors": true,
@@ -102,43 +107,68 @@
     },
     "conventionalCommits": {
       "types": {
-        "build": true,
+        "build": {
+          "semverBump": "none"
+        },
         "chore": {
-          "semverBump": "patch"
+          "semverBump": "none"
         },
-        "ci": true,
+        "ci": {
+          "semverBump": "none"
+        },
         "docs": {
+          "semverBump": "none"
+        },
+        "feat": {
+          "semverBump": "minor"
+        },
+        "fix": {
           "semverBump": "patch"
         },
-        "feat": true,
-        "fix": true,
-        "perf": true,
-        "refactor": true,
-        "revert": true,
-        "test": true,
-        "style": {
+        "perf": {
           "semverBump": "patch"
+        },
+        "refactor": {
+          "semverBump": "none"
+        },
+        "revert": {
+          "semverBump": "patch"
+        },
+        "style": {
+          "semverBump": "none"
+        },
+        "test": {
+          "semverBump": "none"
+        }
+      },
+      "useCommitScope": false
+    },
+    "groups": {
+      "applications": {
+        "projects": [
+          "monorepo",
+          "tag:type:application",
+          "!tag:production:false"
+        ],
+        "projectsRelationship": "independent",
+        "releaseTag": {
+          "pattern": "{projectName}@{version}"
         }
       }
     },
-    "git": {
-      "commit": true,
-      "commitMessage": "chore(monorepo): [skip ci] release {version}"
-    },
-    "projects": ["tag:publish:true", "!tag:production:false"],
-    "projectsRelationship": "independent",
     "version": {
-      "conventionalCommits": true,
-      "preVersionCommand": "nx run-many -t build-package",
+      "currentVersionResolver": "git-tag",
       "fallbackCurrentVersionResolver": "disk",
+      "git": {
+        "commit": false,
+        "push": false,
+        "stageChanges": false,
+        "tag": false
+      },
+      "specifierSource": "conventional-commits",
       "versionActionsOptions": {
-        "gitCommit": true,
-        "gitCommitMessage": "chore(version): [skip ci] {version}",
         "skipLockFileUpdate": true
       }
-    },
-    "releaseTag": {
-      "pattern": "{projectName}@{version}"
     }
   },
   "sync": {
@@ -281,9 +311,6 @@
         "cwd": "{workspaceRoot}"
       },
       "inputs": [
-        "{workspaceRoot}/.claude/hooks/*.cjs",
-        "{workspaceRoot}/.codex/hooks/*.cjs",
-        "{workspaceRoot}/.cursor/hooks/*.cjs",
         "{workspaceRoot}/.gitattributes",
         "{workspaceRoot}/applications/*/schema.gql",
         "{workspaceRoot}/packages/*/schemas/*.json",
@@ -424,6 +451,15 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "tsx ./scripts/check-test-file-filter-docs.ts",
+        "cwd": "{workspaceRoot}"
+      }
+    },
+    "check-test-file-names": {
+      "cache": false,
+      "description": "Fail when a tracked file under applications/, packages/ or tools/ uses the *.spec.* test suffix, or is a *.test.* colocated with source outside __tests__/ (NestJS tier and project-root tests/ exempt), via scripts/check-test-file-names.ts — tests are *.test.* in a sibling __tests__/ (OT plans 8dd14e61, f5625772). ESLint cannot see file names, so this is a tree check. Never cached: the input is the whole tracked tree, like check-folder-vocabulary.",
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsx ./scripts/check-test-file-names.ts",
         "cwd": "{workspaceRoot}"
       }
     },

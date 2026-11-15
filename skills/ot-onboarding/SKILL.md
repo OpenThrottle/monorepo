@@ -3,11 +3,14 @@ name: ot-onboarding
 description: >-
   Guided orientation tour of OpenThrottle for a new person or a fresh session,
   ending in a first real plan. USE WHEN running /ot-onboarding, or the user says
-  "onboard me", "I'm new here", "where do I start", "what is this repo", "how do
-  plans/tasks work here", or asks you to remember that plans belong in OT rather
-  than in Markdown. Gates on an openthrottle-mcp health check, then persists the
-  OT-only plan rule to durable memory and reports guidance that contradicts it.
-  Not for a specific subsystem — see ot-stack.
+  "onboard me", "I'm new here" or "where do I start", or asks you to remember
+  that plans belong in OT rather than in Markdown. Gates on an openthrottle-mcp
+  health check first. Not for plan CRUD (ot-plans) or a specific subsystem
+  (ot-stack, ot-folders).
+metadata:
+  author: openthrottle
+  last-reviewed: '2026-11-14'
+  version: '1.1.0'
 ---
 
 # 🚪 OpenThrottle onboarding — start here
@@ -39,14 +42,7 @@ Everything in OpenThrottle flows through the **`openthrottle-mcp`** server — p
 
 > ⚠️ **Use `health`, never `list_sources` as your probe.** `health` is a few bytes; `list_sources` returns ~67k characters and will blow out the context window. Reach for `list_sources` / `semantic_search` only when you actually need knowledge-base content.
 
-**Step 3 — interpret and fail loudly.** If `health` errors or any facet is not `ok`, **report the exact failure and the fix — do not proceed to section 2.**
-
-| Symptom                                        | Likely cause                                                                                                      | Remediation                                                                                                               |
-| ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| Agent lists **no** `openthrottle-mcp` tools    | Launcher missing its `-c` config flag, or `OPENTHROTTLE_MCP_AUTH_TOKEN` not exported                              | Re-check the `.mcp.json` entry; run `pnpm exec tsx scripts/verify-openthrottle-mcp-env.ts` to confirm the env resolves    |
-| Tools present but calls **401 / unauthorized** | Missing/expired `OPENTHROTTLE_MCP_AUTH_TOKEN` (use a long-lived `ot_sa_…` service-account token, not a human JWT) | `pnpm database:bootstrap-service-accounts` (self-heals a missing key) then `pnpm check:bootstrap-secrets`; reload the MCP |
-| `health` reports `database`/`redis` not `ok`   | Postgres/Redis not up, or migrations pending                                                                      | `pnpm run database:start` then `pnpm run database:migrate`                                                                |
-| Calls throw **"fetch failed"** in a worktree   | Tools pinned to a dead/alternate server port                                                                      | Point at the live server, or use the stdio/curl fallback below                                                            |
+**Step 3 — interpret and fail loudly.** If `health` errors or any facet is not `ok`, **report the exact failure and the fix — do not proceed to section 2.** Read [references/health-troubleshooting.md](references/health-troubleshooting.md) when it fails: symptom → cause → remediation table (no tools, 401, database/redis not ok, "fetch failed" in a worktree).
 
 **Setup from zero.** If this is a fresh checkout, `./scripts/setup.sh` provisions the environment and seeds the service accounts; it ends by running `pnpm check:bootstrap-secrets` which fails loudly if any required token is missing.
 
@@ -64,9 +60,9 @@ Only once `health` is green across all four facets do you continue.
 
 Skill-usage telemetry is optional but fails **silently**: a session started by hand outside this
 repo records nothing without the `openthrottle@openthrottle` plugin. Run
-`node <ot-checkout>/.claude/hooks/skill-usage-doctor.cjs --json`, give each check one line, and relay
-its `fix` lines verbatim. The plugin install changes the user's global Claude setup: **offer** to run
-it, never unasked. Ongoing view: `/usage` → Telemetry coverage
+`skill-usage-doctor.cjs --json` (on the Bash PATH when the plugin is installed; from an OT
+checkout, `pnpm run telemetry:doctor --json`), give each check one line, and relay
+its `fix` lines verbatim. The plugin install changes the user's global Claude setup: **ask first**, never unasked. Ongoing view: `/usage` → Telemetry coverage
 ([contract §8](https://github.com/openthrottle/monorepo/blob/main/docs/monorepo/child-repo-hook-telemetry-contract.md#8-coverage-heartbeat)).
 
 ---
@@ -86,9 +82,7 @@ past this session.
 
 ### First, write the rule where it survives
 
-Onboarding runs once; without this the rule evaporates
-when the session ends. Map the intent onto whatever your own host actually provides — you know which
-agent you are, so pick your row:
+Onboarding runs once; without this the rule evaporates when the session ends. **A write to a user-global surface is a global write: ask the user first, then write.** Map the intent onto whatever your own host provides — pick your row:
 
 | Host agent          | Where to persist it                                                                           |
 | ------------------- | --------------------------------------------------------------------------------------------- |
@@ -112,33 +106,11 @@ ran) and quote the line back. If the write failed, say so and fall back to the p
 
 ### Then sweep out the guidance that fights it
 
-Persisting the rule is only half the job — the host may already be carrying instructions that say
-the opposite. Work this as **search → report → ask → edit**, and never collapse those four steps.
-
-**Search.** Grep the agent-facing guidance for instructions to put a plan on disk:
-
-```bash
-grep -rniE 'plans/NNN|plans/README\.md|write (the |a )?(plan|prd|spec)|plan file|docs/plans|(plan|prd|spec|task list)[^.]{0,40}\.md' \
-  skills/ .agents/ AGENTS.md CLAUDE.md docs/ 2>/dev/null \
-  | grep -viE "never|not as|instead of|do not|don't|rather than|fail loudly"
-```
-
-That negative filter matters: without it the hits that _state_ the rule drown out the ones that
-break it. Even so, expect roughly fifty hits in this repo and **triage before reporting** — this
-skill's own file, `ot-plans`, and the `docs/openthrottle/*` guides all mention plans and Markdown in
-the same breath while saying the right thing. A hit only counts if it tells an agent to _put a plan
-on disk_. Sweep your own memory/rules store the same way — and remember `.agents/skills/` holds
-**external** skills installed via `npx skills add`, which are the likeliest offenders because nobody
-here wrote them.
-
-**Report.** Show the user **every** hit as `file:line` with the offending text quoted. Never edit
-anything found this way before showing it. A known live example, so you know what a real hit looks
-like: the vendored `improve` skill instructs writing plans to `plans/NNN-short-slug.md` with a
-`plans/README.md` index — directly against the rule.
+Persisting the rule is only half the job — the host may already be carrying instructions that say the opposite. Work this as **search → report → ask → edit**, and never collapse those four steps. Read [references/guidance-sweep.md](references/guidance-sweep.md) for the grep and the triage rules (search and report steps).
 
 **Ask.** Get explicit confirmation before changing anything outside your own memory store.
 
-- Your own memory/rules store — fix it yourself, then say what you changed.
+- Your own memory/rules store — a user-global write: ask first, then fix it and say what you changed.
 - **Repo-tracked files** (`CLAUDE.md`, `AGENTS.md`, a doc under `docs/`, another skill) — a **code
   change**. It belongs in a commit and a PR, not a silent side effect of onboarding. Say that to the
   user rather than just editing.
@@ -164,27 +136,7 @@ Deep dive on the lifecycle this rule protects: [`ot-plans`](https://github.com/o
 
 **The one rule that shapes everything** is the one section 2 just made durable: plans and tasks are the single source of truth and they live in OpenThrottle (OT), never on disk. What that buys you here is traceability — the same MCP tools that create the rows (`create_plan`, `create_task`, `update_task`, …) give every row an id, and you thread it back to git with `Plan-Id:` / `Task-Id:` commit footers. The [`ot-plans`](https://github.com/openthrottle/monorepo/blob/main/skills/ot-plans/SKILL.md) skill is the deep dive here.
 
-**The monorepo shape** (Nx + pnpm, Node ≥ 22, pnpm only):
-
-| Folder          | What lives there                                                                                                                                                         |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `applications/` | Deployable apps — `openthrottle-server` (NestJS code-first GraphQL API) and the React Router apps `openthrottle-developer`, `openthrottle-admin`, `openthrottle-website` |
-| `packages/`     | Shared libs — `@openthrottle/nestjs-*` server modules, `@openthrottle/react-router-*` UI/client libs, `openthrottle-agentic-*` Ralph tooling, `openthrottle-mcp`         |
-| `tools/`        | Nx plugins, `@tools/generators` (scaffolding), `@tools/workflows` (Ralph CLI)                                                                                            |
-| `databases/`    | Postgres schema, migrations, local DB scripts                                                                                                                            |
-
-Everything runs **through Nx, prefixed with pnpm** (`pnpm nx …`) — never the underlying tooling directly.
-
-**Bring the system up:**
-
-```bash
-./scripts/setup.sh                        # one-shot environment setup/reset (also seeds the default login user)
-pnpm run database:start                   # Postgres + Redis via docker compose
-pnpm nx run openthrottle-server:dev       # NestJS GraphQL API (auto-applies pending migrations first)
-pnpm nx run openthrottle-developer:dev    # Developer UI (React Router)
-```
-
-The server auto-applies pending migrations on boot and fails fast if Postgres is down, so start it after `database:start`.
+Everything runs **through Nx, prefixed with pnpm** (`pnpm nx …`). Bring-up commands and the folder layout are in the operating manual below — do not restate them.
 
 **Don't duplicate — go read the source of truth:**
 
@@ -196,27 +148,22 @@ The server auto-applies pending migrations on boot and fails fast if Postgres is
 
 ---
 
-## 4. Keyboard shortcuts + everyday workflows
+## 4. Everyday workflows
 
-These are the levers a newcomer should know exist. You don't need to master them now — just recognize the name so you know what to reach for.
+One line each on when you'd reach for it, with the deeper skill to read:
 
-**Agent keyboard shortcuts.** Your agent (Claude Code / Cursor) has its own keybindings and slash-command palette. In Claude Code, customize them in `~/.claude/keybindings.json` (the `keybindings-help` skill walks you through rebinding keys and chord shortcuts). Harness dialogs like `/config` and `/permissions` are only available in an interactive terminal session.
+| Lever                               | Reach for it when…                                                                                                   | Deeper skill                                                                            |
+| ----------------------------------- | -------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| **`/loop`**                         | you want a prompt or slash command to run on a repeating interval (poll a deploy, keep grinding a task list)         | built-in `loop` skill                                                                   |
+| **`ot-loop`** (`/ot-loop <planId>`) | you have an OT plan and want its tasks executed one at a time via `/loop`, with `Plan-Id:` / `Task-Id:` traceability | [`ot-loop`](https://github.com/openthrottle/monorepo/blob/main/skills/ot-loop/SKILL.md) |
 
-**Everyday workflows** — one line each on when you'd reach for it, with the deeper skill to read:
-
-| Lever                            | Reach for it when…                                                                                                                                               | Deeper skill                                                                                      |
-| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| **`/loop`**                      | you want a prompt or slash command to run on a repeating interval (poll a deploy, keep grinding a task list)                                                     | built-in `loop` skill                                                                             |
-| **Ralph loop** (`/agents-ralph`) | you have an OT plan and want to execute its tasks one at a time — IN_PROGRESS → work → validate → COMPLETED → commit — with `Plan-Id:` / `Task-Id:` traceability | [`agents-ralph`](https://github.com/openthrottle/monorepo/blob/main/skills/agents-ralph/SKILL.md) |
-| **`ot-loop`**                    | drive that same per-task loop over a plan interactively via `/loop`                                                                                              | [`ot-loop`](https://github.com/openthrottle/monorepo/blob/main/skills/ot-loop/SKILL.md)           |
-
-**The `/github/*` workflow skills** — the portable git/PR toolkit (one job each):
+**The `github-*` workflow skills** — the portable git/PR toolkit (one job each):
 
 - [`github-commit`](https://github.com/openthrottle/monorepo/blob/main/skills/github-commit/SKILL.md) — write a conventional-commit message from the diff
 - [`github-pull-request`](https://github.com/openthrottle/monorepo/blob/main/skills/github-pull-request/SKILL.md) — create or update a template-compliant PR
 - [`github-squash`](https://github.com/openthrottle/monorepo/blob/main/skills/github-squash/SKILL.md) — squash the branch to a single commit before merge
 
-> **Guard rails that never bend:** never push to `main`, never `--no-verify` or bypass Husky hooks, and get human confirmation before any rebase or force-push. Commits are Conventional Commits (commitlint + Husky enforce it) — and **never** add `Co-authored-by`/attribution lines; only the sanctioned footers (`BREAKING CHANGE:`, `Closes #123`, `Plan-Id:`, `Task-Id:`).
+The git guard rails (no push to `main`, no `--no-verify`, no attribution lines) are in `CLAUDE.md`.
 
 ---
 
@@ -225,9 +172,9 @@ These are the levers a newcomer should know exist. You don't need to master them
 Skills are packaged, reusable know-how an agent pulls in to do a task "the OpenThrottle way." There are **two homes**, and the distinction matters:
 
 - **`skills/` — authored, repo-specific skills.** Hand-written, committed, PR-reviewed (this skill lives here). Any OpenThrottle repo can have its own `skills/`.
-- **`.agents/skills/` — the merged, managed single-source-of-truth view** that most universal agent tools read natively. **Real directories** here are _external_ skills installed via `npx skills add … --agent universal` and tracked in [`skills-lock.json`](https://github.com/openthrottle/monorepo/blob/main/skills-lock.json) — never hand-edit them. **Symlinks** here are this repo's `skills/*`, generated by the sync.
+- **`.agents/skills/` and `.claude/skills/` — generated.** Never hand-edit them; real dirs in `.agents/skills/` are external skills tracked in `skills-lock.json`.
 
-**Fan-out is automated — never hand-edit generated dirs.** The [`ot-skill-sync`](https://github.com/openthrottle/monorepo/blob/main/skills/ot-skill-sync/SKILL.md) skill builds the whole layout: it symlinks authored `skills/*` into `.agents/skills/`, then fans them out to the agent folders that need their own copy (e.g. `.claude/skills/` for Claude Code). It also owns the generated-symlink `.gitignore` and ships a `--check` mode that CI runs as the **SSOT drift gate**. **Always run `ot-skill-sync` after editing or adding a skill.**
+**Fan-out is automated — never hand-edit generated dirs.** Run the [`ot-skill-sync`](https://github.com/openthrottle/monorepo/blob/main/skills/ot-skill-sync/SKILL.md) skill after editing or adding a skill.
 
 **Invoking a skill.** Type `/<skill-name>` (e.g. `/ot-onboarding`), or let the agent trigger it via the Skill tool when your request matches the skill's `USE WHEN` description. That description is what makes a skill discoverable — write it as triggers, not prose.
 
@@ -287,7 +234,7 @@ You're oriented, and you've made one plan. What to do from here:
 3. **Skim the operating manual** — [`CLAUDE.md`](https://github.com/openthrottle/monorepo/blob/main/CLAUDE.md) for commands, code style, and the generators-first rule.
 4. **Run the lap in section 6** if you skipped it — one real plan teaches more than the rest of this tour.
 5. **Pick the skill for your first task:**
-   - Creating/working plans & tasks → [`ot-plans`](https://github.com/openthrottle/monorepo/blob/main/skills/ot-plans/SKILL.md), then execute with [`agents-ralph`](https://github.com/openthrottle/monorepo/blob/main/skills/agents-ralph/SKILL.md).
+   - Creating/working plans & tasks → [`ot-plans`](https://github.com/openthrottle/monorepo/blob/main/skills/ot-plans/SKILL.md), then execute with [`ot-loop`](https://github.com/openthrottle/monorepo/blob/main/skills/ot-loop/SKILL.md).
    - Adding a component/route/service/package → [`ot-generators`](https://github.com/openthrottle/monorepo/blob/main/skills/ot-generators/SKILL.md) (generators before hand-writing).
    - Working in the NestJS/GraphQL server or a React Router app → [`ot-stack`](https://github.com/openthrottle/monorepo/blob/main/skills/ot-stack/SKILL.md).
    - Shipping the change → `pnpm run worktree:new <name>` → [`github-commit`](https://github.com/openthrottle/monorepo/blob/main/skills/github-commit/SKILL.md) → [`github-pull-request`](https://github.com/openthrottle/monorepo/blob/main/skills/github-pull-request/SKILL.md).

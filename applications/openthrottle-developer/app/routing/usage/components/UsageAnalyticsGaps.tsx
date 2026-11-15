@@ -28,9 +28,9 @@ export const UsageAnalyticsGaps = (
           title="Analytics gaps (by design today)"
         />
         <p className="text-muted-foreground text-sm">
-          Token and skill usage above cover model spend and harness-captured
-          skill runs; these are the gaps that remain—reach for other surfaces
-          when you need what isn&apos;t here.
+          Token and skill usage (see the Agents and Skills pages) cover model
+          spend and harness-captured skill runs; these are the gaps that
+          remain—reach for other surfaces when you need what isn&apos;t here.
         </p>
       </div>
 
@@ -39,19 +39,30 @@ export const UsageAnalyticsGaps = (
           <li>
             No per-prompt or per-command invocation counts. Skill invocations
             are captured at the harness — see{' '}
-            <span className="text-foreground">Skill usage</span> above.
+            <Link className="text-primary underline" to="/usage/skills">
+              Skills usage
+            </Link>
+            .
           </li>
           <li>
             Outcome and duration are opt-in enrichment for skills we author, so{' '}
-            <span className="text-foreground">Skill usage</span> above may show
-            no outcomes for third-party or uninstrumented skills. Model token
-            and cost usage is captured — see{' '}
-            <span className="text-foreground">Model token usage</span> above.
+            <Link className="text-primary underline" to="/usage/skills">
+              Skills usage
+            </Link>{' '}
+            may show no outcomes for third-party or uninstrumented skills. Model
+            token and cost usage is captured — see{' '}
+            <Link className="text-primary underline" to="/usage/agents">
+              Agents usage
+            </Link>
+            .
           </li>
           <li>
             Sessions you start by hand outside the OpenThrottle repo are only
             recorded when the marketplace plugin is installed — see{' '}
-            <span className="text-foreground">Telemetry coverage</span> above.
+            <Link className="text-primary underline" to="/usage/telemetry">
+              Telemetry
+            </Link>
+            .
           </li>
           <li>
             No visibility into user-local skills (outside the repo) unless the

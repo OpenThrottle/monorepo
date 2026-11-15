@@ -215,6 +215,9 @@ your first PR.
   Read this first if you are touching `.github/workflows`.
 - [docs/monorepo/Knip.md](./docs/monorepo/Knip.md) — dead-code checks and the
   `@public` export convention.
+- [docs/monorepo/releases.md](./docs/monorepo/releases.md) — how the
+  applications and the monorepo get versions from PR titles, the release PR, and
+  deploying or rolling back by version. Read it before you title a breaking PR.
 - [applications/openthrottle-workbench/README.md](./applications/openthrottle-workbench/README.md)
   — the Storybook host for `@openthrottle/react-router-shadcn`
   (`pnpm nx run openthrottle-workbench:dev`). Often the quickest check on a

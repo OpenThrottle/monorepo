@@ -5,7 +5,8 @@
  *
  * {@link listToolSurface} reads it through an in-process client over a linked in-memory transport, so the
  * result is the serialized protocol payload rather than an approximation of it. It is shared by the byte-budget
- * measurement and the tool-selection evals, so both see the same surface.
+ * measurement and the tool-selection evals (`@openthrottle/openthrottle-mcp-evals`, through the public
+ * `./tool-surface` subpath), so both see the same surface.
  *
  * {@link measureToolSurface} measures two listings, because a client's cost depends on its toolset selection:
  *

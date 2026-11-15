@@ -23,7 +23,8 @@ import { fileURLToPath } from 'node:url';
 import { globSync } from 'glob';
 import ts from 'typescript';
 
-import { countLines, createLogger } from './utils/index.ts';
+import { countLines } from './utils/lines.ts';
+import { createLogger } from './utils/logger.ts';
 
 const logger = createLogger();
 
@@ -155,8 +156,9 @@ const analyze = (absPath: string): FileReport => {
   };
 };
 
-const hasViolation = (r: FileReport): boolean =>
-  r.disallowedExports.length > 0 || r.moduleScopeDecls.length > 0;
+const hasViolation = (r: FileReport): boolean => {
+  return r.disallowedExports.length > 0 || r.moduleScopeDecls.length > 0;
+};
 
 const run = (): void => {
   const json = process.argv.includes('--json');

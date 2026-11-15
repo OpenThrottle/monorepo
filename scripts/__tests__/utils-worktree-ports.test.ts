@@ -64,7 +64,9 @@ describe('portsForBase', () => {
 });
 
 describe('resolveWorktreePorts', () => {
-  const free = (): boolean => false;
+  const free = (): boolean => {
+    return false;
+  };
 
   it('uses the deterministic slot when every port is free', () => {
     const { base } = resolveWorktreePorts('my-feature', { isPortInUse: free });
@@ -75,8 +77,9 @@ describe('resolveWorktreePorts', () => {
   it('bumps past occupied blocks', () => {
     const expected = deriveBase('my-feature');
     // The whole deterministic block is busy; the next one is free.
-    const isPortInUse = (port: number): boolean =>
-      port >= expected && port <= expected + 6;
+    const isPortInUse = (port: number): boolean => {
+      return port >= expected && port <= expected + 6;
+    };
 
     const { base } = resolveWorktreePorts('my-feature', { isPortInUse });
 

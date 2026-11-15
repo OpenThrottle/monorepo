@@ -14,7 +14,7 @@ import {
   appendMcpShellFlags,
   appendPluginDirShellFlags,
   appendWorktreeShellFlags,
-  OPENTHROTTLE_CURSOR_PLUGIN_DIR_REL,
+  OPENTHROTTLE_CURSOR_PLUGIN_DIR_RELS,
 } from '../utils/shell-flags.ts';
 
 /**
@@ -47,7 +47,7 @@ const capabilities: DriverCapabilities = {
   permissionMode: false,
   /**
    * `--plugin-dir <path>`, repeatable — verified against `cursor-agent` 2026.09.10-fd3934a. Points
-   * at the CURSOR payload (`pluginDirRel` below), never the Claude one.
+   * at the CURSOR payload (`pluginDirRels` below), never the Claude one.
    */
   pluginDir: true,
   reportsToolCalls: true,
@@ -109,7 +109,7 @@ export const cursorDriver = defineDriver({
     url: 'https://cursor.com/install',
   },
   label: 'cursor-agent',
-  pluginDirRel: OPENTHROTTLE_CURSOR_PLUGIN_DIR_REL,
+  pluginDirRels: OPENTHROTTLE_CURSOR_PLUGIN_DIR_RELS,
   update: { method: 'reinstall' },
   versionArgs: ['--version'],
 });

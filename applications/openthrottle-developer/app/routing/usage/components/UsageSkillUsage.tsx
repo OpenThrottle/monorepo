@@ -20,9 +20,6 @@ import type { UsageBranchOption } from '~/routing/usage/types';
 import { partitionSkillUsageByPresence } from '~/routing/usage/utils/partitionSkillUsageByPresence';
 
 export interface UsageSkillUsageProps {
-  /** Current `?provider=` (token usage); preserved when skill filters change. */
-  /** `?account=` token-usage filter to preserve, or null. */
-  accountParam?: string | null;
   /** SSR first page of branches: default branch first, then A–Z. */
   branchOptions: readonly UsageBranchOption[];
   /** The SSR branch page was truncated, so the list is not exhaustive. */
@@ -40,8 +37,6 @@ export interface UsageSkillUsageProps {
    * which table it lands in.
    */
   presentSlugs: readonly string[];
-  providerParam: string | null;
-  rangeDays: number;
   selectedCwd: string | null;
   selectedGitBranch: string | null;
   selectedRepo: string | null;
@@ -64,9 +59,6 @@ export const UsageSkillUsage = (
     end,
     filterOptions,
     presentSlugs,
-    accountParam = null,
-    providerParam,
-    rangeDays,
     selectedCwd,
     selectedGitBranch,
     selectedRepo,
@@ -130,22 +122,11 @@ export const UsageSkillUsage = (
 
   return (
     <div className={cn('mt-8', className)} data-testid="UsageSkillUsage">
-      <GlobalHeading
-        className="mb-4"
-        heading="h2"
-        title={SKILL_USAGE_COPY.heading}
-      />
-      <p className="text-muted-foreground mb-4 text-sm md:mb-6">
-        {SKILL_USAGE_COPY.intro(rangeDays)}
-      </p>
-
       <UsageSkillUsageFilters
-        accountParam={accountParam}
         branchOptions={branchOptions}
         branchesHaveMore={branchesHaveMore}
         end={end}
         filterOptions={filterOptions}
-        providerParam={providerParam}
         selectedCwd={selectedCwd}
         selectedGitBranch={selectedGitBranch}
         selectedRepo={selectedRepo}

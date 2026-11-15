@@ -16,14 +16,20 @@ import {
   resolveAuthToken,
   resolveGraphqlUrl,
 } from '../../config/env.ts';
+import {
+  LAST_HEARTBEAT_BASENAME,
+  readVersionField,
+} from '../../data/heartbeat.ts';
 import { resolveTelemetryDir } from '../../data/jsonl.ts';
 import { readBufferStats } from '../../data/readBufferStats.ts';
+import { readTruncatedRepoOptIns } from '../../utils/privacy.ts';
 import {
   checkBuffer,
   checkEndpoint,
   checkHeartbeat,
   checkOffline,
   checkPlugin,
+  checkPrivacyOptIns,
   checkReachability,
   checkToken,
   type DoctorCheck,
@@ -33,10 +39,8 @@ import {
 } from './doctor-checks.ts';
 import {
   parseMarketplaceInstall,
-  readVersionField,
   resolveClaudeConfigDir,
 } from './heartbeat-payload.ts';
-import { LAST_HEARTBEAT_BASENAME } from './heartbeat-run.ts';
 
 /** How long `/health` gets before the server counts as unreachable. */
 const HEALTH_TIMEOUT_MS = 2000;
@@ -159,9 +163,10 @@ const displayUrl = (graphqlUrl: string): string => {
 };
 
 /**
- * The version of the payload this bundle ships in: `<bundle dir>/../.claude-plugin/plugin.json`
- * when run from a plugin, else the repo's own `plugins/openthrottle` payload when run from
- * `.claude/hooks/`. Null when neither is readable, which skips the comparison.
+ * The version of the payload this bundle ships in: `<bundle dir>/../.claude-plugin/plugin.json`,
+ * which holds for the plugin's `dist/` (where the `bin/` stub points `argv[1]`). The second
+ * candidate is the repo's own `plugins/openthrottle` payload, for a bundle run from a tool hook
+ * folder such as `.claude/hooks/`. Null when neither is readable, which skips the comparison.
  *
  * @public
  */
@@ -268,5 +273,6 @@ export const collectChecks = async ({
     checkOffline({
       offline: process.env.OPENTHROTTLE_TELEMETRY_OFFLINE === '1',
     }),
+    checkPrivacyOptIns(readTruncatedRepoOptIns()),
   ];
 };

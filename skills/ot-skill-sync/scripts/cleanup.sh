@@ -6,18 +6,35 @@
 # This removes those symlinks (never their targets), strips our .gitignore block,
 # deletes any legacy .gitignore-symlinks ledger, and prunes emptied roots.
 #
-# Personal-tier links (docs/monorepo/foreign-workspace-skill-injection.md §7) are
+# Personal-tier links (https://github.com/openthrottle/monorepo/blob/main/docs/monorepo/foreign-workspace-skill-injection.md §7) are
 # symlinks like any other and are removed by the same pass — no separate personal
 # teardown exists or is needed. `rm` on a symlink unlinks it, so the skill itself,
 # which lives outside the repo, is never touched. The pass is reported by tier so
 # it is obvious that removing links is not removing anybody's work.
 #
-# Usage: cleanup.sh
+# Usage:
+#   cleanup.sh             remove generated links
+#   cleanup.sh --dry-run   print what would be removed; remove nothing
+#   cleanup.sh --help      print this usage; exit 0
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 source "$SCRIPT_DIR/common.sh"
+
+DRY_RUN=false
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --dry-run) DRY_RUN=true ;;
+    -h | --help)
+      sed -n '2,/^$/p' "$0" | sed -e '/^$/d' -e 's/^# \{0,1\}//'
+      exit 0 ;;
+    *)
+      echo "Usage: $0 [--dry-run]" >&2
+      exit 1 ;;
+  esac
+  shift
+done
 
 detect_repo_root || exit 1
 validate_agent_skill_dirs || exit 1
@@ -26,10 +43,16 @@ validate_agent_skill_dirs || exit 1
 # exists is fine (its links are dangling and get removed either way).
 PERSONAL_ROOT="$(resolve_personal_skills_root)"
 
-echo -e "${YELLOW}Cleaning up generated skill links in: $REPO_ROOT${NC}"
+if [ "$DRY_RUN" = true ]; then
+  echo -e "${YELLOW}Dry run — nothing will be removed. Generated skill links in: $REPO_ROOT${NC}"
+else
+  echo -e "${YELLOW}Cleaning up generated skill links in: $REPO_ROOT${NC}"
+fi
 echo ""
 
 removed=0
+verb="Removed"
+[ "$DRY_RUN" = false ] || verb="Would remove"
 
 # Remove every generated symlink under the universal dir and each agent dir.
 # Symlinks only — real directories (external installs) are never touched.
@@ -40,9 +63,9 @@ for dir in "$UNIVERSAL_DIR" $AGENT_SKILL_DIRS; do
   # target's contents (e.g. hand-authored skills/). Remove the repo-owned link
   # itself (rm unlinks — the target is untouched) and skip traversal.
   if [ -L "$root" ]; then
-    rm "$root"
+    [ "$DRY_RUN" = true ] || rm "$root"
     removed=$((removed + 1))
-    echo -e "  ${GREEN}🗑️  Removed symlinked root: $dir${NC}"
+    echo -e "  ${GREEN}🗑️  ${verb} symlinked root: $dir${NC}"
     continue
   fi
   [ -d "$root" ] || continue
@@ -50,11 +73,19 @@ for dir in "$UNIVERSAL_DIR" $AGENT_SKILL_DIRS; do
     [ -L "$entry" ] || continue
     tier=""
     link_points_into_personal_root "$entry" "$PERSONAL_ROOT" && tier="  (personal — the skill itself is untouched)"
-    rm "$entry"
+    [ "$DRY_RUN" = true ] || rm "$entry"
     removed=$((removed + 1))
-    echo -e "  ${GREEN}🗑️  Removed: $dir/$(basename "$entry")${tier}${NC}"
+    echo -e "  ${GREEN}🗑️  ${verb}: $dir/$(basename "$entry")${tier}${NC}"
   done
 done
+
+if [ "$DRY_RUN" = true ]; then
+  echo -e "  ${GREEN}🗑️  Would strip the managed .gitignore block${NC}"
+  [ ! -f "$REPO_ROOT/.gitignore-symlinks" ] || echo -e "  ${GREEN}🗑️  Would remove legacy .gitignore-symlinks${NC}"
+  echo ""
+  echo -e "${GREEN}Dry run complete.${NC} Would remove $removed link(s); nothing changed."
+  exit 0
+fi
 
 # Strip our managed .gitignore block.
 remove_gitignore_block

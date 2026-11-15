@@ -4,13 +4,15 @@
 # Personal skills live OUTSIDE the repo (~/.openthrottle/skills by default,
 # override with OPENTHROTTLE_PERSONAL_SKILLS_DIR) and are linked in by sync.sh,
 # so they reach every agent CLI exactly like a committed skill while remaining
-# impossible to commit. See docs/monorepo/foreign-workspace-skill-injection.md §7.
+# impossible to commit. See
+# https://github.com/openthrottle/monorepo/blob/main/docs/monorepo/foreign-workspace-skill-injection.md (§7).
 #
 # Usage:
 #   personal.sh new <name>       scaffold a skill, sync it, say how to invoke it
 #   personal.sh list             what you have, and where each one is linked
 #   personal.sh promote <name>   graduate it into the committed skills/ catalog
 #   personal.sh demote <name>    the inverse, for when you promoted too early
+#   personal.sh --help           print this usage; exit 0
 #
 # The whole point is that starting one costs a single command — a tier nobody
 # can be bothered to opt into is a tier nobody uses.
@@ -21,6 +23,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 source "$SCRIPT_DIR/common.sh"
 
 usage() {
+  local code="${1:-1}"
   cat >&2 <<EOF
 Usage: $(basename "$0") <command> [args]
 
@@ -32,8 +35,12 @@ Usage: $(basename "$0") <command> [args]
 Personal root: $(resolve_personal_skills_root)
   (override with $PERSONAL_SKILLS_DIR_ENV)
 EOF
-  exit 1
+  exit "$code"
 }
+
+case "${1:-}" in
+  -h | --help) usage 0 ;;
+esac
 
 detect_repo_root || exit 1
 validate_agent_skill_dirs || exit 1
@@ -196,11 +203,14 @@ command_promote() {
   echo ""
   echo -e "${GREEN}Promoted '$name' — it is now a committed skill, staged and ready.${NC}"
   echo -e "- ${BLUE}Still to do${NC} (see $SKILLS_SRC_DIR/AGENTS.md):"
-  echo -e "    • add '$name' to the OT-owned list in docs/Skills.md"
-  echo -e "    • re-measure the always-on description budget in that same file"
   echo -e "    • nothing goes in $LOCKFILE_NAME — that file records npx-skills installs only"
-  echo -e "- ${BLUE}Commit${NC} (commitlint has no 'skills' scope — use 'monorepo'):"
-  echo -e "    git commit -m \"feat(monorepo): add the $name skill\""
+  # OpenThrottle-only hints: docs/Skills.md at the repo root is the signal.
+  if [ -f "$REPO_ROOT/docs/Skills.md" ]; then
+    echo -e "    • add '$name' to the OT-owned list in docs/Skills.md"
+    echo -e "    • re-measure the always-on description budget in that same file"
+    echo -e "- ${BLUE}Commit${NC} (commitlint has no 'skills' scope — use 'monorepo'):"
+    echo -e "    git commit -m \"feat(monorepo): add the $name skill\""
+  fi
   echo -e "- ${YELLOW}Changed your mind?${NC} $(basename "$0") demote $name"
 }
 
@@ -244,6 +254,7 @@ COMMAND="$1"
 shift
 
 case "$COMMAND" in
+  -h | --help) usage 0 ;;
   demote) command_demote "$@" ;;
   list) command_list "$@" ;;
   new) command_new "$@" ;;

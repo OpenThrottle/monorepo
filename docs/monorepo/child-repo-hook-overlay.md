@@ -4,15 +4,20 @@
 problem, for skills — read the two together), [agent-cli-hook-capability-matrix.md](./agent-cli-hook-capability-matrix.md),
 [child-repo-hook-telemetry-contract.md](./child-repo-hook-telemetry-contract.md).
 
+> **Superseded in part:** [hook-plugin-distribution.md](./hook-plugin-distribution.md) (accepted
+> 2026-11-13, OT plan `88d08c18`) is the shipped design. Bundles are no longer committed on `main`
+> and hooks no longer live under `.claude/hooks/` or `.cursor/hooks/`. The payload is split into
+> plugins, and this repo consumes them (§3 and §3a below). Everything else here still holds.
+
 ## What the overlay does
 
 `@openthrottle/agentic-hooks` authors a tool-neutral skill-usage core in TS and esbuild-bundles
-per-tool adapters into committed, self-contained `.cjs` under each tool's hook folder. This repo's
-`.claude/settings.json` and `.cursor/hooks.json` wire those bundles up, so on their own they fire
-only inside the OpenThrottle monorepo.
+per-tool adapters into self-contained `.cjs` under each plugin payload's `dist/`. Those payloads
+are the only place hooks live: there are no per-tool hook folders any more. This repo loads them
+the way any other repository does (§3a).
 
 The overlay carries the same hooks into **child repositories** — foreign checkouts OT drives agents
-against, plus repos humans open directly — via one committed plugin payload delivered two ways
+against, plus repos humans open directly — via plugin payloads delivered two ways
 (§3): a marketplace plugin for humans, and `--plugin-dir` for orchestrated runs. It **never
 overrides or clobbers a user's own hooks**, and it writes nothing into the target checkout.
 
@@ -73,17 +78,24 @@ the fallback for CLIs whose hooks we cannot reach — currently grok and opencod
 
 ## 3. The design — one payload per tool, two delivery paths
 
-Payloads are built by the `bundle-hooks` target in `@openthrottle/agentic-hooks` and committed,
-**one directory per tool**:
+Payloads are built by the `bundle-hooks` target in `@openthrottle/agentic-hooks`, **one directory
+per tool and per intrusiveness tier** (the split is in
+[hook-plugin-distribution.md](./hook-plugin-distribution.md) §2):
+
+| tool   | payloads (under `plugins/`)                                                   |
+| ------ | ----------------------------------------------------------------------------- |
+| Claude | `openthrottle` (telemetry), `openthrottle-workflow`, `openthrottle-guards`    |
+| Cursor | `openthrottle-cursor`, `openthrottle-cursor-guards`                           |
+| Codex  | `openthrottle-codex` (no `hooks.json`; a `config.toml` snippet in its README) |
 
 ```
-plugins/openthrottle/                # Claude Code
-plugins/openthrottle-cursor/         # Cursor
-  .claude-plugin/plugin.json         # name, version (derived), description, author
+plugins/openthrottle/                # committed: only what is small and rarely changes
+  .claude-plugin/plugin.json         # name, description, author
   hooks/hooks.json                   # event → handler, in THAT tool's event names
-  hooks/skill-usage-capture.cjs      # bundled, zero runtime deps
-  hooks/skill-usage-complete.cjs
-  README.md                          # what it collects, and how to turn it off
+  hooks/skill-usage-capture.cjs      # fixed stub: requires dist/<file>, exits 0 if unbuilt
+  bin/skill-usage-doctor.cjs         # same, for operator CLIs on the Bash PATH
+  dist/                              # gitignored esbuild bundles, zero runtime deps
+  README.md                          # generated: what it collects, and how to turn it off
 ```
 
 **Why one per tool rather than one shared payload.** Everything except `hooks/hooks.json` is
@@ -97,12 +109,12 @@ an event that never fires in a headless run. A shared payload would load under C
 error, and record nothing — the worst of the three outcomes. Measurements:
 [cursor-agent-hook-probe.md](./cursor-agent-hook-probe.md).
 
-Each driver names its own payload through `AgentDriver.pluginDirRel`, and
-`resolveHookPluginDirs({ payloadRel })` resolves that one. A driver that names none falls back to
-the Claude payload.
+Each driver names its payloads through `AgentDriver.pluginDirRels` (Claude: three, Cursor: two), and
+`resolveHookPluginDirs` resolves them. A driver that names none falls back to the Claude payloads.
 
-- **Leg A — plugin + marketplace.** `.claude-plugin/marketplace.json` at the repo root lists the
-  payload with `source: "./plugins/openthrottle"`. A user runs `/plugin marketplace add
+- **Leg A — plugin + marketplace.** `.claude-plugin/marketplace.json` at the repo root (name
+  `openthrottle`) points each plugin at the generated `plugins-dist` branch with a `git-subdir`
+  source and `ref: plugins-dist`. A user runs `/plugin marketplace add
 OpenThrottle/monorepo` then `/plugin install openthrottle@openthrottle` **once**, and it applies in
   every repo they open. This repo is public, so it hosts the marketplace itself — no second repo, no
   sync, no drift gate between repos, and no separate LICENSE.
@@ -113,10 +125,26 @@ OpenThrottle/monorepo` then `/plugin install openthrottle@openthrottle` **once**
   **Claude and Cursor both support this leg** — `cursor-agent --plugin-dir <path>` is repeatable in
   exactly the same way, verified against 2026.09.10-fd3934a.
 
-The payload is a **real committed directory, not gitignored build output**, because leg B points a
-running server at it in a plain checkout with nothing built. It is drift-gated by
-`bundle-hooks-check` and excluded from prettier (two formatters over one generated file means every
-reformat reads as drift).
+**Why bundles are not committed on `main`.** The original design committed them, so leg B could
+point a running server at a plain checkout with nothing built. That cost about 3× generated lines
+per authored line and 41.8k bundle lines in 60 days
+([hook-plugin-distribution.md](./hook-plugin-distribution.md) §1). Now each payload commits fixed
+stubs that `require` `dist/<file>` and exit 0 while it is unbuilt, so a plain checkout is
+fail-open. `dist/` is gitignored; `pnpm run build:hooks` builds it (setup, worktree provisioning,
+openthrottle-server `dev`, husky `post-merge` and `post-checkout`).
+`.github/workflows/publish-plugins.yml` publishes the built payloads, with `version` stripped from
+their manifests, to `plugins-dist`. `bundle-hooks-check` diffs only the committed files. They are
+excluded from prettier (two formatters over one generated file means every reformat reads as drift).
+
+### 3a. Dogfooding
+
+This repo consumes its own plugins, not hook registrations in `.claude/settings.json`.
+`bundle-hooks` generates `plugins/.claude-plugin/marketplace.json` (name `openthrottle-dev`, relative
+sources, loaded in place). `scripts/utils/claude-plugins.ts` adds it from the primary checkout and
+installs the three Claude plugins at `--scope local`; committed `.claude/settings.json` enables the
+`@openthrottle-dev` ids and disables the `@openthrottle` ones so nothing double-fires.
+`OPENTHROTTLE_CLAUDE_PLUGINS=0` opts out. Cursor's `.cursor/hooks.json` points at the built stubs
+under `plugins/`. To test a branch's own hooks, run `claude --plugin-dir ./plugins/<p>`.
 
 ### Why the split lands where it does
 
@@ -153,9 +181,11 @@ So `PreToolUse(Skill)` and `UserPromptExpansion` are **complementary capture pat
 ones** — a session hits one or the other depending on how the skill was reached. Both ship. Anyone
 tempted to drop one as duplication should re-read this row.
 
-The payload ships **two** adapters, not all five. `drain`, `outcome`, and `scope` are manual CLIs
-wired to no event, and would be dead weight in someone else's repo. The buffer still flushes, because
-`complete` drains opportunistically on `Stop`.
+The telemetry hooks ship **two** adapters (plus the heartbeat below), not all five. `doctor`,
+`drain` and `outcome` are operator CLIs wired to no event; they ship in the telemetry plugin's
+`bin/`, on the Bash PATH. `backfill`, `resegment` and `scope` are not bundled at all and run from
+source via `pnpm run telemetry:<name>`. The buffer still flushes, because `complete` drains
+opportunistically on `Stop`.
 
 **Plan `c4ece7fe` adds a third, on `SessionStart`:** the coverage heartbeat. It exists because leg A
 can be missing with no symptom. A machine with the endpoint configured but no plugin installed

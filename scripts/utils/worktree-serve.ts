@@ -51,7 +51,9 @@ export const SERVE_TARGET_SPECS: Readonly<
 
 export const isServeTarget = (
   value: string | undefined,
-): value is ServeTarget => value === 'developer' || value === 'server';
+): value is ServeTarget => {
+  return value === 'developer' || value === 'server';
+};
 
 /** What the command line asked for. */
 export type ServeCommand =
@@ -63,7 +65,9 @@ export const USAGE =
   'usage: pnpm worktree:serve <server|developer> [--api-only] [--timeout=<seconds>]\n' +
   '       pnpm worktree:serve --stop [server|developer]';
 
-const usage = (message: string): ServeCommand => ({ kind: 'usage', message });
+const usage = (message: string): ServeCommand => {
+  return { kind: 'usage', message };
+};
 
 /** Parse `--timeout=<seconds>`; undefined when absent, NaN-safe. */
 const parseTimeout = (
@@ -82,8 +86,11 @@ const parseTimeout = (
 
 /** Turn the script's own arguments into a command. Never throws. */
 export const parseServeArgs = (args: readonly string[]): ServeCommand => {
-  const known = (arg: string): boolean =>
-    arg === '--api-only' || arg === '--stop' || arg.startsWith('--timeout=');
+  const known = (arg: string): boolean => {
+    return (
+      arg === '--api-only' || arg === '--stop' || arg.startsWith('--timeout=')
+    );
+  };
   const unknownFlag = args.find((arg) => arg.startsWith('--') && !known(arg));
 
   if (unknownFlag !== undefined) {
@@ -102,10 +109,15 @@ export const parseServeArgs = (args: readonly string[]): ServeCommand => {
   }
 
   if (args.includes('--stop')) {
-    return args.includes('--api-only') ||
-      args.some((arg) => arg.startsWith('--timeout='))
-      ? usage('--stop takes only an optional target')
-      : { kind: 'stop', target };
+    const hasStartOnlyFlag =
+      args.includes('--api-only') ||
+      args.some((arg) => arg.startsWith('--timeout='));
+
+    if (hasStartOnlyFlag) {
+      return usage('--stop takes only an optional target');
+    }
+
+    return { kind: 'stop', target };
   }
 
   if (target === undefined) {
@@ -141,25 +153,30 @@ export const nxTaskId = (target: ServeTarget, apiOnly: boolean): string => {
 };
 
 /** Every Nx task id the helper may start for a target (for stale-lock sweeps). */
-export const nxTaskIds = (target: ServeTarget): readonly string[] =>
-  target === 'developer'
+export const nxTaskIds = (target: ServeTarget): readonly string[] => {
+  return target === 'developer'
     ? [nxTaskId('developer', false)]
     : [nxTaskId('server', false), nxTaskId('server', true)];
+};
 
 /** The argv that runs a task: always through Nx, prefixed with pnpm. */
 export const nxArgv = (
   taskId: string,
-): { readonly args: string[]; readonly command: string } => ({
-  // prettier-ignore
-  args: ['nx', 'run', taskId],
-  command: 'pnpm',
-});
+): { readonly args: string[]; readonly command: string } => {
+  return {
+    // prettier-ignore
+    args: ['nx', 'run', taskId],
+    command: 'pnpm',
+  };
+};
 
-export const logPath = (root: string, target: ServeTarget): string =>
-  join(root, SERVE_STATE_DIR, `${target}.log`);
+export const logPath = (root: string, target: ServeTarget): string => {
+  return join(root, SERVE_STATE_DIR, `${target}.log`);
+};
 
-export const pidfilePath = (root: string, target: ServeTarget): string =>
-  join(root, SERVE_STATE_DIR, `${target}.pid`);
+export const pidfilePath = (root: string, target: ServeTarget): string => {
+  return join(root, SERVE_STATE_DIR, `${target}.pid`);
+};
 
 /** What the pidfile records about a launched target. */
 export interface PidRecord {
@@ -171,14 +188,17 @@ export interface PidRecord {
   readonly task: string;
 }
 
-export const renderPidRecord = (record: PidRecord): string =>
-  `${JSON.stringify(record, null, 2)}\n`;
+export const renderPidRecord = (record: PidRecord): string => {
+  return `${JSON.stringify(record, null, 2)}\n`;
+};
 
-const field = (value: object, key: string): unknown =>
-  Object.entries(value).find(([name]) => name === key)?.[1];
+const field = (value: object, key: string): unknown => {
+  return Object.entries(value).find(([name]) => name === key)?.[1];
+};
 
-const isPositiveInteger = (value: unknown): value is number =>
-  typeof value === 'number' && Number.isInteger(value) && value > 0;
+const isPositiveInteger = (value: unknown): value is number => {
+  return typeof value === 'number' && Number.isInteger(value) && value > 0;
+};
 
 /** Parse a pidfile; undefined for anything that is not a complete record. */
 export const parsePidRecord = (contents: string): PidRecord | undefined => {
@@ -269,12 +289,13 @@ const readOptionalFile = (path: string): string | undefined => {
 export const readServePort = (
   root: string,
   target: ServeTarget,
-): PortResolution =>
-  resolveServePort(
+): PortResolution => {
+  return resolveServePort(
     target,
     readEnvFile(join(root, '.env')),
     readOptionalFile(join(root, WORKTREE_PORTS_FILE)),
   );
+};
 
 /**
  * The reason the helper refuses to run in the checkout at `root`, or undefined
@@ -285,18 +306,19 @@ export const readServePort = (
 export const primaryRefusal = (
   mode: WorktreeDbMode,
   root: string,
-): string | undefined =>
-  mode === 'primary'
+): string | undefined => {
+  return mode === 'primary'
     ? `${root} is the primary checkout (no OT_WORKTREE_DB marker in its .env); worktree:serve only runs in a provisioned worktree and never touches the primary's processes` // prettier-ignore
     : undefined;
+};
 
 /** The refusal for the checkout at `root`, reading only its own `.env`. */
-export const refusalForRoot = (root: string): string | undefined =>
-  primaryRefusal(readWorktreeDbMode(root, {}), root);
+export const refusalForRoot = (root: string): string | undefined => {
+  return primaryRefusal(readWorktreeDbMode(root, {}), root);
+};
 
 /** The shell fragment that reads the worktree's bearer without printing it. */
-const bearerExpression = (root: string): string =>
-  `$(sed -n 's/^${PROBE_TOKEN_ENV_KEY}=//p' '${join(root, SERVER_ENV_FILE)}' | tail -n 1 | tr -d '"')`; // prettier-ignore
+const bearerExpression = (root: string): string => { return `$(sed -n 's/^${PROBE_TOKEN_ENV_KEY}=//p' '${join(root, SERVER_ENV_FILE)}' | tail -n 1 | tr -d '"')`; }; // prettier-ignore
 
 /**
  * The probe printed once a target is listening. The server probe queries
@@ -327,8 +349,9 @@ export const launchHeader = (
   target: ServeTarget,
   commandLine: string,
   at: Date,
-): string =>
-  `\n--- ${at.toISOString()} worktree:serve ${target}: ${commandLine} ---\n`;
+): string => {
+  return `\n--- ${at.toISOString()} worktree:serve ${target}: ${commandLine} ---\n`;
+};
 
 /**
  * The part of an append-only target log written by the latest launch (from its
@@ -356,15 +379,17 @@ export const nxLockWaits = (log: string): string[] => {
 };
 
 /** The last `count` lines of `text`, trailing blank lines dropped. */
-export const tailLines = (text: string, count: number): string =>
-  text.trimEnd().split('\n').slice(-count).join('\n');
+export const tailLines = (text: string, count: number): string => {
+  return text.trimEnd().split('\n').slice(-count).join('\n');
+};
 
 /** `lsof -ti` output (one pid per line) as pids. */
-export const parsePids = (output: string): number[] =>
-  output
+export const parsePids = (output: string): number[] => {
+  return output
     .split('\n')
     .map((line) => Number(line.trim()))
     .filter((pid) => Number.isInteger(pid) && pid > 0);
+};
 
 export interface ProcessRow {
   readonly command: string;
@@ -415,8 +440,9 @@ export const descendantPids = (
 };
 
 /** True when `path` is the worktree at `root` or inside it. */
-export const isInsideWorktree = (path: string, root: string): boolean =>
-  path === root || path.startsWith(`${root}/`);
+export const isInsideWorktree = (path: string, root: string): boolean => {
+  return path === root || path.startsWith(`${root}/`);
+};
 
 /** The directory `lsof -a -p <pid> -d cwd -Fn` printed, if any. */
 export const parseLsofCwd = (output: string): string | undefined => {

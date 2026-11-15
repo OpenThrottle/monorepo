@@ -1,5 +1,5 @@
 /**
- * @description GraphQL resolver for Database health, server health, and server metrics. databaseHealth for status page (DB); serverHealth returns API, DB, Redis; serverMetrics returns process CPU and memory.
+ * @description GraphQL resolver for Database health, server health, server metrics and server info. databaseHealth for status page (DB); serverHealth returns API, DB, Redis; serverMetrics returns process CPU and memory.
  */
 
 import { Query, Resolver } from '@nestjs/graphql';
@@ -8,6 +8,7 @@ import { Public } from '@openthrottle/nestjs-auth';
 import { ProcessMetricsService } from '../../metrics/process-metrics/process-metrics.service.ts';
 import { HealthService } from './health.service.ts';
 import { ServerHealthObject } from './server-health.object.ts';
+import { ServerInfoObject } from './server-info.object.ts';
 import { ServerMetricsObject } from './server-metrics.object.ts';
 
 /** Database health status: ok, unconfigured, or unreachable. */
@@ -49,5 +50,15 @@ export class HealthResolver {
   })
   serverMetrics(): ServerMetricsObject {
     return this.processMetrics.getCurrentSnapshot();
+  }
+
+  /**
+   * @description Static facts about the running build. Cheap, unlike serverHealth: it pings nothing.
+   */
+  @Query(() => ServerInfoObject, {
+    description: `Static facts about the running server build, currently its package.json version.`,
+  })
+  serverInfo(): ServerInfoObject {
+    return this.healthService.getServerInfo();
   }
 }

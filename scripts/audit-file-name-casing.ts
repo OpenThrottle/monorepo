@@ -30,7 +30,7 @@ import { fileURLToPath } from 'node:url';
 
 import type { RenameCandidate } from './codemod-file-name-casing.ts';
 import { planRenames, RENAME_STATUS } from './codemod-file-name-casing.ts';
-import { createLogger } from './utils/index.ts';
+import { createLogger } from './utils/logger.ts';
 
 const logger = createLogger();
 

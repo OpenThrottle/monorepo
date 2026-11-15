@@ -14,6 +14,7 @@ import {
   systemScheduleClock,
   tailForRetry,
 } from '@openthrottle/openthrottle-agentic-loop';
+import { buildRunIdentityEnv } from '@openthrottle/openthrottle-agentic-utils';
 
 import type { OtLoopWorkerRunnerOptions } from './ot-loop.types.ts';
 
@@ -22,7 +23,8 @@ const ERROR_SENTINEL = '<promise>ERROR</promise>';
 /**
  * @description The OT Loop `WorkerRunner` (§ 3, § 5, § 9, § 10): one `runDriverAsync` invocation per
  * attempt, in the run's worktree, with the routed model, the abort signal and an env that blanks the
- * OT credentials. Driver output streams through a batched sink to plan output tagged with the task.
+ * OT credentials and carries the run identity (plan, run and task ids) for in-worker hooks, which
+ * load from OT's hook payloads (`pluginDirs`). Driver output streams through a batched sink to plan output tagged with the task.
  * Classification checks `signal.aborted` first (an aborted attempt is a cancel, never a failed
  * attempt), then a usage limit, then the driver's error sentinel or a non-zero exit, and only then
  * reads the result file.
@@ -30,7 +32,8 @@ const ERROR_SENTINEL = '<promise>ERROR</promise>';
 export const createOtLoopWorkerRunner = (
   options: OtLoopWorkerRunnerOptions,
 ): WorkerRunner => {
-  const { cwd, driver, effort, env, output, runDriver, timeoutMs } = options;
+  const { cwd, driver, effort, env, output, planId, planRunId } = options;
+  const { pluginDirs, runDriver, timeoutMs } = options;
   let attempts = 0;
 
   return {
@@ -66,12 +69,16 @@ export const createOtLoopWorkerRunner = (
           {
             cwd,
             effort,
-            env,
+            env: {
+              ...env,
+              ...buildRunIdentityEnv({ planId, planRunId, taskId: task.id }),
+            },
             iteration: attempts,
             ...(model !== undefined ? { model } : {}),
             onChunk: (chunk) => {
               clean.push(chunk.data);
             },
+            pluginDirs,
             prompt: buildWorkerPrompt({
               guidance: input.guidance,
               previousFailure: input.previousFailure,

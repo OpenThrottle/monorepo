@@ -24,6 +24,8 @@
     "jsonwebtoken": "catalog:"
   },
   "devDependencies": {
+    "@nestjs/platform-express": "catalog:",
+    "@nestjs/testing": "catalog:",
     "@types/jsonwebtoken": "catalog:",
     "vitest": "catalog:"
   },

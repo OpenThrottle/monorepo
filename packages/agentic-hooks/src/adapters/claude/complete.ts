@@ -24,6 +24,7 @@ import {
   sweepTrajectoryUploadState,
 } from '../../index.ts';
 import { resolveClaudeTokenUsageAccount } from './account.ts';
+import { detectClaudeBundleHost } from './bundle-host.ts';
 import { CLAUDE_SOURCE, normalizeClaudeStopPayload } from './payload.ts';
 import { captureSessionTrajectories } from './session-trajectory.ts';
 import { isShadowedByRepoHooks } from './shadow.ts';
@@ -31,6 +32,13 @@ import { captureTranscriptUsage } from './transcript-usage.ts';
 
 const main = async (): Promise<void> => {
   try {
+    // Another tool is running this bundle. Its payloads are not Claude's, and its own adapter is
+    // the only correct producer (agent-cli-hook-capability-matrix.md § Which tool is running the
+    // Claude bundles).
+    if (detectClaudeBundleHost() !== 'claude-code') {
+      return;
+    }
+
     const repoRoot =
       process.env.CLAUDE_PROJECT_DIR ||
       process.env.OPEN_THROTTLE_REPO_ROOT ||

@@ -2,18 +2,12 @@ import {
   atomFragmentDraft,
   CoreFormRenderer,
 } from '@openthrottle/react-router-cms-core';
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-  cn,
-  Input,
-  Label,
-} from '@openthrottle/react-router-shadcn';
+import { cn, Input, Label } from '@openthrottle/react-router-shadcn';
 import { useHydrateAtoms } from 'jotai/utils';
 import * as React from 'react';
-import { Link, useLocation } from 'react-router';
+import { useLocation } from 'react-router';
 
+import { CmsActionFailureAlert } from '~/global/components/CmsActionFailureAlert';
 import { getSignInHref } from '~/routing/auth/utils/auth-redirect';
 import { FragmentChildAdd } from '~/routing/fragments/components/FragmentChildAdd';
 import { FragmentChildCreate } from '~/routing/fragments/components/FragmentChildCreate';
@@ -66,30 +60,13 @@ export const FragmentEditor = (
   // Handlers
 
   // Markup
-  const issueItems = failed?.issues.map((issue) => {
-    const path = issue.path === '' ? FRAGMENT_EDITOR_COPY.rootPath : issue.path;
-
-    return (
-      <li key={`${issue.path}:${issue.message}`}>
-        <code>{path}</code> {issue.message}
-      </li>
-    );
-  });
   const failure = failed && (
-    <Alert className="mx-4 mt-4 w-auto" variant="destructive">
-      <AlertTitle>{FRAGMENT_EDITOR_COPY.issuesTitle}</AlertTitle>
-      <AlertDescription>
-        <p>
-          {failed.message}{' '}
-          {failed.requiresSignIn && (
-            <Link className="font-medium underline" to={signInHref}>
-              {FRAGMENT_EDITOR_COPY.signIn}
-            </Link>
-          )}
-        </p>
-        <ul className="list-disc pl-4">{issueItems}</ul>
-      </AlertDescription>
-    </Alert>
+    <CmsActionFailureAlert
+      className="mx-4 mt-4 w-auto"
+      copy={FRAGMENT_EDITOR_COPY}
+      failure={failed}
+      signInHref={signInHref}
+    />
   );
   const savedNotice = saved && (
     <p className="text-muted-foreground mx-4 mt-4 text-sm" role="status">

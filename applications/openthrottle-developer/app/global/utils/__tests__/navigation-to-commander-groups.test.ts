@@ -37,7 +37,16 @@ const expectedLinks = (
   },
 ): readonly GlobalSidebarContentLinkProps[] => {
   return Object.values(navigation)
-    .flat()
+    .flatMap((link) => link)
+    .flatMap((link) => [
+      link,
+      ...(link.subLinks ?? [])
+        .filter((subLink) => String(subLink.to) !== String(link.to))
+        .map((subLink) => ({
+          ...subLink,
+          children: `${String(link.children)} › ${String(subLink.children)}`,
+        })),
+    ])
     .filter(
       (link) =>
         (link.beta !== true || flags.isBetaEnabled) &&
@@ -151,6 +160,48 @@ describe('buildCommanderGroupsFromNavigation', () => {
       expect(item.value).toBe(`${String(link.children)} ${path}`);
       expect(item.icon).toBeDefined();
     });
+  });
+
+  test('exposes usage sub-links as searchable entries', () => {
+    const options = buildOptions();
+    const groups = buildCommanderGroupsFromNavigation(
+      dataNavigationV2,
+      options,
+    );
+
+    const items = groups.flatMap((group) => group.items);
+    const skills = items.find((item) => item.id === 'nav-usage-skills');
+
+    expect(items.map((item) => item.id)).toEqual(
+      expect.arrayContaining([
+        'nav-usage',
+        'nav-usage-agents',
+        'nav-usage-skills',
+        'nav-usage-telemetry',
+      ]),
+    );
+    expect(items.filter((item) => item.id === 'nav-usage')).toHaveLength(1);
+
+    skills?.onSelect?.();
+    expect(options.navigate).toHaveBeenCalledWith('/usage/skills');
+  });
+
+  test('lists usage sub-links alphabetically after the overview', () => {
+    const groups = buildCommanderGroupsFromNavigation(
+      dataNavigationV2,
+      buildOptions(),
+    );
+
+    const usageSubIds = groups
+      .flatMap((group) => group.items)
+      .map((item) => item.id)
+      .filter((id) => id.startsWith('nav-usage-'));
+
+    expect(usageSubIds).toEqual([
+      'nav-usage-agents',
+      'nav-usage-skills',
+      'nav-usage-telemetry',
+    ]);
   });
 
   test('onSelect navigates to the link path', () => {

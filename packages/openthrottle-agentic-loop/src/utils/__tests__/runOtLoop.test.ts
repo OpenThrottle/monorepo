@@ -453,6 +453,78 @@ describe('runOtLoop inbox', () => {
   });
 });
 
+describe('runOtLoop hook-claimed messages', () => {
+  it('folds a message the in-worker hook claimed into every later prompt, once', async () => {
+    const world = makeWorld({
+      inbox: [['boundary']],
+      tasks: [makeTask('1'), makeTask('2'), makeTask('3')],
+      worker: (input, w) => {
+        if (input.task.id === '1') {
+          // The hook claims mid-attempt: DELIVERED to the run, never returned by claimInbox.
+          w.delivered.push({ body: 'from the hook', id: 'hook-1' });
+        }
+
+        return done();
+      },
+    });
+
+    await run(world);
+
+    expect(world.workerInputs.map((input) => input.guidance)).toEqual([
+      ['boundary'],
+      ['boundary', 'from the hook'],
+      ['boundary', 'from the hook'],
+    ]);
+  });
+
+  it('folds hook-claimed messages before a retry', async () => {
+    const world = makeWorld({
+      tasks: [makeTask('1')],
+      validations: [red],
+      worker: (_input, w) => {
+        if (w.delivered.length === 0) {
+          w.delivered.push({ body: 'stop deleting', id: 'hook-1' });
+        }
+
+        return done();
+      },
+    });
+
+    await run(world);
+
+    expect(world.workerInputs.map((input) => input.guidance)).toEqual([
+      [],
+      ['stop deleting'],
+    ]);
+  });
+
+  it('keeps going when the delivered list cannot be read', async () => {
+    const world = makeWorld({
+      inbox: [['claimed']],
+      tasks: [makeTask('1')],
+    });
+    const failing = {
+      ...world.deps,
+      client: {
+        ...world.deps.client,
+        listRunDeliveredMessages: () => Promise.reject(new Error('down')),
+      },
+    };
+
+    const outcome = await runOtLoop({
+      deps: failing,
+      maxRetries: undefined,
+      planId: 'plan',
+      taskId: undefined,
+    });
+
+    expect(outcome.kind).not.toBe('failed');
+    expect(world.workerInputs.map((input) => input.guidance)).toEqual([
+      ['claimed'],
+    ]);
+  });
+});
+
 describe('runOtLoop worker guards', () => {
   it('restores HEAD and the branch when the worker moved them', async () => {
     const world = makeWorld({

@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type {
   CommanderGroup,
+  CommanderItem,
   OpenThrottleCommanderProps,
 } from '../OpenThrottleCommander';
 import { OpenThrottleCommander } from '../OpenThrottleCommander';
@@ -15,9 +16,34 @@ describe('OpenThrottleCommander Component', () => {
   let component: RenderResult;
   let props: OpenThrottleCommanderProps;
 
-  const renderCommander = (p: OpenThrottleCommanderProps): RenderResult => {
+  /**
+   * @description `resolveAsync` mimics the developer app's debounced id
+   * lookup: its rows land a tick after the query that asked for them.
+   */
+  const renderCommander = (
+    p: OpenThrottleCommanderProps,
+    resolveAsync?: (query: string) => readonly CommanderItem[],
+  ): RenderResult => {
     const Comp = () => {
-      return <OpenThrottleCommander {...p} />;
+      const [resolvedFor, setResolvedFor] = React.useState('');
+      if (!resolveAsync) {
+        return <OpenThrottleCommander {...p} />;
+      }
+      const handleSearchChange = (query: string): void => {
+        setTimeout(() => {
+          setResolvedFor(query.trim());
+        }, 20);
+      };
+      const emptyStateExtras = (query: string) => {
+        return resolvedFor === query ? resolveAsync(query) : [];
+      };
+      return (
+        <OpenThrottleCommander
+          {...p}
+          emptyStateExtras={emptyStateExtras}
+          onSearchChange={handleSearchChange}
+        />
+      );
     };
     const RoutesStub = createRoutesStub([{ Component: Comp, path: '/' }]);
     return render(<RoutesStub />);
@@ -188,6 +214,32 @@ describe('OpenThrottleCommander Component', () => {
       expect(component.queryByRole('dialog')).not.toBeInTheDocument();
     });
 
+    test('renders an empty-state extra trailing node beside its label', async () => {
+      const user = userEvent.setup();
+      component = renderCommander({
+        ...props,
+        emptyStateExtras: () => [
+          {
+            id: 'jump-plan-abc123',
+            label: 'Open plan: Ship it (abc123…)',
+            onSelect: () => {},
+            trailing: <span data-testid="status-badge">In progress</span>,
+            value: 'abc123 open plan',
+          },
+        ],
+        groups: [],
+      });
+      const dialog = await openCommandPalette(user, component);
+      await user.type(getCommandInput(component, dialog), 'abc123');
+
+      const trailing = await within(dialog).findByTestId(
+        'CommanderItemRow-trailing',
+      );
+      expect(trailing).toContainElement(
+        within(dialog).getByTestId('status-badge'),
+      );
+    });
+
     test('should render UUID debug jumps when emptyStateExtras returns items', async () => {
       const user = userEvent.setup();
       const planId = 'c65fb0f7-56ae-43bb-b516-dfd41fda7985';
@@ -254,6 +306,80 @@ describe('OpenThrottleCommander Component', () => {
       expect(
         within(dialog).queryByRole('option', { name: /Search for/ }),
       ).not.toBeInTheDocument();
+    });
+  });
+
+  describe('async-resolved id rows', () => {
+    const renderAsyncResolver = (
+      onOpenPlan: () => void,
+      onOpenTask: () => void,
+    ): RenderResult => {
+      return renderCommander(
+        {
+          groups: [
+            {
+              heading: 'Nav',
+              items: [{ id: 'n1', label: 'Plans', onSelect: () => {} }],
+            },
+          ],
+          onEmptyStateSearch: () => {},
+        },
+        (query) => [
+          {
+            id: 'jump-plan',
+            label: 'Open plan: Ship it',
+            onSelect: onOpenPlan,
+            value: `${query} open plan`,
+          },
+          {
+            id: 'jump-task',
+            label: 'Open task: Wire it',
+            onSelect: onOpenTask,
+            value: `${query} open task`,
+          },
+        ],
+      );
+    };
+
+    test('Enter opens the first resolved row once it arrives', async () => {
+      const user = userEvent.setup();
+      const onOpenPlan = vi.fn();
+      const onOpenTask = vi.fn();
+      component = renderAsyncResolver(onOpenPlan, onOpenTask);
+      const dialog = await openCommandPalette(user, component);
+      await user.type(getCommandInput(component, dialog), '316daa7a');
+      const row = await within(dialog).findByRole('option', {
+        name: 'Open plan: Ship it',
+      });
+      await waitFor(() => {
+        expect(row).toHaveAttribute('aria-selected', 'true');
+      });
+
+      await user.keyboard('{Enter}');
+
+      expect(onOpenPlan).toHaveBeenCalledTimes(1);
+      expect(onOpenTask).not.toHaveBeenCalled();
+    });
+
+    test('keeps a highlight the user moved', async () => {
+      const user = userEvent.setup();
+      const onOpenPlan = vi.fn();
+      const onOpenTask = vi.fn();
+      component = renderAsyncResolver(onOpenPlan, onOpenTask);
+      const dialog = await openCommandPalette(user, component);
+      await user.type(getCommandInput(component, dialog), '316daa7a');
+      const planRow = await within(dialog).findByRole('option', {
+        name: 'Open plan: Ship it',
+      });
+      await waitFor(() => {
+        expect(planRow).toHaveAttribute('aria-selected', 'true');
+      });
+
+      await user.keyboard('{ArrowDown}');
+      await user.keyboard('{Enter}');
+
+      expect(onOpenTask).toHaveBeenCalledTimes(1);
+      expect(onOpenPlan).not.toHaveBeenCalled();
     });
   });
 

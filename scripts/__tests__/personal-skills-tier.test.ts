@@ -364,13 +364,24 @@ describe('personal skills tier', () => {
       ).toContain('name: my-experiment');
     });
 
-    it('names the docs touchpoints and the right commit scope', () => {
+    it('names the docs touchpoints and the right commit scope in an OpenThrottle repo', () => {
+      mkdirSync(join(sandbox.repo, 'docs'), { recursive: true });
+      writeFileSync(join(sandbox.repo, 'docs', 'Skills.md'), '# Skills\n');
       personal(sandbox, ['new', 'my-experiment']);
 
       const result = personal(sandbox, ['promote', 'my-experiment']);
 
       expect(result.output).toContain('docs/Skills.md');
       expect(result.output).toContain('feat(monorepo)');
+      expect(result.output).toContain('demote my-experiment');
+    });
+
+    it('omits the OpenThrottle-only hints outside an OpenThrottle repo', () => {
+      personal(sandbox, ['new', 'my-experiment']);
+
+      const result = personal(sandbox, ['promote', 'my-experiment']);
+
+      expect(result.output).not.toContain('docs/Skills.md');
       expect(result.output).toContain('demote my-experiment');
     });
 
@@ -480,7 +491,7 @@ describe('personal skills tier', () => {
 
       expect(shellRoot(env)).toBe(
         resolvePersonalSkillsRoot({
-          HOME: env.HOME,
+          HOME: process.env.HOME,
           OPENTHROTTLE_PERSONAL_SKILLS_DIR: '',
         }),
       );
@@ -692,7 +703,7 @@ describe('personal skills tier', () => {
       const end = rest.indexOf('\n## ');
       const body = end === -1 ? rest : rest.slice(0, end);
       return [...body.matchAll(/\b([a-z][a-z0-9]*(?:-[a-z0-9]+)+)\b/g)].map(
-        (match) => match[1],
+        (match) => match[1] ?? '',
       );
     };
 

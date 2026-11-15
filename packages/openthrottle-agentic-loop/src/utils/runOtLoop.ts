@@ -112,6 +112,7 @@ export const runOtLoop = async (
       completedTaskIds: [],
       currentTaskId: undefined,
       guidance: [],
+      guidanceMessageIds: new Set(),
       sessionId: undefined,
       taskStartedAt: options.deps.clock.now(),
     },

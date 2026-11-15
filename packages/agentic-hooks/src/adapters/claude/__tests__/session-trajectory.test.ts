@@ -13,6 +13,7 @@ import type { HookFetch } from '../../../index.ts';
 import {
   deadLetterPathFor,
   defaultTrajectoriesJsonlPath,
+  planRunFilePath,
   readTrajectoryUploadState,
 } from '../../../index.ts';
 import { captureSessionTrajectories } from '../session-trajectory.ts';
@@ -352,10 +353,10 @@ describe('captureSessionTrajectories', () => {
         transcriptPath,
         lines.filter((line) => !line.includes('t-reg')).join('\n'),
       );
-      const planRunsDir = path.join(tmpRoot, 'repo', '.cache', 'plan-runs');
-      fs.mkdirSync(planRunsDir, { recursive: true });
+      const notePath = planRunFilePath(path.join(tmpRoot, 'repo'), SESSION);
+      fs.mkdirSync(path.dirname(notePath), { recursive: true });
       fs.writeFileSync(
-        path.join(planRunsDir, `${SESSION}.json`),
+        notePath,
         JSON.stringify({ planId: 'plan-1', planRunId: 'run-9' }),
       );
       const server = fakeServer();

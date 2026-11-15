@@ -6,12 +6,12 @@ import {
   CommandItem,
   CommandList,
   CommandSeparator,
-  CommandShortcut,
 } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import { useOpenThrottleCommander } from '../hooks/useOpenThrottleCommander';
 import { CommanderFooter } from './CommanderFooter';
+import { CommanderItemRow } from './CommanderItemRow';
 
 /** Single command palette item: action (onSelect) or navigation (href). At least one of onSelect or href should be set for the item to be actionable. */
 export interface CommanderItem {
@@ -21,6 +21,8 @@ export interface CommanderItem {
   readonly label: string;
   readonly onSelect?: () => void;
   readonly shortcut?: string;
+  /** Right-aligned node after the label (e.g. a status badge); the label wraps to make room. */
+  readonly trailing?: React.ReactNode;
   /**
    * Optional cmdk filter value; defaults to {@link CommanderItem.id}. Include user-typed text (e.g. a pasted UUID) so items stay visible while filtering.
    */
@@ -87,8 +89,10 @@ export const OpenThrottleCommander = (
     extraItems,
     handleEmptyStateSearch,
     handleSelect,
+    highlighted,
     open,
     search,
+    setHighlighted,
     setOpen,
     setSearch,
     showEmptyEscapeHatch,
@@ -111,20 +115,13 @@ export const OpenThrottleCommander = (
   const escapeHatch = (
     <CommandGroup forceMount={true} heading={escapeHeading}>
       {extraItems.map((item) => (
-        <CommandItem
+        <CommanderItemRow
+          className={undefined}
           forceMount={true}
+          item={item}
           key={item.id}
-          onSelect={() => handleSelect(item)}
-          value={item.value ?? item.id}
-        >
-          {item.icon ?? null}
-          <span>{item.label}</span>
-          {item.shortcut && (
-            <CommandShortcut className="w-auto whitespace-nowrap">
-              {item.shortcut}
-            </CommandShortcut>
-          )}
-        </CommandItem>
+          onSelect={handleSelect}
+        />
       ))}
       {onEmptyStateSearch && (
         <CommandItem
@@ -158,8 +155,10 @@ export const OpenThrottleCommander = (
       data-testid="OpenThrottleCommander"
       modal={true}
       onOpenChange={setOpen}
+      onValueChange={setHighlighted}
       open={open}
       translate="no"
+      value={highlighted}
     >
       <CommandInput
         className="border-border! flex-1 border-b! p-4 pb-4 text-sm! leading-none"
@@ -179,20 +178,13 @@ export const OpenThrottleCommander = (
             ) : null}
             <CommandGroup className="m-0! p-0!" heading={group.heading}>
               {group.items.map((item) => (
-                <CommandItem
+                <CommanderItemRow
                   className="m-0! h-auto! rounded-none! p-2! px-4!"
+                  forceMount={undefined}
+                  item={item}
                   key={item.id}
-                  onSelect={() => handleSelect(item)}
-                  value={item.value ?? item.id}
-                >
-                  {item.icon ?? null}
-                  <span>{item.label}</span>
-                  {item.shortcut && (
-                    <CommandShortcut className="w-auto whitespace-nowrap">
-                      {item.shortcut}
-                    </CommandShortcut>
-                  )}
-                </CommandItem>
+                  onSelect={handleSelect}
+                />
               ))}
             </CommandGroup>
           </React.Fragment>

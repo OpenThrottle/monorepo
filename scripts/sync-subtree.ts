@@ -26,15 +26,18 @@
  */
 import { fileURLToPath } from 'node:url';
 
-import { createLogger, hasFlag, positionals, run } from './utils/index.ts';
+import { hasFlag, positionals } from './utils/args.ts';
+import { run } from './utils/exec.ts';
+import { createLogger } from './utils/logger.ts';
 
 const logger = createLogger();
 
 const SOURCE_REF = 'main';
 
 /** The snapshot commit message for a prefix at a monorepo short SHA. */
-export const snapshotMessage = (prefix: string, short: string): string =>
-  `chore: sync ${prefix} from monorepo\n\nSnapshot of ${prefix} at monorepo ${SOURCE_REF} ${short}.`;
+export const snapshotMessage = (prefix: string, short: string): string => {
+  return `chore: sync ${prefix} from monorepo\n\nSnapshot of ${prefix} at monorepo ${SOURCE_REF} ${short}.`;
+};
 
 const main = (): void => {
   const [prefix, remote, branchArg] = positionals();

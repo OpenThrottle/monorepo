@@ -45,12 +45,12 @@ import path from 'node:path';
 
 import type { DatabaseDefinition } from '../databases/database-registry.ts';
 import { DATABASES } from '../databases/database-registry.ts';
-import type { DuplicatePrefixScope } from './check-migration-hygiene.rules';
+import type { DuplicatePrefixScope } from './check-migration-hygiene.rules.ts';
 import {
   findDuplicatePrefixCollisions,
   findGuardedForeignKeyStatements,
-} from './check-migration-hygiene.rules';
-import { createLogger } from './utils/index.ts';
+} from './check-migration-hygiene.rules.ts';
+import { createLogger } from './utils/logger.ts';
 import {
   changedMigrationPaths,
   migrationDiffArgs,

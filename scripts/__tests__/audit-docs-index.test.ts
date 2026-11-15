@@ -1,9 +1,11 @@
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+
 import { afterEach, describe, expect, it } from 'vitest';
+
 import {
   auditDocsTree,
   extractLinks,
@@ -14,8 +16,9 @@ const SCRIPT = fileURLToPath(
   new URL('../audit-docs-index.ts', import.meta.url),
 );
 
-const tree = (entries: Record<string, string>): ReadonlyMap<string, string> =>
-  new Map(Object.entries(entries));
+const tree = (entries: Record<string, string>): ReadonlyMap<string, string> => {
+  return new Map(Object.entries(entries));
+};
 
 describe('extractLinks', () => {
   it('pulls every inline link target', () => {
@@ -186,8 +189,9 @@ describe('the CLI', () => {
     return directory;
   };
 
-  const audit = (cwd: string, ...args: string[]): string =>
-    execFileSync('tsx', [SCRIPT, ...args], { cwd, encoding: 'utf-8' });
+  const audit = (cwd: string, ...args: string[]): string => {
+    return execFileSync('tsx', [SCRIPT, ...args], { cwd, encoding: 'utf-8' });
+  };
 
   it('exits 0 in warn-mode with an orphan present', () => {
     fixture = withOrphan();

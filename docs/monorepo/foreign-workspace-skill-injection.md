@@ -51,7 +51,7 @@ Note the personal `create-readme` also loses — not because personal < OT, but 
 
 ## 2. Placement — `.agents/skills/` + `.claude/skills/`, forced by CLI reality
 
-> **Measured 2026-08-26** against the installed binaries/bundles, read off each CLI's own path constants and shipped docs. **Re-verify before changing the target set, and whenever any of these CLIs ships a release** — every one of these facts goes stale silently. The **discovery** facts are shared with ot-skill-sync's in-repo fan-out (`skills/ot-skill-sync/SKILL.md` § "Which CLI reads what") and must stay in sync; the **coverage** facts are per-consumer and deliberately differ — see the two tables below.
+> **Measured 2026-08-26** against the installed binaries/bundles, read off each CLI's own path constants and shipped docs. **Re-verify before changing the target set, and whenever any of these CLIs ships a release** — every one of these facts goes stale silently. The **discovery** facts are shared with ot-skill-sync's in-repo fan-out (`skills/ot-skill-sync/references/cli-matrix.md`) and must stay in sync; the **coverage** facts are per-consumer and deliberately differ — see the two tables below.
 
 Every agent CLI discovers skills **only from directories inside the working tree** (plus, for most, a global user dir — rejected below). None exposes an out-of-repo `--skills-dir` flag or env override, which is what forces materialization into the foreign repo.
 

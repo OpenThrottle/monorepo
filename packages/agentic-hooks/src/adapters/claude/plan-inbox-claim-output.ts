@@ -4,6 +4,12 @@
  * over transcript lines, the throttle wiring and the rendering. The claim call,
  * the destructive-command matcher and the throttle live in the neutral core.
  *
+ * The run comes from the transcript (a session that called `register_plan_run`
+ * itself) and, failing that, from the run identity env an orchestrator exports
+ * to the CLI it spawns (`OPENTHROTTLE_PLAN_ID` / `_PLAN_RUN_ID` / `_TASK_ID`):
+ * a headless worker never registers its own run, so its transcript cannot
+ * name it. The transcript wins when both are present.
+ *
  * Payload shape: `{ session_id, tool_input, tool_name, transcript_path }`.
  * A STEER is rendered as a PreToolUse `deny` (the messages are already claimed,
  * so the agent must act on the reason text); QUEUE-only is rendered as
@@ -13,6 +19,7 @@ import { isRecord } from '@openthrottle/nodejs-utils';
 import {
   claudeSessionToolUsesOf,
   findClaudeSessionPlanRunId,
+  readRunIdentityEnv,
 } from '@openthrottle/openthrottle-agentic-utils';
 
 import {
@@ -171,9 +178,22 @@ export const renderInboxOutput = (
   return `${JSON.stringify({ hookSpecificOutput })}\n`;
 };
 
+/**
+ * @description The run to claim for: the transcript's registered run, else the
+ * run identity the spawning orchestrator exported in `env`, else null.
+ */
+export const resolveActivePlanRun = (
+  events: readonly unknown[],
+  env: Readonly<Record<string, string | undefined>>,
+): ActivePlanRun | null => {
+  return findActivePlanRun(events) ?? readRunIdentityEnv(env);
+};
+
 /** Collaborators of the decision, injectable so tests do no I/O of their own. */
 export interface PlanInboxClaimDeps {
   readonly claim: PlanInboxClaimFn;
+  /** Where the run identity env is read from; defaults to `process.env`. */
+  readonly env?: Readonly<Record<string, string | undefined>>;
   readonly nowMs: () => number;
   readonly readEvents?: (transcriptPath: string) => readonly unknown[];
   readonly stateDir?: string;
@@ -190,7 +210,10 @@ export const decideClaudePlanInboxClaim = async (
     if (candidate === null) return null;
 
     const readEvents = deps.readEvents ?? readTranscriptTail;
-    const run = findActivePlanRun(readEvents(candidate.transcriptPath));
+    const run = resolveActivePlanRun(
+      readEvents(candidate.transcriptPath),
+      deps.env ?? process.env,
+    );
     if (run === null) return null;
 
     const hasSlot = tryTakeClaimSlot({

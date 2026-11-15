@@ -58,3 +58,12 @@ export const GLOBAL_LAYOUT_HEADER_LINKS_COPY = {
   reportBug: `Report a bug`,
   signOut: `Sign out`,
 } as const;
+
+/**
+ * @public
+ * Copy for {@link GlobalSidebarFooter}. `versionLabel` prefixes the app version
+ * (its package.json `version`, injected by each app at build time).
+ */
+export const GLOBAL_SIDEBAR_FOOTER_COPY = {
+  versionLabel: `Version`,
+} as const;

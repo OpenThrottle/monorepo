@@ -15,11 +15,11 @@ This payload is per-tool because a hook config names its own tool's events. See
 ```
 
 Installing once applies it in every repository you open — nothing is written into any of
-them. OT-orchestrated runs do not need this: the driver passes `--plugin-dir` at spawn time,
-so an orchestrated run carries the same hooks whether or not you have installed anything.
+them. Where the CLI has a `--plugin-dir` flag (Claude Code, Cursor), OT-orchestrated runs
+pass it at spawn time and do not need this install.
 
-The plugin version tracks `@openthrottle/agentic-hooks`, so a version bump there is what
-users see.
+The payload published to the `plugins-dist` branch carries no `version`, so every publish is
+an update for installed copies.
 
 ## What it collects
 
@@ -30,6 +30,9 @@ completion — an outcome (`success` / `error` / `abandoned`) and a duration.
 
 Outside the OpenThrottle monorepo the default privacy level is `name-only`: skill
 **arguments are not collected at all**. A secret redactor runs regardless of level.
+You can opt a specific repository in to `truncated` (redacted, 256 characters) by listing
+its remote in `OPENTHROTTLE_TELEMETRY_TRUNCATED_REPOS` in `~/.openthrottle/.env`; the
+repository itself and your shell environment cannot set it.
 No filesystem path is sent from your repository either: the working directory is
 reported only inside an OpenThrottle checkout, and the git remote identifies the
 repository everywhere else.
@@ -95,8 +98,11 @@ pass `--fix`, and never prints your token.
 # from an OpenThrottle checkout
 pnpm run telemetry:doctor
 
-# from anywhere, using the installed plugin
-node ~/.claude/plugins/cache/openthrottle/openthrottle/<version>/hooks/skill-usage-doctor.cjs
+# inside a Claude Code session, the plugin puts it on the Bash PATH
+skill-usage-doctor.cjs
+
+# from any shell, using the installed plugin
+node ~/.claude/plugins/cache/openthrottle/openthrottle/<version>/bin/skill-usage-doctor.cjs
 ```
 
 Add `--json` for machine-readable output, or `--strict` to exit 1 when any check fails.

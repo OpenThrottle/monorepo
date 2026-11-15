@@ -82,7 +82,6 @@ describe('UsageTokenUsage Component', () => {
           totalTokens: 240,
         }),
       ],
-      rangeDays: 30,
       selectedProvider: null,
       totals: buildTotals({
         costUsd: 0.06,
@@ -93,9 +92,10 @@ describe('UsageTokenUsage Component', () => {
       }),
     });
 
+    // The page heading now lives in the route's UsagePageIntroduction.
     expect(
-      component.getByRole('heading', { name: 'Model token usage' }),
-    ).toBeInTheDocument();
+      component.queryByRole('heading', { name: 'Model token usage' }),
+    ).not.toBeInTheDocument();
     // Total-tokens tile (1540 → 1.5k) and cost tile ($0.060).
     expect(component.getAllByText('1.5k').length).toBeGreaterThan(0);
     expect(component.getByText('$0.060')).toBeInTheDocument();
@@ -114,7 +114,6 @@ describe('UsageTokenUsage Component', () => {
         buildRow({ id: 'a', source: 'openthrottle-chat', totalTokens: 100 }),
         buildRow({ id: 'b', source: 'claude-code', totalTokens: 900 }),
       ],
-      rangeDays: 30,
       selectedProvider: null,
       totals: buildTotals({ totalTokens: 1000, turnCount: 2 }),
     });
@@ -128,7 +127,6 @@ describe('UsageTokenUsage Component', () => {
   test('provider filter links target ?provider= and mark the active one', () => {
     const component = renderComponent({
       items: [],
-      rangeDays: 30,
       selectedProvider: 'claude',
       totals: buildTotals({}),
     });
@@ -142,29 +140,9 @@ describe('UsageTokenUsage Component', () => {
     expect(claudeLink).toHaveAttribute('aria-current', 'true');
   });
 
-  test('provider filter links preserve skill-usage search params', () => {
-    const component = renderComponent({
-      items: [],
-      rangeDays: 30,
-      selectedProvider: null,
-      skillCwdParam: '/tmp/repo',
-      skillGitBranchParam: 'main',
-      skillScopeParam: 'ours',
-      totals: buildTotals({}),
-    });
-
-    const claudeLink = component.getByRole('link', { name: 'Claude' });
-    const href = claudeLink.getAttribute('href') ?? '';
-    expect(href).toContain('provider=claude');
-    expect(href).toContain('skillScope=ours');
-    expect(href).toContain('skillBranch=main');
-    expect(href).toContain('skillCwd=%2Ftmp%2Frepo');
-  });
-
   test('shows a provider-scoped empty state when no rows', () => {
     const component = renderComponent({
       items: [],
-      rangeDays: 30,
       selectedProvider: 'grok',
       totals: buildTotals({}),
     });
@@ -190,7 +168,6 @@ describe('UsageTokenUsage Component', () => {
           totalTokens: 100,
         }),
       ],
-      rangeDays: 30,
       selectedProvider: 'claude',
       totals: buildTotals({ totalTokens: 1000, turnCount: 2 }),
     });
@@ -207,7 +184,6 @@ describe('UsageTokenUsage Component', () => {
       const component = renderComponent(
         {
           items: [buildRow({ id: 'a', totalTokens: 100 })],
-          rangeDays: 30,
           selectedProvider: null,
           totals: buildTotals({ totalTokens: 100, turnCount: 1 }),
         },
@@ -233,7 +209,6 @@ describe('UsageTokenUsage Component', () => {
     test('omits the account breakdown', () => {
       const component = renderComponent({
         items: [],
-        rangeDays: 30,
         selectedProvider: null,
         totals: buildTotals({}),
       });

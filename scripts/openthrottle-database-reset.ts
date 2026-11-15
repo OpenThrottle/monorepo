@@ -4,7 +4,7 @@ import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
 import { Client } from 'pg';
 
 import { databaseNameOf } from '../databases/database-registry.ts';
-import { createLogger } from './utils/index.ts';
+import { createLogger } from './utils/logger.ts';
 
 const logger = createLogger();
 

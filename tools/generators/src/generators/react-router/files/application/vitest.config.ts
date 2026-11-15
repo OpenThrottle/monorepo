@@ -1,3 +1,4 @@
+import { createAppVersionDefine } from '@tools/dotfiles/app-version';
 import { ConfigEnv, defineConfig, loadEnv } from 'vite';
 
 export default (config: ConfigEnv) => {
@@ -5,6 +6,7 @@ export default (config: ConfigEnv) => {
 
   const configuration = defineConfig({
     cacheDir: '../../node_modules/.vite/applications/<%= name %>',
+    define: createAppVersionDefine(__dirname),
     resolve: {
       dedupe: ['react', 'react-dom', '@testing-library/react'],
       // Vite 8 resolves tsconfig.json `paths` aliases natively (discovers the

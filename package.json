@@ -21,6 +21,7 @@
     "@openthrottle/openthrottle-agentic-loop": "workspace:^",
     "@openthrottle/openthrottle-agentic-utils": "workspace:^",
     "@openthrottle/openthrottle-desktop-bridge": "workspace:^",
+    "@openthrottle/openthrottle-mcp-evals": "workspace:^",
     "@openthrottle/openthrottle-skills": "workspace:^",
     "@openthrottle/react-router-cms-core": "workspace:^",
     "@openthrottle/react-router-cms-editor": "workspace:^",
@@ -41,6 +42,7 @@
     "@commitlint/cli": "catalog:",
     "@commitlint/config-conventional": "catalog:",
     "@commitlint/config-nx-scopes": "catalog:",
+    "@graphql-inspector/core": "catalog:",
     "@nx/devkit": "catalog:",
     "@nx/js": "catalog:",
     "@nx/plugin": "catalog:",
@@ -70,6 +72,7 @@
     "@types/yargs": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "eslint": "catalog:",
+    "graphql": "catalog:",
     "husky": "catalog:",
     "knip": "catalog:",
     "lint-staged": "catalog:",
@@ -120,6 +123,7 @@
       "check-package-entrypoints": {},
       "check-side-effects": {},
       "check-test-file-filter-docs": {},
+      "check-test-file-names": {},
       "ensure-migrations": {
         "cache": false,
         "executor": "nx:run-commands",
@@ -147,14 +151,53 @@
       "ingest-agent-assets": {},
       "knip": {},
       "lint": {
-        "executor": "nx:noop"
+        "executor": "nx:run-commands",
+        "inputs": [
+          "{workspaceRoot}/eslint.config.ts",
+          "{workspaceRoot}/scripts/**/*",
+          "^noMarkdown"
+        ],
+        "metadata": {
+          "description": "Lint scripts/ with the workspace eslint.config.ts. Scoped to scripts/ because the root project's root is `.`, and the default `eslint .` from {projectRoot} would lint the whole repo. `inputs` MUST be explicit {workspaceRoot} globs — the root `monorepo` project owns 0 files, so the default {projectRoot} input would hash nothing and cache-hit forever. `^noMarkdown` carries @tools/dotfiles, which holds the ESLint config and the custom rules."
+        },
+        "options": {
+          "command": "pnpm exec eslint -c ./eslint.config.ts scripts",
+          "cwd": "{workspaceRoot}"
+        }
       },
       "test": {
         "outputs": [
           "{workspaceRoot}/coverage/monorepo"
         ]
       },
-      "typecheck": {},
+      "typecheck": {
+        "dependsOn": [
+          "^build",
+          "^codegen-graphql"
+        ],
+        "executor": "nx:run-commands",
+        "inputs": [
+          "{workspaceRoot}/scripts/**/*",
+          "{workspaceRoot}/tsconfig.base.json",
+          "^production",
+          {
+            "env": "OPENTHROTTLE_TSC_BIN"
+          },
+          {
+            "externalDependencies": [
+              "typescript",
+              "typescript7"
+            ]
+          }
+        ],
+        "metadata": {
+          "description": "Type-check scripts/ (source and tests) with scripts/tsconfig.json: nodenext, noEmit, extending tsconfig.base.json. `^build` is load-bearing: nestjs-modules, nestjs-repositories and nestjs-testing resolve through dist. `^typecheck` is left out on purpose, since the root depends on 18 projects and their typechecks prove nothing about scripts/. The compiler follows the same knob as the inferred typecheck targets (`$OPENTHROTTLE_TSC_BIN`, defaulting to the workspace's `tsc`, which is TypeScript 7). `inputs` MUST be explicit {workspaceRoot} globs — the root `monorepo` project owns 0 files, so the default {projectRoot} input would hash nothing and cache-hit forever."
+        },
+        "options": {
+          "command": "${OPENTHROTTLE_TSC_BIN:-tsc} -p scripts/tsconfig.json",
+          "cwd": "{workspaceRoot}"
+        }
+      },
       "validate-agent-assets-frontmatter": {},
       "validate-licenses": {}
     }
@@ -188,13 +231,15 @@
     "build:all": "nx run-many --target=build,typecheck --all --parallel=4",
     "build:docker": "pnpm nx run openthrottle-server:docker-build",
     "build:graphql": "pnpm nx run-many --target=codegen-graphql,codegen-react-router --projects tag:production:true --parallel",
+    "build:hooks": "nx run @openthrottle/agentic-hooks:bundle-hooks",
     "build:licenses": "pnpm dlx license-checker --csv --production --out \"$(basename $PWD)-licenses.csv\"",
     "build:packages": "nx run-many --target build --projects tag:type:package,tag:type:tool",
     "caddy": "caddy run --config tools/caddy/Caddyfile",
     "check:bootstrap-secrets": "tsx ./scripts/check-bootstrap-secrets.ts",
     "check:catalog": "tsx ./scripts/check-catalog-coverage.ts",
     "check:claude-settings": "tsx ./scripts/check-claude-global-settings.ts",
-    "check:local": "pnpm run check:catalog && pnpm run check:local:lockfile && pnpm run check:local:folder-vocabulary && pnpm run check:local:test-file-filter-docs && pnpm run check:local:claude-config-json && pnpm run check:target-descriptions && pnpm run validate:licenses && pnpm run validate:notices && pnpm run check:local:validate-tags && pnpm run check:local:format && pnpm run check:local:component-shape && pnpm run check:local:agent-assets && pnpm run check:local:agent-config-parity && pnpm run check:local:model-facing-text && pnpm run check:local:video-scripts && pnpm run check:local:migration-comments && pnpm run check:local:migration-hygiene && pnpm run check:local:package-entrypoints && pnpm run check:local:side-effects && pnpm run check:local:nodenext-references && pnpm run check:local:workspace-deps && pnpm run check:local:third-party-deps && pnpm run check:local:tsconfig-refs && pnpm run check:rbac-admin-coverage && pnpm run check:local:affected-lint && pnpm run check:local:affected-typecheck && pnpm run check:local:affected-test && pnpm run check:local:bundle-hooks && pnpm run check:local:cms-schemas && pnpm run check:local:generated-attributes && pnpm run check:local:graphql-schema && pnpm run check:local:verify && pnpm run check:local:codegen",
+    "check:graphql-breaking-changes": "tsx ./scripts/check-graphql-breaking-changes.ts",
+    "check:local": "pnpm run check:catalog && pnpm run check:local:lockfile && pnpm run check:local:folder-vocabulary && pnpm run check:local:test-file-filter-docs && pnpm run check:local:test-file-names && pnpm run check:local:claude-config-json && pnpm run check:target-descriptions && pnpm run validate:licenses && pnpm run validate:notices && pnpm run check:local:validate-tags && pnpm run check:local:format && pnpm run check:local:component-shape && pnpm run check:local:agent-assets && pnpm run check:local:agent-config-parity && pnpm run check:local:model-facing-text && pnpm run check:local:video-scripts && pnpm run check:local:migration-comments && pnpm run check:local:migration-hygiene && pnpm run check:local:package-entrypoints && pnpm run check:local:side-effects && pnpm run check:local:nodenext-references && pnpm run check:local:workspace-deps && pnpm run check:local:third-party-deps && pnpm run check:local:tsconfig-refs && pnpm run check:rbac-admin-coverage && pnpm run check:local:affected-lint && pnpm run check:local:affected-typecheck && pnpm run check:local:affected-test && pnpm run check:local:bundle-hooks && pnpm run check:local:cms-schemas && pnpm run check:local:generated-attributes && pnpm run check:local:graphql-schema && pnpm run check:local:verify && pnpm run check:local:codegen",
     "check:local:affected-lint": "pnpm nx affected --target=lint --parallel",
     "check:local:affected-test": "pnpm nx affected --target=test --parallel --nxBail",
     "check:local:affected-typecheck": "pnpm nx affected --target=typecheck --parallel",
@@ -208,6 +253,7 @@
     "check:local:component-shape": "pnpm run audit:component-shape:strict && pnpm run audit:component-shape:shadcn:strict",
     "check:local:folder-vocabulary": "pnpm nx run monorepo:check-folder-vocabulary",
     "check:local:test-file-filter-docs": "pnpm nx run monorepo:check-test-file-filter-docs",
+    "check:local:test-file-names": "pnpm nx run monorepo:check-test-file-names",
     "check:local:format": "pnpm nx run monorepo:format:check",
     "check:local:generated-attributes": "pnpm nx run monorepo:check-generated-attributes",
     "check:local:graphql-schema": "pnpm nx run-many --target=graphql-schema --configuration=check",
@@ -273,6 +319,7 @@
     "ollama-proxy": "nx run @tools/ollama-proxy:serve",
     "preinstall": "node ./scripts/check-node-engine.mjs && npx only-allow pnpm",
     "prepare": "husky",
+    "release:applications": "tsx ./scripts/release-applications.ts",
     "setup:mcp-instructions": "tsx ./scripts/setup_mcp-instructions.ts",
     "start": "pnpm run sync:skills && pnpm run start:docker && pnpm install && NX_TUI=false pnpm run start:openthrottle",
     "start:docker": "pnpm run database:start",
@@ -285,14 +332,20 @@
     "sync:openthrottle:server": "node --experimental-strip-types ./scripts/sync-subtree.ts applications/openthrottle-server openthrottle-server main",
     "sync:openthrottle:website": "node --experimental-strip-types ./scripts/sync-subtree.ts applications/openthrottle-website openthrottle-website main",
     "sync:skills": "./skills/ot-skill-sync/scripts/sync.sh",
-    "telemetry:doctor": "node .claude/hooks/skill-usage-doctor.cjs",
+    "telemetry:backfill": "tsx packages/agentic-hooks/src/adapters/claude/backfill.ts",
+    "telemetry:doctor": "node plugins/openthrottle/bin/skill-usage-doctor.cjs",
+    "telemetry:drain": "node plugins/openthrottle/bin/skill-usage-drain.cjs",
     "telemetry:report": "nx run @tools/ot-telemetry:report",
+    "telemetry:resegment": "tsx packages/agentic-hooks/src/adapters/claude/resegment.ts",
+    "telemetry:scope": "tsx packages/agentic-hooks/src/adapters/claude/scope.ts",
     "tools:dev": "GOOGLE_CLOUD_PROJECT_ID='openthrottle-staging' tsx watch ./tools/index.ts",
     "tools:dev:temp": "node --env-file .env --experimental-strip-types --watch ./tools/index.ts",
     "validate": "pnpm run \"/^validate:.*/\"",
     "validate:licenses": "tsx ./scripts/validate-license-compliance.ts",
     "validate:notices": "tsx ./scripts/generate-third-party-notices.ts --check",
-    "voice:start": "docker compose --profile voice up whisper",
+    "voice:logs": "node --experimental-strip-types ./scripts/openthrottle-voice-lifecycle.ts logs",
+    "voice:start": "node --experimental-strip-types ./scripts/openthrottle-voice-lifecycle.ts start",
+    "voice:stop": "node --experimental-strip-types ./scripts/openthrottle-voice-lifecycle.ts stop",
     "worktree:db": "node --experimental-strip-types ./scripts/worktree_db.ts",
     "worktree:heal": "sh -c 'd=skills/ot-worktree/scripts; [ -x \"$d/heal.sh\" ] || d=.agents/skills/ot-worktree/scripts; exec \"$d/heal.sh\" \"$@\"' --",
     "worktree:new": "sh -c 'd=skills/ot-worktree/scripts; [ -x \"$d/create.sh\" ] || d=.agents/skills/ot-worktree/scripts; exec \"$d/create.sh\" \"$@\"' --",

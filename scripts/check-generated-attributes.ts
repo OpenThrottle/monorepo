@@ -32,7 +32,8 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { createLogger, run } from './utils/index.ts';
+import { run } from './utils/exec.ts';
+import { createLogger } from './utils/logger.ts';
 
 const logger = createLogger();
 
@@ -54,8 +55,7 @@ export const HEADER_LINES = 15;
  * shown this by default?".
  */
 export const ATTRIBUTE_EXEMPT_PATHS: Readonly<Record<string, string>> = {
-  'applications/openthrottle-server/schema.gql':
-    "the schema diff is the review that enforces deprecate-don't-remove",
+  'applications/openthrottle-server/schema.gql': `the schema diff is the review that enforces deprecate-don't-remove`,
 };
 
 /** A tracked, banner-headed path and whether git marks it generated. */
@@ -141,13 +141,14 @@ export const checkAttributes = (
 /** Banner-headed paths that are neither marked nor exempt. */
 export const findUnmarkedPaths = (
   statuses: readonly GeneratedPathStatus[],
-): string[] =>
-  statuses
+): string[] => {
+  return statuses
     .filter(
       (status) =>
         !status.marked && !Object.hasOwn(ATTRIBUTE_EXEMPT_PATHS, status.path),
     )
     .map((status) => status.path);
+};
 
 /**
  * The `.gitattributes` line to add for a path — a folder glob, never the file

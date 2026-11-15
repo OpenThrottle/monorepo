@@ -13,7 +13,7 @@ export const GlobalFooter = (_props: GlobalFooterProps): React.ReactElement => {
   // Hooks
 
   // Setup
-  const { blogLink, navAriaLabel, sponsorLink } = GLOBAL_FOOTER;
+  const { blogLink, navAriaLabel, sponsorLink, versionLabel } = GLOBAL_FOOTER;
   const blogEnabled = isBlogEnabled();
 
   // Handlers
@@ -52,6 +52,9 @@ export const GlobalFooter = (_props: GlobalFooterProps): React.ReactElement => {
             >
               {sponsorLink.label}
             </a>
+          </p>
+          <p className="mt-2 text-xs" data-testid="GlobalFooterVersion">
+            {versionLabel} {__APP_VERSION__}
           </p>
         </div>
 

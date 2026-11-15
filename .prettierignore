@@ -23,16 +23,16 @@ NOTICE
 # Prettier must not reformat it (would fight the generator and break the guard).
 THIRD-PARTY-LICENSES.md
 
-# Every hook bundle here is esbuild output from @openthrottle/agentic-hooks,
+# Every hook file here is generated output from @openthrottle/agentic-hooks,
 # committed and drift-checked byte-for-byte via bundle-hooks-check; Prettier must
 # not reformat them (would fight esbuild and break the drift gate). Matched by
 # folder rather than by name prefix: a new adapter is generated output the moment
 # it is added, and naming it explicitly is a step everyone forgets until the gate
 # fails (as it did for plan-run-janitor.cjs).
-.claude/hooks/*.cjs
-.codex/hooks/*.cjs
-.cursor/hooks/*.cjs
+.agents/plugins/*/hooks/*.cjs
+plugins/*/bin/*.cjs
 plugins/*/hooks/*.cjs
+plugins/*/dist/*.cjs
 
 #############################################################################
 # Folders
@@ -67,7 +67,12 @@ applications/openthrottle-app/out/
 # would be a second formatter fighting the generator, and every reformat would
 # read as drift. One entry per payload — a bare `plugins/` would also swallow any
 # hand-authored file that lands there later.
+plugins/.claude-plugin/
+plugins/openthrottle-codex/
+plugins/openthrottle-cursor-guards/
 plugins/openthrottle-cursor/
+plugins/openthrottle-guards/
+plugins/openthrottle-workflow/
 plugins/openthrottle/
 tools/generators/src/generators/*/files/**
 

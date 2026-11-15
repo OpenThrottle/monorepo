@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import {
   findDuplicatePrefixCollisions,
   findGuardedForeignKeyStatements,
@@ -6,7 +7,7 @@ import {
   migrationPrefix,
   splitStatements,
   stripComments,
-} from './check-migration-hygiene.rules';
+} from './check-migration-hygiene.rules.ts';
 
 describe('splitStatements', () => {
   it('splits on top-level semicolons', () => {

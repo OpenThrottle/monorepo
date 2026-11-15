@@ -32,8 +32,8 @@ export const TELEMETRY_DELIVERY_LEG_LABELS: Readonly<Record<string, string>> = {
 /** Commands the section offers to copy. */
 export const TELEMETRY_COVERAGE_COMMANDS = {
   doctor: `pnpm run telemetry:doctor`,
-  drain: `node <ot-checkout>/.claude/hooks/skill-usage-drain.cjs`,
-  drainReplayDeadLetter: `node <ot-checkout>/.claude/hooks/skill-usage-drain.cjs --replay-dead-letter`,
+  drain: `pnpm run telemetry:drain`,
+  drainReplayDeadLetter: `pnpm run telemetry:drain --replay-dead-letter`,
   envGraphqlUrl: `OPENTHROTTLE_GRAPHQL_URL=…`,
   envMcpAuthToken: `OPENTHROTTLE_MCP_AUTH_TOKEN=…`,
   pluginInstall: `claude plugin install openthrottle@openthrottle`,
@@ -43,6 +43,11 @@ export const TELEMETRY_COVERAGE_COMMANDS = {
 
 /** The `intent` field the row's "Forget machine" action posts to the /usage action. */
 export const FORGET_TELEMETRY_MACHINE_INTENT = 'forgetTelemetryMachine';
+
+export const TELEMETRY_PAGE_COPY = {
+  heading: `Telemetry`,
+  intro: `Whether usage capture is working: when each tool last reported to this server, and which machines and repos are sending telemetry. Use it to tell a quiet chart from a broken pipe.`,
+} as const;
 
 export const TELEMETRY_COVERAGE_COPY = {
   bufferDeadLetter: (count: number): string => `${count} dead-lettered`,

@@ -50,7 +50,7 @@ Repo-wide search for `knip --fix`, `knip --fix-type`, `knip:fix`, and `fix-type 
 | **Nx `monorepo:knip`**                                         | Yes        | **No**        | `nx.json` → `knip --config knip.jsonc` only (report).                                                  |
 | **Root `package.json` scripts**                                | No         | No            | No `knip` script.                                                                                      |
 | **GitHub CI** (`continuous-integration.yml` → `knip-report`)   | Yes        | **No**        | `pnpm nx run monorepo:knip-ci` — report-only; `knip-baseline.json` + `dist/knip-report.json` artifact. |
-| **GitHub release** (`.github/workflows/nx-release.yml`)        | No         | No            | Job disabled (`if: false`).                                                                            |
+| **Release** (`.github/workflows/release.yml`)                  | No         | No            | Versions and tags the applications; runs no Knip.                                                      |
 | **Husky `pre-commit`**                                         | No         | No            | Runs `lint-staged` only.                                                                               |
 | **Husky `pre-push`**                                           | No         | No            | Branch protection only.                                                                                |
 | **lint-staged** (`.lintstagedrc.js`)                           | No         | No            | Prettier + ESLint `--fix` on staged files; no Knip.                                                    |

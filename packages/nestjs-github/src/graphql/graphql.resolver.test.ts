@@ -1,30 +1,51 @@
 import { createMock } from '@golevelup/ts-vitest';
+import {
+  GraphQLSchemaBuilderModule,
+  GraphQLSchemaFactory,
+} from '@nestjs/graphql';
 import { Test } from '@nestjs/testing';
-import { asMock } from '@openthrottle/nestjs-testing';
-import type { GraphQLResolveInfo } from 'graphql';
+import type { GraphQLSchema } from 'graphql';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 
 import { GitHubService } from '../github/github.service.ts';
 import type { PullListItemDto } from '../github/github.types.ts';
-import type {
-  CommitsPerPrInput,
-  GetPullInput,
-  GitHubRepoInput,
-  LinesAddedDeletedInput,
-  ListPullsInput,
-  OpenToMergedCycleTimeInput,
-  PrCountByLabelInput,
-  PrsMergedPerPeriodInput,
-  ReviewCycleTimeInput,
-} from './github.input.ts';
 import { GitHubStatsService } from './github-stats/github-stats.service.ts';
+import {
+  GITHUB_CACHE_HINT,
+  GITHUB_TOKEN_CONFIGURED_CACHE_HINT,
+} from './graphql.constants.ts';
 import { GithubResolver } from './graphql.resolver.ts';
 
-const gqlInfo = asMock<GraphQLResolveInfo>({});
+interface QueryField {
+  readonly extensions: Readonly<Record<string, unknown>>;
+  readonly name: string;
+}
 
-// Every resolver input in this file is a superset of { owner, repo }; the rest
-// of each shape is irrelevant because the services underneath are all mocked.
-const repoInput = { owner: 'o', repo: 'r' };
+/**
+ * The Query fields of a built schema. Read structurally: `isObjectType` from
+ * this test's `graphql` copy rejects types built by Nest's copy ("from another
+ * module or realm").
+ */
+const getQueryFields = (schema: GraphQLSchema): readonly QueryField[] => {
+  const queryType = schema.getQueryType();
+
+  if (queryType === null || queryType === undefined) {
+    throw new Error('expected the schema to have a Query type');
+  }
+
+  return Object.values(queryType.getFields());
+};
+
+/** Whether a field extension value is a cache hint with a positive maxAge. */
+const isPositiveCacheHint = (value: unknown): boolean => {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'maxAge' in value &&
+    typeof value.maxAge === 'number' &&
+    value.maxAge > 0
+  );
+};
 
 describe('GithubResolver', () => {
   let resolver: GithubResolver;
@@ -85,16 +106,13 @@ describe('GithubResolver', () => {
     test('returns array of PullListItemObject from GitHubService', async () => {
       vi.mocked(githubService.listPulls).mockResolvedValue([mockPullDto]);
 
-      const result = await resolver.pulls(
-        {
-          base: null,
-          merged: null,
-          owner: 'owner',
-          repo: 'repo',
-          state: 'open',
-        },
-        gqlInfo,
-      );
+      const result = await resolver.pulls({
+        base: null,
+        merged: null,
+        owner: 'owner',
+        repo: 'repo',
+        state: 'open',
+      });
 
       expect(result).toHaveLength(1);
       expect(result[0]?.author).toBe(mockPullDto.author);
@@ -119,16 +137,13 @@ describe('GithubResolver', () => {
     test('passes optional state, base, merged to GitHubService', async () => {
       vi.mocked(githubService.listPulls).mockResolvedValue([]);
 
-      await resolver.pulls(
-        {
-          base: 'main',
-          merged: true,
-          owner: 'o',
-          repo: 'r',
-          state: 'all',
-        },
-        gqlInfo,
-      );
+      await resolver.pulls({
+        base: 'main',
+        merged: true,
+        owner: 'o',
+        repo: 'r',
+        state: 'all',
+      });
 
       expect(githubService.listPulls).toHaveBeenCalledWith('o', 'r', {
         base: 'main',
@@ -140,16 +155,13 @@ describe('GithubResolver', () => {
     test('returns empty array when no pulls', async () => {
       vi.mocked(githubService.listPulls).mockResolvedValue([]);
 
-      const result = await resolver.pulls(
-        {
-          base: null,
-          merged: null,
-          owner: 'owner',
-          repo: 'repo',
-          state: null,
-        },
-        gqlInfo,
-      );
+      const result = await resolver.pulls({
+        base: null,
+        merged: null,
+        owner: 'owner',
+        repo: 'repo',
+        state: null,
+      });
 
       expect(result).toEqual([]);
       expect(githubService.listPulls).toHaveBeenCalledWith('owner', 'repo', {
@@ -164,14 +176,11 @@ describe('GithubResolver', () => {
     test('returns PullListItemObject from GitHubService', async () => {
       vi.mocked(githubService.getPullListItem).mockResolvedValue(mockPullDto);
 
-      const result = await resolver.pull(
-        {
-          number: 1,
-          owner: 'owner',
-          repo: 'repo',
-        },
-        gqlInfo,
-      );
+      const result = await resolver.pull({
+        number: 1,
+        owner: 'owner',
+        repo: 'repo',
+      });
 
       expect(result).toEqual(mockPullDto);
       expect(githubService.getPullListItem).toHaveBeenCalledWith(
@@ -184,14 +193,11 @@ describe('GithubResolver', () => {
     test('returns null when GitHubService returns null', async () => {
       vi.mocked(githubService.getPullListItem).mockResolvedValue(null);
 
-      const result = await resolver.pull(
-        {
-          number: 404,
-          owner: 'owner',
-          repo: 'repo',
-        },
-        gqlInfo,
-      );
+      const result = await resolver.pull({
+        number: 404,
+        owner: 'owner',
+        repo: 'repo',
+      });
 
       expect(result).toBeNull();
     });
@@ -204,14 +210,11 @@ describe('GithubResolver', () => {
         { author: 'bob', openCount: 1 },
       ]);
 
-      const result = await resolver.openPrCountByAuthor(
-        {
-          owner: 'owner',
-          repo: 'repo',
-          state: 'open',
-        },
-        gqlInfo,
-      );
+      const result = await resolver.openPrCountByAuthor({
+        owner: 'owner',
+        repo: 'repo',
+        state: 'open',
+      });
 
       expect(githubStatsService.getOpenPrCountByAuthor).toHaveBeenCalledWith(
         'owner',
@@ -228,14 +231,11 @@ describe('GithubResolver', () => {
         { author: 'carol', openCount: 2 },
       ]);
 
-      await resolver.openPrCountByAuthor(
-        {
-          owner: 'owner',
-          repo: 'repo',
-          state: 'closed',
-        },
-        gqlInfo,
-      );
+      await resolver.openPrCountByAuthor({
+        owner: 'owner',
+        repo: 'repo',
+        state: 'closed',
+      });
 
       expect(githubStatsService.getOpenPrCountByAuthor).toHaveBeenCalledWith(
         'owner',
@@ -249,14 +249,11 @@ describe('GithubResolver', () => {
         [],
       );
 
-      const result = await resolver.openPrCountByAuthor(
-        {
-          owner: 'o',
-          repo: 'r',
-          state: 'open',
-        },
-        gqlInfo,
-      );
+      const result = await resolver.openPrCountByAuthor({
+        owner: 'o',
+        repo: 'r',
+        state: 'open',
+      });
 
       expect(githubStatsService.getOpenPrCountByAuthor).toHaveBeenCalledWith(
         'o',
@@ -274,14 +271,11 @@ describe('GithubResolver', () => {
         { avgDaysInState: 4.0, count: 10, state: 'merged' },
       ]);
 
-      const result = await resolver.prTimeInStateSummary(
-        {
-          owner: 'owner',
-          repo: 'repo',
-          state: 'open',
-        },
-        gqlInfo,
-      );
+      const result = await resolver.prTimeInStateSummary({
+        owner: 'owner',
+        repo: 'repo',
+        state: 'open',
+      });
 
       expect(githubStatsService.getPrTimeInStateSummary).toHaveBeenCalledWith(
         'owner',
@@ -305,14 +299,11 @@ describe('GithubResolver', () => {
         [],
       );
 
-      const result = await resolver.prTimeInStateSummary(
-        {
-          owner: 'o',
-          repo: 'r',
-          state: 'open',
-        },
-        gqlInfo,
-      );
+      const result = await resolver.prTimeInStateSummary({
+        owner: 'o',
+        repo: 'r',
+        state: 'open',
+      });
 
       expect(result).toEqual([]);
     });
@@ -333,15 +324,12 @@ describe('GithubResolver', () => {
         },
       ]);
 
-      const result = await resolver.linesAddedDeleted(
-        {
-          maxPrs: null,
-          owner: 'owner',
-          period: 'month',
-          repo: 'repo',
-        },
-        gqlInfo,
-      );
+      const result = await resolver.linesAddedDeleted({
+        maxPrs: null,
+        owner: 'owner',
+        period: 'month',
+        repo: 'repo',
+      });
 
       expect(
         githubStatsService.getLinesAddedDeletedByPeriodOrAuthor,
@@ -365,15 +353,12 @@ describe('GithubResolver', () => {
         githubStatsService.getLinesAddedDeletedByPeriodOrAuthor,
       ).mockResolvedValue([]);
 
-      await resolver.linesAddedDeleted(
-        {
-          maxPrs: 50,
-          owner: 'o',
-          period: 'week',
-          repo: 'r',
-        },
-        gqlInfo,
-      );
+      await resolver.linesAddedDeleted({
+        maxPrs: 50,
+        owner: 'o',
+        period: 'week',
+        repo: 'r',
+      });
 
       expect(
         githubStatsService.getLinesAddedDeletedByPeriodOrAuthor,
@@ -388,15 +373,12 @@ describe('GithubResolver', () => {
         githubStatsService.getLinesAddedDeletedByPeriodOrAuthor,
       ).mockResolvedValue([]);
 
-      await resolver.linesAddedDeleted(
-        {
-          maxPrs: null,
-          owner: 'o',
-          period: null,
-          repo: 'r',
-        },
-        gqlInfo,
-      );
+      await resolver.linesAddedDeleted({
+        maxPrs: null,
+        owner: 'o',
+        period: null,
+        repo: 'r',
+      });
 
       expect(
         githubStatsService.getLinesAddedDeletedByPeriodOrAuthor,
@@ -418,14 +400,11 @@ describe('GithubResolver', () => {
         },
       ]);
 
-      const result = await resolver.openToMergedCycleTime(
-        {
-          owner: 'owner',
-          period: null,
-          repo: 'repo',
-        },
-        gqlInfo,
-      );
+      const result = await resolver.openToMergedCycleTime({
+        owner: 'owner',
+        period: null,
+        repo: 'repo',
+      });
 
       expect(githubStatsService.getOpenToMergedCycleTime).toHaveBeenCalledWith(
         'owner',
@@ -446,14 +425,11 @@ describe('GithubResolver', () => {
         { medianDays: 3, p90Days: 7, period: '2026-02', prCount: 4 },
       ]);
 
-      await resolver.openToMergedCycleTime(
-        {
-          owner: 'o',
-          period: 'month',
-          repo: 'r',
-        },
-        gqlInfo,
-      );
+      await resolver.openToMergedCycleTime({
+        owner: 'o',
+        period: 'month',
+        repo: 'r',
+      });
 
       expect(githubStatsService.getOpenToMergedCycleTime).toHaveBeenCalledWith(
         'o',
@@ -470,14 +446,11 @@ describe('GithubResolver', () => {
         { count: 3, label: 'feature' },
       ]);
 
-      const result = await resolver.prCountByLabel(
-        {
-          owner: 'owner',
-          repo: 'repo',
-          state: null,
-        },
-        gqlInfo,
-      );
+      const result = await resolver.prCountByLabel({
+        owner: 'owner',
+        repo: 'repo',
+        state: null,
+      });
 
       expect(githubStatsService.getPrCountByLabel).toHaveBeenCalledWith(
         'owner',
@@ -492,14 +465,11 @@ describe('GithubResolver', () => {
     test('passes state to service when provided', async () => {
       vi.mocked(githubStatsService.getPrCountByLabel).mockResolvedValue([]);
 
-      await resolver.prCountByLabel(
-        {
-          owner: 'o',
-          repo: 'r',
-          state: 'open',
-        },
-        gqlInfo,
-      );
+      await resolver.prCountByLabel({
+        owner: 'o',
+        repo: 'r',
+        state: 'open',
+      });
 
       expect(githubStatsService.getPrCountByLabel).toHaveBeenCalledWith(
         'o',
@@ -516,14 +486,11 @@ describe('GithubResolver', () => {
         { count: 3, period: '2026-01' },
       ]);
 
-      const result = await resolver.prsMergedPerPeriod(
-        {
-          owner: 'owner',
-          period: 'month',
-          repo: 'repo',
-        },
-        gqlInfo,
-      );
+      const result = await resolver.prsMergedPerPeriod({
+        owner: 'owner',
+        period: 'month',
+        repo: 'repo',
+      });
 
       expect(githubStatsService.getPrsMergedPerPeriod).toHaveBeenCalledWith(
         'owner',
@@ -540,14 +507,11 @@ describe('GithubResolver', () => {
         { count: 2, period: '2026-W06' },
       ]);
 
-      await resolver.prsMergedPerPeriod(
-        {
-          owner: 'o',
-          period: 'week',
-          repo: 'r',
-        },
-        gqlInfo,
-      );
+      await resolver.prsMergedPerPeriod({
+        owner: 'o',
+        period: 'week',
+        repo: 'r',
+      });
 
       expect(githubStatsService.getPrsMergedPerPeriod).toHaveBeenCalledWith(
         'o',
@@ -568,15 +532,12 @@ describe('GithubResolver', () => {
         },
       ]);
 
-      const result = await resolver.reviewCycleTime(
-        {
-          maxPrs: null,
-          owner: 'owner',
-          period: null,
-          repo: 'repo',
-        },
-        gqlInfo,
-      );
+      const result = await resolver.reviewCycleTime({
+        maxPrs: null,
+        owner: 'owner',
+        period: null,
+        repo: 'repo',
+      });
 
       expect(githubStatsService.getReviewCycleTime).toHaveBeenCalledWith(
         'owner',
@@ -597,15 +558,12 @@ describe('GithubResolver', () => {
         { medianDays: 1, p90Days: 2, period: '2026-02', prCount: 3 },
       ]);
 
-      await resolver.reviewCycleTime(
-        {
-          maxPrs: 50,
-          owner: 'o',
-          period: 'month',
-          repo: 'r',
-        },
-        gqlInfo,
-      );
+      await resolver.reviewCycleTime({
+        maxPrs: 50,
+        owner: 'o',
+        period: 'month',
+        repo: 'r',
+      });
 
       expect(githubStatsService.getReviewCycleTime).toHaveBeenCalledWith(
         'o',
@@ -626,15 +584,12 @@ describe('GithubResolver', () => {
         },
       ]);
 
-      const result = await resolver.commitsPerPr(
-        {
-          maxPrs: null,
-          owner: 'owner',
-          period: 'month',
-          repo: 'repo',
-        },
-        gqlInfo,
-      );
+      const result = await resolver.commitsPerPr({
+        maxPrs: null,
+        owner: 'owner',
+        period: 'month',
+        repo: 'repo',
+      });
 
       expect(githubStatsService.getCommitsPerPr).toHaveBeenCalledWith(
         'owner',
@@ -653,15 +608,12 @@ describe('GithubResolver', () => {
     test('passes maxPrs and period to service', async () => {
       vi.mocked(githubStatsService.getCommitsPerPr).mockResolvedValue([]);
 
-      await resolver.commitsPerPr(
-        {
-          maxPrs: 50,
-          owner: 'o',
-          period: 'week',
-          repo: 'r',
-        },
-        gqlInfo,
-      );
+      await resolver.commitsPerPr({
+        maxPrs: 50,
+        owner: 'o',
+        period: 'week',
+        repo: 'r',
+      });
 
       expect(githubStatsService.getCommitsPerPr).toHaveBeenCalledWith(
         'o',
@@ -675,88 +627,69 @@ describe('GithubResolver', () => {
     test('returns true when GitHubService reports the token configured', () => {
       vi.mocked(githubService.isGithubTokenConfigured).mockReturnValue(true);
 
-      expect(resolver.githubTokenConfigured(gqlInfo)).toBe(true);
+      expect(resolver.githubTokenConfigured()).toBe(true);
       expect(githubService.isGithubTokenConfigured).toHaveBeenCalled();
     });
 
     test('returns false when GitHubService reports the token unset', () => {
       vi.mocked(githubService.isGithubTokenConfigured).mockReturnValue(false);
 
-      expect(resolver.githubTokenConfigured(gqlInfo)).toBe(false);
+      expect(resolver.githubTokenConfigured()).toBe(false);
     });
   });
-  // A query that forgets setCacheHint fails silently: Apollo derives an
+  // A query that forgets its @CacheHint fails silently: Apollo derives an
   // operation's cache policy from its MOST RESTRICTIVE field and cacheControl's
   // defaultMaxAge is 0, so one un-hinted field makes every document that selects
   // it uncacheable — with no error and no warning. That is exactly how the ~4s
-  // getDashboardGithubStats query went uncached. This suite is the guard.
+  // getDashboardGithubStats query went uncached. This suite is the guard: it
+  // reads the hints off the built schema, so a new query without one fails here.
   describe('cache hints', () => {
-    // Keyed by resolver method name. The test below asserts these keys match the
-    // resolver's real @Query set, so adding a query without adding it here fails.
-    const invokeQuery: Record<string, (info: GraphQLResolveInfo) => unknown> = {
-      commitsPerPr: (info) =>
-        resolver.commitsPerPr(asMock<CommitsPerPrInput>(repoInput), info),
-      githubTokenConfigured: (info) => resolver.githubTokenConfigured(info),
-      linesAddedDeleted: (info) =>
-        resolver.linesAddedDeleted(
-          asMock<LinesAddedDeletedInput>(repoInput),
-          info,
-        ),
-      openPrCountByAuthor: (info) =>
-        resolver.openPrCountByAuthor(asMock<GitHubRepoInput>(repoInput), info),
-      openToMergedCycleTime: (info) =>
-        resolver.openToMergedCycleTime(
-          asMock<OpenToMergedCycleTimeInput>(repoInput),
-          info,
-        ),
-      prCountByLabel: (info) =>
-        resolver.prCountByLabel(asMock<PrCountByLabelInput>(repoInput), info),
-      prTimeInStateSummary: (info) =>
-        resolver.prTimeInStateSummary(asMock<GitHubRepoInput>(repoInput), info),
-      prsMergedPerPeriod: (info) =>
-        resolver.prsMergedPerPeriod(
-          asMock<PrsMergedPerPeriodInput>(repoInput),
-          info,
-        ),
-      pull: (info) => resolver.pull(asMock<GetPullInput>(repoInput), info),
-      pulls: (info) => resolver.pulls(asMock<ListPullsInput>(repoInput), info),
-      reviewCycleTime: (info) =>
-        resolver.reviewCycleTime(asMock<ReviewCycleTimeInput>(repoInput), info),
-    };
+    let queryFields: readonly QueryField[];
 
-    test('covers every method declared on the resolver', () => {
-      // Enumerate the prototype rather than keeping a second hand-written list
-      // that can silently drift. Every method on GithubResolver is a @Query, so
-      // a new one shows up here and fails until it is exercised above. (Nest's
-      // @Query metadata is registered lazily and is not readable without the
-      // schema build, so the prototype is the reliable source.) If a genuine
-      // non-query helper is ever added, exclude it here deliberately.
-      const declared = Object.getOwnPropertyNames(
-        GithubResolver.prototype,
-      ).filter((name) => name !== 'constructor');
+    beforeAll(async () => {
+      const moduleRef = await Test.createTestingModule({
+        imports: [GraphQLSchemaBuilderModule],
+      }).compile();
+      const schema = await moduleRef
+        .get(GraphQLSchemaFactory)
+        .create([GithubResolver]);
 
-      expect(declared.sort()).toEqual(Object.keys(invokeQuery).sort());
-      expect(declared.length).toBeGreaterThan(0);
+      queryFields = getQueryFields(schema);
     });
 
-    test.each(Object.keys(invokeQuery))(
-      '%s sets a positive cache hint',
-      async (methodName) => {
-        const setCacheHint = vi.fn();
-        // cacheControlFromInfo() rejects an info whose cacheControl lacks
-        // cacheHint.restrict, so the mock has to look like a real Apollo one.
-        const info = asMock<GraphQLResolveInfo>({
-          cacheControl: {
-            cacheHint: { restrict: vi.fn() },
-            setCacheHint,
-          },
-        });
+    test('hints every Query field with a positive maxAge', () => {
+      const unhinted = queryFields
+        .filter((field) => {
+          return !Object.values(field.extensions).some(isPositiveCacheHint);
+        })
+        .map((field) => field.name);
 
-        await invokeQuery[methodName]?.(info);
+      expect(queryFields.length).toBeGreaterThan(0);
+      expect(unhinted).toEqual([]);
+    });
 
-        expect(setCacheHint).toHaveBeenCalledTimes(1);
-        expect(setCacheHint.mock.calls[0]?.[0].maxAge).toBeGreaterThan(0);
-      },
-    );
+    test('hints githubTokenConfigured with the short token hint', () => {
+      const field = queryFields.find(
+        ({ name }) => name === 'githubTokenConfigured',
+      );
+
+      expect(Object.values(field?.extensions ?? {})).toContainEqual(
+        GITHUB_TOKEN_CONFIGURED_CACHE_HINT,
+      );
+    });
+
+    test('hints the GitHub API queries with the 1-hour PUBLIC hint', () => {
+      const apiFields = queryFields.filter(
+        ({ name }) => name !== 'githubTokenConfigured',
+      );
+
+      expect(apiFields.length).toBeGreaterThan(0);
+
+      for (const field of apiFields) {
+        expect(Object.values(field.extensions)).toContainEqual(
+          GITHUB_CACHE_HINT,
+        );
+      }
+    });
   });
 });

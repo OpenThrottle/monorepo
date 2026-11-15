@@ -6,6 +6,10 @@ description: >-
   hand-writing one — or when hitting "Unable to resolve @tools/generators" or
   "Cannot find generator". Every command needs NX_ISOLATE_PLUGINS=false. Defer
   graph, targets and task running to nx-workspace.
+metadata:
+  author: openthrottle
+  last-reviewed: '2026-11-14'
+  version: '1.1.0'
 ---
 
 # OpenThrottle generators and Nx conventions
@@ -13,18 +17,9 @@ description: >-
 ## When to read this skill
 
 - You are about to **create or scaffold** code in this repo (components, routes, NestJS services, packages, folder trees).
-- Nx errors with **`Unable to resolve @tools/generators:...`** or **Cannot find generator** (often a wrong generator name — see [Registered names](#registered-generator-names)).
-- You need the **OT-specific** command pattern: `NX_ISOLATE_PLUGINS=false` + **`pnpm nx`** and links to **AGENT_USAGE** paths.
+- Nx errors with **`Unable to resolve @tools/generators:...`** or **Cannot find generator** (often a wrong generator name — see [Docs vs reality](#docs-vs-reality-remix-vs-react-router)).
 
-## How this fits other skills (no duplication)
-
-| Need                                                                      | Use                                                            |
-| ------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| **Local `@tools/generators` workflow, OT flags, doc paths**               | **This skill**                                                 |
-| **Read-only** workspace: project list, `nx show project`, graph, affected | **nx-workspace** (installed skill — invoke by name)            |
-| **Execute** `nx run`, `affected`, `run-many` after code exists            | **nx-workspace** (installed skill — invoke by name)            |
-| **Plans, Plan-Id / Task-Id, openthrottle-mcp**                            | [**ot-plans**](../ot-plans/SKILL.md)                           |
-| **Link workspace packages** after new packages                            | **link-workspace-packages** (installed skill — invoke by name) |
+For read-only workspace queries and running tasks use `nx-workspace`; after generating a package, wire its dependencies with `link-workspace-packages`.
 
 ## Non-negotiable: `NX_ISOLATE_PLUGINS=false`
 
@@ -36,25 +31,9 @@ Prefix each command:
 NX_ISOLATE_PLUGINS=false pnpm nx <subcommand> ...
 ```
 
-This repo standardizes on **pnpm** and **nx** via **`pnpm nx`** (see `AGENTS.md`). Do not omit the prefix.
+## Registered generators
 
-## Registered generator names
-
-**Source of truth:** `tools/generators/generators.json` — confirm anytime with:
-
-```bash
-NX_ISOLATE_PLUGINS=false pnpm nx list @tools/generators
-```
-
-As of that list, registered generators are:
-
-| Generator key  | Purpose (high level)                                                                                        |
-| -------------- | ----------------------------------------------------------------------------------------------------------- |
-| `folders`      | Folder trees for routes/services                                                                            |
-| `nestjs`       | NestJS apps, services, modules, GraphQL services, etc.                                                      |
-| `package`      | New workspace packages                                                                                      |
-| `react`        | React components/hooks for packages or apps (`--destination`, `--list=destinations`)                        |
-| `react-router` | React Router app artifacts: components, routes, hooks, utils (`--application`, `--list=applications`, etc.) |
+The source of truth is `tools/generators/generators.json`; list them with `NX_ISOLATE_PLUGINS=false pnpm nx list @tools/generators`.
 
 ### Which one scaffolds a component
 
@@ -69,7 +48,7 @@ everywhere else in this skill:
 `react-router` does **not** scaffold into `packages/` — passing a package to `--application`
 is the wrong generator, not an unsupported target. `react` handles app-local components too,
 so when in doubt it is the safer of the two. Full matrix:
-[`docs/tools/templates/AGENT_USAGE.md`](../../docs/tools/templates/AGENT_USAGE.md).
+[`docs/tools/templates/AGENT_USAGE.md`](https://github.com/openthrottle/monorepo/blob/main/docs/tools/templates/AGENT_USAGE.md).
 
 ### Docs vs reality: `remix` vs `react-router`
 
@@ -81,9 +60,7 @@ Use **`@tools/generators:react-router`** and the same `--subGenerator` / flags d
 
 ## Discovery workflow (mandatory order)
 
-**Non-negotiable: check for a generator before writing ANY new code, component, hook, service
-or file by hand.** Step 1 is not a formality — picking the wrong generator is the mistake that
-actually happens, which is why discovery precedes generation.
+Check for a generator before writing ANY new code by hand; picking the wrong generator is the mistake that actually happens.
 
 1. **List generators**
 
@@ -111,14 +88,14 @@ Prefer **`--dry-run`** where supported before writing files.
 
 **If no generator fits, say so explicitly before writing custom code.** Silently hand-writing
 what a generator would have scaffolded is how files drift out of the primitive shape the
-[`ot-folders`](../ot-folders/SKILL.md) rules and the component ESLint rule then reject.
+`ot-folders` rules and the component ESLint rule then reject.
 
 **Hooks have the same contract.** `--subGenerator=hook` (`react --destination=<package>` or
 `react-router --application=<app> --folder=<area>`) emits a hook that already passes
 `openthrottle/hook-primitive-shape`: one `useFoo` in `hooks/useFoo.tsx`, its `UseFooOptions`
 and `UseFooResult` interfaces, an explicit return type and the six markers. A second hook gets
 its own generated file, never a second export
-([hook-primitive-shape.md](../../docs/monorepo/hook-primitive-shape.md)).
+([hook-primitive-shape.md](https://github.com/openthrottle/monorepo/blob/main/docs/monorepo/hook-primitive-shape.md)).
 
 ## Batch generation (`--name` comma-separated)
 
@@ -138,34 +115,4 @@ NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react \
 
 Prefer batching when scaffolding related siblings; split only when names need different `--folder`, `--destination`, or sub-generators.
 
-## Typical OpenThrottle entrypoints
-
-Exact flags change over time; always use **`--describe`** and **`--list`** for the generator you chose.
-
-- **Components:** see [Which one scaffolds a component](#which-one-scaffolds-a-component) above — the package-vs-application split is the only place this is stated.
-- **Application routes:** `react-router` with `--application` from `--list=applications`, and `--list=componentFolders` where applicable.
-- **GraphQL / NestJS in `openthrottle-server`:** often `nestjs` with `--subGenerator=graphql-service` or other sub-generators from `--describe`.
-- **New libs:** `package` generator, then wire deps via **link-workspace-packages** if needed.
-
-Per-generator markdown deep-dives live under `docs/tools/templates/` (e.g. `react.md`, `nestjs.md`, `folders.md`) as linked from the canonical guide below.
-
-## Canonical documentation paths
-
-| Document                                                   | Path                                                                       |
-| ---------------------------------------------------------- | -------------------------------------------------------------------------- |
-| **Full agent workflow (Quick Start, API, best practices)** | `docs/tools/templates/AGENT_USAGE.md`                                      |
-| **Nx isolate-plugins troubleshooting**                     | `docs/tools/templates/NX_ISOLATE_PLUGINS.md` (referenced from AGENT_USAGE) |
-| **Generators package overview**                            | `tools/generators/README.md`                                               |
-| **Generator source**                                       | `tools/generators/src/generators/`                                         |
-| **Code style (component/data boundaries, shape)**          | `docs/monorepo/code-style.md`                                              |
-| **Hook shape (H1–H6)**                                     | `docs/monorepo/hook-primitive-shape.md`                                    |
-| **Monorepo entry**                                         | `AGENTS.md` (Generators / Nx sections)                                     |
-
-## OpenThrottle and commits
-
-Scaffolding is unrelated to **OT** tool calls, but if work is tracked under a plan/task, follow **ot-plans**: conventional commits with **`Plan-Id`** / **`Task-Id`** in the footer; the work ledger records itself when the PR opens (`settle_plan_run` with `headSha` / `prNumber`), so there is no post-merge step to remember.
-
-## Cross-links
-
-- **nx-workspace** — installed skill, not authored under `skills/`; invoke it by name.
-- [**ot-plans**](../ot-plans/SKILL.md)
+Per-generator deep-dives live under `docs/tools/templates/` (`react.md`, `nestjs.md`, `folders.md`), linked from AGENT_USAGE. Generator source: `tools/generators/src/generators/`. Isolate-plugins troubleshooting: `docs/tools/templates/NX_ISOLATE_PLUGINS.md`.

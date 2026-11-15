@@ -64,7 +64,14 @@ export function useConversationList(): UseConversationListResult {
   const fetchPage = (offset: number): void => {
     listFetcher.submit(
       { intent: 'list', limit: String(pageSize), offset: String(offset) },
-      { action: AGENT_CONVERSATIONS_ACTION, method: 'post' },
+      // A list read changes nothing a page loader shows, so it must not make
+      // React Router re-run every matched loader. Rename and delete below keep
+      // the default: they change the conversations a page may list.
+      {
+        action: AGENT_CONVERSATIONS_ACTION,
+        defaultShouldRevalidate: false,
+        method: 'post',
+      },
     );
   };
 

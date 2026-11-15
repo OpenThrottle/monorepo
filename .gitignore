@@ -101,6 +101,13 @@ CLAUDE.local.md
 # Tracking these in here as we flush the workflows out
 .github/instructions/nx.instructions.md
 
+# Hook plugin bundles: built by @openthrottle/agentic-hooks:bundle-hooks and
+# published to the plugins-dist branch, never committed on main. What is
+# committed is the fixed stub a tool runs (plugins/*/{bin,hooks}/), which exits
+# 0 while dist/ is unbuilt. See docs/monorepo/hook-plugin-distribution.md §4.
+plugins/*/dist/
+.agents/plugins/*/dist/
+
 # Start 🔄 Managed by OpenThrottle ot-skill-sync
 .agents/skills/*
 !.agents/skills/*/

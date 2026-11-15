@@ -4,7 +4,7 @@
  * and the worktree flags, escaping of paths with spaces and shell metacharacters, and which
  * drivers emit the flag at all.
  *
- * Claude and Cursor both emit it and each names its OWN payload via `pluginDirRel` — a payload's
+ * Claude and Cursor both emit it and each names its OWN payloads via `pluginDirRels` — a payload's
  * hook config names one tool's events, so pointing a CLI at the other's payload loads cleanly and
  * records nothing.
  */
@@ -157,10 +157,20 @@ describe('cursor driver --plugin-dir', () => {
 });
 
 describe('per-driver payload paths', () => {
-  it('points each plugin-capable driver at its own payload', () => {
-    expect(claudeDriver.pluginDirRel).toBe(OPENTHROTTLE_PLUGIN_DIR_REL);
-    expect(cursorDriver.pluginDirRel).toBe(OPENTHROTTLE_CURSOR_PLUGIN_DIR_REL);
-    expect(claudeDriver.pluginDirRel).not.toBe(cursorDriver.pluginDirRel);
+  it('points each plugin-capable driver at its own payloads, telemetry first', () => {
+    expect(claudeDriver.pluginDirRels).toEqual([
+      OPENTHROTTLE_PLUGIN_DIR_REL,
+      'plugins/openthrottle-workflow',
+      'plugins/openthrottle-guards',
+    ]);
+    expect(cursorDriver.pluginDirRels).toEqual([
+      OPENTHROTTLE_CURSOR_PLUGIN_DIR_REL,
+      'plugins/openthrottle-cursor-guards',
+    ]);
+    const shared = (claudeDriver.pluginDirRels ?? []).filter((rel) =>
+      (cursorDriver.pluginDirRels ?? []).includes(rel),
+    );
+    expect(shared).toEqual([]);
   });
 
   it('exports the payload paths the agentic-utils resolver joins against', () => {

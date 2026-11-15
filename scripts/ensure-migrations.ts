@@ -14,7 +14,7 @@ import {
   connectClient,
   guardSharedMigrations,
 } from './openthrottle-database-migrations.ts';
-import { createLogger } from './utils/index.ts';
+import { createLogger } from './utils/logger.ts';
 
 const logger = createLogger();
 
@@ -55,14 +55,14 @@ export interface WaitOptions {
 
 /** Thrown when Postgres stays unreachable for the whole retry window. Message points at `database:start`. */
 export class PostgresUnreachableError extends Error {
-  constructor(
-    readonly attempts: number,
-    options?: { cause?: unknown },
-  ) {
+  readonly attempts: number;
+
+  constructor(attempts: number, options?: { cause?: unknown }) {
     super(
       `🔴 Postgres is not reachable after ${attempts} attempt(s) — start it with: pnpm run database:start`,
       options,
     );
+    this.attempts = attempts;
     this.name = 'PostgresUnreachableError';
   }
 }

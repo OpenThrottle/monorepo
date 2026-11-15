@@ -17,7 +17,8 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { createLogger, run } from './utils/index.ts';
+import { run } from './utils/exec.ts';
+import { createLogger } from './utils/logger.ts';
 
 const logger = createLogger();
 
@@ -39,15 +40,17 @@ export interface InvalidConfigFile {
 }
 
 /** True when Claude Code reads this tracked path as JSON. */
-export const isClaudeConfigPath = (path: string): boolean =>
-  CLAUDE_CONFIG_PATTERNS.some((pattern) => pattern.test(path));
+export const isClaudeConfigPath = (path: string): boolean => {
+  return CLAUDE_CONFIG_PATTERNS.some((pattern) => pattern.test(path));
+};
 
 /** Tracked paths Claude Code reads as JSON, sorted. */
-export const findClaudeConfigPaths = (cwd: string): string[] =>
-  run('git', ['ls-files'], { cwd })
+export const findClaudeConfigPaths = (cwd: string): string[] => {
+  return run('git', ['ls-files'], { cwd })
     .stdout.split('\n')
     .filter((path) => path !== '' && isClaudeConfigPath(path))
     .sort();
+};
 
 /** Strict-parse one file; null when it is valid JSON. */
 export const parseConfigFile = (

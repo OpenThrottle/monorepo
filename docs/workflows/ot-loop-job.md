@@ -103,7 +103,7 @@ downward. So the guard is two layers:
 Built from the task row only, plus the job's own operating instructions. No slash command, no MCP
 instruction, no skill reference, so it works on every registered driver (claude, codex, cursor,
 gemini, opencode, grok, antigravity). Derived from the skill's
-[The delegation prompt must stand alone](../../skills/ot-loop/SKILL.md#the-delegation-prompt-must-stand-alone).
+[The delegation prompt must stand alone](../../skills/ot-loop/references/model-routing.md#the-delegation-prompt-must-stand-alone).
 
 ```text
 You are working one task from a plan, inside a git worktree at the repository root.
@@ -361,11 +361,17 @@ diverges, explicitly:
   still reaches it.
 - The worker may answer guidance like "skip the UI task" with `status: "skipped"`, which the job
   honours only for an attempt whose prompt carried guidance.
-- **Mid-attempt delivery is not possible here.** The job only regains control between attempts, so
-  a message posted while the worker CLI runs waits for the retry or the next boundary. Reaching
-  the worker itself mid-attempt needs a hook inside the spawned CLI that knows its run; the bundled
-  `plan-inbox-claim` hook finds the run from an interactive transcript's `register_plan_run`, which
-  a headless worker never calls. Follow-up: OT plan `124a5d6c`.
+- **Mid-attempt delivery goes through a hook in the worker.** The job only regains control between
+  attempts, so it cannot deliver a message posted while the worker CLI runs. The spawned CLI can:
+  the worker runner loads OT's hook payloads (`--plugin-dir`, the same set Ralph loads) and exports the run identity (`OPENTHROTTLE_PLAN_ID`, `OPENTHROTTLE_PLAN_RUN_ID`,
+  `OPENTHROTTLE_TASK_ID`) into every attempt's env, and the `plan-inbox-claim` PreToolUse hook falls
+  back to it when the transcript shows no `register_plan_run` (a headless worker never calls it).
+  The hook claims before a destructive `Bash` call or a delegation and denies the call on a `STEER`.
+- **Hook-claimed messages join the guidance list.** A message the hook claimed is `DELIVERED`, so
+  the job's own `claimPlanMessages` never returns it. At every claim point the job first reads the
+  run's `DELIVERED` messages (`planMessages`, filtered to this `planRunId`) and appends any whose id
+  is not yet in the guidance list, narrated as `claimed in-worker`, so later prompts still carry
+  them. A failed read is narrated and treated as none; it never stops the run.
 - "Stop after this one" is **not** honoured by the job; the UI's message composer says so and points
   at **Cancel**, which is.
 

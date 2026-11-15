@@ -13,7 +13,9 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { WORKSPACE_GLOBS } from './check-catalog-coverage.ts';
-import { createLogger, hasFlag, run } from './utils/index.ts';
+import { hasFlag } from './utils/args.ts';
+import { run } from './utils/exec.ts';
+import { createLogger } from './utils/logger.ts';
 
 /**
  * @description Gate: `pnpm-lock.yaml` must be a fixed point of pnpm's incremental resolver,

@@ -25,16 +25,17 @@ producer hook payload → <tool adapter> → NormalizedInvocation
 | Tool-neutral core (scope, privacy seam, `buildUsageEvent`, GraphQL/JSONL persistence, outcome/duration correlation, drain) | `packages/agentic-hooks/src/` (barrel `index.ts`)                                                |
 | Per-tool adapters (TS esbuild entrypoints)                                                                                 | `packages/agentic-hooks/src/adapters/<tool>/`                                                    |
 | Bundler + drift check                                                                                                      | `packages/agentic-hooks/scripts/bundle-hooks.ts` → targets `bundle-hooks` / `bundle-hooks-check` |
-| Generated Claude bundles                                                                                                   | `.claude/hooks/skill-usage-{capture,complete,drain,outcome,scope}.cjs`                           |
-| Generated Cursor bundle                                                                                                    | `.cursor/hooks/skill-usage-capture.cjs`                                                          |
+| Generated Claude payload                                                                                                   | `plugins/openthrottle/{hooks,bin}/skill-usage-*.cjs` (stubs; bundles in gitignored `dist/`)      |
+| Generated Cursor payload                                                                                                   | `plugins/openthrottle-cursor/hooks/skill-usage-*.cjs`                                            |
 | Unit tests                                                                                                                 | `packages/agentic-hooks/src/**/__tests__/*.test.ts` (Vitest)                                     |
 
-Wired producers (editor-native config):
+Wired producers (plugin `hooks.json`; this repo loads them via its dev marketplace, see
+[hook-plugin-distribution.md](../../../docs/monorepo/hook-plugin-distribution.md) §5):
 
-| Producer    | Bundle(s)                                                                           | Config                                                                                                                                                             |
-| ----------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Claude Code | `.claude/hooks/skill-usage-capture.cjs` (start); `…-complete.cjs` (Stop → outcomes) | `.claude/settings.json` → `PreToolUse`/`UserPromptExpansion` (start) + `Stop` (complete)                                                                           |
-| Cursor      | `.cursor/hooks/skill-usage-capture.cjs`                                             | `.cursor/hooks.json` → `beforeSubmitPrompt` (provisional — the normalizer no-ops on non-skill payloads until Cursor's skill-invocation event/payload is finalized) |
+| Producer    | Bundle(s)                                                                                        | Config                                                                                                                                                                                       |
+| ----------- | ------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Claude Code | `plugins/openthrottle/hooks/skill-usage-capture.cjs` (start); `…-complete.cjs` (Stop → outcomes) | `plugins/openthrottle/hooks/hooks.json` → `PreToolUse`/`UserPromptExpansion` (start) + `Stop` (complete)                                                                                     |
+| Cursor      | `plugins/openthrottle-cursor/hooks/skill-usage-capture.cjs`                                      | `plugins/openthrottle-cursor/hooks/hooks.json` → `beforeSubmitPrompt` (provisional — the normalizer no-ops on non-skill payloads until Cursor's skill-invocation event/payload is finalized) |
 
 ## The producer contract
 
@@ -93,7 +94,7 @@ either (`PostToolUse` on `Skill` fires at injection, not completion), so there i
 no honest duration to record.
 
 `success` and `error` are therefore reserved for a deliberate reporter — the
-opt-in helper `.claude/hooks/skill-usage-outcome.cjs`
+opt-in helper `skill-usage-outcome.cjs` (the openthrottle plugin's `bin/`, on the Bash PATH)
 (`--skill … --outcome error [--duration-ms …] --session …`), which is also the
 only path that may report a duration. It rejects `session_ended`. A skill that
 never reports shows `—` on `/usage`, which is the honest state, not missing data.
@@ -110,7 +111,7 @@ Full model, including the legacy-row quarantine:
 
 When the server is down, starts/outcomes buffer to
 `.cache/skill-usage/{events,outcomes}.jsonl`. The `Stop` hook runs a small
-time-boxed drain opportunistically, and `.claude/hooks/skill-usage-drain.cjs`
+time-boxed drain opportunistically, and `skill-usage-drain.cjs` (plugin `bin/`; `pnpm run telemetry:drain` in an OT checkout)
 does an unbounded catch-up flush (idempotent, concurrent-writer safe).
 
 ## Adding / changing a producer
@@ -118,14 +119,14 @@ does an unbounded catch-up flush (idempotent, concurrent-writer safe).
 1. Add an entrypoint under `packages/agentic-hooks/src/adapters/<tool>/`
    (implement `normalize<Tool>Payload(raw)` and delegate to the core) and a
    Vitest for the normalizer.
-2. Add a row to the `BUNDLES` manifest in
+2. Add a `PluginEntry` row to a payload in
    `packages/agentic-hooks/scripts/bundle-hooks.ts` mapping the entrypoint to its
-   output `.cjs` path.
+   output file. That is the only registration; the Nx outputs are globs.
 3. Run `pnpm nx run @openthrottle/agentic-hooks:bundle-hooks` and commit the
-   generated `.cjs` (tracked, **not** gitignored).
-4. Wire your tool's hook config to run the bundle.
+   generated stub, manifest and `hooks.json`. The bundle lands in the gitignored `dist/`.
+4. Add the event to the payload's hook table in the same file.
 
-**Never** hand-edit a generated `.cjs`, and **never** fork the core — extend it
+**Never** hand-edit a generated stub or `dist/` file, and **never** fork the core — extend it
 generically in the package so every producer benefits. The
 `bundle-hooks-check` drift gate (in `check:local` and CI) fails if a committed
-bundle doesn't match its source.
+stub, manifest or `hooks.json` doesn't match the generator.

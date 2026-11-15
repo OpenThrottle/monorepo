@@ -1,5 +1,6 @@
 import { availableParallelism } from 'node:os';
 
+import { createAppVersionDefine } from '@tools/dotfiles/app-version';
 import type { ConfigEnv } from 'vite';
 import { loadEnv } from 'vite';
 import { defineConfig } from 'vitest/config';
@@ -35,6 +36,7 @@ export default (config: ConfigEnv) => {
 
   const configuration = defineConfig({
     cacheDir: '../../node_modules/.vite/applications/openthrottle-developer',
+    define: createAppVersionDefine(__dirname),
     resolve: {
       dedupe: ['react', 'react-dom', '@testing-library/react'],
       // Vite 8 resolves tsconfig.json `paths` aliases natively (discovers the

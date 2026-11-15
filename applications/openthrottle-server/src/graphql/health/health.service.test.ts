@@ -14,6 +14,7 @@ import type { Redis } from 'ioredis';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { HealthService } from './health.service.ts';
+import { getServerVersion } from './health.utils.ts';
 
 const getPostgresUrl = vi.fn<() => string | undefined>();
 const getCmsPostgresUrl = vi.fn<() => { readonly ok: boolean }>();
@@ -143,6 +144,12 @@ describe('HealthService', () => {
     });
   });
 
+  describe('getServerInfo', () => {
+    test('returns the server package.json version', () => {
+      expect(service.getServerInfo()).toEqual({ version: getServerVersion() });
+    });
+  });
+
   describe('getServerHealth', () => {
     test('aggregates api/database/redis/websocket statuses', async () => {
       await expect(service.getServerHealth()).resolves.toEqual({
@@ -150,6 +157,7 @@ describe('HealthService', () => {
         cms: 'ok',
         database: 'ok',
         redis: 'ok',
+        version: getServerVersion(),
         websocket: 'ok',
       });
     });
@@ -164,6 +172,7 @@ describe('HealthService', () => {
         cms: 'unreachable',
         database: 'unconfigured',
         redis: 'unreachable',
+        version: getServerVersion(),
         websocket: 'ok',
       });
     });

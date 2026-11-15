@@ -17,6 +17,9 @@
       "path": "../nodejs-utils/tsconfig.lib.json"
     },
     {
+      "path": "../nestjs-graphql/tsconfig.lib.json"
+    },
+    {
       "path": "../nestjs-testing/tsconfig.lib.json"
     },
     {

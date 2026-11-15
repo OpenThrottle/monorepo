@@ -56,10 +56,12 @@ class FakeStore implements MigrationStore {
   }
 }
 
-const source = (files: string[]): MigrationSource => ({
-  list: async () => [...files],
-  read: async (f) => `-- sql for ${f}`,
-});
+const source = (files: string[]): MigrationSource => {
+  return {
+    list: async () => [...files],
+    read: async (f) => `-- sql for ${f}`,
+  };
+};
 
 const FILES = ['003_c.sql', '001_a.sql', '002_b.sql', 'README.md'];
 const SORTED = ['001_a.sql', '002_b.sql', '003_c.sql'];

@@ -31,7 +31,9 @@ describe('parseRunningTaskRows', () => {
 });
 
 describe('orphanedNxOwners', () => {
-  const alive = (pids: number[]) => (pid: number) => pids.includes(pid);
+  const alive = (pids: number[]) => {
+    return (pid: number) => pids.includes(pid);
+  };
   const server = ['openthrottle-server:dev', 'openthrottle-server:dev-api'];
 
   it('returns live owners of the target tasks in this checkout that the helper did not launch', () => {

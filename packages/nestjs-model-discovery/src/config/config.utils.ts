@@ -10,6 +10,7 @@ import {
   configValidationSchema,
   DEFAULT_CACHE_TTL_MS,
   DEFAULT_HARD_TTL_MULTIPLIER,
+  FALSY_WARM_ON_BOOT_VALUES,
 } from './config.constants.ts';
 import type { ModelDiscoveryConfig } from './config.types.ts';
 
@@ -23,6 +24,22 @@ function intFromEnv(
   const min = allowZero ? 0 : 1;
 
   return Number.isInteger(parsed) && parsed >= min ? parsed : fallback;
+}
+
+/**
+ * Whether to warm the discovery cache on boot. An explicit value wins; unset
+ * (or blank) means on, except under a test runner.
+ */
+function warmOnBootFromEnv(env: NodeJS.ProcessEnv): boolean {
+  const raw = env.LLM_DISCOVERY_WARM_ON_BOOT?.trim().toLowerCase();
+
+  if (raw !== undefined && raw !== '') {
+    return !FALSY_WARM_ON_BOOT_VALUES.includes(raw);
+  }
+
+  const underTestRunner = env.NODE_ENV === 'test' || (env.VITEST ?? '') !== '';
+
+  return !underTestRunner;
 }
 
 /**
@@ -75,5 +92,6 @@ export function buildModelDiscoveryConfig(
       env.LLM_PROBE_TIMEOUT_MS,
       DEFAULT_PROBE_TIMEOUT_MS,
     ),
+    warmOnBoot: warmOnBootFromEnv(env),
   };
 }

@@ -4,7 +4,8 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { createLogger, hasFlag } from './utils/index.ts';
+import { hasFlag } from './utils/args.ts';
+import { createLogger } from './utils/logger.ts';
 import {
   collectPlatformSpecificPackages,
   type LicensePolicy,
@@ -48,9 +49,12 @@ export const FIRST_PARTY_SCOPES = ['@openthrottle/', '@tools/'] as const;
  * @description True for OpenThrottle's own workspace packages, which are not third-party
  * attributions and must be excluded from the manifest.
  */
-export const isFirstParty = (name: string): boolean =>
-  name === 'monorepo' ||
-  FIRST_PARTY_SCOPES.some((scope) => name.startsWith(scope));
+export const isFirstParty = (name: string): boolean => {
+  return (
+    name === 'monorepo' ||
+    FIRST_PARTY_SCOPES.some((scope) => name.startsWith(scope))
+  );
+};
 
 /**
  * @description Deterministic, locale-independent string order (UTF-16 code units). Used for
@@ -58,8 +62,9 @@ export const isFirstParty = (name: string): boolean =>
  * Node ICU builds — `String#localeCompare` is not (it varies by platform/locale), which
  * would break the CI drift guard.
  */
-export const compareCodeUnits = (a: string, b: string): number =>
-  a < b ? -1 : a > b ? 1 : 0;
+export const compareCodeUnits = (a: string, b: string): number => {
+  return a < b ? -1 : a > b ? 1 : 0;
+};
 
 /**
  * @description Normalize a package `author` (pnpm emits a string, but package.json may carry
@@ -308,10 +313,11 @@ export const diffManifestLines = (
 };
 
 /** Pull the package names out of any package-table rows in a set of diff lines. */
-export const packageNamesFromLines = (lines: readonly string[]): string[] =>
-  lines
+export const packageNamesFromLines = (lines: readonly string[]): string[] => {
+  return lines
     .map((line) => line.match(PACKAGE_ROW)?.[1])
     .filter((name): name is string => name !== undefined);
+};
 
 /**
  * @description Emit the drift detail behind the "out of date" failure to stderr: the

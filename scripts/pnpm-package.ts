@@ -4,7 +4,7 @@ import { readFile, writeFile } from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-import { createLogger } from './utils/index.ts';
+import { createLogger } from './utils/logger.ts';
 
 const logger = createLogger();
 
@@ -29,6 +29,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const [_first, _second, name] = process.argv;
+
+if (name === undefined) {
+  throw new Error('Usage: pnpm-package.ts <scope/package-name>');
+}
 
 const parts = name.split('/');
 const isTools = parts[0] === 'tools';
@@ -101,10 +105,10 @@ const readWorkspaceCatalogs = async (): Promise<Catalogs> => {
 
     if (mode === 'named') {
       // A 2-space `name:` header opens a named catalog block.
-      const header = rawLine.match(/^ {2}([A-Za-z0-9_-]+):\s*$/);
-      if (header) {
-        currentNamed = header[1];
-        catalogs[currentNamed] ??= {};
+      const headerName = rawLine.match(/^ {2}([A-Za-z0-9_-]+):\s*$/)?.[1];
+      if (headerName !== undefined) {
+        currentNamed = headerName;
+        catalogs[headerName] ??= {};
         continue;
       }
     }
@@ -114,10 +118,16 @@ const readWorkspaceCatalogs = async (): Promise<Catalogs> => {
       continue;
     }
     const [, , dependency, , version] = entry;
+    if (dependency === undefined || version === undefined) {
+      continue;
+    }
     if (mode === 'default') {
+      catalogs.default ??= {};
       catalogs.default[dependency] = version;
     } else if (currentNamed) {
-      catalogs[currentNamed][dependency] = version;
+      const named = catalogs[currentNamed] ?? {};
+      catalogs[currentNamed] = named;
+      named[dependency] = version;
     }
   }
 
@@ -149,12 +159,14 @@ const transformPackageJson = async () => {
   });
 
   // The `nx` and `publishConfig` keys are workspace-only noise consumers don't
-  // need; strip them via a record view so no `as` assertion is required.
-  const exportableRecord: Record<string, unknown> = exportable;
-  delete exportableRecord.nx;
-  delete exportableRecord.publishConfig;
+  // need; strip them by filtering the entries.
+  const publishable = Object.fromEntries(
+    Object.entries(exportable).filter(([key]) => {
+      return key !== 'nx' && key !== 'publishConfig';
+    }),
+  );
 
-  const jsonFormatted = JSON.stringify(exportable, undefined, 2);
+  const jsonFormatted = JSON.stringify(publishable, undefined, 2);
   // console.log('📦 Publishable package.json created', jsonFormatted);
 
   try {

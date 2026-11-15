@@ -2,7 +2,7 @@ import { fileURLToPath } from 'node:url';
 
 import { execSync } from 'child_process';
 
-import { createLogger } from './utils/index.ts';
+import { createLogger } from './utils/logger.ts';
 
 const logger = createLogger();
 

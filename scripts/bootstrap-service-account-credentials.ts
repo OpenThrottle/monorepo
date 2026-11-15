@@ -17,7 +17,7 @@
 
 import { fileURLToPath } from 'node:url';
 
-import type { LoggerService } from '@openthrottle/nestjs-modules';
+import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   getOpenThrottleTypeOrmOptions,
   ServiceAccount,
@@ -30,8 +30,8 @@ import {
   LOCAL_SECRETS_FILENAME,
   readLocalSecrets,
   upsertLocalSecrets,
-} from './local-secrets-file';
-import { createLogger } from './utils/index.ts';
+} from './local-secrets-file.ts';
+import { createLogger } from './utils/logger.ts';
 
 const logger = createLogger();
 
@@ -49,8 +49,7 @@ export const BOOTSTRAP_ACCOUNTS = [
 ] as const;
 
 /** Copy-pasteable command that emits a valid `ot_sa_<prefix>_<secret>` token. */
-const TOKEN_GENERATION_HINT =
-  "node -e \"const c=require('node:crypto');const a='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';const r=n=>Array.from(c.randomBytes(n),b=>a[b%a.length]).join('');console.log('ot_sa_'+r(12)+'_'+r(32))\"";
+const TOKEN_GENERATION_HINT = `node -e "const c=require('node:crypto');const a='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';const r=n=>Array.from(c.randomBytes(n),b=>a[b%a.length]).join('');console.log('ot_sa_'+r(12)+'_'+r(32))"`;
 
 type ProvisionOutcome =
   'created' | 'minted' | 'noop' | 'rotated' | 'skipped' | 'updated';
@@ -87,10 +86,10 @@ async function upsertBootstrapCredentialFromEnv(
       process.exit(1);
     }
 
-    const detail =
-      result.action === 'noop'
-        ? 'credential already matches (no change)'
-        : `${result.action} credential`;
+    const isNoop = result.action === 'noop';
+    const detail = isNoop
+      ? 'credential already matches (no change)'
+      : `${result.action} credential`;
 
     logger.info(`${account.name}: ${detail} from ${account.envVar}.`);
 
@@ -256,6 +255,37 @@ export async function provisionAccount(
   );
 }
 
+/** Silent sink for the Nest services' own logging; script output goes through the CLI `logger`. */
+class SilentLoggerService extends LoggerService {
+  override debug(): void {
+    return undefined;
+  }
+
+  override error(): void {
+    return undefined;
+  }
+
+  override fatal(): void {
+    return undefined;
+  }
+
+  override info(): void {
+    return undefined;
+  }
+
+  override log(): void {
+    return undefined;
+  }
+
+  override verbose(): void {
+    return undefined;
+  }
+
+  override warn(): void {
+    return undefined;
+  }
+}
+
 async function main(): Promise<void> {
   const dataSource = new DataSource(getOpenThrottleTypeOrmOptions());
   await dataSource.initialize();
@@ -263,12 +293,7 @@ async function main(): Promise<void> {
   try {
     // Silent sink for the Nest service's own logging; script output goes
     // through the CLI `logger` above, so don't shadow it here.
-    const nestLogger: LoggerService = {
-      debug: () => undefined,
-      error: () => undefined,
-      log: () => undefined,
-      warn: () => undefined,
-    };
+    const nestLogger = new SilentLoggerService();
 
     const serviceAccountsService = new ServiceAccountsService(
       nestLogger,

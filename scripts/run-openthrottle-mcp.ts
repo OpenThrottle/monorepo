@@ -43,8 +43,9 @@ import { fileURLToPath } from 'node:url';
 
 import { parseVersion, satisfies } from './check-node-engine.mjs';
 import { readEnvValue } from './utils/env.ts';
+import { run } from './utils/exec.ts';
 import { gitOutput, primaryCheckoutDir } from './utils/git.ts';
-import { createLogger, run } from './utils/index.ts';
+import { createLogger } from './utils/logger.ts';
 import { classifyAuthSmoke } from './verify-openthrottle-mcp-env.ts';
 
 const logger = createLogger({ stream: process.stderr });

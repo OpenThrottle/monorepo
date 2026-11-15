@@ -7,8 +7,9 @@
  */
 import { readFileSync } from 'node:fs';
 
-const isErrnoException = (error: unknown): error is NodeJS.ErrnoException =>
-  error instanceof Error && 'code' in error;
+const isErrnoException = (error: unknown): error is NodeJS.ErrnoException => {
+  return error instanceof Error && 'code' in error;
+};
 
 /**
  * Parse .env file contents into a map. Supports comments, blank lines, an
@@ -109,14 +110,16 @@ export const upsertEnvLine = (
   return `${contents}${separator}${key}=${value}\n`;
 };
 
-const escapeRegExp = (value: string): string =>
-  value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const escapeRegExp = (value: string): string => {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+};
 
-const assignmentPattern = (key: string): RegExp =>
-  new RegExp(
+const assignmentPattern = (key: string): RegExp => {
+  return new RegExp(
     `^${escapeRegExp(key)}=("[^"\\n]*"|'[^'\\n]*'|[^\\s#]*)(\\s+#.*)?$`,
     'm',
   );
+};
 
 /**
  * Rewrite an existing `KEY` from its current (unquoted) value, keeping the

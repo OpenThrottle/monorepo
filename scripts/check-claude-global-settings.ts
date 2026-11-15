@@ -18,8 +18,9 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import type { Logger } from './utils/index.ts';
-import { createLogger, hasFlag } from './utils/index.ts';
+import { hasFlag } from './utils/args.ts';
+import type { Logger } from './utils/logger.ts';
+import { createLogger } from './utils/logger.ts';
 
 /** The `instructionFiles` value that makes Claude Code load AGENTS.md files. */
 export const REQUIRED_INSTRUCTION_FILES = 'claude-md-and-agents-md';
@@ -60,8 +61,9 @@ export interface ClaudeGlobalSettingsCheckOptions {
   readonly logger: Logger;
 }
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
+const isRecord = (value: unknown): value is Record<string, unknown> => {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+};
 
 const describeJsonType = (value: unknown): string => {
   if (value === null) return 'null';
@@ -177,10 +179,8 @@ export function readClaudeSettingsFile(path: string): SettingsReadResult {
   try {
     return { contents: readFileSync(path, 'utf8'), kind: 'contents' };
   } catch (error) {
-    const code =
-      isRecord(error) && typeof error.code === 'string'
-        ? error.code
-        : undefined;
+    const rawCode = isRecord(error) ? error.code : undefined;
+    const code = typeof rawCode === 'string' ? rawCode : undefined;
 
     if (code === 'ENOENT' || code === 'ENOTDIR') {
       return { kind: 'missing-file' };
@@ -241,12 +241,14 @@ export function runClaudeGlobalSettingsCheck(
   const { env, logger } = options;
   const settingsPath = resolveClaudeSettingsPath(env, options.homedir);
   const read = readClaudeSettingsFile(settingsPath);
-  const outcome: AgentsMdOutcome =
-    read.kind === 'contents'
-      ? evaluateAgentsMdSetting(read.contents)
-      : read.kind === 'missing-file'
-        ? { kind: 'missing-file' }
-        : { kind: 'unreadable', message: read.message };
+  let outcome: AgentsMdOutcome;
+  if (read.kind === 'contents') {
+    outcome = evaluateAgentsMdSetting(read.contents);
+  } else if (read.kind === 'missing-file') {
+    outcome = { kind: 'missing-file' };
+  } else {
+    outcome = { kind: 'unreadable', message: read.message };
+  }
 
   if (outcome.kind === 'ok') {
     logger.success(

@@ -1,19 +1,22 @@
 /**
  * @description GraphQL resolver for local model discovery. The discoverLocalModels query returns
  * the cached snapshot from the injected NestjsModelDiscoveryService (60s in-process TTL) — it does
- * NOT trigger a live scan per request. baseUrls reflect the server's network vantage point.
+ * NOT trigger a live scan per request. baseUrls reflect the server's network vantage point. The
+ * query (here) and its object-typed `endpoints` field (on DiscoverLocalModelsResult) both carry a
+ * 60s PRIVATE @CacheHint, so Apollo's response cache serves a repeat read and the response carries
+ * `cache-control: max-age=60, private`.
  */
 
 import { UseGuards } from '@nestjs/common';
 import { Query, Resolver } from '@nestjs/graphql';
+import { CacheHint } from '@openthrottle/nestjs-graphql';
 import { NestjsModelDiscoveryService } from '@openthrottle/nestjs-model-discovery';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
-import {
-  DiscoverLocalModelsResult,
-  ModelEndpointObject,
-} from './model-discovery.object.ts';
+import { MODEL_DISCOVERY_CACHE_HINT } from './model-discovery.constants.ts';
+import type { ModelEndpointObject } from './model-discovery.object.ts';
+import { DiscoverLocalModelsResult } from './model-discovery.object.ts';
 
 @Resolver()
 @UseGuards(GqlPermissionsGuard)
@@ -23,6 +26,7 @@ export class ModelDiscoveryResolver {
   @Query(() => DiscoverLocalModelsResult, {
     description: `Discover locally-running OpenAI-compatible model servers (Ollama-primary) and the models they serve. Returns a cached snapshot (60s TTL); does not scan per request.`,
   })
+  @CacheHint(MODEL_DISCOVERY_CACHE_HINT)
   @Permissions(PERMISSIONS.SETTINGS_READ)
   async discoverLocalModels(): Promise<DiscoverLocalModelsResult> {
     const result = await this.modelDiscovery.discover();

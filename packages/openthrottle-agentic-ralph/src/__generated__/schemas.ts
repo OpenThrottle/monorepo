@@ -76,6 +76,7 @@ import {
   GetPullInput,
   GetTaskEmbeddingInput,
   GitHubRepoInput,
+  IdRefKind,
   LabelAgentTrajectoryInput,
   LastActivityInput,
   LinesAddedDeletedInput,
@@ -229,6 +230,8 @@ export const BlogReferenceEntitySchema = z.nativeEnum(BlogReferenceEntity);
 export const CustomPromptTypeSchema = z.nativeEnum(CustomPromptType);
 
 export const EditorPresenceStateSchema = z.nativeEnum(EditorPresenceState);
+
+export const IdRefKindSchema = z.nativeEnum(IdRefKind);
 
 export const MissingWorktreeCheckoutReasonSchema = z.nativeEnum(
   MissingWorktreeCheckoutReason,

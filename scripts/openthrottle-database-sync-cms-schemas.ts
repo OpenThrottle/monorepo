@@ -17,7 +17,7 @@ import {
 } from '../databases/database-registry.ts';
 import type { JsonObject, JsonValue } from './generate-cms-schemas.ts';
 import { CMS_SCHEMAS_DIR, CMS_SCHEMAS_MANIFEST, schemaVersion } from './generate-cms-schemas.ts'; // prettier-ignore
-import { createLogger } from './utils/index.ts';
+import { createLogger } from './utils/logger.ts';
 
 const logger = createLogger();
 

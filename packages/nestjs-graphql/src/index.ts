@@ -1,3 +1,12 @@
+// `CacheHint` is both the decorator and the hint type; the decorator file
+// declares the two as one merged name, so the types file is re-exported
+// without it (`export *` from both would be ambiguous).
+export * from './config/cache-hint/cache-hint.decorator.ts';
+export type {
+  CacheHintScope,
+  ResolveInfoCacheControl,
+} from './config/cache-hint/cache-hint.types.ts';
+export * from './config/cache-hint/cache-hint.utils.ts';
 export * from './config/format-error/format-error.types.ts';
 export * from './config/format-error/format-error.utils.ts';
 export * from './config/query-depth-limit/query-depth-limit.utils.ts';

@@ -16,4 +16,5 @@ export const GLOBAL_FOOTER = {
     label: `Sponsor`,
     prompt: `Hosting and CI come out of pocket.`,
   },
+  versionLabel: 'Version',
 } as const;

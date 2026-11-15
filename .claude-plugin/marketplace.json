@@ -15,9 +15,48 @@
         "url": "https://github.com/OpenThrottle"
       },
       "category": "productivity",
-      "source": "./plugins/openthrottle",
+      "source": {
+        "path": "plugins/openthrottle",
+        "ref": "plugins-dist",
+        "source": "git-subdir",
+        "url": "https://github.com/OpenThrottle/monorepo.git"
+      },
       "homepage": "https://github.com/OpenThrottle/monorepo/blob/main/docs/monorepo/child-repo-hook-overlay.md",
       "tags": ["hooks", "openthrottle", "skills", "telemetry"]
+    },
+    {
+      "name": "openthrottle-guards",
+      "description": "Guards for Claude Code: catches shell commands that fail invisibly (zsh globs and modifiers, BSD sed, masked exit status, gh writes to closed PRs) and warns before MEMORY.md outgrows the session index. Can deny a command that cannot succeed.",
+      "author": {
+        "name": "OpenThrottle",
+        "url": "https://github.com/OpenThrottle"
+      },
+      "category": "productivity",
+      "source": {
+        "path": "plugins/openthrottle-guards",
+        "ref": "plugins-dist",
+        "source": "git-subdir",
+        "url": "https://github.com/OpenThrottle/monorepo.git"
+      },
+      "homepage": "https://github.com/OpenThrottle/monorepo/blob/main/docs/monorepo/hook-plugin-distribution.md",
+      "tags": ["bash", "guards", "hooks", "openthrottle"]
+    },
+    {
+      "name": "openthrottle-workflow",
+      "description": "OpenThrottle plan-run workflow hooks: plan inbox delivery before destructive steps, task-status guards, auto-close reports, abandoned-run settling, and an OT-plan requirement for session kickoffs. Depends on openthrottle.",
+      "author": {
+        "name": "OpenThrottle",
+        "url": "https://github.com/OpenThrottle"
+      },
+      "category": "productivity",
+      "source": {
+        "path": "plugins/openthrottle-workflow",
+        "ref": "plugins-dist",
+        "source": "git-subdir",
+        "url": "https://github.com/OpenThrottle/monorepo.git"
+      },
+      "homepage": "https://github.com/OpenThrottle/monorepo/blob/main/docs/monorepo/hook-plugin-distribution.md",
+      "tags": ["hooks", "openthrottle", "plans", "workflow"]
     }
   ]
 }

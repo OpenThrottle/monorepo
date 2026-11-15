@@ -13,13 +13,13 @@ Platform-specific prebuilt binaries (packages that declare `os`/`cpu`, e.g.
 `@rollup/rollup-linux-x64-gnu`, `fsevents`) are omitted: which ones install depends on
 the host OS, and each shares the license of the cross-platform toolchain already listed.
 
-**2137** third-party packages.
+**2138** third-party packages.
 
 ## License summary
 
 | License | Packages |
 | --- | --- |
-| MIT | 1842 |
+| MIT | 1843 |
 | Apache-2.0 | 97 |
 | ISC | 78 |
 | BSD-3-Clause | 56 |
@@ -300,6 +300,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@graphql-codegen/visitor-plugin-common` | 6.3.0 | MIT | [source](https://github.com/dotansimha/graphql-code-generator#readme) |
 | `@graphql-eslint/eslint-plugin` | 4.4.1 | MIT | [Dotan Simha](https://github.com/graphql-hive/graphql-eslint#readme) |
 | `@graphql-hive/signal` | 2.0.0 | MIT | [The Guild](https://github.com/graphql-hive/gateway#readme) |
+| `@graphql-inspector/core` | 8.0.1 | MIT | [Kamil Kisiela](https://github.com/graphql-hive/graphql-inspector#readme) |
 | `@graphql-tools/apollo-engine-loader` | 8.0.34 | MIT | [Dotan Simha](https://github.com/ardatan/graphql-tools#readme) |
 | `@graphql-tools/batch-execute` | 10.0.9 | MIT | [source](https://github.com/graphql-hive/gateway#readme) |
 | `@graphql-tools/code-file-loader` | 8.1.36 | MIT | [Dotan Simha](https://github.com/ardatan/graphql-tools#readme) |

@@ -13,6 +13,20 @@
 # runs the repo's optional, idempotent heal hook (a backfill), so the common dev
 # path pays a couple of `git rev-parse` calls plus that hook.
 
+case "${1:-}" in
+  -h | --help)
+    cat <<'USAGE'
+Usage: heal.sh [-h|--help]
+
+Provision the current linked worktree once if it is unprovisioned, else run the
+repo's optional heal hook. No-op in the primary checkout or outside a repo.
+
+Exit codes: 0 success or no-op; non-zero when the repo provisioner fails.
+USAGE
+    exit 0
+    ;;
+esac
+
 set -e
 
 OPENTHROTTLE_WORKTREE_SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd -P)"

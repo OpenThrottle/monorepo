@@ -28,7 +28,9 @@ const parseCommands = (raw: string): string[][] => {
   return commands;
 };
 
-const bulk = (value: string): string => `$${value.length}\r\n${value}\r\n`;
+const bulk = (value: string): string => {
+  return `$${value.length}\r\n${value}\r\n`;
+};
 
 /**
  * A fake Redis: SCAN pages two matching keys at a time over a snapshot taken at cursor 0 (the

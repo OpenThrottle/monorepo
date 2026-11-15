@@ -91,7 +91,7 @@ export const formatBackfillResult = (result: BackfillSendResult): string => {
     `skill events: accepted ${skills.accepted} (new or already present: the server answers with the surviving row), buffered ${skills.buffered}, rejected ${skills.rejected}`,
     `token rows: inserted ${tokens.inserted}, skipped as already present ${tokens.skipped}, buffered ${tokens.buffered}, dead-lettered ${tokens.deadLettered}${tokens.detail === null ? '' : ` (${tokens.detail})`}`,
     skills.buffered + tokens.buffered > 0
-      ? 'buffered rows stay in ~/.openthrottle/skill-usage/; run skill-usage-drain.cjs once the server is reachable'
+      ? 'buffered rows stay in ~/.openthrottle/skill-usage/; run `pnpm run telemetry:drain` once the server is reachable'
       : 'nothing buffered',
   ].join('\n')}\n`;
 };

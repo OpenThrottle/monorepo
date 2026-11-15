@@ -11,9 +11,7 @@ import {
 import { skillUsageChipClass } from '~/routing/usage/utils/skillUsageChipClass';
 
 export interface UsageSkillUsageRepoFilterProps {
-  accountParam: string | null;
   filterOptions: UsageSkillUsageFilterOptionsFragment;
-  providerParam: string | null;
   selectedCwd: string | null;
   selectedGitBranch: string | null;
   selectedRepo: string | null;
@@ -30,9 +28,7 @@ export const UsageSkillUsageRepoFilter = (
   props: UsageSkillUsageRepoFilterProps,
 ): React.ReactElement | null => {
   const {
-    accountParam,
     filterOptions,
-    providerParam,
     selectedCwd,
     selectedGitBranch,
     selectedRepo,
@@ -50,10 +46,8 @@ export const UsageSkillUsageRepoFilter = (
     : 'Filter skill usage by project path';
   const toSearch = (value: string | null): string => {
     return buildUsageSearch({
-      account: accountParam,
       cwd: byRepo ? null : value,
       gitBranch: selectedGitBranch,
-      provider: providerParam,
       repo: byRepo ? value : null,
       scope: selectedScope,
     });

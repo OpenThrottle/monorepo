@@ -48,7 +48,8 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 
-import { createLogger, hasFlag } from './utils/index.ts';
+import { hasFlag } from './utils/args.ts';
+import { createLogger } from './utils/logger.ts';
 
 const logger = createLogger();
 
@@ -104,8 +105,9 @@ interface Violation {
   readonly samples: readonly string[];
 }
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
+const isRecord = (value: unknown): value is Record<string, unknown> => {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+};
 
 /**
  * @description Strips `//` and comment blocks, then trailing commas, so a tsconfig
@@ -202,15 +204,16 @@ const resolveModuleResolution = (
   if (typeof own === 'string') return own.toLowerCase();
 
   const extendsValue = config.extends;
-  const parents = (
-    typeof extendsValue === 'string'
-      ? [extendsValue]
-      : Array.isArray(extendsValue)
-        ? extendsValue.filter(
-            (entry): entry is string => typeof entry === 'string',
-          )
-        : []
-  ).filter((entry) => entry.startsWith('.'));
+  let declared: string[] = [];
+  if (typeof extendsValue === 'string') {
+    declared = [extendsValue];
+  } else if (Array.isArray(extendsValue)) {
+    declared = extendsValue.filter(
+      (entry): entry is string => typeof entry === 'string',
+    );
+  }
+
+  const parents = declared.filter((entry) => entry.startsWith('.'));
 
   const nextSeen = new Set([...seen, tsconfigPath]);
 
@@ -287,10 +290,12 @@ const readProjectInfo = (directory: string): ProjectInfo | undefined => {
   // consumer then has no build or typecheck edge to that dependency, so it
   // cannot import it by name. It only keeps the pnpm link to resolve files on
   // disk (openthrottle-server → @tools/generators).
-  const implicitDependencies =
-    isRecord(parsed.nx) && Array.isArray(parsed.nx.implicitDependencies)
-      ? parsed.nx.implicitDependencies
-      : [];
+  const declaredImplicit = isRecord(parsed.nx)
+    ? parsed.nx.implicitDependencies
+    : undefined;
+  const implicitDependencies: unknown[] = Array.isArray(declaredImplicit)
+    ? declaredImplicit
+    : [];
   const negated = new Set(
     implicitDependencies
       .filter(
@@ -326,8 +331,8 @@ const readProjectInfo = (directory: string): ProjectInfo | undefined => {
   };
 };
 
-const listProjects = (): readonly ProjectInfo[] =>
-  WORKSPACE_DIRS.flatMap((workspaceDir) => {
+const listProjects = (): readonly ProjectInfo[] => {
+  return WORKSPACE_DIRS.flatMap((workspaceDir) => {
     const absolute = path.join(ROOT, workspaceDir);
 
     if (!existsSync(absolute)) return [];
@@ -337,6 +342,7 @@ const listProjects = (): readonly ProjectInfo[] =>
       .map((entry) => readProjectInfo(path.join(absolute, entry.name)))
       .filter((info): info is ProjectInfo => info !== undefined);
   });
+};
 
 const listSourceFiles = (directory: string): readonly string[] => {
   if (!existsSync(directory)) return [];
@@ -437,10 +443,10 @@ const run = (): void => {
   if (violations.length > 0) {
     for (const violation of violations) {
       const dependency = byName.get(violation.dependency);
-      const relativeDependency =
-        dependency === undefined
-          ? violation.dependency
-          : path.relative(ROOT, dependency.directory);
+      const isUnresolved = dependency === undefined;
+      const relativeDependency = isUnresolved
+        ? violation.dependency
+        : path.relative(ROOT, dependency.directory);
 
       logger.fail(
         `check-nodenext-references: ${violation.consumer} → ${violation.dependency}: ` +

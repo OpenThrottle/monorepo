@@ -5,6 +5,7 @@ import createResponseCachePlugin from '@apollo/server-plugin-response-cache';
 import type { ApolloDriverConfig } from '@nestjs/apollo';
 import type { ValidationRule } from 'graphql';
 
+import { createCacheHintPlugin } from './config/cache-hint/cache-hint.utils.ts';
 import { createQueryDepthLimitRule } from './config/query-depth-limit/query-depth-limit.utils.ts';
 import { defaultResponseCacheSessionId } from './config/response-cache-session/response-cache-session.utils.ts';
 import { DEFAULT_DRIVER_CONFIG } from './nestjs-graphql.constants.ts';
@@ -94,8 +95,8 @@ function resolveResponseCacheOptions(
 }
 
 /**
- * Assemble the opt-in Apollo cache plugins (Cache-Control, then response-cache)
- * in a fixed order. Exported for unit testing of the assembly/order behavior;
+ * Assemble the opt-in Apollo cache plugins in a fixed order: the `@CacheHint`
+ * plugin and Cache-Control (together, under `cacheControl`), then response-cache. Exported for unit testing of the assembly/order behavior;
  * not part of the package public API (no `@public`), so consume via forRoot.
  */
 export function buildCachePlugins(
@@ -104,7 +105,11 @@ export function buildCachePlugins(
   const plugins: NonNullable<ApolloDriverConfig['plugins']> = [];
 
   if (cache.cacheControl) {
+    // The @CacheHint plugin goes FIRST: Apollo runs willResolveField hooks in
+    // reverse plugin order, and it needs the info.cacheControl that the
+    // cache-control plugin installs.
     plugins.push(
+      createCacheHintPlugin(),
       ApolloServerPluginCacheControl(
         cache.cacheControl === true ? {} : cache.cacheControl,
       ),

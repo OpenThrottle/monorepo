@@ -9,7 +9,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { gitOutput, isLinkedWorktree } from './utils/git.ts';
-import { createLogger } from './utils/index.ts';
+import { createLogger } from './utils/logger.ts';
 
 const logger = createLogger();
 
@@ -17,14 +17,17 @@ const logger = createLogger();
 const IGNORED: readonly string[] = [];
 
 /** The short branch name for a checkout, or undefined (detached, not a repo). */
-const branchName = (cwd: string): string | undefined =>
-  gitOutput(['symbolic-ref', '--short', 'HEAD'], cwd);
+const branchName = (cwd: string): string | undefined => {
+  return gitOutput(['symbolic-ref', '--short', 'HEAD'], cwd);
+};
 
 /** True when this checkout should be pulled: on one of its default branches. */
 export const isPullableBranch = (
   branch: string | undefined,
   allowed: readonly string[] = ['main', 'master'],
-): boolean => branch !== undefined && allowed.includes(branch);
+): boolean => {
+  return branch !== undefined && allowed.includes(branch);
+};
 
 const pull = (label: string, cwd: string, allowed: readonly string[]): void => {
   const branch = branchName(cwd);

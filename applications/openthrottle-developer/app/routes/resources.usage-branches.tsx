@@ -5,7 +5,7 @@ import { GetUsageBranchSearchDocument } from '~/__generated__/graphql';
 import type { UsageBranchSearchData } from '~/routing/usage/types';
 
 /**
- * Resource route (loader-only) backing the `/usage` branch filter —
+ * Resource route (loader-only) backing the `/usage/skills` branch filter —
  * `/resources/usage-branches?start=&end=&query=&limit=`. `skillUsageGitBranches`
  * is a server-side GraphQL query (client GraphQL transport is server-only), so
  * the combobox debounces a `useFetcher().load` here via

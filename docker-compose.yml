@@ -569,7 +569,8 @@ services:
   #     Streaming speech-to-text for the developer-app voice-input spike
   #     (Collabora WhisperLive, faster-whisper backend). Opt-in profile so the
   #     default `docker compose up` and `pnpm run database:start` never pull
-  #     this image. Start it with `pnpm run voice:start`.
+  #     this image. `pnpm run voice:start` starts it detached and waits for
+  #     healthy; `voice:logs` follows the log, `voice:stop` stops it.
   #
   #     Streaming contract (details: docs/openthrottle/voice-whisperlive-spike.md):
   #     websocket connect → JSON config handshake (uid, model, language, task)
@@ -578,10 +579,12 @@ services:
   #     completed. That revising behavior is why the GraphQL transcription
   #     layer uses snapshot-replace semantics instead of delta-append.
   #
-  #     WHISPER_MODEL is consumed by openthrottle-server's per-connection
-  #     handshake (WhisperLive selects the model per client, not per server);
-  #     it is exported here only so the intended default is visible on the
-  #     container. First boot downloads the model into whisper_model_cache.
+  #     The model is NOT configured here: WhisperLive picks it per client from
+  #     the JSON config frame, so WHISPER_MODEL is read by openthrottle-server
+  #     (default tiny.en), never by this container. That is also why boot logs
+  #     "Single model mode currently only works with custom models" — expected.
+  #     The FIRST transcription session (not first boot) downloads the model
+  #     into whisper_model_cache; tiny.en is ~75MB and later sessions reuse it.
   #
   whisper:
     # Built from source for the native arch: the upstream whisperlive-cpu image
@@ -590,21 +593,31 @@ services:
     build:
       context: ./
       dockerfile: applications/openthrottle/Dockerfile.Whisper
-    environment:
-      WHISPER_MODEL: ${WHISPER_MODEL:-base.en}
+    # Probe with a real WebSocket handshake, closed before the JSON config
+    # frame. A bare TCP connect made WhisperLive log a ~25-line "opening
+    # handshake failed" traceback on every probe; this logs three INFO lines
+    # ("connection open" / "New client connected" / "Connection closed by
+    # client") and never reaches is_server_full, so it never holds a
+    # max_clients slot. start_interval keeps boot detection fast while the
+    # steady-state interval keeps the idle log quiet.
     healthcheck:
-      interval: 10s
+      interval: 60s
       retries: 3
+      start_interval: 2s
       start_period: 60s
       test:
         [
           'CMD',
           'python3',
           '-c',
-          "import socket; socket.create_connection(('127.0.0.1', 9090), 5).close()",
+          "from websockets.sync.client import connect; connect('ws://127.0.0.1:9090', open_timeout=5).close()",
         ]
       timeout: 5s
     image: openthrottle/whisper:latest
+    # run_server.py is PID 1 and installs no SIGTERM handler, so the kernel
+    # drops the signal and every `docker stop` / Ctrl-C ended in a SIGKILL
+    # (exit 137) after the grace period. tini forwards SIGTERM so it exits.
+    init: true
     ports:
       - '${WHISPER_PORT:-6030}:9090'
     profiles: [voice]

@@ -33,10 +33,12 @@ const baseConfig: ModelDiscoveryConfig = {
   maxConcurrency: 10,
   ports: [9999],
   probeTimeoutMs: 3000,
+  warmOnBoot: false,
 };
 
 async function buildService(
   config: ModelDiscoveryConfig,
+  logger: LoggerService = createMock<LoggerService>(),
 ): Promise<NestjsModelDiscoveryService> {
   const configService = createMock<ConfigService>();
   vi.mocked(configService.get).mockReturnValue(config);
@@ -44,7 +46,7 @@ async function buildService(
     providers: [
       NestjsModelDiscoveryService,
       { provide: ConfigService, useValue: configService },
-      { provide: LoggerService, useValue: createMock<LoggerService>() },
+      { provide: LoggerService, useValue: logger },
     ],
   }).compile();
   return app.get(NestjsModelDiscoveryService);
@@ -189,6 +191,7 @@ describe('NestjsModelDiscoveryService', () => {
       maxConcurrency: 7,
       ports: [11434, 1234],
       probeTimeoutMs: 4321,
+      warmOnBoot: false,
     };
     const service = await buildService(config);
     await service.discover();
@@ -240,5 +243,76 @@ describe('NestjsModelDiscoveryService', () => {
     const summary = vi.mocked(logger.debug).mock.calls[0]?.[0];
     expect(summary).toContain('1 endpoint(s)');
     expect(summary).toContain('2 host(s)');
+  });
+});
+
+describe('NestjsModelDiscoveryService boot warm-up', () => {
+  const emptyResult: DiscoveryResult = {
+    endpoints: [],
+    scannedAt: '2026-11-14T00:00:00.000Z',
+    scannedHosts: ['localhost'],
+  };
+
+  it('starts a scan without blocking bootstrap', async () => {
+    let resolveScan: (result: DiscoveryResult) => void = () => {};
+    discoverModelsMock.mockImplementation(() => {
+      return new Promise((resolve) => {
+        resolveScan = resolve;
+      });
+    });
+    const service = await buildService({ ...baseConfig, warmOnBoot: true });
+
+    expect(service.onApplicationBootstrap()).toBeUndefined();
+
+    await vi.waitFor(() => {
+      expect(discoverModelsMock).toHaveBeenCalledTimes(1);
+    });
+    resolveScan(emptyResult);
+  });
+
+  it('lets the first request share the in-flight warm-up scan', async () => {
+    let resolveScan: (result: DiscoveryResult) => void = () => {};
+    discoverModelsMock.mockImplementation(() => {
+      return new Promise((resolve) => {
+        resolveScan = resolve;
+      });
+    });
+    const service = await buildService({ ...baseConfig, warmOnBoot: true });
+
+    service.onApplicationBootstrap();
+    await vi.waitFor(() => {
+      expect(discoverModelsMock).toHaveBeenCalledTimes(1);
+    });
+    const request = service.discover();
+    resolveScan(emptyResult);
+
+    await expect(request).resolves.toEqual(emptyResult);
+    expect(discoverModelsMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('skips the warm-up when warmOnBoot is off', async () => {
+    const service = await buildService(baseConfig);
+
+    service.onApplicationBootstrap();
+    await Promise.resolve();
+
+    expect(discoverModelsMock).not.toHaveBeenCalled();
+  });
+
+  it('logs and swallows a failed warm-up', async () => {
+    discoverModelsMock.mockRejectedValue(new Error('probe exploded'));
+    const logger = createMock<LoggerService>();
+    const service = await buildService(
+      { ...baseConfig, warmOnBoot: true },
+      logger,
+    );
+
+    service.onApplicationBootstrap();
+
+    await vi.waitFor(() => {
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('probe exploded'),
+      );
+    });
   });
 });

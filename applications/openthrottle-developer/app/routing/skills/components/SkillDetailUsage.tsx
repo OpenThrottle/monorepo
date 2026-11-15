@@ -50,7 +50,7 @@ export const SkillDetailUsage = (
       <GlobalHeading heading="h2" title={SKILL_USAGE_DETAIL_COPY.heading} />
       <Link
         className="text-muted-foreground text-sm hover:underline"
-        to="/usage"
+        to="/usage/skills"
       >
         {SKILL_USAGE_DETAIL_COPY.backToUsage}
       </Link>

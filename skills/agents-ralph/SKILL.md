@@ -1,70 +1,86 @@
 ---
-name: agents-ralph
 description: >-
-  The Ralph prompt: turn an idea or PRD into an OpenThrottle plan, then execute
-  it a task at a time. USE WHEN running /agents-ralph, on a Ralph iteration, or
-  when workflow-ralph has injected plan context. Self-contained by design — the
-  CLI feeds this file to an agent as a standalone prompt.
-disable-model-invocation: false
+  Execute an OpenThrottle plan headlessly, a task at a time, turning an idea or
+  PRD into a plan first if needed. USE WHEN running /agents-ralph, on a Ralph
+  iteration, or when workflow-ralph has injected plan context. Self-contained —
+  the CLI feeds this file to an agent as a standalone prompt. Interactive runs
+  use ot-loop.
+metadata:
+  author: openthrottle
+  last-reviewed: '2026-11-14'
+  version: '1.1.0'
+name: agents-ralph
 ---
 
-**Important:** Echo / output immediately upon startup so we can iterate on this prompt "🚀 🤗 🌟 .agents/skills/agents-ralph - v1.0.6 🌟 🤗 🚀".
+**Ralph** is a loop: read prompt, execute one step, repeat ([ghuntley.com/ralph](https://ghuntley.com/ralph)). Start with an **idea or PRD**, turn it into a **plan and tasks in OpenThrottle** _(a GraphQL service backed by Postgres)_, then **execute one task at a time** (add tasks as the work reveals more) until every task is done. Progress lives in OpenThrottle (plan, tasks, plan_output_stream); no file-based modes.
 
-**Ralph** is a technique: run a loop (read prompt → execute one step → repeat). You tune the prompt and docs when the agent goes wrong ([ghuntley.com/ralph](https://ghuntley.com/ralph)). This prompt defines our single workflow: start with an **idea or PRD**, turn it into a **plan and tasks in OpenThrottle** _(a GraphQL service backed by Postgres)_, then **execute one task at a time** (add tasks as the work reveals more work) until every task is done. Progress lives in OpenThrottle (plan, tasks, plan_output_stream); no file-based modes.
-
-> **Why this prompt restates the per-task discipline.** `workflow-ralph` reads this file and feeds
-> it to the agent as a standalone prompt, often in a foreign checkout where no other skill is
-> reachable. It must therefore be self-contained. The canonical statement lives in
-> [`ot-loop`](../ot-loop/SKILL.md) § The loop — when you change one, change both.
+This prompt is fed standalone by `workflow-ralph`, often in a foreign checkout where no other skill is reachable, so it restates the per-task discipline. The canonical statement is the `ot-loop` skill § The loop — when you change one, change both.
 
 ## What Ralph does
 
-1. **Input:** An idea or a PRD (JSON/Markdown or already in OpenThrottle). If it's rough, turn it into a **plan** and **tasks** in OpenThrottle — OpenThrottle MCP `create_plan` / `create_task` per [`ot-plans`](../ot-plans/SKILL.md). For a strict, hyper-detailed PRD, ensure plan/tasks in OpenThrottle match the PRD; required vs optional vs inferred attributes are defined in [Databases README.md](../../databases/openthrottle/README.md).
-2. **Loop:** Pick one task → set `IN_PROGRESS` → do the work → validate (e.g. `nx affected --targets lint typecheck`) → set `COMPLETED` → **run `/github-commit`**. Do **not** record a commit artifact during the loop, and do **not** wait for the merge to record one either. **Who opens the PR depends on the path** (orchestrator vs interactive `/ot-loop` under Rules): under the orchestrator the host settles with `headSha` / `prNumber` after it pushes; on interactive `/ot-loop` you open the PR then settle. There is no post-merge ledger step. If a run dies before a PR exists, the hourly trailer harvest adopts the work from the `Plan-Id:` footers on `main` — which is why those footers matter. Add new tasks when the work reveals more work — before completing the plan's last open task, which closes the plan (if already closed, `update_plan` it back to `IN_PROGRESS` first). Repeat until every task is `COMPLETED`.
-3. **Progress:** Plan and tasks live in OpenThrottle; decisions and logs go to **plan_output_stream** via `append_plan_output` / `get_plan_output`. No separate output files. When logging progress, pass `taskId` = the task you are **actively working** (not just the iteration seed) so output is attributed to that task and surfaces on the Task detail Output tab. One iteration can touch several tasks — tag the id of the task the log actually describes; omit `taskId` only for genuinely plan-level notes.
+1. **Input:** An idea or a PRD (JSON/Markdown or already in OpenThrottle). If it's rough, turn it into a **plan** and **tasks** with MCP `create_plan` / `create_task` (see the `ot-plans` skill). For a strict PRD, make the plan/tasks match it; required vs optional vs inferred attributes are in the [databases README](https://github.com/openthrottle/monorepo/blob/main/databases/openthrottle/README.md).
+2. **Loop:** Pick one task → set `IN_PROGRESS` → do the work → validate (e.g. `nx affected --targets lint typecheck`) → set `COMPLETED` → **run `/github-commit`**.
+   - Do **not** record a commit artifact during the loop, and do not wait for the merge to record one either. There is no post-merge ledger step.
+   - Under the orchestrator the host settles with `headSha` / `prNumber` after it pushes; on interactive `/ot-loop` you open the PR then settle.
+   - If a run dies before a PR exists, the hourly trailer harvest adopts the work from the `Plan-Id:` footers on `main`.
+   - Add new tasks when the work reveals more work — before completing the plan's last open task, which closes the plan (if already closed, `update_plan` it back to `IN_PROGRESS` first).
+   - Repeat until every task is `COMPLETED`.
+3. **Progress:** Decisions and logs go to **plan_output_stream** via `append_plan_output` / `get_plan_output`; no output files. Pass `taskId` = the task the log actually describes (it surfaces on the Task detail Output tab); omit it only for plan-level notes.
 
 ## Rules
 
-- **Plan and tasks context (reads come from the injected block).** Ralph injects the plan and task list into the prompt from OpenThrottle (you will see a block like "--- OpenThrottle plan (injected by Ralph from OpenThrottle)" with Plan-Id, title, description, and Tasks). **Use that injected context**; do not call `get_plan` or `get_tasks_by_plan_id`—agent-session MCP reads are often unavailable. If for some reason the prompt does not contain the injected block, only then try OpenThrottle MCP to load plan/tasks. Do not create or require a ref file.
-- **Reads vs writes (by design).** Reads come from the injected block above; **writes go through MCP** (`update_task` / `update_plan` / `append_plan_output`). Rationale: prompt injection is reliable in-session, but status mutations need a live call. Your MCP writes and the Ralph CLI's own reconciliation (it parses `<ralph:task-complete>` and writes through its configured transport — GraphQL by default) both reach the **same OpenThrottle server**; they are not separate datastores.
-- **Never attribute a commit or PR to a tool or an agent.** No `Co-authored-by`, no "Made with"
-  line, no link to an agent vendor — in commit messages, PR descriptions, or any other output. The
-  only permitted footers are conventional-commit ones: `BREAKING CHANGE:`, `Closes #123`,
-  `Plan-Id:`, `Task-Id:`.
-- Follow [`AGENTS.md`](../../AGENTS.md) § Code style, and the commit/PR skills —
-  [`github-commit`](../github-commit/SKILL.md), [`github-pull-request`](../github-pull-request/SKILL.md),
-  [`github-squash`](../github-squash/SKILL.md).
+- **Reads come from the injected block.** Ralph injects the plan and task list into the prompt ("--- OpenThrottle plan (injected by Ralph from OpenThrottle)", with Plan-Id, title, description, Tasks). Use it; do not call `get_plan` or `get_tasks_by_plan_id`. Only if the block is missing, load plan/tasks via MCP. Do not create or require a ref file.
+- **Writes go through MCP** (`update_task` / `update_plan` / `append_plan_output`). Your MCP writes and the Ralph CLI's own reconciliation (it parses `<ralph:task-complete>`) reach the same OpenThrottle server.
+- **Never attribute a commit or PR to a tool or an agent.** No `Co-authored-by`, no "Made with" line, no link to an agent vendor — in commit messages, PR descriptions, or any other output.
+- The only permitted footers are conventional-commit ones: `BREAKING CHANGE:`, `Closes #123`, `Plan-Id:`, `Task-Id:`.
+- Follow [AGENTS.md](https://github.com/openthrottle/monorepo/blob/main/AGENTS.md) § Code style and the `github-commit`, `github-pull-request` and `github-squash` skills.
 - Task states: `BACKLOG`, `BLOCKED`, `CANCELED`, `COMPLETED`, `IN_PROGRESS`, `PENDING`, `PROMOTED`, `QUEUED`, `SKIPPED`
-- **One task at a time.** Resume the lowest `sortOrder` `IN_PROGRESS` task first; otherwise pick the lowest `sortOrder` `PENDING` or `QUEUED`. Canonical list order is `sortOrder ASC`, `createdAt ASC` — not `createdAt` alone. Injected plan/task lists follow this order.
-- **Claim the plan inbox before each task.** A human can steer a live run through the plan inbox. At the start of every iteration, and before each further task, call MCP `claim_plan_messages({ planId, taskId })` for the task you are about to start, before setting it `IN_PROGRESS` — once per boundary, because claiming is delivery. Apply `STEER`s first: they override the task description and the injected context, and may redirect the run ("skip task X" → `SKIPPED`; "stop after this" → finish the current task, commit, and exit). Then apply `QUEUE`s as extra requirements; one meant for a later task becomes a `create_tasks` entry or a note on that task. Acknowledge each message via `append_plan_output` (with `taskId`). An empty result is the common case; a failed claim only delays delivery, so log it and carry on. Canonical statement: [`ot-loop`](../ot-loop/SKILL.md) § Your run row.
-- **Claim again mid-task, before anything you cannot take back:** call `claim_plan_messages({ planId, taskId })` with the in-flight task right before deleting files, a migration, a history rewrite or a push, and on both sides of a subagent handoff. A `STEER` then pauses the step, redirects the task, or aborts it to `BLOCKED` (summary quotes it); the task stays the one `IN_PROGRESS`. Acknowledge via `append_plan_output`. Canonical: [`ot-loop`](../ot-loop/SKILL.md) § Mid-task claims.
-- **Fix task order:** prefer MCP `reorder_plan_tasks` (GraphQL `reorderPlanTasks`) over delete-and-recreate when Ralph should run tasks in a different sequence. Batch `create_tasks` appends after the plan max when `sortOrder` is omitted per item.
-- **Commit frequently.** Run `/github-commit` when a task is completed and whenever the program needs to exit (e.g. before stopping or when handing off). Use conventional commits; include **Plan-Id** and **Task-Id** in the commit body or footer for traceability. A task that changes no tracked file needs no commit — don't make an empty or cosmetic one; the squash takes its Task-Id from OT ([`github-squash` § Footers](../github-squash/SKILL.md#footers)). Record commit hashes in task/stream as you go.
-- **💰 Commit per task; push / PR ownership depends on the path.** Committing is free; pushing costs a CI run. Every push to a branch with a _ready_ PR triggers the full suite, so an N-task plan that pushed per task used to burn N CI runs validating a branch nobody was reviewing yet — measured at ~78 CI runs/day, the single largest multiplier on CI spend. Keep the per-task commits (the footers are the traceability) and let them accumulate locally. One push at plan end validates the whole batch — **the same total validation over fewer runs, never less validation**.
-  - **Orchestrator / scheduled plan run (this prompt under `workflow-ralph`):** You commit per task. You do **not** `git push`, open a PR, or run `gh pr ready`. The orchestrator owns push + PR at plan end (draft → ready once every task is `COMPLETED`). **A run that can make no further progress** (only `BLOCKED` tasks left, or the iteration/time limit hit with work pending) **ends the plan `BLOCKED`**, still pushes, and opens a draft PR listing what is blocked or pending; a human unblocks and re-enqueues it. So when a task genuinely can't be finished, set it `BLOCKED` and move on. A denied `git push` is not yours to escalate — see Signals.
-  - **Final orchestrated iteration: draft the PR, don't publish it.** The orchestrator appends an `OT_FINAL_ITERATION=1` line to your prompt when your current task is the plan's last workable one (`BLOCKED` siblings don't count). That line is the trigger; don't infer "last" yourself, because the host applies completions after you exit. On that iteration, once the task is `COMPLETED` and committed, run [`/github-pull-request`](../github-pull-request/SKILL.md) in **draft-only mode** ([§ Draft-only (orchestrator) mode](../github-pull-request/SKILL.md#draft-only-orchestrator-mode)). It writes `title.txt` and `body.md` into the draft directory the `OT_FINAL_ITERATION=1` line names (also `$OT_PR_DRAFT_DIR`; with neither, the skill's worktree-local default, `.ot-pr-draft/` at the worktree root) covering the whole `<base>..HEAD` range. Always regenerate the draft rather than keeping one from an earlier iteration, since it must cover the final commit range. You still never push, and never create, edit or ready the PR — the host validates the draft, replaces its trailer with the OT `Plan-Id:`/`Task-Id:` block, and publishes it, falling back to its own body when the draft is missing or invalid. A draft failure is not a blocker: log it with `append_plan_output` and emit `COMPLETE` as normal.
-  - **Interactive `/ot-loop`:** You still push **once per plan** (not per task) and open/ready the PR yourself via `/github-pull-request` → `gh pr ready`. Mid-plan push only when you must: handing off, exiting, or a worktree at risk of being reaped.
-  - **Do not** reach for `[skip ci]` on intermediate commits to achieve this. If the loop aborts midway it silently skips whichever commit ended up last, leaving unvalidated code on the branch.
-- **💰 Keep the PR in draft until the plan completes (interactive `/ot-loop` only).** `/github-pull-request` already opens in draft, and `build` skips on draft PRs — so a draft PR is the gate that makes an early push cheap. Mark it ready (`gh pr ready`) only once the **last** task is `COMPLETED`, which is also when it is actually reviewable. Under the orchestrator you never open or ready the PR — the host does.
-- **Merge queue behavior is asynchronous.** When `main` is protected by a merge queue, treat `gh pr merge --auto` as an **enqueue** step unless the PR already reports `mergedAt`. Do not say "merged" until the queue lands it, and do not read a landed SHA from an enqueued PR — poll `gh pr view <n> --json mergedAt,mergeCommit --jq '{mergedAt, sha: .mergeCommit.oid}'` or inspect `main`. This no longer gates ledger recording: that happens at settle time, and the verifier maps the branch SHA to its squash commit on its own.
+- **One task at a time.** Resume the lowest `sortOrder` `IN_PROGRESS` task first; otherwise pick the lowest `sortOrder` `PENDING` or `QUEUED`. Order is `sortOrder ASC`, `createdAt ASC`, and injected lists follow it.
+- **Fix task order** with MCP `reorder_plan_tasks`, not delete-and-recreate. Batch `create_tasks` appends after the plan max when `sortOrder` is omitted.
+
+### Plan inbox
+
+- A human can steer a live run through the plan inbox. At the start of every iteration, and before each further task, call MCP `claim_plan_messages({ planId, taskId })` for the task you are about to start, before setting it `IN_PROGRESS`. Claiming is delivery, so once per boundary.
+- Apply `STEER`s first: they override the task description and injected context ("skip task X" → `SKIPPED`; "stop after this" → finish the current task, commit, exit).
+- Then apply `QUEUE`s as extra requirements; one meant for a later task becomes a `create_tasks` entry or a note on that task.
+- Acknowledge each message via `append_plan_output` (with `taskId`). An empty result is the common case; a failed claim only delays delivery, so log it and carry on. Canonical: `ot-loop` § Your run row.
+- **Claim again mid-task, before anything you cannot take back:** right before deleting files, a migration, a history rewrite or a push, and on both sides of a subagent handoff. A `STEER` then pauses the step, redirects the task, or aborts it to `BLOCKED` (summary quotes it); the task stays the one `IN_PROGRESS`. Canonical: `ot-loop` § Mid-task claims.
+
+### Commits and pushes
+
+- **Commit frequently.** Run `/github-commit` when a task is completed and whenever the program needs to exit. Conventional commits with **Plan-Id** and **Task-Id** in the body or footer.
+- A task that changes no tracked file needs no commit — don't make an empty or cosmetic one; the squash takes its Task-Id from OT. Record commit hashes in task/stream as you go.
+- **Commit per task, push once per plan.** Every push to a branch with a ready PR runs the full CI suite; let per-task commits accumulate locally.
+- **Never** use `[skip ci]` on intermediate commits: an aborted loop would leave the last one unvalidated.
+- **Orchestrator / scheduled plan run (this prompt under `workflow-ralph`):** you commit per task. You do **not** `git push`, open a PR, or run `gh pr ready`; the orchestrator owns push + PR at plan end (draft → ready once every task is `COMPLETED`).
+- **A run that can make no further progress** (only `BLOCKED` tasks left, or the iteration/time limit hit with work pending) ends the plan `BLOCKED`, still pushes, and opens a draft PR listing what is blocked or pending. So when a task genuinely can't be finished, set it `BLOCKED` and move on. A denied `git push` is not yours to escalate — see Signals.
+- **Final orchestrated iteration:** the orchestrator appends an `OT_FINAL_ITERATION=1` line to your prompt when your current task is the plan's last workable one (`BLOCKED` siblings don't count). That line is the trigger; don't infer "last" yourself.
+  - Once the task is `COMPLETED` and committed, run `/github-pull-request` in its draft-only (orchestrator) mode.
+  - It writes `title.txt` and `body.md` into the draft directory the `OT_FINAL_ITERATION=1` line names (also `$OT_PR_DRAFT_DIR`; otherwise `.ot-pr-draft/` at the worktree root), covering the whole `<base>..HEAD` range. Always regenerate it.
+  - You still never push, and never create, edit or ready the PR; the host validates and publishes the draft. A draft failure is not a blocker: log it with `append_plan_output` and emit `COMPLETE` as normal.
+- **Interactive `/ot-loop`:** push **once per plan**, open the PR as a draft via `/github-pull-request`, and `gh pr ready` only once the **last** task is `COMPLETED`. Mid-plan push only when you must: handing off, exiting, or a worktree at risk of being reaped.
+- **Merge queue is asynchronous.** Treat `gh pr merge --auto` as an enqueue step until the PR reports `mergedAt`. Do not say "merged" until the queue lands it; poll `gh pr view <n> --json mergedAt,mergeCommit --jq '{mergedAt, sha: .mergeCommit.oid}'`.
 
 ### Status updates
 
 Always keep plan and task status in OpenThrottle up to date:
 
-- **At run start:** The workflow CLI sets the plan to `IN_PROGRESS` at run start when OpenThrottle is configured (plan- and task-centric). The agent can still set the plan to `IN_PROGRESS` when starting a task as redundancy.
-- **When starting work on a task:** Set the task to `IN_PROGRESS` via MCP `update_task(taskId, { status: 'IN_PROGRESS' })`. If the plan is still `PENDING`, set the plan to `IN_PROGRESS` (MCP `update_plan(planId, { status: 'IN_PROGRESS' })`). Then call MCP `begin_task_session({ planId, taskId, model })` with the model you are running as, so the work ledger records which model did which task. Declare the model you actually are; omit it rather than guess, since a session's model is fixed when it opens. You run the whole plan on one configured model, so the same value every task is the honest answer — **model routing is an interactive-only enhancement and does not apply to you.**
-- **When completing a task:** Set the task to `COMPLETED` via MCP `update_task` when available. **Always** output `<ralph:task-complete>TASK_UUID</ralph:task-complete>` (one per completed task) so the Ralph CLI can mark it completed in OpenThrottle even if MCP was not used or failed.
-- **When closing the plan:** Re-fetch tasks. Any `IN_PROGRESS` / `PENDING` / `QUEUED` → fix those first; else any `BLOCKED` → `update_plan(planId, { status: 'BLOCKED' })` (still draft PR + settle the run `COMPLETED`); else → `update_plan(planId, { status: 'COMPLETED' })`. The server refuses `COMPLETED` over unresolved tasks — a refusal means take the `BLOCKED` branch, not retry.
+- **At run start:** The workflow CLI sets the plan to `IN_PROGRESS` when OpenThrottle is configured. You can set it again when starting a task as redundancy.
+- **Starting a task:** `update_task(taskId, { status: 'IN_PROGRESS' })`. If the plan is still `PENDING`, `update_plan(planId, { status: 'IN_PROGRESS' })`. Then call `begin_task_session({ planId, taskId, model })` with the model you are running as; omit it rather than guess. You run the whole plan on one model, so model routing does not apply to you.
+- **Completing a task:** Set it `COMPLETED` via `update_task` when available. **Always** output `<ralph:task-complete>TASK_UUID</ralph:task-complete>` (one per completed task) so the Ralph CLI can mark it completed even if MCP failed.
+- **Closing the plan:** Re-fetch tasks. Any `IN_PROGRESS` / `PENDING` / `QUEUED` → fix those first; else any `BLOCKED` → `update_plan(planId, { status: 'BLOCKED' })` (still draft PR + settle the run `COMPLETED`); else → `update_plan(planId, { status: 'COMPLETED' })`. The server refuses `COMPLETED` over unresolved tasks — a refusal means take the `BLOCKED` branch, not retry.
 
 ## Signals
 
 - **`<promise>ERROR</promise>`:** Invalid input or critical failure. Log to stream.
-- **`<promise>INPUT_REQUIRED</promise>`:** Reserved for a **human decision or input that blocks finishing a task** (e.g. which API key to use, an approval the human must give). Leave the blocked task `IN_PROGRESS`; log what's needed. It is **not** for a permission-denied tool (`git push`, `curl`, browser automation), a missing verification you owe, or any other host/environment failure. Those: log a diagnostic chunk to plan output via `append_plan_output`, file a follow-up plan (`tags: ['follow-up']`) if the work still needs a human, and continue. Once every task is `COMPLETED`, emit `COMPLETE` — never `INPUT_REQUIRED`.
-- **`<promise>COMPLETE</promise>`:** All tasks `COMPLETED`. No `PENDING` or `IN_PROGRESS`. Run `/github-commit` before exiting. Under the orchestrator, do not push or open a PR before exiting — the host finalizes.
+- **`<promise>INPUT_REQUIRED</promise>`:** Reserved for a **human decision or input that blocks finishing a task** (e.g. which API key to use). Leave the blocked task `IN_PROGRESS`; log what's needed.
+  - It is **not** for a permission-denied tool (`git push`, `curl`, browser automation), a missing verification you owe, or any other host/environment failure.
+  - Those: log a diagnostic chunk via `append_plan_output`, file a follow-up plan (`tags: ['follow-up']`) if the work still needs a human, and continue.
+  - Once every task is `COMPLETED`, emit `COMPLETE` — never `INPUT_REQUIRED`.
+- **`<promise>COMPLETE</promise>`:** All tasks `COMPLETED`; none `PENDING` or `IN_PROGRESS`. Run `/github-commit` before exiting. Under the orchestrator, do not push or open a PR before exiting — the host finalizes.
 
 ## References
 
-- **OpenThrottle:** What it is, how to interact, and the full MCP tool catalog: [`ot-plans`](../ot-plans/SKILL.md). Schema and PRD attribute mapping (required / inferred / optional): [databases README](../../databases/openthrottle/README.md).
+- **OpenThrottle:** tool selection and gotchas: the `ot-plans` skill. Schema and PRD attribute mapping: [databases README](https://github.com/openthrottle/monorepo/blob/main/databases/openthrottle/README.md).
 - **Ralph:** [ghuntley.com/ralph](https://ghuntley.com/ralph)
-- Workflow/design: [Workflow README](../../tools/workflows/README.md) and [Ralph Design](../../docs/workflows/ralph-design.md)
+- Workflow/design: [Workflow README](https://github.com/openthrottle/monorepo/blob/main/tools/workflows/README.md) and [Ralph Design](https://github.com/openthrottle/monorepo/blob/main/docs/workflows/ralph-design.md)

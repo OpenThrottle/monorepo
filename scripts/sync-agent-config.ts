@@ -22,7 +22,9 @@ import { dirname, join } from 'node:path';
 
 import * as prettier from 'prettier';
 
-import { createLogger, hasFlag, run } from './utils/index.ts';
+import { hasFlag } from './utils/args.ts';
+import { run } from './utils/exec.ts';
+import { createLogger } from './utils/logger.ts';
 
 const logger = createLogger();
 
@@ -642,7 +644,7 @@ const antigravityServerEntry = (server: McpServer): JsonObject => {
 /** `.agents/plugins/openthrottle/plugin.json` — the marker agy needs to load the folder. */
 export const renderAntigravityPluginManifest = (): string => {
   return toJson({
-    description: `GENERATED — DO NOT EDIT. The default MCP servers and the shell deny hook from ${SOURCE_PATH}; edit that file, then run ${REGENERATE_COMMAND}.`,
+    description: `GENERATED — DO NOT EDIT. The default MCP servers and the shell deny hook from ${SOURCE_PATH}, plus the telemetry heartbeat hook; edit that file, then run ${REGENERATE_COMMAND}.`,
     name: 'openthrottle',
     version: '1.0.0',
   });
@@ -667,10 +669,19 @@ export const renderAntigravityMcpConfig = (config: AgentConfig): string => {
 export const ANTIGRAVITY_DENY_HOOK = './scripts/antigravity-deny-hook.ts';
 
 /**
+ * The coverage-heartbeat bundle, relative to the plugin folder. Generated
+ * into the plugin by `@openthrottle/agentic-hooks:bundle-hooks`, not by this
+ * script, so the plugin folder carries it wherever it is copied.
+ */
+export const ANTIGRAVITY_HEARTBEAT_HOOK = './hooks/skill-usage-heartbeat.cjs';
+
+/**
  * `.agents/plugins/openthrottle/hooks.json` — a PreToolUse hook on
- * `run_command` that enforces the shell deny rules. agy runs hook commands
- * with cwd = the plugin folder, so the script path climbs to the repo root.
- * The hook spec has no free-text key, hence no GENERATED banner here.
+ * `run_command` that enforces the shell deny rules, and a SessionStart hook
+ * that sends the telemetry coverage heartbeat. agy runs hook commands with
+ * cwd = the plugin folder, so the deny script path climbs to the repo root
+ * and the heartbeat path stays inside the plugin. The hook spec has no
+ * free-text key, hence no GENERATED banner here.
  */
 export const renderAntigravityHooks = (): string => {
   const script = fromAntigravityPlugin(ANTIGRAVITY_DENY_HOOK);
@@ -687,6 +698,11 @@ export const renderAntigravityHooks = (): string => {
           ],
           matcher: 'run_command',
         },
+      ],
+    },
+    'openthrottle-telemetry': {
+      SessionStart: [
+        { command: `node ${ANTIGRAVITY_HEARTBEAT_HOOK}`, timeout: 10 },
       ],
     },
   });

@@ -25,9 +25,7 @@ const buildFilterOptions = (
 
 const baseProps = (): UsageSkillUsageRepoFilterProps => {
   return {
-    accountParam: null,
     filterOptions: buildFilterOptions(),
-    providerParam: null,
     selectedCwd: null,
     selectedGitBranch: null,
     selectedRepo: null,
@@ -56,14 +54,13 @@ describe('UsageSkillUsageRepoFilter Component', () => {
   });
 
   describe('when rows carry repo identities', () => {
-    test('offers repositories, preserves filters and marks the active chip', () => {
+    test('offers repositories, preserves skill filters and marks the active chip', () => {
       const component = renderComponent({
         ...baseProps(),
         filterOptions: buildFilterOptions({
           cwds: ['/Users/someone/repo'],
           repoIdentities: [REPO],
         }),
-        providerParam: 'claude',
         selectedGitBranch: 'main',
         selectedRepo: REPO,
         selectedScope: SKILL_USAGE_SCOPES.OURS,
@@ -79,7 +76,7 @@ describe('UsageSkillUsageRepoFilter Component', () => {
       expect(repoLink).toHaveAttribute('title', REPO);
       const href = repoLink.getAttribute('href') ?? '';
       expect(href).toContain(`skillRepo=${encodeURIComponent(REPO)}`);
-      expect(href).toContain('provider=claude');
+      expect(href).not.toContain('provider=');
       expect(href).toContain('skillBranch=main');
       expect(href).toContain('skillScope=ours');
       // The path chips are not offered alongside the repositories.

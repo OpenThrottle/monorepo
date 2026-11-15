@@ -18,7 +18,8 @@
  */
 import { fileURLToPath } from 'node:url';
 
-import { createLogger, run } from './utils/index.ts';
+import { run } from './utils/exec.ts';
+import { createLogger } from './utils/logger.ts';
 
 const logger = createLogger();
 
@@ -58,7 +59,9 @@ export const resolveProjectId = (
   return { error: `Invalid PRODUCTION='${env.PRODUCTION}' (use true or false).` }; // prettier-ignore
 };
 
-const dryRun = (): boolean => process.env.OPENTHROTTLE_DRY_RUN === '1';
+const dryRun = (): boolean => {
+  return process.env.OPENTHROTTLE_DRY_RUN === '1';
+};
 
 const runCmd = (command: string, args: string[]): void => {
   if (dryRun()) {

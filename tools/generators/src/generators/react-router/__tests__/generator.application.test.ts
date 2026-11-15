@@ -43,6 +43,42 @@ describe('generatorReactRouterApplication', () => {
     });
   });
 
+  test('ships graphql as a runtime dependency for the SSR bundle', async () => {
+    await generatorReactRouterApplication(tree, { name });
+    const packageJsonPath = tree
+      .listChanges()
+      .map((change) => change.path)
+      .find((path) => path.startsWith('applications/') && path.endsWith('/package.json')); // prettier-ignore
+    const { dependencies } = readJson(tree, packageJsonPath ?? '');
+
+    // @openthrottle/react-router-ui-global imports graphql at runtime; without a
+    // direct dependency the Docker `pnpm deploy --prod` tree has no top-level copy.
+    expect(dependencies).toMatchObject({ graphql: 'catalog:' });
+  });
+
+  test('injects and checks the package.json version as __APP_VERSION__', async () => {
+    await generatorReactRouterApplication(tree, { name });
+    const paths = tree.listChanges().map((change) => change.path);
+    const readEmitted = (suffix: string): string => {
+      const path = paths.find((candidate) => candidate.endsWith(suffix));
+
+      return path === undefined ? '' : (tree.read(path, 'utf-8') ?? '');
+    };
+
+    for (const config of ['/vite.config.ts', '/vitest.config.ts']) {
+      expect(readEmitted(config)).toContain(
+        'define: createAppVersionDefine(__dirname)',
+      );
+    }
+
+    expect(readEmitted('/app/types/global.d.ts')).toContain(
+      'const __APP_VERSION__: string;',
+    );
+    expect(
+      readEmitted('/app/global/config/__tests__/app-version.test.ts'),
+    ).toContain('__APP_VERSION__');
+  });
+
   test('should run successfully', async () => {
     await generatorReactRouterApplication(tree, { name });
 

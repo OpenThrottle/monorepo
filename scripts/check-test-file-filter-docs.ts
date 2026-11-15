@@ -13,7 +13,8 @@
  * Tracked text files only (`git grep -I`). The `.jsonl` showroom snapshots are
  * recorded conversations, not documentation, so they are skipped.
  */
-import { createLogger, run } from './utils/index.ts';
+import { run } from './utils/exec.ts';
+import { createLogger } from './utils/logger.ts';
 
 const logger = createLogger();
 

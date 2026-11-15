@@ -18,7 +18,7 @@ import {
 } from '../databases/database-registry.ts';
 import { resolvePrimaryComposeProject } from './openthrottle-database-lifecycle.ts';
 import { readEnvFile } from './utils/env.ts';
-import { createLogger } from './utils/index.ts';
+import { createLogger } from './utils/logger.ts';
 
 const logger = createLogger();
 

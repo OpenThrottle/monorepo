@@ -1,14 +1,36 @@
 {
   "version": 1,
   "hooks": {
-    "afterFileEdit": [{ "command": ".cursor/hooks/format.sh" }],
+    "afterFileEdit": [
+      {
+        "command": ".cursor/hooks/format.sh"
+      }
+    ],
     "beforeShellExecution": [
-      { "command": ".cursor/hooks/bash-guard.cjs", "timeout": 10 }
+      {
+        "command": "plugins/openthrottle-cursor-guards/hooks/bash-guard.cjs",
+        "timeout": 10
+      }
     ],
     "beforeSubmitPrompt": [
-      { "command": ".cursor/hooks/skill-usage-capture.cjs" }
+      {
+        "command": "plugins/openthrottle-cursor/hooks/skill-usage-capture.cjs"
+      }
     ],
-    "preToolUse": [{ "command": ".cursor/hooks/skill-usage-capture.cjs" }],
-    "sessionEnd": [{ "command": ".cursor/hooks/skill-usage-complete.cjs" }]
+    "preToolUse": [
+      {
+        "command": "plugins/openthrottle-cursor/hooks/skill-usage-capture.cjs"
+      }
+    ],
+    "sessionEnd": [
+      {
+        "command": "plugins/openthrottle-cursor/hooks/skill-usage-complete.cjs"
+      }
+    ],
+    "sessionStart": [
+      {
+        "command": "plugins/openthrottle-cursor/hooks/skill-usage-heartbeat.cjs"
+      }
+    ]
   }
 }

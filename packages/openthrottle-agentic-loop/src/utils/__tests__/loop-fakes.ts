@@ -3,6 +3,7 @@ import type {
   GitHeadState,
   LoopDeps,
   LoopFollowUp,
+  LoopInboxMessage,
   LoopTask,
   LoopTaskStatus,
   ValidationResult,
@@ -57,6 +58,8 @@ export interface FakeWorld {
   readonly abort: AbortController;
   cancelAfterPolls: number;
   commitResults: GitCommitResult[];
+  /** Messages delivered to the run, as the server lists them; claims append to it. */
+  readonly delivered: LoopInboxMessage[];
   readonly deps: LoopDeps;
   head: GitHeadState;
   inbox: string[][];
@@ -86,6 +89,7 @@ export const makeWorld = (options: FakeWorldOptions): FakeWorld => {
   const tasks = new Map(options.tasks.map((task) => [task.id, task]));
   const log: string[] = [];
   let sessionCounter = 0;
+  let claimCounter = 0;
   let polls = 0;
   const script: WorkerScript = options.worker ?? (() => done());
 
@@ -93,6 +97,7 @@ export const makeWorld = (options: FakeWorldOptions): FakeWorld => {
     abort,
     cancelAfterPolls: Number.POSITIVE_INFINITY,
     commitResults: options.commitResults ?? [],
+    delivered: [],
     deps: {
       cancel: {
         isCancelled: () => {
@@ -106,7 +111,15 @@ export const makeWorld = (options: FakeWorldOptions): FakeWorld => {
         claimInbox: ({ taskId }) => {
           log.push(`claim:${taskId}`);
 
-          return Promise.resolve(world.inbox.shift() ?? []);
+          const messages = (world.inbox.shift() ?? []).map((body) => {
+            claimCounter += 1;
+
+            return { body, id: `claimed-${claimCounter}` };
+          });
+
+          world.delivered.push(...messages);
+
+          return Promise.resolve(messages);
         },
         createFollowUps: ({ followUps }) => {
           log.push(`followups:${followUps.map((f) => f.title).join('|')}`);
@@ -119,6 +132,7 @@ export const makeWorld = (options: FakeWorldOptions): FakeWorld => {
           return Promise.resolve();
         },
         getPlanStatus: () => Promise.resolve(world.planStatus),
+        listRunDeliveredMessages: () => Promise.resolve([...world.delivered]),
         listTasks: () => Promise.resolve([...tasks.values()]),
         narrate: () => Promise.resolve(),
         startWorkSession: ({ model, taskId }) => {

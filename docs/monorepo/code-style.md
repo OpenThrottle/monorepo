@@ -1238,7 +1238,15 @@ its own [conventions](../../packages/react-router-shadcn/README.md#conventions).
   functions share the bucket's test, one `describe` per function. Only a suite that genuinely
   spans several files (a parity, guard, replay or integration suite) takes a descriptive name.
   The NestJS tier (`openthrottle-server`, `nestjs-*`) is the exception: its `<folder>.<kind>.test.ts`
-  sits beside the file it covers.
+  sits beside the file it covers. A project-root `tests/` folder (the package generator's test
+  root) may also hold suites that span several files.
+- **The suffix is `.test`, never `.spec`.** _(Enforced, via `monorepo:check-test-file-names` in
+  CI and `check:local`: any tracked `*.spec.*` under `applications/`, `packages/` or `tools/` fails,
+  naming the `__tests__/<name>.test.<ext>` it should become.)_
+- **The `__tests__/` placement is enforced too**, by the same check: a tracked `*.test.*` under
+  `applications/`, `packages/` or `tools/` that is not under `__tests__/` fails, naming the
+  `__tests__/` path it should move to. Exempt: the NestJS tier, the generator templates that emit
+  NestJS-tier files, and a project-root `tests/` folder (OT plan `f5625772`).
 - Use `component`, not `screen`, to get elements.
 - Use `userEvent`, not `fireEvent`, to simulate interactions.
 - Use `waitFor` for asynchronous DOM updates.

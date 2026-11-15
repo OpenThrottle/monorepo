@@ -1,3 +1,4 @@
+import type { OnApplicationBootstrap } from '@nestjs/common';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { LoggerService } from '@openthrottle/nestjs-modules';
@@ -16,10 +17,11 @@ import type { DiscoverOptions } from './nestjs-model-discovery.types.ts';
  * core. A local scan is sub-second but the result changes rarely, so repeat
  * loads serve the last-good snapshot (refreshing out of band once past the soft
  * TTL) rather than paying the cold ~48-probe cost. GraphQL-agnostic — the
- * resolver lives in the server.
+ * resolver lives in the server. Warms itself once after boot (see
+ * {@link onApplicationBootstrap}) so the first chat load is not the cold scan.
  */
 @Injectable()
-export class NestjsModelDiscoveryService {
+export class NestjsModelDiscoveryService implements OnApplicationBootstrap {
   private readonly cache = new StaleWhileRevalidateCache<DiscoveryResult>();
 
   constructor(
@@ -48,6 +50,14 @@ export class NestjsModelDiscoveryService {
   }
 
   /**
+   * Fire the boot warm-up without awaiting it, so bootstrap (and the HTTP
+   * listener) never waits on probes. Gated by `LLM_DISCOVERY_WARM_ON_BOOT`.
+   */
+  onApplicationBootstrap(): void {
+    void this.warm();
+  }
+
+  /**
    * Discover local OpenAI-compatible model servers with stale-while-revalidate
    * caching. Within the soft TTL the snapshot is served fresh; past it (but
    * within the hard TTL) the last-good snapshot is served immediately while a
@@ -67,6 +77,25 @@ export class NestjsModelDiscoveryService {
   /** Drop the cached snapshot so the next {@link discover} re-scans. */
   invalidate(): void {
     this.cache.invalidate();
+  }
+
+  /**
+   * Scan once so the cache is warm before the first request; a request that
+   * arrives mid-scan shares it rather than starting its own. Never throws: a
+   * failed warm-up only means the first request pays the cold scan.
+   */
+  private async warm(): Promise<void> {
+    try {
+      if (!this.getConfig().warmOnBoot) {
+        return;
+      }
+
+      await this.discover();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+
+      this.logger.warn(`🔭 model-discovery: boot warm-up failed: ${message}`);
+    }
   }
 
   /** Run a fresh scan and stamp `scannedAt`. */

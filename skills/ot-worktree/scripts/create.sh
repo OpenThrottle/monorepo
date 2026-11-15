@@ -42,6 +42,19 @@ OPENTHROTTLE_WORKTREE_SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd -P)"
 # shellcheck source=skills/ot-worktree/scripts/provision.sh
 . "$OPENTHROTTLE_WORKTREE_SCRIPT_DIR/provision.sh"
 
+usage() {
+  cat <<'USAGE'
+Usage: create.sh [<name>] [--base <ref>] [--own-db] [-h|--help]
+
+Create a git worktree and provision it. Prints only the worktree path on stdout.
+With no <name>: reads a Claude WorktreeCreate JSON payload from stdin, or, inside
+a linked worktree, provisions it in place.
+
+Exit codes: 0 success (path printed); 1 any failure (bad option, unresolved
+--base, no name outside a worktree, git or provisioner failure).
+USAGE
+}
+
 # Resolve the ref a new branch forks from. See the base-branch ladder up top.
 # Prints the ref on stdout; returns 1 only when an EXPLICIT base does not resolve
 # (a bad --base is a typo worth failing on, never something to silently ignore).
@@ -101,6 +114,7 @@ while [ $# -gt 0 ]; do
       BASE_OVERRIDE="$1"; BASE_EXPLICIT=1
       ;;
     --base=*) BASE_OVERRIDE="${1#--base=}"; BASE_EXPLICIT=1 ;;
+    -h | --help) usage; exit 0 ;;
     --own-db) OPENTHROTTLE_WORKTREE_OWN_DB=1; export OPENTHROTTLE_WORKTREE_OWN_DB ;;
     --) ;;
     -*) log "🔴 unknown option: $1"; exit 1 ;;
@@ -113,11 +127,16 @@ while [ $# -gt 0 ]; do
   shift
 done
 RAW=""
-# Only read stdin when there's no name arg AND stdin is a pipe (a payload). A TTY
-# (interactive shell) or a name arg means there is no payload to read — never
-# block on `cat`.
+# Only read stdin when there's no name arg AND stdin is not a TTY (a payload). Do
+# not narrow this to pipes: Node-spawned hooks (libuv) hand stdin over as a socket.
+# The read is line-wise with a 2s idle timeout so an open stdin that never closes
+# cannot hang us; /dev/null ends the loop at once.
 if [ -z "$NAME" ] && [ ! -t 0 ]; then
-  RAW="$(cat || true)"
+  _line=""
+  while IFS= read -r -t 2 _line || [ -n "$_line" ]; do
+    RAW="$RAW$_line"$'\n'
+    _line=""
+  done
 fi
 
 # Mode 3: no name, no payload → provision the current worktree in place.

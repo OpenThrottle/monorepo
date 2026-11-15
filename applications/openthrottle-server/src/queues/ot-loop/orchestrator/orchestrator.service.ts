@@ -39,6 +39,7 @@ import {
 import {
   discoverAgentClis,
   getOpenThrottleRoot,
+  resolveHookPluginDirs,
 } from '@openthrottle/openthrottle-agentic-utils';
 import type {
   DriverId,
@@ -273,6 +274,7 @@ export class OtLoopOrchestratorService {
       effort: toEffort(tuning.effort),
       output,
       planId,
+      planRunId: run?.id,
       runCommand,
       runModel,
       say,
@@ -346,6 +348,7 @@ export class OtLoopOrchestratorService {
     readonly effort: DriverReasoningEffort | undefined;
     readonly output: PlanOutputWriter;
     readonly planId: string;
+    readonly planRunId: string | undefined;
     readonly runCommand: ReturnType<
       typeof createDefaultWorkflowRalphCommandRunner
     >;
@@ -357,6 +360,7 @@ export class OtLoopOrchestratorService {
   }): Promise<LoopDeps> {
     const { cwd, output, planId, runCommand, signal } = input;
     const modelFor = await this.buildModelRouter(input);
+    const driver = getDriver(input.backend);
 
     return {
       cancel: {
@@ -396,13 +400,22 @@ export class OtLoopOrchestratorService {
       }),
       worker: createOtLoopWorkerRunner({
         cwd,
-        driver: getDriver(input.backend),
+        driver,
         effort: input.effort,
         env: buildWorkerEnv(),
         onUsageLimit: (usageLimit) => {
           input.usage.current = usageLimit;
         },
         output,
+        planId,
+        planRunId: input.planRunId,
+        // OT's hook payloads, as Ralph loads them: without them the in-worker plan-inbox claim
+        // never runs, so a STEER cannot reach the worker mid-attempt.
+        pluginDirs: resolveHookPluginDirs(
+          driver.pluginDirRels === undefined
+            ? {}
+            : { payloadRels: driver.pluginDirRels },
+        ),
         runDriver: runDriverAsync,
         timeoutMs: input.timeoutMs,
       }),
