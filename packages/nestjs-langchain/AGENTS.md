@@ -1,7 +1,7 @@
 # @openthrottle/nestjs-langchain — agent notes
 
-Factory library for LangChain providers: chat models (Ollama, VertexAI), embedding models,
-a PGVector vector store, and document loaders (markdown, PDF, URL, YouTube). Despite the
+Factory library for LangChain providers: chat models (Ollama, VertexAI) and document loaders
+(markdown, PDF, URL, YouTube). Despite the
 `nestjs-` name there is no NestJS module, decorator, or `@nestjs/*` dependency — it is a
 plain TypeScript library of factory functions.
 
@@ -15,9 +15,8 @@ AI-agent services become consumers.
 - `src/config/config.utils.ts` — shared `maxRetries`/`maxConcurrency` defaults applied to
   every provider factory; read its header comment before touching provider construction.
 - `src/models/index.ts` — chat model factories, `chatModelProviders` union.
-- `src/embeddings/index.ts` — embedding factories + model-dimensions helper.
-- `src/stores/index.ts` — PGVector store factory; the store is always PGVector, the
-  "provider" only selects which embedding backend fills it.
+- No embeddings or vector store: semantic search embeds through `@openthrottle/node-client`'s
+  single embedder (OT plan 165e86ef removed the unused factories here). Do not re-add one.
 - `src/loaders/` — markdown/pdf/url/youtube loaders plus `url-guard.ts` for the URL loader.
 
 ## Invariants & gotchas
@@ -29,8 +28,8 @@ AI-agent services become consumers.
   factory arguments; keep config ownership with callers.
 - Every provider factory applies `resolveResilienceConfig` to bound retries/concurrency
   (cost control for VertexAI/Ollama); new providers must do the same.
-- Provider unions are `as const` arrays (`chatModelProviders`, `embeddingModelProviders`,
-  `vectorStoreProviders`) — extend those arrays, per the no-new-enums rule.
+- Provider unions are `as const` arrays (`chatModelProviders`) — extend those arrays, per
+  the no-new-enums rule.
 
 ## Pointers
 

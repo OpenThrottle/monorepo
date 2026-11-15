@@ -7,12 +7,13 @@
 import { Args, Query, Resolver } from '@nestjs/graphql';
 import type { SemanticSearchChunk } from '@openthrottle/node-client';
 import {
-  embedQuery,
   getChunkById,
   listSources,
+  runLexicalSearch,
   runSemanticSearch,
 } from '@openthrottle/node-client';
 
+import { EmbedderService } from '../../services/embedder/embedder.service.ts';
 import { SearchInput } from './search.input.ts';
 import {
   ListPlanSourceObject,
@@ -21,6 +22,7 @@ import {
   SearchChunk,
   SearchResult,
 } from './search.object.ts';
+import { searchWithFallback } from './search.utils.ts';
 
 const DEFAULT_SEARCH_LIMIT = 20;
 const MAX_SEARCH_LIMIT = 50;
@@ -48,8 +50,10 @@ function mapChunkToObject(chunk: SemanticSearchChunk): SearchChunk {
 // @authz-stance: authenticated-only (Path A — see OT plan 18e16dfc-4f22-43f9-9b77-6fc90309b60a)
 @Resolver()
 export class SearchResolver {
+  constructor(private readonly embedder: EmbedderService) {}
+
   @Query(() => SearchResult, {
-    description: `Semantic search over plan and task embeddings. Embeds the query and returns ranked chunks. Requires OpenThrottle Postgres and embedding (OPENAI_API_KEY or Ollama).`,
+    description: `Semantic search over plan, task and documentation embeddings. Embeds the query with the server embedder (local nomic-embed-text-v1.5 by default) and returns ranked chunks; when the embedder is unavailable or nothing is embedded yet, answers with Postgres full-text search instead — see mode and reason.`,
   })
   async search(
     @Args('input', { type: () => SearchInput }) input: SearchInput,
@@ -61,18 +65,25 @@ export class SearchResolver {
 
     const query = input.query?.trim() ?? '';
     if (!query) {
-      return { chunks: [] };
+      return { chunks: [], mode: 'semantic', reason: null };
     }
 
-    const embedding = await embedQuery(query);
-    if (!embedding || embedding.length === 0) {
-      return { chunks: [] };
-    }
-
-    const chunks = await runSemanticSearch(embedding, limit);
+    const found = await searchWithFallback({
+      embed: () => {
+        return this.embedder.embed([query], 'query');
+      },
+      lexical: () => {
+        return runLexicalSearch(query, limit);
+      },
+      semantic: (vector, model) => {
+        return runSemanticSearch(vector, limit, model);
+      },
+    });
     const result = new SearchResult();
 
-    result.chunks = chunks.map(mapChunkToObject);
+    result.chunks = found.chunks.map(mapChunkToObject);
+    result.mode = found.mode;
+    result.reason = found.reason;
 
     return result;
   }

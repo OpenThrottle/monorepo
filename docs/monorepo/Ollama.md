@@ -9,27 +9,29 @@
 ## Running Ollama
 
 - Install from https://ollama.com/download; start the app or run `ollama serve`.
-- Pull models: `scripts/ollama.ts (pnpm run ollama:pull)` (chat and embedding models). See `databases/openthrottle/README.md` for embedding dimension strategy.
+- Pull models: `scripts/ollama.ts (pnpm run ollama:pull)` (chat and embedding models). Semantic search does not need Ollama — see § Embeddings for OpenThrottle below.
 
-## Embeddings for OpenThrottle (Ollama or OpenAI)
+## Embeddings for OpenThrottle
 
-Semantic search (`semantic_search`) and doc/plan ingest embed on **openthrottle-server**, so the embedding provider is configured on **`applications/openthrottle-server/.env`** — never in the MCP launcher.
+Semantic search (`semantic_search`) embeds on **openthrottle-server** only — never in the MCP launcher or the ingest scripts — with **one model at one dimension: nomic-embed-text-v1.5, 768 dims** (OT plan `165e86ef`; schema and provenance in [`databases/openthrottle/README.md`](../../databases/openthrottle/README.md) § Embedding dimension strategy).
 
-| Path                      | Configure                                                                                                                      | Notes                                                                      |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------- |
-| **Ollama (no cloud API)** | **`OLLAMA_BASE_URL`** (default `http://localhost:11434`) and optionally **`OLLAMA_EMBEDDING_MODEL`** (e.g. `nomic-embed-text`) | No API key needed. Run Ollama locally (or proxy it through Caddy, above).  |
-| **OpenAI**                | **`OPENAI_API_KEY`** (leave the Ollama vars unset), e.g. `text-embedding-3-small`                                              | Cloud embeddings; the rest of the stack still runs locally.                |
-| **Neither**               | —                                                                                                                              | The stack runs; `semantic_search` and ingest embedding are simply skipped. |
+| Provider              | Configure (server `.env`)                                                         | Notes                                                                                                                                                       |
+| --------------------- | --------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Local (default)**   | nothing — or `EMBEDDING_MODELS_DIR` (default `~/.openthrottle/models`)            | Quantized ONNX in a worker thread inside the server. Weights come from `pnpm run embeddings:download-model` (setup + worktree provisioning run it for you). |
+| **Ollama (optional)** | `EMBEDDING_PROVIDER=ollama`, `OLLAMA_BASE_URL` (default `http://localhost:11434`) | Same model: `ollama pull nomic-embed-text`. Useful to put inference on a GPU box; vectors are interchangeable with the local provider's.                    |
+| **OpenAI / Gemini**   | —                                                                                 | Reserved `EMBEDDING_PROVIDER` values, refused with "not implemented" (follow-up plan).                                                                      |
 
-**Dimension caveat:** OpenThrottle stores **1536-dim** vectors. If the Ollama model returns a different dimension, embeddings are skipped — see [`databases/openthrottle/README.md`](../../databases/openthrottle/README.md) § Embedding dimension strategy.
+When the embedder cannot run — weights missing, Ollama down, a refused value — the server says so: MCP `health` shows `embeddings: unconfigured` or `degraded` with per-table coverage, and `semantic_search` answers with Postgres full-text search (`mode: lexical`, plus a `reason`) instead of empty results. Once the embedder is back, the embeddings queue and its 15-minute reconciler catch up with no manual step.
+
+`OLLAMA_EMBEDDING_MODEL` is now read only by the code index (`nestjs-vector-search`), which has its own follow-up plan.
 
 ### MCP launcher and embeddings
 
-The stdio launcher [`scripts/run-openthrottle-mcp.sh`](../../scripts/run-openthrottle-mcp.sh) (a thin shim; the logic lives in [`scripts/run-openthrottle-mcp.ts`](../../scripts/run-openthrottle-mcp.ts)) starts **@openthrottle/openthrottle-mcp** on stdio. It does **not** require **`OPENAI_API_KEY`** in the monorepo root `.env` — it needs only `API_URL` / **`API_URL_INTERNAL`** and **`OPENTHROTTLE_MCP_AUTH_TOKEN`** (see [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md)). Embedding config lives on the server `.env` per the table above, which is why `semantic_search` can fail while every other MCP tool works.
+The stdio launcher [`scripts/run-openthrottle-mcp.sh`](../../scripts/run-openthrottle-mcp.sh) (a thin shim; the logic lives in [`scripts/run-openthrottle-mcp.ts`](../../scripts/run-openthrottle-mcp.ts)) starts **@openthrottle/openthrottle-mcp** on stdio. It needs no embedding config at all — only `API_URL` / **`API_URL_INTERNAL`** and **`OPENTHROTTLE_MCP_AUTH_TOKEN`** (see [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md)). Embedding runs on the server per the table above, which is why `semantic_search` can answer lexically while every other MCP tool works normally.
 
 > **Running the stack fully in Docker (no host Node)?** Use the streamable-HTTP `mcp` container instead of the stdio launcher — `docker compose --profile prod up mcp`, registered by URL. See [mcp-registration.md § HTTP transport (Docker-native)](../openthrottle/mcp-registration.md#http-transport-docker-native).
 
-Smoke check: `API_URL_INTERNAL=http://localhost:6021 pnpm run verify:mcp-env` (reports server embedding config).
+Smoke check: `API_URL_INTERNAL=http://localhost:6021 pnpm run verify:mcp-env` (reports the server's `serverHealth.embeddings` status).
 
 ## Proxying Ollama through Caddy
 

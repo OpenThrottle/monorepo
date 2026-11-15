@@ -209,6 +209,8 @@ query search($input: SearchInput!) {
       taskId
       taskTitle
     }
+    mode
+    reason
   }
 }
 

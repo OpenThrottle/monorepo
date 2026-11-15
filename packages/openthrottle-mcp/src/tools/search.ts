@@ -31,9 +31,13 @@ type ListSourcesResult = GenericResult<{
   sources: ListSourcesQuery['listSources']['sources'];
 }>;
 
-type SemanticSearchResult = GenericResult<{
+type SemanticSearchStructured = {
   chunks: SearchQuery['search']['chunks'];
-}>;
+  mode: SearchQuery['search']['mode'];
+  reason: SearchQuery['search']['reason'];
+};
+
+type SemanticSearchResult = GenericResult<SemanticSearchStructured>;
 
 export const getDocumentToolParameters = z
   .object({ id: z.string().uuid() })
@@ -50,7 +54,7 @@ export const getDocumentToolDescription = `Fetch a single document chunk by id (
 
 export const listSourcesToolDescription = `List knowledge-base sources (plan, task, documentation) and plan titles. Use to discover available collections and plans.`;
 
-export const semanticSearchToolDescription = `Search the plans knowledge base by meaning. Runs a vector similarity search over plan and task content via GraphQL. Requires OPENAI_API_KEY or Ollama on the server for query embedding.`;
+export const semanticSearchToolDescription = `Search plans, tasks and docs by meaning (vector search). If the server's embedder is down it falls back to full-text: see mode (semantic|lexical) and reason.`;
 
 export async function getDocumentToolHandler(
   args: z.infer<typeof getDocumentToolParameters>,
@@ -128,26 +132,30 @@ export async function semanticSearchToolHandler(
     return invalidArgsContent('query must be a non-empty string');
   }
 
-  return runTool<{ chunks: SearchQuery['search']['chunks'] }>(
-    'semantic_search',
-    async () => {
-      const token = getAuthToken();
-      const result = await executeGraphqlWithAuth(token, SearchDocument, {
-        input: { limit, query },
-      });
+  return runTool<SemanticSearchStructured>('semantic_search', async () => {
+    const token = getAuthToken();
+    const result = await executeGraphqlWithAuth(token, SearchDocument, {
+      input: { limit, query },
+    });
 
-      const chunks = result?.search?.chunks ?? [];
-      const textSummary = chunks
-        .map(
-          (c) =>
-            `[${c.source}] ${c.planTitle ?? ''} ${c.taskTitle ?? ''} (similarity: ${c.similarity.toFixed(3)})\n${c.content}`,
-        )
-        .join('\n\n---\n\n');
+    const chunks = result?.search?.chunks ?? [];
+    const mode = result?.search?.mode ?? 'semantic';
+    const reason = result?.search?.reason ?? null;
+    const textSummary = chunks
+      .map(
+        (c) =>
+          `[${c.source}] ${c.planTitle ?? ''} ${c.taskTitle ?? ''} (similarity: ${c.similarity.toFixed(3)})\n${c.content}`,
+      )
+      .join('\n\n---\n\n');
 
-      return {
-        structuredContent: { chunks },
-        text: textSummary || 'No matching chunks found.',
-      };
-    },
-  );
+    const isLexical = mode === 'lexical';
+    const header = isLexical
+      ? `Mode: lexical (full-text fallback; reason: ${reason ?? 'unknown'}). Similarity is a ts_rank, not a cosine score.\n\n`
+      : '';
+
+    return {
+      structuredContent: { chunks, mode, reason },
+      text: `${header}${textSummary || 'No matching chunks found.'}`,
+    };
+  });
 }

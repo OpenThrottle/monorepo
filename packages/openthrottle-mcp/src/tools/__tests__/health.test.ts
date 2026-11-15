@@ -45,6 +45,46 @@ describe('healthToolHandler', () => {
     });
   });
 
+  describe('when the server reports embeddings', () => {
+    it('adds status, model, backlog and per-table coverage lines', async () => {
+      vi.mocked(executeGraphql).mockResolvedValue({
+        serverHealth: {
+          api: 'ok',
+          database: 'ok',
+          embeddings: {
+            coverage: [
+              {
+                embedded: 90,
+                entity: 'task',
+                stale: 4,
+                table: 'task_embeddings',
+                total: 100,
+              },
+            ],
+            detail: null,
+            dims: 768,
+            model: 'nomic-embed-text-v1.5',
+            provider: 'local',
+            queueDepth: 12,
+            staleCount: 4,
+            status: 'degraded',
+          },
+          redis: 'ok',
+          websocket: 'ok',
+        },
+      });
+
+      const result = await healthToolHandler({});
+      const text =
+        result.content[0]?.type === 'text' ? result.content[0].text : '';
+
+      expect(text).toContain(
+        'embeddings: degraded (local nomic-embed-text-v1.5, 768 dims) — queue 12, stale 4',
+      );
+      expect(text).toContain('task_embeddings: 90/100 (4 stale)');
+    });
+  });
+
   describe('when only the default toolsets are active', () => {
     it('reports the disabled toolsets and how to enable them', async () => {
       setActiveToolsets(new Set(['core']));

@@ -230,6 +230,10 @@ export type AgentAssetSearchResult = {
   __typename?: 'AgentAssetSearchResult';
   /** Ranked agent-asset matches by similarity. */
   chunks: Array<AgentAssetChunk>;
+  /** How the result was ranked: "semantic" (vector similarity with the configured embedding model) or "lexical" (Postgres full-text search, used when semantic search is unavailable). */
+  mode: Scalars['String']['output'];
+  /** Why the result is lexical, or null when it is semantic: embedder_unconfigured | embedder_dimension_mismatch | embedder_provider_error | no_embeddings. */
+  reason?: Maybe<Scalars['String']['output']>;
 };
 
 export type AgentCliAuthStateObject = {
@@ -1678,6 +1682,42 @@ export const EditorPresenceState = {
 
 export type EditorPresenceState =
   (typeof EditorPresenceState)[keyof typeof EditorPresenceState];
+/** Embedding coverage for one source table: how many rows that should be searchable have an up-to-date vector from the configured model. */
+export type EmbeddingCoverageObject = {
+  __typename?: 'EmbeddingCoverageObject';
+  /** Rows with an up-to-date vector (configured model, current text). */
+  embedded: Scalars['Int']['output'];
+  /** Entity: plan | task | documentation | custom_prompt. */
+  entity: Scalars['String']['output'];
+  /** Rows whose vector is from another model or from text that has since changed; the reconciler re-embeds them. */
+  stale: Scalars['Int']['output'];
+  /** Embedding table name. */
+  table: Scalars['String']['output'];
+  /** Source rows that should have a vector (non-empty text, not soft-deleted or superseded). */
+  total: Scalars['Int']['output'];
+};
+
+/** Semantic-search embeddings health: the embedder's state, per-table coverage, stale rows and queue backlog. */
+export type EmbeddingsHealthObject = {
+  __typename?: 'EmbeddingsHealthObject';
+  /** Coverage per embedded table. */
+  coverage: Array<EmbeddingCoverageObject>;
+  /** Why the embedder is not ok (missing weights, refused env, dimension mismatch, provider error), or null. */
+  detail?: Maybe<Scalars['String']['output']>;
+  /** Vector dimension of the configured model, or null when unconfigured. */
+  dims?: Maybe<Scalars['Int']['output']>;
+  /** Configured embedding model (recorded as embedding_model), or null when unconfigured. */
+  model?: Maybe<Scalars['String']['output']>;
+  /** EMBEDDING_PROVIDER as configured: local | ollama (or a refused value). */
+  provider: Scalars['String']['output'];
+  /** Embedding jobs waiting, delayed or active; null when Redis cannot be read. */
+  queueDepth?: Maybe<Scalars['Int']['output']>;
+  /** Rows across all tables whose vector is stale. */
+  staleCount: Scalars['Int']['output'];
+  /** ok | degraded (coverage below threshold, backlog above it, or provider erroring) | unconfigured (search is lexical-only). */
+  status: Scalars['String']['output'];
+};
+
 export type EndWorkSessionInput = {
   /** Session to close */
   sessionId: Scalars['ID']['input'];
@@ -4670,11 +4710,11 @@ export type Query = {
   scheduledAgentJobRunsInFlight: Array<ScheduledAgentJobRunObject>;
   /** All scheduled agent jobs, newest first. */
   scheduledAgentJobs: Array<ScheduledAgentJobObject>;
-  /** Semantic search over plan and task embeddings. Embeds the query and returns ranked chunks. Requires OpenThrottle Postgres and embedding (OPENAI_API_KEY or Ollama). */
+  /** Semantic search over plan, task and documentation embeddings. Embeds the query with the server embedder (local nomic-embed-text-v1.5 by default) and returns ranked chunks; when the embedder is unavailable or nothing is embedded yet, answers with Postgres full-text search instead — see mode and reason. */
   search: SearchResult;
-  /** Semantic search over agent-asset (custom_prompt) embeddings. Embeds the query and returns ranked, de-duped assets (skills, rules, personas by default). Requires OpenThrottle Postgres and embedding (OPENAI_API_KEY or Ollama). */
+  /** Semantic search over agent-asset (custom_prompt) embeddings. Embeds the query and returns ranked, de-duped assets (skills, rules, personas by default) using the server embedder (local nomic-embed-text-v1.5 by default); when it is unavailable or nothing is embedded yet, answers with Postgres full-text search instead — see mode and reason. */
   searchAgentAssets: AgentAssetSearchResult;
-  /** Semantic search over plans/tasks (vector similarity). Requires OPENAI_API_KEY or Ollama for query embedding. Returns plans matching the query, deduped by plan id. */
+  /** Semantic search over plans/tasks (vector similarity with the server's embedder), falling back to Postgres full-text search when the embedder is unavailable or nothing is embedded yet. Returns plans matching the query, deduped by plan id. */
   searchPlans: ListPlansByStatusResultObject;
   /** Server health: API, OpenThrottle DB, cms DB, Redis (BullMQ), and WebSocket. Each component is ok | unconfigured | unreachable. */
   serverHealth: ServerHealthObject;
@@ -6474,6 +6514,10 @@ export type SearchResult = {
   __typename?: 'SearchResult';
   /** Ranked search chunks (plans and tasks) by similarity. */
   chunks: Array<SearchChunk>;
+  /** How the result was ranked: "semantic" (vector similarity with the configured embedding model) or "lexical" (Postgres full-text search, used when semantic search is unavailable). */
+  mode: Scalars['String']['output'];
+  /** Why the result is lexical, or null when it is semantic: embedder_unconfigured | embedder_dimension_mismatch | embedder_provider_error | no_embeddings. */
+  reason?: Maybe<Scalars['String']['output']>;
 };
 
 /** Server health: API reachability, OpenThrottle DB, cms DB, Redis (BullMQ), and WebSocket. Each component is ok, unconfigured, or unreachable. */
@@ -6485,6 +6529,8 @@ export type ServerHealthObject = {
   cms?: Maybe<Scalars['String']['output']>;
   /** OpenThrottle DB status: ok | unconfigured | unreachable. Reuses existing databaseHealth logic. */
   database: Scalars['String']['output'];
+  /** Semantic-search embeddings: embedder state, per-table coverage, stale rows and queue backlog. Computed on demand (hashes every source row). Null when it cannot be computed (e.g. the database is unreachable) — that never fails the rest of serverHealth. */
+  embeddings?: Maybe<EmbeddingsHealthObject>;
   /** Redis (BullMQ) status: ok | unconfigured | unreachable. From Redis PING. */
   redis: Scalars['String']['output'];
   /** WebSocket (Socket.IO) status: ok when server process is running. */
@@ -9259,6 +9305,8 @@ export type SearchQuery = {
   __typename?: 'Query';
   search: {
     __typename?: 'SearchResult';
+    mode: string;
+    reason?: string | null;
     chunks: Array<{
       __typename?: 'SearchChunk';
       content: string;
@@ -12831,6 +12879,8 @@ export const SearchDocument = {
                     ],
                   },
                 },
+                { kind: 'Field', name: { kind: 'Name', value: 'mode' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'reason' } },
               ],
             },
           },

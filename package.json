@@ -302,6 +302,7 @@
     "database:stop": "node --experimental-strip-types ./scripts/openthrottle-database-lifecycle.ts stop",
     "dev:native": "pnpm nx run openthrottle-server:dev",
     "dev:native:split": "pnpm nx run-many --projects openthrottle-server --targets dev-api,worker",
+    "embeddings:download-model": "tsx ./scripts/download-embedding-model.ts",
     "generate": "pnpm run generate:list",
     "generate:folders": "NX_ISOLATE_PLUGINS=false nx generate @tools/generators:folders --interactive",
     "generate:generator": "nx generate @nx/plugin:generator $1 --project=@tools/generators",

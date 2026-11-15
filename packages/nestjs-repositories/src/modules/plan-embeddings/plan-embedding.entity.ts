@@ -11,7 +11,7 @@ import { vectorTransformer } from '../../vector-transformer/vector-transformer.c
 import type { Plan } from '../plans/plan.entity.ts';
 
 /**
- * @description TypeORM entity for OpenThrottle plan_embeddings table. Matches databases/openthrottle/migrations (004). Uses pgvector vector(1536).
+ * @description TypeORM entity for OpenThrottle plan_embeddings table. Matches databases/openthrottle/migrations (004, 163). Uses pgvector vector(768) with per-row provenance (embedding_model, embedding_dims, content_hash); one row per source row.
  */
 @Entity('plan_embeddings')
 export class PlanEmbedding {
@@ -20,6 +20,9 @@ export class PlanEmbedding {
 
   @Column({ name: 'content', type: 'text' })
   content!: string;
+
+  @Column({ name: 'content_hash', nullable: true, type: 'text' })
+  contentHash!: string | null;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp with time zone' })
   createdAt!: Date;
@@ -31,6 +34,12 @@ export class PlanEmbedding {
     type: 'vector',
   })
   embedding!: number[] | null;
+
+  @Column({ name: 'embedding_dims', nullable: true, type: 'integer' })
+  embeddingDims!: number | null;
+
+  @Column({ name: 'embedding_model', nullable: true, type: 'text' })
+  embeddingModel!: string | null;
 
   @Column({ default: () => "'{}'::jsonb", name: 'metadata', type: 'jsonb' })
   metadata!: Record<string, unknown>;

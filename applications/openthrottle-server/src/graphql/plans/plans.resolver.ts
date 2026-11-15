@@ -48,10 +48,12 @@ import { EmitNotification } from '@openthrottle/nestjs-websockets';
 import type { PlanStatusCount } from '@openthrottle/node-client';
 import {
   getPostgresConfig,
+  searchPlansByLexicalQuery,
   searchPlansBySemanticQuery,
 } from '@openthrottle/node-client';
 import { isRecord } from '@openthrottle/nodejs-utils';
 import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
+import { In } from 'typeorm';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import { PlanRulesEvaluationService } from '../../queues/plan-rules/evaluation/evaluation.service.ts';
@@ -59,11 +61,13 @@ import { PLAN_RULES_TRIGGER_KINDS } from '../../queues/plan-rules/plan-rules.con
 import { TaggingEnqueueService } from '../../queues/tagging/enqueue/enqueue.service.ts';
 import { TAGGING_ENTITY_TYPES } from '../../queues/tagging/tagging.constants.ts';
 import { EffectiveUserResolutionService } from '../../services/effective-user-resolution/effective-user-resolution.service.ts';
+import { EmbedderService } from '../../services/embedder/embedder.service.ts';
 import { PlanCreationService } from '../../services/plan-creation/plan-creation.service.ts';
 import { PlanRunWorktreeCheckoutService } from '../../services/plan-run-worktree-checkout/plan-run-worktree-checkout.service.ts';
 import { PRUNE_WORKTREE_CHECKOUT_OUTCOME } from '../../services/worktree-checkout-prune/worktree-checkout-prune.constants.ts';
 import { WorktreeCheckoutPruneService } from '../../services/worktree-checkout-prune/worktree-checkout-prune.service.ts';
 import { ProjectObject } from '../projects/project.object.ts';
+import { searchWithFallback } from '../search/search.utils.ts';
 import { TaskObject } from '../tasks/task.object.ts';
 import { SettleRunLedgerService } from '../work-ledger/settle-run-ledger/settle-run-ledger.service.ts';
 import { DeregisterWorktreeCheckoutInput } from '../workspace-settings/prune-worktree-checkouts.input.ts';
@@ -304,6 +308,7 @@ export class PlansResolver {
   constructor(
     private readonly agentPreferences: AgentCliPreferencesService,
     private readonly effectiveUserResolution: EffectiveUserResolutionService,
+    private readonly embedder: EmbedderService,
     private readonly loaders: PlansLoaders,
     private readonly planCreationService: PlanCreationService,
     private readonly planEnqueueService: PlanEnqueueService,
@@ -916,7 +921,7 @@ export class PlansResolver {
 
   // @ProfileResponseTime('PlansResolver.searchPlans')
   @Query(() => ListPlansByStatusResultObject, {
-    description: `Semantic search over plans/tasks (vector similarity). Requires OPENAI_API_KEY or Ollama for query embedding. Returns plans matching the query, deduped by plan id.`,
+    description: `Semantic search over plans/tasks (vector similarity with the server's embedder), falling back to Postgres full-text search when the embedder is unavailable or nothing is embedded yet. Returns plans matching the query, deduped by plan id.`,
   })
   async searchPlans(
     @Args('input', { type: () => SearchPlansInput }) input: SearchPlansInput,
@@ -933,22 +938,45 @@ export class PlansResolver {
     }
 
     const result = new ListPlansByStatusResultObject();
-    const raw = await searchPlansBySemanticQuery(
-      input.query,
-      input.limit ?? DEFAULT_SEARCH_PLANS_LIMIT,
+    const limit = input.limit ?? DEFAULT_SEARCH_PLANS_LIMIT;
+    const found = await searchWithFallback({
+      embed: () => {
+        return this.embedder.embed([input.query], 'query');
+      },
+      lexical: async () => {
+        const { plans } = await searchPlansByLexicalQuery(input.query, limit);
+
+        return plans.map((plan) => {
+          return plan.id;
+        });
+      },
+      semantic: async (vector, model) => {
+        const { plans } = await searchPlansBySemanticQuery(
+          vector,
+          limit,
+          model,
+        );
+
+        return plans.map((plan) => {
+          return plan.id;
+        });
+      },
+    });
+    const entities = await this.plansService
+      .getRepository()
+      .findBy({ id: In(found.chunks) });
+    const byId = new Map(
+      entities.map((plan) => {
+        return [plan.id, plan];
+      }),
     );
 
-    if (
-      !raw ||
-      !Array.isArray(raw.plans) ||
-      typeof raw.totalCount !== 'number'
-    ) {
-      result.plans = [];
-      result.totalCount = 0;
-    } else {
-      result.plans = raw.plans;
-      result.totalCount = raw.totalCount;
-    }
+    result.plans = found.chunks.flatMap((id) => {
+      const plan = byId.get(id);
+
+      return plan ? [plan] : [];
+    });
+    result.totalCount = result.plans.length;
 
     return result;
   }

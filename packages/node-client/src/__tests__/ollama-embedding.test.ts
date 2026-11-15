@@ -1,99 +1,74 @@
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 
-import {
-  embedWithOllama,
-  isOllamaEmbeddingConfigured,
-} from '../ollama-embedding.ts';
+import { embedWithOllama } from '../ollama-embedding.ts';
 
-/**
- * Tests for ollama-embedding.ts: the env-driven configured check and the
- * embedWithOllama failure→undefined paths (no config, non-ok response, empty
- * payload, thrown fetch). global.fetch is mocked; an explicit config is passed
- * so these do not depend on env beyond the no-config case.
- */
+const TARGET = { baseUrl: 'http://ollama.test', model: 'nomic-embed-text' };
 
-const CONFIG = {
-  baseUrl: 'http://localhost:11434',
-  model: 'nomic-embed-text',
-} as const;
-
-beforeEach(() => {
+afterEach(() => {
   vi.restoreAllMocks();
 });
 
-afterEach(() => {
-  vi.unstubAllEnvs();
-});
-
-describe('isOllamaEmbeddingConfigured', () => {
-  test('true when OLLAMA_BASE_URL is set', () => {
-    vi.stubEnv('OLLAMA_BASE_URL', 'http://localhost:11434');
-    vi.stubEnv('OLLAMA_EMBEDDING_MODEL', '');
-    expect(isOllamaEmbeddingConfigured()).toBe(true);
-  });
-
-  test('true when OLLAMA_EMBEDDING_MODEL is set', () => {
-    vi.stubEnv('OLLAMA_BASE_URL', '');
-    vi.stubEnv('OLLAMA_EMBEDDING_MODEL', 'nomic-embed-text');
-    expect(isOllamaEmbeddingConfigured()).toBe(true);
-  });
-
-  test('false when neither env var is set', () => {
-    vi.stubEnv('OLLAMA_BASE_URL', '');
-    vi.stubEnv('OLLAMA_EMBEDDING_MODEL', '');
-    expect(isOllamaEmbeddingConfigured()).toBe(false);
-  });
-});
-
 describe('embedWithOllama', () => {
-  test('returns the embedding on a successful response', async () => {
-    vi.spyOn(global, 'fetch').mockResolvedValue(
-      new Response(JSON.stringify({ embedding: [0.1, 0.2, 0.3] }), {
-        status: 200,
-      }),
-    );
+  describe('when Ollama answers with one vector per input', () => {
+    test('returns the vectors in order', async () => {
+      vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            embeddings: [
+              [1, 2],
+              [3, 4],
+            ],
+          }),
+        ),
+      );
 
-    const result = await embedWithOllama('hello', CONFIG);
+      const result = await embedWithOllama(['a', 'b'], TARGET);
 
-    expect(result).toEqual([0.1, 0.2, 0.3]);
+      expect(result).toEqual({
+        ok: true,
+        vectors: [
+          [1, 2],
+          [3, 4],
+        ],
+      });
+    });
   });
 
-  test('returns undefined when no config is resolvable (env unset)', async () => {
-    vi.stubEnv('OLLAMA_BASE_URL', '');
-    vi.stubEnv('OLLAMA_EMBEDDING_MODEL', '');
-    const fetchSpy = vi.spyOn(global, 'fetch');
+  describe('when Ollama answers non-2xx', () => {
+    test('returns provider_error naming the model', async () => {
+      vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+        new Response('missing', { status: 404 }),
+      );
 
-    const result = await embedWithOllama('hello');
+      const result = await embedWithOllama(['a'], TARGET);
 
-    expect(result).toBeUndefined();
-    expect(fetchSpy).not.toHaveBeenCalled();
+      expect(result).toMatchObject({ ok: false, reason: 'provider_error' });
+      expect(!result.ok && result.detail).toContain('nomic-embed-text');
+    });
   });
 
-  test('returns undefined on a non-ok response', async () => {
-    vi.spyOn(global, 'fetch').mockResolvedValue(
-      new Response('error', { status: 500 }),
-    );
+  describe('when the body has the wrong shape or count', () => {
+    test('returns provider_error', async () => {
+      vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+        new Response(JSON.stringify({ embeddings: [[1, 2]] })),
+      );
 
-    const result = await embedWithOllama('hello', CONFIG);
+      const result = await embedWithOllama(['a', 'b'], TARGET);
 
-    expect(result).toBeUndefined();
+      expect(result).toMatchObject({ ok: false, reason: 'provider_error' });
+    });
   });
 
-  test('returns undefined when the response embedding is empty', async () => {
-    vi.spyOn(global, 'fetch').mockResolvedValue(
-      new Response(JSON.stringify({ embedding: [] }), { status: 200 }),
-    );
+  describe('when Ollama is unreachable', () => {
+    test('returns provider_error instead of throwing', async () => {
+      vi.spyOn(globalThis, 'fetch').mockRejectedValue(
+        new Error('ECONNREFUSED'),
+      );
 
-    const result = await embedWithOllama('hello', CONFIG);
+      const result = await embedWithOllama(['a'], TARGET);
 
-    expect(result).toBeUndefined();
-  });
-
-  test('returns undefined when fetch throws', async () => {
-    vi.spyOn(global, 'fetch').mockRejectedValue(new Error('ECONNREFUSED'));
-
-    const result = await embedWithOllama('hello', CONFIG);
-
-    expect(result).toBeUndefined();
+      expect(result).toMatchObject({ ok: false, reason: 'provider_error' });
+      expect(!result.ok && result.detail).toContain('ECONNREFUSED');
+    });
   });
 });

@@ -218,6 +218,22 @@ CMD ["bin-http.mjs"]
 
 ################################################################################
 #
+#   EMBEDDING-MODEL - Semantic-search weights, fetched at build time (OT plan 165e86ef)
+#
+################################################################################
+# The server never downloads model weights at runtime (no network, no surprise latency), so the
+# quantized nomic-embed-text-v1.5 ONNX + tokenizer are baked into the production images. The same
+# checksum-pinned script developers run fills /models here; its own stage keeps the ~137 MB layer
+# cached across source-only rebuilds.
+FROM builder AS embedding-model
+
+COPY scripts/download-embedding-model.ts ./scripts/download-embedding-model.ts
+COPY scripts/utils/logger.ts ./scripts/utils/logger.ts
+
+RUN pnpm exec tsx ./scripts/download-embedding-model.ts --dir /models
+
+################################################################################
+#
 #   BUILD - Nx build + pnpm deploy pruned runtime tree
 #
 ################################################################################
@@ -272,6 +288,9 @@ RUN apt-get update \
   && rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /app/pruned/. /app/
+# Embedding weights baked in at build time; the server loads them from here only.
+COPY --from=embedding-model /models /app/models
+ENV EMBEDDING_MODELS_DIR="/app/models"
 
 RUN chown -R appuser:appuser /app
 
@@ -314,6 +333,10 @@ ENV NODE_OPTIONS="--import=/app/build/src/register-workspace-type-stripping.js"
 # We never COPY monorepo roots `/app/packages` or `/app/tools` into this stage; workspace libraries
 # the server needs at runtime are already resolved into the pruned tree (built artifacts + linked deps).
 COPY --from=build --chown=65532:65532 /app/pruned/. /app/
+# Embedding weights baked in at build time; the server loads them from here only (see the
+# embedding-model stage). onnxruntime-node ships glibc binaries, which this debian13 base runs.
+COPY --from=embedding-model --chown=65532:65532 /models /app/models
+ENV EMBEDDING_MODELS_DIR="/app/models"
 
 # In-image probe only — no curl. Matches root compose intent (GET /health on PORT).
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \

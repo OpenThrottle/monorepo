@@ -194,6 +194,28 @@ boot_server() {
   # POSTGRES_* with the database swapped for cms; the migrations image above
   # created and migrated it. Health reports it separately.
   wait_for "http://${APP_CONTAINER}:3000/health" '"cms":"ok"'
+  wait_for_embedder "${scenario}"
+}
+
+# The server's boot probe loads the model baked into the image (OT plan
+# 165e86ef) in a worker thread and embeds one string. /health stays green
+# without it — search just degrades to lexical — so an image whose weights or
+# onnxruntime binaries do not load would pass every check above. This one
+# reads the probe's verdict from the logs.
+wait_for_embedder() {
+  local scenario="$1" deadline=$((SECONDS + TIMEOUT_SECONDS)) logs
+  while ((SECONDS < deadline)); do
+    logs="$(docker logs "${APP_CONTAINER}" 2>&1 || true)"
+    if grep -q 'Embedder ready' <<< "${logs}"; then
+      echo "✅ ${APP} ${scenario}: $(grep -o 'Embedder ready: .* dims)' <<< "${logs}" | head -1)"
+      return 0
+    fi
+    if grep -qE 'Embedder (unconfigured|dimension mismatch|provider_error|dimension_mismatch)' <<< "${logs}"; then
+      fail "${scenario}: the embedder boot probe failed (see logs)"
+    fi
+    sleep 2
+  done
+  fail "${scenario}: the embedder boot probe did not report within ${TIMEOUT_SECONDS}s"
 }
 
 case "${APP}" in

@@ -1,98 +1,82 @@
 /**
- * @description Ollama embedding client for local embeddings. Calls POST /api/embeddings.
- * Additive: lives alongside OpenAI embedding; provider selection is env-driven (see embedder abstraction).
+ * @description Ollama embedding backend. Calls the batch endpoint `POST /api/embed` with the
+ * same model the local provider runs (`nomic-embed-text` is nomic-embed-text v1.5), so vectors
+ * from either provider are comparable. Failures are returned, never swallowed.
  * @see https://github.com/ollama/ollama/blob/main/docs/api.md#generate-embeddings
  */
 
-import { EMBEDDING_MAX_INPUT_CHARS } from './constants.ts';
+import type { EmbeddingBackendResult } from './embedding.ts';
 
-const DEFAULT_OLLAMA_BASE_URL = 'http://localhost:11434';
-const DEFAULT_OLLAMA_EMBEDDING_MODEL = 'nomic-embed-text';
-
-interface OllamaEmbeddingConfig {
+export interface OllamaEmbeddingTarget {
   readonly baseUrl: string;
   readonly model: string;
 }
 
-/**
- * @description Returns Ollama embedding config from env when OLLAMA_BASE_URL or OLLAMA_EMBEDDING_MODEL is set.
- * @returns Config or undefined if neither env var is set (caller should use OpenAI path).
- */
-function getOllamaEmbeddingConfig(): OllamaEmbeddingConfig | undefined {
-  const baseUrlRaw = process.env.OLLAMA_BASE_URL?.trim();
-  const modelRaw = process.env.OLLAMA_EMBEDDING_MODEL?.trim();
-
-  if (!baseUrlRaw && !modelRaw) {
-    return undefined;
-  }
-
-  const baseUrl = (baseUrlRaw ?? DEFAULT_OLLAMA_BASE_URL).replace(/\/$/, '');
-  const model = modelRaw ?? DEFAULT_OLLAMA_EMBEDDING_MODEL;
-
-  return { baseUrl, model };
-}
-
-/**
- * @description Checks if Ollama should be used for embeddings (OLLAMA_BASE_URL or OLLAMA_EMBEDDING_MODEL set).
- */
-export function isOllamaEmbeddingConfigured(): boolean {
+function isNumberMatrix(value: unknown): value is number[][] {
   return (
-    Boolean(process.env.OLLAMA_BASE_URL?.trim()) ||
-    Boolean(process.env.OLLAMA_EMBEDDING_MODEL?.trim())
+    Array.isArray(value) &&
+    value.every((row) => {
+      return (
+        Array.isArray(row) &&
+        row.every((cell) => {
+          return typeof cell === 'number';
+        })
+      );
+    })
   );
 }
 
-/**
- * @description Embeds text via local Ollama API (POST /api/embeddings). Dimension is model-specific.
- * @param text Input text to embed.
- * @param config Optional config; when omitted uses getOllamaEmbeddingConfig() (env).
- * @returns Embedding array, or undefined if config missing or request fails.
- */
-export async function embedWithOllama(
-  text: string,
-  config?: OllamaEmbeddingConfig,
-): Promise<number[] | undefined> {
-  const resolved = config ?? getOllamaEmbeddingConfig();
-  if (!resolved) {
+function readEmbeddings(data: unknown): number[][] | undefined {
+  if (typeof data !== 'object' || data === null || !('embeddings' in data)) {
     return undefined;
   }
 
-  const url = `${resolved.baseUrl}/api/embeddings`;
-  const body = JSON.stringify({
-    model: resolved.model,
-    prompt: text.slice(0, EMBEDDING_MAX_INPUT_CHARS),
-  });
+  return isNumberMatrix(data.embeddings) ? data.embeddings : undefined;
+}
+
+/**
+ * @description Embeds already-prefixed texts through Ollama. A connection error or non-2xx is a
+ * `provider_error` (Ollama is down or the model is not pulled); a malformed body is too.
+ */
+export async function embedWithOllama(
+  texts: readonly string[],
+  target: OllamaEmbeddingTarget,
+): Promise<EmbeddingBackendResult> {
+  const url = `${target.baseUrl}/api/embed`;
 
   try {
     const response = await fetch(url, {
-      body,
+      body: JSON.stringify({ input: texts, model: target.model }),
       headers: { 'Content-Type': 'application/json' },
       method: 'POST',
     });
 
     if (!response.ok) {
-      console.error(
-        `[node-client] Ollama embedding request failed (model=${resolved.model}, status=${response.status}); skipping embedding.`,
-      );
-      return undefined;
+      return {
+        detail: `Ollama ${url} answered ${response.status} for model ${target.model} (is it pulled? \`ollama pull ${target.model}\`).`,
+        ok: false,
+        reason: 'provider_error',
+      };
     }
 
-    const data: unknown = await response.json();
-    const hasEmbeddingField =
-      typeof data === 'object' && data !== null && 'embedding' in data;
-    const embedding = hasEmbeddingField ? data.embedding : undefined;
+    const embeddings = readEmbeddings(await response.json());
 
-    if (!Array.isArray(embedding) || embedding.length === 0) {
-      console.error(
-        `[node-client] Ollama embedding returned empty result (model=${resolved.model}); skipping embedding.`,
-      );
-      return undefined;
+    if (!embeddings || embeddings.length !== texts.length) {
+      return {
+        detail: `Ollama ${url} returned no usable embeddings for ${texts.length} input(s).`,
+        ok: false,
+        reason: 'provider_error',
+      };
     }
 
-    return embedding;
+    return { ok: true, vectors: embeddings };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    console.error(`[node-client] Ollama embedding request failed: ${message}`);
-    return undefined;
+
+    return {
+      detail: `Ollama ${url} is unreachable: ${message}`,
+      ok: false,
+      reason: 'provider_error',
+    };
   }
 }

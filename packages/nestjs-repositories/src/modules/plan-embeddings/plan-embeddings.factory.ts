@@ -20,8 +20,15 @@ import type { PlanEmbedding } from './plan-embedding.entity.ts';
  */
 export const planEmbeddingsFactory = Factory.define<PlanEmbedding>(() => ({
   content: faker.lorem.paragraph(),
+  contentHash: faker.string.hexadecimal({
+    casing: 'lower',
+    length: 64,
+    prefix: '',
+  }),
   createdAt: faker.date.past(),
-  embedding: Array.from({ length: 1536 }, () => faker.number.float()),
+  embedding: Array.from({ length: 768 }, () => faker.number.float()),
+  embeddingDims: 768,
+  embeddingModel: 'nomic-embed-text-v1.5',
   id: faker.string.uuid(),
   metadata: {},
   plan: plansFactory.build(),

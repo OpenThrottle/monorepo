@@ -28,8 +28,11 @@ describe('TaskEmbeddingsResolver', () => {
 
   const mockTaskEmbedding: TaskEmbedding = {
     content: 'Task content chunk for embedding',
+    contentHash: null,
     createdAt: new Date('2026-02-01T22:00:00.000Z'),
     embedding: null,
+    embeddingDims: null,
+    embeddingModel: null,
     id: '23c58683-01de-4fdd-b484-ea9ad2c0c5b8',
     metadata: { source: 'task' },
     task: {

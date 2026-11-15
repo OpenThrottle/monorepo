@@ -10,11 +10,9 @@ import type {
 import {
   AgentCliPreferencesService,
   getDefaultPlanRunConfigStorage,
-  PlanEmbeddingsService,
   PlansService,
   UserPreferencesService,
 } from '@openthrottle/nestjs-repositories';
-import { embedQuery } from '@openthrottle/node-client';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { CreatePlanInput } from '../../graphql/plans/plan.input.ts';
@@ -23,15 +21,6 @@ import { EffectiveUserResolutionService } from '../effective-user-resolution/eff
 import { PlanCreationService } from './plan-creation.service.ts';
 
 const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
-
-vi.mock('@openthrottle/node-client', async (importOriginal) => {
-  const mod =
-    await importOriginal<typeof import('@openthrottle/node-client')>();
-  return {
-    ...mod,
-    embedQuery: vi.fn(),
-  };
-});
 
 describe('PlanCreationService', () => {
   let service: PlanCreationService;
@@ -50,14 +39,9 @@ describe('PlanCreationService', () => {
     },
     save: vi.fn(),
   };
-  const embedRepo = {
-    create: vi.fn(),
-    save: vi.fn(),
-  };
 
   beforeEach(async () => {
     vi.clearAllMocks();
-    vi.mocked(embedQuery).mockResolvedValue(undefined);
     resolveCheckoutForPath.mockResolvedValue(null);
     // Default: a user sub acts as itself (the human-JWT case).
     resolveEffectiveUserId.mockImplementation(async (sub: string) => sub);
@@ -97,12 +81,6 @@ describe('PlanCreationService', () => {
           provide: PlansService,
           useValue: {
             getRepository: () => planRepo,
-          },
-        },
-        {
-          provide: PlanEmbeddingsService,
-          useValue: {
-            getRepository: () => embedRepo,
           },
         },
       ],
@@ -715,48 +693,5 @@ describe('PlanCreationService', () => {
       expect(plan).toBeDefined();
       expectRalph(systemAgent);
     });
-  });
-
-  it('persists embedding when embedQuery returns a vector', async () => {
-    vi.mocked(embedQuery).mockResolvedValue([0.1, 0.2]);
-
-    const saved: PlanData = {
-      assignee: null,
-      author: 'visormatt',
-      category: 'feature',
-      completedAt: null,
-      createdAt: new Date(FIXED_NOW),
-      description: 'd',
-      id: 'p3',
-      project: null,
-      projectId: null,
-      status: 'PENDING',
-      summary: null,
-      title: 'Plan',
-      updatedAt: new Date(FIXED_NOW),
-    };
-
-    const embeddingRow = { content: 'x', id: 'e1' };
-    planRepo.create.mockReturnValue(saved);
-    planRepo.save.mockResolvedValue(saved);
-    embedRepo.create.mockReturnValue(embeddingRow);
-    embedRepo.save.mockResolvedValue(embeddingRow);
-
-    const input: CreatePlanInput = {
-      assignee: null,
-      author: 'visormatt',
-      category: 'feature',
-      description: 'd',
-      project: null,
-      projectId: null,
-      status: null,
-      summary: null,
-      title: 'Plan',
-    };
-
-    await service.createPlanFromInput(input);
-
-    expect(embedQuery).toHaveBeenCalled();
-    expect(embedRepo.save).toHaveBeenCalledWith(embeddingRow);
   });
 });

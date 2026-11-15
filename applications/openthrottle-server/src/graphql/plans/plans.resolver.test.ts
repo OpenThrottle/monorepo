@@ -37,6 +37,7 @@ import type { RunPlanJobData } from '../../queues/plans/plans.types.ts';
 import { PlanRunCancellationService } from '../../queues/plans/run-cancellation/run-cancellation.service.ts';
 import { TaggingEnqueueService } from '../../queues/tagging/enqueue/enqueue.service.ts';
 import { EffectiveUserResolutionService } from '../../services/effective-user-resolution/effective-user-resolution.service.ts';
+import { EmbedderService } from '../../services/embedder/embedder.service.ts';
 import { PlanCreationService } from '../../services/plan-creation/plan-creation.service.ts';
 import { PlanRunWorktreeCheckoutService } from '../../services/plan-run-worktree-checkout/plan-run-worktree-checkout.service.ts';
 import { PRUNE_WORKTREE_CHECKOUT_OUTCOME } from '../../services/worktree-checkout-prune/worktree-checkout-prune.constants.ts';
@@ -56,6 +57,7 @@ import { PlansResolver } from './plans.resolver.ts';
 
 vi.mock('@openthrottle/node-client', () => ({
   getPostgresConfig: vi.fn(),
+  searchPlansByLexicalQuery: vi.fn(),
   searchPlansBySemanticQuery: vi.fn(),
 }));
 
@@ -118,6 +120,7 @@ describe('PlansResolver', () => {
     create: vi.fn(),
     createQueryBuilder: vi.fn(),
     find: vi.fn(),
+    findBy: vi.fn(),
     findOne: vi.fn(),
     // Mirrors repo.manager.transaction: runs the callback with a manager whose getRepository
     // routes Plan -> plans repo and Task -> taskRepo. Rejections propagate so the enqueue tests can
@@ -303,6 +306,17 @@ describe('PlansResolver', () => {
         {
           provide: EffectiveUserResolutionService,
           useValue: mockEffectiveUserResolution,
+        },
+        {
+          provide: EmbedderService,
+          useValue: {
+            embed: vi.fn().mockResolvedValue({
+              dims: 3,
+              model: 'nomic-embed-text-v1.5',
+              ok: true,
+              vectors: [[0.1, 0.2, 0.3]],
+            }),
+          },
         },
         { provide: PlansLoaders, useValue: mockPlansLoaders },
         {
@@ -956,12 +970,25 @@ describe('PlansResolver', () => {
   });
 
   describe('searchPlans', () => {
-    test('returns empty result when OpenThrottle config is not set', async () => {
-      const { getPostgresConfig } = await import('@openthrottle/node-client');
+    test('returns empty result when nothing matches either search', async () => {
+      const {
+        getPostgresConfig,
+        searchPlansByLexicalQuery,
+        searchPlansBySemanticQuery,
+      } = await import('@openthrottle/node-client');
 
       vi.mocked(getPostgresConfig).mockReturnValue({
         connectionString: 'postgresql://localhost/openthrottle',
       });
+      vi.mocked(searchPlansBySemanticQuery).mockResolvedValue({
+        plans: [],
+        totalCount: 0,
+      });
+      vi.mocked(searchPlansByLexicalQuery).mockResolvedValue({
+        plans: [],
+        totalCount: 0,
+      });
+      repo.findBy.mockResolvedValue([]);
 
       const result = await resolver.searchPlans({
         limit: 10,
@@ -972,7 +999,7 @@ describe('PlansResolver', () => {
       expect(result.totalCount).toBe(0);
     });
 
-    test('returns mapped plans when semantic search returns results', async () => {
+    test('returns the ranked plan entities when semantic search returns results', async () => {
       const { getPostgresConfig, searchPlansBySemanticQuery } =
         await import('@openthrottle/node-client');
       vi.mocked(getPostgresConfig).mockReturnValue({
@@ -986,26 +1013,30 @@ describe('PlansResolver', () => {
             category: 'openthrottle',
             completedAt: null,
             createdAt: '2026-02-01T19:57:37.738Z',
-            id: '80864bba-630a-451d-bfd2-4b25ec202381',
+            id: mockPlan.id,
             project: null,
             projectId: null,
             status: 'pending',
             summary: null,
-            title: 'Test plan',
+            title: mockPlan.title,
             updatedAt: '2026-02-01T19:59:19.440Z',
           },
         ],
         totalCount: 1,
       });
+      repo.findBy.mockResolvedValue([mockPlan]);
 
       const result = await resolver.searchPlans({
         limit: 10,
         query: 'test',
       });
 
-      expect(result.plans).toHaveLength(1);
-      expect(result.plans[0]?.id).toBe('80864bba-630a-451d-bfd2-4b25ec202381');
-      expect(result.plans[0]?.title).toBe('Test plan');
+      expect(searchPlansBySemanticQuery).toHaveBeenCalledWith(
+        [0.1, 0.2, 0.3],
+        10,
+        'nomic-embed-text-v1.5',
+      );
+      expect(result.plans).toEqual([mockPlan]);
       expect(result.totalCount).toBe(1);
     });
   });

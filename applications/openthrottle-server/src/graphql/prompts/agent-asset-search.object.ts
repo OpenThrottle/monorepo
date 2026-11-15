@@ -5,6 +5,7 @@
 
 import { Field, Float, ObjectType } from '@nestjs/graphql';
 
+import type { SearchMode } from '../search/search.types.ts';
 import { CustomPromptTypeEnum } from './custom-prompt.object.ts';
 
 @ObjectType({
@@ -63,4 +64,15 @@ export class AgentAssetSearchResult {
     description: 'Ranked agent-asset matches by similarity.',
   })
   chunks!: AgentAssetChunk[];
+
+  @Field(() => String, {
+    description: `How the result was ranked: "semantic" (vector similarity with the configured embedding model) or "lexical" (Postgres full-text search, used when semantic search is unavailable).`,
+  })
+  mode!: SearchMode;
+
+  @Field(() => String, {
+    description: `Why the result is lexical, or null when it is semantic: embedder_unconfigured | embedder_dimension_mismatch | embedder_provider_error | no_embeddings.`,
+    nullable: true,
+  })
+  reason!: string | null;
 }

@@ -1,0 +1,26 @@
+# MCP `health`: server health plus the embeddings section. Separate from the shared
+# getServerHealth (Ralph's preflight), because `embeddings` hashes every source row.
+query getServerHealthWithEmbeddings {
+  serverHealth {
+    api
+    database
+    embeddings {
+      coverage {
+        embedded
+        entity
+        stale
+        table
+        total
+      }
+      detail
+      dims
+      model
+      provider
+      queueDepth
+      staleCount
+      status
+    }
+    redis
+    websocket
+  }
+}

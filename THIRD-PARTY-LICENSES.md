@@ -13,16 +13,16 @@ Platform-specific prebuilt binaries (packages that declare `os`/`cpu`, e.g.
 `@rollup/rollup-linux-x64-gnu`, `fsevents`) are omitted: which ones install depends on
 the host OS, and each shares the license of the cross-platform toolchain already listed.
 
-**2138** third-party packages.
+**2150** third-party packages.
 
 ## License summary
 
 | License | Packages |
 | --- | --- |
-| MIT | 1843 |
-| Apache-2.0 | 97 |
-| ISC | 78 |
-| BSD-3-Clause | 56 |
+| MIT | 1849 |
+| Apache-2.0 | 101 |
+| ISC | 79 |
+| BSD-3-Clause | 57 |
 | BSD-2-Clause | 26 |
 | BlueOak-1.0.0 | 12 |
 | Unlicense | 4 |
@@ -334,12 +334,16 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@hapi/tlds` | 1.1.7 | BSD-3-Clause | [source](https://github.com/hapijs/tlds#readme) |
 | `@hapi/topo` | 6.0.2 | BSD-3-Clause | [source](https://github.com/hapijs/topo#readme) |
 | `@hono/node-server` | 2.0.12 | MIT | [Yusuke Wada](https://github.com/honojs/node-server) |
+| `@huggingface/jinja` | 0.5.11 | MIT | [Hugging Face](https://github.com/huggingface/huggingface.js#readme) |
+| `@huggingface/tokenizers` | 0.2.0 | Apache-2.0 | [Hugging Face](https://github.com/huggingface/tokenizers.js#readme) |
+| `@huggingface/transformers` | 4.3.2 | Apache-2.0 | [Hugging Face](https://github.com/huggingface/transformers.js#readme) |
 | `@humanfs/core` | 0.19.2 | Apache-2.0 | [Nicholas C. Zakas](https://github.com/humanwhocodes/humanfs#readme) |
 | `@humanfs/node` | 0.16.8 | Apache-2.0 | [Nicholas C. Zakas](https://github.com/humanwhocodes/humanfs#readme) |
 | `@humanfs/types` | 0.15.0 | Apache-2.0 | [Nicholas C. Zakas](https://github.com/humanwhocodes/humanfs#readme) |
 | `@humanwhocodes/module-importer` | 1.0.1 | Apache-2.0 | [Nicholas C. Zaks](https://github.com/humanwhocodes/module-importer#readme) |
 | `@humanwhocodes/retry` | 0.4.3 | Apache-2.0 | [Nicholas C. Zaks](https://github.com/humanwhocodes/retry#readme) |
 | `@ibm-cloud/watsonx-ai` | 1.7.15 | Apache-2.0 | [IBM Corp.](https://github.com/IBM/watsonx-ai-node-sdk#readme) |
+| `@img/colour` | 1.1.0 | MIT | [source](https://github.com/lovell/colour#readme) |
 | `@inquirer/ansi` | 1.0.2, 2.0.8 | MIT | [Simon Boudrias](https://github.com/SBoudrias/Inquirer.js/blob/main/packages/ansi/README.md) |
 | `@inquirer/checkbox` | 4.3.2, 5.2.4 | MIT | [Simon Boudrias](https://github.com/SBoudrias/Inquirer.js/blob/main/packages/checkbox/README.md) |
 | `@inquirer/confirm` | 5.1.21, 6.3.1 | MIT | [Simon Boudrias](https://github.com/SBoudrias/Inquirer.js/blob/main/packages/confirm/README.md) |
@@ -822,6 +826,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `acorn-jsx` | 5.3.2 | MIT | [source](https://github.com/acornjs/acorn-jsx) |
 | `acorn-walk` | 8.3.5 | MIT | [source](https://github.com/acornjs/acorn) |
 | `address` | 2.0.3 | MIT | [fengmk2](https://github.com/node-modules/address#readme) |
+| `adm-zip` | 0.6.1 | MIT | [Nasca Iacob](https://github.com/cthackers/adm-zip) |
 | `agent-base` | 6.0.2, 7.1.4 | MIT | [Nathan Rajlich](https://github.com/TooTallNate/proxy-agents#readme) |
 | `agentkeepalive` | 4.6.0 | MIT | [fengmk2](https://github.com/node-modules/agentkeepalive#readme) |
 | `ajv` | 6.15.0, 8.18.0, 8.20.0, 8.6.3 | MIT | [Evgeny Poberezkin](https://ajv.js.org) |
@@ -1238,6 +1243,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `fishery` | 2.4.0 | MIT | [Stephen Hanson](https://github.com/thoughtbot/fishery#readme) |
 | `flat` | 5.0.2 | BSD-3-Clause | [Hugh Kennedy](https://github.com/hughsk/flat) |
 | `flat-cache` | 6.1.23 | MIT | [Jared Wray](https://github.com/jaredwray/cacheable#readme) |
+| `flatbuffers` | 25.9.23 | Apache-2.0 | [The FlatBuffers project](https://google.github.io/flatbuffers/) |
 | `flatted` | 3.4.4 | ISC | [Andrea Giammarchi](https://github.com/WebReflection/flatted#readme) |
 | `fn.name` | 1.1.0 | MIT | [Arnout Kazemier](https://github.com/3rd-Eden/fn.name) |
 | `follow-redirects` | 1.16.2 | MIT | [Ruben Verborgh](https://github.com/follow-redirects/follow-redirects) |
@@ -1279,7 +1285,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `glob` | 10.5.0, 7.2.3 | ISC | [Isaac Z. Schlueter](https://github.com/isaacs/node-glob#readme) |
 | `glob` | 13.0.6 | BlueOak-1.0.0 | [Isaac Z. Schlueter](https://github.com/isaacs/node-glob#readme) |
 | `glob-parent` | 5.1.2, 6.0.2 | ISC | [Gulp Team](https://github.com/gulpjs/glob-parent#readme) |
-| `global-agent` | 3.0.0 | BSD-3-Clause | [Gajus Kuizinas](https://github.com/gajus/global-agent#readme) |
+| `global-agent` | 3.0.0, 4.1.7 | BSD-3-Clause | [Gajus Kuizinas](https://github.com/gajus/global-agent#readme) |
 | `global-directory` | 5.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/global-directory#readme) |
 | `globals` | 17.8.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/globals#readme) |
 | `globalthis` | 1.0.4 | MIT | [Jordan Harband](https://github.com/ljharb/System.global#readme) |
@@ -1299,6 +1305,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `graphql-tag` | 2.12.7 | MIT | [source](https://github.com/apollographql/graphql-tag#readme) |
 | `graphql-ws` | 6.2.1 | MIT | [Denis Badurina](https://the-guild.dev/graphql/ws) |
 | `gtoken` | 7.1.0 | MIT | [Google, LLC](https://github.com/google/node-gtoken#readme) |
+| `guid-typescript` | 1.0.9 | ISC | [nicolas](https://github.com/NicolasDeveloper/guid-typescript#readme) |
 | `handlebars` | 4.7.9 | MIT | [Yehuda Katz](https://handlebarsjs.com/) |
 | `happy-dom` | 20.11.1 | MIT | [David Ortner](https://github.com/capricorn86/happy-dom) |
 | `harmony-reflect` | 1.6.2 | (Apache-2.0 OR MPL-1.1) | [source](https://github.com/tvcutsem/harmony-reflect) |
@@ -1522,7 +1529,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `log-update` | 6.1.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/log-update#readme) |
 | `logform` | 2.7.0 | MIT | [Charlie Robbins](https://github.com/winstonjs/logform#readme) |
 | `loglevel` | 1.9.2 | MIT | [Tim Perry](https://github.com/pimterry/loglevel) |
-| `long` | 4.0.0 | Apache-2.0 | [Daniel Wirtz](https://github.com/dcodeIO/long.js#readme) |
+| `long` | 4.0.0, 5.3.2 | Apache-2.0 | [Daniel Wirtz](https://github.com/dcodeIO/long.js#readme) |
 | `longest-streak` | 3.1.0 | MIT | [Titus Wormer](https://github.com/wooorm/longest-streak#readme) |
 | `lookup-closest-locale` | 6.2.0 | MIT | [Andy VanWagoner](https://github.com/format-message/format-message/tree/master/packages/lookup-closest-locale) |
 | `loose-envify` | 1.4.0 | MIT | [Andres Suarez](https://github.com/zertosh/loose-envify) |
@@ -1546,7 +1553,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `markdown-table` | 3.0.4 | MIT | [Titus Wormer](https://github.com/wooorm/markdown-table#readme) |
 | `marked` | 14.0.0 | MIT | [Christopher Jeffrey](https://marked.js.org) |
 | `marky` | 1.3.0 | Apache-2.0 | [Nolan Lawson](https://github.com/nolanlawson/marky#readme) |
-| `matcher` | 3.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/matcher#readme) |
+| `matcher` | 3.0.0, 4.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/matcher#readme) |
 | `math-expression-evaluator` | 2.0.7 | MIT | [bugwheels94](https://github.com/redhivesoftware/math-expression-evaluator#readme) |
 | `math-intrinsics` | 1.1.0 | MIT | [Jordan Harband](https://github.com/es-shims/math-intrinsics#readme) |
 | `mdast-util-find-and-replace` | 3.0.2 | MIT | [Titus Wormer](https://github.com/syntax-tree/mdast-util-find-and-replace#readme) |
@@ -1683,6 +1690,8 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `one-time` | 1.0.0 | MIT | [Arnout Kazemier](https://github.com/3rd-Eden/one-time#readme) |
 | `onetime` | 5.1.2, 6.0.0, 7.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/onetime#readme) |
 | `only-allow` | 1.2.2 | MIT | [Zoltan Kochan](https://github.com/pnpm/only-allow#readme) |
+| `onnxruntime-common` | 1.30.0, 1.31.0-dev.20260911-2a43ec07e | MIT | [fs-eire](https://github.com/Microsoft/onnxruntime#readme) |
+| `onnxruntime-web` | 1.31.0-dev.20260914-8d85527a0 | MIT | [fs-eire](https://github.com/Microsoft/onnxruntime#readme) |
 | `open` | 10.2.0, 8.4.2 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/open#readme) |
 | `openai` | 6.49.0 | Apache-2.0 | [OpenAI](https://github.com/openai/openai-node#readme) |
 | `openapi-types` | 12.1.3 | MIT | [Joseph Spencer](https://github.com/kogosoftwarellc/open-api/tree/master/packages/openapi-types#readme) |
@@ -1759,6 +1768,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `pkce-challenge` | 5.0.1 | MIT | [crouchcd](https://github.com/crouchcd/pkce-challenge#readme) |
 | `pkg-types` | 1.3.1, 2.3.1 | MIT | [source](https://github.com/unjs/pkg-types#readme) |
 | `pkijs` | 3.4.3 | BSD-3-Clause | [Yury Strozhevsky](https://github.com/PeculiarVentures/PKI.js#readme) |
+| `platform` | 1.3.6 | MIT | [Benjamin Tan](https://github.com/bestiejs/platform.js#readme) |
 | `playwright` | 1.62.1 | Apache-2.0 | [Microsoft Corporation](https://playwright.dev) |
 | `playwright-core` | 1.62.1 | Apache-2.0 | [Microsoft Corporation](https://playwright.dev) |
 | `plist` | 3.1.0 | MIT | [Nathan Rajlich](https://github.com/TooTallNate/node-plist#readme) |
@@ -1784,6 +1794,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `prop-types` | 15.8.1 | MIT | [source](https://facebook.github.io/react/) |
 | `proper-lockfile` | 4.1.2 | MIT | [André Cruz](https://github.com/moxystudio/node-proper-lockfile) |
 | `property-information` | 7.2.0 | MIT | [Titus Wormer](https://github.com/wooorm/property-information#readme) |
+| `protobufjs` | 7.6.6 | BSD-3-Clause | [Daniel Wirtz](https://protobufjs.github.io/protobuf.js/) |
 | `proxy-addr` | 2.0.8 | MIT | [Douglas Christopher Wilson](https://github.com/jshttp/proxy-addr#readme) |
 | `proxy-from-env` | 2.1.0 | MIT | [Rob Wu](https://github.com/Rob--W/proxy-from-env#readme) |
 | `psl` | 1.15.0 | MIT | [Lupo Montero](https://github.com/lupomontero/psl#readme) |
@@ -1907,7 +1918,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `semver-truncate` | 3.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/semver-truncate#readme) |
 | `send` | 1.2.1 | MIT | [TJ Holowaychuk](https://github.com/pillarjs/send#readme) |
 | `sentence-case` | 3.0.4 | MIT | [Blake Embrey](https://github.com/blakeembrey/change-case/tree/master/packages/sentence-case#readme) |
-| `serialize-error` | 7.0.1 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/serialize-error#readme) |
+| `serialize-error` | 7.0.1, 8.1.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/serialize-error#readme) |
 | `seroval` | 1.5.6 | MIT | [Alexis Munsayac](https://github.com/lxsmnsyc/seroval/tree/main/packages/seroval) |
 | `seroval-plugins` | 1.5.6 | MIT | [Alexis Munsayac](https://github.com/lxsmnsyc/seroval/tree/main/packages/plugins) |
 | `serve-static` | 2.2.1 | MIT | [Douglas Christopher Wilson](https://github.com/expressjs/serve-static#readme) |
@@ -1916,6 +1927,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `set-proto` | 1.0.0 | MIT | [Jordan Harband](https://github.com/ljharb/set-proto#readme) |
 | `setprototypeof` | 1.2.0 | ISC | [Wes Todd](https://github.com/wesleytodd/setprototypeof) |
 | `sha.js` | 2.4.12 | (MIT AND BSD-3-Clause) | [Dominic Tarr](https://github.com/crypto-browserify/sha.js) |
+| `sharp` | 0.35.5 | Apache-2.0 | [Lovell Fuller](https://sharp.pixelplumbing.com) |
 | `shebang-command` | 2.0.0 | MIT | [Kevin Mårtensson](https://github.com/kevva/shebang-command#readme) |
 | `shebang-regex` | 3.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/shebang-regex#readme) |
 | `shell-quote` | 1.10.0 | MIT | [James Halliday](https://github.com/ljharb/shell-quote) |
@@ -2056,7 +2068,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `tw-animate-css` | 1.4.0 | MIT | [Luca Bosin](https://github.com/Wombosvideo/tw-animate-css#readme) |
 | `type-check` | 0.4.0 | MIT | [George Zahariev](https://github.com/gkz/type-check) |
 | `type-detect` | 4.0.8 | MIT | [Jake Luer](https://github.com/chaijs/type-detect#readme) |
-| `type-fest` | 0.13.1, 0.21.3, 4.41.0 | (MIT OR CC0-1.0) | [Sindre Sorhus](https://github.com/sindresorhus/type-fest#readme) |
+| `type-fest` | 0.13.1, 0.20.2, 0.21.3, 4.41.0 | (MIT OR CC0-1.0) | [Sindre Sorhus](https://github.com/sindresorhus/type-fest#readme) |
 | `type-is` | 1.6.18, 2.1.0 | MIT | [source](https://github.com/jshttp/type-is#readme) |
 | `typed-array-buffer` | 1.0.3 | MIT | [Jordan Harband](https://github.com/inspect-js/typed-array-buffer#readme) |
 | `typed-array-byte-length` | 1.0.3 | MIT | [Jordan Harband](https://github.com/inspect-js/typed-array-byte-length#readme) |

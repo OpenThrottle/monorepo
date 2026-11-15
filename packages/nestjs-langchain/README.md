@@ -1,6 +1,6 @@
 # @openthrottle/nestjs-langchain
 
-A package for using LangChain in Server Side API projects. This package provides LangChain integration for NestJS applications, enabling AI/ML capabilities including language models, document processing, vector stores, and agent workflows.
+A package for using LangChain in Server Side API projects. This package provides LangChain integration for NestJS applications, enabling AI/ML capabilities including language models, document processing, and agent workflows.
 
 ## Installation
 

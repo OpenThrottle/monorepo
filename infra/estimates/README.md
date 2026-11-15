@@ -52,25 +52,24 @@ Derived from `docker-compose.yml` and reconciled against `infra/applications/ope
 and `infra/environments/`. Note that `infra/environments/staging/openthrottle.tf` is **commented
 out** — nothing is deployed today, so this is a greenfield estimate, not a bill.
 
-| Service                   | Where it comes from                                            | Required                     | Desired                         |
-| ------------------------- | -------------------------------------------------------------- | ---------------------------- | ------------------------------- |
-| `server`                  | NestJS GraphQL API; `PROCESS_ROLE` is `api` / `worker` / `all` | one VM, role `all`           | two VMs, `api` + `worker` split |
-| `postgres`                | pgvector, `vector(1536)` (migration 052)                       | Cloud SQL PostgreSQL, zonal  | + regional HA and PITR          |
-| `redis`                   | BullMQ + cache                                                 | Memorystore Basic M1         | Memorystore Standard M1         |
-| `mcp`                     | OT MCP server                                                  | co-located on the VM         | co-located on the API VM        |
-| `migrations`, `bootstrap` | run-once jobs                                                  | run on the VM, ~$0           | same                            |
-| `whisper`                 | compose profile `[voice]` — opt-in                             | **excluded**                 | dedicated VM + model cache      |
-| Embeddings                | `packages/node-client/src/embedding.ts`                        | **hosted OpenAI, $0 on GCP** | same                            |
-| 4 React Router apps       | `applications/*/vercel.json`                                   | **stay on Vercel**           | stay on Vercel                  |
-| TLS / ingress             | Caddy on the VM, Let's Encrypt                                 | **$0, no GCLB**              | optional GCLB for WAF           |
+| Service                   | Where it comes from                                            | Required                    | Desired                         |
+| ------------------------- | -------------------------------------------------------------- | --------------------------- | ------------------------------- |
+| `server`                  | NestJS GraphQL API; `PROCESS_ROLE` is `api` / `worker` / `all` | one VM, role `all`          | two VMs, `api` + `worker` split |
+| `postgres`                | pgvector, `vector(1536)` (migration 052)                       | Cloud SQL PostgreSQL, zonal | + regional HA and PITR          |
+| `redis`                   | BullMQ + cache                                                 | Memorystore Basic M1        | Memorystore Standard M1         |
+| `mcp`                     | OT MCP server                                                  | co-located on the VM        | co-located on the API VM        |
+| `migrations`, `bootstrap` | run-once jobs                                                  | run on the VM, ~$0          | same                            |
+| `whisper`                 | compose profile `[voice]` — opt-in                             | **excluded**                | dedicated VM + model cache      |
+| Embeddings                | `packages/node-client/src/embedding.ts`                        | **in-process CPU, $0**      | same                            |
+| 4 React Router apps       | `applications/*/vercel.json`                                   | **stay on Vercel**          | stay on Vercel                  |
+| TLS / ingress             | Caddy on the VM, Let's Encrypt                                 | **$0, no GCLB**             | optional GCLB for WAF           |
 
 Two of those deserve calling out, because both cut the estimate rather than growing it:
 
-**Embeddings do not need a GPU or a big instance.** `embedding.ts` defaults to OpenAI
-`text-embedding-3-small` and only uses Ollama when `OLLAMA_BASE_URL` or
-`OLLAMA_EMBEDDING_MODEL` is set — and both are commented out in `.env.default`. Self-hosting
-Ollama on GCP would add a large always-on instance to replace an API call that costs cents per
-month. Priced as hosted; the local-Ollama path stays a development convenience.
+**Embeddings do not need a GPU or a big instance.** Since OT plan `165e86ef` the server runs
+quantized nomic-embed-text-v1.5 (768 dims) in-process on CPU, from weights baked into the image —
+no API key and no extra service. Budget ~300 MB of RAM per process that embeds (API + worker)
+and a few seconds of CPU at boot; Ollama stays an optional development convenience.
 
 **There is no load balancer line.** The Terraform app module puts Caddy on the E2 instance to
 terminate TLS with Let's Encrypt and reverse-proxy by hostname. That avoids the ~$18.25/month

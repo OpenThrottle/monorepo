@@ -3,15 +3,14 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 /**
  * Characterization tests for the semantic-search surface of openthrottle-client.
  *
- * The transport (TypeORM DataSource) and the embedding call are mocked, so these
+ * The transport (TypeORM DataSource) is mocked, so these
  * exercise the client's own logic — result normalization/coercion, ranking-order
  * preservation, and empty/early-exit paths — without a network or live pgvector
  * instance. A real-DB test that asserts pgvector `<=>` ranking is the honest
  * follow-up (see the integration note at the bottom of this file).
  */
 
-const { embedQuery, query, runQuery } = vi.hoisted(() => ({
-  embedQuery: vi.fn(),
+const { query, runQuery } = vi.hoisted(() => ({
   query: vi.fn(),
   runQuery: vi.fn(),
 }));
@@ -26,25 +25,23 @@ vi.mock('../data-source.js', () => ({
   runQuery,
 }));
 
-vi.mock('../embedding.js', () => ({
-  embedQuery,
-}));
-
 const {
   createCommitLink,
   getChunkById,
   getCommitLinksByPlanId,
   getCommitLinksByTaskId,
+  runLexicalSearch,
   runSemanticSearch,
   searchAgentAssets,
+  searchAgentAssetsLexically,
   searchPlansBySemanticQuery,
 } = await import('../openthrottle-client.js');
 
-const EMBEDDING = Array.from({ length: 1536 }, () => 0);
+const EMBEDDING = Array.from({ length: 768 }, () => 0);
+const MODEL = 'nomic-embed-text-v1.5';
 
 beforeEach(() => {
   query.mockReset();
-  embedQuery.mockReset();
   runQuery.mockReset();
 });
 
@@ -89,7 +86,7 @@ describe('runSemanticSearch', () => {
         },
       ]);
 
-    const result = await runSemanticSearch(EMBEDDING, 10);
+    const result = await runSemanticSearch(EMBEDDING, 10, MODEL);
 
     expect(result.map((chunk) => chunk.id)).toEqual(['t1', 'd1', 'p1']);
     expect(result.map((chunk) => chunk.source)).toEqual([
@@ -132,7 +129,7 @@ describe('runSemanticSearch', () => {
         },
       ]);
 
-    const result = await runSemanticSearch(EMBEDDING, 10);
+    const result = await runSemanticSearch(EMBEDDING, 10, MODEL);
 
     const plan = result.find((chunk) => chunk.id === 'p1');
     const doc = result.find((chunk) => chunk.id === 'd1');
@@ -176,7 +173,7 @@ describe('runSemanticSearch', () => {
       ])
       .mockResolvedValueOnce([]);
 
-    const result = await runSemanticSearch(EMBEDDING, 2);
+    const result = await runSemanticSearch(EMBEDDING, 2, MODEL);
 
     expect(result).toHaveLength(2);
     // highest-similarity two, in order.
@@ -186,7 +183,7 @@ describe('runSemanticSearch', () => {
   test('returns an empty array when every source is empty', async () => {
     query.mockResolvedValue([]);
 
-    const result = await runSemanticSearch(EMBEDDING, 10);
+    const result = await runSemanticSearch(EMBEDDING, 10, MODEL);
 
     expect(result).toEqual([]);
   });
@@ -209,7 +206,7 @@ describe('runSemanticSearch', () => {
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([]);
 
-    const result = await runSemanticSearch(EMBEDDING, 10);
+    const result = await runSemanticSearch(EMBEDDING, 10, MODEL);
 
     expect(result).toHaveLength(1);
     expect(result[0]?.id).toBe('p1');
@@ -245,23 +242,124 @@ describe('getChunkById', () => {
     const chunk = await getChunkById('missing');
 
     expect(chunk).toBeNull();
+    // three embedding tables, then the source-row fallback lexical results resolve through
+    expect(query).toHaveBeenCalledTimes(4);
+  });
+
+  test('resolves a source-row id from a lexical result', async () => {
+    query
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([
+        {
+          content: 'Plan body',
+          id: 'plan-1',
+          plan_id: 'plan-1',
+          plan_title: 'Plan One',
+          rank: 1,
+          source: 'plan',
+        },
+      ]);
+
+    const chunk = await getChunkById('plan-1');
+
+    expect(chunk).toMatchObject({
+      id: 'plan-1',
+      planId: 'plan-1',
+      source: 'plan',
+    });
+  });
+});
+
+describe('runSemanticSearch model filter', () => {
+  test('compares only vectors written by the configured model', async () => {
+    query.mockResolvedValue([]);
+
+    await runSemanticSearch(EMBEDDING, 5, MODEL);
+
     expect(query).toHaveBeenCalledTimes(3);
+    for (const call of query.mock.calls) {
+      expect(call[0]).toMatch(/WHERE \w+\.embedding_model = \$3/);
+      expect(call[1]).toEqual([expect.any(String), 5, MODEL]);
+    }
+  });
+});
+
+describe('runLexicalSearch', () => {
+  test('ranks full-text matches and maps documentation and task rows', async () => {
+    query.mockResolvedValueOnce([
+      {
+        authors: ['octocat'],
+        content: 'doc body',
+        id: 'doc-1',
+        path: 'docs/a.md',
+        rank: '0.6',
+        repo: 'o/r',
+        sha: 'abc',
+        source: 'documentation',
+      },
+      {
+        content: 'task body',
+        id: 'task-1',
+        plan_id: 'plan-1',
+        plan_title: 'Plan One',
+        rank: 0.2,
+        source: 'task',
+        task_id: 'task-1',
+        task_title: 'Task One',
+      },
+    ]);
+
+    const chunks = await runLexicalSearch('embeddings backfill', 10);
+
+    expect(query.mock.calls[0]?.[0]).toContain(
+      "websearch_to_tsquery('english', $1)",
+    );
+    expect(query.mock.calls[0]?.[1]).toEqual(['embeddings backfill', 10]);
+    expect(chunks).toEqual([
+      expect.objectContaining({
+        documentationId: 'doc-1',
+        path: 'docs/a.md',
+        similarity: 0.6,
+        source: 'documentation',
+      }),
+      expect.objectContaining({
+        planTitle: 'Plan One',
+        similarity: 0.2,
+        source: 'task',
+        taskId: 'task-1',
+      }),
+    ]);
+  });
+});
+
+describe('searchAgentAssetsLexically', () => {
+  test('applies prompt-type and project filters', async () => {
+    query.mockResolvedValueOnce([]);
+
+    await searchAgentAssetsLexically('commit', 5, ['skills'], 'project-1');
+
+    const [sql, params] = query.mock.calls[0] ?? [];
+
+    expect(sql).toContain('cp.prompt_type = ANY($2)');
+    expect(sql).toContain('cp.project_id = $3');
+    expect(params).toEqual(['commit', ['skills'], 'project-1', 5]);
   });
 });
 
 describe('searchPlansBySemanticQuery', () => {
-  test('returns an empty result without searching when the query cannot be embedded', async () => {
-    embedQuery.mockResolvedValueOnce(null);
+  test('returns an empty result when no chunk carries a plan', async () => {
+    query.mockResolvedValue([]);
 
-    const result = await searchPlansBySemanticQuery('anything');
+    const result = await searchPlansBySemanticQuery(EMBEDDING, 20, MODEL);
 
     expect(result).toEqual({ plans: [], totalCount: 0 });
-    expect(query).not.toHaveBeenCalled();
   });
 });
 
 describe('searchAgentAssets', () => {
-  const AGENT_EMBEDDING = Array.from({ length: 1536 }, () => 0);
+  const AGENT_EMBEDDING = Array.from({ length: 768 }, () => 0);
 
   function row(
     overrides: Partial<{
@@ -296,7 +394,13 @@ describe('searchAgentAssets', () => {
       row({ custom_prompt_id: 'cp-2', id: 'e-2', similarity: '0.70' }),
     ]);
 
-    const result = await searchAgentAssets(AGENT_EMBEDDING, 10);
+    const result = await searchAgentAssets(
+      AGENT_EMBEDDING,
+      10,
+      undefined,
+      undefined,
+      MODEL,
+    );
 
     expect(result.map((c) => c.customPromptId)).toEqual(['cp-1', 'cp-2']);
     expect(result.map((c) => c.id)).toEqual(['e-1a', 'e-2']);
@@ -312,7 +416,13 @@ describe('searchAgentAssets', () => {
       row({ custom_prompt_id: 'cp-3', id: 'e-3' }),
     ]);
 
-    const result = await searchAgentAssets(AGENT_EMBEDDING, 2);
+    const result = await searchAgentAssets(
+      AGENT_EMBEDDING,
+      2,
+      undefined,
+      undefined,
+      MODEL,
+    );
 
     expect(result).toHaveLength(2);
     expect(result.map((c) => c.customPromptId)).toEqual(['cp-1', 'cp-2']);
@@ -324,7 +434,13 @@ describe('searchAgentAssets', () => {
       rows: [row({ custom_prompt_id: 'cp-1', labels: 'not-an-array' })],
     });
 
-    const result = await searchAgentAssets(AGENT_EMBEDDING, 10);
+    const result = await searchAgentAssets(
+      AGENT_EMBEDDING,
+      10,
+      undefined,
+      undefined,
+      MODEL,
+    );
 
     expect(result).toHaveLength(1);
     expect(result[0]?.labels).toEqual([]);
