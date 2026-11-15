@@ -31,6 +31,7 @@ describe('OpenThrottlePagination Component', () => {
   describe('when pagination is not needed', () => {
     test('returns null when total fits a single page', () => {
       const view = renderPagination({
+        basePath: '/projects',
         limit: 10,
         page: 1,
         resultLabel: 'projects',
@@ -45,6 +46,7 @@ describe('OpenThrottlePagination Component', () => {
   describe('summary line', () => {
     test('shows the showing range and result label', () => {
       const view = renderPagination({
+        basePath: '/projects',
         limit: 10,
         page: 2,
         resultLabel: 'plans',
@@ -56,6 +58,7 @@ describe('OpenThrottlePagination Component', () => {
 
     test('uses the supplied label rather than a fixed entity noun', () => {
       const view = renderPagination({
+        basePath: '/projects',
         limit: 10,
         page: 1,
         resultLabel: 'tasks',
@@ -70,6 +73,7 @@ describe('OpenThrottlePagination Component', () => {
   describe('windowed page links', () => {
     test('renders a bounded strip with ellipsis for 100 pages at page 50', () => {
       const view = renderPagination({
+        basePath: '/projects',
         limit: 10,
         page: 50,
         resultLabel: 'projects',
@@ -93,6 +97,7 @@ describe('OpenThrottlePagination Component', () => {
     test('renders every page when totalPages is at or below the threshold', () => {
       const totalPages = PAGINATION_CONFIG.showAllPagesThreshold;
       const view = renderPagination({
+        basePath: '/projects',
         limit: 10,
         page: 4,
         resultLabel: 'projects',
@@ -112,6 +117,7 @@ describe('OpenThrottlePagination Component', () => {
   describe('active page styling', () => {
     test('marks the current page with aria-current page', () => {
       const view = renderPagination({
+        basePath: '/projects',
         limit: 10,
         page: 50,
         resultLabel: 'projects',
@@ -127,6 +133,7 @@ describe('OpenThrottlePagination Component', () => {
   describe('navigation controls', () => {
     test('disables previous on the first page and links next', () => {
       const view = renderPagination({
+        basePath: '/projects',
         limit: 10,
         page: 1,
         resultLabel: 'projects',
@@ -143,6 +150,7 @@ describe('OpenThrottlePagination Component', () => {
 
     test('disables next on the last page and links previous', () => {
       const view = renderPagination({
+        basePath: '/projects',
         limit: 10,
         page: 10,
         resultLabel: 'projects',
@@ -189,7 +197,13 @@ describe('OpenThrottlePagination Component', () => {
   describe('preserveSearchParams', () => {
     test('drops unmodelled params by default', () => {
       const view = renderPagination(
-        { limit: 10, page: 1, resultLabel: 'skills', total: 25 },
+        {
+          basePath: '/skills',
+          limit: 10,
+          page: 1,
+          resultLabel: 'skills',
+          total: 25,
+        },
         '/?source=openthrottle&search=abc',
       );
 
@@ -203,6 +217,7 @@ describe('OpenThrottlePagination Component', () => {
     test('clones the live query string when opted in', () => {
       const view = renderPagination(
         {
+          basePath: '/projects',
           limit: 10,
           page: 1,
           preserveSearchParams: true,

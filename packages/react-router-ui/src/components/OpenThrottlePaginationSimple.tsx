@@ -3,8 +3,11 @@ import * as React from 'react';
 import { Link, useSearchParams } from 'react-router';
 
 export interface OpenThrottlePaginationSimpleProps {
-  /** Base path for pagination links (default /). */
-  readonly basePath?: string;
+  /**
+   * Route the page links point at, e.g. `/queues/plans`. Required: a default
+   * would silently send another route's pager somewhere else.
+   */
+  readonly basePath: string;
   readonly className?: string;
   readonly limit: number;
   readonly page: number;
@@ -22,7 +25,7 @@ export const OpenThrottlePaginationSimple = (
   props: OpenThrottlePaginationSimpleProps,
 ): React.ReactElement | null => {
   const {
-    basePath = '/',
+    basePath,
     className,
     limit,
     page,

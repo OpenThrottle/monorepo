@@ -21,6 +21,7 @@ const renderPagination = (
 describe('OpenThrottlePaginationSimple Component', () => {
   test('derives page count from total and limit', () => {
     const component = renderPagination({
+      basePath: '/queues/plans',
       limit: 10,
       page: 1,
       resultLabel: 'jobs',
@@ -66,7 +67,12 @@ describe('OpenThrottlePaginationSimple Component', () => {
   });
 
   test('renders nothing when everything fits on one page', () => {
-    const component = renderPagination({ limit: 10, page: 1, total: 4 });
+    const component = renderPagination({
+      basePath: '/queues/plans',
+      limit: 10,
+      page: 1,
+      total: 4,
+    });
 
     expect(
       component.queryByTestId('queue-jobs-pagination'),
