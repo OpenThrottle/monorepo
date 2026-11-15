@@ -31,6 +31,7 @@ import {
   addHook,
   addPlanTag,
   cancelPlanRun,
+  createPlanRunSchedule,
   detachHook,
   evaluatePlanRules,
   forceSettlePlanRun,
@@ -41,6 +42,7 @@ import {
   saveJobRunHooks,
   saveRunConfig,
   schedulePlanRun,
+  setPlanRunScheduleEnabled,
   setPlanStatus,
   updateTaskStatus,
   withdrawPlanMessage,
@@ -289,6 +291,8 @@ export const action = async (args: Route.ActionArgs) => {
       return addPlanTag(args, planId, formData);
     case 'cancelPlanRun':
       return cancelPlanRun(args, planId, formData);
+    case 'createPlanRunSchedule':
+      return createPlanRunSchedule(args, planId, formData);
     case 'detachHook':
       return detachHook(args.request, formData);
     case 'evaluatePlanRules':
@@ -309,6 +313,8 @@ export const action = async (args: Route.ActionArgs) => {
       return saveRunConfig(args, planId, formData);
     case 'schedulePlanRun':
       return schedulePlanRun(args, planId, formData);
+    case 'setPlanRunScheduleEnabled':
+      return setPlanRunScheduleEnabled(args, formData);
     case 'setPlanStatus':
       return setPlanStatus(args, planId, formData);
     case 'updateTaskStatus':

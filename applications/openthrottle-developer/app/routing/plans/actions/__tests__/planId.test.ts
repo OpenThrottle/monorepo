@@ -17,6 +17,8 @@ const { executeGraphqlWithAuth } =
 const {
   PlanDetailAddPlanTagDocument,
   PlanDetailAddHookDocument,
+  PlanDetailCreatePlanRunScheduleDocument,
+  PlanDetailSetPlanRunScheduleEnabledDocument,
   PlanDetailDetachHookDocument,
   PlanDetailEnqueuePlanRunDocument,
   PlanDetailReschedulePlanRunDocument,
@@ -29,9 +31,11 @@ const {
   removePlanTag,
   reschedulePlanRun,
   addHook,
+  createPlanRunSchedule,
   detachHook,
   runPlan,
   saveRunConfig,
+  setPlanRunScheduleEnabled,
   setPlanStatus,
   updateTaskStatus,
 } = await import('../planId');
@@ -421,6 +425,107 @@ describe('plans/actions/planId reschedulePlanRun', () => {
 
     expect(result).toEqual({
       reschedulePlanRunError: 'Run is already starting.',
+    });
+  });
+});
+
+describe('plans/actions/planId recurring schedules', () => {
+  beforeEach(() => {
+    mockExecute.mockReset();
+  });
+
+  test('createPlanRunSchedule creates the schedule with cron, timezone and only the allowed overrides', async () => {
+    mockExecute.mockResolvedValue(
+      asMock<Awaited<ReturnType<typeof executeGraphqlWithAuth>>>({
+        createPlanRunSchedule: { id: 'schedule-1' },
+      }),
+    );
+
+    const result = await createPlanRunSchedule(
+      actionArgs(),
+      'plan-1',
+      form({
+        branch: 'feat/x',
+        cronPattern: '0 9 * * 1-5',
+        iterations: '4',
+        timezone: 'America/Los_Angeles',
+      }),
+    );
+
+    expect(result).toEqual({ createPlanRunSchedule: { id: 'schedule-1' } });
+    expect(mockExecute).toHaveBeenCalledTimes(1);
+    expect(mockExecute).toHaveBeenCalledWith(
+      expect.any(Request),
+      PlanDetailCreatePlanRunScheduleDocument,
+      {
+        input: {
+          cronPattern: '0 9 * * 1-5',
+          planId: 'plan-1',
+          runOverridesJson: JSON.stringify({
+            branch: 'feat/x',
+            iterations: 4,
+          }),
+          timezone: 'America/Los_Angeles',
+        },
+      },
+    );
+  });
+
+  test('createPlanRunSchedule needs a cron and does not call the server without one', async () => {
+    const result = await createPlanRunSchedule(
+      actionArgs(),
+      'plan-1',
+      form({ branch: 'feat/x' }),
+    );
+
+    expect(result).toEqual({ createPlanRunScheduleError: expect.any(String) });
+    expect(mockExecute).not.toHaveBeenCalled();
+  });
+
+  test('createPlanRunSchedule surfaces the server BadRequest message', async () => {
+    mockExecute.mockRejectedValue(new Error('Runs must be 5 minutes apart.'));
+
+    const result = await createPlanRunSchedule(
+      actionArgs(),
+      'plan-1',
+      form({ branch: 'feat/x', cronPattern: '* * * * *' }),
+    );
+
+    expect(result).toEqual({
+      createPlanRunScheduleError: 'Runs must be 5 minutes apart.',
+    });
+  });
+
+  test('setPlanRunScheduleEnabled stops a schedule by id', async () => {
+    mockExecute.mockResolvedValue(
+      asMock<Awaited<ReturnType<typeof executeGraphqlWithAuth>>>({
+        setPlanRunScheduleEnabled: { id: 'schedule-1' },
+      }),
+    );
+
+    const result = await setPlanRunScheduleEnabled(
+      actionArgs(),
+      form({ enabled: 'false', scheduleId: 'schedule-1' }),
+    );
+
+    expect(result).toEqual({ setPlanRunScheduleEnabled: { id: 'schedule-1' } });
+    expect(mockExecute).toHaveBeenCalledWith(
+      expect.any(Request),
+      PlanDetailSetPlanRunScheduleEnabledDocument,
+      { input: { enabled: false, id: 'schedule-1' } },
+    );
+  });
+
+  test('setPlanRunScheduleEnabled forwards the server message', async () => {
+    mockExecute.mockRejectedValue(new Error('Schedule not found.'));
+
+    const result = await setPlanRunScheduleEnabled(
+      actionArgs(),
+      form({ enabled: 'false', scheduleId: 'missing' }),
+    );
+
+    expect(result).toEqual({
+      setPlanRunScheduleEnabledError: 'Schedule not found.',
     });
   });
 });

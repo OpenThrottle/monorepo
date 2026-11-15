@@ -14,6 +14,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { PlanEnqueueService } from '../../../graphql/plans/plan-enqueue/plan-enqueue.service.ts';
 import type { StatusChangeSystemAccountService } from '../../../graphql/work-ledger/status-change-system-account/status-change-system-account.service.ts';
 import type { NotificationsService } from '../../../notifications/notifications.service.ts';
+import type { PlanRunScheduleService } from '../plan-run-schedule/plan-run-schedule.service.ts';
 import type { PlanRunJobResult, RunPlanJobData } from '../plans.types.ts';
 import { ScheduledPlanRunService } from './scheduled-plan-run.service.ts';
 
@@ -31,6 +32,7 @@ const scheduledRun = (
     bullmqJobId: `scheduled-plan-run-${id}`,
     id,
     planId: `plan-${id}`,
+    planRunScheduleId: null,
     scheduledFor,
     status: 'SCHEDULED',
     ...overrides,
@@ -45,6 +47,7 @@ describe('ScheduledPlanRunService', () => {
   const mockFindScheduledRunsWithJob = vi.fn();
   const mockTransitionScheduledRun = vi.fn();
   const mockGetJob = vi.fn();
+  const mockOnScheduledRunSettled = vi.fn();
   const mockOutputCreate = vi.fn((chunk: object) => chunk);
   const mockOutputSave = vi.fn();
 
@@ -63,6 +66,9 @@ describe('ScheduledPlanRunService', () => {
         create: mockOutputCreate,
         save: mockOutputSave,
       }),
+    }),
+    createMock<PlanRunScheduleService>({
+      onScheduledRunSettled: mockOnScheduledRunSettled,
     }),
     createMock<PlanRunsService>({
       findScheduledRunsWithJob: mockFindScheduledRunsWithJob,
@@ -85,6 +91,7 @@ describe('ScheduledPlanRunService', () => {
     mockTransitionScheduledRun.mockResolvedValue(true);
     mockGetJob.mockResolvedValue(undefined);
     mockOutputSave.mockResolvedValue(undefined);
+    mockOnScheduledRunSettled.mockResolvedValue([]);
   });
 
   describe('fire', () => {
@@ -240,6 +247,76 @@ describe('ScheduledPlanRunService', () => {
       });
       expect(mockEmitQueueJobCompleted).not.toHaveBeenCalled();
     });
+
+    describe('continues the recurring schedule chain after every settle', () => {
+      it.each([
+        ['fire', { kind: 'fire' }],
+        [
+          'superseded',
+          { kind: 'superseded', reason: 'the plan already had an active run' },
+        ],
+        [
+          'nothing_to_run',
+          {
+            kind: 'nothing_to_run',
+            reason: 'the plan had no tasks left to run',
+          },
+        ],
+        [
+          'workspace_missing',
+          {
+            kind: 'workspace_missing',
+            reason: 'workingDirectory does not exist',
+          },
+        ],
+      ])(
+        '%s: hooks the plan with its own slot and no missed schedule',
+        async (_name, outcome) => {
+          mockFireScheduledRun.mockResolvedValueOnce(outcome);
+
+          await service.fire({ now: NOW, run, workingDirectory: undefined });
+
+          expect(mockOnScheduledRunSettled).toHaveBeenCalledTimes(1);
+          expect(mockOnScheduledRunSettled).toHaveBeenCalledWith(
+            'plan-a',
+            NOW,
+            {
+              missedRunScheduleId: null,
+              settledSlot: NOW,
+            },
+          );
+        },
+      );
+
+      it('missed: hooks the plan and names the schedule whose occurrence was missed', async () => {
+        mockFireScheduledRun.mockResolvedValueOnce({
+          kind: 'missed',
+          reason: 'it was 75 minutes late',
+        });
+        const recurring = scheduledRun('m', NOW, {
+          planRunScheduleId: 'schedule-9',
+        });
+
+        await service.fire({
+          now: NOW,
+          run: recurring,
+          workingDirectory: undefined,
+        });
+
+        expect(mockOnScheduledRunSettled).toHaveBeenCalledWith('plan-m', NOW, {
+          missedRunScheduleId: 'schedule-9',
+          settledSlot: NOW,
+        });
+      });
+
+      it('not_scheduled: does not hook (the cancel path continues the chain itself)', async () => {
+        mockFireScheduledRun.mockResolvedValueOnce({ kind: 'not_scheduled' });
+
+        await service.fire({ now: NOW, run, workingDirectory: undefined });
+
+        expect(mockOnScheduledRunSettled).not.toHaveBeenCalled();
+      });
+    });
   });
 
   describe('reconcileOnStartup', () => {
@@ -307,6 +384,37 @@ describe('ScheduledPlanRunService', () => {
         planId: 'plan-stale',
         severity: 'warning',
       });
+    });
+
+    it('a MISSED settle continues the plan schedule chain, naming the missed schedule', async () => {
+      const run = scheduledRun('chain', new Date(NOW.getTime() - 2 * HOUR_MS), {
+        planRunScheduleId: 'schedule-3',
+      });
+      mockFindScheduledRunsWithJob.mockResolvedValueOnce([run]);
+
+      await service.reconcileOnStartup(NOW);
+
+      expect(mockOnScheduledRunSettled).toHaveBeenCalledWith(
+        'plan-chain',
+        NOW,
+        {
+          missedRunScheduleId: 'schedule-3',
+          settledSlot: run.scheduledFor,
+        },
+      );
+    });
+
+    it('does not continue the chain for a re-projected, present or cancel-raced run', async () => {
+      mockFindScheduledRunsWithJob.mockResolvedValueOnce([
+        scheduledRun('p', new Date(NOW.getTime() + HOUR_MS)),
+        scheduledRun('raced', new Date(NOW.getTime() - 2 * HOUR_MS)),
+      ]);
+      mockGetJob.mockResolvedValueOnce(createMock<Job>({ id: 'x' }));
+      mockTransitionScheduledRun.mockResolvedValueOnce(false);
+
+      await service.reconcileOnStartup(NOW);
+
+      expect(mockOnScheduledRunSettled).not.toHaveBeenCalled();
     });
 
     it('does not notify when a cancel settled the row first', async () => {

@@ -44,3 +44,35 @@ export type PlanSchedulability =
       readonly kind: 'conflict';
       readonly message: string;
     };
+
+/**
+ * @description What {@link PlanEnqueueService.materializeScheduleOccurrence} did. Never thrown: a
+ * recurring schedule's chain must survive every one of these.
+ * - `materialized`: the SCHEDULED run and its delayed job exist; `planStatusMoved` says whether the
+ *   plan went to SCHEDULED (it does only from PENDING/BACKLOG; an active plan keeps its status).
+ * - `already_materialized`: a run with this slot's deterministic job id already exists (any status).
+ * - `plan_has_scheduled_run`: the plan already holds its one SCHEDULED run (a user one-off, or another
+ *   schedule's occurrence); nothing was written, and the chain resumes when that run settles.
+ * - `beyond_horizon` / `not_future`: the slot is past the 30-day horizon or not strictly in the future.
+ * - `plan_not_found`, `unpreparable`: the plan is gone, or its run could not be resolved (workspace,
+ *   backend or hooks no longer valid); `reason` is human-readable.
+ */
+export type MaterializeOccurrenceOutcome =
+  | { readonly kind: 'already_materialized'; readonly planRunId: string }
+  | { readonly kind: 'beyond_horizon' }
+  | {
+      readonly executionBackend: PlanRunExecutionBackend;
+      readonly jobId: string;
+      readonly kind: 'materialized';
+      readonly planId: string;
+      readonly planRunId: string;
+      readonly planStatusMoved: boolean;
+      readonly scheduledFor: Date;
+    }
+  | { readonly kind: 'not_future' }
+  | {
+      readonly kind: 'plan_has_scheduled_run';
+      readonly planRunId: string | null;
+    }
+  | { readonly kind: 'plan_not_found' }
+  | { readonly kind: 'unpreparable'; readonly reason: string };

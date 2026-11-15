@@ -3,8 +3,10 @@ import * as React from 'react';
 import { parseDate } from '~/global/utils/dates';
 import { PlanRunCancelScheduledButton } from '~/routing/plans/components/PlanRunCancelScheduledButton';
 import { PlanRunMetaList } from '~/routing/plans/components/PlanRunMetaList';
+import { PlanRunRepeatBadge } from '~/routing/plans/components/PlanRunRepeatBadge';
 import { PlanRunRescheduleButton } from '~/routing/plans/components/PlanRunRescheduleButton';
 import { PlanRunStatusBadge } from '~/routing/plans/components/PlanRunStatusBadge';
+import { PlanRunStopRepeatingButton } from '~/routing/plans/components/PlanRunStopRepeatingButton';
 import { PlanRunTime } from '~/routing/plans/components/PlanRunTime';
 import { PlanWorkflowRunSection } from '~/routing/plans/components/PlanWorkflowRunSection';
 import type { PlanRunAuditRow } from '~/routing/plans/components/PlanWorkflowRunTransparencyAuditTable';
@@ -77,6 +79,7 @@ export const PlanWorkflowRunUpcoming = (
             </span>
             {hasFireTime ? knownFireTime : unknownFireTime}
             <PlanRunStatusBadge status="SCHEDULED" />
+            <PlanRunRepeatBadge planRunId={item.id} />
           </div>
           {renderMeta(item)}
         </div>
@@ -87,6 +90,7 @@ export const PlanWorkflowRunUpcoming = (
             scheduledFor={item.scheduledFor}
           />
           <PlanRunCancelScheduledButton planId={planId} planRunId={item.id} />
+          <PlanRunStopRepeatingButton planId={planId} planRunId={item.id} />
         </div>
       </li>
     );

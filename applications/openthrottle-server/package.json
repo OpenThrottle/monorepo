@@ -57,6 +57,7 @@
     "@tools/generators": "workspace:^",
     "@tools/workflows": "workspace:^",
     "bullmq": "catalog:",
+    "cron-parser": "catalog:",
     "dataloader": "catalog:",
     "dotenv": "catalog:",
     "graphql": "catalog:",

@@ -105,6 +105,7 @@ const mockPlan = {
     name: 'Test Project',
   },
   runConfigJson: storedRunConfigJson,
+  runSchedules: [],
   status: 'IN_PROGRESS',
   summary: 'Plan summary',
   tags: [],

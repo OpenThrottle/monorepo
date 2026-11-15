@@ -1,5 +1,6 @@
 import { createMock } from '@golevelup/ts-vitest';
 import type {
+  PlanRunSchedulesService,
   PlanRunsService,
   ProjectsService,
   TasksService,
@@ -29,6 +30,10 @@ describe('PlansLoaders', () => {
   const planRunsService = createMock<PlanRunsService>({
     findEarliestScheduledForByPlanIds,
   });
+  const findByPlanIds = vi.fn();
+  const planRunSchedulesService = createMock<PlanRunSchedulesService>({
+    findByPlanIds,
+  });
   const getPlanHooksForPlans = vi.fn();
   const tasksService = createMock<TasksService>({
     getPlanHooksForPlans,
@@ -45,7 +50,12 @@ describe('PlansLoaders', () => {
     taskQueryBuilder.select.mockReturnThis();
     taskQueryBuilder.where.mockReturnThis();
     createQueryBuilder.mockReturnValue(taskQueryBuilder);
-    loaders = new PlansLoaders(planRunsService, projectsService, tasksService);
+    loaders = new PlansLoaders(
+      planRunSchedulesService,
+      planRunsService,
+      projectsService,
+      tasksService,
+    );
   });
 
   describe('projectLoader', () => {

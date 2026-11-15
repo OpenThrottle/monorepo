@@ -8,7 +8,10 @@ import { toast } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import type { PlanRunConfigRepositoryFieldsFragment } from '~/__generated__/graphql';
-import { PLAN_TOOLBAR_COPY } from '~/routing/plans/data/data.copy';
+import {
+  PLAN_RUN_REPEAT_COPY,
+  PLAN_TOOLBAR_COPY,
+} from '~/routing/plans/data/data.copy';
 import { usePlanDeferredValue } from '~/routing/plans/hooks/usePlanDeferredValue';
 import type {
   PlanRunDialogMode,
@@ -18,6 +21,7 @@ import {
   PLAN_RUN_BULLMQ_QUEUE_NAME,
   planRunJobDetailPath,
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
+import { describeRunSchedule } from '~/routing/plans/utils/plan-run-repeat';
 import { formatScheduledInstant } from '~/routing/plans/utils/plan-run-schedule';
 import { addRecentWorkspacePath } from '~/routing/plans/utils/workspace-path';
 
@@ -65,6 +69,14 @@ export const usePlanToolbarRunDialog = (
   };
 
   const onSubmitted = (submission: PlanRunDialogSubmission): void => {
+    if (submission.mode === 'repeat') {
+      toast.success(PLAN_RUN_REPEAT_COPY.repeatScheduledToast, {
+        description: describeRunSchedule(submission.result),
+      });
+
+      return;
+    }
+
     if (submission.mode === 'schedule') {
       toast.success(PLAN_TOOLBAR_COPY.runScheduledToast, {
         description: PLAN_TOOLBAR_COPY.runScheduledToastDescription(

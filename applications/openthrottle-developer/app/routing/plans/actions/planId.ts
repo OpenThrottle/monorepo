@@ -15,6 +15,7 @@ import type {
 import {
   PlanDetailAddHookDocument,
   PlanDetailAddPlanTagDocument,
+  PlanDetailCreatePlanRunScheduleDocument,
   PlanDetailDetachHookDocument,
   PlanDetailEnqueuePlanRunDocument,
   PlanDetailEvaluatePlanRulesDocument,
@@ -24,6 +25,7 @@ import {
   PlanDetailReschedulePlanRunDocument,
   PlanDetailRunConfigDocument,
   PlanDetailSchedulePlanRunDocument,
+  PlanDetailSetPlanRunScheduleEnabledDocument,
   PlanDetailSetPlanStatusDocument,
   PlanDetailUpdatePlanJobRunHooksDocument,
   PlanDetailUpdatePlanRunConfigDocument,
@@ -34,6 +36,7 @@ import {
   AddHookInputSchema,
   AddPlanTagInputSchema,
   CancelPlanRunInputSchema,
+  CreatePlanRunScheduleInputSchema,
   DetachHookInputSchema,
   EnqueuePlanRunInputSchema,
   ForceSettlePlanRunInputSchema,
@@ -41,6 +44,7 @@ import {
   RemovePlanTagInputSchema,
   ReschedulePlanRunInputSchema,
   SchedulePlanRunInputSchema,
+  SetPlanRunScheduleEnabledInputSchema,
   SetPlanStatusInputSchema,
   UpdateTaskInputSchema,
   WithdrawPlanMessageInputSchema,
@@ -57,6 +61,7 @@ import {
   parsePlanRunForm,
   parseScheduledFor,
 } from '~/routing/plans/utils/plan-run-form';
+import { buildRunOverridesJson } from '~/routing/plans/utils/plan-run-repeat';
 import { readPlanScheduleFailure } from '~/routing/plans/utils/plan-schedule-conflict';
 
 /**
@@ -737,6 +742,117 @@ export const schedulePlanRun = async (
     return 'conflict' in failure
       ? { schedulePlanRunConflict: failure.conflict }
       : { schedulePlanRunError: failure.message };
+  }
+};
+
+/**
+ * Makes the plan recur, INSTEAD of `schedulePlanRun`: the server materializes the first
+ * occurrence itself. Reads the same kickoff form (so the model/effort/runner selection is
+ * persisted like a one-off schedule) plus `cronPattern` and `timezone`; the run tuning
+ * travels as `runOverridesJson` (branch, effort, iterations, model only). The server owns
+ * cron validity and the minimum interval; its message is returned as
+ * `createPlanRunScheduleError`.
+ */
+export const createPlanRunSchedule = async (
+  args: Route.ActionArgs,
+  planId: string,
+  formData: FormData,
+) => {
+  const recurrence = parseFormData(
+    formData,
+    z.object({
+      cronPattern: z.string().nullish(),
+      timezone: z.string().nullish(),
+    }),
+    { strict: false },
+  );
+  if (!recurrence.success) {
+    return { createPlanRunScheduleError: recurrence.error };
+  }
+
+  const { cronPattern, timezone } = recurrence.data;
+  if (cronPattern == null || cronPattern.trim() === '') {
+    return {
+      createPlanRunScheduleError: 'Choose how this plan should repeat.',
+    };
+  }
+
+  const parsed = parsePlanRunForm(formData);
+  if (!parsed.success) {
+    return { createPlanRunScheduleError: parsed.error };
+  }
+
+  if (parsed.persisted !== undefined || parsed.runnerSelection !== undefined) {
+    const persistError = await persistPlanRunSelection(args, planId, parsed);
+    if (persistError !== undefined) {
+      return { createPlanRunScheduleError: persistError };
+    }
+  }
+
+  try {
+    const runOverridesJson = buildRunOverridesJson(parsed.fields);
+    const input = CreatePlanRunScheduleInputSchema().parse({
+      cronPattern: cronPattern.trim(),
+      planId,
+      ...(runOverridesJson === undefined ? {} : { runOverridesJson }),
+      ...(timezone == null || timezone === '' ? {} : { timezone }),
+    });
+    const result = await executeGraphqlWithAuth(
+      args.request,
+      PlanDetailCreatePlanRunScheduleDocument,
+      { input },
+    );
+
+    return { createPlanRunSchedule: result.createPlanRunSchedule };
+  } catch (error) {
+    return {
+      createPlanRunScheduleError: toErrorMessage(
+        error,
+        'Failed to schedule the repeating run.',
+      ),
+    };
+  }
+};
+
+/**
+ * Pauses ("Stop repeating") or resumes a recurring schedule by its id. A pause also cancels
+ * the schedule's pending occurrence on the server.
+ */
+export const setPlanRunScheduleEnabled = async (
+  args: Route.ActionArgs,
+  formData: FormData,
+) => {
+  const parsed = parseFormData(
+    formData,
+    z.object({
+      enabled: z.enum(['true', 'false']),
+      scheduleId: z.string().min(1),
+    }),
+    { strict: false },
+  );
+  if (!parsed.success) {
+    return { setPlanRunScheduleEnabledError: parsed.error };
+  }
+
+  try {
+    const input = SetPlanRunScheduleEnabledInputSchema().parse({
+      enabled: parsed.data.enabled === 'true',
+      id: parsed.data.scheduleId,
+    });
+    const result = await executeGraphqlWithAuth(
+      args.request,
+      PlanDetailSetPlanRunScheduleEnabledDocument,
+      { input },
+    );
+
+    return { setPlanRunScheduleEnabled: result.setPlanRunScheduleEnabled };
+  } catch (error) {
+    return {
+      setPlanRunScheduleEnabledError: toErrorMessage(
+        error,
+        'Failed to update the repeat schedule.',
+      ),
+    };
   }
 };
 

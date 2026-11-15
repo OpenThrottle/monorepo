@@ -77,3 +77,12 @@ export interface WriteGuardedStatusParams {
   readonly requestedStatus: string;
   readonly throwOnForbiddenInProgress: boolean;
 }
+
+/**
+ * @description Result of {@link PlanStatusService.setStatusWithOutcome}: the saved plan plus the
+ * SCHEDULED runs the change cancelled (D7); the id list is usually empty.
+ */
+export interface SetStatusOutcome {
+  readonly cancelledScheduledRunIds: readonly string[];
+  readonly plan: Plan;
+}

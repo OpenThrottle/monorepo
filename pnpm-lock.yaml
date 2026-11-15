@@ -548,6 +548,9 @@ catalogs:
     compression:
       specifier: ^1.8.1
       version: 1.8.1
+    cron-parser:
+      specifier: ^5.10.4
+      version: 5.10.4
     cronstrue:
       specifier: ^3.24.0
       version: 3.24.0
@@ -1536,6 +1539,9 @@ importers:
       '@vscode/ripgrep':
         specifier: 'catalog:'
         version: 1.18.0
+      cronstrue:
+        specifier: 'catalog:'
+        version: 3.24.0
       date-fns:
         specifier: 'catalog:'
         version: 4.4.0
@@ -1792,6 +1798,9 @@ importers:
       bullmq:
         specifier: 'catalog:'
         version: 5.81.3(supports-color@8.1.1)
+      cron-parser:
+        specifier: 'catalog:'
+        version: 5.10.4
       dataloader:
         specifier: 'catalog:'
         version: 2.2.3
@@ -11639,6 +11648,10 @@ packages:
     resolution: {integrity: sha512-p0SaNjrHOnQeR8/VnfGbmg9te2kfyYSQ7Sc/j/6DtPL3JQvKxmjO9TSjNFpujqV3vEYYBvNNvXSxzyksBWAx1Q==}
     engines: {node: '>=12.0.0'}
     deprecated: v4 is no longer maintained, upgrade to v5
+
+  cron-parser@5.10.4:
+    resolution: {integrity: sha512-TagNqYzoV/C7Ty7VAQjrQg+57WsEOuQEUh0tWT5Dc+l/GOuoAdWVIzFU0CqYdQswqdjUalrdmOvaMtQhErYZTA==}
+    engines: {node: '>=18'}
 
   cronstrue@3.24.0:
     resolution: {integrity: sha512-t/Ji3Ur2c/pzhIAWNwC0ftl3JAE4dLfCjAdZoTZXmPDZwcispnS1PaMcMS4OmIIXyIVouAz+yw+mfQiE3hz5OQ==}
@@ -25307,6 +25320,10 @@ snapshots:
     optional: true
 
   cron-parser@4.9.0:
+    dependencies:
+      luxon: 3.7.2
+
+  cron-parser@5.10.4:
     dependencies:
       luxon: 3.7.2
 

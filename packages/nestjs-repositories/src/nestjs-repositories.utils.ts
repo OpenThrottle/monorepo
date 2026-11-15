@@ -31,6 +31,7 @@ import { Note } from './modules/notes/note.entity.ts';
 import { PlanEmbedding } from './modules/plan-embeddings/plan-embedding.entity.ts';
 import { PlanMessage } from './modules/plan-messages/plan-message.entity.ts';
 import { PlanOutputStreamChunk } from './modules/plan-output-stream/plan-output-stream.entity.ts';
+import { PlanRunSchedule } from './modules/plan-run-schedules/plan-run-schedules.entity.ts';
 import { PlanRun } from './modules/plan-runs/plan-run.entity.ts';
 import { Plan } from './modules/plans/plan.entity.ts';
 import { ProjectSkill } from './modules/project-skills/project-skill.entity.ts';
@@ -117,6 +118,7 @@ export function getTypeOrmOptions(): DataSourceOptions {
       PlanMessage,
       PlanOutputStreamChunk,
       PlanRun,
+      PlanRunSchedule,
       PlanTag,
       Project,
       ProjectSkill,

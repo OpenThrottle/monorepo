@@ -99,6 +99,7 @@ export const createPlanRunDialogDraft = (input: {
 
   return {
     backend: workflowInput.executionBackend,
+    customCron: '',
     effort: reconcilePlanRunEffort(
       workflowInput.executionBackend,
       workflowInput.effort,
@@ -109,6 +110,7 @@ export const createPlanRunDialogDraft = (input: {
     otLoopMaxRetriesText:
       otLoop?.maxRetries === undefined ? '' : String(otLoop.maxRetries),
     otLoopValidationText: formatOtLoopCommandsText(otLoop?.validationCommands),
+    repeat: 'none',
     runner: resolvePlanRunRunner(runner),
     scheduleDate: defaultInstant,
     scheduleTime: formatScheduleTime(defaultInstant),
@@ -185,15 +187,30 @@ export const getPlanRunDialogBlockedReason = (
   return null;
 };
 
+const getPlanRunDialogIntent = (
+  mode: PlanRunDialogMode,
+  isRepeat: boolean,
+): string => {
+  if (mode === 'run') {
+    return 'runPlan';
+  }
+
+  return isRepeat ? 'createPlanRunSchedule' : 'schedulePlanRun';
+};
+
 export interface PlanRunDialogFieldsInput {
   readonly branch: string;
   readonly checkoutId: string;
+  /** @description The cron a Repeat choice means; set only while repeating, which swaps the intent. */
+  readonly cronPattern: string | undefined;
   readonly draft: PlanRunDialogDraft;
   readonly iterations: number | null | undefined;
   readonly jobRunHooksJson: string;
   readonly ralphTuningJson: string;
   readonly repositoryId: string;
   readonly scheduledFor: Date | undefined;
+  /** @description IANA zone the date, time and cron are read in; sent with a repeat. */
+  readonly timeZone: string;
   readonly workingDirectory: string;
 }
 
@@ -202,7 +219,8 @@ export interface PlanRunDialogFieldsInput {
  * order. Blank values are left out, as the toolbar's one-click Run form does. `backend` +
  * `model` always travel together; `effort` is omitted when unset; `iterations` is only the
  * per-run override and Ralph-only (dropped for OT Loop); the `otLoop*` fields travel only for
- * OT Loop, and `runner` always travels; `scheduledFor` (an ISO instant) exists on the Schedule tab alone.
+ * OT Loop, and `runner` always travels; `scheduledFor` (an ISO instant) exists on the Schedule tab alone,
+ * except for a repeat, which sends `cronPattern` + `timezone` under `createPlanRunSchedule` instead.
  */
 export const buildPlanRunDialogFields = (
   input: PlanRunDialogFieldsInput,
@@ -210,21 +228,25 @@ export const buildPlanRunDialogFields = (
   const {
     branch,
     checkoutId,
+    cronPattern,
     draft,
     iterations,
     jobRunHooksJson,
     ralphTuningJson,
     repositoryId,
     scheduledFor,
+    timeZone,
     workingDirectory,
   } = input;
+  const isRepeat = draft.mode === 'schedule' && cronPattern !== undefined;
   const isOtLoop = draft.runner === 'ot-loop';
   const entries: readonly (readonly [string, string | undefined])[] = [
     ['backend', draft.backend],
     ['branch', branch],
     ['checkoutId', checkoutId],
+    ['cronPattern', isRepeat ? cronPattern : undefined],
     ['effort', draft.effort],
-    ['intent', draft.mode === 'schedule' ? 'schedulePlanRun' : 'runPlan'],
+    ['intent', getPlanRunDialogIntent(draft.mode, isRepeat)],
     [
       'iterations',
       iterations == null || isOtLoop ? undefined : String(iterations),
@@ -243,8 +265,11 @@ export const buildPlanRunDialogFields = (
     ['runner', draft.runner],
     [
       'scheduledFor',
-      draft.mode === 'schedule' ? scheduledFor?.toISOString() : undefined,
+      draft.mode === 'schedule' && !isRepeat
+        ? scheduledFor?.toISOString()
+        : undefined,
     ],
+    ['timezone', isRepeat ? timeZone : undefined],
     ['workingDirectory', workingDirectory],
   ];
 

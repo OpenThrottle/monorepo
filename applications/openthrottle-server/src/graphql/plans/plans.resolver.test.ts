@@ -32,6 +32,7 @@ import { NotificationsService } from '../../notifications/notifications.service.
 import { PlanRulesEvaluationService } from '../../queues/plan-rules/evaluation/evaluation.service.ts';
 import { PLAN_RULES_TRIGGER_KINDS } from '../../queues/plan-rules/plan-rules.constants.ts';
 import { PlanCancelChannelService } from '../../queues/plans/cancel-channel/cancel-channel.service.ts';
+import { PlanRunScheduleService } from '../../queues/plans/plan-run-schedule/plan-run-schedule.service.ts';
 import { PLANS_QUEUE_NAME } from '../../queues/plans/plans.constants.ts';
 import type { RunPlanJobData } from '../../queues/plans/plans.types.ts';
 import { PlanRunCancellationService } from '../../queues/plans/run-cancellation/run-cancellation.service.ts';
@@ -157,6 +158,7 @@ describe('PlansResolver', () => {
   const mockProjectLoad = vi.fn().mockResolvedValue(null);
   const mockRunnableTaskCountLoad = vi.fn().mockResolvedValue(0);
   const mockScheduledRunLoad = vi.fn().mockResolvedValue(null);
+  const mockRunSchedulesLoad = vi.fn().mockResolvedValue([]);
   const mockTaskCountLoad = vi.fn().mockResolvedValue(0);
   const mockTasksCompletedCountLoad = vi.fn().mockResolvedValue(0);
   const mockPlanHooksLoad = vi
@@ -165,6 +167,7 @@ describe('PlansResolver', () => {
   const mockPlansLoaders = createMock<PlansLoaders>({
     planHooksByPlanIdLoader: { load: mockPlanHooksLoad },
     projectLoader: { load: mockProjectLoad },
+    runSchedulesByPlanIdLoader: { load: mockRunSchedulesLoad },
     runnableTaskCountByPlanIdLoader: { load: mockRunnableTaskCountLoad },
     scheduledRunByPlanIdLoader: { load: mockScheduledRunLoad },
     taskCountByPlanIdLoader: { load: mockTaskCountLoad },
@@ -280,6 +283,10 @@ describe('PlansResolver', () => {
     schedulePlanRun: mockSchedulePlanRun,
   });
 
+  const mockOnScheduledRunSettled = vi.fn().mockResolvedValue([]);
+  const mockOnPlanStatusChangedCancellingOccurrence = vi
+    .fn()
+    .mockResolvedValue(undefined);
   const mockEnqueueEvaluation = vi.fn().mockResolvedValue(undefined);
   const mockPlanRulesEvaluationService = createMock<PlanRulesEvaluationService>(
     {
@@ -308,6 +315,14 @@ describe('PlansResolver', () => {
         {
           provide: PlanRulesEvaluationService,
           useValue: mockPlanRulesEvaluationService,
+        },
+        {
+          provide: PlanRunScheduleService,
+          useValue: createMock<PlanRunScheduleService>({
+            onPlanStatusChangedCancellingOccurrence:
+              mockOnPlanStatusChangedCancellingOccurrence,
+            onScheduledRunSettled: mockOnScheduledRunSettled,
+          }),
         },
         {
           provide: TaggingEnqueueService,
@@ -640,6 +655,35 @@ describe('PlansResolver', () => {
       await expect(resolver.scheduledRunId(mockPlan)).resolves.toBeNull();
     });
 
+    test("runSchedules maps the plan's schedules from runSchedulesByPlanIdLoader", async () => {
+      const now = new Date('2026-11-14T12:00:00Z');
+      mockRunSchedulesLoad.mockResolvedValueOnce([
+        {
+          createdAt: now,
+          createdBy: null,
+          cronPattern: '0 9 * * 1',
+          enabled: true,
+          id: 'schedule-1',
+          misfirePolicy: 'skip',
+          planId: mockPlan.id,
+          runOverrides: { model: 'opus' },
+          scheduleKind: 'cron',
+          timezone: null,
+          updatedAt: now,
+        },
+      ]);
+
+      const result = await resolver.runSchedules(mockPlan);
+
+      expect(mockRunSchedulesLoad).toHaveBeenCalledWith(mockPlan.id);
+      expect(result).toHaveLength(1);
+      expect(result[0]).toMatchObject({
+        cronPattern: '0 9 * * 1',
+        id: 'schedule-1',
+        runOverridesJson: '{"model":"opus"}',
+      });
+    });
+
     test('runnableTaskCount resolves through runnableTaskCountByPlanIdLoader', async () => {
       mockRunnableTaskCountLoad.mockResolvedValueOnce(3);
 
@@ -923,6 +967,72 @@ describe('PlansResolver', () => {
       expect(repo.findOne).toHaveBeenCalledWith({
         where: { id: mockPlan.id },
       });
+    });
+
+    test('hands the cancelled scheduled run ids to the schedule chain hook (D7)', async () => {
+      vi.spyOn(
+        PlanStatusService.prototype,
+        'setStatusWithOutcome',
+      ).mockResolvedValueOnce({
+        cancelledScheduledRunIds: ['run-1'],
+        plan: { ...mockPlan, status: 'PENDING' },
+      });
+      mockOnPlanStatusChangedCancellingOccurrence.mockClear();
+
+      await resolver.setPlanStatus({
+        planId: mockPlan.id,
+        status: 'pending',
+      });
+
+      expect(mockOnPlanStatusChangedCancellingOccurrence).toHaveBeenCalledWith(
+        mockPlan.id,
+        'PENDING',
+        ['run-1'],
+      );
+    });
+
+    test('passes a terminal target through so the hook can disable the schedules', async () => {
+      vi.spyOn(
+        PlanStatusService.prototype,
+        'setStatusWithOutcome',
+      ).mockResolvedValueOnce({
+        cancelledScheduledRunIds: ['run-1'],
+        plan: { ...mockPlan, status: 'CANCELED' },
+      });
+      mockOnPlanStatusChangedCancellingOccurrence.mockClear();
+
+      await resolver.setPlanStatus({
+        planId: mockPlan.id,
+        status: 'canceled',
+      });
+
+      expect(mockOnPlanStatusChangedCancellingOccurrence).toHaveBeenCalledWith(
+        mockPlan.id,
+        'CANCELED',
+        ['run-1'],
+      );
+    });
+
+    test('an unrelated status change reports no cancelled runs', async () => {
+      vi.spyOn(
+        PlanStatusService.prototype,
+        'setStatusWithOutcome',
+      ).mockResolvedValueOnce({
+        cancelledScheduledRunIds: [],
+        plan: { ...mockPlan, status: 'COMPLETED' },
+      });
+      mockOnPlanStatusChangedCancellingOccurrence.mockClear();
+
+      await resolver.setPlanStatus({
+        planId: mockPlan.id,
+        status: 'completed',
+      });
+
+      expect(mockOnPlanStatusChangedCancellingOccurrence).toHaveBeenCalledWith(
+        mockPlan.id,
+        'COMPLETED',
+        [],
+      );
     });
 
     test('accepts the typed statusEnum arg', async () => {
@@ -1294,6 +1404,31 @@ describe('PlansResolver', () => {
         ),
       ).rejects.toBeInstanceOf(BadRequestException);
       expect(mockSchedulePlanRun).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('cancelPlanRun', () => {
+    test('continues the plan recurring schedule chain after the cancel settled its slot', async () => {
+      vi.spyOn(PlanStatusService.prototype, 'cancelRun').mockResolvedValueOnce({
+        activeJobIdsCouldNotCancel: [],
+        cancelRequested: false,
+        noMatchingJob: false,
+        outcome: 'RUN_CANCELLED',
+        planId: mockPlan.id,
+        planStatusAfter: 'PENDING',
+        removedJobIds: ['scheduled-plan-run-sched-s-1'],
+        signaledActiveRunToStop: false,
+      });
+      mockOnScheduledRunSettled.mockClear();
+
+      const result = await resolver.cancelPlanRun(
+        { planId: mockPlan.id, planRunId: 'run-1' },
+        'user-1',
+        'user',
+      );
+
+      expect(mockOnScheduledRunSettled).toHaveBeenCalledWith(mockPlan.id);
+      expect(result.outcome).toBe('RUN_CANCELLED');
     });
   });
 
@@ -2283,6 +2418,56 @@ describe('PlansResolver', () => {
             ralph: expect.objectContaining({ iterations: 42 }),
           }),
         }),
+      );
+    });
+
+    test('hands a D7-cancelled scheduled run to the schedule chain hook after the status write', async () => {
+      const repo = plansService.getRepository();
+      vi.mocked(repo.findOne).mockResolvedValue({
+        ...mockPlan,
+        status: 'SCHEDULED',
+      });
+      vi.mocked(repo.save).mockImplementation(() =>
+        Promise.resolve(createMock<Plan>()),
+      );
+      vi.spyOn(
+        PlanStatusService.prototype,
+        'applyStatusChange',
+      ).mockImplementationOnce((_manager, params) => {
+        params.entity.status = params.requestedStatus;
+
+        return Promise.resolve({
+          applied: true,
+          cancelledScheduledRunIds: ['run-1'],
+          fromStatus: 'SCHEDULED',
+          toStatus: params.requestedStatus,
+        });
+      });
+      mockOnPlanStatusChangedCancellingOccurrence.mockClear();
+
+      await resolver.updatePlan({ id: mockPlan.id, status: 'PENDING' });
+
+      expect(mockOnPlanStatusChangedCancellingOccurrence).toHaveBeenCalledWith(
+        mockPlan.id,
+        'PENDING',
+        ['run-1'],
+      );
+    });
+
+    test('an update without a status change reports no cancelled scheduled runs', async () => {
+      const repo = plansService.getRepository();
+      vi.mocked(repo.findOne).mockResolvedValue({ ...mockPlan });
+      vi.mocked(repo.save).mockImplementation(() =>
+        Promise.resolve(createMock<Plan>()),
+      );
+      mockOnPlanStatusChangedCancellingOccurrence.mockClear();
+
+      await resolver.updatePlan({ id: mockPlan.id, title: 'Renamed' });
+
+      expect(mockOnPlanStatusChangedCancellingOccurrence).toHaveBeenCalledWith(
+        mockPlan.id,
+        mockPlan.status,
+        [],
       );
     });
 

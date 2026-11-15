@@ -56,6 +56,7 @@ import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notificatio
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import { PlanRulesEvaluationService } from '../../queues/plan-rules/evaluation/evaluation.service.ts';
 import { PLAN_RULES_TRIGGER_KINDS } from '../../queues/plan-rules/plan-rules.constants.ts';
+import { PlanRunScheduleService } from '../../queues/plans/plan-run-schedule/plan-run-schedule.service.ts';
 import { TaggingEnqueueService } from '../../queues/tagging/enqueue/enqueue.service.ts';
 import { TAGGING_ENTITY_TYPES } from '../../queues/tagging/tagging.constants.ts';
 import { EffectiveUserResolutionService } from '../../services/effective-user-resolution/effective-user-resolution.service.ts';
@@ -111,6 +112,8 @@ import type {
   EnqueueOutcome,
   ScheduleOutcome,
 } from './plan-enqueue/plan-enqueue.types.ts';
+import { PlanRunScheduleObject } from './plan-run-schedules/plan-run-schedules.object.ts';
+import { mapPlanRunScheduleObject } from './plan-run-schedules/plan-run-schedules.utils.ts';
 import { PlanStatusService } from './plan-status/plan-status.service.ts';
 import { PlanTaskStatus } from './plan-task-status.enum.ts';
 
@@ -308,6 +311,7 @@ export class PlansResolver {
     private readonly planCreationService: PlanCreationService,
     private readonly planEnqueueService: PlanEnqueueService,
     private readonly planRulesEvaluationService: PlanRulesEvaluationService,
+    private readonly planRunScheduleService: PlanRunScheduleService,
     private readonly planRunsService: PlanRunsService,
     private readonly planRunWorktreeCheckoutService: PlanRunWorktreeCheckoutService,
     private readonly planStatusService: PlanStatusService,
@@ -468,6 +472,19 @@ export class PlansResolver {
     return run?.id ?? null;
   }
 
+  @ResolveField(() => [PlanRunScheduleObject], {
+    description: `The plan's recurring schedules, oldest first. Resolved through a batched loader (one query for a whole list of plans).`,
+  })
+  async runSchedules(
+    @Parent() parent: PlanObject,
+  ): Promise<PlanRunScheduleObject[]> {
+    const schedules = await this.loaders.runSchedulesByPlanIdLoader.load(
+      parent.id,
+    );
+
+    return schedules.map((schedule) => mapPlanRunScheduleObject(schedule));
+  }
+
   @ResolveField(() => [TaskObject], {
     description: `Plan-level before-hooks (beforeAll, or beforeEach when scope='each'), in execution order.`,
   })
@@ -499,6 +516,7 @@ export class PlansResolver {
     out.lastHeartbeatAt = planRun.lastHeartbeatAt;
     out.pid = planRun.pid;
     out.planId = planRun.planId;
+    out.planRunScheduleId = planRun.planRunScheduleId;
     out.queueName = planRun.queueName;
     out.resumeOfRunId = planRun.resumeOfRunId;
     out.runConfigSnapshotJson = serializePlanRunConfigSnapshotForGraphql(
@@ -1146,6 +1164,7 @@ export class PlansResolver {
     const statusChanged = statusChange != null;
 
     let touched = false;
+    let cancelledScheduledRunIds: readonly string[] = [];
 
     if (input.author != null && input.author !== entity.author) {
       entity.author = input.author;
@@ -1240,7 +1259,7 @@ export class PlansResolver {
     // this repeats the same decision and always applies).
     const saved = await repo.manager.transaction(async (manager) => {
       if (statusChanged && statusChange) {
-        await this.planStatusService.applyStatusChange(manager, {
+        const change = await this.planStatusService.applyStatusChange(manager, {
           actorKind,
           actorSub,
           captureFailureIsFatal: true,
@@ -1250,10 +1269,22 @@ export class PlansResolver {
           // reaches here — resolveStatusChange returns null for it first).
           throwOnForbiddenInProgress: true,
         });
+
+        if (change.applied) {
+          cancelledScheduledRunIds = change.cancelledScheduledRunIds;
+        }
       }
 
       return manager.save(entity);
     });
+
+    // D7: leaving SCHEDULED cancelled the occurrence; keep (or stop) the recurring chain now the
+    // write committed. A no-op unless a scheduled run was cancelled; best-effort.
+    await this.planRunScheduleService.onPlanStatusChangedCancellingOccurrence(
+      entity.id,
+      entity.status,
+      cancelledScheduledRunIds,
+    );
 
     // Downstream reaction stays outside the transaction (fire-and-forget, as before).
     if (statusChanged) {
@@ -1311,11 +1342,19 @@ export class PlansResolver {
     }
     const nextStatus = String(rawStatus).trim().toUpperCase();
     assertValidPlanStatuses([nextStatus]);
-    const plan = await this.planStatusService.setStatus(
+    const outcome = await this.planStatusService.setStatusWithOutcome(
       input.planId,
       nextStatus,
       { actorKind, actorSub },
     );
+    const plan = outcome === null ? null : outcome.plan;
+    if (outcome !== null) {
+      await this.planRunScheduleService.onPlanStatusChangedCancellingOccurrence(
+        outcome.plan.id,
+        outcome.plan.status,
+        outcome.cancelledScheduledRunIds,
+      );
+    }
     if (plan != null) {
       await this.planRulesEvaluationService.enqueueEvaluation(
         plan.id,
@@ -1700,6 +1739,11 @@ export class PlansResolver {
       { actorKind, actorSub },
       input.planRunId ?? null,
     );
+
+    // A cancelled SCHEDULED occurrence settles its slot: keep the plan's recurring schedule(s)
+    // chained by materializing the next future one. A no-op when nothing was cancelled (the
+    // schedule already has its occurrence) and best-effort, so it never fails the cancel.
+    await this.planRunScheduleService.onScheduledRunSettled(input.planId);
 
     const out = new CancelPlanRunResultObject();
     out.activeJobIdsCouldNotCancel = outcome.activeJobIdsCouldNotCancel;

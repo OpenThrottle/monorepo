@@ -1020,7 +1020,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `cosmiconfig` | 7.1.0, 8.3.6, 9.0.2 | MIT | [Daniel Fischer](https://github.com/cosmiconfig/cosmiconfig#readme) |
 | `cosmiconfig-typescript-loader` | 6.3.0 | MIT | [Alex Miller](https://github.com/Codex-/cosmiconfig-typescript-loader#readme) |
 | `create-require` | 1.1.1 | MIT | [source](https://github.com/nuxt-contrib/create-require#readme) |
-| `cron-parser` | 4.9.0 | MIT | [Harri Siirak](https://github.com/harrisiirak/cron-parser#readme) |
+| `cron-parser` | 4.9.0, 5.10.4 | MIT | [Harri Siirak](https://github.com/harrisiirak/cron-parser#readme) |
 | `cronstrue` | 3.24.0 | MIT | [Brady Holt](https://github.com/bradymholt/cronstrue) |
 | `cross-inspect` | 1.0.1 | MIT | [Arda TANRIKULU](https://github.com/ardatan/graphql-tools#readme) |
 | `cross-spawn` | 7.0.6 | MIT | [André Cruz](https://github.com/moxystudio/node-cross-spawn) |

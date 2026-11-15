@@ -4,6 +4,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 import type { PlanDetailsFragment } from '~/__generated__/graphql';
 import { renderRoutesStub } from '~/testing/route-fixtures';
 
+import { buildPlanRunSchedule } from '../../testing/buildPlanRunSchedule';
 import { PlanDetailRouteHeader } from '../PlanDetailRouteHeader';
 
 // FEATURE_BETA_PREVIEW resolves from process.env at module load; mock it as a
@@ -37,6 +38,7 @@ const basePlan: PlanDetailsFragment = {
   projectId: null,
   projectRelation: null,
   runConfigJson: '{}',
+  runSchedules: [],
   runnableTaskCount: 1,
   status: 'IN_PROGRESS',
   summary: null,
@@ -147,5 +149,42 @@ describe('PlanDetailRouteHeader Component', () => {
     );
 
     expect(queryByTestId('PlanProjectBadge')).not.toBeInTheDocument();
+  });
+
+  describe('the repeat line', () => {
+    test('says Repeats with the readable rule when a schedule is enabled', () => {
+      const { getByTestId } = renderRoutesStub(
+        <PlanDetailRouteHeader
+          plan={{ ...basePlan, runSchedules: [buildPlanRunSchedule()] }}
+          status="SCHEDULED"
+        />,
+      );
+
+      expect(getByTestId('PlanDetailRouteHeader-repeats')).toHaveTextContent(
+        /^Repeats at 09:00 AM, Monday through Friday/,
+      );
+    });
+
+    test('is absent when the only schedule is stopped', () => {
+      const { queryByTestId } = renderRoutesStub(
+        <PlanDetailRouteHeader
+          plan={{
+            ...basePlan,
+            runSchedules: [buildPlanRunSchedule({ enabled: false })],
+          }}
+          status="IN_PROGRESS"
+        />,
+      );
+
+      expect(queryByTestId('PlanDetailRouteHeader-repeats')).toBeNull();
+    });
+
+    test('is absent on a plan that does not repeat', () => {
+      const { queryByTestId } = renderRoutesStub(
+        <PlanDetailRouteHeader plan={basePlan} status="IN_PROGRESS" />,
+      );
+
+      expect(queryByTestId('PlanDetailRouteHeader-repeats')).toBeNull();
+    });
   });
 });

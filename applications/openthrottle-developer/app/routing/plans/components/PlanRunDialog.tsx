@@ -5,10 +5,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
 } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
@@ -16,8 +12,8 @@ import type { PlanRunConfigRepositoryFieldsFragment } from '~/__generated__/grap
 import { PlanRunDialogConfirm } from '~/routing/plans/components/PlanRunDialogConfirm';
 import { PlanRunDialogFooter } from '~/routing/plans/components/PlanRunDialogFooter';
 import { PlanRunDialogHiddenFields } from '~/routing/plans/components/PlanRunDialogHiddenFields';
-import { PlanRunDialogSchedule } from '~/routing/plans/components/PlanRunDialogSchedule';
 import { PlanRunDialogSettings } from '~/routing/plans/components/PlanRunDialogSettings';
+import { PlanRunDialogTabs } from '~/routing/plans/components/PlanRunDialogTabs';
 import { PlanRunDialogWorkspace } from '~/routing/plans/components/PlanRunDialogWorkspace';
 import { PLAN_RUN_DIALOG_COPY } from '~/routing/plans/data/data.copy';
 import { usePlanRunDialog } from '~/routing/plans/hooks/usePlanRunDialog';
@@ -119,9 +115,6 @@ export const PlanRunDialog = (
   const copy = PLAN_RUN_DIALOG_COPY;
 
   // Handlers
-  const handleModeChange = (value: string): void => {
-    return dialog.onModeChange(value === 'schedule' ? 'schedule' : 'run');
-  };
 
   // Markup
 
@@ -144,28 +137,7 @@ export const PlanRunDialog = (
 
           <PlanRunDialogHiddenFields fields={dialog.fields} />
 
-          <Tabs onValueChange={handleModeChange} value={draft.mode}>
-            <TabsList>
-              <TabsTrigger value="run">{copy.modeRunLabel}</TabsTrigger>
-              <TabsTrigger value="schedule">
-                {copy.modeScheduleLabel}
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="run">
-              <p className="text-muted-foreground text-sm">{copy.runSummary}</p>
-            </TabsContent>
-            <TabsContent value="schedule">
-              <PlanRunDialogSchedule
-                date={draft.scheduleDate}
-                error={dialog.scheduleError}
-                onDateChange={dialog.onScheduleDateChange}
-                onTimeChange={dialog.onScheduleTimeChange}
-                summary={dialog.scheduleSummary}
-                time={draft.scheduleTime}
-                timeZone={dialog.timeZone}
-              />
-            </TabsContent>
-          </Tabs>
+          <PlanRunDialogTabs dialog={dialog} />
 
           <PlanRunDialogSettings
             backend={draft.backend}

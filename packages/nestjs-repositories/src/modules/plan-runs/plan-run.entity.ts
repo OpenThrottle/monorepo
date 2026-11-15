@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for OpenThrottle plan_runs table. Matches databases/openthrottle/migrations/038 (+ 047, 053, 076, 080, 087, 110, 138, 140).
+ * @description TypeORM entity for OpenThrottle plan_runs table. Matches databases/openthrottle/migrations/038 (+ 047, 053, 076, 080, 087, 110, 138, 140, 163).
  */
 
 import type { PlanRunConfigSnapshot } from '@openthrottle/openthrottle-plan-config';
@@ -34,6 +34,7 @@ export type PlanRunData = Pick<
   | 'lastHeartbeatAt'
   | 'pid'
   | 'planId'
+  | 'planRunScheduleId'
   | 'queueName'
   | 'runKind'
   | 'scheduledFor'
@@ -145,6 +146,13 @@ export class PlanRun {
 
   @Column({ name: 'plan_id', type: 'uuid' })
   planId!: string;
+
+  /**
+   * The recurring schedule (plan_run_schedules, migration 163) that materialized this run; null for
+   * every run not created by a schedule. FK is ON DELETE SET NULL, so run history outlives the schedule.
+   */
+  @Column({ name: 'plan_run_schedule_id', nullable: true, type: 'uuid' })
+  planRunScheduleId!: string | null;
 
   @Column({ default: 'plans', name: 'queue_name', type: 'text' })
   queueName!: string;

@@ -63,6 +63,7 @@ import {
 import { OtLoopOrchestratorService } from '../ot-loop/orchestrator/orchestrator.service.ts';
 import { WorkflowLifecycleDispatcherFactory } from '../plan-lifecycle-hooks/workflow-lifecycle-dispatcher/workflow-lifecycle-dispatcher.service.ts';
 import { resolveRepeatablesOwner } from '../repeatable-job/repeatable-job.utils.ts';
+import { PlanRunScheduleService } from './plan-run-schedule/plan-run-schedule.service.ts';
 import {
   PLANS_QUEUE_NAME,
   PLANS_WORKER_LOCK_DURATION_MS,
@@ -147,6 +148,7 @@ export class PlansProcessor
     private readonly planOutputStreamService: PlanOutputStreamService,
     private readonly planRunCancellation: PlanRunCancellationService,
     private readonly planRunWorktreeCleanup: PlanRunWorktreeCleanupService,
+    private readonly planRunScheduleService: PlanRunScheduleService,
     private readonly planRunsService: PlanRunsService,
     @InjectQueue(PLANS_QUEUE_NAME)
     private readonly plansQueue: Queue<RunPlanJobData, PlanRunJobResult | void>,
@@ -186,6 +188,10 @@ export class PlansProcessor
     // Re-project SCHEDULED runs whose delayed job was lost (Redis flushed, volume recreated),
     // applying the grace window. Owner-only for the same reason as the two above. Never throws.
     await this.scheduledPlanRun.reconcileOnStartup();
+    // Then make sure every enabled recurring schedule has its one future occurrence (and fire a
+    // run_once catch-up where one was missed). After the line above, so a MISSED settle there has
+    // already continued its own chain. Owner-only, never throws.
+    await this.planRunScheduleService.reconcileOnStartup();
   }
 
   /**

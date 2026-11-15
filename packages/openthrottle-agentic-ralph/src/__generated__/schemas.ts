@@ -39,6 +39,7 @@ import {
   CreateEvalDatasetFromTrajectoriesInput,
   CreateNoteInput,
   CreatePlanInput,
+  CreatePlanRunScheduleInput,
   CreatePlansInput,
   CreateProjectInput,
   CreateQueueInput,
@@ -154,6 +155,7 @@ import {
   SearchPlansInput,
   SetBlogPostTagsInput,
   SetMcpConnectorEnabledInput,
+  SetPlanRunScheduleEnabledInput,
   SetPlanStatusInput,
   SetScheduledAgentJobEnabledInputType,
   SetWorkspaceLocalRepositoryProjectInput,
@@ -178,6 +180,7 @@ import {
   UpdateNoteInput,
   UpdatePlanInput,
   UpdatePlanMessageInput,
+  UpdatePlanRunScheduleInput,
   UpdateProjectInput,
   UpdateRepositoryInput,
   UpdateRoleInput,
@@ -668,6 +671,18 @@ export function CreatePlanInputSchema(): z.ZodObject<
     summary: z.string().nullish(),
     title: z.string().min(1),
     workspacePath: z.string().nullish(),
+  });
+}
+
+export function CreatePlanRunScheduleInputSchema(): z.ZodObject<
+  Properties<CreatePlanRunScheduleInput>
+> {
+  return z.object({
+    cronPattern: z.string().min(1),
+    misfirePolicy: z.string().nullish(),
+    planId: z.string().min(1),
+    runOverridesJson: z.string().nullish(),
+    timezone: z.string().nullish(),
   });
 }
 
@@ -1798,6 +1813,15 @@ export function SetMcpConnectorEnabledInputSchema(): z.ZodObject<
   });
 }
 
+export function SetPlanRunScheduleEnabledInputSchema(): z.ZodObject<
+  Properties<SetPlanRunScheduleEnabledInput>
+> {
+  return z.object({
+    enabled: z.boolean(),
+    id: z.string().min(1),
+  });
+}
+
 export function SetPlanStatusInputSchema(): z.ZodObject<
   Properties<SetPlanStatusInput>
 > {
@@ -2046,6 +2070,18 @@ export function UpdatePlanMessageInputSchema(): z.ZodObject<
   return z.object({
     body: z.string().min(1),
     id: z.string().min(1),
+  });
+}
+
+export function UpdatePlanRunScheduleInputSchema(): z.ZodObject<
+  Properties<UpdatePlanRunScheduleInput>
+> {
+  return z.object({
+    cronPattern: z.string().nullish(),
+    id: z.string().min(1),
+    misfirePolicy: z.string().nullish(),
+    runOverridesJson: z.string().nullish(),
+    timezone: z.string().nullish(),
   });
 }
 

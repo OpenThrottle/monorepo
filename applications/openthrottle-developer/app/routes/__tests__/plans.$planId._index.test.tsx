@@ -80,6 +80,7 @@ const mockPlan = {
     name: 'Test Project',
   },
   runConfigJson: JSON.stringify({ version: 1 }),
+  runSchedules: [],
   status: 'IN_PROGRESS',
   summary: 'Plan summary',
   tags: [],

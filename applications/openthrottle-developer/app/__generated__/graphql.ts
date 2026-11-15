@@ -1227,6 +1227,19 @@ export type CreatePlanInput = {
   workspacePath?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type CreatePlanRunScheduleInput = {
+  /** REQUIRED cron pattern (5 fields). Consecutive runs must be at least the minimum interval apart; the server rejects anything else with the reason. */
+  cronPattern: Scalars['String']['input'];
+  /** Optional misfire policy: skip (default) or run_once. */
+  misfirePolicy?: InputMaybe<Scalars['String']['input']>;
+  /** The plan to recur. */
+  planId: Scalars['ID']['input'];
+  /** Optional JSON object of run overrides; only branch, effort, iterations and model are accepted. */
+  runOverridesJson?: InputMaybe<Scalars['String']['input']>;
+  /** Optional IANA timezone name (e.g. America/New_York). Omitted means UTC. */
+  timezone?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type CreatePlansInput = {
   /** Plans to create atomically in one transaction. Each item carries its own author/category/title (same shape as createPlan). */
   plans: Array<CreatePlanInput>;
@@ -2732,6 +2745,8 @@ export type Mutation = {
   createNote: NoteObject;
   /** Create a plan */
   createPlan: PlanObject;
+  /** Create a recurring schedule for a plan and materialize its first occurrence as a SCHEDULED run. Rejects a cron pattern or timezone the scheduler cannot honour (extensions: BAD_REQUEST with the reason), an unknown misfirePolicy and run overrides other than branch / effort / iterations / model. */
+  createPlanRunSchedule: PlanRunSchedule;
   /** Create many plans atomically in a single transaction. Every input is validated up front (same rules as createPlan); a single invalid input or DB failure rolls back the whole batch. */
   createPlans: CreatePlansResultObject;
   /** Create a project */
@@ -2949,6 +2964,8 @@ export type Mutation = {
   setBlogPostTags: SetBlogPostTagsResult;
   /** Enable or disable the authenticated user's connection for a connector. */
   setMcpConnectorEnabled?: Maybe<McpConnectorConnectionResultObject>;
+  /** Pause or resume a schedule. Disabling cancels the pending occurrence (and nothing re-materializes it while disabled); enabling materializes the next slot. */
+  setPlanRunScheduleEnabled: PlanRunSchedule;
   /** Set a plan's status (e.g. COMPLETED). Convenience mutation for Mark Complete; equivalent to updatePlan with { id, status }. */
   setPlanStatus?: Maybe<PlanObject>;
   /** Enable or disable a scheduled agent job (owner only); registers/removes its scheduler. */
@@ -2997,6 +3014,8 @@ export type Mutation = {
   updatePlan?: Maybe<PlanObject>;
   /** Edit the body of a PENDING plan message. Delivered, withdrawn and recorded messages are immutable. */
   updatePlanMessage: PlanMessageObject;
+  /** Edit a schedule. Validated like createPlanRunSchedule against the merged rule. When the cron pattern or timezone changed, the pending occurrence is cancelled and the next slot of the new rule is materialized (an enabled schedule only). */
+  updatePlanRunSchedule: PlanRunSchedule;
   /** Update a project */
   updateProject?: Maybe<ProjectObject>;
   /** Edit an owned repository's name, default branch, and/or project link. Requires the authenticated user to own a checkout of the repository. */
@@ -3188,6 +3207,10 @@ export type MutationCreateNoteArgs = {
 
 export type MutationCreatePlanArgs = {
   input: CreatePlanInput;
+};
+
+export type MutationCreatePlanRunScheduleArgs = {
+  input: CreatePlanRunScheduleInput;
 };
 
 export type MutationCreatePlansArgs = {
@@ -3609,6 +3632,10 @@ export type MutationSetMcpConnectorEnabledArgs = {
   input: SetMcpConnectorEnabledInput;
 };
 
+export type MutationSetPlanRunScheduleEnabledArgs = {
+  input: SetPlanRunScheduleEnabledInput;
+};
+
 export type MutationSetPlanStatusArgs = {
   input: SetPlanStatusInput;
 };
@@ -3683,6 +3710,10 @@ export type MutationUpdatePlanArgs = {
 
 export type MutationUpdatePlanMessageArgs = {
   input: UpdatePlanMessageInput;
+};
+
+export type MutationUpdatePlanRunScheduleArgs = {
+  input: UpdatePlanRunScheduleInput;
 };
 
 export type MutationUpdateProjectArgs = {
@@ -3933,6 +3964,8 @@ export type PlanObject = {
   projectRelation?: Maybe<ProjectObject>;
   /** Workflow-ralph run configuration stored on the plan (PlanRunConfigStorage v1). */
   runConfigJson: Scalars['String']['output'];
+  /** The plan's recurring schedules, oldest first. Resolved through a batched loader (one query for a whole list of plans). */
+  runSchedules: Array<PlanRunSchedule>;
   /** Number of tasks a whole-plan run would pick up (status PENDING, IN_PROGRESS, BLOCKED, BACKLOG, SKIPPED, CANCELED or QUEUED): the count enqueuePlanRun and schedulePlanRun require to be above zero. Resolved through a batched loader; select it in plan-detail documents rather than list documents. */
   runnableTaskCount: Scalars['Int']['output'];
   /** The soonest instant a SCHEDULED run of this plan fires at (plan_runs.scheduled_for of its earliest SCHEDULED run); null when none is waiting. Lets the UI explain why a run is already pending ("a run is scheduled for <local time>; cancel it to run now"). Resolved from plan_runs; a run that fired, was cancelled or was settled MISSED/SUPERSEDED no longer counts. */
@@ -4031,6 +4064,8 @@ export type PlanRunObject = {
   /** OS process id of the worker executing this run. Null when not actively executing. */
   pid?: Maybe<Scalars['Int']['output']>;
   planId: Scalars['String']['output'];
+  /** The recurring schedule (PlanRunSchedule.id) that materialized this run. Null for runs started by hand or scheduled once. */
+  planRunScheduleId?: Maybe<Scalars['String']['output']>;
   /** The run's linked pull request (via the work-ledger session bridge), with lifecycle state and GitHub URL. Null when no PR has been recorded for the run. */
   pullRequest?: Maybe<PlanRunPullRequestObject>;
   queueName: Scalars['String']['output'];
@@ -4064,6 +4099,32 @@ export type PlanRunPullRequestObject = {
   state?: Maybe<Scalars['String']['output']>;
   /** Canonical GitHub URL for the PR. */
   url: Scalars['String']['output'];
+};
+
+export type PlanRunSchedule = {
+  __typename?: 'PlanRunSchedule';
+  createdAt: Scalars['DateTime']['output'];
+  /** Who created the schedule (GitHub username or principal id). Null for system schedules. */
+  createdBy?: Maybe<Scalars['String']['output']>;
+  /** Cron pattern (5 fields, evaluated in timezone). Render it for humans on the client. */
+  cronPattern: Scalars['String']['output'];
+  /** False while the schedule is paused: no occurrence is materialized and the pending one was cancelled. */
+  enabled: Scalars['Boolean']['output'];
+  id: Scalars['ID']['output'];
+  /** What happens to an occurrence the server missed: skip (drop it) or run_once (fire a single catch-up run). */
+  misfirePolicy: Scalars['String']['output'];
+  /** When the next occurrence fires: scheduledFor of the pending SCHEDULED run. Null when the schedule is disabled or has no pending occurrence. Resolved through a batched loader. */
+  nextOccurrenceAt?: Maybe<Scalars['DateTime']['output']>;
+  /** The id of the pending SCHEDULED plan run behind nextOccurrenceAt; null when none is waiting. */
+  pendingPlanRunId?: Maybe<Scalars['ID']['output']>;
+  planId: Scalars['ID']['output'];
+  /** JSON object of per-schedule run overrides applied to every materialized run (keys: branch, effort, iterations, model). '{}' means none. */
+  runOverridesJson: Scalars['String']['output'];
+  /** Schedule kind. Only 'cron' exists today. */
+  scheduleKind: Scalars['String']['output'];
+  /** IANA timezone the cron pattern is evaluated in. Null means UTC. */
+  timezone?: Maybe<Scalars['String']['output']>;
+  updatedAt: Scalars['DateTime']['output'];
 };
 
 /** What a guarded plan-run worktree teardown did. */
@@ -6595,6 +6656,12 @@ export type SetMcpConnectorEnabledInput = {
   enabled: Scalars['Boolean']['input'];
 };
 
+export type SetPlanRunScheduleEnabledInput = {
+  /** False pauses the schedule and cancels its pending occurrence; true resumes it and materializes the next slot. */
+  enabled: Scalars['Boolean']['input'];
+  id: Scalars['ID']['input'];
+};
+
 export type SetPlanStatusInput = {
   /** Plan id to update status for */
   planId: Scalars['ID']['input'];
@@ -7666,6 +7733,18 @@ export type UpdatePlanMessageInput = {
   body: Scalars['String']['input'];
   /** A PENDING message to edit. */
   id: Scalars['ID']['input'];
+};
+
+export type UpdatePlanRunScheduleInput = {
+  /** New cron pattern. Changing it (or the timezone) cancels the pending occurrence and materializes the next slot of the new rule. */
+  cronPattern?: InputMaybe<Scalars['String']['input']>;
+  /** The schedule to update. */
+  id: Scalars['ID']['input'];
+  misfirePolicy?: InputMaybe<Scalars['String']['input']>;
+  /** Replaces the run overrides (JSON object; branch, effort, iterations, model). Applies from the next materialized occurrence. */
+  runOverridesJson?: InputMaybe<Scalars['String']['input']>;
+  /** New IANA timezone. Send an empty string to reset to UTC; omit or null to leave it unchanged. */
+  timezone?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type UpdateProjectInput = {
@@ -9972,6 +10051,16 @@ export type ProjectDetailsFragment = {
   name: string;
 };
 
+export type PlanRunScheduleFieldsFragment = {
+  __typename?: 'PlanRunSchedule';
+  cronPattern: string;
+  enabled: boolean;
+  id: string;
+  nextOccurrenceAt?: any | null;
+  pendingPlanRunId?: string | null;
+  timezone?: string | null;
+};
+
 export type PlanTagChipFragment = {
   __typename?: 'PlanTagObject';
   confidence?: number | null;
@@ -10025,6 +10114,15 @@ export type PlanDetailsFragment = {
     id: string;
     name: string;
   } | null;
+  runSchedules: Array<{
+    __typename?: 'PlanRunSchedule';
+    cronPattern: string;
+    enabled: boolean;
+    id: string;
+    nextOccurrenceAt?: any | null;
+    pendingPlanRunId?: string | null;
+    timezone?: string | null;
+  }>;
   tags: Array<{
     __typename?: 'PlanTagObject';
     confidence?: number | null;
@@ -10085,6 +10183,15 @@ export type GetPlanByIdQuery = {
       id: string;
       name: string;
     } | null;
+    runSchedules: Array<{
+      __typename?: 'PlanRunSchedule';
+      cronPattern: string;
+      enabled: boolean;
+      id: string;
+      nextOccurrenceAt?: any | null;
+      pendingPlanRunId?: string | null;
+      timezone?: string | null;
+    }>;
     tags: Array<{
       __typename?: 'PlanTagObject';
       confidence?: number | null;
@@ -10170,6 +10277,40 @@ export type PlanDetailReschedulePlanRunMutation = {
     planId: string;
     planRunId: string;
     scheduledFor: any;
+  };
+};
+
+export type PlanDetailCreatePlanRunScheduleMutationVariables = Exact<{
+  input: CreatePlanRunScheduleInput;
+}>;
+
+export type PlanDetailCreatePlanRunScheduleMutation = {
+  __typename?: 'Mutation';
+  createPlanRunSchedule: {
+    __typename?: 'PlanRunSchedule';
+    cronPattern: string;
+    enabled: boolean;
+    id: string;
+    nextOccurrenceAt?: any | null;
+    pendingPlanRunId?: string | null;
+    timezone?: string | null;
+  };
+};
+
+export type PlanDetailSetPlanRunScheduleEnabledMutationVariables = Exact<{
+  input: SetPlanRunScheduleEnabledInput;
+}>;
+
+export type PlanDetailSetPlanRunScheduleEnabledMutation = {
+  __typename?: 'Mutation';
+  setPlanRunScheduleEnabled: {
+    __typename?: 'PlanRunSchedule';
+    cronPattern: string;
+    enabled: boolean;
+    id: string;
+    nextOccurrenceAt?: any | null;
+    pendingPlanRunId?: string | null;
+    timezone?: string | null;
   };
 };
 
@@ -10397,6 +10538,15 @@ export type PlanDetailCriticalQuery = {
       id: string;
       name: string;
     } | null;
+    runSchedules: Array<{
+      __typename?: 'PlanRunSchedule';
+      cronPattern: string;
+      enabled: boolean;
+      id: string;
+      nextOccurrenceAt?: any | null;
+      pendingPlanRunId?: string | null;
+      timezone?: string | null;
+    }>;
     tags: Array<{
       __typename?: 'PlanTagObject';
       confidence?: number | null;
@@ -15988,6 +16138,30 @@ export const ProjectDetailsFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<ProjectDetailsFragment, unknown>;
+export const PlanRunScheduleFieldsFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PlanRunScheduleFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PlanRunSchedule' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'cronPattern' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'nextOccurrenceAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'pendingPlanRunId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'timezone' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<PlanRunScheduleFieldsFragment, unknown>;
 export const PlanTagChipFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -16074,6 +16248,19 @@ export const PlanDetailsFragmentDoc = {
           },
           { kind: 'Field', name: { kind: 'Name', value: 'runConfigJson' } },
           { kind: 'Field', name: { kind: 'Name', value: 'runnableTaskCount' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'runSchedules' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'PlanRunScheduleFields' },
+                },
+              ],
+            },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'scheduledRunAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'scheduledRunId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
@@ -16128,6 +16315,25 @@ export const PlanDetailsFragmentDoc = {
         selections: [
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PlanRunScheduleFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PlanRunSchedule' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'cronPattern' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'nextOccurrenceAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'pendingPlanRunId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'timezone' } },
         ],
       },
     },
@@ -23482,6 +23688,25 @@ export const GetPlanByIdDocument = {
     },
     {
       kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PlanRunScheduleFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PlanRunSchedule' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'cronPattern' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'nextOccurrenceAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'pendingPlanRunId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'timezone' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
       name: { kind: 'Name', value: 'PlanTagChip' },
       typeCondition: {
         kind: 'NamedType',
@@ -23558,6 +23783,19 @@ export const GetPlanByIdDocument = {
           },
           { kind: 'Field', name: { kind: 'Name', value: 'runConfigJson' } },
           { kind: 'Field', name: { kind: 'Name', value: 'runnableTaskCount' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'runSchedules' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'PlanRunScheduleFields' },
+                },
+              ],
+            },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'scheduledRunAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'scheduledRunId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
@@ -23864,6 +24102,158 @@ export const PlanDetailReschedulePlanRunDocument = {
 } as unknown as DocumentNode<
   PlanDetailReschedulePlanRunMutation,
   PlanDetailReschedulePlanRunMutationVariables
+>;
+export const PlanDetailCreatePlanRunScheduleDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'PlanDetailCreatePlanRunSchedule' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'CreatePlanRunScheduleInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'createPlanRunSchedule' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'PlanRunScheduleFields' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PlanRunScheduleFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PlanRunSchedule' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'cronPattern' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'nextOccurrenceAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'pendingPlanRunId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'timezone' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  PlanDetailCreatePlanRunScheduleMutation,
+  PlanDetailCreatePlanRunScheduleMutationVariables
+>;
+export const PlanDetailSetPlanRunScheduleEnabledDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'PlanDetailSetPlanRunScheduleEnabled' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'SetPlanRunScheduleEnabledInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'setPlanRunScheduleEnabled' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'PlanRunScheduleFields' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PlanRunScheduleFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PlanRunSchedule' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'cronPattern' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'nextOccurrenceAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'pendingPlanRunId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'timezone' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  PlanDetailSetPlanRunScheduleEnabledMutation,
+  PlanDetailSetPlanRunScheduleEnabledMutationVariables
 >;
 export const PlanDetailEvaluatePlanRulesDocument = {
   kind: 'Document',
@@ -24537,6 +24927,25 @@ export const PlanDetailCriticalDocument = {
     },
     {
       kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PlanRunScheduleFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PlanRunSchedule' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'cronPattern' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'nextOccurrenceAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'pendingPlanRunId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'timezone' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
       name: { kind: 'Name', value: 'PlanTagChip' },
       typeCondition: {
         kind: 'NamedType',
@@ -24613,6 +25022,19 @@ export const PlanDetailCriticalDocument = {
           },
           { kind: 'Field', name: { kind: 'Name', value: 'runConfigJson' } },
           { kind: 'Field', name: { kind: 'Name', value: 'runnableTaskCount' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'runSchedules' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'PlanRunScheduleFields' },
+                },
+              ],
+            },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'scheduledRunAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'scheduledRunId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },

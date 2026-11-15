@@ -12,6 +12,7 @@ import { PlanRunWorktreeCleanupModule } from '../../services/plan-run-worktree-c
 import { AgenticRalphModule } from '../agentic-ralph/agentic-ralph.module.ts';
 import { OtLoopModule } from '../ot-loop/ot-loop.module.ts';
 import { PlanLifecycleHooksQueueProducerModule } from '../plan-lifecycle-hooks/producer/producer.module.ts';
+import { PlanRunScheduleModule } from './plan-run-schedule/plan-run-schedule.module.ts';
 import { PlansProcessor } from './plans.processor.ts';
 import { PlansQueueProducerModule } from './producer/producer.module.ts';
 import { ScheduledPlanRunService } from './scheduled-plan-run/scheduled-plan-run.service.ts';
@@ -35,7 +36,8 @@ import { WorkLedgerRunService } from './work-ledger-run/work-ledger-run.service.
  * for the worker's own plan status writes (job start, startup reconcile). PlanEnqueueModule lets
  * {@link UsageLimitResumeService} enqueue a usage-limit continuation through the shared enqueue
  * pipeline, and lets {@link ScheduledPlanRunService} fire a scheduled run (and re-project a lost one)
- * through it.
+ * through it. PlanRunScheduleModule supplies the recurring-schedule chain the settle hooks and the boot
+ * reconcile continue.
  */
 @Module({
   exports: [PlansQueueProducerModule],
@@ -49,6 +51,7 @@ import { WorkLedgerRunService } from './work-ledger-run/work-ledger-run.service.
     OtLoopModule,
     PlanEnqueueModule,
     PlanLifecycleHooksQueueProducerModule,
+    PlanRunScheduleModule,
     PlanRunWorktreeCleanupModule,
     PlanStatusModule,
     PlansQueueProducerModule,

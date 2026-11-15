@@ -270,6 +270,19 @@ export type {
 } from './modules/plan-messages/plan-messages.types.ts';
 export { PlanOutputStreamChunk } from './modules/plan-output-stream/plan-output-stream.entity.ts';
 export { PlanOutputStreamService } from './modules/plan-output-stream/plan-output-stream.service.ts';
+export {
+  PLAN_RUN_SCHEDULE_KINDS,
+  PLAN_RUN_SCHEDULE_MISFIRE_POLICIES,
+} from './modules/plan-run-schedules/plan-run-schedules.constants.ts';
+export { PlanRunSchedule } from './modules/plan-run-schedules/plan-run-schedules.entity.ts';
+export { PlanRunSchedulesModule } from './modules/plan-run-schedules/plan-run-schedules.module.ts';
+export { PlanRunSchedulesService } from './modules/plan-run-schedules/plan-run-schedules.service.ts';
+export type {
+  CreatePlanRunScheduleInput,
+  PlanRunScheduleKind,
+  PlanRunScheduleMisfirePolicy,
+  UpdatePlanRunSchedulePatch,
+} from './modules/plan-run-schedules/plan-run-schedules.types.ts';
 export type {
   PlanRunData,
   PlanRunExecutionBackend,
