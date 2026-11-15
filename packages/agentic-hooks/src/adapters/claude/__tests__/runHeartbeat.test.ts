@@ -6,7 +6,19 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { HookFetch } from '../../../types.ts';
+import { normalizeRemoteUrl } from '../../../utils/normalizeRemoteUrl.ts';
 import { runHeartbeat } from '../runHeartbeat.ts';
+
+const ORIGIN_URL = 'https://user:ghp_secret@GitHub.com/org/repo.git';
+
+/**
+ * @description The real resolver spawns git with a 1s deadline and maps a timeout to null, so under
+ * a parallel run it can report "no remote" for a repo that has one. Answer as git would, then run
+ * the real normalization, so the credential-stripping assertion still has something to strip.
+ */
+const resolveOriginIdentity = (): string | null => {
+  return normalizeRemoteUrl(ORIGIN_URL);
+};
 
 const git = (cwd: string, ...args: string[]): string => {
   return execFileSync('git', args, { cwd, encoding: 'utf8' });
@@ -27,13 +39,7 @@ describe('runHeartbeat', () => {
     telemetryDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hb-tel-'));
     repo = fs.mkdtempSync(path.join(os.tmpdir(), 'hb-repo-'));
     git(repo, 'init', '-q');
-    git(
-      repo,
-      'remote',
-      'add',
-      'origin',
-      'https://user:ghp_secret@GitHub.com/org/repo.git',
-    );
+    git(repo, 'remote', 'add', 'origin', ORIGIN_URL);
     fs.writeFileSync(path.join(repo, 'README.md'), 'hello\n');
 
     vi.stubEnv('HOME', home);
@@ -112,6 +118,7 @@ describe('runHeartbeat', () => {
         env: {},
         fetchImpl,
         repoRoot: repo,
+        resolveRepoIdentity: resolveOriginIdentity,
       });
 
       expect(fetchImpl).toHaveBeenCalledTimes(1);

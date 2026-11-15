@@ -409,6 +409,7 @@ export const sendHeartbeat = async ({
   now = () => new Date(),
   pluginVersion,
   repoRoot,
+  resolveRepoIdentity: resolveIdentity = resolveRepoIdentity,
   source,
   timeoutMs = DEFAULT_POST_TIMEOUT_MS,
 }: {
@@ -419,6 +420,8 @@ export const sendHeartbeat = async ({
   readonly now?: () => Date;
   readonly pluginVersion: string | null;
   readonly repoRoot: string;
+  /** Seam for tests: the default spawns git with a deadline, which loses races under CPU load. */
+  readonly resolveRepoIdentity?: (repoRoot: string) => string | null;
   readonly source: string;
   readonly timeoutMs?: number;
 }): Promise<HeartbeatReceipt | null> => {
@@ -439,7 +442,7 @@ export const sendHeartbeat = async ({
       marketplace,
       now: attemptedAt,
       pluginVersion,
-      repoIdentity: resolveRepoIdentity(repoRoot),
+      repoIdentity: resolveIdentity(repoRoot),
       source,
     });
 
