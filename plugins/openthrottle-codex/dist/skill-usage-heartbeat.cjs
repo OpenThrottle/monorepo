@@ -724,6 +724,7 @@ var sendHeartbeat = async ({
   now = () => /* @__PURE__ */ new Date(),
   pluginVersion,
   repoRoot,
+  resolveRepoIdentity: resolveIdentity = resolveRepoIdentity,
   source,
   timeoutMs = DEFAULT_POST_TIMEOUT_MS
 }) => {
@@ -743,7 +744,7 @@ var sendHeartbeat = async ({
       marketplace,
       now: attemptedAt,
       pluginVersion,
-      repoIdentity: resolveRepoIdentity(repoRoot),
+      repoIdentity: resolveIdentity(repoRoot),
       source
     });
     const receiptBase = { attemptedAt: attemptedAt.toISOString(), payload };

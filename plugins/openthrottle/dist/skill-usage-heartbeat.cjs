@@ -715,6 +715,7 @@ var sendHeartbeat = async ({
   now = () => /* @__PURE__ */ new Date(),
   pluginVersion,
   repoRoot,
+  resolveRepoIdentity: resolveIdentity = resolveRepoIdentity,
   source,
   timeoutMs = DEFAULT_POST_TIMEOUT_MS
 }) => {
@@ -734,7 +735,7 @@ var sendHeartbeat = async ({
       marketplace,
       now: attemptedAt,
       pluginVersion,
-      repoIdentity: resolveRepoIdentity(repoRoot),
+      repoIdentity: resolveIdentity(repoRoot),
       source
     });
     const receiptBase = { attemptedAt: attemptedAt.toISOString(), payload };
@@ -1260,6 +1261,7 @@ var runHeartbeat = async ({
   fetchImpl = globalThis.fetch,
   now = () => /* @__PURE__ */ new Date(),
   repoRoot,
+  resolveRepoIdentity: resolveRepoIdentity2,
   timeoutMs = DEFAULT_POST_TIMEOUT_MS
 }) => {
   const homeDir = import_node_os4.default.homedir();
@@ -1278,6 +1280,7 @@ var runHeartbeat = async ({
     now,
     pluginVersion: resolvePluginVersion2(env),
     repoRoot,
+    resolveRepoIdentity: resolveRepoIdentity2,
     source: CLAUDE_SOURCE,
     timeoutMs
   });

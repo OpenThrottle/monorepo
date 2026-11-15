@@ -2539,11 +2539,25 @@ var toolArgumentsOf = (toolInfo) => {
   }
   return toolInfo ?? null;
 };
+var TOOL_STEP_FAILED = "Tool step failed";
 var toolOutputOf = (toolInfo) => {
   if (isRecord(toolInfo) && toolInfo.output !== void 0) {
     return toolInfo.output;
   }
-  return toolArgumentsOf(toolInfo);
+  return null;
+};
+var toolErrorOf = (payload) => {
+  const candidates = [
+    isRecord(payload.tool_info) ? payload.tool_info.error : void 0,
+    payload.error
+  ];
+  for (const candidate of candidates) {
+    const message = isRecord(candidate) ? asString2(candidate.message) : asString2(candidate);
+    if (message !== void 0 && message.trim() !== "") {
+      return message;
+    }
+  }
+  return TOOL_STEP_FAILED;
 };
 function createAntigravityEventMapper() {
   let model;
@@ -2585,6 +2599,21 @@ function createAntigravityEventMapper() {
           }
         ];
       }
+      if (state === "ERROR") {
+        return [
+          {
+            delta: "",
+            done: false,
+            kind: CONVERSATION_STREAM_CHUNK_KINDS.toolResult,
+            metadata: {
+              callId,
+              isError: true,
+              toolCall: toolErrorOf(payload),
+              toolName: name
+            }
+          }
+        ];
+      }
       return [
         {
           delta: "",
@@ -2592,13 +2621,10 @@ function createAntigravityEventMapper() {
           kind: CONVERSATION_STREAM_CHUNK_KINDS.toolResult,
           metadata: {
             callId,
-            toolCall: {
-              // A step-level ERROR is not a turn failure (see rule 3) — surface it on the tool
-              // result and let `result.status` decide the turn.
-              error: state === "ERROR" ? state : null,
-              output: toolOutputOf(payload.tool_info),
-              status: state
-            },
+            isError: false,
+            // The output alone: the card already shows the status, so a `{error, output, status}`
+            // wrapper only buried the one field worth reading.
+            toolCall: toolOutputOf(payload.tool_info),
             toolName: name
           }
         }
