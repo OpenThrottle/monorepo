@@ -78,9 +78,11 @@ hand-written `@ObjectType()` classes and `*ListResult` envelopes (`items`, `tota
 - The DataSource logger is `createPostgresProfilingQueryLogger('advanced-console', …)`, so
   `POSTGRES_PROFILING=true` EXPLAINs repository methods.
 - Entity/SQL drift is caught only by the opt-in live test
-  (`OT_CMS_DB_INTEGRATION=true`, see `src/nestjs-repositories-cms.module.integration.test.ts`),
+  (`pnpm run database:test:cms`, see `src/nestjs-repositories-cms.module.integration.test.ts`),
   which compares every column's type and nullability with `information_schema`, and round-trips a
-  soft delete on `tags`. Run it after touching an entity.
+  soft delete on `tags`. Run it after touching an entity. Typed by hand it needs
+  `POSTGRES_HOST=localhost` (or `CMS_POSTGRES_URL`): Nx loads the root `.env`'s
+  `host.docker.internal`, which does not resolve on the host.
 - Built, not source-first: real `build` target, `exports` → `dist`; see [../AGENTS.md](../AGENTS.md).
 
 ## Pointers
