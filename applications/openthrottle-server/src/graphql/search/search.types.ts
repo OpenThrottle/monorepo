@@ -1,11 +1,17 @@
 /**
- * @description Types shared by the semantic-search resolvers (OT plan 165e86ef).
+ * @description Types shared by the semantic-search resolvers (OT plans 165e86ef, e5397271).
  */
 
 import type { EmbedResult } from '@openthrottle/node-client';
 
-/** @description How a search result was ranked. */
-export type SearchMode = 'lexical' | 'semantic';
+/**
+ * @description How a search result was ranked: `hybrid` (vector and full-text merged by reciprocal rank
+ * fusion), `semantic` (vector only) or `lexical` (the full-text fallback).
+ */
+export type SearchMode = 'hybrid' | 'lexical' | 'semantic';
+
+/** @description The ranking a caller may request; `lexical` is only ever a fallback. */
+export type RequestedSearchMode = Exclude<SearchMode, 'lexical'>;
 
 /** @description Why a search answered lexically instead of semantically. */
 export type LexicalFallbackReason =
@@ -25,6 +31,30 @@ export interface SearchWithFallbackOptions<TChunk> {
 
 export interface SearchWithFallbackResult<TChunk> {
   readonly chunks: TChunk[];
+  readonly mode: SearchMode;
+  readonly reason: LexicalFallbackReason | null;
+}
+
+export interface SearchHybridOptions<
+  TChunk,
+> extends SearchWithFallbackOptions<TChunk> {
+  /** Identifies the entity a chunk belongs to; chunks of one entity fuse into one result. */
+  readonly key: (chunk: TChunk) => string;
+  /** Max results returned. */
+  readonly limit: number;
+  /** `semantic` skips fusion and returns the vector ranking unchanged. */
+  readonly mode: RequestedSearchMode;
+}
+
+/** @description One result of {@link SearchHybridResult}. */
+export interface RankedSearchChunk<TChunk> {
+  readonly chunk: TChunk;
+  /** The reciprocal-rank-fusion score when the result is `hybrid`, otherwise null. */
+  readonly fusedScore: number | null;
+}
+
+export interface SearchHybridResult<TChunk> {
+  readonly chunks: readonly RankedSearchChunk<TChunk>[];
   readonly mode: SearchMode;
   readonly reason: LexicalFallbackReason | null;
 }

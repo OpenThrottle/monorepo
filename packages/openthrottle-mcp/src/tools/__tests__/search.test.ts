@@ -107,6 +107,38 @@ describe('semanticSearchToolHandler', () => {
     });
   });
 
+  describe('when the server answered with a hybrid ranking', () => {
+    it('says the order is fused in the text', async () => {
+      vi.mocked(executeGraphqlWithAuth).mockResolvedValue({
+        search: {
+          chunks: [
+            {
+              content: 'Plan body',
+              id: chunkId,
+              planTitle: 'Hybrid ranking',
+              similarity: 0.71,
+              source: 'plan',
+              taskTitle: null,
+            },
+          ],
+          mode: 'hybrid',
+          reason: null,
+        },
+      });
+
+      const result = await semanticSearchToolHandler({ query: 'TS2835' });
+
+      expect(result).toMatchObject({
+        content: [
+          {
+            text: expect.stringContaining('Mode: hybrid'),
+          },
+        ],
+        structuredContent: { mode: 'hybrid', reason: null },
+      });
+    });
+  });
+
   describe('when GraphQL returns no chunks', () => {
     it('returns an empty result message', async () => {
       vi.mocked(executeGraphqlWithAuth).mockResolvedValue({

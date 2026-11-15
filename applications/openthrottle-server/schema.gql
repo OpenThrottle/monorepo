@@ -4024,6 +4024,11 @@ type SearchChunk {
   """Chunk content (plan or task text)."""
   content: String!
 
+  """
+  Reciprocal-rank-fusion score when the search mode is "hybrid" (results are ordered by it); null otherwise.
+  """
+  fusedScore: Float
+
   """Chunk UUID from plan_embeddings or task_embeddings."""
   id: String!
 
@@ -4033,7 +4038,9 @@ type SearchChunk {
   """Plan title for display and linking."""
   planTitle: String
 
-  """Cosine similarity score (0–1, higher is more relevant)."""
+  """
+  The retriever's own score for this chunk: cosine similarity (0–1) from vector search, or a ts_rank when only full-text search found it. In hybrid mode, order by fusedScore instead.
+  """
   similarity: Float!
 
   """Source of the chunk: "plan", "task", or "documentation"."""
@@ -4060,16 +4067,18 @@ type SearchChunk {
 }
 
 type SearchResult {
-  """Ranked search chunks (plans and tasks) by similarity."""
+  """
+  Ranked search chunks (plans, tasks and documentation): by fusedScore in hybrid mode, otherwise by similarity.
+  """
   chunks: [SearchChunk!]!
 
   """
-  How the result was ranked: "semantic" (vector similarity with the configured embedding model) or "lexical" (Postgres full-text search, used when semantic search is unavailable).
+  How the result was ranked: "hybrid" (vector similarity and Postgres full-text search merged by reciprocal rank fusion), "semantic" (vector similarity with the configured embedding model) or "lexical" (full-text search only, used when semantic search is unavailable).
   """
   mode: String!
 
   """
-  Why the result is lexical, or null when it is semantic: embedder_unconfigured | embedder_dimension_mismatch | embedder_provider_error | no_embeddings.
+  Why the result is lexical, or null when it is hybrid or semantic: embedder_unconfigured | embedder_dimension_mismatch | embedder_provider_error | no_embeddings.
   """
   reason: String
 }
@@ -6292,7 +6301,7 @@ type Query {
   permissionsForServiceAccount(serviceAccountId: ID!): [String!]!
 
   """
-  Semantic search over plan, task and documentation embeddings. Embeds the query with the server embedder (local nomic-embed-text-v1.5 by default) and returns ranked chunks; when the embedder is unavailable or nothing is embedded yet, answers with Postgres full-text search instead — see mode and reason.
+  Search over plans, tasks and documentation. By default hybrid: vector similarity (the server embedder, local nomic-embed-text-v1.5 by default) and Postgres full-text search run together and merge by reciprocal rank fusion, so exact identifiers still surface. Pass mode "semantic" for the vector ranking alone. When the embedder is unavailable or nothing is embedded yet, answers with full-text search only — see mode and reason.
   """
   search(input: SearchInput!): SearchResult!
 
@@ -6960,7 +6969,12 @@ input SearchInput {
   """Max number of chunks to return (default 20)."""
   limit: Int
 
-  """Text query to embed and search by vector similarity."""
+  """
+  Requested ranking: "hybrid" (default; vector and full-text merged by reciprocal rank fusion) or "semantic" (vector similarity only). The full-text fallback still applies when the embedder cannot answer.
+  """
+  mode: String
+
+  """Text query to search for."""
   query: String!
 }
 

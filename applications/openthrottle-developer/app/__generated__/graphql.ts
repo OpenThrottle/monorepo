@@ -4710,7 +4710,7 @@ export type Query = {
   scheduledAgentJobRunsInFlight: Array<ScheduledAgentJobRunObject>;
   /** All scheduled agent jobs, newest first. */
   scheduledAgentJobs: Array<ScheduledAgentJobObject>;
-  /** Semantic search over plan, task and documentation embeddings. Embeds the query with the server embedder (local nomic-embed-text-v1.5 by default) and returns ranked chunks; when the embedder is unavailable or nothing is embedded yet, answers with Postgres full-text search instead — see mode and reason. */
+  /** Search over plans, tasks and documentation. By default hybrid: vector similarity (the server embedder, local nomic-embed-text-v1.5 by default) and Postgres full-text search run together and merge by reciprocal rank fusion, so exact identifiers still surface. Pass mode "semantic" for the vector ranking alone. When the embedder is unavailable or nothing is embedded yet, answers with full-text search only — see mode and reason. */
   search: SearchResult;
   /** Semantic search over agent-asset (custom_prompt) embeddings. Embeds the query and returns ranked, de-duped assets (skills, rules, personas by default) using the server embedder (local nomic-embed-text-v1.5 by default); when it is unavailable or nothing is embedded yet, answers with Postgres full-text search instead — see mode and reason. */
   searchAgentAssets: AgentAssetSearchResult;
@@ -6476,13 +6476,15 @@ export type SearchChunk = {
   __typename?: 'SearchChunk';
   /** Chunk content (plan or task text). */
   content: Scalars['String']['output'];
+  /** Reciprocal-rank-fusion score when the search mode is "hybrid" (results are ordered by it); null otherwise. */
+  fusedScore?: Maybe<Scalars['Float']['output']>;
   /** Chunk UUID from plan_embeddings or task_embeddings. */
   id: Scalars['String']['output'];
   /** Plan UUID when chunk is from a plan or a plan's task. */
   planId?: Maybe<Scalars['String']['output']>;
   /** Plan title for display and linking. */
   planTitle?: Maybe<Scalars['String']['output']>;
-  /** Cosine similarity score (0–1, higher is more relevant). */
+  /** The retriever's own score for this chunk: cosine similarity (0–1) from vector search, or a ts_rank when only full-text search found it. In hybrid mode, order by fusedScore instead. */
   similarity: Scalars['Float']['output'];
   /** Source of the chunk: "plan", "task", or "documentation". */
   source: Scalars['String']['output'];
@@ -6501,7 +6503,9 @@ export type SearchChunk = {
 export type SearchInput = {
   /** Max number of chunks to return (default 20). */
   limit?: InputMaybe<Scalars['Int']['input']>;
-  /** Text query to embed and search by vector similarity. */
+  /** Requested ranking: "hybrid" (default; vector and full-text merged by reciprocal rank fusion) or "semantic" (vector similarity only). The full-text fallback still applies when the embedder cannot answer. */
+  mode?: InputMaybe<Scalars['String']['input']>;
+  /** Text query to search for. */
   query: Scalars['String']['input'];
 };
 
@@ -6513,11 +6517,11 @@ export type SearchPlansInput = {
 
 export type SearchResult = {
   __typename?: 'SearchResult';
-  /** Ranked search chunks (plans and tasks) by similarity. */
+  /** Ranked search chunks (plans, tasks and documentation): by fusedScore in hybrid mode, otherwise by similarity. */
   chunks: Array<SearchChunk>;
-  /** How the result was ranked: "semantic" (vector similarity with the configured embedding model) or "lexical" (Postgres full-text search, used when semantic search is unavailable). */
+  /** How the result was ranked: "hybrid" (vector similarity and Postgres full-text search merged by reciprocal rank fusion), "semantic" (vector similarity with the configured embedding model) or "lexical" (full-text search only, used when semantic search is unavailable). */
   mode: Scalars['String']['output'];
-  /** Why the result is lexical, or null when it is semantic: embedder_unconfigured | embedder_dimension_mismatch | embedder_provider_error | no_embeddings. */
+  /** Why the result is lexical, or null when it is hybrid or semantic: embedder_unconfigured | embedder_dimension_mismatch | embedder_provider_error | no_embeddings. */
   reason?: Maybe<Scalars['String']['output']>;
 };
 

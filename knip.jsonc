@@ -423,6 +423,9 @@
         // Run by the on-demand `eval-tool-selection` Nx target (tsx); reaches
         // the rest of src/tool-selection/, which it imports.
         "src/tool-selection/cli.ts",
+        // Run by the on-demand `eval-search-ranking` Nx target (tsx); reaches
+        // the rest of src/search-ranking/, which it imports.
+        "src/search-ranking/cli.ts",
         // Spawned by cli.ts as a stdio child through a `new URL(...)` path,
         // not an import, so knip cannot reach it from the graph.
         "src/sandbox/bin-sandbox.ts",
