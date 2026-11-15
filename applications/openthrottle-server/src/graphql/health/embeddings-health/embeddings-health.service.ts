@@ -17,12 +17,16 @@ import { Queue } from 'bullmq';
 import { DataSource } from 'typeorm';
 
 import {
+  CODE_EMBEDDINGS_TABLE,
   EMBEDDABLE_ENTITIES,
   EMBEDDING_SOURCES,
   EMBEDDINGS_QUEUE_NAME,
 } from '../../../queues/embeddings/embeddings.constants.ts';
 import type { EmbeddableEntity } from '../../../queues/embeddings/embeddings.types.ts';
-import { contentHashSql } from '../../../queues/embeddings/embeddings.utils.ts';
+import {
+  codeContentHashSql,
+  contentHashSql,
+} from '../../../queues/embeddings/embeddings.utils.ts';
 import { EmbedderService } from '../../../services/embedder/embedder.service.ts';
 import type { EmbeddingsHealthObject } from './embeddings-health.object.ts';
 import type { EmbeddingCoverage } from './embeddings-health.types.ts';
@@ -80,15 +84,44 @@ export class EmbeddingsHealthService {
       return [];
     }
 
-    return Promise.all(
-      EMBEDDABLE_ENTITIES.map((entity) => {
+    return Promise.all([
+      ...EMBEDDABLE_ENTITIES.map((entity) => {
         return this.readEntityCoverage(
           entity,
           config.spec.documentPrefix,
           config.model,
         );
       }),
+      this.readCodeCoverage(config.spec.documentPrefix, config.model),
+    ]);
+  }
+
+  /**
+   * @description Code chunks (OT plan e489d73d) are their own source: every non-empty row should
+   * carry a current vector, and any row that does not is stale (the reconciler re-embeds it).
+   */
+  private async readCodeCoverage(
+    documentPrefix: string,
+    model: string,
+  ): Promise<EmbeddingCoverage> {
+    const isCurrent = `c.embedding IS NOT NULL AND c.embedding_model = $3 AND c.content_hash = ${codeContentHashSql('$1', '$2')}`;
+    const rows: unknown = await this.dataSource.query(
+      `SELECT count(*)::int AS total,
+              count(*) FILTER (WHERE ${isCurrent})::int AS embedded,
+              count(*) FILTER (WHERE NOT (${isCurrent}))::int AS stale
+         FROM ${CODE_EMBEDDINGS_TABLE} c
+        WHERE btrim(c.content, E' \\t\\n\\r') <> ''`,
+      [documentPrefix, EMBEDDING_MAX_INPUT_CHARS, model],
     );
+    const row: unknown = Array.isArray(rows) ? rows[0] : undefined;
+
+    return {
+      embedded: readCount(row, 'embedded'),
+      entity: 'code',
+      stale: readCount(row, 'stale'),
+      table: CODE_EMBEDDINGS_TABLE,
+      total: readCount(row, 'total'),
+    };
   }
 
   private async readEntityCoverage(

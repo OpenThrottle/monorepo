@@ -12,20 +12,7 @@ export {
   chunkWorkspace,
   DEFAULT_CHUNK_WINDOW_LINES,
 } from './data/chunk.ts';
-export type {
-  EmbeddingsConfig,
-  EmbeddingsProvider,
-  FetchLike,
-} from './data/embeddings.ts';
-export {
-  createEmbeddingsProvider,
-  DEFAULT_OLLAMA_BASE_URL,
-  DEFAULT_OLLAMA_EMBEDDING_MODEL,
-  DEFAULT_OPENAI_BASE_URL,
-  DEFAULT_OPENAI_EMBEDDING_MODEL,
-  EMBEDDING_DIMENSIONS,
-  MAX_EMBEDDING_CHARS,
-} from './data/embeddings.ts';
+export type { EmbeddingsProvider } from './data/embeddings.ts';
 export type { SearchMatch, SearchOptions } from './data/search.ts';
 export { searchText } from './data/search.ts';
 export type {

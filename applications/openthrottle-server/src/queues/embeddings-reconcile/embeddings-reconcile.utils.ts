@@ -2,8 +2,12 @@
  * @description Config and SQL builders for the embeddings reconciler (OT plan 165e86ef).
  */
 
+import { CODE_EMBEDDINGS_TABLE } from '../embeddings/embeddings.constants.ts';
 import type { EmbeddingSource } from '../embeddings/embeddings.types.ts';
-import { contentHashSql } from '../embeddings/embeddings.utils.ts';
+import {
+  codeContentHashSql,
+  contentHashSql,
+} from '../embeddings/embeddings.utils.ts';
 import {
   DEFAULT_EMBEDDINGS_RECONCILE_BATCH_SIZE,
   DEFAULT_EMBEDDINGS_RECONCILE_INTERVAL_MINUTES,
@@ -69,4 +73,26 @@ export function buildPruneOrphansSql(source: EmbeddingSource): string {
      SELECT 1 FROM ${source.fromSql}
       WHERE s.id = e.${source.fkColumn} AND (${source.whereSql})
    )`;
+}
+
+/**
+ * @description One keyset page of code chunks that need embedding (OT plan e489d73d): no vector,
+ * a NULL or different `embedding_model`, or a `content_hash` that does not match the row's own
+ * `content`. Chunk ids are TEXT, so the walk starts after `''`.
+ *
+ * Parameters: `$1` document prefix, `$2` input cap, `$3` configured model, `$4` last id seen,
+ * `$5` page size.
+ */
+export function buildStaleCodeChunksSql(): string {
+  return `SELECT c.id
+    FROM ${CODE_EMBEDDINGS_TABLE} c
+   WHERE c.id > $4
+     AND btrim(c.content, E' \\t\\n\\r') <> ''
+     AND (
+       c.embedding IS NULL
+       OR c.embedding_model IS DISTINCT FROM $3
+       OR c.content_hash IS DISTINCT FROM ${codeContentHashSql('$1', '$2')}
+     )
+   ORDER BY c.id
+   LIMIT $5`;
 }

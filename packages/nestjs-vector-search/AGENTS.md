@@ -16,8 +16,10 @@ through `openthrottle-server` GraphQL ("architecture B" — the client never tou
   `indexedChunkCount`, `isProviderConfigured`.
 - `src/code-snapshot-store/code-snapshot-store.service.ts` — snapshot baseline for (planned) incremental indexing;
   v1 still does a full re-index per run.
-- `src/app-config/app-config.service.ts` — resolves the embeddings provider from env.
-- `src/nestjs-vector-search.module.ts` — provides/exports all four; no config module of its own.
+- `src/code-embedder/` — the `CODE_EMBEDDER` token and `CodeEmbedder` port; the host binds its
+  embedder to it. This package never resolves a provider or reads embedding env itself.
+- `src/nestjs-vector-search.module.ts` — `register({ embedder, imports })` provides/exports the
+  three services.
 
 ## Invariants & gotchas
 
@@ -26,13 +28,14 @@ through `openthrottle-server` GraphQL ("architecture B" — the client never tou
 - The host app must configure a TypeORM root: `CodeVectorStore`/`CodeSnapshotStore` inject the
   default `DataSource` (in `openthrottle-server` that's `NestjsRepositoriesModule`). The module
   fails DI without one.
-- Requires migration `052_create_code_embeddings_table.sql` — `code_embeddings` has a
-  different shape from the other embedding tables (content-hash TEXT PK, no FK/metadata).
-- Embeddings are `vector(1536)`; the platform silently skips vectors of any other length. The
-  OpenAI-vs-Ollama dimension strategy lives in
+- Requires migrations `052` and `164` — `code_embeddings` has a different shape from the
+  other embedding tables (content-hash TEXT PK, no FK/metadata) but the same provenance columns.
+- Rows are written with `embedding_model` / `embedding_dims` and a `content_hash` of the exact
+  embedded text (`prepareEmbeddingInput`); `query` reads only rows of the configured model. Keep
+  the hash in step with the server reconciler's SQL. Dimension strategy:
   [databases/openthrottle/README.md § Embedding dimension strategy](../../databases/openthrottle/README.md) — link to it,
   don't restate it.
-- No embeddings provider configured is a supported state: `isProviderConfigured()` drives the
+- An unconfigured embedder is a supported state: `isProviderConfigured()` drives the
   `unavailable` status and the Semantic tab's gated UI — don't turn it into a thrown error.
 
 ## Pointers

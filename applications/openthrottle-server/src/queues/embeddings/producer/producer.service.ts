@@ -11,21 +11,32 @@ import { LoggerService } from '@openthrottle/nestjs-modules';
 import { Queue } from 'bullmq';
 
 import {
+  EMBED_CODE_CHUNKS_JOB_NAME,
   EMBED_ENTITY_BACKOFF_DELAY_MS,
   EMBED_ENTITY_JOB_ATTEMPTS,
   EMBED_ENTITY_JOB_NAME,
   EMBED_ENTITY_REMOVE_ON_FAIL_AGE_SECONDS,
   EMBEDDINGS_QUEUE_NAME,
 } from '../embeddings.constants.ts';
-import type { EmbedEntityJobData } from '../embeddings.types.ts';
-import { embeddingJobId } from '../embeddings.utils.ts';
+import type {
+  EmbeddingsJobData,
+  EmbedEntityJobData,
+} from '../embeddings.types.ts';
+import { codeChunksJobId, embeddingJobId } from '../embeddings.utils.ts';
+
+const RETRY_OPTIONS = {
+  attempts: EMBED_ENTITY_JOB_ATTEMPTS,
+  backoff: { delay: EMBED_ENTITY_BACKOFF_DELAY_MS, type: 'exponential' },
+  removeOnComplete: true,
+  removeOnFail: { age: EMBED_ENTITY_REMOVE_ON_FAIL_AGE_SECONDS },
+} as const;
 
 @Injectable()
 export class EmbeddingsProducerService {
   constructor(
     private readonly logger: LoggerService,
     @InjectQueue(EMBEDDINGS_QUEUE_NAME)
-    private readonly queue: Queue<EmbedEntityJobData>,
+    private readonly queue: Queue<EmbeddingsJobData>,
   ) {}
 
   /**
@@ -46,14 +57,8 @@ export class EmbeddingsProducerService {
             data: { entity: item.entity, id: item.id },
             name: EMBED_ENTITY_JOB_NAME,
             opts: {
-              attempts: EMBED_ENTITY_JOB_ATTEMPTS,
-              backoff: {
-                delay: EMBED_ENTITY_BACKOFF_DELAY_MS,
-                type: 'exponential',
-              },
+              ...RETRY_OPTIONS,
               jobId: embeddingJobId(item.entity, item.id),
-              removeOnComplete: true,
-              removeOnFail: { age: EMBED_ENTITY_REMOVE_ON_FAIL_AGE_SECONDS },
             },
           };
         }),
@@ -63,6 +68,34 @@ export class EmbeddingsProducerService {
     } catch (error: unknown) {
       this.logger.error(
         `Failed to enqueue ${items.length} embedding job(s): ${error instanceof Error ? error.message : String(error)}`,
+        EmbeddingsProducerService.name,
+      );
+
+      return 0;
+    }
+  }
+
+  /**
+   * @description Enqueues one job that re-embeds a page of code chunks in place, deduped by the
+   * page's first id. Same retry policy and failure handling as {@link enqueue}.
+   * @returns 1 when the queue accepted the job, 0 for an empty page or when Redis is unavailable.
+   */
+  async enqueueCodeChunks(ids: readonly string[]): Promise<number> {
+    if (ids.length === 0) {
+      return 0;
+    }
+
+    try {
+      await this.queue.add(
+        EMBED_CODE_CHUNKS_JOB_NAME,
+        { entity: 'code', ids: [...ids] },
+        { ...RETRY_OPTIONS, jobId: codeChunksJobId(ids) },
+      );
+
+      return 1;
+    } catch (error: unknown) {
+      this.logger.error(
+        `Failed to enqueue a code-chunk embedding job (${ids.length} chunks): ${error instanceof Error ? error.message : String(error)}`,
         EmbeddingsProducerService.name,
       );
 

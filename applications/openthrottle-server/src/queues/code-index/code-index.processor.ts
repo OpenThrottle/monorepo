@@ -63,7 +63,7 @@ export class CodeIndexProcessor
 
     if (!this.codeSearch.isProviderConfigured()) {
       throw new Error(
-        'No embeddings provider configured. Set OPENAI_API_KEY or OLLAMA_BASE_URL / OLLAMA_EMBEDDING_MODEL.',
+        'The embedder is unavailable (see health → embeddings). Download the model with `pnpm run embeddings:download-model` or check EMBEDDING_PROVIDER.',
       );
     }
 

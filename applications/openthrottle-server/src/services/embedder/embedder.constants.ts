@@ -4,6 +4,7 @@
 
 /** @description Tables whose `embedding` column must match the configured dimension. */
 export const EMBEDDING_TABLES = [
+  'code_embeddings',
   'custom_prompt_embeddings',
   'documentation_embeddings',
   'plan_embeddings',

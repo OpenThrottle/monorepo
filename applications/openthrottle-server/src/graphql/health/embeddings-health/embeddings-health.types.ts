@@ -14,8 +14,12 @@ export type EmbeddingsHealthStatus = 'degraded' | 'ok' | 'unconfigured';
 export interface EmbeddingCoverage {
   /** Rows with an up-to-date vector from the configured model. */
   readonly embedded: number;
-  readonly entity: EmbeddableEntity;
-  /** Rows whose vector exists but is from another model or older text. */
+  /** `code` is the code-chunk table, which is its own source (OT plan e489d73d). */
+  readonly entity: EmbeddableEntity | 'code';
+  /**
+   * Rows whose vector exists but is from another model or older text. For `code`, also chunks
+   * with no vector yet — the row exists before its vector does.
+   */
   readonly stale: number;
   readonly table: string;
   /** Source rows that should have a vector (non-empty text, not soft-deleted or superseded). */

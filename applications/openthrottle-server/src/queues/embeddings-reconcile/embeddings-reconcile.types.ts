@@ -22,6 +22,8 @@ export interface EmbeddingsReconcileEntitySummary {
 
 export type EmbeddingsReconcileSummary =
   | {
+      /** Code chunks re-embedded from their own content (OT plan e489d73d); never pruned. */
+      readonly code: EmbeddingsReconcileEntitySummary;
       readonly entities: Readonly<
         Record<EmbeddableEntity, EmbeddingsReconcileEntitySummary>
       >;
