@@ -99,6 +99,7 @@ Read [references/contract.md](references/contract.md) when writing or debugging 
 
 - **Refuses the primary checkout.** The target must be a registered _linked_ worktree of this repo.
 - **Refuses a dirty tree** — prints what is dirty and requires an explicit `--force`.
+- **Refuses a worktree an unsettled plan run is using** (OpenThrottle repos, see below), even with `--force`.
 - **Branch-preserving.** `--delete-branch` deletes it only if merged; `--delete-branch --force` otherwise.
 - **`--dry-run`** prints exactly what would happen and removes nothing.
 - Runs the teardown hook _before_ removal, then `git worktree prune`.
@@ -119,7 +120,8 @@ Only relevant where the OpenThrottle server and its `package.json` scripts exist
 
 - **Entrypoints:** `pnpm worktree:new <name>`, `pnpm worktree:heal` (also nx `monorepo:ensure-worktree`), `pnpm worktree:remove [name|path]`; the Claude `WorktreeCreate` hook and Cursor call the same scripts.
 - **Provisioner:** OpenThrottle needs no `.worktree/provision.sh`: its `scripts/setup_worktree.ts` is found by rung 3 and run by bare Node (native type stripping). It ships `.worktree/teardown.sh`, which stops the worktree's docker compose project before removal.
-- **Checkout record:** after a successful removal `scripts/deregister.sh` calls `deregisterWorktreeCheckout` with the path, resolving endpoint and token from the _primary_ checkout's `.env`, then the ambient environment, then `~/.openthrottle/.env`. Strictly fail-open: no `curl`, no endpoint or token, a server that is down, or a refused request each log one line and removal still succeeds. The server keeps the record while an unsettled plan run points at it, so settle a run before tearing down its worktree. `OPENTHROTTLE_WORKTREE_DEREGISTER=0` skips it. The repositories page flags records left by other removals "Missing on disk" and prunes them.
+- **Checkout record:** after a successful removal `scripts/deregister.sh` calls `deregisterWorktreeCheckout` with the path, resolving endpoint and token from the _primary_ checkout's `.env`, then the ambient environment, then `~/.openthrottle/.env`. Strictly fail-open: no `curl`, no endpoint or token, a server that is down, or a refused request each log one line and removal still succeeds. The server keeps the record while an unsettled plan run points at it, so settle a run before tearing down its worktree. `OPENTHROTTLE_WORKTREE_DEREGISTER=0` skips it.
+- **Active-run guard:** _before_ teardown, `destroy.sh` sends the same call while the worktree still exists; the server checks runs before liveness, so it never prunes here. `SKIPPED_ACTIVE_RUN` refuses the removal. Fail-open; `OPENTHROTTLE_WORKTREE_ACTIVE_RUN_GUARD=0` skips it.
 - **Outcome telemetry:** once, at the end — `error` if the action exited non-zero, `abandoned` if called off ([why](https://github.com/openthrottle/monorepo/blob/main/docs/monorepo/skill-usage-telemetry-scope.md#reporting-an-outcome-from-a-skill)):
 
   ```bash

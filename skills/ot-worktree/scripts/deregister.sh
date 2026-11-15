@@ -7,8 +7,11 @@
 # repositories page keeps listing worktrees that no longer exist. destroy.sh calls
 # deregister_worktree_checkout right after `git worktree remove` succeeds.
 #
-# Strictly fail-open: this runs AFTER the worktree is gone, so nothing here may
-# fail the removal. No curl, no endpoint, no token, a server that is down, or an
+# The same request, made while the worktree still exists, is destroy.sh's
+# pre-removal active-run check (worktree_has_active_plan_run, below).
+#
+# Strictly fail-open: deregistration runs AFTER the worktree is gone, so nothing
+# here may fail the removal. No curl, no endpoint, no token, a server that is down, or an
 # error response all log one line and return 0. A record left behind this way is
 # still flagged "Missing on disk" on the repositories page and can be pruned there.
 #
@@ -86,6 +89,72 @@ _ot_auth_token() {
   return 1
 }
 
+# POST deregisterWorktreeCheckout for a path and print the server's outcome
+# (PRUNED, NOT_FOUND, SKIPPED_ACTIVE_RUN, SKIPPED_LIVE, SKIPPED_PRIMARY), or
+# nothing when it answered without one. Returns 1 — after logging why — when
+# there is no curl, no endpoint, no token or no reachable server.
+# $1 = worktree path, $2 = primary checkout, $3 = what the caller is doing (for logs).
+_ot_deregister_request() {
+  _dr_wt="$1"
+  _dr_src="$2"
+  _dr_doing="$3"
+
+  if ! command -v curl >/dev/null 2>&1; then
+    log "ℹ️  curl not found — skipping $_dr_doing"
+    return 1
+  fi
+  if ! _dr_url=$(_ot_graphql_url "$_dr_src"); then
+    log "ℹ️  no OpenThrottle endpoint configured — skipping $_dr_doing"
+    return 1
+  fi
+  if ! _dr_token=$(_ot_auth_token "$_dr_src"); then
+    log "ℹ️  no OpenThrottle token configured — skipping $_dr_doing"
+    return 1
+  fi
+
+  # JSON-escape the only interpolated value; the rest of the body is a constant.
+  _dr_path=$(printf '%s' "$_dr_wt" | sed 's/\\/\\\\/g; s/"/\\"/g')
+  # The $input in the body is a GraphQL variable, not shell.
+  # shellcheck disable=SC2016
+  _dr_body=$(printf '{"query":"mutation DeregisterWorktreeCheckout($input: DeregisterWorktreeCheckoutInput!) { deregisterWorktreeCheckout(input: $input) { outcome } }","variables":{"input":{"filesystemPath":"%s"}}}' "$_dr_path")
+
+  if ! _dr_response=$(curl -sS --max-time 5 -X POST \
+    -H 'Content-Type: application/json' \
+    -H "Authorization: Bearer $_dr_token" \
+    --data "$_dr_body" "$_dr_url" 2>&1); then
+    log "⚠️  could not reach OpenThrottle at $_dr_url for $_dr_doing"
+    log "    $_dr_response"
+    return 1
+  fi
+
+  _dr_outcome=$(printf '%s' "$_dr_response" | sed -n 's/.*"outcome"[[:space:]]*:[[:space:]]*"\([A-Z_]*\)".*/\1/p')
+  [ -n "$_dr_outcome" ] ||
+    log "⚠️  OpenThrottle gave no outcome for $_dr_doing: $(printf '%s' "$_dr_response" | cut -c 1-300)"
+  printf '%s' "$_dr_outcome"
+  return 0
+}
+
+# True (0) when OpenThrottle says a plan run that has not been settled points at
+# the worktree — the one question destroy.sh must ask BEFORE it removes anything.
+#
+# It asks through deregisterWorktreeCheckout while the worktree still exists. That
+# is safe by the server's guard order (WorktreeCheckoutPruneService): an unsettled
+# run answers SKIPPED_ACTIVE_RUN, and a live linked worktree answers SKIPPED_LIVE,
+# both before any delete — so a probe on a live path can never drop its record.
+#
+# Fail-open, like deregistration: no curl, endpoint, token or server answers 1
+# (not busy), so a foreign repo or an offline laptop keeps its old behaviour. Set
+# OPENTHROTTLE_WORKTREE_ACTIVE_RUN_GUARD=0 to skip the probe.
+# $1 = worktree path, $2 = primary checkout.
+worktree_has_active_plan_run() {
+  if [ "${OPENTHROTTLE_WORKTREE_ACTIVE_RUN_GUARD:-1}" = "0" ]; then
+    log "ℹ️  OPENTHROTTLE_WORKTREE_ACTIVE_RUN_GUARD=0 — not asking OpenThrottle whether a plan run is using this worktree"
+    return 1
+  fi
+  _ar_outcome=$(_ot_deregister_request "$1" "$2" "the active-plan-run check") || return 1
+  [ "$_ar_outcome" = "SKIPPED_ACTIVE_RUN" ]
+}
+
 # $1 = the removed worktree's absolute path, $2 = primary checkout. Always returns 0.
 deregister_worktree_checkout() {
   _dw_wt="$1"
@@ -95,40 +164,14 @@ deregister_worktree_checkout() {
     log "ℹ️  OPENTHROTTLE_WORKTREE_DEREGISTER=0 — leaving the OpenThrottle checkout record alone"
     return 0
   fi
-  if ! command -v curl >/dev/null 2>&1; then
-    log "ℹ️  curl not found — skipping OpenThrottle checkout deregistration"
-    return 0
-  fi
-  if ! _dw_url=$(_ot_graphql_url "$_dw_src"); then
-    log "ℹ️  no OpenThrottle endpoint configured — skipping checkout deregistration"
-    return 0
-  fi
-  if ! _dw_token=$(_ot_auth_token "$_dw_src"); then
-    log "ℹ️  no OpenThrottle token configured — skipping checkout deregistration"
-    return 0
-  fi
 
-  # JSON-escape the only interpolated value; the rest of the body is a constant.
-  _dw_path=$(printf '%s' "$_dw_wt" | sed 's/\\/\\\\/g; s/"/\\"/g')
-  # The $input in the body is a GraphQL variable, not shell.
-  # shellcheck disable=SC2016
-  _dw_body=$(printf '{"query":"mutation DeregisterWorktreeCheckout($input: DeregisterWorktreeCheckoutInput!) { deregisterWorktreeCheckout(input: $input) { outcome } }","variables":{"input":{"filesystemPath":"%s"}}}' "$_dw_path")
+  _dw_outcome=$(_ot_deregister_request "$_dw_wt" "$_dw_src" "checkout deregistration") || return 0
 
-  if ! _dw_response=$(curl -sS --max-time 5 -X POST \
-    -H 'Content-Type: application/json' \
-    -H "Authorization: Bearer $_dw_token" \
-    --data "$_dw_body" "$_dw_url" 2>&1); then
-    log "⚠️  could not reach OpenThrottle at $_dw_url to deregister this worktree; its record will show as missing until pruned"
-    log "    $_dw_response"
-    return 0
-  fi
-
-  _dw_outcome=$(printf '%s' "$_dw_response" | sed -n 's/.*"outcome"[[:space:]]*:[[:space:]]*"\([A-Z_]*\)".*/\1/p')
   case "$_dw_outcome" in
     PRUNED) log "🧹 removed the worktree's OpenThrottle checkout record" ;;
     NOT_FOUND) log "ℹ️  OpenThrottle had no checkout record for this worktree" ;;
     SKIPPED_ACTIVE_RUN) log "⚠️  OpenThrottle kept this worktree's record: a plan run that has not been settled still points at it" ;;
-    "") log "⚠️  OpenThrottle did not deregister this worktree: $(printf '%s' "$_dw_response" | cut -c 1-300)" ;;
+    "") ;;
     *) log "ℹ️  OpenThrottle kept this worktree's record ($_dw_outcome)" ;;
   esac
   return 0

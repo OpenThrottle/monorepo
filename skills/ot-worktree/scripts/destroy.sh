@@ -18,7 +18,9 @@
 #
 # Safety: the target must be a registered LINKED worktree of this repo. The
 # primary checkout is refused outright. A dirty worktree is refused without
-# --force. The branch is left alone unless asked for.
+# --force. A worktree an unsettled OpenThrottle plan run points at is refused
+# even with --force (asked before anything is touched; fail-open when the server
+# cannot be reached). The branch is left alone unless asked for.
 #
 # After a successful removal, the worktree's OpenThrottle checkout record is
 # deregistered best-effort (deregister.sh). That step can only log, never fail.
@@ -130,6 +132,19 @@ if [ -n "$DIRTY" ] && [ "$FORCE" != "1" ] && [ "$DRY_RUN" != "1" ]; then
   log "🔴 worktree has uncommitted changes — refusing to remove it:"
   printf '%s\n' "$DIRTY" >&2
   log "    commit/stash them, or re-run with --force to discard them."
+  exit 1
+fi
+
+# A plan run that has not been settled is working in here — an agent may be
+# mid-task in a worktree whose branch has no commits yet, which looks exactly like
+# a clean, fully merged one. Asked BEFORE teardown: once `git worktree remove` has
+# run, the server's own guard can only save the checkout record, not the files.
+# --force does not override this (it is about uncommitted changes); settle the
+# run first. Fail-open when OpenThrottle cannot be asked — see deregister.sh.
+if worktree_has_active_plan_run "$WTREE" "$SRC"; then
+  log "🔴 an OpenThrottle plan run that has not been settled is using this worktree — refusing to remove it."
+  log "    let the run finish, or settle it (settle_plan_run CANCELLED / FAILED), then retry."
+  log "    to skip this check deliberately: OPENTHROTTLE_WORKTREE_ACTIVE_RUN_GUARD=0"
   exit 1
 fi
 

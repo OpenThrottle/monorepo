@@ -9,7 +9,9 @@
 #           reached the default branch with exactly that content (how a squash merge shows up)
 #   REVIEW  some, but not all, of the branch's file contents reached the default branch —
 #           typical of a squash that picked up fixups; run --explain <branch> and look
-#   KEEP    open PR, checked out here, no shared history, or work found nowhere else
+#   KEEP    open PR, checked out here, a worktree with no commits and no PR yet (a fresh
+#           worktree looks merged, but an agent may be working in it), no shared history,
+#           or work found nowhere else
 #
 #   PR        "#<n> <STATE>" of the newest PR from that branch name, or "-"
 #   WORKTREE  path of the worktree that has the branch checked out, or "-"
@@ -168,6 +170,10 @@ git for-each-ref --format='%(refname:short)' refs/heads/ | while read -r branch;
     reason="checked out in this worktree"
   elif [ -z "$mb" ]; then
     reason="shares no history with $base (another remote?)"
+  elif [ "$wt" != - ] && [ -z "$num" ] && git merge-base --is-ancestor "$tip" "$base"; then
+    # Indistinguishable from merged work by history alone: a worktree created moments
+    # ago from the default branch, where an agent may be mid-task with nothing committed.
+    reason="worktree with no commits and no PR yet (fresh, may be in use)"
   elif git merge-base --is-ancestor "$tip" "$base"; then
     verdict=SAFE; reason="every commit is on $base"
   elif [ "$state" = OPEN ]; then

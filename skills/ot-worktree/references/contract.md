@@ -139,6 +139,7 @@ marker files. The scheme:
 | `OPENTHROTTLE_WORKTREE_PROVISION`           | create, heal | (discovery)                                    |
 | `OPENTHROTTLE_WORKTREE_HEAL`                | heal         | (discovery)                                    |
 | `OPENTHROTTLE_WORKTREE_TEARDOWN`            | destroy      | (discovery)                                    |
+| `OPENTHROTTLE_WORKTREE_ACTIVE_RUN_GUARD`    | destroy      | `1` (`0` skips the unsettled-plan-run check)   |
 | `OPENTHROTTLE_WORKTREE_PROVISIONED_MARKERS` | create, heal | `.env`                                         |
 | `OPENTHROTTLE_WORKTREE_OWN_DB`              | create       | unset (`--own-db` sets `1`)                    |
 | `OPENTHROTTLE_WORKTREE_SETUP`               | create, heal | `1`                                            |
