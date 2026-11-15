@@ -235,4 +235,54 @@ describe('OpenThrottlePagination Component', () => {
       }
     });
   });
+
+  describe('with a page-size select', () => {
+    const pageSize = { label: 'Results per page', options: [10, 20, 50] };
+
+    test('stays visible on a single page so the size can still change', () => {
+      const view = renderPagination({
+        basePath: '/search',
+        limit: 10,
+        page: 1,
+        pageSize,
+        resultLabel: 'results',
+        total: 5,
+      });
+
+      expect(
+        view.getByTestId('OpenThrottlePaginationLimit'),
+      ).toBeInTheDocument();
+      expect(view.queryByTestId('OpenThrottlePagination')).toBeNull();
+      expect(view.getByText('Showing 1-5 of 5 results')).toBeInTheDocument();
+    });
+
+    test('renders nothing for an empty list', () => {
+      const view = renderPagination({
+        basePath: '/search',
+        limit: 10,
+        page: 1,
+        pageSize,
+        resultLabel: 'results',
+        total: 0,
+      });
+
+      expect(view.container.textContent).toBe('');
+    });
+
+    test('sits beside the page links when there are several pages', () => {
+      const view = renderPagination({
+        basePath: '/search',
+        limit: 10,
+        page: 1,
+        pageSize,
+        resultLabel: 'results',
+        total: 45,
+      });
+
+      expect(view.getByTestId('OpenThrottlePagination')).toBeInTheDocument();
+      expect(
+        view.getByRole('combobox', { name: 'Results per page' }),
+      ).toBeInTheDocument();
+    });
+  });
 });

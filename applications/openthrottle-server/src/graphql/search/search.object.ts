@@ -2,7 +2,7 @@
  * @description GraphQL ObjectTypes for semantic search: SearchResult wrapper and SearchChunk with id, content, similarity, and source metadata.
  */
 
-import { Field, Float, ObjectType } from '@nestjs/graphql';
+import { Field, Float, Int, ObjectType } from '@nestjs/graphql';
 
 import type { SearchMode } from './search.types.ts';
 
@@ -94,6 +94,11 @@ export class SearchResult {
     nullable: true,
   })
   reason!: string | null;
+
+  @Field(() => Int, {
+    description: `How many ranked candidates the query matched, capped at 100. Page through them with \`offset\` and \`limit\`.`,
+  })
+  total!: number;
 }
 
 /**

@@ -1771,6 +1771,7 @@ export function SearchInputSchema(): z.ZodObject<Properties<SearchInput>> {
   return z.object({
     limit: z.number().nullish(),
     mode: z.string().nullish(),
+    offset: z.number().nullish(),
     query: z.string().min(1),
   });
 }

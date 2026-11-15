@@ -18,6 +18,12 @@ export class SearchInput {
   })
   mode!: string | null;
 
+  @Field(() => Int, {
+    description: `Number of ranked chunks to skip before returning \`limit\` (default 0). Pages are slices of one ranking of at most 100 candidates, so offsets past \`total\` return no chunks.`,
+    nullable: true,
+  })
+  offset!: number | null;
+
   @Field(() => String, {
     description: `Text query to search for.`,
   })

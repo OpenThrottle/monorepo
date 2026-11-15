@@ -183,6 +183,14 @@ describe('authMiddleware', () => {
         expect(result).toBeUndefined();
       });
 
+      it('does not gate /search, which graduated out of beta', () => {
+        process.env.FEATURE_BETA_PREVIEW = 'false';
+
+        const result = runMiddleware(buildArgs('/search', validToken));
+
+        expect(result).toBeUndefined();
+      });
+
       it('does not gate /dashboard, which is no longer beta-only', () => {
         process.env.FEATURE_BETA_PREVIEW = 'false';
 

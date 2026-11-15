@@ -39,8 +39,8 @@ describe('parseSearchParams', () => {
     );
   });
 
-  test('should clamp limit to at most 100', () => {
-    expect(parseSearchParams(new URLSearchParams('limit=500')).limit).toBe(100);
+  test('should clamp limit to at most 50', () => {
+    expect(parseSearchParams(new URLSearchParams('limit=500')).limit).toBe(50);
   });
 
   test('should use default limit when limit param is not a number', () => {

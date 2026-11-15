@@ -1,5 +1,6 @@
 import {
   Button,
+  cn,
   Pagination,
   PaginationContent,
   PaginationEllipsis,
@@ -15,6 +16,8 @@ import {
   buildPreservedSearchParams,
   buildProjectsSearchParams,
 } from '../utils/index';
+import type { OpenThrottlePaginationLimitProps } from './OpenThrottlePaginationLimit';
+import { OpenThrottlePaginationLimit } from './OpenThrottlePaginationLimit';
 
 export interface OpenThrottlePaginationProps extends ProjectsSearchParamsExtras {
   /**
@@ -25,6 +28,11 @@ export interface OpenThrottlePaginationProps extends ProjectsSearchParamsExtras 
   readonly className?: string;
   readonly limit: number;
   readonly page: number;
+  /** Opt in to a page-size select: the footer becomes one row and shows even on a single page. */
+  readonly pageSize?: Pick<
+    OpenThrottlePaginationLimitProps,
+    'label' | 'options'
+  >;
   /**
    * Opt in to building page links from the *live* query string instead of the
    * `extras` contract: the current params are cloned and only `page`/`limit`
@@ -46,42 +54,20 @@ export const OpenThrottlePagination = (
   props: OpenThrottlePaginationProps,
 ): React.ReactElement | null => {
   const {
-    assignees,
     basePath,
     className,
-    details,
     limit,
     page,
+    pageSize,
     preserveSearchParams = false,
     resultLabel,
-    search,
-    sortBy,
-    sortOrder,
-    status,
-    statuses,
     total,
-    view,
+    ...allExtras
   } = props;
 
-  const hasExtras =
-    (assignees !== undefined && assignees.length > 0) ||
-    details !== undefined ||
-    search !== undefined ||
-    sortBy !== undefined ||
-    sortOrder !== undefined ||
-    status !== undefined ||
-    (statuses !== undefined && statuses.length > 0) ||
-    view !== undefined;
-  const allExtras = {
-    assignees,
-    details,
-    search,
-    sortBy,
-    sortOrder,
-    status,
-    statuses,
-    view,
-  };
+  const hasExtras = Object.values(allExtras).some((value) => {
+    return Array.isArray(value) ? value.length > 0 : value !== undefined;
+  });
   const extras = hasExtras ? allExtras : undefined;
 
   // Hooks
@@ -89,81 +75,100 @@ export const OpenThrottlePagination = (
 
   // Setup
   const totalPages = Math.ceil(total / limit) || 1;
-
-  const buildParams = (targetPage: number): string => {
+  const buildParams = (targetPage: number, targetLimit = limit): string => {
     return preserveSearchParams
-      ? buildPreservedSearchParams(searchParams, targetPage, limit)
-      : buildProjectsSearchParams(targetPage, limit, extras);
+      ? buildPreservedSearchParams(searchParams, targetPage, targetLimit)
+      : buildProjectsSearchParams(targetPage, targetLimit, extras);
   };
-
-  const prevPage = page > 1 ? page - 1 : null;
-  const nextPage = page < totalPages ? page + 1 : null;
-
-  const prevUrl = prevPage ? `${basePath}?${buildParams(prevPage)}` : undefined;
-  const nextUrl = nextPage ? `${basePath}?${buildParams(nextPage)}` : undefined;
-
+  const buildLimitHref = (targetLimit: number): string => {
+    return `${basePath}?${buildParams(1, targetLimit)}`;
+  };
+  const hasPageSize = pageSize !== undefined;
+  const prevUrl = page > 1 ? `${basePath}?${buildParams(page - 1)}` : undefined;
+  const nextUrl =
+    page < totalPages ? `${basePath}?${buildParams(page + 1)}` : undefined;
   const startItem = total === 0 ? 0 : (page - 1) * limit + 1;
   const endItem = Math.min(page * limit, total);
 
   const pageItems = buildPaginationPageItems({ page, totalPages });
 
   // Handlers
+  const renderStep = (
+    url: string | undefined,
+    label: string,
+    icon: React.ReactElement,
+  ): React.ReactElement => {
+    if (url === undefined) {
+      return (
+        <Button
+          aria-disabled={true}
+          className="pointer-events-none opacity-50"
+          variant="ghost"
+        >
+          {icon}
+        </Button>
+      );
+    }
+
+    return (
+      <Button aria-label={label} asChild={true} variant="ghost">
+        <Link className="gap-1 px-2.5" to={url}>
+          {icon}
+        </Link>
+      </Button>
+    );
+  };
 
   // Markup
-  const prevLink = prevUrl && (
-    <Button aria-label="Go to previous page" asChild={true} variant="ghost">
-      <Link className="gap-1 pl-2.5" to={prevUrl}>
-        {/* <span className="sm:inline">Previous</span> */}
-        <ChevronsLeftIcon className="h-4 w-4" />
-      </Link>
-    </Button>
+  const prevStep = renderStep(
+    prevUrl,
+    'Go to previous page',
+    <ChevronsLeftIcon className="h-4 w-4" />,
   );
-  const prevDisabled = (
-    <Button
-      aria-disabled={true}
-      className="pointer-events-none opacity-50"
-      variant="ghost"
-    >
-      {/* <span className="sm:inline">Previous</span> */}
-      <ChevronsLeftIcon className="h-4 w-4" />
-    </Button>
+  const nextStep = renderStep(
+    nextUrl,
+    'Go to next page',
+    <ChevronsRightIcon className="h-4 w-4" />,
   );
-  const nextLink = nextUrl && (
-    <Button aria-label="Go to next page" asChild={true} variant="ghost">
-      <Link className="gap-1 pr-2.5" to={nextUrl}>
-        {/* <span className="sm:inline">Next</span> */}
-        <ChevronsRightIcon className="h-4 w-4" />
-      </Link>
-    </Button>
-  );
-  const nextDisabled = (
-    <Button
-      aria-disabled={true}
-      className="pointer-events-none opacity-50"
-      variant="ghost"
-    >
-      {/* <span className="sm:inline">Next</span> */}
-      <ChevronsRightIcon className="h-4 w-4" />
-    </Button>
+  const limitControl = hasPageSize && (
+    <OpenThrottlePaginationLimit
+      buildHref={buildLimitHref}
+      label={pageSize.label}
+      limit={limit}
+      options={pageSize.options}
+    />
   );
 
   // Life Cycle
 
   // 🔌 Short Circuit
-  if (totalPages <= 1) {
+  if (total === 0 || (totalPages <= 1 && !hasPageSize)) {
     return null;
   }
 
   return (
-    <div className={className}>
-      <p className="text-muted-foreground my-4 text-center text-sm">
+    <div
+      className={cn(
+        hasPageSize && 'flex flex-wrap items-center justify-between gap-3',
+        className,
+      )}
+    >
+      <p
+        className={cn(
+          'text-muted-foreground text-sm',
+          !hasPageSize && 'my-4 text-center',
+        )}
+      >
         Showing {startItem}-{endItem} of {total} {resultLabel}
       </p>
 
       {totalPages > 1 && (
-        <Pagination data-testid="OpenThrottlePagination">
+        <Pagination
+          className={cn(hasPageSize && 'mx-0 w-auto')}
+          data-testid="OpenThrottlePagination"
+        >
           <PaginationContent>
-            <PaginationItem>{prevUrl ? prevLink : prevDisabled}</PaginationItem>
+            <PaginationItem>{prevStep}</PaginationItem>
 
             {pageItems.map((item, index) => {
               if (item.type === 'ellipsis') {
@@ -194,10 +199,11 @@ export const OpenThrottlePagination = (
               );
             })}
 
-            <PaginationItem>{nextUrl ? nextLink : nextDisabled}</PaginationItem>
+            <PaginationItem>{nextStep}</PaginationItem>
           </PaginationContent>
         </Pagination>
       )}
+      {limitControl}
     </div>
   );
 };

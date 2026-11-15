@@ -23,7 +23,7 @@ export function parseSearchParams(
   const q = searchParams.get('q') ?? '';
   const { limit, page } = parsePagination(searchParams, {
     defaultLimit: DEFAULT_SEARCH_LIMIT,
-    maxLimit: 100,
+    maxLimit: 50,
   });
   const details = searchParams.get('details') ?? '';
   const expandRankingDetails = details === 'ranking';

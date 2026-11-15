@@ -5,17 +5,25 @@ import { GlobalScreen } from '@openthrottle/react-router-ui-global';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import * as React from 'react';
-import { useSearchParams } from 'react-router';
+import { redirect, useSearchParams } from 'react-router';
 
 import type { Route } from '@/app/routes/+types/search._index';
+import type { SearchChunk } from '~/__generated__/graphql';
 import { GetSearchResultsDocument } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
 import { SearchCard } from '~/routing/search/components/SearchCard';
-import { SearchFilters } from '~/routing/search/components/SearchFilters';
-import { SearchForm } from '~/routing/search/components/SearchForm';
 import { SearchIntroduction } from '~/routing/search/components/SearchIntroduction';
-import { DEFAULT_SEARCH_LIMIT } from '~/routing/search/config';
-import { parseSearchParams } from '~/routing/search/utils/parsers';
+import { SearchResultPreview } from '~/routing/search/components/SearchResultPreview';
+import { SearchToolbar } from '~/routing/search/components/SearchToolbar';
+import {
+  DEFAULT_SEARCH_LIMIT,
+  SEARCH_LIMIT_OPTIONS,
+} from '~/routing/search/config';
+import { SEARCH_PAGINATION_COPY } from '~/routing/search/data/data.copy';
+import {
+  buildSearchUrl,
+  parseSearchParams,
+} from '~/routing/search/utils/parsers';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -53,30 +61,35 @@ export const loader = async (args: Route.LoaderArgs) => {
     };
   }
 
-  const apiLimit = Math.min(100, page * limit);
-
   const { search } = await executeGraphqlWithAuth(
     args.request,
     GetSearchResultsDocument,
     {
       input: {
-        limit: apiLimit,
+        limit,
+        offset: (page - 1) * limit,
         query: trimmed,
       },
     },
   );
 
-  const chunks = search.chunks;
-  const start = (page - 1) * limit;
-  const pageChunks = chunks.slice(start, start + limit);
+  const lastPage = Math.max(1, Math.ceil(search.total / limit));
+
+  if (page > lastPage) {
+    throw redirect(
+      buildSearchUrl(q, lastPage, limit, {
+        detailsRanking: expandRankingDetails,
+      }),
+    );
+  }
 
   return {
     expandRankingDetails,
     limit,
     page,
     query: q,
-    results: { chunks: pageChunks },
-    total: chunks.length,
+    results: { chunks: search.chunks },
+    total: search.total,
   };
 };
 
@@ -102,26 +115,34 @@ export default function Component(
   } = loaderData;
 
   // Hooks
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
+  const [previewResult, setPreviewResult] = React.useState<SearchChunk | null>(
+    null,
+  );
+  const previewTriggerRef = React.useRef<HTMLElement | null>(null);
 
   // Setup
   const currentQ = q ?? searchParams.get('q') ?? '';
   const expandRankingDetails =
     expandRankingFromLoader ||
     (searchParams.get('details') ?? '') === 'ranking';
+  const pageSize = pageLimit ?? DEFAULT_SEARCH_LIMIT;
+  const previewIndex = results.chunks.findIndex((chunk) => {
+    return chunk.id === previewResult?.id;
+  });
+  const isPreviewOnPage = previewIndex >= 0;
+  const previewRankMeta = isPreviewOnPage
+    ? { indexOnPage: previewIndex, page, pageSize, total }
+    : undefined;
 
   // Handlers
-  const handleExpandRankingChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-  ): void => {
-    const next = new URLSearchParams(searchParams);
-    if (e.target.checked) {
-      next.set('details', 'ranking');
-    } else {
-      next.delete('details');
-    }
+  const handlePreview = (result: SearchChunk, trigger: HTMLElement): void => {
+    previewTriggerRef.current = trigger;
+    setPreviewResult(result);
+  };
 
-    setSearchParams(next, { replace: true });
+  const handleClosePreview = (): void => {
+    setPreviewResult(null);
   };
 
   // Markup
@@ -131,47 +152,49 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <GlobalScreen beta={true}>
-      <SearchIntroduction
-        expandRankingDetails={expandRankingDetails}
-        hasQuery={Boolean(currentQ)}
-        onExpandRankingChange={currentQ ? handleExpandRankingChange : undefined}
-      />
-
-      {/* SearchFilters: limit (results per page) wired to URL; future: source filter when API supports it */}
-      <SearchFilters />
-      {/* SearchForm: query input and GET submit to /search?q=...; pre-fill from current searchParams */}
-      <SearchForm
-        defaultQuery={currentQ}
-        preserveRankingDetails={expandRankingDetails}
-      />
+    <GlobalScreen>
+      {/* One stack: GlobalScreen's own gap between children is far too loose for a result list. */}
       <div className="flex flex-col gap-4">
-        {results.chunks.map((result, index) => {
-          return (
-            <SearchCard
-              defaultOpenWhy={expandRankingDetails}
-              key={result.id}
-              rankMeta={{
-                indexOnPage: index,
-                page,
-                pageSize: pageLimit ?? DEFAULT_SEARCH_LIMIT,
-                total,
-              }}
-              result={result}
-            />
-          );
-        })}
+        <div className="space-y-3">
+          <SearchIntroduction hasQuery={currentQ !== ''} />
+          <SearchToolbar
+            defaultQuery={currentQ}
+            expandRankingDetails={expandRankingDetails}
+          />
+        </div>
+        <div className="flex flex-col gap-2">
+          {results.chunks.map((result) => {
+            return (
+              <SearchCard
+                key={result.id}
+                onPreview={handlePreview}
+                result={result}
+              />
+            );
+          })}
+        </div>
+        <SearchResultPreview
+          defaultOpenWhy={expandRankingDetails}
+          onClose={handleClosePreview}
+          rankMeta={previewRankMeta}
+          result={previewResult}
+          returnFocusTo={previewTriggerRef.current}
+        />
+        <OpenThrottlePagination
+          basePath="/search"
+          className="mt-2"
+          details={expandRankingDetails ? 'ranking' : undefined}
+          limit={pageSize}
+          page={page}
+          pageSize={{
+            label: SEARCH_PAGINATION_COPY.pageSizeLabel,
+            options: SEARCH_LIMIT_OPTIONS,
+          }}
+          resultLabel={SEARCH_PAGINATION_COPY.resultLabel}
+          search={currentQ || undefined}
+          total={total}
+        />
       </div>
-      <OpenThrottlePagination
-        basePath="/search"
-        className="mt-8"
-        details={expandRankingDetails ? 'ranking' : undefined}
-        limit={pageLimit ?? DEFAULT_SEARCH_LIMIT}
-        page={page}
-        resultLabel="results"
-        search={currentQ || undefined}
-        total={total}
-      />
     </GlobalScreen>
   );
 }

@@ -6511,6 +6511,8 @@ export type SearchInput = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   /** Requested ranking: "hybrid" (default; vector and full-text merged by reciprocal rank fusion) or "semantic" (vector similarity only). The full-text fallback still applies when the embedder cannot answer. */
   mode?: InputMaybe<Scalars['String']['input']>;
+  /** Number of ranked chunks to skip before returning `limit` (default 0). Pages are slices of one ranking of at most 100 candidates, so offsets past `total` return no chunks. */
+  offset?: InputMaybe<Scalars['Int']['input']>;
   /** Text query to search for. */
   query: Scalars['String']['input'];
 };
@@ -6529,6 +6531,8 @@ export type SearchResult = {
   mode: Scalars['String']['output'];
   /** Why the result is lexical, or null when it is hybrid or semantic: embedder_unconfigured | embedder_dimension_mismatch | embedder_provider_error | no_embeddings. */
   reason?: Maybe<Scalars['String']['output']>;
+  /** How many ranked candidates the query matched, capped at 100. Page through them with `offset` and `limit`. */
+  total: Scalars['Int']['output'];
 };
 
 /** Server health: API reachability, OpenThrottle DB, cms DB, Redis (BullMQ), and WebSocket. Each component is ok, unconfigured, or unreachable. */
@@ -12860,6 +12864,7 @@ export type GetSearchResultsQuery = {
   __typename?: 'Query';
   search: {
     __typename?: 'SearchResult';
+    total: number;
     chunks: Array<{
       __typename?: 'SearchChunk';
       content: string;
@@ -31422,6 +31427,7 @@ export const GetSearchResultsDocument = {
                     ],
                   },
                 },
+                { kind: 'Field', name: { kind: 'Name', value: 'total' } },
               ],
             },
           },

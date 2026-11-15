@@ -16,7 +16,6 @@ const GATED_PREFIXES = [
   '/profile',
   '/prompts',
   '/pull-requests',
-  '/search',
   '/timeline',
 ];
 
