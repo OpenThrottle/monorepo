@@ -8,6 +8,9 @@
  *   call with an empty `rawInput` and fill it in a later update (cursor does),
  *   so the `tool_call` chunk is held until the input is known or the call
  *   starts running; the `tool_result` is emitted on `completed`/`failed`.
+ *   A `failed` result carries `metadata.isError` and a readable error text
+ *   (the update's content text, else a string `rawOutput`) — the chat
+ *   timeline marks a card failed on `isError` alone.
  * - Everything else (`plan`, mode/config/command updates, `session_info_update`,
  *   `usage_update` — a context-window gauge, not token counts — and replayed
  *   `user_message_chunk`s) maps to no chunk.
@@ -49,6 +52,44 @@ function textOf(content: { readonly type: string }): string {
   }
 
   return '';
+}
+
+/** Fallback error text for a failed call that carries no readable output. */
+const FAILED_TOOL_CALL_ERROR = 'The agent reported a failed tool call.';
+
+/**
+ * The joined text of a tool call's `content` array: the text of every
+ * `{ type: 'content' }` item, ignoring diffs, terminals and non-text blocks.
+ */
+function contentTextOf(content: unknown): string {
+  if (!Array.isArray(content)) {
+    return '';
+  }
+
+  const texts: string[] = [];
+  for (const item of content) {
+    if (isRecord(item) && item.type === 'content' && isRecord(item.content)) {
+      const text = item.content.text;
+      if (typeof text === 'string' && text !== '') {
+        texts.push(text);
+      }
+    }
+  }
+
+  return texts.join('\n');
+}
+
+/** Readable error text for a failed call: content text, else a string rawOutput. */
+function failedErrorText(rawOutput: unknown, content: unknown): string {
+  const contentText = contentTextOf(content);
+  if (contentText.trim() !== '') {
+    return contentText;
+  }
+  if (typeof rawOutput === 'string' && rawOutput.trim() !== '') {
+    return rawOutput;
+  }
+
+  return FAILED_TOOL_CALL_ERROR;
 }
 
 /** One text-like chunk for a non-empty delta, none otherwise. */
@@ -94,16 +135,26 @@ export function createAcpUpdateMapper(): (
     callId: string,
     state: ToolCallState,
     status: string,
-    output: unknown,
+    fields: { readonly content?: unknown; readonly rawOutput?: unknown },
   ): ConversationStreamChunk => {
     state.emittedResult = true;
+    const isError = status === 'failed';
+    const errorText = isError
+      ? failedErrorText(fields.rawOutput, fields.content)
+      : null;
+    const output = fields.rawOutput ?? fields.content ?? null;
+
+    // The chat timeline marks a card failed only on `metadata.isError`; the
+    // chunk-level `error` is read on the terminal `done` chunk alone.
     return {
       delta: '',
       done: false,
+      error: errorText,
       kind: CONVERSATION_STREAM_CHUNK_KINDS.toolResult,
       metadata: {
         callId,
-        toolCall: { output: output ?? null, status },
+        isError,
+        toolCall: errorText ?? { output, status },
         toolName: state.toolName,
       },
     };
@@ -143,9 +194,7 @@ export function createAcpUpdateMapper(): (
     }
 
     if (finished && status !== null && !state.emittedResult) {
-      chunks.push(
-        resultChunk(callId, state, status, fields.rawOutput ?? fields.content),
-      );
+      chunks.push(resultChunk(callId, state, status, fields));
     }
 
     return chunks;
