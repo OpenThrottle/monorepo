@@ -27,25 +27,109 @@ describe('resolveEmbeddingConfig', () => {
       if (!result.ok) return;
       expect(result.config.provider).toBe('ollama');
       expect(result.config.ollamaBaseUrl).toBe('https://ollama.local');
-      expect(result.config.spec.ollamaName).toBe('nomic-embed-text');
+      expect(result.config.spec).toMatchObject({
+        kind: 'open-weights',
+        ollamaName: 'nomic-embed-text',
+      });
     });
   });
 
-  describe('when EMBEDDING_PROVIDER is reserved', () => {
-    test.each(['openai', 'gemini'])(
-      'refuses %s as not implemented',
-      (provider) => {
-        const result = resolveEmbeddingConfig({ EMBEDDING_PROVIDER: provider });
+  describe('when EMBEDDING_PROVIDER=gemini', () => {
+    test('defaults to gemini-embedding-001 at 768 dims with the public API', () => {
+      const result = resolveEmbeddingConfig({
+        EMBEDDING_PROVIDER: 'gemini',
+        GEMINI_API_KEY: 'g-test',
+      });
 
-        expect(result).toMatchObject({
-          ok: false,
-          provider,
-          reason: 'unconfigured',
-        });
-        if (result.ok) return;
-        expect(result.detail).toContain('not implemented');
-      },
-    );
+      expect(result.ok).toBe(true);
+      if (!result.ok || result.config.provider !== 'gemini') return;
+      expect(result.config.model).toBe('gemini-embedding-001');
+      expect(result.config.dims).toBe(768);
+      expect(result.config.apiKey).toBe('g-test');
+      expect(result.config.apiBaseUrl).toBe(
+        'https://generativelanguage.googleapis.com/v1beta',
+      );
+    });
+
+    test('refuses without GEMINI_API_KEY', () => {
+      const result = resolveEmbeddingConfig({ EMBEDDING_PROVIDER: 'gemini' });
+
+      expect(result).toMatchObject({ ok: false, reason: 'unconfigured' });
+      if (result.ok) return;
+      expect(result.detail).toContain('GEMINI_API_KEY');
+    });
+
+    test('refuses an OpenAI model', () => {
+      const result = resolveEmbeddingConfig({
+        EMBEDDING_MODEL: 'text-embedding-3-small',
+        EMBEDDING_PROVIDER: 'gemini',
+        GEMINI_API_KEY: 'g-test',
+      });
+
+      expect(result).toMatchObject({ ok: false, reason: 'unconfigured' });
+    });
+  });
+
+  describe('when EMBEDDING_PROVIDER=openai', () => {
+    test('defaults to text-embedding-3-small at 768 dims with the public API', () => {
+      const result = resolveEmbeddingConfig({
+        EMBEDDING_PROVIDER: 'openai',
+        OPENAI_API_KEY: 'sk-test',
+      });
+
+      expect(result.ok).toBe(true);
+      if (!result.ok || result.config.provider !== 'openai') return;
+      expect(result.config.model).toBe('text-embedding-3-small');
+      expect(result.config.dims).toBe(768);
+      expect(result.config.apiKey).toBe('sk-test');
+      expect(result.config.apiBaseUrl).toBe('https://api.openai.com/v1');
+      expect(result.config.spec.documentPrefix).toBe('');
+    });
+
+    test('accepts text-embedding-3-large and a trimmed OPENAI_BASE_URL', () => {
+      const result = resolveEmbeddingConfig({
+        EMBEDDING_MODEL: 'text-embedding-3-large',
+        EMBEDDING_PROVIDER: 'openai',
+        OPENAI_API_KEY: 'sk-test',
+        OPENAI_BASE_URL: 'https://proxy.test/v1/',
+      });
+
+      expect(result.ok).toBe(true);
+      if (!result.ok || result.config.provider !== 'openai') return;
+      expect(result.config.model).toBe('text-embedding-3-large');
+      expect(result.config.apiBaseUrl).toBe('https://proxy.test/v1');
+    });
+
+    test('refuses without OPENAI_API_KEY', () => {
+      const result = resolveEmbeddingConfig({ EMBEDDING_PROVIDER: 'openai' });
+
+      expect(result).toMatchObject({ ok: false, reason: 'unconfigured' });
+      if (result.ok) return;
+      expect(result.detail).toContain('OPENAI_API_KEY');
+    });
+
+    test('refuses the open-weights model', () => {
+      const result = resolveEmbeddingConfig({
+        EMBEDDING_MODEL: 'nomic-embed-text-v1.5',
+        EMBEDDING_PROVIDER: 'openai',
+        OPENAI_API_KEY: 'sk-test',
+      });
+
+      expect(result).toMatchObject({ ok: false, reason: 'unconfigured' });
+      if (result.ok) return;
+      expect(result.detail).toContain('text-embedding-3-small');
+    });
+  });
+
+  describe('when a self-hosted provider is given a hosted model', () => {
+    test('refuses it', () => {
+      const result = resolveEmbeddingConfig({
+        EMBEDDING_MODEL: 'text-embedding-3-small',
+        EMBEDDING_PROVIDER: 'ollama',
+      });
+
+      expect(result).toMatchObject({ ok: false, reason: 'unconfigured' });
+    });
   });
 
   describe('when EMBEDDING_PROVIDER is unknown', () => {

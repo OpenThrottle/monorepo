@@ -2414,7 +2414,9 @@ type EmbeddingsHealthObject {
   """
   model: String
 
-  """EMBEDDING_PROVIDER as configured: local | ollama (or a refused value)."""
+  """
+  EMBEDDING_PROVIDER as configured — local, ollama or a hosted provider (openai, gemini) — even when it was refused.
+  """
   provider: String!
 
   """

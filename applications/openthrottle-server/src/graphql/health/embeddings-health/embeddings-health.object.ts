@@ -31,7 +31,7 @@ export class EmbeddingsHealthObject {
   model!: string | null;
 
   @Field(() => String, {
-    description: `EMBEDDING_PROVIDER as configured: local | ollama (or a refused value).`,
+    description: `EMBEDDING_PROVIDER as configured — local, ollama or a hosted provider (openai, gemini) — even when it was refused.`,
   })
   provider!: string;
 
