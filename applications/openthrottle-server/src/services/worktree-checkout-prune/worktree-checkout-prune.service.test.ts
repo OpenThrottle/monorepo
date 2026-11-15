@@ -149,6 +149,24 @@ describe('WorktreeCheckoutPruneService', () => {
       );
       expect(deleteWorktreeCheckout).not.toHaveBeenCalled();
     });
+
+    it('answers SKIPPED_ACTIVE_RUN, not SKIPPED_LIVE, while the worktree is still on disk', async () => {
+      // destroy.sh's pre-removal probe depends on this order: asked on a live path, the run guard
+      // must speak first, or the script could not tell "in use" from "merely present".
+      const busy = worktree('wt-busy-live');
+      withDisk([busy.filesystemPath]);
+      const { deleteWorktreeCheckout, service } = build({
+        checkouts: [busy],
+        unsettledRuns: [createMock<PlanRun>({ checkoutId: busy.id })],
+      });
+
+      const result = await service.pruneByPath(USER, busy.filesystemPath);
+
+      expect(result.outcome).toBe(
+        PRUNE_WORKTREE_CHECKOUT_OUTCOME.SKIPPED_ACTIVE_RUN,
+      );
+      expect(deleteWorktreeCheckout).not.toHaveBeenCalled();
+    });
   });
 
   describe('when only a SCHEDULED run points at the checkout', () => {

@@ -173,7 +173,7 @@
     "prompt/Job_TestHealth.md": 8163,
     "prompt/Job_WorkInFlight.md": 9928,
     "skill/agents-ralph": 10550,
-    "skill/github-cleanup": 7327,
+    "skill/github-cleanup": 7374,
     "skill/github-commit": 6017,
     "skill/github-pull-request": 11659,
     "skill/github-squash": 6184,
@@ -186,7 +186,7 @@
     "skill/ot-skill-guide": 11047,
     "skill/ot-skill-sync": 9963,
     "skill/ot-stack": 6507,
-    "skill/ot-worktree": 8809,
+    "skill/ot-worktree": 9105,
     "skillDescription/agents-ralph": 323,
     "skillDescription/github-cleanup": 402,
     "skillDescription/github-commit": 309,
@@ -215,6 +215,6 @@
     "mcpInstructions": 2069,
     "mcpTools": 34809,
     "prompts": 133419,
-    "skills": 151961
+    "skills": 152304
   }
 }
