@@ -39,7 +39,22 @@ export const EMBED_ENTITY_UNCONFIGURED_DELAY_MS = 5 * 60 * 1000;
 /** @description A failed job is kept this long, then removed so the reconciler can re-add it. */
 export const EMBED_ENTITY_REMOVE_ON_FAIL_AGE_SECONDS = 3600;
 
-export const EMBEDDINGS_CONCURRENCY = 2;
+/**
+ * @description Default jobs in flight on the Embeddings worker (`EMBEDDINGS_CONCURRENCY`). One:
+ * the local model is a single worker thread, so a second job only queues there while holding its
+ * texts in memory, and it doubles what a search query can find in line ahead of it.
+ */
+export const DEFAULT_EMBEDDINGS_CONCURRENCY = 1;
+
+/**
+ * @description Default BullMQ limiter for the Embeddings worker: at most this many jobs per
+ * {@link DEFAULT_EMBEDDINGS_RATE_LIMIT_DURATION_MS} (`EMBEDDINGS_RATE_LIMIT_MAX` /
+ * `EMBEDDINGS_RATE_LIMIT_DURATION_MS`; a max of 0 turns it off). Two jobs a second only paces a
+ * burst of single-row entity jobs; a code-chunk page takes longer than that on its own.
+ */
+export const DEFAULT_EMBEDDINGS_RATE_LIMIT_MAX = 120;
+
+export const DEFAULT_EMBEDDINGS_RATE_LIMIT_DURATION_MS = 60_000;
 
 /**
  * @description Where each embeddable entity's text comes from. `contentSql` is the ONE

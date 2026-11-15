@@ -153,6 +153,70 @@ describe('createEmbedder', () => {
     });
   });
 
+  describe('when inputs differ in length', () => {
+    test('batches them shortest first and returns vectors in input order', async () => {
+      const backend: EmbeddingBackend & {
+        readonly embed: ReturnType<typeof vi.fn<EmbeddingBackend['embed']>>;
+      } = {
+        close: vi.fn(() => {
+          return Promise.resolve();
+        }),
+        // Each vector encodes its text's length, so the test can tell which input it belongs to.
+        embed: vi.fn<EmbeddingBackend['embed']>((texts) => {
+          return Promise.resolve({
+            ok: true,
+            vectors: texts.map((text) => {
+              return Array.from({ length: 768 }, () => {
+                return text.length;
+              });
+            }),
+          });
+        }),
+      };
+      const embedder = createEmbedder(localConfig(), {
+        backend,
+        local: undefined,
+      });
+      const texts = ['ccc', 'a', 'bb'];
+
+      const result = await embedder.embed(texts, 'document');
+
+      expect(backend.embed.mock.calls[0]?.[0]).toEqual([
+        'search_document: a',
+        'search_document: bb',
+        'search_document: ccc',
+      ]);
+      expect(
+        result.ok &&
+          result.vectors.map((vector) => {
+            return vector[0];
+          }),
+      ).toEqual(
+        texts.map((text) => {
+          return `search_document: ${text}`.length;
+        }),
+      );
+    });
+  });
+
+  describe('when the backend returns fewer vectors than inputs', () => {
+    test('fails with provider_error', async () => {
+      const backend = fakeBackend(768);
+
+      backend.embed.mockResolvedValueOnce({ ok: true, vectors: [] });
+
+      const embedder = createEmbedder(localConfig(), {
+        backend,
+        local: undefined,
+      });
+
+      await expect(embedder.embed(['a'], 'document')).resolves.toMatchObject({
+        ok: false,
+        reason: 'provider_error',
+      });
+    });
+  });
+
   describe('when the backend returns the wrong dimension', () => {
     test('fails with dimension_mismatch', async () => {
       const embedder = createEmbedder(localConfig(), {

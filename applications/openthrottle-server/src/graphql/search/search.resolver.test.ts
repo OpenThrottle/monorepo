@@ -100,6 +100,45 @@ describe('SearchResolver', () => {
       expect(runSemanticSearch).not.toHaveBeenCalled();
     });
 
+    test('answers lexically with embedder_busy when the query embed misses its budget', async () => {
+      vi.stubEnv('SEARCH_EMBED_BUDGET_MS', '20');
+      vi.mocked(runLexicalSearch).mockResolvedValue([
+        {
+          content: 'Plan body',
+          id: 'plan-1',
+          metadata: {},
+          planId: 'plan-1',
+          planTitle: 'Plan One',
+          similarity: 0.4,
+          source: 'plan',
+        },
+      ]);
+      // An embed stuck behind a re-embed: it never answers within the test.
+      embed.mockReturnValue(
+        new Promise(() => {
+          return undefined;
+        }),
+      );
+
+      try {
+        const result = await resolver.search({
+          limit: 10,
+          mode: null,
+          offset: null,
+          query: 'ci pipelines',
+        });
+
+        expect(result.mode).toBe('lexical');
+        expect(result.reason).toBe('embedder_busy');
+        expect(result.chunks).toEqual([
+          expect.objectContaining({ id: 'plan-1' }),
+        ]);
+        expect(runSemanticSearch).not.toHaveBeenCalled();
+      } finally {
+        vi.unstubAllEnvs();
+      }
+    });
+
     test('returns mapped chunks when embed and search succeed', async () => {
       embed.mockResolvedValue(embedded([0.1, 0.2]));
       vi.mocked(runSemanticSearch).mockResolvedValue([

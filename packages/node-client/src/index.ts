@@ -14,4 +14,5 @@ export * from './embedWithGemini.ts';
 export * from './embedWithOllama.ts';
 export * from './embedWithOpenAI.ts';
 export * from './local-embedding.ts';
+export * from './local-embedding-tuning.ts';
 export * from './openthrottle-client.ts';

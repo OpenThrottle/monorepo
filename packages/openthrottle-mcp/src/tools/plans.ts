@@ -2,6 +2,8 @@
  * @description Plan CRUD tool handlers + schemas: list_plans_by_status, create_plan, create_plans, get_plan, update_plan, delete_plan. Wired up via the shared `developerMcpToolDefinitions` registry and the Nest surface.
  */
 
+import { randomUUID } from 'node:crypto';
+
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 // zod/v3 to match the generated *InputSchema (src/__generated__/schemas.ts imports
 // from zod/v3): `.extend` on a generated schema only keeps its type in the same major.
@@ -38,6 +40,7 @@ import { ambientSessionOptions } from '../session/sessionHeaders.ts';
 import type { GenericResult } from '../types/index.ts';
 import {
   invalidArgsContent,
+  isGraphqlTimeoutError,
   toSanitizedClientMessage,
 } from '../utils/errors.ts';
 import { runTool } from '../utils/runTool.ts';
@@ -112,7 +115,7 @@ const SCHEDULED_STATUS_GUIDANCE = `SCHEDULED (plans only) is server-set while a 
 /** Shared tail: the workspace the plan is recorded against. Identical wording on both tools. */
 const WORKSPACE_PATH_GUIDANCE = `On stdio, the folder you are working in is sent automatically as workspacePath and resolved to the repository behind it, so the plan opens pre-selected in its Configuration tab — you do NOT need to pass it, and this works the same for OpenThrottle and for any other registered checkout. Pass workspacePath to name a different absolute path, or an empty string to opt out. It is only ever a hint: the server resolves it against your own registered checkouts and ignores anything else, and it never overrides a workspace already named in runConfigJson. The repository link lives in runConfigJson.workspace.repositoryId — the free-text project field is an unrelated label and does NOT link a plan to a repo.`;
 
-export const createPlanToolDescription = `Create a plan in OpenThrottle. Required: title, author (e.g. GitHub username), category. Optional: description, status (one of: ${PLAN_TASK_STATUS_VALUES}; uppercase), assignee, project, projectId, summary, runConfigJson, workspacePath, tags. tags are attached right after the create, best-effort: a tag that fails is reported in tagFailures and never undoes the plan. Filing a follow-up you identified (out-of-scope work, a later fix, a separate PR)? Create it PENDING with tags: ["follow-up"], then author its tasks in ONE create_tasks call with sortOrder and wave set per task. ${WORKSPACE_PATH_GUIDANCE}`;
+export const createPlanToolDescription = `Create a plan in OpenThrottle. Required: title, author (e.g. GitHub username), category. Optional: description, status (one of: ${PLAN_TASK_STATUS_VALUES}; uppercase), assignee, project, projectId, summary, runConfigJson, workspacePath, tags. tags are attached right after the create, best-effort: a tag that fails is reported in tagFailures and never undoes the plan. Optional id (UUID) makes the create idempotent; one is generated, so a timeout is retried safely. Filing a follow-up you identified (out-of-scope work, a later fix, a separate PR)? Create it PENDING with tags: ["follow-up"], then author its tasks in ONE create_tasks call with sortOrder and wave set per task. ${WORKSPACE_PATH_GUIDANCE}`;
 
 export const createPlansToolDescription = `Create multiple plans in OpenThrottle atomically in one call. Pass plans (array of objects, each with title, author (e.g. GitHub username), and category; optional description, status (one of: ${PLAN_TASK_STATUS_VALUES}; uppercase), assignee, project, projectId, summary, runConfigJson, workspacePath). Either all plans are created or none (a single invalid input or DB failure rolls back the whole batch). Returns the created plans and totalCount. ${WORKSPACE_PATH_GUIDANCE}`;
 
@@ -165,6 +168,46 @@ const withWorkspacePath = (input: CreatePlanInput): CreatePlanInput => {
   const resolved = resolveWorkspacePathArgument(workspacePath);
 
   return resolved === undefined ? rest : { ...rest, workspacePath: resolved };
+};
+
+/**
+ * @description Request timeout for the one retry of a timed-out create: long enough for a server
+ * that is busy (e.g. behind a large re-embed) to answer, since the retry only replays.
+ */
+const CREATE_PLAN_RETRY_TIMEOUT_MS = 60_000;
+
+/**
+ * @description Creates the plan under a client-chosen id, so the create is idempotent (OT plan
+ * ca13e543). A request that times out may still land on the server; the one retry re-sends the
+ * same id, and the server answers with the plan the first request wrote (or writes it now). The
+ * caller therefore sees one whole plan or a real error, never a plan it does not know about.
+ */
+const createPlanIdempotently = async (
+  token: string,
+  input: CreatePlanInput,
+): Promise<CreatePlanMutation | null> => {
+  const request = { ...input, id: input.id ?? randomUUID() };
+  const options = await ambientSessionOptions(token);
+
+  try {
+    return await executeGraphqlWithAuth(
+      token,
+      CreatePlanDocument,
+      { input: request },
+      options,
+    );
+  } catch (error: unknown) {
+    if (!isGraphqlTimeoutError(error)) {
+      throw error;
+    }
+
+    return executeGraphqlWithAuth(
+      token,
+      CreatePlanDocument,
+      { input: request },
+      { ...options, timeoutMs: CREATE_PLAN_RETRY_TIMEOUT_MS },
+    );
+  }
 };
 
 const describeTagFailure = (outcome: PromiseSettledResult<unknown>): string => {
@@ -224,13 +267,9 @@ export async function createPlanToolHandler(
     tags: readonly string[];
   }>('create_plan', async () => {
     const token = getAuthToken();
-    const result = await executeGraphqlWithAuth(
+    const result = await createPlanIdempotently(
       token,
-      CreatePlanDocument,
-      {
-        input: withWorkspacePath(input),
-      },
-      await ambientSessionOptions(token),
+      withWorkspacePath(input),
     );
 
     const plan = result?.createPlan;

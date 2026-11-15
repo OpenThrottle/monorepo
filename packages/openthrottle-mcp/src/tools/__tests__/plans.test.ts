@@ -268,11 +268,82 @@ describe('createPlanToolHandler', () => {
           input: {
             author: 'visormatt',
             category: 'maintenance',
+            id: expect.any(String),
             title: 'Improve test coverage',
           },
         },
         SESSION_OPTIONS,
       );
+    });
+  });
+
+  describe('when the create times out', () => {
+    const timeout = new Error(
+      'openthrottle-server GraphQL request timed out after 15000ms',
+    );
+
+    it('retries once with the same client id and returns that plan', async () => {
+      process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = serviceAccountToken;
+      vi.mocked(executeGraphqlWithAuth)
+        .mockRejectedValueOnce(timeout)
+        .mockResolvedValueOnce({ createPlan: { id: 'plan-1' } });
+
+      const result = await createPlanToolHandler({
+        author: 'visormatt',
+        category: 'bug',
+        title: 'Slow',
+      });
+
+      const calls = vi.mocked(executeGraphqlWithAuth).mock.calls;
+      const firstId: unknown = Reflect.get(
+        Reflect.get(calls[0]?.[2] ?? {}, 'input') ?? {},
+        'id',
+      );
+
+      expect(result).not.toHaveProperty('isError');
+      expect(calls).toHaveLength(2);
+      expect(typeof firstId).toBe('string');
+      expect(calls[1]?.[2]).toEqual(calls[0]?.[2]);
+      expect(calls[1]?.[3]).toMatchObject({ timeoutMs: 60_000 });
+    });
+
+    it('keeps an id the caller chose', async () => {
+      process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = serviceAccountToken;
+      vi.mocked(executeGraphqlWithAuth).mockResolvedValueOnce({
+        createPlan: { id: '0b9a4a0e-8a3e-4c1e-9f0a-2f6d1f4b7c11' },
+      });
+
+      await createPlanToolHandler({
+        author: 'visormatt',
+        category: 'bug',
+        id: '0b9a4a0e-8a3e-4c1e-9f0a-2f6d1f4b7c11',
+        title: 'Mine',
+      });
+
+      expect(
+        vi.mocked(executeGraphqlWithAuth).mock.calls[0]?.[2],
+      ).toMatchObject({
+        input: { id: '0b9a4a0e-8a3e-4c1e-9f0a-2f6d1f4b7c11' },
+      });
+    });
+
+    it('reports a timeout, not an internal error, when the retry times out too', async () => {
+      process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = serviceAccountToken;
+      vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      vi.mocked(executeGraphqlWithAuth)
+        .mockRejectedValueOnce(timeout)
+        .mockRejectedValueOnce(timeout);
+
+      const result = await createPlanToolHandler({
+        author: 'visormatt',
+        category: 'bug',
+        title: 'Slow',
+      });
+
+      expect(result).toMatchObject({
+        content: [{ text: expect.stringContaining('did not answer in time') }],
+        isError: true,
+      });
     });
   });
 
@@ -297,6 +368,7 @@ describe('createPlanToolHandler', () => {
         input: {
           author: 'visormatt',
           category: 'maintenance',
+          id: expect.any(String),
           title: 'Follow-up',
         },
       });

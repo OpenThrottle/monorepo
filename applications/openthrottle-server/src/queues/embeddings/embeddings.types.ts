@@ -50,3 +50,11 @@ export interface EmbeddingSource {
   readonly fromSql: string;
   readonly whereSql: string;
 }
+
+/** @description The Embeddings worker's pace, from env (see `resolveEmbeddingsWorkerSettings`). */
+export interface EmbeddingsWorkerSettings {
+  readonly concurrency: number;
+  /** BullMQ limiter, or undefined when `EMBEDDINGS_RATE_LIMIT_MAX=0` turns it off. */
+  readonly limiter:
+    { readonly duration: number; readonly max: number } | undefined;
+}

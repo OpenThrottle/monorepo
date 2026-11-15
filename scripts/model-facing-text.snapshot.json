@@ -18,8 +18,8 @@
     "mcp.tool/claim_plan_messages": 699,
     "mcp.tool/create_blog_post": 1365,
     "mcp.tool/create_note": 479,
-    "mcp.tool/create_plan": 2112,
-    "mcp.tool/create_plans": 2030,
+    "mcp.tool/create_plan": 2242,
+    "mcp.tool/create_plans": 2062,
     "mcp.tool/create_task": 1248,
     "mcp.tool/create_tasks": 2297,
     "mcp.tool/delete_note": 317,
@@ -96,7 +96,7 @@
     "mcp.toolDescription/claim_plan_messages": 346,
     "mcp.toolDescription/create_blog_post": 739,
     "mcp.toolDescription/create_note": 171,
-    "mcp.toolDescription/create_plan": 1360,
+    "mcp.toolDescription/create_plan": 1458,
     "mcp.toolDescription/create_plans": 1227,
     "mcp.toolDescription/create_task": 549,
     "mcp.toolDescription/create_tasks": 853,
@@ -208,13 +208,13 @@
     "mcpToolset/admin": 14222,
     "mcpToolset/agents": 3213,
     "mcpToolset/blog": 7444,
-    "mcpToolset/core": 34732,
-    "mcpToolsFull": 59611
+    "mcpToolset/core": 34894,
+    "mcpToolsFull": 59773
   },
   "totals": {
-    "alwaysInjected": 42586,
+    "alwaysInjected": 42748,
     "mcpInstructions": 2069,
-    "mcpTools": 34732,
+    "mcpTools": 34894,
     "prompts": 140980,
     "skills": 152837
   }

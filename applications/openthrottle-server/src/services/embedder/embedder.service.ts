@@ -1,7 +1,9 @@
 /**
  * @description The server's single embedder (OT plan 165e86ef). One instance per process owns
  * the local model's worker thread; the embeddings queue processor and every search resolver go
- * through it. A boot probe embeds one string and compares the vector length with the
+ * through it. Search embeds pass `'query'` and background work passes `'document'`: the local
+ * backend runs queries first, so a search waits at most one background slice behind a backfill
+ * (OT plan ca13e543). A boot probe embeds one string and compares the vector length with the
  * `vector(N)` the five embedding tables declare, so a missing model, a down provider or a
  * dimension mismatch is logged at error and visible in `health` instead of silently producing
  * empty search results.

@@ -31,6 +31,7 @@ describe('PlanCreationService', () => {
   const isModelEnabled = vi.fn();
   const planRepo = {
     create: vi.fn(),
+    findOne: vi.fn(),
     manager: {
       transaction: vi.fn(
         (run: (manager: { getRepository: () => unknown }) => unknown) =>
@@ -155,6 +156,98 @@ describe('PlanCreationService', () => {
         delete process.env.GITHUB_USER;
       }
     }
+  });
+
+  describe('when the input carries a client id', () => {
+    const CLIENT_ID = '0b9a4a0e-8a3e-4c1e-9f0a-2f6d1f4b7c11';
+
+    const plan = (title: string): PlanData => {
+      return {
+        assignee: null,
+        author: 'visormatt',
+        category: 'feature',
+        completedAt: null,
+        createdAt: new Date(FIXED_NOW),
+        description: 'body',
+        id: CLIENT_ID,
+        project: null,
+        projectId: null,
+        status: 'PENDING',
+        summary: null,
+        title,
+        updatedAt: new Date(FIXED_NOW),
+      };
+    };
+
+    const input = (id: string): CreatePlanInput => {
+      return {
+        assignee: null,
+        author: 'visormatt',
+        category: 'feature',
+        description: 'body',
+        id,
+        project: null,
+        projectId: null,
+        status: null,
+        summary: null,
+        title: 'My plan',
+      };
+    };
+
+    it('inserts the plan under that id when it is new', async () => {
+      planRepo.findOne.mockResolvedValue(null);
+      planRepo.create.mockImplementation((fields: unknown) => fields);
+      planRepo.save.mockImplementation(async (entity: unknown) => entity);
+
+      const result = await service.createPlanFromInput(input(CLIENT_ID));
+
+      expect(result).toMatchObject({ id: CLIENT_ID, title: 'My plan' });
+      expect(planRepo.save).toHaveBeenCalledTimes(1);
+    });
+
+    it('returns the plan an earlier call created instead of inserting again', async () => {
+      planRepo.findOne.mockResolvedValue(plan('My plan'));
+
+      const result = await service.createPlanFromInput(
+        input(CLIENT_ID.toUpperCase()),
+      );
+
+      expect(result.id).toBe(CLIENT_ID);
+      expect(planRepo.findOne).toHaveBeenCalledWith({
+        where: { id: CLIENT_ID },
+      });
+      expect(planRepo.save).not.toHaveBeenCalled();
+    });
+
+    it('returns the winner when a concurrent replay inserted first', async () => {
+      planRepo.findOne
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(plan('My plan'));
+      planRepo.create.mockImplementation((fields: unknown) => fields);
+      planRepo.save.mockRejectedValue(
+        Object.assign(new Error('duplicate key'), { code: '23505' }),
+      );
+
+      await expect(
+        service.createPlanFromInput(input(CLIENT_ID)),
+      ).resolves.toMatchObject({ id: CLIENT_ID });
+    });
+
+    it('refuses an id that already belongs to a plan with another title', async () => {
+      planRepo.findOne.mockResolvedValue(plan('Someone else'));
+
+      await expect(
+        service.createPlanFromInput(input(CLIENT_ID)),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(planRepo.save).not.toHaveBeenCalled();
+    });
+
+    it('refuses an id that is not a UUID', async () => {
+      await expect(
+        service.createPlanFromInput(input('not-a-uuid')),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(planRepo.findOne).not.toHaveBeenCalled();
+    });
   });
 
   it('uses GITHUB_USER when author omitted', async () => {

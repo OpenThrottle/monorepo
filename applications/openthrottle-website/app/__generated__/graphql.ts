@@ -232,7 +232,7 @@ export type AgentAssetSearchResult = {
   chunks: Array<AgentAssetChunk>;
   /** How the result was ranked: "semantic" (vector similarity with the configured embedding model) or "lexical" (Postgres full-text search, used when semantic search is unavailable). */
   mode: Scalars['String']['output'];
-  /** Why the result is lexical, or null when it is semantic: embedder_unconfigured | embedder_dimension_mismatch | embedder_provider_error | no_embeddings. */
+  /** Why the result is lexical, or null when it is semantic: embedder_unconfigured | embedder_dimension_mismatch | embedder_provider_error | embedder_busy | no_embeddings. */
   reason?: Maybe<Scalars['String']['output']>;
 };
 
@@ -1219,6 +1219,8 @@ export type CreatePlanInput = {
   author: Scalars['String']['input'];
   category: Scalars['String']['input'];
   description?: InputMaybe<Scalars['String']['input']>;
+  /** Optional client-chosen plan id (UUID) that makes the create idempotent. Re-sending a create with the same id and title returns the plan the first call created instead of inserting a second, so a caller whose request timed out can retry safely. A different title under an existing id is refused. */
+  id?: InputMaybe<Scalars['ID']['input']>;
   project?: InputMaybe<Scalars['String']['input']>;
   /** Optional. Project UUID (FK to projects table). Omit or pass null when plan is not linked to a project. */
   projectId?: InputMaybe<Scalars['ID']['input']>;
@@ -6529,7 +6531,7 @@ export type SearchResult = {
   chunks: Array<SearchChunk>;
   /** How the result was ranked: "hybrid" (vector similarity and Postgres full-text search merged by reciprocal rank fusion), "semantic" (vector similarity with the configured embedding model) or "lexical" (full-text search only, used when semantic search is unavailable). */
   mode: Scalars['String']['output'];
-  /** Why the result is lexical, or null when it is hybrid or semantic: embedder_unconfigured | embedder_dimension_mismatch | embedder_provider_error | no_embeddings. */
+  /** Why the result is lexical, or null when it is hybrid or semantic: embedder_unconfigured | embedder_dimension_mismatch | embedder_provider_error | embedder_busy | no_embeddings. */
   reason?: Maybe<Scalars['String']['output']>;
   /** How many ranked candidates the query matched, capped at 100. Page through them with `offset` and `limit`. */
   total: Scalars['Int']['output'];

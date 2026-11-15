@@ -3595,7 +3595,7 @@ type AgentAssetSearchResult {
   mode: String!
 
   """
-  Why the result is lexical, or null when it is semantic: embedder_unconfigured | embedder_dimension_mismatch | embedder_provider_error | no_embeddings.
+  Why the result is lexical, or null when it is semantic: embedder_unconfigured | embedder_dimension_mismatch | embedder_provider_error | embedder_busy | no_embeddings.
   """
   reason: String
 }
@@ -4078,7 +4078,7 @@ type SearchResult {
   mode: String!
 
   """
-  Why the result is lexical, or null when it is hybrid or semantic: embedder_unconfigured | embedder_dimension_mismatch | embedder_provider_error | no_embeddings.
+  Why the result is lexical, or null when it is hybrid or semantic: embedder_unconfigured | embedder_dimension_mismatch | embedder_provider_error | embedder_busy | no_embeddings.
   """
   reason: String
 
@@ -9034,6 +9034,11 @@ input CreatePlanInput {
   author: String!
   category: String!
   description: String
+
+  """
+  Optional client-chosen plan id (UUID) that makes the create idempotent. Re-sending a create with the same id and title returns the plan the first call created instead of inserting a second, so a caller whose request timed out can retry safely. A different title under an existing id is refused.
+  """
+  id: ID
   project: String
 
   """

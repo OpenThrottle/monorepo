@@ -152,6 +152,32 @@ Semantic search (`plan_embeddings`, `task_embeddings`, `documentation_embeddings
 - **One row per source row:** each table has a UNIQUE index on its source FK (`plan_id`, `task_id`, `documentation_id`, `custom_prompt_id`), so the processor upserts. Task content is title + description + summary + parent plan title, truncated, no chunking.
 - **Lexical fallback:** `plans`, `tasks`, `documentation` and `custom_prompts` carry a generated `search_tsv tsvector` (GIN-indexed; titles weighted A). When the embedder is not available, semantic search answers from Postgres full-text (`websearch_to_tsquery` + `ts_rank`) and says so (`mode: 'lexical'` plus a `reason`) instead of returning empty results.
 - **Switching provider re-embeds everything.** Each model records its own `embedding_model` (`nomic-embed-text-v1.5`, `text-embedding-3-small`, `gemini-embedding-001`, …) and vectors from different models are never compared, so changing `EMBEDDING_PROVIDER` or `EMBEDDING_MODEL` marks every row stale. The reconciler re-embeds the lot on the next boot cycle; until a row is redone, search skips it. `local` ↔ `ollama` is the one switch that costs nothing, because both run the same model. Switching back re-embeds again.
+- **A big re-embed stays in the background** (OT plan `ca13e543`). A model switch or a migration like 164 re-embeds thousands of rows; it may take longer, but search must stay responsive while it runs. The knobs, all optional:
+
+  | Env                                 | Default           | What it does                                                                                                                                      |
+  | ----------------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+  | `EMBEDDINGS_BATCH_SLICE`            | `2`               | Texts per message to the local worker for background embeds. The worker runs one message at a time, so a search query waits at most one slice.    |
+  | `EMBEDDINGS_MAX_TOKENS`             | `2048`            | Tokens kept per input (clamped to the model's 8192). A batch pads to its longest text and attention grows with its square, so this bounds memory. |
+  | `EMBEDDINGS_THREADS`                | half the cores    | ONNX intra-op threads for the local worker, leaving the rest of the machine to the API and the other queues.                                      |
+  | `EMBEDDINGS_SLICE_PAUSE_MS`         | `0`               | Optional pause between a background embed's slices.                                                                                               |
+  | `EMBEDDINGS_CONCURRENCY`            | `1`               | Embeddings jobs in flight. The local model is one thread, so a second job only waits there while holding its texts in memory.                     |
+  | `EMBEDDINGS_RATE_LIMIT_MAX`         | `120` (`0` = off) | BullMQ limiter: at most this many embeddings jobs per `EMBEDDINGS_RATE_LIMIT_DURATION_MS`. Paces bursts of single-row entity jobs.                |
+  | `EMBEDDINGS_RATE_LIMIT_DURATION_MS` | `60000`           | The limiter's window.                                                                                                                             |
+
+  If a query embed still misses `SEARCH_EMBED_BUDGET_MS` (default `3000`), search answers lexically with `reason: embedder_busy` rather than letting the client time out.
+
+  `pnpm run embeddings:bench-backfill -- --database-url <url>` measures a backfill against real `code_embeddings` texts: throughput, query-embed latency, peak RSS and CPU.
+
+  What a big re-embed costs, measured on a 10-core Apple M1 Max re-embedding the 5,760 `code_embeddings` rows that migration 164 nulled (bench over 400 of them; server over the full set while searching every 3s):
+
+  |                                  | Before (as of #843)             | After (defaults above)                              |
+  | -------------------------------- | ------------------------------- | --------------------------------------------------- |
+  | Backfill throughput              | ~1 chunk/s (~0.6 in the server) | ~4–5 chunks/s (~20 min for all 5,760)               |
+  | Query embed during backfill      | p50 21s, p95 77s                | p50 0.2s, p95 1.1s                                  |
+  | `search` GraphQL during backfill | timed out at 15s                | p50 0.46s, p95 1.3s, max 1.7s (hybrid, no fallback) |
+  | Peak RSS                         | 20–30 GB                        | 3.4 GB (bench), 4.4 GB (server)                     |
+  | CPU                              | every core                      | about half the cores                                |
+
 - **Choosing a provider:**
 
   |                  | `local` / `ollama` (default)                                                | `openai` / `gemini`                                                                                                                                                                                                                                                     |

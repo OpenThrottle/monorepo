@@ -27,11 +27,16 @@ agent-asset search, plan-creation) and `@openthrottle/openthrottle-agentic-utils
   (open-weights spec: Hugging Face id, Ollama name, task prefixes) vs hosted (empty prefixes,
   API key + base URL). A model is only accepted by the provider that serves it.
 - `src/embedding.ts` — `createEmbedder(config)`: prefixing (`search_document: ` /
-  `search_query: `), truncation, batching and the dimension check over a provider backend.
+  `search_query: `), truncation, length-sorted batching (a batch pads to its longest text) and the
+  dimension check over a provider backend.
   Returns an `EmbedResult` (`ok: true` with vectors + model + dims, or `ok: false` with
   `unconfigured` | `dimension_mismatch` | `provider_error`) — never `undefined`.
 - `src/local-embedding.ts` — transformers.js in an eval'd worker thread, loading quantized
-  ONNX weights from `EMBEDDING_MODELS_DIR` only (remote downloads disabled).
+  ONNX weights from `EMBEDDING_MODELS_DIR` only (remote downloads disabled). One message is in
+  flight at a time; `document` embeds are sent as slices so other callers interleave.
+- `src/local-embedding-tuning.ts` — `resolveLocalEmbeddingTuning()`: the worker's throttle knobs
+  (`EMBEDDINGS_BATCH_SLICE`, `EMBEDDINGS_MAX_TOKENS`, `EMBEDDINGS_THREADS`,
+  `EMBEDDINGS_SLICE_PAUSE_MS`).
 - `src/embedWithOllama.ts` — Ollama batch path (`POST /api/embed`), same model.
 - `src/embedWithOpenAI.ts` / `src/embedWithGemini.ts` — hosted backends at `dimensions` /
   `outputDimensionality` 768; Gemini maps `inputType` to `RETRIEVAL_DOCUMENT` / `RETRIEVAL_QUERY`.

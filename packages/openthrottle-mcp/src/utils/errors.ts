@@ -115,8 +115,16 @@ export class SafeToolError extends Error {
   }
 }
 
+/**
+ * @description Start of the message nodejs-graphql throws when a request exceeds its timeout —
+ * a copy of its `GRAPHQL_TIMEOUT_ERROR_PREFIX`, kept here because most tool tests mock that
+ * package wholesale. A test pins the two together.
+ */
+export const GRAPHQL_TIMEOUT_MESSAGE_PREFIX = `openthrottle-server GraphQL request timed out`;
+
 export const errorCategory = {
   auth: 'auth',
+  timeout: 'timeout',
   transport: 'transport',
   unknown: 'unknown',
   validation: 'validation',
@@ -126,6 +134,7 @@ export type ErrorCategory = (typeof errorCategory)[keyof typeof errorCategory];
 
 const sanitizedMessageByCategory: Record<ErrorCategory, string> = {
   [errorCategory.auth]: `Authentication failed. Verify OPENTHROTTLE_MCP_AUTH_TOKEN is set and valid.`,
+  [errorCategory.timeout]: `The OpenThrottle (OT) server did not answer in time. It may still finish the request: before retrying a create or update, check whether it already landed.`,
   [errorCategory.transport]: `Could not reach the OpenThrottle (OT) server. Confirm the server is running and reachable, then retry.`,
   [errorCategory.unknown]: `The request failed due to an internal error. See server logs for detail.`,
   [errorCategory.validation]: `The request was rejected as invalid. Check the provided arguments and retry.`,
@@ -168,6 +177,12 @@ const validationHints = [
 export function classifyError(error: unknown): ErrorCategory {
   const raw = error instanceof Error ? error.message : String(error);
   const message = raw.toLowerCase();
+
+  // The client's own request timeout (nodejs-graphql). Checked first: it is not a transport
+  // failure — the server got the request and may still complete it (OT plan ca13e543).
+  if (message.startsWith(GRAPHQL_TIMEOUT_MESSAGE_PREFIX.toLowerCase())) {
+    return errorCategory.timeout;
+  }
 
   if (authHints.some((hint) => message.includes(hint))) {
     return errorCategory.auth;
@@ -272,4 +287,9 @@ export function toSanitizedClientMessage(
   console.error(`[openthrottle-mcp] ${context} failed (${category}):`, error);
 
   return sanitizedMessageForCategory(category);
+}
+
+/** @description True when `error` is the GraphQL client's own request timeout. */
+export function isGraphqlTimeoutError(error: unknown): boolean {
+  return classifyError(error) === errorCategory.timeout;
 }
