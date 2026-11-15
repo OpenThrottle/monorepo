@@ -527,6 +527,27 @@ export type AttachWorkSessionSubjectInput = {
   taskId?: InputMaybe<Scalars['ID']['input']>;
 };
 
+/** Long-running server work in progress (e.g. an embeddings backfill). Listed only while it runs. */
+export type BackgroundActivityObject = {
+  __typename?: 'BackgroundActivityObject';
+  /** Units of work finished so far, never more than total. */
+  done: Scalars['Int']['output'];
+  /** Seconds left at the smoothed throughput. Null until there is enough signal, while stalled, or when total is unknown. */
+  etaSeconds?: Maybe<Scalars['Int']['output']>;
+  /** Stable id, e.g. embeddings_backfill:code. */
+  id: Scalars['String']['output'];
+  /** What kind of work this is: embeddings_backfill (more kinds, e.g. app_update, may follow). */
+  kind: Scalars['String']['output'];
+  /** Human-readable description, e.g. "Re-embedding code chunks". */
+  label: Scalars['String']['output'];
+  /** When the work was first seen. */
+  startedAt: Scalars['DateTime']['output'];
+  /** running while progress keeps arriving; stalled after five minutes without any. */
+  status: Scalars['String']['output'];
+  /** Units of work in all. Null when the size is unknown (an indeterminate bar). */
+  total?: Maybe<Scalars['Int']['output']>;
+};
+
 export type BlogAdminPostListResult = {
   __typename?: 'BlogAdminPostListResult';
   /** Opaque cursor of the last item; pass as `after` to fetch the next page. Null when the page is empty. */
@@ -4492,6 +4513,8 @@ export type Query = {
   agentTrajectoryLabels: Array<AgentTrajectoryLabel>;
   /** Typenames an editor can add to a live layout: every live ACTIVE schema typename except the root "Layout", sorted. NOT_FOUND when the layout is missing or deleted. */
   availableCmsTypenames: Array<Scalars['String']['output']>;
+  /** Long-running server work in progress, oldest first; empty when the server is idle. Served from Redis without counting database rows, so it is cheap to poll. */
+  backgroundActivities: Array<BackgroundActivityObject>;
   /** Every blog author, ordered by display name. */
   blogAdminAuthors: Array<BlogAuthorObject>;
   /** One blog post in any state, by id or by slug (exactly one of the two is required, otherwise the query is rejected). BlogPostNotFoundError when no such post exists. */
@@ -8332,6 +8355,17 @@ export const WorktreeRootSource = {
 
 export type WorktreeRootSource =
   (typeof WorktreeRootSource)[keyof typeof WorktreeRootSource];
+export type BackgroundActivityFieldsFragment = {
+  __typename?: 'BackgroundActivityObject';
+  done: number;
+  etaSeconds?: number | null;
+  id: string;
+  label: string;
+  startedAt: any;
+  status: string;
+  total?: number | null;
+};
+
 export type HealthCardFragment = {
   __typename?: 'ServerHealthObject';
   api: string;
@@ -8529,6 +8563,16 @@ export type GetRootHealthQueryVariables = Exact<{ [key: string]: never }>;
 
 export type GetRootHealthQuery = {
   __typename?: 'Query';
+  backgroundActivities: Array<{
+    __typename?: 'BackgroundActivityObject';
+    done: number;
+    etaSeconds?: number | null;
+    id: string;
+    label: string;
+    startedAt: any;
+    status: string;
+    total?: number | null;
+  }>;
   serverHealth: {
     __typename?: 'ServerHealthObject';
     api: string;
@@ -12154,6 +12198,24 @@ export type UpdateAgentCliMutation = {
   };
 };
 
+export type GetBackgroundActivitiesQueryVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type GetBackgroundActivitiesQuery = {
+  __typename?: 'Query';
+  backgroundActivities: Array<{
+    __typename?: 'BackgroundActivityObject';
+    done: number;
+    etaSeconds?: number | null;
+    id: string;
+    label: string;
+    startedAt: any;
+    status: string;
+    total?: number | null;
+  }>;
+};
+
 export type ResolveIdRefQueryVariables = Exact<{
   ref: Scalars['String']['input'];
 }>;
@@ -15316,6 +15378,31 @@ export type RemoveProjectSkillMutation = {
   removeProjectSkill: boolean;
 };
 
+export const BackgroundActivityFieldsFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'BackgroundActivityFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'BackgroundActivityObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'done' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'etaSeconds' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'label' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'startedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'total' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<BackgroundActivityFieldsFragment, unknown>;
 export const HealthCardFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -18922,6 +19009,19 @@ export const GetRootHealthDocument = {
         selections: [
           {
             kind: 'Field',
+            name: { kind: 'Name', value: 'backgroundActivities' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'BackgroundActivityFields' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
             name: { kind: 'Name', value: 'serverHealth' },
             selectionSet: {
               kind: 'SelectionSet',
@@ -18933,6 +19033,26 @@ export const GetRootHealthDocument = {
               ],
             },
           },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'BackgroundActivityFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'BackgroundActivityObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'done' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'etaSeconds' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'label' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'startedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'total' } },
         ],
       },
     },
@@ -29605,6 +29725,57 @@ export const UpdateAgentCliDocument = {
 } as unknown as DocumentNode<
   UpdateAgentCliMutation,
   UpdateAgentCliMutationVariables
+>;
+export const GetBackgroundActivitiesDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getBackgroundActivities' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'backgroundActivities' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'BackgroundActivityFields' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'BackgroundActivityFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'BackgroundActivityObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'done' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'etaSeconds' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'label' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'startedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'total' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetBackgroundActivitiesQuery,
+  GetBackgroundActivitiesQueryVariables
 >;
 export const ResolveIdRefDocument = {
   kind: 'Document',

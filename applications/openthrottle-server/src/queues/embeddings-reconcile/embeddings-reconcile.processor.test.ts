@@ -4,6 +4,7 @@ import { resolveEmbeddingConfig } from '@openthrottle/node-client';
 import type { DataSource } from 'typeorm';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import type { BackgroundActivityRegistryService } from '../../services/background-activity-registry/background-activity-registry.service.ts';
 import type { EmbedderService } from '../../services/embedder/embedder.service.ts';
 import type { EmbedderStatus } from '../../services/embedder/embedder.types.ts';
 import type { EmbeddingsProducerService } from '../embeddings/producer/producer.service.ts';
@@ -38,11 +39,45 @@ function ids(count: number, offset = 0): { id: string }[] {
   });
 }
 
+interface ActivityMocks {
+  readonly finish: ReturnType<
+    typeof vi.fn<BackgroundActivityRegistryService['finish']>
+  >;
+  readonly grow: ReturnType<
+    typeof vi.fn<BackgroundActivityRegistryService['grow']>
+  >;
+  readonly rebase: ReturnType<
+    typeof vi.fn<BackgroundActivityRegistryService['rebase']>
+  >;
+  readonly start: ReturnType<
+    typeof vi.fn<BackgroundActivityRegistryService['start']>
+  >;
+}
+
+function activityMocks(alreadyRunning: boolean): ActivityMocks {
+  return {
+    finish: vi.fn<BackgroundActivityRegistryService['finish']>(() => {
+      return Promise.resolve();
+    }),
+    grow: vi.fn<BackgroundActivityRegistryService['grow']>(() => {
+      return Promise.resolve();
+    }),
+    rebase: vi.fn<BackgroundActivityRegistryService['rebase']>(() => {
+      return Promise.resolve();
+    }),
+    start: vi.fn<BackgroundActivityRegistryService['start']>(() => {
+      return Promise.resolve(!alreadyRunning);
+    }),
+  };
+}
+
 function setup(options: {
+  readonly alreadyRunning?: boolean;
   readonly configured: boolean;
   readonly pages: Readonly<Record<string, { id: string }[][]>>;
   readonly state: EmbedderStatus['state'];
 }): {
+  readonly activities: ActivityMocks;
   readonly enqueue: ReturnType<
     typeof vi.fn<EmbeddingsProducerService['enqueue']>
   >;
@@ -79,6 +114,7 @@ function setup(options: {
   >(() => {
     return Promise.resolve(1);
   });
+  const activities = activityMocks(options.alreadyRunning ?? false);
   const processor = new EmbeddingsReconcileProcessor(
     createMock<LoggerService>(),
     createMock<EmbedderService>({
@@ -90,10 +126,11 @@ function setup(options: {
       },
     }),
     createMock<EmbeddingsProducerService>({ enqueue, enqueueCodeChunks }),
+    createMock<BackgroundActivityRegistryService>(activities),
     createMock<DataSource>({ query }),
   );
 
-  return { enqueue, enqueueCodeChunks, processor, query };
+  return { activities, enqueue, enqueueCodeChunks, processor, query };
 }
 
 const JOB = createMock<EmbeddingsReconcileJob>({ id: 'reconcile-1' });
@@ -213,8 +250,94 @@ describe('EmbeddingsReconcileProcessor', () => {
       await processor.process(JOB);
 
       expect(enqueue).toHaveBeenCalledWith([
-        { entity: 'plan', id: '00000000-0000-0000-0000-000000000000' },
+        {
+          backfill: true,
+          entity: 'plan',
+          id: '00000000-0000-0000-0000-000000000000',
+        },
       ]);
+    });
+  });
+
+  describe('background activity', () => {
+    test('opens one activity per stale source and grows it before each page is enqueued', async () => {
+      const { activities, enqueueCodeChunks, processor } = setup({
+        configured: true,
+        pages: {
+          code_embeddings: [[{ id: 'aa' }, { id: 'bb' }], [{ id: 'cc' }]],
+        },
+        state: 'ok',
+      });
+
+      await processor.process(JOB);
+
+      expect(activities.start).toHaveBeenCalledOnce();
+      expect(activities.start).toHaveBeenCalledWith({
+        id: 'embeddings_backfill:code',
+        kind: 'embeddings_backfill',
+        label: 'Embedding code chunks',
+        total: 0,
+      });
+      expect(activities.grow.mock.calls).toEqual([
+        ['embeddings_backfill:code', 2],
+        ['embeddings_backfill:code', 1],
+      ]);
+      expect(activities.grow.mock.invocationCallOrder[0]).toBeLessThan(
+        enqueueCodeChunks.mock.invocationCallOrder[0] ?? 0,
+      );
+      expect(activities.rebase).not.toHaveBeenCalled();
+      expect(activities.finish).not.toHaveBeenCalledWith(
+        'embeddings_backfill:code',
+      );
+    });
+
+    test('re-measures an activity a previous cycle opened instead of growing it', async () => {
+      const { activities, processor } = setup({
+        alreadyRunning: true,
+        configured: true,
+        pages: { task_embeddings: [ids(2), ids(1, 2)] },
+        state: 'ok',
+      });
+
+      await processor.process(JOB);
+
+      expect(activities.grow).not.toHaveBeenCalled();
+      expect(activities.rebase).toHaveBeenCalledWith(
+        'embeddings_backfill:task',
+        3,
+      );
+    });
+
+    test('finishes every source whose walk found nothing', async () => {
+      const { activities, processor } = setup({
+        configured: true,
+        pages: {},
+        state: 'ok',
+      });
+
+      await processor.process(JOB);
+
+      expect(activities.start).not.toHaveBeenCalled();
+      expect(activities.finish.mock.calls.map(([id]) => id).sort()).toEqual([
+        'embeddings_backfill:code',
+        'embeddings_backfill:custom_prompt',
+        'embeddings_backfill:documentation',
+        'embeddings_backfill:plan',
+        'embeddings_backfill:task',
+      ]);
+    });
+
+    test('reports nothing while the embedder is unconfigured', async () => {
+      const { activities, processor } = setup({
+        configured: false,
+        pages: {},
+        state: 'unconfigured',
+      });
+
+      await processor.process(JOB);
+
+      expect(activities.start).not.toHaveBeenCalled();
+      expect(activities.finish).not.toHaveBeenCalled();
     });
   });
 });

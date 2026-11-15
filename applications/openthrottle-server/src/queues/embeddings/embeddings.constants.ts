@@ -3,7 +3,11 @@
  * (OT plan 165e86ef).
  */
 
-import type { EmbeddableEntity, EmbeddingSource } from './embeddings.types.ts';
+import type {
+  EmbeddableEntity,
+  EmbeddingBackfillSource,
+  EmbeddingSource,
+} from './embeddings.types.ts';
 
 export const EMBEDDINGS_QUEUE_NAME = 'Embeddings';
 
@@ -117,3 +121,17 @@ export const EMBEDDED_PROPERTIES = [
   'summary',
   'title',
 ] as const;
+
+/**
+ * @description The label each source's `embeddings_backfill` activity shows in the sidebar
+ * (OT plan 5767e798).
+ */
+export const EMBEDDINGS_BACKFILL_LABELS: Readonly<
+  Record<EmbeddingBackfillSource, string>
+> = {
+  code: 'Embedding code chunks',
+  custom_prompt: 'Embedding custom prompts',
+  documentation: 'Embedding documentation',
+  plan: 'Embedding plans',
+  task: 'Embedding tasks',
+};

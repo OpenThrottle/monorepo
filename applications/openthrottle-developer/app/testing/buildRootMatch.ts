@@ -19,6 +19,7 @@ export const buildRootMatch = (): RootMatch => {
     handle: undefined,
     id: 'root',
     loaderData: {
+      backgroundActivities: [],
       canonical: 'http://localhost/',
       defaultEditor: null,
       env: getPublicEnv(),

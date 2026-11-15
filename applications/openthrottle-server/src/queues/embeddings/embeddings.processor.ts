@@ -22,6 +22,7 @@ import { prepareEmbeddingInput } from '@openthrottle/node-client';
 import { DelayedError } from 'bullmq';
 import { DataSource } from 'typeorm';
 
+import { BackgroundActivityRegistryService } from '../../services/background-activity-registry/background-activity-registry.service.ts';
 import { EmbedderService } from '../../services/embedder/embedder.service.ts';
 import {
   CODE_EMBEDDINGS_TABLE,
@@ -31,12 +32,15 @@ import {
 } from './embeddings.constants.ts';
 import type {
   EmbedCodeChunksJobData,
+  EmbeddingBackfillSource,
   EmbeddingsJob,
+  EmbeddingsJobData,
   EmbeddingSource,
   EmbeddingsWorkerSettings,
   EmbedEntityJobResult,
 } from './embeddings.types.ts';
 import {
+  embeddingsBackfillActivityId,
   isCodeChunksJobData,
   isEmbeddableEntity,
   resolveEmbeddingsWorkerSettings,
@@ -73,6 +77,7 @@ export class EmbeddingsProcessor
   constructor(
     private readonly logger: LoggerService,
     private readonly embedder: EmbedderService,
+    private readonly activities: BackgroundActivityRegistryService,
     @InjectDataSource()
     private readonly dataSource: DataSource,
   ) {
@@ -93,6 +98,53 @@ export class EmbeddingsProcessor
   async process(
     job: EmbeddingsJob,
     token?: string,
+  ): Promise<EmbedEntityJobResult> {
+    const result = await this.embedJob(job, token);
+
+    if (result.outcome !== 'delayed') {
+      await this.reportBackfillProgress(job.data);
+    }
+
+    return result;
+  }
+
+  /**
+   * @description Counts a finished backfill job toward its source's `embeddings_backfill`
+   * activity (OT plan 5767e798), and finishes the activity once its total is reached. Code-chunk
+   * jobs are only ever enqueued by the reconciler, so they always count, per chunk; entity jobs
+   * count only when the reconciler marked them, so a burst of ordinary writes cannot finish a
+   * backfill early. A job that ends in failure is not counted: the next reconcile cycle
+   * re-measures what is left.
+   */
+  private async reportBackfillProgress(data: EmbeddingsJobData): Promise<void> {
+    let source: EmbeddingBackfillSource;
+    let units: number;
+
+    if (isCodeChunksJobData(data)) {
+      source = 'code';
+      units = data.ids.length;
+    } else if (data.backfill) {
+      source = data.entity;
+      units = 1;
+    } else {
+      return;
+    }
+
+    const id = embeddingsBackfillActivityId(source);
+    const progress = await this.activities.progress(id, units);
+
+    if (
+      progress &&
+      progress.total !== null &&
+      progress.done >= progress.total
+    ) {
+      await this.activities.finish(id);
+    }
+  }
+
+  private async embedJob(
+    job: EmbeddingsJob,
+    token: string | undefined,
   ): Promise<EmbedEntityJobResult> {
     const data = job.data;
 

@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 
+import { BackgroundActivityRegistryModule } from '../../services/background-activity-registry/background-activity-registry.module.ts';
 import { EmbedderModule } from '../../services/embedder/embedder.module.ts';
 import { EmbeddingsProcessor } from './embeddings.processor.ts';
 import { EmbeddingsQueueProducerModule } from './producer/producer.module.ts';
@@ -11,7 +12,12 @@ import { EmbeddingsQueueProducerModule } from './producer/producer.module.ts';
  */
 @Module({
   exports: [EmbeddingsQueueProducerModule],
-  imports: [EmbedderModule, EmbeddingsQueueProducerModule, LoggerModule],
+  imports: [
+    BackgroundActivityRegistryModule,
+    EmbedderModule,
+    EmbeddingsQueueProducerModule,
+    LoggerModule,
+  ],
   providers: [EmbeddingsProcessor],
 })
 export class EmbeddingsQueueModule {}

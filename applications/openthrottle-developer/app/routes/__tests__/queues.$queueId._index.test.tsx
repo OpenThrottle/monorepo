@@ -62,6 +62,7 @@ type QueueLoaderData = Route.ComponentProps['loaderData'];
 /** Build a fully-typed `matches` tuple for the QueueDetailIndex component (which ignores it). */
 const buildQueueMatches = (loaderData: QueueLoaderData): QueueMatches => {
   const rootData = {
+    backgroundActivities: [],
     canonical: 'http://localhost/',
     defaultEditor: null,
     env: getPublicEnv(),

@@ -13,6 +13,7 @@ import {
 import type {
   EmbedCodeChunksJobData,
   EmbeddableEntity,
+  EmbeddingBackfillSource,
   EmbeddingSource,
   EmbeddingsWorkerSettings,
 } from './embeddings.types.ts';
@@ -23,6 +24,13 @@ import type {
  */
 export function embeddingJobId(entity: EmbeddableEntity, id: string): string {
   return `${entity}.${id}`;
+}
+
+/** @description The registry id of a source's `embeddings_backfill` activity. */
+export function embeddingsBackfillActivityId(
+  source: EmbeddingBackfillSource,
+): string {
+  return `embeddings_backfill:${source}`;
 }
 
 export function isEmbeddableEntity(value: unknown): value is EmbeddableEntity {

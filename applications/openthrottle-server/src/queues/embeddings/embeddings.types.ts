@@ -9,6 +9,12 @@ import type { EMBEDDABLE_ENTITIES } from './embeddings.constants.ts';
 export type EmbeddableEntity = (typeof EMBEDDABLE_ENTITIES)[number];
 
 export interface EmbedEntityJobData {
+  /**
+   * Set by the reconciler, so the job's completion counts toward the source's
+   * `embeddings_backfill` activity (OT plan 5767e798). Absent on subscriber jobs and on payloads
+   * enqueued before the field existed.
+   */
+  readonly backfill?: true;
   readonly entity: EmbeddableEntity;
   readonly id: string;
 }
@@ -58,3 +64,6 @@ export interface EmbeddingsWorkerSettings {
   readonly limiter:
     { readonly duration: number; readonly max: number } | undefined;
 }
+
+/** @description What an `embeddings_backfill` activity tracks: an entity table or code chunks. */
+export type EmbeddingBackfillSource = 'code' | EmbeddableEntity;

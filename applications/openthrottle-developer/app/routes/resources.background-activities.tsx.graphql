@@ -1,0 +1,5 @@
+query getBackgroundActivities {
+  backgroundActivities {
+    ...BackgroundActivityFields
+  }
+}

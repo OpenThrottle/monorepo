@@ -30,6 +30,7 @@ const buildPlanDetailMatches = (
   loaderData: PlanDetailLoaderData,
 ): PlanDetailMatches => {
   const rootData = {
+    backgroundActivities: [],
     canonical: 'http://localhost/',
     defaultEditor: null,
     env: getPublicEnv(),

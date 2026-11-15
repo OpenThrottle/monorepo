@@ -20,7 +20,10 @@ import {
   OpenThrottleCommander,
   useIdRefResolver,
 } from '@openthrottle/react-router-ui';
-import type { GlobalLayoutHeaderSearchEvent } from '@openthrottle/react-router-ui-global';
+import type {
+  GlobalBackgroundActivity,
+  GlobalLayoutHeaderSearchEvent,
+} from '@openthrottle/react-router-ui-global';
 import {
   GlobalErrorBoundary,
   GlobalLayout,
@@ -75,6 +78,7 @@ import { DeveloperRolloutProvider } from '~/global/components/DeveloperRolloutPr
 import { GlobalRootLoaderFailureBanner } from '~/global/components/GlobalRootLoaderFailureBanner';
 import { GlobalServerHealthBanner } from '~/global/components/GlobalServerHealthBanner';
 import { NotificationsSubscriptionBridge } from '~/global/components/NotificationsSubscriptionBridge';
+import { NO_BACKGROUND_ACTIVITIES } from '~/global/config/background-activities';
 import { PROTECTED_PATH_PREFIXES } from '~/global/config/config.app';
 import {
   DefaultEditorContext,
@@ -88,6 +92,7 @@ import {
   dataNavigationGuest,
   dataNavigationV2,
 } from '~/global/data/data.navigation';
+import { useBackgroundActivities } from '~/global/hooks/useBackgroundActivities';
 import { useCommanderOptions } from '~/global/hooks/useCommanderOptions';
 import { usePermissions } from '~/global/hooks/usePermissions';
 import type { CommanderSearchFields } from '~/global/utils/commander-empty-extras';
@@ -186,6 +191,9 @@ export const loader = async (args: Route.LoaderArgs) => {
    * health query is skipped or short-circuits without overwriting this, the
    * shell must not read as healthy during a real outage.
    */
+  /** Long-running server work, read in the same request as health; idle on failure. */
+  let backgroundActivities: readonly GlobalBackgroundActivity[] =
+    NO_BACKGROUND_ACTIVITIES;
   let serverHealth: ServerHealthObject = {
     api: 'unconfigured',
     database: 'unconfigured',
@@ -229,6 +237,8 @@ export const loader = async (args: Route.LoaderArgs) => {
 
       diagnostics.healthLatencyMs = Date.now() - t0;
       serverHealth = response?.serverHealth;
+      backgroundActivities =
+        response?.backgroundActivities ?? NO_BACKGROUND_ACTIVITIES;
 
       return null;
     } catch (error) {
@@ -323,6 +333,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   }
 
   return {
+    backgroundActivities,
     canonical,
     defaultEditor,
     env,
@@ -530,6 +541,9 @@ export default function App(): React.ReactElement {
     return dataNavigationGuest;
   }, [data?.user, permissions]);
   const groups = useCommanderOptions(navigation);
+  const { activities: backgroundActivities } = useBackgroundActivities({
+    initial: data?.backgroundActivities ?? NO_BACKGROUND_ACTIVITIES,
+  });
   const { pathname } = useLocation();
   const [commanderOpen, setCommanderOpen] = React.useState(false);
   const [commanderQuery, setCommanderQuery] = React.useState('');
@@ -686,6 +700,7 @@ export default function App(): React.ReactElement {
                 <GlobalLayout
                   appVersion={__APP_VERSION__}
                   authenticated={data?.user !== null}
+                  backgroundActivities={backgroundActivities}
                   data={navigation}
                   health={data?.serverHealth}
                   overrides={{

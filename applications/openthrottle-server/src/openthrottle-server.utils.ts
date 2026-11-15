@@ -36,6 +36,7 @@ import { AgentTrajectoriesGraphqlModule } from './graphql/agent-trajectories/age
 import { AgenticWorkflowGraphqlModule } from './graphql/agentic-workflow/agentic-workflow.module.ts';
 import { AgentsGraphqlModule } from './graphql/agents/agents.module.ts';
 import { AuthGraphqlModule } from './graphql/auth/auth.module.ts';
+import { BackgroundActivitiesGraphqlModule } from './graphql/background-activities/background-activities.module.ts';
 import { BlogGraphqlModule } from './graphql/blog/blog.module.ts';
 import { CaptureHealthGraphqlModule } from './graphql/capture-health/capture-health.module.ts';
 import { CodeSearchGraphqlModule } from './graphql/code-search/code-search.module.ts';
@@ -273,6 +274,7 @@ export const buildImports = (role: ProcessRole): AppModuleImports => {
       AgentTrajectoriesGraphqlModule,
       AgentsGraphqlModule,
       AuthGraphqlModule,
+      BackgroundActivitiesGraphqlModule,
       BlogGraphqlModule,
       CaptureHealthGraphqlModule,
       CodeSearchGraphqlModule,
