@@ -175,15 +175,28 @@ export interface LoopGit {
 // ---------------------------------------------------------------------------
 
 /** @public */
+export interface LoopInboxMessage {
+  readonly body: string;
+  readonly id: string;
+}
+
+/** @public */
 export interface LoopClient {
-  /** Claim the plan inbox once; returns the claimed message bodies (STEERs first, oldest first). */
-  claimInbox(input: { readonly taskId: string }): Promise<readonly string[]>;
+  /** Claim the plan inbox once; returns the claimed messages (STEERs first, oldest first). */
+  claimInbox(input: {
+    readonly taskId: string;
+  }): Promise<readonly LoopInboxMessage[]>;
   createFollowUps(input: {
     readonly followUps: readonly LoopFollowUp[];
     readonly planId: string;
   }): Promise<void>;
   endWorkSession(sessionId: string): Promise<void>;
   getPlanStatus(planId: string): Promise<string>;
+  /**
+   * Messages already DELIVERED to this run, oldest first: the job's own claims and those an
+   * in-worker hook claimed mid-attempt. Empty when the run has no `plan_runs` row.
+   */
+  listRunDeliveredMessages(): Promise<readonly LoopInboxMessage[]>;
   listTasks(planId: string): Promise<readonly LoopTask[]>;
   narrate(input: {
     readonly message: string;

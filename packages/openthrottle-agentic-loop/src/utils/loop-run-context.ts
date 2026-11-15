@@ -5,6 +5,8 @@ export interface LoopRunTracker {
   readonly completedTaskIds: string[];
   currentTaskId: string | undefined;
   guidance: readonly string[];
+  /** Ids of the messages already in `guidance`, so a message is folded in once. */
+  readonly guidanceMessageIds: Set<string>;
   /** The previous task's session, ended at the next boundary. */
   sessionId: string | undefined;
   taskStartedAt: number;

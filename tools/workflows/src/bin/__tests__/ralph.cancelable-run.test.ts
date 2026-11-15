@@ -234,6 +234,38 @@ describe('Ralph detached-CLI cancelable run', () => {
     expect(exitSpy).toHaveBeenCalledWith(0);
   });
 
+  it('exports the run identity to the agent CLI env', async () => {
+    const { main } = await import('../ralph.js');
+
+    await expect(main()).rejects.toThrow(EXIT);
+
+    expect(runIterationAsyncMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        env: {
+          OPENTHROTTLE_PLAN_ID: PLAN_ID,
+          OPENTHROTTLE_PLAN_RUN_ID: RUN_ID,
+          OPENTHROTTLE_TASK_ID: pendingTask.id,
+        },
+      }),
+    );
+  });
+
+  it('exports a blank run id for an untracked (TTY) run', async () => {
+    process.stdin.isTTY = true;
+    const { main } = await import('../ralph.js');
+
+    await expect(main()).rejects.toThrow(EXIT);
+
+    expect(runIterationMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        env: expect.objectContaining({
+          OPENTHROTTLE_PLAN_ID: PLAN_ID,
+          OPENTHROTTLE_PLAN_RUN_ID: '',
+        }),
+      }),
+    );
+  });
+
   it('passes branch into registerCliPlanRun when resolveGitBranchFromCwd returns a name', async () => {
     resolveGitBranchFromCwdMock.mockReturnValue('feature/cli-branch');
     const { main } = await import('../ralph.js');

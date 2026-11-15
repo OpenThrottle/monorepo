@@ -9400,6 +9400,20 @@ export type GetProjectQuery = {
   } | null;
 };
 
+export type RalphDeliveredPlanMessagesQueryVariables = Exact<{
+  input: ListPlanMessagesInput;
+}>;
+
+export type RalphDeliveredPlanMessagesQuery = {
+  __typename?: 'Query';
+  planMessages: Array<{
+    __typename?: 'PlanMessageObject';
+    body: string;
+    id: string;
+    planRunId?: string | null;
+  }>;
+};
+
 export const NoteFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -13213,3 +13227,59 @@ export const GetProjectDocument = {
     },
   ],
 } as unknown as DocumentNode<GetProjectQuery, GetProjectQueryVariables>;
+export const RalphDeliveredPlanMessagesDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'ralphDeliveredPlanMessages' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'ListPlanMessagesInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'planMessages' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'body' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'planRunId' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  RalphDeliveredPlanMessagesQuery,
+  RalphDeliveredPlanMessagesQueryVariables
+>;

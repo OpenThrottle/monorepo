@@ -54,6 +54,9 @@ describe('createOtLoopWorkerRunner', () => {
       env: buildWorkerEnv(),
       onUsageLimit,
       output,
+      planId: 'plan-1',
+      planRunId: 'run-1',
+      pluginDirs: ['/ot/plugins/openthrottle-workflow'],
       runDriver,
       timeoutMs: 5000,
     });
@@ -93,7 +96,7 @@ describe('createOtLoopWorkerRunner', () => {
     await rm(cwd, { force: true, recursive: true });
   });
 
-  it('runs the driver in the worktree with the routed model, the signal and an env that blanks the OT credentials', async () => {
+  it('runs the driver in the worktree with the routed model, the signal and an env that blanks the OT credentials and carries the run identity', async () => {
     const controller = new AbortController();
     const runner = build(
       driverThat(async (_config, options) => {
@@ -110,11 +113,15 @@ describe('createOtLoopWorkerRunner', () => {
       cwd,
       effort: 'high',
       model: 'sonnet',
+      pluginDirs: ['/ot/plugins/openthrottle-workflow'],
       signal: controller.signal,
       timeoutMs: 5000,
     });
     expect(seen?.env).toEqual({
       OPENTHROTTLE_MCP_AUTH_TOKEN: '',
+      OPENTHROTTLE_PLAN_ID: 'plan-1',
+      OPENTHROTTLE_PLAN_RUN_ID: 'run-1',
+      OPENTHROTTLE_TASK_ID: 'task-1',
       OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN: '',
       OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN: '',
       OT_MCP_AUTH_TOKEN_ENV_FILE: '',
