@@ -71,7 +71,10 @@ export const GlobalTable = <TRow extends object>(
   // 🔌 Short Circuit
 
   return (
-    <div className={cn(className, "border rounded-md")} data-testid="GlobalTable">
+    <div
+      className={cn(className, 'rounded-md border')}
+      data-testid="GlobalTable"
+    >
       <DataTable
         columns={columnDefs}
         data={data}
