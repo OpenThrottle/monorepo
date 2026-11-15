@@ -10,7 +10,7 @@ import path from 'node:path';
 import { Worker } from 'node:worker_threads';
 
 import type { EmbeddingBackend, EmbeddingBackendResult } from './embedding.ts';
-import type { EmbeddingConfig } from './embedding-config.ts';
+import type { SelfHostedEmbeddingConfig } from './embedding-config.ts';
 
 /** @description Message the main thread sends the worker. */
 export interface LocalEmbeddingRequest {
@@ -40,7 +40,7 @@ export interface LocalEmbeddingBackendOptions {
   readonly createWorker: (
     data: LocalEmbeddingWorkerData,
   ) => EmbeddingWorkerHandle;
-  readonly weightsExist: (config: EmbeddingConfig) => boolean;
+  readonly weightsExist: (config: SelfHostedEmbeddingConfig) => boolean;
 }
 
 /**
@@ -85,7 +85,9 @@ interface PendingRequest {
 }
 
 /** @description Absolute path of the model's ONNX weights inside `modelsDir`. */
-export function localEmbeddingWeightsPath(config: EmbeddingConfig): string {
+export function localEmbeddingWeightsPath(
+  config: SelfHostedEmbeddingConfig,
+): string {
   return path.join(
     config.modelsDir,
     config.spec.huggingFaceId,
@@ -93,7 +95,7 @@ export function localEmbeddingWeightsPath(config: EmbeddingConfig): string {
   );
 }
 
-function defaultWeightsExist(config: EmbeddingConfig): boolean {
+function defaultWeightsExist(config: SelfHostedEmbeddingConfig): boolean {
   const tokenizer = path.join(
     config.modelsDir,
     config.spec.huggingFaceId,
@@ -145,7 +147,7 @@ function isNumberMatrix(value: unknown): value is number[][] {
  * running server without a restart.
  */
 export function createLocalEmbeddingBackend(
-  config: EmbeddingConfig,
+  config: SelfHostedEmbeddingConfig,
   options: LocalEmbeddingBackendOptions | undefined,
 ): EmbeddingBackend {
   const createWorker = options?.createWorker ?? defaultCreateWorker;

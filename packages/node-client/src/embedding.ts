@@ -7,13 +7,16 @@
 
 import { EMBEDDING_MAX_INPUT_CHARS } from './constants.ts';
 import type { EmbeddingConfig } from './embedding-config.ts';
+import { embedWithGemini } from './embedWithGemini.ts';
 import { embedWithOllama } from './embedWithOllama.ts';
+import { embedWithOpenAI } from './embedWithOpenAI.ts';
 import type { LocalEmbeddingBackendOptions } from './local-embedding.ts';
 import { createLocalEmbeddingBackend } from './local-embedding.ts';
 
 /**
  * @description What the text is for. nomic-embed-text was trained with a task prefix per side:
- * stored content gets `search_document: `, a search query gets `search_query: `.
+ * stored content gets `search_document: `, a search query gets `search_query: `. Hosted models
+ * take no prefix; a provider that supports a task type gets this as a request parameter.
  */
 export type EmbeddingInputType = 'document' | 'query';
 
@@ -44,7 +47,10 @@ export type EmbeddingBackendResult =
 
 export interface EmbeddingBackend {
   close(): Promise<void>;
-  embed(texts: readonly string[]): Promise<EmbeddingBackendResult>;
+  embed(
+    texts: readonly string[],
+    inputType: EmbeddingInputType,
+  ): Promise<EmbeddingBackendResult>;
 }
 
 export interface Embedder {
@@ -127,21 +133,38 @@ function createBackend(
     return options.backend;
   }
 
-  if (config.provider === 'ollama') {
-    return {
-      close: () => {
-        return Promise.resolve();
-      },
-      embed: (texts) => {
-        return embedWithOllama(texts, {
-          baseUrl: config.ollamaBaseUrl,
-          model: config.spec.ollamaName,
-        });
-      },
-    };
-  }
+  const close = (): Promise<void> => {
+    return Promise.resolve();
+  };
 
-  return createLocalEmbeddingBackend(config, options.local);
+  switch (config.provider) {
+    case 'gemini':
+      return {
+        close,
+        embed: (texts, inputType) => {
+          return embedWithGemini(texts, inputType, config);
+        },
+      };
+    case 'local':
+      return createLocalEmbeddingBackend(config, options.local);
+    case 'ollama':
+      return {
+        close,
+        embed: (texts) => {
+          return embedWithOllama(texts, {
+            baseUrl: config.ollamaBaseUrl,
+            model: config.spec.ollamaName,
+          });
+        },
+      };
+    case 'openai':
+      return {
+        close,
+        embed: (texts) => {
+          return embedWithOpenAI(texts, config);
+        },
+      };
+  }
 }
 
 function chunk<T>(items: readonly T[], size: number): T[][] {
@@ -177,7 +200,7 @@ export function createEmbedder(
     // concurrent batches would only queue there while holding every batch's memory at once.
     for (const batch of chunk(inputs, EMBEDDING_BATCH_SIZE)) {
       // eslint-disable-next-line no-await-in-loop -- sequential by design, see above
-      const result = await backend.embed(batch);
+      const result = await backend.embed(batch, inputType);
 
       if (!result.ok) {
         return result;

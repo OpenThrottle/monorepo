@@ -1708,7 +1708,7 @@ export type EmbeddingsHealthObject = {
   dims?: Maybe<Scalars['Int']['output']>;
   /** Configured embedding model (recorded as embedding_model), or null when unconfigured. */
   model?: Maybe<Scalars['String']['output']>;
-  /** EMBEDDING_PROVIDER as configured: local | ollama (or a refused value). */
+  /** EMBEDDING_PROVIDER as configured — local, ollama or a hosted provider (openai, gemini) — even when it was refused. */
   provider: Scalars['String']['output'];
   /** Embedding jobs waiting, delayed or active; null when Redis cannot be read. */
   queueDepth?: Maybe<Scalars['Int']['output']>;

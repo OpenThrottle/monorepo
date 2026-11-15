@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from 'vitest';
 
-import type { EmbeddingConfig } from '../embedding-config.ts';
+import type { SelfHostedEmbeddingConfig } from '../embedding-config.ts';
 import { resolveEmbeddingConfig } from '../embedding-config.ts';
 import type {
   EmbeddingWorkerHandle,
@@ -9,11 +9,15 @@ import type {
 } from '../local-embedding.ts';
 import { createLocalEmbeddingBackend } from '../local-embedding.ts';
 
-function config(): EmbeddingConfig {
+function config(): SelfHostedEmbeddingConfig {
   const result = resolveEmbeddingConfig({ EMBEDDING_MODELS_DIR: '/models' });
 
   if (!result.ok) {
     throw new Error(result.detail);
+  }
+
+  if (result.config.provider !== 'local') {
+    throw new Error('expected the local provider');
   }
 
   return result.config;
@@ -81,7 +85,7 @@ describe('createLocalEmbeddingBackend', () => {
         },
       });
 
-      const result = await backend.embed(['a']);
+      const result = await backend.embed(['a'], 'document');
 
       expect(result).toMatchObject({ ok: false, reason: 'unconfigured' });
       expect(!result.ok && result.detail).toContain(
@@ -108,8 +112,8 @@ describe('createLocalEmbeddingBackend', () => {
       });
 
       const [first, second] = await Promise.all([
-        backend.embed(['a']),
-        backend.embed(['b']),
+        backend.embed(['a'], 'document'),
+        backend.embed(['b'], 'document'),
       ]);
 
       expect(first).toEqual({ ok: true, vectors: [[0.1, 0.2]] });
@@ -137,7 +141,7 @@ describe('createLocalEmbeddingBackend', () => {
         },
       });
 
-      const result = await backend.embed(['a']);
+      const result = await backend.embed(['a'], 'document');
 
       expect(result).toMatchObject({ ok: false, reason: 'provider_error' });
       expect(!result.ok && result.detail).toContain('bad onnx');
@@ -165,7 +169,7 @@ describe('createLocalEmbeddingBackend', () => {
         },
       });
 
-      const pending = backend.embed(['a']);
+      const pending = backend.embed(['a'], 'document');
 
       crashing.crash(1);
 
@@ -173,7 +177,7 @@ describe('createLocalEmbeddingBackend', () => {
         ok: false,
         reason: 'provider_error',
       });
-      await expect(backend.embed(['b'])).resolves.toEqual({
+      await expect(backend.embed(['b'], 'document')).resolves.toEqual({
         ok: true,
         vectors: [[1]],
       });
@@ -194,7 +198,7 @@ describe('createLocalEmbeddingBackend', () => {
         },
       });
 
-      await backend.embed(['a']);
+      await backend.embed(['a'], 'document');
       await backend.close();
 
       expect(worker.terminate).toHaveBeenCalledTimes(1);

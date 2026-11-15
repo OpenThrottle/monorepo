@@ -21,9 +21,11 @@ agent-asset search, plan-creation) and `@openthrottle/openthrottle-agentic-utils
   per connection string, for pooling) registering `Plan`, `Task`, `PlanEmbedding`,
   `TaskEmbedding`, `Project`, `CommitLink`, `PlanOutputStreamChunk`.
 - `src/embedding-config.ts` — `resolveEmbeddingConfig()` from `EMBEDDING_PROVIDER`
-  (`local` default | `ollama`; `openai`/`gemini` reserved and refused), `EMBEDDING_MODEL`,
-  `EMBEDDING_DIMS`, `EMBEDDING_MODELS_DIR`, `OLLAMA_BASE_URL`, plus the per-model spec
-  (dims, Hugging Face id, Ollama name, task prefixes).
+  (`local` default | `ollama` | `openai` | `gemini`), `EMBEDDING_MODEL`, `EMBEDDING_DIMS`,
+  `EMBEDDING_MODELS_DIR`, `OLLAMA_BASE_URL`, and a hosted provider's `*_API_KEY` /
+  `*_BASE_URL`. The config and the per-model spec are discriminated unions: self-hosted
+  (open-weights spec: Hugging Face id, Ollama name, task prefixes) vs hosted (empty prefixes,
+  API key + base URL). A model is only accepted by the provider that serves it.
 - `src/embedding.ts` — `createEmbedder(config)`: prefixing (`search_document: ` /
   `search_query: `), truncation, batching and the dimension check over a provider backend.
   Returns an `EmbedResult` (`ok: true` with vectors + model + dims, or `ok: false` with
@@ -31,6 +33,11 @@ agent-asset search, plan-creation) and `@openthrottle/openthrottle-agentic-utils
 - `src/local-embedding.ts` — transformers.js in an eval'd worker thread, loading quantized
   ONNX weights from `EMBEDDING_MODELS_DIR` only (remote downloads disabled).
 - `src/embedWithOllama.ts` — Ollama batch path (`POST /api/embed`), same model.
+- `src/embedWithOpenAI.ts` / `src/embedWithGemini.ts` — hosted backends at `dimensions` /
+  `outputDimensionality` 768; Gemini maps `inputType` to `RETRIEVAL_DOCUMENT` / `RETRIEVAL_QUERY`.
+  The backend `embed(texts, inputType)` receives the side so a provider can use it.
+- `src/hosted-embedding-request.ts` — shared JSON POST with 429/5xx backoff (honours
+  `Retry-After`) and L2 normalisation. The API key travels in headers only.
 - `src/embedding-content.ts` — builds the text blob fed to the embedder for a plan/task.
 - `src/config.ts` — `getPostgresConfig()` (returns `undefined` when Postgres isn't configured).
 - `src/constants.ts` — `EMBEDDING_MAX_INPUT_CHARS` (8191, prefix included), shared across both

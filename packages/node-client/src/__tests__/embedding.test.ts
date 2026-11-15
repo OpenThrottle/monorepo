@@ -118,10 +118,10 @@ describe('createEmbedder', () => {
         ok: true,
       });
       expect(result.ok && result.vectors).toHaveLength(2);
-      expect(backend.embed).toHaveBeenCalledWith([
-        'search_query: a',
-        'search_query: b',
-      ]);
+      expect(backend.embed).toHaveBeenCalledWith(
+        ['search_query: a', 'search_query: b'],
+        'query',
+      );
     });
   });
 
@@ -222,6 +222,79 @@ describe('createEmbedder', () => {
           }),
         }),
       );
+      fetchMock.mockRestore();
+    });
+  });
+  describe('when the provider is openai', () => {
+    test('sends unprefixed text at 768 dims and records the OpenAI model', async () => {
+      const result = resolveEmbeddingConfig({
+        EMBEDDING_PROVIDER: 'openai',
+        OPENAI_API_KEY: 'sk-test',
+      });
+
+      if (!result.ok) throw new Error(result.detail);
+      const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            data: [
+              {
+                embedding: Array.from({ length: 768 }, () => 1),
+                index: 0,
+              },
+            ],
+          }),
+        ),
+      );
+      const embedder = createEmbedder(result.config);
+
+      const embedded = await embedder.embed(['a'], 'query');
+
+      expect(embedded).toMatchObject({
+        dims: 768,
+        model: 'text-embedding-3-small',
+        ok: true,
+      });
+      const [url, init] = fetchMock.mock.calls[0] ?? [];
+
+      expect(url).toBe('https://api.openai.com/v1/embeddings');
+      expect(JSON.parse(String(init?.body))).toMatchObject({
+        dimensions: 768,
+        input: ['a'],
+      });
+      fetchMock.mockRestore();
+    });
+  });
+  describe('when the provider is gemini', () => {
+    test('sends RETRIEVAL_QUERY for a query and records the Gemini model', async () => {
+      const result = resolveEmbeddingConfig({
+        EMBEDDING_PROVIDER: 'gemini',
+        GEMINI_API_KEY: 'g-test',
+      });
+
+      if (!result.ok) throw new Error(result.detail);
+      const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            embeddings: [{ values: Array.from({ length: 768 }, () => 1) }],
+          }),
+        ),
+      );
+      const embedder = createEmbedder(result.config);
+
+      const embedded = await embedder.embed(['a'], 'query');
+
+      expect(embedded).toMatchObject({
+        dims: 768,
+        model: 'gemini-embedding-001',
+        ok: true,
+      });
+      const [, init] = fetchMock.mock.calls[0] ?? [];
+
+      expect(JSON.parse(String(init?.body))).toMatchObject({
+        requests: [
+          { content: { parts: [{ text: 'a' }] }, taskType: 'RETRIEVAL_QUERY' },
+        ],
+      });
       fetchMock.mockRestore();
     });
   });

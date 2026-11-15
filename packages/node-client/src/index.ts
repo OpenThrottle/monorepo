@@ -10,6 +10,8 @@ export * from './data-source.ts';
 export * from './embedding.ts';
 export * from './embedding-config.ts';
 export * from './embedding-content.ts';
+export * from './embedWithGemini.ts';
 export * from './embedWithOllama.ts';
+export * from './embedWithOpenAI.ts';
 export * from './local-embedding.ts';
 export * from './openthrottle-client.ts';
