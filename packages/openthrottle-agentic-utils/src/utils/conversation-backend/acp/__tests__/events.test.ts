@@ -1,3 +1,4 @@
+import type { SessionUpdate } from '@agentclientprotocol/sdk';
 import { describe, expect, it } from 'vitest';
 
 import { acpTerminalChunk, createAcpUpdateMapper } from '../events.ts';
@@ -71,7 +72,7 @@ describe('createAcpUpdateMapper', () => {
         metadata: {
           callId: 'c1',
           isError: false,
-          toolCall: { output: { ok: true }, status: 'completed' },
+          toolCall: { ok: true },
           toolName: 'Edit File',
         },
       },
@@ -145,6 +146,109 @@ describe('createAcpUpdateMapper', () => {
     });
   });
 
+  describe('agy 1.5.9 terminal tool steps (2026-11-15 ACP probe)', () => {
+    const PWD_TRANSCRIPT = `Command exited with code 0.\n\nCommand output:\n/repo\r\n`;
+
+    const announce = (
+      map: ReturnType<typeof createAcpUpdateMapper>,
+      toolCallId: string,
+      title: string,
+      rawInput: Record<string, unknown>,
+    ): void => {
+      map({
+        kind: 'read',
+        rawInput,
+        sessionUpdate: 'tool_call',
+        status: 'in_progress',
+        title,
+        toolCallId,
+      });
+    };
+
+    it('sends a shell transcript as the output alone, never wrapped', () => {
+      const map = createAcpUpdateMapper();
+      announce(map, 'c1', 'pwd', { CommandLine: 'pwd' });
+
+      const [result] = map({
+        content: [
+          { content: { text: PWD_TRANSCRIPT, type: 'text' }, type: 'content' },
+        ],
+        rawOutput: { exit_code: 0, output: PWD_TRANSCRIPT },
+        sessionUpdate: 'tool_call_update',
+        status: 'completed',
+        toolCallId: 'c1',
+      });
+
+      expect(result?.metadata).toEqual({
+        callId: 'c1',
+        isError: false,
+        toolCall: PWD_TRANSCRIPT,
+        toolName: 'pwd',
+      });
+    });
+
+    it('takes rawOutput.output when there is no content text', () => {
+      const map = createAcpUpdateMapper();
+      announce(map, 'c1', 'pwd', { CommandLine: 'pwd' });
+
+      const [result] = map({
+        rawOutput: { exit_code: 0, output: PWD_TRANSCRIPT },
+        sessionUpdate: 'tool_call_update',
+        status: 'completed',
+        toolCallId: 'c1',
+      });
+
+      expect(result?.metadata?.['toolCall']).toBe(PWD_TRANSCRIPT);
+    });
+
+    it('sends null for a completed read that reports no output, not its arguments', () => {
+      const map = createAcpUpdateMapper();
+      announce(map, 'c2', 'File package.json', { Path: '/repo/package.json' });
+
+      const [result] = map({
+        rawInput: { Path: '/repo/package.json' },
+        sessionUpdate: 'tool_call_update',
+        status: 'completed',
+        toolCallId: 'c2',
+      });
+
+      expect(result?.metadata).toEqual({
+        callId: 'c2',
+        isError: false,
+        toolCall: null,
+        toolName: 'File package.json',
+      });
+    });
+
+    it('says a refused call was denied instead of failing generically', () => {
+      const deniedCallIds = new Set(['c3']);
+      const map = createAcpUpdateMapper({ deniedCallIds });
+      announce(map, 'c3', 'pwd', { CommandLine: 'pwd' });
+      announce(map, 'c4', 'File missing.txt', { Path: '/repo/missing.txt' });
+      const failed = (toolCallId: string): SessionUpdate => {
+        return {
+          content: [{ content: { text: '', type: 'text' }, type: 'content' }],
+          rawOutput: { output: '' },
+          sessionUpdate: 'tool_call_update',
+          status: 'failed',
+          toolCallId,
+        };
+      };
+
+      const [denied] = map(failed('c3'));
+      const [missing] = map(failed('c4'));
+
+      expect(denied?.metadata).toMatchObject({
+        isError: true,
+        toolCall: 'Permission denied: the tool call was refused.',
+      });
+      expect(missing?.metadata).toMatchObject({
+        isError: true,
+        toolCall: 'The agent reported a failed tool call.',
+      });
+    });
+  });
+
   it('emits the call when it starts running even without input', () => {
     const map = createAcpUpdateMapper();
     map({ sessionUpdate: 'tool_call', title: 'MCP: tool', toolCallId: 'c2' });
@@ -178,6 +282,15 @@ describe('acpTerminalChunk', () => {
     expect(acpTerminalChunk({ stopReason: 'end_turn' })).toMatchObject({
       done: true,
       error: null,
+    });
+  });
+
+  it('lists the refused calls under deniedActions, and only when there are some', () => {
+    expect(
+      acpTerminalChunk({ stopReason: 'end_turn' }, ['pwd']).metadata,
+    ).toEqual({ deniedActions: ['pwd'], stopReason: 'end_turn' });
+    expect(acpTerminalChunk({ stopReason: 'end_turn' }, []).metadata).toEqual({
+      stopReason: 'end_turn',
     });
   });
 

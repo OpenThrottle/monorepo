@@ -5,6 +5,7 @@ import {
   awaitAcpPermission,
   decideAcpPermission,
   humanPermissionOptions,
+  isRefusal,
   resolveAcpPermission,
 } from '../permissions.ts';
 
@@ -70,6 +71,36 @@ describe('decideAcpPermission', () => {
     expect(decideAcpPermission(onlyAllow, undefined, [])).toEqual({
       outcome: { outcome: 'cancelled' },
     });
+  });
+});
+
+describe('isRefusal', () => {
+  const request: RequestPermissionRequest = {
+    options: [
+      { kind: 'allow_once', name: 'Allow', optionId: 'allow' },
+      { kind: 'reject_once', name: 'Deny', optionId: 'deny' },
+    ],
+    sessionId: 's',
+    toolCall: { kind: 'execute', title: 'pwd', toolCallId: 't' },
+  };
+
+  it('is true for a reject option and for a cancelled outcome', () => {
+    expect(
+      isRefusal(request, {
+        outcome: { optionId: 'deny', outcome: 'selected' },
+      }),
+    ).toBe(true);
+    expect(isRefusal(request, { outcome: { outcome: 'cancelled' } })).toBe(
+      true,
+    );
+  });
+
+  it('is false for an allow option', () => {
+    expect(
+      isRefusal(request, {
+        outcome: { optionId: 'allow', outcome: 'selected' },
+      }),
+    ).toBe(false);
   });
 });
 

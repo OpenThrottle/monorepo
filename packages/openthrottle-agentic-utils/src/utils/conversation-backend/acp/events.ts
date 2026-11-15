@@ -9,8 +9,11 @@
  *   so the `tool_call` chunk is held until the input is known or the call
  *   starts running; the `tool_result` is emitted on `completed`/`failed`.
  *   A `failed` result carries `metadata.isError` and a readable error text
- *   (the update's content text, else a string `rawOutput`) — the chat
- *   timeline marks a card failed on `isError` alone.
+ *   (the update's content text, else a string `rawOutput`, else — for a call
+ *   this client refused permission for — a denial message) — the chat
+ *   timeline marks a card failed on `isError` alone. A `completed` result
+ *   carries the tool's output alone (see {@link completedOutputOf}), never a
+ *   `{ output, status }` wrapper and never the call's arguments.
  * - Everything else (`plan`, mode/config/command updates, `session_info_update`,
  *   `usage_update` — a context-window gauge, not token counts — and replayed
  *   `user_message_chunk`s) maps to no chunk.
@@ -23,6 +26,7 @@ import type { PromptResponse, SessionUpdate } from '@agentclientprotocol/sdk';
 import { isRecord } from '@openthrottle/nodejs-utils';
 
 import {
+  CONVERSATION_DENIED_ACTIONS_KEY,
   CONVERSATION_STREAM_CHUNK_KINDS,
   type ConversationStreamChunk,
   type ConversationStreamChunkKind,
@@ -79,8 +83,24 @@ function contentTextOf(content: unknown): string {
   return texts.join('\n');
 }
 
-/** Readable error text for a failed call: content text, else a string rawOutput. */
-function failedErrorText(rawOutput: unknown, content: unknown): string {
+/**
+ * Error text for a failed call this client refused permission for. agy 1.5.9
+ * reports such a call `failed` with an empty content text and
+ * `rawOutput: { output: '' }`, so without this the card reads only as a
+ * generic failure.
+ */
+const DENIED_TOOL_CALL_ERROR = 'Permission denied: the tool call was refused.';
+
+/**
+ * Readable error text for a failed call: content text, else a string
+ * rawOutput, else the denial message when the call was refused, else a
+ * generic message.
+ */
+function failedErrorText(
+  rawOutput: unknown,
+  content: unknown,
+  denied: boolean,
+): string {
   const contentText = contentTextOf(content);
   if (contentText.trim() !== '') {
     return contentText;
@@ -88,8 +108,48 @@ function failedErrorText(rawOutput: unknown, content: unknown): string {
   if (typeof rawOutput === 'string' && rawOutput.trim() !== '') {
     return rawOutput;
   }
+  if (denied) {
+    return DENIED_TOOL_CALL_ERROR;
+  }
 
   return FAILED_TOOL_CALL_ERROR;
+}
+
+/**
+ * The output of a completed call, or `null` when it reported none: the
+ * update's content text, else a string `rawOutput`, else agy's
+ * `rawOutput.output` string, else any other non-empty `rawOutput`. agy 1.5.9
+ * sends a shell transcript as both content text and `rawOutput.output`, and a
+ * file read with neither. The card already shows the status, so the output is
+ * never wrapped, and never falls back to the arguments.
+ */
+function completedOutputOf(rawOutput: unknown, content: unknown): unknown {
+  const contentText = contentTextOf(content);
+  if (contentText.trim() !== '') {
+    return contentText;
+  }
+  if (typeof rawOutput === 'string') {
+    return rawOutput.trim() === '' ? null : rawOutput;
+  }
+  if (isRecord(rawOutput) && typeof rawOutput.output === 'string') {
+    return rawOutput.output.trim() === '' ? null : rawOutput.output;
+  }
+
+  return hasInput(rawOutput) ? rawOutput : null;
+}
+
+/**
+ * Options for {@link createAcpUpdateMapper}.
+ *
+ * @public
+ */
+export interface AcpUpdateMapperOptions {
+  /**
+   * Ids of the tool calls this client refused permission for during the turn.
+   * The caller owns the set and adds to it as it answers
+   * `session/request_permission`; the mapper only reads it.
+   */
+  readonly deniedCallIds: ReadonlySet<string>;
 }
 
 /** One text-like chunk for a non-empty delta, none otherwise. */
@@ -109,9 +169,9 @@ function deltaChunks(
  *
  * @public
  */
-export function createAcpUpdateMapper(): (
-  update: SessionUpdate,
-) => ConversationStreamChunk[] {
+export function createAcpUpdateMapper(
+  options: AcpUpdateMapperOptions = { deniedCallIds: new Set() },
+): (update: SessionUpdate) => ConversationStreamChunk[] {
   const calls = new Map<string, ToolCallState>();
 
   const callChunk = (
@@ -139,10 +199,10 @@ export function createAcpUpdateMapper(): (
   ): ConversationStreamChunk => {
     state.emittedResult = true;
     const isError = status === 'failed';
+    const denied = options.deniedCallIds.has(callId);
     const errorText = isError
-      ? failedErrorText(fields.rawOutput, fields.content)
+      ? failedErrorText(fields.rawOutput, fields.content, denied)
       : null;
-    const output = fields.rawOutput ?? fields.content ?? null;
 
     // The chat timeline marks a card failed only on `metadata.isError`; the
     // chunk-level `error` is read on the terminal `done` chunk alone.
@@ -154,7 +214,8 @@ export function createAcpUpdateMapper(): (
       metadata: {
         callId,
         isError,
-        toolCall: errorText ?? { output, status },
+        toolCall:
+          errorText ?? completedOutputOf(fields.rawOutput, fields.content),
         toolName: state.toolName,
       },
     };
@@ -239,17 +300,28 @@ const STOP_REASON_ERRORS: Readonly<Record<string, string>> = {
 /**
  * The terminal chunk for a finished `session/prompt`. `end_turn` is a clean
  * finish; every other stop reason is surfaced as the terminal error.
+ * `deniedActions` names the calls this client refused during the turn: agy
+ * ends such a turn `end_turn` with no answer text, so they ride the terminal
+ * metadata under {@link CONVERSATION_DENIED_ACTIONS_KEY} for the chat to
+ * explain the silence.
  *
  * @public
  */
 export function acpTerminalChunk(
   response: PromptResponse,
+  deniedActions: readonly string[] = [],
 ): ConversationStreamChunk {
+  const stopMetadata = { stopReason: response.stopReason };
+  const hasDenials = deniedActions.length > 0;
+  const metadata = hasDenials
+    ? { ...stopMetadata, [CONVERSATION_DENIED_ACTIONS_KEY]: [...deniedActions] }
+    : stopMetadata;
+
   return {
     delta: '',
     done: true,
     error: STOP_REASON_ERRORS[response.stopReason] ?? null,
     kind: CONVERSATION_STREAM_CHUNK_KINDS.text,
-    metadata: { stopReason: response.stopReason },
+    metadata,
   };
 }

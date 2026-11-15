@@ -4,6 +4,7 @@ import type { ResolvedRunPhase } from './run-phase';
 import {
   appendTurnTextEvent,
   applyTerminalUsageLimit,
+  applyTurnDeniedActions,
   applyTurnPermission,
   applyTurnToolCall,
   applyTurnToolResult,
@@ -294,12 +295,18 @@ export function reduceStreamChunk(
   } else if (chunk.kind === 'usage') {
     // Mid-stream usage: opencode emits per-step `usage` chunks, and the server
     // forwards claude/cursor terminal usage as a discrete `usage` chunk. Fold
-    // into the turn's single (accumulating) usage event.
+    // into the turn's single (accumulating) usage event. A backend's terminal
+    // metadata arrives the same way, so it may name refused permissions too.
+    const withUsage = applyTurnUsage(
+      currentEvents,
+      chunk.metadataJson ?? null,
+      chunk.sortOrder,
+    );
     events.set(
       chunk.messageId,
-      applyTurnUsage(
-        currentEvents,
-        chunk.metadataJson ?? null,
+      applyTurnDeniedActions(
+        withUsage,
+        parseChunkMetadataRecord(chunk.metadataJson ?? null),
         chunk.sortOrder,
       ),
     );

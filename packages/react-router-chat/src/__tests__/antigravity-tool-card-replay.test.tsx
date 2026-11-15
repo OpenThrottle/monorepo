@@ -17,6 +17,7 @@ import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
 import { ChatToolCall } from '../components/ChatToolCall';
+import { ChatTurnTimeline } from '../components/ChatTurnTimeline';
 import { foldPersistedTurnEvents } from '../turn-events';
 import type { ChatTurnEvent, ChatTurnToolEvent } from '../types';
 
@@ -150,5 +151,74 @@ describe('antigravity tool cards (persisted replay)', () => {
     expect(component.getByText('Arguments')).toBeInTheDocument();
     expect(component.queryByText('Result')).not.toBeInTheDocument();
     expect(component.getByTestId('ChatToolCall-no-output')).toBeInTheDocument();
+  });
+});
+
+// --- The same probe over `agy acp` (OPENTHROTTLE_CHAT_ACP_BACKENDS) ------------
+
+/** A failed ACP call this client refused: agy 1.5.9 sends no text of its own. */
+const ACP_DENIED = 'Permission denied: the tool call was refused.';
+
+/** The 2026-11-15 ACP probe on agy 1.5.9, as the ACP mapper now emits it. */
+const ACP_PROBE_TURN = persisted([
+  { delta: '', kind: 'session', metadata: { sessionId: 'agy-acp-1' } },
+  toolCall('a1', 'pwd', { CommandLine: 'pwd' }),
+  toolDone('a1', 'pwd', PWD_OUTPUT),
+  toolCall('a2', 'File package.json', { Path: `${REPO}/package.json` }),
+  toolDone('a2', 'File package.json', null),
+  toolCall('a3', 'pwd', { CommandLine: 'pwd' }),
+  toolError('a3', 'pwd', ACP_DENIED),
+]);
+
+describe('antigravity tool cards over ACP (persisted replay)', () => {
+  test('a completed call shows its transcript, never a status wrapper', () => {
+    const card = findCard(replayToolEvents(ACP_PROBE_TURN), 'a1');
+
+    expect(card.status).toBe('succeeded');
+    expect(card.resultJson).toBe(PWD_OUTPUT);
+    expect(card.resultJson).not.toContain('"status"');
+  });
+
+  test('a completed read with no output says so', () => {
+    const card = findCard(replayToolEvents(ACP_PROBE_TURN), 'a2');
+    const component = render(<ChatToolCall defaultOpen={true} event={card} />);
+
+    expect(card.resultJson).toBeNull();
+    expect(component.getByTestId('ChatToolCall-no-output')).toBeInTheDocument();
+  });
+
+  test('a refused call renders failed with the denial', () => {
+    const card = findCard(replayToolEvents(ACP_PROBE_TURN), 'a3');
+    const component = render(<ChatToolCall defaultOpen={true} event={card} />);
+
+    expect(component.getByText('failed')).toBeInTheDocument();
+    expect(component.getByRole('alert')).toHaveTextContent(ACP_DENIED);
+  });
+});
+
+// --- A permission denial ends the turn silent: the notice explains it ----------
+
+describe('antigravity denied permissions (persisted replay)', () => {
+  test('a stream-json turn with result.denied_actions renders the notice', () => {
+    const turn = persisted([
+      { delta: '', kind: 'session', metadata: { sessionId: 'agy-conv-2' } },
+      toolCall('5', 'call_mcp_tool', { ServerName: 'x', ToolName: 'health' }),
+      toolDone('5', 'call_mcp_tool', null),
+      {
+        delta: '',
+        kind: 'usage',
+        metadata: {
+          deniedActions: ['McpTool'],
+          model: null,
+          usage: { output_tokens: 787 },
+        },
+      },
+    ]);
+    const events = foldPersistedTurnEvents(turn, '');
+    const component = render(<ChatTurnTimeline events={events} />);
+
+    expect(
+      component.getByTestId('ChatDeniedActionsNotice-actions'),
+    ).toHaveTextContent('McpTool.');
   });
 });

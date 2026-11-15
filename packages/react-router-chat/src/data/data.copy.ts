@@ -8,6 +8,12 @@ export const CHAT_USAGE_LIMIT_COPY = {
   resetsPrefix: 'resets',
 } as const;
 
+/** Copy for {@link ChatDeniedActionsNotice}. */
+export const CHAT_DENIED_ACTIONS_COPY = {
+  hint: `The agent may have stopped early. Choose a broader permission mode to let it use these.`,
+  prefix: 'Permission denied:',
+} as const;
+
 /** Tooltip copy for {@link ChatComposerPersistControl}'s Saved ↔ Private switch. */
 export const CHAT_PERSIST_HINT_COPY = {
   private: 'Private — this conversation is not saved',

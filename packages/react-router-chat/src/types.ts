@@ -12,6 +12,7 @@ export type ChatMessageRole = 'assistant' | 'system' | 'user';
  * @public
  */
 export const ChatTurnEventKind = {
+  deniedActions: 'deniedActions',
   session: 'session',
   text: 'text',
   thinking: 'thinking',
@@ -130,6 +131,20 @@ export interface ChatTurnUsageLimitEvent {
   readonly sortOrder: number;
 }
 
+/**
+ * What the turn was refused permission for, as readable labels (agy's
+ * `denied_actions` display names, or the titles of calls the ACP client
+ * refused). There is at most one per turn. A refusal can end a turn with no
+ * answer text, so this is what explains it.
+ *
+ * @public
+ */
+export interface ChatTurnDeniedActionsEvent {
+  readonly actions: readonly string[];
+  readonly kind: 'deniedActions';
+  readonly sortOrder: number;
+}
+
 /** One choice the agent offered for a permission request. @public */
 export interface ChatPermissionOption {
   readonly kind: string;
@@ -181,6 +196,7 @@ export type ChatPermissionResponder = (
  * @public
  */
 export type ChatTurnEvent =
+  | ChatTurnDeniedActionsEvent
   | ChatTurnPermissionEvent
   | ChatTurnSessionEvent
   | ChatTurnTextEvent

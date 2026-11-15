@@ -14,6 +14,7 @@ import { isRecord } from '@openthrottle/nodejs-utils';
 import type {
   ChatPermissionOption,
   ChatPermissionResolution,
+  ChatTurnDeniedActionsEvent,
   ChatTurnEvent,
   ChatTurnPermissionEvent,
   ChatTurnToolEvent,
@@ -123,6 +124,59 @@ export const applyTerminalUsageLimit = (
   }
 
   return applyTurnUsageLimit(events, usageLimit, sortOrder);
+};
+
+/** The readable labels in a `deniedActions` payload, or none. */
+const toDeniedActions = (value: unknown): string[] => {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.filter((entry): entry is string => {
+    return typeof entry === 'string' && entry.trim() !== '';
+  });
+};
+
+/**
+ * Fold a usage payload's `deniedActions` (the server forwards a backend's
+ * terminal metadata as the turn's `usage` chunk) into the turn's SINGLE
+ * `deniedActions` event, merging labels a repeat adds. A payload without
+ * denials is a no-op.
+ *
+ * @public
+ */
+export const applyTurnDeniedActions = (
+  events: readonly ChatTurnEvent[],
+  metadata: Record<string, unknown> | null,
+  sortOrder: number,
+): readonly ChatTurnEvent[] => {
+  const incoming = toDeniedActions(metadata?.deniedActions);
+  if (incoming.length === 0) {
+    return events;
+  }
+
+  const existing = events.find((event) => {
+    return event.kind === 'deniedActions';
+  });
+  const actions = new Set(
+    existing?.kind === 'deniedActions' ? existing.actions : [],
+  );
+  for (const action of incoming) {
+    actions.add(action);
+  }
+  const next: ChatTurnDeniedActionsEvent = {
+    actions: [...actions],
+    kind: 'deniedActions',
+    sortOrder: existing?.sortOrder ?? sortOrder,
+  };
+
+  if (existing === undefined) {
+    return [...events, next];
+  }
+
+  return events.map((event) => {
+    return event.kind === 'deniedActions' ? next : event;
+  });
 };
 
 const toPermissionOptions = (
@@ -885,13 +939,12 @@ export const foldPersistedTurnEvents = (
         );
       } else if (kind === 'usage') {
         usageMetadataJsons.push(metadataJson);
+        const usageMetadata = isRecord(raw.metadata) ? raw.metadata : null;
         // The terminal usage payload of a limited turn carries `usageLimit`;
         // surface it when no `usage_limit` event was persisted (a bare 429).
-        events = applyTerminalUsageLimit(
-          events,
-          isRecord(raw.metadata) ? raw.metadata : null,
-          order,
-        );
+        events = applyTerminalUsageLimit(events, usageMetadata, order);
+        // ...and a turn refused a permission carries `deniedActions`.
+        events = applyTurnDeniedActions(events, usageMetadata, order);
       }
     }
 

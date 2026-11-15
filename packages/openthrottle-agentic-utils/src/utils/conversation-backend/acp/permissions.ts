@@ -94,6 +94,34 @@ export function decideAcpPermission(
   return select(request, 'reject_once');
 }
 
+/** Option kinds that refuse the call. */
+const REFUSING_OPTION_KINDS: ReadonlySet<PermissionOptionKind> = new Set([
+  'reject_always',
+  'reject_once',
+]);
+
+/**
+ * True when `response` refuses the call `request` asked about: a `cancelled`
+ * outcome, or a selected option of a `reject_*` kind.
+ *
+ * @public
+ */
+export function isRefusal(
+  request: RequestPermissionRequest,
+  response: RequestPermissionResponse,
+): boolean {
+  const { outcome } = response;
+  if (outcome.outcome !== 'selected') {
+    return true;
+  }
+
+  const chosen = request.options.find((option) => {
+    return option.optionId === outcome.optionId;
+  });
+
+  return chosen !== undefined && REFUSING_OPTION_KINDS.has(chosen.kind);
+}
+
 const CANCELLED: RequestPermissionResponse = {
   outcome: { outcome: 'cancelled' },
 };

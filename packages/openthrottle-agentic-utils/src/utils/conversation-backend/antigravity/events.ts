@@ -29,7 +29,10 @@
 import { isRecord } from '@openthrottle/nodejs-utils';
 
 import type { ConversationStreamChunk } from '../types.ts';
-import { CONVERSATION_STREAM_CHUNK_KINDS } from '../types.ts';
+import {
+  CONVERSATION_DENIED_ACTIONS_KEY,
+  CONVERSATION_STREAM_CHUNK_KINDS,
+} from '../types.ts';
 
 /** Terminal step states: the step is finished, successfully or not. */
 const TERMINAL_STEP_STATES = new Set(['DONE', 'ERROR']);
@@ -50,6 +53,30 @@ const toolArgumentsOf = (toolInfo: unknown): unknown => {
   }
 
   return toolInfo ?? null;
+};
+
+/**
+ * Labels for `result.denied_actions`, the permissions agy refused in headless mode
+ * (`[{ action: 'mcp', display_name: 'McpTool' }]` on 1.5.9): each entry's `display_name`, else its
+ * `action`, deduplicated. A denial ends the turn with no answer text, so these are what the chat
+ * shows to explain it — see {@link CONVERSATION_DENIED_ACTIONS_KEY}.
+ */
+const deniedActionsOf = (value: unknown): string[] => {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  const labels = new Set<string>();
+  for (const entry of value) {
+    const label = isRecord(entry)
+      ? (asString(entry.display_name) ?? asString(entry.action))
+      : asString(entry);
+    if (label !== undefined && label.trim() !== '') {
+      labels.add(label);
+    }
+  }
+
+  return [...labels];
 };
 
 /** Shown when an ERROR step carries no message of its own. */
@@ -232,6 +259,15 @@ export function createAntigravityEventMapper(): (
     if (name === 'result' && isRecord(payload)) {
       const failed = asString(payload.status) !== 'SUCCESS';
       const errorMessage = asString(payload.error);
+      const deniedActions = deniedActionsOf(payload.denied_actions);
+      const usageMetadata = {
+        model: model ?? null,
+        usage: payload.usage ?? null,
+      };
+      const hasDenials = deniedActions.length > 0;
+      const metadata = hasDenials
+        ? { ...usageMetadata, [CONVERSATION_DENIED_ACTIONS_KEY]: deniedActions }
+        : usageMetadata;
 
       return [
         {
@@ -241,7 +277,7 @@ export function createAntigravityEventMapper(): (
             ? (errorMessage ?? 'antigravity reported an error')
             : null,
           kind: CONVERSATION_STREAM_CHUNK_KINDS.usage,
-          metadata: { model: model ?? null, usage: payload.usage ?? null },
+          metadata,
         },
       ];
     }

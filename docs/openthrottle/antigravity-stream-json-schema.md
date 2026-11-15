@@ -301,6 +301,32 @@ That run emits no `agent_response` step after the tools and no `text_delta` anyw
 something the mapper dropped. Most of `output_tokens` there is `thinking_tokens`. `denied_actions` appears only when
 something was denied.
 
+## 3d. The same tool steps over `agy acp` (chat's default path)
+
+`.env.default` sets `OPENTHROTTLE_CHAT_ACP_BACKENDS="all"`, so antigravity chat runs over `agy acp`
+and the stream-json mapper above never sees it. The ACP mapper
+(`conversation-backend/acp/events.ts`) does. agy 1.5.9 on 2026-11-15, running the 4-call parallel
+probe (pwd, read `package.json`, an MCP call, a read of a missing file):
+
+- **Tool steps are standard `tool_call` / `tool_call_update` updates**, plus agy-only `name` (the
+  tool, e.g. `run_command`) and `args` fields. `title` is a label (`pwd`, `File package.json`), and
+  it is what the card shows as the tool name.
+- **A completed shell step** carries its transcript twice: as `content[0].content.text` and as
+  `rawOutput.output`, next to `rawOutput.exit_code`. **A completed read carries no output at all.**
+  The card gets the transcript alone, or `null` ("No output reported.").
+- **A failed step carries no reason.** A missing file is `status: "failed"` with no content and no
+  `rawOutput`. The agent's answer text names the real error (`file does not exist`), but the update
+  does not. The card falls back to a generic failure.
+- **A refused permission** (`session/request_permission` answered `reject_once`, the no-mode
+  default for a shell command) comes back `failed` with an empty content text and
+  `rawOutput: { output: "" }`. The client remembers the calls it refused, and their cards say
+  "Permission denied". After one refusal agy fails the rest of the parallel batch unrun and ends
+  the turn `end_turn` **with no answer text**. That is the same silent turn the stream-json path
+  shows for `result.denied_actions`.
+- **No plugin MCP servers.** Under ACP agy exposes only the servers `session/new` hands it, not its
+  own `openthrottle_openthrottle-mcp` plugin server. An MCP call the server did not inject never
+  reaches a tool step. The model reports the tool as unavailable.
+
 ## 4. Driver capabilities
 
 The headless surface is well specified: `-p` with `--output-format stream-json`, optional
@@ -346,6 +372,43 @@ standing argument for keeping a live gate in every driver change:
    honored.
 
 A third: `agy models` is tab-separated, so a "bare id per line" parser returns zero models (see §3b).
+
+### A silent start ends "interrupted" with 0 tokens (agy 1.5.9, 2026-11-15)
+
+Conversation 54a41391 (2026-11-14, the server-spawned stream-json path) ended with a terminal
+`usage` of all zeros and no tool steps. agy's own log (`~/.gemini/antigravity-cli/log/cli-*.log`)
+explains it:
+
+1. agy authenticated, created the conversation and forwarded the prompt. Then it **held the first
+   model call until its workspace-plugin MCP servers connected**. `openthrottle_github` and
+   `openthrottle_shadcn`, both `npx` launches, were still `connecting` at 30s, 1m, 1m30s and 2m.
+   agy writes nothing to stdout while it waits.
+2. At 120s the adapter's idle timer (`OPENTHROTTLE_AGENT_IDLE_TIMEOUT_MS`, default 120000) sent
+   SIGTERM.
+3. A SIGTERMed agy still writes a terminal event:
+
+   ```json
+   {
+     "status": "ERROR",
+     "error": "interrupted",
+     "finished_reason": "interrupted",
+     "num_turns": 0,
+     "response": "",
+     "usage": { "input_tokens": 0, "output_tokens": 0, "total_tokens": 0 }
+   }
+   ```
+
+   The adapter treated that as agy's own failure, so the turn read "interrupted" and the idle stop
+   was lost. Now, when the adapter stopped agy, its own reason wins. An idle stop says agy produced
+   no output and names a slow MCP server start as the usual cause.
+
+A thinking-heavy turn gets close to the timeout as well. The 4-call probe has spent up to 90s with
+no stdout before its first tool step, because agy streams no thinking events.
+
+**A denied MCP call can come back DONE.** Under the server's scrubbed env, the same probe reported
+`call_mcp_tool` as `state: DONE` with no output and no error, and only `result.denied_actions`
+recorded the denial. From an interactive shell it was `ERROR` with the permission message. The
+card can only show what the step says, so the turn-level `denied_actions` is the reliable signal.
 
 ## 6. How to reproduce
 
