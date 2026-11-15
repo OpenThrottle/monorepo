@@ -52,10 +52,10 @@ describe('CodeIndexProcessor', () => {
     ).rejects.toThrow('requires both repositoryId and userId');
   });
 
-  it('throws when no embeddings provider is configured', async () => {
+  it('throws when the embedder is unavailable', async () => {
     vi.mocked(codeSearch.isProviderConfigured).mockReturnValue(false);
     await expect(processor.process(buildJob())).rejects.toThrow(
-      'No embeddings provider configured',
+      'The embedder is unavailable',
     );
   });
 

@@ -46,6 +46,9 @@ function setup(options: {
   readonly enqueue: ReturnType<
     typeof vi.fn<EmbeddingsProducerService['enqueue']>
   >;
+  readonly enqueueCodeChunks: ReturnType<
+    typeof vi.fn<EmbeddingsProducerService['enqueueCodeChunks']>
+  >;
   readonly processor: EmbeddingsReconcileProcessor;
   readonly query: ReturnType<
     typeof vi.fn<(sql: string, params?: unknown[]) => Promise<unknown>>
@@ -61,12 +64,20 @@ function setup(options: {
       return Promise.resolve([[], 0]);
     }
 
-    const table = /LEFT JOIN (\w+) e/.exec(sql)?.[1] ?? '';
+    const table =
+      /LEFT JOIN (\w+) e/.exec(sql)?.[1] ??
+      /FROM (code_embeddings) c/.exec(sql)?.[1] ??
+      '';
 
     return Promise.resolve(remaining.get(table)?.shift() ?? []);
   });
   const enqueue = vi.fn<EmbeddingsProducerService['enqueue']>((items) => {
     return Promise.resolve(items.length);
+  });
+  const enqueueCodeChunks = vi.fn<
+    EmbeddingsProducerService['enqueueCodeChunks']
+  >(() => {
+    return Promise.resolve(1);
   });
   const processor = new EmbeddingsReconcileProcessor(
     createMock<LoggerService>(),
@@ -78,11 +89,11 @@ function setup(options: {
         return status(options.state);
       },
     }),
-    createMock<EmbeddingsProducerService>({ enqueue }),
+    createMock<EmbeddingsProducerService>({ enqueue, enqueueCodeChunks }),
     createMock<DataSource>({ query }),
   );
 
-  return { enqueue, processor, query };
+  return { enqueue, enqueueCodeChunks, processor, query };
 }
 
 const JOB = createMock<EmbeddingsReconcileJob>({ id: 'reconcile-1' });
@@ -153,6 +164,41 @@ describe('EmbeddingsReconcileProcessor', () => {
         '00000000-0000-0000-0000-000000000000',
         2,
       ]);
+    });
+  });
+
+  describe('when code chunks are stale', () => {
+    test('enqueues one job per page, walking text ids from the empty string', async () => {
+      const chunk = (id: string): { id: string } => {
+        return { id };
+      };
+      const { enqueueCodeChunks, processor, query } = setup({
+        configured: true,
+        pages: {
+          code_embeddings: [[chunk('aa'), chunk('bb')], [chunk('cc')]],
+        },
+        state: 'ok',
+      });
+
+      const summary = await processor.process(JOB);
+
+      expect(summary).toMatchObject({
+        code: { enqueued: 3, pruned: 0 },
+        skipped: false,
+      });
+      expect(enqueueCodeChunks.mock.calls).toEqual([[['aa', 'bb']], [['cc']]]);
+
+      const codeQueries = query.mock.calls.filter((call) => {
+        return call[0].includes('FROM code_embeddings c');
+      });
+
+      expect(codeQueries.map((call) => call[1]?.[3])).toEqual(['', 'bb']);
+      // Code chunks are never pruned by the reconciler.
+      expect(
+        query.mock.calls.some((call) => {
+          return call[0].includes('DELETE FROM code_embeddings');
+        }),
+      ).toBe(false);
     });
   });
 

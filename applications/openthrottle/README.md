@@ -36,7 +36,7 @@ Machine tools use the container's `ot_sa` token automatically; the `agent_conver
 OpenThrottle can run **entirely locally** with Open Source models and software—no required SaaS or proprietary APIs for core flows.
 
 - **Local / OSS stack:** Postgres (with pgvector), Redis, Node, and the OpenThrottle server, developer app, and MCP (OpenThrottle/openthrottle-mcp) are all OSS and run on your machine or your infra.
-- **Embeddings (semantic search, plans knowledge base):** For **local-only** use set **Ollama** (`OLLAMA_BASE_URL`, optional `OLLAMA_EMBEDDING_MODEL`). The MCP and OpenThrottle ingest then use Ollama for embeddings; no API key required. See root `.env.default`, `databases/openthrottle/README.md` (embedding dimension strategy), and `docs/monorepo/Ollama.md`.
+- **Embeddings (semantic search, plans knowledge base):** For **local-only** use set **Ollama** (`EMBEDDING_PROVIDER=ollama` + `OLLAMA_BASE_URL`). The MCP and OpenThrottle ingest then use Ollama for embeddings; no API key required. See root `.env.default`, `databases/openthrottle/README.md` (embedding dimension strategy), and `docs/monorepo/Ollama.md`.
 - **Optional — OpenAI:** If you prefer cloud embeddings, set `OPENAI_API_KEY` and leave Ollama unset; the stack uses OpenAI (e.g. `text-embedding-3-small`) for embeddings. Not required for local-only.
 
 Details and copy for website or docs: `docs/openthrottle/features.md` § Runs entirely locally on Open Source.

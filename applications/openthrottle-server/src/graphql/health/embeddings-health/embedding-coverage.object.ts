@@ -10,7 +10,7 @@ export class EmbeddingCoverageObject {
   embedded!: number;
 
   @Field(() => String, {
-    description: `Entity: plan | task | documentation | custom_prompt.`,
+    description: `Entity: plan | task | documentation | custom_prompt | code.`,
   })
   entity!: string;
 

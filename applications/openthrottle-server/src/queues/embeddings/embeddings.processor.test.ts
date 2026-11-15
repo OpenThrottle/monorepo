@@ -11,7 +11,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { EmbedderService } from '../../services/embedder/embedder.service.ts';
 import { EmbeddingsProcessor } from './embeddings.processor.ts';
-import type { EmbedEntityJob } from './embeddings.types.ts';
+import type { EmbeddingsJob, EmbedEntityJob } from './embeddings.types.ts';
 import { sha256Hex } from './embeddings.utils.ts';
 
 const configResult = resolveEmbeddingConfig({});
@@ -221,5 +221,128 @@ describe('EmbeddingsProcessor', () => {
       );
       expect(current.moveToDelayed).not.toHaveBeenCalled();
     });
+  });
+});
+
+describe('EmbeddingsProcessor code chunks', () => {
+  const CHUNK = 'export const answer = 42;';
+  const CHUNK_HASH = sha256Hex(
+    prepareEmbeddingInput(CONFIG, CHUNK, 'document'),
+  );
+
+  interface ChunkRow {
+    readonly content: string;
+    readonly content_hash: string;
+    readonly embedding_model: string | null;
+    readonly has_embedding: boolean;
+    readonly id: string;
+  }
+
+  function codeHarness(rows: readonly ChunkRow[]): Harness {
+    const query = vi.fn((sql: string) => {
+      return Promise.resolve(sql.startsWith('SELECT id, content') ? rows : []);
+    });
+    const embed = vi.fn<() => Promise<EmbedResult>>(() => {
+      return Promise.resolve({
+        dims: 768,
+        model: CONFIG.model,
+        ok: true,
+        vectors: [VECTOR],
+      });
+    });
+    const processor = new EmbeddingsProcessor(
+      createMock<LoggerService>(),
+      createMock<EmbedderService>({
+        embed,
+        getConfig: () => {
+          return CONFIG;
+        },
+      }),
+      createMock<DataSource>({ query }),
+    );
+
+    return { embed, processor, query };
+  }
+
+  function codeJob(): EmbeddingsJob {
+    return createMock<EmbeddingsJob>({
+      data: { entity: 'code', ids: ['chunk-a', 'chunk-b'] },
+      id: 'code.chunk-a',
+    });
+  }
+
+  test('re-embeds only the stale rows and updates them in place', async () => {
+    const { embed, processor, query } = codeHarness([
+      {
+        content: CHUNK,
+        content_hash: 'old-unprefixed-hash',
+        embedding_model: null,
+        has_embedding: false,
+        id: 'chunk-a',
+      },
+      {
+        content: CHUNK,
+        content_hash: CHUNK_HASH,
+        embedding_model: CONFIG.model,
+        has_embedding: true,
+        id: 'chunk-b',
+      },
+    ]);
+
+    await expect(processor.process(codeJob(), 'token')).resolves.toEqual({
+      outcome: 'embedded',
+    });
+    expect(embed).toHaveBeenCalledWith([CHUNK], 'document');
+
+    const update = query.mock.calls.find((call) => {
+      return call[0].includes('UPDATE code_embeddings');
+    });
+
+    expect(update?.[1]).toEqual([
+      ['chunk-a'],
+      [`[${VECTOR.join(',')}]`],
+      [CHUNK_HASH],
+      CONFIG.model,
+      768,
+    ]);
+  });
+
+  test('skips the embedder when every row is current', async () => {
+    const { embed, processor } = codeHarness([
+      {
+        content: CHUNK,
+        content_hash: CHUNK_HASH,
+        embedding_model: CONFIG.model,
+        has_embedding: true,
+        id: 'chunk-a',
+      },
+    ]);
+
+    await expect(processor.process(codeJob(), 'token')).resolves.toEqual({
+      outcome: 'unchanged',
+    });
+    expect(embed).not.toHaveBeenCalled();
+  });
+
+  test('throws on a provider error so BullMQ retries', async () => {
+    const { embed, processor } = codeHarness([
+      {
+        content: CHUNK,
+        content_hash: 'x',
+        embedding_model: null,
+        has_embedding: false,
+        id: 'chunk-a',
+      },
+    ]);
+
+    embed.mockResolvedValue({
+      detail: 'worker crashed',
+      ok: false,
+      reason: 'provider_error',
+    });
+
+    await expect(processor.process(codeJob(), 'token')).rejects.toThrow(
+      /code chunk\(s\) failed: worker crashed/u,
+    );
   });
 });

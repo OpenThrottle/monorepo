@@ -16,6 +16,21 @@ export interface EmbedEntityJobData {
 export type EmbedEntityJob = Job<EmbedEntityJobData>;
 
 /**
+ * @description Re-embed code chunks in place (OT plan e489d73d). A code chunk's text lives in
+ * its own `code_embeddings` row, so the job carries the row ids and the processor embeds each
+ * row's `content`. The code-index queue still decides which chunks exist.
+ */
+export interface EmbedCodeChunksJobData {
+  readonly entity: 'code';
+  readonly ids: readonly string[];
+}
+
+/** @description Everything the embeddings queue carries. */
+export type EmbeddingsJobData = EmbedCodeChunksJobData | EmbedEntityJobData;
+
+export type EmbeddingsJob = Job<EmbeddingsJobData>;
+
+/**
  * @description What a job did: wrote a vector, found the stored one current, found nothing to
  * embed (row gone, soft-deleted or empty — any stale vector is removed), or re-delayed itself
  * because the embedder is unconfigured.

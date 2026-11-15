@@ -1,16 +1,31 @@
 import { createMock } from '@golevelup/ts-vitest';
+import type { EmbeddingConfig } from '@openthrottle/node-client';
+import { resolveEmbeddingConfig } from '@openthrottle/node-client';
 import type { StoredChunk } from '@openthrottle/openthrottle-ide';
 import { hashContent } from '@openthrottle/openthrottle-ide';
 import type { DataSource } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { CodeEmbedder } from '../code-embedder/code-embedder.types.ts';
 import { CodeVectorStore } from './code-vector-store.service.ts';
 
 const WORKSPACE = '/Users/dev/repo';
 
-/** A well-formed 1536-dim embedding (matches the code_embeddings column width). */
+function defaultConfig(): EmbeddingConfig {
+  const resolved = resolveEmbeddingConfig({});
+
+  if (!resolved.ok) {
+    throw new Error(resolved.detail);
+  }
+
+  return resolved.config;
+}
+
+const CONFIG = defaultConfig();
+
+/** A well-formed 768-dim embedding (matches the code_embeddings column width). */
 function buildEmbedding(): number[] {
-  return Array.from({ length: 1536 }, (_unused, i) => i / 1536);
+  return Array.from({ length: 768 }, (_unused, i) => i / 768);
 }
 
 function buildStoredChunk(
@@ -25,12 +40,13 @@ function buildStoredChunk(
       startLine: 1,
       ...overrides,
     },
-    embedding: Array.from({ length: 1536 }, (_unused, i) => i / 1536),
+    embedding: Array.from({ length: 768 }, (_unused, i) => i / 768),
   };
 }
 
 describe('CodeVectorStore', () => {
   let dataSource: DataSource;
+  let embedder: CodeEmbedder;
   let store: CodeVectorStore;
 
   function queryMock(): ReturnType<typeof vi.mocked<DataSource['query']>> {
@@ -40,7 +56,9 @@ describe('CodeVectorStore', () => {
   beforeEach(() => {
     dataSource = createMock<DataSource>();
     queryMock().mockResolvedValue([]);
-    store = new CodeVectorStore(dataSource);
+    embedder = createMock<CodeEmbedder>();
+    vi.mocked(embedder.getConfig).mockReturnValue(CONFIG);
+    store = new CodeVectorStore(dataSource, embedder);
   });
 
   describe('clear', () => {
@@ -115,7 +133,15 @@ describe('CodeVectorStore', () => {
       const params = call?.[1] ?? [];
       expect(sql).toContain('1 - (embedding <=> $1::vector) AS similarity');
       expect(sql).toContain('ORDER BY embedding <=> $1::vector');
-      expect(params).toEqual([`[${embedding.join(',')}]`, WORKSPACE, 5]);
+      // Only vectors from the configured model are comparable.
+      expect(sql).toContain('embedding IS NOT NULL');
+      expect(sql).toContain('embedding_model = $4');
+      expect(params).toEqual([
+        `[${embedding.join(',')}]`,
+        WORKSPACE,
+        5,
+        'nomic-embed-text-v1.5',
+      ]);
 
       expect(matches).toEqual([
         {
@@ -133,7 +159,7 @@ describe('CodeVectorStore', () => {
 
     it('rejects an embedding whose width differs from the column (no query)', async () => {
       await expect(store.query(WORKSPACE, [0.1, 0.2, 0.3], 5)).rejects.toThrow(
-        /3 dimensions.*1536/u,
+        /3 dimensions.*768/u,
       );
       expect(queryMock()).not.toHaveBeenCalled();
     });
@@ -163,7 +189,15 @@ describe('CodeVectorStore', () => {
       expect(queryMock()).not.toHaveBeenCalled();
     });
 
-    it('emits an ON CONFLICT (id) upsert with a ::vector cast and computed content_hash', async () => {
+    it('throws when the embedder has no config (nothing could have been embedded)', async () => {
+      vi.mocked(embedder.getConfig).mockReturnValue(undefined);
+      await expect(
+        store.upsert(WORKSPACE, [buildStoredChunk()]),
+      ).rejects.toThrow(/not configured/u);
+      expect(queryMock()).not.toHaveBeenCalled();
+    });
+
+    it('emits an ON CONFLICT (id) upsert with a ::vector cast and provenance columns', async () => {
       const record = buildStoredChunk();
       await store.upsert(WORKSPACE, [record]);
 
@@ -173,19 +207,25 @@ describe('CodeVectorStore', () => {
       expect(sql).toContain('INSERT INTO code_embeddings');
       expect(sql).toContain('ON CONFLICT (id) DO UPDATE SET');
       expect(sql).toContain('$8::vector');
-      // 8 columns for one record.
-      expect(params).toHaveLength(8);
+      // 10 columns for one record.
+      expect(params).toHaveLength(10);
       expect(params[0]).toBe('chunk-1');
       expect(params[1]).toBe(WORKSPACE);
-      expect(params[6]).toBe(hashContent(record.chunk.content));
+      expect(sql).toContain('embedding_model = EXCLUDED.embedding_model');
+      // content_hash covers the exact embedded text: the document prefix + content.
+      expect(params[6]).toBe(
+        hashContent(`search_document: ${record.chunk.content}`),
+      );
       expect(params[7]).toBe(`[${record.embedding.join(',')}]`);
+      expect(params[8]).toBe('nomic-embed-text-v1.5');
+      expect(params[9]).toBe(768);
     });
 
     it('rejects a record whose embedding width differs from the column (no insert)', async () => {
       const record = buildStoredChunk();
       const malformed: StoredChunk = { ...record, embedding: [0.1, 0.2, 0.3] };
       await expect(store.upsert(WORKSPACE, [malformed])).rejects.toThrow(
-        /3 dimensions.*1536/u,
+        /3 dimensions.*768/u,
       );
       expect(queryMock()).not.toHaveBeenCalled();
     });
@@ -209,8 +249,8 @@ describe('CodeVectorStore', () => {
 
       // 250 records with a 200-row batch size => 2 INSERT statements.
       expect(queryMock()).toHaveBeenCalledTimes(2);
-      expect(queryMock().mock.calls[0]?.[1]).toHaveLength(200 * 8);
-      expect(queryMock().mock.calls[1]?.[1]).toHaveLength(50 * 8);
+      expect(queryMock().mock.calls[0]?.[1]).toHaveLength(200 * 10);
+      expect(queryMock().mock.calls[1]?.[1]).toHaveLength(50 * 10);
     });
   });
 });

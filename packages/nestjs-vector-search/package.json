@@ -11,6 +11,7 @@
     "@nestjs/common": "catalog:",
     "@nestjs/typeorm": "catalog:",
     "@openthrottle/nestjs-modules": "workspace:^",
+    "@openthrottle/node-client": "workspace:^",
     "@openthrottle/openthrottle-ide": "workspace:^",
     "typeorm": "catalog:"
   },

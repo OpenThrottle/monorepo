@@ -1687,7 +1687,7 @@ export type EmbeddingCoverageObject = {
   __typename?: 'EmbeddingCoverageObject';
   /** Rows with an up-to-date vector (configured model, current text). */
   embedded: Scalars['Int']['output'];
-  /** Entity: plan | task | documentation | custom_prompt. */
+  /** Entity: plan | task | documentation | custom_prompt | code. */
   entity: Scalars['String']['output'];
   /** Rows whose vector is from another model or from text that has since changed; the reconciler re-embeds them. */
   stale: Scalars['Int']['output'];

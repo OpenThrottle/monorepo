@@ -11,7 +11,7 @@ export default [
    *
    * `@openthrottle/openthrottle-ide` is a source-first, server-only Node library:
    * its `package.json` `main`/`module` point at `./src/index.ts` and it exports
-   * runtime values (`searchText`, `chunkFile`, `createEmbeddingsProvider`, …) that
+   * runtime values (`searchText`, `chunkFile`, `indexWorkspace`, …) that
    * pull Node-only deps (`@vscode/ripgrep`, `chokidar`, `ts-morph`). This package is
    * presentational and client-safe, so it may import the engine's TYPES only —
    * a value import would drag those Node deps into the client bundle.

@@ -16,6 +16,14 @@ export const EMBEDDABLE_ENTITIES = [
 
 export const EMBED_ENTITY_JOB_NAME = 'embed-entity';
 
+export const EMBED_CODE_CHUNKS_JOB_NAME = 'embed-code-chunks';
+
+/**
+ * @description The code chunk table. Unlike the four entity tables it has no source table: each
+ * row carries its own text in `content` and is re-embedded from it (OT plan e489d73d).
+ */
+export const CODE_EMBEDDINGS_TABLE = 'code_embeddings';
+
 /** @description Attempts for a provider error, with exponential backoff from the delay below. */
 export const EMBED_ENTITY_JOB_ATTEMPTS = 8;
 

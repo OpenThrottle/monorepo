@@ -6,7 +6,9 @@ import { vectorTransformer } from '../../vector-transformer/vector-transformer.c
  * @description TypeORM entity for the code_embeddings table (databases/openthrottle/migrations 052). Backs the
  * `@openthrottle/openthrottle-ide` engine's pgvector `VectorStore`. Unlike plan/task embeddings this
  * has no FK/metadata: the `id` is a content-derived chunk id (hashContent(path + content)) and the
- * store is scoped by `workspaceRoot`. Uses pgvector vector(1536).
+ * store is scoped by `workspaceRoot`. Uses pgvector vector(768) (nomic-embed-text-v1.5, migration 164) with the
+ * same provenance columns as the other embedding tables; `embedding` is NULL until the server's embedder
+ * has embedded the chunk.
  */
 @Entity('code_embeddings')
 export class CodeEmbedding {
@@ -17,7 +19,7 @@ export class CodeEmbedding {
   @Column({ name: 'content', type: 'text' })
   content!: string;
 
-  /** sha256 of the chunk content; lets the engine detect changed chunks. */
+  /** sha256 hex of the exact text embedded (document prefix + content, capped). */
   @Column({ name: 'content_hash', type: 'text' })
   contentHash!: string;
 
@@ -26,10 +28,19 @@ export class CodeEmbedding {
 
   @Column({
     name: 'embedding',
+    nullable: true,
     transformer: vectorTransformer,
     type: 'vector',
   })
-  embedding!: number[];
+  embedding!: number[] | null;
+
+  /** Dimension of `embedding` as returned by the model; NULL until embedded. */
+  @Column({ name: 'embedding_dims', nullable: true, type: 'integer' })
+  embeddingDims!: number | null;
+
+  /** Model that produced `embedding`; NULL or another model means the row is stale. */
+  @Column({ name: 'embedding_model', nullable: true, type: 'text' })
+  embeddingModel!: string | null;
 
   /** 1-based inclusive last line of the chunk. */
   @Column({ name: 'end_line', type: 'integer' })

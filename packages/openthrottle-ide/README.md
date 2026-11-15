@@ -9,15 +9,15 @@ Headless code-intelligence engine for an IDE-like, agent-driven web experience. 
   - **workspace + text search**: `listFiles` / `hashWorkspace` (gitignore-aware enumeration + per-file fingerprints for incremental re-indexing) and `searchText` (structured ripgrep matches with path/line/column).
   - **symbols (`ts-morph`)**: `loadProject` plus `listExports`, `findDefinition`, and `findReferences` — the LSP-grade tier that lets agents reason about code structure (definitions, references, exports) rather than just text.
   - **watch + incremental sync**: `watchWorkspace` (debounced, gitignore-aware `add`/`change`/`unlink` events), `diffSnapshots` (pure `{ added, changed, removed }` delta over two `hashWorkspace` snapshots), and `createWorkspaceIndex` (a live in-memory snapshot that re-hashes only what changed and emits deltas to subscribers) — the Merkle-style tier so downstream layers only re-process files that actually moved.
-  - **semantic search (pgvector)**: `chunkFile` / `chunkWorkspace` (AST-aware chunks for TS/JS, line-window fallback otherwise, with stable content-derived ids), `createEmbeddingsProvider` (the `EmbeddingsProvider` seam — pass an explicit, fully-resolved `EmbeddingsConfig` selecting OpenAI or Ollama), `indexWorkspace` (chunk → embed → upsert, full or incremental via a `diffSnapshots` delta), and `semanticSearch` (top-k vector similarity) — natural-language code search over the existing embeddings + pgvector infrastructure.
+  - **semantic search (pgvector)**: `chunkFile` / `chunkWorkspace` (AST-aware chunks for TS/JS, line-window fallback otherwise, with stable content-derived ids), the injected `EmbeddingsProvider` seam (the engine ships no embedder of its own), `indexWorkspace` (chunk → embed → upsert, full or incremental via a `diffSnapshots` delta), and `semanticSearch` (top-k vector similarity) — natural-language code search over the existing embeddings + pgvector infrastructure.
 - **`utils/`** — `runRipgrep` (the bundled `@vscode/ripgrep` binary) and `hashContent` / `hashFile`.
 
 ### Semantic layer: storage & provider boundary
 
 The semantic tier reuses OpenThrottle's existing infrastructure rather than standing up a new store:
 
-- **Embeddings provider** — `createEmbeddingsProvider(config)` takes a fully-resolved `EmbeddingsConfig` discriminated union and selects the provider explicitly by `config.kind` (`'openai'` for `text-embedding-3-small`, 1536-dim, or `'ollama'`). This module **never reads `process.env`**: config resolution (env, DB, defaults, precedence) is owned by the caller, so this leaf stays a pure function of its input. The returned provider implements the `EmbeddingsProvider` interface, which is **injectable** — pass any `{ embed(texts) => number[][] }` (e.g. a mock in tests).
-- **Vector storage** — code-chunk vectors live in a dedicated pgvector table (`code_embeddings`: content-derived chunk id, `workspace_root`, `path`, line range, `content`, `content_hash`, `vector(1536)`), keyed by chunk id for idempotent incremental upserts. The migration is delivered in its own PR.
+- **Embeddings provider** — the engine embeds nothing itself: callers inject an `EmbeddingsProvider` (`{ embed(texts) => Promise<number[][]> }`). In OpenThrottle that is the server's single embedder (nomic-embed-text-v1.5, 768 dims, via `@openthrottle/node-client`), adapted by `@openthrottle/nestjs-vector-search`; tests pass a mock.
+- **Vector storage** — code-chunk vectors live in a dedicated pgvector table (`code_embeddings`: content-derived chunk id, `workspace_root`, `path`, line range, `content`, `content_hash`, `vector(768)` plus `embedding_model`/`embedding_dims` provenance), keyed by chunk id for idempotent incremental upserts. See migrations 052 and 164.
 - **Boundary** — this engine owns the `VectorStore` interface and ships a pgvector-backed implementation that talks to Postgres **directly** (not through `openthrottle-server` GraphQL, which is plan/task/doc-shaped, and not through `openthrottle-mcp`, which stays GraphQL-only). `VectorStore` is injectable, so `indexWorkspace` / `semanticSearch` run against an in-memory store in tests with no live model or database.
 
 ## Threat model: path containment
@@ -151,24 +151,15 @@ tests. Chunk ids are content-derived, so incremental re-indexing (driven by a
 
 ```ts
 import {
-  createEmbeddingsProvider,
-  DEFAULT_OPENAI_BASE_URL,
-  DEFAULT_OPENAI_EMBEDDING_MODEL,
+  type EmbeddingsProvider,
   indexWorkspace,
   semanticSearch,
   type VectorStore,
 } from '@openthrottle/openthrottle-ide';
 
 const config = { root: '/path/to/repo' };
-// Provider selection is explicit — pass a fully-resolved EmbeddingsConfig.
-// The caller owns config resolution (env, DB, defaults); this never reads process.env.
-const provider = createEmbeddingsProvider({
-  apiKey: process.env.OPENAI_API_KEY,
-  baseUrl: DEFAULT_OPENAI_BASE_URL,
-  kind: 'openai',
-  model: DEFAULT_OPENAI_EMBEDDING_MODEL,
-});
-// …or Ollama: createEmbeddingsProvider({ baseUrl, kind: 'ollama', model }).
+// The caller owns embedding: any { embed(texts) => Promise<number[][]> } will do.
+const provider: EmbeddingsProvider = myEmbedder;
 const store: VectorStore = /* pgvector-backed implementation */ myStore;
 
 // Full index: clear + chunk + embed + upsert every tracked file.

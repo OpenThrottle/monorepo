@@ -1,11 +1,9 @@
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import type {
-  EmbeddingsConfig,
-  WorkspaceFileHash,
-} from '@openthrottle/openthrottle-ide';
+import type { EmbeddingConfig } from '@openthrottle/node-client';
+import { resolveEmbeddingConfig } from '@openthrottle/node-client';
+import type { WorkspaceFileHash } from '@openthrottle/openthrottle-ide';
 import {
-  createEmbeddingsProvider,
   diffSnapshots,
   hashWorkspace,
   indexWorkspace,
@@ -13,7 +11,10 @@ import {
 } from '@openthrottle/openthrottle-ide';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { AppConfigService } from '../app-config/app-config.service.ts';
+import type {
+  CodeEmbedder,
+  CodeEmbedderState,
+} from '../code-embedder/code-embedder.types.ts';
 import type { CodeSnapshotStore } from '../code-snapshot-store/code-snapshot-store.service.ts';
 import type { CodeVectorStore } from '../code-vector-store/code-vector-store.service.ts';
 import { CodeSearchService } from './code-search.service.ts';
@@ -23,7 +24,6 @@ vi.mock('@openthrottle/openthrottle-ide', async (importActual) => {
     await importActual<typeof import('@openthrottle/openthrottle-ide')>();
   return {
     ...actual,
-    createEmbeddingsProvider: vi.fn(),
     diffSnapshots: vi.fn(),
     hashWorkspace: vi.fn(),
     indexWorkspace: vi.fn(),
@@ -42,37 +42,40 @@ const PRIOR_SNAPSHOT: WorkspaceFileHash[] = [
 
 const WORKSPACE = '/Users/dev/repo';
 
-/**
- * The service wraps the resolved provider in a dimension guard before handing it to the engine, so
- * the engine receives a delegating wrapper rather than the bare mock. Assert structural shape, not
- * object identity.
- */
-const GUARDED_PROVIDER = { embed: expect.any(Function) };
+/** The service hands the engine an adapter over the embedder; assert its shape, not identity. */
+const ADAPTED_PROVIDER = { embed: expect.any(Function) };
 
-const OPENAI_CONFIG: EmbeddingsConfig = {
-  apiKey: 'sk-test',
-  baseUrl: 'https://api.openai.com/v1',
-  kind: 'openai',
-  model: 'text-embedding-3-small',
-};
+function defaultConfig(): EmbeddingConfig {
+  const resolved = resolveEmbeddingConfig({});
+
+  if (!resolved.ok) {
+    throw new Error(resolved.detail);
+  }
+
+  return resolved.config;
+}
+
+const CONFIG = defaultConfig();
 
 describe('CodeSearchService', () => {
-  let appConfig: AppConfigService;
+  let embedder: CodeEmbedder;
   let store: CodeVectorStore;
   let snapshotStore: CodeSnapshotStore;
   let service: CodeSearchService;
-  const provider = { embed: vi.fn() };
+
+  const setState = (state: CodeEmbedderState): void => {
+    vi.mocked(embedder.getStatus).mockReturnValue({ detail: null, state });
+  };
 
   beforeEach(() => {
-    vi.mocked(createEmbeddingsProvider).mockReturnValue(provider);
     vi.mocked(hashWorkspace).mockResolvedValue(NEXT_SNAPSHOT);
-    appConfig = createMock<AppConfigService>();
-    vi.mocked(appConfig.getEmbeddingsConfig).mockReturnValue(OPENAI_CONFIG);
-    vi.mocked(appConfig.isEmbeddingsConfigured).mockReturnValue(true);
+    embedder = createMock<CodeEmbedder>();
+    vi.mocked(embedder.getConfig).mockReturnValue(CONFIG);
+    setState('ok');
     store = createMock<CodeVectorStore>();
     snapshotStore = createMock<CodeSnapshotStore>();
     service = new CodeSearchService(
-      appConfig,
+      embedder,
       createMock<LoggerService>(),
       store,
       snapshotStore,
@@ -84,11 +87,19 @@ describe('CodeSearchService', () => {
   });
 
   describe('isProviderConfigured', () => {
-    it('delegates to AppConfigService.isEmbeddingsConfigured', () => {
-      vi.mocked(appConfig.isEmbeddingsConfigured).mockReturnValue(true);
-      expect(service.isProviderConfigured()).toBe(true);
+    it.each<[CodeEmbedderState, boolean]>([
+      ['ok', true],
+      ['starting', true],
+      ['provider_error', true],
+      ['unconfigured', false],
+      ['dimension_mismatch', false],
+    ])('reports %s as %s', (state, expected) => {
+      setState(state);
+      expect(service.isProviderConfigured()).toBe(expected);
+    });
 
-      vi.mocked(appConfig.isEmbeddingsConfigured).mockReturnValue(false);
+    it('is false when the embedder has no config', () => {
+      vi.mocked(embedder.getConfig).mockReturnValue(undefined);
       expect(service.isProviderConfigured()).toBe(false);
     });
   });
@@ -109,14 +120,11 @@ describe('CodeSearchService', () => {
 
       const out = await service.indexCodeWorkspace(WORKSPACE);
 
-      expect(createEmbeddingsProvider).toHaveBeenCalledWith(OPENAI_CONFIG);
-      // No prior snapshot → full mode: indexWorkspace called WITHOUT a diff.
       expect(indexWorkspace).toHaveBeenCalledWith(
         { root: WORKSPACE },
-        { provider: GUARDED_PROVIDER, store },
+        { provider: ADAPTED_PROVIDER, store },
       );
       expect(diffSnapshots).not.toHaveBeenCalled();
-      // Snapshot persisted after a successful index.
       expect(snapshotStore.save).toHaveBeenCalledWith(WORKSPACE, NEXT_SNAPSHOT);
       expect(out).toEqual(result);
     });
@@ -131,12 +139,10 @@ describe('CodeSearchService', () => {
       const out = await service.indexCodeWorkspace(WORKSPACE);
 
       expect(diffSnapshots).toHaveBeenCalledWith(PRIOR_SNAPSHOT, NEXT_SNAPSHOT);
-      // Prior snapshot → incremental mode: indexWorkspace called WITH the diff.
       expect(indexWorkspace).toHaveBeenCalledWith(
         { root: WORKSPACE },
-        { diff, provider: GUARDED_PROVIDER, store },
+        { diff, provider: ADAPTED_PROVIDER, store },
       );
-      // Fresh snapshot persisted (becomes the next baseline).
       expect(snapshotStore.save).toHaveBeenCalledWith(WORKSPACE, NEXT_SNAPSHOT);
       expect(out).toEqual(result);
     });
@@ -155,64 +161,72 @@ describe('CodeSearchService', () => {
       );
       expect(snapshotStore.save).not.toHaveBeenCalled();
     });
-
-    it('throws a clear error when OpenAI config has no API key', async () => {
-      vi.mocked(appConfig.getEmbeddingsConfig).mockReturnValue({
-        ...OPENAI_CONFIG,
-        apiKey: undefined,
-      });
-
-      await expect(service.indexCodeWorkspace(WORKSPACE)).rejects.toThrow(
-        /not configured/u,
-      );
-      expect(createEmbeddingsProvider).not.toHaveBeenCalled();
-      expect(snapshotStore.load).not.toHaveBeenCalled();
-    });
   });
 
-  describe('dimension guard', () => {
-    it('rejects vectors whose width differs from the column, naming the model and dims', async () => {
-      // Drive the real engine so the wrapped provider's embed() actually runs: indexWorkspace
-      // invokes the provider, which here yields a 768-dim vector (the nomic-embed-text default).
+  describe('embedder adapter', () => {
+    it('embeds chunks as documents and hands the vectors to the engine', async () => {
+      const vectors = [[0.1, 0.2]];
       vi.mocked(snapshotStore.load).mockResolvedValue(null);
-      vi.mocked(appConfig.getEmbeddingsConfig).mockReturnValue({
-        baseUrl: 'http://localhost:11434',
-        kind: 'ollama',
-        model: 'nomic-embed-text',
+      vi.mocked(embedder.embed).mockResolvedValue({
+        dims: 2,
+        model: CONFIG.model,
+        ok: true,
+        vectors,
+      });
+      vi.mocked(indexWorkspace).mockImplementation(async (_config, options) => {
+        expect(await options.provider.embed(['some chunk'])).toEqual(vectors);
+        return { deletedPaths: 0, embedded: 1 };
+      });
+
+      await service.indexCodeWorkspace(WORKSPACE);
+
+      expect(embedder.embed).toHaveBeenCalledWith(['some chunk'], 'document');
+    });
+
+    it('throws the embedder failure reason so the index job fails loudly', async () => {
+      vi.mocked(snapshotStore.load).mockResolvedValue(null);
+      vi.mocked(embedder.embed).mockResolvedValue({
+        detail: 'no weights',
+        ok: false,
+        reason: 'unconfigured',
       });
       vi.mocked(indexWorkspace).mockImplementation(async (_config, options) => {
         await options.provider.embed(['some chunk']);
         return { deletedPaths: 0, embedded: 1 };
       });
-      provider.embed.mockResolvedValue([new Array(768).fill(0)]);
 
       await expect(service.indexCodeWorkspace(WORKSPACE)).rejects.toThrow(
-        /nomic-embed-text.*768.*1536|768.*1536/u,
+        /unconfigured: no weights/u,
       );
       expect(snapshotStore.save).not.toHaveBeenCalled();
     });
 
-    it('passes vectors of the expected width through unchanged', async () => {
-      vi.mocked(snapshotStore.load).mockResolvedValue(null);
-      const embedded = [new Array(1536).fill(0.5)];
-      vi.mocked(indexWorkspace).mockImplementation(async (_config, options) => {
-        const out = await options.provider.embed(['some chunk']);
-        expect(out).toEqual(embedded);
-        return { deletedPaths: 0, embedded: 1 };
+    it('embeds the search text as a query', async () => {
+      vi.mocked(embedder.embed).mockResolvedValue({
+        dims: 1,
+        model: CONFIG.model,
+        ok: true,
+        vectors: [[1]],
       });
-      provider.embed.mockResolvedValue(embedded);
+      vi.mocked(semanticSearch).mockImplementation(
+        async (query, _config, options) => {
+          await options.provider.embed([query]);
+          return [];
+        },
+      );
 
-      const out = await service.indexCodeWorkspace(WORKSPACE);
-      expect(out).toEqual({ deletedPaths: 0, embedded: 1 });
+      await service.codeSemanticSearch(WORKSPACE, 'find user');
+
+      expect(embedder.embed).toHaveBeenCalledWith(['find user'], 'query');
     });
   });
 
   describe('codeSemanticSearch', () => {
-    it('returns [] for a blank query without resolving a provider', async () => {
+    it('returns [] for a blank query without calling the embedder', async () => {
       const matches = await service.codeSemanticSearch(WORKSPACE, '   ');
       expect(matches).toEqual([]);
       expect(semanticSearch).not.toHaveBeenCalled();
-      expect(createEmbeddingsProvider).not.toHaveBeenCalled();
+      expect(embedder.embed).not.toHaveBeenCalled();
     });
 
     it('delegates a trimmed query to the engine with topK', async () => {
@@ -227,11 +241,10 @@ describe('CodeSearchService', () => {
         5,
       );
 
-      expect(createEmbeddingsProvider).toHaveBeenCalledWith(OPENAI_CONFIG);
       expect(semanticSearch).toHaveBeenCalledWith(
         'find user',
         { root: WORKSPACE },
-        { provider: GUARDED_PROVIDER, store, topK: 5 },
+        { provider: ADAPTED_PROVIDER, store, topK: 5 },
       );
       expect(out).toEqual(matches);
     });
@@ -242,7 +255,7 @@ describe('CodeSearchService', () => {
       expect(semanticSearch).toHaveBeenCalledWith(
         'query',
         { root: WORKSPACE },
-        { provider: GUARDED_PROVIDER, store, topK: 10 },
+        { provider: ADAPTED_PROVIDER, store, topK: 10 },
       );
     });
 
@@ -259,7 +272,7 @@ describe('CodeSearchService', () => {
         expect(semanticSearch).toHaveBeenCalledWith(
           'query',
           { root: WORKSPACE },
-          { provider: GUARDED_PROVIDER, store, topK: expected },
+          { provider: ADAPTED_PROVIDER, store, topK: expected },
         );
       },
     );
@@ -270,7 +283,7 @@ describe('CodeSearchService', () => {
       expect(semanticSearch).toHaveBeenCalledWith(
         'query',
         { root: WORKSPACE },
-        { provider: GUARDED_PROVIDER, store, topK: 10 },
+        { provider: ADAPTED_PROVIDER, store, topK: 10 },
       );
     });
   });

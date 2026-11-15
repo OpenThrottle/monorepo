@@ -17,8 +17,11 @@ exposes it via GraphQL, so the GraphQL-only `openthrottle-developer` app can pow
   - `indexCodeWorkspace(workspaceRoot)` — full re-index (chunk → embed → upsert).
   - `codeSemanticSearch(workspaceRoot, query, topK?)` — top-k natural-language search.
   - `indexedChunkCount(workspaceRoot)` — drives ready-vs-not-indexed status.
-  - `isProviderConfigured()` — whether an embeddings provider is configured.
-- **`NestjsVectorSearchModule`** — provides + exports both.
+  - `isProviderConfigured()` — whether the host's embedder can embed.
+- **`NestjsVectorSearchModule.register({ embedder, imports })`** — provides + exports both,
+  binding the host's embedder class to the `CODE_EMBEDDER` token. The package ships **no
+  embedder of its own**: `openthrottle-server` passes its single `EmbedderService` (the
+  `@openthrottle/node-client` embedder that also serves plans, tasks and docs).
 
 ## Consumers
 
@@ -37,15 +40,13 @@ The host app must configure a TypeORM root (the default `DataSource` is injected
 
    ```bash
    pnpm run database:start      # Postgres (+ Redis)
-   pnpm run database:migrate    # applies databases/openthrottle/migrations/052_create_code_embeddings_table.sql
+   pnpm run database:migrate    # applies migrations 052 (table) and 164 (768 dims + provenance)
    ```
 
-2. **Embeddings provider** — one of (same env the rest of the platform uses):
-   - `OPENAI_API_KEY` (default; OpenAI `text-embedding-3-small`, 1536-dim), or
-   - `OLLAMA_BASE_URL` / `OLLAMA_EMBEDDING_MODEL` (use a 1536-dim model).
-
-   With no provider configured, `codeIndexStatus` returns `unavailable` and the Semantic
-   tab renders its gated state.
+2. **Embedder** — the server's embedder (nomic-embed-text-v1.5, 768 dims; local by default,
+   Ollama optional). See [databases/openthrottle/README.md § Embedding dimension strategy](../../databases/openthrottle/README.md).
+   While it is unconfigured, `codeIndexStatus` returns `unavailable` and the Semantic tab
+   renders its gated state.
 
 ## Using the /ide Semantic tab
 

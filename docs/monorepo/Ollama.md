@@ -23,7 +23,7 @@ Semantic search (`semantic_search`) embeds on **openthrottle-server** only — n
 
 When the embedder cannot run — weights missing, Ollama down, a refused value — the server says so: MCP `health` shows `embeddings: unconfigured` or `degraded` with per-table coverage, and `semantic_search` answers with Postgres full-text search (`mode: lexical`, plus a `reason`) instead of empty results. Once the embedder is back, the embeddings queue and its 15-minute reconciler catch up with no manual step.
 
-`OLLAMA_EMBEDDING_MODEL` is now read only by the code index (`nestjs-vector-search`), which has its own follow-up plan.
+The code index (`/ide` Semantic tab, `nestjs-vector-search`) uses this same embedder and model; `OLLAMA_EMBEDDING_MODEL` is no longer read anywhere.
 
 ### MCP launcher and embeddings
 

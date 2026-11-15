@@ -1,6 +1,7 @@
 /**
  * @description The embeddings guarantee and backfill (OT plan 165e86ef). Each cycle — on boot
- * and every 15 minutes — walks plans, tasks, documentation and custom prompts in keyset pages
+ * and every 15 minutes — walks plans, tasks, documentation, custom prompts and code chunks
+ * (OT plan e489d73d; re-embedded from their own `content`, never pruned here) in keyset pages
  * (100 ids by default) and enqueues every row whose vector is missing, from another model, or
  * hashed from text that has since changed. Writes the entity subscriber cannot see (raw-SQL
  * ingest, documentation) and jobs that failed or were lost are caught here. A cycle is skipped,
@@ -35,6 +36,7 @@ import type {
 } from './embeddings-reconcile.types.ts';
 import {
   buildPruneOrphansSql,
+  buildStaleCodeChunksSql,
   buildStaleRowsSql,
   resolveEmbeddingsReconcileConfig,
 } from './embeddings-reconcile.utils.ts';
@@ -98,6 +100,11 @@ export class EmbeddingsReconcileProcessor
       );
     }
 
+    const code = await this.reconcileCodeChunks(
+      config.spec.documentPrefix,
+      config.model,
+      batchSize,
+    );
     const summary = {
       custom_prompt: entities.custom_prompt ?? { enqueued: 0, pruned: 0 },
       documentation: entities.documentation ?? { enqueued: 0, pruned: 0 },
@@ -108,11 +115,11 @@ export class EmbeddingsReconcileProcessor
     this.logger.info(
       `Embeddings reconcile: ${EMBEDDABLE_ENTITIES.map((entity) => {
         return `${entity} +${summary[entity].enqueued}/-${summary[entity].pruned}`;
-      }).join(', ')}`,
+      }).join(', ')}, code +${code.enqueued}`,
       EmbeddingsReconcileProcessor.name,
     );
 
-    return { entities: summary, skipped: false };
+    return { code, entities: summary, skipped: false };
   }
 
   private async reconcileEntity(
@@ -160,6 +167,51 @@ export class EmbeddingsReconcileProcessor
     }
 
     return { enqueued, pruned };
+  }
+
+  /**
+   * @description Keyset walk over `code_embeddings`, one embedding job per stale page. Nothing is
+   * pruned: which chunks exist is the code-index queue's call (and data retention's).
+   * @returns `enqueued` counts chunks, not jobs.
+   */
+  private async reconcileCodeChunks(
+    documentPrefix: string,
+    model: string,
+    batchSize: number,
+  ): Promise<EmbeddingsReconcileEntitySummary> {
+    const staleSql = buildStaleCodeChunksSql();
+    let after = '';
+    let enqueued = 0;
+
+    for (;;) {
+      // eslint-disable-next-line no-await-in-loop -- each page depends on the previous one's last id
+      const rows: unknown = await this.dataSource.query(staleSql, [
+        documentPrefix,
+        EMBEDDING_MAX_INPUT_CHARS,
+        model,
+        after,
+        batchSize,
+      ]);
+      const ids = readIds(rows);
+      const last = ids[ids.length - 1];
+
+      if (!last) {
+        break;
+      }
+
+      // eslint-disable-next-line no-await-in-loop -- enqueue before reading the next page
+      const accepted = await this.producer.enqueueCodeChunks(ids);
+
+      enqueued += accepted * ids.length;
+
+      if (ids.length < batchSize) {
+        break;
+      }
+
+      after = last;
+    }
+
+    return { enqueued, pruned: 0 };
   }
 
   private async prune(sql: string): Promise<number> {

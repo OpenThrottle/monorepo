@@ -4,6 +4,7 @@ import type { EmbedResult } from '@openthrottle/node-client';
 import type { DataSource } from 'typeorm';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { EMBEDDING_TABLES } from './embedder.constants.ts';
 import { EmbedderService } from './embedder.service.ts';
 
 const { embed } = vi.hoisted(() => {
@@ -36,12 +37,7 @@ const OK: EmbedResult = {
 };
 
 function columns(dims: number): { column_type: string; table_name: string }[] {
-  return [
-    'custom_prompt_embeddings',
-    'documentation_embeddings',
-    'plan_embeddings',
-    'task_embeddings',
-  ].map((table) => {
+  return EMBEDDING_TABLES.map((table) => {
     return { column_type: `vector(${dims})`, table_name: table };
   });
 }

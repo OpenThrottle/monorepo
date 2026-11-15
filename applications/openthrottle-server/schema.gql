@@ -2377,7 +2377,7 @@ type EmbeddingCoverageObject {
   """Rows with an up-to-date vector (configured model, current text)."""
   embedded: Int!
 
-  """Entity: plan | task | documentation | custom_prompt."""
+  """Entity: plan | task | documentation | custom_prompt | code."""
   entity: String!
 
   """

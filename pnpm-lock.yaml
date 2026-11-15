@@ -2896,6 +2896,9 @@ importers:
       '@openthrottle/nestjs-modules':
         specifier: workspace:^
         version: link:../nestjs-modules
+      '@openthrottle/node-client':
+        specifier: workspace:^
+        version: link:../node-client
       '@openthrottle/openthrottle-ide':
         specifier: workspace:^
         version: link:../openthrottle-ide
