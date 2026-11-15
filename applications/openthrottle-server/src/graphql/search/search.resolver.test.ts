@@ -1,4 +1,5 @@
 import { Test } from '@nestjs/testing';
+import type { SemanticSearchChunk } from '@openthrottle/node-client';
 import {
   getChunkById,
   listSources,
@@ -51,10 +52,16 @@ describe('SearchResolver', () => {
       const result = await resolver.search({
         limit: null,
         mode: null,
+        offset: null,
         query: '   ',
       });
 
-      expect(result).toEqual({ chunks: [], mode: 'hybrid', reason: null });
+      expect(result).toEqual({
+        chunks: [],
+        mode: 'hybrid',
+        reason: null,
+        total: 0,
+      });
       expect(embed).not.toHaveBeenCalled();
     });
 
@@ -79,6 +86,7 @@ describe('SearchResolver', () => {
       const result = await resolver.search({
         limit: 10,
         mode: null,
+        offset: null,
         query: 'test',
       });
 
@@ -88,7 +96,7 @@ describe('SearchResolver', () => {
         expect.objectContaining({ id: 'plan-1', planTitle: 'Plan One' }),
       ]);
       expect(embed).toHaveBeenCalledWith(['test'], 'query');
-      expect(runLexicalSearch).toHaveBeenCalledWith('test', 20);
+      expect(runLexicalSearch).toHaveBeenCalledWith('test', 100);
       expect(runSemanticSearch).not.toHaveBeenCalled();
     });
 
@@ -120,13 +128,14 @@ describe('SearchResolver', () => {
       const result = await resolver.search({
         limit: 5,
         mode: 'semantic',
+        offset: null,
         query: 'find plans about auth',
       });
 
       expect(embed).toHaveBeenCalledWith(['find plans about auth'], 'query');
       expect(runSemanticSearch).toHaveBeenCalledWith(
         [0.1, 0.2],
-        5,
+        100,
         'nomic-embed-text-v1.5',
       );
       expect(result.mode).toBe('semantic');
@@ -162,6 +171,7 @@ describe('SearchResolver', () => {
       const result = await resolver.search({
         limit: 5,
         mode: null,
+        offset: null,
         query: 'anything',
       });
 
@@ -169,41 +179,153 @@ describe('SearchResolver', () => {
         chunks: [],
         mode: 'lexical',
         reason: 'no_embeddings',
+        total: 0,
       });
     });
 
-    test('clamps limit to max 50', async () => {
-      embed.mockResolvedValue(embedded([0.1]));
-      vi.mocked(runSemanticSearch).mockResolvedValue([]);
+    describe('paging', () => {
+      const ranked: SemanticSearchChunk[] = Array.from(
+        { length: 120 },
+        (_, index) => {
+          return {
+            content: `chunk ${index}`,
+            id: `chunk-${index}`,
+            metadata: {},
+            planId: `plan-${index}`,
+            planTitle: 'Plan',
+            similarity: 1 - index / 1000,
+            source: 'plan',
+          };
+        },
+      );
 
-      await resolver.search({
-        limit: 100,
-        mode: 'semantic',
-        query: 'test',
+      test('ranks one 100-candidate window regardless of limit', async () => {
+        embed.mockResolvedValue(embedded([0.1]));
+        vi.mocked(runSemanticSearch).mockResolvedValue([]);
+
+        await resolver.search({
+          limit: 5,
+          mode: 'semantic',
+          offset: null,
+          query: 'test',
+        });
+
+        expect(runSemanticSearch).toHaveBeenCalledWith(
+          [0.1],
+          100,
+          'nomic-embed-text-v1.5',
+        );
       });
 
-      expect(runSemanticSearch).toHaveBeenCalledWith(
-        [0.1],
-        50,
-        'nomic-embed-text-v1.5',
-      );
-    });
+      test('clamps limit to max 50 and defaults it to 20', async () => {
+        embed.mockResolvedValue(embedded([0.1]));
+        vi.mocked(runSemanticSearch).mockResolvedValue(ranked);
 
-    test('uses default limit 20 when limit is null', async () => {
-      embed.mockResolvedValue(embedded([0.1]));
-      vi.mocked(runSemanticSearch).mockResolvedValue([]);
+        const clamped = await resolver.search({
+          limit: 100,
+          mode: 'semantic',
+          offset: null,
+          query: 'test',
+        });
+        const defaulted = await resolver.search({
+          limit: null,
+          mode: 'semantic',
+          offset: null,
+          query: 'test',
+        });
 
-      await resolver.search({
-        limit: null,
-        mode: 'semantic',
-        query: 'test',
+        expect(clamped.chunks).toHaveLength(50);
+        expect(defaulted.chunks).toHaveLength(20);
       });
 
-      expect(runSemanticSearch).toHaveBeenCalledWith(
-        [0.1],
-        20,
-        'nomic-embed-text-v1.5',
-      );
+      test('returns consecutive pages with no overlap or gap, and the capped total', async () => {
+        embed.mockResolvedValue(embedded([0.1]));
+        vi.mocked(runSemanticSearch).mockResolvedValue(ranked);
+
+        const first = await resolver.search({
+          limit: 10,
+          mode: 'semantic',
+          offset: 0,
+          query: 'test',
+        });
+        const second = await resolver.search({
+          limit: 10,
+          mode: 'semantic',
+          offset: 10,
+          query: 'test',
+        });
+
+        expect(first.total).toBe(100);
+        expect(first.chunks.map((chunk) => chunk.id)).toEqual(
+          ranked.slice(0, 10).map((chunk) => chunk.id),
+        );
+        expect(second.chunks.map((chunk) => chunk.id)).toEqual(
+          ranked.slice(10, 20).map((chunk) => chunk.id),
+        );
+      });
+
+      test('pages the hybrid ranking without overlap', async () => {
+        embed.mockResolvedValue(embedded([0.1]));
+        vi.mocked(runSemanticSearch).mockResolvedValue(ranked.slice(0, 30));
+        vi.mocked(runLexicalSearch).mockResolvedValue(ranked.slice(0, 30));
+
+        const first = await resolver.search({
+          limit: 10,
+          mode: null,
+          offset: 0,
+          query: 'test',
+        });
+        const second = await resolver.search({
+          limit: 10,
+          mode: null,
+          offset: 10,
+          query: 'test',
+        });
+        const firstIds = first.chunks.map((chunk) => chunk.id);
+        const secondIds = second.chunks.map((chunk) => chunk.id);
+
+        expect(first.total).toBe(30);
+        expect(firstIds).toHaveLength(10);
+        expect(secondIds).toHaveLength(10);
+        expect(firstIds.filter((id) => secondIds.includes(id))).toEqual([]);
+      });
+
+      test('pages the lexical fallback the same way', async () => {
+        embed.mockResolvedValue({
+          detail: 'no weights',
+          ok: false,
+          reason: 'unconfigured',
+        });
+        vi.mocked(runLexicalSearch).mockResolvedValue(ranked.slice(0, 15));
+
+        const result = await resolver.search({
+          limit: 10,
+          mode: null,
+          offset: 10,
+          query: 'test',
+        });
+
+        expect(result.mode).toBe('lexical');
+        expect(result.total).toBe(15);
+        expect(result.chunks.map((chunk) => chunk.id)).toEqual(
+          ranked.slice(10, 15).map((chunk) => chunk.id),
+        );
+      });
+
+      test('returns no chunks for an offset past the total', async () => {
+        embed.mockResolvedValue(embedded([0.1]));
+        vi.mocked(runSemanticSearch).mockResolvedValue(ranked.slice(0, 5));
+
+        const result = await resolver.search({
+          limit: 10,
+          mode: 'semantic',
+          offset: 40,
+          query: 'test',
+        });
+
+        expect(result.chunks).toEqual([]);
+        expect(result.total).toBe(5);
+      });
     });
 
     test('maps documentation chunks with sourcePath, sourceRepo, sourceSha', async () => {
@@ -224,6 +346,7 @@ describe('SearchResolver', () => {
       const result = await resolver.search({
         limit: 10,
         mode: 'semantic',
+        offset: null,
         query: 'notifications',
       });
 
@@ -258,6 +381,7 @@ describe('SearchResolver', () => {
       const result = await resolver.search({
         limit: 10,
         mode: 'semantic',
+        offset: null,
         query: 'plan',
       });
 
@@ -267,7 +391,7 @@ describe('SearchResolver', () => {
     });
 
     describe('when the mode is hybrid (the default)', () => {
-      test('fuses vector and full-text hits by entity, fetching 2x candidates', async () => {
+      test('fuses vector and full-text hits by entity over one candidate window', async () => {
         embed.mockResolvedValue(embedded([0.1]));
         vi.mocked(runSemanticSearch).mockResolvedValue([
           {
@@ -313,15 +437,16 @@ describe('SearchResolver', () => {
         const result = await resolver.search({
           limit: 5,
           mode: null,
+          offset: null,
           query: 'B-only identifier',
         });
 
         expect(runSemanticSearch).toHaveBeenCalledWith(
           [0.1],
-          10,
+          100,
           'nomic-embed-text-v1.5',
         );
-        expect(runLexicalSearch).toHaveBeenCalledWith('B-only identifier', 10);
+        expect(runLexicalSearch).toHaveBeenCalledWith('B-only identifier', 100);
         expect(result.mode).toBe('hybrid');
         expect(result.reason).toBeNull();
         expect(result.chunks.map((chunk) => chunk.id)).toEqual([
@@ -335,7 +460,12 @@ describe('SearchResolver', () => {
     describe('when the mode is unknown', () => {
       test('rejects it as bad user input', async () => {
         await expect(
-          resolver.search({ limit: 5, mode: 'lexical', query: 'q' }),
+          resolver.search({
+            limit: 5,
+            mode: 'lexical',
+            offset: null,
+            query: 'q',
+          }),
         ).rejects.toMatchObject({
           extensions: { code: 'BAD_USER_INPUT' },
         });

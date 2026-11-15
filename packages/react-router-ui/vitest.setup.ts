@@ -52,3 +52,12 @@ if (globalThis.matchMedia === undefined) {
 if (typeof Element !== 'undefined' && !Element.prototype.scrollIntoView) {
   Element.prototype.scrollIntoView = (): void => {};
 }
+
+/**
+ * @description jsdom omits the pointer-capture API; Radix Select calls it when its trigger is pressed.
+ */
+if (typeof Element !== 'undefined' && !Element.prototype.hasPointerCapture) {
+  Element.prototype.hasPointerCapture = (): boolean => false;
+  Element.prototype.releasePointerCapture = (): void => {};
+  Element.prototype.setPointerCapture = (): void => {};
+}

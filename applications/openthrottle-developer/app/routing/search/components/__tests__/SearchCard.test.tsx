@@ -1,13 +1,13 @@
 import type { RenderResult } from '@testing-library/react';
-import { cleanup, render } from '@testing-library/react';
-import { within } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
-import { afterEach, beforeEach, describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 
 import type { SearchChunk } from '~/__generated__/graphql';
+import { SEARCH_SOURCE_PILL_COLORS } from '~/routing/search/data/data.source-pills';
 
-import type { SearchCardProps } from '../SearchCard';
 import { SearchCard } from '../SearchCard';
 
 function mockSearchChunk(overrides: Partial<SearchChunk> = {}): SearchChunk {
@@ -28,243 +28,194 @@ function mockSearchChunk(overrides: Partial<SearchChunk> = {}): SearchChunk {
   };
 }
 
-describe('SearchCard Component', () => {
-  let component: RenderResult;
-  let props: SearchCardProps;
+function renderCard(
+  result: SearchChunk,
+  onPreview: (result: SearchChunk) => void = vi.fn(),
+): RenderResult {
+  const Component = (): React.ReactElement => {
+    return <SearchCard onPreview={onPreview} result={result} />;
+  };
+  const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
-  afterEach(() => {
-    cleanup();
-  });
+  return render(<RoutesStub />);
+}
 
-  beforeEach(() => {
-    props = {
-      result: mockSearchChunk(),
-    };
+describe('SearchCard', () => {
+  test('renders pill, title and meta in one header for every source', () => {
+    const sources = ['plan', 'task', 'documentation'] as const;
 
-    const Component = () => {
-      return <SearchCard {...props} />;
-    };
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-
-    component = render(<RoutesStub />);
-  });
-
-  test('should delegate to SearchPlanCard for plan source and render with data-testid', () => {
-    const card = component.getByTestId('SearchPlanCard');
-
-    expect(card).toBeInTheDocument();
-  });
-
-  test('should show plan title as plain text when result has no planId', () => {
-    cleanup();
-    props.result = mockSearchChunk({
-      planId: null,
-      planTitle: 'Untitled Plan',
-      source: 'plan',
-    });
-    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => {
-      return <SearchCard {...props} />;
-    };
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    const view = render(<RoutesStub />);
-
-    expect(view.getByTestId('SearchPlanCard')).toBeInTheDocument();
-    expect(
-      view.queryByTestId('SearchPlanCard-planLink'),
-    ).not.toBeInTheDocument();
-    const heading = view.getByRole('heading', {
-      level: 3,
-      name: 'Untitled Plan',
-    });
-    expect(heading).toBeInTheDocument();
-  });
-
-  describe('when result has planId', () => {
-    beforeEach(() => {
-      cleanup();
-      props.result = mockSearchChunk({
-        planId: 'plan-123',
-        planTitle: 'My Plan',
-        source: 'plan',
-      });
-      // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-      const Component = () => {
-        return <SearchCard {...props} />;
-      };
-      const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-      component = render(<RoutesStub />);
-    });
-
-    test('should render plan link via SearchPlanCard with correct href and data-testid', () => {
-      const planLink = component.getByTestId('SearchPlanCard-planLink');
-      expect(planLink).toBeInTheDocument();
-      expect(planLink).toHaveAttribute('href', '/plans/plan-123');
-      expect(planLink).toHaveTextContent('My Plan');
-    });
-
-    test('should not render task link when taskId is absent', () => {
-      expect(
-        component.queryByTestId('SearchTaskCard-taskLink'),
-      ).not.toBeInTheDocument();
-    });
-  });
-
-  describe('when result has planId and taskId (task source)', () => {
-    beforeEach(() => {
-      cleanup();
-      props.result = mockSearchChunk({
-        planId: 'plan-456',
-        planTitle: 'Plan With Task',
-        source: 'task',
-        taskId: 'task-789',
-        taskTitle: 'A task',
-      });
-      // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-      const Component = () => {
-        return <SearchCard {...props} />;
-      };
-      const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-      component = render(<RoutesStub />);
-    });
-
-    test('should delegate to SearchTaskCard and render plan link and task link', () => {
-      const planLink = component.getByTestId('SearchTaskCard-planLink');
-      expect(planLink).toHaveAttribute('href', '/plans/plan-456');
-      expect(planLink).toHaveTextContent('Plan With Task');
-
-      const taskLink = component.getByTestId('SearchTaskCard-taskLink');
-      expect(taskLink).toBeInTheDocument();
-      expect(taskLink).toHaveAttribute('href', '/plans/plan-456#task-task-789');
-      expect(taskLink).toHaveTextContent('View task');
-    });
-
-    test('should show task title on task card', () => {
-      const card = component.getByTestId('SearchTaskCard');
-      expect(within(card).getByText('A task')).toBeInTheDocument();
-    });
-  });
-
-  describe('when source is documentation', () => {
-    beforeEach(() => {
-      cleanup();
-      props.result = mockSearchChunk({
-        content: 'Docs chunk content',
-        planId: null,
-        planTitle: null,
-        source: 'documentation',
-        taskId: null,
-        taskTitle: null,
-      });
-      // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-      const Component = () => {
-        return <SearchCard {...props} />;
-      };
-      const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-      component = render(<RoutesStub />);
-    });
-
-    test('should delegate to SearchDocumentationCard with source badge and content only', () => {
-      expect(
-        component.getByTestId('SearchDocumentationCard'),
-      ).toBeInTheDocument();
-      expect(
-        component.getByTestId('SearchDocumentationCard-sourceBadge'),
-      ).toHaveTextContent('documentation');
-      expect(component.getByText('Docs chunk content')).toBeInTheDocument();
-      expect(
-        component.queryByTestId('SearchPlanCard-planLink'),
-      ).not.toBeInTheDocument();
-      expect(
-        component.queryByTestId('SearchTaskCard-taskLink'),
-      ).not.toBeInTheDocument();
-    });
-
-    test('should not render blob link when sourceRepo or sourcePath is missing', () => {
-      expect(
-        component.queryByTestId('SearchDocumentationCard-blobLink'),
-      ).not.toBeInTheDocument();
-    });
-  });
-
-  describe('when source is documentation with sourceRepo and sourcePath', () => {
-    beforeEach(() => {
-      cleanup();
-      props.result = mockSearchChunk({
-        content: 'Docs chunk content',
-        planId: null,
-        planTitle: null,
-        source: 'documentation',
-        sourcePath: 'docs/openthrottle/desktop-notifications-testing.md',
-        sourceRepo: 'visormatt/monorepo',
-        sourceSha: null,
-        taskId: null,
-        taskTitle: null,
-      });
-      // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-      const Component = () => {
-        return <SearchCard {...props} />;
-      };
-      const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-      component = render(<RoutesStub />);
-    });
-
-    test('should delegate to SearchDocumentationCard with blob link (main when sourceSha absent)', () => {
-      const link = component.getByTestId('SearchDocumentationCard-blobLink');
-      expect(link).toBeInTheDocument();
-      expect(link).toHaveAttribute(
-        'href',
-        'https://github.com/visormatt/monorepo/blob/main/docs/openthrottle/desktop-notifications-testing.md',
+    sources.forEach((source) => {
+      const component = renderCard(
+        mockSearchChunk({
+          planId: 'plan-1',
+          source,
+          sourcePath: 'docs/a.md',
+          sourceRepo: 'org/repo',
+          taskId: 'task-1',
+        }),
       );
-      expect(link).toHaveAttribute('target', '_blank');
-      expect(link).toHaveAttribute('rel', 'noopener noreferrer');
-      expect(
-        component.getByTestId('SearchDocumentationCard-sourceBadge'),
-      ).toHaveTextContent('documentation');
+      const card = component.getByTestId('SearchCard');
+      const pill = component.getByTestId('SearchCard-pill');
+
+      expect(card).toHaveAttribute('data-source', source);
+      expect(pill).toHaveTextContent(source);
+      expect(pill.parentElement).toBe(
+        component.getByTestId('SearchCard-title').parentElement,
+      );
+      expect(component.getByTestId('SearchCard-meta')).toBeInTheDocument();
+      expect(SEARCH_SOURCE_PILL_COLORS[source]).toBeDefined();
+      component.unmount();
+    });
+  });
+
+  describe('plan results', () => {
+    test('link the title to the plan', () => {
+      const component = renderCard(
+        mockSearchChunk({ planId: 'plan-1', planTitle: 'My Plan' }),
+      );
+      const title = component.getByTestId('SearchCard-title');
+
+      expect(title).toHaveAttribute('href', '/plans/plan-1');
+      expect(title).toHaveTextContent('My Plan');
+      expect(component.queryByTestId('SearchCard-context')).toBeNull();
     });
 
-    test('should use sourceSha in blob URL when present', () => {
-      cleanup();
-      props.result = mockSearchChunk({
-        content: 'Docs chunk content',
-        planId: null,
-        planTitle: null,
-        source: 'documentation',
-        sourcePath: 'docs/foo.md',
-        sourceRepo: 'owner/repo',
-        sourceSha: 'abc123def',
-        taskId: null,
-        taskTitle: null,
-      });
-      // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-      const Component = () => {
-        return <SearchCard {...props} />;
-      };
-      const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-      const view = render(<RoutesStub />);
-      const link = view.getByTestId('SearchDocumentationCard-blobLink');
-      expect(link).toHaveAttribute(
+    test('render the title as text without a plan id', () => {
+      const component = renderCard(mockSearchChunk({ planTitle: 'Orphan' }));
+
+      expect(component.getByTestId('SearchCard-title').tagName).toBe('SPAN');
+    });
+
+    test('link a related task on the meta line', () => {
+      const component = renderCard(
+        mockSearchChunk({
+          planId: 'plan-1',
+          taskId: 'task-1',
+          taskTitle: 'Related',
+        }),
+      );
+
+      expect(component.getByTestId('SearchCard-context')).toHaveAttribute(
         'href',
-        'https://github.com/owner/repo/blob/abc123def/docs/foo.md',
+        '/plans/plan-1#task-task-1',
       );
     });
   });
 
-  test('should render card content from result.content via delegated card', () => {
-    cleanup();
-    props.result = mockSearchChunk({
-      content: 'Snippet of plan or task text.',
-    });
-    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => {
-      return <SearchCard {...props} />;
-    };
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    const view = render(<RoutesStub />);
+  describe('task results', () => {
+    test('link the title to the task and the meta line to its plan', () => {
+      const component = renderCard(
+        mockSearchChunk({
+          planId: 'plan-1',
+          planTitle: 'Parent',
+          source: 'task',
+          taskId: 'task-1',
+          taskTitle: 'Do it',
+        }),
+      );
 
-    const card = view.getByTestId('SearchPlanCard');
-    expect(
-      within(card).getByText('Snippet of plan or task text.'),
-    ).toBeInTheDocument();
+      expect(component.getByTestId('SearchCard-title')).toHaveAttribute(
+        'href',
+        '/plans/plan-1#task-task-1',
+      );
+      expect(component.getByTestId('SearchCard-context')).toHaveAttribute(
+        'href',
+        '/plans/plan-1',
+      );
+    });
+
+    test('render the title as text without plan and task ids', () => {
+      const component = renderCard(mockSearchChunk({ source: 'task' }));
+
+      expect(component.getByTestId('SearchCard-title').tagName).toBe('SPAN');
+      expect(component.queryByTestId('SearchCard-context')).toBeNull();
+    });
+  });
+
+  describe('documentation results', () => {
+    test('link the title to the GitHub blob at the sha, falling back to main', () => {
+      const withSha = renderCard(
+        mockSearchChunk({
+          source: 'documentation',
+          sourcePath: 'docs/a.md',
+          sourceRepo: 'org/repo',
+          sourceSha: 'abc',
+        }),
+      );
+
+      expect(withSha.getByTestId('SearchCard-title')).toHaveAttribute(
+        'href',
+        'https://github.com/org/repo/blob/abc/docs/a.md',
+      );
+      withSha.unmount();
+
+      const onMain = renderCard(
+        mockSearchChunk({
+          source: 'documentation',
+          sourcePath: 'docs/a.md',
+          sourceRepo: 'org/repo',
+        }),
+      );
+
+      expect(onMain.getByTestId('SearchCard-title')).toHaveAttribute(
+        'href',
+        'https://github.com/org/repo/blob/main/docs/a.md',
+      );
+    });
+
+    test('render no blob link when the repo or path is missing', () => {
+      const component = renderCard(
+        mockSearchChunk({ source: 'documentation', sourcePath: 'docs/a.md' }),
+      );
+
+      expect(component.getByTestId('SearchCard-title').tagName).toBe('SPAN');
+    });
+  });
+
+  test('shows relevance on the meta line', () => {
+    const component = renderCard(mockSearchChunk({ similarity: 0.734 }));
+
+    expect(component.getByTestId('SearchCard-relevance')).toHaveTextContent(
+      '73%',
+    );
+  });
+
+  test('renders the chunk content as a clamped snippet', () => {
+    const component = renderCard(mockSearchChunk({ content: 'Body text' }));
+    const snippet = component.getByTestId('SearchCard-content');
+
+    expect(snippet).toHaveTextContent('Body text');
+    expect(snippet).toHaveClass('line-clamp-3');
+  });
+
+  test('opens the preview from the snippet or the preview button', async () => {
+    const user = userEvent.setup();
+    const onPreview = vi.fn();
+    const result = mockSearchChunk();
+    const component = renderCard(result, onPreview);
+
+    await user.click(component.getByTestId('SearchCard-content'));
+    await user.click(component.getByTestId('SearchCard-preview'));
+
+    expect(onPreview).toHaveBeenCalledTimes(2);
+    expect(onPreview).toHaveBeenCalledWith(result, expect.any(HTMLElement));
+  });
+
+  test('opens the preview from the keyboard', async () => {
+    const user = userEvent.setup();
+    const onPreview = vi.fn();
+    const component = renderCard(mockSearchChunk(), onPreview);
+
+    component.getByTestId('SearchCard-content').focus();
+    await user.keyboard('{Enter}');
+    await user.keyboard(' ');
+
+    expect(onPreview).toHaveBeenCalledTimes(2);
+  });
+
+  test('keeps ranking details out of the card', () => {
+    const component = renderCard(mockSearchChunk());
+
+    expect(component.queryByTestId('SearchWhyThisResult')).toBeNull();
   });
 });

@@ -1,60 +1,38 @@
-import type { RenderResult } from '@testing-library/react';
 import { render } from '@testing-library/react';
 import * as React from 'react';
-import { createRoutesStub } from 'react-router';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { describe, expect, test } from 'vitest';
 
-import type { SearchIntroductionProps } from '../SearchIntroduction';
+import { SEARCH_INTRODUCTION_COPY } from '~/routing/search/data/data.copy';
+
 import { SearchIntroduction } from '../SearchIntroduction';
 
-describe('SearchIntroduction Component', () => {
-  let component: RenderResult;
-  let props: SearchIntroductionProps;
+describe('SearchIntroduction', () => {
+  test('renders the page heading', () => {
+    const component = render(<SearchIntroduction hasQuery={false} />);
 
-  beforeEach(() => {
-    props = {};
-
-    const Component = () => {
-      return <SearchIntroduction {...props} />;
-    };
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-
-    component = render(<RoutesStub />);
-  });
-
-  test('renders search page title', () => {
     expect(
-      component.getByRole('heading', { level: 1, name: 'Search' }),
-    ).toBeInTheDocument();
-    expect(component.getByTestId('SearchIntroduction')).toBeInTheDocument();
-  });
-
-  test('renders empty-state hint when hasQuery is false', () => {
-    expect(
-      component.getByText(/Enter a query below for semantic search/i),
+      component.getByRole('heading', {
+        level: 1,
+        name: SEARCH_INTRODUCTION_COPY.title,
+      }),
     ).toBeInTheDocument();
   });
 
-  test('renders power-user controls when hasQuery and handler are set', () => {
-    const onExpandRankingChange = vi.fn();
-    props = {
-      expandRankingDetails: true,
-      hasQuery: true,
-      onExpandRankingChange,
-    };
+  test('shows the first-visit hint only without a query', () => {
+    const empty = render(<SearchIntroduction hasQuery={false} />);
 
-    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => {
-      return <SearchIntroduction {...props} />;
-    };
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    component = render(<RoutesStub />);
+    expect(empty.getByTestId('SearchIntroduction-hint')).toBeInTheDocument();
+    empty.unmount();
 
-    expect(
-      component.getByLabelText('Expand ranking details on all results'),
-    ).toBeChecked();
-    expect(
-      component.getByText(/Power user: expand ranking details/i),
-    ).toBeInTheDocument();
+    const withQuery = render(<SearchIntroduction hasQuery={true} />);
+
+    expect(withQuery.queryByTestId('SearchIntroduction-hint')).toBeNull();
+  });
+
+  test('owns no controls', () => {
+    const component = render(<SearchIntroduction hasQuery={true} />);
+
+    expect(component.queryByRole('checkbox')).toBeNull();
+    expect(component.queryByRole('switch')).toBeNull();
   });
 });

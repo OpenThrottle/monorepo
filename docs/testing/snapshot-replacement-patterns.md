@@ -52,10 +52,10 @@ Remove the redundant `toMatchSnapshot()` once those assertions exist.
 
 **Assert:** visible title/body, links and `href` (and hash fragments), optional sections absent/present per variant.
 
-Use `within(card)` scoped queries when multiple cards exist. If the component exposes stable `data-testid`s for links (e.g. `SearchTaskCard-planLink`), assert `href` and text inside that subtree.
+Use `within(card)` scoped queries when multiple cards exist. If the component exposes stable `data-testid`s for links (e.g. `SearchCard-context`), assert `href` and text inside that subtree.
 
 ```ts
-const planLink = screen.getByTestId('SearchTaskCard-planLink');
+const planLink = screen.getByTestId('SearchCard-context');
 expect(planLink).toHaveAttribute('href', '/plans/plan-123');
 expect(within(planLink).getByText('My Plan')).toBeInTheDocument();
 ```

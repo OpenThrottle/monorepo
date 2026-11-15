@@ -20,7 +20,7 @@ Prefer importing these from `~/testing/route-fixtures` instead of duplicating `c
 | Settings diagnostics | `SettingsDebugPanel`, `SettingsLogsPanel`, `SettingsEnvironmentDiagnostics`, `SettingsPortsTroubleshootingCard`              | Env/storage/health surfaces; easy to break across deploys                                  |
 | Queues & jobs        | `QueueJobDetail`, `QueueJobsTable`, `QueueForm`                                                                              | Dense job list, payload display, links to plan/task                                        |
 | Global resilience    | `GlobalErrorBoundary`, `GlobalServerHealthBanner`                                                                            | Error classification and retry UX                                                          |
-| Search (power user)  | `SearchForm`, `SearchWhyThisResult`, `SearchPlanCard`                                                                        | Explainability and ranking-sensitive UI                                                    |
+| Search (power user)  | `SearchToolbar`, `SearchWhyThisResult`, `SearchCard`                                                                         | Explainability and ranking-sensitive UI                                                    |
 
 ## Tier 2 — solid ROI (dashboard, generators, PRs)
 

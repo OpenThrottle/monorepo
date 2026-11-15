@@ -13,5 +13,6 @@ query getSearchResults($input: SearchInput!) {
       taskId
       taskTitle
     }
+    total
   }
 }

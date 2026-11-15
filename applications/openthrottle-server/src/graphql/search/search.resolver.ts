@@ -28,8 +28,12 @@ import { searchHybrid } from './search.utils.ts';
 
 const DEFAULT_SEARCH_LIMIT = 20;
 const MAX_SEARCH_LIMIT = 50;
-/** Each retriever over-fetches so fusion has candidates past the cut (2x the limit, at most 100). */
-const HYBRID_CANDIDATE_FACTOR = 2;
+/**
+ * @description How many results one query ranks. Each retriever fetches this many candidates and
+ * fusion ranks them once; every page is a slice of that one ranking, so pages never overlap or
+ * skip, and `total` is the ranking's length (capped here).
+ */
+const SEARCH_CANDIDATE_CAP = 100;
 
 /** The entity a chunk belongs to: several vector chunks of one plan, task or doc fuse into one result. */
 function chunkEntityKey(chunk: SemanticSearchChunk): string {
@@ -99,17 +103,18 @@ export class SearchResolver {
       MAX_SEARCH_LIMIT,
     );
 
+    const offset = Math.min(
+      Math.max(0, input.offset ?? 0),
+      SEARCH_CANDIDATE_CAP,
+    );
+
     const mode = requestedMode(input.mode ?? null);
     const query = input.query?.trim() ?? '';
     if (!query) {
-      return { chunks: [], mode, reason: null };
+      return { chunks: [], mode, reason: null, total: 0 };
     }
 
-    const hybridCandidates = Math.min(
-      limit * HYBRID_CANDIDATE_FACTOR,
-      MAX_SEARCH_LIMIT * HYBRID_CANDIDATE_FACTOR,
-    );
-    const candidates = mode === 'hybrid' ? hybridCandidates : limit;
+    const candidates = SEARCH_CANDIDATE_CAP;
     const found = await searchHybrid({
       embed: () => {
         return this.embedder.embed([query], 'query');
@@ -118,7 +123,7 @@ export class SearchResolver {
       lexical: () => {
         return runLexicalSearch(query, candidates);
       },
-      limit,
+      limit: SEARCH_CANDIDATE_CAP,
       mode,
       semantic: (vector, model) => {
         return runSemanticSearch(vector, candidates, model);
@@ -126,11 +131,12 @@ export class SearchResolver {
     });
     const result = new SearchResult();
 
-    result.chunks = found.chunks.map((ranked) => {
+    result.chunks = found.chunks.slice(offset, offset + limit).map((ranked) => {
       return mapChunkToObject(ranked.chunk, ranked.fusedScore);
     });
     result.mode = found.mode;
     result.reason = found.reason;
+    result.total = Math.min(found.chunks.length, SEARCH_CANDIDATE_CAP);
 
     return result;
   }

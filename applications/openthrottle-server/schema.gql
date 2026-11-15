@@ -4081,6 +4081,11 @@ type SearchResult {
   Why the result is lexical, or null when it is hybrid or semantic: embedder_unconfigured | embedder_dimension_mismatch | embedder_provider_error | no_embeddings.
   """
   reason: String
+
+  """
+  How many ranked candidates the query matched, capped at 100. Page through them with `offset` and `limit`.
+  """
+  total: Int!
 }
 
 type ListSourceInfoObject {
@@ -7012,6 +7017,11 @@ input SearchInput {
   Requested ranking: "hybrid" (default; vector and full-text merged by reciprocal rank fusion) or "semantic" (vector similarity only). The full-text fallback still applies when the embedder cannot answer.
   """
   mode: String
+
+  """
+  Number of ranked chunks to skip before returning `limit` (default 0). Pages are slices of one ranking of at most 100 candidates, so offsets past `total` return no chunks.
+  """
+  offset: Int
 
   """Text query to search for."""
   query: String!

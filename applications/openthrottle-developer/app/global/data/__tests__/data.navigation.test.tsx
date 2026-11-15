@@ -79,4 +79,16 @@ describe('dataNavigationV2 Blog entry', () => {
 
     expect(await component.findByText('blog page')).toBeDefined();
   });
+
+  test('lists Search in the main Agents section, not as a beta link', () => {
+    const search = Object.values(dataNavigationV2)
+      .flat()
+      .filter((link) => link.to === '/search');
+
+    expect(search).toHaveLength(1);
+    expect(search[0]?.beta).not.toBe(true);
+    expect(
+      dataNavigationV2['Agents']?.some((link) => link.to === '/search'),
+    ).toBe(true);
+  });
 });

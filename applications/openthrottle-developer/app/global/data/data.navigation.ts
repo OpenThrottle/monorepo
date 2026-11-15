@@ -112,12 +112,6 @@ const BETA_NAVIGATION_LINKS: PermissionGatedNavigationLink[] = [
   },
   {
     beta: true,
-    children: 'Search',
-    icon: Search,
-    to: '/search',
-  },
-  {
-    beta: true,
     children: 'Timeline',
     icon: TimelineIcon,
     to: '/timeline',
@@ -171,6 +165,11 @@ export const dataNavigationV2: Record<string, PermissionGatedNavigationLink[]> =
         children: 'Schedule',
         icon: CalendarClockIcon,
         to: '/schedule',
+      },
+      {
+        children: 'Search',
+        icon: Search,
+        to: '/search',
       },
       {
         children: 'Skills',
