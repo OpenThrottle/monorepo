@@ -50,14 +50,14 @@ export const GlobalFeatureOnboardingTrigger = (
       className={cn(
         'cursor-pointer transition-colors',
         'inline-flex items-center gap-3',
-        'text-muted-foreground hover:text-foreground text-sm',
+        'text-muted-foreground hover:text-foreground text-xs',
         className,
       )}
       data-testid="GlobalFeatureOnboardingTrigger"
       onClick={handleClick}
       type="button"
     >
-      <SparklesIcon className="text-accent size-4" />
+      <SparklesIcon className="text-accent size-3" />
       {label}
     </button>
   );

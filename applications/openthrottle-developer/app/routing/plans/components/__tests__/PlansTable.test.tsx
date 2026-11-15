@@ -6,10 +6,7 @@ import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
 import type { PlanCardFragment } from '~/__generated__/graphql';
-import {
-  PLANS_INDEX_EMPTY_COPY,
-  PLANS_ROW_ACTIONS_COPY,
-} from '~/routing/plans/data/data.copy';
+import { PLANS_INDEX_EMPTY_COPY } from '~/routing/plans/data/data.copy';
 import { renderRoutesStub } from '~/testing/route-fixtures';
 
 import type { PlansTableProps } from '../PlansTable';
@@ -119,19 +116,8 @@ describe('PlansTable Component', () => {
       withPlans.getByRole('columnheader', { name: 'Plan Details' }),
     ).toBeInTheDocument();
     expect(
-      withPlans.getByRole('columnheader', { name: 'Actions' }),
-    ).toBeInTheDocument();
-  });
-
-  test('renders plan tags inline on the row', () => {
-    const { getByLabelText, queryByLabelText } = renderPlansTable({
-      plans: mockPlans,
-    });
-
-    expect(getByLabelText('Tag: discovery')).toBeInTheDocument();
-    expect(getByLabelText('Tag: frontend')).toBeInTheDocument();
-    // Second plan has no tags — nothing extra rendered for it.
-    expect(queryByLabelText('Tag: chore')).not.toBeInTheDocument();
+      withPlans.queryByRole('columnheader', { name: 'Actions' }),
+    ).not.toBeInTheDocument();
   });
 
   test('renders plans from props when provided', () => {
@@ -149,43 +135,22 @@ describe('PlansTable Component', () => {
     expect(titleLink2).toHaveAttribute('href', '/plans/plan-2');
     expect(getByLabelText('1 of 3 tasks resolved')).toBeDefined();
     expect(getByLabelText('0 of 0 tasks resolved')).toBeDefined();
-    expect(
-      getByRole('button', {
-        name: `${PLANS_ROW_ACTIONS_COPY.menuAriaLabelPrefix} First Plan`,
-      }),
-    ).toBeInTheDocument();
-    expect(
-      getByRole('button', {
-        name: `${PLANS_ROW_ACTIONS_COPY.menuAriaLabelPrefix} Second Plan`,
-      }),
-    ).toBeInTheDocument();
   });
 
-  // A remount here is what destroyed the keyed cancel fetcher's payload: React
-  // Router refcounts fetcher keys, so tearing down the row took the count to
-  // zero and purged `fetcher.data` before the Kill outcome could be toasted.
+  // Rows must re-render in place on revalidation, not remount: a remount drops
+  // any row-local state (e.g. a keyed fetcher's payload).
   test('keeps row cells mounted across a revalidation', async () => {
     const user = userEvent.setup();
     const component = renderRoutesStub(<RevalidationHarness />);
-    const actionsLabel = `${PLANS_ROW_ACTIONS_COPY.menuAriaLabelPrefix} First Plan`;
-    const before = component.getByRole('button', { name: actionsLabel });
+    const linkLabel = 'View plan: First Plan';
+    const before = component.getByRole('link', { name: linkLabel });
 
     await user.click(component.getByRole('button', { name: 'Revalidate' }));
 
-    const after = component.getByRole('button', { name: actionsLabel });
+    const after = component.getByRole('link', { name: linkLabel });
 
     // Same DOM node instance: the cell re-rendered, it did not remount.
     expect(after).toBe(before);
-  });
-
-  test('shows author, assignee, and updated date when present', () => {
-    const { container, getByText } = renderPlansTable({
-      plans: mockPlans,
-    });
-
-    expect(getByText('author1 → assignee1')).toBeDefined();
-    expect(container.textContent).toContain('Updated:');
-    expect(container.textContent).toMatch(/\d{1,2}\/\d{1,2}\/2025/);
   });
 
   test('renders status badges when statusFilterUrls is provided', () => {
@@ -275,16 +240,14 @@ describe('PlansTable Component', () => {
       expect(heading).toHaveClass('line-clamp-1', 'max-sm:line-clamp-2');
     });
 
-    test('keeps every row actions menu inside its own row', () => {
+    test('keeps every plan link inside its own row', () => {
       const { getByRole } = renderPlansTable({ plans: mockPlans });
 
       for (const title of ['First Plan', 'Second Plan']) {
-        const menu = getByRole('button', {
-          name: `${PLANS_ROW_ACTIONS_COPY.menuAriaLabelPrefix} ${title}`,
-        });
-        const row = menu.closest('tr');
+        const link = getByRole('link', { name: `View plan: ${title}` });
+        const row = link.closest('tr');
         expect(row).toHaveClass('max-sm:flex');
-        expect(row?.querySelectorAll(':scope > td')).toHaveLength(3);
+        expect(row?.querySelectorAll(':scope > td')).toHaveLength(2);
       }
     });
 
