@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
@@ -26,7 +26,7 @@ const matches: Route.ComponentProps['matches'] = [
 
 describe('routes/pull-requests.$prId.tsx', () => {
   test('renders not found state when pull is missing', () => {
-    render(
+    const component = render(
       <MemoryRouter>
         <PullRequestDetail
           actionData={undefined}
@@ -42,12 +42,12 @@ describe('routes/pull-requests.$prId.tsx', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByTestId('PullRequestNotFound')).toBeInTheDocument();
-    expect(screen.getByText('Pull request not found')).toBeInTheDocument();
+    expect(component.getByTestId('PullRequestNotFound')).toBeInTheDocument();
+    expect(component.getByText('Pull request not found')).toBeInTheDocument();
   });
 
   test('renders pull request title and number when found', () => {
-    render(
+    const component = render(
       <MemoryRouter>
         <PullRequestDetail
           actionData={undefined}
@@ -75,9 +75,9 @@ describe('routes/pull-requests.$prId.tsx', () => {
     );
 
     expect(
-      screen.getByRole('heading', { name: /fix queues/i }),
+      component.getByRole('heading', { name: /fix queues/i }),
     ).toBeInTheDocument();
-    expect(screen.getByText('#42')).toBeInTheDocument();
-    expect(screen.getByText('visormatt')).toBeInTheDocument();
+    expect(component.getByText('#42')).toBeInTheDocument();
+    expect(component.getByText('visormatt')).toBeInTheDocument();
   });
 });

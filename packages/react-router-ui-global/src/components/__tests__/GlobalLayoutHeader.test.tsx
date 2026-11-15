@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { render, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
@@ -39,33 +39,35 @@ const renderHeader = (
 
 describe('GlobalLayoutHeader Component', () => {
   test('renders navigation chrome and inert search field by default', () => {
-    renderHeader({});
+    const component = renderHeader({});
     expect(
-      screen.getByRole('button', { name: /toggle sidebar/i }),
+      component.getByRole('button', { name: /toggle sidebar/i }),
     ).toBeInTheDocument();
-    expect(screen.getByTestId('OpenThrottleBreadcrumbs')).toBeInTheDocument();
-    expect(screen.getByRole('searchbox')).toBeInTheDocument();
+    expect(
+      component.getByTestId('OpenThrottleBreadcrumbs'),
+    ).toBeInTheDocument();
+    expect(component.getByRole('searchbox')).toBeInTheDocument();
   });
 
   test('when search is unwired, omits search form wrapper', () => {
-    renderHeader({});
+    const component = renderHeader({});
     expect(
-      screen.queryByTestId('GlobalLayoutHeaderSearch'),
+      component.queryByTestId('GlobalLayoutHeaderSearch'),
     ).not.toBeInTheDocument();
   });
 });
 
 describe('GlobalLayoutHeader mobile chrome', () => {
   test('exposes the trailing links through a labelled overflow menu', () => {
-    renderHeader({});
+    const component = renderHeader({});
     expect(
-      screen.getByRole('button', { name: 'More actions' }),
+      component.getByRole('button', { name: 'More actions' }),
     ).toBeInTheDocument();
   });
 
   test('gives every header link an accessible name', () => {
-    renderHeader({});
-    const nav = screen.getByTestId('global-layout-nav');
+    const component = renderHeader({});
+    const nav = component.getByTestId('global-layout-nav');
     within(nav)
       .getAllByRole('link')
       .forEach((link) => {
@@ -76,9 +78,9 @@ describe('GlobalLayoutHeader mobile chrome', () => {
   test('the collapsed search icon opens the commander via engage', async () => {
     const user = userEvent.setup();
     const onSearchChromeEvent = vi.fn();
-    renderHeader({ onSearchChromeEvent });
+    const component = renderHeader({ onSearchChromeEvent });
 
-    await user.click(screen.getByRole('button', { name: 'Search' }));
+    await user.click(component.getByRole('button', { name: 'Search' }));
 
     expect(onSearchChromeEvent).toHaveBeenCalledWith({ type: 'engage' });
   });
@@ -88,9 +90,9 @@ describe('GlobalLayoutHeader search chrome', () => {
   test('focus emits engage once wired', async () => {
     const user = userEvent.setup();
     const onSearchChromeEvent = vi.fn();
-    renderHeader({ onSearchChromeEvent });
+    const component = renderHeader({ onSearchChromeEvent });
 
-    const field = screen.getByRole('searchbox');
+    const field = component.getByRole('searchbox');
     await user.click(field);
 
     expect(onSearchChromeEvent).toHaveBeenCalledWith({ type: 'engage' });
@@ -99,9 +101,9 @@ describe('GlobalLayoutHeader search chrome', () => {
   test('focus via keyboard Tab emits engage', async () => {
     const user = userEvent.setup();
     const onSearchChromeEvent = vi.fn();
-    renderHeader({ onSearchChromeEvent });
+    const component = renderHeader({ onSearchChromeEvent });
 
-    const field = screen.getByRole('searchbox');
+    const field = component.getByRole('searchbox');
     await tabUntilFocused(user, field, 30);
 
     expect(field).toHaveFocus();
@@ -111,9 +113,9 @@ describe('GlobalLayoutHeader search chrome', () => {
   test('submit emits submit with trimmed query when non-empty', async () => {
     const user = userEvent.setup();
     const onSearchChromeEvent = vi.fn();
-    renderHeader({ onSearchChromeEvent });
+    const component = renderHeader({ onSearchChromeEvent });
 
-    const field = screen.getByRole('searchbox');
+    const field = component.getByRole('searchbox');
     await user.type(field, '  hello world  ');
     await user.keyboard('{Enter}');
 
@@ -126,9 +128,9 @@ describe('GlobalLayoutHeader search chrome', () => {
   test('submit with empty draft does not emit submit', async () => {
     const user = userEvent.setup();
     const onSearchChromeEvent = vi.fn();
-    renderHeader({ onSearchChromeEvent });
+    const component = renderHeader({ onSearchChromeEvent });
 
-    const field = screen.getByRole('searchbox');
+    const field = component.getByRole('searchbox');
     await user.click(field);
     await user.keyboard('{Enter}');
 
@@ -157,9 +159,9 @@ describe('GlobalLayoutHeader search chrome', () => {
     const RoutesStub = createRoutesStub([
       { Component: ControlledHarness, path: '/' },
     ]);
-    render(<RoutesStub />);
+    const component = render(<RoutesStub />);
 
-    const field = screen.getByRole('searchbox');
+    const field = component.getByRole('searchbox');
     expect(field).toHaveValue('seed');
 
     await user.type(field, 'x');
@@ -169,15 +171,15 @@ describe('GlobalLayoutHeader search chrome', () => {
 
 describe('GlobalLayoutHeader touch targets', () => {
   test('grows every header control to 44px on coarse pointers and drops the gaps', () => {
-    renderHeader({ onSearchChromeEvent: vi.fn() });
+    const component = renderHeader({ onSearchChromeEvent: vi.fn() });
 
-    expect(screen.getByRole('button', { name: /toggle sidebar/i })).toHaveClass(
+    expect(
+      component.getByRole('button', { name: /toggle sidebar/i }),
+    ).toHaveClass('pointer-coarse:size-11');
+    expect(component.getByRole('button', { name: 'Search' })).toHaveClass(
       'pointer-coarse:size-11',
     );
-    expect(screen.getByRole('button', { name: 'Search' })).toHaveClass(
-      'pointer-coarse:size-11',
-    );
-    expect(screen.getByTestId('global-layout-nav')).toHaveClass(
+    expect(component.getByTestId('global-layout-nav')).toHaveClass(
       'pointer-coarse:max-sm:gap-0',
     );
   });

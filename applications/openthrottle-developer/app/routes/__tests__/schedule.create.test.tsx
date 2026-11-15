@@ -1,4 +1,3 @@
-import { screen } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
@@ -22,7 +21,7 @@ const matches: Route.ComponentProps['matches'] = [
 
 describe('routes/schedule.create.tsx', () => {
   test('renders the schedule form in create mode', () => {
-    renderRoutesStub(
+    const component = renderRoutesStub(
       <CreateSchedule
         actionData={undefined}
         loaderData={{ agentClis: undefined, repositories: [] }}
@@ -31,16 +30,16 @@ describe('routes/schedule.create.tsx', () => {
       />,
     );
 
-    expect(screen.getByTestId('ScheduleForm')).toBeInTheDocument();
-    expect(screen.getByLabelText('Prompt')).toBeRequired();
-    expect(screen.getByLabelText(SCHEDULE_COPY.cronLabel)).toBeRequired();
+    expect(component.getByTestId('ScheduleForm')).toBeInTheDocument();
+    expect(component.getByLabelText('Prompt')).toBeRequired();
+    expect(component.getByLabelText(SCHEDULE_COPY.cronLabel)).toBeRequired();
     expect(
-      screen.getByRole('button', { name: /create schedule/i }),
+      component.getByRole('button', { name: /create schedule/i }),
     ).toBeInTheDocument();
   });
 
   test('surfaces an action error inline', () => {
-    renderRoutesStub(
+    const component = renderRoutesStub(
       <CreateSchedule
         actionData={{
           error: 'Name, prompt, provider, and schedule are required.',
@@ -51,6 +50,6 @@ describe('routes/schedule.create.tsx', () => {
       />,
     );
 
-    expect(screen.getByRole('alert')).toHaveTextContent(/are required/i);
+    expect(component.getByRole('alert')).toHaveTextContent(/are required/i);
   });
 });

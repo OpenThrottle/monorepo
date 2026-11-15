@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
@@ -11,13 +11,13 @@ describe('NotificationPermissionDenied Component', () => {
       return <NotificationPermissionDenied />;
     };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    render(<RoutesStub />);
+    const component = render(<RoutesStub />);
 
     expect(
-      screen.getByTestId('NotificationPermissionDenied'),
+      component.getByTestId('NotificationPermissionDenied'),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(
+      component.getByText(
         "Desktop notifications are blocked. You can re-enable them in your browser's site settings.",
       ),
     ).toBeInTheDocument();

@@ -1,4 +1,5 @@
-import { render, screen } from '@testing-library/react';
+import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
@@ -7,6 +8,7 @@ import type { HomeBuiltWithProps } from '../HomeBuiltWith';
 import { HomeBuiltWith } from '../HomeBuiltWith';
 
 describe('HomeBuiltWith Component', () => {
+  let component: RenderResult;
   let props: HomeBuiltWithProps;
 
   beforeEach(() => {
@@ -17,13 +19,13 @@ describe('HomeBuiltWith Component', () => {
     };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
-    render(<RoutesStub />);
+    component = render(<RoutesStub />);
   });
 
   test('should render section heading', () => {
-    expect(screen.getByTestId('HomeBuiltWith')).toBeInTheDocument();
+    expect(component.getByTestId('HomeBuiltWith')).toBeInTheDocument();
     expect(
-      screen.getByRole('heading', {
+      component.getByRole('heading', {
         level: 2,
         name: /Everything is built on OpenSource work/,
       }),
@@ -31,7 +33,7 @@ describe('HomeBuiltWith Component', () => {
   });
 
   test('when technologies list is empty, should not render technology images', () => {
-    expect(screen.queryAllByRole('img')).toHaveLength(0);
-    expect(screen.queryAllByRole('link')).toHaveLength(0);
+    expect(component.queryAllByRole('img')).toHaveLength(0);
+    expect(component.queryAllByRole('link')).toHaveLength(0);
   });
 });

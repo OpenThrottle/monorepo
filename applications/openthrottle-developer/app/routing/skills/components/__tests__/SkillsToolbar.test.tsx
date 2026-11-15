@@ -1,5 +1,4 @@
 import { GLOBAL_TOOLBAR_SEARCH_COPY } from '@openthrottle/react-router-ui-global';
-import { cleanup, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -35,63 +34,64 @@ describe('SkillsToolbar Component', () => {
   });
 
   test('renders the GlobalToolbarSearch control with skills copy', () => {
-    renderRoutesStub(<SkillsToolbar />);
+    const component = renderRoutesStub(<SkillsToolbar />);
 
     // The shared control owns its own form role=search + labeled searchbox.
-    expect(screen.getByRole('search')).toBeInTheDocument();
+    expect(component.getByRole('search')).toBeInTheDocument();
     expect(
-      screen.getByRole('searchbox', { name: SKILLS_SEARCH_COPY.ariaLabel }),
+      component.getByRole('searchbox', { name: SKILLS_SEARCH_COPY.ariaLabel }),
     ).toHaveAttribute('placeholder', SKILLS_SEARCH_COPY.placeholder);
     expect(
-      screen.getByRole('button', {
+      component.getByRole('button', {
         name: GLOBAL_TOOLBAR_SEARCH_COPY.buttonLabel,
       }),
     ).toBeInTheDocument();
-    expect(screen.getByTestId('SkillsToolbar')).toBeInTheDocument();
+    expect(component.getByTestId('SkillsToolbar')).toBeInTheDocument();
   });
 
   describe('beta-gated authoring links', () => {
     test('hides both links when beta preview is disabled', () => {
-      renderRoutesStub(<SkillsToolbar />);
+      const component = renderRoutesStub(<SkillsToolbar />);
 
       expect(
-        screen.queryByRole('link', { name: /Manage availability/i }),
+        component.queryByRole('link', { name: /Manage availability/i }),
       ).not.toBeInTheDocument();
       expect(
-        screen.queryByRole('link', { name: /Manage vocabulary/i }),
+        component.queryByRole('link', { name: /Manage vocabulary/i }),
       ).not.toBeInTheDocument();
     });
 
     test('links to the availability authoring surface when beta preview is enabled', () => {
       betaPreview.enabled = true;
 
-      renderRoutesStub(<SkillsToolbar />);
+      const component = renderRoutesStub(<SkillsToolbar />);
 
-      const link = screen.getByRole('link', { name: /Manage availability/i });
+      const link = component.getByRole('link', {
+        name: /Manage availability/i,
+      });
       expect(link).toHaveAttribute('href', '/skills/availability');
     });
 
     test('links to the tag-vocabulary manager when beta preview is enabled', () => {
       betaPreview.enabled = true;
 
-      renderRoutesStub(<SkillsToolbar />);
+      const component = renderRoutesStub(<SkillsToolbar />);
 
-      const link = screen.getByRole('link', { name: /Manage vocabulary/i });
+      const link = component.getByRole('link', { name: /Manage vocabulary/i });
       expect(link).toHaveAttribute('href', '/skills/vocabulary');
     });
   });
 
   test('no longer renders the dead Create-new-skill control', () => {
-    renderRoutesStub(<SkillsToolbar />);
+    const component = renderRoutesStub(<SkillsToolbar />);
 
-    expect(screen.queryByText('Create new skill')).not.toBeInTheDocument();
+    expect(component.queryByText('Create new skill')).not.toBeInTheDocument();
   });
 
   describe('source filter (All / OpenThrottle / External)', () => {
     const onSourceFilterChange = vi.fn();
 
     beforeEach(() => {
-      cleanup();
       onSourceFilterChange.mockClear();
     });
 
@@ -165,10 +165,10 @@ describe('SkillsToolbar Component', () => {
   // is NOT behind FEATURE_BETA_PREVIEW, so it must be present either way.
   describe('the create-skill entry point', () => {
     test('links to /skills/create', () => {
-      renderRoutesStub(<SkillsToolbar />);
+      const component = renderRoutesStub(<SkillsToolbar />);
 
       expect(
-        screen.getByRole('link', {
+        component.getByRole('link', {
           name: SKILL_CREATE_COPY.toolbarNewSkillLabel,
         }),
       ).toHaveAttribute('href', '/skills/create');
@@ -176,10 +176,10 @@ describe('SkillsToolbar Component', () => {
 
     test('is present with the beta preview enabled too', () => {
       betaPreview.enabled = true;
-      renderRoutesStub(<SkillsToolbar />);
+      const component = renderRoutesStub(<SkillsToolbar />);
 
       expect(
-        screen.getByRole('link', {
+        component.getByRole('link', {
           name: SKILL_CREATE_COPY.toolbarNewSkillLabel,
         }),
       ).toBeInTheDocument();

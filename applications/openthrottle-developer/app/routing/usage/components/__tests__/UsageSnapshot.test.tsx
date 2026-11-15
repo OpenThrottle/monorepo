@@ -1,4 +1,3 @@
-import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -37,7 +36,7 @@ describe('UsageSnapshot Component', () => {
   });
 
   test('renders export card and copy action', () => {
-    renderRoutesStub(
+    const component = renderRoutesStub(
       <UsageSnapshot
         dailyStats={dailyStats}
         rangeDays={30}
@@ -46,9 +45,9 @@ describe('UsageSnapshot Component', () => {
       />,
     );
 
-    expect(screen.getByText('Export coarse usage data')).toBeInTheDocument();
+    expect(component.getByText('Export coarse usage data')).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: 'Copy usage snapshot (JSON)' }),
+      component.getByRole('button', { name: 'Copy usage snapshot (JSON)' }),
     ).toBeInTheDocument();
   });
 
@@ -59,7 +58,7 @@ describe('UsageSnapshot Component', () => {
       .mockResolvedValue(undefined);
     vi.stubGlobal('navigator', { clipboard: { writeText } });
 
-    renderRoutesStub(
+    const component = renderRoutesStub(
       <UsageSnapshot
         dailyStats={dailyStats}
         rangeDays={30}
@@ -69,7 +68,7 @@ describe('UsageSnapshot Component', () => {
     );
 
     await user.click(
-      screen.getByRole('button', { name: 'Copy usage snapshot (JSON)' }),
+      component.getByRole('button', { name: 'Copy usage snapshot (JSON)' }),
     );
 
     expect(writeText).toHaveBeenCalledTimes(1);

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import { describe, expect, test } from 'vitest';
@@ -17,13 +17,13 @@ describe('AgentsSectionQuickLinks', () => {
       { initialEntries: ['/'] },
     );
 
-    render(<RouterProvider router={router} />);
+    const component = render(<RouterProvider router={router} />);
 
-    expect(screen.getByText(/Agents workspace/i)).toBeInTheDocument();
+    expect(component.getByText(/Agents workspace/i)).toBeInTheDocument();
 
-    const prompts = screen.getByRole('link', { name: /^Prompts$/i });
-    const skills = screen.getByRole('link', { name: /^Skills$/i });
-    const usage = screen.getByRole('link', { name: /^Usage$/i });
+    const prompts = component.getByRole('link', { name: /^Prompts$/i });
+    const skills = component.getByRole('link', { name: /^Skills$/i });
+    const usage = component.getByRole('link', { name: /^Usage$/i });
 
     expect(prompts).toHaveAttribute('href', '/prompts');
     expect(skills).toHaveAttribute('href', '/skills');

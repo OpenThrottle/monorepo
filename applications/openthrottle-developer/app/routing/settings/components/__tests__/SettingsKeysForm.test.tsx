@@ -1,5 +1,5 @@
 import type { RenderResult } from '@testing-library/react';
-import { cleanup, render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
@@ -54,37 +54,39 @@ const renderForm = (props: SettingsKeysFormProps = {}): RenderResult => {
 
 describe('SettingsKeysForm Component', () => {
   afterEach(() => {
-    cleanup();
     toastError.mockClear();
     toastSuccess.mockClear();
   });
 
   describe('when dialog is closed', () => {
     test('does not show create form in the document', () => {
-      renderForm({ createDialogOpen: false, serviceAccountId: 'sa-1' });
+      const component = renderForm({
+        createDialogOpen: false,
+        serviceAccountId: 'sa-1',
+      });
 
       expect(
-        screen.queryByRole('heading', { name: 'Create credential' }),
+        component.queryByRole('heading', { name: 'Create credential' }),
       ).not.toBeInTheDocument();
     });
   });
 
   describe('when dialog is open', () => {
     test('renders create credential form with intent fields', () => {
-      renderForm({
+      const component = renderForm({
         createDialogOpen: true,
         serviceAccountId: 'sa-1',
       });
 
-      expect(screen.getByTestId('SettingsKeysForm')).toBeInTheDocument();
+      expect(component.getByTestId('SettingsKeysForm')).toBeInTheDocument();
       expect(
-        screen.getByRole('heading', { name: 'Create credential' }),
+        component.getByRole('heading', { name: 'Create credential' }),
       ).toBeInTheDocument();
       expect(
-        screen.getByTestId('SettingsKeysForm-label-input'),
+        component.getByTestId('SettingsKeysForm-label-input'),
       ).toBeInTheDocument();
       expect(
-        screen.getByTestId('SettingsKeysForm-submit-button'),
+        component.getByTestId('SettingsKeysForm-submit-button'),
       ).toBeEnabled();
       const intentInput = document.querySelector<HTMLInputElement>(
         'input[name="intent"]',
@@ -97,20 +99,20 @@ describe('SettingsKeysForm Component', () => {
     });
 
     test('disables submit when no service account is selected', () => {
-      renderForm({
+      const component = renderForm({
         createDialogOpen: true,
         serviceAccountId: null,
       });
 
       expect(
-        screen.getByTestId('SettingsKeysForm-submit-button'),
+        component.getByTestId('SettingsKeysForm-submit-button'),
       ).toBeDisabled();
     });
   });
 
   describe('when create succeeds', () => {
     test('shows one-time token and copy control', () => {
-      renderForm({
+      const component = renderForm({
         actionData: {
           credential: credential({ id: 'cred-1', prefix: 'abcd1234' }),
           intent: 'createCredential',
@@ -121,16 +123,16 @@ describe('SettingsKeysForm Component', () => {
       });
 
       expect(
-        screen.getByRole('heading', { name: 'Credential created' }),
+        component.getByRole('heading', { name: 'Credential created' }),
       ).toBeInTheDocument();
-      expect(screen.getByTestId('SettingsKeysForm-token-input')).toHaveValue(
+      expect(component.getByTestId('SettingsKeysForm-token-input')).toHaveValue(
         'ot_sa_abcd_secret',
       );
       expect(
-        screen.getByTestId('SettingsKeysForm-copy-token'),
+        component.getByTestId('SettingsKeysForm-copy-token'),
       ).toBeInTheDocument();
       expect(
-        screen.queryByTestId('SettingsKeysForm-submit-button'),
+        component.queryByTestId('SettingsKeysForm-submit-button'),
       ).not.toBeInTheDocument();
     });
 
@@ -142,7 +144,7 @@ describe('SettingsKeysForm Component', () => {
         },
       });
 
-      renderForm({
+      const component = renderForm({
         actionData: {
           credential: credential({ id: 'cred-1', prefix: 'abcd1234' }),
           intent: 'createCredential',
@@ -152,7 +154,7 @@ describe('SettingsKeysForm Component', () => {
         serviceAccountId: 'sa-1',
       });
 
-      await user.click(screen.getByTestId('SettingsKeysForm-copy-token'));
+      await user.click(component.getByTestId('SettingsKeysForm-copy-token'));
 
       expect(toastError).toHaveBeenCalledWith(
         'Could not copy token to clipboard',
@@ -164,7 +166,7 @@ describe('SettingsKeysForm Component', () => {
       const writeText = vi.fn().mockResolvedValue(undefined);
       vi.stubGlobal('navigator', { clipboard: { writeText } });
 
-      renderForm({
+      const component = renderForm({
         actionData: {
           credential: credential({ id: 'cred-1', prefix: 'abcd1234' }),
           intent: 'createCredential',
@@ -174,7 +176,7 @@ describe('SettingsKeysForm Component', () => {
         serviceAccountId: 'sa-1',
       });
 
-      await user.click(screen.getByTestId('SettingsKeysForm-copy-token'));
+      await user.click(component.getByTestId('SettingsKeysForm-copy-token'));
 
       expect(writeText).toHaveBeenCalledWith('ot_sa_abcd_secret');
       expect(toastSuccess).toHaveBeenCalledWith(

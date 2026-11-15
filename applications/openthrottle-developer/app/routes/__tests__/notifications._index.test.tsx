@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
@@ -21,7 +21,7 @@ const matches: Route.ComponentProps['matches'] = [
 
 describe('routes/notifications._index.tsx', () => {
   test('should render', () => {
-    render(
+    const component = render(
       <MemoryRouter>
         <NotificationsIndex
           actionData={undefined}
@@ -33,10 +33,10 @@ describe('routes/notifications._index.tsx', () => {
     );
 
     expect(
-      screen.getByRole('heading', { name: 'Notifications' }),
+      component.getByRole('heading', { name: 'Notifications' }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('heading', { name: 'Event subscriptions' }),
+      component.getByRole('heading', { name: 'Event subscriptions' }),
     ).toBeInTheDocument();
   });
 });

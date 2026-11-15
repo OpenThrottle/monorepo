@@ -1,4 +1,3 @@
-import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -24,15 +23,15 @@ describe('SettingsSupportBundle Component', () => {
   });
 
   test('renders support bundle copy and action buttons', () => {
-    renderRoutesStub(<SettingsSupportBundle />);
+    const component = renderRoutesStub(<SettingsSupportBundle />);
 
-    expect(screen.getByText('Support bundle')).toBeInTheDocument();
-    expect(screen.getByText(/sanitized/i)).toBeInTheDocument();
+    expect(component.getByText('Support bundle')).toBeInTheDocument();
+    expect(component.getByText(/sanitized/i)).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: 'Copy bundle JSON' }),
+      component.getByRole('button', { name: 'Copy bundle JSON' }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: 'Download bundle JSON' }),
+      component.getByRole('button', { name: 'Download bundle JSON' }),
     ).toBeInTheDocument();
   });
 
@@ -41,9 +40,11 @@ describe('SettingsSupportBundle Component', () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     vi.stubGlobal('navigator', { clipboard: { writeText } });
 
-    renderRoutesStub(<SettingsSupportBundle />);
+    const component = renderRoutesStub(<SettingsSupportBundle />);
 
-    await user.click(screen.getByRole('button', { name: 'Copy bundle JSON' }));
+    await user.click(
+      component.getByRole('button', { name: 'Copy bundle JSON' }),
+    );
 
     expect(writeText).toHaveBeenCalled();
     expect(toastSuccess).toHaveBeenCalledWith(

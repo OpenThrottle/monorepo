@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
@@ -8,13 +8,13 @@ import { CommandList } from '../CommandList';
 
 describe('CommandEmpty', () => {
   test('renders the empty state when no items match', () => {
-    render(
+    const component = render(
       <Command>
         <CommandList>
           <CommandEmpty>No results found</CommandEmpty>
         </CommandList>
       </Command>,
     );
-    expect(screen.getByText('No results found')).toBeInTheDocument();
+    expect(component.getByText('No results found')).toBeInTheDocument();
   });
 });

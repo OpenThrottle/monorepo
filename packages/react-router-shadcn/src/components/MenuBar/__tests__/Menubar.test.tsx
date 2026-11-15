@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
@@ -6,14 +6,14 @@ import { Menubar, MenubarMenu, MenubarTrigger } from '../index';
 
 describe('Menubar', () => {
   test('renders the menubar with a trigger', () => {
-    render(
+    const component = render(
       <Menubar>
         <MenubarMenu>
           <MenubarTrigger>File</MenubarTrigger>
         </MenubarMenu>
       </Menubar>,
     );
-    expect(screen.getByRole('menubar')).toBeInTheDocument();
-    expect(screen.getByText('File')).toBeInTheDocument();
+    expect(component.getByRole('menubar')).toBeInTheDocument();
+    expect(component.getByText('File')).toBeInTheDocument();
   });
 });

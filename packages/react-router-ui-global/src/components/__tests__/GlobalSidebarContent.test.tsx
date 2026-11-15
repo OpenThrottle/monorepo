@@ -1,5 +1,5 @@
 import { Sidebar, SidebarTrigger } from '@openthrottle/react-router-shadcn';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
@@ -29,10 +29,10 @@ describe('GlobalSidebarContent Component', () => {
       );
     };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    render(<RoutesStub />);
+    const component = render(<RoutesStub />);
 
-    expect(screen.queryByRole('link')).not.toBeInTheDocument();
-    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+    expect(component.queryByRole('link')).not.toBeInTheDocument();
+    expect(component.queryByRole('button')).not.toBeInTheDocument();
   });
 });
 
@@ -62,31 +62,31 @@ describe('GlobalSidebarContent collapsible sections', () => {
       // eslint-disable-next-line react/no-multi-comp -- test-local mock component
       { Component: () => <div>Beta page</div>, path: '/beta' },
     ]);
-    render(<RoutesStub />);
+    const component = render(<RoutesStub />);
 
     await waitFor(() => {
       expect(
-        screen.queryByRole('link', { name: 'Link A' }),
+        component.queryByRole('link', { name: 'Link A' }),
       ).not.toBeInTheDocument();
     });
     expect(
-      screen.queryByRole('link', { name: 'Link B' }),
+      component.queryByRole('link', { name: 'Link B' }),
     ).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'Alpha' }));
+    await user.click(component.getByRole('button', { name: 'Alpha' }));
 
     await waitFor(() => {
-      expect(screen.getByRole('link', { name: 'Link A' })).toBeVisible();
+      expect(component.getByRole('link', { name: 'Link A' })).toBeVisible();
     });
     expect(
-      screen.queryByRole('link', { name: 'Link B' }),
+      component.queryByRole('link', { name: 'Link B' }),
     ).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'Alpha' }));
+    await user.click(component.getByRole('button', { name: 'Alpha' }));
 
     await waitFor(() => {
       expect(
-        screen.queryByRole('link', { name: 'Link A' }),
+        component.queryByRole('link', { name: 'Link A' }),
       ).not.toBeInTheDocument();
     });
   });
@@ -108,11 +108,11 @@ describe('GlobalSidebarContent collapsible sections', () => {
       // eslint-disable-next-line react/no-multi-comp -- test-local mock component
       { Component: () => <div>Beta page</div>, path: '/beta' },
     ]);
-    render(<RoutesStub />);
+    const component = render(<RoutesStub />);
 
-    expect(screen.getByRole('link', { name: 'Link A' })).toBeVisible();
-    await user.click(screen.getByRole('link', { name: 'Link A' }));
-    expect(await screen.findByText('Alpha page')).toBeInTheDocument();
+    expect(component.getByRole('link', { name: 'Link A' })).toBeVisible();
+    await user.click(component.getByRole('link', { name: 'Link A' }));
+    expect(await component.findByText('Alpha page')).toBeInTheDocument();
   });
 });
 
@@ -142,15 +142,17 @@ describe('GlobalSidebarContent on phones', () => {
       );
     };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    render(<RoutesStub />);
+    const component = render(<RoutesStub />);
 
-    await user.click(screen.getByRole('button', { name: /toggle sidebar/i }));
-    expect(await screen.findByRole('dialog')).toBeInTheDocument();
+    await user.click(
+      component.getByRole('button', { name: /toggle sidebar/i }),
+    );
+    expect(await component.findByRole('dialog')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('link', { name: 'Link A' }));
+    await user.click(component.getByRole('link', { name: 'Link A' }));
 
     await waitFor(() => {
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(component.queryByRole('dialog')).not.toBeInTheDocument();
     });
   });
 });
@@ -186,11 +188,11 @@ describe('GlobalSidebarContent prefetch and pending navigation', () => {
         path: '/target',
       },
     ]);
-    render(<RoutesStub />);
+    const component = render(<RoutesStub />);
 
     expect(document.querySelector('link[rel="prefetch"]')).toBeNull();
 
-    await user.hover(screen.getByRole('link', { name: 'Repositories' }));
+    await user.hover(component.getByRole('link', { name: 'Repositories' }));
 
     await waitFor(() => {
       expect(
@@ -230,9 +232,9 @@ describe('GlobalSidebarContent prefetch and pending navigation', () => {
         path: '/slow',
       },
     ]);
-    render(<RoutesStub />);
+    const component = render(<RoutesStub />);
 
-    const link = screen.getByRole('link', { name: 'Repositories' });
+    const link = component.getByRole('link', { name: 'Repositories' });
     expect(link).not.toHaveClass('pending');
 
     await user.click(link);

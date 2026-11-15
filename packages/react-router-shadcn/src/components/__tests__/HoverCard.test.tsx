@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, it } from 'vitest';
 
@@ -6,33 +6,33 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from '../HoverCard';
 
 describe('HoverCard', () => {
   it('should render HoverCard root with children', () => {
-    render(
+    const component = render(
       <HoverCard>
         <HoverCardTrigger>Hover</HoverCardTrigger>
       </HoverCard>,
     );
-    expect(screen.getByText('Hover')).toBeInTheDocument();
+    expect(component.getByText('Hover')).toBeInTheDocument();
   });
 
   it('should render HoverCardTrigger as a link (Radix uses Primitive.a)', () => {
-    render(
+    const component = render(
       <HoverCard>
         <HoverCardTrigger>Hover</HoverCardTrigger>
       </HoverCard>,
     );
-    const trigger = screen.getByText('Hover').closest('a');
+    const trigger = component.getByText('Hover').closest('a');
     expect(trigger).toBeInTheDocument();
     expect(trigger).toHaveTextContent('Hover');
   });
 
   it('should render HoverCardContent with expected content when open', () => {
-    render(
+    const component = render(
       <HoverCard onOpenChange={() => {}} open={true}>
         <HoverCardTrigger>Hover</HoverCardTrigger>
         <HoverCardContent>Card content</HoverCardContent>
       </HoverCard>,
     );
-    expect(screen.getByText('Hover')).toBeInTheDocument();
-    expect(screen.getByText('Card content')).toBeInTheDocument();
+    expect(component.getByText('Hover')).toBeInTheDocument();
+    expect(component.getByText('Card content')).toBeInTheDocument();
   });
 });

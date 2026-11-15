@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
@@ -11,7 +11,7 @@ import {
 
 describe('DropdownMenuLabel', () => {
   test('renders inside an open dropdown menu', () => {
-    render(
+    const component = render(
       <DropdownMenu defaultOpen={true}>
         <DropdownMenuTrigger>Open</DropdownMenuTrigger>
         <DropdownMenuContent>
@@ -19,6 +19,6 @@ describe('DropdownMenuLabel', () => {
         </DropdownMenuContent>
       </DropdownMenu>,
     );
-    expect(screen.getByText('Section')).toBeInTheDocument();
+    expect(component.getByText('Section')).toBeInTheDocument();
   });
 });

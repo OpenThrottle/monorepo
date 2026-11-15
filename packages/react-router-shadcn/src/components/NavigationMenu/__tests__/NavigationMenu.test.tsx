@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
@@ -11,7 +11,7 @@ import {
 
 describe('NavigationMenu', () => {
   test('renders the navigation landmark with its items', () => {
-    render(
+    const component = render(
       <NavigationMenu>
         <NavigationMenuList>
           <NavigationMenuItem>
@@ -20,7 +20,7 @@ describe('NavigationMenu', () => {
         </NavigationMenuList>
       </NavigationMenu>,
     );
-    expect(screen.getByRole('navigation')).toBeInTheDocument();
-    expect(screen.getByText('Home')).toBeInTheDocument();
+    expect(component.getByRole('navigation')).toBeInTheDocument();
+    expect(component.getByText('Home')).toBeInTheDocument();
   });
 });

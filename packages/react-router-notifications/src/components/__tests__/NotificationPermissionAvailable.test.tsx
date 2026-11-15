@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
@@ -11,13 +11,15 @@ describe('NotificationPermissionAvailable Component', () => {
       return <NotificationPermissionAvailable />;
     };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    render(<RoutesStub />);
+    const component = render(<RoutesStub />);
 
     expect(
-      screen.getByTestId('NotificationPermissionAvailable'),
+      component.getByTestId('NotificationPermissionAvailable'),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('heading', { name: 'NotificationPermissionAvailable' }),
+      component.getByRole('heading', {
+        name: 'NotificationPermissionAvailable',
+      }),
     ).toBeInTheDocument();
   });
 });

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
@@ -21,7 +21,7 @@ const matches: Route.ComponentProps['matches'] = [
 
 describe('routes/personas.create.tsx', () => {
   test('renders create persona heading', () => {
-    render(
+    const component = render(
       <MemoryRouter>
         <CreatePersona
           actionData={undefined}
@@ -33,7 +33,7 @@ describe('routes/personas.create.tsx', () => {
     );
 
     expect(
-      screen.getByRole('heading', { name: 'Create persona' }),
+      component.getByRole('heading', { name: 'Create persona' }),
     ).toBeInTheDocument();
   });
 });

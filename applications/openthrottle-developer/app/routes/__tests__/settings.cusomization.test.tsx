@@ -5,7 +5,7 @@ import {
   DEFAULT_BRAND_HSL,
 } from '@openthrottle/react-router-utils';
 // eslint-disable-next-line openthrottle/no-fire-event -- `<input type="color">` has no keyboard/pointer affordance userEvent can drive; a change event is the only way to simulate the native picker
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createStore, Provider } from 'jotai';
 import * as React from 'react';
@@ -62,56 +62,56 @@ describe('routes/settings.appearance.tsx (customization)', () => {
   });
 
   test('should render Theme and Brand sections', () => {
-    renderAppearance();
+    const component = renderAppearance();
 
     expect(
-      screen.getByRole('heading', { name: 'Appearance' }),
+      component.getByRole('heading', { name: 'Appearance' }),
     ).toBeInTheDocument();
-    expect(screen.getByText('Theme')).toBeInTheDocument();
-    expect(screen.getByText('Brand color')).toBeInTheDocument();
-    expect(screen.getByLabelText('Color mode')).toBeInTheDocument();
-    expect(screen.getByLabelText('Brand color')).toBeInTheDocument();
+    expect(component.getByText('Theme')).toBeInTheDocument();
+    expect(component.getByText('Brand color')).toBeInTheDocument();
+    expect(component.getByLabelText('Color mode')).toBeInTheDocument();
+    expect(component.getByLabelText('Brand color')).toBeInTheDocument();
   });
 
   describe('when brand uses theme default', () => {
     test('shows default-state copy and hides reset button', () => {
-      renderAppearance();
+      const component = renderAppearance();
 
       expect(
-        screen.getByText(
+        component.getByText(
           `Using theme default (${DEFAULT_BRAND_HSL}). Pick a color to override.`,
         ),
       ).toBeInTheDocument();
       expect(
-        screen.queryByRole('button', { name: 'Use theme default' }),
+        component.queryByRole('button', { name: 'Use theme default' }),
       ).not.toBeInTheDocument();
     });
   });
 
   describe('when brand is customized', () => {
     test('shows custom copy and reset button', () => {
-      renderAppearance({
+      const component = renderAppearance({
         brand: '#ff5500',
         theme: 'light',
       });
 
       expect(
-        screen.getByText('Custom brand color applied (#ff5500).'),
+        component.getByText('Custom brand color applied (#ff5500).'),
       ).toBeInTheDocument();
       expect(
-        screen.getByRole('button', { name: 'Use theme default' }),
+        component.getByRole('button', { name: 'Use theme default' }),
       ).toBeInTheDocument();
     });
 
     test('reset clears brand override in configAtom', async () => {
       const user = userEvent.setup();
-      const { store } = renderAppearance({
+      const { store, ...component } = renderAppearance({
         brand: '#ff5500',
         theme: 'light',
       });
 
       await user.click(
-        screen.getByRole('button', { name: 'Use theme default' }),
+        component.getByRole('button', { name: 'Use theme default' }),
       );
 
       expect(store.get(configAtom).brand).toBeUndefined();
@@ -121,15 +121,15 @@ describe('routes/settings.appearance.tsx (customization)', () => {
   describe('when theme is changed', () => {
     test('persists dark mode in configAtom', async () => {
       const user = userEvent.setup();
-      const { store } = renderAppearance();
+      const { store, ...component } = renderAppearance();
 
       expect(
-        screen.getByText(
+        component.getByText(
           new RegExp(`Default: ${DEFAULT_APPEARANCE_CONFIG.theme}`),
         ),
       ).toBeInTheDocument();
 
-      await user.click(screen.getByLabelText('Dark mode'));
+      await user.click(component.getByLabelText('Dark mode'));
 
       expect(store.get(configAtom).theme).toBe('dark');
     });
@@ -137,9 +137,9 @@ describe('routes/settings.appearance.tsx (customization)', () => {
     test('selecting System updates configAtom to theme: system', async () => {
       const user = userEvent.setup();
       // Start from an explicit mode so selecting System is a real change.
-      const { store } = renderAppearance({ theme: 'light' });
+      const { store, ...component } = renderAppearance({ theme: 'light' });
 
-      await user.click(screen.getByLabelText('System mode'));
+      await user.click(component.getByLabelText('System mode'));
 
       expect(store.get(configAtom).theme).toBe('system');
     });
@@ -147,8 +147,8 @@ describe('routes/settings.appearance.tsx (customization)', () => {
 
   describe('when brand color input changes', () => {
     test('persists brand in configAtom', () => {
-      const { store } = renderAppearance();
-      const colorInput = screen.getByLabelText('Brand color');
+      const { store, ...component } = renderAppearance();
+      const colorInput = component.getByLabelText('Brand color');
 
       fireEvent.change(colorInput, { target: { value: '#aabbcc' } });
 
@@ -158,15 +158,15 @@ describe('routes/settings.appearance.tsx (customization)', () => {
 
   describe('CSS token plumbing', () => {
     test('no longer surfaces raw token names in the UI', () => {
-      renderAppearance();
+      const component = renderAppearance();
 
       expect(
-        screen.queryByRole('button', {
+        component.queryByRole('button', {
           name: 'CSS tokens affected by a custom brand',
         }),
       ).not.toBeInTheDocument();
       for (const token of APPEARANCE_THEME_COLOR_TOKEN_KEYS) {
-        expect(screen.queryByText(token)).not.toBeInTheDocument();
+        expect(component.queryByText(token)).not.toBeInTheDocument();
       }
     });
 

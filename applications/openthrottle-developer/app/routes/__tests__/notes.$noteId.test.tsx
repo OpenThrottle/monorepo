@@ -1,5 +1,5 @@
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
-import { screen } from '@testing-library/react';
+import type { RenderResult } from '@testing-library/react';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
@@ -31,7 +31,7 @@ const matches: Route.ComponentProps['matches'] = [
   },
 ];
 
-function renderNoteDetail(initialEntries: readonly string[]): void {
+function renderNoteDetail(initialEntries: readonly string[]): RenderResult {
   const Stub = createTestRoutesStub([
     {
       Component: (): React.ReactElement => (
@@ -46,7 +46,7 @@ function renderNoteDetail(initialEntries: readonly string[]): void {
     },
   ]);
 
-  render(
+  return render(
     <TooltipProvider>
       <Stub initialEntries={[...initialEntries]} />
     </TooltipProvider>,
@@ -55,36 +55,36 @@ function renderNoteDetail(initialEntries: readonly string[]): void {
 
 describe('routes/notes.$noteId.tsx', () => {
   test('defaults to read mode rendering the note content as markdown', () => {
-    renderNoteDetail(['/notes/note-1']);
+    const component = renderNoteDetail(['/notes/note-1']);
 
-    expect(screen.getByTestId('MarkdownRenderer')).toBeInTheDocument();
+    expect(component.getByTestId('MarkdownRenderer')).toBeInTheDocument();
     expect(
-      screen.getByRole('heading', { level: 1, name: 'Hello note' }),
+      component.getByRole('heading', { level: 1, name: 'Hello note' }),
     ).toBeInTheDocument();
-    expect(screen.queryByTestId('NoteForm')).not.toBeInTheDocument();
+    expect(component.queryByTestId('NoteForm')).not.toBeInTheDocument();
   });
 
   test('renders the edit form when mode=edit is in the URL', () => {
-    renderNoteDetail(['/notes/note-1?mode=edit']);
+    const component = renderNoteDetail(['/notes/note-1?mode=edit']);
 
-    expect(screen.getByTestId('NoteForm')).toBeInTheDocument();
-    expect(screen.getByLabelText('Content')).toHaveValue(note.content);
+    expect(component.getByTestId('NoteForm')).toBeInTheDocument();
+    expect(component.getByLabelText('Content')).toHaveValue(note.content);
     expect(
-      screen.getByRole('button', { name: /update note/i }),
+      component.getByRole('button', { name: /update note/i }),
     ).toBeInTheDocument();
-    expect(screen.queryByTestId('MarkdownRenderer')).not.toBeInTheDocument();
+    expect(component.queryByTestId('MarkdownRenderer')).not.toBeInTheDocument();
   });
 
   test('toggles from read to edit via the Edit button', async () => {
     const user = userEvent.setup();
-    renderNoteDetail(['/notes/note-1']);
+    const component = renderNoteDetail(['/notes/note-1']);
 
-    expect(screen.getByTestId('MarkdownRenderer')).toBeInTheDocument();
+    expect(component.getByTestId('MarkdownRenderer')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: /edit/i }));
+    await user.click(component.getByRole('button', { name: /edit/i }));
 
-    expect(screen.getByTestId('NoteForm')).toBeInTheDocument();
-    expect(screen.queryByTestId('MarkdownRenderer')).not.toBeInTheDocument();
+    expect(component.getByTestId('NoteForm')).toBeInTheDocument();
+    expect(component.queryByTestId('MarkdownRenderer')).not.toBeInTheDocument();
   });
 
   test('renders the empty state when the note is missing', () => {
@@ -103,13 +103,13 @@ describe('routes/notes.$noteId.tsx', () => {
       },
     ]);
 
-    render(
+    const component = render(
       <TooltipProvider>
         <Stub initialEntries={['/notes/missing']} />
       </TooltipProvider>,
     );
 
-    expect(screen.getByText('Note not found')).toBeInTheDocument();
-    expect(screen.queryByTestId('NoteForm')).not.toBeInTheDocument();
+    expect(component.getByText('Note not found')).toBeInTheDocument();
+    expect(component.queryByTestId('NoteForm')).not.toBeInTheDocument();
   });
 });

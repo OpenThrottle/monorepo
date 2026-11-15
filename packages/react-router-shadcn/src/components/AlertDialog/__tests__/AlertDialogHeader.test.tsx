@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, it } from 'vitest';
 
@@ -6,13 +6,13 @@ import { AlertDialogHeader } from '../AlertDialogHeader';
 
 describe('AlertDialogHeader', () => {
   it('renders a flex column with typography alignment classes and merged className', () => {
-    const { container } = render(
+    const component = render(
       <AlertDialogHeader className="header-extra">
         <span>Header content</span>
       </AlertDialogHeader>,
     );
 
-    const header = container.firstElementChild;
+    const header = component.container.firstElementChild;
     expect(header).toBeInTheDocument();
     expect(header).toHaveClass('header-extra');
     expect(header).toHaveClass(
@@ -22,6 +22,6 @@ describe('AlertDialogHeader', () => {
       'text-center',
       'sm:text-left',
     );
-    expect(screen.getByText('Header content')).toBeInTheDocument();
+    expect(component.getByText('Header content')).toBeInTheDocument();
   });
 });

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, it } from 'vitest';
 
@@ -12,7 +12,7 @@ import {
 
 describe('AlertDialogCancel', () => {
   it('renders as a button with outline variant, spacing, and merged className', () => {
-    render(
+    const component = render(
       <AlertDialog defaultOpen={true}>
         <AlertDialogContent>
           <AlertDialogTitle>Cancel test</AlertDialogTitle>
@@ -26,7 +26,7 @@ describe('AlertDialogCancel', () => {
       </AlertDialog>,
     );
 
-    const button = screen.getByRole('button', { name: 'Go back' });
+    const button = component.getByRole('button', { name: 'Go back' });
     expect(button).toBeInTheDocument();
     expect(button).toHaveClass('custom-cancel');
     expect(button).toHaveClass('border', 'bg-background', 'shadow-xs');
@@ -36,7 +36,7 @@ describe('AlertDialogCancel', () => {
   it('forwards ref to the underlying button', () => {
     const ref = React.createRef<HTMLButtonElement>();
 
-    render(
+    const component = render(
       <AlertDialog defaultOpen={true}>
         <AlertDialogContent>
           <AlertDialogTitle>Cancel test</AlertDialogTitle>
@@ -48,6 +48,6 @@ describe('AlertDialogCancel', () => {
       </AlertDialog>,
     );
 
-    expect(ref.current).toBe(screen.getByRole('button', { name: 'Cancel' }));
+    expect(ref.current).toBe(component.getByRole('button', { name: 'Cancel' }));
   });
 });

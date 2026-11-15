@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
@@ -11,11 +11,11 @@ describe('GlobalSearch Component', () => {
       return <GlobalSearch />;
     };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    render(<RoutesStub />);
+    const component = render(<RoutesStub />);
 
-    expect(screen.getByTestId('GlobalSearch')).toBeInTheDocument();
+    expect(component.getByTestId('GlobalSearch')).toBeInTheDocument();
     expect(
-      screen.getByRole('heading', { name: 'GlobalSearch' }),
+      component.getByRole('heading', { name: 'GlobalSearch' }),
     ).toBeInTheDocument();
   });
 });

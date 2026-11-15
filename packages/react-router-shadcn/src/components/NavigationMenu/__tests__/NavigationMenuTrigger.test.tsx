@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
@@ -14,7 +14,7 @@ import {
 
 describe('NavigationMenuTrigger', () => {
   test('renders a trigger button', () => {
-    render(
+    const component = render(
       <NavigationMenu>
         <NavigationMenuList>
           <NavigationMenuItem>
@@ -24,7 +24,7 @@ describe('NavigationMenuTrigger', () => {
       </NavigationMenu>,
     );
     expect(
-      screen.getByRole('button', { name: /Products/ }),
+      component.getByRole('button', { name: /Products/ }),
     ).toBeInTheDocument();
   });
 

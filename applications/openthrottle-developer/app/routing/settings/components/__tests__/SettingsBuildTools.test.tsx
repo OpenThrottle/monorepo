@@ -1,4 +1,3 @@
-import { screen } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
@@ -13,23 +12,23 @@ import { SettingsBuildTools } from '../SettingsBuildTools';
 
 describe('SettingsBuildTools Component', () => {
   test('renders devtools guidance and documentation links', () => {
-    renderRoutesStub(<SettingsBuildTools />);
+    const component = renderRoutesStub(<SettingsBuildTools />);
 
     expect(
-      screen.getByText('React Router / Vite devtools'),
+      component.getByText('React Router / Vite devtools'),
     ).toBeInTheDocument();
-    expect(screen.getByText(/REACT_ROUTER_DEV_TOOLS/i)).toBeInTheDocument();
+    expect(component.getByText(/REACT_ROUTER_DEV_TOOLS/i)).toBeInTheDocument();
 
     expect(
-      screen.getByRole('link', { name: /quick reference/i }),
+      component.getByRole('link', { name: /quick reference/i }),
     ).toHaveAttribute('href', VITE_DEVTOOLS_DOC_QUICK_REF_HREF);
     expect(
-      screen.getByRole('link', {
+      component.getByRole('link', {
         name: /openthrottle-developer-vite-devtools/i,
       }),
     ).toHaveAttribute('href', VITE_DEVTOOLS_DOC_HREF);
     expect(
-      screen.getByRole('link', { name: /vite cli build profiling/i }),
+      component.getByRole('link', { name: /vite cli build profiling/i }),
     ).toHaveAttribute('href', VITE_DEVTOOLS_DOC_PROFILING_HREF);
   });
 });

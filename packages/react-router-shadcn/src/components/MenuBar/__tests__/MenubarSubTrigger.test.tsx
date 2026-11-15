@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
@@ -13,7 +13,7 @@ import {
 
 describe('MenubarSubTrigger', () => {
   test('renders inside an open menubar menu', () => {
-    render(
+    const component = render(
       <Menubar defaultValue="file">
         <MenubarMenu value="file">
           <MenubarTrigger>File</MenubarTrigger>
@@ -25,6 +25,6 @@ describe('MenubarSubTrigger', () => {
         </MenubarMenu>
       </Menubar>,
     );
-    expect(screen.getByText('More')).toBeInTheDocument();
+    expect(component.getByText('More')).toBeInTheDocument();
   });
 });

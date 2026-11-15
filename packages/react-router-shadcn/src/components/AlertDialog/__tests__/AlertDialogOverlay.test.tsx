@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import { AlertDialog as AlertDialogPrimitive } from 'radix-ui';
 import * as React from 'react';
 import { describe, expect, it } from 'vitest';
@@ -15,7 +15,7 @@ describe('AlertDialogOverlay', () => {
   it('renders a full-screen backdrop with merged className and forwards ref', () => {
     const ref = React.createRef<HTMLDivElement>();
 
-    render(
+    const component = render(
       <AlertDialog open={true}>
         <AlertDialogPortal>
           <AlertDialogOverlay className="overlay-extra" ref={ref} />
@@ -29,7 +29,7 @@ describe('AlertDialogOverlay', () => {
       </AlertDialog>,
     );
 
-    expect(screen.getByRole('alertdialog')).toHaveTextContent('Inside');
+    expect(component.getByRole('alertdialog')).toHaveTextContent('Inside');
     expect(ref.current).toBeInstanceOf(HTMLDivElement);
     expect(ref.current?.getAttribute('data-state')).toBe('open');
     expect(ref.current).toHaveClass('overlay-extra');

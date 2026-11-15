@@ -1,5 +1,6 @@
 import type { ServerHealthObject } from '@openthrottle/openthrottle-developer-codegen';
-import { render, screen } from '@testing-library/react';
+import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
@@ -7,12 +8,12 @@ import { describe, expect, test } from 'vitest';
 import type { GlobalFooterProps } from '../GlobalFooter';
 import { GlobalFooter } from '../GlobalFooter';
 
-const renderFooter = (props: GlobalFooterProps = {}): void => {
+const renderFooter = (props: GlobalFooterProps = {}): RenderResult => {
   const Component = () => {
     return <GlobalFooter {...props} />;
   };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-  render(<RoutesStub />);
+  return render(<RoutesStub />);
 };
 
 /**
@@ -20,8 +21,8 @@ const renderFooter = (props: GlobalFooterProps = {}): void => {
  * text/role) rendered next to its label (e.g. `<dot> &nbsp;API`). Find the
  * label text, walk up to the wrapping `<div>`, and grab the dot inside it.
  */
-const getComponentDot = (label: RegExp): Element => {
-  const wrapper = screen.getByText(label).closest('div');
+const getComponentDot = (component: RenderResult, label: RegExp): Element => {
+  const wrapper = component.getByText(label).closest('div');
   const dot = wrapper?.querySelector('div.rounded-full');
   if (dot == null) {
     throw new Error(`Expected a status dot next to ${String(label)}`);
@@ -38,61 +39,71 @@ const okHealth: ServerHealthObject = {
 
 describe('GlobalFooter Component', () => {
   test('renders footer tagline and health status link', () => {
-    renderFooter();
+    const component = renderFooter();
 
-    expect(screen.getByTestId('GlobalFooter')).toBeInTheDocument();
+    expect(component.getByTestId('GlobalFooter')).toBeInTheDocument();
     expect(
-      screen.getByText(/Built by engineers.*Open source.*Run locally/i),
+      component.getByText(/Built by engineers.*Open source.*Run locally/i),
     ).toBeInTheDocument();
-    expect(screen.getByRole('link')).toHaveAttribute(
+    expect(component.getByRole('link')).toHaveAttribute(
       'href',
       expect.stringContaining('/health'),
     );
-    expect(screen.getByText(/API/i)).toBeInTheDocument();
-    expect(screen.getByText(/Postgres/i)).toBeInTheDocument();
-    expect(screen.getByText(/Redis/i)).toBeInTheDocument();
-    expect(screen.queryByText(/Sockets/i)).not.toBeInTheDocument();
+    expect(component.getByText(/API/i)).toBeInTheDocument();
+    expect(component.getByText(/Postgres/i)).toBeInTheDocument();
+    expect(component.getByText(/Redis/i)).toBeInTheDocument();
+    expect(component.queryByText(/Sockets/i)).not.toBeInTheDocument();
   });
 
   describe('per-component status dot color mapping', () => {
     test('maps ok → green for every reported component', () => {
-      renderFooter({ health: okHealth });
+      const component = renderFooter({ health: okHealth });
 
-      expect(getComponentDot(/API/i)).toHaveClass('bg-green-500');
-      expect(getComponentDot(/Postgres/i)).toHaveClass('bg-green-500');
-      expect(getComponentDot(/Redis/i)).toHaveClass('bg-green-500');
+      expect(getComponentDot(component, /API/i)).toHaveClass('bg-green-500');
+      expect(getComponentDot(component, /Postgres/i)).toHaveClass(
+        'bg-green-500',
+      );
+      expect(getComponentDot(component, /Redis/i)).toHaveClass('bg-green-500');
     });
 
     test('maps unreachable → red', () => {
-      renderFooter({ health: { ...okHealth, redis: 'unreachable' } });
+      const component = renderFooter({
+        health: { ...okHealth, redis: 'unreachable' },
+      });
 
-      const redisDot = getComponentDot(/Redis/i);
+      const redisDot = getComponentDot(component, /Redis/i);
       expect(redisDot).toHaveClass('bg-red-500');
       expect(redisDot).not.toHaveClass('bg-green-500');
     });
 
     test('maps unconfigured → amber', () => {
-      renderFooter({ health: { ...okHealth, database: 'unconfigured' } });
+      const component = renderFooter({
+        health: { ...okHealth, database: 'unconfigured' },
+      });
 
-      const dbDot = getComponentDot(/Postgres/i);
+      const dbDot = getComponentDot(component, /Postgres/i);
       expect(dbDot).toHaveClass('bg-amber-500');
       expect(dbDot).not.toHaveClass('bg-green-500');
     });
 
     test('maps an unknown/empty value → amber (not green)', () => {
-      renderFooter({ health: { ...okHealth, api: 'something-unexpected' } });
+      const component = renderFooter({
+        health: { ...okHealth, api: 'something-unexpected' },
+      });
 
-      const apiDot = getComponentDot(/API/i);
+      const apiDot = getComponentDot(component, /API/i);
       expect(apiDot).toHaveClass('bg-amber-500');
       expect(apiDot).not.toHaveClass('bg-green-500');
     });
 
     test('defaults to amber when no health payload is present', () => {
-      renderFooter();
+      const component = renderFooter();
 
-      expect(getComponentDot(/API/i)).toHaveClass('bg-amber-500');
-      expect(getComponentDot(/Postgres/i)).toHaveClass('bg-amber-500');
-      expect(getComponentDot(/Redis/i)).toHaveClass('bg-amber-500');
+      expect(getComponentDot(component, /API/i)).toHaveClass('bg-amber-500');
+      expect(getComponentDot(component, /Postgres/i)).toHaveClass(
+        'bg-amber-500',
+      );
+      expect(getComponentDot(component, /Redis/i)).toHaveClass('bg-amber-500');
     });
   });
 });

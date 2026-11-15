@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { describe, expect, test, vi } from 'vitest';
@@ -21,31 +21,31 @@ describe('ProjectsSortDropdown', () => {
     const onChange =
       vi.fn<(sortBy: ProjectsSortBy, sortOrder: ProjectsSortOrder) => void>();
     const user = userEvent.setup();
-    render(
+    const component = render(
       <ProjectsSortDropdown
         onChange={onChange}
         sortBy="createdAt"
         sortOrder="desc"
       />,
     );
-    const combobox = screen.getByRole('combobox', { name: 'Sort projects' });
+    const combobox = component.getByRole('combobox', { name: 'Sort projects' });
     expect(combobox).toHaveTextContent('Newest first');
 
     await user.click(combobox);
-    await user.click(screen.getByRole('option', { name: 'Name A-Z' }));
+    await user.click(component.getByRole('option', { name: 'Name A-Z' }));
     expect(onChange).toHaveBeenCalledTimes(1);
     expect(onChange).toHaveBeenCalledWith('name', 'asc');
   });
 
   test('resolves invalid sort pair to createdAt-desc display', () => {
-    render(
+    const component = render(
       <ProjectsSortDropdown
         onChange={() => {}}
         sortBy={asSortBy('invalid')}
         sortOrder="desc"
       />,
     );
-    const combobox = screen.getByRole('combobox', { name: 'Sort projects' });
+    const combobox = component.getByRole('combobox', { name: 'Sort projects' });
     expect(combobox).toHaveTextContent('Newest first');
   });
 });

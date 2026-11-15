@@ -1,4 +1,3 @@
-import { screen } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
@@ -21,7 +20,7 @@ const matches: Route.ComponentProps['matches'] = [
 
 describe('routes/projects.create.tsx', () => {
   test('renders project form in create mode', () => {
-    renderRoutesStub(
+    const component = renderRoutesStub(
       <CreateProject
         actionData={undefined}
         loaderData={{}}
@@ -30,10 +29,10 @@ describe('routes/projects.create.tsx', () => {
       />,
     );
 
-    expect(screen.getByTestId('ProjectForm')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('Project name')).toBeRequired();
+    expect(component.getByTestId('ProjectForm')).toBeInTheDocument();
+    expect(component.getByPlaceholderText('Project name')).toBeRequired();
     expect(
-      screen.getByRole('button', { name: 'Create project' }),
+      component.getByRole('button', { name: 'Create project' }),
     ).toBeInTheDocument();
   });
 });

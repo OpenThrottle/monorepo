@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
@@ -26,13 +26,13 @@ describe('PlanWorkflowConfigHooksValidation Component', () => {
   });
 
   test('renders alert with issues when validation fails', () => {
-    renderValidation({
+    const component = renderValidation({
       validation: { issues: ['Prompt is required.'], ok: false },
     });
 
-    expect(screen.getByRole('alert')).toHaveTextContent(
+    expect(component.getByRole('alert')).toHaveTextContent(
       'Fix hook configuration',
     );
-    expect(screen.getByText('Prompt is required.')).toBeInTheDocument();
+    expect(component.getByText('Prompt is required.')).toBeInTheDocument();
   });
 });

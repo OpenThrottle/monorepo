@@ -4,7 +4,7 @@ import { ESLintUtils } from '@typescript-eslint/utils';
 /**
  * Shared plumbing for the anti-flake test rules (`no-test-sleep`,
  * `no-wall-clock-in-tests`, `no-per-test-timeout`, `skip-requires-issue`,
- * `no-fire-event`). See docs/monorepo/code-style.md, "Anti-flake test rules".
+ * `no-fire-event`, `no-screen`). See docs/monorepo/code-style.md, "Anti-flake test rules".
  */
 
 export const createAntiFlakeRule = ESLintUtils.RuleCreator(

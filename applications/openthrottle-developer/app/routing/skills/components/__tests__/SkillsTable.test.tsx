@@ -1,4 +1,4 @@
-import { cleanup, type RenderResult, screen } from '@testing-library/react';
+import type { RenderResult } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -75,41 +75,43 @@ describe('SkillsTable Component', () => {
   });
 
   test('when entries is empty renders SkillsEmpty inside the table', () => {
-    renderRoutesStub(<SkillsTable {...props} />);
+    const component = renderRoutesStub(<SkillsTable {...props} />);
 
-    expect(screen.getByText(SKILLS_EMPTY_COPY.title)).toBeInTheDocument();
+    expect(component.getByText(SKILLS_EMPTY_COPY.title)).toBeInTheDocument();
   });
 
   test('forwards isFiltered so an empty filtered view offers a way out', () => {
-    renderRoutesStub(<SkillsTable {...props} isFiltered={true} />);
-
-    expect(screen.getByText(SKILLS_EMPTY_COPY.searchTitle)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Clear filters' })).toHaveAttribute(
-      'href',
-      '/skills',
+    const component = renderRoutesStub(
+      <SkillsTable {...props} isFiltered={true} />,
     );
+
+    expect(
+      component.getByText(SKILLS_EMPTY_COPY.searchTitle),
+    ).toBeInTheDocument();
+    expect(
+      component.getByRole('link', { name: 'Clear filters' }),
+    ).toHaveAttribute('href', '/skills');
   });
 
   describe('when entries are provided', () => {
     beforeEach(() => {
-      cleanup();
       props = { entries: [...mockEntries] };
     });
 
     test('renders table shell and column headers', () => {
-      renderRoutesStub(<SkillsTable {...props} />);
+      const component = renderRoutesStub(<SkillsTable {...props} />);
 
-      expect(screen.getByTestId('SkillsTable')).toBeInTheDocument();
-      expect(screen.getByRole('table')).toBeInTheDocument();
+      expect(component.getByTestId('SkillsTable')).toBeInTheDocument();
+      expect(component.getByRole('table')).toBeInTheDocument();
 
       expect(
-        screen.getByRole('columnheader', { name: 'Source' }),
+        component.getByRole('columnheader', { name: 'Source' }),
       ).toBeInTheDocument();
       expect(
-        screen.getByRole('columnheader', { name: 'Summary' }),
+        component.getByRole('columnheader', { name: 'Summary' }),
       ).toBeInTheDocument();
       expect(
-        screen.getByRole('columnheader', { name: 'Invocation' }),
+        component.getByRole('columnheader', { name: 'Invocation' }),
       ).toBeInTheDocument();
     });
 
@@ -143,15 +145,17 @@ describe('SkillsTable Component', () => {
     });
 
     test('renders table rows from entries', () => {
-      renderRoutesStub(<SkillsTable {...props} />);
+      const component = renderRoutesStub(<SkillsTable {...props} />);
 
-      expect(screen.getByText('/grilling')).toBeInTheDocument();
-      expect(screen.getByText('/nx-workspace')).toBeInTheDocument();
+      expect(component.getByText('/grilling')).toBeInTheDocument();
+      expect(component.getByText('/nx-workspace')).toBeInTheDocument();
       expect(
-        screen.getByText('Grill the user relentlessly'),
+        component.getByText('Grill the user relentlessly'),
       ).toBeInTheDocument();
       expect(
-        screen.getByText('Explore Nx projects, targets, and dependency graph.'),
+        component.getByText(
+          'Explore Nx projects, targets, and dependency graph.',
+        ),
       ).toBeInTheDocument();
     });
   });
@@ -202,7 +206,6 @@ describe('SkillsTable Component', () => {
     let component: RenderResult;
 
     beforeEach(() => {
-      cleanup();
       component = renderRoutesStub(
         <SkillsTable entries={[...sourceEntries]} />,
       );
@@ -252,7 +255,6 @@ describe('SkillsTable Component', () => {
     let component: RenderResult;
 
     beforeEach(() => {
-      cleanup();
       component = renderRoutesStub(
         <SkillsTable entries={[...triStateEntries]} />,
       );

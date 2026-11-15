@@ -1,4 +1,5 @@
-import { render, screen } from '@testing-library/react';
+import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
@@ -7,6 +8,7 @@ import type { PlanTasksColumnProps } from '../PlanTasksColumn';
 import { PlanTasksColumn } from '../PlanTasksColumn';
 
 describe('PlanTasksColumn Component', () => {
+  let component: RenderResult;
   let props: PlanTasksColumnProps;
 
   describe('when empty', () => {
@@ -22,19 +24,21 @@ describe('PlanTasksColumn Component', () => {
       };
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
-      render(<RoutesStub />);
+      component = render(<RoutesStub />);
     });
 
     test('shows empty label when there are no task cards', () => {
-      expect(screen.getByTestId('PlanTasksColumn-pending')).toBeInTheDocument();
       expect(
-        screen.getByRole('heading', { name: 'Pending' }),
+        component.getByTestId('PlanTasksColumn-pending'),
       ).toBeInTheDocument();
-      expect(screen.getByText('No tasks')).toBeInTheDocument();
+      expect(
+        component.getByRole('heading', { name: 'Pending' }),
+      ).toBeInTheDocument();
+      expect(component.getByText('No tasks')).toBeInTheDocument();
     });
 
     test('exposes the column as a named region for screen readers', () => {
-      const region = screen.getByRole('region', { name: 'Pending' });
+      const region = component.getByRole('region', { name: 'Pending' });
       expect(region).toHaveAttribute(
         'aria-labelledby',
         'plan-tasks-column-title-pending',
@@ -56,17 +60,17 @@ describe('PlanTasksColumn Component', () => {
       };
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
-      render(<RoutesStub />);
+      component = render(<RoutesStub />);
     });
 
     test('renders children instead of the empty state', () => {
       expect(
-        screen.getByTestId('PlanTasksColumn-in_progress'),
+        component.getByTestId('PlanTasksColumn-in_progress'),
       ).toBeInTheDocument();
-      expect(screen.getByTestId('task-slot')).toHaveTextContent(
+      expect(component.getByTestId('task-slot')).toHaveTextContent(
         'Task card placeholder',
       );
-      expect(screen.queryByText('No tasks')).not.toBeInTheDocument();
+      expect(component.queryByText('No tasks')).not.toBeInTheDocument();
     });
   });
 });

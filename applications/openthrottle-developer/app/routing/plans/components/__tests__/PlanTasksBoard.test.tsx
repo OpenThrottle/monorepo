@@ -11,7 +11,7 @@
  *   `aria-live` region should announce moves and errors.
  */
 import type { RenderResult } from '@testing-library/react';
-import { act, screen, within } from '@testing-library/react';
+import { act, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { DndProvider } from 'react-dnd';
@@ -112,47 +112,55 @@ const renderBoard = (args: {
 
 describe('PlanTasksBoard Component', () => {
   test('exposes a live region for drag-and-drop announcements', () => {
-    renderBoard({
+    const component = renderBoard({
       planId: 'plan-1',
       tasks: [mockTask({ id: 'a', status: 'PENDING' })],
     });
 
     expect(
-      screen.getByTestId('PlanTasksBoard-a11y-announcement'),
+      component.getByTestId('PlanTasksBoard-a11y-announcement'),
     ).toHaveAttribute('aria-live', 'polite');
   });
 
   test('exposes the board as a group with an accessible name', () => {
-    renderBoard({
+    const component = renderBoard({
       planId: 'plan-1',
       tasks: [mockTask({ id: 'a', status: 'PENDING' })],
     });
 
     expect(
-      screen.getByRole('group', { name: 'Plan tasks board' }),
+      component.getByRole('group', { name: 'Plan tasks board' }),
     ).toBeInTheDocument();
   });
 
   test('renders a status column region for each known status label', () => {
-    renderBoard({
+    const component = renderBoard({
       planId: 'plan-1',
       tasks: [mockTask({ id: 'a', status: 'PENDING' })],
     });
 
-    expect(screen.getByRole('region', { name: 'Backlog' })).toBeInTheDocument();
-    expect(screen.getByRole('region', { name: 'Queued' })).toBeInTheDocument();
-    expect(screen.getByRole('region', { name: 'Pending' })).toBeInTheDocument();
     expect(
-      screen.getByRole('region', { name: 'In Progress' }),
+      component.getByRole('region', { name: 'Backlog' }),
     ).toBeInTheDocument();
-    expect(screen.getByRole('region', { name: 'Blocked' })).toBeInTheDocument();
     expect(
-      screen.getByRole('region', { name: 'Completed' }),
+      component.getByRole('region', { name: 'Queued' }),
+    ).toBeInTheDocument();
+    expect(
+      component.getByRole('region', { name: 'Pending' }),
+    ).toBeInTheDocument();
+    expect(
+      component.getByRole('region', { name: 'In Progress' }),
+    ).toBeInTheDocument();
+    expect(
+      component.getByRole('region', { name: 'Blocked' }),
+    ).toBeInTheDocument();
+    expect(
+      component.getByRole('region', { name: 'Completed' }),
     ).toBeInTheDocument();
   });
 
   test('places task cards under the column matching their status', () => {
-    renderBoard({
+    const component = renderBoard({
       planId: 'plan-1',
       tasks: [
         mockTask({ id: 't-pending', status: 'PENDING', title: 'Alpha' }),
@@ -160,8 +168,10 @@ describe('PlanTasksBoard Component', () => {
       ],
     });
 
-    const pendingRegion = screen.getByRole('region', { name: 'Pending' });
-    const completedRegion = screen.getByRole('region', { name: 'Completed' });
+    const pendingRegion = component.getByRole('region', { name: 'Pending' });
+    const completedRegion = component.getByRole('region', {
+      name: 'Completed',
+    });
 
     expect(
       within(pendingRegion).getByTestId('PlanTaskCard-t-pending'),
@@ -175,7 +185,7 @@ describe('PlanTasksBoard Component', () => {
   });
 
   test('renders an Other column when a task has an unknown status', () => {
-    renderBoard({
+    const component = renderBoard({
       planId: 'plan-1',
       tasks: [
         mockTask({
@@ -186,34 +196,38 @@ describe('PlanTasksBoard Component', () => {
       ],
     });
 
-    expect(screen.getByRole('region', { name: 'Other' })).toBeInTheDocument();
     expect(
-      within(screen.getByRole('region', { name: 'Other' })).getByTestId(
+      component.getByRole('region', { name: 'Other' }),
+    ).toBeInTheDocument();
+    expect(
+      within(component.getByRole('region', { name: 'Other' })).getByTestId(
         'PlanTaskCard-t-unknown',
       ),
     ).toBeInTheDocument();
   });
 
   test('does not render an Other column when every status is known', () => {
-    renderBoard({
+    const component = renderBoard({
       planId: 'plan-1',
       tasks: [mockTask({ id: 'a', status: 'PENDING' })],
     });
 
     expect(
-      screen.queryByRole('region', { name: 'Other' }),
+      component.queryByRole('region', { name: 'Other' }),
     ).not.toBeInTheDocument();
   });
 
   test('renders status columns and task cards grouped by status', () => {
-    renderBoard({
+    const component = renderBoard({
       planId: 'plan-1',
       tasks: [mockTask({ id: 'a', status: 'PENDING' })],
     });
 
-    expect(screen.getByTestId('PlanTasksBoard')).toBeInTheDocument();
-    expect(screen.getByTestId('PlanTasksColumn-pending')).toBeInTheDocument();
-    expect(screen.getByTestId('PlanTaskCard-a')).toBeInTheDocument();
+    expect(component.getByTestId('PlanTasksBoard')).toBeInTheDocument();
+    expect(
+      component.getByTestId('PlanTasksColumn-pending'),
+    ).toBeInTheDocument();
+    expect(component.getByTestId('PlanTaskCard-a')).toBeInTheDocument();
   });
 
   test('moves focus to the task title link when tabbing into the board', async () => {

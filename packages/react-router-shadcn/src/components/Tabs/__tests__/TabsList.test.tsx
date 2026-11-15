@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
@@ -12,7 +12,7 @@ describe('TabsList Component', () => {
   test('renders tab list with trigger inside Tabs context', () => {
     const props: TabsListProps = {};
 
-    render(
+    const component = render(
       <Tabs defaultValue="a">
         <TabsList {...props}>
           <TabsTrigger value="a">Tab</TabsTrigger>
@@ -21,7 +21,7 @@ describe('TabsList Component', () => {
       </Tabs>,
     );
 
-    expect(screen.getByRole('tab', { name: 'Tab' })).toBeInTheDocument();
-    expect(screen.getByRole('tablist')).toBeInTheDocument();
+    expect(component.getByRole('tab', { name: 'Tab' })).toBeInTheDocument();
+    expect(component.getByRole('tablist')).toBeInTheDocument();
   });
 });

@@ -1,6 +1,6 @@
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { getPublicEnv } from '@openthrottle/react-router-utils';
-import { screen, waitFor } from '@testing-library/react';
+import { waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { describe, expect, test, vi } from 'vitest';
@@ -119,7 +119,7 @@ describe('routes/plans.$planId._index run config hydration', () => {
       plan: mockPlan,
       tasks: [],
     });
-    renderWithPlanDetailRouteData(
+    const component = renderWithPlanDetailRouteData(
       <TooltipProvider>
         <PlanDetail
           actionData={undefined}
@@ -132,22 +132,22 @@ describe('routes/plans.$planId._index run config hydration', () => {
       { initialEntries: ['/?plansDetailTab=configuration'] },
     );
 
-    await user.click(screen.getByRole('tab', { name: 'Configuration' }));
+    await user.click(component.getByRole('tab', { name: 'Configuration' }));
 
     await waitFor(() => {
       expect(
-        screen.getByLabelText('Execution backend for this plan run'),
+        component.getByLabelText('Execution backend for this plan run'),
       ).toHaveTextContent('Claude Code CLI');
     });
 
     expect(
-      screen.getByLabelText('Iteration count for --iterations'),
+      component.getByLabelText('Iteration count for --iterations'),
     ).toHaveValue(7);
-    expect(screen.getByLabelText('NX project name for --project')).toHaveValue(
-      'packages/foo',
-    );
     expect(
-      screen.getByLabelText('Absolute path to workspace directory'),
+      component.getByLabelText('NX project name for --project'),
+    ).toHaveValue('packages/foo');
+    expect(
+      component.getByLabelText('Absolute path to workspace directory'),
     ).toHaveValue('/tmp/openthrottle-workspace');
   });
 });

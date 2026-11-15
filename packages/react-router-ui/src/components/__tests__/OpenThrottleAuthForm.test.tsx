@@ -1,4 +1,4 @@
-import { cleanup, render, screen, within } from '@testing-library/react';
+import { cleanup, render, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
@@ -55,15 +55,15 @@ describe('OpenThrottleAuthForm Component', () => {
         path: '/',
       },
     ]);
-    render(<RoutesStub />);
+    const secondComponent = render(<RoutesStub />);
 
-    const email = screen.getByRole('textbox', { name: /email/i });
-    const password = screen.getByLabelText(/password/i);
+    const email = secondComponent.getByRole('textbox', { name: /email/i });
+    const password = secondComponent.getByLabelText(/password/i);
     await user.clear(email);
     await user.clear(password);
     await user.type(email, 'test@example.com');
     await user.type(password, 'secret');
-    const form = screen.getByTestId('OpenThrottleAuthForm');
+    const form = secondComponent.getByTestId('OpenThrottleAuthForm');
     await user.click(
       within(form).getByRole('button', {
         // exact: true,

@@ -1,6 +1,5 @@
 import * as graphqlWithAuth from '@openthrottle/react-router-graphql';
 import { createTestRouterContext } from '@openthrottle/react-router-testing';
-import { screen } from '@testing-library/react';
 import * as React from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -49,7 +48,7 @@ describe('routes/projects.$projectId.edit.tsx', () => {
 
   describe('render', () => {
     test('renders the form with loaded default values', () => {
-      renderRoutesStub(
+      const component = renderRoutesStub(
         <EditProject
           actionData={undefined}
           loaderData={{ project: mockProject }}
@@ -58,24 +57,26 @@ describe('routes/projects.$projectId.edit.tsx', () => {
         />,
       );
 
-      expect(screen.getByDisplayValue('Existing Project')).toBeInTheDocument();
       expect(
-        screen.getByDisplayValue('Existing description'),
+        component.getByDisplayValue('Existing Project'),
       ).toBeInTheDocument();
       expect(
-        screen.getByDisplayValue('openthrottle-developer'),
+        component.getByDisplayValue('Existing description'),
       ).toBeInTheDocument();
       expect(
-        screen.getByRole('button', { name: 'Save changes' }),
+        component.getByDisplayValue('openthrottle-developer'),
       ).toBeInTheDocument();
-      expect(screen.getByRole('link', { name: 'Cancel' })).toHaveAttribute(
+      expect(
+        component.getByRole('button', { name: 'Save changes' }),
+      ).toBeInTheDocument();
+      expect(component.getByRole('link', { name: 'Cancel' })).toHaveAttribute(
         'href',
         '/projects/proj-1',
       );
     });
 
     test('renders ProjectNotFound when project is missing', () => {
-      renderRoutesStub(
+      const component = renderRoutesStub(
         <EditProject
           actionData={undefined}
           loaderData={{ project: null }}
@@ -84,7 +85,7 @@ describe('routes/projects.$projectId.edit.tsx', () => {
         />,
       );
 
-      expect(screen.getByText('Project not found')).toBeInTheDocument();
+      expect(component.getByText('Project not found')).toBeInTheDocument();
     });
   });
 

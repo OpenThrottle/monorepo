@@ -4,7 +4,8 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from '@openthrottle/react-router-shadcn';
-import { render, screen } from '@testing-library/react';
+import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
@@ -16,6 +17,7 @@ import { NotificationItem } from '../NotificationItem';
 const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
 
 describe('NotificationItem Component', () => {
+  let component: RenderResult;
   let props: NotificationItemProps;
 
   beforeEach(() => {
@@ -55,12 +57,12 @@ describe('NotificationItem Component', () => {
     };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
-    render(<RoutesStub />);
+    component = render(<RoutesStub />);
   });
 
   test('should render notification message', () => {
-    expect(screen.getByTestId('notification-item-test-id')).toHaveTextContent(
-      'Plan updated',
-    );
+    expect(
+      component.getByTestId('notification-item-test-id'),
+    ).toHaveTextContent('Plan updated');
   });
 });

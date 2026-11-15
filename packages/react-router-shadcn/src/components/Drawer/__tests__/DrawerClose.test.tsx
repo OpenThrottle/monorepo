@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
@@ -8,13 +8,15 @@ import { DrawerContent } from '../DrawerContent';
 
 describe('DrawerClose', () => {
   test('renders a close button inside the drawer', () => {
-    render(
+    const component = render(
       <Drawer open={true}>
         <DrawerContent>
           <DrawerClose>Close</DrawerClose>
         </DrawerContent>
       </Drawer>,
     );
-    expect(screen.getByRole('button', { name: 'Close' })).toBeInTheDocument();
+    expect(
+      component.getByRole('button', { name: 'Close' }),
+    ).toBeInTheDocument();
   });
 });

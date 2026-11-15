@@ -1,5 +1,6 @@
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
-import { render, screen, waitFor } from '@testing-library/react';
+import type { RenderResult } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
@@ -66,6 +67,7 @@ const loaderData = {
 };
 
 const renderRoute = (): {
+  component: RenderResult;
   submitted: {
     intent: FormDataEntryValue | null;
     tag: FormDataEntryValue | null;
@@ -92,27 +94,27 @@ const renderRoute = (): {
     },
   ]);
 
-  render(
+  const component = render(
     <TooltipProvider>
       <RoutesStub initialEntries={['/plans/plan-1/tasks/task-1']} />
     </TooltipProvider>,
   );
-  return { submitted };
+  return { component, submitted };
 };
 
 // PlanTaskToolbar is the only surface rendering task tags.
 describe('routes/plans.$planId.tasks.$taskId._index.tsx — task tags', () => {
   test('renders existing task tags', async () => {
-    renderRoute();
-    expect(await screen.findByTestId('PlanTagChips')).toBeInTheDocument();
-    expect(screen.getByText('backend')).toBeInTheDocument();
+    const { component } = renderRoute();
+    expect(await component.findByTestId('PlanTagChips')).toBeInTheDocument();
+    expect(component.getByText('backend')).toBeInTheDocument();
   });
 
   test('removing a tag submits the removeTaskTag intent', async () => {
     const user = userEvent.setup();
-    const { submitted } = renderRoute();
+    const { component, submitted } = renderRoute();
     await user.click(
-      await screen.findByRole('button', { name: 'Remove tag backend' }),
+      await component.findByRole('button', { name: 'Remove tag backend' }),
     );
     await waitFor(() => expect(submitted).toHaveLength(1));
     expect(submitted[0]).toEqual({ intent: 'removeTaskTag', tag: 'backend' });
@@ -120,12 +122,12 @@ describe('routes/plans.$planId.tasks.$taskId._index.tsx — task tags', () => {
 
   test('adding a tag submits the addTaskTag intent', async () => {
     const user = userEvent.setup();
-    const { submitted } = renderRoute();
+    const { component, submitted } = renderRoute();
     await user.selectOptions(
-      await screen.findByRole('combobox', { name: 'Add a tag' }),
+      await component.findByRole('combobox', { name: 'Add a tag' }),
       'design',
     );
-    await user.click(screen.getByRole('button', { name: 'Add' }));
+    await user.click(component.getByRole('button', { name: 'Add' }));
     await waitFor(() => expect(submitted).toHaveLength(1));
     expect(submitted[0]).toEqual({ intent: 'addTaskTag', tag: 'design' });
   });
@@ -133,6 +135,7 @@ describe('routes/plans.$planId.tasks.$taskId._index.tsx — task tags', () => {
 
 describe('routes/plans.$planId.tasks.$taskId._index.tsx — task lifecycle hooks', () => {
   const renderWithHook = (): {
+    component: RenderResult;
     submitted: Record<string, FormDataEntryValue | null>[];
   } => {
     const submitted: Record<string, FormDataEntryValue | null>[] = [];
@@ -164,29 +167,29 @@ describe('routes/plans.$planId.tasks.$taskId._index.tsx — task lifecycle hooks
       },
     ]);
 
-    render(
+    const component = render(
       <TooltipProvider>
         <RoutesStub initialEntries={['/plans/plan-1/tasks/task-1']} />
       </TooltipProvider>,
     );
-    return { submitted };
+    return { component, submitted };
   };
 
   test('renders the task hooks section with its before-hook', async () => {
     const user = userEvent.setup();
-    renderWithHook();
+    const { component } = renderWithHook();
     // Hooks now live behind the Hooks tab on the task detail page.
-    await user.click(await screen.findByRole('tab', { name: /hooks/i }));
-    expect(await screen.findByText('Task hooks')).toBeInTheDocument();
-    expect(screen.getByText('before: /seed-db')).toBeInTheDocument();
+    await user.click(await component.findByRole('tab', { name: /hooks/i }));
+    expect(await component.findByText('Task hooks')).toBeInTheDocument();
+    expect(component.getByText('before: /seed-db')).toBeInTheDocument();
   });
 
   test('removing a task hook submits the detachHook intent', async () => {
     const user = userEvent.setup();
-    const { submitted } = renderWithHook();
-    await user.click(await screen.findByRole('tab', { name: /hooks/i }));
+    const { component, submitted } = renderWithHook();
+    await user.click(await component.findByRole('tab', { name: /hooks/i }));
     await user.click(
-      await screen.findByRole('button', {
+      await component.findByRole('button', {
         name: 'Remove hook: before: /seed-db',
       }),
     );

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
@@ -11,11 +11,11 @@ describe('GlobalSidebarHeader Component', () => {
       return <GlobalSidebarHeader name="" />;
     };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    render(<RoutesStub />);
+    const component = render(<RoutesStub />);
 
-    expect(screen.getByTestId('GlobalSidebarHeader')).toBeInTheDocument();
-    expect(screen.getByRole('link')).toHaveAttribute('href', '/');
-    expect(screen.getByText('Open')).toBeInTheDocument();
-    expect(screen.getByText('Throttle')).toBeInTheDocument();
+    expect(component.getByTestId('GlobalSidebarHeader')).toBeInTheDocument();
+    expect(component.getByRole('link')).toHaveAttribute('href', '/');
+    expect(component.getByText('Open')).toBeInTheDocument();
+    expect(component.getByText('Throttle')).toBeInTheDocument();
   });
 });

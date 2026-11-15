@@ -1,5 +1,5 @@
 // eslint-disable-next-line openthrottle/no-fire-event -- every test runs under vi.useFakeTimers(); RTL's asyncWrapper (which every userEvent call goes through) drains on a setTimeout(0) it only auto-advances under jest fake timers, so an awaited userEvent call never resolves there
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render } from '@testing-library/react';
 import * as React from 'react';
 import { createRoutesStub, useSearchParams } from 'react-router';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
@@ -49,10 +49,10 @@ describe('useDebouncedSearchParam', () => {
       { Component: SearchHarness, path: '/' },
     ]);
 
-    render(<RoutesStub initialEntries={['/?q=hello']} />);
+    const component = render(<RoutesStub initialEntries={['/?q=hello']} />);
 
-    expect(screen.getByTestId('committed-q')).toHaveTextContent('hello');
-    expect(screen.getByTestId('search-input')).toHaveValue('hello');
+    expect(component.getByTestId('committed-q')).toHaveTextContent('hello');
+    expect(component.getByTestId('search-input')).toHaveValue('hello');
   });
 
   test('commits trimmed q after debounce when typing', async () => {
@@ -60,25 +60,25 @@ describe('useDebouncedSearchParam', () => {
       { Component: SearchHarness, path: '/' },
     ]);
 
-    render(<RoutesStub initialEntries={['/']} />);
+    const component = render(<RoutesStub initialEntries={['/']} />);
 
-    fireEvent.change(screen.getByTestId('search-input'), {
+    fireEvent.change(component.getByTestId('search-input'), {
       target: { value: 'abc' },
     });
 
-    expect(screen.getByTestId('committed-q')).toHaveTextContent('');
+    expect(component.getByTestId('committed-q')).toHaveTextContent('');
 
     await act(async () => {
       await vi.advanceTimersByTimeAsync(299);
     });
 
-    expect(screen.getByTestId('committed-q')).toHaveTextContent('');
+    expect(component.getByTestId('committed-q')).toHaveTextContent('');
 
     await act(async () => {
       await vi.advanceTimersByTimeAsync(1);
     });
 
-    expect(screen.getByTestId('committed-q')).toHaveTextContent('abc');
+    expect(component.getByTestId('committed-q')).toHaveTextContent('abc');
   });
 
   test('commitNow writes immediately without waiting for debounce', async () => {
@@ -86,19 +86,19 @@ describe('useDebouncedSearchParam', () => {
       { Component: SearchHarness, path: '/' },
     ]);
 
-    render(<RoutesStub initialEntries={['/']} />);
+    const component = render(<RoutesStub initialEntries={['/']} />);
 
-    fireEvent.change(screen.getByTestId('search-input'), {
+    fireEvent.change(component.getByTestId('search-input'), {
       target: { value: 'fast' },
     });
 
-    expect(screen.getByTestId('committed-q')).toHaveTextContent('');
+    expect(component.getByTestId('committed-q')).toHaveTextContent('');
 
     await act(() => {
-      fireEvent.click(screen.getByTestId('commit-now'));
+      fireEvent.click(component.getByTestId('commit-now'));
     });
 
-    expect(screen.getByTestId('committed-q')).toHaveTextContent('fast');
+    expect(component.getByTestId('committed-q')).toHaveTextContent('fast');
   });
 
   test('applies transformCommittedParams on commit', async () => {
@@ -130,9 +130,9 @@ describe('useDebouncedSearchParam', () => {
       { Component: HarnessWithTransform, path: '/' },
     ]);
 
-    render(<RoutesStub initialEntries={['/']} />);
+    const component = render(<RoutesStub initialEntries={['/']} />);
 
-    fireEvent.change(screen.getByTestId('search-input'), {
+    fireEvent.change(component.getByTestId('search-input'), {
       target: { value: 'x' },
     });
 
@@ -140,7 +140,7 @@ describe('useDebouncedSearchParam', () => {
       await vi.advanceTimersByTimeAsync(300);
     });
 
-    const query = screen.getByTestId('full-query').textContent ?? '';
+    const query = component.getByTestId('full-query').textContent ?? '';
     expect(query).toContain('q=x');
     expect(query).toContain('page=1');
     expect(query).toContain('limit=50');

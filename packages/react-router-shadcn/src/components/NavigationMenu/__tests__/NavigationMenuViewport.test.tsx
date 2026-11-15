@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
@@ -14,7 +14,7 @@ import {
 describe('NavigationMenuViewport', () => {
   test('renders within a navigation menu without error', () => {
     expect(NavigationMenuViewport).toBeDefined();
-    render(
+    const component = render(
       <NavigationMenu defaultValue="a">
         <NavigationMenuList>
           <NavigationMenuItem value="a">
@@ -25,6 +25,6 @@ describe('NavigationMenuViewport', () => {
         <NavigationMenuViewport />
       </NavigationMenu>,
     );
-    expect(screen.getByRole('navigation')).toBeInTheDocument();
+    expect(component.getByRole('navigation')).toBeInTheDocument();
   });
 });

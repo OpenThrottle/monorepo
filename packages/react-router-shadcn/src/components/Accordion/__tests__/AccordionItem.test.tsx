@@ -1,4 +1,3 @@
-import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 
@@ -17,12 +16,12 @@ const getAccordionItemRoot = (trigger: HTMLElement): HTMLElement | null => {
 
 describe('AccordionItem', () => {
   it('renders the item wrapper with border-b and closed data-state by default', () => {
-    renderComposedSingleAccordion({
+    const component = renderComposedSingleAccordion({
       panelChildren: PANEL_TEXT,
       triggerLabel: TRIGGER_LABEL,
     });
 
-    const trigger = screen.getByRole('button', { name: TRIGGER_LABEL });
+    const trigger = component.getByRole('button', { name: TRIGGER_LABEL });
     const item = getAccordionItemRoot(trigger);
 
     expect(item).not.toBeNull();
@@ -31,13 +30,13 @@ describe('AccordionItem', () => {
   });
 
   it('sets data-state to open when the section is expanded by default', () => {
-    renderComposedSingleAccordion({
+    const component = renderComposedSingleAccordion({
       defaultOpen: true,
       panelChildren: PANEL_TEXT,
       triggerLabel: TRIGGER_LABEL,
     });
 
-    const trigger = screen.getByRole('button', { name: TRIGGER_LABEL });
+    const trigger = component.getByRole('button', { name: TRIGGER_LABEL });
     const item = getAccordionItemRoot(trigger);
 
     expect(item).not.toBeNull();
@@ -47,12 +46,12 @@ describe('AccordionItem', () => {
   it('toggles data-state on the item when the trigger is clicked', async () => {
     const user = userEvent.setup();
 
-    renderComposedSingleAccordion({
+    const component = renderComposedSingleAccordion({
       panelChildren: PANEL_TEXT,
       triggerLabel: TRIGGER_LABEL,
     });
 
-    const trigger = screen.getByRole('button', { name: TRIGGER_LABEL });
+    const trigger = component.getByRole('button', { name: TRIGGER_LABEL });
     const item = getAccordionItemRoot(trigger);
 
     expect(item).not.toBeNull();
@@ -66,13 +65,13 @@ describe('AccordionItem', () => {
   });
 
   it('merges className onto the item wrapper', () => {
-    renderComposedSingleAccordion({
+    const component = renderComposedSingleAccordion({
       classNames: { item: 'item-custom-class' },
       panelChildren: PANEL_TEXT,
       triggerLabel: TRIGGER_LABEL,
     });
 
-    const trigger = screen.getByRole('button', { name: TRIGGER_LABEL });
+    const trigger = component.getByRole('button', { name: TRIGGER_LABEL });
     const item = getAccordionItemRoot(trigger);
 
     expect(item).not.toBeNull();

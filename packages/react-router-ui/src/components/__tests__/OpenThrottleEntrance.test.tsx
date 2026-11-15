@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
@@ -6,23 +6,23 @@ import { OpenThrottleEntrance } from '../OpenThrottleEntrance';
 
 describe('OpenThrottleEntrance Component', () => {
   test('renders its children', () => {
-    render(
+    const component = render(
       <OpenThrottleEntrance>
         <span>Hero copy</span>
       </OpenThrottleEntrance>,
     );
 
-    expect(screen.getByText('Hero copy')).toBeInTheDocument();
+    expect(component.getByText('Hero copy')).toBeInTheDocument();
   });
 
   test('applies the provided className to the wrapper', () => {
-    render(
+    const component = render(
       <OpenThrottleEntrance className="custom-entrance">
         <span data-testid="child">Content</span>
       </OpenThrottleEntrance>,
     );
 
-    expect(screen.getByTestId('child').parentElement).toHaveClass(
+    expect(component.getByTestId('child').parentElement).toHaveClass(
       'custom-entrance',
     );
   });

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { describe, expect, it } from 'vitest';
@@ -19,7 +19,7 @@ describe('AlertDialog (integration)', () => {
   it('opens from the trigger and exposes alertdialog semantics, copy, and actions', async () => {
     const user = userEvent.setup();
 
-    render(
+    const component = render(
       <AlertDialog>
         <AlertDialogTrigger>Open confirmation</AlertDialogTrigger>
         <AlertDialogContent>
@@ -37,16 +37,22 @@ describe('AlertDialog (integration)', () => {
       </AlertDialog>,
     );
 
-    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    expect(component.queryByRole('alertdialog')).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'Open confirmation' }));
+    await user.click(
+      component.getByRole('button', { name: 'Open confirmation' }),
+    );
 
-    const dialog = await screen.findByRole('alertdialog');
+    const dialog = await component.findByRole('alertdialog');
     expect(dialog).toBeInTheDocument();
     expect(dialog).toHaveTextContent('Delete item');
     expect(dialog).toHaveTextContent('This cannot be undone. Continue?');
 
-    expect(screen.getByRole('button', { name: 'Go back' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Delete' })).toBeInTheDocument();
+    expect(
+      component.getByRole('button', { name: 'Go back' }),
+    ).toBeInTheDocument();
+    expect(
+      component.getByRole('button', { name: 'Delete' }),
+    ).toBeInTheDocument();
   });
 });

@@ -3,7 +3,7 @@ import {
   TabsList,
   TabsTrigger,
 } from '@openthrottle/react-router-shadcn';
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { createRoutesStub, useSearchParams } from 'react-router';
@@ -79,13 +79,13 @@ describe('OpenThrottleTabs Component', () => {
         },
       ]);
 
-      render(<RoutesStub />);
+      const component = render(<RoutesStub />);
 
-      expect(screen.getByRole('tab', { name: 'One' })).toHaveAttribute(
+      expect(component.getByRole('tab', { name: 'One' })).toHaveAttribute(
         'aria-selected',
         'true',
       );
-      expect(screen.getByText('Panel one')).toBeVisible();
+      expect(component.getByText('Panel one')).toBeVisible();
     });
 
     test('merges w-full with custom className on the root', () => {
@@ -113,52 +113,52 @@ describe('OpenThrottleTabs Component', () => {
 
   describe('when urlSync is set', () => {
     test('shows the default tab when the param is absent', () => {
-      renderUrlSyncedTabs();
+      const component = renderUrlSyncedTabs();
 
-      expect(screen.getByRole('tab', { name: 'One' })).toHaveAttribute(
+      expect(component.getByRole('tab', { name: 'One' })).toHaveAttribute(
         'aria-selected',
         'true',
       );
-      expect(screen.getByText('Panel one')).toBeVisible();
-      expect(screen.getByTestId(SEARCH_PARAMS_ID)).toHaveTextContent('');
+      expect(component.getByText('Panel one')).toBeVisible();
+      expect(component.getByTestId(SEARCH_PARAMS_ID)).toHaveTextContent('');
     });
 
     test('reads the active tab from the URL', () => {
-      renderUrlSyncedTabs({ initialEntry: `/?${PARAM}=two` });
+      const component = renderUrlSyncedTabs({ initialEntry: `/?${PARAM}=two` });
 
-      expect(screen.getByRole('tab', { name: 'Two' })).toHaveAttribute(
+      expect(component.getByRole('tab', { name: 'Two' })).toHaveAttribute(
         'aria-selected',
         'true',
       );
-      expect(screen.getByText('Panel two')).toBeVisible();
+      expect(component.getByText('Panel two')).toBeVisible();
     });
 
     test('updates the search param when selecting a non-default tab', async () => {
       const user = userEvent.setup();
-      renderUrlSyncedTabs();
+      const component = renderUrlSyncedTabs();
 
-      await user.click(screen.getByRole('tab', { name: 'Two' }));
+      await user.click(component.getByRole('tab', { name: 'Two' }));
 
-      expect(screen.getByRole('tab', { name: 'Two' })).toHaveAttribute(
+      expect(component.getByRole('tab', { name: 'Two' })).toHaveAttribute(
         'aria-selected',
         'true',
       );
-      expect(screen.getByTestId(SEARCH_PARAMS_ID).textContent).toContain(
+      expect(component.getByTestId(SEARCH_PARAMS_ID).textContent).toContain(
         `${PARAM}=two`,
       );
     });
 
     test('removes the search param when selecting the default tab', async () => {
       const user = userEvent.setup();
-      renderUrlSyncedTabs({ initialEntry: `/?${PARAM}=two` });
+      const component = renderUrlSyncedTabs({ initialEntry: `/?${PARAM}=two` });
 
-      await user.click(screen.getByRole('tab', { name: 'One' }));
+      await user.click(component.getByRole('tab', { name: 'One' }));
 
-      expect(screen.getByRole('tab', { name: 'One' })).toHaveAttribute(
+      expect(component.getByRole('tab', { name: 'One' })).toHaveAttribute(
         'aria-selected',
         'true',
       );
-      expect(screen.getByTestId(SEARCH_PARAMS_ID)).toHaveTextContent('');
+      expect(component.getByTestId(SEARCH_PARAMS_ID)).toHaveTextContent('');
     });
   });
 
@@ -167,18 +167,18 @@ describe('OpenThrottleTabs Component', () => {
       const user = userEvent.setup();
       const onValueChange = vi.fn();
 
-      renderUrlSyncedTabs({
+      const component = renderUrlSyncedTabs({
         tabsProps: {
           onValueChange,
           value: 'one',
         },
       });
 
-      await user.click(screen.getByRole('tab', { name: 'Two' }));
+      await user.click(component.getByRole('tab', { name: 'Two' }));
 
       expect(onValueChange).toHaveBeenCalledWith('two');
-      expect(screen.getByTestId(SEARCH_PARAMS_ID)).toHaveTextContent('');
-      expect(screen.getByRole('tab', { name: 'One' })).toHaveAttribute(
+      expect(component.getByTestId(SEARCH_PARAMS_ID)).toHaveTextContent('');
+      expect(component.getByRole('tab', { name: 'One' })).toHaveAttribute(
         'aria-selected',
         'true',
       );

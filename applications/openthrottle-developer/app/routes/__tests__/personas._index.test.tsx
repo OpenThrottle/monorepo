@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
@@ -21,7 +21,7 @@ const matches: Route.ComponentProps['matches'] = [
 
 describe('routes/personas._index.tsx', () => {
   test('renders personas page sections', () => {
-    render(
+    const component = render(
       <MemoryRouter>
         <PersonasIndex
           actionData={undefined}
@@ -41,9 +41,9 @@ describe('routes/personas._index.tsx', () => {
     );
 
     expect(
-      screen.getByRole('heading', { name: 'Personas' }),
+      component.getByRole('heading', { name: 'Personas' }),
     ).toBeInTheDocument();
-    expect(screen.getByTestId('PersonasToolbar')).toBeInTheDocument();
-    expect(screen.getByTestId('PersonasTable')).toBeInTheDocument();
+    expect(component.getByTestId('PersonasToolbar')).toBeInTheDocument();
+    expect(component.getByTestId('PersonasTable')).toBeInTheDocument();
   });
 });

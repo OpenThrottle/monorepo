@@ -1247,8 +1247,10 @@ its own [conventions](../../packages/react-router-shadcn/README.md#conventions).
   `applications/`, `packages/` or `tools/` that is not under `__tests__/` fails, naming the
   `__tests__/` path it should move to. Exempt: the NestJS tier, the generator templates that emit
   NestJS-tier files, and a project-root `tests/` folder (OT plan `f5625772`).
-- Use `component`, not `screen`, to get elements.
-- Use `userEvent`, not `fireEvent`, to simulate interactions.
+- Use `component`, not `screen`, to get elements: `const component = render(...)`, then
+  `component.getByRole(...)`. _(Enforced, via `openthrottle/no-screen`.)_
+- Use `userEvent`, not `fireEvent`, to simulate interactions. _(Enforced, via
+  `openthrottle/no-fire-event`.)_
 - Use `waitFor` for asynchronous DOM updates.
 - Generate mock data from GraphQL in the application's `mocks.ts`.
 - Each `if` branch in the logic gets its own `describe` block.
@@ -1282,12 +1284,16 @@ fails on a loaded CI runner, so each rule names the deterministic replacement.
 | `openthrottle/no-per-test-timeout`    | A timeout argument or `{ timeout }` / `{ retry }` on a test or hook; `vi.setConfig` timeouts | Make the test faster, or move real I/O into a `*.integration.test.ts` suite (exempt)                    |
 | `openthrottle/skip-requires-issue`    | `.skip` / `.todo` / `xit` without a `#123`, issue URL or OT id in a comment above            | Cite the tracking issue, or delete the test. `skipIf` / `runIf` are allowed                             |
 | `openthrottle/no-fire-event`          | Importing `fireEvent` from `@testing-library/*` (one report per file)                        | `userEvent`; under fake timers, `userEvent.setup({ advanceTimers: vi.advanceTimersByTime })`            |
+| `openthrottle/no-screen`              | Importing `screen` from `@testing-library/react` or `/dom` (one report per file)             | The render result: `const component = render(...)`, then `component.getByRole(...)`                     |
 
 `no-test-sleep` skips files that call `vi.useFakeTimers()`, and `no-wall-clock-in-tests` also
 skips files that call `vi.setSystemTime()`, because under a fake clock those calls are
 deterministic. A delay of `0` is a tick flush, not a sleep. Drag-and-drop with a `dataTransfer`
 and `<input type="color">` changes are the cases `userEvent` cannot drive. They keep
-`fireEvent` behind an inline disable that states the reason.
+`fireEvent` behind an inline disable that states the reason. The render result's queries are
+bound to `document.body`, like `screen`'s, so portaled dialogs and popovers are still reachable
+through `component`; no site needed a `no-screen` disable when the rule landed (OT plan
+`24312010`).
 
 Retries are pinned to `0` (`VITEST_RETRY` in `@tools/dotfiles`, mirrored in the configs that
 bypass the factory). A retry turns a flaky test green without fixing it.

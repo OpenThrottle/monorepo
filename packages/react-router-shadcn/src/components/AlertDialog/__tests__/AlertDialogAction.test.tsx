@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, it } from 'vitest';
 
@@ -12,7 +12,7 @@ import {
 
 describe('AlertDialogAction', () => {
   it('renders as a button with merged className and button variant styles', () => {
-    render(
+    const component = render(
       <AlertDialog defaultOpen={true}>
         <AlertDialogContent>
           <AlertDialogTitle>Action test</AlertDialogTitle>
@@ -26,7 +26,7 @@ describe('AlertDialogAction', () => {
       </AlertDialog>,
     );
 
-    const button = screen.getByRole('button', { name: 'Confirm' });
+    const button = component.getByRole('button', { name: 'Confirm' });
 
     expect(button).toBeInTheDocument();
     expect(button).toHaveClass('custom-action');
@@ -36,7 +36,7 @@ describe('AlertDialogAction', () => {
   it('forwards ref to the underlying button', () => {
     const ref = React.createRef<HTMLButtonElement>();
 
-    render(
+    const component = render(
       <AlertDialog defaultOpen={true}>
         <AlertDialogContent>
           <AlertDialogTitle>Action test</AlertDialogTitle>
@@ -48,6 +48,6 @@ describe('AlertDialogAction', () => {
       </AlertDialog>,
     );
 
-    expect(ref.current).toBe(screen.getByRole('button', { name: 'OK' }));
+    expect(ref.current).toBe(component.getByRole('button', { name: 'OK' }));
   });
 });

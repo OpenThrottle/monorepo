@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
@@ -21,7 +21,7 @@ function stubMatches(): unknown {
 
 describe('routes/generators.$generatorId.tsx', () => {
   test('renders generator heading and documentation tab', () => {
-    render(
+    const component = render(
       <MemoryRouter>
         <GeneratorDetail
           actionData={undefined}
@@ -33,10 +33,10 @@ describe('routes/generators.$generatorId.tsx', () => {
     );
 
     expect(
-      screen.getByRole('heading', { name: '@tools/generators' }),
+      component.getByRole('heading', { name: '@tools/generators' }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('tab', { name: /documentation/i }),
+      component.getByRole('tab', { name: /documentation/i }),
     ).toBeInTheDocument();
   });
 });

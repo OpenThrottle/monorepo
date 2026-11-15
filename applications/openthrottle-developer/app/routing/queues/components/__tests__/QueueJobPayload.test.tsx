@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
@@ -36,20 +36,20 @@ const renderPayload = (
 
 describe('QueueJobPayload Component', () => {
   test('shows empty payload message when job has no data', () => {
-    renderPayload(baseJob());
+    const component = renderPayload(baseJob());
 
-    expect(screen.getByText(/No payload on this job/i)).toBeInTheDocument();
+    expect(component.getByText(/No payload on this job/i)).toBeInTheDocument();
   });
 
   test('renders copy control when payload JSON exists', () => {
-    renderPayload({
+    const component = renderPayload({
       ...baseJob(),
       data: JSON.stringify({ planId: 'plan-uuid' }),
     });
 
     expect(
-      screen.getByRole('button', { name: /copy json/i }),
+      component.getByRole('button', { name: /copy json/i }),
     ).toBeInTheDocument();
-    expect(screen.getByText(/plan-uuid/)).toBeInTheDocument();
+    expect(component.getByText(/plan-uuid/)).toBeInTheDocument();
   });
 });

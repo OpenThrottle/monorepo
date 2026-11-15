@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
@@ -37,14 +37,14 @@ const renderTimestamps = (
 describe('QueueJobTimestamps Component', () => {
   test('renders timestamp labels and formatted created time', () => {
     const job = baseJob();
-    renderTimestamps(job);
+    const component = renderTimestamps(job);
 
-    expect(screen.getByText('Timestamps')).toBeInTheDocument();
-    expect(screen.getByText('Created')).toBeInTheDocument();
-    expect(screen.getByText('Started')).toBeInTheDocument();
-    expect(screen.getByText('Finished')).toBeInTheDocument();
+    expect(component.getByText('Timestamps')).toBeInTheDocument();
+    expect(component.getByText('Created')).toBeInTheDocument();
+    expect(component.getByText('Started')).toBeInTheDocument();
+    expect(component.getByText('Finished')).toBeInTheDocument();
     expect(
-      screen.getByText(new Date(job.timestamp!).toISOString()),
+      component.getByText(new Date(job.timestamp!).toISOString()),
     ).toBeInTheDocument();
   });
 });

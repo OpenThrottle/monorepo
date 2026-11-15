@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, it } from 'vitest';
 
@@ -11,7 +11,7 @@ import {
 
 describe('AlertDialogTitle', () => {
   it('renders a heading with title styles and merged className', () => {
-    render(
+    const component = render(
       <AlertDialog defaultOpen={true}>
         <AlertDialogContent>
           <AlertDialogTitle className="title-extra">
@@ -22,7 +22,9 @@ describe('AlertDialogTitle', () => {
       </AlertDialog>,
     );
 
-    const heading = screen.getByRole('heading', { name: 'Important choice' });
+    const heading = component.getByRole('heading', {
+      name: 'Important choice',
+    });
     expect(heading).toBeInTheDocument();
     expect(heading).toHaveClass('title-extra');
     expect(heading).toHaveClass('text-lg');
@@ -31,7 +33,7 @@ describe('AlertDialogTitle', () => {
   it('forwards ref to the title element', () => {
     const ref = React.createRef<HTMLHeadingElement>();
 
-    render(
+    const component = render(
       <AlertDialog defaultOpen={true}>
         <AlertDialogContent>
           <AlertDialogTitle ref={ref}>T</AlertDialogTitle>
@@ -40,6 +42,6 @@ describe('AlertDialogTitle', () => {
       </AlertDialog>,
     );
 
-    expect(ref.current).toBe(screen.getByRole('heading', { name: 'T' }));
+    expect(ref.current).toBe(component.getByRole('heading', { name: 'T' }));
   });
 });

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
@@ -11,13 +11,13 @@ describe('SettingsWorkspaceIntro Component', () => {
       return <SettingsWorkspaceIntro />;
     };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    render(<RoutesStub />);
+    const component = render(<RoutesStub />);
 
     expect(
-      screen.getByRole('heading', { name: 'Workspace' }),
+      component.getByRole('heading', { name: 'Workspace' }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/Choose which editors OpenThrottle configures/i),
+      component.getByText(/Choose which editors OpenThrottle configures/i),
     ).toBeInTheDocument();
   });
 });

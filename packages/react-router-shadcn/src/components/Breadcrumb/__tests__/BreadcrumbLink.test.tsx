@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, it } from 'vitest';
 
@@ -6,19 +6,21 @@ import { BreadcrumbLink } from '../BreadcrumbLink';
 
 describe('BreadcrumbLink', () => {
   it('renders an anchor with href, visible text, and transition hover classes', () => {
-    render(<BreadcrumbLink href="/docs">Documentation</BreadcrumbLink>);
-    const link = screen.getByRole('link', { name: 'Documentation' });
+    const component = render(
+      <BreadcrumbLink href="/docs">Documentation</BreadcrumbLink>,
+    );
+    const link = component.getByRole('link', { name: 'Documentation' });
     expect(link).toHaveAttribute('href', '/docs');
     expect(link).toHaveClass('transition-colors', 'hover:text-foreground');
   });
 
   it('merges custom className with defaults', () => {
-    render(
+    const component = render(
       <BreadcrumbLink className="underline-offset-4" href="/">
         Home
       </BreadcrumbLink>,
     );
-    const link = screen.getByRole('link', { name: 'Home' });
+    const link = component.getByRole('link', { name: 'Home' });
     expect(link).toHaveClass('transition-colors', 'underline-offset-4');
   });
 

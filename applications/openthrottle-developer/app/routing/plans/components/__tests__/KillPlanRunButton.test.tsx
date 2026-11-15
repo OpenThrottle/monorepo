@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
@@ -38,10 +38,10 @@ describe('KillPlanRunButton', () => {
     const RoutesStub = createRoutesStub([
       { Component, path: '/plans/:planId' },
     ]);
-    render(<RoutesStub initialEntries={['/plans/p1']} />);
+    const component = render(<RoutesStub initialEntries={['/plans/p1']} />);
 
     expect(
-      screen.queryByRole('button', { name: /Kill plan run for T/i }),
+      component.queryByRole('button', { name: /Kill plan run for T/i }),
     ).not.toBeInTheDocument();
   });
 
@@ -53,10 +53,10 @@ describe('KillPlanRunButton', () => {
     const RoutesStub = createRoutesStub([
       { Component, path: '/plans/:planId' },
     ]);
-    render(<RoutesStub initialEntries={['/plans/p1']} />);
+    const component = render(<RoutesStub initialEntries={['/plans/p1']} />);
 
     expect(
-      screen.getByRole('button', { name: /Kill plan run for Alpha/i }),
+      component.getByRole('button', { name: /Kill plan run for Alpha/i }),
     ).toBeInTheDocument();
   });
 
@@ -68,9 +68,9 @@ describe('KillPlanRunButton', () => {
     const RoutesStub = createRoutesStub([
       { Component, path: '/plans/:planId' },
     ]);
-    render(<RoutesStub initialEntries={['/plans/p1']} />);
+    const component = render(<RoutesStub initialEntries={['/plans/p1']} />);
 
-    const trigger = screen.getByRole('button', {
+    const trigger = component.getByRole('button', {
       name: /Kill plan run for Alpha/i,
     });
     expect(trigger).toHaveAttribute('aria-label', 'Kill plan run for Alpha');
@@ -103,20 +103,20 @@ describe('KillPlanRunButton', () => {
       },
     ]);
 
-    render(<RoutesStub initialEntries={['/plans/p1']} />);
+    const component = render(<RoutesStub initialEntries={['/plans/p1']} />);
 
     await user.click(
-      screen.getByRole('button', { name: /Kill plan run for Alpha/i }),
+      component.getByRole('button', { name: /Kill plan run for Alpha/i }),
     );
     expect(
-      screen.getByRole('heading', { name: /Kill plan run\?/i }),
+      component.getByRole('heading', { name: /Kill plan run\?/i }),
     ).toBeInTheDocument();
 
     await user.keyboard('{Escape}');
 
     await waitFor(() => {
       expect(
-        screen.queryByRole('heading', { name: /Kill plan run\?/i }),
+        component.queryByRole('heading', { name: /Kill plan run\?/i }),
       ).not.toBeInTheDocument();
     });
     expect(cancelPlanRunPosts).toBe(0);
@@ -133,9 +133,9 @@ describe('KillPlanRunButton', () => {
       { Component, path: '/plans/:planId' },
     ]);
 
-    render(<RoutesStub initialEntries={['/plans/p1']} />);
+    const component = render(<RoutesStub initialEntries={['/plans/p1']} />);
 
-    const trigger = screen.getByRole('button', {
+    const trigger = component.getByRole('button', {
       name: /Kill plan run for Alpha/i,
     });
     await user.click(trigger);
@@ -178,17 +178,17 @@ describe('KillPlanRunButton', () => {
       },
     ]);
 
-    render(<RoutesStub initialEntries={['/plans/p1']} />);
+    const component = render(<RoutesStub initialEntries={['/plans/p1']} />);
 
     await user.click(
-      screen.getByRole('button', { name: /Kill plan run for Alpha/i }),
+      component.getByRole('button', { name: /Kill plan run for Alpha/i }),
     );
     expect(
-      screen.getByRole('heading', { name: /Kill plan run/i }),
+      component.getByRole('heading', { name: /Kill plan run/i }),
     ).toBeInTheDocument();
-    expect(screen.getByText(/Alpha/)).toBeInTheDocument();
+    expect(component.getByText(/Alpha/)).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: /^Kill run$/i }));
+    await user.click(component.getByRole('button', { name: /^Kill run$/i }));
 
     await waitFor(() => {
       expect(toastSuccess).toHaveBeenCalledWith(
@@ -230,12 +230,12 @@ describe('KillPlanRunButton', () => {
       },
     ]);
 
-    render(<RoutesStub initialEntries={['/plans/p1']} />);
+    const component = render(<RoutesStub initialEntries={['/plans/p1']} />);
 
     await user.click(
-      screen.getByRole('button', { name: /Kill plan run for Alpha/i }),
+      component.getByRole('button', { name: /Kill plan run for Alpha/i }),
     );
-    await user.click(screen.getByRole('button', { name: /^Kill run$/i }));
+    await user.click(component.getByRole('button', { name: /^Kill run$/i }));
 
     await waitFor(() => {
       expect(toastInfo).toHaveBeenCalledWith(
@@ -269,23 +269,23 @@ describe('KillPlanRunButton', () => {
       },
     ]);
 
-    render(<RoutesStub initialEntries={['/plans/p1']} />);
+    const component = render(<RoutesStub initialEntries={['/plans/p1']} />);
 
     await user.click(
-      screen.getByRole('button', { name: /Kill plan run for Alpha/i }),
+      component.getByRole('button', { name: /Kill plan run for Alpha/i }),
     );
     expect(
-      screen.getByRole('heading', { name: /Kill plan run\?/i }),
+      component.getByRole('heading', { name: /Kill plan run\?/i }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/Task or plan edits are not deleted/i),
+      component.getByText(/Task or plan edits are not deleted/i),
     ).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: /^Cancel$/i }));
+    await user.click(component.getByRole('button', { name: /^Cancel$/i }));
 
     await waitFor(() => {
       expect(
-        screen.queryByRole('heading', { name: /Kill plan run\?/i }),
+        component.queryByRole('heading', { name: /Kill plan run\?/i }),
       ).not.toBeInTheDocument();
     });
     expect(cancelPlanRunPosts).toBe(0);
@@ -330,22 +330,22 @@ describe('KillPlanRunButton', () => {
       },
     ]);
 
-    render(<RoutesStub initialEntries={['/plans/p1']} />);
+    const component = render(<RoutesStub initialEntries={['/plans/p1']} />);
 
     await user.click(
-      screen.getByRole('button', { name: /Kill plan run for Alpha/i }),
+      component.getByRole('button', { name: /Kill plan run for Alpha/i }),
     );
-    await user.click(screen.getByRole('button', { name: /^Kill run$/i }));
+    await user.click(component.getByRole('button', { name: /^Kill run$/i }));
 
     // Trigger sits under aria-hidden while the dialog is open; still assert label + text.
     expect(
-      screen.getByRole('button', {
+      component.getByRole('button', {
         hidden: true,
         name: /Kill plan run for Alpha/i,
       }),
     ).toHaveTextContent('Stopping…');
     expect(
-      screen.getByRole('button', { name: /^Stopping…$/i }),
+      component.getByRole('button', { name: /^Stopping…$/i }),
     ).toBeInTheDocument();
 
     releaseCancel?.();
@@ -376,19 +376,19 @@ describe('KillPlanRunButton', () => {
       },
     ]);
 
-    render(<RoutesStub initialEntries={['/plans/p1']} />);
+    const component = render(<RoutesStub initialEntries={['/plans/p1']} />);
 
     await user.click(
-      screen.getByRole('button', { name: /Kill plan run for Alpha/i }),
+      component.getByRole('button', { name: /Kill plan run for Alpha/i }),
     );
-    await user.click(screen.getByRole('button', { name: /^Kill run$/i }));
+    await user.click(component.getByRole('button', { name: /^Kill run$/i }));
 
     await waitFor(() => {
       expect(toastError).toHaveBeenCalledWith('Failed to fetch');
     });
     expect(toastSuccess).not.toHaveBeenCalled();
     expect(
-      screen.getByRole('heading', { name: /Kill plan run\?/i }),
+      component.getByRole('heading', { name: /Kill plan run\?/i }),
     ).toBeInTheDocument();
   });
 
@@ -432,19 +432,19 @@ describe('KillPlanRunButton', () => {
       },
     ]);
 
-    render(<RoutesStub initialEntries={['/plans/p1']} />);
+    const component = render(<RoutesStub initialEntries={['/plans/p1']} />);
 
     await user.click(
-      screen.getByRole('button', { name: /Kill plan run for Alpha/i }),
+      component.getByRole('button', { name: /Kill plan run for Alpha/i }),
     );
-    const confirmKill = screen.getByRole('button', { name: /^Kill run$/i });
+    const confirmKill = component.getByRole('button', { name: /^Kill run$/i });
     await user.click(confirmKill);
 
     await waitFor(() => {
       expect(cancelPlanRunPosts).toBe(1);
     });
 
-    const stoppingConfirm = screen.getByRole('button', {
+    const stoppingConfirm = component.getByRole('button', {
       name: /^Stopping…$/i,
     });
     expect(stoppingConfirm).toBeDisabled();

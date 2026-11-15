@@ -1,5 +1,5 @@
 import { GlobalLayoutBreadcrumbs } from '@openthrottle/react-router-ui-global';
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
@@ -22,9 +22,11 @@ describe('plan and task breadcrumbs', () => {
         path: '/plans/:planId',
       },
     ]);
-    render(<RoutesStub initialEntries={[`/plans/${PLAN_ID}`]} />);
+    const component = render(
+      <RoutesStub initialEntries={[`/plans/${PLAN_ID}`]} />,
+    );
 
-    const nav = await screen.findByTestId('OpenThrottleBreadcrumbs');
+    const nav = await component.findByTestId('OpenThrottleBreadcrumbs');
 
     expect(nav).toHaveTextContent('Plans');
     expect(nav).toHaveTextContent('Fix mobile header');
@@ -43,18 +45,18 @@ describe('plan and task breadcrumbs', () => {
         path: '/plans/:planId/tasks/:taskId',
       },
     ]);
-    render(
+    const component = render(
       <RoutesStub initialEntries={[`/plans/${PLAN_ID}/tasks/${TASK_ID}`]} />,
     );
 
-    const nav = await screen.findByTestId('OpenThrottleBreadcrumbs');
+    const nav = await component.findByTestId('OpenThrottleBreadcrumbs');
 
     expect(nav).toHaveTextContent('Plans');
     expect(nav).toHaveTextContent('Fix mobile header');
     expect(nav).toHaveTextContent('Collapse trailing links');
     expect(nav.textContent).not.toMatch(UUID_PATTERN);
     expect(
-      screen.getByRole('link', { name: 'Fix mobile header' }),
+      component.getByRole('link', { name: 'Fix mobile header' }),
     ).toHaveAttribute('href', `/plans/${PLAN_ID}`);
   });
 });

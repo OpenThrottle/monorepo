@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
@@ -11,11 +11,11 @@ describe('GlobalTheme Component', () => {
       return <GlobalTheme />;
     };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    render(<RoutesStub />);
+    const component = render(<RoutesStub />);
 
-    expect(screen.getByTestId('GlobalTheme')).toBeInTheDocument();
+    expect(component.getByTestId('GlobalTheme')).toBeInTheDocument();
     expect(
-      screen.getByRole('heading', { name: 'GlobalTheme' }),
+      component.getByRole('heading', { name: 'GlobalTheme' }),
     ).toBeInTheDocument();
   });
 });

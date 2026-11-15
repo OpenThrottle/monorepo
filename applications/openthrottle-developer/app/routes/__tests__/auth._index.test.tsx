@@ -1,4 +1,3 @@
-import { screen } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
@@ -29,7 +28,7 @@ const matches: Route.ComponentProps['matches'] = [
 
 describe('routes/auth._index.tsx', () => {
   test('renders sign-in form', () => {
-    renderRoutesStub(
+    const component = renderRoutesStub(
       <AuthIndex
         actionData={undefined}
         loaderData={{ composerData }}
@@ -38,7 +37,9 @@ describe('routes/auth._index.tsx', () => {
       />,
     );
 
-    expect(screen.getByRole('button', { name: 'Sign in' })).toBeInTheDocument();
-    expect(screen.getByLabelText('Email')).toBeInTheDocument();
+    expect(
+      component.getByRole('button', { name: 'Sign in' }),
+    ).toBeInTheDocument();
+    expect(component.getByLabelText('Email')).toBeInTheDocument();
   });
 });
