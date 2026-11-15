@@ -66,8 +66,6 @@ jobs:
 
       - name: '🤖 Node Setup'
         uses: ./.github/actions/node-setup
-        with:
-          save-cache: 'false'
 
       - name: '🐙 Configure the bot identity'
         env:

@@ -24,17 +24,25 @@ inputs:
     required: false
     default: ''
 
-  # 'false' restores both caches (pnpm store and Nx) but never SAVES them. For
-  # merge-queue entries: each runs on a unique `gh-readonly-queue/main/pr-N-<sha>`
-  # ref, and Actions caches are ref-scoped, so nothing later can ever restore
-  # what a queue entry saves. Before this input every entry still wrote ~1.4 GB
-  # (four ~215 MB Nx entries plus the ~336 MB pnpm store), which kept the repo
-  # over its 10 GB cache quota and evicted the main entries PRs actually read
-  # (OT plan 80b62f5e).
+  # Restore-only by DEFAULT. 'false' restores both caches (pnpm store and Nx)
+  # but never SAVES them; 'true' also saves. Opt in only from a job whose save a
+  # later run actually restores: today that is continuous-integration.yml's
+  # `build` shards and `gates` (outside the merge queue) and `warm-cache` (the
+  # entry on `main` every PR restores from). Nothing else opts in.
+  #
+  # Why the default flipped (OT plan 820b4838). Every save writes a ~215 MB Nx
+  # entry, plus the ~336 MB pnpm store on a lockfile change, and the repo has a
+  # 10 GB cache quota whose LRU evicts the `main` entries PRs read. With 'true'
+  # as the default, any new caller saved silently: merge-queue entries (a
+  # unique `gh-readonly-queue/*` ref nothing can restore from, ~1.4 GB each,
+  # OT plan 80b62f5e), then side jobs on every main push duplicating
+  # `warm-cache`'s entry (model-facing-text, database-seeds, OpenThrottle
+  # Docker, Publish hook plugins; OT plan 1d2f247c). Opt-in makes a new save a
+  # visible decision in review.
   save-cache:
-    description: "'true' (default) restores and saves the pnpm store and Nx caches; 'false' only restores them. Pass 'false' where nothing could ever restore the save (merge-queue refs)."
+    description: "'false' (default) only restores the pnpm store and Nx caches; 'true' restores and saves them. Pass 'true' only from a job whose save a later run restores (CI build shards and gates outside the merge queue, warm-cache)."
     required: false
-    default: 'true'
+    default: 'false'
 
 runs:
   using: 'composite'

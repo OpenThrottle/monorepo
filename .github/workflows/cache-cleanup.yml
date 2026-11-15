@@ -1,19 +1,28 @@
 ################################################################################
 #
-#   🧹 Delete a pull request's Actions caches once it closes.
+#   🧹 Delete Actions caches nothing can restore any more.
 #
-#   A PR's caches live under `refs/pull/<n>/merge` and can only ever be restored
-#   by later runs of that same PR, so once it is closed or merged they are dead
-#   weight. They are not small: each ready push saves four ~215 MB Nx entries
-#   (three shards plus `gates`) and, on a lockfile change, a ~336 MB pnpm store.
-#   Left to GitHub's LRU, they push the repo over its 10 GB quota and evict
-#   the `main` entries every PR restores from (OT plan 80b62f5e,
+#   Two jobs, one per kind of dead weight. Left to GitHub's LRU, either one
+#   pushes the repo over its 10 GB quota, and the LRU then evicts the `main`
+#   entries every PR restores from (OT plans 80b62f5e and 820b4838,
 #   docs/monorepo/ci-cost.md).
 #
-#   💰 One `gh` call on a standard runner, with no checkout and no install.
+#   `delete-pr-caches` — on PR close. A PR's caches live under
+#   `refs/pull/<n>/merge` and can only ever be restored by later runs of that
+#   same PR. Each ready push saves four ~215 MB Nx entries (three shards plus
+#   `gates`) and, on a lockfile change, a ~336 MB pnpm store.
 #
-#   Fork PRs get a read-only token here, so their delete is refused; that is
-#   reported and tolerated. Their caches still age out via the LRU.
+#   `prune-codeql-overlay` — on every push to `main`. CodeQL default setup
+#   (enabled 2026-11-14; it has no workflow file and reports as event
+#   `dynamic`) saves a ~520 MB `codeql-overlay-base-database-*` entry on `main`
+#   per push. The next CodeQL run restores the newest one and nothing reads the
+#   older ones again; eight of them held 4.2 GB when this job was added.
+#   Default setup has no setting for it, so this job keeps the newest and
+#   deletes the rest. The push's own CodeQL run saves its entry ~10 min after
+#   this job runs, so the entry kept is the one the next run will restore, and
+#   `main` holds at most two (one live, one landing).
+#
+#   💰 A few `gh` calls on a standard runner, with no checkout and no install.
 #
 ################################################################################
 name: '🧹 Cache cleanup'
@@ -21,6 +30,9 @@ name: '🧹 Cache cleanup'
 on:
   pull_request:
     types: [closed]
+  push:
+    branches: [main]
+  workflow_dispatch:
 
 permissions:
   # `gh cache delete` needs actions: write.
@@ -28,9 +40,12 @@ permissions:
 
 jobs:
   delete-pr-caches:
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-26.04
     timeout-minutes: 5
     steps:
+      # Fork PRs get a read-only token here, so their delete is refused; that
+      # is reported and tolerated. Their caches still age out via the LRU.
       - name: '🧹 Delete this PR’s caches'
         env:
           GH_REPO: ${{ github.repository }}
@@ -42,3 +57,28 @@ jobs:
           gh cache list --ref "$REF" --limit 100 || true
           gh cache delete --all --ref "$REF" --succeed-on-no-caches \
             || echo "⚠️ delete refused (fork PR with a read-only token?); LRU eviction will reclaim these"
+
+  prune-codeql-overlay:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    # A newer push makes an in-flight prune redundant: it does the same work
+    # against a list that is at least as current.
+    concurrency:
+      group: prune-codeql-overlay
+      cancel-in-progress: true
+    steps:
+      - name: '🧹 Keep only the newest CodeQL overlay-base cache on main'
+        env:
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+          PREFIX: codeql-overlay-base-database-
+          REF: refs/heads/main
+        run: |
+          set -euo pipefail
+          ids="$(gh cache list --ref "$REF" --key "$PREFIX" --sort created_at --order desc --limit 100 --json id --jq '.[].id')"
+          echo "$(printf '%s\n' "$ids" | sed '/^$/d' | wc -l | tr -d ' ') ${PREFIX}* entries on $REF; keeping the newest."
+          printf '%s\n' "$ids" | sed '/^$/d' | tail -n +2 | while read -r id; do
+            echo "🗑️ deleting cache $id"
+            gh cache delete "$id"
+          done
