@@ -3607,6 +3607,9 @@ importers:
       react:
         specifier: 19.2.4
         version: 19.2.4
+      react-router:
+        specifier: 'catalog:'
+        version: 8.0.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       zod:
         specifier: ^4.4.3
         version: 4.4.3

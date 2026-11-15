@@ -6,18 +6,34 @@ const executeGraphqlMock = vi.fn();
 const executeGraphqlWithAuthNodeJSMock = vi.fn();
 const getAuthTokenFromCookieMock = vi.fn();
 
+// Mirrors `@openthrottle/nodejs-graphql`'s class: the module is mocked whole, so
+// the classifier's `isGraphqlResponseError` guard must see this same class.
+class FakeGraphqlResponseError extends Error {
+  readonly extensions: Readonly<Record<string, unknown>>;
+
+  constructor(message: string, extensions: Readonly<Record<string, unknown>>) {
+    super(message);
+    this.name = 'GraphqlResponseError';
+    this.extensions = extensions;
+  }
+}
+
 vi.mock('@openthrottle/nodejs-graphql', () => ({
   DEFAULT_GRAPHQL_TIMEOUT_MS: 15_000,
   GRAPHQL_TIMEOUT_ERROR_PREFIX: 'openthrottle-server GraphQL request timed out',
+  GraphqlResponseError: FakeGraphqlResponseError,
   executeGraphql: (...args: ReadonlyArray<unknown>): unknown =>
     executeGraphqlMock(...args),
   executeGraphqlWithAuth: (...args: ReadonlyArray<unknown>): unknown =>
     executeGraphqlWithAuthNodeJSMock(...args),
+  isGraphqlResponseError: (error: unknown): boolean =>
+    error instanceof FakeGraphqlResponseError,
 }));
 
 vi.mock('@openthrottle/react-router-auth', () => ({
   getAuthTokenFromCookie: (...args: ReadonlyArray<unknown>): unknown =>
     getAuthTokenFromCookieMock(...args),
+  getClearAuthCookieHeader: (): string => 'token=; Max-Age=0; Path=/',
 }));
 
 // `./index` re-exports the ws hooks, which transitively evaluate
@@ -32,6 +48,7 @@ const {
   executeGraphqlWithAuth,
   isAuthError,
   isTimeoutError,
+  redirectOnAuthError,
 } = await import('../index');
 
 const document: TypedDocumentNode<unknown, Record<string, unknown>> = {
@@ -137,6 +154,71 @@ describe('executeGraphqlWithAuth auth-error mapping', () => {
     if (error instanceof GraphqlAuthError) {
       expect(error.httpStatus).toBe(403);
     }
+  });
+
+  it('rejects with GraphqlAuthError on a GraphQL UNAUTHENTICATED error (HTTP 200, token path)', async () => {
+    getAuthTokenFromCookieMock.mockReturnValue('revoked-token');
+    const original = new FakeGraphqlResponseError(
+      'GraphQL errors: Unauthorized',
+      { code: 'UNAUTHENTICATED' },
+    );
+    executeGraphqlWithAuthNodeJSMock.mockRejectedValue(original);
+
+    const error = await executeGraphqlWithAuth(makeRequest(), document).catch(
+      (caught: unknown) => caught,
+    );
+
+    expect(isAuthError(error)).toBe(true);
+
+    if (error instanceof GraphqlAuthError) {
+      expect(error.httpStatus).toBe(401);
+      expect(error.cause).toBe(original);
+    }
+  });
+
+  it('rejects with GraphqlAuthError on a GraphQL UNAUTHENTICATED error (no-token path)', async () => {
+    getAuthTokenFromCookieMock.mockReturnValue(undefined);
+    executeGraphqlMock.mockRejectedValue(
+      new FakeGraphqlResponseError('GraphQL errors: Unauthorized', {
+        code: 'UNAUTHENTICATED',
+      }),
+    );
+
+    const error = await executeGraphqlWithAuth(makeRequest(), document).catch(
+      (caught: unknown) => caught,
+    );
+
+    expect(error).toBeInstanceOf(GraphqlAuthError);
+  });
+
+  it('passes through a GraphQL FORBIDDEN error unchanged (signed in, not permitted)', async () => {
+    getAuthTokenFromCookieMock.mockReturnValue('a-token');
+    const original = new FakeGraphqlResponseError('GraphQL errors: Forbidden', {
+      code: 'FORBIDDEN',
+    });
+    executeGraphqlWithAuthNodeJSMock.mockRejectedValue(original);
+
+    const error = await executeGraphqlWithAuth(makeRequest(), document).catch(
+      (caught: unknown) => caught,
+    );
+
+    expect(error).toBe(original);
+    expect(isAuthError(error)).toBe(false);
+  });
+
+  it('does not classify on the message: an UNAUTHENTICATED-looking message without the code passes through', async () => {
+    getAuthTokenFromCookieMock.mockReturnValue('a-token');
+    const original = new FakeGraphqlResponseError(
+      'GraphQL errors: Unauthorized',
+      {},
+    );
+    executeGraphqlWithAuthNodeJSMock.mockRejectedValue(original);
+
+    const error = await executeGraphqlWithAuth(makeRequest(), document).catch(
+      (caught: unknown) => caught,
+    );
+
+    expect(error).toBe(original);
   });
 
   it('passes through a non-auth HTTP error (500) unchanged', async () => {
@@ -330,5 +412,65 @@ describe('isTimeoutError', () => {
     } else {
       throw new Error('expected isTimeoutError to narrow the type');
     }
+  });
+});
+
+describe('redirectOnAuthError', () => {
+  const catchThrown = (run: () => void): unknown => {
+    try {
+      run();
+    } catch (thrown) {
+      return thrown;
+    }
+
+    return undefined;
+  };
+
+  it('throws a redirect to /auth that clears the auth cookie for a GraphqlAuthError', () => {
+    const thrown = catchThrown(() => {
+      redirectOnAuthError(
+        new GraphqlAuthError('GraphQL errors: Unauthorized', 401),
+      );
+    });
+
+    expect(thrown).toBeInstanceOf(Response);
+
+    if (thrown instanceof Response) {
+      expect(thrown.status).toBe(302);
+      expect(thrown.headers.get('Location')).toBe('/auth');
+      expect(thrown.headers.get('Set-Cookie')).toBe(
+        'token=; Max-Age=0; Path=/',
+      );
+    }
+  });
+
+  it('redirects to the given route when `to` is set', () => {
+    const thrown = catchThrown(() => {
+      redirectOnAuthError(new GraphqlAuthError('Forbidden', 403), {
+        to: '/sign-in',
+      });
+    });
+
+    expect(thrown).toBeInstanceOf(Response);
+
+    if (thrown instanceof Response) {
+      expect(thrown.headers.get('Location')).toBe('/sign-in');
+    }
+  });
+
+  it('returns without throwing for a non-auth error, leaving the caller to rethrow it', () => {
+    const thrown = catchThrown(() => {
+      redirectOnAuthError(new Error('GraphQL errors: something went wrong'));
+    });
+
+    expect(thrown).toBeUndefined();
+  });
+
+  it('returns without throwing for a timeout error', () => {
+    const thrown = catchThrown(() => {
+      redirectOnAuthError(new GraphqlTimeoutError('timed out', 15_000));
+    });
+
+    expect(thrown).toBeUndefined();
   });
 });

@@ -9,12 +9,17 @@ import {
   executeGraphql,
   executeGraphqlWithAuth as executeGraphqlWithAuthNodeJS,
   GRAPHQL_TIMEOUT_ERROR_PREFIX,
+  isGraphqlResponseError,
 } from '@openthrottle/nodejs-graphql';
 export {
   GraphqlResponseError,
   isGraphqlResponseError,
 } from '@openthrottle/nodejs-graphql';
-import { getAuthTokenFromCookie } from '@openthrottle/react-router-auth';
+import {
+  getAuthTokenFromCookie,
+  getClearAuthCookieHeader,
+} from '@openthrottle/react-router-auth';
+import { redirect } from 'react-router';
 
 /**
  * @description HTTP status codes that indicate an authentication/authorization
@@ -24,11 +29,30 @@ import { getAuthTokenFromCookie } from '@openthrottle/react-router-auth';
 const AUTH_HTTP_STATUSES: ReadonlyArray<number> = [401, 403];
 
 /**
+ * @description The `extensions.code` openthrottle-server puts on a GraphQL
+ * error when the caller's credentials are missing, invalid or revoked. The
+ * request itself still answers HTTP 200, so this code, not the status line, is
+ * how the common auth failure is recognized.
+ */
+const UNAUTHENTICATED_CODE = 'UNAUTHENTICATED';
+
+/**
+ * @description The HTTP status recorded on a {@link GraphqlAuthError} built
+ * from an `UNAUTHENTICATED` GraphQL error, which arrives on an HTTP 200
+ * response. 401 is what the server's guard would have answered over REST.
+ */
+const UNAUTHENTICATED_HTTP_STATUS = 401;
+
+/**
  * @description Typed error thrown by {@link executeGraphqlWithAuth} when the
- * underlying request fails with an auth-related HTTP status (401/403). Consumers
- * can `instanceof`-check this to distinguish auth expiry from network/server
- * errors and redirect to login. Replaces the old (never-true) string match on a
- * bare `'Unauthorized'` message that the wrapped client never throws.
+ * caller is not authenticated: a GraphQL error whose `extensions.code` is
+ * `UNAUTHENTICATED` (the server's usual answer, on HTTP 200), or an HTTP
+ * 401/403. Consumers can `instanceof`-check this to distinguish auth expiry
+ * from network/server errors and redirect to login.
+ *
+ * A GraphQL `FORBIDDEN` error is deliberately NOT an auth error: the caller is
+ * signed in but lacks permission, and sending them to login would loop them
+ * straight back to the same refusal.
  *
  * @public
  */
@@ -45,7 +69,7 @@ export class GraphqlAuthError extends Error {
 
 /**
  * @description Type guard that reports whether a thrown error is an
- * authentication/authorization failure (HTTP 401/403) raised by
+ * authentication failure (GraphQL `UNAUTHENTICATED`, or HTTP 401/403) raised by
  * {@link executeGraphqlWithAuth}. Use this single helper in loaders/actions to
  * decide whether to redirect to login, instead of brittle `message.includes`
  * string-scraping that breaks when the backend rewords an error or returns the
@@ -55,6 +79,50 @@ export class GraphqlAuthError extends Error {
  */
 export function isAuthError(error: unknown): error is GraphqlAuthError {
   return error instanceof GraphqlAuthError;
+}
+
+/**
+ * @description Options for {@link redirectOnAuthError}.
+ *
+ * @public
+ */
+export interface RedirectOnAuthErrorOptions {
+  /** @description Where to send the caller. Defaults to `/auth`. */
+  readonly to?: string | undefined;
+}
+
+/**
+ * @description The one reaction to an auth failure in a loader or action:
+ * when `error` is a {@link GraphqlAuthError}, throw a redirect to the login
+ * route that also clears the auth cookie. Any other error returns, so the
+ * caller decides what to do with it (usually `throw error`).
+ *
+ * Clearing the cookie is the point: each app's `/auth` loader sends a request
+ * that still carries a token on to the dashboard, so redirecting a
+ * server-rejected (revoked, or from another stack) token without clearing it
+ * loops between the two.
+ *
+ * @example
+ * ```ts
+ * } catch (error) {
+ *   redirectOnAuthError(error);
+ *   throw error;
+ * }
+ * ```
+ *
+ * @public
+ */
+export function redirectOnAuthError(
+  error: unknown,
+  options?: RedirectOnAuthErrorOptions,
+): void {
+  if (!isAuthError(error)) {
+    return;
+  }
+
+  throw redirect(options?.to ?? '/auth', {
+    headers: { 'Set-Cookie': getClearAuthCookieHeader() },
+  });
 }
 
 /**
@@ -120,9 +188,9 @@ function extractHttpStatus(message: string): number | undefined {
 /**
  * @description Inspect a thrown error and classify it into a typed failure when
  * recognizable: a {@link GraphqlTimeoutError} for the timeout marker raised by
- * `@openthrottle/nodejs-graphql`, or a {@link GraphqlAuthError} for an
- * auth-related HTTP status (401/403). Any other error is returned unchanged so
- * callers see the same failure they always have.
+ * `@openthrottle/nodejs-graphql`, or a {@link GraphqlAuthError} for a GraphQL
+ * `UNAUTHENTICATED` error or an auth-related HTTP status (401/403). Any other
+ * error is returned unchanged so callers see the same failure they always have.
  */
 function classifyError(error: unknown, timeoutMs: number): unknown {
   if (!(error instanceof Error)) {
@@ -131,6 +199,15 @@ function classifyError(error: unknown, timeoutMs: number): unknown {
 
   if (error.message.startsWith(GRAPHQL_TIMEOUT_ERROR_PREFIX)) {
     return new GraphqlTimeoutError(error.message, timeoutMs, { cause: error });
+  }
+
+  if (
+    isGraphqlResponseError(error) &&
+    error.extensions['code'] === UNAUTHENTICATED_CODE
+  ) {
+    return new GraphqlAuthError(error.message, UNAUTHENTICATED_HTTP_STATUS, {
+      cause: error,
+    });
   }
 
   const httpStatus = extractHttpStatus(error.message);
@@ -168,7 +245,7 @@ export interface ExecuteGraphqlWithAuthOptions {
  * stalled connection cannot hang the loader indefinitely.
  *
  * On a timeout the rejection is a {@link GraphqlTimeoutError} (check via
- * {@link isTimeoutError}); on an auth-related failure (HTTP 401/403) it is a
+ * {@link isTimeoutError}); on an auth failure (GraphQL `UNAUTHENTICATED`, or HTTP 401/403) it is a
  * {@link GraphqlAuthError} (with `httpStatus`) so callers can `instanceof`-check
  * it and redirect to login; all other failures reject with the original error.
  */

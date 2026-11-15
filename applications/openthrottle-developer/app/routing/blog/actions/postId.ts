@@ -1,6 +1,6 @@
 import {
   executeGraphqlWithAuth,
-  isAuthError,
+  redirectOnAuthError,
 } from '@openthrottle/react-router-graphql';
 
 import type { Route } from '@/app/routes/+types/blog.$postId';
@@ -106,7 +106,9 @@ const runLifecycleAction = async (
   try {
     return await runLifecycleMutation(request, postId, body);
   } catch (error) {
-    if (isAuthError(error) || !(error instanceof Error)) {
+    redirectOnAuthError(error);
+
+    if (!(error instanceof Error)) {
       throw error;
     }
 
@@ -158,7 +160,9 @@ const runSaveAction = async (
 
     return toBlogPostTagsResult(setBlogPostTags);
   } catch (error) {
-    if (isAuthError(error) || !(error instanceof Error)) {
+    redirectOnAuthError(error);
+
+    if (!(error instanceof Error)) {
       throw error;
     }
 

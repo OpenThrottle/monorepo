@@ -278,6 +278,58 @@ describe('root loader: token gate + protected-prefix redirect', () => {
     expect(data.permissions).toEqual([]);
   });
 
+  test('redirects a protected path to /auth, clearing the cookie, when the server rejects the token', async () => {
+    mockExecuteGraphqlWithAuth.mockImplementation(
+      async (_request, document) => {
+        if (document === GetRootHealthDocument) {
+          return { serverHealth: HEALTHY };
+        }
+        if (document === GetMyUserDocument) {
+          throw new graphqlWithAuth.GraphqlAuthError(
+            'GraphQL errors: Unauthorized',
+            401,
+          );
+        }
+        return {};
+      },
+    );
+
+    const thrown = await loader(
+      loaderArgs('http://localhost/dashboard', { cookie: COOKIE_WITH_TOKEN }),
+    ).catch((caught: unknown) => caught);
+
+    expect(thrown).toBeInstanceOf(Response);
+    assertIsResponse(thrown);
+    expect(thrown.headers.get('location')).toBe('/auth');
+    expect(thrown.headers.get('set-cookie')).toContain('Max-Age=0');
+  });
+
+  test('does not redirect an unprotected path when the server rejects the token', async () => {
+    mockExecuteGraphqlWithAuth.mockImplementation(
+      async (_request, document) => {
+        if (document === GetRootHealthDocument) {
+          return { serverHealth: HEALTHY };
+        }
+        if (document === GetMyUserDocument) {
+          throw new graphqlWithAuth.GraphqlAuthError(
+            'GraphQL errors: Unauthorized',
+            401,
+          );
+        }
+        return {};
+      },
+    );
+
+    const result = await loader(
+      loaderArgs('http://localhost/', { cookie: COOKIE_WITH_TOKEN }),
+    );
+
+    expect(result).not.toBeInstanceOf(Response);
+    assertIsData(result);
+    expect(result.userLoadOk).toBe(false);
+    expect(result.rootLoaderFailure?.httpStatus).toBe(401);
+  });
+
   test('records a health-step failure when the health query throws', async () => {
     mockExecuteGraphqlWithAuth.mockRejectedValue(new Error('health down'));
 

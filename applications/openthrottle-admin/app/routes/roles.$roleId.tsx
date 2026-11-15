@@ -1,6 +1,6 @@
 import {
   executeGraphqlWithAuth,
-  isAuthError,
+  redirectOnAuthError,
 } from '@openthrottle/react-router-graphql';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
@@ -10,7 +10,7 @@ import {
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { ShieldCheckIcon } from 'lucide-react';
 import * as React from 'react';
-import { redirect, useFetcher } from 'react-router';
+import { useFetcher } from 'react-router';
 
 import type { Route } from '@/app/routes/+types/roles.$roleId';
 import {
@@ -53,9 +53,7 @@ export const loader = async (args: Route.LoaderArgs) => {
       role: roleResult.role ?? null,
     };
   } catch (error) {
-    if (isAuthError(error)) {
-      return redirect('/');
-    }
+    redirectOnAuthError(error);
 
     throw error;
   }

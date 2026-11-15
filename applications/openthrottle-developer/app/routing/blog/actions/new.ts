@@ -1,6 +1,6 @@
 import {
   executeGraphqlWithAuth,
-  isAuthError,
+  redirectOnAuthError,
 } from '@openthrottle/react-router-graphql';
 
 import type { CreateBlogPostDraftMutation } from '~/__generated__/graphql';
@@ -70,7 +70,9 @@ export const runBlogPostCreateAction = async (
         return { error: result.message, postId: null };
     }
   } catch (error) {
-    if (isAuthError(error) || !(error instanceof Error)) {
+    redirectOnAuthError(error);
+
+    if (!(error instanceof Error)) {
       throw error;
     }
 
