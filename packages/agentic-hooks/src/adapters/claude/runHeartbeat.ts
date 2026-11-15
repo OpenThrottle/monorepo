@@ -45,12 +45,14 @@ export const runHeartbeat = async ({
   fetchImpl = globalThis.fetch,
   now = () => new Date(),
   repoRoot,
+  resolveRepoIdentity,
   timeoutMs = DEFAULT_POST_TIMEOUT_MS,
 }: {
   readonly env?: NodeJS.ProcessEnv;
   readonly fetchImpl?: HookFetch;
   readonly now?: () => Date;
   readonly repoRoot: string;
+  readonly resolveRepoIdentity?: (repoRoot: string) => string | null;
   readonly timeoutMs?: number;
 }): Promise<HeartbeatReceipt | null> => {
   const homeDir = os.homedir();
@@ -69,6 +71,7 @@ export const runHeartbeat = async ({
     now,
     pluginVersion: resolvePluginVersion(env),
     repoRoot,
+    resolveRepoIdentity,
     source: CLAUDE_SOURCE,
     timeoutMs,
   });
