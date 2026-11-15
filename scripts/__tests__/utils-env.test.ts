@@ -1,6 +1,7 @@
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { parseEnv } from 'node:util';
 
 import { describe, expect, it } from 'vitest';
 
@@ -37,6 +38,23 @@ describe('parseEnvContents', () => {
     const parsed = parseEnvContents('export URL=https://x?a=b');
 
     expect(parsed).toEqual({ URL: 'https://x?a=b' });
+  });
+
+  it('strips inline comments the way util.parseEnv does', () => {
+    const contents = [
+      'POSTGRES_DB="openthrottle" # ✏️ CHANGE THIS ✏️',
+      "SINGLE='quoted value' # note",
+      'BARE=plain # trailing',
+      'HASH="a#b"',
+    ].join('\n');
+
+    expect(parseEnvContents(contents)).toEqual({
+      BARE: 'plain',
+      HASH: 'a#b',
+      POSTGRES_DB: 'openthrottle',
+      SINGLE: 'quoted value',
+    });
+    expect(parseEnvContents(contents)).toEqual({ ...parseEnv(contents) });
   });
 });
 

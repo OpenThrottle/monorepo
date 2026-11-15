@@ -2,48 +2,31 @@
  * @description Read KEY=VALUE .env files without mutating process.env — the
  * typed replacement for the `get_env() { grep | tail -1 | cut | tr -d '"' }`
  * idiom copied across the shell scripts. Later assignments win (matching the
- * shell `tail -1` semantics), quotes are stripped, and a missing file reads as
- * an empty map so callers can fall back to defaults.
+ * shell `tail -1` semantics), quotes and inline comments are stripped the way
+ * Node strips them, and a missing file reads as an empty map so callers can
+ * fall back to defaults.
  */
 import { readFileSync } from 'node:fs';
+import { parseEnv } from 'node:util';
 
 const isErrnoException = (error: unknown): error is NodeJS.ErrnoException => {
   return error instanceof Error && 'code' in error;
 };
 
 /**
- * Parse .env file contents into a map. Supports comments, blank lines, an
- * optional `export ` prefix, and single/double-quoted values. Lines without
- * an `=` are ignored. Duplicate keys: the last assignment wins.
+ * Parse .env file contents into a map with Node's own dotenv parser
+ * (`util.parseEnv`), so these scripts read a file exactly as `--env-file` and
+ * `process.loadEnvFile` do: comments (inline `#` comments included), blank
+ * lines, an optional `export ` prefix, single/double/backtick-quoted values.
+ * Lines without an `=` are ignored. Duplicate keys: the last assignment wins.
  */
 export const parseEnvContents = (contents: string): Record<string, string> => {
   const result: Record<string, string> = {};
 
-  for (const rawLine of contents.split('\n')) {
-    const line = rawLine.trim();
-
-    if (line === '' || line.startsWith('#')) {
-      continue;
+  for (const [key, value] of Object.entries(parseEnv(contents))) {
+    if (value !== undefined) {
+      result[key] = value;
     }
-
-    const assignment = line.startsWith('export ') ? line.slice(7) : line;
-    const separator = assignment.indexOf('=');
-
-    if (separator <= 0) {
-      continue;
-    }
-
-    const key = assignment.slice(0, separator).trim();
-    let value = assignment.slice(separator + 1).trim();
-
-    if (
-      (value.startsWith('"') && value.endsWith('"') && value.length >= 2) ||
-      (value.startsWith("'") && value.endsWith("'") && value.length >= 2)
-    ) {
-      value = value.slice(1, -1);
-    }
-
-    result[key] = value;
   }
 
   return result;
