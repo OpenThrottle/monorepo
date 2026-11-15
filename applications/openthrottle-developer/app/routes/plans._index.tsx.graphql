@@ -28,13 +28,6 @@ query getPlanAssigneeOptions {
   listDistinctAuthorsAndAssignees
 }
 
-query getPlanCountsByStatus {
-  planCountsByStatus {
-    count
-    status
-  }
-}
-
 query getPlansByStatus($input: ListPlansByStatusInput!) {
   allPlansCount: listPlansByStatus(input: { statuses: [] }) {
     totalCount
@@ -55,10 +48,6 @@ query getPlansByStatus($input: ListPlansByStatusInput!) {
       ...PlanCard
     }
 
-    totalCount
-  }
-
-  queuedPlansCount: listPlansByStatus(input: { statuses: ["QUEUED"] }) {
     totalCount
   }
 }

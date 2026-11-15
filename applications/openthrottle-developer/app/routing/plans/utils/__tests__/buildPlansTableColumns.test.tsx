@@ -1,10 +1,8 @@
 import type { CellContext, HeaderContext } from '@tanstack/react-table';
-import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
 import type { PlanCardFragment } from '~/__generated__/graphql';
-import { PLANS_ROW_ACTIONS_COPY } from '~/routing/plans/data/data.copy';
 import { renderRoutesStub } from '~/testing/route-fixtures';
 
 import { buildPlansTableColumns } from '../buildPlansTableColumns';
@@ -100,23 +98,18 @@ function Harness(props: HarnessProps): React.ReactElement {
 }
 
 describe('buildPlansTableColumns', () => {
-  test('defines status, details, and actions columns', () => {
+  test('defines status and details columns', () => {
     const columns = buildPlansTableColumns({});
 
-    const [statusColumn, detailsColumn, actionsColumn] = columns;
+    const [statusColumn, detailsColumn] = columns;
 
-    expect(columns).toHaveLength(3);
-    if (
-      statusColumn === undefined ||
-      detailsColumn === undefined ||
-      actionsColumn === undefined
-    ) {
-      throw new Error('expected three plan table columns');
+    expect(columns).toHaveLength(2);
+    if (statusColumn === undefined || detailsColumn === undefined) {
+      throw new Error('expected two plan table columns');
     }
 
     expect(asPlainColumn(statusColumn).accessorKey).toBe('status');
     expect(asPlainColumn(detailsColumn).accessorKey).toBe('details');
-    expect(asPlainColumn(actionsColumn).id).toBe('actions');
   });
 
   test('renders header labels for each column', () => {
@@ -136,7 +129,6 @@ describe('buildPlansTableColumns', () => {
 
     expect(rendered.getByText('Status')).toBeInTheDocument();
     expect(rendered.getByText('Plan Details')).toBeInTheDocument();
-    expect(rendered.getByText('Actions')).toBeInTheDocument();
   });
 
   test('status cell links to the status-filtered plans list with the label', () => {
@@ -154,116 +146,46 @@ describe('buildPlansTableColumns', () => {
     expect(rendered.getByText('Pending')).toBeInTheDocument();
   });
 
-  test('title cell renders title, task count, tags, project, and author/assignee', () => {
+  test('details cell links the title and task count to the plan', () => {
     const plan = buildPlan({
-      assignee: 'bob',
-      author: 'alice',
-      hasCustomRunConfig: true,
-      projectRelation: {
-        __typename: 'ProjectObject',
-        id: 'proj-1',
-        name: 'Proj One',
-      },
-      tags: [{ __typename: 'PlanTagObject', dimension: 'phase', tag: 'alpha' }],
       taskCount: 5,
       tasksCompletedCount: 2,
       title: 'Ship the thing',
     });
     const rendered = renderRoutesStub(<Harness plan={plan} />);
 
-    expect(
-      rendered.getByRole('link', { name: 'View plan: Ship the thing' }),
-    ).toHaveAttribute('href', '/plans/plan-1');
-    expect(
-      rendered.getByLabelText('2 of 5 tasks resolved'),
-    ).toBeInTheDocument();
-    expect(rendered.getByLabelText('Tag: alpha')).toBeInTheDocument();
-    expect(rendered.getByLabelText('Project: Proj One')).toHaveAttribute(
-      'href',
-      '/projects/proj-1',
-    );
-    expect(rendered.getByLabelText('Author: alice')).toHaveTextContent(
-      'alice → bob',
-    );
-  });
-
-  test('title cell renders a plain project string when no projectRelation is set', () => {
-    const plan = buildPlan({
-      project: 'legacy-project',
-      taskCount: 1,
-      tasksCompletedCount: 0,
+    const link = rendered.getByRole('link', {
+      name: 'View plan: Ship the thing',
     });
-    const rendered = renderRoutesStub(<Harness plan={plan} />);
-
-    expect(
-      rendered.getByLabelText('Project: legacy-project'),
-    ).toBeInTheDocument();
-    expect(
-      rendered.getByLabelText('0 of 1 tasks resolved'),
-    ).toBeInTheDocument();
-  });
-
-  test('title cell shows assignee-only label when there is no author', () => {
-    const plan = buildPlan({ assignee: 'carol', author: '' });
-    const rendered = renderRoutesStub(<Harness plan={plan} />);
-
-    expect(rendered.getByLabelText('Assignee: carol')).toHaveTextContent(
-      'Assignee: carol',
+    expect(link).toHaveAttribute('href', '/plans/plan-1');
+    expect(link).toContainElement(
+      rendered.getByLabelText('2 of 5 tasks resolved'),
     );
   });
 
-  test('actions cell opens a menu with View plan, without Queue or the open-in links', async () => {
-    const plan = buildPlan({ status: 'PENDING', title: 'Queueable Plan' });
+  test('details cell renders the run-config indicator outside the plan link', () => {
+    const plan = buildPlan({ hasCustomRunConfig: true, title: 'Tuned' });
     const rendered = renderRoutesStub(<Harness plan={plan} />);
-    const user = userEvent.setup();
 
-    await user.click(
-      rendered.getByRole('button', {
-        name: `${PLANS_ROW_ACTIONS_COPY.menuAriaLabelPrefix} Queueable Plan`,
-      }),
+    const indicator = rendered.getByRole('link', {
+      name: 'Custom workflow run configuration (differs from defaults)',
+    });
+    expect(indicator).toHaveAttribute(
+      'href',
+      '/plans/plan-1?tab=configuration',
     );
-
     expect(
-      rendered.getByRole('menuitem', { name: PLANS_ROW_ACTIONS_COPY.view }),
-    ).toBeInTheDocument();
-    // The Queue action is parked while runs are launched from plan details.
-    expect(
-      rendered.queryByRole('menuitem', { name: PLANS_ROW_ACTIONS_COPY.queue }),
-    ).toBeNull();
-    // The editor/BullMQ affiliate links are parked while that surface is reworked.
-    for (const label of ['BullMQ', 'Claude', 'Cursor', 'VSCode']) {
-      expect(rendered.queryByRole('menuitem', { name: label })).toBeNull();
-    }
+      rendered.getByRole('link', { name: 'View plan: Tuned' }),
+    ).not.toContainElement(indicator);
   });
 
-  test('actions menu shows Kill only when the plan is cancelable', async () => {
-    const running = buildPlan({ status: 'IN_PROGRESS', title: 'Running Plan' });
-    const runningRendered = renderRoutesStub(<Harness plan={running} />);
-    const runningUser = userEvent.setup();
+  test('details cell omits the run-config indicator for default configs', () => {
+    const plan = buildPlan({ hasCustomRunConfig: false });
+    const rendered = renderRoutesStub(<Harness plan={plan} />);
 
-    await runningUser.click(
-      runningRendered.getByRole('button', {
-        name: `${PLANS_ROW_ACTIONS_COPY.menuAriaLabelPrefix} Running Plan`,
-      }),
-    );
     expect(
-      runningRendered.getByRole('menuitem', {
-        name: PLANS_ROW_ACTIONS_COPY.killConfirm,
-      }),
-    ).toBeInTheDocument();
-    runningRendered.unmount();
-
-    const pending = buildPlan({ status: 'PENDING', title: 'Idle Plan' });
-    const pendingRendered = renderRoutesStub(<Harness plan={pending} />);
-    const pendingUser = userEvent.setup();
-    await pendingUser.click(
-      pendingRendered.getByRole('button', {
-        name: `${PLANS_ROW_ACTIONS_COPY.menuAriaLabelPrefix} Idle Plan`,
-      }),
-    );
-    expect(
-      pendingRendered.queryByRole('menuitem', {
-        name: PLANS_ROW_ACTIONS_COPY.killConfirm,
+      rendered.queryByRole('link', {
+        name: 'Custom workflow run configuration (differs from defaults)',
       }),
     ).toBeNull();
   });

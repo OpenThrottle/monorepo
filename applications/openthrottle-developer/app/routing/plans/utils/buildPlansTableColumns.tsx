@@ -3,24 +3,19 @@
  * component file per component-primitive-shape R4 (module-scope helpers live in
  * the sibling utils/ folder) so the table component stays UI-focused.
  */
-import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
 import {
-  Badge,
   cn,
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
-import { GlobalPopoverActionsHeader } from '@openthrottle/react-router-ui-global';
 import type { ColumnDef } from '@tanstack/react-table';
-import { formatDate } from 'date-fns';
 import { SlidersHorizontal } from 'lucide-react';
 import * as React from 'react';
 import { Link } from 'react-router';
 
 import type { PlanCardFragment } from '~/__generated__/graphql';
 import type { PlansTableProps } from '~/routing/plans/components/PlansTable';
-import { PlansTableRowActions } from '~/routing/plans/components/PlansTableRowActions';
 import { PlanStatusBadge } from '~/routing/plans/components/PlanStatusBadge';
 import {
   MOBILE_CARD_BLOCK_CLASS,
@@ -56,97 +51,6 @@ const renderCustomRunConfigIndicator = (
         Configuration tab to view or edit.
       </TooltipContent>
     </Tooltip>
-  );
-};
-
-const renderProjectChip = (plan: PlanCardFragment): React.ReactNode => {
-  if (plan.projectRelation != null) {
-    return (
-      <Link
-        aria-label={`Project: ${plan.projectRelation.name}`}
-        className="underline underline-offset-2"
-        to={`/projects/${plan.projectRelation.id}`}
-        viewTransition={true}
-      >
-        {plan.projectRelation.name}
-      </Link>
-    );
-  }
-
-  if (plan.project != null && plan.project !== '') {
-    return (
-      <span
-        aria-label={`Project: ${plan.project}`}
-        className="border-border rounded border px-1.5 py-0.5"
-      >
-        {plan.project}
-      </span>
-    );
-  }
-
-  return null;
-};
-
-const formatAuthorLabel = (
-  author: string,
-  assignee: string | null | undefined,
-): string => {
-  if (assignee) {
-    return `${author} → ${assignee}`;
-  }
-
-  return author;
-};
-
-const renderAuthorChip = (plan: PlanCardFragment): React.ReactNode => {
-  if (plan.author) {
-    return (
-      <span aria-label={`Author: ${plan.author}`}>
-        {formatAuthorLabel(plan.author, plan.assignee)}
-      </span>
-    );
-  }
-
-  if (plan.assignee) {
-    return (
-      <span aria-label={`Assignee: ${plan.assignee}`}>
-        Assignee: {plan.assignee}
-      </span>
-    );
-  }
-
-  return null;
-};
-
-const getTagBadgeClassName = (dimension: string): string | undefined => {
-  if (dimension === 'phase') {
-    return 'border-amber-500/60 bg-amber-500/10';
-  }
-
-  return undefined;
-};
-
-const renderTagBadges = (
-  tags: NonNullable<PlanCardFragment['tags']>,
-): React.ReactNode => {
-  if (!tags.length) {
-    return null;
-  }
-
-  return (
-    <div className={cn('flex flex-wrap gap-2', MOBILE_CARD_BLOCK_CLASS.tags)}>
-      {tags.map((tag) => (
-        <Badge
-          aria-label={`Tag: ${tag.tag}`}
-          className={getTagBadgeClassName(tag.dimension)}
-          color="slate"
-          key={`${tag.dimension}:${tag.tag}`}
-          size="xs"
-        >
-          {tag.tag}
-        </Badge>
-      ))}
-    </div>
   );
 };
 
@@ -189,93 +93,47 @@ export const buildPlansTableColumns = (
         const configurationHref = `${planHref}?${PLANS_DETAIL_TAB_SEARCH_PARAM}=configuration`;
         const title = plan.title ?? 'Untitled';
         const taskCount = plan.taskCount ?? 0;
-        const tags = plan.tags ?? [];
         const tasksCompletedCount = plan.tasksCompletedCount ?? 0;
 
-        const updatedAt = formatDate(
-          plan.updatedAt ?? plan.createdAt,
-          'MM/dd/yyyy',
-        );
-
+        // The whole title + task-count block is one link to the plan. The
+        // custom-run-config indicator is its own link, so it sits beside the
+        // block rather than inside it (an `<a>` may not contain another `<a>`).
         return (
-          <div className="flex flex-col gap-4 overflow-hidden p-2 max-sm:contents">
-            <div className="max-sm:contents">
-              <div
+          <div className="flex items-start gap-2 overflow-hidden p-2 max-sm:contents">
+            <Link
+              aria-label={`View plan: ${title}`}
+              className="hover:text-primary min-w-0 max-sm:contents"
+              data-testid="plan-list-title-link"
+              prefetch="intent"
+              to={planHref}
+              viewTransition={true}
+            >
+              <h2
                 className={cn(
-                  'flex flex-wrap items-center gap-2',
+                  'line-clamp-1 min-w-0 text-sm font-medium text-ellipsis max-sm:line-clamp-2',
                   MOBILE_CARD_TITLE_CLASS,
                 )}
               >
-                <h2 className="line-clamp-1 min-w-0 text-sm font-medium text-ellipsis max-sm:line-clamp-2">
-                  <Link
-                    aria-label={`View plan: ${title}`}
-                    className="hover:text-primary underline underline-offset-2"
-                    data-testid="plan-list-title-link"
-                    prefetch="intent"
-                    to={planHref}
-                    viewTransition={true}
-                  >
-                    {title}
-                  </Link>
-                </h2>
-              </div>
+                {title}
+              </h2>
 
-              <div
+              <span
+                aria-label={`${tasksCompletedCount} of ${taskCount} tasks resolved`}
                 className={cn(
-                  'text-muted-foreground mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs',
+                  'text-muted-foreground mt-1 block text-xs tabular-nums',
                   MOBILE_CARD_BLOCK_CLASS.meta,
                 )}
               >
-                <span
-                  aria-label={`${tasksCompletedCount} of ${taskCount} tasks resolved`}
-                  className="tabular-nums"
-                >
-                  {tasksCompletedCount}/{taskCount}{' '}
-                  {taskCount === 1 ? 'task' : 'tasks'}
-                </span>
+                {tasksCompletedCount}/{taskCount}{' '}
+                {taskCount === 1 ? 'task' : 'tasks'}
+              </span>
+            </Link>
 
-                {renderCustomRunConfigIndicator(plan, configurationHref)}
-
-                {renderProjectChip(plan)}
-
-                {renderAuthorChip(plan)}
-
-                <span>Updated: {updatedAt}</span>
-              </div>
-            </div>
-
-            {renderTagBadges(tags)}
-
-            <div
-              className={cn(
-                'flex flex-wrap items-center gap-2',
-                MOBILE_CARD_BLOCK_CLASS.description,
-              )}
-            >
-              <MarkdownRenderer
-                className="line-clamp-5 overflow-hidden [&_p]:!mb-0 [&_p]:!text-xs"
-                source={
-                  plan.description ||
-                  plan.summary ||
-                  'View plan details for more information'
-                }
-              />
-            </div>
+            {renderCustomRunConfigIndicator(plan, configurationHref)}
           </div>
         );
       },
       header: () => <div className="p-2">Plan Details</div>,
-    },
-    {
-      cell: ({ row }) => {
-        return (
-          <div className="flex items-center justify-center">
-            <PlansTableRowActions plan={row.original} />
-          </div>
-        );
-      },
-      header: () => <GlobalPopoverActionsHeader />,
-      id: 'actions',
     },
   ];
 };

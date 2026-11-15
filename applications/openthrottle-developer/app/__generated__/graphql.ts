@@ -11268,19 +11268,6 @@ export type GetPlanAssigneeOptionsQuery = {
   listDistinctAuthorsAndAssignees: Array<string>;
 };
 
-export type GetPlanCountsByStatusQueryVariables = Exact<{
-  [key: string]: never;
-}>;
-
-export type GetPlanCountsByStatusQuery = {
-  __typename?: 'Query';
-  planCountsByStatus: Array<{
-    __typename?: 'PlanStatusCountObject';
-    count: number;
-    status: string;
-  }>;
-};
-
 export type GetPlansByStatusQueryVariables = Exact<{
   input: ListPlansByStatusInput;
 }>;
@@ -11322,10 +11309,6 @@ export type GetPlansByStatusQuery = {
         tag: string;
       }>;
     }>;
-  };
-  queuedPlansCount: {
-    __typename?: 'ListPlansByStatusResultObject';
-    totalCount: number;
   };
 };
 
@@ -27080,35 +27063,6 @@ export const GetPlanAssigneeOptionsDocument = {
   GetPlanAssigneeOptionsQuery,
   GetPlanAssigneeOptionsQueryVariables
 >;
-export const GetPlanCountsByStatusDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'getPlanCountsByStatus' },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'planCountsByStatus' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'count' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<
-  GetPlanCountsByStatusQuery,
-  GetPlanCountsByStatusQueryVariables
->;
 export const GetPlansByStatusDocument = {
   kind: 'Document',
   definitions: [
@@ -27191,42 +27145,6 @@ export const GetPlansByStatusDocument = {
                     ],
                   },
                 },
-                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
-              ],
-            },
-          },
-          {
-            kind: 'Field',
-            alias: { kind: 'Name', value: 'queuedPlansCount' },
-            name: { kind: 'Name', value: 'listPlansByStatus' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'input' },
-                value: {
-                  kind: 'ObjectValue',
-                  fields: [
-                    {
-                      kind: 'ObjectField',
-                      name: { kind: 'Name', value: 'statuses' },
-                      value: {
-                        kind: 'ListValue',
-                        values: [
-                          {
-                            kind: 'StringValue',
-                            value: 'QUEUED',
-                            block: false,
-                          },
-                        ],
-                      },
-                    },
-                  ],
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
                 { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
               ],
             },

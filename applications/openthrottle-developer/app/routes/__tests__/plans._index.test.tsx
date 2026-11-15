@@ -31,33 +31,15 @@ const mockPlan: PlanCardFragment = {
   updatedAt: '2025-01-02T00:00:00Z',
 };
 
-const mockLoaderDataWithStats: Route.ComponentProps['loaderData'] = {
+const mockLoaderDataPopulated: Route.ComponentProps['loaderData'] = {
   assigneeOptions: ['visormatt'],
   assignees: [],
   limit: 20,
   page: 1,
   plans: [mockPlan],
-  statusCounts: [
-    {
-      __typename: 'PlanStatusCountObject' as const,
-      count: 3,
-      status: 'IN_PROGRESS',
-    },
-    {
-      __typename: 'PlanStatusCountObject' as const,
-      count: 7,
-      status: 'COMPLETED',
-    },
-    {
-      __typename: 'PlanStatusCountObject' as const,
-      count: 1,
-      status: 'PENDING',
-    },
-  ],
   statuses: [],
   totalCount: 1,
   totalCountAll: 11,
-  totalCountQueued: 2,
 };
 
 const mockLoaderDataEmpty: Route.ComponentProps['loaderData'] = {
@@ -66,22 +48,9 @@ const mockLoaderDataEmpty: Route.ComponentProps['loaderData'] = {
   limit: 20,
   page: 1,
   plans: [],
-  statusCounts: [
-    {
-      __typename: 'PlanStatusCountObject' as const,
-      count: 0,
-      status: 'IN_PROGRESS',
-    },
-    {
-      __typename: 'PlanStatusCountObject' as const,
-      count: 0,
-      status: 'COMPLETED',
-    },
-  ],
   statuses: [],
   totalCount: 0,
   totalCountAll: 0,
-  totalCountQueued: 0,
 };
 
 const matches: Route.ComponentProps['matches'] = [
@@ -89,19 +58,19 @@ const matches: Route.ComponentProps['matches'] = [
   {
     handle: undefined,
     id: 'routes/plans._index',
-    loaderData: mockLoaderDataWithStats,
+    loaderData: mockLoaderDataPopulated,
     params: {},
     pathname: '/',
   },
 ];
 
 describe('routes/plans._index.tsx', () => {
-  test('should render with distinct stat cards: Total, In progress (all), Completed (all)', () => {
+  test('renders the plans list without the stat cards', () => {
     const Component = () => {
       return (
         <Index
           actionData={undefined}
-          loaderData={mockLoaderDataWithStats}
+          loaderData={mockLoaderDataPopulated}
           matches={matches}
           params={{}}
         />
@@ -110,36 +79,10 @@ describe('routes/plans._index.tsx', () => {
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const component = render(<RoutesStub />);
 
-    const statCards = component.getAllByTestId('OpenThrottleStatCard');
-    expect(statCards).toHaveLength(3);
-
-    expect(component.getByText('Matching / Total plans')).toBeInTheDocument();
-    expect(component.getByText('In progress / Queued')).toBeInTheDocument();
-    expect(component.getByText('Completed (all)')).toBeInTheDocument();
-
-    expect(component.getByText('1')).toBeInTheDocument();
-    expect(component.getByText('3')).toBeInTheDocument();
-    expect(component.getByText('7')).toBeInTheDocument();
-  });
-
-  test('should render empty state with zero counts in stat cards', () => {
-    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => {
-      return (
-        <Index
-          actionData={undefined}
-          loaderData={mockLoaderDataEmpty}
-          matches={matches}
-          params={{}}
-        />
-      );
-    };
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    const component = render(<RoutesStub />);
-    expect(component.getByText('Matching / Total plans')).toBeInTheDocument();
-    expect(component.getByText('In progress / Queued')).toBeInTheDocument();
-    expect(component.getByText('Completed (all)')).toBeInTheDocument();
-    expect(component.getAllByText('0').length).toBeGreaterThanOrEqual(3);
+    expect(
+      component.getByRole('link', { name: 'View plan: Test Plan' }),
+    ).toBeInTheDocument();
+    expect(component.queryAllByTestId('OpenThrottleStatCard')).toHaveLength(0);
   });
 
   test('shows the onboarding pitch for a new user (no plans, unfiltered)', () => {
@@ -177,7 +120,7 @@ describe('routes/plans._index.tsx', () => {
       return (
         <Index
           actionData={undefined}
-          loaderData={mockLoaderDataWithStats}
+          loaderData={mockLoaderDataPopulated}
           matches={matches}
           params={{}}
         />
@@ -201,7 +144,7 @@ describe('routes/plans._index.tsx', () => {
       return (
         <Index
           actionData={undefined}
-          loaderData={mockLoaderDataWithStats}
+          loaderData={mockLoaderDataPopulated}
           matches={matches}
           params={{}}
         />
@@ -256,7 +199,7 @@ describe('routes/plans._index.tsx', () => {
         <Index
           actionData={undefined}
           loaderData={{
-            ...mockLoaderDataWithStats,
+            ...mockLoaderDataPopulated,
             assignees: ['visormatt'],
             limit: 10,
             page: 3,

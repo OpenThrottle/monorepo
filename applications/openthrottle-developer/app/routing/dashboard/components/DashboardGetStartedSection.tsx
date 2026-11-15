@@ -1,4 +1,3 @@
-import { FEATURE_BETA_PREVIEW } from '@openthrottle/react-router-utils';
 import * as React from 'react';
 import { Await } from 'react-router';
 
@@ -28,14 +27,6 @@ export const DashboardGetStartedSection = (
 
   // Setup
 
-  const mockData = {
-    agentCli: false,
-    firstPlan: false,
-    firstRun: false,
-    githubToken: false,
-    workspaceRepo: false,
-  };
-
   // Handlers
 
   // Markup
@@ -48,8 +39,7 @@ export const DashboardGetStartedSection = (
     <React.Suspense fallback={null}>
       <Await errorElement={null} resolve={onboarding}>
         {(data) => {
-          const calculated = deriveOnboardingCompletion(data);
-          const completion = FEATURE_BETA_PREVIEW ? mockData : calculated;
+          const completion = deriveOnboardingCompletion(data);
 
           return (
             <DashboardGetStartedCard

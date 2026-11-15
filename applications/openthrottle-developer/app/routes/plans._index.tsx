@@ -18,12 +18,10 @@ import { useSearchParams } from 'react-router';
 import type { Route } from '@/app/routes/+types/plans._index';
 import {
   GetPlanAssigneeOptionsDocument,
-  GetPlanCountsByStatusDocument,
   GetPlansByStatusDocument,
 } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
 import { PlansIntroduction } from '~/routing/plans/components/PlansIntroduction';
-import { PlansStats } from '~/routing/plans/components/PlansStats';
 import { PlansTable } from '~/routing/plans/components/PlansTable';
 import { PlansToolbar } from '~/routing/plans/components/PlansToolbar';
 import { parseStatusesFromSearchParams } from '~/routing/plans/config/status-options';
@@ -50,31 +48,23 @@ export const loader = async (args: Route.LoaderArgs) => {
   const q = readSearchParam(searchParams);
   const titleSubstring = q.length > 0 ? q : null;
 
-  const [result, statusCountsResult, assigneeOptionsResult] = await Promise.all(
-    [
-      executeGraphqlWithAuth(args.request, GetPlansByStatusDocument, {
-        input: {
-          assignees: assignees.length > 0 ? assignees : null,
-          limit,
-          offset,
-          statuses: statuses.length > 0 ? statuses : null,
-          titleSubstring,
-        },
-      }),
-      executeGraphqlWithAuth(args.request, GetPlanCountsByStatusDocument).catch(
-        () => null,
-      ),
-      executeGraphqlWithAuth(
-        args.request,
-        GetPlanAssigneeOptionsDocument,
-      ).catch(() => null),
-    ],
-  );
+  const [result, assigneeOptionsResult] = await Promise.all([
+    executeGraphqlWithAuth(args.request, GetPlansByStatusDocument, {
+      input: {
+        assignees: assignees.length > 0 ? assignees : null,
+        limit,
+        offset,
+        statuses: statuses.length > 0 ? statuses : null,
+        titleSubstring,
+      },
+    }),
+    executeGraphqlWithAuth(args.request, GetPlanAssigneeOptionsDocument).catch(
+      () => null,
+    ),
+  ]);
 
   const assigneeOptions: string[] =
     assigneeOptionsResult?.listDistinctAuthorsAndAssignees ?? [];
-
-  const statusCounts = statusCountsResult?.planCountsByStatus ?? [];
 
   return {
     assigneeOptions,
@@ -82,11 +72,9 @@ export const loader = async (args: Route.LoaderArgs) => {
     limit,
     page,
     plans: result.listPlansByStatus.plans,
-    statusCounts,
     statuses,
     totalCount: result.listPlansByStatus.totalCount,
     totalCountAll: result.allPlansCount.totalCount,
-    totalCountQueued: result.queuedPlansCount.totalCount,
   };
 };
 
@@ -108,11 +96,9 @@ export default function Component(
     limit,
     page,
     plans,
-    statusCounts,
     statuses,
     totalCount,
     totalCountAll,
-    totalCountQueued,
   } = loaderData;
 
   // Hooks
@@ -127,13 +113,7 @@ export default function Component(
   );
 
   // Setup
-  const countByStatus = (status: string): number => {
-    return statusCounts.find((s) => s.status === status)?.count ?? 0;
-  };
-
   const isCard = searchParams.get('view') === 'card';
-  const countInProgress = countByStatus('IN_PROGRESS');
-  const countCompleted = countByStatus('COMPLETED');
   const view: 'card' | 'table' = isCard ? 'card' : 'table';
 
   // New user: zero plans workspace-wide and no active filter — show onboarding
@@ -182,13 +162,6 @@ export default function Component(
     <GlobalScreen>
       <GlobalFeatureOnboardingModal content={PLANS_ONBOARDING} />
       <PlansIntroduction />
-      <PlansStats
-        countCompleted={countCompleted}
-        countInProgress={countInProgress}
-        totalCount={totalCount}
-        totalCountAll={totalCountAll}
-        totalCountQueued={totalCountQueued}
-      />
       {isNewUser ? onboarding : plansListing}
     </GlobalScreen>
   );
