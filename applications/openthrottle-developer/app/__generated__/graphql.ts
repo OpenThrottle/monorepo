@@ -10688,12 +10688,22 @@ export type PlanLifecycleNotificationsSubscription = {
         status: string;
         event: string;
       }
-    | { __typename?: 'PlanUpdatedNotification'; event: string }
+    | {
+        __typename?: 'PlanUpdatedNotification';
+        planId: string;
+        taskId?: string | null;
+        event: string;
+      }
     | { __typename?: 'PlanWaitingForWorktreeNotification'; event: string }
     | { __typename?: 'QueueJobCompletedNotification'; event: string }
     | { __typename?: 'ScheduledRunFailedNotification'; event: string }
     | { __typename?: 'SystemAlertNotification'; event: string }
-    | { __typename?: 'TaskCompletedNotification'; event: string }
+    | {
+        __typename?: 'TaskCompletedNotification';
+        planId: string;
+        taskId?: string | null;
+        event: string;
+      }
     | {
         __typename?: 'TaskStatusChangedNotification';
         planId: string;
@@ -25371,6 +25381,46 @@ export const PlanLifecycleNotificationsDocument = {
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'status' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'InlineFragment',
+                  typeCondition: {
+                    kind: 'NamedType',
+                    name: { kind: 'Name', value: 'PlanUpdatedNotification' },
+                  },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'planId' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'taskId' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'InlineFragment',
+                  typeCondition: {
+                    kind: 'NamedType',
+                    name: { kind: 'Name', value: 'TaskCompletedNotification' },
+                  },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'planId' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'taskId' },
                       },
                     ],
                   },

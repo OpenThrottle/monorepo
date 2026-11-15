@@ -153,20 +153,37 @@ describe('routes/plans.$planId._index subscription revalidation', () => {
     ).toBe(true);
   });
 
-  test('revalidates when a plan lifecycle notification arrives', () => {
+  test('revalidates when a plan lifecycle notification arrives', async () => {
     renderPlanDetail('plan-1');
 
     emitPlanLifecycle({ event: 'plan.status_changed', planId: 'plan-1' });
 
-    expect(mockRevalidate).toHaveBeenCalledTimes(1);
+    // Revalidation is coalesced on a short trailing window, so it lands asynchronously.
+    await vi.waitFor(() => expect(mockRevalidate).toHaveBeenCalledTimes(1));
   });
 
-  test('revalidates on a task lifecycle notification (server already scoped by planId)', () => {
+  test('revalidates on a task lifecycle notification (server already scoped by planId)', async () => {
     renderPlanDetail('plan-1');
 
     emitPlanLifecycle({ event: 'task.status_changed', planId: 'plan-1' });
 
-    expect(mockRevalidate).toHaveBeenCalledTimes(1);
+    await vi.waitFor(() => expect(mockRevalidate).toHaveBeenCalledTimes(1));
+  });
+
+  test('revalidates once for a burst of lifecycle notifications', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    try {
+      renderPlanDetail('plan-1');
+
+      emitPlanLifecycle({ event: 'task.status_changed', planId: 'plan-1' });
+      emitPlanLifecycle({ event: 'task.status_changed', planId: 'plan-1' });
+      emitPlanLifecycle({ event: 'plan.status_changed', planId: 'plan-1' });
+      await vi.advanceTimersByTimeAsync(1000);
+
+      expect(mockRevalidate).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   test('tears down the lifecycle subscription on unmount', () => {

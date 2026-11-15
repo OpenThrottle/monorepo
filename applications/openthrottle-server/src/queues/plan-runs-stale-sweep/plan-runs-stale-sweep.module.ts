@@ -4,6 +4,7 @@ import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 
 import { PlanStatusModule } from '../../graphql/plans/plan-status/plan-status.module.ts';
 import { WorkLedgerGraphqlModule } from '../../graphql/work-ledger/work-ledger.module.ts';
+import { NotificationsModule } from '../../notifications/notifications.module.ts';
 import { ForeignSkillInjectionModule } from '../../services/foreign-skill-injection/foreign-skill-injection.module.ts';
 import { PlanRunsStaleSweepProcessor } from './plan-runs-stale-sweep.processor.ts';
 import { PlanRunsStaleSweepQueueProducerModule } from './producer/producer.module.ts';
@@ -24,6 +25,7 @@ import { PlanRunsStaleSweepRepeatableService } from './repeatable/repeatable.ser
     ForeignSkillInjectionModule,
     LoggerModule,
     NestjsRepositoriesModule,
+    NotificationsModule,
     PlanRunsStaleSweepQueueProducerModule,
     PlanStatusModule,
     WorkLedgerGraphqlModule,

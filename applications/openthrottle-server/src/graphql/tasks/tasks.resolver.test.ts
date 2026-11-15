@@ -69,6 +69,7 @@ describe('TasksResolver', () => {
 
   const mockNotificationsService = createMock<NotificationsService>({
     emitPlanStatusChanged: vi.fn(),
+    emitPlanUpdated: vi.fn(),
   });
 
   const mockTaskPromotionEnqueueService =
@@ -172,6 +173,7 @@ describe('TasksResolver', () => {
     vi.mocked(mockTasksService.resolveNextSortOrder).mockReset();
     vi.mocked(mockTasksService.resolveNextSortOrder).mockResolvedValue(1000);
     vi.mocked(mockNotificationsService.emitPlanStatusChanged).mockClear();
+    vi.mocked(mockNotificationsService.emitPlanUpdated).mockClear();
     vi.mocked(repo.create).mockClear();
     vi.mocked(repo.save).mockClear();
     vi.mocked(repo.findOne).mockClear();
@@ -1307,6 +1309,63 @@ describe('TasksResolver', () => {
       expect(
         mockPlanStatusService.promoteParentPlanToInProgress,
       ).not.toHaveBeenCalled();
+    });
+
+    test('announces the new rows with plan.updated so an open plan view refreshes', async () => {
+      const planId = mockTask.planId;
+      vi.mocked(mockTasksService.createTasksBatch).mockResolvedValue([
+        { ...mockTask, id: 'new-task-1', planId, status: 'PENDING' },
+        { ...mockTask, id: 'new-task-2', planId, status: 'PENDING' },
+      ]);
+
+      await resolver.createTasks({ planId, tasks: [] });
+
+      expect(mockNotificationsService.emitPlanUpdated).toHaveBeenCalledTimes(1);
+      expect(mockNotificationsService.emitPlanUpdated).toHaveBeenCalledWith({
+        message: '2 task(s) created',
+        planId,
+        severity: 'info',
+      });
+    });
+
+    test('publishes nothing when the batch fails', async () => {
+      vi.mocked(mockTasksService.createTasksBatch).mockRejectedValueOnce(
+        new Error('boom'),
+      );
+
+      await expect(
+        resolver.createTasks({ planId: mockTask.planId, tasks: [] }),
+      ).rejects.toThrow('boom');
+
+      expect(mockNotificationsService.emitPlanUpdated).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('deleteTask', () => {
+    test("announces the removal on the task's plan", async () => {
+      const repo = mockTasksService.getRepository();
+      vi.mocked(repo.findOne).mockResolvedValue(mockTask);
+      vi.mocked(repo.delete).mockResolvedValue({ affected: 1, raw: [] });
+
+      await expect(resolver.deleteTask({ id: mockTask.id })).resolves.toBe(
+        true,
+      );
+
+      expect(mockNotificationsService.emitPlanUpdated).toHaveBeenCalledWith({
+        message: `Task deleted: ${mockTask.title}`,
+        planId: mockTask.planId,
+        severity: 'info',
+      });
+    });
+
+    test('publishes nothing when no row was deleted', async () => {
+      const repo = mockTasksService.getRepository();
+      vi.mocked(repo.findOne).mockResolvedValue(null);
+      vi.mocked(repo.delete).mockResolvedValue({ affected: 0, raw: [] });
+
+      await expect(resolver.deleteTask({ id: 'missing' })).resolves.toBe(false);
+
+      expect(mockNotificationsService.emitPlanUpdated).not.toHaveBeenCalled();
     });
   });
 

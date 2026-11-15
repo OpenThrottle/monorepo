@@ -427,6 +427,17 @@ export class TasksResolver {
       }
     }
 
+    // createTask announces itself through @EmitNotification; the batch result carries no planId
+    // for a payload mapper, so publish here. Without it an open plan view never sees MCP
+    // create_tasks rows until a reload.
+    if (saved.length > 0) {
+      this.notificationsService.emitPlanUpdated({
+        message: `${saved.length} task(s) created`,
+        planId: input.planId,
+        severity: 'info',
+      });
+    }
+
     await this.planRulesEvaluationService.enqueueEvaluation(
       input.planId,
       PLAN_RULES_TRIGGER_KINDS.TASK_CREATED,
@@ -664,9 +675,22 @@ export class TasksResolver {
     @Args('input', { type: () => DeleteTaskInput }) input: DeleteTaskInput,
   ): Promise<boolean> {
     const repo = this.tasksService.getRepository();
+    const existing = await repo.findOne({
+      select: { id: true, planId: true, title: true },
+      where: { id: input.id },
+    });
     const result = await repo.delete({ id: input.id });
+    const isDeleted = (result.affected ?? 0) > 0;
 
-    return (result.affected ?? 0) > 0;
+    if (isDeleted && existing !== null) {
+      this.notificationsService.emitPlanUpdated({
+        message: `Task deleted: ${existing.title}`,
+        planId: existing.planId,
+        severity: 'info',
+      });
+    }
+
+    return isDeleted;
   }
 
   @Mutation(() => TaskObject, {

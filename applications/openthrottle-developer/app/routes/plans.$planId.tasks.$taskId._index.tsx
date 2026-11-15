@@ -19,6 +19,8 @@ import {
 } from '~/routing/plans/actions/taskId';
 import { PlanTaskNotFound } from '~/routing/plans/components/PlanTaskNotFound';
 import { TaskDetailRoute } from '~/routing/plans/components/TaskDetailRoute';
+import { TASK_DETAIL_REVALIDATE_EVENTS } from '~/routing/plans/data/data.plan-lifecycle-events';
+import { usePlanLifecycleRevalidation } from '~/routing/plans/hooks/usePlanLifecycleRevalidation';
 import { loadTaskDetailRelations } from '~/routing/plans/utils/loadTaskDetailRelations';
 
 type HandleData = Route.ComponentProps['loaderData'];
@@ -98,6 +100,12 @@ export default function Component(
   const { task } = loaderData;
 
   // Hooks
+  // Refresh the status badge and plan gates when this task or its plan changes status; a
+  // sibling task's change is ignored.
+  usePlanLifecycleRevalidation(params.planId, {
+    events: TASK_DETAIL_REVALIDATE_EVENTS,
+    taskId: params.taskId,
+  });
 
   // Setup
 

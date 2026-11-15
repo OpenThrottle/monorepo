@@ -61,6 +61,7 @@ import { QueryFailedError } from 'typeorm';
 import { StatusChangeSystemAccountService } from '../../graphql/work-ledger/status-change-system-account/status-change-system-account.service.ts';
 import { WORK_LEDGER_CAPTURE_FAILED_MARKER } from '../../graphql/work-ledger/work-ledger.constants.ts';
 import { WorkLedgerCaptureService } from '../../graphql/work-ledger/work-ledger-capture/work-ledger-capture.service.ts';
+import { NotificationsService } from '../../notifications/notifications.service.ts';
 import { PlanContextAvailabilityService } from '../../services/plan-context-availability/plan-context-availability.service.ts';
 import { ActionExecutorRegistry } from './action-executor-registry/action-executor-registry.service.ts';
 import type {
@@ -114,6 +115,7 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
     private readonly configService: ConfigService,
     private readonly executorRegistry: ActionExecutorRegistry,
     private readonly logger: LoggerService,
+    private readonly notifications: NotificationsService,
     private readonly planContextAvailabilityService: PlanContextAvailabilityService,
     private readonly ruleApplicationsService: RuleApplicationsService,
     private readonly statusChangeSystemAccount: StatusChangeSystemAccountService,
@@ -322,6 +324,13 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
           );
         }
       });
+
+    // After commit, so an open plan view picks up the revived task.
+    this.notifications.emitTaskStatusChanged({
+      planId,
+      status: 'PENDING',
+      taskId: task.id,
+    });
   }
 
   /**
@@ -670,14 +679,21 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
       return repository.save(entity);
     };
 
-    try {
-      return await attemptInsert();
-    } catch (error) {
+    const task = await attemptInsert().catch((error: unknown) => {
       if (!isSortOrderUniqueViolation(error)) throw error;
       // Concurrent writer took the slot; recompute once against fresh
       // MIN/MAX and retry.
       return attemptInsert();
-    }
+    });
+
+    // A new PENDING task is a status the plan view has not seen yet.
+    this.notifications.emitTaskStatusChanged({
+      planId: plan.id,
+      status: task.status,
+      taskId: task.id,
+    });
+
+    return task;
   }
 
   private async resolveSortOrder(

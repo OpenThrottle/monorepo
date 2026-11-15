@@ -381,6 +381,14 @@ subscription PlanLifecycleNotifications($planId: ID!) {
       planId
       status
     }
+    ... on PlanUpdatedNotification {
+      planId
+      taskId
+    }
+    ... on TaskCompletedNotification {
+      planId
+      taskId
+    }
     ... on TaskStatusChangedNotification {
       planId
       status

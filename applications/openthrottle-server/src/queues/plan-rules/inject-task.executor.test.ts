@@ -23,6 +23,7 @@ import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 
 import type { StatusChangeSystemAccountService } from '../../graphql/work-ledger/status-change-system-account/status-change-system-account.service.ts';
 import type { WorkLedgerCaptureService } from '../../graphql/work-ledger/work-ledger-capture/work-ledger-capture.service.ts';
+import type { NotificationsService } from '../../notifications/notifications.service.ts';
 import type { PlanContextAvailabilityService } from '../../services/plan-context-availability/plan-context-availability.service.ts';
 import { ActionExecutorRegistry } from './action-executor-registry/action-executor-registry.service.ts';
 import { InjectTaskExecutor } from './inject-task.executor.ts';
@@ -81,6 +82,9 @@ describe('InjectTaskExecutor', () => {
   let configGet: ReturnType<typeof vi.fn>;
   let siblingGetRawMany: ReturnType<typeof vi.fn>;
   let managerUpdate: ReturnType<typeof vi.fn>;
+  let emitTaskStatusChanged: Mock<
+    NotificationsService['emitTaskStatusChanged']
+  >;
   let resolveStatusChangeSystemAccountId: Mock<
     StatusChangeSystemAccountService['resolveId']
   >;
@@ -204,10 +208,13 @@ describe('InjectTaskExecutor', () => {
       recordStatusChange: mockRecordStatusChange,
     });
 
+    emitTaskStatusChanged = vi.fn();
+
     executor = new InjectTaskExecutor(
       configService,
       new ActionExecutorRegistry(createMock<LoggerService>()),
       createMock<LoggerService>(),
+      createMock<NotificationsService>({ emitTaskStatusChanged }),
       planContextAvailabilityService,
       ruleApplicationsService,
       statusChangeSystemAccount,
@@ -302,6 +309,12 @@ describe('InjectTaskExecutor', () => {
     expect(ruleApplicationsService.record).toHaveBeenCalledWith(
       expect.objectContaining({ state: 'applied', taskId }),
     );
+    // The new row is announced so an open plan view shows it without a reload.
+    expect(emitTaskStatusChanged).toHaveBeenCalledWith({
+      planId,
+      status: 'PENDING',
+      taskId,
+    });
   });
 
   it('injects at last position (MAX + 1000) when placement is last', async () => {
@@ -848,6 +861,11 @@ describe('InjectTaskExecutor', () => {
       expect(ruleApplicationsService.upsertApplication).toHaveBeenCalledWith(
         expect.objectContaining({ state: 'applied', taskId: 'old-task' }),
       );
+      expect(emitTaskStatusChanged).toHaveBeenCalledWith({
+        planId,
+        status: 'PENDING',
+        taskId: 'old-task',
+      });
     });
 
     it('does not reopen an orphaned task that is already active', async () => {
