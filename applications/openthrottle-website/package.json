@@ -10,6 +10,7 @@
   "dependencies": {
     "@graphql-typed-document-node/core": "catalog:",
     "@openthrottle/graphql-codegen": "workspace:^",
+    "@openthrottle/openthrottle-product": "workspace:^",
     "@openthrottle/react-router-docs": "workspace:^",
     "@openthrottle/react-router-graphql": "workspace:^",
     "@openthrottle/react-router-markdown": "workspace:^",

@@ -8,7 +8,7 @@
 - **Versions checked:** ATIF **v1.8** (Harbor RFC 0001, April 2026); Harbor agent list as published
   2026-11-05; inspect_swe 0.2.52; Coder Eval `main` 2026-11-05
 - **Related:** [agentic-hooks-standards-adr.md](../monorepo/agentic-hooks-standards-adr.md) (OTel
-  GenAI conventions), [features.md](./features.md) (preview flags),
+  GenAI conventions), [the feature registry](../../packages/openthrottle-product/README.md) (preview status),
   [plan-run-worktrees.md](./plan-run-worktrees.md), OT plan `012fa4b0` (critic panel)
 
 Every claim about an external project below has a shelf life. Re-check them before relying on this
@@ -286,7 +286,7 @@ viewer, datasets, runs and reports. They stay hidden behind a new preview flag,
 - `packages/react-router-utils/src/config/features.ts` (`parseEnvBoolean`),
 - `src/types.ts` and `src/utils/environment.ts` (default `'false'`),
 - `applications/openthrottle-developer/.env.default` (`FEATURE_DELTA_PREVIEW="false"`),
-- an entry in [features.md](./features.md).
+- an entry in [the feature registry](../../packages/openthrottle-product/README.md) (`evals`, status `preview`).
 
 The flag gates the **UI only**, as the BETA flag does. **Capture is not gated.** Trajectories
 accumulate from the moment task 4 lands, bounded by Decision 5's caps and retention, so there is

@@ -1,16 +1,27 @@
-import { OPENTHROTTLE_GITHUB_URL } from '@openthrottle/react-router-utils';
+import type { ProductFeatureStatus } from '@openthrottle/openthrottle-product';
+import {
+  getPublicFeatures,
+  isLandedFeature,
+  isUpcomingFeature,
+  PRODUCT_FEATURES,
+  PRODUCT_POSITIONING,
+} from '@openthrottle/openthrottle-product';
+import {
+  OPENTHROTTLE_GITHUB_URL,
+  OPENTHROTTLE_GITHUB_URL_MONOREPO,
+} from '@openthrottle/react-router-utils';
 
 /**
- * Landing page copy and links, translated from the source mockup.
+ * Landing page copy and links.
  *
- * All user-facing strings for the home route live here so components stay
- * presentational. External links are composed from the shared
- * `OPENTHROTTLE_GITHUB_URL` constant (the org root) rather than hardcoding a
- * repo URL, so there is a single source of truth for the GitHub target.
+ * Product copy (positioning, pillars, features, roadmap) comes from the typed
+ * registry in `@openthrottle/openthrottle-product`; never hand-write it here.
+ * Only website-only strings live in this file: nav, CTAs, section kickers and
+ * the code block. Repo links go through `OPENTHROTTLE_GITHUB_URL_MONOREPO`.
  */
 
 const GITHUB_ORG_URL = OPENTHROTTLE_GITHUB_URL;
-const GITHUB_MONOREPO_URL = `${OPENTHROTTLE_GITHUB_URL}/monorepo`;
+const GITHUB_MONOREPO_URL = OPENTHROTTLE_GITHUB_URL_MONOREPO;
 const QUICKSTART_URL = `${GITHUB_MONOREPO_URL}/blob/main/docs/openthrottle/local-quickstart.md`;
 
 export interface LandingLink {
@@ -30,7 +41,8 @@ export const LANDING_NAV = {
   brand: 'OpenThrottle',
   links: [
     { href: '#how', label: 'How it works' },
-    { href: '#surfaces', label: 'Surfaces' },
+    { href: '#features', label: 'Features' },
+    { href: '#roadmap', label: 'Roadmap' },
     { href: '/blog', label: 'Blog', requiresBlog: true },
     { external: true, href: GITHUB_ORG_URL, label: 'GitHub' },
   ] satisfies LandingLink[],
@@ -53,69 +65,71 @@ export const LANDING_HERO = {
   /** Auto-advance delay for the rotating hero headline (ms). */
   headlineIntervalMs: 5_000,
   headlines: [
+    PRODUCT_POSITIONING.tagline.short,
     'Every commit + why it shipped',
     'Every commit knows why it exists',
     'Shipped code, still tied to the plan',
     'The commit remembers the task',
     'Plan it. Run it. Ship it. Point back',
-    'One task at a time — all the way to git',
     'Your plans. Your runs. Your git history',
     'Run agents on your box. Keep the receipts',
     'Stop losing the agent run',
     "Chat forgot. The commit shouldn't",
   ],
-  lede: 'The self-hostable harness that turns plans into agent runs and keeps every commit linked to the work that produced it.',
+  lede: PRODUCT_POSITIONING.tagline.medium,
   wordmark: { accent: 'Throttle', lead: 'Open' },
 } as const;
 
 export const LANDING_PROMISE = {
   kicker: 'Why it exists',
-  lede: 'Chat tabs forget. Markdown plans drift. Issue trackers never see the agent run. OpenThrottle keeps plans, tasks, output, and commits in one Postgres-backed system — reachable from your editor over MCP, and owned entirely by you.',
-  title: 'One substrate for planning and agentic execution.',
+  lede: PRODUCT_POSITIONING.lede.long,
+  title: PRODUCT_POSITIONING.tagline.short,
 } as const;
 
 export const LANDING_FLOW = {
   kicker: 'How it works',
-  lede: 'Ralph drives one task at a time. Progress streams live. Merged commits carry Plan-Id and Task-Id so you can ask what shipped — and why the code exists.',
-  steps: [
-    {
-      body: 'Capture intent as durable plans and tasks — not scattered Markdown.',
-      title: 'Plan',
-    },
-    {
-      body: 'Run agents through Ralph, one scoped task at a time, with live output.',
-      title: 'Execute',
-    },
-    {
-      body: 'Search plans, tasks, and docs by meaning with semantic memory.',
-      title: 'Remember',
-    },
-    {
-      body: 'Link shipped commits back to the plan and task that produced them.',
-      title: 'Trace',
-    },
-  ] satisfies LandingStep[],
-  title: 'Idea in. Traceable work out.',
+  lede: PRODUCT_POSITIONING.lede.medium,
+  steps: PRODUCT_POSITIONING.pillars.map((pillar) => {
+    return { body: pillar.medium, title: pillar.name };
+  }),
+  title: PRODUCT_POSITIONING.lede.short,
 } as const;
 
-export const LANDING_SURFACES = {
-  cards: [
-    {
-      body: 'Agents create plans, update tasks, stream output, and search institutional memory from Cursor and other MCP clients.',
-      title: 'MCP',
-    },
-    {
-      body: 'A dashboard for humans: what’s in progress, what shipped, and what’s next — without leaving the loop.',
-      title: 'Developer app',
-    },
-    {
-      body: 'Queue-backed agentic execution with worktrees and commit traceability built for one-task-at-a-time runs.',
-      title: 'Ralph loop',
-    },
-  ] satisfies LandingStep[],
-  kicker: 'Surfaces',
-  lede: 'Bring your agent host and editor. Every surface reads and writes the same plans and tasks.',
-  title: 'Same source of truth, wherever you work.',
+export const LANDING_FEATURES = {
+  cards: getPublicFeatures(PRODUCT_FEATURES)
+    .filter(isLandedFeature)
+    .map((feature) => {
+      return {
+        body: feature.oneLiner,
+        isPreview: feature.status === 'preview',
+        title: feature.name,
+      };
+    }),
+  kicker: 'Features',
+  lede: PRODUCT_POSITIONING.closing,
+  previewLabel: 'Preview',
+  title: 'What you can run today.',
+} as const;
+
+export const LANDING_ROADMAP = {
+  /** In-flight entries first, then planned; registry order within each. */
+  items: [
+    ...getPublicFeatures(PRODUCT_FEATURES).filter((feature) => {
+      return feature.status === 'in-flight';
+    }),
+    ...getPublicFeatures(PRODUCT_FEATURES).filter((feature) => {
+      return feature.status === 'planned';
+    }),
+  ].filter(isUpcomingFeature),
+  kicker: 'Roadmap',
+  lede: 'A curated look at what is being built now and what comes next.',
+  statusLabels: {
+    'in-flight': 'In flight',
+    planned: 'Planned',
+    preview: 'Preview',
+    shipped: 'Shipped',
+  } satisfies Record<ProductFeatureStatus, string>,
+  title: 'Where OpenThrottle is heading.',
 } as const;
 
 export const LANDING_CLOSE = {

@@ -258,6 +258,9 @@
     },
     {
       "path": "./packages/openthrottle-mcp-evals"
+    },
+    {
+      "path": "./packages/openthrottle-product"
     }
   ]
 }

@@ -11,6 +11,7 @@ import {
   buildWebsiteJsonLd,
   OPENTHROTTLE_AUTHOR,
   OPENTHROTTLE_BUCKET,
+  OPENTHROTTLE_GITHUB_REPOSITORY,
   OPENTHROTTLE_GITHUB_URL,
   OPENTHROTTLE_META_DESCRIPTION,
   serializeJsonLd,
@@ -59,7 +60,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   const { request } = args;
 
   const _header = request.headers.get('cookie');
-  const repo = `openthrottle/openthrottle`;
+  const repo = OPENTHROTTLE_GITHUB_REPOSITORY;
 
   const isVercel = process.env.VERCEL === '1';
   const env = getPublicEnv();

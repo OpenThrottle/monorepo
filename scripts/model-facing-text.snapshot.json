@@ -70,7 +70,7 @@
     "mcp.tool/remove_task_tag": 485,
     "mcp.tool/rename_skill_tag": 483,
     "mcp.tool/reorder_plan_tasks": 572,
-    "mcp.tool/semantic_search": 481,
+    "mcp.tool/semantic_search": 471,
     "mcp.tool/set_blog_post_tags": 961,
     "mcp.tool/settle_plan_run": 1345,
     "mcp.tool/update_blog_post": 1627,
@@ -148,7 +148,7 @@
     "mcp.toolDescription/remove_task_tag": 167,
     "mcp.toolDescription/rename_skill_tag": 170,
     "mcp.toolDescription/reorder_plan_tasks": 218,
-    "mcp.toolDescription/semantic_search": 157,
+    "mcp.toolDescription/semantic_search": 147,
     "mcp.toolDescription/set_blog_post_tags": 605,
     "mcp.toolDescription/settle_plan_run": 714,
     "mcp.toolDescription/update_blog_post": 752,
@@ -162,6 +162,7 @@
     "prompt/Job_DatabaseHealth.md": 9083,
     "prompt/Job_DeadCode.md": 8432,
     "prompt/Job_DocDrift.md": 9521,
+    "prompt/Job_FeatureRegistryRefresh.md": 7561,
     "prompt/Job_Issue_Reporting.md": 11673,
     "prompt/Job_MemoryDrift.md": 10214,
     "prompt/Job_Performance.md": 8936,
@@ -207,14 +208,14 @@
     "mcpToolset/admin": 14222,
     "mcpToolset/agents": 3213,
     "mcpToolset/blog": 7444,
-    "mcpToolset/core": 34742,
-    "mcpToolsFull": 59621
+    "mcpToolset/core": 34732,
+    "mcpToolsFull": 59611
   },
   "totals": {
-    "alwaysInjected": 42596,
+    "alwaysInjected": 42586,
     "mcpInstructions": 2069,
-    "mcpTools": 34742,
-    "prompts": 133419,
+    "mcpTools": 34732,
+    "prompts": 140980,
     "skills": 152837
   }
 }
