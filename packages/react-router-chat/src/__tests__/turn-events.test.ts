@@ -166,6 +166,47 @@ describe('foldPersistedTurnEvents', () => {
     expect(result.filter((e) => e.kind === 'usageLimit')).toHaveLength(1);
   });
 
+  describe('when the persisted terminal usage names denied actions', () => {
+    it('adds one deniedActions event with every label, deduplicated', () => {
+      const result = foldPersistedTurnEvents(
+        persisted([
+          { delta: '', kind: 'session', metadata: { sessionId: 'agy-1' } },
+          {
+            delta: '',
+            kind: 'usage',
+            metadata: {
+              deniedActions: ['McpTool', 'McpTool', 'pwd'],
+              model: 'gemini-3.8-flash-medium',
+              usage: { output_tokens: 738 },
+            },
+          },
+        ]),
+        '',
+      );
+
+      expect(result).toContainEqual({
+        actions: ['McpTool', 'pwd'],
+        kind: 'deniedActions',
+        sortOrder: 1,
+      });
+    });
+
+    it('adds none when the list is empty or not strings', () => {
+      const result = foldPersistedTurnEvents(
+        persisted([
+          {
+            delta: '',
+            kind: 'usage',
+            metadata: { deniedActions: [42, ''], usage: null },
+          },
+        ]),
+        '',
+      );
+
+      expect(result.some((e) => e.kind === 'deniedActions')).toBe(false);
+    });
+  });
+
   it('surfaces persisted usage (claude) as a single trailing usage event with typed counts', () => {
     const result = foldPersistedTurnEvents(
       persisted([

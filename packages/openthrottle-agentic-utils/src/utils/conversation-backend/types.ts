@@ -183,6 +183,16 @@ export const CONVERSATION_STREAM_CHUNK_KINDS = {
 } as const;
 
 /**
+ * Terminal-chunk metadata key listing what a turn was refused permission for, as readable labels
+ * (`string[]`). Set only when something was refused. A refusal can end a turn with no answer text
+ * (agy does), so the chat renders these as a notice that explains why. agy's stream-json path
+ * fills it from `result.denied_actions`. The ACP path fills it from the calls this client refused.
+ *
+ * @public
+ */
+export const CONVERSATION_DENIED_ACTIONS_KEY = 'deniedActions';
+
+/**
  * One of the {@link CONVERSATION_STREAM_CHUNK_KINDS} values.
  *
  * @public

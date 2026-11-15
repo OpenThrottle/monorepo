@@ -236,6 +236,27 @@ describe('reduceStreamChunk', () => {
     expect(state.isStreaming).toBe(true);
   });
 
+  it('adds a deniedActions turn event from a forwarded terminal usage chunk', () => {
+    let state = INITIAL_STREAM_STATE;
+    state = reduceStreamChunk(
+      state,
+      chunk({
+        kind: 'usage',
+        metadataJson: JSON.stringify({
+          deniedActions: ['pwd'],
+          stopReason: 'end_turn',
+        }),
+        sortOrder: 0,
+      }),
+    );
+
+    expect(state.events.get('assistant-1')).toContainEqual({
+      actions: ['pwd'],
+      kind: 'deniedActions',
+      sortOrder: 0,
+    });
+  });
+
   it('keeps a usage-limited terminal out of retryableIds and keeps the error body', () => {
     const usageLimit = {
       rateLimitType: 'five_hour',

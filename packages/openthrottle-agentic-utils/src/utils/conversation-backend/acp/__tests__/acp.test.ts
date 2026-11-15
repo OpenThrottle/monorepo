@@ -486,6 +486,55 @@ describe('createAcpConversationBackend', () => {
       );
     });
 
+    it('marks a refused call that then fails as denied, and lists it on the terminal', async () => {
+      const refuseThenFail = async (
+        turn: FakeTurn,
+      ): Promise<PromptResponse> => {
+        await turn.client.request(methods.client.session.requestPermission, {
+          options: [
+            { kind: 'allow_once', name: 'Allow', optionId: 'allow' },
+            { kind: 'reject_once', name: 'Deny', optionId: 'deny' },
+          ],
+          sessionId: turn.sessionId,
+          toolCall: { kind: 'execute', title: 'pwd', toolCallId: 't9' },
+        });
+        await turn.client.notify(methods.client.session.update, {
+          sessionId: turn.sessionId,
+          update: {
+            kind: 'execute',
+            rawInput: { CommandLine: 'pwd' },
+            rawOutput: { output: '' },
+            sessionUpdate: 'tool_call',
+            status: 'failed',
+            title: 'pwd',
+            toolCallId: 't9',
+          },
+        });
+        return END_TURN;
+      };
+      const fake = createFakeLauncher({
+        authMethods: [],
+        configOptions: [],
+        loadable: [],
+        modes: undefined,
+        onPrompt: refuseThenFail,
+      });
+      const backend = createAcpConversationBackend(FAKE_SPEC, {
+        launch: fake.launch,
+      });
+
+      const chunks = await collect(backend.stream(run({})));
+      const result = chunks.find((chunk) => chunk.kind === 'tool_result');
+      const terminal = chunks.find((chunk) => chunk.done);
+
+      expect(result?.metadata).toMatchObject({
+        callId: 't9',
+        isError: true,
+        toolCall: 'Permission denied: the tool call was refused.',
+      });
+      expect(terminal?.metadata).toMatchObject({ deniedActions: ['pwd'] });
+    });
+
     it('allows everything under fullAccess', async () => {
       const fake = createFakeLauncher({
         authMethods: [],

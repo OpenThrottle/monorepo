@@ -103,6 +103,28 @@ export function buildAntigravityPrompt(run: ConversationBackendRun): string {
   return sections.join('\n\n');
 }
 
+/** Termination reason for the per-turn idle timer. */
+const IDLE_TIMEOUT_REASON = 'idle timeout';
+
+/**
+ * The terminal error for a turn this adapter stopped itself, or `null` when it did not stop it.
+ * An idle stop names its usual cause: agy holds the first model call until its workspace-plugin
+ * MCP servers connect and writes nothing meanwhile, so one slow server start (an `npx` launch
+ * fetching from the registry) runs straight into the idle timeout. Every other reason
+ * (`cancelled`, `wall-clock timeout`) passes through unchanged.
+ */
+function describeTermination(
+  reason: string | null,
+  idleMs: number,
+): string | null {
+  if (reason !== IDLE_TIMEOUT_REASON) {
+    return reason;
+  }
+
+  const seconds = Math.round(idleMs / 1000);
+  return `agy produced no output for ${seconds}s and was stopped. agy waits for its MCP servers to connect before it replies, so a slow-starting MCP server is the usual cause.`;
+}
+
 async function* streamAntigravity(
   run: ConversationBackendRun,
 ): AsyncGenerator<ConversationStreamChunk> {
@@ -150,7 +172,10 @@ async function* streamAntigravity(
     if (idleTimer !== null) {
       clearTimeout(idleTimer);
     }
-    idleTimer = setTimeout(() => terminate('idle timeout'), timeouts.idleMs);
+    idleTimer = setTimeout(
+      () => terminate(IDLE_TIMEOUT_REASON),
+      timeouts.idleMs,
+    );
     idleTimer.unref();
   };
   const wallTimer = setTimeout(
@@ -193,10 +218,20 @@ async function* streamAntigravity(
         continue;
       }
       for (const chunk of mapEvent(parsed)) {
-        if (chunk.done) {
-          sawTerminal = true;
+        if (!chunk.done) {
+          yield chunk;
+          continue;
         }
-        yield chunk;
+
+        sawTerminal = true;
+        // A SIGTERMed agy still writes a `result` on its way out
+        // (`status: ERROR, error: 'interrupted'`, all-zero usage). When this adapter did the
+        // stopping, that result says nothing about why, so the reason it stopped for wins.
+        const stopError = describeTermination(
+          terminationReason,
+          timeouts.idleMs,
+        );
+        yield stopError === null ? chunk : { ...chunk, error: stopError };
       }
     }
   };
@@ -221,7 +256,8 @@ async function* streamAntigravity(
         error !== null ||
         (code !== null && code !== 0);
       const message =
-        terminationReason ?? describeExit('agy', { code, error, stderr });
+        describeTermination(terminationReason, timeouts.idleMs) ??
+        describeExit('agy', { code, error, stderr });
       yield {
         delta: '',
         done: true,

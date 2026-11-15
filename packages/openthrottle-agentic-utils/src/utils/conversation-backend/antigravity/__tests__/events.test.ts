@@ -360,6 +360,42 @@ describe('createAntigravityEventMapper', () => {
     ).toBe(false);
   });
 
+  describe('when agy denied a permission', () => {
+    it('lists result.denied_actions on the terminal metadata', () => {
+      const map = createAntigravityEventMapper();
+
+      const [terminal] = map({
+        event: 'result',
+        result: {
+          denied_actions: [
+            { action: 'mcp', display_name: 'McpTool' },
+            { action: 'mcp', display_name: 'McpTool' },
+            { action: 'shell' },
+          ],
+          response: '',
+          status: 'SUCCESS',
+        },
+      });
+
+      expect(terminal).toMatchObject({ done: true, error: null });
+      expect(terminal?.metadata?.['deniedActions']).toEqual([
+        'McpTool',
+        'shell',
+      ]);
+    });
+
+    it('omits the key when nothing was denied', () => {
+      const map = createAntigravityEventMapper();
+
+      const [terminal] = map({
+        event: 'result',
+        result: { denied_actions: [], response: 'ok', status: 'SUCCESS' },
+      });
+
+      expect(terminal?.metadata).not.toHaveProperty('deniedActions');
+    });
+  });
+
   it('surfaces the error string when result.status is not SUCCESS', () => {
     const map = createAntigravityEventMapper();
 

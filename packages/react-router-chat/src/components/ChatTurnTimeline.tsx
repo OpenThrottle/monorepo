@@ -5,6 +5,7 @@ import { buildTurnTimeline, foldTurnActivity } from '../turn-tool-groups';
 import type { ChatTurnEvent } from '../types';
 import { activityGroupAnchor } from '../utils/activityGroupAnchor';
 import { ChatActivityGroup } from './ChatActivityGroup';
+import { ChatDeniedActionsNotice } from './ChatDeniedActionsNotice';
 import { ChatMessageBody } from './ChatMessageBody';
 import { ChatPermissionRequest } from './ChatPermissionRequest';
 import { ChatThinkingBlock } from './ChatThinkingBlock';
@@ -89,6 +90,8 @@ export const ChatTurnTimeline = (
         const key = `${event.kind}-${event.sortOrder}`;
 
         switch (event.kind) {
+          case 'deniedActions':
+            return <ChatDeniedActionsNotice event={event} key={key} />;
           case 'permission':
             return <ChatPermissionRequest event={event} key={key} />;
           case 'session':

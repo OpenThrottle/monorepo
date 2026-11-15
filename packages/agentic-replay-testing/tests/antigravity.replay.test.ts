@@ -61,12 +61,14 @@ describe('antigravity replay', () => {
     expect(terminal(chunks)?.error).toContain('not-a-real-model');
   });
 
-  it('interrupt ends interrupted', async () => {
+  // A cancelled agy still writes its own `result` (`error: 'interrupted'`) as it exits; the
+  // adapter's reason wins, so antigravity ends `cancelled` like every other backend.
+  it('interrupt ends cancelled', async () => {
     const { chunks } = await replay(
       replayFixturePath('antigravity', 'interrupt'),
     );
 
-    expect(terminal(chunks)?.error).toBe('interrupted');
+    expect(terminal(chunks)?.error).toBe('cancelled');
   });
 
   it('system-prompt and thinking complete', async () => {

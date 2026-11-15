@@ -55,6 +55,7 @@ import {
   decideAcpPermission,
   humanPermissionOptions,
   isManagedMcpTool,
+  isRefusal,
   restrictToOffered,
 } from './permissions.ts';
 import { toAcpMcpServers } from './toAcpMcpServers.ts';
@@ -497,7 +498,10 @@ export function createAcpConversationBackend(
     const { fresh, live } = acquired;
     const agent = live.connection.agent;
     const queue = new AsyncQueue<ConversationStreamChunk>();
-    const mapUpdate = createAcpUpdateMapper();
+    const deniedCallIds = new Set<string>();
+    // Readable labels for the refused calls, in refusal order, for the terminal chunk.
+    const deniedActions = new Set<string>();
+    const mapUpdate = createAcpUpdateMapper({ deniedCallIds });
     const managedServerNames = Object.keys(run.mcpServers ?? {});
     let killTimer: NodeJS.Timeout | null = null;
 
@@ -564,19 +568,31 @@ export function createAcpConversationBackend(
         clearInterval(keepalive);
       }
     };
-    live.routes.onPermission = (request: RequestPermissionRequest) => {
+    /** Remember a refused call so its `failed` card can say it was denied. */
+    const recordDecision = (
+      request: RequestPermissionRequest,
+      response: RequestPermissionResponse,
+    ): RequestPermissionResponse => {
+      if (isRefusal(request, response)) {
+        deniedCallIds.add(request.toolCall.toolCallId);
+        deniedActions.add(
+          request.toolCall.title ?? request.toolCall.kind ?? 'tool call',
+        );
+      }
+      return response;
+    };
+    live.routes.onPermission = async (request: RequestPermissionRequest) => {
       const supervised =
         run.permissionMode === CONVERSATION_PERMISSION_MODES.supervised;
       if (
         supervised &&
         !isManagedMcpTool(request.toolCall.title, managedServerNames)
       ) {
-        return askHuman(request);
+        return recordDecision(request, await askHuman(request));
       }
-      return decideAcpPermission(
+      return recordDecision(
         request,
-        run.permissionMode,
-        managedServerNames,
+        decideAcpPermission(request, run.permissionMode, managedServerNames),
       );
     };
 
@@ -609,7 +625,7 @@ export function createAcpConversationBackend(
           prompt: [{ text: composePrompt(run, fresh), type: 'text' }],
           sessionId: live.sessionId,
         });
-        queue.push(acpTerminalChunk(response));
+        queue.push(acpTerminalChunk(response, [...deniedActions]));
       } catch (error) {
         queue.push(terminalError(describeAcpError(error, live.stderrTail())));
         drop(live);
