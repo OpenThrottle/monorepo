@@ -184,6 +184,7 @@ export default function Component(
           projects={projects}
         />
         <OpenThrottlePagination
+          basePath="/projects"
           className="mt-8"
           limit={limit}
           page={page}

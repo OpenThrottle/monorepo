@@ -16,11 +16,12 @@ import {
   buildProjectsSearchParams,
 } from '../utils/index';
 
-const DEFAULT_BASE_PATH = '/projects';
-
 export interface OpenThrottlePaginationProps extends ProjectsSearchParamsExtras {
-  /** Base path for pagination links (default /projects). Use /plans for plans index. */
-  readonly basePath?: string;
+  /**
+   * Route the page links point at, e.g. `/plans`. Required: a default would
+   * silently send another route's pager somewhere else.
+   */
+  readonly basePath: string;
   readonly className?: string;
   readonly limit: number;
   readonly page: number;
@@ -46,7 +47,7 @@ export const OpenThrottlePagination = (
 ): React.ReactElement | null => {
   const {
     assignees,
-    basePath = DEFAULT_BASE_PATH,
+    basePath,
     className,
     details,
     limit,

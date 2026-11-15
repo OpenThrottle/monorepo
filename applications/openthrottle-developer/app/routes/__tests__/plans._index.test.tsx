@@ -249,7 +249,7 @@ describe('routes/plans._index.tsx', () => {
     ).toBeInTheDocument();
   });
 
-  test('should render pagination on /plans with assignee and status filters in links', () => {
+  test('keeps every live filter, sort and view param in the /plans page links', () => {
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => {
       return (
@@ -268,18 +268,27 @@ describe('routes/plans._index.tsx', () => {
         />
       );
     };
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    const view = render(<RoutesStub />);
+    const RoutesStub = createRoutesStub([{ Component, path: '/plans' }]);
+    const view = render(
+      <RoutesStub
+        initialEntries={[
+          '/plans?assignee=visormatt&status=IN_PROGRESS&status=PENDING&sortBy=title&sortOrder=asc&view=card&page=3',
+        ]}
+      />,
+    );
 
     expect(view.getByTestId('OpenThrottlePagination')).toBeInTheDocument();
-    const pageLink = view.getByRole('link', { name: '3' });
+    const pageLink = view.getByRole('link', { name: '4' });
     const href = pageLink.getAttribute('href') ?? '';
     expect(href).toContain('/plans?');
-    expect(href).toContain('page=3');
+    expect(href).toContain('page=4');
     expect(href).toContain('limit=10');
     expect(href).toContain('assignee=visormatt');
     expect(href).toContain('status=IN_PROGRESS');
     expect(href).toContain('status=PENDING');
+    expect(href).toContain('sortBy=title');
+    expect(href).toContain('sortOrder=asc');
+    expect(href).toContain('view=card');
     expect(view.getByText('Showing 21-30 of 100 plans')).toBeInTheDocument();
   });
 });
