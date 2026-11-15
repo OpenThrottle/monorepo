@@ -35,7 +35,7 @@ export const GlobalTable = <TRow extends object>(
       cell: (context) => {
         const cell = (
           <GlobalTableCell
-            className={undefined}
+            className="p-2"
             kind={column.kind}
             value={context.getValue()}
           />
@@ -71,7 +71,10 @@ export const GlobalTable = <TRow extends object>(
   // 🔌 Short Circuit
 
   return (
-    <div className={cn(className)} data-testid="GlobalTable">
+    <div
+      className={cn(className, 'rounded-md border')}
+      data-testid="GlobalTable"
+    >
       <DataTable
         columns={columnDefs}
         data={data}
