@@ -1,4 +1,5 @@
 import { NotFoundException } from '@nestjs/common';
+import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { getDataSourceToken } from '@nestjs/typeorm';
 import type { DataSource } from 'typeorm';
@@ -28,10 +29,18 @@ import { NestjsRepositoriesCmsModule } from './nestjs-repositories-cms.module.ts
  * because it needs a live Postgres:
  *
  *   pnpm run database:migrate -- --database cms
- *   OT_CMS_DB_INTEGRATION=true pnpm nx run nestjs-repositories-cms:test \
+ *   pnpm run database:test:cms
+ *
+ * which is:
+ *
+ *   POSTGRES_HOST=localhost OT_CMS_DB_INTEGRATION=true \
+ *     pnpm nx run nestjs-repositories-cms:test --skip-nx-cache \
  *     -- src/nestjs-repositories-cms.module.integration.test.ts
  *
  * The connection comes from CMS_POSTGRES_URL, else POSTGRES_URL / POSTGRES_*.
+ * Nx loads the root `.env` into the task, whose POSTGRES_HOST is
+ * `host.docker.internal` (for tools inside Docker) and does not resolve on the
+ * host, so a host run overrides it — or sets CMS_POSTGRES_URL instead.
  */
 
 /** A TypeORM column's metadata, without reaching into typeorm's internals. */
@@ -85,9 +94,16 @@ const REPOSITORIES = [
 ];
 
 describe.skipIf(!ENABLED)('NestjsRepositoriesCmsModule (live cms DB)', () => {
-  let app: Awaited<
-    ReturnType<ReturnType<typeof Test.createTestingModule>['compile']>
-  >;
+  /** Unset when `beforeAll` fails, so `afterAll` must not assume it. */
+  let app: TestingModule | undefined;
+
+  /** @description The booted module; only reached after `beforeAll` succeeded. */
+  const requireApp = (): TestingModule => {
+    if (!app) {
+      throw new Error('cms test module did not boot; see the beforeAll error');
+    }
+    return app;
+  };
 
   beforeAll(async () => {
     app = await Test.createTestingModule({
@@ -97,11 +113,13 @@ describe.skipIf(!ENABLED)('NestjsRepositoriesCmsModule (live cms DB)', () => {
   });
 
   afterAll(async () => {
-    await app.close();
+    await app?.close();
   });
 
   it('every entity column matches the live table (name, type, nullability)', async () => {
-    const dataSource = app.get<DataSource>(getDataSourceToken(CMS_CONNECTION));
+    const dataSource = requireApp().get<DataSource>(
+      getDataSourceToken(CMS_CONNECTION),
+    );
     const live: DbColumn[] = await dataSource.query(
       `SELECT table_name, column_name, data_type, udt_name, is_nullable
          FROM information_schema.columns
@@ -143,7 +161,10 @@ describe.skipIf(!ENABLED)('NestjsRepositoriesCmsModule (live cms DB)', () => {
   it.each(SERVICES.map((service) => [service.name, service] as const))(
     '%s reads its table',
     async (_name, service) => {
-      const rows = await app.get(service).getRepository().find({ take: 1 });
+      const rows = await requireApp()
+        .get(service)
+        .getRepository()
+        .find({ take: 1 });
 
       expect(Array.isArray(rows)).toBe(true);
     },
@@ -152,14 +173,18 @@ describe.skipIf(!ENABLED)('NestjsRepositoriesCmsModule (live cms DB)', () => {
   it.each(
     REPOSITORIES.map((repository) => [repository.name, repository] as const),
   )('%s pages its live rows', async (_name, repository) => {
-    const page = await app.get(repository).findByPaginated({ take: 1 });
+    const page = await requireApp()
+      .get(repository)
+      .findByPaginated({ take: 1 });
 
     expect(Array.isArray(page.data)).toBe(true);
   });
 
   it('soft deletes through is_deleted and treats NULL as live', async () => {
-    const tags = app.get(TagsRepository);
-    const dataSource = app.get<DataSource>(getDataSourceToken(CMS_CONNECTION));
+    const tags = requireApp().get(TagsRepository);
+    const dataSource = requireApp().get<DataSource>(
+      getDataSourceToken(CMS_CONNECTION),
+    );
     const name = `integration-${Date.now()}`;
     const [deleted, nullFlag] = await tags.createMany([
       { description: 'soft delete round trip', name: `${name}-a` },
@@ -199,8 +224,10 @@ describe.skipIf(!ENABLED)('NestjsRepositoriesCmsModule (live cms DB)', () => {
   });
 
   it('reads a layout tree in pre-order, cutting cycles and soft-deleted fragments', async () => {
-    const dataSource = app.get<DataSource>(getDataSourceToken(CMS_CONNECTION));
-    const layouts = app.get(CmsLayoutsService);
+    const dataSource = requireApp().get<DataSource>(
+      getDataSourceToken(CMS_CONNECTION),
+    );
+    const layouts = requireApp().get(CmsLayoutsService);
     const [layout] = await dataSource.query(
       `SELECT uuid, slug, fragment_uuid FROM layouts WHERE is_deleted IS NOT TRUE LIMIT 1`,
     );
@@ -265,10 +292,12 @@ describe.skipIf(!ENABLED)('NestjsRepositoriesCmsModule (live cms DB)', () => {
   });
 
   it('writes layouts, fragments and edges transactionally with the documented refusals', async () => {
-    const dataSource = app.get<DataSource>(getDataSourceToken(CMS_CONNECTION));
-    const layouts = app.get(CmsLayoutsService);
-    const fragments = app.get(CmsFragmentsService);
-    const children = app.get(CmsFragmentChildrenService);
+    const dataSource = requireApp().get<DataSource>(
+      getDataSourceToken(CMS_CONNECTION),
+    );
+    const layouts = requireApp().get(CmsLayoutsService);
+    const fragments = requireApp().get(CmsFragmentsService);
+    const children = requireApp().get(CmsFragmentChildrenService);
     const slug = `integration-${Date.now()}`;
     const created: string[] = [];
 
@@ -470,8 +499,10 @@ describe.skipIf(!ENABLED)('NestjsRepositoriesCmsModule (live cms DB)', () => {
   });
 
   it('resolves one profile per OpenThrottle user, restoring a soft-deleted one', async () => {
-    const dataSource = app.get<DataSource>(getDataSourceToken(CMS_CONNECTION));
-    const profiles = app.get(CmsProfilesService);
+    const dataSource = requireApp().get<DataSource>(
+      getDataSourceToken(CMS_CONNECTION),
+    );
+    const profiles = requireApp().get(CmsProfilesService);
     const userId = '0b9a4f1e-5c3d-4e2a-9f10-0000000000aa';
 
     try {

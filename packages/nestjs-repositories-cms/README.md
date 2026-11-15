@@ -42,5 +42,10 @@ through `createPostgresProfilingQueryLogger`.
 
 ```bash
 pnpm run database:migrate -- --database cms
-OT_CMS_DB_INTEGRATION=true pnpm nx run nestjs-repositories-cms:test -- src/nestjs-repositories-cms.module.integration.test.ts
+pnpm run database:test:cms
 ```
+
+`database:test:cms` is `POSTGRES_HOST=localhost OT_CMS_DB_INTEGRATION=true pnpm nx run nestjs-repositories-cms:test --skip-nx-cache -- src/nestjs-repositories-cms.module.integration.test.ts` (uncached: Nx hashes neither the opt-in flag nor the database).
+Nx loads the root `.env` into the task, and its `POSTGRES_HOST` is `host.docker.internal` (for tools
+inside Docker), which does not resolve on the host — so a hand-typed run needs the `POSTGRES_HOST`
+override, or `CMS_POSTGRES_URL` pointing at the database.
