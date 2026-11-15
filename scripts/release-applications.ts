@@ -103,6 +103,17 @@ const existingReleaseTags = (): ReadonlySet<string> => {
   return new Set(output === '' ? [] : output.split('\n'));
 };
 
+const remoteReleaseTags = (): ReadonlySet<string> => {
+  const output = run('git', ['ls-remote', '--tags', '--refs', 'origin', 'refs/tags/*@*']).stdout; // prettier-ignore
+
+  return new Set(
+    output
+      .split('\n')
+      .map((line) => line.split('refs/tags/')[1] ?? '')
+      .filter((tag) => tag !== ''),
+  );
+};
+
 const baseline = async (args: readonly string[]): Promise<number> => {
   const ref = flagValue('ref', [...args]) ?? 'HEAD';
   const push = hasFlag('push', [...args]);
@@ -116,7 +127,7 @@ const baseline = async (args: readonly string[]): Promise<number> => {
     logger.detail(`exists  ${tag}`);
   }
 
-  if (plan.missing.length === 0) {
+  if (plan.missing.length === 0 && !push) {
     logger.success('Every project already has its baseline tag');
 
     return 0;
@@ -138,8 +149,19 @@ const baseline = async (args: readonly string[]): Promise<number> => {
   }
 
   if (push) {
-    run('git', ['push', 'origin', ...plan.missing.map((tag) => `refs/tags/${tag}`)], { stdio: 'inherit' }); // prettier-ignore
-    logger.success(`pushed ${plan.missing.length} tag(s) to origin`);
+    // A tag created by an earlier `--apply` exists locally but not on origin;
+    // push every baseline tag origin lacks, not only the ones made just now.
+    const remote = remoteReleaseTags();
+    const unpushed = [...plan.existing, ...plan.missing].filter((tag) => !remote.has(tag)); // prettier-ignore
+
+    if (unpushed.length === 0) {
+      logger.success('Every baseline tag is already on origin');
+
+      return 0;
+    }
+
+    run('git', ['push', 'origin', ...unpushed.map((tag) => `refs/tags/${tag}`)], { stdio: 'inherit' }); // prettier-ignore
+    logger.success(`pushed ${unpushed.length} tag(s) to origin`);
   }
 
   return 0;
