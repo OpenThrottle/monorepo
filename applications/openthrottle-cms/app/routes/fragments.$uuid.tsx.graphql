@@ -51,8 +51,18 @@ mutation UpdateCmsFragment($input: UpdateCmsFragmentInput!) {
   }
 }
 
-query CmsFragmentChildCandidates($skip: Int, $take: Int, $typename: String) {
-  cmsFragments(skip: $skip, take: $take, typename: $typename) {
+query CmsFragmentChildCandidates(
+  $childCandidatesOf: String!
+  $skip: Int
+  $take: Int
+  $typename: String
+) {
+  cmsFragments(
+    childCandidatesOf: $childCandidatesOf
+    skip: $skip
+    take: $take
+    typename: $typename
+  ) {
     hasNextPage
     items {
       name

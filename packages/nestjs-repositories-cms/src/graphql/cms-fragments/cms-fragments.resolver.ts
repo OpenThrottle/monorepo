@@ -45,9 +45,16 @@ export class CmsFragmentsResolver {
     isSystem: boolean | null,
     @Args('skip', { nullable: true, type: () => Int }) skip: number | null,
     @Args('take', { nullable: true, type: () => Int }) take: number | null,
+    @Args('childCandidatesOf', {
+      description: `Only fragments addable as a new child of this fragment: leaves out the fragment itself, its ancestors (a cycle) and its current children.`,
+      nullable: true,
+      type: () => String,
+    })
+    childCandidatesOf: string | null,
   ): Promise<CmsFragmentListResult> {
     return this.cmsFragmentsService.findPage({
       ...toCmsPageOptions(skip, take),
+      childCandidatesOf: childCandidatesOf ?? null,
       isSystem: isSystem ?? null,
       typename: typename ?? null,
     });

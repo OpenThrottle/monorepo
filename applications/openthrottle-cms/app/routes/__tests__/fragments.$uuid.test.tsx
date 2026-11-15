@@ -339,7 +339,7 @@ describe('routes/fragments.$uuid.tsx', () => {
       expect(fetchPublicGraphql).toHaveBeenCalledTimes(1);
     });
 
-    test('loads child candidates for a container, minus itself and its children', async () => {
+    test('asks the server for child candidates of the container, and lists them as served', async () => {
       const grid = {
         ...buildFragment(),
         children: [{ ...buildFragment('child-1'), schema: undefined }],
@@ -359,11 +359,7 @@ describe('routes/fragments.$uuid.tsx', () => {
           return {
             cmsFragments: {
               hasNextPage: true,
-              items: [
-                { name: 'Self', typename: 'Heading', uuid: 'fragment-1' },
-                { name: 'Child', typename: 'Heading', uuid: 'child-1' },
-                { name: 'Spare', typename: 'Heading', uuid: 'spare-1' },
-              ],
+              items: [{ name: 'Spare', typename: 'Heading', uuid: 'spare-1' }],
             },
             cmsSchemas: {
               items: [
@@ -391,7 +387,12 @@ describe('routes/fragments.$uuid.tsx', () => {
       });
       expect(fetchPublicGraphql).toHaveBeenCalledWith(
         CmsFragmentChildCandidatesDocument,
-        { skip: 50, take: 25, typename: 'Heading' },
+        {
+          childCandidatesOf: 'fragment-1',
+          skip: 50,
+          take: 25,
+          typename: 'Heading',
+        },
       );
       expect(result.editor).toMatchObject({
         ok: true,

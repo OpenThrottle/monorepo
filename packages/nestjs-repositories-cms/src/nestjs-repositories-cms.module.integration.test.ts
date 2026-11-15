@@ -352,6 +352,38 @@ describe.skipIf(!ENABLED)('NestjsRepositoriesCmsModule (live cms DB)', () => {
 
       await children.reorder(layout.fragmentUuid, [button.uuid, heading.uuid]);
 
+      const headingCandidates = await fragments.findPage({
+        childCandidatesOf: heading.uuid,
+        isSystem: null,
+        skip: 0,
+        take: 100,
+        typename: null,
+      });
+      const headingCandidateUuids = headingCandidates.items.map((item) => {
+        return item.uuid;
+      });
+
+      // The heading's ancestor (the layout root) would close a cycle; its sibling would not.
+      expect(headingCandidateUuids).not.toContain(heading.uuid);
+      expect(headingCandidateUuids).not.toContain(layout.fragmentUuid);
+      expect(headingCandidateUuids).toContain(button.uuid);
+
+      const rootCandidates = await fragments.findPage({
+        childCandidatesOf: layout.fragmentUuid,
+        isSystem: null,
+        skip: 0,
+        take: 100,
+        typename: null,
+      });
+      const rootCandidateUuids = rootCandidates.items.map((item) => {
+        return item.uuid;
+      });
+
+      // The root itself, and its current children, which are already edges.
+      expect(rootCandidateUuids).not.toContain(layout.fragmentUuid);
+      expect(rootCandidateUuids).not.toContain(heading.uuid);
+      expect(rootCandidateUuids).not.toContain(button.uuid);
+
       const tree = await layouts.findBySlug(slug, 'editor');
 
       // A new layout is DRAFT (the column default), so the public cannot read it.
@@ -395,6 +427,7 @@ describe.skipIf(!ENABLED)('NestjsRepositoriesCmsModule (live cms DB)', () => {
       expect(copiedHeading?.properties).toEqual({ copy: 'Hi', heading: 'h1' });
 
       const headings = await fragments.findPage({
+        childCandidatesOf: null,
         isSystem: false,
         skip: 0,
         take: 100,

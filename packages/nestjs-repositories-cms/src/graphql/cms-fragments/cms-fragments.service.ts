@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import type { FindOptionsWhere } from 'typeorm';
-import { DataSource, Equal, IsNull, Or } from 'typeorm';
+import { DataSource, Equal, In, IsNull, Not, Or } from 'typeorm';
 
 import { CMS_CONNECTION, CMS_STATUS } from '../../config/config.constants.ts';
 import { Fragment } from '../../modules/fragments/fragment.entity.ts';
@@ -56,15 +56,29 @@ export class CmsFragmentsService {
   /**
    * @description One bounded page of live fragments, oldest first, optionally narrowed to one
    * typename and/or to system (`true`) or editor (`false`) fragments. `is_system` is nullable,
-   * and NULL counts as not system.
+   * and NULL counts as not system. `childCandidatesOf` leaves out every fragment that cannot be
+   * added under that parent — itself, its ancestors and its current children — in the query, so
+   * pages stay full.
+   * @throws GraphQLError NOT_FOUND when `childCandidatesOf` is not a uuid.
    */
   async findPage(options: {
+    readonly childCandidatesOf: string | null;
     readonly isSystem: boolean | null;
     readonly skip: number;
     readonly take: number;
     readonly typename: string | null;
   }): Promise<CmsFragmentListResult> {
     const where: FindOptionsWhere<Fragment> = {};
+
+    if (options.childCandidatesOf !== null) {
+      assertCmsUuid('parent fragment', options.childCandidatesOf);
+
+      const excluded = await this.fragmentsRepository.findChildExclusions(
+        options.childCandidatesOf,
+      );
+
+      where.uuid = Not(In(excluded));
+    }
 
     if (options.typename !== null) {
       where.typename = options.typename;

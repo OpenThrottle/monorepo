@@ -23,9 +23,10 @@ describe('CmsFragmentsResolver', () => {
     it('passes default paging to the service when skip and take are omitted', async () => {
       const { resolver, service } = buildResolver();
 
-      await resolver.cmsFragments(null, null, null, null);
+      await resolver.cmsFragments(null, null, null, null, null);
 
       expect(service.findPage).toHaveBeenCalledWith({
+        childCandidatesOf: null,
         isSystem: null,
         skip: 0,
         take: 25,
@@ -36,9 +37,16 @@ describe('CmsFragmentsResolver', () => {
     it('passes filters and paging through', async () => {
       const { resolver, service } = buildResolver();
 
-      await resolver.cmsFragments('Heading', false, 50, 10);
+      await resolver.cmsFragments(
+        'Heading',
+        false,
+        50,
+        10,
+        '5eed0000-0000-4000-8000-000000000205',
+      );
 
       expect(service.findPage).toHaveBeenCalledWith({
+        childCandidatesOf: '5eed0000-0000-4000-8000-000000000205',
         isSystem: false,
         skip: 50,
         take: 10,
