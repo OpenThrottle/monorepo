@@ -236,6 +236,78 @@ describe('SettleRunLedgerService', () => {
     );
   });
 
+  describe('when the repository is not on a supported forge', () => {
+    it('records nothing and names the host, rather than writing GitHub rows that can never verify', async () => {
+      vi.mocked(repositoriesService.findById).mockResolvedValue(
+        createMock<
+          NonNullable<Awaited<ReturnType<RepositoriesService['findById']>>>
+        >({
+          name: 'acme/app',
+          normalizedRemoteUrl: 'https://bitbucket.org/acme/app',
+        }),
+      );
+
+      await service.recordSettledRunArtifacts({
+        headSha: 'deadbeef',
+        planRun: planRun(),
+        prNumber: 537,
+      });
+
+      expect(transaction).not.toHaveBeenCalled();
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('bitbucket.org'),
+        expect.anything(),
+      );
+    });
+
+    it('still treats a repository with no remote at all as GitHub', async () => {
+      vi.mocked(repositoriesService.findById).mockResolvedValue(
+        createMock<
+          NonNullable<Awaited<ReturnType<RepositoriesService['findById']>>>
+        >({
+          name: 'OpenThrottle/monorepo',
+          normalizedRemoteUrl: null,
+        }),
+      );
+
+      await service.recordSettledRunArtifacts({
+        headSha: 'deadbeef',
+        planRun: planRun(),
+        prNumber: null,
+      });
+
+      expect(artifacts()).toEqual([
+        expect.objectContaining({
+          externalKey: 'github:OpenThrottle/monorepo@deadbeef',
+        }),
+      ]);
+    });
+
+    it('records a GitLab repository under its full nested path', async () => {
+      vi.mocked(repositoriesService.findById).mockResolvedValue(
+        createMock<
+          NonNullable<Awaited<ReturnType<RepositoriesService['findById']>>>
+        >({
+          name: 'sub/project',
+          normalizedRemoteUrl: 'https://gitlab.com/group/sub/project',
+        }),
+      );
+
+      await service.recordSettledRunArtifacts({
+        headSha: null,
+        planRun: planRun(),
+        prNumber: 9,
+      });
+
+      expect(artifacts()).toEqual([
+        expect.objectContaining({
+          externalKey: 'gitlab:group/sub/project#9',
+          payload: { forge: 'gitlab', number: 9, repo: 'group/sub/project' },
+        }),
+      ]);
+    });
+  });
+
   it('skips quietly when the run has nothing to resolve a repo from', async () => {
     await service.recordSettledRunArtifacts({
       headSha: 'deadbeef',
@@ -294,6 +366,7 @@ describe('SettleRunLedgerService', () => {
           NonNullable<Awaited<ReturnType<RepositoriesService['findById']>>>
         >({
           name: 'OpenThrottle/monorepo',
+          normalizedRemoteUrl: 'https://github.com/OpenThrottle/monorepo',
         }),
       );
 
