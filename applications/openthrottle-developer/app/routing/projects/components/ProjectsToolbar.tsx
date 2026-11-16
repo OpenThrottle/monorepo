@@ -1,5 +1,8 @@
 import { Button, cn } from '@openthrottle/react-router-shadcn';
-import { GlobalToolbarSearch } from '@openthrottle/react-router-ui-global';
+import {
+  GlobalStatsToggleButton,
+  GlobalToolbarSearch,
+} from '@openthrottle/react-router-ui-global';
 import { FolderPlusIcon } from 'lucide-react';
 import * as React from 'react';
 import { Link, useSearchParams } from 'react-router';
@@ -96,6 +99,8 @@ export const ProjectsToolbar = (
         />
 
         <div className="min-w-0 flex-1" />
+
+        <GlobalStatsToggleButton />
 
         <Button asChild={true} variant="outline">
           <Link to="/settings/workspace">

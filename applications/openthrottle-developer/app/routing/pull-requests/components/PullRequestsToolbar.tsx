@@ -1,4 +1,5 @@
 import { Button, cn, Input, Label } from '@openthrottle/react-router-shadcn';
+import { GlobalStatsToggleButton } from '@openthrottle/react-router-ui-global';
 import { Building2Icon, GitGraphIcon } from 'lucide-react';
 import * as React from 'react';
 import { Form, Link } from 'react-router';
@@ -73,6 +74,7 @@ export const PullRequestsToolbar = (
         </div>
 
         <div className="flex flex-1 justify-end gap-2">
+          <GlobalStatsToggleButton />
           <Button asChild={true} size="sm" variant="outline">
             <Link to="/pull-requests">Reset</Link>
           </Button>

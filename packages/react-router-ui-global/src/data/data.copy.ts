@@ -85,3 +85,13 @@ export const GLOBAL_SIDEBAR_FOOTER_COPY = {
   versionLinkLabel: `Release notes for version`,
   versionPrefix: `v`,
 } as const;
+
+/**
+ * @public
+ * @description Labels for {@link GlobalStatsToggleButton}: the button's
+ * accessible name and tooltip, which flip with the stats panel's open state.
+ */
+export const GLOBAL_STATS_TOGGLE_COPY = {
+  hide: `Hide stats`,
+  show: `Show stats`,
+} as const;

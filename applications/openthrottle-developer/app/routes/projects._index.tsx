@@ -5,7 +5,10 @@ import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-u
 import {
   GlobalHeading,
   GlobalScreen,
+  GlobalStatsPanel,
   readSearchParam,
+  ROUTE_STATS_URL,
+  shouldRevalidateIgnoringParams,
 } from '@openthrottle/react-router-ui-global';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import {
@@ -164,11 +167,13 @@ export default function Component(
         </p>
       </div>
 
-      <ProjectsStats
-        plansLinkedCount={plansLinkedCount}
-        tasksLinkedCount={tasksLinkedCount}
-        totalProjects={totalCount}
-      />
+      <GlobalStatsPanel>
+        <ProjectsStats
+          plansLinkedCount={plansLinkedCount}
+          tasksLinkedCount={tasksLinkedCount}
+          totalProjects={totalCount}
+        />
+      </GlobalStatsPanel>
 
       <div className="flex flex-col gap-4">
         <ProjectsToolbar
@@ -199,6 +204,10 @@ export default function Component(
     </GlobalScreen>
   );
 }
+
+export const shouldRevalidate = shouldRevalidateIgnoringParams([
+  ROUTE_STATS_URL.param,
+]);
 
 export const action = async (_args: Route.ActionArgs) => {
   return {};

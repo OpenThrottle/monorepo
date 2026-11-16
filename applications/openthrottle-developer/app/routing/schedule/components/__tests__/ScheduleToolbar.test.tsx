@@ -20,10 +20,13 @@ function ScheduleToolbarWithQueryString(props: ScheduleToolbarProps) {
   );
 }
 
-function renderToolbar(initialEntry = '/'): RenderResult {
+function renderToolbar(
+  initialEntry = '/',
+  showStatsToggle = false,
+): RenderResult {
   // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
   const Component = () => {
-    return <ScheduleToolbarWithQueryString />;
+    return <ScheduleToolbarWithQueryString showStatsToggle={showStatsToggle} />;
   };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
   return render(<RoutesStub initialEntries={[initialEntry]} />);
@@ -101,6 +104,25 @@ describe('ScheduleToolbar Component', () => {
         component.getByTestId('current-search').textContent ?? '',
       );
       expect(qs.has('search')).toBe(false);
+    });
+  });
+
+  describe('when showStatsToggle is false', () => {
+    test('renders no stats toggle', () => {
+      const component = renderToolbar();
+
+      expect(component.queryByTestId('GlobalStatsToggleButton')).toBeNull();
+    });
+  });
+
+  describe('when showStatsToggle is true', () => {
+    test('renders the stats toggle', () => {
+      const component = renderToolbar('/', true);
+
+      expect(component.getByTestId('GlobalStatsToggleButton')).toHaveAttribute(
+        'aria-expanded',
+        'false',
+      );
     });
   });
 });

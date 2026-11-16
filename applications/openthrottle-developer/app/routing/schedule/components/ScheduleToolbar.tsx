@@ -1,5 +1,8 @@
 import { Button, cn } from '@openthrottle/react-router-shadcn';
-import { GlobalToolbarSearch } from '@openthrottle/react-router-ui-global';
+import {
+  GlobalStatsToggleButton,
+  GlobalToolbarSearch,
+} from '@openthrottle/react-router-ui-global';
 import { PlusIcon } from 'lucide-react';
 import * as React from 'react';
 import { Link } from 'react-router';
@@ -8,6 +11,8 @@ import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
 
 export interface ScheduleToolbarProps {
   className?: string;
+  /** Render the stats toggle — only where the route also renders its stats panel. */
+  readonly showStatsToggle: boolean;
 }
 
 /**
@@ -18,7 +23,7 @@ export interface ScheduleToolbarProps {
 export const ScheduleToolbar = (
   props: ScheduleToolbarProps,
 ): React.ReactElement => {
-  const { className } = props;
+  const { className, showStatsToggle } = props;
 
   // Hooks
 
@@ -40,6 +45,7 @@ export const ScheduleToolbar = (
           placeholder={SCHEDULE_COPY.searchPlaceholder}
         />
         <div className="min-w-0 flex-1" />
+        {showStatsToggle && <GlobalStatsToggleButton />}
         <Button asChild={true} className="shrink-0" variant="outline">
           <Link to="/schedule/create" viewTransition={true}>
             <PlusIcon className="h-4 w-4" /> {SCHEDULE_COPY.newScheduleAction}

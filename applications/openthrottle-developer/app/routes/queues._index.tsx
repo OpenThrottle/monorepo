@@ -6,7 +6,11 @@ import { Button } from '@openthrottle/react-router-shadcn';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalScreen,
+  GlobalStatsPanel,
+  GlobalStatsToggleButton,
   readSearchParam,
+  ROUTE_STATS_URL,
+  shouldRevalidateIgnoringParams,
 } from '@openthrottle/react-router-ui-global';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
@@ -84,28 +88,41 @@ export default function Component(
   return (
     <GlobalScreen>
       <QueuesIntroduction />
-      <QueueStatRow
-        columns={4}
-        stats={[
-          { color: 'bg-yellow-300', title: 'Backlog', value: summary.backlog },
-          { color: 'bg-blue-300', title: 'In flight', value: summary.inFlight },
-          { color: 'bg-red-300', title: 'Failed', value: summary.failed },
-          {
-            color: 'bg-green-300',
-            title: 'Completed',
-            value: summary.completed,
-          },
-        ]}
-      />
+      <GlobalStatsPanel>
+        <QueueStatRow
+          columns={4}
+          stats={[
+            {
+              color: 'bg-yellow-300',
+              title: 'Backlog',
+              value: summary.backlog,
+            },
+            {
+              color: 'bg-blue-300',
+              title: 'In flight',
+              value: summary.inFlight,
+            },
+            { color: 'bg-red-300', title: 'Failed', value: summary.failed },
+            {
+              color: 'bg-green-300',
+              title: 'Completed',
+              value: summary.completed,
+            },
+          ]}
+        />
+      </GlobalStatsPanel>
 
       <div>
         <QueueOpsToolbar
           actions={
-            <Button asChild={true} className="shrink-0" variant="outline">
-              <Link to="/queues/create">
-                <PlusIcon className="h-4 w-4" /> Create queue
-              </Link>
-            </Button>
+            <>
+              <GlobalStatsToggleButton />
+              <Button asChild={true} className="shrink-0" variant="outline">
+                <Link to="/queues/create">
+                  <PlusIcon className="h-4 w-4" /> Create queue
+                </Link>
+              </Button>
+            </>
           }
           className="mb-4"
           searchAriaLabel="Search queues"
@@ -125,6 +142,10 @@ export default function Component(
     </GlobalScreen>
   );
 }
+
+export const shouldRevalidate = shouldRevalidateIgnoringParams([
+  ROUTE_STATS_URL.param,
+]);
 
 export const action = async (args: Route.ActionArgs) => {
   const formData = await args.request.formData();

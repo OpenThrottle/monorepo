@@ -8,6 +8,9 @@ import {
   GlobalFeatureOnboarding,
   GlobalFeatureOnboardingModal,
   GlobalScreen,
+  GlobalStatsPanel,
+  ROUTE_STATS_URL,
+  shouldRevalidateIgnoringParams,
 } from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import * as React from 'react';
@@ -99,11 +102,13 @@ export default function Component(
   );
   const rulesListing = (
     <>
-      <RulesStats
-        disabledCount={disabledCount}
-        enabledCount={enabledCount}
-        totalCount={totalCount}
-      />
+      <GlobalStatsPanel>
+        <RulesStats
+          disabledCount={disabledCount}
+          enabledCount={enabledCount}
+          totalCount={totalCount}
+        />
+      </GlobalStatsPanel>
 
       {ruleError != null ? errorAlert : null}
 
@@ -135,6 +140,10 @@ export default function Component(
     </>
   );
 }
+
+export const shouldRevalidate = shouldRevalidateIgnoringParams([
+  ROUTE_STATS_URL.param,
+]);
 
 export const action = async (args: Route.ActionArgs) => {
   const formData = await args.request.formData();

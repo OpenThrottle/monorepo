@@ -6,6 +6,7 @@ import {
   ToggleGroupItem,
 } from '@openthrottle/react-router-shadcn';
 import { useDebouncedSearchParam } from '@openthrottle/react-router-ui';
+import { GlobalStatsToggleButton } from '@openthrottle/react-router-ui-global';
 import { PlusIcon } from 'lucide-react';
 import * as React from 'react';
 import { Link, useSearchParams } from 'react-router';
@@ -142,6 +143,8 @@ export const RulesToolbar = (props: RulesToolbarProps): React.ReactElement => {
         )}
 
         <div className="min-w-0 flex-1" />
+
+        <GlobalStatsToggleButton />
 
         <Button
           asChild={true}
