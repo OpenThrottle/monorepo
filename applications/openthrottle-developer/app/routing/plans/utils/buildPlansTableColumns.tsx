@@ -38,7 +38,7 @@ const renderCustomRunConfigIndicator = (
       <TooltipTrigger asChild={true}>
         <Link
           aria-label="Custom workflow run configuration (differs from defaults)"
-          className="text-muted-foreground hover:text-foreground inline-flex shrink-0"
+          className="text-muted-foreground hover:text-foreground inline-flex shrink-0 py-2 pr-2 max-sm:p-0"
           prefetch="intent"
           to={configurationHref}
           viewTransition={true}
@@ -95,14 +95,17 @@ export const buildPlansTableColumns = (
         const taskCount = plan.taskCount ?? 0;
         const tasksCompletedCount = plan.tasksCompletedCount ?? 0;
 
-        // The whole title + task-count block is one link to the plan. The
-        // custom-run-config indicator is its own link, so it sits beside the
-        // block rather than inside it (an `<a>` may not contain another `<a>`).
+        // The whole title + task-count block is one link to the plan, and it
+        // grows (`flex-1`) and carries the cell padding so the entire details
+        // cell is its click target. The custom-run-config indicator is its own
+        // link, so it sits beside the block rather than inside it (an `<a>` may
+        // not contain another `<a>`); it keeps its intrinsic width and takes the
+        // cell's right/vertical padding, so spacing matches the old `p-2 gap-2`.
         return (
-          <div className="flex items-start gap-2 overflow-hidden p-2 max-sm:contents">
+          <div className="flex items-start overflow-hidden max-sm:contents">
             <Link
               aria-label={`View plan: ${title}`}
-              className="hover:text-primary min-w-0 max-sm:contents"
+              className="hover:text-primary min-w-0 flex-1 p-2 max-sm:contents"
               data-testid="plan-list-title-link"
               prefetch="intent"
               to={planHref}
