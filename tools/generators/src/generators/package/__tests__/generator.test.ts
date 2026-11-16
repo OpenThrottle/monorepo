@@ -112,6 +112,23 @@ describe('package generator', () => {
       expect(files.some((file) => file.endsWith('TODO.md'))).toBe(false);
     });
 
+    test('should point exports at source, matching its __build placeholder', async () => {
+      // A source-first tool (parked `__build`) whose exports name `dist/`
+      // fails `scripts/check-package-entrypoints.ts`.
+      await packageGenerator(tree, { name, organization: org, type });
+      const packageJson = readJson(tree, `tools/${name}/package.json`);
+
+      expect(packageJson.nx.targets).toHaveProperty('__build');
+      expect(packageJson.nx.targets).not.toHaveProperty('build');
+      expect(packageJson.main).toBe('./src/index.ts');
+      // nx-validate-tags requires a publish tag on every type:tool project.
+      expect(packageJson.nx.tags).toContain('publish:false');
+      expect(packageJson.exports).toEqual({
+        '.': { default: './src/index.ts', types: './src/index.ts' },
+      });
+      expect(packageJson.publishConfig).toBeUndefined();
+    });
+
     test('should return a callback to run install + reference sync after flush', async () => {
       // The callback is returned (not invoked here) so the test never runs a
       // real pnpm install, nor the `@nx/js:typescript-sync` generator that
