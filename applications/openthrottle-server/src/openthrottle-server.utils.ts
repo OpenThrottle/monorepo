@@ -49,6 +49,7 @@ import { EvalJudgeCalibrationsGraphqlModule } from './graphql/eval-judge-calibra
 import { EvalReportsGraphqlModule } from './graphql/eval-reports/eval-reports.module.ts';
 import { EvalRunsGraphqlModule } from './graphql/eval-runs/eval-runs.module.ts';
 import { GeneratorsGraphqlModule } from './graphql/generators/generators.module.ts';
+import { GitTextGraphqlModule } from './graphql/git-text/git-text.module.ts';
 import { HealthGraphqlModule } from './graphql/health/health.module.ts';
 import { IdRefsGraphqlModule } from './graphql/id-refs/id-refs.module.ts';
 import { McpConnectorsGraphqlModule } from './graphql/mcp-connectors/mcp-connectors.module.ts';
@@ -288,6 +289,7 @@ export const buildImports = (role: ProcessRole): AppModuleImports => {
       EvalReportsGraphqlModule,
       EvalRunsGraphqlModule,
       GeneratorsGraphqlModule,
+      GitTextGraphqlModule,
       GithubGraphqlModule,
       HealthGraphqlModule,
       IdRefsGraphqlModule,

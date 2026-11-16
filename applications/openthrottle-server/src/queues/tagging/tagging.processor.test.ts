@@ -5,8 +5,8 @@
  * ladder-disagreement logging (never forced), evaluation-event emission, and
  * the stub provider + strict response parsing.
  */
-
 import { createMock } from '@golevelup/ts-vitest';
+import type { ConfigService } from '@nestjs/config';
 import type { GitHubService } from '@openthrottle/nestjs-github';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
@@ -21,6 +21,9 @@ import type {
 import { asMock } from '@openthrottle/nestjs-testing';
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 
+import { GitHubForgeService } from '../../services/source-control/github-forge/github-forge.service.ts';
+import { GitLabForgeService } from '../../services/source-control/gitlab-forge/gitlab-forge.service.ts';
+import { SourceControlService } from '../../services/source-control/source-control.service.ts';
 import type { PlanRulesEvaluationService } from '../plan-rules/evaluation/evaluation.service.ts';
 import { StubTaggingModelProvider } from './stub-tagging-model.strategy.ts';
 import { TaggingProcessor } from './tagging.processor.ts';
@@ -100,7 +103,6 @@ describe('TaggingProcessor', () => {
     });
 
     processor = new TaggingProcessor(
-      createMock<GitHubService>({ getCommitDetail }),
       createMock<LoggerService>(),
       planRulesEvaluationService,
       createMock<PlansService>({
@@ -127,6 +129,10 @@ describe('TaggingProcessor', () => {
           asMock({ find: vi.fn(() => Promise.resolve([])) }),
         ),
       }),
+      new SourceControlService(
+        new GitHubForgeService(createMock<GitHubService>({ getCommitDetail })),
+        new GitLabForgeService(createMock<ConfigService>()),
+      ),
       provider,
       tagsService,
       createMock<TasksService>(),

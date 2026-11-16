@@ -1259,6 +1259,46 @@ export class PlanRunsService {
   }
 
   /**
+   * @description Settles an unsupervised run its pull request has outlived: merged → COMPLETED
+   * (the work shipped), closed unmerged → CANCELLED. Guarded on IN_PROGRESS and
+   * `NOT heartbeat_expected`, exactly like {@link forceSettleUnsupervisedRun}: a heartbeating run
+   * has a live owner that settles itself, and an already-settled row is never rewritten, so a
+   * re-run of the sweep is a no-op. Never touches plan or task status. Returns the updated run, or
+   * null when nothing matched.
+   */
+  async settleUnsupervisedRunForPullRequest(
+    planRunId: string,
+    outcome: 'closed' | 'merged',
+  ): Promise<PlanRun | null> {
+    const repo = this.getRepository();
+    const isMerged = outcome === 'merged';
+    const result = await repo
+      .createQueryBuilder()
+      .update(PlanRun)
+      .set({
+        hostname: null,
+        pid: null,
+        settledReason: isMerged
+          ? PLAN_RUN_SETTLED_REASON.PR_MERGED
+          : PLAN_RUN_SETTLED_REASON.PR_CLOSED,
+        status: isMerged
+          ? PLAN_RUN_STATUS.COMPLETED
+          : PLAN_RUN_STATUS.CANCELLED,
+        workerId: null,
+      })
+      .where('id = :planRunId', { planRunId })
+      .andWhere('status = :status', { status: PLAN_RUN_STATUS.IN_PROGRESS })
+      .andWhere('NOT heartbeat_expected')
+      .execute();
+
+    if ((result.affected ?? 0) === 0) {
+      return null;
+    }
+
+    return repo.findOne({ where: { id: planRunId } });
+  }
+
+  /**
    * @description Settles a stale run to the terminal STALE status and clears its
    * run-location columns. Guarded on status = IN_PROGRESS so a concurrent settle (a
    * graceful exit landing between the sweep's find and this update) never clobbers a

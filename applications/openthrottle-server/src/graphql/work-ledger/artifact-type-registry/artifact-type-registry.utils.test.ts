@@ -58,6 +58,28 @@ describe('artifact-type-registry', () => {
     expect(second.externalKey).toBe(first.externalKey);
   });
 
+  it('prefixes the key with the payload forge, GitHub when absent', () => {
+    const gitlab = resolveArtifactForWrite('pull_request', {
+      forge: 'gitlab',
+      number: 4,
+      repo: 'group/sub/project',
+    });
+    const github = resolveArtifactForWrite('pull_request', {
+      number: 4,
+      repo: 'acme/monorepo',
+    });
+
+    expect(gitlab.externalKey).toBe('gitlab:group/sub/project#4');
+    expect(github.externalKey).toBe('github:acme/monorepo#4');
+    expect(() =>
+      resolveArtifactForWrite('git_commit', {
+        forge: 'bitbucket',
+        repo: 'a/b',
+        sha: 'x',
+      }),
+    ).toThrow();
+  });
+
   it('discriminates event-type keys so repeated events append', () => {
     const payload = {
       entity: 'task',

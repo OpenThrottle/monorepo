@@ -1,4 +1,5 @@
 import { createMock } from '@golevelup/ts-vitest';
+import type { ConfigService } from '@nestjs/config';
 import type { GitHubService } from '@openthrottle/nestjs-github';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
@@ -14,6 +15,10 @@ import type {
 import type { Repository } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { SettleRunLedgerService } from '../../graphql/work-ledger/settle-run-ledger/settle-run-ledger.service.ts';
+import { GitHubForgeService } from '../../services/source-control/github-forge/github-forge.service.ts';
+import { GitLabForgeService } from '../../services/source-control/gitlab-forge/gitlab-forge.service.ts';
+import { SourceControlService } from '../../services/source-control/source-control.service.ts';
 import { WorkLedgerHarvestProcessor } from './work-ledger-harvest.processor.ts';
 import type { WorkLedgerHarvestJob } from './work-ledger-harvest.types.ts';
 
@@ -98,7 +103,6 @@ describe('WorkLedgerHarvestProcessor', () => {
     logger = createMock<LoggerService>();
 
     processor = new WorkLedgerHarvestProcessor(
-      githubService,
       logger,
       createMock<PlansService>({
         getRepository: vi.fn().mockReturnValue({
@@ -119,6 +123,13 @@ describe('WorkLedgerHarvestProcessor', () => {
       createMock<ServiceAccountsService>({
         findByName: vi.fn().mockResolvedValue({ id: 'service-account-1' }),
       }),
+      createMock<SettleRunLedgerService>({
+        linkPullRequestsForUnreportedRuns: vi.fn().mockResolvedValue(0),
+      }),
+      new SourceControlService(
+        new GitHubForgeService(githubService),
+        new GitLabForgeService(createMock<ConfigService>()),
+      ),
       createMock<UsersService>({
         findByGithubUsername: vi.fn().mockResolvedValue({ id: 'user-1' }),
       }),
@@ -226,13 +237,19 @@ describe('WorkLedgerHarvestProcessor', () => {
 
   it('harvests nothing when the service account is missing', async () => {
     processor = new WorkLedgerHarvestProcessor(
-      githubService,
       logger,
       createMock<PlansService>(),
       repositoriesService,
       createMock<ServiceAccountsService>({
         findByName: vi.fn().mockResolvedValue(null),
       }),
+      createMock<SettleRunLedgerService>({
+        linkPullRequestsForUnreportedRuns: vi.fn().mockResolvedValue(0),
+      }),
+      new SourceControlService(
+        new GitHubForgeService(githubService),
+        new GitLabForgeService(createMock<ConfigService>()),
+      ),
       createMock<UsersService>(),
       createMock<WorkLedgerService>({
         getArtifactRepository: vi.fn().mockReturnValue(artifactRepo),

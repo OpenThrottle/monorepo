@@ -676,7 +676,7 @@ type PlanRunObject {
   checkout: PlanRunCheckoutObject
 
   """
-  The run's linked pull request (via the work-ledger session bridge), with lifecycle state and GitHub URL. Null when no PR has been recorded for the run.
+  The run's linked pull request (via the work-ledger session bridge), with lifecycle state and its URL on the forge (GitHub, GitLab). Null when no PR has been recorded for the run.
   """
   pullRequest: PlanRunPullRequestObject
 }
@@ -2376,6 +2376,27 @@ type GeneratorDetailObject {
   description: String!
   name: String!
   schemaJson: String
+}
+
+"""
+Branch, commit and PR text drafted from a plan and its tasks: conventional commits, the repo PR template, Plan-Id / Task-Id footers, and never a tool or model credit. A draft to edit, not to send blind.
+"""
+type GitTextDraftObject {
+  """A git-safe branch name: ot/<slug>-<plan id prefix>."""
+  branchName: String!
+
+  """
+  The commit message for the requested task, footers included. Null when no taskId was given.
+  """
+  commitMessage: String
+
+  """
+  The PR body on the repo template's headings. Testing keeps its TODO: the steps are the author's to write.
+  """
+  pullRequestBody: String!
+
+  """A conventional-commit PR title for the plan."""
+  pullRequestTitle: String!
 }
 
 """
@@ -6130,6 +6151,11 @@ type Query {
   """Get a generator by name (includes schema JSON)"""
   generator(input: GetGeneratorInput!): GeneratorDetailObject
 
+  """
+  Draft a branch name, a task's commit message and the PR title and body for a plan, from its OT data. Conventional commits, the repo PR template, Plan-Id / Task-Id footers, no tool or model credit.
+  """
+  gitTextDraft(input: GitTextDraftInput!): GitTextDraftObject!
+
   """List pull requests for a repository (GitHub API)"""
   pulls(input: ListPullsInput!): [PullListItemObject!]!
 
@@ -6764,6 +6790,22 @@ input ListCustomPromptsInput {
 input GetGeneratorInput {
   """Generator name (e.g. from @tools/generators)"""
   name: String!
+}
+
+"""Which plan (and optionally which task) to draft git text for."""
+input GitTextDraftInput {
+  """The plan the branch, PR and commits belong to."""
+  planId: ID!
+
+  """
+  Conventional-commit scope: the Nx project the change touches. Defaults to 'monorepo'.
+  """
+  scope: String
+
+  """
+  A task of the plan to draft a commit message for. Omit for the branch and PR only.
+  """
+  taskId: ID
 }
 
 input ListPullsInput {

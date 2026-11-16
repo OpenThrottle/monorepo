@@ -31,6 +31,7 @@
     "mcp.tool/delete_task": 317,
     "mcp.tool/discover_agent_clis": 888,
     "mcp.tool/discover_local_models": 583,
+    "mcp.tool/draft_git_text": 1108,
     "mcp.tool/end_session": 369,
     "mcp.tool/get_activity_by_date": 655,
     "mcp.tool/get_blog_post": 970,
@@ -109,6 +110,7 @@
     "mcp.toolDescription/delete_task": 55,
     "mcp.toolDescription/discover_agent_clis": 672,
     "mcp.toolDescription/discover_local_models": 365,
+    "mcp.toolDescription/draft_git_text": 336,
     "mcp.toolDescription/end_session": 106,
     "mcp.toolDescription/get_activity_by_date": 294,
     "mcp.toolDescription/get_blog_post": 618,
@@ -176,7 +178,7 @@
     "skill/agents-ralph": 10550,
     "skill/github-cleanup": 7374,
     "skill/github-commit": 6017,
-    "skill/github-pull-request": 11659,
+    "skill/github-pull-request": 12080,
     "skill/github-squash": 6184,
     "skill/ot-folders": 14757,
     "skill/ot-generators": 5961,
@@ -208,14 +210,14 @@
     "mcpToolset/admin": 14222,
     "mcpToolset/agents": 3213,
     "mcpToolset/blog": 7444,
-    "mcpToolset/core": 34894,
-    "mcpToolsFull": 59773
+    "mcpToolset/core": 36002,
+    "mcpToolsFull": 60881
   },
   "totals": {
-    "alwaysInjected": 42748,
+    "alwaysInjected": 43856,
     "mcpInstructions": 2069,
-    "mcpTools": 34894,
+    "mcpTools": 36002,
     "prompts": 141004,
-    "skills": 153010
+    "skills": 153431
   }
 }

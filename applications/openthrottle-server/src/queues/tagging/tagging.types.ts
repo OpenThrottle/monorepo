@@ -3,6 +3,7 @@
  */
 import type { Job } from 'bullmq';
 
+import type { ForgeKind } from '../../services/source-control/source-control.types.ts';
 import type { TAGGING_ENTITY_TYPES } from './tagging.constants.ts';
 export type TaggingEntityType =
   (typeof TAGGING_ENTITY_TYPES)[keyof typeof TAGGING_ENTITY_TYPES];
@@ -13,8 +14,13 @@ export interface PredictTaggingJobData {
 }
 
 export interface RefineTaggingJobData {
+  /**
+   * The forge `repo` is on. Optional only because jobs enqueued before forges existed lack it;
+   * those are GitHub jobs, and the processor reads absence that way.
+   */
+  readonly forge?: ForgeKind;
   readonly planId: string;
-  /** owner/name, as stored on the git_commit work-ledger artifact payload (repo). */
+  /** The repo's forge fullName, as stored on the git_commit work-ledger artifact payload (repo). */
   readonly repo: string;
   readonly sha: string;
 }

@@ -186,6 +186,17 @@ export class McpDeveloperMcpSurface {
   }
 
   @Tool({
+    description: Th.draftGitTextToolDescription,
+    name: 'draft_git_text',
+    parameters: asMcpParameters(Th.draftGitTextToolParameters),
+  })
+  draftGitText(
+    args: Parameters<typeof Th.draftGitTextToolHandler>[0],
+  ): ReturnType<typeof Th.draftGitTextToolHandler> {
+    return Th.draftGitTextToolHandler(args);
+  }
+
+  @Tool({
     description: Th.getActivityByDateToolDescription,
     name: 'get_activity_by_date',
     parameters: asMcpParameters(Th.getActivityByDateToolParameters),

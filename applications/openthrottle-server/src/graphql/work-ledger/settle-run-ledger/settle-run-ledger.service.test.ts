@@ -1,8 +1,11 @@
 import { createMock } from '@golevelup/ts-vitest';
+import type { ConfigService } from '@nestjs/config';
+import type { GitHubService } from '@openthrottle/nestjs-github';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
   PlanRun,
   PlanRunConfigSnapshotV1,
+  PlanRunsService,
   RepositoriesService,
   RepositoryCheckoutsService,
   ServiceAccountsService,
@@ -10,6 +13,9 @@ import type {
 } from '@openthrottle/nestjs-repositories';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { GitHubForgeService } from '../../../services/source-control/github-forge/github-forge.service.ts';
+import { GitLabForgeService } from '../../../services/source-control/gitlab-forge/gitlab-forge.service.ts';
+import { SourceControlService } from '../../../services/source-control/source-control.service.ts';
 import type { RepositoryInspectionService } from '../../repository-inspection/repository-inspection.service.ts';
 import { SettleRunLedgerService } from './settle-run-ledger.service.ts';
 
@@ -54,6 +60,9 @@ describe('SettleRunLedgerService', () => {
   };
   const findOne = vi.fn();
 
+  let githubService: GitHubService;
+  let planRunsService: PlanRunsService;
+  let endedRuns: PlanRun[];
   let repositoriesService: RepositoriesService;
   let repositoryCheckoutsService: RepositoryCheckoutsService;
   let repositoryInspectionService: RepositoryInspectionService;
@@ -100,7 +109,21 @@ describe('SettleRunLedgerService', () => {
     workLedgerService = createMock<WorkLedgerService>({
       getArtifactRepository: vi
         .fn()
-        .mockReturnValue({ manager: { transaction } }),
+        .mockReturnValue({ findOne, manager: { transaction } }),
+    });
+    githubService = createMock<GitHubService>();
+    endedRuns = [];
+    const queryBuilder = {
+      andWhere: () => queryBuilder,
+      getMany: async () => endedRuns,
+      limit: () => queryBuilder,
+      orderBy: () => queryBuilder,
+      where: () => queryBuilder,
+    };
+    planRunsService = createMock<PlanRunsService>({
+      getRepository: vi
+        .fn()
+        .mockReturnValue({ createQueryBuilder: () => queryBuilder }),
     });
     repositoryInspectionService = createMock<RepositoryInspectionService>({
       scan: vi.fn().mockResolvedValue({
@@ -111,10 +134,15 @@ describe('SettleRunLedgerService', () => {
 
     service = new SettleRunLedgerService(
       logger,
+      planRunsService,
       repositoriesService,
       repositoryCheckoutsService,
       repositoryInspectionService,
       serviceAccountsService,
+      new SourceControlService(
+        new GitHubForgeService(githubService),
+        new GitLabForgeService(createMock<ConfigService>()),
+      ),
       workLedgerService,
     );
   });
@@ -330,5 +358,82 @@ describe('SettleRunLedgerService', () => {
     ).resolves.toBeUndefined();
 
     expect(logger.warn).toHaveBeenCalled();
+  });
+
+  describe('linkPullRequestsForUnreportedRuns', () => {
+    const pullDetail = {
+      additions: 0,
+      author: 'octocat',
+      changedFiles: 0,
+      deletions: 0,
+      mergeCommitSha: null,
+      mergedAt: null,
+      number: 612,
+      state: 'open',
+    };
+
+    beforeEach(() => {
+      vi.mocked(githubService.listPulls).mockResolvedValue([
+        createMock<Awaited<ReturnType<GitHubService['listPulls']>>[number]>({
+          number: 612,
+        }),
+      ]);
+      vi.mocked(githubService.getPullDetail).mockResolvedValue(pullDetail);
+    });
+
+    it('records the PR found on an ended run branch as an adapter artifact under the run', async () => {
+      endedRuns = [planRun({ branch: 'feat/x', status: 'FAILED' })];
+
+      await expect(service.linkPullRequestsForUnreportedRuns()).resolves.toBe(
+        1,
+      );
+
+      expect(githubService.listPulls).toHaveBeenCalledWith(
+        'OpenThrottle',
+        'monorepo',
+        { head: 'feat/x', state: 'all' },
+      );
+      expect(artifacts()).toEqual([
+        expect.objectContaining({
+          externalKey: 'github:OpenThrottle/monorepo#612',
+          payload: { number: 612, repo: 'OpenThrottle/monorepo' },
+          source: 'adapter',
+          type: 'pull_request',
+        }),
+      ]);
+      expect(saved.WorkSession).toEqual([
+        expect.objectContaining({ planRunId: PLAN_RUN_ID }),
+      ]);
+    });
+
+    it('links nothing when the forge has no request on the branch', async () => {
+      endedRuns = [planRun({ branch: 'feat/x', status: 'FAILED' })];
+      vi.mocked(githubService.listPulls).mockResolvedValue([]);
+
+      await expect(service.linkPullRequestsForUnreportedRuns()).resolves.toBe(
+        0,
+      );
+      expect(transaction).not.toHaveBeenCalled();
+    });
+
+    it('opens no session when the request is already on the ledger', async () => {
+      endedRuns = [planRun({ branch: 'feat/x', status: 'STALE' })];
+      findOne.mockResolvedValue({ id: 'artifact-1' });
+
+      await expect(service.linkPullRequestsForUnreportedRuns()).resolves.toBe(
+        0,
+      );
+      expect(transaction).not.toHaveBeenCalled();
+    });
+
+    it('never throws when the forge errors', async () => {
+      endedRuns = [planRun({ branch: 'feat/x', status: 'FAILED' })];
+      vi.mocked(githubService.listPulls).mockRejectedValue(new Error('502'));
+
+      await expect(service.linkPullRequestsForUnreportedRuns()).resolves.toBe(
+        0,
+      );
+      expect(logger.warn).toHaveBeenCalled();
+    });
   });
 });

@@ -1,0 +1,8 @@
+query gitTextDraft($input: GitTextDraftInput!) {
+  gitTextDraft(input: $input) {
+    branchName
+    commitMessage
+    pullRequestBody
+    pullRequestTitle
+  }
+}

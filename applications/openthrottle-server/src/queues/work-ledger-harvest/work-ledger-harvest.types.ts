@@ -15,6 +15,8 @@ export interface WorkLedgerHarvestSummary {
   examined: number;
   /** Commits adopted as new git_commit artifacts. */
   harvested: number;
+  /** Ended plan runs whose unreported PR was found by branch and linked. */
+  pullRequestsLinked: number;
   /** Commits read whose message carried no Plan-Id: trailer. */
   skipped: number;
   /** Trailer references that matched no plan. */

@@ -4,8 +4,8 @@ description: Analyze branch commits and diff, then create or update a Pull Reque
 compatibility: 'git, gh (authenticated), jq; the Traceability step also needs the github-squash skill'
 metadata:
   author: openthrottle
-  last-reviewed: '2026-11-14'
-  version: '1.1.0'
+  last-reviewed: '2026-11-15'
+  version: '1.2.0'
 ---
 
 Your job is to look at all commits on the current branch and summarize them into a great Pull Request. Start the Pull Request in `draft` mode.
@@ -42,7 +42,7 @@ as it has always been. Elsewhere the skill falls back to the defaults it ships w
    - Use `git diff <BASE_REF>..HEAD --stat` to see changed files
    - Review the actual diff with `git diff <BASE_REF>..HEAD` to understand the scope of changes
 4. **Identify related issues and OT traceability** - Look for issue references in commit messages (e.g., `#123`, `fixes #456`). For OT work (`PLAN_IDS` is not `none`), the `Plan-Id:` in the commits names the plan, but the `Task-Id:` set comes from OT, not from the commits (see [Traceability](#traceability))
-5. **Generate PR content** - Create a comprehensive PR description starting from `PR_TEMPLATE`
+5. **Generate PR content** - Create a comprehensive PR description starting from `PR_TEMPLATE`. For OT work, when the openthrottle-mcp `draft_git_text` tool is available, call it first with the `Plan-Id` (and `scope` = the main Nx project touched): it returns a conventional title and a body already on the repo template, built from the plan's OT data. Treat it as the starting draft, not the answer — refine both against the diff and fill its Testing `**TODO:**`. Without the tool, write it from scratch as below
 6. **Guard the title, body and commits before publishing** - Write the drafted title and body to files and run `ATTRIBUTION_GUARD` on them and on `--commits HEAD` (see [Attribution](#attribution)). Only call `gh pr create`/`gh pr edit` once it exits 0.
 
 ## Rules

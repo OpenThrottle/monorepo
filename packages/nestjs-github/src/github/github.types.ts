@@ -61,6 +61,8 @@ export interface IssueWithLabelsDto {
 /** Query params for listing PRs: state (open | closed | all), optional base branch, optional merged filter. */
 export interface ListPullsOptions {
   readonly base?: string;
+  /** Head branch, as `owner:branch` or a bare branch (same-repo PRs; GitHub needs the owner). */
+  readonly head?: string;
   readonly merged?: boolean;
   readonly state: 'all' | 'closed' | 'open';
 }

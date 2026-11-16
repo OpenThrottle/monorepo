@@ -10,6 +10,7 @@ import { Module } from '@nestjs/common';
 import { GlobalClsModule, LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 
+import { SourceControlModule } from '../../services/source-control/source-control.module.ts';
 import { RepositoryInspectionModule } from '../repository-inspection/repository-inspection.module.ts';
 import { SettleRunLedgerService } from './settle-run-ledger/settle-run-ledger.service.ts';
 import { StatusChangeSystemAccountService } from './status-change-system-account/status-change-system-account.service.ts';
@@ -27,6 +28,7 @@ import { WorkLedgerCaptureService } from './work-ledger-capture/work-ledger-capt
     LoggerModule,
     NestjsRepositoriesModule,
     RepositoryInspectionModule,
+    SourceControlModule,
   ],
   providers: [
     SettleRunLedgerService,
