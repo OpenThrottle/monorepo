@@ -102,6 +102,31 @@ before its squash becomes immutable history on `main`.
 
 The local layers exist to make the common case never reach CI, not to replace it.
 
+## Allowed co-authors
+
+One `Co-authored-by:` is not attribution: the one GitHub adds for the repo's own release App. The
+release workflow commits `release/next` as `openthrottle-releases[bot]`. When the merge queue
+squashes that PR, GitHub appends the trailer. The pattern refuses every `Co-authored-by:`, so the
+queue ejected the first release PR, #858 (OT plan `4b1395e6`).
+
+The exemption is deliberately narrow:
+
+- **Exact identities, in a file the repo owns.** [`.github/attribution-allow`](../../.github/attribution-allow)
+  lists whole trailers, `Co-authored-by: Name <email>`, and the guard reads it through
+  `--allow-file`. A line is exempt only when it matches an entry in full. The same name with another
+  email still fails, and so does any other `[bot]`. The guard rejects any entry that is not one named
+  co-author with an email, so the file cannot allow `🤖` or `Generated with`. The skill scripts name
+  no identity, so other repos get the flag and none of our exemptions.
+- **CI only, read from the base commit.** The `attribution-guard` job fetches the file at
+  `merge_group.base_sha` / `pull_request.base.sha` through the contents API, never from the
+  checkout. A PR that adds its own entry gets no allowance from it. An entry takes effect for PRs
+  queued after it lands. The local layers do not pass the flag, because only a server-composed
+  squash ever carries this trailer.
+
+Rejected: a `BLANK` or `PR_BODY` squash message (it changes every landed message, and GitHub still
+appends co-author trailers), committing release PRs as a person (the App token is what makes CI run
+on the release PR), and skipping the guard by PR author (that exempts every line, not one trailer).
+
 ## See also
 
 - [`openthrottle/ot-loop-ci-gate.md`](../openthrottle/ot-loop-ci-gate.md) — the CI signal `ot-loop`

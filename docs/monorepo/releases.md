@@ -92,6 +92,12 @@ release PR merges ──▶ release.yml ── publish: tags + GitHub releases �
    to each image, plus `x.y.z`, `x.y` and `x` to the server and developer images. These are
    registry-side retags, not rebuilds.
 
+The queue's squash of the release PR carries a `Co-authored-by: openthrottle-releases[bot]` trailer,
+because the App authored the commit. The CI attribution guard exempts exactly that identity, which
+is listed in [`.github/attribution-allow`](../../.github/attribution-allow). If the App is ever
+replaced, update that line in the same PR as the new secrets, or the queue ejects the next release
+PR. See [attribution-guard-layers.md § Allowed co-authors](./attribution-guard-layers.md#allowed-co-authors).
+
 To skip a release, leave the release PR open. It accumulates until you merge it. To cut one now,
 merge it.
 

@@ -34,6 +34,15 @@
 #                                                  <remote_ref> <remote_sha>" per line)
 #   check-attribution.sh --strip <f>               remove matching lines from a commit message in
 #                                                  place and say what went; always exits 0
+#   --allow-file <f>                               combines with any mode: exact co-author lines
+#                                                  that are NOT attribution (a repo's own release
+#                                                  App, say). One `Co-authored-by: Name <email>`
+#                                                  per line, `#` comments; any other entry exits 2.
+#                                                  A line is exempt only when it equals an entry
+#                                                  whole (case-insensitive, outer whitespace
+#                                                  ignored) — same name, other email still fails.
+#                                                  No identity is built in: the caller owns the
+#                                                  file, so this script stays repo-agnostic.
 #
 # Exits 0 when clean, 1 naming every offending line when not, 2 on bad usage.
 
@@ -69,6 +78,7 @@ message_files=""
 commits_rev=""
 push_refs=""
 strip_file=""
+allow_file=""
 
 while [ $# -gt 0 ]; do
   [ $# -ge 2 ] || usage
@@ -80,10 +90,50 @@ while [ $# -gt 0 ]; do
     --commits) commits_rev="$2" ;;
     --push-refs) push_refs="$2" ;;
     --strip) strip_file="$2" ;;
+    --allow-file) allow_file="$2" ;;
     *) usage ;;
   esac
   shift 2
 done
+
+# Every temp file lives in one place so a single trap cleans all of them, on every exit path.
+allow_list="$(mktemp)"
+masked="$(mktemp)"
+report="$(mktemp)"
+stdin_copy="$(mktemp)"
+trap 'rm -f "$allow_list" "$masked" "$report" "$stdin_copy"' EXIT
+
+# --- allow-file: exact identities that are not attribution ----------------------------------------
+# Normalized to one trimmed entry per line. The entry shape is checked strictly, because this file
+# is a hole in the guard: an entry that is not a single named co-author with an email (an emoji, a
+# bare "Co-authored-by:", a "Generated with" line) would open it far wider than one identity.
+if [ -n "$allow_file" ]; then
+  if [ ! -f "$allow_file" ]; then
+    echo "no such file: $allow_file" >&2
+    exit 2
+  fi
+  sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' "$allow_file" \
+    | grep -v -e '^#' -e '^$' > "$allow_list" || true
+  if bad="$(grep -invE '^co-authored-by:[[:space:]]+[^<>[:space:]][^<>]*[[:space:]]<[^<>[:space:]]+@[^<>[:space:]]+>$' "$allow_list")"; then
+    echo "invalid --allow-file entry (want exactly \`Co-authored-by: Name <email>\`):" >&2
+    echo "$bad" | sed 's/^/     entry /' >&2
+    exit 2
+  fi
+fi
+
+# mask <file>: write <file> to $masked with every allowed line blanked. Blanked, not dropped, so
+# the line numbers the report prints still point at the caller's file.
+mask() {
+  if [ ! -s "$allow_list" ]; then
+    cat "$1" > "$masked"
+    return
+  fi
+  awk '
+    { line = $0; sub(/^[[:space:]]+/, "", line); sub(/[[:space:]]+$/, "", line) }
+    NR == FNR { allow[tolower(line)] = 1; next }
+    { if (tolower(line) in allow) print ""; else print $0 }
+  ' "$allow_list" "$1" > "$masked"
+}
 
 # --- strip: the one mode that rewrites instead of failing --------------------------------------
 if [ -n "$strip_file" ]; then
@@ -91,14 +141,17 @@ if [ -n "$strip_file" ]; then
     usage
   fi
   [ -f "$strip_file" ] || exit 0
-  if stripped="$(grep -inE "$OT_ATTRIBUTION_PATTERN" "$strip_file")"; then
+  mask "$strip_file"
+  if stripped="$(grep -inE "$OT_ATTRIBUTION_PATTERN" "$masked")"; then
     echo "✂️  Removed agent attribution from the commit message:"
     echo "$stripped" | sed 's/^/     line /'
     echo "   Rule:  No agent attribution — commits carry only conventional footers"
     echo "          (BREAKING CHANGE:, Closes #, Plan-Id:, Task-Id:)."
     echo "   Guard: skills/github-pull-request/scripts/check-attribution.sh"
     echo "   The commit itself is fine — the line is gone. Nothing to redo."
-    grep -viE "$OT_ATTRIBUTION_PATTERN" "$strip_file" > "$strip_file.stripped" || true
+    # Delete by line number, so an allowed line that also matches the pattern survives.
+    echo "$stripped" | cut -d: -f1 \
+      | awk 'NR == FNR { drop[$1] = 1; next } !(FNR in drop)' - "$strip_file" > "$strip_file.stripped"
     mv "$strip_file.stripped" "$strip_file"
   fi
   exit 0
@@ -108,16 +161,14 @@ if [ -z "$title_file$body_file$message_files$commits_rev$push_refs" ]; then
   usage
 fi
 
-# A file, not a variable: findings are appended from inside loops, and one of them (the push-refs
-# read) runs in a subshell on some shells, where a variable set inside would be invisible here.
-report="$(mktemp)"
-stdin_copy="$(mktemp)"
-trap 'rm -f "$report" "$stdin_copy"' EXIT
+# $report is a file, not a variable: findings are appended from inside loops, and one of them (the
+# push-refs read) runs in a subshell on some shells, where a variable set inside would be invisible.
 kinds=""
 
 # check <label> <file> <pattern>: append every offending line to the report.
 check() {
-  if hits="$(grep -inE "$3" "$2")"; then
+  mask "$2"
+  if hits="$(grep -inE "$3" "$masked")"; then
     {
       echo "❌ $1"
       echo "$hits" | sed 's/^/     line /'

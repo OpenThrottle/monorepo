@@ -358,6 +358,121 @@ describe('check-attribution.sh', () => {
     });
   });
 
+  describe('--allow-file', () => {
+    // The exact trailer GitHub's merge queue appended to release PR #858's squash.
+    const RELEASE_BOT = `Co-authored-by: openthrottle-releases[bot] <356780848+openthrottle-releases[bot]@users.noreply.github.com>`;
+
+    const allowFile = (): string => {
+      return write(
+        'attribution-allow',
+        `# the release App\n\n${RELEASE_BOT}\n`,
+      );
+    };
+
+    it('passes a squash carrying exactly the allowed co-author', () => {
+      const message = write(
+        'squash.txt',
+        `chore(release): openthrottle 4.6.0 (#858)\n\n${RELEASE_BOT}\n`,
+      );
+
+      const result = run([
+        '--allow-file',
+        allowFile(),
+        '--message-file',
+        message,
+      ]);
+
+      expect(result.status).toBe(0);
+    });
+
+    it('still fails that squash when no allowance is passed', () => {
+      const message = write(
+        'squash.txt',
+        `chore(release): openthrottle 4.6.0 (#858)\n\n${RELEASE_BOT}\n`,
+      );
+
+      expect(run(['--message-file', message]).status).toBe(1);
+    });
+
+    it('fails the allowed name paired with a different email', () => {
+      const message = write(
+        'msg.txt',
+        'x\n\nCo-authored-by: openthrottle-releases[bot] <x@example.invalid>\n',
+      );
+
+      expect(
+        run(['--allow-file', allowFile(), '--message-file', message]).status,
+      ).toBe(1);
+    });
+
+    it('fails a different [bot] co-author', () => {
+      const message = write(
+        'msg.txt',
+        'x\n\nCo-authored-by: Copilot[bot] <175728472+Copilot@users.noreply.github.com>\n',
+      );
+
+      expect(
+        run(['--allow-file', allowFile(), '--message-file', message]).status,
+      ).toBe(1);
+    });
+
+    it('fails a non-allowed identity in any casing, beside an allowed one, naming its line', () => {
+      const message = write(
+        'msg.txt',
+        `x\n\n${RELEASE_BOT}\nCO-AUTHORED-BY: Claude <noreply@anthropic.com>\n`,
+      );
+
+      const result = run([
+        '--allow-file',
+        allowFile(),
+        '--message-file',
+        message,
+      ]);
+
+      expect(result.status).toBe(1);
+      expect(result.output).toContain('line 4:CO-AUTHORED-BY: Claude');
+      expect(result.output).not.toContain('openthrottle-releases');
+    });
+
+    it('keeps an allowed line under --strip and removes the rest', () => {
+      const message = write(
+        'COMMIT_EDITMSG',
+        `feat: x\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n${RELEASE_BOT}\n`,
+      );
+
+      expect(
+        run(['--allow-file', allowFile(), '--strip', message]).status,
+      ).toBe(0);
+      expect(readFileSync(message, 'utf8')).toBe(`feat: x\n\n${RELEASE_BOT}\n`);
+    });
+
+    it('rejects an entry that is not one named co-author with an email', () => {
+      const message = write('msg.txt', 'feat: x\n');
+      const entries = [
+        '🤖 Generated with Some Tool',
+        'Co-authored-by:',
+        'Co-authored-by: openthrottle-releases[bot]',
+      ];
+
+      for (const entry of entries) {
+        const allow = write('bad-allow', `${entry}\n`);
+
+        expect(
+          run(['--allow-file', allow, '--message-file', message]).status,
+        ).toBe(2);
+      }
+    });
+
+    it('exits 2 for an allow-file that does not exist', () => {
+      const message = write('msg.txt', 'feat: x\n');
+
+      expect(
+        run(['--allow-file', join(dir, 'missing'), '--message-file', message])
+          .status,
+      ).toBe(2);
+    });
+  });
+
   describe('usage', () => {
     it('exits 2 with usage when given no arguments', () => {
       const result = run([]);
