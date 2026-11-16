@@ -16,6 +16,7 @@ export const PRODUCT_POSITIONING = {
   },
   pillars: [
     {
+      emoji: '🧠',
       id: 'memory',
       long: `Intent belongs in a database, not a chat tab. OpenThrottle stores plans, tasks, notes and your repo docs in Postgres with hybrid semantic search, and exposes all of it over MCP, so every agent CLI and editor you use reads and writes the same source of truth with the same servers and permissions.`,
       medium: `Plans, tasks, notes and repo docs in one knowledge base with hybrid search, available in Claude Code, Cursor, Codex, OpenCode and Antigravity over MCP.`,
@@ -23,6 +24,7 @@ export const PRODUCT_POSITIONING = {
       short: `Plans, tasks and docs your agents can search.`,
     },
     {
+      emoji: '🔁',
       id: 'runners',
       long: `OpenThrottle ships foundational runners and loops, not a single fixed agent. Today's starting points work a plan one task at a time: select, work, validate, commit. Choose one, change its prompts, hooks and model routing, or build your own. Each run gets its own git worktree, ports and, when needed, database, and runs can start now or be scheduled.`,
       medium: `Start from strong runners and loops, then customize them. Runs get isolated worktrees and can be queued or scheduled; any agent CLI does the work.`,
@@ -30,6 +32,7 @@ export const PRODUCT_POSITIONING = {
       short: `Foundational runners and loops you adapt and improve.`,
     },
     {
+      emoji: '📜',
       id: 'history',
       long: `OpenThrottle treats work as a history you can query. Commits carry Plan-Id and Task-Id footers, runs record which agent and model did the work, usage is attributed to the task and the account that paid for it, and every run is captured as an open trajectory. When someone asks why a line of code exists, the answer is a plan, a task and a run, not a guess.`,
       medium: `Every commit carries its plan and task. Runs record the agent, model, tokens and outcome, so you can always ask what shipped and why the code exists.`,
@@ -37,6 +40,7 @@ export const PRODUCT_POSITIONING = {
       short: `Who did what, when, and why, for every change.`,
     },
     {
+      emoji: '🏠',
       id: 'local',
       long: `The whole stack runs on your own hardware with open-source software: Postgres, Redis, the server, the developer app and a desktop shell. Embeddings run locally in-process with no API key; Ollama and hosted providers are opt-in. Your plans, history and code stay yours, under an Apache-2.0 license.`,
       medium: `Apache-2.0 and local first: Postgres, Redis and in-process embeddings on your own machine. Cloud models and providers are optional, never required.`,

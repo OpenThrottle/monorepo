@@ -25,6 +25,8 @@ export interface ProductCopy {
 
 /** @public */
 export interface ProductPillar extends ProductCopy {
+  /** A single emoji (one grapheme) for decorative headings; surfaces may ignore it. */
+  readonly emoji: string;
   readonly id: ProductPillarId;
   readonly name: string;
 }
@@ -63,6 +65,11 @@ export interface UpcomingFeatureEvidence extends ProductFeatureEvidence {
 
 interface ProductFeatureBase {
   readonly body: string;
+  /**
+   * A single emoji (one grapheme) for decorative headings on text surfaces.
+   * Surfaces may ignore it; UI layers key their icons on `id` instead.
+   */
+  readonly emoji: string;
   readonly id: string;
   readonly name: string;
   /** At most 120 characters. */
@@ -104,3 +111,22 @@ export type ProductFeature =
   | PlannedProductFeature
   | PreviewProductFeature
   | ShippedProductFeature;
+
+/** @public */
+export type ProductProjectStatus = 'experimental' | 'planned' | 'stable';
+
+/**
+ * @description A workspace project shown in the org profile's status table.
+ * Nx tags carry no maturity signal (every app is `production:true`), so the
+ * status is declared here and `check-surfaces` verifies `path` exists.
+ * @public
+ */
+export interface ProductProject {
+  /** Display name, usually the Nx project name. */
+  readonly name: string;
+  /** Repo-relative directory of the project. */
+  readonly path: string;
+  readonly status: ProductProjectStatus;
+  /** One short sentence; Markdown links allowed. At most 100 characters. */
+  readonly summary: string;
+}

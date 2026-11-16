@@ -11,6 +11,7 @@ import {
 
 const base = {
   body: 'Body',
+  emoji: '🧪',
   name: 'Name',
   oneLiner: 'One liner',
   since: '2026-11-15',

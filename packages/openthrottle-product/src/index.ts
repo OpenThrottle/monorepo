@@ -1,5 +1,6 @@
 export * from './data/data.features';
 export * from './data/data.positioning';
+export * from './data/data.projects';
 export * from './data/data.surfaces';
 export * from './types/product';
 export * from './types/surfaces';

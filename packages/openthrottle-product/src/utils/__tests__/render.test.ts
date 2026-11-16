@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 
 import { PRODUCT_FEATURES } from '../../data/data.features';
 import { PRODUCT_POSITIONING } from '../../data/data.positioning';
+import { PRODUCT_PROJECTS } from '../../data/data.projects';
 import { SURFACE_MARKERS } from '../../data/data.surfaces';
+import type { ProductFeature } from '../../types/product';
 import type { SurfaceInput } from '../../types/surfaces';
 import {
   renderLinkedInBlock,
@@ -14,6 +16,7 @@ import {
 const input: SurfaceInput = {
   features: PRODUCT_FEATURES,
   positioning: PRODUCT_POSITIONING,
+  projects: PRODUCT_PROJECTS,
   repositoryUrl: 'https://github.com/OpenThrottle/monorepo',
   stats: {
     agentClis: ['Claude Code', 'Codex'],
@@ -37,10 +40,18 @@ describe('renderReadmeSection', () => {
     expect(section.endsWith(SURFACE_MARKERS.end)).toBe(true);
   });
 
-  it('heads a block for every pillar', () => {
+  it('heads a block for every pillar, with its emoji', () => {
     for (const pillar of PRODUCT_POSITIONING.pillars) {
-      expect(section).toContain(`### ${pillar.name}`);
+      expect(section).toContain(`### ${pillar.emoji} ${pillar.name}`);
     }
+  });
+
+  it('leads each landed entry with its emoji', () => {
+    const [first] = PRODUCT_FEATURES.filter((feature) => {
+      return feature.public && feature.status === 'shipped';
+    });
+
+    expect(section).toContain(`- ${first?.emoji} **[${first?.name}](`);
   });
 
   it('never renders a private entry', () => {
@@ -107,6 +118,50 @@ describe('renderOrgProfile', () => {
     );
   });
 
+  it('heads each feature card with its emoji', () => {
+    const profile = renderOrgProfile(input);
+    const [first] = PRODUCT_FEATURES.filter((feature) => {
+      return feature.public && feature.status === 'shipped';
+    });
+
+    expect(profile).toContain(`<h3>${first?.emoji} ${first?.name}</h3>`);
+  });
+
+  it('pads a short final row so every row has three cells', () => {
+    const feature: ProductFeature = {
+      body: 'Body',
+      emoji: '🧪',
+      evidence: { docs: [], planIds: [], prs: [1] },
+      id: 'only',
+      name: 'Only',
+      oneLiner: 'The only card',
+      pillar: 'memory',
+      public: true,
+      since: '2026-11-15',
+      status: 'shipped',
+    };
+    const profile = renderOrgProfile({ ...input, features: [feature] });
+    const cells = profile.match(/<td width="33%" valign="top">/g) ?? [];
+
+    expect(cells).toHaveLength(3);
+  });
+
+  it('renders the project status table', () => {
+    const profile = renderOrgProfile(input);
+
+    expect(profile).toContain('## 🚦 Project status');
+    expect(profile).toContain(
+      '| `openthrottle-server` | ✅ Stable | NestJS code-first GraphQL API: the backbone of the platform. |',
+    );
+    expect(profile).toContain('| `openthrottle-admin` | 🧭 Planned |');
+  });
+
+  it('omits the project status section when there are no projects', () => {
+    expect(renderOrgProfile({ ...input, projects: [] })).not.toContain(
+      'Project status',
+    );
+  });
+
   it('never renders a private entry', () => {
     const profile = renderOrgProfile(input);
 
@@ -125,6 +180,13 @@ describe('renderLinkedInBlock', () => {
 
   it('uses the short tagline as the headline', () => {
     expect(block).toContain(PRODUCT_POSITIONING.tagline.short);
+  });
+
+  it('leaves emoji off the pillar lines', () => {
+    for (const pillar of PRODUCT_POSITIONING.pillars) {
+      expect(block).toContain(`• ${pillar.name}: `);
+      expect(block).not.toContain(pillar.emoji);
+    }
   });
 
   it('writes stats as plain text', () => {

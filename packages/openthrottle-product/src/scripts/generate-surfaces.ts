@@ -23,6 +23,7 @@ import {
 
 import { PRODUCT_FEATURES } from '../data/data.features';
 import { PRODUCT_POSITIONING } from '../data/data.positioning';
+import { PRODUCT_PROJECTS } from '../data/data.projects';
 import { AGENT_CLI_NAMES } from '../data/data.surfaces';
 import type { SurfaceInput, SurfaceStats } from '../types/surfaces';
 import {
@@ -85,6 +86,7 @@ const main = async (): Promise<number> => {
   const input: SurfaceInput = {
     features: PRODUCT_FEATURES,
     positioning: PRODUCT_POSITIONING,
+    projects: PRODUCT_PROJECTS,
     repositoryUrl: OPENTHROTTLE_GITHUB_URL_MONOREPO,
     stats,
     syncedOn: new Date().toISOString().slice(0, 10),
