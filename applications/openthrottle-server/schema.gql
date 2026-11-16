@@ -1596,7 +1596,7 @@ type CodeSearchMatch {
 
 type CodeSemanticSearchResult {
   """
-  False when no embeddings provider is configured; the UI renders its gated state.
+  False when no embeddings provider is configured, or a hosted one is not opted in for code; the UI renders its gated state.
   """
   available: Boolean!
 
@@ -1611,7 +1611,9 @@ type CodeIndexStatusObject {
   """Registered repository id."""
   repositoryId: String!
 
-  """One of: unavailable, indexing, ready, notIndexed."""
+  """
+  One of: unavailable, hostedOptInRequired, indexing, ready, notIndexed. hostedOptInRequired means the embedder is hosted (openai/gemini) and CODE_EMBEDDINGS_ALLOW_HOSTED is not true, so code is not indexed.
+  """
   status: String!
 }
 
@@ -1620,7 +1622,7 @@ type IndexCodeRepositoryResult {
   repositoryId: String!
 
   """
-  Status after enqueue: indexing, or unavailable when no provider is configured.
+  Status after enqueue: indexing; unavailable when no provider is configured; hostedOptInRequired (nothing enqueued) when a hosted provider is not opted in for code.
   """
   status: String!
 }
@@ -6048,12 +6050,12 @@ type Query {
   captureHealth: [CaptureHealthRowObject!]!
 
   """
-  Natural-language code semantic search over a registered repository's indexed code. available=false when no embeddings provider is configured.
+  Natural-language code semantic search over a registered repository's indexed code. available=false when no embeddings provider is configured, or a hosted one is not opted in for code.
   """
   codeSemanticSearch(input: CodeSemanticSearchInput!): CodeSemanticSearchResult!
 
   """
-  Index status for a registered repository: unavailable, indexing, ready, or notIndexed.
+  Index status for a registered repository: unavailable, hostedOptInRequired, indexing, ready, or notIndexed.
   """
   codeIndexStatus(repositoryId: ID!): CodeIndexStatusObject!
 
@@ -7350,7 +7352,7 @@ type Mutation {
   upsertBlogTag(input: UpsertBlogTagInput!): BlogTagObject!
 
   """
-  Enqueue a full re-index of a registered repository's code. Returns indexing, or unavailable when no embeddings provider is configured.
+  Enqueue a full re-index of a registered repository's code. Returns indexing; unavailable when no embeddings provider is configured; hostedOptInRequired when a hosted provider is not opted in for code (CODE_EMBEDDINGS_ALLOW_HOSTED).
   """
   indexCodeRepository(repositoryId: ID!): IndexCodeRepositoryResult!
 

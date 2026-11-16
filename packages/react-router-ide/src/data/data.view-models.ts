@@ -126,12 +126,15 @@ export interface IdeSymbolRef {
  * Index status for the semantic tier (as-const object; no TS enum). Mirrors the server's
  * codeIndexStatus and drives which state the Semantic tab renders.
  * - `unavailable`: no embeddings provider configured (gated Empty state)
+ * - `hostedOptInRequired`: the server embeds through a hosted API (openai/gemini) and has not
+ *   opted code in with `CODE_EMBEDDINGS_ALLOW_HOSTED=true`, so code is never sent to it (gated)
  * - `notIndexed`: provider configured, nothing indexed yet (offer the Index action)
  * - `indexing`: a code-index job is running (in-progress affordance)
  * - `ready`: the repository is indexed and searchable
  * @public
  */
 export const IDE_SEMANTIC_STATUS = {
+  hostedOptInRequired: 'hostedOptInRequired',
   indexing: 'indexing',
   notIndexed: 'notIndexed',
   ready: 'ready',
@@ -144,11 +147,11 @@ export type IdeSemanticStatus =
 
 /**
  * Semantic-search result envelope. `status` selects the rendered state; `available` is
- * retained for back-compat and is false exactly when `status` is `unavailable`.
+ * retained for back-compat and is false exactly when `status` is `unavailable` or `hostedOptInRequired`.
  * @public
  */
 export interface IdeSemanticResult {
-  /** False when the semantic index/provider is unavailable (render the gated state). Equivalent to `status === 'unavailable'`. */
+  /** False when the semantic index/provider is unavailable (render the gated state). Equivalent to `status` being `unavailable` or `hostedOptInRequired`. */
   available: boolean;
   /** Number of indexed chunks for the repository (0 when not indexed). */
   indexedChunks: number;

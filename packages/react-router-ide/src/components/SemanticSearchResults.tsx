@@ -26,7 +26,7 @@ export interface SemanticSearchResultsProps {
 
 /**
  * Renders the semantic tier by `result.status`: a gated "index unavailable" `Empty`
- * (`unavailable`), a "not indexed yet" prompt (`notIndexed`), an indexing-in-progress
+ * (`unavailable`), a gated "hosted provider not opted in" `Empty` (`hostedOptInRequired`), a "not indexed yet" prompt (`notIndexed`), an indexing-in-progress
  * affordance (`indexing`), or — when `ready` — a loading `Skeleton`, an empty state,
  * or the ranked matches (similarity score, `path:startLine` location, snippet).
  * Presentational; data arrives via props.
@@ -60,6 +60,22 @@ export const SemanticSearchResults = (
             Natural-language code search needs an embeddings provider
             (OPENAI_API_KEY or Ollama) configured on the server. It will light
             up once a provider is available.
+          </EmptyDescription>
+        </EmptyHeader>
+      </Empty>
+    );
+  }
+
+  if (result.status === IDE_SEMANTIC_STATUS.hostedOptInRequired) {
+    return (
+      <Empty className={className} data-testid="SemanticSearchResults">
+        <EmptyHeader>
+          <EmptyTitle>Code stays off the hosted provider</EmptyTitle>
+          <EmptyDescription>
+            The server embeds through a hosted API, and indexing would send
+            every source file to it. Set CODE_EMBEDDINGS_ALLOW_HOSTED=true on
+            the server to allow that, or switch EMBEDDING_PROVIDER to local or
+            ollama.
           </EmptyDescription>
         </EmptyHeader>
       </Empty>

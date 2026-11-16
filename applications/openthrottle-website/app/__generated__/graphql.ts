@@ -1054,7 +1054,7 @@ export type CodeIndexStatusObject = {
   indexedChunks: Scalars['Int']['output'];
   /** Registered repository id. */
   repositoryId: Scalars['String']['output'];
-  /** One of: unavailable, indexing, ready, notIndexed. */
+  /** One of: unavailable, hostedOptInRequired, indexing, ready, notIndexed. hostedOptInRequired means the embedder is hosted (openai/gemini) and CODE_EMBEDDINGS_ALLOW_HOSTED is not true, so code is not indexed. */
   status: Scalars['String']['output'];
 };
 
@@ -1083,7 +1083,7 @@ export type CodeSemanticSearchInput = {
 
 export type CodeSemanticSearchResult = {
   __typename?: 'CodeSemanticSearchResult';
-  /** False when no embeddings provider is configured; the UI renders its gated state. */
+  /** False when no embeddings provider is configured, or a hosted one is not opted in for code; the UI renders its gated state. */
   available: Scalars['Boolean']['output'];
   /** Ranked code matches by similarity (empty when unavailable or no hits). */
   matches: Array<CodeSearchMatch>;
@@ -2356,7 +2356,7 @@ export type IndexCodeRepositoryResult = {
   __typename?: 'IndexCodeRepositoryResult';
   /** Registered repository id. */
   repositoryId: Scalars['String']['output'];
-  /** Status after enqueue: indexing, or unavailable when no provider is configured. */
+  /** Status after enqueue: indexing; unavailable when no provider is configured; hostedOptInRequired (nothing enqueued) when a hosted provider is not opted in for code. */
   status: Scalars['String']['output'];
 };
 
@@ -2901,7 +2901,7 @@ export type Mutation = {
   forgetTelemetryMachine: Scalars['Int']['output'];
   /** Permanently delete a custom prompt by ID */
   hardDeleteCustomPrompt: Scalars['Boolean']['output'];
-  /** Enqueue a full re-index of a registered repository's code. Returns indexing, or unavailable when no embeddings provider is configured. */
+  /** Enqueue a full re-index of a registered repository's code. Returns indexing; unavailable when no embeddings provider is configured; hostedOptInRequired when a hosted provider is not opted in for code (CODE_EMBEDDINGS_ALLOW_HOSTED). */
   indexCodeRepository: IndexCodeRepositoryResult;
   /** Install an allowlisted agent CLI on the server host by driver id. Gated by SETTINGS_WRITE and the default-off OT_AGENT_CLI_INSTALL_ENABLED flag; returns a runId to stream via agentSetupChunkAdded. */
   installAgentCli: StartAgentSetupResult;
@@ -4557,9 +4557,9 @@ export type Query = {
   cmsSchemaByTypename?: Maybe<CmsSchemaObject>;
   /** One page of live cms schemas, optionally filtered by status (ACTIVE | DISABLED | DRAFT) and typename. take is clamped to 1–100 (default 25). */
   cmsSchemas: CmsSchemaListResult;
-  /** Index status for a registered repository: unavailable, indexing, ready, or notIndexed. */
+  /** Index status for a registered repository: unavailable, hostedOptInRequired, indexing, ready, or notIndexed. */
   codeIndexStatus: CodeIndexStatusObject;
-  /** Natural-language code semantic search over a registered repository's indexed code. available=false when no embeddings provider is configured. */
+  /** Natural-language code semantic search over a registered repository's indexed code. available=false when no embeddings provider is configured, or a hosted one is not opted in for code. */
   codeSemanticSearch: CodeSemanticSearchResult;
   /** Commits per PR (PR size in commits) for merged PRs. Lists merged PRs across pages up to 1000 (10 pages) and paginates commits per PR; maxPrs caps the per-PR commit-count requests. Optional period bucket (week/month UTC). */
   commitsPerPr: Array<CommitsPerPrRowObject>;

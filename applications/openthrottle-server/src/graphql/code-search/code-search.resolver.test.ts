@@ -16,6 +16,7 @@ import { CodeSearchResolver } from './code-search.resolver.ts';
 const USER_ID = 'user-1';
 const REPO_ID = 'repo-1';
 const PATH = '/Users/dev/repo';
+const REFUSAL = 'Code indexing is off under EMBEDDING_PROVIDER=openai.';
 
 function repoStub(): WorkspaceLocalRepository {
   return createMock<WorkspaceLocalRepository>({ filesystemPath: PATH });
@@ -32,6 +33,7 @@ describe('CodeSearchResolver', () => {
     repositories = createMock<WorkspaceLocalRepositoriesService>();
     queue = createMock<Queue>();
     vi.mocked(codeSearch.isProviderConfigured).mockReturnValue(true);
+    vi.mocked(codeSearch.codeIndexingRefusal).mockReturnValue(null);
     vi.mocked(repositories.findByIdForUser).mockResolvedValue(repoStub());
     resolver = new CodeSearchResolver(codeSearch, repositories, queue);
   });
@@ -54,6 +56,13 @@ describe('CodeSearchResolver', () => {
 
     it('returns available=false (no search) when no provider is configured', async () => {
       vi.mocked(codeSearch.isProviderConfigured).mockReturnValue(false);
+      const result = await resolver.codeSemanticSearch(USER_ID, input);
+      expect(result).toEqual({ available: false, matches: [] });
+      expect(codeSearch.codeSemanticSearch).not.toHaveBeenCalled();
+    });
+
+    it('returns available=false (no search) when a hosted provider is not opted in', async () => {
+      vi.mocked(codeSearch.codeIndexingRefusal).mockReturnValue(REFUSAL);
       const result = await resolver.codeSemanticSearch(USER_ID, input);
       expect(result).toEqual({ available: false, matches: [] });
       expect(codeSearch.codeSemanticSearch).not.toHaveBeenCalled();
@@ -97,6 +106,17 @@ describe('CodeSearchResolver', () => {
       expect(result.status).toBe('unavailable');
     });
 
+    it('is hostedOptInRequired when a hosted provider is not opted in', async () => {
+      vi.mocked(codeSearch.codeIndexingRefusal).mockReturnValue(REFUSAL);
+      const result = await resolver.codeIndexStatus(USER_ID, REPO_ID);
+      expect(result).toEqual({
+        indexedChunks: 0,
+        repositoryId: REPO_ID,
+        status: 'hostedOptInRequired',
+      });
+      expect(codeSearch.indexedChunkCount).not.toHaveBeenCalled();
+    });
+
     it('is indexing when a job is pending', async () => {
       vi.mocked(codeSearch.indexedChunkCount).mockResolvedValue(0);
       vi.mocked(queue.getJob).mockResolvedValue(
@@ -132,6 +152,16 @@ describe('CodeSearchResolver', () => {
       vi.mocked(codeSearch.isProviderConfigured).mockReturnValue(false);
       const result = await resolver.indexCodeRepository(USER_ID, REPO_ID);
       expect(result.status).toBe('unavailable');
+      expect(queue.add).not.toHaveBeenCalled();
+    });
+
+    it('returns hostedOptInRequired without enqueuing when a hosted provider is not opted in', async () => {
+      vi.mocked(codeSearch.codeIndexingRefusal).mockReturnValue(REFUSAL);
+      const result = await resolver.indexCodeRepository(USER_ID, REPO_ID);
+      expect(result).toEqual({
+        repositoryId: REPO_ID,
+        status: 'hostedOptInRequired',
+      });
       expect(queue.add).not.toHaveBeenCalled();
     });
 

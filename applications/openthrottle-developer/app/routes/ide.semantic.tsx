@@ -52,7 +52,9 @@ export const loader = async (
   const indexedChunks = statusResult.codeIndexStatus.indexedChunks;
 
   let matches: SemanticMatch[] = [];
-  let available = status !== IDE_SEMANTIC_STATUS.unavailable;
+  let available =
+    status !== IDE_SEMANTIC_STATUS.unavailable &&
+    status !== IDE_SEMANTIC_STATUS.hostedOptInRequired;
 
   if (query.trim() !== '' && status === IDE_SEMANTIC_STATUS.ready) {
     const searchResult = await executeGraphqlWithAuth(

@@ -137,6 +137,24 @@ describe('routes/ide.semantic loader', () => {
     expect(result.available).toBe(true);
   });
 
+  test('reports unavailable without searching when a hosted provider is not opted in for code', async () => {
+    mockExecute.mockResolvedValueOnce(workspaceSettings).mockResolvedValueOnce({
+      codeIndexStatus: {
+        indexedChunks: 0,
+        repositoryId: 'r1',
+        status: 'hostedOptInRequired',
+      },
+    });
+
+    const result = await loader(
+      buildLoaderArgs('/ide/semantic?repositoryId=r1&q=foo'),
+    );
+
+    expect(mockExecute).toHaveBeenCalledTimes(2);
+    expect(result.status).toBe(IDE_SEMANTIC_STATUS.hostedOptInRequired);
+    expect(result.available).toBe(false);
+  });
+
   test('does not run the search call when the index is not ready', async () => {
     mockExecute.mockResolvedValueOnce(workspaceSettings).mockResolvedValueOnce({
       codeIndexStatus: {
