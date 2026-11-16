@@ -16,3 +16,4 @@ export * from './embedWithOpenAI.ts';
 export * from './local-embedding.ts';
 export * from './local-embedding-tuning.ts';
 export * from './openthrottle-client.ts';
+export * from './resolveCodeEmbeddingPolicy.ts';

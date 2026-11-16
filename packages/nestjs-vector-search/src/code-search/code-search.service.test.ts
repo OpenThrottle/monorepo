@@ -57,6 +57,19 @@ function defaultConfig(): EmbeddingConfig {
 
 const CONFIG = defaultConfig();
 
+function hostedConfig(): EmbeddingConfig {
+  const resolved = resolveEmbeddingConfig({
+    EMBEDDING_PROVIDER: 'openai',
+    OPENAI_API_KEY: 'test-key',
+  });
+
+  if (!resolved.ok) {
+    throw new Error(resolved.detail);
+  }
+
+  return resolved.config;
+}
+
 describe('CodeSearchService', () => {
   let embedder: CodeEmbedder;
   let store: CodeVectorStore;
@@ -84,6 +97,32 @@ describe('CodeSearchService', () => {
 
   afterEach(() => {
     vi.clearAllMocks();
+    vi.unstubAllEnvs();
+  });
+
+  describe('codeIndexingRefusal', () => {
+    it('is null for a self-hosted provider', () => {
+      expect(service.codeIndexingRefusal({})).toBeNull();
+    });
+
+    it('is null when the embedder has no config', () => {
+      vi.mocked(embedder.getConfig).mockReturnValue(undefined);
+      expect(service.codeIndexingRefusal({})).toBeNull();
+    });
+
+    it('names the opt-in for a hosted provider without it', () => {
+      vi.mocked(embedder.getConfig).mockReturnValue(hostedConfig());
+      expect(service.codeIndexingRefusal({})).toContain(
+        'CODE_EMBEDDINGS_ALLOW_HOSTED=true',
+      );
+    });
+
+    it('is null for a hosted provider with the opt-in', () => {
+      vi.mocked(embedder.getConfig).mockReturnValue(hostedConfig());
+      expect(
+        service.codeIndexingRefusal({ CODE_EMBEDDINGS_ALLOW_HOSTED: 'true' }),
+      ).toBeNull();
+    });
   });
 
   describe('isProviderConfigured', () => {
@@ -113,6 +152,18 @@ describe('CodeSearchService', () => {
   });
 
   describe('indexCodeWorkspace', () => {
+    it('refuses a hosted provider without the opt-in before reading or embedding anything', async () => {
+      vi.stubEnv('CODE_EMBEDDINGS_ALLOW_HOSTED', '');
+      vi.mocked(embedder.getConfig).mockReturnValue(hostedConfig());
+
+      await expect(service.indexCodeWorkspace(WORKSPACE)).rejects.toThrow(
+        'CODE_EMBEDDINGS_ALLOW_HOSTED=true',
+      );
+      expect(hashWorkspace).not.toHaveBeenCalled();
+      expect(indexWorkspace).not.toHaveBeenCalled();
+      expect(embedder.embed).not.toHaveBeenCalled();
+    });
+
     it('runs a FULL index (no diff) when there is no prior snapshot, then persists the snapshot', async () => {
       const result = { deletedPaths: 0, embedded: 17 };
       vi.mocked(snapshotStore.load).mockResolvedValue(null);

@@ -33,7 +33,7 @@ export class CodeSearchMatch {
 @ObjectType()
 export class CodeSemanticSearchResult {
   @Field(() => Boolean, {
-    description: `False when no embeddings provider is configured; the UI renders its gated state.`,
+    description: `False when no embeddings provider is configured, or a hosted one is not opted in for code; the UI renders its gated state.`,
   })
   available!: boolean;
 
@@ -54,7 +54,7 @@ export class CodeIndexStatusObject {
   repositoryId!: string;
 
   @Field(() => String, {
-    description: `One of: unavailable, indexing, ready, notIndexed.`,
+    description: `One of: unavailable, hostedOptInRequired, indexing, ready, notIndexed. hostedOptInRequired means the embedder is hosted (openai/gemini) and CODE_EMBEDDINGS_ALLOW_HOSTED is not true, so code is not indexed.`,
   })
   status!: string;
 }
@@ -65,7 +65,7 @@ export class IndexCodeRepositoryResult {
   repositoryId!: string;
 
   @Field(() => String, {
-    description: `Status after enqueue: indexing, or unavailable when no provider is configured.`,
+    description: `Status after enqueue: indexing; unavailable when no provider is configured; hostedOptInRequired (nothing enqueued) when a hosted provider is not opted in for code.`,
   })
   status!: string;
 }

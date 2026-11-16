@@ -8,6 +8,9 @@ describe('toSemanticStatus', () => {
     expect(toSemanticStatus('indexing')).toBe(IDE_SEMANTIC_STATUS.indexing);
     expect(toSemanticStatus('notIndexed')).toBe(IDE_SEMANTIC_STATUS.notIndexed);
     expect(toSemanticStatus('ready')).toBe(IDE_SEMANTIC_STATUS.ready);
+    expect(toSemanticStatus('hostedOptInRequired')).toBe(
+      IDE_SEMANTIC_STATUS.hostedOptInRequired,
+    );
   });
 
   test('falls back to unavailable for an unknown status', () => {

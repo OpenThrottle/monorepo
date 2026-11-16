@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { EmbeddingInputType } from '@openthrottle/node-client';
+import { resolveCodeEmbeddingPolicy } from '@openthrottle/node-client';
 import type {
   EmbeddingsProvider,
   IndexWorkspaceResult,
@@ -67,6 +68,12 @@ export class CodeSearchService {
     workspaceRoot: string,
   ): Promise<IndexWorkspaceResult> {
     this.logger.debug(`🧩 indexCodeWorkspace: ${workspaceRoot}`);
+    const refusal = this.codeIndexingRefusal();
+
+    if (refusal !== null) {
+      throw new Error(refusal);
+    }
+
     const provider = this.providerFor('document');
     const config = { root: workspaceRoot };
 
@@ -112,6 +119,24 @@ export class CodeSearchService {
       state !== 'unconfigured' &&
       state !== 'dimension_mismatch'
     );
+  }
+
+  /**
+   * Why code may not be embedded under the configured provider, or null when it may. A hosted
+   * provider (`openai`, `gemini`) is refused unless `CODE_EMBEDDINGS_ALLOW_HOSTED=true`, because
+   * indexing would send every source chunk to that API (OT plan 1c8b9a90). Null too when the
+   * embedder has no config — {@link isProviderConfigured} reports that case.
+   */
+  codeIndexingRefusal(env: NodeJS.ProcessEnv = process.env): string | null {
+    const config = this.embedder.getConfig();
+
+    if (config === undefined) {
+      return null;
+    }
+
+    const policy = resolveCodeEmbeddingPolicy(config.provider, env);
+
+    return policy.allowed ? null : policy.detail;
   }
 
   /**

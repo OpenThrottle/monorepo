@@ -36,6 +36,22 @@ describe('SemanticSearchResults Component', () => {
     ).toBeInTheDocument();
   });
 
+  test('renders the opt-in gate when a hosted provider is not opted in for code', () => {
+    component = render(
+      <SemanticSearchResults
+        result={buildResult({
+          available: false,
+          status: 'hostedOptInRequired',
+        })}
+      />,
+    );
+
+    expect(
+      component.getByText(/CODE_EMBEDDINGS_ALLOW_HOSTED=true/),
+    ).toBeInTheDocument();
+    expect(component.queryByText('Not indexed yet')).not.toBeInTheDocument();
+  });
+
   test('renders a not-indexed prompt when status is notIndexed', () => {
     component = render(
       <SemanticSearchResults result={buildResult({ status: 'notIndexed' })} />,

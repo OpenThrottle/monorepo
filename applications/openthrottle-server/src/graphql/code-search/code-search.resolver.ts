@@ -56,7 +56,7 @@ export class CodeSearchResolver {
   ) {}
 
   @Query(() => CodeSemanticSearchResult, {
-    description: `Natural-language code semantic search over a registered repository's indexed code. available=false when no embeddings provider is configured.`,
+    description: `Natural-language code semantic search over a registered repository's indexed code. available=false when no embeddings provider is configured, or a hosted one is not opted in for code.`,
   })
   @Permissions(PERMISSIONS.SETTINGS_READ)
   async codeSemanticSearch(
@@ -69,7 +69,10 @@ export class CodeSearchResolver {
       userId,
     );
 
-    if (!this.codeSearch.isProviderConfigured()) {
+    if (
+      !this.codeSearch.isProviderConfigured() ||
+      this.codeSearch.codeIndexingRefusal() !== null
+    ) {
       return { available: false, matches: [] };
     }
 
@@ -87,7 +90,7 @@ export class CodeSearchResolver {
   }
 
   @Query(() => CodeIndexStatusObject, {
-    description: `Index status for a registered repository: unavailable, indexing, ready, or notIndexed.`,
+    description: `Index status for a registered repository: unavailable, hostedOptInRequired, indexing, ready, or notIndexed.`,
   })
   @Permissions(PERMISSIONS.SETTINGS_READ)
   async codeIndexStatus(
@@ -107,6 +110,14 @@ export class CodeSearchResolver {
       };
     }
 
+    if (this.codeSearch.codeIndexingRefusal() !== null) {
+      return {
+        indexedChunks: 0,
+        repositoryId,
+        status: CODE_INDEX_STATUS.hostedOptInRequired,
+      };
+    }
+
     const indexedChunks =
       await this.codeSearch.indexedChunkCount(filesystemPath);
     const isPending = await this.isIndexJobPending(repositoryId);
@@ -121,7 +132,7 @@ export class CodeSearchResolver {
   }
 
   @Mutation(() => IndexCodeRepositoryResult, {
-    description: `Enqueue a full re-index of a registered repository's code. Returns indexing, or unavailable when no embeddings provider is configured.`,
+    description: `Enqueue a full re-index of a registered repository's code. Returns indexing; unavailable when no embeddings provider is configured; hostedOptInRequired when a hosted provider is not opted in for code (CODE_EMBEDDINGS_ALLOW_HOSTED).`,
   })
   @Permissions(PERMISSIONS.SETTINGS_WRITE)
   async indexCodeRepository(
@@ -133,6 +144,10 @@ export class CodeSearchResolver {
 
     if (!this.codeSearch.isProviderConfigured()) {
       return { repositoryId, status: CODE_INDEX_STATUS.unavailable };
+    }
+
+    if (this.codeSearch.codeIndexingRefusal() !== null) {
+      return { repositoryId, status: CODE_INDEX_STATUS.hostedOptInRequired };
     }
 
     // jobId = repositoryId dedupes concurrent indexing for the same repo;
