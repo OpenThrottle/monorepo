@@ -36,6 +36,7 @@ Every commit carries its plan and task. Runs record the agent, model, tokens and
 - 📊 **[Attributed token usage](https://github.com/OpenThrottle/monorepo/pull/269)**: Token usage from every agent CLI, attributed to the model, the task and the billed account.
 - 🧪 **[Evals](https://github.com/OpenThrottle/monorepo/blob/main/docs/openthrottle/eval-system-adr.md)** _(preview)_: Evals built from real runs: datasets from failures, calibrated graders, paired comparisons.
 - 🖥️ **[Developer app](https://github.com/OpenThrottle/monorepo/blob/main/applications/openthrottle-developer/README.md)**: A dashboard for plans, queues, pull requests, schedules and usage, plus a timeline of the work.
+- 🔭 **[Skill-usage telemetry](https://github.com/OpenThrottle/monorepo/blob/main/docs/monorepo/skill-usage-telemetry-scope.md)**: See which agent skills get used, how they turn out and where coverage is thin.
 
 ### 🏠 Runs on your machine
 
@@ -48,7 +49,6 @@ Apache-2.0 and local first: Postgres, Redis and in-process embeddings on your ow
 
 - **Content CMS** _(in flight)_: Schema-driven editing of fragments and layouts, with nested previews and drag-to-reorder.
 - **Agent-agnostic loop job** _(in flight)_: A background loop job that drives any agent CLI with the same validation and settling.
-- **Skill-usage telemetry** _(in flight)_: See which agent skills get used, how they turn out and where coverage is thin.
 - **Cross-repo projects** _(planned)_: Ordered initiatives that span repositories, planned and tracked as one piece of work.
 - **Specialist roles and critics** _(planned)_: Specialist agent roles and parallel critics that review each task before it lands.
 - **Standalone install** _(planned)_: One download that bundles the whole stack with the desktop app.

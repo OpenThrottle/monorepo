@@ -364,7 +364,7 @@ export const PRODUCT_FEATURES = [
         '618c3670-0f0d-4135-bda4-afd7b8c06b57',
         'e7b74d81-3265-49c2-84fd-597a74d4bb5a',
       ],
-      prs: [],
+      prs: [595, 767, 779, 792, 823],
     },
     id: 'skill-usage-telemetry',
     name: 'Skill-usage telemetry',
@@ -372,12 +372,12 @@ export const PRODUCT_FEATURES = [
     pillar: 'history',
     public: true,
     since: '2026-11-15',
-    status: 'in-flight',
+    status: 'shipped',
   },
 
   // ── local ─────────────────────────────────────────────────────────────────
   {
-    body: `Postgres, Redis, the server and the developer app all run on your own machine. Embeddings run locally in-process with no API key; Ollama and hosted providers are opt-in.`,
+    body: `Postgres, Redis, the server and the developer app all run on your own machine. Embeddings run locally in-process with no API key; Ollama and hosted providers are opt-in, and your source code never goes to a hosted provider unless you allow that separately.`,
     emoji: '🏠',
     evidence: {
       docs: [
@@ -385,7 +385,7 @@ export const PRODUCT_FEATURES = [
         'docs/openthrottle/local-quickstart.md',
       ],
       planIds: [],
-      prs: [834, 839],
+      prs: [834, 839, 863],
     },
     id: 'local-first',
     name: 'Runs entirely local',
