@@ -31,6 +31,19 @@ export type Scalars = {
   DateTime: { input: any; output: any };
 };
 
+/** Worktree-backed runs the server is tracking. */
+export type ActiveProcessesMetrics = {
+  __typename?: 'ActiveProcessesMetrics';
+  /** Worktrees currently locked by a run. */
+  activeWorktreeCount: Scalars['Int']['output'];
+  /** Job ids holding a worktree lock. */
+  lockedWorktrees: Array<Scalars['String']['output']>;
+  /** Always process. */
+  scope: MetricScope;
+  /** Worktrees known to the tracker. */
+  totalWorktreeCount: Scalars['Int']['output'];
+};
+
 export type ActivityByDateInput = {
   /** Single date (YYYY-MM-DD). Provide exactly one of date or daysBack. */
   date?: InputMaybe<Scalars['String']['input']>;
@@ -1138,6 +1151,81 @@ export type ConnectMcpConnectorInput = {
   connectorKey: Scalars['ID']['input'];
   /** Optional label for the credential. */
   label?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** The server cgroup's CPU limit (cpu.max) and cumulative accounting (cpu.stat) since the cgroup was created. */
+export type ContainerCpuMetrics = {
+  __typename?: 'ContainerCpuMetrics';
+  /** vCPUs allowed by cpu.max (quota / period). Null when unlimited. */
+  limitVcpus?: Maybe<Scalars['Float']['output']>;
+  /** CFS enforcement periods elapsed (cpu.stat nr_periods). */
+  nrPeriods?: Maybe<Scalars['Float']['output']>;
+  /** Periods in which the cgroup was throttled (cpu.stat nr_throttled). */
+  nrThrottled?: Maybe<Scalars['Float']['output']>;
+  /** Total time throttled, in microseconds (cpu.stat throttled_usec). */
+  throttledUsec?: Maybe<Scalars['Float']['output']>;
+  /** Total CPU time used, in microseconds (cpu.stat usage_usec). */
+  usageUsec?: Maybe<Scalars['Float']['output']>;
+};
+
+/** The server cgroup's CPU usage and throttling between two reads, so it describes recent behaviour rather than totals. */
+export type ContainerCpuWindow = {
+  __typename?: 'ContainerCpuWindow';
+  /** Length of the window in milliseconds. */
+  elapsedMs: Scalars['Float']['output'];
+  /** Share of CFS periods in the window that were throttled, 0–1. */
+  throttledPeriodRatio?: Maybe<Scalars['Float']['output']>;
+  /** CPU used in the window as a share of the cpu.max limit; above ~0.9 the container is at its ceiling. Null when unlimited. */
+  usageRatioOfLimit?: Maybe<Scalars['Float']['output']>;
+  /** Average vCPUs used over the window. */
+  usedVcpus?: Maybe<Scalars['Float']['output']>;
+};
+
+/** Counters from the server cgroup's memory.events, cumulative since it was created. */
+export type ContainerMemoryEvents = {
+  __typename?: 'ContainerMemoryEvents';
+  /** Times usage went over memory.high and was throttled. */
+  high: Scalars['Float']['output'];
+  /** Times usage hit memory.max. */
+  max: Scalars['Float']['output'];
+  /** Times the OOM killer was invoked for this cgroup. */
+  oom: Scalars['Float']['output'];
+  /** Processes in this cgroup killed by the OOM killer. Non-zero means the memory limit is too small. */
+  oomKill: Scalars['Float']['output'];
+};
+
+/** The server cgroup's memory limit and usage. */
+export type ContainerMemoryMetrics = {
+  __typename?: 'ContainerMemoryMetrics';
+  /** Current usage in bytes (memory.current). */
+  currentBytes?: Maybe<Scalars['Float']['output']>;
+  /** OOM and limit counters (memory.events). Null when unreadable. */
+  events?: Maybe<ContainerMemoryEvents>;
+  /** memory.high throttle threshold in bytes. Null when unlimited. */
+  highBytes?: Maybe<Scalars['Float']['output']>;
+  /** memory.max hard limit in bytes. Null when unlimited. */
+  limitBytes?: Maybe<Scalars['Float']['output']>;
+};
+
+/** The server's own cgroup v2 limits, usage and pressure. When available is false only unavailableReason is set (macOS, cgroup v1, unreadable files). */
+export type ContainerMetrics = {
+  __typename?: 'ContainerMetrics';
+  /** Whether the server's cgroup v2 was found and read. */
+  available: Scalars['Boolean']['output'];
+  /** CPU limit and cumulative accounting. */
+  cpu?: Maybe<ContainerCpuMetrics>;
+  /** CPU usage and throttling since the previous read (or over the run, on plan-run metrics). */
+  cpuWindow?: Maybe<ContainerCpuWindow>;
+  /** Memory limit, usage and OOM counters. */
+  memory?: Maybe<ContainerMemoryMetrics>;
+  /** Absolute path of the cgroup directory that was read. */
+  path?: Maybe<Scalars['String']['output']>;
+  /** The cgroup's own CPU pressure (cpu.pressure), not the host's. */
+  psi?: Maybe<PsiCpuMetrics>;
+  /** Always container. */
+  scope: MetricScope;
+  /** Why the cgroup could not be read, when available is false. */
+  unavailableReason?: Maybe<Scalars['String']['output']>;
 };
 
 export type ConversationStreamChunkObject = {
@@ -2446,6 +2534,19 @@ export type GitTextDraftObject = {
   pullRequestTitle: Scalars['String']['output'];
 };
 
+/** Host memory from os.totalmem()/os.freemem(). Inside a container this is the host's (or VM's) memory, not the container's limit — see ContainerMetrics.memory for that. */
+export type HostMemoryMetrics = {
+  __typename?: 'HostMemoryMetrics';
+  /** Free host memory in bytes. */
+  freeBytes: Scalars['Float']['output'];
+  /** Always host. */
+  scope: MetricScope;
+  /** Total host memory in bytes. */
+  totalBytes: Scalars['Float']['output'];
+  /** (total - free) / total, 0–1. */
+  usedRatio: Scalars['Float']['output'];
+};
+
 /** Which entity an id ref resolved to: a plan or a task. */
 export const IdRefKind = {
   Plan: 'PLAN',
@@ -2771,8 +2872,10 @@ export type LoadAverageMetrics = {
   load5m: Scalars['Float']['output'];
   /** 15-minute load average. */
   load15m: Scalars['Float']['output'];
-  /** Per-core load (load1m / cpuCount). > 1 means oversubscribed. */
+  /** Per-core load (load1m / cpuCount). > 1 means oversubscribed. Host-wide: inside a container, cpuCount is the host's CPUs, not the container's cpu.max limit. */
   perCoreLoad1m: Scalars['Float']['output'];
+  /** Always host when set: os.loadavg() counts every process on the machine. Null on plan-run metrics recorded before scopes existed. */
+  scope?: Maybe<MetricScope>;
 };
 
 export type LoginInput = {
@@ -2832,6 +2935,14 @@ export type McpConnectorObject = {
   transport: Scalars['String']['output'];
 };
 
+/** What a metric group measures: host (the whole machine or VM — load average, os memory and /proc/pressure are host-wide under Docker), container (the server's own cgroup limits and usage) or process (the server process and the runs it tracks). */
+export const MetricScope = {
+  Container: 'container',
+  Host: 'host',
+  Process: 'process',
+} as const;
+
+export type MetricScope = (typeof MetricScope)[keyof typeof MetricScope];
 /** Metrics namespace: server snapshot and plan-run metrics. serverMetrics at root remains for backward compatibility. */
 export type MetricsObject = {
   __typename?: 'MetricsObject';
@@ -2839,6 +2950,8 @@ export type MetricsObject = {
   recentPlanRunsMetrics: Array<PlanRunMetricsEntry>;
   /** Current process CPU and memory snapshot. Same data as root serverMetrics query. */
   serverSnapshot: ServerMetricsObject;
+  /** Live host and container metrics, each group labelled with its scope. Same data as REST GET /metrics/system. */
+  systemSnapshot: SystemMetricsSnapshot;
 };
 
 /** Metrics namespace: server snapshot and plan-run metrics. serverMetrics at root remains for backward compatibility. */
@@ -4784,6 +4897,8 @@ export type PsiCpuMetrics = {
   full300s?: Maybe<Scalars['Float']['output']>;
   /** Total full stall time in microseconds (cumulative since boot). */
   fullTotalUs?: Maybe<Scalars['Float']['output']>;
+  /** Whose pressure this is: host (/proc/pressure/cpu) or container (the server cgroup's cpu.pressure). Null on plan-run metrics recorded before scopes existed. */
+  scope?: Maybe<MetricScope>;
   /** Percentage of time at least one task stalled (10s avg). */
   some10s?: Maybe<Scalars['Float']['output']>;
   /** Percentage of time at least one task stalled (60s avg). */
@@ -7630,9 +7745,13 @@ export type SystemCpuMetrics = {
   atEnd: SystemCpuSnapshot;
   /** Snapshot at job start. */
   atStart: SystemCpuSnapshot;
+  /** The server cgroup's CPU usage and throttling over the whole job (atStart to atEnd). Null outside a cgroup or on older runs. */
+  containerCpuWindow?: Maybe<ContainerCpuWindow>;
   /** Platform: linux, darwin, win32, etc. */
   platform: Scalars['String']['output'];
-  /** Interpretation of system CPU pressure: low, moderate, high, or unknown. */
+  /** What pressureLevel was judged on: container (usage and throttling against the cgroup's cpu.max limit) or host (load average and PSI). Null on runs recorded before scopes existed, which were always host. */
+  pressureBasis?: Maybe<MetricScope>;
+  /** Interpretation of CPU pressure: low, moderate, high, or unknown. Judged on the container's own CPU limit when the server has one, otherwise on host load and PSI — see pressureBasis. */
   pressureLevel: PressureLevel;
   /** Whether PSI metrics are available (Linux with cgroup v2). */
   psiAvailable: Scalars['Boolean']['output'];
@@ -7645,11 +7764,38 @@ export type SystemCpuMetrics = {
 /** System-level CPU metrics snapshot at a point in time. */
 export type SystemCpuSnapshot = {
   __typename?: 'SystemCpuSnapshot';
+  /** The server's own cgroup limits and usage at snapshot time. Null on runs recorded before container metrics existed. */
+  container?: Maybe<ContainerMetrics>;
   /** Load average at snapshot time. */
   loadAverage: LoadAverageMetrics;
   /** PSI metrics at snapshot time (Linux only). */
   psi: PsiCpuMetrics;
   /** Timestamp when snapshot was taken (Unix ms). */
+  timestamp: Scalars['Float']['output'];
+};
+
+/** Live system metrics, each group labelled with its scope: host-wide load, memory and PSI next to the server's own cgroup limits, usage and throttling. */
+export type SystemMetricsSnapshot = {
+  __typename?: 'SystemMetricsSnapshot';
+  /** Worktree-backed runs the server is tracking. */
+  activeProcesses: ActiveProcessesMetrics;
+  /** The server's own cgroup limits, usage and throttling, or why there is none. */
+  container: ContainerMetrics;
+  /** Host memory. */
+  hostMemory: HostMemoryMetrics;
+  /** Host load average. */
+  loadAverage: LoadAverageMetrics;
+  /** Platform: linux, darwin, win32, etc. */
+  platform: Scalars['String']['output'];
+  /** What pressureLevel was judged on: container when the server has a cgroup CPU limit, otherwise host. */
+  pressureBasis: MetricScope;
+  /** Interpretation of CPU pressure: low, moderate, high, or unknown. */
+  pressureLevel: PressureLevel;
+  /** Host PSI (/proc/pressure/cpu). Null fields off Linux. */
+  psi: PsiCpuMetrics;
+  /** Whether host PSI is available. */
+  psiAvailable: Scalars['Boolean']['output'];
+  /** When the snapshot was taken (Unix ms). */
   timestamp: Scalars['Float']['output'];
 };
 

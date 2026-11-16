@@ -7,6 +7,7 @@ import { Field, ObjectType } from '@nestjs/graphql';
 
 import { ServerMetricsObject } from '../health/server-metrics.object.ts';
 import { PlanRunMetricsEntryObject } from './plan-run-metrics-entry.object.ts';
+import { SystemMetricsSnapshotObject } from './system-metrics-snapshot.object.ts';
 
 @ObjectType({
   description: `Metrics namespace: server snapshot and plan-run metrics. serverMetrics at root remains for backward compatibility.`,
@@ -21,4 +22,9 @@ export class MetricsObject {
     description: `Current process CPU and memory snapshot. Same data as root serverMetrics query.`,
   })
   serverSnapshot!: ServerMetricsObject;
+
+  @Field(() => SystemMetricsSnapshotObject, {
+    description: `Live host and container metrics, each group labelled with its scope. Same data as REST GET /metrics/system.`,
+  })
+  systemSnapshot!: SystemMetricsSnapshotObject;
 }

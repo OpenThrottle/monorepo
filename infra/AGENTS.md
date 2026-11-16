@@ -13,6 +13,7 @@ Terraform IaC providing a **suite of pre-configured hosting options for the same
 - `gcp-estimate.csv` — the GCP Pricing Calculator spec the `gcp_*` modules are aligned to. Note it prices Cloud SQL for **MySQL** while the stack runs Postgres, and its total was never billed — the app composition is instantiated nowhere.
 - `estimates/` — the sponsorship cost model's managed-GCP tiers (one environment $98.52/mo, staging + production $431.55/mo), re-derived for Postgres; [`FUNDING.md`](../FUNDING.md) consumes them.
 - `hetzner-estimate.csv` + `hetzner-topology.md` — the Hetzner sibling estimate, the CX23 sizing decision and the scaling ladder.
+- `container-metrics.md` — how to read the server's `host` / `container` / `process` metrics under Docker (load average and PSI are host-wide; throttling and `oom_kill` are the container's own), and why no host `/proc` bind mount is needed.
 - `provider-contract.md` — **read this before touching either application module.** GCP and Hetzner are both supported hosting options; this is the shared variable contract that keeps them interchangeable, plus the known defects on the GCP path.
 
 ## Invariants & gotchas

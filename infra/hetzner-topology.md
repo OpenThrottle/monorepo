@@ -82,6 +82,8 @@ these services do not saturate simultaneously) but it means the first symptom of
 CPU contention between the two SSR/API Node processes, not an OOM kill. Expect the move to CX33 to be
 driven by CPU. Because server type is a single variable, that is a one-line change
 — see rung 1.
+[container-metrics.md](./container-metrics.md) says which of the server's metrics show it: load
+average is host-wide, and throttling against the container's own limit is the per-service reading.
 
 ## Scaling ladder
 

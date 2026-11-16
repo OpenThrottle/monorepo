@@ -7,6 +7,8 @@ import { Test } from '@nestjs/testing';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 
 import { ProcessMetricsService } from '../../metrics/process-metrics/process-metrics.service.ts';
+import { SystemMetricsService } from '../../metrics/system-metrics/system-metrics.service.ts';
+import type { SystemMetricsSnapshot } from '../../metrics/system-metrics/system-metrics.types.ts';
 import { QueuesService } from '../queues/queues-service/queues-service.service.ts';
 import { MetricsResolver } from './metrics.resolver.ts';
 
@@ -26,6 +28,84 @@ describe('MetricsResolver', () => {
     getCurrentSnapshot: vi.fn().mockReturnValue(mockSnapshot),
   });
 
+  const mockSystemSnapshot: SystemMetricsSnapshot = {
+    activeProcesses: {
+      activeWorktreeCount: 1,
+      lockedWorktrees: ['job-1'],
+      scope: 'process',
+      totalWorktreeCount: 2,
+    },
+    container: {
+      cpu: {
+        limitVcpus: 0.75,
+        nrPeriods: 10,
+        nrThrottled: 2,
+        throttledUsec: 300,
+        usageUsec: 4000,
+      },
+      cpuWindow: {
+        elapsedMs: 2000,
+        throttledPeriodRatio: 0.2,
+        usageRatioOfLimit: 0.5,
+        usedVcpus: 0.375,
+      },
+      kind: 'cgroup',
+      memory: {
+        currentBytes: 100,
+        events: { high: 0, max: 0, oom: 0, oomKill: 1 },
+        highBytes: null,
+        limitBytes: 671088640,
+      },
+      path: '/sys/fs/cgroup',
+      psi: {
+        full10s: 0,
+        full300s: 0,
+        full60s: 0,
+        fullTotalUs: 1,
+        scope: 'container',
+        some10s: 1,
+        some300s: 1,
+        some60s: 1,
+        someTotalUs: 2,
+      },
+      scope: 'container',
+    },
+    hostMemory: {
+      freeBytes: 4,
+      scope: 'host',
+      totalBytes: 16,
+      usedRatio: 0.75,
+    },
+    loadAverage: {
+      cpuCount: 2,
+      load15m: 1,
+      load1m: 1,
+      load5m: 1,
+      perCoreLoad1m: 0.5,
+      scope: 'host',
+    },
+    platform: 'linux',
+    pressureBasis: 'container',
+    pressureLevel: 'moderate',
+    psi: {
+      full10s: null,
+      full300s: null,
+      full60s: null,
+      fullTotalUs: null,
+      scope: 'host',
+      some10s: 3,
+      some300s: 3,
+      some60s: 3,
+      someTotalUs: 9,
+    },
+    psiAvailable: true,
+    timestamp: 1700000000000,
+  };
+
+  const mockSystemMetrics = createMock<SystemMetricsService>({
+    getSystemSnapshot: vi.fn().mockResolvedValue(mockSystemSnapshot),
+  });
+
   const mockQueuesService = createMock<QueuesService>({
     getCompletedJobsByPlanId: vi.fn().mockResolvedValue([]),
   });
@@ -36,6 +116,7 @@ describe('MetricsResolver', () => {
         MetricsResolver,
         { provide: ProcessMetricsService, useValue: mockProcessMetrics },
         { provide: QueuesService, useValue: mockQueuesService },
+        { provide: SystemMetricsService, useValue: mockSystemMetrics },
       ],
     }).compile();
 
@@ -143,6 +224,51 @@ describe('MetricsResolver', () => {
         'plan-uuid',
         10,
       );
+    });
+  });
+
+  describe('systemSnapshot', () => {
+    test('maps the live snapshot with every group scoped', async () => {
+      const result = await resolver.systemSnapshot();
+
+      expect(result.pressureBasis).toBe('container');
+      expect(result.hostMemory.scope).toBe('host');
+      expect(result.loadAverage.scope).toBe('host');
+      expect(result.activeProcesses.scope).toBe('process');
+      expect(result.container).toMatchObject({
+        available: true,
+        cpu: { limitVcpus: 0.75, nrThrottled: 2 },
+        cpuWindow: { throttledPeriodRatio: 0.2 },
+        memory: { events: { oomKill: 1 }, limitBytes: 671088640 },
+        psi: { scope: 'container' },
+        scope: 'container',
+        unavailableReason: null,
+      });
+    });
+
+    test('flattens an unavailable cgroup', async () => {
+      vi.mocked(mockSystemMetrics.getSystemSnapshot).mockResolvedValueOnce({
+        ...mockSystemSnapshot,
+        container: {
+          kind: 'unavailable',
+          reason: 'Not Linux (darwin)',
+          scope: 'container',
+        },
+        pressureBasis: 'host',
+      });
+
+      const result = await resolver.systemSnapshot();
+
+      expect(result.container).toEqual({
+        available: false,
+        cpu: null,
+        cpuWindow: null,
+        memory: null,
+        path: null,
+        psi: null,
+        scope: 'container',
+        unavailableReason: 'Not Linux (darwin)',
+      });
     });
   });
 });
