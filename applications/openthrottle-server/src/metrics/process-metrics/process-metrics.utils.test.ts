@@ -128,18 +128,25 @@ describe('formatEnhancedTaskRunMetricsSummary', () => {
       ...baseMetrics,
       systemCpuMetrics: {
         atEnd: {
+          container: {
+            kind: 'unavailable',
+            reason: 'Not Linux (darwin)',
+            scope: 'container',
+          },
           loadAverage: {
             cpuCount: 8,
             load15m: 1.5,
             load1m: 2.1,
             load5m: 1.8,
             perCoreLoad1m: 0.26,
+            scope: 'host',
           },
           psi: {
             full10s: null,
             full300s: null,
             full60s: null,
             fullTotalUs: null,
+            scope: 'host',
             some10s: null,
             some300s: null,
             some60s: null,
@@ -148,18 +155,25 @@ describe('formatEnhancedTaskRunMetricsSummary', () => {
           timestamp: FIXED_NOW_MS,
         },
         atStart: {
+          container: {
+            kind: 'unavailable',
+            reason: 'Not Linux (darwin)',
+            scope: 'container',
+          },
           loadAverage: {
             cpuCount: 8,
             load15m: 1.2,
             load1m: 1.5,
             load5m: 1.4,
             perCoreLoad1m: 0.19,
+            scope: 'host',
           },
           psi: {
             full10s: null,
             full300s: null,
             full60s: null,
             fullTotalUs: null,
+            scope: 'host',
             some10s: null,
             some300s: null,
             some60s: null,
@@ -167,7 +181,9 @@ describe('formatEnhancedTaskRunMetricsSummary', () => {
           },
           timestamp: FIXED_NOW_MS - 10000,
         },
+        containerCpuWindow: null,
         platform: 'darwin',
+        pressureBasis: 'host',
         pressureLevel: 'low',
         psiAvailable: false,
         psiFullDeltaUs: null,
@@ -187,6 +203,77 @@ describe('formatEnhancedTaskRunMetricsSummary', () => {
     const summary = formatEnhancedTaskRunMetricsSummary(metrics);
 
     expect(summary).toContain('load 0.3/core (low)');
+    expect(summary).not.toContain('throttled');
+  });
+
+  it('includes container throttling when the run has a CPU window', () => {
+    const metrics: EnhancedTaskRunMetrics = {
+      ...baseMetrics,
+      systemCpuMetrics: {
+        atEnd: {
+          container: { kind: 'unavailable', reason: 'n/a', scope: 'container' },
+          loadAverage: {
+            cpuCount: 2,
+            load15m: 1,
+            load1m: 1,
+            load5m: 1,
+            perCoreLoad1m: 0.5,
+            scope: 'host',
+          },
+          psi: {
+            full10s: null,
+            full300s: null,
+            full60s: null,
+            fullTotalUs: null,
+            scope: 'host',
+            some10s: null,
+            some300s: null,
+            some60s: null,
+            someTotalUs: null,
+          },
+          timestamp: FIXED_NOW_MS,
+        },
+        atStart: {
+          container: { kind: 'unavailable', reason: 'n/a', scope: 'container' },
+          loadAverage: {
+            cpuCount: 2,
+            load15m: 1,
+            load1m: 1,
+            load5m: 1,
+            perCoreLoad1m: 0.5,
+            scope: 'host',
+          },
+          psi: {
+            full10s: null,
+            full300s: null,
+            full60s: null,
+            fullTotalUs: null,
+            scope: 'host',
+            some10s: null,
+            some300s: null,
+            some60s: null,
+            someTotalUs: null,
+          },
+          timestamp: FIXED_NOW_MS - 10000,
+        },
+        containerCpuWindow: {
+          elapsedMs: 10000,
+          throttledPeriodRatio: 0.3,
+          usageRatioOfLimit: 0.95,
+          usedVcpus: 0.71,
+        },
+        platform: 'linux',
+        pressureBasis: 'container',
+        pressureLevel: 'high',
+        psiAvailable: false,
+        psiFullDeltaUs: null,
+        psiSomeDeltaUs: null,
+      },
+    };
+    const summary = formatEnhancedTaskRunMetricsSummary(metrics);
+
+    expect(summary).toMatch(/^Task run metrics: RSS /);
+    expect(summary).toContain('load 0.5/core (high), container throttled 30%');
   });
 
   it('produces a single line without newlines', () => {

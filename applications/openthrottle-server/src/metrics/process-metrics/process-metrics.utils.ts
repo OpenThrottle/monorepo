@@ -49,7 +49,12 @@ function formatSystemCpuCompact(
   metrics: NonNullable<EnhancedTaskRunMetrics['systemCpuMetrics']>,
 ): string {
   const { perCoreLoad1m } = metrics.atEnd.loadAverage;
-  return `load ${perCoreLoad1m.toFixed(1)}/core (${metrics.pressureLevel})`;
+  const throttled = metrics.containerCpuWindow?.throttledPeriodRatio ?? null;
+  const load = `load ${perCoreLoad1m.toFixed(1)}/core (${metrics.pressureLevel})`;
+  if (throttled === null) {
+    return load;
+  }
+  return `${load}, container throttled ${Math.round(throttled * 100)}%`;
 }
 
 /**
@@ -80,12 +85,20 @@ export function formatEnhancedTaskRunMetricsSummary(
     parts.push(formatWallClockCompact(wallClockMetrics));
   }
 
-  if (systemCpuMetrics) {
-    parts.push(formatSystemCpuCompact(systemCpuMetrics));
+  const systemPart = systemCpuMetrics
+    ? formatSystemCpuCompact(systemCpuMetrics)
+    : null;
+
+  // System CPU alone must not replace the process RSS/heap/CPU line: every plan run records it.
+  if (parts.length === 0) {
+    const processSummary = formatTaskRunMetricsSummary(metrics);
+    return systemPart === null
+      ? processSummary
+      : `${processSummary}, ${systemPart}`;
   }
 
-  if (parts.length === 0) {
-    return formatTaskRunMetricsSummary(metrics);
+  if (systemPart !== null) {
+    parts.push(systemPart);
   }
 
   return `Metrics: ${parts.join(', ')}`;

@@ -87,6 +87,7 @@ import {
   ListPlansByStatusInput,
   ListPullsInput,
   LoginInput,
+  MetricScope,
   MissingWorktreeCheckoutReason,
   OpenToMergedCycleTimeInput,
   PlanEmbeddingsByPlanInput,
@@ -233,6 +234,8 @@ export const CustomPromptTypeSchema = z.nativeEnum(CustomPromptType);
 export const EditorPresenceStateSchema = z.nativeEnum(EditorPresenceState);
 
 export const IdRefKindSchema = z.nativeEnum(IdRefKind);
+
+export const MetricScopeSchema = z.nativeEnum(MetricScope);
 
 export const MissingWorktreeCheckoutReasonSchema = z.nativeEnum(
   MissingWorktreeCheckoutReason,
