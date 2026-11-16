@@ -19,6 +19,10 @@ export interface GlobalStatsPanelProps extends React.PropsWithChildren {
  * its height open and closed (none under `prefers-reduced-motion`) and is
  * unmounted once closed, so nothing inside is tab-reachable. The root uses
  * `display: contents`, so a closed panel adds no gap to a flex or grid parent.
+ * The parent's `gap` itself never animates, so the content cancels the
+ * `GlobalScreen` gap below it with a negative margin and re-adds it as
+ * inner padding: the spacing then collapses with the height instead of
+ * snapping away on unmount (or appearing at once on open).
  */
 export const GlobalStatsPanel = (
   props: GlobalStatsPanelProps,
@@ -43,13 +47,14 @@ export const GlobalStatsPanel = (
       <CollapsibleContent
         className={cn(
           'overflow-hidden',
+          '-mb-4 md:-mb-8 lg:-mb-12',
           'motion-safe:data-[state=closed]:animate-collapsible-up motion-safe:data-[state=open]:animate-collapsible-down',
           className,
         )}
         data-testid="GlobalStatsPanel"
         id={contentId}
       >
-        {children}
+        <div className="pb-4 md:pb-8 lg:pb-12">{children}</div>
       </CollapsibleContent>
     </Collapsible>
   );
