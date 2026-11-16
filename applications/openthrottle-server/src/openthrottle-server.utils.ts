@@ -67,6 +67,7 @@ import { ModelDiscoveryGraphqlModule } from './graphql/model-discovery/model-dis
 import { NotesGraphqlModule } from './graphql/notes/notes.module.ts';
 import { NOTIFICATION_EVENT_TYPES } from './graphql/notifications/notification-event.object.ts';
 import { NotificationsGraphqlModule } from './graphql/notifications/notifications.module.ts';
+import { OAuthGraphqlModule } from './graphql/oauth/oauth.module.ts';
 import { PlanEmbeddingsGraphqlModule } from './graphql/plan-embeddings/plan-embeddings.module.ts';
 import { PlanMessagesGraphqlModule } from './graphql/plan-messages/plan-messages.module.ts';
 import { PlanOutputStreamGraphqlModule } from './graphql/plan-output-stream/plan-output-stream.module.ts';
@@ -106,6 +107,7 @@ import { isDevelopmentGraphqlEnabled } from './modules/development/development.u
 import { GeneratorsModule } from './modules/generators/generators.module.ts';
 import { HealthModule } from './modules/health/health.module.ts';
 import { McpDeveloperModule } from './modules/mcp-developer/mcp-developer.module.ts';
+import { OAuthRoutesModule } from './modules/oauth/oauth.module.ts';
 import { NotificationsModule } from './notifications/notifications.module.ts';
 import { AgenticTestQueueModule } from './queues/agentic-test/agentic-test.module.ts';
 import { BullMqRunOutputModule } from './queues/bullmq-run-output/bullmq-run-output.module.ts';
@@ -350,6 +352,8 @@ export const buildImports = (role: ProcessRole): AppModuleImports => {
       TokenUsageGraphqlModule,
       TranscriptionStreamGraphqlModule,
       UserPreferencesGraphqlModule,
+      OAuthGraphqlModule,
+      OAuthRoutesModule,
       UsersGraphqlModule,
       WorkLedgerGraphqlModule,
       WorkspaceSettingsGraphqlModule,

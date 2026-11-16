@@ -19,6 +19,10 @@ import { EvalRun } from '../modules/eval-runs/eval-run.entity.ts';
 import { EvalTrial } from '../modules/eval-trials/eval-trial.entity.ts';
 import { McpConnectorConnection } from '../modules/mcp-connector-connections/mcp-connector-connection.entity.ts';
 import { Note } from '../modules/notes/note.entity.ts';
+import { OAuthAuthorizationRequest } from '../modules/oauth/oauth-authorization-request.entity.ts';
+import { OAuthClient } from '../modules/oauth/oauth-client.entity.ts';
+import { OAuthGrant } from '../modules/oauth/oauth-grant.entity.ts';
+import { OAuthToken } from '../modules/oauth/oauth-token.entity.ts';
 import { Permission } from '../modules/permissions/permission.entity.ts';
 import { PlanEmbedding } from '../modules/plan-embeddings/plan-embedding.entity.ts';
 import { PlanMessage } from '../modules/plan-messages/plan-message.entity.ts';
@@ -90,6 +94,10 @@ export const OPENTHROTTLE_ENTITIES = [
   EvalTrial,
   McpConnectorConnection,
   Note,
+  OAuthAuthorizationRequest,
+  OAuthClient,
+  OAuthGrant,
+  OAuthToken,
   Permission,
   Plan,
   PlanEmbedding,

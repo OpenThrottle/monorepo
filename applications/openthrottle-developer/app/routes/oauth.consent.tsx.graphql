@@ -1,0 +1,18 @@
+query OAuthConsentRequest($id: String!) {
+  oauthAuthorizationRequest(id: $id) {
+    clientHost
+    clientName
+    expiresAt
+    id
+    redirectHost
+    registrationKind
+    requestedScopes
+    resource
+  }
+}
+
+mutation DecideOAuthAuthorization($input: DecideOAuthAuthorizationInput!) {
+  decideOAuthAuthorization(input: $input) {
+    redirectUrl
+  }
+}

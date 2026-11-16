@@ -56,6 +56,7 @@ import {
   CreateUserInput,
   CreateWorkspaceLocalRepositoryInput,
   CustomPromptType,
+  DecideOAuthAuthorizationInput,
   DeleteAgentConversationInput,
   DeletePlanInput,
   DeletePlanOutputInput,
@@ -917,6 +918,16 @@ export function CreateWorkspaceLocalRepositoryInputSchema(): z.ZodObject<
     gitDefaultBranch: z.string().nullish(),
     gitRemoteUrl: z.string().nullish(),
     projectId: z.string().nullish(),
+  });
+}
+
+export function DecideOAuthAuthorizationInputSchema(): z.ZodObject<
+  Properties<DecideOAuthAuthorizationInput>
+> {
+  return z.object({
+    approve: z.boolean(),
+    id: z.string().min(1),
+    scopes: z.array(z.string().min(1)),
   });
 }
 

@@ -19,6 +19,7 @@ import { EvalRunsModule } from './modules/eval-runs/eval-runs.module.ts';
 import { EvalTrialsModule } from './modules/eval-trials/eval-trials.module.ts';
 import { McpConnectorConnectionsModule } from './modules/mcp-connector-connections/mcp-connector-connections.module.ts';
 import { NotesModule } from './modules/notes/notes.module.ts';
+import { OAuthModule } from './modules/oauth/oauth.module.ts';
 import { PermissionsModule } from './modules/permissions/permissions.module.ts';
 import { PlanEmbeddingsModule } from './modules/plan-embeddings/plan-embeddings.module.ts';
 import { PlanMessagesModule } from './modules/plan-messages/plan-messages.module.ts';
@@ -90,6 +91,7 @@ import { WorktreeRemovalsModule } from './modules/worktree-removals/worktree-rem
     EvalTrialsModule,
     McpConnectorConnectionsModule,
     NotesModule,
+    OAuthModule,
     PermissionsModule,
     PlanEmbeddingsModule,
     PlanMessagesModule,
@@ -152,6 +154,7 @@ import { WorktreeRemovalsModule } from './modules/worktree-removals/worktree-rem
     EvalTrialsModule,
     McpConnectorConnectionsModule,
     NotesModule,
+    OAuthModule,
     PermissionsModule,
     PlanEmbeddingsModule,
     PlanMessagesModule,

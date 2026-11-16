@@ -1,21 +1,78 @@
 import {
   type CanActivate,
   type ExecutionContext,
+  ForbiddenException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import type { GqlContextType } from '@nestjs/graphql';
+import { GqlExecutionContext } from '@nestjs/graphql';
 import {
   type AuthenticatedRequest,
   getAuthPrincipalFromRequest,
   IS_PUBLIC_KEY,
+  type UserAuthPrincipal,
 } from '@openthrottle/nestjs-auth';
 import { getRequestFromExecutionContext } from '@openthrottle/nestjs-auth';
+import { scopesAllowWrite } from '@openthrottle/nestjs-repositories-server';
 import { isRecord } from '@openthrottle/nodejs-utils';
+import { GraphQLError } from 'graphql';
 
 import { GlobalClsAuthHook } from '../auth/global-cls-auth-hook/global-cls-auth-hook.service.ts';
+import { OAuthAccessAuthService } from '../auth/oauth-access-auth/oauth-access-auth.service.ts';
 import { ServiceAccountAuthService } from '../auth/service-account-auth/service-account-auth.service.ts';
 import { GqlJwtAuthGuard } from './gql-jwt-auth.guard.ts';
+
+const READ_ONLY_HTTP_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
+
+/**
+ * @description Whether the operation writes: a GraphQL mutation, or a non-safe HTTP method
+ * on a REST route. Queries and subscriptions read.
+ */
+const isWriteOperation = (context: ExecutionContext): boolean => {
+  if (context.getType<GqlContextType>() === 'graphql') {
+    const info: unknown = GqlExecutionContext.create(context).getInfo();
+    if (!isRecord(info) || !isRecord(info.operation)) {
+      return true;
+    }
+    return info.operation.operation === 'mutation';
+  }
+  const req: unknown = context.switchToHttp().getRequest();
+  const method =
+    isRecord(req) && typeof req.method === 'string' ? req.method : '';
+  return !READ_ONLY_HTTP_METHODS.has(method.toUpperCase());
+};
+
+/**
+ * @description Refuses a write by a read-only OAuth token (scopes only subtract from the
+ * user's permissions; design docs/openthrottle/mcp-oauth-design.md § Scopes and RBAC).
+ */
+const assertOAuthScopeAllows = (
+  context: ExecutionContext,
+  principal: UserAuthPrincipal,
+): void => {
+  if (
+    principal.oauth === undefined ||
+    scopesAllowWrite(principal.oauth.scopes)
+  ) {
+    return;
+  }
+  if (!isWriteOperation(context)) {
+    return;
+  }
+  const message = `This OAuth token is read-only: writes need the mcp:write scope.`;
+  if (context.getType<GqlContextType>() === 'graphql') {
+    throw new GraphQLError(message, {
+      extensions: {
+        code: 'FORBIDDEN',
+        reason: 'INSUFFICIENT_SCOPE',
+        scope: 'mcp:write',
+      },
+    });
+  }
+  throw new ForbiddenException(message);
+};
 
 const readAuthorizationHeader = (req: object): string | undefined => {
   const headers = 'headers' in req ? req.headers : undefined;
@@ -33,7 +90,9 @@ const readAuthorizationHeader = (req: object): string | undefined => {
 };
 
 /**
- * @description Global auth guard: service-account bearer (`ot_sa_`) first, then JWT.
+ * @description Global auth guard: service-account bearer (`ot_sa_`) first, then an OAuth
+ * access token (`ot_oat_`, the consenting user's principal with its grant attached and
+ * mutations refused without `mcp:write`), then JWT.
  * Use as APP_GUARD; mark login and health with @Public().
  * After successful auth, populates {@link GlobalClsService} via {@link GlobalClsAuthHook}.
  *
@@ -48,6 +107,7 @@ export class GlobalAuthGuard implements CanActivate {
     private readonly jwtAuthGuard: GqlJwtAuthGuard,
     private readonly globalClsAuthHook: GlobalClsAuthHook,
     private readonly serviceAccountAuthService: ServiceAccountAuthService,
+    private readonly oauthAccessAuthService: OAuthAccessAuthService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -94,6 +154,25 @@ export class GlobalAuthGuard implements CanActivate {
       return true;
     }
 
+    if (
+      authorization != null &&
+      this.oauthAccessAuthService.isOAuthAuthorization(authorization)
+    ) {
+      const principal =
+        await this.oauthAccessAuthService.tryAuthenticateAuthorizationHeader(
+          authorization,
+        );
+
+      if (principal == null) {
+        throw new UnauthorizedException('Unauthorized');
+      }
+
+      assertOAuthScopeAllows(context, principal);
+      req.user = principal;
+      await this.globalClsAuthHook.populateFromPrincipal(principal);
+      return true;
+    }
+
     const allowed = await this.jwtAuthGuard.canActivate(context);
     if (!allowed) {
       return false;
@@ -129,6 +208,21 @@ export class GlobalAuthGuard implements CanActivate {
     ) {
       const principal =
         await this.serviceAccountAuthService.tryAuthenticateAuthorizationHeader(
+          authorization,
+        );
+
+      if (principal == null) {
+        return;
+      }
+
+      req.user = principal;
+      await this.globalClsAuthHook.populateFromPrincipal(principal);
+      return;
+    }
+
+    if (this.oauthAccessAuthService.isOAuthAuthorization(authorization)) {
+      const principal =
+        await this.oauthAccessAuthService.tryAuthenticateAuthorizationHeader(
           authorization,
         );
 

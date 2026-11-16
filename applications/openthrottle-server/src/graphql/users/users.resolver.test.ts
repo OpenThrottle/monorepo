@@ -1,6 +1,7 @@
 import { NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import {
+  OAuthService,
   RolesRepository,
   UsersRepository,
 } from '@openthrottle/nestjs-repositories-server';
@@ -10,13 +11,15 @@ import {
   createUsersRepositoryMock,
   usersFactory,
 } from '@openthrottle/nestjs-repositories-server/testing';
-import { beforeEach, describe, expect, test } from 'vitest';
+import type { Mock } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import { UsersResolver } from './users.resolver.ts';
 
 describe('UsersResolver', () => {
   let resolver: UsersResolver;
+  let mockOAuthService: { readonly revokeGrantsForUser: Mock };
   let users: UsersRepositoryMock;
 
   const mockUser = usersFactory.build({
@@ -32,11 +35,13 @@ describe('UsersResolver', () => {
   const notFound = new NotFoundException('users record not found');
 
   beforeEach(async () => {
+    mockOAuthService = { revokeGrantsForUser: vi.fn() };
     users = createUsersRepositoryMock();
     const app = await Test.createTestingModule({
       providers: [
         UsersResolver,
         { provide: UsersRepository, useValue: users },
+        { provide: OAuthService, useValue: mockOAuthService },
         { provide: RolesRepository, useValue: createRolesRepositoryMock() },
         GqlPermissionsGuard,
       ],
@@ -166,6 +171,11 @@ describe('UsersResolver', () => {
       expect(result).not.toBeNull();
       expect(result?.id).toBe(mockUser.id);
       expect(result?.disabledAt).toEqual(new Date('2026-02-02T12:00:00.000Z'));
+      expect(mockOAuthService.revokeGrantsForUser).toHaveBeenCalledWith(
+        mockUser.id,
+        'user_disabled',
+        expect.any(Date),
+      );
     });
 
     test('returns null when user does not exist', async () => {
@@ -174,6 +184,7 @@ describe('UsersResolver', () => {
       const result = await resolver.disableUser('non-existent-id');
 
       expect(result).toBeNull();
+      expect(mockOAuthService.revokeGrantsForUser).not.toHaveBeenCalled();
     });
   });
 

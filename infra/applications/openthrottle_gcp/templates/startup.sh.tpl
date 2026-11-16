@@ -116,6 +116,15 @@ API_URL_INTERNAL=http://openthrottle-server:3000
 APP_URL_DEVELOPER=https://${developer_domain}
 
 OT_MCP_HTTP_PORT=3000
+%{ if mcp_domain != "" }
+# mcp_domain is set: the MCP is an OAuth 2.1 resource server and openthrottle-server
+# is its authorization server (OT plan 16f321a7, docs/openthrottle/mcp-oauth-design.md).
+# Requests without a bearer get a 401 challenge instead of running as the
+# OPENTHROTTLE_MCP_AUTH_TOKEN service account.
+OT_MCP_PUBLIC_URL=https://${mcp_domain}/mcp
+OT_OAUTH_ISSUER=https://${api_domain}
+OT_OAUTH_CONSENT_URL=https://${developer_domain}/oauth/consent
+%{ endif }
 ENVEOF
 chmod 0600 /opt/openthrottle/.env
 umask 022

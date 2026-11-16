@@ -58,6 +58,7 @@ import {
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { GlobalClsAuthHook } from '../../../auth/global-cls-auth-hook/global-cls-auth-hook.service.ts';
+import { OAuthAccessAuthService } from '../../../auth/oauth-access-auth/oauth-access-auth.service.ts';
 import { ServiceAccountAuthService } from '../../../auth/service-account-auth/service-account-auth.service.ts';
 import { GlobalAuthGuard } from '../../../guards/global-auth.guard.ts';
 import { GqlJwtAuthGuard } from '../../../guards/gql-jwt-auth.guard.ts';
@@ -171,6 +172,12 @@ describe('BlogAdminResolver', () => {
       providers: [
         BlogAdminResolver,
         GlobalAuthGuard,
+        {
+          provide: OAuthAccessAuthService,
+          useValue: createMock<OAuthAccessAuthService>({
+            isOAuthAuthorization: vi.fn().mockReturnValue(false),
+          }),
+        },
         GqlPermissionsGuard,
         Reflector,
         { provide: BlogPostsRepository, useValue: blogPostsRepository },

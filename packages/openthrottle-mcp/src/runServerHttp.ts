@@ -32,6 +32,10 @@ import {
   setActiveToolsets,
 } from './config/toolsets.ts';
 import { mcpHttpAuthMiddleware } from './http/mcp-http-auth.middleware.ts';
+import { McpWriteScopeGuard } from './http/mcp-write-scope.guard.ts';
+import type { McpHttpAuthMode } from './http/protected-resource.ts';
+import { resolveMcpHttpAuthMode } from './http/protected-resource.ts';
+import { protectedResourceMetadataMiddleware } from './http/protected-resource-metadata.middleware.ts';
 import { mcpToolsetPrunerProvider } from './nest/mcp-toolset-pruner.provider.ts';
 import { McpDeveloperMcpSurface } from './nest/McpDeveloperMcpSurface.ts';
 
@@ -127,6 +131,8 @@ export class McpHttpRootModule {
       imports: [
         McpModule.forRoot({
           capabilities: { resources: {}, tools: {} },
+          // Public mode: 403 insufficient_scope for write tools on a read-only OAuth token.
+          guards: [McpWriteScopeGuard],
           instructions: buildServerInstructions(toolsets),
           name: SERVER_NAME,
           // Stateful streamable HTTP: issue an Mcp-Session-Id on initialize and serve
@@ -152,9 +158,34 @@ export class McpHttpRootModule {
   }
 }
 
+/**
+ * @description Resolves public vs internal mode, failing boot on a misconfigured
+ * public mode (a public server with a broken resource or issuer URL must not start
+ * and silently serve anonymous requests).
+ */
+function resolveAuthModeOrThrow(): McpHttpAuthMode {
+  const resolved = resolveMcpHttpAuthMode(process.env);
+  if (!resolved.ok) {
+    throw new Error(`[openthrottle-mcp:http] ${resolved.error}`);
+  }
+  const { mode } = resolved;
+  if (mode.kind === 'public') {
+    console.error(
+      `[openthrottle-mcp:http] public mode: OAuth resource ${mode.resource}, authorization server ${mode.issuer}.`,
+    );
+    if (mode.allowStaticToken) {
+      console.error(
+        '[openthrottle-mcp:http] DEPRECATED: OT_MCP_ALLOW_STATIC_TOKEN=true lets requests with no Authorization header run as the OPENTHROTTLE_MCP_AUTH_TOKEN service account on the public URL. Migrate clients to OAuth and unset it.',
+      );
+    }
+  }
+  return mode;
+}
+
 export async function runServerHttp(): Promise<void> {
   const toolsets = enabledToolsetsFromProcess();
   setActiveToolsets(toolsets);
+  const authMode = resolveAuthModeOrThrow();
   warnIfAuthTokenMissing();
   await preflightAuth();
   const port = resolvePort();
@@ -164,10 +195,15 @@ export async function runServerHttp(): Promise<void> {
       logger: ['error', 'warn', 'log'],
     },
   );
+  // Public mode: the RFC 9728 metadata document, anonymous, ahead of the auth gate.
+  if (authMode.kind === 'public') {
+    app.use(protectedResourceMetadataMiddleware(authMode, SERVER_NAME));
+  }
   // Per-request identity: Authorization: Bearer <token> → request-scoped store,
   // so machine tools use the env ot_sa token and agent_conversation_* can use a
-  // client-supplied human JWT. Registered before listen() so it wraps the routes.
-  app.use(mcpHttpAuthMiddleware());
+  // client-supplied human JWT. In public mode a request with no bearer gets a 401
+  // OAuth challenge instead. Registered before listen() so it wraps the routes.
+  app.use(mcpHttpAuthMiddleware({ mode: authMode }));
   await app.listen(port);
   console.error(
     `[openthrottle-mcp:http] STREAMABLE_HTTP listening on http://0.0.0.0:${port}/mcp (server: ${SERVER_NAME}, toolsets: ${[...toolsets].join(',')})`,
