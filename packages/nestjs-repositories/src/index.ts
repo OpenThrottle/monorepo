@@ -248,6 +248,39 @@ export type { ConnectMcpConnectorInput } from './modules/mcp-connectors/mcp-conn
 export { maskCredentialToken } from './modules/mcp-connectors/mcp-connectors.utils.ts';
 export { Note } from './modules/notes/note.entity.ts';
 export { NotesService } from './modules/notes/notes.service.ts';
+export {
+  OAUTH_ACCESS_TOKEN_PREFIX,
+  OAUTH_GRANT_REVOKED_REASONS,
+  OAUTH_LIFETIMES_MS,
+  OAUTH_REFRESH_TOKEN_PREFIX,
+  OAUTH_SCOPES,
+  OAUTH_SUPPORTED_SCOPES,
+} from './modules/oauth/oauth.constants.ts';
+export { OAuthModule } from './modules/oauth/oauth.module.ts';
+export { OAuthService } from './modules/oauth/oauth.service.ts';
+export type {
+  DecideAuthorizationRequestResult,
+  IssuedOAuthTokens,
+  IssueOAuthTokensResult,
+  OAuthErrorCode,
+  OAuthFailure,
+  OAuthGrantRevokedReason,
+  OAuthScope,
+  RegisterDynamicClientResult,
+  UpsertMetadataDocumentClientInput,
+  VerifiedOAuthAccessToken,
+} from './modules/oauth/oauth.types.ts';
+export {
+  isOAuthAccessTokenAuthorization,
+  isRegistrableRedirectUri,
+  parseOAuthScopes,
+  redirectUriMatches,
+  scopesAllowWrite,
+} from './modules/oauth/oauth.utils.ts';
+export { OAuthAuthorizationRequest } from './modules/oauth/oauth-authorization-request.entity.ts';
+export { OAuthClient } from './modules/oauth/oauth-client.entity.ts';
+export { OAuthGrant } from './modules/oauth/oauth-grant.entity.ts';
+export { OAuthToken } from './modules/oauth/oauth-token.entity.ts';
 export type { PlanEmbeddingSearchRow } from './modules/plan-embeddings/plan-embedding.entity.ts';
 export { PlanEmbedding } from './modules/plan-embeddings/plan-embedding.entity.ts';
 export { PlanEmbeddingsService } from './modules/plan-embeddings/plan-embeddings.service.ts';

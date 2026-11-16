@@ -1,7 +1,11 @@
 import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import type { User } from '@openthrottle/nestjs-repositories';
-import { RolesService, UsersService } from '@openthrottle/nestjs-repositories';
+import {
+  OAuthService,
+  RolesService,
+  UsersService,
+} from '@openthrottle/nestjs-repositories';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
@@ -23,6 +27,7 @@ describe('UsersResolver', () => {
   };
 
   const mockUsersService = createMock<UsersService>();
+  const mockOAuthService = createMock<OAuthService>();
 
   beforeAll(async () => {
     const mockRolesService = createMock<RolesService>({
@@ -34,6 +39,7 @@ describe('UsersResolver', () => {
       providers: [
         UsersResolver,
         { provide: UsersService, useValue: mockUsersService },
+        { provide: OAuthService, useValue: mockOAuthService },
         { provide: RolesService, useValue: mockRolesService },
         GqlPermissionsGuard,
       ],
@@ -161,14 +167,21 @@ describe('UsersResolver', () => {
       expect(result).not.toBeNull();
       expect(result?.id).toBe(mockUser.id);
       expect(result?.disabledAt).toEqual(new Date('2026-02-02T12:00:00.000Z'));
+      expect(mockOAuthService.revokeGrantsForUser).toHaveBeenCalledWith(
+        mockUser.id,
+        'user_disabled',
+        expect.any(Date),
+      );
     });
 
     test('returns null when user does not exist', async () => {
+      vi.mocked(mockOAuthService.revokeGrantsForUser).mockClear();
       vi.mocked(usersService.disable).mockResolvedValue(null);
 
       const result = await resolver.disableUser('non-existent-id');
 
       expect(result).toBeNull();
+      expect(mockOAuthService.revokeGrantsForUser).not.toHaveBeenCalled();
     });
   });
 

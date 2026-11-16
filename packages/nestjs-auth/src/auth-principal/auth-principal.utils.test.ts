@@ -6,6 +6,7 @@ import {
 } from './auth-principal.constants.ts';
 import {
   authPrincipalFromJwtPayload,
+  authPrincipalFromOAuthGrant,
   authPrincipalFromServiceAccountId,
   getAuthPrincipalSub,
   isAuthPrincipal,
@@ -89,5 +90,37 @@ describe('isAuthPrincipal', () => {
     if (isAuthPrincipal(principal)) {
       expect(getAuthPrincipalSub(principal)).toBe('sa-9');
     }
+  });
+});
+
+describe('authPrincipalFromOAuthGrant', () => {
+  const grant = {
+    clientId: 'ot_client_x',
+    grantId: 'g-1',
+    scopes: ['mcp:read'],
+  };
+
+  it('maps to the consenting user with the grant attached', () => {
+    expect(authPrincipalFromOAuthGrant('u-1', grant)).toEqual({
+      kind: AUTH_PRINCIPAL_KIND_USER,
+      oauth: grant,
+      sub: 'u-1',
+    });
+  });
+
+  it('survives request normalization, so @CurrentUser() still sees the grant', () => {
+    expect(
+      normalizeRequestAuthPrincipal(authPrincipalFromOAuthGrant('u-1', grant)),
+    ).toEqual({ kind: AUTH_PRINCIPAL_KIND_USER, oauth: grant, sub: 'u-1' });
+  });
+
+  it('drops a malformed oauth member during normalization', () => {
+    expect(
+      normalizeRequestAuthPrincipal({
+        kind: AUTH_PRINCIPAL_KIND_USER,
+        oauth: { grantId: 'g-1' },
+        sub: 'u-1',
+      }),
+    ).toEqual({ kind: AUTH_PRINCIPAL_KIND_USER, sub: 'u-1' });
   });
 });

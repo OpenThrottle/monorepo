@@ -22,6 +22,7 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GlobalClsAuthHook } from '../auth/global-cls-auth-hook/global-cls-auth-hook.service.ts';
+import { OAuthAccessAuthService } from '../auth/oauth-access-auth/oauth-access-auth.service.ts';
 import { ServiceAccountAuthService } from '../auth/service-account-auth/service-account-auth.service.ts';
 import { GlobalAuthGuard } from './global-auth.guard.ts';
 import { GqlJwtAuthGuard } from './gql-jwt-auth.guard.ts';
@@ -70,6 +71,12 @@ describe('auth guard matrix (GlobalAuthGuard + GqlPermissionsGuard)', () => {
     const moduleRef = await Test.createTestingModule({
       providers: [
         GlobalAuthGuard,
+        {
+          provide: OAuthAccessAuthService,
+          useValue: createMock<OAuthAccessAuthService>({
+            isOAuthAuthorization: vi.fn().mockReturnValue(false),
+          }),
+        },
         GqlPermissionsGuard,
         ServiceAccountAuthService,
         ServiceAccountsService,

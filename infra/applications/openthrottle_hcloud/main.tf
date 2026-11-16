@@ -68,6 +68,7 @@ locals {
     caddyfile_content      = local.caddyfile
     compose_content        = local.compose_content
     developer_domain       = var.developer_domain
+    mcp_domain             = var.mcp_domain
 
     # Empty string when no volume is attached; the script then skips the mount
     # and leaves Postgres on the boot disk.

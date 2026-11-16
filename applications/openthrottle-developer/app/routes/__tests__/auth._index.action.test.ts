@@ -2,7 +2,7 @@
 import { createTestRouterContext } from '@openthrottle/react-router-testing';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import type { Route } from '@/app/routes/+types/_index';
+import type { Route } from '@/app/routes/+types/auth._index';
 
 vi.mock('@openthrottle/react-router-graphql', async (importOriginal) => {
   const actual =

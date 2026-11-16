@@ -103,6 +103,22 @@ describe('authMiddleware', () => {
       expect(result.headers.get('Set-Cookie')).toBe(getClearAuthCookieHeader());
     });
 
+    it('keeps a deep link as redirectTo so sign-in returns there', () => {
+      const result = runMiddleware(buildArgs('/oauth/consent?request=abc'));
+
+      assertIsRedirectResponse(result);
+      expect(result.headers.get('Location')).toBe(
+        '/auth?redirectTo=%2Foauth%2Fconsent%3Frequest%3Dabc',
+      );
+    });
+
+    it('sends data requests to plain /auth', () => {
+      const result = runMiddleware(buildArgs('/settings/keys.data'));
+
+      assertIsRedirectResponse(result);
+      expect(result.headers.get('Location')).toBe('/auth');
+    });
+
     it('does not redirect a public route', () => {
       const result = runMiddleware(buildArgs('/about'));
 
