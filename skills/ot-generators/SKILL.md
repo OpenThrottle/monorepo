@@ -19,7 +19,7 @@ metadata:
 - You are about to **create or scaffold** code in this repo (components, routes, NestJS services, packages, folder trees).
 - Nx errors with **`Unable to resolve @tools/generators:...`** or **Cannot find generator** (often a wrong generator name — see [Docs vs reality](#docs-vs-reality-remix-vs-react-router)).
 
-For read-only workspace queries and running tasks use `nx-workspace`; after generating a package, wire its dependencies with `link-workspace-packages`.
+For read-only workspace queries and running tasks use `nx-workspace`; after generating a package, wire its dependencies with `link-workspace-packages`. Add a workspace dep by writing `"<pkg>": "workspace:^"` into `package.json`, then `pnpm install`; `pnpm add <pkg>@workspace:^` wrongly catalogs it in `pnpm-workspace.yaml`.
 
 ## Non-negotiable: `NX_ISOLATE_PLUGINS=false`
 

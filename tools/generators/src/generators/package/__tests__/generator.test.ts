@@ -35,6 +35,33 @@ describe('package generator', () => {
     );
   });
 
+  describe('devDependencies', () => {
+    // Every template ships a vitest.config.ts, so the first test file a
+    // package adds imports `vitest`; undeclared, that fails
+    // `audit:third-party-deps:strict`.
+    const cases = [
+      { organization: '@tools', root: 'tools', type: 'tools' },
+      { organization: '@openthrottle', root: 'packages', type: 'node' },
+      { organization: '@openthrottle', root: 'packages', type: 'nestjs' },
+      { organization: '@openthrottle', root: 'packages', type: 'react' },
+    ] as const;
+
+    beforeEach(() => {
+      tree = createTreeWithEmptyWorkspace({ formatter: 'prettier' });
+    });
+
+    test.each(cases)(
+      'declares vitest for a $type package',
+      async ({ organization, root, type }) => {
+        const name = 'example-dev-dependencies';
+        await packageGenerator(tree, { name, organization, type });
+        const packageJson = readJson(tree, `${root}/${name}/package.json`);
+
+        expect(packageJson.devDependencies.vitest).toBe('catalog:');
+      },
+    );
+  });
+
   describe('@tools', () => {
     const type = 'tools';
     const org = '@tools';
@@ -149,6 +176,20 @@ describe('package generator', () => {
 
       expect(files).not.toContain(`packages/${name}/TODO.md`);
       expect(files.some((file) => file.endsWith('TODO.md'))).toBe(false);
+    });
+
+    test('should point exports at source, matching its __build placeholder', async () => {
+      // A source-first package (parked `__build`) whose exports name `dist/`
+      // fails `scripts/check-package-entrypoints.ts`.
+      await packageGenerator(tree, { name, organization: org, type });
+      const packageJson = readJson(tree, `packages/${name}/package.json`);
+
+      expect(packageJson.nx.targets).toHaveProperty('__build');
+      expect(packageJson.nx.targets).not.toHaveProperty('build');
+      expect(packageJson.exports).toEqual({
+        '.': { default: './src/index.ts', types: './src/index.ts' },
+      });
+      expect(packageJson.publishConfig).toBeUndefined();
     });
 
     test('should return a callback to run install + sync after flush', async () => {

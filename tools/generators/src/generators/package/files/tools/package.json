@@ -1,7 +1,9 @@
 {
   "dependencies": {},
   "description": "TODO: Add a description for <%= name %>.",
-  "devDependencies": {},
+  "devDependencies": {
+    "vitest": "catalog:"
+  },
   "exports": {
     "./package.json": "./package.json",
     ".": {
