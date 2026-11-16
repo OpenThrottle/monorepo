@@ -1,7 +1,7 @@
 {
   "name": "openthrottle-admin",
   "description": "OpenThrottle admin web app (React Router, Vite): dashboard, users, roles, and permissions backed by openthrottle-server.",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
