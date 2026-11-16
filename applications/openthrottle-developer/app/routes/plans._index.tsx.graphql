@@ -28,6 +28,13 @@ query getPlanAssigneeOptions {
   listDistinctAuthorsAndAssignees
 }
 
+query getPlanCountsByStatus {
+  planCountsByStatus {
+    count
+    status
+  }
+}
+
 query getPlansByStatus($input: ListPlansByStatusInput!) {
   allPlansCount: listPlansByStatus(input: { statuses: [] }) {
     totalCount

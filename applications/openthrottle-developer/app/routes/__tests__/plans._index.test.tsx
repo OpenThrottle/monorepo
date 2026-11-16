@@ -37,6 +37,11 @@ const mockLoaderDataPopulated: Route.ComponentProps['loaderData'] = {
   limit: 20,
   page: 1,
   plans: [mockPlan],
+  statusCounts: [
+    { __typename: 'PlanStatusCountObject', count: 4, status: 'in_progress' },
+    { __typename: 'PlanStatusCountObject', count: 3, status: 'QUEUED' },
+    { __typename: 'PlanStatusCountObject', count: 2, status: 'COMPLETED' },
+  ],
   statuses: [],
   totalCount: 1,
   totalCountAll: 11,
@@ -48,6 +53,7 @@ const mockLoaderDataEmpty: Route.ComponentProps['loaderData'] = {
   limit: 20,
   page: 1,
   plans: [],
+  statusCounts: [],
   statuses: [],
   totalCount: 0,
   totalCountAll: 0,
@@ -65,7 +71,7 @@ const matches: Route.ComponentProps['matches'] = [
 ];
 
 describe('routes/plans._index.tsx', () => {
-  test('renders the plans list without the stat cards', () => {
+  const renderPopulatedAt = (entry: string): ReturnType<typeof render> => {
     const Component = () => {
       return (
         <Index
@@ -77,12 +83,37 @@ describe('routes/plans._index.tsx', () => {
       );
     };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    const component = render(<RoutesStub />);
 
-    expect(
-      component.getByRole('link', { name: 'View plan: Test Plan' }),
-    ).toBeInTheDocument();
-    expect(component.queryAllByTestId('OpenThrottleStatCard')).toHaveLength(0);
+    return render(<RoutesStub initialEntries={[entry]} />);
+  };
+
+  describe('when the stats param is absent', () => {
+    test('renders the plans list with the stat cards collapsed', () => {
+      const component = renderPopulatedAt('/');
+
+      expect(
+        component.getByRole('link', { name: 'View plan: Test Plan' }),
+      ).toBeInTheDocument();
+      expect(component.queryByTestId('PlansStats')).not.toBeInTheDocument();
+      expect(component.getByTestId('GlobalStatsToggleButton')).toHaveAttribute(
+        'aria-expanded',
+        'false',
+      );
+    });
+  });
+
+  describe('when ?stats=open', () => {
+    test('renders the stat cards from the status counts, case-insensitively', () => {
+      const component = renderPopulatedAt('/?stats=open');
+
+      const stats = component.getByTestId('PlansStats');
+      expect(stats).toBeInTheDocument();
+      // In progress (4, from lower-case "in_progress") / Queued (3).
+      expect(stats).toHaveTextContent('4');
+      expect(stats).toHaveTextContent('3');
+      // Completed (2).
+      expect(stats).toHaveTextContent('2');
+    });
   });
 
   test('shows the onboarding pitch for a new user (no plans, unfiltered)', () => {

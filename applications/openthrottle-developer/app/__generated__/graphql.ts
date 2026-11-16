@@ -11383,6 +11383,19 @@ export type GetPlanAssigneeOptionsQuery = {
   listDistinctAuthorsAndAssignees: Array<string>;
 };
 
+export type GetPlanCountsByStatusQueryVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type GetPlanCountsByStatusQuery = {
+  __typename?: 'Query';
+  planCountsByStatus: Array<{
+    __typename?: 'PlanStatusCountObject';
+    count: number;
+    status: string;
+  }>;
+};
+
 export type GetPlansByStatusQueryVariables = Exact<{
   input: ListPlansByStatusInput;
 }>;
@@ -27304,6 +27317,35 @@ export const GetPlanAssigneeOptionsDocument = {
 } as unknown as DocumentNode<
   GetPlanAssigneeOptionsQuery,
   GetPlanAssigneeOptionsQueryVariables
+>;
+export const GetPlanCountsByStatusDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getPlanCountsByStatus' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'planCountsByStatus' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'count' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetPlanCountsByStatusQuery,
+  GetPlanCountsByStatusQueryVariables
 >;
 export const GetPlansByStatusDocument = {
   kind: 'Document',

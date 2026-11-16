@@ -1,5 +1,8 @@
 import { cn } from '@openthrottle/react-router-shadcn';
-import { GlobalToolbarSearch } from '@openthrottle/react-router-ui-global';
+import {
+  GlobalStatsToggleButton,
+  GlobalToolbarSearch,
+} from '@openthrottle/react-router-ui-global';
 import * as React from 'react';
 
 import { AssigneeMultiSelect } from '~/routing/plans/components/AssigneeMultiSelect';
@@ -85,6 +88,8 @@ export const PlansToolbar = (props: PlansToolbarProps): React.ReactElement => {
         />
 
         <div className="min-w-0 flex-1" />
+
+        <GlobalStatsToggleButton />
       </div>
     </div>
   );
