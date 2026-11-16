@@ -141,14 +141,34 @@ describe('useOpenThrottleCommander', () => {
       useOpenThrottleCommander({ emptyStateExtras }),
     );
 
-    expect(result.current.extraItems).toEqual([]);
+    expect(result.current.leadingExtraItems).toEqual([]);
 
     act(() => {
       result.current.setSearch('uuid-1');
     });
 
     expect(emptyStateExtras).toHaveBeenCalledWith('uuid-1');
-    expect(result.current.extraItems).toEqual([extraItem]);
+    expect(result.current.leadingExtraItems).toEqual([extraItem]);
+    expect(result.current.fallbackExtraItems).toEqual([]);
     expect(result.current.showEmptyEscapeHatch).toBe(true);
+  });
+
+  test('splits isFallback extras from leading extras', () => {
+    const match: CommanderItem = { id: 'match', label: 'Open plan' };
+    const fallback: CommanderItem = {
+      id: 'browse',
+      isFallback: true,
+      label: 'Browse all',
+    };
+    const { result } = renderHook(() =>
+      useOpenThrottleCommander({ emptyStateExtras: () => [fallback, match] }),
+    );
+
+    act(() => {
+      result.current.setSearch('argo');
+    });
+
+    expect(result.current.leadingExtraItems).toEqual([match]);
+    expect(result.current.fallbackExtraItems).toEqual([fallback]);
   });
 });

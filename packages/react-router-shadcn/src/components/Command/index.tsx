@@ -1,4 +1,5 @@
 export * from './Command';
+export * from './commandDefaultFilter';
 export * from './CommandDialog';
 export * from './CommandEmpty';
 export * from './CommandGroup';

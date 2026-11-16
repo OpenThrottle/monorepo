@@ -83,6 +83,7 @@ export const parseQueueAndJobIdsFromCommanderQuery = (
 
 /**
  * @description Browse shortcuts when the typed text is not a UUID (palette still shows “no match” for static commands).
+ * Flagged `isFallback`, so the palette's "Search for …" row leads them.
  */
 const buildNonUuidDebugIndexItems = (
   query: string,
@@ -93,6 +94,7 @@ const buildNonUuidDebugIndexItems = (
     {
       icon: <MapIcon aria-hidden={true} className={ICON_SM} />,
       id: 'debug-open-plans-index',
+      isFallback: true,
       label: 'Open Plans (browse all)',
       onSelect: () => {
         submit({ jump: 'plans-index' });
@@ -102,6 +104,7 @@ const buildNonUuidDebugIndexItems = (
     {
       icon: <ChartLineIcon aria-hidden={true} className={ICON_SM} />,
       id: 'debug-open-queues-index',
+      isFallback: true,
       label: 'Open Queues (browse all)',
       onSelect: () => {
         submit({ jump: 'queues-index' });
@@ -111,6 +114,7 @@ const buildNonUuidDebugIndexItems = (
     {
       icon: <BotIcon aria-hidden={true} className={ICON_SM} />,
       id: 'debug-open-generators-index',
+      isFallback: true,
       label: 'Open Generators (browse all)',
       onSelect: () => {
         submit({ jump: 'generators-index' });
