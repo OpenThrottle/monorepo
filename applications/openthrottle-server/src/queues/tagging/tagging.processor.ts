@@ -25,7 +25,6 @@ import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Inject } from '@nestjs/common';
 import { OnApplicationShutdown, OnModuleInit } from '@nestjs/common';
 import { defaultWorkerOptions } from '@openthrottle/nestjs-bullmq';
-import { GitHubService } from '@openthrottle/nestjs-github';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   PlansService,
@@ -40,6 +39,7 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import { DEFAULT_TAG_VOCABULARY_SEED } from '@openthrottle/openthrottle-skills';
 
+import { SourceControlService } from '../../services/source-control/source-control.service.ts';
 import { PlanRulesEvaluationService } from '../plan-rules/evaluation/evaluation.service.ts';
 import { PLAN_RULES_TRIGGER_KINDS } from '../plan-rules/plan-rules.constants.ts';
 import {
@@ -74,12 +74,12 @@ export class TaggingProcessor
   implements OnApplicationShutdown, OnModuleInit
 {
   constructor(
-    private readonly githubService: GitHubService,
     private readonly logger: LoggerService,
     private readonly planRulesEvaluationService: PlanRulesEvaluationService,
     private readonly plansService: PlansService,
     private readonly serviceAccountsService: ServiceAccountsService,
     private readonly skillTagsService: SkillTagsService,
+    private readonly sourceControlService: SourceControlService,
     @Inject(TAGGING_MODEL_PROVIDER_TOKEN)
     private readonly taggingModelProvider: TaggingModelProvider,
     private readonly tagsService: TagsService,
@@ -179,22 +179,20 @@ export class TaggingProcessor
       return { added: 0, removed: 0, skipped: 'plan-missing' };
     }
 
-    const [owner, repoName] = data.repo.split('/');
-    if (owner == null || repoName == null || repoName.length === 0) {
+    const forge = this.sourceControlService.forgeForPayload({
+      forge: data.forge,
+    });
+    if (forge == null || !data.repo.includes('/')) {
       this.logger.warn(
-        `refine-tagging skipped for plan ${data.planId}: repo "${data.repo}" is not owner/name`,
+        `refine-tagging skipped for plan ${data.planId}: repo "${data.repo}" on forge "${String(data.forge)}" is not resolvable`,
         TaggingProcessor.name,
       );
       return { added: 0, removed: 0, skipped: 'bad-repo' };
     }
 
-    // A GitHub transport error throws here on purpose: BullMQ backs off and
+    // A forge transport error throws here on purpose: BullMQ backs off and
     // retries. A null commit (unknown sha) is a permanent skip.
-    const commit = await this.githubService.getCommitDetail(
-      owner,
-      repoName,
-      data.sha,
-    );
+    const commit = await forge.getCommit(data.repo, data.sha);
     if (commit == null) {
       this.logger.warn(
         `refine-tagging skipped for plan ${data.planId}: commit ${data.sha} not found in ${data.repo}`,

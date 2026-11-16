@@ -14,6 +14,7 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import { In } from 'typeorm';
 
+import { SourceControlService } from '../../../services/source-control/source-control.service.ts';
 import {
   PlanRunCheckoutObject,
   PlanRunObject,
@@ -31,6 +32,7 @@ const PULL_REQUEST_ARTIFACT_TYPE = 'pull_request';
 export class PlanRunObjectResolver {
   constructor(
     private readonly repositoryCheckoutsService: RepositoryCheckoutsService,
+    private readonly sourceControlService: SourceControlService,
     private readonly workLedgerService: WorkLedgerService,
   ) {}
 
@@ -71,7 +73,7 @@ export class PlanRunObjectResolver {
    * Null when the run has produced no pull_request artifact yet.
    */
   @ResolveField(() => PlanRunPullRequestObject, {
-    description: `The run's linked pull request (via the work-ledger session bridge), with lifecycle state and GitHub URL. Null when no PR has been recorded for the run.`,
+    description: `The run's linked pull request (via the work-ledger session bridge), with lifecycle state and its URL on the forge (GitHub, GitLab). Null when no PR has been recorded for the run.`,
     nullable: true,
   })
   async pullRequest(
@@ -97,7 +99,13 @@ export class PlanRunObjectResolver {
 
     const repo = String(artifact.payload.repo ?? '');
     const number = Number(artifact.payload.number ?? 0);
-    if (repo === '' || !Number.isInteger(number) || number <= 0) {
+    const forge = this.sourceControlService.forgeForPayload(artifact.payload);
+    if (
+      repo === '' ||
+      !Number.isInteger(number) ||
+      number <= 0 ||
+      forge == null
+    ) {
       return null;
     }
 
@@ -105,7 +113,7 @@ export class PlanRunObjectResolver {
       number,
       repo,
       state: artifact.lifecycle,
-      url: `https://github.com/${repo}/pull/${number}`,
+      url: forge.pullRequestUrl(repo, number),
     };
   }
 }

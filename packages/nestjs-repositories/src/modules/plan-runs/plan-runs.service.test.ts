@@ -1460,6 +1460,55 @@ describe('PlanRunsService', () => {
       expect(result?.status).toBe('STALE');
     });
 
+    it('settleUnsupervisedRunForPullRequest settles a merged run COMPLETED under the same guards', async () => {
+      qbExecute.mockResolvedValueOnce({ affected: 1 });
+      repo.findOne.mockResolvedValueOnce(
+        buildRun({
+          heartbeatExpected: false,
+          id: 'run-1',
+          status: 'COMPLETED',
+        }),
+      );
+
+      const result = await service.settleUnsupervisedRunForPullRequest(
+        'run-1',
+        'merged',
+      );
+      const qb = repo.createQueryBuilder.mock.results[0]?.value;
+
+      expect(qb.andWhere).toHaveBeenCalledWith('status = :status', {
+        status: 'IN_PROGRESS',
+      });
+      expect(qb.andWhere).toHaveBeenCalledWith('NOT heartbeat_expected');
+      expect(qb.set).toHaveBeenCalledWith(
+        expect.objectContaining({
+          settledReason: PLAN_RUN_SETTLED_REASON.PR_MERGED,
+          status: 'COMPLETED',
+        }),
+      );
+      expect(result?.status).toBe('COMPLETED');
+    });
+
+    it('settleUnsupervisedRunForPullRequest settles a closed-unmerged run CANCELLED', async () => {
+      qbExecute.mockResolvedValueOnce({ affected: 0 });
+
+      const result = await service.settleUnsupervisedRunForPullRequest(
+        'run-1',
+        'closed',
+      );
+      const qb = repo.createQueryBuilder.mock.results[0]?.value;
+
+      expect(qb.set).toHaveBeenCalledWith(
+        expect.objectContaining({
+          settledReason: PLAN_RUN_SETTLED_REASON.PR_CLOSED,
+          status: 'CANCELLED',
+        }),
+      );
+      // Already settled elsewhere: nothing matched, nothing read back.
+      expect(result).toBeNull();
+      expect(repo.findOne).not.toHaveBeenCalled();
+    });
+
     it('forceSettleUnsupervisedRun records the caller-supplied reason', async () => {
       // The Stop janitor knows more than "a human clicked it"; its reason must survive.
       qbExecute.mockResolvedValueOnce({ affected: 1 });

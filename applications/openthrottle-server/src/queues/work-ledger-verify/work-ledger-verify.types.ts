@@ -25,6 +25,8 @@ export interface WorkLedgerVerifySummary {
   pullRequestsExamined: number;
   /** Orphaned git_commit rows repaired from a merged sibling PR's merge_commit_sha. */
   repaired: number;
+  /** Unsettled unsupervised plan runs settled because their PR merged or closed. */
+  runsSettled: number;
   /** Artifacts promoted unverified → verified (commit confirmed to exist) but not yet landed. */
   verified: number;
 }

@@ -34,8 +34,13 @@
  */
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import type { PlanRun } from '@openthrottle/nestjs-repositories';
+import type {
+  PlanRun,
+  WorkArtifactSource,
+} from '@openthrottle/nestjs-repositories';
 import {
+  PLAN_RUN_STATUS,
+  PlanRunsService,
   RepositoriesService,
   RepositoryCheckoutsService,
   ServiceAccountsService,
@@ -46,6 +51,10 @@ import {
   WorkSessionSubject,
 } from '@openthrottle/nestjs-repositories';
 
+import { DEFAULT_FORGE_KIND } from '../../../services/source-control/source-control.constants.ts';
+import { SourceControlService } from '../../../services/source-control/source-control.service.ts';
+import type { ForgeRepoRef } from '../../../services/source-control/source-control.types.ts';
+import { repoPayloadFields } from '../../../services/source-control/source-control.utils.ts';
 import { RepositoryInspectionService } from '../../repository-inspection/repository-inspection.service.ts';
 import { resolveArtifactForWrite } from '../artifact-type-registry/artifact-type-registry.utils.ts';
 import type { RecordSettledRunArtifactsInput } from './settle-run-ledger.types.ts';
@@ -54,14 +63,30 @@ import type { RecordSettledRunArtifactsInput } from './settle-run-ledger.types.t
 const WORKFLOW_RALPH_SERVICE_ACCOUNT_NAME = 'workflow-ralph';
 const TOOL_NAME = 'workflow-ralph';
 
+/** Runs that may have opened a PR without reporting it: everything that started and then ended. */
+const ENDED_RUN_STATUSES = [
+  PLAN_RUN_STATUS.CANCELLED,
+  PLAN_RUN_STATUS.COMPLETED,
+  PLAN_RUN_STATUS.FAILED,
+  PLAN_RUN_STATUS.STALE,
+];
+
+/** How far back the branch backstop looks. A run older than this has had its chance. */
+const BRANCH_LINK_WINDOW_MS = 48 * 60 * 60 * 1000;
+
+/** Runs looked up per sweep, to bound forge API calls. */
+const BRANCH_LINK_BATCH_SIZE = 25;
+
 @Injectable()
 export class SettleRunLedgerService {
   constructor(
     private readonly logger: LoggerService,
+    private readonly planRunsService: PlanRunsService,
     private readonly repositoriesService: RepositoriesService,
     private readonly repositoryCheckoutsService: RepositoryCheckoutsService,
     private readonly repositoryInspectionService: RepositoryInspectionService,
     private readonly serviceAccountsService: ServiceAccountsService,
+    private readonly sourceControlService: SourceControlService,
     private readonly workLedgerService: WorkLedgerService,
   ) {}
 
@@ -78,7 +103,7 @@ export class SettleRunLedgerService {
     if (headSha == null && prNumber == null) return;
 
     try {
-      const repo = await this.resolveRepoName(planRun);
+      const repo = await this.resolveRepoRef(planRun);
 
       if (repo == null) {
         this.logger.warn(
@@ -104,6 +129,7 @@ export class SettleRunLedgerService {
         planRun,
         prNumber,
         repo,
+        source: WORK_ARTIFACT_SOURCE.AGENT,
       });
     } catch (error) {
       this.logger.warn(
@@ -113,15 +139,125 @@ export class SettleRunLedgerService {
     }
   }
 
+  /**
+   * @description Backstop for runs that ended without reporting a PR: a run that FAILED, went
+   * STALE or was CANCELLED after pushing, or settled COMPLETED without a prNumber. For each recent
+   * ended run with a branch and no pull_request artifact, ask the forge for a request on that
+   * branch and record it as an `adapter` artifact under the run, so the verifier takes it from
+   * there and PlanRun.pullRequest can show it. The forge is the evidence; nothing the run printed
+   * is trusted. Returns how many runs were linked. Never throws.
+   */
+  async linkPullRequestsForUnreportedRuns(): Promise<number> {
+    try {
+      const runs = await this.findRunsWithoutPullRequest();
+      const actorServiceAccountId =
+        runs.length === 0 ? null : await this.resolveActorServiceAccountId();
+
+      if (actorServiceAccountId == null) return 0;
+
+      let linked = 0;
+
+      for (const run of runs) {
+        // eslint-disable-next-line no-await-in-loop -- sequential to bound forge API pressure
+        if (await this.linkPullRequestFromBranch(run, actorServiceAccountId)) {
+          linked += 1;
+        }
+      }
+
+      return linked;
+    } catch (error) {
+      this.logger.warn(
+        `Work-ledger: branch PR backstop failed: ${String(error)}`,
+        SettleRunLedgerService.name,
+      );
+      return 0;
+    }
+  }
+
+  /** Recent ended runs with a branch whose sessions carry no pull_request artifact. */
+  private async findRunsWithoutPullRequest(): Promise<PlanRun[]> {
+    return this.planRunsService
+      .getRepository()
+      .createQueryBuilder('run')
+      .where('run.status IN (:...statuses)', { statuses: ENDED_RUN_STATUSES })
+      .andWhere(`run.branch IS NOT NULL AND run.branch <> ''`)
+      .andWhere('run.updated_at >= :since', {
+        since: new Date(Date.now() - BRANCH_LINK_WINDOW_MS),
+      })
+      .andWhere(
+        `NOT EXISTS (
+          SELECT 1 FROM work_sessions s
+          JOIN work_artifacts a ON a.session_id = s.id
+          WHERE s.plan_run_id = run.id AND a.type = 'pull_request'
+        )`,
+      )
+      .orderBy('run.updated_at', 'DESC')
+      .limit(BRANCH_LINK_BATCH_SIZE)
+      .getMany();
+  }
+
+  /** One run: look its branch up on the forge and record the request it finds. */
+  private async linkPullRequestFromBranch(
+    planRun: PlanRun,
+    actorServiceAccountId: string,
+  ): Promise<boolean> {
+    const branch = nonEmpty(planRun.branch);
+
+    if (branch == null) return false;
+
+    try {
+      const repo = await this.resolveRepoRef(planRun);
+      const forge =
+        repo == null ? null : this.sourceControlService.forge(repo.forge);
+
+      if (repo == null || forge == null) return false;
+
+      const pull = await forge.findPullRequestForBranch(repo.fullName, branch);
+
+      if (pull == null) return false;
+
+      // Someone else already recorded this request (another run on the same branch, a human
+      // session): it is on the ledger, and a second session for it would only be noise.
+      const { externalKey } = resolveArtifactForWrite('pull_request', {
+        ...repoPayloadFields(repo),
+        number: pull.number,
+      });
+      const existing = await this.workLedgerService
+        .getArtifactRepository()
+        .findOne({ where: { externalKey, type: 'pull_request' } });
+
+      if (existing != null) return false;
+
+      await this.writeArtifacts({
+        actorServiceAccountId,
+        headSha: null,
+        planRun,
+        prNumber: pull.number,
+        repo,
+        source: WORK_ARTIFACT_SOURCE.ADAPTER,
+      });
+
+      return true;
+    } catch (error) {
+      this.logger.warn(
+        `Work-ledger: could not link a PR for plan run ${planRun.id} on branch ${branch}: ${String(error)}`,
+        SettleRunLedgerService.name,
+      );
+      return false;
+    }
+  }
+
   /** One transaction: the session, its subjects, and both artifacts land together or not at all. */
   private async writeArtifacts(params: {
     readonly actorServiceAccountId: string;
     readonly headSha: string | null;
     readonly planRun: PlanRun;
     readonly prNumber: number | null;
-    readonly repo: string;
+    readonly repo: ForgeRepoRef;
+    readonly source: WorkArtifactSource;
   }): Promise<void> {
-    const { actorServiceAccountId, headSha, planRun, prNumber, repo } = params;
+    const { actorServiceAccountId, headSha, planRun, prNumber, repo, source } =
+      params;
     const taskId = resolveTargetTaskId(planRun);
     const now = new Date();
 
@@ -161,12 +297,15 @@ export class SettleRunLedgerService {
         }> = [];
 
         if (headSha != null) {
-          pending.push({ payload: { repo, sha: headSha }, type: 'git_commit' });
+          pending.push({
+            payload: { ...repoPayloadFields(repo), sha: headSha },
+            type: 'git_commit',
+          });
         }
 
         if (prNumber != null) {
           pending.push({
-            payload: { number: prNumber, repo },
+            payload: { ...repoPayloadFields(repo), number: prNumber },
             type: 'pull_request',
           });
         }
@@ -205,7 +344,7 @@ export class SettleRunLedgerService {
               payload: entry.resolved.payload,
               producedAt: now,
               sessionId: session.id,
-              source: WORK_ARTIFACT_SOURCE.AGENT,
+              source,
               type: entry.type,
             }),
           ),
@@ -214,8 +353,8 @@ export class SettleRunLedgerService {
   }
 
   /**
-   * @description Resolves `repositories.name` (already stored as `owner/repo`) for the run, most
-   * specific source first:
+   * @description Resolves the run's repository, most specific source first, then names it on its
+   * forge (see {@link toRepoRef}):
    *
    * 1. `plan_runs.checkout_id` (or the snapshot's) -> repository_id. The user-JWT path, where the
    *    orchestrator registered the run's worktree checkout.
@@ -227,7 +366,7 @@ export class SettleRunLedgerService {
    * Every hop is a lookup against registered rows; the repo name is never derived from a remote
    * string directly, so the wrong remote can only ever miss, not mis-record.
    */
-  private async resolveRepoName(planRun: PlanRun): Promise<string | null> {
+  private async resolveRepoRef(planRun: PlanRun): Promise<ForgeRepoRef | null> {
     const workspace = planRun.runConfigSnapshot?.workspace;
 
     const fromCheckout = await this.resolveRepositoryIdFromCheckout(
@@ -239,10 +378,28 @@ export class SettleRunLedgerService {
       if (repositoryId == null) continue;
       // eslint-disable-next-line no-await-in-loop -- deliberate precedence: stop at the first hit
       const repository = await this.repositoriesService.findById(repositoryId);
-      if (repository != null) return repository.name;
+      if (repository != null) return this.toRepoRef(repository);
     }
 
-    return this.resolveRepoNameFromPath(nonEmpty(workspace?.workingDirectory));
+    return this.resolveRepoRefFromPath(nonEmpty(workspace?.workingDirectory));
+  }
+
+  /**
+   * A registered repository on its forge. GitHub keeps `repositories.name` (already `owner/repo`,
+   * and what every existing row was keyed on); another forge takes the full path from its remote,
+   * because `name` keeps only the last two segments and a GitLab group can nest.
+   */
+  private toRepoRef(repository: {
+    readonly name: string;
+    readonly normalizedRemoteUrl: string | null;
+  }): ForgeRepoRef {
+    const parsed = this.sourceControlService.parseRemote(
+      repository.normalizedRemoteUrl,
+    );
+
+    if (parsed != null && parsed.forge !== DEFAULT_FORGE_KIND) return parsed;
+
+    return { forge: DEFAULT_FORGE_KIND, fullName: repository.name };
   }
 
   private async resolveRepositoryIdFromCheckout(
@@ -256,9 +413,9 @@ export class SettleRunLedgerService {
   }
 
   /** The working directory's normalized git remote, matched against registered repositories. */
-  private async resolveRepoNameFromPath(
+  private async resolveRepoRefFromPath(
     workingDirectory: string | null,
-  ): Promise<string | null> {
+  ): Promise<ForgeRepoRef | null> {
     if (workingDirectory == null) return null;
 
     const inspection =
@@ -270,7 +427,7 @@ export class SettleRunLedgerService {
     const repository =
       await this.repositoriesService.findByNormalizedRemoteUrl(remote);
 
-    return repository?.name ?? null;
+    return repository == null ? null : this.toRepoRef(repository);
   }
 
   /** The seeded Ralph service account; null when it cannot be resolved. */

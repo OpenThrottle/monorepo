@@ -1,4 +1,6 @@
 import { createMock } from '@golevelup/ts-vitest';
+import type { ConfigService } from '@nestjs/config';
+import type { GitHubService } from '@openthrottle/nestjs-github';
 import type {
   RepositoryCheckout,
   RepositoryCheckoutsService,
@@ -9,6 +11,9 @@ import type {
 import { asMock } from '@openthrottle/nestjs-testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { GitHubForgeService } from '../../../services/source-control/github-forge/github-forge.service.ts';
+import { GitLabForgeService } from '../../../services/source-control/gitlab-forge/gitlab-forge.service.ts';
+import { SourceControlService } from '../../../services/source-control/source-control.service.ts';
 import type { PlanRunObject } from '../plan.object.ts';
 import { PlanRunObjectResolver } from './plan-run-object.resolver.ts';
 
@@ -35,6 +40,10 @@ describe('PlanRunObjectResolver', () => {
 
   const resolver = new PlanRunObjectResolver(
     checkoutsService,
+    new SourceControlService(
+      new GitHubForgeService(createMock<GitHubService>()),
+      new GitLabForgeService(createMock<ConfigService>()),
+    ),
     workLedgerService,
   );
 

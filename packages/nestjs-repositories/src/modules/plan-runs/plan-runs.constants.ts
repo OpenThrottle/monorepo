@@ -76,6 +76,8 @@ export const PLAN_RUN_STATUS = {
 export const PLAN_RUN_SETTLED_REASON = {
   FORCE_SETTLED: `Force-settled to STALE: contact with the agent was reported lost.`,
   HEARTBEAT_LOST: `No heartbeat within the stale cutoff; the stale sweep settled it.`,
+  PR_CLOSED: `Its pull request was closed unmerged while the run was still unsettled; the work-ledger verifier settled it.`,
+  PR_MERGED: `Its pull request merged while the run was still unsettled; the work-ledger verifier settled it.`,
   SUPERSEDED: `A newer interactive run registered on this plan; settle-on-next-register settled this one.`,
   UNSUPERVISED_AGE: `Unsettled past the unsupervised age cutoff; the age sweep settled it.`,
 } as const;

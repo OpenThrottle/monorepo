@@ -76,6 +76,7 @@ import {
   GetPullInput,
   GetTaskEmbeddingInput,
   GitHubRepoInput,
+  GitTextDraftInput,
   IdRefKind,
   LabelAgentTrajectoryInput,
   LastActivityInput,
@@ -1046,6 +1047,16 @@ export function GitHubRepoInputSchema(): z.ZodObject<
     owner: z.string().min(1),
     repo: z.string().min(1),
     state: z.string().min(1),
+  });
+}
+
+export function GitTextDraftInputSchema(): z.ZodObject<
+  Properties<GitTextDraftInput>
+> {
+  return z.object({
+    planId: z.string().min(1),
+    scope: z.string().nullish(),
+    taskId: z.string().nullish(),
   });
 }
 

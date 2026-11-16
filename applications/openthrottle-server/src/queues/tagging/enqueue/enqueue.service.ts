@@ -11,6 +11,7 @@ import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { Queue } from 'bullmq';
 
+import type { ForgeKind } from '../../../services/source-control/source-control.types.ts';
 import {
   TAGGING_PREDICT_JOB_NAME,
   TAGGING_QUEUE_NAME,
@@ -60,13 +61,14 @@ export class TaggingEnqueueService {
    */
   async enqueueRefine(
     planId: string,
+    forge: ForgeKind,
     repo: string,
     sha: string,
   ): Promise<void> {
     try {
       await this.queue.add(
         TAGGING_REFINE_JOB_NAME,
-        { planId, repo, sha },
+        { forge, planId, repo, sha },
         { jobId: `tag-refine:${planId}:${sha}` },
       );
     } catch (error) {

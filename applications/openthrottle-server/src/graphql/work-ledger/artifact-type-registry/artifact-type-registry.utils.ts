@@ -11,6 +11,10 @@ import { randomUUID } from 'node:crypto';
 import { WORK_ARTIFACT_SOURCE } from '@openthrottle/nestjs-repositories';
 import { z } from 'zod';
 
+import {
+  DEFAULT_FORGE_KIND,
+  FORGE_KIND,
+} from '../../../services/source-control/source-control.constants.ts';
 import { ARTIFACT_IDENTITY } from './artifact-type-registry.constants.ts';
 import type {
   ArtifactIdentity,
@@ -47,8 +51,17 @@ interface ArtifactTypeDefinition {
   readonly validatePayload: (raw: unknown) => Record<string, unknown>;
 }
 
+/** Absent means GitHub: every row written before forges existed is one. */
+const forgeField = z.enum([FORGE_KIND.GITHUB, FORGE_KIND.GITLAB]).optional();
+
+/** The external-key prefix for a repo-scoped payload: its forge, GitHub when absent. */
+const forgePrefix = (payload: Record<string, unknown>): string => {
+  return typeof payload.forge === 'string' ? payload.forge : DEFAULT_FORGE_KIND;
+};
+
 const gitCommitPayload = z
   .object({
+    forge: forgeField,
     landedSha: z.string().min(1).optional(),
     repo: z.string().min(1),
     sha: z.string().min(1),
@@ -57,6 +70,7 @@ const gitCommitPayload = z
 
 const pullRequestPayload = z
   .object({
+    forge: forgeField,
     number: z.number().int().positive(),
     repo: z.string().min(1),
   })
@@ -118,7 +132,7 @@ const ARTIFACT_TYPE_REGISTRY: Readonly<Record<string, ArtifactTypeDefinition>> =
     },
     git_commit: {
       deriveExternalKey: (payload) =>
-        `github:${String(payload.repo)}@${String(payload.sha)}`,
+        `${forgePrefix(payload)}:${String(payload.repo)}@${String(payload.sha)}`,
       identity: ARTIFACT_IDENTITY.IDEMPOTENT,
       initialLifecycle: 'created',
       lifecycleStates: ['created', 'landed'],
@@ -139,7 +153,7 @@ const ARTIFACT_TYPE_REGISTRY: Readonly<Record<string, ArtifactTypeDefinition>> =
     },
     pull_request: {
       deriveExternalKey: (payload) =>
-        `github:${String(payload.repo)}#${String(payload.number)}`,
+        `${forgePrefix(payload)}:${String(payload.repo)}#${String(payload.number)}`,
       identity: ARTIFACT_IDENTITY.IDEMPOTENT,
       initialLifecycle: 'open',
       lifecycleStates: ['closed', 'merged', 'open'],

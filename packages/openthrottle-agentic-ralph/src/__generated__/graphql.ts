@@ -2331,6 +2331,29 @@ export type GitHubRepoInput = {
   state: Scalars['String']['input'];
 };
 
+/** Which plan (and optionally which task) to draft git text for. */
+export type GitTextDraftInput = {
+  /** The plan the branch, PR and commits belong to. */
+  planId: Scalars['ID']['input'];
+  /** Conventional-commit scope: the Nx project the change touches. Defaults to 'monorepo'. */
+  scope?: InputMaybe<Scalars['String']['input']>;
+  /** A task of the plan to draft a commit message for. Omit for the branch and PR only. */
+  taskId?: InputMaybe<Scalars['ID']['input']>;
+};
+
+/** Branch, commit and PR text drafted from a plan and its tasks: conventional commits, the repo PR template, Plan-Id / Task-Id footers, and never a tool or model credit. A draft to edit, not to send blind. */
+export type GitTextDraftObject = {
+  __typename?: 'GitTextDraftObject';
+  /** A git-safe branch name: ot/<slug>-<plan id prefix>. */
+  branchName: Scalars['String']['output'];
+  /** The commit message for the requested task, footers included. Null when no taskId was given. */
+  commitMessage?: Maybe<Scalars['String']['output']>;
+  /** The PR body on the repo template's headings. Testing keeps its TODO: the steps are the author's to write. */
+  pullRequestBody: Scalars['String']['output'];
+  /** A conventional-commit PR title for the plan. */
+  pullRequestTitle: Scalars['String']['output'];
+};
+
 /** Which entity an id ref resolved to: a plan or a task. */
 export const IdRefKind = {
   Plan: 'PLAN',
@@ -4100,7 +4123,7 @@ export type PlanRunObject = {
   /** OS process id of the worker executing this run. Null when not actively executing. */
   pid?: Maybe<Scalars['Int']['output']>;
   planId: Scalars['String']['output'];
-  /** The run's linked pull request (via the work-ledger session bridge), with lifecycle state and GitHub URL. Null when no PR has been recorded for the run. */
+  /** The run's linked pull request (via the work-ledger session bridge), with lifecycle state and its URL on the forge (GitHub, GitLab). Null when no PR has been recorded for the run. */
   pullRequest?: Maybe<PlanRunPullRequestObject>;
   queueName: Scalars['String']['output'];
   /** The usage-limited run this run continues: set on the continuation run enqueued automatically after a Claude usage limit. Null for every ordinary run. */
@@ -4609,6 +4632,8 @@ export type Query = {
   getAgentConversationMessages: ListAgentConversationMessagesResultObject;
   /** Fetch a single document chunk by id (UUID from plan_embeddings, task_embeddings, or documentation_embeddings). Use after semantic search to read full chunk content. */
   getDocument?: Maybe<SearchChunk>;
+  /** Draft a branch name, a task's commit message and the PR title and body for a plan, from its OT data. Conventional commits, the repo PR template, Plan-Id / Task-Id footers, no tool or model credit. */
+  gitTextDraft: GitTextDraftObject;
   /** Whether GITHUB_TOKEN is configured on the server. Boolean only — the token value is never exposed. Used to prompt the user to set GITHUB_TOKEN instead of rendering empty/unauthenticated GitHub stats. */
   githubTokenConfigured: Scalars['Boolean']['output'];
   /** Single job by id and queue name. Returns null if not found. */
@@ -5010,6 +5035,10 @@ export type QueryGetAgentConversationMessagesArgs = {
 
 export type QueryGetDocumentArgs = {
   id: Scalars['String']['input'];
+};
+
+export type QueryGitTextDraftArgs = {
+  input: GitTextDraftInput;
 };
 
 export type QueryJobArgs = {

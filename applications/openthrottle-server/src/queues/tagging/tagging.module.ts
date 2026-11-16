@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { GitHubModule } from '@openthrottle/nestjs-github';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 
+import { SourceControlModule } from '../../services/source-control/source-control.module.ts';
 import { PlanRulesQueueProducerModule } from '../plan-rules/producer/producer.module.ts';
 import { TaggingQueueProducerModule } from './producer/producer.module.ts';
 import { TaggingProcessor } from './tagging.processor.ts';
@@ -19,10 +19,10 @@ import { taggingModelProviderFactory } from './tagging-model.provider.ts';
   exports: [TaggingQueueProducerModule],
   imports: [
     ConfigModule,
-    GitHubModule,
     LoggerModule,
     NestjsRepositoriesModule,
     PlanRulesQueueProducerModule,
+    SourceControlModule,
     TaggingQueueProducerModule,
   ],
   providers: [taggingModelProviderFactory, TaggingProcessor],

@@ -243,6 +243,7 @@ export class GitHubService {
   ): Promise<PullListItemDto[]> {
     const state = options.state;
     const base = options.base;
+    const head = options.head;
     const mergedFilter = options.merged;
 
     const url = new URL(
@@ -251,6 +252,13 @@ export class GitHubService {
     url.searchParams.set('state', state);
     if (base !== undefined && base !== '') {
       url.searchParams.set('base', base);
+    }
+    if (head !== undefined && head !== '') {
+      // GitHub filters `head` only as `user:ref`; a bare branch means a same-repo PR.
+      url.searchParams.set(
+        'head',
+        head.includes(':') ? head : `${owner}:${head}`,
+      );
     }
     url.searchParams.set('per_page', '100');
 

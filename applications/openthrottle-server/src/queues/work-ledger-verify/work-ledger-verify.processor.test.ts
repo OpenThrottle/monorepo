@@ -1,14 +1,22 @@
 import { createMock } from '@golevelup/ts-vitest';
+import type { ConfigService } from '@nestjs/config';
 import type { GitHubService } from '@openthrottle/nestjs-github';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import type { WorkLedgerService } from '@openthrottle/nestjs-repositories';
+import type {
+  PlanRunsService,
+  WorkLedgerService,
+} from '@openthrottle/nestjs-repositories';
 import type {
   WorkArtifact,
+  WorkSession,
   WorkSessionSubject,
 } from '@openthrottle/nestjs-repositories';
 import type { FindManyOptions, Repository } from 'typeorm';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { GitHubForgeService } from '../../services/source-control/github-forge/github-forge.service.ts';
+import { GitLabForgeService } from '../../services/source-control/gitlab-forge/gitlab-forge.service.ts';
+import { SourceControlService } from '../../services/source-control/source-control.service.ts';
 import type { TaggingEnqueueService } from '../tagging/enqueue/enqueue.service.ts';
 import { WorkLedgerVerifyProcessor } from './work-ledger-verify.processor.ts';
 import type { WorkLedgerVerifyJob } from './work-ledger-verify.types.ts';
@@ -85,8 +93,12 @@ describe('WorkLedgerVerifyProcessor', () => {
       getSubjectRepository: vi.fn().mockReturnValue(subjectRepo),
     });
     processor = new WorkLedgerVerifyProcessor(
-      githubService,
       createMock<LoggerService>(),
+      createMock<PlanRunsService>(),
+      new SourceControlService(
+        new GitHubForgeService(githubService),
+        new GitLabForgeService(createMock<ConfigService>()),
+      ),
       taggingEnqueueService,
       workLedgerService,
     );
@@ -108,6 +120,7 @@ describe('WorkLedgerVerifyProcessor', () => {
     );
     expect(taggingEnqueueService.enqueueRefine).toHaveBeenCalledWith(
       'plan-1',
+      'github',
       'OpenThrottle/monorepo',
       'abc',
     );
@@ -167,6 +180,7 @@ describe('WorkLedgerVerifyProcessor', () => {
     );
     expect(taggingEnqueueService.enqueueRefine).toHaveBeenCalledWith(
       'plan-1',
+      'github',
       'OpenThrottle/monorepo',
       'squash-sha',
     );
@@ -232,6 +246,8 @@ describe('WorkLedgerVerifyProcessor pull_request sweep', () => {
   let artifactRepo: Repository<WorkArtifact>;
   let subjectRepo: Repository<WorkSessionSubject>;
   let taggingEnqueueService: TaggingEnqueueService;
+  let planRunsService: PlanRunsService;
+  let sessionRepo: Repository<WorkSession>;
   let processor: WorkLedgerVerifyProcessor;
 
   const job = createMock<WorkLedgerVerifyJob>({ id: 'sweep-1' });
@@ -279,12 +295,26 @@ describe('WorkLedgerVerifyProcessor pull_request sweep', () => {
     ]);
     vi.mocked(artifactRepo.find).mockResolvedValue([]);
 
+    planRunsService = createMock<PlanRunsService>();
+    vi.mocked(
+      planRunsService.settleUnsupervisedRunForPullRequest,
+    ).mockResolvedValue(null);
+    sessionRepo = createMock<Repository<WorkSession>>();
+    vi.mocked(sessionRepo.findOne).mockResolvedValue(
+      createMock<WorkSession>({ id: 'sess-1', planRunId: 'run-1' }),
+    );
+
     processor = new WorkLedgerVerifyProcessor(
-      githubService,
       createMock<LoggerService>(),
+      planRunsService,
+      new SourceControlService(
+        new GitHubForgeService(githubService),
+        new GitLabForgeService(createMock<ConfigService>()),
+      ),
       taggingEnqueueService,
       createMock<WorkLedgerService>({
         getArtifactRepository: vi.fn().mockReturnValue(artifactRepo),
+        getSessionRepository: vi.fn().mockReturnValue(sessionRepo),
         getSubjectRepository: vi.fn().mockReturnValue(subjectRepo),
       }),
     );
@@ -323,6 +353,55 @@ describe('WorkLedgerVerifyProcessor pull_request sweep', () => {
     expect(artifactRepo.save).toHaveBeenCalledWith(
       expect.objectContaining({ lifecycle: 'closed' }),
     );
+  });
+
+  it('settles the run behind a merged PR, and the one behind a closed PR', async () => {
+    onlyPulls([
+      pullArtifact(),
+      pullArtifact({ id: 'pr-2', sessionId: 'sess-2' }),
+    ]);
+    vi.mocked(githubService.getPullDetail)
+      .mockResolvedValueOnce({
+        ...pullDetail,
+        mergeCommitSha: 'squash-sha',
+        mergedAt: '2026-09-01T00:00:00Z',
+        state: 'closed',
+      })
+      .mockResolvedValueOnce({
+        ...pullDetail,
+        mergedAt: null,
+        state: 'closed',
+      });
+
+    await processor.process(job);
+
+    expect(
+      planRunsService.settleUnsupervisedRunForPullRequest,
+    ).toHaveBeenNthCalledWith(1, 'run-1', 'merged');
+    expect(
+      planRunsService.settleUnsupervisedRunForPullRequest,
+    ).toHaveBeenNthCalledWith(2, 'run-1', 'closed');
+  });
+
+  it('settles nothing for an open PR or a session with no plan run', async () => {
+    onlyPulls([pullArtifact()]);
+    vi.mocked(githubService.getPullDetail).mockResolvedValue(pullDetail);
+
+    await processor.process(job);
+
+    vi.mocked(sessionRepo.findOne).mockResolvedValue(
+      createMock<WorkSession>({ id: 'sess-1', planRunId: null }),
+    );
+    vi.mocked(githubService.getPullDetail).mockResolvedValue({
+      ...pullDetail,
+      mergedAt: null,
+      state: 'closed',
+    });
+    await processor.process(job);
+
+    expect(
+      planRunsService.settleUnsupervisedRunForPullRequest,
+    ).not.toHaveBeenCalled();
   });
 
   it('verifies a still-open PR without advancing its lifecycle', async () => {

@@ -1,8 +1,9 @@
 import { Module } from '@nestjs/common';
-import { GitHubModule } from '@openthrottle/nestjs-github';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 
+import { WorkLedgerGraphqlModule } from '../../graphql/work-ledger/work-ledger.module.ts';
+import { SourceControlModule } from '../../services/source-control/source-control.module.ts';
 import { WorkLedgerHarvestQueueProducerModule } from './producer/producer.module.ts';
 import { WorkLedgerHarvestRepeatableService } from './repeatable/repeatable.service.ts';
 import { WorkLedgerHarvestProcessor } from './work-ledger-harvest.processor.ts';
@@ -16,9 +17,10 @@ import { WorkLedgerHarvestProcessor } from './work-ledger-harvest.processor.ts';
 @Module({
   exports: [WorkLedgerHarvestQueueProducerModule],
   imports: [
-    GitHubModule,
     LoggerModule,
     NestjsRepositoriesModule,
+    SourceControlModule,
+    WorkLedgerGraphqlModule,
     WorkLedgerHarvestQueueProducerModule,
   ],
   providers: [WorkLedgerHarvestProcessor, WorkLedgerHarvestRepeatableService],

@@ -1,8 +1,6 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { OnApplicationShutdown, OnModuleInit } from '@nestjs/common';
 import { defaultWorkerOptions } from '@openthrottle/nestjs-bullmq';
-import type { CommitSummaryDto } from '@openthrottle/nestjs-github';
-import { GitHubService } from '@openthrottle/nestjs-github';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { Repository as RepositoryEntity } from '@openthrottle/nestjs-repositories';
 import {
@@ -19,6 +17,13 @@ import {
 } from '@openthrottle/nestjs-repositories';
 
 import { resolveArtifactForWrite } from '../../graphql/work-ledger/artifact-type-registry/artifact-type-registry.utils.ts';
+import { SettleRunLedgerService } from '../../graphql/work-ledger/settle-run-ledger/settle-run-ledger.service.ts';
+import { SourceControlService } from '../../services/source-control/source-control.service.ts';
+import type {
+  ForgeCommitSummary,
+  ForgeRepoRef,
+} from '../../services/source-control/source-control.types.ts';
+import { repoPayloadFields } from '../../services/source-control/source-control.utils.ts';
 import {
   WORK_LEDGER_HARVEST_BATCH_SIZE,
   WORK_LEDGER_HARVEST_QUEUE_NAME,
@@ -38,22 +43,6 @@ const TOOL_NAME = 'work-ledger-harvest';
 /** Seeded service account that owns harvested artifacts (databases/openthrottle/migrations/117). */
 const HARVEST_SERVICE_ACCOUNT_NAME = 'work-ledger-harvest';
 
-/** Extract owner/repo from a github.com remote URL; null when it is not one. */
-function parseGithubRemote(
-  url: string | null,
-): { name: string; owner: string } | null {
-  if (url == null) return null;
-
-  const match = /github\.com[/:]([^/]+)\/([^/]+?)(?:\.git)?\/?$/i.exec(url);
-
-  if (match == null) return null;
-
-  const owner = match[1];
-  const name = match[2];
-
-  return owner != null && name != null ? { name, owner } : null;
-}
-
 /**
  * @description Work-ledger trailer harvest. On an hourly sweep, for each eligible repository it
  * reads commits on the default branch newer than the stored watermark, parses their `Plan-Id:` /
@@ -65,7 +54,7 @@ function parseGithubRemote(
  * opened a PR outside the loop. Those plans have no session left to record anything, so the commit
  * message is the only surviving evidence — and it is durable evidence, which is the point.
  *
- * WHY THE GITHUB API AND NOT A LOCAL CHECKOUT. The server does shell out to git elsewhere, and a
+ * WHY THE FORGE API AND NOT A LOCAL CHECKOUT. The server does shell out to git elsewhere, and a
  * local harvest would be cheaper. But a checkout whose main is behind produces false negatives that
  * are indistinguishable from "nothing owed" — the exact silent failure this replaces — and a
  * deployed instance has no checkout at all.
@@ -83,11 +72,12 @@ export class WorkLedgerHarvestProcessor
   implements OnApplicationShutdown, OnModuleInit
 {
   constructor(
-    private readonly githubService: GitHubService,
     private readonly logger: LoggerService,
     private readonly plansService: PlansService,
     private readonly repositoriesService: RepositoriesService,
     private readonly serviceAccountsService: ServiceAccountsService,
+    private readonly settleRunLedgerService: SettleRunLedgerService,
+    private readonly sourceControlService: SourceControlService,
     private readonly usersService: UsersService,
     private readonly workLedgerService: WorkLedgerService,
   ) {
@@ -119,6 +109,7 @@ export class WorkLedgerHarvestProcessor
       alreadyRecorded: 0,
       examined: 0,
       harvested: 0,
+      pullRequestsLinked: 0,
       skipped: 0,
       unresolved: 0,
     };
@@ -138,12 +129,17 @@ export class WorkLedgerHarvestProcessor
       .find({ where: { ledgerHarvestEnabled: true } });
 
     for (const repository of repositories) {
-      // eslint-disable-next-line no-await-in-loop -- sequential to bound GitHub API pressure
+      // eslint-disable-next-line no-await-in-loop -- sequential to bound forge API pressure
       await this.harvestRepository(repository, actorServiceAccountId, summary);
     }
 
+    // Discovery's other half: a run that ended without reporting its PR. Hourly is plenty — the
+    // verifier picks up whatever this links on its next 15-minute sweep.
+    summary.pullRequestsLinked =
+      await this.settleRunLedgerService.linkPullRequestsForUnreportedRuns();
+
     this.logger.info(
-      `Work-ledger harvest sweep done: examined=${summary.examined}, harvested=${summary.harvested}, skipped=${summary.skipped}, already-recorded=${summary.alreadyRecorded}, unresolved=${summary.unresolved}`,
+      `Work-ledger harvest sweep done: examined=${summary.examined}, harvested=${summary.harvested}, skipped=${summary.skipped}, already-recorded=${summary.alreadyRecorded}, unresolved=${summary.unresolved}, pull-requests-linked=${summary.pullRequestsLinked}`,
       WorkLedgerHarvestProcessor.name,
     );
   }
@@ -153,21 +149,26 @@ export class WorkLedgerHarvestProcessor
     actorServiceAccountId: string,
     summary: WorkLedgerHarvestSummary,
   ): Promise<void> {
-    const remote = parseGithubRemote(repository.normalizedRemoteUrl);
+    const remote = this.sourceControlService.parseRemote(
+      repository.normalizedRemoteUrl,
+    );
+    const forge =
+      remote == null ? null : this.sourceControlService.forge(remote.forge);
     const branch = repository.defaultBranch;
 
-    // Eligibility is derived, not stored: no parseable GitHub remote or no default branch
+    // Eligibility is derived, not stored: no remote on a supported forge or no default branch
     // means there is nothing to read, and a second stored flag could only go stale.
-    if (remote == null || branch == null || branch === '') return;
+    if (remote == null || forge == null || branch == null || branch === '') {
+      return;
+    }
 
     summary.examined += 1;
 
-    const repoKey = `${remote.owner}/${remote.name}`;
+    const repoKey = remote.fullName;
 
     try {
-      const commits = await this.githubService.listCommits(
-        remote.owner,
-        remote.name,
+      const commits = await forge.listCommits(
+        repoKey,
         branch,
         repository.ledgerHarvestCursor,
       );
@@ -178,7 +179,7 @@ export class WorkLedgerHarvestProcessor
         // eslint-disable-next-line no-await-in-loop -- one transaction per commit, by design
         await this.harvestCommit(
           commit,
-          repoKey,
+          remote,
           actorServiceAccountId,
           summary,
         );
@@ -208,11 +209,12 @@ export class WorkLedgerHarvestProcessor
 
   /** Adopt one trailer commit: a session of its own, its subject plans/tasks, and the artifact. */
   private async harvestCommit(
-    commit: CommitSummaryDto,
-    repoKey: string,
+    commit: ForgeCommitSummary,
+    remote: ForgeRepoRef,
     actorServiceAccountId: string,
     summary: WorkLedgerHarvestSummary,
   ): Promise<void> {
+    const repoKey = remote.fullName;
     const refs = parsePlanTrailers(commit.message);
 
     if (refs.length === 0) {
@@ -230,7 +232,7 @@ export class WorkLedgerHarvestProcessor
     const artifactRepo = this.workLedgerService.getArtifactRepository();
     const { externalKey, initialLifecycle, payload } = resolveArtifactForWrite(
       'git_commit',
-      { repo: repoKey, sha: commit.sha },
+      { ...repoPayloadFields(remote), sha: commit.sha },
     );
     void initialLifecycle;
 
@@ -254,7 +256,7 @@ export class WorkLedgerHarvestProcessor
           actorUserId: null,
           externalRef: `${repoKey}@${commit.sha}`,
           onBehalfOfUserId,
-          // GitHub's author login is a fact, not a hint — it is the standard the column asks for.
+          // The forge's author login is a fact, not a hint — it is the standard the column asks for.
           onBehalfOfVerified: onBehalfOfUserId != null,
           toolName: TOOL_NAME,
         }),

@@ -1,16 +1,19 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { OnApplicationShutdown, OnModuleInit } from '@nestjs/common';
 import { defaultWorkerOptions } from '@openthrottle/nestjs-bullmq';
-import { GitHubService } from '@openthrottle/nestjs-github';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { WorkArtifact } from '@openthrottle/nestjs-repositories';
 import {
+  PlanRunsService,
   WORK_ARTIFACT_VERIFICATION,
   WorkLedgerService,
 } from '@openthrottle/nestjs-repositories';
 import { In, Not } from 'typeorm';
 
 import { shouldFireLifecycleTriggers } from '../../graphql/work-ledger/artifact-type-registry/artifact-type-registry.utils.ts';
+import { REACHABLE_COMPARE_STATUSES } from '../../services/source-control/source-control.constants.ts';
+import { SourceControlService } from '../../services/source-control/source-control.service.ts';
+import type { SourceControlForge } from '../../services/source-control/source-control.types.ts';
 import { TaggingEnqueueService } from '../tagging/enqueue/enqueue.service.ts';
 import {
   WORK_LEDGER_VERIFY_BATCH_SIZE,
@@ -28,28 +31,25 @@ const LANDED = 'landed';
 const MERGED = 'merged';
 const CLOSED = 'closed';
 
-/** Lifecycle states a pull_request never leaves — nothing more to ask GitHub about. */
+/** Lifecycle states a pull_request never leaves — nothing more to ask the forge about. */
 const TERMINAL_PULL_REQUEST_STATES = [CLOSED, MERGED];
 
 /** Compare statuses that mean `head` is reachable from `base` (i.e. it has landed). */
-const REACHABLE_STATUSES = new Set(['behind', 'identical']);
+const REACHABLE_STATUSES = new Set(REACHABLE_COMPARE_STATUSES);
 
-/** Split "owner/repo" into its parts; null if malformed. */
-function parseOwnerRepo(repo: unknown): { name: string; owner: string } | null {
-  if (typeof repo !== 'string') return null;
-  const slash = repo.indexOf('/');
-  if (slash <= 0 || slash === repo.length - 1) return null;
-  return { name: repo.slice(slash + 1), owner: repo.slice(0, slash) };
+/** The payload's repo `fullName`, or null when it is not a non-empty string. */
+function payloadRepo(repo: unknown): string | null {
+  return typeof repo === 'string' && repo.includes('/') ? repo : null;
 }
 
 type VerifyOutcome = 'landed' | 'orphaned' | 'pending' | 'verified';
 
 /**
  * @description Work-ledger verifier (git adapter, poller mode). On a schedule, for each not-yet-landed,
- * not-orphaned git_commit artifact it: confirms the commit exists on GitHub (unverified → verified);
+ * not-orphaned git_commit artifact it: confirms the commit exists on its forge (unverified → verified);
  * detects when it has landed on the default branch — directly, or via squash mapping to the merged
  * PR's merge_commit_sha (recorded as payload.landedSha) — and promotes lifecycle to 'landed'; and
- * orphans a commit GitHub still can't find past the grace window. On a landed transition it re-keys
+ * orphans a commit the forge still can't find past the grace window. On a landed transition it re-keys
  * the #182 refine-tagging trigger by enqueueing a refine per subject plan (deterministic jobId →
  * self-healing) — but only when the artifact's source says this is live agent-reported work; bulk
  * and adapter-sourced rows land silently (see shouldFireLifecycleTriggers). Idempotent: re-queries
@@ -72,8 +72,9 @@ export class WorkLedgerVerifyProcessor
   implements OnApplicationShutdown, OnModuleInit
 {
   constructor(
-    private readonly githubService: GitHubService,
     private readonly logger: LoggerService,
+    private readonly planRunsService: PlanRunsService,
+    private readonly sourceControlService: SourceControlService,
     private readonly taggingEnqueueService: TaggingEnqueueService,
     private readonly workLedgerService: WorkLedgerService,
   ) {
@@ -105,7 +106,7 @@ export class WorkLedgerVerifyProcessor
     await this.verifyPullRequests(summary);
 
     this.logger.info(
-      `Work-ledger verify sweep done: examined=${summary.examined}, verified=${summary.verified}, landed=${summary.landed}, orphaned=${summary.orphaned}, pending=${summary.pending}, pullRequestsExamined=${summary.pullRequestsExamined}, merged=${summary.merged}, closed=${summary.closed}, repaired=${summary.repaired}`,
+      `Work-ledger verify sweep done: examined=${summary.examined}, verified=${summary.verified}, landed=${summary.landed}, orphaned=${summary.orphaned}, pending=${summary.pending}, pullRequestsExamined=${summary.pullRequestsExamined}, merged=${summary.merged}, closed=${summary.closed}, repaired=${summary.repaired}, runsSettled=${summary.runsSettled}`,
       WorkLedgerVerifyProcessor.name,
     );
   }
@@ -134,11 +135,12 @@ export class WorkLedgerVerifyProcessor
       pending: 0,
       pullRequestsExamined: 0,
       repaired: 0,
+      runsSettled: 0,
       verified: 0,
     };
 
     for (const artifact of artifacts) {
-      // eslint-disable-next-line no-await-in-loop -- sequential to bound GitHub API pressure
+      // eslint-disable-next-line no-await-in-loop -- sequential to bound forge API pressure
       const outcome = await this.verifyOne(artifact, defaultBranchByRepo);
       if (outcome === 'landed') summary.landed += 1;
       else if (outcome === 'verified') summary.verified += 1;
@@ -153,22 +155,20 @@ export class WorkLedgerVerifyProcessor
     artifact: WorkArtifact,
     defaultBranchByRepo: Map<string, string | null>,
   ): Promise<VerifyOutcome> {
-    const ownerRepo = parseOwnerRepo(artifact.payload.repo);
+    const repoKey = payloadRepo(artifact.payload.repo);
     const sha = artifact.payload.sha;
+    const forge = this.sourceControlService.forgeForPayload(artifact.payload);
 
-    if (ownerRepo == null || typeof sha !== 'string') {
+    if (repoKey == null || typeof sha !== 'string' || forge == null) {
       this.logger.warn(
-        `Work-ledger verify: malformed git_commit payload on artifact ${artifact.id}; skipping.`,
+        `Work-ledger verify: malformed or unsupported-forge git_commit payload on artifact ${artifact.id}; skipping.`,
         WorkLedgerVerifyProcessor.name,
       );
       return 'pending';
     }
 
-    const { name, owner } = ownerRepo;
-    const repoKey = `${owner}/${name}`;
-
     try {
-      const commit = await this.githubService.getCommitDetail(owner, name, sha);
+      const commit = await forge.getCommit(repoKey, sha);
 
       if (commit == null) {
         return this.maybeOrphan(artifact);
@@ -181,10 +181,9 @@ export class WorkLedgerVerifyProcessor
       }
 
       const landedSha = await this.resolveLandedSha(
-        owner,
-        name,
-        sha,
+        forge,
         repoKey,
+        sha,
         defaultBranchByRepo,
       );
 
@@ -205,6 +204,7 @@ export class WorkLedgerVerifyProcessor
         ) {
           await this.enqueueRefineForSubjects(
             artifact.sessionId,
+            forge,
             repoKey,
             landedSha,
           );
@@ -224,7 +224,7 @@ export class WorkLedgerVerifyProcessor
     }
   }
 
-  /** Orphan a commit GitHub can't find once it is older than the grace window; else leave it. */
+  /** Orphan a commit the forge can't find once it is older than the grace window; else leave it. */
   private async maybeOrphan(artifact: WorkArtifact): Promise<VerifyOutcome> {
     const ageMs = Date.now() - artifact.producedAt.getTime();
     if (ageMs < WORK_LEDGER_VERIFY_ORPHAN_GRACE_HOURS * MS_PER_HOUR) {
@@ -241,24 +241,21 @@ export class WorkLedgerVerifyProcessor
    * or its squash commit (the merged PR's merge_commit_sha) if that is reachable. null if not landed.
    */
   private async resolveLandedSha(
-    owner: string,
-    name: string,
-    sha: string,
+    forge: SourceControlForge,
     repoKey: string,
+    sha: string,
     defaultBranchByRepo: Map<string, string | null>,
   ): Promise<string | null> {
-    if (!defaultBranchByRepo.has(repoKey)) {
-      defaultBranchByRepo.set(
-        repoKey,
-        await this.githubService.getDefaultBranch(owner, name),
-      );
+    const branchKey = `${forge.kind}:${repoKey}`;
+
+    if (!defaultBranchByRepo.has(branchKey)) {
+      defaultBranchByRepo.set(branchKey, await forge.getDefaultBranch(repoKey));
     }
-    const defaultBranch = defaultBranchByRepo.get(repoKey) ?? null;
+    const defaultBranch = defaultBranchByRepo.get(branchKey) ?? null;
     if (defaultBranch == null) return null;
 
-    const directStatus = await this.githubService.compareCommitStatus(
-      owner,
-      name,
+    const directStatus = await forge.compareCommits(
+      repoKey,
       defaultBranch,
       sha,
     );
@@ -267,16 +264,11 @@ export class WorkLedgerVerifyProcessor
     }
 
     // Not directly on the branch — it may have landed via a squash merge under a new sha.
-    const mergeSha = await this.githubService.getMergeCommitShaForCommit(
-      owner,
-      name,
-      sha,
-    );
+    const mergeSha = await forge.getMergeCommitShaForCommit(repoKey, sha);
     if (mergeSha == null) return null;
 
-    const mergeStatus = await this.githubService.compareCommitStatus(
-      owner,
-      name,
+    const mergeStatus = await forge.compareCommits(
+      repoKey,
       defaultBranch,
       mergeSha,
     );
@@ -308,7 +300,7 @@ export class WorkLedgerVerifyProcessor
     summary.pullRequestsExamined = artifacts.length;
 
     for (const artifact of artifacts) {
-      // eslint-disable-next-line no-await-in-loop -- sequential to bound GitHub API pressure
+      // eslint-disable-next-line no-await-in-loop -- sequential to bound forge API pressure
       await this.verifyOnePullRequest(artifact, summary);
     }
   }
@@ -317,21 +309,20 @@ export class WorkLedgerVerifyProcessor
     artifact: WorkArtifact,
     summary: WorkLedgerVerifySummary,
   ): Promise<void> {
-    const ownerRepo = parseOwnerRepo(artifact.payload.repo);
+    const repoKey = payloadRepo(artifact.payload.repo);
     const number = artifact.payload.number;
+    const forge = this.sourceControlService.forgeForPayload(artifact.payload);
 
-    if (ownerRepo == null || typeof number !== 'number') {
+    if (repoKey == null || typeof number !== 'number' || forge == null) {
       this.logger.warn(
-        `Work-ledger verify: malformed pull_request payload on artifact ${artifact.id}; skipping.`,
+        `Work-ledger verify: malformed or unsupported-forge pull_request payload on artifact ${artifact.id}; skipping.`,
         WorkLedgerVerifyProcessor.name,
       );
       return;
     }
 
-    const { name, owner } = ownerRepo;
-
     try {
-      const pull = await this.githubService.getPullDetail(owner, name, number);
+      const pull = await forge.getPullRequest(repoKey, number);
       const repo = this.workLedgerService.getArtifactRepository();
 
       artifact.verification = WORK_ARTIFACT_VERIFICATION.VERIFIED;
@@ -353,11 +344,16 @@ export class WorkLedgerVerifyProcessor
         if (pull.mergeCommitSha != null) {
           summary.repaired += await this.repairSiblingCommits(
             artifact.sessionId,
-            `${owner}/${name}`,
+            forge,
+            repoKey,
             pull.mergeCommitSha,
           );
         }
 
+        summary.runsSettled += await this.settleRunForPullRequest(
+          artifact.sessionId,
+          MERGED,
+        );
         return;
       }
 
@@ -365,6 +361,10 @@ export class WorkLedgerVerifyProcessor
         artifact.lifecycle = CLOSED;
         await repo.save(artifact);
         summary.closed += 1;
+        summary.runsSettled += await this.settleRunForPullRequest(
+          artifact.sessionId,
+          CLOSED,
+        );
         return;
       }
 
@@ -388,6 +388,7 @@ export class WorkLedgerVerifyProcessor
    */
   private async repairSiblingCommits(
     sessionId: string,
+    forge: SourceControlForge,
     repoKey: string,
     mergeCommitSha: string,
   ): Promise<number> {
@@ -418,15 +419,57 @@ export class WorkLedgerVerifyProcessor
 
     for (const _sibling of firing) {
       // eslint-disable-next-line no-await-in-loop -- small set (a session's own commits)
-      await this.enqueueRefineForSubjects(sessionId, repoKey, mergeCommitSha);
+      await this.enqueueRefineForSubjects(
+        sessionId,
+        forge,
+        repoKey,
+        mergeCommitSha,
+      );
     }
 
     return siblings.length;
   }
 
+  /**
+   * A PR reaching merged/closed is the strongest evidence a plan run is over. A run that reported
+   * its PR at open already settled; this catches the one that did not — an interactive loop that
+   * opened the PR and then lost its turn before settling — so it stops reading as live, its
+   * worktree stops reading as busy, and the reaper's teardown guard can finally let it go.
+   * PlanRunsService guards on IN_PROGRESS + unsupervised, so a heartbeating or settled run is
+   * untouched and a re-sweep is a no-op. Best-effort: returns 1 when it settled a run, else 0.
+   */
+  private async settleRunForPullRequest(
+    sessionId: string,
+    outcome: typeof CLOSED | typeof MERGED,
+  ): Promise<number> {
+    try {
+      const session = await this.workLedgerService
+        .getSessionRepository()
+        .findOne({ where: { id: sessionId } });
+      const planRunId = session?.planRunId ?? null;
+
+      if (planRunId == null) return 0;
+
+      const settled =
+        await this.planRunsService.settleUnsupervisedRunForPullRequest(
+          planRunId,
+          outcome,
+        );
+
+      return settled == null ? 0 : 1;
+    } catch (error) {
+      this.logger.warn(
+        `Work-ledger verify: could not settle the plan run for session ${sessionId}: ${String(error)}`,
+        WorkLedgerVerifyProcessor.name,
+      );
+      return 0;
+    }
+  }
+
   /** Re-key the #182 refine-tagging trigger: one refine per subject plan of the landed artifact. */
   private async enqueueRefineForSubjects(
     sessionId: string,
+    forge: SourceControlForge,
     repoKey: string,
     landedSha: string,
   ): Promise<void> {
@@ -439,6 +482,7 @@ export class WorkLedgerVerifyProcessor
       // eslint-disable-next-line no-await-in-loop -- small set (a session's subject plans)
       await this.taggingEnqueueService.enqueueRefine(
         planId,
+        forge.kind,
         repoKey,
         landedSha,
       );

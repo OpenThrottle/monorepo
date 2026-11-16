@@ -191,6 +191,13 @@ export const developerMcpToolDefinitions: readonly DeveloperMcpToolDefinition[] 
       Th.discoverAgentClisToolHandler,
     ),
     defineTool(
+      'core',
+      'draft_git_text',
+      Th.draftGitTextToolDescription,
+      Th.draftGitTextToolParameters,
+      Th.draftGitTextToolHandler,
+    ),
+    defineTool(
       'agents',
       'discover_local_models',
       Th.discoverLocalModelsToolDescription,

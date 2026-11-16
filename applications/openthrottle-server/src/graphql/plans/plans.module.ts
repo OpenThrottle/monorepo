@@ -14,6 +14,7 @@ import { EffectiveUserResolutionModule } from '../../services/effective-user-res
 import { EmbedderModule } from '../../services/embedder/embedder.module.ts';
 import { PlanCreationModule } from '../../services/plan-creation/plan-creation.module.ts';
 import { PlanRunWorktreeCheckoutModule } from '../../services/plan-run-worktree-checkout/plan-run-worktree-checkout.module.ts';
+import { SourceControlModule } from '../../services/source-control/source-control.module.ts';
 import { WorktreeCheckoutPruneModule } from '../../services/worktree-checkout-prune/worktree-checkout-prune.module.ts';
 import { QueuesGraphqlModule } from '../queues/queues.module.ts';
 import { WorkLedgerGraphqlModule } from '../work-ledger/work-ledger.module.ts';
@@ -38,6 +39,7 @@ import { PlansResolver } from './plans.resolver.ts';
     PlansQueueProducerModule,
     TaggingQueueProducerModule,
     QueuesGraphqlModule,
+    SourceControlModule,
     WorkLedgerGraphqlModule,
     WorktreeCheckoutPruneModule,
   ],

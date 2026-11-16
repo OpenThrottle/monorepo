@@ -498,6 +498,30 @@ describe('GitHubService', () => {
     vi.unstubAllGlobals();
   });
 
+  test('listPulls qualifies a bare head branch with the owner', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue({ json: () => Promise.resolve([]), ok: true });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const service = new GitHubService(mockConfig);
+    await service.listPulls('owner', 'repo', {
+      head: 'feat/x',
+      state: 'all',
+    });
+    await service.listPulls('owner', 'repo', {
+      head: 'fork:feat/y',
+      state: 'all',
+    });
+
+    const first = new URL(String(fetchMock.mock.calls[0]?.[0]));
+    const second = new URL(String(fetchMock.mock.calls[1]?.[0]));
+    expect(first.searchParams.get('head')).toBe('owner:feat/x');
+    expect(second.searchParams.get('head')).toBe('fork:feat/y');
+
+    vi.unstubAllGlobals();
+  });
+
   test('passes an AbortSignal to fetch (default timeout when unconfigured)', async () => {
     const fetchMock = vi
       .fn()
