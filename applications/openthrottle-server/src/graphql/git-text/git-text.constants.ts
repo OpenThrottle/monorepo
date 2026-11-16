@@ -28,9 +28,6 @@ export const COMMIT_TYPE_BY_CATEGORY: Readonly<Record<string, string>> = {
 /** @description The type for a category nothing maps: the one that claims least about the change. */
 export const DEFAULT_COMMIT_TYPE = 'chore';
 
-/** @description The scope when the caller names none; commitlint accepts it in every repo here. */
-export const DEFAULT_COMMIT_SCOPE = 'monorepo';
-
 /** @description commitlint's `header-max-length` and `body-max-line-length` (config-conventional). */
 export const COMMIT_LINE_MAX = 100;
 

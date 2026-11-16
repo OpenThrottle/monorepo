@@ -2335,7 +2335,9 @@ export type GitHubRepoInput = {
 export type GitTextDraftInput = {
   /** The plan the branch, PR and commits belong to. */
   planId: Scalars['ID']['input'];
-  /** Conventional-commit scope: the Nx project the change touches. Defaults to 'monorepo'. */
+  /** The target repo's PR template (its raw markdown). The body keeps its headings and checklists and fills the first section. Omit for the default sections. */
+  pullRequestTemplate?: InputMaybe<Scalars['String']['input']>;
+  /** Conventional-commit scope, e.g. the Nx project touched; send one the repo's commitlint accepts. Omitted or malformed, the header has no scope: type: subject. */
   scope?: InputMaybe<Scalars['String']['input']>;
   /** A task of the plan to draft a commit message for. Omit for the branch and PR only. */
   taskId?: InputMaybe<Scalars['ID']['input']>;

@@ -94,15 +94,20 @@ export function branchNameFor(plan: GitTextPlan): string {
     : `${BRANCH_PREFIX}${slug}-${suffix}`;
 }
 
-/** @description `type(scope): subject`, credit-free and within commitlint's header length. */
+/**
+ * @description `type(scope): subject`, or `type: subject` when there is no scope, credit-free and
+ * within commitlint's header length. No scope is the portable default: a repo's commitlint
+ * `scope-enum` may not contain any name this server could guess.
+ */
 export function conventionalHeader(
   type: string,
-  scope: string,
+  scope: string | null,
   title: string,
 ): string {
   const cleaned = stripAttributionInline(title.trim().replace(/\s+/gu, ' '));
   const subject = cleaned.charAt(0).toLowerCase() + cleaned.slice(1);
-  const header = `${type}(${scope}): ${subject.replace(/\.+$/u, '')}`;
+  const prefix = scope == null ? type : `${type}(${scope})`;
+  const header = `${prefix}: ${subject.replace(/\.+$/u, '')}`;
 
   return header.length <= COMMIT_LINE_MAX
     ? header
@@ -116,7 +121,7 @@ export function conventionalHeader(
 export function commitMessageFor(
   plan: GitTextPlan,
   task: GitTextTask,
-  scope: string,
+  scope: string | null,
 ): string {
   const type = commitTypeFor(task.category ?? plan.category);
   const header = conventionalHeader(type, scope, task.title);
@@ -130,20 +135,15 @@ export function commitMessageFor(
 }
 
 /** @description The PR title: a conventional header for the plan as a whole. */
-export function pullRequestTitleFor(plan: GitTextPlan, scope: string): string {
+export function pullRequestTitleFor(
+  plan: GitTextPlan,
+  scope: string | null,
+): string {
   return conventionalHeader(commitTypeFor(plan.category), scope, plan.title);
 }
 
-/**
- * @description The PR body, on the repo template's headings. Summary comes from the plan (its summary,
- * else the first paragraph of its description) plus one line per task. Testing keeps the template's
- * TODO: the server knows what changed, not how to prove it, and an invented test plan is worse
- * than an honest gap.
- */
-export function pullRequestBodyFor(
-  plan: GitTextPlan,
-  tasks: readonly GitTextTask[],
-): string {
+/** The plan's PR summary: its summary (else first description paragraph) plus a line per task. */
+function summaryFor(plan: GitTextPlan, tasks: readonly GitTextTask[]): string {
   const intro = (plan.summary ?? plan.description ?? '')
     .trim()
     .split(/\n\s*\n/u)[0]
@@ -153,11 +153,65 @@ export function pullRequestBodyFor(
 
     return `- ${task.title}${unfinished}`;
   });
-  const summary = [intro === '' ? null : intro, taskLines.join('\n')]
+
+  return [intro === '' ? null : intro, taskLines.join('\n')]
     .filter((part) => part != null && part !== '')
     .join('\n\n');
+}
 
-  const body = [
+/**
+ * @description Fill a repo's own PR template: the summary replaces the body of its first section,
+ * and every other heading, checklist and comment stays exactly as the template wrote it, prompts
+ * included, because those are the author's to answer. A template with no heading gets the summary
+ * above it.
+ */
+export function fillPullRequestTemplate(
+  template: string,
+  summary: string,
+): string {
+  const lines = template.replace(/\r\n/gu, '\n').trim().split('\n');
+  const isHeading = (line: string): boolean => {
+    return /^#{1,6} /u.test(line);
+  };
+  const first = lines.findIndex(isHeading);
+
+  if (first === -1) return `${summary}\n\n${lines.join('\n')}`;
+
+  const afterFirst = lines.slice(first + 1);
+  const nextOffset = afterFirst.findIndex(isHeading);
+  const rest = nextOffset === -1 ? [] : afterFirst.slice(nextOffset);
+
+  return [
+    ...lines.slice(0, first + 1),
+    '',
+    summary,
+    ...(rest.length === 0 ? [] : ['', ...rest]),
+  ].join('\n');
+}
+
+/**
+ * @description The PR body. With the target repo's template, that template filled
+ * ({@link fillPullRequestTemplate}); without one, this repo's template headings. Testing keeps its
+ * TODO either way: the server knows what changed, not how to prove it, and an invented test plan
+ * is worse than an honest gap. Always ends with the Plan-Id footer.
+ */
+export function pullRequestBodyFor(
+  plan: GitTextPlan,
+  tasks: readonly GitTextTask[],
+  template: string | null,
+): string {
+  const summary = summaryFor(plan, tasks);
+  const hasTemplate = template != null && template.trim() !== '';
+  const filled = hasTemplate
+    ? fillPullRequestTemplate(template, summary)
+    : defaultBody(summary);
+
+  return stripAttributionLines(`${filled}\n\nPlan-Id: ${plan.id}`);
+}
+
+/** The body on {@link PULL_REQUEST_TEMPLATE_HEADINGS}, for a caller that sends no template. */
+function defaultBody(summary: string): string {
+  return [
     '# Summary',
     summary,
     '## Testing',
@@ -169,8 +223,5 @@ export function pullRequestBodyFor(
       '- [ ] Out-of-scope work found here is filed as its own OT plan (tagged `follow-up`), not folded into this PR',
       '- [ ] Friction an agent or a reviewer hit is fed back into the system — a skill, an `AGENTS.md` line, a lint rule, a test or a check — so the next run does not hit it',
     ].join('\n'),
-    `Plan-Id: ${plan.id}`,
   ].join('\n\n');
-
-  return stripAttributionLines(body);
 }
