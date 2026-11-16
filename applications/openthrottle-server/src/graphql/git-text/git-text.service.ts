@@ -1,7 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PlansService, TasksService } from '@openthrottle/nestjs-repositories';
 
-import { DEFAULT_COMMIT_SCOPE } from './git-text.constants.ts';
 import type { GitTextDraftInput } from './git-text.input.ts';
 import type { GitTextDraftObject } from './git-text.object.ts';
 import {
@@ -57,15 +56,19 @@ export class GitTextService {
     return {
       branchName: branchNameFor(plan),
       commitMessage: task == null ? null : commitMessageFor(plan, task, scope),
-      pullRequestBody: pullRequestBodyFor(plan, tasks),
+      pullRequestBody: pullRequestBodyFor(
+        plan,
+        tasks,
+        input.pullRequestTemplate,
+      ),
       pullRequestTitle: pullRequestTitleFor(plan, scope),
     };
   }
 
-  /** A scope commitlint could accept; anything else falls back to the default, never into the header. */
-  private resolveScope(scope: string | null): string {
+  /** A scope commitlint could accept, or none: a malformed one is dropped, never put in the header. */
+  private resolveScope(scope: string | null): string | null {
     const trimmed = scope?.trim() ?? '';
 
-    return SCOPE_PATTERN.test(trimmed) ? trimmed : DEFAULT_COMMIT_SCOPE;
+    return SCOPE_PATTERN.test(trimmed) ? trimmed : null;
   }
 }

@@ -49,6 +49,7 @@ describe('GitTextService', () => {
   it('drafts branch, PR and the requested task commit', async () => {
     const draft = await service(plan, [task]).draft({
       planId: PLAN_ID,
+      pullRequestTemplate: null,
       scope: 'openthrottle-server',
       taskId: 'task-1',
     });
@@ -60,24 +61,31 @@ describe('GitTextService', () => {
     expect(draft.commitMessage).toContain('Task-Id: task-1');
   });
 
-  it('leaves the commit null without a task, and defaults an unusable scope', async () => {
+  it('leaves the commit null without a task, and drops an unusable scope', async () => {
     const draft = await service(plan, [task]).draft({
       planId: PLAN_ID,
+      pullRequestTemplate: null,
       scope: 'Not A Scope!',
       taskId: null,
     });
 
     expect(draft.commitMessage).toBeNull();
-    expect(draft.pullRequestTitle.startsWith('feat(monorepo):')).toBe(true);
+    expect(draft.pullRequestTitle).toBe('feat: forge abstraction');
   });
 
   it('refuses an unknown plan, and a task from another plan', async () => {
     await expect(
-      service(null, []).draft({ planId: PLAN_ID, scope: null, taskId: null }),
+      service(null, []).draft({
+        planId: PLAN_ID,
+        pullRequestTemplate: null,
+        scope: null,
+        taskId: null,
+      }),
     ).rejects.toBeInstanceOf(NotFoundException);
     await expect(
       service(plan, [task]).draft({
         planId: PLAN_ID,
+        pullRequestTemplate: null,
         scope: null,
         taskId: 'elsewhere',
       }),

@@ -1055,6 +1055,7 @@ export function GitTextDraftInputSchema(): z.ZodObject<
 > {
   return z.object({
     planId: z.string().min(1),
+    pullRequestTemplate: z.string().nullish(),
     scope: z.string().nullish(),
     taskId: z.string().nullish(),
   });

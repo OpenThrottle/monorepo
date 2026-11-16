@@ -10,7 +10,13 @@ export class GitTextDraftInput {
   planId!: string;
 
   @Field(() => String, {
-    description: `Conventional-commit scope: the Nx project the change touches. Defaults to 'monorepo'.`,
+    description: `The target repo's PR template (its raw markdown). The body keeps its headings and checklists and fills the first section. Omit for the default sections.`,
+    nullable: true,
+  })
+  pullRequestTemplate!: string | null;
+
+  @Field(() => String, {
+    description: `Conventional-commit scope, e.g. the Nx project touched; send one the repo's commitlint accepts. Omitted or malformed, the header has no scope: type: subject.`,
     nullable: true,
   })
   scope!: string | null;

@@ -20,12 +20,13 @@ type DraftGitTextResult = GenericResult<{ draft: GitTextDraft }>;
 export const draftGitTextToolParameters = z
   .object({
     planId: z.string().uuid(),
+    pullRequestTemplate: z.string().nullable().optional(),
     scope: z.string().min(1).nullable().optional(),
     taskId: z.string().uuid().nullable().optional(),
   })
   .strict();
 
-export const draftGitTextToolDescription = `Draft git text for a plan from its OT data: a branch name, the PR title and body (repo template, Plan-Id footer), and with taskId that task's commit message (Plan-Id / Task-Id footers). scope = the Nx project touched (default monorepo). Never carries a tool or model credit. A draft: fill the PR's Testing TODO and edit before using it.`;
+export const draftGitTextToolDescription = `Draft git text for a plan from its OT data: a branch name, the PR title and body (Plan-Id footer), and with taskId that task's commit message (Plan-Id / Task-Id footers). Pass pullRequestTemplate (the target repo's template markdown) to fill that template, and scope only when you know one its commitlint accepts; omitted, the header is type: subject. Never carries a tool or model credit. A draft: answer its template prompts and edit before using it.`;
 
 export async function draftGitTextToolHandler(
   args: z.infer<typeof draftGitTextToolParameters>,
@@ -40,6 +41,7 @@ export async function draftGitTextToolHandler(
     const result = await executeGraphqlWithAuth(token, GitTextDraftDocument, {
       input: {
         planId: parsed.data.planId,
+        pullRequestTemplate: parsed.data.pullRequestTemplate ?? null,
         scope: parsed.data.scope ?? null,
         taskId: parsed.data.taskId ?? null,
       },

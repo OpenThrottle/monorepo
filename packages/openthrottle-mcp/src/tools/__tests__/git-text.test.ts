@@ -49,7 +49,14 @@ describe('draftGitTextToolHandler', () => {
       expect(executeGraphqlWithAuth).toHaveBeenCalledWith(
         token,
         expect.anything(),
-        { input: { planId, scope: null, taskId: null } },
+        {
+          input: {
+            planId,
+            pullRequestTemplate: null,
+            scope: null,
+            taskId: null,
+          },
+        },
       );
       expect(result).toMatchObject({
         content: [

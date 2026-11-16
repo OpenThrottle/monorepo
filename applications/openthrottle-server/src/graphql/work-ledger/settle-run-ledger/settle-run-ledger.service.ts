@@ -385,19 +385,37 @@ export class SettleRunLedgerService {
   }
 
   /**
-   * A registered repository on its forge. GitHub keeps `repositories.name` (already `owner/repo`,
-   * and what every existing row was keyed on); another forge takes the full path from its remote,
-   * because `name` keeps only the last two segments and a GitLab group can nest.
+   * A registered repository on its forge, or null when its remote is on a forge this server has no
+   * adapter for. GitHub keeps `repositories.name` (already `owner/repo`, and what every existing row
+   * was keyed on); another forge takes the full path from its remote, because `name` keeps only the
+   * last two segments and a GitLab group can nest.
+   *
+   * Only a repository with no remote at all (a provisional, local-only one) falls back to GitHub,
+   * which is what it always meant. A Bitbucket or GitHub Enterprise remote is NOT GitHub: recording
+   * it as such would have the verifier ask github.com, 404, and orphan the rows, so it records
+   * nothing and says which host it could not serve.
    */
   private toRepoRef(repository: {
     readonly name: string;
     readonly normalizedRemoteUrl: string | null;
-  }): ForgeRepoRef {
-    const parsed = this.sourceControlService.parseRemote(
-      repository.normalizedRemoteUrl,
-    );
+  }): ForgeRepoRef | null {
+    const remote = nonEmpty(repository.normalizedRemoteUrl);
 
-    if (parsed != null && parsed.forge !== DEFAULT_FORGE_KIND) return parsed;
+    if (remote == null) {
+      return { forge: DEFAULT_FORGE_KIND, fullName: repository.name };
+    }
+
+    const parsed = this.sourceControlService.parseRemote(remote);
+
+    if (parsed == null) {
+      this.logger.warn(
+        `Work-ledger: repository ${repository.name} is on ${remoteHost(remote)}, which has no forge adapter; recording no artifacts for it.`,
+        SettleRunLedgerService.name,
+      );
+      return null;
+    }
+
+    if (parsed.forge !== DEFAULT_FORGE_KIND) return parsed;
 
     return { forge: DEFAULT_FORGE_KIND, fullName: repository.name };
   }
@@ -438,6 +456,11 @@ export class SettleRunLedgerService {
 
     return account?.id ?? null;
   }
+}
+
+/** The host of a remote URL, for log lines; the raw string when it does not parse. */
+function remoteHost(remote: string): string {
+  return /^(?:[a-z+]+:\/\/)?(?:[^@/]+@)?([^/:]+)/iu.exec(remote)?.[1] ?? remote;
 }
 
 function nonEmpty(value: string | null | undefined): string | null {

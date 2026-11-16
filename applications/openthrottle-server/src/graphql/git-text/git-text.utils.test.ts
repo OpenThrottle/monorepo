@@ -13,6 +13,7 @@ import {
   commitMessageFor,
   commitTypeFor,
   conventionalHeader,
+  fillPullRequestTemplate,
   pullRequestBodyFor,
   pullRequestTitleFor,
   stripAttributionInline,
@@ -165,10 +166,11 @@ describe('pull request drafts', () => {
   });
 
   it('fills the template headings in order, flags unfinished tasks and keeps the Testing TODO', () => {
-    const body = pullRequestBodyFor(plan, [
-      task,
-      { ...task, id: 't2', status: 'BLOCKED', title: 'Second task' },
-    ]);
+    const body = pullRequestBodyFor(
+      plan,
+      [task, { ...task, id: 't2', status: 'BLOCKED', title: 'Second task' }],
+      null,
+    );
     const positions = PULL_REQUEST_TEMPLATE_HEADINGS.map((heading) =>
       body.indexOf(`${heading}\n`),
     );
@@ -186,8 +188,59 @@ describe('pull request drafts', () => {
     const body = pullRequestBodyFor(
       { ...plan, summary: 'Did it.\nCo-authored-by: Bot <b@x>' },
       [],
+      null,
     );
 
     expect(body.toLowerCase()).not.toContain('co-authored-by');
+  });
+});
+
+describe('scope', () => {
+  it('omits the scope when there is none, the portable default', () => {
+    expect(conventionalHeader('fix', null, 'Handle it')).toBe('fix: handle it');
+    expect(pullRequestTitleFor(plan, null)).toBe(
+      'feat: source control: forge abstraction & PR sync',
+    );
+  });
+});
+
+describe('fillPullRequestTemplate', () => {
+  const foreign = [
+    '## What',
+    '',
+    '<!-- describe the change -->',
+    '',
+    '## How to test',
+    '',
+    '1. Steps go here',
+    '',
+    '## Checklist',
+    '',
+    '- [ ] Docs updated',
+  ].join('\n');
+
+  it('replaces only the first section and keeps every other heading and checklist', () => {
+    const filled = fillPullRequestTemplate(foreign, 'The summary.');
+
+    expect(filled.startsWith('## What\n\nThe summary.\n\n## How to test')).toBe(
+      true,
+    );
+    expect(filled).not.toContain('<!-- describe the change -->');
+    expect(filled).toContain('1. Steps go here');
+    expect(filled).toContain('- [ ] Docs updated');
+  });
+
+  it('puts the summary above a template with no headings', () => {
+    expect(fillPullRequestTemplate('- [ ] Tested', 'S.')).toBe(
+      'S.\n\n- [ ] Tested',
+    );
+  });
+
+  it('is what the body uses when a template is given, footer appended', () => {
+    const body = pullRequestBodyFor(plan, [task], foreign);
+
+    expect(body).toContain('## Checklist');
+    expect(body).not.toContain('## Review focus');
+    expect(body.endsWith(`Plan-Id: ${plan.id}`)).toBe(true);
   });
 });
