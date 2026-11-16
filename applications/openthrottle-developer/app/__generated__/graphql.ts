@@ -9071,6 +9071,8 @@ export type SearchAgentAssetsQuery = {
   __typename?: 'Query';
   searchAgentAssets: {
     __typename?: 'AgentAssetSearchResult';
+    mode: string;
+    reason?: string | null;
     chunks: Array<{
       __typename?: 'AgentAssetChunk';
       content: string;
@@ -12979,6 +12981,8 @@ export type GetSearchResultsQuery = {
   __typename?: 'Query';
   search: {
     __typename?: 'SearchResult';
+    mode: string;
+    reason?: string | null;
     total: number;
     chunks: Array<{
       __typename?: 'SearchChunk';
@@ -20738,6 +20742,8 @@ export const SearchAgentAssetsDocument = {
                     ],
                   },
                 },
+                { kind: 'Field', name: { kind: 'Name', value: 'mode' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'reason' } },
               ],
             },
           },
@@ -31683,6 +31689,8 @@ export const GetSearchResultsDocument = {
                     ],
                   },
                 },
+                { kind: 'Field', name: { kind: 'Name', value: 'mode' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'reason' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'total' } },
               ],
             },

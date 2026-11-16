@@ -13,6 +13,8 @@ query getSearchResults($input: SearchInput!) {
       taskId
       taskTitle
     }
+    mode
+    reason
     total
   }
 }

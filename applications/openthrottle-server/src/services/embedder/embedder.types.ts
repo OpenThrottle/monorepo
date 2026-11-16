@@ -26,3 +26,10 @@ export interface EmbeddingColumnDims {
   readonly dims: number | null;
   readonly table: string;
 }
+
+/** @description What the lexical-only boot banner reports. */
+export interface LexicalOnlyBannerInput {
+  readonly detail: string;
+  readonly provider: string;
+  readonly state: string;
+}

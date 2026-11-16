@@ -130,7 +130,7 @@ const main = async (): Promise<void> => {
     );
   } else if (embeddings) {
     logger.warn(`server embeddings ${embeddings.status}: ${embeddings.detail ?? 'see MCP health for coverage'}`); // prettier-ignore
-    logger.detail('semantic_search still answers, lexically — run pnpm run embeddings:download-model -- --verify and see docs/monorepo/Ollama.md'); // prettier-ignore
+    logger.detail('semantic_search still answers, lexically — the next server boot fetches the model; to fetch it now: pnpm run embeddings:download-model -- --verify'); // prettier-ignore
   } else {
     logger.warn('could not read serverHealth.embeddings (older server, or the request failed)'); // prettier-ignore
   }

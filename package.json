@@ -125,6 +125,17 @@
       "check-side-effects": {},
       "check-test-file-filter-docs": {},
       "check-test-file-names": {},
+      "ensure-embedding-model": {
+        "cache": false,
+        "executor": "nx:run-commands",
+        "metadata": {
+          "description": "Server boot gate (OT plan 7803080c): makes sure the semantic-search embedding model is in the weights cache (EMBEDDING_MODELS_DIR, else ~/.openthrottle/models) before openthrottle-server dev, dev-api, worker or start boots, so no one has to know embeddings:download-model exists. Re-hashes every pinned file (~0.5s), downloads what is missing with a progress line, and loads the embedder once after a download. Skips when EMBEDDING_PROVIDER is not local. Never fails the boot: offline it prints a loud warning and exits 0, and the server answers search by keyword until a later boot heals it. Reads the server's .env so it sees the same provider and cache. Never cached (external filesystem state)."
+        },
+        "options": {
+          "command": "tsx --env-file-if-exists=applications/openthrottle-server/.env ./scripts/ensure-embedding-model.ts",
+          "cwd": "{workspaceRoot}"
+        }
+      },
       "ensure-migrations": {
         "cache": false,
         "executor": "nx:run-commands",
