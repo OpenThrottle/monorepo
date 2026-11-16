@@ -158,6 +158,7 @@ jobs:
               compose_content                  = "services: {}"
               developer_domain                 = "dev.example.com"
               jwt_secret                       = ""
+              mcp_domain                       = "mcp.example.com"
               postgres_db                      = "openthrottle"
               postgres_host                    = "10.1.2.3"
               postgres_password_secret         = "openthrottle-production-postgres-password"
@@ -193,14 +194,16 @@ jobs:
           }
 
           # Both branches of the data-volume conditional: they are different
-          # scripts as far as shellcheck is concerned.
+          # scripts as far as shellcheck is concerned. They also split the
+          # mcp_domain conditional (the OAuth .env block) between them, so both
+          # of its branches get checked too.
           resource "local_file" "with_volume" {
-            content  = templatefile(local.tpl, merge(local.vars, { data_volume_device = "/dev/disk/by-id/scsi-0HC_Volume_1" }))
+            content  = templatefile(local.tpl, merge(local.vars, { data_volume_device = "/dev/disk/by-id/scsi-0HC_Volume_1", mcp_domain = "mcp.example.com" }))
             filename = "rendered-with-volume.sh"
           }
 
           resource "local_file" "without_volume" {
-            content  = templatefile(local.tpl, merge(local.vars, { data_volume_device = "" }))
+            content  = templatefile(local.tpl, merge(local.vars, { data_volume_device = "", mcp_domain = "" }))
             filename = "rendered-without-volume.sh"
           }
 
