@@ -1,6 +1,6 @@
 /**
  * @description TypeORM entity for the cms `schemas` table: a versioned JSON
- * Schema for one fragment typename. Matches databases/cms/migrations (001).
+ * Schema for one fragment typename. Matches databases/cms/migrations (001, 013).
  * @public
  */
 
@@ -14,7 +14,10 @@ import {
 import type { CmsStatus } from '../../config/config.types.ts';
 
 @Entity('schemas')
-@Index('idx_schemas_typename_version', ['typename', 'version'])
+@Index('uq_schemas_typename_version', ['typename', 'version'], {
+  unique: true,
+  where: '"is_deleted" IS NOT TRUE',
+})
 export class Schema extends BaseUuidModel {
   @Column({ default: () => "'{}'::jsonb", name: 'json_schema', type: 'jsonb' })
   jsonSchema!: Record<string, unknown>;

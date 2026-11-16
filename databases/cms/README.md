@@ -237,7 +237,7 @@ The sync that fills `schemas` from the block manifests (OT plan
 `a608869b-407d-40a0-9dff-8d61fe578cf7`, task 5) runs in two places. Both are in
 `@openthrottle/nestjs-repositories-cms`:
 
-- An **`onApplicationBootstrap` hook** in the module. It runs once each time the server starts.
+- An **`onApplicationBootstrap` hook** on `CmsSchemaSyncService`. It runs once each time the server starts.
 - An **admin-only `syncCmsSchemas` mutation**. It runs the same code on demand, and it is how you
   retry after a failed boot sync.
 
@@ -252,10 +252,11 @@ What the sync has to guarantee:
 
 - **Append-only.** A `(typename, version)` missing from the table inserts one row. Nothing is updated
   or deleted, and fragments keep the `schema_uuid` they were created with.
-- **Safe with more than one replica.** Today `(typename, version)` has only a plain index
-  (`idx_schemas_typename_version`, migration 001), so two servers booting together could insert the
-  same row twice. Task 5 adds a migration that makes the pair unique, and the sync inserts with
-  `ON CONFLICT (typename, version) DO NOTHING`.
+- **Safe with more than one replica.** Migration `013` replaced the plain
+  `idx_schemas_typename_version` (migration 001) with the partial unique index
+  `uq_schemas_typename_version` (live rows only), and the sync inserts with
+  `ON CONFLICT (typename, version) WHERE is_deleted IS NOT TRUE DO NOTHING`. It also takes the same
+  transaction advisory lock as the local seed script, so syncs never interleave.
 - **Never blocks the API.** A failed sync logs an error and the server keeps serving. Fragment writes
   against a typename with no row then fail on their own, and the rest of OpenThrottle stays up.
 
@@ -301,14 +302,18 @@ Rejected options:
 - **An `exports` subpath `./schemas/*`** on the React packages. Same dependency problem, and it adds
   a server-facing entry to client packages whose entries deliberately point at `src`.
 
-## Not here yet
+## What the server serves
 
-Reads and writes are served: `openthrottle-server` imports `NestjsRepositoriesCmsModule`, whose
-`CmsGraphqlModule` answers `cmsLayout` / `cmsLayoutByUuid` (the fragment tree in one recursive query,
-cut at depth 10, cycles not followed), `cmsLayouts`, `cmsFragments`, `cmsLibraries`, `cmsSchemas`, `cmsSchema` and
+`openthrottle-server` imports `NestjsRepositoriesCmsModule`, whose `CmsGraphqlModule` answers
+`cmsLayout` / `cmsLayoutByUuid` (the fragment tree in one recursive query, cut at depth 10, cycles
+not followed), `cmsLayouts`, `cmsFragments`, `cmsLibraries`, `cmsSchemas`, `cmsSchema` and
 `cmsSchemaByTypename`. Reads are public; writes (fragments and their edges, layouts, library
-components) need `cms:write`. What is left:
+components, `syncCmsSchemas`) need `cms:write`, which is admin-only.
 
-- **Filling `schemas`** (OT plan `a608869b-407d-40a0-9dff-8d61fe578cf7`, task 5), as decided in
-  [§ 3](#3-schema-sync-trigger-on-server-boot-in-the-package-plus-an-admin-mutation) and
-  [§ 4](#4-how-the-server-reads-the-manifests-copied-into-the-packages-dist-at-build-time).
+`schemas` is filled by `CmsSchemaSyncService` (`src/graphql/cms-schema-sync/` in
+`@openthrottle/nestjs-repositories-cms`) on every boot, as decided in
+[§ 3](#3-schema-sync-trigger-on-server-boot-in-the-package-plus-an-admin-mutation) and
+[§ 4](#4-how-the-server-reads-the-manifests-copied-into-the-packages-dist-at-build-time). The boot
+log says what it did (`CMS schemas in sync (14 generated, nothing to change)` or `CMS schemas synced
+…`), or `CMS schema sync failed: …` with the reason. After `cms-schemas:write`, rebuild the package
+(or restart `dev`) and call `syncCmsSchemas` to pick up the new versions without a restart.

@@ -28,7 +28,8 @@ hand-written `@ObjectType()` classes and `*ListResult` envelopes (`items`, `tota
 - `src/graphql/` — `cms-graphql/` (the module, shared utils and error codes), one folder per area
   (`cms-layouts/`, `cms-libraries/`, `cms-schemas/`, `cms-fragments/`, `cms-fragment-children/`,
   `cms-library-components/`: object, input, mapper, service, resolver), `cms-fragment-tree/` (the
-  pure tree builder and its depth/node caps) and `cms-schema-validation/` (the one Ajv instance).
+  pure tree builder and its depth/node caps), `cms-schema-validation/` (the one Ajv instance) and
+  `cms-schema-sync/` (the boot-time and on-demand sync of the generated block schemas into `schemas`).
 - `src/testing/` — the fishery factories, published as `./testing` and never from the main barrel
   (they import the `@faker-js/faker` devDependency, which the production image lacks).
 
@@ -89,3 +90,13 @@ hand-written `@ObjectType()` classes and `*ListResult` envelopes (`items`, `tota
 
 - [README.md](./README.md) — overview and configuration.
 - [../../databases/cms/README.md](../../databases/cms/README.md) — the cms tables and their relations.
+- **`schemas` is filled from the block manifests, append-only, on every boot** (`CmsSchemaSyncService`,
+  plus the `cms:write` `syncCmsSchemas` mutation). The `build` target copies
+  `packages/react-router-cms-{core,ui}/schemas/*.json` into `dist/schemas/<pkg>/` (`assets`, with both
+  folders in `inputs`), and the service reads them relative to its own compiled file — never the
+  React packages themselves, which must not become server dependencies. Under `src/` (vitest) that
+  folder does not exist, so a booted test module logs `CMS schema sync failed` and carries on; pass a
+  temp dir through `CMS_SCHEMA_MANIFESTS_DIR` to exercise it. A failed sync never throws. Its SQL
+  mirrors `scripts/openthrottle-database-sync-cms-schemas.ts` (the local seed) and shares its
+  advisory-lock key; change both together, and keep `getCmsSchemaVersion` byte-for-byte the
+  generator's hash.

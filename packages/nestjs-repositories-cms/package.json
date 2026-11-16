@@ -58,7 +58,27 @@
     ],
     "targets": {
       "build": {
-        "executor": "@nx/js:tsc"
+        "executor": "@nx/js:tsc",
+        "inputs": [
+          "default",
+          "^default",
+          "{workspaceRoot}/packages/react-router-cms-core/schemas/*.json",
+          "{workspaceRoot}/packages/react-router-cms-ui/schemas/*.json"
+        ],
+        "options": {
+          "assets": [
+            {
+              "glob": "*.json",
+              "input": "packages/react-router-cms-core/schemas",
+              "output": "schemas/react-router-cms-core"
+            },
+            {
+              "glob": "*.json",
+              "input": "packages/react-router-cms-ui/schemas",
+              "output": "schemas/react-router-cms-ui"
+            }
+          ]
+        }
       },
       "dev": {
         "cache": false,

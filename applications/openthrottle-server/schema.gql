@@ -369,6 +369,27 @@ type CmsLibraryComponentListResult {
   totalCount: Int!
 }
 
+"""
+What one sync of the generated block schemas into the cms schemas table changed. All three lists empty means everything was already in sync.
+"""
+type CmsSchemaSyncResultObject {
+  """
+  Versions that existed but were not ACTIVE and are now (typename@version).
+  """
+  activated: [String!]!
+
+  """
+  Older ACTIVE versions now DISABLED; fragments pinned to them keep them (typename@version).
+  """
+  disabled: [String!]!
+
+  """Versions inserted as new ACTIVE rows (typename@version)."""
+  inserted: [String!]!
+
+  """How many generated block schemas the manifests list."""
+  total: Int!
+}
+
 type TaskObject {
   assignee: String
   category: String
@@ -7261,6 +7282,11 @@ type Mutation {
 
   """Soft delete a library component."""
   deleteCmsLibraryComponent(uuid: String!): CmsLibraryComponentObject!
+
+  """
+  Sync the generated block schemas into the cms schemas table, the same sync the server runs on boot. Append-only and idempotent. CMS_SCHEMA_SYNC_FAILED when the manifests are missing or stale or the write fails.
+  """
+  syncCmsSchemas: CmsSchemaSyncResultObject!
 
   """
   Trigger a test websocket notification (system.alert). Returns true when the event was emitted. Use from the web app to verify the notification flow end-to-end.
