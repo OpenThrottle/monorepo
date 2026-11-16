@@ -8,6 +8,7 @@
  * pointing at a root outside the repo, and a mocked `fs` would let a naive
  * path-prefix implementation pass.
  */
+import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -248,5 +249,156 @@ describe('detectScope — the injected tier', () => {
     link('ot-loop', authoredIn(sourceRepo, 'ot-loop'));
 
     expect(detectScope('ot-loop', foreignRepo, env())).toBe('ours');
+  });
+});
+
+describe('detectScope — a ledgered copy (container-mode injection)', () => {
+  let fixtureRoot: string;
+  let foreignRepo: string;
+  let ledgerDir: string;
+  let personalRoot: string;
+
+  const env = (): NodeJS.ProcessEnv => {
+    return {
+      OPENTHROTTLE_FOREIGN_SKILL_LEDGER_DIR: ledgerDir,
+      OPENTHROTTLE_PERSONAL_SKILLS_DIR: personalRoot,
+    };
+  };
+
+  /** Reproduce what copy-mode injection writes: a real directory carrying a SKILL.md. */
+  const copyInto = (name: string, body: string): string => {
+    const relativePath = path.join('.agents', 'skills', name);
+    const dir = path.join(foreignRepo, relativePath);
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(path.join(dir, 'SKILL.md'), body);
+    return relativePath;
+  };
+
+  const fingerprint = (body: string): string => {
+    return createHash('sha256').update(body, 'utf8').digest('hex');
+  };
+
+  const writeLedger = (file: string, entries: readonly unknown[]) => {
+    fs.mkdirSync(ledgerDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(ledgerDir, file),
+      JSON.stringify({
+        createdDirs: [],
+        entries,
+        // The host path: deliberately NOT the path the hook sees.
+        repoPath: '/host/workspaces/foreign',
+        updatedAt: '2026-11-15T00:00:00.000Z',
+      }),
+    );
+  };
+
+  const copyEntry = (
+    name: string,
+    body: string,
+    injectedRelativePath: string,
+    sourcePath = `/srv/openthrottle/skills/${name}`,
+  ) => {
+    return {
+      fingerprint: fingerprint(body),
+      injectedRelativePath,
+      mode: 'copy',
+      name,
+      sourcePath,
+    };
+  };
+
+  beforeEach(() => {
+    fixtureRoot = fs.realpathSync(
+      fs.mkdtempSync(path.join(os.tmpdir(), 'skill-usage-ledgered-')),
+    );
+    foreignRepo = path.join(fixtureRoot, 'foreign');
+    ledgerDir = path.join(fixtureRoot, 'ledgers');
+    personalRoot = path.join(fixtureRoot, 'personal');
+    fs.mkdirSync(path.join(foreignRepo, '.git'), { recursive: true });
+  });
+
+  afterEach(() => {
+    fs.rmSync(fixtureRoot, { force: true, recursive: true });
+  });
+
+  it('labels a copy whose SKILL.md matches a ledgered fingerprint as injected', () => {
+    const body = '# ot-plans\n';
+    const relativePath = copyInto('ot-plans', body);
+    writeLedger('a.json', [copyEntry('ot-plans', body, relativePath)]);
+
+    expect(detectScope('ot-plans', foreignRepo, env())).toBe('injected');
+  });
+
+  it('finds the entry in the worktree-overlay ledger too', () => {
+    const body = '# ot-worktree\n';
+    const relativePath = copyInto('ot-worktree', body);
+    writeLedger('a.json', []);
+    writeLedger('a.worktree-overlay.json', [
+      copyEntry('ot-worktree', body, relativePath),
+    ]);
+
+    expect(detectScope('ot-worktree', foreignRepo, env())).toBe('injected');
+  });
+
+  it('labels a ledgered copy of a personal skill as personal', () => {
+    const body = '# draft\n';
+    const relativePath = copyInto('draft', body);
+    writeLedger('a.json', [
+      copyEntry('draft', body, relativePath, path.join(personalRoot, 'draft')),
+    ]);
+
+    expect(detectScope('draft', foreignRepo, env())).toBe('personal');
+  });
+
+  it('labels a copy the user has since edited as third-party', () => {
+    const relativePath = copyInto('ot-plans', '# edited by the user\n');
+    writeLedger('a.json', [
+      copyEntry('ot-plans', '# ot-plans\n', relativePath),
+    ]);
+
+    expect(detectScope('ot-plans', foreignRepo, env())).toBe('third-party');
+  });
+
+  it('ignores a ledger entry recorded for a different skill name', () => {
+    const body = '# ot-plans\n';
+    const relativePath = copyInto('ot-plans', body);
+    writeLedger('a.json', [copyEntry('ot-stack', body, relativePath)]);
+
+    expect(detectScope('ot-plans', foreignRepo, env())).toBe('third-party');
+  });
+
+  it('ignores a symlink-mode entry, which the link check already owns', () => {
+    const body = '# ot-plans\n';
+    const relativePath = copyInto('ot-plans', body);
+    writeLedger('a.json', [
+      { ...copyEntry('ot-plans', body, relativePath), mode: 'symlink' },
+    ]);
+
+    expect(detectScope('ot-plans', foreignRepo, env())).toBe('third-party');
+  });
+
+  it('refuses a ledgered path that escapes the repo', () => {
+    const body = '# ot-plans\n';
+    const outside = path.join(fixtureRoot, 'outside', 'ot-plans');
+    fs.mkdirSync(outside, { recursive: true });
+    fs.writeFileSync(path.join(outside, 'SKILL.md'), body);
+    writeLedger('a.json', [
+      copyEntry('ot-plans', body, path.join('..', 'outside', 'ot-plans')),
+    ]);
+
+    expect(detectScope('ot-plans', foreignRepo, env())).toBe('third-party');
+  });
+
+  it('fails open on a malformed ledger and on a missing ledger dir', () => {
+    copyInto('ot-plans', '# ot-plans\n');
+    fs.mkdirSync(ledgerDir, { recursive: true });
+    fs.writeFileSync(path.join(ledgerDir, 'broken.json'), '{ not json');
+
+    expect(detectScope('ot-plans', foreignRepo, env())).toBe('third-party');
+    expect(
+      detectScope('ot-plans', foreignRepo, {
+        OPENTHROTTLE_FOREIGN_SKILL_LEDGER_DIR: path.join(fixtureRoot, 'none'),
+      }),
+    ).toBe('third-party');
   });
 });

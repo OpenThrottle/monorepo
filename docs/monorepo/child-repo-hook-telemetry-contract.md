@@ -110,14 +110,33 @@ it posts to.
 
 ### `detectScope` in a foreign repo
 
-`detectScope` currently answers "is this skill authored under `<repoRoot>/skills/`". In a foreign repo
-that question is malformed: OT's own skills arrive there via injection (`d3a30314`) or via the plugin,
-never as `<repoRoot>/skills/<name>`. Left alone it would misreport OT-authored skills as `third-party`,
+`detectScope` originally answered only "is this skill authored under `<repoRoot>/skills/`". In a
+foreign repo that question is malformed: OT's own skills arrive there via injection (`d3a30314`),
+never as `<repoRoot>/skills/<name>`. Left alone it misreported OT-authored skills as `third-party`,
 quietly corrupting the exact metric the telemetry exists to produce.
 
-In `foreign` repos, scope resolves against the **injected/plugin skill set** — the skills OT actually
-put there — and falls back to `third-party` only when the skill is in neither. Fail-open is preserved:
-any error still yields `third-party`.
+In `foreign` repos, scope resolves against the **injected skill set** — the skills OT actually put
+there — and falls back to `third-party` only when the skill is not in it. Fail-open is preserved: any
+error still yields `third-party`. Injection writes two shapes, and both are recognised
+(`packages/agentic-hooks/src/utils/scope.ts`):
+
+- **Symlink (host mode).** The link at `.agents/skills/<name>` resolves into a personal root →
+  `personal`, or into `<checkout>/skills/<name>` of a different checkout → `injected`.
+- **Copy (container mode, [injection §6](./foreign-workspace-skill-injection.md)).** A copy realpaths
+  to itself, so nothing on disk in the repo says where it came from. It is matched against the
+  injection ledgers instead (`utils/findLedgeredCopy.ts`, reading
+  `OPENTHROTTLE_FOREIGN_SKILL_LEDGER_DIR` or `~/.openthrottle/foreign-skill-ledgers`): an entry with
+  the same name whose fingerprint matches the copy's `SKILL.md` makes it OT's. Matching is by
+  fingerprint across every ledger, not by the ledger's `repoPath`, because that key is the **host**
+  path and a containerised hook sees the **container** path. A copy the user has since edited no
+  longer matches, and stops being OT's. A ledgered `sourcePath` under the personal root is
+  `personal`; that comparison is lexical, so a container whose personal root is mounted elsewhere
+  reads its personal copies as `injected`.
+
+No plugin payload ships skills today — every `plugins/*` directory carries hooks only — so there is
+no plugin skill set to resolve against. If a payload ever ships a `skills/` folder, its skills reach
+the agent plugin-namespaced (`<plugin>:<skill>`), and those are deliberately `third-party` today; that
+rule would need revisiting in the same change.
 
 #### The scope vocabulary grows; senders are never required to catch up
 
@@ -385,7 +404,7 @@ without the field rather than held.
 | endpoint sources                  | repo `.env` → process env → `~/.openthrottle/.env` | process env → `~/.openthrottle/.env`                         |
 | repo identity                     | normalized git remote URL, or none                 | normalized git remote URL, or none                           |
 | working directory (`cwd`)         | sent                                               | **never**                                                    |
-| scope detection                   | `<repoRoot>/skills/<name>`                         | injected/plugin skill set                                    |
+| scope detection                   | `<repoRoot>/skills/<name>`                         | injected skill set (links, then ledgered copies)             |
 | buffer location                   | `~/.openthrottle/skill-usage/`                     | `~/.openthrottle/skill-usage/` (same)                        |
 | privacy default                   | `truncated` (args redacted, 256 cap)               | **`name-only`** (no args); `truncated` only by the §6 opt-in |
 | warning on unreachable endpoint   | per failure                                        | one per session                                              |
