@@ -7,7 +7,8 @@ import type {
   ChildProcessMetrics,
   WallClockMetrics,
 } from '@openthrottle/openthrottle-agentic-utils';
-import type { SystemCpuMetrics } from '@openthrottle/openthrottle-agentic-workflow';
+
+import type { RunSystemCpuMetrics } from '../system-metrics/system-metrics.types.ts';
 
 /** Process memory and CPU snapshot (units: MB for memory, ms for CPU). */
 export interface ProcessMetricsSnapshot {
@@ -26,6 +27,8 @@ export interface ProcessMetricsSnapshot {
 export interface TaskRunMetrics {
   readonly atEnd: ProcessMetricsSnapshot;
   readonly atStart: ProcessMetricsSnapshot;
+  /** @description Host and container CPU readings at the run's start and end, when captured. */
+  readonly systemCpuMetrics?: RunSystemCpuMetrics;
 }
 
 /**
@@ -40,8 +43,8 @@ export interface TaskRunMetrics {
 export interface EnhancedTaskRunMetrics extends TaskRunMetrics {
   /** Child process CPU/memory metrics from pidusage polling (if available). */
   readonly childProcessMetrics?: ChildProcessMetrics;
-  /** System-level CPU pressure metrics (load average, PSI on Linux). */
-  readonly systemCpuMetrics?: SystemCpuMetrics;
+  /** System-level CPU pressure metrics (load average, PSI on Linux, container cgroup). */
+  readonly systemCpuMetrics?: RunSystemCpuMetrics;
   /** Wall-clock vs CPU time metrics for determining CPU/IO bound behavior. */
   readonly wallClockMetrics?: WallClockMetrics;
 }

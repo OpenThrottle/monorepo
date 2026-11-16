@@ -41,6 +41,9 @@ terraform apply
 
 Expect CPU, not RAM, to be what forces this. The sizing note records that nominal CPU limits already
 sum to 2.5 against 2 vCPU, so contention between the two Node processes arrives before any OOM.
+The signal to watch is the server's own throttling (`container.cpuWindow.throttledPeriodRatio`), not
+`loadAverage`, which is host-wide inside a container. See
+[container-metrics.md](./container-metrics.md).
 
 ## Rung 2a — grow the data volume
 

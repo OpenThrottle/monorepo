@@ -6,12 +6,19 @@
 import { isRecord } from '@openthrottle/nodejs-utils';
 
 import { ChildProcessMetricsObject } from '../metrics/child-process-metrics.object.ts';
+import {
+  ContainerCpuWindowObject,
+  ContainerMemoryEventsObject,
+  ContainerMetricsObject,
+} from '../metrics/container-metrics.object.ts';
+import type { MetricScopeType } from '../metrics/metric-scope.enum.ts';
+import { MetricScope } from '../metrics/metric-scope.enum.ts';
 import { ProcessMetricsSnapshotObject } from '../metrics/process-metrics-snapshot.object.ts';
+import { PsiCpuMetricsObject } from '../metrics/psi-cpu-metrics.object.ts';
 import type { PressureLevelType } from '../metrics/system-cpu-metrics.object.ts';
 import {
   LoadAverageMetricsObject,
   PressureLevel,
-  PsiCpuMetricsObject,
   SystemCpuMetricsObject,
   SystemCpuSnapshotObject,
 } from '../metrics/system-cpu-metrics.object.ts';
@@ -72,6 +79,35 @@ function readRecord(
 ): Record<string, unknown> {
   const value = record[key];
   return isRecord(value) ? value : {};
+}
+
+/**
+ * @description Reads an optional MetricScope; anything else (absent on older runs) is null.
+ */
+function readNullableScope(
+  record: Record<string, unknown>,
+  key: string,
+): MetricScopeType | null {
+  const value = record[key];
+  switch (value) {
+    case MetricScope.container:
+    case MetricScope.host:
+    case MetricScope.process:
+      return value;
+    default:
+      return null;
+  }
+}
+
+/**
+ * @description Reads a nullable string field.
+ */
+function readNullableString(
+  record: Record<string, unknown>,
+  key: string,
+): string | null {
+  const value = record[key];
+  return typeof value === 'string' ? value : null;
 }
 
 /**
@@ -334,6 +370,7 @@ function toLoadAverageMetricsObject(
   out.load1m = readNumber(raw, 'load1m');
   out.load5m = readNumber(raw, 'load5m');
   out.perCoreLoad1m = readNumber(raw, 'perCoreLoad1m');
+  out.scope = readNullableScope(raw, 'scope');
   return out;
 }
 
@@ -349,6 +386,80 @@ function toPsiCpuMetricsObject(
   out.some300s = readNullableNumber(raw, 'some300s');
   out.some60s = readNullableNumber(raw, 'some60s');
   out.someTotalUs = readNullableNumber(raw, 'someTotalUs');
+  out.scope = readNullableScope(raw, 'scope');
+  return out;
+}
+
+function toContainerCpuWindowObject(
+  value: unknown,
+): ContainerCpuWindowObject | null {
+  if (!isRecord(value) || typeof value['elapsedMs'] !== 'number') {
+    return null;
+  }
+  const out = new ContainerCpuWindowObject();
+  out.elapsedMs = value['elapsedMs'];
+  out.throttledPeriodRatio = readNullableNumber(value, 'throttledPeriodRatio');
+  out.usageRatioOfLimit = readNullableNumber(value, 'usageRatioOfLimit');
+  out.usedVcpus = readNullableNumber(value, 'usedVcpus');
+  return out;
+}
+
+function toContainerMemoryEventsObject(
+  value: unknown,
+): ContainerMemoryEventsObject | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+  const out = new ContainerMemoryEventsObject();
+  out.high = readNumber(value, 'high');
+  out.max = readNumber(value, 'max');
+  out.oom = readNumber(value, 'oom');
+  out.oomKill = readNumber(value, 'oomKill');
+  return out;
+}
+
+/**
+ * @description Reads a stored cgroup union (`kind: 'cgroup' | 'unavailable'`) into the
+ * flattened ContainerMetricsObject. Null when absent (runs recorded before container metrics).
+ */
+function toContainerMetricsObjectFromRaw(
+  value: unknown,
+): ContainerMetricsObject | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+  const out = new ContainerMetricsObject();
+  out.scope = 'container';
+  if (value['kind'] !== 'cgroup') {
+    out.available = false;
+    out.cpu = null;
+    out.cpuWindow = null;
+    out.memory = null;
+    out.path = null;
+    out.psi = null;
+    out.unavailableReason = readNullableString(value, 'reason');
+    return out;
+  }
+  const cpu = readRecord(value, 'cpu');
+  const memory = readRecord(value, 'memory');
+  out.available = true;
+  out.cpu = {
+    limitVcpus: readNullableNumber(cpu, 'limitVcpus'),
+    nrPeriods: readNullableNumber(cpu, 'nrPeriods'),
+    nrThrottled: readNullableNumber(cpu, 'nrThrottled'),
+    throttledUsec: readNullableNumber(cpu, 'throttledUsec'),
+    usageUsec: readNullableNumber(cpu, 'usageUsec'),
+  };
+  out.cpuWindow = toContainerCpuWindowObject(value['cpuWindow']);
+  out.memory = {
+    currentBytes: readNullableNumber(memory, 'currentBytes'),
+    events: toContainerMemoryEventsObject(memory['events']),
+    highBytes: readNullableNumber(memory, 'highBytes'),
+    limitBytes: readNullableNumber(memory, 'limitBytes'),
+  };
+  out.path = readNullableString(value, 'path');
+  out.psi = toPsiCpuMetricsObject(readRecord(value, 'psi'));
+  out.unavailableReason = null;
   return out;
 }
 
@@ -356,6 +467,7 @@ function toSystemCpuSnapshotObject(
   raw: Record<string, unknown>,
 ): SystemCpuSnapshotObject {
   const out = new SystemCpuSnapshotObject();
+  out.container = toContainerMetricsObjectFromRaw(raw['container']);
   out.loadAverage = toLoadAverageMetricsObject(readRecord(raw, 'loadAverage'));
   out.psi = toPsiCpuMetricsObject(readRecord(raw, 'psi'));
   out.timestamp = readNumber(raw, 'timestamp');
@@ -368,7 +480,11 @@ function toSystemCpuMetricsObject(
   const out = new SystemCpuMetricsObject();
   out.atEnd = toSystemCpuSnapshotObject(readRecord(raw, 'atEnd'));
   out.atStart = toSystemCpuSnapshotObject(readRecord(raw, 'atStart'));
+  out.containerCpuWindow = toContainerCpuWindowObject(
+    raw['containerCpuWindow'],
+  );
   out.platform = readString(raw, 'platform');
+  out.pressureBasis = readNullableScope(raw, 'pressureBasis');
   out.pressureLevel = readPressureLevel(raw, 'pressureLevel');
   out.psiAvailable = readBoolean(raw, 'psiAvailable');
   out.psiFullDeltaUs = readNullableNumber(raw, 'psiFullDeltaUs');
