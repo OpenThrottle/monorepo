@@ -27,10 +27,12 @@ export interface BatchedChunkSink {
 
 /**
  * @description One batched slice of validation output; the server forwards it to plan output
- * tagged with `taskId`.
+ * tagged with `taskId` and `attempt`.
  * @public
  */
 export interface ValidationChunk {
+  /** The task's attempt number the command ran for. */
+  readonly attempt: number;
   readonly command: string;
   readonly taskId: string;
   readonly text: string;

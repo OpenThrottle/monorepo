@@ -71,6 +71,7 @@ query TaskOutputStreamChunks($planId: ID!, $taskId: ID!) {
     createdAt
     id
     iteration
+    kind
     planId
     taskId
   }

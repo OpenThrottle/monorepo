@@ -24,6 +24,7 @@ export const planOutputStreamFactory = Factory.define<PlanOutputStreamChunk>(
     createdAt: faker.date.past(),
     id: faker.string.uuid(),
     iteration: faker.number.int({ max: 10, min: 1 }),
+    kind: null,
     plan: plansFactory.build(),
     planId: faker.string.uuid(),
     taskId: null,

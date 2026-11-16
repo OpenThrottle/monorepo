@@ -148,6 +148,14 @@ export const PLAN_LIFECYCLE_HOOKS_COPY = {
  * meaning is carried by `iterationTitle` on hover.
  */
 export const OUTPUT_STREAM_COPY = {
+  attemptDetailsHide: `Hide full attempt`,
+  attemptDetailsShow: `Show full attempt`,
+  attemptHeaderSeparator: ` · `,
+  attemptLabel: (number: number): string => `Attempt ${number}`,
+  attemptTitle: `OT Loop attempt`,
+  attemptValidation: (labels: readonly string[]): string =>
+    `validation: ${labels.join(', ')}`,
+  attemptWorker: (duration: string): string => `worker ${duration}`,
   iterationPrefix: `#`,
   iterationTitle: `Iteration`,
   taskLabel: (name: string): string => `Task: ${name}`,

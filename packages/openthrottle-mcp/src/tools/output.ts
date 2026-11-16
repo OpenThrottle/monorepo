@@ -36,8 +36,10 @@ type DeletePlanOutputResult = GenericResult<{
   deletedCount: DeletePlanOutputMutation['deletePlanOutput']['deletedCount'];
 }>;
 
-export const appendPlanOutputToolParameters =
-  AppendPlanOutputInputSchema().strict();
+/** `kind` is written only by the OT Loop job, never by an agent (docs/workflows/ot-loop-job.md § 10.1). */
+export const appendPlanOutputToolParameters = AppendPlanOutputInputSchema()
+  .omit({ kind: true })
+  .strict();
 
 export const appendPlanOutputToolDescription = `Append a chunk of streaming output (e.g. agent iteration log) to a plan. Requires planId and content; optional iteration number and taskId (attribute the chunk to the task you are actively working, for task-scoped output).`;
 

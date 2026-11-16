@@ -109,6 +109,7 @@ export const runOtLoop = async (
     maxRetries: clampMaxRetries(options.maxRetries),
     planId: options.planId,
     tracker: {
+      attempt: undefined,
       completedTaskIds: [],
       currentTaskId: undefined,
       guidance: [],
