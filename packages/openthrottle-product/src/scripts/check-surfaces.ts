@@ -2,7 +2,9 @@
  * @description The product-registry drift gate. Fails (exit 1) when:
  * - the root README.md features section differs from what generate-surfaces
  *   would write;
- * - the registry breaks a static rule (lengths, ids, pillars, dates, UUIDs);
+ * - the registry breaks a static rule (lengths, ids, pillars, dates, UUIDs,
+ *   emoji, project summaries);
+ * - a `PRODUCT_PROJECTS` entry points at a directory that does not exist;
  * - a `shipped`/`preview` entry cites a PR that is not merged;
  * - an `in-flight`/`planned` entry cites an OpenThrottle plan that is
  *   CANCELED or missing.
@@ -11,7 +13,7 @@
  * missing token never turns into a false failure.
  */
 import { execFile } from 'node:child_process';
-import { readFile } from 'node:fs/promises';
+import { access, readFile } from 'node:fs/promises';
 import { promisify } from 'node:util';
 
 import {
@@ -22,13 +24,15 @@ import {
 
 import { PRODUCT_FEATURES } from '../data/data.features';
 import { PRODUCT_POSITIONING } from '../data/data.positioning';
+import { PRODUCT_PROJECTS } from '../data/data.projects';
 import { isLandedFeature, isUpcomingFeature } from '../utils/features';
 import { renderReadmeSection, replaceMarkedSection } from '../utils/render';
-import { validateRegistry } from '../utils/validate';
+import { validateProjects, validateRegistry } from '../utils/validate';
 
 const run = promisify(execFile);
 
-const README_URL = new URL('../../../../README.md', import.meta.url);
+const WORKSPACE_ROOT = new URL('../../../../', import.meta.url);
+const README_URL = new URL('README.md', WORKSPACE_ROOT);
 const API_URL =
   process.env.OPENTHROTTLE_GRAPHQL_URL ?? 'http://localhost:6021/graphql';
 const API_TOKEN =
@@ -49,6 +53,7 @@ const checkReadme = async (): Promise<string[]> => {
   const section = renderReadmeSection({
     features: PRODUCT_FEATURES,
     positioning: PRODUCT_POSITIONING,
+    projects: PRODUCT_PROJECTS,
     repositoryUrl: OPENTHROTTLE_GITHUB_URL_MONOREPO,
     stats: undefined,
     syncedOn: '',
@@ -67,6 +72,24 @@ const checkReadme = async (): Promise<string[]> => {
   }
 
   return [];
+};
+
+const checkProjectPaths = async (): Promise<string[]> => {
+  const missing = await Promise.all(
+    PRODUCT_PROJECTS.map(async (project) => {
+      try {
+        await access(new URL(`${project.path}/`, WORKSPACE_ROOT));
+
+        return undefined;
+      } catch {
+        return `project ${project.name}: ${project.path} does not exist`;
+      }
+    }),
+  );
+
+  return missing.filter((problem) => {
+    return problem !== undefined;
+  });
 };
 
 const isPullRequestMerged = async (pr: number): Promise<boolean> => {
@@ -218,7 +241,9 @@ const main = async (): Promise<number> => {
   const isOffline = process.argv.includes('--offline');
   const problems = [
     ...validateRegistry(PRODUCT_FEATURES, PRODUCT_POSITIONING),
+    ...validateProjects(PRODUCT_PROJECTS),
     ...(await checkReadme()),
+    ...(await checkProjectPaths()),
   ];
   const network: { label: string; result: NetworkResult }[] = [];
 

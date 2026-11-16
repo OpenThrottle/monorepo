@@ -71,7 +71,11 @@ export const renderReadmeSection = (input: SurfaceInput): string => {
   for (const pillar of input.positioning.pillars) {
     const features = getFeaturesByPillar(landed, pillar.id);
 
-    lines.push('', `${README_SECTION_COPY.pillarHeading} ${pillar.name}`, '');
+    lines.push(
+      '',
+      `${README_SECTION_COPY.pillarHeading} ${pillar.emoji} ${pillar.name}`,
+      '',
+    );
     lines.push(pillar.medium, '');
 
     for (const feature of features) {
@@ -79,7 +83,7 @@ export const renderReadmeSection = (input: SurfaceInput): string => {
       const status = feature.status === 'preview' ? ' _(preview)_' : '';
 
       lines.push(
-        `- **[${feature.name}](${link})**${status}: ${feature.oneLiner}`,
+        `- ${feature.emoji} **[${feature.name}](${link})**${status}: ${feature.oneLiner}`,
       );
     }
   }
@@ -173,9 +177,14 @@ const renderOrgProfileTable = (input: SurfaceInput): string[] => {
         feature.status === 'preview' ? ' <sub><code>preview</code></sub>' : '';
 
       lines.push('    <td width="33%" valign="top">');
-      lines.push(`      <h3>${feature.name}${preview}</h3>`);
+      lines.push(`      <h3>${feature.emoji} ${feature.name}${preview}</h3>`);
       lines.push(`      ${feature.oneLiner}`);
       lines.push('    </td>');
+    }
+
+    // Pad a short final row so GitHub keeps every column at a third.
+    for (let empty = row.length; empty < ORG_PROFILE_COLUMNS; empty += 1) {
+      lines.push('    <td width="33%" valign="top"></td>');
     }
 
     lines.push('  </tr>');
@@ -184,6 +193,16 @@ const renderOrgProfileTable = (input: SurfaceInput): string[] => {
   lines.push('</table>');
 
   return lines;
+};
+
+const renderOrgProfileProjects = (input: SurfaceInput): string[] => {
+  const rows = input.projects.map((project) => {
+    const status = ORG_PROFILE_COPY.projectStatusLabels[project.status];
+
+    return `| \`${project.name}\` | ${status} | ${project.summary} |`;
+  });
+
+  return [...ORG_PROFILE_COPY.projectsHeader, ...rows];
 };
 
 /**
@@ -224,6 +243,15 @@ export const renderOrgProfile = (input: SurfaceInput): string => {
     for (const feature of roadmap) {
       lines.push(`- **${feature.name}.** ${feature.oneLiner}`);
     }
+  }
+
+  if (input.projects.length > 0) {
+    lines.push(
+      '',
+      ORG_PROFILE_COPY.projectsTitle,
+      '',
+      ...renderOrgProfileProjects(input),
+    );
   }
 
   lines.push(

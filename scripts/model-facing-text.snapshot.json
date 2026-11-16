@@ -162,7 +162,7 @@
     "prompt/Job_DatabaseHealth.md": 9083,
     "prompt/Job_DeadCode.md": 8432,
     "prompt/Job_DocDrift.md": 9521,
-    "prompt/Job_FeatureRegistryRefresh.md": 7561,
+    "prompt/Job_FeatureRegistryRefresh.md": 7585,
     "prompt/Job_Issue_Reporting.md": 11673,
     "prompt/Job_MemoryDrift.md": 10214,
     "prompt/Job_Performance.md": 8936,
@@ -215,7 +215,7 @@
     "alwaysInjected": 42748,
     "mcpInstructions": 2069,
     "mcpTools": 34894,
-    "prompts": 140980,
+    "prompts": 141004,
     "skills": 152837
   }
 }

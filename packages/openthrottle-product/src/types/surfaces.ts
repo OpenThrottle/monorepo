@@ -1,4 +1,8 @@
-import type { ProductFeature, ProductPositioning } from './product';
+import type {
+  ProductFeature,
+  ProductPositioning,
+  ProductProject,
+} from './product';
 
 /**
  * @description Numbers computed at generate time (never typed by hand). Absent
@@ -20,6 +24,8 @@ export interface SurfaceStats {
 export interface SurfaceInput {
   readonly features: readonly ProductFeature[];
   readonly positioning: ProductPositioning;
+  /** The org profile's project status table, in display order. */
+  readonly projects: readonly ProductProject[];
   readonly repositoryUrl: string;
   readonly stats: SurfaceStats | undefined;
   /** ISO date (YYYY-MM-DD) stamped on outputs that carry a "last synced" line. */

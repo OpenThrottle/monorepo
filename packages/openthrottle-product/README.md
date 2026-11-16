@@ -4,6 +4,7 @@ The typed source of truth for how OpenThrottle describes itself. It holds two la
 
 - **Positioning canon** (`PRODUCT_POSITIONING`, `src/data/data.positioning.ts`): the tagline, lede and four pillars, each in short (≤60 chars), medium (≤160) and long forms. Changes quarterly, and only by a human.
 - **Feature registry** (`PRODUCT_FEATURES`, `src/data/data.features.ts`): one entry per capability, a discriminated union on `status`. Changes weekly.
+- **Project list** (`PRODUCT_PROJECTS`, `src/data/data.projects.ts`): the workspace projects and their maturity (`stable`, `experimental`, `planned`) for the org profile's status table. Nx tags carry no maturity signal, so it is declared here; `check-surfaces` fails when a `path` no longer exists.
 
 There is no Markdown source. Every public surface is built from this data, and none of them is ever read back as a source.
 
@@ -19,17 +20,18 @@ Source-first: `exports` point at `./src/index.ts`, there is no `build` target, a
 
 ## The registry entry
 
-| Field      | Meaning                                                                                        |
-| ---------- | ---------------------------------------------------------------------------------------------- |
-| `id`       | Stable kebab-case key. UI layers key icons on it.                                              |
-| `name`     | Display name.                                                                                  |
-| `pillar`   | One of the canon's pillar ids: `memory`, `runners`, `history`, `local`.                        |
-| `oneLiner` | At most 120 characters.                                                                        |
-| `body`     | One short paragraph.                                                                           |
-| `status`   | `shipped`, `preview`, `in-flight` or `planned`.                                                |
-| `evidence` | `{ docs, planIds, prs }`: repo-relative doc paths, OT plan UUIDs, `OpenThrottle/monorepo` PRs. |
-| `since`    | ISO date the entry reached its current status.                                                 |
-| `public`   | Shown on public surfaces only when the owner has approved the entry.                           |
+| Field      | Meaning                                                                                             |
+| ---------- | --------------------------------------------------------------------------------------------------- |
+| `id`       | Stable kebab-case key. UI layers key icons on it.                                                   |
+| `name`     | Display name.                                                                                       |
+| `emoji`    | One emoji (a single grapheme) for text-surface headings: the counterpart to UI icons keyed by `id`. |
+| `pillar`   | One of the canon's pillar ids: `memory`, `runners`, `history`, `local`.                             |
+| `oneLiner` | At most 120 characters.                                                                             |
+| `body`     | One short paragraph.                                                                                |
+| `status`   | `shipped`, `preview`, `in-flight` or `planned`.                                                     |
+| `evidence` | `{ docs, planIds, prs }`: repo-relative doc paths, OT plan UUIDs, `OpenThrottle/monorepo` PRs.      |
+| `since`    | ISO date the entry reached its current status.                                                      |
+| `public`   | Shown on public surfaces only when the owner has approved the entry.                                |
 
 The types enforce the evidence rule: a `shipped` or `preview` entry needs at least one merged PR, and an `in-flight` or `planned` entry needs at least one plan id. Keep internal detail (telemetry numbers, machine counts, costs) out of the copy.
 

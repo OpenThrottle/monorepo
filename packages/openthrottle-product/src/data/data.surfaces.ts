@@ -35,6 +35,13 @@ export const ORG_PROFILE_COPY = {
   openSource: `OpenThrottle is **open core**. The core is licensed under the **Apache License, Version 2.0**, and commercial/enterprise modules are reserved under a separate EULA. The **OpenThrottle** name and logo are trademarks (Apache-2.0 §6 grants no trademark rights). You can build on the code freely; use of the marks is covered by our trademark policy.`,
   openSourceHelp: `Want to help? Start with [CONTRIBUTING](https://github.com/OpenThrottle/.github/blob/main/CONTRIBUTING.md), find help in [SUPPORT](https://github.com/OpenThrottle/.github/blob/main/SUPPORT.md), and report vulnerabilities privately via [SECURITY](https://github.com/OpenThrottle/.github/blob/main/SECURITY.md).`,
   openSourceTitle: '## 🤝 Open source',
+  projectStatusLabels: {
+    experimental: '🚧 Experimental',
+    planned: '🧭 Planned',
+    stable: '✅ Stable',
+  },
+  projectsHeader: ['| Project | Status | What it is |', '| --- | --- | --- |'],
+  projectsTitle: '## 🚦 Project status',
   quickstart: [
     'git clone https://github.com/OpenThrottle/monorepo.git && cd monorepo',
     'nvm use && ./scripts/setup.sh   # Postgres, Redis, migrations, a seeded login',

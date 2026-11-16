@@ -12,7 +12,7 @@ OpenThrottle is an Nx + pnpm workspace monorepo (Node >= 22, pnpm only).
 
 - **`packages/openthrottle-product/`** is the only source of truth for how OpenThrottle describes itself:
   - `src/data/data.positioning.ts` (`PRODUCT_POSITIONING`) is the positioning canon: tagline, lede and four pillars (`memory`, `runners`, `history`, `local`). The owner wrote it and changes it by hand. **Never propose a change to it.**
-  - `src/data/data.features.ts` (`PRODUCT_FEATURES`) is the feature registry, grouped by pillar in display order. Each entry is a discriminated union on `status` (`shipped` | `preview` | `in-flight` | `planned`) with `id`, `name`, `pillar`, `oneLiner` (at most 120 characters), `body`, `evidence { docs, planIds, prs }`, `since` (YYYY-MM-DD) and `public`.
+  - `src/data/data.features.ts` (`PRODUCT_FEATURES`) is the feature registry, grouped by pillar in display order. Each entry is a discriminated union on `status` (`shipped` | `preview` | `in-flight` | `planned`) with `id`, `name`, `emoji` (one grapheme), `pillar`, `oneLiner` (at most 120 characters), `body`, `evidence { docs, planIds, prs }`, `since` (YYYY-MM-DD) and `public`.
   - `README.md` in that package documents the entry shape and the rules.
 - Every surface is built from the registry: the website home page, `@openthrottle/react-router-ui`'s `FEATURES`, the root `README.md` section between `<!-- features:start -->` and `<!-- features:end -->`, the GitHub org profile and the LinkedIn block. After a registry edit, `pnpm nx run @openthrottle/openthrottle-product:generate-surfaces` rewrites the README section, and `check-surfaces` is the drift gate.
 

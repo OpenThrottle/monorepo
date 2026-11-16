@@ -13,6 +13,7 @@ export const PRODUCT_FEATURES = [
   // ── memory ────────────────────────────────────────────────────────────────
   {
     body: `Capture intent as durable plans and tasks instead of scattered Markdown. Each one carries a status, an order, an assignee and a summary, and moves through a lifecycle shared by the database, the API and MCP.`,
+    emoji: '📋',
     evidence: {
       docs: ['databases/openthrottle/README.md', 'skills/ot-plans/SKILL.md'],
       planIds: [],
@@ -28,6 +29,7 @@ export const PRODUCT_FEATURES = [
   },
   {
     body: `Plans, tasks, notes and your repo docs are indexed together and ranked by meaning and exact terms. Ask a question in plain language and get answers grounded in what your team actually planned and shipped.`,
+    emoji: '🧠',
     evidence: {
       docs: ['databases/openthrottle/README.md'],
       planIds: [],
@@ -43,6 +45,7 @@ export const PRODUCT_FEATURES = [
   },
   {
     body: `openthrottle-mcp puts the knowledge base inside Claude Code, Cursor, Codex, OpenCode and Antigravity. Every tool gets the same servers and the same permissions, so agents read and write one source of truth wherever you work.`,
+    emoji: '🔌',
     evidence: {
       docs: [
         'docs/openthrottle/mcp-registration.md',
@@ -61,6 +64,7 @@ export const PRODUCT_FEATURES = [
   },
   {
     body: `Skills, rules and prompts live in one place and fan out to every agent tool. Iterate on a personal skill privately, then promote it to your team when it is ready.`,
+    emoji: '🧩',
     evidence: {
       docs: ['docs/Skills.md'],
       planIds: [],
@@ -76,6 +80,7 @@ export const PRODUCT_FEATURES = [
   },
   {
     body: `Quick, unstructured notes with an author, reachable over MCP. A note is the cheapest way to capture an idea before it becomes a plan.`,
+    emoji: '📝',
     evidence: {
       docs: ['databases/openthrottle/README.md'],
       planIds: [],
@@ -91,6 +96,7 @@ export const PRODUCT_FEATURES = [
   },
   {
     body: `Group plans from several repositories into one ordered initiative, so a change that spans services is planned, run and tracked as a single piece of work.`,
+    emoji: '🗺️',
     evidence: {
       docs: [],
       planIds: ['e013cc75-2792-4c06-b4ce-f9174980f692'],
@@ -106,6 +112,7 @@ export const PRODUCT_FEATURES = [
   },
   {
     body: `A scope ladder for rules, from your machine up to the organization, with clear precedence and actions backed by prompts.`,
+    emoji: '📐',
     evidence: {
       docs: [],
       planIds: ['4f4ef365-04fa-4b18-93fc-275c0a1a3b28'],
@@ -119,10 +126,31 @@ export const PRODUCT_FEATURES = [
     since: '2026-11-15',
     status: 'planned',
   },
+  {
+    body: `Edit fragments and layouts against generated schemas, with nested previews and drag-to-reorder, so the content of OpenThrottle sites is managed in the same stack as the rest of your work.`,
+    emoji: '🧱',
+    evidence: {
+      docs: ['applications/openthrottle-cms/README.md'],
+      planIds: [
+        'a608869b-407d-40a0-9dff-8d61fe578cf7',
+        '834541c7-aeb3-4a61-855c-a651ca4f820c',
+        '12d714d9-d51a-4358-b164-830a0f7bb5ff',
+      ],
+      prs: [],
+    },
+    id: 'content-cms',
+    name: 'Content CMS',
+    oneLiner: `Schema-driven editing of fragments and layouts, with nested previews and drag-to-reorder.`,
+    pillar: 'memory',
+    public: true,
+    since: '2026-11-15',
+    status: 'in-flight',
+  },
 
   // ── runners ───────────────────────────────────────────────────────────────
   {
     body: `OpenThrottle ships foundational runners and loops rather than one fixed agent. Today's starting points work a plan one task at a time: select, work, validate, commit. Choose one, change its prompts, hooks and model routing, or build your own.`,
+    emoji: '🔁',
     evidence: {
       docs: [
         'docs/workflows/ot-loop-job.md',
@@ -142,6 +170,7 @@ export const PRODUCT_FEATURES = [
   },
   {
     body: `Claude Code, Codex, Cursor, OpenCode, Antigravity and Grok all plug in as agent providers. Pick the one that suits a task; the plan, the history and the permissions stay the same.`,
+    emoji: '🤖',
     evidence: {
       docs: ['docs/openthrottle/mcp-registration.md'],
       planIds: [],
@@ -157,6 +186,7 @@ export const PRODUCT_FEATURES = [
   },
   {
     body: `Every run gets its own git worktree, its own ports and, when it needs one, its own database. Parallel agents stay out of each other's way, and the worktree is torn down once the pull request opens.`,
+    emoji: '🌳',
     evidence: {
       docs: [
         'docs/monorepo/worktree-port-allocation.md',
@@ -175,6 +205,7 @@ export const PRODUCT_FEATURES = [
   },
   {
     body: `Start a run now or schedule it up to 30 days out, with the model and effort you choose. Grace windows and collision holds keep a plan from running late or running twice, and recurring agent jobs run on a cron.`,
+    emoji: '🗓️',
     evidence: {
       docs: [
         'docs/openthrottle/running-and-scheduling-plans.md',
@@ -193,6 +224,7 @@ export const PRODUCT_FEATURES = [
   },
   {
     body: `Send a running plan a steer or a queued requirement. The runner picks it up at the next task boundary, and before any destructive step, so you can redirect work without killing it.`,
+    emoji: '🕹️',
     evidence: {
       docs: ['skills/ot-loop/SKILL.md'],
       planIds: [],
@@ -208,6 +240,7 @@ export const PRODUCT_FEATURES = [
   },
   {
     body: `Generators scaffold apps, packages, routes, components and services in the shape the codebase expects, so agents produce predictable code and lint passes on the first try.`,
+    emoji: '🏗️',
     evidence: {
       docs: [
         'docs/tools/templates/AGENT_USAGE.md',
@@ -226,6 +259,7 @@ export const PRODUCT_FEATURES = [
   },
   {
     body: `The loop becomes an agent-agnostic background job: the job owns the plan and every agent CLI is a worker it drives, so any runner gets the same validation, retries and settling.`,
+    emoji: '⚙️',
     evidence: {
       docs: ['docs/workflows/ot-loop-job.md'],
       planIds: ['8a529290-26a5-45cc-8705-b35496ce2e67'],
@@ -241,6 +275,7 @@ export const PRODUCT_FEATURES = [
   },
   {
     body: `Specialist roles and a panel of parallel critics review each task before it lands, so a run gets the scrutiny of several reviewers instead of one.`,
+    emoji: '🕵️',
     evidence: {
       docs: [],
       planIds: ['012fa4b0-f9b6-4539-a4d7-b0097155bf8b'],
@@ -258,6 +293,7 @@ export const PRODUCT_FEATURES = [
   // ── history ───────────────────────────────────────────────────────────────
   {
     body: `Commits carry Plan-Id and Task-Id footers, and every status change and merged pull request is recorded on a work ledger. Ask what shipped on a given day, or why a line of code exists, and get the plan, the task and the run.`,
+    emoji: '📒',
     evidence: {
       docs: ['databases/openthrottle/README.md', 'skills/ot-plans/SKILL.md'],
       planIds: [],
@@ -273,6 +309,7 @@ export const PRODUCT_FEATURES = [
   },
   {
     body: `Usage from every agent CLI is normalized into one shape and attributed to the model, the task and the account that was billed.`,
+    emoji: '📊',
     evidence: {
       docs: [],
       planIds: [],
@@ -288,6 +325,7 @@ export const PRODUCT_FEATURES = [
   },
   {
     body: `Every run is recorded as an open trajectory. Build datasets from real failures, calibrate graders against human labels, and compare models, drivers and prompts with paired statistics.`,
+    emoji: '🧪',
     evidence: {
       docs: ['docs/openthrottle/eval-system-adr.md'],
       planIds: ['af00f30f-575d-41b4-954e-2768706cce46'],
@@ -303,6 +341,7 @@ export const PRODUCT_FEATURES = [
   },
   {
     body: `A dashboard for humans: plans, queues, pull requests, schedules, usage and code search, with a timeline of who worked on what.`,
+    emoji: '🖥️',
     evidence: {
       docs: ['applications/openthrottle-developer/README.md'],
       planIds: [],
@@ -316,10 +355,30 @@ export const PRODUCT_FEATURES = [
     since: '2026-09-08',
     status: 'shipped',
   },
+  {
+    body: `See which agent skills get used, how each run turns out, and where coverage is thin. Capture is privacy-first and fails open, so it never blocks the agent it observes.`,
+    emoji: '🔭',
+    evidence: {
+      docs: ['docs/monorepo/skill-usage-telemetry-scope.md'],
+      planIds: [
+        '618c3670-0f0d-4135-bda4-afd7b8c06b57',
+        'e7b74d81-3265-49c2-84fd-597a74d4bb5a',
+      ],
+      prs: [],
+    },
+    id: 'skill-usage-telemetry',
+    name: 'Skill-usage telemetry',
+    oneLiner: `See which agent skills get used, how they turn out and where coverage is thin.`,
+    pillar: 'history',
+    public: true,
+    since: '2026-11-15',
+    status: 'in-flight',
+  },
 
   // ── local ─────────────────────────────────────────────────────────────────
   {
     body: `Postgres, Redis, the server and the developer app all run on your own machine. Embeddings run locally in-process with no API key; Ollama and hosted providers are opt-in.`,
+    emoji: '🏠',
     evidence: {
       docs: [
         'docs/monorepo/Ollama.md',
@@ -338,6 +397,7 @@ export const PRODUCT_FEATURES = [
   },
   {
     body: `A native desktop shell around the developer app, so OpenThrottle sits in your dock beside your editor.`,
+    emoji: '💻',
     evidence: {
       docs: ['applications/openthrottle-app/README.md'],
       planIds: [],
@@ -353,6 +413,7 @@ export const PRODUCT_FEATURES = [
   },
   {
     body: `One download that bundles the server, Postgres and Redis with the desktop app, so you can run OpenThrottle without a terminal.`,
+    emoji: '📦',
     evidence: {
       docs: [],
       planIds: ['4bec3d8e-9219-4867-a84c-df7b44aee490'],
@@ -368,6 +429,7 @@ export const PRODUCT_FEATURES = [
   },
   {
     body: `A signed and notarized desktop app that updates itself.`,
+    emoji: '🔏',
     evidence: {
       docs: [],
       planIds: ['333b0695-d2b9-43a2-bd6f-257acd821c2e'],
@@ -383,6 +445,7 @@ export const PRODUCT_FEATURES = [
   },
   {
     body: `Reach your own OpenThrottle from your phone, with agent runs gated behind a passkey.`,
+    emoji: '📱',
     evidence: {
       docs: [],
       planIds: [
@@ -395,7 +458,7 @@ export const PRODUCT_FEATURES = [
     name: 'Phone access',
     oneLiner: `Reach your own OpenThrottle from your phone, with agent runs gated behind a passkey.`,
     pillar: 'local',
-    public: false,
+    public: true,
     since: '2026-11-15',
     status: 'planned',
   },
