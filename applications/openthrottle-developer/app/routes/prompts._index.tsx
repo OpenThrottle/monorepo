@@ -6,6 +6,9 @@ import {
   GlobalFeatureOnboarding,
   GlobalFeatureOnboardingModal,
   GlobalScreen,
+  GlobalStatsPanel,
+  ROUTE_STATS_URL,
+  shouldRevalidateIgnoringParams,
 } from '@openthrottle/react-router-ui-global';
 import {
   mergeRouteModuleMeta,
@@ -61,8 +64,11 @@ export const loader = async (args: Route.LoaderArgs) => {
   }
 
   const total = prompts.length;
-  const countAgents = prompts.filter(
-    (p) => p.promptType === CustomPromptType.Agents,
+  const countPersonas = prompts.filter(
+    (p) => p.promptType === CustomPromptType.Personas,
+  ).length;
+  const countPrompts = prompts.filter(
+    (p) => p.promptType === CustomPromptType.Prompts,
   ).length;
   const countSkills = prompts.filter(
     (p) => p.promptType === CustomPromptType.Skills,
@@ -71,7 +77,8 @@ export const loader = async (args: Route.LoaderArgs) => {
   const totalPages = Math.ceil(total / limit);
 
   return {
-    countAgents,
+    countPersonas,
+    countPrompts,
     countSkills,
     limit,
     page,
@@ -96,7 +103,8 @@ export default function Component(
 ): React.ReactElement {
   const { actionData: _a, loaderData, matches: _m, params: _p } = props;
   const {
-    countAgents,
+    countPersonas,
+    countPrompts,
     countSkills,
     limit,
     page,
@@ -110,7 +118,6 @@ export default function Component(
   const [searchParams] = useSearchParams();
 
   // Setup
-  const showStats = false;
   const { sortBy, sortOrder } = parsePromptsSortFromSearchParams(searchParams);
   const isFiltered = (search != null && search.length > 0) || types.length > 0;
   // A genuinely-new user has zero prompts and no active filter — show the rich
@@ -123,27 +130,37 @@ export default function Component(
   // Markup
   const onboarding = <GlobalFeatureOnboarding content={PROMPTS_ONBOARDING} />;
   const promptsListing = (
-    <div className="flex flex-col gap-4">
-      <PromptToolbar
-        limit={limit}
-        page={page}
-        sortBy={sortBy}
-        sortOrder={sortOrder}
-        types={types}
-      />
-      <PromptsTable prompts={prompts ?? []} search={search ?? undefined} />
-      <OpenThrottlePagination
-        basePath="/prompts"
-        className="mt-8"
-        limit={limit}
-        page={page}
-        // The `?type=` filter is not in the extras contract, so clone the live
-        // query string to keep it (and search/sort) across a page change.
-        preserveSearchParams={true}
-        resultLabel="prompts"
-        total={total}
-      />
-    </div>
+    <>
+      <GlobalStatsPanel>
+        <PromptsStats
+          countPersonas={countPersonas}
+          countPrompts={countPrompts}
+          countSkills={countSkills}
+          total={total}
+        />
+      </GlobalStatsPanel>
+      <div className="flex flex-col gap-4">
+        <PromptToolbar
+          limit={limit}
+          page={page}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          types={types}
+        />
+        <PromptsTable prompts={prompts ?? []} search={search ?? undefined} />
+        <OpenThrottlePagination
+          basePath="/prompts"
+          className="mt-8"
+          limit={limit}
+          page={page}
+          // The `?type=` filter is not in the extras contract, so clone the live
+          // query string to keep it (and search/sort) across a page change.
+          preserveSearchParams={true}
+          resultLabel="prompts"
+          total={total}
+        />
+      </div>
+    </>
   );
 
   // Life Cycle
@@ -153,13 +170,6 @@ export default function Component(
   return (
     <>
       <GlobalScreen beta={true}>
-        {showStats && (
-          <PromptsStats
-            countAgents={countAgents}
-            countSkills={countSkills}
-            total={total}
-          />
-        )}
         <PromptsIntroduction />
 
         {isNewUser ? onboarding : promptsListing}
@@ -169,6 +179,10 @@ export default function Component(
     </>
   );
 }
+
+export const shouldRevalidate = shouldRevalidateIgnoringParams([
+  ROUTE_STATS_URL.param,
+]);
 
 export const action = async (_args: Route.ActionArgs) => {
   return {};

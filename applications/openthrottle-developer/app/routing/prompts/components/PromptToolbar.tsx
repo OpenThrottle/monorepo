@@ -7,6 +7,7 @@ import {
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
 import { useDebouncedSearchParam } from '@openthrottle/react-router-ui';
+import { GlobalStatsToggleButton } from '@openthrottle/react-router-ui-global';
 import { FilePlusIcon } from 'lucide-react';
 import * as React from 'react';
 import { Link, useSearchParams } from 'react-router';
@@ -170,6 +171,8 @@ export const PromptToolbar = (
           </Button>
         )}
         <div className="min-w-0 flex-1" />
+
+        <GlobalStatsToggleButton />
 
         <Tooltip delayDuration={1_000}>
           <TooltipTrigger asChild={true}>
