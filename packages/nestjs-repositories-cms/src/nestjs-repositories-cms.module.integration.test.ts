@@ -453,7 +453,11 @@ describe.skipIf(!ENABLED)('NestjsRepositoriesCmsModule (live cms DB)', () => {
         [copy.uuid],
       );
 
-      expect(copiedHeading?.properties).toEqual({ copy: 'Hi', heading: 'h1' });
+      // toMatchObject: create also prefills the ACTIVE Heading schema's defaults (className).
+      expect(copiedHeading?.properties).toMatchObject({
+        copy: 'Hi',
+        heading: 'h1',
+      });
 
       const headings = await fragments.findPage({
         childCandidatesOf: null,

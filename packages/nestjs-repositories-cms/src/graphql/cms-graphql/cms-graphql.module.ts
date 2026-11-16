@@ -19,6 +19,12 @@ import { CmsLibrariesService } from '../cms-libraries/cms-libraries.service.ts';
 import { CmsLibraryComponentsResolver } from '../cms-library-components/cms-library-components.resolver.ts';
 import { CmsLibraryComponentsService } from '../cms-library-components/cms-library-components.service.ts';
 import { CmsProfilesService } from '../cms-profiles/cms-profiles.service.ts';
+import {
+  CMS_SCHEMA_MANIFESTS_DEFAULT_DIR,
+  CMS_SCHEMA_MANIFESTS_DIR,
+} from '../cms-schema-sync/cms-schema-sync.constants.ts';
+import { CmsSchemaSyncResolver } from '../cms-schema-sync/cms-schema-sync.resolver.ts';
+import { CmsSchemaSyncService } from '../cms-schema-sync/cms-schema-sync.service.ts';
 import { CmsSchemaValidationService } from '../cms-schema-validation/cms-schema-validation.service.ts';
 import { CmsSchemasResolver } from '../cms-schemas/cms-schemas.resolver.ts';
 import { CmsSchemasService } from '../cms-schemas/cms-schemas.service.ts';
@@ -43,6 +49,7 @@ import { CmsWriteAccessService } from '../cms-write-access/cms-write-access.serv
     CmsLibrariesService,
     CmsLibraryComponentsService,
     CmsProfilesService,
+    CmsSchemaSyncService,
     CmsSchemaValidationService,
     CmsSchemasService,
     CmsWriteAccessService,
@@ -56,6 +63,10 @@ import { CmsWriteAccessService } from '../cms-write-access/cms-write-access.serv
     TypeOrmModule.forFeature([Profile], CMS_CONNECTION),
   ],
   providers: [
+    {
+      provide: CMS_SCHEMA_MANIFESTS_DIR,
+      useValue: CMS_SCHEMA_MANIFESTS_DEFAULT_DIR,
+    },
     CmsFragmentChildrenResolver,
     CmsFragmentChildrenService,
     CmsFragmentsResolver,
@@ -67,6 +78,8 @@ import { CmsWriteAccessService } from '../cms-write-access/cms-write-access.serv
     CmsLibraryComponentsResolver,
     CmsLibraryComponentsService,
     CmsProfilesService,
+    CmsSchemaSyncResolver,
+    CmsSchemaSyncService,
     CmsSchemaValidationService,
     CmsSchemasResolver,
     CmsSchemasService,

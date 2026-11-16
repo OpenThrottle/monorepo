@@ -167,7 +167,11 @@ const DISABLE_OTHERS = `${ENTRIES_CTE}
     AND s.status = 'ACTIVE'
   RETURNING s.typename, s.version`;
 
-/** Serializes concurrent syncs (two worktrees seeding one shared database). */
+/**
+ * Serializes concurrent syncs (two worktrees seeding one shared database, or a seed and a booting
+ * server). Must equal CMS_SCHEMA_SYNC_LOCK_KEY in @openthrottle/nestjs-repositories-cms, whose
+ * CmsSchemaSyncService runs the same three statements on every server boot.
+ */
 const SYNC_LOCK_KEY = 'openthrottle-cms-schema-sync';
 
 /** The slice of a `pg` client the sync uses, so tests can pass a recorder. */

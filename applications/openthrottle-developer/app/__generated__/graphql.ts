@@ -1050,6 +1050,19 @@ export type CmsSchemaObject = {
   version: Scalars['String']['output'];
 };
 
+/** What one sync of the generated block schemas into the cms schemas table changed. All three lists empty means everything was already in sync. */
+export type CmsSchemaSyncResultObject = {
+  __typename?: 'CmsSchemaSyncResultObject';
+  /** Versions that existed but were not ACTIVE and are now (typename@version). */
+  activated: Array<Scalars['String']['output']>;
+  /** Older ACTIVE versions now DISABLED; fragments pinned to them keep them (typename@version). */
+  disabled: Array<Scalars['String']['output']>;
+  /** Versions inserted as new ACTIVE rows (typename@version). */
+  inserted: Array<Scalars['String']['output']>;
+  /** How many generated block schemas the manifests list. */
+  total: Scalars['Int']['output'];
+};
+
 export type CodeIndexStatusObject = {
   __typename?: 'CodeIndexStatusObject';
   /** Number of indexed code chunks for the repository (0 when not indexed). */
@@ -3065,6 +3078,8 @@ export type Mutation = {
   startWorkSession: WorkSessionObject;
   /** Flush and finalize an owned transcription session: sends END_OF_AUDIO upstream, waits a short flush window for the last revising segments, then emits the terminal done:true snapshot. Returns false (no throw) for unauthenticated, unknown, or foreign sessions. */
   stopTranscriptionStream: Scalars['Boolean']['output'];
+  /** Sync the generated block schemas into the cms schemas table, the same sync the server runs on boot. Append-only and idempotent. CMS_SCHEMA_SYNC_FAILED when the manifests are missing or stale or the write fails. */
+  syncCmsSchemas: CmsSchemaSyncResultObject;
   /** Append a sample structured log line (JSONL + hub). Requires OT_SERVER_DEV_JSONL_LOGGING=true at startup. See packages/nestjs-logging README. */
   triggerDevJsonlLogSample: Scalars['Boolean']['output'];
   /** Trigger a test websocket notification (system.alert). Returns true when the event was emitted. Use from the web app to verify the notification flow end-to-end. */
