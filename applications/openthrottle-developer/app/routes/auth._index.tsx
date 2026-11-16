@@ -16,7 +16,7 @@ import * as React from 'react';
 import type { ShouldRevalidateFunction } from 'react-router';
 import { data, redirect, useFetcher } from 'react-router';
 
-import type { Route } from '@/app/routes/+types/_index';
+import type { Route } from '@/app/routes/+types/auth._index';
 import { LoginInputSchema } from '~/__generated__/schemas';
 import { SITE_SUBDOMAIN, SITE_TITLE } from '~/global/config/settings';
 import { REDUCED_MOTION_MODES } from '~/global/data/data.appearance-config';
@@ -28,6 +28,7 @@ import {
   GRAIN_REST,
   HOLD_MS,
 } from '~/routing/auth/config/animation';
+import { safeRedirectPath } from '~/routing/auth/utils/safeRedirectPath';
 
 type AuthFetcherData = { error?: string; ok?: boolean };
 
@@ -36,12 +37,14 @@ export const loader = async (args: Route.LoaderArgs) => {
 
   const cookieHeader = request.headers.get('cookie') ?? '';
   const token = getAuthTokenFromCookie(cookieHeader);
+  // Where to land after sign-in, e.g. back on the OAuth consent screen.
+  const redirectTo = safeRedirectPath(args.url.searchParams.get('redirectTo'));
 
   if (token) {
-    return redirect('/dashboard');
+    return redirect(redirectTo);
   }
 
-  return {};
+  return { redirectTo };
 };
 
 // After login the action sets the auth cookie; the default post-action
@@ -63,7 +66,8 @@ export const meta = (_args: Route.MetaArgs) => {
 export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
-  const { actionData: _a, loaderData: _l, matches: _m, params: _p } = props;
+  const { actionData: _a, loaderData, matches: _m, params: _p } = props;
+  const { redirectTo } = loaderData;
 
   // Hooks
   const fetcher = useFetcher<AuthFetcherData>();
@@ -132,7 +136,7 @@ export default function Component(
     }
 
     if (prefersReducedMotion) {
-      window.location.assign('/dashboard');
+      window.location.assign(redirectTo);
       return;
     }
 
@@ -153,7 +157,7 @@ export default function Component(
     });
 
     const timer = setTimeout(() => {
-      window.location.assign('/dashboard');
+      window.location.assign(redirectTo);
     }, FORM_FADE_MS + HOLD_MS);
 
     return () => {
@@ -161,7 +165,7 @@ export default function Component(
       mixer.stop();
       clearTimeout(timer);
     };
-  }, [fetcher.data, prefersReducedMotion]);
+  }, [fetcher.data, prefersReducedMotion, redirectTo]);
 
   // 🔌 Short Circuit
 

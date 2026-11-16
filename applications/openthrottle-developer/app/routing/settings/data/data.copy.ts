@@ -409,3 +409,29 @@ export const SETTINGS_KEYS_ONBOARDING = {
   ],
   whatItIs: `A credential is a service-account bearer token in the form ot_sa_<prefix>_<secret>, sent in the Authorization header. The secret is shown once at creation; revoked or expired credentials stop working at the next request. Human JWT sessions manage these keys in the developer portal — service-account tokens must not call those admin mutations.`,
 } satisfies GlobalFeatureOnboardingContent;
+
+/**
+ * @description Copy for Settings → Connections: the MCP clients the signed-in user has
+ * authorized through OAuth (OT plan 16f321a7).
+ */
+export const SETTINGS_CONNECTIONS_COPY = {
+  accessRead: `Read only`,
+  accessReadWrite: `Read & write`,
+  columnAccess: `Access`,
+  columnApp: `App`,
+  columnConnected: `Connected`,
+  columnLastUsed: `Last used`,
+  description: `Apps you have allowed to use OpenThrottle on your behalf through OAuth, such as Claude Code, Cursor or Codex connected to the remote MCP server. Each connection acts as you, can do no more than your account can, and expires 30 days after you allow it.`,
+  empty: `No apps are connected. Connect an MCP client to the remote server and approve it to see it here.`,
+  expiresPrefix: `Expires `,
+  revoke: `Revoke`,
+  revokeCancel: `Cancel`,
+  revokeConfirm: `Revoke access`,
+  revokeDescriptionPrefix: `This signs out `,
+  revokeDescriptionSuffix: ` immediately. It will need your approval again to reconnect.`,
+  revokeFailed: `Could not revoke this connection.`,
+  revokeSucceeded: `Connection revoked.`,
+  revokeTitle: `Revoke this connection?`,
+  revoking: `Revoking…`,
+  title: `Connections`,
+} as const;

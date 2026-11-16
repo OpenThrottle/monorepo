@@ -18,6 +18,7 @@ import { EvalJudgeCalibrationsModule } from './modules/eval-judge-calibrations/e
 import { EvalRunsModule } from './modules/eval-runs/eval-runs.module.ts';
 import { McpConnectorsModule } from './modules/mcp-connectors/mcp-connectors.module.ts';
 import { NotesModule } from './modules/notes/notes.module.ts';
+import { OAuthModule } from './modules/oauth/oauth.module.ts';
 import { PlanEmbeddingsModule } from './modules/plan-embeddings/plan-embeddings.module.ts';
 import { PlanMessagesModule } from './modules/plan-messages/plan-messages.module.ts';
 import { PlanOutputStreamModule } from './modules/plan-output-stream/plan-output-stream.module.ts';
@@ -76,6 +77,7 @@ import { getTypeOrmOptions } from './nestjs-repositories.utils.ts';
     RolesModule,
     ScheduledAgentJobsModule,
     ServiceAccountsModule,
+    OAuthModule,
     SkillAvailabilityModule,
     SkillTagsModule,
     SkillUsageEventsModule,
@@ -129,6 +131,7 @@ import { getTypeOrmOptions } from './nestjs-repositories.utils.ts';
     RolesModule,
     ScheduledAgentJobsModule,
     ServiceAccountsModule,
+    OAuthModule,
     SkillAvailabilityModule,
     SkillTagsModule,
     SkillUsageEventsModule,

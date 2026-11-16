@@ -23,6 +23,25 @@ const BETA_ROUTE_PREFIXES = FEATURE_BETA_PREVIEW ? [] : GATED_PREFIXES;
 
 const PUBLIC_ROUTE_PREFIXES = ['/about', '/auth', '/legal'];
 
+/** Paths the login page lands on anyway, so they need no `redirectTo`. */
+const DEFAULT_LANDING_PATHS = new Set(['/', '/dashboard']);
+
+/**
+ * @description The sign-in URL for a signed-out request. A document GET for a deep link
+ * keeps where it was going as `redirectTo` (e.g. the OAuth consent screen), which the
+ * login page accepts only as a same-origin path. Data requests and non-GETs get plain
+ * `/auth`: there is no page to return to.
+ */
+const buildLoginLocation = (request: Request, url: URL): string => {
+  const isDocumentGet =
+    request.method === 'GET' && !url.pathname.endsWith('.data');
+  if (!isDocumentGet || DEFAULT_LANDING_PATHS.has(url.pathname)) {
+    return '/auth';
+  }
+  const target = `${url.pathname}${url.search}`;
+  return `/auth?redirectTo=${encodeURIComponent(target)}`;
+};
+
 /**
  * Server-side Authentication Middleware
  */
@@ -54,7 +73,7 @@ export const authMiddleware: MiddlewareFunction = (args) => {
     const message = `🚨 authMiddleware: missing or expired token + non-public route`;
     if (!isProd) console.log(message, { pathname, token });
 
-    throw redirect('/auth', {
+    throw redirect(buildLoginLocation(request, url), {
       headers: { 'Set-Cookie': getClearAuthCookieHeader() },
     });
   }

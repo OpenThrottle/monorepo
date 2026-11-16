@@ -282,7 +282,7 @@ variable "http_source_ips" {
 
 variable "mcp_domain" {
   default     = ""
-  description = "Optional hostname for the openthrottle-mcp streamable-HTTP transport. Empty (the default) keeps mcp reachable only on the compose network, which is the safer default: the MCP transport authenticates with OPENTHROTTLE_MCP_AUTH_TOKEN and exposing it publicly widens the surface. Set it only when a remote MCP client genuinely needs to reach this box."
+  description = "Optional hostname for the openthrottle-mcp streamable-HTTP transport. Empty (the default) keeps mcp reachable only on the compose network. Set, Caddy routes it publicly and the MCP runs as an OAuth 2.1 resource server: clients authorize through openthrottle-server (issuer https://<api_domain>) and the developer-app consent screen, and requests without a bearer are refused. Set it only when a remote MCP client genuinely needs to reach this box."
   type        = string
 }
 

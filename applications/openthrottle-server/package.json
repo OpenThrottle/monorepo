@@ -269,6 +269,8 @@
     "./src/graphql/id-refs/id-refs.enum.ts",
     "./src/graphql/metrics/system-cpu-metrics.object.ts",
     "./src/graphql/metrics/wall-clock-metrics.object.ts",
+    "./src/graphql/oauth/oauth.input.ts",
+    "./src/graphql/oauth/oauth.object.ts",
     "./src/graphql/plan-messages/plan-message.enum.ts",
     "./src/graphql/plans/plan-task-status.enum.ts",
     "./src/graphql/plans/plan.input.ts",

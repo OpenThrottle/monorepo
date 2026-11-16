@@ -13,6 +13,7 @@ This doc **consolidates** registration guidance that previously lived (partly) a
 - [Config locations](#config-locations) — project vs user-level, per editor
 - [Template structure](#template-structure) — shared server set and the launcher
 - [HTTP transport (Docker-native)](#http-transport-docker-native) — the `mcp` container / `openthrottle-mcp-docker`
+- [Remote MCP over OAuth](#remote-mcp-over-oauth) — connecting a client to a published `mcp_domain`
 - [Editor parity](#editor-parity) — all six drivers + VS Code
 - [Toolsets](#toolsets) — the lean `core` default and how each client opts into more
 - [User-provided servers](#user-provided-servers) — github, shadcn, nx-mcp, maestro, fetch
@@ -140,6 +141,50 @@ The stdio launcher needs host Node + a built `dist/`. A **fully-Dockerized** ins
 - **Port:** `${OPENTHROTTLE_MCP_PORT}` (default `6026` at the monorepo root). In a **worktree** it is the block's `base+6` (e.g. `7126`) — `setup_worktree.ts` rewrites it, so use the port printed by `pnpm run worktree:new`. Consumer-install (`applications/openthrottle/`) defaults to `9026`. Update the `url` to match.
 - **Hybrid** (server on the host via Nx, infra in Docker): either keep using the **stdio launcher** (`openthrottle-mcp`) — zero-config, it probes the host `/health` — or run the `mcp` container with `OPENTHROTTLE_MCP_UPSTREAM_URL=http://host.docker.internal:${OPENTHROTTLE_SERVER_PORT}` in `.env` so it targets the host server.
 - **Reconnect** the MCP in your client after changing the URL/token (the HTTP server picks up a new env token only on container restart).
+
+## Remote MCP over OAuth
+
+A box deployed with `mcp_domain` set publishes the HTTP MCP at `https://<mcp_domain>/mcp`, and
+the infra renders `OT_MCP_PUBLIC_URL`, `OT_OAUTH_ISSUER` and `OT_OAUTH_CONSENT_URL` into its
+`.env`. That makes the MCP an **OAuth 2.1 resource server** with `openthrottle-server` as its
+authorization server, per the MCP authorization spec. Design and decisions:
+[mcp-oauth-design.md](./mcp-oauth-design.md).
+
+**Register by URL only** — no token, no env block:
+
+```json
+{
+  "mcpServers": {
+    "openthrottle-remote": {
+      "url": "https://mcp.example.com/mcp"
+    }
+  }
+}
+```
+
+On first use the client gets a `401` naming the protected-resource metadata, discovers the
+authorization server, registers itself (Client ID Metadata Document, or Dynamic Client
+Registration) and opens a browser at the developer app's **consent screen**. Sign in if asked,
+check the app's name against the host it is identified by, choose read-only or read & write, and
+allow it. The client receives its own tokens.
+
+- **Identity:** the token acts as **you**, never as a service account, and can do no more than
+  your account can. `mcp:read` is every query; `mcp:write` adds mutations. A read-only token that
+  calls a write tool gets HTTP `403` with `error="insufficient_scope"`, which clients answer by
+  asking you to re-authorize with more access.
+- **Lifetime:** access tokens last an hour and refresh silently; the grant itself lasts **30 days**
+  from consent, after which you approve the client again.
+- **Revoke:** **Settings → Connections** lists every client you have allowed, with its access and
+  expiry, and revokes it immediately. Disabling a user revokes all of their connections.
+- **No anonymous access:** a request with no `Authorization` header is refused. It used to run as
+  the container's `OPENTHROTTLE_MCP_AUTH_TOKEN` service account, which left a published MCP open
+  to anyone who could reach it.
+- **Deprecated escape hatch:** `OT_MCP_ALLOW_STATIC_TOKEN=true` in the box's `.env` restores the
+  old header-less fallback for a client you cannot migrate yet, with a deprecation warning in the
+  logs. It will be removed once Claude Code, Cursor and Codex are verified end to end against a
+  deployed instance (OT plan `16f321a7`, task 4000).
+- **Unchanged:** without `mcp_domain` (the default, and every local compose stack) none of this
+  applies — the `mcp` service behaves exactly as in [HTTP transport](#http-transport-docker-native).
 
 ## Editor parity
 

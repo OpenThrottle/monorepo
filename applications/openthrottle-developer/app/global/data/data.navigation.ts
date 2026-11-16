@@ -28,6 +28,7 @@ import {
   MonitorCogIcon,
   NewspaperIcon,
   NotebookTextIcon,
+  PlugZapIcon,
   Search,
   SlidersHorizontalIcon,
   StickyNoteIcon,
@@ -218,6 +219,12 @@ export const dataNavigationV2: Record<string, PermissionGatedNavigationLink[]> =
         children: 'Appearance',
         icon: SwatchBookIcon,
         to: '/settings/appearance',
+      },
+      {
+        children: 'Connections',
+        disabled: false,
+        icon: PlugZapIcon,
+        to: '/settings/connections',
       },
       {
         children: 'Keys',

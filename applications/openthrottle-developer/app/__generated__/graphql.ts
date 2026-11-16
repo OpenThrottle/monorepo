@@ -1510,6 +1510,22 @@ export type DebugNotification = NotificationEvent & {
   timestamp: Scalars['String']['output'];
 };
 
+export type DecideOAuthAuthorizationInput = {
+  /** true to approve, false to deny. */
+  approve: Scalars['Boolean']['input'];
+  /** The authorization request id from the consent URL. */
+  id: Scalars['String']['input'];
+  /** Scopes to grant, a subset of the requested scopes. Ignored on deny. */
+  scopes: Array<Scalars['String']['input']>;
+};
+
+/** Where to send the browser after an OAuth consent decision. */
+export type DecideOAuthAuthorizationResultObject = {
+  __typename?: 'DecideOAuthAuthorizationResultObject';
+  /** The client's redirect URI carrying code (approve) or error=access_denied (deny), plus state and iss. */
+  redirectUrl: Scalars['String']['output'];
+};
+
 export type DeleteAgentConversationInput = {
   conversationId: Scalars['ID']['input'];
 };
@@ -2828,6 +2844,8 @@ export type Mutation = {
    * @deprecated Replaced by addWorkspaceFolder (repository/checkout model with auto-detected git metadata).
    */
   createWorkspaceLocalRepository: WorkspaceLocalRepositoryObject;
+  /** Approve or deny a pending OAuth authorization request as the signed-in user. Returns the client redirect URL to send the browser to. */
+  decideOAuthAuthorization: DecideOAuthAuthorizationResultObject;
   /** Soft-delete an owned agent conversation (status=deleted; row + messages retained, hidden from the default list, reversible). */
   deleteAgentConversation: AgentConversationObject;
   /** Soft delete a fragment. CONFLICT while a live parent or layout still references it. */
@@ -2998,6 +3016,8 @@ export type Mutation = {
   resumeQueue: QueueControlResultObject;
   /** Retry a failed job. Validates queue exists and job is in failed state. Returns job id or error. */
   retryJob: RetryJobResultObject;
+  /** Revoke one of the signed-in user's OAuth grants and every token under it. False when no live grant of theirs matched. */
+  revokeOAuthGrant: Scalars['Boolean']['output'];
   /** Revoke a service account credential (admin, human only). */
   revokeServiceAccountCredential: Scalars['Boolean']['output'];
   /** Enqueue an immediate one-off run (owner only); allowed even when the schedule is disabled. */
@@ -3305,6 +3325,10 @@ export type MutationCreateUserArgs = {
 
 export type MutationCreateWorkspaceLocalRepositoryArgs = {
   input: CreateWorkspaceLocalRepositoryInput;
+};
+
+export type MutationDecideOAuthAuthorizationArgs = {
+  input: DecideOAuthAuthorizationInput;
 };
 
 export type MutationDeleteAgentConversationArgs = {
@@ -3629,6 +3653,10 @@ export type MutationRetryJobArgs = {
   input: RetryJobInput;
 };
 
+export type MutationRevokeOAuthGrantArgs = {
+  id: Scalars['String']['input'];
+};
+
 export type MutationRevokeServiceAccountCredentialArgs = {
   credentialId: Scalars['ID']['input'];
 };
@@ -3852,6 +3880,39 @@ export type NotificationEvent = {
   severity?: Maybe<Scalars['String']['output']>;
   /** ISO 8601 timestamp when the event occurred. */
   timestamp: Scalars['String']['output'];
+};
+
+/** A pending OAuth authorization request, as the developer-app consent screen renders it. */
+export type OAuthAuthorizationRequestObject = {
+  __typename?: 'OAuthAuthorizationRequestObject';
+  /** The host the client is identified by (CIMD URL host, client_uri host, or redirect URI host or scheme). */
+  clientHost: Scalars['String']['output'];
+  /** The client's self-asserted name. Untrusted — show it beside clientHost. */
+  clientName?: Maybe<Scalars['String']['output']>;
+  expiresAt: Scalars['DateTime']['output'];
+  id: Scalars['String']['output'];
+  /** Where the browser returns after the decision (host only). */
+  redirectHost: Scalars['String']['output'];
+  /** dcr (registered via POST /oauth/register) or cimd (Client ID Metadata Document). */
+  registrationKind: Scalars['String']['output'];
+  /** Scopes the client asked for: mcp:read, mcp:write. */
+  requestedScopes: Array<Scalars['String']['output']>;
+  /** The MCP resource URL the token will be bound to. */
+  resource: Scalars['String']['output'];
+};
+
+/** A client the signed-in user has authorized to use the MCP server on their behalf. */
+export type OAuthGrantObject = {
+  __typename?: 'OAuthGrantObject';
+  clientHost: Scalars['String']['output'];
+  clientName?: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['DateTime']['output'];
+  /** Grants last 30 days from consent; refreshing never extends them. */
+  expiresAt: Scalars['DateTime']['output'];
+  id: Scalars['String']['output'];
+  lastUsedAt?: Maybe<Scalars['DateTime']['output']>;
+  resource: Scalars['String']['output'];
+  scopes: Array<Scalars['String']['output']>;
 };
 
 export type OpenPrCountByAuthorObject = {
@@ -4644,12 +4705,16 @@ export type Query = {
    * @deprecated Use evaluateFeatureFlags (public hydration; no flags:read). Auth remains enrichment for targeting.
    */
   myFeatureFlags: Array<FeatureFlagObject>;
+  /** Clients the signed-in user has authorized via OAuth that are still live, newest first. */
+  myOAuthGrants: Array<OAuthGrantObject>;
   /** Get permission names for the current user */
   myPermissions: Array<Scalars['String']['output']>;
   /** Get a note by ID */
   note?: Maybe<NoteObject>;
   /** List all notes, ordered by createdAt descending */
   notes: Array<NoteObject>;
+  /** A pending OAuth authorization request for the consent screen, or null when it is unknown, decided or expired. */
+  oauthAuthorizationRequest?: Maybe<OAuthAuthorizationRequestObject>;
   /** Open PR count per author for a repository (GitHub stats). Paginates PRs up to 1000 (10 pages); repos with more matching PRs are truncated to the most recent window. */
   openPrCountByAuthor: Array<OpenPrCountByAuthorObject>;
   /** Cycle time for merged PRs: median and P90 of days from open to merged. Optional period buckets by week/month (UTC). Paginates merged PRs up to 1000 (10 pages); older PRs beyond the cap are excluded. */
@@ -4798,6 +4863,8 @@ export type Query = {
   userPreferences: UserPreferencesObject;
   /** List all users, ordered by createdAt descending */
   users: Array<UserObject>;
+  /** The OAuth scopes of the access token this request authenticated with, or null when it did not use an OAuth token. Lets the MCP server answer insufficient_scope before running a write tool. */
+  viewerOAuthScopes?: Maybe<Array<Scalars['String']['output']>>;
   workArtifactsByPlan: WorkArtifactListResult;
   workArtifactsBySession: WorkArtifactListResult;
   workArtifactsByTask: WorkArtifactListResult;
@@ -5039,6 +5106,10 @@ export type QueryListPlansByStatusArgs = {
 
 export type QueryNoteArgs = {
   id: Scalars['ID']['input'];
+};
+
+export type QueryOauthAuthorizationRequestArgs = {
+  id: Scalars['String']['input'];
 };
 
 export type QueryOpenPrCountByAuthorArgs = {
@@ -10083,6 +10154,37 @@ export type CreateNoteMutation = {
   };
 };
 
+export type OAuthConsentRequestQueryVariables = Exact<{
+  id: Scalars['String']['input'];
+}>;
+
+export type OAuthConsentRequestQuery = {
+  __typename?: 'Query';
+  oauthAuthorizationRequest?: {
+    __typename?: 'OAuthAuthorizationRequestObject';
+    clientHost: string;
+    clientName?: string | null;
+    expiresAt: any;
+    id: string;
+    redirectHost: string;
+    registrationKind: string;
+    requestedScopes: Array<string>;
+    resource: string;
+  } | null;
+};
+
+export type DecideOAuthAuthorizationMutationVariables = Exact<{
+  input: DecideOAuthAuthorizationInput;
+}>;
+
+export type DecideOAuthAuthorizationMutation = {
+  __typename?: 'Mutation';
+  decideOAuthAuthorization: {
+    __typename?: 'DecideOAuthAuthorizationResultObject';
+    redirectUrl: string;
+  };
+};
+
 export type HookTaskFragment = {
   __typename?: 'TaskObject';
   hookRole?: string | null;
@@ -13078,6 +13180,32 @@ export type AgentSetupChunkAddedSubscription = {
     sortOrder: number;
     stream: string;
   };
+};
+
+export type SettingsConnectionsQueryVariables = Exact<{ [key: string]: never }>;
+
+export type SettingsConnectionsQuery = {
+  __typename?: 'Query';
+  myOAuthGrants: Array<{
+    __typename?: 'OAuthGrantObject';
+    clientHost: string;
+    clientName?: string | null;
+    createdAt: any;
+    expiresAt: any;
+    id: string;
+    lastUsedAt?: any | null;
+    resource: string;
+    scopes: Array<string>;
+  }>;
+};
+
+export type RevokeOAuthGrantMutationVariables = Exact<{
+  id: Scalars['String']['input'];
+}>;
+
+export type RevokeOAuthGrantMutation = {
+  __typename?: 'Mutation';
+  revokeOAuthGrant: boolean;
 };
 
 export type ServiceAccountCredentialFieldsFragment = {
@@ -23643,6 +23771,127 @@ export const CreateNoteDocument = {
     },
   ],
 } as unknown as DocumentNode<CreateNoteMutation, CreateNoteMutationVariables>;
+export const OAuthConsentRequestDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'OAuthConsentRequest' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'String' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'oauthAuthorizationRequest' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'id' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'clientHost' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'clientName' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'expiresAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'redirectHost' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'registrationKind' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'requestedScopes' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'resource' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  OAuthConsentRequestQuery,
+  OAuthConsentRequestQueryVariables
+>;
+export const DecideOAuthAuthorizationDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'DecideOAuthAuthorization' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'DecideOAuthAuthorizationInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'decideOAuthAuthorization' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'redirectUrl' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  DecideOAuthAuthorizationMutation,
+  DecideOAuthAuthorizationMutationVariables
+>;
 export const GetPlanByIdDocument = {
   kind: 'Document',
   definitions: [
@@ -32210,6 +32459,86 @@ export const AgentSetupChunkAddedDocument = {
 } as unknown as DocumentNode<
   AgentSetupChunkAddedSubscription,
   AgentSetupChunkAddedSubscriptionVariables
+>;
+export const SettingsConnectionsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'SettingsConnections' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'myOAuthGrants' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'clientHost' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'clientName' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'expiresAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'lastUsedAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'resource' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'scopes' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  SettingsConnectionsQuery,
+  SettingsConnectionsQueryVariables
+>;
+export const RevokeOAuthGrantDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'RevokeOAuthGrant' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'String' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'revokeOAuthGrant' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'id' },
+                },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  RevokeOAuthGrantMutation,
+  RevokeOAuthGrantMutationVariables
 >;
 export const GetSettingsKeysDocument = {
   kind: 'Document',

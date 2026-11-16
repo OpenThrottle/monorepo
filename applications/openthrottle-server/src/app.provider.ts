@@ -3,6 +3,7 @@ import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { EmitNotificationInterceptor } from '@openthrottle/nestjs-websockets';
 
 import { GlobalClsAuthHook } from './auth/global-cls-auth-hook/global-cls-auth-hook.service.ts';
+import { OAuthAccessAuthService } from './auth/oauth-access-auth/oauth-access-auth.service.ts';
 import { ServiceAccountAuthService } from './auth/service-account-auth/service-account-auth.service.ts';
 import { PlanScheduleConflictFilter } from './graphql/plans/plan-enqueue/plan-schedule-conflict.filter.ts';
 import { GlobalAuthGuard } from './guards/global-auth.guard.ts';
@@ -25,6 +26,7 @@ export const appProviders: Provider[] = [
   GlobalClsAuthHook,
   GlobalAuthGuard,
   GqlJwtAuthGuard,
+  OAuthAccessAuthService,
   ServiceAccountAuthService,
   {
     provide: APP_GUARD,

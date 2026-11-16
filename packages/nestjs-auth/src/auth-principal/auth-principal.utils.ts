@@ -7,6 +7,7 @@ import {
 } from './auth-principal.constants.ts';
 import type {
   AuthPrincipal,
+  OAuthPrincipalGrant,
   ServiceAccountAuthPrincipal,
   UserAuthPrincipal,
 } from './auth-principal.types.ts';
@@ -29,6 +30,24 @@ export const authPrincipalFromServiceAccountId = (
   return {
     kind: AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
     sub: serviceAccountId,
+  };
+};
+
+/**
+ * @description Maps a verified OAuth access token to the consenting user's principal.
+ */
+export const authPrincipalFromOAuthGrant = (
+  userId: string,
+  grant: OAuthPrincipalGrant,
+): UserAuthPrincipal => {
+  return {
+    kind: AUTH_PRINCIPAL_KIND_USER,
+    oauth: {
+      clientId: grant.clientId,
+      grantId: grant.grantId,
+      scopes: [...grant.scopes],
+    },
+    sub: userId,
   };
 };
 
@@ -65,6 +84,24 @@ const parseOptionalStringArray = (
   return out;
 };
 
+const oauthGrantFromUnknown = (
+  value: unknown,
+): OAuthPrincipalGrant | undefined => {
+  if (!isRecord(value)) {
+    return undefined;
+  }
+  const { clientId, grantId } = value;
+  const scopes = parseOptionalStringArray(value.scopes);
+  if (
+    typeof clientId !== 'string' ||
+    typeof grantId !== 'string' ||
+    scopes === undefined
+  ) {
+    return undefined;
+  }
+  return { clientId, grantId, scopes };
+};
+
 const userPrincipalFromUnknown = (
   userUnknown: Record<string, unknown>,
 ): UserAuthPrincipal | undefined => {
@@ -78,6 +115,7 @@ const userPrincipalFromUnknown = (
   const expUnknown = userUnknown.exp;
   const iatUnknown = userUnknown.iat;
   const roles = parseOptionalStringArray(userUnknown.roles);
+  const oauth = oauthGrantFromUnknown(userUnknown.oauth);
 
   return {
     kind: AUTH_PRINCIPAL_KIND_USER,
@@ -85,6 +123,7 @@ const userPrincipalFromUnknown = (
     ...(typeof emailUnknown === 'string' ? { email: emailUnknown } : {}),
     ...(typeof expUnknown === 'number' ? { exp: expUnknown } : {}),
     ...(typeof iatUnknown === 'number' ? { iat: iatUnknown } : {}),
+    ...(oauth !== undefined ? { oauth } : {}),
     ...(roles !== undefined ? { roles } : {}),
   };
 };

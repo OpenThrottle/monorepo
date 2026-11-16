@@ -139,6 +139,7 @@ locals {
     compose_content          = local.compose_content
     developer_domain         = var.developer_domain
     jwt_secret               = var.jwt_secret
+    mcp_domain               = var.mcp_domain
     postgres_db              = var.postgres_db_name
     postgres_host            = local.postgres_host
 
