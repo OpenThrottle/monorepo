@@ -10,6 +10,7 @@ import * as React from 'react';
 
 import { COMMANDER_CLASS_NAME } from '../data/data.commander';
 import { useOpenThrottleCommander } from '../hooks/useOpenThrottleCommander';
+import { getCommanderEscapeHeading } from '../utils/getCommanderEscapeHeading';
 import { scoreCommanderRow } from '../utils/scoreCommanderRow';
 import { CommanderFooter } from './CommanderFooter';
 import { CommanderItemRow } from './CommanderItemRow';
@@ -116,16 +117,19 @@ export const OpenThrottleCommander = (
   });
 
   // Setup
+  const escapeHeading = getCommanderEscapeHeading({
+    groups,
+    hasExtras: leadingExtraItems.length + fallbackExtraItems.length > 0,
+    search: trimmedSearch,
+  });
 
   // Handlers
 
   // Markup
-  const noMatchHeading = 'No match in palette — open a route or search';
-  const hasExtras = leadingExtraItems.length + fallbackExtraItems.length > 0;
   const escapeHatch = (
     <CommanderNoMatchGroup
       fallbackItems={fallbackExtraItems}
-      heading={hasExtras ? noMatchHeading : 'Search'}
+      heading={escapeHeading}
       leadingItems={leadingExtraItems}
       onSearch={onEmptyStateSearch && handleEmptyStateSearch}
       onSelect={handleSelect}
