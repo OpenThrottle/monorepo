@@ -24,16 +24,22 @@ import {
 import { PRODUCT_FEATURES } from '../data/data.features';
 import { PRODUCT_POSITIONING } from '../data/data.positioning';
 import { PRODUCT_PROJECTS } from '../data/data.projects';
-import { AGENT_CLI_NAMES } from '../data/data.surfaces';
-import type { SurfaceInput, SurfaceStats } from '../types/surfaces';
+import type {
+  StatsGraphicScheme,
+  SurfaceInput,
+  SurfaceStats,
+} from '../types/surfaces';
 import {
   renderLinkedInBlock,
   renderOrgProfile,
   renderReadmeSection,
   replaceMarkedSection,
 } from '../utils/render';
+import { getAgentCliNames, renderStatsSvg } from '../utils/stats-graphic';
 
 const run = promisify(execFile);
+
+const STATS_GRAPHIC_SCHEMES: readonly StatsGraphicScheme[] = ['dark', 'light'];
 
 const WORKSPACE_ROOT = new URL('../../../../', import.meta.url);
 const README_URL = new URL('README.md', WORKSPACE_ROOT);
@@ -72,9 +78,7 @@ const getStats = async (): Promise<SurfaceStats> => {
     countProjects('type:package'),
     countMergedPullRequests(),
   ]);
-  const agentClis = DRIVER_IDS.map((id) => {
-    return AGENT_CLI_NAMES[id] ?? id;
-  }).sort();
+  const agentClis = getAgentCliNames(DRIVER_IDS);
 
   return { agentClis, applications, mergedPullRequests, packages };
 };
@@ -105,16 +109,35 @@ const main = async (): Promise<number> => {
   const orgProfileUrl = new URL('org-profile/README.md', OUT_URL);
   const linkedInUrl = new URL('linkedin.md', OUT_URL);
 
-  await mkdir(new URL('org-profile/', OUT_URL), { recursive: true });
-  await Promise.all([
+  const assetsUrl = new URL('org-profile/assets/', OUT_URL);
+
+  // Create out/ before any write starts: a rejected write would end the
+  // process mid-write and truncate README.md.
+  await mkdir(assetsUrl, { recursive: true });
+
+  const writes = [
     writeFile(README_URL, replaced.document),
     writeFile(orgProfileUrl, renderOrgProfile(input)),
     writeFile(linkedInUrl, renderLinkedInBlock(input)),
-  ]);
+  ];
+
+  if (stats !== undefined) {
+    for (const scheme of STATS_GRAPHIC_SCHEMES) {
+      const svgUrl = new URL(`stats-${scheme}.svg`, assetsUrl);
+
+      writes.push(writeFile(svgUrl, renderStatsSvg(stats, scheme)));
+    }
+  }
+
+  await Promise.all(writes);
 
   console.log(`README.md features section written.`);
   console.log(`Org profile: ${orgProfileUrl.pathname}`);
   console.log(`LinkedIn block: ${linkedInUrl.pathname}`);
+
+  if (stats !== undefined) {
+    console.log(`Stats graphics: ${assetsUrl.pathname}stats-{dark,light}.svg`);
+  }
 
   if (stats === undefined) {
     console.log('Offline: stats omitted.');

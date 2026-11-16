@@ -26,6 +26,20 @@ export const AGENT_CLI_NAMES: Readonly<Record<string, string>> = {
   opencode: 'OpenCode',
 };
 
+/**
+ * @description The order agent CLIs are shown in, by driver id. A driver
+ * missing here is appended after these, in `DRIVER_IDS` order.
+ * @public
+ */
+export const AGENT_CLI_DISPLAY_ORDER: readonly string[] = [
+  'claude',
+  'codex',
+  'cursor',
+  'grok',
+  'opencode',
+  'antigravity',
+];
+
 /** @public */
 export const ORG_PROFILE_COPY = {
   builtWith: `TypeScript end to end in an Nx + pnpm monorepo: **NestJS** and **Apollo GraphQL** on the server, **React Router** + **Vite** + **Tailwind** + **shadcn/ui** on the client, **Postgres** + **pgvector** for data and search, **Redis** + **BullMQ** for queues, and **Electron** for desktop.`,
@@ -49,8 +63,7 @@ export const ORG_PROFILE_COPY = {
   ],
   quickstartAfter: `Then point your agent at \`openthrottle-mcp\` and ask it what's in progress. The [local quickstart](https://github.com/OpenThrottle/monorepo/blob/main/docs/openthrottle/local-quickstart.md) walks through it end to end.`,
   quickstartTitle: '## ⚡ Zero to sixty',
-  roadmapTitle: '## 🧭 On the roadmap',
-  statsTitle: '## 📈 By the numbers',
+  roadmapTitle: '## 🔧 In the garage',
 } as const;
 
 /** @public */

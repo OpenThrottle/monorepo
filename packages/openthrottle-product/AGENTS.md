@@ -9,6 +9,7 @@ The positioning canon and the feature registry, as typed `as const` data. Every 
 - [src/types/product.ts](src/types/product.ts) — the discriminated union and copy types.
 - [src/utils/features.ts](src/utils/features.ts) — selectors and `getFeatureLink`.
 - [src/utils/render.ts](src/utils/render.ts) — pure renderers for the README section, org profile and LinkedIn block.
+- [src/utils/stats-graphic.ts](src/utils/stats-graphic.ts) — the org profile's stats card SVG (light and dark) and its alt text; geometry and palette in [src/data/data.statsGraphic.ts](src/data/data.statsGraphic.ts).
 - [src/scripts/generate-surfaces.ts](src/scripts/generate-surfaces.ts) — the `generate-surfaces` target: gathers stats, writes the README section and `out/`.
 - [tests/registry.test.ts](tests/registry.test.ts) — length, id and pillar invariants over the real data.
 
