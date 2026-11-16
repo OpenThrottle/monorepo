@@ -5,6 +5,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { COMMANDER_ESCAPE_HEADING } from '../../data/data.copy';
 import type {
   CommanderGroup,
   CommanderItem,
@@ -251,6 +252,59 @@ describe('OpenThrottleCommander Component', () => {
       await user.keyboard('{Enter}');
       expect(onEmptyStateSearch).toHaveBeenCalledWith('argo cd');
       expect(onBrowse).not.toHaveBeenCalled();
+    });
+
+    describe('escape-group heading', () => {
+      const withBrowseExtra = (): OpenThrottleCommanderProps => {
+        return {
+          ...props,
+          emptyStateExtras: (query: string) => [
+            {
+              id: 'browse-plans',
+              isFallback: true,
+              label: 'Browse plans',
+              value: `${query} browse plans`,
+            },
+          ],
+          groups: [
+            {
+              heading: 'Nav',
+              items: [{ id: 'n1', label: 'Plans', value: 'plans' }],
+            },
+          ],
+          onEmptyStateSearch: vi.fn(),
+        };
+      };
+
+      test('claims no match when no static row matches', async () => {
+        const user = userEvent.setup();
+        component = renderCommander(withBrowseExtra());
+        const dialog = await openCommandPalette(user, component);
+        await user.type(getCommandInput(component, dialog), 'argo cd');
+
+        const group = within(dialog).getByTestId('CommanderNoMatchGroup');
+        expect(
+          within(group).getByText(COMMANDER_ESCAPE_HEADING.noMatch),
+        ).toBeInTheDocument();
+      });
+
+      test('takes a neutral heading when a static row matches', async () => {
+        const user = userEvent.setup();
+        component = renderCommander(withBrowseExtra());
+        const dialog = await openCommandPalette(user, component);
+        await user.type(getCommandInput(component, dialog), 'plans');
+
+        expect(
+          within(dialog).getByRole('option', { name: 'Plans' }),
+        ).toBeInTheDocument();
+        const group = within(dialog).getByTestId('CommanderNoMatchGroup');
+        expect(
+          within(group).getByText(COMMANDER_ESCAPE_HEADING.more),
+        ).toBeInTheDocument();
+        expect(
+          within(dialog).queryByText(COMMANDER_ESCAPE_HEADING.noMatch),
+        ).not.toBeInTheDocument();
+      });
     });
 
     test('keeps non-fallback extras (real matches) ahead of Search', async () => {
