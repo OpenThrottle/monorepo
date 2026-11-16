@@ -19,13 +19,16 @@ import SearchIndex from '../search._index';
  * @description Converts the shared (readonly) search fixture into the mutable
  * loader-data shape the route component expects, copying the chunk array.
  */
-const toLoaderData = (fixture: SearchIndexLoaderFixture) => {
+const toLoaderData = (
+  fixture: SearchIndexLoaderFixture,
+  reason: string | null = null,
+) => {
   return {
     expandRankingDetails: fixture.expandRankingDetails,
     limit: fixture.limit,
     page: fixture.page,
     query: fixture.query,
-    results: { chunks: [...fixture.results.chunks] },
+    results: { chunks: [...fixture.results.chunks], reason },
     total: fixture.total,
   };
 };
@@ -40,6 +43,32 @@ function stubMatches(): unknown {
 }
 
 describe('routes/search._index.tsx', () => {
+  describe('when the search fell back because the model is missing', () => {
+    test('shows the semantic-search-off notice above the results', async () => {
+      const view = render(
+        <TooltipProvider>
+          <MemoryRouter initialEntries={['/search?q=test']}>
+            <SearchIndex
+              actionData={undefined}
+              loaderData={toLoaderData(
+                searchIndexLoaderFixture,
+                'embedder_unconfigured',
+              )}
+              matches={stubMatches()}
+              params={{}}
+            />
+          </MemoryRouter>
+        </TooltipProvider>,
+      );
+
+      await waitFor(() => {
+        expect(
+          view.getByTestId('GlobalSemanticSearchOffNotice'),
+        ).toBeInTheDocument();
+      });
+    });
+  });
+
   test('should render search shell, SearchToolbar, and results', () => {
     const view = render(
       <TooltipProvider>

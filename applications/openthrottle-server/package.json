@@ -118,6 +118,10 @@
             "projects": "monorepo"
           },
           {
+            "target": "ensure-embedding-model",
+            "projects": "monorepo"
+          },
+          {
             "target": "bundle-hooks",
             "projects": "@openthrottle/agentic-hooks"
           },
@@ -146,6 +150,10 @@
         "dependsOn": [
           {
             "target": "ensure-migrations",
+            "projects": "monorepo"
+          },
+          {
+            "target": "ensure-embedding-model",
             "projects": "monorepo"
           },
           "^build",
@@ -216,6 +224,10 @@
             "target": "ensure-migrations",
             "projects": "monorepo"
           },
+          {
+            "target": "ensure-embedding-model",
+            "projects": "monorepo"
+          },
           "build",
           "^build"
         ],
@@ -235,6 +247,10 @@
         "dependsOn": [
           {
             "target": "ensure-migrations",
+            "projects": "monorepo"
+          },
+          {
+            "target": "ensure-embedding-model",
             "projects": "monorepo"
           },
           "build",

@@ -10,6 +10,7 @@ import { useSearchParams } from 'react-router';
 
 import type { Route } from '@/app/routes/+types/agent-search._index';
 import { SearchAgentAssetsDocument } from '~/__generated__/graphql';
+import { GlobalSemanticSearchOffNotice } from '~/global/components/GlobalSemanticSearchOffNotice';
 import { SITE_TITLE } from '~/global/config/settings';
 import { AgentAssetCard } from '~/routing/agent-search/components/AgentAssetCard';
 import { AgentSearchEmpty } from '~/routing/agent-search/components/AgentSearchEmpty';
@@ -55,6 +56,7 @@ export const loader = async (args: Route.LoaderArgs) => {
       counts: EMPTY_COUNTS,
       projectId,
       query: q,
+      reason: null,
       results: [],
       tab,
       usedDiskFallback: false,
@@ -116,6 +118,7 @@ export const loader = async (args: Route.LoaderArgs) => {
     counts,
     projectId,
     query: q,
+    reason: searchAgentAssets.reason ?? null,
     results: visible,
     tab,
     usedDiskFallback,
@@ -134,7 +137,7 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { actionData: _a, loaderData, matches: _m, params: _p } = props;
-  const { counts, projectId, query, results, tab, usedDiskFallback } =
+  const { counts, projectId, query, reason, results, tab, usedDiskFallback } =
     loaderData;
 
   // Hooks
@@ -172,6 +175,9 @@ export default function Component(
         tab={tab}
       />
       <AgentSearchTabs counts={counts} tab={tab} />
+      <div className="px-4">
+        <GlobalSemanticSearchOffNotice reason={reason} />
+      </div>
       {usedDiskFallback ? diskNotice : null}
       <div className="flex flex-col gap-4 p-4">
         {showEmpty ? <AgentSearchEmpty /> : resultCards}

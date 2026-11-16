@@ -228,6 +228,7 @@ CMD ["bin-http.mjs"]
 FROM builder AS embedding-model
 
 COPY scripts/download-embedding-model.ts ./scripts/download-embedding-model.ts
+COPY scripts/embedding-model.ts ./scripts/embedding-model.ts
 COPY scripts/utils/logger.ts ./scripts/utils/logger.ts
 
 RUN pnpm exec tsx ./scripts/download-embedding-model.ts --dir /models

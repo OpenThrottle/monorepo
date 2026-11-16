@@ -10,6 +10,7 @@ import { redirect, useSearchParams } from 'react-router';
 import type { Route } from '@/app/routes/+types/search._index';
 import type { SearchChunk } from '~/__generated__/graphql';
 import { GetSearchResultsDocument } from '~/__generated__/graphql';
+import { GlobalSemanticSearchOffNotice } from '~/global/components/GlobalSemanticSearchOffNotice';
 import { SITE_TITLE } from '~/global/config/settings';
 import { SearchCard } from '~/routing/search/components/SearchCard';
 import { SearchIntroduction } from '~/routing/search/components/SearchIntroduction';
@@ -56,7 +57,7 @@ export const loader = async (args: Route.LoaderArgs) => {
       limit,
       page,
       query: q,
-      results: { chunks: [] },
+      results: { chunks: [], reason: null },
       total: 0,
     };
   }
@@ -88,7 +89,7 @@ export const loader = async (args: Route.LoaderArgs) => {
     limit,
     page,
     query: q,
-    results: { chunks: search.chunks },
+    results: { chunks: search.chunks, reason: search.reason ?? null },
     total: search.total,
   };
 };
@@ -162,6 +163,7 @@ export default function Component(
             expandRankingDetails={expandRankingDetails}
           />
         </div>
+        <GlobalSemanticSearchOffNotice reason={results.reason} />
         <div className="flex flex-col gap-2">
           {results.chunks.map((result) => {
             return (

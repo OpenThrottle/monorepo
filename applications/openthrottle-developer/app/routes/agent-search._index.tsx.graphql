@@ -12,5 +12,7 @@ query searchAgentAssets($input: AgentAssetSearchInput!) {
       similarity
       title
     }
+    mode
+    reason
   }
 }

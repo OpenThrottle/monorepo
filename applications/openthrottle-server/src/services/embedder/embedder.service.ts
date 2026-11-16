@@ -33,6 +33,7 @@ import type {
   EmbedderStatus,
   EmbeddingColumnDims,
 } from './embedder.types.ts';
+import { formatLexicalOnlyBanner } from './embedder.utils.ts';
 
 @Injectable()
 export class EmbedderService
@@ -115,7 +116,11 @@ export class EmbedderService
 
     if (!config) {
       this.logger.error(
-        `Embedder unconfigured: ${this.status.detail ?? 'unknown'} Semantic search will answer lexically.`,
+        formatLexicalOnlyBanner({
+          detail: this.status.detail ?? 'unknown',
+          provider: this.status.provider,
+          state: 'unconfigured',
+        }),
         EmbedderService.name,
       );
 
@@ -143,7 +148,11 @@ export class EmbedderService
       );
     } else {
       this.logger.error(
-        `Embedder ${result.reason}: ${result.detail} Semantic search will answer lexically.`,
+        formatLexicalOnlyBanner({
+          detail: result.detail,
+          provider: config.provider,
+          state: result.reason,
+        }),
         EmbedderService.name,
       );
     }
