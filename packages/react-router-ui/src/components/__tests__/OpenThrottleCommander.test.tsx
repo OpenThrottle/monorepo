@@ -214,6 +214,80 @@ describe('OpenThrottleCommander Component', () => {
       expect(component.queryByRole('dialog')).not.toBeInTheDocument();
     });
 
+    test('puts Search before fallback extras and highlights it when nothing matches', async () => {
+      const user = userEvent.setup();
+      const onEmptyStateSearch = vi.fn();
+      const onBrowse = vi.fn();
+      component = renderCommander({
+        ...props,
+        emptyStateExtras: (query: string) => [
+          {
+            id: 'browse-plans',
+            isFallback: true,
+            label: 'Browse plans',
+            onSelect: onBrowse,
+            value: `${query} browse plans`,
+          },
+        ],
+        groups: [
+          {
+            heading: 'Nav',
+            items: [{ id: 'n1', label: 'Plans', onSelect: () => {} }],
+          },
+        ],
+        onEmptyStateSearch,
+      });
+      const dialog = await openCommandPalette(user, component);
+      await user.type(getCommandInput(component, dialog), 'argo cd');
+
+      const options = within(dialog).getAllByRole('option');
+      expect(options[0]).toBe(
+        within(dialog).getByTestId('OpenThrottleCommander-search'),
+      );
+      await waitFor(() => {
+        expect(options[0]).toHaveAttribute('aria-selected', 'true');
+      });
+
+      await user.keyboard('{Enter}');
+      expect(onEmptyStateSearch).toHaveBeenCalledWith('argo cd');
+      expect(onBrowse).not.toHaveBeenCalled();
+    });
+
+    test('keeps non-fallback extras (real matches) ahead of Search', async () => {
+      const user = userEvent.setup();
+      component = renderCommander({
+        ...props,
+        emptyStateExtras: (query: string) => [
+          {
+            id: 'browse-plans',
+            isFallback: true,
+            label: 'Browse plans',
+            value: `${query} browse plans`,
+          },
+          {
+            id: 'open-plan-abc123',
+            label: 'Open plan: Ship it',
+            value: `${query} open plan`,
+          },
+        ],
+        onEmptyStateSearch: vi.fn(),
+      });
+      const dialog = await openCommandPalette(user, component);
+      await user.type(getCommandInput(component, dialog), 'abc123');
+
+      const options = within(dialog).getAllByRole('option');
+      expect(
+        options.map((option) => {
+          return option.dataset['testid'];
+        }),
+      ).toEqual([
+        'CommanderItemRow',
+        'OpenThrottleCommander-search',
+        'CommanderItemRow',
+      ]);
+      expect(options[0]).toHaveTextContent('Open plan: Ship it');
+    });
+
     test('renders an empty-state extra trailing node beside its label', async () => {
       const user = userEvent.setup();
       component = renderCommander({

@@ -16,13 +16,18 @@ export interface UseOpenThrottleCommanderOptions {
 }
 
 export interface UseOpenThrottleCommanderResult {
-  readonly extraItems: readonly CommanderItem[];
+  /** Empty-state extras flagged `isFallback`: rendered after the Search row. */
+  readonly fallbackExtraItems: readonly CommanderItem[];
   readonly handleEmptyStateSearch: () => void;
   readonly handleSelect: (item: CommanderItem) => void;
   /** Controlled cmdk `value` (the highlighted row); pass to `Command`. */
   readonly highlighted: string;
+  /** Empty-state extras that are real matches (e.g. a resolved id): rendered before the Search row. */
+  readonly leadingExtraItems: readonly CommanderItem[];
   readonly open: boolean;
   readonly search: string;
+  /** cmdk value of the "Search for …" row. */
+  readonly searchRowValue: string;
   /** cmdk `onValueChange`: arrow keys, pointer and cmdk's own filter reset. */
   readonly setHighlighted: (value: string) => void;
   readonly setOpen: (value: boolean) => void;
@@ -68,8 +73,15 @@ export const useOpenThrottleCommander = (
     Boolean(onEmptyStateSearch) && trimmedSearch.length > 0;
   const showUuidExtras = trimmedSearch.length > 0 && extraItems.length > 0;
   const showEmptyEscapeHatch = showSearchEscape || showUuidExtras;
-  const firstExtra = extraItems[0];
-  const firstExtraValue = (firstExtra?.value ?? firstExtra?.id)?.trim();
+  const leadingExtraItems = extraItems.filter((item) => {
+    return item.isFallback !== true;
+  });
+  const fallbackExtraItems = extraItems.filter((item) => {
+    return item.isFallback === true;
+  });
+  const searchRowValue = `__empty_state_search__ ${trimmedSearch}`;
+  const firstLeading = leadingExtraItems[0];
+  const firstLeadingValue = (firstLeading?.value ?? firstLeading?.id)?.trim();
 
   // Handlers
   const handleSelect = React.useCallback(
@@ -97,15 +109,17 @@ export const useOpenThrottleCommander = (
     }
   }, [open]);
 
-  // Extras (e.g. resolved id rows) arrive after an async lookup, and cmdk only
-  // auto-selects a newly mounted item when nothing is selected — so without
-  // this Enter does nothing. Re-target only when the first extra changes (a new
-  // result set), so a row the user arrowed to keeps the highlight.
+  // Leading extras (e.g. resolved id rows) arrive after an async lookup, and
+  // cmdk only auto-selects a newly mounted item when nothing is selected — so
+  // without this Enter does nothing. Re-target only when the first leading
+  // extra changes (a new result set), so a row the user arrowed to keeps the
+  // highlight. Fallback extras never re-target: they sit below the Search row,
+  // which cmdk's filter reset already highlights when nothing else matches.
   React.useEffect(() => {
-    if (firstExtraValue) {
-      setHighlighted(firstExtraValue);
+    if (firstLeadingValue) {
+      setHighlighted(firstLeadingValue);
     }
-  }, [firstExtraValue]);
+  }, [firstLeadingValue]);
 
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent): void => {
@@ -129,12 +143,14 @@ export const useOpenThrottleCommander = (
   // 🔌 Short Circuit
 
   return {
-    extraItems,
+    fallbackExtraItems,
     handleEmptyStateSearch,
     handleSelect,
     highlighted,
+    leadingExtraItems,
     open,
     search,
+    searchRowValue,
     setHighlighted,
     setOpen,
     setSearch,

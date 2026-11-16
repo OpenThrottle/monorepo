@@ -25,6 +25,7 @@ describe('CommanderItemRow Component', () => {
         className: undefined,
         forceMount: undefined,
         item: { id: 'plans', label: 'Plans' },
+        keywords: undefined,
         onSelect: vi.fn(),
       });
 
@@ -45,6 +46,7 @@ describe('CommanderItemRow Component', () => {
           label: 'Open plan: Ship it',
           trailing: <span data-testid="status-badge">In progress</span>,
         },
+        keywords: undefined,
         onSelect: vi.fn(),
       });
 
@@ -63,6 +65,7 @@ describe('CommanderItemRow Component', () => {
         className: undefined,
         forceMount: undefined,
         item,
+        keywords: undefined,
         onSelect,
       });
 

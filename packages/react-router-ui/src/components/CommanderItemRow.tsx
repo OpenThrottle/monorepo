@@ -12,6 +12,8 @@ export interface CommanderItemRowProps {
   /** Keep the row mounted even when cmdk's own filter would hide it (empty-state extras). */
   readonly forceMount: boolean | undefined;
   readonly item: CommanderItem;
+  /** cmdk keywords; the palette uses them to rank its no-match rows. */
+  readonly keywords: readonly string[] | undefined;
   readonly onSelect: (item: CommanderItem) => void;
 }
 
@@ -25,7 +27,7 @@ export interface CommanderItemRowProps {
 export const CommanderItemRow = (
   props: CommanderItemRowProps,
 ): React.ReactElement => {
-  const { className, forceMount, item, onSelect } = props;
+  const { className, forceMount, item, keywords, onSelect } = props;
 
   // Hooks
 
@@ -58,6 +60,7 @@ export const CommanderItemRow = (
       className={className}
       data-testid="CommanderItemRow"
       forceMount={forceMount}
+      keywords={keywords ? [...keywords] : undefined}
       onSelect={handleSelect}
       value={item.value ?? item.id}
     >

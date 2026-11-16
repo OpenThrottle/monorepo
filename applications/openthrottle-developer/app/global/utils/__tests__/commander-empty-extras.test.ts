@@ -66,6 +66,11 @@ describe('buildCommanderEmptyStateExtras', () => {
       submitCommanderSearch: submit,
     });
     expect(items).toHaveLength(3);
+    expect(
+      items.every((item) => {
+        return item.isFallback === true;
+      }),
+    ).toBe(true);
     items[0]?.onSelect?.();
     items[1]?.onSelect?.();
     items[2]?.onSelect?.();

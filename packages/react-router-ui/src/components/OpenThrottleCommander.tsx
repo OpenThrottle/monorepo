@@ -3,21 +3,29 @@ import {
   CommandEmpty,
   CommandGroup,
   CommandInput,
-  CommandItem,
   CommandList,
   CommandSeparator,
 } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
+import { COMMANDER_CLASS_NAME } from '../data/data.commander';
 import { useOpenThrottleCommander } from '../hooks/useOpenThrottleCommander';
+import { scoreCommanderRow } from '../utils/scoreCommanderRow';
 import { CommanderFooter } from './CommanderFooter';
 import { CommanderItemRow } from './CommanderItemRow';
+import { CommanderNoMatchGroup } from './CommanderNoMatchGroup';
 
 /** Single command palette item: action (onSelect) or navigation (href). At least one of onSelect or href should be set for the item to be actionable. */
 export interface CommanderItem {
   readonly href?: string;
   readonly icon?: React.ReactNode;
   readonly id: string;
+  /**
+   * Empty-state extras only: a generic escape (e.g. "browse all") rather than a
+   * match for the query. Fallback rows render after "Search for …", so Search
+   * leads — and is highlighted — when nothing actually matched.
+   */
+  readonly isFallback?: boolean;
   readonly label: string;
   readonly onSelect?: () => void;
   readonly shortcut?: string;
@@ -86,12 +94,14 @@ export const OpenThrottleCommander = (
 
   // Hooks
   const {
-    extraItems,
+    fallbackExtraItems,
     handleEmptyStateSearch,
     handleSelect,
     highlighted,
+    leadingExtraItems,
     open,
     search,
+    searchRowValue,
     setHighlighted,
     setOpen,
     setSearch,
@@ -111,28 +121,17 @@ export const OpenThrottleCommander = (
 
   // Markup
   const noMatchHeading = 'No match in palette — open a route or search';
-  const escapeHeading = extraItems.length > 0 ? noMatchHeading : 'Search';
+  const hasExtras = leadingExtraItems.length + fallbackExtraItems.length > 0;
   const escapeHatch = (
-    <CommandGroup forceMount={true} heading={escapeHeading}>
-      {extraItems.map((item) => (
-        <CommanderItemRow
-          className={undefined}
-          forceMount={true}
-          item={item}
-          key={item.id}
-          onSelect={handleSelect}
-        />
-      ))}
-      {onEmptyStateSearch && (
-        <CommandItem
-          forceMount={true}
-          onSelect={handleEmptyStateSearch}
-          value={`__empty_state_search__ ${trimmedSearch}`}
-        >
-          Search for &quot;{trimmedSearch}&quot;
-        </CommandItem>
-      )}
-    </CommandGroup>
+    <CommanderNoMatchGroup
+      fallbackItems={fallbackExtraItems}
+      heading={hasExtras ? noMatchHeading : 'Search'}
+      leadingItems={leadingExtraItems}
+      onSearch={onEmptyStateSearch && handleEmptyStateSearch}
+      onSelect={handleSelect}
+      search={trimmedSearch}
+      searchValue={searchRowValue}
+    />
   );
   const emptyState = (
     <CommandEmpty data-testid="OpenThrottleCommander-empty">
@@ -153,6 +152,7 @@ export const OpenThrottleCommander = (
     <CommandDialog
       className={className}
       data-testid="OpenThrottleCommander"
+      filter={scoreCommanderRow}
       modal={true}
       onOpenChange={setOpen}
       onValueChange={setHighlighted}
@@ -176,13 +176,17 @@ export const OpenThrottleCommander = (
             {groupIndex > 0 ? (
               <CommandSeparator className="my-4 px-4!" />
             ) : null}
-            <CommandGroup className="m-0! p-0!" heading={group.heading}>
+            <CommandGroup
+              className={COMMANDER_CLASS_NAME.group}
+              heading={group.heading}
+            >
               {group.items.map((item) => (
                 <CommanderItemRow
-                  className="m-0! h-auto! rounded-none! p-2! px-4!"
+                  className={COMMANDER_CLASS_NAME.row}
                   forceMount={undefined}
                   item={item}
                   key={item.id}
+                  keywords={undefined}
                   onSelect={handleSelect}
                 />
               ))}
