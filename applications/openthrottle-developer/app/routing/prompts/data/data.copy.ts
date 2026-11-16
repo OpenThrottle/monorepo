@@ -43,6 +43,17 @@ export const PROMPTS_COPY = {
   pageTitle: `Prompts`,
 } as const;
 
+/**
+ * Titles for the collapsible stat cards on `/prompts`. Each count covers the
+ * rows the current search and type filters return, not the whole table.
+ */
+export const PROMPTS_STATS_COPY = {
+  personas: `Personas`,
+  prompts: `Prompts`,
+  skills: `Skills`,
+  total: `Total`,
+} as const;
+
 export const PROMPTS_EMPTY_COPY = {
   description: `Create your first prompt to get started.`,
   searchDescription: `Try clearing the search to see all prompts.`,

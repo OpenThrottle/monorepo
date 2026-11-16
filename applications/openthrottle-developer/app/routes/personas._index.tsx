@@ -1,5 +1,10 @@
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
-import { GlobalScreen } from '@openthrottle/react-router-ui-global';
+import {
+  GlobalScreen,
+  GlobalStatsPanel,
+  ROUTE_STATS_URL,
+  shouldRevalidateIgnoringParams,
+} from '@openthrottle/react-router-ui-global';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import * as React from 'react';
 
@@ -57,12 +62,18 @@ export default function Component(
   return (
     <GlobalScreen beta={true}>
       <PersonasIntroduction entries={entries} />
-      <PersonasStats entries={entries} />
+      <GlobalStatsPanel>
+        <PersonasStats entries={entries} />
+      </GlobalStatsPanel>
       <PersonasToolbar />
       <PersonasTable className="bg-card" entries={entries} />
     </GlobalScreen>
   );
 }
+
+export const shouldRevalidate = shouldRevalidateIgnoringParams([
+  ROUTE_STATS_URL.param,
+]);
 
 export const action = async (_args: Route.ActionArgs) => {
   return {};

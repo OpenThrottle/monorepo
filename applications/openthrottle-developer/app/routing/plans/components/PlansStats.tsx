@@ -36,6 +36,7 @@ export const PlansStats = (props: PlansStatsProps): React.ReactElement => {
   return (
     <div
       className={cn('grid gap-4 md:grid-cols-3 md:gap-8 lg:gap-12', className)}
+      data-testid="PlansStats"
     >
       <OpenThrottleStatCard
         color="bg-yellow-300"

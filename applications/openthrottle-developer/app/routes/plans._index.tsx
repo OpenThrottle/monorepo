@@ -5,7 +5,10 @@ import {
   GlobalFeatureOnboarding,
   GlobalFeatureOnboardingModal,
   GlobalScreen,
+  GlobalStatsPanel,
   readSearchParam,
+  ROUTE_STATS_URL,
+  shouldRevalidateIgnoringParams,
 } from '@openthrottle/react-router-ui-global';
 import {
   mergeRouteModuleMeta,
@@ -18,10 +21,12 @@ import { useSearchParams } from 'react-router';
 import type { Route } from '@/app/routes/+types/plans._index';
 import {
   GetPlanAssigneeOptionsDocument,
+  GetPlanCountsByStatusDocument,
   GetPlansByStatusDocument,
 } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
 import { PlansIntroduction } from '~/routing/plans/components/PlansIntroduction';
+import { PlansStats } from '~/routing/plans/components/PlansStats';
 import { PlansTable } from '~/routing/plans/components/PlansTable';
 import { PlansToolbar } from '~/routing/plans/components/PlansToolbar';
 import { parseStatusesFromSearchParams } from '~/routing/plans/config/status-options';
@@ -49,20 +54,28 @@ export const loader = async (args: Route.LoaderArgs) => {
   const q = readSearchParam(searchParams);
   const titleSubstring = q.length > 0 ? q : null;
 
-  const [result, assigneeOptionsResult] = await Promise.all([
-    executeGraphqlWithAuth(args.request, GetPlansByStatusDocument, {
-      input: {
-        assignees: assignees.length > 0 ? assignees : null,
-        limit,
-        offset,
-        statuses: statuses.length > 0 ? statuses : null,
-        titleSubstring,
-      },
-    }),
-    executeGraphqlWithAuth(args.request, GetPlanAssigneeOptionsDocument).catch(
-      () => null,
-    ),
-  ]);
+  const [result, assigneeOptionsResult, statusCountsResult] = await Promise.all(
+    [
+      executeGraphqlWithAuth(args.request, GetPlansByStatusDocument, {
+        input: {
+          assignees: assignees.length > 0 ? assignees : null,
+          limit,
+          offset,
+          statuses: statuses.length > 0 ? statuses : null,
+          titleSubstring,
+        },
+      }),
+      executeGraphqlWithAuth(
+        args.request,
+        GetPlanAssigneeOptionsDocument,
+      ).catch(() => null),
+      // Feeds only the collapsible stat cards, so a failure degrades to zeros
+      // rather than failing the list.
+      executeGraphqlWithAuth(args.request, GetPlanCountsByStatusDocument).catch(
+        () => null,
+      ),
+    ],
+  );
 
   const assigneeOptions: string[] =
     assigneeOptionsResult?.listDistinctAuthorsAndAssignees ?? [];
@@ -73,6 +86,7 @@ export const loader = async (args: Route.LoaderArgs) => {
     limit,
     page,
     plans: result.listPlansByStatus.plans,
+    statusCounts: statusCountsResult?.planCountsByStatus ?? [],
     statuses,
     totalCount: result.listPlansByStatus.totalCount,
     totalCountAll: result.allPlansCount.totalCount,
@@ -97,6 +111,7 @@ export default function Component(
     limit,
     page,
     plans,
+    statusCounts,
     statuses,
     totalCount,
     totalCountAll,
@@ -119,6 +134,12 @@ export default function Component(
   const isCard = searchParams.get('view') === 'card';
   const view: 'card' | 'table' = isCard ? 'card' : 'table';
 
+  const countByStatus = (status: string): number => {
+    return (
+      statusCounts.find((s) => s.status.toUpperCase() === status)?.count ?? 0
+    );
+  };
+
   // New user: zero plans workspace-wide and no active filter — show onboarding
   // instead of the toolbar/table/pagination. Filtered no-results falls through
   // to PlansTable -> PlanTasksEmpty (clear-filters CTA).
@@ -130,6 +151,15 @@ export default function Component(
   const onboarding = <GlobalFeatureOnboarding content={PLANS_ONBOARDING} />;
   const plansListing = (
     <>
+      <GlobalStatsPanel>
+        <PlansStats
+          countCompleted={countByStatus('COMPLETED')}
+          countInProgress={countByStatus('IN_PROGRESS')}
+          totalCount={totalCount}
+          totalCountAll={totalCountAll}
+          totalCountQueued={countByStatus('QUEUED')}
+        />
+      </GlobalStatsPanel>
       <div className="flex flex-col gap-4">
         <PlansToolbar
           assigneeOptions={assigneeOptions}
@@ -169,6 +199,10 @@ export default function Component(
     </GlobalScreen>
   );
 }
+
+export const shouldRevalidate = shouldRevalidateIgnoringParams([
+  ROUTE_STATS_URL.param,
+]);
 
 export const action = async (_args: Route.ActionArgs) => {
   return {};

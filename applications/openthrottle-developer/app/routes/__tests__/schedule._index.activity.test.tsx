@@ -31,7 +31,7 @@ const matches: Route.ComponentProps['matches'] = [
 ];
 
 describe('routes/schedule._index.tsx activity surface', () => {
-  test('renders the stats row and the activity panel above a populated list', () => {
+  test('renders the collapsed stats row and the activity panel above a populated list', () => {
     const component = renderRoutesStub(
       <ScheduleIndex
         actionData={undefined}
@@ -44,12 +44,19 @@ describe('routes/schedule._index.tsx activity surface', () => {
       />,
     );
 
-    expect(component.getByTestId('ScheduleStats')).toBeInTheDocument();
+    // Collapsed by default (?stats=open opens it): the panel is there, its cards are not.
+    expect(component.getByTestId('GlobalStatsPanel')).toHaveAttribute(
+      'data-state',
+      'closed',
+    );
+    expect(
+      component.getByTestId('GlobalStatsToggleButton'),
+    ).toBeInTheDocument();
     expect(component.getByTestId('ScheduleActiveRuns')).toBeInTheDocument();
     expect(component.getByTestId('ScheduleTable')).toBeInTheDocument();
   });
 
-  test('omits the activity panel — but keeps the stats row — when nothing is in flight', () => {
+  test('omits the activity panel — but keeps the collapsed stats row — when nothing is in flight', () => {
     const component = renderRoutesStub(
       <ScheduleIndex
         actionData={undefined}
@@ -61,7 +68,14 @@ describe('routes/schedule._index.tsx activity surface', () => {
       />,
     );
 
-    expect(component.getByTestId('ScheduleStats')).toBeInTheDocument();
+    // Collapsed by default (?stats=open opens it): the panel is there, its cards are not.
+    expect(component.getByTestId('GlobalStatsPanel')).toHaveAttribute(
+      'data-state',
+      'closed',
+    );
+    expect(
+      component.getByTestId('GlobalStatsToggleButton'),
+    ).toBeInTheDocument();
     expect(
       component.queryByTestId('ScheduleActiveRuns'),
     ).not.toBeInTheDocument();
@@ -82,7 +96,10 @@ describe('routes/schedule._index.tsx activity surface', () => {
     expect(
       component.getByTestId('GlobalFeatureOnboarding'),
     ).toBeInTheDocument();
-    expect(component.queryByTestId('ScheduleStats')).not.toBeInTheDocument();
+    expect(component.queryByTestId('GlobalStatsPanel')).not.toBeInTheDocument();
+    expect(
+      component.queryByTestId('GlobalStatsToggleButton'),
+    ).not.toBeInTheDocument();
     expect(
       component.queryByTestId('ScheduleActiveRuns'),
     ).not.toBeInTheDocument();
@@ -104,7 +121,10 @@ describe('routes/schedule._index.tsx activity surface', () => {
     expect(
       component.getByText(SCHEDULE_COPY.noSearchResults),
     ).toBeInTheDocument();
-    expect(component.queryByTestId('ScheduleStats')).not.toBeInTheDocument();
+    expect(component.queryByTestId('GlobalStatsPanel')).not.toBeInTheDocument();
+    expect(
+      component.queryByTestId('GlobalStatsToggleButton'),
+    ).not.toBeInTheDocument();
     expect(
       component.queryByTestId('ScheduleActiveRuns'),
     ).not.toBeInTheDocument();

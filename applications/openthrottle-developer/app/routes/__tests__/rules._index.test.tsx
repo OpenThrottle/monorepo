@@ -84,7 +84,15 @@ describe('routes/rules._index.tsx', () => {
   test('composes stats, introduction, toolbar, and table', () => {
     const component = renderIndex([enabledRule, disabledRule]);
 
-    expect(component.getByTestId('RulesStats')).toBeInTheDocument();
+    // Stats are collapsed until ?stats=open; the panel and its toggle are present.
+    expect(component.queryByTestId('RulesStats')).not.toBeInTheDocument();
+    expect(component.getByTestId('GlobalStatsPanel')).toHaveAttribute(
+      'data-state',
+      'closed',
+    );
+    expect(
+      component.getByTestId('GlobalStatsToggleButton'),
+    ).toBeInTheDocument();
     expect(component.getByTestId('RulesIntroduction')).toBeInTheDocument();
     expect(
       component.getByRole('heading', { name: RULES_COPY.pageTitle }),

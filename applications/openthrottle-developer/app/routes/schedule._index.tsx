@@ -5,7 +5,10 @@ import {
   GlobalFeatureOnboarding,
   GlobalFeatureOnboardingModal,
   GlobalScreen,
+  GlobalStatsPanel,
   readSearchParam,
+  ROUTE_STATS_URL,
+  shouldRevalidateIgnoringParams,
 } from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import * as React from 'react';
@@ -95,7 +98,7 @@ export default function Component(
   const onboarding = <GlobalFeatureOnboarding content={SCHEDULE_ONBOARDING} />;
   const noSearchResults = (
     <div className="flex flex-col gap-4">
-      <ScheduleToolbar />
+      <ScheduleToolbar showStatsToggle={false} />
       <p className="text-muted-foreground text-sm">
         {SCHEDULE_COPY.noSearchResults}
       </p>
@@ -103,20 +106,22 @@ export default function Component(
   );
   const jobsListing = (
     <>
-      <ScheduleStats
-        enabledCount={jobs.filter((job) => job.enabled).length}
-        failedCount={runStats.failedCount}
-        queuedCount={runStats.queuedCount}
-        ranCount={runStats.windowTotalCount}
-        runningCount={runStats.runningCount}
-        succeededCount={runStats.succeededCount}
-        totalCount={jobs.length}
-      />
+      <GlobalStatsPanel>
+        <ScheduleStats
+          enabledCount={jobs.filter((job) => job.enabled).length}
+          failedCount={runStats.failedCount}
+          queuedCount={runStats.queuedCount}
+          ranCount={runStats.windowTotalCount}
+          runningCount={runStats.runningCount}
+          succeededCount={runStats.succeededCount}
+          totalCount={jobs.length}
+        />
+      </GlobalStatsPanel>
 
       <ScheduleActiveRuns runs={inFlightRuns} />
 
       <div className="flex flex-col gap-4">
-        <ScheduleToolbar />
+        <ScheduleToolbar showStatsToggle={true} />
         <ScheduleTable inFlightByJob={inFlightByJob} jobs={jobs} />
       </div>
     </>
@@ -140,6 +145,10 @@ export default function Component(
     </>
   );
 }
+
+export const shouldRevalidate = shouldRevalidateIgnoringParams([
+  ROUTE_STATS_URL.param,
+]);
 
 export const action = async (args: Route.ActionArgs) => {
   const form = await args.request.formData();

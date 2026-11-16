@@ -7,6 +7,7 @@ import { CustomPromptType } from '~/__generated__/graphql';
 import {
   PROMPTS_EMPTY_COPY,
   PROMPTS_ONBOARDING,
+  PROMPTS_STATS_COPY,
 } from '~/routing/prompts/data/data.copy';
 import { buildRootMatch } from '~/testing/buildRootMatch';
 import {
@@ -26,13 +27,14 @@ const mockPrompt: PromptCardFragment = {
   filePath: '/path/to/prompt.md',
   id: 'prompt-route-1',
   labels: ['route'],
-  promptType: CustomPromptType.Agents,
+  promptType: CustomPromptType.Prompts,
   title: 'Route Test Prompt',
   updatedAt: '2024-01-20T15:30:00Z',
 };
 
 const mockLoaderDataWithPrompts: PromptsIndexLoaderData = {
-  countAgents: 1,
+  countPersonas: 0,
+  countPrompts: 1,
   countSkills: 0,
   limit: 20,
   page: 1,
@@ -44,7 +46,8 @@ const mockLoaderDataWithPrompts: PromptsIndexLoaderData = {
 };
 
 const mockLoaderDataEmpty: PromptsIndexLoaderData = {
-  countAgents: 0,
+  countPersonas: 0,
+  countPrompts: 0,
   countSkills: 0,
   limit: 20,
   page: 1,
@@ -224,5 +227,63 @@ describe('routes/prompts._index.tsx', () => {
     expect(params.get('sortBy')).toBe('name');
     expect(params.get('sortOrder')).toBe('desc');
     expect(params.get('page')).toBe('2');
+  });
+
+  describe('collapsible stats', () => {
+    test('the stat cards are collapsed by default', () => {
+      const view = renderRoutesStub(
+        <Index
+          actionData={undefined}
+          loaderData={mockLoaderDataWithPrompts}
+          matches={matches}
+          params={{}}
+        />,
+      );
+
+      expect(view.queryByTestId('PromptsStats')).not.toBeInTheDocument();
+      expect(view.getByTestId('GlobalStatsToggleButton')).toHaveAttribute(
+        'aria-expanded',
+        'false',
+      );
+    });
+
+    test('?stats=open shows the per-type counts', () => {
+      const view = renderWithMemoryRouter(
+        [
+          {
+            element: (
+              <Index
+                actionData={undefined}
+                loaderData={mockLoaderDataWithPrompts}
+                matches={matches}
+                params={{}}
+              />
+            ),
+            path: '/prompts',
+          },
+        ],
+        { initialEntries: ['/prompts?stats=open'] },
+      );
+
+      const stats = view.getByTestId('PromptsStats');
+      expect(stats).toHaveTextContent(PROMPTS_STATS_COPY.prompts);
+      expect(stats).toHaveTextContent(PROMPTS_STATS_COPY.personas);
+    });
+
+    test('a new user sees neither the stats nor the toggle', () => {
+      const view = renderRoutesStub(
+        <Index
+          actionData={undefined}
+          loaderData={mockLoaderDataEmpty}
+          matches={matches}
+          params={{}}
+        />,
+      );
+
+      expect(view.queryByTestId('GlobalStatsPanel')).not.toBeInTheDocument();
+      expect(
+        view.queryByTestId('GlobalStatsToggleButton'),
+      ).not.toBeInTheDocument();
+    });
   });
 });

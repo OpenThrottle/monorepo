@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 import QueuesIndex from '../queues._index';
 
 describe('routes/queues._index.tsx', () => {
-  test('renders queues introduction, summary stats and table', async () => {
+  test('renders queues introduction, collapsed summary stats and table', async () => {
     const RoutesStub = createRoutesStub([
       {
         Component: QueuesIndex,
@@ -22,8 +22,29 @@ describe('routes/queues._index.tsx', () => {
     expect(
       await component.findByRole('heading', { level: 1, name: 'Queues' }),
     ).toBeInTheDocument();
-    expect(component.getByTestId('QueueStatRow')).toBeInTheDocument();
+    // Summary stats are collapsed until ?stats=open.
+    expect(component.queryByTestId('QueueStatRow')).not.toBeInTheDocument();
+    expect(component.getByTestId('GlobalStatsToggleButton')).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    );
     expect(component.getByTestId('QueuesTable')).toBeInTheDocument();
     expect(component.getByTestId('QueueOpsToolbar')).toBeInTheDocument();
+  });
+
+  test('opens the summary stats from ?stats=open', async () => {
+    const RoutesStub = createRoutesStub([
+      {
+        Component: QueuesIndex,
+        HydrateFallback: () => null,
+        id: 'routes/queues._index',
+        loader: () => ({ queues: [] }),
+        path: '/',
+      },
+    ]);
+
+    const component = render(<RoutesStub initialEntries={['/?stats=open']} />);
+
+    expect(await component.findByTestId('QueueStatRow')).toBeInTheDocument();
   });
 });

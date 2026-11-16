@@ -1,7 +1,12 @@
 import { authMiddleware } from '@openthrottle/react-router-auth';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
-import { GlobalScreen } from '@openthrottle/react-router-ui-global';
+import {
+  GlobalScreen,
+  GlobalStatsPanel,
+  ROUTE_STATS_URL,
+  shouldRevalidateIgnoringParams,
+} from '@openthrottle/react-router-ui-global';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import * as React from 'react';
@@ -152,7 +157,9 @@ export default function Component(
 
   return (
     <GlobalScreen beta={true}>
-      <PullRequestStats />
+      <GlobalStatsPanel>
+        <PullRequestStats />
+      </GlobalStatsPanel>
       <PullRequestsIntroduction />
       <PullRequestsToolbar filters={filters} />
       <PullRequestsTable
@@ -170,6 +177,10 @@ export default function Component(
     </GlobalScreen>
   );
 }
+
+export const shouldRevalidate = shouldRevalidateIgnoringParams([
+  ROUTE_STATS_URL.param,
+]);
 
 export const action = async (_args: Route.ActionArgs) => {
   return {};
