@@ -1,0 +1,12 @@
+# Co-author identities the attribution guard does NOT treat as tool attribution.
+#
+# Read only by the CI `attribution-guard` job, and always from the BASE commit (main), never from
+# the PR's own head, so a PR cannot allow its own co-author. A change here takes effect for PRs
+# queued after it lands.
+#
+# One exact `Co-authored-by: Name <email>` trailer per line; the guard rejects any other shape.
+# Why each entry exists: docs/monorepo/attribution-guard-layers.md § Allowed co-authors.
+
+# The release GitHub App. Its commits on release/next make the merge queue's squash carry this
+# trailer (release PR #858). See docs/monorepo/releases.md.
+Co-authored-by: openthrottle-releases[bot] <356780848+openthrottle-releases[bot]@users.noreply.github.com>

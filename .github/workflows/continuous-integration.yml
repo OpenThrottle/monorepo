@@ -310,6 +310,11 @@ jobs:
   # the queue fast-forwards `main` to head_sha, so those exact messages are what
   # land. Failing here ejects the PR before the commit becomes immutable history.
   #
+  # Exact co-author identities that are not tool attribution (the release
+  # App, whose squash GitHub signs with a Co-authored-by trailer) are listed in
+  # .github/attribution-allow and passed as --allow-file. That file is fetched
+  # from the BASE commit, never the checkout, so a PR cannot allow itself.
+  #
   # The check itself is NOT restated here — it is the github-pull-request skill's
   # guard, skills/github-pull-request/scripts/check-attribution.sh, the same one
   # the commit-msg and pre-push hooks run, so none of them can drift.
@@ -341,6 +346,8 @@ jobs:
         env:
           # Via env, never `${{ }}` inside the script: a PR title or body is
           # attacker-controlled text and would otherwise be shell-injected.
+          # main as the queue or PR saw it: the allow-file is read from here.
+          BASE_SHA: ${{ github.event.merge_group.base_sha || github.event.pull_request.base.sha }}
           EVENT_NAME: ${{ github.event_name }}
           MERGE_GROUP_BASE: ${{ github.event.merge_group.base_sha }}
           MERGE_GROUP_HEAD: ${{ github.event.merge_group.head_sha }}
@@ -354,6 +361,16 @@ jobs:
           work="$(mktemp -d)"
           args=""
 
+          # The allowance as main has it, not as this PR has it. A missing file
+          # (404) means no allowance; any other API failure also leaves it unset,
+          # which fails closed: the guard just gets stricter.
+          if gh api -H 'Accept: application/vnd.github.raw+json' \
+            "repos/$REPO/contents/.github/attribution-allow?ref=$BASE_SHA" > "$work/allow" 2>/dev/null; then
+            args="--allow-file $work/allow"
+          else
+            echo "ℹ️  no .github/attribution-allow at $BASE_SHA; no co-author is exempt"
+          fi
+
           # The guard picks the pattern per input: unanchored for the one-line PR
           # title, line-anchored for the body and commit messages (a squash subject
           # is the PR title, which the PR run already checked unanchored).
@@ -365,7 +382,7 @@ jobs:
           else
             printf '%s' "$PR_TITLE" > "$work/title"
             printf '%s' "$PR_BODY" > "$work/body"
-            args="--title-file $work/title --body-file $work/body"
+            args="$args --title-file $work/title --body-file $work/body"
 
             # One paginated call; the message is base64'd so multi-line bodies
             # survive being paired with their SHA on a single line.
