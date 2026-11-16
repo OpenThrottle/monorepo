@@ -163,6 +163,24 @@ describe('buildPlansTableColumns', () => {
     );
   });
 
+  test('details cell plan link grows to fill the cell so empty space is clickable', () => {
+    const plan = buildPlan({ hasCustomRunConfig: true, title: 'Wide' });
+    const rendered = renderRoutesStub(<Harness plan={plan} />);
+
+    const link = rendered.getByTestId('plan-list-title-link');
+    expect(link).toHaveClass('flex-1', 'min-w-0', 'p-2', 'max-sm:contents');
+    expect(link.parentElement).not.toHaveClass('p-2');
+
+    const indicator = rendered.getByRole('link', {
+      name: 'Custom workflow run configuration (differs from defaults)',
+    });
+    expect(indicator).toHaveClass('shrink-0');
+    expect(indicator).toHaveAttribute(
+      'href',
+      '/plans/plan-1?tab=configuration',
+    );
+  });
+
   test('details cell renders the run-config indicator outside the plan link', () => {
     const plan = buildPlan({ hasCustomRunConfig: true, title: 'Tuned' });
     const rendered = renderRoutesStub(<Harness plan={plan} />);
