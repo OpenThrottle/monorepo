@@ -18,6 +18,7 @@ import {
   isLandedFeature,
   isUpcomingFeature,
 } from './features';
+import { escapeXml, renderStatsAlt } from './stats-graphic';
 
 const ORG_PROFILE_COLUMNS = 3;
 
@@ -206,6 +207,24 @@ const renderOrgProfileProjects = (input: SurfaceInput): string[] => {
 };
 
 /**
+ * @description The stats card, as the light/dark `<picture>` pair that
+ * generate-surfaces writes next to the README (`assets/stats-*.svg`).
+ */
+const renderOrgProfileStats = (stats: SurfaceStats): string[] => {
+  const alt = escapeXml(renderStatsAlt(stats));
+
+  return [
+    '<p align="center">',
+    '  <picture>',
+    '    <source media="(prefers-color-scheme: dark)" srcset="./assets/stats-dark.svg">',
+    '    <source media="(prefers-color-scheme: light)" srcset="./assets/stats-light.svg">',
+    `    <img src="./assets/stats-dark.svg" alt="${alt}" width="100%">`,
+    '  </picture>',
+    '</p>',
+  ];
+};
+
+/**
  * @description The OpenThrottle/.github org profile README. Written to a local
  * file; publishing it is a separate, owner-approved PR.
  * @public
@@ -234,7 +253,7 @@ export const renderOrgProfile = (input: SurfaceInput): string => {
   ];
 
   if (stats !== undefined) {
-    lines.push('', ORG_PROFILE_COPY.statsTitle, '', formatStats(stats));
+    lines.push('', ...renderOrgProfileStats(stats));
   }
 
   if (roadmap.length > 0) {

@@ -37,3 +37,20 @@ export interface SurfaceInput {
 export type ReplaceSectionResult =
   | { readonly document: string; readonly ok: true }
   | { readonly ok: false; readonly reason: string };
+
+/**
+ * @description A colour scheme of the stats graphic; one SVG is written per
+ * scheme and selected with `<picture>` + `prefers-color-scheme`.
+ * @public
+ */
+export type StatsGraphicScheme = 'dark' | 'light';
+
+/**
+ * @description One "bring your own agent" chip, positioned on the card.
+ * @public
+ */
+export interface StatsGraphicChip {
+  readonly name: string;
+  readonly width: number;
+  readonly x: number;
+}

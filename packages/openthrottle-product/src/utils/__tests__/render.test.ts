@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { PRODUCT_FEATURES } from '../../data/data.features';
 import { PRODUCT_POSITIONING } from '../../data/data.positioning';
 import { PRODUCT_PROJECTS } from '../../data/data.projects';
-import { SURFACE_MARKERS } from '../../data/data.surfaces';
+import { ORG_PROFILE_COPY, SURFACE_MARKERS } from '../../data/data.surfaces';
 import type { ProductFeature } from '../../types/product';
 import type { SurfaceInput } from '../../types/surfaces';
 import {
@@ -108,14 +108,33 @@ describe('replaceMarkedSection', () => {
 });
 
 describe('renderOrgProfile', () => {
-  it('includes the computed stats when present', () => {
-    expect(renderOrgProfile(input)).toContain('**700** pull requests merged');
+  it('embeds the stats graphic for both colour schemes when stats are present', () => {
+    const profile = renderOrgProfile(input);
+
+    expect(profile).toContain('srcset="./assets/stats-dark.svg"');
+    expect(profile).toContain('srcset="./assets/stats-light.svg"');
+    expect(profile).not.toContain('By the numbers');
   });
 
-  it('omits the stats section when offline', () => {
-    expect(renderOrgProfile({ ...input, stats: undefined })).not.toContain(
-      'pull requests merged',
+  it('carries the computed stats in the graphic alt text', () => {
+    expect(renderOrgProfile(input)).toContain(
+      `alt="700+ pull requests merged, 70 packages, 7 applications, 2 agent CLIs: Claude Code and Codex."`,
     );
+  });
+
+  it('places the stats graphic between the features and the roadmap', () => {
+    const profile = renderOrgProfile(input);
+    const stats = profile.indexOf('stats-dark.svg');
+
+    expect(stats).toBeGreaterThan(profile.indexOf('</table>'));
+    expect(stats).toBeLessThan(profile.indexOf(ORG_PROFILE_COPY.roadmapTitle));
+  });
+
+  it('omits the stats graphic when offline', () => {
+    const profile = renderOrgProfile({ ...input, stats: undefined });
+
+    expect(profile).not.toContain('stats-dark.svg');
+    expect(profile).not.toContain('pull requests merged');
   });
 
   it('heads each feature card with its emoji', () => {
