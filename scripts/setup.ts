@@ -18,7 +18,12 @@ import { fileURLToPath } from 'node:url';
 
 import { runClaudeGlobalSettingsCheck } from './check-claude-global-settings.ts';
 import { interactiveConfirm, resetEnvironmentFiles } from './setup_environment.ts'; // prettier-ignore
-import { ensureCheckoutClaudePlugins } from './utils/claude-plugins.ts';
+import {
+  logAgentCheckoutResults,
+  logAgentOrphanSweeps,
+  pruneCheckoutAgentOrphans,
+  registerCheckoutAgents,
+} from './utils/agent-checkout-registrations.ts';
 import { configureBlameIgnoreRevs, isLinkedWorktree } from './utils/git.ts';
 import { createLogger } from './utils/logger.ts';
 
@@ -118,13 +123,14 @@ const main = async (): Promise<void> => {
     }
   }
 
-  // The repo's hooks ship as Claude Code plugins; enable them for this
-  // checkout. Best-effort: a machine without `claude` just skips it.
-  logger.heading('Claude Code plugins 🔌');
-  const plugins = ensureCheckoutClaudePlugins(process.cwd(), process.env);
-  if (plugins !== undefined) {
-    logger[plugins.level](plugins.message);
-  }
+  // Register this checkout with every agent that keeps per-checkout state
+  // (today: the repo's hooks, shipped as Claude Code plugins). Best-effort: a
+  // machine without an agent's CLI just skips that entry.
+  logger.heading('Agent checkout registrations 🔌');
+  logAgentCheckoutResults(registerCheckoutAgents(process.cwd(), process.env), logger); // prettier-ignore
+  // And sweep registrations left by checkouts removed without teardown (a bare
+  // `git worktree remove`, `rm -rf`). Best-effort: a failure only warns.
+  logAgentOrphanSweeps(pruneCheckoutAgentOrphans(process.cwd(), process.env, false), logger); // prettier-ignore
 
   outro();
 };

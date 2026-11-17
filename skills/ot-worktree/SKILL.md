@@ -3,8 +3,8 @@ compatibility: Requires git, a POSIX sh and bash; curl is optional (OpenThrottle
 description: Create, heal and destroy git worktrees in any repo — the portable worktree machinery behind `worktree:new`, `worktree:heal` and `worktree:remove`. Use when creating a worktree, spinning up a worktree for a branch or task, provisioning or self-healing a worktree, removing/deleting/tearing down/cleaning up a worktree, or when OPENTHROTTLE_WORKTREE_ROOT, `.worktree/provision.sh` or `.worktree/teardown.sh` are involved. Not for pruning many merged branches (see `github-cleanup`).
 metadata:
   author: openthrottle
-  last-reviewed: '2026-11-15'
-  version: '1.2.0'
+  last-reviewed: '2026-11-16'
+  version: '1.3.0'
 name: ot-worktree
 ---
 
@@ -123,6 +123,7 @@ Only relevant where the OpenThrottle server and its `package.json` scripts exist
 
 - **Entrypoints:** `pnpm worktree:new <name>`, `pnpm worktree:heal` (also nx `monorepo:ensure-worktree`), `pnpm worktree:remove [name|path]`; the Claude `WorktreeCreate` hook and Cursor call the same scripts.
 - **Provisioner:** OpenThrottle needs no `.worktree/provision.sh`: its `scripts/setup_worktree.ts` is found by rung 3 and run by bare Node (native type stripping). It ships `.worktree/teardown.sh`, which stops the worktree's `worktree:serve` processes (refusing if one survives) and docker compose project before removal; `pnpm worktree:serve --orphans` finds servers that outlived theirs.
+- **Agent registrations:** teardown also undoes per-checkout agent state (Claude's local-scope plugins) via `scripts/utils/agent-checkout-registrations.ts`; `pnpm worktree:prune-agents` sweeps leftovers. [Rule](https://github.com/openthrottle/monorepo/blob/main/docs/monorepo/agent-editor-folders.md#per-checkout-registrations-ship-with-their-removal).
 - **Checkout record:** after a successful removal `scripts/deregister.sh` calls `deregisterWorktreeCheckout` with the path, resolving endpoint and token from the _primary_ checkout's `.env`, then the ambient environment, then `~/.openthrottle/.env`. Strictly fail-open: no `curl`, no endpoint or token, a server that is down, or a refused request each log one line and removal still succeeds. The server keeps the record while an unsettled plan run points at it, so settle a run before tearing down its worktree. `OPENTHROTTLE_WORKTREE_DEREGISTER=0` skips it.
 - **Active-run guard:** _before_ teardown, `destroy.sh` sends the same call while the worktree still exists; the server checks runs before liveness, so it never prunes here. `SKIPPED_ACTIVE_RUN` refuses the removal. Fail-open; `OPENTHROTTLE_WORKTREE_ACTIVE_RUN_GUARD=0` skips it.
 - **Outcome telemetry:** once, at the end — `error` if the action exited non-zero, `abandoned` if called off ([why](https://github.com/openthrottle/monorepo/blob/main/docs/monorepo/skill-usage-telemetry-scope.md#reporting-an-outcome-from-a-skill)):

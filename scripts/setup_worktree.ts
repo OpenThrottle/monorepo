@@ -17,7 +17,10 @@ import { basename, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { resetEnvironmentFiles } from './setup_environment.ts';
-import { ensureCheckoutClaudePlugins } from './utils/claude-plugins.ts';
+import {
+  logAgentCheckoutResults,
+  registerCheckoutAgents,
+} from './utils/agent-checkout-registrations.ts';
 import { ensurePrimaryCheckoutCodexTrust } from './utils/codex-trust.ts';
 import { firstEnvMatch, upsertEnvLine } from './utils/env.ts';
 import { run } from './utils/exec.ts';
@@ -164,21 +167,19 @@ const main = async (): Promise<void> => {
   //     committed .codex/config.toml + rules. Codex resolves a worktree to its
   //     primary for trust, so this one entry covers every worktree and teardown
   //     never removes it. Additive, codex-installed-only, best-effort.
+  //     Deliberately NOT on the agent checkout-registration registry (0d): that
+  //     registry's entries are undone on teardown, and this one must not be.
   const trust = ensurePrimaryCheckoutCodexTrust(process.cwd(), process.env);
 
   if (trust !== undefined) {
     logger[trust.level](trust.message);
   }
 
-  // 0d. Load this repo's own Claude Code plugins in this worktree: the hooks
-  //     ship as plugins, not as .claude/settings.json registrations. Adds the
-  //     marketplace (pointed at the PRIMARY checkout) only when it is absent,
-  //     then records a local-scope install for this path. Best-effort.
-  const plugins = ensureCheckoutClaudePlugins(process.cwd(), process.env);
-
-  if (plugins !== undefined) {
-    logger[plugins.level](plugins.message);
-  }
+  // 0d. Register this worktree with every agent that keeps per-checkout state
+  //     outside it (today: this repo's own Claude Code plugins, installed at
+  //     local scope). Each registry entry carries its own removal, which
+  //     teardown_worktree.ts runs before the directory goes. Best-effort.
+  logAgentCheckoutResults(registerCheckoutAgents(process.cwd(), process.env), logger); // prettier-ignore
 
   // 1. Create the environment file(s) — resets each .env to .env.default
   //    unconditionally: worktree provisioning always starts from the template
