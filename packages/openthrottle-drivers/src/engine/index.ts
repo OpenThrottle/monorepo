@@ -107,22 +107,25 @@ const carriesPluginDir = (
 
 /**
  * @description Child env: `undefined` (inherit `process.env`, the historical behavior) unless the
- * caller supplied extra variables or the run carries `--plugin-dir`, in which case the child is
- * stamped `OPENTHROTTLE_HOOK_DELIVERY=plugin-dir`. The stamp wins over `config.env`: the hooks must
- * report the leg the run really used.
+ * caller supplied extra variables, the driver adds its own ({@link AgentDriver.childEnv}), or the
+ * run carries `--plugin-dir`, in which case the child is stamped `OPENTHROTTLE_HOOK_DELIVERY=plugin-dir`.
+ * The driver's variables win over `config.env` (cursor's attribution-off config must hold whatever
+ * the caller passed), and the stamp wins over both: the hooks must report the leg the run really used.
  */
 const mergeChildEnv = (
   driver: AgentDriver,
   config: DriverInvocationConfig,
 ): NodeJS.ProcessEnv | undefined => {
   const stamped = carriesPluginDir(driver, config);
-  if (config.env === undefined && !stamped) {
+  const driverEnv = driver.childEnv?.({ ...process.env, ...config.env });
+  if (config.env === undefined && driverEnv === undefined && !stamped) {
     return undefined;
   }
 
   return {
     ...process.env,
     ...config.env,
+    ...driverEnv,
     ...(stamped ? { [HOOK_DELIVERY_ENV]: 'plugin-dir' } : {}),
   };
 };

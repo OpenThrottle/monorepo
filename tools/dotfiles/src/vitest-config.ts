@@ -1,3 +1,6 @@
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
 import react from '@vitejs/plugin-react';
 import swc from 'unplugin-swc';
 import type { UserConfig } from 'vite';
@@ -135,6 +138,14 @@ const createBaseVitestConfig = (
       },
       env: {
         NODE_ENV: 'test',
+        // The cursor driver writes an attribution-off config copy on every spawn
+        // (openthrottle-drivers `prepareCursorConfigDir`); keep tests out of the
+        // real ~/.openthrottle/cursor-config. A literal, since this package cannot
+        // import a workspace package.
+        OPENTHROTTLE_CURSOR_CONFIG_DIR: join(
+          tmpdir(),
+          'openthrottle-vitest-cursor-config',
+        ),
         TZ: 'UTC',
         ...env,
       },

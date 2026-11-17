@@ -8,6 +8,7 @@
 
 import { defineDriver } from '../registry/index.ts';
 import type { DriverCapabilities, DriverModelListing } from '../types/index.ts';
+import { cursorAttributionOffEnv } from '../utils/cursor-config.ts';
 import { structuredOutputShellFlag } from '../utils/output-format.ts';
 import { escapeForShellDoubleQuoted, escapeShellArg } from '../utils/shell.ts';
 import {
@@ -101,6 +102,8 @@ export const cursorDriver = defineDriver({
     return appendWorktreeShellFlags(withPlugins, capabilities, config.worktree);
   },
   capabilities,
+  // Stops cursor writing a `Co-authored-by: Cursor` trailer — see utils/cursor-config.ts.
+  childEnv: cursorAttributionOffEnv,
   discoverModels,
   id: 'cursor',
   install: {

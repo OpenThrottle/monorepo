@@ -5,15 +5,23 @@
  */
 
 import { EventEmitter } from 'node:events';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { PassThrough } from 'node:stream';
 
 import type { ChildProcess } from 'child_process';
 import { spawn, spawnSync } from 'child_process';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { cursorDriver } from '../../drivers/index.ts';
 import { defineDriver } from '../../registry/index.ts';
 import type { AgentDriver, DriverChunk } from '../../types/index.ts';
 import type { DriverParsedOutput } from '../../types/index.ts';
+import {
+  CURSOR_CONFIG_DIR_ENV,
+  OPENTHROTTLE_CURSOR_CONFIG_DIR_ENV,
+} from '../../utils/cursor-config.ts';
 import type { DriverRawOutput } from '../index.ts';
 import { runDriverAsync, runDriverSync } from '../index.ts';
 
@@ -773,6 +781,64 @@ describe('plugin-dir delivery stamp', () => {
         pluginDirs: ['/srv/plugins/openthrottle'],
         prompt: 'hi',
       });
+
+      expect(spawnedEnv()).toBeUndefined();
+    });
+  });
+});
+
+describe('driver childEnv', () => {
+  let configRoot: string;
+
+  beforeEach(() => {
+    configRoot = mkdtempSync(join(tmpdir(), 'engine-cursor-config-'));
+    vi.mocked(spawnSync).mockReset();
+    vi.mocked(spawnSync).mockReturnValue({
+      output: [''],
+      pid: 0,
+      signal: null,
+      status: 0,
+      stderr: '',
+      stdout: '',
+    });
+  });
+
+  afterEach(() => {
+    rmSync(configRoot, { force: true, recursive: true });
+    vi.restoreAllMocks();
+  });
+
+  const spawnedEnv = (): NodeJS.ProcessEnv | undefined => {
+    return vi.mocked(spawnSync).mock.calls[0]?.[2]?.env;
+  };
+
+  describe('when the driver is cursor', () => {
+    it('spawns with CURSOR_CONFIG_DIR at an attribution-off config, over a caller value', () => {
+      const target = join(configRoot, 'ot');
+      runDriverSync(cursorDriver, {
+        env: {
+          [CURSOR_CONFIG_DIR_ENV]: join(configRoot, 'user'),
+          [OPENTHROTTLE_CURSOR_CONFIG_DIR_ENV]: target,
+        },
+        iteration: 1,
+        prompt: 'commit the work',
+      });
+
+      expect(spawnedEnv()?.[CURSOR_CONFIG_DIR_ENV]).toBe(target);
+      expect(
+        JSON.parse(readFileSync(join(target, 'cli-config.json'), 'utf8'))
+          .attribution,
+      ).toEqual({ attributeCommitsToAgent: false, attributePRsToAgent: false });
+      // The command itself is unchanged: no trailer or attribution flag on argv.
+      expect(vi.mocked(spawnSync).mock.calls[0]?.[0]).not.toMatch(
+        /trailer|co-authored/i,
+      );
+    });
+  });
+
+  describe('when the driver adds no childEnv', () => {
+    it('leaves the env inherited', () => {
+      runDriverSync(testDriver, { iteration: 1, prompt: 'hi' });
 
       expect(spawnedEnv()).toBeUndefined();
     });

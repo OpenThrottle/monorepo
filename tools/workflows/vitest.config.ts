@@ -1,3 +1,6 @@
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
 import type { ConfigEnv } from 'vitest/config';
 import { defineConfig } from 'vitest/config';
 
@@ -6,6 +9,12 @@ export default (_config: ConfigEnv) => {
 
   const env = {
     NODE_ENV: 'test',
+    // Mirrors @tools/dotfiles: keep the cursor driver's attribution-off config
+    // copy out of the real ~/.openthrottle/cursor-config.
+    OPENTHROTTLE_CURSOR_CONFIG_DIR: join(
+      tmpdir(),
+      'openthrottle-vitest-cursor-config',
+    ),
     TZ: 'UTC',
   };
 

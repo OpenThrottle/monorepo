@@ -102,6 +102,32 @@ before its squash becomes immutable history on `main`.
 
 The local layers exist to make the common case never reach CI, not to replace it.
 
+## Upstream of the guards: Cursor's own attribution setting
+
+The guards are the backstop. Where a harness exposes a switch for its own attribution, OT turns it
+off so the line is never written in the first place (OT plan `7dd760a3`).
+
+`cursor-agent` attributes commits and PRs to itself (the `Co-authored-by: Cursor` trailer) unless
+`attribution.attributeCommitsToAgent` / `attributePRsToAgent` are `false` in
+`$CURSOR_CONFIG_DIR/cli-config.json` (default `~/.cursor`). Both default to `true`. There is no CLI
+flag, and a project `.cursor/cli.json` cannot carry them: it accepts only `permissions`
+([agent-config-parity.md](agent-config-parity.md#generated-outputs)).
+
+- **Runs OT spawns** (plan runs, OT Loop, scheduled jobs, chat and ACP) get `CURSOR_CONFIG_DIR`
+  pointed at `~/.openthrottle/cursor-config/`. That holds a copy of the user's `cli-config.json`
+  with both flags forced off, rewritten before every spawn. The user's own file is never written.
+  Login, `mcp.json`, plugins, skills and MCP approvals are not read from `CURSOR_CONFIG_DIR`, so they
+  are unaffected. Source: `prepareCursorConfigDir` in
+  `packages/openthrottle-drivers/src/utils/cursor-config.ts`, applied by the cursor driver's
+  `childEnv` and by `buildCursorAgentEnv` in `openthrottle-agentic-utils`.
+- **Interactive Cursor** reads the user's own config, which the repo cannot reach. Set it once:
+
+  ```json
+  "attribution": { "attributeCommitsToAgent": false, "attributePRsToAgent": false }
+  ```
+
+  in `~/.cursor/cli-config.json`. Until you do, `.husky/commit-msg` keeps stripping the trailer.
+
 ## Allowed co-authors
 
 One `Co-authored-by:` is not attribution: the one GitHub adds for the repo's own release App. The
