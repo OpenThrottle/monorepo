@@ -33,6 +33,11 @@
  * policy as a failed `docker compose down`. `pnpm worktree:serve --orphans` finds the ones that
  * got away before this existed.
  *
+ * Per-checkout agent registrations (state an agent keeps OUTSIDE the worktree, keyed by its path,
+ * such as a local-scope plugin install) are undone through the registry in
+ * `scripts/utils/agent-checkout-registrations.ts`, which owns which agents have one. That step runs
+ * last, only once the removal is going ahead, and never blocks it.
+ *
  * Nothing else needs undoing: ports are derived deterministically from the worktree name
  * (`scripts/utils/worktree-ports.ts`), not leased from a registry, so there is no allocation to
  * release. `.env` and the compose override die with the directory.
@@ -47,6 +52,10 @@ import { existsSync, readFileSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import {
+  logAgentCheckoutResults,
+  unregisterCheckoutAgents,
+} from './utils/agent-checkout-registrations.ts';
 import { readEnvFile, readEnvValue } from './utils/env.ts';
 import { run } from './utils/exec.ts';
 import type { Logger } from './utils/logger.ts';
@@ -301,6 +310,10 @@ const main = async (): Promise<void> => {
   if (mode === 'shared') {
     await clearSharedQueueKeys(worktreePath, logger);
   }
+
+  // Last, and only once nothing above has refused the removal: unregistering first and then
+  // refusing would leave a surviving worktree without its agent registrations. Fail-open.
+  logAgentCheckoutResults(unregisterCheckoutAgents(worktreePath, process.env), logger); // prettier-ignore
 };
 
 // Guarded so the pure helpers above stay importable from tests without running the teardown.

@@ -22,11 +22,13 @@
  * applies at the next session without `/plugin update`.
  *
  * Owner-approved (OT plan 88d08c18). `OPENTHROTTLE_CLAUDE_PLUGINS=0` opts out.
- * Dependency-free (node builtins + ./exec.ts + ./git.ts): provisioning runs
+ * Dependency-free (node builtins + ./exec.ts): provisioning runs
  * under bare Node before `pnpm install`.
  */
+import { homedir } from 'node:os';
+import { join } from 'node:path';
+
 import { run } from './exec.ts';
-import { primaryCheckoutDir } from './git.ts';
 
 /**
  * The checkout's own marketplace, from `plugins/.claude-plugin/marketplace.json`
@@ -39,12 +41,23 @@ export const CLAUDE_MARKETPLACE_NAME = 'openthrottle-dev';
 /** Where the dev marketplace lives, relative to a checkout. */
 export const CLAUDE_MARKETPLACE_DIR = 'plugins';
 
-/** The plugins this repository enables, telemetry first (the others depend on it). */
+/**
+ * The plugins this repository enables, telemetry first (the others depend on
+ * it). The one list: install walks it forwards, removal walks it backwards.
+ */
 export const REPO_CLAUDE_PLUGINS: readonly string[] = [
   'openthrottle',
   'openthrottle-workflow',
   'openthrottle-guards',
 ];
+
+/** {@link REPO_CLAUDE_PLUGINS} in removal order: dependents first, `openthrottle` last. */
+export const REPO_CLAUDE_PLUGINS_REMOVAL_ORDER: readonly string[] = [
+  ...REPO_CLAUDE_PLUGINS,
+].reverse();
+
+/** The manifest bundle-hooks writes; a checkout without it has no dev marketplace to install from. */
+export const CLAUDE_MARKETPLACE_MANIFEST = `${CLAUDE_MARKETPLACE_DIR}/.claude-plugin/marketplace.json`;
 
 /** The env switch that turns every step here off. */
 export const CLAUDE_PLUGINS_OPT_OUT_ENV = 'OPENTHROTTLE_CLAUDE_PLUGINS';
@@ -182,6 +195,142 @@ export const ensureRepoClaudePlugins = (
   }
 };
 
+/** Outcome of {@link removeRepoClaudePlugins}. */
+export type RemoveClaudePluginsResult =
+  | {
+      /** Plugins that had no local install for this checkout (already gone). */
+      readonly absent: readonly string[];
+      readonly kind: 'ok';
+      readonly removed: readonly string[];
+    }
+  | { readonly kind: 'failed'; readonly message: string }
+  | { readonly kind: 'skipped'; readonly reason: string };
+
+export interface RemoveClaudePluginsOptions {
+  /** The checkout whose local-scope installs to remove; it need not exist on disk any more. */
+  readonly checkout: string;
+  readonly env: NodeJS.ProcessEnv;
+  readonly isClaudeInstalled: () => boolean;
+  /** The primary checkout, which is never unregistered: it outlives its worktrees. */
+  readonly primary: string;
+  readonly runClaude: ClaudeRunner;
+}
+
+/** The `failureCode` Claude Code's `--json` uninstall reports for a plugin with no install at that scope. */
+const NOT_INSTALLED_AT_SCOPE = 'not_installed_at_scope';
+
+/** True when an uninstall failed only because there was nothing to uninstall. */
+const isNotInstalled = (result: ClaudeRunResult): boolean => {
+  try {
+    const parsed: unknown = JSON.parse(result.stdout);
+    if (typeof parsed === 'object' && parsed !== null) {
+      return Reflect.get(parsed, 'failureCode') === NOT_INSTALLED_AT_SCOPE;
+    }
+  } catch {
+    // An older CLI without --json: fall back to its message.
+  }
+  return `${result.stdout}\n${result.stderr}`.includes('is not installed');
+};
+
+/**
+ * Undo {@link ensureRepoClaudePlugins} for one checkout: uninstall the repo's
+ * `@openthrottle-dev` local-scope installs, dependents first, run from the
+ * checkout so Claude Code resolves the same `projectPath` the install
+ * recorded. Always `--keep-data`: `~/.claude/plugins/data/<id>/` is shared by
+ * every checkout's install of that plugin. Only `@openthrottle-dev` ids are
+ * named, so the public `@openthrottle` user-scope install is never touched.
+ * Idempotent (a plugin already gone counts as absent) and never throws.
+ */
+export const removeRepoClaudePlugins = (
+  options: RemoveClaudePluginsOptions,
+): RemoveClaudePluginsResult => {
+  const { checkout, env, isClaudeInstalled, primary, runClaude } = options;
+
+  if (env[CLAUDE_PLUGINS_OPT_OUT_ENV] === '0') {
+    return { kind: 'skipped', reason: `${CLAUDE_PLUGINS_OPT_OUT_ENV}=0` };
+  }
+  if (checkout === primary) {
+    return { kind: 'skipped', reason: 'the primary checkout keeps its install' }; // prettier-ignore
+  }
+  if (!isClaudeInstalled()) {
+    return { kind: 'skipped', reason: 'claude is not installed' };
+  }
+
+  try {
+    const removed: string[] = [];
+    const absent: string[] = [];
+    const failed: string[] = [];
+
+    for (const plugin of REPO_CLAUDE_PLUGINS_REMOVAL_ORDER) {
+      const result = runClaude(['plugin', 'uninstall', `${plugin}@${CLAUDE_MARKETPLACE_NAME}`, '--scope', 'local', '--keep-data', '--json'], checkout); // prettier-ignore
+      if (result.exitCode === 0) {
+        removed.push(plugin);
+      } else if (isNotInstalled(result)) {
+        absent.push(plugin);
+      } else {
+        failed.push(plugin);
+      }
+    }
+
+    if (failed.length > 0) {
+      return { kind: 'failed', message: `could not uninstall ${failed.join(', ')}` }; // prettier-ignore
+    }
+
+    return { absent, kind: 'ok', removed };
+  } catch (error) {
+    return { kind: 'failed', message: error instanceof Error ? error.message : String(error) }; // prettier-ignore
+  }
+};
+
+/** Where Claude Code records every plugin install, per scope and project path. Read-only here. */
+export const claudeInstalledPluginsPath = (env: NodeJS.ProcessEnv): string => {
+  const configDir = env.CLAUDE_CONFIG_DIR ?? join(homedir(), '.claude');
+  return join(configDir, 'plugins', 'installed_plugins.json');
+};
+
+/**
+ * The checkout paths that still hold a local-scope install of one of the
+ * repo's `@openthrottle-dev` plugins but no longer exist on disk, from the
+ * parsed `installed_plugins.json`. Pure: `exists` is injected. The primary
+ * checkout is never an orphan, and installs from any other marketplace are
+ * never considered.
+ */
+export const findOrphanedClaudeCheckouts = (params: {
+  readonly exists: (path: string) => boolean;
+  readonly installed: unknown;
+  readonly primary: string;
+}): string[] => {
+  const { exists, installed, primary } = params;
+  if (typeof installed !== 'object' || installed === null) {
+    return [];
+  }
+
+  const plugins: unknown = Reflect.get(installed, 'plugins');
+
+  if (typeof plugins !== 'object' || plugins === null) {
+    return [];
+  }
+
+  const orphans = new Set<string>();
+
+  for (const plugin of REPO_CLAUDE_PLUGINS) {
+    const entries: unknown = Reflect.get(plugins, `${plugin}@${CLAUDE_MARKETPLACE_NAME}`); // prettier-ignore
+    if (!Array.isArray(entries)) continue;
+
+    for (const entry of entries) {
+      if (typeof entry !== 'object' || entry === null) continue;
+      const scope: unknown = Reflect.get(entry, 'scope');
+      const projectPath: unknown = Reflect.get(entry, 'projectPath');
+      const isLocal = scope === 'local' && typeof projectPath === 'string';
+      if (isLocal && projectPath !== primary && !exists(projectPath)) {
+        orphans.add(projectPath);
+      }
+    }
+  }
+
+  return [...orphans].sort();
+};
+
 /** A log line for a result worth telling the operator about; undefined when there is nothing new. */
 export const describeClaudePluginsResult = (
   result: EnsureClaudePluginsResult,
@@ -206,21 +355,27 @@ export const describeClaudePluginsResult = (
 };
 
 /**
- * Setup/provision entry: enable the repo plugins for the checkout at `cwd`,
- * against the primary checkout that owns it, and return the line worth logging.
+ * Provision entry: enable the repo plugins for `checkout`, against `primary`,
+ * with the real `claude` CLI. Called through the agent checkout-registration
+ * registry (`./agent-checkout-registrations.ts`), never directly.
  */
 export const ensureCheckoutClaudePlugins = (
-  cwd: string,
+  checkout: string,
+  primary: string,
   env: NodeJS.ProcessEnv,
-): ReturnType<typeof describeClaudePluginsResult> => {
-  const primary = primaryCheckoutDir(cwd);
+): EnsureClaudePluginsResult => {
+  return ensureRepoClaudePlugins({ checkout, env, isClaudeInstalled: claudeOnPath, primary, runClaude: runClaudeCli }); // prettier-ignore
+};
 
-  if (primary === undefined) {
-    return undefined;
-  }
-
-  return describeClaudePluginsResult(
-    ensureRepoClaudePlugins({ checkout: cwd, env, isClaudeInstalled: claudeOnPath, primary, runClaude: runClaudeCli }), // prettier-ignore
-    primary,
-  );
+/**
+ * Teardown entry, the mirror of {@link ensureCheckoutClaudePlugins}: remove
+ * this checkout's local-scope installs with the real `claude` CLI. Called
+ * through the registry, never directly.
+ */
+export const removeCheckoutClaudePlugins = (
+  checkout: string,
+  primary: string,
+  env: NodeJS.ProcessEnv,
+): RemoveClaudePluginsResult => {
+  return removeRepoClaudePlugins({ checkout, env, isClaudeInstalled: claudeOnPath, primary, runClaude: runClaudeCli }); // prettier-ignore
 };

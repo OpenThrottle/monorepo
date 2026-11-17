@@ -167,7 +167,25 @@ marketplace installs never see them.
   - Plugins load in place, so a rebuilt bundle applies at the next session with no
     `/plugin update`.
   - `scripts/setup.sh` and worktree provisioning run the one-time
-    `claude plugin install … --scope project` and `bundle-hooks`.
+    `claude plugin install … --scope local` and `bundle-hooks`. Local scope records the checkout's
+    path in `~/.claude/plugins/installed_plugins.json` and writes the gitignored
+    `.claude/settings.local.json`. Project scope would rewrite the committed settings file.
+  - **Removal is the other half of the same registry entry**
+    ([the rule](./agent-editor-folders.md#per-checkout-registrations-ship-with-their-removal)).
+    Worktree teardown (`scripts/teardown_worktree.ts`) runs
+    `claude plugin uninstall <p>@openthrottle-dev --scope local --keep-data` from the worktree,
+    dependents first and `openthrottle` last. `--keep-data` is required because
+    `~/.claude/plugins/data/<id>/` is shared by every checkout's install. Only `@openthrottle-dev`
+    ids are named, so the public `@openthrottle` user-scope install is never touched, and the
+    primary checkout is never unregistered.
+  - **The sweep.** `pnpm worktree:prune-agents [--dry-run]` (also run best-effort by `setup.ts`)
+    reads `installed_plugins.json` read-only. For each `@openthrottle-dev` local install whose
+    `projectPath` is gone, it recreates the empty directory, runs the same uninstall inside it,
+    and deletes only the directory it created. It skips an orphan nested in another git checkout,
+    because the CLI could resolve the enclosing repository and unregister that instead.
+  - Orphaned cache versions under `~/.claude/plugins/cache/openthrottle-dev/` (about 0.9 MB) are
+    left to Claude Code to collect.
+  - `OPENTHROTTLE_CLAUDE_PLUGINS=0` opts out of install, removal and the sweep.
 - **Testing a branch's own hooks.** A directory source resolves against the main checkout, so a
   worktree session runs `main`'s plugin. To exercise a branch's own hooks, run
   `claude --plugin-dir ./plugins/<p>`. That flag replaces the installed copy, and OT-driven runs
