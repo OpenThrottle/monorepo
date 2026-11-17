@@ -4,7 +4,11 @@ import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-u
 import {
   GlobalHeading,
   GlobalScreen,
+  GlobalStatsPanel,
+  GlobalStatsToggleButton,
   readSearchParam,
+  ROUTE_STATS_URL,
+  shouldRevalidateIgnoringParams,
 } from '@openthrottle/react-router-ui-global';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
@@ -121,26 +125,37 @@ export default function Component(
         <QueueDetailControls queueName={queue.name} />
       </div>
 
-      <QueueStatRow
-        columns={5}
-        stats={[
-          {
-            color: 'bg-green-300',
-            title: 'Completed',
-            value: queue.completedCount,
-          },
-          { color: 'bg-yellow-300', title: 'Active', value: queue.activeCount },
-          { color: 'bg-blue-300', title: 'Waiting', value: queue.waitingCount },
-          {
-            color: 'bg-violet-300',
-            title: 'Delayed',
-            value: queue.delayedCount,
-          },
-          { color: 'bg-red-300', title: 'Failed', value: queue.failedCount },
-        ]}
-      />
+      <GlobalStatsPanel>
+        <QueueStatRow
+          columns={5}
+          stats={[
+            {
+              color: 'bg-green-300',
+              title: 'Completed',
+              value: queue.completedCount,
+            },
+            {
+              color: 'bg-yellow-300',
+              title: 'Active',
+              value: queue.activeCount,
+            },
+            {
+              color: 'bg-blue-300',
+              title: 'Waiting',
+              value: queue.waitingCount,
+            },
+            {
+              color: 'bg-violet-300',
+              title: 'Delayed',
+              value: queue.delayedCount,
+            },
+            { color: 'bg-red-300', title: 'Failed', value: queue.failedCount },
+          ]}
+        />
+      </GlobalStatsPanel>
 
       <QueueOpsToolbar
+        actions={<GlobalStatsToggleButton />}
         searchAriaLabel="Find a job on this page"
         searchPlaceholder="Find a job on this page"
         stateOptions={QUEUE_JOB_STATE_FILTER_OPTIONS}
@@ -158,6 +173,10 @@ export default function Component(
     </GlobalScreen>
   );
 }
+
+export const shouldRevalidate = shouldRevalidateIgnoringParams([
+  ROUTE_STATS_URL.param,
+]);
 
 export const action = (args: Route.ActionArgs) => {
   return runQueueDetailAction(args);

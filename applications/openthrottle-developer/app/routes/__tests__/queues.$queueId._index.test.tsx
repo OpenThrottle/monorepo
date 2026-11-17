@@ -4,14 +4,19 @@ import {
   DEFAULT_PAGINATION_LIMIT,
   getPublicEnv,
 } from '@openthrottle/react-router-utils';
-import { render } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import * as React from 'react';
-import { createRoutesStub } from 'react-router';
+import { createRoutesStub, useLoaderData, useSearchParams } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { Route } from '@/app/routes/+types/queues.$queueId._index';
+import { renderWithMemoryRouter } from '~/testing/route-fixtures';
 
-import QueueDetailIndex, { loader } from '../queues.$queueId._index';
+import QueueDetailIndex, {
+  loader,
+  shouldRevalidate,
+} from '../queues.$queueId._index';
 
 vi.mock('@openthrottle/react-router-graphql', async (importOriginal) => {
   const actual =
@@ -205,5 +210,83 @@ describe('routes/queues.$queueId.tsx', () => {
       'href',
       '/queues/plans/job-1',
     );
+  });
+
+  describe('collapsible stats', () => {
+    // eslint-disable-next-line react/no-multi-comp -- test-local route wrapper
+    const QueueRoute = (): React.ReactElement => {
+      const loaderData = useLoaderData<typeof mockLoaderData>();
+      const [searchParams] = useSearchParams();
+
+      return (
+        <>
+          <QueueDetailIndex
+            actionData={undefined}
+            loaderData={loaderData}
+            matches={buildQueueMatches(loaderData)}
+            params={{ queueId: 'plans' }}
+          />
+          <span data-testid="qs">{searchParams.toString()}</span>
+        </>
+      );
+    };
+
+    const renderQueue = (
+      entry: string,
+    ): {
+      readonly component: ReturnType<typeof renderWithMemoryRouter>;
+      readonly routeLoader: ReturnType<typeof vi.fn>;
+    } => {
+      const routeLoader = vi.fn(() => {
+        return mockLoaderData;
+      });
+      const component = renderWithMemoryRouter(
+        [
+          {
+            Component: QueueRoute,
+            HydrateFallback: () => null,
+            loader: routeLoader,
+            path: '/queues/:queueId',
+            shouldRevalidate,
+          },
+        ],
+        { initialEntries: [entry] },
+      );
+
+      return { component, routeLoader };
+    };
+
+    test('stats are closed by default', async () => {
+      const { component } = renderQueue('/queues/plans');
+
+      const toggle = await component.findByTestId('GlobalStatsToggleButton');
+      expect(toggle).toHaveAttribute('aria-expanded', 'false');
+      expect(component.queryByTestId('QueueStatRow')).toBeNull();
+    });
+
+    test('?stats=open deep-links the stats open', async () => {
+      const { component } = renderQueue('/queues/plans?stats=open');
+
+      expect(await component.findByTestId('QueueStatRow')).toBeInTheDocument();
+    });
+
+    test('the toolbar toggle opens the stats without re-running the loader', async () => {
+      const user = userEvent.setup();
+      const { component, routeLoader } = renderQueue(
+        '/queues/plans?state=failed',
+      );
+
+      await user.click(await component.findByTestId('GlobalStatsToggleButton'));
+
+      expect(await component.findByTestId('QueueStatRow')).toBeInTheDocument();
+      const qs = new URLSearchParams(
+        component.getByTestId('qs').textContent ?? '',
+      );
+      expect(qs.get('stats')).toBe('open');
+      expect(qs.get('state')).toBe('failed');
+      await waitFor(() => {
+        expect(routeLoader).toHaveBeenCalledTimes(1);
+      });
+    });
   });
 });

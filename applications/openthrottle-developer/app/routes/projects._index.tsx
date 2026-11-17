@@ -193,12 +193,12 @@ export default function Component(
           className="mt-8"
           limit={limit}
           page={page}
+          // Clone the live query string so `?stats=open` (and any other
+          // route-local param) survives a page change; search, sort and view
+          // already live in the URL, so nothing is lost by not rebuilding them.
+          preserveSearchParams={true}
           resultLabel="projects"
-          search={search}
-          sortBy={sortBy}
-          sortOrder={sortOrder}
           total={totalCount}
-          view={view}
         />
       </div>
     </GlobalScreen>
