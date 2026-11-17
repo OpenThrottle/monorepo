@@ -145,6 +145,38 @@ describe('package generator', () => {
     });
   });
 
+  describe('nestjs', () => {
+    const name = 'example-nestjs-package';
+
+    beforeEach(() => {
+      tree = createTreeWithEmptyWorkspace({ formatter: 'prettier' });
+    });
+
+    test('should point every entrypoint at built output', async () => {
+      // `technology:nestjs` packages are never source-first: Node's loader is
+      // strip-only, so decorators need emitted code. A `src/` main/module/types
+      // fails `scripts/check-package-entrypoints.ts`.
+      await packageGenerator(tree, {
+        name,
+        organization: '@openthrottle',
+        type: 'nestjs',
+      });
+      const packageJson = readJson(tree, `packages/${name}/package.json`);
+
+      expect(packageJson.main).toBe('./dist/src/index.js');
+      expect(packageJson.module).toBe('./dist/src/index.js');
+      expect(packageJson.types).toBe('./dist/src/index.d.ts');
+      expect(packageJson.exports['.']).toEqual({
+        import: './dist/src/index.js',
+        require: './dist/src/index.js',
+        types: './dist/src/index.d.ts',
+      });
+      expect(packageJson.nx.targets).toHaveProperty('build');
+      expect(packageJson.nx.targets).not.toHaveProperty('__build');
+      expect(packageJson.nx.targets).not.toHaveProperty('__build-package');
+    });
+  });
+
   describe('@organization', () => {
     const type = 'node';
     const org = '@openthrottle';

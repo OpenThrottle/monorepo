@@ -12,6 +12,7 @@
 .postgres-profiling
 .vercel
 .vitest
+applications/openthrottle-server/.openthrottle/
 build
 coverage
 design/*
