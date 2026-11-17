@@ -17,15 +17,20 @@ import { useAgenticChatTurn } from '../useAgenticChatTurn';
 
 // A controllable stand-in for the live stream hook: the recovery tests drive
 // `retryableIds` (a server retryable-timeout terminal) and `lastActivityAt` (the
-// stall watchdog) directly instead of over a socket. Assigned on every render so
-// the test always holds the current React setters.
+// stall watchdog) directly instead of over a socket, and the Private-mode test
+// streams a reply into one conversation id. Like the real hook, it only returns
+// the streamed messages of the CURRENT conversation id, so a re-key drops them.
+// Assigned on every render so the test always holds the current React setters.
 let streamControl: {
   markCompleted: (id: string, failed?: boolean) => void;
   markRetryable: (id: string) => void;
+  streamReply: (conversationId: string, message: ChatMessage) => void;
 } | null = null;
 
 vi.mock('../useConversationStream', () => ({
-  useConversationStream: (): {
+  useConversationStream: (options: {
+    readonly conversationId: string | null;
+  }): {
     completedIds: ReadonlySet<string>;
     isStreaming: boolean;
     lastActivityAt: number | null;
@@ -40,6 +45,9 @@ vi.mock('../useConversationStream', () => ({
       new Set(),
     );
     const [messages, setMessages] = React.useState<ChatMessage[]>([]);
+    const [streamed, setStreamed] = React.useState<
+      ReadonlyMap<string, ChatMessage[]>
+    >(new Map());
     streamControl = {
       markCompleted: (id: string, failed = false): void => {
         // A failed turn ends on a usage event carrying an error.
@@ -58,12 +66,25 @@ vi.mock('../useConversationStream', () => ({
       },
       markRetryable: (id: string): void =>
         setRetryableIds((previous) => new Set(previous).add(id)),
+      // Streams a finished reply: like a terminal chunk, it also completes the turn.
+      streamReply: (conversationId: string, message: ChatMessage): void => {
+        setStreamed((previous) =>
+          new Map(previous).set(conversationId, [
+            ...(previous.get(conversationId) ?? []),
+            message,
+          ]),
+        );
+        setCompletedIds((previous) => new Set(previous).add(message.id));
+      },
     };
     return {
       completedIds,
       isStreaming: false,
       lastActivityAt: null,
-      messages,
+      messages: [
+        ...messages,
+        ...(streamed.get(options.conversationId ?? '') ?? []),
+      ],
       phaseByMessageId: new Map<string, never>(),
       retryableIds,
     };
@@ -135,6 +156,12 @@ const Harness = (): React.ReactElement => {
       <button onClick={() => turn.resumeQueue()} type="button">
         Resume
       </button>
+      <span data-testid="assistant-bodies">
+        {turn.messages
+          .filter((message) => message.role === 'assistant')
+          .map((message) => message.body)
+          .join('|')}
+      </span>
       <button
         onClick={() => turn.restore({ conversationId: 'conv-42' })}
         type="button"
@@ -518,5 +545,77 @@ describe('useAgenticChatTurn queue', () => {
     await user.click(component.getByRole('button', { name: 'Reset' }));
 
     expect(component.getByTestId('queue')).toHaveTextContent('');
+  });
+});
+
+// Private mode: every start mints a fresh synthetic conversation id, exactly as
+// the server's `startConversationStream` does for `persist=false`.
+let privateStarts = 0;
+const privateStreamAction = (): Record<string, unknown> => {
+  privateStarts += 1;
+  return {
+    assistantMessageId: `p${privateStarts}`,
+    conversationId: `private-${privateStarts}`,
+    errorMessage: null,
+    userMessageId: null,
+  };
+};
+
+const renderPrivate = (): RenderResult => {
+  const RoutesStub = createRoutesStub([
+    { Component: Harness, path: '/' },
+    { action: privateStreamAction, path: '/resources/conversation-stream' },
+  ]);
+  return render(<RoutesStub />);
+};
+
+describe('useAgenticChatTurn Private mode', () => {
+  beforeEach(() => {
+    privateStarts = 0;
+    streamControl = null;
+  });
+
+  test('keeps an earlier reply when the next turn re-keys to a new conversation id', async () => {
+    const user = userEvent.setup();
+    const component = renderPrivate();
+
+    await user.click(component.getByRole('button', { name: 'Submit' }));
+    await waitFor(() =>
+      expect(component.getByTestId('conversation-id')).toHaveTextContent(
+        'private-1',
+      ),
+    );
+    act(() =>
+      streamControl?.streamReply('private-1', {
+        body: 'Cherry',
+        id: 'p1',
+        role: 'assistant',
+      }),
+    );
+    await waitFor(() =>
+      expect(component.getByTestId('assistant-bodies')).toHaveTextContent(
+        'Cherry',
+      ),
+    );
+
+    await user.click(component.getByRole('button', { name: 'Submit' }));
+    await waitFor(() =>
+      expect(component.getByTestId('conversation-id')).toHaveTextContent(
+        'private-2',
+      ),
+    );
+    act(() =>
+      streamControl?.streamReply('private-2', {
+        body: 'Grape',
+        id: 'p2',
+        role: 'assistant',
+      }),
+    );
+
+    await waitFor(() =>
+      expect(component.getByTestId('assistant-bodies')).toHaveTextContent(
+        'Cherry|Grape',
+      ),
+    );
   });
 });

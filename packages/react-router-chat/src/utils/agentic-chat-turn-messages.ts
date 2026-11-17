@@ -19,6 +19,22 @@ export const overlayStreamedMessage = (
   return { ...message, body: streamed.body };
 };
 
+/**
+ * @description Bake every streamed turn into its placeholder so the thread keeps
+ * those replies once the live stream re-keys to another conversation id and
+ * drops its accumulation. A Private-mode turn gets a fresh synthetic id per turn
+ * and has no persisted rows to fall back on, so without this an earlier reply
+ * renders empty after the next message.
+ */
+export const bakeStreamedMessages = (
+  messages: readonly ChatMessage[],
+  streamedById: ReadonlyMap<string, ChatMessage>,
+): ChatMessage[] => {
+  return messages.map((message) =>
+    overlayStreamedMessage(message, streamedById.get(message.id)),
+  );
+};
+
 /** Append an empty assistant placeholder unless one with `id` already exists. */
 export const appendAssistantPlaceholder = (
   messages: ChatMessage[],
