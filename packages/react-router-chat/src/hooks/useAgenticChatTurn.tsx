@@ -21,6 +21,7 @@ import { deriveRunPhaseFromElapsed } from '../run-phase';
 import type {
   ChatMessage,
   ChatPermissionResponder,
+  ChatQueuedMessage,
   ChatStartActionResult,
   ChatTokenUsage,
   LoadAgentConversationMessagesResult,
@@ -28,8 +29,10 @@ import type {
 import { sumUsage } from '../usage';
 import {
   appendAssistantPlaceholder,
+  didTurnFail,
   overlayStreamedMessage,
 } from '../utils/agentic-chat-turn-messages';
+import { useChatMessageQueue } from './useChatMessageQueue';
 import { useConversationStream } from './useConversationStream';
 
 /**
@@ -53,8 +56,17 @@ export interface UseAgenticChatTurnResult {
    * automatic retry is already spent — the UI should offer a manual Retry.
    */
   readonly canRetry: boolean;
+  /** Drop every queued message. */
+  readonly clearQueue: () => void;
   readonly conversationId: string | null;
+  /** Replace a queued message's text; an empty edit removes it. */
+  readonly editQueued: (id: string, message: string) => void;
   readonly error: string | null;
+  /**
+   * True after Stop or a failed turn while messages are queued: nothing sends
+   * on its own until {@link resumeQueue} or {@link sendQueuedNow}.
+   */
+  readonly isQueuePaused: boolean;
   readonly isStreaming: boolean;
   /** User messages + streamed assistant turns (placeholders flagged `pending`). */
   readonly messages: ChatMessage[];
@@ -62,8 +74,11 @@ export interface UseAgenticChatTurnResult {
   readonly onRespondToPermission: ChatPermissionResponder;
   /** Manually replay the last turn after the auto-retry was exhausted. */
   readonly onRetry: () => void;
-  /** Cancel the in-flight turn. */
+  /** Cancel the in-flight turn, and pause the queue. */
   readonly onStop: () => void;
+  /** Messages sent while a turn was running, oldest first. */
+  readonly queuedMessages: readonly ChatQueuedMessage[];
+  readonly removeQueued: (id: string) => void;
   /** Clear the thread for a fresh conversation (New chat). */
   readonly reset: () => void;
   /**
@@ -71,6 +86,13 @@ export interface UseAgenticChatTurnResult {
    * and hydrate its messages from the load-messages resource action.
    */
   readonly restore: (params: { conversationId: string }) => void;
+  /** Un-pause the queue and send its oldest message now if nothing is running. */
+  readonly resumeQueue: () => void;
+  /**
+   * Send one queued message now: cancel the running turn (if any), then start
+   * this message as the next turn. Un-pauses the queue.
+   */
+  readonly sendQueuedNow: (id: string) => void;
   /**
    * Cumulative token usage across all assistant turns in this thread (best
    * effort; empty when no backend reported counts). Feeds the composer's
@@ -82,7 +104,9 @@ export interface UseAgenticChatTurnResult {
   /**
    * Start a turn: append the user message and POST `intent=start` + `fields`
    * (the backend-specific payload the caller builds from its toolbar selections)
-   * to the conversation-stream resource action.
+   * to the conversation-stream resource action. While a turn is running (or
+   * being cancelled) the message is queued instead, and sent as its own turn
+   * once the running one ends successfully.
    */
   readonly submitTurn: (
     message: string,
@@ -127,6 +151,7 @@ export function useAgenticChatTurn(
   // replayed turn's new pending id arriving, so the composer never flickers out
   // of its streaming state mid-retry.
   const [isRetrying, setIsRetrying] = React.useState(false);
+
   // Set once the single auto-retry is spent on a timed-out turn → the UI offers
   // a manual Retry.
   const [canRetry, setCanRetry] = React.useState(false);
@@ -158,6 +183,25 @@ export function useAgenticChatTurn(
   const recoverRef = React.useRef<(recoverOptions: RecoverOptions) => void>(
     () => undefined,
   );
+  const queue = useChatMessageQueue();
+  // The assistant id of the most recent turn, kept after its pending flag clears
+  // so the drain can tell whether that turn failed.
+  const lastAssistantIdRef = React.useRef<string | null>(null);
+  // A queued message the user chose to "Send now" while a turn was running: it
+  // waits here for the cancel to settle, then starts ahead of the queue.
+  const sendNowRef = React.useRef<ChatQueuedMessage | null>(null);
+  // `isBusy` on the previous render, so the drain fires on the busy→idle edge.
+  const wasBusyRef = React.useRef(false);
+  // Set by `startTurn`, cleared once a render observes `isBusy`. Covers the gap
+  // before the start fetcher reports itself in flight, so a second submit in
+  // the same tick queues instead of starting a parallel turn. (The fetcher's
+  // submit can re-render synchronously while its state still reads idle.)
+  const startPendingRef = React.useRef(false);
+  // The start result the result effect last handled. For the one render where
+  // the fetcher reads idle but that effect has not yet set the pending id,
+  // `isStreaming` would blip false — which the queue drain would read as "the
+  // turn ended" and start a queued message on top of the running turn.
+  const handledStartResultRef = React.useRef<ChatStartActionResult | undefined>(undefined); // prettier-ignore
 
   const stream = useConversationStream({
     client: streamClient,
@@ -219,11 +263,21 @@ export function useAgenticChatTurn(
     streamedById,
   ]);
 
+  const hasUnhandledStartResult =
+    startFetcher.data !== undefined &&
+    startFetcher.data !== handledStartResultRef.current;
   const isStreaming =
     startFetcher.state !== 'idle' ||
+    hasUnhandledStartResult ||
     stream.isStreaming ||
     pendingAssistantId !== null ||
     isRetrying;
+  // A cancel still in flight counts as busy: starting a turn before the server
+  // has aborted the old one would be refused (one turn per conversation).
+  const isBusy = isStreaming || cancelFetcher.state !== 'idle';
+  if (isBusy) {
+    startPendingRef.current = false;
+  }
 
   // Accumulate every turn's usage event into one running session total for the
   // composer counter. Each assistant message carries at most one usage event
@@ -243,10 +297,11 @@ export function useAgenticChatTurn(
   }, [messagesView]);
 
   // Handlers
-  const submitTurn = (
+  const startTurn = (
     message: string,
-    fields: Record<string, string>,
+    fields: Readonly<Record<string, string>>,
   ): void => {
+    startPendingRef.current = true;
     // Remember the turn and reset the retry budget so a stall/timeout can replay
     // it, and clear any prior manual-retry state.
     lastTurnRef.current = { fields, message };
@@ -276,6 +331,17 @@ export function useAgenticChatTurn(
         method: 'post',
       },
     );
+  };
+
+  const submitTurn = (
+    message: string,
+    fields: Record<string, string>,
+  ): void => {
+    if (isBusy || startPendingRef.current) {
+      queue.enqueue(message, fields);
+      return;
+    }
+    startTurn(message, fields);
   };
 
   /**
@@ -367,7 +433,7 @@ export function useAgenticChatTurn(
     );
   };
 
-  const onStop = (): void => {
+  const cancelTurn = (): void => {
     // Stopping is deliberate — never auto-retry a user-cancelled turn.
     retryCountRef.current = MAX_AUTO_RETRIES;
     setCanRetry(false);
@@ -391,10 +457,46 @@ export function useAgenticChatTurn(
     );
   };
 
+  const onStop = (): void => {
+    queue.pause();
+    cancelTurn();
+  };
+
+  const sendQueuedNow = (id: string): void => {
+    const item = queue.take(id);
+    if (item === undefined) {
+      return;
+    }
+    queue.resume();
+    if (isBusy || startPendingRef.current) {
+      sendNowRef.current = item;
+      cancelTurn();
+      return;
+    }
+    startTurn(item.message, item.fields);
+  };
+
+  const resumeQueue = (): void => {
+    queue.resume();
+    if (isBusy || startPendingRef.current) {
+      return;
+    }
+    const next = queue.take();
+    if (next !== undefined) {
+      startTurn(next.message, next.fields);
+    }
+  };
+
+  const clearQueue = (): void => {
+    sendNowRef.current = null;
+    queue.clear();
+  };
+
   // Restore a persisted conversation: seed the id synchronously (so the live
   // subscription re-keys to that thread's topic) and fetch its messages; the
   // effect below swaps them in when the load resolves.
   const restore = (params: { conversationId: string }): void => {
+    clearQueue();
     lastTurnRef.current = null;
     retryCountRef.current = 0;
     setCanRetry(false);
@@ -414,6 +516,7 @@ export function useAgenticChatTurn(
 
   // New chat: drop the id + thread so the next turn starts a fresh conversation.
   const reset = (): void => {
+    clearQueue();
     lastTurnRef.current = null;
     retryCountRef.current = 0;
     setCanRetry(false);
@@ -432,6 +535,7 @@ export function useAgenticChatTurn(
     if (!result) {
       return;
     }
+    handledStartResultRef.current = result;
 
     if (result.errorMessage || !result.conversationId) {
       // A failed (re)start must never leave the composer wedged mid-retry.
@@ -446,6 +550,7 @@ export function useAgenticChatTurn(
       // The replayed turn's stream has begun → leave the retry bridge state.
       setIsRetrying(false);
       const assistantId = result.assistantMessageId;
+      lastAssistantIdRef.current = assistantId;
       setPendingAssistantId(assistantId);
       setMessages((previous) =>
         appendAssistantPlaceholder(previous, assistantId),
@@ -478,6 +583,19 @@ export function useAgenticChatTurn(
       setPendingAssistantId(null);
     }
   }, [pendingAssistantId, stream.completedIds, stream.retryableIds]);
+
+  // "Send now": start the chosen message as soon as the cancel request settles.
+  // The server frees the conversation the moment it aborts, so there is no need
+  // to wait for the old reply's last chunks to drain to the client. (The drain
+  // effect below still sends it if no cancel request was made.)
+  React.useEffect(() => {
+    const sendNow = sendNowRef.current;
+    if (cancelFetcher.state !== 'idle' || sendNow === null) {
+      return;
+    }
+    sendNowRef.current = null;
+    startTurn(sendNow.message, sendNow.fields);
+  }, [cancelFetcher.state]);
 
   // Stall watchdog: if a turn is pending but no chunk arrives for the stall
   // window (a silently-dead subscription — the server terminal never reached
@@ -543,6 +661,43 @@ export function useAgenticChatTurn(
     };
   }, [pendingAssistantId]);
 
+  // Drain the queue on the busy→idle edge: a "Send now" message goes first;
+  // otherwise the oldest queued message starts as the next turn — unless the
+  // queue is paused or the turn that just ended failed (then pause, so a
+  // follow-up never runs on top of an error the user has not seen). Stall
+  // recovery keeps `isBusy` true across its replay, so it never drains early.
+  React.useEffect(() => {
+    const wasBusy = wasBusyRef.current;
+    wasBusyRef.current = isBusy;
+    if (isBusy || !wasBusy) {
+      return;
+    }
+
+    const sendNow = sendNowRef.current;
+    if (sendNow !== null) {
+      sendNowRef.current = null;
+      startTurn(sendNow.message, sendNow.fields);
+      return;
+    }
+
+    if (queue.isPaused || queue.items.length === 0) {
+      return;
+    }
+
+    const lastAssistant = messagesView.find((message) => {
+      return message.id === lastAssistantIdRef.current;
+    });
+    if (error !== null || canRetry || didTurnFail(lastAssistant)) {
+      queue.pause();
+      return;
+    }
+
+    const next = queue.take();
+    if (next !== undefined) {
+      startTurn(next.message, next.fields);
+    }
+  }, [isBusy]);
+
   // Hydrate the thread from a restored conversation once its messages load. The
   // load-messages helper already maps rows to ChatMessage[]; a load error
   // surfaces without clobbering the (already re-keyed) id.
@@ -564,15 +719,22 @@ export function useAgenticChatTurn(
 
   return {
     canRetry,
+    clearQueue,
     conversationId,
+    editQueued: queue.edit,
     error,
+    isQueuePaused: queue.isPaused,
     isStreaming,
     messages: messagesView,
     onRespondToPermission,
     onRetry,
     onStop,
+    queuedMessages: queue.items,
+    removeQueued: queue.remove,
     reset,
     restore,
+    resumeQueue,
+    sendQueuedNow,
     sessionUsage,
     setError,
     submitTurn,

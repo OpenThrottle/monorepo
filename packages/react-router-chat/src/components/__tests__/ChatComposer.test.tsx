@@ -148,6 +148,50 @@ describe('ChatComposer Component', () => {
       expect(onSubmit).not.toHaveBeenCalled();
     });
   });
+
+  describe('when isStreaming is true and onQueue is set', () => {
+    test('Enter queues the trimmed draft instead of submitting, and clears it', async () => {
+      const onQueue = vi.fn();
+      const user = userEvent.setup();
+      mountComposer({ isStreaming: true, onQueue, onStop: vi.fn() });
+
+      const textarea = component!.getByLabelText('Message');
+      assertTextArea(textarea);
+      await user.type(textarea, '  also check vercel  ');
+      await user.keyboard('{Enter}');
+
+      expect(onQueue).toHaveBeenCalledWith('also check vercel');
+      expect(onSubmit).not.toHaveBeenCalled();
+      expect(textarea.value).toBe('');
+    });
+
+    test('shows Queue beside Stop, and Stop still fires', async () => {
+      const onQueue = vi.fn();
+      const onStop = vi.fn();
+      const user = userEvent.setup();
+      mountComposer({ isStreaming: true, onQueue, onStop });
+
+      await user.type(component!.getByLabelText('Message'), 'next');
+      await user.click(component!.getByRole('button', { name: 'Queue' }));
+      expect(onQueue).toHaveBeenCalledWith('next');
+
+      await user.click(component!.getByRole('button', { name: 'Stop' }));
+      expect(onStop).toHaveBeenCalledTimes(1);
+    });
+
+    test('submits normally through onSubmit once streaming ends', async () => {
+      const onQueue = vi.fn();
+      const user = userEvent.setup();
+      mountComposer({ isStreaming: false, onQueue });
+
+      await user.type(component!.getByLabelText('Message'), 'hello');
+      await user.keyboard('{Enter}');
+
+      expect(onSubmit).toHaveBeenCalledWith('hello');
+      expect(onQueue).not.toHaveBeenCalled();
+    });
+  });
+
   describe('controlled draft + readOnly (voice input)', () => {
     test('renders the controlled draft and reports edits via onDraftChange', async () => {
       const onDraftChange = vi.fn();

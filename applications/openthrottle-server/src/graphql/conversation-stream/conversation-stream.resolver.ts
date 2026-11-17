@@ -52,6 +52,7 @@ import {
   toConversationServiceTier,
 } from '@openthrottle/openthrottle-agentic-utils';
 
+import { TURN_IN_PROGRESS_ERROR } from './conversation-stream.constants.ts';
 import { StartConversationStreamInput } from './conversation-stream.input.ts';
 import {
   ConversationStreamChunkObject,
@@ -364,6 +365,15 @@ export class ConversationStreamResolver {
 
     if (conversationId == null) {
       return failed('Conversation not found.');
+    }
+
+    // One turn at a time per conversation: a second start while a turn is live
+    // would replace its abort controller and interleave two streams on one
+    // topic. Checked before the user message is persisted so a refused send
+    // leaves no orphan row. Clients queue follow-ups and send them once the
+    // running turn ends (or cancel it first).
+    if (this.streamService.hasActiveTurn(conversationId)) {
+      return failed(TURN_IN_PROGRESS_ERROR);
     }
 
     const resolved = await this.resolveBackendRun(

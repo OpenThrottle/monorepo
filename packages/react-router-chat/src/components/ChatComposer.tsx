@@ -1,6 +1,7 @@
 import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
+import { CHAT_COMPOSER_QUEUE_COPY } from '../data/data.copy';
 import { useChatComposerMentions } from '../hooks/useChatComposerMentions';
 import { useChatComposerSlashCommands } from '../hooks/useChatComposerSlashCommands';
 import type {
@@ -22,9 +23,8 @@ export interface ChatComposerProps {
   readonly draft?: string;
   /**
    * When true, the Send button is replaced by a Stop button wired to
-   * {@link onStop}, and Enter/submit is blocked. NOTE: this is a presentational
-   * in-flight affordance — the package performs no real cancellation; the
-   * consumer's {@link onStop} decides what (if anything) stopping does.
+   * {@link onStop}, and Enter/submit is blocked unless {@link onQueue} is set.
+   * Presentational: the consumer's {@link onStop} decides what stopping does.
    */
   readonly isStreaming?: boolean;
   /**
@@ -36,6 +36,12 @@ export interface ChatComposerProps {
   readonly mentionProvider?: ChatMentionProvider;
   /** Called with the new draft on user edits and on post-submit clearing (controlled mode). */
   readonly onDraftChange?: (draft: string) => void;
+  /**
+   * Opt in to sending while {@link isStreaming}: Enter and a Queue button beside
+   * Stop hand the trimmed draft here instead of {@link onSubmit}. Omit to keep
+   * submit blocked while streaming.
+   */
+  readonly onQueue?: (message: string) => void;
   /** Invoked when the Stop button is pressed while {@link isStreaming}. */
   readonly onStop?: () => void;
   readonly onSubmit: (message: string) => void;
@@ -81,6 +87,7 @@ export const ChatComposer = (props: ChatComposerProps): React.ReactElement => {
     isStreaming = false,
     mentionProvider,
     onDraftChange,
+    onQueue,
     onStop,
     onSubmit,
     placeholder = 'Type a message…',
@@ -124,14 +131,17 @@ export const ChatComposer = (props: ChatComposerProps): React.ReactElement => {
   });
 
   // Setup
+  const isQueueing = isStreaming && onQueue !== undefined;
+  const queuePlaceholder = CHAT_COMPOSER_QUEUE_COPY.placeholder;
 
   // Handlers
   const submitDraft = (): void => {
     const trimmed = draft.trim();
-    if (!trimmed || disabled || isStreaming || readOnly) {
+    const deliver = isStreaming ? onQueue : onSubmit;
+    if (!trimmed || disabled || readOnly || !deliver) {
       return;
     }
-    onSubmit(trimmed);
+    deliver(trimmed);
     setDraft('');
     mentions.reset();
     slash.reset();
@@ -179,7 +189,7 @@ export const ChatComposer = (props: ChatComposerProps): React.ReactElement => {
         mentionProvider={mentionProvider}
         mentions={mentions}
         onKeyDown={onTextAreaKeyDown}
-        placeholder={placeholder}
+        placeholder={isQueueing ? queuePlaceholder : placeholder}
         readOnly={readOnly}
         slash={slash}
         slashCommandProvider={slashCommandProvider}
@@ -187,6 +197,7 @@ export const ChatComposer = (props: ChatComposerProps): React.ReactElement => {
       <ChatComposerFooter
         disabled={disabled}
         draft={draft}
+        isQueueing={isQueueing}
         isStreaming={isStreaming}
         onStop={onStop}
         sessionUsage={sessionUsage}

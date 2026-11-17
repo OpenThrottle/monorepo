@@ -803,6 +803,67 @@ describe('ConversationStreamService', () => {
     expect(last).toMatchObject({ done: true });
   });
 
+  it('reports a live turn as active, and a cancelled one as free', async () => {
+    let release: () => void = () => {};
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    async function* held(
+      _input: unknown,
+    ): AsyncGenerator<{ delta: string; done: boolean; kind: string }> {
+      yield { delta: 'first', done: false, kind: 'text' };
+      await gate;
+      yield { delta: '', done: true, kind: 'text' };
+    }
+    openAiStreamMock.mockImplementation(held);
+    const { service } = buildService();
+
+    expect(service.hasActiveTurn('conv-1')).toBe(false);
+    const done = service.runStream(baseRun);
+    expect(service.hasActiveTurn('conv-1')).toBe(true);
+
+    service.cancel('conv-1');
+    expect(service.hasActiveTurn('conv-1')).toBe(false);
+
+    release();
+    await done;
+    expect(service.hasActiveTurn('conv-1')).toBe(false);
+  });
+
+  it('a cancelled turn unwinding does not release the next turn', async () => {
+    const releases: Array<() => void> = [];
+    async function* held(
+      _input: unknown,
+    ): AsyncGenerator<{ delta: string; done: boolean; kind: string }> {
+      yield { delta: 'first', done: false, kind: 'text' };
+      await new Promise<void>((resolve) => {
+        releases.push(resolve);
+      });
+      yield { delta: '', done: true, kind: 'text' };
+    }
+    openAiStreamMock.mockImplementation(held);
+    const { service } = buildService();
+
+    const first = service.runStream(baseRun);
+    service.cancel('conv-1');
+    const second = service.runStream({
+      ...baseRun,
+      assistantMessageId: 'assistant-2',
+    });
+
+    // Let the first (cancelled) turn finish while the second is still live.
+    await vi.waitFor(() => {
+      expect(releases).toHaveLength(2);
+    });
+    releases[0]?.();
+    await first;
+    expect(service.hasActiveTurn('conv-1')).toBe(true);
+    expect(service.cancel('conv-1')).toBe(true);
+
+    releases[1]?.();
+    await second;
+  });
+
   it('routes the claude backend to the claude adapter', async () => {
     claudeStreamMock.mockReturnValue(fakeStream(['hi']));
     const { service } = buildService();

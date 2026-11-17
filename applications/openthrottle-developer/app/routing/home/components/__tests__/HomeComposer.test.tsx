@@ -36,15 +36,22 @@ const buildTurn = (
 ): UseAgenticChatTurnResult => {
   return {
     canRetry: false,
+    clearQueue: vi.fn(),
     conversationId: null,
+    editQueued: vi.fn(),
     error: null,
+    isQueuePaused: false,
     isStreaming: false,
     messages: [],
     onRespondToPermission: vi.fn(),
     onRetry: vi.fn(),
     onStop: vi.fn(),
+    queuedMessages: [],
+    removeQueued: vi.fn(),
     reset: vi.fn(),
     restore: vi.fn(),
+    resumeQueue: vi.fn(),
+    sendQueuedNow: vi.fn(),
     sessionUsage: {},
     setError: vi.fn(),
     submitTurn: vi.fn(),
@@ -114,6 +121,47 @@ describe('HomeComposer Component', () => {
     });
 
     expect(component.getByText('Something went wrong.')).toBeInTheDocument();
+  });
+
+  describe('while a turn is streaming', () => {
+    test('Queue hands the message to the turn, which queues it', async () => {
+      const submitTurn = vi.fn();
+      component.unmount();
+      component = renderComposer({
+        ...props,
+        turn: buildTurn({ isStreaming: true, submitTurn }),
+      });
+      const user = userEvent.setup();
+
+      await user.type(component.getByRole('textbox'), 'check vercel');
+      await user.click(component.getByRole('button', { name: 'Queue' }));
+
+      expect(submitTurn).toHaveBeenCalledWith(
+        'check vercel',
+        expect.any(Object),
+      );
+      expect(component.getByRole('button', { name: 'Stop' })).toBeEnabled();
+    });
+  });
+
+  test('lists queued messages and sends one now', async () => {
+    const sendQueuedNow = vi.fn();
+    component.unmount();
+    component = renderComposer({
+      ...props,
+      turn: buildTurn({
+        isStreaming: true,
+        queuedMessages: [{ fields: {}, id: 'q1', message: 'check vercel' }],
+        sendQueuedNow,
+      }),
+    });
+    const user = userEvent.setup();
+
+    const queue = component.getByTestId('ChatQueuedMessages');
+    expect(queue).toHaveTextContent('check vercel');
+    await user.click(component.getByRole('button', { name: 'Send now' }));
+
+    expect(sendQueuedNow).toHaveBeenCalledWith('q1');
   });
 
   test('does not hint to register a repository for the plain openai backend', () => {

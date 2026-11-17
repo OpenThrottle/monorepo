@@ -253,6 +253,19 @@ export class ConversationStreamService {
   }
 
   /**
+   * @description True while a turn for `conversationId` is live and not yet
+   * aborted. The start mutation refuses a second turn while this holds, so two
+   * turns never interleave in one conversation. An aborted controller counts as
+   * free: a cancel followed by an immediate start (the composer's "Send now")
+   * must not be refused while the cancelled turn is still unwinding.
+   */
+  hasActiveTurn(conversationId: string): boolean {
+    const controller = this.controllers.get(conversationId);
+
+    return controller !== undefined && !controller.signal.aborted;
+  }
+
+  /**
    * Kick off a streaming completion. Fire-and-forget; errors are logged, never thrown.
    */
   start(run: StartConversationStreamRun): void {
@@ -356,7 +369,7 @@ export class ConversationStreamService {
           metadataJson: null,
           sortOrder,
         });
-        this.controllers.delete(run.conversationId);
+        this.releaseController(run.conversationId, controller);
         return;
       }
     }
@@ -585,7 +598,22 @@ export class ConversationStreamService {
         sortOrder: sortOrder,
       });
     } finally {
-      this.controllers.delete(run.conversationId);
+      this.releaseController(run.conversationId, controller);
+    }
+  }
+
+  /**
+   * @description Drop `controller` from the live map only if it is still the
+   * registered one. A cancelled turn unwinds after the next turn has already
+   * registered its own controller; deleting by key alone would orphan that
+   * newer turn, making it uncancellable and invisible to {@link hasActiveTurn}.
+   */
+  private releaseController(
+    conversationId: string,
+    controller: AbortController,
+  ): void {
+    if (this.controllers.get(conversationId) === controller) {
+      this.controllers.delete(conversationId);
     }
   }
 

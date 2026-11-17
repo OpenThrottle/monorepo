@@ -12,6 +12,7 @@ import type {
   ConversationStreamSubscriptionData,
   ConversationStreamSubscriptionVariables,
 } from '../../conversation-stream';
+import type { ChatMessage, ChatTurnEvent } from '../../types';
 import { useAgenticChatTurn } from '../useAgenticChatTurn';
 
 // A controllable stand-in for the live stream hook: the recovery tests drive
@@ -19,6 +20,7 @@ import { useAgenticChatTurn } from '../useAgenticChatTurn';
 // stall watchdog) directly instead of over a socket. Assigned on every render so
 // the test always holds the current React setters.
 let streamControl: {
+  markCompleted: (id: string, failed?: boolean) => void;
   markRetryable: (id: string) => void;
 } | null = null;
 
@@ -27,22 +29,41 @@ vi.mock('../useConversationStream', () => ({
     completedIds: ReadonlySet<string>;
     isStreaming: boolean;
     lastActivityAt: number | null;
-    messages: never[];
+    messages: ChatMessage[];
     phaseByMessageId: ReadonlyMap<string, never>;
     retryableIds: ReadonlySet<string>;
   } => {
     const [retryableIds, setRetryableIds] = React.useState<ReadonlySet<string>>(
       new Set(),
     );
+    const [completedIds, setCompletedIds] = React.useState<ReadonlySet<string>>(
+      new Set(),
+    );
+    const [messages, setMessages] = React.useState<ChatMessage[]>([]);
     streamControl = {
+      markCompleted: (id: string, failed = false): void => {
+        // A failed turn ends on a usage event carrying an error.
+        const usage: ChatTurnEvent = {
+          error: failed ? 'boom' : null,
+          kind: 'usage',
+          result: null,
+          sortOrder: 1,
+          usageJson: null,
+        };
+        setMessages((previous) => [
+          ...previous,
+          { body: 'done', events: [usage], id, role: 'assistant' },
+        ]);
+        setCompletedIds((previous) => new Set(previous).add(id));
+      },
       markRetryable: (id: string): void =>
         setRetryableIds((previous) => new Set(previous).add(id)),
     };
     return {
-      completedIds: new Set<string>(),
+      completedIds,
       isStreaming: false,
       lastActivityAt: null,
-      messages: [],
+      messages,
       phaseByMessageId: new Map<string, never>(),
       retryableIds,
     };
@@ -79,6 +100,41 @@ const Harness = (): React.ReactElement => {
       <span data-testid="conversation-id">{turn.conversationId ?? 'none'}</span>
       <span data-testid="can-retry">{turn.canRetry ? 'yes' : 'no'}</span>
       <span data-testid="message-count">{turn.messages.length}</span>
+      <span data-testid="queue">
+        {turn.queuedMessages.map((item) => item.message).join('|')}
+      </span>
+      <span data-testid="queue-paused">
+        {turn.isQueuePaused ? 'yes' : 'no'}
+      </span>
+      <button
+        onClick={() =>
+          turn.submitTurn('follow-up', { backend: 'openai', persist: 'true' })
+        }
+        type="button"
+      >
+        Follow up
+      </button>
+      <button
+        onClick={() => {
+          turn.submitTurn('one', { backend: 'openai' });
+          turn.submitTurn('two', { backend: 'openai' });
+        }}
+        type="button"
+      >
+        Double submit
+      </button>
+      <button onClick={() => turn.onStop()} type="button">
+        Stop
+      </button>
+      <button
+        onClick={() => turn.sendQueuedNow(turn.queuedMessages[0]?.id ?? '')}
+        type="button"
+      >
+        Send now
+      </button>
+      <button onClick={() => turn.resumeQueue()} type="button">
+        Resume
+      </button>
       <button
         onClick={() => turn.restore({ conversationId: 'conv-42' })}
         type="button"
@@ -195,6 +251,9 @@ describe('useAgenticChatTurn restore/reset', () => {
 // Each `start` POST returns the next assistant id; a `cancel` POST is a no-op.
 // startCalls counts only real (re)starts, so it measures how many turns ran.
 let startCalls = 0;
+let cancelCalls = 0;
+// The `message` of each start POST, in order — which turns ran, and when.
+let startedMessages: string[] = [];
 const ASSISTANT_IDS = ['a1', 'a2', 'a3'];
 
 const streamAction = async ({
@@ -204,10 +263,12 @@ const streamAction = async ({
 }): Promise<Record<string, unknown>> => {
   const form = await request.formData();
   if (form.get('intent') === 'cancel') {
+    cancelCalls += 1;
     return { cancelled: true };
   }
   const id = ASSISTANT_IDS[startCalls] ?? 'aX';
   startCalls += 1;
+  startedMessages.push(String(form.get('message')));
   return {
     assistantMessageId: id,
     conversationId: 'conv-1',
@@ -344,5 +405,118 @@ describe('useAgenticChatTurn recovery', () => {
       await vi.advanceTimersByTimeAsync(1_000);
     });
     expect(stalledStartCalls).toBe(2);
+  });
+});
+
+describe('useAgenticChatTurn queue', () => {
+  beforeEach(() => {
+    startCalls = 0;
+    cancelCalls = 0;
+    startedMessages = [];
+    streamControl = null;
+  });
+
+  const startFirstTurn = async (
+    component: RenderResult,
+    user: ReturnType<typeof userEvent.setup>,
+  ): Promise<void> => {
+    await user.click(component.getByRole('button', { name: 'Submit' }));
+    await waitFor(() => expect(startCalls).toBe(1));
+    await waitFor(() =>
+      expect(component.getByTestId('message-count')).toHaveTextContent('2'),
+    );
+  };
+
+  test('queues a message sent mid-turn and sends it when the turn succeeds', async () => {
+    const user = userEvent.setup();
+    const component = renderRecovery();
+    await startFirstTurn(component, user);
+
+    await user.click(component.getByRole('button', { name: 'Follow up' }));
+    expect(component.getByTestId('queue')).toHaveTextContent('follow-up');
+    expect(startCalls).toBe(1);
+
+    act(() => streamControl?.markCompleted('a1'));
+
+    await waitFor(() => expect(startCalls).toBe(2));
+    expect(startedMessages).toEqual(['hi', 'follow-up']);
+    expect(component.getByTestId('queue')).toHaveTextContent('');
+  });
+
+  test('pauses instead of sending when the turn fails', async () => {
+    const user = userEvent.setup();
+    const component = renderRecovery();
+    await startFirstTurn(component, user);
+    await user.click(component.getByRole('button', { name: 'Follow up' }));
+
+    act(() => streamControl?.markCompleted('a1', true));
+
+    await waitFor(() =>
+      expect(component.getByTestId('queue-paused')).toHaveTextContent('yes'),
+    );
+    expect(startCalls).toBe(1);
+    expect(component.getByTestId('queue')).toHaveTextContent('follow-up');
+
+    await user.click(component.getByRole('button', { name: 'Resume' }));
+    await waitFor(() => expect(startCalls).toBe(2));
+    expect(startedMessages).toEqual(['hi', 'follow-up']);
+  });
+
+  test('Stop pauses the queue and sends nothing', async () => {
+    const user = userEvent.setup();
+    const component = renderRecovery();
+    await startFirstTurn(component, user);
+    await user.click(component.getByRole('button', { name: 'Follow up' }));
+
+    await user.click(component.getByRole('button', { name: 'Stop' }));
+
+    await waitFor(() => expect(cancelCalls).toBe(1));
+    expect(component.getByTestId('queue-paused')).toHaveTextContent('yes');
+    // Let any drain the cancel settling might trigger run.
+    await new Promise((resolve) => {
+      setTimeout(resolve, 50);
+    });
+    expect(startCalls).toBe(1);
+  });
+
+  test('Send now cancels the running turn, then starts the queued message', async () => {
+    const user = userEvent.setup();
+    const component = renderRecovery();
+    await startFirstTurn(component, user);
+    await user.click(component.getByRole('button', { name: 'Follow up' }));
+
+    await user.click(component.getByRole('button', { name: 'Send now' }));
+
+    await waitFor(() => expect(startCalls).toBe(2));
+    expect(cancelCalls).toBe(1);
+    expect(startedMessages).toEqual(['hi', 'follow-up']);
+    expect(component.getByTestId('queue')).toHaveTextContent('');
+    expect(component.getByTestId('queue-paused')).toHaveTextContent('no');
+  });
+
+  test('a second submit in the same tick queues instead of starting a parallel turn', async () => {
+    const user = userEvent.setup();
+    const component = renderRecovery();
+
+    await user.click(component.getByRole('button', { name: 'Double submit' }));
+
+    await waitFor(() => {
+      expect(component.getByTestId('message-count')).toHaveTextContent('2');
+    });
+    // Past the start result: the queued message still waits for the turn.
+    expect(startedMessages).toEqual(['one']);
+    expect(component.getByTestId('queue')).toHaveTextContent('two');
+    expect(component.getByTestId('queue')).toHaveTextContent('two');
+  });
+
+  test('reset drops queued messages', async () => {
+    const user = userEvent.setup();
+    const component = renderRecovery();
+    await startFirstTurn(component, user);
+    await user.click(component.getByRole('button', { name: 'Follow up' }));
+
+    await user.click(component.getByRole('button', { name: 'Reset' }));
+
+    expect(component.getByTestId('queue')).toHaveTextContent('');
   });
 });

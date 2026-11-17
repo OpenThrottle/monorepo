@@ -3,6 +3,7 @@ import {
   ChatComposerToolbar,
   type ChatModelOption,
   type ChatPersonaOption,
+  ChatQueuedMessages,
 } from '@openthrottle/react-router-chat';
 import type { ChatAgentRuntime } from '@openthrottle/react-router-chat-state';
 import { CHAT_TOOLBAR_CONTEXT_SOURCES } from '@openthrottle/react-router-chat-state';
@@ -167,6 +168,15 @@ export const HomeComposer = (props: HomeComposerProps): React.ReactElement => {
     <>
       <InlineErrors errors={[turn.error, voice.error]} />
       {hasModels ? null : noModelsNotice}
+      <ChatQueuedMessages
+        isPaused={turn.isQueuePaused}
+        items={turn.queuedMessages}
+        onClear={turn.clearQueue}
+        onEdit={turn.editQueued}
+        onRemove={turn.removeQueued}
+        onResume={turn.resumeQueue}
+        onSendNow={turn.sendQueuedNow}
+      />
       <ChatComposer
         className="border-t-0"
         disabled={!hasModels}
@@ -174,6 +184,7 @@ export const HomeComposer = (props: HomeComposerProps): React.ReactElement => {
         isStreaming={turn.isStreaming}
         mentionProvider={mentionProvider}
         onDraftChange={setDraft}
+        onQueue={onSubmit}
         onStop={turn.onStop}
         onSubmit={onSubmit}
         readOnly={voice.isDraftFrozen}
