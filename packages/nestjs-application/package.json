@@ -26,8 +26,8 @@
       "require": "./dist/*.js"
     }
   },
-  "main": "./src/index.ts",
-  "module": "./src/index.ts",
+  "main": "./dist/src/index.js",
+  "module": "./dist/src/index.js",
   "name": "@openthrottle/nestjs-application",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
@@ -42,9 +42,6 @@
     ],
     "targets": {
       "build": {
-        "executor": "@nx/js:tsc"
-      },
-      "__build-package": {
         "executor": "@nx/js:tsc"
       },
       "dev": {
@@ -85,6 +82,6 @@
   "scripts": {},
   "sideEffects": false,
   "type": "module",
-  "types": "./src/index.ts",
+  "types": "./dist/src/index.d.ts",
   "version": "1.0.0"
 }
