@@ -29,6 +29,7 @@ import type {
 import { sumUsage } from '../usage';
 import {
   appendAssistantPlaceholder,
+  bakeStreamedMessages,
   didTurnFail,
   overlayStreamedMessage,
 } from '../utils/agentic-chat-turn-messages';
@@ -203,6 +204,11 @@ export function useAgenticChatTurn(
   // turn ended" and start a queued message on top of the running turn.
   const handledStartResultRef = React.useRef<ChatStartActionResult | undefined>(undefined); // prettier-ignore
 
+  const streamedByIdRef = React.useRef<ReadonlyMap<string, ChatMessage>>(
+    new Map(),
+  );
+  const conversationIdRef = React.useRef<string | null>(null);
+
   const stream = useConversationStream({
     client: streamClient,
     conversationId,
@@ -217,6 +223,10 @@ export function useAgenticChatTurn(
     () => new Map(stream.messages.map((message) => [message.id, message])),
     [stream.messages],
   );
+  // Read by the start-result effect, which must see the overlay and id from
+  // before it re-keys the stream without listing them as dependencies.
+  streamedByIdRef.current = streamedById;
+  conversationIdRef.current = conversationId;
 
   const messagesView = React.useMemo(() => {
     return messages.map((message) => {
@@ -542,6 +552,14 @@ export function useAgenticChatTurn(
       setIsRetrying(false);
       setError(result.errorMessage ?? 'Failed to start the conversation.');
       return;
+    }
+
+    // A start that lands on a different id (every Private-mode turn mints its
+    // own) re-keys the live stream, which drops what it accumulated. Keep the
+    // replies already streamed by baking them into the thread first.
+    if (result.conversationId !== conversationIdRef.current) {
+      const streamed = streamedByIdRef.current;
+      setMessages((previous) => bakeStreamedMessages(previous, streamed));
     }
 
     setConversationId(result.conversationId);
