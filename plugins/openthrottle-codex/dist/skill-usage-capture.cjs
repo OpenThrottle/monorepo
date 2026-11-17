@@ -33,8 +33,8 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 ));
 
 // packages/agentic-hooks/src/adapters/codex/capture.ts
-var import_node_fs5 = __toESM(require("node:fs"), 1);
-var import_node_path5 = __toESM(require("node:path"), 1);
+var import_node_fs6 = __toESM(require("node:fs"), 1);
+var import_node_path6 = __toESM(require("node:path"), 1);
 
 // packages/agentic-hooks/src/data/jsonl.ts
 var import_node_fs2 = __toESM(require("node:fs"), 1);
@@ -75,8 +75,8 @@ var normalizeRemoteUrl = (raw) => {
     return null;
   }
   const host = withoutScheme.slice(0, slashIndex).toLowerCase();
-  const path6 = withoutScheme.slice(slashIndex);
-  return `https://${host}${path6}`;
+  const path7 = withoutScheme.slice(slashIndex);
+  return `https://${host}${path7}`;
 };
 
 // packages/agentic-hooks/src/config/env.ts
@@ -517,9 +517,9 @@ var applyPrivacy = (level, args, options = {}) => {
 };
 
 // packages/agentic-hooks/src/utils/scope.ts
-var import_node_fs4 = __toESM(require("node:fs"), 1);
-var import_node_os2 = __toESM(require("node:os"), 1);
-var import_node_path4 = __toESM(require("node:path"), 1);
+var import_node_fs5 = __toESM(require("node:fs"), 1);
+var import_node_os3 = __toESM(require("node:os"), 1);
+var import_node_path5 = __toESM(require("node:path"), 1);
 
 // packages/agentic-hooks/src/utils/checkout-root.ts
 var import_node_fs3 = __toESM(require("node:fs"), 1);
@@ -545,50 +545,119 @@ var resolveCheckoutRoot = (dir) => {
   }
 };
 
+// packages/agentic-hooks/src/utils/findLedgeredCopy.ts
+var import_node_crypto = require("node:crypto");
+var import_node_fs4 = __toESM(require("node:fs"), 1);
+var import_node_os2 = __toESM(require("node:os"), 1);
+var import_node_path4 = __toESM(require("node:path"), 1);
+var LEDGER_DIR_ENV = "OPENTHROTTLE_FOREIGN_SKILL_LEDGER_DIR";
+var resolveLedgerDir = (env) => {
+  const override = env[LEDGER_DIR_ENV]?.trim();
+  if (override !== void 0 && override !== "") {
+    return override;
+  }
+  return import_node_path4.default.join(import_node_os2.default.homedir(), ".openthrottle", "foreign-skill-ledgers");
+};
+var isCopiedLedgerEntry = (value) => {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+  return "mode" in value && value.mode === "copy" && "fingerprint" in value && typeof value.fingerprint === "string" && "injectedRelativePath" in value && typeof value.injectedRelativePath === "string" && "name" in value && typeof value.name === "string" && "sourcePath" in value && typeof value.sourcePath === "string";
+};
+var readCopiedEntries = (ledgerPath) => {
+  try {
+    const parsed = JSON.parse(import_node_fs4.default.readFileSync(ledgerPath, "utf8"));
+    if (typeof parsed !== "object" || parsed === null) {
+      return [];
+    }
+    if (!("entries" in parsed) || !Array.isArray(parsed.entries)) {
+      return [];
+    }
+    return parsed.entries.filter(isCopiedLedgerEntry);
+  } catch {
+    return [];
+  }
+};
+var skillMdFingerprint = (skillDir) => {
+  try {
+    return (0, import_node_crypto.createHash)("sha256").update(import_node_fs4.default.readFileSync(import_node_path4.default.join(skillDir, "SKILL.md"), "utf8")).digest("hex");
+  } catch {
+    return null;
+  }
+};
+var isContainedRelativePath = (relativePath) => {
+  if (relativePath === "" || import_node_path4.default.isAbsolute(relativePath)) {
+    return false;
+  }
+  return !relativePath.split(/[\\/]/).includes("..");
+};
+var findLedgeredCopy = (skillName, repoRoot, env) => {
+  const ledgerDir = resolveLedgerDir(env);
+  let ledgerFiles;
+  try {
+    ledgerFiles = import_node_fs4.default.readdirSync(ledgerDir).filter((file) => file.endsWith(".json"));
+  } catch {
+    return null;
+  }
+  const candidates = ledgerFiles.flatMap((file) => {
+    return readCopiedEntries(import_node_path4.default.join(ledgerDir, file)).filter((entry) => {
+      return entry.name === skillName && isContainedRelativePath(entry.injectedRelativePath);
+    });
+  });
+  const match = candidates.find((entry) => {
+    const copied = import_node_path4.default.join(repoRoot, entry.injectedRelativePath);
+    return skillMdFingerprint(copied) === entry.fingerprint;
+  });
+  return match ?? null;
+};
+
 // packages/agentic-hooks/src/utils/scope.ts
 var PERSONAL_SKILLS_DIR_ENV = "OPENTHROTTLE_PERSONAL_SKILLS_DIR";
-var SKILL_LINK_DIR = import_node_path4.default.join(".agents", "skills");
+var SKILL_LINK_DIR = import_node_path5.default.join(".agents", "skills");
 var resolvePersonalSkillsRoot = (env) => {
   const override = env[PERSONAL_SKILLS_DIR_ENV]?.trim();
   if (override !== void 0 && override !== "") {
     return override;
   }
-  return import_node_path4.default.join(import_node_os2.default.homedir(), ".openthrottle", "skills");
+  return import_node_path5.default.join(import_node_os3.default.homedir(), ".openthrottle", "skills");
 };
 var isPathInsideRoot = (root, candidate) => {
   try {
-    const realRoot = import_node_fs4.default.realpathSync(root);
-    return import_node_fs4.default.realpathSync(candidate).startsWith(`${realRoot}${import_node_path4.default.sep}`);
+    const realRoot = import_node_fs5.default.realpathSync(root);
+    return import_node_fs5.default.realpathSync(candidate).startsWith(`${realRoot}${import_node_path5.default.sep}`);
   } catch {
     return false;
   }
+};
+var isUnderRoot = (root, candidate) => {
+  return import_node_path5.default.resolve(candidate).startsWith(`${import_node_path5.default.resolve(root)}${import_node_path5.default.sep}`);
 };
 var isPersonalSkill = (skillName, repoRoot, env) => {
   const personalRoot = resolvePersonalSkillsRoot(env);
   return isPathInsideRoot(
     personalRoot,
-    import_node_path4.default.join(repoRoot, SKILL_LINK_DIR, skillName)
+    import_node_path5.default.join(repoRoot, SKILL_LINK_DIR, skillName)
   );
 };
 var isInjectedSkill = (skillName, repoRoot) => {
-  const target = import_node_fs4.default.realpathSync(
-    import_node_path4.default.join(repoRoot, SKILL_LINK_DIR, skillName)
+  const target = import_node_fs5.default.realpathSync(
+    import_node_path5.default.join(repoRoot, SKILL_LINK_DIR, skillName)
   );
   const sourceRoot = resolveCheckoutRoot(target);
   if (sourceRoot === null) {
     return false;
   }
-  const isAuthoredDir = target === import_node_path4.default.join(sourceRoot, "skills", skillName);
-  const ownRoot = resolveCheckoutRoot(import_node_fs4.default.realpathSync(repoRoot));
+  const isAuthoredDir = target === import_node_path5.default.join(sourceRoot, "skills", skillName);
+  const ownRoot = resolveCheckoutRoot(import_node_fs5.default.realpathSync(repoRoot));
   return isAuthoredDir && sourceRoot !== ownRoot;
 };
 var detectScope = (skillName, repoRoot, env = process.env) => {
   if (!skillName || skillName.includes(":")) {
     return "third-party";
   }
-  const authoredDir = import_node_path4.default.join(repoRoot, "skills", skillName);
+  const authoredDir = import_node_path5.default.join(repoRoot, "skills", skillName);
   try {
-    if (import_node_fs4.default.existsSync(authoredDir) && import_node_fs4.default.statSync(authoredDir).isDirectory()) {
+    if (import_node_fs5.default.existsSync(authoredDir) && import_node_fs5.default.statSync(authoredDir).isDirectory()) {
       return "ours";
     }
   } catch {
@@ -602,6 +671,13 @@ var detectScope = (skillName, repoRoot, env = process.env) => {
   try {
     if (isInjectedSkill(skillName, repoRoot)) {
       return "injected";
+    }
+  } catch {
+  }
+  try {
+    const copy = findLedgeredCopy(skillName, repoRoot, env);
+    if (copy !== null) {
+      return isUnderRoot(resolvePersonalSkillsRoot(env), copy.sourcePath) ? "personal" : "injected";
     }
   } catch {
   }
@@ -883,7 +959,7 @@ var normalizeCodexPayload = (raw) => {
 var main = async () => {
   try {
     const repoRoot = process.env.OPEN_THROTTLE_REPO_ROOT || process.cwd();
-    const stdinBuf = import_node_fs5.default.readFileSync(0, "utf8");
+    const stdinBuf = import_node_fs6.default.readFileSync(0, "utf8");
     if (!stdinBuf || !stdinBuf.trim()) {
       return;
     }
@@ -917,7 +993,7 @@ var main = async () => {
     const outPath = defaultJsonlPath();
     await persistUsageEvent({
       event,
-      jsonlPath: import_node_path5.default.resolve(outPath),
+      jsonlPath: import_node_path6.default.resolve(outPath),
       repoRoot: eventRepoRoot
     });
   } catch (err) {

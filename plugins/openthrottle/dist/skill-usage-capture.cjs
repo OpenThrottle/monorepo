@@ -33,8 +33,8 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 ));
 
 // packages/agentic-hooks/src/adapters/claude/capture.ts
-var import_node_fs6 = __toESM(require("node:fs"), 1);
-var import_node_path10 = __toESM(require("node:path"), 1);
+var import_node_fs7 = __toESM(require("node:fs"), 1);
+var import_node_path11 = __toESM(require("node:path"), 1);
 
 // packages/agentic-hooks/src/data/jsonl.ts
 var import_node_fs2 = __toESM(require("node:fs"), 1);
@@ -75,8 +75,8 @@ var normalizeRemoteUrl = (raw) => {
     return null;
   }
   const host = withoutScheme.slice(0, slashIndex).toLowerCase();
-  const path11 = withoutScheme.slice(slashIndex);
-  return `https://${host}${path11}`;
+  const path12 = withoutScheme.slice(slashIndex);
+  return `https://${host}${path12}`;
 };
 
 // packages/agentic-hooks/src/config/env.ts
@@ -517,9 +517,9 @@ var applyPrivacy = (level, args, options = {}) => {
 };
 
 // packages/agentic-hooks/src/utils/scope.ts
-var import_node_fs4 = __toESM(require("node:fs"), 1);
-var import_node_os2 = __toESM(require("node:os"), 1);
-var import_node_path4 = __toESM(require("node:path"), 1);
+var import_node_fs5 = __toESM(require("node:fs"), 1);
+var import_node_os3 = __toESM(require("node:os"), 1);
+var import_node_path5 = __toESM(require("node:path"), 1);
 
 // packages/agentic-hooks/src/utils/checkout-root.ts
 var import_node_fs3 = __toESM(require("node:fs"), 1);
@@ -551,50 +551,119 @@ var resolveHookRepoRoot = ({
   return resolveCheckoutRoot(projectDir) ?? resolveCheckoutRoot(payloadCwd) ?? projectDir;
 };
 
+// packages/agentic-hooks/src/utils/findLedgeredCopy.ts
+var import_node_crypto = require("node:crypto");
+var import_node_fs4 = __toESM(require("node:fs"), 1);
+var import_node_os2 = __toESM(require("node:os"), 1);
+var import_node_path4 = __toESM(require("node:path"), 1);
+var LEDGER_DIR_ENV = "OPENTHROTTLE_FOREIGN_SKILL_LEDGER_DIR";
+var resolveLedgerDir = (env) => {
+  const override = env[LEDGER_DIR_ENV]?.trim();
+  if (override !== void 0 && override !== "") {
+    return override;
+  }
+  return import_node_path4.default.join(import_node_os2.default.homedir(), ".openthrottle", "foreign-skill-ledgers");
+};
+var isCopiedLedgerEntry = (value) => {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+  return "mode" in value && value.mode === "copy" && "fingerprint" in value && typeof value.fingerprint === "string" && "injectedRelativePath" in value && typeof value.injectedRelativePath === "string" && "name" in value && typeof value.name === "string" && "sourcePath" in value && typeof value.sourcePath === "string";
+};
+var readCopiedEntries = (ledgerPath) => {
+  try {
+    const parsed = JSON.parse(import_node_fs4.default.readFileSync(ledgerPath, "utf8"));
+    if (typeof parsed !== "object" || parsed === null) {
+      return [];
+    }
+    if (!("entries" in parsed) || !Array.isArray(parsed.entries)) {
+      return [];
+    }
+    return parsed.entries.filter(isCopiedLedgerEntry);
+  } catch {
+    return [];
+  }
+};
+var skillMdFingerprint = (skillDir) => {
+  try {
+    return (0, import_node_crypto.createHash)("sha256").update(import_node_fs4.default.readFileSync(import_node_path4.default.join(skillDir, "SKILL.md"), "utf8")).digest("hex");
+  } catch {
+    return null;
+  }
+};
+var isContainedRelativePath = (relativePath) => {
+  if (relativePath === "" || import_node_path4.default.isAbsolute(relativePath)) {
+    return false;
+  }
+  return !relativePath.split(/[\\/]/).includes("..");
+};
+var findLedgeredCopy = (skillName, repoRoot, env) => {
+  const ledgerDir = resolveLedgerDir(env);
+  let ledgerFiles;
+  try {
+    ledgerFiles = import_node_fs4.default.readdirSync(ledgerDir).filter((file) => file.endsWith(".json"));
+  } catch {
+    return null;
+  }
+  const candidates = ledgerFiles.flatMap((file) => {
+    return readCopiedEntries(import_node_path4.default.join(ledgerDir, file)).filter((entry) => {
+      return entry.name === skillName && isContainedRelativePath(entry.injectedRelativePath);
+    });
+  });
+  const match = candidates.find((entry) => {
+    const copied = import_node_path4.default.join(repoRoot, entry.injectedRelativePath);
+    return skillMdFingerprint(copied) === entry.fingerprint;
+  });
+  return match ?? null;
+};
+
 // packages/agentic-hooks/src/utils/scope.ts
 var PERSONAL_SKILLS_DIR_ENV = "OPENTHROTTLE_PERSONAL_SKILLS_DIR";
-var SKILL_LINK_DIR = import_node_path4.default.join(".agents", "skills");
+var SKILL_LINK_DIR = import_node_path5.default.join(".agents", "skills");
 var resolvePersonalSkillsRoot = (env) => {
   const override = env[PERSONAL_SKILLS_DIR_ENV]?.trim();
   if (override !== void 0 && override !== "") {
     return override;
   }
-  return import_node_path4.default.join(import_node_os2.default.homedir(), ".openthrottle", "skills");
+  return import_node_path5.default.join(import_node_os3.default.homedir(), ".openthrottle", "skills");
 };
 var isPathInsideRoot = (root, candidate) => {
   try {
-    const realRoot = import_node_fs4.default.realpathSync(root);
-    return import_node_fs4.default.realpathSync(candidate).startsWith(`${realRoot}${import_node_path4.default.sep}`);
+    const realRoot = import_node_fs5.default.realpathSync(root);
+    return import_node_fs5.default.realpathSync(candidate).startsWith(`${realRoot}${import_node_path5.default.sep}`);
   } catch {
     return false;
   }
+};
+var isUnderRoot = (root, candidate) => {
+  return import_node_path5.default.resolve(candidate).startsWith(`${import_node_path5.default.resolve(root)}${import_node_path5.default.sep}`);
 };
 var isPersonalSkill = (skillName, repoRoot, env) => {
   const personalRoot = resolvePersonalSkillsRoot(env);
   return isPathInsideRoot(
     personalRoot,
-    import_node_path4.default.join(repoRoot, SKILL_LINK_DIR, skillName)
+    import_node_path5.default.join(repoRoot, SKILL_LINK_DIR, skillName)
   );
 };
 var isInjectedSkill = (skillName, repoRoot) => {
-  const target = import_node_fs4.default.realpathSync(
-    import_node_path4.default.join(repoRoot, SKILL_LINK_DIR, skillName)
+  const target = import_node_fs5.default.realpathSync(
+    import_node_path5.default.join(repoRoot, SKILL_LINK_DIR, skillName)
   );
   const sourceRoot = resolveCheckoutRoot(target);
   if (sourceRoot === null) {
     return false;
   }
-  const isAuthoredDir = target === import_node_path4.default.join(sourceRoot, "skills", skillName);
-  const ownRoot = resolveCheckoutRoot(import_node_fs4.default.realpathSync(repoRoot));
+  const isAuthoredDir = target === import_node_path5.default.join(sourceRoot, "skills", skillName);
+  const ownRoot = resolveCheckoutRoot(import_node_fs5.default.realpathSync(repoRoot));
   return isAuthoredDir && sourceRoot !== ownRoot;
 };
 var detectScope = (skillName, repoRoot, env = process.env) => {
   if (!skillName || skillName.includes(":")) {
     return "third-party";
   }
-  const authoredDir = import_node_path4.default.join(repoRoot, "skills", skillName);
+  const authoredDir = import_node_path5.default.join(repoRoot, "skills", skillName);
   try {
-    if (import_node_fs4.default.existsSync(authoredDir) && import_node_fs4.default.statSync(authoredDir).isDirectory()) {
+    if (import_node_fs5.default.existsSync(authoredDir) && import_node_fs5.default.statSync(authoredDir).isDirectory()) {
       return "ours";
     }
   } catch {
@@ -608,6 +677,13 @@ var detectScope = (skillName, repoRoot, env = process.env) => {
   try {
     if (isInjectedSkill(skillName, repoRoot)) {
       return "injected";
+    }
+  } catch {
+  }
+  try {
+    const copy = findLedgeredCopy(skillName, repoRoot, env);
+    if (copy !== null) {
+      return isUnderRoot(resolvePersonalSkillsRoot(env), copy.sourcePath) ? "personal" : "injected";
     }
   } catch {
   }
@@ -727,7 +803,7 @@ var toRecordSkillUsageInput = (event) => {
 };
 
 // packages/agentic-hooks/src/data/heartbeat.ts
-var import_node_path5 = __toESM(require("node:path"), 1);
+var import_node_path6 = __toESM(require("node:path"), 1);
 
 // packages/agentic-hooks/src/data/starts.ts
 var recordSkillStart = ({
@@ -860,31 +936,31 @@ var UNKNOWN_MARKETPLACE_INSTALL = Object.freeze({
   version: null
 });
 var isPathInside = (parent, child) => {
-  const relative = import_node_path5.default.relative(import_node_path5.default.resolve(parent), import_node_path5.default.resolve(child));
-  return relative !== "" && !relative.startsWith("..") && !import_node_path5.default.isAbsolute(relative);
+  const relative = import_node_path6.default.relative(import_node_path6.default.resolve(parent), import_node_path6.default.resolve(child));
+  return relative !== "" && !relative.startsWith("..") && !import_node_path6.default.isAbsolute(relative);
 };
 
 // packages/agentic-hooks/src/adapters/claude/bundle-host.ts
-var import_node_os3 = __toESM(require("node:os"), 1);
-var import_node_path8 = __toESM(require("node:path"), 1);
+var import_node_os4 = __toESM(require("node:os"), 1);
+var import_node_path9 = __toESM(require("node:path"), 1);
 
 // packages/agentic-hooks/src/adapters/antigravity/marketplace-install.ts
-var import_node_path6 = __toESM(require("node:path"), 1);
+var import_node_path7 = __toESM(require("node:path"), 1);
 var resolveAntigravityPluginsDir = (homeDir) => {
-  return import_node_path6.default.join(homeDir, ".gemini", "config", "plugins");
+  return import_node_path7.default.join(homeDir, ".gemini", "config", "plugins");
 };
 
 // packages/agentic-hooks/src/adapters/antigravity/payload.ts
 var ANTIGRAVITY_SOURCE = "antigravity";
 
 // packages/agentic-hooks/src/adapters/codex/marketplace-install.ts
-var import_node_path7 = __toESM(require("node:path"), 1);
+var import_node_path8 = __toESM(require("node:path"), 1);
 var resolveCodexHome = (env, homeDir) => {
   const configured = env.CODEX_HOME?.trim();
-  return configured ? import_node_path7.default.resolve(configured) : import_node_path7.default.join(homeDir, ".codex");
+  return configured ? import_node_path8.default.resolve(configured) : import_node_path8.default.join(homeDir, ".codex");
 };
 var resolveCodexMarketplaceCacheDir = (codexHome) => {
-  return import_node_path7.default.join(codexHome, "plugins", "cache");
+  return import_node_path8.default.join(codexHome, "plugins", "cache");
 };
 
 // packages/agentic-hooks/src/adapters/codex/payload.ts
@@ -976,11 +1052,11 @@ var isCursorHost = ({
   if (!cursorRoot || !claudeRoot) {
     return false;
   }
-  return import_node_path8.default.resolve(cursorRoot) === import_node_path8.default.resolve(claudeRoot) && scriptIsInside(cursorRoot, scriptPath);
+  return import_node_path9.default.resolve(cursorRoot) === import_node_path9.default.resolve(claudeRoot) && scriptIsInside(cursorRoot, scriptPath);
 };
 var detectClaudeBundleHost = ({
   env = process.env,
-  homeDir = import_node_os3.default.homedir(),
+  homeDir = import_node_os4.default.homedir(),
   scriptPath = process.argv[1]
 } = {}) => {
   const context = { env, homeDir, scriptPath };
@@ -1000,21 +1076,21 @@ var detectClaudeBundleHost = ({
 };
 
 // packages/agentic-hooks/src/adapters/claude/shadow.ts
-var import_node_fs5 = __toESM(require("node:fs"), 1);
-var import_node_path9 = __toESM(require("node:path"), 1);
+var import_node_fs6 = __toESM(require("node:fs"), 1);
+var import_node_path10 = __toESM(require("node:path"), 1);
 var CAPTURE_BUNDLE = "skill-usage-capture";
 var runningFromPlugin = (env, scriptPath) => {
   const pluginRoot = env.CLAUDE_PLUGIN_ROOT?.trim();
   if (!pluginRoot || !scriptPath) {
     return false;
   }
-  const relative = import_node_path9.default.relative(import_node_path9.default.resolve(pluginRoot), scriptPath);
+  const relative = import_node_path10.default.relative(import_node_path10.default.resolve(pluginRoot), scriptPath);
   return relative !== "" && !relative.startsWith("..");
 };
 var repoRegistersBundle = (repoRoot, bundle) => {
   try {
-    const raw = import_node_fs5.default.readFileSync(
-      import_node_path9.default.join(repoRoot, ".claude", "settings.json"),
+    const raw = import_node_fs6.default.readFileSync(
+      import_node_path10.default.join(repoRoot, ".claude", "settings.json"),
       "utf8"
     );
     const parsed = JSON.parse(raw);
@@ -1045,7 +1121,7 @@ var main = async () => {
     if (isShadowedByRepoHooks({ repoRoot: projectDir })) {
       return;
     }
-    const stdinBuf = import_node_fs6.default.readFileSync(0, "utf8");
+    const stdinBuf = import_node_fs7.default.readFileSync(0, "utf8");
     if (!stdinBuf || !stdinBuf.trim()) {
       return;
     }
@@ -1082,7 +1158,7 @@ var main = async () => {
     const outPath = defaultJsonlPath();
     await persistUsageEvent({
       event,
-      jsonlPath: import_node_path10.default.resolve(outPath),
+      jsonlPath: import_node_path11.default.resolve(outPath),
       repoRoot
     });
   } catch (err) {
