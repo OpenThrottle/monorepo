@@ -46,3 +46,24 @@ export const CHAT_PERMISSION_REMEMBER_COPY = {
   hint: `When off, Auto-accept edits and Full access reset to Supervised in each new session`,
   label: 'Remember my choice',
 } as const;
+
+/** Copy for {@link ChatComposer}'s queue-while-streaming affordance. */
+export const CHAT_COMPOSER_QUEUE_COPY = {
+  placeholder: 'Queue a follow-up — it sends when this reply finishes',
+  submitLabel: 'Queue',
+} as const;
+
+/** Copy for {@link ChatQueuedMessages} and {@link ChatQueuedMessageRow}. */
+export const CHAT_QUEUED_MESSAGES_COPY = {
+  cancelEdit: 'Cancel',
+  clear: 'Clear',
+  edit: 'Edit queued message',
+  editLabel: 'Queued message',
+  heading: 'Queued',
+  lostOnReload: 'Queued messages are not saved if you reload the page.',
+  paused: 'Paused — nothing sends until you resume.',
+  remove: 'Remove queued message',
+  resume: 'Resume',
+  save: 'Save',
+  sendNow: 'Send now',
+} as const;

@@ -1,13 +1,16 @@
 import { Button, cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
+import { CHAT_COMPOSER_QUEUE_COPY } from '../data/data.copy';
 import type { ChatTokenUsage } from '../types';
 import { ChatUsageCounter } from './ChatUsageCounter';
 
 export interface ChatComposerFooterProps {
   readonly disabled: boolean;
-  /** Current draft; the Send button is disabled while it is empty. */
+  /** Current draft; the Send and Queue buttons are disabled while it is empty. */
   readonly draft: string;
+  /** Streaming with queuing on: render a Queue submit button beside Stop. */
+  readonly isQueueing: boolean;
   readonly isStreaming: boolean;
   readonly onStop?: () => void;
   /** Cumulative session usage; the counter is hidden when omitted. */
@@ -22,7 +25,8 @@ export interface ChatComposerFooterProps {
  * @description {@link ChatComposer}'s footer row: an optional docked toolbar on
  * the left, and on the right the running token counter plus the send/stop
  * action — Send (submit, disabled while the draft is empty) when idle, Stop
- * (wired to {@link onStop}) while streaming.
+ * (wired to {@link onStop}) while streaming, with a Queue submit button beside
+ * Stop when {@link ChatComposerFooterProps.isQueueing}.
  *
  * @public
  */
@@ -32,6 +36,7 @@ export const ChatComposerFooter = (
   const {
     disabled,
     draft,
+    isQueueing,
     isStreaming,
     onStop,
     sessionUsage,
@@ -43,6 +48,7 @@ export const ChatComposerFooter = (
   // Hooks
 
   // Setup
+  const isSubmitDisabled = disabled || draft.trim().length === 0;
 
   // Handlers
 
@@ -53,6 +59,7 @@ export const ChatComposerFooter = (
       onClick={onStop}
       size="sm"
       type="button"
+      variant={isQueueing ? 'outline' : 'default'}
     >
       {stopLabel}
     </Button>
@@ -60,12 +67,18 @@ export const ChatComposerFooter = (
   const submitButton = (
     <Button
       className="pointer-coarse:h-11 pointer-coarse:min-w-11"
-      disabled={disabled || draft.trim().length === 0}
+      disabled={isSubmitDisabled}
       size="sm"
       type="submit"
     >
-      {submitLabel}
+      {isQueueing ? CHAT_COMPOSER_QUEUE_COPY.submitLabel : submitLabel}
     </Button>
+  );
+  const streamingActions = (
+    <>
+      {stopButton}
+      {isQueueing && submitButton}
+    </>
   );
 
   // Life Cycle
@@ -84,7 +97,7 @@ export const ChatComposerFooter = (
         {sessionUsage !== undefined && (
           <ChatUsageCounter streaming={isStreaming} usage={sessionUsage} />
         )}
-        {isStreaming ? stopButton : submitButton}
+        {isStreaming ? streamingActions : submitButton}
       </div>
     </div>
   );

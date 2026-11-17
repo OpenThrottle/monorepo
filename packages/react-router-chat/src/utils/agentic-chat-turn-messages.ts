@@ -30,3 +30,16 @@ export const appendAssistantPlaceholder = (
 
   return [...messages, { body: '', id, role: 'assistant' }];
 };
+
+/**
+ * True when an assistant turn ended in failure: its terminal usage event
+ * carries an error, or the backend hit a usage limit.
+ */
+export const didTurnFail = (message: ChatMessage | undefined): boolean => {
+  return (message?.events ?? []).some((event) => {
+    return (
+      event.kind === 'usageLimit' ||
+      (event.kind === 'usage' && event.error !== null)
+    );
+  });
+};

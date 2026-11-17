@@ -386,6 +386,19 @@ export interface ChatStartActionResult {
 }
 
 /**
+ * A message the user sent while a turn was still running, waiting to be sent
+ * as its own turn. `fields` is the backend payload captured when it was queued,
+ * so it runs with the toolbar selections the user saw at the time.
+ *
+ * @public
+ */
+export interface ChatQueuedMessage {
+  readonly fields: Readonly<Record<string, string>>;
+  readonly id: string;
+  readonly message: string;
+}
+
+/**
  * A model group after the picker resolves it: the synthetic favorites group,
  * each provider group with its models, and the catch-all for ungrouped models.
  * @public

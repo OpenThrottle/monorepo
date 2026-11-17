@@ -14,6 +14,7 @@ const renderFooter = (
     <ChatComposerFooter
       disabled={false}
       draft=""
+      isQueueing={false}
       isStreaming={false}
       stopLabel="Stop"
       submitLabel="Send"
@@ -64,6 +65,25 @@ describe('ChatComposerFooter Component', () => {
     await user.click(stop);
 
     expect(onStop).toHaveBeenCalledTimes(1);
+  });
+
+  test('shows Stop and a Queue submit button while queueing', () => {
+    const component = renderFooter({
+      draft: 'next',
+      isQueueing: true,
+      isStreaming: true,
+    });
+
+    expect(component.getByRole('button', { name: 'Stop' })).toBeEnabled();
+    const queue = component.getByRole('button', { name: 'Queue' });
+    expect(queue).toHaveAttribute('type', 'submit');
+    expect(queue).toBeEnabled();
+  });
+
+  test('keeps Queue disabled while the draft is empty', () => {
+    const component = renderFooter({ isQueueing: true, isStreaming: true });
+
+    expect(component.getByRole('button', { name: 'Queue' })).toBeDisabled();
   });
 
   test('renders the docked toolbar on the left when supplied', () => {

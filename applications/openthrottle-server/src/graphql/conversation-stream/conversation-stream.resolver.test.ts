@@ -25,6 +25,7 @@ import type {
 import type { Repository } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { TURN_IN_PROGRESS_ERROR } from './conversation-stream.constants.ts';
 import { ConversationStreamResolver } from './conversation-stream.resolver.ts';
 import type { ConversationStreamService } from './conversation-stream.service.ts';
 
@@ -108,6 +109,8 @@ function build(): {
   });
   const streamService = createMock<ConversationStreamService>({
     cancel: vi.fn().mockReturnValue(true),
+    // Default: no turn is running, so a start proceeds.
+    hasActiveTurn: vi.fn().mockReturnValue(false),
     // Default: no ephemeral (Private-mode) stream is registered. Persisted
     // conversations authorize via the DB ownership check; the Private-mode
     // authorization test overrides this to true.
@@ -169,6 +172,24 @@ describe('ConversationStreamResolver.startConversationStream', () => {
         userId: 'user-1',
       }),
     );
+  });
+
+  it('refuses a second turn while one is running, persisting nothing', async () => {
+    const { conversations, resolver, streamService } = build();
+    vi.mocked(streamService.hasActiveTurn).mockReturnValue(true);
+
+    const result = await resolver.startConversationStream(human, {
+      baseUrl: 'http://localhost:11434/v1',
+      conversationId: 'conv-1',
+      message: 'one more thing',
+      modelId: 'llama3',
+    });
+
+    expect(result.errorMessage).toBe(TURN_IN_PROGRESS_ERROR);
+    expect(result.assistantMessageId).toBeNull();
+    expect(streamService.hasActiveTurn).toHaveBeenCalledWith('conv-1');
+    expect(conversations.appendMessages).not.toHaveBeenCalled();
+    expect(streamService.start).not.toHaveBeenCalled();
   });
 
   it('threads @-mention fileMentions onto the run for structured context injection', async () => {
