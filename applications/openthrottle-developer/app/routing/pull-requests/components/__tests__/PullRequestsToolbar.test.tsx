@@ -19,17 +19,19 @@ const baseFilters: PullRequestsListFilters = {
   state: 'closed',
 };
 
+const toolbarProps: PullRequestsToolbarProps = { filters: baseFilters };
+
+const ToolbarRoute = (): React.ReactElement => {
+  return <PullRequestsToolbar {...toolbarProps} />;
+};
+
 describe('PullRequestsToolbar Component', () => {
   let component: RenderResult;
-  let props: PullRequestsToolbarProps;
 
   beforeEach(() => {
-    props = { filters: baseFilters };
-
-    const Component = () => {
-      return <PullRequestsToolbar {...props} />;
-    };
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    const RoutesStub = createRoutesStub([
+      { Component: ToolbarRoute, path: '/' },
+    ]);
 
     component = render(<RoutesStub />);
   });
@@ -73,6 +75,34 @@ describe('PullRequestsToolbar Component', () => {
     expect(resetLinks).toHaveLength(2);
     resetLinks.forEach((link) => {
       expect(link).toHaveAttribute('href', '/pull-requests');
+    });
+  });
+
+  describe('stats state', () => {
+    const renderAt = (entry: string): RenderResult => {
+      const RoutesStub = createRoutesStub([
+        { Component: ToolbarRoute, path: '/pull-requests' },
+      ]);
+
+      return render(<RoutesStub initialEntries={[entry]} />);
+    };
+
+    const getStatsInput = (view: RenderResult): Element | null => {
+      return view.container.querySelector('form input[name="stats"]');
+    };
+
+    test('carries stats=open through the GET submit while the panel is open', () => {
+      const view = renderAt('/pull-requests?stats=open');
+
+      const input = getStatsInput(view);
+      expect(input).toHaveAttribute('type', 'hidden');
+      expect(input).toHaveValue('open');
+    });
+
+    test('adds no stats field while the panel is closed', () => {
+      const view = renderAt('/pull-requests');
+
+      expect(getStatsInput(view)).toBeNull();
     });
   });
 });

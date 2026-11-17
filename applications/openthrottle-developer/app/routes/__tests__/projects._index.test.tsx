@@ -7,10 +7,7 @@ import { describe, expect, test, vi } from 'vitest';
 import type { Route } from '@/app/routes/+types/projects._index';
 import type { ProjectWithStats } from '~/routing/projects/types';
 import { buildRootMatch } from '~/testing/buildRootMatch';
-import {
-  renderRoutesStub,
-  renderWithMemoryRouter,
-} from '~/testing/route-fixtures';
+import { renderWithMemoryRouter } from '~/testing/route-fixtures';
 
 import Index, { shouldRevalidate } from '../projects._index';
 
@@ -65,6 +62,23 @@ const matches: Route.ComponentProps['matches'] = [
   },
 ];
 
+const ProjectsRoute = (): React.ReactElement => {
+  const loaderData = useLoaderData<typeof mockLoaderDataWithProjects>();
+  const [searchParams] = useSearchParams();
+
+  return (
+    <>
+      <Index
+        actionData={undefined}
+        loaderData={loaderData}
+        matches={matches}
+        params={{}}
+      />
+      <span data-testid="qs">{searchParams.toString()}</span>
+    </>
+  );
+};
+
 describe('routes/projects._index.tsx', () => {
   test('should render with projects (table view)', () => {
     const component = render(
@@ -106,61 +120,82 @@ describe('routes/projects._index.tsx', () => {
     expect(newProjectLinks[0]).toHaveAttribute('href', '/projects/create');
   });
 
-  test('should render pagination links that preserve search, sort, and view filters', () => {
-    const view = renderRoutesStub(
-      <Index
-        actionData={undefined}
-        loaderData={{
-          limit: 10,
-          page: 2,
-          plansLinkedCount: 0,
-          projects: mockProjects,
-          search: 'alpha',
-          sortBy: 'name',
-          sortOrder: 'desc',
-          tasksLinkedCount: 0,
-          totalCount: 100,
-          view: 'card',
-        }}
-        matches={matches}
-        params={{}}
-      />,
-    );
+  describe('pagination', () => {
+    const pagedLoaderData = {
+      ...mockLoaderDataWithProjects,
+      limit: 10,
+      page: 2,
+      search: 'alpha',
+      sortOrder: 'desc' as const,
+      totalCount: 100,
+      view: 'card' as const,
+    };
 
-    expect(view.getByTestId('OpenThrottlePagination')).toBeInTheDocument();
-    const pageLink = view.getByRole('link', { name: '2' });
-    const href = pageLink.getAttribute('href') ?? '';
-    expect(href).toContain('/projects?');
-    expect(href).toContain('page=2');
-    expect(href).toContain('limit=10');
-    expect(href).toContain('q=alpha');
-    expect(href).toContain('sortBy=name');
-    expect(href).toContain('sortOrder=desc');
-    expect(href).toContain('view=card');
-    expect(view.getByRole('link', { name: 'Go to next page' })).toHaveAttribute(
-      'href',
-      expect.stringContaining('page=3'),
-    );
-  });
-
-  describe('collapsible stats', () => {
-    const ProjectsRoute = (): React.ReactElement => {
-      const loaderData = useLoaderData<typeof mockLoaderDataWithProjects>();
-      const [searchParams] = useSearchParams();
-
-      return (
-        <>
-          <Index
-            actionData={undefined}
-            loaderData={loaderData}
-            matches={matches}
-            params={{}}
-          />
-          <span data-testid="qs">{searchParams.toString()}</span>
-        </>
+    const renderPaged = (
+      entry: string,
+    ): ReturnType<typeof renderWithMemoryRouter> => {
+      return renderWithMemoryRouter(
+        [
+          {
+            Component: ProjectsRoute,
+            HydrateFallback: () => null,
+            loader: () => {
+              return pagedLoaderData;
+            },
+            path: '/projects',
+          },
+        ],
+        { initialEntries: [entry] },
       );
     };
 
+    test('page links preserve search, sort, and view filters', async () => {
+      const component = renderPaged(
+        '/projects?page=2&limit=10&q=alpha&sortBy=name&sortOrder=desc&view=card',
+      );
+
+      expect(
+        await component.findByTestId('OpenThrottlePagination'),
+      ).toBeInTheDocument();
+      const href = component
+        .getByRole('link', { name: '3' })
+        .getAttribute('href');
+      const url = new URL(href ?? '', 'http://localhost');
+      expect(url.pathname).toBe('/projects');
+      expect(url.searchParams.get('page')).toBe('3');
+      expect(url.searchParams.get('limit')).toBe('10');
+      expect(url.searchParams.get('q')).toBe('alpha');
+      expect(url.searchParams.get('sortBy')).toBe('name');
+      expect(url.searchParams.get('sortOrder')).toBe('desc');
+      expect(url.searchParams.get('view')).toBe('card');
+      expect(
+        component.getByRole('link', { name: 'Go to next page' }),
+      ).toHaveAttribute('href', expect.stringContaining('page=3'));
+    });
+
+    test('page links keep the stats panel open', async () => {
+      const component = renderPaged('/projects?page=2&limit=10&stats=open');
+
+      const next = await component.findByRole('link', {
+        name: 'Go to next page',
+      });
+      const url = new URL(next.getAttribute('href') ?? '', 'http://localhost');
+      expect(url.searchParams.get('stats')).toBe('open');
+      expect(url.searchParams.get('page')).toBe('3');
+    });
+
+    test('page links stay free of stats while the panel is closed', async () => {
+      const component = renderPaged('/projects?page=2&limit=10');
+
+      const next = await component.findByRole('link', {
+        name: 'Go to next page',
+      });
+      const url = new URL(next.getAttribute('href') ?? '', 'http://localhost');
+      expect(url.searchParams.has('stats')).toBe(false);
+    });
+  });
+
+  describe('collapsible stats', () => {
     const renderProjects = (
       entry: string,
     ): {

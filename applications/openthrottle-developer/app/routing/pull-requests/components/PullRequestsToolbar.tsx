@@ -1,5 +1,9 @@
 import { Button, cn, Input, Label } from '@openthrottle/react-router-shadcn';
-import { GlobalStatsToggleButton } from '@openthrottle/react-router-ui-global';
+import {
+  GlobalStatsToggleButton,
+  ROUTE_STATS_URL,
+  useRouteStatsToggle,
+} from '@openthrottle/react-router-ui-global';
 import { Building2Icon, GitGraphIcon } from 'lucide-react';
 import * as React from 'react';
 import { Form, Link } from 'react-router';
@@ -18,12 +22,22 @@ export const PullRequestsToolbar = (
   const { className, filters } = props;
 
   // Hooks
+  const { isOpen: isStatsOpen } = useRouteStatsToggle();
 
   // Setup
 
   // Handlers
 
   // Markup
+  // A GET form replaces the whole query string on submit, so carry the open
+  // stats state as a field or Apply would collapse the panel.
+  const statsInput = isStatsOpen && (
+    <input
+      name={ROUTE_STATS_URL.param}
+      type="hidden"
+      value={ROUTE_STATS_URL.openValue}
+    />
+  );
 
   // Life Cycle
 
@@ -38,6 +52,7 @@ export const PullRequestsToolbar = (
       )}
       method="get"
     >
+      {statsInput}
       <div className="flex w-full gap-2">
         <div className="flex items-center gap-2">
           <Building2Icon className="size-4" />
