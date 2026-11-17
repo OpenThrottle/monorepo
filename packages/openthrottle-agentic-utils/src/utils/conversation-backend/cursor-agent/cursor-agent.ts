@@ -26,6 +26,8 @@
 
 import { spawn } from 'node:child_process';
 
+import { cursorAttributionOffEnv } from '@openthrottle/openthrottle-drivers';
+
 import { warnUnsupportedAdditionalDirectories } from '../capabilities.ts';
 import { describeExit } from '../describeExit.ts';
 import { withFileMentions } from '../file-mentions.ts';
@@ -158,8 +160,9 @@ export function buildCursorAgentEnv(
     }
   }
 
-  // Forced last so the host can never override them.
-  return { ...scrubbed, ...FORCED_ENV };
+  // Forced last so the host can never override them. `CURSOR_CONFIG_DIR` points at an
+  // attribution-off copy of the user's config, so cursor never writes a `Co-authored-by` trailer.
+  return { ...scrubbed, ...cursorAttributionOffEnv(env), ...FORCED_ENV };
 }
 
 /**

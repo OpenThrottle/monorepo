@@ -1,7 +1,18 @@
-import { chmodSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  chmodSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import {
+  CURSOR_CONFIG_DIR_ENV,
+  OPENTHROTTLE_CURSOR_CONFIG_DIR_ENV,
+} from '@openthrottle/openthrottle-drivers';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import type { ConversationStreamChunk } from '../../types.ts';
@@ -78,11 +89,17 @@ async function collect(
 
 beforeAll(() => {
   dir = mkdtempSync(join(tmpdir(), 'cursor-adapter-'));
+  // Keep the attribution-off config copy out of the real ~/.openthrottle.
+  process.env[OPENTHROTTLE_CURSOR_CONFIG_DIR_ENV] = join(
+    dir,
+    'ot-cursor-config',
+  );
 });
 
 afterAll(() => {
   rmSync(dir, { force: true, recursive: true });
   delete process.env[CURSOR_AGENT_BIN_ENV];
+  delete process.env[OPENTHROTTLE_CURSOR_CONFIG_DIR_ENV];
 });
 
 describe('cursorAgentConversationBackend', () => {
@@ -223,6 +240,53 @@ describe('cursorAgentConversationBackend', () => {
       for (const key of Object.keys(hostEnv)) {
         delete process.env[key];
       }
+    }
+  });
+
+  it('points the child at an attribution-off copy of the user config, leaving the user file alone', async () => {
+    // Reports the config cursor would load — `$CURSOR_CONFIG_DIR/cli-config.json` — as the result.
+    process.env[CURSOR_AGENT_BIN_ENV] = writeFakeBin(
+      'cursor-config-dir.js',
+      `const fs = require('node:fs');
+      const path = require('node:path');
+      const configDir = process.env.CURSOR_CONFIG_DIR ?? null;
+      const config = configDir ? JSON.parse(fs.readFileSync(path.join(configDir, 'cli-config.json'), 'utf8')) : null;
+      process.stdout.write(JSON.stringify({ type: 'result', subtype: 'success', is_error: false, result: JSON.stringify({ config, configDir }) }) + '\\n');`,
+    );
+    const userDir = join(dir, 'user-cursor');
+    mkdirSync(userDir, { recursive: true });
+    const userConfig = `${JSON.stringify({
+      attribution: { attributeCommitsToAgent: true, attributePRsToAgent: true },
+      model: { modelId: 'composer-2.5' },
+      version: 1,
+    })}\n`;
+    writeFileSync(join(userDir, 'cli-config.json'), userConfig);
+    process.env[CURSOR_CONFIG_DIR_ENV] = userDir;
+
+    try {
+      const chunks = await collect({
+        cwd: dir,
+        messages: [{ content: 'hi', role: 'user' }],
+        model: 'auto',
+        sessionId: 'sess-1',
+      });
+      const seen: {
+        readonly config: Record<string, unknown> | null;
+        readonly configDir: string | null;
+      } = JSON.parse(String(chunks.at(-1)?.metadata?.result));
+
+      expect(seen.configDir).toBe(join(dir, 'ot-cursor-config'));
+      expect(seen.config?.attribution).toEqual({
+        attributeCommitsToAgent: false,
+        attributePRsToAgent: false,
+      });
+      // The rest of the user's config is carried over.
+      expect(seen.config?.model).toEqual({ modelId: 'composer-2.5' });
+      expect(readFileSync(join(userDir, 'cli-config.json'), 'utf8')).toBe(
+        userConfig,
+      );
+    } finally {
+      delete process.env[CURSOR_CONFIG_DIR_ENV];
     }
   });
 

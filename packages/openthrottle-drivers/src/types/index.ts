@@ -267,6 +267,14 @@ export interface AgentDriver {
   readonly binary: string;
   readonly buildShellCommand: (config: DriverInvocationConfig) => string;
   readonly capabilities: DriverCapabilities;
+  /**
+   * Variables this CLI's child always gets, computed from its effective env (inherited
+   * `process.env` + `config.env`) and merged over both. Cursor uses it to point `CURSOR_CONFIG_DIR`
+   * at an attribution-off config. Omitted ⇒ nothing added.
+   */
+  readonly childEnv?: (
+    env: NodeJS.ProcessEnv,
+  ) => Readonly<Record<string, string>>;
   /** How discovery enumerates this CLI's models; omitted ⇒ availability-only (`models: []`). */
   readonly discoverModels?: DriverModelListing;
   /** Stable driver id (also a `DriverId`). */
