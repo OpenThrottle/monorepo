@@ -8,6 +8,9 @@
  *                   so nobody else's checkout has it.
  * - `injected`    — authored under ANOTHER checkout's `skills/<name>/` and linked into this
  *                   repo by foreign skill injection, so this repo's other checkouts lack it.
+ *                   A container-mode injection writes a copy rather than a link; that is
+ *                   recognised from the injection ledger (`findLedgeredCopy`), and a ledgered
+ *                   copy of a personal skill is `personal`.
  * - `third-party` — everything else (plugin-namespaced `a:b`, or a skills-lock install).
  *
  * This runs synchronously inside a hook on every Skill invocation, so the `ours` answer is
@@ -19,6 +22,7 @@ import path from 'node:path';
 
 import type { Scope } from '../types.ts';
 import { resolveCheckoutRoot } from './checkout-root.ts';
+import { findLedgeredCopy } from './findLedgeredCopy.ts';
 
 /** Env var overriding the personal skills root. */
 const PERSONAL_SKILLS_DIR_ENV = 'OPENTHROTTLE_PERSONAL_SKILLS_DIR';
@@ -69,6 +73,16 @@ const isPathInsideRoot = (root: string, candidate: string): boolean => {
   } catch {
     return false;
   }
+};
+
+/**
+ * @description Lexical containment, for a ledgered `sourcePath`: that path is the server's view of
+ * the source and need not exist where the hook runs, so it cannot be realpath'd like
+ * {@link isPathInsideRoot} does. A container whose personal root is mounted elsewhere therefore
+ * reads its personal copies as `injected` — still OT-delivered, just not attributed to the person.
+ */
+const isUnderRoot = (root: string, candidate: string): boolean => {
+  return path.resolve(candidate).startsWith(`${path.resolve(root)}${path.sep}`);
 };
 
 /**
@@ -142,7 +156,18 @@ export const detectScope = (
       return 'injected';
     }
   } catch {
-    // fail-open → treat as third-party (missing or dangling link included)
+    // fail-open → fall through to the ledgered-copy check (missing or dangling link included)
+  }
+
+  try {
+    const copy = findLedgeredCopy(skillName, repoRoot, env);
+    if (copy !== null) {
+      return isUnderRoot(resolvePersonalSkillsRoot(env), copy.sourcePath)
+        ? 'personal'
+        : 'injected';
+    }
+  } catch {
+    // fail-open → treat as third-party
   }
 
   return 'third-party';
