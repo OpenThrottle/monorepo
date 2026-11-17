@@ -316,6 +316,7 @@
     "database:start": "node --experimental-strip-types ./scripts/openthrottle-database-lifecycle.ts start",
     "database:stop": "node --experimental-strip-types ./scripts/openthrottle-database-lifecycle.ts stop",
     "database:test:cms": "POSTGRES_HOST='localhost' OT_CMS_DB_INTEGRATION=true pnpm nx run nestjs-repositories-cms:test --skip-nx-cache -- src/nestjs-repositories-cms.module.integration.test.ts",
+    "database:test:openthrottle": "POSTGRES_HOST='localhost' OT_OPENTHROTTLE_DB_INTEGRATION=true pnpm nx run @openthrottle/nestjs-repositories-server:test --skip-nx-cache -- src/nestjs-repositories-server.module.integration.test.ts",
     "dev:native": "pnpm nx run openthrottle-server:dev",
     "dev:native:split": "pnpm nx run-many --projects openthrottle-server --targets dev-api,worker",
     "embeddings:bench-backfill": "tsx ./scripts/bench-embedding-backfill.ts",

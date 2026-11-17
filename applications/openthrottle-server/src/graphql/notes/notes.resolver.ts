@@ -1,12 +1,12 @@
 /**
- * @description Resolver for Note queries and mutations. Injects NotesService from @openthrottle/nestjs-repositories and maps entities to NoteObject.
+ * @description Resolver for Note queries and mutations. Injects NotesRepository from @openthrottle/nestjs-repositories-server and maps entities to NoteObject. Reads see live rows only; deleteNote soft deletes.
  */
 
 import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { type AuthPrincipal, CurrentUser } from '@openthrottle/nestjs-auth';
 import { GlobalClsService } from '@openthrottle/nestjs-modules';
-import type { Note } from '@openthrottle/nestjs-repositories';
-import { NotesService } from '@openthrottle/nestjs-repositories';
+import type { Note } from '@openthrottle/nestjs-repositories-server';
+import { NotesRepository } from '@openthrottle/nestjs-repositories-server';
 
 import { CreateNoteInput, UpdateNoteInput } from './note.input.ts';
 import { NoteObject } from './note.object.ts';
@@ -16,7 +16,7 @@ import { resolveNoteAuthor } from './notes.utils.ts';
 @Resolver(() => NoteObject)
 export class NotesResolver {
   constructor(
-    private readonly notesService: NotesService,
+    private readonly notesRepository: NotesRepository,
     private readonly globalCls: GlobalClsService,
   ) {}
 
@@ -25,22 +25,14 @@ export class NotesResolver {
     nullable: true,
   })
   async note(@Args('id', { type: () => ID }) id: string): Promise<Note | null> {
-    const entity = await this.notesService
-      .getRepository()
-      .findOne({ where: { id } });
-
-    return entity;
+    return this.notesRepository.findOne({ where: { id } });
   }
 
   @Query(() => [NoteObject], {
     description: `List all notes, ordered by createdAt descending`,
   })
   async notes(): Promise<Note[]> {
-    const entities = await this.notesService.getRepository().find({
-      order: { createdAt: 'DESC' },
-    });
-
-    return entities;
+    return this.notesRepository.findAllNewestFirst();
   }
 
   @Mutation(() => NoteObject, {
@@ -50,10 +42,9 @@ export class NotesResolver {
     @Args('input', { type: () => CreateNoteInput }) input: CreateNoteInput,
     @CurrentUser() principal: AuthPrincipal | undefined,
   ): Promise<Note> {
-    const repo = this.notesService.getRepository();
     // Attribution is derived server-side so every caller (Developer UI, the OT
     // MCP, raw GraphQL) is stamped identically and cannot spoof it by omission.
-    const entity = repo.create({
+    return this.notesRepository.create({
       author: resolveNoteAuthor(
         input.author,
         this.globalCls.get('user'),
@@ -61,9 +52,6 @@ export class NotesResolver {
       ),
       content: input.content,
     });
-    const saved = await repo.save(entity);
-
-    return saved;
   }
 
   @Mutation(() => NoteObject, {
@@ -73,16 +61,18 @@ export class NotesResolver {
   async updateNote(
     @Args('input', { type: () => UpdateNoteInput }) input: UpdateNoteInput,
   ): Promise<Note | null> {
-    const repo = this.notesService.getRepository();
-    const entity = await repo.findOne({ where: { id: input.id } });
+    // Look the row up first: a missing note answers null, as it always has,
+    // rather than surfacing BaseRepository's NotFoundException.
+    const entity = await this.notesRepository.findOne({
+      where: { id: input.id },
+    });
 
     if (!entity) return null;
-    if (input.content != null) entity.content = input.content;
-    if (input.author !== undefined) entity.author = input.author;
 
-    const saved = await repo.save(entity);
-
-    return saved;
+    return this.notesRepository.update(input.id, {
+      ...(input.author !== undefined && { author: input.author }),
+      ...(input.content != null && { content: input.content }),
+    });
   }
 
   @Mutation(() => Boolean, {
@@ -91,9 +81,9 @@ export class NotesResolver {
   async deleteNote(
     @Args('id', { type: () => ID }) id: string,
   ): Promise<boolean> {
-    const repo = this.notesService.getRepository();
-    const result = await repo.delete({ id });
+    // Soft delete: stamps deleted_at. A missing or already-deleted note answers false.
+    const { removedCount } = await this.notesRepository.removeMany({ id });
 
-    return (result.affected ?? 0) > 0;
+    return removedCount > 0;
   }
 }

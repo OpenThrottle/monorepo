@@ -8,8 +8,8 @@ import {
   GlobalClsService,
   type GlobalClsUser,
 } from '@openthrottle/nestjs-modules';
-import type { Note } from '@openthrottle/nestjs-repositories';
-import { NotesService } from '@openthrottle/nestjs-repositories';
+import type { Note } from '@openthrottle/nestjs-repositories-server';
+import { NotesRepository } from '@openthrottle/nestjs-repositories-server';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { NotesResolver } from './notes.resolver.ts';
@@ -20,19 +20,16 @@ interface NoteDraft {
   content: string;
 }
 
-const notesRepo = {
-  create: vi.fn<(draft: NoteDraft) => Note>(),
-  find: vi.fn(),
-  findOne: vi.fn(),
-  save: vi.fn<(entity: Note) => Promise<Note>>(),
+const notesRepository = {
+  create: vi.fn<(draft: NoteDraft) => Promise<Note>>(),
+  findAllNewestFirst: vi.fn<() => Promise<Note[]>>(),
+  findOne: vi.fn<() => Promise<Note | null>>(),
+  removeMany: vi.fn<() => Promise<{ removedCount: number }>>(),
+  update: vi.fn<(id: string, input: Partial<NoteDraft>) => Promise<Note>>(),
 };
 
 /** Stands in for the per-request CLS `user` slot; set per test to steer derivation. */
 const clsGet = vi.fn();
-
-const mockNotesService = createMock<NotesService>({
-  getRepository: vi.fn().mockReturnValue(notesRepo),
-});
 
 const mockGlobalCls = createMock<GlobalClsService>({ get: clsGet });
 
@@ -52,12 +49,12 @@ const userPrincipal: AuthPrincipal = {
 
 describe('NotesResolver', () => {
   let resolver: NotesResolver;
-  let notesService: NotesService;
 
   const mockNote: Note = {
     author: 'visormatt',
     content: 'Quick thought for planning',
     createdAt: new Date('2026-02-01T22:00:00.000Z'),
+    deletedAt: null,
     id: 'ddc5ff9d-8dee-4d99-b9ee-b7c5a0bd879f',
     updatedAt: new Date('2026-02-01T22:05:00.000Z'),
   };
@@ -67,18 +64,16 @@ describe('NotesResolver', () => {
       providers: [
         NotesResolver,
         { provide: GlobalClsService, useValue: mockGlobalCls },
-        { provide: NotesService, useValue: mockNotesService },
+        { provide: NotesRepository, useValue: notesRepository },
       ],
     }).compile();
 
     resolver = app.get<NotesResolver>(NotesResolver);
-    notesService = app.get<NotesService>(NotesService);
   });
 
   describe('note', () => {
     test('returns NoteObject when note exists', async () => {
-      const repo = notesService.getRepository();
-      vi.mocked(repo.findOne).mockResolvedValue(mockNote);
+      notesRepository.findOne.mockResolvedValue(mockNote);
 
       const result = await resolver.note(mockNote.id);
 
@@ -91,8 +86,7 @@ describe('NotesResolver', () => {
     });
 
     test('returns null when note does not exist', async () => {
-      const repo = notesService.getRepository();
-      vi.mocked(repo.findOne).mockResolvedValue(null);
+      notesRepository.findOne.mockResolvedValue(null);
 
       const result = await resolver.note('non-existent-id');
 
@@ -102,8 +96,7 @@ describe('NotesResolver', () => {
 
   describe('notes', () => {
     test('returns array of NoteObjects', async () => {
-      const repo = notesService.getRepository();
-      vi.mocked(repo.find).mockResolvedValue([mockNote]);
+      notesRepository.findAllNewestFirst.mockResolvedValue([mockNote]);
 
       const result = await resolver.notes();
 
@@ -113,8 +106,7 @@ describe('NotesResolver', () => {
     });
 
     test('returns empty array when no notes', async () => {
-      const repo = notesService.getRepository();
-      vi.mocked(repo.find).mockResolvedValue([]);
+      notesRepository.findAllNewestFirst.mockResolvedValue([]);
 
       const result = await resolver.notes();
 
@@ -128,21 +120,19 @@ describe('NotesResolver', () => {
       input: { author: string | null; content: string },
       principal: AuthPrincipal | undefined,
     ): Promise<string | null> => {
-      notesRepo.create.mockImplementation((draft) => ({
+      notesRepository.create.mockImplementation(async (draft) => ({
         ...mockNote,
         author: draft.author,
         content: draft.content,
       }));
-      notesRepo.save.mockImplementation(async (entity) => entity);
 
       await resolver.createNote(input, principal);
 
-      return notesRepo.create.mock.calls[0]?.[0].author ?? null;
+      return notesRepository.create.mock.calls[0]?.[0].author ?? null;
     };
 
     beforeEach(() => {
-      notesRepo.create.mockReset();
-      notesRepo.save.mockReset();
+      notesRepository.create.mockReset();
       clsGet.mockReset();
       clsGet.mockReturnValue(undefined);
     });
@@ -208,6 +198,78 @@ describe('NotesResolver', () => {
       );
 
       expect(author).toBeNull();
+    });
+  });
+
+  describe('updateNote', () => {
+    beforeEach(() => {
+      notesRepository.findOne.mockReset();
+      notesRepository.update.mockReset();
+    });
+
+    test('returns null without updating when the note does not exist', async () => {
+      notesRepository.findOne.mockResolvedValue(null);
+
+      const result = await resolver.updateNote({
+        author: null,
+        content: 'changed',
+        id: 'missing',
+      });
+
+      expect(result).toBeNull();
+      expect(notesRepository.update).not.toHaveBeenCalled();
+    });
+
+    test('applies only the fields the input sets', async () => {
+      notesRepository.findOne.mockResolvedValue(mockNote);
+      notesRepository.update.mockResolvedValue({
+        ...mockNote,
+        content: 'changed',
+      });
+
+      const result = await resolver.updateNote({
+        author: null,
+        content: 'changed',
+        id: mockNote.id,
+      });
+
+      expect(result?.content).toBe('changed');
+      expect(notesRepository.update).toHaveBeenCalledWith(mockNote.id, {
+        author: null,
+        content: 'changed',
+      });
+    });
+
+    test('leaves content alone when the input omits it', async () => {
+      notesRepository.findOne.mockResolvedValue(mockNote);
+      notesRepository.update.mockResolvedValue(mockNote);
+
+      await resolver.updateNote({
+        author: 'someone',
+        content: null,
+        id: mockNote.id,
+      });
+
+      expect(notesRepository.update).toHaveBeenCalledWith(mockNote.id, {
+        author: 'someone',
+      });
+    });
+  });
+
+  describe('deleteNote', () => {
+    test('soft deletes the live note and answers true', async () => {
+      notesRepository.removeMany.mockResolvedValue({ removedCount: 1 });
+
+      await expect(resolver.deleteNote(mockNote.id)).resolves.toBe(true);
+      expect(notesRepository.removeMany).toHaveBeenCalledWith({
+        id: mockNote.id,
+      });
+    });
+
+    test('answers false when no live note has that id', async () => {
+      notesRepository.removeMany.mockResolvedValue({ removedCount: 0 });
+
+      await expect(resolver.deleteNote('missing')).resolves.toBe(false);
     });
   });
 });

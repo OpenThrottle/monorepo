@@ -1,6 +1,8 @@
 # @openthrottle/nestjs-repositories-server
 
-Add a short description of this package (purpose, main exports, and who consumes it).
+NestJS + TypeORM data access for the OpenThrottle `openthrottle` database. Each table gets a
+`BaseModel` entity, a `BaseRepository` subclass and a module; fishery factories ship separately
+under `./testing`. GraphQL types and resolvers live in `openthrottle-server`, not here.
 
 ## Installation
 
@@ -16,4 +18,27 @@ pnpm add @openthrottle/nestjs-repositories-server
 
 ```bash
 npm install @openthrottle/nestjs-repositories-server
+```
+
+## Usage
+
+Import a table module (or `NestjsRepositoriesServerModule` for all of them) and inject its
+repository. The app must register the default TypeORM DataSource, which today
+`NestjsRepositoriesModule` from `@openthrottle/nestjs-repositories` does.
+
+```ts
+import { NestjsRepositoriesServerModule } from '@openthrottle/nestjs-repositories-server';
+```
+
+Test factories come from `@openthrottle/nestjs-repositories-server/testing`, never the main
+entry.
+
+## Development
+
+```bash
+pnpm run database:test:openthrottle   # opt-in: entities vs the live, migrated tables
+pnpm nx run @openthrottle/nestjs-repositories-server:lint
+pnpm nx run @openthrottle/nestjs-repositories-server:typecheck
+pnpm nx run @openthrottle/nestjs-repositories-server:test
+pnpm nx run @openthrottle/nestjs-repositories-server:build
 ```

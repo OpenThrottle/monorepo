@@ -3,6 +3,7 @@
  * Used by NestjsRepositoriesModule to register TypeORM with OpenThrottle connection.
  */
 
+import { Note } from '@openthrottle/nestjs-repositories-server';
 import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
 import type { DataSourceOptions } from 'typeorm';
 
@@ -27,7 +28,6 @@ import { EvalGrade } from './modules/eval-runs/eval-grade.entity.ts';
 import { EvalRun } from './modules/eval-runs/eval-run.entity.ts';
 import { EvalTrial } from './modules/eval-runs/eval-trial.entity.ts';
 import { McpConnectorConnection } from './modules/mcp-connectors/mcp-connector-connection.entity.ts';
-import { Note } from './modules/notes/note.entity.ts';
 import { PlanEmbedding } from './modules/plan-embeddings/plan-embedding.entity.ts';
 import { PlanMessage } from './modules/plan-messages/plan-message.entity.ts';
 import { PlanOutputStreamChunk } from './modules/plan-output-stream/plan-output-stream.entity.ts';
@@ -111,6 +111,7 @@ export function getTypeOrmOptions(): DataSourceOptions {
       EvalRun,
       EvalTrial,
       McpConnectorConnection,
+      // Moved to nestjs-repositories-server (OT plan 052d37b0); listed here until the DataSource moves too.
       Note,
       Permission,
       Plan,

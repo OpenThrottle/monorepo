@@ -1,5 +1,5 @@
 /**
- * @description Fishery factory for {@link Note}. Use in tests to build mock notes.
+ * @description Fishery factory for {@link Note}. Use in tests to build mock rows.
  */
 
 import { faker } from '@faker-js/faker';
@@ -7,20 +7,25 @@ import { Factory } from 'fishery';
 
 import type { Note } from './note.entity.ts';
 
-/** Column-only shape for building note test data. */
+/**
+ * @description Column-only shape for building `notes` test data.
+ * @public
+ */
 export type NoteFactoryData = Pick<
   Note,
-  'id' | 'content' | 'author' | 'createdAt' | 'updatedAt'
+  'author' | 'content' | 'createdAt' | 'deletedAt' | 'id' | 'updatedAt'
 >;
 
 /**
- * Factory for building Note-shaped objects (plain data for mocks / tests).
- * Override any field via .build({ content: '...' }) or .buildList(3, { author: 'user' }).
+ * @description Builds Note-shaped plain objects. Override any field via
+ * `.build({ ... })`.
+ * @public
  */
 export const notesFactory = Factory.define<NoteFactoryData>(() => ({
   author: faker.internet.username(),
   content: faker.lorem.paragraph(),
   createdAt: faker.date.past(),
+  deletedAt: null,
   id: faker.string.uuid(),
   updatedAt: faker.date.recent(),
 }));

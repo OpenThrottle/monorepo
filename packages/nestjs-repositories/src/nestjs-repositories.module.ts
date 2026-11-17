@@ -17,7 +17,6 @@ import { EvalHumanLabelsModule } from './modules/eval-human-labels/eval-human-la
 import { EvalJudgeCalibrationsModule } from './modules/eval-judge-calibrations/eval-judge-calibrations.module.ts';
 import { EvalRunsModule } from './modules/eval-runs/eval-runs.module.ts';
 import { McpConnectorsModule } from './modules/mcp-connectors/mcp-connectors.module.ts';
-import { NotesModule } from './modules/notes/notes.module.ts';
 import { PlanEmbeddingsModule } from './modules/plan-embeddings/plan-embeddings.module.ts';
 import { PlanMessagesModule } from './modules/plan-messages/plan-messages.module.ts';
 import { PlanOutputStreamModule } from './modules/plan-output-stream/plan-output-stream.module.ts';
@@ -64,7 +63,6 @@ import { getTypeOrmOptions } from './nestjs-repositories.utils.ts';
     EvalJudgeCalibrationsModule,
     EvalRunsModule,
     McpConnectorsModule,
-    NotesModule,
     PlanEmbeddingsModule,
     PlanMessagesModule,
     PlanOutputStreamModule,
@@ -117,7 +115,6 @@ import { getTypeOrmOptions } from './nestjs-repositories.utils.ts';
     EvalRunsModule,
     LoggerModule,
     McpConnectorsModule,
-    NotesModule,
     PlanEmbeddingsModule,
     PlanMessagesModule,
     PlanOutputStreamModule,
