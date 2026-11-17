@@ -1,0 +1,19 @@
+import { Injectable } from '@nestjs/common';
+import { LoggerService } from '@openthrottle/nestjs-modules';
+
+@Injectable()
+export class NestjsRepositoriesServerService {
+  private name = 'nestjs-repositories-server';
+
+  // Inject and initialize as needed
+  constructor(private readonly logger: LoggerService) {
+    this.logger.debug(`🧩 ${this.name} 🧩`);
+
+    // TODO: If we need to do anything in here
+  }
+
+  // TODO: Fill in the actual tool calls
+  exampleMethod() {
+    return `${this.name} says Hello API`;
+  }
+}
