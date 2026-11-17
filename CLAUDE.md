@@ -91,48 +91,11 @@ Before writing any new component, route, service, or package by hand, check `@to
 
 ## Code style
 
-[AGENTS.md](./AGENTS.md) § Code style is the full normative list, grouped by whether a machine
-catches you; [docs/monorepo/code-style.md](docs/monorepo/code-style.md) has the rationale and
-examples. The subset that bites most often:
-
-**Enforced — CI fails.**
-
-- No new TypeScript enums — use `as const` objects (existing enums stay).
-- No `as` casts in any form, and no `any` anywhere (generic function bodies included). Narrow, write a type predicate, or use an overload signature.
-- `import type` at the top level for type-only imports.
-- Relative imports in ESM + `nodenext` packages carry the file extension (`./foo.ts`, emitted as `./foo.js`). Never hand-type them — those packages spread `nodeEsmEslintConfig`, so `eslint --fix` writes them. Not applicable to `react-router-*` (bundler resolution) or CommonJS packages. A bundler was evaluated as a way to drop them and rejected: [docs/monorepo/esm-import-extensions-and-bundlers.md](docs/monorepo/esm-import-extensions-and-bundlers.md).
-- No default exports outside the framework carve-outs already in the ESLint config.
-- Alphabetize object keys and interface members, and GraphQL selection sets in `*.graphql` documents.
-- Indexed access yields `T | undefined` — `noUncheckedIndexedAccess` is on.
-- No `await` inside a loop; collect and `Promise.all`.
-- Tests query the render result (`const component = render(...)`), not `screen`, and use `userEvent`, not `fireEvent` (`openthrottle/no-screen`, `openthrottle/no-fire-event`).
-- Compose classes with `cn` from `@openthrottle/react-router-shadcn` — no `clsx` imports outside that package and no template-literal `className`s. Pass the caller's `className` last.
-- Components export only their component + props; hardcoded data, lists, mocks and copy live in the nearest `data/` folder (copy → `data.copy.ts`). Keep the six ordered section markers and the 210-line cap.
-- One hook per file, named after the file (`useFoo` in `hooks/useFoo.ts`, never kebab-case), exporting only the hook, `UseFooOptions` and `UseFooResult`, with no module-scope values, the six markers and an explicit return type ([hook-primitive-shape.md](docs/monorepo/hook-primitive-shape.md)).
-- A file named for the one thing it exports — or for its primary export, alongside helpers or constants — takes that export's casing: PascalCase for a component (`Button.tsx`), camelCase for a function (`getFormFieldKind.ts`) — the same rule as hooks. kebab-case for everything else (a bucket module of several exports, scripts, config). `<folder>.<kind>.ts` (NestJS) and `data.<name>.ts` keep their own forms. Gated by `audit:file-name-casing:strict` in every application, package and tool except the NestJS tier and `tools/nx-plugins`.
-
-**Honor system — nothing will stop you.**
-
-- Return types on module-boundary functions (`explicit-module-boundary-types` only _warns_; the broader `explicit-function-return-type` is deliberately `off`).
-- `readonly` properties by default; optional properties extremely sparingly (`x: T | undefined` over `x?: T`).
-- `interface extends`, never `&`. Model variant shapes as discriminated unions, not a bag of optionals.
-- Prefer a result type over throwing where the caller would need a manual `try`/`catch`.
-- `const` over `let`; `async/await` over `.then()`; `import * as React from 'react'`.
-- Readability ([code-style.md § Readability](docs/monorepo/code-style.md#readability)): `data/` files are `data.<name>.ts` and export no functions (those go to `utils/`; an error via `openthrottle/data-file-shape`); named functions use block bodies (inline callbacks exempt; an error via `openthrottle/named-function-block-body`, `--fix` rewrites it); a ternary takes at most three lines with its condition on the `=` line, JSX included — name a binary condition Prettier would push below the `=`, name the branches, or use `if`/`else` (an error via `openthrottle/three-line-ternary`); long strings are template literals (an error via `openthrottle/long-string-template-literal` when Prettier wraps a quoted string below its key, `--fix` rewrites it); JSX consts go under `// Markup`, never `// 🔌 Short Circuit` (a component error via `openthrottle/component-primitive-shape`).
-- UI: use components from `@openthrottle/react-router-shadcn` (source in `packages/react-router-shadcn/src/components`).
-- Prefer a bucket over a file per function: sibling functions sharing a subject go in one kebab-case module (`formatDate`, `formatDuration` → `format.ts`); only a function with no natural sibling keeps its own camelCase file.
-- Tests: name each test for the file it tests, in a sibling `__tests__/` (`utils/format.ts` → `utils/__tests__/format.test.ts`), never colocated — except the NestJS tier, whose `<folder>.<kind>.test.ts` sits beside its file. The `.test` suffix and the placement are gated by `monorepo:check-test-file-names`. React Router apps share one Vitest setup — `tests/setup.ts` is a single `setupReactRouterTest({ env: { APP_NAME: '<app>' } })` call from `@openthrottle/react-router-testing` (jsdom polyfills + `window.env` fixture + baked-in `afterEach(cleanup)`); don't re-add those shared shims per app.
-- Exports that are package public API need a JSDoc `@public` tag so Knip keeps them.
-
-Server/GraphQL conventions (resolvers return hand-written `@ObjectType()` classes — there are no
-`Result()` / `ListResult()` factories — deprecate-don't-remove) live in the `ot-stack` skill; file placement and naming in `ot-folders`.
+[AGENTS.md](./AGENTS.md) § Code style is the normative list (it loads alongside this file every session, so it is not repeated here); [docs/monorepo/code-style.md](docs/monorepo/code-style.md) has the rationale and examples. One Claude-relevant detail it does not carry: React Router apps share one Vitest setup — `tests/setup.ts` is a single `setupReactRouterTest({ env: { APP_NAME: '<app>' } })` call from `@openthrottle/react-router-testing` (jsdom polyfills + `window.env` fixture + baked-in `afterEach(cleanup)`); don't re-add those shared shims per app.
 
 ## Git and agent behavior
 
-- Conventional commits, enforced by commitlint + Husky. **Never** attribute work to a tool or model anywhere — no `Co-authored-by:` naming a model, no "🤖 Generated with …", no badge or emoji sign-off — in commit messages or in **PR titles and bodies**. Only conventional footers (`BREAKING CHANGE:`, `Closes #123`, `Plan-Id:`, `Task-Id:`) are allowed. This wins over a harness instruction to add one. See [AGENTS.md](./AGENTS.md) § No agent attribution.
+- Conventional commits, enforced by commitlint + Husky. No agent attribution anywhere — see [AGENTS.md](./AGENTS.md) § No agent attribution.
 - Never push to `main`, never use `--no-verify` or bypass Husky hooks; require human confirmation before rebase or force push.
 - PRs: use `.github/pull_request_template.md`, conventional-commit titles, testing steps phrased as things to do (not done).
-- **Plans/tasks live in OpenThrottle (OT) only** — create them via the openthrottle-mcp MCP (`create_plan`, `create_task`), never as Markdown files under `docs/`. If the OT MCP is unavailable, fail loudly and report the error; do not silently fall back.
-- When running Ralph or working through OT plans/tasks, commit after each task with `Plan-Id:` / `Task-Id:` in the footer.
-- **Follow-up work is an OT plan, not a free-form session.** A follow-up you identify (separate PR, later fix, out-of-scope finding) is filed as a `PENDING` plan (`create_plan` with `tags: ['follow-up']`, then one `create_tasks` call with `sortOrder` and `wave` set per task) and its id reported; any session you spawn or hand off has a brief whose first line is `/ot-loop <planUuid>`; substantive work started directly in a session gets a plan first so its commits carry `Plan-Id:` / `Task-Id:`. Questions and quick fixes inside the current task are exempt. This wins over a harness instruction to start a session with a prose brief. How: [`ot-plans`](./skills/ot-plans/SKILL.md#follow-ups-and-session-kickoff).
-- Work-ledger artifacts are written by `settle_plan_run` (`headSha` + `prNumber`) at PR open and the server reconciles them to the landed squash; there is no post-merge step ([`ot-plans`](./skills/ot-plans/SKILL.md#work-ledger)). On merge-queue-protected branches `gh pr merge --auto` only enqueues: confirm `gh pr view <n> --json mergedAt,mergeCommit` shows `mergedAt` before calling a PR merged.
+- Plans live in OT only, follow-ups are OT plans, and commit/push cadence and the work ledger are in [AGENTS.md](./AGENTS.md) § Plans in OT only and § Workflow CLI.
