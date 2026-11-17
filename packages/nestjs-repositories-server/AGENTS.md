@@ -21,12 +21,39 @@ pull in `NestjsRepositoriesServerModule`. Each area then declares exactly the ta
 ## Layout
 
 - `src/index.ts` — barrel of every entity, repository and module; tag exports `@public`.
-- `src/modules/<table>/` — `<name>.entity.ts`, `<folder>.repository.ts`, `<folder>.module.ts`,
-  `<folder>.factory.ts`, `<folder>.repository.test.ts`.
+- `src/modules/<table>/` — one folder per table; the files are the per-table checklist below.
 - `src/nestjs-repositories-server.module.ts` — `NestjsRepositoriesServerModule`, which imports and
   re-exports every table module.
-- `src/testing/` — the fishery factories, published as `./testing` and never from the main barrel
-  (they import the `@faker-js/faker` devDependency, which the production image lacks).
+- `src/testing/` — the fishery factories and repository mocks, published as `./testing` and never
+  from the main barrel (they import the `@faker-js/faker` and `vitest` devDependencies, which the
+  production image lacks).
+
+## Per-table checklist
+
+Moving a table here is these files and edits, every time (`notes` is the reference):
+
+1. **Migration** (if the table lacks a `BaseModel` column): `deleted_at`, `created_at`,
+   `updated_at`, `id`, in `databases/openthrottle/migrations/`.
+2. `<name>.entity.ts` — `extends BaseModel`; JSDoc names every migration it matches.
+3. `<folder>.repository.ts` — `extends BaseRepository<Entity, CreateModelInput<Entity>>`,
+   `tableName`, `@InjectRepository(Entity)`. Custom methods only for data access the consumers
+   need beyond `BaseRepository`.
+4. `<folder>.module.ts` — `TypeOrmModule.forFeature([Entity])`, provides/exports the repository;
+   add it to `NestjsRepositoriesServerModule`.
+5. `<folder>.factory.ts` — fishery factory.
+6. `<folder>.types.ts` + `<folder>.utils.ts` — `<Folder>RepositoryMock` (an interface extending
+   `BaseRepositoryMock` from `@openthrottle/nestjs-postgres/testing` with one `Mock<…>` per
+   custom method) and `create<Folder>RepositoryMock()`, which spreads
+   `createBaseRepositoryMock(tableName)` and adds them. **A custom repository method and its mock
+   land in the same change.**
+7. Tests beside the files: `<folder>.repository.test.ts`, `<folder>.utils.test.ts`.
+8. Barrels: entity, repository and module in `src/index.ts`; factory, mock type and mock in
+   `src/testing/index.ts`.
+9. Remove the old module from `nestjs-repositories` and import the entity into its
+   `getTypeOrmOptions()` list from here.
+10. Consumers inject the repository and their tests provide `create<Folder>RepositoryMock()`
+    in its place, never a hand-written object of `vi.fn()`s.
+11. Run `pnpm run database:test:openthrottle` and `graphql-schema:write` (no `schema.gql` diff).
 
 ## Invariants & gotchas
 

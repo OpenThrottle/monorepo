@@ -10,23 +10,13 @@ import {
 } from '@openthrottle/nestjs-modules';
 import type { Note } from '@openthrottle/nestjs-repositories-server';
 import { NotesRepository } from '@openthrottle/nestjs-repositories-server';
+import { createNotesRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { NotesResolver } from './notes.resolver.ts';
 
-/** The subset of the persisted draft the author-derivation tests assert on. */
-interface NoteDraft {
-  author: string | null;
-  content: string;
-}
-
-const notesRepository = {
-  create: vi.fn<(draft: NoteDraft) => Promise<Note>>(),
-  findAllNewestFirst: vi.fn<() => Promise<Note[]>>(),
-  findOne: vi.fn<() => Promise<Note | null>>(),
-  removeMany: vi.fn<() => Promise<{ removedCount: number }>>(),
-  update: vi.fn<(id: string, input: Partial<NoteDraft>) => Promise<Note>>(),
-};
+/** Starts as an empty `notes` table; each test stubs what it asserts on. */
+const notesRepository = createNotesRepositoryMock();
 
 /** Stands in for the per-request CLS `user` slot; set per test to steer derivation. */
 const clsGet = vi.fn();

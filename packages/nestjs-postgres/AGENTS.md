@@ -6,8 +6,8 @@ serves (`BaseModel`: `id` + `deleted_at`; `BaseUuidModel`: `uuid` + nullable `is
 repository method issues.
 
 **Consumed by:** `@openthrottle/nestjs-repositories-cms` (every cms content table, on
-`BaseUuidModel`, and its DataSource logger). `@openthrottle/nestjs-repositories` (the `openthrottle`
-database) has not adopted it yet.
+`BaseUuidModel`, and its DataSource logger) and `@openthrottle/nestjs-repositories-server` (the
+`openthrottle` tables as they move off `@openthrottle/nestjs-repositories`, on `BaseModel`).
 
 **Adoption step (done for cms, not yet for openthrottle):** to profile real queries, set that DataSource's `logger` to
 `createPostgresProfilingQueryLogger(<previous logger>, <logging>)`. A table moved onto
@@ -21,6 +21,13 @@ database) has not adopted it yet.
 - `src/base-model/`, `src/base-uuid-model/`, `src/base-repository/` — the two entity bases and
   the abstract repository; `src/base-repository/testing/` (`test-record/`, `test-uuid-record/`) is
   test-only (excluded from the build).
+- `src/base-repository-mock/` + `src/testing/index.ts` — `createBaseRepositoryMock` and its
+  `BaseRepositoryMock` type, published as `./testing` and never from the main barrel (it imports
+  the `vitest` devDependency). The mock is an empty table: reads find nothing, bulk writes match
+  nothing, the by-id methods reject with `NotFoundException`, and `create` / `createMany` reject
+  until stubbed. Repositories packages extend it with their custom methods; see
+  [`nestjs-repositories-server`](../nestjs-repositories-server/AGENTS.md). Add a new
+  `BaseRepository` method to `BaseRepositoryMethod` and the mock in the same change.
 - `src/model-convention/` — the key / soft-delete convention union and the two constants each base
   declares as its static `modelConvention`.
 - `src/postgres-profiling/` — the decorator plus one sub-folder per concern (settings, query

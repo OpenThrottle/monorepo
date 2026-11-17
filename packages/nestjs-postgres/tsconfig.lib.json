@@ -11,7 +11,7 @@
     "**/*.spec.tsx",
     "**/*.test.ts",
     "**/*.test.tsx",
-    "**/testing/**",
+    "src/base-repository/testing/**",
     "dist",
     "tests/**"
   ],
