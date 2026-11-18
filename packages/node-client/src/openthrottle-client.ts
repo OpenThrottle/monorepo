@@ -1460,7 +1460,7 @@ export async function createCommitLink(
     // 1. Actor: the credential-less node-client service account (seeded by migration 073).
     const saRes = await runQuery<{ id: string }>(
       manager,
-      `SELECT id FROM service_accounts WHERE name = 'node-client' LIMIT 1`,
+      `SELECT id FROM service_accounts WHERE name = 'node-client' AND deleted_at IS NULL LIMIT 1`,
     );
     const serviceAccountId = saRes.rows[0]?.id;
     if (!serviceAccountId) {

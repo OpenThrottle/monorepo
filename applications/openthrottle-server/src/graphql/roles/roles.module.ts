@@ -4,13 +4,16 @@
  */
 
 import { Module } from '@nestjs/common';
-import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+import {
+  PermissionsModule,
+  RolesModule,
+} from '@openthrottle/nestjs-repositories-server';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import { RolesResolver } from './roles.resolver.ts';
 
 @Module({
-  imports: [NestjsRepositoriesModule],
+  imports: [PermissionsModule, RolesModule],
   providers: [GqlPermissionsGuard, RolesResolver],
 })
 export class RolesGraphqlModule {}

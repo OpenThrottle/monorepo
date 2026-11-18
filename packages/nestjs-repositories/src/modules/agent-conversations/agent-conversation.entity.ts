@@ -4,6 +4,7 @@
 
 import { Plan } from '@openthrottle/nestjs-repositories-server';
 import { Project } from '@openthrottle/nestjs-repositories-server';
+import { User } from '@openthrottle/nestjs-repositories-server';
 import {
   Column,
   CreateDateColumn,
@@ -14,7 +15,6 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-import { User } from '../users/user.entity.ts';
 import type { AgentConversationStatus } from './agent-conversations.types.ts';
 
 export interface AgentConversationData {

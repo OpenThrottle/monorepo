@@ -5,7 +5,7 @@
  */
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
-import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+import { RolesModule } from '@openthrottle/nestjs-repositories-server';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import { EditorPresenceResolver } from './editor-presence.resolver.ts';
@@ -13,8 +13,8 @@ import { EditorPresenceService } from './editor-presence.service.ts';
 
 @Module({
   exports: [EditorPresenceService],
-  // NestjsRepositoriesModule supplies RolesService, which GqlPermissionsGuard injects.
-  imports: [LoggerModule, NestjsRepositoriesModule],
+  // RolesModule supplies RolesRepository, which GqlPermissionsGuard injects.
+  imports: [RolesModule, LoggerModule],
   providers: [
     EditorPresenceResolver,
     EditorPresenceService,

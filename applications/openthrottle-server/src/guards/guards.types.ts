@@ -1,10 +1,10 @@
 import type {
-  ServiceAccountsService,
-  UsersService,
-} from '@openthrottle/nestjs-repositories';
+  ServiceAccountsRepository,
+  UsersRepository,
+} from '@openthrottle/nestjs-repositories-server';
 
-/** Services {@link getEditorNameForPrincipal} reads the caller's display name from. */
-export interface PrincipalIdentityServices {
-  readonly serviceAccountsService: ServiceAccountsService;
-  readonly usersService: UsersService;
+/** Repositories {@link getEditorNameForPrincipal} reads the caller's display name from. */
+export interface PrincipalIdentityRepositories {
+  readonly serviceAccountsRepository: ServiceAccountsRepository;
+  readonly usersRepository: UsersRepository;
 }

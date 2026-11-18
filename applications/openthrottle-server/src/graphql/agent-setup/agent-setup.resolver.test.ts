@@ -5,12 +5,13 @@ import {
   type AuthPrincipal,
 } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS } from '@openthrottle/nestjs-rbac';
-import type { RolesService } from '@openthrottle/nestjs-repositories';
 import type {
+  RolesRepository,
   UserDisabledAgentClisRepository,
   UserFavoriteAgentModelsRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import {
+  createRolesRepositoryMock,
   createUserDisabledAgentClisRepositoryMock,
   createUserFavoriteAgentModelsRepositoryMock,
 } from '@openthrottle/nestjs-repositories-server/testing';
@@ -43,9 +44,9 @@ function build(
       return enabled ? 'true' : '';
     }),
   });
-  const roles = createMock<RolesService>({
-    getPermissionsForUser: vi.fn().mockResolvedValue([...permissions]),
-  });
+  const rolesMock = createRolesRepositoryMock();
+  rolesMock.getPermissionsForUser.mockResolvedValue([...permissions]);
+  const roles = createMock<RolesRepository>(rolesMock);
   const setPreferenceEnabled = vi.fn().mockResolvedValue(undefined);
   const setModelEnabled = vi.fn().mockResolvedValue(undefined);
   const setModelFavorite = vi.fn().mockResolvedValue(undefined);

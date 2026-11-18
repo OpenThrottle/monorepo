@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
-  ServiceAccountsService,
-  UsersService,
-} from '@openthrottle/nestjs-repositories';
+  ServiceAccountsRepository,
+  UsersRepository,
+} from '@openthrottle/nestjs-repositories-server';
 
 /**
  * @description Maps an auth principal's `sub` to the human user it acts as.
@@ -24,8 +24,8 @@ export class EffectiveUserResolutionService {
 
   constructor(
     private readonly logger: LoggerService,
-    private readonly serviceAccountsService: ServiceAccountsService,
-    private readonly usersService: UsersService,
+    private readonly serviceAccountsRepository: ServiceAccountsRepository,
+    private readonly usersRepository: UsersRepository,
   ) {
     this.logger.debug(`🧩 ${this.name} 🧩`);
   }
@@ -44,12 +44,14 @@ export class EffectiveUserResolutionService {
     }
 
     try {
-      const user = await this.usersService.findById(trimmed);
+      const user = await this.usersRepository.findOne({
+        where: { id: trimmed },
+      });
       if (user != null) {
         return user.id;
       }
 
-      return await this.serviceAccountsService.resolveActingUserId(trimmed);
+      return await this.serviceAccountsRepository.resolveActingUserId(trimmed);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       this.logger.warn(

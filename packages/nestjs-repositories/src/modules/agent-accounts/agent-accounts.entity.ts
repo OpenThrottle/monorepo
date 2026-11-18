@@ -3,6 +3,7 @@
  * One row per (user, provider, external account): the agent-CLI login a usage row was billed to.
  */
 
+import { User } from '@openthrottle/nestjs-repositories-server';
 import {
   Column,
   Entity,
@@ -10,8 +11,6 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-
-import { User } from '../users/user.entity.ts';
 
 @Entity('agent_accounts')
 export class AgentAccount {

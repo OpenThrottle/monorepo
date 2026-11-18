@@ -12,10 +12,9 @@ import {
 } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS } from '@openthrottle/nestjs-rbac';
 import type { CustomPrompt } from '@openthrottle/nestjs-repositories';
-import {
-  CustomPromptsService,
-  RolesService,
-} from '@openthrottle/nestjs-repositories';
+import { CustomPromptsService } from '@openthrottle/nestjs-repositories';
+import { RolesRepository } from '@openthrottle/nestjs-repositories-server';
+import { createRolesRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { CustomPromptTypeEnum } from './custom-prompt.object.ts';
@@ -53,12 +52,11 @@ const mockConfigService = createMock<ConfigService>({
   get: vi.fn().mockReturnValue(workspaceRoot),
 });
 
-const mockRolesService = createMock<RolesService>({
-  getPermissionsForServiceAccount: vi.fn().mockResolvedValue([]),
-  getPermissionsForUser: vi
-    .fn()
-    .mockResolvedValue([PERMISSIONS.SETTINGS_WRITE]),
-});
+const mockRolesRepository = createRolesRepositoryMock();
+mockRolesRepository.getPermissionsForServiceAccount.mockResolvedValue([]);
+mockRolesRepository.getPermissionsForUser.mockResolvedValue([
+  PERMISSIONS.SETTINGS_WRITE,
+]);
 
 describe('CustomPromptsResolver', () => {
   let resolver: CustomPromptsResolver;
@@ -80,7 +78,7 @@ describe('CustomPromptsResolver', () => {
   } satisfies CustomPrompt;
 
   beforeEach(() => {
-    vi.mocked(mockRolesService.getPermissionsForUser).mockResolvedValue([
+    mockRolesRepository.getPermissionsForUser.mockResolvedValue([
       PERMISSIONS.SETTINGS_WRITE,
     ]);
   });
@@ -91,7 +89,7 @@ describe('CustomPromptsResolver', () => {
         CustomPromptsResolver,
         { provide: ConfigService, useValue: mockConfigService },
         { provide: CustomPromptsService, useValue: mockCustomPromptsService },
-        { provide: RolesService, useValue: mockRolesService },
+        { provide: RolesRepository, useValue: mockRolesRepository },
       ],
     }).compile();
 
@@ -341,7 +339,7 @@ describe('CustomPromptsResolver', () => {
     });
 
     test('refuses the write without the settings:write permission', async () => {
-      vi.mocked(mockRolesService.getPermissionsForUser).mockResolvedValue([]);
+      mockRolesRepository.getPermissionsForUser.mockResolvedValue([]);
 
       const repo = customPromptsService.getRepository();
       vi.mocked(repo.findOne).mockResolvedValue(mockCustomPrompt);

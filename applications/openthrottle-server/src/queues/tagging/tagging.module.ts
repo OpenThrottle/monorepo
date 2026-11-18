@@ -4,6 +4,7 @@ import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import {
   PlansModule,
+  ServiceAccountsModule,
   TasksModule,
 } from '@openthrottle/nestjs-repositories-server';
 
@@ -22,6 +23,7 @@ import { taggingModelProviderFactory } from './tagging-model.provider.ts';
 @Module({
   exports: [TaggingQueueProducerModule],
   imports: [
+    ServiceAccountsModule,
     ConfigModule,
     LoggerModule,
     NestjsRepositoriesModule,

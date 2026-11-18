@@ -12,15 +12,20 @@ import {
   DailyStat,
   McpConnectorConnection,
   Note,
+  Permission,
   Plan,
   PlanEmbedding,
   PlanOutputStreamChunk,
   Project,
+  Role,
+  ServiceAccount,
+  ServiceAccountCredential,
   SkillUsageEvent,
   SkillUsageOutcome,
   Task,
   TaskEmbedding,
   TelemetryHeartbeat,
+  User,
   UserDisabledAgentCli,
   UserFavoriteAgentModel,
   WorkArtifact,
@@ -49,12 +54,8 @@ import { ProjectSkill } from './modules/project-skills/project-skill.entity.ts';
 import { CustomPrompt } from './modules/prompts/custom-prompt.entity.ts';
 import { Repository } from './modules/repositories/repository.entity.ts';
 import { RepositoryCheckout } from './modules/repositories/repository-checkout.entity.ts';
-import { Permission } from './modules/roles/permission.entity.ts';
-import { Role } from './modules/roles/role.entity.ts';
 import { ScheduledAgentJob } from './modules/scheduled-agent-jobs/scheduled-agent-job.entity.ts';
 import { ScheduledAgentJobRun } from './modules/scheduled-agent-jobs/scheduled-agent-job-run.entity.ts';
-import { ServiceAccount } from './modules/service-accounts/service-account.entity.ts';
-import { ServiceAccountCredential } from './modules/service-accounts/service-account-credential.entity.ts';
 import { SkillAvailabilityRule } from './modules/skill-availability/skill-availability-rule.entity.ts';
 import { SkillAvailabilityRuleSet } from './modules/skill-availability/skill-availability-rule-set.entity.ts';
 import { UserSkillTag } from './modules/skill-tags/user-skill-tag.entity.ts';
@@ -65,7 +66,6 @@ import { PlanTag } from './modules/tags/plan-tag.entity.ts';
 import { ProjectTag } from './modules/tags/project-tag.entity.ts';
 import { TaskTag } from './modules/tags/task-tag.entity.ts';
 import { UserPreferences } from './modules/user-preferences/user-preferences.entity.ts';
-import { User } from './modules/users/user.entity.ts';
 import { UserWorkspaceSettings } from './modules/workspace-settings/user-workspace-settings.entity.ts';
 
 /**

@@ -2,8 +2,8 @@ import {
   AUTH_PRINCIPAL_KIND_USER,
   type AuthPrincipal,
 } from '@openthrottle/nestjs-auth';
-import type { ServiceAccountsService } from '@openthrottle/nestjs-repositories';
 import { type TagCaller } from '@openthrottle/nestjs-repositories';
+import type { ServiceAccountsRepository } from '@openthrottle/nestjs-repositories-server';
 /**
  * @description Builds the {@link TagCaller} from the request principal: user
  * JWTs map directly; service-account principals resolve their account name so
@@ -11,13 +11,15 @@ import { type TagCaller } from '@openthrottle/nestjs-repositories';
  */
 export const resolveTagCaller = async (
   principal: AuthPrincipal,
-  serviceAccountsService: ServiceAccountsService,
+  serviceAccountsRepository: ServiceAccountsRepository,
 ): Promise<TagCaller> => {
   if (principal.kind === AUTH_PRINCIPAL_KIND_USER) {
     return { principalKind: 'user', subjectId: principal.sub };
   }
 
-  const account = await serviceAccountsService.findById(principal.sub);
+  const account = await serviceAccountsRepository.findOne({
+    where: { id: principal.sub },
+  });
   return {
     principalKind: 'service_account',
     serviceAccountName: account?.name,

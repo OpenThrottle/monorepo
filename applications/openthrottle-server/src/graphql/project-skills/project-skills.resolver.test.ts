@@ -7,12 +7,15 @@ import type {
   Project,
   ProjectSkillView,
 } from '@openthrottle/nestjs-repositories';
+import { ProjectSkillsService } from '@openthrottle/nestjs-repositories';
 import {
-  ProjectSkillsService,
-  ServiceAccountsService,
-} from '@openthrottle/nestjs-repositories';
-import { ProjectsRepository } from '@openthrottle/nestjs-repositories-server';
-import { createProjectsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+  ProjectsRepository,
+  ServiceAccountsRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import {
+  createProjectsRepositoryMock,
+  createServiceAccountsRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
@@ -76,7 +79,7 @@ describe('ProjectSkillsResolver', () => {
     removeProjectSkillTag: vi.fn(),
   });
   const mockProjectsRepository = createProjectsRepositoryMock();
-  const mockServiceAccountsService = createMock<ServiceAccountsService>();
+  const mockServiceAccountsRepository = createServiceAccountsRepositoryMock();
 
   let resolver: ProjectSkillsResolver;
 
@@ -89,8 +92,8 @@ describe('ProjectSkillsResolver', () => {
         { provide: ProjectSkillsService, useValue: mockProjectSkillsService },
         { provide: ProjectsRepository, useValue: mockProjectsRepository },
         {
-          provide: ServiceAccountsService,
-          useValue: mockServiceAccountsService,
+          provide: ServiceAccountsRepository,
+          useValue: mockServiceAccountsRepository,
         },
       ],
     })

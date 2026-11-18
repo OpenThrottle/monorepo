@@ -11,13 +11,16 @@ import type { GitHubService } from '@openthrottle/nestjs-github';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
   PlanTag,
-  ServiceAccountsService,
   SkillTagsService,
   TagsService,
 } from '@openthrottle/nestjs-repositories';
-import type { Plan } from '@openthrottle/nestjs-repositories-server';
+import type {
+  Plan,
+  ServiceAccountsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import {
   createPlansRepositoryMock,
+  createServiceAccountsRepositoryMock,
   createTasksRepositoryMock,
 } from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
@@ -120,9 +123,9 @@ describe('TaggingProcessor', () => {
           ),
         ),
       }),
-      createMock<ServiceAccountsService>({
-        findAll: vi.fn().mockResolvedValue([]),
-      }),
+      createMock<ServiceAccountsRepository>(
+        createServiceAccountsRepositoryMock(),
+      ),
       createMock<SkillTagsService>({
         getRepository: vi.fn(() =>
           asMock({ find: vi.fn(() => Promise.resolve([])) }),

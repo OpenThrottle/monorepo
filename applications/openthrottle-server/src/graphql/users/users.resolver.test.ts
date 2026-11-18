@@ -1,51 +1,53 @@
-import { createMock } from '@golevelup/ts-vitest';
+import { NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import type { User } from '@openthrottle/nestjs-repositories';
-import { RolesService, UsersService } from '@openthrottle/nestjs-repositories';
-import { beforeAll, describe, expect, test, vi } from 'vitest';
+import {
+  RolesRepository,
+  UsersRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import type { UsersRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import {
+  createRolesRepositoryMock,
+  createUsersRepositoryMock,
+  usersFactory,
+} from '@openthrottle/nestjs-repositories-server/testing';
+import { beforeEach, describe, expect, test } from 'vitest';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import { UsersResolver } from './users.resolver.ts';
 
 describe('UsersResolver', () => {
   let resolver: UsersResolver;
-  let usersService: UsersService;
+  let users: UsersRepositoryMock;
 
-  const mockUser: User = {
+  const mockUser = usersFactory.build({
     createdAt: new Date('2026-02-02T10:00:00.000Z'),
     disabledAt: null,
     email: 'user@example.com',
     githubUsername: 'visormatt',
     id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
     passwordHash: null,
-    roles: [],
     updatedAt: new Date('2026-02-02T10:00:00.000Z'),
-  };
+  });
 
-  const mockUsersService = createMock<UsersService>();
+  const notFound = new NotFoundException('users record not found');
 
-  beforeAll(async () => {
-    const mockRolesService = createMock<RolesService>({
-      getPermissionsForUser: vi
-        .fn()
-        .mockResolvedValue(['users:read', 'users:write']),
-    });
+  beforeEach(async () => {
+    users = createUsersRepositoryMock();
     const app = await Test.createTestingModule({
       providers: [
         UsersResolver,
-        { provide: UsersService, useValue: mockUsersService },
-        { provide: RolesService, useValue: mockRolesService },
+        { provide: UsersRepository, useValue: users },
+        { provide: RolesRepository, useValue: createRolesRepositoryMock() },
         GqlPermissionsGuard,
       ],
     }).compile();
 
     resolver = app.get<UsersResolver>(UsersResolver);
-    usersService = app.get<UsersService>(UsersService);
   });
 
   describe('user', () => {
     test('returns UserObject when user exists', async () => {
-      vi.mocked(usersService.findById).mockResolvedValue(mockUser);
+      users.findOne.mockResolvedValue(mockUser);
 
       const result = await resolver.user(mockUser.id);
 
@@ -53,10 +55,13 @@ describe('UsersResolver', () => {
       expect(result?.id).toBe(mockUser.id);
       expect(result?.githubUsername).toBe(mockUser.githubUsername);
       expect(result?.email).toBe(mockUser.email);
+      expect(users.findOne).toHaveBeenCalledWith({
+        where: { id: mockUser.id },
+      });
     });
 
     test('returns null when user does not exist', async () => {
-      vi.mocked(usersService.findById).mockResolvedValue(null);
+      users.findOne.mockResolvedValue(null);
 
       const result = await resolver.user('non-existent-id');
 
@@ -66,7 +71,7 @@ describe('UsersResolver', () => {
 
   describe('me', () => {
     test('returns UserObject when user exists', async () => {
-      vi.mocked(usersService.findById).mockResolvedValue(mockUser);
+      users.findOne.mockResolvedValue(mockUser);
 
       const result = await resolver.me(mockUser.id);
 
@@ -77,7 +82,7 @@ describe('UsersResolver', () => {
     });
 
     test('returns null when user not found', async () => {
-      vi.mocked(usersService.findById).mockResolvedValue(null);
+      users.findOne.mockResolvedValue(null);
 
       const result = await resolver.me('non-existent-id');
 
@@ -87,7 +92,7 @@ describe('UsersResolver', () => {
 
   describe('users', () => {
     test('returns array of UserObjects', async () => {
-      vi.mocked(usersService.findAll).mockResolvedValue([mockUser]);
+      users.findAll.mockResolvedValue([mockUser]);
 
       const result = await resolver.users();
 
@@ -97,7 +102,7 @@ describe('UsersResolver', () => {
     });
 
     test('returns empty array when no users', async () => {
-      vi.mocked(usersService.findAll).mockResolvedValue([]);
+      users.findAll.mockResolvedValue([]);
 
       const result = await resolver.users();
 
@@ -107,7 +112,7 @@ describe('UsersResolver', () => {
 
   describe('createUser', () => {
     test('returns UserObject after create', async () => {
-      vi.mocked(usersService.create).mockResolvedValue(mockUser);
+      users.create.mockResolvedValue(mockUser);
 
       const result = await resolver.createUser({
         email: mockUser.email,
@@ -121,7 +126,7 @@ describe('UsersResolver', () => {
 
   describe('updateUser', () => {
     test('returns UserObject when user exists', async () => {
-      vi.mocked(usersService.update).mockResolvedValue(mockUser);
+      users.update.mockResolvedValue(mockUser);
 
       const result = await resolver.updateUser({
         disabledAt: undefined,
@@ -135,7 +140,7 @@ describe('UsersResolver', () => {
     });
 
     test('returns null when user does not exist', async () => {
-      vi.mocked(usersService.update).mockResolvedValue(null);
+      users.update.mockRejectedValue(notFound);
 
       const result = await resolver.updateUser({
         disabledAt: undefined,
@@ -154,7 +159,7 @@ describe('UsersResolver', () => {
         ...mockUser,
         disabledAt: new Date('2026-02-02T12:00:00.000Z'),
       };
-      vi.mocked(usersService.disable).mockResolvedValue(disabledUser);
+      users.disable.mockResolvedValue(disabledUser);
 
       const result = await resolver.disableUser(mockUser.id);
 
@@ -164,7 +169,7 @@ describe('UsersResolver', () => {
     });
 
     test('returns null when user does not exist', async () => {
-      vi.mocked(usersService.disable).mockResolvedValue(null);
+      users.disable.mockRejectedValue(notFound);
 
       const result = await resolver.disableUser('non-existent-id');
 
@@ -174,7 +179,7 @@ describe('UsersResolver', () => {
 
   describe('enableUser', () => {
     test('returns UserObject when user is re-enabled', async () => {
-      vi.mocked(usersService.enable).mockResolvedValue(mockUser);
+      users.enable.mockResolvedValue(mockUser);
 
       const result = await resolver.enableUser(mockUser.id);
 
@@ -184,7 +189,7 @@ describe('UsersResolver', () => {
     });
 
     test('returns null when user does not exist', async () => {
-      vi.mocked(usersService.enable).mockResolvedValue(null);
+      users.enable.mockRejectedValue(notFound);
 
       const result = await resolver.enableUser('non-existent-id');
 

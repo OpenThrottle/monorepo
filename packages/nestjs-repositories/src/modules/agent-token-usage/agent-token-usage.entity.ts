@@ -3,6 +3,7 @@
  * One immutable row per persisted assistant turn (normalized token/cost usage).
  */
 
+import { User } from '@openthrottle/nestjs-repositories-server';
 import {
   Column,
   CreateDateColumn,
@@ -15,7 +16,6 @@ import {
 import { AgentAccount } from '../agent-accounts/agent-accounts.entity.ts';
 import { AgentConversation } from '../agent-conversations/agent-conversation.entity.ts';
 import { AgentConversationMessage } from '../agent-conversations/agent-conversation-message.entity.ts';
-import { User } from '../users/user.entity.ts';
 
 /**
  * Postgres returns bigint/numeric as strings (to avoid precision loss). Token

@@ -94,7 +94,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, JWT_STRATEGY_NAME) {
    * ```ts
    * @Injectable()
    * class AppJwtStrategy extends JwtStrategy {
-   *   constructor(config: ConfigService, private readonly users: UsersService) {
+   *   constructor(config: ConfigService, private readonly users: UsersRepository) {
    *     super(config);
    *   }
    *   override async validate(payload: JwtPayload): Promise<JwtPayload> {

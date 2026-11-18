@@ -8,11 +8,8 @@ import {
 } from '@nestjs/graphql';
 import { type AuthPrincipal, CurrentUser } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
-import {
-  type PlanTag,
-  ServiceAccountsService,
-  TagsService,
-} from '@openthrottle/nestjs-repositories';
+import { type PlanTag, TagsService } from '@openthrottle/nestjs-repositories';
+import { ServiceAccountsRepository } from '@openthrottle/nestjs-repositories-server';
 
 import { GqlPermissionsGuard } from '../../../guards/gql-permissions.guard.ts';
 import { PlanRulesEvaluationService } from '../../../queues/plan-rules/evaluation/evaluation.service.ts';
@@ -29,7 +26,7 @@ export class PlanTagsResolver {
   constructor(
     private readonly loaders: TagsLoaders,
     private readonly planRulesEvaluationService: PlanRulesEvaluationService,
-    private readonly serviceAccountsService: ServiceAccountsService,
+    private readonly serviceAccountsRepository: ServiceAccountsRepository,
     private readonly tagsService: TagsService,
   ) {}
 
@@ -50,7 +47,7 @@ export class PlanTagsResolver {
   ): Promise<PlanTag> {
     const caller = await resolveTagCaller(
       principal,
-      this.serviceAccountsService,
+      this.serviceAccountsRepository,
     );
     const tag = await this.tagsService.addPlanTag(
       caller,
@@ -75,7 +72,7 @@ export class PlanTagsResolver {
   ): Promise<boolean> {
     const caller = await resolveTagCaller(
       principal,
-      this.serviceAccountsService,
+      this.serviceAccountsRepository,
     );
     const removed = await this.tagsService.removePlanTag(
       caller,

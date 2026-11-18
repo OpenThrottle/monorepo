@@ -10,6 +10,7 @@ import { Module } from '@nestjs/common';
 import { GlobalClsModule, LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import {
+  ServiceAccountsModule,
   WorkArtifactsModule,
   WorkSessionsModule,
   WorkSessionSubjectsModule,
@@ -29,6 +30,7 @@ import { WorkLedgerCaptureService } from './work-ledger-capture/work-ledger-capt
     WorkLedgerCaptureService,
   ],
   imports: [
+    ServiceAccountsModule,
     GlobalClsModule,
     LoggerModule,
     NestjsRepositoriesModule,

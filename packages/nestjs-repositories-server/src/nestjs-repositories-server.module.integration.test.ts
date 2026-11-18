@@ -7,6 +7,10 @@ import type { DataSource } from 'typeorm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { NotesRepository } from './modules/notes/notes.repository.ts';
+import { RolesRepository } from './modules/roles/roles.repository.ts';
+import { ServiceAccountCredentialsRepository } from './modules/service-account-credentials/service-account-credentials.repository.ts';
+import { ServiceAccountsRepository } from './modules/service-accounts/service-accounts.repository.ts';
+import { UsersRepository } from './modules/users/users.repository.ts';
 import { NestjsRepositoriesServerModule } from './nestjs-repositories-server.module.ts';
 
 /**
@@ -200,6 +204,92 @@ describe.skipIf(!ENABLED)(
         await dataSource.query(`DELETE FROM notes WHERE content LIKE $1`, [
           `${marker}-%`,
         ]);
+      }
+    });
+
+    it('grants nothing through a soft-deleted role', async () => {
+      const users = requireApp().get(UsersRepository);
+      const roles = requireApp().get(RolesRepository);
+      const accounts = requireApp().get(ServiceAccountsRepository);
+      const dataSource = requireApp().get<DataSource>(getDataSourceToken());
+      const marker = `integration-${Date.now()}`;
+
+      try {
+        const user = await users.create({ githubUsername: `${marker}-user` });
+        const account = await accounts.create({ name: `${marker}-account` });
+        const role = await roles.create({ name: `${marker}-role` });
+
+        await expect(roles.assignRoleToUser(user.id, role.id)).resolves.toBe(
+          true,
+        );
+        await expect(
+          roles.assignRoleToServiceAccount(account.id, role.id),
+        ).resolves.toBe(true);
+        await expect(roles.findRoleNamesByUserId(user.id)).resolves.toEqual([
+          `${marker}-role`,
+        ]);
+
+        await roles.remove(role.id);
+
+        await expect(roles.findRoleNamesByUserId(user.id)).resolves.toEqual([]);
+        await expect(roles.findRolesForUser(user.id)).resolves.toEqual([]);
+        await expect(
+          roles.findRoleNamesByServiceAccountId(account.id),
+        ).resolves.toEqual([]);
+        await expect(roles.assignRoleToUser(user.id, role.id)).resolves.toBe(
+          false,
+        );
+      } finally {
+        await dataSource.query(
+          `DELETE FROM users WHERE github_username LIKE $1`,
+          [`${marker}-%`],
+        );
+        await dataSource.query(
+          `DELETE FROM service_accounts WHERE name LIKE $1`,
+          [`${marker}-%`],
+        );
+        await dataSource.query(`DELETE FROM roles WHERE name LIKE $1`, [
+          `${marker}-%`,
+        ]);
+      }
+    });
+
+    it('stops verifying a service account token once the account is soft deleted', async () => {
+      const accounts = requireApp().get(ServiceAccountsRepository);
+      const credentials = requireApp().get(ServiceAccountCredentialsRepository);
+      const dataSource = requireApp().get<DataSource>(getDataSourceToken());
+      const marker = `integration-${Date.now()}`;
+
+      try {
+        const account = await accounts.create({ name: `${marker}-account` });
+        const issued = await credentials.createCredential({
+          serviceAccountId: account.id,
+        });
+
+        if (issued == null) {
+          throw new Error('createCredential returned null for a live account');
+        }
+
+        await expect(
+          credentials.verifyBearerToken(issued.token),
+        ).resolves.toEqual({
+          credentialId: issued.credential.id,
+          serviceAccountId: account.id,
+        });
+
+        await accounts.remove(account.id);
+
+        await expect(
+          credentials.verifyBearerToken(issued.token),
+        ).resolves.toBeNull();
+        await expect(
+          credentials.createCredential({ serviceAccountId: account.id }),
+        ).resolves.toBeNull();
+      } finally {
+        await dataSource.query(
+          `DELETE FROM service_accounts WHERE name LIKE $1`,
+          [`${marker}-%`],
+        );
       }
     });
   },

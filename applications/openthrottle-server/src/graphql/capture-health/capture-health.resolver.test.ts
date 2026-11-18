@@ -4,10 +4,15 @@ import { PERMISSIONS, PERMISSIONS_KEY } from '@openthrottle/nestjs-rbac';
 import {
   AgentTokenUsageService,
   CAPTURE_HEALTH_STREAMS,
-  RolesService,
 } from '@openthrottle/nestjs-repositories';
-import { SkillUsageEventsRepository } from '@openthrottle/nestjs-repositories-server';
-import { createSkillUsageEventsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import {
+  RolesRepository,
+  SkillUsageEventsRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import {
+  createRolesRepositoryMock,
+  createSkillUsageEventsRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
@@ -31,7 +36,7 @@ describe('CaptureHealthResolver', () => {
             listCaptureHealth: listTokenCaptureHealth,
           }),
         },
-        { provide: RolesService, useValue: createMock<RolesService>() },
+        { provide: RolesRepository, useValue: createRolesRepositoryMock() },
         GqlPermissionsGuard,
       ],
     }).compile();

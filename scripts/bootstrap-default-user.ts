@@ -7,14 +7,14 @@
  * Requires migrations 026/031/034 and a running OpenThrottle Postgres.
  */
 
-import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   getOpenThrottleTypeOrmOptions,
+  hashPassword,
   Role,
-  RolesService,
+  RolesRepository,
   ServiceAccount,
   User,
-  UsersService,
+  UsersRepository,
 } from '@openthrottle/nestjs-repositories';
 import { DataSource } from 'typeorm';
 
@@ -43,14 +43,16 @@ const DEVELOPER_URL: string = process.env.OPENTHROTTLE_DEVELOPER_APP_URL?.trim()
 
 const ROLE_NAMES = ['admin', 'user', 'viewer'] as const;
 
-async function ensureDefaultUser(usersService: UsersService): Promise<User> {
-  const existing = await usersService.findByEmail(DEFAULT_USER.email);
+async function ensureDefaultUser(
+  usersRepository: UsersRepository,
+): Promise<User> {
+  const existing = await usersRepository.findByEmail(DEFAULT_USER.email);
 
   if (existing == null) {
-    const created = await usersService.create({
+    const created = await usersRepository.create({
       email: DEFAULT_USER.email,
       githubUsername: DEFAULT_USER.githubUsername,
-      passwordHash: await usersService.hashPassword(DEFAULT_USER.password),
+      passwordHash: await hashPassword(DEFAULT_USER.password),
     });
 
     logger.success(`Created user ${DEFAULT_USER.email} (${created.id}).`);
@@ -59,15 +61,15 @@ async function ensureDefaultUser(usersService: UsersService): Promise<User> {
   }
 
   if (existing.passwordHash == null) {
-    const updated = await usersService.update(existing.id, {
-      passwordHash: await usersService.hashPassword(DEFAULT_USER.password),
+    const updated = await usersRepository.update(existing.id, {
+      passwordHash: await hashPassword(DEFAULT_USER.password),
     });
 
     logger.success(
       `Set default password for existing user ${DEFAULT_USER.email}.`,
     );
 
-    return updated ?? existing;
+    return updated;
   }
 
   logger.step(
@@ -78,12 +80,12 @@ async function ensureDefaultUser(usersService: UsersService): Promise<User> {
 }
 
 async function ensureAllRoles(
-  rolesService: RolesService,
+  rolesRepository: RolesRepository,
   userId: string,
 ): Promise<void> {
   /* eslint-disable no-await-in-loop -- role assignments mutate the same user row; run in order */
   for (const roleName of ROLE_NAMES) {
-    const role = await rolesService.findByName(roleName);
+    const role = await rolesRepository.findByName(roleName);
 
     if (role == null) {
       logger.fail(`Missing role "${roleName}". Run: pnpm run database:migrate`);
@@ -91,7 +93,7 @@ async function ensureAllRoles(
       process.exit(1);
     }
 
-    await rolesService.assignRoleToUser(userId, role.id);
+    await rolesRepository.assignRoleToUser(userId, role.id);
 
     logger.success(`Role ${roleName}: assigned.`);
   }
@@ -148,37 +150,6 @@ async function linkActingUser(
   /* eslint-enable no-await-in-loop */
 }
 
-/** Silent sink for the Nest services' own logging; script output goes through the CLI `logger`. */
-class SilentLoggerService extends LoggerService {
-  override debug(): void {
-    return undefined;
-  }
-
-  override error(): void {
-    return undefined;
-  }
-
-  override fatal(): void {
-    return undefined;
-  }
-
-  override info(): void {
-    return undefined;
-  }
-
-  override log(): void {
-    return undefined;
-  }
-
-  override verbose(): void {
-    return undefined;
-  }
-
-  override warn(): void {
-    return undefined;
-  }
-}
-
 async function main(): Promise<void> {
   if (USER_PASSWORD === '') {
     logger.fail(
@@ -192,21 +163,18 @@ async function main(): Promise<void> {
   await dataSource.initialize();
 
   try {
-    const serviceLogger = new SilentLoggerService();
-
     const userRepository = dataSource.getRepository(User);
     const roleRepository = dataSource.getRepository(Role);
 
-    const usersService = new UsersService(serviceLogger, userRepository);
-    const rolesService = new RolesService(
-      serviceLogger,
+    const usersRepository = new UsersRepository(userRepository);
+    const rolesRepository = new RolesRepository(
       roleRepository,
       userRepository,
       dataSource.getRepository(ServiceAccount),
     );
 
-    const user = await ensureDefaultUser(usersService);
-    await ensureAllRoles(rolesService, user.id);
+    const user = await ensureDefaultUser(usersRepository);
+    await ensureAllRoles(rolesRepository, user.id);
     await linkActingUser(dataSource, user.id);
 
     // Record the login to the git-ignored local file so a fresh machine can

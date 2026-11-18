@@ -7,11 +7,12 @@ import type {
   WorkspaceLocalRepository,
 } from '@openthrottle/nestjs-repositories';
 import {
-  RolesService,
   UserWorkspaceSettingsService,
   WorkspaceEditorConfigService,
   WorkspaceLocalRepositoriesService,
 } from '@openthrottle/nestjs-repositories';
+import { RolesRepository } from '@openthrottle/nestjs-repositories-server';
+import { createRolesRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import type DataLoader from 'dataloader';
 import { mkdtempSync } from 'fs';
 import { tmpdir } from 'os';
@@ -125,12 +126,7 @@ describe('WorkspaceSettingsResolver', () => {
           provide: WorktreeActivityService,
           useValue: mockActivityService,
         },
-        {
-          provide: RolesService,
-          useValue: createMock<RolesService>({
-            getPermissionsForUser: vi.fn().mockResolvedValue([]),
-          }),
-        },
+        { provide: RolesRepository, useValue: createRolesRepositoryMock() },
       ],
     }).compile();
 

@@ -11,14 +11,16 @@ import type {
   Role,
   ServiceAccount,
   ServiceAccountCredential,
-} from '@openthrottle/nestjs-repositories';
+} from '@openthrottle/nestjs-repositories-server';
 import {
-  RolesService,
-  ServiceAccountsService,
-} from '@openthrottle/nestjs-repositories';
+  RolesRepository,
+  ServiceAccountCredentialsRepository,
+  ServiceAccountsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import { RoleObject } from '../roles/role.object.ts';
+import { nullIfNotFound } from '../users/users.utils.ts';
 import { CreateServiceAccountCredentialResultObject } from './create-service-account-credential-result.object.ts';
 import {
   AssignRoleToServiceAccountInput,
@@ -50,8 +52,9 @@ const toCredentialObject = (
 @UseGuards(GqlPermissionsGuard)
 export class ServiceAccountsResolver {
   constructor(
-    private readonly rolesService: RolesService,
-    private readonly serviceAccountsService: ServiceAccountsService,
+    private readonly rolesRepository: RolesRepository,
+    private readonly serviceAccountCredentialsRepository: ServiceAccountCredentialsRepository,
+    private readonly serviceAccountsRepository: ServiceAccountsRepository,
   ) {}
 
   @Query(() => [ServiceAccountObject], {
@@ -62,7 +65,7 @@ export class ServiceAccountsResolver {
     @CurrentUser() principal: AuthPrincipal | undefined,
   ): Promise<ServiceAccount[]> {
     assertHumanAuthPrincipal(principal);
-    return this.serviceAccountsService.findAll();
+    return this.serviceAccountsRepository.findAll();
   }
 
   @Query(() => ServiceAccountObject, {
@@ -75,7 +78,7 @@ export class ServiceAccountsResolver {
     @Args('id', { type: () => ID }) id: string,
   ): Promise<ServiceAccount | null> {
     assertHumanAuthPrincipal(principal);
-    return this.serviceAccountsService.findById(id);
+    return this.serviceAccountsRepository.findOne({ where: { id } });
   }
 
   @Query(() => [ServiceAccountCredentialObject], {
@@ -88,7 +91,9 @@ export class ServiceAccountsResolver {
   ): Promise<ServiceAccountCredentialObject[]> {
     assertHumanAuthPrincipal(principal);
     const credentials =
-      await this.serviceAccountsService.findCredentials(serviceAccountId);
+      await this.serviceAccountCredentialsRepository.findCredentials(
+        serviceAccountId,
+      );
     return credentials.map(toCredentialObject);
   }
 
@@ -101,7 +106,7 @@ export class ServiceAccountsResolver {
     @Args('serviceAccountId', { type: () => ID }) serviceAccountId: string,
   ): Promise<Role[]> {
     assertHumanAuthPrincipal(principal);
-    return this.rolesService.findRolesForServiceAccount(serviceAccountId);
+    return this.rolesRepository.findRolesForServiceAccount(serviceAccountId);
   }
 
   @Query(() => [String], {
@@ -113,7 +118,9 @@ export class ServiceAccountsResolver {
     @Args('serviceAccountId', { type: () => ID }) serviceAccountId: string,
   ): Promise<string[]> {
     assertHumanAuthPrincipal(principal);
-    return this.rolesService.getPermissionsForServiceAccount(serviceAccountId);
+    return this.rolesRepository.getPermissionsForServiceAccount(
+      serviceAccountId,
+    );
   }
 
   @Mutation(() => ServiceAccountObject, {
@@ -126,7 +133,7 @@ export class ServiceAccountsResolver {
     input: CreateServiceAccountInput,
   ): Promise<ServiceAccount> {
     assertHumanAuthPrincipal(principal);
-    return this.serviceAccountsService.create({
+    return this.serviceAccountsRepository.create({
       description: input.description ?? null,
       name: input.name,
     });
@@ -143,14 +150,16 @@ export class ServiceAccountsResolver {
     input: UpdateServiceAccountInput,
   ): Promise<ServiceAccount | null> {
     assertHumanAuthPrincipal(principal);
-    return this.serviceAccountsService.update(input.id, {
-      ...(input.actingUserId !== undefined && {
-        actingUserId: input.actingUserId,
-      }),
-      ...(input.description !== undefined && {
-        description: input.description,
-      }),
-      ...(input.name != null && { name: input.name }),
+    return nullIfNotFound(async () => {
+      return this.serviceAccountsRepository.update(input.id, {
+        ...(input.actingUserId !== undefined && {
+          actingUserId: input.actingUserId,
+        }),
+        ...(input.description !== undefined && {
+          description: input.description,
+        }),
+        ...(input.name != null && { name: input.name }),
+      });
     });
   }
 
@@ -164,7 +173,9 @@ export class ServiceAccountsResolver {
     @Args('id', { type: () => ID }) id: string,
   ): Promise<ServiceAccount | null> {
     assertHumanAuthPrincipal(principal);
-    return this.serviceAccountsService.disable(id);
+    return nullIfNotFound(async () => {
+      return this.serviceAccountsRepository.disable(id);
+    });
   }
 
   @Mutation(() => ServiceAccountObject, {
@@ -177,7 +188,9 @@ export class ServiceAccountsResolver {
     @Args('id', { type: () => ID }) id: string,
   ): Promise<ServiceAccount | null> {
     assertHumanAuthPrincipal(principal);
-    return this.serviceAccountsService.enable(id);
+    return nullIfNotFound(async () => {
+      return this.serviceAccountsRepository.enable(id);
+    });
   }
 
   @Mutation(() => CreateServiceAccountCredentialResultObject, {
@@ -191,11 +204,12 @@ export class ServiceAccountsResolver {
     input: CreateServiceAccountCredentialInput,
   ): Promise<CreateServiceAccountCredentialResultObject | null> {
     assertHumanAuthPrincipal(principal);
-    const result = await this.serviceAccountsService.createCredential({
-      expiresAt: input.expiresAt ?? null,
-      label: input.label ?? null,
-      serviceAccountId: input.serviceAccountId,
-    });
+    const result =
+      await this.serviceAccountCredentialsRepository.createCredential({
+        expiresAt: input.expiresAt ?? null,
+        label: input.label ?? null,
+        serviceAccountId: input.serviceAccountId,
+      });
     if (result == null) {
       return null;
     }
@@ -214,7 +228,9 @@ export class ServiceAccountsResolver {
     @Args('credentialId', { type: () => ID }) credentialId: string,
   ): Promise<boolean> {
     assertHumanAuthPrincipal(principal);
-    return this.serviceAccountsService.revokeCredential(credentialId);
+    return this.serviceAccountCredentialsRepository.revokeCredential(
+      credentialId,
+    );
   }
 
   @Mutation(() => Boolean, {
@@ -227,7 +243,7 @@ export class ServiceAccountsResolver {
     input: AssignRoleToServiceAccountInput,
   ): Promise<boolean> {
     assertHumanAuthPrincipal(principal);
-    return this.rolesService.assignRoleToServiceAccount(
+    return this.rolesRepository.assignRoleToServiceAccount(
       input.serviceAccountId,
       input.roleId,
     );
@@ -243,7 +259,7 @@ export class ServiceAccountsResolver {
     input: RemoveRoleFromServiceAccountInput,
   ): Promise<boolean> {
     assertHumanAuthPrincipal(principal);
-    return this.rolesService.removeRoleFromServiceAccount(
+    return this.rolesRepository.removeRoleFromServiceAccount(
       input.serviceAccountId,
       input.roleId,
     );

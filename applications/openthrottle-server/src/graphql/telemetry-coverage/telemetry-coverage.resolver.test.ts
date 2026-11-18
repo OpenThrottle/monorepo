@@ -2,12 +2,13 @@ import { createMock } from '@golevelup/ts-vitest';
 import { BadRequestException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { PERMISSIONS, PERMISSIONS_KEY } from '@openthrottle/nestjs-rbac';
-import { RolesService } from '@openthrottle/nestjs-repositories';
 import {
+  RolesRepository,
   type TelemetryHeartbeat,
   TelemetryHeartbeatsRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import {
+  createRolesRepositoryMock,
   createTelemetryHeartbeatsRepositoryMock,
   type TelemetryHeartbeatsRepositoryMock,
 } from '@openthrottle/nestjs-repositories-server/testing';
@@ -47,7 +48,7 @@ describe('TelemetryCoverageResolver', () => {
           provide: EffectiveUserResolutionService,
           useValue: { resolveEffectiveUserId },
         },
-        { provide: RolesService, useValue: createMock<RolesService>() },
+        { provide: RolesRepository, useValue: createRolesRepositoryMock() },
         GqlPermissionsGuard,
       ],
     }).compile();

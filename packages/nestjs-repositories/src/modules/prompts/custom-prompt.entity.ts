@@ -4,6 +4,7 @@
  */
 
 import { Project } from '@openthrottle/nestjs-repositories-server';
+import { User } from '@openthrottle/nestjs-repositories-server';
 import {
   Column,
   CreateDateColumn,
@@ -13,8 +14,6 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-
-import { User } from '../users/user.entity.ts';
 
 /**
  * @description Strict set of document purposes for custom prompts.

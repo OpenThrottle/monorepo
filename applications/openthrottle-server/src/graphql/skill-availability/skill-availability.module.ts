@@ -9,7 +9,10 @@ import './skill-availability.object.ts';
 
 import { Module } from '@nestjs/common';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
-import { ProjectsModule } from '@openthrottle/nestjs-repositories-server';
+import {
+  ProjectsModule,
+  RolesModule,
+} from '@openthrottle/nestjs-repositories-server';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import { PlanContextAvailabilityModule } from '../../services/plan-context-availability/plan-context-availability.module.ts';
@@ -18,6 +21,7 @@ import { SkillAvailabilityResolutionResolver } from './skill-availability-resolu
 
 @Module({
   imports: [
+    RolesModule,
     NestjsRepositoriesModule,
     PlanContextAvailabilityModule,
     ProjectsModule,

@@ -4,13 +4,11 @@ import { InjectDataSource } from '@nestjs/typeorm';
 import { defaultWorkerOptions } from '@openthrottle/nestjs-bullmq';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { Repository as RepositoryEntity } from '@openthrottle/nestjs-repositories';
-import {
-  RepositoriesService,
-  ServiceAccountsService,
-  UsersService,
-} from '@openthrottle/nestjs-repositories';
+import { RepositoriesService } from '@openthrottle/nestjs-repositories';
 import {
   PlansRepository,
+  ServiceAccountsRepository,
+  UsersRepository,
   WORK_ARTIFACT_SOURCE,
   WORK_ARTIFACT_VERIFICATION,
   WorkArtifact,
@@ -79,10 +77,10 @@ export class WorkLedgerHarvestProcessor
     private readonly logger: LoggerService,
     private readonly plansRepository: PlansRepository,
     private readonly repositoriesService: RepositoriesService,
-    private readonly serviceAccountsService: ServiceAccountsService,
+    private readonly serviceAccountsRepository: ServiceAccountsRepository,
     private readonly settleRunLedgerService: SettleRunLedgerService,
     private readonly sourceControlService: SourceControlService,
-    private readonly usersService: UsersService,
+    private readonly usersRepository: UsersRepository,
     private readonly workArtifactsRepository: WorkArtifactsRepository,
     @InjectDataSource() private readonly dataSource: DataSource,
   ) {
@@ -345,7 +343,7 @@ export class WorkLedgerHarvestProcessor
   ): Promise<string | null> {
     if (authorLogin == null) return null;
 
-    const user = await this.usersService
+    const user = await this.usersRepository
       .findByGithubUsername(authorLogin)
       .catch(() => null);
 
@@ -353,7 +351,7 @@ export class WorkLedgerHarvestProcessor
   }
 
   private async resolveActorServiceAccountId(): Promise<string | null> {
-    const account = await this.serviceAccountsService.findByName(
+    const account = await this.serviceAccountsRepository.findByName(
       HARVEST_SERVICE_ACCOUNT_NAME,
     );
 

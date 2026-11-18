@@ -5,12 +5,12 @@
  * transitions plan/task status on its own initiative rather than on behalf of a request.
  *
  * The lookup-by-name is memoised per process: every background writer needing an actorSub would
- * otherwise repeat the same `ServiceAccountsService.findByName` round trip, one call site at a
+ * otherwise repeat the same `ServiceAccountsRepository.findByName` round trip, one call site at a
  * time, the same pattern `WorkLedgerHarvestProcessor.resolveActorServiceAccountId` already has —
  * this centralizes it so nobody hand-types the name again.
  */
 import { Injectable } from '@nestjs/common';
-import { ServiceAccountsService } from '@openthrottle/nestjs-repositories';
+import { ServiceAccountsRepository } from '@openthrottle/nestjs-repositories-server';
 
 import { STATUS_CHANGE_SYSTEM_SERVICE_ACCOUNT_NAME } from './status-change-system-account.constants.ts';
 
@@ -19,7 +19,7 @@ export class StatusChangeSystemAccountService {
   private resolved: Promise<string | null> | null = null;
 
   constructor(
-    private readonly serviceAccountsService: ServiceAccountsService,
+    private readonly serviceAccountsRepository: ServiceAccountsRepository,
   ) {}
 
   /**
@@ -41,7 +41,7 @@ export class StatusChangeSystemAccountService {
   }
 
   private async lookup(): Promise<string | null> {
-    const account = await this.serviceAccountsService.findByName(
+    const account = await this.serviceAccountsRepository.findByName(
       STATUS_CHANGE_SYSTEM_SERVICE_ACCOUNT_NAME,
     );
 

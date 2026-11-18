@@ -34,9 +34,11 @@ import {
   SOFT_CLOSED_TASK_STATUS,
   TagActionRulesService,
   TagsService,
-  UsersService,
 } from '@openthrottle/nestjs-repositories';
-import { PlansRepository } from '@openthrottle/nestjs-repositories-server';
+import {
+  PlansRepository,
+  UsersRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import {
   evaluateTagActionRules,
   type TagActionRuleInput,
@@ -73,7 +75,7 @@ export class PlanRulesProcessor
     private readonly statusChangeSystemAccount: StatusChangeSystemAccountService,
     private readonly tagActionRulesService: TagActionRulesService,
     private readonly tagsService: TagsService,
-    private readonly usersService: UsersService,
+    private readonly usersRepository: UsersRepository,
     private readonly workLedgerCapture: WorkLedgerCaptureService,
   ) {
     super();
@@ -140,7 +142,7 @@ export class PlanRulesProcessor
       };
     }
 
-    const owner = await this.usersService.findByGithubUsername(plan.author);
+    const owner = await this.usersRepository.findByGithubUsername(plan.author);
     if (owner == null) {
       const message = `Plan ${planId} author "${plan.author}" has no user row; no rules to evaluate`;
 

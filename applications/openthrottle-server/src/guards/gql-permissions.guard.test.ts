@@ -7,7 +7,9 @@ import {
   authPrincipalFromServiceAccountId,
 } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS } from '@openthrottle/nestjs-rbac';
-import type { RolesService } from '@openthrottle/nestjs-repositories';
+import type { RolesRepository } from '@openthrottle/nestjs-repositories-server';
+import type { RolesRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import { createRolesRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GqlPermissionsGuard } from './gql-permissions.guard.ts';
@@ -31,17 +33,17 @@ const createHttpExecutionContext = (req: {
 describe('GqlPermissionsGuard', () => {
   let guard: GqlPermissionsGuard;
   let reflector: Reflector;
-  let rolesService: RolesService;
+  let roles: RolesRepositoryMock;
 
   beforeEach(() => {
     reflector = createMock<Reflector>({
       getAllAndOverride: vi.fn(),
     });
-    rolesService = createMock<RolesService>({
-      getPermissionsForServiceAccount: vi.fn(),
-      getPermissionsForUser: vi.fn(),
-    });
-    guard = new GqlPermissionsGuard(reflector, rolesService);
+    roles = createRolesRepositoryMock();
+    guard = new GqlPermissionsGuard(
+      reflector,
+      createMock<RolesRepository>(roles),
+    );
   });
 
   afterEach(() => {
@@ -54,16 +56,14 @@ describe('GqlPermissionsGuard', () => {
 
     await expect(guard.canActivate(ctx)).resolves.toBe(true);
 
-    expect(rolesService.getPermissionsForUser).not.toHaveBeenCalled();
+    expect(roles.getPermissionsForUser).not.toHaveBeenCalled();
   });
 
   it('resolves permissions via getPermissionsForUser for user principals', async () => {
     vi.mocked(reflector.getAllAndOverride).mockReturnValue([
       PERMISSIONS.USERS_READ,
     ]);
-    vi.mocked(rolesService.getPermissionsForUser).mockResolvedValue([
-      'users:read',
-    ]);
+    roles.getPermissionsForUser.mockResolvedValue(['users:read']);
     const ctx = createHttpExecutionContext({
       user: {
         email: 'user@example.com',
@@ -74,42 +74,38 @@ describe('GqlPermissionsGuard', () => {
 
     await expect(guard.canActivate(ctx)).resolves.toBe(true);
 
-    expect(rolesService.getPermissionsForUser).toHaveBeenCalledWith(userId);
-    expect(rolesService.getPermissionsForServiceAccount).not.toHaveBeenCalled();
+    expect(roles.getPermissionsForUser).toHaveBeenCalledWith(userId);
+    expect(roles.getPermissionsForServiceAccount).not.toHaveBeenCalled();
   });
 
   it('resolves permissions via getPermissionsForServiceAccount for service accounts', async () => {
     vi.mocked(reflector.getAllAndOverride).mockReturnValue([
       PERMISSIONS.SETTINGS_READ,
     ]);
-    vi.mocked(rolesService.getPermissionsForServiceAccount).mockResolvedValue([
-      'settings:read',
-    ]);
+    roles.getPermissionsForServiceAccount.mockResolvedValue(['settings:read']);
     const principal = authPrincipalFromServiceAccountId(serviceAccountId);
     const ctx = createHttpExecutionContext({ user: principal });
 
     await expect(guard.canActivate(ctx)).resolves.toBe(true);
 
-    expect(rolesService.getPermissionsForServiceAccount).toHaveBeenCalledWith(
+    expect(roles.getPermissionsForServiceAccount).toHaveBeenCalledWith(
       serviceAccountId,
     );
-    expect(rolesService.getPermissionsForUser).not.toHaveBeenCalled();
+    expect(roles.getPermissionsForUser).not.toHaveBeenCalled();
   });
 
   it('accepts legacy JWT payloads without kind as user principals', async () => {
     vi.mocked(reflector.getAllAndOverride).mockReturnValue([
       PERMISSIONS.USERS_READ,
     ]);
-    vi.mocked(rolesService.getPermissionsForUser).mockResolvedValue([
-      'users:read',
-    ]);
+    roles.getPermissionsForUser.mockResolvedValue(['users:read']);
     const ctx = createHttpExecutionContext({
       user: { email: 'user@example.com', sub: userId },
     });
 
     await expect(guard.canActivate(ctx)).resolves.toBe(true);
 
-    expect(rolesService.getPermissionsForUser).toHaveBeenCalledWith(userId);
+    expect(roles.getPermissionsForUser).toHaveBeenCalledWith(userId);
   });
 
   it('throws ForbiddenException when principal is missing', async () => {
@@ -128,9 +124,7 @@ describe('GqlPermissionsGuard', () => {
     vi.mocked(reflector.getAllAndOverride).mockReturnValue([
       PERMISSIONS.USERS_WRITE,
     ]);
-    vi.mocked(rolesService.getPermissionsForUser).mockResolvedValue([
-      'users:read',
-    ]);
+    roles.getPermissionsForUser.mockResolvedValue(['users:read']);
     const ctx = createHttpExecutionContext({
       user: {
         kind: AUTH_PRINCIPAL_KIND_USER,
@@ -147,9 +141,7 @@ describe('GqlPermissionsGuard', () => {
     vi.mocked(reflector.getAllAndOverride).mockReturnValue([
       PERMISSIONS.SETTINGS_WRITE,
     ]);
-    vi.mocked(rolesService.getPermissionsForServiceAccount).mockResolvedValue(
-      [],
-    );
+    roles.getPermissionsForServiceAccount.mockResolvedValue([]);
     const ctx = createHttpExecutionContext({
       user: authPrincipalFromServiceAccountId(serviceAccountId),
     });
@@ -157,7 +149,7 @@ describe('GqlPermissionsGuard', () => {
     await expect(guard.canActivate(ctx)).rejects.toThrow(
       'Missing permission: settings:write',
     );
-    expect(rolesService.getPermissionsForServiceAccount).toHaveBeenCalledWith(
+    expect(roles.getPermissionsForServiceAccount).toHaveBeenCalledWith(
       serviceAccountId,
     );
   });

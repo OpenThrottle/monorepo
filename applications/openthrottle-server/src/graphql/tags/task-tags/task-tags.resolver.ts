@@ -8,12 +8,11 @@ import {
 } from '@nestjs/graphql';
 import { type AuthPrincipal, CurrentUser } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
+import { TagsService, type TaskTag } from '@openthrottle/nestjs-repositories';
 import {
-  ServiceAccountsService,
-  TagsService,
-  type TaskTag,
-} from '@openthrottle/nestjs-repositories';
-import { TasksRepository } from '@openthrottle/nestjs-repositories-server';
+  ServiceAccountsRepository,
+  TasksRepository,
+} from '@openthrottle/nestjs-repositories-server';
 
 import { GqlPermissionsGuard } from '../../../guards/gql-permissions.guard.ts';
 import { PlanRulesEvaluationService } from '../../../queues/plan-rules/evaluation/evaluation.service.ts';
@@ -30,7 +29,7 @@ export class TaskTagsResolver {
   constructor(
     private readonly loaders: TagsLoaders,
     private readonly planRulesEvaluationService: PlanRulesEvaluationService,
-    private readonly serviceAccountsService: ServiceAccountsService,
+    private readonly serviceAccountsRepository: ServiceAccountsRepository,
     private readonly tagsService: TagsService,
     private readonly tasksRepository: TasksRepository,
   ) {}
@@ -62,7 +61,7 @@ export class TaskTagsResolver {
   ): Promise<TaskTag> {
     const caller = await resolveTagCaller(
       principal,
-      this.serviceAccountsService,
+      this.serviceAccountsRepository,
     );
     const tag = await this.tagsService.addTaskTag(
       caller,
@@ -84,7 +83,7 @@ export class TaskTagsResolver {
   ): Promise<boolean> {
     const caller = await resolveTagCaller(
       principal,
-      this.serviceAccountsService,
+      this.serviceAccountsRepository,
     );
     const removed = await this.tagsService.removeTaskTag(
       caller,

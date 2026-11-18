@@ -8,12 +8,13 @@ import './tag-action-rules.input.ts';
 
 import { Module } from '@nestjs/common';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+import { RolesModule } from '@openthrottle/nestjs-repositories-server';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import { TagActionRulesResolver } from './tag-action-rules.resolver.ts';
 
 @Module({
-  imports: [NestjsRepositoriesModule],
+  imports: [RolesModule, NestjsRepositoriesModule],
   providers: [GqlPermissionsGuard, TagActionRulesResolver],
 })
 export class TagActionRulesGraphqlModule {}

@@ -16,7 +16,7 @@ import {
 } from '@openthrottle/nestjs-auth';
 import type { Permission } from '@openthrottle/nestjs-rbac';
 import { PERMISSIONS_KEY } from '@openthrottle/nestjs-rbac';
-import { RolesService } from '@openthrottle/nestjs-repositories';
+import { RolesRepository } from '@openthrottle/nestjs-repositories-server';
 
 import { getPermissionsForPrincipal } from './guards.utils.ts';
 
@@ -24,7 +24,7 @@ import { getPermissionsForPrincipal } from './guards.utils.ts';
 export class GqlPermissionsGuard {
   constructor(
     private readonly reflector: Reflector,
-    private readonly rolesService: RolesService,
+    private readonly rolesRepository: RolesRepository,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -45,7 +45,7 @@ export class GqlPermissionsGuard {
     }
 
     const principalPermissions = await getPermissionsForPrincipal(
-      this.rolesService,
+      this.rolesRepository,
       principal,
     );
 

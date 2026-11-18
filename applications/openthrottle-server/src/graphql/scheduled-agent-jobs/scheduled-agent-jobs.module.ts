@@ -11,7 +11,10 @@ import './scheduled-agent-jobs.input.ts';
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
-import { UserDisabledAgentClisModule } from '@openthrottle/nestjs-repositories-server';
+import {
+  RolesModule,
+  UserDisabledAgentClisModule,
+} from '@openthrottle/nestjs-repositories-server';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import { ScheduledAgentJobsQueueProducerModule } from '../../queues/scheduled-agent-jobs/producer/producer.module.ts';
@@ -22,6 +25,7 @@ import { ScheduledAgentJobsGraphqlService } from './scheduled-agent-jobs.service
 
 @Module({
   imports: [
+    RolesModule,
     UserDisabledAgentClisModule,
     LoggerModule,
     NestjsRepositoriesModule,

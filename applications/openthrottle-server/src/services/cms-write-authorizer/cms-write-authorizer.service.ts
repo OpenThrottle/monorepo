@@ -9,24 +9,27 @@ import { Injectable } from '@nestjs/common';
 import type { AuthPrincipal } from '@openthrottle/nestjs-auth';
 import { AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS } from '@openthrottle/nestjs-rbac';
-import { RolesService, UsersService } from '@openthrottle/nestjs-repositories';
 import type {
   CmsWriteAuthorizer,
   CmsWriteDecision,
 } from '@openthrottle/nestjs-repositories-cms';
+import {
+  RolesRepository,
+  UsersRepository,
+} from '@openthrottle/nestjs-repositories-server';
 
 import { getPermissionsForPrincipal } from '../../guards/guards.utils.ts';
 
 @Injectable()
 export class CmsWriteAuthorizerService implements CmsWriteAuthorizer {
   constructor(
-    private readonly rolesService: RolesService,
-    private readonly usersService: UsersService,
+    private readonly rolesRepository: RolesRepository,
+    private readonly usersRepository: UsersRepository,
   ) {}
 
   async authorize(principal: AuthPrincipal): Promise<CmsWriteDecision> {
     const permissions = await getPermissionsForPrincipal(
-      this.rolesService,
+      this.rolesRepository,
       principal,
     );
 
@@ -44,7 +47,9 @@ export class CmsWriteAuthorizerService implements CmsWriteAuthorizer {
       };
     }
 
-    const user = await this.usersService.findById(principal.sub);
+    const user = await this.usersRepository.findOne({
+      where: { id: principal.sub },
+    });
 
     return {
       ok: true,

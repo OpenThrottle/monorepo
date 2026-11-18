@@ -7,7 +7,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
-import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+import { UsersModule } from '@openthrottle/nestjs-repositories-server';
 
 import { AuthResolver } from './auth.resolver.ts';
 import { AuthService } from './auth.service.ts';
@@ -19,6 +19,7 @@ import { SubscriptionTokenResolver } from './subscription-token/subscription-tok
 
 @Module({
   imports: [
+    UsersModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -49,7 +50,6 @@ import { SubscriptionTokenResolver } from './subscription-token/subscription-tok
       },
     }),
     LoggerModule,
-    NestjsRepositoriesModule,
     // `.register({})` and not a bare `PassportModule`: only the dynamic form
     // provides `AuthModuleOptions`, which `AuthGuard()` — and therefore the
     // `GqlLocalAuthGuard` below — takes as its first constructor argument.

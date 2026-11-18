@@ -6,12 +6,13 @@
 import { Module } from '@nestjs/common';
 import { NestjsModelDiscoveryModule } from '@openthrottle/nestjs-model-discovery';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+import { RolesModule } from '@openthrottle/nestjs-repositories-server';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import { ModelDiscoveryResolver } from './model-discovery.resolver.ts';
 
 @Module({
-  imports: [NestjsModelDiscoveryModule, NestjsRepositoriesModule],
+  imports: [RolesModule, NestjsModelDiscoveryModule, NestjsRepositoriesModule],
   providers: [GqlPermissionsGuard, ModelDiscoveryResolver],
 })
 export class ModelDiscoveryGraphqlModule {}

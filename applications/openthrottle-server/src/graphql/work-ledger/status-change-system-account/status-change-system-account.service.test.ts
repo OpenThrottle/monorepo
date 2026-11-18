@@ -1,61 +1,58 @@
 import { createMock } from '@golevelup/ts-vitest';
-import type {
-  ServiceAccount,
-  ServiceAccountsService,
-} from '@openthrottle/nestjs-repositories';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { ServiceAccountsRepository } from '@openthrottle/nestjs-repositories-server';
+import type { ServiceAccountsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import {
+  createServiceAccountsRepositoryMock,
+  serviceAccountsFactory,
+} from '@openthrottle/nestjs-repositories-server/testing';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 import { STATUS_CHANGE_SYSTEM_SERVICE_ACCOUNT_NAME } from './status-change-system-account.constants.ts';
 import { StatusChangeSystemAccountService } from './status-change-system-account.service.ts';
 
-function buildAccount(id: string): ServiceAccount {
-  return {
-    actingUserId: null,
-    createdAt: new Date('2026-01-01T00:00:00.000Z'),
-    credentials: [],
-    description: null,
-    disabledAt: null,
-    id,
-    name: STATUS_CHANGE_SYSTEM_SERVICE_ACCOUNT_NAME,
-    roles: [],
-  };
-}
-
 describe('StatusChangeSystemAccountService', () => {
-  let serviceAccountsService: ServiceAccountsService;
+  let serviceAccounts: ServiceAccountsRepositoryMock;
   let service: StatusChangeSystemAccountService;
 
   beforeEach(() => {
-    serviceAccountsService = createMock<ServiceAccountsService>();
-    service = new StatusChangeSystemAccountService(serviceAccountsService);
+    serviceAccounts = createServiceAccountsRepositoryMock();
+    service = new StatusChangeSystemAccountService(
+      createMock<ServiceAccountsRepository>(serviceAccounts),
+    );
   });
 
   it('resolves the id of the seeded account by name', async () => {
-    vi.mocked(serviceAccountsService.findByName).mockResolvedValue(
-      buildAccount('system-account-1'),
+    serviceAccounts.findByName.mockResolvedValue(
+      serviceAccountsFactory.build({
+        id: 'system-account-1',
+        name: STATUS_CHANGE_SYSTEM_SERVICE_ACCOUNT_NAME,
+      }),
     );
 
     const id = await service.resolveId();
 
     expect(id).toBe('system-account-1');
-    expect(serviceAccountsService.findByName).toHaveBeenCalledWith(
+    expect(serviceAccounts.findByName).toHaveBeenCalledWith(
       STATUS_CHANGE_SYSTEM_SERVICE_ACCOUNT_NAME,
     );
   });
 
   it('memoises the lookup so a second call does not query again', async () => {
-    vi.mocked(serviceAccountsService.findByName).mockResolvedValue(
-      buildAccount('system-account-1'),
+    serviceAccounts.findByName.mockResolvedValue(
+      serviceAccountsFactory.build({
+        id: 'system-account-1',
+        name: STATUS_CHANGE_SYSTEM_SERVICE_ACCOUNT_NAME,
+      }),
     );
 
     await service.resolveId();
     await service.resolveId();
 
-    expect(serviceAccountsService.findByName).toHaveBeenCalledTimes(1);
+    expect(serviceAccounts.findByName).toHaveBeenCalledTimes(1);
   });
 
   it('returns null when the account is missing (e.g. migration not yet run)', async () => {
-    vi.mocked(serviceAccountsService.findByName).mockResolvedValue(null);
+    serviceAccounts.findByName.mockResolvedValue(null);
 
     const id = await service.resolveId();
 
@@ -63,9 +60,12 @@ describe('StatusChangeSystemAccountService', () => {
   });
 
   it('does not cache a null, so a process that booted ahead of its migrations recovers', async () => {
-    vi.mocked(serviceAccountsService.findByName).mockResolvedValueOnce(null);
-    vi.mocked(serviceAccountsService.findByName).mockResolvedValue(
-      buildAccount('system-account-1'),
+    serviceAccounts.findByName.mockResolvedValueOnce(null);
+    serviceAccounts.findByName.mockResolvedValue(
+      serviceAccountsFactory.build({
+        id: 'system-account-1',
+        name: STATUS_CHANGE_SYSTEM_SERVICE_ACCOUNT_NAME,
+      }),
     );
 
     expect(await service.resolveId()).toBeNull();

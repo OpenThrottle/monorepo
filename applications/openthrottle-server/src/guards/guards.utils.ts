@@ -1,15 +1,15 @@
 /**
  * @description Principal lookups shared by {@link GqlPermissionsGuard} and resolvers that need
  * the caller's permissions or identity themselves (e.g. a status-dependent permission rule that
- * the static `@Permissions()` metadata cannot express). Plain functions over injected services,
+ * the static `@Permissions()` metadata cannot express). Plain functions over injected repositories,
  * not an injectable class: the guard is instantiated in every feature module that uses it, so a
  * new constructor dependency on it would have to be provided in all of them.
  */
 import type { AuthPrincipal } from '@openthrottle/nestjs-auth';
 import { AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT } from '@openthrottle/nestjs-auth';
-import type { RolesService } from '@openthrottle/nestjs-repositories';
+import type { RolesRepository } from '@openthrottle/nestjs-repositories-server';
 
-import type { PrincipalIdentityServices } from './guards.types.ts';
+import type { PrincipalIdentityRepositories } from './guards.types.ts';
 const nonBlank = (value: string | null | undefined): string | null => {
   const trimmed = value?.trim() ?? '';
   return trimmed.length > 0 ? trimmed : null;
@@ -20,12 +20,12 @@ const nonBlank = (value: string | null | undefined): string | null => {
  * user's via theirs. The single lookup behind both the permission guard and in-resolver checks.
  */
 export const getPermissionsForPrincipal = async (
-  rolesService: RolesService,
+  rolesRepository: RolesRepository,
   principal: AuthPrincipal,
 ): Promise<readonly string[]> => {
   return principal.kind === AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT
-    ? rolesService.getPermissionsForServiceAccount(principal.sub)
-    : rolesService.getPermissionsForUser(principal.sub);
+    ? rolesRepository.getPermissionsForServiceAccount(principal.sub)
+    : rolesRepository.getPermissionsForUser(principal.sub);
 };
 
 /**
@@ -34,15 +34,19 @@ export const getPermissionsForPrincipal = async (
  * (from the row, then the token) and finally their id, so the result is never empty.
  */
 export const getEditorNameForPrincipal = async (
-  { serviceAccountsService, usersService }: PrincipalIdentityServices,
+  { serviceAccountsRepository, usersRepository }: PrincipalIdentityRepositories,
   principal: AuthPrincipal,
 ): Promise<string> => {
   if (principal.kind === AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT) {
-    const serviceAccount = await serviceAccountsService.findById(principal.sub);
+    const serviceAccount = await serviceAccountsRepository.findOne({
+      where: { id: principal.sub },
+    });
     return nonBlank(serviceAccount?.name) ?? principal.sub;
   }
 
-  const user = await usersService.findById(principal.sub);
+  const user = await usersRepository.findOne({
+    where: { id: principal.sub },
+  });
   return (
     nonBlank(user?.githubUsername) ??
     nonBlank(user?.email) ??

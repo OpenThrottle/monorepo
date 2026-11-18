@@ -36,7 +36,7 @@ export const PERMISSIONS = {
  *
  * This static table is NOT the production source of truth. Apps with a
  * database-backed authorization model (e.g. openthrottle-server, which resolves
- * permissions via `RolesService` and enforces them through `GqlPermissionsGuard`)
+ * permissions via `RolesRepository` and enforces them through `GqlPermissionsGuard`)
  * MUST NOT rely on this map. It exists solely as the built-in default for the
  * package's JWT-claim-based {@link RolesGuard} / {@link PermissionsGuard}, and as
  * a seed/reference for apps that have no DB. Pass a custom mapping to

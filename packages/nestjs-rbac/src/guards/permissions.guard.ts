@@ -35,7 +35,7 @@ import type { RbacUser } from './roles.guard.ts';
  * MUST NOT be used where roles/permissions are managed in a database or are otherwise mutable after
  * token issuance. In openthrottle-server, the canonical enforcer is `GqlPermissionsGuard`
  * (applications/openthrottle-server/src/guards/gql-permissions.guard.ts), which resolves permissions
- * from the DB via `RolesService.getPermissionsForUser` / `getPermissionsForServiceAccount`.
+ * from the DB via `RolesRepository.getPermissionsForUser` / `getPermissionsForServiceAccount`.
  *
  * Only safe for apps whose authorization model is genuinely "JWT claim + static map" with immutable
  * roles for a token's lifetime.

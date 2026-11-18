@@ -10,28 +10,32 @@ import {
 } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS } from '@openthrottle/nestjs-rbac';
 import type {
-  RolesService,
-  UsersService,
-} from '@openthrottle/nestjs-repositories';
-import { describe, expect, it, vi } from 'vitest';
+  RolesRepository,
+  UsersRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import {
+  createRolesRepositoryMock,
+  createUsersRepositoryMock,
+  usersFactory,
+} from '@openthrottle/nestjs-repositories-server/testing';
+import { describe, expect, it } from 'vitest';
 
 import { CmsWriteAuthorizerService } from './cms-write-authorizer.service.ts';
 
 const buildService = (permissions: readonly string[]) => {
-  const rolesService = createMock<RolesService>();
-  const usersService = createMock<UsersService>();
+  const roles = createRolesRepositoryMock();
+  const users = createUsersRepositoryMock();
 
-  vi.mocked(rolesService.getPermissionsForUser).mockResolvedValue([
-    ...permissions,
-  ]);
-  vi.mocked(rolesService.getPermissionsForServiceAccount).mockResolvedValue([
-    ...permissions,
-  ]);
+  roles.getPermissionsForUser.mockResolvedValue([...permissions]);
+  roles.getPermissionsForServiceAccount.mockResolvedValue([...permissions]);
 
   return {
-    rolesService,
-    service: new CmsWriteAuthorizerService(rolesService, usersService),
-    usersService,
+    roles,
+    service: new CmsWriteAuthorizerService(
+      createMock<RolesRepository>(roles),
+      createMock<UsersRepository>(users),
+    ),
+    users,
   };
 };
 
@@ -51,12 +55,10 @@ describe('CmsWriteAuthorizerService', () => {
 
   describe('when a user holds cms:write', () => {
     it('returns a user writer with the email from the users row', async () => {
-      const { rolesService, service, usersService } = buildService([
-        PERMISSIONS.CMS_WRITE,
-      ]);
+      const { roles, service, users } = buildService([PERMISSIONS.CMS_WRITE]);
 
-      vi.mocked(usersService.findById).mockResolvedValue(
-        Object.assign(Object.create(null), { email: 'row@example.test' }),
+      users.findOne.mockResolvedValue(
+        usersFactory.build({ email: 'row@example.test' }),
       );
 
       await expect(
@@ -69,13 +71,13 @@ describe('CmsWriteAuthorizerService', () => {
         ok: true,
         writer: { email: 'row@example.test', kind: 'user', userId: 'u1' },
       });
-      expect(rolesService.getPermissionsForUser).toHaveBeenCalledWith('u1');
+      expect(roles.getPermissionsForUser).toHaveBeenCalledWith('u1');
     });
   });
 
   describe('when a service account holds cms:write', () => {
     it('returns a service-account writer without looking up a user', async () => {
-      const { service, usersService } = buildService([PERMISSIONS.CMS_WRITE]);
+      const { service, users } = buildService([PERMISSIONS.CMS_WRITE]);
 
       await expect(
         service.authorize({
@@ -86,7 +88,7 @@ describe('CmsWriteAuthorizerService', () => {
         ok: true,
         writer: { kind: 'service-account', serviceAccountId: 'sa1' },
       });
-      expect(usersService.findById).not.toHaveBeenCalled();
+      expect(users.findOne).not.toHaveBeenCalled();
     });
   });
 });

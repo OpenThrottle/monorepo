@@ -1,11 +1,13 @@
-import { createMock } from '@golevelup/ts-vitest';
 import { BadRequestException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { RolesService } from '@openthrottle/nestjs-repositories';
-import { McpConnectorConnectionsRepository } from '@openthrottle/nestjs-repositories-server';
+import {
+  McpConnectorConnectionsRepository,
+  RolesRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import type { McpConnectorConnectionsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import {
   createMcpConnectorConnectionsRepositoryMock,
+  createRolesRepositoryMock,
   mcpConnectorConnectionsFactory,
 } from '@openthrottle/nestjs-repositories-server/testing';
 import { beforeEach, describe, expect, test } from 'vitest';
@@ -34,7 +36,7 @@ describe('McpConnectorsResolver', () => {
       providers: [
         McpConnectorsResolver,
         { provide: McpConnectorConnectionsRepository, useValue: service },
-        { provide: RolesService, useValue: createMock<RolesService>() },
+        { provide: RolesRepository, useValue: createRolesRepositoryMock() },
         GqlPermissionsGuard,
       ],
     }).compile();

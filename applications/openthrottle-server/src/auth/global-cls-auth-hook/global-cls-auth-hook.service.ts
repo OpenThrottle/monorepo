@@ -15,18 +15,18 @@ import {
   globalClsUserFromJwtLike,
 } from '@openthrottle/nestjs-modules';
 import {
-  RolesService,
-  ServiceAccountsService,
-  UsersService,
-} from '@openthrottle/nestjs-repositories';
+  RolesRepository,
+  ServiceAccountsRepository,
+  UsersRepository,
+} from '@openthrottle/nestjs-repositories-server';
 
 @Injectable()
 export class GlobalClsAuthHook {
   constructor(
     private readonly globalCls: GlobalClsService,
-    private readonly usersService: UsersService,
-    private readonly rolesService: RolesService,
-    private readonly serviceAccountsService: ServiceAccountsService,
+    private readonly usersRepository: UsersRepository,
+    private readonly rolesRepository: RolesRepository,
+    private readonly serviceAccountsRepository: ServiceAccountsRepository,
   ) {}
 
   /**
@@ -56,7 +56,9 @@ export class GlobalClsAuthHook {
       { kind: typeof AUTH_PRINCIPAL_KIND_USER }
     >,
   ): Promise<void> {
-    const row = await this.usersService.findById(principal.sub);
+    const row = await this.usersRepository.findOne({
+      where: { id: principal.sub },
+    });
 
     if (row == null) {
       this.globalCls.setUser(globalClsUserFromJwtLike(principal));
@@ -64,8 +66,8 @@ export class GlobalClsAuthHook {
     }
 
     const [permissions, roles] = await Promise.all([
-      this.rolesService.getPermissionsForUser(row.id),
-      this.rolesService.findRoleNamesByUserId(row.id),
+      this.rolesRepository.getPermissionsForUser(row.id),
+      this.rolesRepository.findRoleNamesByUserId(row.id),
     ]);
 
     this.globalCls.setUser({
@@ -84,7 +86,9 @@ export class GlobalClsAuthHook {
       { kind: typeof AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT }
     >,
   ): Promise<void> {
-    const row = await this.serviceAccountsService.findById(principal.sub);
+    const row = await this.serviceAccountsRepository.findOne({
+      where: { id: principal.sub },
+    });
 
     if (row == null) {
       this.globalCls.setUser({
@@ -99,8 +103,8 @@ export class GlobalClsAuthHook {
     }
 
     const [permissions, roles] = await Promise.all([
-      this.rolesService.getPermissionsForServiceAccount(row.id),
-      this.rolesService.findRoleNamesByServiceAccountId(row.id),
+      this.rolesRepository.getPermissionsForServiceAccount(row.id),
+      this.rolesRepository.findRoleNamesByServiceAccountId(row.id),
     ]);
 
     this.globalCls.setUser({

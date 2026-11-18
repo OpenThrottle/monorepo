@@ -8,11 +8,20 @@ import type {
   PlanRunsService,
   RepositoriesService,
   RepositoryCheckoutsService,
-  ServiceAccountsService,
 } from '@openthrottle/nestjs-repositories';
-import type { WorkArtifactsRepository } from '@openthrottle/nestjs-repositories-server';
-import type { WorkArtifactsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
-import { createWorkArtifactsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import type {
+  ServiceAccountsRepository,
+  WorkArtifactsRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import type {
+  ServiceAccountsRepositoryMock,
+  WorkArtifactsRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
+import {
+  createServiceAccountsRepositoryMock,
+  createWorkArtifactsRepositoryMock,
+  serviceAccountsFactory,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
 import type { DataSource } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -70,7 +79,7 @@ describe('SettleRunLedgerService', () => {
   let repositoriesService: RepositoriesService;
   let repositoryCheckoutsService: RepositoryCheckoutsService;
   let repositoryInspectionService: RepositoryInspectionService;
-  let serviceAccountsService: ServiceAccountsService;
+  let serviceAccounts: ServiceAccountsRepositoryMock;
   let workArtifactsRepository: WorkArtifactsRepositoryMock;
   let logger: LoggerService;
   let service: SettleRunLedgerService;
@@ -107,9 +116,10 @@ describe('SettleRunLedgerService', () => {
     repositoriesService = createMock<RepositoriesService>({
       findById: vi.fn().mockResolvedValue({ name: 'OpenThrottle/monorepo' }),
     });
-    serviceAccountsService = createMock<ServiceAccountsService>({
-      findByName: vi.fn().mockResolvedValue({ id: 'service-account-1' }),
-    });
+    serviceAccounts = createServiceAccountsRepositoryMock();
+    serviceAccounts.findByName.mockResolvedValue(
+      serviceAccountsFactory.build({ id: 'service-account-1' }),
+    );
     // One findOne backs both the injected repository and the transaction's repositories, so a
     // test that stubs an existing artifact sees it on either path.
     workArtifactsRepository = createWorkArtifactsRepositoryMock();
@@ -141,7 +151,7 @@ describe('SettleRunLedgerService', () => {
       repositoriesService,
       repositoryCheckoutsService,
       repositoryInspectionService,
-      serviceAccountsService,
+      createMock<ServiceAccountsRepository>(serviceAccounts),
       new SourceControlService(
         new GitHubForgeService(githubService),
         new GitLabForgeService(createMock<ConfigService>()),

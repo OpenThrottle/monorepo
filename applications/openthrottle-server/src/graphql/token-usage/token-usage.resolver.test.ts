@@ -9,13 +9,14 @@ import {
 import {
   AgentAccountsService,
   AgentTokenUsageService,
-  RolesService,
   type TokenUsageTotals,
 } from '@openthrottle/nestjs-repositories';
 import {
   agentAccountFactory,
   agentTokenUsageFactory,
 } from '@openthrottle/nestjs-repositories/testing';
+import { RolesRepository } from '@openthrottle/nestjs-repositories-server';
+import { createRolesRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import { beforeAll, beforeEach, describe, expect, it, test, vi } from 'vitest';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
@@ -83,7 +84,7 @@ describe('TokenUsageResolver', () => {
             resolveEffectiveUserId,
           }),
         },
-        { provide: RolesService, useValue: createMock<RolesService>() },
+        { provide: RolesRepository, useValue: createRolesRepositoryMock() },
         GqlPermissionsGuard,
       ],
     }).compile();

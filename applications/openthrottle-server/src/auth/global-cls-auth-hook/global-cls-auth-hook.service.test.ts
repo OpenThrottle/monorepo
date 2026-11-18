@@ -13,72 +13,42 @@ import {
   globalClsUserFromJwtLike,
 } from '@openthrottle/nestjs-modules';
 import {
-  RolesService,
-  type ServiceAccount,
-  ServiceAccountsService,
-  type User,
-  UsersService,
-} from '@openthrottle/nestjs-repositories';
+  RolesRepository,
+  ServiceAccountsRepository,
+  UsersRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import {
+  createRolesRepositoryMock,
+  createServiceAccountsRepositoryMock,
+  createUsersRepositoryMock,
+  serviceAccountsFactory,
+  usersFactory,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import { ClsService } from 'nestjs-cls';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GlobalClsAuthHook } from './global-cls-auth-hook.service.ts';
 
-const userRow = (
-  fields: Pick<User, 'disabledAt' | 'email' | 'githubUsername' | 'id'>,
-): User => {
-  return {
-    createdAt: new Date('2019-01-01T00:00:00.000Z'),
-    passwordHash: null,
-    roles: [],
-    updatedAt: new Date('2019-01-01T00:00:00.000Z'),
-    ...fields,
-  };
-};
-
-const serviceAccountRow = (
-  fields: Pick<ServiceAccount, 'disabledAt' | 'description' | 'id' | 'name'>,
-): ServiceAccount => {
-  return {
-    actingUserId: null,
-    createdAt: new Date('2019-01-01T00:00:00.000Z'),
-    credentials: [],
-    roles: [],
-    ...fields,
-  };
-};
-
 describe('GlobalClsAuthHook', () => {
   let hook: GlobalClsAuthHook;
   /** Same CLS instance {@link GlobalClsModule} augments with `setUser` for {@link GlobalClsAuthHook}. */
   let cls: ClsService<GlobalClsStore>;
-  const mockUsersService = { findById: vi.fn() };
-  const mockServiceAccountsService = { findById: vi.fn() };
-  const mockRolesService = {
-    findRoleNamesByServiceAccountId: vi.fn(),
-    findRoleNamesByUserId: vi.fn(),
-    getPermissionsForServiceAccount: vi.fn(),
-    getPermissionsForUser: vi.fn(),
-  };
+  let roles: ReturnType<typeof createRolesRepositoryMock>;
+  let serviceAccounts: ReturnType<typeof createServiceAccountsRepositoryMock>;
+  let users: ReturnType<typeof createUsersRepositoryMock>;
 
   beforeEach(async () => {
-    vi.mocked(mockUsersService.findById).mockReset();
-    vi.mocked(mockServiceAccountsService.findById).mockReset();
-    vi.mocked(mockRolesService.findRoleNamesByUserId).mockReset();
-    vi.mocked(mockRolesService.getPermissionsForUser).mockReset();
-    vi.mocked(mockRolesService.findRoleNamesByServiceAccountId).mockReset();
-    vi.mocked(mockRolesService.getPermissionsForServiceAccount).mockReset();
+    roles = createRolesRepositoryMock();
+    serviceAccounts = createServiceAccountsRepositoryMock();
+    users = createUsersRepositoryMock();
 
     const moduleRef = await Test.createTestingModule({
       imports: [GlobalClsModule],
       providers: [
         GlobalClsAuthHook,
-        { provide: UsersService, useValue: mockUsersService },
-        {
-          provide: ServiceAccountsService,
-          useValue: mockServiceAccountsService,
-        },
-        { provide: RolesService, useValue: mockRolesService },
+        { provide: UsersRepository, useValue: users },
+        { provide: ServiceAccountsRepository, useValue: serviceAccounts },
+        { provide: RolesRepository, useValue: roles },
       ],
     }).compile();
 
@@ -87,7 +57,7 @@ describe('GlobalClsAuthHook', () => {
   });
 
   it('sets JWT-only user when no DB row', async () => {
-    vi.mocked(mockUsersService.findById).mockResolvedValue(null);
+    vi.mocked(users.findOne).mockResolvedValue(null);
     const payload = { email: 'ghost@example.com', sub: 'missing-id' };
 
     await cls.run(async () => {
@@ -95,26 +65,22 @@ describe('GlobalClsAuthHook', () => {
       expect(cls.get('user')).toEqual(globalClsUserFromJwtLike(payload));
     });
 
-    expect(mockRolesService.getPermissionsForUser).not.toHaveBeenCalled();
-    expect(mockRolesService.findRoleNamesByUserId).not.toHaveBeenCalled();
+    expect(roles.getPermissionsForUser).not.toHaveBeenCalled();
+    expect(roles.findRoleNamesByUserId).not.toHaveBeenCalled();
   });
 
   it('loads displayName, permissions, roles, and isDeleted from DB when row exists', async () => {
     const userId = '550e8400-e29b-41d4-a716-446655440000';
-    vi.mocked(mockUsersService.findById).mockResolvedValue(
-      userRow({
+    vi.mocked(users.findOne).mockResolvedValue(
+      usersFactory.build({
         disabledAt: new Date('2020-01-01T00:00:00.000Z'),
         email: 'u@example.com',
         githubUsername: 'octocat',
         id: userId,
       }),
     );
-    vi.mocked(mockRolesService.getPermissionsForUser).mockResolvedValue([
-      'plans:read',
-    ]);
-    vi.mocked(mockRolesService.findRoleNamesByUserId).mockResolvedValue([
-      'admin',
-    ]);
+    vi.mocked(roles.getPermissionsForUser).mockResolvedValue(['plans:read']);
+    vi.mocked(roles.findRoleNamesByUserId).mockResolvedValue(['admin']);
 
     await cls.run(async () => {
       await hook.populateFromPrincipal({
@@ -133,22 +99,23 @@ describe('GlobalClsAuthHook', () => {
       });
     });
 
-    expect(mockRolesService.getPermissionsForUser).toHaveBeenCalledWith(userId);
-    expect(mockRolesService.findRoleNamesByUserId).toHaveBeenCalledWith(userId);
+    expect(users.findOne).toHaveBeenCalledWith({ where: { id: userId } });
+    expect(roles.getPermissionsForUser).toHaveBeenCalledWith(userId);
+    expect(roles.findRoleNamesByUserId).toHaveBeenCalledWith(userId);
   });
 
   it('uses JWT email when DB email is null', async () => {
     const userId = '660e8400-e29b-41d4-a716-446655440001';
-    vi.mocked(mockUsersService.findById).mockResolvedValue(
-      userRow({
+    vi.mocked(users.findOne).mockResolvedValue(
+      usersFactory.build({
         disabledAt: null,
         email: null,
         githubUsername: 'nobody',
         id: userId,
       }),
     );
-    vi.mocked(mockRolesService.getPermissionsForUser).mockResolvedValue([]);
-    vi.mocked(mockRolesService.findRoleNamesByUserId).mockResolvedValue([]);
+    vi.mocked(roles.getPermissionsForUser).mockResolvedValue([]);
+    vi.mocked(roles.findRoleNamesByUserId).mockResolvedValue([]);
 
     await cls.run(async () => {
       await hook.populateFromJwtPayload({
@@ -162,7 +129,7 @@ describe('GlobalClsAuthHook', () => {
 
   it('sets minimal CLS user when service account row is missing', async () => {
     const saId = '770e8400-e29b-41d4-a716-446655440002';
-    vi.mocked(mockServiceAccountsService.findById).mockResolvedValue(null);
+    vi.mocked(serviceAccounts.findOne).mockResolvedValue(null);
 
     await cls.run(async () => {
       await hook.populateFromPrincipal({
@@ -180,30 +147,24 @@ describe('GlobalClsAuthHook', () => {
       });
     });
 
-    expect(
-      mockRolesService.getPermissionsForServiceAccount,
-    ).not.toHaveBeenCalled();
-    expect(
-      mockRolesService.findRoleNamesByServiceAccountId,
-    ).not.toHaveBeenCalled();
+    expect(roles.getPermissionsForServiceAccount).not.toHaveBeenCalled();
+    expect(roles.findRoleNamesByServiceAccountId).not.toHaveBeenCalled();
   });
 
   it('loads service account name, permissions, roles, and isDeleted from DB', async () => {
     const saId = '880e8400-e29b-41d4-a716-446655440003';
-    vi.mocked(mockServiceAccountsService.findById).mockResolvedValue(
-      serviceAccountRow({
+    vi.mocked(serviceAccounts.findOne).mockResolvedValue(
+      serviceAccountsFactory.build({
         description: 'MCP automation',
         disabledAt: null,
         id: saId,
         name: 'openthrottle-mcp',
       }),
     );
-    vi.mocked(
-      mockRolesService.getPermissionsForServiceAccount,
-    ).mockResolvedValue(['plans:write']);
-    vi.mocked(
-      mockRolesService.findRoleNamesByServiceAccountId,
-    ).mockResolvedValue(['mcp']);
+    vi.mocked(roles.getPermissionsForServiceAccount).mockResolvedValue([
+      'plans:write',
+    ]);
+    vi.mocked(roles.findRoleNamesByServiceAccountId).mockResolvedValue(['mcp']);
 
     await cls.run(async () => {
       await hook.populateFromPrincipal({
@@ -221,11 +182,7 @@ describe('GlobalClsAuthHook', () => {
       });
     });
 
-    expect(
-      mockRolesService.getPermissionsForServiceAccount,
-    ).toHaveBeenCalledWith(saId);
-    expect(
-      mockRolesService.findRoleNamesByServiceAccountId,
-    ).toHaveBeenCalledWith(saId);
+    expect(roles.getPermissionsForServiceAccount).toHaveBeenCalledWith(saId);
+    expect(roles.findRoleNamesByServiceAccountId).toHaveBeenCalledWith(saId);
   });
 });

@@ -4,6 +4,7 @@ import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import {
   PlansModule,
   TasksModule,
+  UsersModule,
 } from '@openthrottle/nestjs-repositories-server';
 
 import { WorkLedgerGraphqlModule } from '../../graphql/work-ledger/work-ledger.module.ts';
@@ -29,6 +30,7 @@ import { PromoteTaskToPlanExecutor } from './promote-task-to-plan.executor.ts';
 @Module({
   exports: [ActionExecutorRegistry, PlanRulesQueueProducerModule],
   imports: [
+    UsersModule,
     LoggerModule,
     NestjsRepositoriesModule,
     NotificationsModule,

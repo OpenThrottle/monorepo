@@ -2,10 +2,11 @@ import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import type { UserPreferencesData } from '@openthrottle/nestjs-repositories';
 import {
-  RolesService,
   USER_PREFERENCES_ERROR_REASONS,
   UserPreferencesService,
 } from '@openthrottle/nestjs-repositories';
+import { RolesRepository } from '@openthrottle/nestjs-repositories-server';
+import { createRolesRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import { GraphQLError } from 'graphql';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -44,12 +45,7 @@ describe('UserPreferencesResolver', () => {
           provide: UserPreferencesService,
           useValue: mockUserPreferencesService,
         },
-        {
-          provide: RolesService,
-          useValue: createMock<RolesService>({
-            getPermissionsForUser: vi.fn().mockResolvedValue([]),
-          }),
-        },
+        { provide: RolesRepository, useValue: createRolesRepositoryMock() },
       ],
     }).compile();
 

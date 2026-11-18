@@ -16,6 +16,7 @@
   "devDependencies": {
     "@golevelup/ts-vitest": "catalog:",
     "@nestjs/testing": "catalog:",
+    "@openthrottle/nestjs-repositories-server": "workspace:^",
     "@openthrottle/nestjs-testing": "workspace:^",
     "vitest": "catalog:"
   },

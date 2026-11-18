@@ -19,7 +19,7 @@ import {
   type AuthPrincipal,
 } from '@openthrottle/nestjs-auth';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { RolesService } from '@openthrottle/nestjs-repositories';
+import { RolesRepository } from '@openthrottle/nestjs-repositories';
 import { Repository } from 'typeorm';
 
 import { RolloutFlag } from './rollout-flag.entity.ts';
@@ -54,7 +54,7 @@ export class RolloutService {
     private readonly logger: LoggerService,
     @InjectRepository(RolloutFlag)
     private readonly rolloutFlagRepository: Repository<RolloutFlag>,
-    private readonly rolesService: RolesService,
+    private readonly rolesRepository: RolesRepository,
   ) {
     this.logger.debug('🚩 rollout 🚩');
   }
@@ -301,8 +301,8 @@ export class RolloutService {
     principal: AuthPrincipal,
   ): Promise<string[]> {
     return principal.kind === AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT
-      ? this.rolesService.findRoleNamesByServiceAccountId(principal.sub)
-      : this.rolesService.findRoleNamesByUserId(principal.sub);
+      ? this.rolesRepository.findRoleNamesByServiceAccountId(principal.sub)
+      : this.rolesRepository.findRoleNamesByUserId(principal.sub);
   }
 
   /**

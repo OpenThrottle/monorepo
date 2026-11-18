@@ -41,10 +41,10 @@ import {
   PlanRunsService,
   RepositoriesService,
   RepositoryCheckoutsService,
-  ServiceAccountsService,
 } from '@openthrottle/nestjs-repositories';
 import type { WorkArtifactSource } from '@openthrottle/nestjs-repositories-server';
 import {
+  ServiceAccountsRepository,
   WORK_ARTIFACT_SOURCE,
   WorkArtifact,
   WorkArtifactsRepository,
@@ -87,7 +87,7 @@ export class SettleRunLedgerService {
     private readonly repositoriesService: RepositoriesService,
     private readonly repositoryCheckoutsService: RepositoryCheckoutsService,
     private readonly repositoryInspectionService: RepositoryInspectionService,
-    private readonly serviceAccountsService: ServiceAccountsService,
+    private readonly serviceAccountsRepository: ServiceAccountsRepository,
     private readonly sourceControlService: SourceControlService,
     private readonly workArtifactsRepository: WorkArtifactsRepository,
     @InjectDataSource() private readonly dataSource: DataSource,
@@ -451,7 +451,7 @@ export class SettleRunLedgerService {
 
   /** The seeded Ralph service account; null when it cannot be resolved. */
   private async resolveActorServiceAccountId(): Promise<string | null> {
-    const account = await this.serviceAccountsService.findByName(
+    const account = await this.serviceAccountsRepository.findByName(
       WORKFLOW_RALPH_SERVICE_ACCOUNT_NAME,
     );
 

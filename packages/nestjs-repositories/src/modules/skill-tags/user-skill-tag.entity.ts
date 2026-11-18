@@ -2,6 +2,7 @@
  * @description TypeORM entity for user_skill_tags. Matches databases/openthrottle/migrations/060 + 063.
  */
 
+import { User } from '@openthrottle/nestjs-repositories-server';
 import {
   Column,
   CreateDateColumn,
@@ -11,8 +12,6 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-
-import { User } from '../users/user.entity.ts';
 
 export interface UserSkillTagData {
   readonly dimension: string;

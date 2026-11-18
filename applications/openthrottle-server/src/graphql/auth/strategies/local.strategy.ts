@@ -6,8 +6,11 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import type { User } from '@openthrottle/nestjs-repositories';
-import { UsersService } from '@openthrottle/nestjs-repositories';
+import type { User } from '@openthrottle/nestjs-repositories-server';
+import {
+  UsersRepository,
+  validatePassword,
+} from '@openthrottle/nestjs-repositories-server';
 import { Strategy } from 'passport-local';
 
 /** Strategy name for use with AuthGuard('local'). */
@@ -19,7 +22,7 @@ export class LocalStrategy extends PassportStrategy(
   LOCAL_STRATEGY_NAME,
 ) {
   constructor(
-    private readonly usersService: UsersService,
+    private readonly usersRepository: UsersRepository,
     private readonly logger: LoggerService,
   ) {
     super({
@@ -27,7 +30,7 @@ export class LocalStrategy extends PassportStrategy(
       usernameField: 'username',
     });
 
-    // console.log('🔑 local-strategy', { usersService: usersService });
+    // console.log('🔑 local-strategy', { usersRepository });
   }
 
   /**
@@ -35,7 +38,7 @@ export class LocalStrategy extends PassportStrategy(
    */
   async validate(username: string, password: string): Promise<User> {
     const email = username;
-    const user = await this.usersService.findByEmail(email);
+    const user = await this.usersRepository.findByEmail(email);
 
     // this.logger.info('🔑 local-strategy', { user });
 
@@ -43,10 +46,7 @@ export class LocalStrategy extends PassportStrategy(
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    const valid = await this.usersService.validatePassword(
-      password,
-      user.passwordHash,
-    );
+    const valid = await validatePassword(password, user.passwordHash);
 
     if (!valid) {
       throw new UnauthorizedException('Invalid email or password');
