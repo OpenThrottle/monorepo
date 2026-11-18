@@ -1,9 +1,9 @@
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
-  PlanOutputStreamService,
-  PlansService,
-  TasksService,
-} from '@openthrottle/nestjs-repositories';
+  PlanOutputStreamRepository,
+  PlansRepository,
+  TasksRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import type {
   JobRunHookEntry,
   JobRunHookPhase,
@@ -52,10 +52,10 @@ export interface ExecuteSinglePlanLifecycleHookParams {
   readonly mainRunStarted?: boolean;
   readonly mainRunSucceeded?: boolean;
   readonly phase: JobRunHookPhase;
-  readonly planOutputStreamService: PlanOutputStreamService;
-  readonly plansService: PlansService;
+  readonly planOutputStreamRepository: PlanOutputStreamRepository;
+  readonly plansRepository: PlansRepository;
   readonly signal?: AbortSignal;
   readonly task?: JobRunHookTaskContext;
   readonly taskOutcome?: JobRunHookTaskOutcome;
-  readonly tasksService: TasksService;
+  readonly tasksRepository: TasksRepository;
 }

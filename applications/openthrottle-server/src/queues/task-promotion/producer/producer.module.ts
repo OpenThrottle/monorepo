@@ -4,6 +4,7 @@ import { NestjsBullmqModule } from '@openthrottle/nestjs-bullmq';
 import { NestjsBullmqBoardModule } from '@openthrottle/nestjs-bullmq-board';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+import { TasksModule } from '@openthrottle/nestjs-repositories-server';
 
 import { TaskPromotionEnqueueService } from '../enqueue/enqueue.service.ts';
 import { TASK_PROMOTION_QUEUE_NAME } from '../task-promotion.constants.ts';
@@ -18,9 +19,10 @@ import { TASK_PROMOTION_QUEUE_NAME } from '../task-promotion.constants.ts';
   exports: [BullModule, TaskPromotionEnqueueService],
   imports: [
     LoggerModule,
-    NestjsBullmqModule.registerQueue(TASK_PROMOTION_QUEUE_NAME),
     NestjsBullmqBoardModule.forFeature(TASK_PROMOTION_QUEUE_NAME),
+    NestjsBullmqModule.registerQueue(TASK_PROMOTION_QUEUE_NAME),
     NestjsRepositoriesModule,
+    TasksModule,
   ],
   providers: [TaskPromotionEnqueueService],
 })

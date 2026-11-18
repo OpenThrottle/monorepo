@@ -6,18 +6,23 @@
  */
 
 import { createMock } from '@golevelup/ts-vitest';
+import { NotFoundException } from '@nestjs/common';
 import type { ConfigService } from '@nestjs/config';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
-  Plan,
   RuleApplication,
   RuleApplicationsService,
   TagActionRule,
-  TasksService,
 } from '@openthrottle/nestjs-repositories';
-import { Task } from '@openthrottle/nestjs-repositories';
+import type {
+  Plan,
+  TasksRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import { Task } from '@openthrottle/nestjs-repositories-server';
+import { createTasksRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
 import type { MatchedTagAction } from '@openthrottle/openthrottle-skills';
+import type { DataSource } from 'typeorm';
 import { QueryFailedError } from 'typeorm';
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 
@@ -73,10 +78,9 @@ describe('InjectTaskExecutor', () => {
     PlanContextAvailabilityService['isSkillUnavailableForPlan']
   >;
   let preSatisfiedGetOne: ReturnType<typeof vi.fn>;
-  let aggregateGetRawOne: ReturnType<typeof vi.fn>;
-  let taskSave: ReturnType<typeof vi.fn>;
+  let sortOrderLookup: ReturnType<typeof vi.fn>;
   let taskCreate: ReturnType<typeof vi.fn>;
-  let taskDelete: ReturnType<typeof vi.fn>;
+  let taskRemove: ReturnType<typeof vi.fn>;
   let taskFindOne: ReturnType<typeof vi.fn>;
   let taskUpdate: ReturnType<typeof vi.fn>;
   let configGet: ReturnType<typeof vi.fn>;
@@ -92,54 +96,43 @@ describe('InjectTaskExecutor', () => {
     WorkLedgerCaptureService['recordStatusChange']
   >;
   let allocateSortOrderBesideAnchor: Mock<
-    TasksService['allocateSortOrderBesideAnchor']
+    TasksRepository['allocateSortOrderBesideAnchor']
   >;
 
   beforeEach(() => {
     vi.clearAllMocks();
 
     preSatisfiedGetOne = vi.fn().mockResolvedValue(null);
-    aggregateGetRawOne = vi.fn().mockResolvedValue({ value: '1000' });
-    const queryBuilder = {
-      andWhere: vi.fn(),
-      getOne: preSatisfiedGetOne,
-      getRawOne: aggregateGetRawOne,
-      orderBy: vi.fn(),
-      select: vi.fn(),
-      where: vi.fn(),
-    };
-    queryBuilder.andWhere.mockReturnValue(queryBuilder);
-    queryBuilder.orderBy.mockReturnValue(queryBuilder);
-    queryBuilder.select.mockReturnValue(queryBuilder);
-    queryBuilder.where.mockReturnValue(queryBuilder);
+    // MIN/MAX sort_order extent and the neighbour beside an anchor share one stub: a test sets
+    // the single number (or null) the lookup it exercises should answer with.
+    sortOrderLookup = vi.fn().mockResolvedValue(1000);
 
-    taskCreate = vi.fn((data: Partial<Task>) => ({ ...data }));
-    taskSave = vi.fn((entity: Task) =>
-      Promise.resolve({ ...entity, id: taskId }),
-    );
-    taskDelete = vi.fn();
+    taskCreate = vi.fn(async (data: Partial<Task>) => ({
+      ...data,
+      id: taskId,
+    }));
+    taskRemove = vi.fn().mockResolvedValue(undefined);
     taskFindOne = vi.fn().mockResolvedValue(null);
-    taskUpdate = vi.fn().mockResolvedValue({ affected: 1 });
+    taskUpdate = vi.fn().mockResolvedValue({ updateCount: 1 });
     // Transaction manager used by the multi-sibling group reconcile path.
     managerUpdate = vi.fn().mockResolvedValue({ affected: 1 });
-    const managerTransaction = vi.fn(
-      async (run: (manager: unknown) => Promise<void>) =>
+    const dataSource = asMock<DataSource>({
+      transaction: vi.fn(async (run: (manager: unknown) => Promise<void>) =>
         run(asMock({ update: managerUpdate })),
-    );
-    allocateSortOrderBesideAnchor = vi.fn().mockResolvedValue(1500);
-    const tasksService = createMock<TasksService>({
-      allocateSortOrderBesideAnchor,
-      getRepository: vi.fn(() =>
-        asMock({
-          create: taskCreate,
-          createQueryBuilder: vi.fn(() => queryBuilder),
-          delete: taskDelete,
-          findOne: taskFindOne,
-          manager: { transaction: managerTransaction },
-          save: taskSave,
-          update: taskUpdate,
-        }),
       ),
+    });
+    allocateSortOrderBesideAnchor = vi.fn().mockResolvedValue(1500);
+    const tasksRepository = asMock<TasksRepository>({
+      ...createTasksRepositoryMock(),
+      allocateSortOrderBesideAnchor,
+      create: taskCreate,
+      findFirstByTitleContaining: preSatisfiedGetOne,
+      findFirstMentioning: preSatisfiedGetOne,
+      findOne: taskFindOne,
+      getNeighborSortOrder: sortOrderLookup,
+      getSortOrderExtent: sortOrderLookup,
+      remove: taskRemove,
+      updateMany: taskUpdate,
     });
 
     // Kill switch defaults to enabled (flag unset).
@@ -212,13 +205,14 @@ describe('InjectTaskExecutor', () => {
 
     executor = new InjectTaskExecutor(
       configService,
+      dataSource,
       new ActionExecutorRegistry(createMock<LoggerService>()),
       createMock<LoggerService>(),
       createMock<NotificationsService>({ emitTaskStatusChanged }),
       planContextAvailabilityService,
       ruleApplicationsService,
       statusChangeSystemAccount,
-      tasksService,
+      tasksRepository,
       workLedgerCapture,
     );
   });
@@ -241,7 +235,7 @@ describe('InjectTaskExecutor', () => {
         taskId: 'existing-task',
       }),
     );
-    expect(taskSave).not.toHaveBeenCalled();
+    expect(taskCreate).not.toHaveBeenCalled();
   });
 
   it('ledgers flagged {reason: skill-unavailable} when plan-context availability gates the slug', async () => {
@@ -260,7 +254,7 @@ describe('InjectTaskExecutor', () => {
         state: 'flagged',
       }),
     );
-    expect(taskSave).not.toHaveBeenCalled();
+    expect(taskCreate).not.toHaveBeenCalled();
   });
 
   it('consults the gate with the plan id, slug, and owner vocabulary', async () => {
@@ -279,7 +273,7 @@ describe('InjectTaskExecutor', () => {
   });
 
   it('injects at first position (MIN − 1000) with default title and provenance footer, then ledgers applied', async () => {
-    aggregateGetRawOne.mockResolvedValue({ value: '1000' });
+    sortOrderLookup.mockResolvedValue(1000);
 
     await executor.execute({
       action: buildAction(),
@@ -318,7 +312,7 @@ describe('InjectTaskExecutor', () => {
   });
 
   it('injects at last position (MAX + 1000) when placement is last', async () => {
-    aggregateGetRawOne.mockResolvedValue({ value: '3000' });
+    sortOrderLookup.mockResolvedValue(3000);
 
     await executor.execute({
       action: buildAction({ placement: 'last', skillSlug: 'grilling' }),
@@ -414,7 +408,7 @@ describe('InjectTaskExecutor', () => {
   });
 
   it('starts at 1000 on an empty plan', async () => {
-    aggregateGetRawOne.mockResolvedValue({ value: null });
+    sortOrderLookup.mockResolvedValue(null);
 
     await executor.execute({
       action: buildAction(),
@@ -429,10 +423,8 @@ describe('InjectTaskExecutor', () => {
   });
 
   it('retries once with a recomputed sort order on a UNIQUE collision', async () => {
-    aggregateGetRawOne
-      .mockResolvedValueOnce({ value: '1000' })
-      .mockResolvedValueOnce({ value: '0' });
-    taskSave
+    sortOrderLookup.mockResolvedValueOnce(1000).mockResolvedValueOnce(0);
+    taskCreate
       .mockRejectedValueOnce(sortOrderViolation())
       .mockImplementationOnce((entity: Task) =>
         Promise.resolve({ ...entity, id: taskId }),
@@ -445,7 +437,7 @@ describe('InjectTaskExecutor', () => {
       rule: buildRule(),
     });
 
-    expect(taskSave).toHaveBeenCalledTimes(2);
+    expect(taskCreate).toHaveBeenCalledTimes(2);
     expect(taskCreate).toHaveBeenLastCalledWith(
       expect.objectContaining({ sortOrder: -1000 }),
     );
@@ -488,7 +480,23 @@ describe('InjectTaskExecutor', () => {
       rule: buildRule(),
     });
 
-    expect(taskDelete).toHaveBeenCalledWith({ id: taskId });
+    expect(taskRemove).toHaveBeenCalledWith(taskId);
+  });
+
+  it('tolerates the duplicate task already being gone when the ledger race is lost', async () => {
+    vi.mocked(ruleApplicationsService.record).mockResolvedValue(
+      asMock<RuleApplication>({ state: 'applied', taskId: 'winner-task' }),
+    );
+    taskRemove.mockRejectedValue(new NotFoundException('already gone'));
+
+    await expect(
+      executor.execute({
+        action: buildAction(),
+        ownerUserId,
+        plan: buildPlan(),
+        rule: buildRule(),
+      }),
+    ).resolves.toBeUndefined();
   });
 
   describe('reconcile', () => {
@@ -517,7 +525,7 @@ describe('InjectTaskExecutor', () => {
           status: 'PENDING',
         }),
       );
-      aggregateGetRawOne.mockResolvedValue({ value: '5000' }); // MAX of other tasks
+      sortOrderLookup.mockResolvedValue(5000); // MAX of other tasks
 
       await executor.reconcile(
         buildReconcile({ placement: 'last', skillSlug: 'grilling' }),
@@ -538,7 +546,7 @@ describe('InjectTaskExecutor', () => {
           status: 'PENDING',
         }),
       );
-      aggregateGetRawOne.mockResolvedValue({ value: '5000' });
+      sortOrderLookup.mockResolvedValue(5000);
 
       await executor.reconcile(
         buildReconcile({ placement: 'last', skillSlug: 'grilling' }),
@@ -556,7 +564,7 @@ describe('InjectTaskExecutor', () => {
           status: 'PENDING',
         }),
       );
-      aggregateGetRawOne.mockResolvedValue({ value: '2000' }); // MIN of other tasks
+      sortOrderLookup.mockResolvedValue(2000); // MIN of other tasks
 
       await executor.reconcile(
         buildReconcile({ placement: 'first', skillSlug: 'grilling' }),
@@ -627,7 +635,7 @@ describe('InjectTaskExecutor', () => {
         { sortOrder: 1000, taskId: siblingA },
         { sortOrder: 2000, taskId: siblingB },
       ]);
-      aggregateGetRawOne.mockResolvedValue({ value: '5000' }); // MAX excluding siblings
+      sortOrderLookup.mockResolvedValue(5000); // MAX excluding siblings
 
       await executor.reconcile(
         buildReconcile({ placement: 'last', skillSlug: 'grilling' }),
@@ -659,7 +667,7 @@ describe('InjectTaskExecutor', () => {
         { sortOrder: 6000, taskId: '00000000-0000-4000-8000-0000000000aa' },
         { sortOrder: 7000, taskId: '00000000-0000-4000-8000-0000000000bb' },
       ]);
-      aggregateGetRawOne.mockResolvedValue({ value: '5000' });
+      sortOrderLookup.mockResolvedValue(5000);
 
       await executor.reconcile(
         buildReconcile({ placement: 'last', skillSlug: 'grilling' }),
@@ -677,11 +685,11 @@ describe('InjectTaskExecutor', () => {
           status: 'PENDING',
         }),
       );
-      aggregateGetRawOne.mockResolvedValue({ value: '5000' });
+      sortOrderLookup.mockResolvedValue(5000);
       // First update loses the UNIQUE(plan_id, sort_order) race; retry succeeds.
       taskUpdate
         .mockRejectedValueOnce(sortOrderViolation())
-        .mockResolvedValueOnce({ affected: 1 });
+        .mockResolvedValueOnce({ updateCount: 1 });
 
       await executor.reconcile(
         buildReconcile({ placement: 'last', skillSlug: 'grilling' }),
@@ -709,7 +717,7 @@ describe('InjectTaskExecutor', () => {
         { sortOrder: 9000, taskId: siblingA },
         { sortOrder: 9500, taskId: siblingB },
       ]);
-      aggregateGetRawOne.mockResolvedValue({ value: '5000' }); // MIN excluding siblings
+      sortOrderLookup.mockResolvedValue(5000); // MIN excluding siblings
 
       await executor.reconcile(
         buildReconcile({ placement: 'first', skillSlug: 'grilling' }),
@@ -745,7 +753,7 @@ describe('InjectTaskExecutor', () => {
             sortOrder: 1000,
           }),
         ); // the resolved anchor
-      aggregateGetRawOne.mockResolvedValue({ value: null }); // no task between anchor and self
+      sortOrderLookup.mockResolvedValue(null); // no task between anchor and self
 
       await executor.reconcile({
         action: buildAction({
@@ -787,7 +795,7 @@ describe('InjectTaskExecutor', () => {
             sortOrder: 1000,
           }),
         );
-      aggregateGetRawOne.mockResolvedValue({ value: null }); // no other task after the anchor
+      sortOrderLookup.mockResolvedValue(null); // no other task after the anchor
 
       await executor.reconcile({
         action: buildAction({
@@ -822,7 +830,7 @@ describe('InjectTaskExecutor', () => {
         buildReinject({ state: 'applied', taskId: null }),
       );
 
-      expect(taskSave).toHaveBeenCalled();
+      expect(taskCreate).toHaveBeenCalled();
       expect(ruleApplicationsService.upsertApplication).toHaveBeenCalledWith(
         expect.objectContaining({ state: 'applied' }),
       );
@@ -839,13 +847,13 @@ describe('InjectTaskExecutor', () => {
 
       // The revive runs the update + capture inside its own manager.transaction (background
       // writer, no request principal — see reviveSoftClosedTask's doc comment), so the row write
-      // lands via managerUpdate rather than the bare taskRepo.update used by the reconcile paths.
+      // lands via managerUpdate rather than the bare tasksRepository.updateMany used by the reconcile paths.
       expect(managerUpdate).toHaveBeenCalledWith(
         Task,
         { id: 'old-task' },
         { status: 'PENDING' },
       );
-      expect(taskSave).not.toHaveBeenCalled();
+      expect(taskCreate).not.toHaveBeenCalled();
       expect(mockRecordStatusChange).toHaveBeenCalledWith(
         expect.anything(),
         expect.objectContaining({

@@ -4,8 +4,8 @@
  * hasNext stay honest once the legs are capped.
  */
 
-import { createMock } from '@golevelup/ts-vitest';
-import type { PlansService } from '@openthrottle/nestjs-repositories';
+import { asMock } from '@openthrottle/nestjs-testing';
+import type { DataSource } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { ActivityByDateRangeInput } from './activity.input.ts';
@@ -15,6 +15,11 @@ type QueryFn = (sql: string, params?: unknown[]) => Promise<unknown[]>;
 
 /** Mirrors the resolver's own default; asserted rather than imported so a change is visible here. */
 const DEFAULT_LIMIT = 500;
+
+/** The resolver only ever calls `query` on the DataSource. */
+const asDataSource = (query: QueryFn): DataSource => {
+  return asMock<DataSource>({ query });
+};
 
 describe('ActivityResolver.activityByDateRange row bounds', () => {
   let query: ReturnType<typeof vi.fn<QueryFn>>;
@@ -38,10 +43,7 @@ describe('ActivityResolver.activityByDateRange row bounds', () => {
 
   beforeEach(() => {
     query = vi.fn();
-    const plansService = createMock<PlansService>({
-      getRepository: vi.fn().mockReturnValue({ manager: { query } }),
-    });
-    resolver = new ActivityResolver(plansService);
+    resolver = new ActivityResolver(asDataSource(query));
   });
 
   const run = (limit?: number, offset?: number) => {
@@ -54,6 +56,19 @@ describe('ActivityResolver.activityByDateRange row bounds', () => {
 
     return resolver.activityByDateRange(input);
   };
+
+  it('never reads a soft-deleted plan or task', async () => {
+    respondWith(0);
+
+    await run();
+
+    const sql = query.mock.calls.map(([text]) => text).join('\n');
+    expect(sql.match(/p\.deleted_at IS NULL/g)).toHaveLength(6);
+    expect(sql).toContain(
+      'LEFT JOIN tasks t ON t.id = wss.task_id AND t.deleted_at IS NULL',
+    );
+    expect(sql.match(/t\.deleted_at IS NULL/g)).toHaveLength(3);
+  });
 
   it('applies a LIMIT to all three row legs', async () => {
     respondWith(0);

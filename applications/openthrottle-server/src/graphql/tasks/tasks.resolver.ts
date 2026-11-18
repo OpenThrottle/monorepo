@@ -1,8 +1,12 @@
 /**
- * @description Resolver for Task queries and mutations. Injects TasksService from @openthrottle/nestjs-repositories and TasksLoaders for batched plan/project resolution. Maps Task entities to TaskObject.
+ * @description Resolver for Task queries and mutations. Injects TasksRepository from @openthrottle/nestjs-repositories-server and TasksLoaders for batched plan/project resolution. Maps Task entities to TaskObject.
  */
 
-import { BadRequestException, ConflictException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import {
   Args,
   ID,
@@ -18,18 +22,18 @@ import type {
   CreateTaskBatchItem,
   Plan,
   Project,
-} from '@openthrottle/nestjs-repositories';
+} from '@openthrottle/nestjs-repositories-server';
 import {
   CROSS_PLAN_TASK_LIST_ORDER,
   PLAN_TASK_LIST_ORDER,
   resolveCompletedAtForStatusChange,
+  Task,
   TASK_SORT_ORDER_GAP,
-  TasksService,
-} from '@openthrottle/nestjs-repositories';
-import { Task } from '@openthrottle/nestjs-repositories';
+  TasksRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import { EmitNotification } from '@openthrottle/nestjs-websockets';
 import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
-import { In, QueryFailedError } from 'typeorm';
+import { DataSource, In, QueryFailedError } from 'typeorm';
 
 import { NotificationsService } from '../../notifications/notifications.service.ts';
 import { PlanRulesEvaluationService } from '../../queues/plan-rules/evaluation/evaluation.service.ts';
@@ -134,15 +138,32 @@ const parseHookScope = (
 @Resolver(() => TaskObject)
 export class TasksResolver {
   constructor(
+    private readonly dataSource: DataSource,
     private readonly loaders: TasksLoaders,
     private readonly notificationsService: NotificationsService,
     private readonly planRulesEvaluationService: PlanRulesEvaluationService,
     private readonly planStatusService: PlanStatusService,
     private readonly taggingEnqueueService: TaggingEnqueueService,
     private readonly taskPromotionEnqueueService: TaskPromotionEnqueueService,
-    private readonly tasksService: TasksService,
+    private readonly tasksRepository: TasksRepository,
     private readonly workLedgerCapture: WorkLedgerCaptureService,
   ) {}
+
+  /**
+   * @description Soft deletes a task (and its child tasks); false when no live task has that id.
+   */
+  private async removeTask(id: string): Promise<boolean> {
+    try {
+      await this.tasksRepository.remove(id);
+
+      return true;
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        return false;
+      }
+      throw error;
+    }
+  }
 
   @ResolveField(() => PlanObject, {
     description: `Resolved plan entity when planId is set`,
@@ -177,14 +198,14 @@ export class TasksResolver {
     description: `Task-level before-hooks anchored to this task (one level), in execution order.`,
   })
   async beforeHooks(@Parent() parent: TaskObject): Promise<Task[]> {
-    return (await this.tasksService.getTaskHooks(parent.id)).before;
+    return (await this.tasksRepository.getTaskHooks(parent.id)).before;
   }
 
   @ResolveField(() => [TaskObject], {
     description: `Task-level after-hooks anchored to this task (one level), in execution order.`,
   })
   async afterHooks(@Parent() parent: TaskObject): Promise<Task[]> {
-    return (await this.tasksService.getTaskHooks(parent.id)).after;
+    return (await this.tasksRepository.getTaskHooks(parent.id)).after;
   }
 
   @Query(() => TaskObject, {
@@ -192,9 +213,7 @@ export class TasksResolver {
     nullable: true,
   })
   async task(@Args('id', { type: () => ID }) id: string): Promise<Task | null> {
-    const entity = await this.tasksService
-      .getRepository()
-      .findOne({ where: { id } });
+    const entity = await this.tasksRepository.findOne({ where: { id } });
 
     return entity;
   }
@@ -210,7 +229,7 @@ export class TasksResolver {
       Math.max(1, limit ?? DEFAULT_TASKS_LIMIT),
       MAX_TASKS_LIMIT,
     );
-    const entities = await this.tasksService.getRepository().find({
+    const entities = await this.tasksRepository.findBy({
       order: { ...CROSS_PLAN_TASK_LIST_ORDER },
       take: effectiveLimit,
     });
@@ -225,7 +244,7 @@ export class TasksResolver {
     @Args('input', { type: () => TasksByPlanIdInput })
     input: TasksByPlanIdInput,
   ): Promise<Task[]> {
-    const entities = await this.tasksService.getRepository().find({
+    const entities = await this.tasksRepository.findBy({
       order: { ...PLAN_TASK_LIST_ORDER },
       where: { planId: input.planId },
     });
@@ -240,7 +259,7 @@ export class TasksResolver {
     @Args('input', { type: () => TasksByProjectIdInput })
     input: TasksByProjectIdInput,
   ): Promise<TasksByProjectIdResultObject> {
-    const repo = this.tasksService.getRepository();
+    const repo = this.tasksRepository;
     const where = { projectId: input.projectId };
 
     const usePagination = input.limit != null && input.limit > 0;
@@ -249,13 +268,13 @@ export class TasksResolver {
 
     if (usePagination && take != null) {
       const [entities, totalCount] = await Promise.all([
-        repo.find({
+        repo.findBy({
           order: { ...CROSS_PLAN_TASK_LIST_ORDER },
           skip,
           take,
           where,
         }),
-        repo.count({ where }),
+        repo.countByProjectId(input.projectId),
       ]);
       return {
         tasks: entities.map((t): TaskObject => ({
@@ -268,7 +287,7 @@ export class TasksResolver {
       };
     }
 
-    const entities = await repo.find({
+    const entities = await repo.findBy({
       order: { ...CROSS_PLAN_TASK_LIST_ORDER },
       where,
     });
@@ -290,7 +309,7 @@ export class TasksResolver {
     @Args('input', { type: () => RemainingTasksByPlanIdInput })
     input: RemainingTasksByPlanIdInput,
   ): Promise<Task[]> {
-    const entities = await this.tasksService.getRepository().find({
+    const entities = await this.tasksRepository.findBy({
       order: { ...PLAN_TASK_LIST_ORDER },
       where: {
         planId: input.planId,
@@ -319,15 +338,14 @@ export class TasksResolver {
     @CurrentUser('sub') actorSub?: string,
     @CurrentUser('kind') actorKind?: string,
   ): Promise<Task> {
-    const repo = this.tasksService.getRepository();
     const requirementsArr = parseRequirements(input.requirements);
 
     const sortOrder =
       input.sortOrder ??
-      (await this.tasksService.resolveNextSortOrder(input.planId));
+      (await this.tasksRepository.resolveNextSortOrder(input.planId));
 
     const status = (input.status ?? 'PENDING').toUpperCase();
-    const entity = repo.create({
+    const entityInput = {
       assignee: input.assignee ?? null,
       category: input.category ?? null,
       completedAt: status === 'COMPLETED' ? new Date() : null,
@@ -341,11 +359,11 @@ export class TasksResolver {
       summary: input.summary ?? null,
       title: input.title,
       wave: input.wave ?? null,
-    });
+    };
 
     let saved: Task;
     try {
-      saved = await repo.save(entity);
+      saved = await this.tasksRepository.create(entityInput);
     } catch (error) {
       if (isSortOrderUniqueViolation(error)) {
         throw new ConflictException(SORT_ORDER_UNIQUE_VIOLATION_MESSAGE);
@@ -404,7 +422,7 @@ export class TasksResolver {
 
     let saved: Task[];
     try {
-      saved = await this.tasksService.createTasksBatch(input.planId, items);
+      saved = await this.tasksRepository.createTasksBatch(input.planId, items);
     } catch (error) {
       if (isSortOrderUniqueViolation(error)) {
         throw new ConflictException(SORT_ORDER_UNIQUE_VIOLATION_MESSAGE);
@@ -502,8 +520,9 @@ export class TasksResolver {
     @CurrentUser('sub') actorSub?: string,
     @CurrentUser('kind') actorKind?: string,
   ): Promise<Task | null> {
-    const repo = this.tasksService.getRepository();
-    const entity = await repo.findOne({ where: { id: input.id } });
+    const entity = await this.tasksRepository.findOne({
+      where: { id: input.id },
+    });
 
     if (!entity) return null;
 
@@ -542,7 +561,7 @@ export class TasksResolver {
 
     let saved: Task;
     try {
-      saved = await repo.manager.transaction(async (manager) => {
+      saved = await this.dataSource.transaction(async (manager) => {
         const persisted = await manager.save(entity);
 
         if (statusChanged) {
@@ -616,7 +635,6 @@ export class TasksResolver {
     @Args('input', { type: () => ReorderPlanTasksInput })
     input: ReorderPlanTasksInput,
   ): Promise<Task[]> {
-    const repo = this.tasksService.getRepository();
     const { planId, taskIds } = input;
 
     if (taskIds.length === 0) {
@@ -629,7 +647,7 @@ export class TasksResolver {
       throw new BadRequestException('taskIds must not contain duplicates');
     }
 
-    const tasks = await repo.find({
+    const tasks = await this.tasksRepository.findBy({
       where: { id: In(taskIds), planId },
     });
 
@@ -643,7 +661,7 @@ export class TasksResolver {
     const orderedTasks = taskIds.map((id) => taskById.get(id)!);
     const temporarySortOrderBase = 1_000_000;
 
-    return repo.manager.transaction(async (manager) => {
+    return this.dataSource.transaction(async (manager) => {
       const taskRepo = manager.getRepository(Task);
 
       await Promise.all(
@@ -674,13 +692,11 @@ export class TasksResolver {
   async deleteTask(
     @Args('input', { type: () => DeleteTaskInput }) input: DeleteTaskInput,
   ): Promise<boolean> {
-    const repo = this.tasksService.getRepository();
-    const existing = await repo.findOne({
+    const existing = await this.tasksRepository.findOne({
       select: { id: true, planId: true, title: true },
       where: { id: input.id },
     });
-    const result = await repo.delete({ id: input.id });
-    const isDeleted = (result.affected ?? 0) > 0;
+    const isDeleted = await this.removeTask(input.id);
 
     if (isDeleted && existing !== null) {
       this.notificationsService.emitPlanUpdated({
@@ -704,10 +720,12 @@ export class TasksResolver {
     const scope = parseHookScope(input.scope);
     const anchorTaskId = input.anchorTaskId ?? null;
 
-    const attachBefore = this.tasksService.addBeforeHook.bind(
-      this.tasksService,
+    const attachBefore = this.tasksRepository.addBeforeHook.bind(
+      this.tasksRepository,
     );
-    const attachAfter = this.tasksService.addAfterHook.bind(this.tasksService);
+    const attachAfter = this.tasksRepository.addAfterHook.bind(
+      this.tasksRepository,
+    );
     const attach = role === 'before' ? attachBefore : attachAfter;
 
     try {
@@ -737,7 +755,7 @@ export class TasksResolver {
   async detachHook(
     @Args('input', { type: () => DetachHookInput }) input: DetachHookInput,
   ): Promise<boolean> {
-    return this.tasksService.detachHook(input.hookTaskId);
+    return this.tasksRepository.detachHook(input.hookTaskId);
   }
 
   @Mutation(() => PromoteTaskToPlanResultObject, {

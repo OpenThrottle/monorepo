@@ -40,7 +40,7 @@ export interface DatabaseSchema {
   /**
    * Every unique key except the primary one, reflected from `pg_index` rather
    * than `pg_constraint`: half of them are bare `CREATE UNIQUE INDEX`
-   * statements (`idx_projects_nx_project_name_unique`, for one) that never
+   * statements (`idx_projects_nx_project_name_live`, for one) that never
    * appear in `pg_constraint` at all.
    */
   uniqueKeys: UniqueKey[];

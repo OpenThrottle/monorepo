@@ -48,7 +48,7 @@ export interface TasksMetrics {
 
 async function countLifetimeTotal(client: pg.Pool): Promise<number> {
   const { rows } = await client.query<{ count: number }>(
-    'SELECT count(*)::int AS count FROM tasks',
+    'SELECT count(*)::int AS count FROM tasks WHERE deleted_at IS NULL',
   );
   return rows[0]?.count ?? 0;
 }
@@ -57,6 +57,7 @@ async function countByStatus(client: pg.Pool): Promise<readonly StatusCount[]> {
   const { rows } = await client.query<StatusCount>(
     `SELECT status::text AS status, count(*)::int AS count
      FROM tasks
+     WHERE deleted_at IS NULL
      GROUP BY status
      ORDER BY status`,
   );
@@ -69,6 +70,7 @@ async function countByCategory(
   const { rows } = await client.query<CategoryCount>(
     `SELECT COALESCE(category, 'uncategorized') AS category, count(*)::int AS count
      FROM tasks
+     WHERE deleted_at IS NULL
      GROUP BY 1
      ORDER BY 1`,
   );
@@ -86,7 +88,8 @@ async function tasksPerPlan(client: pg.Pool): Promise<TasksPerPlanStats> {
     `WITH counts AS (
        SELECT p.id, count(t.id)::int AS task_count
        FROM plans p
-       LEFT JOIN tasks t ON t.plan_id = p.id
+       LEFT JOIN tasks t ON t.plan_id = p.id AND t.deleted_at IS NULL
+       WHERE p.deleted_at IS NULL
        GROUP BY p.id
      )
      SELECT
@@ -123,7 +126,7 @@ async function cohortCompletion(
     `SELECT count(*)::int AS created,
             count(*) FILTER (WHERE completed_at IS NOT NULL)::int AS completed
        FROM tasks
-      WHERE created_at >= $1 AND created_at < $2`,
+      WHERE deleted_at IS NULL AND created_at >= $1 AND created_at < $2`,
     [window.since, window.until],
   );
   return { completed: rows[0]?.completed ?? 0, created: rows[0]?.created ?? 0 };
@@ -134,7 +137,7 @@ export const tasksMetricQuery: MetricQuery<TasksMetrics> = {
   name: 'tasks',
   requires: {
     columns: {
-      plans: ['id'],
+      plans: ['id', 'deleted_at'],
       tasks: [
         'id',
         'plan_id',
@@ -142,6 +145,7 @@ export const tasksMetricQuery: MetricQuery<TasksMetrics> = {
         'category',
         'created_at',
         'completed_at',
+        'deleted_at',
       ],
     },
     tables: ['plans', 'tasks'],

@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import { PlanOutputStreamChunk } from '@openthrottle/nestjs-repositories-server';
+import { Plan } from '@openthrottle/nestjs-repositories-server';
 import type { FindOptionsWhere } from 'typeorm';
 import { In, Repository } from 'typeorm';
 
-import { PlanOutputStreamChunk } from '../plan-output-stream/plan-output-stream.entity.ts';
-import { Plan } from '../plans/plan.entity.ts';
 import { PlanMessage } from './plan-message.entity.ts';
 import {
   PLAN_MESSAGE_DELIVERABLE_KINDS,

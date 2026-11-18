@@ -18,6 +18,8 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import { Plan } from '@openthrottle/nestjs-repositories-server';
+import { Task } from '@openthrottle/nestjs-repositories-server';
 import {
   AGENT_ASSET_SLUG_PATTERN,
   DEFAULT_TAG_VOCABULARY_SEED,
@@ -25,9 +27,7 @@ import {
 } from '@openthrottle/openthrottle-skills';
 import { QueryFailedError, Repository } from 'typeorm';
 
-import { Plan } from '../plans/plan.entity.ts';
 import { SkillTagsService } from '../skill-tags/skill-tags.service.ts';
-import { Task } from '../tasks/task.entity.ts';
 import { PlanTag } from './plan-tag.entity.ts';
 import { ProjectTag } from './project-tag.entity.ts';
 import { TAG_SOURCE_RANK } from './tags.constants.ts';

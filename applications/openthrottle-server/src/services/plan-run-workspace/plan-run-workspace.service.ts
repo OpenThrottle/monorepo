@@ -10,10 +10,10 @@ import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { PlanRun } from '@openthrottle/nestjs-repositories';
 import {
-  PlanOutputStreamService,
   PlanRunsService,
   RepositoryCheckoutsService,
 } from '@openthrottle/nestjs-repositories';
+import { PlanOutputStreamRepository } from '@openthrottle/nestjs-repositories-server';
 import {
   ensureMaterialized,
   getOpenThrottleRoot,
@@ -47,7 +47,7 @@ import type {
 export class PlanRunWorkspaceService {
   constructor(
     private readonly logger: LoggerService,
-    private readonly planOutputStreamService: PlanOutputStreamService,
+    private readonly planOutputStreamRepository: PlanOutputStreamRepository,
     private readonly planRunsService: PlanRunsService,
     private readonly planRunWorktreeCheckoutService: PlanRunWorktreeCheckoutService,
     private readonly planRunWorkspacePreflightService: PlanRunWorkspacePreflightService,
@@ -164,8 +164,11 @@ export class PlanRunWorkspaceService {
 
       this.logger.warn(content, PlanRunWorkspaceService.name);
 
-      const repo = this.planOutputStreamService.getRepository();
-      await repo.save(repo.create({ content, iteration: null, planId }));
+      await this.planOutputStreamRepository.create({
+        content,
+        iteration: null,
+        planId,
+      });
     } catch (error) {
       this.logger.warn(
         `Soft-fail running the workspace preflight for plan ${planId}: ${

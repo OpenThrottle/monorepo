@@ -31,6 +31,16 @@ describe('parseAgentCompleteTaskSignals', () => {
   it('returns an empty list when no markers are present', () => {
     expect(parseAgentCompleteTaskSignals('no markers here')).toEqual([]);
   });
+
+  it('parses a uuidv7 task id, the default for tasks since migration 173', () => {
+    const v7 = '01a1ee5e-f142-7168-b470-60f2280340a1';
+
+    expect(
+      parseAgentCompleteTaskSignals(
+        `<ralph:task-complete>${v7}</ralph:task-complete>`,
+      ),
+    ).toEqual([v7]);
+  });
 });
 
 describe('parseAgentOutput control precedence (ERROR > INPUT_REQUIRED > COMPLETE)', () => {

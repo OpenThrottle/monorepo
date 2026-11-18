@@ -9,9 +9,10 @@ import type {
 } from '@openthrottle/nestjs-repositories';
 import {
   ProjectSkillsService,
-  ProjectsService,
   ServiceAccountsService,
 } from '@openthrottle/nestjs-repositories';
+import { ProjectsRepository } from '@openthrottle/nestjs-repositories-server';
+import { createProjectsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
@@ -74,9 +75,7 @@ describe('ProjectSkillsResolver', () => {
     removeProjectSkill: vi.fn(),
     removeProjectSkillTag: vi.fn(),
   });
-  const mockProjectsService = createMock<ProjectsService>({
-    findByNxProjectName: vi.fn(),
-  });
+  const mockProjectsRepository = createProjectsRepositoryMock();
   const mockServiceAccountsService = createMock<ServiceAccountsService>();
 
   let resolver: ProjectSkillsResolver;
@@ -88,7 +87,7 @@ describe('ProjectSkillsResolver', () => {
       providers: [
         ProjectSkillsResolver,
         { provide: ProjectSkillsService, useValue: mockProjectSkillsService },
-        { provide: ProjectsService, useValue: mockProjectsService },
+        { provide: ProjectsRepository, useValue: mockProjectsRepository },
         {
           provide: ServiceAccountsService,
           useValue: mockServiceAccountsService,
@@ -109,7 +108,7 @@ describe('ProjectSkillsResolver', () => {
 
     const result = await resolver.projectSkills('explicit-project-id');
 
-    expect(mockProjectsService.findByNxProjectName).not.toHaveBeenCalled();
+    expect(mockProjectsRepository.findByNxProjectName).not.toHaveBeenCalled();
     expect(mockProjectSkillsService.getSkillsForProject).toHaveBeenCalledWith(
       'explicit-project-id',
     );
@@ -149,7 +148,7 @@ describe('ProjectSkillsResolver', () => {
   });
 
   test('resolves the dogfood monorepo project when projectId is omitted', async () => {
-    vi.mocked(mockProjectsService.findByNxProjectName).mockResolvedValue(
+    mockProjectsRepository.findByNxProjectName.mockResolvedValue(
       dogfoodProject,
     );
     vi.mocked(mockProjectSkillsService.getSkillsForProject).mockResolvedValue(
@@ -158,7 +157,7 @@ describe('ProjectSkillsResolver', () => {
 
     const result = await resolver.projectSkills();
 
-    expect(mockProjectsService.findByNxProjectName).toHaveBeenCalledWith(
+    expect(mockProjectsRepository.findByNxProjectName).toHaveBeenCalledWith(
       'OpenThrottle/monorepo',
     );
     expect(mockProjectSkillsService.getSkillsForProject).toHaveBeenCalledWith(
@@ -168,7 +167,7 @@ describe('ProjectSkillsResolver', () => {
   });
 
   test('returns an empty list when the dogfood project is absent (never queries skills)', async () => {
-    vi.mocked(mockProjectsService.findByNxProjectName).mockResolvedValue(null);
+    mockProjectsRepository.findByNxProjectName.mockResolvedValue(null);
 
     const result = await resolver.projectSkills();
 
@@ -205,7 +204,7 @@ describe('ProjectSkillsResolver', () => {
     await expect(
       resolver.removeProjectSkill('vanished', 'explicit-project-id'),
     ).resolves.toBe(true);
-    expect(mockProjectsService.findByNxProjectName).not.toHaveBeenCalled();
+    expect(mockProjectsRepository.findByNxProjectName).not.toHaveBeenCalled();
     expect(mockProjectSkillsService.removeProjectSkill).toHaveBeenCalledWith(
       'explicit-project-id',
       'vanished',
@@ -213,7 +212,7 @@ describe('ProjectSkillsResolver', () => {
   });
 
   test('removeProjectSkill returns false when the dogfood project is absent', async () => {
-    vi.mocked(mockProjectsService.findByNxProjectName).mockResolvedValue(null);
+    mockProjectsRepository.findByNxProjectName.mockResolvedValue(null);
 
     await expect(resolver.removeProjectSkill('vanished')).resolves.toBe(false);
     expect(mockProjectSkillsService.removeProjectSkill).not.toHaveBeenCalled();
@@ -230,7 +229,7 @@ describe('ProjectSkillsResolver', () => {
       tag: 'github',
     });
 
-    expect(mockProjectsService.findByNxProjectName).not.toHaveBeenCalled();
+    expect(mockProjectsRepository.findByNxProjectName).not.toHaveBeenCalled();
     expect(mockProjectSkillsService.addProjectSkillTag).toHaveBeenCalledWith(
       { principalKind: 'user', subjectId: 'user-1' },
       'explicit-project-id',
@@ -249,7 +248,7 @@ describe('ProjectSkillsResolver', () => {
   });
 
   test('addProjectSkillTag throws when the dogfood project is absent', async () => {
-    vi.mocked(mockProjectsService.findByNxProjectName).mockResolvedValue(null);
+    mockProjectsRepository.findByNxProjectName.mockResolvedValue(null);
 
     await expect(
       resolver.addProjectSkillTag(userPrincipal, {
@@ -262,7 +261,7 @@ describe('ProjectSkillsResolver', () => {
   });
 
   test('removeProjectSkillTag returns false when the dogfood project is absent', async () => {
-    vi.mocked(mockProjectsService.findByNxProjectName).mockResolvedValue(null);
+    mockProjectsRepository.findByNxProjectName.mockResolvedValue(null);
 
     await expect(
       resolver.removeProjectSkillTag({

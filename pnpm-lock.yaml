@@ -2757,6 +2757,9 @@ importers:
       '@openthrottle/nodejs-utils':
         specifier: workspace:^
         version: link:../nodejs-utils
+      '@openthrottle/openthrottle-plan-config':
+        specifier: workspace:^
+        version: link:../openthrottle-plan-config
       bcrypt:
         specifier: 'catalog:'
         version: 6.0.0

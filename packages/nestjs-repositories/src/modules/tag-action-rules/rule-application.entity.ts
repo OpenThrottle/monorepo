@@ -3,6 +3,8 @@
  * Matches databases/openthrottle/migrations/066.
  */
 
+import { Plan } from '@openthrottle/nestjs-repositories-server';
+import { Task } from '@openthrottle/nestjs-repositories-server';
 import {
   Column,
   CreateDateColumn,
@@ -13,8 +15,6 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-import { Plan } from '../plans/plan.entity.ts';
-import { Task } from '../tasks/task.entity.ts';
 import { TagActionRule } from './tag-action-rule.entity.ts';
 
 /**

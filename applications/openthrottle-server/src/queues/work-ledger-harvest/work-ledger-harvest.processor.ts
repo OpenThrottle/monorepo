@@ -4,7 +4,6 @@ import { defaultWorkerOptions } from '@openthrottle/nestjs-bullmq';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { Repository as RepositoryEntity } from '@openthrottle/nestjs-repositories';
 import {
-  PlansService,
   RepositoriesService,
   ServiceAccountsService,
   UsersService,
@@ -15,6 +14,7 @@ import {
   WorkSession,
   WorkSessionSubject,
 } from '@openthrottle/nestjs-repositories';
+import { PlansRepository } from '@openthrottle/nestjs-repositories-server';
 
 import { resolveArtifactForWrite } from '../../graphql/work-ledger/artifact-type-registry/artifact-type-registry.utils.ts';
 import { SettleRunLedgerService } from '../../graphql/work-ledger/settle-run-ledger/settle-run-ledger.service.ts';
@@ -73,7 +73,7 @@ export class WorkLedgerHarvestProcessor
 {
   constructor(
     private readonly logger: LoggerService,
-    private readonly plansService: PlansService,
+    private readonly plansRepository: PlansRepository,
     private readonly repositoriesService: RepositoriesService,
     private readonly serviceAccountsService: ServiceAccountsService,
     private readonly settleRunLedgerService: SettleRunLedgerService,
@@ -324,12 +324,7 @@ export class WorkLedgerHarvestProcessor
     // One prefix query covers both shapes: a full uuid matches only itself, and a short-id
     // trailer matches the plan it abbreviates. Two rows are fetched so an ambiguous prefix can
     // be dropped rather than guessed.
-    const candidates = await this.plansService
-      .getRepository()
-      .createQueryBuilder('plan')
-      .where('plan.id::text LIKE :prefix', { prefix: `${planRef}%` })
-      .limit(2)
-      .getMany();
+    const candidates = await this.plansRepository.findByRefPrefix(planRef, 2);
 
     if (candidates.length !== 1) return null;
 

@@ -6,8 +6,11 @@
  */
 
 import { Injectable } from '@nestjs/common';
-import type { Plan, Task } from '@openthrottle/nestjs-repositories';
-import { PlansService, TasksService } from '@openthrottle/nestjs-repositories';
+import type { Plan, Task } from '@openthrottle/nestjs-repositories-server';
+import {
+  PlansRepository,
+  TasksRepository,
+} from '@openthrottle/nestjs-repositories-server';
 
 import {
   FULL_UUID_HEX_LENGTH,
@@ -46,8 +49,8 @@ const toTaskRef = (task: Task): IdRefObject => {
 @Injectable()
 export class IdRefsService {
   constructor(
-    private readonly plansService: PlansService,
-    private readonly tasksService: TasksService,
+    private readonly plansRepository: PlansRepository,
+    private readonly tasksRepository: TasksRepository,
   ) {}
 
   /**
@@ -73,59 +76,33 @@ export class IdRefsService {
   }
 
   private findPlans(normalized: string): Promise<Plan[]> {
-    const qb = this.plansService
-      .getRepository()
-      .createQueryBuilder('plan')
-      .select(['plan.id', 'plan.status', 'plan.title']);
-
     if (normalized.length === FULL_UUID_HEX_LENGTH) {
-      return qb
-        .where('plan.id = :id', { id: toHyphenatedUuid(normalized) })
-        .getMany();
+      return this.plansRepository.findBy({
+        select: { id: true, status: true, title: true },
+        where: { id: toHyphenatedUuid(normalized) },
+      });
     }
 
     // `normalized` is validated hex-only, so the pattern carries no LIKE
-    // wildcards of its own; it is still passed as a bound parameter.
-    return qb
-      .where(`REPLACE(plan.id::text, '-', '') ILIKE :pattern`, {
-        pattern: `${normalized}%`,
-      })
-      .orderBy('plan.updatedAt', 'DESC')
-      .take(MAX_ID_REF_MATCHES)
-      .getMany();
+    // wildcards of its own.
+    return this.plansRepository.findByIdPrefix(normalized, MAX_ID_REF_MATCHES);
   }
 
   private findTasks(normalized: string): Promise<Task[]> {
-    const qb = this.tasksService
-      .getRepository()
-      .createQueryBuilder('task')
-      .leftJoin('task.plan', 'plan')
-      .select([
-        'task.id',
-        'task.planId',
-        'task.status',
-        'task.title',
-        'plan.id',
-        'plan.title',
-      ]);
-
     if (normalized.length === FULL_UUID_HEX_LENGTH) {
-      return qb
-        .where('task.id = :id', { id: toHyphenatedUuid(normalized) })
-        .getMany();
+      return this.tasksRepository.findBy({
+        relations: { plan: true },
+        select: {
+          id: true,
+          plan: { id: true, title: true },
+          planId: true,
+          status: true,
+          title: true,
+        },
+        where: { id: toHyphenatedUuid(normalized) },
+      });
     }
 
-    return (
-      qb
-        .where(`REPLACE(task.id::text, '-', '') ILIKE :pattern`, {
-          pattern: `${normalized}%`,
-        })
-        .orderBy('task.updatedAt', 'DESC')
-        // `limit`, not `take`: with a join, `take` wraps the query in a DISTINCT
-        // subquery that cannot order by an unselected column. The plan join is
-        // many-to-one, so it never multiplies task rows and LIMIT is exact.
-        .limit(MAX_ID_REF_MATCHES)
-        .getMany()
-    );
+    return this.tasksRepository.findByIdPrefix(normalized, MAX_ID_REF_MATCHES);
   }
 }

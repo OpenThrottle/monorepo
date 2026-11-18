@@ -10,8 +10,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { ListPaginationInput } from '@openthrottle/nestjs-postgres';
+import { ProjectsRepository } from '@openthrottle/nestjs-repositories-server';
 
-import { ProjectsService } from '../../projects/projects.service.ts';
 import { RepositoriesService } from '../../repositories/repositories.service.ts';
 import { normalizeRemoteUrl } from '../../repositories/repositories.utils.ts';
 import type { Repository } from '../../repositories/repository.entity.ts';
@@ -77,7 +77,7 @@ export class WorkspaceLocalRepositoriesService {
   constructor(
     private readonly logger: LoggerService,
     private readonly checkoutsService: RepositoryCheckoutsService,
-    private readonly projectsService: ProjectsService,
+    private readonly projectsRepository: ProjectsRepository,
     private readonly repositoriesService: RepositoriesService,
   ) {
     this.logger.debug('🧩 workspace-local-repositories 🧩');
@@ -315,7 +315,9 @@ export class WorkspaceLocalRepositoriesService {
     projectId: string | null,
   ): Promise<void> {
     if (projectId === null) return;
-    const project = await this.projectsService.findById(projectId);
+    const project = await this.projectsRepository.findOne({
+      where: { id: projectId },
+    });
     if (!project) {
       throw new NotFoundException(`Project not found: ${projectId}`);
     }

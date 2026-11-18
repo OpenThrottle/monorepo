@@ -5,17 +5,17 @@
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
-  PlanOutputStreamService,
-  PlansService,
-  TasksService,
-} from '@openthrottle/nestjs-repositories';
+  PlanOutputStreamRepository,
+  PlansRepository,
+  TasksRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import {
-  type Plan,
-  type PlanOutputStreamChunk,
-  type Task,
-} from '@openthrottle/nestjs-repositories';
+  createPlanOutputStreamRepositoryMock,
+  createPlansRepositoryMock,
+  createTasksRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
+import { asMock } from '@openthrottle/nestjs-testing';
 import type { JobRunHooksConfig } from '@tools/workflows';
-import type { Repository } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { PlanStatusService } from '../../graphql/plans/plan-status/plan-status.service.ts';
@@ -63,11 +63,9 @@ const mockLogger = createMock<LoggerService>({
 
 const mockPlanFindOne = vi.fn();
 const mockTaskFind = vi.fn().mockResolvedValue([]);
-const mockPlansService = createMock<PlansService>({
-  getRepository: () =>
-    createMock<Repository<Plan>>({
-      findOne: mockPlanFindOne,
-    }),
+const mockPlansRepository = asMock<PlansRepository>({
+  ...createPlansRepositoryMock(),
+  findOne: mockPlanFindOne,
 });
 
 // The plans.status write chokepoint and the background-writer service-account lookup, in place
@@ -85,20 +83,15 @@ const mockStatusChangeSystemAccountService =
     resolveId: mockResolveStatusChangeSystemAccountId,
   });
 
-const mockTasksService = createMock<TasksService>({
-  getRepository: () =>
-    createMock<Repository<Task>>({
-      find: mockTaskFind,
-    }),
+const mockTasksRepository = asMock<TasksRepository>({
+  ...createTasksRepositoryMock(),
+  findBy: mockTaskFind,
 });
 
-const mockPlanOutputSave = vi.fn().mockResolvedValue(undefined);
-const mockPlanOutputStreamService = createMock<PlanOutputStreamService>({
-  getRepository: () =>
-    createMock<Repository<PlanOutputStreamChunk>>({
-      create: vi.fn(),
-      save: mockPlanOutputSave,
-    }),
+const mockPlanOutputCreate = vi.fn().mockResolvedValue(undefined);
+const mockPlanOutputStreamRepository = asMock<PlanOutputStreamRepository>({
+  ...createPlanOutputStreamRepositoryMock(),
+  create: mockPlanOutputCreate,
 });
 
 const baseJobData = {
@@ -130,9 +123,9 @@ describe('executePlanJobRunHooks', () => {
       logLabel: 'test',
       logger: mockLogger,
       phase: 'beforeAll',
-      planOutputStreamService: mockPlanOutputStreamService,
-      plansService: mockPlansService,
-      tasksService: mockTasksService,
+      planOutputStreamRepository: mockPlanOutputStreamRepository,
+      plansRepository: mockPlansRepository,
+      tasksRepository: mockTasksRepository,
     });
 
     expect(result).toEqual({ blocked: false, results: [] });
@@ -149,9 +142,9 @@ describe('executePlanJobRunHooks', () => {
       logLabel: 'test',
       logger: mockLogger,
       phase: 'beforeAll',
-      planOutputStreamService: mockPlanOutputStreamService,
-      plansService: mockPlansService,
-      tasksService: mockTasksService,
+      planOutputStreamRepository: mockPlanOutputStreamRepository,
+      plansRepository: mockPlansRepository,
+      tasksRepository: mockTasksRepository,
     });
 
     expect(result).toEqual({ blocked: false, results: [] });
@@ -176,9 +169,9 @@ describe('executePlanJobRunHooks', () => {
       logLabel: 'PlansProcessor',
       logger: mockLogger,
       phase: 'beforeAll',
-      planOutputStreamService: mockPlanOutputStreamService,
-      plansService: mockPlansService,
-      tasksService: mockTasksService,
+      planOutputStreamRepository: mockPlanOutputStreamRepository,
+      plansRepository: mockPlansRepository,
+      tasksRepository: mockTasksRepository,
     });
 
     expect(mockPlanFindOne).toHaveBeenCalledWith({ where: { id: planId } });
@@ -207,9 +200,9 @@ describe('executePlanJobRunHooks', () => {
       mainRunStarted: true,
       mainRunSucceeded: true,
       phase: 'afterAll',
-      planOutputStreamService: mockPlanOutputStreamService,
-      plansService: mockPlansService,
-      tasksService: mockTasksService,
+      planOutputStreamRepository: mockPlanOutputStreamRepository,
+      plansRepository: mockPlansRepository,
+      tasksRepository: mockTasksRepository,
     });
 
     expect(mockExecuteJobRunHooksPhase.mock.calls[0]?.[0]?.runKind).toBe(
@@ -253,11 +246,11 @@ describe('runBeforeRunHooksAndHandleBlock', () => {
         emitPlanStatusChanged,
         emitQueueJobCompleted,
       },
-      planOutputStreamService: mockPlanOutputStreamService,
+      planOutputStreamRepository: mockPlanOutputStreamRepository,
       planStatusService: mockPlanStatusService,
-      plansService: mockPlansService,
+      plansRepository: mockPlansRepository,
       statusChangeSystemAccount: mockStatusChangeSystemAccountService,
-      tasksService: mockTasksService,
+      tasksRepository: mockTasksRepository,
     });
 
     expect(blocked).toBe(false);
@@ -280,11 +273,11 @@ describe('runBeforeRunHooksAndHandleBlock', () => {
         emitPlanStatusChanged,
         emitQueueJobCompleted,
       },
-      planOutputStreamService: mockPlanOutputStreamService,
+      planOutputStreamRepository: mockPlanOutputStreamRepository,
       planStatusService: mockPlanStatusService,
-      plansService: mockPlansService,
+      plansRepository: mockPlansRepository,
       statusChangeSystemAccount: mockStatusChangeSystemAccountService,
-      tasksService: mockTasksService,
+      tasksRepository: mockTasksRepository,
     });
 
     expect(blocked).toBe(true);
@@ -355,9 +348,9 @@ describe('runAfterRunHooksThenNotify', () => {
         severity: 'success',
       },
       notifications: { emitQueueJobCompleted },
-      planOutputStreamService: mockPlanOutputStreamService,
-      plansService: mockPlansService,
-      tasksService: mockTasksService,
+      planOutputStreamRepository: mockPlanOutputStreamRepository,
+      plansRepository: mockPlansRepository,
+      tasksRepository: mockTasksRepository,
     });
 
     expect(mockExecuteJobRunHooksPhase).toHaveBeenCalledWith(
@@ -399,9 +392,9 @@ describe('runAfterRunHooksThenNotify', () => {
         severity: 'error',
       },
       notifications: { emitQueueJobCompleted },
-      planOutputStreamService: mockPlanOutputStreamService,
-      plansService: mockPlansService,
-      tasksService: mockTasksService,
+      planOutputStreamRepository: mockPlanOutputStreamRepository,
+      plansRepository: mockPlansRepository,
+      tasksRepository: mockTasksRepository,
     });
 
     expect(mockLogger.warn).toHaveBeenCalledWith(

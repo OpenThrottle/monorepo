@@ -1,11 +1,11 @@
 // FIXME: Swap out eventually
 
 /**
- * @description Resolver for activity-by-date-range. Uses PlansService repository manager for raw SQL across the work ledger (work_artifacts git_commit), plan_output_stream, tasks.
+ * @description Resolver for activity-by-date-range. Uses the DataSource for raw SQL across the work ledger (work_artifacts git_commit), plan_output_stream, tasks.
  */
 
 import { Args, Query, Resolver } from '@nestjs/graphql';
-import { PlansService } from '@openthrottle/nestjs-repositories';
+import { DataSource } from 'typeorm';
 
 import {
   ActivityByDateInput,
@@ -53,7 +53,7 @@ const ACTIVITY_FETCH_DEPTH_CAP = 2_000;
 
 @Resolver()
 export class ActivityResolver {
-  constructor(private readonly plansService: PlansService) {}
+  constructor(private readonly dataSource: DataSource) {}
 
   @Query(() => ActivityByDateResultObject, {
     description: `Activity for a single date (YYYY-MM-DD) or last N days. Provide exactly one of date or daysBack. Optional limit/offset for pagination.`,
@@ -126,9 +126,8 @@ export class ActivityResolver {
     input: LastActivityInput,
   ): Promise<LastActivityResultObject | null> {
     const { planId, taskId } = input;
-    const repo = this.plansService.getRepository();
     const q = <T>(sql: string, params?: unknown[]): Promise<T> => {
-      return repo.manager.query(sql, params);
+      return this.dataSource.query(sql, params);
     };
 
     type Candidate = {
@@ -237,7 +236,10 @@ export class ActivityResolver {
     if (taskId) {
       const taskRows = await q<
         { status: string; title: string; updated_at: string }[]
-      >(`SELECT title, status, updated_at FROM tasks WHERE id = $1`, [taskId]);
+      >(
+        `SELECT title, status, updated_at FROM tasks WHERE id = $1 AND deleted_at IS NULL`,
+        [taskId],
+      );
       const tRow = taskRows[0];
       if (tRow) {
         candidates.push({
@@ -255,7 +257,7 @@ export class ActivityResolver {
       const taskRows = await q<
         { id: string; status: string; title: string; updated_at: string }[]
       >(
-        `SELECT id, title, status, updated_at FROM tasks WHERE plan_id = $1 ORDER BY updated_at DESC LIMIT 1`,
+        `SELECT id, title, status, updated_at FROM tasks WHERE plan_id = $1 AND deleted_at IS NULL ORDER BY updated_at DESC LIMIT 1`,
         [planId],
       );
       const tRow = taskRows[0];
@@ -312,9 +314,8 @@ export class ActivityResolver {
     limit?: number,
     offset?: number,
   ): Promise<ActivityByDateResultObject> {
-    const repo = this.plansService.getRepository();
     const q = <T>(sql: string, params?: unknown[]): Promise<T> => {
-      return repo.manager.query(sql, params);
+      return this.dataSource.query(sql, params);
     };
 
     const usePagination = limit != null && limit > 0;
@@ -379,8 +380,8 @@ export class ActivityResolver {
                 t.title AS task_title
            FROM work_artifacts wa
            JOIN work_session_subjects wss ON wss.session_id = wa.session_id
-           JOIN plans p ON p.id = wss.plan_id
-           LEFT JOIN tasks t ON t.id = wss.task_id
+           JOIN plans p ON p.id = wss.plan_id AND p.deleted_at IS NULL
+           LEFT JOIN tasks t ON t.id = wss.task_id AND t.deleted_at IS NULL
            WHERE wa.type = 'git_commit'
              AND wa.produced_at >= $1::timestamptz AND wa.produced_at < $2::timestamptz
            ORDER BY wa.id, (wss.task_id IS NULL)
@@ -402,7 +403,7 @@ export class ActivityResolver {
       >(
         `SELECT pos.id, pos.plan_id, pos.iteration, pos.content, pos.created_at, pos.task_id, p.title AS plan_title
          FROM plan_output_stream pos
-         JOIN plans p ON pos.plan_id = p.id
+         JOIN plans p ON pos.plan_id = p.id AND p.deleted_at IS NULL
          WHERE pos.created_at >= $1::timestamptz AND pos.created_at < $2::timestamptz
          ORDER BY pos.created_at DESC
          LIMIT $3`,
@@ -420,8 +421,9 @@ export class ActivityResolver {
       >(
         `SELECT t.id, t.plan_id, t.title, t.status, t.updated_at, p.title AS plan_title
          FROM tasks t
-         JOIN plans p ON t.plan_id = p.id
-         WHERE t.updated_at >= $1::timestamptz AND t.updated_at < $2::timestamptz
+         JOIN plans p ON t.plan_id = p.id AND p.deleted_at IS NULL
+         WHERE t.deleted_at IS NULL
+           AND t.updated_at >= $1::timestamptz AND t.updated_at < $2::timestamptz
          ORDER BY t.updated_at DESC
          LIMIT $3`,
         [startIso, endIso, fetchDepth],
@@ -440,17 +442,18 @@ export class ActivityResolver {
            (SELECT count(DISTINCT wa.id)
               FROM work_artifacts wa
               JOIN work_session_subjects wss ON wss.session_id = wa.session_id
-              JOIN plans p ON p.id = wss.plan_id
+              JOIN plans p ON p.id = wss.plan_id AND p.deleted_at IS NULL
              WHERE wa.type = 'git_commit'
                AND wa.produced_at >= $1::timestamptz AND wa.produced_at < $2::timestamptz)
          + (SELECT count(*)
               FROM plan_output_stream pos
-              JOIN plans p ON p.id = pos.plan_id
+              JOIN plans p ON p.id = pos.plan_id AND p.deleted_at IS NULL
              WHERE pos.created_at >= $1::timestamptz AND pos.created_at < $2::timestamptz)
          + (SELECT count(*)
               FROM tasks t
-              JOIN plans p ON p.id = t.plan_id
-             WHERE t.updated_at >= $1::timestamptz AND t.updated_at < $2::timestamptz)
+              JOIN plans p ON p.id = t.plan_id AND p.deleted_at IS NULL
+             WHERE t.deleted_at IS NULL
+               AND t.updated_at >= $1::timestamptz AND t.updated_at < $2::timestamptz)
          )::text AS total`,
         [startIso, endIso],
       ),

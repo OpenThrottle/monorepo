@@ -7,6 +7,7 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+import { PlanOutputStreamModule } from '@openthrottle/nestjs-repositories-server';
 
 import { ForeignSkillInjectionModule } from '../foreign-skill-injection/foreign-skill-injection.module.ts';
 import { PlanRunWorkspacePreflightModule } from '../plan-run-workspace-preflight/plan-run-workspace-preflight.module.ts';
@@ -20,6 +21,7 @@ import { PlanRunWorkspaceService } from './plan-run-workspace.service.ts';
     ForeignSkillInjectionModule,
     LoggerModule,
     NestjsRepositoriesModule,
+    PlanOutputStreamModule,
     PlanRunWorkspacePreflightModule,
     PlanRunWorktreeCheckoutModule,
     PlanRunWorktreeProvisionModule,

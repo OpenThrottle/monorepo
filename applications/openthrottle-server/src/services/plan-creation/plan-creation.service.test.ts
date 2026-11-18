@@ -9,11 +9,20 @@ import type {
 } from '@openthrottle/nestjs-repositories';
 import {
   getDefaultPlanRunConfigStorage,
-  PlansService,
   UserPreferencesService,
 } from '@openthrottle/nestjs-repositories';
-import { UserDisabledAgentClisRepository } from '@openthrottle/nestjs-repositories-server';
-import { createUserDisabledAgentClisRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import {
+  type Plan,
+  PlansRepository,
+  UserDisabledAgentClisRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import {
+  createPlansRepositoryMock,
+  createUserDisabledAgentClisRepositoryMock,
+  plansFactory,
+} from '@openthrottle/nestjs-repositories-server/testing';
+import { asMock } from '@openthrottle/nestjs-testing';
+import { DataSource } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { CreatePlanInput } from '../../graphql/plans/plan.input.ts';
@@ -30,9 +39,10 @@ describe('PlanCreationService', () => {
   const getForUser = vi.fn();
   const isEnabled = vi.fn();
   const isModelEnabled = vi.fn();
+  const plansRepository = createPlansRepositoryMock();
+  // The TypeORM repository a batch create's transaction manager hands out.
   const planRepo = {
     create: vi.fn(),
-    findOne: vi.fn(),
     manager: {
       transaction: vi.fn(
         (run: (manager: { getRepository: () => unknown }) => unknown) =>
@@ -41,6 +51,9 @@ describe('PlanCreationService', () => {
     },
     save: vi.fn(),
   };
+  const dataSource = asMock<DataSource>({
+    transaction: planRepo.manager.transaction,
+  });
 
   beforeEach(async () => {
     vi.clearAllMocks();
@@ -83,12 +96,8 @@ describe('PlanCreationService', () => {
           provide: UserPreferencesService,
           useValue: { getForUser },
         },
-        {
-          provide: PlansService,
-          useValue: {
-            getRepository: () => planRepo,
-          },
-        },
+        { provide: PlansRepository, useValue: plansRepository },
+        { provide: DataSource, useValue: dataSource },
       ],
     }).compile();
 
@@ -166,8 +175,8 @@ describe('PlanCreationService', () => {
   describe('when the input carries a client id', () => {
     const CLIENT_ID = '0b9a4a0e-8a3e-4c1e-9f0a-2f6d1f4b7c11';
 
-    const plan = (title: string): PlanData => {
-      return {
+    const plan = (title: string): Plan => {
+      return plansFactory.build({
         assignee: null,
         author: 'visormatt',
         category: 'feature',
@@ -181,7 +190,7 @@ describe('PlanCreationService', () => {
         summary: null,
         title,
         updatedAt: new Date(FIXED_NOW),
-      };
+      });
     };
 
     const input = (id: string): CreatePlanInput => {
@@ -200,36 +209,36 @@ describe('PlanCreationService', () => {
     };
 
     it('inserts the plan under that id when it is new', async () => {
-      planRepo.findOne.mockResolvedValue(null);
-      planRepo.create.mockImplementation((fields: unknown) => fields);
-      planRepo.save.mockImplementation(async (entity: unknown) => entity);
+      plansRepository.findOne.mockResolvedValue(null);
+      plansRepository.create.mockImplementation(async (fields) => {
+        return plansFactory.build(fields);
+      });
 
       const result = await service.createPlanFromInput(input(CLIENT_ID));
 
       expect(result).toMatchObject({ id: CLIENT_ID, title: 'My plan' });
-      expect(planRepo.save).toHaveBeenCalledTimes(1);
+      expect(plansRepository.create).toHaveBeenCalledTimes(1);
     });
 
     it('returns the plan an earlier call created instead of inserting again', async () => {
-      planRepo.findOne.mockResolvedValue(plan('My plan'));
+      plansRepository.findOne.mockResolvedValue(plan('My plan'));
 
       const result = await service.createPlanFromInput(
         input(CLIENT_ID.toUpperCase()),
       );
 
       expect(result.id).toBe(CLIENT_ID);
-      expect(planRepo.findOne).toHaveBeenCalledWith({
+      expect(plansRepository.findOne).toHaveBeenCalledWith({
         where: { id: CLIENT_ID },
       });
-      expect(planRepo.save).not.toHaveBeenCalled();
+      expect(plansRepository.create).not.toHaveBeenCalled();
     });
 
     it('returns the winner when a concurrent replay inserted first', async () => {
-      planRepo.findOne
+      plansRepository.findOne
         .mockResolvedValueOnce(null)
         .mockResolvedValueOnce(plan('My plan'));
-      planRepo.create.mockImplementation((fields: unknown) => fields);
-      planRepo.save.mockRejectedValue(
+      plansRepository.create.mockRejectedValue(
         Object.assign(new Error('duplicate key'), { code: '23505' }),
       );
 
@@ -239,19 +248,19 @@ describe('PlanCreationService', () => {
     });
 
     it('refuses an id that already belongs to a plan with another title', async () => {
-      planRepo.findOne.mockResolvedValue(plan('Someone else'));
+      plansRepository.findOne.mockResolvedValue(plan('Someone else'));
 
       await expect(
         service.createPlanFromInput(input(CLIENT_ID)),
       ).rejects.toBeInstanceOf(BadRequestException);
-      expect(planRepo.save).not.toHaveBeenCalled();
+      expect(plansRepository.create).not.toHaveBeenCalled();
     });
 
     it('refuses an id that is not a UUID', async () => {
       await expect(
         service.createPlanFromInput(input('not-a-uuid')),
       ).rejects.toBeInstanceOf(BadRequestException);
-      expect(planRepo.findOne).not.toHaveBeenCalled();
+      expect(plansRepository.findOne).not.toHaveBeenCalled();
     });
   });
 
@@ -275,8 +284,7 @@ describe('PlanCreationService', () => {
       updatedAt: new Date(FIXED_NOW),
     };
 
-    planRepo.create.mockReturnValue(saved);
-    planRepo.save.mockResolvedValue(saved);
+    plansRepository.create.mockResolvedValue(plansFactory.build(saved));
 
     const input: CreatePlanInput = {
       assignee: null,
@@ -294,7 +302,7 @@ describe('PlanCreationService', () => {
       const result = await service.createPlanFromInput(input);
 
       expect(result.author).toBe('fromenv');
-      expect(planRepo.create).toHaveBeenCalledWith(
+      expect(plansRepository.create).toHaveBeenCalledWith(
         expect.objectContaining({ author: 'fromenv', title: 'My plan' }),
       );
     } finally {
@@ -323,8 +331,7 @@ describe('PlanCreationService', () => {
       updatedAt: new Date(FIXED_NOW),
     };
 
-    planRepo.create.mockReturnValue(saved);
-    planRepo.save.mockResolvedValue(saved);
+    plansRepository.create.mockResolvedValue(plansFactory.build(saved));
 
     const input: CreatePlanInput = {
       assignee: null,
@@ -341,7 +348,7 @@ describe('PlanCreationService', () => {
 
     await service.createPlanFromInput(input);
 
-    expect(planRepo.create).toHaveBeenCalledWith(
+    expect(plansRepository.create).toHaveBeenCalledWith(
       expect.objectContaining({
         runConfig: getDefaultPlanRunConfigStorage(),
       }),
@@ -365,8 +372,7 @@ describe('PlanCreationService', () => {
       updatedAt: new Date(FIXED_NOW),
     };
 
-    planRepo.create.mockReturnValue(saved);
-    planRepo.save.mockResolvedValue(saved);
+    plansRepository.create.mockResolvedValue(plansFactory.build(saved));
 
     const input: CreatePlanInput = {
       assignee: 'not-a-github!!!',
@@ -382,7 +388,7 @@ describe('PlanCreationService', () => {
 
     await service.createPlanFromInput(input);
 
-    expect(planRepo.create).toHaveBeenCalledWith(
+    expect(plansRepository.create).toHaveBeenCalledWith(
       expect.objectContaining({ assignee: null }),
     );
   });
@@ -467,7 +473,7 @@ describe('PlanCreationService', () => {
       nth: number,
       expected: Partial<PlanRunConfigStorage['workspace']>,
     ): void => {
-      expect(planRepo.create).toHaveBeenNthCalledWith(
+      expect(plansRepository.create).toHaveBeenNthCalledWith(
         nth,
         expect.objectContaining({
           runConfig: expect.objectContaining({
@@ -478,10 +484,9 @@ describe('PlanCreationService', () => {
     };
 
     beforeEach(() => {
-      planRepo.create.mockImplementation((fields: unknown) => fields);
-      planRepo.save.mockImplementation((entity: unknown) =>
-        Promise.resolve(entity),
-      );
+      plansRepository.create.mockImplementation(async (fields) => {
+        return plansFactory.build(fields);
+      });
     });
 
     it('seeds checkoutId and repositoryId when the path resolves and the run config is empty', async () => {
@@ -606,6 +611,7 @@ describe('PlanCreationService', () => {
 
     it('seeds every plan in a batch create', async () => {
       resolveCheckoutForPath.mockResolvedValue(RESOLVED);
+      planRepo.create.mockImplementation((fields: unknown) => fields);
       planRepo.save.mockImplementation((entities: unknown) =>
         Promise.resolve(entities),
       );
@@ -618,8 +624,16 @@ describe('PlanCreationService', () => {
         USER,
       );
 
-      expectWorkspace(1, RESOLVED);
-      expectWorkspace(2, RESOLVED);
+      for (const nth of [1, 2]) {
+        expect(planRepo.create).toHaveBeenNthCalledWith(
+          nth,
+          expect.objectContaining({
+            runConfig: expect.objectContaining({
+              workspace: expect.objectContaining(RESOLVED),
+            }),
+          }),
+        );
+      }
     });
   });
 
@@ -647,7 +661,7 @@ describe('PlanCreationService', () => {
     const expectRalph = (
       expected: Partial<PlanRunConfigStorage['ralph']>,
     ): void => {
-      expect(planRepo.create).toHaveBeenCalledWith(
+      expect(plansRepository.create).toHaveBeenCalledWith(
         expect.objectContaining({
           runConfig: expect.objectContaining({
             ralph: expect.objectContaining(expected),
@@ -664,10 +678,9 @@ describe('PlanCreationService', () => {
     };
 
     beforeEach(() => {
-      planRepo.create.mockImplementation((fields: unknown) => fields);
-      planRepo.save.mockImplementation((entity: unknown) =>
-        Promise.resolve(entity),
-      );
+      plansRepository.create.mockImplementation(async (fields) => {
+        return plansFactory.build(fields);
+      });
     });
 
     it('keeps the system default when the user has no preference', async () => {

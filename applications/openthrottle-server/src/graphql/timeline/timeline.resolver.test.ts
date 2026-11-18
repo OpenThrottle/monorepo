@@ -4,8 +4,8 @@
  * and the derived-end rule that keeps a queued-at from reading as a start.
  */
 
-import { createMock } from '@golevelup/ts-vitest';
-import type { PlansService } from '@openthrottle/nestjs-repositories';
+import { asMock } from '@openthrottle/nestjs-testing';
+import type { DataSource } from 'typeorm';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -25,6 +25,11 @@ const FIXED_NOW = new Date('2026-09-05T00:00:00.000Z');
 afterEach(() => {
   vi.useRealTimers();
 });
+
+/** The resolver only ever calls `query` on the DataSource. */
+const asDataSource = (query: QueryFn): DataSource => {
+  return asMock<DataSource>({ query });
+};
 
 const baseInput = (
   overrides: Partial<WorkstreamTimelineInput> = {},
@@ -49,10 +54,7 @@ describe('TimelineResolver.workstreamTimeline', () => {
 
   beforeEach(() => {
     query = vi.fn().mockResolvedValue([]);
-    const plansService = createMock<PlansService>({
-      getRepository: vi.fn().mockReturnValue({ manager: { query } }),
-    });
-    resolver = new TimelineResolver(plansService);
+    resolver = new TimelineResolver(asDataSource(query));
   });
 
   describe('window bounds', () => {
@@ -125,6 +127,24 @@ describe('TimelineResolver.workstreamTimeline', () => {
   });
 
   describe('row caps and truncation', () => {
+    it('never reads a soft-deleted plan or task', async () => {
+      await resolver.workstreamTimeline(
+        baseInput({ markerKinds: null, spanKinds: null }),
+      );
+
+      for (const [sql] of query.mock.calls) {
+        const readsPlans = /(?:JOIN|FROM) plans p/.test(sql);
+        if (readsPlans) {
+          expect(sql).toMatch(
+            /plans p ON p\.id = [\w.]+ AND p\.deleted_at IS NULL/,
+          );
+        }
+        if (/FROM tasks t/.test(sql)) {
+          expect(sql).toContain('t.deleted_at IS NULL');
+        }
+      }
+    });
+
     it('applies a LIMIT to every leg', async () => {
       await resolver.workstreamTimeline(
         baseInput({ markerKinds: null, spanKinds: null }),

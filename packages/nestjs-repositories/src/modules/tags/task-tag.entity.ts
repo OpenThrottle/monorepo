@@ -2,6 +2,7 @@
  * @description TypeORM entity for task_tags. Matches databases/openthrottle/migrations/064.
  */
 
+import { Task } from '@openthrottle/nestjs-repositories-server';
 import {
   Column,
   CreateDateColumn,
@@ -12,7 +13,6 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-import { Task } from '../tasks/task.entity.ts';
 import type { TagSource } from './tags.types.ts';
 
 export interface TaskTagData {

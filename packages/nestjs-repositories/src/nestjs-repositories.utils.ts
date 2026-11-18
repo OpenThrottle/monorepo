@@ -12,8 +12,14 @@ import {
   DailyStat,
   McpConnectorConnection,
   Note,
+  Plan,
+  PlanEmbedding,
+  PlanOutputStreamChunk,
+  Project,
   SkillUsageEvent,
   SkillUsageOutcome,
+  Task,
+  TaskEmbedding,
   TelemetryHeartbeat,
   UserDisabledAgentCli,
   UserFavoriteAgentModel,
@@ -34,13 +40,9 @@ import { EvalJudgeCalibration } from './modules/eval-judge-calibrations/eval-jud
 import { EvalGrade } from './modules/eval-runs/eval-grade.entity.ts';
 import { EvalRun } from './modules/eval-runs/eval-run.entity.ts';
 import { EvalTrial } from './modules/eval-runs/eval-trial.entity.ts';
-import { PlanEmbedding } from './modules/plan-embeddings/plan-embedding.entity.ts';
 import { PlanMessage } from './modules/plan-messages/plan-message.entity.ts';
-import { PlanOutputStreamChunk } from './modules/plan-output-stream/plan-output-stream.entity.ts';
 import { PlanRun } from './modules/plan-runs/plan-run.entity.ts';
-import { Plan } from './modules/plans/plan.entity.ts';
 import { ProjectSkill } from './modules/project-skills/project-skill.entity.ts';
-import { Project } from './modules/projects/project.entity.ts';
 import { CustomPrompt } from './modules/prompts/custom-prompt.entity.ts';
 import { Repository } from './modules/repositories/repository.entity.ts';
 import { RepositoryCheckout } from './modules/repositories/repository-checkout.entity.ts';
@@ -59,8 +61,6 @@ import { TagActionRule } from './modules/tag-action-rules/tag-action-rule.entity
 import { PlanTag } from './modules/tags/plan-tag.entity.ts';
 import { ProjectTag } from './modules/tags/project-tag.entity.ts';
 import { TaskTag } from './modules/tags/task-tag.entity.ts';
-import { TaskEmbedding } from './modules/task-embeddings/task-embedding.entity.ts';
-import { Task } from './modules/tasks/task.entity.ts';
 import { UserPreferences } from './modules/user-preferences/user-preferences.entity.ts';
 import { User } from './modules/users/user.entity.ts';
 import { WorkArtifact } from './modules/work-ledger/work-artifact.entity.ts';

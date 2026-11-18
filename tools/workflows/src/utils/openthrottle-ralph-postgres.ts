@@ -90,7 +90,7 @@ export async function getTaskByIdPostgres(
       updated_at: string;
       wave: number | null;
     }>(
-      `SELECT id, plan_id, title, description, category, status, requirements, sort_order, wave, created_at, updated_at FROM tasks WHERE id = $1`,
+      `SELECT id, plan_id, title, description, category, status, requirements, sort_order, wave, created_at, updated_at FROM tasks WHERE id = $1 AND deleted_at IS NULL`,
       [id],
     );
     const row = res.rows[0];
@@ -127,7 +127,7 @@ export async function listPlansByStatusPostgres(
       status: string;
       title: string;
     }>(
-      `SELECT id, title, status, created_at FROM plans WHERE status = $1 ORDER BY created_at DESC`,
+      `SELECT id, title, status, created_at FROM plans WHERE status = $1 AND deleted_at IS NULL ORDER BY created_at DESC`,
       [status],
     );
     return res.rows.map((row) => ({
@@ -160,7 +160,7 @@ export async function getPlanByIdPostgres(
       title: string;
       updated_at: string;
     }>(
-      `SELECT id, title, author, category, description, status, summary, created_at, updated_at FROM plans WHERE id = $1`,
+      `SELECT id, title, author, category, description, status, summary, created_at, updated_at FROM plans WHERE id = $1 AND deleted_at IS NULL`,
       [id],
     );
     const row = res.rows[0];
@@ -192,7 +192,10 @@ export async function listProjectsPostgres(
       id: string;
       name: string;
       nx_project_name: string | null;
-    }>(`SELECT id, name, nx_project_name FROM projects ORDER BY name`, []);
+    }>(
+      `SELECT id, name, nx_project_name FROM projects WHERE deleted_at IS NULL ORDER BY name`,
+      [],
+    );
     return res.rows.map((row) => ({
       id: row.id,
       name: row.name,
@@ -212,7 +215,7 @@ export async function ensureProjectForNxNamePostgres(
   await client.connect();
   try {
     const existing = await client.query<{ id: string }>(
-      `SELECT id FROM projects WHERE nx_project_name = $1 LIMIT 1`,
+      `SELECT id FROM projects WHERE nx_project_name = $1 AND deleted_at IS NULL LIMIT 1`,
       [nxProjectName],
     );
     const row = existing.rows[0];
@@ -239,7 +242,7 @@ export async function updatePlanProjectIdPostgres(
   await client.connect();
   try {
     const res = await client.query(
-      `UPDATE plans SET project_id = $1, updated_at = NOW() WHERE id = $2`,
+      `UPDATE plans SET project_id = $1, updated_at = NOW() WHERE id = $2 AND deleted_at IS NULL`,
       [projectId, planId],
     );
     return (res.rowCount ?? 0) > 0;
@@ -269,7 +272,7 @@ export async function getTasksByPlanIdPostgres(
       updated_at: string;
       wave: number | null;
     }>(
-      `SELECT id, plan_id, title, description, category, status, requirements, sort_order, wave, created_at, updated_at FROM tasks WHERE plan_id = $1 ORDER BY sort_order ASC, created_at ASC`,
+      `SELECT id, plan_id, title, description, category, status, requirements, sort_order, wave, created_at, updated_at FROM tasks WHERE plan_id = $1 AND deleted_at IS NULL ORDER BY sort_order ASC, created_at ASC`,
       [planId],
     );
     return res.rows.map((row) => ({
@@ -319,7 +322,7 @@ export async function updatePlanStatusPostgres(
         title: string;
         updated_at: string;
       }>(
-        `UPDATE plans SET status = $1, ${completedAtSql}, updated_at = NOW() WHERE id = $2 AND status != 'IN_PROGRESS' RETURNING id, title, author, category, description, status, summary, created_at, updated_at`,
+        `UPDATE plans SET status = $1, ${completedAtSql}, updated_at = NOW() WHERE id = $2 AND deleted_at IS NULL AND status != 'IN_PROGRESS' RETURNING id, title, author, category, description, status, summary, created_at, updated_at`,
         [status, planId],
       );
       const row = res.rows[0];
@@ -347,7 +350,7 @@ export async function updatePlanStatusPostgres(
       title: string;
       updated_at: string;
     }>(
-      `UPDATE plans SET status = $1, ${completedAtSql}, updated_at = NOW() WHERE id = $2 RETURNING id, title, author, category, description, status, summary, created_at, updated_at`,
+      `UPDATE plans SET status = $1, ${completedAtSql}, updated_at = NOW() WHERE id = $2 AND deleted_at IS NULL RETURNING id, title, author, category, description, status, summary, created_at, updated_at`,
       [status, planId],
     );
     const row = res.rows[0];
@@ -398,7 +401,7 @@ export async function updateTaskStatusPostgres(
           ELSE completed_at
         END,
         updated_at = NOW()
-       WHERE id = $2
+       WHERE id = $2 AND deleted_at IS NULL
        RETURNING id, plan_id, title, description, category, status, requirements, sort_order, wave, created_at, updated_at`,
       [status, id],
     );

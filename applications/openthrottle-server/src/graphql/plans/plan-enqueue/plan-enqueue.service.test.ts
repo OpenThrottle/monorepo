@@ -8,20 +8,27 @@ import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
   PlanRun,
   PlanRunsService,
-  PlansService,
   RepositoryCheckoutsService,
-  TasksService,
+} from '@openthrottle/nestjs-repositories';
+import {
+  PlanRun as PlanRunEntity,
+  type RepositoryCheckout,
 } from '@openthrottle/nestjs-repositories';
 import {
   type Plan,
-  PlanRun as PlanRunEntity,
-  type RepositoryCheckout,
+  type PlansRepository,
   Task,
-} from '@openthrottle/nestjs-repositories';
+  type TasksRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import {
+  createPlansRepositoryMock,
+  createTasksRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
 import { isRecord } from '@openthrottle/nodejs-utils';
 import type { Queue } from 'bullmq';
 import { GraphQLError } from 'graphql';
+import type { DataSource } from 'typeorm';
 import { In, QueryFailedError } from 'typeorm';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -157,8 +164,11 @@ describe('PlanEnqueueService', () => {
     enqueuePlanRalphOrchestrator: mockEnqueuePlanRalphOrchestrator,
   });
 
-  const mockPlansService = createMock<PlansService>({
-    getRepository: vi.fn().mockReturnValue(repo),
+  const mockPlansRepository = createPlansRepositoryMock();
+  // The DataSource hands out the same transactional manager the old shim repository did.
+  const mockDataSource = asMock<DataSource>({
+    manager: repo.manager,
+    transaction: repo.manager.transaction,
   });
 
   // The plans.status write chokepoint, in place of the old direct repo.update({ status: 'QUEUED' })
@@ -185,10 +195,7 @@ describe('PlanEnqueueService', () => {
     removeScheduledRunJobs: mockRemoveScheduledRunJobs,
   });
 
-  const mockGetPlanHooks = vi.fn().mockResolvedValue({ after: [], before: [] });
-  const mockTasksService = createMock<TasksService>({
-    getPlanHooks: mockGetPlanHooks,
-  });
+  const mockTasksRepository = createTasksRepositoryMock();
 
   const mockFindByIdForUser = vi.fn().mockResolvedValue(null);
   const mockFindByRepositoryIdForUser = vi.fn().mockResolvedValue([]);
@@ -208,20 +215,24 @@ describe('PlanEnqueueService', () => {
   });
 
   const service = new PlanEnqueueService(
+    mockDataSource,
     mockLogger,
     mockNotificationsService,
     mockPlanRunsService,
-    mockPlansService,
+    asMock<PlansRepository>(mockPlansRepository),
     mockPlanStatusService,
     mockQueuesService,
     mockRepositoryCheckoutsService,
-    mockTasksService,
+    asMock<TasksRepository>(mockTasksRepository),
     mockWorkLedgerCapture,
     mockPlansQueue,
   );
 
   beforeEach(() => {
     repo.findOne.mockResolvedValue(mockPlan);
+    mockPlansRepository.findOne.mockImplementation(async (options) => {
+      return repo.findOne(options);
+    });
     repo.save.mockReset().mockResolvedValue(undefined);
     repo.update.mockResolvedValue(undefined);
     mockApplyStatusChange.mockReset().mockResolvedValue({

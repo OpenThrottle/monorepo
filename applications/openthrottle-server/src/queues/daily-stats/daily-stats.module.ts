@@ -1,7 +1,11 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
-import { DailyStatsModule } from '@openthrottle/nestjs-repositories-server';
+import {
+  DailyStatsModule,
+  PlansModule,
+  TasksModule,
+} from '@openthrottle/nestjs-repositories-server';
 
 import { NotificationsModule } from '../../notifications/notifications.module.ts';
 import { DailyStatsProcessor } from './daily-stats.processor.ts';
@@ -23,6 +27,8 @@ import { DailyStatsRepeatableService } from './repeatable/repeatable.service.ts'
     LoggerModule,
     NestjsRepositoriesModule,
     NotificationsModule,
+    PlansModule,
+    TasksModule,
   ],
   providers: [DailyStatsProcessor, DailyStatsRepeatableService],
 })

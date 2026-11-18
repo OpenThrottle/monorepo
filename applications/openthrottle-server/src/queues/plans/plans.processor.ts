@@ -20,11 +20,13 @@ import {
   HEARTBEAT_INTERVAL_MS,
   PLAN_RUN_STARTABLE_STATUSES,
   PLAN_RUN_STATUS,
-  PlanOutputStreamService,
   PlanRunsService,
-  PlansService,
-  TasksService,
 } from '@openthrottle/nestjs-repositories';
+import {
+  PlanOutputStreamRepository,
+  PlansRepository,
+  TasksRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import { getWorkflowConfigCwd } from '@openthrottle/openthrottle-agentic-utils';
 import {
   isLifecycleHooksChildJobsEnabled,
@@ -144,19 +146,19 @@ export class PlansProcessor
     private readonly logger: LoggerService,
     private readonly notifications: NotificationsService,
     private readonly otLoopOrchestrator: OtLoopOrchestratorService,
-    private readonly planOutputStreamService: PlanOutputStreamService,
+    private readonly planOutputStreamRepository: PlanOutputStreamRepository,
     private readonly planRunCancellation: PlanRunCancellationService,
     private readonly planRunWorktreeCleanup: PlanRunWorktreeCleanupService,
     private readonly planRunsService: PlanRunsService,
     @InjectQueue(PLANS_QUEUE_NAME)
     private readonly plansQueue: Queue<RunPlanJobData, PlanRunJobResult | void>,
-    private readonly plansService: PlansService,
+    private readonly plansRepository: PlansRepository,
     private readonly planStatusService: PlanStatusService,
     private readonly processMetrics: ProcessMetricsService,
     private readonly scheduledPlanRun: ScheduledPlanRunService,
     private readonly settleRunLedger: SettleRunLedgerService,
     private readonly statusChangeSystemAccount: StatusChangeSystemAccountService,
-    private readonly tasksService: TasksService,
+    private readonly tasksRepository: TasksRepository,
     private readonly usageLimitResume: UsageLimitResumeService,
     private readonly workLedgerRun: WorkLedgerRunService,
   ) {
@@ -196,8 +198,9 @@ export class PlansProcessor
    * restart, and is settled by its owner or the sweeps, never by this reconcile.
    */
   private async reconcilePlanStatusOnStartup(): Promise<void> {
-    const repo = this.plansService.getRepository();
-    const plans = await repo.find({ where: { status: 'IN_PROGRESS' } });
+    const plans = await this.plansRepository.findBy({
+      where: { status: 'IN_PROGRESS' },
+    });
 
     if (plans.length === 0) {
       return;
@@ -278,9 +281,9 @@ export class PlansProcessor
    * left alone: it is waiting for a run, not stranded.
    */
   private async repairStrandedQueuedPlans(): Promise<void> {
-    const plans = await this.plansService
-      .getRepository()
-      .find({ where: { status: 'QUEUED' } });
+    const plans = await this.plansRepository.findBy({
+      where: { status: 'QUEUED' },
+    });
 
     if (plans.length === 0) {
       return;
@@ -346,9 +349,9 @@ export class PlansProcessor
    * as running (the delayed job promotes it itself when it starts).
    */
   private async reconcilePlansQueuedWithInProgressTasks(): Promise<void> {
-    const planRepo = this.plansService.getRepository();
-    const taskRepo = this.tasksService.getRepository();
-    const plans = await planRepo.find({ where: { status: 'QUEUED' } });
+    const plans = await this.plansRepository.findBy({
+      where: { status: 'QUEUED' },
+    });
 
     if (plans.length === 0) {
       return;
@@ -369,7 +372,7 @@ export class PlansProcessor
       }
 
       // eslint-disable-next-line no-await-in-loop -- sequential by design: one plan reconciled at a time
-      const tasks = await taskRepo.findOne({
+      const tasks = await this.tasksRepository.findOne({
         select: ['id'],
         where: { planId: plan.id, status: 'IN_PROGRESS' },
       });
@@ -537,9 +540,11 @@ export class PlansProcessor
     content: string,
   ): Promise<void> {
     try {
-      const repo = this.planOutputStreamService.getRepository();
-
-      await repo.save(repo.create({ content, iteration: null, planId }));
+      await this.planOutputStreamRepository.create({
+        content,
+        iteration: null,
+        planId,
+      });
     } catch (error) {
       this.logger.warn(
         `Failed to append to plan output: planId=${planId}, error=${error instanceof Error ? error.message : String(error)}`,
@@ -705,10 +710,10 @@ export class PlansProcessor
       mainRunSucceeded: params.mainRunSucceeded,
       notification: params.notification,
       notifications: this.notifications,
-      planOutputStreamService: this.planOutputStreamService,
-      plansService: this.plansService,
+      planOutputStreamRepository: this.planOutputStreamRepository,
+      plansRepository: this.plansRepository,
       signal: params.abortSignal,
-      tasksService: this.tasksService,
+      tasksRepository: this.tasksRepository,
     });
   }
 
@@ -792,7 +797,7 @@ export class PlansProcessor
       return new Map();
     }
 
-    const tasks = await this.tasksService.getRepository().find({
+    const tasks = await this.tasksRepository.findBy({
       select: ['hookRole', 'hookSource', 'parentTaskId', 'planId', 'status'],
       where: { planId: In([...planIds]) },
     });
@@ -841,8 +846,9 @@ export class PlansProcessor
    */
   private async getPlanStatus(planId: string): Promise<string | null> {
     try {
-      const repo = this.plansService.getRepository();
-      const plan = await repo.findOne({ where: { id: planId } });
+      const plan = await this.plansRepository.findOne({
+        where: { id: planId },
+      });
 
       return plan?.status ?? null;
     } catch {
@@ -954,8 +960,9 @@ export class PlansProcessor
         PlansProcessor.name,
       );
 
-      const repo = this.plansService.getRepository();
-      const plan = await repo.findOne({ where: { id: planId } });
+      const plan = await this.plansRepository.findOne({
+        where: { id: planId },
+      });
       const _planTitle = plan?.title ?? undefined;
       // What the plan was before this run promotes it: the OT Loop runner restores it when the run
       // fails at start (docs/workflows/ot-loop-job.md § 6), so the plan is not stranded IN_PROGRESS.
@@ -1003,12 +1010,12 @@ export class PlansProcessor
         logLabel: PlansProcessor.name,
         logger: this.logger,
         notifications: this.notifications,
-        planOutputStreamService: this.planOutputStreamService,
+        planOutputStreamRepository: this.planOutputStreamRepository,
         planStatusService: this.planStatusService,
-        plansService: this.plansService,
+        plansRepository: this.plansRepository,
         signal: abortSignal,
         statusChangeSystemAccount: this.statusChangeSystemAccount,
-        tasksService: this.tasksService,
+        tasksRepository: this.tasksRepository,
       };
       const runBeforeRunHooks = async () => {
         if (lifecycleDispatcher !== undefined) {
@@ -1285,14 +1292,11 @@ export class PlansProcessor
   ): Promise<void> {
     try {
       const content = formatEnhancedTaskRunMetricsSummary(taskRunMetrics);
-      const repo = this.planOutputStreamService.getRepository();
-      const entity = repo.create({
+      await this.planOutputStreamRepository.create({
         content,
         iteration: null,
         planId,
       });
-
-      await repo.save(entity);
     } catch (error) {
       const isError = error instanceof Error;
 

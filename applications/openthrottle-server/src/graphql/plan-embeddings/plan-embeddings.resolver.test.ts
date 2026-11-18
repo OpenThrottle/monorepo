@@ -1,20 +1,18 @@
 import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
-import type { Plan, PlanEmbedding } from '@openthrottle/nestjs-repositories';
-import {
-  getDefaultPlanRunConfigStorage,
-  PlanEmbeddingsService,
-} from '@openthrottle/nestjs-repositories';
+import { getDefaultPlanRunConfigStorage } from '@openthrottle/nestjs-repositories';
+import type {
+  Plan,
+  PlanEmbedding,
+} from '@openthrottle/nestjs-repositories-server';
+import { PlanEmbeddingsRepository } from '@openthrottle/nestjs-repositories-server';
+import { createPlanEmbeddingsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 
 import { PlanEmbeddingsLoaders } from './loaders/loaders.service.ts';
 import { PlanEmbeddingsResolver } from './plan-embeddings.resolver.ts';
 
-const planEmbeddingsRepo = { find: vi.fn(), findOne: vi.fn() };
-
-const mockPlanEmbeddingsService = createMock<PlanEmbeddingsService>({
-  getRepository: vi.fn().mockReturnValue(planEmbeddingsRepo),
-});
+const planEmbeddingsRepo = createPlanEmbeddingsRepositoryMock();
 const mockPlanLoad = vi.fn().mockResolvedValue(null);
 const mockLoaders: PlanEmbeddingsLoaders = createMock<PlanEmbeddingsLoaders>({
   planLoader: { load: mockPlanLoad },
@@ -29,6 +27,7 @@ describe('PlanEmbeddingsResolver', () => {
     category: 'Plan category',
     completedAt: null,
     createdAt: new Date('2026-02-01T22:00:00.000Z'),
+    deletedAt: null,
     description: 'Plan description',
     id: 'c70fc1ea-c7de-4fe8-9722-44781ad80415',
     jobRunHooks: { hooks: [] },
@@ -60,6 +59,7 @@ describe('PlanEmbeddingsResolver', () => {
       category: 'Plan category',
       completedAt: null,
       createdAt: new Date('2026-02-01T22:00:00.000Z'),
+      deletedAt: null,
       description: 'Plan description',
       id: 'c70fc1ea-c7de-4fe8-9722-44781ad80415',
       jobRunHooks: { hooks: [] },
@@ -69,6 +69,7 @@ describe('PlanEmbeddingsResolver', () => {
       projectId: 'c70fc1ea-c7de-4fe8-9722-44781ad80415',
       projectRelation: {
         createdAt: new Date('2026-02-01T22:00:00.000Z'),
+        deletedAt: null,
         description: 'Plan project description',
         id: 'c70fc1ea-c7de-4fe8-9722-44781ad80415',
         name: 'Plan project name',
@@ -92,8 +93,8 @@ describe('PlanEmbeddingsResolver', () => {
       providers: [
         PlanEmbeddingsResolver,
         {
-          provide: PlanEmbeddingsService,
-          useValue: mockPlanEmbeddingsService,
+          provide: PlanEmbeddingsRepository,
+          useValue: planEmbeddingsRepo,
         },
         { provide: PlanEmbeddingsLoaders, useValue: mockLoaders },
       ],
@@ -104,9 +105,7 @@ describe('PlanEmbeddingsResolver', () => {
 
   describe('planEmbedding', () => {
     test('returns PlanEmbeddingObject when embedding exists', async () => {
-      vi.mocked(planEmbeddingsRepo.findOne).mockResolvedValue(
-        mockPlanEmbedding,
-      );
+      planEmbeddingsRepo.findOne.mockResolvedValue(mockPlanEmbedding);
 
       const result = await resolver.planEmbedding({
         id: mockPlanEmbedding.id,
@@ -121,7 +120,7 @@ describe('PlanEmbeddingsResolver', () => {
     });
 
     test('returns null when embedding does not exist', async () => {
-      vi.mocked(planEmbeddingsRepo.findOne).mockResolvedValue(null);
+      planEmbeddingsRepo.findOne.mockResolvedValue(null);
 
       const result = await resolver.planEmbedding({
         id: 'non-existent-id',
@@ -133,7 +132,7 @@ describe('PlanEmbeddingsResolver', () => {
 
   describe('planEmbeddings', () => {
     test('returns array of PlanEmbeddingObjects for planId', async () => {
-      vi.mocked(planEmbeddingsRepo.find).mockResolvedValue([mockPlanEmbedding]);
+      planEmbeddingsRepo.findBy.mockResolvedValue([mockPlanEmbedding]);
 
       const result = await resolver.planEmbeddings({
         planId: mockPlanEmbedding.planId,
@@ -146,7 +145,7 @@ describe('PlanEmbeddingsResolver', () => {
     });
 
     test('returns empty array when no embeddings for plan', async () => {
-      vi.mocked(planEmbeddingsRepo.find).mockResolvedValue([]);
+      planEmbeddingsRepo.findBy.mockResolvedValue([]);
 
       const result = await resolver.planEmbeddings({
         planId: mockPlanEmbedding.planId,
@@ -156,17 +155,17 @@ describe('PlanEmbeddingsResolver', () => {
     });
 
     test('applies the default cap (take 1000, skip 0) when no limit/offset', async () => {
-      vi.mocked(planEmbeddingsRepo.find).mockResolvedValue([]);
+      planEmbeddingsRepo.findBy.mockResolvedValue([]);
 
       await resolver.planEmbeddings({ planId: mockPlanEmbedding.planId });
 
-      expect(planEmbeddingsRepo.find).toHaveBeenCalledWith(
+      expect(planEmbeddingsRepo.findBy).toHaveBeenCalledWith(
         expect.objectContaining({ skip: 0, take: 1000 }),
       );
     });
 
     test('passes through an explicit limit/offset', async () => {
-      vi.mocked(planEmbeddingsRepo.find).mockResolvedValue([]);
+      planEmbeddingsRepo.findBy.mockResolvedValue([]);
 
       await resolver.planEmbeddings({
         limit: 50,
@@ -174,26 +173,26 @@ describe('PlanEmbeddingsResolver', () => {
         planId: mockPlanEmbedding.planId,
       });
 
-      expect(planEmbeddingsRepo.find).toHaveBeenCalledWith(
+      expect(planEmbeddingsRepo.findBy).toHaveBeenCalledWith(
         expect.objectContaining({ skip: 10, take: 50 }),
       );
     });
 
     test('clamps a limit above the max down to 1000', async () => {
-      vi.mocked(planEmbeddingsRepo.find).mockResolvedValue([]);
+      planEmbeddingsRepo.findBy.mockResolvedValue([]);
 
       await resolver.planEmbeddings({
         limit: 5000,
         planId: mockPlanEmbedding.planId,
       });
 
-      expect(planEmbeddingsRepo.find).toHaveBeenCalledWith(
+      expect(planEmbeddingsRepo.findBy).toHaveBeenCalledWith(
         expect.objectContaining({ take: 1000 }),
       );
     });
 
     test('clamps a non-positive limit up to 1 and a negative offset to 0', async () => {
-      vi.mocked(planEmbeddingsRepo.find).mockResolvedValue([]);
+      planEmbeddingsRepo.findBy.mockResolvedValue([]);
 
       await resolver.planEmbeddings({
         limit: 0,
@@ -201,7 +200,7 @@ describe('PlanEmbeddingsResolver', () => {
         planId: mockPlanEmbedding.planId,
       });
 
-      expect(planEmbeddingsRepo.find).toHaveBeenCalledWith(
+      expect(planEmbeddingsRepo.findBy).toHaveBeenCalledWith(
         expect.objectContaining({ skip: 0, take: 1 }),
       );
     });

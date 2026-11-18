@@ -712,3 +712,8 @@ export const PLAN_RUN_DIALOG_COPY = {
   workspaceHeading: `Workspace`,
   workspaceNotice: `Read-only here. Branch and checkout come from this plan's Configuration.`,
 } as const;
+
+/** Inline warning under the workflow-ralph `--plan` / `--task` id field. */
+export const PLAN_WORKFLOW_CONFIG_TARGET_COPY = {
+  invalidIdWarning: `Value does not match a UUID pattern; CLI validation may fail.`,
+} as const;

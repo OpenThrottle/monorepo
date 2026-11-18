@@ -449,6 +449,10 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
         action: 'keep',
         reason: 'structural (timestamp with time zone)',
       },
+      deleted_at: {
+        action: 'keep',
+        reason: 'structural (timestamp with time zone)',
+      },
       description: {
         action: 'scrub',
         reason: 'free text — identity/secret pass (text)',
@@ -495,6 +499,10 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
     classification: 'exported',
     columns: {
       created_at: {
+        action: 'keep',
+        reason: 'structural (timestamp with time zone)',
+      },
+      deleted_at: {
         action: 'keep',
         reason: 'structural (timestamp with time zone)',
       },
@@ -943,6 +951,10 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
         reason: 'structural (timestamp with time zone)',
       },
       created_at: {
+        action: 'keep',
+        reason: 'structural (timestamp with time zone)',
+      },
+      deleted_at: {
         action: 'keep',
         reason: 'structural (timestamp with time zone)',
       },

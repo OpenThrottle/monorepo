@@ -22,6 +22,7 @@ const PLAN_UUID = '77cb14a0-5eb0-4061-87ea-d618b85e8818';
 const TASK_UUID = '93fcbc19-1861-4931-9631-6393d33220a2';
 const TASK_UUID_UPPER = '93FCBC19-1861-4931-9631-6393D33220A2';
 const OTHER_UUID = '89280b05-845f-4581-8e27-68f004d9b698';
+const V7_UUID = '01a1ee5e-f142-7168-b470-60f2280340a1';
 
 describe('parseRalphCompleteTaskSignals', () => {
   it('returns empty array when result has no complete-task tag', () => {
@@ -46,6 +47,16 @@ describe('parseRalphCompleteTaskSignals', () => {
     expect(parseRalphCompleteTaskSignals(result)).toEqual([
       TASK_UUID.toLowerCase(),
     ]);
+  });
+
+  it('parses a uuidv7 task id, the default for tasks since migration 173', () => {
+    const result = `<ralph:task-complete>${V7_UUID}</ralph:task-complete>`;
+    expect(parseRalphCompleteTaskSignals(result)).toEqual([V7_UUID]);
+  });
+
+  it('accepts uuidv7 plan and task ids', () => {
+    expect(isOpenThrottlePlanId(V7_UUID)).toBe(true);
+    expect(isOpenThrottleTaskId(V7_UUID)).toBe(true);
   });
 
   it('returns unique task ids when multiple tags present', () => {

@@ -1,12 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT } from '@openthrottle/nestjs-auth';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import {
-  PlanRunsService,
-  PlansService,
-  TasksService,
-} from '@openthrottle/nestjs-repositories';
+import { PlanRunsService } from '@openthrottle/nestjs-repositories';
+import { PlansRepository } from '@openthrottle/nestjs-repositories-server';
 import type { WorkflowRalphUsageLimit } from '@openthrottle/openthrottle-agentic-ralph';
+import { DataSource } from 'typeorm';
 
 import { PlanEnqueueService } from '../../../graphql/plans/plan-enqueue/plan-enqueue.service.ts';
 import { PlanStatusService } from '../../../graphql/plans/plan-status/plan-status.service.ts';
@@ -45,14 +43,14 @@ const parseInstant = (iso: string | null): Date | null => {
 @Injectable()
 export class UsageLimitResumeService {
   constructor(
+    private readonly dataSource: DataSource,
     private readonly logger: LoggerService,
     private readonly notifications: NotificationsService,
     private readonly planEnqueueService: PlanEnqueueService,
     private readonly planRunsService: PlanRunsService,
-    private readonly plansService: PlansService,
+    private readonly plansRepository: PlansRepository,
     private readonly planStatusService: PlanStatusService,
     private readonly statusChangeSystemAccount: StatusChangeSystemAccountService,
-    private readonly tasksService: TasksService,
     private readonly workLedgerCapture: WorkLedgerCaptureService,
   ) {}
 
@@ -92,9 +90,9 @@ export class UsageLimitResumeService {
         };
       }
 
-      const plan = await this.plansService
-        .getRepository()
-        .findOne({ where: { id: planId } });
+      const plan = await this.plansRepository.findOne({
+        where: { id: planId },
+      });
       const cancelMarker =
         await this.planRunsService.readCancelRequested(planId);
 
@@ -176,7 +174,7 @@ export class UsageLimitResumeService {
         throwOnForbiddenInProgress: false,
       });
 
-      await this.tasksService.getRepository().manager.transaction((manager) =>
+      await this.dataSource.transaction((manager) =>
         updateMatchingTasksAndEmitStatusChanged({
           actorKind: AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
           actorSub: actorSub ?? undefined,

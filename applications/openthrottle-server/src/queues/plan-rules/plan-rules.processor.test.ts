@@ -9,8 +9,6 @@ import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
   OrphanedTaskStatusCaptureParams,
-  Plan,
-  PlansService,
   RuleApplication,
   RuleApplicationsService,
   TagActionRule,
@@ -19,6 +17,11 @@ import type {
   User,
   UsersService,
 } from '@openthrottle/nestjs-repositories';
+import type {
+  Plan,
+  PlansRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import { createPlansRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 
@@ -88,8 +91,9 @@ describe('PlanRulesProcessor.process', () => {
     executor = { actionType: 'inject-task', execute: vi.fn() };
 
     plansFindOne = vi.fn().mockResolvedValue(buildPlan());
-    const plansService = createMock<PlansService>({
-      getRepository: vi.fn(() => asMock({ findOne: plansFindOne })),
+    const plansRepository = asMock<PlansRepository>({
+      ...createPlansRepositoryMock(),
+      findOne: plansFindOne,
     });
 
     usersService = createMock<UsersService>({
@@ -127,7 +131,7 @@ describe('PlanRulesProcessor.process', () => {
       registry,
       createMock<LoggerService>(),
       createMock<NotificationsService>({ emitTaskStatusChanged }),
-      plansService,
+      plansRepository,
       ruleApplicationsService,
       createMock<StatusChangeSystemAccountService>({
         resolveId: resolveStatusChangeSystemAccountId,

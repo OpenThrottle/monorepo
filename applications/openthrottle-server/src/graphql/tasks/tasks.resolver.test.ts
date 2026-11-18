@@ -1,14 +1,23 @@
 import { createMock } from '@golevelup/ts-vitest';
-import { BadRequestException, ConflictException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import type { Plan, Task } from '@openthrottle/nestjs-repositories';
+import type { Plan, Task } from '@openthrottle/nestjs-repositories-server';
 import {
   CROSS_PLAN_TASK_LIST_ORDER,
   PLAN_TASK_LIST_ORDER,
-  TasksService,
-} from '@openthrottle/nestjs-repositories';
+  TasksRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import {
+  createTasksRepositoryMock,
+  tasksFactory,
+} from '@openthrottle/nestjs-repositories-server/testing';
+import { asMock } from '@openthrottle/nestjs-testing';
 import { isRecord } from '@openthrottle/nodejs-utils';
-import { QueryFailedError } from 'typeorm';
+import { DataSource, QueryFailedError } from 'typeorm';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { NotificationsService } from '../../notifications/notifications.service.ts';
@@ -56,10 +65,35 @@ describe('TasksResolver', () => {
     save: vi.fn((entity: Task) => Promise.resolve(entity)),
   };
 
-  const mockTasksService = createMock<TasksService>({
-    createTasksBatch: vi.fn().mockResolvedValue([]),
-    getRepository: vi.fn().mockReturnValue(repo),
-    resolveNextSortOrder: vi.fn().mockResolvedValue(1000),
+  // `repo` stands in for the TypeORM-style persistence the repository wraps (and the transaction
+  // manager's repository). The repository mock below delegates its reads, create, count and delete
+  // to it, so every stub and assertion on `repo` still describes what reaches the database.
+  const mockTasksRepository = createTasksRepositoryMock();
+  mockTasksRepository.createTasksBatch.mockResolvedValue([]);
+  mockTasksRepository.resolveNextSortOrder.mockResolvedValue(1000);
+  mockTasksRepository.findOne.mockImplementation(async (options) => {
+    return repo.findOne(options);
+  });
+  mockTasksRepository.findBy.mockImplementation(async (options) => {
+    return repo.find(options);
+  });
+  mockTasksRepository.create.mockImplementation(async (input) => {
+    return repo.save(tasksFactory.build(repo.create({ ...input })));
+  });
+  mockTasksRepository.countByProjectId.mockImplementation(async (projectId) => {
+    return repo.count({ where: { projectId } });
+  });
+  mockTasksRepository.remove.mockImplementation(async (id) => {
+    const result = await repo.delete({ id });
+
+    if (!result.affected) {
+      throw new NotFoundException();
+    }
+
+    return repo.findOne({ where: { id } });
+  });
+  const mockDataSource = asMock<DataSource>({
+    transaction: repo.manager.transaction,
   });
 
   const mockPlanStatusService = createMock<PlanStatusService>({
@@ -87,6 +121,7 @@ describe('TasksResolver', () => {
     category: 'testing',
     completedAt: null,
     createdAt: new Date('2026-02-01T21:33:51.891Z'),
+    deletedAt: null,
     description: 'Create TaskData type if needed',
     hookChildren: [],
     hookRole: null,
@@ -150,7 +185,8 @@ describe('TasksResolver', () => {
           useValue: mockNotificationsService,
         },
         { provide: PlanStatusService, useValue: mockPlanStatusService },
-        { provide: TasksService, useValue: mockTasksService },
+        { provide: TasksRepository, useValue: mockTasksRepository },
+        { provide: DataSource, useValue: mockDataSource },
         {
           provide: WorkLedgerCaptureService,
           useValue: createMock<WorkLedgerCaptureService>(),
@@ -170,8 +206,8 @@ describe('TasksResolver', () => {
     vi.mocked(
       mockPlanStatusService.completeParentPlanIfTasksDone,
     ).mockResolvedValue(false);
-    vi.mocked(mockTasksService.resolveNextSortOrder).mockReset();
-    vi.mocked(mockTasksService.resolveNextSortOrder).mockResolvedValue(1000);
+    vi.mocked(mockTasksRepository.resolveNextSortOrder).mockReset();
+    vi.mocked(mockTasksRepository.resolveNextSortOrder).mockResolvedValue(1000);
     vi.mocked(mockNotificationsService.emitPlanStatusChanged).mockClear();
     vi.mocked(mockNotificationsService.emitPlanUpdated).mockClear();
     vi.mocked(repo.create).mockClear();
@@ -505,14 +541,10 @@ describe('TasksResolver', () => {
             useValue: createMock<PlanStatusService>(),
           },
           {
-            provide: TasksService,
-            useValue: createMock<TasksService>({
-              getRepository: vi.fn().mockReturnValue({
-                find: vi.fn(),
-                findOne: vi.fn(),
-              }),
-            }),
+            provide: TasksRepository,
+            useValue: createTasksRepositoryMock(),
           },
+          { provide: DataSource, useValue: {} },
           {
             provide: WorkLedgerCaptureService,
             useValue: createMock<WorkLedgerCaptureService>(),
@@ -588,14 +620,10 @@ describe('TasksResolver', () => {
             useValue: createMock<PlanStatusService>(),
           },
           {
-            provide: TasksService,
-            useValue: createMock<TasksService>({
-              getRepository: vi.fn().mockReturnValue({
-                find: vi.fn(),
-                findOne: vi.fn(),
-              }),
-            }),
+            provide: TasksRepository,
+            useValue: createTasksRepositoryMock(),
           },
+          { provide: DataSource, useValue: {} },
           {
             provide: WorkLedgerCaptureService,
             useValue: createMock<WorkLedgerCaptureService>(),
@@ -1005,7 +1033,9 @@ describe('TasksResolver', () => {
     const planId = mockTask.planId;
 
     test('auto-assigns sortOrder via resolveNextSortOrder when omitted', async () => {
-      vi.mocked(mockTasksService.resolveNextSortOrder).mockResolvedValue(3000);
+      vi.mocked(mockTasksRepository.resolveNextSortOrder).mockResolvedValue(
+        3000,
+      );
       vi.mocked(repo.save).mockResolvedValue({
         ...mockTask,
         sortOrder: 3000,
@@ -1026,7 +1056,7 @@ describe('TasksResolver', () => {
         wave: null,
       });
 
-      expect(mockTasksService.resolveNextSortOrder).toHaveBeenCalledWith(
+      expect(mockTasksRepository.resolveNextSortOrder).toHaveBeenCalledWith(
         planId,
       );
       expect(repo.create).toHaveBeenCalledWith(
@@ -1055,7 +1085,7 @@ describe('TasksResolver', () => {
         wave: null,
       });
 
-      expect(mockTasksService.resolveNextSortOrder).not.toHaveBeenCalled();
+      expect(mockTasksRepository.resolveNextSortOrder).not.toHaveBeenCalled();
       expect(repo.create).toHaveBeenCalledWith(
         expect.objectContaining({ sortOrder: 1500 }),
       );
@@ -1243,7 +1273,7 @@ describe('TasksResolver', () => {
   describe('createTasks — parent plan IN_PROGRESS sync', () => {
     test('promotes the plan and emits when any created task is IN_PROGRESS', async () => {
       const planId = mockTask.planId;
-      vi.mocked(mockTasksService.createTasksBatch).mockResolvedValue([
+      vi.mocked(mockTasksRepository.createTasksBatch).mockResolvedValue([
         { ...mockTask, id: 'new-task-1', planId, status: 'IN_PROGRESS' },
       ]);
       vi.mocked(
@@ -1283,7 +1313,7 @@ describe('TasksResolver', () => {
 
     test('does not promote when no created task is IN_PROGRESS', async () => {
       const planId = mockTask.planId;
-      vi.mocked(mockTasksService.createTasksBatch).mockResolvedValue([
+      vi.mocked(mockTasksRepository.createTasksBatch).mockResolvedValue([
         { ...mockTask, id: 'new-task-1', planId, status: 'PENDING' },
       ]);
 
@@ -1313,7 +1343,7 @@ describe('TasksResolver', () => {
 
     test('announces the new rows with plan.updated so an open plan view refreshes', async () => {
       const planId = mockTask.planId;
-      vi.mocked(mockTasksService.createTasksBatch).mockResolvedValue([
+      vi.mocked(mockTasksRepository.createTasksBatch).mockResolvedValue([
         { ...mockTask, id: 'new-task-1', planId, status: 'PENDING' },
         { ...mockTask, id: 'new-task-2', planId, status: 'PENDING' },
       ]);
@@ -1329,7 +1359,7 @@ describe('TasksResolver', () => {
     });
 
     test('publishes nothing when the batch fails', async () => {
-      vi.mocked(mockTasksService.createTasksBatch).mockRejectedValueOnce(
+      vi.mocked(mockTasksRepository.createTasksBatch).mockRejectedValueOnce(
         new Error('boom'),
       );
 
@@ -1343,7 +1373,6 @@ describe('TasksResolver', () => {
 
   describe('deleteTask', () => {
     test("announces the removal on the task's plan", async () => {
-      const repo = mockTasksService.getRepository();
       vi.mocked(repo.findOne).mockResolvedValue(mockTask);
       vi.mocked(repo.delete).mockResolvedValue({ affected: 1, raw: [] });
 
@@ -1359,7 +1388,6 @@ describe('TasksResolver', () => {
     });
 
     test('publishes nothing when no row was deleted', async () => {
-      const repo = mockTasksService.getRepository();
       vi.mocked(repo.findOne).mockResolvedValue(null);
       vi.mocked(repo.delete).mockResolvedValue({ affected: 0, raw: [] });
 
@@ -1437,7 +1465,7 @@ describe('TasksResolver', () => {
 
   describe('hooks', () => {
     test('addHook plan-level before delegates to addBeforeHook', async () => {
-      vi.mocked(mockTasksService.addBeforeHook).mockResolvedValue(mockTask);
+      vi.mocked(mockTasksRepository.addBeforeHook).mockResolvedValue(mockTask);
 
       const result = await resolver.addHook({
         anchorTaskId: null,
@@ -1450,7 +1478,7 @@ describe('TasksResolver', () => {
         title: null,
       });
 
-      expect(mockTasksService.addBeforeHook).toHaveBeenCalledWith(
+      expect(mockTasksRepository.addBeforeHook).toHaveBeenCalledWith(
         mockTask.planId,
         null,
         {
@@ -1465,7 +1493,7 @@ describe('TasksResolver', () => {
     });
 
     test('addHook task-level after delegates to addAfterHook with the anchor', async () => {
-      vi.mocked(mockTasksService.addAfterHook).mockResolvedValue(mockTask);
+      vi.mocked(mockTasksRepository.addAfterHook).mockResolvedValue(mockTask);
 
       await resolver.addHook({
         anchorTaskId: 'anchor',
@@ -1474,7 +1502,7 @@ describe('TasksResolver', () => {
         source: 'template',
       });
 
-      expect(mockTasksService.addAfterHook).toHaveBeenCalledWith(
+      expect(mockTasksRepository.addAfterHook).toHaveBeenCalledWith(
         'plan-1',
         'anchor',
         expect.objectContaining({ scope: undefined, source: 'template' }),
@@ -1494,7 +1522,7 @@ describe('TasksResolver', () => {
     });
 
     test('addHook maps a service invariant error to a 400', async () => {
-      vi.mocked(mockTasksService.addBeforeHook).mockRejectedValue(
+      vi.mocked(mockTasksRepository.addBeforeHook).mockRejectedValue(
         new Error("hook source 'skill' requires a skillSlug"),
       );
 
@@ -1504,18 +1532,18 @@ describe('TasksResolver', () => {
     });
 
     test('detachHook delegates to the service', async () => {
-      vi.mocked(mockTasksService.detachHook).mockResolvedValue(true);
+      vi.mocked(mockTasksRepository.detachHook).mockResolvedValue(true);
 
       const removed = await resolver.detachHook({ hookTaskId: 'hook-1' });
 
       expect(removed).toBe(true);
-      expect(mockTasksService.detachHook).toHaveBeenCalledWith('hook-1');
+      expect(mockTasksRepository.detachHook).toHaveBeenCalledWith('hook-1');
     });
 
     test('beforeHooks/afterHooks resolve via getTaskHooks', async () => {
       const before = { ...mockTask, id: 'before-hook' };
       const after = { ...mockTask, id: 'after-hook' };
-      vi.mocked(mockTasksService.getTaskHooks).mockResolvedValue({
+      vi.mocked(mockTasksRepository.getTaskHooks).mockResolvedValue({
         after: [after],
         before: [before],
       });

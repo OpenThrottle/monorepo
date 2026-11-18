@@ -1,5 +1,5 @@
 /**
- * @description Resolver for PlanOutputStreamChunk queries and mutations. Injects PlanOutputStreamService from @openthrottle/nestjs-repositories and maps entities to PlanOutputStreamChunkObject.
+ * @description Resolver for PlanOutputStreamChunk queries and mutations. Injects PlanOutputStreamRepository from @openthrottle/nestjs-repositories-server and maps entities to PlanOutputStreamChunkObject.
  */
 
 import {
@@ -22,12 +22,12 @@ import {
   PUB_SUB,
   type PubSubEngine,
 } from '@openthrottle/nestjs-graphql';
-import type { PlanOutputStreamChunk } from '@openthrottle/nestjs-repositories';
+import type { PlanOutputStreamChunk } from '@openthrottle/nestjs-repositories-server';
 import {
   isPlanOutputStreamKind,
   PLAN_OUTPUT_STREAM_KINDS,
-  PlanOutputStreamService,
-} from '@openthrottle/nestjs-repositories';
+  PlanOutputStreamRepository,
+} from '@openthrottle/nestjs-repositories-server';
 
 import {
   AppendPlanOutputInput,
@@ -51,7 +51,7 @@ const MAX_LIST_LIMIT = 1000;
 @Resolver(() => PlanOutputStreamChunkObject)
 export class PlanOutputStreamResolver {
   constructor(
-    private readonly planOutputStreamService: PlanOutputStreamService,
+    private readonly planOutputStreamRepository: PlanOutputStreamRepository,
     @Inject(PUB_SUB) private readonly pubSub: PubSubEngine,
   ) {}
 
@@ -63,9 +63,9 @@ export class PlanOutputStreamResolver {
     @Args('input', { type: () => GetPlanOutputStreamChunkInput })
     input: GetPlanOutputStreamChunkInput,
   ): Promise<PlanOutputStreamChunk | null> {
-    const entity = await this.planOutputStreamService
-      .getRepository()
-      .findOne({ where: { id: input.id } });
+    const entity = await this.planOutputStreamRepository.findOne({
+      where: { id: input.id },
+    });
 
     return entity;
   }
@@ -83,7 +83,7 @@ export class PlanOutputStreamResolver {
     );
     const skip = Math.max(0, input.offset ?? 0);
 
-    const entities = await this.planOutputStreamService.listChunks({
+    const entities = await this.planOutputStreamRepository.listChunks({
       planId: input.planId,
       skip,
       take,
@@ -107,16 +107,13 @@ export class PlanOutputStreamResolver {
       );
     }
 
-    const repo = this.planOutputStreamService.getRepository();
-    const entity = repo.create({
+    const saved = await this.planOutputStreamRepository.create({
       content: input.content,
       iteration: input.iteration ?? null,
       kind,
       planId: input.planId,
       taskId: input.taskId ?? null,
     });
-
-    const saved = await repo.save(entity);
 
     // Publish the new chunk to the per-plan output topic so live subscribers on
     // plan:<planId>:output receive it. The payload is keyed by the subscription
@@ -135,7 +132,7 @@ export class PlanOutputStreamResolver {
     @Args('input', { type: () => DeletePlanOutputInput })
     input: DeletePlanOutputInput,
   ): Promise<DeletePlanOutputResult> {
-    const repo = this.planOutputStreamService.getRepository();
+    const repo = this.planOutputStreamRepository;
 
     if (input.chunkId) {
       const chunk = await repo.findOne({ where: { id: input.chunkId } });
@@ -150,16 +147,16 @@ export class PlanOutputStreamResolver {
         );
       }
 
-      const result = await repo.delete({ id: input.chunkId });
-      return { deletedCount: result.affected ?? 0 };
+      await repo.remove(input.chunkId);
+      return { deletedCount: 1 };
     }
 
-    const result = await repo.delete({
+    const result = await repo.removeMany({
       planId: input.planId,
       ...(input.taskId ? { taskId: input.taskId } : {}),
     });
 
-    return { deletedCount: result.affected ?? 0 };
+    return { deletedCount: result.removedCount };
   }
 
   // 🔌 graphql-ws only: connection auth (onConnect) already validated the token

@@ -64,14 +64,16 @@ export function buildStaleRowsSql(source: EmbeddingSource): string {
 }
 
 /**
- * @description Deletes embedding rows whose source no longer qualifies — soft-deleted prompts
- * and superseded documentation versions. (Hard deletes already cascade.)
+ * @description Deletes embedding rows whose source no longer qualifies for
+ * {@link EmbeddingSource.pruneWhereSql} — soft-deleted prompts and superseded documentation
+ * versions. Soft-deleted plans and tasks keep their vectors: their prune filter is wide open, and
+ * search never returns them (it joins the live plan or task). (Hard deletes already cascade.)
  */
 export function buildPruneOrphansSql(source: EmbeddingSource): string {
   return `DELETE FROM ${source.embeddingTable} e
    WHERE NOT EXISTS (
      SELECT 1 FROM ${source.fromSql}
-      WHERE s.id = e.${source.fkColumn} AND (${source.whereSql})
+      WHERE s.id = e.${source.fkColumn} AND (${source.pruneWhereSql})
    )`;
 }
 

@@ -3,6 +3,7 @@
  * per agent run iteration). Matches databases/openthrottle/migrations (145).
  */
 
+import type { Task } from '@openthrottle/nestjs-repositories-server';
 import type { AtifTrajectory } from '@openthrottle/openthrottle-agentic-utils';
 import {
   Column,
@@ -14,7 +15,6 @@ import {
 } from 'typeorm';
 
 import type { PlanRun } from '../plan-runs/plan-run.entity.ts';
-import type { Task } from '../tasks/task.entity.ts';
 import type { AgentTrajectorySource } from './agent-trajectories.types.ts';
 
 /**

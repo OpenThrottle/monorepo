@@ -21,9 +21,9 @@ import {
   DEFAULT_PLAN_RUN_RALPH_WORKTREE_CLI,
 } from '@openthrottle/openthrottle-plan-config';
 
-/** RFC 4122 UUID v4 — matches `tools/workflows/src/utils/parsers.ts` plan/task validation. */
+/** RFC 9562 UUID (versions 1-8, so both v4 and the v7 ids new rows get) — matches `tools/workflows/src/utils/parsers.ts` plan/task validation. */
 const UUID_REGEX =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 // One source of truth with the server and `plans.run_config`: these alias the shared
 // `@openthrottle/openthrottle-plan-config` defaults rather than restating them, so the Configuration
@@ -169,7 +169,7 @@ export interface WorkflowRalphRunOptionsInput {
 }
 
 /**
- * @description Returns true when `value` is a plausible plan/task UUID (v4).
+ * @description Returns true when `value` is a plausible plan/task UUID (versions 1-8).
  */
 export const isUuid = (value: string): boolean => {
   return UUID_REGEX.test(value.trim());

@@ -22,15 +22,17 @@ import type {
   ScheduledRunRef,
 } from '@openthrottle/nestjs-repositories';
 import {
-  Plan,
   PLAN_RUN_STATUS,
   PLAN_STATUS,
   PlanRun,
   PlanRunsService,
-  PlansService,
   RepositoryCheckoutsService,
-  TasksService,
 } from '@openthrottle/nestjs-repositories';
+import {
+  Plan,
+  PlansRepository,
+  TasksRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import {
   nodeResolverFs,
   resolveOtLoopCommands,
@@ -40,6 +42,7 @@ import type { JobRunHookEntry } from '@tools/workflows';
 import { projectHookTasksToJobRunHookEntries } from '@tools/workflows';
 import type { Queue } from 'bullmq';
 import type { EntityManager } from 'typeorm';
+import { DataSource } from 'typeorm';
 
 import { NotificationsService } from '../../../notifications/notifications.service.ts';
 import { updateMatchingTasksAndEmitStatusChanged } from '../../../notifications/notifications.utils.ts';
@@ -232,14 +235,15 @@ interface ResolvedWorkspace {
 @Injectable()
 export class PlanEnqueueService {
   constructor(
+    private readonly dataSource: DataSource,
     private readonly logger: LoggerService,
     private readonly notificationsService: NotificationsService,
     private readonly planRunsService: PlanRunsService,
-    private readonly plansService: PlansService,
+    private readonly plansRepository: PlansRepository,
     private readonly planStatusService: PlanStatusService,
     private readonly queuesService: QueuesService,
     private readonly repositoryCheckoutsService: RepositoryCheckoutsService,
-    private readonly tasksService: TasksService,
+    private readonly tasksRepository: TasksRepository,
     private readonly workLedgerCapture: WorkLedgerCaptureService,
     @InjectQueue(PLANS_QUEUE_NAME)
     private readonly plansQueue: Queue<RunPlanJobData, void>,
@@ -253,7 +257,7 @@ export class PlanEnqueueService {
   private async resolveMaterializedHookEntries(
     planId: string,
   ): Promise<readonly JobRunHookEntry[]> {
-    const { after, before } = await this.tasksService.getPlanHooks(planId);
+    const { after, before } = await this.tasksRepository.getPlanHooks(planId);
     return projectHookTasksToJobRunHookEntries([...before, ...after]);
   }
 
@@ -617,8 +621,7 @@ export class PlanEnqueueService {
       );
     }
 
-    const repo = this.plansService.getRepository();
-    const plan = await repo.findOne({ where: { id: planId } });
+    const plan = await this.plansRepository.findOne({ where: { id: planId } });
 
     if (!plan) {
       throw new NotFoundException(`🟡 1 - Plan not found: ${planId}`);
@@ -629,7 +632,7 @@ export class PlanEnqueueService {
     // the method JSDoc.
     if (mode !== 'task') {
       const runnableTaskCount = await countRunnablePlanTasks(
-        repo.manager,
+        this.dataSource.manager,
         planId,
       );
       if (runnableTaskCount === 0) {
@@ -895,9 +898,7 @@ export class PlanEnqueueService {
       statusWrites,
       taskStatusesToReset,
     } = params;
-    const repo = this.plansService.getRepository();
-
-    return repo.manager.transaction(async (manager) => {
+    return this.dataSource.transaction(async (manager) => {
       const cancelledScheduledRuns = await this.applyScheduledRunPolicy(
         manager,
         planId,
@@ -1285,9 +1286,7 @@ export class PlanEnqueueService {
   }): Promise<ScheduledRunFireOutcome> {
     const { actorKind, actorSub, now, planId, planRunId, workspaceError } =
       params;
-    const repo = this.plansService.getRepository();
-
-    const outcome = await repo.manager.transaction<ScheduledRunFireOutcome>(
+    const outcome = await this.dataSource.transaction<ScheduledRunFireOutcome>(
       async (manager) => {
         const plan = await manager.getRepository(Plan).findOne({
           lock: { mode: 'pessimistic_write' },

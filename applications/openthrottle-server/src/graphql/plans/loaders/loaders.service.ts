@@ -5,15 +5,16 @@
 import { Injectable, Scope } from '@nestjs/common';
 import {
   createEntityByIdLoader,
-  createGroupedCountLoader,
-  type GroupedHooks,
   PlanRunsService,
-  type Project,
-  ProjectsService,
   type ScheduledPlanRun,
   TASK_STATUS,
-  TasksService,
 } from '@openthrottle/nestjs-repositories';
+import {
+  type GroupedHooks,
+  type Project,
+  ProjectsRepository,
+  TasksRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import DataLoader from 'dataloader';
 
 import { RUNNABLE_TASK_STATUSES } from '../plan-enqueue/runnable-tasks/runnable-tasks.constants.ts';
@@ -28,6 +29,23 @@ const RESOLVED_TASK_STATUSES = [
   TASK_STATUS.PROMOTED,
   TASK_STATUS.SKIPPED,
 ] as const;
+
+/**
+ * @description Builds a loader that counts a plan's live tasks, optionally only those in `statuses`,
+ * with one grouped query per batch of plan ids. A plan with no matching task resolves to 0.
+ */
+const createTaskCountLoader = (
+  tasksRepository: TasksRepository,
+  statuses?: readonly string[],
+): DataLoader<string, number> => {
+  return new DataLoader<string, number>(async (planIds) => {
+    const counts = await tasksRepository.countByPlanIds(planIds, statuses);
+
+    return planIds.map((planId) => {
+      return counts.get(planId) ?? 0;
+    });
+  });
+};
 
 /**
  * @description Holds project and task-count DataLoaders for the current request. Injected into PlansResolver; resolve projectRelation, taskCount, and tasksCompletedCount via loaders instead of one service call per plan row.
@@ -46,33 +64,19 @@ export class PlansLoaders {
 
   constructor(
     planRunsService: PlanRunsService,
-    projectsService: ProjectsService,
-    tasksService: TasksService,
+    projectsRepository: ProjectsRepository,
+    tasksRepository: TasksRepository,
   ) {
-    this.projectLoader = createEntityByIdLoader(projectsService);
-    this.taskCountByPlanIdLoader = createGroupedCountLoader(tasksService, {
-      column: 'planId',
-    });
-    this.tasksCompletedCountByPlanIdLoader = createGroupedCountLoader(
-      tasksService,
-      {
-        column: 'planId',
-        filter: {
-          column: 'status',
-          values: RESOLVED_TASK_STATUSES,
-        },
-      },
+    this.projectLoader = createEntityByIdLoader(projectsRepository);
+    this.taskCountByPlanIdLoader = createTaskCountLoader(tasksRepository);
+    this.tasksCompletedCountByPlanIdLoader = createTaskCountLoader(
+      tasksRepository,
+      RESOLVED_TASK_STATUSES,
     );
 
-    this.runnableTaskCountByPlanIdLoader = createGroupedCountLoader(
-      tasksService,
-      {
-        column: 'planId',
-        filter: {
-          column: 'status',
-          values: RUNNABLE_TASK_STATUSES,
-        },
-      },
+    this.runnableTaskCountByPlanIdLoader = createTaskCountLoader(
+      tasksRepository,
+      RUNNABLE_TASK_STATUSES,
     );
 
     // One grouped query for a whole list of plans: each plan's soonest SCHEDULED run (id and
@@ -96,7 +100,7 @@ export class PlansLoaders {
     */
     this.planHooksByPlanIdLoader = new DataLoader<string, GroupedHooks>(
       async (planIds) => {
-        const byPlanId = await tasksService.getPlanHooksForPlans(planIds);
+        const byPlanId = await tasksRepository.getPlanHooksForPlans(planIds);
 
         return planIds.map(
           (planId) => byPlanId.get(planId) ?? { after: [], before: [] },

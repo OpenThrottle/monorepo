@@ -3,11 +3,11 @@
  */
 
 import { Injectable, Scope } from '@nestjs/common';
+import { createEntityByIdLoader } from '@openthrottle/nestjs-repositories';
 import {
-  createEntityByIdLoader,
   type Project,
-  ProjectsService,
-} from '@openthrottle/nestjs-repositories';
+  ProjectsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import type DataLoader from 'dataloader';
 
 /**
@@ -17,7 +17,7 @@ import type DataLoader from 'dataloader';
 export class WorkspaceSettingsLoaders {
   readonly projectLoader: DataLoader<string, Project | null>;
 
-  constructor(projectsService: ProjectsService) {
-    this.projectLoader = createEntityByIdLoader(projectsService);
+  constructor(projectsRepository: ProjectsRepository) {
+    this.projectLoader = createEntityByIdLoader(projectsRepository);
   }
 }

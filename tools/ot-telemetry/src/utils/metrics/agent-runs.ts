@@ -104,6 +104,7 @@ async function queryRunsPerPlan(client: pg.Pool): Promise<RunsPerPlanStats> {
        SELECT p.id, count(r.id)::int AS run_count
        FROM plans p
        LEFT JOIN plan_runs r ON r.plan_id = p.id
+       WHERE p.deleted_at IS NULL
        GROUP BY p.id
      )
      SELECT
@@ -142,7 +143,7 @@ export const planRunsMetricQuery: MetricQuery<PlanRunsMetrics> = {
         'status',
         'created_at',
       ],
-      plans: ['id'],
+      plans: ['id', 'deleted_at'],
     },
     tables: ['plan_runs', 'plans'],
   },

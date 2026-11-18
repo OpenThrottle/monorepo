@@ -8,10 +8,11 @@ import type {
 } from '@openthrottle/nestjs-repositories';
 import {
   ProjectSkillsService,
-  ProjectsService,
   SkillAvailabilityService,
   SkillTagsService,
 } from '@openthrottle/nestjs-repositories';
+import { ProjectsRepository } from '@openthrottle/nestjs-repositories-server';
+import { createProjectsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import type { SkillAvailabilityRuleSet } from '@openthrottle/openthrottle-skills';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -71,9 +72,7 @@ describe('SkillAvailabilityResolutionResolver', () => {
   const mockProjectSkillsService = createMock<ProjectSkillsService>({
     getSkillsForProject: vi.fn(),
   });
-  const mockProjectsService = createMock<ProjectsService>({
-    findByNxProjectName: vi.fn(),
-  });
+  const mockProjectsRepository = createProjectsRepositoryMock();
   const mockSkillAvailabilityService = createMock<SkillAvailabilityService>({
     getRuleSetForProject: vi.fn(),
   });
@@ -94,7 +93,7 @@ describe('SkillAvailabilityResolutionResolver', () => {
           useValue: createMock<PlanContextAvailabilityService>(),
         },
         { provide: ProjectSkillsService, useValue: mockProjectSkillsService },
-        { provide: ProjectsService, useValue: mockProjectsService },
+        { provide: ProjectsRepository, useValue: mockProjectsRepository },
         {
           provide: SkillAvailabilityService,
           useValue: mockSkillAvailabilityService,
@@ -120,7 +119,7 @@ describe('SkillAvailabilityResolutionResolver', () => {
 
     const result = await resolver.skillAvailability(userId, projectId);
 
-    expect(mockProjectsService.findByNxProjectName).not.toHaveBeenCalled();
+    expect(mockProjectsRepository.findByNxProjectName).not.toHaveBeenCalled();
     expect(result.totalCount).toBe(3);
     expect(result.warnings).toEqual([]);
     expect(result.skills).toEqual([
@@ -233,7 +232,7 @@ describe('SkillAvailabilityResolutionResolver', () => {
   });
 
   test('resolves the dogfood monorepo project when projectId is omitted', async () => {
-    vi.mocked(mockProjectsService.findByNxProjectName).mockResolvedValue(
+    mockProjectsRepository.findByNxProjectName.mockResolvedValue(
       dogfoodProject,
     );
     vi.mocked(
@@ -242,7 +241,7 @@ describe('SkillAvailabilityResolutionResolver', () => {
 
     const result = await resolver.skillAvailability(userId);
 
-    expect(mockProjectsService.findByNxProjectName).toHaveBeenCalledWith(
+    expect(mockProjectsRepository.findByNxProjectName).toHaveBeenCalledWith(
       'OpenThrottle/monorepo',
     );
     expect(mockProjectSkillsService.getSkillsForProject).toHaveBeenCalledWith(
@@ -252,7 +251,7 @@ describe('SkillAvailabilityResolutionResolver', () => {
   });
 
   test('returns an empty result when the dogfood project is absent', async () => {
-    vi.mocked(mockProjectsService.findByNxProjectName).mockResolvedValue(null);
+    mockProjectsRepository.findByNxProjectName.mockResolvedValue(null);
 
     const result = await resolver.skillAvailability(userId);
 

@@ -1,13 +1,18 @@
 import { createMock } from '@golevelup/ts-vitest';
+import { NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import type { Plan, Project, Task } from '@openthrottle/nestjs-repositories';
-import {
-  ProjectsLoaders,
-  ProjectsService,
-} from '@openthrottle/nestjs-repositories';
 import { getDefaultPlanRunConfigStorage } from '@openthrottle/nestjs-repositories';
+import type {
+  Plan,
+  Project,
+  Task,
+} from '@openthrottle/nestjs-repositories-server';
+import { ProjectsRepository } from '@openthrottle/nestjs-repositories-server';
+import type { ProjectsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import { createProjectsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 
+import { ProjectsLoaders } from './loaders/loaders.service.ts';
 import { ProjectsResolver } from './projects.resolver.ts';
 
 const buildMockPlan = (projectId: string): Plan => {
@@ -17,6 +22,7 @@ const buildMockPlan = (projectId: string): Plan => {
     category: 'infra',
     completedAt: null,
     createdAt: new Date('2026-02-03T10:00:00.000Z'),
+    deletedAt: null,
     description: null,
     id: 'plan-1',
     jobRunHooks: { hooks: [] },
@@ -36,12 +42,13 @@ const buildMockPlan = (projectId: string): Plan => {
 
 describe('ProjectsResolver', () => {
   let resolver: ProjectsResolver;
-  let projectsService: ProjectsService;
+  let projectsRepository: ProjectsRepositoryMock;
   let plansByProjectIdLoader: { load: ReturnType<typeof vi.fn> };
   let tasksByProjectIdLoader: { load: ReturnType<typeof vi.fn> };
 
   const mockProject: Project = {
     createdAt: new Date('2026-02-02T10:00:00.000Z'),
+    deletedAt: null,
     description: 'OpenThrottle API application',
     id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
     name: 'openthrottle-server',
@@ -59,24 +66,27 @@ describe('ProjectsResolver', () => {
   });
 
   beforeAll(async () => {
+    projectsRepository = createProjectsRepositoryMock();
     plansByProjectIdLoader = { load: plansLoad };
     tasksByProjectIdLoader = { load: tasksLoad };
 
     const app = await Test.createTestingModule({
       providers: [
         ProjectsResolver,
-        { provide: ProjectsLoaders, useValue: mockProjectsLoaders },
-        { provide: ProjectsService, useValue: createMock<ProjectsService>() },
+        {
+          provide: ProjectsLoaders,
+          useValue: mockProjectsLoaders,
+        },
+        { provide: ProjectsRepository, useValue: projectsRepository },
       ],
     }).compile();
 
     resolver = app.get<ProjectsResolver>(ProjectsResolver);
-    projectsService = app.get<ProjectsService>(ProjectsService);
   });
 
   describe('project', () => {
     test('returns ProjectObject when project exists', async () => {
-      vi.mocked(projectsService.findById).mockResolvedValue(mockProject);
+      projectsRepository.findOne.mockResolvedValue(mockProject);
 
       const result = await resolver.project(mockProject.id);
 
@@ -88,7 +98,7 @@ describe('ProjectsResolver', () => {
     });
 
     test('returns null when project does not exist', async () => {
-      vi.mocked(projectsService.findById).mockResolvedValue(null);
+      projectsRepository.findOne.mockResolvedValue(null);
 
       const result = await resolver.project('non-existent-id');
 
@@ -98,7 +108,7 @@ describe('ProjectsResolver', () => {
 
   describe('projects', () => {
     test('returns array of ProjectObjects', async () => {
-      vi.mocked(projectsService.findAll).mockResolvedValue([mockProject]);
+      projectsRepository.findAll.mockResolvedValue([mockProject]);
 
       const result = await resolver.projects();
 
@@ -108,7 +118,7 @@ describe('ProjectsResolver', () => {
     });
 
     test('returns empty array when no projects', async () => {
-      vi.mocked(projectsService.findAll).mockResolvedValue([]);
+      projectsRepository.findAll.mockResolvedValue([]);
 
       const result = await resolver.projects();
 
@@ -118,7 +128,7 @@ describe('ProjectsResolver', () => {
 
   describe('createProject', () => {
     test('returns ProjectObject after create', async () => {
-      vi.mocked(projectsService.create).mockResolvedValue(mockProject);
+      projectsRepository.create.mockResolvedValue(mockProject);
 
       const result = await resolver.createProject({
         description: mockProject.description,
@@ -133,7 +143,7 @@ describe('ProjectsResolver', () => {
 
   describe('updateProject', () => {
     test('returns ProjectObject when project exists', async () => {
-      vi.mocked(projectsService.update).mockResolvedValue(mockProject);
+      projectsRepository.update.mockResolvedValue(mockProject);
 
       const result = await resolver.updateProject({
         description: null,
@@ -147,7 +157,7 @@ describe('ProjectsResolver', () => {
     });
 
     test('returns null when project does not exist', async () => {
-      vi.mocked(projectsService.update).mockResolvedValue(null);
+      projectsRepository.update.mockRejectedValue(new NotFoundException());
 
       const result = await resolver.updateProject({
         description: null,
@@ -161,17 +171,17 @@ describe('ProjectsResolver', () => {
   });
 
   describe('deleteProject', () => {
-    test('returns true when service removes a row', async () => {
-      vi.mocked(projectsService.delete).mockResolvedValue(true);
+    test('returns true when the repository removes a row', async () => {
+      projectsRepository.remove.mockResolvedValue(mockProject);
 
       const result = await resolver.deleteProject({ id: mockProject.id });
 
       expect(result).toBe(true);
-      expect(projectsService.delete).toHaveBeenCalledWith(mockProject.id);
+      expect(projectsRepository.remove).toHaveBeenCalledWith(mockProject.id);
     });
 
     test('returns false when project id does not exist', async () => {
-      vi.mocked(projectsService.delete).mockResolvedValue(false);
+      projectsRepository.remove.mockRejectedValue(new NotFoundException());
 
       const result = await resolver.deleteProject({
         id: '00000000-0000-0000-0000-000000000000',
@@ -209,6 +219,7 @@ describe('ProjectsResolver', () => {
           category: null,
           completedAt: null,
           createdAt: new Date('2026-02-03T10:00:00.000Z'),
+          deletedAt: null,
           description: null,
           hookChildren: [],
           hookRole: null,

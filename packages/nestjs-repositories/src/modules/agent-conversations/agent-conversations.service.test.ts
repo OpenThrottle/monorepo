@@ -3,11 +3,17 @@ import { NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import {
+  PlansRepository,
+  ProjectsRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import {
+  createPlansRepositoryMock,
+  createProjectsRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { PlansService } from '../plans/plans.service.ts';
-import { ProjectsService } from '../projects/projects.service.ts';
 import { AgentConversation } from './agent-conversation.entity.ts';
 import { AgentConversationMessage } from './agent-conversation-message.entity.ts';
 import {
@@ -53,15 +59,9 @@ describe('AgentConversationsService', () => {
     find: vi.fn(),
   };
 
-  const mockPlansService = createMock<PlansService>({
-    getRepository: vi.fn(() => ({
-      findOne: vi.fn(),
-    })),
-  });
+  const mockPlansRepository = createPlansRepositoryMock();
 
-  const mockProjectsService = createMock<ProjectsService>({
-    findById: vi.fn(),
-  });
+  const mockProjectsRepository = createProjectsRepositoryMock();
 
   let service: AgentConversationsService;
 
@@ -82,12 +82,12 @@ describe('AgentConversationsService', () => {
           useValue: mockMessageRepository,
         },
         {
-          provide: PlansService,
-          useValue: mockPlansService,
+          provide: PlansRepository,
+          useValue: mockPlansRepository,
         },
         {
-          provide: ProjectsService,
-          useValue: mockProjectsService,
+          provide: ProjectsRepository,
+          useValue: mockProjectsRepository,
         },
       ],
     }).compile();
@@ -117,11 +117,7 @@ describe('AgentConversationsService', () => {
 
     it('throws NotFoundException when planId does not exist', async () => {
       const planId = '33333333-3333-4333-8333-333333333333';
-      vi.mocked(mockPlansService.getRepository).mockReturnValue(
-        asMock<ReturnType<PlansService['getRepository']>>({
-          findOne: vi.fn().mockResolvedValue(null),
-        }),
-      );
+      mockPlansRepository.findOne.mockResolvedValue(null);
 
       await expect(
         service.createConversation(userId, { planId }),

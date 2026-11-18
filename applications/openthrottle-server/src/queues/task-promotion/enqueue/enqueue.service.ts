@@ -13,7 +13,8 @@
  */
 import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable } from '@nestjs/common';
-import { TagsService, TasksService } from '@openthrottle/nestjs-repositories';
+import { TagsService } from '@openthrottle/nestjs-repositories';
+import { TasksRepository } from '@openthrottle/nestjs-repositories-server';
 import type { Queue } from 'bullmq';
 
 import { normalizeIdempotencyKey } from '../../../graphql/queues/queues-service/queues-service.utils.ts';
@@ -36,7 +37,7 @@ import type {
 export class TaskPromotionEnqueueService {
   constructor(
     private readonly tagsService: TagsService,
-    private readonly tasksService: TasksService,
+    private readonly tasksRepository: TasksRepository,
     @InjectQueue(TASK_PROMOTION_QUEUE_NAME)
     private readonly queue: Queue<PromoteTaskJobData, PromoteTaskJobResult>,
   ) {}
@@ -59,9 +60,7 @@ export class TaskPromotionEnqueueService {
       return { error: normalizedKey.error };
     }
 
-    const task = await this.tasksService
-      .getRepository()
-      .findOne({ where: { id: taskId } });
+    const task = await this.tasksRepository.findOne({ where: { id: taskId } });
     if (task == null) {
       return { error: `Task not found: ${taskId}` };
     }

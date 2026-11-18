@@ -2,8 +2,11 @@ import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { OnApplicationShutdown, OnModuleInit } from '@nestjs/common';
 import { defaultWorkerOptions } from '@openthrottle/nestjs-bullmq';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { PlansService, TasksService } from '@openthrottle/nestjs-repositories';
-import { DailyStatsRepository } from '@openthrottle/nestjs-repositories-server';
+import {
+  DailyStatsRepository,
+  PlansRepository,
+  TasksRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import { And, LessThan, MoreThanOrEqual } from 'typeorm';
 
 import { NotificationsService } from '../../notifications/notifications.service.ts';
@@ -47,8 +50,8 @@ export class DailyStatsProcessor
     private readonly dailyStats: DailyStatsRepository,
     private readonly logger: LoggerService,
     private readonly notifications: NotificationsService,
-    private readonly plansService: PlansService,
-    private readonly tasksService: TasksService,
+    private readonly plansRepository: PlansRepository,
+    private readonly tasksRepository: TasksRepository,
   ) {
     super();
   }
@@ -214,8 +217,8 @@ export class DailyStatsProcessor
     targetYmd: string = getPreviousUtcDayYmd(),
   ): Promise<DailyStatsAggregate> {
     const { dayEnd, dayStart } = getUtcDayBounds(targetYmd);
-    const planRepo = this.plansService.getRepository();
-    const taskRepo = this.tasksService.getRepository();
+    const planRepo = this.plansRepository;
+    const taskRepo = this.tasksRepository;
     const createdInRange = {
       createdAt: And(MoreThanOrEqual(dayStart), LessThan(dayEnd)),
     };
@@ -224,9 +227,6 @@ export class DailyStatsProcessor
     };
     // Completions are attributed by immutable completed_at (set once on
     // transition into COMPLETED), not mutable updated_at — see migration 056.
-    const completedInRange = {
-      completedAt: And(MoreThanOrEqual(dayStart), LessThan(dayEnd)),
-    };
 
     const [
       plansCreated,
@@ -240,25 +240,25 @@ export class DailyStatsProcessor
       tasksCreatedInDay,
       tasksUpdatedInDay,
     ] = await Promise.all([
-      planRepo.count({ where: createdInRange }),
-      planRepo.count({ where: updatedInRange }),
-      planRepo.count({ where: completedInRange }),
-      planRepo.find({
+      planRepo.countByDateRange({ column: 'createdAt', dayEnd, dayStart }),
+      planRepo.countByDateRange({ column: 'updatedAt', dayEnd, dayStart }),
+      planRepo.countByDateRange({ column: 'completedAt', dayEnd, dayStart }),
+      planRepo.findBy({
         select: ['id', 'status'],
         where: createdInRange,
       }),
-      planRepo.find({
+      planRepo.findBy({
         select: ['id', 'status'],
         where: updatedInRange,
       }),
-      taskRepo.count({ where: createdInRange }),
-      taskRepo.count({ where: updatedInRange }),
-      taskRepo.count({ where: completedInRange }),
-      taskRepo.find({
+      taskRepo.countByDateRange({ column: 'createdAt', dayEnd, dayStart }),
+      taskRepo.countByDateRange({ column: 'updatedAt', dayEnd, dayStart }),
+      taskRepo.countByDateRange({ column: 'completedAt', dayEnd, dayStart }),
+      taskRepo.findBy({
         select: ['id', 'status'],
         where: createdInRange,
       }),
-      taskRepo.find({
+      taskRepo.findBy({
         select: ['id', 'status'],
         where: updatedInRange,
       }),

@@ -7,14 +7,29 @@
  * batch and cache within the request without leaking across requests.
  */
 import DataLoader from 'dataloader';
-import type { FindOptionsWhere, ObjectLiteral } from 'typeorm';
+import type { FindManyOptions, FindOptionsWhere, ObjectLiteral } from 'typeorm';
 import { In } from 'typeorm';
 
 import type {
   CollectionByColumnLoaderOptions,
+  EntityLoaderSource,
   GroupedCountLoaderOptions,
   RepositoryAccessor,
 } from './entity-loaders.types.ts';
+
+/**
+ * @description Reads rows through whichever shape `source` has: `getRepository().find` for a
+ * service, `findBy` for a `BaseRepository`. Both skip soft-deleted rows.
+ */
+async function findRows<TEntity extends ObjectLiteral>(
+  source: EntityLoaderSource<TEntity>,
+  options: FindManyOptions<TEntity>,
+): Promise<TEntity[]> {
+  if ('getRepository' in source) {
+    return source.getRepository().find(options);
+  }
+  return source.findBy(options);
+}
 
 /**
  * @description Creates a DataLoader that resolves entities by primary id.
@@ -23,18 +38,19 @@ import type {
  *
  * Replaces the repeated by-id loader body across the per-module loader classes.
  *
- * @param accessor - A service exposing `getRepository()` (e.g. PlansService).
+ * @param accessor - A service exposing `getRepository()` or a `BaseRepository`
+ * (e.g. PlansRepository).
  * @returns A DataLoader keyed by id returning `TEntity | null`.
  */
 export function createEntityByIdLoader<
   TEntity extends ObjectLiteral & { id: string },
->(accessor: RepositoryAccessor<TEntity>): DataLoader<string, TEntity | null> {
+>(accessor: EntityLoaderSource<TEntity>): DataLoader<string, TEntity | null> {
   return new DataLoader<string, TEntity | null>(async (ids) => {
     if (ids.length === 0) return [];
 
     const where: FindOptionsWhere<TEntity> = {};
     Object.assign(where, { id: In([...ids]) });
-    const rows = await accessor.getRepository().find({ where });
+    const rows = await findRows(accessor, { where });
 
     const byId = new Map<string, TEntity>();
     for (const row of rows) {
@@ -51,12 +67,12 @@ export function createEntityByIdLoader<
  * `find({ where: { [column]: In(keys) } })` and groups rows back into key order;
  * keys with no rows resolve to `[]`.
  *
- * @param accessor - A service exposing `getRepository()`.
+ * @param accessor - A service exposing `getRepository()` or a `BaseRepository`.
  * @param options - The grouping `column` and optional `order`.
  * @returns A DataLoader keyed by the column value returning `TEntity[]`.
  */
 export function createCollectionByColumnLoader<TEntity extends ObjectLiteral>(
-  accessor: RepositoryAccessor<TEntity>,
+  accessor: EntityLoaderSource<TEntity>,
   { column, order }: CollectionByColumnLoaderOptions<TEntity>,
 ): DataLoader<string, TEntity[]> {
   return new DataLoader<string, TEntity[]>(async (keys) => {
@@ -65,7 +81,7 @@ export function createCollectionByColumnLoader<TEntity extends ObjectLiteral>(
     const ids = [...new Set(keys)];
     const where: FindOptionsWhere<TEntity> = {};
     Object.assign(where, { [column]: In(ids) });
-    const rows = await accessor.getRepository().find({ order, where });
+    const rows = await findRows(accessor, { order, where });
 
     const byKey = new Map<string, TEntity[]>();
     for (const row of rows) {

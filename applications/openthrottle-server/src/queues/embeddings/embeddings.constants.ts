@@ -64,7 +64,9 @@ export const DEFAULT_EMBEDDINGS_RATE_LIMIT_DURATION_MS = 60_000;
  * @description Where each embeddable entity's text comes from. `contentSql` is the ONE
  * definition of what gets embedded: the processor loads it and the reconciler hashes it in SQL,
  * so the two can never disagree about whether a row is stale. Every expression reads alias `s`
- * (the source row); `fromSql` may join more.
+ * (the source row); `fromSql` may join more. `whereSql` is what may be embedded; `pruneWhereSql`
+ * is what the reconciler's prune keeps a vector for, which is wider where a vector outlives its
+ * source's soft delete (plans, tasks).
  */
 export const EMBEDDING_SOURCES: Readonly<
   Record<EmbeddableEntity, EmbeddingSource>
@@ -74,6 +76,7 @@ export const EMBEDDING_SOURCES: Readonly<
     embeddingTable: 'custom_prompt_embeddings',
     fkColumn: 'custom_prompt_id',
     fromSql: 'custom_prompts s',
+    pruneWhereSql: 's.deleted_at IS NULL',
     whereSql: 's.deleted_at IS NULL',
   },
   documentation: {
@@ -83,6 +86,7 @@ export const EMBEDDING_SOURCES: Readonly<
     fromSql: 'documentation s',
     // documentation keeps one row per (repo, sha, path); only the newest version of a path is
     // searchable, older ones would only return as duplicates.
+    pruneWhereSql: `s.id IN (SELECT DISTINCT ON (d.repo, d.path) d.id FROM documentation d ORDER BY d.repo, d.path, d.created_at DESC)`,
     whereSql: `s.id IN (SELECT DISTINCT ON (d.repo, d.path) d.id FROM documentation d ORDER BY d.repo, d.path, d.created_at DESC)`,
   },
   plan: {
@@ -90,14 +94,20 @@ export const EMBEDDING_SOURCES: Readonly<
     embeddingTable: 'plan_embeddings',
     fkColumn: 'plan_id',
     fromSql: 'plans s',
-    whereSql: 'TRUE',
+    // A soft-deleted plan is not embeddable, but its vector stays in place: search reaches
+    // plan_embeddings through a live join, so it is never returned, and a restored plan keeps it.
+    pruneWhereSql: 'TRUE',
+    whereSql: 's.deleted_at IS NULL',
   },
   task: {
     contentSql: `concat_ws(E'\\n', NULLIF(s.title, ''), NULLIF(s.description, ''), NULLIF(s.summary, ''), 'Plan: ' || NULLIF(p.title, ''))`,
     embeddingTable: 'task_embeddings',
     fkColumn: 'task_id',
     fromSql: 'tasks s LEFT JOIN plans p ON p.id = s.plan_id',
-    whereSql: 'TRUE',
+    // Not embeddable: a soft-deleted task, or a task of a soft-deleted plan (p is NULL only when
+    // the plan row is gone, which the foreign key rules out). Vectors stay in place, as for plans.
+    pruneWhereSql: 'TRUE',
+    whereSql: 's.deleted_at IS NULL AND p.deleted_at IS NULL',
   },
 };
 

@@ -8,12 +8,19 @@
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
-  Plan,
   PlanRunsService,
-  PlansService,
   RepositoryCheckout,
   RepositoryCheckoutsService,
 } from '@openthrottle/nestjs-repositories';
+import type {
+  Plan,
+  PlansRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import {
+  createPlansRepositoryMock,
+  plansFactory,
+} from '@openthrottle/nestjs-repositories-server/testing';
+import { asMock } from '@openthrottle/nestjs-testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { mockExecFile } = vi.hoisted(() => ({ mockExecFile: vi.fn() }));
@@ -167,7 +174,7 @@ const plansFor = (fixtures: readonly Fixture[], options: unknown): Plan[] => {
   const fixture = fixtures.find((entry) => entry.name === `plan-${prefix}`);
   if (fixture?.plan == null) return [];
   return [
-    createMock<Plan>({
+    plansFactory.build({
       id: `${prefix}-0000-4000-8000-000000000000`,
       status: fixture.plan.status,
       updatedAt: fixture.plan.updatedAt,
@@ -233,6 +240,10 @@ const build = (
     assessmentFor(fixtures, params),
   );
   const emitSystemAlert = vi.fn();
+  const plansRepository = createPlansRepositoryMock();
+  plansRepository.findBy.mockImplementation(async (options) => {
+    return plansFor(fixtures, options);
+  });
   const worktrees = [
     ...fixtures.map((fixture) => discovered(fixture.name)),
     ...extraWorktrees,
@@ -257,11 +268,7 @@ const build = (
     createMock<PlanRunsService>({
       findRecentByPlanId: vi.fn().mockResolvedValue([]),
     }),
-    createMock<PlansService>({
-      getRepository: vi.fn().mockReturnValue({
-        find: vi.fn(async (options: unknown) => plansFor(fixtures, options)),
-      }),
-    }),
+    asMock<PlansRepository>(plansRepository),
     createMock<PlanRunWorktreeTeardownService>({ assess, teardown }),
   );
   return { assess, emitSystemAlert, service, teardown };

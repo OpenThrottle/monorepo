@@ -2,6 +2,10 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+import {
+  PlansModule,
+  TasksModule,
+} from '@openthrottle/nestjs-repositories-server';
 
 import { SourceControlModule } from '../../services/source-control/source-control.module.ts';
 import { PlanRulesQueueProducerModule } from '../plan-rules/producer/producer.module.ts';
@@ -22,8 +26,10 @@ import { taggingModelProviderFactory } from './tagging-model.provider.ts';
     LoggerModule,
     NestjsRepositoriesModule,
     PlanRulesQueueProducerModule,
+    PlansModule,
     SourceControlModule,
     TaggingQueueProducerModule,
+    TasksModule,
   ],
   providers: [taggingModelProviderFactory, TaggingProcessor],
 })

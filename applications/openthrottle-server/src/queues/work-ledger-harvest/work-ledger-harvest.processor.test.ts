@@ -3,8 +3,6 @@ import type { ConfigService } from '@nestjs/config';
 import type { GitHubService } from '@openthrottle/nestjs-github';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
-  Plan,
-  PlansService,
   RepositoriesService,
   Repository as RepositoryEntity,
   ServiceAccountsService,
@@ -12,6 +10,12 @@ import type {
   WorkArtifact,
   WorkLedgerService,
 } from '@openthrottle/nestjs-repositories';
+import type {
+  Plan,
+  PlansRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import { createPlansRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import { asMock } from '@openthrottle/nestjs-testing';
 import type { Repository } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -104,20 +108,9 @@ describe('WorkLedgerHarvestProcessor', () => {
 
     processor = new WorkLedgerHarvestProcessor(
       logger,
-      createMock<PlansService>({
-        getRepository: vi.fn().mockReturnValue({
-          createQueryBuilder: () => ({
-            getMany: async () => [createMock<Plan>({ id: PLAN })],
-            limit: () => ({
-              getMany: async () => [createMock<Plan>({ id: PLAN })],
-            }),
-            where: () => ({
-              limit: () => ({
-                getMany: async () => [createMock<Plan>({ id: PLAN })],
-              }),
-            }),
-          }),
-        }),
+      asMock<PlansRepository>({
+        ...createPlansRepositoryMock(),
+        findByRefPrefix: vi.fn(async () => [createMock<Plan>({ id: PLAN })]),
       }),
       repositoriesService,
       createMock<ServiceAccountsService>({
@@ -238,7 +231,7 @@ describe('WorkLedgerHarvestProcessor', () => {
   it('harvests nothing when the service account is missing', async () => {
     processor = new WorkLedgerHarvestProcessor(
       logger,
-      createMock<PlansService>(),
+      asMock<PlansRepository>(createPlansRepositoryMock()),
       repositoriesService,
       createMock<ServiceAccountsService>({
         findByName: vi.fn().mockResolvedValue(null),

@@ -1,9 +1,13 @@
 /**
- * @description GraphQL module that registers TasksResolver and TasksLoaders (request-scoped DataLoaders). Imports NestjsRepositoriesModule for TasksService, PlansService, ProjectsService.
+ * @description GraphQL module that registers TasksResolver and TasksLoaders (request-scoped DataLoaders). Imports the tasks, plans and projects table modules for TasksRepository, PlansRepository and ProjectsRepository.
  */
 
 import { Module } from '@nestjs/common';
-import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+import {
+  PlansModule,
+  ProjectsModule,
+  TasksModule,
+} from '@openthrottle/nestjs-repositories-server';
 
 import { NotificationsModule } from '../../notifications/notifications.module.ts';
 import { PlanRulesQueueProducerModule } from '../../queues/plan-rules/producer/producer.module.ts';
@@ -16,12 +20,14 @@ import { TasksResolver } from './tasks.resolver.ts';
 
 @Module({
   imports: [
-    NestjsRepositoriesModule,
     NotificationsModule,
     PlanRulesQueueProducerModule,
+    PlansModule,
     PlanStatusModule,
+    ProjectsModule,
     TaggingQueueProducerModule,
     TaskPromotionQueueProducerModule,
+    TasksModule,
     WorkLedgerGraphqlModule,
   ],
   providers: [TasksLoaders, TasksResolver],

@@ -1,8 +1,12 @@
 /**
- * @description Resolver for Plan queries and mutations. Injects PlansService from @openthrottle/nestjs-repositories and maps Plan entities to PlanObject.
+ * @description Resolver for Plan queries and mutations. Injects PlansRepository from @openthrottle/nestjs-repositories-server and maps Plan entities to PlanObject.
  */
 
-import { BadRequestException, UseGuards } from '@nestjs/common';
+import {
+  BadRequestException,
+  NotFoundException,
+  UseGuards,
+} from '@nestjs/common';
 import {
   Args,
   ID,
@@ -26,7 +30,6 @@ import type {
   PlanRunConfigStorage,
   PlanRunExecutionBackend,
 } from '@openthrottle/nestjs-repositories';
-import type { Project, Task } from '@openthrottle/nestjs-repositories';
 import {
   getDefaultPlanRunConfigStorage,
   isPlanStatus,
@@ -36,14 +39,17 @@ import {
   planHasCustomRunConfig,
   planRunConfigFromPlanStorage,
   PlanRunsService,
-  PlansService,
   serializePlanRunConfigForGraphql,
   serializePlanRunConfigSnapshotForGraphql,
   STALE_CUTOFF_MS,
   TASK_STATUS_VALUES,
-  TasksService,
 } from '@openthrottle/nestjs-repositories';
-import { UserDisabledAgentClisRepository } from '@openthrottle/nestjs-repositories-server';
+import type { Project, Task } from '@openthrottle/nestjs-repositories-server';
+import {
+  PlansRepository,
+  TasksRepository,
+  UserDisabledAgentClisRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import { EmitNotification } from '@openthrottle/nestjs-websockets';
 import type { PlanStatusCount } from '@openthrottle/node-client';
 import {
@@ -53,7 +59,7 @@ import {
 } from '@openthrottle/node-client';
 import { isRecord } from '@openthrottle/nodejs-utils';
 import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
-import { In } from 'typeorm';
+import { DataSource, In } from 'typeorm';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import { PlanRulesEvaluationService } from '../../queues/plan-rules/evaluation/evaluation.service.ts';
@@ -306,6 +312,7 @@ function isPlanRunStale(planRun: PlanRun): boolean {
 @Resolver(() => PlanObject)
 export class PlansResolver {
   constructor(
+    private readonly dataSource: DataSource,
     private readonly disabledAgentClis: UserDisabledAgentClisRepository,
     private readonly effectiveUserResolution: EffectiveUserResolutionService,
     private readonly embedder: EmbedderService,
@@ -316,9 +323,9 @@ export class PlansResolver {
     private readonly planRunsService: PlanRunsService,
     private readonly planRunWorktreeCheckoutService: PlanRunWorktreeCheckoutService,
     private readonly planStatusService: PlanStatusService,
-    private readonly plansService: PlansService,
+    private readonly plansRepository: PlansRepository,
     private readonly taggingEnqueueService: TaggingEnqueueService,
-    private readonly tasksService: TasksService,
+    private readonly tasksRepository: TasksRepository,
     private readonly settleRunLedgerService: SettleRunLedgerService,
     private readonly worktreeCheckoutPruneService: WorktreeCheckoutPruneService,
   ) {}
@@ -737,9 +744,7 @@ export class PlansResolver {
   async plan(
     @Args('id', { type: () => ID }) id: string,
   ): Promise<PlanObject | null> {
-    const entity = await this.plansService
-      .getRepository()
-      .findOne({ where: { id } });
+    const entity = await this.plansRepository.findOne({ where: { id } });
 
     return entity;
   }
@@ -762,16 +767,10 @@ export class PlansResolver {
     // hyphen boundary (e.g. "f5e4088636d3") still matches. `normalized` is
     // validated hex-only, so the LIKE pattern carries no wildcard metacharacters;
     // the value is still passed as a bound param.
-    const rows = await this.plansService
-      .getRepository()
-      .createQueryBuilder('plan')
-      .select(['plan.id', 'plan.status', 'plan.title'])
-      .where(`REPLACE(plan.id::text, '-', '') ILIKE :pattern`, {
-        pattern: `${normalized}%`,
-      })
-      .orderBy('plan.updatedAt', 'DESC')
-      .take(MAX_PLAN_REF_MATCHES)
-      .getMany();
+    const rows = await this.plansRepository.findByIdPrefix(
+      normalized,
+      MAX_PLAN_REF_MATCHES,
+    );
 
     return rows.map((row) => {
       const ref = new PlanRefObject();
@@ -796,7 +795,7 @@ export class PlansResolver {
       Math.max(1, limit ?? DEFAULT_PLANS_LIMIT),
       MAX_PLANS_LIMIT,
     );
-    const entities = await this.plansService.getRepository().find({
+    const entities = await this.plansRepository.findBy({
       order: { createdAt: 'DESC' },
       take: effectiveLimit,
     });
@@ -812,7 +811,6 @@ export class PlansResolver {
     @Args('input', { type: () => ListPlansByStatusInput })
     input: ListPlansByStatusInput,
   ): Promise<ListPlansByStatusResultObject> {
-    const repo = this.plansService.getRepository();
     const orderColumn = input.sortBy === 'updated' ? 'updatedAt' : 'createdAt';
     const orderDir = input.sortOrder === 'asc' ? 'ASC' : 'DESC';
     const take = input.limit ?? 20;
@@ -838,69 +836,32 @@ export class PlansResolver {
         ?.filter((a) => a != null && String(a).trim() !== '')
         .map((a) => String(a).trim()) ?? [];
 
-    const qb = repo
-      .createQueryBuilder('plan')
-      .select([
-        'plan.assignee',
-        'plan.author',
-        'plan.category',
-        'plan.createdAt',
-        'plan.id',
-        'plan.project',
-        'plan.projectId',
-        'plan.status',
-        'plan.summary',
-        'plan.title',
-        'plan.updatedAt',
-      ])
-      .orderBy(`plan.${orderColumn}`, orderDir)
-      .take(take)
-      .skip(skip);
+    const applyStatusFilter = !showAllStatuses && statusList.length > 0;
+    let statuses: string[] = [];
 
-    // Use explicit param names (e.g. status_0, status_1) instead of :...statuses so TypeORM binds arrays correctly.
-    if (!showAllStatuses && statusList.length > 0) {
+    if (applyStatusFilter) {
       assertValidPlanStatuses(statusList);
-      const statusParams = statusList.map((_, i) => `status_${i}`);
-      qb.andWhere(
-        `plan.status IN (${statusParams.map((p) => `:${p}`).join(', ')})`,
-        Object.fromEntries(
-          statusList.map((s, i) => [`status_${i}`, String(s).trim()]),
-        ),
-      );
-    }
-
-    if (assigneeList.length > 0) {
-      const assigneeParams = assigneeList.map((_, i) => `assignee_${i}`);
-      const placeholders = assigneeParams.map((p) => `:${p}`).join(', ');
-
-      qb.andWhere(
-        `(plan.author IN (${placeholders}) OR plan.assignee IN (${placeholders}))`,
-        Object.fromEntries(assigneeList.map((a, i) => [`assignee_${i}`, a])),
-      );
-    }
-
-    if (input.project?.trim()) {
-      qb.andWhere('plan.project = :project', {
-        project: input.project.trim(),
+      statuses = statusList.map((status) => {
+        return String(status).trim();
       });
     }
 
-    if (input.projectId?.trim()) {
-      qb.andWhere('plan.projectId = :projectId', {
-        projectId: input.projectId.trim(),
-      });
-    }
-
-    if (input.titleSubstring?.trim()) {
-      qb.andWhere('plan.title ILIKE :titlePattern', {
-        titlePattern: `%${input.titleSubstring.trim()}%`,
-      });
-    }
-
-    const [entities, totalCount] = await qb.getManyAndCount();
+    const { plans, totalCount } = await this.plansRepository.listFiltered({
+      assignees: assigneeList,
+      orderColumn,
+      orderDirection: orderDir,
+      project: input.project?.trim() ? input.project.trim() : null,
+      projectId: input.projectId?.trim() ? input.projectId.trim() : null,
+      skip,
+      statuses,
+      take,
+      titleSubstring: input.titleSubstring?.trim()
+        ? input.titleSubstring.trim()
+        : null,
+    });
     const result = new ListPlansByStatusResultObject();
 
-    result.plans = entities;
+    result.plans = plans;
     result.totalCount = totalCount;
 
     return result;
@@ -965,9 +926,9 @@ export class PlansResolver {
         });
       },
     });
-    const entities = await this.plansService
-      .getRepository()
-      .findBy({ id: In(found.chunks) });
+    const entities = await this.plansRepository.findBy({
+      where: { id: In(found.chunks) },
+    });
     const byId = new Map(
       entities.map((plan) => {
         return [plan.id, plan];
@@ -985,9 +946,8 @@ export class PlansResolver {
   }
 
   private async fetchPlanCountsByStatus(): Promise<PlanStatusCount[]> {
-    const repo = this.plansService.getRepository();
-    const rows = await repo.query<{ count: number; status: string }[]>(
-      `SELECT status, COUNT(*)::int AS count FROM plans GROUP BY status ORDER BY status LIMIT ${MAX_FILTER_FACET_ROWS}`,
+    const rows = await this.plansRepository.countByStatus(
+      MAX_FILTER_FACET_ROWS,
     );
 
     return rows.map((r) => {
@@ -1005,12 +965,7 @@ export class PlansResolver {
     description: `Distinct category values from plans for filters`,
   })
   async listDistinctCategories(): Promise<string[]> {
-    const repo = this.plansService.getRepository();
-    const rows = await repo.query<{ category: string }[]>(
-      `SELECT DISTINCT category FROM plans ORDER BY category LIMIT ${MAX_FILTER_FACET_ROWS}`,
-    );
-
-    return rows.map((r) => r.category);
+    return this.plansRepository.listDistinctCategories(MAX_FILTER_FACET_ROWS);
   }
 
   // @ProfileResponseTime('PlansResolver.listDistinctAuthorsAndAssignees')
@@ -1018,18 +973,7 @@ export class PlansResolver {
     description: `Distinct author and assignee values from plans and tasks for filters`,
   })
   async listDistinctAuthorsAndAssignees(): Promise<string[]> {
-    const repo = this.plansService.getRepository();
-    const rows = await repo.query<{ person: string }[]>(
-      `(SELECT author AS person FROM plans)
-       UNION
-       (SELECT assignee AS person FROM plans WHERE assignee IS NOT NULL)
-       UNION
-       (SELECT assignee AS person FROM tasks WHERE assignee IS NOT NULL)
-       ORDER BY person
-       LIMIT ${MAX_FILTER_FACET_ROWS}`,
-    );
-
-    return rows.map((r) => r.person);
+    return this.plansRepository.listDistinctPeople(MAX_FILTER_FACET_ROWS);
   }
 
   @Query(() => [PlanTaskStatus], {
@@ -1147,8 +1091,9 @@ export class PlansResolver {
     @CurrentUser('sub') actorSub?: string,
     @CurrentUser('kind') actorKind?: string,
   ): Promise<PlanObject | null> {
-    const repo = this.plansService.getRepository();
-    const entity = await repo.findOne({ where: { id: input.id } });
+    const entity = await this.plansRepository.findOne({
+      where: { id: input.id },
+    });
 
     if (!entity) return null;
 
@@ -1269,7 +1214,7 @@ export class PlansResolver {
     // applyStatusChange chokepoint (mutates entity.status/completedAt in place when statusChanged —
     // resolveStatusChange above already established the transition is valid and not a no-op, so
     // this repeats the same decision and always applies).
-    const saved = await repo.manager.transaction(async (manager) => {
+    const saved = await this.dataSource.transaction(async (manager) => {
       if (statusChanged && statusChange) {
         await this.planStatusService.applyStatusChange(manager, {
           actorKind,
@@ -1363,10 +1308,16 @@ export class PlansResolver {
   async deletePlan(
     @Args('input', { type: () => DeletePlanInput }) input: DeletePlanInput,
   ): Promise<boolean> {
-    const repo = this.plansService.getRepository();
-    const result = await repo.delete({ id: input.id });
+    try {
+      await this.plansRepository.remove(input.id);
 
-    return (result.affected ?? 0) > 0;
+      return true;
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        return false;
+      }
+      throw error;
+    }
   }
 
   @Mutation(() => EvaluatePlanRulesResultObject, {
@@ -1377,9 +1328,7 @@ export class PlansResolver {
   async evaluatePlanRules(
     @Args('planId', { type: () => ID }) planId: string,
   ): Promise<EvaluatePlanRulesResultObject> {
-    const plan = await this.plansService
-      .getRepository()
-      .findOne({ where: { id: planId } });
+    const plan = await this.plansRepository.findOne({ where: { id: planId } });
 
     if (!plan) {
       throw new BadRequestException(`Plan not found: ${planId}`);
@@ -1535,7 +1484,7 @@ export class PlansResolver {
     }
 
     if (mode === 'task' && taskId != null) {
-      const task = await this.tasksService.getRepository().findOne({
+      const task = await this.tasksRepository.findOne({
         where: { id: taskId.trim(), planId },
       });
       if (!task) {

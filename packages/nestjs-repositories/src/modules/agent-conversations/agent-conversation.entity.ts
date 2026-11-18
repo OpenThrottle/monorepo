@@ -2,6 +2,8 @@
  * @description TypeORM entity for agent_conversations. Matches databases/openthrottle/migrations/051.
  */
 
+import { Plan } from '@openthrottle/nestjs-repositories-server';
+import { Project } from '@openthrottle/nestjs-repositories-server';
 import {
   Column,
   CreateDateColumn,
@@ -12,8 +14,6 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-import { Plan } from '../plans/plan.entity.ts';
-import { Project } from '../projects/project.entity.ts';
 import { User } from '../users/user.entity.ts';
 import type { AgentConversationStatus } from './agent-conversations.types.ts';
 

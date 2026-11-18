@@ -2,11 +2,12 @@ import { createMock } from '@golevelup/ts-vitest';
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import type { Project } from '@openthrottle/nestjs-repositories-server';
+import { ProjectsRepository } from '@openthrottle/nestjs-repositories-server';
+import { createProjectsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { Project } from '../../projects/project.entity.ts';
-import { ProjectsService } from '../../projects/projects.service.ts';
 import { RepositoriesService } from '../../repositories/repositories.service.ts';
 import type { Repository } from '../../repositories/repository.entity.ts';
 import type { RepositoryCheckout } from '../../repositories/repository-checkout.entity.ts';
@@ -59,9 +60,7 @@ describe('WorkspaceLocalRepositoriesService', () => {
     update: vi.fn(),
   });
 
-  const mockProjectsService = createMock<ProjectsService>({
-    findById: vi.fn(),
-  });
+  const mockProjectsRepository = createProjectsRepositoryMock();
 
   let service: WorkspaceLocalRepositoriesService;
 
@@ -82,8 +81,8 @@ describe('WorkspaceLocalRepositoriesService', () => {
           useValue: mockRepositoriesService,
         },
         {
-          provide: ProjectsService,
-          useValue: mockProjectsService,
+          provide: ProjectsRepository,
+          useValue: mockProjectsRepository,
         },
       ],
     }).compile();
@@ -95,7 +94,7 @@ describe('WorkspaceLocalRepositoriesService', () => {
     vi.mocked(mockCheckoutsService.findByIdForUser).mockReset();
     vi.mocked(mockRepositoriesService.findById).mockReset();
     vi.mocked(mockRepositoriesService.update).mockReset();
-    vi.mocked(mockProjectsService.findById).mockReset();
+    vi.mocked(mockProjectsRepository.findOne).mockReset();
   });
 
   describe('listByUserId', () => {
@@ -210,7 +209,7 @@ describe('WorkspaceLocalRepositoriesService', () => {
     });
 
     it('lets an existing repository project link win over the input', async () => {
-      vi.mocked(mockProjectsService.findById).mockResolvedValue(
+      vi.mocked(mockProjectsRepository.findOne).mockResolvedValue(
         asMock<Project>({ id: projectId }),
       );
       vi.mocked(
@@ -235,7 +234,7 @@ describe('WorkspaceLocalRepositoriesService', () => {
     });
 
     it('throws NotFoundException when projectId does not exist', async () => {
-      vi.mocked(mockProjectsService.findById).mockResolvedValue(null);
+      vi.mocked(mockProjectsRepository.findOne).mockResolvedValue(null);
 
       await expect(
         service.create(userId, {
@@ -305,7 +304,7 @@ describe('WorkspaceLocalRepositoriesService', () => {
     });
 
     it('assigns a validated project on the repository', async () => {
-      vi.mocked(mockProjectsService.findById).mockResolvedValue(
+      vi.mocked(mockProjectsRepository.findOne).mockResolvedValue(
         asMock<Project>({ id: projectId }),
       );
       vi.mocked(mockCheckoutsService.findByIdForUser).mockResolvedValue(
@@ -326,7 +325,7 @@ describe('WorkspaceLocalRepositoriesService', () => {
     });
 
     it('throws NotFoundException when updating to a missing project', async () => {
-      vi.mocked(mockProjectsService.findById).mockResolvedValue(null);
+      vi.mocked(mockProjectsRepository.findOne).mockResolvedValue(null);
       vi.mocked(mockCheckoutsService.findByIdForUser).mockResolvedValue(
         mockCheckoutEntity,
       );
@@ -350,7 +349,7 @@ describe('WorkspaceLocalRepositoriesService', () => {
       const result = await service.setProject(userId, checkoutId, null);
 
       expect(result.projectId).toBeNull();
-      expect(mockProjectsService.findById).not.toHaveBeenCalled();
+      expect(mockProjectsRepository.findOne).not.toHaveBeenCalled();
     });
   });
 

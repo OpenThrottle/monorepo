@@ -2,10 +2,10 @@ import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import { PlanOutputStreamChunk } from '@openthrottle/nestjs-repositories-server';
+import { Plan } from '@openthrottle/nestjs-repositories-server';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { PlanOutputStreamChunk } from '../plan-output-stream/plan-output-stream.entity.ts';
-import { Plan } from '../plans/plan.entity.ts';
 import { PlanMessage } from './plan-message.entity.ts';
 import { planMessageFactory } from './plan-message.factory.ts';
 import {

@@ -5,11 +5,13 @@
  */
 
 import { createMock } from '@golevelup/ts-vitest';
-import type { Task, TaskTag } from '@openthrottle/nestjs-repositories';
-import {
-  type TagsService,
-  type TasksService,
-} from '@openthrottle/nestjs-repositories';
+import type { TaskTag } from '@openthrottle/nestjs-repositories';
+import { type TagsService } from '@openthrottle/nestjs-repositories';
+import type {
+  Task,
+  TasksRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import { createTasksRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
 import type { Queue } from 'bullmq';
 import type { Repository } from 'typeorm';
@@ -24,7 +26,7 @@ import { TaskPromotionEnqueueService } from './enqueue.service.ts';
 const TASK_ID = '00000000-0000-4000-8000-000000000001';
 
 describe('TaskPromotionEnqueueService.enqueuePromotion', () => {
-  let tasksService: TasksService;
+  let tasksRepository: TasksRepository;
   let tagsService: TagsService;
   let queue: Queue<PromoteTaskJobData, PromoteTaskJobResult>;
   let service: TaskPromotionEnqueueService;
@@ -44,10 +46,9 @@ describe('TaskPromotionEnqueueService.enqueuePromotion', () => {
     taskFindOne = vi.fn().mockResolvedValue(buildTask());
     tagFindOne = vi.fn().mockResolvedValue(null);
 
-    tasksService = createMock<TasksService>({
-      getRepository: vi.fn(() =>
-        asMock<Repository<Task>>({ findOne: taskFindOne }),
-      ),
+    tasksRepository = asMock<TasksRepository>({
+      ...createTasksRepositoryMock(),
+      findOne: taskFindOne,
     });
     tagsService = createMock<TagsService>({
       getTaskTagsRepository: vi.fn(() =>
@@ -58,7 +59,11 @@ describe('TaskPromotionEnqueueService.enqueuePromotion', () => {
       add: vi.fn().mockResolvedValue(asMock({ id: 'promote:job' })),
     });
 
-    service = new TaskPromotionEnqueueService(tagsService, tasksService, queue);
+    service = new TaskPromotionEnqueueService(
+      tagsService,
+      tasksRepository,
+      queue,
+    );
   });
 
   it('enqueues with the caller idempotency key as the job id', async () => {

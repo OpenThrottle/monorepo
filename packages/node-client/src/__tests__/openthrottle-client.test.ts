@@ -30,6 +30,8 @@ const {
   getChunkById,
   getCommitLinksByPlanId,
   getCommitLinksByTaskId,
+  listPlansByStatus,
+  listSources,
   runLexicalSearch,
   runSemanticSearch,
   searchAgentAssets,
@@ -283,6 +285,78 @@ describe('runSemanticSearch model filter', () => {
       expect(call[0]).toMatch(/WHERE \w+\.embedding_model = \$3/);
       expect(call[1]).toEqual([expect.any(String), 5, MODEL]);
     }
+  });
+});
+
+describe('soft-deleted plans and tasks', () => {
+  const sqlOf = (call: number): string => {
+    return String(query.mock.calls[call]?.[0]);
+  };
+
+  test('semantic search joins only live plans and tasks', async () => {
+    query.mockResolvedValue([]);
+
+    await runSemanticSearch(EMBEDDING, 5, MODEL);
+
+    expect(sqlOf(0)).toContain(
+      'JOIN plans p ON pe.plan_id = p.id AND p.deleted_at IS NULL',
+    );
+    expect(sqlOf(1)).toContain(
+      'JOIN tasks t ON te.task_id = t.id AND t.deleted_at IS NULL',
+    );
+    expect(sqlOf(1)).toContain(
+      'JOIN plans p ON t.plan_id = p.id AND p.deleted_at IS NULL',
+    );
+  });
+
+  test('chunk lookup by id joins only live plans and tasks', async () => {
+    query.mockResolvedValue([]);
+
+    await getChunkById('chunk-1');
+
+    expect(sqlOf(0)).toContain('p.deleted_at IS NULL');
+    expect(sqlOf(1)).toContain('t.deleted_at IS NULL');
+    expect(sqlOf(1)).toContain('p.deleted_at IS NULL');
+  });
+
+  test('lexical search reads live plans, live tasks and their live plans', async () => {
+    query.mockResolvedValue([]);
+
+    await runLexicalSearch('anything', 5);
+
+    const sql = sqlOf(0);
+
+    expect(sql).toContain('FROM plans s\n   WHERE s.deleted_at IS NULL');
+    expect(sql).toContain(
+      'FROM tasks s JOIN plans p ON p.id = s.plan_id AND p.deleted_at IS NULL\n   WHERE s.deleted_at IS NULL',
+    );
+  });
+
+  test('plan lists and their counts filter on deleted_at', async () => {
+    query.mockResolvedValue([{ count: '0' }]);
+
+    await listPlansByStatus('all');
+
+    expect(sqlOf(0)).toContain('FROM plans WHERE deleted_at IS NULL');
+    expect(sqlOf(1)).toContain('WHERE deleted_at IS NULL');
+  });
+
+  test('plan lists keep the live filter alongside the other filters', async () => {
+    query.mockResolvedValue([{ count: '0' }]);
+
+    await listPlansByStatus('pending', 'ada');
+
+    expect(sqlOf(0)).toContain(
+      'WHERE deleted_at IS NULL AND status = $1 AND (author = $2 OR assignee = $2)',
+    );
+  });
+
+  test('the source listing reads live plans only', async () => {
+    query.mockResolvedValue([]);
+
+    await listSources();
+
+    expect(sqlOf(0)).toContain('FROM plans WHERE deleted_at IS NULL');
   });
 });
 

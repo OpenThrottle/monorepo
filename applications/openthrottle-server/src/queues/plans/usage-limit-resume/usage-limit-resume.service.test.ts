@@ -3,9 +3,11 @@ import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
   PlanRun,
   PlanRunsService,
-  PlansService,
-  TasksService,
 } from '@openthrottle/nestjs-repositories';
+import type { PlansRepository } from '@openthrottle/nestjs-repositories-server';
+import { createPlansRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import { asMock } from '@openthrottle/nestjs-testing';
+import type { DataSource } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { PlanEnqueueService } from '../../../graphql/plans/plan-enqueue/plan-enqueue.service.ts';
@@ -64,6 +66,7 @@ describe('UsageLimitResumeService', () => {
     transaction.mockResolvedValue(0);
 
     service = new UsageLimitResumeService(
+      asMock<DataSource>({ transaction }),
       createMock<LoggerService>(),
       createMock<NotificationsService>({ emitPlanStatusChanged }),
       createMock<PlanEnqueueService>({ enqueueUsageLimitResume }),
@@ -72,15 +75,13 @@ describe('UsageLimitResumeService', () => {
         readCancelRequested,
         settleRunUsageLimited,
       }),
-      createMock<PlansService>({
-        getRepository: vi.fn().mockReturnValue({ findOne: findOnePlan }),
+      asMock<PlansRepository>({
+        ...createPlansRepositoryMock(),
+        findOne: findOnePlan,
       }),
       createMock<PlanStatusService>({ writeGuardedStatus }),
       createMock<StatusChangeSystemAccountService>({
         resolveId: vi.fn().mockResolvedValue('system-account-id'),
-      }),
-      createMock<TasksService>({
-        getRepository: vi.fn().mockReturnValue({ manager: { transaction } }),
       }),
       createMock<WorkLedgerCaptureService>(),
     );

@@ -4,6 +4,7 @@
  * for local-only folders until a remote is detected.
  */
 
+import { Project } from '@openthrottle/nestjs-repositories-server';
 import {
   Column,
   CreateDateColumn,
@@ -13,8 +14,6 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-
-import { Project } from '../projects/project.entity.ts';
 
 export interface RepositoryData {
   readonly defaultBranch: string | null;

@@ -1,15 +1,20 @@
 import { createMock } from '@golevelup/ts-vitest';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
+import type { PlanRunsService } from '@openthrottle/nestjs-repositories';
 import type {
   Plan,
-  PlanRunsService,
-  PlansService,
-  TasksService,
-} from '@openthrottle/nestjs-repositories';
-import { Task } from '@openthrottle/nestjs-repositories';
+  PlansRepository,
+  TasksRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import { Task } from '@openthrottle/nestjs-repositories-server';
+import {
+  createPlansRepositoryMock,
+  createTasksRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
+import { asMock } from '@openthrottle/nestjs-testing';
 import type { Queue } from 'bullmq';
-import type { EntityManager } from 'typeorm';
+import type { DataSource, EntityManager } from 'typeorm';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { NotificationsService } from '../../../notifications/notifications.service.ts';
@@ -60,15 +65,12 @@ describe('PlanStatusService', () => {
     update: vi.fn().mockReturnThis(),
     where: vi.fn().mockReturnThis(),
   };
+  const mockTaskFind = vi.fn().mockResolvedValue([]);
+  // The one task repository a transaction's manager hands out: `find` serves the COMPLETED guard,
+  // `createQueryBuilder` the bulk status update.
   const taskRepo = {
     createQueryBuilder: vi.fn(() => mockTaskUpdateQueryBuilder),
-    manager: {
-      transaction: vi.fn(
-        async (
-          cb: (manager: { getRepository: () => typeof taskRepo }) => unknown,
-        ) => cb({ getRepository: () => taskRepo }),
-      ),
-    },
+    find: mockTaskFind,
   };
 
   const repo = {
@@ -103,13 +105,11 @@ describe('PlanStatusService', () => {
   // D7: the SCHEDULED runs cancelled when a plan leaves SCHEDULED.
   const mockCancelScheduledRunsForPlan = vi.fn().mockResolvedValue([]);
   const mockHasUnsettledRun = vi.fn().mockResolvedValue(false);
-  const mockPlansService = createMock<PlansService>({
-    getRepository: vi.fn().mockReturnValue(repo),
-  });
-  const mockHasRemainingTasks = vi.fn().mockResolvedValue(false);
-  const mockTasksService = createMock<TasksService>({
-    getRepository: vi.fn().mockReturnValue(taskRepo),
-    hasRemainingTasks: mockHasRemainingTasks,
+  const mockPlansRepository = createPlansRepositoryMock();
+  const mockTasksRepository = createTasksRepositoryMock();
+  const mockHasRemainingTasks = mockTasksRepository.hasRemainingTasks;
+  const mockDataSource = asMock<DataSource>({
+    transaction: repo.manager.transaction,
   });
 
   const mockLoggerWarn = vi.fn();
@@ -124,18 +124,15 @@ describe('PlanStatusService', () => {
     recordStatusChange: mockRecordStatusChange,
     resolveSessionId: mockResolveSessionId,
   });
-  const mockTaskFind = vi.fn().mockResolvedValue([]);
-  const taskFindRepo = {
-    find: mockTaskFind,
-  };
   const manager = createMock<EntityManager>({
     getRepository: vi.fn((entity: unknown) => {
-      if (entity === Task) return taskFindRepo;
+      if (entity === Task) return taskRepo;
       return repo;
     }),
   });
 
   const service = new PlanStatusService(
+    mockDataSource,
     mockLogger,
     mockNotificationsService,
     createMock<PlanCancelChannelService>({
@@ -154,19 +151,22 @@ describe('PlanStatusService', () => {
       settleScheduledRunsCancelled: mockSettleScheduledRunsCancelled,
       stampCancelRequested: mockStampCancelRequested,
     }),
-    mockPlansService,
-    mockTasksService,
+    asMock<PlansRepository>(mockPlansRepository),
+    asMock<TasksRepository>(mockTasksRepository),
     mockWorkLedgerCapture,
     mockPlansQueue,
   );
 
   beforeEach(() => {
     repo.findOne.mockReset();
+    mockPlansRepository.findOne.mockImplementation(async (options) => {
+      return repo.findOne(options);
+    });
     repo.save.mockReset();
     repo.update.mockReset();
     repo.update.mockResolvedValue(undefined);
     repo.manager.transaction.mockReset();
-    // Mirrors repo.manager.transaction: Plan → `repo`, Task → `taskFindRepo` (COMPLETED guard).
+    // Mirrors the DataSource transaction: Plan → `repo`, Task → `taskRepo`.
     repo.manager.transaction.mockImplementation(
       async (
         cb: (manager: {
@@ -175,7 +175,7 @@ describe('PlanStatusService', () => {
       ) =>
         cb({
           getRepository: (entity?: unknown) => {
-            if (entity === Task) return taskFindRepo;
+            if (entity === Task) return taskRepo;
             return repo;
           },
         }),
@@ -206,7 +206,6 @@ describe('PlanStatusService', () => {
       raw: [],
     });
     mockTaskUpdateQueryBuilder.set.mockClear();
-    taskRepo.manager.transaction.mockClear();
     mockLoggerWarn.mockClear();
     mockLoggerError.mockClear();
     mockRecordStatusChange.mockReset();

@@ -6,7 +6,6 @@ import { Inject, Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { REDIS_CLIENT } from '@openthrottle/nestjs-redis';
-import { PlansService } from '@openthrottle/nestjs-repositories';
 import { CMS_CONNECTION } from '@openthrottle/nestjs-repositories-cms';
 import {
   getCmsPostgresUrl,
@@ -25,7 +24,8 @@ export class HealthService {
   constructor(
     @Inject(REDIS_CLIENT)
     private readonly redis: Redis | null,
-    private readonly plansService: PlansService,
+    @InjectDataSource()
+    private readonly dataSource: DataSource,
     private readonly logger: LoggerService,
     @InjectDataSource(CMS_CONNECTION)
     private readonly cmsDataSource: DataSource,
@@ -64,8 +64,7 @@ export class HealthService {
     }
 
     try {
-      const repo = this.plansService.getRepository();
-      await repo.manager.query('SELECT 1');
+      await this.dataSource.query('SELECT 1');
 
       return 'ok';
     } catch (error: unknown) {

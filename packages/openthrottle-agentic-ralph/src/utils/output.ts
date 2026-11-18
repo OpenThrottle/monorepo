@@ -1,7 +1,7 @@
 import type { AgentOutputControlType } from '../contract/step-results.ts';
 
 /** @description Matches `<ralph:task-complete>uuid</ralph:task-complete>`. */
-const TASK_COMPLETE_REGEX = /<ralph:task-complete>([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})<\/ralph:task-complete>/gi; // prettier-ignore
+const TASK_COMPLETE_REGEX = /<ralph:task-complete>([0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})<\/ralph:task-complete>/gi; // prettier-ignore
 
 const PROMISE_COMPLETE = '<promise>COMPLETE</promise>';
 const PROMISE_ERROR = '<promise>ERROR</promise>';

@@ -13,9 +13,9 @@ import {
   TASK_STATUS,
   TASK_STATUS_VALUES,
 } from '@openthrottle/nestjs-repositories-server';
+import { Task } from '@openthrottle/nestjs-repositories-server';
 import { In, QueryFailedError, Repository } from 'typeorm';
 
-import { Task } from '../../tasks/task.entity.ts';
 import {
   RULE_APPLICATION_STATES,
   RuleApplication,

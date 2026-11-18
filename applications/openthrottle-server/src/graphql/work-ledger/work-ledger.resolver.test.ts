@@ -146,6 +146,16 @@ describe('WorkLedgerResolver.workLedgerCompleteness', () => {
     };
   };
 
+  it('reads live plans only', async () => {
+    query.mockResolvedValue([]);
+
+    await resolver.workLedgerCompleteness({ limit: null });
+
+    expect(query.mock.calls[0]?.[0]).toContain(
+      'JOIN plans p ON p.id = g.plan_id AND p.deleted_at IS NULL',
+    );
+  });
+
   it('counts a plan as recorded only when the verifier confirmed a landed commit', async () => {
     // The SQL orders unrecorded first; mirror that here.
     query.mockResolvedValue([

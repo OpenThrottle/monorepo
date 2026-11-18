@@ -18,8 +18,8 @@ import {
   RULE_APPLICATION_STATES,
   RuleApplicationsService,
   TagsService,
-  TasksService,
 } from '@openthrottle/nestjs-repositories';
+import { TasksRepository } from '@openthrottle/nestjs-repositories-server';
 import { TAG_ACTION_TYPES } from '@openthrottle/openthrottle-skills';
 
 import {
@@ -43,7 +43,7 @@ export class PromoteTaskToPlanExecutor implements ActionExecutor, OnModuleInit {
     private readonly ruleApplicationsService: RuleApplicationsService,
     private readonly tagsService: TagsService,
     private readonly taskPromotionService: TaskPromotionService,
-    private readonly tasksService: TasksService,
+    private readonly tasksRepository: TasksRepository,
   ) {}
 
   onModuleInit(): void {
@@ -139,9 +139,7 @@ export class PromoteTaskToPlanExecutor implements ActionExecutor, OnModuleInit {
 
   /** A task already PROMOTED, or carrying the legacy `promoted` tag, is skipped (idempotency). */
   private async isAlreadyPromoted(taskId: string): Promise<boolean> {
-    const task = await this.tasksService
-      .getRepository()
-      .findOne({ where: { id: taskId } });
+    const task = await this.tasksRepository.findOne({ where: { id: taskId } });
     if (task == null) {
       return false;
     }

@@ -10,6 +10,7 @@ import {
 import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
 import * as React from 'react';
 
+import { PLAN_WORKFLOW_CONFIG_TARGET_COPY } from '~/routing/plans/data/data.copy';
 import {
   isUuid,
   type WorkflowRalphRunOptionsInput,
@@ -140,7 +141,7 @@ export const PlanWorkflowConfigTarget = (
 
       {targetIdWarning && (
         <p className="text-destructive text-xs" role="alert">
-          Value does not match a UUID (v4) pattern; CLI validation may fail.
+          {PLAN_WORKFLOW_CONFIG_TARGET_COPY.invalidIdWarning}
         </p>
       )}
     </OpenThrottleFieldset>

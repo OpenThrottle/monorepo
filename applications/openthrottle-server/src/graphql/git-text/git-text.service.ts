@@ -1,5 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PlansService, TasksService } from '@openthrottle/nestjs-repositories';
+import {
+  PlansRepository,
+  TasksRepository,
+} from '@openthrottle/nestjs-repositories-server';
 
 import type { GitTextDraftInput } from './git-text.input.ts';
 import type { GitTextDraftObject } from './git-text.object.ts';
@@ -20,22 +23,22 @@ const SCOPE_PATTERN = /^[a-z0-9@][a-z0-9@/._-]*$/u;
 @Injectable()
 export class GitTextService {
   constructor(
-    private readonly plansService: PlansService,
-    private readonly tasksService: TasksService,
+    private readonly plansRepository: PlansRepository,
+    private readonly tasksRepository: TasksRepository,
   ) {}
 
   async draft(input: GitTextDraftInput): Promise<GitTextDraftObject> {
-    const plan = await this.plansService
-      .getRepository()
-      .findOne({ where: { id: input.planId } });
+    const plan = await this.plansRepository.findOne({
+      where: { id: input.planId },
+    });
 
     if (plan == null) {
       throw new NotFoundException(`Plan ${input.planId} not found`);
     }
 
-    const rows = await this.tasksService
-      .getRepository()
-      .find({ where: { planId: plan.id } });
+    const rows = await this.tasksRepository.findBy({
+      where: { planId: plan.id },
+    });
     // Canonical task order is sortOrder, then createdAt. Sorted here rather than in `order`,
     // because TypeORM takes precedence from key order and keys are kept alphabetical.
     const tasks = [...rows].sort(
