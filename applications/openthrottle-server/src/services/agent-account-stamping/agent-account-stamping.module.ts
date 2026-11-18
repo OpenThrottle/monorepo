@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
-import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+import { AgentAccountsModule } from '@openthrottle/nestjs-repositories-server';
 import type { AgentAccountResolver } from '@openthrottle/openthrottle-agentic-utils';
 import {
   createAgentAccountResolver,
@@ -15,7 +15,7 @@ import { AgentAccountStampingService } from './agent-account-stamping.service.ts
  */
 @Module({
   exports: [AgentAccountStampingService],
-  imports: [LoggerModule, NestjsRepositoriesModule],
+  imports: [AgentAccountsModule, LoggerModule],
   providers: [
     AgentAccountStampingService,
     {

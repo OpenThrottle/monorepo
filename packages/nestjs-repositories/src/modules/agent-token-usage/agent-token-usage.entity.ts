@@ -3,7 +3,7 @@
  * One immutable row per persisted assistant turn (normalized token/cost usage).
  */
 
-import { User } from '@openthrottle/nestjs-repositories-server';
+import { AgentAccount, User } from '@openthrottle/nestjs-repositories-server';
 import {
   Column,
   CreateDateColumn,
@@ -13,7 +13,6 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
-import { AgentAccount } from '../agent-accounts/agent-accounts.entity.ts';
 import { AgentConversation } from '../agent-conversations/agent-conversation.entity.ts';
 import { AgentConversationMessage } from '../agent-conversations/agent-conversation-message.entity.ts';
 

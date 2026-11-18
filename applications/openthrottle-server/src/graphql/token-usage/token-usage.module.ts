@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+import { AgentAccountsModule } from '@openthrottle/nestjs-repositories-server';
 
 import { AgentAccountStampingModule } from '../../services/agent-account-stamping/agent-account-stamping.module.ts';
 import { EffectiveUserResolutionModule } from '../../services/effective-user-resolution/effective-user-resolution.module.ts';
@@ -13,6 +14,7 @@ import { TokenUsageResolver } from './token-usage.resolver.ts';
  */
 @Module({
   imports: [
+    AgentAccountsModule,
     AgentAccountStampingModule,
     EffectiveUserResolutionModule,
     NestjsRepositoriesModule,

@@ -4,6 +4,7 @@ import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import {
   PlansModule,
   ProjectsModule,
+  SkillTagsModule,
   TasksModule,
   UsersModule,
 } from '@openthrottle/nestjs-repositories-server';
@@ -23,6 +24,7 @@ import { PlanContextAvailabilityService } from './plan-context-availability.serv
     NestjsRepositoriesModule,
     PlansModule,
     ProjectsModule,
+    SkillTagsModule,
     TasksModule,
   ],
   providers: [PlanContextAvailabilityService],

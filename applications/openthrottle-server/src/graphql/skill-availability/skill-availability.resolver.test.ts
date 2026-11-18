@@ -1,13 +1,10 @@
 import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
-import type {
-  SkillAvailabilityRule,
-  UserSkillTag,
-} from '@openthrottle/nestjs-repositories';
-import {
-  SkillAvailabilityService,
-  SkillTagsService,
-} from '@openthrottle/nestjs-repositories';
+import type { SkillAvailabilityRule } from '@openthrottle/nestjs-repositories';
+import { SkillAvailabilityService } from '@openthrottle/nestjs-repositories';
+import type { UserSkillTag } from '@openthrottle/nestjs-repositories-server';
+import { SkillTagsRepository } from '@openthrottle/nestjs-repositories-server';
+import { createSkillTagsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
@@ -36,9 +33,7 @@ describe('SkillAvailabilityResolver', () => {
     updateRule: vi.fn(),
     upsertRuleSet: vi.fn(),
   });
-  const mockSkillTagsService = createMock<SkillTagsService>({
-    listForUser: vi.fn(),
-  });
+  const mockSkillTagsRepository = createSkillTagsRepositoryMock();
 
   let resolver: SkillAvailabilityResolver;
 
@@ -50,7 +45,7 @@ describe('SkillAvailabilityResolver', () => {
           provide: SkillAvailabilityService,
           useValue: mockSkillAvailabilityService,
         },
-        { provide: SkillTagsService, useValue: mockSkillTagsService },
+        { provide: SkillTagsRepository, useValue: mockSkillTagsRepository },
       ],
     })
       .overrideGuard(GqlPermissionsGuard)
@@ -139,7 +134,7 @@ describe('SkillAvailabilityResolver', () => {
   });
 
   test('addSkillAvailabilityRule passes the caller vocabulary as knownTags', async () => {
-    vi.mocked(mockSkillTagsService.listForUser).mockResolvedValue([
+    mockSkillTagsRepository.listForUser.mockResolvedValue([
       makeTag('github'),
       makeTag('infra'),
     ]);
@@ -169,9 +164,7 @@ describe('SkillAvailabilityResolver', () => {
   });
 
   test('updateSkillAvailabilityRule passes knownTags and delegates by ruleId', async () => {
-    vi.mocked(mockSkillTagsService.listForUser).mockResolvedValue([
-      makeTag('infra'),
-    ]);
+    mockSkillTagsRepository.listForUser.mockResolvedValue([makeTag('infra')]);
     const rule: SkillAvailabilityRule = createMock<SkillAvailabilityRule>({
       environment: 'interactive',
       id: 'rule-9',

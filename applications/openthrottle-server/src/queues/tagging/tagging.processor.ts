@@ -28,7 +28,6 @@ import { defaultWorkerOptions } from '@openthrottle/nestjs-bullmq';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   type PlanTag,
-  SkillTagsService,
   type TagCaller,
   TAGGING_SERVICE_ACCOUNT_NAME,
   TagsService,
@@ -37,6 +36,7 @@ import {
 import {
   PlansRepository,
   ServiceAccountsRepository,
+  SkillTagsRepository,
   TasksRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import { DEFAULT_TAG_VOCABULARY_SEED } from '@openthrottle/openthrottle-skills';
@@ -80,7 +80,7 @@ export class TaggingProcessor
     private readonly planRulesEvaluationService: PlanRulesEvaluationService,
     private readonly plansRepository: PlansRepository,
     private readonly serviceAccountsRepository: ServiceAccountsRepository,
-    private readonly skillTagsService: SkillTagsService,
+    private readonly skillTagsRepository: SkillTagsRepository,
     private readonly sourceControlService: SourceControlService,
     @Inject(TAGGING_MODEL_PROVIDER_TOKEN)
     private readonly taggingModelProvider: TaggingModelProvider,
@@ -390,9 +390,9 @@ export class TaggingProcessor
    */
   private async resolveTaggingVocabulary(): Promise<TaggingVocabularyEntry[]> {
     const caller = await this.resolveTaggingCaller();
-    const rows = await this.skillTagsService
-      .getRepository()
-      .find({ where: { userId: caller.subjectId } });
+    const rows = await this.skillTagsRepository.findBy({
+      where: { userId: caller.subjectId },
+    });
     if (rows.length > 0) {
       return rows.map((row) => ({ dimension: row.dimension, tag: row.tag }));
     }

@@ -1,7 +1,7 @@
 /**
  * @description GraphQL resolver for the *resolved* per-context skill-availability surface
  * (`skillAvailability`). Composes the three server inputs — the project's ingested skill
- * universe (ProjectSkillsService), the caller's skill-tag vocabulary (SkillTagsService), and
+ * universe (ProjectSkillsService), the caller's skill-tag vocabulary (SkillTagsRepository), and
  * the project's rule set (SkillAvailabilityService) — and runs the pure
  * `resolveSkillAvailability` resolver from @openthrottle/openthrottle-skills. The server is the
  * single resolution point; the developer app and external OT consumers read this query.
@@ -21,9 +21,11 @@ import { CurrentUser } from '@openthrottle/nestjs-auth';
 import {
   ProjectSkillsService,
   SkillAvailabilityService,
-  SkillTagsService,
 } from '@openthrottle/nestjs-repositories';
-import { ProjectsRepository } from '@openthrottle/nestjs-repositories-server';
+import {
+  ProjectsRepository,
+  SkillTagsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import type {
   SkillAvailabilityEnvironment,
   SkillAvailabilityInput,
@@ -57,7 +59,7 @@ export class SkillAvailabilityResolutionResolver {
     private readonly projectSkillsService: ProjectSkillsService,
     private readonly projectsRepository: ProjectsRepository,
     private readonly skillAvailabilityService: SkillAvailabilityService,
-    private readonly skillTagsService: SkillTagsService,
+    private readonly skillTagsRepository: SkillTagsRepository,
   ) {}
 
   @Query(() => SkillAvailabilityResolutionResult, {
@@ -125,7 +127,7 @@ export class SkillAvailabilityResolutionResolver {
 
     const [views, vocabulary, ruleSet] = await Promise.all([
       this.projectSkillsService.getSkillsForProject(resolvedProjectId),
-      this.skillTagsService.listForUser(userId),
+      this.skillTagsRepository.listForUser(userId),
       this.skillAvailabilityService.getRuleSetForProject(resolvedProjectId),
     ]);
 

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 
+import { AgentAccountsModule } from './modules/agent-accounts/agent-accounts.module.ts';
 import { BlogAuthorsModule } from './modules/blog-authors/blog-authors.module.ts';
 import { BlogPostsModule } from './modules/blog-posts/blog-posts.module.ts';
 import { BlogTagsModule } from './modules/blog-tags/blog-tags.module.ts';
@@ -16,8 +17,10 @@ import { ProjectsModule } from './modules/projects/projects.module.ts';
 import { RolesModule } from './modules/roles/roles.module.ts';
 import { ServiceAccountCredentialsModule } from './modules/service-account-credentials/service-account-credentials.module.ts';
 import { ServiceAccountsModule } from './modules/service-accounts/service-accounts.module.ts';
+import { SkillTagsModule } from './modules/skill-tags/skill-tags.module.ts';
 import { SkillUsageEventsModule } from './modules/skill-usage-events/skill-usage-events.module.ts';
 import { SkillUsageOutcomesModule } from './modules/skill-usage-outcomes/skill-usage-outcomes.module.ts';
+import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module.ts';
 import { TaskEmbeddingsModule } from './modules/task-embeddings/task-embeddings.module.ts';
 import { TasksModule } from './modules/tasks/tasks.module.ts';
 import { TelemetryHeartbeatsModule } from './modules/telemetry-heartbeats/telemetry-heartbeats.module.ts';
@@ -39,6 +42,7 @@ import { WorktreeRemovalsModule } from './modules/worktree-removals/worktree-rem
  */
 @Module({
   exports: [
+    AgentAccountsModule,
     BlogAuthorsModule,
     BlogPostsModule,
     BlogTagsModule,
@@ -55,8 +59,10 @@ import { WorktreeRemovalsModule } from './modules/worktree-removals/worktree-rem
     RolesModule,
     ServiceAccountCredentialsModule,
     ServiceAccountsModule,
+    SkillTagsModule,
     SkillUsageEventsModule,
     SkillUsageOutcomesModule,
+    SubscriptionsModule,
     TaskEmbeddingsModule,
     TasksModule,
     TelemetryHeartbeatsModule,
@@ -69,6 +75,7 @@ import { WorktreeRemovalsModule } from './modules/worktree-removals/worktree-rem
     WorktreeRemovalsModule,
   ],
   imports: [
+    AgentAccountsModule,
     BlogAuthorsModule,
     BlogPostsModule,
     BlogTagsModule,
@@ -85,8 +92,10 @@ import { WorktreeRemovalsModule } from './modules/worktree-removals/worktree-rem
     RolesModule,
     ServiceAccountCredentialsModule,
     ServiceAccountsModule,
+    SkillTagsModule,
     SkillUsageEventsModule,
     SkillUsageOutcomesModule,
+    SubscriptionsModule,
     TaskEmbeddingsModule,
     TasksModule,
     TelemetryHeartbeatsModule,

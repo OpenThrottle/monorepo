@@ -3,11 +3,12 @@ import { BadRequestException, ConflictException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import type { UserSkillTag } from '@openthrottle/nestjs-repositories-server';
+import { SkillTagsRepository } from '@openthrottle/nestjs-repositories-server';
+import { createSkillTagsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { SkillTagsService } from '../skill-tags/skill-tags.service.ts';
-import type { UserSkillTag } from '../skill-tags/user-skill-tag.entity.ts';
 import { PlanTag } from './plan-tag.entity.ts';
 import { ProjectTag } from './project-tag.entity.ts';
 import { TAG_SOURCES, TAGGING_SERVICE_ACCOUNT_NAME } from './tags.constants.ts';
@@ -154,12 +155,7 @@ describe('TagsService', () => {
     save: vi.fn((entity: ProjectTag) => Promise.resolve(entity)),
   };
 
-  const mockVocabularyRepository = { find: vi.fn() };
-
-  const mockSkillTagsService = {
-    getRepository: vi.fn(() => mockVocabularyRepository),
-    listForUser: vi.fn(),
-  };
+  const mockSkillTagsRepository = createSkillTagsRepositoryMock();
 
   let service: TagsService;
 
@@ -180,7 +176,7 @@ describe('TagsService', () => {
           provide: getRepositoryToken(TaskTag),
           useValue: mockTaskTagsRepository,
         },
-        { provide: SkillTagsService, useValue: mockSkillTagsService },
+        { provide: SkillTagsRepository, useValue: mockSkillTagsRepository },
       ],
     }).compile();
 
@@ -198,12 +194,8 @@ describe('TagsService', () => {
     projectTagsSelectBuilder.where.mockReturnValue(projectTagsSelectBuilder);
     projectTagsSelectBuilder.andWhere.mockReturnValue(projectTagsSelectBuilder);
     vi.mocked(projectTagsSelectBuilder.getMany).mockResolvedValue([]);
-    vi.mocked(mockSkillTagsService.listForUser).mockResolvedValue(
-      defaultVocabulary,
-    );
-    vi.mocked(mockVocabularyRepository.find).mockResolvedValue(
-      defaultVocabulary,
-    );
+    mockSkillTagsRepository.listForUser.mockResolvedValue(defaultVocabulary);
+    mockSkillTagsRepository.findBy.mockResolvedValue(defaultVocabulary);
   });
 
   describe('identity-derived source (no API path accepts a source argument)', () => {
@@ -256,11 +248,11 @@ describe('TagsService', () => {
       await expect(
         service.addPlanTag(humanCaller, planId, 'Not Valid'),
       ).rejects.toBeInstanceOf(BadRequestException);
-      expect(mockSkillTagsService.listForUser).not.toHaveBeenCalled();
+      expect(mockSkillTagsRepository.listForUser).not.toHaveBeenCalled();
     });
 
     it('falls back to the committed default vocabulary for a service account with zero rows', async () => {
-      vi.mocked(mockVocabularyRepository.find).mockResolvedValue([]);
+      mockSkillTagsRepository.findBy.mockResolvedValue([]);
       vi.mocked(mockPlanTagsRepository.findOne).mockResolvedValue(null);
 
       await service.addPlanTag(agentCaller, planId, 'breakdown');
@@ -268,7 +260,7 @@ describe('TagsService', () => {
       expect(mockPlanTagsRepository.create).toHaveBeenCalledWith(
         expect.objectContaining({ dimension: 'phase', tag: 'breakdown' }),
       );
-      expect(mockSkillTagsService.listForUser).not.toHaveBeenCalled();
+      expect(mockSkillTagsRepository.listForUser).not.toHaveBeenCalled();
     });
   });
 
@@ -281,7 +273,7 @@ describe('TagsService', () => {
       expect(mockPlanTagsRepository.create).toHaveBeenCalledWith(
         expect.objectContaining({ dimension: 'domain', tag: 'follow-up' }),
       );
-      expect(mockVocabularyRepository.find).not.toHaveBeenCalled();
+      expect(mockSkillTagsRepository.findBy).not.toHaveBeenCalled();
     });
 
     it('accepts follow-up from a user without seeding their vocabulary', async () => {
@@ -292,7 +284,7 @@ describe('TagsService', () => {
       expect(mockPlanTagsRepository.create).toHaveBeenCalledWith(
         expect.objectContaining({ source: 'human', tag: 'follow-up' }),
       );
-      expect(mockSkillTagsService.listForUser).not.toHaveBeenCalled();
+      expect(mockSkillTagsRepository.listForUser).not.toHaveBeenCalled();
     });
   });
 

@@ -1,26 +1,23 @@
 /**
- * @description TypeORM entity for agent_accounts. Matches databases/openthrottle/migrations/158.
- * One row per (user, provider, external account): the agent-CLI login a usage row was billed to.
+ * @description TypeORM entity for the openthrottle `agent_accounts` table: one row per (user,
+ * provider, external account), the agent-CLI login a usage row was billed to. The usage writers
+ * upsert it on every sighting, and a deleted row is simply recreated on the next one, so it
+ * extends `BaseHardDeleteModel`. `created_at` equals `first_seen_at`, which stays the column its
+ * consumers read. Matches databases/openthrottle/migrations (158, 177).
+ * @public
  */
 
-import { User } from '@openthrottle/nestjs-repositories-server';
-import {
-  Column,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { BaseHardDeleteModel } from '@openthrottle/nestjs-postgres';
+import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
+
+import type { User } from '../users/user.entity.ts';
 
 @Entity('agent_accounts')
-export class AgentAccount {
-  @PrimaryGeneratedColumn('uuid')
-  id!: string;
-
+export class AgentAccount extends BaseHardDeleteModel {
   @Column({ name: 'user_id', type: 'uuid' })
   userId!: string;
 
-  @ManyToOne(() => User, { onDelete: 'CASCADE' })
+  @ManyToOne('User', { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
   user?: User;
 

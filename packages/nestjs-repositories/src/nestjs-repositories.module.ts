@@ -10,7 +10,6 @@ import {
   UsersModule,
 } from '@openthrottle/nestjs-repositories-server';
 
-import { AgentAccountsModule } from './modules/agent-accounts/agent-accounts.module.ts';
 import { AgentConversationsModule } from './modules/agent-conversations/agent-conversations.module.ts';
 import { AgentTokenUsageModule } from './modules/agent-token-usage/agent-token-usage.module.ts';
 import { AgentTrajectoriesModule } from './modules/agent-trajectories/agent-trajectories.module.ts';
@@ -23,8 +22,6 @@ import { CustomPromptsModule } from './modules/prompts/prompts.module.ts';
 import { RepositoriesModule } from './modules/repositories/repositories.module.ts';
 import { ScheduledAgentJobsModule } from './modules/scheduled-agent-jobs/scheduled-agent-jobs.module.ts';
 import { SkillAvailabilityModule } from './modules/skill-availability/skill-availability.module.ts';
-import { SkillTagsModule } from './modules/skill-tags/skill-tags.module.ts';
-import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module.ts';
 import { TagActionRulesModule } from './modules/tag-action-rules/tag-action-rules.module.ts';
 import { TagsModule } from './modules/tags/tags.module.ts';
 import { UserPreferencesModule } from './modules/user-preferences/user-preferences.module.ts';
@@ -34,7 +31,6 @@ import { getTypeOrmOptions } from './nestjs-repositories.utils.ts';
 @Module({
   controllers: [],
   exports: [
-    AgentAccountsModule,
     AgentConversationsModule,
     AgentTokenUsageModule,
     AgentTrajectoriesModule,
@@ -51,8 +47,6 @@ import { getTypeOrmOptions } from './nestjs-repositories.utils.ts';
     ServiceAccountCredentialsModule,
     ServiceAccountsModule,
     SkillAvailabilityModule,
-    SkillTagsModule,
-    SubscriptionsModule,
     TagActionRulesModule,
     TagsModule,
     UserPreferencesModule,
@@ -69,7 +63,6 @@ import { getTypeOrmOptions } from './nestjs-repositories.utils.ts';
         return { ...getTypeOrmOptions(), autoLoadEntities: true };
       },
     }),
-    AgentAccountsModule,
     AgentConversationsModule,
     AgentTokenUsageModule,
     AgentTrajectoriesModule,
@@ -87,8 +80,6 @@ import { getTypeOrmOptions } from './nestjs-repositories.utils.ts';
     ServiceAccountCredentialsModule,
     ServiceAccountsModule,
     SkillAvailabilityModule,
-    SkillTagsModule,
-    SubscriptionsModule,
     TagActionRulesModule,
     TagsModule,
     UserPreferencesModule,

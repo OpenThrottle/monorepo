@@ -1,9 +1,9 @@
 import type {
-  AgentAccount,
   AgentTokenUsage,
   TokenUsageByAccount,
   TokenUsageTotals,
 } from '@openthrottle/nestjs-repositories';
+import type { AgentAccount } from '@openthrottle/nestjs-repositories-server';
 
 import {
   TokenUsageAccountObject,

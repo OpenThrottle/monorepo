@@ -2760,6 +2760,9 @@ importers:
       '@openthrottle/openthrottle-plan-config':
         specifier: workspace:^
         version: link:../openthrottle-plan-config
+      '@openthrottle/openthrottle-skills':
+        specifier: workspace:^
+        version: link:../openthrottle-skills
       bcrypt:
         specifier: 'catalog:'
         version: 6.0.0

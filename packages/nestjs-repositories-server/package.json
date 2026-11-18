@@ -10,6 +10,7 @@
     "@openthrottle/nestjs-postgres": "workspace:^",
     "@openthrottle/nodejs-utils": "workspace:^",
     "@openthrottle/openthrottle-plan-config": "workspace:^",
+    "@openthrottle/openthrottle-skills": "workspace:^",
     "bcrypt": "catalog:",
     "fishery": "catalog:",
     "pg": "catalog:",

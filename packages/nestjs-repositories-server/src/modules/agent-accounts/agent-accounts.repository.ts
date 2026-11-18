@@ -1,21 +1,31 @@
-/**
- * @description Typed persistence for agent_accounts — the agent-CLI logins that agent_token_usage
- * rows are billed to. Usage writers call {@link AgentAccountsService.upsertSeen} when they stamp a
- * row; the Usage route reads a user's accounts with {@link AgentAccountsService.listForUser}.
- */
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import type { CreateModelInput } from '@openthrottle/nestjs-postgres';
+import { BaseRepository } from '@openthrottle/nestjs-postgres';
 import { In, Repository } from 'typeorm';
 
-import { AgentAccount } from './agent-accounts.entity.ts';
+import { AgentAccount } from './agent-account.entity.ts';
 import type { UpsertAgentAccountInput } from './agent-accounts.types.ts';
 
+/**
+ * @description Data access for the openthrottle `agent_accounts` table on the default
+ * connection: the `BaseRepository` CRUD (hard deletes) plus the usage writers' upsert
+ * ({@link AgentAccountsRepository.upsertSeen}) and the Usage route's user-scoped reads.
+ * @public
+ */
 @Injectable()
-export class AgentAccountsService {
+export class AgentAccountsRepository extends BaseRepository<
+  AgentAccount,
+  CreateModelInput<AgentAccount>
+> {
+  protected readonly tableName = 'agent_accounts';
+
   constructor(
     @InjectRepository(AgentAccount)
-    private readonly repository: Repository<AgentAccount>,
-  ) {}
+    repository: Repository<AgentAccount>,
+  ) {
+    super(repository);
+  }
 
   /**
    * @description Create the account, or refresh its descriptive fields and `last_seen_at`, in one
@@ -59,8 +69,8 @@ export class AgentAccountsService {
   }
 
   /** @description The user's accounts, most recently used first. */
-  listForUser(userId: string): Promise<AgentAccount[]> {
-    return this.repository.find({
+  async listForUser(userId: string): Promise<AgentAccount[]> {
+    return this.findBy({
       order: { lastSeenAt: 'DESC' },
       where: { userId },
     });
@@ -75,6 +85,6 @@ export class AgentAccountsService {
       return [];
     }
 
-    return this.repository.find({ where: { id: In([...ids]), userId } });
+    return this.findBy({ where: { id: In([...ids]), userId } });
   }
 }

@@ -8,8 +8,8 @@ import { UseGuards } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { CurrentUser } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
-import type { UserSkillTag } from '@openthrottle/nestjs-repositories';
-import { SkillTagsService } from '@openthrottle/nestjs-repositories';
+import type { UserSkillTag } from '@openthrottle/nestjs-repositories-server';
+import { SkillTagsRepository } from '@openthrottle/nestjs-repositories-server';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import {
@@ -25,7 +25,7 @@ import {
 @Resolver(() => SkillTagObject)
 @UseGuards(GqlPermissionsGuard)
 export class SkillTagsResolver {
-  constructor(private readonly skillTagsService: SkillTagsService) {}
+  constructor(private readonly skillTagsRepository: SkillTagsRepository) {}
 
   @Query(() => SkillTagVocabularyResult, {
     description: `The authenticated user's skill-tag vocabulary. Seeded from the platform default on first read.`,
@@ -34,7 +34,7 @@ export class SkillTagsResolver {
   async skillTagVocabulary(
     @CurrentUser('sub') userId: string,
   ): Promise<SkillTagVocabularyResult> {
-    const tags = await this.skillTagsService.listForUser(userId);
+    const tags = await this.skillTagsRepository.listForUser(userId);
     return { tags, totalCount: tags.length };
   }
 
@@ -46,7 +46,7 @@ export class SkillTagsResolver {
     @CurrentUser('sub') userId: string,
     @Args('input', { type: () => AddSkillTagInput }) input: AddSkillTagInput,
   ): Promise<UserSkillTag> {
-    return this.skillTagsService.addTag(
+    return this.skillTagsRepository.addTag(
       userId,
       input.tag,
       input.dimension ?? 'domain',
@@ -62,7 +62,7 @@ export class SkillTagsResolver {
     @Args('input', { type: () => RenameSkillTagInput })
     input: RenameSkillTagInput,
   ): Promise<UserSkillTag> {
-    return this.skillTagsService.renameTag(userId, input.from, input.to);
+    return this.skillTagsRepository.renameTag(userId, input.from, input.to);
   }
 
   @Mutation(() => Boolean, {
@@ -74,6 +74,6 @@ export class SkillTagsResolver {
     @Args('input', { type: () => RemoveSkillTagInput })
     input: RemoveSkillTagInput,
   ): Promise<boolean> {
-    return this.skillTagsService.removeTag(userId, input.tag);
+    return this.skillTagsRepository.removeTag(userId, input.tag);
   }
 }

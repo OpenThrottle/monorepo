@@ -15,7 +15,10 @@
   ],
   "references": [
     {
-      "path": "../nestjs-testing/tsconfig.lib.json"
+      "path": "../openthrottle-skills/tsconfig.lib.json"
+    },
+    {
+      "path": "../openthrottle-plan-config/tsconfig.lib.json"
     },
     {
       "path": "../nodejs-utils/tsconfig.lib.json"
@@ -27,7 +30,7 @@
       "path": "../openthrottle-agentic-utils/tsconfig.lib.json"
     },
     {
-      "path": "../openthrottle-plan-config/tsconfig.lib.json"
+      "path": "../nestjs-testing/tsconfig.lib.json"
     },
     {
       "path": "../../tools/dotfiles/tsconfig.lib.json"

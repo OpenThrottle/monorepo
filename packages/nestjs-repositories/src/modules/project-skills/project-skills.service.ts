@@ -16,6 +16,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import { SkillTagsRepository } from '@openthrottle/nestjs-repositories-server';
 import type {
   ProjectSkillInput,
   SkillSource,
@@ -26,7 +27,6 @@ import {
 } from '@openthrottle/openthrottle-skills';
 import { Repository } from 'typeorm';
 
-import { SkillTagsService } from '../skill-tags/skill-tags.service.ts';
 import type { TagCaller } from '../tags/tags.types.ts';
 import { ProjectSkill } from './project-skill.entity.ts';
 import type {
@@ -65,7 +65,7 @@ export class ProjectSkillsService {
     private readonly logger: LoggerService,
     @InjectRepository(ProjectSkill)
     private readonly repository: Repository<ProjectSkill>,
-    private readonly skillTagsService: SkillTagsService,
+    private readonly skillTagsRepository: SkillTagsRepository,
   ) {
     this.logger.debug('🧩 project-skills 🧩');
   }
@@ -255,11 +255,11 @@ export class ProjectSkillsService {
 
   private async listVocabularyRows(caller: TagCaller) {
     if (caller.principalKind === 'user') {
-      return this.skillTagsService.listForUser(caller.subjectId);
+      return this.skillTagsRepository.listForUser(caller.subjectId);
     }
-    return this.skillTagsService
-      .getRepository()
-      .find({ where: { userId: caller.subjectId } });
+    return this.skillTagsRepository.findBy({
+      where: { userId: caller.subjectId },
+    });
   }
 
   private async assertDomainTag(caller: TagCaller, tag: string): Promise<void> {

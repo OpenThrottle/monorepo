@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
+import { SkillTagsModule } from '@openthrottle/nestjs-repositories-server';
 
-import { SkillTagsModule } from '../skill-tags/skill-tags.module.ts';
 import { ProjectSkill } from './project-skill.entity.ts';
 import { ProjectSkillsService } from './project-skills.service.ts';
 

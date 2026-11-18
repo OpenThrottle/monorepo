@@ -12,7 +12,6 @@ import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
   ProjectSkillsService,
   SkillAvailabilityService,
-  SkillTagsService,
   TagActionRule,
   TagActionRulesService,
   TagsService,
@@ -21,8 +20,10 @@ import type {
   Plan,
   PlansRepository,
   ProjectsRepository,
+  SkillTagsRepository,
   Task,
   TasksRepository,
+  UserSkillTag,
   UsersRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import type {
@@ -32,6 +33,7 @@ import type {
 import {
   createPlansRepositoryMock,
   createProjectsRepositoryMock,
+  createSkillTagsRepositoryMock,
   createTasksRepositoryMock,
   createUsersRepositoryMock,
   usersFactory,
@@ -48,7 +50,12 @@ const ownerId = '00000000-0000-4000-8000-000000000004';
 const callerId = '00000000-0000-4000-8000-000000000005';
 
 const vocabularyRows = ['backend', 'breakdown', 'github', 'terraform'].map(
-  (tag) => asMock({ dimension: tag === 'breakdown' ? 'phase' : 'domain', tag }),
+  (tag) => {
+    return asMock<UserSkillTag>({
+      dimension: tag === 'breakdown' ? 'phase' : 'domain',
+      tag,
+    });
+  },
 );
 
 const availabilityExceptionRule = (
@@ -84,6 +91,8 @@ describe('PlanContextAvailabilityService', () => {
     const plansRepository = createPlansRepositoryMock();
     const tasksRepository = createTasksRepositoryMock();
     const usersRepository = createUsersRepositoryMock();
+    const skillTagsRepository = createSkillTagsRepositoryMock();
+    skillTagsRepository.listForUser.mockResolvedValue(vocabularyRows);
     usersRepository.findByGithubUsername.mockResolvedValue(
       usersFactory.build({ id: ownerId }),
     );
@@ -129,9 +138,7 @@ describe('PlanContextAvailabilityService', () => {
       createMock<ProjectSkillsService>({ getSkillsForProject }),
       asMock<ProjectsRepository>(createProjectsRepositoryMock()),
       createMock<SkillAvailabilityService>({ getRuleSetForProject }),
-      createMock<SkillTagsService>({
-        listForUser: vi.fn().mockResolvedValue(vocabularyRows),
-      }),
+      asMock<SkillTagsRepository>(skillTagsRepository),
       createMock<TagActionRulesService>({ listEnabledForUser }),
       createMock<TagsService>({ getEffectiveTagSet: effectiveTagSet }),
       asMock<TasksRepository>(tasksRepository),
