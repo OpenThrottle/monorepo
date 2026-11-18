@@ -4,6 +4,9 @@
  */
 
 import {
+  BlogAuthor,
+  BlogPost,
+  BlogTag,
   CodeEmbedding,
   CodeIndexSnapshot,
   DailyStat,
@@ -24,9 +27,6 @@ import { AgentConversation } from './modules/agent-conversations/agent-conversat
 import { AgentConversationMessage } from './modules/agent-conversations/agent-conversation-message.entity.ts';
 import { AgentTokenUsage } from './modules/agent-token-usage/agent-token-usage.entity.ts';
 import { AgentTrajectory } from './modules/agent-trajectories/agent-trajectory.entity.ts';
-import { BlogAuthor } from './modules/blog-authors/blog-author.entity.ts';
-import { BlogPost } from './modules/blog-posts/blog-post.entity.ts';
-import { BlogTag } from './modules/blog-tags/blog-tag.entity.ts';
 import { EvalCase } from './modules/eval-datasets/eval-case.entity.ts';
 import { EvalDataset } from './modules/eval-datasets/eval-dataset.entity.ts';
 import { EvalHumanLabel } from './modules/eval-human-labels/eval-human-label.entity.ts';
@@ -98,9 +98,6 @@ export function getTypeOrmOptions(): DataSourceOptions {
       AgentConversationMessage,
       AgentTokenUsage,
       AgentTrajectory,
-      BlogAuthor,
-      BlogPost,
-      BlogTag,
       CodeEmbedding,
       CodeIndexSnapshot,
       CustomPrompt,
@@ -113,6 +110,9 @@ export function getTypeOrmOptions(): DataSourceOptions {
       EvalTrial,
       McpConnectorConnection,
       // Moved to nestjs-repositories-server (OT plan 052d37b0); listed here until the DataSource moves too.
+      BlogAuthor,
+      BlogPost,
+      BlogTag,
       DailyStat,
       Note,
       Permission,

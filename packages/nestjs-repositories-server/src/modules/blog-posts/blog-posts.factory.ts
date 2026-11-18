@@ -6,12 +6,13 @@
 import { faker } from '@faker-js/faker';
 import { Factory } from 'fishery';
 
-import type { BlogPostData } from './blog-post.entity.ts';
 import { BLOG_POST_STATUS } from './blog-posts.constants.ts';
+import type { BlogPostData } from './blog-posts.types.ts';
 
 /**
  * Factory for building BlogPost-shaped objects (plain data for mocks / tests).
  * Override any field via .build({ status: 'DRAFT', publishedAt: null }) or .buildList(3).
+ * @public
  */
 export const blogPostsFactory = Factory.define<BlogPostData>(
   ({ sequence }) => ({
@@ -20,6 +21,7 @@ export const blogPostsFactory = Factory.define<BlogPostData>(
     coverImageAlt: faker.lorem.sentence(),
     coverImageUrl: faker.image.url(),
     createdAt: faker.date.past(),
+    deletedAt: null,
     excerpt: faker.lorem.sentence(),
     id: faker.string.uuid(),
     lastEditedBy: null,

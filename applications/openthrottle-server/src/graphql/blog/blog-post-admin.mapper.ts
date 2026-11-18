@@ -5,8 +5,8 @@
  * current time at mapping, so it is never stale in a response.
  */
 
-import type { BlogPost } from '@openthrottle/nestjs-repositories';
-import { deriveBlogPostState } from '@openthrottle/nestjs-repositories';
+import type { BlogPost } from '@openthrottle/nestjs-repositories-server';
+import { deriveBlogPostState } from '@openthrottle/nestjs-repositories-server';
 
 import { toBlogAuthorObject, toBlogTagObject } from './blog-post.mapper.ts';
 import type { BlogPostAdminObject } from './blog-post-admin.object.ts';

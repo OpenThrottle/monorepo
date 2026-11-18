@@ -1,17 +1,17 @@
 /**
  * @description Public, unauthenticated read API for the marketing-site blog. All visibility
- * rules (PUBLISHED, not future-dated) live in BlogPostsService / BlogTagsService; this resolver
+ * rules (PUBLISHED, not future-dated) live in BlogPostsRepository / BlogTagsRepository; this resolver
  * only calls them and maps entities to the public objects, so a draft, archived or scheduled post
- * is unreachable here by construction. Author and tags arrive hydrated from the services, so
+ * is unreachable here by construction. Author and tags arrive hydrated from the repositories, so
  * there is no per-post follow-up query.
  */
 
 import { Args, Int, Query, Resolver } from '@nestjs/graphql';
 import { Public } from '@openthrottle/nestjs-auth';
 import {
-  BlogPostsService,
-  BlogTagsService,
-} from '@openthrottle/nestjs-repositories';
+  BlogPostsRepository,
+  BlogTagsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 
 import { toBlogPostObject, toBlogTagObject } from './blog-post.mapper.ts';
 import { BlogPostListResult, BlogPostObject } from './blog-post.object.ts';
@@ -23,8 +23,8 @@ const DEFAULT_PAGE_SIZE = 10;
 @Resolver()
 export class BlogResolver {
   constructor(
-    private readonly blogPostsService: BlogPostsService,
-    private readonly blogTagsService: BlogTagsService,
+    private readonly blogPostsRepository: BlogPostsRepository,
+    private readonly blogTagsRepository: BlogTagsRepository,
   ) {}
 
   @Query(() => BlogPostObject, {
@@ -34,7 +34,7 @@ export class BlogResolver {
   async blogPost(
     @Args('slug', { type: () => String }) slug: string,
   ): Promise<BlogPostObject | null> {
-    const post = await this.blogPostsService.findPublishedBySlug(slug);
+    const post = await this.blogPostsRepository.findPublishedBySlug(slug);
 
     return post == null ? null : toBlogPostObject(post);
   }
@@ -50,7 +50,7 @@ export class BlogResolver {
     @Args('tagSlug', { nullable: true, type: () => String })
     tagSlug: string | null | undefined,
   ): Promise<BlogPostListResult> {
-    const page = await this.blogPostsService.findPublished({
+    const page = await this.blogPostsRepository.findPublished({
       after,
       first,
       tagSlug,
@@ -67,7 +67,7 @@ export class BlogResolver {
     description: `Blog tags carried by at least one publicly visible post, ordered by name.`,
   })
   async blogTags(): Promise<BlogTagObject[]> {
-    const tags = await this.blogTagsService.findVisibleTags();
+    const tags = await this.blogTagsRepository.findVisibleTags();
 
     return tags.map(toBlogTagObject);
   }

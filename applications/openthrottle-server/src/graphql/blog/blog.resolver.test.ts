@@ -1,17 +1,18 @@
-import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import {
   type BlogAuthor,
   type BlogPost,
-  BlogPostsService,
+  BlogPostsRepository,
   type BlogTag,
-  BlogTagsService,
-} from '@openthrottle/nestjs-repositories';
+  BlogTagsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import {
   blogAuthorsFactory,
   blogPostsFactory,
   blogTagsFactory,
-} from '@openthrottle/nestjs-repositories/testing';
+  createBlogPostsRepositoryMock,
+  createBlogTagsRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { BlogResolver } from './blog.resolver.ts';
@@ -40,26 +41,18 @@ const post: BlogPost = {
 
 describe('BlogResolver', () => {
   let resolver: BlogResolver;
-  const findPublished = vi.fn<BlogPostsService['findPublished']>();
-  const findPublishedBySlug = vi.fn<BlogPostsService['findPublishedBySlug']>();
-  const findVisibleTags = vi.fn<BlogTagsService['findVisibleTags']>();
+  const blogPostsRepository = createBlogPostsRepositoryMock();
+  const blogTagsRepository = createBlogTagsRepositoryMock();
+  const { findPublished, findPublishedBySlug } = blogPostsRepository;
+  const { findVisibleTags } = blogTagsRepository;
 
   beforeEach(async () => {
     vi.resetAllMocks();
     const app = await Test.createTestingModule({
       providers: [
         BlogResolver,
-        {
-          provide: BlogPostsService,
-          useValue: createMock<BlogPostsService>({
-            findPublished,
-            findPublishedBySlug,
-          }),
-        },
-        {
-          provide: BlogTagsService,
-          useValue: createMock<BlogTagsService>({ findVisibleTags }),
-        },
+        { provide: BlogPostsRepository, useValue: blogPostsRepository },
+        { provide: BlogTagsRepository, useValue: blogTagsRepository },
       ],
     }).compile();
 
@@ -67,7 +60,7 @@ describe('BlogResolver', () => {
   });
 
   describe('blogPost', () => {
-    describe('when the service finds a publicly visible post', () => {
+    describe('when the repository finds a publicly visible post', () => {
       test('returns the mapped post with derived reading time', async () => {
         findPublishedBySlug.mockResolvedValue(post);
 
@@ -126,7 +119,7 @@ describe('BlogResolver', () => {
 
   describe('blogPosts', () => {
     describe('when posts are visible', () => {
-      test('maps the page and passes cursor and tag filter to the service', async () => {
+      test('maps the page and passes cursor and tag filter to the repository', async () => {
         findPublished.mockResolvedValue({
           endCursor: 'cursor-2',
           hasNextPage: true,
@@ -166,7 +159,7 @@ describe('BlogResolver', () => {
       });
     });
 
-    describe('when the service rejects a bad cursor', () => {
+    describe('when the repository rejects a bad cursor', () => {
       test('propagates the error', async () => {
         findPublished.mockRejectedValue(
           new Error('Invalid pagination cursor.'),

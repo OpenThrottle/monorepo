@@ -4,6 +4,15 @@
  * they import `@faker-js/faker` and `vitest`, devDependencies the production server image
  * does not install.
  */
+export * from '../modules/blog-authors/blog-authors.factory.ts';
+export type * from '../modules/blog-authors/blog-authors.types.ts';
+export * from '../modules/blog-authors/blog-authors.utils.ts';
+export * from '../modules/blog-posts/blog-posts.factory.ts';
+export type * from '../modules/blog-posts/blog-posts.types.ts';
+export * from '../modules/blog-posts/blog-posts.utils.ts';
+export * from '../modules/blog-tags/blog-tags.factory.ts';
+export type * from '../modules/blog-tags/blog-tags.types.ts';
+export * from '../modules/blog-tags/blog-tags.utils.ts';
 export * from '../modules/code-embeddings/code-embeddings.factory.ts';
 export * from '../modules/code-index-snapshots/code-index-snapshots.factory.ts';
 export * from '../modules/daily-stats/daily-stats.factory.ts';

@@ -7,9 +7,6 @@ import { AgentAccountsModule } from './modules/agent-accounts/agent-accounts.mod
 import { AgentConversationsModule } from './modules/agent-conversations/agent-conversations.module.ts';
 import { AgentTokenUsageModule } from './modules/agent-token-usage/agent-token-usage.module.ts';
 import { AgentTrajectoriesModule } from './modules/agent-trajectories/agent-trajectories.module.ts';
-import { BlogAuthorsModule } from './modules/blog-authors/blog-authors.module.ts';
-import { BlogPostsModule } from './modules/blog-posts/blog-posts.module.ts';
-import { BlogTagsModule } from './modules/blog-tags/blog-tags.module.ts';
 import { EvalDatasetsModule } from './modules/eval-datasets/eval-datasets.module.ts';
 import { EvalHumanLabelsModule } from './modules/eval-human-labels/eval-human-labels.module.ts';
 import { EvalJudgeCalibrationsModule } from './modules/eval-judge-calibrations/eval-judge-calibrations.module.ts';
@@ -46,9 +43,6 @@ import { getTypeOrmOptions } from './nestjs-repositories.utils.ts';
     AgentConversationsModule,
     AgentTokenUsageModule,
     AgentTrajectoriesModule,
-    BlogAuthorsModule,
-    BlogPostsModule,
-    BlogTagsModule,
     CustomPromptsModule,
     EvalDatasetsModule,
     EvalHumanLabelsModule,
@@ -91,9 +85,6 @@ import { getTypeOrmOptions } from './nestjs-repositories.utils.ts';
     AgentConversationsModule,
     AgentTokenUsageModule,
     AgentTrajectoriesModule,
-    BlogAuthorsModule,
-    BlogPostsModule,
-    BlogTagsModule,
     CustomPromptsModule,
     EvalDatasetsModule,
     EvalHumanLabelsModule,

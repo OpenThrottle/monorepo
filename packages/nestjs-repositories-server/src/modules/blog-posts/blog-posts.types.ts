@@ -1,12 +1,41 @@
+import type { CreateModelInput } from '@openthrottle/nestjs-postgres';
+import type { BaseRepositoryMock } from '@openthrottle/nestjs-postgres/testing';
+import type { Mock } from 'vitest';
+
 import type { BlogPost } from './blog-post.entity.ts';
 import type { BLOG_POST_STATUS } from './blog-posts.constants.ts';
+import type { BlogPostsRepository } from './blog-posts.repository.ts';
 import type { BlogPostState } from './visibility/visibility.types.ts';
 
 /** @public */
 export type BlogPostStatus =
   (typeof BLOG_POST_STATUS)[keyof typeof BLOG_POST_STATUS];
 /**
- * Input for {@link BlogPostsService.findPublished}.
+ * Scalar/column fields of {@link BlogPost} (no relations).
+ * @public
+ */
+export type BlogPostData = Pick<
+  BlogPost,
+  | 'authorId'
+  | 'bodyMarkdown'
+  | 'coverImageAlt'
+  | 'coverImageUrl'
+  | 'createdAt'
+  | 'deletedAt'
+  | 'excerpt'
+  | 'id'
+  | 'lastEditedBy'
+  | 'publishedAt'
+  | 'seoDescription'
+  | 'seoTitle'
+  | 'slug'
+  | 'status'
+  | 'title'
+  | 'updatedAt'
+>;
+
+/**
+ * Input for {@link BlogPostsRepository.findPublished}.
  * @public
  */
 export interface FindPublishedBlogPostsInput {
@@ -31,8 +60,8 @@ export interface BlogPostPage {
 }
 
 /**
- * Input for {@link BlogPostsService.createPost}. Posts are always created as DRAFT; go live
- * with {@link BlogPostsService.publishPost}.
+ * Input for {@link BlogPostsRepository.createPost}. Posts are always created as DRAFT; go live
+ * with {@link BlogPostsRepository.publishPost}.
  * @public
  */
 export interface BlogPostDraftInput {
@@ -49,7 +78,7 @@ export interface BlogPostDraftInput {
 }
 
 /**
- * Partial update for {@link BlogPostsService.updatePost}. A property that is `undefined` (or
+ * Partial update for {@link BlogPostsRepository.updatePost}. A property that is `undefined` (or
  * omitted) is left unchanged; `null` clears a nullable column. Status and `published_at` are
  * not patchable — use the publish / unpublish / archive transitions.
  * @public
@@ -67,7 +96,7 @@ export interface BlogPostPatch {
 }
 
 /**
- * Input for {@link BlogPostsService.findAdminPosts}.
+ * Input for {@link BlogPostsRepository.findAdminPosts}.
  * @public
  */
 export interface FindAdminBlogPostsInput {
@@ -82,8 +111,32 @@ export interface FindAdminBlogPostsInput {
 }
 
 /**
- * Lookup for {@link BlogPostsService.findAdminPost}: by id or by slug.
+ * Lookup for {@link BlogPostsRepository.findAdminPost}: by id or by slug.
  * @public
  */
 export type FindAdminBlogPostInput =
   { readonly id: string } | { readonly slug: string };
+
+/**
+ * @description A {@link BlogPostsRepository} mock: every inherited `BaseRepository` method
+ * plus the blog post ones.
+ * @public
+ */
+export interface BlogPostsRepositoryMock extends BaseRepositoryMock<
+  BlogPost,
+  CreateModelInput<BlogPost>
+> {
+  readonly archivePost: Mock<BlogPostsRepository['archivePost']>;
+  readonly createPost: Mock<BlogPostsRepository['createPost']>;
+  readonly findAdminPost: Mock<BlogPostsRepository['findAdminPost']>;
+  readonly findAdminPosts: Mock<BlogPostsRepository['findAdminPosts']>;
+  readonly findPublished: Mock<BlogPostsRepository['findPublished']>;
+  readonly findPublishedBySlug: Mock<
+    BlogPostsRepository['findPublishedBySlug']
+  >;
+  readonly findStatusById: Mock<BlogPostsRepository['findStatusById']>;
+  readonly publishPost: Mock<BlogPostsRepository['publishPost']>;
+  readonly setPostTags: Mock<BlogPostsRepository['setPostTags']>;
+  readonly unpublishPost: Mock<BlogPostsRepository['unpublishPost']>;
+  readonly updatePost: Mock<BlogPostsRepository['updatePost']>;
+}

@@ -1,19 +1,20 @@
 /**
- * @description TypeORM entity for OpenThrottle blog_posts table. Matches databases/openthrottle/migrations (131, 133).
- * Public visibility (`status = 'PUBLISHED' AND published_at <= now()`) is NOT encoded here —
- * it lives once, in `applyBlogPostVisibility` (blog-post-visibility.ts).
+ * @description TypeORM entity for the openthrottle `blog_posts` table. Extends `BaseModel`, so a
+ * delete is a soft delete and a soft-deleted post is never publicly visible. Matches
+ * databases/openthrottle/migrations (131, 133, 172). Public visibility
+ * (`status = 'PUBLISHED' AND published_at <= now()` and live) is NOT encoded here: it lives
+ * once, in `applyBlogPostVisibility` (visibility/visibility.utils.ts).
+ * @public
  */
 
+import { BaseModel } from '@openthrottle/nestjs-postgres';
 import {
   Column,
-  CreateDateColumn,
   Entity,
   JoinColumn,
   JoinTable,
   ManyToMany,
   ManyToOne,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
 } from 'typeorm';
 
 import type { BlogAuthor } from '../blog-authors/blog-author.entity.ts';
@@ -21,35 +22,8 @@ import type { BlogTag } from '../blog-tags/blog-tag.entity.ts';
 import { BLOG_POST_STATUS } from './blog-posts.constants.ts';
 import type { BlogPostStatus } from './blog-posts.types.ts';
 
-/**
- * Scalar/column fields of BlogPost (no relations).
- * @public
- */
-export type BlogPostData = Pick<
-  BlogPost,
-  | 'authorId'
-  | 'bodyMarkdown'
-  | 'coverImageAlt'
-  | 'coverImageUrl'
-  | 'createdAt'
-  | 'excerpt'
-  | 'id'
-  | 'lastEditedBy'
-  | 'publishedAt'
-  | 'seoDescription'
-  | 'seoTitle'
-  | 'slug'
-  | 'status'
-  | 'title'
-  | 'updatedAt'
->;
-
-/** @public */
 @Entity('blog_posts')
-export class BlogPost {
-  @PrimaryGeneratedColumn('uuid')
-  id!: string;
-
+export class BlogPost extends BaseModel {
   @Column({ name: 'slug', type: 'text' })
   slug!: string;
 
@@ -94,12 +68,6 @@ export class BlogPost {
 
   @Column({ name: 'author_id', nullable: true, type: 'uuid' })
   authorId!: string | null;
-
-  @CreateDateColumn({ name: 'created_at', type: 'timestamp with time zone' })
-  createdAt!: Date;
-
-  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp with time zone' })
-  updatedAt!: Date;
 
   @ManyToOne('BlogAuthor', { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'author_id' })

@@ -26,7 +26,7 @@ export interface BlogWriteNotFound {
 }
 
 /**
- * Another post already uses `slug` (unique index `idx_blog_posts_slug`).
+ * Another post already uses `slug` (unique index `idx_blog_posts_slug_live`, over live posts).
  * @public
  */
 export interface BlogWriteSlugConflict {

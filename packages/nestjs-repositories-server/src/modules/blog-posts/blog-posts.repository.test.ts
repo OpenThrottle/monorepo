@@ -2,7 +2,6 @@ import { createMock } from '@golevelup/ts-vitest';
 import { BadRequestException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
   Repository,
   SelectQueryBuilder,
@@ -18,7 +17,7 @@ import { blogTagsFactory } from '../blog-tags/blog-tags.factory.ts';
 import { BlogPost } from './blog-post.entity.ts';
 import { BLOG_POST_STATUS } from './blog-posts.constants.ts';
 import { blogPostsFactory } from './blog-posts.factory.ts';
-import { BlogPostsService } from './blog-posts.service.ts';
+import { BlogPostsRepository } from './blog-posts.repository.ts';
 import type { BlogPostStatus } from './blog-posts.types.ts';
 import { BLOG_POST_STATE } from './visibility/visibility.constants.ts';
 import {
@@ -33,6 +32,7 @@ const FUTURE = '2026-12-01T00:00:00.000000Z';
 
 interface FakeRow {
   readonly id: string;
+  readonly isDeleted: boolean;
   readonly publishedAt: string | null;
   readonly slug: string;
   readonly status: BlogPostStatus;
@@ -49,8 +49,9 @@ const row = (
   status: BlogPostStatus,
   publishedAt: string | null,
   tagSlugs: readonly string[] = [],
+  isDeleted = false,
 ): FakeRow => {
-  return { id, publishedAt, slug: `slug-${id}`, status, tagSlugs };
+  return { id, isDeleted, publishedAt, slug: `slug-${id}`, status, tagSlugs };
 };
 
 /**
@@ -62,6 +63,7 @@ const matches = (
   candidate: FakeRow,
   { params = {}, sql }: Condition,
 ): boolean => {
+  if (sql === 'post.deletedAt IS NULL') return !candidate.isDeleted;
   if (sql === 'post.status = :blogPostPublishedStatus') {
     return candidate.status === params.blogPostPublishedStatus;
   }
@@ -136,8 +138,8 @@ const fakeQueryBuilder = (getRows: () => readonly FakeRow[]) => {
   return builder;
 };
 
-describe('BlogPostsService', () => {
-  type GetRepository = ReturnType<BlogPostsService['getRepository']>;
+describe('BlogPostsRepository', () => {
+  type GetRepository = Repository<BlogPost>;
 
   // Ties on purpose: three PUBLISHED rows share one published_at.
   const tied = PAST;
@@ -146,6 +148,7 @@ describe('BlogPostsService', () => {
     row('00000000-0000-4000-8000-00000000000b', 'DRAFT', PAST),
     row('00000000-0000-4000-8000-00000000000c', 'ARCHIVED', PAST),
     row('00000000-0000-4000-8000-00000000000d', 'PUBLISHED', FUTURE),
+    row('00000000-0000-4000-8000-00000000000e', 'PUBLISHED', PAST, [], true),
     row('00000000-0000-4000-8000-000000000001', 'PUBLISHED', tied, ['ops']),
     row('00000000-0000-4000-8000-000000000002', 'PUBLISHED', tied),
     row('00000000-0000-4000-8000-000000000003', 'PUBLISHED', tied, ['ops']),
@@ -170,7 +173,7 @@ describe('BlogPostsService', () => {
     ),
   );
   const find = vi.fn();
-  let service: BlogPostsService;
+  let service: BlogPostsRepository;
   let activeRows: readonly FakeRow[] = rows;
   let queryBuilder: ReturnType<typeof fakeQueryBuilder>;
 
@@ -182,13 +185,13 @@ describe('BlogPostsService', () => {
 
     const app = await Test.createTestingModule({
       providers: [
-        BlogPostsService,
-        { provide: LoggerService, useValue: createMock<LoggerService>() },
+        BlogPostsRepository,
         {
           provide: getRepositoryToken(BlogPost),
           useValue: createMock<GetRepository>({
             createQueryBuilder: vi.fn().mockReturnValue(queryBuilder),
             find,
+            target: BlogPost,
           }),
         },
         { provide: getRepositoryToken(BlogAuthor), useValue: createMock() },
@@ -196,7 +199,7 @@ describe('BlogPostsService', () => {
       ],
     }).compile();
 
-    service = app.get<BlogPostsService>(BlogPostsService);
+    service = app.get<BlogPostsRepository>(BlogPostsRepository);
   });
 
   describe('findPublished visibility', () => {
@@ -212,6 +215,7 @@ describe('BlogPostsService', () => {
       ['a draft with a past date', '00000000-0000-4000-8000-00000000000b'],
       ['an archived post', '00000000-0000-4000-8000-00000000000c'],
       ['a future-scheduled post', '00000000-0000-4000-8000-00000000000d'],
+      ['a soft-deleted published post', '00000000-0000-4000-8000-00000000000e'],
     ])('never returns %s', async (_label, id) => {
       const page = await service.findPublished({ first: 50 });
 
@@ -282,6 +286,16 @@ describe('BlogPostsService', () => {
   });
 
   describe('findPublished tag filter', () => {
+    it('keeps soft-deleted tags and posts out of the EXISTS sub-query', async () => {
+      await service.findPublished({ first: 50, tagSlug: 'ops' });
+
+      const subQuery = queryBuilder.subQuery.mock.results[0]?.value;
+      expect(subQuery?.andWhere).toHaveBeenCalledWith('tag.deletedAt IS NULL');
+      expect(subQuery?.andWhere).toHaveBeenCalledWith(
+        'taggedPost.deletedAt IS NULL',
+      );
+    });
+
     it('keeps only posts carrying the tag', async () => {
       const page = await service.findPublished({ first: 50, tagSlug: 'ops' });
 
@@ -315,6 +329,7 @@ describe('BlogPostsService', () => {
       ['draft', '00000000-0000-4000-8000-00000000000b'],
       ['archived', '00000000-0000-4000-8000-00000000000c'],
       ['future-scheduled', '00000000-0000-4000-8000-00000000000d'],
+      ['soft-deleted', '00000000-0000-4000-8000-00000000000e'],
     ])('returns null for a %s post', async (_label, id) => {
       expect(await service.findPublishedBySlug(`slug-${id}`)).toBeNull();
     });
@@ -325,7 +340,7 @@ describe('BlogPostsService', () => {
   });
 });
 
-describe('BlogPostsService admin listing', () => {
+describe('BlogPostsRepository admin listing', () => {
   /** The "database clock" the fake evaluates `NOW()` against. */
   const NOW = '2026-10-11T00:00:00.000000Z';
   const PAST = '2026-09-01T00:00:00.000000Z';
@@ -469,8 +484,8 @@ describe('BlogPostsService admin listing', () => {
     return builder;
   };
 
-  describe('BlogPostsService.findAdminPosts', () => {
-    type GetRepository = ReturnType<BlogPostsService['getRepository']>;
+  describe('BlogPostsRepository.findAdminPosts', () => {
+    type GetRepository = Repository<BlogPost>;
 
     // Ties on purpose: rows 4-6 share one updated_at.
     const TIED = '2026-10-05T10:00:00.000001Z';
@@ -513,7 +528,7 @@ describe('BlogPostsService admin listing', () => {
     );
 
     const find = vi.fn();
-    let service: BlogPostsService;
+    let service: BlogPostsRepository;
     let queryBuilder: ReturnType<typeof fakeQueryBuilder>;
 
     beforeEach(async () => {
@@ -523,13 +538,13 @@ describe('BlogPostsService admin listing', () => {
 
       const app = await Test.createTestingModule({
         providers: [
-          BlogPostsService,
-          { provide: LoggerService, useValue: createMock<LoggerService>() },
+          BlogPostsRepository,
           {
             provide: getRepositoryToken(BlogPost),
             useValue: createMock<GetRepository>({
               createQueryBuilder: vi.fn().mockReturnValue(queryBuilder),
               find,
+              target: BlogPost,
             }),
           },
           { provide: getRepositoryToken(BlogAuthor), useValue: createMock() },
@@ -537,7 +552,7 @@ describe('BlogPostsService admin listing', () => {
         ],
       }).compile();
 
-      service = app.get<BlogPostsService>(BlogPostsService);
+      service = app.get<BlogPostsRepository>(BlogPostsRepository);
     });
 
     const ids = (page: { items: readonly BlogPost[] }): string[] => {
@@ -733,7 +748,7 @@ describe('BlogPostsService admin listing', () => {
   });
 });
 
-describe('BlogPostsService write path', () => {
+describe('BlogPostsRepository write path', () => {
   const NOW = new Date('2026-10-11T12:00:00.000Z');
   const FUTURE = new Date('2026-12-25T09:00:00.000Z');
   const PAST = new Date('2026-09-01T00:00:00.000Z');
@@ -761,8 +776,10 @@ describe('BlogPostsService write path', () => {
     );
   };
 
-  describe('BlogPostsService write path', () => {
-    const postRepository = createMock<Repository<BlogPost>>();
+  describe('BlogPostsRepository write path', () => {
+    const postRepository = createMock<Repository<BlogPost>>({
+      target: BlogPost,
+    });
     const set = vi.fn();
     const where = vi.fn();
     const andWhere = vi.fn();
@@ -778,7 +795,7 @@ describe('BlogPostsService write path', () => {
     });
     const authorRepository = createMock<Repository<BlogAuthor>>();
     const tagRepository = createMock<Repository<BlogTag>>();
-    let service: BlogPostsService;
+    let service: BlogPostsRepository;
 
     /** `findOne` (the reload after a save) returns whatever `post` currently holds. */
     const reloadReturns = (post: BlogPost): void => {
@@ -801,8 +818,7 @@ describe('BlogPostsService write path', () => {
 
       const app = await Test.createTestingModule({
         providers: [
-          BlogPostsService,
-          { provide: LoggerService, useValue: createMock<LoggerService>() },
+          BlogPostsRepository,
           { provide: getRepositoryToken(BlogPost), useValue: postRepository },
           {
             provide: getRepositoryToken(BlogAuthor),
@@ -812,7 +828,7 @@ describe('BlogPostsService write path', () => {
         ],
       }).compile();
 
-      service = app.get<BlogPostsService>(BlogPostsService);
+      service = app.get<BlogPostsRepository>(BlogPostsRepository);
     });
 
     afterEach(() => {
@@ -1031,6 +1047,7 @@ describe('BlogPostsService write path', () => {
           title: 'New title',
         });
         expect(where).toHaveBeenCalledWith('id = :id', { id: post.id });
+        expect(andWhere).toHaveBeenCalledWith('deleted_at IS NULL');
       });
 
       it('never writes status or published_at', async () => {
@@ -1222,7 +1239,10 @@ describe('BlogPostsService write path', () => {
 
           await service.updatePost(post.id, { title: 'x' }, EDITOR, READ_AT);
 
-          expect(andWhere).toHaveBeenCalledExactlyOnceWith(
+          expect(andWhere).toHaveBeenCalledTimes(2);
+          expect(andWhere).toHaveBeenNthCalledWith(1, 'deleted_at IS NULL');
+          expect(andWhere).toHaveBeenNthCalledWith(
+            2,
             "date_trunc('milliseconds', updated_at) = CAST(:expectedUpdatedAt AS timestamptz)",
             { expectedUpdatedAt: READ_AT },
           );
@@ -1236,7 +1256,10 @@ describe('BlogPostsService write path', () => {
           await service.updatePost(post.id, { title: 'x' }, EDITOR);
           await service.updatePost(post.id, { title: 'x' }, EDITOR, null);
 
-          expect(andWhere).not.toHaveBeenCalled();
+          expect(andWhere.mock.calls).toEqual([
+            ['deleted_at IS NULL'],
+            ['deleted_at IS NULL'],
+          ]);
         });
 
         it('returns stale-write with the current updatedAt when no row matched', async () => {

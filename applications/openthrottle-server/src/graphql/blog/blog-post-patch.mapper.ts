@@ -5,7 +5,7 @@
  */
 
 import { BadRequestException } from '@nestjs/common';
-import type { BlogPostPatch } from '@openthrottle/nestjs-repositories';
+import type { BlogPostPatch } from '@openthrottle/nestjs-repositories-server';
 
 import type { UpdateBlogPostInput } from './blog-admin.input.ts';
 

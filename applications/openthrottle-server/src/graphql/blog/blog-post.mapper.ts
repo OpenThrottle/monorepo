@@ -8,7 +8,7 @@ import type {
   BlogAuthor,
   BlogPost,
   BlogTag,
-} from '@openthrottle/nestjs-repositories';
+} from '@openthrottle/nestjs-repositories-server';
 
 import { readingTimeMinutes } from './blog.utils.ts';
 import type { BlogAuthorObject } from './blog-author.object.ts';

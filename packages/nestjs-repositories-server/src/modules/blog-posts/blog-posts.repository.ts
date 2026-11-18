@@ -1,9 +1,12 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { LoggerService } from '@openthrottle/nestjs-modules';
-import { toLikeContainsPattern } from '@openthrottle/nestjs-postgres';
-import { resolveListPagination } from '@openthrottle/nestjs-postgres';
-import { isUniqueViolation } from '@openthrottle/nestjs-postgres';
+import type { CreateModelInput } from '@openthrottle/nestjs-postgres';
+import {
+  BaseRepository,
+  isUniqueViolation,
+  resolveListPagination,
+  toLikeContainsPattern,
+} from '@openthrottle/nestjs-postgres';
 import { In, Repository } from 'typeorm';
 
 import { BlogAuthor } from '../blog-authors/blog-author.entity.ts';
@@ -98,28 +101,31 @@ const CURSOR_UPDATED_AT_SQL = cursorTimestampSql('post.updatedAt');
  */
 const UPDATED_AT_MATCHES_EXPECTED_SQL = `date_trunc('milliseconds', updated_at) = CAST(:expectedUpdatedAt AS timestamptz)`;
 
-/** @public */
+/**
+ * @description Data access for the openthrottle `blog_posts` table on the default connection:
+ * the `BaseRepository` CRUD plus the public feed, the admin list and the draft / publish /
+ * archive write path. A delete is a soft delete: a soft-deleted post is never publicly visible,
+ * never found by an admin read and never writable, and its slug is free to reuse
+ * (`idx_blog_posts_slug_live`). Author and tag slugs are resolved through the TypeORM
+ * repositories of those entities, registered by `BlogPostsModule`.
+ * @public
+ */
 @Injectable()
-export class BlogPostsService {
+export class BlogPostsRepository extends BaseRepository<
+  BlogPost,
+  CreateModelInput<BlogPost>
+> {
+  protected readonly tableName = 'blog_posts';
+
   constructor(
-    private readonly logger: LoggerService,
     @InjectRepository(BlogPost)
-    private readonly blogPostRepository: Repository<BlogPost>,
+    repository: Repository<BlogPost>,
     @InjectRepository(BlogAuthor)
     private readonly blogAuthorRepository: Repository<BlogAuthor>,
     @InjectRepository(BlogTag)
     private readonly blogTagRepository: Repository<BlogTag>,
   ) {
-    this.logger.debug('🧩 blog-posts 🧩');
-  }
-
-  /**
-   * @description Returns the TypeORM repository for blog posts. Use for admin/CRUD
-   * paths only — public reads must go through {@link findPublished} /
-   * {@link findPublishedBySlug}, which apply the visibility rule.
-   */
-  getRepository(): Repository<BlogPost> {
-    return this.blogPostRepository;
+    super(repository);
   }
 
   /**
@@ -128,7 +134,7 @@ export class BlogPostsService {
    * values. Runs two queries regardless of page size: one for the page's keys (fetching
    * `first + 1` to derive `hasNextPage`), one to hydrate `author` and `tags`.
    * The tag filter is an EXISTS, so each returned post still carries all its tags.
-   * @throws BadRequestException when `after` is not a cursor this service produced.
+   * @throws BadRequestException when `after` is not a cursor this repository produced.
    * @public
    */
   async findPublished(
@@ -142,7 +148,7 @@ export class BlogPostsService {
     }
 
     const query = applyBlogPostVisibility(
-      this.blogPostRepository
+      this.repository
         .createQueryBuilder('post')
         .select('post.id', 'id')
         .addSelect(CURSOR_PUBLISHED_AT_SQL, 'cursorPublishedAt'),
@@ -156,6 +162,8 @@ export class BlogPostsService {
         .from(BlogTag, 'tag')
         .innerJoin('tag.posts', 'taggedPost')
         .where('taggedPost.id = post.id')
+        .andWhere('tag.deletedAt IS NULL')
+        .andWhere('taggedPost.deletedAt IS NULL')
         .andWhere('tag.slug = :tagSlug')
         .getQuery();
       query.andWhere(`EXISTS ${tagged}`, { tagSlug: input.tagSlug });
@@ -197,7 +205,7 @@ export class BlogPostsService {
    */
   async findPublishedBySlug(slug: string): Promise<BlogPost | null> {
     return applyBlogPostVisibility(
-      this.blogPostRepository
+      this.repository
         .createQueryBuilder('post')
         .leftJoinAndSelect('post.author', 'author')
         .leftJoinAndSelect('post.tags', 'tag')
@@ -215,7 +223,7 @@ export class BlogPostsService {
    * two-query shape as {@link findPublished}. `states` is translated to SQL by
    * {@link applyBlogPostStateFilter}; `search` is a case-insensitive substring match on title OR
    * slug (LIKE wildcards in the term are matched literally).
-   * @throws BadRequestException when `after` is not a cursor this service produced.
+   * @throws BadRequestException when `after` is not a cursor this repository produced.
    * @public
    */
   async findAdminPosts(input: FindAdminBlogPostsInput): Promise<BlogPostPage> {
@@ -227,7 +235,7 @@ export class BlogPostsService {
     }
 
     const query = applyBlogPostStateFilter(
-      this.blogPostRepository
+      this.repository
         .createQueryBuilder('post')
         .select('post.id', 'id')
         .addSelect(CURSOR_UPDATED_AT_SQL, 'cursorUpdatedAt'),
@@ -277,7 +285,7 @@ export class BlogPostsService {
    * @public
    */
   async findAdminPost(input: FindAdminBlogPostInput): Promise<BlogPost | null> {
-    return this.blogPostRepository.findOne({
+    return this.repository.findOne({
       order: { tags: { name: 'ASC' } },
       relations: { author: true, tags: true },
       where: 'id' in input ? { id: input.id } : { slug: input.slug },
@@ -293,7 +301,7 @@ export class BlogPostsService {
    * @public
    */
   async findStatusById(id: string): Promise<BlogPostStatus | null> {
-    const post = await this.blogPostRepository.findOne({
+    const post = await this.repository.findOne({
       select: { id: true, status: true },
       where: { id },
     });
@@ -304,7 +312,7 @@ export class BlogPostsService {
    * @description Creates a DRAFT post. Admin write path: the public visibility rule is not
    * applied. The slug is validated against the DB CHECK shape first, so a malformed slug is a
    * `BadRequestException` rather than a constraint violation; a slug another post already uses
-   * (unique index `idx_blog_posts_slug`, including a race with a concurrent insert) comes back
+   * (unique index `idx_blog_posts_slug_live`, including a race with a concurrent insert) comes back
    * as a `slug-conflict` result, never a thrown 23505. A cover URL without cover alt text is a
    * `cover-alt-required` result and nothing is written.
    * @param editedBy - Caller identity stored as `last_edited_by` (user display name or service
@@ -324,8 +332,8 @@ export class BlogPostsService {
     if (author.kind !== BLOG_WRITE_RESULT_KIND.OK) return author;
 
     try {
-      const saved = await this.blogPostRepository.save(
-        this.blogPostRepository.create({
+      const saved = await this.repository.save(
+        this.repository.create({
           authorId: author.value,
           bodyMarkdown: input.bodyMarkdown,
           coverImageAlt: input.coverImageAlt ?? null,
@@ -370,7 +378,7 @@ export class BlogPostsService {
     if (patch.slug !== undefined) assertBlogSlug(patch.slug);
     if (patch.title !== undefined) assertNotBlank(patch.title, 'title');
 
-    const post = await this.blogPostRepository.findOneBy({ id });
+    const post = await this.repository.findOneBy({ id });
     if (post == null) return blogWriteNotFound(BLOG_WRITE_ENTITY.POST, id);
 
     const isAltUnpatched = patch.coverImageAlt === undefined;
@@ -425,7 +433,7 @@ export class BlogPostsService {
     editedBy: string | null,
     publishedAt?: Date | null,
   ): Promise<BlogPostWriteResult> {
-    const post = await this.blogPostRepository.findOneBy({ id });
+    const post = await this.repository.findOneBy({ id });
     if (post == null) return blogWriteNotFound(BLOG_WRITE_ENTITY.POST, id);
 
     const now = new Date();
@@ -452,7 +460,7 @@ export class BlogPostsService {
     id: string,
     editedBy: string | null,
   ): Promise<BlogPostWriteResult> {
-    const post = await this.blogPostRepository.findOneBy({ id });
+    const post = await this.repository.findOneBy({ id });
     if (post == null) return blogWriteNotFound(BLOG_WRITE_ENTITY.POST, id);
 
     return this.writePost(
@@ -473,7 +481,7 @@ export class BlogPostsService {
     id: string,
     editedBy: string | null,
   ): Promise<BlogPostWriteResult> {
-    const post = await this.blogPostRepository.findOneBy({ id });
+    const post = await this.repository.findOneBy({ id });
     if (post == null) return blogWriteNotFound(BLOG_WRITE_ENTITY.POST, id);
 
     return this.writePost(id, { status: BLOG_POST_STATUS.ARCHIVED }, editedBy, {
@@ -500,7 +508,7 @@ export class BlogPostsService {
     const slugs = [...new Set(tagSlugs)];
     for (const slug of slugs) assertBlogSlug(slug, 'tag slug');
 
-    const post = await this.blogPostRepository.findOne({
+    const post = await this.repository.findOne({
       relations: { tags: true },
       where: { id: postId },
     });
@@ -515,7 +523,7 @@ export class BlogPostsService {
     }
 
     post.tags = tags;
-    await this.blogPostRepository.save(post);
+    await this.repository.save(post);
     return this.writePost(postId, {}, editedBy, {
       expectedUpdatedAt: null,
       slug: post.slug,
@@ -550,11 +558,12 @@ export class BlogPostsService {
     editedBy: string | null,
     options: { readonly expectedUpdatedAt: Date | null; readonly slug: string },
   ): Promise<BlogPostWriteResult> {
-    const update = this.blogPostRepository
+    const update = this.repository
       .createQueryBuilder()
       .update(BlogPost)
       .set({ ...changes, lastEditedBy: editedBy })
-      .where('id = :id', { id });
+      .where('id = :id', { id })
+      .andWhere('deleted_at IS NULL');
     if (options.expectedUpdatedAt != null) {
       update.andWhere(UPDATED_AT_MATCHES_EXPECTED_SQL, {
         expectedUpdatedAt: options.expectedUpdatedAt,
@@ -569,7 +578,7 @@ export class BlogPostsService {
       throw error;
     }
 
-    const current = await this.blogPostRepository.findOneBy({ id });
+    const current = await this.repository.findOneBy({ id });
     if (current == null) {
       return blogWriteNotFound(BLOG_WRITE_ENTITY.POST, id);
     }
@@ -586,7 +595,7 @@ export class BlogPostsService {
 
   /** Posts for `ids` with author and tags, in the order of `ids`. */
   private async hydratePosts(ids: readonly string[]): Promise<BlogPost[]> {
-    const posts = await this.blogPostRepository.find({
+    const posts = await this.repository.find({
       order: { tags: { name: 'ASC' } },
       relations: { author: true, tags: true },
       where: { id: In([...ids]) },
@@ -596,7 +605,7 @@ export class BlogPostsService {
   }
 
   private async reloadPost(id: string): Promise<BlogPostWriteResult> {
-    const post = await this.blogPostRepository.findOne({
+    const post = await this.repository.findOne({
       order: { tags: { name: 'ASC' } },
       relations: { author: true, tags: true },
       where: { id },
