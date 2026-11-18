@@ -4,7 +4,8 @@
 -- `pnpm run database:seed:blog` (scripts/openthrottle-database-seed-blog.ts), which refuses
 -- NODE_ENV=production and any non-local Postgres host.
 --
--- Idempotent: every row is keyed by its unique slug and upserted, all timestamps are FIXED
+-- Idempotent: every row is keyed by its slug (unique among live rows since migration 172,
+-- so each ON CONFLICT names the WHERE deleted_at IS NULL predicate) and upserted, all timestamps are FIXED
 -- absolute values (never now()-relative), and each DO UPDATE is guarded by IS DISTINCT FROM,
 -- so a re-run changes no row (updated_at included). Visibility states covered
 -- (public = status PUBLISHED AND published_at <= now()):
@@ -32,7 +33,7 @@ VALUES
     'Sample guest author for the local development seed. Not a real person.',
     'https://placehold.co/96x96/png?text=SC'
   )
-ON CONFLICT (slug) DO UPDATE
+ON CONFLICT (slug) WHERE deleted_at IS NULL DO UPDATE
 SET
   display_name = EXCLUDED.display_name,
   bio = EXCLUDED.bio,
@@ -49,7 +50,7 @@ VALUES
   ('plans', 'Plans', 'How OpenThrottle plans and tasks capture work before an agent touches code.'),
   ('agent-loops', 'Agent loops', 'Running an agent a task at a time, from plan to pull request.'),
   ('release-notes', 'Release notes', 'What shipped in OpenThrottle. Sample tag carried only by non-public posts.')
-ON CONFLICT (slug) DO UPDATE
+ON CONFLICT (slug) WHERE deleted_at IS NULL DO UPDATE
 SET
   name = EXCLUDED.name,
   description = EXCLUDED.description
@@ -134,7 +135,7 @@ $md$,
     'A tour of the OpenThrottle workflow from plan to tasks to pull request. Sample content.',
     'PUBLISHED',
     TIMESTAMPTZ '2026-09-01 10:00:00+00',
-    (SELECT id FROM blog_authors WHERE slug = 'openthrottle-team')
+    (SELECT id FROM blog_authors WHERE slug = 'openthrottle-team' AND deleted_at IS NULL)
   ),
   -- 2. PUBLISHED, shares published_at with #3 (cursor tie-break).
   (
@@ -164,7 +165,7 @@ $md$,
     NULL,
     'PUBLISHED',
     TIMESTAMPTZ '2026-09-15 09:00:00+00',
-    (SELECT id FROM blog_authors WHERE slug = 'openthrottle-team')
+    (SELECT id FROM blog_authors WHERE slug = 'openthrottle-team' AND deleted_at IS NULL)
   ),
   -- 3. PUBLISHED, same published_at as #2.
   (
@@ -190,7 +191,7 @@ $md$,
     NULL,
     'PUBLISHED',
     TIMESTAMPTZ '2026-09-15 09:00:00+00',
-    (SELECT id FROM blog_authors WHERE slug = 'sample-contributor')
+    (SELECT id FROM blog_authors WHERE slug = 'sample-contributor' AND deleted_at IS NULL)
   ),
   -- 4. DRAFT: never public, no published_at.
   (
@@ -208,7 +209,7 @@ $md$,
     NULL,
     'DRAFT',
     NULL,
-    (SELECT id FROM blog_authors WHERE slug = 'openthrottle-team')
+    (SELECT id FROM blog_authors WHERE slug = 'openthrottle-team' AND deleted_at IS NULL)
   ),
   -- 5. ARCHIVED: was published, now withdrawn; never public.
   (
@@ -226,7 +227,7 @@ $md$,
     NULL,
     'ARCHIVED',
     TIMESTAMPTZ '2026-08-10 12:00:00+00',
-    (SELECT id FROM blog_authors WHERE slug = 'sample-contributor')
+    (SELECT id FROM blog_authors WHERE slug = 'sample-contributor' AND deleted_at IS NULL)
   ),
   -- 6. Future-scheduled: PUBLISHED but published_at far in the future; not public yet.
   (
@@ -244,9 +245,9 @@ $md$,
     NULL,
     'PUBLISHED',
     TIMESTAMPTZ '2099-01-01 00:00:00+00',
-    (SELECT id FROM blog_authors WHERE slug = 'openthrottle-team')
+    (SELECT id FROM blog_authors WHERE slug = 'openthrottle-team' AND deleted_at IS NULL)
   )
-ON CONFLICT (slug) DO UPDATE
+ON CONFLICT (slug) WHERE deleted_at IS NULL DO UPDATE
 SET
   title = EXCLUDED.title,
   excerpt = EXCLUDED.excerpt,
@@ -291,18 +292,19 @@ DELETE FROM blog_post_tags bpt
 USING blog_posts p
 WHERE bpt.post_id = p.id
   AND p.slug IN (SELECT post_slug FROM seed_blog_post_tags)
+  AND p.deleted_at IS NULL
   AND NOT EXISTS (
     SELECT 1
     FROM seed_blog_post_tags s
-    JOIN blog_tags t ON t.slug = s.tag_slug
+    JOIN blog_tags t ON t.slug = s.tag_slug AND t.deleted_at IS NULL
     WHERE s.post_slug = p.slug AND t.id = bpt.tag_id
   );
 
 INSERT INTO blog_post_tags (post_id, tag_id)
 SELECT p.id, t.id
 FROM seed_blog_post_tags s
-JOIN blog_posts p ON p.slug = s.post_slug
-JOIN blog_tags t ON t.slug = s.tag_slug
+JOIN blog_posts p ON p.slug = s.post_slug AND p.deleted_at IS NULL
+JOIN blog_tags t ON t.slug = s.tag_slug AND t.deleted_at IS NULL
 ON CONFLICT (post_id, tag_id) DO NOTHING;
 
 COMMIT;

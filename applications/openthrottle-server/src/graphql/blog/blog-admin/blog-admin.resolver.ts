@@ -12,7 +12,7 @@
  * a DRAFT (`updateBlogPost`, `setBlogPostTags`) also needs `blog:write`; a `blog:draft`-only
  * caller gets `BlogPostPublishPermissionRequiredError` and nothing is written. That depends on
  * the post's status, so it cannot be a static `@Permissions()` and is checked here, against the
- * same lookup the guard uses. All write logic lives in the repository services; this resolver
+ * same lookup the guard uses. All write logic lives in the repositories; this resolver
  * maps inputs and results.
  */
 
@@ -21,19 +21,21 @@ import { Args, ID, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
 import type { AuthPrincipal } from '@openthrottle/nestjs-auth';
 import { CurrentUser } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
-import type {
-  BlogPostState,
-  FindAdminBlogPostInput,
-} from '@openthrottle/nestjs-repositories';
 import {
-  BLOG_POST_STATUS,
-  BlogAuthorsService,
-  BlogPostsService,
-  BlogTagsService,
   RolesService,
   ServiceAccountsService,
   UsersService,
 } from '@openthrottle/nestjs-repositories';
+import type {
+  BlogPostState,
+  FindAdminBlogPostInput,
+} from '@openthrottle/nestjs-repositories-server';
+import {
+  BLOG_POST_STATUS,
+  BlogAuthorsRepository,
+  BlogPostsRepository,
+  BlogTagsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 
 import { GqlPermissionsGuard } from '../../../guards/gql-permissions.guard.ts';
 import {
@@ -101,9 +103,9 @@ const toAdminPostLookup = (
 @UseGuards(GqlPermissionsGuard)
 export class BlogAdminResolver {
   constructor(
-    private readonly blogAuthorsService: BlogAuthorsService,
-    private readonly blogPostsService: BlogPostsService,
-    private readonly blogTagsService: BlogTagsService,
+    private readonly blogAuthorsRepository: BlogAuthorsRepository,
+    private readonly blogPostsRepository: BlogPostsRepository,
+    private readonly blogTagsRepository: BlogTagsRepository,
     private readonly rolesService: RolesService,
     private readonly serviceAccountsService: ServiceAccountsService,
     private readonly usersService: UsersService,
@@ -123,7 +125,7 @@ export class BlogAdminResolver {
     @Args('search', { nullable: true, type: () => String })
     search: string | null | undefined,
   ): Promise<BlogAdminPostListResult> {
-    const page = await this.blogPostsService.findAdminPosts({
+    const page = await this.blogPostsRepository.findAdminPosts({
       after,
       first,
       search,
@@ -148,7 +150,7 @@ export class BlogAdminResolver {
     slug: string | null | undefined,
   ): Promise<BlogPostAdminObject | BlogPostNotFoundError> {
     const lookup = toAdminPostLookup(id, slug);
-    const post = await this.blogPostsService.findAdminPost(lookup.input);
+    const post = await this.blogPostsRepository.findAdminPost(lookup.input);
 
     return post == null
       ? blogPostNotFoundError(lookup.key)
@@ -160,7 +162,7 @@ export class BlogAdminResolver {
   })
   @Permissions(PERMISSIONS.BLOG_DRAFT)
   async blogAdminTags(): Promise<BlogTagObject[]> {
-    const tags = await this.blogTagsService.findAllTags();
+    const tags = await this.blogTagsRepository.findAllTags();
 
     return tags.map(toBlogTagObject);
   }
@@ -170,7 +172,7 @@ export class BlogAdminResolver {
   })
   @Permissions(PERMISSIONS.BLOG_DRAFT)
   async blogAdminAuthors(): Promise<BlogAuthorObject[]> {
-    const authors = await this.blogAuthorsService.findAllAuthors();
+    const authors = await this.blogAuthorsRepository.findAllAuthors();
 
     return authors.map(toBlogAuthorObject);
   }
@@ -185,7 +187,7 @@ export class BlogAdminResolver {
     @CurrentUser() principal: AuthPrincipal | undefined,
   ): Promise<CreateBlogPostOutcome> {
     return toCreateBlogPostOutcome(
-      await this.blogPostsService.createPost(
+      await this.blogPostsRepository.createPost(
         input,
         await this.editorName(principal),
       ),
@@ -206,7 +208,7 @@ export class BlogAdminResolver {
     }
 
     return toUpdateBlogPostOutcome(
-      await this.blogPostsService.updatePost(
+      await this.blogPostsRepository.updatePost(
         input.id,
         toBlogPostPatch(input),
         await this.editorName(principal),
@@ -226,7 +228,7 @@ export class BlogAdminResolver {
   ): Promise<BlogPostTransitionOutcome> {
     return toBlogPostTransitionOutcome(
       'publishBlogPost',
-      await this.blogPostsService.publishPost(
+      await this.blogPostsRepository.publishPost(
         input.id,
         await this.editorName(principal),
         input.publishedAt,
@@ -244,7 +246,7 @@ export class BlogAdminResolver {
   ): Promise<BlogPostTransitionOutcome> {
     return toBlogPostTransitionOutcome(
       'unpublishBlogPost',
-      await this.blogPostsService.unpublishPost(
+      await this.blogPostsRepository.unpublishPost(
         id,
         await this.editorName(principal),
       ),
@@ -261,7 +263,7 @@ export class BlogAdminResolver {
   ): Promise<BlogPostTransitionOutcome> {
     return toBlogPostTransitionOutcome(
       'archiveBlogPost',
-      await this.blogPostsService.archivePost(
+      await this.blogPostsRepository.archivePost(
         id,
         await this.editorName(principal),
       ),
@@ -282,7 +284,7 @@ export class BlogAdminResolver {
     }
 
     return toSetBlogPostTagsOutcome(
-      await this.blogPostsService.setPostTags(
+      await this.blogPostsRepository.setPostTags(
         input.postId,
         input.tagSlugs,
         await this.editorName(principal),
@@ -299,7 +301,7 @@ export class BlogAdminResolver {
     input: UpsertBlogAuthorInput,
   ): Promise<BlogAuthorObject> {
     return toBlogAuthorObject(
-      await this.blogAuthorsService.upsertAuthor(input),
+      await this.blogAuthorsRepository.upsertAuthor(input),
     );
   }
 
@@ -311,7 +313,7 @@ export class BlogAdminResolver {
     @Args('input', { type: () => UpsertBlogTagInput })
     input: UpsertBlogTagInput,
   ): Promise<BlogTagObject> {
-    return toBlogTagObject(await this.blogTagsService.upsertTag(input));
+    return toBlogTagObject(await this.blogTagsRepository.upsertTag(input));
   }
 
   /** Caller identity for `last_edited_by`; `null` only when there is no principal. */
@@ -340,7 +342,7 @@ export class BlogAdminResolver {
     postId: string,
     principal: AuthPrincipal | undefined,
   ): Promise<boolean> {
-    const status = await this.blogPostsService.findStatusById(postId);
+    const status = await this.blogPostsRepository.findStatusById(postId);
     if (status == null || status === BLOG_POST_STATUS.DRAFT) return false;
 
     if (principal == null) return true;

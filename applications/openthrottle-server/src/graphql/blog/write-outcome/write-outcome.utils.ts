@@ -9,11 +9,11 @@ import { InternalServerErrorException } from '@nestjs/common';
 import type {
   BlogPostWriteResult,
   BlogWriteNotFound,
-} from '@openthrottle/nestjs-repositories';
+} from '@openthrottle/nestjs-repositories-server';
 import {
   BLOG_WRITE_ENTITY,
   BLOG_WRITE_RESULT_KIND,
-} from '@openthrottle/nestjs-repositories';
+} from '@openthrottle/nestjs-repositories-server';
 
 import { BlogCoverAltRequiredError } from '../blog-cover-alt-required-error.object.ts';
 import { toBlogPostAdminObject } from '../blog-post-admin.mapper.ts';

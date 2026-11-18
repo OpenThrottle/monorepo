@@ -54,7 +54,10 @@ describe('blog seed file', () => {
   });
 
   it('upserts by slug and never uses now()-relative dates', () => {
-    expect(sql).toContain('ON CONFLICT (slug) DO UPDATE');
+    expect(sql).toContain(
+      'ON CONFLICT (slug) WHERE deleted_at IS NULL DO UPDATE',
+    );
+    expect(sql).not.toMatch(/ON CONFLICT \(slug\) DO/);
     expect(sql).toContain('IS DISTINCT FROM');
     const code = sql.replace(/^\s*--.*$/gm, '');
 

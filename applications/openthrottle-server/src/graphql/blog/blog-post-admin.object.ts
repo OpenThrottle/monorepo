@@ -9,7 +9,7 @@ import { Field, ID, ObjectType } from '@nestjs/graphql';
 import type {
   BlogPostState,
   BlogPostStatus,
-} from '@openthrottle/nestjs-repositories';
+} from '@openthrottle/nestjs-repositories-server';
 
 import { BlogAuthorObject } from './blog-author.object.ts';
 import { BlogPostStateEnum } from './blog-post-state.enum.ts';

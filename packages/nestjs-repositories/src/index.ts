@@ -62,60 +62,6 @@ export type {
   ReplaceAgentTrajectoryInput,
 } from './modules/agent-trajectories/agent-trajectories.types.ts';
 export { AgentTrajectory } from './modules/agent-trajectories/agent-trajectory.entity.ts';
-export type { BlogAuthorData } from './modules/blog-authors/blog-author.entity.ts';
-export { BlogAuthor } from './modules/blog-authors/blog-author.entity.ts';
-export { BlogAuthorsModule } from './modules/blog-authors/blog-authors.module.ts';
-export { BlogAuthorsService } from './modules/blog-authors/blog-authors.service.ts';
-export type { BlogAuthorUpsertInput } from './modules/blog-authors/blog-authors.types.ts';
-export type { BlogPostData } from './modules/blog-posts/blog-post.entity.ts';
-export { BlogPost } from './modules/blog-posts/blog-post.entity.ts';
-export {
-  BLOG_POST_STATUS,
-  BLOG_POST_STATUS_VALUES,
-} from './modules/blog-posts/blog-posts.constants.ts';
-export { BlogPostsModule } from './modules/blog-posts/blog-posts.module.ts';
-export { BlogPostsService } from './modules/blog-posts/blog-posts.service.ts';
-export type { BlogPostStatus } from './modules/blog-posts/blog-posts.types.ts';
-export type {
-  BlogPostDraftInput,
-  BlogPostPage,
-  BlogPostPatch,
-  FindAdminBlogPostInput,
-  FindAdminBlogPostsInput,
-  FindPublishedBlogPostsInput,
-} from './modules/blog-posts/blog-posts.types.ts';
-export { BLOG_POST_STATE } from './modules/blog-posts/visibility/visibility.constants.ts';
-export type { BlogPostState } from './modules/blog-posts/visibility/visibility.types.ts';
-export {
-  applyBlogPostStateFilter,
-  applyBlogPostVisibility,
-  deriveBlogPostState,
-} from './modules/blog-posts/visibility/visibility.utils.ts';
-export {
-  BLOG_WRITE_ENTITY,
-  BLOG_WRITE_RESULT_KIND,
-} from './modules/blog-posts/write-result/write-result.constants.ts';
-export type {
-  BlogPostWriteResult,
-  BlogWriteCoverAltRequired,
-  BlogWriteEntity,
-  BlogWriteNotFound,
-  BlogWriteOk,
-  BlogWriteResult,
-  BlogWriteSlugConflict,
-  BlogWriteStaleWrite,
-} from './modules/blog-posts/write-result/write-result.types.ts';
-export { BLOG_SLUG_PATTERN } from './modules/blog-posts/write-validation/write-validation.constants.ts';
-export {
-  assertBlogSlug,
-  assertNotBlank,
-  isCoverAltMissing,
-} from './modules/blog-posts/write-validation/write-validation.utils.ts';
-export type { BlogTagData } from './modules/blog-tags/blog-tag.entity.ts';
-export { BlogTag } from './modules/blog-tags/blog-tag.entity.ts';
-export { BlogTagsModule } from './modules/blog-tags/blog-tags.module.ts';
-export { BlogTagsService } from './modules/blog-tags/blog-tags.service.ts';
-export type { BlogTagUpsertInput } from './modules/blog-tags/blog-tags.types.ts';
 export { EvalCase } from './modules/eval-datasets/eval-case.entity.ts';
 export { EvalDataset } from './modules/eval-datasets/eval-dataset.entity.ts';
 export {

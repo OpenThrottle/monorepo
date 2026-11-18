@@ -17,16 +17,17 @@ describe('applyBlogPostVisibility', () => {
     andWhere: andWhere.mockReturnThis(),
   });
 
-  it('restricts to PUBLISHED posts whose published_at is not in the future', () => {
+  it('restricts to live PUBLISHED posts whose published_at is not in the future', () => {
     applyBlogPostVisibility(queryBuilder, 'p');
 
+    expect(andWhere).toHaveBeenNthCalledWith(1, 'p.deletedAt IS NULL');
     expect(andWhere).toHaveBeenNthCalledWith(
-      1,
+      2,
       'p.status = :blogPostPublishedStatus',
       { blogPostPublishedStatus: BLOG_POST_STATUS.PUBLISHED },
     );
-    expect(andWhere).toHaveBeenNthCalledWith(2, 'p.publishedAt <= NOW()');
-    expect(andWhere).toHaveBeenCalledTimes(2);
+    expect(andWhere).toHaveBeenNthCalledWith(3, 'p.publishedAt <= NOW()');
+    expect(andWhere).toHaveBeenCalledTimes(3);
   });
 });
 

@@ -7,8 +7,9 @@ import type { BlogPostState } from './visibility.types.ts';
 
 /**
  * @description THE single definition of public blog visibility: a post is publicly
- * visible iff `status = 'PUBLISHED' AND published_at <= now()`. Drafts, archived and
- * future-scheduled posts are never visible. Every query that serves the public site
+ * visible iff `status = 'PUBLISHED' AND published_at <= now()` and it is not soft deleted
+ * (`deleted_at IS NULL`, stated explicitly so a raw or joined alias can never leak a deleted
+ * post). Drafts, archived, future-scheduled and soft-deleted posts are never visible. Every query that serves the public site
  * (post lists, post by slug, tags that have a visible post) must route through this
  * function — never restate the rule.
  *
@@ -21,6 +22,7 @@ export function applyBlogPostVisibility<T extends ObjectLiteral>(
   alias: string,
 ): SelectQueryBuilder<T> {
   return queryBuilder
+    .andWhere(`${alias}.deletedAt IS NULL`)
     .andWhere(`${alias}.status = :blogPostPublishedStatus`, {
       blogPostPublishedStatus: BLOG_POST_STATUS.PUBLISHED,
     })

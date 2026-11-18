@@ -1,5 +1,8 @@
 import { Module } from '@nestjs/common';
 
+import { BlogAuthorsModule } from './modules/blog-authors/blog-authors.module.ts';
+import { BlogPostsModule } from './modules/blog-posts/blog-posts.module.ts';
+import { BlogTagsModule } from './modules/blog-tags/blog-tags.module.ts';
 import { DailyStatsModule } from './modules/daily-stats/daily-stats.module.ts';
 import { McpConnectorConnectionsModule } from './modules/mcp-connector-connections/mcp-connector-connections.module.ts';
 import { NotesModule } from './modules/notes/notes.module.ts';
@@ -20,6 +23,9 @@ import { WorktreeRemovalsModule } from './modules/worktree-removals/worktree-rem
  */
 @Module({
   exports: [
+    BlogAuthorsModule,
+    BlogPostsModule,
+    BlogTagsModule,
     DailyStatsModule,
     McpConnectorConnectionsModule,
     NotesModule,
@@ -31,6 +37,9 @@ import { WorktreeRemovalsModule } from './modules/worktree-removals/worktree-rem
     WorktreeRemovalsModule,
   ],
   imports: [
+    BlogAuthorsModule,
+    BlogPostsModule,
+    BlogTagsModule,
     DailyStatsModule,
     McpConnectorConnectionsModule,
     NotesModule,

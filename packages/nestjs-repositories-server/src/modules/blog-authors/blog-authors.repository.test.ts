@@ -2,40 +2,40 @@ import { createMock } from '@golevelup/ts-vitest';
 import { BadRequestException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { LoggerService } from '@openthrottle/nestjs-modules';
+import type { Repository } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { BlogAuthor } from './blog-author.entity.ts';
 import { blogAuthorsFactory } from './blog-authors.factory.ts';
-import { BlogAuthorsService } from './blog-authors.service.ts';
+import { BlogAuthorsRepository } from './blog-authors.repository.ts';
 
-describe('BlogAuthorsService', () => {
-  type GetRepository = ReturnType<BlogAuthorsService['getRepository']>;
+describe('BlogAuthorsRepository', () => {
+  type GetRepository = Repository<BlogAuthor>;
 
   const find = vi.fn();
   const upsert = vi.fn();
   const findOneByOrFail = vi.fn();
-  let service: BlogAuthorsService;
+  let service: BlogAuthorsRepository;
 
   beforeEach(async () => {
     vi.clearAllMocks();
     find.mockResolvedValue(blogAuthorsFactory.buildList(2));
     const app = await Test.createTestingModule({
       providers: [
-        BlogAuthorsService,
-        { provide: LoggerService, useValue: createMock<LoggerService>() },
+        BlogAuthorsRepository,
         {
           provide: getRepositoryToken(BlogAuthor),
           useValue: createMock<GetRepository>({
             find,
             findOneByOrFail,
+            target: BlogAuthor,
             upsert,
           }),
         },
       ],
     }).compile();
 
-    service = app.get<BlogAuthorsService>(BlogAuthorsService);
+    service = app.get<BlogAuthorsRepository>(BlogAuthorsRepository);
   });
 
   describe('findAllAuthors', () => {
@@ -56,21 +56,8 @@ describe('BlogAuthorsService', () => {
     });
   });
 
-  describe('getRepository', () => {
-    it('returns the blog author repository', () => {
-      expect(service.getRepository().find).toBeDefined();
-    });
-
-    it('returns factory-built data from find', async () => {
-      const authors = await service.getRepository().find();
-
-      expect(authors).toHaveLength(2);
-      expect(authors[0]).toMatchObject({ displayName: expect.any(String) });
-    });
-  });
-
   describe('upsertAuthor', () => {
-    it('upserts on the slug conflict path and returns the stored row', async () => {
+    it('upserts on the live-slug conflict path and returns the stored row', async () => {
       const stored = blogAuthorsFactory.build({ slug: 'ada' });
       findOneByOrFail.mockResolvedValue(stored);
 
@@ -88,7 +75,7 @@ describe('BlogAuthorsService', () => {
           displayName: 'Ada',
           slug: 'ada',
         },
-        { conflictPaths: ['slug'] },
+        { conflictPaths: ['slug'], indexPredicate: 'deleted_at IS NULL' },
       );
       expect(findOneByOrFail).toHaveBeenCalledWith({ slug: 'ada' });
       expect(result).toBe(stored);
@@ -101,8 +88,19 @@ describe('BlogAuthorsService', () => {
 
       expect(upsert).toHaveBeenCalledWith(
         { avatarUrl: null, bio: null, displayName: 'Ada', slug: 'ada' },
-        { conflictPaths: ['slug'] },
+        { conflictPaths: ['slug'], indexPredicate: 'deleted_at IS NULL' },
       );
+    });
+
+    it('conflicts on the partial unique index, so a soft-deleted slug is not a conflict', async () => {
+      findOneByOrFail.mockResolvedValue(blogAuthorsFactory.build());
+
+      await service.upsertAuthor({ displayName: 'Ada', slug: 'ada' });
+
+      expect(upsert.mock.calls[0]?.[1]).toEqual({
+        conflictPaths: ['slug'],
+        indexPredicate: 'deleted_at IS NULL',
+      });
     });
 
     it('never writes user_id', async () => {

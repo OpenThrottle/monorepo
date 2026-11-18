@@ -31,23 +31,28 @@ import {
   ROLES,
 } from '@openthrottle/nestjs-rbac';
 import {
-  type BlogAuthor,
-  BlogAuthorsService,
-  type BlogPost,
-  BlogPostsService,
-  type BlogTag,
-  BlogTagsService,
   RolesService,
   type ServiceAccount,
   ServiceAccountsService,
   UsersService,
 } from '@openthrottle/nestjs-repositories';
+import { usersFactory } from '@openthrottle/nestjs-repositories/testing';
+import {
+  type BlogAuthor,
+  BlogAuthorsRepository,
+  type BlogPost,
+  BlogPostsRepository,
+  type BlogTag,
+  BlogTagsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import {
   blogAuthorsFactory,
   blogPostsFactory,
   blogTagsFactory,
-  usersFactory,
-} from '@openthrottle/nestjs-repositories/testing';
+  createBlogAuthorsRepositoryMock,
+  createBlogPostsRepositoryMock,
+  createBlogTagsRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { GlobalClsAuthHook } from '../../../auth/global-cls-auth-hook/global-cls-auth-hook.service.ts';
@@ -154,9 +159,9 @@ const updateInput = {
 };
 
 describe('BlogAdminResolver', () => {
-  const blogPostsService = createMock<BlogPostsService>();
-  const blogAuthorsService = createMock<BlogAuthorsService>();
-  const blogTagsService = createMock<BlogTagsService>();
+  const blogPostsRepository = createBlogPostsRepositoryMock();
+  const blogAuthorsRepository = createBlogAuthorsRepositoryMock();
+  const blogTagsRepository = createBlogTagsRepositoryMock();
   const rolesService = createMock<RolesService>();
   const usersService = createMock<UsersService>();
   const serviceAccountsService = createMock<ServiceAccountsService>();
@@ -175,9 +180,9 @@ describe('BlogAdminResolver', () => {
         GlobalAuthGuard,
         GqlPermissionsGuard,
         Reflector,
-        { provide: BlogPostsService, useValue: blogPostsService },
-        { provide: BlogAuthorsService, useValue: blogAuthorsService },
-        { provide: BlogTagsService, useValue: blogTagsService },
+        { provide: BlogPostsRepository, useValue: blogPostsRepository },
+        { provide: BlogAuthorsRepository, useValue: blogAuthorsRepository },
+        { provide: BlogTagsRepository, useValue: blogTagsRepository },
         { provide: RolesService, useValue: rolesService },
         { provide: UsersService, useValue: usersService },
         { provide: ServiceAccountsService, useValue: serviceAccountsService },
@@ -357,7 +362,7 @@ describe('BlogAdminResolver', () => {
 
   describe('admin queries', () => {
     test('blogAdminPosts forwards state / cursor / search and maps items with state', async () => {
-      vi.mocked(blogPostsService.findAdminPosts).mockResolvedValue({
+      vi.mocked(blogPostsRepository.findAdminPosts).mockResolvedValue({
         endCursor: 'cursor-1',
         hasNextPage: true,
         items: [post],
@@ -370,7 +375,7 @@ describe('BlogAdminResolver', () => {
         'hello',
       );
 
-      expect(blogPostsService.findAdminPosts).toHaveBeenCalledWith({
+      expect(blogPostsRepository.findAdminPosts).toHaveBeenCalledWith({
         after: 'cursor-0',
         first: 5,
         search: 'hello',
@@ -384,7 +389,7 @@ describe('BlogAdminResolver', () => {
     });
 
     test('blogAdminPosts with no filters passes nulls through', async () => {
-      vi.mocked(blogPostsService.findAdminPosts).mockResolvedValue({
+      vi.mocked(blogPostsRepository.findAdminPosts).mockResolvedValue({
         endCursor: null,
         hasNextPage: false,
         items: [],
@@ -406,7 +411,7 @@ describe('BlogAdminResolver', () => {
 
     describe('blogAdminPost', () => {
       test('by id returns the post with derived state', async () => {
-        vi.mocked(blogPostsService.findAdminPost).mockResolvedValue({
+        vi.mocked(blogPostsRepository.findAdminPost).mockResolvedValue({
           ...post,
           publishedAt: new Date('2000-01-01T00:00:00.000Z'),
           status: 'PUBLISHED',
@@ -414,24 +419,24 @@ describe('BlogAdminResolver', () => {
 
         const result = await resolver.blogAdminPost(post.id, undefined);
 
-        expect(blogPostsService.findAdminPost).toHaveBeenCalledWith({
+        expect(blogPostsRepository.findAdminPost).toHaveBeenCalledWith({
           id: post.id,
         });
         expect(result).toMatchObject({ state: 'LIVE', status: 'PUBLISHED' });
       });
 
       test('by slug looks the post up by slug', async () => {
-        vi.mocked(blogPostsService.findAdminPost).mockResolvedValue(post);
+        vi.mocked(blogPostsRepository.findAdminPost).mockResolvedValue(post);
 
         await resolver.blogAdminPost(null, 'hello-world');
 
-        expect(blogPostsService.findAdminPost).toHaveBeenCalledWith({
+        expect(blogPostsRepository.findAdminPost).toHaveBeenCalledWith({
           slug: 'hello-world',
         });
       });
 
       test('returns BlogPostNotFoundError for an unknown post', async () => {
-        vi.mocked(blogPostsService.findAdminPost).mockResolvedValue(null);
+        vi.mocked(blogPostsRepository.findAdminPost).mockResolvedValue(null);
 
         const result = await resolver.blogAdminPost(undefined, 'ghost');
 
@@ -450,14 +455,14 @@ describe('BlogAdminResolver', () => {
           await expect(resolver.blogAdminPost(id, slug)).rejects.toBeInstanceOf(
             BadRequestException,
           );
-          expect(blogPostsService.findAdminPost).not.toHaveBeenCalled();
+          expect(blogPostsRepository.findAdminPost).not.toHaveBeenCalled();
         },
       );
     });
 
     test('blogAdminTags and blogAdminAuthors map every row to the public objects', async () => {
-      vi.mocked(blogTagsService.findAllTags).mockResolvedValue([tag]);
-      vi.mocked(blogAuthorsService.findAllAuthors).mockResolvedValue([
+      vi.mocked(blogTagsRepository.findAllTags).mockResolvedValue([tag]);
+      vi.mocked(blogAuthorsRepository.findAllAuthors).mockResolvedValue([
         { ...author, userId: 'secret-user-id' },
       ]);
 
@@ -477,7 +482,7 @@ describe('BlogAdminResolver', () => {
 
   describe('createBlogPost', () => {
     test('returns the saved post and stamps the user editor name', async () => {
-      vi.mocked(blogPostsService.createPost).mockResolvedValue({
+      vi.mocked(blogPostsRepository.createPost).mockResolvedValue({
         kind: 'ok',
         value: post,
       });
@@ -485,7 +490,7 @@ describe('BlogAdminResolver', () => {
       const result = await resolver.createBlogPost(createInput, userPrincipal);
 
       expect(usersService.findById).toHaveBeenCalledWith(userId);
-      expect(blogPostsService.createPost).toHaveBeenCalledWith(
+      expect(blogPostsRepository.createPost).toHaveBeenCalledWith(
         createInput,
         'octocat',
       );
@@ -501,7 +506,7 @@ describe('BlogAdminResolver', () => {
     });
 
     test('stamps a service account by its name', async () => {
-      vi.mocked(blogPostsService.createPost).mockResolvedValue({
+      vi.mocked(blogPostsRepository.createPost).mockResolvedValue({
         kind: 'ok',
         value: post,
       });
@@ -512,14 +517,14 @@ describe('BlogAdminResolver', () => {
         serviceAccountId,
       );
       expect(usersService.findById).not.toHaveBeenCalled();
-      expect(blogPostsService.createPost).toHaveBeenCalledWith(
+      expect(blogPostsRepository.createPost).toHaveBeenCalledWith(
         createInput,
         'ot-mcp',
       );
     });
 
     test('returns BlogSlugConflictError on a slug collision', async () => {
-      vi.mocked(blogPostsService.createPost).mockResolvedValue({
+      vi.mocked(blogPostsRepository.createPost).mockResolvedValue({
         kind: 'slug-conflict',
         slug: 'hello-world',
       });
@@ -534,7 +539,7 @@ describe('BlogAdminResolver', () => {
     });
 
     test('returns BlogCoverAltRequiredError when a cover has no alt text', async () => {
-      vi.mocked(blogPostsService.createPost).mockResolvedValue({
+      vi.mocked(blogPostsRepository.createPost).mockResolvedValue({
         kind: 'cover-alt-required',
       });
 
@@ -547,7 +552,7 @@ describe('BlogAdminResolver', () => {
     });
 
     test('returns BlogReferenceNotFoundError for an unknown author', async () => {
-      vi.mocked(blogPostsService.createPost).mockResolvedValue({
+      vi.mocked(blogPostsRepository.createPost).mockResolvedValue({
         entity: 'author',
         key: 'ghost',
         kind: 'not-found',
@@ -572,7 +577,7 @@ describe('BlogAdminResolver', () => {
     ] as const)(
       'treats %s as an invariant violation, not a union member',
       async (_name, result) => {
-        vi.mocked(blogPostsService.createPost).mockResolvedValue(result);
+        vi.mocked(blogPostsRepository.createPost).mockResolvedValue(result);
 
         await expect(
           resolver.createBlogPost(createInput, userPrincipal),
@@ -581,7 +586,7 @@ describe('BlogAdminResolver', () => {
     );
 
     test('propagates validation errors (malformed slug is a GraphQL error)', async () => {
-      vi.mocked(blogPostsService.createPost).mockRejectedValue(
+      vi.mocked(blogPostsRepository.createPost).mockRejectedValue(
         new BadRequestException('slug "Bad" is invalid'),
       );
 
@@ -593,11 +598,11 @@ describe('BlogAdminResolver', () => {
 
   describe('updateBlogPost', () => {
     beforeEach(() => {
-      vi.mocked(blogPostsService.findStatusById).mockResolvedValue('DRAFT');
+      vi.mocked(blogPostsRepository.findStatusById).mockResolvedValue('DRAFT');
     });
 
     test('forwards the id separately from the patch, plus editor name and expectedUpdatedAt', async () => {
-      vi.mocked(blogPostsService.updatePost).mockResolvedValue({
+      vi.mocked(blogPostsRepository.updatePost).mockResolvedValue({
         kind: 'ok',
         value: post,
       });
@@ -608,7 +613,7 @@ describe('BlogAdminResolver', () => {
         userPrincipal,
       );
 
-      expect(blogPostsService.updatePost).toHaveBeenCalledWith(
+      expect(blogPostsRepository.updatePost).toHaveBeenCalledWith(
         post.id,
         expect.objectContaining({ excerpt: null, title: 'Retitled' }),
         'octocat',
@@ -619,7 +624,7 @@ describe('BlogAdminResolver', () => {
     });
 
     test('returns BlogSlugConflictError when re-slugging onto a taken slug', async () => {
-      vi.mocked(blogPostsService.updatePost).mockResolvedValue({
+      vi.mocked(blogPostsRepository.updatePost).mockResolvedValue({
         kind: 'slug-conflict',
         slug: 'taken',
       });
@@ -633,7 +638,7 @@ describe('BlogAdminResolver', () => {
     });
 
     test('returns BlogCoverAltRequiredError', async () => {
-      vi.mocked(blogPostsService.updatePost).mockResolvedValue({
+      vi.mocked(blogPostsRepository.updatePost).mockResolvedValue({
         kind: 'cover-alt-required',
       });
 
@@ -644,7 +649,7 @@ describe('BlogAdminResolver', () => {
 
     test('returns BlogPostStaleWriteError carrying currentUpdatedAt', async () => {
       const currentUpdatedAt = new Date('2026-05-06T07:08:09.000Z');
-      vi.mocked(blogPostsService.updatePost).mockResolvedValue({
+      vi.mocked(blogPostsRepository.updatePost).mockResolvedValue({
         currentUpdatedAt,
         kind: 'stale-write',
       });
@@ -656,8 +661,8 @@ describe('BlogAdminResolver', () => {
     });
 
     test('returns BlogPostNotFoundError for an unknown post', async () => {
-      vi.mocked(blogPostsService.findStatusById).mockResolvedValue(null);
-      vi.mocked(blogPostsService.updatePost).mockResolvedValue({
+      vi.mocked(blogPostsRepository.findStatusById).mockResolvedValue(null);
+      vi.mocked(blogPostsRepository.updatePost).mockResolvedValue({
         entity: 'post',
         key: post.id,
         kind: 'not-found',
@@ -669,7 +674,7 @@ describe('BlogAdminResolver', () => {
     });
 
     test('returns BlogReferenceNotFoundError for an unknown author', async () => {
-      vi.mocked(blogPostsService.updatePost).mockResolvedValue({
+      vi.mocked(blogPostsRepository.updatePost).mockResolvedValue({
         entity: 'author',
         key: 'ghost',
         kind: 'not-found',
@@ -693,7 +698,7 @@ describe('BlogAdminResolver', () => {
             userPrincipal,
           ),
         ).rejects.toBeInstanceOf(BadRequestException);
-        expect(blogPostsService.updatePost).not.toHaveBeenCalled();
+        expect(blogPostsRepository.updatePost).not.toHaveBeenCalled();
       },
     );
   });
@@ -706,11 +711,11 @@ describe('BlogAdminResolver', () => {
       vi.mocked(rolesService.getPermissionsForServiceAccount).mockResolvedValue(
         permissions,
       );
-      vi.mocked(blogPostsService.updatePost).mockResolvedValue({
+      vi.mocked(blogPostsRepository.updatePost).mockResolvedValue({
         kind: 'ok',
         value: post,
       });
-      vi.mocked(blogPostsService.setPostTags).mockResolvedValue({
+      vi.mocked(blogPostsRepository.setPostTags).mockResolvedValue({
         kind: 'ok',
         value: post,
       });
@@ -736,7 +741,9 @@ describe('BlogAdminResolver', () => {
     describe.each(OPERATION_CASES)('%s', (_name, run, writeMethod) => {
       test('mcp caller may edit a DRAFT without a permission lookup', async () => {
         setCaller(mcpPermissions);
-        vi.mocked(blogPostsService.findStatusById).mockResolvedValue('DRAFT');
+        vi.mocked(blogPostsRepository.findStatusById).mockResolvedValue(
+          'DRAFT',
+        );
 
         const result = await run();
 
@@ -744,7 +751,7 @@ describe('BlogAdminResolver', () => {
         expect(result).not.toBeInstanceOf(
           BlogPostPublishPermissionRequiredError,
         );
-        expect(blogPostsService[writeMethod]).toHaveBeenCalledTimes(1);
+        expect(blogPostsRepository[writeMethod]).toHaveBeenCalledTimes(1);
         expect(
           rolesService.getPermissionsForServiceAccount,
         ).not.toHaveBeenCalled();
@@ -754,7 +761,9 @@ describe('BlogAdminResolver', () => {
         'mcp caller is rejected on a %s post and nothing is written',
         async (status) => {
           setCaller(mcpPermissions);
-          vi.mocked(blogPostsService.findStatusById).mockResolvedValue(status);
+          vi.mocked(blogPostsRepository.findStatusById).mockResolvedValue(
+            status,
+          );
 
           const result = await run();
 
@@ -762,7 +771,7 @@ describe('BlogAdminResolver', () => {
           expect(result).toMatchObject({
             message: expect.stringContaining('blog:write'),
           });
-          expect(blogPostsService[writeMethod]).not.toHaveBeenCalled();
+          expect(blogPostsRepository[writeMethod]).not.toHaveBeenCalled();
           expect(
             rolesService.getPermissionsForServiceAccount,
           ).toHaveBeenCalledWith(serviceAccountId);
@@ -773,21 +782,23 @@ describe('BlogAdminResolver', () => {
         'admin caller may edit a %s post',
         async (status) => {
           setCaller(adminPermissions);
-          vi.mocked(blogPostsService.findStatusById).mockResolvedValue(status);
+          vi.mocked(blogPostsRepository.findStatusById).mockResolvedValue(
+            status,
+          );
 
           const result = await run();
 
           expect(result).not.toBeInstanceOf(
             BlogPostPublishPermissionRequiredError,
           );
-          expect(blogPostsService[writeMethod]).toHaveBeenCalledTimes(1);
+          expect(blogPostsRepository[writeMethod]).toHaveBeenCalledTimes(1);
         },
       );
 
       test('an unknown post is left to the write to report as not found', async () => {
         setCaller(mcpPermissions);
-        vi.mocked(blogPostsService.findStatusById).mockResolvedValue(null);
-        vi.mocked(blogPostsService[writeMethod]).mockResolvedValue({
+        vi.mocked(blogPostsRepository.findStatusById).mockResolvedValue(null);
+        vi.mocked(blogPostsRepository[writeMethod]).mockResolvedValue({
           entity: 'post',
           key: post.id,
           kind: 'not-found',
@@ -801,11 +812,13 @@ describe('BlogAdminResolver', () => {
     });
 
     test('a user principal is looked up through the user roles', async () => {
-      vi.mocked(blogPostsService.findStatusById).mockResolvedValue('PUBLISHED');
+      vi.mocked(blogPostsRepository.findStatusById).mockResolvedValue(
+        'PUBLISHED',
+      );
       vi.mocked(rolesService.getPermissionsForUser).mockResolvedValue(
         adminPermissions,
       );
-      vi.mocked(blogPostsService.updatePost).mockResolvedValue({
+      vi.mocked(blogPostsRepository.updatePost).mockResolvedValue({
         kind: 'ok',
         value: post,
       });
@@ -813,26 +826,28 @@ describe('BlogAdminResolver', () => {
       await resolver.updateBlogPost(updateInput, userPrincipal);
 
       expect(rolesService.getPermissionsForUser).toHaveBeenCalledWith(userId);
-      expect(blogPostsService.updatePost).toHaveBeenCalledTimes(1);
+      expect(blogPostsRepository.updatePost).toHaveBeenCalledTimes(1);
     });
 
     test('a missing principal cannot edit a non-DRAFT post', async () => {
-      vi.mocked(blogPostsService.findStatusById).mockResolvedValue('PUBLISHED');
+      vi.mocked(blogPostsRepository.findStatusById).mockResolvedValue(
+        'PUBLISHED',
+      );
 
       const result = await resolver.updateBlogPost(updateInput, undefined);
 
       expect(result).toBeInstanceOf(BlogPostPublishPermissionRequiredError);
-      expect(blogPostsService.updatePost).not.toHaveBeenCalled();
+      expect(blogPostsRepository.updatePost).not.toHaveBeenCalled();
     });
   });
 
   describe('setBlogPostTags', () => {
     beforeEach(() => {
-      vi.mocked(blogPostsService.findStatusById).mockResolvedValue('DRAFT');
+      vi.mocked(blogPostsRepository.findStatusById).mockResolvedValue('DRAFT');
     });
 
     test('delegates the slugs with the editor name', async () => {
-      vi.mocked(blogPostsService.setPostTags).mockResolvedValue({
+      vi.mocked(blogPostsRepository.setPostTags).mockResolvedValue({
         kind: 'ok',
         value: post,
       });
@@ -842,7 +857,7 @@ describe('BlogAdminResolver', () => {
         userPrincipal,
       );
 
-      expect(blogPostsService.setPostTags).toHaveBeenCalledWith(
+      expect(blogPostsRepository.setPostTags).toHaveBeenCalledWith(
         post.id,
         ['ops'],
         'octocat',
@@ -851,7 +866,7 @@ describe('BlogAdminResolver', () => {
     });
 
     test('returns BlogPostNotFoundError for an unknown post', async () => {
-      vi.mocked(blogPostsService.setPostTags).mockResolvedValue({
+      vi.mocked(blogPostsRepository.setPostTags).mockResolvedValue({
         entity: 'post',
         key: post.id,
         kind: 'not-found',
@@ -866,7 +881,7 @@ describe('BlogAdminResolver', () => {
     });
 
     test('returns BlogReferenceNotFoundError for an unknown tag slug', async () => {
-      vi.mocked(blogPostsService.setPostTags).mockResolvedValue({
+      vi.mocked(blogPostsRepository.setPostTags).mockResolvedValue({
         entity: 'tag',
         key: 'ghost',
         kind: 'not-found',
@@ -894,7 +909,7 @@ describe('BlogAdminResolver', () => {
     };
 
     test('publishBlogPost without publishedAt delegates with no date (service stamps now)', async () => {
-      vi.mocked(blogPostsService.publishPost).mockResolvedValue({
+      vi.mocked(blogPostsRepository.publishPost).mockResolvedValue({
         kind: 'ok',
         value: published,
       });
@@ -904,7 +919,7 @@ describe('BlogAdminResolver', () => {
         userPrincipal,
       );
 
-      expect(blogPostsService.publishPost).toHaveBeenCalledWith(
+      expect(blogPostsRepository.publishPost).toHaveBeenCalledWith(
         post.id,
         'octocat',
         undefined,
@@ -912,7 +927,7 @@ describe('BlogAdminResolver', () => {
     });
 
     test('publishBlogPost with a future publishedAt passes it through and exposes the schedule', async () => {
-      vi.mocked(blogPostsService.publishPost).mockResolvedValue({
+      vi.mocked(blogPostsRepository.publishPost).mockResolvedValue({
         kind: 'ok',
         value: published,
       });
@@ -922,7 +937,7 @@ describe('BlogAdminResolver', () => {
         userPrincipal,
       );
 
-      expect(blogPostsService.publishPost).toHaveBeenCalledWith(
+      expect(blogPostsRepository.publishPost).toHaveBeenCalledWith(
         post.id,
         'octocat',
         published.publishedAt,
@@ -957,7 +972,7 @@ describe('BlogAdminResolver', () => {
     ] as const)(
       '%s returns BlogPostNotFoundError for an unknown post',
       async (_name, run, service) => {
-        vi.mocked(blogPostsService[service]).mockResolvedValue({
+        vi.mocked(blogPostsRepository[service]).mockResolvedValue({
           entity: 'post',
           key: 'x',
           kind: 'not-found',
@@ -986,7 +1001,7 @@ describe('BlogAdminResolver', () => {
     ] as const)(
       'treat %s as an invariant violation (not in their unions)',
       async (_name, result) => {
-        vi.mocked(blogPostsService.publishPost).mockResolvedValue(result);
+        vi.mocked(blogPostsRepository.publishPost).mockResolvedValue(result);
 
         await expect(
           resolver.publishBlogPost(
@@ -998,11 +1013,11 @@ describe('BlogAdminResolver', () => {
     );
 
     test('unpublishBlogPost and archiveBlogPost delegate by id with the editor name', async () => {
-      vi.mocked(blogPostsService.unpublishPost).mockResolvedValue({
+      vi.mocked(blogPostsRepository.unpublishPost).mockResolvedValue({
         kind: 'ok',
         value: post,
       });
-      vi.mocked(blogPostsService.archivePost).mockResolvedValue({
+      vi.mocked(blogPostsRepository.archivePost).mockResolvedValue({
         kind: 'ok',
         value: { ...post, status: 'ARCHIVED' },
       });
@@ -1013,11 +1028,11 @@ describe('BlogAdminResolver', () => {
         serviceAccountPrincipal,
       );
 
-      expect(blogPostsService.unpublishPost).toHaveBeenCalledWith(
+      expect(blogPostsRepository.unpublishPost).toHaveBeenCalledWith(
         post.id,
         'ot-mcp',
       );
-      expect(blogPostsService.archivePost).toHaveBeenCalledWith(
+      expect(blogPostsRepository.archivePost).toHaveBeenCalledWith(
         post.id,
         'ot-mcp',
       );
@@ -1027,14 +1042,14 @@ describe('BlogAdminResolver', () => {
 
   describe('caller identity', () => {
     test('a missing principal stamps null', async () => {
-      vi.mocked(blogPostsService.createPost).mockResolvedValue({
+      vi.mocked(blogPostsRepository.createPost).mockResolvedValue({
         kind: 'ok',
         value: post,
       });
 
       await resolver.createBlogPost(createInput, undefined);
 
-      expect(blogPostsService.createPost).toHaveBeenCalledWith(
+      expect(blogPostsRepository.createPost).toHaveBeenCalledWith(
         createInput,
         null,
       );
@@ -1043,7 +1058,7 @@ describe('BlogAdminResolver', () => {
 
   describe('upsertBlogAuthor / upsertBlogTag', () => {
     test('upsertBlogAuthor delegates and never exposes id or userId', async () => {
-      vi.mocked(blogAuthorsService.upsertAuthor).mockResolvedValue({
+      vi.mocked(blogAuthorsRepository.upsertAuthor).mockResolvedValue({
         ...author,
         userId: 'secret-user-id',
       });
@@ -1055,7 +1070,7 @@ describe('BlogAdminResolver', () => {
         slug: 'ada',
       });
 
-      expect(blogAuthorsService.upsertAuthor).toHaveBeenCalledTimes(1);
+      expect(blogAuthorsRepository.upsertAuthor).toHaveBeenCalledTimes(1);
       expect(result).toEqual({
         avatarUrl: author.avatarUrl,
         bio: author.bio,
@@ -1065,7 +1080,7 @@ describe('BlogAdminResolver', () => {
     });
 
     test('upsertBlogTag delegates and maps the tag', async () => {
-      vi.mocked(blogTagsService.upsertTag).mockResolvedValue(tag);
+      vi.mocked(blogTagsRepository.upsertTag).mockResolvedValue(tag);
 
       const result = await resolver.upsertBlogTag({
         description: undefined,
@@ -1073,7 +1088,7 @@ describe('BlogAdminResolver', () => {
         slug: 'ops',
       });
 
-      expect(blogTagsService.upsertTag).toHaveBeenCalledWith({
+      expect(blogTagsRepository.upsertTag).toHaveBeenCalledWith({
         description: undefined,
         name: 'Ops',
         slug: 'ops',

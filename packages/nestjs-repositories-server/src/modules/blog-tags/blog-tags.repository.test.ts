@@ -2,18 +2,17 @@ import { createMock } from '@golevelup/ts-vitest';
 import { BadRequestException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { LoggerService } from '@openthrottle/nestjs-modules';
-import type { SelectQueryBuilder } from 'typeorm';
+import type { Repository, SelectQueryBuilder } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { BlogPost } from '../blog-posts/blog-post.entity.ts';
 import { applyBlogPostVisibility } from '../blog-posts/visibility/visibility.utils.ts';
 import { BlogTag } from './blog-tag.entity.ts';
 import { blogTagsFactory } from './blog-tags.factory.ts';
-import { BlogTagsService } from './blog-tags.service.ts';
+import { BlogTagsRepository } from './blog-tags.repository.ts';
 
-describe('BlogTagsService', () => {
-  type GetRepository = ReturnType<BlogTagsService['getRepository']>;
+describe('BlogTagsRepository', () => {
+  type GetRepository = Repository<BlogTag>;
 
   const tags = blogTagsFactory.buildList(2);
   const queryBuilder = {
@@ -28,7 +27,7 @@ describe('BlogTagsService', () => {
   const find = vi.fn();
   const upsert = vi.fn();
   const findOneByOrFail = vi.fn();
-  let service: BlogTagsService;
+  let service: BlogTagsRepository;
 
   beforeEach(async () => {
     vi.clearAllMocks();
@@ -36,27 +35,21 @@ describe('BlogTagsService', () => {
 
     const app = await Test.createTestingModule({
       providers: [
-        BlogTagsService,
-        { provide: LoggerService, useValue: createMock<LoggerService>() },
+        BlogTagsRepository,
         {
           provide: getRepositoryToken(BlogTag),
           useValue: createMock<GetRepository>({
             createQueryBuilder: vi.fn().mockReturnValue(queryBuilder),
             find,
             findOneByOrFail,
+            target: BlogTag,
             upsert,
           }),
         },
       ],
     }).compile();
 
-    service = app.get<BlogTagsService>(BlogTagsService);
-  });
-
-  describe('getRepository', () => {
-    it('returns the blog tag repository', () => {
-      expect(service.getRepository().createQueryBuilder).toBeDefined();
-    });
+    service = app.get<BlogTagsRepository>(BlogTagsRepository);
   });
 
   describe('findAllTags', () => {
@@ -77,7 +70,7 @@ describe('BlogTagsService', () => {
       expect(queryBuilder.innerJoin).toHaveBeenCalledWith('tag.posts', 'post');
 
       // The clauses must be exactly what the single visibility function emits —
-      // the rule is not restated in the tags service.
+      // the rule is not restated in the tags repository.
       const expected = vi.fn();
       applyBlogPostVisibility(
         createMock<SelectQueryBuilder<BlogPost>>({
@@ -97,7 +90,7 @@ describe('BlogTagsService', () => {
   });
 
   describe('upsertTag', () => {
-    it('upserts on the slug conflict path and returns the stored row', async () => {
+    it('upserts on the live-slug conflict path and returns the stored row', async () => {
       const stored = blogTagsFactory.build({ slug: 'ops' });
       findOneByOrFail.mockResolvedValue(stored);
 
@@ -109,10 +102,21 @@ describe('BlogTagsService', () => {
 
       expect(upsert).toHaveBeenCalledWith(
         { description: 'Operations', name: 'Ops', slug: 'ops' },
-        { conflictPaths: ['slug'] },
+        { conflictPaths: ['slug'], indexPredicate: 'deleted_at IS NULL' },
       );
       expect(findOneByOrFail).toHaveBeenCalledWith({ slug: 'ops' });
       expect(result).toBe(stored);
+    });
+
+    it('conflicts on the partial unique index, so a soft-deleted slug is not a conflict', async () => {
+      findOneByOrFail.mockResolvedValue(blogTagsFactory.build());
+
+      await service.upsertTag({ name: 'Ops', slug: 'ops' });
+
+      expect(upsert.mock.calls[0]?.[1]).toEqual({
+        conflictPaths: ['slug'],
+        indexPredicate: 'deleted_at IS NULL',
+      });
     });
 
     it('clears the description when omitted (full replace)', async () => {
@@ -122,7 +126,7 @@ describe('BlogTagsService', () => {
 
       expect(upsert).toHaveBeenCalledWith(
         { description: null, name: 'Ops', slug: 'ops' },
-        { conflictPaths: ['slug'] },
+        { conflictPaths: ['slug'], indexPredicate: 'deleted_at IS NULL' },
       );
     });
 
