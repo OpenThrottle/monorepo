@@ -137,9 +137,6 @@
       "path": "./packages/openthrottle-skills"
     },
     {
-      "path": "./packages/nestjs-express"
-    },
-    {
       "path": "./packages/openthrottle-agentic-ralph"
     },
     {

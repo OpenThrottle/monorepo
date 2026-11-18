@@ -16,7 +16,6 @@
     "@openthrottle/nestjs-auth": 23677,
     "@openthrottle/nestjs-bullmq": 17309,
     "@openthrottle/nestjs-bullmq-board": 15645,
-    "@openthrottle/nestjs-express": 16481,
     "@openthrottle/nestjs-github": 20694,
     "@openthrottle/nestjs-graphql": 20074,
     "@openthrottle/nestjs-langchain": 20604,
