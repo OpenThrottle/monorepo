@@ -2,6 +2,7 @@
  * @description TypeORM entity for OpenThrottle task_embeddings table. Matches databases/openthrottle/migrations (005, 163). Uses pgvector vector(768) with per-row provenance (embedding_model, embedding_dims, content_hash); one row per source row.
  */
 
+import { vectorTransformer } from '@openthrottle/nestjs-postgres';
 import {
   Column,
   CreateDateColumn,
@@ -11,7 +12,6 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
-import { vectorTransformer } from '../../vector-transformer/vector-transformer.constants.ts';
 import type { Task } from '../tasks/task.entity.ts';
 
 @Entity('task_embeddings')

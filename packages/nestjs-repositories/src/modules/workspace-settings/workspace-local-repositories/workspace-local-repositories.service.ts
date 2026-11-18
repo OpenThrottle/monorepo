@@ -9,8 +9,8 @@
 
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import type { ListPaginationInput } from '@openthrottle/nestjs-postgres';
 
-import type { ListPaginationInput } from '../../../list-pagination/list-pagination.types.ts';
 import { ProjectsService } from '../../projects/projects.service.ts';
 import { RepositoriesService } from '../../repositories/repositories.service.ts';
 import { normalizeRemoteUrl } from '../../repositories/repositories.utils.ts';

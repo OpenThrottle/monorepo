@@ -2,6 +2,10 @@
  * @description TypeORM entity for OpenThrottle plans table. Matches databases/openthrottle/migrations (002, 012, 014, 022, 055).
  */
 
+import {
+  PLAN_STATUS,
+  PLAN_STATUS_VALUES,
+} from '@openthrottle/nestjs-repositories-server';
 import type {
   PlanJobRunHooksStorage,
   PlanRunConfigStorage,
@@ -17,10 +21,6 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-import {
-  PLAN_STATUS,
-  PLAN_STATUS_VALUES,
-} from '../../config/config.constants.ts';
 import type { PlanEmbedding } from '../plan-embeddings/plan-embedding.entity.ts';
 import type { PlanOutputStreamChunk } from '../plan-output-stream/plan-output-stream.entity.ts';
 import type { Project } from '../projects/project.entity.ts';

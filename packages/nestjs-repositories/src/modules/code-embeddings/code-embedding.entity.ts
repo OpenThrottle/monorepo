@@ -1,6 +1,5 @@
+import { vectorTransformer } from '@openthrottle/nestjs-postgres';
 import { Column, CreateDateColumn, Entity, PrimaryColumn } from 'typeorm';
-
-import { vectorTransformer } from '../../vector-transformer/vector-transformer.constants.ts';
 
 /**
  * @description TypeORM entity for the code_embeddings table (databases/openthrottle/migrations 052). Backs the

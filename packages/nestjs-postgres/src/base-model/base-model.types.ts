@@ -1,12 +1,14 @@
+import type { BaseHardDeleteModel } from '../base-hard-delete-model/base-hard-delete-model.entity.ts';
 import type { BaseUuidModel } from '../base-uuid-model/base-uuid-model.entity.ts';
 import type { BaseModel } from './base-model.entity.ts';
 
 /**
  * @description Any entity a `BaseRepository` can serve: one extending `BaseModel` (`id` +
- * `deleted_at`) or `BaseUuidModel` (`uuid` + `is_deleted`).
+ * `deleted_at`), `BaseUuidModel` (`uuid` + `is_deleted`) or `BaseHardDeleteModel` (`id`,
+ * no soft delete).
  * @public
  */
-export type PersistedModel = BaseModel | BaseUuidModel;
+export type PersistedModel = BaseHardDeleteModel | BaseModel | BaseUuidModel;
 
 /**
  * @description The columns `BaseModel` owns, which callers never write directly.
@@ -21,11 +23,23 @@ export type BaseModelKeys = keyof BaseModel;
 export type BaseUuidModelKeys = keyof BaseUuidModel;
 
 /**
- * @description The base-owned columns of `TEntity`, whichever base it extends.
+ * @description The columns a `BaseHardDeleteModel` table never takes from callers: the
+ * base's own plus `updatedAt`, which a table that updates rows declares itself.
+ * @public
+ */
+export type BaseHardDeleteModelKeys = keyof BaseHardDeleteModel | 'updatedAt';
+
+/**
+ * @description The base-owned columns of `TEntity`, whichever base it extends. `BaseModel`
+ * is tested first because it structurally satisfies `BaseHardDeleteModel` too.
  * @public
  */
 export type ModelManagedKeys<TEntity extends PersistedModel> =
-  TEntity extends BaseModel ? BaseModelKeys : BaseUuidModelKeys;
+  TEntity extends BaseModel
+    ? BaseModelKeys
+    : TEntity extends BaseUuidModel
+      ? BaseUuidModelKeys
+      : BaseHardDeleteModelKeys;
 
 /**
  * @description The shape a caller supplies to create a row: the entity minus the columns

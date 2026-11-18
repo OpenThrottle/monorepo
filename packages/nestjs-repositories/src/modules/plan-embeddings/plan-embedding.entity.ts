@@ -1,3 +1,4 @@
+import { vectorTransformer } from '@openthrottle/nestjs-postgres';
 import {
   Column,
   CreateDateColumn,
@@ -7,7 +8,6 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
-import { vectorTransformer } from '../../vector-transformer/vector-transformer.constants.ts';
 import type { Plan } from '../plans/plan.entity.ts';
 
 /**

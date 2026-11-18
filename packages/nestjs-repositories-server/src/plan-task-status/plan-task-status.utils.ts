@@ -1,5 +1,8 @@
-import { PLAN_STATUS_VALUES, TASK_STATUS_VALUES } from './config.constants.ts';
-import type { PlanStatus, TaskStatus } from './config.types.ts';
+import {
+  PLAN_STATUS_VALUES,
+  TASK_STATUS_VALUES,
+} from './plan-task-status.constants.ts';
+import type { PlanStatus, TaskStatus } from './plan-task-status.types.ts';
 
 const TASK_STATUS_SET: ReadonlySet<string> = new Set(TASK_STATUS_VALUES);
 

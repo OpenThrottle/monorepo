@@ -12,6 +12,7 @@ import type {
 import { IsNull, Raw } from 'typeorm';
 
 import {
+  ID_HARD_DELETE_MODEL_CONVENTION,
   ID_TIMESTAMP_MODEL_CONVENTION,
   UUID_FLAG_MODEL_CONVENTION,
 } from '../model-convention/model-convention.constants.ts';
@@ -27,7 +28,8 @@ export function isRawRow(value: unknown): value is Record<string, unknown> {
 /**
  * @description Reads the convention a model base class declares as its static
  * `modelConvention`.
- * @throws Error when `target` is not a class extending `BaseModel` or `BaseUuidModel`.
+ * @throws Error when `target` is not a class extending `BaseModel`, `BaseUuidModel` or
+ * `BaseHardDeleteModel`.
  */
 export function resolveModelConvention(target: unknown): ModelConvention {
   const isClass = typeof target === 'function';
@@ -43,8 +45,12 @@ export function resolveModelConvention(target: unknown): ModelConvention {
     return UUID_FLAG_MODEL_CONVENTION;
   }
 
+  if (convention === ID_HARD_DELETE_MODEL_CONVENTION) {
+    return ID_HARD_DELETE_MODEL_CONVENTION;
+  }
+
   throw new Error(
-    `BaseRepository needs an entity class that extends BaseModel or BaseUuidModel`,
+    `BaseRepository needs an entity class that extends BaseModel, BaseUuidModel or BaseHardDeleteModel`,
   );
 }
 
@@ -93,7 +99,8 @@ function buildLiveFlagOperator(): FindOperator<unknown> {
 }
 
 /**
- * @description The caller's `where` restricted to rows that are not soft deleted.
+ * @description The caller's `where` restricted to rows that are not soft deleted. A model
+ * without soft delete holds only live rows, so its `where` passes through unchanged.
  */
 export function withLiveRows<TEntity extends ObjectLiteral>(
   convention: ModelConvention,
@@ -103,17 +110,23 @@ export function withLiveRows(
   convention: ModelConvention,
   where: object,
 ): object {
-  if (convention.softDelete.kind === 'timestamp') {
-    return { ...where, deletedAt: IsNull() };
+  switch (convention.softDelete.kind) {
+    case 'flag': {
+      return { ...where, isDeleted: buildLiveFlagOperator() };
+    }
+    case 'none': {
+      return where;
+    }
+    case 'timestamp': {
+      return { ...where, deletedAt: IsNull() };
+    }
   }
-
-  return { ...where, isDeleted: buildLiveFlagOperator() };
 }
 
 /**
  * @description The `where` a read uses. TypeORM already hides `@DeleteDateColumn` rows from
- * `find*`, so a timestamp model passes through unchanged; a flag model has no such
- * filter, so this adds the live-rows condition.
+ * `find*`, and a model without soft delete has no deleted rows, so both pass through
+ * unchanged; a flag model has no such filter, so this adds the live-rows condition.
  */
 export function scopeReadWhere<TEntity extends ObjectLiteral>(
   convention: ModelConvention,
@@ -123,7 +136,7 @@ export function scopeReadWhere(
   convention: ModelConvention,
   where: object,
 ): object {
-  if (convention.softDelete.kind === 'timestamp') {
+  if (convention.softDelete.kind !== 'flag') {
     return where;
   }
 
@@ -147,7 +160,7 @@ export function scopeReadOptions(
   convention: ModelConvention,
   options: FindManyOptions<ObjectLiteral> | undefined,
 ): FindManyOptions<ObjectLiteral> | undefined {
-  if (convention.softDelete.kind === 'timestamp' || options?.withDeleted) {
+  if (convention.softDelete.kind !== 'flag' || options?.withDeleted) {
     return options;
   }
 

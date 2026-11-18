@@ -8,13 +8,13 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { In, QueryFailedError, Repository } from 'typeorm';
-
+import type { TaskStatus } from '@openthrottle/nestjs-repositories-server';
 import {
   TASK_STATUS,
   TASK_STATUS_VALUES,
-} from '../../../config/config.constants.ts';
-import type { TaskStatus } from '../../../config/config.types.ts';
+} from '@openthrottle/nestjs-repositories-server';
+import { In, QueryFailedError, Repository } from 'typeorm';
+
 import { Task } from '../../tasks/task.entity.ts';
 import {
   RULE_APPLICATION_STATES,

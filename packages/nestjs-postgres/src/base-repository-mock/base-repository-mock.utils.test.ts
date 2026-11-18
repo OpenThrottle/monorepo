@@ -1,6 +1,7 @@
 import { NotFoundException } from '@nestjs/common';
 import { describe, expect, it } from 'vitest';
 
+import type { TestHardDeleteRecord } from '../base-repository/testing/test-hard-delete-record/test-hard-delete-record.entity.ts';
 import type { TestRecord } from '../base-repository/testing/test-record/test-record.entity.ts';
 import { createBaseRepositoryMock } from './base-repository-mock.utils.ts';
 
@@ -75,6 +76,33 @@ describe('createBaseRepositoryMock', () => {
       await expect(
         repository.create({ note: null, ownerId: null, quantity: 1 }),
       ).resolves.toBe(row);
+    });
+  });
+
+  describe('a no-soft-delete entity', () => {
+    it('types and behaves the same, with updatedAt kept out of the create input', async () => {
+      const repository = createBaseRepositoryMock<TestHardDeleteRecord>(
+        'test_hard_delete_records',
+      );
+      const row = {
+        createdAt: FIXED_NOW,
+        id: 'a',
+        note: null,
+        quantity: 1,
+        updatedAt: FIXED_NOW,
+      };
+
+      repository.create.mockResolvedValue(row);
+
+      await expect(
+        repository.create({ note: null, quantity: 1 }),
+      ).resolves.toBe(row);
+      await expect(repository.remove('b')).rejects.toThrow(
+        'test_hard_delete_records record with ID "b" not found',
+      );
+      await expect(repository.removeMany({ quantity: 1 })).resolves.toEqual({
+        removedCount: 0,
+      });
     });
   });
 });

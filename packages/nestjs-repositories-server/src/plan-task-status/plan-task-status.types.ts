@@ -2,7 +2,7 @@ import type {
   PLAN_STATUS,
   REMAINING_TASK_STATUSES,
   TASK_STATUS,
-} from './config.constants.ts';
+} from './plan-task-status.constants.ts';
 /** @public */
 export type PlanStatus = (typeof PLAN_STATUS)[keyof typeof PLAN_STATUS];
 
