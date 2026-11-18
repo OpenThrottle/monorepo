@@ -2,6 +2,7 @@
  * @description TypeORM entity for tag_action_rules. Matches databases/openthrottle/migrations/065.
  */
 
+import { Project } from '@openthrottle/nestjs-repositories-server';
 import type { TagActionType } from '@openthrottle/openthrottle-skills';
 import {
   Column,
@@ -13,7 +14,6 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-import { Project } from '../projects/project.entity.ts';
 import { User } from '../users/user.entity.ts';
 
 export interface TagActionRuleData {

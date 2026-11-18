@@ -9,6 +9,10 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+import {
+  PlansModule,
+  TasksModule,
+} from '@openthrottle/nestjs-repositories-server';
 
 import { NotificationsModule } from '../../../notifications/notifications.module.ts';
 import { PlansQueueProducerModule } from '../../../queues/plans/producer/producer.module.ts';
@@ -21,7 +25,9 @@ import { PlanStatusService } from './plan-status.service.ts';
     LoggerModule,
     NestjsRepositoriesModule,
     NotificationsModule,
+    PlansModule,
     PlansQueueProducerModule,
+    TasksModule,
     WorkLedgerGraphqlModule,
   ],
   providers: [PlanStatusService],

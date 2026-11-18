@@ -20,9 +20,9 @@ import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 import type { ProjectSkillView } from '@openthrottle/nestjs-repositories';
 import {
   ProjectSkillsService,
-  ProjectsService,
   ServiceAccountsService,
 } from '@openthrottle/nestjs-repositories';
+import { ProjectsRepository } from '@openthrottle/nestjs-repositories-server';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import { resolveTagCaller } from '../tags/tags.utils.ts';
@@ -55,7 +55,7 @@ function toObject(view: ProjectSkillView): ProjectSkillObject {
 export class ProjectSkillsResolver {
   constructor(
     private readonly projectSkillsService: ProjectSkillsService,
-    private readonly projectsService: ProjectsService,
+    private readonly projectsRepository: ProjectsRepository,
     private readonly serviceAccountsService: ServiceAccountsService,
   ) {}
 
@@ -163,7 +163,7 @@ export class ProjectSkillsResolver {
   }
 
   private async resolveDogfoodProjectId(): Promise<string | null> {
-    const project = await this.projectsService.findByNxProjectName(
+    const project = await this.projectsRepository.findByNxProjectName(
       DOGFOOD_NX_PROJECT_NAME,
     );
 

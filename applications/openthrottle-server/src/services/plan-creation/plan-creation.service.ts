@@ -4,11 +4,14 @@ import type { PlanRunConfigStorage } from '@openthrottle/nestjs-repositories';
 import {
   getDefaultPlanRunConfigStorage,
   parsePlanRunConfigJson,
-  Plan,
-  PlansService,
   UserPreferencesService,
 } from '@openthrottle/nestjs-repositories';
-import { UserDisabledAgentClisRepository } from '@openthrottle/nestjs-repositories-server';
+import {
+  Plan,
+  PlansRepository,
+  UserDisabledAgentClisRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import { DataSource } from 'typeorm';
 
 import type { CreatePlanInput } from '../../graphql/plans/plan.input.ts';
 import { CheckoutPathResolutionService } from '../checkout-path-resolution/checkout-path-resolution.service.ts';
@@ -40,11 +43,12 @@ export class PlanCreationService {
   private readonly name = 'plan-creation';
 
   constructor(
+    private readonly dataSource: DataSource,
     private readonly logger: LoggerService,
     private readonly disabledAgentClis: UserDisabledAgentClisRepository,
     private readonly checkoutPathResolutionService: CheckoutPathResolutionService,
     private readonly effectiveUserResolutionService: EffectiveUserResolutionService,
-    private readonly plansService: PlansService,
+    private readonly plansRepository: PlansRepository,
     private readonly userPreferencesService: UserPreferencesService,
   ) {
     this.logger.debug(`🧩 ${this.name} 🧩`);
@@ -258,7 +262,6 @@ export class PlanCreationService {
     input: CreatePlanInput,
     userId?: string,
   ): Promise<Plan> {
-    const repo = this.plansService.getRepository();
     const clientId = readClientPlanId(input.id);
 
     if (!clientId.ok) {
@@ -268,7 +271,7 @@ export class PlanCreationService {
     const fields = await this.resolvePlanCreateFields(input, userId);
 
     if (clientId.id === undefined) {
-      return repo.save(repo.create(fields));
+      return this.plansRepository.create(fields);
     }
 
     // Idempotent create (OT plan ca13e543): a caller that timed out re-sends the same id, and
@@ -281,7 +284,7 @@ export class PlanCreationService {
     }
 
     try {
-      return await repo.save(repo.create({ ...fields, id }));
+      return await this.plansRepository.create({ ...fields, id });
     } catch (error: unknown) {
       const winner = isUniqueViolation(error)
         ? await this.findReplayedPlan(id, fields.title)
@@ -303,9 +306,7 @@ export class PlanCreationService {
     id: string,
     title: string,
   ): Promise<Plan | undefined> {
-    const existing = await this.plansService
-      .getRepository()
-      .findOne({ where: { id } });
+    const existing = await this.plansRepository.findOne({ where: { id } });
 
     if (!existing) {
       return undefined;
@@ -338,8 +339,7 @@ export class PlanCreationService {
       inputs.map((input) => this.resolvePlanCreateFields(input, userId)),
     );
 
-    const repo = this.plansService.getRepository();
-    return repo.manager.transaction(async (manager) => {
+    return this.dataSource.transaction(async (manager) => {
       const planRepo = manager.getRepository(Plan);
       const entities = fieldsList.map((fields) => planRepo.create(fields));
 

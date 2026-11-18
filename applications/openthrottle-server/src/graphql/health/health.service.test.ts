@@ -8,7 +8,6 @@ import { Test } from '@nestjs/testing';
 import { getDataSourceToken } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { REDIS_CLIENT } from '@openthrottle/nestjs-redis';
-import { PlansService } from '@openthrottle/nestjs-repositories';
 import { CMS_CONNECTION } from '@openthrottle/nestjs-repositories-cms';
 import type { Redis } from 'ioredis';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
@@ -25,7 +24,6 @@ vi.mock('@openthrottle/openthrottle-agentic-utils', () => ({
 
 describe('HealthService', () => {
   let service: HealthService;
-  let plansService: PlansService;
   let query: ReturnType<typeof vi.fn>;
   let cmsQuery: ReturnType<typeof vi.fn>;
   let redis: DeepMocked<Redis>;
@@ -45,10 +43,8 @@ describe('HealthService', () => {
           useValue: redis,
         },
         {
-          provide: PlansService,
-          useValue: createMock<PlansService>({
-            getRepository: vi.fn().mockReturnValue({ manager: { query } }),
-          }),
+          provide: getDataSourceToken(),
+          useValue: { query },
         },
         {
           provide: getDataSourceToken(CMS_CONNECTION),
@@ -62,7 +58,6 @@ describe('HealthService', () => {
     }).compile();
 
     service = app.get<HealthService>(HealthService);
-    plansService = app.get<PlansService>(PlansService);
 
     getPostgresUrl.mockReturnValue('postgres://localhost/test');
     getCmsPostgresUrl.mockReturnValue({ ok: true });
@@ -83,7 +78,7 @@ describe('HealthService', () => {
       getPostgresUrl.mockReturnValue(undefined);
 
       await expect(service.getDatabaseStatus()).resolves.toBe('unconfigured');
-      expect(plansService.getRepository).not.toHaveBeenCalled();
+      expect(query).not.toHaveBeenCalled();
     });
 
     test('returns ok when SELECT 1 succeeds', async () => {

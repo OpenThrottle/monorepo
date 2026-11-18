@@ -37,26 +37,28 @@
  * revives), so the action is no longer a one-way door.
  */
 
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT } from '@openthrottle/nestjs-auth';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
-  type Plan,
   RULE_APPLICATION_STATES,
   RuleApplicationsService,
   SOFT_CLOSED_TASK_STATUS,
+} from '@openthrottle/nestjs-repositories';
+import {
+  type Plan,
   Task,
   TASK_SORT_ORDER_GAP,
-  TasksService,
-} from '@openthrottle/nestjs-repositories';
+  TasksRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import {
   type InjectTaskActionPayload,
   injectTaskActionPayloadSchema,
   type MatchedTagAction,
   TAG_ACTION_TYPES,
 } from '@openthrottle/openthrottle-skills';
-import { QueryFailedError } from 'typeorm';
+import { DataSource, QueryFailedError } from 'typeorm';
 
 import { StatusChangeSystemAccountService } from '../../graphql/work-ledger/status-change-system-account/status-change-system-account.service.ts';
 import { WORK_LEDGER_CAPTURE_FAILED_MARKER } from '../../graphql/work-ledger/work-ledger.constants.ts';
@@ -113,13 +115,14 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
 
   constructor(
     private readonly configService: ConfigService,
+    private readonly dataSource: DataSource,
     private readonly executorRegistry: ActionExecutorRegistry,
     private readonly logger: LoggerService,
     private readonly notifications: NotificationsService,
     private readonly planContextAvailabilityService: PlanContextAvailabilityService,
     private readonly ruleApplicationsService: RuleApplicationsService,
     private readonly statusChangeSystemAccount: StatusChangeSystemAccountService,
-    private readonly tasksService: TasksService,
+    private readonly tasksRepository: TasksRepository,
     private readonly workLedgerCapture: WorkLedgerCaptureService,
   ) {}
 
@@ -186,11 +189,25 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
       taskId: task.id,
     });
     if (ledger.taskId !== task.id) {
-      await this.tasksService.getRepository().delete({ id: task.id });
+      await this.removeDuplicateTask(task.id);
       this.logger.warn(
         `Lost the apply-once race for rule ${rule.id} on plan ${plan.id}; removed duplicate injected task ${task.id}`,
         InjectTaskExecutor.name,
       );
+    }
+  }
+
+  /**
+   * @description Soft deletes the injected task that lost the apply-once race. A task that is
+   * already gone needs nothing more.
+   */
+  private async removeDuplicateTask(taskId: string): Promise<void> {
+    try {
+      await this.tasksRepository.remove(taskId);
+    } catch (error) {
+      if (!(error instanceof NotFoundException)) {
+        throw error;
+      }
     }
   }
 
@@ -218,9 +235,9 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
     // Orphan revive: reopen the task we previously soft-closed rather than
     // injecting a duplicate.
     if (application.taskId != null) {
-      const existing = await this.tasksService
-        .getRepository()
-        .findOne({ where: { id: application.taskId, planId: plan.id } });
+      const existing = await this.tasksRepository.findOne({
+        where: { id: application.taskId, planId: plan.id },
+      });
       if (existing != null) {
         if (existing.status === SOFT_CLOSED_TASK_STATUS) {
           await this.reviveSoftClosedTask(plan.id, existing);
@@ -301,29 +318,27 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
     const fromStatus = task.status;
     const actorSub = await this.statusChangeSystemAccount.resolveId();
 
-    await this.tasksService
-      .getRepository()
-      .manager.transaction(async (manager) => {
-        await manager.update(Task, { id: task.id }, { status: 'PENDING' });
+    await this.dataSource.transaction(async (manager) => {
+      await manager.update(Task, { id: task.id }, { status: 'PENDING' });
 
-        try {
-          await this.workLedgerCapture.recordStatusChange(manager, {
-            actorKind: AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
-            actorSub: actorSub ?? undefined,
-            entity: 'task',
-            from: fromStatus,
-            id: task.id,
-            planId,
-            taskId: task.id,
-            to: 'PENDING',
-          });
-        } catch (error) {
-          this.logger.error(
-            `${WORK_LEDGER_CAPTURE_FAILED_MARKER} entity=task id=${task.id} from=${fromStatus} to=PENDING: ${String(error)}`,
-            InjectTaskExecutor.name,
-          );
-        }
-      });
+      try {
+        await this.workLedgerCapture.recordStatusChange(manager, {
+          actorKind: AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
+          actorSub: actorSub ?? undefined,
+          entity: 'task',
+          from: fromStatus,
+          id: task.id,
+          planId,
+          taskId: task.id,
+          to: 'PENDING',
+        });
+      } catch (error) {
+        this.logger.error(
+          `${WORK_LEDGER_CAPTURE_FAILED_MARKER} entity=task id=${task.id} from=${fromStatus} to=PENDING: ${String(error)}`,
+          InjectTaskExecutor.name,
+        );
+      }
+    });
 
     // After commit, so an open plan view picks up the revived task.
     this.notifications.emitTaskStatusChanged({
@@ -342,16 +357,7 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
     planId: string,
     skillSlug: string,
   ): Promise<Task | null> {
-    return this.tasksService
-      .getRepository()
-      .createQueryBuilder('task')
-      .where('task.plan_id = :planId', { planId })
-      .andWhere(
-        '(task.title ILIKE :reference OR task.description ILIKE :reference)',
-        { reference: `%/${skillSlug}%` },
-      )
-      .orderBy('task.sort_order', 'ASC')
-      .getOne();
+    return this.tasksRepository.findFirstMentioning(planId, `/${skillSlug}`);
   }
 
   /**
@@ -375,9 +381,9 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
     if (taskId == null) return;
 
     const payload = injectTaskActionPayloadSchema.parse(action.actionPayload);
-    const task = await this.tasksService
-      .getRepository()
-      .findOne({ where: { id: taskId, planId: plan.id } });
+    const task = await this.tasksRepository.findOne({
+      where: { id: taskId, planId: plan.id },
+    });
     if (task == null) return;
     if (TERMINAL_TASK_STATUSES.includes(task.status)) return;
 
@@ -408,7 +414,6 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
       return;
     }
 
-    const repository = this.tasksService.getRepository();
     const aggregate = placement === 'first' ? 'MIN' : 'MAX';
     const attempt = async (currentSortOrder: number): Promise<void> => {
       const extent = await this.planSortOrderExtent(planId, aggregate, [
@@ -422,7 +427,10 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
       }
       const gap = TASK_SORT_ORDER_GAP;
       const target = placement === 'first' ? extent - gap : extent + gap;
-      await repository.update({ id: task.id }, { sortOrder: target });
+      await this.tasksRepository.updateMany(
+        { id: task.id },
+        { sortOrder: target },
+      );
       this.logger.debug(
         `Reconciled injected task ${task.id} to sort_order ${target} (placement '${placement}', plan ${planId})`,
         InjectTaskExecutor.name,
@@ -433,7 +441,7 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
       await attempt(task.sortOrder);
     } catch (error) {
       if (!isSortOrderUniqueViolation(error)) throw error;
-      const fresh = await repository.findOne({
+      const fresh = await this.tasksRepository.findOne({
         select: { sortOrder: true },
         where: { id: task.id },
       });
@@ -481,32 +489,30 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
     // Park movers into a disjoint negative band first so setting final targets
     // can never collide with a sibling still holding a target slot.
     const parkBase = -1_000_000_000;
-    await this.tasksService
-      .getRepository()
-      .manager.transaction(async (manager) => {
-        await movers.reduce<Promise<void>>(
-          (chain, mover, index) =>
-            chain.then(async () => {
-              await manager.update(
-                Task,
-                { id: mover.taskId },
-                { sortOrder: parkBase - index },
-              );
-            }),
-          Promise.resolve(),
-        );
-        await movers.reduce<Promise<void>>(
-          (chain, mover) =>
-            chain.then(async () => {
-              await manager.update(
-                Task,
-                { id: mover.taskId },
-                { sortOrder: mover.target },
-              );
-            }),
-          Promise.resolve(),
-        );
-      });
+    await this.dataSource.transaction(async (manager) => {
+      await movers.reduce<Promise<void>>(
+        (chain, mover, index) =>
+          chain.then(async () => {
+            await manager.update(
+              Task,
+              { id: mover.taskId },
+              { sortOrder: parkBase - index },
+            );
+          }),
+        Promise.resolve(),
+      );
+      await movers.reduce<Promise<void>>(
+        (chain, mover) =>
+          chain.then(async () => {
+            await manager.update(
+              Task,
+              { id: mover.taskId },
+              { sortOrder: mover.target },
+            );
+          }),
+        Promise.resolve(),
+      );
+    });
 
     this.logger.debug(
       `Reconciled ${movers.length} '${placement}' injected task(s) on plan ${planId} to deterministic slots`,
@@ -539,6 +545,7 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
       .andWhere('rule.actionType = :actionType', {
         actionType: TAG_ACTION_TYPES.INJECT_TASK,
       })
+      .andWhere('task.deletedAt IS NULL')
       .andWhere('task.status NOT IN (:...terminal)', {
         terminal: TERMINAL_TASK_STATUSES,
       })
@@ -570,7 +577,7 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
    * @description Reconcile a 'before'/'after' injected task: it must sit
    * immediately beside its anchor with no other task between them. If already
    * adjacent, no write. Otherwise re-allocate a slot beside the anchor via the
-   * canonical TasksService allocator (which rebalances only when the integer gap
+   * canonical TasksRepository allocator (which rebalances only when the integer gap
    * is exhausted) and move the task there. One recompute retry on a collision.
    * A missing/unresolvable anchor leaves the task in place.
    */
@@ -586,14 +593,16 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
     const side = payload.placement === 'before' ? 'before' : 'after';
     if (await this.isBesideAnchor(planId, task, anchor, side)) return;
 
-    const repository = this.tasksService.getRepository();
     const move = async (): Promise<void> => {
-      const target = await this.tasksService.allocateSortOrderBesideAnchor(
+      const target = await this.tasksRepository.allocateSortOrderBesideAnchor(
         planId,
         anchor.id,
         side,
       );
-      await repository.update({ id: task.id }, { sortOrder: target });
+      await this.tasksRepository.updateMany(
+        { id: task.id },
+        { sortOrder: target },
+      );
       this.logger.debug(
         `Reconciled injected task ${task.id} beside anchor ${anchor.id} (placement '${side}', plan ${planId})`,
         InjectTaskExecutor.name,
@@ -618,22 +627,12 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
     anchor: Task,
     side: 'after' | 'before',
   ): Promise<boolean> {
-    const repository = this.tasksService.getRepository();
-    const isAfter = side === 'after';
-    const aggregateFn = isAfter ? 'MIN' : 'MAX';
-    const comparator = isAfter ? '>' : '<';
-    const selectExpression = `${aggregateFn}(task.sortOrder)`;
-    const anchorCondition = `task.sortOrder ${comparator} :anchor`;
-    const neighbor = await repository
-      .createQueryBuilder('task')
-      .select(selectExpression, 'value')
-      .where('task.planId = :planId', { planId })
-      .andWhere('task.id != :taskId', { taskId: task.id })
-      .andWhere(anchorCondition, { anchor: anchor.sortOrder })
-      .getRawOne<{ value: string | null }>();
-    const rawNeighbor = neighbor?.value;
-    const hasNeighbor = rawNeighbor != null && rawNeighbor !== '';
-    const neighborValue = hasNeighbor ? Number(rawNeighbor) : null;
+    const neighborValue = await this.tasksRepository.getNeighborSortOrder({
+      anchorSortOrder: anchor.sortOrder,
+      excludeTaskId: task.id,
+      planId,
+      side,
+    });
 
     if (side === 'after') {
       if (task.sortOrder <= anchor.sortOrder) return false;
@@ -666,17 +665,15 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
     const provenanceFooter = `---\nInjected by tag→action rule ${action.ruleId} (matched tags: [${action.matchedTags.join(', ')}]; fingerprint: ${action.ruleId}/${plan.id}).`;
     const description = `${bodyDescription}\n\n${provenanceFooter}`;
 
-    const repository = this.tasksService.getRepository();
     const attemptInsert = async (): Promise<Task> => {
       const sortOrder = await this.resolveSortOrder(plan.id, payload);
-      const entity = repository.create({
+      return this.tasksRepository.create({
         description,
         planId: plan.id,
         sortOrder,
         status: 'PENDING',
         title,
       });
-      return repository.save(entity);
     };
 
     const task = await attemptInsert().catch((error: unknown) => {
@@ -713,8 +710,8 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
           `inject-task anchor did not resolve to a task in plan ${planId}`,
         );
       }
-      // Delegate adjacency + rebalance to the canonical TasksService allocator.
-      return this.tasksService.allocateSortOrderBesideAnchor(
+      // Delegate adjacency + rebalance to the canonical TasksRepository allocator.
+      return this.tasksRepository.allocateSortOrderBesideAnchor(
         planId,
         anchorTask.id,
         placement,
@@ -743,18 +740,11 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
     aggregate: 'MAX' | 'MIN',
     excludeTaskIds: readonly string[] = [],
   ): Promise<number | null> {
-    const query = this.tasksService
-      .getRepository()
-      .createQueryBuilder('task')
-      .select(`${aggregate}(task.sortOrder)`, 'value')
-      .where('task.planId = :planId', { planId });
-    if (excludeTaskIds.length > 0) {
-      query.andWhere('task.id NOT IN (:...excludeTaskIds)', { excludeTaskIds });
-    }
-    const result = await query.getRawOne<{ value: string | null }>();
-    return result?.value != null && result.value !== ''
-      ? Number(result.value)
-      : null;
+    return this.tasksRepository.getSortOrderExtent(
+      planId,
+      aggregate,
+      excludeTaskIds,
+    );
   }
 
   /**
@@ -766,29 +756,26 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
     planId: string,
     anchor: NonNullable<InjectTaskActionPayload['anchor']>,
   ): Promise<Task | null> {
-    const repository = this.tasksService.getRepository();
     if (anchor.taskId != null) {
-      return repository.findOne({
+      return this.tasksRepository.findOne({
         where: { id: anchor.taskId, planId },
       });
     }
 
-    const base = repository
-      .createQueryBuilder('task')
-      .where('task.plan_id = :planId', { planId })
-      .orderBy('task.sort_order', 'ASC');
-
     if (anchor.skillSlug != null) {
-      return base
-        .andWhere(
-          '(task.title ILIKE :reference OR task.description ILIKE :reference)',
-          { reference: `%/${anchor.skillSlug}%` },
-        )
-        .getOne();
+      return this.tasksRepository.findFirstMentioning(
+        planId,
+        `/${anchor.skillSlug}`,
+      );
     }
 
-    return base
-      .andWhere('task.title ILIKE :match', { match: `%${anchor.titleMatch}%` })
-      .getOne();
+    if (anchor.titleMatch == null) {
+      return null;
+    }
+
+    return this.tasksRepository.findFirstByTitleContaining(
+      planId,
+      anchor.titleMatch,
+    );
   }
 }

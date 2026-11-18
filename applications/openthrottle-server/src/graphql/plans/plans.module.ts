@@ -1,11 +1,16 @@
 /**
- * @description GraphQL module that registers PlansResolver and PlansLoaders (request-scoped DataLoaders) and imports NestjsRepositoriesModule for PlansService, PlansQueueProducerModule for enqueuePlanRun, and QueuesGraphqlModule for enqueuePlanRalphOrchestrator.
+ * @description GraphQL module that registers PlansResolver and PlansLoaders (request-scoped DataLoaders) and imports the plans, projects and tasks table modules and NestjsRepositoriesModule for the unmoved services, PlansQueueProducerModule for enqueuePlanRun, and QueuesGraphqlModule for enqueuePlanRalphOrchestrator.
  */
 
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
-import { UserDisabledAgentClisModule } from '@openthrottle/nestjs-repositories-server';
+import {
+  PlansModule,
+  ProjectsModule,
+  TasksModule,
+  UserDisabledAgentClisModule,
+} from '@openthrottle/nestjs-repositories-server';
 
 import { NotificationsModule } from '../../notifications/notifications.module.ts';
 import { PlanRulesQueueProducerModule } from '../../queues/plan-rules/producer/producer.module.ts';
@@ -39,10 +44,13 @@ import { PlansResolver } from './plans.resolver.ts';
     PlanRulesQueueProducerModule,
     PlanRunWorktreeCheckoutModule,
     PlanStatusModule,
+    PlansModule,
     PlansQueueProducerModule,
+    ProjectsModule,
     TaggingQueueProducerModule,
     QueuesGraphqlModule,
     SourceControlModule,
+    TasksModule,
     WorkLedgerGraphqlModule,
     WorktreeCheckoutPruneModule,
   ],

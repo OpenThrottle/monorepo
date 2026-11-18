@@ -12,7 +12,6 @@ import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type { WorkArtifact } from '@openthrottle/nestjs-repositories';
 import {
   Plan,
-  type PlansService,
   PlanTag,
   Task,
   TaskTag,
@@ -25,7 +24,7 @@ import {
   workSessionsFactory,
 } from '@openthrottle/nestjs-repositories/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
-import type { EntityManager, Repository } from 'typeorm';
+import type { DataSource, EntityManager, Repository } from 'typeorm';
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 
 import type { WorkLedgerCaptureService } from '../../graphql/work-ledger/work-ledger-capture/work-ledger-capture.service.ts';
@@ -47,7 +46,7 @@ describe('TaskPromotionService.promote', () => {
   let artifactRepo: Repository<WorkArtifact>;
   let manager: EntityManager;
   let notifications: NotificationsService;
-  let plansService: PlansService;
+  let dataSource: DataSource;
   let service: TaskPromotionService;
   let getOne: ReturnType<typeof vi.fn>;
   let mockRecordStatusChange: Mock<
@@ -82,6 +81,7 @@ describe('TaskPromotionService.promote', () => {
     getOne = vi.fn().mockResolvedValue(buildTask());
     vi.mocked(taskRepo.createQueryBuilder).mockReturnValue(
       asMock({
+        andWhere: vi.fn().mockReturnThis(),
         getOne,
         setLock: vi.fn().mockReturnThis(),
         where: vi.fn().mockReturnThis(),
@@ -135,24 +135,19 @@ describe('TaskPromotionService.promote', () => {
       }),
     });
 
-    const serviceRepo = asMock<Repository<Plan>>({
-      manager: asMock<EntityManager>({
-        transaction: vi.fn((cb: (m: EntityManager) => Promise<unknown>) =>
-          cb(manager),
-        ),
-      }),
-    });
-    plansService = createMock<PlansService>({
-      getRepository: vi.fn(() => serviceRepo),
+    dataSource = asMock<DataSource>({
+      transaction: vi.fn((cb: (m: EntityManager) => Promise<unknown>) =>
+        cb(manager),
+      ),
     });
     notifications = createMock<NotificationsService>();
 
     mockRecordStatusChange = vi.fn().mockResolvedValue(undefined);
 
     service = new TaskPromotionService(
+      dataSource,
       createMock<LoggerService>(),
       notifications,
-      plansService,
       createMock<WorkLedgerCaptureService>({
         recordStatusChange: mockRecordStatusChange,
       }),

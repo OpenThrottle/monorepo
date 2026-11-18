@@ -4,10 +4,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import {
+  PlansRepository,
+  ProjectsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import { Repository } from 'typeorm';
 
-import { PlansService } from '../plans/plans.service.ts';
-import { ProjectsService } from '../projects/projects.service.ts';
 import { AgentConversation } from './agent-conversation.entity.ts';
 import { AgentConversationMessage } from './agent-conversation-message.entity.ts';
 import {
@@ -82,8 +84,8 @@ export class AgentConversationsService {
     private readonly conversationRepository: Repository<AgentConversation>,
     @InjectRepository(AgentConversationMessage)
     private readonly messageRepository: Repository<AgentConversationMessage>,
-    private readonly plansService: PlansService,
-    private readonly projectsService: ProjectsService,
+    private readonly plansRepository: PlansRepository,
+    private readonly projectsRepository: ProjectsRepository,
   ) {
     this.logger.debug('🧩 agent-conversations 🧩');
   }
@@ -437,9 +439,7 @@ export class AgentConversationsService {
       return;
     }
 
-    const plan = await this.plansService
-      .getRepository()
-      .findOne({ where: { id: planId } });
+    const plan = await this.plansRepository.findOne({ where: { id: planId } });
 
     if (!plan) {
       throw new NotFoundException(`Plan not found: ${planId}`);
@@ -453,7 +453,9 @@ export class AgentConversationsService {
       return;
     }
 
-    const project = await this.projectsService.findById(projectId);
+    const project = await this.projectsRepository.findOne({
+      where: { id: projectId },
+    });
     if (!project) {
       throw new NotFoundException(`Project not found: ${projectId}`);
     }

@@ -16,12 +16,12 @@
 
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import type { Plan } from '@openthrottle/nestjs-repositories';
 import {
   PlanRunsService,
-  PlansService,
   RepositoryCheckoutsService,
 } from '@openthrottle/nestjs-repositories';
+import type { Plan } from '@openthrottle/nestjs-repositories-server';
+import { PlansRepository } from '@openthrottle/nestjs-repositories-server';
 import { Raw } from 'typeorm';
 
 import { NotificationsService } from '../../notifications/notifications.service.ts';
@@ -71,7 +71,7 @@ export class PlanRunWorktreeReaperService {
     private readonly discovery: WorktreeDiscoveryService,
     private readonly notifications: NotificationsService,
     private readonly planRunsService: PlanRunsService,
-    private readonly plansService: PlansService,
+    private readonly plansRepository: PlansRepository,
     private readonly teardownService: PlanRunWorktreeTeardownService,
   ) {
     this.logger.debug(`🧩 ${this.name} 🧩`);
@@ -263,7 +263,7 @@ export class PlanRunWorktreeReaperService {
 
   private async findPlansForWorktree(name: string): Promise<Plan[]> {
     const prefix = planIdPrefixFromWorktreeName(name);
-    return this.plansService.getRepository().find({
+    return this.plansRepository.findBy({
       take: 2,
       where: {
         id: Raw((alias) => `CAST(${alias} AS text) LIKE :prefix`, {

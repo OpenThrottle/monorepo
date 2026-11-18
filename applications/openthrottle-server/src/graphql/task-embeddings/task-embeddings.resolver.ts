@@ -1,10 +1,13 @@
 /**
- * @description Resolver for TaskEmbedding queries. Injects TaskEmbeddingsService from @openthrottle/nestjs-repositories and maps entities to TaskEmbeddingObject.
+ * @description Resolver for TaskEmbedding queries. Injects TaskEmbeddingsRepository from @openthrottle/nestjs-repositories-server and maps entities to TaskEmbeddingObject.
  */
 
 import { Args, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
-import type { Task, TaskEmbedding } from '@openthrottle/nestjs-repositories';
-import { TaskEmbeddingsService } from '@openthrottle/nestjs-repositories';
+import type {
+  Task,
+  TaskEmbedding,
+} from '@openthrottle/nestjs-repositories-server';
+import { TaskEmbeddingsRepository } from '@openthrottle/nestjs-repositories-server';
 
 import { TaskObject } from '../tasks/task.object.ts';
 import { TaskEmbeddingsLoaders } from './loaders/loaders.service.ts';
@@ -23,7 +26,7 @@ const MAX_LIST_LIMIT = 1000;
 export class TaskEmbeddingsResolver {
   constructor(
     private readonly loaders: TaskEmbeddingsLoaders,
-    private readonly taskEmbeddingsService: TaskEmbeddingsService,
+    private readonly taskEmbeddingsRepository: TaskEmbeddingsRepository,
   ) {}
 
   @ResolveField(() => TaskObject, {
@@ -44,9 +47,9 @@ export class TaskEmbeddingsResolver {
     @Args('input', { type: () => GetTaskEmbeddingInput })
     input: GetTaskEmbeddingInput,
   ): Promise<TaskEmbedding | null> {
-    const entity = await this.taskEmbeddingsService
-      .getRepository()
-      .findOne({ where: { id: input.id } });
+    const entity = await this.taskEmbeddingsRepository.findOne({
+      where: { id: input.id },
+    });
 
     return entity;
   }
@@ -64,7 +67,7 @@ export class TaskEmbeddingsResolver {
     );
     const skip = Math.max(0, input.offset ?? 0);
 
-    const entities = await this.taskEmbeddingsService.getRepository().find({
+    const entities = await this.taskEmbeddingsRepository.findBy({
       order: { createdAt: 'ASC' },
       skip,
       take,

@@ -1,26 +1,30 @@
-import { createMock } from '@golevelup/ts-vitest';
-import type { TasksService } from '@openthrottle/nestjs-repositories';
+import type { TasksRepository } from '@openthrottle/nestjs-repositories-server';
+import {
+  createTasksRepositoryMock,
+  tasksFactory,
+} from '@openthrottle/nestjs-repositories-server/testing';
+import { asMock } from '@openthrottle/nestjs-testing';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { TaskEmbeddingsLoaders } from './loaders.service.ts';
 
 describe('TaskEmbeddingsLoaders', () => {
-  const findTasks = vi.fn();
-  const tasksService = createMock<TasksService>({
-    getRepository: vi.fn().mockReturnValue({ find: findTasks }),
-  });
+  const tasksRepository = createTasksRepositoryMock();
+  const findTasks = tasksRepository.findBy;
 
   let loaders: TaskEmbeddingsLoaders;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    loaders = new TaskEmbeddingsLoaders(tasksService);
+    loaders = new TaskEmbeddingsLoaders(
+      asMock<TasksRepository>(tasksRepository),
+    );
   });
 
   test('taskLoader batches many load() calls into one find and maps to key order', async () => {
     findTasks.mockResolvedValue([
-      { id: 't2', title: 'Two' },
-      { id: 't1', title: 'One' },
+      tasksFactory.build({ id: 't2', title: 'Two' }),
+      tasksFactory.build({ id: 't1', title: 'One' }),
     ]);
 
     const [a, b, missing] = await Promise.all([

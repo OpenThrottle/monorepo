@@ -170,6 +170,54 @@ class PlansService {
       errors: [{ data: { table: 'plans' }, messageId: 'bareStatusAssignment' }],
       filename: 'this-field-assignment.ts',
     },
+    // A BaseRepository `update(id, { status })` on an injected PlansRepository field.
+    {
+      code: `import { PlansRepository } from '@openthrottle/nestjs-repositories-server';
+
+class RoguePlanWriter {
+  constructor(private readonly plansRepository: PlansRepository) {}
+
+  async closePlan(planId) {
+    return this.plansRepository.update(planId, { status: 'COMPLETED' });
+  }
+}
+`,
+      errors: [{ data: { table: 'plans' }, messageId: 'bareStatusWrite' }],
+      filename: 'rogue-plans-repository-update.ts',
+    },
+    // The bulk forms on an injected TasksRepository field.
+    {
+      code: `import { TasksRepository } from '@openthrottle/nestjs-repositories-server';
+
+class RogueTaskWriter {
+  constructor(private readonly tasksRepository: TasksRepository) {}
+
+  async closeAll(planId) {
+    await this.tasksRepository.updateMany({ planId }, { status: 'SKIPPED' });
+    return this.tasksRepository.updateManyReturning(
+      { planId },
+      { status: 'CANCELED' },
+    );
+  }
+}
+`,
+      errors: [
+        { data: { table: 'tasks' }, messageId: 'bareStatusWrite' },
+        { data: { table: 'tasks' }, messageId: 'bareStatusWrite' },
+      ],
+      filename: 'rogue-tasks-repository-update-many.ts',
+    },
+    // A parameter typed as the repository class is traced too.
+    {
+      code: `import type { TasksRepository } from '@openthrottle/nestjs-repositories-server';
+
+async function closeTask(repository: TasksRepository, taskId) {
+  return repository.update(taskId, { status: 'COMPLETED' });
+}
+`,
+      errors: [{ data: { table: 'tasks' }, messageId: 'bareStatusWrite' }],
+      filename: 'rogue-tasks-repository-parameter.ts',
+    },
   ],
   valid: [
     // Creation is not a transition: `repo.create({ status: 'PENDING' })` is a
@@ -282,6 +330,49 @@ class InjectTaskExecutor {
 `,
       filename: 'inject-task.executor.ts',
       options: [{ allowedFunctionNames: ['reviveSoftClosedTask'] }],
+    },
+    // A repository write that does not touch `status` is never flagged.
+    {
+      code: `import { TasksRepository } from '@openthrottle/nestjs-repositories-server';
+
+class TaskTitleWriter {
+  constructor(private readonly tasksRepository: TasksRepository) {}
+
+  async rename(taskId, title) {
+    return this.tasksRepository.update(taskId, { title });
+  }
+}
+`,
+      filename: 'task-title-writer.ts',
+    },
+    // A repository status write inside a named chokepoint function passes.
+    {
+      code: `import { PlansRepository } from '@openthrottle/nestjs-repositories-server';
+
+class PlanChokepoint {
+  constructor(private readonly plansRepository: PlansRepository) {}
+
+  async writeGuardedStatus(planId, status) {
+    return this.plansRepository.update(planId, { status });
+  }
+}
+`,
+      filename: 'plan-chokepoint.ts',
+      options: [{ allowedFunctionNames: ['writeGuardedStatus'] }],
+    },
+    // Creating a row through the repository is not a transition.
+    {
+      code: `import { PlansRepository } from '@openthrottle/nestjs-repositories-server';
+
+class PlanCreator {
+  constructor(private readonly plansRepository: PlansRepository) {}
+
+  async createPlan(title) {
+    return this.plansRepository.create({ status: 'PENDING', title });
+  }
+}
+`,
+      filename: 'plan-creator.ts',
     },
   ],
 });

@@ -27,16 +27,18 @@ import { OnApplicationShutdown, OnModuleInit } from '@nestjs/common';
 import { defaultWorkerOptions } from '@openthrottle/nestjs-bullmq';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
-  PlansService,
   type PlanTag,
   ServiceAccountsService,
   SkillTagsService,
   type TagCaller,
   TAGGING_SERVICE_ACCOUNT_NAME,
   TagsService,
-  TasksService,
   type TaskTag,
 } from '@openthrottle/nestjs-repositories';
+import {
+  PlansRepository,
+  TasksRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import { DEFAULT_TAG_VOCABULARY_SEED } from '@openthrottle/openthrottle-skills';
 
 import { SourceControlService } from '../../services/source-control/source-control.service.ts';
@@ -76,14 +78,14 @@ export class TaggingProcessor
   constructor(
     private readonly logger: LoggerService,
     private readonly planRulesEvaluationService: PlanRulesEvaluationService,
-    private readonly plansService: PlansService,
+    private readonly plansRepository: PlansRepository,
     private readonly serviceAccountsService: ServiceAccountsService,
     private readonly skillTagsService: SkillTagsService,
     private readonly sourceControlService: SourceControlService,
     @Inject(TAGGING_MODEL_PROVIDER_TOKEN)
     private readonly taggingModelProvider: TaggingModelProvider,
     private readonly tagsService: TagsService,
-    private readonly tasksService: TasksService,
+    private readonly tasksRepository: TasksRepository,
   ) {
     super();
   }
@@ -113,13 +115,9 @@ export class TaggingProcessor
     const isPlan = data.entityType === TAGGING_ENTITY_TYPES.PLAN;
     const findEntity = async () => {
       if (isPlan) {
-        return this.plansService
-          .getRepository()
-          .findOne({ where: { id: data.entityId } });
+        return this.plansRepository.findOne({ where: { id: data.entityId } });
       }
-      return this.tasksService
-        .getRepository()
-        .findOne({ where: { id: data.entityId } });
+      return this.tasksRepository.findOne({ where: { id: data.entityId } });
     };
     const entity = await findEntity();
     if (entity == null) {
@@ -172,9 +170,9 @@ export class TaggingProcessor
   private async processRefine(
     data: RefineTaggingJob['data'],
   ): Promise<TaggingJobResult> {
-    const plan = await this.plansService
-      .getRepository()
-      .findOne({ where: { id: data.planId } });
+    const plan = await this.plansRepository.findOne({
+      where: { id: data.planId },
+    });
     if (plan == null) {
       return { added: 0, removed: 0, skipped: 'plan-missing' };
     }

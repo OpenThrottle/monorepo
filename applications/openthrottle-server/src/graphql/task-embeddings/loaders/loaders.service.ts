@@ -3,11 +3,11 @@
  */
 
 import { Injectable, Scope } from '@nestjs/common';
+import { createEntityByIdLoader } from '@openthrottle/nestjs-repositories';
 import {
-  createEntityByIdLoader,
   type Task,
-  TasksService,
-} from '@openthrottle/nestjs-repositories';
+  TasksRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import type DataLoader from 'dataloader';
 
 /**
@@ -17,7 +17,7 @@ import type DataLoader from 'dataloader';
 export class TaskEmbeddingsLoaders {
   readonly taskLoader: DataLoader<string, Task | null>;
 
-  constructor(tasksService: TasksService) {
-    this.taskLoader = createEntityByIdLoader(tasksService);
+  constructor(tasksRepository: TasksRepository) {
+    this.taskLoader = createEntityByIdLoader(tasksRepository);
   }
 }

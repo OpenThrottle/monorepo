@@ -1,10 +1,10 @@
 /**
- * @description Resolver for PlanEmbedding queries. Injects PlanEmbeddingsService from @openthrottle/nestjs-repositories and maps entities to PlanEmbeddingObject.
+ * @description Resolver for PlanEmbedding queries. Injects PlanEmbeddingsRepository from @openthrottle/nestjs-repositories-server and maps entities to PlanEmbeddingObject.
  */
 
 import { Args, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
-import type { PlanEmbedding } from '@openthrottle/nestjs-repositories';
-import { PlanEmbeddingsService } from '@openthrottle/nestjs-repositories';
+import type { PlanEmbedding } from '@openthrottle/nestjs-repositories-server';
+import { PlanEmbeddingsRepository } from '@openthrottle/nestjs-repositories-server';
 
 import { PlanObject } from '../plans/plan.object.ts';
 import { PlanEmbeddingsLoaders } from './loaders/loaders.service.ts';
@@ -23,7 +23,7 @@ const MAX_LIST_LIMIT = 1000;
 export class PlanEmbeddingsResolver {
   constructor(
     private readonly loaders: PlanEmbeddingsLoaders,
-    private readonly planEmbeddingsService: PlanEmbeddingsService,
+    private readonly planEmbeddingsRepository: PlanEmbeddingsRepository,
   ) {}
 
   @ResolveField(() => PlanObject, {
@@ -46,9 +46,9 @@ export class PlanEmbeddingsResolver {
     @Args('input', { type: () => GetPlanEmbeddingInput })
     input: GetPlanEmbeddingInput,
   ): Promise<PlanEmbedding | null> {
-    const entity = await this.planEmbeddingsService
-      .getRepository()
-      .findOne({ where: { id: input.id } });
+    const entity = await this.planEmbeddingsRepository.findOne({
+      where: { id: input.id },
+    });
 
     return entity;
   }
@@ -66,7 +66,7 @@ export class PlanEmbeddingsResolver {
     );
     const skip = Math.max(0, input.offset ?? 0);
 
-    const entities = await this.planEmbeddingsService.getRepository().find({
+    const entities = await this.planEmbeddingsRepository.findBy({
       order: { createdAt: 'ASC' },
       skip,
       take,

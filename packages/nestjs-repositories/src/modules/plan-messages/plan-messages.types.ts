@@ -3,7 +3,8 @@
  * and its callers.
  */
 
-import type { PlanOutputStreamChunk } from '../plan-output-stream/plan-output-stream.entity.ts';
+import type { PlanOutputStreamChunk } from '@openthrottle/nestjs-repositories-server';
+
 import type { PlanMessage } from './plan-message.entity.ts';
 import type {
   PLAN_MESSAGE_KIND,

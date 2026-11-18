@@ -1,7 +1,8 @@
 /**
- * @description Resolver for Project queries and mutations. Injects ProjectsService and ProjectsLoaders from @openthrottle/nestjs-repositories. ResolveField for plans and tasks use ProjectsLoaders to avoid N+1.
+ * @description Resolver for Project queries and mutations. Injects ProjectsRepository from @openthrottle/nestjs-repositories-server and ProjectsLoaders. ResolveField for plans and tasks use ProjectsLoaders to avoid N+1.
  */
 
+import { NotFoundException } from '@nestjs/common';
 import {
   Args,
   ID,
@@ -11,14 +12,16 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import type { Plan, Project, Task } from '@openthrottle/nestjs-repositories';
-import {
-  ProjectsLoaders,
-  ProjectsService,
-} from '@openthrottle/nestjs-repositories';
+import type {
+  Plan,
+  Project,
+  Task,
+} from '@openthrottle/nestjs-repositories-server';
+import { ProjectsRepository } from '@openthrottle/nestjs-repositories-server';
 
 import { PlanObject } from '../plans/plan.object.ts';
 import { TaskObject } from '../tasks/task.object.ts';
+import { ProjectsLoaders } from './loaders/loaders.service.ts';
 import {
   CreateProjectInput,
   DeleteProjectInput,
@@ -30,8 +33,8 @@ import { ProjectObject } from './project.object.ts';
 @Resolver(() => ProjectObject)
 export class ProjectsResolver {
   constructor(
-    private readonly projectsLoaders: ProjectsLoaders,
-    private readonly projectsService: ProjectsService,
+    private readonly projectRelationLoaders: ProjectsLoaders,
+    private readonly projectsRepository: ProjectsRepository,
   ) {}
 
   // @ProfileResponseTime('ProjectsResolver.plans')
@@ -40,7 +43,7 @@ export class ProjectsResolver {
     nullable: true,
   })
   async plans(@Parent() parent: Project): Promise<Plan[]> {
-    return this.projectsLoaders.plansByProjectIdLoader.load(parent.id);
+    return this.projectRelationLoaders.plansByProjectIdLoader.load(parent.id);
   }
 
   // @ProfileResponseTime('ProjectsResolver.tasks')
@@ -49,7 +52,7 @@ export class ProjectsResolver {
     nullable: true,
   })
   async tasks(@Parent() parent: Project): Promise<Task[]> {
-    return this.projectsLoaders.tasksByProjectIdLoader.load(parent.id);
+    return this.projectRelationLoaders.tasksByProjectIdLoader.load(parent.id);
   }
 
   // @ProfileResponseTime('ProjectsResolver.project')
@@ -60,7 +63,7 @@ export class ProjectsResolver {
   async project(
     @Args('id', { type: () => ID }) id: string,
   ): Promise<Project | null> {
-    const entity = await this.projectsService.findById(id);
+    const entity = await this.projectsRepository.findOne({ where: { id } });
 
     return entity;
   }
@@ -70,7 +73,7 @@ export class ProjectsResolver {
     description: `List all projects, ordered by createdAt descending`,
   })
   async projects(): Promise<Project[]> {
-    const entities = await this.projectsService.findAll({ limit: 100 });
+    const entities = await this.projectsRepository.findAll({ limit: 100 });
 
     return entities;
   }
@@ -83,7 +86,7 @@ export class ProjectsResolver {
     @Args('input', { type: () => CreateProjectInput })
     input: CreateProjectInput,
   ): Promise<Project> {
-    const entity = await this.projectsService.create({
+    const entity = await this.projectsRepository.create({
       description: input.description ?? null,
       name: input.name,
       nxProjectName: input.nxProjectName ?? null,
@@ -101,17 +104,22 @@ export class ProjectsResolver {
     @Args('input', { type: () => UpdateProjectInput })
     input: UpdateProjectInput,
   ): Promise<Project | null> {
-    const entity = await this.projectsService.update(input.id, {
-      ...(input.name != null && { name: input.name }),
-      ...(input.description !== undefined && {
-        description: input.description,
-      }),
-      ...(input.nxProjectName !== undefined && {
-        nxProjectName: input.nxProjectName,
-      }),
-    });
-
-    return entity;
+    try {
+      return await this.projectsRepository.update(input.id, {
+        ...(input.name != null && { name: input.name }),
+        ...(input.description !== undefined && {
+          description: input.description,
+        }),
+        ...(input.nxProjectName !== undefined && {
+          nxProjectName: input.nxProjectName,
+        }),
+      });
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        return null;
+      }
+      throw error;
+    }
   }
 
   // @ProfileResponseTime('ProjectsResolver.deleteProject')
@@ -122,6 +130,15 @@ export class ProjectsResolver {
     @Args('input', { type: () => DeleteProjectInput })
     input: DeleteProjectInput,
   ): Promise<boolean> {
-    return this.projectsService.delete(input.id);
+    try {
+      await this.projectsRepository.remove(input.id);
+
+      return true;
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        return false;
+      }
+      throw error;
+    }
   }
 }

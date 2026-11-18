@@ -1,4 +1,4 @@
-import { PLAN_TASK_LIST_ORDER } from '@openthrottle/nestjs-repositories';
+import { PLAN_TASK_LIST_ORDER } from '@openthrottle/nestjs-repositories-server';
 import { formatPlanAndTasksForPrompt } from '@openthrottle/openthrottle-agentic-ralph';
 import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 import {
@@ -95,12 +95,9 @@ export const executeSinglePlanLifecycleHook = async (
     return { blocked: false, ok: true };
   }
 
-  const planRepo = params.plansService.getRepository();
-  const taskRepo = params.tasksService.getRepository();
-
   const [plan, tasks] = await Promise.all([
-    planRepo.findOne({ where: { id: planId } }),
-    taskRepo.find({
+    params.plansRepository.findOne({ where: { id: planId } }),
+    params.tasksRepository.findBy({
       order: { ...PLAN_TASK_LIST_ORDER },
       where: { planId },
     }),
@@ -123,13 +120,11 @@ export const executeSinglePlanLifecycleHook = async (
   const label = formatJobRunHookEntryLabel(entry);
 
   const appendPlanOutput = async (content: string): Promise<void> => {
-    const outputRepo = params.planOutputStreamService.getRepository();
-    const entity = outputRepo.create({
+    await params.planOutputStreamRepository.create({
       content,
       iteration: null,
       planId,
     });
-    await outputRepo.save(entity);
   };
 
   await appendPlanOutput(`[job-run-hook] Starting ${label}\n`);

@@ -11,9 +11,9 @@ import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 import {
   ServiceAccountsService,
   TagsService,
-  TasksService,
   type TaskTag,
 } from '@openthrottle/nestjs-repositories';
+import { TasksRepository } from '@openthrottle/nestjs-repositories-server';
 
 import { GqlPermissionsGuard } from '../../../guards/gql-permissions.guard.ts';
 import { PlanRulesEvaluationService } from '../../../queues/plan-rules/evaluation/evaluation.service.ts';
@@ -32,13 +32,11 @@ export class TaskTagsResolver {
     private readonly planRulesEvaluationService: PlanRulesEvaluationService,
     private readonly serviceAccountsService: ServiceAccountsService,
     private readonly tagsService: TagsService,
-    private readonly tasksService: TasksService,
+    private readonly tasksRepository: TasksRepository,
   ) {}
 
   private async enqueueTaskPlanEvaluation(taskId: string): Promise<void> {
-    const task = await this.tasksService
-      .getRepository()
-      .findOne({ where: { id: taskId } });
+    const task = await this.tasksRepository.findOne({ where: { id: taskId } });
     if (task?.planId != null) {
       await this.planRulesEvaluationService.enqueueEvaluation(
         task.planId,

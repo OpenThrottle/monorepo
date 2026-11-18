@@ -5,11 +5,11 @@
 import { AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT } from '@openthrottle/nestjs-auth';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
-  PlanOutputStreamService,
-  PlansService,
-  TasksService,
-} from '@openthrottle/nestjs-repositories';
-import { PLAN_TASK_LIST_ORDER } from '@openthrottle/nestjs-repositories';
+  PlanOutputStreamRepository,
+  PlansRepository,
+  TasksRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import { PLAN_TASK_LIST_ORDER } from '@openthrottle/nestjs-repositories-server';
 import { formatPlanAndTasksForPrompt } from '@openthrottle/openthrottle-agentic-ralph';
 import type { WorkflowLifecycleDispatcher } from '@openthrottle/openthrottle-agentic-workflow';
 import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
@@ -127,12 +127,9 @@ export const executePlanJobRunHooks = async (
     return { blocked: false, results: [] };
   }
 
-  const planRepo = params.plansService.getRepository();
-  const taskRepo = params.tasksService.getRepository();
-
   const [plan, tasks] = await Promise.all([
-    planRepo.findOne({ where: { id: planId } }),
-    taskRepo.find({
+    params.plansRepository.findOne({ where: { id: planId } }),
+    params.tasksRepository.findBy({
       order: { ...PLAN_TASK_LIST_ORDER },
       where: { planId },
     }),
@@ -159,14 +156,11 @@ export const executePlanJobRunHooks = async (
     content: string,
     _iteration: number | null,
   ): Promise<void> => {
-    const outputRepo = params.planOutputStreamService.getRepository();
-    const entity = outputRepo.create({
+    await params.planOutputStreamRepository.create({
       content,
       iteration: null,
       planId,
     });
-
-    await outputRepo.save(entity);
   };
 
   const layer1Suffix = layer1SuffixForPhase(phase);
@@ -253,10 +247,10 @@ export const runAfterRunHooksThenNotify = async (params: {
   readonly mainRunSucceeded: boolean;
   readonly notification: PlanQueueJobCompletedPayload;
   readonly notifications: PlanJobRunHooksServices;
-  readonly planOutputStreamService: PlanOutputStreamService;
-  readonly plansService: PlansService;
+  readonly planOutputStreamRepository: PlanOutputStreamRepository;
+  readonly plansRepository: PlansRepository;
   readonly signal?: AbortSignal;
-  readonly tasksService: TasksService;
+  readonly tasksRepository: TasksRepository;
 }): Promise<void> => {
   const phaseResult = await runAfterRunHooks({
     hooks: params.hooks,
@@ -265,10 +259,10 @@ export const runAfterRunHooksThenNotify = async (params: {
     logger: params.logger,
     mainRunStarted: params.mainRunStarted,
     mainRunSucceeded: params.mainRunSucceeded,
-    planOutputStreamService: params.planOutputStreamService,
-    plansService: params.plansService,
+    planOutputStreamRepository: params.planOutputStreamRepository,
+    plansRepository: params.plansRepository,
     signal: params.signal,
-    tasksService: params.tasksService,
+    tasksRepository: params.tasksRepository,
   });
 
   logAfterRunHookFailures(
@@ -295,12 +289,12 @@ export const runBeforeAllHooksAndHandleBlock = async (params: {
       status: string;
     }) => void;
   };
-  readonly planOutputStreamService: PlanOutputStreamService;
+  readonly planOutputStreamRepository: PlanOutputStreamRepository;
   readonly planStatusService: PlanStatusService;
-  readonly plansService: PlansService;
+  readonly plansRepository: PlansRepository;
   readonly signal?: AbortSignal;
   readonly statusChangeSystemAccount: StatusChangeSystemAccountService;
-  readonly tasksService: TasksService;
+  readonly tasksRepository: TasksRepository;
 }): Promise<boolean> => {
   const phaseResult = await executePlanJobRunHooks({
     hooks: params.hooks,
@@ -308,10 +302,10 @@ export const runBeforeAllHooksAndHandleBlock = async (params: {
     logLabel: params.logLabel,
     logger: params.logger,
     phase: 'beforeAll',
-    planOutputStreamService: params.planOutputStreamService,
-    plansService: params.plansService,
+    planOutputStreamRepository: params.planOutputStreamRepository,
+    plansRepository: params.plansRepository,
     signal: params.signal,
-    tasksService: params.tasksService,
+    tasksRepository: params.tasksRepository,
   });
 
   if (!phaseResult.blocked) {
@@ -327,10 +321,10 @@ export const runBeforeAllHooksAndHandleBlock = async (params: {
     logger: params.logger,
     mainRunStarted: false,
     mainRunSucceeded: false,
-    planOutputStreamService: params.planOutputStreamService,
-    plansService: params.plansService,
+    planOutputStreamRepository: params.planOutputStreamRepository,
+    plansRepository: params.plansRepository,
     signal: params.signal,
-    tasksService: params.tasksService,
+    tasksRepository: params.tasksRepository,
   });
 
   await setPlanBlocked(
@@ -381,12 +375,12 @@ export const runBeforeAllHooksWithDispatcher = async (params: {
       status: string;
     }) => void;
   };
-  readonly planOutputStreamService: PlanOutputStreamService;
+  readonly planOutputStreamRepository: PlanOutputStreamRepository;
   readonly planStatusService: PlanStatusService;
-  readonly plansService: PlansService;
+  readonly plansRepository: PlansRepository;
   readonly signal?: AbortSignal;
   readonly statusChangeSystemAccount: StatusChangeSystemAccountService;
-  readonly tasksService: TasksService;
+  readonly tasksRepository: TasksRepository;
 }): Promise<boolean> => {
   const phaseResult = await params.dispatcher.runPlan({ phase: 'beforeAll' });
 

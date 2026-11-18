@@ -27,6 +27,9 @@
       "path": "../openthrottle-agentic-utils/tsconfig.lib.json"
     },
     {
+      "path": "../openthrottle-plan-config/tsconfig.lib.json"
+    },
+    {
       "path": "../../tools/dotfiles/tsconfig.lib.json"
     }
   ]

@@ -9,6 +9,7 @@
     "@nestjs/typeorm": "catalog:",
     "@openthrottle/nestjs-postgres": "workspace:^",
     "@openthrottle/nodejs-utils": "workspace:^",
+    "@openthrottle/openthrottle-plan-config": "workspace:^",
     "bcrypt": "catalog:",
     "fishery": "catalog:",
     "pg": "catalog:",

@@ -45,11 +45,14 @@ interface DbColumn {
 
 /**
  * @description Postgres type aliases an entity may declare, mapped to the name
- * information_schema reports (`BaseModel` declares `timestamptz`).
+ * information_schema reports (`BaseModel` declares `timestamptz`). pgvector's `vector` is an
+ * extension type, so information_schema reports it as USER-DEFINED with udt_name `vector`.
  */
 const TYPE_ALIASES: Readonly<Record<string, string>> = {
+  int: 'integer',
   timestamptz: 'timestamp with time zone',
   varchar: 'character varying',
+  vector: 'USER-DEFINED:vector',
 };
 
 /**

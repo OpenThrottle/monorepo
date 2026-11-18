@@ -4,6 +4,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
+import { PLAN_WORKFLOW_CONFIG_TARGET_COPY } from '~/routing/plans/data/data.copy';
 import { getDefaultWorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
 
 import { PlanWorkflowConfigTarget } from '../PlanWorkflowConfigTarget';
@@ -78,7 +79,7 @@ describe('PlanWorkflowConfigTarget Component', () => {
     await user.type(planInput, 'not-a-valid-uuid');
 
     expect(getByRole('alert')).toHaveTextContent(
-      'Value does not match a UUID (v4) pattern',
+      PLAN_WORKFLOW_CONFIG_TARGET_COPY.invalidIdWarning,
     );
   });
 
@@ -140,7 +141,7 @@ describe('PlanWorkflowConfigTarget Component', () => {
     await user.type(taskInput, 'bad');
 
     expect(getByRole('alert')).toHaveTextContent(
-      'Value does not match a UUID (v4) pattern',
+      PLAN_WORKFLOW_CONFIG_TARGET_COPY.invalidIdWarning,
     );
   });
 });

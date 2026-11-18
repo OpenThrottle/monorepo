@@ -3,11 +3,16 @@ import type { AuthPrincipal } from '@openthrottle/nestjs-auth';
 import { AUTH_PRINCIPAL_KIND_USER } from '@openthrottle/nestjs-auth';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
-  PlansService,
   ServiceAccountsService,
   TagsService,
 } from '@openthrottle/nestjs-repositories';
 import { type ProjectTag } from '@openthrottle/nestjs-repositories';
+import type { PlansRepository } from '@openthrottle/nestjs-repositories-server';
+import {
+  createPlansRepositoryMock,
+  plansFactory,
+} from '@openthrottle/nestjs-repositories-server/testing';
+import { asMock } from '@openthrottle/nestjs-testing';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { PlanRulesEvaluationService } from '../../queues/plan-rules/evaluation/evaluation.service.ts';
@@ -23,9 +28,13 @@ const userPrincipal: AuthPrincipal = createMock<AuthPrincipal>({
 
 describe('ProjectTagsResolver', () => {
   const enqueueEvaluation = vi.fn().mockResolvedValue(undefined);
-  const planFind = vi
-    .fn()
-    .mockResolvedValue([{ id: 'plan-a' }, { id: 'plan-b' }]);
+  const plansRepository = createPlansRepositoryMock();
+  const planFind = plansRepository.findBy;
+
+  planFind.mockResolvedValue([
+    plansFactory.build({ id: 'plan-a' }),
+    plansFactory.build({ id: 'plan-b' }),
+  ]);
   const addProjectTag = vi
     .fn()
     .mockResolvedValue(createMock<ProjectTag>({ tag: 'backend' }));
@@ -34,9 +43,7 @@ describe('ProjectTagsResolver', () => {
   const resolver = new ProjectTagsResolver(
     createMock<TagsLoaders>(),
     createMock<LoggerService>(),
-    createMock<PlansService>({
-      getRepository: vi.fn().mockReturnValue({ find: planFind }),
-    }),
+    asMock<PlansRepository>(plansRepository),
     createMock<PlanRulesEvaluationService>({ enqueueEvaluation }),
     createMock<ServiceAccountsService>(),
     createMock<TagsService>({ addProjectTag, removeProjectTag }),

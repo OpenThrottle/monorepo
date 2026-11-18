@@ -15,7 +15,7 @@ import {
   Task,
 } from '@openthrottle/nestjs-repositories';
 import { isRecord } from '@openthrottle/nodejs-utils';
-import { In } from 'typeorm';
+import { In, IsNull } from 'typeorm';
 
 import { getOrCreateDataSource, runQuery } from './data-source.ts';
 
@@ -123,7 +123,7 @@ export async function runSemanticSearch(
     `SELECT pe.id, pe.content, pe.metadata, pe.plan_id, p.title AS plan_title,
               1 - (pe.embedding <=> $1::vector) AS similarity
        FROM plan_embeddings pe
-       JOIN plans p ON pe.plan_id = p.id
+       JOIN plans p ON pe.plan_id = p.id AND p.deleted_at IS NULL
        WHERE pe.embedding_model = $3
        ORDER BY pe.embedding <=> $1::vector
        LIMIT $2`,
@@ -135,8 +135,8 @@ export async function runSemanticSearch(
               t.plan_id, p.title AS plan_title,
               1 - (te.embedding <=> $1::vector) AS similarity
        FROM task_embeddings te
-       JOIN tasks t ON te.task_id = t.id
-       JOIN plans p ON t.plan_id = p.id
+       JOIN tasks t ON te.task_id = t.id AND t.deleted_at IS NULL
+       JOIN plans p ON t.plan_id = p.id AND p.deleted_at IS NULL
        WHERE te.embedding_model = $3
        ORDER BY te.embedding <=> $1::vector
        LIMIT $2`,
@@ -336,7 +336,7 @@ export async function getChunkById(
   const planRaw = await ds.query<PlanEmbeddingGetRow>(
     `SELECT pe.id, pe.content, pe.metadata, pe.plan_id, p.title AS plan_title
        FROM plan_embeddings pe
-       JOIN plans p ON pe.plan_id = p.id
+       JOIN plans p ON pe.plan_id = p.id AND p.deleted_at IS NULL
        WHERE pe.id = $1`,
     [id],
   );
@@ -375,8 +375,8 @@ export async function getChunkById(
     `SELECT te.id, te.content, te.metadata, te.task_id, t.title AS task_title,
               t.plan_id, p.title AS plan_title
        FROM task_embeddings te
-       JOIN tasks t ON te.task_id = t.id
-       JOIN plans p ON t.plan_id = p.id
+       JOIN tasks t ON te.task_id = t.id AND t.deleted_at IS NULL
+       JOIN plans p ON t.plan_id = p.id AND p.deleted_at IS NULL
        WHERE te.id = $1`,
     [id],
   );
@@ -467,10 +467,12 @@ const LEXICAL_SOURCES_SQL = `
          NULL AS path, NULL AS repo, NULL AS sha, NULL::int AS pr_number, NULL::jsonb AS authors,
          s.search_tsv
     FROM plans s
+   WHERE s.deleted_at IS NULL
   UNION ALL
   SELECT 'task', s.id, concat_ws(E'\\n', s.title, s.description, s.summary),
          s.plan_id, p.title, s.id, s.title, NULL, NULL, NULL, NULL, NULL, s.search_tsv
-    FROM tasks s JOIN plans p ON p.id = s.plan_id
+    FROM tasks s JOIN plans p ON p.id = s.plan_id AND p.deleted_at IS NULL
+   WHERE s.deleted_at IS NULL
   UNION ALL
   SELECT 'documentation', s.id, s.content, NULL, NULL, NULL, NULL,
          s.path, s.repo, s.sha, s.pr_number, s.authors, s.search_tsv
@@ -715,7 +717,7 @@ interface ListSourcesResult {
 export async function listSources(): Promise<ListSourcesResult> {
   const ds = await getOrCreateDataSource();
   const planRaw = await ds.query<Pick<PlanData, 'id' | 'title'>>(
-    `SELECT id, title FROM plans ORDER BY title`,
+    `SELECT id, title FROM plans WHERE deleted_at IS NULL ORDER BY title`,
   );
   const { rows: planRowsList } =
     normalizeQueryResult<Pick<PlanData, 'id' | 'title'>>(planRaw);
@@ -803,7 +805,7 @@ export async function listPlansByStatus(
   const trimmedProjectId = projectId?.trim() ?? '';
   const projectIdFilter = trimmedProjectId === '' ? null : trimmedProjectId;
 
-  const conditions: string[] = [];
+  const conditions: string[] = ['deleted_at IS NULL'];
   const params: (string | number)[] = [];
   let paramIndex = 1;
   if (!showAllStatuses) {
@@ -827,8 +829,7 @@ export async function listPlansByStatus(
     conditions.push(`title ILIKE $${paramIndex++}`);
     params.push(titlePattern);
   }
-  const whereClause =
-    conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+  const whereClause = `WHERE ${conditions.join(' AND ')}`;
 
   const countParams = params;
   const countRaw = await ds.query<{ count: string }>(
@@ -1173,13 +1174,25 @@ export async function updatePlan(
 }
 
 /**
- * @description Deletes a plan by id (cascades to tasks). Returns true if a row was deleted.
+ * @description Soft deletes a live plan by id, and its live tasks with it. Returns true if a plan was deleted.
  */
 export async function deletePlan(id: string): Promise<boolean> {
   const ds = await getOrCreateDataSource();
-  const repo = ds.getRepository(Plan);
-  const result = await repo.delete(id);
-  return (result.affected ?? 0) > 0;
+
+  return ds.transaction(async (manager) => {
+    const result = await manager.softDelete(Plan, {
+      deletedAt: IsNull(),
+      id,
+    });
+
+    if ((result.affected ?? 0) === 0) {
+      return false;
+    }
+
+    await manager.softDelete(Task, { deletedAt: IsNull(), planId: id });
+
+    return true;
+  });
 }
 
 /**
@@ -1372,13 +1385,25 @@ export async function updateTask(
 }
 
 /**
- * @description Deletes a task by id. Returns true if a row was deleted.
+ * @description Soft deletes a live task by id, and its live child tasks (hooks, subtasks) with it. Returns true if a task was deleted.
  */
 export async function deleteTask(id: string): Promise<boolean> {
   const ds = await getOrCreateDataSource();
-  const repo = ds.getRepository(Task);
-  const result = await repo.delete(id);
-  return (result.affected ?? 0) > 0;
+
+  return ds.transaction(async (manager) => {
+    const result = await manager.softDelete(Task, {
+      deletedAt: IsNull(),
+      id,
+    });
+
+    if ((result.affected ?? 0) === 0) {
+      return false;
+    }
+
+    await manager.softDelete(Task, { deletedAt: IsNull(), parentTaskId: id });
+
+    return true;
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -1764,9 +1789,11 @@ export async function getLastActivityForPlanOrTask(
       status: string;
       title: string;
       updated_at: string;
-    }>(ds, `SELECT title, status, updated_at FROM tasks WHERE id = $1`, [
-      taskId,
-    ]);
+    }>(
+      ds,
+      `SELECT title, status, updated_at FROM tasks WHERE id = $1 AND deleted_at IS NULL`,
+      [taskId],
+    );
     const taskRow = taskRes.rows[0];
     if (taskRow) {
       candidates.push({
@@ -1788,7 +1815,7 @@ export async function getLastActivityForPlanOrTask(
       updated_at: string;
     }>(
       ds,
-      `SELECT id, title, status, updated_at FROM tasks WHERE plan_id = $1 ORDER BY updated_at DESC LIMIT 1`,
+      `SELECT id, title, status, updated_at FROM tasks WHERE plan_id = $1 AND deleted_at IS NULL ORDER BY updated_at DESC LIMIT 1`,
       [planId],
     );
     const taskRow = taskRes.rows[0];
@@ -1970,8 +1997,8 @@ async function getCommitLinksInDateRange(
             AND wa.produced_at >= $1::timestamptz AND wa.produced_at < $2::timestamptz
           ORDER BY wa.id, (wss.task_id IS NULL)
        ) sub
-       JOIN plans p ON p.id = sub.plan_id
-       LEFT JOIN tasks t ON t.id = sub.task_id
+       JOIN plans p ON p.id = sub.plan_id AND p.deleted_at IS NULL
+       LEFT JOIN tasks t ON t.id = sub.task_id AND t.deleted_at IS NULL
        ORDER BY sub.created_at DESC`,
     [startIso, endIso],
   );
@@ -2008,7 +2035,7 @@ async function getPlanOutputChunksInDateRange(
     ds,
     `SELECT pos.id, pos.plan_id, pos.iteration, pos.content, pos.created_at, p.title AS plan_title
        FROM plan_output_stream pos
-       JOIN plans p ON pos.plan_id = p.id
+       JOIN plans p ON pos.plan_id = p.id AND p.deleted_at IS NULL
        WHERE pos.created_at >= $1::timestamptz AND pos.created_at < $2::timestamptz
        ORDER BY pos.created_at ASC`,
     [startIso, endIso],
@@ -2043,8 +2070,9 @@ async function getTasksUpdatedInDateRange(
     ds,
     `SELECT t.id, t.plan_id, t.title, t.status, t.updated_at, p.title AS plan_title
        FROM tasks t
-       JOIN plans p ON t.plan_id = p.id
-       WHERE t.updated_at >= $1::timestamptz AND t.updated_at < $2::timestamptz
+       JOIN plans p ON t.plan_id = p.id AND p.deleted_at IS NULL
+       WHERE t.deleted_at IS NULL
+         AND t.updated_at >= $1::timestamptz AND t.updated_at < $2::timestamptz
        ORDER BY t.updated_at DESC`,
     [startIso, endIso],
   );

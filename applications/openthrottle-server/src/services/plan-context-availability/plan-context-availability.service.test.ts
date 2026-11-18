@@ -10,20 +10,31 @@ import { createMock } from '@golevelup/ts-vitest';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
-  Plan,
-  PlansService,
   ProjectSkillsService,
-  ProjectsService,
   SkillAvailabilityService,
   SkillTagsService,
   TagActionRule,
   TagActionRulesService,
   TagsService,
-  Task,
-  TasksService,
   User,
   UsersService,
 } from '@openthrottle/nestjs-repositories';
+import type {
+  Plan,
+  PlansRepository,
+  ProjectsRepository,
+  Task,
+  TasksRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import type {
+  PlansRepositoryMock,
+  TasksRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
+import {
+  createPlansRepositoryMock,
+  createProjectsRepositoryMock,
+  createTasksRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 
@@ -57,8 +68,8 @@ const availabilityExceptionRule = (
 
 describe('PlanContextAvailabilityService', () => {
   let service: PlanContextAvailabilityService;
-  let planFindOne: ReturnType<typeof vi.fn>;
-  let taskFindOne: ReturnType<typeof vi.fn>;
+  let planFindOne: PlansRepositoryMock['findOne'];
+  let taskFindOne: TasksRepositoryMock['findOne'];
   let effectiveTagSet: Mock<TagsService['getEffectiveTagSet']>;
   let listEnabledForUser: Mock<TagActionRulesService['listEnabledForUser']>;
   let getRuleSetForProject: Mock<
@@ -69,7 +80,11 @@ describe('PlanContextAvailabilityService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    planFindOne = vi.fn().mockResolvedValue(
+    const plansRepository = createPlansRepositoryMock();
+    const tasksRepository = createTasksRepositoryMock();
+
+    planFindOne = plansRepository.findOne;
+    planFindOne.mockResolvedValue(
       asMock<Plan>({
         author: 'owner-gh',
         id: planId,
@@ -77,9 +92,8 @@ describe('PlanContextAvailabilityService', () => {
         status: 'PENDING',
       }),
     );
-    taskFindOne = vi
-      .fn()
-      .mockResolvedValue(asMock<Task>({ id: taskId, planId }));
+    taskFindOne = tasksRepository.findOne;
+    taskFindOne.mockResolvedValue(asMock<Task>({ id: taskId, planId }));
     effectiveTagSet = vi.fn().mockResolvedValue([
       {
         confidence: null,
@@ -106,22 +120,16 @@ describe('PlanContextAvailabilityService', () => {
 
     service = new PlanContextAvailabilityService(
       createMock<LoggerService>(),
-      createMock<PlansService>({
-        getRepository: vi.fn(() => asMock({ findOne: planFindOne })),
-      }),
+      asMock<PlansRepository>(plansRepository),
       createMock<ProjectSkillsService>({ getSkillsForProject }),
-      createMock<ProjectsService>({
-        findByNxProjectName: vi.fn().mockResolvedValue(null),
-      }),
+      asMock<ProjectsRepository>(createProjectsRepositoryMock()),
       createMock<SkillAvailabilityService>({ getRuleSetForProject }),
       createMock<SkillTagsService>({
         listForUser: vi.fn().mockResolvedValue(vocabularyRows),
       }),
       createMock<TagActionRulesService>({ listEnabledForUser }),
       createMock<TagsService>({ getEffectiveTagSet: effectiveTagSet }),
-      createMock<TasksService>({
-        getRepository: vi.fn(() => asMock({ findOne: taskFindOne })),
-      }),
+      asMock<TasksRepository>(tasksRepository),
       createMock<UsersService>({
         findByGithubUsername: vi
           .fn()

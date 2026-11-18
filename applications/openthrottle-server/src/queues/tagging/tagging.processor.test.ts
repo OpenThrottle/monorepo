@@ -10,14 +10,16 @@ import type { ConfigService } from '@nestjs/config';
 import type { GitHubService } from '@openthrottle/nestjs-github';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
-  Plan,
-  PlansService,
   PlanTag,
   ServiceAccountsService,
   SkillTagsService,
   TagsService,
-  TasksService,
 } from '@openthrottle/nestjs-repositories';
+import type { Plan } from '@openthrottle/nestjs-repositories-server';
+import {
+  createPlansRepositoryMock,
+  createTasksRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 
@@ -105,20 +107,17 @@ describe('TaggingProcessor', () => {
     processor = new TaggingProcessor(
       createMock<LoggerService>(),
       planRulesEvaluationService,
-      createMock<PlansService>({
-        getRepository: vi.fn(() =>
-          asMock({
-            findOne: vi.fn(() =>
-              Promise.resolve(
-                asMock<Plan>({
-                  description: 'Terraform the infra',
-                  id: planId,
-                  summary: null,
-                  title: 'Breakdown the infra work',
-                }),
-              ),
-            ),
-          }),
+      asMock({
+        ...createPlansRepositoryMock(),
+        findOne: vi.fn(() =>
+          Promise.resolve(
+            asMock<Plan>({
+              description: 'Terraform the infra',
+              id: planId,
+              summary: null,
+              title: 'Breakdown the infra work',
+            }),
+          ),
         ),
       }),
       createMock<ServiceAccountsService>({
@@ -135,7 +134,7 @@ describe('TaggingProcessor', () => {
       ),
       provider,
       tagsService,
-      createMock<TasksService>(),
+      asMock(createTasksRepositoryMock()),
     );
   });
 

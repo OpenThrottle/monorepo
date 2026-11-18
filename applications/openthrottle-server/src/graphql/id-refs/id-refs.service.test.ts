@@ -3,12 +3,23 @@
  * plans-first merge, and the junk-input short circuit.
  */
 
-import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
-import type { Plan, Task } from '@openthrottle/nestjs-repositories';
-import { PlansService, TasksService } from '@openthrottle/nestjs-repositories';
-import type { SelectQueryBuilder } from 'typeorm';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { Plan, Task } from '@openthrottle/nestjs-repositories-server';
+import {
+  PlansRepository,
+  TasksRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import type {
+  PlansRepositoryMock,
+  TasksRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
+import {
+  createPlansRepositoryMock,
+  createTasksRepositoryMock,
+  plansFactory,
+  tasksFactory,
+} from '@openthrottle/nestjs-repositories-server/testing';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 import { ID_REF_KIND } from './id-refs.enum.ts';
 import { IdRefsService } from './id-refs.service.ts';
@@ -16,36 +27,15 @@ import { IdRefsService } from './id-refs.service.ts';
 const PLAN_ID = '1e5089b4-94f1-449b-8d80-4edd82c47037';
 const TASK_ID = '2e139d89-3dde-42f1-a51a-6899ef4e1e86';
 
-const createQbMock = <TEntity extends object>(rows: TEntity[]) => {
-  const getMany = vi.fn().mockResolvedValue(rows);
-  const leftJoin = vi.fn().mockReturnThis();
-  const limit = vi.fn().mockReturnThis();
-  const orderBy = vi.fn().mockReturnThis();
-  const select = vi.fn().mockReturnThis();
-  const take = vi.fn().mockReturnThis();
-  const where = vi.fn().mockReturnThis();
-  const chain = createMock<SelectQueryBuilder<TEntity>>({
-    getMany,
-    leftJoin,
-    limit,
-    orderBy,
-    select,
-    take,
-    where,
-  });
-
-  return { chain, limit, take, where };
-};
-
-const plan = createMock<Plan>({
+const plan = plansFactory.build({
   id: PLAN_ID,
   status: 'IN_PROGRESS',
   title: 'Commander id lookup',
 });
 
-const task = createMock<Task>({
+const task = tasksFactory.build({
   id: TASK_ID,
-  plan: createMock<Plan>({ id: PLAN_ID, title: 'Commander id lookup' }),
+  plan: plansFactory.build({ id: PLAN_ID, title: 'Commander id lookup' }),
   planId: PLAN_ID,
   status: 'PENDING',
   title: 'Server query',
@@ -53,36 +43,22 @@ const task = createMock<Task>({
 
 describe('IdRefsService', () => {
   let service: IdRefsService;
-  let planQb: ReturnType<typeof createQbMock<Plan>>;
-  let taskQb: ReturnType<typeof createQbMock<Task>>;
-  let plansCreateQb: ReturnType<typeof vi.fn>;
-  let tasksCreateQb: ReturnType<typeof vi.fn>;
+  let plans: PlansRepositoryMock;
+  let tasks: TasksRepositoryMock;
 
-  const setup = async (plans: Plan[], tasks: Task[]): Promise<void> => {
-    planQb = createQbMock(plans);
-    taskQb = createQbMock(tasks);
-    plansCreateQb = vi.fn().mockReturnValue(planQb.chain);
-    tasksCreateQb = vi.fn().mockReturnValue(taskQb.chain);
+  const setup = async (planRows: Plan[], taskRows: Task[]): Promise<void> => {
+    plans = createPlansRepositoryMock();
+    tasks = createTasksRepositoryMock();
+    plans.findByIdPrefix.mockResolvedValue(planRows);
+    plans.findBy.mockResolvedValue(planRows);
+    tasks.findByIdPrefix.mockResolvedValue(taskRows);
+    tasks.findBy.mockResolvedValue(taskRows);
 
     const moduleRef = await Test.createTestingModule({
       providers: [
         IdRefsService,
-        {
-          provide: PlansService,
-          useValue: {
-            getRepository: () => {
-              return { createQueryBuilder: plansCreateQb };
-            },
-          },
-        },
-        {
-          provide: TasksService,
-          useValue: {
-            getRepository: () => {
-              return { createQueryBuilder: tasksCreateQb };
-            },
-          },
-        },
+        { provide: PlansRepository, useValue: plans },
+        { provide: TasksRepository, useValue: tasks },
       ],
     }).compile();
 
@@ -101,8 +77,10 @@ describe('IdRefsService', () => {
       ['empty', '   '],
     ])('returns [] and never queries for %s input', async (_label, ref) => {
       await expect(service.resolve(ref)).resolves.toEqual([]);
-      expect(plansCreateQb).not.toHaveBeenCalled();
-      expect(tasksCreateQb).not.toHaveBeenCalled();
+      expect(plans.findByIdPrefix).not.toHaveBeenCalled();
+      expect(plans.findBy).not.toHaveBeenCalled();
+      expect(tasks.findByIdPrefix).not.toHaveBeenCalled();
+      expect(tasks.findBy).not.toHaveBeenCalled();
     });
   });
 
@@ -122,10 +100,7 @@ describe('IdRefsService', () => {
           title: 'Commander id lookup',
         },
       ]);
-      expect(planQb.where).toHaveBeenCalledWith(expect.any(String), {
-        pattern: '1e5089b4%',
-      });
-      expect(planQb.take).toHaveBeenCalledWith(8);
+      expect(plans.findByIdPrefix).toHaveBeenCalledWith('1e5089b4', 8);
     });
 
     it('resolves a task by prefix and carries its plan', async () => {
@@ -143,13 +118,7 @@ describe('IdRefsService', () => {
           title: 'Server query',
         },
       ]);
-      expect(taskQb.where).toHaveBeenCalledWith(expect.any(String), {
-        pattern: '2e139d89%',
-      });
-      // A joined query must use LIMIT: `take` would wrap it in a DISTINCT
-      // subquery that fails to order by task.updatedAt in Postgres.
-      expect(taskQb.limit).toHaveBeenCalledWith(8);
-      expect(taskQb.take).not.toHaveBeenCalled();
+      expect(tasks.findByIdPrefix).toHaveBeenCalledWith('2e139d89', 8);
     });
 
     it('lists plans before tasks when a prefix matches both', async () => {
@@ -179,10 +148,10 @@ describe('IdRefsService', () => {
       const result = await service.resolve(` ${PLAN_ID.toUpperCase()} `);
 
       expect(result[0]?.id).toBe(PLAN_ID);
-      expect(planQb.where).toHaveBeenCalledWith('plan.id = :id', {
-        id: PLAN_ID,
-      });
-      expect(planQb.take).not.toHaveBeenCalled();
+      expect(plans.findBy).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: PLAN_ID } }),
+      );
+      expect(plans.findByIdPrefix).not.toHaveBeenCalled();
     });
 
     it('matches a task exactly from its hyphen-less form', async () => {
@@ -191,9 +160,10 @@ describe('IdRefsService', () => {
       const result = await service.resolve(TASK_ID.replace(/-/g, ''));
 
       expect(result[0]?.kind).toBe(ID_REF_KIND.TASK);
-      expect(taskQb.where).toHaveBeenCalledWith('task.id = :id', {
-        id: TASK_ID,
-      });
+      expect(tasks.findBy).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: TASK_ID } }),
+      );
+      expect(tasks.findByIdPrefix).not.toHaveBeenCalled();
     });
   });
 });

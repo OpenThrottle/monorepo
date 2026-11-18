@@ -19,12 +19,17 @@ import { ESLintUtils } from '@typescript-eslint/utils';
  * `route-primitive-shape`: it traces a small, local "is this a Plan/Task
  * repository or entity" provenance through the file being linted —
  * `manager.getRepository(Task)` / `this.tasksService.getRepository()` /
- * `this.plansService.getRepository()`, an explicit `: Task` / `: Plan` type
+ * `this.plansService.getRepository()`, a `PlansRepository` / `TasksRepository`
+ * binding (`this.plansRepository`, `this.tasksRepository`, or a parameter or field
+ * typed as one of those classes), an explicit `: Task` / `: Plan` type
  * annotation, or a `new Task()` / `new Plan()` — and flags:
  *
  *   - a plain `<entity>.status = …` assignment on a traced Plan/Task binding;
  *   - a `repo.update(criteria, { status })` / `manager.update(Task, id, { status })`
- *     call whose target resolves to Plan/Task;
+ *     call whose target resolves to Plan/Task, and the `BaseRepository` bulk forms
+ *     `repository.updateMany(where, { status })` and
+ *     `repository.updateManyReturning(where, { status })` on a PlansRepository /
+ *     TasksRepository;
  *   - a query-builder `.set({ status })` chained off a traced Plan/Task
  *     repository (however deep the `.where()`/`.andWhere()`/`.setLock()` chain
  *     between them).
@@ -75,12 +80,30 @@ const tableForEntity = (entity: Entity): string => {
   return entity === 'plan' ? 'plans' : 'tasks';
 };
 
-/** The two DI service field names this codebase consistently uses for the Plan/Task repositories. */
+/**
+ * The DI field names this codebase consistently uses for the Plan/Task data access: the
+ * deprecated services (whose `getRepository()` hands out the TypeORM repository) and the
+ * `BaseRepository` subclasses that replace them.
+ */
 const entityForServiceBindingName = (name: string): Entity | null => {
-  if (name === 'plansService') return 'plan';
-  if (name === 'tasksService') return 'task';
+  if (name === 'plansService' || name === 'plansRepository') return 'plan';
+  if (name === 'tasksService' || name === 'tasksRepository') return 'task';
   return null;
 };
+
+/** The two `BaseRepository` subclasses over the plans and tasks tables, matched by class name. */
+const entityForRepositoryClassName = (name: string): Entity | null => {
+  if (name === 'PlansRepository') return 'plan';
+  if (name === 'TasksRepository') return 'task';
+  return null;
+};
+
+/** `BaseRepository` write methods that take `(where | id, partial)`, partial in position 1. */
+const PARTIAL_SECOND_ARGUMENT_METHODS: ReadonlySet<string> = new Set([
+  'update',
+  'updateMany',
+  'updateManyReturning',
+]);
 
 /** The two entity class names this rule cares about (matched against the imported/local name). */
 const entityForImportedName = (name: string): Entity | null => {
@@ -191,6 +214,10 @@ export const planTaskStatusChokepoint = createRule<[RuleOptions?], MessageIds>({
       ) {
         const direct = importedEntityLocalNames.get(typeNode.typeName.name);
         if (direct !== undefined) return direct;
+        const repositoryEntity = entityForRepositoryClassName(
+          typeNode.typeName.name,
+        );
+        if (repositoryEntity !== null) return repositoryEntity;
         // Unwrap one level of generic wrapper — `Repository<Task>` (the
         // universal NestJS `@InjectRepository(Task) private readonly
         // taskRepository: Repository<Task>` shape) as well as `Promise<Task>`
@@ -266,7 +293,11 @@ export const planTaskStatusChokepoint = createRule<[RuleOptions?], MessageIds>({
 
       const fieldKey = thisFieldKey(unwrapped);
       if (fieldKey !== null) {
-        return bindings.get(fieldKey) ?? null;
+        const traced = bindings.get(fieldKey);
+        if (traced !== undefined) return traced;
+        // An injected `plansRepository` / `tasksRepository` field is recognised by its
+        // conventional name even when its declaration is not in this file (a base class).
+        return entityForServiceBindingName(fieldKey.slice('this.'.length));
       }
 
       if (unwrapped.type === 'NewExpression') {
@@ -293,7 +324,7 @@ export const planTaskStatusChokepoint = createRule<[RuleOptions?], MessageIds>({
           return entityFromServiceReceiver(callee.object);
         }
 
-        if (methodName === 'update') {
+        if (PARTIAL_SECOND_ARGUMENT_METHODS.has(methodName)) {
           const arg0 = unwrapped.arguments[0];
           if (arg0 !== undefined && arg0.type === 'Identifier') {
             const byArg = importedEntityLocalNames.get(arg0.name);
@@ -397,7 +428,7 @@ export const planTaskStatusChokepoint = createRule<[RuleOptions?], MessageIds>({
         if (callee.property.type !== 'Identifier') return;
         const methodName = callee.property.name;
 
-        if (methodName === 'update') {
+        if (PARTIAL_SECOND_ARGUMENT_METHODS.has(methodName)) {
           const args = node.arguments;
           const arg0 = args[0];
           let entity: Entity | null = null;

@@ -5,9 +5,9 @@ import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { PlanRun } from '@openthrottle/nestjs-repositories';
 import {
   PLAN_RUN_STATUS,
-  PlanOutputStreamService,
   PlanRunsService,
 } from '@openthrottle/nestjs-repositories';
+import { PlanOutputStreamRepository } from '@openthrottle/nestjs-repositories-server';
 import type { Queue } from 'bullmq';
 
 import { validateWorkingDirectory } from '../../../graphql/plans/enqueue-plan-ralph-tuning/enqueue-plan-ralph-tuning.utils.ts';
@@ -66,7 +66,7 @@ export class ScheduledPlanRunService {
     private readonly logger: LoggerService,
     private readonly notifications: NotificationsService,
     private readonly planEnqueueService: PlanEnqueueService,
-    private readonly planOutputStreamService: PlanOutputStreamService,
+    private readonly planOutputStreamRepository: PlanOutputStreamRepository,
     private readonly planRunsService: PlanRunsService,
     @InjectQueue(PLANS_QUEUE_NAME)
     private readonly plansQueue: Queue<RunPlanJobData, PlanRunJobResult | void>,
@@ -279,11 +279,11 @@ export class ScheduledPlanRunService {
     });
 
     try {
-      const repo = this.planOutputStreamService.getRepository();
-
-      await repo.save(
-        repo.create({ content: message, iteration: null, planId: run.planId }),
-      );
+      await this.planOutputStreamRepository.create({
+        content: message,
+        iteration: null,
+        planId: run.planId,
+      });
     } catch (error) {
       this.logger.warn(
         `Could not append the not-started note for scheduled run ${run.id} to plan ${run.planId} output: ${describeError(error)}`,

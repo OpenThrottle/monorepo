@@ -11,13 +11,9 @@ import { EvalDatasetsModule } from './modules/eval-datasets/eval-datasets.module
 import { EvalHumanLabelsModule } from './modules/eval-human-labels/eval-human-labels.module.ts';
 import { EvalJudgeCalibrationsModule } from './modules/eval-judge-calibrations/eval-judge-calibrations.module.ts';
 import { EvalRunsModule } from './modules/eval-runs/eval-runs.module.ts';
-import { PlanEmbeddingsModule } from './modules/plan-embeddings/plan-embeddings.module.ts';
 import { PlanMessagesModule } from './modules/plan-messages/plan-messages.module.ts';
-import { PlanOutputStreamModule } from './modules/plan-output-stream/plan-output-stream.module.ts';
 import { PlanRunsModule } from './modules/plan-runs/plan-runs.module.ts';
-import { PlansModule } from './modules/plans/plans.module.ts';
 import { ProjectSkillsModule } from './modules/project-skills/project-skills.module.ts';
-import { ProjectsModule } from './modules/projects/projects.module.ts';
 import { CustomPromptsModule } from './modules/prompts/prompts.module.ts';
 import { RepositoriesModule } from './modules/repositories/repositories.module.ts';
 import { RolesModule } from './modules/roles/roles.module.ts';
@@ -28,8 +24,6 @@ import { SkillTagsModule } from './modules/skill-tags/skill-tags.module.ts';
 import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module.ts';
 import { TagActionRulesModule } from './modules/tag-action-rules/tag-action-rules.module.ts';
 import { TagsModule } from './modules/tags/tags.module.ts';
-import { TaskEmbeddingsModule } from './modules/task-embeddings/task-embeddings.module.ts';
-import { TasksModule } from './modules/tasks/tasks.module.ts';
 import { UserPreferencesModule } from './modules/user-preferences/user-preferences.module.ts';
 import { UsersModule } from './modules/users/users.module.ts';
 import { WorkLedgerModule } from './modules/work-ledger/work-ledger.module.ts';
@@ -48,13 +42,9 @@ import { getTypeOrmOptions } from './nestjs-repositories.utils.ts';
     EvalHumanLabelsModule,
     EvalJudgeCalibrationsModule,
     EvalRunsModule,
-    PlanEmbeddingsModule,
     PlanMessagesModule,
-    PlanOutputStreamModule,
     PlanRunsModule,
-    PlansModule,
     ProjectSkillsModule,
-    ProjectsModule,
     RepositoriesModule,
     RolesModule,
     ScheduledAgentJobsModule,
@@ -64,8 +54,6 @@ import { getTypeOrmOptions } from './nestjs-repositories.utils.ts';
     SubscriptionsModule,
     TagActionRulesModule,
     TagsModule,
-    TaskEmbeddingsModule,
-    TasksModule,
     UserPreferencesModule,
     UsersModule,
     WorkLedgerModule,
@@ -91,13 +79,9 @@ import { getTypeOrmOptions } from './nestjs-repositories.utils.ts';
     EvalJudgeCalibrationsModule,
     EvalRunsModule,
     LoggerModule,
-    PlanEmbeddingsModule,
     PlanMessagesModule,
-    PlanOutputStreamModule,
     PlanRunsModule,
-    PlansModule,
     ProjectSkillsModule,
-    ProjectsModule,
     RepositoriesModule,
     RolesModule,
     ScheduledAgentJobsModule,
@@ -107,8 +91,6 @@ import { getTypeOrmOptions } from './nestjs-repositories.utils.ts';
     SubscriptionsModule,
     TagActionRulesModule,
     TagsModule,
-    TaskEmbeddingsModule,
-    TasksModule,
     UserPreferencesModule,
     UsersModule,
     WorkLedgerModule,

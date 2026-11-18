@@ -12,19 +12,21 @@ import {
 } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
-  Plan,
   PLAN_RUN_STATUS,
   PLAN_STATUS,
   PlanRunsService,
-  PlansService,
   REMAINING_TASK_STATUSES,
   resolveCompletedAtForStatusChange,
-  Task,
-  TasksService,
 } from '@openthrottle/nestjs-repositories';
+import {
+  Plan,
+  PlansRepository,
+  Task,
+  TasksRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import type { Queue } from 'bullmq';
 import type { EntityManager } from 'typeorm';
-import { In } from 'typeorm';
+import { DataSource, In } from 'typeorm';
 
 import { NotificationsService } from '../../../notifications/notifications.service.ts';
 import { updateMatchingTasksAndEmitStatusChanged } from '../../../notifications/notifications.utils.ts';
@@ -118,13 +120,14 @@ interface CancelRunOutcome {
 @Injectable()
 export class PlanStatusService {
   constructor(
+    private readonly dataSource: DataSource,
     private readonly logger: LoggerService,
     private readonly notificationsService: NotificationsService,
     private readonly planCancelChannel: PlanCancelChannelService,
     private readonly planRunCancellation: PlanRunCancellationService,
     private readonly planRunsService: PlanRunsService,
-    private readonly plansService: PlansService,
-    private readonly tasksService: TasksService,
+    private readonly plansRepository: PlansRepository,
+    private readonly tasksRepository: TasksRepository,
     private readonly workLedgerCapture: WorkLedgerCaptureService,
     @InjectQueue(PLANS_QUEUE_NAME)
     private readonly plansQueue: Queue<RunPlanJobData, void>,
@@ -404,9 +407,7 @@ export class PlanStatusService {
     requestedStatus: string,
     actor: StatusChangeActor,
   ): Promise<Plan | null> {
-    const repo = this.plansService.getRepository();
-
-    return repo.manager.transaction(async (manager) => {
+    return this.dataSource.transaction(async (manager) => {
       const planRepo = manager.getRepository(Plan);
       const entity = await planRepo.findOne({ where: { id: planId } });
 
@@ -445,9 +446,7 @@ export class PlanStatusService {
     planId: string,
     params: WriteGuardedStatusParams,
   ): Promise<boolean> {
-    const repo = this.plansService.getRepository();
-
-    return repo.manager.transaction(async (manager) => {
+    return this.dataSource.transaction(async (manager) => {
       const planRepo = manager.getRepository(Plan);
       const entity = await planRepo.findOne({
         lock: { mode: 'pessimistic_write' },
@@ -535,7 +534,7 @@ export class PlanStatusService {
   /**
    * @description Promotes `planId` to IN_PROGRESS when one of its tasks has just entered
    * IN_PROGRESS (the "any live task implies a live plan" rule) — the write half of what used to be
-   * `TasksService.syncParentPlanStatus`. Defers to `applyStatusChange`'s IN_PROGRESS transition
+   * `TasksRepository.syncParentPlanStatus`. Defers to `applyStatusChange`'s IN_PROGRESS transition
    * policy (PENDING/QUEUED/IN_PROGRESS only), which tightens the old ad hoc
    * `status != 'IN_PROGRESS'` guard that would have happily resurrected a
    * CANCELED/COMPLETED/BACKLOG plan — this method now obeys the same policy every other IN_PROGRESS
@@ -558,8 +557,8 @@ export class PlanStatusService {
 
   /**
    * @description Downward reconcile: completes `planId` when it has no remaining (non-terminal)
-   * tasks — the write half of what used to be `TasksService.completeParentPlanIfTasksDone`.
-   * `TasksService.hasRemainingTasks` answers the "should it change?" question; the status guards
+   * tasks — the write half of what used to be `TasksRepository.completeParentPlanIfTasksDone`.
+   * `TasksRepository.hasRemainingTasks` answers the "should it change?" question; the status guards
    * re-check the plan's status under the row lock before writing, because
    * `applyStatusChange`'s own transition policy only restricts moves INTO IN_PROGRESS, not out of
    * it, so nothing else would stop a CANCELED/BACKLOG plan from being resurrected to COMPLETED.
@@ -581,7 +580,7 @@ export class PlanStatusService {
     planId: string,
     actor: StatusChangeActor,
   ): Promise<boolean> {
-    const hasRemaining = await this.tasksService.hasRemainingTasks(planId);
+    const hasRemaining = await this.tasksRepository.hasRemainingTasks(planId);
 
     if (hasRemaining) return false;
 
@@ -668,8 +667,7 @@ export class PlanStatusService {
     actor: StatusChangeActor,
     planRunId: string | null = null,
   ): Promise<CancelRunOutcome> {
-    const repo = this.plansService.getRepository();
-    const plan = await repo.findOne({ where: { id: planId } });
+    const plan = await this.plansRepository.findOne({ where: { id: planId } });
 
     if (!plan) {
       throw new NotFoundException(`🟡 2 - Plan not found: ${planId}`);
@@ -778,7 +776,7 @@ export class PlanStatusService {
       // `plan` was loaded once at the top of this method and is reused here (not re-fetched) —
       // the same staleness window the unconditional `repo.update` this replaced used to accept,
       // preserved rather than widened or narrowed by routing through the chokepoint.
-      await repo.manager.transaction(async (manager) => {
+      await this.dataSource.transaction(async (manager) => {
         const planRepo = manager.getRepository(Plan);
 
         await this.applyStatusChange(manager, {
@@ -808,7 +806,7 @@ export class PlanStatusService {
       // QUEUED tasks under the tasks-table manager's own transaction, attributed to the same
       // request principal with a fatal capture (cancelRun is user-initiated, same as the plan
       // write immediately above it).
-      await this.tasksService.getRepository().manager.transaction((manager) =>
+      await this.dataSource.transaction((manager) =>
         updateMatchingTasksAndEmitStatusChanged({
           actorKind: actor.actorKind,
           actorSub: actor.actorSub,
@@ -823,7 +821,9 @@ export class PlanStatusService {
         }),
       );
 
-      const refreshed = await repo.findOne({ where: { id: planId } });
+      const refreshed = await this.plansRepository.findOne({
+        where: { id: planId },
+      });
       planStatusAfter = refreshed?.status ?? 'PENDING';
     }
 

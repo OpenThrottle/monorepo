@@ -28,11 +28,7 @@ import {
 } from '@openthrottle/nestjs-auth';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
-  Plan,
-  PlansService,
   PlanTag,
-  Task,
-  TASK_SORT_ORDER_GAP,
   TaskTag,
   WORK_ARTIFACT_SOURCE,
   WORK_ARTIFACT_VERIFICATION,
@@ -41,7 +37,13 @@ import {
   WorkSession,
   WorkSessionSubject,
 } from '@openthrottle/nestjs-repositories';
+import {
+  Plan,
+  Task,
+  TASK_SORT_ORDER_GAP,
+} from '@openthrottle/nestjs-repositories-server';
 import type { EntityManager } from 'typeorm';
+import { DataSource } from 'typeorm';
 
 import { resolveArtifactForWrite } from '../../graphql/work-ledger/artifact-type-registry/artifact-type-registry.utils.ts';
 import { WORK_LEDGER_CAPTURE_FAILED_MARKER } from '../../graphql/work-ledger/work-ledger.constants.ts';
@@ -63,9 +65,9 @@ const PHASE_DIMENSION = 'phase';
 @Injectable()
 export class TaskPromotionService {
   constructor(
+    private readonly dataSource: DataSource,
     private readonly logger: LoggerService,
     private readonly notificationsService: NotificationsService,
-    private readonly plansService: PlansService,
     private readonly workLedgerCapture: WorkLedgerCaptureService,
   ) {}
 
@@ -81,14 +83,14 @@ export class TaskPromotionService {
       captureFailureIsFatal,
       taskId,
     } = params;
-    const repo = this.plansService.getRepository();
 
-    const outcome = await repo.manager.transaction(async (manager) => {
+    const outcome = await this.dataSource.transaction(async (manager) => {
       const task = await manager
         .getRepository(Task)
         .createQueryBuilder('task')
         .setLock('pessimistic_write')
         .where('task.id = :taskId', { taskId })
+        .andWhere('task.deletedAt IS NULL')
         .getOne();
 
       if (task == null) {

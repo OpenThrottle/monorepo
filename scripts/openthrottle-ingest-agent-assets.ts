@@ -48,7 +48,7 @@ const formatIssue = (issue: {
  */
 const resolveDogfoodProjectId = async (client: Client): Promise<string> => {
   const existing = await client.query<{ id: string }>(
-    'SELECT id FROM projects WHERE nx_project_name = $1 LIMIT 1',
+    'SELECT id FROM projects WHERE nx_project_name = $1 AND deleted_at IS NULL LIMIT 1',
     [DOGFOOD_NX_PROJECT_NAME],
   );
   const existingId = existing.rows[0]?.id;

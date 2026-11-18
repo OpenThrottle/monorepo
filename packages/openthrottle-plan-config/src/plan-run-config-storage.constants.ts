@@ -52,9 +52,9 @@ export const PLAN_RUN_DEBUG_CLI = ['omit', 'debug', 'verbose'] as const;
 export const PLAN_RUN_WORKTREE_CLI = ['flag-only', 'named', 'omit'] as const;
 export const PLAN_RUN_WORKTREE_CLEANUP = ['keep', 'on-pr'] as const;
 
-/** @description RFC 4122 UUID v4 — aligned with workflow-ralph plan/task validation. */
+/** @description RFC 9562 UUID (versions 1-8, so both v4 and the v7 ids new rows get) — aligned with workflow-ralph plan/task validation. */
 export const PLAN_RUN_CONFIG_UUID_REGEX =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export const MAX_PLAN_RUN_CONFIG_JSON_LEN = 512_000;
 export const MAX_PLAN_RUN_ITERATIONS = 1_000_000;

@@ -38,7 +38,7 @@ export interface PlansMetrics {
 
 async function countLifetimeTotal(client: pg.Pool): Promise<number> {
   const { rows } = await client.query<{ count: number }>(
-    'SELECT count(*)::int AS count FROM plans',
+    'SELECT count(*)::int AS count FROM plans WHERE deleted_at IS NULL',
   );
   return rows[0]?.count ?? 0;
 }
@@ -47,6 +47,7 @@ async function countByStatus(client: pg.Pool): Promise<readonly StatusCount[]> {
   const { rows } = await client.query<StatusCount>(
     `SELECT status::text AS status, count(*)::int AS count
      FROM plans
+     WHERE deleted_at IS NULL
      GROUP BY status
      ORDER BY status`,
   );
@@ -59,6 +60,7 @@ async function countByCategory(
   const { rows } = await client.query<CategoryCount>(
     `SELECT COALESCE(category, 'uncategorized') AS category, count(*)::int AS count
      FROM plans
+     WHERE deleted_at IS NULL
      GROUP BY 1
      ORDER BY 1`,
   );
@@ -79,7 +81,8 @@ async function timeToCompleteInWindow(
        percentile_cont(0.9) WITHIN GROUP (ORDER BY EXTRACT(EPOCH FROM (completed_at - created_at))) AS "p90Seconds",
        count(*)::int AS "sampleCount"
      FROM plans
-     WHERE completed_at IS NOT NULL AND completed_at >= $1 AND completed_at < $2`,
+     WHERE deleted_at IS NULL
+       AND completed_at IS NOT NULL AND completed_at >= $1 AND completed_at < $2`,
     [window.since, window.until],
   );
 
@@ -95,7 +98,10 @@ async function countZeroTaskPlans(client: pg.Pool): Promise<number> {
   const { rows } = await client.query<{ count: number }>(
     `SELECT count(*)::int AS count
      FROM plans p
-     WHERE NOT EXISTS (SELECT 1 FROM tasks t WHERE t.plan_id = p.id)`,
+     WHERE p.deleted_at IS NULL
+       AND NOT EXISTS (
+         SELECT 1 FROM tasks t WHERE t.plan_id = p.id AND t.deleted_at IS NULL
+       )`,
   );
   return rows[0]?.count ?? 0;
 }
@@ -105,8 +111,15 @@ export const plansMetricQuery: MetricQuery<PlansMetrics> = {
   name: 'plans',
   requires: {
     columns: {
-      plans: ['id', 'status', 'category', 'created_at', 'completed_at'],
-      tasks: ['plan_id'],
+      plans: [
+        'id',
+        'status',
+        'category',
+        'created_at',
+        'completed_at',
+        'deleted_at',
+      ],
+      tasks: ['plan_id', 'deleted_at'],
     },
     tables: ['plans', 'tasks'],
   },

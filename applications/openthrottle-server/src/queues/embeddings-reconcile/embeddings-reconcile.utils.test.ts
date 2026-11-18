@@ -62,6 +62,19 @@ describe('buildStaleRowsSql', () => {
       '(s.deleted_at IS NULL)',
     );
   });
+
+  test('never selects a soft-deleted plan', () => {
+    expect(buildStaleRowsSql(EMBEDDING_SOURCES.plan)).toContain(
+      'WHERE (s.deleted_at IS NULL)',
+    );
+  });
+
+  test('never selects a soft-deleted task, nor a task of a soft-deleted plan', () => {
+    expect(sql).toContain('FROM tasks s LEFT JOIN plans p ON p.id = s.plan_id');
+    expect(sql).toContain(
+      'WHERE (s.deleted_at IS NULL AND p.deleted_at IS NULL)',
+    );
+  });
 });
 
 describe('buildPruneOrphansSql', () => {
@@ -73,4 +86,17 @@ describe('buildPruneOrphansSql', () => {
       'WHERE s.id = e.custom_prompt_id AND (s.deleted_at IS NULL)',
     );
   });
+
+  test.each([
+    ['plan', 'plan_id'],
+    ['task', 'task_id'],
+  ] as const)(
+    'keeps the vectors of a soft-deleted %s (only a vanished row is pruned)',
+    (entity, fkColumn) => {
+      const sql = buildPruneOrphansSql(EMBEDDING_SOURCES[entity]);
+
+      expect(sql).toContain(`WHERE s.id = e.${fkColumn} AND (TRUE)`);
+      expect(sql).not.toContain('deleted_at');
+    },
+  );
 });

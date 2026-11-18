@@ -121,9 +121,6 @@ export type {
   UpsertEvalTrialInput,
 } from './modules/eval-runs/eval-runs.types.ts';
 export { EvalTrial } from './modules/eval-runs/eval-trial.entity.ts';
-export type { PlanEmbeddingSearchRow } from './modules/plan-embeddings/plan-embedding.entity.ts';
-export { PlanEmbedding } from './modules/plan-embeddings/plan-embedding.entity.ts';
-export { PlanEmbeddingsService } from './modules/plan-embeddings/plan-embeddings.service.ts';
 export { PlanMessage } from './modules/plan-messages/plan-message.entity.ts';
 export {
   PLAN_MESSAGE_DELIVERABLE_KINDS,
@@ -141,14 +138,6 @@ export type {
   PostPlanMessageParams,
   PostPlanMessageResult,
 } from './modules/plan-messages/plan-messages.types.ts';
-export {
-  PLAN_OUTPUT_STREAM_KIND,
-  PLAN_OUTPUT_STREAM_KINDS,
-} from './modules/plan-output-stream/plan-output-stream.constants.ts';
-export { PlanOutputStreamChunk } from './modules/plan-output-stream/plan-output-stream.entity.ts';
-export { PlanOutputStreamService } from './modules/plan-output-stream/plan-output-stream.service.ts';
-export type { PlanOutputStreamKind } from './modules/plan-output-stream/plan-output-stream.types.ts';
-export { isPlanOutputStreamKind } from './modules/plan-output-stream/plan-output-stream.utils.ts';
 export type {
   PlanRunData,
   PlanRunExecutionBackend,
@@ -169,9 +158,6 @@ export type {
   ScheduledPlanRun,
   ScheduledRunRef,
 } from './modules/plan-runs/plan-runs.types.ts';
-export type { PlanData } from './modules/plans/plan.entity.ts';
-export { Plan } from './modules/plans/plan.entity.ts';
-export { PlansService } from './modules/plans/plans.service.ts';
 export type { ProjectSkillData } from './modules/project-skills/project-skill.entity.ts';
 export { ProjectSkill } from './modules/project-skills/project-skill.entity.ts';
 export { ProjectSkillsService } from './modules/project-skills/project-skills.service.ts';
@@ -179,10 +165,6 @@ export type {
   ProjectSkillReconciliation,
   ProjectSkillView,
 } from './modules/project-skills/project-skills.types.ts';
-export { ProjectsLoaders } from './modules/projects/loaders/loaders.service.ts';
-export type { ProjectData } from './modules/projects/project.entity.ts';
-export { Project } from './modules/projects/project.entity.ts';
-export { ProjectsService } from './modules/projects/projects.service.ts';
 export type {
   CustomPromptData,
   CustomPromptType,
@@ -325,21 +307,6 @@ export type { AddTagOptions, EffectiveTag } from './modules/tags/tags.types.ts';
 export { deriveTagSource } from './modules/tags/tags.utils.ts';
 export type { TaskTagData } from './modules/tags/task-tag.entity.ts';
 export { TaskTag } from './modules/tags/task-tag.entity.ts';
-export type { TaskEmbeddingSearchRow } from './modules/task-embeddings/task-embedding.entity.ts';
-export { TaskEmbedding } from './modules/task-embeddings/task-embedding.entity.ts';
-export { TaskEmbeddingsService } from './modules/task-embeddings/task-embeddings.service.ts';
-export type { TaskData } from './modules/tasks/task.entity.ts';
-export { Task } from './modules/tasks/task.entity.ts';
-export {
-  CROSS_PLAN_TASK_LIST_ORDER,
-  PLAN_TASK_LIST_ORDER,
-  TASK_SORT_ORDER_GAP,
-} from './modules/tasks/tasks.constants.ts';
-export { TasksService } from './modules/tasks/tasks.service.ts';
-export type {
-  CreateTaskBatchItem,
-  GroupedHooks,
-} from './modules/tasks/tasks.types.ts';
 export { USER_PREFERENCES_ERROR_REASONS } from './modules/user-preferences/user-preferences.constants.ts';
 export { UserPreferences } from './modules/user-preferences/user-preferences.entity.ts';
 export { UserPreferencesModule } from './modules/user-preferences/user-preferences.module.ts';
@@ -426,9 +393,38 @@ export {
 } from '@openthrottle/nestjs-postgres';
 export { resolveListPagination } from '@openthrottle/nestjs-postgres';
 export { vectorTransformer } from '@openthrottle/nestjs-postgres';
+// Moved to nestjs-repositories-server (OT plan f89ee499): re-exported under the same names so
+// consumers compile unchanged until they inject the repositories directly.
+export type {
+  CreateTaskBatchItem,
+  GroupedHooks,
+  PlanData,
+  PlanEmbeddingSearchRow,
+  PlanOutputStreamKind,
+  ProjectData,
+  TaskData,
+  TaskEmbeddingSearchRow,
+  TaskHookRole,
+  TaskHookScope,
+  TaskHookSource,
+} from '@openthrottle/nestjs-repositories-server';
 export type {
   CaptureHealthRow,
   CaptureHealthStream,
+} from '@openthrottle/nestjs-repositories-server';
+export {
+  CROSS_PLAN_TASK_LIST_ORDER,
+  isPlanOutputStreamKind,
+  Plan,
+  PLAN_OUTPUT_STREAM_KIND,
+  PLAN_OUTPUT_STREAM_KINDS,
+  PLAN_TASK_LIST_ORDER,
+  PlanEmbedding,
+  PlanOutputStreamChunk,
+  Project,
+  Task,
+  TASK_SORT_ORDER_GAP,
+  TaskEmbedding,
 } from '@openthrottle/nestjs-repositories-server';
 export { CAPTURE_HEALTH_STREAMS } from '@openthrottle/nestjs-repositories-server';
 export { type ResolveCompletedAtForStatusChangeInput } from '@openthrottle/nestjs-repositories-server';
@@ -498,10 +494,4 @@ export {
   serializePlanRunConfigSnapshotForGraphql,
   workflowUiStateFromPlanRunConfig,
 } from '@openthrottle/openthrottle-plan-config';
-// export type { PlanEmbeddingFactoryData } from './modules/plan-embeddings/plan-embeddings.factory';
-// export type { PlanFactoryData } from './modules/plans/plans.factory';
-// export type { PlanOutputStreamChunkFactoryData } from './modules/plan-output-stream/plan-output-stream.factory';
-// export type { ProjectFactoryData } from './modules/projects/projects.factory';
-// export type { TaskEmbeddingFactoryData } from './modules/task-embeddings/task-embeddings.factory';
-// export type { TaskFactoryData } from './modules/tasks/tasks.factory';
 // export type { UserFactoryData } from './modules/users/users.factory';

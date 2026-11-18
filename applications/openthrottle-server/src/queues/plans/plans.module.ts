@@ -1,6 +1,11 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+import {
+  PlanOutputStreamModule,
+  PlansModule,
+  TasksModule,
+} from '@openthrottle/nestjs-repositories-server';
 import { NestjsWorktreesModule } from '@openthrottle/nestjs-worktrees';
 
 import { PlanEnqueueModule } from '../../graphql/plans/plan-enqueue/plan-enqueue.module.ts';
@@ -49,9 +54,12 @@ import { WorkLedgerRunService } from './work-ledger-run/work-ledger-run.service.
     OtLoopModule,
     PlanEnqueueModule,
     PlanLifecycleHooksQueueProducerModule,
+    PlanOutputStreamModule,
     PlanRunWorktreeCleanupModule,
+    PlansModule,
     PlanStatusModule,
     PlansQueueProducerModule,
+    TasksModule,
     WorkLedgerGraphqlModule,
   ],
   providers: [

@@ -7,11 +7,12 @@
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
-  PlanOutputStreamService,
   PlanRun,
   PlanRunsService,
   RepositoryCheckoutsService,
 } from '@openthrottle/nestjs-repositories';
+import type { PlanOutputStreamRepository } from '@openthrottle/nestjs-repositories-server';
+import { createPlanOutputStreamRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -84,13 +85,9 @@ describe('PlanRunWorkspaceService', () => {
 
     service = new PlanRunWorkspaceService(
       createMock<LoggerService>(),
-      createMock<PlanOutputStreamService>({
-        getRepository: () =>
-          asMock<ReturnType<PlanOutputStreamService['getRepository']>>({
-            create: (entity: unknown) => entity,
-            save: vi.fn(),
-          }),
-      }),
+      asMock<PlanOutputStreamRepository>(
+        createPlanOutputStreamRepositoryMock(),
+      ),
       planRuns,
       createMock<PlanRunWorktreeCheckoutService>({ register: mockRegister }),
       createMock<PlanRunWorkspacePreflightService>({ check: mockCheck }),

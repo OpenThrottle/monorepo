@@ -2,8 +2,11 @@ import { createMock } from '@golevelup/ts-vitest';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { PlansService, TasksService } from '@openthrottle/nestjs-repositories';
-import { DailyStatsRepository } from '@openthrottle/nestjs-repositories-server';
+import {
+  DailyStatsRepository,
+  PlansRepository,
+  TasksRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import type { DailyStatsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import {
   createDailyStatsRepositoryMock,
@@ -34,8 +37,8 @@ function createRepoMocks(
   const taskFind = overrides.task?.find ?? vi.fn().mockResolvedValue([]);
 
   return {
-    planRepo: { count: planCount, find: planFind },
-    taskRepo: { count: taskCount, find: taskFind },
+    planRepo: { countByDateRange: planCount, findBy: planFind },
+    taskRepo: { countByDateRange: taskCount, findBy: taskFind },
   };
 }
 
@@ -96,12 +99,12 @@ describe('DailyStatsProcessor', () => {
           useValue: { emitQueueJobCompleted: mockEmitQueueJobCompleted },
         },
         {
-          provide: PlansService,
-          useValue: { getRepository: () => planRepoMocks },
+          provide: PlansRepository,
+          useValue: planRepoMocks,
         },
         {
-          provide: TasksService,
-          useValue: { getRepository: () => taskRepoMocks },
+          provide: TasksRepository,
+          useValue: taskRepoMocks,
         },
       ],
     }).compile();
@@ -135,7 +138,7 @@ describe('DailyStatsProcessor', () => {
     const result = await processor.aggregateDailyStats('2026-02-08');
 
     expect(result.date).toBe('2026-02-08');
-    expect(planRepoMocks.count).toHaveBeenCalled();
+    expect(planRepoMocks.countByDateRange).toHaveBeenCalled();
   });
 
   it('counts completions by completedAt day range, not status+updatedAt', async () => {
@@ -172,12 +175,12 @@ describe('DailyStatsProcessor', () => {
           useValue: createMock<NotificationsService>(),
         },
         {
-          provide: PlansService,
-          useValue: { getRepository: () => planRepoMocks },
+          provide: PlansRepository,
+          useValue: planRepoMocks,
         },
         {
-          provide: TasksService,
-          useValue: { getRepository: () => taskRepoMocks },
+          provide: TasksRepository,
+          useValue: taskRepoMocks,
         },
       ],
     }).compile();
@@ -188,19 +191,12 @@ describe('DailyStatsProcessor', () => {
     expect(result.plansCompleted).toBe(5);
     expect(result.tasksCompleted).toBe(2);
 
-    const planCompletedWhere = planCount.mock.calls[2]?.[0]?.where;
-    expect(planCompletedWhere).toEqual(
-      expect.objectContaining({ completedAt: expect.anything() }),
+    expect(planCount.mock.calls[2]?.[0]).toEqual(
+      expect.objectContaining({ column: 'completedAt' }),
     );
-    expect(planCompletedWhere).not.toHaveProperty('status');
-    expect(planCompletedWhere).not.toHaveProperty('updatedAt');
-
-    const taskCompletedWhere = taskCount.mock.calls[2]?.[0]?.where;
-    expect(taskCompletedWhere).toEqual(
-      expect.objectContaining({ completedAt: expect.anything() }),
+    expect(taskCount.mock.calls[2]?.[0]).toEqual(
+      expect.objectContaining({ column: 'completedAt' }),
     );
-    expect(taskCompletedWhere).not.toHaveProperty('status');
-    expect(taskCompletedWhere).not.toHaveProperty('updatedAt');
   });
 
   describe('on-boot catch-up', () => {
@@ -323,7 +319,9 @@ describe('DailyStatsProcessor', () => {
   });
 
   it('resolves without throwing and emits error when aggregation fails', async () => {
-    planRepoMocks.count.mockRejectedValueOnce(new Error('count failed'));
+    planRepoMocks.countByDateRange.mockRejectedValueOnce(
+      new Error('count failed'),
+    );
 
     await expect(processor.process(mockJob)).resolves.toBeUndefined();
 
@@ -370,12 +368,12 @@ describe('DailyStatsProcessor', () => {
           useValue: createMock<NotificationsService>(),
         },
         {
-          provide: PlansService,
-          useValue: { getRepository: () => planRepoMocks },
+          provide: PlansRepository,
+          useValue: planRepoMocks,
         },
         {
-          provide: TasksService,
-          useValue: { getRepository: () => taskRepoMocks },
+          provide: TasksRepository,
+          useValue: taskRepoMocks,
         },
       ],
     }).compile();
@@ -413,12 +411,12 @@ describe('DailyStatsProcessor', () => {
           useValue: createMock<NotificationsService>(),
         },
         {
-          provide: PlansService,
-          useValue: { getRepository: () => planRepoMocks },
+          provide: PlansRepository,
+          useValue: planRepoMocks,
         },
         {
-          provide: TasksService,
-          useValue: { getRepository: () => taskRepoMocks },
+          provide: TasksRepository,
+          useValue: taskRepoMocks,
         },
       ],
     }).compile();

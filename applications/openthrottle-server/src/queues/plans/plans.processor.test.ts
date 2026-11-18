@@ -8,11 +8,19 @@ import type { PlanRun } from '@openthrottle/nestjs-repositories';
 import {
   HEARTBEAT_INTERVAL_MS,
   PLAN_RUN_STATUS,
-  PlanOutputStreamService,
   PlanRunsService,
-  PlansService,
-  TasksService,
 } from '@openthrottle/nestjs-repositories';
+import {
+  PlanOutputStreamRepository,
+  PlansRepository,
+  TasksRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import {
+  createPlanOutputStreamRepositoryMock,
+  createPlansRepositoryMock,
+  createTasksRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
+import { asMock } from '@openthrottle/nestjs-testing';
 import { WORKTREE_TRACKER_TOKEN } from '@openthrottle/nestjs-worktrees';
 import type {
   ChildProcessMetrics,
@@ -201,25 +209,21 @@ const mockTaskRepoFindOne = vi.fn().mockResolvedValue(null);
 const mockTaskRepoFind = vi.fn().mockResolvedValue([]);
 /** Default: plan is COMPLETED so job completed message is success. Override to { status: 'IN_PROGRESS' } to test iteration-limit notification. */
 const mockRepoFindOne = vi.fn().mockResolvedValue({ status: 'COMPLETED' });
-const mockPlansService = createMock<PlansService>({
-  getRepository: () =>
-    createMock<ReturnType<PlansService['getRepository']>>({
-      find: mockRepoFind,
-      findOne: mockRepoFindOne,
-      update: mockRepoUpdate,
-    }),
+const mockPlansRepository = asMock<PlansRepository>({
+  ...createPlansRepositoryMock(),
+  findBy: mockRepoFind,
+  findOne: mockRepoFindOne,
+  updateMany: mockRepoUpdate,
 });
 
-const mockTasksService = createMock<TasksService>({
-  getRepository: () =>
-    createMock<ReturnType<TasksService['getRepository']>>({
-      find: mockTaskRepoFind,
-      findOne: mockTaskRepoFindOne,
-    }),
+const mockTasksRepository = asMock<TasksRepository>({
+  ...createTasksRepositoryMock(),
+  findBy: mockTaskRepoFind,
+  findOne: mockTaskRepoFindOne,
 });
 
 // The plans.status write chokepoint and the background-writer service-account lookup, both now
-// injected into PlansProcessor in place of the old direct repo.update/TasksService.syncParentPlanStatus
+// injected into PlansProcessor in place of the old direct repo.update / syncParentPlanStatus
 // writes. Mocked wholesale here — PlanStatusService's own race/capture behaviour is covered by
 // plan-status.service.test.ts.
 const mockPromoteParentPlanToInProgress = vi.fn().mockResolvedValue(false);
@@ -248,14 +252,10 @@ const mockProcessMetrics = createMock<ProcessMetricsService>({
   getCurrentSnapshot: vi.fn().mockReturnValue(snapshotStub),
 });
 
-const mockSave = vi.fn().mockResolvedValue(undefined);
-const mockCreate = vi.fn();
-const mockPlanOutputStreamService = createMock<PlanOutputStreamService>({
-  getRepository: () =>
-    createMock<ReturnType<PlanOutputStreamService['getRepository']>>({
-      create: mockCreate,
-      save: mockSave,
-    }),
+const mockCreate = vi.fn().mockResolvedValue(undefined);
+const mockPlanOutputStreamRepository = asMock<PlanOutputStreamRepository>({
+  ...createPlanOutputStreamRepositoryMock(),
+  create: mockCreate,
 });
 
 const mockGetJobs = vi.fn().mockResolvedValue([]);
@@ -362,8 +362,8 @@ describe('PlansProcessor', () => {
           }),
         },
         {
-          provide: PlansService,
-          useValue: mockPlansService,
+          provide: PlansRepository,
+          useValue: mockPlansRepository,
         },
         {
           provide: PlanStatusService,
@@ -374,16 +374,16 @@ describe('PlansProcessor', () => {
           useValue: mockStatusChangeSystemAccountService,
         },
         {
-          provide: TasksService,
-          useValue: mockTasksService,
+          provide: TasksRepository,
+          useValue: mockTasksRepository,
         },
         {
           provide: WORKTREE_TRACKER_TOKEN,
           useValue: mockWorktreeTracker,
         },
         {
-          provide: PlanOutputStreamService,
-          useValue: mockPlanOutputStreamService,
+          provide: PlanOutputStreamRepository,
+          useValue: mockPlanOutputStreamRepository,
         },
         {
           provide: ProcessMetricsService,
@@ -564,7 +564,7 @@ describe('PlansProcessor', () => {
   it('should append task-run metrics summary to plan output stream', async () => {
     await processor.process(mockJob);
 
-    expect(mockSave).toHaveBeenCalledTimes(1);
+    expect(mockCreate).toHaveBeenCalledTimes(1);
     expect(mockCreate).toHaveBeenCalledWith(
       expect.objectContaining({
         content: expect.stringContaining('Task run metrics:'),
@@ -2162,7 +2162,7 @@ describe('PlansProcessor', () => {
     describe('plan status by attempt', () => {
       beforeEach(() => {
         mockGetJobs.mockClear();
-        mockSave.mockClear();
+        mockCreate.mockClear();
         mockWriteGuardedStatus.mockClear();
       });
 
@@ -2182,7 +2182,7 @@ describe('PlansProcessor', () => {
           'plan-retry',
           expect.objectContaining({ requestedStatus: 'QUEUED' }),
         );
-        expect(mockSave).not.toHaveBeenCalled();
+        expect(mockCreate).not.toHaveBeenCalled();
       });
 
       it('the final attempt sets the plan BLOCKED, not QUEUED, and writes the reason to its output', async () => {
@@ -2201,7 +2201,7 @@ describe('PlansProcessor', () => {
           'plan-final',
           expect.objectContaining({ requestedStatus: 'BLOCKED' }),
         );
-        expect(mockSave).toHaveBeenCalledTimes(1);
+        expect(mockCreate).toHaveBeenCalledTimes(1);
       });
 
       it('an UnrecoverableError on the first attempt sets the plan BLOCKED', async () => {
@@ -2237,7 +2237,7 @@ describe('PlansProcessor', () => {
         });
 
         expect(mockWriteGuardedStatus).not.toHaveBeenCalled();
-        expect(mockSave).not.toHaveBeenCalled();
+        expect(mockCreate).not.toHaveBeenCalled();
       });
     });
 

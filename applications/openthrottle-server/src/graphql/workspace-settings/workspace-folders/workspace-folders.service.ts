@@ -25,10 +25,10 @@ import type {
 } from '@openthrottle/nestjs-repositories';
 import {
   normalizeRemoteUrl,
-  ProjectsService,
   RepositoriesService,
   RepositoryCheckoutsService,
 } from '@openthrottle/nestjs-repositories';
+import { ProjectsRepository } from '@openthrottle/nestjs-repositories-server';
 import { isRecord } from '@openthrottle/nodejs-utils';
 import { resolveForeignWorkspaceContext } from '@openthrottle/openthrottle-agentic-utils';
 import {
@@ -159,7 +159,7 @@ export class WorkspaceFoldersService {
     private readonly logger: LoggerService,
     private readonly checkoutsService: RepositoryCheckoutsService,
     private readonly inspectionService: RepositoryInspectionService,
-    private readonly projectsService: ProjectsService,
+    private readonly projectsRepository: ProjectsRepository,
     private readonly repositoriesService: RepositoriesService,
     private readonly foreignSkillMaterialization: ForeignSkillMaterializationService,
     private readonly worktreeSkillOverlay: WorktreeSkillOverlayService,
@@ -575,7 +575,7 @@ export class WorkspaceFoldersService {
     let project = await this.findLinkedProject(repository.projectId);
     let projectCreated = false;
     if (createdRepository && repository.projectId === null) {
-      project = await this.projectsService.create({
+      project = await this.projectsRepository.create({
         description: `Auto-created by the add-folder onboarding flow for ${
           repository.normalizedRemoteUrl ?? checkout.filesystemPath
         }.`,
@@ -910,7 +910,7 @@ export class WorkspaceFoldersService {
   /** The project a repository is linked to, or null when it has none. */
   private async findLinkedProject(projectId: string | null) {
     if (projectId === null) return null;
-    return this.projectsService.findById(projectId);
+    return this.projectsRepository.findOne({ where: { id: projectId } });
   }
 
   /**

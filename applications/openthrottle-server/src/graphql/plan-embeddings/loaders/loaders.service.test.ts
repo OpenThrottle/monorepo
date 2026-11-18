@@ -1,26 +1,30 @@
-import { createMock } from '@golevelup/ts-vitest';
-import type { PlansService } from '@openthrottle/nestjs-repositories';
+import type { PlansRepository } from '@openthrottle/nestjs-repositories-server';
+import {
+  createPlansRepositoryMock,
+  plansFactory,
+} from '@openthrottle/nestjs-repositories-server/testing';
+import { asMock } from '@openthrottle/nestjs-testing';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { PlanEmbeddingsLoaders } from './loaders.service.ts';
 
 describe('PlanEmbeddingsLoaders', () => {
-  const findPlans = vi.fn();
-  const plansService = createMock<PlansService>({
-    getRepository: vi.fn().mockReturnValue({ find: findPlans }),
-  });
+  const plansRepository = createPlansRepositoryMock();
+  const findPlans = plansRepository.findBy;
 
   let loaders: PlanEmbeddingsLoaders;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    loaders = new PlanEmbeddingsLoaders(plansService);
+    loaders = new PlanEmbeddingsLoaders(
+      asMock<PlansRepository>(plansRepository),
+    );
   });
 
   test('planLoader batches many load() calls into one find and maps to key order', async () => {
     findPlans.mockResolvedValue([
-      { id: 'p2', title: 'Two' },
-      { id: 'p1', title: 'One' },
+      plansFactory.build({ id: 'p2', title: 'Two' }),
+      plansFactory.build({ id: 'p1', title: 'One' }),
     ]);
 
     const [a, b, missing] = await Promise.all([

@@ -9,6 +9,10 @@ import './tags.input.ts';
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+import {
+  PlansModule,
+  TasksModule,
+} from '@openthrottle/nestjs-repositories-server';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import { PlanRulesQueueProducerModule } from '../../queues/plan-rules/producer/producer.module.ts';
@@ -22,6 +26,8 @@ import { TaskTagsResolver } from './task-tags/task-tags.resolver.ts';
     LoggerModule,
     NestjsRepositoriesModule,
     PlanRulesQueueProducerModule,
+    PlansModule,
+    TasksModule,
   ],
   providers: [
     GqlPermissionsGuard,

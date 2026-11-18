@@ -1,11 +1,12 @@
 import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
-import type { TaskEmbedding } from '@openthrottle/nestjs-repositories';
+import { getDefaultPlanRunConfigStorage } from '@openthrottle/nestjs-repositories';
+import type { TaskEmbedding } from '@openthrottle/nestjs-repositories-server';
+import { TaskEmbeddingsRepository } from '@openthrottle/nestjs-repositories-server';
 import {
-  getDefaultPlanRunConfigStorage,
-  TaskEmbeddingsService,
-} from '@openthrottle/nestjs-repositories';
-import { tasksFactory } from '@openthrottle/nestjs-repositories/testing';
+  createTaskEmbeddingsRepositoryMock,
+  tasksFactory,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 
 import { TaskEmbeddingsLoaders } from './loaders/loaders.service.ts';
@@ -13,11 +14,7 @@ import { TaskEmbeddingsResolver } from './task-embeddings.resolver.ts';
 
 const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
 
-const taskEmbeddingsRepo = { find: vi.fn(), findOne: vi.fn() };
-
-const mockTaskEmbeddingsService = createMock<TaskEmbeddingsService>({
-  getRepository: vi.fn().mockReturnValue(taskEmbeddingsRepo),
-});
+const taskEmbeddingsRepo = createTaskEmbeddingsRepositoryMock();
 const mockTaskLoad = vi.fn().mockResolvedValue(null);
 const mockLoaders: TaskEmbeddingsLoaders = createMock<TaskEmbeddingsLoaders>({
   taskLoader: { load: mockTaskLoad },
@@ -40,6 +37,7 @@ describe('TaskEmbeddingsResolver', () => {
       category: 'Task category',
       completedAt: null,
       createdAt: new Date('2026-02-01T22:00:00.000Z'),
+      deletedAt: null,
       description: 'Task description',
       hookChildren: [],
       hookRole: null,
@@ -54,6 +52,7 @@ describe('TaskEmbeddingsResolver', () => {
         category: 'Plan category',
         completedAt: null,
         createdAt: new Date('2026-02-01T22:00:00.000Z'),
+        deletedAt: null,
         description: 'Plan description',
         id: 'c70fc1ea-c7de-4fe8-9722-44781ad80415',
         jobRunHooks: { hooks: [] },
@@ -63,6 +62,7 @@ describe('TaskEmbeddingsResolver', () => {
         projectId: 'c70fc1ea-c7de-4fe8-9722-44781ad80415',
         projectRelation: {
           createdAt: new Date('2026-02-01T22:00:00.000Z'),
+          deletedAt: null,
           description: 'Plan project description',
           id: 'c70fc1ea-c7de-4fe8-9722-44781ad80415',
           name: 'Plan project name',
@@ -83,6 +83,7 @@ describe('TaskEmbeddingsResolver', () => {
       projectId: 'c70fc1ea-c7de-4fe8-9722-44781ad80415',
       projectRelation: {
         createdAt: new Date('2026-02-01T22:00:00.000Z'),
+        deletedAt: null,
         description: 'Task project description',
         id: 'c70fc1ea-c7de-4fe8-9722-44781ad80415',
         name: 'Task project name',
@@ -108,7 +109,7 @@ describe('TaskEmbeddingsResolver', () => {
     const app = await Test.createTestingModule({
       providers: [
         TaskEmbeddingsResolver,
-        { provide: TaskEmbeddingsService, useValue: mockTaskEmbeddingsService },
+        { provide: TaskEmbeddingsRepository, useValue: taskEmbeddingsRepo },
         { provide: TaskEmbeddingsLoaders, useValue: mockLoaders },
       ],
     }).compile();
@@ -175,9 +176,7 @@ describe('TaskEmbeddingsResolver', () => {
 
   describe('taskEmbedding', () => {
     test('returns TaskEmbeddingObject when embedding exists', async () => {
-      vi.mocked(taskEmbeddingsRepo.findOne).mockResolvedValue(
-        mockTaskEmbedding,
-      );
+      taskEmbeddingsRepo.findOne.mockResolvedValue(mockTaskEmbedding);
 
       const result = await resolver.taskEmbedding({
         id: mockTaskEmbedding.id,
@@ -192,7 +191,7 @@ describe('TaskEmbeddingsResolver', () => {
     });
 
     test('returns null when embedding does not exist', async () => {
-      vi.mocked(taskEmbeddingsRepo.findOne).mockResolvedValue(null);
+      taskEmbeddingsRepo.findOne.mockResolvedValue(null);
 
       const result = await resolver.taskEmbedding({ id: 'non-existent-id' });
 
@@ -202,7 +201,7 @@ describe('TaskEmbeddingsResolver', () => {
 
   describe('taskEmbeddings', () => {
     test('returns array of TaskEmbeddingObjects for taskId', async () => {
-      vi.mocked(taskEmbeddingsRepo.find).mockResolvedValue([mockTaskEmbedding]);
+      taskEmbeddingsRepo.findBy.mockResolvedValue([mockTaskEmbedding]);
 
       const result = await resolver.taskEmbeddings({
         taskId: mockTaskEmbedding.taskId,
@@ -215,7 +214,7 @@ describe('TaskEmbeddingsResolver', () => {
     });
 
     test('returns empty array when no embeddings for task', async () => {
-      vi.mocked(taskEmbeddingsRepo.find).mockResolvedValue([]);
+      taskEmbeddingsRepo.findBy.mockResolvedValue([]);
 
       const result = await resolver.taskEmbeddings({
         taskId: mockTaskEmbedding.taskId,
@@ -225,17 +224,17 @@ describe('TaskEmbeddingsResolver', () => {
     });
 
     test('applies the default cap (take 1000, skip 0) when no limit/offset', async () => {
-      vi.mocked(taskEmbeddingsRepo.find).mockResolvedValue([]);
+      taskEmbeddingsRepo.findBy.mockResolvedValue([]);
 
       await resolver.taskEmbeddings({ taskId: mockTaskEmbedding.taskId });
 
-      expect(taskEmbeddingsRepo.find).toHaveBeenCalledWith(
+      expect(taskEmbeddingsRepo.findBy).toHaveBeenCalledWith(
         expect.objectContaining({ skip: 0, take: 1000 }),
       );
     });
 
     test('passes through an explicit limit/offset', async () => {
-      vi.mocked(taskEmbeddingsRepo.find).mockResolvedValue([]);
+      taskEmbeddingsRepo.findBy.mockResolvedValue([]);
 
       await resolver.taskEmbeddings({
         limit: 50,
@@ -243,26 +242,26 @@ describe('TaskEmbeddingsResolver', () => {
         taskId: mockTaskEmbedding.taskId,
       });
 
-      expect(taskEmbeddingsRepo.find).toHaveBeenCalledWith(
+      expect(taskEmbeddingsRepo.findBy).toHaveBeenCalledWith(
         expect.objectContaining({ skip: 10, take: 50 }),
       );
     });
 
     test('clamps a limit above the max down to 1000', async () => {
-      vi.mocked(taskEmbeddingsRepo.find).mockResolvedValue([]);
+      taskEmbeddingsRepo.findBy.mockResolvedValue([]);
 
       await resolver.taskEmbeddings({
         limit: 5000,
         taskId: mockTaskEmbedding.taskId,
       });
 
-      expect(taskEmbeddingsRepo.find).toHaveBeenCalledWith(
+      expect(taskEmbeddingsRepo.findBy).toHaveBeenCalledWith(
         expect.objectContaining({ take: 1000 }),
       );
     });
 
     test('clamps a non-positive limit up to 1 and a negative offset to 0', async () => {
-      vi.mocked(taskEmbeddingsRepo.find).mockResolvedValue([]);
+      taskEmbeddingsRepo.findBy.mockResolvedValue([]);
 
       await resolver.taskEmbeddings({
         limit: 0,
@@ -270,7 +269,7 @@ describe('TaskEmbeddingsResolver', () => {
         taskId: mockTaskEmbedding.taskId,
       });
 
-      expect(taskEmbeddingsRepo.find).toHaveBeenCalledWith(
+      expect(taskEmbeddingsRepo.findBy).toHaveBeenCalledWith(
         expect.objectContaining({ skip: 0, take: 1 }),
       );
     });

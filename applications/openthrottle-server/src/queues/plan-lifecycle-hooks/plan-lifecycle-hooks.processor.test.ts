@@ -6,10 +6,16 @@
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
-  PlanOutputStreamService,
-  PlansService,
-  TasksService,
-} from '@openthrottle/nestjs-repositories';
+  PlanOutputStreamRepository,
+  PlansRepository,
+  TasksRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import {
+  createPlanOutputStreamRepositoryMock,
+  createPlansRepositoryMock,
+  createTasksRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
+import { asMock } from '@openthrottle/nestjs-testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PlanLifecycleHooksProcessor } from './plan-lifecycle-hooks.processor.ts';
@@ -53,21 +59,23 @@ const buildJobData = (
 describe('PlanLifecycleHooksProcessor.process', () => {
   let processor: PlanLifecycleHooksProcessor;
   let logger: LoggerService;
-  let planOutputStreamService: PlanOutputStreamService;
-  let plansService: PlansService;
-  let tasksService: TasksService;
+  let planOutputStreamRepository: PlanOutputStreamRepository;
+  let plansRepository: PlansRepository;
+  let tasksRepository: TasksRepository;
 
   beforeEach(() => {
     vi.clearAllMocks();
     logger = createMock<LoggerService>();
-    planOutputStreamService = createMock<PlanOutputStreamService>();
-    plansService = createMock<PlansService>();
-    tasksService = createMock<TasksService>();
+    planOutputStreamRepository = asMock<PlanOutputStreamRepository>(
+      createPlanOutputStreamRepositoryMock(),
+    );
+    plansRepository = asMock<PlansRepository>(createPlansRepositoryMock());
+    tasksRepository = asMock<TasksRepository>(createTasksRepositoryMock());
     processor = new PlanLifecycleHooksProcessor(
       logger,
-      planOutputStreamService,
-      plansService,
-      tasksService,
+      planOutputStreamRepository,
+      plansRepository,
+      tasksRepository,
     );
   });
 
@@ -92,9 +100,9 @@ describe('PlanLifecycleHooksProcessor.process', () => {
         mainRunStarted: data.mainRunStarted,
         mainRunSucceeded: data.mainRunSucceeded,
         phase: data.phase,
-        planOutputStreamService,
-        plansService,
-        tasksService,
+        planOutputStreamRepository,
+        plansRepository,
+        tasksRepository,
       }),
     );
   });

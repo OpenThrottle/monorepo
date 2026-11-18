@@ -1,12 +1,11 @@
 /**
  * @description Resolver for the workstream timeline. Reuses the activity
- * resolver's aggregation idiom — raw SQL through PlansService's repository
- * manager, one bounded leg per kind, merged and sorted in JS — widened from
+ * resolver's aggregation idiom — raw SQL through the DataSource, one bounded leg per kind, merged and sorted in JS — widened from
  * three legs to nine and re-shaped into spans + markers.
  */
 
 import { Args, Query, Resolver } from '@nestjs/graphql';
-import { PlansService } from '@openthrottle/nestjs-repositories';
+import { DataSource } from 'typeorm';
 
 import {
   TimelineLaneGrouping,
@@ -79,7 +78,7 @@ type QueryFn = <T>(sql: string, params?: unknown[]) => Promise<T>;
 // @authz-stance: authenticated-only (matches the activity module it extends)
 @Resolver()
 export class TimelineResolver {
-  constructor(private readonly plansService: PlansService) {}
+  constructor(private readonly dataSource: DataSource) {}
 
   @Query(() => WorkstreamTimelineResultObject, {
     description: `The workstream over a time window: run/session spans plus instant markers (task added, task updated, grilling, commit, PR, status change). Window is required and capped at ${TIMELINE_MAX_WINDOW_DAYS} days. Rows are capped per kind; read \`truncation\` before presenting a lane as complete.`,
@@ -97,9 +96,8 @@ export class TimelineResolver {
     const spanKinds = input.spanKinds ?? Object.values(TimelineSpanKind);
     const markerKinds = input.markerKinds ?? Object.values(TimelineMarkerKind);
 
-    const repo = this.plansService.getRepository();
     const q: QueryFn = (sql, params) => {
-      return repo.manager.query(sql, params);
+      return this.dataSource.query(sql, params);
     };
 
     const [spanLegs, markerLegs] = await Promise.all([
@@ -182,8 +180,9 @@ export class TimelineResolver {
                 t.id AS task_id, t.title, NULL::text AS branch, NULL::text AS url,
                 NULL::uuid AS user_id
            FROM tasks t
-           JOIN plans p ON p.id = t.plan_id
-          WHERE t.created_at >= $1::timestamptz AND t.created_at < $2::timestamptz
+           JOIN plans p ON p.id = t.plan_id AND p.deleted_at IS NULL
+          WHERE t.deleted_at IS NULL
+            AND t.created_at >= $1::timestamptz AND t.created_at < $2::timestamptz
             AND ($3::uuid IS NULL OR t.plan_id = $3::uuid)
           ORDER BY t.created_at DESC
           LIMIT $4`,
@@ -200,8 +199,9 @@ export class TimelineResolver {
                 t.id AS task_id, t.title, NULL::text AS branch, NULL::text AS url,
                 NULL::uuid AS user_id
            FROM tasks t
-           JOIN plans p ON p.id = t.plan_id
-          WHERE t.updated_at >= $1::timestamptz AND t.updated_at < $2::timestamptz
+           JOIN plans p ON p.id = t.plan_id AND p.deleted_at IS NULL
+          WHERE t.deleted_at IS NULL
+            AND t.updated_at >= $1::timestamptz AND t.updated_at < $2::timestamptz
             AND t.updated_at <> t.created_at
             AND ($3::uuid IS NULL OR t.plan_id = $3::uuid)
           ORDER BY t.updated_at DESC
@@ -268,7 +268,7 @@ export class TimelineResolver {
                 NULL::uuid AS user_id
            FROM work_artifacts wa
            JOIN work_session_subjects wss ON wss.session_id = wa.session_id
-           JOIN plans p ON p.id = wss.plan_id
+           JOIN plans p ON p.id = wss.plan_id AND p.deleted_at IS NULL
           WHERE wa.type = $3
             AND wa.produced_at >= $1::timestamptz AND wa.produced_at < $2::timestamptz
             AND ($4::uuid IS NULL OR wss.plan_id = $4::uuid)
@@ -298,7 +298,7 @@ export class TimelineResolver {
                 pr.execution_backend AS backend, pr.model, pr.branch,
                 pr.checkout_id, pr.status, NULL::uuid AS conversation_id
            FROM plan_runs pr
-           JOIN plans p ON p.id = pr.plan_id
+           JOIN plans p ON p.id = pr.plan_id AND p.deleted_at IS NULL
           WHERE pr.created_at < $2::timestamptz
             AND GREATEST(pr.updated_at, COALESCE(pr.last_heartbeat_at, pr.updated_at)) >= $1::timestamptz
             AND ($3::uuid IS NULL OR pr.plan_id = $3::uuid)
@@ -333,7 +333,7 @@ export class TimelineResolver {
                 ws.closed_by AS status, ws.conversation_id
            FROM work_sessions ws
            LEFT JOIN work_session_subjects wss ON wss.session_id = ws.id
-           LEFT JOIN plans p ON p.id = wss.plan_id
+           LEFT JOIN plans p ON p.id = wss.plan_id AND p.deleted_at IS NULL
           WHERE ws.started_at < $2::timestamptz
             AND COALESCE(ws.ended_at, $2::timestamptz) >= $1::timestamptz
             AND ($3::uuid IS NULL OR wss.plan_id = $3::uuid)

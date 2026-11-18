@@ -1,4 +1,9 @@
-import type { FindOptionsOrder, ObjectLiteral, Repository } from 'typeorm';
+import type {
+  FindManyOptions,
+  FindOptionsOrder,
+  ObjectLiteral,
+  Repository,
+} from 'typeorm';
 
 /**
  * @description Anything that exposes a TypeORM repository — every `*Service` in
@@ -8,6 +13,23 @@ import type { FindOptionsOrder, ObjectLiteral, Repository } from 'typeorm';
 export interface RepositoryAccessor<TEntity extends ObjectLiteral> {
   getRepository(): Repository<TEntity>;
 }
+
+/**
+ * @description Anything that reads rows with `FindManyOptions` — a `BaseRepository`
+ * satisfies this through its `findBy`, which already scopes reads to live rows.
+ * @public
+ */
+export interface RepositoryFindSource<TEntity extends ObjectLiteral> {
+  findBy(options?: FindManyOptions<TEntity>): Promise<TEntity[]>;
+}
+
+/**
+ * @description What the loader factories read rows from: a service exposing `getRepository()`
+ * (the unmoved services) or a `BaseRepository`-like source.
+ * @public
+ */
+export type EntityLoaderSource<TEntity extends ObjectLiteral> =
+  RepositoryAccessor<TEntity> | RepositoryFindSource<TEntity>;
 
 /**
  * @description Options for {@link createCollectionByColumnLoader}.

@@ -2,6 +2,8 @@
  * @description TypeORM entity for the OpenThrottle plan_messages table (the plan inbox). Matches databases/openthrottle/migrations (144).
  */
 
+import type { Plan } from '@openthrottle/nestjs-repositories-server';
+import type { Task } from '@openthrottle/nestjs-repositories-server';
 import {
   Column,
   CreateDateColumn,
@@ -13,8 +15,6 @@ import {
 } from 'typeorm';
 
 import type { PlanRun } from '../plan-runs/plan-run.entity.ts';
-import type { Plan } from '../plans/plan.entity.ts';
-import type { Task } from '../tasks/task.entity.ts';
 import type {
   PlanMessageKind,
   PlanMessageStatus,

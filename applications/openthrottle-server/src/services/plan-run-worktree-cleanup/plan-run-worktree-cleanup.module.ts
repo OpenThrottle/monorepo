@@ -6,6 +6,10 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+import {
+  PlanOutputStreamModule,
+  PlansModule,
+} from '@openthrottle/nestjs-repositories-server';
 
 import { PlanRunWorktreeTeardownModule } from '../plan-run-worktree-teardown/plan-run-worktree-teardown.module.ts';
 import { PlanRunWorktreeCleanupService } from './plan-run-worktree-cleanup.service.ts';
@@ -15,7 +19,9 @@ import { PlanRunWorktreeCleanupService } from './plan-run-worktree-cleanup.servi
   imports: [
     LoggerModule,
     NestjsRepositoriesModule,
+    PlanOutputStreamModule,
     PlanRunWorktreeTeardownModule,
+    PlansModule,
   ],
   providers: [PlanRunWorktreeCleanupService],
 })

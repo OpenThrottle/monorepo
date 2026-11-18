@@ -3,7 +3,7 @@
  * enqueue guard, the scheduled-run fire decision and the `Plan.runnableTaskCount` loader so they
  * cannot drift.
  */
-import { Task } from '@openthrottle/nestjs-repositories';
+import { Task } from '@openthrottle/nestjs-repositories-server';
 import type { EntityManager } from 'typeorm';
 import { In } from 'typeorm';
 

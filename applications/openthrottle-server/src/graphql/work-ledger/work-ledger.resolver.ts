@@ -90,7 +90,7 @@ const PLAN_COMPLETENESS_SQL = `
      AND a.type = 'git_commit'
     GROUP BY s.plan_id
   ) g
-  JOIN plans p ON p.id = g.plan_id
+  JOIN plans p ON p.id = g.plan_id AND p.deleted_at IS NULL
   ORDER BY g.recorded ASC, g.artifact_count DESC, p.title ASC
 `;
 

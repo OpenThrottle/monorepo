@@ -2,9 +2,9 @@ import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import { Task } from '@openthrottle/nestjs-repositories-server';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { Task } from '../../tasks/task.entity.ts';
 import {
   RULE_APPLICATION_STATES,
   RuleApplication,

@@ -26,9 +26,11 @@ export type {
 export { BaseUuidModel } from './base-uuid-model/base-uuid-model.entity.ts';
 export type {
   CollectionByColumnLoaderOptions,
+  EntityLoaderSource,
   GroupedCountColumnInFilter,
   GroupedCountLoaderOptions,
   RepositoryAccessor,
+  RepositoryFindSource,
 } from './entity-loaders/entity-loaders.types.ts';
 export {
   createCollectionByColumnLoader,

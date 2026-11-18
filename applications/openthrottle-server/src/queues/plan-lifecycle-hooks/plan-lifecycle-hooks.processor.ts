@@ -7,10 +7,10 @@ import { OnApplicationShutdown, OnModuleInit } from '@nestjs/common';
 import { defaultWorkerOptions } from '@openthrottle/nestjs-bullmq';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
-  PlanOutputStreamService,
-  PlansService,
-  TasksService,
-} from '@openthrottle/nestjs-repositories';
+  PlanOutputStreamRepository,
+  PlansRepository,
+  TasksRepository,
+} from '@openthrottle/nestjs-repositories-server';
 
 import {
   PLAN_LIFECYCLE_HOOKS_QUEUE_NAME,
@@ -32,9 +32,9 @@ export class PlanLifecycleHooksProcessor
 {
   constructor(
     private readonly logger: LoggerService,
-    private readonly planOutputStreamService: PlanOutputStreamService,
-    private readonly plansService: PlansService,
-    private readonly tasksService: TasksService,
+    private readonly planOutputStreamRepository: PlanOutputStreamRepository,
+    private readonly plansRepository: PlansRepository,
+    private readonly tasksRepository: TasksRepository,
   ) {
     super();
   }
@@ -64,11 +64,11 @@ export class PlanLifecycleHooksProcessor
       mainRunStarted: data.mainRunStarted,
       mainRunSucceeded: data.mainRunSucceeded,
       phase: data.phase,
-      planOutputStreamService: this.planOutputStreamService,
-      plansService: this.plansService,
+      planOutputStreamRepository: this.planOutputStreamRepository,
+      plansRepository: this.plansRepository,
       task: data.task,
       taskOutcome: data.taskOutcome,
-      tasksService: this.tasksService,
+      tasksRepository: this.tasksRepository,
     });
   }
 }

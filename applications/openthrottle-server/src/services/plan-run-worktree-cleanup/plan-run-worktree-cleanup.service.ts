@@ -15,11 +15,11 @@
 
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import { planRunConfigFromPlanStorage } from '@openthrottle/nestjs-repositories';
 import {
-  PlanOutputStreamService,
-  planRunConfigFromPlanStorage,
-  PlansService,
-} from '@openthrottle/nestjs-repositories';
+  PlanOutputStreamRepository,
+  PlansRepository,
+} from '@openthrottle/nestjs-repositories-server';
 
 import { PlanRunWorktreeTeardownService } from '../plan-run-worktree-teardown/plan-run-worktree-teardown.service.ts';
 import { describePlanRunWorktreeTeardown } from '../plan-run-worktree-teardown/plan-run-worktree-teardown.utils.ts';
@@ -41,8 +41,8 @@ export class PlanRunWorktreeCleanupService {
 
   constructor(
     private readonly logger: LoggerService,
-    private readonly planOutputStreamService: PlanOutputStreamService,
-    private readonly plansService: PlansService,
+    private readonly planOutputStreamRepository: PlanOutputStreamRepository,
+    private readonly plansRepository: PlansRepository,
     private readonly teardownService: PlanRunWorktreeTeardownService,
   ) {
     this.logger.debug(`🧩 ${this.name} 🧩`);
@@ -119,9 +119,9 @@ export class PlanRunWorktreeCleanupService {
     planId: string,
   ): Promise<'keep' | 'on-pr' | null> {
     try {
-      const plan = await this.plansService
-        .getRepository()
-        .findOne({ where: { id: planId } });
+      const plan = await this.plansRepository.findOne({
+        where: { id: planId },
+      });
       if (plan === null) return null;
 
       // An unparsable stored config reads as the defaults, exactly as the Configuration tab shows it.
@@ -147,10 +147,11 @@ export class PlanRunWorktreeCleanupService {
     this.logger.log(`[${this.name}] plan ${params.planId}: ${content}`);
 
     try {
-      const repo = this.planOutputStreamService.getRepository();
-      await repo.save(
-        repo.create({ content, iteration: null, planId: params.planId }),
-      );
+      await this.planOutputStreamRepository.create({
+        content,
+        iteration: null,
+        planId: params.planId,
+      });
     } catch (error) {
       this.logger.warn(
         `[${this.name}] could not write plan output for ${params.planId}: ${

@@ -3,6 +3,7 @@
  * databases/openthrottle/migrations (061, 074, 090, 093).
  */
 
+import { Project } from '@openthrottle/nestjs-repositories-server';
 import {
   Column,
   CreateDateColumn,
@@ -12,8 +13,6 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-
-import { Project } from '../projects/project.entity.ts';
 
 /** Scalar/column fields of ProjectSkill (no relations). Use to type DTOs that mirror the entity. */
 export type ProjectSkillData = Omit<ProjectSkill, 'project'>;

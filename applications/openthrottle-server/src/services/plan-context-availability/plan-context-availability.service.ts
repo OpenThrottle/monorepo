@@ -24,17 +24,19 @@ import {
 } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
-  type Plan,
-  PlansService,
   ProjectSkillsService,
-  ProjectsService,
   SkillAvailabilityService,
   SkillTagsService,
   TagActionRulesService,
   TagsService,
-  TasksService,
   UsersService,
 } from '@openthrottle/nestjs-repositories';
+import {
+  type Plan,
+  PlansRepository,
+  ProjectsRepository,
+  TasksRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import {
   availabilityExceptionActionPayloadSchema,
   evaluateTagActionRules,
@@ -59,14 +61,14 @@ const DOGFOOD_NX_PROJECT_NAME = 'OpenThrottle/monorepo';
 export class PlanContextAvailabilityService {
   constructor(
     private readonly logger: LoggerService,
-    private readonly plansService: PlansService,
+    private readonly plansRepository: PlansRepository,
     private readonly projectSkillsService: ProjectSkillsService,
-    private readonly projectsService: ProjectsService,
+    private readonly projectsRepository: ProjectsRepository,
     private readonly skillAvailabilityService: SkillAvailabilityService,
     private readonly skillTagsService: SkillTagsService,
     private readonly tagActionRulesService: TagActionRulesService,
     private readonly tagsService: TagsService,
-    private readonly tasksService: TasksService,
+    private readonly tasksRepository: TasksRepository,
     private readonly usersService: UsersService,
   ) {}
 
@@ -77,9 +79,9 @@ export class PlanContextAvailabilityService {
   async resolveForPlan(
     input: ResolveForPlanInput,
   ): Promise<PlanContextAvailability> {
-    const plan = await this.plansService
-      .getRepository()
-      .findOne({ where: { id: input.planId } });
+    const plan = await this.plansRepository.findOne({
+      where: { id: input.planId },
+    });
     if (plan == null) {
       throw new NotFoundException(`Plan "${input.planId}" not found.`);
     }
@@ -191,9 +193,7 @@ export class PlanContextAvailabilityService {
     if (taskId == null) {
       return;
     }
-    const task = await this.tasksService
-      .getRepository()
-      .findOne({ where: { id: taskId } });
+    const task = await this.tasksRepository.findOne({ where: { id: taskId } });
     if (task == null || task.planId !== planId) {
       throw new BadRequestException(
         `Task "${taskId}" does not belong to plan "${planId}".`,
@@ -267,7 +267,7 @@ export class PlanContextAvailabilityService {
   }
 
   private async resolveDogfoodProjectId(): Promise<string | null> {
-    const project = await this.projectsService.findByNxProjectName(
+    const project = await this.projectsRepository.findByNxProjectName(
       DOGFOOD_NX_PROJECT_NAME,
     );
     return project?.id ?? null;

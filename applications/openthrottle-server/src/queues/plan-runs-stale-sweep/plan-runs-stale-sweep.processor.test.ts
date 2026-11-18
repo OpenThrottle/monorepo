@@ -1,12 +1,12 @@
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import type {
-  PlanRunsService,
-  PlansService,
-  TasksService,
-} from '@openthrottle/nestjs-repositories';
+import type { PlanRunsService } from '@openthrottle/nestjs-repositories';
 import type { PlanRun } from '@openthrottle/nestjs-repositories';
 import { PLAN_RUN_SETTLED_REASON } from '@openthrottle/nestjs-repositories';
+import type { PlansRepository } from '@openthrottle/nestjs-repositories-server';
+import { createPlansRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import { asMock } from '@openthrottle/nestjs-testing';
+import type { DataSource } from 'typeorm';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { PlanStatusService } from '../../graphql/plans/plan-status/plan-status.service.ts';
@@ -39,10 +39,10 @@ const unsupervisedRun = (id: string, planId: string): PlanRun => {
 
 describe('PlanRunsStaleSweepProcessor', () => {
   let planRunsService: PlanRunsService;
-  let plansService: PlansService;
+  let plansRepository: PlansRepository;
   let planStatusService: PlanStatusService;
   let statusChangeSystemAccount: StatusChangeSystemAccountService;
-  let tasksService: TasksService;
+  let dataSource: DataSource;
   let processor: PlanRunsStaleSweepProcessor;
 
   const findStaleInProgressRuns = vi.fn();
@@ -117,11 +117,9 @@ describe('PlanRunsStaleSweepProcessor', () => {
       findStaleUnsupervisedRuns,
       settleStaleRun,
     });
-    plansService = createMock<PlansService>({
-      getRepository: () =>
-        createMock<ReturnType<PlansService['getRepository']>>({
-          findOne: planFindOne,
-        }),
+    plansRepository = asMock<PlansRepository>({
+      ...createPlansRepositoryMock(),
+      findOne: planFindOne,
     });
     planStatusService = createMock<PlanStatusService>({
       writeGuardedStatus,
@@ -129,24 +127,19 @@ describe('PlanRunsStaleSweepProcessor', () => {
     statusChangeSystemAccount = createMock<StatusChangeSystemAccountService>({
       resolveId: resolveStatusChangeSystemAccountId,
     });
-    tasksService = createMock<TasksService>({
-      getRepository: () =>
-        createMock<ReturnType<TasksService['getRepository']>>({
-          manager: createMock({ transaction: taskManagerTransaction }),
-        }),
-    });
+    dataSource = asMock<DataSource>({ transaction: taskManagerTransaction });
 
     processor = new PlanRunsStaleSweepProcessor(
+      dataSource,
       createMock<LoggerService>(),
       createMock<NotificationsService>({
         emitPlanStatusChanged,
         emitTaskStatusChanged,
       }),
       planRunsService,
-      plansService,
+      plansRepository,
       planStatusService,
       statusChangeSystemAccount,
-      tasksService,
       createMock<WorkLedgerCaptureService>({
         recordStatusChange: mockRecordStatusChange,
         resolveSessionId: vi.fn().mockResolvedValue('session-1'),

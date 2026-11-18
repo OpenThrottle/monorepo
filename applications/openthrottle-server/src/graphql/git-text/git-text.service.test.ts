@@ -1,40 +1,43 @@
-import { createMock } from '@golevelup/ts-vitest';
 import { NotFoundException } from '@nestjs/common';
+import type { Plan, Task } from '@openthrottle/nestjs-repositories-server';
 import type {
-  Plan,
-  PlansService,
-  Task,
-  TasksService,
-} from '@openthrottle/nestjs-repositories';
-import { describe, expect, it, vi } from 'vitest';
+  PlansRepository,
+  TasksRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import {
+  createPlansRepositoryMock,
+  createTasksRepositoryMock,
+  plansFactory,
+  tasksFactory,
+} from '@openthrottle/nestjs-repositories-server/testing';
+import { asMock } from '@openthrottle/nestjs-testing';
+import { describe, expect, it } from 'vitest';
 
 import { GitTextService } from './git-text.service.ts';
 
 const PLAN_ID = 'ea4347bf-5cd4-42b3-9c7e-5c1662c135e2';
 
 function service(plan: Plan | null, tasks: Task[]): GitTextService {
+  const plansRepository = createPlansRepositoryMock();
+  const tasksRepository = createTasksRepositoryMock();
+
+  plansRepository.findOne.mockResolvedValue(plan);
+  tasksRepository.findBy.mockResolvedValue(tasks);
+
   return new GitTextService(
-    createMock<PlansService>({
-      getRepository: vi
-        .fn()
-        .mockReturnValue({ findOne: vi.fn().mockResolvedValue(plan) }),
-    }),
-    createMock<TasksService>({
-      getRepository: vi
-        .fn()
-        .mockReturnValue({ find: vi.fn().mockResolvedValue(tasks) }),
-    }),
+    asMock<PlansRepository>(plansRepository),
+    asMock<TasksRepository>(tasksRepository),
   );
 }
 
-const plan = createMock<Plan>({
+const plan = plansFactory.build({
   category: 'feature',
   description: 'Why.',
   id: PLAN_ID,
   summary: null,
   title: 'Forge abstraction',
 });
-const task = createMock<Task>({
+const task = tasksFactory.build({
   category: 'refactor',
   createdAt: new Date('2026-11-01T00:00:00Z'),
   description: 'Route it.',

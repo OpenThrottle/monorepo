@@ -20,10 +20,10 @@ import { Args, ID, Query, Resolver } from '@nestjs/graphql';
 import { CurrentUser } from '@openthrottle/nestjs-auth';
 import {
   ProjectSkillsService,
-  ProjectsService,
   SkillAvailabilityService,
   SkillTagsService,
 } from '@openthrottle/nestjs-repositories';
+import { ProjectsRepository } from '@openthrottle/nestjs-repositories-server';
 import type {
   SkillAvailabilityEnvironment,
   SkillAvailabilityInput,
@@ -55,7 +55,7 @@ export class SkillAvailabilityResolutionResolver {
   constructor(
     private readonly planContextAvailabilityService: PlanContextAvailabilityService,
     private readonly projectSkillsService: ProjectSkillsService,
-    private readonly projectsService: ProjectsService,
+    private readonly projectsRepository: ProjectsRepository,
     private readonly skillAvailabilityService: SkillAvailabilityService,
     private readonly skillTagsService: SkillTagsService,
   ) {}
@@ -176,7 +176,7 @@ export class SkillAvailabilityResolutionResolver {
   }
 
   private async resolveDogfoodProjectId(): Promise<string | null> {
-    const project = await this.projectsService.findByNxProjectName(
+    const project = await this.projectsRepository.findByNxProjectName(
       DOGFOOD_NX_PROJECT_NAME,
     );
     return project?.id ?? null;

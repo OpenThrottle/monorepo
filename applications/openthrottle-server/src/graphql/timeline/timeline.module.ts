@@ -1,16 +1,13 @@
 /**
- * @description GraphQL module for the workstream timeline. Imports
- * NestjsRepositoriesModule for PlansService (raw SQL), the same dependency the
- * activity module it extends uses.
+ * @description GraphQL module for the workstream timeline. Its raw SQL runs through the
+ * default DataSource, which needs no module import.
  */
 
 import { Module } from '@nestjs/common';
-import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 
 import { TimelineResolver } from './timeline.resolver.ts';
 
 @Module({
-  imports: [NestjsRepositoriesModule],
   providers: [TimelineResolver],
 })
 export class TimelineGraphqlModule {}

@@ -8,13 +8,16 @@
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import {
-  type Plan,
   type RuleApplicationsService,
   type TagActionRule,
   type TagsService,
-  type Task,
-  type TasksService,
 } from '@openthrottle/nestjs-repositories';
+import type {
+  Plan,
+  Task,
+  TasksRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import { createTasksRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
 import type { MatchedTagAction } from '@openthrottle/openthrottle-skills';
 import type { Repository } from 'typeorm';
@@ -32,7 +35,7 @@ describe('PromoteTaskToPlanExecutor', () => {
   let executor: PromoteTaskToPlanExecutor;
   let ruleApplicationsService: RuleApplicationsService;
   let tagsService: TagsService;
-  let tasksService: TasksService;
+  let tasksRepository: TasksRepository;
   let taskPromotionService: TaskPromotionService;
   let getRawMany: ReturnType<typeof vi.fn>;
   let tagFindOne: ReturnType<typeof vi.fn>;
@@ -76,10 +79,9 @@ describe('PromoteTaskToPlanExecutor', () => {
     taskFindOne = vi
       .fn()
       .mockResolvedValue(asMock<Task>({ id: 'task-1', status: 'PENDING' }));
-    tasksService = createMock<TasksService>({
-      getRepository: vi.fn(() =>
-        asMock<Repository<Task>>({ findOne: taskFindOne }),
-      ),
+    tasksRepository = asMock<TasksRepository>({
+      ...createTasksRepositoryMock(),
+      findOne: taskFindOne,
     });
 
     taskPromotionService = createMock<TaskPromotionService>({
@@ -98,7 +100,7 @@ describe('PromoteTaskToPlanExecutor', () => {
       ruleApplicationsService,
       tagsService,
       taskPromotionService,
-      tasksService,
+      tasksRepository,
     );
   });
 
@@ -111,7 +113,7 @@ describe('PromoteTaskToPlanExecutor', () => {
       ruleApplicationsService,
       tagsService,
       taskPromotionService,
-      tasksService,
+      tasksRepository,
     );
 
     local.onModuleInit();

@@ -5,12 +5,19 @@
 
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
+import { getDefaultPlanRunConfigStorage } from '@openthrottle/nestjs-repositories';
 import type {
   Plan,
-  PlanOutputStreamService,
-  PlansService,
-} from '@openthrottle/nestjs-repositories';
-import { getDefaultPlanRunConfigStorage } from '@openthrottle/nestjs-repositories';
+  PlanOutputStreamRepository,
+  PlansRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import {
+  createPlanOutputStreamRepositoryMock,
+  createPlansRepositoryMock,
+  planOutputStreamFactory,
+  plansFactory,
+} from '@openthrottle/nestjs-repositories-server/testing';
+import { asMock } from '@openthrottle/nestjs-testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PLAN_RUN_WORKTREE_TEARDOWN_OUTCOME } from '../plan-run-worktree-teardown/plan-run-worktree-teardown.constants.ts';
@@ -26,7 +33,7 @@ const WORKTREE = {
 
 const planWith = (worktreeCleanup: 'keep' | 'on-pr'): Plan => {
   const defaults = getDefaultPlanRunConfigStorage({ planId: PLAN_ID });
-  return createMock<Plan>({
+  return plansFactory.build({
     id: PLAN_ID,
     runConfig: { ...defaults, ralph: { ...defaults.ralph, worktreeCleanup } },
   });
@@ -45,24 +52,23 @@ const build = (options: {
     outcome: PLAN_RUN_WORKTREE_TEARDOWN_OUTCOME.REMOVED,
     worktreePath: WORKTREE.worktreePath,
   });
-  const findOne = vi.fn();
-  if (options.plan instanceof Error) findOne.mockRejectedValue(options.plan);
-  else findOne.mockResolvedValue(options.plan);
+  const plansRepository = createPlansRepositoryMock();
+  if (options.plan instanceof Error) {
+    plansRepository.findOne.mockRejectedValue(options.plan);
+  } else {
+    plansRepository.findOne.mockResolvedValue(options.plan);
+  }
+  const planOutputStreamRepository = createPlanOutputStreamRepositoryMock();
+  planOutputStreamRepository.create.mockImplementation(async (input) => {
+    saved.push(input.content);
+
+    return planOutputStreamFactory.build(input);
+  });
 
   const service = new PlanRunWorktreeCleanupService(
     createMock<LoggerService>(),
-    createMock<PlanOutputStreamService>({
-      getRepository: vi.fn().mockReturnValue({
-        create: (entity: { readonly content: string }) => entity,
-        save: vi.fn(async (entity: { readonly content: string }) => {
-          saved.push(entity.content);
-          return entity;
-        }),
-      }),
-    }),
-    createMock<PlansService>({
-      getRepository: vi.fn().mockReturnValue({ findOne }),
-    }),
+    asMock<PlanOutputStreamRepository>(planOutputStreamRepository),
+    asMock<PlansRepository>(plansRepository),
     createMock<PlanRunWorktreeTeardownService>({ teardown }),
   );
   return { saved, service, teardown };

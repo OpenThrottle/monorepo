@@ -29,7 +29,6 @@ import { defaultWorkerOptions } from '@openthrottle/nestjs-bullmq';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   type OrphanedTaskStatusCaptureParams,
-  PlansService,
   RULE_APPLICATION_STATES,
   RuleApplicationsService,
   SOFT_CLOSED_TASK_STATUS,
@@ -37,6 +36,7 @@ import {
   TagsService,
   UsersService,
 } from '@openthrottle/nestjs-repositories';
+import { PlansRepository } from '@openthrottle/nestjs-repositories-server';
 import {
   evaluateTagActionRules,
   type TagActionRuleInput,
@@ -68,7 +68,7 @@ export class PlanRulesProcessor
     private readonly executorRegistry: ActionExecutorRegistry,
     private readonly logger: LoggerService,
     private readonly notifications: NotificationsService,
-    private readonly plansService: PlansService,
+    private readonly plansRepository: PlansRepository,
     private readonly ruleApplicationsService: RuleApplicationsService,
     private readonly statusChangeSystemAccount: StatusChangeSystemAccountService,
     private readonly tagActionRulesService: TagActionRulesService,
@@ -128,9 +128,7 @@ export class PlanRulesProcessor
   ): Promise<PlanRulesEvaluateJobResult> {
     const { planId, triggerKind } = job.data;
 
-    const plan = await this.plansService
-      .getRepository()
-      .findOne({ where: { id: planId } });
+    const plan = await this.plansRepository.findOne({ where: { id: planId } });
     if (plan == null) {
       return {
         dispatched: 0,

@@ -55,7 +55,8 @@ async function liveCount(
 
   const { rows } = await client.query<{ count: number }>(
     `SELECT count(*)::int AS count FROM ${query.table}
-     WHERE ${query.timestampColumn} >= $1 AND ${query.timestampColumn} < $2`,
+     WHERE deleted_at IS NULL
+       AND ${query.timestampColumn} >= $1 AND ${query.timestampColumn} < $2`,
     [from.toISOString(), to.toISOString()],
   );
 

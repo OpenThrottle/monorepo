@@ -5,19 +5,25 @@ import { Test } from '@nestjs/testing';
 import { AUTH_PRINCIPAL_KIND_USER } from '@openthrottle/nestjs-auth';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { PERMISSIONS, PERMISSIONS_KEY } from '@openthrottle/nestjs-rbac';
-import type { Plan } from '@openthrottle/nestjs-repositories';
 import {
   getDefaultPlanRunConfigStorage,
   PlanRunsService,
-  PlansService,
-  ProjectsService,
-  TasksService,
 } from '@openthrottle/nestjs-repositories';
-import { Task } from '@openthrottle/nestjs-repositories';
-import { UserDisabledAgentClisRepository } from '@openthrottle/nestjs-repositories-server';
-import { createUserDisabledAgentClisRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import type { Plan } from '@openthrottle/nestjs-repositories-server';
+import {
+  PlansRepository,
+  Task,
+  TasksRepository,
+  UserDisabledAgentClisRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import {
+  createPlansRepositoryMock,
+  createTasksRepositoryMock,
+  createUserDisabledAgentClisRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
+import { asMock } from '@openthrottle/nestjs-testing';
 import type { Queue } from 'bullmq';
-import type { SelectQueryBuilder } from 'typeorm';
+import { DataSource } from 'typeorm';
 import {
   afterEach,
   beforeAll,
@@ -72,7 +78,6 @@ const IN_PROGRESS_TRANSITION_FORBIDDEN_MESSAGE = `Cannot transition to IN_PROGRE
 
 describe('PlansResolver', () => {
   let resolver: PlansResolver;
-  let plansService: PlansService;
 
   const mockPlan: Plan = createMock<Plan>({
     assignee: null,
@@ -97,31 +102,8 @@ describe('PlansResolver', () => {
     updatedAt: new Date('2026-02-01T19:59:19.440Z'),
   });
 
-  function createQueryBuilderMock(
-    getManyAndCountResult: [Plan[], number] = [[], 0],
-  ) {
-    const andWhere = vi.fn().mockReturnThis();
-    const orderBy = vi.fn().mockReturnThis();
-    const select = vi.fn().mockReturnThis();
-    const skip = vi.fn().mockReturnThis();
-    const take = vi.fn().mockReturnThis();
-    const getManyAndCount = vi.fn().mockResolvedValue(getManyAndCountResult);
-    const chain = createMock<SelectQueryBuilder<Plan>>({
-      andWhere,
-      getManyAndCount,
-      orderBy,
-      select,
-      skip,
-      take,
-    });
-    return { andWhere, chain, getManyAndCount, orderBy, select, skip, take };
-  }
-
   const repo = {
     create: vi.fn(),
-    createQueryBuilder: vi.fn(),
-    find: vi.fn(),
-    findBy: vi.fn(),
     findOne: vi.fn(),
     // Mirrors repo.manager.transaction: runs the callback with a manager whose getRepository
     // routes Plan -> plans repo and Task -> taskRepo. Rejections propagate so the enqueue tests can
@@ -150,12 +132,12 @@ describe('PlansResolver', () => {
     createPlanFromInput: vi.fn(),
   };
 
-  const mockPlansService = createMock<PlansService>({
-    getRepository: vi.fn().mockReturnValue(repo),
-  });
-
-  const mockProjectsService = createMock<ProjectsService>({
-    findById: vi.fn(),
+  // `repo` stands in for the transaction manager's TypeORM repository (PlanStatusService and
+  // updatePlan run inside it); plans read outside a transaction go through the repository mock,
+  // whose findOne delegates to the same mock so one stub serves both paths.
+  const mockPlansRepository = createPlansRepositoryMock();
+  const mockDataSource = asMock<DataSource>({
+    transaction: repo.manager.transaction,
   });
 
   const mockProjectLoad = vi.fn().mockResolvedValue(null);
@@ -206,9 +188,7 @@ describe('PlansResolver', () => {
     findOne: vi.fn().mockResolvedValue(null),
     update: vi.fn().mockResolvedValue(undefined),
   };
-  const mockTasksService = createMock<TasksService>({
-    getRepository: vi.fn().mockReturnValue(taskRepo),
-  });
+  const mockTasksRepository = createTasksRepositoryMock();
 
   const mockEmitTaskStatusChanged = vi.fn();
   const mockNotificationsService = createMock<NotificationsService>({
@@ -363,13 +343,13 @@ describe('PlansResolver', () => {
           provide: PlanRunWorktreeCheckoutService,
           useValue: mockPlanRunWorktreeCheckoutService,
         },
-        { provide: PlansService, useValue: mockPlansService },
-        { provide: ProjectsService, useValue: mockProjectsService },
+        { provide: PlansRepository, useValue: mockPlansRepository },
+        { provide: DataSource, useValue: mockDataSource },
         {
           provide: WorktreeCheckoutPruneService,
           useValue: mockWorktreeCheckoutPruneService,
         },
-        { provide: TasksService, useValue: mockTasksService },
+        { provide: TasksRepository, useValue: mockTasksRepository },
         {
           provide: SettleRunLedgerService,
           useValue: mockSettleRunLedgerService,
@@ -389,12 +369,19 @@ describe('PlansResolver', () => {
       .compile();
 
     resolver = app.get<PlansResolver>(PlansResolver);
-    plansService = app.get<PlansService>(PlansService);
+  });
+
+  beforeEach(() => {
+    mockPlansRepository.findOne.mockImplementation(async (options) => {
+      return repo.findOne(options);
+    });
+    mockTasksRepository.findOne.mockImplementation(async (options) => {
+      return taskRepo.findOne(options);
+    });
   });
 
   describe('plan', () => {
     test('returns PlanObject when plan exists', async () => {
-      const repo = plansService.getRepository();
       vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
 
       const result = await resolver.plan(mockPlan.id);
@@ -411,7 +398,6 @@ describe('PlansResolver', () => {
     });
 
     test('returns plan with projectId and projectRelation null when plan has no project', async () => {
-      const repo = plansService.getRepository();
       vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
 
       const result = await resolver.plan(mockPlan.id);
@@ -423,7 +409,6 @@ describe('PlansResolver', () => {
     });
 
     test('returns null when plan does not exist', async () => {
-      const repo = plansService.getRepository();
       vi.mocked(repo.findOne).mockResolvedValue(null);
 
       const result = await resolver.plan('non-existent-id');
@@ -433,46 +418,22 @@ describe('PlansResolver', () => {
   });
 
   describe('resolvePlanRef', () => {
-    function createResolvePlanRefQbMock(rows: Plan[]) {
-      const getMany = vi.fn().mockResolvedValue(rows);
-      const orderBy = vi.fn().mockReturnThis();
-      const select = vi.fn().mockReturnThis();
-      const take = vi.fn().mockReturnThis();
-      const where = vi.fn().mockReturnThis();
-      const chain = createMock<SelectQueryBuilder<Plan>>({
-        getMany,
-        orderBy,
-        select,
-        take,
-        where,
-      });
-      return { chain, getMany, orderBy, select, take, where };
-    }
-
     test('returns [] and never queries when the prefix is too short', async () => {
-      const repo = plansService.getRepository();
-      vi.mocked(repo.createQueryBuilder).mockClear();
-
       const result = await resolver.resolvePlanRef('f5e4');
 
       expect(result).toEqual([]);
-      expect(repo.createQueryBuilder).not.toHaveBeenCalled();
+      expect(mockPlansRepository.findByIdPrefix).not.toHaveBeenCalled();
     });
 
     test('returns [] and never queries when the prefix is non-hex', async () => {
-      const repo = plansService.getRepository();
-      vi.mocked(repo.createQueryBuilder).mockClear();
-
       const result = await resolver.resolvePlanRef('zzzzzzzz');
 
       expect(result).toEqual([]);
-      expect(repo.createQueryBuilder).not.toHaveBeenCalled();
+      expect(mockPlansRepository.findByIdPrefix).not.toHaveBeenCalled();
     });
 
     test('resolves a unique short prefix to a single PlanRefObject', async () => {
-      const repo = plansService.getRepository();
-      const qb = createResolvePlanRefQbMock([mockPlan]);
-      vi.mocked(repo.createQueryBuilder).mockReturnValue(qb.chain);
+      mockPlansRepository.findByIdPrefix.mockResolvedValue([mockPlan]);
 
       const result = await resolver.resolvePlanRef('80864bba');
 
@@ -480,23 +441,20 @@ describe('PlansResolver', () => {
       expect(result[0]?.id).toBe(mockPlan.id);
       expect(result[0]?.title).toBe(mockPlan.title);
       expect(result[0]?.status).toBe(mockPlan.status);
-      // LIKE pattern is the normalized prefix + '%', passed as a bound param.
-      expect(qb.where).toHaveBeenCalledWith(expect.any(String), {
-        pattern: '80864bba%',
-      });
-      // Ambiguous prefixes are capped, so a bounded take is always applied.
-      expect(qb.take).toHaveBeenCalledWith(6);
+      // Ambiguous prefixes are capped, so a bounded limit is always applied.
+      expect(mockPlansRepository.findByIdPrefix).toHaveBeenCalledWith(
+        '80864bba',
+        6,
+      );
     });
 
     test('lists multiple matches for an ambiguous prefix', async () => {
-      const repo = plansService.getRepository();
       const other: Plan = createMock<Plan>({
         id: '80864bba-0000-0000-0000-000000000000',
         status: 'completed',
         title: 'Second match',
       });
-      const qb = createResolvePlanRefQbMock([mockPlan, other]);
-      vi.mocked(repo.createQueryBuilder).mockReturnValue(qb.chain);
+      mockPlansRepository.findByIdPrefix.mockResolvedValue([mockPlan, other]);
 
       const result = await resolver.resolvePlanRef('80864b');
 
@@ -505,9 +463,7 @@ describe('PlansResolver', () => {
     });
 
     test('returns [] when the prefix matches nothing', async () => {
-      const repo = plansService.getRepository();
-      const qb = createResolvePlanRefQbMock([]);
-      vi.mocked(repo.createQueryBuilder).mockReturnValue(qb.chain);
+      mockPlansRepository.findByIdPrefix.mockResolvedValue([]);
 
       const result = await resolver.resolvePlanRef('deadbeef');
 
@@ -515,22 +471,20 @@ describe('PlansResolver', () => {
     });
 
     test('strips hyphens so a fragment spanning a UUID boundary still matches', async () => {
-      const repo = plansService.getRepository();
-      const qb = createResolvePlanRefQbMock([mockPlan]);
-      vi.mocked(repo.createQueryBuilder).mockReturnValue(qb.chain);
+      mockPlansRepository.findByIdPrefix.mockResolvedValue([mockPlan]);
 
       await resolver.resolvePlanRef('80864bba-630a');
 
-      expect(qb.where).toHaveBeenCalledWith(expect.any(String), {
-        pattern: '80864bba630a%',
-      });
+      expect(mockPlansRepository.findByIdPrefix).toHaveBeenCalledWith(
+        '80864bba630a',
+        6,
+      );
     });
   });
 
   describe('plans', () => {
     test('returns array of PlanObjects', async () => {
-      const repo = plansService.getRepository();
-      vi.mocked(repo.find).mockResolvedValue([mockPlan]);
+      mockPlansRepository.findBy.mockResolvedValue([mockPlan]);
 
       const result = await resolver.plans();
 
@@ -540,8 +494,7 @@ describe('PlansResolver', () => {
     });
 
     test('returns empty array when no plans', async () => {
-      const repo = plansService.getRepository();
-      vi.mocked(repo.find).mockResolvedValue([]);
+      mockPlansRepository.findBy.mockResolvedValue([]);
 
       const result = await resolver.plans();
 
@@ -549,45 +502,41 @@ describe('PlansResolver', () => {
     });
 
     test('applies a default take cap when no limit is provided', async () => {
-      const repo = plansService.getRepository();
-      vi.mocked(repo.find).mockResolvedValue([]);
+      mockPlansRepository.findBy.mockResolvedValue([]);
 
       await resolver.plans();
 
-      expect(repo.find).toHaveBeenCalledWith(
+      expect(mockPlansRepository.findBy).toHaveBeenCalledWith(
         expect.objectContaining({ take: 100 }),
       );
     });
 
     test('honors an explicit limit', async () => {
-      const repo = plansService.getRepository();
-      vi.mocked(repo.find).mockResolvedValue([]);
+      mockPlansRepository.findBy.mockResolvedValue([]);
 
       await resolver.plans(5);
 
-      expect(repo.find).toHaveBeenCalledWith(
+      expect(mockPlansRepository.findBy).toHaveBeenCalledWith(
         expect.objectContaining({ take: 5 }),
       );
     });
 
     test('clamps an oversized limit to the max', async () => {
-      const repo = plansService.getRepository();
-      vi.mocked(repo.find).mockResolvedValue([]);
+      mockPlansRepository.findBy.mockResolvedValue([]);
 
       await resolver.plans(10000);
 
-      expect(repo.find).toHaveBeenCalledWith(
+      expect(mockPlansRepository.findBy).toHaveBeenCalledWith(
         expect.objectContaining({ take: 500 }),
       );
     });
 
     test('clamps a non-positive limit to at least 1', async () => {
-      const repo = plansService.getRepository();
-      vi.mocked(repo.find).mockResolvedValue([]);
+      mockPlansRepository.findBy.mockResolvedValue([]);
 
       await resolver.plans(0);
 
-      expect(repo.find).toHaveBeenCalledWith(
+      expect(mockPlansRepository.findBy).toHaveBeenCalledWith(
         expect.objectContaining({ take: 1 }),
       );
     });
@@ -694,9 +643,9 @@ describe('PlansResolver', () => {
       expect(result).toEqual([]);
     });
 
-    test('selecting both hook fields never calls the service directly', async () => {
+    test('selecting both hook fields never calls the repository directly', async () => {
       mockPlanHooksLoad.mockClear();
-      vi.mocked(mockTasksService.getPlanHooks).mockClear();
+      mockTasksRepository.getPlanHooks.mockClear();
 
       const [before, after] = await Promise.all([
         resolver.beforeHooks(mockPlan),
@@ -708,25 +657,22 @@ describe('PlansResolver', () => {
         key, so the two loads collapse to one service fetch. The collapsing
         itself is asserted against the real DataLoader in plans-loaders.test.ts;
         here the loader is mocked, so what matters is that neither field reaches
-        TasksService.getPlanHooks on its own.
+        TasksRepository.getPlanHooks on its own.
       */
       expect(mockPlanHooksLoad).toHaveBeenCalledTimes(2);
       expect(mockPlanHooksLoad).toHaveBeenNthCalledWith(1, mockPlan.id);
       expect(mockPlanHooksLoad).toHaveBeenNthCalledWith(2, mockPlan.id);
-      expect(mockTasksService.getPlanHooks).not.toHaveBeenCalled();
+      expect(mockTasksRepository.getPlanHooks).not.toHaveBeenCalled();
       expect(before).toEqual([]);
       expect(after).toEqual([]);
     });
   });
 
   describe('listPlansByStatus', () => {
-    test('returns plans and totalCount from query builder (no filters)', async () => {
-      const [entities, count] = [[mockPlan], 1];
-      const qbMock = createQueryBuilderMock([entities, count]);
-      const repo = plansService.getRepository();
-      vi.mocked(repo.createQueryBuilder).mockReturnValue(qbMock.chain);
-
-      const input: ListPlansByStatusInput = {
+    const baseInput = (
+      overrides: Partial<ListPlansByStatusInput> = {},
+    ): ListPlansByStatusInput => {
+      return {
         assignees: null,
         limit: 20,
         offset: 0,
@@ -736,118 +682,85 @@ describe('PlansResolver', () => {
         sortOrder: 'desc',
         statuses: null,
         titleSubstring: null,
+        ...overrides,
       };
+    };
 
-      const result = await resolver.listPlansByStatus(input);
+    test('returns plans and totalCount from the repository (no filters)', async () => {
+      mockPlansRepository.listFiltered.mockResolvedValue({
+        plans: [mockPlan],
+        totalCount: 1,
+      });
+
+      const result = await resolver.listPlansByStatus(baseInput());
 
       expect(result.plans).toHaveLength(1);
       expect(result.plans[0]?.id).toBe(mockPlan.id);
       expect(result.totalCount).toBe(1);
-      expect(qbMock.getManyAndCount).toHaveBeenCalled();
-      expect(qbMock.andWhere).not.toHaveBeenCalled();
-    });
-
-    test('adds status filter and returns filtered result when statuses passed', async () => {
-      const statuses = ['IN_PROGRESS', 'PENDING'];
-      const [entities, count] = [[mockPlan], 1];
-      const qbMock = createQueryBuilderMock([entities, count]);
-      const repo = plansService.getRepository();
-
-      vi.mocked(repo.createQueryBuilder).mockReturnValue(qbMock.chain);
-
-      const input: ListPlansByStatusInput = {
-        assignees: null,
-        limit: 20,
-        offset: 0,
+      expect(mockPlansRepository.listFiltered).toHaveBeenCalledWith({
+        assignees: [],
+        orderColumn: 'createdAt',
+        orderDirection: 'DESC',
         project: null,
         projectId: null,
-        sortBy: 'created',
-        sortOrder: 'desc',
-        statuses,
+        skip: 0,
+        statuses: [],
+        take: 20,
         titleSubstring: null,
-      };
+      });
+    });
 
-      const result = await resolver.listPlansByStatus(input);
+    test('passes the status filter when statuses passed', async () => {
+      mockPlansRepository.listFiltered.mockResolvedValue({
+        plans: [mockPlan],
+        totalCount: 1,
+      });
+
+      const result = await resolver.listPlansByStatus(
+        baseInput({ statuses: ['IN_PROGRESS', 'PENDING'] }),
+      );
 
       expect(result.plans).toHaveLength(1);
       expect(result.totalCount).toBe(1);
-      expect(qbMock.andWhere).toHaveBeenCalledWith(
-        'plan.status IN (:status_0, :status_1)',
-        { status_0: 'IN_PROGRESS', status_1: 'PENDING' },
+      expect(mockPlansRepository.listFiltered).toHaveBeenCalledWith(
+        expect.objectContaining({ statuses: ['IN_PROGRESS', 'PENDING'] }),
       );
     });
 
-    test('adds assignee filter when assignees passed', async () => {
-      const assignees = ['visormatt'];
-      const qbMock = createQueryBuilderMock([[], 0]);
-      const repo = plansService.getRepository();
-      vi.mocked(repo.createQueryBuilder).mockReturnValue(qbMock.chain);
-
-      const input: ListPlansByStatusInput = {
-        assignees,
-        limit: 20,
-        offset: 0,
-        project: null,
-        projectId: null,
-        sortBy: 'created',
-        sortOrder: 'desc',
-        statuses: null,
-        titleSubstring: null,
-      };
-
-      await resolver.listPlansByStatus(input);
-
-      expect(qbMock.andWhere).toHaveBeenCalledWith(
-        '(plan.author IN (:assignee_0) OR plan.assignee IN (:assignee_0))',
-        { assignee_0: 'visormatt' },
-      );
-    });
-
-    test('adds titleSubstring and project filters when passed', async () => {
-      const qbMock = createQueryBuilderMock([[], 0]);
-      const repo = plansService.getRepository();
-      vi.mocked(repo.createQueryBuilder).mockReturnValue(qbMock.chain);
-
-      const input: ListPlansByStatusInput = {
-        assignees: null,
-        limit: 20,
-        offset: 0,
-        project: 'my-project',
-        projectId: null,
-        sortBy: 'created',
-        sortOrder: 'desc',
-        statuses: null,
-        titleSubstring: 'foo',
-      };
-
-      await resolver.listPlansByStatus(input);
-
-      expect(qbMock.andWhere).toHaveBeenCalledWith('plan.project = :project', {
-        project: 'my-project',
+    test('passes the assignee filter when assignees passed', async () => {
+      mockPlansRepository.listFiltered.mockResolvedValue({
+        plans: [],
+        totalCount: 0,
       });
-      expect(qbMock.andWhere).toHaveBeenCalledWith(
-        'plan.title ILIKE :titlePattern',
-        { titlePattern: '%foo%' },
+
+      await resolver.listPlansByStatus(baseInput({ assignees: ['visormatt'] }));
+
+      expect(mockPlansRepository.listFiltered).toHaveBeenCalledWith(
+        expect.objectContaining({ assignees: ['visormatt'] }),
+      );
+    });
+
+    test('passes the titleSubstring and project filters when passed', async () => {
+      mockPlansRepository.listFiltered.mockResolvedValue({
+        plans: [],
+        totalCount: 0,
+      });
+
+      await resolver.listPlansByStatus(
+        baseInput({ project: 'my-project', titleSubstring: 'foo' }),
+      );
+
+      expect(mockPlansRepository.listFiltered).toHaveBeenCalledWith(
+        expect.objectContaining({
+          project: 'my-project',
+          titleSubstring: 'foo',
+        }),
       );
     });
 
     test('rejects an unknown status with an actionable error and never queries', async () => {
-      const qbMock = createQueryBuilderMock([[mockPlan], 1]);
-      const repo = plansService.getRepository();
-      vi.mocked(repo.createQueryBuilder).mockReturnValue(qbMock.chain);
-
-      const input: ListPlansByStatusInput = {
-        assignees: null,
-        limit: 20,
-        offset: 0,
-        project: null,
-        projectId: null,
-        sortBy: 'created',
-        sortOrder: 'desc',
-        // 'cancelled' (double-L) normalizes to CANCELLED — not a valid enum member.
-        statuses: ['IN_PROGRESS', 'cancelled'],
-        titleSubstring: null,
-      };
+      // 'cancelled' (double-L) normalizes to CANCELLED — not a valid enum member.
+      const input = baseInput({ statuses: ['IN_PROGRESS', 'cancelled'] });
 
       await expect(resolver.listPlansByStatus(input)).rejects.toBeInstanceOf(
         BadRequestException,
@@ -856,63 +769,44 @@ describe('PlansResolver', () => {
         /Unknown plan status: "CANCELLED"\. Valid statuses: .*CANCELED/,
       );
       // Validation short-circuits before the DB round-trip.
-      expect(qbMock.getManyAndCount).not.toHaveBeenCalled();
+      expect(mockPlansRepository.listFiltered).not.toHaveBeenCalled();
     });
 
     test('treats "all" as no status filter (no validation, no status clause)', async () => {
-      const qbMock = createQueryBuilderMock([[mockPlan], 1]);
-      const repo = plansService.getRepository();
-      vi.mocked(repo.createQueryBuilder).mockReturnValue(qbMock.chain);
+      mockPlansRepository.listFiltered.mockResolvedValue({
+        plans: [mockPlan],
+        totalCount: 1,
+      });
 
-      const input: ListPlansByStatusInput = {
-        assignees: null,
-        limit: 20,
-        offset: 0,
-        project: null,
-        projectId: null,
-        sortBy: 'created',
-        sortOrder: 'desc',
-        // 'garbage' would be invalid, but 'all' short-circuits to no filter.
-        statuses: ['all', 'garbage'],
-        titleSubstring: null,
-      };
-
-      const result = await resolver.listPlansByStatus(input);
+      // 'garbage' would be invalid, but 'all' short-circuits to no filter.
+      const result = await resolver.listPlansByStatus(
+        baseInput({ statuses: ['all', 'garbage'] }),
+      );
 
       expect(result.totalCount).toBe(1);
-      expect(qbMock.andWhere).not.toHaveBeenCalled();
+      expect(mockPlansRepository.listFiltered).toHaveBeenCalledWith(
+        expect.objectContaining({ statuses: [] }),
+      );
     });
 
-    test('accepts the typed statusesEnum arg and builds the IN filter', async () => {
-      const qbMock = createQueryBuilderMock([[mockPlan], 1]);
-      const repo = plansService.getRepository();
-      vi.mocked(repo.createQueryBuilder).mockReturnValue(qbMock.chain);
+    test('accepts the typed statusesEnum arg and passes it as the status filter', async () => {
+      mockPlansRepository.listFiltered.mockResolvedValue({
+        plans: [mockPlan],
+        totalCount: 1,
+      });
 
-      const input: ListPlansByStatusInput = {
-        assignees: null,
-        limit: 20,
-        offset: 0,
-        project: null,
-        projectId: null,
-        sortBy: 'created',
-        sortOrder: 'desc',
-        statuses: null,
-        statusesEnum: ['COMPLETED'],
-        titleSubstring: null,
-      };
+      await resolver.listPlansByStatus(
+        baseInput({ statusesEnum: ['COMPLETED'] }),
+      );
 
-      await resolver.listPlansByStatus(input);
-
-      expect(qbMock.andWhere).toHaveBeenCalledWith(
-        'plan.status IN (:status_0)',
-        { status_0: 'COMPLETED' },
+      expect(mockPlansRepository.listFiltered).toHaveBeenCalledWith(
+        expect.objectContaining({ statuses: ['COMPLETED'] }),
       );
     });
   });
 
   describe('setPlanStatus', () => {
     test('rejects an unknown status with an actionable error, before touching the DB', async () => {
-      const repo = plansService.getRepository();
       vi.mocked(repo.findOne).mockClear();
 
       await expect(
@@ -928,7 +822,6 @@ describe('PlansResolver', () => {
     });
 
     test('accepts a valid lowercase status (normalized) and delegates to setStatus', async () => {
-      const repo = plansService.getRepository();
       vi.mocked(repo.findOne).mockClear();
       vi.mocked(repo.findOne).mockResolvedValueOnce(null);
 
@@ -944,7 +837,6 @@ describe('PlansResolver', () => {
     });
 
     test('accepts the typed statusEnum arg', async () => {
-      const repo = plansService.getRepository();
       vi.mocked(repo.findOne).mockClear();
       vi.mocked(repo.findOne).mockResolvedValueOnce(null);
 
@@ -992,7 +884,7 @@ describe('PlansResolver', () => {
         plans: [],
         totalCount: 0,
       });
-      repo.findBy.mockResolvedValue([]);
+      mockPlansRepository.findBy.mockResolvedValue([]);
 
       const result = await resolver.searchPlans({
         limit: 10,
@@ -1028,7 +920,7 @@ describe('PlansResolver', () => {
         ],
         totalCount: 1,
       });
-      repo.findBy.mockResolvedValue([mockPlan]);
+      mockPlansRepository.findBy.mockResolvedValue([mockPlan]);
 
       const result = await resolver.searchPlans({
         limit: 10,
@@ -2297,7 +2189,6 @@ describe('PlansResolver', () => {
 
   describe('updatePlan', () => {
     test('persists runConfigJson on update', async () => {
-      const repo = plansService.getRepository();
       vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
       const updatedConfig = {
         ...getDefaultPlanRunConfigStorage({ planId: mockPlan.id }),
@@ -2326,7 +2217,6 @@ describe('PlansResolver', () => {
     });
 
     test('resets runConfigJson to defaults when null', async () => {
-      const repo = plansService.getRepository();
       const planWithCustomConfig: Plan = {
         ...mockPlan,
         runConfig: {
@@ -2359,7 +2249,6 @@ describe('PlansResolver', () => {
     });
 
     test('persists jobRunHooksJson on update', async () => {
-      const repo = plansService.getRepository();
       vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
       const hooksJson = JSON.stringify({
         hooks: [
@@ -2392,7 +2281,6 @@ describe('PlansResolver', () => {
     });
 
     test('can set projectId to null', async () => {
-      const repo = plansService.getRepository();
       const planWithProject: Plan = {
         ...mockPlan,
         id: 'plan-with-project',
@@ -2432,7 +2320,6 @@ describe('PlansResolver', () => {
        * means omitted so the resolver does not treat null clears as updates.
        */
       test('transitions PENDING to IN_PROGRESS and persists', async () => {
-        const repo = plansService.getRepository();
         const pending: Plan = { ...mockPlan, status: 'PENDING' };
         const saved: Plan = { ...pending, status: 'IN_PROGRESS' };
         vi.mocked(repo.findOne).mockResolvedValue(pending);
@@ -2457,7 +2344,6 @@ describe('PlansResolver', () => {
       });
 
       test('accepts lowercase in_progress for PENDING → IN_PROGRESS', async () => {
-        const repo = plansService.getRepository();
         const pending: Plan = { ...mockPlan, status: 'pending' };
         const saved: Plan = { ...pending, status: 'IN_PROGRESS' };
         vi.mocked(repo.findOne).mockResolvedValue(pending);
@@ -2476,7 +2362,6 @@ describe('PlansResolver', () => {
       });
 
       test('transitions QUEUED to IN_PROGRESS and persists', async () => {
-        const repo = plansService.getRepository();
         const queued: Plan = { ...mockPlan, status: 'QUEUED' };
         const saved: Plan = { ...queued, status: 'IN_PROGRESS' };
         vi.mocked(repo.findOne).mockResolvedValue(queued);
@@ -2501,7 +2386,6 @@ describe('PlansResolver', () => {
       });
 
       test('accepts lowercase queued for QUEUED → IN_PROGRESS', async () => {
-        const repo = plansService.getRepository();
         const queued: Plan = { ...mockPlan, status: 'queued' };
         const saved: Plan = { ...queued, status: 'IN_PROGRESS' };
         vi.mocked(repo.findOne).mockResolvedValue(queued);
@@ -2520,7 +2404,6 @@ describe('PlansResolver', () => {
       });
 
       test('throws BadRequestException when COMPLETED plan requests IN_PROGRESS with no other changes', async () => {
-        const repo = plansService.getRepository();
         const completed: Plan = { ...mockPlan, status: 'COMPLETED' };
         vi.mocked(repo.findOne).mockResolvedValue(completed);
         vi.mocked(repo.save).mockClear();
@@ -2540,7 +2423,6 @@ describe('PlansResolver', () => {
       });
 
       test('throws BadRequestException when BLOCKED plan requests IN_PROGRESS with no other changes', async () => {
-        const repo = plansService.getRepository();
         const blocked: Plan = { ...mockPlan, status: 'BLOCKED' };
         vi.mocked(repo.findOne).mockResolvedValue(blocked);
         vi.mocked(repo.save).mockClear();
@@ -2557,7 +2439,6 @@ describe('PlansResolver', () => {
       });
 
       test('returns unchanged plan without save when already IN_PROGRESS and input requests IN_PROGRESS', async () => {
-        const repo = plansService.getRepository();
         const inProgress: Plan = { ...mockPlan, status: 'IN_PROGRESS' };
         vi.mocked(repo.findOne).mockResolvedValue(inProgress);
         vi.mocked(repo.save).mockClear();
@@ -2574,7 +2455,6 @@ describe('PlansResolver', () => {
       });
 
       test('persists other fields when invalid IN_PROGRESS is requested but another field changes', async () => {
-        const repo = plansService.getRepository();
         const completed: Plan = {
           ...mockPlan,
           status: 'COMPLETED',
@@ -2605,7 +2485,6 @@ describe('PlansResolver', () => {
 
     describe('completedAt write path', () => {
       test('surfaces BadRequestException when COMPLETED is requested over unresolved tasks', async () => {
-        const repo = plansService.getRepository();
         const pending: Plan = {
           ...mockPlan,
           completedAt: null,
@@ -2627,7 +2506,6 @@ describe('PlansResolver', () => {
       });
 
       test('stamps completedAt when transitioning into COMPLETED', async () => {
-        const repo = plansService.getRepository();
         const pending: Plan = {
           ...mockPlan,
           completedAt: null,
@@ -2656,7 +2534,6 @@ describe('PlansResolver', () => {
       });
 
       test('does not overwrite completedAt when editing a COMPLETED plan without status change', async () => {
-        const repo = plansService.getRepository();
         const existingCompletedAt = new Date('2026-06-01T08:00:00.000Z');
         const completed: Plan = {
           ...mockPlan,
@@ -2683,7 +2560,6 @@ describe('PlansResolver', () => {
       });
 
       test('clears completedAt when leaving COMPLETED', async () => {
-        const repo = plansService.getRepository();
         const existingCompletedAt = new Date('2026-06-01T08:00:00.000Z');
         const completed: Plan = {
           ...mockPlan,
@@ -2719,7 +2595,6 @@ describe('PlansResolver', () => {
     });
 
     test('enqueues a full pass with the manual trigger kind and acks', async () => {
-      const repo = plansService.getRepository();
       vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
 
       const result = await resolver.evaluatePlanRules(mockPlan.id);
@@ -2737,7 +2612,6 @@ describe('PlansResolver', () => {
     });
 
     test('rejects and does not enqueue when the plan does not exist', async () => {
-      const repo = plansService.getRepository();
       vi.mocked(repo.findOne).mockResolvedValue(null);
 
       await expect(

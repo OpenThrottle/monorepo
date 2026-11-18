@@ -10,11 +10,11 @@ import { type AuthPrincipal, CurrentUser } from '@openthrottle/nestjs-auth';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 import {
-  PlansService,
   type ProjectTag,
   ServiceAccountsService,
   TagsService,
 } from '@openthrottle/nestjs-repositories';
+import { PlansRepository } from '@openthrottle/nestjs-repositories-server';
 
 import { GqlPermissionsGuard } from '../../../guards/gql-permissions.guard.ts';
 import { PlanRulesEvaluationService } from '../../../queues/plan-rules/evaluation/evaluation.service.ts';
@@ -31,7 +31,7 @@ export class ProjectTagsResolver {
   constructor(
     private readonly loaders: TagsLoaders,
     private readonly logger: LoggerService,
-    private readonly plansService: PlansService,
+    private readonly plansRepository: PlansRepository,
     private readonly planRulesEvaluationService: PlanRulesEvaluationService,
     private readonly serviceAccountsService: ServiceAccountsService,
     private readonly tagsService: TagsService,
@@ -45,9 +45,10 @@ export class ProjectTagsResolver {
   private async enqueueProjectPlansEvaluation(
     projectId: string,
   ): Promise<void> {
-    const plans = await this.plansService
-      .getRepository()
-      .find({ select: { id: true }, where: { projectId } });
+    const plans = await this.plansRepository.findBy({
+      select: { id: true },
+      where: { projectId },
+    });
     this.logger.debug(
       `Project ${projectId} tag change → enqueuing plan-rules evaluation for ${plans.length} plan(s)`,
       ProjectTagsResolver.name,

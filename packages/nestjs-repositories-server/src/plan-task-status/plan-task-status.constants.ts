@@ -83,7 +83,7 @@ export const TASK_STATUS_LIST = TASK_STATUS_VALUES.join(', ');
 /**
  * @description Task statuses that still count as unresolved for plan completion —
  * BLOCKED, IN_PROGRESS, PENDING, and QUEUED. COMPLETED, SKIPPED, CANCELED and
- * PROMOTED are terminal. Shared by `TasksService.hasRemainingTasks` and the
+ * PROMOTED are terminal. Shared by `TasksRepository.hasRemainingTasks` and the
  * `PlanStatusService.applyStatusChange` COMPLETED guard so the two never drift.
  * QUEUED is included even though tasks rarely hold it (plans-only in practice).
  * @public

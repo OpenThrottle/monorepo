@@ -7,11 +7,11 @@ import {
   PLAN_RUN_SETTLED_REASON,
   PLAN_RUN_STATUS,
   PlanRunsService,
-  PlansService,
   STALE_CUTOFF_MS,
-  TasksService,
   UNSUPERVISED_STALE_CUTOFF_MS,
 } from '@openthrottle/nestjs-repositories';
+import { PlansRepository } from '@openthrottle/nestjs-repositories-server';
+import { DataSource } from 'typeorm';
 
 import { PlanStatusService } from '../../graphql/plans/plan-status/plan-status.service.ts';
 import { applyBulkTaskStatusChange } from '../../graphql/work-ledger/bulk-task-status-change/bulk-task-status-change.utils.ts';
@@ -58,13 +58,13 @@ export class PlanRunsStaleSweepProcessor
   implements OnApplicationShutdown, OnModuleInit
 {
   constructor(
+    private readonly dataSource: DataSource,
     private readonly logger: LoggerService,
     private readonly notifications: NotificationsService,
     private readonly planRunsService: PlanRunsService,
-    private readonly plansService: PlansService,
+    private readonly plansRepository: PlansRepository,
     private readonly planStatusService: PlanStatusService,
     private readonly statusChangeSystemAccount: StatusChangeSystemAccountService,
-    private readonly tasksService: TasksService,
     private readonly workLedgerCapture: WorkLedgerCaptureService,
   ) {
     super();
@@ -192,8 +192,7 @@ export class PlanRunsStaleSweepProcessor
     // NOTE: plans/tasks use the plan_task_status vocabulary (PENDING/IN_PROGRESS/...), which is
     // distinct from plan_runs.status (PLAN_RUN_STATUS). Only run.status comparisons use
     // PLAN_RUN_STATUS below; plan/task writes use the plan_task_status literals.
-    const planRepo = this.plansService.getRepository();
-    const plan = await planRepo.findOne({ where: { id: planId } });
+    const plan = await this.plansRepository.findOne({ where: { id: planId } });
     if (!plan || plan.status !== 'IN_PROGRESS') {
       return false;
     }
@@ -241,21 +240,19 @@ export class PlanRunsStaleSweepProcessor
     // one status_change artifact per row (from='IN_PROGRESS' here, but read off the row rather
     // than assumed — see applyBulkTaskStatusChange). Same system-account/non-fatal attribution as
     // the plan-row reset immediately above: a ledger hiccup must not block the reset itself.
-    const resetTasks = await this.tasksService
-      .getRepository()
-      .manager.transaction((manager) =>
-        applyBulkTaskStatusChange({
-          actorKind: AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
-          actorSub: actorSub ?? undefined,
-          captureFailureIsFatal: false,
-          fromStatuses: ['IN_PROGRESS'],
-          logger: this.logger,
-          manager,
-          planId,
-          toStatus: 'PENDING',
-          workLedgerCapture: this.workLedgerCapture,
-        }),
-      );
+    const resetTasks = await this.dataSource.transaction((manager) =>
+      applyBulkTaskStatusChange({
+        actorKind: AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
+        actorSub: actorSub ?? undefined,
+        captureFailureIsFatal: false,
+        fromStatuses: ['IN_PROGRESS'],
+        logger: this.logger,
+        manager,
+        planId,
+        toStatus: 'PENDING',
+        workLedgerCapture: this.workLedgerCapture,
+      }),
+    );
 
     // Publish after both transactions commit, so an open /plans* view refreshes off the reset
     // instead of showing a run that no longer exists.

@@ -4,6 +4,7 @@
  * owns zero or more SkillAvailabilityRule rows.
  */
 
+import { Project } from '@openthrottle/nestjs-repositories-server';
 import {
   Column,
   CreateDateColumn,
@@ -15,7 +16,6 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-import { Project } from '../projects/project.entity.ts';
 import { SkillAvailabilityRule } from './skill-availability-rule.entity.ts';
 
 /** Scalar/column fields of SkillAvailabilityRuleSet (no relations). */

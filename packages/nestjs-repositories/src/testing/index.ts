@@ -17,17 +17,20 @@ export {
 } from '../modules/agent-conversations/agent-conversations.factory.ts';
 export type { AgentTokenUsageFactoryData } from '../modules/agent-token-usage/agent-token-usage.factory.ts';
 export { agentTokenUsageFactory } from '../modules/agent-token-usage/agent-token-usage.factory.ts';
-export { planEmbeddingsFactory } from '../modules/plan-embeddings/plan-embeddings.factory.ts';
-export { planOutputStreamFactory } from '../modules/plan-output-stream/plan-output-stream.factory.ts';
-export { plansFactory } from '../modules/plans/plans.factory.ts';
-export { projectsFactory } from '../modules/projects/projects.factory.ts';
 export type { CustomPromptFactoryData } from '../modules/prompts/custom-prompts.factory.ts';
 export { customPromptsFactory } from '../modules/prompts/custom-prompts.factory.ts';
-export { taskEmbeddingsFactory } from '../modules/task-embeddings/task-embeddings.factory.ts';
-export { tasksFactory } from '../modules/tasks/tasks.factory.ts';
 export { usersFactory } from '../modules/users/users.factory.ts';
 export {
   workArtifactsFactory,
   workSessionsFactory,
   workSessionSubjectsFactory,
 } from '../modules/work-ledger/work-ledger.factory.ts';
+// Moved to nestjs-repositories-server (OT plan f89ee499): re-exported under the same names.
+export {
+  planEmbeddingsFactory,
+  planOutputStreamFactory,
+  plansFactory,
+  projectsFactory,
+  taskEmbeddingsFactory,
+  tasksFactory,
+} from '@openthrottle/nestjs-repositories-server/testing';

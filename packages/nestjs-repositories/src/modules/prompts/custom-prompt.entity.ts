@@ -3,6 +3,7 @@
  * Matches databases/openthrottle/migrations (036_create_custom_prompts_table.sql).
  */
 
+import { Project } from '@openthrottle/nestjs-repositories-server';
 import {
   Column,
   CreateDateColumn,
@@ -13,7 +14,6 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-import { Project } from '../projects/project.entity.ts';
 import { User } from '../users/user.entity.ts';
 
 /**

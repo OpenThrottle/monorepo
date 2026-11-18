@@ -9,19 +9,21 @@ import { createMock } from '@golevelup/ts-vitest';
 import type { AgenticWorkflowRegistry } from '@openthrottle/nestjs-agentic-workflow';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
-  PlanOutputStreamService,
   PlanRunsService,
   RepositoryCheckoutsService,
 } from '@openthrottle/nestjs-repositories';
 import {
-  type PlanOutputStreamChunk,
   type PlanRun,
   type RepositoryCheckout,
 } from '@openthrottle/nestjs-repositories';
+import type { PlanOutputStreamRepository } from '@openthrottle/nestjs-repositories-server';
+import {
+  createPlanOutputStreamRepositoryMock,
+  planOutputStreamFactory,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
 import { getOpenThrottleRoot } from '@openthrottle/openthrottle-agentic-utils';
 import { UnrecoverableError } from 'bullmq';
-import type { Repository } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { WorktreeSkillOverlayService } from '../../../services/foreign-skill-injection/worktree-skill-overlay/worktree-skill-overlay.service.ts';
@@ -111,19 +113,9 @@ const mockEnsureOverlay = vi.fn(async () => ({
   status: 'not-foreign' as const,
 }));
 const mockPreflightCheck = vi.fn((): readonly string[] => []);
-const mockOutputCreate = vi.fn((entity: unknown) => entity);
-const mockOutputSave = vi.fn(async (entity: unknown) => entity);
-
-// Narrow partial repository: the orchestrator only ever calls create + save on it.
-const planOutputStreamServiceMock = (): PlanOutputStreamService => {
-  return createMock<PlanOutputStreamService>({
-    getRepository: () =>
-      asMock<Repository<PlanOutputStreamChunk>>({
-        create: mockOutputCreate,
-        save: mockOutputSave,
-      }),
-  });
-};
+// The orchestrator only ever appends chunks, through `create`.
+const planOutputStreamRepository = createPlanOutputStreamRepositoryMock();
+const mockOutputCreate = planOutputStreamRepository.create;
 
 const buildRun = (overrides: Partial<PlanRun> = {}): PlanRun => {
   return createMock<PlanRun>({
@@ -159,8 +151,10 @@ describe('AgenticRalphOrchestratorService worktree checkout registration', () =>
     mockProvision.mockResolvedValue(PROVISIONED_WORKTREE_PATH);
     mockPreflightCheck.mockReset();
     mockPreflightCheck.mockReturnValue([]);
-    mockOutputSave.mockClear();
-    mockOutputCreate.mockClear();
+    mockOutputCreate.mockReset();
+    mockOutputCreate.mockImplementation(async (input) => {
+      return planOutputStreamFactory.build(input);
+    });
     mockFindByUserAndPath.mockReset();
     mockFindByUserAndPath.mockResolvedValue(null);
     mockEnsureMaterialized.mockReset();
@@ -186,7 +180,7 @@ describe('AgenticRalphOrchestratorService worktree checkout registration', () =>
       planRuns,
       new PlanRunWorkspaceService(
         createMock<LoggerService>({ debug: mockDebug, warn: mockWarn }),
-        planOutputStreamServiceMock(),
+        asMock<PlanOutputStreamRepository>(planOutputStreamRepository),
         planRuns,
         createMock<PlanRunWorktreeCheckoutService>({
           register: mockRegister,
@@ -334,8 +328,10 @@ describe('AgenticRalphOrchestratorService foreign-skill injection gate', () => {
     mockProvision.mockResolvedValue(PROVISIONED_WORKTREE_PATH);
     mockPreflightCheck.mockReset();
     mockPreflightCheck.mockReturnValue([]);
-    mockOutputSave.mockClear();
-    mockOutputCreate.mockClear();
+    mockOutputCreate.mockReset();
+    mockOutputCreate.mockImplementation(async (input) => {
+      return planOutputStreamFactory.build(input);
+    });
     mockFindByUserAndPath.mockReset();
     mockEnsureMaterialized.mockReset();
     mockEnsureMaterialized.mockReturnValue({
@@ -358,7 +354,7 @@ describe('AgenticRalphOrchestratorService foreign-skill injection gate', () => {
       planRuns,
       new PlanRunWorkspaceService(
         createMock<LoggerService>(),
-        planOutputStreamServiceMock(),
+        asMock<PlanOutputStreamRepository>(planOutputStreamRepository),
         planRuns,
         createMock<PlanRunWorktreeCheckoutService>({ register: mockRegister }),
         createMock<PlanRunWorkspacePreflightService>({
@@ -474,8 +470,10 @@ describe('AgenticRalphOrchestratorService worktree provisioning', () => {
     mockProvision.mockResolvedValue(PROVISIONED_WORKTREE_PATH);
     mockPreflightCheck.mockReset();
     mockPreflightCheck.mockReturnValue([]);
-    mockOutputSave.mockClear();
-    mockOutputCreate.mockClear();
+    mockOutputCreate.mockReset();
+    mockOutputCreate.mockImplementation(async (input) => {
+      return planOutputStreamFactory.build(input);
+    });
     mockResolveForeign.mockReset();
     mockResolveForeign.mockReturnValue({
       isForeign: false,
@@ -493,7 +491,7 @@ describe('AgenticRalphOrchestratorService worktree provisioning', () => {
       planRuns,
       new PlanRunWorkspaceService(
         createMock<LoggerService>({ warn: mockWarn }),
-        planOutputStreamServiceMock(),
+        asMock<PlanOutputStreamRepository>(planOutputStreamRepository),
         planRuns,
         createMock<PlanRunWorktreeCheckoutService>({ register: mockRegister }),
         createMock<PlanRunWorkspacePreflightService>({
@@ -610,14 +608,14 @@ describe('AgenticRalphOrchestratorService worktree provisioning', () => {
         planId: PLAN_ID,
       }),
     );
-    expect(mockOutputSave).toHaveBeenCalledTimes(1);
+    expect(mockOutputCreate).toHaveBeenCalledTimes(1);
   });
 
   it('writes nothing to the output stream when the preflight is clean', async () => {
     await runWithWorktree();
 
     expect(mockPreflightCheck).toHaveBeenCalledTimes(1);
-    expect(mockOutputSave).not.toHaveBeenCalled();
+    expect(mockOutputCreate).not.toHaveBeenCalled();
   });
 
   it('ensures the ot-worktree overlay on the base checkout before provisioning', async () => {
@@ -721,8 +719,10 @@ describe('AgenticRalphOrchestratorService default-path worktree root resolution'
     mockProvision.mockResolvedValue(PROVISIONED_WORKTREE_PATH);
     mockPreflightCheck.mockReset();
     mockPreflightCheck.mockReturnValue([]);
-    mockOutputSave.mockClear();
-    mockOutputCreate.mockClear();
+    mockOutputCreate.mockReset();
+    mockOutputCreate.mockImplementation(async (input) => {
+      return planOutputStreamFactory.build(input);
+    });
     mockResolveForeign.mockReset();
     mockResolveForeign.mockReturnValue({
       isForeign: false,
@@ -745,7 +745,7 @@ describe('AgenticRalphOrchestratorService default-path worktree root resolution'
       planRuns,
       new PlanRunWorkspaceService(
         createMock<LoggerService>({ warn: mockWarn }),
-        planOutputStreamServiceMock(),
+        asMock<PlanOutputStreamRepository>(planOutputStreamRepository),
         planRuns,
         createMock<PlanRunWorktreeCheckoutService>({ register: mockRegister }),
         createMock<PlanRunWorkspacePreflightService>({

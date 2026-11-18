@@ -54,6 +54,7 @@ export interface EmbeddingSource {
   readonly embeddingTable: string;
   readonly fkColumn: string;
   readonly fromSql: string;
+  readonly pruneWhereSql: string;
   readonly whereSql: string;
 }
 

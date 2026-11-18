@@ -35,13 +35,13 @@ import type { RalphDebugLevel } from './ralphDebugLogger';
 import { ralphDebugLogger, setRalphDebugLevel } from './ralphDebugLogger';
 import { sanitizeRalphShellNoise } from './run-output';
 
-/** RFC 4122 UUID v4 pattern: plan/task is OpenThrottle plan or task ID when matching */
+/** RFC 9562 UUID (versions 1-8, so both v4 and the v7 ids new rows get) pattern: plan/task is OpenThrottle plan or task ID when matching */
 const RALPH_UUID_REGEX =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 /** Matches <ralph:task-complete>uuid</ralph:task-complete>; Ralph marks those tasks completed via Postgres. */
 const RALPH_COMPLETE_TASK_REGEX =
-  /<ralph:task-complete>([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})<\/ralph:task-complete>/gi;
+  /<ralph:task-complete>([0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})<\/ralph:task-complete>/gi;
 
 const RALPH_COMPLETE_TASK_OPEN = '<ralph:task-complete>' as const;
 const RALPH_COMPLETE_TASK_CLOSE = '</ralph:task-complete>' as const;
@@ -369,12 +369,12 @@ export const parseRalphArgs = (): RalphArgs => {
   }
 
   if (parsed.plan && !isOpenThrottlePlanId(parsed.plan)) {
-    const message = `🚨 Plan must be a OpenThrottle plan UUID (v4). Example: ${COLORS.blue}77cb14a0-5eb0-4061-87ea-d618b85e8818${COLORS.reset}`;
+    const message = `🚨 Plan must be a OpenThrottle plan UUID. Example: ${COLORS.blue}77cb14a0-5eb0-4061-87ea-d618b85e8818${COLORS.reset}`;
     throw new Error(message);
   }
 
   if (parsed.task && !isOpenThrottleTaskId(parsed.task)) {
-    const message = `🚨 Task must be a OpenThrottle task UUID (v4). Example: ${COLORS.blue}45a30762-92a9-42f4-90e0-2437c7ef26a8${COLORS.reset}`;
+    const message = `🚨 Task must be a OpenThrottle task UUID. Example: ${COLORS.blue}45a30762-92a9-42f4-90e0-2437c7ef26a8${COLORS.reset}`;
     throw new Error(message);
   }
 

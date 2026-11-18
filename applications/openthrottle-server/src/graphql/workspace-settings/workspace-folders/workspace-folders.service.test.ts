@@ -9,15 +9,18 @@ import { createMock } from '@golevelup/ts-vitest';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
-  Project,
   Repository,
   RepositoryCheckout,
 } from '@openthrottle/nestjs-repositories';
 import type {
-  ProjectsService,
   RepositoriesService,
   RepositoryCheckoutsService,
 } from '@openthrottle/nestjs-repositories';
+import type {
+  Project,
+  ProjectsRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import { createProjectsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
 import {
   afterAll,
@@ -58,10 +61,7 @@ describe('WorkspaceFoldersService', () => {
     saveInspection: vi.fn(),
     updateFilesystemPath: vi.fn(),
   });
-  const mockProjectsService = createMock<ProjectsService>({
-    create: vi.fn(),
-    findById: vi.fn(),
-  });
+  const mockProjectsRepository = createProjectsRepositoryMock();
   const mockRepositoriesService = createMock<RepositoriesService>({
     create: vi.fn(),
     delete: vi.fn(),
@@ -89,7 +89,7 @@ describe('WorkspaceFoldersService', () => {
     createMock<LoggerService>(),
     mockCheckoutsService,
     inspectionService,
-    mockProjectsService,
+    asMock<ProjectsRepository>(mockProjectsRepository),
     mockRepositoriesService,
     mockForeignSkillMaterialization,
     mockWorktreeSkillOverlay,
@@ -136,8 +136,8 @@ describe('WorkspaceFoldersService', () => {
       mockCheckoutsService.setWorktreeSkillOverlayEnabledForRepository,
     ).mockReset();
     vi.mocked(mockForeignSkillMaterialization.applyForRepository).mockReset();
-    vi.mocked(mockProjectsService.create).mockReset();
-    vi.mocked(mockProjectsService.create).mockResolvedValue(
+    mockProjectsRepository.create.mockReset();
+    mockProjectsRepository.create.mockResolvedValue(
       asMock<Project>({ id: 'auto-project', name: 'Fixture' }),
     );
     vi.mocked(mockRepositoriesService.create).mockReset();
@@ -449,7 +449,7 @@ describe('WorkspaceFoldersService', () => {
       );
       expect(payload.projectCreated).toBe(true);
       expect(payload.project?.id).toBe('auto-project');
-      expect(mockProjectsService.create).toHaveBeenCalledWith(
+      expect(mockProjectsRepository.create).toHaveBeenCalledWith(
         expect.objectContaining({
           name: 'Fixture',
           nxProjectName: 'Fixture',
@@ -492,7 +492,7 @@ describe('WorkspaceFoldersService', () => {
       expect(payload.reconciliation).toBe('matched_remote');
       expect(payload.projectCreated).toBe(false);
       expect(mockRepositoriesService.create).not.toHaveBeenCalled();
-      expect(mockProjectsService.create).not.toHaveBeenCalled();
+      expect(mockProjectsRepository.create).not.toHaveBeenCalled();
     });
 
     it('rejects invalid paths before any registration', async () => {
