@@ -11,7 +11,7 @@
 #   LRU then evicts the `main` entries every PR restores from (OT plan 1d2f247c).
 #
 #   Run it as the LAST step of a job that passed `save-cache: 'true'` to
-#   node-setup. Its earlier entries were already restored into `.nx/cache` at
+#   node-setup. Its earlier entries were already restored into `.nx/` at
 #   the start of this job, so this run's save supersedes them. actions/cache
 #   saves in its post step, which runs after every step here and only on
 #   success, so on a green job the ref ends up with exactly this run's entry.

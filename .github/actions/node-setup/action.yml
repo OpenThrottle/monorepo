@@ -5,6 +5,26 @@
 #
 #     - https://docs.github.com/en/actions/creating-actions/creating-a-composite-action
 #
+#   ⚠️ Why caching `.nx/cache` alone stopped working under Nx 24 (OT plan
+#   5656aac1). Two things have to cross machines for a cross-job Nx hit, and
+#   from Nx 24 neither did:
+#
+#     1. The task outputs. Nx 24 writes them to a per-user shared root,
+#        `~/.nx/<workspace-id>/cache`, whenever the workspace has a git
+#        identity and `~/.nx` is writable, which is always true on a runner.
+#        `<repo>/.nx/cache` was never written again. We kept saving and
+#        restoring it anyway: a 216 MB, 2.8 GB-on-disk fossil, ~13 s per job.
+#     2. The cache index. A hit also needs a row in Nx's SQLite DB, which
+#        lives in the workspace-data dir as `<machine-id>-v<N>.db`. Outputs
+#        without that DB are never read.
+#
+#   So this action pins both dirs inside the checkout (📌, before anything runs
+#   Nx), caches the outputs AND the DB, and checks Nx agrees (🛡️). GitHub's
+#   hosted VMs share one machine-id per runner image (probe run 44245027995),
+#   so a restored DB opens as-is. An image bump can change it, and 🪪 then
+#   renames the restored DB to this VM's id. Without the rename Nx would
+#   silently start an empty DB and every task would miss.
+#
 ################################################################################
 
 name: '🤖 Node Setup'
@@ -47,6 +67,28 @@ inputs:
 runs:
   using: 'composite'
   steps:
+    # 📌 Pin Nx's two data dirs inside the checkout, for every later step of
+    # the job. Without either variable Nx 24 relocates both to ~/.nx (see the
+    # header), where nothing below saves them. Setting either one also turns
+    # off Nx's shared-root logic entirely, so the two always move together.
+    # Must run before anything invokes Nx, `pnpm install` included.
+    #
+    # 💰 NX_MAX_CACHE_SIZE bounds the cache now that it carries over and
+    # grows. Each job restores the newest entry, adds its outputs and saves
+    # the lot, so without a cap it only grows. Nx's default cap is 10% of the
+    # disk (~14 GB on a hosted runner), which alone would overrun the repo's
+    # 10 GB Actions quota. 3 GB on disk is roughly the fossil's size (2.8 GB,
+    # ~216 MB compressed), so a saved entry stays about as large as today's.
+    # Past the cap, Nx deletes the oldest outputs.
+    - name: '📌 Pin the Nx cache and workspace-data dirs'
+      run: |
+        {
+          echo "NX_CACHE_DIRECTORY=${GITHUB_WORKSPACE}/.nx/cache"
+          echo "NX_WORKSPACE_DATA_DIRECTORY=${GITHUB_WORKSPACE}/.nx/workspace-data"
+          echo "NX_MAX_CACHE_SIZE=3GB"
+        } >> "$GITHUB_ENV"
+      shell: bash
+
     # Node first so Corepack matches .nvmrc (Corepack ships with Node ≥16.13).
     - name: '⚙️ Setup NodeJS'
       uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
@@ -132,13 +174,22 @@ runs:
     # holds no more of this shard's work than any other entry, and on `main` the
     # freshest entry is now `warm-cache`'s (a queue-validated push runs no
     # shards). Preferring the suffix would skip it for an older shard entry.
+    #
+    # Two paths, one entry: the outputs and the DB that indexes them (header).
+    # Only the DB files (`<machine-id>-v<N>.db` and its -wal/-shm) are cached
+    # from workspace-data, not the project-graph files beside them, which Nx
+    # rebuilds every run anyway. The glob carries no schema version, so an Nx
+    # bump to `-v7.db` is still saved. actions/cache versions an entry by its
+    # path list, so entries saved before the DB was added never restore here.
     - name: '💾 Cache Nx local cache'
       if: inputs.save-cache == 'true'
       uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
       id: nx-cache
       with:
         key: cache-nx-${{ runner.os }}-${{ hashFiles('nx.json', 'pnpm-lock.yaml') }}-${{ github.sha }}${{ inputs.cache-suffix && format('-{0}', inputs.cache-suffix) || '' }}
-        path: .nx/cache
+        path: |
+          .nx/cache
+          .nx/workspace-data/*.db*
         restore-keys: |
           cache-nx-${{ runner.os }}-${{ hashFiles('nx.json', 'pnpm-lock.yaml') }}-
           cache-nx-${{ runner.os }}-
@@ -153,7 +204,84 @@ runs:
       uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
       with:
         key: cache-nx-${{ runner.os }}-${{ hashFiles('nx.json', 'pnpm-lock.yaml') }}-${{ github.sha }}${{ inputs.cache-suffix && format('-{0}', inputs.cache-suffix) || '' }}
-        path: .nx/cache
+        path: |
+          .nx/cache
+          .nx/workspace-data/*.db*
         restore-keys: |
           cache-nx-${{ runner.os }}-${{ hashFiles('nx.json', 'pnpm-lock.yaml') }}-
           cache-nx-${{ runner.os }}-
+
+    # 🪪 A restored DB is only opened when its file name matches THIS VM's
+    # machine-id; otherwise Nx silently creates an empty one beside it and every
+    # task misses. Hosted VMs of one runner image share an id, so this is
+    # normally a no-op. An image bump changes the id, and then the restored DB
+    # is renamed to this VM's. The id source matches Nx's own (the machine-uid
+    # crate): /var/lib/dbus/machine-id, else /etc/machine-id.
+    - name: '🪪 Re-key the restored Nx DB to this machine-id'
+      shell: bash
+      run: |
+        set -uo pipefail
+        shopt -s nullglob
+        dir="$NX_WORKSPACE_DATA_DIRECTORY"
+        dbs=("$dir"/*-v[0-9]*.db)
+        if [ "${#dbs[@]}" -eq 0 ]; then
+          echo "No restored Nx DB in $dir: this job starts with a cold Nx cache."
+          exit 0
+        fi
+        mid="$(cat /var/lib/dbus/machine-id 2>/dev/null || cat /etc/machine-id 2>/dev/null || true)"
+        if [ -z "$mid" ]; then
+          echo "::warning::No machine-id on this runner, so the restored Nx DB cannot be re-keyed and may be ignored."
+          exit 0
+        fi
+        for db in "${dbs[@]}"; do
+          base="$(basename "$db")"
+          id="${base%%-v*}"
+          rest="${base#"$id"-}"
+          if [ "$id" = "$mid" ]; then
+            echo "Restored Nx DB $base already matches this machine-id."
+            continue
+          fi
+          if [ -e "$dir/$mid-$rest" ]; then
+            echo "::warning::Both $base and $mid-$rest exist; leaving them as they are."
+            continue
+          fi
+          echo "Re-keying restored Nx DB $base -> $mid-$rest"
+          for f in "$db" "$db-wal" "$db-shm"; do
+            if [ -e "$f" ]; then
+              mv "$f" "$dir/$mid-${rest}${f#"$db"}"
+            fi
+          done
+        done
+
+    # 🛡️ Fail loudly if Nx no longer resolves its dirs to the paths saved
+    # above. This is the check that would have caught Nx 24's relocation: an
+    # Nx upgrade that moves them again, or stops honoring the variables, would
+    # otherwise fossilize the cache silently a second time. The require path is
+    # an Nx internal; if it moves, this step fails too, which is the point.
+    - name: '🛡️ Check Nx resolves the cache dirs we save'
+      shell: bash
+      run: |
+        node - <<'NODE'
+        const path = require('node:path');
+        let dirs;
+        try {
+          dirs = require('nx/src/utils/cache-directory');
+        } catch (error) {
+          console.log(`::error::Cannot load nx/src/utils/cache-directory (${error.message}). Re-check where Nx keeps its cache before trusting the Actions cache.`);
+          process.exit(1);
+        }
+        const checks = [
+          ['cacheDir', dirs.cacheDir, process.env.NX_CACHE_DIRECTORY],
+          ['workspaceDataDirectory', dirs.workspaceDataDirectory, process.env.NX_WORKSPACE_DATA_DIRECTORY],
+        ];
+        let failed = false;
+        for (const [name, actual, expected] of checks) {
+          if (!expected || path.resolve(actual ?? '') !== path.resolve(expected)) {
+            console.log(`::error::Nx ${name} resolves to '${actual}', but node-setup caches '${expected}'. The Actions cache would carry nothing Nx reads; see the header of .github/actions/node-setup/action.yml.`);
+            failed = true;
+          } else {
+            console.log(`Nx ${name}: ${actual}`);
+          }
+        }
+        process.exit(failed ? 1 : 0);
+        NODE
