@@ -121,7 +121,135 @@ export interface ScratchDatabase {
   readonly sanitizedUrl: string;
 }
 
-/** Creates a uniquely-named, fully-migrated scratch database and returns a pool connected to it. */
+/**
+ * @description The one `DROP DATABASE` both teardown paths share — the
+ * caller's {@link ScratchDatabase.drop} and the failure path inside
+ * {@link createScratchDatabase} — so the two can never drift. `WITH (FORCE)`
+ * terminates any connection a half-finished migration left open.
+ */
+async function dropScratchDatabase(
+  baseUrl: string,
+  name: string,
+): Promise<void> {
+  const admin = new pg.Client({ connectionString: baseUrl });
+  await admin.connect();
+  try {
+    await admin.query(`DROP DATABASE IF EXISTS "${name}" WITH (FORCE)`);
+  } finally {
+    await admin.end();
+  }
+}
+
+/**
+ * @description Builds the error a failed set-up throws once its cleanup drop
+ * has also failed. The set-up error stays first, so it is still the one to
+ * read; the drop error rides along so a leaked database is never silent.
+ */
+function cleanupFailedError(
+  name: string,
+  setupError: unknown,
+  dropError: unknown,
+): AggregateError {
+  const reason =
+    setupError instanceof Error ? setupError.message : String(setupError);
+  return new AggregateError(
+    [setupError, dropError],
+    `ot-telemetry DB tests: setting up "${name}" failed (${reason}), and dropping it again failed too — it may need dropping by hand.`,
+  );
+}
+
+const SCRATCH_DATABASE_PREFIX = 'ot_telemetry_test_';
+
+/**
+ * @description How old a scratch database must be before a later run may
+ * sweep it. Worktrees share the primary Postgres server, so a younger one may
+ * belong to a run that is live right now. The longest legitimate lifetime is a
+ * suite's `beforeAll` (120s) plus its tests, so two hours is a wide margin.
+ */
+const SCRATCH_DATABASE_TTL_SECONDS = 2 * 60 * 60;
+
+/** `ot_telemetry_test_<unixSeconds>_<hex>` — the name carries its own age, since Postgres records none. */
+const TIMESTAMPED_NAME = /^ot_telemetry_test_(\d+)_[0-9a-f]+$/;
+
+/** `ot_telemetry_test_<hex>` — the pre-timestamp format, with no age to read. */
+const LEGACY_NAME = /^ot_telemetry_test_[0-9a-f]+$/;
+
+/** What a sweep does with one existing database. */
+type SweepAction = 'drop' | 'drop-if-idle' | 'keep';
+
+/**
+ * @description Decides a database's fate from its name alone.
+ *
+ * A timestamped name older than {@link SCRATCH_DATABASE_TTL_SECONDS} is
+ * dropped `WITH (FORCE)`: whatever run owned it is long dead.
+ *
+ * A legacy name is swept too, because nothing on this branch creates one any
+ * more — but a worktree still on an older commit might, and it would be live.
+ * So a legacy name is dropped without `FORCE`, which Postgres refuses while
+ * anything is connected: an interrupted run's leftover goes, a live run's
+ * database survives.
+ */
+function sweepActionFor(name: string, nowSeconds: number): SweepAction {
+  const timestamped = TIMESTAMPED_NAME.exec(name);
+  if (timestamped) {
+    const createdAt = Number(timestamped[1]);
+    const isStale = nowSeconds - createdAt > SCRATCH_DATABASE_TTL_SECONDS;
+    return isStale ? 'drop' : 'keep';
+  }
+  return LEGACY_NAME.test(name) ? 'drop-if-idle' : 'keep';
+}
+
+/**
+ * @description Drops the scratch databases interrupted runs left behind
+ * (killed or timed-out Vitest processes never reach `afterAll`). Best-effort:
+ * every failure is logged and swallowed, because a failed sweep must never
+ * fail the run that happened to trigger it.
+ */
+async function sweepStaleScratchDatabases(
+  admin: pg.Client,
+  nowSeconds: number,
+): Promise<void> {
+  try {
+    const result = await admin.query<{ datname: string }>(
+      'SELECT datname FROM pg_database WHERE starts_with(datname, $1)',
+      [SCRATCH_DATABASE_PREFIX],
+    );
+    const drops = result.rows.flatMap(({ datname }) => {
+      const action = sweepActionFor(datname, nowSeconds);
+      if (action === 'keep') return [];
+      const force = action === 'drop' ? ' WITH (FORCE)' : '';
+      return [
+        admin
+          .query(`DROP DATABASE IF EXISTS "${datname}"${force}`)
+          .catch((error: unknown) => {
+            console.warn(
+              `ot-telemetry DB tests: could not sweep stale scratch database "${datname}" — leaving it.`,
+              error,
+            );
+          }),
+      ];
+    });
+    await Promise.all(drops);
+  } catch (error) {
+    console.warn(
+      'ot-telemetry DB tests: sweeping stale scratch databases failed — carrying on.',
+      error,
+    );
+  }
+}
+
+/**
+ * @description Creates a uniquely-named, fully-migrated scratch database and
+ * returns a pool connected to it.
+ *
+ * Sweeps stale leftovers from interrupted runs first
+ * ({@link sweepStaleScratchDatabases}).
+ *
+ * Throws (it is a `beforeAll` helper, so the throw is the desired behavior).
+ * Whatever fails after `CREATE DATABASE` drops the database again before the
+ * error propagates: the caller never received a {@link ScratchDatabase.drop}
+ * handle, so nothing else could.
+ */
 export async function createScratchDatabase(): Promise<ScratchDatabase> {
   const baseUrl = tryResolveBaseUrl();
   if (!baseUrl) {
@@ -130,33 +258,42 @@ export async function createScratchDatabase(): Promise<ScratchDatabase> {
     );
   }
 
-  const name = `ot_telemetry_test_${randomBytes(6).toString('hex')}`;
+  const nowSeconds = Math.floor(Date.now() / 1000);
+  const name = `${SCRATCH_DATABASE_PREFIX}${nowSeconds}_${randomBytes(6).toString('hex')}`;
 
   const admin = new pg.Client({ connectionString: baseUrl });
   await admin.connect();
   try {
+    await sweepStaleScratchDatabases(admin, nowSeconds);
     await admin.query(`CREATE DATABASE "${name}"`);
   } finally {
     await admin.end();
   }
 
   const scratchUrl = withDatabaseName(baseUrl, name);
-  await migrateScratchDatabase(scratchUrl);
+  let pool: pg.Pool | undefined;
+  try {
+    await migrateScratchDatabase(scratchUrl);
+    pool = new pg.Pool({ connectionString: scratchUrl });
+  } catch (setupError) {
+    try {
+      // A pool that fails to close must not stop the drop; `FORCE` ends its
+      // connections anyway.
+      await pool?.end().catch(() => undefined);
+      await dropScratchDatabase(baseUrl, name);
+    } catch (dropError) {
+      throw cleanupFailedError(name, setupError, dropError);
+    }
+    throw setupError;
+  }
 
-  const pool = new pg.Pool({ connectionString: scratchUrl });
-
+  const scratchPool = pool;
   return {
     async drop(): Promise<void> {
-      await pool.end();
-      const admin2 = new pg.Client({ connectionString: baseUrl });
-      await admin2.connect();
-      try {
-        await admin2.query(`DROP DATABASE IF EXISTS "${name}" WITH (FORCE)`);
-      } finally {
-        await admin2.end();
-      }
+      await scratchPool.end();
+      await dropScratchDatabase(baseUrl, name);
     },
-    pool,
+    pool: scratchPool,
     sanitizedUrl: sanitizePostgresUrlForLogs(scratchUrl),
   };
 }
