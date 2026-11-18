@@ -43,7 +43,7 @@ describe('AuthSignInForm', () => {
     });
     expect(submitted[0]?.get('email')).toBe('editor@example.test');
     expect(submitted[0]?.get('password')).toBe('secret');
-    expect(submitted[0]?.get('redirectTo')).toBe('/fragments/abc');
+    expect(submitted[0]?.get('redirectUrl')).toBe('/fragments/abc');
   });
 
   test('shows the last error', () => {

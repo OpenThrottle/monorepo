@@ -1,3 +1,4 @@
+import { getLoginHref } from '@openthrottle/react-router-auth';
 import { render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
@@ -5,7 +6,7 @@ import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
 import type { CmsComponentDetailFragment } from '~/__generated__/graphql';
-import { getSignInHref } from '~/routing/auth/utils/auth-redirect';
+import { AUTH_ROUTES } from '~/routing/auth/data/data.routes';
 import {
   COMPONENT_EDITOR_COPY,
   COMPONENT_PREVIEW_COPY,
@@ -152,7 +153,10 @@ describe('ComponentEditor', () => {
 
       expect(
         component.getByRole('link', { name: COMPONENT_EDITOR_COPY.signIn }),
-      ).toHaveAttribute('href', getSignInHref('/components/component-1'));
+      ).toHaveAttribute(
+        'href',
+        getLoginHref('/components/component-1', AUTH_ROUTES.signIn),
+      );
     });
   });
 

@@ -1,3 +1,4 @@
+import { getLoginHref } from '@openthrottle/react-router-auth';
 import {
   atomFragmentDraft,
   CoreFormRenderer,
@@ -8,7 +9,7 @@ import * as React from 'react';
 import { useLocation } from 'react-router';
 
 import { CmsActionFailureAlert } from '~/global/components/CmsActionFailureAlert';
-import { getSignInHref } from '~/routing/auth/utils/auth-redirect';
+import { AUTH_ROUTES } from '~/routing/auth/data/data.routes';
 import { FragmentChildAdd } from '~/routing/fragments/components/FragmentChildAdd';
 import { FragmentChildCreate } from '~/routing/fragments/components/FragmentChildCreate';
 import { FRAGMENT_EDITOR_COPY } from '~/routing/fragments/data/data.copy';
@@ -55,7 +56,10 @@ export const FragmentEditor = (
   const failed = result?.ok === false ? result : undefined;
   const issues = failed ? toCmsFormIssues(failed.issues) : undefined;
   const saved = result?.ok === true ? result : undefined;
-  const signInHref = getSignInHref(`${location.pathname}${location.search}`);
+  const signInHref = getLoginHref(
+    `${location.pathname}${location.search}`,
+    AUTH_ROUTES.signIn,
+  );
 
   // Handlers
 

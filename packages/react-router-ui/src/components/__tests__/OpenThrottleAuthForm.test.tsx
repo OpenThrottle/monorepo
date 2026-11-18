@@ -78,6 +78,17 @@ describe('OpenThrottleAuthForm Component', () => {
     });
   });
 
+  test('posts hiddenFields as hidden inputs', () => {
+    // The form uses no router hooks, so it renders without a routes stub.
+    const view = render(
+      <OpenThrottleAuthForm hiddenFields={{ redirectUrl: '/users/abc' }} />,
+    );
+    const input = view.container.querySelector('input[name="redirectUrl"]');
+
+    expect(input).toHaveAttribute('type', 'hidden');
+    expect(input).toHaveAttribute('value', '/users/abc');
+  });
+
   test('inputs and submit grow to 44px on coarse pointers', () => {
     expect(component.getByTestId('auth-email-input')).toHaveClass(
       'pointer-coarse:h-11',

@@ -1,6 +1,8 @@
 import {
   buildAuthCookie,
   getAuthTokenFromCookie,
+  getSafeRedirect,
+  REDIRECT_URL_PARAM,
 } from '@openthrottle/react-router-auth';
 import { parseFormData } from '@openthrottle/react-router-graphql';
 import { cn } from '@openthrottle/react-router-shadcn';
@@ -14,7 +16,7 @@ import { animate, useReducedMotion } from 'framer-motion';
 import { useAtom } from 'jotai';
 import * as React from 'react';
 import type { ShouldRevalidateFunction } from 'react-router';
-import { data, redirect, useFetcher } from 'react-router';
+import { data, redirect, useFetcher, useSearchParams } from 'react-router';
 
 import type { Route } from '@/app/routes/+types/_index';
 import { LoginInputSchema } from '~/__generated__/schemas';
@@ -28,17 +30,18 @@ import {
   GRAIN_REST,
   HOLD_MS,
 } from '~/routing/auth/config/animation';
+import { assignDocumentLocation } from '~/routing/auth/utils/assignDocumentLocation';
 
 type AuthFetcherData = { error?: string; ok?: boolean };
 
 export const loader = async (args: Route.LoaderArgs) => {
-  const { request } = args;
+  const { request, url } = args;
 
   const cookieHeader = request.headers.get('cookie') ?? '';
   const token = getAuthTokenFromCookie(cookieHeader);
 
   if (token) {
-    return redirect('/dashboard');
+    return redirect(getSafeRedirect(url.searchParams.get(REDIRECT_URL_PARAM)));
   }
 
   return {};
@@ -46,7 +49,7 @@ export const loader = async (args: Route.LoaderArgs) => {
 
 // After login the action sets the auth cookie; the default post-action
 // revalidation would re-run the loader above, see the token, and redirect to
-// /dashboard immediately — cutting off the exit animation. Skip revalidation so
+// the post-login target immediately — cutting off the exit animation. Skip revalidation so
 // the client stays put and navigates on its own timer.
 export const shouldRevalidate: ShouldRevalidateFunction = () => {
   return false;
@@ -67,6 +70,7 @@ export default function Component(
 
   // Hooks
   const fetcher = useFetcher<AuthFetcherData>();
+  const [searchParams] = useSearchParams();
   const prefersReducedMotion = useReducedMotion();
   const [config] = useAtom(configAtom);
   const [count, setCount] = React.useState(0);
@@ -84,6 +88,9 @@ export default function Component(
     config.reducedMotion === REDUCED_MOTION_MODES.system;
   const isFormEnabled = count >= 0;
   const isSubmitting = fetcher.state !== 'idle';
+  // Where to land after login: the page that sent us here, when it is a safe
+  // same-origin path, otherwise /dashboard.
+  const redirectUrl = getSafeRedirect(searchParams.get(REDIRECT_URL_PARAM));
 
   // Handlers
   const onIncrementCount = () => {
@@ -132,7 +139,7 @@ export default function Component(
     }
 
     if (prefersReducedMotion) {
-      window.location.assign('/dashboard');
+      assignDocumentLocation(redirectUrl);
       return;
     }
 
@@ -153,7 +160,7 @@ export default function Component(
     });
 
     const timer = setTimeout(() => {
-      window.location.assign('/dashboard');
+      assignDocumentLocation(redirectUrl);
     }, FORM_FADE_MS + HOLD_MS);
 
     return () => {
@@ -161,7 +168,7 @@ export default function Component(
       mixer.stop();
       clearTimeout(timer);
     };
-  }, [fetcher.data, prefersReducedMotion]);
+  }, [fetcher.data, prefersReducedMotion, redirectUrl]);
 
   // 🔌 Short Circuit
 
@@ -210,7 +217,8 @@ export const action = async (args: Route.ActionArgs) => {
 
     // Set the cookie via headers and return data (not a redirect): a fetcher
     // follows redirects, which would navigate before the exit animation runs.
-    // The client navigates to /dashboard once the choreography completes.
+    // The client navigates to the redirectUrl target once the choreography
+    // completes.
     return data<AuthFetcherData>(
       { ok: true },
       { headers: { 'Set-Cookie': buildAuthCookie(token) } },

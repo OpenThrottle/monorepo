@@ -20,7 +20,7 @@ const renderAlert = (failure: CmsActionFailure) => {
         className={undefined}
         copy={COPY}
         failure={failure}
-        signInHref="/auth/sign-in?redirectTo=%2Fx"
+        signInHref="/auth/sign-in?redirectUrl=%2Fx"
       />
     );
   };
@@ -62,7 +62,7 @@ describe('CmsActionFailureAlert', () => {
 
       expect(
         component.getByRole('link', { name: COPY.signIn }),
-      ).toHaveAttribute('href', '/auth/sign-in?redirectTo=%2Fx');
+      ).toHaveAttribute('href', '/auth/sign-in?redirectUrl=%2Fx');
     });
   });
 });

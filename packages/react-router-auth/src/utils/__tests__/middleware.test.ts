@@ -94,13 +94,46 @@ describe('authMiddleware', () => {
   });
 
   describe('when there is no auth token', () => {
-    it('redirects a protected route to /auth and clears the auth cookie', () => {
+    it('redirects a protected route to /auth with redirectUrl and clears the auth cookie', () => {
       const result = runMiddleware(buildArgs('/dashboard'));
 
       assertIsRedirectResponse(result);
       expect(result.status).toBe(302);
-      expect(result.headers.get('Location')).toBe('/auth');
+      expect(result.headers.get('Location')).toBe(
+        '/auth?redirectUrl=%2Fdashboard',
+      );
       expect(result.headers.get('Set-Cookie')).toBe(getClearAuthCookieHeader());
+    });
+
+    it('carries a deep link with its search as redirectUrl', () => {
+      const result = runMiddleware(buildArgs('/plans/abc?tab=tasks'));
+
+      assertIsRedirectResponse(result);
+      expect(result.headers.get('Location')).toBe(
+        '/auth?redirectUrl=%2Fplans%2Fabc%3Ftab%3Dtasks',
+      );
+    });
+
+    it('carries the page URL, not the .data URL, for a single-fetch request', () => {
+      const result = runMiddleware(
+        buildArgs('/plans/abc.data?tab=tasks&_routes=root'),
+      );
+
+      assertIsRedirectResponse(result);
+      expect(result.headers.get('Location')).toBe(
+        '/auth?redirectUrl=%2Fplans%2Fabc%3Ftab%3Dtasks',
+      );
+    });
+
+    it('redirects a non-GET request to bare /auth', () => {
+      const args = buildArgs('/plans/abc');
+      const result = runMiddleware({
+        ...args,
+        request: new Request(args.url, { method: 'POST' }),
+      });
+
+      assertIsRedirectResponse(result);
+      expect(result.headers.get('Location')).toBe('/auth');
     });
 
     it('does not redirect a public route', () => {
@@ -121,7 +154,9 @@ describe('authMiddleware', () => {
       const result = runMiddleware(buildArgs('/dashboard', expiredToken));
 
       assertIsRedirectResponse(result);
-      expect(result.headers.get('Location')).toBe('/auth');
+      expect(result.headers.get('Location')).toBe(
+        '/auth?redirectUrl=%2Fdashboard',
+      );
     });
 
     it('does not redirect a public route even with an expired token', () => {

@@ -62,7 +62,7 @@ export const loader = async (args: Route.LoaderArgs) => {
       user: userResult.user ?? null,
     };
   } catch (error) {
-    redirectOnAuthError(error);
+    redirectOnAuthError(error, { request });
 
     throw error;
   }

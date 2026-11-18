@@ -1,3 +1,4 @@
+import { getLoginHref } from '@openthrottle/react-router-auth';
 import { CMS_STATUS } from '@openthrottle/react-router-cms-core';
 import {
   Button,
@@ -17,7 +18,7 @@ import { Form, useLocation } from 'react-router';
 import type { CmsComponentDetailFragment } from '~/__generated__/graphql';
 import { CmsActionFailureAlert } from '~/global/components/CmsActionFailureAlert';
 import { formatJson } from '~/global/utils/formatJson';
-import { getSignInHref } from '~/routing/auth/utils/auth-redirect';
+import { AUTH_ROUTES } from '~/routing/auth/data/data.routes';
 import { ComponentPropsPreview } from '~/routing/components/components/ComponentPropsPreview';
 import { COMPONENT_EDITOR_COPY } from '~/routing/components/data/data.copy';
 import type { ComponentActionResult } from '~/routing/components/types/component-action';
@@ -51,7 +52,10 @@ export const ComponentEditor = (
   const failed = result?.ok === false ? result : undefined;
   const nameId = `${component.uuid}-name`;
   const propsSchemaId = `${component.uuid}-props-schema`;
-  const signInHref = getSignInHref(`${location.pathname}${location.search}`);
+  const signInHref = getLoginHref(
+    `${location.pathname}${location.search}`,
+    AUTH_ROUTES.signIn,
+  );
   const statusId = `${component.uuid}-status`;
   const statuses = Object.values(CMS_STATUS);
   const typenameId = `${component.uuid}-typename`;

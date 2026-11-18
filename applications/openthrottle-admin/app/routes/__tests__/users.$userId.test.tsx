@@ -83,7 +83,7 @@ describe('routes/users.$userId.tsx', () => {
       expect(executeGraphqlWithAuth).not.toHaveBeenCalled();
     });
 
-    test('redirects to /auth, clearing the cookie, on an auth error', async () => {
+    test('redirects to /auth with redirectUrl, clearing the cookie, on an auth error', async () => {
       executeGraphqlWithAuth.mockRejectedValue(
         new GraphqlAuthError('Forbidden', 403),
       );
@@ -97,7 +97,9 @@ describe('routes/users.$userId.tsx', () => {
         throw new Error('Expected a redirect Response');
       }
       expect(response.status).toBe(302);
-      expect(response.headers.get('Location')).toBe('/auth');
+      expect(response.headers.get('Location')).toBe(
+        '/auth?redirectUrl=%2Fusers%2Fuser-1',
+      );
       expect(response.headers.get('Set-Cookie')).toContain('Max-Age=0');
     });
   });

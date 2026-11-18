@@ -30,11 +30,17 @@ vi.mock('@openthrottle/nodejs-graphql', () => ({
     error instanceof FakeGraphqlResponseError,
 }));
 
-vi.mock('@openthrottle/react-router-auth', () => ({
-  getAuthTokenFromCookie: (...args: ReadonlyArray<unknown>): unknown =>
-    getAuthTokenFromCookieMock(...args),
-  getClearAuthCookieHeader: (): string => 'token=; Max-Age=0; Path=/',
-}));
+vi.mock('@openthrottle/react-router-auth', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('@openthrottle/react-router-auth')>();
+
+  return {
+    getAuthTokenFromCookie: (...args: ReadonlyArray<unknown>): unknown =>
+      getAuthTokenFromCookieMock(...args),
+    getClearAuthCookieHeader: (): string => 'token=; Max-Age=0; Path=/',
+    getLoginRedirectFromRequest: actual.getLoginRedirectFromRequest,
+  };
+});
 
 // `./index` re-exports the ws hooks, which transitively evaluate
 // `@openthrottle/react-router-utils` config that reads `window.env` under jsdom.
@@ -441,6 +447,56 @@ describe('redirectOnAuthError', () => {
       expect(thrown.headers.get('Set-Cookie')).toBe(
         'token=; Max-Age=0; Path=/',
       );
+    }
+  });
+
+  it('carries the page being loaded as redirectUrl when given the request', () => {
+    const request = new Request('http://localhost/users/abc?tab=roles');
+    const thrown = catchThrown(() => {
+      redirectOnAuthError(new GraphqlAuthError('Unauthorized', 401), {
+        request,
+      });
+    });
+
+    expect(thrown).toBeInstanceOf(Response);
+
+    if (thrown instanceof Response) {
+      expect(thrown.headers.get('Location')).toBe(
+        '/auth?redirectUrl=%2Fusers%2Fabc%3Ftab%3Droles',
+      );
+    }
+  });
+
+  it('redirects to bare /auth for a non-GET request with no referer', () => {
+    const request = new Request('http://localhost/users/abc', {
+      method: 'POST',
+    });
+    const thrown = catchThrown(() => {
+      redirectOnAuthError(new GraphqlAuthError('Unauthorized', 401), {
+        request,
+      });
+    });
+
+    expect(thrown).toBeInstanceOf(Response);
+
+    if (thrown instanceof Response) {
+      expect(thrown.headers.get('Location')).toBe('/auth');
+    }
+  });
+
+  it('prefers `to` over the request', () => {
+    const request = new Request('http://localhost/users/abc');
+    const thrown = catchThrown(() => {
+      redirectOnAuthError(new GraphqlAuthError('Unauthorized', 401), {
+        request,
+        to: '/sign-in',
+      });
+    });
+
+    expect(thrown).toBeInstanceOf(Response);
+
+    if (thrown instanceof Response) {
+      expect(thrown.headers.get('Location')).toBe('/sign-in');
     }
   });
 

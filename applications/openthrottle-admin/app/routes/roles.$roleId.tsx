@@ -53,7 +53,7 @@ export const loader = async (args: Route.LoaderArgs) => {
       role: roleResult.role ?? null,
     };
   } catch (error) {
-    redirectOnAuthError(error);
+    redirectOnAuthError(error, { request });
 
     throw error;
   }

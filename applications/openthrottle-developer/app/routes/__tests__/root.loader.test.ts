@@ -144,24 +144,28 @@ describe('root loader: token gate + protected-prefix redirect', () => {
     mockExecuteGraphqlWithAuth.mockReset();
   });
 
-  test('redirects to /auth for a protected path with no token (no GraphQL call)', async () => {
+  test('redirects to /auth with redirectUrl for a protected path with no token (no GraphQL call)', async () => {
     const result = await loader(loaderArgs('http://localhost/dashboard'));
 
     expect(result).toBeInstanceOf(Response);
     assertIsResponse(result);
     expect(result.status).toBe(302);
-    expect(result.headers.get('location')).toBe('/auth');
+    expect(result.headers.get('location')).toBe(
+      '/auth?redirectUrl=%2Fdashboard',
+    );
     expect(mockExecuteGraphqlWithAuth).not.toHaveBeenCalled();
   });
 
-  test('redirects nested protected paths (prefix match) to /auth when no token', async () => {
+  test('redirects nested protected paths (prefix match) to /auth, carrying the deep link, when no token', async () => {
     const result = await loader(
-      loaderArgs('http://localhost/plans/abc/tasks/def'),
+      loaderArgs('http://localhost/plans/abc/tasks/def?tab=notes'),
     );
 
     expect(result).toBeInstanceOf(Response);
     assertIsResponse(result);
-    expect(result.headers.get('location')).toBe('/auth');
+    expect(result.headers.get('location')).toBe(
+      '/auth?redirectUrl=%2Fplans%2Fabc%2Ftasks%2Fdef%3Ftab%3Dnotes',
+    );
   });
 
   test('does not redirect an unprotected path when no token, and skips the user query', async () => {
@@ -235,7 +239,9 @@ describe('root loader: token gate + protected-prefix redirect', () => {
 
     expect(result).toBeInstanceOf(Response);
     assertIsResponse(result);
-    expect(result.headers.get('location')).toBe('/auth');
+    expect(result.headers.get('location')).toBe(
+      '/auth?redirectUrl=%2Fdashboard',
+    );
   });
 
   test('does not redirect an unprotected path when `me` resolves null', async () => {
@@ -278,7 +284,7 @@ describe('root loader: token gate + protected-prefix redirect', () => {
     expect(data.permissions).toEqual([]);
   });
 
-  test('redirects a protected path to /auth, clearing the cookie, when the server rejects the token', async () => {
+  test('redirects a protected path to /auth with redirectUrl, clearing the cookie, when the server rejects the token', async () => {
     mockExecuteGraphqlWithAuth.mockImplementation(
       async (_request, document) => {
         if (document === GetRootHealthDocument) {
@@ -300,7 +306,9 @@ describe('root loader: token gate + protected-prefix redirect', () => {
 
     expect(thrown).toBeInstanceOf(Response);
     assertIsResponse(thrown);
-    expect(thrown.headers.get('location')).toBe('/auth');
+    expect(thrown.headers.get('location')).toBe(
+      '/auth?redirectUrl=%2Fdashboard',
+    );
     expect(thrown.headers.get('set-cookie')).toContain('Max-Age=0');
   });
 

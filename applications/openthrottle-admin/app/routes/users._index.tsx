@@ -45,7 +45,7 @@ export const loader = async (args: Route.LoaderArgs) => {
 
     return { users: data.users };
   } catch (error) {
-    redirectOnAuthError(error);
+    redirectOnAuthError(error, { request });
 
     throw error;
   }

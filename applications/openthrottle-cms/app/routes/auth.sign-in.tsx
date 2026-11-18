@@ -1,6 +1,8 @@
 import {
   buildAuthCookie,
   getAuthTokenFromCookie,
+  getSafeRedirect,
+  REDIRECT_URL_PARAM,
 } from '@openthrottle/react-router-auth';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
@@ -16,8 +18,6 @@ import { SITE_TITLE } from '~/global/config/settings';
 import { fetchPublicGraphql } from '~/global/utils/graphql.server';
 import { AuthSignInForm } from '~/routing/auth/components/AuthSignInForm';
 import { AUTH_COPY } from '~/routing/auth/data/data.copy';
-import { AUTH_ROUTES } from '~/routing/auth/data/data.routes';
-import { getSafeRedirect } from '~/routing/auth/utils/auth-redirect';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -27,13 +27,16 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
 };
 
 /**
- * @description Where to return to after signing in, from `?redirectTo=`. A visitor who already
+ * @description Where to return to after signing in, from `?redirectUrl=`. A visitor who already
  * has a CMS session goes straight there.
  */
 export const loader = async (args: Route.LoaderArgs) => {
   const { request } = args;
   const url = new URL(request.url);
-  const redirectTo = getSafeRedirect(url.searchParams.get(AUTH_ROUTES.redirectParam)); // prettier-ignore
+  const redirectTo = getSafeRedirect(
+    url.searchParams.get(REDIRECT_URL_PARAM),
+    '/',
+  );
 
   if (getAuthTokenFromCookie(request.headers.get('cookie') ?? '')) {
     return redirect(redirectTo);
@@ -89,7 +92,7 @@ export const action = async (args: Route.ActionArgs) => {
   const formData = await args.request.formData();
   const email = formData.get('email');
   const password = formData.get('password');
-  const redirectTo = getSafeRedirect(formData.get(AUTH_ROUTES.redirectParam));
+  const redirectTo = getSafeRedirect(formData.get(REDIRECT_URL_PARAM), '/');
 
   if (
     typeof email !== 'string' ||

@@ -59,15 +59,15 @@ describe('routes/auth.sign-in', () => {
 
   describe('loader', () => {
     test('passes on a safe return path', async () => {
-      await expect(loader(buildLoaderArgs('?redirectTo=%2Ffragments%2Fabc'))).resolves.toEqual({ redirectTo: '/fragments/abc' }); // prettier-ignore
+      await expect(loader(buildLoaderArgs('?redirectUrl=%2Ffragments%2Fabc'))).resolves.toEqual({ redirectTo: '/fragments/abc' }); // prettier-ignore
     });
 
     test('drops an off-site return path', async () => {
-      await expect(loader(buildLoaderArgs('?redirectTo=%2F%2Fevil.test'))).resolves.toEqual({ redirectTo: '/' }); // prettier-ignore
+      await expect(loader(buildLoaderArgs('?redirectUrl=%2F%2Fevil.test'))).resolves.toEqual({ redirectTo: '/' }); // prettier-ignore
     });
 
     test('sends someone already signed in straight back', async () => {
-      const result = await loader(buildLoaderArgs('?redirectTo=%2Ffragments%2Fabc', `openthrottle-cms_auth_token=${TOKEN}`)); // prettier-ignore
+      const result = await loader(buildLoaderArgs('?redirectUrl=%2Ffragments%2Fabc', `openthrottle-cms_auth_token=${TOKEN}`)); // prettier-ignore
 
       expect(result).toBeInstanceOf(Response);
       expect(result instanceof Response && result.headers.get('Location')).toBe('/fragments/abc'); // prettier-ignore
@@ -78,7 +78,7 @@ describe('routes/auth.sign-in', () => {
     test('logs in, sets the CMS auth cookie and returns to redirectTo', async () => {
       fetchPublicGraphql.mockResolvedValue({ login: { accessToken: TOKEN } });
 
-      const result = await action(buildActionArgs({ email: ' editor@example.test ', password: 'pw', redirectTo: '/fragments/abc' })); // prettier-ignore
+      const result = await action(buildActionArgs({ email: ' editor@example.test ', password: 'pw', redirectUrl: '/fragments/abc' })); // prettier-ignore
 
       expect(fetchPublicGraphql).toHaveBeenCalledWith(CmsLoginDocument, { input: { email: 'editor@example.test', password: 'pw' } }); // prettier-ignore
       expect(result).toBeInstanceOf(Response);

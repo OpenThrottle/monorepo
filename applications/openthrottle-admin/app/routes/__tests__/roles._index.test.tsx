@@ -54,7 +54,7 @@ describe('routes/roles._index.tsx', () => {
       expect(result).toEqual({ roles });
     });
 
-    test('redirects to /auth, clearing the cookie, on a 401 auth error', async () => {
+    test('redirects to /auth with redirectUrl, clearing the cookie, on a 401 auth error', async () => {
       executeGraphqlWithAuth.mockRejectedValueOnce(
         new GraphqlAuthError('Unauthorized', 401),
       );
@@ -68,7 +68,9 @@ describe('routes/roles._index.tsx', () => {
         throw new Error('Expected a redirect Response');
       }
       expect(response.status).toBe(302);
-      expect(response.headers.get('Location')).toBe('/auth');
+      expect(response.headers.get('Location')).toBe(
+        '/auth?redirectUrl=%2Froles',
+      );
       expect(response.headers.get('Set-Cookie')).toContain('Max-Age=0');
     });
 
