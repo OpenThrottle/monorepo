@@ -24,8 +24,6 @@ export { codeEmbeddingsFactory } from '../modules/code-embeddings/code-embedding
 export { codeIndexSnapshotsFactory } from '../modules/code-index-snapshots/code-index-snapshots.factory.ts';
 export type { DailyStatFactoryData } from '../modules/daily-stats/daily-stats.factory.ts';
 export { dailyStatsFactory } from '../modules/daily-stats/daily-stats.factory.ts';
-export type { NoteFactoryData } from '../modules/notes/notes.factory.ts';
-export { notesFactory } from '../modules/notes/notes.factory.ts';
 export { planEmbeddingsFactory } from '../modules/plan-embeddings/plan-embeddings.factory.ts';
 export { planOutputStreamFactory } from '../modules/plan-output-stream/plan-output-stream.factory.ts';
 export { plansFactory } from '../modules/plans/plans.factory.ts';

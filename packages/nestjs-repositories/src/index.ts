@@ -246,8 +246,6 @@ export { McpConnectorsModule } from './modules/mcp-connectors/mcp-connectors.mod
 export { McpConnectorsService } from './modules/mcp-connectors/mcp-connectors.service.ts';
 export type { ConnectMcpConnectorInput } from './modules/mcp-connectors/mcp-connectors.types.ts';
 export { maskCredentialToken } from './modules/mcp-connectors/mcp-connectors.utils.ts';
-export { Note } from './modules/notes/note.entity.ts';
-export { NotesService } from './modules/notes/notes.service.ts';
 export type { PlanEmbeddingSearchRow } from './modules/plan-embeddings/plan-embedding.entity.ts';
 export { PlanEmbedding } from './modules/plan-embeddings/plan-embedding.entity.ts';
 export { PlanEmbeddingsService } from './modules/plan-embeddings/plan-embeddings.service.ts';

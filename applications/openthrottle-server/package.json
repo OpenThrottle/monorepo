@@ -37,6 +37,7 @@
     "@openthrottle/nestjs-redis": "workspace:^",
     "@openthrottle/nestjs-repositories": "workspace:^",
     "@openthrottle/nestjs-repositories-cms": "workspace:^",
+    "@openthrottle/nestjs-repositories-server": "workspace:^",
     "@openthrottle/nestjs-rollout": "workspace:^",
     "@openthrottle/nestjs-stripe": "workspace:^",
     "@openthrottle/nestjs-throttler": "workspace:^",

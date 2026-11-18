@@ -1,7 +1,4 @@
-// export * from './components/index.ts';
-// export * from './config/index.ts';
-// export * from './data/index.ts';
-// export * from './hooks/index.ts';
-// export * from './utils/index.ts';
-
-export const REMOVE_ME = `We can remove this when we actually have some code to export.`;
+export * from './modules/notes/note.entity.ts';
+export * from './modules/notes/notes.module.ts';
+export * from './modules/notes/notes.repository.ts';
+export * from './nestjs-repositories-server.module.ts';

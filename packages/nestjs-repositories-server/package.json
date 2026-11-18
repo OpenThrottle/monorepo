@@ -6,12 +6,18 @@
   },
   "dependencies": {
     "@nestjs/common": "catalog:",
-    "@openthrottle/nestjs-modules": "workspace:^"
+    "@nestjs/typeorm": "catalog:",
+    "@openthrottle/nestjs-postgres": "workspace:^",
+    "fishery": "catalog:",
+    "pg": "catalog:",
+    "typeorm": "catalog:"
   },
-  "description": "TODO: Add a description",
+  "description": "NestJS TypeORM data access for the OpenThrottle openthrottle database: one BaseModel entity and BaseRepository per table, fishery factories under ./testing. GraphQL stays in openthrottle-server.",
   "devDependencies": {
+    "@faker-js/faker": "catalog:",
     "@golevelup/ts-vitest": "catalog:",
     "@nestjs/testing": "catalog:",
+    "@openthrottle/openthrottle-agentic-utils": "workspace:^",
     "vitest": "catalog:"
   },
   "exports": {
@@ -24,6 +30,11 @@
       "types": "./dist/*.d.ts",
       "import": "./dist/*.js",
       "require": "./dist/*.js"
+    },
+    "./testing": {
+      "types": "./dist/src/testing/index.d.ts",
+      "import": "./dist/src/testing/index.js",
+      "require": "./dist/src/testing/index.js"
     }
   },
   "main": "./dist/src/index.js",
@@ -58,30 +69,15 @@
       "typecheck": {}
     }
   },
-  "peerDependencies": {},
   "private": true,
   "publishConfig": {
-    "access": "restricted",
-    "exports": {
-      ".": {
-        "import": "./src/index.js",
-        "require": "./src/index.js",
-        "types": "./src/index.d.ts"
-      },
-      "./*": {
-        "import": "./*.js",
-        "require": "./*.js",
-        "types": "./*.d.ts"
-      }
-    },
-    "main": "./src/index.js",
-    "module": "./src/index.js",
-    "types": "./src/index.d.ts"
+    "access": "restricted"
   },
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
   "sideEffects": false,
   "type": "module",
   "types": "./dist/src/index.d.ts",
-  "version": "1.0.0"
+  "version": "1.0.0",
+  "license": "Apache-2.0"
 }
