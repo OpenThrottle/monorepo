@@ -7,9 +7,12 @@
  */
 
 import type { RetentionPolicy } from '../data-retention.types.ts';
+import { agentConversationsPolicy } from './agent-conversations.policy.ts';
 import { agentTokenUsagePolicy } from './agent-token-usage.policy.ts';
 import { codeEmbeddingsPolicy } from './code-embeddings.policy.ts';
 import { planOutputStreamPolicy } from './plan-output-stream.policy.ts';
+import { planRunsPolicy } from './plan-runs.policy.ts';
+import { scheduledAgentJobRunsPolicy } from './scheduled-agent-job-runs.policy.ts';
 import {
   skillUsageEventsPolicy,
   skillUsageOutcomesPolicy,
@@ -23,6 +26,9 @@ export const DATA_RETENTION_POLICIES: readonly RetentionPolicy[] = [
   skillUsageEventsPolicy,
   skillUsageOutcomesPolicy,
   codeEmbeddingsPolicy,
+  agentConversationsPolicy,
+  planRunsPolicy,
+  scheduledAgentJobRunsPolicy,
 ];
 
 /**

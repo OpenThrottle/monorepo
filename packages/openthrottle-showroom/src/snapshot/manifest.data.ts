@@ -480,10 +480,6 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
         action: 'keep',
         reason: 'structural (timestamp with time zone)',
       },
-      working_directory: {
-        action: 'scrub',
-        reason: 'free text — identity/secret pass (text)',
-      },
     },
     reason: 'the core planning surface',
   },

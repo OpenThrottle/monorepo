@@ -32,6 +32,23 @@ No `package.json` here. Everything runs through root `pnpm run database:*` scrip
 - After an `openthrottle` schema change, sync the TypeORM entities in `@openthrottle/nestjs-repositories`, or `@openthrottle/nestjs-repositories-server` for tables already moved there (entity JSDoc cites the migration numbers); for the latter run `pnpm run database:test:openthrottle`. After a `cms` schema change, sync the entities in `@openthrottle/nestjs-repositories-cms` and run `pnpm run database:test:cms`, which checks them against the live tables.
 - A shared-DB worktree refuses a branch-only migration in **any** database; run `pnpm worktree:db isolate` first.
 
+### Ledger orphans
+
+`database:migrate` (every runner entrypoint) warns when `schema_migrations` holds filenames with no file on disk. It is warn-only: nothing is re-applied or removed, and apply semantics are unchanged.
+
+Two causes, told apart by whether the successor file is applied:
+
+- **A renumbered migration.** A branch applied `NNN_x.sql` to a shared database, then renumbered it before merge (another branch took the prefix). The body ran a second time under the new name, which was harmless only because it is idempotent, and the old row stays behind. The shared-DB guard does not prevent this when the branch runs from the **primary** checkout: primary checkouts are always allowed. `166_create_oauth_tables.sql` reached the shared DB from `feat/mcp-oauth` that way on 2026-11-16.
+- **A checkout behind the branch that migrated this database**, e.g. a worktree on an older `main`. The file exists elsewhere; pull, do not delete.
+
+Cleanup is operator-approved and per database. For each orphan, confirm its successor is applied (`SELECT filename, applied_at FROM schema_migrations WHERE filename LIKE '%<suffix>'` shows the new name), then:
+
+```sql
+DELETE FROM schema_migrations WHERE filename IN ('<orphan>.sql', …);
+```
+
+Never delete a row whose file merely lives on a branch you have not pulled: the next run on that branch would re-apply it.
+
 ## Adding a database
 
 1. Add an entry to [`database-registry.ts`](./database-registry.ts), with its name env var and URL env var.

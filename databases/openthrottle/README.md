@@ -267,6 +267,9 @@ Most OpenThrottle tables are bounded by the entities they describe — one row p
 | `agent_token_usage`                                          | every assistant turn                       |
 | `skill_usage_events` / `skill_usage_outcomes`                | every skill invocation                     |
 | `code_embeddings`                                            | every indexed chunk, per workspace root    |
+| `agent_conversations` / `agent_conversation_messages`        | every chat (soft-deleted, never purged)    |
+| `plan_runs`                                                  | every plan execution                       |
+| `scheduled_agent_job_runs`                                   | every scheduled-job fire                   |
 
 BullMQ's own JSONL run output is already pruned by `bullmq-run-output-retention.service.ts`; the database side was not. The **Data Retention** queue (`applications/openthrottle-server/src/queues/data-retention/`) closes that gap: one nightly sweep applies a list of declarative per-table policies.
 
@@ -282,6 +285,18 @@ Only the exact string `true` (case-insensitive, trimmed) enables enforcement. `1
 | `DATA_RETENTION_CRON`    | `0 30 3 * * *` | 6-field BullMQ cron for the sweep (nightly 03:30)   |
 | `DATA_RETENTION_TZ`      | UTC            | Timezone for the cron pattern                       |
 
+### Operator checklist: turning enforcement on
+
+Enforcement is decided per environment by a human. Before setting `DATA_RETENTION_ENFORCE=true` anywhere:
+
+1. **Collect at least a week of dry-run sweeps.** Each nightly run logs one `Data-retention <policy> (<table>): expired=N, deleted=0` line per policy and a closing `Data-retention sweep done (dry-run): … WOULD be deleted` line. The boot line `Data-retention worker started (… mode=dry-run, policies=N)` confirms the mode and the policy count.
+2. **Read the per-policy `expired` counts against the table sizes.** A policy whose `expired` is close to its table's whole row count is the one to question before enabling, and `code_embeddings` can free the most at once.
+3. **Record the expected counts** (in the plan or task that enables enforcement), so the first enforced sweep can be checked against them.
+4. **Set `DATA_RETENTION_ENFORCE=true`** in that environment and restart the worker; the boot line must now say `mode=ENFORCING`.
+5. **Check the first enforced sweep**: `deleted` should match the recorded `expired` counts, or run short with `(hit batch cap, remainder next sweep)` on a large first backlog.
+
+An environment that deliberately stays in dry-run (local dev, a demo database) should say so where its environment is configured, so the biweekly database-health job can tell a waiver from an oversight.
+
 ### How the sweep behaves
 
 - **Batched.** Each policy deletes at most `DATA_RETENTION_BATCH_SIZE` (1,000) rows per statement, so locks are taken and released in short transactions instead of being held across the whole backlog while the app is still writing.
@@ -291,7 +306,7 @@ Only the exact string `true` (case-insensitive, trimmed) enables enforcement. `1
 
 ### Policies
 
-Each policy lives in `queues/data-retention/policies/` and is registered in `data-retention.policies.ts`. Adding a table means adding one file and one array entry.
+Each policy lives in `queues/data-retention/policies/` and is registered in `policies/policies.constants.ts`. Adding a table means adding one file and one array entry.
 
 #### `plan_output_stream`
 
@@ -319,7 +334,7 @@ One row per assistant turn, append-only, never purged. Small today (137 rows in 
 
 180 days sits just past the longest window the Usage UI offers, so every view the product can render is still answered from raw rows. If usage reporting later needs a longer horizon, the answer is a monthly rollup table feeding the UI, not a longer raw-row window — that only defers the problem.
 
-This policy and the skill-usage one below are built by the shared `createAgeRetentionPolicy` factory (`policies/create-age-retention-policy.ts`), which covers the common case: an append-only table with a timestamp column and no dependents. Postgres cannot bind identifiers as parameters, so the factory interpolates the table and column names and validates them against a strict snake_case pattern — they must be compile-time literals from the policy files, never request input.
+This policy and the skill-usage one below are built by the shared `createAgeRetentionPolicy` factory (`policies/policies.utils.ts`), which covers the common case: an append-only table with a timestamp column and no dependents. Postgres cannot bind identifiers as parameters, so the factory interpolates the table and column names and validates them against a strict snake_case pattern — they must be compile-time literals from the policy files, never request input.
 
 #### `skill_usage_events` and `skill_usage_outcomes`
 
@@ -345,6 +360,33 @@ Two smaller decisions worth knowing:
 - `code_index_snapshots` is **not** used as the liveness signal despite being the obvious candidate. It was empty on the audited database while `code_embeddings` held 5,760 rows, so the absence of a snapshot says nothing about whether a root is real.
 
 Because this policy can free a lot of space at once, it is the one most worth reading a dry-run report for before enabling enforcement.
+
+#### `agent_conversations` (and `agent_conversation_messages`)
+
+Delete conversations whose `status` has been **`deleted` for 30 days**, measured by `updated_at`.
+
+Deleting a chat in the product is a soft delete: `status` flips to `deleted` and the row and every message stay, so the delete can be undone. Nothing ever purged them, and on the audited database deleted conversations outnumbered active ones (144 to 62). `updated_at` is an `@UpdateDateColumn`, so the soft delete itself stamps it and the 30 days run from the delete, not from the last message. A conversation restored within the window leaves `deleted` and is never touched; `active` and `archived` conversations are out of scope at any age.
+
+Messages declare `ON DELETE CASCADE` and go with their conversation, so the policy's unit is the conversation and it cannot leave orphan messages. `agent_token_usage` and `work_sessions` reference conversations `ON DELETE SET NULL`: usage reporting and the work ledger keep their rows and lose only the link.
+
+#### `plan_runs`
+
+Delete a run only when **all** of these hold: its status is terminal (`COMPLETED`, `FAILED`, `CANCELLED`, `STALE`, `MISSED`, `SKIPPED`, `SUPERSEDED`, `USAGE_LIMITED`), it was last updated more than **180 days** ago, it is **not its plan's newest run**, and it has **no `agent_trajectories` row**.
+
+One row is written per plan execution and none was ever deleted (524 runs in six months on the audited database). A run row is attribution — agent, model, branch, worktree — so it earns half a year, but an old settled run answers nothing the plan, its tasks and the git history do not.
+
+- **Never a live run.** `QUEUED`, `SCHEDULED` and `IN_PROGRESS` are not in the terminal set, at any age. `USAGE_LIMITED` is terminal for its own row: a continuation is a new row linked by `resume_of_run_id`.
+- **Each plan keeps its newest run**, so every plan that ever ran still shows who ran it last.
+- **Runs with a trajectory are kept.** `agent_trajectories.plan_run_id` cascades from the run and `eval_human_labels` cascades from the trajectory, so deleting the run would silently delete hand-written eval labels. Trajectory retention belongs to the eval system and is not decided here.
+- Every other reference — `work_sessions.plan_run_id`, `plan_messages.plan_run_id` and the `resume_of_run_id` self-reference — is `ON DELETE SET NULL`, so the work ledger and the plan inbox keep their rows and lose only the link.
+
+#### `scheduled_agent_job_runs`
+
+Delete a run once it is **no longer in flight** (anything but `queued` / `running`), it finished — or, if it never started, was created — more than **180 days** ago, and it is **not its job's newest run**.
+
+One row per cron fire, run-now or usage-limit resume, each with a settings snapshot and raw usage JSON, and none was ever pruned. The in-flight set comes from `SCHEDULED_AGENT_JOB_RUN_IN_FLIGHT_STATUSES` in `@openthrottle/nestjs-repositories`, the same list the scheduler uses, so the policy and the scheduler cannot disagree about what is live. Keeping each job's newest run means the schedule page always shows a job's latest outcome.
+
+The only reference into the table is the `resume_of_run_id` self-reference, `ON DELETE SET NULL`: a resume run outlives the limited run it continued and loses only the link.
 
 ## Foreign keys in migrations
 
@@ -436,9 +478,9 @@ pnpm exec tsx ./scripts/check-migration-hygiene.ts --all
 
 `schema_migrations` declares `filename TEXT PRIMARY KEY`. The filename **is** the ledger key.
 
-Renaming `110_add_user_id_to_skill_usage_events.sql` to `112_…` therefore does two things at once: the runner stops recognizing the file as applied and re-runs it, and the original ledger row survives forever naming a file that no longer exists. Migrations here are written idempotent so the re-run is probably survivable — but "probably survivable" is not a migration strategy, and the orphan row is permanent. The runner also checksums applied migrations and warns on drift, so editing one in place is not an escape either.
+Renaming `110_add_user_id_to_skill_usage_events.sql` to `112_…` therefore does two things at once on every database that applied it: the runner stops recognizing the file as applied and re-runs it, and the original ledger row survives naming a file that no longer exists. Migrations here are written idempotent so the re-run is probably survivable — but "probably survivable" is not a migration strategy. The runner also checksums applied migrations and warns on drift, so editing one in place is not an escape either.
 
-Renumber **before** the migration is applied anywhere. After that, grandfather it and record why.
+What counts is which databases you cannot throw away. **Once a migration merges to `main` it is on the shared dev DB and on every deployed box: grandfather it and record why, never rename it.** Before merge, a branch's migrations run on a disposable database (`pnpm worktree:db isolate`, removed with the worktree), so renumbering to dodge a prefix another branch took is routine and costs nothing. The one leak is a branch migration applied to the shared dev DB, which the shared-DB guard refuses in a worktree but not in the primary checkout; renumbering then leaves an orphan row there, cleaned up per [`databases/AGENTS.md` § Ledger orphans](../AGENTS.md#ledger-orphans).
 
 #### Numeric prefix vs timestamp prefix — decided 2026-09-10: keep numeric
 

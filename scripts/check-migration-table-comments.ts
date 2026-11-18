@@ -10,6 +10,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
 import { DATABASES } from '../databases/database-registry.ts';
+import { findUncommentedTables } from './check-migration-table-comments.rules.ts';
 import { createLogger } from './utils/logger.ts';
 import {
   changedMigrationPaths,
@@ -24,11 +25,6 @@ const MIGRATIONS_DIRS = DATABASES.flatMap((database) => [
   database.migrationsPath,
   ...database.legacyMigrationsPaths,
 ]);
-
-const CREATE_TABLE_PATTERN =
-  /CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?([a-z][a-z0-9_]*)/gi;
-
-const COMMENT_ON_TABLE_PATTERN = /COMMENT\s+ON\s+TABLE\s+([a-z][a-z0-9_]*)/gi;
 
 const resolveBaseRef = (): string => {
   return (
@@ -60,37 +56,10 @@ const listChangedMigrationFiles = (baseRef: string): readonly string[] => {
   return changedMigrationPaths(output);
 };
 
-const collectMatches = (
-  content: string,
-  pattern: RegExp,
-): readonly string[] => {
-  const names: string[] = [];
-  const re = new RegExp(pattern.source, pattern.flags);
-  let match = re.exec(content);
-  while (match) {
-    const tableName = match[1];
-    if (tableName) {
-      names.push(tableName);
-    }
-    match = re.exec(content);
-  }
-  return names;
-};
-
 const validateMigrationFile = (relativePath: string): readonly string[] => {
-  const absolutePath = path.join(ROOT, relativePath);
-  const content = readFileSync(absolutePath, 'utf8');
-  const createdTables = collectMatches(content, CREATE_TABLE_PATTERN);
-
-  if (createdTables.length === 0) {
-    return [];
-  }
-
-  const commentedTables = new Set(
-    collectMatches(content, COMMENT_ON_TABLE_PATTERN),
+  return findUncommentedTables(
+    readFileSync(path.join(ROOT, relativePath), 'utf8'),
   );
-
-  return createdTables.filter((table) => !commentedTables.has(table));
 };
 
 const run = (): void => {

@@ -1,0 +1,80 @@
+/**
+ * @description Request-scoped DataLoaders for PlanRunObjectResolver: the run's
+ * checkout by id, and its latest pull_request artifact by plan-run id. A
+ * `planRunsByPlanId` list resolving `checkout` and `pullRequest` for N runs
+ * costs three queries in total instead of up to three per run.
+ */
+
+import { Injectable, Scope } from '@nestjs/common';
+import {
+  createEntityByIdLoader,
+  type RepositoryCheckout,
+  RepositoryCheckoutsService,
+  type WorkArtifact,
+  WorkLedgerService,
+} from '@openthrottle/nestjs-repositories';
+import DataLoader from 'dataloader';
+import { In } from 'typeorm';
+
+/** work_artifacts.type for a pull-request artifact (see artifact-type-registry). */
+const PULL_REQUEST_ARTIFACT_TYPE = 'pull_request';
+
+@Injectable({ scope: Scope.REQUEST })
+export class PlanRunLoaders {
+  readonly checkoutLoader: DataLoader<string, RepositoryCheckout | null>;
+  readonly pullRequestArtifactByPlanRunIdLoader: DataLoader<
+    string,
+    WorkArtifact | null
+  >;
+
+  constructor(
+    repositoryCheckoutsService: RepositoryCheckoutsService,
+    workLedgerService: WorkLedgerService,
+  ) {
+    this.checkoutLoader = createEntityByIdLoader(repositoryCheckoutsService);
+
+    /*
+      Two queries for the whole batch: every session bridged to one of the runs,
+      then every pull_request artifact on those sessions, newest first. The first
+      artifact seen for a run is therefore its most recently produced one, which
+      is what the per-run findOne({ order: producedAt DESC }) used to return.
+    */
+    this.pullRequestArtifactByPlanRunIdLoader = new DataLoader<
+      string,
+      WorkArtifact | null
+    >(async (planRunIds) => {
+      const sessions = await workLedgerService
+        .getSessionRepository()
+        .find({ where: { planRunId: In([...planRunIds]) } });
+
+      const planRunIdBySessionId = new Map<string, string>();
+      for (const session of sessions) {
+        if (session.planRunId !== null) {
+          planRunIdBySessionId.set(session.id, session.planRunId);
+        }
+      }
+
+      if (planRunIdBySessionId.size === 0) {
+        return planRunIds.map(() => null);
+      }
+
+      const artifacts = await workLedgerService.getArtifactRepository().find({
+        order: { producedAt: 'DESC' },
+        where: {
+          sessionId: In([...planRunIdBySessionId.keys()]),
+          type: PULL_REQUEST_ARTIFACT_TYPE,
+        },
+      });
+
+      const latestByPlanRunId = new Map<string, WorkArtifact>();
+      for (const artifact of artifacts) {
+        const planRunId = planRunIdBySessionId.get(artifact.sessionId);
+        if (planRunId !== undefined && !latestByPlanRunId.has(planRunId)) {
+          latestByPlanRunId.set(planRunId, artifact);
+        }
+      }
+
+      return planRunIds.map((id) => latestByPlanRunId.get(id) ?? null);
+    });
+  }
+}
