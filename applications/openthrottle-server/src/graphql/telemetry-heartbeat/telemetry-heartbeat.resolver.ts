@@ -15,8 +15,8 @@ import { CurrentUser } from '@openthrottle/nestjs-auth';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   type TelemetryHeartbeat,
-  TelemetryHeartbeatsService,
-} from '@openthrottle/nestjs-repositories';
+  TelemetryHeartbeatsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import { getOpenThrottleRoot } from '@openthrottle/openthrottle-agentic-utils';
 
 import { NotificationsService } from '../../notifications/notifications.service.ts';
@@ -57,7 +57,7 @@ export class TelemetryHeartbeatResolver {
     private readonly effectiveUserResolutionService: EffectiveUserResolutionService,
     private readonly logger: LoggerService,
     private readonly notificationsService: NotificationsService,
-    private readonly telemetryHeartbeatsService: TelemetryHeartbeatsService,
+    private readonly telemetryHeartbeatsRepository: TelemetryHeartbeatsRepository,
   ) {}
 
   @Mutation(() => TelemetryHeartbeatObject, {
@@ -79,7 +79,7 @@ export class TelemetryHeartbeatResolver {
     }
 
     const before = await this.machineRowsOrNull(userId, validated.machineId);
-    const saved = await this.telemetryHeartbeatsService.upsertHeartbeat(
+    const saved = await this.telemetryHeartbeatsRepository.upsertHeartbeat(
       userId,
       validated,
     );
@@ -103,7 +103,7 @@ export class TelemetryHeartbeatResolver {
       const since = new Date(
         Date.now() - 2 * TELEMETRY_COVERAGE_DEFAULT_WINDOW_DAYS * DAY_MS,
       );
-      const rows = await this.telemetryHeartbeatsService.listForUser(
+      const rows = await this.telemetryHeartbeatsRepository.listForUser(
         userId,
         since,
       );

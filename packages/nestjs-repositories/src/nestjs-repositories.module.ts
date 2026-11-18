@@ -11,7 +11,6 @@ import { AgentTrajectoriesModule } from './modules/agent-trajectories/agent-traj
 import { BlogAuthorsModule } from './modules/blog-authors/blog-authors.module.ts';
 import { BlogPostsModule } from './modules/blog-posts/blog-posts.module.ts';
 import { BlogTagsModule } from './modules/blog-tags/blog-tags.module.ts';
-import { DailyStatsModule } from './modules/daily-stats/daily-stats.module.ts';
 import { EvalDatasetsModule } from './modules/eval-datasets/eval-datasets.module.ts';
 import { EvalHumanLabelsModule } from './modules/eval-human-labels/eval-human-labels.module.ts';
 import { EvalJudgeCalibrationsModule } from './modules/eval-judge-calibrations/eval-judge-calibrations.module.ts';
@@ -31,18 +30,15 @@ import { ScheduledAgentJobsModule } from './modules/scheduled-agent-jobs/schedul
 import { ServiceAccountsModule } from './modules/service-accounts/service-accounts.module.ts';
 import { SkillAvailabilityModule } from './modules/skill-availability/skill-availability.module.ts';
 import { SkillTagsModule } from './modules/skill-tags/skill-tags.module.ts';
-import { SkillUsageEventsModule } from './modules/skill-usage-events/skill-usage-events.module.ts';
 import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module.ts';
 import { TagActionRulesModule } from './modules/tag-action-rules/tag-action-rules.module.ts';
 import { TagsModule } from './modules/tags/tags.module.ts';
 import { TaskEmbeddingsModule } from './modules/task-embeddings/task-embeddings.module.ts';
 import { TasksModule } from './modules/tasks/tasks.module.ts';
-import { TelemetryHeartbeatsModule } from './modules/telemetry-heartbeats/telemetry-heartbeats.module.ts';
 import { UserPreferencesModule } from './modules/user-preferences/user-preferences.module.ts';
 import { UsersModule } from './modules/users/users.module.ts';
 import { WorkLedgerModule } from './modules/work-ledger/work-ledger.module.ts';
 import { WorkspaceSettingsModule } from './modules/workspace-settings/workspace-settings.module.ts';
-import { WorktreeRemovalsModule } from './modules/worktree-removals/worktree-removals.module.ts';
 import { getTypeOrmOptions } from './nestjs-repositories.utils.ts';
 
 @Module({
@@ -57,7 +53,6 @@ import { getTypeOrmOptions } from './nestjs-repositories.utils.ts';
     BlogPostsModule,
     BlogTagsModule,
     CustomPromptsModule,
-    DailyStatsModule,
     EvalDatasetsModule,
     EvalHumanLabelsModule,
     EvalJudgeCalibrationsModule,
@@ -76,9 +71,7 @@ import { getTypeOrmOptions } from './nestjs-repositories.utils.ts';
     ServiceAccountsModule,
     SkillAvailabilityModule,
     SkillTagsModule,
-    SkillUsageEventsModule,
     SubscriptionsModule,
-    TelemetryHeartbeatsModule,
     TagActionRulesModule,
     TagsModule,
     TaskEmbeddingsModule,
@@ -87,7 +80,6 @@ import { getTypeOrmOptions } from './nestjs-repositories.utils.ts';
     UsersModule,
     WorkLedgerModule,
     WorkspaceSettingsModule,
-    WorktreeRemovalsModule,
   ],
   imports: [
     TypeOrmModule.forRootAsync({
@@ -108,7 +100,6 @@ import { getTypeOrmOptions } from './nestjs-repositories.utils.ts';
     BlogPostsModule,
     BlogTagsModule,
     CustomPromptsModule,
-    DailyStatsModule,
     EvalDatasetsModule,
     EvalHumanLabelsModule,
     EvalJudgeCalibrationsModule,
@@ -128,9 +119,7 @@ import { getTypeOrmOptions } from './nestjs-repositories.utils.ts';
     ServiceAccountsModule,
     SkillAvailabilityModule,
     SkillTagsModule,
-    SkillUsageEventsModule,
     SubscriptionsModule,
-    TelemetryHeartbeatsModule,
     TagActionRulesModule,
     TagsModule,
     TaskEmbeddingsModule,
@@ -139,7 +128,6 @@ import { getTypeOrmOptions } from './nestjs-repositories.utils.ts';
     UsersModule,
     WorkLedgerModule,
     WorkspaceSettingsModule,
-    WorktreeRemovalsModule,
   ],
   providers: [],
 })

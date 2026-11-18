@@ -62,6 +62,10 @@ Moving a table here is these files and edits, every time (`notes` is the referen
    custom method) and `create<Folder>RepositoryMock()`, which spreads
    `createBaseRepositoryMock(tableName)` and adds them. **A custom repository method and its mock
    land in the same change.**
+   `<folder>.utils.ts` is test-only (it imports `vitest`), so a runtime helper the old module kept
+   in a utils file moves to a sub-folder of its own, e.g.
+   `telemetry-heartbeats/delivery-leg/delivery-leg.utils.ts`. Entity files hold the entity class
+   only; their constants and types move to `<folder>.constants.ts` / `<folder>.types.ts`.
 7. Tests beside the files: `<folder>.repository.test.ts`, `<folder>.utils.test.ts`.
 8. Barrels: entity, repository and module in `src/index.ts`; factory, mock type and mock in
    `src/testing/index.ts`.
@@ -88,6 +92,10 @@ have no uuidv7 `id`. They do **not** extend a base model or `BaseRepository`. In
   `{ readonly [TMethod in <Folder>RepositoryMethod]: Mock<<Folder>Repository[TMethod]> }`, with
   one `vi.fn()` per method that behaves like an empty table (`null`, `[]`, or a no-op).
 - Steps 4, 5 and 7–11 apply unchanged.
+- **A natural-key table that only raw SQL touches** (`code_embeddings`, `code_index_snapshots`:
+  their reads and writes are SQL in `nestjs-vector-search` and the server's embedding and
+  retention processors) moves as entity, `.types.ts` and factory only. It needs no repository,
+  module or mock until a consumer wants TypeORM access; add them then, in the same change.
 
 **Why not a key-column override in `ModelConvention` (decided in batch 1, plan `2246e801`):**
 

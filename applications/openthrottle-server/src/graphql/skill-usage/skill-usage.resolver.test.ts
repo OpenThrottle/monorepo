@@ -2,15 +2,20 @@ import { createMock } from '@golevelup/ts-vitest';
 import { BadRequestException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { PERMISSIONS, PERMISSIONS_KEY } from '@openthrottle/nestjs-rbac';
+import { RolesService } from '@openthrottle/nestjs-repositories';
 import {
-  RolesService,
   SKILL_USAGE_OUTCOMES,
   SKILL_USAGE_PRIVACY_LEVELS,
   SKILL_USAGE_SCOPES,
   type SkillUsageEvent,
-  SkillUsageEventsService,
+  SkillUsageEventsRepository,
   type SkillUsageOutcome,
-} from '@openthrottle/nestjs-repositories';
+  SkillUsageOutcomesRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import {
+  createSkillUsageEventsRepositoryMock,
+  createSkillUsageOutcomesRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
@@ -21,23 +26,18 @@ const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
 
 describe('SkillUsageResolver', () => {
   let resolver: SkillUsageResolver;
-  const recordSkillUsage = vi.fn();
-  const recordSkillUsageOutcome = vi.fn();
-  const getUsageAggregation = vi.fn();
-  const searchGitBranches = vi.fn();
+  const skillUsageEvents = createSkillUsageEventsRepositoryMock();
+  const skillUsageOutcomes = createSkillUsageOutcomesRepositoryMock();
+  const { getUsageAggregation, recordSkillUsage, searchGitBranches } =
+    skillUsageEvents;
+  const { recordSkillUsageOutcome } = skillUsageOutcomes;
   const resolveEffectiveUserId = vi.fn();
-
-  const mockService = createMock<SkillUsageEventsService>({
-    getUsageAggregation,
-    recordSkillUsage,
-    recordSkillUsageOutcome,
-    searchGitBranches,
-  });
 
   const savedRow: SkillUsageEvent = {
     agentId: null,
     agentType: null,
     args: 'truncated args…',
+    createdAt: new Date('2026-07-31T12:00:01.000Z'),
     cwd: '/repo',
     duplicateOfId: null,
     gitBranch: 'example-usage-tracking',
@@ -62,7 +62,11 @@ describe('SkillUsageResolver', () => {
     const app = await Test.createTestingModule({
       providers: [
         SkillUsageResolver,
-        { provide: SkillUsageEventsService, useValue: mockService },
+        { provide: SkillUsageEventsRepository, useValue: skillUsageEvents },
+        {
+          provide: SkillUsageOutcomesRepository,
+          useValue: skillUsageOutcomes,
+        },
         { provide: RolesService, useValue: createMock<RolesService>() },
         {
           provide: EffectiveUserResolutionService,
@@ -325,6 +329,7 @@ describe('SkillUsageResolver', () => {
   describe('recordSkillUsageOutcome', () => {
     const savedOutcome: SkillUsageOutcome = {
       captureModel: 'reported_v1',
+      createdAt: new Date('2026-07-31T12:05:01.000Z'),
       cwd: '/repo',
       durationMs: 4200,
       gitBranch: 'example-usage-tracking',
@@ -463,8 +468,10 @@ describe('SkillUsageResolver', () => {
             avgDurationMs: 1500,
             count: 2,
             errorCount: 0,
+            lastUsedAt: null,
             outcomeCount: 1,
             scope: SKILL_USAGE_SCOPES.OURS,
+            sessionEndedCount: 0,
             skillName: 'ot-plans',
             successCount: 1,
           },

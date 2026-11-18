@@ -5,8 +5,9 @@ import {
   AgentTokenUsageService,
   CAPTURE_HEALTH_STREAMS,
   RolesService,
-  SkillUsageEventsService,
 } from '@openthrottle/nestjs-repositories';
+import { SkillUsageEventsRepository } from '@openthrottle/nestjs-repositories-server';
+import { createSkillUsageEventsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
@@ -15,19 +16,15 @@ import { CaptureHealthResolver } from './capture-health.resolver.ts';
 describe('CaptureHealthResolver', () => {
   let resolver: CaptureHealthResolver;
 
-  const listSkillCaptureHealth = vi.fn();
+  const skillUsageEvents = createSkillUsageEventsRepositoryMock();
+  const listSkillCaptureHealth = skillUsageEvents.listCaptureHealth;
   const listTokenCaptureHealth = vi.fn();
 
   beforeAll(async () => {
     const app = await Test.createTestingModule({
       providers: [
         CaptureHealthResolver,
-        {
-          provide: SkillUsageEventsService,
-          useValue: createMock<SkillUsageEventsService>({
-            listCaptureHealth: listSkillCaptureHealth,
-          }),
-        },
+        { provide: SkillUsageEventsRepository, useValue: skillUsageEvents },
         {
           provide: AgentTokenUsageService,
           useValue: createMock<AgentTokenUsageService>({
@@ -87,7 +84,7 @@ describe('CaptureHealthResolver', () => {
       });
     });
 
-    describe('when a service fails', () => {
+    describe('when a source fails', () => {
       test('propagates the error rather than reporting partial health', async () => {
         listSkillCaptureHealth.mockResolvedValue([]);
         listTokenCaptureHealth.mockRejectedValue(new Error('db down'));

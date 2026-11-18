@@ -11,18 +11,19 @@ import { BadRequestException, UseGuards } from '@nestjs/common';
 import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { CurrentUser } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
+import { normalizeRemoteUrl } from '@openthrottle/nestjs-repositories';
 import {
   isSkillUsageOutcome,
   isSkillUsageScope,
-  normalizeRemoteUrl,
   SKILL_USAGE_OUTCOMES,
   SKILL_USAGE_PRIVACY_LEVELS,
   SKILL_USAGE_SCOPE_LIST,
   SKILL_USAGE_SCOPES,
-  SkillUsageEventsService,
+  SkillUsageEventsRepository,
+  SkillUsageOutcomesRepository,
   type SkillUsagePrivacyLevel,
   type SkillUsageScope,
-} from '@openthrottle/nestjs-repositories';
+} from '@openthrottle/nestjs-repositories-server';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import { EffectiveUserResolutionService } from '../../services/effective-user-resolution/effective-user-resolution.service.ts';
@@ -76,7 +77,8 @@ const toOptionalTrimmed = (value?: string | null): string | null => {
 export class SkillUsageResolver {
   constructor(
     private readonly effectiveUserResolutionService: EffectiveUserResolutionService,
-    private readonly skillUsageEventsService: SkillUsageEventsService,
+    private readonly skillUsageEventsRepository: SkillUsageEventsRepository,
+    private readonly skillUsageOutcomesRepository: SkillUsageOutcomesRepository,
   ) {}
 
   @Mutation(() => SkillUsageEventObject, {
@@ -129,7 +131,7 @@ export class SkillUsageResolver {
       ? normalizeRemoteUrl(input.repoIdentity)
       : null;
 
-    const saved = await this.skillUsageEventsService.recordSkillUsage({
+    const saved = await this.skillUsageEventsRepository.recordSkillUsage({
       agentId: input.agentId ?? null,
       agentType: input.agentType ?? null,
       args: input.args ?? null,
@@ -203,19 +205,20 @@ export class SkillUsageResolver {
       throw new BadRequestException('occurredAt must be a valid date');
     }
 
-    const saved = await this.skillUsageEventsService.recordSkillUsageOutcome({
-      cwd: input.cwd ?? null,
-      deliberate: input.deliberate ?? null,
-      durationMs: input.durationMs ?? null,
-      gitBranch: input.gitBranch ?? null,
-      occurredAt,
-      outcome: outcomeRaw,
-      scope: resolvedScope,
-      sessionId: input.sessionId ?? null,
-      skillName,
-      source: input.source?.trim() || null,
-      toolUseId: input.toolUseId ?? null,
-    });
+    const saved =
+      await this.skillUsageOutcomesRepository.recordSkillUsageOutcome({
+        cwd: input.cwd ?? null,
+        deliberate: input.deliberate ?? null,
+        durationMs: input.durationMs ?? null,
+        gitBranch: input.gitBranch ?? null,
+        occurredAt,
+        outcome: outcomeRaw,
+        scope: resolvedScope,
+        sessionId: input.sessionId ?? null,
+        skillName,
+        source: input.source?.trim() || null,
+        toolUseId: input.toolUseId ?? null,
+      });
 
     return toSkillUsageOutcomeObject(saved);
   }
@@ -285,15 +288,16 @@ export class SkillUsageResolver {
       ? (normalizeRemoteUrl(trimmedRepoIdentity) ?? trimmedRepoIdentity)
       : null;
 
-    const aggregation = await this.skillUsageEventsService.getUsageAggregation({
-      cwd: cwd ?? null,
-      end,
-      gitBranch: gitBranch ?? null,
-      repoIdentity: resolvedRepoIdentity,
-      scope: resolvedScope,
-      skillName: resolvedSkillName,
-      start,
-    });
+    const aggregation =
+      await this.skillUsageEventsRepository.getUsageAggregation({
+        cwd: cwd ?? null,
+        end,
+        gitBranch: gitBranch ?? null,
+        repoIdentity: resolvedRepoIdentity,
+        scope: resolvedScope,
+        skillName: resolvedSkillName,
+        start,
+      });
 
     return toSkillUsageResultObject(aggregation);
   }
@@ -334,7 +338,7 @@ export class SkillUsageResolver {
       throw new BadRequestException('limit must be a positive number');
     }
 
-    const result = await this.skillUsageEventsService.searchGitBranches({
+    const result = await this.skillUsageEventsRepository.searchGitBranches({
       end,
       limit: limit ?? null,
       query: toOptionalTrimmed(query),

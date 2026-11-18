@@ -12,7 +12,7 @@ import type {
   SkillUsageGitBranchRow,
   SkillUsageGitBranchSearchResult,
   SkillUsageOutcome,
-} from '@openthrottle/nestjs-repositories';
+} from '@openthrottle/nestjs-repositories-server';
 
 import {
   SkillUsageByDayObject,

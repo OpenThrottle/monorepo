@@ -8,7 +8,7 @@ import { BadRequestException, UseGuards } from '@nestjs/common';
 import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { CurrentUser } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
-import { TelemetryHeartbeatsService } from '@openthrottle/nestjs-repositories';
+import { TelemetryHeartbeatsRepository } from '@openthrottle/nestjs-repositories-server';
 import { getOpenThrottleRoot } from '@openthrottle/openthrottle-agentic-utils';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
@@ -35,7 +35,7 @@ export class TelemetryCoverageResolver {
 
   constructor(
     private readonly effectiveUserResolutionService: EffectiveUserResolutionService,
-    private readonly telemetryHeartbeatsService: TelemetryHeartbeatsService,
+    private readonly telemetryHeartbeatsRepository: TelemetryHeartbeatsRepository,
   ) {}
 
   @Mutation(() => Int, {
@@ -52,7 +52,7 @@ export class TelemetryCoverageResolver {
     }
     const userId = await this.requireUserId(sub);
 
-    return this.telemetryHeartbeatsService.deleteForUserMachine(
+    return this.telemetryHeartbeatsRepository.deleteForUserMachine(
       userId,
       trimmed,
     );
@@ -79,7 +79,7 @@ export class TelemetryCoverageResolver {
 
     const now = new Date();
     // 2x the window so a machine silent for the window is still listed.
-    const rows = await this.telemetryHeartbeatsService.listForUser(
+    const rows = await this.telemetryHeartbeatsRepository.listForUser(
       userId,
       new Date(now.getTime() - 2 * windowDays * DAY_MS),
     );

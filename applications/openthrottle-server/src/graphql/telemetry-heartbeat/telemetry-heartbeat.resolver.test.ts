@@ -4,8 +4,12 @@ import { Test } from '@nestjs/testing';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   type TelemetryHeartbeat,
-  TelemetryHeartbeatsService,
-} from '@openthrottle/nestjs-repositories';
+  TelemetryHeartbeatsRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import {
+  createTelemetryHeartbeatsRepositoryMock,
+  type TelemetryHeartbeatsRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { NotificationsService } from '../../notifications/notifications.service.ts';
@@ -36,27 +40,24 @@ const validInput: RecordTelemetryHeartbeatInput = {
 
 describe('TelemetryHeartbeatResolver', () => {
   let resolver: TelemetryHeartbeatResolver;
-  const upsertHeartbeat = vi.fn();
-  const listForUser = vi.fn();
+  let heartbeats: TelemetryHeartbeatsRepositoryMock;
   const emitSystemAlert = vi.fn();
   const resolveEffectiveUserId = vi.fn();
 
   beforeEach(async () => {
     vi.resetAllMocks();
     resolveEffectiveUserId.mockResolvedValue(userId);
-    upsertHeartbeat.mockResolvedValue(
+    heartbeats = createTelemetryHeartbeatsRepositoryMock();
+    heartbeats.upsertHeartbeat.mockResolvedValue(
       createMock<TelemetryHeartbeat>({ id: 'hb-1' }),
     );
-    listForUser.mockResolvedValue([]);
+    heartbeats.listForUser.mockResolvedValue([]);
     const app = await Test.createTestingModule({
       providers: [
         TelemetryHeartbeatResolver,
         {
-          provide: TelemetryHeartbeatsService,
-          useValue: createMock<TelemetryHeartbeatsService>({
-            listForUser,
-            upsertHeartbeat,
-          }),
+          provide: TelemetryHeartbeatsRepository,
+          useValue: heartbeats,
         },
         {
           provide: NotificationsService,
@@ -77,7 +78,7 @@ describe('TelemetryHeartbeatResolver', () => {
       await resolver.recordTelemetryHeartbeat(validInput, 'sub-1');
 
       expect(resolveEffectiveUserId).toHaveBeenCalledWith('sub-1');
-      expect(upsertHeartbeat).toHaveBeenCalledWith(
+      expect(heartbeats.upsertHeartbeat).toHaveBeenCalledWith(
         userId,
         expect.objectContaining({
           deliveryLeg: 'marketplace',
@@ -93,7 +94,7 @@ describe('TelemetryHeartbeatResolver', () => {
         'sub-1',
       );
 
-      expect(upsertHeartbeat).toHaveBeenCalledWith(
+      expect(heartbeats.upsertHeartbeat).toHaveBeenCalledWith(
         userId,
         expect.objectContaining({ repoIdentity: null }),
       );
@@ -108,7 +109,7 @@ describe('TelemetryHeartbeatResolver', () => {
             'sub-1',
           ),
         ).rejects.toThrow(BadRequestException);
-        expect(upsertHeartbeat).not.toHaveBeenCalled();
+        expect(heartbeats.upsertHeartbeat).not.toHaveBeenCalled();
       },
     );
 
@@ -160,7 +161,7 @@ describe('TelemetryHeartbeatResolver', () => {
       await expect(
         resolver.recordTelemetryHeartbeat(validInput, 'sub-1'),
       ).rejects.toThrow(BadRequestException);
-      expect(upsertHeartbeat).not.toHaveBeenCalled();
+      expect(heartbeats.upsertHeartbeat).not.toHaveBeenCalled();
     });
   });
 
@@ -198,13 +199,15 @@ describe('TelemetryHeartbeatResolver', () => {
     };
 
     test('alerts once for a warning the heartbeat newly raised', async () => {
-      listForUser.mockResolvedValueOnce([row({})]).mockResolvedValueOnce([
-        row({ deadLetterCount: 2 }),
-        row({
-          machineId: 'other-machine',
-          marketplacePluginInstalled: false,
-        }),
-      ]);
+      heartbeats.listForUser
+        .mockResolvedValueOnce([row({})])
+        .mockResolvedValueOnce([
+          row({ deadLetterCount: 2 }),
+          row({
+            machineId: 'other-machine',
+            marketplacePluginInstalled: false,
+          }),
+        ]);
 
       await resolver.recordTelemetryHeartbeat(validInput, 'sub-1');
 
@@ -221,7 +224,7 @@ describe('TelemetryHeartbeatResolver', () => {
 
     test('stays quiet while a warning stays raised', async () => {
       const uncovered = row({ marketplacePluginInstalled: false });
-      listForUser
+      heartbeats.listForUser
         .mockResolvedValueOnce([uncovered])
         .mockResolvedValueOnce([uncovered]);
 
@@ -231,12 +234,12 @@ describe('TelemetryHeartbeatResolver', () => {
     });
 
     test('still records the heartbeat when the rows cannot be read', async () => {
-      listForUser.mockRejectedValue(new Error('db down'));
+      heartbeats.listForUser.mockRejectedValue(new Error('db down'));
 
       await expect(
         resolver.recordTelemetryHeartbeat(validInput, 'sub-1'),
       ).resolves.toBeDefined();
-      expect(upsertHeartbeat).toHaveBeenCalled();
+      expect(heartbeats.upsertHeartbeat).toHaveBeenCalled();
       expect(emitSystemAlert).not.toHaveBeenCalled();
     });
   });

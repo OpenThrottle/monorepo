@@ -4,7 +4,7 @@
 
 ## Scope
 
-- **`DailyStatsProcessor.process`:** Behavior when `aggregateDailyStats`, `dailyStatsService.upsertForDate`, logging, or notifications throw (try/catch path: error log + `emitQueueJobCompleted` with `severity: 'error'`).
+- **`DailyStatsProcessor.process`:** Behavior when `aggregateDailyStats`, `dailyStats.upsertForDate`, logging, or notifications throw (try/catch path: error log + `emitQueueJobCompleted` with `severity: 'error'`).
 - **`KeyedJsonlRunRecord`:** Interface field order only; no runtime behavior change—typecheck/build coverage is sufficient unless consumers relied on key ordering (they should not).
 
 ## Acceptance criteria (definition of done)

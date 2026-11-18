@@ -7,7 +7,7 @@
  * Who a captured invocation belongs to.
  *
  * DUPLICATED ON PURPOSE. The canonical declaration is `SKILL_USAGE_SCOPES` in
- * `packages/nestjs-repositories/src/modules/skill-usage-events/skill-usage-events.entity.ts`,
+ * `packages/nestjs-repositories-server/src/modules/skill-usage-events/skill-usage-events.constants.ts`,
  * which the Postgres CHECK follows — but a React Router app must not import
  * from a NestJS package, so the members are restated here. A third copy is the
  * `Scope` union in `packages/agentic-hooks/src/types.ts`, which the capture

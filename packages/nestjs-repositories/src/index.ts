@@ -123,12 +123,6 @@ export { BlogTag } from './modules/blog-tags/blog-tag.entity.ts';
 export { BlogTagsModule } from './modules/blog-tags/blog-tags.module.ts';
 export { BlogTagsService } from './modules/blog-tags/blog-tags.service.ts';
 export type { BlogTagUpsertInput } from './modules/blog-tags/blog-tags.types.ts';
-export type { CodeEmbeddingSearchRow } from './modules/code-embeddings/code-embedding.entity.ts';
-export { CodeEmbedding } from './modules/code-embeddings/code-embedding.entity.ts';
-export type { CodeIndexSnapshotEntry } from './modules/code-index-snapshots/code-index-snapshot.entity.ts';
-export { CodeIndexSnapshot } from './modules/code-index-snapshots/code-index-snapshot.entity.ts';
-export { DailyStat } from './modules/daily-stats/daily-stat.entity.ts';
-export { DailyStatsService } from './modules/daily-stats/daily-stats.service.ts';
 export { EvalCase } from './modules/eval-datasets/eval-case.entity.ts';
 export { EvalDataset } from './modules/eval-datasets/eval-dataset.entity.ts';
 export {
@@ -367,46 +361,6 @@ export { SkillAvailabilityRuleSet } from './modules/skill-availability/skill-ava
 export { SkillTagsService } from './modules/skill-tags/skill-tags.service.ts';
 export type { UserSkillTagData } from './modules/skill-tags/user-skill-tag.entity.ts';
 export { UserSkillTag } from './modules/skill-tags/user-skill-tag.entity.ts';
-export { SKILL_USAGE_DEFAULT_BRANCHES } from './modules/skill-usage-events/skill-usage-events.constants.ts';
-export type {
-  SkillUsageEventData,
-  SkillUsagePrivacyLevel,
-  SkillUsageScope,
-} from './modules/skill-usage-events/skill-usage-events.entity.ts';
-export {
-  isSkillUsageScope,
-  SKILL_USAGE_PRIVACY_LEVELS,
-  SKILL_USAGE_SCOPE_COUNT_KEYS,
-  SKILL_USAGE_SCOPE_LIST,
-  SKILL_USAGE_SCOPES,
-  SkillUsageEvent,
-} from './modules/skill-usage-events/skill-usage-events.entity.ts';
-export { SkillUsageEventsModule } from './modules/skill-usage-events/skill-usage-events.module.ts';
-export { SkillUsageEventsService } from './modules/skill-usage-events/skill-usage-events.service.ts';
-export type {
-  RecordSkillUsageInput,
-  RecordSkillUsageOutcomeInput,
-  SkillUsageAggregation,
-  SkillUsageByDayRow,
-  SkillUsageByScopeRow,
-  SkillUsageBySkillRow,
-  SkillUsageFilterOptions,
-  SkillUsageGitBranchRow,
-  SkillUsageGitBranchSearchQuery,
-  SkillUsageGitBranchSearchResult,
-  SkillUsageRangeQuery,
-} from './modules/skill-usage-events/skill-usage-events.types.ts';
-export type {
-  SkillUsageCaptureModel,
-  SkillUsageOutcomeData,
-  SkillUsageOutcomeValue,
-} from './modules/skill-usage-events/skill-usage-outcomes.entity.ts';
-export {
-  isSkillUsageOutcome,
-  SKILL_USAGE_CAPTURE_MODELS,
-  SKILL_USAGE_OUTCOMES,
-  SkillUsageOutcome,
-} from './modules/skill-usage-events/skill-usage-outcomes.entity.ts';
 export type { SubscriptionData } from './modules/subscriptions/subscription.entity.ts';
 export { Subscription } from './modules/subscriptions/subscription.entity.ts';
 export { SubscriptionsService } from './modules/subscriptions/subscriptions.service.ts';
@@ -459,19 +413,6 @@ export type {
   CreateTaskBatchItem,
   GroupedHooks,
 } from './modules/tasks/tasks.types.ts';
-export {
-  TELEMETRY_HEARTBEAT_DELIVERY_LEG_LIST,
-  TELEMETRY_HEARTBEAT_DELIVERY_LEGS,
-  TELEMETRY_HEARTBEAT_RECENT_TOTALS_LIMIT,
-} from './modules/telemetry-heartbeats/telemetry-heartbeats.constants.ts';
-export { TelemetryHeartbeat } from './modules/telemetry-heartbeats/telemetry-heartbeats.entity.ts';
-export { TelemetryHeartbeatsModule } from './modules/telemetry-heartbeats/telemetry-heartbeats.module.ts';
-export { TelemetryHeartbeatsService } from './modules/telemetry-heartbeats/telemetry-heartbeats.service.ts';
-export type {
-  TelemetryHeartbeatDeliveryLeg,
-  UpsertTelemetryHeartbeatInput,
-} from './modules/telemetry-heartbeats/telemetry-heartbeats.types.ts';
-export { isTelemetryHeartbeatDeliveryLeg } from './modules/telemetry-heartbeats/telemetry-heartbeats.utils.ts';
 export { USER_PREFERENCES_ERROR_REASONS } from './modules/user-preferences/user-preferences.constants.ts';
 export { UserPreferences } from './modules/user-preferences/user-preferences.entity.ts';
 export { UserPreferencesModule } from './modules/user-preferences/user-preferences.module.ts';
@@ -531,10 +472,6 @@ export {
 } from './modules/workspace-settings/workspace-settings.constants.ts';
 export type { WorkspaceEditorId } from './modules/workspace-settings/workspace-settings.types.ts';
 export { isWorkspaceEditorId } from './modules/workspace-settings/workspace-settings.utils.ts';
-export { WorktreeRemoval } from './modules/worktree-removals/worktree-removal.entity.ts';
-export { WorktreeRemovalsModule } from './modules/worktree-removals/worktree-removals.module.ts';
-export { WorktreeRemovalsService } from './modules/worktree-removals/worktree-removals.service.ts';
-export type { RecordWorktreeRemovalInput } from './modules/worktree-removals/worktree-removals.types.ts';
 export { NestjsRepositoriesModule } from './nestjs-repositories.module.ts';
 export { getTypeOrmOptions as getOpenThrottleTypeOrmOptions } from './nestjs-repositories.utils.ts';
 export {

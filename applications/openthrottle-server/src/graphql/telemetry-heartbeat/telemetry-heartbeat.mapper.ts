@@ -1,17 +1,17 @@
 /**
  * @description Validation and mapping between the GraphQL heartbeat types and
- * the {@link TelemetryHeartbeatsService} shapes. Validation failures are
+ * the {@link TelemetryHeartbeatsRepository} shapes. Validation failures are
  * BadRequestExceptions, matching the skill-usage ingest resolver.
  */
 
 import { BadRequestException } from '@nestjs/common';
+import { normalizeRemoteUrl } from '@openthrottle/nestjs-repositories';
 import {
   isTelemetryHeartbeatDeliveryLeg,
-  normalizeRemoteUrl,
   TELEMETRY_HEARTBEAT_DELIVERY_LEG_LIST,
   type TelemetryHeartbeat,
   type UpsertTelemetryHeartbeatInput,
-} from '@openthrottle/nestjs-repositories';
+} from '@openthrottle/nestjs-repositories-server';
 
 import type { RecordTelemetryHeartbeatInput } from './telemetry-heartbeat.input.ts';
 import type { TelemetryHeartbeatObject } from './telemetry-heartbeat.object.ts';
