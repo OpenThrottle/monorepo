@@ -1,0 +1,63 @@
+################################################################################
+#
+#   🧹 Keep ONE Nx cache entry per job on a pull request's ref.
+#
+#   node-setup's Nx key ends in `-<sha>-<cache-suffix>`, so every push to a
+#   ready PR saves a new ~215 MB entry per saving job (three `build` shards plus
+#   `gates`) under `refs/pull/<n>/merge`. Only the newest is ever restored —
+#   GitHub returns the most recent prefix match — but the older ones stay until
+#   cache-cleanup.yml deletes them when the PR closes. On 2026-11-17 two busy
+#   PRs held ~29 of them (~6 GB) and pushed the repo past its 10 GB quota, whose
+#   LRU then evicts the `main` entries every PR restores from (OT plan 1d2f247c).
+#
+#   Run it as the LAST step of a job that passed `save-cache: 'true'` to
+#   node-setup. Its earlier entries were already restored into `.nx/cache` at
+#   the start of this job, so this run's save supersedes them. actions/cache
+#   saves in its post step, which runs after every step here and only on
+#   success, so on a green job the ref ends up with exactly this run's entry.
+#   A red or cancelled job never reaches this step and keeps its old entry.
+#
+#   The current commit's own key is never deleted: on a re-run actions/cache
+#   skips the save on an exact hit, so that entry has to survive.
+#
+#   Pull requests only. A `main` entry is what every PR restores from, and a
+#   merge-queue ref saves nothing. Needs `actions: write` on the job (the
+#   `build` and `gates` jobs already hold it for their ⏏️ step). A fork PR's
+#   read-only token is refused; that is tolerated, and its caches still go when
+#   the PR closes or the LRU reaches them.
+#
+################################################################################
+
+name: '🧹 Nx cache prune (PR ref)'
+description: "Delete this PR ref's older Nx cache entries for one job, keeping this commit's."
+
+inputs:
+  cache-suffix:
+    description: 'The same cache-suffix this job passed to node-setup (e.g. shard-1, gates).'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: '🧹 Delete older Nx entries for this job on this PR'
+      if: github.event_name == 'pull_request'
+      shell: bash
+      env:
+        GH_REPO: ${{ github.repository }}
+        GH_TOKEN: ${{ github.token }}
+        KEEP_TAIL: -${{ github.sha }}-${{ inputs.cache-suffix }}
+        REF: ${{ github.ref }}
+        SUFFIX: -${{ inputs.cache-suffix }}
+      run: |
+        set -uo pipefail
+        ids="$(gh cache list --ref "$REF" --key "cache-nx-${RUNNER_OS}-" --limit 100 --json id,key \
+          --jq '.[] | select(.key | endswith(env.SUFFIX)) | select(.key | endswith(env.KEEP_TAIL) | not) | .id')" || {
+          echo "⚠️ could not list caches on $REF; skipping the prune"
+          exit 0
+        }
+        count="$(printf '%s\n' "$ids" | sed '/^$/d' | wc -l | tr -d ' ')"
+        echo "${count} older cache-nx-*${SUFFIX} entries on $REF; this run's save replaces them."
+        printf '%s\n' "$ids" | sed '/^$/d' | while read -r id; do
+          echo "🗑️ deleting cache $id"
+          gh cache delete "$id" || echo "⚠️ delete refused (fork PR with a read-only token?); cache-cleanup.yml or the LRU will reclaim it"
+        done

@@ -10,7 +10,9 @@
 #   `delete-pr-caches` — on PR close. A PR's caches live under
 #   `refs/pull/<n>/merge` and can only ever be restored by later runs of that
 #   same PR. Each ready push saves four ~215 MB Nx entries (three shards plus
-#   `gates`) and, on a lockfile change, a ~336 MB pnpm store.
+#   `gates`) and, on a lockfile change, a ~336 MB pnpm store. While the PR is
+#   open, each job's last step (.github/actions/nx-cache-prune) deletes that
+#   job's older Nx entries, so this job only has the last push's set to clear.
 #
 #   `prune-codeql-overlay` — on every push to `main`. CodeQL default setup
 #   (enabled 2026-11-14; it has no workflow file and reports as event
