@@ -1,6 +1,6 @@
 /**
- * @description Masking for MCP connector api_token credentials. The raw token is
- * never persisted; only this masked hint (for display) plus a bcrypt hash are kept.
+ * @description Masking for MCP connector api_token credentials. The raw token is never
+ * persisted; only this masked hint (for display) plus a bcrypt hash are kept.
  */
 
 /** Chars of the token head kept visible in the masked hint. */
@@ -9,10 +9,10 @@ const VISIBLE_HEAD = 4;
 const VISIBLE_TAIL = 4;
 
 /**
- * @description Builds a display-only masked hint for an api_token, e.g.
- * `sk_l…3xYz`. Reveals at most {@link VISIBLE_HEAD} leading and
- * {@link VISIBLE_TAIL} trailing characters; short tokens are fully masked so no
- * meaningful portion of the secret leaks.
+ * @description Builds a display-only masked hint for an api_token, e.g. `sk_l…3xYz`. Reveals at
+ * most {@link VISIBLE_HEAD} leading and {@link VISIBLE_TAIL} trailing characters; short tokens
+ * are fully masked so no meaningful portion of the secret leaks.
+ * @public
  */
 export function maskCredentialToken(token: string): string {
   const trimmed = token.trim();

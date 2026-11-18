@@ -6,13 +6,6 @@ export type {
   AgentAccountCredentialKind,
   UpsertAgentAccountInput,
 } from './modules/agent-accounts/agent-accounts.types.ts';
-export { AgentCliPreferencesModule } from './modules/agent-cli-preferences/agent-cli-preferences.module.ts';
-export { AgentCliPreferencesService } from './modules/agent-cli-preferences/agent-cli-preferences.service.ts';
-export type { ModelPreferenceMap } from './modules/agent-cli-preferences/agent-cli-preferences.types.ts';
-export type { UserDisabledAgentCliData } from './modules/agent-cli-preferences/user-disabled-agent-cli.entity.ts';
-export { UserDisabledAgentCli } from './modules/agent-cli-preferences/user-disabled-agent-cli.entity.ts';
-export type { UserFavoriteAgentModelData } from './modules/agent-cli-preferences/user-favorite-agent-model.entity.ts';
-export { UserFavoriteAgentModel } from './modules/agent-cli-preferences/user-favorite-agent-model.entity.ts';
 export type { AgentConversationData } from './modules/agent-conversations/agent-conversation.entity.ts';
 export { AgentConversation } from './modules/agent-conversations/agent-conversation.entity.ts';
 export type { AgentConversationMessageData } from './modules/agent-conversations/agent-conversation-message.entity.ts';
@@ -182,18 +175,6 @@ export type {
   UpsertEvalTrialInput,
 } from './modules/eval-runs/eval-runs.types.ts';
 export { EvalTrial } from './modules/eval-runs/eval-trial.entity.ts';
-export type {
-  McpConnectorAuthType,
-  McpConnectorConnectionData,
-} from './modules/mcp-connectors/mcp-connector-connection.entity.ts';
-export {
-  MCP_CONNECTOR_AUTH_TYPES,
-  McpConnectorConnection,
-} from './modules/mcp-connectors/mcp-connector-connection.entity.ts';
-export { McpConnectorsModule } from './modules/mcp-connectors/mcp-connectors.module.ts';
-export { McpConnectorsService } from './modules/mcp-connectors/mcp-connectors.service.ts';
-export type { ConnectMcpConnectorInput } from './modules/mcp-connectors/mcp-connectors.types.ts';
-export { maskCredentialToken } from './modules/mcp-connectors/mcp-connectors.utils.ts';
 export type { PlanEmbeddingSearchRow } from './modules/plan-embeddings/plan-embedding.entity.ts';
 export { PlanEmbedding } from './modules/plan-embeddings/plan-embedding.entity.ts';
 export { PlanEmbeddingsService } from './modules/plan-embeddings/plan-embeddings.service.ts';

@@ -4,7 +4,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 
 import { AgentAccountsModule } from './modules/agent-accounts/agent-accounts.module.ts';
-import { AgentCliPreferencesModule } from './modules/agent-cli-preferences/agent-cli-preferences.module.ts';
 import { AgentConversationsModule } from './modules/agent-conversations/agent-conversations.module.ts';
 import { AgentTokenUsageModule } from './modules/agent-token-usage/agent-token-usage.module.ts';
 import { AgentTrajectoriesModule } from './modules/agent-trajectories/agent-trajectories.module.ts';
@@ -15,7 +14,6 @@ import { EvalDatasetsModule } from './modules/eval-datasets/eval-datasets.module
 import { EvalHumanLabelsModule } from './modules/eval-human-labels/eval-human-labels.module.ts';
 import { EvalJudgeCalibrationsModule } from './modules/eval-judge-calibrations/eval-judge-calibrations.module.ts';
 import { EvalRunsModule } from './modules/eval-runs/eval-runs.module.ts';
-import { McpConnectorsModule } from './modules/mcp-connectors/mcp-connectors.module.ts';
 import { PlanEmbeddingsModule } from './modules/plan-embeddings/plan-embeddings.module.ts';
 import { PlanMessagesModule } from './modules/plan-messages/plan-messages.module.ts';
 import { PlanOutputStreamModule } from './modules/plan-output-stream/plan-output-stream.module.ts';
@@ -45,7 +43,6 @@ import { getTypeOrmOptions } from './nestjs-repositories.utils.ts';
   controllers: [],
   exports: [
     AgentAccountsModule,
-    AgentCliPreferencesModule,
     AgentConversationsModule,
     AgentTokenUsageModule,
     AgentTrajectoriesModule,
@@ -57,7 +54,6 @@ import { getTypeOrmOptions } from './nestjs-repositories.utils.ts';
     EvalHumanLabelsModule,
     EvalJudgeCalibrationsModule,
     EvalRunsModule,
-    McpConnectorsModule,
     PlanEmbeddingsModule,
     PlanMessagesModule,
     PlanOutputStreamModule,
@@ -92,7 +88,6 @@ import { getTypeOrmOptions } from './nestjs-repositories.utils.ts';
       },
     }),
     AgentAccountsModule,
-    AgentCliPreferencesModule,
     AgentConversationsModule,
     AgentTokenUsageModule,
     AgentTrajectoriesModule,
@@ -105,7 +100,6 @@ import { getTypeOrmOptions } from './nestjs-repositories.utils.ts';
     EvalJudgeCalibrationsModule,
     EvalRunsModule,
     LoggerModule,
-    McpConnectorsModule,
     PlanEmbeddingsModule,
     PlanMessagesModule,
     PlanOutputStreamModule,

@@ -28,7 +28,6 @@ import type {
 } from '@openthrottle/nestjs-repositories';
 import type { Project, Task } from '@openthrottle/nestjs-repositories';
 import {
-  AgentCliPreferencesService,
   getDefaultPlanRunConfigStorage,
   isPlanStatus,
   parsePlanRunConfigJson,
@@ -44,6 +43,7 @@ import {
   TASK_STATUS_VALUES,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
+import { UserDisabledAgentClisRepository } from '@openthrottle/nestjs-repositories-server';
 import { EmitNotification } from '@openthrottle/nestjs-websockets';
 import type { PlanStatusCount } from '@openthrottle/node-client';
 import {
@@ -306,7 +306,7 @@ function isPlanRunStale(planRun: PlanRun): boolean {
 @Resolver(() => PlanObject)
 export class PlansResolver {
   constructor(
-    private readonly agentPreferences: AgentCliPreferencesService,
+    private readonly disabledAgentClis: UserDisabledAgentClisRepository,
     private readonly effectiveUserResolution: EffectiveUserResolutionService,
     private readonly embedder: EmbedderService,
     private readonly loaders: PlansLoaders,
@@ -338,7 +338,7 @@ export class PlansResolver {
     if (actorUserId === null) {
       return;
     }
-    if (!(await this.agentPreferences.isEnabled(actorUserId, backend))) {
+    if (!(await this.disabledAgentClis.isEnabled(actorUserId, backend))) {
       throw new BadRequestException(
         `The ${backend} agent is disabled. Re-enable it on Settings › Setup to run it.`,
       );
@@ -346,7 +346,7 @@ export class PlansResolver {
     const trimmedModel = model?.trim() ?? '';
     if (
       trimmedModel !== '' &&
-      !(await this.agentPreferences.isModelEnabled(
+      !(await this.disabledAgentClis.isModelEnabled(
         actorUserId,
         backend,
         trimmedModel,

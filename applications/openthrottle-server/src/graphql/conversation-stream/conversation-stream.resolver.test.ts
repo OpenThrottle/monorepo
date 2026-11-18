@@ -7,7 +7,6 @@ import {
 import type { NestjsModelDiscoveryService } from '@openthrottle/nestjs-model-discovery';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
-  AgentCliPreferencesService,
   AgentConversationsService,
   CustomPrompt,
   CustomPromptsService,
@@ -18,6 +17,8 @@ import {
   agentConversationMessagesFactory,
   agentConversationsFactory,
 } from '@openthrottle/nestjs-repositories/testing';
+import type { UserDisabledAgentClisRepository } from '@openthrottle/nestjs-repositories-server';
+import { createUserDisabledAgentClisRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import type {
   ChatCompletionMessage,
   DiscoveryResult,
@@ -85,7 +86,8 @@ function build(): {
 } {
   const agentIsEnabled = vi.fn().mockResolvedValue(true);
   const agentModelIsEnabled = vi.fn().mockResolvedValue(true);
-  const agentPreferences = createMock<AgentCliPreferencesService>({
+  const disabledAgentClis = createMock<UserDisabledAgentClisRepository>({
+    ...createUserDisabledAgentClisRepositoryMock(),
     isEnabled: agentIsEnabled,
     isModelEnabled: agentModelIsEnabled,
   });
@@ -123,7 +125,7 @@ function build(): {
     warn: vi.fn(),
   });
   const resolver = new ConversationStreamResolver(
-    agentPreferences,
+    disabledAgentClis,
     conversations,
     customPrompts,
     logger,

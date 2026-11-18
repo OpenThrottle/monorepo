@@ -5,6 +5,7 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+import { UserDisabledAgentClisModule } from '@openthrottle/nestjs-repositories-server';
 
 import { NotificationsModule } from '../../notifications/notifications.module.ts';
 import { PlanRulesQueueProducerModule } from '../../queues/plan-rules/producer/producer.module.ts';
@@ -27,6 +28,7 @@ import { PlansResolver } from './plans.resolver.ts';
 
 @Module({
   imports: [
+    UserDisabledAgentClisModule,
     EffectiveUserResolutionModule,
     EmbedderModule,
     LoggerModule,

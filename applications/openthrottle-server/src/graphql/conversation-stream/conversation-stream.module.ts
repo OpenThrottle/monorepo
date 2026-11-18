@@ -9,6 +9,7 @@ import { Module } from '@nestjs/common';
 import { NestjsModelDiscoveryModule } from '@openthrottle/nestjs-model-discovery';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+import { UserDisabledAgentClisModule } from '@openthrottle/nestjs-repositories-server';
 
 import { AgentAccountStampingModule } from '../../services/agent-account-stamping/agent-account-stamping.module.ts';
 import { ConversationStreamResolver } from './conversation-stream.resolver.ts';
@@ -16,6 +17,7 @@ import { ConversationStreamService } from './conversation-stream.service.ts';
 
 @Module({
   imports: [
+    UserDisabledAgentClisModule,
     AgentAccountStampingModule,
     LoggerModule,
     NestjsModelDiscoveryModule,

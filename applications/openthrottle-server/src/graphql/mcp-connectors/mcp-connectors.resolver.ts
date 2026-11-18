@@ -8,8 +8,8 @@ import { BadRequestException, UseGuards } from '@nestjs/common';
 import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { CurrentUser } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
-import type { McpConnectorConnection } from '@openthrottle/nestjs-repositories';
-import { McpConnectorsService } from '@openthrottle/nestjs-repositories';
+import type { McpConnectorConnection } from '@openthrottle/nestjs-repositories-server';
+import { McpConnectorConnectionsRepository } from '@openthrottle/nestjs-repositories-server';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import { MCP_CONNECTOR_CATALOG } from './catalog/catalog.constants.ts';
@@ -43,7 +43,9 @@ const toConnectionObject = (
 @Resolver(() => McpConnectorObject)
 @UseGuards(GqlPermissionsGuard)
 export class McpConnectorsResolver {
-  constructor(private readonly mcpConnectorsService: McpConnectorsService) {}
+  constructor(
+    private readonly connectionsRepository: McpConnectorConnectionsRepository,
+  ) {}
 
   @Query(() => [McpConnectorObject], {
     description: `The curated MCP connector catalog (static server-side seed).`,
@@ -61,7 +63,7 @@ export class McpConnectorsResolver {
     @CurrentUser('sub') userId: string,
   ): Promise<McpConnectorConnectionObject[]> {
     const connections =
-      await this.mcpConnectorsService.findConnectionsForUser(userId);
+      await this.connectionsRepository.findConnectionsForUser(userId);
     return connections.map(toConnectionObject);
   }
 
@@ -80,7 +82,7 @@ export class McpConnectorsResolver {
         `Unknown MCP connector: ${input.connectorKey}`,
       );
     }
-    const connection = await this.mcpConnectorsService.connect({
+    const connection = await this.connectionsRepository.connect({
       apiToken: input.apiToken,
       authType: entry.authType,
       connectorKey: entry.key,
@@ -100,7 +102,7 @@ export class McpConnectorsResolver {
     @Args('input', { type: () => SetMcpConnectorEnabledInput })
     input: SetMcpConnectorEnabledInput,
   ): Promise<McpConnectorConnectionResultObject | null> {
-    const connection = await this.mcpConnectorsService.setEnabled(
+    const connection = await this.connectionsRepository.setEnabled(
       userId,
       input.connectorKey,
       input.enabled,
@@ -119,6 +121,6 @@ export class McpConnectorsResolver {
     @CurrentUser('sub') userId: string,
     @Args('connectorKey', { type: () => ID }) connectorKey: string,
   ): Promise<boolean> {
-    return this.mcpConnectorsService.disconnect(userId, connectorKey);
+    return this.connectionsRepository.disconnect(userId, connectorKey);
   }
 }

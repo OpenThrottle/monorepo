@@ -9,6 +9,7 @@
     "@nestjs/typeorm": "catalog:",
     "@openthrottle/nestjs-postgres": "workspace:^",
     "@openthrottle/nodejs-utils": "workspace:^",
+    "bcrypt": "catalog:",
     "fishery": "catalog:",
     "pg": "catalog:",
     "typeorm": "catalog:"
@@ -20,6 +21,7 @@
     "@nestjs/testing": "catalog:",
     "@openthrottle/nestjs-testing": "workspace:^",
     "@openthrottle/openthrottle-agentic-utils": "workspace:^",
+    "@types/bcrypt": "catalog:",
     "vitest": "catalog:"
   },
   "exports": {

@@ -8,11 +8,12 @@ import type {
   PlanRunConfigStorage,
 } from '@openthrottle/nestjs-repositories';
 import {
-  AgentCliPreferencesService,
   getDefaultPlanRunConfigStorage,
   PlansService,
   UserPreferencesService,
 } from '@openthrottle/nestjs-repositories';
+import { UserDisabledAgentClisRepository } from '@openthrottle/nestjs-repositories-server';
+import { createUserDisabledAgentClisRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { CreatePlanInput } from '../../graphql/plans/plan.input.ts';
@@ -71,8 +72,12 @@ describe('PlanCreationService', () => {
           useValue: createMock<LoggerService>(),
         },
         {
-          provide: AgentCliPreferencesService,
-          useValue: { isEnabled, isModelEnabled },
+          provide: UserDisabledAgentClisRepository,
+          useValue: {
+            ...createUserDisabledAgentClisRepositoryMock(),
+            isEnabled,
+            isModelEnabled,
+          },
         },
         {
           provide: UserPreferencesService,

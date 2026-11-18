@@ -10,7 +10,18 @@ import {
   AUTH_PRINCIPAL_KIND_USER,
   type AuthPrincipal,
 } from '@openthrottle/nestjs-auth';
-import type { AgentCliPreferencesService } from '@openthrottle/nestjs-repositories';
+import type {
+  UserDisabledAgentClisRepository,
+  UserFavoriteAgentModelsRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import type {
+  UserDisabledAgentClisRepositoryMock,
+  UserFavoriteAgentModelsRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
+import {
+  createUserDisabledAgentClisRepositoryMock,
+  createUserFavoriteAgentModelsRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import type { AgentCliDiscoveryResult } from '@openthrottle/openthrottle-agentic-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -80,17 +91,20 @@ const SNAPSHOT: AgentCliDiscoveryResult = {
 
 describe('AgentDiscoveryResolver', () => {
   let service: AgentDiscoveryService;
-  let preferences: AgentCliPreferencesService;
+  let disabledAgentClis: UserDisabledAgentClisRepositoryMock;
+  let favoriteAgentModels: UserFavoriteAgentModelsRepositoryMock;
   let resolver: AgentDiscoveryResolver;
 
   beforeEach(() => {
     service = createMock<AgentDiscoveryService>();
     vi.mocked(service.discover).mockResolvedValue(SNAPSHOT);
-    preferences = createMock<AgentCliPreferencesService>();
-    vi.mocked(preferences.getDisabledBackends).mockResolvedValue(new Set());
-    vi.mocked(preferences.getDisabledModels).mockResolvedValue(new Map());
-    vi.mocked(preferences.getFavoriteModels).mockResolvedValue(new Map());
-    resolver = new AgentDiscoveryResolver(service, preferences);
+    disabledAgentClis = createUserDisabledAgentClisRepositoryMock();
+    favoriteAgentModels = createUserFavoriteAgentModelsRepositoryMock();
+    resolver = new AgentDiscoveryResolver(
+      service,
+      createMock<UserDisabledAgentClisRepository>(disabledAgentClis),
+      createMock<UserFavoriteAgentModelsRepository>(favoriteAgentModels),
+    );
   });
 
   it('surfaces only available agents (cursor + opencode, not the unavailable claude), all enabled by default', async () => {
@@ -185,13 +199,13 @@ describe('AgentDiscoveryResolver', () => {
   });
 
   it('overlays per-model disabled + favorite state into modelOptions, and an agent-OFF forces every model disabled', async () => {
-    vi.mocked(preferences.getDisabledBackends).mockResolvedValue(
+    disabledAgentClis.getDisabledBackends.mockResolvedValue(
       new Set(['opencode']),
     );
-    vi.mocked(preferences.getDisabledModels).mockResolvedValue(
+    disabledAgentClis.getDisabledModels.mockResolvedValue(
       new Map([['cursor', new Set(['gpt-5.2'])]]),
     );
-    vi.mocked(preferences.getFavoriteModels).mockResolvedValue(
+    favoriteAgentModels.getFavoriteModels.mockResolvedValue(
       new Map([['cursor', new Set(['auto'])]]),
     );
     const result = await resolver.discoverAgentClis(human);
@@ -212,11 +226,13 @@ describe('AgentDiscoveryResolver', () => {
   });
 
   it("overlays the current user's disabled set onto enabled", async () => {
-    vi.mocked(preferences.getDisabledBackends).mockResolvedValue(
+    disabledAgentClis.getDisabledBackends.mockResolvedValue(
       new Set(['cursor']),
     );
     const result = await resolver.discoverAgentClis(human);
-    expect(preferences.getDisabledBackends).toHaveBeenCalledWith('user-1');
+    expect(disabledAgentClis.getDisabledBackends).toHaveBeenCalledWith(
+      'user-1',
+    );
     expect(
       result.agents.map((agent) => [agent.backend, agent.enabled]),
     ).toEqual([
@@ -227,7 +243,7 @@ describe('AgentDiscoveryResolver', () => {
 
   it('defaults every agent to enabled for an unauthenticated request (no preference lookup)', async () => {
     const result = await resolver.discoverAgentClis(undefined);
-    expect(preferences.getDisabledBackends).not.toHaveBeenCalled();
+    expect(disabledAgentClis.getDisabledBackends).not.toHaveBeenCalled();
     expect(result.agents.every((agent) => agent.enabled)).toBe(true);
   });
 

@@ -1,4 +1,4 @@
-import type { McpConnectorAuthType } from '@openthrottle/nestjs-repositories';
+import type { McpConnectorAuthType } from '@openthrottle/nestjs-repositories-server';
 
 import type {
   MCP_CONNECTOR_PROVIDERS,
