@@ -1,3 +1,4 @@
+import { REDIRECT_URL_PARAM } from '@openthrottle/react-router-auth';
 import {
   Alert,
   AlertDescription,
@@ -16,7 +17,6 @@ import * as React from 'react';
 import { Form } from 'react-router';
 
 import { AUTH_COPY } from '~/routing/auth/data/data.copy';
-import { AUTH_ROUTES } from '~/routing/auth/data/data.routes';
 
 export interface AuthSignInFormProps {
   readonly className: string | undefined;
@@ -69,11 +69,7 @@ export const AuthSignInForm = (
         </CardHeader>
         <CardContent className="grid gap-4 py-4">
           {errorAlert}
-          <input
-            name={AUTH_ROUTES.redirectParam}
-            type="hidden"
-            value={redirectTo}
-          />
+          <input name={REDIRECT_URL_PARAM} type="hidden" value={redirectTo} />
           <div className="grid gap-2">
             <Label htmlFor={emailId}>{AUTH_COPY.emailLabel}</Label>
             <Input

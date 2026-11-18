@@ -18,6 +18,7 @@ export {
 import {
   getAuthTokenFromCookie,
   getClearAuthCookieHeader,
+  getLoginRedirectFromRequest,
 } from '@openthrottle/react-router-auth';
 import { redirect } from 'react-router';
 
@@ -87,6 +88,12 @@ export function isAuthError(error: unknown): error is GraphqlAuthError {
  * @public
  */
 export interface RedirectOnAuthErrorOptions {
+  /**
+   * @description The request being served, so the login redirect can carry
+   * the page as `redirectUrl` and the user returns there after logging in
+   * (see `getLoginRedirectFromRequest`). Ignored when `to` is set.
+   */
+  readonly request?: Request | undefined;
   /** @description Where to send the caller. Defaults to `/auth`. */
   readonly to?: string | undefined;
 }
@@ -105,7 +112,7 @@ export interface RedirectOnAuthErrorOptions {
  * @example
  * ```ts
  * } catch (error) {
- *   redirectOnAuthError(error);
+ *   redirectOnAuthError(error, { request });
  *   throw error;
  * }
  * ```
@@ -120,7 +127,11 @@ export function redirectOnAuthError(
     return;
   }
 
-  throw redirect(options?.to ?? '/auth', {
+  const loginHref = options?.request
+    ? getLoginRedirectFromRequest(options.request)
+    : '/auth';
+
+  throw redirect(options?.to ?? loginHref, {
     headers: { 'Set-Cookie': getClearAuthCookieHeader() },
   });
 }

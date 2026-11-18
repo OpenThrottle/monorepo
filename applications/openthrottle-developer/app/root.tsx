@@ -4,6 +4,10 @@ import {
   buildAuthCookie,
   getAuthTokenFromCookie,
   getClearAuthCookieHeader,
+  getLoginHref,
+  getRedirectUrlFromRequest,
+  getSafeRedirect,
+  REDIRECT_URL_PARAM,
 } from '@openthrottle/react-router-auth';
 import {
   executeGraphqlWithAuth,
@@ -218,7 +222,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   );
 
   if (isProtected && isTokenNull) {
-    return redirect('/auth');
+    return redirect(getLoginHref(getRedirectUrlFromRequest(request)));
   }
 
   /**
@@ -284,7 +288,7 @@ export const loader = async (args: Route.LoaderArgs) => {
       // another stack). On a protected page that session is unusable: send the
       // caller to /auth with the cookie cleared instead of rendering a banner.
       if (isProtected) {
-        redirectOnAuthError(error);
+        redirectOnAuthError(error, { request });
       }
 
       console.error('🚨 root loader: GetMyUser failed', error);
@@ -328,7 +332,7 @@ export const loader = async (args: Route.LoaderArgs) => {
     );
 
     if (isProtected) {
-      return redirect('/auth');
+      return redirect(getLoginHref(getRedirectUrlFromRequest(request)));
     }
   }
 
@@ -848,7 +852,9 @@ export const action = async (args: Route.ActionArgs) => {
       }
 
       const cookie = buildAuthCookie(token);
-      return redirect('/dashboard', {
+      const redirectUrl = getSafeRedirect(formData.get(REDIRECT_URL_PARAM));
+
+      return redirect(redirectUrl, {
         headers: { 'Set-Cookie': cookie },
       });
     } catch (error) {

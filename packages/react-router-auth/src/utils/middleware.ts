@@ -7,6 +7,7 @@ import {
   getClearAuthCookieHeader,
   isJwtExpired,
 } from '../utils/index';
+import { getLoginRedirectFromRequest } from './redirect-url';
 
 const GATED_PREFIXES = [
   '/blog',
@@ -54,7 +55,7 @@ export const authMiddleware: MiddlewareFunction = (args) => {
     const message = `🚨 authMiddleware: missing or expired token + non-public route`;
     if (!isProd) console.log(message, { pathname, token });
 
-    throw redirect('/auth', {
+    throw redirect(getLoginRedirectFromRequest(request), {
       headers: { 'Set-Cookie': getClearAuthCookieHeader() },
     });
   }

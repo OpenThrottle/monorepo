@@ -145,7 +145,7 @@ describe('FragmentEditor', () => {
       );
       expect(
         component.getByRole('link', { name: FRAGMENT_EDITOR_COPY.signIn }),
-      ).toHaveAttribute('href', '/auth/sign-in?redirectTo=%2F');
+      ).toHaveAttribute('href', '/auth/sign-in?redirectUrl=%2F');
     });
   });
 

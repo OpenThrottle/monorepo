@@ -32,7 +32,7 @@ export const loader = async (args: Route.LoaderArgs) => {
 
     return { permissions: data.permissions };
   } catch (error) {
-    redirectOnAuthError(error);
+    redirectOnAuthError(error, { request });
 
     throw error;
   }

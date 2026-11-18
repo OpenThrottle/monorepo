@@ -2,6 +2,10 @@ import {
   buildAuthCookie,
   getAuthTokenFromCookie,
   getClearAuthCookieHeader,
+  getLoginHref,
+  getRedirectUrlFromRequest,
+  getSafeRedirect,
+  REDIRECT_URL_PARAM,
 } from '@openthrottle/react-router-auth';
 import { executeGraphql } from '@openthrottle/react-router-graphql';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
@@ -71,6 +75,8 @@ export const loader = async (args: Route.LoaderArgs) => {
   const cookieHeader = request.headers.get('cookie') ?? '';
   const token = getAuthTokenFromCookie(cookieHeader);
   const isIndexRoute = url.pathname === '/';
+  const isAuthRoute =
+    url.pathname === '/auth' || url.pathname.startsWith('/auth/');
 
   let user: UserObject | null = null;
 
@@ -83,9 +89,15 @@ export const loader = async (args: Route.LoaderArgs) => {
     console.error('Failed to load user session in root loader', error);
   }
 
-  // 🔒 No user and any non-index route, so redirect to index
-  if (!isIndexRoute && !user) {
-    return redirect('/');
+  // 🔒 No user on a protected route: send them to /auth, carrying the page so
+  // login can return there, and clear any cookie the server just rejected so
+  // /auth renders the form instead of bouncing back.
+  if (!isIndexRoute && !isAuthRoute && !user) {
+    const headers = token ? { 'Set-Cookie': getClearAuthCookieHeader() } : undefined; // prettier-ignore
+
+    return redirect(getLoginHref(getRedirectUrlFromRequest(request)), {
+      headers,
+    });
   }
 
   // 🔑 We have a user and are on the index route, so redirect to dashboard
@@ -294,8 +306,9 @@ export const action = async (args: Route.ActionArgs) => {
       }
 
       const cookie = buildAuthCookie(token);
+      const redirectUrl = getSafeRedirect(formData.get(REDIRECT_URL_PARAM));
 
-      return redirect('/dashboard', {
+      return redirect(redirectUrl, {
         headers: { 'Set-Cookie': cookie },
       });
     } catch (error) {

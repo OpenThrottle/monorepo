@@ -24,6 +24,8 @@ export interface OpenThrottleAuthFormProps {
   readonly defaultPassword?: string;
   /** Server or client error message to display (e.g. from actionData or fetcher.data). */
   readonly error?: string;
+  /** Extra fields posted with a native submit, as hidden inputs (e.g. `{ redirectUrl }`). Ignored by `onSubmit`. */
+  readonly hiddenFields?: Readonly<Record<string, string>>;
   /** When true, disables the submit button (e.g. fetcher.state === 'loading'). */
   readonly isLoading?: boolean;
   /** Called after form submit with email and password. Use when handling submit client-side or via fetcher. */
@@ -43,6 +45,7 @@ export const OpenThrottleAuthForm = (
     defaultEmail = IS_DEVELOPMENT ? 'developer@openthrottle.ai' : '',
     defaultPassword = IS_DEVELOPMENT ? 'FullThrottle2026!' : '',
     error,
+    hiddenFields,
     isLoading = false,
     onSubmit,
   } = props;
@@ -57,6 +60,7 @@ export const OpenThrottleAuthForm = (
   const signInHint = 'Enter your email and password to sign in.';
   const signUpHint = 'Enter your email and password to register.';
   const description = isLogin ? signInHint : signUpHint;
+  const hiddenEntries = Object.entries(hiddenFields ?? {});
 
   // Handlers
   const handleSubmit = React.useCallback(
@@ -90,6 +94,9 @@ export const OpenThrottleAuthForm = (
       >
         <form action={action} method="POST" onSubmit={handleSubmit}>
           <input name="intent" type="hidden" value={intent} />
+          {hiddenEntries.map(([name, value]) => (
+            <input key={name} name={name} type="hidden" value={value} />
+          ))}
 
           <CardHeader>
             <CardTitle className="text-lg font-normal">

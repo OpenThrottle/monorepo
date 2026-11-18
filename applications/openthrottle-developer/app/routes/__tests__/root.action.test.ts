@@ -76,6 +76,38 @@ describe('root action: login', () => {
     expect(result.headers.get('set-cookie')).toContain('jwt-token');
   });
 
+  test('redirects to a safe redirectUrl field on success', async () => {
+    mockLogin.mockResolvedValue('jwt-token');
+
+    const result = await action(
+      actionArgs({
+        email: 'pilot@example.com',
+        intent: 'login',
+        password: 'pw',
+        redirectUrl: '/plans/abc?tab=tasks',
+      }),
+    );
+
+    assertResponse(result);
+    expect(result.headers.get('location')).toBe('/plans/abc?tab=tasks');
+  });
+
+  test('ignores an unsafe redirectUrl field and redirects to /dashboard', async () => {
+    mockLogin.mockResolvedValue('jwt-token');
+
+    const result = await action(
+      actionArgs({
+        email: 'pilot@example.com',
+        intent: 'login',
+        password: 'pw',
+        redirectUrl: '//evil.test',
+      }),
+    );
+
+    assertResponse(result);
+    expect(result.headers.get('location')).toBe('/dashboard');
+  });
+
   test('returns a field error when email or password is missing', async () => {
     const result = await action(actionArgs({ intent: 'login' }));
 
