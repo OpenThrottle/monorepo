@@ -10,8 +10,13 @@ import type {
   PlanRunsService,
   RepositoryCheckout,
   RepositoryCheckoutsService,
-  WorktreeRemovalsService,
 } from '@openthrottle/nestjs-repositories';
+import type { WorktreeRemovalsRepository } from '@openthrottle/nestjs-repositories-server';
+import type { WorktreeRemovalsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import {
+  createWorktreeRemovalsRepositoryMock,
+  worktreeRemovalsFactory,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { mockRealpathSync, mockStatSync } = vi.hoisted(() => ({
@@ -64,12 +69,16 @@ const build = (options: {
   readonly unsettledRuns?: readonly PlanRun[];
 }): {
   readonly deleteWorktreeCheckout: ReturnType<typeof vi.fn>;
-  readonly record: ReturnType<typeof vi.fn>;
+  readonly record: WorktreeRemovalsRepositoryMock['record'];
   readonly service: WorktreeCheckoutPruneService;
 } => {
-  const record = options.recordFails
-    ? vi.fn().mockRejectedValue(new Error('db down'))
-    : vi.fn().mockResolvedValue({});
+  const removals = createWorktreeRemovalsRepositoryMock();
+  const { record } = removals;
+  if (options.recordFails) {
+    record.mockRejectedValue(new Error('db down'));
+  } else {
+    record.mockResolvedValue(worktreeRemovalsFactory.build());
+  }
   const deleteWorktreeCheckout = vi
     .fn()
     .mockResolvedValue(options.deleted ?? true);
@@ -94,7 +103,7 @@ const build = (options: {
         .fn()
         .mockResolvedValue([...(options.unsettledRuns ?? [])]),
     }),
-    createMock<WorktreeRemovalsService>({ record }),
+    createMock<WorktreeRemovalsRepository>(removals),
   );
 
   return { deleteWorktreeCheckout, record, service };

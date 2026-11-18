@@ -1,4 +1,4 @@
-import type { TelemetryHeartbeat } from '@openthrottle/nestjs-repositories';
+import type { TelemetryHeartbeat } from '@openthrottle/nestjs-repositories-server';
 import { describe, expect, test } from 'vitest';
 
 import {
@@ -24,6 +24,7 @@ function row(overrides: Partial<TelemetryHeartbeat>): TelemetryHeartbeat {
     bufferedOutcomes: 0,
     bufferedTokenUsage: 0,
     bufferedTrajectories: 0,
+    createdAt: now,
     deadLetterCount: 0,
     deliveryLeg: 'marketplace',
     firstSeenAt: now,

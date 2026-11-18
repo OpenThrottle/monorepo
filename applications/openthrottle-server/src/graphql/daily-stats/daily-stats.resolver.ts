@@ -1,9 +1,9 @@
 /**
- * @description Resolver for daily stats: single date and date range. Uses DailyStatsService from @openthrottle/nestjs-repositories.
+ * @description Resolver for daily stats: single date and date range. Reads through DailyStatsRepository from @openthrottle/nestjs-repositories-server.
  */
 
 import { Args, Query, Resolver } from '@nestjs/graphql';
-import { DailyStatsService } from '@openthrottle/nestjs-repositories';
+import { DailyStatsRepository } from '@openthrottle/nestjs-repositories-server';
 
 import {
   DailyStatsObject,
@@ -41,7 +41,7 @@ function toDailyStatsObject(row: {
 // @authz-stance: authenticated-only (Path A — see OT plan 18e16dfc-4f22-43f9-9b77-6fc90309b60a)
 @Resolver()
 export class DailyStatsResolver {
-  constructor(private readonly dailyStatsService: DailyStatsService) {}
+  constructor(private readonly dailyStatsRepository: DailyStatsRepository) {}
 
   @Query(() => DailyStatsObject, {
     description: `Aggregated plan and task stats for a single date (YYYY-MM-DD). Returns null if no row for that date.`,
@@ -51,8 +51,7 @@ export class DailyStatsResolver {
     @Args('date', { description: 'Date in YYYY-MM-DD format' })
     date: string,
   ): Promise<DailyStatsObject | null> {
-    const repo = this.dailyStatsService.getRepository();
-    const row = await repo.findOne({ where: { date: new Date(date) } });
+    const row = await this.dailyStatsRepository.findByDate(date);
 
     if (!row) return null;
 
@@ -68,14 +67,7 @@ export class DailyStatsResolver {
     @Args('end', { description: 'End date (inclusive), YYYY-MM-DD' })
     end: string,
   ): Promise<DailyStatsRangeResultObject> {
-    const repo = this.dailyStatsService.getRepository();
-    const qb = repo
-      .createQueryBuilder('d')
-      .where('d.date >= :start', { start })
-      .andWhere('d.date <= :end', { end })
-      .orderBy('d.date', 'ASC');
-
-    const rows = await qb.getMany();
+    const rows = await this.dailyStatsRepository.findInRange(start, end);
     const result = new DailyStatsRangeResultObject();
 
     result.items = rows.map(toDailyStatsObject);

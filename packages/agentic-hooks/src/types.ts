@@ -15,7 +15,7 @@ export type PrivacyLevel = 'full' | 'name-only' | 'truncated';
  * (`third-party`).
  *
  * Mirrors `SKILL_USAGE_SCOPES` in
- * `@openthrottle/nestjs-repositories`'s `skill-usage-events.entity.ts`, which
+ * `@openthrottle/nestjs-repositories-server`'s `skill-usage-events.constants.ts`, which
  * is the canonical declaration and the one the Postgres CHECK follows.
  */
 export type Scope = 'injected' | 'ours' | 'personal' | 'third-party';

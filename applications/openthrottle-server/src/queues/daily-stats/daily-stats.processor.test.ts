@@ -2,26 +2,19 @@ import { createMock } from '@golevelup/ts-vitest';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import { PlansService, TasksService } from '@openthrottle/nestjs-repositories';
+import { DailyStatsRepository } from '@openthrottle/nestjs-repositories-server';
+import type { DailyStatsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import {
-  DailyStatsService,
-  PlansService,
-  TasksService,
-} from '@openthrottle/nestjs-repositories';
+  createDailyStatsRepositoryMock,
+  dailyStatsFactory,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { NotificationsService } from '../../notifications/notifications.service.ts';
 import { DailyStatsProcessor } from './daily-stats.processor.ts';
 import type { AggregateDailyStatsJob } from './daily-stats.types.ts';
 import { addUtcDaysToYmd, getPreviousUtcDayYmd } from './daily-stats.utils.ts';
-
-/**
- * Local mock signature for `DailyStatsService.upsertForDate`: same call args as the real
- * service method, but a simplified `Record`-shaped resolved value (tests never inspect it)
- * so the mock doesn't need a full `DailyStat` entity fixture.
- */
-type MockUpsertForDate = (
-  ...args: Parameters<DailyStatsService['upsertForDate']>
-) => Promise<Record<string, unknown>>;
 
 function createRepoMocks(
   overrides: {
@@ -49,9 +42,7 @@ function createRepoMocks(
 describe('DailyStatsProcessor', () => {
   let processor: DailyStatsProcessor;
   let mockJob: AggregateDailyStatsJob;
-  let mockUpsertForDate: ReturnType<typeof vi.fn<MockUpsertForDate>>;
-  let mockGetLatestDate: ReturnType<typeof vi.fn>;
-  let mockGetExistingDatesInRange: ReturnType<typeof vi.fn>;
+  let dailyStats: DailyStatsRepositoryMock;
   let mockEmitQueueJobCompleted: ReturnType<typeof vi.fn>;
   let mockLoggerError: ReturnType<typeof vi.fn>;
   let mockLoggerInfo: ReturnType<typeof vi.fn>;
@@ -64,11 +55,14 @@ describe('DailyStatsProcessor', () => {
   const dayBeforeYesterday = addUtcDaysToYmd(yesterday, -1);
 
   beforeEach(async () => {
-    mockUpsertForDate = vi.fn<MockUpsertForDate>().mockResolvedValue({});
+    dailyStats = createDailyStatsRepositoryMock();
+    // Tests never inspect the upserted row, so any DailyStat-shaped value will do.
+    dailyStats.upsertForDate.mockImplementation(async (date) => {
+      return dailyStatsFactory.build({ date: new Date(date) });
+    });
     // Default: last row is 2 days ago and nothing else present → the only
     // missing day is yesterday (the normal daily case).
-    mockGetLatestDate = vi.fn().mockResolvedValue(dayBeforeYesterday);
-    mockGetExistingDatesInRange = vi.fn().mockResolvedValue(new Set<string>());
+    dailyStats.getLatestDate.mockResolvedValue(dayBeforeYesterday);
     mockEmitQueueJobCompleted = vi.fn();
     mockLoggerError = vi.fn();
     mockLoggerInfo = vi.fn();
@@ -86,12 +80,8 @@ describe('DailyStatsProcessor', () => {
       providers: [
         DailyStatsProcessor,
         {
-          provide: DailyStatsService,
-          useValue: {
-            getExistingDatesInRange: mockGetExistingDatesInRange,
-            getLatestDate: mockGetLatestDate,
-            upsertForDate: mockUpsertForDate,
-          },
+          provide: DailyStatsRepository,
+          useValue: dailyStats,
         },
         {
           provide: LoggerService,
@@ -170,8 +160,8 @@ describe('DailyStatsProcessor', () => {
       providers: [
         DailyStatsProcessor,
         {
-          provide: DailyStatsService,
-          useValue: createMock<DailyStatsService>(),
+          provide: DailyStatsRepository,
+          useValue: createDailyStatsRepositoryMock(),
         },
         {
           provide: LoggerService,
@@ -226,8 +216,8 @@ describe('DailyStatsProcessor', () => {
     it('backfills missing days on the owner’s boot', async () => {
       await processor.onModuleInit();
 
-      expect(mockGetLatestDate).toHaveBeenCalledTimes(1);
-      expect(mockUpsertForDate).toHaveBeenCalledTimes(1);
+      expect(dailyStats.getLatestDate).toHaveBeenCalledTimes(1);
+      expect(dailyStats.upsertForDate).toHaveBeenCalledTimes(1);
     });
 
     it('a shared-DB worktree writes no daily_stats rows at boot', async () => {
@@ -235,16 +225,16 @@ describe('DailyStatsProcessor', () => {
 
       await processor.onModuleInit();
 
-      expect(mockGetLatestDate).not.toHaveBeenCalled();
-      expect(mockUpsertForDate).not.toHaveBeenCalled();
+      expect(dailyStats.getLatestDate).not.toHaveBeenCalled();
+      expect(dailyStats.upsertForDate).not.toHaveBeenCalled();
     });
   });
 
   it('upserts a zero-count row for a quiet day so the chart stays continuous', async () => {
     await processor.process(mockJob);
 
-    expect(mockUpsertForDate).toHaveBeenCalledTimes(1);
-    const [dateArg, payload] = mockUpsertForDate.mock.calls[0] ?? [];
+    expect(dailyStats.upsertForDate).toHaveBeenCalledTimes(1);
+    const [dateArg, payload] = dailyStats.upsertForDate.mock.calls[0] ?? [];
 
     expect(dateArg).toBe(yesterday);
     expect(payload).toMatchObject({
@@ -269,12 +259,16 @@ describe('DailyStatsProcessor', () => {
     // Last row is 4 days before yesterday → window is [y-3 .. y] (4 days).
     const latest = addUtcDaysToYmd(yesterday, -4);
     const present = addUtcDaysToYmd(yesterday, -2);
-    mockGetLatestDate.mockResolvedValue(latest);
-    mockGetExistingDatesInRange.mockResolvedValue(new Set<string>([present]));
+    dailyStats.getLatestDate.mockResolvedValue(latest);
+    dailyStats.getExistingDatesInRange.mockResolvedValue(
+      new Set<string>([present]),
+    );
 
     await processor.process(mockJob);
 
-    const upsertedDates = mockUpsertForDate.mock.calls.map(([date]) => date);
+    const upsertedDates = dailyStats.upsertForDate.mock.calls.map(
+      ([date]) => date,
+    );
     expect(upsertedDates).toEqual([
       addUtcDaysToYmd(yesterday, -3),
       addUtcDaysToYmd(yesterday, -1),
@@ -290,30 +284,30 @@ describe('DailyStatsProcessor', () => {
   });
 
   it('is a no-op when the table is already current (no upsert, no notification)', async () => {
-    mockGetLatestDate.mockResolvedValue(yesterday);
+    dailyStats.getLatestDate.mockResolvedValue(yesterday);
 
     await processor.process(mockJob);
 
-    expect(mockGetExistingDatesInRange).not.toHaveBeenCalled();
-    expect(mockUpsertForDate).not.toHaveBeenCalled();
+    expect(dailyStats.getExistingDatesInRange).not.toHaveBeenCalled();
+    expect(dailyStats.upsertForDate).not.toHaveBeenCalled();
     expect(mockEmitQueueJobCompleted).not.toHaveBeenCalled();
   });
 
   it('is a no-op when every candidate day is already present', async () => {
     const latest = addUtcDaysToYmd(yesterday, -2);
-    mockGetLatestDate.mockResolvedValue(latest);
-    mockGetExistingDatesInRange.mockResolvedValue(
+    dailyStats.getLatestDate.mockResolvedValue(latest);
+    dailyStats.getExistingDatesInRange.mockResolvedValue(
       new Set<string>([addUtcDaysToYmd(yesterday, -1), yesterday]),
     );
 
     await processor.process(mockJob);
 
-    expect(mockUpsertForDate).not.toHaveBeenCalled();
+    expect(dailyStats.upsertForDate).not.toHaveBeenCalled();
     expect(mockEmitQueueJobCompleted).not.toHaveBeenCalled();
   });
 
   it('resolves without throwing, logs error, and emits error notification when upsert fails', async () => {
-    mockUpsertForDate.mockRejectedValueOnce(new Error('upsert failed'));
+    dailyStats.upsertForDate.mockRejectedValueOnce(new Error('upsert failed'));
 
     await expect(processor.process(mockJob)).resolves.toBeUndefined();
 
@@ -364,8 +358,8 @@ describe('DailyStatsProcessor', () => {
       providers: [
         DailyStatsProcessor,
         {
-          provide: DailyStatsService,
-          useValue: createMock<DailyStatsService>(),
+          provide: DailyStatsRepository,
+          useValue: createDailyStatsRepositoryMock(),
         },
         {
           provide: LoggerService,
@@ -407,8 +401,8 @@ describe('DailyStatsProcessor', () => {
       providers: [
         DailyStatsProcessor,
         {
-          provide: DailyStatsService,
-          useValue: createMock<DailyStatsService>(),
+          provide: DailyStatsRepository,
+          useValue: createDailyStatsRepositoryMock(),
         },
         {
           provide: LoggerService,

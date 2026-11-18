@@ -19,11 +19,9 @@ import { NotFoundException, UseGuards } from '@nestjs/common';
 import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { CurrentUser } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
-import type { WorktreeRemoval } from '@openthrottle/nestjs-repositories';
-import {
-  RepositoryCheckoutsService,
-  WorktreeRemovalsService,
-} from '@openthrottle/nestjs-repositories';
+import { RepositoryCheckoutsService } from '@openthrottle/nestjs-repositories';
+import type { WorktreeRemoval } from '@openthrottle/nestjs-repositories-server';
+import { WorktreeRemovalsRepository } from '@openthrottle/nestjs-repositories-server';
 
 import { GqlPermissionsGuard } from '../../../guards/gql-permissions.guard.ts';
 import { PLAN_RUN_WORKTREE_TEARDOWN_OUTCOME } from '../../../services/plan-run-worktree-teardown/plan-run-worktree-teardown.constants.ts';
@@ -44,7 +42,7 @@ export class DiscoveredWorktreesResolver {
     private readonly checkoutsService: RepositoryCheckoutsService,
     private readonly pruneService: WorktreeCheckoutPruneService,
     private readonly teardownService: PlanRunWorktreeTeardownService,
-    private readonly removalsService: WorktreeRemovalsService,
+    private readonly removals: WorktreeRemovalsRepository,
   ) {}
 
   @Query(() => DiscoveredWorktreesObject, {
@@ -195,7 +193,7 @@ export class DiscoveredWorktreesResolver {
     userId: string,
     paths: readonly string[],
   ): Promise<Map<string, WorktreeRemovalObject>> {
-    const rows = await this.removalsService
+    const rows = await this.removals
       .findLatestByUserAndPaths(userId, paths)
       .catch((): WorktreeRemoval[] => []);
     return new Map(

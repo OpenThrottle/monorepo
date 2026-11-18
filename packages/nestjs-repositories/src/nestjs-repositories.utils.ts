@@ -3,7 +3,16 @@
  * Used by NestjsRepositoriesModule to register TypeORM with OpenThrottle connection.
  */
 
-import { Note } from '@openthrottle/nestjs-repositories-server';
+import {
+  CodeEmbedding,
+  CodeIndexSnapshot,
+  DailyStat,
+  Note,
+  SkillUsageEvent,
+  SkillUsageOutcome,
+  TelemetryHeartbeat,
+  WorktreeRemoval,
+} from '@openthrottle/nestjs-repositories-server';
 import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
 import type { DataSourceOptions } from 'typeorm';
 
@@ -17,9 +26,6 @@ import { AgentTrajectory } from './modules/agent-trajectories/agent-trajectory.e
 import { BlogAuthor } from './modules/blog-authors/blog-author.entity.ts';
 import { BlogPost } from './modules/blog-posts/blog-post.entity.ts';
 import { BlogTag } from './modules/blog-tags/blog-tag.entity.ts';
-import { CodeEmbedding } from './modules/code-embeddings/code-embedding.entity.ts';
-import { CodeIndexSnapshot } from './modules/code-index-snapshots/code-index-snapshot.entity.ts';
-import { DailyStat } from './modules/daily-stats/daily-stat.entity.ts';
 import { EvalCase } from './modules/eval-datasets/eval-case.entity.ts';
 import { EvalDataset } from './modules/eval-datasets/eval-dataset.entity.ts';
 import { EvalHumanLabel } from './modules/eval-human-labels/eval-human-label.entity.ts';
@@ -47,8 +53,6 @@ import { ServiceAccountCredential } from './modules/service-accounts/service-acc
 import { SkillAvailabilityRule } from './modules/skill-availability/skill-availability-rule.entity.ts';
 import { SkillAvailabilityRuleSet } from './modules/skill-availability/skill-availability-rule-set.entity.ts';
 import { UserSkillTag } from './modules/skill-tags/user-skill-tag.entity.ts';
-import { SkillUsageEvent } from './modules/skill-usage-events/skill-usage-events.entity.ts';
-import { SkillUsageOutcome } from './modules/skill-usage-events/skill-usage-outcomes.entity.ts';
 import { Subscription } from './modules/subscriptions/subscription.entity.ts';
 import { RuleApplication } from './modules/tag-action-rules/rule-application.entity.ts';
 import { TagActionRule } from './modules/tag-action-rules/tag-action-rule.entity.ts';
@@ -57,14 +61,12 @@ import { ProjectTag } from './modules/tags/project-tag.entity.ts';
 import { TaskTag } from './modules/tags/task-tag.entity.ts';
 import { TaskEmbedding } from './modules/task-embeddings/task-embedding.entity.ts';
 import { Task } from './modules/tasks/task.entity.ts';
-import { TelemetryHeartbeat } from './modules/telemetry-heartbeats/telemetry-heartbeats.entity.ts';
 import { UserPreferences } from './modules/user-preferences/user-preferences.entity.ts';
 import { User } from './modules/users/user.entity.ts';
 import { WorkArtifact } from './modules/work-ledger/work-artifact.entity.ts';
 import { WorkSession } from './modules/work-ledger/work-session.entity.ts';
 import { WorkSessionSubject } from './modules/work-ledger/work-session-subject.entity.ts';
 import { UserWorkspaceSettings } from './modules/workspace-settings/user-workspace-settings.entity.ts';
-import { WorktreeRemoval } from './modules/worktree-removals/worktree-removal.entity.ts';
 
 /**
  * @description Resolves a positive integer from an env var, or undefined when
@@ -102,7 +104,6 @@ export function getTypeOrmOptions(): DataSourceOptions {
       CodeEmbedding,
       CodeIndexSnapshot,
       CustomPrompt,
-      DailyStat,
       EvalCase,
       EvalDataset,
       EvalGrade,
@@ -112,6 +113,7 @@ export function getTypeOrmOptions(): DataSourceOptions {
       EvalTrial,
       McpConnectorConnection,
       // Moved to nestjs-repositories-server (OT plan 052d37b0); listed here until the DataSource moves too.
+      DailyStat,
       Note,
       Permission,
       Plan,

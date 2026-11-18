@@ -5,12 +5,13 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+import { WorktreeRemovalsModule } from '@openthrottle/nestjs-repositories-server';
 
 import { WorktreeCheckoutPruneService } from './worktree-checkout-prune.service.ts';
 
 @Module({
   exports: [WorktreeCheckoutPruneService],
-  imports: [LoggerModule, NestjsRepositoriesModule],
+  imports: [LoggerModule, NestjsRepositoriesModule, WorktreeRemovalsModule],
   providers: [WorktreeCheckoutPruneService],
 })
 export class WorktreeCheckoutPruneModule {}

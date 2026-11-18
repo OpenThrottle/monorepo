@@ -1,0 +1,708 @@
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import type { CreateModelInput } from '@openthrottle/nestjs-postgres';
+import {
+  BaseRepository,
+  toLikeContainsPattern,
+} from '@openthrottle/nestjs-postgres';
+import { IsNull, Repository, type SelectQueryBuilder } from 'typeorm';
+
+import {
+  CAPTURE_HEALTH_STREAMS,
+  CAPTURE_HEALTH_UNKNOWN_SOURCE,
+} from '../../capture-health/capture-health.constants.ts';
+import type { CaptureHealthRow } from '../../capture-health/capture-health.types.ts';
+import { toCaptureHealthRows } from '../../capture-health/capture-health.utils.ts';
+import { SkillUsageOutcome } from '../skill-usage-outcomes/skill-usage-outcome.entity.ts';
+import {
+  SKILL_USAGE_CAPTURE_MODELS,
+  SKILL_USAGE_OUTCOMES,
+} from '../skill-usage-outcomes/skill-usage-outcomes.constants.ts';
+import { SkillUsageEvent } from './skill-usage-event.entity.ts';
+import {
+  SKILL_USAGE_DEFAULT_BRANCHES,
+  SKILL_USAGE_PRIVACY_LEVELS,
+  SKILL_USAGE_SCOPE_COUNT_KEYS,
+  SKILL_USAGE_SCOPES,
+} from './skill-usage-events.constants.ts';
+import type {
+  RecordSkillUsageInput,
+  SkillUsageAggregation,
+  SkillUsageByDayRow,
+  SkillUsageByScopeRow,
+  SkillUsageBySkillRow,
+  SkillUsageFilterOptions,
+  SkillUsageGitBranchSearchQuery,
+  SkillUsageGitBranchSearchResult,
+  SkillUsageRangeQuery,
+  SkillUsageScope,
+} from './skill-usage-events.types.ts';
+import { isSkillUsageScope } from './skill-usage-scope/skill-usage-scope.utils.ts';
+
+/** Per-skill outcome aggregates used to enrich the start leaderboard. */
+interface SkillUsageOutcomeStats {
+  readonly abandonedCount: number;
+  readonly avgDurationMs: number | null;
+  readonly errorCount: number;
+  readonly outcomeCount: number;
+  readonly sessionEndedCount: number;
+  readonly successCount: number;
+}
+
+/**
+ * Composite key for the outcome-stats lookup. Outcomes and starts are both
+ * grouped by (skill_name, scope), so they must be joined on the same tuple.
+ */
+const outcomeStatsKey = (skillName: string, scope: SkillUsageScope): string => {
+  return `${skillName}\u0000${scope}`;
+};
+
+const EMPTY_OUTCOME_STATS: SkillUsageOutcomeStats = {
+  abandonedCount: 0,
+  avgDurationMs: null,
+  errorCount: 0,
+  outcomeCount: 0,
+  sessionEndedCount: 0,
+  successCount: 0,
+};
+
+/** Day after `end` (YYYY-MM-DD) as an ISO instant, for a half-open [start, endExclusive) range. */
+const exclusiveEndInstant = (end: string): string => {
+  const date = new Date(`${end}T00:00:00.000Z`);
+  date.setUTCDate(date.getUTCDate() + 1);
+
+  return date.toISOString();
+};
+
+/** COUNT/SUM raw → number, coalescing NULL (no rows) to 0. */
+/** The `id` of the first RETURNING row, or null when the insert was skipped. */
+const readFirstId = (raw: unknown): string | null => {
+  if (!Array.isArray(raw)) {
+    return null;
+  }
+  const first: unknown = raw[0];
+  if (
+    typeof first === 'object' &&
+    first !== null &&
+    'id' in first &&
+    typeof first.id === 'string'
+  ) {
+    return first.id;
+  }
+  return null;
+};
+
+const toNumber = (value: unknown): number => {
+  return value == null ? 0 : Number(value);
+};
+
+/** AVG raw → number | null (NULL when no duration samples). */
+const toAvgOrNull = (value: unknown): number | null => {
+  if (value == null) {
+    return null;
+  }
+
+  const n = Number(value);
+
+  return Number.isFinite(n) ? Math.round(n) : null;
+};
+
+/** MAX(timestamptz) raw → Date | null (pg may hand back a Date or an ISO string). */
+const toDateOrNull = (value: unknown): Date | null => {
+  if (value == null) {
+    return null;
+  }
+
+  if (value instanceof Date) {
+    return value;
+  }
+
+  const date = new Date(String(value));
+
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
+/**
+ * Narrow a raw SQL scope value to SkillUsageScope.
+ *
+ * The fallback is `third-party`, not `ours`. A CHECK constraint makes an
+ * unrecognized value nearly impossible, but "nearly" is doing work during a
+ * migration window or against a hand-edited row — and defaulting an unknown to
+ * `ours` inflates the count of skills we authored, which is the number people
+ * actually act on. `third-party` matches how capture itself fails open
+ * (`detectScope`), so the same unknown is treated the same way end to end, and
+ * it can never be mistaken for a positive classification.
+ */
+const toSkillUsageScope = (value: unknown): SkillUsageScope => {
+  if (typeof value === 'string' && isSkillUsageScope(value)) {
+    return value;
+  }
+
+  return SKILL_USAGE_SCOPES.THIRD_PARTY;
+};
+
+/** Cap the leaderboard so a noisy window stays UI-friendly. */
+const BY_SKILL_LIMIT = 50;
+
+/** Cap the deprecated filterOptions lists so they can never grow unbounded. */
+const FILTER_OPTIONS_LIMIT = 50;
+/** Default branch-search page size. */
+const BRANCH_SEARCH_DEFAULT_LIMIT = 20;
+
+/** Hard upper bound on a branch-search page, regardless of the request. */
+const BRANCH_SEARCH_MAX_LIMIT = 50;
+
+/** Clamp a requested branch-search limit into `[1, BRANCH_SEARCH_MAX_LIMIT]`. */
+const resolveBranchSearchLimit = (limit?: number | null): number => {
+  if (limit == null || !Number.isFinite(limit)) {
+    return BRANCH_SEARCH_DEFAULT_LIMIT;
+  }
+
+  return Math.min(Math.max(Math.floor(limit), 1), BRANCH_SEARCH_MAX_LIMIT);
+};
+
+/**
+ * Source label for capture health: NULL and blank collapse to `unknown`.
+ * Shared by SELECT, GROUP BY and ORDER BY so Postgres sees one expression.
+ */
+const captureSourceExpression = (alias: string): string => {
+  return `COALESCE(NULLIF(${alias}.source, ''), '${CAPTURE_HEALTH_UNKNOWN_SOURCE}')`;
+};
+
+/**
+ * @description Data access for the openthrottle `skill_usage_events` table on the
+ * default connection: harness-captured skill invocations (ours, personal and
+ * third-party). Owns the idempotent ingest write and the read/aggregation behind the
+ * Developer Usage surface; stores args exactly as the client sent them (already
+ * privacy-processed). The leaderboard and capture-health reads also touch
+ * `skill_usage_outcomes` (opt-in enrichment), reached through the entity manager.
+ * @public
+ */
+@Injectable()
+export class SkillUsageEventsRepository extends BaseRepository<
+  SkillUsageEvent,
+  CreateModelInput<SkillUsageEvent>
+> {
+  protected readonly tableName = 'skill_usage_events';
+
+  constructor(
+    @InjectRepository(SkillUsageEvent)
+    repository: Repository<SkillUsageEvent>,
+  ) {
+    super(repository);
+  }
+
+  /** The `skill_usage_outcomes` repository on the same connection. */
+  private get outcomesRepository(): Repository<SkillUsageOutcome> {
+    return this.repository.manager.getRepository(SkillUsageOutcome);
+  }
+
+  /**
+   * Insert one skill-usage event. Args are stored as-sent (client privacy
+   * seam already applied). Idempotent: an event whose key (tool_use_id, or
+   * prompt_id + skill_name for a prompt expansion) is already stored inserts
+   * nothing and returns the stored row, so a hook registered twice or a
+   * re-sent buffer line cannot double-count. See migration 134.
+   */
+  async recordSkillUsage(
+    input: RecordSkillUsageInput,
+  ): Promise<SkillUsageEvent> {
+    const row = this.repository.create({
+      agentId: input.agentId ?? null,
+      agentType: input.agentType ?? null,
+      args: input.args ?? null,
+      cwd: input.cwd ?? null,
+      gitBranch: input.gitBranch ?? null,
+      hookEventName: input.hookEventName ?? null,
+      invocationPath: input.invocationPath ?? null,
+      occurredAt: input.occurredAt,
+      privacyLevel: input.privacyLevel ?? SKILL_USAGE_PRIVACY_LEVELS.TRUNCATED,
+      promptId: input.promptId ?? null,
+      repoIdentity: input.repoIdentity ?? null,
+      scope: input.scope,
+      sessionId: input.sessionId ?? null,
+      skillName: input.skillName,
+      source: input.source ?? null,
+      toolUseId: input.toolUseId ?? null,
+      userId: input.userId ?? null,
+    });
+
+    // No conflict target: ON CONFLICT DO NOTHING covers both partial unique
+    // indexes, whichever key this row carries.
+    const result = await this.repository
+      .createQueryBuilder()
+      .insert()
+      .into(SkillUsageEvent)
+      .values(row)
+      .orIgnore()
+      .returning('id')
+      .execute();
+
+    const raw: unknown = result.raw;
+    const insertedId = readFirstId(raw);
+    if (insertedId !== null) {
+      return this.repository.findOneByOrFail({ id: insertedId });
+    }
+
+    // Conflict: NULLs never conflict in a unique index, so every key column
+    // is non-null here and plain equality finds the surviving row.
+    if (row.toolUseId !== null) {
+      return this.repository.findOneOrFail({
+        where: {
+          duplicateOfId: IsNull(),
+          hookEventName: row.hookEventName ?? IsNull(),
+          sessionId: row.sessionId ?? IsNull(),
+          source: row.source ?? IsNull(),
+          toolUseId: row.toolUseId,
+        },
+      });
+    }
+    return this.repository.findOneOrFail({
+      where: {
+        duplicateOfId: IsNull(),
+        hookEventName: row.hookEventName ?? IsNull(),
+        promptId: row.promptId ?? IsNull(),
+        sessionId: row.sessionId ?? IsNull(),
+        skillName: row.skillName,
+        source: row.source ?? IsNull(),
+        toolUseId: IsNull(),
+      },
+    });
+  }
+
+  /**
+   * Aggregated skill usage over `[start, end]` (inclusive days, UTC): top
+   * skills (with opt-in outcome stats), the ours / injected / personal / third-party split, per-day
+   * series, and filter option lists. Branch/cwd filters apply to the
+   * aggregates; filterOptions are computed over the same date range without
+   * those two filters so the dropdowns stay populated while a filter is active.
+   */
+  async getUsageAggregation(
+    query: SkillUsageRangeQuery,
+  ): Promise<SkillUsageAggregation> {
+    const [bySkill, byScope, byDay, totalCount, filterOptions] =
+      await Promise.all([
+        this.listBySkill(query),
+        this.listByScope(query),
+        this.listByDay(query),
+        this.countInRange(query),
+        this.listFilterOptions({
+          end: query.end,
+          skillName: query.skillName ?? null,
+          start: query.start,
+        }),
+      ]);
+
+    return { byDay, byScope, bySkill, filterOptions, totalCount };
+  }
+
+  /**
+   * Top skills by start-invocation count (skill_name + scope), highest first,
+   * enriched with opt-in outcome stats keyed by skill_name AND scope.
+   *
+   * Both halves must key on the same tuple. Starts have always grouped by
+   * (skill_name, scope), so keying outcomes by skill_name alone merged one
+   * skill's entire outcome history into *every* scope row it has — surfacing
+   * as impossible cells like "31/1" once a skill's history straddled two
+   * scopes, which the personal member made routine.
+   */
+  async listBySkill(
+    query: SkillUsageRangeQuery,
+  ): Promise<SkillUsageBySkillRow[]> {
+    const [startRows, outcomeBySkill] = await Promise.all([
+      this.listStartCountsBySkill(query),
+      this.listOutcomeStatsBySkill(query),
+    ]);
+
+    return startRows.map((row) => {
+      const outcomes =
+        outcomeBySkill.get(outcomeStatsKey(row.skillName, row.scope)) ??
+        EMPTY_OUTCOME_STATS;
+
+      return {
+        abandonedCount: outcomes.abandonedCount,
+        avgDurationMs: outcomes.avgDurationMs,
+        count: row.count,
+        errorCount: outcomes.errorCount,
+        lastUsedAt: row.lastUsedAt,
+        outcomeCount: outcomes.outcomeCount,
+        scope: row.scope,
+        sessionEndedCount: outcomes.sessionEndedCount,
+        skillName: row.skillName,
+        successCount: outcomes.successCount,
+      };
+    });
+  }
+
+  /**
+   * Invocation counts grouped by scope (ours | personal | third-party).
+   * Groups by the column itself, so it needed no widening — a new member
+   * appears as a new row the moment one is captured.
+   */
+  async listByScope(
+    query: SkillUsageRangeQuery,
+  ): Promise<SkillUsageByScopeRow[]> {
+    const rows = await this.rangeQuery(query)
+      .select('e.scope', 'scope')
+      .addSelect('COUNT(*)', 'count')
+      .groupBy('e.scope')
+      .orderBy('e.scope', 'ASC')
+      .getRawMany<Record<string, unknown>>();
+
+    return rows.map((row) => ({
+      count: toNumber(row.count),
+      scope: toSkillUsageScope(row.scope),
+    }));
+  }
+
+  /** Per-UTC-day counts with the ours / personal / third-party split. */
+  async listByDay(query: SkillUsageRangeQuery): Promise<SkillUsageByDayRow[]> {
+    const qb = this.rangeQuery(query).select(
+      `to_char(date_trunc('day', e.occurred_at AT TIME ZONE 'UTC'), 'YYYY-MM-DD')`,
+      'date',
+    );
+
+    // One FILTER per scope, generated from the exhaustive count-key record
+    // rather than hand-written per member — that is what makes a future
+    // fourth scope a compile error at the record instead of a missing series.
+    for (const [scope, alias] of Object.entries(SKILL_USAGE_SCOPE_COUNT_KEYS)) {
+      qb.addSelect(`COUNT(*) FILTER (WHERE e.scope = '${scope}')`, alias);
+    }
+
+    const rows = await qb
+      .addSelect('COUNT(*)', 'totalCount')
+      .groupBy(`date_trunc('day', e.occurred_at AT TIME ZONE 'UTC')`)
+      .orderBy(`date_trunc('day', e.occurred_at AT TIME ZONE 'UTC')`, 'ASC')
+      .getRawMany<Record<string, unknown>>();
+
+    return rows.map((row) => ({
+      date: String(row.date),
+      injectedCount: toNumber(row[SKILL_USAGE_SCOPE_COUNT_KEYS.injected]),
+      oursCount: toNumber(row[SKILL_USAGE_SCOPE_COUNT_KEYS.ours]),
+      personalCount: toNumber(row[SKILL_USAGE_SCOPE_COUNT_KEYS.personal]),
+      thirdPartyCount: toNumber(
+        row[SKILL_USAGE_SCOPE_COUNT_KEYS['third-party']],
+      ),
+      totalCount: toNumber(row.totalCount),
+    }));
+  }
+
+  /**
+   * When skill telemetry last arrived, per `source`, for both the start-event
+   * stream (`received_at` of skill_usage_events, fixtures excluded — a bring-up
+   * probe is not capture) and the outcome stream (skill_usage_outcomes). Uses
+   * server receipt time, not the client-reported `occurred_at`, so a client
+   * with a skewed clock cannot mask an ingest outage.
+   */
+  async listCaptureHealth(): Promise<CaptureHealthRow[]> {
+    const eventSource = captureSourceExpression('e');
+    const outcomeSource = captureSourceExpression('o');
+
+    const [eventRows, outcomeRows] = await Promise.all([
+      this.repository
+        .createQueryBuilder('e')
+        .select(eventSource, 'source')
+        .addSelect('MAX(e.received_at)', 'lastCapturedAt')
+        .where('e.is_fixture = FALSE')
+        .groupBy(eventSource)
+        .orderBy(eventSource, 'ASC')
+        .getRawMany<Record<string, unknown>>(),
+      this.outcomesRepository
+        .createQueryBuilder('o')
+        .select(outcomeSource, 'source')
+        .addSelect('MAX(o.received_at)', 'lastCapturedAt')
+        .groupBy(outcomeSource)
+        .orderBy(outcomeSource, 'ASC')
+        .getRawMany<Record<string, unknown>>(),
+    ]);
+
+    return [
+      ...toCaptureHealthRows(CAPTURE_HEALTH_STREAMS.SKILL_EVENTS, eventRows),
+      ...toCaptureHealthRows(
+        CAPTURE_HEALTH_STREAMS.SKILL_OUTCOMES,
+        outcomeRows,
+      ),
+    ];
+  }
+
+  /** Total invocation count for the filtered range. */
+  async countInRange(query: SkillUsageRangeQuery): Promise<number> {
+    const raw = await this.rangeQuery(query)
+      .select('COUNT(*)', 'count')
+      .getRawOne<Record<string, unknown>>();
+
+    return toNumber(raw?.count);
+  }
+
+  /**
+   * Distinct non-null git branches and cwds in the date window (no branch/cwd
+   * filter applied — those are the values the UI offers as filter options).
+   */
+  async listFilterOptions(query: {
+    readonly end: string;
+    readonly skillName?: string | null;
+    readonly start: string;
+  }): Promise<SkillUsageFilterOptions> {
+    const [branchRows, cwdRows, repoRows] = await Promise.all([
+      this.withSkillName(this.dateRangeQuery(query), query.skillName)
+        .select('DISTINCT e.git_branch', 'value')
+        .andWhere('e.git_branch IS NOT NULL')
+        .andWhere(`e.git_branch <> ''`)
+        .orderBy('e.git_branch', 'ASC')
+        .limit(FILTER_OPTIONS_LIMIT)
+        .getRawMany<{ value: string }>(),
+      this.withSkillName(this.dateRangeQuery(query), query.skillName)
+        .select('DISTINCT e.cwd', 'value')
+        .andWhere('e.cwd IS NOT NULL')
+        .andWhere(`e.cwd <> ''`)
+        .orderBy('e.cwd', 'ASC')
+        .limit(FILTER_OPTIONS_LIMIT)
+        .getRawMany<{ value: string }>(),
+      this.withSkillName(this.dateRangeQuery(query), query.skillName)
+        .select('DISTINCT e.repo_identity', 'value')
+        .andWhere('e.repo_identity IS NOT NULL')
+        .orderBy('e.repo_identity', 'ASC')
+        .limit(FILTER_OPTIONS_LIMIT)
+        .getRawMany<{ value: string }>(),
+    ]);
+
+    return {
+      cwds: cwdRows.map((row) => row.value),
+      gitBranches: branchRows.map((row) => row.value),
+      repoIdentities: repoRows.map((row) => row.value),
+    };
+  }
+
+  /**
+   * Git branches present in the date window, ranked in SQL so the default
+   * branch (`main`, else `master`) leads and the rest follow A–Z — the pin
+   * therefore survives the LIMIT. An optional `query` narrows by
+   * case-insensitive substring; `limit` defaults to 20 and is capped at 50,
+   * with `hasMore` derived from an n+1 fetch so the UI can prompt for a
+   * narrower search instead of paging.
+   */
+  async searchGitBranches(
+    query: SkillUsageGitBranchSearchQuery,
+  ): Promise<SkillUsageGitBranchSearchResult> {
+    const limit = resolveBranchSearchLimit(query.limit);
+    const needle = query.query?.trim() ?? '';
+
+    const qb = this.withSkillName(this.dateRangeQuery(query), query.skillName)
+      .select('e.git_branch', 'branch')
+      .addSelect('COUNT(*)', 'count')
+      .andWhere('e.git_branch IS NOT NULL')
+      .andWhere(`e.git_branch <> ''`)
+      .groupBy('e.git_branch')
+      .orderBy(
+        `CASE e.git_branch WHEN :primaryBranch THEN 0 WHEN :secondaryBranch THEN 1 ELSE 2 END`,
+        'ASC',
+      )
+      .addOrderBy('e.git_branch', 'ASC')
+      .setParameters({
+        primaryBranch: SKILL_USAGE_DEFAULT_BRANCHES[0],
+        secondaryBranch: SKILL_USAGE_DEFAULT_BRANCHES[1],
+      })
+      .limit(limit + 1);
+
+    if (needle !== '') {
+      qb.andWhere('e.git_branch ILIKE :branchPattern', {
+        branchPattern: toLikeContainsPattern(needle),
+      });
+    }
+
+    const rows = await qb.getRawMany<Record<string, unknown>>();
+
+    return {
+      hasMore: rows.length > limit,
+      items: rows.slice(0, limit).map((row) => ({
+        branch: String(row.branch),
+        count: toNumber(row.count),
+      })),
+    };
+  }
+
+  /** Start counts only (no outcome join). */
+  private async listStartCountsBySkill(query: SkillUsageRangeQuery): Promise<
+    ReadonlyArray<{
+      readonly count: number;
+      readonly lastUsedAt: Date | null;
+      readonly scope: SkillUsageScope;
+      readonly skillName: string;
+    }>
+  > {
+    const rows = await this.rangeQuery(query)
+      .select('e.skill_name', 'skillName')
+      .addSelect('e.scope', 'scope')
+      .addSelect('COUNT(*)', 'count')
+      .addSelect('MAX(e.occurred_at)', 'lastUsedAt')
+      .groupBy('e.skill_name')
+      .addGroupBy('e.scope')
+      .orderBy('count', 'DESC')
+      .addOrderBy('e.skill_name', 'ASC')
+      .limit(BY_SKILL_LIMIT)
+      .getRawMany<Record<string, unknown>>();
+
+    return rows.map((row) => ({
+      count: toNumber(row.count),
+      lastUsedAt: toDateOrNull(row.lastUsedAt),
+      scope: toSkillUsageScope(row.scope),
+      skillName: String(row.skillName),
+    }));
+  }
+
+  /** Outcome aggregates by (skill_name, scope) for the same filter window. */
+  private async listOutcomeStatsBySkill(
+    query: SkillUsageRangeQuery,
+  ): Promise<Map<string, SkillUsageOutcomeStats>> {
+    const qb = this.outcomesRepository
+      .createQueryBuilder('o')
+      .select('o.skill_name', 'skillName')
+      .addSelect('o.scope', 'scope')
+      // QUALITY outcomes only. `COUNT(*)` here would readmit `session_ended`
+      // and `abandoned` and put the leaderboard straight back to reporting
+      // liveness as if it were quality.
+      .addSelect(
+        `COUNT(*) FILTER (WHERE o.outcome IN ('${SKILL_USAGE_OUTCOMES.SUCCESS}', '${SKILL_USAGE_OUTCOMES.ERROR}'))`,
+        'outcomeCount',
+      )
+      .addSelect(
+        `COUNT(*) FILTER (WHERE o.outcome = '${SKILL_USAGE_OUTCOMES.SESSION_ENDED}')`,
+        'sessionEndedCount',
+      )
+      .addSelect(
+        `COUNT(*) FILTER (WHERE o.outcome = '${SKILL_USAGE_OUTCOMES.SUCCESS}')`,
+        'successCount',
+      )
+      .addSelect(
+        `COUNT(*) FILTER (WHERE o.outcome = '${SKILL_USAGE_OUTCOMES.ABANDONED}')`,
+        'abandonedCount',
+      )
+      .addSelect(
+        `COUNT(*) FILTER (WHERE o.outcome = '${SKILL_USAGE_OUTCOMES.ERROR}')`,
+        'errorCount',
+      )
+      .addSelect('AVG(o.duration_ms)', 'avgDurationMs')
+      // Legacy rows are excluded wholesale, not just from the quality counts.
+      // Their `success` was a hardcoded default rather than an observation, and
+      // their duration was session-tail length — so counting them anywhere here
+      // would reintroduce the exact numbers this work exists to retire.
+      .where('o.capture_model = :captureModel', {
+        captureModel: SKILL_USAGE_CAPTURE_MODELS.REPORTED_V1,
+      })
+      .andWhere('o.occurred_at >= :start', { start: query.start })
+      .andWhere('o.occurred_at < :endExclusive', {
+        endExclusive: exclusiveEndInstant(query.end),
+      })
+      .groupBy('o.skill_name')
+      .addGroupBy('o.scope');
+
+    if (query.scope != null) {
+      qb.andWhere('o.scope = :scope', { scope: query.scope });
+    }
+
+    if (query.gitBranch != null && query.gitBranch !== '') {
+      qb.andWhere('o.git_branch = :gitBranch', { gitBranch: query.gitBranch });
+    }
+
+    if (query.cwd != null && query.cwd !== '') {
+      qb.andWhere('o.cwd = :cwd', { cwd: query.cwd });
+    }
+
+    // Outcomes carry no repo identity of their own, so they follow the start
+    // they correlate to — the documented sessionId + skillName key.
+    if (query.repoIdentity != null && query.repoIdentity !== '') {
+      qb.andWhere(
+        `EXISTS (SELECT 1 FROM skill_usage_events s WHERE s.session_id = o.session_id AND s.skill_name = o.skill_name AND s.repo_identity = :repoIdentity)`,
+        { repoIdentity: query.repoIdentity },
+      );
+    }
+
+    if (query.skillName != null && query.skillName !== '') {
+      qb.andWhere('o.skill_name = :skillName', { skillName: query.skillName });
+    }
+
+    const rows = await qb.getRawMany<Record<string, unknown>>();
+    const map = new Map<string, SkillUsageOutcomeStats>();
+
+    for (const row of rows) {
+      map.set(
+        outcomeStatsKey(String(row.skillName), toSkillUsageScope(row.scope)),
+        {
+          abandonedCount: toNumber(row.abandonedCount),
+          avgDurationMs: toAvgOrNull(row.avgDurationMs),
+          errorCount: toNumber(row.errorCount),
+          outcomeCount: toNumber(row.outcomeCount),
+          sessionEndedCount: toNumber(row.sessionEndedCount),
+          successCount: toNumber(row.successCount),
+        },
+      );
+    }
+
+    return map;
+  }
+
+  /** Narrow a builder to one skill when a non-empty skillName is supplied. */
+  private withSkillName(
+    qb: SelectQueryBuilder<SkillUsageEvent>,
+    skillName?: string | null,
+  ): SelectQueryBuilder<SkillUsageEvent> {
+    if (skillName != null && skillName !== '') {
+      qb.andWhere('e.skill_name = :skillName', { skillName });
+    }
+
+    return qb;
+  }
+
+  /**
+   * Shared date-window filter (no optional scope/branch/cwd).
+   *
+   * Every event aggregate funnels through here, which is why the fixture
+   * exclusion lives here and nowhere else: instrumentation probes from telemetry
+   * bring-up are not usage, and one of them slipping into a count that a later
+   * decision rests on is the failure worth preventing. See migration 115.
+   */
+  private dateRangeQuery(query: {
+    readonly end: string;
+    readonly start: string;
+  }): SelectQueryBuilder<SkillUsageEvent> {
+    return this.repository
+      .createQueryBuilder('e')
+      .where('e.occurred_at >= :start', { start: query.start })
+      .andWhere('e.occurred_at < :endExclusive', {
+        endExclusive: exclusiveEndInstant(query.end),
+      })
+      .andWhere('e.is_fixture = FALSE')
+      .andWhere('e.duplicate_of_id IS NULL');
+  }
+
+  /** Date window + optional scope / gitBranch / cwd / repoIdentity filters. */
+  private rangeQuery(
+    query: SkillUsageRangeQuery,
+  ): SelectQueryBuilder<SkillUsageEvent> {
+    const qb = this.dateRangeQuery(query);
+
+    if (query.scope != null) {
+      qb.andWhere('e.scope = :scope', { scope: query.scope });
+    }
+
+    if (query.gitBranch != null && query.gitBranch !== '') {
+      qb.andWhere('e.git_branch = :gitBranch', { gitBranch: query.gitBranch });
+    }
+
+    if (query.cwd != null && query.cwd !== '') {
+      qb.andWhere('e.cwd = :cwd', { cwd: query.cwd });
+    }
+
+    if (query.repoIdentity != null && query.repoIdentity !== '') {
+      qb.andWhere('e.repo_identity = :repoIdentity', {
+        repoIdentity: query.repoIdentity,
+      });
+    }
+
+    if (query.skillName != null && query.skillName !== '') {
+      qb.andWhere('e.skill_name = :skillName', { skillName: query.skillName });
+    }
+
+    return qb;
+  }
+}

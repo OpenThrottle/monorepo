@@ -1,13 +1,15 @@
-import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
-import { DailyStatsService } from '@openthrottle/nestjs-repositories';
-import { dailyStatsFactory } from '@openthrottle/nestjs-repositories/testing';
-import { beforeAll, describe, expect, test, vi } from 'vitest';
+import { DailyStatsRepository } from '@openthrottle/nestjs-repositories-server';
+import {
+  createDailyStatsRepositoryMock,
+  dailyStatsFactory,
+} from '@openthrottle/nestjs-repositories-server/testing';
+import { beforeAll, describe, expect, test } from 'vitest';
 
 import { DailyStatsResolver } from './daily-stats.resolver.ts';
 
 /**
- * @description Unit tests for daily stats resolver: dailyStats and dailyStatsRange. Mocks DailyStatsService.
+ * @description Unit tests for daily stats resolver: dailyStats and dailyStatsRange. Mocks DailyStatsRepository.
  */
 describe('DailyStatsResolver', () => {
   let resolver: DailyStatsResolver;
@@ -24,29 +26,13 @@ describe('DailyStatsResolver', () => {
     tasksUpdated: 2,
   });
 
-  const findOne = vi.fn();
-  const getMany = vi.fn();
-  const createQueryBuilder = vi.fn().mockReturnValue({
-    andWhere: vi.fn().mockReturnThis(),
-    getMany: () => getMany(),
-    orderBy: vi.fn().mockReturnThis(),
-    where: vi.fn().mockReturnThis(),
-  });
-
-  const mockRepo = {
-    createQueryBuilder,
-    findOne,
-  };
-
-  const mockDailyStatsService = createMock<DailyStatsService>({
-    getRepository: vi.fn().mockReturnValue(mockRepo),
-  });
+  const dailyStats = createDailyStatsRepositoryMock();
 
   beforeAll(async () => {
     const app = await Test.createTestingModule({
       providers: [
         DailyStatsResolver,
-        { provide: DailyStatsService, useValue: mockDailyStatsService },
+        { provide: DailyStatsRepository, useValue: dailyStats },
       ],
     }).compile();
 
@@ -55,18 +41,16 @@ describe('DailyStatsResolver', () => {
 
   describe('dailyStats', () => {
     test('returns null when no row for date', async () => {
-      findOne.mockResolvedValueOnce(null);
+      dailyStats.findByDate.mockResolvedValueOnce(null);
 
       const result = await resolver.dailyStats('2026-02-10');
 
       expect(result).toBeNull();
-      expect(findOne).toHaveBeenCalledWith({
-        where: { date: new Date('2026-02-10') },
-      });
+      expect(dailyStats.findByDate).toHaveBeenCalledWith('2026-02-10');
     });
 
     test('returns DailyStatsObject when row exists', async () => {
-      findOne.mockResolvedValueOnce(mockRow);
+      dailyStats.findByDate.mockResolvedValueOnce({ ...mockRow });
 
       const result = await resolver.dailyStats('2026-02-07');
 
@@ -93,14 +77,17 @@ describe('DailyStatsResolver', () => {
         dailyStatsFactory.build({ date: new Date('2026-02-01') }),
         dailyStatsFactory.build({ date: new Date('2026-02-02') }),
       ];
-      getMany.mockResolvedValueOnce(rows);
+      dailyStats.findInRange.mockResolvedValueOnce(rows);
 
       const result = await resolver.dailyStatsRange('2026-02-01', '2026-02-02');
 
       expect(result.items).toHaveLength(2);
       expect(result.items[0]?.date).toBe('2026-02-01');
       expect(result.items[1]?.date).toBe('2026-02-02');
-      expect(createQueryBuilder).toHaveBeenCalledWith('d');
+      expect(dailyStats.findInRange).toHaveBeenCalledWith(
+        '2026-02-01',
+        '2026-02-02',
+      );
     });
   });
 });

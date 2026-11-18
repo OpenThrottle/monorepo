@@ -23,8 +23,8 @@ import type { RepositoryCheckout } from '@openthrottle/nestjs-repositories';
 import {
   PlanRunsService,
   RepositoryCheckoutsService,
-  WorktreeRemovalsService,
 } from '@openthrottle/nestjs-repositories';
+import { WorktreeRemovalsRepository } from '@openthrottle/nestjs-repositories-server';
 
 import { realPath } from '../paths/real-path/real-path.utils.ts';
 import { isLinkedWorktreeDirectory } from '../worktree-discovery/worktree-discovery.utils.ts';
@@ -47,7 +47,7 @@ export class WorktreeCheckoutPruneService {
     private readonly logger: LoggerService,
     private readonly checkoutsService: RepositoryCheckoutsService,
     private readonly planRunsService: PlanRunsService,
-    private readonly worktreeRemovalsService: WorktreeRemovalsService,
+    private readonly worktreeRemovals: WorktreeRemovalsRepository,
   ) {
     this.logger.debug(`🧩 ${this.name} 🧩`);
   }
@@ -149,7 +149,7 @@ export class WorktreeCheckoutPruneService {
     audit: WorktreeRemovalAudit,
   ): Promise<void> {
     try {
-      await this.worktreeRemovalsService.record({
+      await this.worktreeRemovals.record({
         ...normalizeWorktreeRemovalAudit(audit),
         checkoutId: result.checkoutId,
         filesystemPath: result.path,

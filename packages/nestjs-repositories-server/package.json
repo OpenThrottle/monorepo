@@ -18,6 +18,7 @@
     "@faker-js/faker": "catalog:",
     "@golevelup/ts-vitest": "catalog:",
     "@nestjs/testing": "catalog:",
+    "@openthrottle/nestjs-testing": "workspace:^",
     "@openthrottle/openthrottle-agentic-utils": "workspace:^",
     "vitest": "catalog:"
   },

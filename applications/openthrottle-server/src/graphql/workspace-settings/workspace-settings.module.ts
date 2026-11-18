@@ -21,6 +21,7 @@ import './remove-plan-run-worktree.object.ts';
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+import { WorktreeRemovalsModule } from '@openthrottle/nestjs-repositories-server';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import { ForeignSkillInjectionModule } from '../../services/foreign-skill-injection/foreign-skill-injection.module.ts';
@@ -44,6 +45,7 @@ import { WorkspaceSettingsResolver } from './workspace-settings.resolver.ts';
     RepositoryInspectionModule,
     WorktreeActivityModule,
     WorktreeCheckoutPruneModule,
+    WorktreeRemovalsModule,
   ],
   providers: [
     DiscoveredWorktreeResolver,

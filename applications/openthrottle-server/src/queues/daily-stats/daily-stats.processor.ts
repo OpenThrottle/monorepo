@@ -2,11 +2,8 @@ import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { OnApplicationShutdown, OnModuleInit } from '@nestjs/common';
 import { defaultWorkerOptions } from '@openthrottle/nestjs-bullmq';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import {
-  DailyStatsService,
-  PlansService,
-  TasksService,
-} from '@openthrottle/nestjs-repositories';
+import { PlansService, TasksService } from '@openthrottle/nestjs-repositories';
+import { DailyStatsRepository } from '@openthrottle/nestjs-repositories-server';
 import { And, LessThan, MoreThanOrEqual } from 'typeorm';
 
 import { NotificationsService } from '../../notifications/notifications.service.ts';
@@ -47,7 +44,7 @@ export class DailyStatsProcessor
   implements OnApplicationShutdown, OnModuleInit
 {
   constructor(
-    private readonly dailyStatsService: DailyStatsService,
+    private readonly dailyStats: DailyStatsRepository,
     private readonly logger: LoggerService,
     private readonly notifications: NotificationsService,
     private readonly plansService: PlansService,
@@ -127,7 +124,7 @@ export class DailyStatsProcessor
       -(MAX_CATCHUP_DAYS - 1),
     );
 
-    const latestYmd = await this.dailyStatsService.getLatestDate();
+    const latestYmd = await this.dailyStats.getLatestDate();
     let startYmd = flooredStartYmd;
     if (latestYmd != null) {
       startYmd = maxYmd(addUtcDaysToYmd(latestYmd, 1), flooredStartYmd);
@@ -139,7 +136,7 @@ export class DailyStatsProcessor
     }
 
     const candidates = enumerateYmdRange(startYmd, yesterdayYmd);
-    const existing = await this.dailyStatsService.getExistingDatesInRange(
+    const existing = await this.dailyStats.getExistingDatesInRange(
       startYmd,
       yesterdayYmd,
     );
@@ -152,7 +149,7 @@ export class DailyStatsProcessor
       // eslint-disable-next-line no-await-in-loop -- see note above
       const aggregate = await this.aggregateDailyStats(ymd);
       // eslint-disable-next-line no-await-in-loop -- see note above
-      await this.dailyStatsService.upsertForDate(aggregate.date, {
+      await this.dailyStats.upsertForDate(aggregate.date, {
         plansByStatus: aggregate.plansByStatus,
         plansCompleted: aggregate.plansCompleted,
         plansCreated: aggregate.plansCreated,

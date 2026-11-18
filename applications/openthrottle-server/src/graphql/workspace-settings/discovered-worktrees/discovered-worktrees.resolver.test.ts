@@ -9,9 +9,12 @@ import { createMock } from '@golevelup/ts-vitest';
 import type {
   RepositoryCheckout,
   RepositoryCheckoutsService,
-  WorktreeRemoval,
-  WorktreeRemovalsService,
 } from '@openthrottle/nestjs-repositories';
+import type {
+  WorktreeRemoval,
+  WorktreeRemovalsRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import { createWorktreeRemovalsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import { describe, expect, it, vi } from 'vitest';
 
 import { PLAN_RUN_WORKTREE_TEARDOWN_OUTCOME } from '../../../services/plan-run-worktree-teardown/plan-run-worktree-teardown.constants.ts';
@@ -34,12 +37,17 @@ const build = (
   discoverAndClassify = vi.fn().mockResolvedValue(result),
   findLatestByUserAndPaths = vi.fn().mockResolvedValue([]),
 ): DiscoveredWorktreesResolver => {
+  const removals = createWorktreeRemovalsRepositoryMock();
+  removals.findLatestByUserAndPaths.mockImplementation(
+    findLatestByUserAndPaths,
+  );
+
   return new DiscoveredWorktreesResolver(
     createMock<WorktreeActivityService>({ discoverAndClassify }),
     createMock<RepositoryCheckoutsService>(),
     createMock<WorktreeCheckoutPruneService>(),
     createMock<PlanRunWorktreeTeardownService>(),
-    createMock<WorktreeRemovalsService>({ findLatestByUserAndPaths }),
+    createMock<WorktreeRemovalsRepository>(removals),
   );
 };
 
@@ -289,7 +297,9 @@ describe('DiscoveredWorktreesResolver', () => {
         createMock<RepositoryCheckoutsService>(),
         createMock<WorktreeCheckoutPruneService>({ pruneByIds }),
         createMock<PlanRunWorktreeTeardownService>(),
-        createMock<WorktreeRemovalsService>(),
+        createMock<WorktreeRemovalsRepository>(
+          createWorktreeRemovalsRepositoryMock(),
+        ),
       );
 
       const payload = await resolver.pruneWorktreeCheckouts('user-1', {
@@ -345,7 +355,9 @@ describe('DiscoveredWorktreesResolver', () => {
           resolveBaseCheckoutPath: vi.fn().mockResolvedValue('/repo'),
           teardown,
         }),
-        createMock<WorktreeRemovalsService>(),
+        createMock<WorktreeRemovalsRepository>(
+          createWorktreeRemovalsRepositoryMock(),
+        ),
       );
       return { invalidate, resolver, teardown };
     };

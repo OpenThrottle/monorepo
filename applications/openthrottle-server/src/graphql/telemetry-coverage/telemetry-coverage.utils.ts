@@ -6,7 +6,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import type { TelemetryHeartbeat } from '@openthrottle/nestjs-repositories';
+import type { TelemetryHeartbeat } from '@openthrottle/nestjs-repositories-server';
 
 import {
   TELEMETRY_COVERAGE_STALE_AFTER_HOURS,

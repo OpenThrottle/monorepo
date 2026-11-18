@@ -2,11 +2,15 @@ import { createMock } from '@golevelup/ts-vitest';
 import { BadRequestException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { PERMISSIONS, PERMISSIONS_KEY } from '@openthrottle/nestjs-rbac';
+import { RolesService } from '@openthrottle/nestjs-repositories';
 import {
-  RolesService,
   type TelemetryHeartbeat,
-  TelemetryHeartbeatsService,
-} from '@openthrottle/nestjs-repositories';
+  TelemetryHeartbeatsRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import {
+  createTelemetryHeartbeatsRepositoryMock,
+  type TelemetryHeartbeatsRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
@@ -18,8 +22,7 @@ const userId = '11111111-1111-4111-8111-111111111111';
 
 describe('TelemetryCoverageResolver', () => {
   let resolver: TelemetryCoverageResolver;
-  const listForUser = vi.fn();
-  const deleteForUserMachine = vi.fn();
+  let heartbeats: TelemetryHeartbeatsRepositoryMock;
   const resolveEffectiveUserId = vi.fn();
 
   afterEach(() => {
@@ -31,16 +34,14 @@ describe('TelemetryCoverageResolver', () => {
     vi.useFakeTimers();
     vi.setSystemTime(FIXED_NOW);
     resolveEffectiveUserId.mockResolvedValue(userId);
-    listForUser.mockResolvedValue([]);
+    heartbeats = createTelemetryHeartbeatsRepositoryMock();
+    heartbeats.listForUser.mockResolvedValue([]);
     const app = await Test.createTestingModule({
       providers: [
         TelemetryCoverageResolver,
         {
-          provide: TelemetryHeartbeatsService,
-          useValue: createMock<TelemetryHeartbeatsService>({
-            deleteForUserMachine,
-            listForUser,
-          }),
+          provide: TelemetryHeartbeatsRepository,
+          useValue: heartbeats,
         },
         {
           provide: EffectiveUserResolutionService,
@@ -66,13 +67,13 @@ describe('TelemetryCoverageResolver', () => {
     await resolver.telemetryCoverage(14, 'sub-1');
 
     expect(resolveEffectiveUserId).toHaveBeenCalledWith('sub-1');
-    const [calledUser, since] = listForUser.mock.calls[0] ?? [];
+    const [calledUser, since] = heartbeats.listForUser.mock.calls[0] ?? [];
     expect(calledUser).toBe(userId);
-    expect(FIXED_NOW.getTime() - since.getTime()).toBe(28 * 86_400_000);
+    expect(since).toEqual(new Date(FIXED_NOW.getTime() - 28 * 86_400_000));
   });
 
   test('returns the object shape with machines from the rows', async () => {
-    listForUser.mockResolvedValue([
+    heartbeats.listForUser.mockResolvedValue([
       createMock<TelemetryHeartbeat>({
         bufferedEvents: 1,
         bufferedOutcomes: 0,
@@ -134,12 +135,15 @@ describe('TelemetryCoverageResolver', () => {
     });
 
     test("deletes the resolved user's rows for the trimmed machine id", async () => {
-      deleteForUserMachine.mockResolvedValue(2);
+      heartbeats.deleteForUserMachine.mockResolvedValue(2);
 
       await expect(
         resolver.forgetTelemetryMachine(' m1 ', 'sub-1'),
       ).resolves.toBe(2);
-      expect(deleteForUserMachine).toHaveBeenCalledWith(userId, 'm1');
+      expect(heartbeats.deleteForUserMachine).toHaveBeenCalledWith(
+        userId,
+        'm1',
+      );
     });
 
     describe('when the machine id is blank', () => {
@@ -147,7 +151,7 @@ describe('TelemetryCoverageResolver', () => {
         await expect(
           resolver.forgetTelemetryMachine('  ', 'sub-1'),
         ).rejects.toThrow(BadRequestException);
-        expect(deleteForUserMachine).not.toHaveBeenCalled();
+        expect(heartbeats.deleteForUserMachine).not.toHaveBeenCalled();
       });
     });
 
@@ -158,7 +162,7 @@ describe('TelemetryCoverageResolver', () => {
         await expect(
           resolver.forgetTelemetryMachine('m1', undefined),
         ).rejects.toThrow(BadRequestException);
-        expect(deleteForUserMachine).not.toHaveBeenCalled();
+        expect(heartbeats.deleteForUserMachine).not.toHaveBeenCalled();
       });
     });
   });

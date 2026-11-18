@@ -129,7 +129,7 @@ function fixtureExclusionClause(probe: CapabilityProbe): string {
  * else nothing. Excludes the pre-fix rows wholesale — their `success` was a
  * hardcoded default and their `duration_ms` is session-tail length, not a
  * measurement — matching how the production Usage aggregation already treats
- * them (`skill-usage-events.service.ts`).
+ * them (`skill-usage-events.repository.ts`).
  */
 function reportedOnlyClause(probe: CapabilityProbe): string {
   return probe.hasColumns('skill_usage_outcomes', ['capture_model'])
