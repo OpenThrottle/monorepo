@@ -1,6 +1,11 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+import {
+  WorkArtifactsModule,
+  WorkSessionsModule,
+  WorkSessionSubjectsModule,
+} from '@openthrottle/nestjs-repositories-server';
 
 import { SourceControlModule } from '../../services/source-control/source-control.module.ts';
 import { TaggingQueueProducerModule } from '../tagging/producer/producer.module.ts';
@@ -21,7 +26,10 @@ import { WorkLedgerVerifyProcessor } from './work-ledger-verify.processor.ts';
     NestjsRepositoriesModule,
     SourceControlModule,
     TaggingQueueProducerModule,
+    WorkArtifactsModule,
     WorkLedgerVerifyQueueProducerModule,
+    WorkSessionSubjectsModule,
+    WorkSessionsModule,
   ],
   providers: [WorkLedgerVerifyProcessor, WorkLedgerVerifyRepeatableService],
 })

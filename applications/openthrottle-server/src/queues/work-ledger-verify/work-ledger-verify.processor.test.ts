@@ -2,16 +2,26 @@ import { createMock } from '@golevelup/ts-vitest';
 import type { ConfigService } from '@nestjs/config';
 import type { GitHubService } from '@openthrottle/nestjs-github';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import type {
-  PlanRunsService,
-  WorkLedgerService,
-} from '@openthrottle/nestjs-repositories';
+import type { PlanRunsService } from '@openthrottle/nestjs-repositories';
 import type {
   WorkArtifact,
+  WorkArtifactsRepository,
   WorkSession,
+  WorkSessionsRepository,
   WorkSessionSubject,
-} from '@openthrottle/nestjs-repositories';
-import type { FindManyOptions, Repository } from 'typeorm';
+  WorkSessionSubjectsRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import type {
+  WorkArtifactsRepositoryMock,
+  WorkSessionsRepositoryMock,
+  WorkSessionSubjectsRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
+import {
+  createWorkArtifactsRepositoryMock,
+  createWorkSessionsRepositoryMock,
+  createWorkSessionSubjectsRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
+import type { FindManyOptions } from 'typeorm';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GitHubForgeService } from '../../services/source-control/github-forge/github-forge.service.ts';
@@ -67,31 +77,29 @@ const commitDetail = {
 
 describe('WorkLedgerVerifyProcessor', () => {
   let githubService: GitHubService;
-  let artifactRepo: Repository<WorkArtifact>;
-  let subjectRepo: Repository<WorkSessionSubject>;
+  let artifactRepo: WorkArtifactsRepositoryMock;
+  let subjectRepo: WorkSessionSubjectsRepositoryMock;
   let taggingEnqueueService: TaggingEnqueueService;
-  let workLedgerService: WorkLedgerService;
   let processor: WorkLedgerVerifyProcessor;
 
   const job = createMock<WorkLedgerVerifyJob>({ id: 'sweep-1' });
 
   beforeEach(() => {
     githubService = createMock<GitHubService>();
-    artifactRepo = createMock<Repository<WorkArtifact>>();
-    subjectRepo = createMock<Repository<WorkSessionSubject>>();
+    artifactRepo = createWorkArtifactsRepositoryMock();
+    artifactRepo.update.mockImplementation(async (id) => {
+      return createMock<WorkArtifact>({ id });
+    });
+    subjectRepo = createWorkSessionSubjectsRepositoryMock();
     taggingEnqueueService = createMock<TaggingEnqueueService>();
 
-    vi.mocked(subjectRepo.find).mockResolvedValue([
+    subjectRepo.findBy.mockResolvedValue([
       createMock<WorkSessionSubject>({ planId: 'plan-1', sessionId: 'sess-1' }),
     ]);
     vi.mocked(githubService.getDefaultBranch).mockResolvedValue('main');
     // Both sweeps call find(); default everything to empty and let each test opt in.
-    vi.mocked(artifactRepo.find).mockResolvedValue([]);
+    artifactRepo.findBy.mockResolvedValue([]);
 
-    workLedgerService = createMock<WorkLedgerService>({
-      getArtifactRepository: vi.fn().mockReturnValue(artifactRepo),
-      getSubjectRepository: vi.fn().mockReturnValue(subjectRepo),
-    });
     processor = new WorkLedgerVerifyProcessor(
       createMock<LoggerService>(),
       createMock<PlanRunsService>(),
@@ -100,18 +108,21 @@ describe('WorkLedgerVerifyProcessor', () => {
         new GitLabForgeService(createMock<ConfigService>()),
       ),
       taggingEnqueueService,
-      workLedgerService,
+      createMock<WorkArtifactsRepository>(artifactRepo),
+      createMock<WorkSessionsRepository>(createWorkSessionsRepositoryMock()),
+      createMock<WorkSessionSubjectsRepository>(subjectRepo),
     );
   });
 
   it('promotes a directly-reachable commit to landed and enqueues refine per subject plan', async () => {
-    vi.mocked(artifactRepo.find).mockResolvedValue([artifact({})]);
+    artifactRepo.findBy.mockResolvedValue([artifact({})]);
     vi.mocked(githubService.getCommitDetail).mockResolvedValue(commitDetail);
     vi.mocked(githubService.compareCommitStatus).mockResolvedValue('behind');
 
     await processor.process(job);
 
-    expect(artifactRepo.save).toHaveBeenCalledWith(
+    expect(artifactRepo.update).toHaveBeenCalledWith(
+      expect.any(String),
       expect.objectContaining({
         lifecycle: 'landed',
         payload: expect.objectContaining({ landedSha: 'abc' }),
@@ -129,37 +140,35 @@ describe('WorkLedgerVerifyProcessor', () => {
   it('lands a bulk-sourced artifact without enqueueing any refine', async () => {
     // The task-5 demotion puts ~1k legacy rows back in this queue. They must land silently:
     // one refine per subject plan would mean ~1k LLM calls re-tagging long-finished work.
-    vi.mocked(artifactRepo.find).mockResolvedValue([
-      artifact({ source: 'legacy' }),
-    ]);
+    artifactRepo.findBy.mockResolvedValue([artifact({ source: 'legacy' })]);
     vi.mocked(githubService.getCommitDetail).mockResolvedValue(commitDetail);
     vi.mocked(githubService.compareCommitStatus).mockResolvedValue('behind');
 
     await processor.process(job);
 
-    expect(artifactRepo.save).toHaveBeenCalledWith(
+    expect(artifactRepo.update).toHaveBeenCalledWith(
+      expect.any(String),
       expect.objectContaining({ lifecycle: 'landed' }),
     );
     expect(taggingEnqueueService.enqueueRefine).not.toHaveBeenCalled();
   });
 
   it('lands an adapter-sourced artifact without enqueueing any refine', async () => {
-    vi.mocked(artifactRepo.find).mockResolvedValue([
-      artifact({ source: 'adapter' }),
-    ]);
+    artifactRepo.findBy.mockResolvedValue([artifact({ source: 'adapter' })]);
     vi.mocked(githubService.getCommitDetail).mockResolvedValue(commitDetail);
     vi.mocked(githubService.compareCommitStatus).mockResolvedValue('behind');
 
     await processor.process(job);
 
-    expect(artifactRepo.save).toHaveBeenCalledWith(
+    expect(artifactRepo.update).toHaveBeenCalledWith(
+      expect.any(String),
       expect.objectContaining({ lifecycle: 'landed' }),
     );
     expect(taggingEnqueueService.enqueueRefine).not.toHaveBeenCalled();
   });
 
   it('maps a squash-merged commit to its merge_commit_sha and lands that', async () => {
-    vi.mocked(artifactRepo.find).mockResolvedValue([artifact({})]);
+    artifactRepo.findBy.mockResolvedValue([artifact({})]);
     vi.mocked(githubService.getCommitDetail).mockResolvedValue(commitDetail);
     // Branch sha is not on main (diverged); its merged PR's squash sha is.
     vi.mocked(githubService.compareCommitStatus).mockImplementation(
@@ -172,7 +181,8 @@ describe('WorkLedgerVerifyProcessor', () => {
 
     await processor.process(job);
 
-    expect(artifactRepo.save).toHaveBeenCalledWith(
+    expect(artifactRepo.update).toHaveBeenCalledWith(
+      expect.any(String),
       expect.objectContaining({
         lifecycle: 'landed',
         payload: expect.objectContaining({ landedSha: 'squash-sha' }),
@@ -187,55 +197,54 @@ describe('WorkLedgerVerifyProcessor', () => {
   });
 
   it('verifies existence but does not land or refine when not yet reachable', async () => {
-    vi.mocked(artifactRepo.find).mockResolvedValue([artifact({})]);
+    artifactRepo.findBy.mockResolvedValue([artifact({})]);
     vi.mocked(githubService.getCommitDetail).mockResolvedValue(commitDetail);
     vi.mocked(githubService.compareCommitStatus).mockResolvedValue('diverged');
     vi.mocked(githubService.getMergeCommitShaForCommit).mockResolvedValue(null);
 
     await processor.process(job);
 
-    expect(artifactRepo.save).toHaveBeenCalledWith(
+    expect(artifactRepo.update).toHaveBeenCalledWith(
+      expect.any(String),
       expect.objectContaining({ verification: 'verified' }),
     );
-    expect(artifactRepo.save).not.toHaveBeenCalledWith(
+    expect(artifactRepo.update).not.toHaveBeenCalledWith(
+      expect.any(String),
       expect.objectContaining({ lifecycle: 'landed' }),
     );
     expect(taggingEnqueueService.enqueueRefine).not.toHaveBeenCalled();
   });
 
   it('orphans a commit GitHub cannot find once past the grace window', async () => {
-    vi.mocked(artifactRepo.find).mockResolvedValue([
-      artifact({ producedAt: OLD }),
-    ]);
+    artifactRepo.findBy.mockResolvedValue([artifact({ producedAt: OLD })]);
     vi.mocked(githubService.getCommitDetail).mockResolvedValue(null);
 
     await processor.process(job);
 
-    expect(artifactRepo.save).toHaveBeenCalledWith(
+    expect(artifactRepo.update).toHaveBeenCalledWith(
+      expect.any(String),
       expect.objectContaining({ verification: 'orphaned' }),
     );
   });
 
   it('leaves a not-found commit pending while within the grace window', async () => {
-    vi.mocked(artifactRepo.find).mockResolvedValue([
-      artifact({ producedAt: RECENT }),
-    ]);
+    artifactRepo.findBy.mockResolvedValue([artifact({ producedAt: RECENT })]);
     vi.mocked(githubService.getCommitDetail).mockResolvedValue(null);
 
     await processor.process(job);
 
-    expect(artifactRepo.save).not.toHaveBeenCalled();
+    expect(artifactRepo.update).not.toHaveBeenCalled();
   });
 
   it('skips malformed payloads without calling GitHub', async () => {
-    vi.mocked(artifactRepo.find).mockResolvedValue([
+    artifactRepo.findBy.mockResolvedValue([
       artifact({ payload: { repo: 'no-slash', sha: 'abc' } }),
     ]);
 
     await processor.process(job);
 
     expect(githubService.getCommitDetail).not.toHaveBeenCalled();
-    expect(artifactRepo.save).not.toHaveBeenCalled();
+    expect(artifactRepo.update).not.toHaveBeenCalled();
   });
 });
 
@@ -243,11 +252,11 @@ describe('WorkLedgerVerifyProcessor pull_request sweep', () => {
   // pull_request was registered in the type registry but nothing ever verified it, so every
   // row written sat at lifecycle='open', unverified, forever.
   let githubService: GitHubService;
-  let artifactRepo: Repository<WorkArtifact>;
-  let subjectRepo: Repository<WorkSessionSubject>;
+  let artifactRepo: WorkArtifactsRepositoryMock;
+  let subjectRepo: WorkSessionSubjectsRepositoryMock;
   let taggingEnqueueService: TaggingEnqueueService;
   let planRunsService: PlanRunsService;
-  let sessionRepo: Repository<WorkSession>;
+  let sessionRepo: WorkSessionsRepositoryMock;
   let processor: WorkLedgerVerifyProcessor;
 
   const job = createMock<WorkLedgerVerifyJob>({ id: 'sweep-1' });
@@ -279,28 +288,31 @@ describe('WorkLedgerVerifyProcessor pull_request sweep', () => {
 
   /** git_commit sweep finds nothing; pull_request sweep finds these. */
   function onlyPulls(pulls: WorkArtifact[]): void {
-    vi.mocked(artifactRepo.find).mockImplementation(async (options) =>
+    artifactRepo.findBy.mockImplementation(async (options) =>
       findTypeOf(options) === 'pull_request' ? pulls : [],
     );
   }
 
   beforeEach(() => {
     githubService = createMock<GitHubService>();
-    artifactRepo = createMock<Repository<WorkArtifact>>();
-    subjectRepo = createMock<Repository<WorkSessionSubject>>();
+    artifactRepo = createWorkArtifactsRepositoryMock();
+    artifactRepo.update.mockImplementation(async (id) => {
+      return createMock<WorkArtifact>({ id });
+    });
+    subjectRepo = createWorkSessionSubjectsRepositoryMock();
     taggingEnqueueService = createMock<TaggingEnqueueService>();
 
-    vi.mocked(subjectRepo.find).mockResolvedValue([
+    subjectRepo.findBy.mockResolvedValue([
       createMock<WorkSessionSubject>({ planId: 'plan-1', sessionId: 'sess-1' }),
     ]);
-    vi.mocked(artifactRepo.find).mockResolvedValue([]);
+    artifactRepo.findBy.mockResolvedValue([]);
 
     planRunsService = createMock<PlanRunsService>();
     vi.mocked(
       planRunsService.settleUnsupervisedRunForPullRequest,
     ).mockResolvedValue(null);
-    sessionRepo = createMock<Repository<WorkSession>>();
-    vi.mocked(sessionRepo.findOne).mockResolvedValue(
+    sessionRepo = createWorkSessionsRepositoryMock();
+    sessionRepo.findOne.mockResolvedValue(
       createMock<WorkSession>({ id: 'sess-1', planRunId: 'run-1' }),
     );
 
@@ -312,11 +324,9 @@ describe('WorkLedgerVerifyProcessor pull_request sweep', () => {
         new GitLabForgeService(createMock<ConfigService>()),
       ),
       taggingEnqueueService,
-      createMock<WorkLedgerService>({
-        getArtifactRepository: vi.fn().mockReturnValue(artifactRepo),
-        getSessionRepository: vi.fn().mockReturnValue(sessionRepo),
-        getSubjectRepository: vi.fn().mockReturnValue(subjectRepo),
-      }),
+      createMock<WorkArtifactsRepository>(artifactRepo),
+      createMock<WorkSessionsRepository>(sessionRepo),
+      createMock<WorkSessionSubjectsRepository>(subjectRepo),
     );
   });
 
@@ -331,7 +341,8 @@ describe('WorkLedgerVerifyProcessor pull_request sweep', () => {
 
     await processor.process(job);
 
-    expect(artifactRepo.save).toHaveBeenCalledWith(
+    expect(artifactRepo.update).toHaveBeenCalledWith(
+      expect.any(String),
       expect.objectContaining({
         lifecycle: 'merged',
         payload: expect.objectContaining({ mergeCommitSha: 'squash-sha' }),
@@ -350,7 +361,8 @@ describe('WorkLedgerVerifyProcessor pull_request sweep', () => {
 
     await processor.process(job);
 
-    expect(artifactRepo.save).toHaveBeenCalledWith(
+    expect(artifactRepo.update).toHaveBeenCalledWith(
+      expect.any(String),
       expect.objectContaining({ lifecycle: 'closed' }),
     );
   });
@@ -389,7 +401,7 @@ describe('WorkLedgerVerifyProcessor pull_request sweep', () => {
 
     await processor.process(job);
 
-    vi.mocked(sessionRepo.findOne).mockResolvedValue(
+    sessionRepo.findOne.mockResolvedValue(
       createMock<WorkSession>({ id: 'sess-1', planRunId: null }),
     );
     vi.mocked(githubService.getPullDetail).mockResolvedValue({
@@ -410,7 +422,8 @@ describe('WorkLedgerVerifyProcessor pull_request sweep', () => {
 
     await processor.process(job);
 
-    expect(artifactRepo.save).toHaveBeenCalledWith(
+    expect(artifactRepo.update).toHaveBeenCalledWith(
+      expect.any(String),
       expect.objectContaining({ lifecycle: 'open', verification: 'verified' }),
     );
   });
@@ -428,7 +441,7 @@ describe('WorkLedgerVerifyProcessor pull_request sweep', () => {
       type: 'git_commit',
       verification: 'orphaned',
     });
-    vi.mocked(artifactRepo.find).mockImplementation(async (options) => {
+    artifactRepo.findBy.mockImplementation(async (options) => {
       const type = findTypeOf(options);
       if (type === 'pull_request') return [pullArtifact()];
       if (type === 'git_commit') return [orphan];
@@ -444,14 +457,14 @@ describe('WorkLedgerVerifyProcessor pull_request sweep', () => {
 
     await processor.process(job);
 
-    expect(artifactRepo.save).toHaveBeenCalledWith([
+    expect(artifactRepo.update).toHaveBeenCalledWith(
+      'commit-1',
       expect.objectContaining({
-        id: 'commit-1',
         lifecycle: 'landed',
         payload: expect.objectContaining({ landedSha: 'squash-sha' }),
         verification: 'verified',
       }),
-    ]);
+    );
   });
 
   it('skips a malformed payload without calling GitHub', async () => {

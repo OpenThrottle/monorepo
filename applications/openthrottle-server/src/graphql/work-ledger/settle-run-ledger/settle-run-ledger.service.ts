@@ -33,23 +33,25 @@
  * be the reason a run fails to settle. Every failure is logged and swallowed.
  */
 import { Injectable } from '@nestjs/common';
+import { InjectDataSource } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import type {
-  PlanRun,
-  WorkArtifactSource,
-} from '@openthrottle/nestjs-repositories';
+import type { PlanRun } from '@openthrottle/nestjs-repositories';
 import {
   PLAN_RUN_STATUS,
   PlanRunsService,
   RepositoriesService,
   RepositoryCheckoutsService,
   ServiceAccountsService,
+} from '@openthrottle/nestjs-repositories';
+import type { WorkArtifactSource } from '@openthrottle/nestjs-repositories-server';
+import {
   WORK_ARTIFACT_SOURCE,
   WorkArtifact,
-  WorkLedgerService,
+  WorkArtifactsRepository,
   WorkSession,
   WorkSessionSubject,
-} from '@openthrottle/nestjs-repositories';
+} from '@openthrottle/nestjs-repositories-server';
+import { DataSource } from 'typeorm';
 
 import { DEFAULT_FORGE_KIND } from '../../../services/source-control/source-control.constants.ts';
 import { SourceControlService } from '../../../services/source-control/source-control.service.ts';
@@ -87,7 +89,8 @@ export class SettleRunLedgerService {
     private readonly repositoryInspectionService: RepositoryInspectionService,
     private readonly serviceAccountsService: ServiceAccountsService,
     private readonly sourceControlService: SourceControlService,
-    private readonly workLedgerService: WorkLedgerService,
+    private readonly workArtifactsRepository: WorkArtifactsRepository,
+    @InjectDataSource() private readonly dataSource: DataSource,
   ) {}
 
   /**
@@ -222,9 +225,9 @@ export class SettleRunLedgerService {
         ...repoPayloadFields(repo),
         number: pull.number,
       });
-      const existing = await this.workLedgerService
-        .getArtifactRepository()
-        .findOne({ where: { externalKey, type: 'pull_request' } });
+      const existing = await this.workArtifactsRepository.findOne({
+        where: { externalKey, type: 'pull_request' },
+      });
 
       if (existing != null) return false;
 
@@ -261,95 +264,93 @@ export class SettleRunLedgerService {
     const taskId = resolveTargetTaskId(planRun);
     const now = new Date();
 
-    await this.workLedgerService
-      .getArtifactRepository()
-      .manager.transaction(async (manager) => {
-        const sessionRepo = manager.getRepository(WorkSession);
-        const subjectRepo = manager.getRepository(WorkSessionSubject);
-        const artifactRepo = manager.getRepository(WorkArtifact);
+    await this.dataSource.transaction(async (manager) => {
+      const sessionRepo = manager.getRepository(WorkSession);
+      const subjectRepo = manager.getRepository(WorkSessionSubject);
+      const artifactRepo = manager.getRepository(WorkArtifact);
 
-        const onBehalfOfUserId = planRun.actorUserId ?? null;
-        const session = await sessionRepo.save(
-          sessionRepo.create({
-            actorServiceAccountId,
-            actorUserId: null,
-            externalRef: planRun.id,
-            model: planRun.model ?? null,
-            onBehalfOfUserId,
-            // Verified: actor_user_id was stamped from an authenticated principal at register time.
-            onBehalfOfVerified: onBehalfOfUserId != null,
-            planRunId: planRun.id,
-            toolName: TOOL_NAME,
-          }),
-        );
+      const onBehalfOfUserId = planRun.actorUserId ?? null;
+      const session = await sessionRepo.save(
+        sessionRepo.create({
+          actorServiceAccountId,
+          actorUserId: null,
+          externalRef: planRun.id,
+          model: planRun.model ?? null,
+          onBehalfOfUserId,
+          // Verified: actor_user_id was stamped from an authenticated principal at register time.
+          onBehalfOfVerified: onBehalfOfUserId != null,
+          planRunId: planRun.id,
+          toolName: TOOL_NAME,
+        }),
+      );
 
-        await subjectRepo.save(
-          subjectRepo.create({
-            planId: planRun.planId,
-            sessionId: session.id,
-            taskId,
-          }),
-        );
+      await subjectRepo.save(
+        subjectRepo.create({
+          planId: planRun.planId,
+          sessionId: session.id,
+          taskId,
+        }),
+      );
 
-        const pending: Array<{
-          readonly payload: Record<string, unknown>;
-          readonly type: string;
-        }> = [];
+      const pending: Array<{
+        readonly payload: Record<string, unknown>;
+        readonly type: string;
+      }> = [];
 
-        if (headSha != null) {
-          pending.push({
-            payload: { ...repoPayloadFields(repo), sha: headSha },
-            type: 'git_commit',
-          });
-        }
-
-        if (prNumber != null) {
-          pending.push({
-            payload: { ...repoPayloadFields(repo), number: prNumber },
-            type: 'pull_request',
-          });
-        }
-
-        const resolved = pending.map((entry) => ({
-          resolved: resolveArtifactForWrite(entry.type, entry.payload),
-          type: entry.type,
-        }));
-
-        // The artifact may already exist — the same PR settled twice, or the harvest got there
-        // first. uq_work_artifacts_type_external_key is global, so a blind insert would throw.
-        const existing = await Promise.all(
-          resolved.map(async (entry) =>
-            artifactRepo.findOne({
-              where: {
-                externalKey: entry.resolved.externalKey,
-                type: entry.type,
-              },
-            }),
-          ),
-        );
-
-        const missing = resolved.filter((_entry, index) => {
-          const found = existing[index];
-          return found === undefined || found === null;
+      if (headSha != null) {
+        pending.push({
+          payload: { ...repoPayloadFields(repo), sha: headSha },
+          type: 'git_commit',
         });
+      }
 
-        if (missing.length === 0) return;
+      if (prNumber != null) {
+        pending.push({
+          payload: { ...repoPayloadFields(repo), number: prNumber },
+          type: 'pull_request',
+        });
+      }
 
-        await artifactRepo.save(
-          missing.map((entry) =>
-            artifactRepo.create({
+      const resolved = pending.map((entry) => ({
+        resolved: resolveArtifactForWrite(entry.type, entry.payload),
+        type: entry.type,
+      }));
+
+      // The artifact may already exist — the same PR settled twice, or the harvest got there
+      // first. uq_work_artifacts_type_external_key is global, so a blind insert would throw.
+      const existing = await Promise.all(
+        resolved.map(async (entry) =>
+          artifactRepo.findOne({
+            where: {
               externalKey: entry.resolved.externalKey,
-              lifecycle: entry.resolved.initialLifecycle,
-              message: null,
-              payload: entry.resolved.payload,
-              producedAt: now,
-              sessionId: session.id,
-              source,
               type: entry.type,
-            }),
-          ),
-        );
+            },
+          }),
+        ),
+      );
+
+      const missing = resolved.filter((_entry, index) => {
+        const found = existing[index];
+        return found === undefined || found === null;
       });
+
+      if (missing.length === 0) return;
+
+      await artifactRepo.save(
+        missing.map((entry) =>
+          artifactRepo.create({
+            externalKey: entry.resolved.externalKey,
+            lifecycle: entry.resolved.initialLifecycle,
+            message: null,
+            payload: entry.resolved.payload,
+            producedAt: now,
+            sessionId: session.id,
+            source,
+            type: entry.type,
+          }),
+        ),
+      );
+    });
   }
 
   /**

@@ -4,8 +4,9 @@ import { defaultWorkerOptions } from '@openthrottle/nestjs-bullmq';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   WORK_SESSION_CLOSED_BY,
-  WorkLedgerService,
-} from '@openthrottle/nestjs-repositories';
+  WorkArtifactsRepository,
+  WorkSessionsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import { IsNull, LessThan } from 'typeorm';
 
 import {
@@ -40,7 +41,8 @@ export class WorkLedgerSweepProcessor
 {
   constructor(
     private readonly logger: LoggerService,
-    private readonly workLedgerService: WorkLedgerService,
+    private readonly workArtifactsRepository: WorkArtifactsRepository,
+    private readonly workSessionsRepository: WorkSessionsRepository,
   ) {
     super();
   }
@@ -78,10 +80,7 @@ export class WorkLedgerSweepProcessor
     const cutoff = new Date(
       Date.now() - WORK_LEDGER_SWEEP_TTL_HOURS * MS_PER_HOUR,
     );
-    const sessionRepo = this.workLedgerService.getSessionRepository();
-    const artifactRepo = this.workLedgerService.getArtifactRepository();
-
-    const sessions = await sessionRepo.find({
+    const sessions = await this.workSessionsRepository.findBy({
       order: { startedAt: 'ASC' },
       take: WORK_LEDGER_SWEEP_BATCH_SIZE,
       where: { endedAt: IsNull(), startedAt: LessThan(cutoff) },
@@ -91,15 +90,17 @@ export class WorkLedgerSweepProcessor
 
     for (const session of sessions) {
       // eslint-disable-next-line no-await-in-loop -- sequential DB writes, one abandoned session at a time
-      const lastArtifact = await artifactRepo.findOne({
+      const lastArtifact = await this.workArtifactsRepository.findOne({
         order: { producedAt: 'DESC' },
         where: { sessionId: session.id },
       });
 
-      session.endedAt = lastArtifact?.producedAt ?? session.startedAt;
-      session.closedBy = WORK_SESSION_CLOSED_BY.SWEEPER;
       // eslint-disable-next-line no-await-in-loop -- sequential DB writes, one abandoned session at a time
-      await sessionRepo.save(session);
+      await this.workSessionsRepository.close(session.id, {
+        closedBy: WORK_SESSION_CLOSED_BY.SWEEPER,
+        endedAt: lastArtifact?.producedAt ?? session.startedAt,
+        summary: null,
+      });
       swept += 1;
     }
 

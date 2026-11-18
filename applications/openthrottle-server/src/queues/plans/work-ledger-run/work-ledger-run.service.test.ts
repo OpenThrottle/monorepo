@@ -3,14 +3,25 @@ import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
   PlanRunsService,
   ServiceAccountsService,
-  WorkLedgerService,
 } from '@openthrottle/nestjs-repositories';
 import type {
   PlanRun,
   ServiceAccount,
-  WorkSession,
 } from '@openthrottle/nestjs-repositories';
-import type { Repository } from 'typeorm';
+import type {
+  WorkSession,
+  WorkSessionsRepository,
+  WorkSessionSubject,
+  WorkSessionSubjectsRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import type {
+  WorkSessionsRepositoryMock,
+  WorkSessionSubjectsRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
+import {
+  createWorkSessionsRepositoryMock,
+  createWorkSessionSubjectsRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { WorkLedgerRunService } from './work-ledger-run.service.ts';
@@ -21,9 +32,8 @@ const JOB_ID = 'job-1';
 const QUEUE = 'plans';
 
 describe('WorkLedgerRunService', () => {
-  let sessionRepo: Repository<WorkSession>;
-  let subjectRepo: Repository<WorkSession>;
-  let workLedgerService: WorkLedgerService;
+  let sessionRepo: WorkSessionsRepositoryMock;
+  let subjectRepo: WorkSessionSubjectsRepositoryMock;
   let planRunsService: PlanRunsService;
   let serviceAccountsService: ServiceAccountsService;
   let service: WorkLedgerRunService;
@@ -35,16 +45,12 @@ describe('WorkLedgerRunService', () => {
     vi.stubEnv('OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN', '');
     vi.stubEnv('OPENTHROTTLE_MCP_AUTH_TOKEN', '');
 
-    sessionRepo = createMock<Repository<WorkSession>>();
-    subjectRepo = createMock<Repository<WorkSession>>();
-    vi.mocked(sessionRepo.save).mockResolvedValue(
+    sessionRepo = createWorkSessionsRepositoryMock();
+    subjectRepo = createWorkSessionSubjectsRepositoryMock();
+    sessionRepo.create.mockResolvedValue(
       createMock<WorkSession>({ id: 'session-1' }),
     );
-
-    workLedgerService = createMock<WorkLedgerService>({
-      getSessionRepository: vi.fn().mockReturnValue(sessionRepo),
-      getSubjectRepository: vi.fn().mockReturnValue(subjectRepo),
-    });
+    subjectRepo.create.mockResolvedValue(createMock<WorkSessionSubject>());
     planRunsService = createMock<PlanRunsService>();
     serviceAccountsService = createMock<ServiceAccountsService>();
     vi.mocked(serviceAccountsService.findByName).mockResolvedValue(
@@ -55,7 +61,8 @@ describe('WorkLedgerRunService', () => {
       createMock<LoggerService>(),
       planRunsService,
       serviceAccountsService,
-      workLedgerService,
+      createMock<WorkSessionsRepository>(sessionRepo),
+      createMock<WorkSessionSubjectsRepository>(subjectRepo),
     );
   });
 
@@ -171,14 +178,14 @@ describe('WorkLedgerRunService', () => {
     });
 
     expect(sessionId).toBeNull();
-    expect(sessionRepo.save).not.toHaveBeenCalled();
+    expect(sessionRepo.create).not.toHaveBeenCalled();
   });
 
   it('never throws when the ledger write fails', async () => {
     vi.mocked(planRunsService.findByQueueNameAndBullmqJobId).mockResolvedValue(
       createMock<PlanRun>({ actorUserId: 'user-9', id: 'run-1' }),
     );
-    vi.mocked(sessionRepo.save).mockRejectedValue(new Error('db down'));
+    sessionRepo.create.mockRejectedValue(new Error('db down'));
 
     await expect(
       service.openRalphSession({
@@ -191,17 +198,14 @@ describe('WorkLedgerRunService', () => {
 
   it('closeRalphSession is a no-op for a null id', async () => {
     await service.closeRalphSession(null, 'summary');
-    expect(sessionRepo.findOne).not.toHaveBeenCalled();
+    expect(sessionRepo.close).not.toHaveBeenCalled();
   });
 
-  it('closeRalphSession stamps a still-open session', async () => {
-    vi.mocked(sessionRepo.findOne).mockResolvedValue(
-      createMock<WorkSession>({ endedAt: null, id: 'session-1' }),
-    );
-
+  it('closeRalphSession closes the session explicitly with its summary', async () => {
     await service.closeRalphSession('session-1', 'done');
 
-    expect(sessionRepo.save).toHaveBeenCalledWith(
+    expect(sessionRepo.close).toHaveBeenCalledWith(
+      'session-1',
       expect.objectContaining({ closedBy: 'explicit', summary: 'done' }),
     );
   });

@@ -57,6 +57,15 @@ export * from '../modules/user-disabled-agent-clis/user-disabled-agent-clis.util
 export * from '../modules/user-favorite-agent-models/user-favorite-agent-models.factory.ts';
 export type * from '../modules/user-favorite-agent-models/user-favorite-agent-models.types.ts';
 export * from '../modules/user-favorite-agent-models/user-favorite-agent-models.utils.ts';
+export * from '../modules/work-artifacts/work-artifacts.factory.ts';
+export type * from '../modules/work-artifacts/work-artifacts.types.ts';
+export * from '../modules/work-artifacts/work-artifacts.utils.ts';
+export * from '../modules/work-session-subjects/work-session-subjects.factory.ts';
+export type * from '../modules/work-session-subjects/work-session-subjects.types.ts';
+export * from '../modules/work-session-subjects/work-session-subjects.utils.ts';
+export * from '../modules/work-sessions/work-sessions.factory.ts';
+export type * from '../modules/work-sessions/work-sessions.types.ts';
+export * from '../modules/work-sessions/work-sessions.utils.ts';
 export * from '../modules/worktree-removals/worktree-removals.factory.ts';
 export type * from '../modules/worktree-removals/worktree-removals.types.ts';
 export * from '../modules/worktree-removals/worktree-removals.utils.ts';

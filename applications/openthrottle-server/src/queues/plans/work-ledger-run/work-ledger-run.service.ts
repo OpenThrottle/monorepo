@@ -23,8 +23,12 @@ import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   PlanRunsService,
   ServiceAccountsService,
-  WorkLedgerService,
 } from '@openthrottle/nestjs-repositories';
+import {
+  WORK_SESSION_CLOSED_BY,
+  WorkSessionsRepository,
+  WorkSessionSubjectsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 
 import { resolveAgenticRalphWorkerWorkflowGraphqlConfigFromEnv } from '../../agentic-ralph/agentic-ralph.utils.ts';
 import type { OpenRalphSessionInput } from './work-ledger-run.types.ts';
@@ -39,7 +43,8 @@ export class WorkLedgerRunService {
     private readonly logger: LoggerService,
     private readonly planRunsService: PlanRunsService,
     private readonly serviceAccountsService: ServiceAccountsService,
-    private readonly workLedgerService: WorkLedgerService,
+    private readonly workSessionsRepository: WorkSessionsRepository,
+    private readonly workSessionSubjectsRepository: WorkSessionSubjectsRepository,
   ) {}
 
   /**
@@ -64,30 +69,31 @@ export class WorkLedgerRunService {
       }
 
       const onBehalfOfUserId = planRun?.actorUserId ?? null;
-      const sessionRepo = this.workLedgerService.getSessionRepository();
-      const session = await sessionRepo.save(
-        sessionRepo.create({
-          actorServiceAccountId,
-          actorUserId: null,
-          externalRef: input.bullmqJobId,
-          model: input.model ?? null,
-          onBehalfOfUserId,
-          // Verified: the human came from plan_runs.actor_user_id, stamped from an
-          // authenticated principal at enqueue (G5 in docs/monorepo/work-ledger-sessions.md).
-          onBehalfOfVerified: onBehalfOfUserId != null,
-          planRunId: planRun?.id ?? null,
-          toolName: TOOL_NAME,
-        }),
-      );
+      const session = await this.workSessionsRepository.create({
+        actorServiceAccountId,
+        actorUserId: null,
+        closedBy: null,
+        conversationId: null,
+        endedAt: null,
+        externalRef: input.bullmqJobId,
+        model: input.model ?? null,
+        onBehalfOfUserId,
+        // Verified: the human came from plan_runs.actor_user_id, stamped from an
+        // authenticated principal at enqueue (G5 in docs/monorepo/work-ledger-sessions.md).
+        onBehalfOfVerified: onBehalfOfUserId != null,
+        planRunId: planRun?.id ?? null,
+        startedAt: new Date(),
+        summary: null,
+        toolName: TOOL_NAME,
+        toolVersion: null,
+      });
 
-      const subjectRepo = this.workLedgerService.getSubjectRepository();
-      await subjectRepo.save(
-        subjectRepo.create({
-          planId: input.planId,
-          sessionId: session.id,
-          taskId: null,
-        }),
-      );
+      await this.workSessionSubjectsRepository.create({
+        attachedAt: new Date(),
+        planId: input.planId,
+        sessionId: session.id,
+        taskId: null,
+      });
 
       return session.id;
     } catch (error) {
@@ -143,19 +149,11 @@ export class WorkLedgerRunService {
     if (sessionId == null) return;
 
     try {
-      const sessionRepo = this.workLedgerService.getSessionRepository();
-      const session = await sessionRepo.findOne({ where: { id: sessionId } });
-
-      if (!session) return;
-
-      if (session.endedAt == null) {
-        session.endedAt = new Date();
-        session.closedBy = 'explicit';
-      }
-
-      if (summary != null) session.summary = summary;
-
-      await sessionRepo.save(session);
+      await this.workSessionsRepository.close(sessionId, {
+        closedBy: WORK_SESSION_CLOSED_BY.EXPLICIT,
+        endedAt: new Date(),
+        summary,
+      });
     } catch (error) {
       this.logger.warn(
         `Work-ledger: failed to close run session ${sessionId}: ${String(error)}`,

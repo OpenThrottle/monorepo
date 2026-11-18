@@ -4,10 +4,17 @@ import type { GitHubService } from '@openthrottle/nestjs-github';
 import type {
   RepositoryCheckout,
   RepositoryCheckoutsService,
-  WorkArtifact,
-  WorkLedgerService,
-  WorkSession,
 } from '@openthrottle/nestjs-repositories';
+import type {
+  WorkArtifact,
+  WorkArtifactsRepository,
+  WorkSession,
+  WorkSessionsRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import {
+  createWorkArtifactsRepositoryMock,
+  createWorkSessionsRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -40,15 +47,13 @@ const artifact = (
 
 describe('PlanRunObjectResolver', () => {
   const checkoutFind = vi.fn();
-  const sessionFind = vi.fn();
-  const artifactFind = vi.fn();
+  const workArtifactsRepository = createWorkArtifactsRepositoryMock();
+  const workSessionsRepository = createWorkSessionsRepositoryMock();
+  const sessionFind = workSessionsRepository.findBy;
+  const artifactFind = workArtifactsRepository.findBy;
 
   const checkoutsService = asMock<RepositoryCheckoutsService>({
     getRepository: () => ({ find: checkoutFind }),
-  });
-  const workLedgerService = asMock<WorkLedgerService>({
-    getArtifactRepository: () => ({ find: artifactFind }),
-    getSessionRepository: () => ({ find: sessionFind }),
   });
   const sourceControlService = new SourceControlService(
     new GitHubForgeService(createMock<GitHubService>()),
@@ -63,7 +68,11 @@ describe('PlanRunObjectResolver', () => {
     artifactFind.mockReset();
     // A fresh loader set per test, as a fresh request would get.
     resolver = new PlanRunObjectResolver(
-      new PlanRunLoaders(checkoutsService, workLedgerService),
+      new PlanRunLoaders(
+        checkoutsService,
+        createMock<WorkArtifactsRepository>(workArtifactsRepository),
+        createMock<WorkSessionsRepository>(workSessionsRepository),
+      ),
       sourceControlService,
     );
   });

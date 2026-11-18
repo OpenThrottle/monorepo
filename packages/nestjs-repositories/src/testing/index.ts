@@ -20,11 +20,6 @@ export { agentTokenUsageFactory } from '../modules/agent-token-usage/agent-token
 export type { CustomPromptFactoryData } from '../modules/prompts/custom-prompts.factory.ts';
 export { customPromptsFactory } from '../modules/prompts/custom-prompts.factory.ts';
 export { usersFactory } from '../modules/users/users.factory.ts';
-export {
-  workArtifactsFactory,
-  workSessionsFactory,
-  workSessionSubjectsFactory,
-} from '../modules/work-ledger/work-ledger.factory.ts';
 // Moved to nestjs-repositories-server (OT plan f89ee499): re-exported under the same names.
 export {
   planEmbeddingsFactory,

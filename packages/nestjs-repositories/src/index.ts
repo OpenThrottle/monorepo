@@ -323,23 +323,6 @@ export type {
 export type { UserData } from './modules/users/user.entity.ts';
 export { User } from './modules/users/user.entity.ts';
 export { UsersService } from './modules/users/users.service.ts';
-export type { WorkArtifactData } from './modules/work-ledger/work-artifact.entity.ts';
-export { WorkArtifact } from './modules/work-ledger/work-artifact.entity.ts';
-export {
-  WORK_ARTIFACT_SOURCE,
-  WORK_ARTIFACT_VERIFICATION,
-  WORK_SESSION_CLOSED_BY,
-} from './modules/work-ledger/work-ledger.constants.ts';
-export { WorkLedgerService } from './modules/work-ledger/work-ledger.service.ts';
-export type {
-  WorkArtifactSource,
-  WorkArtifactVerification,
-  WorkSessionClosedBy,
-} from './modules/work-ledger/work-ledger.types.ts';
-export type { WorkSessionData } from './modules/work-ledger/work-session.entity.ts';
-export { WorkSession } from './modules/work-ledger/work-session.entity.ts';
-export type { WorkSessionSubjectData } from './modules/work-ledger/work-session-subject.entity.ts';
-export { WorkSessionSubject } from './modules/work-ledger/work-session-subject.entity.ts';
 export { EDITOR_PRESENCE_STATES } from './modules/workspace-settings/editor-presence/editor-presence.constants.ts';
 export type {
   DetectEditorPresenceOptions,

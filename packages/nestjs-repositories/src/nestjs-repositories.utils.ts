@@ -23,6 +23,9 @@ import {
   TelemetryHeartbeat,
   UserDisabledAgentCli,
   UserFavoriteAgentModel,
+  WorkArtifact,
+  WorkSession,
+  WorkSessionSubject,
   WorktreeRemoval,
 } from '@openthrottle/nestjs-repositories-server';
 import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
@@ -63,9 +66,6 @@ import { ProjectTag } from './modules/tags/project-tag.entity.ts';
 import { TaskTag } from './modules/tags/task-tag.entity.ts';
 import { UserPreferences } from './modules/user-preferences/user-preferences.entity.ts';
 import { User } from './modules/users/user.entity.ts';
-import { WorkArtifact } from './modules/work-ledger/work-artifact.entity.ts';
-import { WorkSession } from './modules/work-ledger/work-session.entity.ts';
-import { WorkSessionSubject } from './modules/work-ledger/work-session-subject.entity.ts';
 import { UserWorkspaceSettings } from './modules/workspace-settings/user-workspace-settings.entity.ts';
 
 /**

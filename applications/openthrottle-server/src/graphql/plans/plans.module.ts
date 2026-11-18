@@ -10,6 +10,8 @@ import {
   ProjectsModule,
   TasksModule,
   UserDisabledAgentClisModule,
+  WorkArtifactsModule,
+  WorkSessionsModule,
 } from '@openthrottle/nestjs-repositories-server';
 
 import { NotificationsModule } from '../../notifications/notifications.module.ts';
@@ -33,7 +35,6 @@ import { PlansResolver } from './plans.resolver.ts';
 
 @Module({
   imports: [
-    UserDisabledAgentClisModule,
     EffectiveUserResolutionModule,
     EmbedderModule,
     LoggerModule,
@@ -47,11 +48,14 @@ import { PlansResolver } from './plans.resolver.ts';
     PlansModule,
     PlansQueueProducerModule,
     ProjectsModule,
-    TaggingQueueProducerModule,
     QueuesGraphqlModule,
     SourceControlModule,
+    TaggingQueueProducerModule,
     TasksModule,
+    UserDisabledAgentClisModule,
+    WorkArtifactsModule,
     WorkLedgerGraphqlModule,
+    WorkSessionsModule,
     WorktreeCheckoutPruneModule,
   ],
   providers: [

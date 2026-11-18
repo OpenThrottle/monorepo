@@ -1,46 +1,25 @@
 /**
- * @description TypeORM entity for the OpenThrottle work_artifacts table. Matches databases/openthrottle/migrations/068.
- * Typed output produced within a work session; payload is per-type JSONB validated in app code (slice 2).
+ * @description TypeORM entity for the openthrottle `work_artifacts` table: a typed output
+ * produced within a work session, with a per-type JSONB payload validated in app code.
+ * Append-only like the rest of the work ledger, so it extends `BaseHardDeleteModel` (no soft
+ * delete). Its in-place writes (the verifier's verification and lifecycle) stamp
+ * `verified_at`, so it has no `updated_at`. Matches databases/openthrottle/migrations (068,
+ * 119, 174).
+ * @public
  */
 
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { BaseHardDeleteModel } from '@openthrottle/nestjs-postgres';
+import { Column, Entity } from 'typeorm';
 
 import type {
   WorkArtifactSource,
   WorkArtifactVerification,
-} from './work-ledger.types.ts';
-
-/** Column-only shape of WorkArtifact (no relations). */
-export type WorkArtifactData = Pick<
-  WorkArtifact,
-  | 'createdAt'
-  | 'externalKey'
-  | 'id'
-  | 'lifecycle'
-  | 'message'
-  | 'producedAt'
-  | 'sessionId'
-  | 'source'
-  | 'type'
-  | 'verification'
-  | 'verifiedAt'
-> & { payload: Record<string, unknown> };
+} from './work-artifacts.types.ts';
 
 @Entity('work_artifacts')
-export class WorkArtifact {
-  @CreateDateColumn({ name: 'created_at', type: 'timestamp with time zone' })
-  createdAt!: Date;
-
+export class WorkArtifact extends BaseHardDeleteModel {
   @Column({ name: 'external_key', type: 'text' })
   externalKey!: string;
-
-  @PrimaryGeneratedColumn('uuid')
-  id!: string;
 
   @Column({ name: 'lifecycle', nullable: true, type: 'text' })
   lifecycle!: string | null;

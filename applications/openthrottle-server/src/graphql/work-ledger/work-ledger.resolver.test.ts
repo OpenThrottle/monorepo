@@ -1,36 +1,75 @@
 import { createMock } from '@golevelup/ts-vitest';
 import type {
   WorkArtifact,
-  WorkLedgerService,
+  WorkArtifactsRepository,
   WorkSession,
-} from '@openthrottle/nestjs-repositories';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+  WorkSessionsRepository,
+  WorkSessionSubject,
+  WorkSessionSubjectsRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import type {
+  WorkArtifactsRepositoryMock,
+  WorkSessionsRepositoryMock,
+  WorkSessionSubjectsRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
+import {
+  createWorkArtifactsRepositoryMock,
+  createWorkSessionsRepositoryMock,
+  createWorkSessionSubjectsRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 import { WorkLedgerResolver } from './work-ledger.resolver.ts';
 
-describe('WorkLedgerResolver.recordWorkArtifact', () => {
-  // Plain mock repo (not createMock<Repository>) so create/save take simple
-  // implementations without fighting TypeORM's overloaded signatures. It mirrors
-  // TypeORM without a live DB: create echoes the partial, save echoes the entity —
-  // and deliberately does NOT synthesize the `produced_at DEFAULT now()` DB default,
-  // so a create path that omits producedAt surfaces as undefined here, which is
-  // exactly the regression this test guards against.
-  const repo = {
-    create: vi.fn((data: Record<string, unknown>) => data),
-    findOne: vi.fn(),
-    save: vi.fn((entity: WorkArtifact) => Promise.resolve(entity)),
-  };
+interface ResolverHarness {
+  readonly artifacts: WorkArtifactsRepositoryMock;
+  readonly resolver: WorkLedgerResolver;
+  readonly sessions: WorkSessionsRepositoryMock;
+  readonly subjects: WorkSessionSubjectsRepositoryMock;
+}
 
-  let workLedgerService: WorkLedgerService;
-  let resolver: WorkLedgerResolver;
+/**
+ * @description A resolver over the package mocks. `create` echoes its input as the saved row and
+ * deliberately does NOT synthesize any DB default (`produced_at`, `started_at DEFAULT now()`), so
+ * a create path that omits one surfaces as undefined — the regression these tests guard against.
+ */
+const buildResolver = (): ResolverHarness => {
+  const artifacts = createWorkArtifactsRepositoryMock();
+  const sessions = createWorkSessionsRepositoryMock();
+  const subjects = createWorkSessionSubjectsRepositoryMock();
+
+  artifacts.create.mockImplementation(async (input) => {
+    return createMock<WorkArtifact>({ ...input, id: 'artifact-new' });
+  });
+  artifacts.update.mockImplementation(async (id, input) => {
+    return createMock<WorkArtifact>({ ...input, id });
+  });
+  sessions.create.mockImplementation(async (input) => {
+    return createMock<WorkSession>({ ...input, id: 'session-new' });
+  });
+  subjects.createMany.mockImplementation(async (inputs) => {
+    return inputs.map((input) => {
+      return createMock<WorkSessionSubject>({ ...input });
+    });
+  });
+
+  return {
+    artifacts,
+    resolver: new WorkLedgerResolver(
+      createMock<WorkArtifactsRepository>(artifacts),
+      createMock<WorkSessionsRepository>(sessions),
+      createMock<WorkSessionSubjectsRepository>(subjects),
+    ),
+    sessions,
+    subjects,
+  };
+};
+
+describe('WorkLedgerResolver.recordWorkArtifact', () => {
+  let harness: ResolverHarness;
 
   beforeEach(() => {
-    vi.clearAllMocks();
-    repo.findOne.mockResolvedValue(null);
-    workLedgerService = createMock<WorkLedgerService>({
-      getArtifactRepository: vi.fn().mockReturnValue(repo),
-    });
-    resolver = new WorkLedgerResolver(workLedgerService);
+    harness = buildResolver();
   });
 
   const gitCommitInput = {
@@ -44,13 +83,14 @@ describe('WorkLedgerResolver.recordWorkArtifact', () => {
   };
 
   it('stamps producedAt on the create path so the non-nullable field never resolves to null', async () => {
-    const artifact = await resolver.recordWorkArtifact(gitCommitInput);
+    const artifact = await harness.resolver.recordWorkArtifact(gitCommitInput);
 
-    expect(repo.create).toHaveBeenCalledWith(
+    expect(harness.artifacts.create).toHaveBeenCalledWith(
       expect.objectContaining({
         producedAt: expect.any(Date),
         sessionId: 'session-1',
         type: 'git_commit',
+        verification: 'unverified',
       }),
     );
     // The returned entity is what GraphQL serializes for the non-nullable
@@ -58,40 +98,33 @@ describe('WorkLedgerResolver.recordWorkArtifact', () => {
     expect(artifact.producedAt).toBeInstanceOf(Date);
   });
 
-  it('promotes an existing idempotent artifact without regressing its producedAt', async () => {
+  it('promotes an existing idempotent artifact without touching its producedAt', async () => {
     const existing = createMock<WorkArtifact>({
       id: 'artifact-existing',
       message: 'old message',
       producedAt: new Date('2026-02-01T00:00:00.000Z'),
+      sessionId: 'session-1',
     });
-    repo.findOne.mockResolvedValue(existing);
+    harness.artifacts.findOne.mockResolvedValue(existing);
+    harness.artifacts.update.mockResolvedValue(existing);
 
-    const artifact = await resolver.recordWorkArtifact(gitCommitInput);
+    await harness.resolver.recordWorkArtifact(gitCommitInput);
 
-    // Promote path reuses the loaded row (create is not called) and keeps its producedAt.
-    expect(repo.create).not.toHaveBeenCalled();
-    expect(artifact.producedAt).toEqual(new Date('2026-02-01T00:00:00.000Z'));
+    // The promote path updates the loaded row (create is not called) and writes only
+    // payload and message, never producedAt, lifecycle or verification.
+    expect(harness.artifacts.create).not.toHaveBeenCalled();
+    expect(harness.artifacts.update).toHaveBeenCalledWith('artifact-existing', {
+      message: 'feat: thing (#1)',
+      payload: { repo: 'OpenThrottle/monorepo', sha: 'deadbeef' },
+    });
   });
 });
 
 describe('WorkLedgerResolver.startWorkSession', () => {
-  // Same shape as the artifact repo above, and for the same reason: it deliberately does
-  // NOT synthesize the `started_at DEFAULT now()` DB default, so a create path that omits
-  // startedAt surfaces as undefined — which is the bug this guards against.
-  const repo = {
-    create: vi.fn((data: Record<string, unknown>) => data),
-    save: vi.fn((entity: WorkSession) => Promise.resolve(entity)),
-  };
-
-  let workLedgerService: WorkLedgerService;
-  let resolver: WorkLedgerResolver;
+  let harness: ResolverHarness;
 
   beforeEach(() => {
-    vi.clearAllMocks();
-    workLedgerService = createMock<WorkLedgerService>({
-      getSessionRepository: vi.fn().mockReturnValue(repo),
-    });
-    resolver = new WorkLedgerResolver(workLedgerService);
+    harness = buildResolver();
   });
 
   const input = {
@@ -105,9 +138,13 @@ describe('WorkLedgerResolver.startWorkSession', () => {
   };
 
   it('stamps startedAt on the create path so the non-nullable field never resolves to null', async () => {
-    const session = await resolver.startWorkSession(input, 'user-1', 'user');
+    const session = await harness.resolver.startWorkSession(
+      input,
+      'user-1',
+      'user',
+    );
 
-    expect(repo.create).toHaveBeenCalledWith(
+    expect(harness.sessions.create).toHaveBeenCalledWith(
       expect.objectContaining({
         actorUserId: 'user-1',
         startedAt: expect.any(Date),
@@ -121,19 +158,38 @@ describe('WorkLedgerResolver.startWorkSession', () => {
   });
 });
 
-describe('WorkLedgerResolver.workLedgerCompleteness', () => {
-  const query = vi.fn();
-  const repo = { manager: { query } };
-
-  let resolver: WorkLedgerResolver;
+describe('WorkLedgerResolver.endWorkSession', () => {
+  let harness: ResolverHarness;
 
   beforeEach(() => {
-    vi.clearAllMocks();
-    resolver = new WorkLedgerResolver(
-      createMock<WorkLedgerService>({
-        getArtifactRepository: vi.fn().mockReturnValue(repo),
-      }),
-    );
+    harness = buildResolver();
+  });
+
+  it('closes the session explicitly, carrying the summary', async () => {
+    await harness.resolver.endWorkSession({
+      sessionId: 'session-1',
+      summary: 'done',
+    });
+
+    expect(harness.sessions.close).toHaveBeenCalledWith('session-1', {
+      closedBy: 'explicit',
+      endedAt: expect.any(Date),
+      summary: 'done',
+    });
+  });
+
+  it('returns null when the session does not exist', async () => {
+    await expect(
+      harness.resolver.endWorkSession({ sessionId: 'missing', summary: null }),
+    ).resolves.toBeNull();
+  });
+});
+
+describe('WorkLedgerResolver.workLedgerCompleteness', () => {
+  let harness: ResolverHarness;
+
+  beforeEach(() => {
+    harness = buildResolver();
   });
 
   const row = (planId: string, recorded: boolean) => {
@@ -146,25 +202,17 @@ describe('WorkLedgerResolver.workLedgerCompleteness', () => {
     };
   };
 
-  it('reads live plans only', async () => {
-    query.mockResolvedValue([]);
-
-    await resolver.workLedgerCompleteness({ limit: null });
-
-    expect(query.mock.calls[0]?.[0]).toContain(
-      'JOIN plans p ON p.id = g.plan_id AND p.deleted_at IS NULL',
-    );
-  });
-
   it('counts a plan as recorded only when the verifier confirmed a landed commit', async () => {
     // The SQL orders unrecorded first; mirror that here.
-    query.mockResolvedValue([
+    harness.artifacts.listPlanCompleteness.mockResolvedValue([
       row('owed-1', false),
       row('owed-2', false),
       row('recorded-1', true),
     ]);
 
-    const result = await resolver.workLedgerCompleteness({ limit: null });
+    const result = await harness.resolver.workLedgerCompleteness({
+      limit: null,
+    });
 
     expect(result.totalCount).toBe(3);
     expect(result.recordedCount).toBe(1);
@@ -176,14 +224,14 @@ describe('WorkLedgerResolver.workLedgerCompleteness', () => {
   });
 
   it('truncates the owed list but never the counts', async () => {
-    query.mockResolvedValue([
+    harness.artifacts.listPlanCompleteness.mockResolvedValue([
       row('owed-1', false),
       row('owed-2', false),
       row('owed-3', false),
       row('recorded-1', true),
     ]);
 
-    const result = await resolver.workLedgerCompleteness({ limit: 1 });
+    const result = await harness.resolver.workLedgerCompleteness({ limit: 1 });
 
     // A caller paging the list must still see the true size of the backlog.
     expect(result.owed).toHaveLength(1);
@@ -192,9 +240,14 @@ describe('WorkLedgerResolver.workLedgerCompleteness', () => {
   });
 
   it('reports a fully-recorded ledger as complete', async () => {
-    query.mockResolvedValue([row('recorded-1', true), row('recorded-2', true)]);
+    harness.artifacts.listPlanCompleteness.mockResolvedValue([
+      row('recorded-1', true),
+      row('recorded-2', true),
+    ]);
 
-    const result = await resolver.workLedgerCompleteness({ limit: null });
+    const result = await harness.resolver.workLedgerCompleteness({
+      limit: null,
+    });
 
     expect(result.owed).toEqual([]);
     expect(result.owedCount).toBe(0);
@@ -206,28 +259,10 @@ describe('WorkLedgerResolver.recordWorkArtifact across sessions', () => {
   // uq_work_artifacts_type_external_key is global for idempotent types, so the same
   // commit reported by a second session must resolve to the one existing row rather
   // than attempt an insert the index would reject.
-  const artifactRepo = {
-    create: vi.fn((data: Record<string, unknown>) => data),
-    findOne: vi.fn(),
-    save: vi.fn((entity: WorkArtifact) => Promise.resolve(entity)),
-  };
-  const subjectRepo = {
-    create: vi.fn((data: Record<string, unknown>) => data),
-    find: vi.fn(),
-    save: vi.fn((rows: unknown) => Promise.resolve(rows)),
-  };
-
-  let resolver: WorkLedgerResolver;
+  let harness: ResolverHarness;
 
   beforeEach(() => {
-    vi.clearAllMocks();
-    subjectRepo.find.mockResolvedValue([]);
-    resolver = new WorkLedgerResolver(
-      createMock<WorkLedgerService>({
-        getArtifactRepository: vi.fn().mockReturnValue(artifactRepo),
-        getSubjectRepository: vi.fn().mockReturnValue(subjectRepo),
-      }),
-    );
+    harness = buildResolver();
   });
 
   const input = {
@@ -240,14 +275,16 @@ describe('WorkLedgerResolver.recordWorkArtifact across sessions', () => {
     type: 'git_commit',
   };
 
-  it('looks the artifact up globally, not scoped to the reporting session', async () => {
-    artifactRepo.findOne.mockResolvedValue(null);
+  const subject = (planId: string, sessionId: string): WorkSessionSubject => {
+    return createMock<WorkSessionSubject>({ planId, sessionId, taskId: null });
+  };
 
-    await resolver.recordWorkArtifact(input);
+  it('looks the artifact up globally, not scoped to the reporting session', async () => {
+    await harness.resolver.recordWorkArtifact(input);
 
     // A sessionId in the where clause would miss another session's row and then
     // fail the insert against the global unique index.
-    expect(artifactRepo.findOne).toHaveBeenCalledWith({
+    expect(harness.artifacts.findOne).toHaveBeenCalledWith({
       where: {
         externalKey: 'github:OpenThrottle/monorepo@deadbeef',
         type: 'git_commit',
@@ -256,53 +293,54 @@ describe('WorkLedgerResolver.recordWorkArtifact across sessions', () => {
   });
 
   it("carries the reporting session's subjects onto the artifact it found", async () => {
-    artifactRepo.findOne.mockResolvedValue(
+    harness.artifacts.findOne.mockResolvedValue(
       createMock<WorkArtifact>({ id: 'artifact-a', sessionId: 'session-a' }),
     );
-    subjectRepo.find.mockImplementation(
-      async ({ where }: { where: { sessionId: string } }) => {
-        const isSessionB = where.sessionId === 'session-b';
-        const sessionBRows = [
-          { planId: 'plan-2', sessionId: 'session-b', taskId: null },
-        ];
-        const sessionARows = [
-          { planId: 'plan-1', sessionId: 'session-a', taskId: null },
-        ];
+    harness.subjects.findBy.mockImplementation(async (options) => {
+      const where = options?.where;
+      const isSessionB =
+        where != null &&
+        !Array.isArray(where) &&
+        where.sessionId === 'session-b';
 
-        return isSessionB ? sessionBRows : sessionARows;
-      },
-    );
+      return isSessionB
+        ? [subject('plan-2', 'session-b')]
+        : [subject('plan-1', 'session-a')];
+    });
 
-    await resolver.recordWorkArtifact(input);
+    await harness.resolver.recordWorkArtifact(input);
 
     // Otherwise plan-2 silently loses its link to this commit — the same
     // (commit, plan) pair loss migration 118 exists to undo.
-    expect(subjectRepo.save).toHaveBeenCalledWith([
-      { planId: 'plan-2', sessionId: 'session-a', taskId: null },
+    expect(harness.subjects.createMany).toHaveBeenCalledWith([
+      {
+        attachedAt: expect.any(Date),
+        planId: 'plan-2',
+        sessionId: 'session-a',
+        taskId: null,
+      },
     ]);
   });
 
   it('attaches nothing when the subject is already on the artifact session', async () => {
-    artifactRepo.findOne.mockResolvedValue(
+    harness.artifacts.findOne.mockResolvedValue(
       createMock<WorkArtifact>({ id: 'artifact-a', sessionId: 'session-a' }),
     );
-    subjectRepo.find.mockResolvedValue([
-      { planId: 'plan-1', sessionId: 'either', taskId: null },
-    ]);
+    harness.subjects.findBy.mockResolvedValue([subject('plan-1', 'either')]);
 
-    await resolver.recordWorkArtifact(input);
+    await harness.resolver.recordWorkArtifact(input);
 
-    expect(subjectRepo.save).not.toHaveBeenCalled();
+    expect(harness.subjects.createMany).not.toHaveBeenCalled();
   });
 
   it('does not mirror when the same session re-reports its own artifact', async () => {
-    artifactRepo.findOne.mockResolvedValue(
+    harness.artifacts.findOne.mockResolvedValue(
       createMock<WorkArtifact>({ id: 'artifact-b', sessionId: 'session-b' }),
     );
 
-    await resolver.recordWorkArtifact(input);
+    await harness.resolver.recordWorkArtifact(input);
 
-    expect(subjectRepo.find).not.toHaveBeenCalled();
-    expect(subjectRepo.save).not.toHaveBeenCalled();
+    expect(harness.subjects.findBy).not.toHaveBeenCalled();
+    expect(harness.subjects.createMany).not.toHaveBeenCalled();
   });
 });

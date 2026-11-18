@@ -6,13 +6,16 @@
  */
 
 import { Injectable, Scope } from '@nestjs/common';
+import type { RepositoryCheckout } from '@openthrottle/nestjs-repositories';
 import {
   createEntityByIdLoader,
-  type RepositoryCheckout,
   RepositoryCheckoutsService,
-  type WorkArtifact,
-  WorkLedgerService,
 } from '@openthrottle/nestjs-repositories';
+import type { WorkArtifact } from '@openthrottle/nestjs-repositories-server';
+import {
+  WorkArtifactsRepository,
+  WorkSessionsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import DataLoader from 'dataloader';
 import { In } from 'typeorm';
 
@@ -29,7 +32,8 @@ export class PlanRunLoaders {
 
   constructor(
     repositoryCheckoutsService: RepositoryCheckoutsService,
-    workLedgerService: WorkLedgerService,
+    workArtifactsRepository: WorkArtifactsRepository,
+    workSessionsRepository: WorkSessionsRepository,
   ) {
     this.checkoutLoader = createEntityByIdLoader(repositoryCheckoutsService);
 
@@ -43,9 +47,9 @@ export class PlanRunLoaders {
       string,
       WorkArtifact | null
     >(async (planRunIds) => {
-      const sessions = await workLedgerService
-        .getSessionRepository()
-        .find({ where: { planRunId: In([...planRunIds]) } });
+      const sessions = await workSessionsRepository.findBy({
+        where: { planRunId: In([...planRunIds]) },
+      });
 
       const planRunIdBySessionId = new Map<string, string>();
       for (const session of sessions) {
@@ -58,7 +62,7 @@ export class PlanRunLoaders {
         return planRunIds.map(() => null);
       }
 
-      const artifacts = await workLedgerService.getArtifactRepository().find({
+      const artifacts = await workArtifactsRepository.findBy({
         order: { producedAt: 'DESC' },
         where: {
           sessionId: In([...planRunIdBySessionId.keys()]),

@@ -27,20 +27,17 @@ import {
   AUTH_PRINCIPAL_KIND_USER,
 } from '@openthrottle/nestjs-auth';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import { PlanTag, TaskTag } from '@openthrottle/nestjs-repositories';
 import {
-  PlanTag,
-  TaskTag,
+  Plan,
+  Task,
+  TASK_SORT_ORDER_GAP,
   WORK_ARTIFACT_SOURCE,
   WORK_ARTIFACT_VERIFICATION,
   WORK_SESSION_CLOSED_BY,
   WorkArtifact,
   WorkSession,
   WorkSessionSubject,
-} from '@openthrottle/nestjs-repositories';
-import {
-  Plan,
-  Task,
-  TASK_SORT_ORDER_GAP,
 } from '@openthrottle/nestjs-repositories-server';
 import type { EntityManager } from 'typeorm';
 import { DataSource } from 'typeorm';

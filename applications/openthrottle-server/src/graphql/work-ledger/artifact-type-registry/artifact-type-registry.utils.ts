@@ -8,7 +8,7 @@
  */
 import { randomUUID } from 'node:crypto';
 
-import { WORK_ARTIFACT_SOURCE } from '@openthrottle/nestjs-repositories';
+import { WORK_ARTIFACT_SOURCE } from '@openthrottle/nestjs-repositories-server';
 import { z } from 'zod';
 
 import {

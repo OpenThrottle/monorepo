@@ -1,7 +1,10 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
-import { PlansModule } from '@openthrottle/nestjs-repositories-server';
+import {
+  PlansModule,
+  WorkArtifactsModule,
+} from '@openthrottle/nestjs-repositories-server';
 
 import { WorkLedgerGraphqlModule } from '../../graphql/work-ledger/work-ledger.module.ts';
 import { SourceControlModule } from '../../services/source-control/source-control.module.ts';
@@ -22,6 +25,7 @@ import { WorkLedgerHarvestProcessor } from './work-ledger-harvest.processor.ts';
     NestjsRepositoriesModule,
     PlansModule,
     SourceControlModule,
+    WorkArtifactsModule,
     WorkLedgerGraphqlModule,
     WorkLedgerHarvestQueueProducerModule,
   ],

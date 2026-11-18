@@ -1,6 +1,6 @@
 /**
  * @description GraphQL feature module for the work ledger (sessions + artifacts + subjects).
- * Imports NestjsRepositoriesModule for WorkLedgerService (the three TypeORM repositories) and
+ * Imports the three work-ledger table modules (sessions, subjects, artifacts) and
  * LoggerModule for SettleRunLedgerService, whose failures are logged rather than thrown, and
  * RepositoryInspectionModule so a service-account run's settle can resolve its repo from the
  * working directory's git remote.
@@ -9,6 +9,11 @@
 import { Module } from '@nestjs/common';
 import { GlobalClsModule, LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+import {
+  WorkArtifactsModule,
+  WorkSessionsModule,
+  WorkSessionSubjectsModule,
+} from '@openthrottle/nestjs-repositories-server';
 
 import { SourceControlModule } from '../../services/source-control/source-control.module.ts';
 import { RepositoryInspectionModule } from '../repository-inspection/repository-inspection.module.ts';
@@ -29,6 +34,9 @@ import { WorkLedgerCaptureService } from './work-ledger-capture/work-ledger-capt
     NestjsRepositoriesModule,
     RepositoryInspectionModule,
     SourceControlModule,
+    WorkArtifactsModule,
+    WorkSessionSubjectsModule,
+    WorkSessionsModule,
   ],
   providers: [
     SettleRunLedgerService,

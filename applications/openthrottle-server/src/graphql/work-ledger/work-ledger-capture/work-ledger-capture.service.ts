@@ -26,7 +26,7 @@ import {
   WorkArtifact,
   WorkSession,
   WorkSessionSubject,
-} from '@openthrottle/nestjs-repositories';
+} from '@openthrottle/nestjs-repositories-server';
 import { EntityManager, IsNull } from 'typeorm';
 
 import { resolveArtifactForWrite } from '../artifact-type-registry/artifact-type-registry.utils.ts';
