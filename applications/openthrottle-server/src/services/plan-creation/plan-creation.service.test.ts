@@ -7,10 +7,8 @@ import type {
   PlanData,
   PlanRunConfigStorage,
 } from '@openthrottle/nestjs-repositories';
-import {
-  getDefaultPlanRunConfigStorage,
-  UserPreferencesService,
-} from '@openthrottle/nestjs-repositories';
+import { getDefaultPlanRunConfigStorage } from '@openthrottle/nestjs-repositories';
+import { UserPreferencesRepository } from '@openthrottle/nestjs-repositories-server';
 import {
   type Plan,
   PlansRepository,
@@ -93,7 +91,7 @@ describe('PlanCreationService', () => {
           },
         },
         {
-          provide: UserPreferencesService,
+          provide: UserPreferencesRepository,
           useValue: { getForUser },
         },
         { provide: PlansRepository, useValue: plansRepository },

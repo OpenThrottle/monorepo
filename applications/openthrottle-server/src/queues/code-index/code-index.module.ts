@@ -5,6 +5,7 @@ import { NestjsVectorSearchModule } from '@openthrottle/nestjs-vector-search';
 
 import { EmbedderModule } from '../../services/embedder/embedder.module.ts';
 import { EmbedderService } from '../../services/embedder/embedder.service.ts';
+import { WorkspaceLocalRepositoriesModule } from '../../services/workspace-local-repositories/workspace-local-repositories.module.ts';
 import { CodeIndexProcessor } from './code-index.processor.ts';
 import { CodeIndexQueueProducerModule } from './producer/producer.module.ts';
 
@@ -21,6 +22,7 @@ import { CodeIndexQueueProducerModule } from './producer/producer.module.ts';
   imports: [
     CodeIndexQueueProducerModule,
     LoggerModule,
+    WorkspaceLocalRepositoriesModule,
     NestjsRepositoriesModule,
     NestjsVectorSearchModule.register({
       embedder: EmbedderService,

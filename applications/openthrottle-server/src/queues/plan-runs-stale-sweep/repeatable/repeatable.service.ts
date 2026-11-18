@@ -1,11 +1,11 @@
 import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { WorkspaceEditorConfigService } from '@openthrottle/nestjs-repositories';
 import type { Queue } from 'bullmq';
 
 import { ForeignSkillInjectionLifecycleService } from '../../../services/foreign-skill-injection/lifecycle/lifecycle.service.ts';
 import { ForeignSkillMaterializationService } from '../../../services/foreign-skill-injection/materialization/materialization.service.ts';
+import { WorkspaceEditorConfigService } from '../../../services/workspace-editor-config/workspace-editor-config.service.ts';
 import { REPEATABLE_JOB_OPTIONS } from '../../repeatable-job/repeatable-job.options.ts';
 import { resolveRepeatablesOwner } from '../../repeatable-job/repeatable-job.utils.ts';
 import { PLAN_RUNS_STALE_SWEEP_QUEUE_NAME } from '../plan-runs-stale-sweep.constants.ts';

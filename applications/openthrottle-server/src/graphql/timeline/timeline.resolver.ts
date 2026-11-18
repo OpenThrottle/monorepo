@@ -365,6 +365,7 @@ export class TimelineResolver {
               sr.status, NULL::uuid AS conversation_id
          FROM scheduled_agent_job_runs sr
          JOIN scheduled_agent_jobs j ON j.id = sr.scheduled_agent_job_id
+                              AND j.deleted_at IS NULL
         WHERE COALESCE(sr.started_at, sr.created_at) < $2::timestamptz
           AND COALESCE(sr.finished_at, $2::timestamptz) >= $1::timestamptz
           AND ($3::text IS NULL OR sr.driver_id = $3::text)

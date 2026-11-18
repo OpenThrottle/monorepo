@@ -10,8 +10,6 @@ import type {
   AgentConversationsService,
   CustomPrompt,
   CustomPromptsService,
-  WorkspaceLocalRepositoriesService,
-  WorkspaceLocalRepository,
 } from '@openthrottle/nestjs-repositories';
 import {
   agentConversationMessagesFactory,
@@ -26,6 +24,8 @@ import type {
 import type { Repository } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { WorkspaceLocalRepositoriesService } from '../../services/workspace-local-repositories/workspace-local-repositories.service.ts';
+import type { WorkspaceLocalRepository } from '../../services/workspace-local-repositories/workspace-local-repositories.types.ts';
 import { TURN_IN_PROGRESS_ERROR } from './conversation-stream.constants.ts';
 import { ConversationStreamResolver } from './conversation-stream.resolver.ts';
 import type { ConversationStreamService } from './conversation-stream.service.ts';

@@ -1,6 +1,6 @@
 /**
  * @description Maps between the GraphQL user-preferences types and the
- * {@link UserPreferencesService} data/patch shapes.
+ * {@link UserPreferencesRepository} data/patch shapes.
  */
 
 import type {

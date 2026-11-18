@@ -3,7 +3,7 @@
  * path: OT-manifest identity anchor, git state, stack markers, and agent
  * config presence. Root-level checks only — no recursive tree walks. The
  * snapshot persists to repository_checkouts.inspection via
- * RepositoryCheckoutsService (DB is a cache; disk is the source of truth).
+ * RepositoryCheckoutsRepository (DB is a cache; disk is the source of truth).
  * Pattern precedent: agent-discovery / model-discovery cached snapshots.
  */
 import { execFile } from 'node:child_process';
@@ -15,10 +15,8 @@ import { promisify } from 'node:util';
 import { Injectable } from '@nestjs/common';
 import { describeTelemetryConfig } from '@openthrottle/agentic-hooks';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import {
-  normalizeRemoteUrl,
-  RepositoryCheckoutsService,
-} from '@openthrottle/nestjs-repositories';
+import { normalizeRemoteUrl } from '@openthrottle/nestjs-repositories';
+import { RepositoryCheckoutsRepository } from '@openthrottle/nestjs-repositories-server';
 import { isRecord } from '@openthrottle/nodejs-utils';
 import { toHostPath } from '@openthrottle/openthrottle-agentic-utils';
 
@@ -74,7 +72,7 @@ const SKILLS_DIRECTORIES = ['.agents/skills', '.claude/skills', 'skills'];
 export class RepositoryInspectionService {
   constructor(
     private readonly logger: LoggerService,
-    private readonly checkoutsService: RepositoryCheckoutsService,
+    private readonly checkoutsRepository: RepositoryCheckoutsRepository,
   ) {
     this.logger.debug('🧩 repository-inspection 🧩');
   }
@@ -133,7 +131,7 @@ export class RepositoryInspectionService {
     filesystemPath: string,
   ): Promise<RepositoryInspectionSnapshot> {
     const snapshot = await this.scan(filesystemPath);
-    await this.checkoutsService.saveInspection(
+    await this.checkoutsRepository.saveInspection(
       checkoutId,
       // JSONB column is typed as a plain record; the snapshot is JSON-safe.
       { ...snapshot },

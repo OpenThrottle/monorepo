@@ -16,8 +16,8 @@
 
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { RepositoryCheckoutsService } from '@openthrottle/nestjs-repositories';
 import type { Plan } from '@openthrottle/nestjs-repositories-server';
+import { RepositoryCheckoutsRepository } from '@openthrottle/nestjs-repositories-server';
 import { PlanRunsRepository } from '@openthrottle/nestjs-repositories-server';
 import { PlansRepository } from '@openthrottle/nestjs-repositories-server';
 import { Raw } from 'typeorm';
@@ -65,7 +65,7 @@ export class PlanRunWorktreeReaperService {
 
   constructor(
     private readonly logger: LoggerService,
-    private readonly checkoutsService: RepositoryCheckoutsService,
+    private readonly checkoutsRepository: RepositoryCheckoutsRepository,
     private readonly discovery: WorktreeDiscoveryService,
     private readonly notifications: NotificationsService,
     private readonly planRunsRepository: PlanRunsRepository,
@@ -143,7 +143,7 @@ export class PlanRunWorktreeReaperService {
    * are skipped: the ot-worktree destroy action has nowhere to run from.
    */
   private async discoverCandidates(): Promise<PlanRunWorktreeCandidate[]> {
-    const checkouts = await this.checkoutsService.findAll();
+    const checkouts = await this.checkoutsRepository.findAll();
     const userIds = [...new Set(checkouts.map((checkout) => checkout.userId))];
     const results = await Promise.all(
       userIds.map((userId) => this.discovery.discover(userId)),

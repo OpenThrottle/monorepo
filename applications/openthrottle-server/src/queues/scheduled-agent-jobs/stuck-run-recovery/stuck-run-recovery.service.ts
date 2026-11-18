@@ -4,8 +4,8 @@ import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   type ScheduledAgentJobRun,
   type ScheduledAgentJobRunSettingsSnapshot,
-  ScheduledAgentJobsService,
 } from '@openthrottle/nestjs-repositories';
+import { ScheduledAgentJobRunsRepository } from '@openthrottle/nestjs-repositories-server';
 import { DRIVER_REGISTRY } from '@openthrottle/openthrottle-drivers';
 import { SCHEDULED_RUN_FAILURE_REASONS } from '@openthrottle/openthrottle-notifications';
 import type { Queue } from 'bullmq';
@@ -89,7 +89,7 @@ const directoryLockKeyForRun = (run: ScheduledAgentJobRun): string | null => {
 export class ScheduledAgentJobStuckRunRecoveryService implements OnApplicationBootstrap {
   constructor(
     private readonly logger: LoggerService,
-    private readonly jobsService: ScheduledAgentJobsService,
+    private readonly runsRepository: ScheduledAgentJobRunsRepository,
     private readonly directoryLock: ScheduledAgentJobDirectoryLockService,
     @InjectQueue(SCHEDULED_AGENT_JOBS_QUEUE_NAME)
     private readonly queue: Queue<ScheduledAgentJobPayload, void>,
@@ -123,7 +123,7 @@ export class ScheduledAgentJobStuckRunRecoveryService implements OnApplicationBo
    * run that finished in between, a no-op.
    */
   async recover(): Promise<ScheduledAgentJobStuckRunRecoverySummary> {
-    const running = await this.jobsService.getRunRepository().find({
+    const running = await this.runsRepository.findBy({
       order: { createdAt: 'ASC' },
       take: STUCK_RUN_RECOVERY_BATCH_SIZE,
       where: { status: 'running' },
@@ -206,7 +206,7 @@ export class ScheduledAgentJobStuckRunRecoveryService implements OnApplicationBo
    * finished between the read and this write keeps its real outcome. Returns whether it was updated.
    */
   private async failAbandonedRun(run: ScheduledAgentJobRun): Promise<boolean> {
-    const result = await this.jobsService.getRunRepository().update(
+    const result = await this.runsRepository.updateMany(
       { id: run.id, status: 'running' },
       {
         errorMessage: SCHEDULED_AGENT_JOB_SERVER_RESTARTED_MESSAGE,
@@ -216,7 +216,7 @@ export class ScheduledAgentJobStuckRunRecoveryService implements OnApplicationBo
       },
     );
 
-    const recovered = (result.affected ?? 0) > 0;
+    const recovered = result.updateCount > 0;
     if (recovered) {
       this.logger.info(
         `Marked scheduled run ${run.id} (schedule ${run.scheduledAgentJobId}) failed: no live process after a server restart`,

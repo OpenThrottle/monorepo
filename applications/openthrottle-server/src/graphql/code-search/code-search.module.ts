@@ -13,12 +13,14 @@ import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import { CodeIndexQueueProducerModule } from '../../queues/code-index/producer/producer.module.ts';
 import { EmbedderModule } from '../../services/embedder/embedder.module.ts';
 import { EmbedderService } from '../../services/embedder/embedder.service.ts';
+import { WorkspaceLocalRepositoriesModule } from '../../services/workspace-local-repositories/workspace-local-repositories.module.ts';
 import { CodeSearchResolver } from './code-search.resolver.ts';
 
 @Module({
   imports: [
     RolesModule,
     CodeIndexQueueProducerModule,
+    WorkspaceLocalRepositoriesModule,
     NestjsRepositoriesModule,
     NestjsVectorSearchModule.register({
       embedder: EmbedderService,

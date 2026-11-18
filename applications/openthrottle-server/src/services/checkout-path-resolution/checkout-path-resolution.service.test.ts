@@ -8,10 +8,10 @@
 
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import type {
-  RepositoryCheckout,
-  RepositoryCheckoutsService,
-} from '@openthrottle/nestjs-repositories';
+import type { RepositoryCheckout } from '@openthrottle/nestjs-repositories';
+import type { RepositoryCheckoutsRepository } from '@openthrottle/nestjs-repositories-server';
+import { createRepositoryCheckoutsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import { asMock } from '@openthrottle/nestjs-testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { mockRealpathSync } = vi.hoisted(() => ({
@@ -45,7 +45,8 @@ const checkout = (overrides: CheckoutOverrides = {}): RepositoryCheckout => {
 const buildService = (
   checkouts: readonly RepositoryCheckout[],
 ): CheckoutPathResolutionService => {
-  const checkoutsService = createMock<RepositoryCheckoutsService>({
+  const checkoutsRepository = asMock<RepositoryCheckoutsRepository>({
+    ...createRepositoryCheckoutsRepositoryMock(),
     listByUserId: vi.fn(async (userId: string) =>
       checkouts.filter((entry) => entry.userId === userId),
     ),
@@ -53,7 +54,7 @@ const buildService = (
 
   return new CheckoutPathResolutionService(
     createMock<LoggerService>(),
-    checkoutsService,
+    checkoutsRepository,
   );
 };
 
@@ -191,14 +192,15 @@ describe('CheckoutPathResolutionService', () => {
   });
 
   it('degrades to null when listing checkouts fails', async () => {
-    const checkoutsService = createMock<RepositoryCheckoutsService>({
+    const checkoutsRepository = asMock<RepositoryCheckoutsRepository>({
+      ...createRepositoryCheckoutsRepositoryMock(),
       listByUserId: vi.fn(async () => {
         throw new Error('database unavailable');
       }),
     });
     const service = new CheckoutPathResolutionService(
       createMock<LoggerService>(),
-      checkoutsService,
+      checkoutsRepository,
     );
 
     await expect(

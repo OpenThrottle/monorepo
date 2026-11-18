@@ -18,15 +18,13 @@ import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 import type {
   Project,
   UserWorkspaceSettings,
-  WorkspaceLocalRepository,
 } from '@openthrottle/nestjs-repositories';
-import {
-  UserWorkspaceSettingsService,
-  WorkspaceEditorConfigService,
-  WorkspaceLocalRepositoriesService,
-} from '@openthrottle/nestjs-repositories';
+import { UserWorkspaceSettingsRepository } from '@openthrottle/nestjs-repositories-server';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { WorkspaceEditorConfigService } from '../../services/workspace-editor-config/workspace-editor-config.service.ts';
+import { WorkspaceLocalRepositoriesService } from '../../services/workspace-local-repositories/workspace-local-repositories.service.ts';
+import type { WorkspaceLocalRepository } from '../../services/workspace-local-repositories/workspace-local-repositories.types.ts';
 import { WorktreeActivityService } from '../../services/worktree-activity/worktree-activity.service.ts';
 import { ProjectObject } from '../projects/project.object.ts';
 import { ApplyWorkspaceEditorConfigurationInput } from './apply-workspace-editor-configuration.input.ts';
@@ -61,7 +59,7 @@ import { WorkspaceSettingsObject } from './workspace-settings.object.ts';
 @UseGuards(GqlPermissionsGuard)
 export class WorkspaceSettingsResolver {
   constructor(
-    private readonly userWorkspaceSettingsService: UserWorkspaceSettingsService,
+    private readonly userWorkspaceSettingsRepository: UserWorkspaceSettingsRepository,
     private readonly workspaceLocalRepositoriesService: WorkspaceLocalRepositoriesService,
     private readonly workspaceEditorConfigService: WorkspaceEditorConfigService,
     private readonly loaders: WorkspaceSettingsLoaders,
@@ -77,7 +75,7 @@ export class WorkspaceSettingsResolver {
     @CurrentUser('sub') userId: string,
   ): Promise<WorkspaceSettingsObject> {
     const [profile, localRepositories] = await Promise.all([
-      this.userWorkspaceSettingsService.getOrCreateForUser(userId),
+      this.userWorkspaceSettingsRepository.getOrCreateForUser(userId),
       this.workspaceLocalRepositoriesService.listByUserId(userId),
     ]);
 
@@ -115,7 +113,7 @@ export class WorkspaceSettingsResolver {
       patch.enabledEditors = enabledEditors;
     }
 
-    const updated = await this.userWorkspaceSettingsService.updateProfile(
+    const updated = await this.userWorkspaceSettingsRepository.updateProfile(
       userId,
       patch,
     );

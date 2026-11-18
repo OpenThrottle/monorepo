@@ -10,7 +10,6 @@ import { BadRequestException, UseGuards } from '@nestjs/common';
 import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { CurrentUser } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
-import { WorkspaceLocalRepositoriesService } from '@openthrottle/nestjs-repositories';
 import { CodeSearchService } from '@openthrottle/nestjs-vector-search';
 import { toContainerPath } from '@openthrottle/openthrottle-agentic-utils';
 import { Queue } from 'bullmq';
@@ -24,6 +23,7 @@ import type {
   CodeIndexJobPayload,
   CodeIndexJobResult,
 } from '../../queues/code-index/code-index.types.ts';
+import { WorkspaceLocalRepositoriesService } from '../../services/workspace-local-repositories/workspace-local-repositories.service.ts';
 import { CODE_INDEX_STATUS } from './code-search.constants.ts';
 import { CodeSemanticSearchInput } from './code-search.input.ts';
 import {

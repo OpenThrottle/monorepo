@@ -4,8 +4,11 @@ import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   type ScheduledAgentJob,
   type ScheduledAgentJobRun,
-  ScheduledAgentJobsService,
 } from '@openthrottle/nestjs-repositories';
+import {
+  ScheduledAgentJobRunsRepository,
+  ScheduledAgentJobsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import type { UsageLimit } from '@openthrottle/openthrottle-drivers';
 import type { Queue } from 'bullmq';
 
@@ -41,7 +44,8 @@ const describeError = (error: unknown): string => {
 export class ScheduledAgentJobUsageLimitResumeService {
   constructor(
     private readonly logger: LoggerService,
-    private readonly jobsService: ScheduledAgentJobsService,
+    private readonly jobsRepository: ScheduledAgentJobsRepository,
+    private readonly runsRepository: ScheduledAgentJobRunsRepository,
     private readonly scheduler: ScheduledAgentJobSchedulerService,
     @InjectQueue(SCHEDULED_AGENT_JOBS_QUEUE_NAME)
     private readonly queue: Queue<ScheduledAgentJobPayload, void>,
@@ -61,7 +65,7 @@ export class ScheduledAgentJobUsageLimitResumeService {
     const now = params.now ?? new Date();
 
     try {
-      const job = await this.jobsService.findJobById(scheduleId);
+      const job = await this.jobsRepository.findJobById(scheduleId);
 
       if (job === null) {
         return await this.hold(limitedRunId, 'the schedule no longer exists');
@@ -71,7 +75,7 @@ export class ScheduledAgentJobUsageLimitResumeService {
         return await this.hold(limitedRunId, 'the schedule is disabled');
       }
 
-      const chainDepth = await this.jobsService.countUsageLimitedInChain(
+      const chainDepth = await this.runsRepository.countUsageLimitedInChain(
         limitedRunId,
         USAGE_LIMIT_RESUME_MAX_CHAIN_DEPTH,
       );
@@ -133,7 +137,8 @@ export class ScheduledAgentJobUsageLimitResumeService {
   }): Promise<ScheduledUsageLimitHandling> {
     const { delayMs, job, limitedRunId } = params;
 
-    const existing = await this.jobsService.findRunResumingFrom(limitedRunId);
+    const existing =
+      await this.runsRepository.findRunResumingFrom(limitedRunId);
     if (existing !== null) {
       return { outcome: 'resumed', resumeRunId: existing.id };
     }
@@ -146,7 +151,8 @@ export class ScheduledAgentJobUsageLimitResumeService {
     );
 
     if (run === null) {
-      const winner = await this.jobsService.findRunResumingFrom(limitedRunId);
+      const winner =
+        await this.runsRepository.findRunResumingFrom(limitedRunId);
 
       if (winner === null) {
         return this.hold(limitedRunId, 'scheduling the resume failed');
@@ -166,10 +172,7 @@ export class ScheduledAgentJobUsageLimitResumeService {
         },
       );
     } catch (error) {
-      await this.jobsService
-        .getRunRepository()
-        .delete({ id: run.id })
-        .catch(() => undefined);
+      await this.runsRepository.remove(run.id).catch(() => undefined);
 
       return this.hold(
         limitedRunId,
@@ -190,7 +193,7 @@ export class ScheduledAgentJobUsageLimitResumeService {
     bullmqJobId: string,
   ): Promise<ScheduledAgentJobRun | null> {
     try {
-      return await this.jobsService.createRun({
+      return await this.runsRepository.createRun({
         bullmqJobId,
         driverId: job.driverId,
         model: job.model,
@@ -215,8 +218,8 @@ export class ScheduledAgentJobUsageLimitResumeService {
     );
 
     try {
-      const run = await this.jobsService.findRunById(limitedRunId);
-      await this.jobsService.updateRunErrorMessage(
+      const run = await this.runsRepository.findRunById(limitedRunId);
+      await this.runsRepository.updateRunErrorMessage(
         limitedRunId,
         `${run?.errorMessage ?? 'Usage limit reached'}; not resumed automatically (${reason})`,
       );

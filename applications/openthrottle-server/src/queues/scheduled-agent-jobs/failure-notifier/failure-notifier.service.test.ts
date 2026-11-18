@@ -1,9 +1,10 @@
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import type {
-  ScheduledAgentJob,
-  ScheduledAgentJobsService,
-} from '@openthrottle/nestjs-repositories';
+import type { ScheduledAgentJob } from '@openthrottle/nestjs-repositories';
+import type { ScheduledAgentJobsRepository } from '@openthrottle/nestjs-repositories-server';
+import type { ScheduledAgentJobsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import { createScheduledAgentJobsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import { asMock } from '@openthrottle/nestjs-testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { NotificationsService } from '../../../notifications/notifications.service.ts';
@@ -24,7 +25,7 @@ const FAILED_RUN: ScheduledRunFailureInput = {
 };
 
 describe('ScheduledAgentJobFailureNotifierService', () => {
-  let jobsService: ScheduledAgentJobsService;
+  let jobsRepository: ScheduledAgentJobsRepositoryMock;
   let notifications: NotificationsService;
   let logger: LoggerService;
   let channel: ScheduledRunFailureChannel;
@@ -34,21 +35,21 @@ describe('ScheduledAgentJobFailureNotifierService', () => {
   ): ScheduledAgentJobFailureNotifierService => {
     return new ScheduledAgentJobFailureNotifierService(
       logger,
-      jobsService,
+      asMock<ScheduledAgentJobsRepository>(jobsRepository),
       notifications,
       channels,
     );
   };
 
   beforeEach(() => {
-    jobsService = createMock<ScheduledAgentJobsService>({
-      findJobById: vi.fn().mockResolvedValue(
-        createMock<ScheduledAgentJob>({
-          name: 'Nightly triage',
-          ownerUserId: 'user-1',
-        }),
-      ),
-    });
+    jobsRepository = createScheduledAgentJobsRepositoryMock();
+    jobsRepository.findJobById.mockResolvedValue(
+      createMock<ScheduledAgentJob>({
+        name: 'Nightly triage',
+        ownerUserId: 'user-1',
+      }),
+    );
+
     notifications = createMock<NotificationsService>({
       emitScheduledRunFailed: vi.fn(),
     });
@@ -130,7 +131,7 @@ describe('ScheduledAgentJobFailureNotifierService', () => {
     it('sends nothing and does not read the schedule', async () => {
       await build([channel]).notify({ ...FAILED_RUN, runCount: 0 });
 
-      expect(jobsService.findJobById).not.toHaveBeenCalled();
+      expect(jobsRepository.findJobById).not.toHaveBeenCalled();
       expect(notifications.emitScheduledRunFailed).not.toHaveBeenCalled();
       expect(channel.deliver).not.toHaveBeenCalled();
     });
@@ -138,7 +139,7 @@ describe('ScheduledAgentJobFailureNotifierService', () => {
 
   describe('when the schedule is gone', () => {
     it('sends nothing', async () => {
-      vi.mocked(jobsService.findJobById).mockResolvedValue(null);
+      vi.mocked(jobsRepository.findJobById).mockResolvedValue(null);
 
       await build([channel]).notify(FAILED_RUN);
 
@@ -149,7 +150,7 @@ describe('ScheduledAgentJobFailureNotifierService', () => {
 
   describe('when reading the schedule throws', () => {
     it('logs and resolves, so the caller is never interrupted', async () => {
-      vi.mocked(jobsService.findJobById).mockRejectedValue(
+      vi.mocked(jobsRepository.findJobById).mockRejectedValue(
         new Error('db down'),
       );
 

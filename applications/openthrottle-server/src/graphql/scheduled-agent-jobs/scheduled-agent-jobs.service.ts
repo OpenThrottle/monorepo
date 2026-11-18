@@ -12,14 +12,16 @@ import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   SCHEDULED_AGENT_JOB_MISFIRE_POLICIES,
   type ScheduledAgentJob,
-  ScheduledAgentJobCheckoutPathService,
   type ScheduledAgentJobDriverId,
   type ScheduledAgentJobMisfirePolicy,
   type ScheduledAgentJobRun,
   type ScheduledAgentJobRunStatusCount,
   type ScheduledAgentJobSettings,
-  ScheduledAgentJobsService,
 } from '@openthrottle/nestjs-repositories';
+import {
+  ScheduledAgentJobRunsRepository,
+  ScheduledAgentJobsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import {
   getDriver,
   parseDriverId,
@@ -36,6 +38,7 @@ import {
 } from '../../queues/scheduled-agent-jobs/scheduled-agent-jobs.constants.ts';
 import type { ScheduledAgentJobPayload } from '../../queues/scheduled-agent-jobs/scheduled-agent-jobs.types.ts';
 import { ScheduledAgentJobSchedulerService } from '../../queues/scheduled-agent-jobs/scheduler/scheduler.service.ts';
+import { ScheduledAgentJobCheckoutPathService } from '../../services/scheduled-agent-job-checkout-path/scheduled-agent-job-checkout-path.service.ts';
 import type {
   ScheduleSpec,
   ScheduleSpecRequest,
@@ -77,7 +80,8 @@ interface UpdateArgs extends ScheduleSpecRequest {
 export class ScheduledAgentJobsGraphqlService {
   constructor(
     private readonly logger: LoggerService,
-    private readonly jobsService: ScheduledAgentJobsService,
+    private readonly jobsRepository: ScheduledAgentJobsRepository,
+    private readonly runsRepository: ScheduledAgentJobRunsRepository,
     private readonly checkoutPaths: ScheduledAgentJobCheckoutPathService,
     private readonly scheduler: ScheduledAgentJobSchedulerService,
     private readonly cancellation: ScheduledAgentJobCancellationService,
@@ -86,39 +90,39 @@ export class ScheduledAgentJobsGraphqlService {
   ) {}
 
   list(ownerUserId?: string): Promise<ScheduledAgentJob[]> {
-    return this.jobsService.listJobs(ownerUserId);
+    return this.jobsRepository.listJobs(ownerUserId);
   }
 
   get(id: string): Promise<ScheduledAgentJob | null> {
-    return this.jobsService.findJobById(id);
+    return this.jobsRepository.findJobById(id);
   }
 
   listRuns(
     scheduledAgentJobId: string,
     limit?: number,
   ): Promise<ScheduledAgentJobRun[]> {
-    return this.jobsService.listRunsForJob(scheduledAgentJobId, limit);
+    return this.runsRepository.listRunsForJob(scheduledAgentJobId, limit);
   }
 
   getRun(runId: string): Promise<ScheduledAgentJobRun | null> {
-    return this.jobsService.findRunById(runId);
+    return this.runsRepository.findRunById(runId);
   }
 
   /** Every not-yet-terminal run across all schedules, oldest-first. */
   listInFlightRuns(limit?: number): Promise<ScheduledAgentJobRun[]> {
-    return this.jobsService.listInFlightRuns(limit);
+    return this.runsRepository.listInFlightRuns(limit);
   }
 
   /** Run counts grouped by status for runs created at or after `since`. */
   countRunsByStatusSince(
     since: Date,
   ): Promise<ScheduledAgentJobRunStatusCount[]> {
-    return this.jobsService.countRunsByStatusSince(since);
+    return this.runsRepository.countRunsByStatusSince(since);
   }
 
   /** Live, unwindowed counts of not-yet-terminal runs, grouped by status. */
   countInFlightRunsByStatus(): Promise<ScheduledAgentJobRunStatusCount[]> {
-    return this.jobsService.countInFlightRunsByStatus();
+    return this.runsRepository.countInFlightRunsByStatus();
   }
 
   async create(args: CreateArgs): Promise<ScheduledAgentJob> {
@@ -137,7 +141,7 @@ export class ScheduledAgentJobsGraphqlService {
       args.ownerUserId,
     );
 
-    const job = await this.jobsService.createJob({
+    const job = await this.jobsRepository.createJob({
       ...spec,
       cwd: args.cwd ?? null,
       driverId,
@@ -186,7 +190,7 @@ export class ScheduledAgentJobsGraphqlService {
       nextSettings = this.parseSettings(args.settingsJson);
     }
 
-    const updated = await this.jobsService.updateJob(id, {
+    const updated = await this.jobsRepository.updateJob(id, {
       ...spec,
       cwd: args.cwd,
       driverId: nextDriverId,
@@ -209,7 +213,7 @@ export class ScheduledAgentJobsGraphqlService {
   }
 
   async setEnabled(id: string, enabled: boolean): Promise<ScheduledAgentJob> {
-    const updated = await this.jobsService.setJobEnabled(id, enabled);
+    const updated = await this.jobsRepository.setJobEnabled(id, enabled);
     if (updated === null) {
       throw new BadRequestException(`Scheduled job ${id} not found`);
     }
@@ -219,13 +223,13 @@ export class ScheduledAgentJobsGraphqlService {
   }
 
   async delete(id: string): Promise<boolean> {
-    const existing = await this.jobsService.findJobById(id);
+    const existing = await this.jobsRepository.findJobById(id);
     if (existing === null) {
       return false;
     }
 
     await this.scheduler.unschedule(existing);
-    return this.jobsService.deleteJob(id);
+    return this.jobsRepository.deleteJob(id);
   }
 
   /**
@@ -236,7 +240,7 @@ export class ScheduledAgentJobsGraphqlService {
   async runNow(id: string): Promise<ScheduledAgentJobRun> {
     const job = await this.requireJob(id);
 
-    const run = await this.jobsService.createRun({
+    const run = await this.runsRepository.createRun({
       driverId: job.driverId,
       model: job.model,
       scheduledAgentJobId: job.id,
@@ -270,19 +274,19 @@ export class ScheduledAgentJobsGraphqlService {
    * fallback.
    */
   async cancelRun(runId: string): Promise<ScheduledAgentJobRun> {
-    const run = await this.jobsService.findRunById(runId);
+    const run = await this.runsRepository.findRunById(runId);
     if (run === null) {
       throw new BadRequestException(`Scheduled job run ${runId} not found`);
     }
 
-    await this.jobsService.requestRunCancel(runId);
+    await this.runsRepository.requestRunCancel(runId);
     this.cancellation.abort(runId);
 
     if (run.status === 'queued') {
       await this.cancelQueuedRun(run);
     }
 
-    const refreshed = await this.jobsService.findRunById(runId);
+    const refreshed = await this.runsRepository.findRunById(runId);
     return refreshed ?? run;
   }
 
@@ -306,7 +310,7 @@ export class ScheduledAgentJobsGraphqlService {
         await job.remove();
       }
 
-      await this.jobsService.markRunFinished(run.id, {
+      await this.runsRepository.markRunFinished(run.id, {
         errorMessage: 'Run cancelled',
         exitCode: null,
         status: 'cancelled',
@@ -322,15 +326,15 @@ export class ScheduledAgentJobsGraphqlService {
   private async projectScheduler(job: ScheduledAgentJob): Promise<void> {
     if (job.enabled) {
       const next = await this.scheduler.upsertScheduler(job);
-      await this.jobsService.updateNextRunAt(job.id, next);
+      await this.jobsRepository.updateNextRunAt(job.id, next);
     } else {
       await this.scheduler.unschedule(job);
-      await this.jobsService.updateNextRunAt(job.id, null);
+      await this.jobsRepository.updateNextRunAt(job.id, null);
     }
   }
 
   private async requireJob(id: string): Promise<ScheduledAgentJob> {
-    const job = await this.jobsService.findJobById(id);
+    const job = await this.jobsRepository.findJobById(id);
     if (job === null) {
       throw new BadRequestException(`Scheduled job ${id} not found`);
     }
@@ -338,7 +342,7 @@ export class ScheduledAgentJobsGraphqlService {
   }
 
   private async reload(id: string): Promise<ScheduledAgentJob> {
-    const job = await this.jobsService.findJobById(id);
+    const job = await this.jobsRepository.findJobById(id);
     if (job === null) {
       throw new BadRequestException(`Scheduled job ${id} vanished after write`);
     }

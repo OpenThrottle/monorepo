@@ -9,9 +9,9 @@ import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { OnApplicationShutdown, OnModuleInit } from '@nestjs/common';
 import { defaultWorkerOptions } from '@openthrottle/nestjs-bullmq';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { WorkspaceLocalRepositoriesService } from '@openthrottle/nestjs-repositories';
 import { CodeSearchService } from '@openthrottle/nestjs-vector-search';
 
+import { WorkspaceLocalRepositoriesService } from '../../services/workspace-local-repositories/workspace-local-repositories.service.ts';
 import { CODE_INDEX_QUEUE_NAME } from './code-index.constants.ts';
 import type { CodeIndexJob, CodeIndexJobResult } from './code-index.types.ts';
 

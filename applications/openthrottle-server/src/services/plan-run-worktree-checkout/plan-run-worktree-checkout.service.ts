@@ -13,9 +13,9 @@ import { basename } from 'node:path';
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
-  RepositoriesService,
-  RepositoryCheckoutsService,
-} from '@openthrottle/nestjs-repositories';
+  RepositoriesRepository,
+  RepositoryCheckoutsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import {
   type PlanRun,
   PlanRunsRepository,
@@ -29,11 +29,11 @@ export class PlanRunWorktreeCheckoutService {
   private readonly name = 'plan-run-worktree-checkout';
 
   constructor(
-    private readonly checkoutsService: RepositoryCheckoutsService,
+    private readonly checkoutsRepository: RepositoryCheckoutsRepository,
     private readonly inspectionService: RepositoryInspectionService,
     private readonly logger: LoggerService,
     private readonly planRunsRepository: PlanRunsRepository,
-    private readonly repositoriesService: RepositoriesService,
+    private readonly repositoriesRepository: RepositoriesRepository,
   ) {
     this.logger.debug(`🧩 ${this.name} 🧩`);
   }
@@ -79,7 +79,7 @@ export class PlanRunWorktreeCheckoutService {
         return run;
       }
 
-      const checkout = await this.checkoutsService.upsertWorktreeCheckout(
+      const checkout = await this.checkoutsRepository.upsertWorktreeCheckout(
         userId,
         {
           displayName: basename(filesystemPath),
@@ -118,7 +118,8 @@ export class PlanRunWorktreeCheckoutService {
   ): Promise<string | null> {
     const fromSnapshot = run.runConfigSnapshot?.workspace?.repositoryId?.trim();
     if (fromSnapshot !== undefined && fromSnapshot !== '') {
-      const known = await this.repositoriesService.findById(fromSnapshot);
+      const known =
+        await this.repositoriesRepository.findRepositoryById(fromSnapshot);
       if (known !== null) {
         return known.id;
       }
@@ -132,7 +133,7 @@ export class PlanRunWorktreeCheckoutService {
     }
 
     const byRemote =
-      await this.repositoriesService.findByNormalizedRemoteUrl(
+      await this.repositoriesRepository.findByNormalizedRemoteUrl(
         normalizedRemoteUrl,
       );
     return byRemote?.id ?? null;

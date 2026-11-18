@@ -129,63 +129,6 @@ export {
   CustomPrompt,
 } from './modules/prompts/custom-prompt.entity.ts';
 export { CustomPromptsService } from './modules/prompts/prompts.service.ts';
-export { RepositoriesModule } from './modules/repositories/repositories.module.ts';
-export { RepositoriesService } from './modules/repositories/repositories.service.ts';
-export type { MergeDetectedRemoteResult } from './modules/repositories/repositories.types.ts';
-export { normalizeRemoteUrl } from './modules/repositories/repositories.utils.ts';
-export type { RepositoryData } from './modules/repositories/repository.entity.ts';
-export { Repository } from './modules/repositories/repository.entity.ts';
-export type {
-  RepositoryCheckoutData,
-  RepositoryCheckoutKind,
-} from './modules/repositories/repository-checkout.entity.ts';
-export {
-  REPOSITORY_CHECKOUT_KINDS,
-  RepositoryCheckout,
-} from './modules/repositories/repository-checkout.entity.ts';
-export { RepositoryCheckoutsService } from './modules/repositories/repository-checkouts/repository-checkouts.service.ts';
-export { ScheduledAgentJobCheckoutPathService } from './modules/scheduled-agent-jobs/checkout-path/checkout-path.service.ts';
-export type {
-  ResolveScheduledAgentJobCheckoutPathInput,
-  ResolveScheduledAgentJobCheckoutPathResult,
-} from './modules/scheduled-agent-jobs/checkout-path/checkout-path.types.ts';
-export type {
-  ScheduledAgentJobData,
-  ScheduledAgentJobDriverId,
-  ScheduledAgentJobEndpointSettings,
-  ScheduledAgentJobMisfirePolicy,
-  ScheduledAgentJobScheduleKind,
-  ScheduledAgentJobSettings,
-  ScheduledAgentJobWorktreeSettings,
-} from './modules/scheduled-agent-jobs/scheduled-agent-job.entity.ts';
-export {
-  SCHEDULED_AGENT_JOB_MISFIRE_POLICIES,
-  SCHEDULED_AGENT_JOB_SCHEDULE_KINDS,
-  ScheduledAgentJob,
-} from './modules/scheduled-agent-jobs/scheduled-agent-job.entity.ts';
-export type {
-  ScheduledAgentJobRunData,
-  ScheduledAgentJobRunSettingsSnapshot,
-  ScheduledAgentJobRunStatus,
-  ScheduledAgentJobRunTrigger,
-} from './modules/scheduled-agent-jobs/scheduled-agent-job-run.entity.ts';
-export {
-  SCHEDULED_AGENT_JOB_RUN_IN_FLIGHT_STATUSES,
-  ScheduledAgentJobRun,
-} from './modules/scheduled-agent-jobs/scheduled-agent-job-run.entity.ts';
-export { ScheduledAgentJobsModule } from './modules/scheduled-agent-jobs/scheduled-agent-jobs.module.ts';
-export { ScheduledAgentJobsService } from './modules/scheduled-agent-jobs/scheduled-agent-jobs.service.ts';
-export type {
-  ClaimScheduledAgentJobSlotInput,
-  CreateScheduledAgentJobInput,
-  CreateScheduledAgentJobRunInput,
-  FinishScheduledAgentJobRunInput,
-  RecordMissedScheduledAgentJobRunsInput,
-  ScheduledAgentJobRunStatusCount,
-  StartScheduledAgentJobRunInput,
-  UpdateScheduledAgentJobInput,
-} from './modules/scheduled-agent-jobs/scheduled-agent-jobs.types.ts';
-export { schedulerKeyForJob } from './modules/scheduled-agent-jobs/scheduled-agent-jobs.utils.ts';
 export {
   skillAvailabilityPostureSchema,
   skillAvailabilityRuleInputSchema,
@@ -233,45 +176,6 @@ export type { AddTagOptions, EffectiveTag } from './modules/tags/tags.types.ts';
 export { deriveTagSource } from './modules/tags/tags.utils.ts';
 export type { TaskTagData } from './modules/tags/task-tag.entity.ts';
 export { TaskTag } from './modules/tags/task-tag.entity.ts';
-export { USER_PREFERENCES_ERROR_REASONS } from './modules/user-preferences/user-preferences.constants.ts';
-export { UserPreferences } from './modules/user-preferences/user-preferences.entity.ts';
-export { UserPreferencesModule } from './modules/user-preferences/user-preferences.module.ts';
-export { UserPreferencesService } from './modules/user-preferences/user-preferences.service.ts';
-export type {
-  UpdateUserPreferencesPatch,
-  UpdateUserPreferencesResult,
-  UserPreferencesAgent,
-  UserPreferencesAgentInput,
-  UserPreferencesData,
-  UserPreferencesError,
-  UserPreferencesErrorReason,
-} from './modules/user-preferences/user-preferences.types.ts';
-export { EDITOR_PRESENCE_STATES } from './modules/workspace-settings/editor-presence/editor-presence.constants.ts';
-export type {
-  DetectEditorPresenceOptions,
-  EditorPresence,
-  EditorPresenceResult,
-  EditorPresenceState,
-} from './modules/workspace-settings/editor-presence/editor-presence.types.ts';
-export { detectEditorPresence } from './modules/workspace-settings/editor-presence/editor-presence.utils.ts';
-export type { UserWorkspaceSettingsData } from './modules/workspace-settings/user-workspace-settings.entity.ts';
-export { UserWorkspaceSettings } from './modules/workspace-settings/user-workspace-settings.entity.ts';
-export { UserWorkspaceSettingsService } from './modules/workspace-settings/user-workspace-settings/user-workspace-settings.service.ts';
-export { WorkspaceEditorConfigService } from './modules/workspace-settings/workspace-editor-config/workspace-editor-config.service.ts';
-export type {
-  ApplyWorkspaceEditorConfigOptions,
-  WorkspaceEditorConfigApplication,
-} from './modules/workspace-settings/workspace-editor-config/workspace-editor-config.types.ts';
-export { buildManagedMcpServers } from './modules/workspace-settings/workspace-editor-mcp-config/workspace-editor-mcp-config.utils.ts';
-export { WorkspaceLocalRepositoriesService } from './modules/workspace-settings/workspace-local-repositories/workspace-local-repositories.service.ts';
-export type { WorkspaceLocalRepository } from './modules/workspace-settings/workspace-local-repository.entity.ts';
-export type { WorkspaceLocalRepositoryData } from './modules/workspace-settings/workspace-local-repository.entity.ts';
-export {
-  WORKSPACE_EDITOR_IDS,
-  WORKSPACE_EDITORS,
-} from './modules/workspace-settings/workspace-settings.constants.ts';
-export type { WorkspaceEditorId } from './modules/workspace-settings/workspace-settings.types.ts';
-export { isWorkspaceEditorId } from './modules/workspace-settings/workspace-settings.utils.ts';
 export { NestjsRepositoriesModule } from './nestjs-repositories.module.ts';
 export { getTypeOrmOptions as getOpenThrottleTypeOrmOptions } from './nestjs-repositories.utils.ts';
 export {
@@ -321,6 +225,75 @@ export type {
   TaskHookRole,
   TaskHookScope,
   TaskHookSource,
+} from '@openthrottle/nestjs-repositories-server';
+// Repositories, scheduled agent jobs, user preferences and workspace settings moved to
+// nestjs-repositories-server (OT plan a097bdcd):
+// re-exported under their entity/type names for non-server consumers. The old services are gone;
+// inject the repositories from the new package.
+export type {
+  ClaimScheduledAgentJobSlotInput,
+  CreateScheduledAgentJobInput,
+  CreateScheduledAgentJobRunInput,
+  FinishScheduledAgentJobRunInput,
+  MergeDetectedRemoteResult,
+  RecordMissedScheduledAgentJobRunsInput,
+  RepositoryCheckoutData,
+  RepositoryCheckoutKind,
+  RepositoryData,
+  ScheduledAgentJobData,
+  ScheduledAgentJobDriverId,
+  ScheduledAgentJobEndpointSettings,
+  ScheduledAgentJobMisfirePolicy,
+  ScheduledAgentJobRunData,
+  ScheduledAgentJobRunSettingsSnapshot,
+  ScheduledAgentJobRunStatus,
+  ScheduledAgentJobRunStatusCount,
+  ScheduledAgentJobRunTrigger,
+  ScheduledAgentJobScheduleKind,
+  ScheduledAgentJobSettings,
+  ScheduledAgentJobWorktreeSettings,
+  StartScheduledAgentJobRunInput,
+  UpdateScheduledAgentJobInput,
+  UpdateUserPreferencesPatch,
+  UpdateUserPreferencesResult,
+  UpdateUserWorkspaceProfileData,
+  UserPreferencesAgent,
+  UserPreferencesAgentInput,
+  UserPreferencesData,
+  UserPreferencesError,
+  UserPreferencesErrorReason,
+  UserWorkspaceSettingsData,
+  WorkspaceEditorId,
+} from '@openthrottle/nestjs-repositories-server';
+export {
+  isWorkspaceEditorId,
+  normalizeRemoteUrl,
+  RepositoriesModule,
+  RepositoriesRepository,
+  Repository,
+  REPOSITORY_CHECKOUT_KINDS,
+  RepositoryCheckout,
+  RepositoryCheckoutsModule,
+  RepositoryCheckoutsRepository,
+  SCHEDULED_AGENT_JOB_MISFIRE_POLICIES,
+  SCHEDULED_AGENT_JOB_RUN_IN_FLIGHT_STATUSES,
+  SCHEDULED_AGENT_JOB_SCHEDULE_KINDS,
+  ScheduledAgentJob,
+  ScheduledAgentJobRun,
+  ScheduledAgentJobRunsModule,
+  ScheduledAgentJobRunsRepository,
+  ScheduledAgentJobsModule,
+  ScheduledAgentJobsRepository,
+  schedulerKeyForJob,
+  USER_PREFERENCES_ERROR_REASONS,
+  UserPreferences,
+  UserPreferencesModule,
+  UserPreferencesRepository,
+  UserWorkspaceSettings,
+  UserWorkspaceSettingsModule,
+  UserWorkspaceSettingsRepository,
+  WORKSPACE_EDITOR_IDS,
+  WORKSPACE_EDITORS,
 } from '@openthrottle/nestjs-repositories-server';
 // Identity tables moved to nestjs-repositories-server (OT plan 8a341c01): re-exported under the
 // same names for non-server consumers. Deprecated for batch 14, when the DataSource moves too.

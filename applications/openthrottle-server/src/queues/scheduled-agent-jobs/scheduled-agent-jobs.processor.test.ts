@@ -1,14 +1,23 @@
 import { createMock } from '@golevelup/ts-vitest';
 import type { KeyedJsonlWriter } from '@openthrottle/nestjs-logging';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import type {
-  ScheduledAgentJobCheckoutPathService,
-  ScheduledAgentJobsService,
-} from '@openthrottle/nestjs-repositories';
 import {
   type ScheduledAgentJob,
   type ScheduledAgentJobRun,
 } from '@openthrottle/nestjs-repositories';
+import type {
+  ScheduledAgentJobRunsRepository,
+  ScheduledAgentJobsRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import type {
+  ScheduledAgentJobRunsRepositoryMock,
+  ScheduledAgentJobsRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
+import {
+  createScheduledAgentJobRunsRepositoryMock,
+  createScheduledAgentJobsRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
+import { asMock } from '@openthrottle/nestjs-testing';
 import {
   RUN_AGENT_STATUS,
   type RunAgentPromptResult,
@@ -23,6 +32,7 @@ import {
   vi,
 } from 'vitest';
 
+import type { ScheduledAgentJobCheckoutPathService } from '../../services/scheduled-agent-job-checkout-path/scheduled-agent-job-checkout-path.service.ts';
 import type { BullMqRunOutputRetentionService } from '../bullmq-run-output/retention/retention.service.ts';
 import type { ScheduledAgentJobCancellationService } from './cancellation/cancellation.service.ts';
 import type { ScheduledAgentJobDirectoryLockService } from './directory-lock/directory-lock.service.ts';
@@ -111,7 +121,8 @@ const makeJob = (
 };
 
 describe('ScheduledAgentJobsProcessor', () => {
-  let jobsService: ScheduledAgentJobsService;
+  let jobsRepository: ScheduledAgentJobsRepositoryMock;
+  let runsRepository: ScheduledAgentJobRunsRepositoryMock;
   let checkoutPaths: ScheduledAgentJobCheckoutPathService;
   let runner: ScheduledAgentRunnerService;
   let cancellation: ScheduledAgentJobCancellationService;
@@ -122,29 +133,22 @@ describe('ScheduledAgentJobsProcessor', () => {
   let scheduler: ScheduledAgentJobSchedulerService;
   let writer: KeyedJsonlWriter;
   let failureNotifier: ScheduledAgentJobFailureNotifierService;
-  let jobRepoUpdate: ReturnType<typeof vi.fn>;
-  let runRepoFindOne: ReturnType<typeof vi.fn>;
   let processor: ScheduledAgentJobsProcessor;
 
   beforeEach(() => {
-    jobRepoUpdate = vi.fn().mockResolvedValue({ affected: 1 });
-    runRepoFindOne = vi.fn().mockResolvedValue(null);
-
-    jobsService = createMock<ScheduledAgentJobsService>({
-      createRun: vi
-        .fn()
-        .mockResolvedValue(createMock<ScheduledAgentJobRun>({ id: 'run-1' })),
-      findJobById: vi
-        .fn()
-        .mockResolvedValue(
-          createMock<ScheduledAgentJob>({ ownerUserId: 'user-1' }),
-        ),
-      findRunById: vi.fn().mockResolvedValue(null),
-      getJobRepository: vi.fn().mockReturnValue({ update: jobRepoUpdate }),
-      getRunRepository: vi.fn().mockReturnValue({ findOne: runRepoFindOne }),
-      markRunFinished: vi.fn().mockResolvedValue(undefined),
-      markRunStarted: vi.fn().mockResolvedValue(undefined),
-    });
+    jobsRepository = createScheduledAgentJobsRepositoryMock();
+    jobsRepository.updateMany.mockResolvedValue({ updateCount: 1 });
+    jobsRepository.findJobById.mockResolvedValue(
+      createMock<ScheduledAgentJob>({ ownerUserId: 'user-1' }),
+    );
+    runsRepository = createScheduledAgentJobRunsRepositoryMock();
+    runsRepository.findOne.mockResolvedValue(null);
+    runsRepository.createRun.mockResolvedValue(
+      createMock<ScheduledAgentJobRun>({ id: 'run-1' }),
+    );
+    runsRepository.findRunById.mockResolvedValue(null);
+    runsRepository.markRunFinished.mockResolvedValue(undefined);
+    runsRepository.markRunStarted.mockResolvedValue(undefined);
 
     checkoutPaths = createMock<ScheduledAgentJobCheckoutPathService>({
       resolve: vi.fn().mockResolvedValue({ error: 'not-found' }),
@@ -178,7 +182,8 @@ describe('ScheduledAgentJobsProcessor', () => {
 
     processor = new ScheduledAgentJobsProcessor(
       createMock<LoggerService>(),
-      jobsService,
+      asMock<ScheduledAgentJobsRepository>(jobsRepository),
+      asMock<ScheduledAgentJobRunsRepository>(runsRepository),
       checkoutPaths,
       runner,
       cancellation,
@@ -194,27 +199,30 @@ describe('ScheduledAgentJobsProcessor', () => {
   it('creates a run for a scheduled fire, runs the driver, records success + lastRunAt', async () => {
     await processor.process(makeJob({ model: 'opus' }));
 
-    expect(jobsService.createRun).toHaveBeenCalledWith(
+    expect(runsRepository.createRun).toHaveBeenCalledWith(
       expect.objectContaining({
         bullmqJobId: 'bull-1',
         scheduledAgentJobId: 'sched-1',
         trigger: 'schedule',
       }),
     );
-    expect(jobsService.markRunStarted).toHaveBeenCalledWith('run-1', 'bull-1');
+    expect(runsRepository.markRunStarted).toHaveBeenCalledWith(
+      'run-1',
+      'bull-1',
+    );
 
     const runConfig = vi.mocked(runner.run).mock.calls[0]?.[0];
     expect(runConfig?.driverId).toBe('claude');
     expect(runConfig?.model).toBe('opus');
     expect(runConfig?.prompt).toBe('do it');
 
-    expect(jobsService.markRunFinished).toHaveBeenCalledWith('run-1', {
+    expect(runsRepository.markRunFinished).toHaveBeenCalledWith('run-1', {
       errorMessage: null,
       exitCode: 0,
       status: 'succeeded',
       ...NULL_USAGE_COLUMNS,
     });
-    expect(jobRepoUpdate).toHaveBeenCalledWith(
+    expect(jobsRepository.updateMany).toHaveBeenCalledWith(
       { id: 'sched-1' },
       expect.objectContaining({ lastRunAt: expect.any(Date) }),
     );
@@ -239,7 +247,7 @@ describe('ScheduledAgentJobsProcessor', () => {
     });
     expect(vi.mocked(runner.run).mock.calls[0]?.[0]?.cwd).toBe(process.cwd());
     // Provenance lands on the run row.
-    expect(jobsService.createRun).toHaveBeenCalledWith(
+    expect(runsRepository.createRun).toHaveBeenCalledWith(
       expect.objectContaining({
         repositoryCheckoutId: 'checkout-1',
         resolvedCwd: process.cwd(),
@@ -249,7 +257,7 @@ describe('ScheduledAgentJobsProcessor', () => {
 
   it('backfills checkout provenance onto a pre-created run-now row', async () => {
     vi.mocked(checkoutPaths.resolve).mockResolvedValue({ path: process.cwd() });
-    vi.mocked(jobsService.findRunById).mockResolvedValue(
+    vi.mocked(runsRepository.findRunById).mockResolvedValue(
       createMock<ScheduledAgentJobRun>({ id: 'run-now-9' }),
     );
 
@@ -257,7 +265,7 @@ describe('ScheduledAgentJobsProcessor', () => {
       makeJob({ repositoryCheckoutId: 'checkout-1', runId: 'run-now-9' }),
     );
 
-    expect(jobsService.markRunStarted).toHaveBeenCalledWith(
+    expect(runsRepository.markRunStarted).toHaveBeenCalledWith(
       'run-now-9',
       'bull-1',
       expect.objectContaining({
@@ -276,13 +284,13 @@ describe('ScheduledAgentJobsProcessor', () => {
 
     // Still runs — from the fallback path — and does NOT claim the dead checkout on the run row.
     expect(vi.mocked(runner.run).mock.calls[0]?.[0]?.cwd).toBe(process.cwd());
-    expect(jobsService.createRun).toHaveBeenCalledWith(
+    expect(runsRepository.createRun).toHaveBeenCalledWith(
       expect.objectContaining({
         repositoryCheckoutId: null,
         resolvedCwd: process.cwd(),
       }),
     );
-    expect(jobsService.markRunFinished).toHaveBeenCalledWith(
+    expect(runsRepository.markRunFinished).toHaveBeenCalledWith(
       'run-1',
       expect.objectContaining({ status: 'succeeded' }),
     );
@@ -299,7 +307,7 @@ describe('ScheduledAgentJobsProcessor', () => {
     );
 
     expect(runner.run).not.toHaveBeenCalled();
-    const finish = vi.mocked(jobsService.markRunFinished).mock.calls[0]?.[1];
+    const finish = vi.mocked(runsRepository.markRunFinished).mock.calls[0]?.[1];
     expect(finish?.status).toBe('failed');
     expect(finish?.errorMessage).toContain('gone');
     expect(finish?.errorMessage).toContain('/definitely/not/a/real/dir');
@@ -310,7 +318,7 @@ describe('ScheduledAgentJobsProcessor', () => {
 
     expect(checkoutPaths.resolve).not.toHaveBeenCalled();
     expect(vi.mocked(runner.run).mock.calls[0]?.[0]?.cwd).toBe(process.cwd());
-    expect(jobsService.createRun).toHaveBeenCalledWith(
+    expect(runsRepository.createRun).toHaveBeenCalledWith(
       expect.objectContaining({
         repositoryCheckoutId: null,
         resolvedCwd: process.cwd(),
@@ -328,7 +336,8 @@ describe('ScheduledAgentJobsProcessor', () => {
     });
     processor = new ScheduledAgentJobsProcessor(
       createMock<LoggerService>(),
-      jobsService,
+      asMock<ScheduledAgentJobsRepository>(jobsRepository),
+      asMock<ScheduledAgentJobRunsRepository>(runsRepository),
       checkoutPaths,
       runner,
       cancellation,
@@ -342,7 +351,7 @@ describe('ScheduledAgentJobsProcessor', () => {
 
     await processor.process(makeJob({}));
 
-    expect(jobsService.markRunFinished).toHaveBeenCalledWith(
+    expect(runsRepository.markRunFinished).toHaveBeenCalledWith(
       'run-1',
       expect.objectContaining({ exitCode: 0, status: 'no_op' }),
     );
@@ -356,7 +365,8 @@ describe('ScheduledAgentJobsProcessor', () => {
     });
     processor = new ScheduledAgentJobsProcessor(
       createMock<LoggerService>(),
-      jobsService,
+      asMock<ScheduledAgentJobsRepository>(jobsRepository),
+      asMock<ScheduledAgentJobRunsRepository>(runsRepository),
       checkoutPaths,
       runner,
       cancellation,
@@ -370,7 +380,7 @@ describe('ScheduledAgentJobsProcessor', () => {
 
     await processor.process(makeJob({}));
 
-    expect(jobsService.markRunFinished).toHaveBeenCalledWith(
+    expect(runsRepository.markRunFinished).toHaveBeenCalledWith(
       'run-1',
       expect.objectContaining({ status: 'succeeded' }),
     );
@@ -388,7 +398,8 @@ describe('ScheduledAgentJobsProcessor', () => {
     });
     processor = new ScheduledAgentJobsProcessor(
       createMock<LoggerService>(),
-      jobsService,
+      asMock<ScheduledAgentJobsRepository>(jobsRepository),
+      asMock<ScheduledAgentJobRunsRepository>(runsRepository),
       checkoutPaths,
       runner,
       cancellation,
@@ -402,23 +413,23 @@ describe('ScheduledAgentJobsProcessor', () => {
 
     await processor.process(makeJob({}));
 
-    expect(jobsService.markRunFinished).toHaveBeenCalledWith(
+    expect(runsRepository.markRunFinished).toHaveBeenCalledWith(
       'run-1',
       expect.objectContaining({ status: 'failed' }),
     );
   });
 
   it('claims a pre-created run row for run-now instead of creating one', async () => {
-    vi.mocked(jobsService.findRunById).mockResolvedValue(
+    vi.mocked(runsRepository.findRunById).mockResolvedValue(
       createMock<ScheduledAgentJobRun>({ id: 'run-now-9' }),
     );
 
     await processor.process(makeJob({ runId: 'run-now-9' }));
 
-    expect(jobsService.findRunById).toHaveBeenCalledWith('run-now-9');
-    expect(jobsService.createRun).not.toHaveBeenCalled();
+    expect(runsRepository.findRunById).toHaveBeenCalledWith('run-now-9');
+    expect(runsRepository.createRun).not.toHaveBeenCalled();
     // Run-now backfills the settings snapshot as the pre-created row starts.
-    expect(jobsService.markRunStarted).toHaveBeenCalledWith(
+    expect(runsRepository.markRunStarted).toHaveBeenCalledWith(
       'run-now-9',
       'bull-1',
       expect.objectContaining({
@@ -434,7 +445,7 @@ describe('ScheduledAgentJobsProcessor', () => {
 
     await processor.process(makeJob());
 
-    expect(jobsService.markRunFinished).toHaveBeenCalledWith('run-1', {
+    expect(runsRepository.markRunFinished).toHaveBeenCalledWith('run-1', {
       errorMessage: 'Agent exited with code 2',
       exitCode: 2,
       status: 'failed',
@@ -447,7 +458,7 @@ describe('ScheduledAgentJobsProcessor', () => {
       result({ exitCode: null, status: RUN_AGENT_STATUS.timeout }),
     );
     await processor.process(makeJob());
-    expect(jobsService.markRunFinished).toHaveBeenLastCalledWith('run-1', {
+    expect(runsRepository.markRunFinished).toHaveBeenLastCalledWith('run-1', {
       errorMessage: 'Run timed out',
       exitCode: null,
       status: 'failed',
@@ -458,7 +469,7 @@ describe('ScheduledAgentJobsProcessor', () => {
       result({ exitCode: null, status: RUN_AGENT_STATUS.cancelled }),
     );
     await processor.process(makeJob());
-    expect(jobsService.markRunFinished).toHaveBeenLastCalledWith('run-1', {
+    expect(runsRepository.markRunFinished).toHaveBeenLastCalledWith('run-1', {
       errorMessage: 'Run cancelled',
       exitCode: null,
       status: 'cancelled',
@@ -470,7 +481,7 @@ describe('ScheduledAgentJobsProcessor', () => {
     it('finishes a run-now run cancelled without spawning the agent', async () => {
       // The cancel landed while BullMQ was moving the job to active: too late to remove the job,
       // too early for an abort controller to exist, so only the durable marker records it.
-      vi.mocked(jobsService.findRunById).mockResolvedValue(
+      vi.mocked(runsRepository.findRunById).mockResolvedValue(
         createMock<ScheduledAgentJobRun>({
           cancelRequestedAt: new Date('2026-11-01T12:00:00.000Z'),
           id: 'run-now-9',
@@ -480,10 +491,10 @@ describe('ScheduledAgentJobsProcessor', () => {
 
       await processor.process(makeJob({ runId: 'run-now-9' }));
 
-      expect(jobsService.markRunStarted).toHaveBeenCalled();
+      expect(runsRepository.markRunStarted).toHaveBeenCalled();
       expect(directoryLock.acquire).not.toHaveBeenCalled();
       expect(runner.run).not.toHaveBeenCalled();
-      expect(jobsService.markRunFinished).toHaveBeenCalledExactlyOnceWith(
+      expect(runsRepository.markRunFinished).toHaveBeenCalledExactlyOnceWith(
         'run-now-9',
         { errorMessage: 'Run cancelled', exitCode: null, status: 'cancelled' },
       );
@@ -497,7 +508,7 @@ describe('ScheduledAgentJobsProcessor', () => {
         order.push('attach');
         return new AbortController().signal;
       });
-      vi.mocked(jobsService.findRunById).mockImplementation(async (id) => {
+      vi.mocked(runsRepository.findRunById).mockImplementation(async (id) => {
         order.push(`find:${id}`);
         return createMock<ScheduledAgentJobRun>({
           cancelRequestedAt: null,
@@ -517,7 +528,7 @@ describe('ScheduledAgentJobsProcessor', () => {
     it('runs normally when no cancel was requested', async () => {
       await processor.process(makeJob({ model: 'opus' }));
 
-      expect(jobsService.findRunById).toHaveBeenCalledWith('run-1');
+      expect(runsRepository.findRunById).toHaveBeenCalledWith('run-1');
       expect(runner.run).toHaveBeenCalledOnce();
     });
   });
@@ -531,16 +542,16 @@ describe('ScheduledAgentJobsProcessor', () => {
     };
 
     it('cancels a resume run without spawning the agent when the schedule was disabled', async () => {
-      vi.mocked(jobsService.findRunById).mockResolvedValue(resumeRow());
-      vi.mocked(jobsService.findJobById).mockResolvedValue(
+      vi.mocked(runsRepository.findRunById).mockResolvedValue(resumeRow());
+      vi.mocked(jobsRepository.findJobById).mockResolvedValue(
         createMock<ScheduledAgentJob>({ enabled: false }),
       );
 
       await processor.process(makeJob({ runId: 'run-resume' }));
 
       expect(runner.run).not.toHaveBeenCalled();
-      expect(jobsService.markRunStarted).not.toHaveBeenCalled();
-      expect(jobsService.markRunFinished).toHaveBeenCalledExactlyOnceWith(
+      expect(runsRepository.markRunStarted).not.toHaveBeenCalled();
+      expect(runsRepository.markRunFinished).toHaveBeenCalledExactlyOnceWith(
         'run-resume',
         {
           errorMessage: `The schedule was disabled before the usage-limit resume fired`,
@@ -551,24 +562,24 @@ describe('ScheduledAgentJobsProcessor', () => {
     });
 
     it('skips a resume run whose schedule was deleted (the run row cascaded away)', async () => {
-      vi.mocked(jobsService.findRunById).mockResolvedValue(null);
-      vi.mocked(jobsService.findJobById).mockResolvedValue(null);
+      vi.mocked(runsRepository.findRunById).mockResolvedValue(null);
+      vi.mocked(jobsRepository.findJobById).mockResolvedValue(null);
 
       await processor.process(makeJob({ runId: 'run-resume' }));
 
       expect(runner.run).not.toHaveBeenCalled();
-      expect(jobsService.createRun).not.toHaveBeenCalled();
-      expect(jobsService.markRunFinished).not.toHaveBeenCalled();
+      expect(runsRepository.createRun).not.toHaveBeenCalled();
+      expect(runsRepository.markRunFinished).not.toHaveBeenCalled();
     });
 
     it('cancels a surviving resume run with a deleted-schedule message', async () => {
-      vi.mocked(jobsService.findRunById).mockResolvedValue(resumeRow());
-      vi.mocked(jobsService.findJobById).mockResolvedValue(null);
+      vi.mocked(runsRepository.findRunById).mockResolvedValue(resumeRow());
+      vi.mocked(jobsRepository.findJobById).mockResolvedValue(null);
 
       await processor.process(makeJob({ runId: 'run-resume' }));
 
       expect(runner.run).not.toHaveBeenCalled();
-      expect(jobsService.markRunFinished).toHaveBeenCalledWith(
+      expect(runsRepository.markRunFinished).toHaveBeenCalledWith(
         'run-resume',
         expect.objectContaining({
           errorMessage: `The schedule was deleted before the usage-limit resume fired`,
@@ -578,22 +589,22 @@ describe('ScheduledAgentJobsProcessor', () => {
     });
 
     it('runs a resume run normally when the schedule is still enabled', async () => {
-      vi.mocked(jobsService.findRunById).mockResolvedValue(resumeRow());
-      vi.mocked(jobsService.findJobById).mockResolvedValue(
+      vi.mocked(runsRepository.findRunById).mockResolvedValue(resumeRow());
+      vi.mocked(jobsRepository.findJobById).mockResolvedValue(
         createMock<ScheduledAgentJob>({ enabled: true, ownerUserId: 'u1' }),
       );
 
       await processor.process(makeJob({ runId: 'run-resume' }));
 
       expect(runner.run).toHaveBeenCalledOnce();
-      expect(jobsService.markRunStarted).toHaveBeenCalled();
+      expect(runsRepository.markRunStarted).toHaveBeenCalled();
     });
 
     it('still lets Run now execute on a disabled schedule', async () => {
-      vi.mocked(jobsService.findRunById).mockResolvedValue(
+      vi.mocked(runsRepository.findRunById).mockResolvedValue(
         createMock<ScheduledAgentJobRun>({ id: 'run-1', trigger: 'manual' }),
       );
-      vi.mocked(jobsService.findJobById).mockResolvedValue(
+      vi.mocked(jobsRepository.findJobById).mockResolvedValue(
         createMock<ScheduledAgentJob>({ enabled: false }),
       );
 
@@ -620,7 +631,7 @@ describe('ScheduledAgentJobsProcessor', () => {
 
       await processor.process(makeJob());
 
-      expect(jobsService.markRunFinished).toHaveBeenCalledWith('run-1', {
+      expect(runsRepository.markRunFinished).toHaveBeenCalledWith('run-1', {
         errorMessage: `Usage limit reached (five_hour); resets at 2026-11-01T17:00:00.000Z`,
         exitCode: 1,
         status: 'usage_limited',
@@ -647,7 +658,7 @@ describe('ScheduledAgentJobsProcessor', () => {
 
       await processor.process(makeJob());
 
-      expect(jobsService.markRunFinished).toHaveBeenCalledWith(
+      expect(runsRepository.markRunFinished).toHaveBeenCalledWith(
         'run-1',
         expect.objectContaining({
           errorMessage: 'Usage limit reached; reset time unknown',
@@ -670,7 +681,7 @@ describe('ScheduledAgentJobsProcessor', () => {
 
       await processor.process(makeJob());
 
-      const finishedOrder = vi.mocked(jobsService.markRunFinished).mock
+      const finishedOrder = vi.mocked(runsRepository.markRunFinished).mock
         .invocationCallOrder[0];
       const handleOrder = vi.mocked(usageLimitResume.handle).mock
         .invocationCallOrder[0];
@@ -688,7 +699,7 @@ describe('ScheduledAgentJobsProcessor', () => {
 
       await processor.process(makeJob());
 
-      expect(jobsService.markRunFinished).toHaveBeenCalledWith(
+      expect(runsRepository.markRunFinished).toHaveBeenCalledWith(
         'run-1',
         expect.objectContaining({ status: 'cancelled' }),
       );
@@ -702,14 +713,13 @@ describe('ScheduledAgentJobsProcessor', () => {
     });
 
     it('treats a usage_limited run as terminal for the crash safety net', async () => {
-      runRepoFindOne.mockResolvedValue({
-        id: 'run-9',
-        status: 'usage_limited',
-      });
+      runsRepository.findOne.mockResolvedValue(
+        asMock<ScheduledAgentJobRun>({ id: 'run-9', status: 'usage_limited' }),
+      );
 
       await processor.onJobStalled('bull-9');
 
-      expect(jobsService.markRunFinished).not.toHaveBeenCalled();
+      expect(runsRepository.markRunFinished).not.toHaveBeenCalled();
     });
   });
 
@@ -733,7 +743,7 @@ describe('ScheduledAgentJobsProcessor', () => {
 
     await expect(processor.process(makeJob())).resolves.toBeUndefined();
 
-    expect(jobsService.markRunFinished).toHaveBeenCalledWith('run-1', {
+    expect(runsRepository.markRunFinished).toHaveBeenCalledWith('run-1', {
       errorMessage: 'unknown driver',
       exitCode: null,
       status: 'failed',
@@ -741,16 +751,16 @@ describe('ScheduledAgentJobsProcessor', () => {
   });
 
   it('failed event marks the matching non-terminal run failed (crash safety net)', async () => {
-    runRepoFindOne.mockResolvedValue(
+    runsRepository.findOne.mockResolvedValue(
       createMock<ScheduledAgentJobRun>({ id: 'run-7', status: 'running' }),
     );
 
     await processor.onJobFailed(makeJob(), new Error('worker died'));
 
-    expect(runRepoFindOne).toHaveBeenCalledWith({
+    expect(runsRepository.findOne).toHaveBeenCalledWith({
       where: { bullmqJobId: 'bull-1' },
     });
-    expect(jobsService.markRunFinished).toHaveBeenCalledWith('run-7', {
+    expect(runsRepository.markRunFinished).toHaveBeenCalledWith('run-7', {
       errorMessage: 'worker died',
       exitCode: null,
       status: 'failed',
@@ -758,13 +768,13 @@ describe('ScheduledAgentJobsProcessor', () => {
   });
 
   it('failed event no-ops when the run is already terminal', async () => {
-    runRepoFindOne.mockResolvedValue(
+    runsRepository.findOne.mockResolvedValue(
       createMock<ScheduledAgentJobRun>({ id: 'run-8', status: 'succeeded' }),
     );
 
     await processor.onJobStalled('bull-1');
 
-    expect(jobsService.markRunFinished).not.toHaveBeenCalled();
+    expect(runsRepository.markRunFinished).not.toHaveBeenCalled();
     expect(failureNotifier.notify).not.toHaveBeenCalled();
   });
 
@@ -790,7 +800,8 @@ describe('ScheduledAgentJobsProcessor', () => {
         scheduledAgentJobId: 'sched-1',
       });
       const settledAt =
-        vi.mocked(jobsService.markRunFinished).mock.invocationCallOrder[0] ?? 0;
+        vi.mocked(runsRepository.markRunFinished).mock.invocationCallOrder[0] ??
+        0;
       const notifiedAt =
         vi.mocked(failureNotifier.notify).mock.invocationCallOrder[0] ?? 0;
       expect(settledAt).toBeLessThan(notifiedAt);
@@ -847,7 +858,7 @@ describe('ScheduledAgentJobsProcessor', () => {
     });
 
     it('sends a failed notice from the crash safety net', async () => {
-      runRepoFindOne.mockResolvedValue(
+      runsRepository.findOne.mockResolvedValue(
         createMock<ScheduledAgentJobRun>({
           id: 'run-7',
           scheduledAgentJobId: 'sched-9',
@@ -876,7 +887,7 @@ describe('ScheduledAgentJobsProcessor', () => {
       }),
     );
 
-    expect(jobsService.createRun).toHaveBeenCalledWith(
+    expect(runsRepository.createRun).toHaveBeenCalledWith(
       expect.objectContaining({
         settingsSnapshot: {
           driverId: 'codex',
@@ -894,7 +905,7 @@ describe('ScheduledAgentJobsProcessor', () => {
 
     await processor.process(makeJob());
 
-    expect(jobsService.markRunFinished).toHaveBeenCalledWith('run-1', {
+    expect(runsRepository.markRunFinished).toHaveBeenCalledWith('run-1', {
       cacheReadTokens: 20,
       cacheWriteTokens: 10,
       costUsd: 0.0123,
@@ -980,7 +991,7 @@ describe('ScheduledAgentJobsProcessor', () => {
       await processor.process(makeJob({ cwd: process.cwd() }));
 
       expect(release).toHaveBeenCalledTimes(1);
-      expect(jobsService.markRunFinished).toHaveBeenCalledWith(
+      expect(runsRepository.markRunFinished).toHaveBeenCalledWith(
         'run-1',
         expect.objectContaining({ status: 'failed' }),
       );
@@ -995,7 +1006,7 @@ describe('ScheduledAgentJobsProcessor', () => {
       await processor.process(makeJob({ cwd: process.cwd() }));
 
       expect(runner.run).not.toHaveBeenCalled();
-      expect(jobsService.markRunFinished).toHaveBeenCalledWith('run-1', {
+      expect(runsRepository.markRunFinished).toHaveBeenCalledWith('run-1', {
         errorMessage: expect.stringContaining(process.cwd()),
         exitCode: null,
         status: 'failed',
@@ -1049,7 +1060,7 @@ describe('ScheduledAgentJobsProcessor', () => {
     const givenPolicy = (
       misfirePolicy: ScheduledAgentJob['misfirePolicy'],
     ): void => {
-      vi.mocked(jobsService.findJobById).mockResolvedValue(
+      vi.mocked(jobsRepository.findJobById).mockResolvedValue(
         createMock<ScheduledAgentJob>({
           misfirePolicy,
           misfireThresholdMs: 10 * MINUTE,
@@ -1059,10 +1070,10 @@ describe('ScheduledAgentJobsProcessor', () => {
     };
 
     beforeEach(() => {
-      vi.mocked(jobsService.claimScheduledSlot).mockResolvedValue(
+      vi.mocked(runsRepository.claimScheduledSlot).mockResolvedValue(
         createMock<ScheduledAgentJobRun>({ id: 'run-slot' }),
       );
-      vi.mocked(jobsService.recordMissedRuns).mockResolvedValue(1);
+      vi.mocked(runsRepository.recordMissedRuns).mockResolvedValue(1);
     });
 
     describe('when an on-time fire runs', () => {
@@ -1071,8 +1082,8 @@ describe('ScheduledAgentJobsProcessor', () => {
 
         await processor.process(job);
 
-        expect(jobsService.findJobById).not.toHaveBeenCalled();
-        expect(jobsService.claimScheduledSlot).toHaveBeenCalledWith(
+        expect(jobsRepository.findJobById).not.toHaveBeenCalled();
+        expect(runsRepository.claimScheduledSlot).toHaveBeenCalledWith(
           expect.objectContaining({
             bullmqJobId: job.id,
             scheduledAgentJobId: 'sched-1',
@@ -1080,8 +1091,8 @@ describe('ScheduledAgentJobsProcessor', () => {
             status: 'running',
           }),
         );
-        expect(jobsService.createRun).not.toHaveBeenCalled();
-        expect(jobsService.markRunStarted).toHaveBeenCalledWith(
+        expect(runsRepository.createRun).not.toHaveBeenCalled();
+        expect(runsRepository.markRunStarted).toHaveBeenCalledWith(
           'run-slot',
           job.id,
           expect.objectContaining({ settingsSnapshot: expect.any(Object) }),
@@ -1097,16 +1108,16 @@ describe('ScheduledAgentJobsProcessor', () => {
 
         await processor.process(job);
 
-        expect(jobsService.recordMissedRuns).toHaveBeenCalledWith(
+        expect(runsRepository.recordMissedRuns).toHaveBeenCalledWith(
           expect.objectContaining({
             errorMessage: expect.stringContaining('42 min'),
             scheduledAgentJobId: 'sched-1',
             slots: [slot],
           }),
         );
-        expect(jobsService.claimScheduledSlot).not.toHaveBeenCalled();
+        expect(runsRepository.claimScheduledSlot).not.toHaveBeenCalled();
         expect(runner.run).not.toHaveBeenCalled();
-        expect(jobRepoUpdate).not.toHaveBeenCalled();
+        expect(jobsRepository.updateMany).not.toHaveBeenCalled();
       });
 
       it('tells the owner the fire was missed', async () => {
@@ -1132,7 +1143,7 @@ describe('ScheduledAgentJobsProcessor', () => {
 
         await processor.process(job);
 
-        expect(jobsService.recordMissedRuns).not.toHaveBeenCalled();
+        expect(runsRepository.recordMissedRuns).not.toHaveBeenCalled();
         expect(runner.run).toHaveBeenCalledTimes(1);
       });
     });
@@ -1144,7 +1155,7 @@ describe('ScheduledAgentJobsProcessor', () => {
 
         await processor.process(job);
 
-        expect(jobsService.recordMissedRuns).not.toHaveBeenCalled();
+        expect(runsRepository.recordMissedRuns).not.toHaveBeenCalled();
         expect(runner.run).toHaveBeenCalledTimes(1);
       });
     });
@@ -1158,8 +1169,8 @@ describe('ScheduledAgentJobsProcessor', () => {
           makeJob({ catchUpForSlotMs: slot.getTime(), cwd: process.cwd() }),
         );
 
-        expect(jobsService.recordMissedRuns).not.toHaveBeenCalled();
-        expect(jobsService.claimScheduledSlot).toHaveBeenCalledWith(
+        expect(runsRepository.recordMissedRuns).not.toHaveBeenCalled();
+        expect(runsRepository.claimScheduledSlot).toHaveBeenCalledWith(
           expect.objectContaining({ scheduledFor: slot }),
         );
         expect(runner.run).toHaveBeenCalledTimes(1);
@@ -1168,21 +1179,21 @@ describe('ScheduledAgentJobsProcessor', () => {
 
     describe('when the slot already has a run', () => {
       it('does not run the fire a second time', async () => {
-        vi.mocked(jobsService.claimScheduledSlot).mockResolvedValue(null);
+        vi.mocked(runsRepository.claimScheduledSlot).mockResolvedValue(null);
         const { job } = makeSchedulerJob(2_000);
 
         await processor.process(job);
 
         expect(runner.run).not.toHaveBeenCalled();
-        expect(jobsService.markRunStarted).not.toHaveBeenCalled();
-        expect(jobsService.markRunFinished).not.toHaveBeenCalled();
-        expect(jobRepoUpdate).not.toHaveBeenCalled();
+        expect(runsRepository.markRunStarted).not.toHaveBeenCalled();
+        expect(runsRepository.markRunFinished).not.toHaveBeenCalled();
+        expect(jobsRepository.updateMany).not.toHaveBeenCalled();
       });
     });
 
     describe('when the job is a run-now', () => {
       it('never consults the misfire policy', async () => {
-        vi.mocked(jobsService.findRunById).mockResolvedValue(
+        vi.mocked(runsRepository.findRunById).mockResolvedValue(
           createMock<ScheduledAgentJobRun>({
             id: 'run-now',
             trigger: 'manual',
@@ -1193,8 +1204,8 @@ describe('ScheduledAgentJobsProcessor', () => {
           makeJob({ cwd: process.cwd(), runId: 'run-now' }),
         );
 
-        expect(jobsService.claimScheduledSlot).not.toHaveBeenCalled();
-        expect(jobsService.recordMissedRuns).not.toHaveBeenCalled();
+        expect(runsRepository.claimScheduledSlot).not.toHaveBeenCalled();
+        expect(runsRepository.recordMissedRuns).not.toHaveBeenCalled();
         expect(runner.run).toHaveBeenCalledTimes(1);
       });
     });
@@ -1204,7 +1215,7 @@ describe('ScheduledAgentJobsProcessor', () => {
     const MINUTE = 60_000;
 
     const givenSchedule = (overrides: Partial<ScheduledAgentJob>): void => {
-      vi.mocked(jobsService.findJobById).mockResolvedValue(
+      vi.mocked(jobsRepository.findJobById).mockResolvedValue(
         createMock<ScheduledAgentJob>({
           enabled: true,
           id: 'sched-1',
@@ -1223,12 +1234,12 @@ describe('ScheduledAgentJobsProcessor', () => {
     };
 
     beforeEach(() => {
-      vi.mocked(jobsService.claimScheduledSlot).mockResolvedValue(
+      vi.mocked(runsRepository.claimScheduledSlot).mockResolvedValue(
         createMock<ScheduledAgentJobRun>({ id: 'run-slot' }),
       );
-      vi.mocked(jobsService.hasLiveScheduledRun).mockResolvedValue(false);
-      vi.mocked(jobsService.setJobEnabled).mockResolvedValue(null);
-      vi.mocked(jobsService.updateNextRunAt).mockResolvedValue(undefined);
+      vi.mocked(runsRepository.hasLiveScheduledRun).mockResolvedValue(false);
+      vi.mocked(jobsRepository.setJobEnabled).mockResolvedValue(null);
+      vi.mocked(jobsRepository.updateNextRunAt).mockResolvedValue(undefined);
     });
 
     describe('when an interval fire runs', () => {
@@ -1240,7 +1251,7 @@ describe('ScheduledAgentJobsProcessor', () => {
 
         await processor.process(fireFor(slot));
 
-        expect(jobsService.claimScheduledSlot).toHaveBeenCalledWith(
+        expect(runsRepository.claimScheduledSlot).toHaveBeenCalledWith(
           expect.objectContaining({ scheduledFor: slot }),
         );
         expect(runner.run).toHaveBeenCalledTimes(1);
@@ -1248,7 +1259,7 @@ describe('ScheduledAgentJobsProcessor', () => {
           expect.objectContaining({ id: 'sched-1' }),
           { lastFinishedAt: expect.any(Date) },
         );
-        expect(jobsService.updateNextRunAt).toHaveBeenCalledWith(
+        expect(jobsRepository.updateNextRunAt).toHaveBeenCalledWith(
           'sched-1',
           next,
         );
@@ -1263,7 +1274,7 @@ describe('ScheduledAgentJobsProcessor', () => {
           fireFor(new Date(FIXED_NOW.getTime() - 5 * 60 * MINUTE)),
         );
 
-        expect(jobsService.recordMissedRuns).not.toHaveBeenCalled();
+        expect(runsRepository.recordMissedRuns).not.toHaveBeenCalled();
         expect(runner.run).toHaveBeenCalledTimes(1);
       });
     });
@@ -1271,11 +1282,11 @@ describe('ScheduledAgentJobsProcessor', () => {
     describe('when another fire of the interval schedule is still running', () => {
       it('drops this fire without a run row or a re-arm', async () => {
         givenSchedule({ intervalMs: 30 * MINUTE, scheduleKind: 'interval' });
-        vi.mocked(jobsService.hasLiveScheduledRun).mockResolvedValue(true);
+        vi.mocked(runsRepository.hasLiveScheduledRun).mockResolvedValue(true);
 
         await processor.process(fireFor(new Date(FIXED_NOW)));
 
-        expect(jobsService.claimScheduledSlot).not.toHaveBeenCalled();
+        expect(runsRepository.claimScheduledSlot).not.toHaveBeenCalled();
         expect(runner.run).not.toHaveBeenCalled();
         expect(scheduler.armSelfScheduledFire).not.toHaveBeenCalled();
       });
@@ -1313,11 +1324,11 @@ describe('ScheduledAgentJobsProcessor', () => {
         await processor.process(fireFor(runAt));
 
         expect(runner.run).toHaveBeenCalledTimes(1);
-        expect(jobsService.setJobEnabled).toHaveBeenCalledWith(
+        expect(jobsRepository.setJobEnabled).toHaveBeenCalledWith(
           'sched-1',
           false,
         );
-        expect(jobsService.updateNextRunAt).toHaveBeenCalledWith(
+        expect(jobsRepository.updateNextRunAt).toHaveBeenCalledWith(
           'sched-1',
           null,
         );
@@ -1349,7 +1360,7 @@ describe('ScheduledAgentJobsProcessor', () => {
           processor.process(fireFor(new Date(FIXED_NOW))),
         ).resolves.toBeUndefined();
 
-        expect(jobsService.markRunFinished).toHaveBeenCalledWith(
+        expect(runsRepository.markRunFinished).toHaveBeenCalledWith(
           'run-slot',
           expect.objectContaining({ status: 'succeeded' }),
         );

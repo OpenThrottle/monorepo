@@ -2,10 +2,8 @@ import { createMock } from '@golevelup/ts-vitest';
 import type { ConfigService } from '@nestjs/config';
 import type { GitHubService } from '@openthrottle/nestjs-github';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import type {
-  RepositoriesService,
-  Repository as RepositoryEntity,
-} from '@openthrottle/nestjs-repositories';
+import type { Repository as RepositoryEntity } from '@openthrottle/nestjs-repositories';
+import type { RepositoriesRepository } from '@openthrottle/nestjs-repositories-server';
 import type {
   Plan,
   PlansRepository,
@@ -16,6 +14,10 @@ import type {
 } from '@openthrottle/nestjs-repositories-server';
 import type { WorkArtifactsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import {
+  createRepositoriesRepositoryMock,
+  type RepositoriesRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
+import {
   createPlansRepositoryMock,
   createServiceAccountsRepositoryMock,
   createUsersRepositoryMock,
@@ -24,7 +26,7 @@ import {
   usersFactory,
 } from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
-import type { DataSource, Repository } from 'typeorm';
+import type { DataSource } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { SettleRunLedgerService } from '../../graphql/work-ledger/settle-run-ledger/settle-run-ledger.service.ts';
@@ -66,8 +68,8 @@ describe('WorkLedgerHarvestProcessor', () => {
   const savedSubjects: unknown[] = [];
 
   let githubService: GitHubService;
-  let repositoriesService: RepositoriesService;
-  let repositoryRepo: Repository<RepositoryEntity>;
+  let repositoriesRepository: RepositoriesRepository;
+  let repositoryRepo: RepositoriesRepositoryMock;
   let artifactRepo: WorkArtifactsRepositoryMock;
   let logger: LoggerService;
   let processor: WorkLedgerHarvestProcessor;
@@ -101,14 +103,12 @@ describe('WorkLedgerHarvestProcessor', () => {
     githubService = createMock<GitHubService>();
     vi.mocked(githubService.listCommits).mockResolvedValue([]);
 
-    repositoryRepo = createMock<Repository<RepositoryEntity>>();
-    vi.mocked(repositoryRepo.find).mockResolvedValue([repository()]);
+    repositoryRepo = createRepositoriesRepositoryMock();
+    repositoryRepo.findBy.mockResolvedValue([repository()]);
 
     artifactRepo = createWorkArtifactsRepositoryMock();
 
-    repositoriesService = createMock<RepositoriesService>({
-      getRepository: vi.fn().mockReturnValue(repositoryRepo),
-    });
+    repositoriesRepository = asMock<RepositoriesRepository>(repositoryRepo);
     logger = createMock<LoggerService>();
     const serviceAccounts = createServiceAccountsRepositoryMock();
     serviceAccounts.findByName.mockResolvedValue(
@@ -125,7 +125,7 @@ describe('WorkLedgerHarvestProcessor', () => {
         ...createPlansRepositoryMock(),
         findByRefPrefix: vi.fn(async () => [createMock<Plan>({ id: PLAN })]),
       }),
-      repositoriesService,
+      repositoriesRepository,
       createMock<ServiceAccountsRepository>(serviceAccounts),
       createMock<SettleRunLedgerService>({
         linkPullRequestsForUnreportedRuns: vi.fn().mockResolvedValue(0),
@@ -195,14 +195,14 @@ describe('WorkLedgerHarvestProcessor', () => {
 
     await processor.process(job);
 
-    expect(repositoryRepo.update).toHaveBeenCalledWith(
+    expect(repositoryRepo.updateMany).toHaveBeenCalledWith(
       { id: 'repository-1' },
       expect.objectContaining({ ledgerHarvestCursor: 'sha-1' }),
     );
   });
 
   it('passes the stored cursor to GitHub so only new commits are read', async () => {
-    vi.mocked(repositoryRepo.find).mockResolvedValue([
+    repositoryRepo.findBy.mockResolvedValue([
       repository({ ledgerHarvestCursor: 'watermark-sha' }),
     ]);
 
@@ -217,7 +217,7 @@ describe('WorkLedgerHarvestProcessor', () => {
   });
 
   it('skips a repo with no parseable GitHub remote', async () => {
-    vi.mocked(repositoryRepo.find).mockResolvedValue([
+    repositoryRepo.findBy.mockResolvedValue([
       repository({ normalizedRemoteUrl: null }),
     ]);
 
@@ -227,7 +227,7 @@ describe('WorkLedgerHarvestProcessor', () => {
   });
 
   it('skips a repo with no default branch', async () => {
-    vi.mocked(repositoryRepo.find).mockResolvedValue([
+    repositoryRepo.findBy.mockResolvedValue([
       repository({ defaultBranch: '' }),
     ]);
 
@@ -240,7 +240,7 @@ describe('WorkLedgerHarvestProcessor', () => {
     processor = new WorkLedgerHarvestProcessor(
       logger,
       asMock<PlansRepository>(createPlansRepositoryMock()),
-      repositoriesService,
+      repositoriesRepository,
       createMock<ServiceAccountsRepository>(
         createServiceAccountsRepositoryMock(),
       ),
@@ -263,7 +263,7 @@ describe('WorkLedgerHarvestProcessor', () => {
   });
 
   it('keeps sweeping other repos when one fails', async () => {
-    vi.mocked(repositoryRepo.find).mockResolvedValue([
+    repositoryRepo.findBy.mockResolvedValue([
       repository({ id: 'repository-1' }),
       repository({ id: 'repository-2' }),
     ]);

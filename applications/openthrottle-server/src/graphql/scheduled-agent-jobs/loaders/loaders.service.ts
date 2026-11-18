@@ -8,10 +8,12 @@ import { Injectable, Scope } from '@nestjs/common';
 import {
   createEntityByIdLoader,
   type RepositoryCheckout,
-  RepositoryCheckoutsService,
   type ScheduledAgentJob,
-  ScheduledAgentJobsService,
 } from '@openthrottle/nestjs-repositories';
+import {
+  RepositoryCheckoutsRepository,
+  ScheduledAgentJobsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import type DataLoader from 'dataloader';
 
 @Injectable({ scope: Scope.REQUEST })
@@ -22,13 +24,10 @@ export class ScheduledAgentJobsLoaders {
   readonly jobLoader: DataLoader<string, ScheduledAgentJob | null>;
 
   constructor(
-    checkoutsService: RepositoryCheckoutsService,
-    jobsService: ScheduledAgentJobsService,
+    checkoutsRepository: RepositoryCheckoutsRepository,
+    jobsRepository: ScheduledAgentJobsRepository,
   ) {
-    this.checkoutLoader = createEntityByIdLoader(checkoutsService);
-    // ScheduledAgentJobsService fronts two repositories, so adapt the jobs one to the accessor shape.
-    this.jobLoader = createEntityByIdLoader({
-      getRepository: () => jobsService.getJobRepository(),
-    });
+    this.checkoutLoader = createEntityByIdLoader(checkoutsRepository);
+    this.jobLoader = createEntityByIdLoader(jobsRepository);
   }
 }

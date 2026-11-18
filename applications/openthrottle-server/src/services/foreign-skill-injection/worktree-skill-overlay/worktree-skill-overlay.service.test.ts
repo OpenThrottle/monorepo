@@ -17,10 +17,10 @@ import { join } from 'node:path';
 
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import type {
-  RepositoryCheckout,
-  RepositoryCheckoutsService,
-} from '@openthrottle/nestjs-repositories';
+import type { RepositoryCheckout } from '@openthrottle/nestjs-repositories';
+import type { RepositoryCheckoutsRepository } from '@openthrottle/nestjs-repositories-server';
+import { createRepositoryCheckoutsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import { asMock } from '@openthrottle/nestjs-testing';
 import { FOREIGN_SKILL_LEDGER_DIR_ENV } from '@openthrottle/openthrottle-agentic-utils';
 import type { Mock } from 'vitest';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -46,9 +46,11 @@ const OVERLAY_SKILL = join('.agents', 'skills', 'ot-worktree', 'SKILL.md');
 describe('WorktreeSkillOverlayService', () => {
   let scratch: string;
   let repo: string;
-  let findByUserAndPath: Mock<RepositoryCheckoutsService['findByUserAndPath']>;
+  let findByUserAndPath: Mock<
+    RepositoryCheckoutsRepository['findByUserAndPath']
+  >;
   let findByRepositoryIdForUser: Mock<
-    RepositoryCheckoutsService['findByRepositoryIdForUser']
+    RepositoryCheckoutsRepository['findByRepositoryIdForUser']
   >;
   let service: WorktreeSkillOverlayService;
 
@@ -80,14 +82,15 @@ describe('WorktreeSkillOverlayService', () => {
     vi.stubEnv(FOREIGN_SKILL_LEDGER_DIR_ENV, join(scratch, 'ledgers'));
 
     findByUserAndPath = vi
-      .fn<RepositoryCheckoutsService['findByUserAndPath']>()
+      .fn<RepositoryCheckoutsRepository['findByUserAndPath']>()
       .mockResolvedValue(null);
     findByRepositoryIdForUser = vi
-      .fn<RepositoryCheckoutsService['findByRepositoryIdForUser']>()
+      .fn<RepositoryCheckoutsRepository['findByRepositoryIdForUser']>()
       .mockResolvedValue([]);
     service = new WorktreeSkillOverlayService(
       createMock<LoggerService>(),
-      createMock<RepositoryCheckoutsService>({
+      asMock<RepositoryCheckoutsRepository>({
+        ...createRepositoryCheckoutsRepositoryMock(),
         findByRepositoryIdForUser,
         findByUserAndPath,
       }),

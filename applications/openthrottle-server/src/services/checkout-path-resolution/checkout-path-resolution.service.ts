@@ -15,7 +15,7 @@ import { isAbsolute } from 'node:path';
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { RepositoryCheckout } from '@openthrottle/nestjs-repositories';
-import { RepositoryCheckoutsService } from '@openthrottle/nestjs-repositories';
+import { RepositoryCheckoutsRepository } from '@openthrottle/nestjs-repositories-server';
 
 import {
   isPathWithin,
@@ -36,7 +36,7 @@ export class CheckoutPathResolutionService {
 
   constructor(
     private readonly logger: LoggerService,
-    private readonly checkoutsService: RepositoryCheckoutsService,
+    private readonly checkoutsRepository: RepositoryCheckoutsRepository,
   ) {
     this.logger.debug(`🧩 ${this.name} 🧩`);
   }
@@ -83,7 +83,7 @@ export class CheckoutPathResolutionService {
   /** A database failure is a miss, not an error — callers degrade to their existing default. */
   private async listCheckouts(userId: string): Promise<RepositoryCheckout[]> {
     try {
-      return await this.checkoutsService.listByUserId(userId, {
+      return await this.checkoutsRepository.listByUserId(userId, {
         limit: CHECKOUT_LIST_LIMIT,
       });
     } catch (error) {

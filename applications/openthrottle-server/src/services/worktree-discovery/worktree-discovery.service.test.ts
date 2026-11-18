@@ -14,11 +14,16 @@ import { join } from 'node:path';
 
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
+import type { RepositoryCheckout } from '@openthrottle/nestjs-repositories';
 import type {
-  RepositoryCheckout,
-  RepositoryCheckoutsService,
-  UserWorkspaceSettingsService,
-} from '@openthrottle/nestjs-repositories';
+  RepositoryCheckoutsRepository,
+  UserWorkspaceSettingsRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import {
+  createRepositoryCheckoutsRepositoryMock,
+  createUserWorkspaceSettingsRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
+import { asMock } from '@openthrottle/nestjs-testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const {
@@ -216,10 +221,13 @@ const build = (
 
   return new WorktreeDiscoveryService(
     createMock<LoggerService>(),
-    createMock<RepositoryCheckoutsService>({
+    asMock<RepositoryCheckoutsRepository>({
+      ...createRepositoryCheckoutsRepositoryMock(),
       listByUserId: vi.fn().mockResolvedValue([...checkouts]),
     }),
-    createMock<UserWorkspaceSettingsService>(),
+    asMock<UserWorkspaceSettingsRepository>(
+      createUserWorkspaceSettingsRepositoryMock(),
+    ),
   );
 };
 

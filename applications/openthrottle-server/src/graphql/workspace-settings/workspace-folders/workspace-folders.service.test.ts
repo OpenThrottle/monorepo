@@ -13,13 +13,17 @@ import type {
   RepositoryCheckout,
 } from '@openthrottle/nestjs-repositories';
 import type {
-  RepositoriesService,
-  RepositoryCheckoutsService,
-} from '@openthrottle/nestjs-repositories';
+  RepositoriesRepository,
+  RepositoryCheckoutsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import type {
   Project,
   ProjectsRepository,
 } from '@openthrottle/nestjs-repositories-server';
+import {
+  createRepositoriesRepositoryMock,
+  createRepositoryCheckoutsRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import { createProjectsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
 import {
@@ -53,27 +57,17 @@ const execFileAsync = promisify(execFile);
 describe('WorkspaceFoldersService', () => {
   const userId = '11111111-1111-4111-8111-111111111111';
 
-  const mockCheckoutsService = createMock<RepositoryCheckoutsService>({
-    create: vi.fn(),
-    findByIdForUser: vi.fn(),
-    findByRepositoryIdForUser: vi.fn(),
-    listByUserId: vi.fn(),
-    saveInspection: vi.fn(),
-    updateFilesystemPath: vi.fn(),
-  });
+  const mockCheckoutsRepository = asMock<RepositoryCheckoutsRepository>(
+    createRepositoryCheckoutsRepositoryMock(),
+  );
   const mockProjectsRepository = createProjectsRepositoryMock();
-  const mockRepositoriesService = createMock<RepositoriesService>({
-    create: vi.fn(),
-    delete: vi.fn(),
-    findById: vi.fn(),
-    findByNormalizedRemoteUrl: vi.fn(),
-    mergeDetectedRemote: vi.fn(),
-    update: vi.fn(),
-  });
+  const mockRepositoriesRepository = asMock<RepositoriesRepository>(
+    createRepositoriesRepositoryMock(),
+  );
 
   const inspectionService = new RepositoryInspectionService(
     createMock<LoggerService>(),
-    mockCheckoutsService,
+    mockCheckoutsRepository,
   );
 
   const mockForeignSkillMaterialization =
@@ -87,10 +81,10 @@ describe('WorkspaceFoldersService', () => {
 
   const service = new WorkspaceFoldersService(
     createMock<LoggerService>(),
-    mockCheckoutsService,
+    mockCheckoutsRepository,
     inspectionService,
     asMock<ProjectsRepository>(mockProjectsRepository),
-    mockRepositoriesService,
+    mockRepositoriesRepository,
     mockForeignSkillMaterialization,
     mockWorktreeSkillOverlay,
   );
@@ -122,31 +116,31 @@ describe('WorkspaceFoldersService', () => {
 
   beforeEach(() => {
     process.env[WORKSPACE_ROOTS_ENV] = workspaceRoot;
-    vi.mocked(mockCheckoutsService.create).mockReset();
-    vi.mocked(mockCheckoutsService.listByUserId).mockResolvedValue([]);
-    vi.mocked(mockCheckoutsService.findByIdForUser).mockResolvedValue(null);
-    vi.mocked(mockCheckoutsService.findByRepositoryIdForUser).mockResolvedValue(
-      [],
-    );
-    vi.mocked(mockCheckoutsService.saveInspection).mockReset();
+    vi.mocked(mockCheckoutsRepository.createForUser).mockReset();
+    vi.mocked(mockCheckoutsRepository.listByUserId).mockResolvedValue([]);
+    vi.mocked(mockCheckoutsRepository.findByIdForUser).mockResolvedValue(null);
     vi.mocked(
-      mockCheckoutsService.setForeignSkillInjectionEnabledForRepository,
+      mockCheckoutsRepository.findByRepositoryIdForUser,
+    ).mockResolvedValue([]);
+    vi.mocked(mockCheckoutsRepository.saveInspection).mockReset();
+    vi.mocked(
+      mockCheckoutsRepository.setForeignSkillInjectionEnabledForRepository,
     ).mockReset();
     vi.mocked(
-      mockCheckoutsService.setWorktreeSkillOverlayEnabledForRepository,
+      mockCheckoutsRepository.setWorktreeSkillOverlayEnabledForRepository,
     ).mockReset();
     vi.mocked(mockForeignSkillMaterialization.applyForRepository).mockReset();
     mockProjectsRepository.create.mockReset();
     mockProjectsRepository.create.mockResolvedValue(
       asMock<Project>({ id: 'auto-project', name: 'Fixture' }),
     );
-    vi.mocked(mockRepositoriesService.create).mockReset();
-    vi.mocked(mockRepositoriesService.delete).mockReset();
-    vi.mocked(mockRepositoriesService.findById).mockReset();
-    vi.mocked(mockRepositoriesService.mergeDetectedRemote).mockReset();
-    vi.mocked(mockRepositoriesService.update).mockReset();
+    vi.mocked(mockRepositoriesRepository.create).mockReset();
+    vi.mocked(mockRepositoriesRepository.removeRepository).mockReset();
+    vi.mocked(mockRepositoriesRepository.findRepositoryById).mockReset();
+    vi.mocked(mockRepositoriesRepository.mergeDetectedRemote).mockReset();
+    vi.mocked(mockRepositoriesRepository.updateRepository).mockReset();
     vi.mocked(
-      mockRepositoriesService.findByNormalizedRemoteUrl,
+      mockRepositoriesRepository.findByNormalizedRemoteUrl,
     ).mockResolvedValue(null);
   });
 
@@ -168,7 +162,7 @@ describe('WorkspaceFoldersService', () => {
     });
 
     it('marks path-registered folders', async () => {
-      vi.mocked(mockCheckoutsService.listByUserId).mockResolvedValue([
+      vi.mocked(mockCheckoutsRepository.listByUserId).mockResolvedValue([
         asMock<RepositoryCheckout>({
           filesystemPath: gitRepoDir,
           id: 'checkout-1',
@@ -298,7 +292,7 @@ describe('WorkspaceFoldersService', () => {
     });
 
     it('marks an entry alreadyRegistered when a checkout matches its path', async () => {
-      vi.mocked(mockCheckoutsService.listByUserId).mockResolvedValue([
+      vi.mocked(mockCheckoutsRepository.listByUserId).mockResolvedValue([
         asMock<RepositoryCheckout>({
           filesystemPath: join(realpathSync(workspaceRoot), 'fixture-repo'),
           id: 'checkout-1',
@@ -367,8 +361,8 @@ describe('WorkspaceFoldersService', () => {
             path: join(workspaceRoot, 'not-a-repo'),
           }),
         ).rejects.toThrow(/not inside a git repository/);
-        expect(mockRepositoriesService.create).not.toHaveBeenCalled();
-        expect(mockCheckoutsService.create).not.toHaveBeenCalled();
+        expect(mockRepositoriesRepository.create).not.toHaveBeenCalled();
+        expect(mockCheckoutsRepository.createForUser).not.toHaveBeenCalled();
       });
 
       it('rejects the folder that merely CONTAINS a repository', async () => {
@@ -377,7 +371,7 @@ describe('WorkspaceFoldersService', () => {
         await expect(
           service.addWorkspaceFolder(userId, { path: workspaceRoot }),
         ).rejects.toThrow(/not inside a git repository/);
-        expect(mockCheckoutsService.create).not.toHaveBeenCalled();
+        expect(mockCheckoutsRepository.createForUser).not.toHaveBeenCalled();
       });
     });
 
@@ -385,14 +379,14 @@ describe('WorkspaceFoldersService', () => {
       it('registers the repository root instead', async () => {
         const subdirectory = join(gitRepoDir, 'packages', 'nested');
         await mkdir(subdirectory, { recursive: true });
-        vi.mocked(mockRepositoriesService.create).mockResolvedValue(
+        vi.mocked(mockRepositoriesRepository.create).mockResolvedValue(
           asMock<Repository>({
             id: 'repo-1',
             name: 'Fixture',
             projectId: null,
           }),
         );
-        vi.mocked(mockCheckoutsService.create).mockResolvedValue(
+        vi.mocked(mockCheckoutsRepository.createForUser).mockResolvedValue(
           asMock<RepositoryCheckout>({
             displayName: 'fixture-repo',
             filesystemPath: gitRepoDir,
@@ -405,7 +399,7 @@ describe('WorkspaceFoldersService', () => {
 
         await service.addWorkspaceFolder(userId, { path: subdirectory });
 
-        expect(mockCheckoutsService.create).toHaveBeenCalledWith(
+        expect(mockCheckoutsRepository.createForUser).toHaveBeenCalledWith(
           userId,
           expect.objectContaining({
             displayName: 'fixture-repo',
@@ -423,8 +417,10 @@ describe('WorkspaceFoldersService', () => {
         normalizedRemoteUrl: 'https://github.com/OpenThrottle/Fixture',
         projectId: null,
       });
-      vi.mocked(mockRepositoriesService.create).mockResolvedValue(repository);
-      vi.mocked(mockCheckoutsService.create).mockResolvedValue(
+      vi.mocked(mockRepositoriesRepository.create).mockResolvedValue(
+        repository,
+      );
+      vi.mocked(mockCheckoutsRepository.createForUser).mockResolvedValue(
         asMock<RepositoryCheckout>({
           displayName: 'fixture-repo',
           filesystemPath: gitRepoDir,
@@ -441,7 +437,7 @@ describe('WorkspaceFoldersService', () => {
       });
 
       expect(payload.reconciliation).toBe('created_canonical');
-      expect(mockRepositoriesService.create).toHaveBeenCalledWith(
+      expect(mockRepositoriesRepository.create).toHaveBeenCalledWith(
         expect.objectContaining({
           name: 'OpenThrottle/Fixture',
           normalizedRemoteUrl: 'https://github.com/OpenThrottle/Fixture',
@@ -455,13 +451,16 @@ describe('WorkspaceFoldersService', () => {
           nxProjectName: 'Fixture',
         }),
       );
-      expect(mockRepositoriesService.update).toHaveBeenCalledWith('repo-1', {
-        projectId: 'auto-project',
-      });
+      expect(mockRepositoriesRepository.updateRepository).toHaveBeenCalledWith(
+        'repo-1',
+        {
+          projectId: 'auto-project',
+        },
+      );
       expect(payload.checkout.inspection?.git.normalizedRemoteUrl).toBe(
         'https://github.com/OpenThrottle/Fixture',
       );
-      expect(mockCheckoutsService.saveInspection).toHaveBeenCalledWith(
+      expect(mockCheckoutsRepository.saveInspection).toHaveBeenCalledWith(
         'checkout-1',
         expect.objectContaining({ scannedAt: expect.any(String) }),
         expect.any(Date),
@@ -476,9 +475,9 @@ describe('WorkspaceFoldersService', () => {
         projectId: null,
       });
       vi.mocked(
-        mockRepositoriesService.findByNormalizedRemoteUrl,
+        mockRepositoriesRepository.findByNormalizedRemoteUrl,
       ).mockResolvedValue(canonical);
-      vi.mocked(mockCheckoutsService.create).mockResolvedValue(
+      vi.mocked(mockCheckoutsRepository.createForUser).mockResolvedValue(
         asMock<RepositoryCheckout>({
           id: 'checkout-2',
           repositoryId: 'repo-existing',
@@ -491,7 +490,7 @@ describe('WorkspaceFoldersService', () => {
 
       expect(payload.reconciliation).toBe('matched_remote');
       expect(payload.projectCreated).toBe(false);
-      expect(mockRepositoriesService.create).not.toHaveBeenCalled();
+      expect(mockRepositoriesRepository.create).not.toHaveBeenCalled();
       expect(mockProjectsRepository.create).not.toHaveBeenCalled();
     });
 
@@ -499,7 +498,7 @@ describe('WorkspaceFoldersService', () => {
       await expect(
         service.addWorkspaceFolder(userId, { path: 'relative/path' }),
       ).rejects.toThrow('absolute path');
-      expect(mockCheckoutsService.create).not.toHaveBeenCalled();
+      expect(mockCheckoutsRepository.createForUser).not.toHaveBeenCalled();
     });
 
     it('cleans up a newly created repository when checkout creation fails', async () => {
@@ -508,15 +507,17 @@ describe('WorkspaceFoldersService', () => {
         normalizedRemoteUrl: 'https://github.com/OpenThrottle/Fixture',
         projectId: null,
       });
-      vi.mocked(mockRepositoriesService.create).mockResolvedValue(repository);
-      vi.mocked(mockCheckoutsService.create).mockRejectedValue(
+      vi.mocked(mockRepositoriesRepository.create).mockResolvedValue(
+        repository,
+      );
+      vi.mocked(mockCheckoutsRepository.createForUser).mockRejectedValue(
         new Error('duplicate'),
       );
 
       await expect(
         service.addWorkspaceFolder(userId, { path: gitRepoDir }),
       ).rejects.toThrow('duplicate');
-      expect(mockRepositoriesService.delete).toHaveBeenCalledWith(
+      expect(mockRepositoriesRepository.removeRepository).toHaveBeenCalledWith(
         'repo-orphan',
       );
     });
@@ -530,7 +531,7 @@ describe('WorkspaceFoldersService', () => {
     });
 
     it('surfaces pathMissing drift when the folder is gone', async () => {
-      vi.mocked(mockCheckoutsService.findByIdForUser).mockResolvedValue(
+      vi.mocked(mockCheckoutsRepository.findByIdForUser).mockResolvedValue(
         asMock<RepositoryCheckout>({
           filesystemPath: join(workspaceRoot, 'deleted-checkout'),
           id: 'checkout-gone',
@@ -548,11 +549,11 @@ describe('WorkspaceFoldersService', () => {
       expect(payload.drift.pathMissing).toBe(true);
       expect(payload.drift.remoteChanged).toBe(false);
       expect(payload.merged).toBe(false);
-      expect(mockCheckoutsService.saveInspection).not.toHaveBeenCalled();
+      expect(mockCheckoutsRepository.saveInspection).not.toHaveBeenCalled();
     });
 
     it('surfaces branch/remote drift against the previous snapshot', async () => {
-      vi.mocked(mockCheckoutsService.findByIdForUser).mockResolvedValue(
+      vi.mocked(mockCheckoutsRepository.findByIdForUser).mockResolvedValue(
         asMock<RepositoryCheckout>({
           filesystemPath: gitRepoDir,
           id: 'checkout-drift',
@@ -579,9 +580,9 @@ describe('WorkspaceFoldersService', () => {
       expect(payload.drift.pathMissing).toBe(false);
       expect(payload.drift.remoteChanged).toBe(true);
       expect(payload.merged).toBe(false);
-      expect(mockCheckoutsService.saveInspection).toHaveBeenCalled();
+      expect(mockCheckoutsRepository.saveInspection).toHaveBeenCalled();
       expect(
-        mockRepositoriesService.mergeDetectedRemote,
+        mockRepositoriesRepository.mergeDetectedRemote,
       ).not.toHaveBeenCalled();
     });
 
@@ -597,7 +598,7 @@ describe('WorkspaceFoldersService', () => {
         normalizedRemoteUrl: 'https://github.com/OpenThrottle/Fixture',
         projectId: 'canon-project',
       });
-      vi.mocked(mockCheckoutsService.findByIdForUser).mockResolvedValue(
+      vi.mocked(mockCheckoutsRepository.findByIdForUser).mockResolvedValue(
         asMock<RepositoryCheckout>({
           filesystemPath: gitRepoDir,
           id: 'checkout-merge',
@@ -607,7 +608,9 @@ describe('WorkspaceFoldersService', () => {
           scannedAt: null,
         }),
       );
-      vi.mocked(mockRepositoriesService.mergeDetectedRemote).mockResolvedValue({
+      vi.mocked(
+        mockRepositoriesRepository.mergeDetectedRemote,
+      ).mockResolvedValue({
         merged: true,
         repository: canonical,
         supersededProjectId: 'prov-project',
@@ -615,7 +618,9 @@ describe('WorkspaceFoldersService', () => {
 
       const payload = await service.refreshCheckout(userId, 'checkout-merge');
 
-      expect(mockRepositoriesService.mergeDetectedRemote).toHaveBeenCalledWith(
+      expect(
+        mockRepositoriesRepository.mergeDetectedRemote,
+      ).toHaveBeenCalledWith(
         'prov-repo',
         'https://github.com/OpenThrottle/Fixture',
       );
@@ -718,7 +723,7 @@ describe('WorkspaceFoldersService', () => {
         projectId: 'proj-1',
       });
       vi.mocked(
-        mockCheckoutsService.findByRepositoryIdForUser,
+        mockCheckoutsRepository.findByRepositoryIdForUser,
       ).mockResolvedValue([ownedCheckout(repository)]);
 
       const result = await service.workspaceRepository(userId, 'repo-detail');
@@ -728,19 +733,21 @@ describe('WorkspaceFoldersService', () => {
       expect(result?.checkouts).toHaveLength(1);
       expect(result?.checkouts?.[0]?.id).toBe('checkout-detail');
       expect(
-        mockCheckoutsService.findByRepositoryIdForUser,
+        mockCheckoutsRepository.findByRepositoryIdForUser,
       ).toHaveBeenCalledWith('repo-detail', userId);
     });
 
     it('returns null when the user owns no checkout of the repository', async () => {
       vi.mocked(
-        mockCheckoutsService.findByRepositoryIdForUser,
+        mockCheckoutsRepository.findByRepositoryIdForUser,
       ).mockResolvedValue([]);
 
       await expect(
         service.workspaceRepository(userId, 'repo-unowned'),
       ).resolves.toBeNull();
-      expect(mockRepositoriesService.findById).not.toHaveBeenCalled();
+      expect(
+        mockRepositoriesRepository.findRepositoryById,
+      ).not.toHaveBeenCalled();
     });
   });
 
@@ -772,9 +779,11 @@ describe('WorkspaceFoldersService', () => {
         projectId: 'proj-2',
       });
       vi.mocked(
-        mockCheckoutsService.findByRepositoryIdForUser,
+        mockCheckoutsRepository.findByRepositoryIdForUser,
       ).mockResolvedValue([ownedCheckout(before)]);
-      vi.mocked(mockRepositoriesService.update).mockResolvedValue(after);
+      vi.mocked(mockRepositoriesRepository.updateRepository).mockResolvedValue(
+        after,
+      );
 
       const result = await service.updateRepository(userId, {
         defaultBranch: 'develop',
@@ -783,11 +792,14 @@ describe('WorkspaceFoldersService', () => {
         projectId: 'proj-2',
       });
 
-      expect(mockRepositoriesService.update).toHaveBeenCalledWith('repo-edit', {
-        defaultBranch: 'develop',
-        name: 'acme/monorepo',
-        projectId: 'proj-2',
-      });
+      expect(mockRepositoriesRepository.updateRepository).toHaveBeenCalledWith(
+        'repo-edit',
+        {
+          defaultBranch: 'develop',
+          name: 'acme/monorepo',
+          projectId: 'proj-2',
+        },
+      );
       expect(result.name).toBe('acme/monorepo');
       expect(result.projectId).toBe('proj-2');
     });
@@ -799,9 +811,9 @@ describe('WorkspaceFoldersService', () => {
         projectId: 'proj-old',
       });
       vi.mocked(
-        mockCheckoutsService.findByRepositoryIdForUser,
+        mockCheckoutsRepository.findByRepositoryIdForUser,
       ).mockResolvedValue([ownedCheckout(repository)]);
-      vi.mocked(mockRepositoriesService.update).mockResolvedValue(
+      vi.mocked(mockRepositoriesRepository.updateRepository).mockResolvedValue(
         asMock<Repository>({ ...repository, projectId: null }),
       );
 
@@ -810,7 +822,7 @@ describe('WorkspaceFoldersService', () => {
         projectId: null,
       });
 
-      expect(mockRepositoriesService.update).toHaveBeenCalledWith(
+      expect(mockRepositoriesRepository.updateRepository).toHaveBeenCalledWith(
         'repo-clear',
         {
           projectId: null,
@@ -825,7 +837,7 @@ describe('WorkspaceFoldersService', () => {
         projectId: null,
       });
       vi.mocked(
-        mockCheckoutsService.findByRepositoryIdForUser,
+        mockCheckoutsRepository.findByRepositoryIdForUser,
       ).mockResolvedValue([ownedCheckout(repository)]);
 
       await service.updateRepository(userId, {
@@ -834,13 +846,15 @@ describe('WorkspaceFoldersService', () => {
       });
 
       expect(
-        mockCheckoutsService.setForeignSkillInjectionEnabledForRepository,
+        mockCheckoutsRepository.setForeignSkillInjectionEnabledForRepository,
       ).toHaveBeenCalledWith(userId, 'repo-inject', true);
       expect(
         mockForeignSkillMaterialization.applyForRepository,
       ).toHaveBeenCalledWith(userId, 'repo-inject', true);
       // Flag-only edit must not touch the shared repository row.
-      expect(mockRepositoriesService.update).not.toHaveBeenCalled();
+      expect(
+        mockRepositoriesRepository.updateRepository,
+      ).not.toHaveBeenCalled();
     });
 
     it('stores the worktree skill overlay flag and applies it to disk', async () => {
@@ -850,7 +864,7 @@ describe('WorkspaceFoldersService', () => {
         projectId: null,
       });
       vi.mocked(
-        mockCheckoutsService.findByRepositoryIdForUser,
+        mockCheckoutsRepository.findByRepositoryIdForUser,
       ).mockResolvedValue([ownedCheckout(repository)]);
 
       await service.updateRepository(userId, {
@@ -859,7 +873,7 @@ describe('WorkspaceFoldersService', () => {
       });
 
       expect(
-        mockCheckoutsService.setWorktreeSkillOverlayEnabledForRepository,
+        mockCheckoutsRepository.setWorktreeSkillOverlayEnabledForRepository,
       ).toHaveBeenCalledWith(userId, 'repo-overlay', false);
       expect(mockWorktreeSkillOverlay.applyForRepository).toHaveBeenCalledWith(
         userId,
@@ -869,7 +883,9 @@ describe('WorkspaceFoldersService', () => {
       expect(
         mockForeignSkillMaterialization.applyForRepository,
       ).not.toHaveBeenCalled();
-      expect(mockRepositoriesService.update).not.toHaveBeenCalled();
+      expect(
+        mockRepositoriesRepository.updateRepository,
+      ).not.toHaveBeenCalled();
     });
 
     it('does not apply injection when the flag is omitted', async () => {
@@ -879,9 +895,11 @@ describe('WorkspaceFoldersService', () => {
         projectId: null,
       });
       vi.mocked(
-        mockCheckoutsService.findByRepositoryIdForUser,
+        mockCheckoutsRepository.findByRepositoryIdForUser,
       ).mockResolvedValue([ownedCheckout(repository)]);
-      vi.mocked(mockRepositoriesService.update).mockResolvedValue(repository);
+      vi.mocked(mockRepositoriesRepository.updateRepository).mockResolvedValue(
+        repository,
+      );
 
       await service.updateRepository(userId, {
         id: 'repo-noinject',
@@ -895,18 +913,20 @@ describe('WorkspaceFoldersService', () => {
 
     it('rejects an edit when the user owns no checkout of the repository', async () => {
       vi.mocked(
-        mockCheckoutsService.findByRepositoryIdForUser,
+        mockCheckoutsRepository.findByRepositoryIdForUser,
       ).mockResolvedValue([]);
 
       await expect(
         service.updateRepository(userId, { id: 'repo-x', name: 'nope' }),
       ).rejects.toBeInstanceOf(NotFoundException);
-      expect(mockRepositoriesService.update).not.toHaveBeenCalled();
+      expect(
+        mockRepositoriesRepository.updateRepository,
+      ).not.toHaveBeenCalled();
     });
 
     it('rejects an empty name', async () => {
       vi.mocked(
-        mockCheckoutsService.findByRepositoryIdForUser,
+        mockCheckoutsRepository.findByRepositoryIdForUser,
       ).mockResolvedValue([
         ownedCheckout(asMock<Repository>({ id: 'repo-empty' })),
       ]);
@@ -914,7 +934,9 @@ describe('WorkspaceFoldersService', () => {
       await expect(
         service.updateRepository(userId, { id: 'repo-empty', name: '   ' }),
       ).rejects.toBeInstanceOf(BadRequestException);
-      expect(mockRepositoriesService.update).not.toHaveBeenCalled();
+      expect(
+        mockRepositoriesRepository.updateRepository,
+      ).not.toHaveBeenCalled();
     });
   });
 
@@ -924,7 +946,7 @@ describe('WorkspaceFoldersService', () => {
     beforeEach(async () => {
       cloneRoot = await mkdtemp(join(tmpdir(), 'ot-clone-root-'));
       process.env[CHECKOUT_ROOT_ENV] = cloneRoot;
-      vi.mocked(mockCheckoutsService.create).mockImplementation(
+      vi.mocked(mockCheckoutsRepository.createForUser).mockImplementation(
         async (_userId, data) =>
           asMock<RepositoryCheckout>({
             displayName: data.displayName,
@@ -934,7 +956,7 @@ describe('WorkspaceFoldersService', () => {
             repositoryId: data.repositoryId,
           }),
       );
-      vi.mocked(mockRepositoriesService.create).mockResolvedValue(
+      vi.mocked(mockRepositoriesRepository.create).mockResolvedValue(
         asMock<Repository>({ id: 'clone-repo', name: 'fixture-repo' }),
       );
     });
@@ -955,7 +977,9 @@ describe('WorkspaceFoldersService', () => {
       // Landed in the managed root as a real git working copy.
       expect(existsSync(join(cloneRoot, 'fixture-repo', '.git'))).toBe(true);
       // Registered as a managed checkout through the shared pipeline.
-      expect(vi.mocked(mockCheckoutsService.create)).toHaveBeenCalledWith(
+      expect(
+        vi.mocked(mockCheckoutsRepository.createForUser),
+      ).toHaveBeenCalledWith(
         userId,
         expect.objectContaining({ managed: true }),
       );
@@ -968,14 +992,18 @@ describe('WorkspaceFoldersService', () => {
       await expect(
         service.cloneRepository(userId, { gitUrl: `file://${gitRepoDir}` }),
       ).rejects.toBeInstanceOf(BadRequestException);
-      expect(vi.mocked(mockCheckoutsService.create)).not.toHaveBeenCalled();
+      expect(
+        vi.mocked(mockCheckoutsRepository.createForUser),
+      ).not.toHaveBeenCalled();
     });
 
     it('rejects an implausible git url', async () => {
       await expect(
         service.cloneRepository(userId, { gitUrl: 'not a git url' }),
       ).rejects.toBeInstanceOf(BadRequestException);
-      expect(vi.mocked(mockCheckoutsService.create)).not.toHaveBeenCalled();
+      expect(
+        vi.mocked(mockCheckoutsRepository.createForUser),
+      ).not.toHaveBeenCalled();
     });
 
     it('leaves no partial directory or rows when the clone fails', async () => {
@@ -986,7 +1014,9 @@ describe('WorkspaceFoldersService', () => {
       ).rejects.toBeInstanceOf(BadRequestException);
 
       expect(existsSync(join(cloneRoot, 'does-not-exist-repo'))).toBe(false);
-      expect(vi.mocked(mockCheckoutsService.create)).not.toHaveBeenCalled();
+      expect(
+        vi.mocked(mockCheckoutsRepository.createForUser),
+      ).not.toHaveBeenCalled();
     });
   });
 });

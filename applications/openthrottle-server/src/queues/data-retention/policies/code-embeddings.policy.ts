@@ -60,6 +60,7 @@ const ABANDONED_EMBEDDING_IDS = `
           SELECT 1
             FROM repository_checkouts rc
            WHERE rtrim(rc.filesystem_path, '/') = rtrim(grouped.workspace_root, '/')
+             AND rc.deleted_at IS NULL
         )
    )
 `;

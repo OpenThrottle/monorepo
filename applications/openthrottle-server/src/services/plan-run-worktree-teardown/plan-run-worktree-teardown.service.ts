@@ -24,7 +24,7 @@ import { dirname } from 'node:path';
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { RepositoryCheckout } from '@openthrottle/nestjs-repositories';
-import { RepositoryCheckoutsService } from '@openthrottle/nestjs-repositories';
+import { RepositoryCheckoutsRepository } from '@openthrottle/nestjs-repositories-server';
 import { PlanRunsRepository } from '@openthrottle/nestjs-repositories-server';
 import { In } from 'typeorm';
 
@@ -77,7 +77,7 @@ export class PlanRunWorktreeTeardownService {
 
   constructor(
     private readonly logger: LoggerService,
-    private readonly checkoutsService: RepositoryCheckoutsService,
+    private readonly checkoutsRepository: RepositoryCheckoutsRepository,
     private readonly planRunsRepository: PlanRunsRepository,
   ) {
     this.logger.debug(`🧩 ${this.name} 🧩`);
@@ -387,7 +387,7 @@ export class PlanRunWorktreeTeardownService {
       const leftovers = await this.findWorktreeCheckouts(worktreePath);
       await Promise.all(
         leftovers.map((checkout) =>
-          this.checkoutsService.deleteWorktreeCheckout(
+          this.checkoutsRepository.deleteWorktreeCheckout(
             checkout.userId,
             checkout.id,
           ),
@@ -407,7 +407,7 @@ export class PlanRunWorktreeTeardownService {
     worktreePath: string,
   ): Promise<RepositoryCheckout[]> {
     const paths = [...new Set([worktreePath, realPath(worktreePath)])];
-    return this.checkoutsService.getRepository().find({
+    return this.checkoutsRepository.findBy({
       where: { filesystemPath: In(paths), kind: WORKTREE_KIND },
     });
   }

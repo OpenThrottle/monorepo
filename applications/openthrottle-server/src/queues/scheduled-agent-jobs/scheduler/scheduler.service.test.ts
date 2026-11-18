@@ -1,12 +1,13 @@
 import { createMock } from '@golevelup/ts-vitest';
-import type {
-  ScheduledAgentJobCheckoutPathService,
-  ScheduledAgentJobsService,
-} from '@openthrottle/nestjs-repositories';
 import { type ScheduledAgentJob } from '@openthrottle/nestjs-repositories';
+import type { ScheduledAgentJobRunsRepository } from '@openthrottle/nestjs-repositories-server';
+import type { ScheduledAgentJobRunsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import { createScheduledAgentJobRunsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import { asMock } from '@openthrottle/nestjs-testing';
 import type { Job, Queue } from 'bullmq';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { ScheduledAgentJobCheckoutPathService } from '../../../services/scheduled-agent-job-checkout-path/scheduled-agent-job-checkout-path.service.ts';
 import type { ScheduledAgentJobPayload } from '../scheduled-agent-jobs.types.ts';
 import { ScheduledAgentJobSchedulerService } from './scheduler.service.ts';
 import { buildScheduledAgentJobPayload } from './scheduler.utils.ts';
@@ -33,7 +34,7 @@ const makeJob = (
 
 describe('ScheduledAgentJobSchedulerService', () => {
   let checkoutPaths: ScheduledAgentJobCheckoutPathService;
-  let jobsService: ScheduledAgentJobsService;
+  let runsRepository: ScheduledAgentJobRunsRepositoryMock;
   let queue: Queue<ScheduledAgentJobPayload, void>;
   let service: ScheduledAgentJobSchedulerService;
 
@@ -49,13 +50,13 @@ describe('ScheduledAgentJobSchedulerService', () => {
       removeJobScheduler: vi.fn().mockResolvedValue(true),
       upsertJobScheduler: vi.fn().mockResolvedValue({}),
     });
-    jobsService = createMock<ScheduledAgentJobsService>({
-      hasRunForSlot: vi.fn().mockResolvedValue(false),
-    });
+    runsRepository = createScheduledAgentJobRunsRepositoryMock();
+    runsRepository.hasRunForSlot.mockResolvedValue(false);
+
     service = new ScheduledAgentJobSchedulerService(
       checkoutPaths,
       queue,
-      jobsService,
+      asMock<ScheduledAgentJobRunsRepository>(runsRepository),
     );
   });
 
@@ -330,7 +331,7 @@ describe('ScheduledAgentJobSchedulerService', () => {
 
     describe('when a once schedule has already fired', () => {
       it('arms nothing', async () => {
-        vi.mocked(jobsService.hasRunForSlot).mockResolvedValue(true);
+        vi.mocked(runsRepository.hasRunForSlot).mockResolvedValue(true);
 
         const next = await service.upsertScheduler(
           makeJob({

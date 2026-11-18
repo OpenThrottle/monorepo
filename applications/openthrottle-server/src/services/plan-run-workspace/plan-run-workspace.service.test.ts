@@ -6,12 +6,13 @@
 
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import type { RepositoryCheckoutsService } from '@openthrottle/nestjs-repositories';
+import type { RepositoryCheckoutsRepository } from '@openthrottle/nestjs-repositories-server';
 import type {
   PlanRun,
   PlanRunsRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import type { PlanOutputStreamRepository } from '@openthrottle/nestjs-repositories-server';
+import { createRepositoryCheckoutsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import {
   createPlanOutputStreamRepositoryMock,
   createPlanRunsRepositoryMock,
@@ -94,7 +95,8 @@ describe('PlanRunWorkspaceService', () => {
       createMock<PlanRunWorktreeCheckoutService>({ register: mockRegister }),
       createMock<PlanRunWorkspacePreflightService>({ check: mockCheck }),
       createMock<PlanRunWorktreeProvisionService>({ provision: mockProvision }),
-      createMock<RepositoryCheckoutsService>({
+      asMock<RepositoryCheckoutsRepository>({
+        ...createRepositoryCheckoutsRepositoryMock(),
         findByUserAndPath: mockFindByUserAndPath,
       }),
       createMock<WorktreeSkillOverlayService>({

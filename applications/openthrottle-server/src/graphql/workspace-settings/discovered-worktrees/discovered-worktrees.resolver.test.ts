@@ -6,15 +6,15 @@
  */
 
 import { createMock } from '@golevelup/ts-vitest';
-import type {
-  RepositoryCheckout,
-  RepositoryCheckoutsService,
-} from '@openthrottle/nestjs-repositories';
+import type { RepositoryCheckout } from '@openthrottle/nestjs-repositories';
+import type { RepositoryCheckoutsRepository } from '@openthrottle/nestjs-repositories-server';
 import type {
   WorktreeRemoval,
   WorktreeRemovalsRepository,
 } from '@openthrottle/nestjs-repositories-server';
+import { createRepositoryCheckoutsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import { createWorktreeRemovalsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import { asMock } from '@openthrottle/nestjs-testing';
 import { describe, expect, it, vi } from 'vitest';
 
 import { PLAN_RUN_WORKTREE_TEARDOWN_OUTCOME } from '../../../services/plan-run-worktree-teardown/plan-run-worktree-teardown.constants.ts';
@@ -44,7 +44,9 @@ const build = (
 
   return new DiscoveredWorktreesResolver(
     createMock<WorktreeActivityService>({ discoverAndClassify }),
-    createMock<RepositoryCheckoutsService>(),
+    asMock<RepositoryCheckoutsRepository>(
+      createRepositoryCheckoutsRepositoryMock(),
+    ),
     createMock<WorktreeCheckoutPruneService>(),
     createMock<PlanRunWorktreeTeardownService>(),
     createMock<WorktreeRemovalsRepository>(removals),
@@ -294,7 +296,9 @@ describe('DiscoveredWorktreesResolver', () => {
       const invalidate = vi.fn();
       const resolver = new DiscoveredWorktreesResolver(
         createMock<WorktreeActivityService>({ invalidate }),
-        createMock<RepositoryCheckoutsService>(),
+        asMock<RepositoryCheckoutsRepository>(
+          createRepositoryCheckoutsRepositoryMock(),
+        ),
         createMock<WorktreeCheckoutPruneService>({ pruneByIds }),
         createMock<PlanRunWorktreeTeardownService>(),
         createMock<WorktreeRemovalsRepository>(
@@ -347,7 +351,8 @@ describe('DiscoveredWorktreesResolver', () => {
       const invalidate = vi.fn();
       const resolver = new DiscoveredWorktreesResolver(
         createMock<WorktreeActivityService>({ invalidate }),
-        createMock<RepositoryCheckoutsService>({
+        asMock<RepositoryCheckoutsRepository>({
+          ...createRepositoryCheckoutsRepositoryMock(),
           findByIdForUser: vi.fn().mockResolvedValue(options.checkout),
         }),
         createMock<WorktreeCheckoutPruneService>(),

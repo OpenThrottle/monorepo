@@ -3,7 +3,7 @@ import { join } from 'node:path';
 
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { RepositoryCheckoutsService } from '@openthrottle/nestjs-repositories';
+import { RepositoryCheckoutsRepository } from '@openthrottle/nestjs-repositories-server';
 import {
   ensureMaterialized,
   FOREIGN_SKILL_MATERIALIZATION_LAYER,
@@ -43,7 +43,7 @@ export class WorktreeSkillOverlayService {
 
   constructor(
     private readonly logger: LoggerService,
-    private readonly checkoutsService: RepositoryCheckoutsService,
+    private readonly checkoutsRepository: RepositoryCheckoutsRepository,
   ) {}
 
   /**
@@ -87,7 +87,7 @@ export class WorktreeSkillOverlayService {
     repositoryId: string,
     enabled: boolean,
   ): Promise<void> {
-    const checkouts = await this.checkoutsService.findByRepositoryIdForUser(
+    const checkouts = await this.checkoutsRepository.findByRepositoryIdForUser(
       repositoryId,
       userId,
     );
@@ -127,7 +127,7 @@ export class WorktreeSkillOverlayService {
     if (userId === '') return false;
 
     try {
-      const checkout = await this.checkoutsService.findByUserAndPath(
+      const checkout = await this.checkoutsRepository.findByUserAndPath(
         userId,
         baseCheckoutPath,
       );

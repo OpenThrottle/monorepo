@@ -5,21 +5,21 @@
 
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import type {
-  RepositoryCheckout,
-  RepositoryCheckoutsService,
-} from '@openthrottle/nestjs-repositories';
+import type { RepositoryCheckout } from '@openthrottle/nestjs-repositories';
+import type { RepositoryCheckoutsRepository } from '@openthrottle/nestjs-repositories-server';
 import type {
   PlanRun,
   PlanRunsRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import type { WorktreeRemovalsRepository } from '@openthrottle/nestjs-repositories-server';
 import type { WorktreeRemovalsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import { createRepositoryCheckoutsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import {
   createPlanRunsRepositoryMock,
   createWorktreeRemovalsRepositoryMock,
   worktreeRemovalsFactory,
 } from '@openthrottle/nestjs-repositories-server/testing';
+import { asMock } from '@openthrottle/nestjs-testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { mockRealpathSync, mockStatSync } = vi.hoisted(() => ({
@@ -97,7 +97,8 @@ const build = (options: {
 
   const service = new WorktreeCheckoutPruneService(
     createMock<LoggerService>(),
-    createMock<RepositoryCheckoutsService>({
+    asMock<RepositoryCheckoutsRepository>({
+      ...createRepositoryCheckoutsRepositoryMock(),
       deleteWorktreeCheckout,
       findByIdForUser: vi.fn((id: string) =>
         Promise.resolve(byId.get(id) ?? null),

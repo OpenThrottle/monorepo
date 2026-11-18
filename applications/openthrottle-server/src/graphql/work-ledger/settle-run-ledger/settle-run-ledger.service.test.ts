@@ -2,11 +2,11 @@ import { createMock } from '@golevelup/ts-vitest';
 import type { ConfigService } from '@nestjs/config';
 import type { GitHubService } from '@openthrottle/nestjs-github';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
+import type { PlanRunConfigSnapshotV1 } from '@openthrottle/nestjs-repositories';
 import type {
-  PlanRunConfigSnapshotV1,
-  RepositoriesService,
-  RepositoryCheckoutsService,
-} from '@openthrottle/nestjs-repositories';
+  RepositoriesRepository,
+  RepositoryCheckoutsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import type {
   PlanRun,
   PlanRunsRepository,
@@ -17,6 +17,10 @@ import type {
   PlanRunsRepositoryMock,
   ServiceAccountsRepositoryMock,
   WorkArtifactsRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
+import {
+  createRepositoriesRepositoryMock,
+  createRepositoryCheckoutsRepositoryMock,
 } from '@openthrottle/nestjs-repositories-server/testing';
 import {
   createPlanRunsRepositoryMock,
@@ -78,8 +82,8 @@ describe('SettleRunLedgerService', () => {
   let githubService: GitHubService;
   let planRunsRepository: PlanRunsRepositoryMock;
   let endedRuns: PlanRun[];
-  let repositoriesService: RepositoriesService;
-  let repositoryCheckoutsService: RepositoryCheckoutsService;
+  let repositoriesRepository: RepositoriesRepository;
+  let repositoryCheckoutsRepository: RepositoryCheckoutsRepository;
   let repositoryInspectionService: RepositoryInspectionService;
   let serviceAccounts: ServiceAccountsRepositoryMock;
   let workArtifactsRepository: WorkArtifactsRepositoryMock;
@@ -112,11 +116,17 @@ describe('SettleRunLedgerService', () => {
     saved.WorkSessionSubject = [];
     findOne.mockResolvedValue(null);
 
-    repositoryCheckoutsService = createMock<RepositoryCheckoutsService>({
-      findById: vi.fn().mockResolvedValue({ repositoryId: 'repository-1' }),
+    repositoryCheckoutsRepository = asMock<RepositoryCheckoutsRepository>({
+      ...createRepositoryCheckoutsRepositoryMock(),
+      findCheckoutById: vi
+        .fn()
+        .mockResolvedValue({ repositoryId: 'repository-1' }),
     });
-    repositoriesService = createMock<RepositoriesService>({
-      findById: vi.fn().mockResolvedValue({ name: 'OpenThrottle/monorepo' }),
+    repositoriesRepository = asMock<RepositoriesRepository>({
+      ...createRepositoriesRepositoryMock(),
+      findRepositoryById: vi
+        .fn()
+        .mockResolvedValue({ name: 'OpenThrottle/monorepo' }),
     });
     serviceAccounts = createServiceAccountsRepositoryMock();
     serviceAccounts.findByName.mockResolvedValue(
@@ -144,8 +154,8 @@ describe('SettleRunLedgerService', () => {
     service = new SettleRunLedgerService(
       logger,
       createMock<PlanRunsRepository>(planRunsRepository),
-      repositoriesService,
-      repositoryCheckoutsService,
+      repositoriesRepository,
+      repositoryCheckoutsRepository,
       repositoryInspectionService,
       createMock<ServiceAccountsRepository>(serviceAccounts),
       new SourceControlService(
@@ -248,9 +258,11 @@ describe('SettleRunLedgerService', () => {
 
   describe('when the repository is not on a supported forge', () => {
     it('records nothing and names the host, rather than writing GitHub rows that can never verify', async () => {
-      vi.mocked(repositoriesService.findById).mockResolvedValue(
+      vi.mocked(repositoriesRepository.findRepositoryById).mockResolvedValue(
         createMock<
-          NonNullable<Awaited<ReturnType<RepositoriesService['findById']>>>
+          NonNullable<
+            Awaited<ReturnType<RepositoriesRepository['findRepositoryById']>>
+          >
         >({
           name: 'acme/app',
           normalizedRemoteUrl: 'https://bitbucket.org/acme/app',
@@ -271,9 +283,11 @@ describe('SettleRunLedgerService', () => {
     });
 
     it('still treats a repository with no remote at all as GitHub', async () => {
-      vi.mocked(repositoriesService.findById).mockResolvedValue(
+      vi.mocked(repositoriesRepository.findRepositoryById).mockResolvedValue(
         createMock<
-          NonNullable<Awaited<ReturnType<RepositoriesService['findById']>>>
+          NonNullable<
+            Awaited<ReturnType<RepositoriesRepository['findRepositoryById']>>
+          >
         >({
           name: 'OpenThrottle/monorepo',
           normalizedRemoteUrl: null,
@@ -294,9 +308,11 @@ describe('SettleRunLedgerService', () => {
     });
 
     it('records a GitLab repository under its full nested path', async () => {
-      vi.mocked(repositoriesService.findById).mockResolvedValue(
+      vi.mocked(repositoriesRepository.findRepositoryById).mockResolvedValue(
         createMock<
-          NonNullable<Awaited<ReturnType<RepositoriesService['findById']>>>
+          NonNullable<
+            Awaited<ReturnType<RepositoriesRepository['findRepositoryById']>>
+          >
         >({
           name: 'sub/project',
           normalizedRemoteUrl: 'https://gitlab.com/group/sub/project',
@@ -360,7 +376,9 @@ describe('SettleRunLedgerService', () => {
         prNumber: 627,
       });
 
-      expect(repositoriesService.findById).toHaveBeenCalledWith('repository-1');
+      expect(repositoriesRepository.findRepositoryById).toHaveBeenCalledWith(
+        'repository-1',
+      );
       expect(repositoryInspectionService.scan).not.toHaveBeenCalled();
       expect(artifacts().map((artifact) => artifact.type)).toEqual([
         'git_commit',
@@ -370,10 +388,12 @@ describe('SettleRunLedgerService', () => {
 
     it('resolves the repo from the working directory remote and writes both artifacts', async () => {
       vi.mocked(
-        repositoriesService.findByNormalizedRemoteUrl,
+        repositoriesRepository.findByNormalizedRemoteUrl,
       ).mockResolvedValue(
         createMock<
-          NonNullable<Awaited<ReturnType<RepositoriesService['findById']>>>
+          NonNullable<
+            Awaited<ReturnType<RepositoriesRepository['findRepositoryById']>>
+          >
         >({
           name: 'OpenThrottle/monorepo',
           normalizedRemoteUrl: 'https://github.com/OpenThrottle/monorepo',
@@ -392,7 +412,7 @@ describe('SettleRunLedgerService', () => {
         '/worktrees/OpenThrottle/monorepo/plan-a68b3a2c',
       );
       expect(
-        repositoriesService.findByNormalizedRemoteUrl,
+        repositoriesRepository.findByNormalizedRemoteUrl,
       ).toHaveBeenCalledWith('github.com/openthrottle/monorepo');
       expect(artifacts()).toEqual([
         expect.objectContaining({
@@ -415,7 +435,7 @@ describe('SettleRunLedgerService', () => {
 
     it('skips with a warning when the remote matches no registered repository', async () => {
       vi.mocked(
-        repositoriesService.findByNormalizedRemoteUrl,
+        repositoriesRepository.findByNormalizedRemoteUrl,
       ).mockResolvedValue(null);
 
       await service.recordSettledRunArtifacts({

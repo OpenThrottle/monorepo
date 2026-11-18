@@ -1,6 +1,6 @@
 /**
  * @description GraphQL inputs for updateUserPreferences. Values are validated by
- * UserPreferencesService, not here.
+ * UserPreferencesRepository, not here.
  */
 
 import { Field, InputType } from '@nestjs/graphql';

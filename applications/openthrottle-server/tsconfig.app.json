@@ -80,13 +80,16 @@
       "path": "../../packages/nestjs-profiling/tsconfig.lib.json"
     },
     {
-      "path": "../../packages/nestjs-mcp-developer/tsconfig.lib.json"
+      "path": "../../packages/nestjs-postgres/tsconfig.lib.json"
     },
     {
       "path": "../../packages/nestjs-modules/tsconfig.lib.json"
     },
     {
       "path": "../../packages/nestjs-model-discovery/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/nestjs-mcp-developer/tsconfig.lib.json"
     },
     {
       "path": "../../packages/nestjs-logging/tsconfig.lib.json"

@@ -6,7 +6,9 @@ import { promisify } from 'node:util';
 
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import type { RepositoryCheckoutsService } from '@openthrottle/nestjs-repositories';
+import type { RepositoryCheckoutsRepository } from '@openthrottle/nestjs-repositories-server';
+import { createRepositoryCheckoutsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import { asMock } from '@openthrottle/nestjs-testing';
 import {
   afterAll,
   afterEach,
@@ -15,7 +17,6 @@ import {
   describe,
   expect,
   it,
-  vi,
 } from 'vitest';
 
 import { RepositoryInspectionService } from './repository-inspection.service.ts';
@@ -23,9 +24,9 @@ import { RepositoryInspectionService } from './repository-inspection.service.ts'
 const execFileAsync = promisify(execFile);
 
 describe('RepositoryInspectionService', () => {
-  const mockCheckoutsService = createMock<RepositoryCheckoutsService>({
-    saveInspection: vi.fn(),
-  });
+  const mockCheckoutsService = asMock<RepositoryCheckoutsRepository>(
+    createRepositoryCheckoutsRepositoryMock(),
+  );
 
   const service = new RepositoryInspectionService(
     createMock<LoggerService>(),
@@ -164,7 +165,9 @@ describe('RepositoryInspectionService', () => {
 describe('RepositoryInspectionService hook telemetry', () => {
   const service = new RepositoryInspectionService(
     createMock<LoggerService>(),
-    createMock<RepositoryCheckoutsService>({ saveInspection: vi.fn() }),
+    asMock<RepositoryCheckoutsRepository>(
+      createRepositoryCheckoutsRepositoryMock(),
+    ),
   );
 
   let root: string;

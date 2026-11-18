@@ -29,9 +29,7 @@ import {
   type AgentConversationMessage,
   type AgentConversationMessageRole,
   AgentConversationsService,
-  buildManagedMcpServers,
   CustomPromptsService,
-  WorkspaceLocalRepositoriesService,
 } from '@openthrottle/nestjs-repositories';
 import { UserDisabledAgentClisRepository } from '@openthrottle/nestjs-repositories-server';
 import {
@@ -52,6 +50,8 @@ import {
   toConversationServiceTier,
 } from '@openthrottle/openthrottle-agentic-utils';
 
+import { buildManagedMcpServers } from '../../services/workspace-editor-config/workspace-editor-config.utils.ts';
+import { WorkspaceLocalRepositoriesService } from '../../services/workspace-local-repositories/workspace-local-repositories.service.ts';
 import { TURN_IN_PROGRESS_ERROR } from './conversation-stream.constants.ts';
 import { StartConversationStreamInput } from './conversation-stream.input.ts';
 import {

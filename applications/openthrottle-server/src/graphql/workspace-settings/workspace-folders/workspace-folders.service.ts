@@ -23,11 +23,11 @@ import type {
   Repository,
   RepositoryCheckout,
 } from '@openthrottle/nestjs-repositories';
+import { normalizeRemoteUrl } from '@openthrottle/nestjs-repositories';
 import {
-  normalizeRemoteUrl,
-  RepositoriesService,
-  RepositoryCheckoutsService,
-} from '@openthrottle/nestjs-repositories';
+  RepositoriesRepository,
+  RepositoryCheckoutsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import { ProjectsRepository } from '@openthrottle/nestjs-repositories-server';
 import { isRecord } from '@openthrottle/nodejs-utils';
 import { resolveForeignWorkspaceContext } from '@openthrottle/openthrottle-agentic-utils';
@@ -157,10 +157,10 @@ const isPlausibleGitUrl = (gitUrl: string): boolean => {
 export class WorkspaceFoldersService {
   constructor(
     private readonly logger: LoggerService,
-    private readonly checkoutsService: RepositoryCheckoutsService,
+    private readonly checkoutsRepository: RepositoryCheckoutsRepository,
     private readonly inspectionService: RepositoryInspectionService,
     private readonly projectsRepository: ProjectsRepository,
-    private readonly repositoriesService: RepositoriesService,
+    private readonly repositoriesRepository: RepositoriesRepository,
     private readonly foreignSkillMaterialization: ForeignSkillMaterializationService,
     private readonly worktreeSkillOverlay: WorktreeSkillOverlayService,
   ) {
@@ -233,7 +233,7 @@ export class WorkspaceFoldersService {
     const roots = getWorkspaceRoots();
     if (roots.length === 0) return [];
 
-    const checkouts = await this.checkoutsService.listByUserId(userId, {
+    const checkouts = await this.checkoutsRepository.listByUserId(userId, {
       limit: 200,
     });
     const registeredPaths = new Set(
@@ -385,7 +385,7 @@ export class WorkspaceFoldersService {
   private async loadRegistrationIndex(
     userId: string,
   ): Promise<{ ids: Set<string>; paths: Set<string> }> {
-    const checkouts = await this.checkoutsService.listByUserId(userId, {
+    const checkouts = await this.checkoutsRepository.listByUserId(userId, {
       limit: 200,
     });
     return {
@@ -474,14 +474,14 @@ export class WorkspaceFoldersService {
 
     // 1. Manifest checkout id: a moved or re-added folder relinks, never duplicates.
     if (snapshot.manifest.checkoutId !== null) {
-      const existing = await this.checkoutsService.findByIdForUser(
+      const existing = await this.checkoutsRepository.findByIdForUser(
         snapshot.manifest.checkoutId,
         userId,
       );
       if (existing) {
         checkout = existing;
         if (existing.filesystemPath !== hostPath) {
-          const moved = await this.checkoutsService.updateFilesystemPath(
+          const moved = await this.checkoutsRepository.updateFilesystemPath(
             userId,
             existing.id,
             hostPath,
@@ -496,7 +496,7 @@ export class WorkspaceFoldersService {
 
     // 2. Manifest repository id: attach a new checkout to the known repository.
     if (checkout === null && snapshot.manifest.repositoryId !== null) {
-      const known = await this.repositoriesService.findById(
+      const known = await this.repositoriesRepository.findRepositoryById(
         snapshot.manifest.repositoryId,
       );
       if (known) {
@@ -511,12 +511,12 @@ export class WorkspaceFoldersService {
       const remote = snapshot.git.normalizedRemoteUrl;
       if (remote !== null) {
         const canonical =
-          await this.repositoriesService.findByNormalizedRemoteUrl(remote);
+          await this.repositoriesRepository.findByNormalizedRemoteUrl(remote);
         if (canonical) {
           repository = canonical;
           reconciliation = WorkspaceFolderReconciliationEnum.MATCHED_REMOTE;
         } else {
-          repository = await this.repositoriesService.create({
+          repository = await this.repositoriesRepository.create({
             defaultBranch: snapshot.git.defaultBranch,
             name: repositoryNameFromRemote(remote) ?? displayName,
             normalizedRemoteUrl: remote,
@@ -526,7 +526,7 @@ export class WorkspaceFoldersService {
           createdRepository = true;
         }
       } else {
-        repository = await this.repositoriesService.create({
+        repository = await this.repositoriesRepository.create({
           defaultBranch: snapshot.git.defaultBranch,
           name: displayName,
           normalizedRemoteUrl: null,
@@ -543,7 +543,7 @@ export class WorkspaceFoldersService {
 
     if (checkout === null) {
       try {
-        checkout = await this.checkoutsService.create(userId, {
+        checkout = await this.checkoutsRepository.createForUser(userId, {
           displayName,
           filesystemPath: hostPath,
           // A path whose `.git` is a file pointer is a linked worktree; persist
@@ -555,13 +555,13 @@ export class WorkspaceFoldersService {
         });
       } catch (error) {
         if (createdRepository) {
-          await this.repositoriesService.delete(repository.id);
+          await this.repositoriesRepository.removeRepository(repository.id);
         }
         throw error;
       }
     }
 
-    await this.checkoutsService.saveInspection(
+    await this.checkoutsRepository.saveInspection(
       checkout.id,
       { ...snapshot },
       new Date(snapshot.scannedAt),
@@ -582,9 +582,12 @@ export class WorkspaceFoldersService {
         name: repository.name,
         nxProjectName: repository.name,
       });
-      const linked = await this.repositoriesService.update(repository.id, {
-        projectId: project.id,
-      });
+      const linked = await this.repositoriesRepository.updateRepository(
+        repository.id,
+        {
+          projectId: project.id,
+        },
+      );
       repository = linked ?? repository;
       projectCreated = true;
     }
@@ -685,7 +688,7 @@ export class WorkspaceFoldersService {
     userId: string,
     id: string,
   ): Promise<RefreshCheckoutPayloadObject> {
-    const checkout = await this.checkoutsService.findByIdForUser(id, userId);
+    const checkout = await this.checkoutsRepository.findByIdForUser(id, userId);
     if (!checkout) {
       throw new NotFoundException('Checkout not found');
     }
@@ -702,7 +705,7 @@ export class WorkspaceFoldersService {
     }
 
     if (snapshot !== null) {
-      await this.checkoutsService.saveInspection(
+      await this.checkoutsRepository.saveInspection(
         checkout.id,
         { ...snapshot },
         new Date(snapshot.scannedAt),
@@ -720,7 +723,7 @@ export class WorkspaceFoldersService {
       repository.normalizedRemoteUrl === null &&
       snapshot.git.normalizedRemoteUrl !== null
     ) {
-      const result = await this.repositoriesService.mergeDetectedRemote(
+      const result = await this.repositoriesRepository.mergeDetectedRemote(
         repository.id,
         snapshot.git.normalizedRemoteUrl,
       );
@@ -760,7 +763,7 @@ export class WorkspaceFoldersService {
    * checkouts, with inspection snapshots refreshed on view past the TTL.
    */
   async workspaceRepositories(userId: string): Promise<RepositoryObject[]> {
-    const checkouts = await this.checkoutsService.listByUserId(userId, {
+    const checkouts = await this.checkoutsRepository.listByUserId(userId, {
       limit: 200,
     });
 
@@ -796,14 +799,15 @@ export class WorkspaceFoldersService {
     userId: string,
     id: string,
   ): Promise<RepositoryObject | null> {
-    const checkouts = await this.checkoutsService.findByRepositoryIdForUser(
+    const checkouts = await this.checkoutsRepository.findByRepositoryIdForUser(
       id,
       userId,
     );
     if (checkouts.length === 0) return null;
 
     const repository =
-      checkouts[0]?.repository ?? (await this.repositoriesService.findById(id));
+      checkouts[0]?.repository ??
+      (await this.repositoriesRepository.findRepositoryById(id));
     if (repository == null) return null;
 
     return this.buildRepositoryObject(repository, checkouts);
@@ -825,7 +829,7 @@ export class WorkspaceFoldersService {
       worktreeSkillOverlayEnabled?: boolean | null;
     },
   ): Promise<RepositoryObject> {
-    const owned = await this.checkoutsService.findByRepositoryIdForUser(
+    const owned = await this.checkoutsRepository.findByRepositoryIdForUser(
       input.id,
       userId,
     );
@@ -837,7 +841,7 @@ export class WorkspaceFoldersService {
     // not a shared-identity field on `repositories`; flip every one of the user's
     // checkouts of this repository so the repository-level toggle stays consistent.
     if (input.foreignSkillInjectionEnabled != null) {
-      await this.checkoutsService.setForeignSkillInjectionEnabledForRepository(
+      await this.checkoutsRepository.setForeignSkillInjectionEnabledForRepository(
         userId,
         input.id,
         input.foreignSkillInjectionEnabled,
@@ -854,7 +858,7 @@ export class WorkspaceFoldersService {
     // The overlay flag is per-user, per-checkout like the injection opt-in. Applied to
     // disk immediately (overlay added on, removed off); soft-fail, never blocks the update.
     if (input.worktreeSkillOverlayEnabled != null) {
-      await this.checkoutsService.setWorktreeSkillOverlayEnabledForRepository(
+      await this.checkoutsRepository.setWorktreeSkillOverlayEnabledForRepository(
         userId,
         input.id,
         input.worktreeSkillOverlayEnabled,
@@ -892,15 +896,20 @@ export class WorkspaceFoldersService {
     const hasRepositoryPatch = Object.keys(data).length > 0;
     let repository: Repository | null | undefined = owned[0]?.repository;
     if (hasRepositoryPatch) {
-      repository = await this.repositoriesService.update(input.id, data);
+      repository = await this.repositoriesRepository.updateRepository(
+        input.id,
+        data,
+      );
     } else if (repository == null) {
-      repository = await this.repositoriesService.findById(input.id);
+      repository = await this.repositoriesRepository.findRepositoryById(
+        input.id,
+      );
     }
     if (repository == null) {
       throw new NotFoundException('Repository not found');
     }
 
-    const refreshed = await this.checkoutsService.findByRepositoryIdForUser(
+    const refreshed = await this.checkoutsRepository.findByRepositoryIdForUser(
       input.id,
       userId,
     );
@@ -966,7 +975,9 @@ export class WorkspaceFoldersService {
   ): Promise<Repository> {
     const repository =
       checkout.repository ??
-      (await this.repositoriesService.findById(checkout.repositoryId));
+      (await this.repositoriesRepository.findRepositoryById(
+        checkout.repositoryId,
+      ));
     if (!repository) {
       throw new NotFoundException(
         `Repository not found for checkout: ${checkout.id}`,

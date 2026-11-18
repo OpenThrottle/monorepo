@@ -1,6 +1,6 @@
 /**
  * @description GraphQL enum for probed editor presence. Values align with
- * {@link EDITOR_PRESENCE_STATES} in @openthrottle/nestjs-repositories.
+ * {@link EDITOR_PRESENCE_STATES} in services/editor-presence.
  *
  * Three states, not a boolean, and the distinction is load-bearing: `NOT_FOUND` is a
  * positive claim about the user's machine, while `UNKNOWN` means the server was not in
@@ -9,7 +9,8 @@
  */
 
 import { registerEnumType } from '@nestjs/graphql';
-import { EDITOR_PRESENCE_STATES } from '@openthrottle/nestjs-repositories';
+
+import { EDITOR_PRESENCE_STATES } from '../../services/editor-presence/editor-presence.constants.ts';
 
 export const EditorPresenceStateEnum = {
   INSTALLED: 'installed',
