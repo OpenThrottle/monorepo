@@ -26,7 +26,6 @@ import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   ProjectSkillsService,
   SkillAvailabilityService,
-  SkillTagsService,
   TagActionRulesService,
   TagsService,
 } from '@openthrottle/nestjs-repositories';
@@ -34,6 +33,7 @@ import type { Plan } from '@openthrottle/nestjs-repositories-server';
 import {
   PlansRepository,
   ProjectsRepository,
+  SkillTagsRepository,
   TasksRepository,
   UsersRepository,
 } from '@openthrottle/nestjs-repositories-server';
@@ -65,7 +65,7 @@ export class PlanContextAvailabilityService {
     private readonly projectSkillsService: ProjectSkillsService,
     private readonly projectsRepository: ProjectsRepository,
     private readonly skillAvailabilityService: SkillAvailabilityService,
-    private readonly skillTagsService: SkillTagsService,
+    private readonly skillTagsRepository: SkillTagsRepository,
     private readonly tagActionRulesService: TagActionRulesService,
     private readonly tagsService: TagsService,
     private readonly tasksRepository: TasksRepository,
@@ -111,7 +111,7 @@ export class PlanContextAvailabilityService {
 
     const [views, vocabulary, storedRuleSet] = await Promise.all([
       this.projectSkillsService.getSkillsForProject(projectId),
-      this.skillTagsService.listForUser(input.vocabularyUserId),
+      this.skillTagsRepository.listForUser(input.vocabularyUserId),
       this.skillAvailabilityService.getRuleSetForProject(projectId),
     ]);
 

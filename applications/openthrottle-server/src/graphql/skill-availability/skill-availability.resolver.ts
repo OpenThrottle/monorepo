@@ -6,7 +6,7 @@
  * Auth stances mirror the sibling skill features: the read query is authenticated-only (Path A, the
  * projectSkills stance — no explicit permission); the mutations require settings:write (the
  * skill-tags mutation stance). For addRule/updateRule the resolver fetches the caller's skill-tag
- * vocabulary (SkillTagsService.listForUser) and passes it as `knownTags`, so the service can reject
+ * vocabulary (SkillTagsRepository.listForUser) and passes it as `knownTags`, so the service can reject
  * tag references outside the user's vocabulary. Mirrored by the openthrottle-mcp
  * get/upsert/delete/add/update/remove_skill_availability_rule(_set) tools.
  */
@@ -16,10 +16,8 @@ import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { CurrentUser } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 import type { SkillAvailabilityRule } from '@openthrottle/nestjs-repositories';
-import {
-  SkillAvailabilityService,
-  SkillTagsService,
-} from '@openthrottle/nestjs-repositories';
+import { SkillAvailabilityService } from '@openthrottle/nestjs-repositories';
+import { SkillTagsRepository } from '@openthrottle/nestjs-repositories-server';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import { SkillAvailabilityRuleInput } from './skill-availability.input.ts';
@@ -54,7 +52,7 @@ function toRuleObject(rule: RuleLike): SkillAvailabilityRuleObject {
 export class SkillAvailabilityResolver {
   constructor(
     private readonly skillAvailabilityService: SkillAvailabilityService,
-    private readonly skillTagsService: SkillTagsService,
+    private readonly skillTagsRepository: SkillTagsRepository,
   ) {}
 
   @Query(() => SkillAvailabilityRuleSetObject, {
@@ -155,7 +153,7 @@ export class SkillAvailabilityResolver {
   }
 
   private async resolveKnownTags(userId: string): Promise<string[]> {
-    const vocabulary = await this.skillTagsService.listForUser(userId);
+    const vocabulary = await this.skillTagsRepository.listForUser(userId);
     return vocabulary.map((entry) => entry.tag);
   }
 }

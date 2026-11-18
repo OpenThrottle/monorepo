@@ -12,6 +12,7 @@ import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import {
   ProjectsModule,
   RolesModule,
+  SkillTagsModule,
 } from '@openthrottle/nestjs-repositories-server';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
@@ -25,6 +26,7 @@ import { SkillAvailabilityResolutionResolver } from './skill-availability-resolu
     NestjsRepositoriesModule,
     PlanContextAvailabilityModule,
     ProjectsModule,
+    SkillTagsModule,
   ],
   providers: [
     GqlPermissionsGuard,

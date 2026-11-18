@@ -5,6 +5,7 @@ import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import {
   PlansModule,
   ServiceAccountsModule,
+  SkillTagsModule,
   TasksModule,
 } from '@openthrottle/nestjs-repositories-server';
 
@@ -29,6 +30,7 @@ import { taggingModelProviderFactory } from './tagging-model.provider.ts';
     NestjsRepositoriesModule,
     PlanRulesQueueProducerModule,
     PlansModule,
+    SkillTagsModule,
     SourceControlModule,
     TaggingQueueProducerModule,
     TasksModule,

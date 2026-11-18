@@ -4,15 +4,20 @@ import { Test } from '@nestjs/testing';
 import type {
   Project,
   ProjectSkillView,
-  UserSkillTag,
 } from '@openthrottle/nestjs-repositories';
 import {
   ProjectSkillsService,
   SkillAvailabilityService,
-  SkillTagsService,
 } from '@openthrottle/nestjs-repositories';
-import { ProjectsRepository } from '@openthrottle/nestjs-repositories-server';
-import { createProjectsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import type { UserSkillTag } from '@openthrottle/nestjs-repositories-server';
+import {
+  ProjectsRepository,
+  SkillTagsRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import {
+  createProjectsRepositoryMock,
+  createSkillTagsRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import type { SkillAvailabilityRuleSet } from '@openthrottle/openthrottle-skills';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -76,9 +81,7 @@ describe('SkillAvailabilityResolutionResolver', () => {
   const mockSkillAvailabilityService = createMock<SkillAvailabilityService>({
     getRuleSetForProject: vi.fn(),
   });
-  const mockSkillTagsService = createMock<SkillTagsService>({
-    listForUser: vi.fn(),
-  });
+  const mockSkillTagsRepository = createSkillTagsRepositoryMock();
 
   let resolver: SkillAvailabilityResolutionResolver;
 
@@ -98,7 +101,7 @@ describe('SkillAvailabilityResolutionResolver', () => {
           provide: SkillAvailabilityService,
           useValue: mockSkillAvailabilityService,
         },
-        { provide: SkillTagsService, useValue: mockSkillTagsService },
+        { provide: SkillTagsRepository, useValue: mockSkillTagsRepository },
       ],
     }).compile();
 
@@ -107,9 +110,7 @@ describe('SkillAvailabilityResolutionResolver', () => {
     vi.mocked(mockProjectSkillsService.getSkillsForProject).mockResolvedValue(
       views,
     );
-    vi.mocked(mockSkillTagsService.listForUser).mockResolvedValue([
-      makeTag('github'),
-    ]);
+    mockSkillTagsRepository.listForUser.mockResolvedValue([makeTag('github')]);
   });
 
   test('no-config passthrough: effective === static ?? false with frontmatter provenance', async () => {

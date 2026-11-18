@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { AgentAccountsService } from '@openthrottle/nestjs-repositories';
+import { AgentAccountsRepository } from '@openthrottle/nestjs-repositories-server';
 import type {
   AgentAccountIdentity,
   AgentAccountResolver,
@@ -21,7 +21,7 @@ export class AgentAccountStampingService {
   private readonly name = 'agent-account-stamping';
 
   constructor(
-    private readonly accounts: AgentAccountsService,
+    private readonly accounts: AgentAccountsRepository,
     private readonly logger: LoggerService,
     @Inject(AGENT_ACCOUNT_RESOLVER)
     private readonly resolver: AgentAccountResolver,

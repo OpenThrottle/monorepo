@@ -1,7 +1,9 @@
 import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { AgentAccountsService } from '@openthrottle/nestjs-repositories';
+import { AgentAccountsRepository } from '@openthrottle/nestjs-repositories-server';
+import type { AgentAccountsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import { createAgentAccountsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import type { AgentAccountIdentity } from '@openthrottle/openthrottle-agentic-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -28,17 +30,19 @@ const unattributed: AgentAccountIdentity = {
 describe('AgentAccountStampingService', () => {
   let service: AgentAccountStampingService;
   let resolve: ReturnType<typeof vi.fn>;
-  let upsertSeen: ReturnType<typeof vi.fn>;
+  let upsertSeen: AgentAccountsRepositoryMock['upsertSeen'];
 
   beforeEach(async () => {
     resolve = vi.fn().mockResolvedValue(identified);
-    upsertSeen = vi.fn().mockResolvedValue('account-1');
+    const accounts = createAgentAccountsRepositoryMock();
+    upsertSeen = accounts.upsertSeen;
+    upsertSeen.mockResolvedValue('account-1');
 
     const app = await Test.createTestingModule({
       providers: [
         AgentAccountStampingService,
         { provide: AGENT_ACCOUNT_RESOLVER, useValue: { resolve } },
-        { provide: AgentAccountsService, useValue: { upsertSeen } },
+        { provide: AgentAccountsRepository, useValue: accounts },
         { provide: LoggerService, useValue: createMock<LoggerService>() },
       ],
     }).compile();

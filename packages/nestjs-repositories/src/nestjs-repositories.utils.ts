@@ -4,6 +4,7 @@
  */
 
 import {
+  AgentAccount,
   BlogAuthor,
   BlogPost,
   BlogTag,
@@ -24,12 +25,14 @@ import {
   ServiceAccountCredential,
   SkillUsageEvent,
   SkillUsageOutcome,
+  Subscription,
   Task,
   TaskEmbedding,
   TelemetryHeartbeat,
   User,
   UserDisabledAgentCli,
   UserFavoriteAgentModel,
+  UserSkillTag,
   WorkArtifact,
   WorkSession,
   WorkSessionSubject,
@@ -38,7 +41,6 @@ import {
 import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
 import type { DataSourceOptions } from 'typeorm';
 
-import { AgentAccount } from './modules/agent-accounts/agent-accounts.entity.ts';
 import { AgentConversation } from './modules/agent-conversations/agent-conversation.entity.ts';
 import { AgentConversationMessage } from './modules/agent-conversations/agent-conversation-message.entity.ts';
 import { AgentTokenUsage } from './modules/agent-token-usage/agent-token-usage.entity.ts';
@@ -58,8 +60,6 @@ import { ScheduledAgentJob } from './modules/scheduled-agent-jobs/scheduled-agen
 import { ScheduledAgentJobRun } from './modules/scheduled-agent-jobs/scheduled-agent-job-run.entity.ts';
 import { SkillAvailabilityRule } from './modules/skill-availability/skill-availability-rule.entity.ts';
 import { SkillAvailabilityRuleSet } from './modules/skill-availability/skill-availability-rule-set.entity.ts';
-import { UserSkillTag } from './modules/skill-tags/user-skill-tag.entity.ts';
-import { Subscription } from './modules/subscriptions/subscription.entity.ts';
 import { RuleApplication } from './modules/tag-action-rules/rule-application.entity.ts';
 import { TagActionRule } from './modules/tag-action-rules/tag-action-rule.entity.ts';
 import { PlanTag } from './modules/tags/plan-tag.entity.ts';

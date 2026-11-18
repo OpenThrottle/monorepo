@@ -1,8 +1,8 @@
-import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
-import type { UserSkillTag } from '@openthrottle/nestjs-repositories';
-import { SkillTagsService } from '@openthrottle/nestjs-repositories';
-import { beforeAll, describe, expect, test, vi } from 'vitest';
+import type { UserSkillTag } from '@openthrottle/nestjs-repositories-server';
+import { SkillTagsRepository } from '@openthrottle/nestjs-repositories-server';
+import { createSkillTagsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import { beforeAll, describe, expect, test } from 'vitest';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import { SkillTagsResolver } from './skill-tags.resolver.ts';
@@ -21,12 +21,7 @@ describe('SkillTagsResolver', () => {
     };
   };
 
-  const mockSkillTagsService = createMock<SkillTagsService>({
-    addTag: vi.fn(),
-    listForUser: vi.fn(),
-    removeTag: vi.fn(),
-    renameTag: vi.fn(),
-  });
+  const mockSkillTagsRepository = createSkillTagsRepositoryMock();
 
   let resolver: SkillTagsResolver;
 
@@ -34,7 +29,7 @@ describe('SkillTagsResolver', () => {
     const app = await Test.createTestingModule({
       providers: [
         SkillTagsResolver,
-        { provide: SkillTagsService, useValue: mockSkillTagsService },
+        { provide: SkillTagsRepository, useValue: mockSkillTagsRepository },
       ],
     })
       .overrideGuard(GqlPermissionsGuard)
@@ -46,22 +41,22 @@ describe('SkillTagsResolver', () => {
 
   test('skillTagVocabulary returns tags with a totalCount envelope', async () => {
     const tags = [makeTag('backend'), makeTag('frontend')];
-    vi.mocked(mockSkillTagsService.listForUser).mockResolvedValue(tags);
+    mockSkillTagsRepository.listForUser.mockResolvedValue(tags);
 
     const result = await resolver.skillTagVocabulary(userId);
 
     expect(result).toEqual({ tags, totalCount: 2 });
-    expect(mockSkillTagsService.listForUser).toHaveBeenCalledWith(userId);
+    expect(mockSkillTagsRepository.listForUser).toHaveBeenCalledWith(userId);
   });
 
   test('addSkillTag delegates to the service', async () => {
     const created = makeTag('pr-review');
-    vi.mocked(mockSkillTagsService.addTag).mockResolvedValue(created);
+    mockSkillTagsRepository.addTag.mockResolvedValue(created);
 
     const result = await resolver.addSkillTag(userId, { tag: 'pr-review' });
 
     expect(result).toBe(created);
-    expect(mockSkillTagsService.addTag).toHaveBeenCalledWith(
+    expect(mockSkillTagsRepository.addTag).toHaveBeenCalledWith(
       userId,
       'pr-review',
       'domain',
@@ -70,7 +65,7 @@ describe('SkillTagsResolver', () => {
 
   test('renameSkillTag delegates to the service', async () => {
     const renamed = makeTag('server');
-    vi.mocked(mockSkillTagsService.renameTag).mockResolvedValue(renamed);
+    mockSkillTagsRepository.renameTag.mockResolvedValue(renamed);
 
     const result = await resolver.renameSkillTag(userId, {
       from: 'backend',
@@ -78,7 +73,7 @@ describe('SkillTagsResolver', () => {
     });
 
     expect(result).toBe(renamed);
-    expect(mockSkillTagsService.renameTag).toHaveBeenCalledWith(
+    expect(mockSkillTagsRepository.renameTag).toHaveBeenCalledWith(
       userId,
       'backend',
       'server',
@@ -86,12 +81,12 @@ describe('SkillTagsResolver', () => {
   });
 
   test('removeSkillTag returns the service boolean', async () => {
-    vi.mocked(mockSkillTagsService.removeTag).mockResolvedValue(true);
+    mockSkillTagsRepository.removeTag.mockResolvedValue(true);
 
     const result = await resolver.removeSkillTag(userId, { tag: 'backend' });
 
     expect(result).toBe(true);
-    expect(mockSkillTagsService.removeTag).toHaveBeenCalledWith(
+    expect(mockSkillTagsRepository.removeTag).toHaveBeenCalledWith(
       userId,
       'backend',
     );

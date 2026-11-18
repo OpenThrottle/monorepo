@@ -19,7 +19,10 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { Plan } from '@openthrottle/nestjs-repositories-server';
-import { Task } from '@openthrottle/nestjs-repositories-server';
+import {
+  SkillTagsRepository,
+  Task,
+} from '@openthrottle/nestjs-repositories-server';
 import {
   AGENT_ASSET_SLUG_PATTERN,
   DEFAULT_TAG_VOCABULARY_SEED,
@@ -27,7 +30,6 @@ import {
 } from '@openthrottle/openthrottle-skills';
 import { QueryFailedError, Repository } from 'typeorm';
 
-import { SkillTagsService } from '../skill-tags/skill-tags.service.ts';
 import { PlanTag } from './plan-tag.entity.ts';
 import { ProjectTag } from './project-tag.entity.ts';
 import { TAG_SOURCE_RANK } from './tags.constants.ts';
@@ -81,7 +83,7 @@ export class TagsService {
     private readonly projectTagsRepository: Repository<ProjectTag>,
     @InjectRepository(TaskTag)
     private readonly taskTagsRepository: Repository<TaskTag>,
-    private readonly skillTagsService: SkillTagsService,
+    private readonly skillTagsRepository: SkillTagsRepository,
   ) {
     this.logger.debug('🏷️ tags 🏷️');
   }
@@ -430,11 +432,11 @@ export class TagsService {
 
   private listVocabularyRows(caller: TagCaller) {
     if (caller.principalKind === 'user') {
-      return this.skillTagsService.listForUser(caller.subjectId);
+      return this.skillTagsRepository.listForUser(caller.subjectId);
     }
-    return this.skillTagsService
-      .getRepository()
-      .find({ where: { userId: caller.subjectId } });
+    return this.skillTagsRepository.findBy({
+      where: { userId: caller.subjectId },
+    });
   }
 
   /**

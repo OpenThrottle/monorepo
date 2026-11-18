@@ -282,7 +282,7 @@ const seed = async (dataSource: DataSource, reset: boolean): Promise<void> => {
   }
 
   // The tag vocabulary, whole. The server self-seeds it only for a user with
-  // ZERO rows (SkillTagsService.listForUser), so inserting just the demo's extra
+  // ZERO rows (SkillTagsRepository.listForUser), so inserting just the demo's extra
   // tag would suppress every default — insert the defaults plus the extra.
   const vocabulary = [
     ...DEFAULT_DOMAIN_TAG_VOCABULARY.map((tag) => ({

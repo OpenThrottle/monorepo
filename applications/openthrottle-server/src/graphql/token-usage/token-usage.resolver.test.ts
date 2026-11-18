@@ -7,16 +7,19 @@ import {
   type AuthPrincipal,
 } from '@openthrottle/nestjs-auth';
 import {
-  AgentAccountsService,
   AgentTokenUsageService,
   type TokenUsageTotals,
 } from '@openthrottle/nestjs-repositories';
+import { agentTokenUsageFactory } from '@openthrottle/nestjs-repositories/testing';
 import {
-  agentAccountFactory,
-  agentTokenUsageFactory,
-} from '@openthrottle/nestjs-repositories/testing';
-import { RolesRepository } from '@openthrottle/nestjs-repositories-server';
-import { createRolesRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+  AgentAccountsRepository,
+  RolesRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import {
+  agentAccountsFactory,
+  createAgentAccountsRepositoryMock,
+  createRolesRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import { beforeAll, beforeEach, describe, expect, it, test, vi } from 'vitest';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
@@ -41,7 +44,8 @@ describe('TokenUsageResolver', () => {
   const listUsageInRange = vi.fn();
   const getUsageTotalsInRange = vi.fn();
   const getUsageByAccountInRange = vi.fn().mockResolvedValue([]);
-  const listByIds = vi.fn().mockResolvedValue([]);
+  const agentAccountsRepository = createAgentAccountsRepositoryMock();
+  const listByIds = agentAccountsRepository.listByIds;
   const recordTokenUsageBatch = vi.fn();
   const resolveEffectiveUserId = vi.fn();
   const stampIdentity = vi.fn();
@@ -71,8 +75,8 @@ describe('TokenUsageResolver', () => {
           }),
         },
         {
-          provide: AgentAccountsService,
-          useValue: createMock<AgentAccountsService>({ listByIds }),
+          provide: AgentAccountsRepository,
+          useValue: agentAccountsRepository,
         },
         {
           provide: AgentAccountStampingService,
@@ -166,7 +170,7 @@ describe('TokenUsageResolver', () => {
     };
 
     test('resolves each bucket to its account, keeping the unattributed bucket', async () => {
-      const account = agentAccountFactory.build({
+      const account = agentAccountsFactory.build({
         email: 'dev@example.com',
         id: 'account-1',
         orgName: 'Example',

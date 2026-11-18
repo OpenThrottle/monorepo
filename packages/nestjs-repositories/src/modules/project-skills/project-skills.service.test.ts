@@ -3,11 +3,12 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import { SkillTagsRepository } from '@openthrottle/nestjs-repositories-server';
+import { createSkillTagsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
 import type { ProjectSkillInput } from '@openthrottle/openthrottle-skills';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { SkillTagsService } from '../skill-tags/skill-tags.service.ts';
 import type { TagCaller } from '../tags/tags.types.ts';
 import { ProjectSkill } from './project-skill.entity.ts';
 import { ProjectSkillsService } from './project-skills.service.ts';
@@ -43,9 +44,7 @@ describe('ProjectSkillsService', () => {
     upsert: vi.fn(),
   };
 
-  const mockSkillTagsService = createMock<SkillTagsService>({
-    listForUser: vi.fn(),
-  });
+  const mockSkillTagsRepository = createSkillTagsRepositoryMock();
 
   const userCaller: TagCaller = {
     principalKind: 'user',
@@ -63,7 +62,7 @@ describe('ProjectSkillsService', () => {
           provide: getRepositoryToken(ProjectSkill),
           useValue: mockRepository,
         },
-        { provide: SkillTagsService, useValue: mockSkillTagsService },
+        { provide: SkillTagsRepository, useValue: mockSkillTagsRepository },
       ],
     }).compile();
 
@@ -340,7 +339,7 @@ describe('ProjectSkillsService', () => {
 
   describe('addProjectSkillTag', () => {
     it('appends a domain tag and sorts the array', async () => {
-      vi.mocked(mockSkillTagsService.listForUser).mockResolvedValue([
+      mockSkillTagsRepository.listForUser.mockResolvedValue([
         asMock({ dimension: 'domain', tag: 'github' }),
       ]);
       vi.mocked(mockRepository.findOne).mockResolvedValue(
@@ -362,7 +361,7 @@ describe('ProjectSkillsService', () => {
     });
 
     it('is idempotent when the tag is already present', async () => {
-      vi.mocked(mockSkillTagsService.listForUser).mockResolvedValue([
+      mockSkillTagsRepository.listForUser.mockResolvedValue([
         asMock({ dimension: 'domain', tag: 'github' }),
       ]);
       vi.mocked(mockRepository.findOne).mockResolvedValue(
@@ -381,7 +380,7 @@ describe('ProjectSkillsService', () => {
     });
 
     it('rejects an unknown tag', async () => {
-      vi.mocked(mockSkillTagsService.listForUser).mockResolvedValue([
+      mockSkillTagsRepository.listForUser.mockResolvedValue([
         asMock({ dimension: 'domain', tag: 'github' }),
       ]);
 
@@ -397,7 +396,7 @@ describe('ProjectSkillsService', () => {
     });
 
     it('rejects a phase tag', async () => {
-      vi.mocked(mockSkillTagsService.listForUser).mockResolvedValue([
+      mockSkillTagsRepository.listForUser.mockResolvedValue([
         asMock({ dimension: 'phase', tag: 'breakdown' }),
       ]);
 
@@ -424,7 +423,7 @@ describe('ProjectSkillsService', () => {
     });
 
     it('throws when the skill row is missing', async () => {
-      vi.mocked(mockSkillTagsService.listForUser).mockResolvedValue([
+      mockSkillTagsRepository.listForUser.mockResolvedValue([
         asMock({ dimension: 'domain', tag: 'github' }),
       ]);
       vi.mocked(mockRepository.findOne).mockResolvedValue(null);

@@ -1,11 +1,3 @@
-export { AGENT_ACCOUNT_CREDENTIAL_KINDS } from './modules/agent-accounts/agent-accounts.constants.ts';
-export { AgentAccount } from './modules/agent-accounts/agent-accounts.entity.ts';
-export { AgentAccountsModule } from './modules/agent-accounts/agent-accounts.module.ts';
-export { AgentAccountsService } from './modules/agent-accounts/agent-accounts.service.ts';
-export type {
-  AgentAccountCredentialKind,
-  UpsertAgentAccountInput,
-} from './modules/agent-accounts/agent-accounts.types.ts';
 export type { AgentConversationData } from './modules/agent-conversations/agent-conversation.entity.ts';
 export { AgentConversation } from './modules/agent-conversations/agent-conversation.entity.ts';
 export type { AgentConversationMessageData } from './modules/agent-conversations/agent-conversation-message.entity.ts';
@@ -207,12 +199,6 @@ export type { SkillAvailabilityRuleData } from './modules/skill-availability/ski
 export { SkillAvailabilityRule } from './modules/skill-availability/skill-availability-rule.entity.ts';
 export type { SkillAvailabilityRuleSetData } from './modules/skill-availability/skill-availability-rule-set.entity.ts';
 export { SkillAvailabilityRuleSet } from './modules/skill-availability/skill-availability-rule-set.entity.ts';
-export { SkillTagsService } from './modules/skill-tags/skill-tags.service.ts';
-export type { UserSkillTagData } from './modules/skill-tags/user-skill-tag.entity.ts';
-export { UserSkillTag } from './modules/skill-tags/user-skill-tag.entity.ts';
-export type { SubscriptionData } from './modules/subscriptions/subscription.entity.ts';
-export { Subscription } from './modules/subscriptions/subscription.entity.ts';
-export { SubscriptionsService } from './modules/subscriptions/subscriptions.service.ts';
 export type {
   RuleApplicationData,
   RuleApplicationState,

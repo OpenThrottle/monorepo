@@ -9,18 +9,16 @@ import { createMock } from '@golevelup/ts-vitest';
 import type { ConfigService } from '@nestjs/config';
 import type { GitHubService } from '@openthrottle/nestjs-github';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import type {
-  PlanTag,
-  SkillTagsService,
-  TagsService,
-} from '@openthrottle/nestjs-repositories';
+import type { PlanTag, TagsService } from '@openthrottle/nestjs-repositories';
 import type {
   Plan,
   ServiceAccountsRepository,
+  SkillTagsRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import {
   createPlansRepositoryMock,
   createServiceAccountsRepositoryMock,
+  createSkillTagsRepositoryMock,
   createTasksRepositoryMock,
 } from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
@@ -126,11 +124,7 @@ describe('TaggingProcessor', () => {
       createMock<ServiceAccountsRepository>(
         createServiceAccountsRepositoryMock(),
       ),
-      createMock<SkillTagsService>({
-        getRepository: vi.fn(() =>
-          asMock({ find: vi.fn(() => Promise.resolve([])) }),
-        ),
-      }),
+      asMock<SkillTagsRepository>(createSkillTagsRepositoryMock()),
       new SourceControlService(
         new GitHubForgeService(createMock<GitHubService>({ getCommitDetail })),
         new GitLabForgeService(createMock<ConfigService>()),

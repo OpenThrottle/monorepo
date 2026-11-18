@@ -4,6 +4,9 @@
  * they import `@faker-js/faker` and `vitest`, devDependencies the production server image
  * does not install.
  */
+export * from '../modules/agent-accounts/agent-accounts.factory.ts';
+export type * from '../modules/agent-accounts/agent-accounts.types.ts';
+export * from '../modules/agent-accounts/agent-accounts.utils.ts';
 export * from '../modules/blog-authors/blog-authors.factory.ts';
 export type * from '../modules/blog-authors/blog-authors.types.ts';
 export * from '../modules/blog-authors/blog-authors.utils.ts';
@@ -54,12 +57,18 @@ export * from '../modules/service-account-credentials/service-account-credential
 export * from '../modules/service-accounts/service-accounts.factory.ts';
 export type * from '../modules/service-accounts/service-accounts.types.ts';
 export * from '../modules/service-accounts/service-accounts.utils.ts';
+export * from '../modules/skill-tags/skill-tags.factory.ts';
+export type * from '../modules/skill-tags/skill-tags.types.ts';
+export * from '../modules/skill-tags/skill-tags.utils.ts';
 export * from '../modules/skill-usage-events/skill-usage-events.factory.ts';
 export type * from '../modules/skill-usage-events/skill-usage-events.types.ts';
 export * from '../modules/skill-usage-events/skill-usage-events.utils.ts';
 export * from '../modules/skill-usage-outcomes/skill-usage-outcomes.factory.ts';
 export type * from '../modules/skill-usage-outcomes/skill-usage-outcomes.types.ts';
 export * from '../modules/skill-usage-outcomes/skill-usage-outcomes.utils.ts';
+export * from '../modules/subscriptions/subscriptions.factory.ts';
+export type * from '../modules/subscriptions/subscriptions.types.ts';
+export * from '../modules/subscriptions/subscriptions.utils.ts';
 export * from '../modules/task-embeddings/task-embeddings.factory.ts';
 export type * from '../modules/task-embeddings/task-embeddings.types.ts';
 export * from '../modules/task-embeddings/task-embeddings.utils.ts';

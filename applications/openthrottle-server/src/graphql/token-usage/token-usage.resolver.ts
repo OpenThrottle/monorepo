@@ -11,14 +11,12 @@ import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { type AuthPrincipal, CurrentUser } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 import type {
-  AgentAccount,
   TokenUsageAccountFilter,
   TokenUsageBatchRow,
 } from '@openthrottle/nestjs-repositories';
-import {
-  AgentAccountsService,
-  AgentTokenUsageService,
-} from '@openthrottle/nestjs-repositories';
+import { AgentTokenUsageService } from '@openthrottle/nestjs-repositories';
+import type { AgentAccount } from '@openthrottle/nestjs-repositories-server';
+import { AgentAccountsRepository } from '@openthrottle/nestjs-repositories-server';
 import type { IdentifiedAgentAccount } from '@openthrottle/openthrottle-agentic-utils';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
@@ -69,7 +67,7 @@ const accountKey = (account: IdentifiedAgentAccount): string => {
 export class TokenUsageResolver {
   constructor(
     private readonly accountStamping: AgentAccountStampingService,
-    private readonly agentAccountsService: AgentAccountsService,
+    private readonly agentAccountsRepository: AgentAccountsRepository,
     private readonly effectiveUserResolutionService: EffectiveUserResolutionService,
     private readonly tokenUsageService: AgentTokenUsageService,
   ) {}
@@ -199,7 +197,7 @@ export class TokenUsageResolver {
           .filter((id): id is string => id !== null),
       ),
     ];
-    const accounts = await this.agentAccountsService.listByIds(
+    const accounts = await this.agentAccountsRepository.listByIds(
       user.sub,
       accountIds,
     );
