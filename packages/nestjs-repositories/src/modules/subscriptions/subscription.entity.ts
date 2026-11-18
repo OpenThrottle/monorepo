@@ -3,6 +3,7 @@
  * Maps Stripe customer/subscription to users; entitlement state owned by our API.
  */
 
+import type { User } from '@openthrottle/nestjs-repositories-server';
 import {
   Column,
   CreateDateColumn,
@@ -12,8 +13,6 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-
-import type { User } from '../users/user.entity.ts';
 
 /** Scalar/column fields of Subscription (no relations). */
 export type SubscriptionData = Pick<

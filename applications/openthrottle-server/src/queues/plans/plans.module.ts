@@ -4,6 +4,8 @@ import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import {
   PlanOutputStreamModule,
   PlansModule,
+  ServiceAccountCredentialsModule,
+  ServiceAccountsModule,
   TasksModule,
   WorkSessionsModule,
   WorkSessionSubjectsModule,
@@ -47,6 +49,8 @@ import { WorkLedgerRunService } from './work-ledger-run/work-ledger-run.service.
 @Module({
   exports: [PlansQueueProducerModule],
   imports: [
+    ServiceAccountCredentialsModule,
+    ServiceAccountsModule,
     AgenticRalphModule,
     LoggerModule,
     MetricsModule,

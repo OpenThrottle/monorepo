@@ -20,6 +20,12 @@ import { NestjsProfilingModule } from '@openthrottle/nestjs-profiling';
 import { NestjsRbacModule } from '@openthrottle/nestjs-rbac';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import { NestjsRepositoriesCmsModule } from '@openthrottle/nestjs-repositories-cms';
+import {
+  RolesModule,
+  ServiceAccountCredentialsModule,
+  ServiceAccountsModule,
+  UsersModule,
+} from '@openthrottle/nestjs-repositories-server';
 import { NestjsThrottlerModule } from '@openthrottle/nestjs-throttler';
 
 import { PROCESS_ROLES } from './config/config.constants.ts';
@@ -208,6 +214,12 @@ export const buildImports = (role: ProcessRole): AppModuleImports => {
     NestjsThrottlerModule,
     NotificationsModule,
     PubSubModule,
+    // The auth providers in `appProviders` (GlobalClsAuthHook, ServiceAccountAuthService)
+    // read identity through these repositories.
+    RolesModule,
+    ServiceAccountCredentialsModule,
+    ServiceAccountsModule,
+    UsersModule,
   );
 
   if (isOpenthrottleServerDevJsonlLoggingEnabled()) {

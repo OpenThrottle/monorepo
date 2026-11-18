@@ -4,7 +4,7 @@ NestJS RBAC and CORS utilities. For step-by-step wiring of this package together
 
 ## RBAC roles and permissions
 
-Roles and permissions are defined in the package and used by guards (see task “Implement permission/role guards and decorators”). The static mapping in `src/roles/roles.utils.ts` (`ROLE_PERMISSIONS`) is a **default / seed table ONLY** — it is the built-in default for this package's JWT-claim-based guards and a reference for apps with no database. It is **not** the production source of truth for apps with a DB-backed authorization model (e.g. openthrottle-server, which resolves permissions via `RolesService`). Apps override or extend it by loading roles/permissions from their own DB and passing a custom mapping to the guards / `roleHasPermission`.
+Roles and permissions are defined in the package and used by guards (see task “Implement permission/role guards and decorators”). The static mapping in `src/roles/roles.utils.ts` (`ROLE_PERMISSIONS`) is a **default / seed table ONLY** — it is the built-in default for this package's JWT-claim-based guards and a reference for apps with no database. It is **not** the production source of truth for apps with a DB-backed authorization model (e.g. openthrottle-server, which resolves permissions via `RolesRepository`). Apps override or extend it by loading roles/permissions from their own DB and passing a custom mapping to the guards / `roleHasPermission`.
 
 > The tables below mirror `ROLE_PERMISSIONS` in `src/roles/roles.utils.ts`. Keep the two in sync.
 
@@ -74,7 +74,7 @@ roleHasPermission(role, permission, customRolePermissions);
 >
 > In **openthrottle-server** these guards are deliberately **not** used. The canonical enforcer is
 > `GqlPermissionsGuard` (`applications/openthrottle-server/src/guards/gql-permissions.guard.ts`), which
-> resolves permissions from the DB via `RolesService.getPermissionsForUser` /
+> resolves permissions from the DB via `RolesRepository.getPermissionsForUser` /
 > `getPermissionsForServiceAccount`. Wire any new HTTP/GraphQL authorization through a DB-backed enforcer
 > like that, not through these package guards.
 

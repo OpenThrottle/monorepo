@@ -15,16 +15,19 @@
   ],
   "references": [
     {
-      "path": "../nestjs-auth/tsconfig.lib.json"
+      "path": "../nestjs-repositories/tsconfig.lib.json"
     },
     {
       "path": "../nestjs-modules/tsconfig.lib.json"
     },
     {
-      "path": "../nestjs-repositories/tsconfig.lib.json"
+      "path": "../nestjs-auth/tsconfig.lib.json"
     },
     {
       "path": "../nestjs-testing/tsconfig.lib.json"
+    },
+    {
+      "path": "../nestjs-repositories-server/tsconfig.lib.json"
     },
     {
       "path": "../../tools/dotfiles/tsconfig.lib.json"

@@ -5,7 +5,6 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
-    "@openthrottle/nestjs-modules": "workspace:^",
     "@openthrottle/nestjs-repositories": "workspace:^",
     "@openthrottle/openthrottle-agentic-utils": "workspace:*",
     "@openthrottle/openthrottle-skills": "workspace:^",

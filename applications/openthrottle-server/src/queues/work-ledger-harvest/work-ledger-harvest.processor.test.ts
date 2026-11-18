@@ -5,19 +5,23 @@ import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
   RepositoriesService,
   Repository as RepositoryEntity,
-  ServiceAccountsService,
-  UsersService,
 } from '@openthrottle/nestjs-repositories';
 import type {
   Plan,
   PlansRepository,
+  ServiceAccountsRepository,
+  UsersRepository,
   WorkArtifact,
   WorkArtifactsRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import type { WorkArtifactsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import {
   createPlansRepositoryMock,
+  createServiceAccountsRepositoryMock,
+  createUsersRepositoryMock,
   createWorkArtifactsRepositoryMock,
+  serviceAccountsFactory,
+  usersFactory,
 } from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
 import type { DataSource, Repository } from 'typeorm';
@@ -106,6 +110,14 @@ describe('WorkLedgerHarvestProcessor', () => {
       getRepository: vi.fn().mockReturnValue(repositoryRepo),
     });
     logger = createMock<LoggerService>();
+    const serviceAccounts = createServiceAccountsRepositoryMock();
+    serviceAccounts.findByName.mockResolvedValue(
+      serviceAccountsFactory.build({ id: 'service-account-1' }),
+    );
+    const users = createUsersRepositoryMock();
+    users.findByGithubUsername.mockResolvedValue(
+      usersFactory.build({ id: 'user-1' }),
+    );
 
     processor = new WorkLedgerHarvestProcessor(
       logger,
@@ -114,9 +126,7 @@ describe('WorkLedgerHarvestProcessor', () => {
         findByRefPrefix: vi.fn(async () => [createMock<Plan>({ id: PLAN })]),
       }),
       repositoriesService,
-      createMock<ServiceAccountsService>({
-        findByName: vi.fn().mockResolvedValue({ id: 'service-account-1' }),
-      }),
+      createMock<ServiceAccountsRepository>(serviceAccounts),
       createMock<SettleRunLedgerService>({
         linkPullRequestsForUnreportedRuns: vi.fn().mockResolvedValue(0),
       }),
@@ -124,9 +134,7 @@ describe('WorkLedgerHarvestProcessor', () => {
         new GitHubForgeService(githubService),
         new GitLabForgeService(createMock<ConfigService>()),
       ),
-      createMock<UsersService>({
-        findByGithubUsername: vi.fn().mockResolvedValue({ id: 'user-1' }),
-      }),
+      createMock<UsersRepository>(users),
       createMock<WorkArtifactsRepository>(artifactRepo),
       asMock<DataSource>({ transaction }),
     );
@@ -233,9 +241,9 @@ describe('WorkLedgerHarvestProcessor', () => {
       logger,
       asMock<PlansRepository>(createPlansRepositoryMock()),
       repositoriesService,
-      createMock<ServiceAccountsService>({
-        findByName: vi.fn().mockResolvedValue(null),
-      }),
+      createMock<ServiceAccountsRepository>(
+        createServiceAccountsRepositoryMock(),
+      ),
       createMock<SettleRunLedgerService>({
         linkPullRequestsForUnreportedRuns: vi.fn().mockResolvedValue(0),
       }),
@@ -243,7 +251,7 @@ describe('WorkLedgerHarvestProcessor', () => {
         new GitHubForgeService(githubService),
         new GitLabForgeService(createMock<ConfigService>()),
       ),
-      createMock<UsersService>(),
+      createMock<UsersRepository>(createUsersRepositoryMock()),
       createMock<WorkArtifactsRepository>(artifactRepo),
       asMock<DataSource>({ transaction }),
     );

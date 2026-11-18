@@ -23,6 +23,7 @@ import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import {
   ProjectsModule,
+  RolesModule,
   WorktreeRemovalsModule,
 } from '@openthrottle/nestjs-repositories-server';
 
@@ -41,6 +42,7 @@ import { WorkspaceSettingsResolver } from './workspace-settings.resolver.ts';
 
 @Module({
   imports: [
+    RolesModule,
     ForeignSkillInjectionModule,
     LoggerModule,
     NestjsRepositoriesModule,

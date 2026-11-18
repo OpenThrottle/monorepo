@@ -19,14 +19,15 @@
 
 import { fileURLToPath } from 'node:url';
 
-import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   getOpenThrottleTypeOrmOptions,
+  hashPassword,
   Role,
-  RolesService,
+  RolesRepository,
   ServiceAccount,
   User,
-  UsersService,
+  UsersRepository,
+  validatePassword,
 } from '@openthrottle/nestjs-repositories';
 import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
 import {
@@ -91,11 +92,6 @@ const at = (now: Date, offsetMinutes: number): Date => {
   return new Date(now.getTime() + offsetMinutes * 60_000);
 };
 
-// The repository services take the real LoggerService. It is a class with a
-// private member, so a structural stand-in cannot satisfy the type — instantiate
-// it rather than faking it.
-const logger = new LoggerService();
-
 const seed = async (dataSource: DataSource, reset: boolean): Promise<void> => {
   // A pinned DEMO_NOW makes a run reproducible to the second; without it, "now".
   const now = process.env.DEMO_NOW
@@ -110,9 +106,8 @@ const seed = async (dataSource: DataSource, reset: boolean): Promise<void> => {
   }
 
   const userRepository = dataSource.getRepository(User);
-  const usersService = new UsersService(logger, userRepository);
-  const rolesService = new RolesService(
-    logger,
+  const usersRepository = new UsersRepository(userRepository);
+  const rolesRepository = new RolesRepository(
     dataSource.getRepository(Role),
     userRepository,
     dataSource.getRepository(ServiceAccount),
@@ -156,13 +151,13 @@ const seed = async (dataSource: DataSource, reset: boolean): Promise<void> => {
     console.log(`seed-demo: truncated ${targets.length} tables.`);
   }
 
-  const existing = await usersService.findByEmail(DEMO_USER.email);
+  const existing = await usersRepository.findByEmail(DEMO_USER.email);
   const user =
     existing ??
-    (await usersService.create({
+    (await usersRepository.create({
       email: DEMO_USER.email,
       githubUsername: DEMO_USER.githubUsername,
-      passwordHash: await usersService.hashPassword(DEMO_USER.password),
+      passwordHash: await hashPassword(DEMO_USER.password),
     }));
 
   // `--reset` deliberately does not truncate `users` (that would cascade to
@@ -174,21 +169,18 @@ const seed = async (dataSource: DataSource, reset: boolean): Promise<void> => {
   // its updated_at trigger) on every run and break seed idempotency.
   if (
     existing != null &&
-    !(await usersService.validatePassword(
-      DEMO_USER.password,
-      existing.passwordHash,
-    ))
+    !(await validatePassword(DEMO_USER.password, existing.passwordHash))
   ) {
     await dataSource.query(
       'UPDATE users SET password_hash = $2 WHERE id = $1',
-      [user.id, await usersService.hashPassword(DEMO_USER.password)],
+      [user.id, await hashPassword(DEMO_USER.password)],
     );
     console.log('seed-demo: demo user password re-stamped from the fixture.');
   }
 
   /* eslint-disable no-await-in-loop -- sequential writes against one connection */
   for (const roleName of ROLE_NAMES) {
-    const role = await rolesService.findByName(roleName);
+    const role = await rolesRepository.findByName(roleName);
 
     if (role == null) {
       console.error(
@@ -197,7 +189,7 @@ const seed = async (dataSource: DataSource, reset: boolean): Promise<void> => {
       process.exit(1);
     }
 
-    await rolesService.assignRoleToUser(user.id, role.id);
+    await rolesRepository.assignRoleToUser(user.id, role.id);
   }
 
   for (const project of DEMO_PROJECTS) {

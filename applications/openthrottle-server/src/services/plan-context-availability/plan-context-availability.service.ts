@@ -29,13 +29,13 @@ import {
   SkillTagsService,
   TagActionRulesService,
   TagsService,
-  UsersService,
 } from '@openthrottle/nestjs-repositories';
+import type { Plan } from '@openthrottle/nestjs-repositories-server';
 import {
-  type Plan,
   PlansRepository,
   ProjectsRepository,
   TasksRepository,
+  UsersRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import {
   availabilityExceptionActionPayloadSchema,
@@ -69,7 +69,7 @@ export class PlanContextAvailabilityService {
     private readonly tagActionRulesService: TagActionRulesService,
     private readonly tagsService: TagsService,
     private readonly tasksRepository: TasksRepository,
-    private readonly usersService: UsersService,
+    private readonly usersRepository: UsersRepository,
   ) {}
 
   /**
@@ -212,7 +212,7 @@ export class PlanContextAvailabilityService {
     effectiveTags: readonly string[],
     environment: string | null,
   ): Promise<SkillAvailabilityRule[]> {
-    const owner = await this.usersService.findByGithubUsername(plan.author);
+    const owner = await this.usersRepository.findByGithubUsername(plan.author);
     if (owner == null) {
       return [];
     }

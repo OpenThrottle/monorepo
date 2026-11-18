@@ -1,20 +1,22 @@
 import { createMock } from '@golevelup/ts-vitest';
 import { UnauthorizedException } from '@nestjs/common';
 import { authPrincipalFromServiceAccountId } from '@openthrottle/nestjs-auth';
-import type { ServiceAccountsService } from '@openthrottle/nestjs-repositories';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { ServiceAccountCredentialsRepository } from '@openthrottle/nestjs-repositories-server';
+import type { ServiceAccountCredentialsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import { createServiceAccountCredentialsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 import { ServiceAccountAuthService } from './service-account-auth.service.ts';
 
 describe('ServiceAccountAuthService', () => {
-  let serviceAccountsService: ServiceAccountsService;
+  let credentials: ServiceAccountCredentialsRepositoryMock;
   let service: ServiceAccountAuthService;
 
   beforeEach(() => {
-    serviceAccountsService = createMock<ServiceAccountsService>({
-      verifyBearerToken: vi.fn(),
-    });
-    service = new ServiceAccountAuthService(serviceAccountsService);
+    credentials = createServiceAccountCredentialsRepositoryMock();
+    service = new ServiceAccountAuthService(
+      createMock<ServiceAccountCredentialsRepository>(credentials),
+    );
   });
 
   describe('isServiceAccountAuthorization', () => {
@@ -37,13 +39,11 @@ describe('ServiceAccountAuthService', () => {
         service.tryAuthenticateAuthorizationHeader('Bearer jwt-here'),
       ).resolves.toBeNull();
 
-      expect(serviceAccountsService.verifyBearerToken).not.toHaveBeenCalled();
+      expect(credentials.verifyBearerToken).not.toHaveBeenCalled();
     });
 
     it('returns null when verification fails', async () => {
-      vi.mocked(serviceAccountsService.verifyBearerToken).mockResolvedValue(
-        null,
-      );
+      credentials.verifyBearerToken.mockResolvedValue(null);
 
       await expect(
         service.tryAuthenticateAuthorizationHeader('Bearer ot_sa_p_s'),
@@ -52,7 +52,7 @@ describe('ServiceAccountAuthService', () => {
 
     it('returns principal when verification succeeds', async () => {
       const serviceAccountId = '11111111-1111-4111-8111-111111111111';
-      vi.mocked(serviceAccountsService.verifyBearerToken).mockResolvedValue({
+      credentials.verifyBearerToken.mockResolvedValue({
         credentialId: 'cred-1',
         serviceAccountId,
       });
@@ -65,9 +65,7 @@ describe('ServiceAccountAuthService', () => {
 
   describe('authenticateAuthorizationHeader', () => {
     it('throws UnauthorizedException when verification fails', async () => {
-      vi.mocked(serviceAccountsService.verifyBearerToken).mockResolvedValue(
-        null,
-      );
+      credentials.verifyBearerToken.mockResolvedValue(null);
 
       await expect(
         service.authenticateAuthorizationHeader('Bearer ot_sa_p_s'),

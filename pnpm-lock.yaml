@@ -2822,6 +2822,9 @@ importers:
       '@nestjs/testing':
         specifier: 'catalog:'
         version: 12.0.1(@nestjs/common@12.0.1(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.0.1)(@nestjs/platform-express@12.0.1)
+      '@openthrottle/nestjs-repositories-server':
+        specifier: workspace:^
+        version: link:../nestjs-repositories-server
       '@openthrottle/nestjs-testing':
         specifier: workspace:^
         version: link:../nestjs-testing
@@ -3340,9 +3343,6 @@ importers:
 
   packages/openthrottle-showroom:
     dependencies:
-      '@openthrottle/nestjs-modules':
-        specifier: workspace:^
-        version: link:../nestjs-modules
       '@openthrottle/nestjs-repositories':
         specifier: workspace:^
         version: link:../nestjs-repositories

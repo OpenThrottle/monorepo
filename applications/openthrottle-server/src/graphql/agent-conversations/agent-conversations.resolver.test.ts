@@ -13,8 +13,9 @@ import type {
 import {
   AGENT_CONVERSATION_STATUSES,
   AgentConversationsService,
-  RolesService,
 } from '@openthrottle/nestjs-repositories';
+import { RolesRepository } from '@openthrottle/nestjs-repositories-server';
+import { createRolesRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
@@ -77,11 +78,11 @@ describe('AgentConversationsResolver', () => {
     getMessageRepository: vi.fn().mockReturnValue(mockMessageRepository),
   });
 
-  const mockRolesService = createMock<RolesService>({
-    getPermissionsForUser: vi
-      .fn()
-      .mockResolvedValue(['settings:read', 'settings:write']),
-  });
+  const mockRolesRepository = createRolesRepositoryMock();
+  mockRolesRepository.getPermissionsForUser.mockResolvedValue([
+    'settings:read',
+    'settings:write',
+  ]);
 
   beforeAll(async () => {
     const app = await Test.createTestingModule({
@@ -91,7 +92,7 @@ describe('AgentConversationsResolver', () => {
           provide: AgentConversationsService,
           useValue: mockAgentConversationsService,
         },
-        { provide: RolesService, useValue: mockRolesService },
+        { provide: RolesRepository, useValue: mockRolesRepository },
         GqlPermissionsGuard,
       ],
     }).compile();

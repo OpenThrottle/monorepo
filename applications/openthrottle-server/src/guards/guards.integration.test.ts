@@ -1,6 +1,6 @@
 /**
  * @description Integration-style guard matrix: {@link GlobalAuthGuard} + {@link GqlPermissionsGuard}
- * with real {@link ServiceAccountAuthService} and {@link ServiceAccountsService} (mocked repos).
+ * with real {@link ServiceAccountAuthService} and {@link ServiceAccountCredentialsRepository} (mocked TypeORM repos).
  */
 
 import { createMock } from '@golevelup/ts-vitest';
@@ -13,12 +13,19 @@ import { AUTH_PRINCIPAL_KIND_USER } from '@openthrottle/nestjs-auth';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { PERMISSIONS, PERMISSIONS_KEY } from '@openthrottle/nestjs-rbac';
 import {
-  RolesService,
+  hashSecret,
+  RolesRepository,
   SERVICE_ACCOUNT_BEARER_PREFIX,
   ServiceAccount,
   ServiceAccountCredential,
-  ServiceAccountsService,
-} from '@openthrottle/nestjs-repositories';
+  ServiceAccountCredentialsRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import type { RolesRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import {
+  createRolesRepositoryMock,
+  serviceAccountCredentialsFactory,
+  serviceAccountsFactory,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GlobalClsAuthHook } from '../auth/global-cls-auth-hook/global-cls-auth-hook.service.ts';
@@ -29,7 +36,27 @@ import { GqlPermissionsGuard } from './gql-permissions.guard.ts';
 
 const serviceAccountId = '11111111-1111-4111-8111-111111111111';
 const userId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+const TEST_BCRYPT_ROUNDS = 4;
 const credentialId = '22222222-2222-4222-8222-222222222222';
+
+const credentialRow = (fields: {
+  prefix: string;
+  revokedAt: Date | null;
+  secretHash: string;
+}): ServiceAccountCredential => {
+  return {
+    ...serviceAccountCredentialsFactory.build({
+      expiresAt: null,
+      id: credentialId,
+      serviceAccountId,
+      ...fields,
+    }),
+    serviceAccount: serviceAccountsFactory.build({
+      disabledAt: null,
+      id: serviceAccountId,
+    }),
+  };
+};
 
 const createHttpExecutionContext = (req: {
   headers?: { authorization?: string };
@@ -50,17 +77,19 @@ describe('auth guard matrix (GlobalAuthGuard + GqlPermissionsGuard)', () => {
   let gqlPermissionsGuard: GqlPermissionsGuard;
   let reflector: Reflector;
   let jwtAuthGuard: GqlJwtAuthGuard;
-  let rolesService: RolesService;
-  let serviceAccountsService: ServiceAccountsService;
+  let roles: RolesRepositoryMock;
   let credentialRepository: {
     findOne: ReturnType<typeof vi.fn>;
+    target: typeof ServiceAccountCredential;
     update: ReturnType<typeof vi.fn>;
   };
 
   beforeEach(async () => {
+    roles = createRolesRepositoryMock();
     const serviceAccountRepository = { findOne: vi.fn() };
     credentialRepository = {
       findOne: vi.fn(),
+      target: ServiceAccountCredential,
       update: vi.fn().mockResolvedValue({ affected: 1 }),
     };
     reflector = createMock<Reflector>({
@@ -72,7 +101,7 @@ describe('auth guard matrix (GlobalAuthGuard + GqlPermissionsGuard)', () => {
         GlobalAuthGuard,
         GqlPermissionsGuard,
         ServiceAccountAuthService,
-        ServiceAccountsService,
+        ServiceAccountCredentialsRepository,
         {
           provide: Reflector,
           useValue: reflector,
@@ -99,21 +128,13 @@ describe('auth guard matrix (GlobalAuthGuard + GqlPermissionsGuard)', () => {
           provide: getRepositoryToken(ServiceAccountCredential),
           useValue: credentialRepository,
         },
-        {
-          provide: RolesService,
-          useValue: createMock<RolesService>({
-            getPermissionsForServiceAccount: vi.fn(),
-            getPermissionsForUser: vi.fn(),
-          }),
-        },
+        { provide: RolesRepository, useValue: roles },
       ],
     }).compile();
 
     globalAuthGuard = moduleRef.get(GlobalAuthGuard);
     gqlPermissionsGuard = moduleRef.get(GqlPermissionsGuard);
     jwtAuthGuard = moduleRef.get(GqlJwtAuthGuard);
-    rolesService = moduleRef.get(RolesService);
-    serviceAccountsService = moduleRef.get(ServiceAccountsService);
   });
 
   afterEach(() => {
@@ -156,28 +177,18 @@ describe('auth guard matrix (GlobalAuthGuard + GqlPermissionsGuard)', () => {
         UnauthorizedException,
       );
 
-      expect(
-        rolesService.getPermissionsForServiceAccount,
-      ).not.toHaveBeenCalled();
+      expect(roles.getPermissionsForServiceAccount).not.toHaveBeenCalled();
     });
 
     it('authenticates a valid ot_sa bearer and enforces plans:read', async () => {
       stubRouteMetadata({ permissions: [PERMISSIONS.PLANS_READ] });
       const secret = 'matrixSecret1';
       const prefix = 'matrixprefix';
-      const hash = await serviceAccountsService.hashSecret(secret);
-      credentialRepository.findOne.mockResolvedValue({
-        expiresAt: null,
-        id: credentialId,
-        prefix,
-        revokedAt: null,
-        secretHash: hash,
-        serviceAccount: { disabledAt: null },
-        serviceAccountId,
-      });
-      vi.mocked(rolesService.getPermissionsForServiceAccount).mockResolvedValue(
-        ['plans:read'],
+      const hash = await hashSecret(secret, TEST_BCRYPT_ROUNDS);
+      credentialRepository.findOne.mockResolvedValue(
+        credentialRow({ prefix, revokedAt: null, secretHash: hash }),
       );
+      roles.getPermissionsForServiceAccount.mockResolvedValue(['plans:read']);
 
       const req: { headers?: { authorization?: string }; user?: unknown } = {
         headers: {
@@ -192,7 +203,7 @@ describe('auth guard matrix (GlobalAuthGuard + GqlPermissionsGuard)', () => {
         kind: 'service_account',
         sub: serviceAccountId,
       });
-      expect(rolesService.getPermissionsForServiceAccount).toHaveBeenCalledWith(
+      expect(roles.getPermissionsForServiceAccount).toHaveBeenCalledWith(
         serviceAccountId,
       );
     });
@@ -201,16 +212,10 @@ describe('auth guard matrix (GlobalAuthGuard + GqlPermissionsGuard)', () => {
       stubRouteMetadata({ permissions: [PERMISSIONS.PLANS_READ] });
       const secret = 'revokedSecret';
       const prefix = 'revprefix01';
-      const hash = await serviceAccountsService.hashSecret(secret);
-      credentialRepository.findOne.mockResolvedValue({
-        expiresAt: null,
-        id: credentialId,
-        prefix,
-        revokedAt: new Date(),
-        secretHash: hash,
-        serviceAccount: { disabledAt: null },
-        serviceAccountId,
-      });
+      const hash = await hashSecret(secret, TEST_BCRYPT_ROUNDS);
+      credentialRepository.findOne.mockResolvedValue(
+        credentialRow({ prefix, revokedAt: new Date(), secretHash: hash }),
+      );
 
       const req = {
         headers: {
@@ -222,28 +227,18 @@ describe('auth guard matrix (GlobalAuthGuard + GqlPermissionsGuard)', () => {
         UnauthorizedException,
       );
 
-      expect(
-        rolesService.getPermissionsForServiceAccount,
-      ).not.toHaveBeenCalled();
+      expect(roles.getPermissionsForServiceAccount).not.toHaveBeenCalled();
     });
 
     it('returns 403 when service account lacks required permission', async () => {
       stubRouteMetadata({ permissions: [PERMISSIONS.PLANS_WRITE] });
       const secret = 'readOnlySec1';
       const prefix = 'readprefix1';
-      const hash = await serviceAccountsService.hashSecret(secret);
-      credentialRepository.findOne.mockResolvedValue({
-        expiresAt: null,
-        id: credentialId,
-        prefix,
-        revokedAt: null,
-        secretHash: hash,
-        serviceAccount: { disabledAt: null },
-        serviceAccountId,
-      });
-      vi.mocked(rolesService.getPermissionsForServiceAccount).mockResolvedValue(
-        ['plans:read'],
+      const hash = await hashSecret(secret, TEST_BCRYPT_ROUNDS);
+      credentialRepository.findOne.mockResolvedValue(
+        credentialRow({ prefix, revokedAt: null, secretHash: hash }),
       );
+      roles.getPermissionsForServiceAccount.mockResolvedValue(['plans:read']);
 
       const req = {
         headers: {
@@ -260,9 +255,7 @@ describe('auth guard matrix (GlobalAuthGuard + GqlPermissionsGuard)', () => {
     it('authenticates human JWT path and enforces user permissions', async () => {
       stubRouteMetadata({ permissions: [PERMISSIONS.USERS_READ] });
       vi.mocked(jwtAuthGuard.canActivate).mockResolvedValue(true);
-      vi.mocked(rolesService.getPermissionsForUser).mockResolvedValue([
-        'users:read',
-      ]);
+      roles.getPermissionsForUser.mockResolvedValue(['users:read']);
       const payload = { email: 'u@example.com', sub: userId };
       const req = {
         headers: { authorization: 'Bearer eyJ.test.token' },
@@ -271,15 +264,13 @@ describe('auth guard matrix (GlobalAuthGuard + GqlPermissionsGuard)', () => {
 
       await expect(runProtectedRoute(req)).resolves.toBeUndefined();
 
-      expect(rolesService.getPermissionsForUser).toHaveBeenCalledWith(userId);
+      expect(roles.getPermissionsForUser).toHaveBeenCalledWith(userId);
     });
 
     it('returns 403 when human JWT principal lacks permission', async () => {
       stubRouteMetadata({ permissions: [PERMISSIONS.USERS_WRITE] });
       vi.mocked(jwtAuthGuard.canActivate).mockResolvedValue(true);
-      vi.mocked(rolesService.getPermissionsForUser).mockResolvedValue([
-        'users:read',
-      ]);
+      roles.getPermissionsForUser.mockResolvedValue(['users:read']);
       const req = {
         headers: { authorization: 'Bearer eyJ.test.token' },
         user: {

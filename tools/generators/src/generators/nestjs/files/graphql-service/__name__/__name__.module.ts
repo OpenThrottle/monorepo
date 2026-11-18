@@ -1,6 +1,6 @@
 /**
  * @description GraphQL feature module for <%= name %>. Register this module in
- * `app.module.ts` after scaffolding. NestjsRepositoriesModule supplies RolesService
+ * `app.module.ts` after scaffolding. NestjsRepositoriesModule supplies RolesRepository
  * for GqlPermissionsGuard.
  */
 

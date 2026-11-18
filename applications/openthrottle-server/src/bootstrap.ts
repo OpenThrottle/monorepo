@@ -14,17 +14,17 @@
  * in sync; DRY-ing them behind a shared @openthrottle/nestjs-repositories export is
  * a tracked follow-up.
  */
-import { LoggerService } from '@openthrottle/nestjs-modules';
+import { getOpenThrottleTypeOrmOptions } from '@openthrottle/nestjs-repositories';
 import {
-  getOpenThrottleTypeOrmOptions,
+  hashPassword,
   Role,
-  RolesService,
+  RolesRepository,
   ServiceAccount,
   ServiceAccountCredential,
-  ServiceAccountsService,
+  ServiceAccountCredentialsRepository,
   User,
-  UsersService,
-} from '@openthrottle/nestjs-repositories';
+  UsersRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import { DataSource } from 'typeorm';
 
 const USER_EMAIL: string = process.env.OPENTHROTTLE_BOOTSTRAP_USER_EMAIL?.trim() || 'developer@openthrottle.ai'; // prettier-ignore
@@ -40,14 +40,16 @@ const BOOTSTRAP_ACCOUNTS = [
   { envVar: 'OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN', label: 'bootstrap-workflow-ralph', name: 'workflow-ralph' }, // prettier-ignore
 ] as const;
 
-async function ensureDefaultUser(usersService: UsersService): Promise<User> {
-  const existing = await usersService.findByEmail(USER_EMAIL);
+async function ensureDefaultUser(
+  usersRepository: UsersRepository,
+): Promise<User> {
+  const existing = await usersRepository.findByEmail(USER_EMAIL);
 
   if (existing == null) {
-    const created = await usersService.create({
+    const created = await usersRepository.create({
       email: USER_EMAIL,
       githubUsername: USER_GITHUB,
-      passwordHash: await usersService.hashPassword(USER_PASSWORD),
+      passwordHash: await hashPassword(USER_PASSWORD),
     });
 
     console.log(`Created user ${USER_EMAIL} (${created.id}).`);
@@ -56,13 +58,13 @@ async function ensureDefaultUser(usersService: UsersService): Promise<User> {
   }
 
   if (existing.passwordHash == null) {
-    const updated = await usersService.update(existing.id, {
-      passwordHash: await usersService.hashPassword(USER_PASSWORD),
+    const updated = await usersRepository.update(existing.id, {
+      passwordHash: await hashPassword(USER_PASSWORD),
     });
 
     console.log(`Set default password for existing user ${USER_EMAIL}.`);
 
-    return updated ?? existing;
+    return updated;
   }
 
   console.log(
@@ -73,25 +75,25 @@ async function ensureDefaultUser(usersService: UsersService): Promise<User> {
 }
 
 async function ensureAllRoles(
-  rolesService: RolesService,
+  rolesRepository: RolesRepository,
   userId: string,
 ): Promise<void> {
   for (const roleName of ROLE_NAMES) {
     // eslint-disable-next-line no-await-in-loop -- assignments mutate the same user row; run in order
-    const role = await rolesService.findByName(roleName);
+    const role = await rolesRepository.findByName(roleName);
     if (role == null) {
       throw new Error(`Missing role "${roleName}". Apply migrations first.`);
     }
 
     // eslint-disable-next-line no-await-in-loop -- see above
-    await rolesService.assignRoleToUser(userId, role.id);
+    await rolesRepository.assignRoleToUser(userId, role.id);
     console.log(`Role ${roleName}: assigned.`);
   }
 }
 
 async function provisionServiceAccount(
   dataSource: DataSource,
-  serviceAccountsService: ServiceAccountsService,
+  serviceAccountCredentialsRepository: ServiceAccountCredentialsRepository,
   account: (typeof BOOTSTRAP_ACCOUNTS)[number],
 ): Promise<void> {
   const row = await dataSource
@@ -112,11 +114,12 @@ async function provisionServiceAccount(
     return;
   }
 
-  const result = await serviceAccountsService.upsertCredentialForToken({
-    label: account.label,
-    serviceAccountId: row.id,
-    token,
-  });
+  const result =
+    await serviceAccountCredentialsRepository.upsertCredentialForToken({
+      label: account.label,
+      serviceAccountId: row.id,
+      token,
+    });
   if (result == null) {
     throw new Error(
       `Failed to provision ${account.name}: service account missing or disabled.`,
@@ -142,31 +145,27 @@ async function main(): Promise<void> {
   await dataSource.initialize();
 
   try {
-    const logger = new LoggerService();
-    const usersService = new UsersService(
-      logger,
-      dataSource.getRepository(User),
-    );
-    const rolesService = new RolesService(
-      logger,
+    const userRepository = dataSource.getRepository(User);
+    const usersRepository = new UsersRepository(userRepository);
+    const rolesRepository = new RolesRepository(
       dataSource.getRepository(Role),
-      dataSource.getRepository(User),
+      userRepository,
       dataSource.getRepository(ServiceAccount),
     );
-    const serviceAccountsService = new ServiceAccountsService(
-      logger,
-      dataSource.getRepository(ServiceAccount),
-      dataSource.getRepository(ServiceAccountCredential),
-    );
+    const serviceAccountCredentialsRepository =
+      new ServiceAccountCredentialsRepository(
+        dataSource.getRepository(ServiceAccountCredential),
+        dataSource.getRepository(ServiceAccount),
+      );
 
     console.log('🔐 OpenThrottle bootstrap — default user + service accounts');
-    const user = await ensureDefaultUser(usersService);
-    await ensureAllRoles(rolesService, user.id);
+    const user = await ensureDefaultUser(usersRepository);
+    await ensureAllRoles(rolesRepository, user.id);
     for (const account of BOOTSTRAP_ACCOUNTS) {
       // eslint-disable-next-line no-await-in-loop -- provision sequentially for readable logs
       await provisionServiceAccount(
         dataSource,
-        serviceAccountsService,
+        serviceAccountCredentialsRepository,
         account,
       );
     }

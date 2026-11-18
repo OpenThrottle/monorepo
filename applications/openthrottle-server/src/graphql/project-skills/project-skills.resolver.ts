@@ -18,11 +18,11 @@ import type { AuthPrincipal } from '@openthrottle/nestjs-auth';
 import { CurrentUser } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 import type { ProjectSkillView } from '@openthrottle/nestjs-repositories';
+import { ProjectSkillsService } from '@openthrottle/nestjs-repositories';
 import {
-  ProjectSkillsService,
-  ServiceAccountsService,
-} from '@openthrottle/nestjs-repositories';
-import { ProjectsRepository } from '@openthrottle/nestjs-repositories-server';
+  ProjectsRepository,
+  ServiceAccountsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import { resolveTagCaller } from '../tags/tags.utils.ts';
@@ -56,7 +56,7 @@ export class ProjectSkillsResolver {
   constructor(
     private readonly projectSkillsService: ProjectSkillsService,
     private readonly projectsRepository: ProjectsRepository,
-    private readonly serviceAccountsService: ServiceAccountsService,
+    private readonly serviceAccountsRepository: ServiceAccountsRepository,
   ) {}
 
   @Query(() => ProjectSkillsResult, {
@@ -127,7 +127,7 @@ export class ProjectSkillsResolver {
 
     const caller = await resolveTagCaller(
       principal,
-      this.serviceAccountsService,
+      this.serviceAccountsRepository,
     );
     const view = await this.projectSkillsService.addProjectSkillTag(
       caller,

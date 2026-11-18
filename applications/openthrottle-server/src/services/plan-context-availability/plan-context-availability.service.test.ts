@@ -16,8 +16,6 @@ import type {
   TagActionRule,
   TagActionRulesService,
   TagsService,
-  User,
-  UsersService,
 } from '@openthrottle/nestjs-repositories';
 import type {
   Plan,
@@ -25,6 +23,7 @@ import type {
   ProjectsRepository,
   Task,
   TasksRepository,
+  UsersRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import type {
   PlansRepositoryMock,
@@ -34,6 +33,8 @@ import {
   createPlansRepositoryMock,
   createProjectsRepositoryMock,
   createTasksRepositoryMock,
+  createUsersRepositoryMock,
+  usersFactory,
 } from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
@@ -82,6 +83,10 @@ describe('PlanContextAvailabilityService', () => {
 
     const plansRepository = createPlansRepositoryMock();
     const tasksRepository = createTasksRepositoryMock();
+    const usersRepository = createUsersRepositoryMock();
+    usersRepository.findByGithubUsername.mockResolvedValue(
+      usersFactory.build({ id: ownerId }),
+    );
 
     planFindOne = plansRepository.findOne;
     planFindOne.mockResolvedValue(
@@ -130,11 +135,7 @@ describe('PlanContextAvailabilityService', () => {
       createMock<TagActionRulesService>({ listEnabledForUser }),
       createMock<TagsService>({ getEffectiveTagSet: effectiveTagSet }),
       asMock<TasksRepository>(tasksRepository),
-      createMock<UsersService>({
-        findByGithubUsername: vi
-          .fn()
-          .mockResolvedValue(asMock<User>({ id: ownerId })),
-      }),
+      createMock<UsersRepository>(usersRepository),
     );
   });
 

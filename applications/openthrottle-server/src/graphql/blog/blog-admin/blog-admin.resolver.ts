@@ -21,11 +21,6 @@ import { Args, ID, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
 import type { AuthPrincipal } from '@openthrottle/nestjs-auth';
 import { CurrentUser } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
-import {
-  RolesService,
-  ServiceAccountsService,
-  UsersService,
-} from '@openthrottle/nestjs-repositories';
 import type {
   BlogPostState,
   FindAdminBlogPostInput,
@@ -35,6 +30,9 @@ import {
   BlogAuthorsRepository,
   BlogPostsRepository,
   BlogTagsRepository,
+  RolesRepository,
+  ServiceAccountsRepository,
+  UsersRepository,
 } from '@openthrottle/nestjs-repositories-server';
 
 import { GqlPermissionsGuard } from '../../../guards/gql-permissions.guard.ts';
@@ -106,9 +104,9 @@ export class BlogAdminResolver {
     private readonly blogAuthorsRepository: BlogAuthorsRepository,
     private readonly blogPostsRepository: BlogPostsRepository,
     private readonly blogTagsRepository: BlogTagsRepository,
-    private readonly rolesService: RolesService,
-    private readonly serviceAccountsService: ServiceAccountsService,
-    private readonly usersService: UsersService,
+    private readonly rolesRepository: RolesRepository,
+    private readonly serviceAccountsRepository: ServiceAccountsRepository,
+    private readonly usersRepository: UsersRepository,
   ) {}
 
   @Query(() => BlogAdminPostListResult, {
@@ -326,8 +324,8 @@ export class BlogAdminResolver {
 
     return getEditorNameForPrincipal(
       {
-        serviceAccountsService: this.serviceAccountsService,
-        usersService: this.usersService,
+        serviceAccountsRepository: this.serviceAccountsRepository,
+        usersRepository: this.usersRepository,
       },
       principal,
     );
@@ -347,7 +345,7 @@ export class BlogAdminResolver {
 
     if (principal == null) return true;
     const permissions = await getPermissionsForPrincipal(
-      this.rolesService,
+      this.rolesRepository,
       principal,
     );
     return !permissions.includes(PERMISSIONS.BLOG_WRITE);

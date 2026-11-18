@@ -20,11 +20,10 @@
  */
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import { PlanRunsService } from '@openthrottle/nestjs-repositories';
 import {
-  PlanRunsService,
-  ServiceAccountsService,
-} from '@openthrottle/nestjs-repositories';
-import {
+  ServiceAccountCredentialsRepository,
+  ServiceAccountsRepository,
   WORK_SESSION_CLOSED_BY,
   WorkSessionsRepository,
   WorkSessionSubjectsRepository,
@@ -42,7 +41,8 @@ export class WorkLedgerRunService {
   constructor(
     private readonly logger: LoggerService,
     private readonly planRunsService: PlanRunsService,
-    private readonly serviceAccountsService: ServiceAccountsService,
+    private readonly serviceAccountCredentialsRepository: ServiceAccountCredentialsRepository,
+    private readonly serviceAccountsRepository: ServiceAccountsRepository,
     private readonly workSessionsRepository: WorkSessionsRepository,
     private readonly workSessionSubjectsRepository: WorkSessionSubjectsRepository,
   ) {}
@@ -119,7 +119,9 @@ export class WorkLedgerRunService {
     if (token != null && token !== '') {
       try {
         const verified =
-          await this.serviceAccountsService.verifyBearerToken(token);
+          await this.serviceAccountCredentialsRepository.verifyBearerToken(
+            token,
+          );
 
         if (verified != null) {
           return verified.serviceAccountId;
@@ -132,7 +134,7 @@ export class WorkLedgerRunService {
       }
     }
 
-    const ralphAccount = await this.serviceAccountsService.findByName(
+    const ralphAccount = await this.serviceAccountsRepository.findByName(
       WORKFLOW_RALPH_SERVICE_ACCOUNT_NAME,
     );
 

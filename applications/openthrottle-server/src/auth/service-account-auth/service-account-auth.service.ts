@@ -9,13 +9,13 @@ import {
 } from '@openthrottle/nestjs-auth';
 import {
   normalizeServiceAccountBearerToken,
-  ServiceAccountsService,
-} from '@openthrottle/nestjs-repositories';
+  ServiceAccountCredentialsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 
 @Injectable()
 export class ServiceAccountAuthService {
   constructor(
-    private readonly serviceAccountsService: ServiceAccountsService,
+    private readonly serviceAccountCredentialsRepository: ServiceAccountCredentialsRepository,
   ) {}
 
   /**
@@ -56,7 +56,9 @@ export class ServiceAccountAuthService {
     }
 
     const verified =
-      await this.serviceAccountsService.verifyBearerToken(authorization);
+      await this.serviceAccountCredentialsRepository.verifyBearerToken(
+        authorization,
+      );
 
     if (verified == null) {
       return null;

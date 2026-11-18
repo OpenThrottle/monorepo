@@ -2,13 +2,20 @@ import { createMock } from '@golevelup/ts-vitest';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import type { User } from '@openthrottle/nestjs-repositories';
 import {
-  ServiceAccountsService,
-  UsersService,
-} from '@openthrottle/nestjs-repositories';
-import { asMock } from '@openthrottle/nestjs-testing';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+  ServiceAccountsRepository,
+  UsersRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import type {
+  ServiceAccountsRepositoryMock,
+  UsersRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
+import {
+  createServiceAccountsRepositoryMock,
+  createUsersRepositoryMock,
+  usersFactory,
+} from '@openthrottle/nestjs-repositories-server/testing';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 import { EffectiveUserResolutionService } from './effective-user-resolution.service.ts';
 
@@ -18,13 +25,12 @@ const actingUserId = '33333333-3333-4333-8333-333333333333';
 
 describe('EffectiveUserResolutionService', () => {
   let service: EffectiveUserResolutionService;
-  const findById = vi.fn();
-  const resolveActingUserId = vi.fn();
+  let serviceAccounts: ServiceAccountsRepositoryMock;
+  let users: UsersRepositoryMock;
 
   beforeEach(async () => {
-    vi.clearAllMocks();
-    findById.mockResolvedValue(null);
-    resolveActingUserId.mockResolvedValue(null);
+    serviceAccounts = createServiceAccountsRepositoryMock();
+    users = createUsersRepositoryMock();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -34,12 +40,12 @@ describe('EffectiveUserResolutionService', () => {
           useValue: createMock<LoggerService>(),
         },
         {
-          provide: ServiceAccountsService,
-          useValue: { resolveActingUserId },
+          provide: ServiceAccountsRepository,
+          useValue: serviceAccounts,
         },
         {
-          provide: UsersService,
-          useValue: { findById },
+          provide: UsersRepository,
+          useValue: users,
         },
       ],
     }).compile();
@@ -48,23 +54,25 @@ describe('EffectiveUserResolutionService', () => {
   });
 
   it('passes a user sub through unchanged', async () => {
-    findById.mockResolvedValue(asMock<User>({ id: userId }));
+    users.findOne.mockResolvedValue(usersFactory.build({ id: userId }));
 
     expect(await service.resolveEffectiveUserId(userId)).toBe(userId);
-    expect(resolveActingUserId).not.toHaveBeenCalled();
+    expect(serviceAccounts.resolveActingUserId).not.toHaveBeenCalled();
   });
 
   it('resolves a service-account sub to its acting user', async () => {
-    resolveActingUserId.mockResolvedValue(actingUserId);
+    serviceAccounts.resolveActingUserId.mockResolvedValue(actingUserId);
 
     expect(await service.resolveEffectiveUserId(serviceAccountId)).toBe(
       actingUserId,
     );
-    expect(resolveActingUserId).toHaveBeenCalledWith(serviceAccountId);
+    expect(serviceAccounts.resolveActingUserId).toHaveBeenCalledWith(
+      serviceAccountId,
+    );
   });
 
   it('resolves to null for an unlinked service account', async () => {
-    resolveActingUserId.mockResolvedValue(null);
+    serviceAccounts.resolveActingUserId.mockResolvedValue(null);
 
     expect(await service.resolveEffectiveUserId(serviceAccountId)).toBeNull();
   });
@@ -74,11 +82,11 @@ describe('EffectiveUserResolutionService', () => {
     expect(await service.resolveEffectiveUserId('   ')).toBeNull();
     expect(await service.resolveEffectiveUserId(null)).toBeNull();
     expect(await service.resolveEffectiveUserId(undefined)).toBeNull();
-    expect(findById).not.toHaveBeenCalled();
+    expect(users.findOne).not.toHaveBeenCalled();
   });
 
   it('resolves to null instead of throwing when a lookup fails', async () => {
-    findById.mockRejectedValue(new Error('db down'));
+    users.findOne.mockRejectedValue(new Error('db down'));
 
     expect(await service.resolveEffectiveUserId(userId)).toBeNull();
   });

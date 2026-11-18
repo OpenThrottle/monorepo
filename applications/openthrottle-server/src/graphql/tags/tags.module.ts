@@ -11,6 +11,8 @@ import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import {
   PlansModule,
+  RolesModule,
+  ServiceAccountsModule,
   TasksModule,
 } from '@openthrottle/nestjs-repositories-server';
 
@@ -23,6 +25,8 @@ import { TaskTagsResolver } from './task-tags/task-tags.resolver.ts';
 
 @Module({
   imports: [
+    RolesModule,
+    ServiceAccountsModule,
     LoggerModule,
     NestjsRepositoriesModule,
     PlanRulesQueueProducerModule,

@@ -1,14 +1,14 @@
 /**
  * @description GraphQL module for skill usage ingest. Imports
  * SkillUsageEventsModule and SkillUsageOutcomesModule for their repositories,
- * NestjsRepositoriesModule for the permissions guard's RolesService, and
+ * NestjsRepositoriesModule for the permissions guard's RolesRepository, and
  * EffectiveUserResolutionModule so ingest can attribute an event to the human
  * user its authenticated principal acts as.
  */
 
 import { Module } from '@nestjs/common';
-import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import {
+  RolesModule,
   SkillUsageEventsModule,
   SkillUsageOutcomesModule,
 } from '@openthrottle/nestjs-repositories-server';
@@ -18,8 +18,9 @@ import { SkillUsageResolver } from './skill-usage.resolver.ts';
 
 @Module({
   imports: [
+    RolesModule,
     EffectiveUserResolutionModule,
-    NestjsRepositoriesModule,
+
     SkillUsageEventsModule,
     SkillUsageOutcomesModule,
   ],

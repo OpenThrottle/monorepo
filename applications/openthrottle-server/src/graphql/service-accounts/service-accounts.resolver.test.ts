@@ -1,28 +1,38 @@
-import { createMock } from '@golevelup/ts-vitest';
-import { ForbiddenException } from '@nestjs/common';
+import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import {
   AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
   AUTH_PRINCIPAL_KIND_USER,
   type AuthPrincipal,
 } from '@openthrottle/nestjs-auth';
-import type {
-  Role,
-  ServiceAccount,
-  ServiceAccountCredential,
-} from '@openthrottle/nestjs-repositories';
 import {
-  RolesService,
-  ServiceAccountsService,
-} from '@openthrottle/nestjs-repositories';
-import { beforeAll, describe, expect, test, vi } from 'vitest';
+  RolesRepository,
+  ServiceAccountCredentialsRepository,
+  ServiceAccountsRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import type {
+  RolesRepositoryMock,
+  ServiceAccountCredentialsRepositoryMock,
+  ServiceAccountsRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
+import {
+  createRolesRepositoryMock,
+  createServiceAccountCredentialsRepositoryMock,
+  createServiceAccountsRepositoryMock,
+  rolesFactory,
+  serviceAccountCredentialsFactory,
+  serviceAccountsFactory,
+} from '@openthrottle/nestjs-repositories-server/testing';
+import { beforeEach, describe, expect, test } from 'vitest';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import { ServiceAccountsResolver } from './service-accounts.resolver.ts';
 
 describe('ServiceAccountsResolver', () => {
   let resolver: ServiceAccountsResolver;
-  let serviceAccountsService: ServiceAccountsService;
+  let credentials: ServiceAccountCredentialsRepositoryMock;
+  let roles: RolesRepositoryMock;
+  let serviceAccounts: ServiceAccountsRepositoryMock;
 
   const humanPrincipal: AuthPrincipal = {
     kind: AUTH_PRINCIPAL_KIND_USER,
@@ -34,61 +44,52 @@ describe('ServiceAccountsResolver', () => {
     sub: 'sa-id',
   };
 
-  const mockServiceAccount: ServiceAccount = {
-    actingUserId: null,
+  const mockServiceAccount = serviceAccountsFactory.build({
     createdAt: new Date('2026-02-02T10:00:00.000Z'),
-    credentials: [],
     description: 'MCP automation',
     disabledAt: null,
     id: '11111111-1111-4111-8111-111111111111',
     name: 'openthrottle-mcp',
-    roles: [],
-  };
-
-  const mockCredential: ServiceAccountCredential = {
-    createdAt: new Date('2026-02-02T10:00:00.000Z'),
-    expiresAt: null,
-    id: '22222222-2222-4222-8222-222222222222',
-    label: 'default',
-    lastUsedAt: null,
-    prefix: 'abcdefghijkl',
-    revokedAt: null,
-    secretHash: 'hashed',
-    serviceAccount: mockServiceAccount,
-    serviceAccountId: mockServiceAccount.id,
-  };
-
-  const mockServiceAccountsService = createMock<ServiceAccountsService>();
-  const mockRolesService = createMock<RolesService>({
-    getPermissionsForUser: vi
-      .fn()
-      .mockResolvedValue(['users:read', 'users:write']),
   });
 
-  beforeAll(async () => {
+  const mockCredential = {
+    ...serviceAccountCredentialsFactory.build({
+      createdAt: new Date('2026-02-02T10:00:00.000Z'),
+      expiresAt: null,
+      id: '22222222-2222-4222-8222-222222222222',
+      label: 'default',
+      lastUsedAt: null,
+      prefix: 'abcdefghijkl',
+      revokedAt: null,
+      secretHash: 'hashed',
+      serviceAccountId: mockServiceAccount.id,
+    }),
+    serviceAccount: mockServiceAccount,
+  };
+
+  const notFound = new NotFoundException('service_accounts record not found');
+
+  beforeEach(async () => {
+    credentials = createServiceAccountCredentialsRepositoryMock();
+    roles = createRolesRepositoryMock();
+    serviceAccounts = createServiceAccountsRepositoryMock();
+
     const app = await Test.createTestingModule({
       providers: [
         ServiceAccountsResolver,
-        {
-          provide: ServiceAccountsService,
-          useValue: mockServiceAccountsService,
-        },
-        { provide: RolesService, useValue: mockRolesService },
+        { provide: ServiceAccountCredentialsRepository, useValue: credentials },
+        { provide: ServiceAccountsRepository, useValue: serviceAccounts },
+        { provide: RolesRepository, useValue: roles },
         GqlPermissionsGuard,
       ],
     }).compile();
 
     resolver = app.get<ServiceAccountsResolver>(ServiceAccountsResolver);
-    serviceAccountsService = app.get<ServiceAccountsService>(
-      ServiceAccountsService,
-    );
   });
 
   describe('serviceAccounts', () => {
     test('returns service accounts for human principal', async () => {
-      vi.mocked(serviceAccountsService.findAll).mockResolvedValue([
-        mockServiceAccount,
-      ]);
+      serviceAccounts.findAll.mockResolvedValue([mockServiceAccount]);
 
       const result = await resolver.serviceAccounts(humanPrincipal);
 
@@ -105,7 +106,7 @@ describe('ServiceAccountsResolver', () => {
 
   describe('createServiceAccountCredential', () => {
     test('returns token and credential metadata once', async () => {
-      vi.mocked(serviceAccountsService.createCredential).mockResolvedValue({
+      credentials.createCredential.mockResolvedValue({
         credential: mockCredential,
         token: '***REMOVED-OT-TOKEN***',
       });
@@ -137,10 +138,8 @@ describe('ServiceAccountsResolver', () => {
   });
 
   describe('revokeServiceAccountCredential', () => {
-    test('delegates to service', async () => {
-      vi.mocked(serviceAccountsService.revokeCredential).mockResolvedValue(
-        true,
-      );
+    test('delegates to the credentials repository', async () => {
+      credentials.revokeCredential.mockResolvedValue(true);
 
       const result = await resolver.revokeServiceAccountCredential(
         humanPrincipal,
@@ -152,20 +151,15 @@ describe('ServiceAccountsResolver', () => {
   });
 
   describe('rolesForServiceAccount', () => {
-    test('returns roles from RolesService', async () => {
-      const mockRole: Role = {
+    test('returns roles from RolesRepository', async () => {
+      const mockRole = rolesFactory.build({
         createdAt: new Date('2026-02-02T10:00:00.000Z'),
         description: null,
         id: 'role-id',
         name: 'mcp',
-        permissions: [],
-        serviceAccounts: [],
         updatedAt: new Date('2026-02-02T10:00:00.000Z'),
-        users: [],
-      };
-      vi.mocked(mockRolesService.findRolesForServiceAccount).mockResolvedValue([
-        mockRole,
-      ]);
+      });
+      roles.findRolesForServiceAccount.mockResolvedValue([mockRole]);
 
       const result = await resolver.rolesForServiceAccount(
         humanPrincipal,
@@ -174,6 +168,46 @@ describe('ServiceAccountsResolver', () => {
 
       expect(result).toHaveLength(1);
       expect(result[0]?.name).toBe('mcp');
+    });
+  });
+
+  describe('updateServiceAccount', () => {
+    test('returns null when the service account does not exist', async () => {
+      serviceAccounts.update.mockRejectedValue(notFound);
+
+      const result = await resolver.updateServiceAccount(humanPrincipal, {
+        description: null,
+        id: 'non-existent-id',
+        name: 'renamed',
+      });
+
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('disableServiceAccount', () => {
+    test('returns null when the service account does not exist', async () => {
+      serviceAccounts.disable.mockRejectedValue(notFound);
+
+      const result = await resolver.disableServiceAccount(
+        humanPrincipal,
+        'non-existent-id',
+      );
+
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('enableServiceAccount', () => {
+    test('returns null when the service account does not exist', async () => {
+      serviceAccounts.enable.mockRejectedValue(notFound);
+
+      const result = await resolver.enableServiceAccount(
+        humanPrincipal,
+        'non-existent-id',
+      );
+
+      expect(result).toBeNull();
     });
   });
 });

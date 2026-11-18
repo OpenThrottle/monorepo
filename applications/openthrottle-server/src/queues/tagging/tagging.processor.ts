@@ -28,7 +28,6 @@ import { defaultWorkerOptions } from '@openthrottle/nestjs-bullmq';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   type PlanTag,
-  ServiceAccountsService,
   SkillTagsService,
   type TagCaller,
   TAGGING_SERVICE_ACCOUNT_NAME,
@@ -37,6 +36,7 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import {
   PlansRepository,
+  ServiceAccountsRepository,
   TasksRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import { DEFAULT_TAG_VOCABULARY_SEED } from '@openthrottle/openthrottle-skills';
@@ -79,7 +79,7 @@ export class TaggingProcessor
     private readonly logger: LoggerService,
     private readonly planRulesEvaluationService: PlanRulesEvaluationService,
     private readonly plansRepository: PlansRepository,
-    private readonly serviceAccountsService: ServiceAccountsService,
+    private readonly serviceAccountsRepository: ServiceAccountsRepository,
     private readonly skillTagsService: SkillTagsService,
     private readonly sourceControlService: SourceControlService,
     @Inject(TAGGING_MODEL_PROVIDER_TOKEN)
@@ -373,7 +373,7 @@ export class TaggingProcessor
    * source=server-llm if the row is missing.
    */
   private async resolveTaggingCaller(): Promise<TagCaller> {
-    const accounts = await this.serviceAccountsService.findAll();
+    const accounts = await this.serviceAccountsRepository.findAll();
     const tagging = accounts.find(
       (account) => account.name === TAGGING_SERVICE_ACCOUNT_NAME,
     );

@@ -13,7 +13,7 @@ vi.mock('typeorm', () => ({
 vi.mock('@openthrottle/nestjs-repositories', () => ({
   ServiceAccount: class {},
   ServiceAccountCredential: class {},
-  ServiceAccountsService: class {},
+  ServiceAccountCredentialsRepository: class {},
   getOpenThrottleTypeOrmOptions: () => ({}),
 }));
 
@@ -41,7 +41,7 @@ type ServiceOverrides = {
   upsertAction?: 'created' | 'noop' | 'updated';
 };
 
-/** A ServiceAccountsService fake exposing only the methods provisionAccount uses. */
+/** A ServiceAccountCredentialsRepository fake exposing only the methods provisionAccount uses. */
 function makeService(overrides: ServiceOverrides = {}) {
   const createCredential = vi.fn().mockResolvedValue({
     credential: { id: 'new' },

@@ -1,7 +1,7 @@
 /**
  * @description NestJS module owning the rollout feature-flag domain. Registers the
  * RolloutFlag repository and RolloutService, and imports NestjsRepositoriesModule so
- * RolloutService can resolve the actor's roles via RolesService for role-targeted
+ * RolloutService can resolve the actor's roles via RolesRepository for role-targeted
  * evaluation. The GraphQL resolver lives in the app (openthrottle-server).
  */
 

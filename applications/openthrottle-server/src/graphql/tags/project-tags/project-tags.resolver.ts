@@ -11,10 +11,12 @@ import { LoggerService } from '@openthrottle/nestjs-modules';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 import {
   type ProjectTag,
-  ServiceAccountsService,
   TagsService,
 } from '@openthrottle/nestjs-repositories';
-import { PlansRepository } from '@openthrottle/nestjs-repositories-server';
+import {
+  PlansRepository,
+  ServiceAccountsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 
 import { GqlPermissionsGuard } from '../../../guards/gql-permissions.guard.ts';
 import { PlanRulesEvaluationService } from '../../../queues/plan-rules/evaluation/evaluation.service.ts';
@@ -33,7 +35,7 @@ export class ProjectTagsResolver {
     private readonly logger: LoggerService,
     private readonly plansRepository: PlansRepository,
     private readonly planRulesEvaluationService: PlanRulesEvaluationService,
-    private readonly serviceAccountsService: ServiceAccountsService,
+    private readonly serviceAccountsRepository: ServiceAccountsRepository,
     private readonly tagsService: TagsService,
   ) {}
 
@@ -81,7 +83,7 @@ export class ProjectTagsResolver {
   ): Promise<ProjectTag> {
     const caller = await resolveTagCaller(
       principal,
-      this.serviceAccountsService,
+      this.serviceAccountsRepository,
     );
     const tag = await this.tagsService.addProjectTag(
       caller,
@@ -103,7 +105,7 @@ export class ProjectTagsResolver {
   ): Promise<boolean> {
     const caller = await resolveTagCaller(
       principal,
-      this.serviceAccountsService,
+      this.serviceAccountsRepository,
     );
     const removed = await this.tagsService.removeProjectTag(
       caller,

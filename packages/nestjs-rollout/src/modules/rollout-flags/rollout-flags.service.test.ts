@@ -8,7 +8,9 @@ import {
   type AuthPrincipal,
 } from '@openthrottle/nestjs-auth';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { RolesService } from '@openthrottle/nestjs-repositories';
+import { RolesRepository } from '@openthrottle/nestjs-repositories';
+import type { RolesRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import { createRolesRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -70,10 +72,7 @@ describe('RolloutService', () => {
 
   let service: RolloutService;
   let repo: FlagRepo;
-  let rolesService: {
-    findRoleNamesByServiceAccountId: ReturnType<typeof vi.fn>;
-    findRoleNamesByUserId: ReturnType<typeof vi.fn>;
-  };
+  let rolesRepository: RolesRepositoryMock;
 
   beforeEach(async () => {
     repo = {
@@ -84,10 +83,7 @@ describe('RolloutService', () => {
       merge: vi.fn(),
       save: vi.fn(),
     };
-    rolesService = {
-      findRoleNamesByServiceAccountId: vi.fn(),
-      findRoleNamesByUserId: vi.fn(),
-    };
+    rolesRepository = createRolesRepositoryMock();
 
     const app = await Test.createTestingModule({
       providers: [
@@ -95,13 +91,8 @@ describe('RolloutService', () => {
         { provide: LoggerService, useValue: createMock<LoggerService>() },
         { provide: getRepositoryToken(RolloutFlag), useValue: repo },
         {
-          provide: RolesService,
-          useValue: {
-            ...createMock<RolesService>(),
-            findRoleNamesByServiceAccountId:
-              rolesService.findRoleNamesByServiceAccountId,
-            findRoleNamesByUserId: rolesService.findRoleNamesByUserId,
-          },
+          provide: RolesRepository,
+          useValue: rolesRepository,
         },
       ],
     }).compile();
@@ -349,12 +340,12 @@ describe('RolloutService', () => {
         value: false,
         variationIndex: 0,
       });
-      expect(rolesService.findRoleNamesByUserId).not.toHaveBeenCalled();
+      expect(rolesRepository.findRoleNamesByUserId).not.toHaveBeenCalled();
     });
 
     it('returns off variation when the actor fails targetRoles', async () => {
       repo.findOne.mockResolvedValue(flag({ targetRoles: ['admin'] }));
-      rolesService.findRoleNamesByUserId.mockResolvedValue(['viewer']);
+      rolesRepository.findRoleNamesByUserId.mockResolvedValue(['viewer']);
 
       expect(await service.evaluate('new-dashboard', userPrincipal)).toEqual({
         key: 'new-dashboard',
@@ -523,7 +514,7 @@ describe('RolloutService', () => {
     it('returns false for an unknown key', async () => {
       repo.findOne.mockResolvedValue(null);
       expect(await service.isEnabled('nope', userPrincipal)).toBe(false);
-      expect(rolesService.findRoleNamesByUserId).not.toHaveBeenCalled();
+      expect(rolesRepository.findRoleNamesByUserId).not.toHaveBeenCalled();
     });
 
     it('returns false when the flag is disabled', async () => {
@@ -531,7 +522,7 @@ describe('RolloutService', () => {
       expect(await service.isEnabled('new-dashboard', userPrincipal)).toBe(
         false,
       );
-      expect(rolesService.findRoleNamesByUserId).not.toHaveBeenCalled();
+      expect(rolesRepository.findRoleNamesByUserId).not.toHaveBeenCalled();
     });
 
     it('returns the resolved boolean (true) when enabled with empty targetRoles', async () => {
@@ -539,22 +530,27 @@ describe('RolloutService', () => {
       expect(await service.isEnabled('new-dashboard', userPrincipal)).toBe(
         true,
       );
-      expect(rolesService.findRoleNamesByUserId).not.toHaveBeenCalled();
+      expect(rolesRepository.findRoleNamesByUserId).not.toHaveBeenCalled();
     });
 
     it('returns true when the actor holds a targeted role (user branch)', async () => {
       repo.findOne.mockResolvedValue(flag({ targetRoles: ['admin'] }));
-      rolesService.findRoleNamesByUserId.mockResolvedValue(['admin', 'user']);
+      rolesRepository.findRoleNamesByUserId.mockResolvedValue([
+        'admin',
+        'user',
+      ]);
 
       expect(await service.isEnabled('new-dashboard', userPrincipal)).toBe(
         true,
       );
-      expect(rolesService.findRoleNamesByUserId).toHaveBeenCalledWith(userId);
+      expect(rolesRepository.findRoleNamesByUserId).toHaveBeenCalledWith(
+        userId,
+      );
     });
 
     it('returns false when the actor lacks every targeted role', async () => {
       repo.findOne.mockResolvedValue(flag({ targetRoles: ['admin'] }));
-      rolesService.findRoleNamesByUserId.mockResolvedValue(['viewer']);
+      rolesRepository.findRoleNamesByUserId.mockResolvedValue(['viewer']);
 
       expect(await service.isEnabled('new-dashboard', userPrincipal)).toBe(
         false,
@@ -563,15 +559,17 @@ describe('RolloutService', () => {
 
     it('resolves roles via the service-account branch', async () => {
       repo.findOne.mockResolvedValue(flag({ targetRoles: ['mcp'] }));
-      rolesService.findRoleNamesByServiceAccountId.mockResolvedValue(['mcp']);
+      rolesRepository.findRoleNamesByServiceAccountId.mockResolvedValue([
+        'mcp',
+      ]);
 
       expect(
         await service.isEnabled('new-dashboard', serviceAccountPrincipal),
       ).toBe(true);
-      expect(rolesService.findRoleNamesByServiceAccountId).toHaveBeenCalledWith(
-        serviceAccountId,
-      );
-      expect(rolesService.findRoleNamesByUserId).not.toHaveBeenCalled();
+      expect(
+        rolesRepository.findRoleNamesByServiceAccountId,
+      ).toHaveBeenCalledWith(serviceAccountId);
+      expect(rolesRepository.findRoleNamesByUserId).not.toHaveBeenCalled();
     });
 
     it('returns false for non-boolean flags even when fallthrough wins', async () => {
@@ -607,7 +605,7 @@ describe('RolloutService', () => {
         flag({ enabled: false, id: '3', key: 'off', targetRoles: ['admin'] }),
         flag({ id: '4', key: 'viewer-only', targetRoles: ['viewer'] }),
       ]);
-      rolesService.findRoleNamesByUserId.mockResolvedValue(['admin']);
+      rolesRepository.findRoleNamesByUserId.mockResolvedValue(['admin']);
 
       const result = await service.evaluateAll(userPrincipal);
 
@@ -641,7 +639,7 @@ describe('RolloutService', () => {
           variationIndex: 0,
         },
       ]);
-      expect(rolesService.findRoleNamesByUserId).toHaveBeenCalledTimes(1);
+      expect(rolesRepository.findRoleNamesByUserId).toHaveBeenCalledTimes(1);
     });
 
     it('skips role resolution when no enabled flag targets roles', async () => {
@@ -668,7 +666,7 @@ describe('RolloutService', () => {
           variationIndex: 0,
         },
       ]);
-      expect(rolesService.findRoleNamesByUserId).not.toHaveBeenCalled();
+      expect(rolesRepository.findRoleNamesByUserId).not.toHaveBeenCalled();
     });
   });
 });

@@ -5,6 +5,7 @@ import {
   PlansModule,
   ProjectsModule,
   TasksModule,
+  UsersModule,
 } from '@openthrottle/nestjs-repositories-server';
 
 import { PlanContextAvailabilityService } from './plan-context-availability.service.ts';
@@ -17,6 +18,7 @@ import { PlanContextAvailabilityService } from './plan-context-availability.serv
 @Module({
   exports: [PlanContextAvailabilityService],
   imports: [
+    UsersModule,
     LoggerModule,
     NestjsRepositoriesModule,
     PlansModule,

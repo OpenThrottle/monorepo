@@ -17,12 +17,11 @@
 
 import { fileURLToPath } from 'node:url';
 
-import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   getOpenThrottleTypeOrmOptions,
   ServiceAccount,
   ServiceAccountCredential,
-  ServiceAccountsService,
+  ServiceAccountCredentialsRepository,
 } from '@openthrottle/nestjs-repositories';
 import { DataSource, IsNull } from 'typeorm';
 
@@ -67,17 +66,18 @@ async function countActiveCredentials(
 }
 
 async function upsertBootstrapCredentialFromEnv(
-  serviceAccountsService: ServiceAccountsService,
+  serviceAccountCredentialsRepository: ServiceAccountCredentialsRepository,
   account: (typeof BOOTSTRAP_ACCOUNTS)[number],
   serviceAccountId: string,
   token: string,
 ): Promise<ProvisionOutcome> {
   try {
-    const result = await serviceAccountsService.upsertCredentialForToken({
-      label: account.label,
-      serviceAccountId,
-      token,
-    });
+    const result =
+      await serviceAccountCredentialsRepository.upsertCredentialForToken({
+        label: account.label,
+        serviceAccountId,
+        token,
+      });
 
     if (result == null) {
       logger.fail(
@@ -123,11 +123,11 @@ async function upsertBootstrapCredentialFromEnv(
  * paths.
  */
 async function createAndRecordCredential(
-  serviceAccountsService: ServiceAccountsService,
+  serviceAccountCredentialsRepository: ServiceAccountCredentialsRepository,
   account: (typeof BOOTSTRAP_ACCOUNTS)[number],
   serviceAccountId: string,
 ): Promise<void> {
-  const created = await serviceAccountsService.createCredential({
+  const created = await serviceAccountCredentialsRepository.createCredential({
     label: account.label,
     serviceAccountId,
   });
@@ -153,16 +153,18 @@ async function createAndRecordCredential(
  * BOOTSTRAP_ACCOUNTS — never a generalized revoke of arbitrary accounts.
  */
 async function rotateBootstrapCredential(
-  serviceAccountsService: ServiceAccountsService,
+  serviceAccountCredentialsRepository: ServiceAccountCredentialsRepository,
   account: (typeof BOOTSTRAP_ACCOUNTS)[number],
   serviceAccountId: string,
 ): Promise<ProvisionOutcome> {
   const active =
-    await serviceAccountsService.findActiveCredentials(serviceAccountId);
+    await serviceAccountCredentialsRepository.findActiveCredentials(
+      serviceAccountId,
+    );
 
   /* eslint-disable no-await-in-loop -- revoke sequentially; small fixed set */
   for (const credential of active) {
-    await serviceAccountsService.revokeCredential(credential.id);
+    await serviceAccountCredentialsRepository.revokeCredential(credential.id);
   }
   /* eslint-enable no-await-in-loop */
 
@@ -171,7 +173,7 @@ async function rotateBootstrapCredential(
   );
 
   await createAndRecordCredential(
-    serviceAccountsService,
+    serviceAccountCredentialsRepository,
     account,
     serviceAccountId,
   );
@@ -181,7 +183,7 @@ async function rotateBootstrapCredential(
 
 async function mintBootstrapCredential(
   dataSource: DataSource,
-  serviceAccountsService: ServiceAccountsService,
+  serviceAccountCredentialsRepository: ServiceAccountCredentialsRepository,
   account: (typeof BOOTSTRAP_ACCOUNTS)[number],
   serviceAccountId: string,
 ): Promise<ProvisionOutcome> {
@@ -206,14 +208,14 @@ async function mintBootstrapCredential(
     // so rotate to a usable token (owner decision, 2026-08-13) rather than leave
     // the file missing this key.
     return rotateBootstrapCredential(
-      serviceAccountsService,
+      serviceAccountCredentialsRepository,
       account,
       serviceAccountId,
     );
   }
 
   await createAndRecordCredential(
-    serviceAccountsService,
+    serviceAccountCredentialsRepository,
     account,
     serviceAccountId,
   );
@@ -223,7 +225,7 @@ async function mintBootstrapCredential(
 
 export async function provisionAccount(
   dataSource: DataSource,
-  serviceAccountsService: ServiceAccountsService,
+  serviceAccountCredentialsRepository: ServiceAccountCredentialsRepository,
   account: (typeof BOOTSTRAP_ACCOUNTS)[number],
 ): Promise<ProvisionOutcome> {
   const row = await dataSource.getRepository(ServiceAccount).findOne({
@@ -240,7 +242,7 @@ export async function provisionAccount(
   const envToken = (process.env[account.envVar] ?? '').trim();
   if (envToken !== '') {
     return upsertBootstrapCredentialFromEnv(
-      serviceAccountsService,
+      serviceAccountCredentialsRepository,
       account,
       row.id,
       envToken,
@@ -249,41 +251,10 @@ export async function provisionAccount(
 
   return mintBootstrapCredential(
     dataSource,
-    serviceAccountsService,
+    serviceAccountCredentialsRepository,
     account,
     row.id,
   );
-}
-
-/** Silent sink for the Nest services' own logging; script output goes through the CLI `logger`. */
-class SilentLoggerService extends LoggerService {
-  override debug(): void {
-    return undefined;
-  }
-
-  override error(): void {
-    return undefined;
-  }
-
-  override fatal(): void {
-    return undefined;
-  }
-
-  override info(): void {
-    return undefined;
-  }
-
-  override log(): void {
-    return undefined;
-  }
-
-  override verbose(): void {
-    return undefined;
-  }
-
-  override warn(): void {
-    return undefined;
-  }
 }
 
 async function main(): Promise<void> {
@@ -291,19 +262,19 @@ async function main(): Promise<void> {
   await dataSource.initialize();
 
   try {
-    // Silent sink for the Nest service's own logging; script output goes
-    // through the CLI `logger` above, so don't shadow it here.
-    const nestLogger = new SilentLoggerService();
-
-    const serviceAccountsService = new ServiceAccountsService(
-      nestLogger,
-      dataSource.getRepository(ServiceAccount),
-      dataSource.getRepository(ServiceAccountCredential),
-    );
+    const serviceAccountCredentialsRepository =
+      new ServiceAccountCredentialsRepository(
+        dataSource.getRepository(ServiceAccountCredential),
+        dataSource.getRepository(ServiceAccount),
+      );
 
     const outcomes = await Promise.all(
       BOOTSTRAP_ACCOUNTS.map((account) =>
-        provisionAccount(dataSource, serviceAccountsService, account),
+        provisionAccount(
+          dataSource,
+          serviceAccountCredentialsRepository,
+          account,
+        ),
       ),
     );
 

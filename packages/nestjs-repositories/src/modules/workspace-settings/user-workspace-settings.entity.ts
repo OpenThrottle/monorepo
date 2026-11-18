@@ -2,6 +2,7 @@
  * @description TypeORM entity for user_workspace_settings. Matches databases/openthrottle/migrations/042.
  */
 
+import { User } from '@openthrottle/nestjs-repositories-server';
 import {
   Column,
   CreateDateColumn,
@@ -12,7 +13,6 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-import { User } from '../users/user.entity.ts';
 import type { WorkspaceEditorId } from './workspace-settings.types.ts';
 
 export interface UserWorkspaceSettingsData {

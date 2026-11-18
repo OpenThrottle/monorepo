@@ -25,10 +25,8 @@ import {
 } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS } from '@openthrottle/nestjs-rbac';
 import type { CustomPrompt } from '@openthrottle/nestjs-repositories';
-import {
-  CustomPromptsService,
-  RolesService,
-} from '@openthrottle/nestjs-repositories';
+import { CustomPromptsService } from '@openthrottle/nestjs-repositories';
+import { RolesRepository } from '@openthrottle/nestjs-repositories-server';
 import { IsNull } from 'typeorm';
 
 import {
@@ -48,7 +46,7 @@ export class CustomPromptsResolver {
   constructor(
     private readonly configService: ConfigService,
     private readonly customPromptsService: CustomPromptsService,
-    private readonly rolesService: RolesService,
+    private readonly rolesRepository: RolesRepository,
   ) {}
 
   @Query(() => CustomPromptObject, {
@@ -276,11 +274,11 @@ export class CustomPromptsResolver {
 
     let permissions: string[];
     if (principal.kind === AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT) {
-      permissions = await this.rolesService.getPermissionsForServiceAccount(
+      permissions = await this.rolesRepository.getPermissionsForServiceAccount(
         principal.sub,
       );
     } else {
-      permissions = await this.rolesService.getPermissionsForUser(
+      permissions = await this.rolesRepository.getPermissionsForUser(
         principal.sub,
       );
     }

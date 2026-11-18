@@ -32,8 +32,8 @@ import {
   Public,
 } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
-import { RolesService } from '@openthrottle/nestjs-repositories';
 import {
+  RolesRepository,
   UserDisabledAgentClisRepository,
   UserFavoriteAgentModelsRepository,
 } from '@openthrottle/nestjs-repositories-server';
@@ -60,7 +60,7 @@ export class AgentSetupResolver {
     private readonly config: ConfigService,
     private readonly disabledAgentClis: UserDisabledAgentClisRepository,
     private readonly favoriteAgentModels: UserFavoriteAgentModelsRepository,
-    private readonly roles: RolesService,
+    private readonly roles: RolesRepository,
     private readonly setupService: AgentSetupService,
   ) {}
 

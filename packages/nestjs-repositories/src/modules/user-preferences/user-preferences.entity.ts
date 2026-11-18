@@ -4,6 +4,7 @@
  * Raw column values are untrusted here — {@link UserPreferencesService} narrows them on read.
  */
 
+import { User } from '@openthrottle/nestjs-repositories-server';
 import {
   Column,
   CreateDateColumn,
@@ -13,8 +14,6 @@ import {
   PrimaryColumn,
   UpdateDateColumn,
 } from 'typeorm';
-
-import { User } from '../users/user.entity.ts';
 
 @Entity('user_preferences')
 export class UserPreferences {

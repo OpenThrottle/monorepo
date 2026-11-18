@@ -11,6 +11,9 @@ import {
   BlogAuthorsModule,
   BlogPostsModule,
   BlogTagsModule,
+  RolesModule,
+  ServiceAccountsModule,
+  UsersModule,
 } from '@openthrottle/nestjs-repositories-server';
 
 import { BlogResolver } from './blog.resolver.ts';
@@ -18,6 +21,9 @@ import { BlogAdminResolver } from './blog-admin/blog-admin.resolver.ts';
 
 @Module({
   imports: [
+    RolesModule,
+    ServiceAccountsModule,
+    UsersModule,
     BlogAuthorsModule,
     BlogPostsModule,
     BlogTagsModule,

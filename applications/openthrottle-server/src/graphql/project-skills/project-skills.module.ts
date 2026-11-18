@@ -8,12 +8,15 @@ import './project-skills.input.ts';
 
 import { Module } from '@nestjs/common';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
-import { ProjectsModule } from '@openthrottle/nestjs-repositories-server';
+import {
+  ProjectsModule,
+  ServiceAccountsModule,
+} from '@openthrottle/nestjs-repositories-server';
 
 import { ProjectSkillsResolver } from './project-skills.resolver.ts';
 
 @Module({
-  imports: [NestjsRepositoriesModule, ProjectsModule],
+  imports: [ServiceAccountsModule, NestjsRepositoriesModule, ProjectsModule],
   providers: [ProjectSkillsResolver],
 })
 export class ProjectSkillsGraphqlModule {}

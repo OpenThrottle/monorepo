@@ -616,7 +616,7 @@ export async function insertCommitLinkPostgres(
 
     // 1. Actor: the credential-less workflow-ralph service account (Ralph's own identity).
     const saRes = await client.query<{ id: string }>(
-      `SELECT id FROM service_accounts WHERE name = 'workflow-ralph' LIMIT 1`,
+      `SELECT id FROM service_accounts WHERE name = 'workflow-ralph' AND deleted_at IS NULL LIMIT 1`,
     );
     const serviceAccountId = saRes.rows[0]?.id;
     if (!serviceAccountId) {

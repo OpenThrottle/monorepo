@@ -1,26 +1,29 @@
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
-  PlanRunsService,
-  ServiceAccountsService,
-} from '@openthrottle/nestjs-repositories';
-import type {
   PlanRun,
-  ServiceAccount,
+  PlanRunsService,
 } from '@openthrottle/nestjs-repositories';
 import type {
+  ServiceAccountCredentialsRepository,
+  ServiceAccountsRepository,
   WorkSession,
   WorkSessionsRepository,
   WorkSessionSubject,
   WorkSessionSubjectsRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import type {
+  ServiceAccountCredentialsRepositoryMock,
+  ServiceAccountsRepositoryMock,
   WorkSessionsRepositoryMock,
   WorkSessionSubjectsRepositoryMock,
 } from '@openthrottle/nestjs-repositories-server/testing';
 import {
+  createServiceAccountCredentialsRepositoryMock,
+  createServiceAccountsRepositoryMock,
   createWorkSessionsRepositoryMock,
   createWorkSessionSubjectsRepositoryMock,
+  serviceAccountsFactory,
 } from '@openthrottle/nestjs-repositories-server/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -35,7 +38,8 @@ describe('WorkLedgerRunService', () => {
   let sessionRepo: WorkSessionsRepositoryMock;
   let subjectRepo: WorkSessionSubjectsRepositoryMock;
   let planRunsService: PlanRunsService;
-  let serviceAccountsService: ServiceAccountsService;
+  let credentials: ServiceAccountCredentialsRepositoryMock;
+  let serviceAccounts: ServiceAccountsRepositoryMock;
   let service: WorkLedgerRunService;
 
   beforeEach(() => {
@@ -52,15 +56,17 @@ describe('WorkLedgerRunService', () => {
     );
     subjectRepo.create.mockResolvedValue(createMock<WorkSessionSubject>());
     planRunsService = createMock<PlanRunsService>();
-    serviceAccountsService = createMock<ServiceAccountsService>();
-    vi.mocked(serviceAccountsService.findByName).mockResolvedValue(
-      createMock<ServiceAccount>({ id: RALPH_SA_ID }),
+    credentials = createServiceAccountCredentialsRepositoryMock();
+    serviceAccounts = createServiceAccountsRepositoryMock();
+    serviceAccounts.findByName.mockResolvedValue(
+      serviceAccountsFactory.build({ id: RALPH_SA_ID }),
     );
 
     service = new WorkLedgerRunService(
       createMock<LoggerService>(),
       planRunsService,
-      serviceAccountsService,
+      createMock<ServiceAccountCredentialsRepository>(credentials),
+      createMock<ServiceAccountsRepository>(serviceAccounts),
       createMock<WorkSessionsRepository>(sessionRepo),
       createMock<WorkSessionSubjectsRepository>(subjectRepo),
     );
@@ -107,7 +113,7 @@ describe('WorkLedgerRunService', () => {
     vi.mocked(planRunsService.findByQueueNameAndBullmqJobId).mockResolvedValue(
       createMock<PlanRun>({ actorUserId: 'user-9', id: 'run-1' }),
     );
-    vi.mocked(serviceAccountsService.verifyBearerToken).mockResolvedValue({
+    credentials.verifyBearerToken.mockResolvedValue({
       credentialId: 'cred-1',
       serviceAccountId: 'principal-sa',
     });
@@ -119,10 +125,10 @@ describe('WorkLedgerRunService', () => {
     });
 
     // Actor is the token's principal, NOT the name-lookup SA.
-    expect(serviceAccountsService.verifyBearerToken).toHaveBeenCalledWith(
+    expect(credentials.verifyBearerToken).toHaveBeenCalledWith(
       'ot_sa_worker_token',
     );
-    expect(serviceAccountsService.findByName).not.toHaveBeenCalled();
+    expect(serviceAccounts.findByName).not.toHaveBeenCalled();
     expect(sessionRepo.create).toHaveBeenCalledWith(
       expect.objectContaining({ actorServiceAccountId: 'principal-sa' }),
     );
@@ -133,7 +139,7 @@ describe('WorkLedgerRunService', () => {
     vi.mocked(planRunsService.findByQueueNameAndBullmqJobId).mockResolvedValue(
       createMock<PlanRun>({ actorUserId: null, id: 'run-3' }),
     );
-    vi.mocked(serviceAccountsService.verifyBearerToken).mockResolvedValue(null);
+    credentials.verifyBearerToken.mockResolvedValue(null);
 
     await service.openRalphSession({
       bullmqJobId: JOB_ID,
@@ -141,9 +147,7 @@ describe('WorkLedgerRunService', () => {
       queueName: QUEUE,
     });
 
-    expect(serviceAccountsService.findByName).toHaveBeenCalledWith(
-      'workflow-ralph',
-    );
+    expect(serviceAccounts.findByName).toHaveBeenCalledWith('workflow-ralph');
     expect(sessionRepo.create).toHaveBeenCalledWith(
       expect.objectContaining({ actorServiceAccountId: RALPH_SA_ID }),
     );
@@ -169,7 +173,7 @@ describe('WorkLedgerRunService', () => {
   });
 
   it('returns null (best-effort) when the ralph service account is missing', async () => {
-    vi.mocked(serviceAccountsService.findByName).mockResolvedValue(null);
+    serviceAccounts.findByName.mockResolvedValue(null);
 
     const sessionId = await service.openRalphSession({
       bullmqJobId: JOB_ID,

@@ -8,8 +8,15 @@ import { ConflictException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
-import { UsersService } from '@openthrottle/nestjs-repositories';
-import { usersFactory } from '@openthrottle/nestjs-repositories/testing';
+import {
+  UsersRepository,
+  validatePassword,
+} from '@openthrottle/nestjs-repositories-server';
+import type { UsersRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import {
+  createUsersRepositoryMock,
+  usersFactory,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import { GraphQLError } from 'graphql';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -28,9 +35,10 @@ describe('AuthService', () => {
   let service: AuthService;
   let configService: ConfigService;
   let jwtService: JwtService;
-  let usersService: UsersService;
+  let users: UsersRepositoryMock;
 
   beforeEach(async () => {
+    users = createUsersRepositoryMock();
     const app = await Test.createTestingModule({
       providers: [
         AuthService,
@@ -42,21 +50,13 @@ describe('AuthService', () => {
           provide: JwtService,
           useValue: createMock<JwtService>({ sign: vi.fn() }),
         },
-        {
-          provide: UsersService,
-          useValue: createMock<UsersService>({
-            create: vi.fn(),
-            findByEmail: vi.fn(),
-            hashPassword: vi.fn(),
-          }),
-        },
+        { provide: UsersRepository, useValue: users },
       ],
     }).compile();
 
     service = app.get<AuthService>(AuthService);
     configService = app.get<ConfigService>(ConfigService);
     jwtService = app.get<JwtService>(JwtService);
-    usersService = app.get<UsersService>(UsersService);
   });
 
   describe('login', () => {
@@ -133,21 +133,20 @@ describe('AuthService', () => {
 
   describe('register', () => {
     test('throws ConflictException when the email is already registered', async () => {
-      vi.mocked(usersService.findByEmail).mockResolvedValue(mockUser);
+      users.findByEmail.mockResolvedValue(mockUser);
 
       await expect(
         service.register({ email: mockUser.email ?? '', password: 'secret' }),
       ).rejects.toBeInstanceOf(ConflictException);
 
-      expect(usersService.create).not.toHaveBeenCalled();
+      expect(users.create).not.toHaveBeenCalled();
     });
 
-    test('creates a user, hashes the password, and returns id/email/token', async () => {
+    test('creates a user, stores a bcrypt hash of the password, and returns id/email/token', async () => {
       vi.mocked(configService.get).mockReturnValue(undefined);
       vi.mocked(jwtService.sign).mockReturnValue('signed-jwt');
-      vi.mocked(usersService.findByEmail).mockResolvedValue(null);
-      vi.mocked(usersService.hashPassword).mockResolvedValue('hashed');
-      vi.mocked(usersService.create).mockResolvedValue(mockUser);
+      users.findByEmail.mockResolvedValue(null);
+      users.create.mockResolvedValue(mockUser);
 
       const result = await service.register({
         email: mockUser.email ?? '',
@@ -155,14 +154,16 @@ describe('AuthService', () => {
         password: 'secret',
       });
 
-      expect(usersService.hashPassword).toHaveBeenCalledWith('secret');
-      expect(usersService.create).toHaveBeenCalledTimes(1);
-      const createArg = vi.mocked(usersService.create).mock.calls[0]?.[0];
+      expect(users.create).toHaveBeenCalledTimes(1);
+      const createArg = users.create.mock.calls[0]?.[0];
       if (createArg === undefined) {
-        throw new Error('usersService.create was not called');
+        throw new Error('users.create was not called');
       }
       expect(createArg.email).toBe(mockUser.email);
-      expect(createArg.passwordHash).toBe('hashed');
+      expect(createArg.passwordHash).not.toBe('secret');
+      await expect(
+        validatePassword('secret', createArg.passwordHash ?? ''),
+      ).resolves.toBe(true);
       expect(createArg.githubUsername).toMatch(/^visormatt-[0-9a-f]{8}$/);
 
       expect(result).toEqual({
@@ -175,15 +176,14 @@ describe('AuthService', () => {
     test('derives the github username base from the email local part when none is provided', async () => {
       vi.mocked(configService.get).mockReturnValue(undefined);
       vi.mocked(jwtService.sign).mockReturnValue('signed-jwt');
-      vi.mocked(usersService.findByEmail).mockResolvedValue(null);
-      vi.mocked(usersService.hashPassword).mockResolvedValue('hashed');
-      vi.mocked(usersService.create).mockResolvedValue(mockUser);
+      users.findByEmail.mockResolvedValue(null);
+      users.create.mockResolvedValue(mockUser);
 
       await service.register({ email: 'jane.doe@example.com', password: 'pw' });
 
-      const createArg = vi.mocked(usersService.create).mock.calls[0]?.[0];
+      const createArg = users.create.mock.calls[0]?.[0];
       if (createArg === undefined) {
-        throw new Error('usersService.create was not called');
+        throw new Error('users.create was not called');
       }
       expect(createArg.githubUsername).toMatch(/^jane\.doe-[0-9a-f]{8}$/);
     });
@@ -191,15 +191,14 @@ describe('AuthService', () => {
     test('falls back to the literal "user" base when email local part is empty', async () => {
       vi.mocked(configService.get).mockReturnValue(undefined);
       vi.mocked(jwtService.sign).mockReturnValue('signed-jwt');
-      vi.mocked(usersService.findByEmail).mockResolvedValue(null);
-      vi.mocked(usersService.hashPassword).mockResolvedValue('hashed');
-      vi.mocked(usersService.create).mockResolvedValue(mockUser);
+      users.findByEmail.mockResolvedValue(null);
+      users.create.mockResolvedValue(mockUser);
 
       await service.register({ email: '@example.com', password: 'pw' });
 
-      const createArg = vi.mocked(usersService.create).mock.calls[0]?.[0];
+      const createArg = users.create.mock.calls[0]?.[0];
       if (createArg === undefined) {
-        throw new Error('usersService.create was not called');
+        throw new Error('users.create was not called');
       }
       expect(createArg.githubUsername).toMatch(/^user-[0-9a-f]{8}$/);
     });
@@ -207,9 +206,8 @@ describe('AuthService', () => {
     test('uses the input email in the result when the created user has no email', async () => {
       vi.mocked(configService.get).mockReturnValue(undefined);
       vi.mocked(jwtService.sign).mockReturnValue('signed-jwt');
-      vi.mocked(usersService.findByEmail).mockResolvedValue(null);
-      vi.mocked(usersService.hashPassword).mockResolvedValue('hashed');
-      vi.mocked(usersService.create).mockResolvedValue({
+      users.findByEmail.mockResolvedValue(null);
+      users.create.mockResolvedValue({
         ...mockUser,
         email: null,
       });
@@ -249,8 +247,8 @@ describe('AuthService', () => {
         code: 'FORBIDDEN',
         reason: 'REGISTRATION_DISABLED',
       });
-      expect(usersService.findByEmail).not.toHaveBeenCalled();
-      expect(usersService.create).not.toHaveBeenCalled();
+      expect(users.findByEmail).not.toHaveBeenCalled();
+      expect(users.create).not.toHaveBeenCalled();
     });
 
     test('rejects registration anywhere when the flag is false', async () => {
@@ -262,7 +260,7 @@ describe('AuthService', () => {
       await expect(service.register(registerInput)).rejects.toBeInstanceOf(
         GraphQLError,
       );
-      expect(usersService.create).not.toHaveBeenCalled();
+      expect(users.create).not.toHaveBeenCalled();
     });
 
     test('allows registration in production when the flag is true', async () => {
@@ -271,9 +269,8 @@ describe('AuthService', () => {
         OPENTHROTTLE_REGISTRATION_ENABLED: ' TRUE ',
       });
       vi.mocked(jwtService.sign).mockReturnValue('signed-jwt');
-      vi.mocked(usersService.findByEmail).mockResolvedValue(null);
-      vi.mocked(usersService.hashPassword).mockResolvedValue('hashed');
-      vi.mocked(usersService.create).mockResolvedValue(mockUser);
+      users.findByEmail.mockResolvedValue(null);
+      users.create.mockResolvedValue(mockUser);
 
       await expect(service.register(registerInput)).resolves.toMatchObject({
         accessToken: 'signed-jwt',
@@ -283,9 +280,8 @@ describe('AuthService', () => {
     test('allows registration outside production by default', async () => {
       withConfig({ NODE_ENV: 'development' });
       vi.mocked(jwtService.sign).mockReturnValue('signed-jwt');
-      vi.mocked(usersService.findByEmail).mockResolvedValue(null);
-      vi.mocked(usersService.hashPassword).mockResolvedValue('hashed');
-      vi.mocked(usersService.create).mockResolvedValue(mockUser);
+      users.findByEmail.mockResolvedValue(null);
+      users.create.mockResolvedValue(mockUser);
 
       await expect(service.register(registerInput)).resolves.toMatchObject({
         id: mockUser.id,

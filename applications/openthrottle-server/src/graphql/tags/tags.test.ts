@@ -2,14 +2,15 @@ import { createMock } from '@golevelup/ts-vitest';
 import type { AuthPrincipal } from '@openthrottle/nestjs-auth';
 import { AUTH_PRINCIPAL_KIND_USER } from '@openthrottle/nestjs-auth';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import type {
-  ServiceAccountsService,
-  TagsService,
-} from '@openthrottle/nestjs-repositories';
+import type { TagsService } from '@openthrottle/nestjs-repositories';
 import { type ProjectTag } from '@openthrottle/nestjs-repositories';
-import type { PlansRepository } from '@openthrottle/nestjs-repositories-server';
+import type {
+  PlansRepository,
+  ServiceAccountsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import {
   createPlansRepositoryMock,
+  createServiceAccountsRepositoryMock,
   plansFactory,
 } from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
@@ -45,7 +46,9 @@ describe('ProjectTagsResolver', () => {
     createMock<LoggerService>(),
     asMock<PlansRepository>(plansRepository),
     createMock<PlanRulesEvaluationService>({ enqueueEvaluation }),
-    createMock<ServiceAccountsService>(),
+    createMock<ServiceAccountsRepository>(
+      createServiceAccountsRepositoryMock(),
+    ),
     createMock<TagsService>({ addProjectTag, removeProjectTag }),
   );
 

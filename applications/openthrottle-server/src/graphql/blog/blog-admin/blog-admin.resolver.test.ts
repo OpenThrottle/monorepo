@@ -31,19 +31,16 @@ import {
   ROLES,
 } from '@openthrottle/nestjs-rbac';
 import {
-  RolesService,
-  type ServiceAccount,
-  ServiceAccountsService,
-  UsersService,
-} from '@openthrottle/nestjs-repositories';
-import { usersFactory } from '@openthrottle/nestjs-repositories/testing';
-import {
   type BlogAuthor,
   BlogAuthorsRepository,
   type BlogPost,
   BlogPostsRepository,
   type BlogTag,
   BlogTagsRepository,
+  RolesRepository,
+  type ServiceAccount,
+  ServiceAccountsRepository,
+  UsersRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import {
   blogAuthorsFactory,
@@ -52,6 +49,11 @@ import {
   createBlogAuthorsRepositoryMock,
   createBlogPostsRepositoryMock,
   createBlogTagsRepositoryMock,
+  createRolesRepositoryMock,
+  createServiceAccountsRepositoryMock,
+  createUsersRepositoryMock,
+  serviceAccountsFactory,
+  usersFactory,
 } from '@openthrottle/nestjs-repositories-server/testing';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -118,24 +120,15 @@ const serviceAccountPrincipal: AuthPrincipal = {
   sub: serviceAccountId,
 };
 
-const editor = {
-  ...usersFactory.build({
-    email: 'octo@example.com',
-    githubUsername: 'octocat',
-  }),
-  roles: [],
-};
+const editor = usersFactory.build({
+  email: 'octo@example.com',
+  githubUsername: 'octocat',
+});
 
-const serviceAccount: ServiceAccount = {
-  actingUserId: null,
-  createdAt: new Date('2026-01-01T00:00:00.000Z'),
-  credentials: [],
-  description: null,
-  disabledAt: null,
+const serviceAccount: ServiceAccount = serviceAccountsFactory.build({
   id: serviceAccountId,
   name: 'ot-mcp',
-  roles: [],
-};
+});
 
 const createInput = {
   authorSlug: undefined,
@@ -162,9 +155,9 @@ describe('BlogAdminResolver', () => {
   const blogPostsRepository = createBlogPostsRepositoryMock();
   const blogAuthorsRepository = createBlogAuthorsRepositoryMock();
   const blogTagsRepository = createBlogTagsRepositoryMock();
-  const rolesService = createMock<RolesService>();
-  const usersService = createMock<UsersService>();
-  const serviceAccountsService = createMock<ServiceAccountsService>();
+  const rolesRepository = createRolesRepositoryMock();
+  const usersRepository = createUsersRepositoryMock();
+  const serviceAccountsRepository = createServiceAccountsRepositoryMock();
   const jwtAuthGuard = createMock<GqlJwtAuthGuard>();
 
   let resolver: BlogAdminResolver;
@@ -183,9 +176,12 @@ describe('BlogAdminResolver', () => {
         { provide: BlogPostsRepository, useValue: blogPostsRepository },
         { provide: BlogAuthorsRepository, useValue: blogAuthorsRepository },
         { provide: BlogTagsRepository, useValue: blogTagsRepository },
-        { provide: RolesService, useValue: rolesService },
-        { provide: UsersService, useValue: usersService },
-        { provide: ServiceAccountsService, useValue: serviceAccountsService },
+        { provide: RolesRepository, useValue: rolesRepository },
+        { provide: UsersRepository, useValue: usersRepository },
+        {
+          provide: ServiceAccountsRepository,
+          useValue: serviceAccountsRepository,
+        },
         { provide: GqlJwtAuthGuard, useValue: jwtAuthGuard },
         {
           provide: GlobalClsAuthHook,
@@ -206,10 +202,8 @@ describe('BlogAdminResolver', () => {
     permissionsGuard = app.get(GqlPermissionsGuard);
 
     // Identity lookups default to a known editor; individual tests override.
-    vi.mocked(usersService.findById).mockResolvedValue(editor);
-    vi.mocked(serviceAccountsService.findById).mockResolvedValue(
-      serviceAccount,
-    );
+    usersRepository.findOne.mockResolvedValue(editor);
+    serviceAccountsRepository.findOne.mockResolvedValue(serviceAccount);
   });
 
   describe('authorization', () => {
@@ -242,7 +236,7 @@ describe('BlogAdminResolver', () => {
 
     const asRole = (role: keyof typeof ROLE_PERMISSIONS): void => {
       vi.mocked(jwtAuthGuard.canActivate).mockResolvedValue(true);
-      vi.mocked(rolesService.getPermissionsForUser).mockResolvedValue([
+      rolesRepository.getPermissionsForUser.mockResolvedValue([
         ...ROLE_PERMISSIONS[role],
       ]);
     };
@@ -296,7 +290,7 @@ describe('BlogAdminResolver', () => {
         await expect(runGuards(method, {})).rejects.toBeInstanceOf(
           UnauthorizedException,
         );
-        expect(rolesService.getPermissionsForUser).not.toHaveBeenCalled();
+        expect(rolesRepository.getPermissionsForUser).not.toHaveBeenCalled();
       },
     );
 
@@ -346,9 +340,9 @@ describe('BlogAdminResolver', () => {
 
     test('a service account principal is authorized through its own roles', async () => {
       vi.mocked(jwtAuthGuard.canActivate).mockResolvedValue(true);
-      vi.mocked(rolesService.getPermissionsForServiceAccount).mockResolvedValue(
-        [...ROLE_PERMISSIONS[ROLES.MCP]],
-      );
+      rolesRepository.getPermissionsForServiceAccount.mockResolvedValue([
+        ...ROLE_PERMISSIONS[ROLES.MCP],
+      ]);
 
       await expect(
         runGuards('createBlogPost', { user: serviceAccountPrincipal }),
@@ -356,7 +350,7 @@ describe('BlogAdminResolver', () => {
       await expect(
         runGuards('publishBlogPost', { user: serviceAccountPrincipal }),
       ).rejects.toBeInstanceOf(ForbiddenException);
-      expect(rolesService.getPermissionsForUser).not.toHaveBeenCalled();
+      expect(rolesRepository.getPermissionsForUser).not.toHaveBeenCalled();
     });
   });
 
@@ -489,7 +483,9 @@ describe('BlogAdminResolver', () => {
 
       const result = await resolver.createBlogPost(createInput, userPrincipal);
 
-      expect(usersService.findById).toHaveBeenCalledWith(userId);
+      expect(usersRepository.findOne).toHaveBeenCalledWith({
+        where: { id: userId },
+      });
       expect(blogPostsRepository.createPost).toHaveBeenCalledWith(
         createInput,
         'octocat',
@@ -513,10 +509,10 @@ describe('BlogAdminResolver', () => {
 
       await resolver.createBlogPost(createInput, serviceAccountPrincipal);
 
-      expect(serviceAccountsService.findById).toHaveBeenCalledWith(
-        serviceAccountId,
-      );
-      expect(usersService.findById).not.toHaveBeenCalled();
+      expect(serviceAccountsRepository.findOne).toHaveBeenCalledWith({
+        where: { id: serviceAccountId },
+      });
+      expect(usersRepository.findOne).not.toHaveBeenCalled();
       expect(blogPostsRepository.createPost).toHaveBeenCalledWith(
         createInput,
         'ot-mcp',
@@ -708,7 +704,7 @@ describe('BlogAdminResolver', () => {
     const adminPermissions = [...ROLE_PERMISSIONS[ROLES.ADMIN]];
 
     const setCaller = (permissions: string[]): void => {
-      vi.mocked(rolesService.getPermissionsForServiceAccount).mockResolvedValue(
+      rolesRepository.getPermissionsForServiceAccount.mockResolvedValue(
         permissions,
       );
       vi.mocked(blogPostsRepository.updatePost).mockResolvedValue({
@@ -753,7 +749,7 @@ describe('BlogAdminResolver', () => {
         );
         expect(blogPostsRepository[writeMethod]).toHaveBeenCalledTimes(1);
         expect(
-          rolesService.getPermissionsForServiceAccount,
+          rolesRepository.getPermissionsForServiceAccount,
         ).not.toHaveBeenCalled();
       });
 
@@ -773,7 +769,7 @@ describe('BlogAdminResolver', () => {
           });
           expect(blogPostsRepository[writeMethod]).not.toHaveBeenCalled();
           expect(
-            rolesService.getPermissionsForServiceAccount,
+            rolesRepository.getPermissionsForServiceAccount,
           ).toHaveBeenCalledWith(serviceAccountId);
         },
       );
@@ -806,7 +802,7 @@ describe('BlogAdminResolver', () => {
 
         expect(await run()).toBeInstanceOf(BlogPostNotFoundError);
         expect(
-          rolesService.getPermissionsForServiceAccount,
+          rolesRepository.getPermissionsForServiceAccount,
         ).not.toHaveBeenCalled();
       });
     });
@@ -815,9 +811,7 @@ describe('BlogAdminResolver', () => {
       vi.mocked(blogPostsRepository.findStatusById).mockResolvedValue(
         'PUBLISHED',
       );
-      vi.mocked(rolesService.getPermissionsForUser).mockResolvedValue(
-        adminPermissions,
-      );
+      rolesRepository.getPermissionsForUser.mockResolvedValue(adminPermissions);
       vi.mocked(blogPostsRepository.updatePost).mockResolvedValue({
         kind: 'ok',
         value: post,
@@ -825,7 +819,9 @@ describe('BlogAdminResolver', () => {
 
       await resolver.updateBlogPost(updateInput, userPrincipal);
 
-      expect(rolesService.getPermissionsForUser).toHaveBeenCalledWith(userId);
+      expect(rolesRepository.getPermissionsForUser).toHaveBeenCalledWith(
+        userId,
+      );
       expect(blogPostsRepository.updatePost).toHaveBeenCalledTimes(1);
     });
 

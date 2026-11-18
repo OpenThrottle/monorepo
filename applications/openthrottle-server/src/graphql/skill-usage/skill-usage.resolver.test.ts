@@ -1,9 +1,8 @@
-import { createMock } from '@golevelup/ts-vitest';
 import { BadRequestException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { PERMISSIONS, PERMISSIONS_KEY } from '@openthrottle/nestjs-rbac';
-import { RolesService } from '@openthrottle/nestjs-repositories';
 import {
+  RolesRepository,
   SKILL_USAGE_OUTCOMES,
   SKILL_USAGE_PRIVACY_LEVELS,
   SKILL_USAGE_SCOPES,
@@ -13,6 +12,7 @@ import {
   SkillUsageOutcomesRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import {
+  createRolesRepositoryMock,
   createSkillUsageEventsRepositoryMock,
   createSkillUsageOutcomesRepositoryMock,
 } from '@openthrottle/nestjs-repositories-server/testing';
@@ -67,7 +67,7 @@ describe('SkillUsageResolver', () => {
           provide: SkillUsageOutcomesRepository,
           useValue: skillUsageOutcomes,
         },
-        { provide: RolesService, useValue: createMock<RolesService>() },
+        { provide: RolesRepository, useValue: createRolesRepositoryMock() },
         {
           provide: EffectiveUserResolutionService,
           useValue: { resolveEffectiveUserId },

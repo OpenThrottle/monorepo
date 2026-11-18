@@ -4,6 +4,7 @@
  * the manifest and git state actually on disk (disk is the source of truth).
  */
 
+import { User } from '@openthrottle/nestjs-repositories-server';
 import {
   Column,
   CreateDateColumn,
@@ -14,7 +15,6 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-import { User } from '../users/user.entity.ts';
 import { Repository } from './repository.entity.ts';
 
 export const REPOSITORY_CHECKOUT_KINDS = ['primary', 'worktree'] as const;

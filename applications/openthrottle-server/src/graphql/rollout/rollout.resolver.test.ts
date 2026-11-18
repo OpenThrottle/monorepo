@@ -15,7 +15,8 @@ import {
 } from '@openthrottle/nestjs-auth';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { PERMISSIONS, PERMISSIONS_KEY } from '@openthrottle/nestjs-rbac';
-import { RolesService } from '@openthrottle/nestjs-repositories';
+import { RolesRepository } from '@openthrottle/nestjs-repositories-server';
+import { createRolesRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import type { RolloutFlag } from '@openthrottle/nestjs-rollout';
 import {
   ROLLOUT_BOOLEAN_DEFAULT_FALLTHROUGH,
@@ -108,7 +109,7 @@ describe('RolloutResolver', () => {
         GqlPermissionsGuard,
         { provide: LoggerService, useValue: createMock<LoggerService>() },
         { provide: RolloutService, useValue: mockRolloutService },
-        { provide: RolesService, useValue: createMock<RolesService>() },
+        { provide: RolesRepository, useValue: createRolesRepositoryMock() },
       ],
     }).compile();
 

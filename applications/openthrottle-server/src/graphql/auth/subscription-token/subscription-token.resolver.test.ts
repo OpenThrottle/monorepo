@@ -1,7 +1,8 @@
 import { createMock } from '@golevelup/ts-vitest';
 import type { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import type { UsersService } from '@openthrottle/nestjs-repositories';
+import type { UsersRepository } from '@openthrottle/nestjs-repositories-server';
+import { createUsersRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import { describe, expect, it, vi } from 'vitest';
 
 import { AuthService } from '../auth.service.ts';
@@ -20,8 +21,10 @@ function makeAuthService(jwtService: JwtService, issuer?: string): AuthService {
   const config = createMock<ConfigService>({
     get: vi.fn((key: string) => (key === 'JWT_ISSUER' ? issuer : undefined)),
   });
-  const usersService = createMock<UsersService>();
-  return new AuthService(config, jwtService, usersService);
+  const usersRepository = createMock<UsersRepository>(
+    createUsersRepositoryMock(),
+  );
+  return new AuthService(config, jwtService, usersRepository);
 }
 
 describe('AuthService.signSubscriptionToken', () => {

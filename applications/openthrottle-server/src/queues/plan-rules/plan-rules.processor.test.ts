@@ -14,14 +14,18 @@ import type {
   TagActionRule,
   TagActionRulesService,
   TagsService,
-  User,
-  UsersService,
 } from '@openthrottle/nestjs-repositories';
 import type {
   Plan,
   PlansRepository,
+  UsersRepository,
 } from '@openthrottle/nestjs-repositories-server';
-import { createPlansRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import type { UsersRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import {
+  createPlansRepositoryMock,
+  createUsersRepositoryMock,
+  usersFactory,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 
@@ -74,7 +78,7 @@ describe('PlanRulesProcessor.process', () => {
   let ruleApplicationsService: RuleApplicationsService;
   let tagActionRulesService: TagActionRulesService;
   let tagsService: TagsService;
-  let usersService: UsersService;
+  let users: UsersRepositoryMock;
   let mockRecordStatusChange: Mock<
     WorkLedgerCaptureService['recordStatusChange']
   >;
@@ -96,11 +100,10 @@ describe('PlanRulesProcessor.process', () => {
       findOne: plansFindOne,
     });
 
-    usersService = createMock<UsersService>({
-      findByGithubUsername: vi
-        .fn()
-        .mockResolvedValue(asMock<User>({ id: userId })),
-    });
+    users = createUsersRepositoryMock();
+    users.findByGithubUsername.mockResolvedValue(
+      usersFactory.build({ id: userId }),
+    );
     tagsService = createMock<TagsService>({
       getEffectiveTagSet: vi.fn().mockResolvedValue([
         {
@@ -138,7 +141,7 @@ describe('PlanRulesProcessor.process', () => {
       }),
       tagActionRulesService,
       tagsService,
-      usersService,
+      createMock<UsersRepository>(users),
       createMock<WorkLedgerCaptureService>({
         recordStatusChange: mockRecordStatusChange,
       }),
@@ -387,7 +390,7 @@ describe('PlanRulesProcessor.process', () => {
   });
 
   it('skips when the plan author has no user row (no rules to evaluate)', async () => {
-    vi.mocked(usersService.findByGithubUsername).mockResolvedValue(null);
+    users.findByGithubUsername.mockResolvedValue(null);
 
     const result = await processor.process(buildJob());
 

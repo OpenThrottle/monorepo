@@ -8,8 +8,11 @@ import { randomUUID } from 'node:crypto';
 import { ConflictException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
-import type { User } from '@openthrottle/nestjs-repositories';
-import { UsersService } from '@openthrottle/nestjs-repositories';
+import type { User } from '@openthrottle/nestjs-repositories-server';
+import {
+  hashPassword,
+  UsersRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import { GraphQLError } from 'graphql';
 
 import type { RegisterInput } from './register.input.ts';
@@ -24,7 +27,7 @@ export class AuthService {
   constructor(
     private readonly configService: ConfigService,
     private readonly jwtService: JwtService,
-    private readonly usersService: UsersService,
+    private readonly usersRepository: UsersRepository,
   ) {}
 
   /**
@@ -74,7 +77,7 @@ export class AuthService {
       });
     }
 
-    const existing = await this.usersService.findByEmail(input.email);
+    const existing = await this.usersRepository.findByEmail(input.email);
     if (existing) {
       throw new ConflictException('Email already registered');
     }
@@ -85,8 +88,8 @@ export class AuthService {
       'user';
 
     const githubUsername = `${base}-${randomUUID().slice(0, 8)}`;
-    const passwordHash = await this.usersService.hashPassword(input.password);
-    const user = await this.usersService.create({
+    const passwordHash = await hashPassword(input.password);
+    const user = await this.usersRepository.create({
       email: input.email,
       githubUsername,
       passwordHash,

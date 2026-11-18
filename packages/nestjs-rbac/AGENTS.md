@@ -18,7 +18,7 @@ options builder NestJS apps use at bootstrap.
 - The guards trust `request.user.roles` (a JWT claim fixed at mint time) with no
   server-side lookup — a privilege-escalation hazard wherever roles are DB-managed.
   openthrottle-server's canonical enforcer is its own `GqlPermissionsGuard` (DB-backed via
-  `RolesService`); never substitute these guards for it.
+  `RolesRepository`); never substitute these guards for it.
 - `ROLE_PERMISSIONS` is a default/seed table only, not production truth for DB-backed apps;
   guards accept a custom mapping.
 - Asymmetric semantics: `@Roles(A, B)` grants on ANY listed role (OR); `@PermissionsGuard`

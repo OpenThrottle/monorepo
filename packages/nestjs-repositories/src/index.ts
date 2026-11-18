@@ -189,12 +189,6 @@ export {
   RepositoryCheckout,
 } from './modules/repositories/repository-checkout.entity.ts';
 export { RepositoryCheckoutsService } from './modules/repositories/repository-checkouts/repository-checkouts.service.ts';
-export type { PermissionData } from './modules/roles/permission.entity.ts';
-export { Permission } from './modules/roles/permission.entity.ts';
-export { PermissionsService } from './modules/roles/permissions/permissions.service.ts';
-export type { RoleData } from './modules/roles/role.entity.ts';
-export { Role } from './modules/roles/role.entity.ts';
-export { RolesService } from './modules/roles/roles.service.ts';
 export { ScheduledAgentJobCheckoutPathService } from './modules/scheduled-agent-jobs/checkout-path/checkout-path.service.ts';
 export type {
   ResolveScheduledAgentJobCheckoutPathInput,
@@ -237,23 +231,6 @@ export type {
   UpdateScheduledAgentJobInput,
 } from './modules/scheduled-agent-jobs/scheduled-agent-jobs.types.ts';
 export { schedulerKeyForJob } from './modules/scheduled-agent-jobs/scheduled-agent-jobs.utils.ts';
-export type { ServiceAccountData } from './modules/service-accounts/service-account.entity.ts';
-export { ServiceAccount } from './modules/service-accounts/service-account.entity.ts';
-export type { ServiceAccountCredentialData } from './modules/service-accounts/service-account-credential.entity.ts';
-export { ServiceAccountCredential } from './modules/service-accounts/service-account-credential.entity.ts';
-export { SERVICE_ACCOUNT_BEARER_PREFIX } from './modules/service-accounts/service-accounts.constants.ts';
-export { ServiceAccountsModule } from './modules/service-accounts/service-accounts.module.ts';
-export { ServiceAccountsService } from './modules/service-accounts/service-accounts.service.ts';
-export type {
-  CreateServiceAccountCredentialResult,
-  UpsertServiceAccountCredentialResult,
-  VerifiedServiceAccountCredential,
-} from './modules/service-accounts/service-accounts.types.ts';
-export {
-  formatServiceAccountToken,
-  normalizeServiceAccountBearerToken,
-  parseServiceAccountToken,
-} from './modules/service-accounts/service-accounts.utils.ts';
 export {
   skillAvailabilityPostureSchema,
   skillAvailabilityRuleInputSchema,
@@ -320,9 +297,6 @@ export type {
   UserPreferencesError,
   UserPreferencesErrorReason,
 } from './modules/user-preferences/user-preferences.types.ts';
-export type { UserData } from './modules/users/user.entity.ts';
-export { User } from './modules/users/user.entity.ts';
-export { UsersService } from './modules/users/users.service.ts';
 export { EDITOR_PRESENCE_STATES } from './modules/workspace-settings/editor-presence/editor-presence.constants.ts';
 export type {
   DetectEditorPresenceOptions,
@@ -391,9 +365,48 @@ export type {
   TaskHookScope,
   TaskHookSource,
 } from '@openthrottle/nestjs-repositories-server';
+// Identity tables moved to nestjs-repositories-server (OT plan 8a341c01): re-exported under the
+// same names for non-server consumers. Deprecated for batch 14, when the DataSource moves too.
+export type {
+  CreateServiceAccountCredentialResult,
+  PermissionCreateInput,
+  PermissionData,
+  RoleCreateInput,
+  RoleData,
+  ServiceAccountCreateInput,
+  ServiceAccountCredentialCreateInput,
+  ServiceAccountCredentialData,
+  ServiceAccountData,
+  UpsertServiceAccountCredentialResult,
+  UserCreateInput,
+  UserData,
+  VerifiedServiceAccountCredential,
+} from '@openthrottle/nestjs-repositories-server';
 export type {
   CaptureHealthRow,
   CaptureHealthStream,
+} from '@openthrottle/nestjs-repositories-server';
+export {
+  formatServiceAccountToken,
+  hashPassword,
+  hashSecret,
+  normalizeServiceAccountBearerToken,
+  parseServiceAccountToken,
+  Permission,
+  PermissionsRepository,
+  Role,
+  RolesModule,
+  RolesRepository,
+  SERVICE_ACCOUNT_BEARER_PREFIX,
+  ServiceAccount,
+  ServiceAccountCredential,
+  ServiceAccountCredentialsRepository,
+  ServiceAccountsModule,
+  ServiceAccountsRepository,
+  User,
+  UsersRepository,
+  validatePassword,
+  validateSecret,
 } from '@openthrottle/nestjs-repositories-server';
 export {
   CROSS_PLAN_TASK_LIST_ORDER,
@@ -477,4 +490,3 @@ export {
   serializePlanRunConfigSnapshotForGraphql,
   workflowUiStateFromPlanRunConfig,
 } from '@openthrottle/openthrottle-plan-config';
-// export type { UserFactoryData } from './modules/users/users.factory';

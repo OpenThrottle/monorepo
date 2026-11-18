@@ -2,14 +2,23 @@
  * @description Unit tests for RolesResolver. Guards are mocked so permission checks are not exercised here.
  */
 
-import { createMock } from '@golevelup/ts-vitest';
+import { NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import type { Permission, Role } from '@openthrottle/nestjs-repositories';
 import {
-  PermissionsService,
-  RolesService,
-} from '@openthrottle/nestjs-repositories';
-import { beforeAll, describe, expect, test, vi } from 'vitest';
+  PermissionsRepository,
+  RolesRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import type {
+  PermissionsRepositoryMock,
+  RolesRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
+import {
+  createPermissionsRepositoryMock,
+  createRolesRepositoryMock,
+  permissionsFactory,
+  rolesFactory,
+} from '@openthrottle/nestjs-repositories-server/testing';
+import { beforeEach, describe, expect, test } from 'vitest';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import type {
@@ -26,59 +35,47 @@ const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
 
 describe('RolesResolver', () => {
   let resolver: RolesResolver;
-  let rolesService: RolesService;
-  let permissionsService: PermissionsService;
+  let roles: RolesRepositoryMock;
+  let permissions: PermissionsRepositoryMock;
 
-  const mockRole: Role = {
+  const mockRole = rolesFactory.build({
     createdAt: new Date(FIXED_NOW),
     description: 'Full access',
     id: 'role-uuid',
     name: 'admin',
-    permissions: [],
-    serviceAccounts: [],
     updatedAt: new Date(FIXED_NOW),
-    users: [],
-  };
+  });
 
-  const mockPermission: Permission = {
+  const mockPermission = permissionsFactory.build({
     createdAt: new Date(FIXED_NOW),
     description: 'Read users',
     id: 'perm-uuid',
     name: 'users:read',
-    roles: [],
-  };
-
-  const mockRolesService = createMock<RolesService>({
-    addPermissionToRole: vi.fn().mockResolvedValue(true),
-    assignRoleToUser: vi.fn().mockResolvedValue(true),
-    create: vi.fn().mockResolvedValue(mockRole),
-    delete: vi.fn().mockResolvedValue(true),
-    findAll: vi.fn().mockResolvedValue([mockRole]),
-    findById: vi.fn().mockResolvedValue(mockRole),
-    findRolesForUser: vi.fn().mockResolvedValue([mockRole]),
-    getPermissionsForUser: vi.fn().mockResolvedValue(['users:read']),
-    removePermissionFromRole: vi.fn().mockResolvedValue(true),
-    removeRoleFromUser: vi.fn().mockResolvedValue(true),
-    update: vi.fn().mockResolvedValue(mockRole),
   });
 
-  const mockPermissionsService = createMock<PermissionsService>({
-    findAll: vi.fn().mockResolvedValue([mockPermission]),
-  });
+  beforeEach(async () => {
+    roles = createRolesRepositoryMock();
+    permissions = createPermissionsRepositoryMock();
+    roles.addPermissionToRole.mockResolvedValue(true);
+    roles.assignRoleToUser.mockResolvedValue(true);
+    roles.create.mockResolvedValue(mockRole);
+    roles.findAll.mockResolvedValue([mockRole]);
+    roles.findOne.mockResolvedValue(mockRole);
+    roles.getPermissionsForUser.mockResolvedValue(['users:read']);
+    roles.remove.mockResolvedValue(mockRole);
+    roles.update.mockResolvedValue(mockRole);
+    permissions.findAll.mockResolvedValue([mockPermission]);
 
-  beforeAll(async () => {
     const app = await Test.createTestingModule({
       providers: [
         RolesResolver,
-        { provide: RolesService, useValue: mockRolesService },
-        { provide: PermissionsService, useValue: mockPermissionsService },
+        { provide: RolesRepository, useValue: roles },
+        { provide: PermissionsRepository, useValue: permissions },
         GqlPermissionsGuard,
       ],
     }).compile();
 
     resolver = app.get<RolesResolver>(RolesResolver);
-    rolesService = app.get<RolesService>(RolesService);
-    permissionsService = app.get<PermissionsService>(PermissionsService);
   });
 
   describe('roles', () => {
@@ -86,7 +83,7 @@ describe('RolesResolver', () => {
       const result = await resolver.roles();
       expect(result).toHaveLength(1);
       expect(result[0]?.name).toBe('admin');
-      expect(rolesService.findAll).toHaveBeenCalled();
+      expect(roles.findAll).toHaveBeenCalled();
     });
   });
 
@@ -95,11 +92,14 @@ describe('RolesResolver', () => {
       const result = await resolver.role(mockRole.id);
       expect(result).not.toBeNull();
       expect(result?.id).toBe(mockRole.id);
-      expect(rolesService.findById).toHaveBeenCalledWith(mockRole.id);
+      expect(roles.findOne).toHaveBeenCalledWith({
+        relations: ['permissions'],
+        where: { id: mockRole.id },
+      });
     });
 
     test('returns null when not found', async () => {
-      vi.mocked(rolesService.findById).mockResolvedValueOnce(null);
+      roles.findOne.mockResolvedValueOnce(null);
       const result = await resolver.role('non-existent');
       expect(result).toBeNull();
     });
@@ -110,7 +110,7 @@ describe('RolesResolver', () => {
       const result = await resolver.permissions();
       expect(result).toHaveLength(1);
       expect(result[0]?.name).toBe('users:read');
-      expect(permissionsService.findAll).toHaveBeenCalled();
+      expect(permissions.findAll).toHaveBeenCalled();
     });
   });
 
@@ -118,9 +118,7 @@ describe('RolesResolver', () => {
     test('returns permission names for current user', async () => {
       const result = await resolver.myPermissions('user-uuid');
       expect(result).toContain('users:read');
-      expect(rolesService.getPermissionsForUser).toHaveBeenCalledWith(
-        'user-uuid',
-      );
+      expect(roles.getPermissionsForUser).toHaveBeenCalledWith('user-uuid');
     });
   });
 
@@ -129,7 +127,7 @@ describe('RolesResolver', () => {
       const input: CreateRoleInput = { description: null, name: 'editor' };
       const result = await resolver.createRole(input);
       expect(result.name).toBe(mockRole.name);
-      expect(rolesService.create).toHaveBeenCalledWith({
+      expect(roles.create).toHaveBeenCalledWith({
         description: null,
         name: 'editor',
       });
@@ -144,10 +142,51 @@ describe('RolesResolver', () => {
       };
       const result = await resolver.assignRoleToUser(input);
       expect(result).toBe(true);
-      expect(rolesService.assignRoleToUser).toHaveBeenCalledWith(
+      expect(roles.assignRoleToUser).toHaveBeenCalledWith(
         'user-uuid',
         'role-uuid',
       );
+    });
+  });
+
+  describe('updateRole', () => {
+    test('returns the updated role', async () => {
+      const result = await resolver.updateRole({
+        description: null,
+        id: mockRole.id,
+        name: 'renamed',
+      });
+
+      expect(result?.id).toBe(mockRole.id);
+      expect(roles.update).toHaveBeenCalledWith(mockRole.id, {
+        description: null,
+        name: 'renamed',
+      });
+    });
+
+    test('returns null when the role does not exist', async () => {
+      roles.update.mockRejectedValue(new NotFoundException('role not found'));
+
+      const result = await resolver.updateRole({
+        description: null,
+        id: 'non-existent',
+        name: 'renamed',
+      });
+
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('deleteRole', () => {
+    test('returns true when the role is removed', async () => {
+      await expect(resolver.deleteRole(mockRole.id)).resolves.toBe(true);
+      expect(roles.remove).toHaveBeenCalledWith(mockRole.id);
+    });
+
+    test('returns false when the role does not exist', async () => {
+      roles.remove.mockRejectedValue(new NotFoundException('role not found'));
+
+      await expect(resolver.deleteRole('non-existent')).resolves.toBe(false);
     });
   });
 });

@@ -3,6 +3,8 @@ import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import {
   PlansModule,
+  ServiceAccountsModule,
+  UsersModule,
   WorkArtifactsModule,
 } from '@openthrottle/nestjs-repositories-server';
 
@@ -21,6 +23,8 @@ import { WorkLedgerHarvestProcessor } from './work-ledger-harvest.processor.ts';
 @Module({
   exports: [WorkLedgerHarvestQueueProducerModule],
   imports: [
+    ServiceAccountsModule,
+    UsersModule,
     LoggerModule,
     NestjsRepositoriesModule,
     PlansModule,

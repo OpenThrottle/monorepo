@@ -19,7 +19,6 @@ export type { AgentTokenUsageFactoryData } from '../modules/agent-token-usage/ag
 export { agentTokenUsageFactory } from '../modules/agent-token-usage/agent-token-usage.factory.ts';
 export type { CustomPromptFactoryData } from '../modules/prompts/custom-prompts.factory.ts';
 export { customPromptsFactory } from '../modules/prompts/custom-prompts.factory.ts';
-export { usersFactory } from '../modules/users/users.factory.ts';
 // Moved to nestjs-repositories-server (OT plan f89ee499): re-exported under the same names.
 export {
   planEmbeddingsFactory,
@@ -28,4 +27,5 @@ export {
   projectsFactory,
   taskEmbeddingsFactory,
   tasksFactory,
+  usersFactory,
 } from '@openthrottle/nestjs-repositories-server/testing';

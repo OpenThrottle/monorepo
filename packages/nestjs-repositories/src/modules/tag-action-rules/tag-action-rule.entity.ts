@@ -3,6 +3,7 @@
  */
 
 import { Project } from '@openthrottle/nestjs-repositories-server';
+import { User } from '@openthrottle/nestjs-repositories-server';
 import type { TagActionType } from '@openthrottle/openthrottle-skills';
 import {
   Column,
@@ -13,8 +14,6 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-
-import { User } from '../users/user.entity.ts';
 
 export interface TagActionRuleData {
   readonly actionPayload: unknown;
