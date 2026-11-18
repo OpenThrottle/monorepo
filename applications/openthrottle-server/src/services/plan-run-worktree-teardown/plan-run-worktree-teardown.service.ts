@@ -24,10 +24,8 @@ import { dirname } from 'node:path';
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { RepositoryCheckout } from '@openthrottle/nestjs-repositories';
-import {
-  PlanRunsService,
-  RepositoryCheckoutsService,
-} from '@openthrottle/nestjs-repositories';
+import { RepositoryCheckoutsService } from '@openthrottle/nestjs-repositories';
+import { PlanRunsRepository } from '@openthrottle/nestjs-repositories-server';
 import { In } from 'typeorm';
 
 import { OT_WORKTREE_ACTION } from '../ot-worktree-script/ot-worktree-script.constants.ts';
@@ -80,7 +78,7 @@ export class PlanRunWorktreeTeardownService {
   constructor(
     private readonly logger: LoggerService,
     private readonly checkoutsService: RepositoryCheckoutsService,
-    private readonly planRunsService: PlanRunsService,
+    private readonly planRunsRepository: PlanRunsRepository,
   ) {
     this.logger.debug(`🧩 ${this.name} 🧩`);
   }
@@ -286,7 +284,7 @@ export class PlanRunWorktreeTeardownService {
     const checkouts = await this.findWorktreeCheckouts(worktreePath);
     if (checkouts.length === 0) return false;
 
-    const runs = await this.planRunsService.findUnsettledRunsByCheckoutIds(
+    const runs = await this.planRunsRepository.findUnsettledRunsByCheckoutIds(
       checkouts.map((checkout) => checkout.id),
     );
     return runs.length > 0;

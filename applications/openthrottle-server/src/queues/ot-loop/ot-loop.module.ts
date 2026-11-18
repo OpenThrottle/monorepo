@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
-import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+import { PlanRunsModule } from '@openthrottle/nestjs-repositories-server';
 
 import { PlanRunWorkspaceModule } from '../../services/plan-run-workspace/plan-run-workspace.module.ts';
 import { OtLoopOrchestratorService } from './orchestrator/orchestrator.service.ts';
@@ -13,7 +13,7 @@ import { otLoopExecuteGraphqlProvider } from './ot-loop-execute-graphql.provider
  */
 @Module({
   exports: [OtLoopOrchestratorService],
-  imports: [LoggerModule, NestjsRepositoriesModule, PlanRunWorkspaceModule],
+  imports: [LoggerModule, PlanRunsModule, PlanRunWorkspaceModule],
   providers: [OtLoopOrchestratorService, otLoopExecuteGraphqlProvider],
 })
 export class OtLoopModule {}

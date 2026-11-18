@@ -2,7 +2,7 @@
  * @description Resolver for the plan inbox (plan_messages): post, list, edit, withdraw and claim
  * human STEER / QUEUE / FEEDBACK messages, plus a live subscription. Claiming is the one delivery
  * path — it marks messages DELIVERED and records the audit chunk on the plan output stream in one
- * transaction (PlanMessagesService.claimPendingMessages).
+ * transaction (PlanMessagesRepository.claimPendingMessages).
  */
 
 import {
@@ -36,8 +36,8 @@ import type {
   ClaimPlanMessagesResult,
   PendingPlanMessageWriteResult,
   PlanMessage,
-} from '@openthrottle/nestjs-repositories';
-import { PlanMessagesService } from '@openthrottle/nestjs-repositories';
+} from '@openthrottle/nestjs-repositories-server';
+import { PlanMessagesRepository } from '@openthrottle/nestjs-repositories-server';
 
 import { resolveNoteAuthor } from '../notes/notes.utils.ts';
 import {
@@ -57,7 +57,7 @@ import {
 @Resolver(() => PlanMessageObject)
 export class PlanMessagesResolver {
   constructor(
-    private readonly planMessagesService: PlanMessagesService,
+    private readonly planMessagesRepository: PlanMessagesRepository,
     private readonly globalCls: GlobalClsService,
     @Inject(PUB_SUB) private readonly pubSub: PubSubEngine,
   ) {}
@@ -69,7 +69,7 @@ export class PlanMessagesResolver {
     @Args('input', { type: () => ListPlanMessagesInput })
     input: ListPlanMessagesInput,
   ): Promise<PlanMessage[]> {
-    return this.planMessagesService.listMessages({
+    return this.planMessagesRepository.listMessages({
       kinds: input.kinds ?? null,
       planId: input.planId,
       statuses: input.statuses ?? null,
@@ -99,7 +99,7 @@ export class PlanMessagesResolver {
       );
     }
 
-    const result = await this.planMessagesService.postMessage({
+    const result = await this.planMessagesRepository.postMessage({
       author,
       body,
       kind: input.kind,
@@ -123,7 +123,7 @@ export class PlanMessagesResolver {
     @Args('input', { type: () => UpdatePlanMessageInput })
     input: UpdatePlanMessageInput,
   ): Promise<PlanMessage> {
-    const result = await this.planMessagesService.editPendingMessage({
+    const result = await this.planMessagesRepository.editPendingMessage({
       body: requireBody(input.body),
       id: input.id,
     });
@@ -138,7 +138,7 @@ export class PlanMessagesResolver {
     @Args('input', { type: () => WithdrawPlanMessageInput })
     input: WithdrawPlanMessageInput,
   ): Promise<PlanMessage> {
-    const result = await this.planMessagesService.withdrawPendingMessage(
+    const result = await this.planMessagesRepository.withdrawPendingMessage(
       input.id,
     );
 
@@ -152,7 +152,7 @@ export class PlanMessagesResolver {
     @Args('input', { type: () => ClaimPlanMessagesInput })
     input: ClaimPlanMessagesInput,
   ): Promise<ClaimPlanMessagesResult> {
-    const result = await this.planMessagesService.claimPendingMessages({
+    const result = await this.planMessagesRepository.claimPendingMessages({
       planId: input.planId,
       planRunId: input.planRunId ?? null,
       taskId: input.taskId ?? null,

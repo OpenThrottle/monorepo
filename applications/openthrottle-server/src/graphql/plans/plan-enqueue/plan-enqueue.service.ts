@@ -16,18 +16,20 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import {
+  PLAN_STATUS,
+  RepositoryCheckoutsService,
+} from '@openthrottle/nestjs-repositories';
 import type {
   PlanRunExecutionBackend,
   PlanRunStatus,
   ScheduledRunRef,
-} from '@openthrottle/nestjs-repositories';
+} from '@openthrottle/nestjs-repositories-server';
 import {
   PLAN_RUN_STATUS,
-  PLAN_STATUS,
   PlanRun,
-  PlanRunsService,
-  RepositoryCheckoutsService,
-} from '@openthrottle/nestjs-repositories';
+  PlanRunsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import {
   Plan,
   PlansRepository,
@@ -238,7 +240,7 @@ export class PlanEnqueueService {
     private readonly dataSource: DataSource,
     private readonly logger: LoggerService,
     private readonly notificationsService: NotificationsService,
-    private readonly planRunsService: PlanRunsService,
+    private readonly planRunsRepository: PlanRunsRepository,
     private readonly plansRepository: PlansRepository,
     private readonly planStatusService: PlanStatusService,
     private readonly queuesService: QueuesService,
@@ -493,10 +495,11 @@ export class PlanEnqueueService {
         workingDirectory,
       });
 
-    const existing = await this.planRunsService.findByQueueNameAndBullmqJobId(
-      PLANS_QUEUE_NAME,
-      jobId,
-    );
+    const existing =
+      await this.planRunsRepository.findByQueueNameAndBullmqJobId(
+        PLANS_QUEUE_NAME,
+        jobId,
+      );
     if (
       existing?.status === PLAN_RUN_STATUS.SCHEDULED &&
       existing.scheduledFor !== null
@@ -992,7 +995,7 @@ export class PlanEnqueueService {
       });
     }
 
-    return this.planRunsService.cancelScheduledRunsForPlan(planId, manager);
+    return this.planRunsRepository.cancelScheduledRunsForPlan(planId, manager);
   }
 
   /**
@@ -1001,11 +1004,11 @@ export class PlanEnqueueService {
    * violation unreachable through this service; the index is the backstop for any other writer.
    */
   private async recordRunMappingScheduleConflict(
-    run: Parameters<PlanRunsService['recordQueuedRun']>[0],
+    run: Parameters<PlanRunsRepository['recordQueuedRun']>[0],
     manager: EntityManager,
   ): Promise<PlanRun> {
     try {
-      return await this.planRunsService.recordQueuedRun(run, manager);
+      return await this.planRunsRepository.recordQueuedRun(run, manager);
     } catch (error) {
       if (!isOneScheduledRunViolation(error)) throw error;
 
@@ -1196,7 +1199,7 @@ export class PlanEnqueueService {
   }): Promise<ScheduleOutcome> {
     const { planId, planRunId, scheduledFor } = params;
     const delayMs = this.resolveScheduleDelayMs(scheduledFor, Date.now());
-    const run = await this.planRunsService.findById(planRunId);
+    const run = await this.planRunsRepository.findRunById(planRunId);
 
     if (!run || run.planId !== planId) {
       throw new BadRequestException(
@@ -1224,7 +1227,7 @@ export class PlanEnqueueService {
       await job.changeDelay(delayMs);
     }
 
-    const moved = await this.planRunsService.rescheduleScheduledRun(
+    const moved = await this.planRunsRepository.rescheduleScheduledRun(
       planRunId,
       scheduledFor,
     );
@@ -1252,10 +1255,10 @@ export class PlanEnqueueService {
    * 2. Re-reads the run; anything but SCHEDULED (a cancel settled it, or it already fired) returns
    *    `not_scheduled` without writing.
    * 3. Decides with {@link decideScheduledPlanRunFire} from the run's lateness, whether the plan has
-   *    another active run ({@link PlanRunsService.hasActiveRun}), and whether it has a task left to
+   *    another active run ({@link PlanRunsRepository.hasActiveRun}), and whether it has a task left to
    *    run (one in {@link ENQUEUE_TASK_STATUSES_TO_RESET} or already QUEUED — exactly the tasks the
    *    run would pick up).
-   * 4. Applies it through {@link PlanRunsService.transitionScheduledRun}, the atomic
+   * 4. Applies it through {@link PlanRunsRepository.transitionScheduledRun}, the atomic
    *    `... WHERE status = 'SCHEDULED'` update that a concurrent cancel races: `fire` claims the row
    *    QUEUED, `missed`/`superseded` settle it MISSED/SUPERSEDED, `nothing_to_run` settles it
    *    SKIPPED, `workspace_missing` (the caller's `workspaceError`) settles it FAILED, each recording
@@ -1304,7 +1307,7 @@ export class PlanEnqueueService {
           return { kind: 'not_scheduled' };
         }
 
-        const hasActiveRun = await this.planRunsService.hasActiveRun(
+        const hasActiveRun = await this.planRunsRepository.hasActiveRun(
           planId,
           planRunId,
           manager,
@@ -1318,7 +1321,7 @@ export class PlanEnqueueService {
           workspaceError,
         });
 
-        const won = await this.planRunsService.transitionScheduledRun(
+        const won = await this.planRunsRepository.transitionScheduledRun(
           planRunId,
           SCHEDULED_RUN_STATUS_BY_DECISION[decision.kind],
           manager,

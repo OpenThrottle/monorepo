@@ -18,8 +18,6 @@ import { EvalDatasetsModule } from './modules/eval-datasets/eval-datasets.module
 import { EvalHumanLabelsModule } from './modules/eval-human-labels/eval-human-labels.module.ts';
 import { EvalJudgeCalibrationsModule } from './modules/eval-judge-calibrations/eval-judge-calibrations.module.ts';
 import { EvalRunsModule } from './modules/eval-runs/eval-runs.module.ts';
-import { PlanMessagesModule } from './modules/plan-messages/plan-messages.module.ts';
-import { PlanRunsModule } from './modules/plan-runs/plan-runs.module.ts';
 import { ProjectSkillsModule } from './modules/project-skills/project-skills.module.ts';
 import { CustomPromptsModule } from './modules/prompts/prompts.module.ts';
 import { RepositoriesModule } from './modules/repositories/repositories.module.ts';
@@ -46,8 +44,6 @@ import { getTypeOrmOptions } from './nestjs-repositories.utils.ts';
     EvalJudgeCalibrationsModule,
     EvalRunsModule,
     PermissionsModule,
-    PlanMessagesModule,
-    PlanRunsModule,
     ProjectSkillsModule,
     RepositoriesModule,
     RolesModule,
@@ -84,8 +80,6 @@ import { getTypeOrmOptions } from './nestjs-repositories.utils.ts';
     EvalRunsModule,
     LoggerModule,
     PermissionsModule,
-    PlanMessagesModule,
-    PlanRunsModule,
     ProjectSkillsModule,
     RepositoriesModule,
     RolesModule,

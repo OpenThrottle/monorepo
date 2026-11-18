@@ -1,20 +1,18 @@
-import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { LoggerService } from '@openthrottle/nestjs-modules';
-import { PlanOutputStreamChunk } from '@openthrottle/nestjs-repositories-server';
-import { Plan } from '@openthrottle/nestjs-repositories-server';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { PlanOutputStreamChunk } from '../plan-output-stream/plan-output-stream-chunk.entity.ts';
+import { Plan } from '../plans/plan.entity.ts';
 import { PlanMessage } from './plan-message.entity.ts';
-import { planMessageFactory } from './plan-message.factory.ts';
 import {
   PLAN_MESSAGE_KIND,
   PLAN_MESSAGE_STATUS,
 } from './plan-messages.constants.ts';
-import { PlanMessagesService } from './plan-messages.service.ts';
+import { planMessagesFactory } from './plan-messages.factory.ts';
+import { PlanMessagesRepository } from './plan-messages.repository.ts';
 
-describe('PlanMessagesService', () => {
+describe('PlanMessagesRepository', () => {
   const planId = 'a1a2a3a4-0000-4000-8000-000000000001';
   const planRunId = 'b1b2b3b4-0000-4000-8000-000000000002';
   const taskId = 'c1c2c3c4-0000-4000-8000-000000000003';
@@ -32,7 +30,7 @@ describe('PlanMessagesService', () => {
 
   const mockRepository = {
     create: vi.fn((data: Partial<PlanMessage>) =>
-      planMessageFactory.build(data),
+      planMessagesFactory.build(data),
     ),
     find: vi.fn(),
     findOne: vi.fn(),
@@ -44,16 +42,16 @@ describe('PlanMessagesService', () => {
       transaction: vi.fn(),
     },
     save: vi.fn((entity: PlanMessage) => Promise.resolve(entity)),
+    target: PlanMessage,
     update: vi.fn(),
   };
 
-  let service: PlanMessagesService;
+  let service: PlanMessagesRepository;
 
   beforeAll(async () => {
     const app = await Test.createTestingModule({
       providers: [
-        PlanMessagesService,
-        { provide: LoggerService, useValue: createMock<LoggerService>() },
+        PlanMessagesRepository,
         {
           provide: getRepositoryToken(PlanMessage),
           useValue: mockRepository,
@@ -61,7 +59,7 @@ describe('PlanMessagesService', () => {
       ],
     }).compile();
 
-    service = app.get(PlanMessagesService);
+    service = app.get(PlanMessagesRepository);
   });
 
   beforeEach(() => {
@@ -124,7 +122,7 @@ describe('PlanMessagesService', () => {
 
   describe('withdrawPendingMessage', () => {
     it('withdraws a PENDING message', async () => {
-      const message = planMessageFactory.build({
+      const message = planMessagesFactory.build({
         status: PLAN_MESSAGE_STATUS.WITHDRAWN,
       });
       mockRepository.update.mockResolvedValue({ affected: 1 });
@@ -142,7 +140,7 @@ describe('PlanMessagesService', () => {
     it('reports NOT_PENDING for a message that was already delivered', async () => {
       mockRepository.update.mockResolvedValue({ affected: 0 });
       mockRepository.findOne.mockResolvedValue(
-        planMessageFactory.build({ status: PLAN_MESSAGE_STATUS.DELIVERED }),
+        planMessagesFactory.build({ status: PLAN_MESSAGE_STATUS.DELIVERED }),
       );
 
       const result = await service.withdrawPendingMessage('m-1');
@@ -228,14 +226,14 @@ describe('PlanMessagesService', () => {
     });
 
     it('marks messages delivered, STEERs first, and records one audit chunk', async () => {
-      const queue = planMessageFactory.build({
+      const queue = planMessagesFactory.build({
         author: 'alice',
         body: 'Also update the README',
         createdAt: new Date('2026-11-01T00:00:00Z'),
         kind: PLAN_MESSAGE_KIND.QUEUE,
         planId,
       });
-      const steer = planMessageFactory.build({
+      const steer = planMessagesFactory.build({
         author: 'bob',
         body: 'Stop, use the existing helper',
         createdAt: new Date('2026-11-02T00:00:00Z'),

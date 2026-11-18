@@ -1,4 +1,4 @@
-import type { PlanRun } from '@openthrottle/nestjs-repositories';
+import type { PlanRun } from '@openthrottle/nestjs-repositories-server';
 
 import type { DiscoveredWorktree } from '../worktree-discovery/worktree-discovery.types.ts';
 import { WORKTREE_ACTIVITY } from './worktree-activity.constants.ts';

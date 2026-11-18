@@ -15,7 +15,9 @@ import {
   Permission,
   Plan,
   PlanEmbedding,
+  PlanMessage,
   PlanOutputStreamChunk,
+  PlanRun,
   Project,
   Role,
   ServiceAccount,
@@ -48,8 +50,6 @@ import { EvalJudgeCalibration } from './modules/eval-judge-calibrations/eval-jud
 import { EvalGrade } from './modules/eval-runs/eval-grade.entity.ts';
 import { EvalRun } from './modules/eval-runs/eval-run.entity.ts';
 import { EvalTrial } from './modules/eval-runs/eval-trial.entity.ts';
-import { PlanMessage } from './modules/plan-messages/plan-message.entity.ts';
-import { PlanRun } from './modules/plan-runs/plan-run.entity.ts';
 import { ProjectSkill } from './modules/project-skills/project-skill.entity.ts';
 import { CustomPrompt } from './modules/prompts/custom-prompt.entity.ts';
 import { Repository } from './modules/repositories/repository.entity.ts';

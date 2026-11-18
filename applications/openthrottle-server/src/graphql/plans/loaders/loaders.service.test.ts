@@ -1,10 +1,11 @@
 import { createMock } from '@golevelup/ts-vitest';
-import type { PlanRunsService } from '@openthrottle/nestjs-repositories';
+import type { PlanRunsRepository } from '@openthrottle/nestjs-repositories-server';
 import type {
   ProjectsRepository,
   TasksRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import {
+  createPlanRunsRepositoryMock,
   createProjectsRepositoryMock,
   createTasksRepositoryMock,
   projectsFactory,
@@ -22,17 +23,16 @@ describe('PlansLoaders', () => {
   const countByPlanIds = tasksRepository.countByPlanIds;
   const getPlanHooksForPlans = tasksRepository.getPlanHooksForPlans;
 
-  const findEarliestScheduledForByPlanIds = vi.fn();
-  const planRunsService = createMock<PlanRunsService>({
-    findEarliestScheduledForByPlanIds,
-  });
+  const planRunsRepository = createPlanRunsRepositoryMock();
+  const findEarliestScheduledForByPlanIds =
+    planRunsRepository.findEarliestScheduledForByPlanIds;
 
   let loaders: PlansLoaders;
 
   beforeEach(() => {
     vi.clearAllMocks();
     loaders = new PlansLoaders(
-      planRunsService,
+      createMock<PlanRunsRepository>(planRunsRepository),
       asMock<ProjectsRepository>(projectsRepository),
       asMock<TasksRepository>(tasksRepository),
     );

@@ -1,15 +1,16 @@
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
-  PlanRunsService,
   RepositoriesService,
   RepositoryCheckoutsService,
 } from '@openthrottle/nestjs-repositories';
 import {
-  type PlanRun,
   type Repository,
   type RepositoryCheckout,
 } from '@openthrottle/nestjs-repositories';
+import type { PlanRunsRepository } from '@openthrottle/nestjs-repositories-server';
+import { type PlanRun } from '@openthrottle/nestjs-repositories-server';
+import { createPlanRunsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { RepositoryInspectionService } from '../../graphql/repository-inspection/repository-inspection.service.ts';
@@ -102,8 +103,7 @@ const buildSnapshot = (
 };
 
 describe('PlanRunWorktreeCheckoutService', () => {
-  const mockFindById = vi.fn();
-  const mockSetCheckoutAndBranch = vi.fn();
+  const planRunsRepository = createPlanRunsRepositoryMock();
   const mockScan = vi.fn();
   const mockUpsertWorktreeCheckout = vi.fn();
   const mockFindRepositoryById = vi.fn();
@@ -127,10 +127,7 @@ describe('PlanRunWorktreeCheckoutService', () => {
         debug: mockDebug,
         warn: mockWarn,
       }),
-      createMock<PlanRunsService>({
-        findById: mockFindById,
-        setCheckoutAndBranch: mockSetCheckoutAndBranch,
-      }),
+      createMock<PlanRunsRepository>(planRunsRepository),
       createMock<RepositoriesService>({
         findById: mockFindRepositoryById,
         findByNormalizedRemoteUrl: mockFindByNormalizedRemoteUrl,
@@ -159,7 +156,7 @@ describe('PlanRunWorktreeCheckoutService', () => {
         checkoutId: worktreeCheckoutId,
       });
 
-      mockFindById.mockResolvedValueOnce(existing);
+      planRunsRepository.findRunById.mockResolvedValueOnce(existing);
       mockScan.mockResolvedValueOnce(
         buildSnapshot({ currentBranch: worktreeBranch }),
       );
@@ -167,7 +164,7 @@ describe('PlanRunWorktreeCheckoutService', () => {
         createMock<Repository>({ id: REPOSITORY_ID }),
       );
       mockUpsertWorktreeCheckout.mockResolvedValueOnce(checkout);
-      mockSetCheckoutAndBranch.mockResolvedValueOnce(updated);
+      planRunsRepository.setCheckoutAndBranch.mockResolvedValueOnce(updated);
 
       const result = await service.register({
         filesystemPath: WORKTREE_PATH,
@@ -180,10 +177,13 @@ describe('PlanRunWorktreeCheckoutService', () => {
         filesystemPath: WORKTREE_PATH,
         repositoryId: REPOSITORY_ID,
       });
-      expect(mockSetCheckoutAndBranch).toHaveBeenCalledWith(PLAN_RUN_ID, {
-        branch: worktreeBranch,
-        checkoutId: worktreeCheckoutId,
-      });
+      expect(planRunsRepository.setCheckoutAndBranch).toHaveBeenCalledWith(
+        PLAN_RUN_ID,
+        {
+          branch: worktreeBranch,
+          checkoutId: worktreeCheckoutId,
+        },
+      );
       expect(result).toEqual(
         expect.objectContaining({
           branch: worktreeBranch,
@@ -196,7 +196,7 @@ describe('PlanRunWorktreeCheckoutService', () => {
   describe('when the path is not a linked worktree', () => {
     it('soft no-ops and leaves checkout_id unchanged', async () => {
       const run = buildRun({ checkoutId: CHECKOUT_ID });
-      mockFindById.mockResolvedValueOnce(run);
+      planRunsRepository.findRunById.mockResolvedValueOnce(run);
       mockScan.mockResolvedValueOnce(
         buildSnapshot({ isLinkedWorktree: false }),
       );
@@ -210,7 +210,7 @@ describe('PlanRunWorktreeCheckoutService', () => {
       expect(result).toBe(run);
       expect(result?.checkoutId).toBe(CHECKOUT_ID);
       expect(mockUpsertWorktreeCheckout).not.toHaveBeenCalled();
-      expect(mockSetCheckoutAndBranch).not.toHaveBeenCalled();
+      expect(planRunsRepository.setCheckoutAndBranch).not.toHaveBeenCalled();
     });
   });
 
@@ -224,7 +224,7 @@ describe('PlanRunWorktreeCheckoutService', () => {
           workspace: { workingDirectory: WORKTREE_PATH },
         },
       });
-      mockFindById.mockResolvedValueOnce(run);
+      planRunsRepository.findRunById.mockResolvedValueOnce(run);
       mockScan.mockResolvedValueOnce(
         buildSnapshot({ normalizedRemoteUrl: null }),
       );
@@ -238,7 +238,7 @@ describe('PlanRunWorktreeCheckoutService', () => {
       expect(result).toBe(run);
       expect(mockWarn).toHaveBeenCalled();
       expect(mockUpsertWorktreeCheckout).not.toHaveBeenCalled();
-      expect(mockSetCheckoutAndBranch).not.toHaveBeenCalled();
+      expect(planRunsRepository.setCheckoutAndBranch).not.toHaveBeenCalled();
     });
   });
 
@@ -267,7 +267,7 @@ describe('PlanRunWorktreeCheckoutService', () => {
         checkoutId: CHECKOUT_ID,
       });
 
-      mockFindById.mockResolvedValueOnce(run);
+      planRunsRepository.findRunById.mockResolvedValueOnce(run);
       mockScan.mockResolvedValueOnce(
         buildSnapshot({ currentBranch: 'openthrottle/auto-register' }),
       );
@@ -275,7 +275,7 @@ describe('PlanRunWorktreeCheckoutService', () => {
         createMock<Repository>({ id: REPOSITORY_ID }),
       );
       mockUpsertWorktreeCheckout.mockResolvedValueOnce(checkout);
-      mockSetCheckoutAndBranch.mockResolvedValueOnce(updated);
+      planRunsRepository.setCheckoutAndBranch.mockResolvedValueOnce(updated);
 
       const result = await service.register({
         filesystemPath: WORKTREE_PATH,
@@ -288,10 +288,13 @@ describe('PlanRunWorktreeCheckoutService', () => {
         filesystemPath: WORKTREE_PATH,
         repositoryId: REPOSITORY_ID,
       });
-      expect(mockSetCheckoutAndBranch).toHaveBeenCalledWith(PLAN_RUN_ID, {
-        branch: 'openthrottle/auto-register',
-        checkoutId: CHECKOUT_ID,
-      });
+      expect(planRunsRepository.setCheckoutAndBranch).toHaveBeenCalledWith(
+        PLAN_RUN_ID,
+        {
+          branch: 'openthrottle/auto-register',
+          checkoutId: CHECKOUT_ID,
+        },
+      );
       expect(mockFindByNormalizedRemoteUrl).not.toHaveBeenCalled();
       expect(result).toEqual(
         expect.objectContaining({
@@ -312,13 +315,13 @@ describe('PlanRunWorktreeCheckoutService', () => {
       });
       const updated = buildRun({ checkoutId: CHECKOUT_ID });
 
-      mockFindById.mockResolvedValueOnce(run);
+      planRunsRepository.findRunById.mockResolvedValueOnce(run);
       mockScan.mockResolvedValueOnce(buildSnapshot());
       mockFindByNormalizedRemoteUrl.mockResolvedValueOnce(
         createMock<Repository>({ id: REPOSITORY_ID }),
       );
       mockUpsertWorktreeCheckout.mockResolvedValueOnce(checkout);
-      mockSetCheckoutAndBranch.mockResolvedValueOnce(updated);
+      planRunsRepository.setCheckoutAndBranch.mockResolvedValueOnce(updated);
 
       const result = await service.register({
         filesystemPath: WORKTREE_PATH,
@@ -329,10 +332,13 @@ describe('PlanRunWorktreeCheckoutService', () => {
       expect(mockFindByNormalizedRemoteUrl).toHaveBeenCalledWith(
         'https://github.com/openthrottle/monorepo',
       );
-      expect(mockSetCheckoutAndBranch).toHaveBeenCalledWith(PLAN_RUN_ID, {
-        branch: 'main',
-        checkoutId: CHECKOUT_ID,
-      });
+      expect(planRunsRepository.setCheckoutAndBranch).toHaveBeenCalledWith(
+        PLAN_RUN_ID,
+        {
+          branch: 'main',
+          checkoutId: CHECKOUT_ID,
+        },
+      );
       expect(result?.checkoutId).toBe(CHECKOUT_ID);
     });
   });
@@ -340,7 +346,9 @@ describe('PlanRunWorktreeCheckoutService', () => {
   describe('when an unexpected error occurs', () => {
     it('soft-fails, logs, and returns the current run row', async () => {
       const run = buildRun();
-      mockFindById.mockResolvedValueOnce(run).mockResolvedValueOnce(run);
+      planRunsRepository.findRunById
+        .mockResolvedValueOnce(run)
+        .mockResolvedValueOnce(run);
       mockScan.mockRejectedValueOnce(new Error('disk exploded'));
 
       const result = await service.register({

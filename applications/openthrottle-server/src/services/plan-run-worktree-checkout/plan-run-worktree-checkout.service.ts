@@ -13,11 +13,13 @@ import { basename } from 'node:path';
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
-  type PlanRun,
-  PlanRunsService,
   RepositoriesService,
   RepositoryCheckoutsService,
 } from '@openthrottle/nestjs-repositories';
+import {
+  type PlanRun,
+  PlanRunsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 
 import { RepositoryInspectionService } from '../../graphql/repository-inspection/repository-inspection.service.ts';
 import type { RegisterPlanRunWorktreeCheckoutParams } from './plan-run-worktree-checkout.types.ts';
@@ -30,7 +32,7 @@ export class PlanRunWorktreeCheckoutService {
     private readonly checkoutsService: RepositoryCheckoutsService,
     private readonly inspectionService: RepositoryInspectionService,
     private readonly logger: LoggerService,
-    private readonly planRunsService: PlanRunsService,
+    private readonly planRunsRepository: PlanRunsRepository,
     private readonly repositoriesService: RepositoriesService,
   ) {
     this.logger.debug(`🧩 ${this.name} 🧩`);
@@ -50,7 +52,7 @@ export class PlanRunWorktreeCheckoutService {
     const { filesystemPath, planRunId, userId } = params;
 
     try {
-      const run = await this.planRunsService.findById(planRunId);
+      const run = await this.planRunsRepository.findRunById(planRunId);
       if (run === null) {
         this.logger.warn(
           `[${this.name}] plan run ${planRunId} not found; skipping worktree checkout registration`,
@@ -86,7 +88,7 @@ export class PlanRunWorktreeCheckoutService {
         },
       );
 
-      const updated = await this.planRunsService.setCheckoutAndBranch(
+      const updated = await this.planRunsRepository.setCheckoutAndBranch(
         planRunId,
         {
           branch: snapshot.git.currentBranch,
@@ -101,7 +103,7 @@ export class PlanRunWorktreeCheckoutService {
           error instanceof Error ? error.message : String(error)
         }`,
       );
-      return this.planRunsService.findById(planRunId);
+      return this.planRunsRepository.findRunById(planRunId);
     }
   }
 

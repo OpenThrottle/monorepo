@@ -8,15 +8,16 @@
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
-  PlanRunsService,
   RepositoryCheckout,
   RepositoryCheckoutsService,
 } from '@openthrottle/nestjs-repositories';
+import type { PlanRunsRepository } from '@openthrottle/nestjs-repositories-server';
 import type {
   Plan,
   PlansRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import {
+  createPlanRunsRepositoryMock,
   createPlansRepositoryMock,
   plansFactory,
 } from '@openthrottle/nestjs-repositories-server/testing';
@@ -265,9 +266,7 @@ const build = (
         .mockResolvedValue(createMock<WorktreeDiscoveryResult>({ worktrees })),
     }),
     createMock<NotificationsService>({ emitSystemAlert }),
-    createMock<PlanRunsService>({
-      findRecentByPlanId: vi.fn().mockResolvedValue([]),
-    }),
+    createMock<PlanRunsRepository>(createPlanRunsRepositoryMock()),
     asMock<PlansRepository>(plansRepository),
     createMock<PlanRunWorktreeTeardownService>({ assess, teardown }),
   );

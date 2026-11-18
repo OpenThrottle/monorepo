@@ -8,11 +8,14 @@
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
-  PlanRun,
-  PlanRunsService,
   RepositoryCheckout,
   RepositoryCheckoutsService,
 } from '@openthrottle/nestjs-repositories';
+import type {
+  PlanRun,
+  PlanRunsRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import { createPlanRunsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const {
@@ -174,17 +177,18 @@ const build = (options: {
   const deleteWorktreeCheckout = vi.fn().mockResolvedValue(true);
   const find = vi.fn().mockResolvedValue([...options.checkouts]);
 
+  const planRunsRepository = createPlanRunsRepositoryMock();
+  planRunsRepository.findUnsettledRunsByCheckoutIds.mockResolvedValue([
+    ...(options.unsettledRuns ?? []),
+  ]);
+
   const service = new PlanRunWorktreeTeardownService(
     createMock<LoggerService>(),
     createMock<RepositoryCheckoutsService>({
       deleteWorktreeCheckout,
       getRepository: vi.fn().mockReturnValue({ find }),
     }),
-    createMock<PlanRunsService>({
-      findUnsettledRunsByCheckoutIds: vi
-        .fn()
-        .mockResolvedValue([...(options.unsettledRuns ?? [])]),
-    }),
+    createMock<PlanRunsRepository>(planRunsRepository),
   );
   return { deleteWorktreeCheckout, service };
 };
@@ -505,7 +509,7 @@ describe('PlanRunWorktreeTeardownService', () => {
             find: vi.fn().mockRejectedValue(new Error('db down')),
           }),
         }),
-        createMock<PlanRunsService>(),
+        createMock<PlanRunsRepository>(createPlanRunsRepositoryMock()),
       );
 
       const result = await service.teardown({

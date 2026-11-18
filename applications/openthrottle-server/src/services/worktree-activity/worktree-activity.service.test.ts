@@ -12,9 +12,11 @@ import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
   PlanRun,
-  PlanRunsService,
-} from '@openthrottle/nestjs-repositories';
-import { STALE_CUTOFF_MS } from '@openthrottle/nestjs-repositories';
+  PlanRunsRepository,
+  PlanRunsRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server';
+import { STALE_CUTOFF_MS } from '@openthrottle/nestjs-repositories-server';
+import { createPlanRunsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { WORKTREE_DISCOVERY_SOURCE } from '../worktree-discovery/worktree-discovery.constants.ts';
@@ -81,11 +83,13 @@ const build = (options: {
   readonly runsError?: Error;
 }): {
   readonly discover: ReturnType<typeof vi.fn>;
-  readonly findLiveRunsByCheckoutIds: ReturnType<typeof vi.fn>;
+  readonly findLiveRunsByCheckoutIds: PlanRunsRepositoryMock['findLiveRunsByCheckoutIds'];
   readonly service: WorktreeActivityService;
 } => {
   const liveRuns = [...(options.liveRuns ?? [])];
-  const findLiveRunsByCheckoutIds = vi.fn();
+  const planRunsRepository = createPlanRunsRepositoryMock();
+  const findLiveRunsByCheckoutIds =
+    planRunsRepository.findLiveRunsByCheckoutIds;
   if (options.runsError === undefined) {
     findLiveRunsByCheckoutIds.mockResolvedValue(liveRuns);
   } else {
@@ -100,7 +104,7 @@ const build = (options: {
     service: new WorktreeActivityService(
       createMock<LoggerService>(),
       createMock<WorktreeDiscoveryService>({ discover }),
-      createMock<PlanRunsService>({ findLiveRunsByCheckoutIds }),
+      createMock<PlanRunsRepository>(planRunsRepository),
     ),
   };
 };

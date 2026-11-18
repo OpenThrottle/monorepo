@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT } from '@openthrottle/nestjs-auth';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { PlanRunsService } from '@openthrottle/nestjs-repositories';
+import { PlanRunsRepository } from '@openthrottle/nestjs-repositories-server';
 import { PlansRepository } from '@openthrottle/nestjs-repositories-server';
 import type { WorkflowRalphUsageLimit } from '@openthrottle/openthrottle-agentic-ralph';
 import { DataSource } from 'typeorm';
@@ -47,7 +47,7 @@ export class UsageLimitResumeService {
     private readonly logger: LoggerService,
     private readonly notifications: NotificationsService,
     private readonly planEnqueueService: PlanEnqueueService,
-    private readonly planRunsService: PlanRunsService,
+    private readonly planRunsRepository: PlanRunsRepository,
     private readonly plansRepository: PlansRepository,
     private readonly planStatusService: PlanStatusService,
     private readonly statusChangeSystemAccount: StatusChangeSystemAccountService,
@@ -70,7 +70,7 @@ export class UsageLimitResumeService {
     const resetLabel = limit.resetsAt ?? 'an unknown time';
 
     try {
-      const limitedRun = await this.planRunsService.settleRunUsageLimited(
+      const limitedRun = await this.planRunsRepository.settleRunUsageLimited(
         PLANS_QUEUE_NAME,
         jobId,
         { resetsAt: parseInstant(limit.resetsAt), type: limit.rateLimitType },
@@ -94,7 +94,7 @@ export class UsageLimitResumeService {
         where: { id: planId },
       });
       const cancelMarker =
-        await this.planRunsService.readCancelRequested(planId);
+        await this.planRunsRepository.readCancelRequested(planId);
 
       if (plan?.status !== 'IN_PROGRESS' || cancelMarker !== null) {
         return {
@@ -103,7 +103,7 @@ export class UsageLimitResumeService {
         };
       }
 
-      const chainDepth = await this.planRunsService.countUsageLimitedInChain(
+      const chainDepth = await this.planRunsRepository.countUsageLimitedInChain(
         limitedRun.id,
         USAGE_LIMIT_RESUME_MAX_CHAIN_DEPTH,
       );

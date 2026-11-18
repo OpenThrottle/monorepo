@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { LoggerService } from '@openthrottle/nestjs-modules';
-import { PlanOutputStreamChunk } from '@openthrottle/nestjs-repositories-server';
-import { Plan } from '@openthrottle/nestjs-repositories-server';
+import type { CreateModelInput } from '@openthrottle/nestjs-postgres';
+import { BaseRepository } from '@openthrottle/nestjs-postgres';
 import type { FindOptionsWhere } from 'typeorm';
 import { In, Repository } from 'typeorm';
 
+import { PlanOutputStreamChunk } from '../plan-output-stream/plan-output-stream-chunk.entity.ts';
+import { Plan } from '../plans/plan.entity.ts';
 import { PlanMessage } from './plan-message.entity.ts';
 import {
   PLAN_MESSAGE_DELIVERABLE_KINDS,
@@ -15,6 +16,7 @@ import {
 import type {
   ClaimPlanMessagesParams,
   ClaimPlanMessagesResult,
+  EditPendingPlanMessageParams,
   ListPlanMessagesParams,
   PendingPlanMessageWriteResult,
   PostPlanMessageParams,
@@ -56,21 +58,25 @@ const formatAuditContent = (
   return [header, ...entries].join('\n\n');
 };
 
+/**
+ * @description Data access for the openthrottle `plan_messages` table (the plan inbox) on the
+ * default connection: the `BaseRepository` CRUD plus posting, listing, the PENDING-guarded edit and
+ * withdraw, and the transactional claim that delivers STEER/QUEUE messages to a run. A delete is a
+ * hard delete, since messages are history.
+ * @public
+ */
 @Injectable()
-export class PlanMessagesService {
-  constructor(
-    private readonly logger: LoggerService,
-    @InjectRepository(PlanMessage)
-    private readonly planMessageRepository: Repository<PlanMessage>,
-  ) {
-    this.logger.debug('🧩 plan-messages 🧩');
-  }
+export class PlanMessagesRepository extends BaseRepository<
+  PlanMessage,
+  CreateModelInput<PlanMessage>
+> {
+  protected readonly tableName = 'plan_messages';
 
-  /**
-   * @description Returns the TypeORM repository for plan_messages.
-   */
-  getRepository(): Repository<PlanMessage> {
-    return this.planMessageRepository;
+  constructor(
+    @InjectRepository(PlanMessage)
+    repository: Repository<PlanMessage>,
+  ) {
+    super(repository);
   }
 
   /**
@@ -87,7 +93,7 @@ export class PlanMessagesService {
         : {}),
     };
 
-    return this.planMessageRepository.find({
+    return this.repository.find({
       order: { createdAt: 'ASC' },
       where,
     });
@@ -100,7 +106,7 @@ export class PlanMessagesService {
   async postMessage(
     params: PostPlanMessageParams,
   ): Promise<PostPlanMessageResult> {
-    const planExists = await this.planMessageRepository.manager
+    const planExists = await this.repository.manager
       .getRepository(Plan)
       .exists({ where: { id: params.planId } });
 
@@ -110,7 +116,7 @@ export class PlanMessagesService {
     const status = isFeedback
       ? PLAN_MESSAGE_STATUS.RECORDED
       : PLAN_MESSAGE_STATUS.PENDING;
-    const entity = this.planMessageRepository.create({
+    const entity = this.repository.create({
       author: params.author,
       body: params.body,
       deliveredAt: null,
@@ -121,7 +127,7 @@ export class PlanMessagesService {
       status,
       taskId: params.taskId,
     });
-    const message = await this.planMessageRepository.save(entity);
+    const message = await this.repository.save(entity);
 
     return { message, ok: true };
   }
@@ -130,10 +136,9 @@ export class PlanMessagesService {
    * @description Replaces the body of a PENDING message. A delivered, withdrawn or recorded
    * message is immutable.
    */
-  async editPendingMessage(params: {
-    readonly body: string;
-    readonly id: string;
-  }): Promise<PendingPlanMessageWriteResult> {
+  async editPendingMessage(
+    params: EditPendingPlanMessageParams,
+  ): Promise<PendingPlanMessageWriteResult> {
     return this.writePending(params.id, { body: params.body });
   }
 
@@ -155,7 +160,7 @@ export class PlanMessagesService {
   async claimPendingMessages(
     params: ClaimPlanMessagesParams,
   ): Promise<ClaimPlanMessagesResult> {
-    return this.planMessageRepository.manager.transaction(async (manager) => {
+    return this.repository.manager.transaction(async (manager) => {
       const messageRepo = manager.getRepository(PlanMessage);
       const pending = await messageRepo.find({
         lock: { mode: 'pessimistic_write' },
@@ -193,10 +198,6 @@ export class PlanMessagesService {
         }),
       );
 
-      this.logger.debug(
-        `📬 plan ${params.planId}: delivered ${messages.length} inbox message(s)`,
-      );
-
       return { auditChunk, messages };
     });
   }
@@ -209,11 +210,11 @@ export class PlanMessagesService {
     id: string,
     patch: Partial<Pick<PlanMessage, 'body' | 'status'>>,
   ): Promise<PendingPlanMessageWriteResult> {
-    const result = await this.planMessageRepository.update(
+    const result = await this.repository.update(
       { id, status: PLAN_MESSAGE_STATUS.PENDING },
       patch,
     );
-    const message = await this.planMessageRepository.findOne({
+    const message = await this.repository.findOne({
       where: { id },
     });
 

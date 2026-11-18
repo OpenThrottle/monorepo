@@ -35,14 +35,16 @@
 import { Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import type { PlanRun } from '@openthrottle/nestjs-repositories';
 import {
-  PLAN_RUN_STATUS,
-  PlanRunsService,
   RepositoriesService,
   RepositoryCheckoutsService,
 } from '@openthrottle/nestjs-repositories';
+import type { PlanRun } from '@openthrottle/nestjs-repositories-server';
 import type { WorkArtifactSource } from '@openthrottle/nestjs-repositories-server';
+import {
+  PLAN_RUN_STATUS,
+  PlanRunsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import {
   ServiceAccountsRepository,
   WORK_ARTIFACT_SOURCE,
@@ -83,7 +85,7 @@ const BRANCH_LINK_BATCH_SIZE = 25;
 export class SettleRunLedgerService {
   constructor(
     private readonly logger: LoggerService,
-    private readonly planRunsService: PlanRunsService,
+    private readonly planRunsRepository: PlanRunsRepository,
     private readonly repositoriesService: RepositoriesService,
     private readonly repositoryCheckoutsService: RepositoryCheckoutsService,
     private readonly repositoryInspectionService: RepositoryInspectionService,
@@ -179,24 +181,11 @@ export class SettleRunLedgerService {
 
   /** Recent ended runs with a branch whose sessions carry no pull_request artifact. */
   private async findRunsWithoutPullRequest(): Promise<PlanRun[]> {
-    return this.planRunsService
-      .getRepository()
-      .createQueryBuilder('run')
-      .where('run.status IN (:...statuses)', { statuses: ENDED_RUN_STATUSES })
-      .andWhere(`run.branch IS NOT NULL AND run.branch <> ''`)
-      .andWhere('run.updated_at >= :since', {
-        since: new Date(Date.now() - BRANCH_LINK_WINDOW_MS),
-      })
-      .andWhere(
-        `NOT EXISTS (
-          SELECT 1 FROM work_sessions s
-          JOIN work_artifacts a ON a.session_id = s.id
-          WHERE s.plan_run_id = run.id AND a.type = 'pull_request'
-        )`,
-      )
-      .orderBy('run.updated_at', 'DESC')
-      .limit(BRANCH_LINK_BATCH_SIZE)
-      .getMany();
+    return this.planRunsRepository.findEndedRunsWithoutPullRequest({
+      limit: BRANCH_LINK_BATCH_SIZE,
+      statuses: ENDED_RUN_STATUSES,
+      updatedSince: new Date(Date.now() - BRANCH_LINK_WINDOW_MS),
+    });
   }
 
   /** One run: look its branch up on the forge and record the request it finds. */

@@ -2,7 +2,7 @@ import { createMock } from '@golevelup/ts-vitest';
 import type { ConfigService } from '@nestjs/config';
 import type { GitHubService } from '@openthrottle/nestjs-github';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import type { PlanRunsService } from '@openthrottle/nestjs-repositories';
+import type { PlanRunsRepository } from '@openthrottle/nestjs-repositories-server';
 import type {
   WorkArtifact,
   WorkArtifactsRepository,
@@ -12,11 +12,13 @@ import type {
   WorkSessionSubjectsRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import type {
+  PlanRunsRepositoryMock,
   WorkArtifactsRepositoryMock,
   WorkSessionsRepositoryMock,
   WorkSessionSubjectsRepositoryMock,
 } from '@openthrottle/nestjs-repositories-server/testing';
 import {
+  createPlanRunsRepositoryMock,
   createWorkArtifactsRepositoryMock,
   createWorkSessionsRepositoryMock,
   createWorkSessionSubjectsRepositoryMock,
@@ -102,7 +104,7 @@ describe('WorkLedgerVerifyProcessor', () => {
 
     processor = new WorkLedgerVerifyProcessor(
       createMock<LoggerService>(),
-      createMock<PlanRunsService>(),
+      createMock<PlanRunsRepository>(createPlanRunsRepositoryMock()),
       new SourceControlService(
         new GitHubForgeService(githubService),
         new GitLabForgeService(createMock<ConfigService>()),
@@ -255,7 +257,7 @@ describe('WorkLedgerVerifyProcessor pull_request sweep', () => {
   let artifactRepo: WorkArtifactsRepositoryMock;
   let subjectRepo: WorkSessionSubjectsRepositoryMock;
   let taggingEnqueueService: TaggingEnqueueService;
-  let planRunsService: PlanRunsService;
+  let planRunsRepository: PlanRunsRepositoryMock;
   let sessionRepo: WorkSessionsRepositoryMock;
   let processor: WorkLedgerVerifyProcessor;
 
@@ -307,10 +309,10 @@ describe('WorkLedgerVerifyProcessor pull_request sweep', () => {
     ]);
     artifactRepo.findBy.mockResolvedValue([]);
 
-    planRunsService = createMock<PlanRunsService>();
-    vi.mocked(
-      planRunsService.settleUnsupervisedRunForPullRequest,
-    ).mockResolvedValue(null);
+    planRunsRepository = createPlanRunsRepositoryMock();
+    planRunsRepository.settleUnsupervisedRunForPullRequest.mockResolvedValue(
+      null,
+    );
     sessionRepo = createWorkSessionsRepositoryMock();
     sessionRepo.findOne.mockResolvedValue(
       createMock<WorkSession>({ id: 'sess-1', planRunId: 'run-1' }),
@@ -318,7 +320,7 @@ describe('WorkLedgerVerifyProcessor pull_request sweep', () => {
 
     processor = new WorkLedgerVerifyProcessor(
       createMock<LoggerService>(),
-      planRunsService,
+      createMock<PlanRunsRepository>(planRunsRepository),
       new SourceControlService(
         new GitHubForgeService(githubService),
         new GitLabForgeService(createMock<ConfigService>()),
@@ -388,10 +390,10 @@ describe('WorkLedgerVerifyProcessor pull_request sweep', () => {
     await processor.process(job);
 
     expect(
-      planRunsService.settleUnsupervisedRunForPullRequest,
+      planRunsRepository.settleUnsupervisedRunForPullRequest,
     ).toHaveBeenNthCalledWith(1, 'run-1', 'merged');
     expect(
-      planRunsService.settleUnsupervisedRunForPullRequest,
+      planRunsRepository.settleUnsupervisedRunForPullRequest,
     ).toHaveBeenNthCalledWith(2, 'run-1', 'closed');
   });
 
@@ -412,7 +414,7 @@ describe('WorkLedgerVerifyProcessor pull_request sweep', () => {
     await processor.process(job);
 
     expect(
-      planRunsService.settleUnsupervisedRunForPullRequest,
+      planRunsRepository.settleUnsupervisedRunForPullRequest,
     ).not.toHaveBeenCalled();
   });
 

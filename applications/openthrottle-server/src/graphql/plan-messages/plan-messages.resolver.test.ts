@@ -3,15 +3,14 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { PUB_SUB } from '@openthrottle/nestjs-graphql';
 import { GlobalClsService } from '@openthrottle/nestjs-modules';
-import type {
-  PlanMessage,
-  PlanOutputStreamChunk,
-} from '@openthrottle/nestjs-repositories';
+import type { PlanOutputStreamChunk } from '@openthrottle/nestjs-repositories';
+import type { PlanMessage } from '@openthrottle/nestjs-repositories-server';
 import {
   PLAN_MESSAGE_KIND,
   PLAN_MESSAGE_STATUS,
-  PlanMessagesService,
-} from '@openthrottle/nestjs-repositories';
+  PlanMessagesRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import { createPlanMessagesRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { PlanMessagesResolver } from './plan-messages.resolver.ts';
@@ -43,13 +42,7 @@ const mockPubSub = {
   publish: vi.fn().mockResolvedValue(undefined),
 };
 
-const mockService = createMock<PlanMessagesService>({
-  claimPendingMessages: vi.fn(),
-  editPendingMessage: vi.fn(),
-  listMessages: vi.fn(),
-  postMessage: vi.fn(),
-  withdrawPendingMessage: vi.fn(),
-});
+const planMessagesRepository = createPlanMessagesRepositoryMock();
 
 const mockCls = createMock<GlobalClsService>({ get: vi.fn() });
 
@@ -63,7 +56,7 @@ describe('PlanMessagesResolver', () => {
     const app = await Test.createTestingModule({
       providers: [
         PlanMessagesResolver,
-        { provide: PlanMessagesService, useValue: mockService },
+        { provide: PlanMessagesRepository, useValue: planMessagesRepository },
         { provide: GlobalClsService, useValue: mockCls },
         { provide: PUB_SUB, useValue: mockPubSub },
       ],
@@ -74,7 +67,7 @@ describe('PlanMessagesResolver', () => {
 
   describe('planMessages', () => {
     test('passes omitted filters through as null', async () => {
-      vi.mocked(mockService.listMessages).mockResolvedValue([buildMessage()]);
+      planMessagesRepository.listMessages.mockResolvedValue([buildMessage()]);
 
       const result = await resolver.planMessages({
         kinds: null,
@@ -82,7 +75,7 @@ describe('PlanMessagesResolver', () => {
         statuses: null,
       });
 
-      expect(mockService.listMessages).toHaveBeenCalledWith({
+      expect(planMessagesRepository.listMessages).toHaveBeenCalledWith({
         kinds: null,
         planId,
         statuses: null,
@@ -94,7 +87,7 @@ describe('PlanMessagesResolver', () => {
   describe('postPlanMessage', () => {
     test('trims the body, keeps an explicit author and publishes the message', async () => {
       const message = buildMessage();
-      vi.mocked(mockService.postMessage).mockResolvedValue({
+      planMessagesRepository.postMessage.mockResolvedValue({
         message,
         ok: true,
       });
@@ -110,7 +103,7 @@ describe('PlanMessagesResolver', () => {
         undefined,
       );
 
-      expect(mockService.postMessage).toHaveBeenCalledWith({
+      expect(planMessagesRepository.postMessage).toHaveBeenCalledWith({
         author: 'alice',
         body: 'Use the shared helper',
         kind: PLAN_MESSAGE_KIND.STEER,
@@ -132,7 +125,7 @@ describe('PlanMessagesResolver', () => {
         roles: [],
         uuid: 'u1',
       });
-      vi.mocked(mockService.postMessage).mockResolvedValue({
+      planMessagesRepository.postMessage.mockResolvedValue({
         message: buildMessage(),
         ok: true,
       });
@@ -148,7 +141,7 @@ describe('PlanMessagesResolver', () => {
         undefined,
       );
 
-      expect(mockService.postMessage).toHaveBeenCalledWith(
+      expect(planMessagesRepository.postMessage).toHaveBeenCalledWith(
         expect.objectContaining({ author: 'visormatt' }),
       );
     });
@@ -166,7 +159,7 @@ describe('PlanMessagesResolver', () => {
           undefined,
         ),
       ).rejects.toBeInstanceOf(BadRequestException);
-      expect(mockService.postMessage).not.toHaveBeenCalled();
+      expect(planMessagesRepository.postMessage).not.toHaveBeenCalled();
     });
 
     test('rejects a call with no resolvable author', async () => {
@@ -187,7 +180,7 @@ describe('PlanMessagesResolver', () => {
     });
 
     test('maps an unknown plan to NotFound', async () => {
-      vi.mocked(mockService.postMessage).mockResolvedValue({
+      planMessagesRepository.postMessage.mockResolvedValue({
         ok: false,
         reason: 'PLAN_NOT_FOUND',
       });
@@ -211,7 +204,7 @@ describe('PlanMessagesResolver', () => {
   describe('withdrawPlanMessage', () => {
     test('returns and publishes the withdrawn message', async () => {
       const message = buildMessage({ status: PLAN_MESSAGE_STATUS.WITHDRAWN });
-      vi.mocked(mockService.withdrawPendingMessage).mockResolvedValue({
+      planMessagesRepository.withdrawPendingMessage.mockResolvedValue({
         message,
         ok: true,
       });
@@ -223,7 +216,7 @@ describe('PlanMessagesResolver', () => {
     });
 
     test('maps NOT_FOUND to NotFound', async () => {
-      vi.mocked(mockService.withdrawPendingMessage).mockResolvedValue({
+      planMessagesRepository.withdrawPendingMessage.mockResolvedValue({
         ok: false,
         reason: 'NOT_FOUND',
       });
@@ -234,7 +227,7 @@ describe('PlanMessagesResolver', () => {
     });
 
     test('maps NOT_PENDING to BadRequest', async () => {
-      vi.mocked(mockService.withdrawPendingMessage).mockResolvedValue({
+      planMessagesRepository.withdrawPendingMessage.mockResolvedValue({
         ok: false,
         reason: 'NOT_PENDING',
       });
@@ -248,7 +241,7 @@ describe('PlanMessagesResolver', () => {
   describe('updatePlanMessage', () => {
     test('edits a pending message with the trimmed body', async () => {
       const message = buildMessage({ body: 'Edited' });
-      vi.mocked(mockService.editPendingMessage).mockResolvedValue({
+      planMessagesRepository.editPendingMessage.mockResolvedValue({
         message,
         ok: true,
       });
@@ -258,7 +251,7 @@ describe('PlanMessagesResolver', () => {
         id: message.id,
       });
 
-      expect(mockService.editPendingMessage).toHaveBeenCalledWith({
+      expect(planMessagesRepository.editPendingMessage).toHaveBeenCalledWith({
         body: 'Edited',
         id: message.id,
       });
@@ -268,7 +261,7 @@ describe('PlanMessagesResolver', () => {
 
   describe('claimPlanMessages', () => {
     test('publishes nothing when the inbox was empty', async () => {
-      vi.mocked(mockService.claimPendingMessages).mockResolvedValue({
+      planMessagesRepository.claimPendingMessages.mockResolvedValue({
         auditChunk: null,
         messages: [],
       });
@@ -296,14 +289,14 @@ describe('PlanMessagesResolver', () => {
         planId,
         taskId,
       });
-      vi.mocked(mockService.claimPendingMessages).mockResolvedValue({
+      planMessagesRepository.claimPendingMessages.mockResolvedValue({
         auditChunk,
         messages: [delivered],
       });
 
       await resolver.claimPlanMessages({ planId, planRunId, taskId });
 
-      expect(mockService.claimPendingMessages).toHaveBeenCalledWith({
+      expect(planMessagesRepository.claimPendingMessages).toHaveBeenCalledWith({
         planId,
         planRunId,
         taskId,

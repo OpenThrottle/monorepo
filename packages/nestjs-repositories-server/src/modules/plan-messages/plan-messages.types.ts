@@ -1,15 +1,19 @@
 /**
- * @description Types for the plan inbox (plan_messages, migration 144) shared by PlanMessagesService
- * and its callers.
+ * @description Types for the plan inbox (plan_messages, migration 144) shared by
+ * PlanMessagesRepository and its callers.
  */
 
-import type { PlanOutputStreamChunk } from '@openthrottle/nestjs-repositories-server';
+import type { CreateModelInput } from '@openthrottle/nestjs-postgres';
+import type { BaseRepositoryMock } from '@openthrottle/nestjs-postgres/testing';
+import type { Mock } from 'vitest';
 
+import type { PlanOutputStreamChunk } from '../plan-output-stream/plan-output-stream-chunk.entity.ts';
 import type { PlanMessage } from './plan-message.entity.ts';
 import type {
   PLAN_MESSAGE_KIND,
   PLAN_MESSAGE_STATUS,
 } from './plan-messages.constants.ts';
+import type { PlanMessagesRepository } from './plan-messages.repository.ts';
 
 /** @public */
 export type PlanMessageKind =
@@ -64,3 +68,34 @@ export type PendingPlanMessageWriteResult =
 export type PostPlanMessageResult =
   | { readonly message: PlanMessage; readonly ok: true }
   | { readonly ok: false; readonly reason: 'PLAN_NOT_FOUND' };
+
+/**
+ * @description Input for {@link PlanMessagesRepository.editPendingMessage}.
+ * @public
+ */
+export interface EditPendingPlanMessageParams {
+  readonly body: string;
+  readonly id: string;
+}
+
+/**
+ * @description A {@link PlanMessagesRepository} mock: every inherited `BaseRepository` method plus
+ * the plan-inbox ones.
+ * @public
+ */
+export interface PlanMessagesRepositoryMock extends BaseRepositoryMock<
+  PlanMessage,
+  CreateModelInput<PlanMessage>
+> {
+  readonly claimPendingMessages: Mock<
+    PlanMessagesRepository['claimPendingMessages']
+  >;
+  readonly editPendingMessage: Mock<
+    PlanMessagesRepository['editPendingMessage']
+  >;
+  readonly listMessages: Mock<PlanMessagesRepository['listMessages']>;
+  readonly postMessage: Mock<PlanMessagesRepository['postMessage']>;
+  readonly withdrawPendingMessage: Mock<
+    PlanMessagesRepository['withdrawPendingMessage']
+  >;
+}

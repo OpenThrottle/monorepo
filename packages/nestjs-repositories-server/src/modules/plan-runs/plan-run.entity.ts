@@ -1,47 +1,20 @@
 /**
- * @description TypeORM entity for OpenThrottle plan_runs table. Matches databases/openthrottle/migrations/038 (+ 047, 053, 076, 080, 087, 110, 138, 140).
+ * @description TypeORM entity for the openthrottle `plan_runs` table. Extends
+ * `BaseHardDeleteModel`: a run is history and is never user-deleted, so a delete is real (the
+ * only deletes are FK cascades from a removed plan). Its status, heartbeat and cancel marker
+ * are written in place, so it declares its own `updated_at`. Matches
+ * databases/openthrottle/migrations (038, 047, 053, 076, 080, 087, 110, 138, 140, 150, 176).
+ * @public
  */
 
+import { BaseHardDeleteModel } from '@openthrottle/nestjs-postgres';
 import type { PlanRunConfigSnapshot } from '@openthrottle/openthrottle-plan-config';
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { Column, Entity, UpdateDateColumn } from 'typeorm';
 
-export type PlanRunKind = 'orchestrator' | 'spawn';
-/**
- * Supported agent-CLI backends for a plan run. Kept in lockstep with the
- * `openthrottle-drivers` `DRIVER_IDS` set and the `plan_runs_execution_backend_check`
- * constraint (see databases/openthrottle/migrations/156). Declared as a standalone union so the
- * repositories layer stays decoupled from the CLI-invocation package.
- */
-export type PlanRunExecutionBackend =
-  'antigravity' | 'claude' | 'codex' | 'cursor' | 'grok' | 'opencode';
-
-/** Scalar/column fields of PlanRun (no relations) surfaced to the API. */
-export type PlanRunData = Pick<
-  PlanRun,
-  | 'bullmqJobId'
-  | 'cancelRequestedAt'
-  | 'createdAt'
-  | 'executionBackend'
-  | 'heartbeatExpected'
-  | 'hostname'
-  | 'id'
-  | 'lastHeartbeatAt'
-  | 'pid'
-  | 'planId'
-  | 'queueName'
-  | 'runKind'
-  | 'scheduledFor'
-  | 'settledReason'
-  | 'status'
-  | 'updatedAt'
-  | 'workerId'
->;
+import type {
+  PlanRunExecutionBackend,
+  PlanRunKind,
+} from './plan-runs.types.ts';
 
 /**
  * Uniqueness on (queue_name, bullmq_job_id) is enforced by the PARTIAL unique
@@ -51,7 +24,7 @@ export type PlanRunData = Pick<
  * it so detached-CLI rows (bullmqJobId NULL) can coexist.
  */
 @Entity('plan_runs')
-export class PlanRun {
+export class PlanRun extends BaseHardDeleteModel {
   /** User who enqueued this run (null for service-account/system runs or legacy rows). */
   @Column({ name: 'actor_user_id', nullable: true, type: 'uuid' })
   actorUserId!: string | null;
@@ -92,9 +65,6 @@ export class PlanRun {
   @Column({ name: 'checkout_id', nullable: true, type: 'uuid' })
   checkoutId!: string | null;
 
-  @CreateDateColumn({ name: 'created_at', type: 'timestamp with time zone' })
-  createdAt!: Date;
-
   @Column({ default: 'cursor', name: 'execution_backend', type: 'text' })
   executionBackend!: PlanRunExecutionBackend;
 
@@ -113,9 +83,6 @@ export class PlanRun {
   /** Host the executing worker is on; populated at job start, cleared at finish. Null when not actively executing. */
   @Column({ name: 'hostname', nullable: true, type: 'text' })
   hostname!: string | null;
-
-  @PrimaryGeneratedColumn('uuid')
-  id!: string;
 
   /**
    * Liveness heartbeat: bumped by the owning run process (~every 15s) while

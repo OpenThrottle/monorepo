@@ -10,6 +10,7 @@ import { Module } from '@nestjs/common';
 import { GlobalClsModule, LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import {
+  PlanRunsModule,
   ServiceAccountsModule,
   WorkArtifactsModule,
   WorkSessionsModule,
@@ -30,15 +31,16 @@ import { WorkLedgerCaptureService } from './work-ledger-capture/work-ledger-capt
     WorkLedgerCaptureService,
   ],
   imports: [
-    ServiceAccountsModule,
     GlobalClsModule,
     LoggerModule,
     NestjsRepositoriesModule,
+    PlanRunsModule,
     RepositoryInspectionModule,
+    ServiceAccountsModule,
     SourceControlModule,
     WorkArtifactsModule,
-    WorkSessionSubjectsModule,
     WorkSessionsModule,
+    WorkSessionSubjectsModule,
   ],
   providers: [
     SettleRunLedgerService,

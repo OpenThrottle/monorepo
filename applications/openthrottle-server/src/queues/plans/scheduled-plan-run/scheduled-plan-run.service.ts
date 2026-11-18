@@ -2,11 +2,11 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable } from '@nestjs/common';
 import { AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT } from '@openthrottle/nestjs-auth';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import type { PlanRun } from '@openthrottle/nestjs-repositories';
+import type { PlanRun } from '@openthrottle/nestjs-repositories-server';
 import {
   PLAN_RUN_STATUS,
-  PlanRunsService,
-} from '@openthrottle/nestjs-repositories';
+  PlanRunsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import { PlanOutputStreamRepository } from '@openthrottle/nestjs-repositories-server';
 import type { Queue } from 'bullmq';
 
@@ -67,7 +67,7 @@ export class ScheduledPlanRunService {
     private readonly notifications: NotificationsService,
     private readonly planEnqueueService: PlanEnqueueService,
     private readonly planOutputStreamRepository: PlanOutputStreamRepository,
-    private readonly planRunsService: PlanRunsService,
+    private readonly planRunsRepository: PlanRunsRepository,
     @InjectQueue(PLANS_QUEUE_NAME)
     private readonly plansQueue: Queue<RunPlanJobData, PlanRunJobResult | void>,
     private readonly statusChangeSystemAccount: StatusChangeSystemAccountService,
@@ -150,7 +150,7 @@ export class ScheduledPlanRunService {
    * @description Boot reconcile for scheduled runs, following the plans worker's other startup
    * reconciles (and, like them, called only on the repeatables owner — a shared-DB worktree's queue
    * is its own Redis prefix, so it would see every scheduled job as missing and re-project them into
-   * the wrong queue). For each SCHEDULED row with a job id ({@link PlanRunsService.findScheduledRunsWithJob}):
+   * the wrong queue). For each SCHEDULED row with a job id ({@link PlanRunsRepository.findScheduledRunsWithJob}):
    *
    * - its delayed job is still in BullMQ (any state) → untouched;
    * - the job is missing and the run is within the grace window → the job is re-created with the time
@@ -173,7 +173,7 @@ export class ScheduledPlanRunService {
     let runs: PlanRun[];
 
     try {
-      runs = await this.planRunsService.findScheduledRunsWithJob(
+      runs = await this.planRunsRepository.findScheduledRunsWithJob(
         SCHEDULED_PLAN_RUN_RECONCILE_LIMIT,
       );
     } catch (error) {
@@ -209,7 +209,7 @@ export class ScheduledPlanRunService {
       const decision = decideScheduledPlanRunReproject({ now, scheduledFor });
 
       if (decision.kind === 'missed') {
-        const settled = await this.planRunsService.transitionScheduledRun(
+        const settled = await this.planRunsRepository.transitionScheduledRun(
           run.id,
           PLAN_RUN_STATUS.MISSED,
           undefined,

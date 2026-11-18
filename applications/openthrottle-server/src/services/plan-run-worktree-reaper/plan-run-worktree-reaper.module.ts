@@ -5,7 +5,10 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
-import { PlansModule } from '@openthrottle/nestjs-repositories-server';
+import {
+  PlanRunsModule,
+  PlansModule,
+} from '@openthrottle/nestjs-repositories-server';
 
 import { NotificationsModule } from '../../notifications/notifications.module.ts';
 import { PlanRunWorktreeTeardownModule } from '../plan-run-worktree-teardown/plan-run-worktree-teardown.module.ts';
@@ -18,6 +21,7 @@ import { PlanRunWorktreeReaperService } from './plan-run-worktree-reaper.service
     LoggerModule,
     NestjsRepositoriesModule,
     NotificationsModule,
+    PlanRunsModule,
     PlanRunWorktreeTeardownModule,
     PlansModule,
     WorktreeDiscoveryModule,

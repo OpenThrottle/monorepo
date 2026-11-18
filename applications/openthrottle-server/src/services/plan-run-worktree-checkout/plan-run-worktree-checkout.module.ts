@@ -6,13 +6,19 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+import { PlanRunsModule } from '@openthrottle/nestjs-repositories-server';
 
 import { RepositoryInspectionModule } from '../../graphql/repository-inspection/repository-inspection.module.ts';
 import { PlanRunWorktreeCheckoutService } from './plan-run-worktree-checkout.service.ts';
 
 @Module({
   exports: [PlanRunWorktreeCheckoutService],
-  imports: [LoggerModule, NestjsRepositoriesModule, RepositoryInspectionModule],
+  imports: [
+    LoggerModule,
+    NestjsRepositoriesModule,
+    PlanRunsModule,
+    RepositoryInspectionModule,
+  ],
   providers: [PlanRunWorktreeCheckoutService],
 })
 export class PlanRunWorktreeCheckoutModule {}

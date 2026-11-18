@@ -2,8 +2,8 @@ import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { OnApplicationShutdown, OnModuleInit } from '@nestjs/common';
 import { defaultWorkerOptions } from '@openthrottle/nestjs-bullmq';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { PlanRunsService } from '@openthrottle/nestjs-repositories';
 import type { WorkArtifact } from '@openthrottle/nestjs-repositories-server';
+import { PlanRunsRepository } from '@openthrottle/nestjs-repositories-server';
 import {
   WORK_ARTIFACT_VERIFICATION,
   WorkArtifactsRepository,
@@ -75,7 +75,7 @@ export class WorkLedgerVerifyProcessor
 {
   constructor(
     private readonly logger: LoggerService,
-    private readonly planRunsService: PlanRunsService,
+    private readonly planRunsRepository: PlanRunsRepository,
     private readonly sourceControlService: SourceControlService,
     private readonly taggingEnqueueService: TaggingEnqueueService,
     private readonly workArtifactsRepository: WorkArtifactsRepository,
@@ -448,7 +448,7 @@ export class WorkLedgerVerifyProcessor
    * its PR at open already settled; this catches the one that did not — an interactive loop that
    * opened the PR and then lost its turn before settling — so it stops reading as live, its
    * worktree stops reading as busy, and the reaper's teardown guard can finally let it go.
-   * PlanRunsService guards on IN_PROGRESS + unsupervised, so a heartbeating or settled run is
+   * PlanRunsRepository guards on IN_PROGRESS + unsupervised, so a heartbeating or settled run is
    * untouched and a re-sweep is a no-op. Best-effort: returns 1 when it settled a run, else 0.
    */
   private async settleRunForPullRequest(
@@ -464,7 +464,7 @@ export class WorkLedgerVerifyProcessor
       if (planRunId == null) return 0;
 
       const settled =
-        await this.planRunsService.settleUnsupervisedRunForPullRequest(
+        await this.planRunsRepository.settleUnsupervisedRunForPullRequest(
           planRunId,
           outcome,
         );

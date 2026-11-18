@@ -2,8 +2,8 @@ import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
   PlanRun,
-  PlanRunsService,
-} from '@openthrottle/nestjs-repositories';
+  PlanRunsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import type {
   ServiceAccountCredentialsRepository,
   ServiceAccountsRepository,
@@ -13,12 +13,14 @@ import type {
   WorkSessionSubjectsRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import type {
+  PlanRunsRepositoryMock,
   ServiceAccountCredentialsRepositoryMock,
   ServiceAccountsRepositoryMock,
   WorkSessionsRepositoryMock,
   WorkSessionSubjectsRepositoryMock,
 } from '@openthrottle/nestjs-repositories-server/testing';
 import {
+  createPlanRunsRepositoryMock,
   createServiceAccountCredentialsRepositoryMock,
   createServiceAccountsRepositoryMock,
   createWorkSessionsRepositoryMock,
@@ -37,7 +39,7 @@ const QUEUE = 'plans';
 describe('WorkLedgerRunService', () => {
   let sessionRepo: WorkSessionsRepositoryMock;
   let subjectRepo: WorkSessionSubjectsRepositoryMock;
-  let planRunsService: PlanRunsService;
+  let planRunsRepository: PlanRunsRepositoryMock;
   let credentials: ServiceAccountCredentialsRepositoryMock;
   let serviceAccounts: ServiceAccountsRepositoryMock;
   let service: WorkLedgerRunService;
@@ -55,7 +57,7 @@ describe('WorkLedgerRunService', () => {
       createMock<WorkSession>({ id: 'session-1' }),
     );
     subjectRepo.create.mockResolvedValue(createMock<WorkSessionSubject>());
-    planRunsService = createMock<PlanRunsService>();
+    planRunsRepository = createPlanRunsRepositoryMock();
     credentials = createServiceAccountCredentialsRepositoryMock();
     serviceAccounts = createServiceAccountsRepositoryMock();
     serviceAccounts.findByName.mockResolvedValue(
@@ -64,7 +66,7 @@ describe('WorkLedgerRunService', () => {
 
     service = new WorkLedgerRunService(
       createMock<LoggerService>(),
-      planRunsService,
+      createMock<PlanRunsRepository>(planRunsRepository),
       createMock<ServiceAccountCredentialsRepository>(credentials),
       createMock<ServiceAccountsRepository>(serviceAccounts),
       createMock<WorkSessionsRepository>(sessionRepo),
@@ -77,7 +79,7 @@ describe('WorkLedgerRunService', () => {
   });
 
   it('opens a session with the ralph SA actor and verified on_behalf from the plan run', async () => {
-    vi.mocked(planRunsService.findByQueueNameAndBullmqJobId).mockResolvedValue(
+    planRunsRepository.findByQueueNameAndBullmqJobId.mockResolvedValue(
       createMock<PlanRun>({ actorUserId: 'user-9', id: 'run-1' }),
     );
 
@@ -110,7 +112,7 @@ describe('WorkLedgerRunService', () => {
 
   it('actors the session to the worker token principal so it matches the request principal', async () => {
     vi.stubEnv('OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN', 'ot_sa_worker_token');
-    vi.mocked(planRunsService.findByQueueNameAndBullmqJobId).mockResolvedValue(
+    planRunsRepository.findByQueueNameAndBullmqJobId.mockResolvedValue(
       createMock<PlanRun>({ actorUserId: 'user-9', id: 'run-1' }),
     );
     credentials.verifyBearerToken.mockResolvedValue({
@@ -136,7 +138,7 @@ describe('WorkLedgerRunService', () => {
 
   it('falls back to the workflow-ralph SA by name when the worker token does not verify', async () => {
     vi.stubEnv('OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN', 'ot_sa_bad_token');
-    vi.mocked(planRunsService.findByQueueNameAndBullmqJobId).mockResolvedValue(
+    planRunsRepository.findByQueueNameAndBullmqJobId.mockResolvedValue(
       createMock<PlanRun>({ actorUserId: null, id: 'run-3' }),
     );
     credentials.verifyBearerToken.mockResolvedValue(null);
@@ -154,7 +156,7 @@ describe('WorkLedgerRunService', () => {
   });
 
   it('leaves on_behalf unverified when the plan run has no actor user', async () => {
-    vi.mocked(planRunsService.findByQueueNameAndBullmqJobId).mockResolvedValue(
+    planRunsRepository.findByQueueNameAndBullmqJobId.mockResolvedValue(
       createMock<PlanRun>({ actorUserId: null, id: 'run-2' }),
     );
 
@@ -186,7 +188,7 @@ describe('WorkLedgerRunService', () => {
   });
 
   it('never throws when the ledger write fails', async () => {
-    vi.mocked(planRunsService.findByQueueNameAndBullmqJobId).mockResolvedValue(
+    planRunsRepository.findByQueueNameAndBullmqJobId.mockResolvedValue(
       createMock<PlanRun>({ actorUserId: 'user-9', id: 'run-1' }),
     );
     sessionRepo.create.mockRejectedValue(new Error('db down'));

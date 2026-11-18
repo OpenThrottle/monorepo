@@ -1,4 +1,4 @@
-import type { PlanRun } from '@openthrottle/nestjs-repositories';
+import type { PlanRun } from '@openthrottle/nestjs-repositories-server';
 import type { WorkflowCorrelation } from '@openthrottle/openthrottle-agentic-workflow';
 import type { loadWorkflowRalphConfig } from '@tools/workflows';
 

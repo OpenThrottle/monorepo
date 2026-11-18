@@ -4,6 +4,7 @@
  */
 
 import type { Task } from '@openthrottle/nestjs-repositories-server';
+import type { PlanRun } from '@openthrottle/nestjs-repositories-server';
 import type { AtifTrajectory } from '@openthrottle/openthrottle-agentic-utils';
 import {
   Column,
@@ -14,7 +15,6 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
-import type { PlanRun } from '../plan-runs/plan-run.entity.ts';
 import type { AgentTrajectorySource } from './agent-trajectories.types.ts';
 
 /**

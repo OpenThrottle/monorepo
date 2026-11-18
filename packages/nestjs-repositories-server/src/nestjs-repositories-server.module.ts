@@ -8,7 +8,9 @@ import { McpConnectorConnectionsModule } from './modules/mcp-connector-connectio
 import { NotesModule } from './modules/notes/notes.module.ts';
 import { PermissionsModule } from './modules/permissions/permissions.module.ts';
 import { PlanEmbeddingsModule } from './modules/plan-embeddings/plan-embeddings.module.ts';
+import { PlanMessagesModule } from './modules/plan-messages/plan-messages.module.ts';
 import { PlanOutputStreamModule } from './modules/plan-output-stream/plan-output-stream.module.ts';
+import { PlanRunsModule } from './modules/plan-runs/plan-runs.module.ts';
 import { PlansModule } from './modules/plans/plans.module.ts';
 import { ProjectsModule } from './modules/projects/projects.module.ts';
 import { RolesModule } from './modules/roles/roles.module.ts';
@@ -45,7 +47,9 @@ import { WorktreeRemovalsModule } from './modules/worktree-removals/worktree-rem
     NotesModule,
     PermissionsModule,
     PlanEmbeddingsModule,
+    PlanMessagesModule,
     PlanOutputStreamModule,
+    PlanRunsModule,
     PlansModule,
     ProjectsModule,
     RolesModule,
@@ -73,7 +77,9 @@ import { WorktreeRemovalsModule } from './modules/worktree-removals/worktree-rem
     NotesModule,
     PermissionsModule,
     PlanEmbeddingsModule,
+    PlanMessagesModule,
     PlanOutputStreamModule,
+    PlanRunsModule,
     PlansModule,
     ProjectsModule,
     RolesModule,

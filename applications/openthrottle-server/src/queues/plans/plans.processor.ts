@@ -15,13 +15,16 @@ import {
 import { AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT } from '@openthrottle/nestjs-auth';
 import type { KeyedJsonlWriter } from '@openthrottle/nestjs-logging';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import type { PlanRun, PlanRunStatus } from '@openthrottle/nestjs-repositories';
+import type {
+  PlanRun,
+  PlanRunStatus,
+} from '@openthrottle/nestjs-repositories-server';
 import {
   HEARTBEAT_INTERVAL_MS,
   PLAN_RUN_STARTABLE_STATUSES,
   PLAN_RUN_STATUS,
-  PlanRunsService,
-} from '@openthrottle/nestjs-repositories';
+  PlanRunsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import {
   PlanOutputStreamRepository,
   PlansRepository,
@@ -149,7 +152,7 @@ export class PlansProcessor
     private readonly planOutputStreamRepository: PlanOutputStreamRepository,
     private readonly planRunCancellation: PlanRunCancellationService,
     private readonly planRunWorktreeCleanup: PlanRunWorktreeCleanupService,
-    private readonly planRunsService: PlanRunsService,
+    private readonly planRunsRepository: PlanRunsRepository,
     @InjectQueue(PLANS_QUEUE_NAME)
     private readonly plansQueue: Queue<RunPlanJobData, PlanRunJobResult | void>,
     private readonly plansRepository: PlansRepository,
@@ -213,7 +216,7 @@ export class PlansProcessor
         .filter((id): id is string => typeof id === 'string'),
     );
     const planIdsWithLiveDetachedRun =
-      await this.planRunsService.findPlanIdsWithLiveDetachedRun(
+      await this.planRunsRepository.findPlanIdsWithLiveDetachedRun(
         plans.map((plan) => plan.id),
       );
     const orphaned = plans.filter((plan) => {
@@ -293,8 +296,8 @@ export class PlansProcessor
     const [planIdsWithQueuedJob, scheduledByPlan, liveDetached, countsByPlan] =
       await Promise.all([
         this.findPlanIdsWithQueuedJob(undefined),
-        this.planRunsService.findEarliestScheduledForByPlanIds(planIds),
-        this.planRunsService.findPlanIdsWithLiveDetachedRun(planIds),
+        this.planRunsRepository.findEarliestScheduledForByPlanIds(planIds),
+        this.planRunsRepository.findPlanIdsWithLiveDetachedRun(planIds),
         this.loadPlanTaskCounts(planIds),
       ]);
 
@@ -556,7 +559,7 @@ export class PlansProcessor
   /** Reads this job's plan_runs row; null when there is none or the read fails (logged). */
   private async findRunForJobSafe(jobId: string): Promise<PlanRun | null> {
     try {
-      return await this.planRunsService.findByQueueNameAndBullmqJobId(
+      return await this.planRunsRepository.findByQueueNameAndBullmqJobId(
         PLANS_QUEUE_NAME,
         jobId,
       );
@@ -573,7 +576,7 @@ export class PlansProcessor
   /** Settles a SCHEDULED run FAILED under the SCHEDULED guard. Never throws. */
   private async settleScheduledRunFailedSafe(planRunId: string): Promise<void> {
     try {
-      await this.planRunsService.transitionScheduledRun(
+      await this.planRunsRepository.transitionScheduledRun(
         planRunId,
         PLAN_RUN_STATUS.FAILED,
       );
@@ -588,7 +591,7 @@ export class PlansProcessor
   /** Settles this job's run FAILED only while it is still QUEUED / IN_PROGRESS. Never throws. */
   private async settleUnsettledRunFailedSafe(jobId: string): Promise<void> {
     try {
-      await this.planRunsService.settleUnsettledRunByJob(
+      await this.planRunsRepository.settleUnsettledRunByJob(
         PLANS_QUEUE_NAME,
         jobId,
         PLAN_RUN_STATUS.FAILED,
@@ -1086,7 +1089,7 @@ export class PlansProcessor
     bullmqJobId: string,
   ): ReturnType<typeof setInterval> {
     const timer = setInterval(() => {
-      void this.planRunsService
+      void this.planRunsRepository
         .recordHeartbeatByJob(queueName, bullmqJobId)
         .catch((error: unknown) => {
           this.logger.warn(
@@ -1122,7 +1125,7 @@ export class PlansProcessor
     jobId: string,
     workingDirectory: string | undefined,
   ): Promise<boolean> {
-    const run = await this.planRunsService.findByQueueNameAndBullmqJobId(
+    const run = await this.planRunsRepository.findByQueueNameAndBullmqJobId(
       queueName,
       jobId,
     );
@@ -1170,7 +1173,7 @@ export class PlansProcessor
     bullmqJobId: string,
   ): Promise<number | null> {
     try {
-      return await this.planRunsService.markRunStarted({
+      return await this.planRunsRepository.markRunStarted({
         bullmqJobId,
         hostname: os.hostname(),
         pid: process.pid,
@@ -1196,7 +1199,7 @@ export class PlansProcessor
     bullmqJobId: string,
   ): Promise<void> {
     try {
-      await this.planRunsService.clearRunLocation(queueName, bullmqJobId);
+      await this.planRunsRepository.clearRunLocation(queueName, bullmqJobId);
     } catch (error) {
       this.logger.warn(
         `Failed to clear plan_runs location: jobId=${bullmqJobId}, error=${error instanceof Error ? error.message : String(error)}`,
@@ -1224,7 +1227,7 @@ export class PlansProcessor
     },
   ): Promise<void> {
     try {
-      const run = await this.planRunsService.settleRunByJob(
+      const run = await this.planRunsRepository.settleRunByJob(
         queueName,
         bullmqJobId,
         status,

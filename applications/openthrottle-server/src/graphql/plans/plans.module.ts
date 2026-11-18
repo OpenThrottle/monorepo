@@ -6,6 +6,7 @@ import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import {
+  PlanRunsModule,
   PlansModule,
   ProjectsModule,
   TasksModule,
@@ -43,10 +44,11 @@ import { PlansResolver } from './plans.resolver.ts';
     PlanCreationModule,
     PlanEnqueueModule,
     PlanRulesQueueProducerModule,
+    PlanRunsModule,
     PlanRunWorktreeCheckoutModule,
-    PlanStatusModule,
     PlansModule,
     PlansQueueProducerModule,
+    PlanStatusModule,
     ProjectsModule,
     QueuesGraphqlModule,
     SourceControlModule,

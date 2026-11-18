@@ -15,7 +15,7 @@ import {
  * Builds a PENDING QUEUE message by default. Override any field via `.build({ kind: 'STEER' })`.
  * @public
  */
-export const planMessageFactory = Factory.define<PlanMessage>(() => ({
+export const planMessagesFactory = Factory.define<PlanMessage>(() => ({
   author: faker.internet.username(),
   body: faker.lorem.sentence(),
   createdAt: faker.date.past(),

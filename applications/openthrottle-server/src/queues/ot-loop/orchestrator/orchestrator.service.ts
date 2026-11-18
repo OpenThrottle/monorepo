@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { PlanRunsService } from '@openthrottle/nestjs-repositories';
+import { PlanRunsRepository } from '@openthrottle/nestjs-repositories-server';
 import type {
   CommandSequenceResult,
   LoopClient,
@@ -131,7 +131,7 @@ export class OtLoopOrchestratorService {
     @Inject(OT_LOOP_EXECUTE_GRAPHQL)
     private readonly executeGraphqlV2: OtLoopExecuteGraphql,
     private readonly logger: LoggerService,
-    private readonly planRunsService: PlanRunsService,
+    private readonly planRunsRepository: PlanRunsRepository,
     private readonly planRunWorkspaceService: PlanRunWorkspaceService,
   ) {}
 
@@ -381,7 +381,8 @@ export class OtLoopOrchestratorService {
 
           try {
             return (
-              (await this.planRunsService.readCancelRequested(planId)) !== null
+              (await this.planRunsRepository.readCancelRequested(planId)) !==
+              null
             );
           } catch {
             // A transient read failure is "not cancelled" (as in Ralph's marker poll).

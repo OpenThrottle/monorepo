@@ -20,10 +20,8 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { RepositoryCheckout } from '@openthrottle/nestjs-repositories';
-import {
-  PlanRunsService,
-  RepositoryCheckoutsService,
-} from '@openthrottle/nestjs-repositories';
+import { RepositoryCheckoutsService } from '@openthrottle/nestjs-repositories';
+import { PlanRunsRepository } from '@openthrottle/nestjs-repositories-server';
 import { WorktreeRemovalsRepository } from '@openthrottle/nestjs-repositories-server';
 
 import { realPath } from '../paths/real-path/real-path.utils.ts';
@@ -46,7 +44,7 @@ export class WorktreeCheckoutPruneService {
   constructor(
     private readonly logger: LoggerService,
     private readonly checkoutsService: RepositoryCheckoutsService,
-    private readonly planRunsService: PlanRunsService,
+    private readonly planRunsRepository: PlanRunsRepository,
     private readonly worktreeRemovals: WorktreeRemovalsRepository,
   ) {
     this.logger.debug(`🧩 ${this.name} 🧩`);
@@ -209,7 +207,7 @@ export class WorktreeCheckoutPruneService {
   private async checkoutIdsWithUnsettledRuns(
     checkouts: readonly RepositoryCheckout[],
   ): Promise<Set<string>> {
-    const runs = await this.planRunsService.findUnsettledRunsByCheckoutIds(
+    const runs = await this.planRunsRepository.findUnsettledRunsByCheckoutIds(
       checkouts
         .filter((checkout) => checkout.kind === WORKTREE_KIND)
         .map((checkout) => checkout.id),

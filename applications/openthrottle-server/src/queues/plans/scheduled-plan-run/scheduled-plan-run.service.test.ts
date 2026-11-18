@@ -5,10 +5,13 @@ import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
   PlanRun,
-  PlanRunsService,
-} from '@openthrottle/nestjs-repositories';
+  PlanRunsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import type { PlanOutputStreamRepository } from '@openthrottle/nestjs-repositories-server';
-import { createPlanOutputStreamRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import {
+  createPlanOutputStreamRepositoryMock,
+  createPlanRunsRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
 import type { Job, Queue } from 'bullmq';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -44,8 +47,7 @@ describe('ScheduledPlanRunService', () => {
   const mockFireScheduledRun = vi.fn();
   const mockReprojectScheduledRun = vi.fn();
   const mockReleaseScheduledPlan = vi.fn();
-  const mockFindScheduledRunsWithJob = vi.fn();
-  const mockTransitionScheduledRun = vi.fn();
+  const planRunsRepository = createPlanRunsRepositoryMock();
   const mockGetJob = vi.fn();
   const mockOutputCreate = vi.fn();
 
@@ -63,10 +65,7 @@ describe('ScheduledPlanRunService', () => {
       ...createPlanOutputStreamRepositoryMock(),
       create: mockOutputCreate,
     }),
-    createMock<PlanRunsService>({
-      findScheduledRunsWithJob: mockFindScheduledRunsWithJob,
-      transitionScheduledRun: mockTransitionScheduledRun,
-    }),
+    createMock<PlanRunsRepository>(planRunsRepository),
     createMock<Queue<RunPlanJobData, PlanRunJobResult | void>>({
       getJob: mockGetJob,
     }),
@@ -80,8 +79,8 @@ describe('ScheduledPlanRunService', () => {
     mockFireScheduledRun.mockResolvedValue({ kind: 'fire' });
     mockReprojectScheduledRun.mockResolvedValue({ jobId: 'job' });
     mockReleaseScheduledPlan.mockResolvedValue(true);
-    mockFindScheduledRunsWithJob.mockResolvedValue([]);
-    mockTransitionScheduledRun.mockResolvedValue(true);
+    planRunsRepository.findScheduledRunsWithJob.mockResolvedValue([]);
+    planRunsRepository.transitionScheduledRun.mockResolvedValue(true);
     mockGetJob.mockResolvedValue(undefined);
     mockOutputCreate.mockResolvedValue(undefined);
   });
@@ -244,26 +243,26 @@ describe('ScheduledPlanRunService', () => {
   describe('reconcileOnStartup', () => {
     it('leaves a run whose delayed job is still in BullMQ untouched', async () => {
       const run = scheduledRun('present', new Date(NOW.getTime() + HOUR_MS));
-      mockFindScheduledRunsWithJob.mockResolvedValueOnce([run]);
+      planRunsRepository.findScheduledRunsWithJob.mockResolvedValueOnce([run]);
       mockGetJob.mockResolvedValueOnce(createMock<Job>({ id: 'x' }));
 
       expect(await service.reconcileOnStartup(NOW)).toEqual(['job_present']);
       expect(mockGetJob).toHaveBeenCalledWith('scheduled-plan-run-present');
       expect(mockReprojectScheduledRun).not.toHaveBeenCalled();
-      expect(mockTransitionScheduledRun).not.toHaveBeenCalled();
+      expect(planRunsRepository.transitionScheduledRun).not.toHaveBeenCalled();
       expect(mockEmitQueueJobCompleted).not.toHaveBeenCalled();
     });
 
     it('re-enqueues a future run whose job is missing, with the time still left', async () => {
       const run = scheduledRun('future', new Date(NOW.getTime() + 3 * HOUR_MS));
-      mockFindScheduledRunsWithJob.mockResolvedValueOnce([run]);
+      planRunsRepository.findScheduledRunsWithJob.mockResolvedValueOnce([run]);
 
       expect(await service.reconcileOnStartup(NOW)).toEqual(['reprojected']);
       expect(mockReprojectScheduledRun).toHaveBeenCalledWith({
         delayMs: 3 * HOUR_MS,
         run,
       });
-      expect(mockTransitionScheduledRun).not.toHaveBeenCalled();
+      expect(planRunsRepository.transitionScheduledRun).not.toHaveBeenCalled();
     });
 
     it('re-enqueues a due run inside the grace window immediately (delay 0)', async () => {
@@ -271,7 +270,7 @@ describe('ScheduledPlanRunService', () => {
         'late',
         new Date(NOW.getTime() - 40 * MINUTE_MS),
       );
-      mockFindScheduledRunsWithJob.mockResolvedValueOnce([run]);
+      planRunsRepository.findScheduledRunsWithJob.mockResolvedValueOnce([run]);
 
       expect(await service.reconcileOnStartup(NOW)).toEqual(['reprojected']);
       expect(mockReprojectScheduledRun).toHaveBeenCalledWith({
@@ -282,10 +281,10 @@ describe('ScheduledPlanRunService', () => {
 
     it('settles a run past the grace window MISSED and notifies, without re-enqueueing it', async () => {
       const run = scheduledRun('stale', new Date(NOW.getTime() - 2 * HOUR_MS));
-      mockFindScheduledRunsWithJob.mockResolvedValueOnce([run]);
+      planRunsRepository.findScheduledRunsWithJob.mockResolvedValueOnce([run]);
 
       expect(await service.reconcileOnStartup(NOW)).toEqual(['missed']);
-      expect(mockTransitionScheduledRun).toHaveBeenCalledWith(
+      expect(planRunsRepository.transitionScheduledRun).toHaveBeenCalledWith(
         'stale',
         'MISSED',
         undefined,
@@ -310,8 +309,8 @@ describe('ScheduledPlanRunService', () => {
 
     it('does not notify when a cancel settled the row first', async () => {
       const run = scheduledRun('raced', new Date(NOW.getTime() - 2 * HOUR_MS));
-      mockFindScheduledRunsWithJob.mockResolvedValueOnce([run]);
-      mockTransitionScheduledRun.mockResolvedValueOnce(false);
+      planRunsRepository.findScheduledRunsWithJob.mockResolvedValueOnce([run]);
+      planRunsRepository.transitionScheduledRun.mockResolvedValueOnce(false);
 
       expect(await service.reconcileOnStartup(NOW)).toEqual([
         'settled_elsewhere',
@@ -323,7 +322,10 @@ describe('ScheduledPlanRunService', () => {
     it('handles each run on its own: a failed re-projection is logged and left SCHEDULED, the rest proceed', async () => {
       const broken = scheduledRun('broken', new Date(NOW.getTime() + HOUR_MS));
       const fine = scheduledRun('fine', new Date(NOW.getTime() + HOUR_MS));
-      mockFindScheduledRunsWithJob.mockResolvedValueOnce([broken, fine]);
+      planRunsRepository.findScheduledRunsWithJob.mockResolvedValueOnce([
+        broken,
+        fine,
+      ]);
       mockReprojectScheduledRun
         .mockRejectedValueOnce(new Error('workingDirectory does not exist'))
         .mockResolvedValueOnce({ jobId: 'job' });
@@ -332,11 +334,13 @@ describe('ScheduledPlanRunService', () => {
         'failed',
         'reprojected',
       ]);
-      expect(mockTransitionScheduledRun).not.toHaveBeenCalled();
+      expect(planRunsRepository.transitionScheduledRun).not.toHaveBeenCalled();
     });
 
     it('never throws, so it cannot block the server from booting', async () => {
-      mockFindScheduledRunsWithJob.mockRejectedValueOnce(new Error('db down'));
+      planRunsRepository.findScheduledRunsWithJob.mockRejectedValueOnce(
+        new Error('db down'),
+      );
 
       await expect(service.reconcileOnStartup(NOW)).resolves.toEqual([]);
     });
@@ -350,14 +354,16 @@ describe('ScheduledPlanRunService', () => {
         'beside-loop',
         new Date(NOW.getTime() + HOUR_MS),
       );
-      mockFindScheduledRunsWithJob.mockResolvedValueOnce([run]);
+      planRunsRepository.findScheduledRunsWithJob.mockResolvedValueOnce([run]);
 
       await service.reconcileOnStartup(NOW);
 
-      expect(mockFindScheduledRunsWithJob).toHaveBeenCalledWith(500);
+      expect(planRunsRepository.findScheduledRunsWithJob).toHaveBeenCalledWith(
+        500,
+      );
       expect(mockReprojectScheduledRun).toHaveBeenCalledTimes(1);
       expect(mockFireScheduledRun).not.toHaveBeenCalled();
-      expect(mockTransitionScheduledRun).not.toHaveBeenCalled();
+      expect(planRunsRepository.transitionScheduledRun).not.toHaveBeenCalled();
     });
   });
 });

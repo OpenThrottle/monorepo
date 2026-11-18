@@ -5,10 +5,12 @@
 import { Injectable, Scope } from '@nestjs/common';
 import {
   createEntityByIdLoader,
-  PlanRunsService,
-  type ScheduledPlanRun,
   TASK_STATUS,
 } from '@openthrottle/nestjs-repositories';
+import {
+  PlanRunsRepository,
+  type ScheduledPlanRun,
+} from '@openthrottle/nestjs-repositories-server';
 import {
   type GroupedHooks,
   type Project,
@@ -63,7 +65,7 @@ export class PlansLoaders {
   readonly tasksCompletedCountByPlanIdLoader: DataLoader<string, number>;
 
   constructor(
-    planRunsService: PlanRunsService,
+    planRunsRepository: PlanRunsRepository,
     projectsRepository: ProjectsRepository,
     tasksRepository: TasksRepository,
   ) {
@@ -87,7 +89,7 @@ export class PlansLoaders {
       ScheduledPlanRun | null
     >(async (planIds) => {
       const byPlanId =
-        await planRunsService.findEarliestScheduledForByPlanIds(planIds);
+        await planRunsRepository.findEarliestScheduledForByPlanIds(planIds);
 
       return planIds.map((planId) => byPlanId.get(planId) ?? null);
     });

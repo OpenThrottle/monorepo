@@ -1,10 +1,13 @@
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import type { PlanRunsService } from '@openthrottle/nestjs-repositories';
-import type { PlanRun } from '@openthrottle/nestjs-repositories';
-import { PLAN_RUN_SETTLED_REASON } from '@openthrottle/nestjs-repositories';
+import type { PlanRunsRepository } from '@openthrottle/nestjs-repositories-server';
+import type { PlanRun } from '@openthrottle/nestjs-repositories-server';
 import type { PlansRepository } from '@openthrottle/nestjs-repositories-server';
-import { createPlansRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import { PLAN_RUN_SETTLED_REASON } from '@openthrottle/nestjs-repositories-server';
+import {
+  createPlanRunsRepositoryMock,
+  createPlansRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
 import type { DataSource } from 'typeorm';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -38,19 +41,15 @@ const unsupervisedRun = (id: string, planId: string): PlanRun => {
 };
 
 describe('PlanRunsStaleSweepProcessor', () => {
-  let planRunsService: PlanRunsService;
+  const planRunsRepository = createPlanRunsRepositoryMock();
   let plansRepository: PlansRepository;
   let planStatusService: PlanStatusService;
   let statusChangeSystemAccount: StatusChangeSystemAccountService;
   let dataSource: DataSource;
   let processor: PlanRunsStaleSweepProcessor;
 
-  const findStaleInProgressRuns = vi.fn();
   const emitPlanStatusChanged = vi.fn();
   const emitTaskStatusChanged = vi.fn();
-  const findStaleUnsupervisedRuns = vi.fn();
-  const settleStaleRun = vi.fn();
-  const findRecentByPlanId = vi.fn();
   // Bare (untyped) fns for the repo mocks so loose fixtures round-trip without casts.
   const planFindOne = vi.fn();
   // applyBulkTaskStatusChange's select-lock-update: getMany() drives which rows are "affected"
@@ -86,17 +85,21 @@ describe('PlanRunsStaleSweepProcessor', () => {
   const job = createMock<PlanRunsStaleSweepJob>({ id: 'sweep-1' });
 
   beforeEach(() => {
-    findStaleInProgressRuns.mockReset().mockResolvedValue([]);
+    planRunsRepository.findStaleInProgressRuns
+      .mockReset()
+      .mockResolvedValue([]);
     emitPlanStatusChanged.mockReset();
     emitTaskStatusChanged.mockReset();
-    findStaleUnsupervisedRuns.mockReset().mockResolvedValue([]);
+    planRunsRepository.findStaleUnsupervisedRuns
+      .mockReset()
+      .mockResolvedValue([]);
     // settleStaleRun echoes a STALE row by default (successful settle).
-    settleStaleRun
+    planRunsRepository.settleStaleRun
       .mockReset()
       .mockImplementation((id: string) =>
         Promise.resolve(createMock<PlanRun>({ id, status: 'STALE' })),
       );
-    findRecentByPlanId.mockReset().mockResolvedValue([]);
+    planRunsRepository.findRecentByPlanId.mockReset().mockResolvedValue([]);
     planFindOne
       .mockReset()
       .mockResolvedValue({ id: 'plan-1', status: 'IN_PROGRESS' });
@@ -111,12 +114,6 @@ describe('PlanRunsStaleSweepProcessor', () => {
       .mockReset()
       .mockResolvedValue('status-change-system-account-id');
 
-    planRunsService = createMock<PlanRunsService>({
-      findRecentByPlanId,
-      findStaleInProgressRuns,
-      findStaleUnsupervisedRuns,
-      settleStaleRun,
-    });
     plansRepository = asMock<PlansRepository>({
       ...createPlansRepositoryMock(),
       findOne: planFindOne,
@@ -136,7 +133,7 @@ describe('PlanRunsStaleSweepProcessor', () => {
         emitPlanStatusChanged,
         emitTaskStatusChanged,
       }),
-      planRunsService,
+      createMock<PlanRunsRepository>(planRunsRepository),
       plansRepository,
       planStatusService,
       statusChangeSystemAccount,
@@ -148,24 +145,26 @@ describe('PlanRunsStaleSweepProcessor', () => {
   });
 
   it('no-ops when there are no stale runs', async () => {
-    findStaleInProgressRuns.mockResolvedValue([]);
+    planRunsRepository.findStaleInProgressRuns.mockResolvedValue([]);
 
     await processor.process(job);
 
-    expect(settleStaleRun).not.toHaveBeenCalled();
+    expect(planRunsRepository.settleStaleRun).not.toHaveBeenCalled();
     expect(writeGuardedStatus).not.toHaveBeenCalled();
   });
 
   it('settles each stale run to STALE and resets a stranded plan (+ its IN_PROGRESS tasks) to PENDING', async () => {
-    findStaleInProgressRuns.mockResolvedValue([staleRun('run-1', 'plan-1')]);
+    planRunsRepository.findStaleInProgressRuns.mockResolvedValue([
+      staleRun('run-1', 'plan-1'),
+    ]);
     // No live run remains for the plan after the settle.
-    findRecentByPlanId.mockResolvedValue([
+    planRunsRepository.findRecentByPlanId.mockResolvedValue([
       createMock<PlanRun>({ id: 'run-1', status: 'STALE' }),
     ]);
 
     await processor.process(job);
 
-    expect(settleStaleRun).toHaveBeenCalledWith(
+    expect(planRunsRepository.settleStaleRun).toHaveBeenCalledWith(
       'run-1',
       PLAN_RUN_SETTLED_REASON.HEARTBEAT_LOST,
     );
@@ -218,15 +217,17 @@ describe('PlanRunsStaleSweepProcessor', () => {
   });
 
   it('does NOT reset a plan that still has a live (IN_PROGRESS) run', async () => {
-    findStaleInProgressRuns.mockResolvedValue([staleRun('run-old', 'plan-1')]);
+    planRunsRepository.findStaleInProgressRuns.mockResolvedValue([
+      staleRun('run-old', 'plan-1'),
+    ]);
     // A concurrent healthy run exists for the same plan.
-    findRecentByPlanId.mockResolvedValue([
+    planRunsRepository.findRecentByPlanId.mockResolvedValue([
       createMock<PlanRun>({ id: 'run-live', status: 'IN_PROGRESS' }),
     ]);
 
     await processor.process(job);
 
-    expect(settleStaleRun).toHaveBeenCalledWith(
+    expect(planRunsRepository.settleStaleRun).toHaveBeenCalledWith(
       'run-old',
       PLAN_RUN_SETTLED_REASON.HEARTBEAT_LOST,
     );
@@ -235,7 +236,9 @@ describe('PlanRunsStaleSweepProcessor', () => {
   });
 
   it('does NOT reset a plan that is no longer IN_PROGRESS', async () => {
-    findStaleInProgressRuns.mockResolvedValue([staleRun('run-1', 'plan-1')]);
+    planRunsRepository.findStaleInProgressRuns.mockResolvedValue([
+      staleRun('run-1', 'plan-1'),
+    ]);
     planFindOne.mockResolvedValue({ id: 'plan-1', status: 'COMPLETED' });
 
     await processor.process(job);
@@ -244,12 +247,14 @@ describe('PlanRunsStaleSweepProcessor', () => {
   });
 
   it('never resets a SCHEDULED plan (its scheduled run is waiting, not stranded — OT plan 764c7654, D4)', async () => {
-    findStaleInProgressRuns.mockResolvedValue([staleRun('run-1', 'plan-1')]);
+    planRunsRepository.findStaleInProgressRuns.mockResolvedValue([
+      staleRun('run-1', 'plan-1'),
+    ]);
     planFindOne.mockResolvedValue({ id: 'plan-1', status: 'SCHEDULED' });
 
     await processor.process(job);
 
-    expect(settleStaleRun).toHaveBeenCalledWith(
+    expect(planRunsRepository.settleStaleRun).toHaveBeenCalledWith(
       'run-1',
       PLAN_RUN_SETTLED_REASON.HEARTBEAT_LOST,
     );
@@ -258,15 +263,15 @@ describe('PlanRunsStaleSweepProcessor', () => {
   });
 
   it('reconciles each affected plan once even when it had several stale runs', async () => {
-    findStaleInProgressRuns.mockResolvedValue([
+    planRunsRepository.findStaleInProgressRuns.mockResolvedValue([
       staleRun('run-1', 'plan-1'),
       staleRun('run-2', 'plan-1'),
     ]);
-    findRecentByPlanId.mockResolvedValue([]);
+    planRunsRepository.findRecentByPlanId.mockResolvedValue([]);
 
     await processor.process(job);
 
-    expect(settleStaleRun).toHaveBeenCalledTimes(2);
+    expect(planRunsRepository.settleStaleRun).toHaveBeenCalledTimes(2);
     // Both runs share plan-1 → reconcile runs once.
     expect(writeGuardedStatus).toHaveBeenCalledTimes(1);
   });
@@ -274,8 +279,10 @@ describe('PlanRunsStaleSweepProcessor', () => {
   it('does not reset the task when the chokepoint declines the write (raced off IN_PROGRESS under its own lock)', async () => {
     // writeGuardedStatus's own pessimistic-write lock re-check found the row no longer
     // IN_PROGRESS — a race the outer plan.status !== 'IN_PROGRESS' check above cannot see.
-    findStaleInProgressRuns.mockResolvedValue([staleRun('run-1', 'plan-1')]);
-    findRecentByPlanId.mockResolvedValue([]);
+    planRunsRepository.findStaleInProgressRuns.mockResolvedValue([
+      staleRun('run-1', 'plan-1'),
+    ]);
+    planRunsRepository.findRecentByPlanId.mockResolvedValue([]);
     writeGuardedStatus.mockResolvedValue(false);
 
     await processor.process(job);
@@ -292,15 +299,15 @@ describe('PlanRunsStaleSweepProcessor', () => {
     // heartbeat by construction, so sweeping one must settle the RUN ROW and stop there —
     // even though the plan is IN_PROGRESS and has no other live run, which is exactly the
     // shape that WOULD trigger a reset on the heartbeating path.
-    findStaleUnsupervisedRuns.mockResolvedValue([
+    planRunsRepository.findStaleUnsupervisedRuns.mockResolvedValue([
       unsupervisedRun('run-abandoned', 'plan-1'),
     ]);
-    findRecentByPlanId.mockResolvedValue([]);
+    planRunsRepository.findRecentByPlanId.mockResolvedValue([]);
     planFindOne.mockResolvedValue({ id: 'plan-1', status: 'IN_PROGRESS' });
 
     await processor.process(job);
 
-    expect(settleStaleRun).toHaveBeenCalledWith(
+    expect(planRunsRepository.settleStaleRun).toHaveBeenCalledWith(
       'run-abandoned',
       PLAN_RUN_SETTLED_REASON.UNSUPERVISED_AGE,
     );
@@ -312,16 +319,20 @@ describe('PlanRunsStaleSweepProcessor', () => {
     // Passing STALE_CUTOFF_MS here would sweep every healthy interactive loop two minutes in.
     let unsupervisedCutoff: Date | undefined;
     let heartbeatCutoff: Date | undefined;
-    findStaleUnsupervisedRuns.mockImplementation((cutoff: Date) => {
-      unsupervisedCutoff = cutoff;
+    planRunsRepository.findStaleUnsupervisedRuns.mockImplementation(
+      (cutoff: Date) => {
+        unsupervisedCutoff = cutoff;
 
-      return Promise.resolve([]);
-    });
-    findStaleInProgressRuns.mockImplementation((cutoff: Date) => {
-      heartbeatCutoff = cutoff;
+        return Promise.resolve([]);
+      },
+    );
+    planRunsRepository.findStaleInProgressRuns.mockImplementation(
+      (cutoff: Date) => {
+        heartbeatCutoff = cutoff;
 
-      return Promise.resolve([]);
-    });
+        return Promise.resolve([]);
+      },
+    );
 
     vi.useFakeTimers({ toFake: ['Date'] });
     vi.setSystemTime(FIXED_NOW);
@@ -342,11 +353,13 @@ describe('PlanRunsStaleSweepProcessor', () => {
   it('reconciles a heartbeating stale run even when an unsupervised run is swept alongside it', async () => {
     // The two passes are independent: the unsupervised pass must neither suppress the
     // heartbeating pass's reconcile nor contribute a plan id to it.
-    findStaleInProgressRuns.mockResolvedValue([staleRun('run-1', 'plan-1')]);
-    findStaleUnsupervisedRuns.mockResolvedValue([
+    planRunsRepository.findStaleInProgressRuns.mockResolvedValue([
+      staleRun('run-1', 'plan-1'),
+    ]);
+    planRunsRepository.findStaleUnsupervisedRuns.mockResolvedValue([
       unsupervisedRun('run-abandoned', 'plan-2'),
     ]);
-    findRecentByPlanId.mockResolvedValue([]);
+    planRunsRepository.findRecentByPlanId.mockResolvedValue([]);
 
     await processor.process(job);
 
@@ -361,9 +374,11 @@ describe('PlanRunsStaleSweepProcessor', () => {
   });
 
   it('skips reconcile for a run whose status-guarded settle was a no-op (already terminal)', async () => {
-    findStaleInProgressRuns.mockResolvedValue([staleRun('run-1', 'plan-1')]);
+    planRunsRepository.findStaleInProgressRuns.mockResolvedValue([
+      staleRun('run-1', 'plan-1'),
+    ]);
     // A graceful settle won the race: settleStaleRun returns a non-STALE row.
-    settleStaleRun.mockResolvedValue(
+    planRunsRepository.settleStaleRun.mockResolvedValue(
       createMock<PlanRun>({ id: 'run-1', status: 'COMPLETED' }),
     );
 
@@ -380,14 +395,18 @@ describe('PlanRunsStaleSweepProcessor', () => {
     it('leaves a SCHEDULED row older than the cutoff, and its plan and tasks, untouched', async () => {
       // Both finders select IN_PROGRESS only (pinned in plan-runs.service.test.ts), so a table
       // holding nothing but an old SCHEDULED row yields no candidates from either pass.
-      findStaleInProgressRuns.mockResolvedValue([]);
-      findStaleUnsupervisedRuns.mockResolvedValue([]);
+      planRunsRepository.findStaleInProgressRuns.mockResolvedValue([]);
+      planRunsRepository.findStaleUnsupervisedRuns.mockResolvedValue([]);
 
       await processor.process(job);
 
-      expect(findStaleInProgressRuns).toHaveBeenCalledTimes(1);
-      expect(findStaleUnsupervisedRuns).toHaveBeenCalledTimes(1);
-      expect(settleStaleRun).not.toHaveBeenCalled();
+      expect(planRunsRepository.findStaleInProgressRuns).toHaveBeenCalledTimes(
+        1,
+      );
+      expect(
+        planRunsRepository.findStaleUnsupervisedRuns,
+      ).toHaveBeenCalledTimes(1);
+      expect(planRunsRepository.settleStaleRun).not.toHaveBeenCalled();
       expect(planFindOne).not.toHaveBeenCalled();
       expect(writeGuardedStatus).not.toHaveBeenCalled();
       expect(taskManagerTransaction).not.toHaveBeenCalled();
@@ -396,8 +415,10 @@ describe('PlanRunsStaleSweepProcessor', () => {
     it('does not let a waiting SCHEDULED run stop a genuinely stranded plan from being reconciled', async () => {
       // The other direction: a SCHEDULED row is not a live run, so it must not shield a plan whose
       // real run died. Only IN_PROGRESS/QUEUED siblings veto the reset.
-      findStaleInProgressRuns.mockResolvedValue([staleRun('run-1', 'plan-1')]);
-      findRecentByPlanId.mockResolvedValue([
+      planRunsRepository.findStaleInProgressRuns.mockResolvedValue([
+        staleRun('run-1', 'plan-1'),
+      ]);
+      planRunsRepository.findRecentByPlanId.mockResolvedValue([
         createMock<PlanRun>({ id: 'run-scheduled', status: 'SCHEDULED' }),
         createMock<PlanRun>({ id: 'run-1', status: 'STALE' }),
       ]);

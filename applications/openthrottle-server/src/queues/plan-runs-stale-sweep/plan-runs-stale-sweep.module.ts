@@ -1,7 +1,10 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
-import { PlansModule } from '@openthrottle/nestjs-repositories-server';
+import {
+  PlanRunsModule,
+  PlansModule,
+} from '@openthrottle/nestjs-repositories-server';
 
 import { PlanStatusModule } from '../../graphql/plans/plan-status/plan-status.module.ts';
 import { WorkLedgerGraphqlModule } from '../../graphql/work-ledger/work-ledger.module.ts';
@@ -27,6 +30,7 @@ import { PlanRunsStaleSweepRepeatableService } from './repeatable/repeatable.ser
     LoggerModule,
     NestjsRepositoriesModule,
     NotificationsModule,
+    PlanRunsModule,
     PlanRunsStaleSweepQueueProducerModule,
     PlansModule,
     PlanStatusModule,

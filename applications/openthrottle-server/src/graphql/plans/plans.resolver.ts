@@ -26,9 +26,7 @@ import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 import type { PlanStatus, TaskStatus } from '@openthrottle/nestjs-repositories';
 import type {
   PlanJobRunHooksStorage,
-  PlanRun,
   PlanRunConfigStorage,
-  PlanRunExecutionBackend,
 } from '@openthrottle/nestjs-repositories';
 import {
   getDefaultPlanRunConfigStorage,
@@ -38,13 +36,19 @@ import {
   PLAN_STATUS_VALUES,
   planHasCustomRunConfig,
   planRunConfigFromPlanStorage,
-  PlanRunsService,
   serializePlanRunConfigForGraphql,
   serializePlanRunConfigSnapshotForGraphql,
-  STALE_CUTOFF_MS,
   TASK_STATUS_VALUES,
 } from '@openthrottle/nestjs-repositories';
+import type {
+  PlanRun,
+  PlanRunExecutionBackend,
+} from '@openthrottle/nestjs-repositories-server';
 import type { Project, Task } from '@openthrottle/nestjs-repositories-server';
+import {
+  PlanRunsRepository,
+  STALE_CUTOFF_MS,
+} from '@openthrottle/nestjs-repositories-server';
 import {
   PlansRepository,
   TasksRepository,
@@ -320,7 +324,7 @@ export class PlansResolver {
     private readonly planCreationService: PlanCreationService,
     private readonly planEnqueueService: PlanEnqueueService,
     private readonly planRulesEvaluationService: PlanRulesEvaluationService,
-    private readonly planRunsService: PlanRunsService,
+    private readonly planRunsRepository: PlanRunsRepository,
     private readonly planRunWorktreeCheckoutService: PlanRunWorktreeCheckoutService,
     private readonly planStatusService: PlanStatusService,
     private readonly plansRepository: PlansRepository,
@@ -540,7 +544,7 @@ export class PlansResolver {
       MAX_PLAN_RUNS_LIMIT,
     );
     if (input.includeAllScheduled) {
-      const history = await this.planRunsService.findRunHistoryByPlanId(
+      const history = await this.planRunsRepository.findRunHistoryByPlanId(
         input.planId,
         effectiveLimit,
         MAX_PLAN_RUNS_LIMIT,
@@ -549,7 +553,7 @@ export class PlansResolver {
       return history.map((run) => this.mapPlanRunObject(run));
     }
 
-    const runs = await this.planRunsService.findRecentByPlanId(
+    const runs = await this.planRunsRepository.findRecentByPlanId(
       input.planId,
       effectiveLimit,
     );
@@ -575,7 +579,7 @@ export class PlansResolver {
     const actorUserId = resolveActorUserId(actorSub, actorKind);
     await this.assertBackendEnabled(actorUserId, input.executionBackend);
 
-    const run = await this.planRunsService.registerCliRun({
+    const run = await this.planRunsRepository.registerCliRun({
       actorUserId,
       branch: input.branch ?? null,
       executionBackend: input.executionBackend,
@@ -615,7 +619,7 @@ export class PlansResolver {
       type: input.usageLimitType ?? null,
     };
     const limit = isUsageLimited ? reportedLimit : null;
-    const run = await this.planRunsService.settleCliRun(
+    const run = await this.planRunsRepository.settleCliRun(
       input.planRunId,
       status,
       limit,
@@ -644,7 +648,7 @@ export class PlansResolver {
     input: ForceSettlePlanRunInput,
   ): Promise<PlanRunObject | null> {
     const reason = input.reason?.trim();
-    const run = await this.planRunsService.forceSettleUnsupervisedRun(
+    const run = await this.planRunsRepository.forceSettleUnsupervisedRun(
       input.planRunId,
       reason ? reason : undefined,
     );
@@ -660,9 +664,9 @@ export class PlansResolver {
     @Args('input', { type: () => RecordPlanRunHeartbeatInput })
     input: RecordPlanRunHeartbeatInput,
   ): Promise<PlanRunObject | null> {
-    await this.planRunsService.recordHeartbeatById(input.planRunId);
+    await this.planRunsRepository.recordHeartbeatById(input.planRunId);
 
-    const run = await this.planRunsService.findById(input.planRunId);
+    const run = await this.planRunsRepository.findRunById(input.planRunId);
 
     return run ? this.mapPlanRunObject(run) : null;
   }
@@ -690,7 +694,9 @@ export class PlansResolver {
     const actorUserId =
       await this.effectiveUserResolution.resolveEffectiveUserId(actorSub);
     if (actorUserId === null) {
-      const unchanged = await this.planRunsService.findById(input.planRunId);
+      const unchanged = await this.planRunsRepository.findRunById(
+        input.planRunId,
+      );
 
       return unchanged ? this.mapPlanRunObject(unchanged) : null;
     }

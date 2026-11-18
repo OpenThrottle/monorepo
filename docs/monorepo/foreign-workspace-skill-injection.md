@@ -169,7 +169,7 @@ The **reaper safety rule:** remove a ledgered path only if it is _still_ identif
 - `packages/openthrottle-skills` for discovery + frontmatter parsing: `walkAgentAssetFiles` / `parseSkillFrontmatter` / `skillFrontmatterSchema`. No new frontmatter parser.
 - `packages/openthrottle-agentic-utils/src/utils/workspace-paths.ts`: `getWorkspacePathMapping` / `toContainerPath` / `toHostPath` to detect container mode and translate paths.
 - `getOpenThrottleRoot(env)` (`workflow.ts`) to locate `<OT_ROOT>/skills/` (the curated SSOT) and `resolveForeignWorkspaceContext` to detect foreign runs.
-- The stale-sweep lifecycle (`PlanRunsStaleSweepProcessor`, `PlanRunsService.findStaleInProgressRuns` / `settleStaleRun`, `enableShutdownHooks`) as the **host** for the boot reaper and shutdown teardown — we ride it, not build a bespoke marker system.
+- The stale-sweep lifecycle (`PlanRunsStaleSweepProcessor`, `PlanRunsRepository.findStaleInProgressRuns` / `settleStaleRun`, `enableShutdownHooks`) as the **host** for the boot reaper and shutdown teardown — we ride it, not build a bespoke marker system.
 
 **Reused as a pattern, re-implemented in TypeScript rather than shelling out to the bash:** ot-skill-sync's _concepts_ — ordered manifest, collision precedence, marker-bracketed managed ignore block, idempotent ensure/cleanup. We do **not** call `skills/ot-skill-sync/scripts/*.sh` because it (a) edits the tracked `.gitignore` (we need `.git/info/exclude`), (b) assumes the SSOT is in the same repo, and (c) has no cross-server teardown/reaper. The materializer is server-side TS.
 

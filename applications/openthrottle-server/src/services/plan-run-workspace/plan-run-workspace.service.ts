@@ -8,11 +8,9 @@ import { join } from 'node:path';
 
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import type { PlanRun } from '@openthrottle/nestjs-repositories';
-import {
-  PlanRunsService,
-  RepositoryCheckoutsService,
-} from '@openthrottle/nestjs-repositories';
+import { RepositoryCheckoutsService } from '@openthrottle/nestjs-repositories';
+import type { PlanRun } from '@openthrottle/nestjs-repositories-server';
+import { PlanRunsRepository } from '@openthrottle/nestjs-repositories-server';
 import { PlanOutputStreamRepository } from '@openthrottle/nestjs-repositories-server';
 import {
   ensureMaterialized,
@@ -48,7 +46,7 @@ export class PlanRunWorkspaceService {
   constructor(
     private readonly logger: LoggerService,
     private readonly planOutputStreamRepository: PlanOutputStreamRepository,
-    private readonly planRunsService: PlanRunsService,
+    private readonly planRunsRepository: PlanRunsRepository,
     private readonly planRunWorktreeCheckoutService: PlanRunWorktreeCheckoutService,
     private readonly planRunWorkspacePreflightService: PlanRunWorkspacePreflightService,
     private readonly planRunWorktreeProvisionService: PlanRunWorktreeProvisionService,
@@ -197,8 +195,8 @@ export class PlanRunWorkspaceService {
     }
 
     try {
-      const latest = await this.planRunsService.findById(run.id);
-      await this.planRunsService.setRunConfigSnapshotWorkspace(run.id, {
+      const latest = await this.planRunsRepository.findRunById(run.id);
+      await this.planRunsRepository.setRunConfigSnapshotWorkspace(run.id, {
         checkoutId: latest?.checkoutId ?? null,
         workingDirectory,
       });
@@ -324,7 +322,7 @@ export class PlanRunWorkspaceService {
       return null;
     }
     try {
-      return await this.planRunsService.findByQueueNameAndBullmqJobId(
+      return await this.planRunsRepository.findByQueueNameAndBullmqJobId(
         queueName,
         queueJobId,
       );

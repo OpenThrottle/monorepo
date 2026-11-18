@@ -4,12 +4,12 @@ import { createMock } from '@golevelup/ts-vitest';
 import { getQueueToken } from '@nestjs/bullmq';
 import { Test } from '@nestjs/testing';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import type { PlanRun } from '@openthrottle/nestjs-repositories';
+import type { PlanRun } from '@openthrottle/nestjs-repositories-server';
 import {
   HEARTBEAT_INTERVAL_MS,
   PLAN_RUN_STATUS,
-  PlanRunsService,
-} from '@openthrottle/nestjs-repositories';
+  PlanRunsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import {
   PlanOutputStreamRepository,
   PlansRepository,
@@ -17,8 +17,10 @@ import {
 } from '@openthrottle/nestjs-repositories-server';
 import {
   createPlanOutputStreamRepositoryMock,
+  createPlanRunsRepositoryMock,
   createPlansRepositoryMock,
   createTasksRepositoryMock,
+  planRunsFactory,
 } from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
 import { WORKTREE_TRACKER_TOKEN } from '@openthrottle/nestjs-worktrees';
@@ -161,21 +163,13 @@ const mockRunOtLoopJob = vi.fn().mockResolvedValue({
   status: 'finished',
 });
 
-const mockFindPlanIdsWithLiveDetachedRun = vi
-  .fn()
-  .mockResolvedValue(new Set<string>());
-const mockRecordHeartbeatByJob = vi.fn().mockResolvedValue(1);
-const mockSettleRunByJob = vi.fn().mockResolvedValue(null);
-const mockSettleUnsettledRunByJob = vi.fn().mockResolvedValue(true);
-const mockTransitionScheduledRun = vi.fn().mockResolvedValue(true);
+const planRunsRepository = createPlanRunsRepositoryMock();
+// Defaults that differ from the empty-table mock: a heartbeat bump matches a row, a settle and a
+// scheduled-run claim succeed.
+planRunsRepository.recordHeartbeatByJob.mockResolvedValue(1);
+planRunsRepository.settleUnsettledRunByJob.mockResolvedValue(true);
+planRunsRepository.transitionScheduledRun.mockResolvedValue(true);
 const mockRecordSettledRunArtifacts = vi.fn().mockResolvedValue(undefined);
-/** Default: no plan_runs row for the job (a legacy job), so admission lets it run as it always did. */
-const mockFindByQueueNameAndBullmqJobId = vi.fn().mockResolvedValue(null);
-const mockMarkRunStarted = vi.fn().mockResolvedValue(0);
-const mockFindScheduledRunsWithJob = vi.fn().mockResolvedValue([]);
-const mockFindEarliestScheduledForByPlanIds = vi
-  .fn()
-  .mockResolvedValue(new Map());
 const mockFireScheduledRun = vi.fn().mockResolvedValue({ kind: 'fire' });
 const mockReprojectScheduledRun = vi
   .fn()
@@ -272,10 +266,12 @@ describe('PlansProcessor', () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
-    mockFindByQueueNameAndBullmqJobId.mockResolvedValue(null);
-    mockMarkRunStarted.mockResolvedValue(0);
-    mockFindScheduledRunsWithJob.mockResolvedValue([]);
-    mockFindEarliestScheduledForByPlanIds.mockResolvedValue(new Map());
+    planRunsRepository.findByQueueNameAndBullmqJobId.mockResolvedValue(null);
+    planRunsRepository.markRunStarted.mockResolvedValue(0);
+    planRunsRepository.findScheduledRunsWithJob.mockResolvedValue([]);
+    planRunsRepository.findEarliestScheduledForByPlanIds.mockResolvedValue(
+      new Map(),
+    );
     mockTaskRepoFind.mockResolvedValue([]);
     mockFireScheduledRun.mockResolvedValue({ kind: 'fire' });
     process.env.OPENTHROTTLE_LIFECYCLE_HOOKS_CHILD_JOBS = 'false';
@@ -346,20 +342,8 @@ describe('PlansProcessor', () => {
           }),
         },
         {
-          provide: PlanRunsService,
-          useValue: createMock<PlanRunsService>({
-            clearRunLocation: vi.fn().mockResolvedValue(0),
-            findByQueueNameAndBullmqJobId: mockFindByQueueNameAndBullmqJobId,
-            findEarliestScheduledForByPlanIds:
-              mockFindEarliestScheduledForByPlanIds,
-            findPlanIdsWithLiveDetachedRun: mockFindPlanIdsWithLiveDetachedRun,
-            findScheduledRunsWithJob: mockFindScheduledRunsWithJob,
-            markRunStarted: mockMarkRunStarted,
-            recordHeartbeatByJob: mockRecordHeartbeatByJob,
-            settleRunByJob: mockSettleRunByJob,
-            settleUnsettledRunByJob: mockSettleUnsettledRunByJob,
-            transitionScheduledRun: mockTransitionScheduledRun,
-          }),
+          provide: PlanRunsRepository,
+          useValue: planRunsRepository,
         },
         {
           provide: PlansRepository,
@@ -583,7 +567,7 @@ describe('PlansProcessor', () => {
 
     it('bumps the heartbeat on a wall-clock timer during the run and clears it on completion', async () => {
       vi.useFakeTimers();
-      mockRecordHeartbeatByJob.mockClear();
+      planRunsRepository.recordHeartbeatByJob.mockClear();
 
       // Hold the orchestrator open so the wall-clock heartbeat timer can fire mid-run.
       let resolveOrchestrator!: (value: {
@@ -602,11 +586,12 @@ describe('PlansProcessor', () => {
       // Advance past two heartbeat intervals while the run is in flight.
       await vi.advanceTimersByTimeAsync(HEARTBEAT_INTERVAL_MS * 2 + 50);
 
-      expect(mockRecordHeartbeatByJob).toHaveBeenCalledWith(
+      expect(planRunsRepository.recordHeartbeatByJob).toHaveBeenCalledWith(
         PLANS_QUEUE_NAME,
         'job-1',
       );
-      const bumpsWhileRunning = mockRecordHeartbeatByJob.mock.calls.length;
+      const bumpsWhileRunning =
+        planRunsRepository.recordHeartbeatByJob.mock.calls.length;
       expect(bumpsWhileRunning).toBeGreaterThanOrEqual(2);
 
       resolveOrchestrator({
@@ -618,15 +603,17 @@ describe('PlansProcessor', () => {
 
       // Timer cleared in finally: no further bumps after completion.
       await vi.advanceTimersByTimeAsync(HEARTBEAT_INTERVAL_MS * 3);
-      expect(mockRecordHeartbeatByJob.mock.calls.length).toBe(
+      expect(planRunsRepository.recordHeartbeatByJob.mock.calls.length).toBe(
         bumpsWhileRunning,
       );
     });
 
     it('swallows a heartbeat bump failure without failing the job', async () => {
       vi.useFakeTimers();
-      mockRecordHeartbeatByJob.mockClear();
-      mockRecordHeartbeatByJob.mockRejectedValue(new Error('db blip'));
+      planRunsRepository.recordHeartbeatByJob.mockClear();
+      planRunsRepository.recordHeartbeatByJob.mockRejectedValue(
+        new Error('db blip'),
+      );
 
       let resolveOrchestrator!: (value: {
         exitCode: number;
@@ -649,7 +636,7 @@ describe('PlansProcessor', () => {
 
       // The rejected heartbeat is caught internally; the job resolves normally.
       await expect(run).resolves.toBeDefined();
-      mockRecordHeartbeatByJob.mockResolvedValue(1);
+      planRunsRepository.recordHeartbeatByJob.mockResolvedValue(1);
     });
   });
 
@@ -694,7 +681,7 @@ describe('PlansProcessor', () => {
 
       await processor.process(mockJob);
 
-      expect(mockSettleRunByJob).toHaveBeenCalledWith(
+      expect(planRunsRepository.settleRunByJob).toHaveBeenCalledWith(
         PLANS_QUEUE_NAME,
         'job-1',
         PLAN_RUN_STATUS.COMPLETED,
@@ -710,7 +697,7 @@ describe('PlansProcessor', () => {
 
       await processor.process(mockJob);
 
-      expect(mockSettleRunByJob).toHaveBeenCalledWith(
+      expect(planRunsRepository.settleRunByJob).toHaveBeenCalledWith(
         PLANS_QUEUE_NAME,
         'job-1',
         PLAN_RUN_STATUS.COMPLETED,
@@ -726,11 +713,11 @@ describe('PlansProcessor', () => {
     });
 
     it('records settle-run ledger artifacts when the orchestrator returns headSha and prNumber', async () => {
-      const settledRun = {
+      const settledRun = planRunsFactory.build({
         id: 'plan-run-1',
         status: PLAN_RUN_STATUS.COMPLETED,
-      };
-      mockSettleRunByJob.mockResolvedValueOnce(settledRun);
+      });
+      planRunsRepository.settleRunByJob.mockResolvedValueOnce(settledRun);
       mockRunPlanOrchestratorJob.mockResolvedValueOnce({
         exitCode: 0,
         headSha: 'deadbeef',
@@ -741,7 +728,7 @@ describe('PlansProcessor', () => {
 
       await processor.process(mockJob);
 
-      expect(mockSettleRunByJob).toHaveBeenCalledWith(
+      expect(planRunsRepository.settleRunByJob).toHaveBeenCalledWith(
         PLANS_QUEUE_NAME,
         'job-1',
         PLAN_RUN_STATUS.COMPLETED,
@@ -762,7 +749,7 @@ describe('PlansProcessor', () => {
 
       await processor.process(mockJob);
 
-      expect(mockSettleRunByJob).toHaveBeenCalledWith(
+      expect(planRunsRepository.settleRunByJob).toHaveBeenCalledWith(
         PLANS_QUEUE_NAME,
         'job-1',
         PLAN_RUN_STATUS.FAILED,
@@ -778,7 +765,7 @@ describe('PlansProcessor', () => {
 
       await processor.process(mockJob);
 
-      expect(mockSettleRunByJob).toHaveBeenCalledWith(
+      expect(planRunsRepository.settleRunByJob).toHaveBeenCalledWith(
         PLANS_QUEUE_NAME,
         'job-1',
         PLAN_RUN_STATUS.CANCELLED,
@@ -788,15 +775,15 @@ describe('PlansProcessor', () => {
     it('never writes STALE from the processor', async () => {
       await processor.process(mockJob);
 
-      for (const call of mockSettleRunByJob.mock.calls) {
+      for (const call of planRunsRepository.settleRunByJob.mock.calls) {
         expect(call[2]).not.toBe(PLAN_RUN_STATUS.STALE);
       }
     });
 
     it('stops the heartbeat timer before the terminal settle write lands', async () => {
       vi.useFakeTimers();
-      mockRecordHeartbeatByJob.mockClear();
-      mockSettleRunByJob.mockClear();
+      planRunsRepository.recordHeartbeatByJob.mockClear();
+      planRunsRepository.settleRunByJob.mockClear();
 
       // Delay the after-run-hooks/notify pipeline (which runs after the terminal
       // settle write) so a heartbeat tick landing in that window would prove the
@@ -814,15 +801,15 @@ describe('PlansProcessor', () => {
       // Let the orchestrator promise (resolved synchronously) settle the row, then
       // advance well past a heartbeat interval while the hooks pipeline is stalled.
       await vi.advanceTimersByTimeAsync(0);
-      expect(mockSettleRunByJob).toHaveBeenCalledWith(
+      expect(planRunsRepository.settleRunByJob).toHaveBeenCalledWith(
         PLANS_QUEUE_NAME,
         'job-1',
         PLAN_RUN_STATUS.COMPLETED,
       );
 
-      mockRecordHeartbeatByJob.mockClear();
+      planRunsRepository.recordHeartbeatByJob.mockClear();
       await vi.advanceTimersByTimeAsync(HEARTBEAT_INTERVAL_MS * 2 + 50);
-      expect(mockRecordHeartbeatByJob).not.toHaveBeenCalled();
+      expect(planRunsRepository.recordHeartbeatByJob).not.toHaveBeenCalled();
 
       resolveHooks();
       await run;
@@ -884,11 +871,11 @@ describe('PlansProcessor', () => {
     });
 
     it('settles COMPLETED with headSha and prNumber', async () => {
-      const settledRun = {
+      const settledRun = planRunsFactory.build({
         id: 'plan-run-1',
         status: PLAN_RUN_STATUS.COMPLETED,
-      };
-      mockSettleRunByJob.mockResolvedValueOnce(settledRun);
+      });
+      planRunsRepository.settleRunByJob.mockResolvedValueOnce(settledRun);
       mockRunOtLoopJob.mockResolvedValueOnce({
         exitCode: 0,
         headSha: 'cafef00d',
@@ -899,7 +886,7 @@ describe('PlansProcessor', () => {
 
       await processor.process(otLoopJob());
 
-      expect(mockSettleRunByJob).toHaveBeenCalledWith(
+      expect(planRunsRepository.settleRunByJob).toHaveBeenCalledWith(
         PLANS_QUEUE_NAME,
         'job-1',
         PLAN_RUN_STATUS.COMPLETED,
@@ -920,7 +907,7 @@ describe('PlansProcessor', () => {
 
       await processor.process(otLoopJob());
 
-      expect(mockSettleRunByJob).toHaveBeenCalledWith(
+      expect(planRunsRepository.settleRunByJob).toHaveBeenCalledWith(
         PLANS_QUEUE_NAME,
         'job-1',
         PLAN_RUN_STATUS.CANCELLED,
@@ -951,7 +938,7 @@ describe('PlansProcessor', () => {
       await processor.process(otLoopJob());
 
       expect(observedAbort).toBe(true);
-      expect(mockSettleRunByJob).toHaveBeenCalledWith(
+      expect(planRunsRepository.settleRunByJob).toHaveBeenCalledWith(
         PLANS_QUEUE_NAME,
         'job-1',
         PLAN_RUN_STATUS.CANCELLED,
@@ -971,7 +958,7 @@ describe('PlansProcessor', () => {
 
       await processor.process(otLoopJob());
 
-      expect(mockSettleRunByJob).toHaveBeenCalledWith(
+      expect(planRunsRepository.settleRunByJob).toHaveBeenCalledWith(
         PLANS_QUEUE_NAME,
         'job-1',
         PLAN_RUN_STATUS.FAILED,
@@ -1022,7 +1009,7 @@ describe('PlansProcessor', () => {
         limit: usageLimit,
         planId,
       });
-      expect(mockSettleRunByJob).not.toHaveBeenCalled();
+      expect(planRunsRepository.settleRunByJob).not.toHaveBeenCalled();
     });
   });
 
@@ -1050,7 +1037,7 @@ describe('PlansProcessor', () => {
         limit: usageLimit,
         planId: '2794d106-95f9-427e-904d-e0f9b5cbe734',
       });
-      expect(mockSettleRunByJob).not.toHaveBeenCalled();
+      expect(planRunsRepository.settleRunByJob).not.toHaveBeenCalled();
       // Paused, not finished: the BLOCKED backstop must not touch the plan.
       expect(mockWriteGuardedStatus).not.toHaveBeenCalled();
     });
@@ -1108,7 +1095,7 @@ describe('PlansProcessor', () => {
 
       // The orchestrator already wrote BLOCKED, so the backstop has nothing to do.
       expect(mockWriteGuardedStatus).not.toHaveBeenCalled();
-      expect(mockSettleRunByJob).toHaveBeenCalledWith(
+      expect(planRunsRepository.settleRunByJob).toHaveBeenCalledWith(
         PLANS_QUEUE_NAME,
         'job-1',
         PLAN_RUN_STATUS.COMPLETED,
@@ -1312,7 +1299,7 @@ describe('PlansProcessor', () => {
       const hooksOrder =
         mockRunAfterRunHooksThenNotify.mock.invocationCallOrder.at(-1) ?? 0;
       const settleOrder =
-        mockSettleRunByJob.mock.invocationCallOrder.at(-1) ?? 0;
+        planRunsRepository.settleRunByJob.mock.invocationCallOrder.at(-1) ?? 0;
       expect(hooksOrder).toBeGreaterThan(settleOrder);
       expect(cleanupOrder).toBeGreaterThan(hooksOrder);
     });
@@ -1341,7 +1328,7 @@ describe('PlansProcessor', () => {
 
       await processor.process(mockJob);
 
-      expect(mockSettleRunByJob).toHaveBeenCalledWith(
+      expect(planRunsRepository.settleRunByJob).toHaveBeenCalledWith(
         PLANS_QUEUE_NAME,
         'job-1',
         PLAN_RUN_STATUS.FAILED,
@@ -1406,17 +1393,19 @@ describe('PlansProcessor', () => {
     /** Every side effect a started run has; a run that is not admitted must have none of them. */
     const expectNoRunSideEffects = (attach: unknown): void => {
       expect(attach).not.toHaveBeenCalled();
-      expect(mockMarkRunStarted).not.toHaveBeenCalled();
-      expect(mockRecordHeartbeatByJob).not.toHaveBeenCalled();
+      expect(planRunsRepository.markRunStarted).not.toHaveBeenCalled();
+      expect(planRunsRepository.recordHeartbeatByJob).not.toHaveBeenCalled();
       expect(mockPromoteParentPlanToInProgress).not.toHaveBeenCalled();
       expect(mockRunBeforeRunHooksAndHandleBlock).not.toHaveBeenCalled();
       expect(mockRunPlanOrchestratorJob).not.toHaveBeenCalled();
-      expect(mockSettleRunByJob).not.toHaveBeenCalled();
+      expect(planRunsRepository.settleRunByJob).not.toHaveBeenCalled();
     };
 
     it("checks the job's working directory at fire time: a worktree removed since scheduling reaches the policy as a workspace error", async () => {
       const gone = '/nonexistent/ot-scheduled-run-worktree-removed';
-      mockFindByQueueNameAndBullmqJobId.mockResolvedValueOnce(scheduledRun);
+      planRunsRepository.findByQueueNameAndBullmqJobId.mockResolvedValueOnce(
+        scheduledRun,
+      );
       mockFireScheduledRun.mockResolvedValueOnce({
         kind: 'workspace_missing',
         reason: `workingDirectory does not exist: ${gone}`,
@@ -1438,15 +1427,16 @@ describe('PlansProcessor', () => {
     });
 
     it('fires a due scheduled run: the policy claims it (plan/tasks QUEUED) before the worker claims it IN_PROGRESS, then the run proceeds', async () => {
-      mockFindByQueueNameAndBullmqJobId.mockResolvedValueOnce(scheduledRun);
-      mockMarkRunStarted.mockResolvedValueOnce(1);
+      planRunsRepository.findByQueueNameAndBullmqJobId.mockResolvedValueOnce(
+        scheduledRun,
+      );
+      planRunsRepository.markRunStarted.mockResolvedValueOnce(1);
 
       const result = await processor.process(mockJob);
 
-      expect(mockFindByQueueNameAndBullmqJobId).toHaveBeenCalledWith(
-        PLANS_QUEUE_NAME,
-        'job-1',
-      );
+      expect(
+        planRunsRepository.findByQueueNameAndBullmqJobId,
+      ).toHaveBeenCalledWith(PLANS_QUEUE_NAME, 'job-1');
       expect(mockFireScheduledRun).toHaveBeenCalledWith({
         actorKind: 'service_account',
         actorSub: 'status-change-system-account-id',
@@ -1458,7 +1448,8 @@ describe('PlansProcessor', () => {
       // fireScheduledRun is where the SCHEDULED -> QUEUED claim and the plan/task QUEUED flip
       // happen (plan-enqueue.service.test.ts); markRunStarted (QUEUED -> IN_PROGRESS) only after.
       const [fireOrder] = mockFireScheduledRun.mock.invocationCallOrder;
-      const [claimOrder] = mockMarkRunStarted.mock.invocationCallOrder;
+      const [claimOrder] =
+        planRunsRepository.markRunStarted.mock.invocationCallOrder;
       expect(fireOrder).toBeLessThan(claimOrder ?? 0);
       expect(mockPromoteParentPlanToInProgress).toHaveBeenCalledTimes(1);
       expect(mockRunPlanOrchestratorJob).toHaveBeenCalledTimes(1);
@@ -1490,7 +1481,9 @@ describe('PlansProcessor', () => {
       '$kind: the run is settled by the policy, the user is warned, and nothing else happens',
       async ({ kind, message, reason }) => {
         const attach = vi.spyOn(planRunCancellation, 'attach');
-        mockFindByQueueNameAndBullmqJobId.mockResolvedValueOnce(scheduledRun);
+        planRunsRepository.findByQueueNameAndBullmqJobId.mockResolvedValueOnce(
+          scheduledRun,
+        );
         mockFireScheduledRun.mockResolvedValueOnce({ kind, reason });
 
         const result = await processor.process(mockJob);
@@ -1514,7 +1507,9 @@ describe('PlansProcessor', () => {
 
     it('nothing to run: settled, notified as info, and not started', async () => {
       const attach = vi.spyOn(planRunCancellation, 'attach');
-      mockFindByQueueNameAndBullmqJobId.mockResolvedValueOnce(scheduledRun);
+      planRunsRepository.findByQueueNameAndBullmqJobId.mockResolvedValueOnce(
+        scheduledRun,
+      );
       mockFireScheduledRun.mockResolvedValueOnce({
         kind: 'nothing_to_run',
         reason: 'the plan had no tasks left to run',
@@ -1533,7 +1528,9 @@ describe('PlansProcessor', () => {
 
     it('cancel won the race (the conditional SCHEDULED update matched nothing): backs off without starting or notifying', async () => {
       const attach = vi.spyOn(planRunCancellation, 'attach');
-      mockFindByQueueNameAndBullmqJobId.mockResolvedValueOnce(scheduledRun);
+      planRunsRepository.findByQueueNameAndBullmqJobId.mockResolvedValueOnce(
+        scheduledRun,
+      );
       mockFireScheduledRun.mockResolvedValueOnce({ kind: 'not_scheduled' });
 
       await processor.process(mockJob);
@@ -1546,7 +1543,7 @@ describe('PlansProcessor', () => {
       'a job whose row is already %s is never reopened: no policy call, no claim, no run',
       async (status) => {
         const attach = vi.spyOn(planRunCancellation, 'attach');
-        mockFindByQueueNameAndBullmqJobId.mockResolvedValueOnce(
+        planRunsRepository.findByQueueNameAndBullmqJobId.mockResolvedValueOnce(
           createMock<PlanRun>({ id: 'run-settled', planId, status }),
         );
 
@@ -1559,14 +1556,14 @@ describe('PlansProcessor', () => {
 
     it('backs off when the guarded claim matches nothing although a row exists (settled between read and claim)', async () => {
       const attach = vi.spyOn(planRunCancellation, 'attach');
-      mockFindByQueueNameAndBullmqJobId.mockResolvedValueOnce(
+      planRunsRepository.findByQueueNameAndBullmqJobId.mockResolvedValueOnce(
         createMock<PlanRun>({ id: 'run-queued', planId, status: 'QUEUED' }),
       );
-      mockMarkRunStarted.mockResolvedValueOnce(0);
+      planRunsRepository.markRunStarted.mockResolvedValueOnce(0);
 
       await processor.process(mockJob);
 
-      expect(mockMarkRunStarted).toHaveBeenCalledTimes(1);
+      expect(planRunsRepository.markRunStarted).toHaveBeenCalledTimes(1);
       expect(attach).not.toHaveBeenCalled();
       expect(mockPromoteParentPlanToInProgress).not.toHaveBeenCalled();
       expect(mockRunPlanOrchestratorJob).not.toHaveBeenCalled();
@@ -1575,10 +1572,10 @@ describe('PlansProcessor', () => {
     it.each(['QUEUED', 'IN_PROGRESS'])(
       'runs a %s row once the claim succeeds (first pickup, or a BullMQ retry / stall recovery)',
       async (status) => {
-        mockFindByQueueNameAndBullmqJobId.mockResolvedValueOnce(
+        planRunsRepository.findByQueueNameAndBullmqJobId.mockResolvedValueOnce(
           createMock<PlanRun>({ id: 'run-1', planId, status }),
         );
-        mockMarkRunStarted.mockResolvedValueOnce(1);
+        planRunsRepository.markRunStarted.mockResolvedValueOnce(1);
 
         await processor.process(mockJob);
 
@@ -1588,10 +1585,12 @@ describe('PlansProcessor', () => {
     );
 
     it('still runs when the claim write itself fails (best-effort stamp, as before)', async () => {
-      mockFindByQueueNameAndBullmqJobId.mockResolvedValueOnce(
+      planRunsRepository.findByQueueNameAndBullmqJobId.mockResolvedValueOnce(
         createMock<PlanRun>({ id: 'run-1', planId, status: 'QUEUED' }),
       );
-      mockMarkRunStarted.mockRejectedValueOnce(new Error('db blip'));
+      planRunsRepository.markRunStarted.mockRejectedValueOnce(
+        new Error('db blip'),
+      );
 
       await processor.process(mockJob);
 
@@ -1601,7 +1600,7 @@ describe('PlansProcessor', () => {
     it('runs a legacy job with no plan_runs row, as it always did', async () => {
       await processor.process(mockJob);
 
-      expect(mockMarkRunStarted).toHaveBeenCalledTimes(1);
+      expect(planRunsRepository.markRunStarted).toHaveBeenCalledTimes(1);
       expect(mockRunPlanOrchestratorJob).toHaveBeenCalledTimes(1);
     });
   });
@@ -1626,7 +1625,9 @@ describe('PlansProcessor', () => {
       expect(mockWriteGuardedStatus).not.toHaveBeenCalled();
       expect(mockPromoteParentPlanToInProgress).not.toHaveBeenCalled();
       // Nor the scheduled-run reconcile: it would see every delayed job as missing in its own prefix.
-      expect(mockFindScheduledRunsWithJob).not.toHaveBeenCalled();
+      expect(
+        planRunsRepository.findScheduledRunsWithJob,
+      ).not.toHaveBeenCalled();
       expect(mockReprojectScheduledRun).not.toHaveBeenCalled();
     });
 
@@ -1640,7 +1641,7 @@ describe('PlansProcessor', () => {
         scheduledFor: new Date('2026-11-01T13:00:00.000Z'),
         status: 'SCHEDULED',
       });
-      mockFindScheduledRunsWithJob.mockResolvedValueOnce([run]);
+      planRunsRepository.findScheduledRunsWithJob.mockResolvedValueOnce([run]);
 
       try {
         await processor.onModuleInit();
@@ -1701,15 +1702,15 @@ describe('PlansProcessor', () => {
         { id: interactivePlanId, status: 'IN_PROGRESS', title: 'Looping' },
       ]);
       mockGetJobs.mockResolvedValueOnce([]);
-      mockFindPlanIdsWithLiveDetachedRun.mockResolvedValueOnce(
+      planRunsRepository.findPlanIdsWithLiveDetachedRun.mockResolvedValueOnce(
         new Set([interactivePlanId]),
       );
 
       await processor.onModuleInit();
 
-      expect(mockFindPlanIdsWithLiveDetachedRun).toHaveBeenCalledWith([
-        interactivePlanId,
-      ]);
+      expect(
+        planRunsRepository.findPlanIdsWithLiveDetachedRun,
+      ).toHaveBeenCalledWith([interactivePlanId]);
       expect(mockWriteGuardedStatus).not.toHaveBeenCalled();
       const notifications = getProcessorNotifications(processor);
       expect(notifications.emitPlanStatusChanged).not.toHaveBeenCalled();
@@ -1723,7 +1724,7 @@ describe('PlansProcessor', () => {
         { id: queuedRunPlanId, status: 'IN_PROGRESS', title: 'Interrupted' },
       ]);
       mockGetJobs.mockResolvedValueOnce([]);
-      mockFindPlanIdsWithLiveDetachedRun.mockResolvedValueOnce(
+      planRunsRepository.findPlanIdsWithLiveDetachedRun.mockResolvedValueOnce(
         new Set([interactivePlanId]),
       );
 
@@ -2005,7 +2006,7 @@ describe('PlansProcessor', () => {
             { id: scheduledPlanId, status: 'QUEUED', title: 'Scheduled' },
           ]);
         mockTaskRepoFind.mockResolvedValue([task(scheduledPlanId, 'BLOCKED')]);
-        mockFindEarliestScheduledForByPlanIds.mockResolvedValueOnce(
+        planRunsRepository.findEarliestScheduledForByPlanIds.mockResolvedValueOnce(
           new Map([
             [
               scheduledPlanId,
@@ -2079,7 +2080,7 @@ describe('PlansProcessor', () => {
 
     it('a non-final failed attempt leaves the plan_runs row IN_PROGRESS (no settle write)', async () => {
       const planId = 'plan-retrying';
-      mockSettleUnsettledRunByJob.mockClear();
+      planRunsRepository.settleUnsettledRunByJob.mockClear();
 
       await processor.onPlanJobFailed({
         error: new Error('Job failed'),
@@ -2091,12 +2092,12 @@ describe('PlansProcessor', () => {
         }),
       });
 
-      expect(mockSettleUnsettledRunByJob).not.toHaveBeenCalled();
+      expect(planRunsRepository.settleUnsettledRunByJob).not.toHaveBeenCalled();
     });
 
     it('the final failed attempt settles the plan_runs row to FAILED', async () => {
       const planId = 'plan-exhausted';
-      mockSettleUnsettledRunByJob.mockClear();
+      planRunsRepository.settleUnsettledRunByJob.mockClear();
 
       await processor.onPlanJobFailed({
         error: new Error('Job failed'),
@@ -2108,7 +2109,7 @@ describe('PlansProcessor', () => {
         }),
       });
 
-      expect(mockSettleUnsettledRunByJob).toHaveBeenCalledWith(
+      expect(planRunsRepository.settleUnsettledRunByJob).toHaveBeenCalledWith(
         PLANS_QUEUE_NAME,
         'job-retry-1',
         PLAN_RUN_STATUS.FAILED,
@@ -2117,7 +2118,7 @@ describe('PlansProcessor', () => {
 
     it('treats an UnrecoverableError as the final attempt even with retries configured (settles to FAILED)', async () => {
       const planId = 'plan-unrecoverable';
-      mockSettleUnsettledRunByJob.mockClear();
+      planRunsRepository.settleUnsettledRunByJob.mockClear();
 
       await processor.onPlanJobFailed({
         error: new UnrecoverableError(
@@ -2131,7 +2132,7 @@ describe('PlansProcessor', () => {
         }),
       });
 
-      expect(mockSettleUnsettledRunByJob).toHaveBeenCalledWith(
+      expect(planRunsRepository.settleUnsettledRunByJob).toHaveBeenCalledWith(
         PLANS_QUEUE_NAME,
         'job-unrecoverable',
         PLAN_RUN_STATUS.FAILED,
@@ -2140,7 +2141,7 @@ describe('PlansProcessor', () => {
 
     it('treats a job with no configured attempts as final (settles to FAILED)', async () => {
       const planId = 'plan-no-retry-config';
-      mockSettleUnsettledRunByJob.mockClear();
+      planRunsRepository.settleUnsettledRunByJob.mockClear();
 
       await processor.onPlanJobFailed({
         error: new Error('Job failed'),
@@ -2152,7 +2153,7 @@ describe('PlansProcessor', () => {
         }),
       });
 
-      expect(mockSettleUnsettledRunByJob).toHaveBeenCalledWith(
+      expect(planRunsRepository.settleUnsettledRunByJob).toHaveBeenCalledWith(
         PLANS_QUEUE_NAME,
         'job-single-attempt',
         PLAN_RUN_STATUS.FAILED,
@@ -2260,13 +2261,13 @@ describe('PlansProcessor', () => {
       };
 
       beforeEach(() => {
-        mockSettleUnsettledRunByJob.mockClear();
-        mockTransitionScheduledRun.mockClear();
+        planRunsRepository.settleUnsettledRunByJob.mockClear();
+        planRunsRepository.transitionScheduledRun.mockClear();
         mockWriteGuardedStatus.mockClear();
       });
 
       it('SCHEDULED (admission threw before the claim): the plan is not reset, and the exhausted run settles FAILED under the SCHEDULED guard', async () => {
-        mockFindByQueueNameAndBullmqJobId.mockResolvedValueOnce(
+        planRunsRepository.findByQueueNameAndBullmqJobId.mockResolvedValueOnce(
           runWithStatus('SCHEDULED'),
         );
 
@@ -2276,15 +2277,17 @@ describe('PlansProcessor', () => {
         });
 
         expect(mockWriteGuardedStatus).not.toHaveBeenCalled();
-        expect(mockSettleUnsettledRunByJob).not.toHaveBeenCalled();
-        expect(mockTransitionScheduledRun).toHaveBeenCalledWith(
+        expect(
+          planRunsRepository.settleUnsettledRunByJob,
+        ).not.toHaveBeenCalled();
+        expect(planRunsRepository.transitionScheduledRun).toHaveBeenCalledWith(
           'run-SCHEDULED',
           PLAN_RUN_STATUS.FAILED,
         );
       });
 
       it('SCHEDULED with retries left: nothing is written, so the retry fires the policy again', async () => {
-        mockFindByQueueNameAndBullmqJobId.mockResolvedValueOnce(
+        planRunsRepository.findByQueueNameAndBullmqJobId.mockResolvedValueOnce(
           runWithStatus('SCHEDULED'),
         );
 
@@ -2299,14 +2302,18 @@ describe('PlansProcessor', () => {
         });
 
         expect(mockWriteGuardedStatus).not.toHaveBeenCalled();
-        expect(mockTransitionScheduledRun).not.toHaveBeenCalled();
-        expect(mockSettleUnsettledRunByJob).not.toHaveBeenCalled();
+        expect(
+          planRunsRepository.transitionScheduledRun,
+        ).not.toHaveBeenCalled();
+        expect(
+          planRunsRepository.settleUnsettledRunByJob,
+        ).not.toHaveBeenCalled();
       });
 
       it.each(['MISSED', 'SUPERSEDED', 'CANCELLED', 'COMPLETED', 'FAILED'])(
         'an already-settled %s row is left as is, and the plan is not reset',
         async (status) => {
-          mockFindByQueueNameAndBullmqJobId.mockResolvedValueOnce(
+          planRunsRepository.findByQueueNameAndBullmqJobId.mockResolvedValueOnce(
             runWithStatus(status),
           );
 
@@ -2316,15 +2323,19 @@ describe('PlansProcessor', () => {
           });
 
           expect(mockWriteGuardedStatus).not.toHaveBeenCalled();
-          expect(mockSettleUnsettledRunByJob).not.toHaveBeenCalled();
-          expect(mockTransitionScheduledRun).not.toHaveBeenCalled();
+          expect(
+            planRunsRepository.settleUnsettledRunByJob,
+          ).not.toHaveBeenCalled();
+          expect(
+            planRunsRepository.transitionScheduledRun,
+          ).not.toHaveBeenCalled();
         },
       );
 
       it.each(['QUEUED', 'IN_PROGRESS'])(
         'an unsettled %s row blocks the plan and settles FAILED through the guarded write',
         async (status) => {
-          mockFindByQueueNameAndBullmqJobId.mockResolvedValueOnce(
+          planRunsRepository.findByQueueNameAndBullmqJobId.mockResolvedValueOnce(
             runWithStatus(status),
           );
 
@@ -2337,7 +2348,9 @@ describe('PlansProcessor', () => {
             'plan-guarded',
             expect.objectContaining({ requestedStatus: 'BLOCKED' }),
           );
-          expect(mockSettleUnsettledRunByJob).toHaveBeenCalledWith(
+          expect(
+            planRunsRepository.settleUnsettledRunByJob,
+          ).toHaveBeenCalledWith(
             PLANS_QUEUE_NAME,
             'job-guarded',
             PLAN_RUN_STATUS.FAILED,

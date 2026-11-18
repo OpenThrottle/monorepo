@@ -20,7 +20,7 @@
  */
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { PlanRunsService } from '@openthrottle/nestjs-repositories';
+import { PlanRunsRepository } from '@openthrottle/nestjs-repositories-server';
 import {
   ServiceAccountCredentialsRepository,
   ServiceAccountsRepository,
@@ -40,7 +40,7 @@ const TOOL_NAME = 'workflow-ralph';
 export class WorkLedgerRunService {
   constructor(
     private readonly logger: LoggerService,
-    private readonly planRunsService: PlanRunsService,
+    private readonly planRunsRepository: PlanRunsRepository,
     private readonly serviceAccountCredentialsRepository: ServiceAccountCredentialsRepository,
     private readonly serviceAccountsRepository: ServiceAccountsRepository,
     private readonly workSessionsRepository: WorkSessionsRepository,
@@ -54,10 +54,11 @@ export class WorkLedgerRunService {
    */
   async openRalphSession(input: OpenRalphSessionInput): Promise<string | null> {
     try {
-      const planRun = await this.planRunsService.findByQueueNameAndBullmqJobId(
-        input.queueName,
-        input.bullmqJobId,
-      );
+      const planRun =
+        await this.planRunsRepository.findByQueueNameAndBullmqJobId(
+          input.queueName,
+          input.bullmqJobId,
+        );
       const actorServiceAccountId = await this.resolveActorServiceAccountId();
 
       if (actorServiceAccountId == null) {
