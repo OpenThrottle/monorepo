@@ -834,6 +834,15 @@ jobs:
           echo "❌ A gate failed in a merge-queue entry; cancelling run $RUN_ID so ci-success reports red now."
           gh run cancel "$RUN_ID" || echo "⚠️ cancel request refused (run already cancelling?); this job is red either way"
 
+      # 💰 PR ONLY, and keep it the LAST step: this run's Nx save (node-setup's
+      # post step, success only) replaces the shard's older entries on the PR
+      # ref, so a busy PR holds one per shard instead of one per push. See
+      # .github/actions/nx-cache-prune/action.yml.
+      - name: '🧹 Prune this shard’s older Nx caches on the PR'
+        uses: ./.github/actions/nx-cache-prune
+        with:
+          cache-suffix: shard-${{ matrix.jobIndex }}
+
       # The skill-usage hook core + per-tool adapters now live in the Nx package
       # @openthrottle/agentic-hooks (authored in TS, bundled to committed .cjs),
       # so `nx affected --target=test` above covers them and the drift check runs
@@ -1180,6 +1189,12 @@ jobs:
         run: |
           echo "❌ A gate failed in a merge-queue entry; cancelling run $RUN_ID so ci-success reports red now."
           gh run cancel "$RUN_ID" || echo "⚠️ cancel request refused (run already cancelling?); this job is red either way"
+
+      # 💰 PR ONLY, and keep it the LAST step. Same as the last step of `build`.
+      - name: '🧹 Prune this job’s older Nx caches on the PR'
+        uses: ./.github/actions/nx-cache-prune
+        with:
+          cache-suffix: gates
 
       # 💰 The warn-only test-coverage audit MOVED OUT of the per-PR path to
       # .github/workflows/test-coverage-audit-scheduled.yml (weekly). It is
