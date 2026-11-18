@@ -7,16 +7,20 @@ import type {
   Repository as RepositoryEntity,
   ServiceAccountsService,
   UsersService,
-  WorkArtifact,
-  WorkLedgerService,
 } from '@openthrottle/nestjs-repositories';
 import type {
   Plan,
   PlansRepository,
+  WorkArtifact,
+  WorkArtifactsRepository,
 } from '@openthrottle/nestjs-repositories-server';
-import { createPlansRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import type { WorkArtifactsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import {
+  createPlansRepositoryMock,
+  createWorkArtifactsRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
-import type { Repository } from 'typeorm';
+import type { DataSource, Repository } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { SettleRunLedgerService } from '../../graphql/work-ledger/settle-run-ledger/settle-run-ledger.service.ts';
@@ -60,7 +64,7 @@ describe('WorkLedgerHarvestProcessor', () => {
   let githubService: GitHubService;
   let repositoriesService: RepositoriesService;
   let repositoryRepo: Repository<RepositoryEntity>;
-  let artifactRepo: Repository<WorkArtifact>;
+  let artifactRepo: WorkArtifactsRepositoryMock;
   let logger: LoggerService;
   let processor: WorkLedgerHarvestProcessor;
 
@@ -96,10 +100,7 @@ describe('WorkLedgerHarvestProcessor', () => {
     repositoryRepo = createMock<Repository<RepositoryEntity>>();
     vi.mocked(repositoryRepo.find).mockResolvedValue([repository()]);
 
-    artifactRepo = createMock<Repository<WorkArtifact>>({
-      manager: { transaction },
-    });
-    vi.mocked(artifactRepo.findOne).mockResolvedValue(null);
+    artifactRepo = createWorkArtifactsRepositoryMock();
 
     repositoriesService = createMock<RepositoriesService>({
       getRepository: vi.fn().mockReturnValue(repositoryRepo),
@@ -126,9 +127,8 @@ describe('WorkLedgerHarvestProcessor', () => {
       createMock<UsersService>({
         findByGithubUsername: vi.fn().mockResolvedValue({ id: 'user-1' }),
       }),
-      createMock<WorkLedgerService>({
-        getArtifactRepository: vi.fn().mockReturnValue(artifactRepo),
-      }),
+      createMock<WorkArtifactsRepository>(artifactRepo),
+      asMock<DataSource>({ transaction }),
     );
   });
 
@@ -172,7 +172,7 @@ describe('WorkLedgerHarvestProcessor', () => {
 
   it('does not re-adopt a commit that is already recorded', async () => {
     vi.mocked(githubService.listCommits).mockResolvedValue([trailerCommit]);
-    vi.mocked(artifactRepo.findOne).mockResolvedValue(
+    artifactRepo.findOne.mockResolvedValue(
       createMock<WorkArtifact>({ id: 'existing' }),
     );
 
@@ -244,9 +244,8 @@ describe('WorkLedgerHarvestProcessor', () => {
         new GitLabForgeService(createMock<ConfigService>()),
       ),
       createMock<UsersService>(),
-      createMock<WorkLedgerService>({
-        getArtifactRepository: vi.fn().mockReturnValue(artifactRepo),
-      }),
+      createMock<WorkArtifactsRepository>(artifactRepo),
+      asMock<DataSource>({ transaction }),
     );
 
     await processor.process(job);

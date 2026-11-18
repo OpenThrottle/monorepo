@@ -2,12 +2,14 @@ import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { OnApplicationShutdown, OnModuleInit } from '@nestjs/common';
 import { defaultWorkerOptions } from '@openthrottle/nestjs-bullmq';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import type { WorkArtifact } from '@openthrottle/nestjs-repositories';
+import { PlanRunsService } from '@openthrottle/nestjs-repositories';
+import type { WorkArtifact } from '@openthrottle/nestjs-repositories-server';
 import {
-  PlanRunsService,
   WORK_ARTIFACT_VERIFICATION,
-  WorkLedgerService,
-} from '@openthrottle/nestjs-repositories';
+  WorkArtifactsRepository,
+  WorkSessionsRepository,
+  WorkSessionSubjectsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import { In, Not } from 'typeorm';
 
 import { shouldFireLifecycleTriggers } from '../../graphql/work-ledger/artifact-type-registry/artifact-type-registry.utils.ts';
@@ -76,7 +78,9 @@ export class WorkLedgerVerifyProcessor
     private readonly planRunsService: PlanRunsService,
     private readonly sourceControlService: SourceControlService,
     private readonly taggingEnqueueService: TaggingEnqueueService,
-    private readonly workLedgerService: WorkLedgerService,
+    private readonly workArtifactsRepository: WorkArtifactsRepository,
+    private readonly workSessionsRepository: WorkSessionsRepository,
+    private readonly workSessionSubjectsRepository: WorkSessionSubjectsRepository,
   ) {
     super();
   }
@@ -112,17 +116,15 @@ export class WorkLedgerVerifyProcessor
   }
 
   private async verifyGitCommits(): Promise<WorkLedgerVerifySummary> {
-    const artifacts = await this.workLedgerService
-      .getArtifactRepository()
-      .find({
-        order: { producedAt: 'ASC' },
-        take: WORK_LEDGER_VERIFY_BATCH_SIZE,
-        where: {
-          lifecycle: Not(LANDED),
-          type: 'git_commit',
-          verification: Not(WORK_ARTIFACT_VERIFICATION.ORPHANED),
-        },
-      });
+    const artifacts = await this.workArtifactsRepository.findBy({
+      order: { producedAt: 'ASC' },
+      take: WORK_LEDGER_VERIFY_BATCH_SIZE,
+      where: {
+        lifecycle: Not(LANDED),
+        type: 'git_commit',
+        verification: Not(WORK_ARTIFACT_VERIFICATION.ORPHANED),
+      },
+    });
 
     // Default branch is per-repo; resolve once per repo per sweep.
     const defaultBranchByRepo = new Map<string, string | null>();
@@ -187,12 +189,10 @@ export class WorkLedgerVerifyProcessor
         defaultBranchByRepo,
       );
 
-      const repo = this.workLedgerService.getArtifactRepository();
-
       if (landedSha != null) {
         artifact.lifecycle = LANDED;
         artifact.payload = { ...artifact.payload, landedSha };
-        await repo.save(artifact);
+        await this.saveVerifierState(artifact);
 
         if (
           shouldFireLifecycleTriggers({
@@ -213,7 +213,7 @@ export class WorkLedgerVerifyProcessor
         return 'landed';
       }
 
-      await repo.save(artifact);
+      await this.saveVerifierState(artifact);
       return 'verified';
     } catch (error) {
       this.logger.warn(
@@ -232,7 +232,7 @@ export class WorkLedgerVerifyProcessor
     }
 
     artifact.verification = WORK_ARTIFACT_VERIFICATION.ORPHANED;
-    await this.workLedgerService.getArtifactRepository().save(artifact);
+    await this.saveVerifierState(artifact);
     return 'orphaned';
   }
 
@@ -285,17 +285,15 @@ export class WorkLedgerVerifyProcessor
   private async verifyPullRequests(
     summary: WorkLedgerVerifySummary,
   ): Promise<void> {
-    const artifacts = await this.workLedgerService
-      .getArtifactRepository()
-      .find({
-        order: { producedAt: 'ASC' },
-        take: WORK_LEDGER_VERIFY_BATCH_SIZE,
-        where: {
-          lifecycle: Not(In(TERMINAL_PULL_REQUEST_STATES)),
-          type: 'pull_request',
-          verification: Not(WORK_ARTIFACT_VERIFICATION.ORPHANED),
-        },
-      });
+    const artifacts = await this.workArtifactsRepository.findBy({
+      order: { producedAt: 'ASC' },
+      take: WORK_LEDGER_VERIFY_BATCH_SIZE,
+      where: {
+        lifecycle: Not(In(TERMINAL_PULL_REQUEST_STATES)),
+        type: 'pull_request',
+        verification: Not(WORK_ARTIFACT_VERIFICATION.ORPHANED),
+      },
+    });
 
     summary.pullRequestsExamined = artifacts.length;
 
@@ -323,7 +321,6 @@ export class WorkLedgerVerifyProcessor
 
     try {
       const pull = await forge.getPullRequest(repoKey, number);
-      const repo = this.workLedgerService.getArtifactRepository();
 
       artifact.verification = WORK_ARTIFACT_VERIFICATION.VERIFIED;
       artifact.verifiedAt = new Date();
@@ -338,7 +335,7 @@ export class WorkLedgerVerifyProcessor
           };
         }
 
-        await repo.save(artifact);
+        await this.saveVerifierState(artifact);
         summary.merged += 1;
 
         if (pull.mergeCommitSha != null) {
@@ -359,7 +356,7 @@ export class WorkLedgerVerifyProcessor
 
       if (pull.state === CLOSED) {
         artifact.lifecycle = CLOSED;
-        await repo.save(artifact);
+        await this.saveVerifierState(artifact);
         summary.closed += 1;
         summary.runsSettled += await this.settleRunForPullRequest(
           artifact.sessionId,
@@ -369,7 +366,7 @@ export class WorkLedgerVerifyProcessor
       }
 
       // Still open: confirmed to exist, but not yet an outcome.
-      await repo.save(artifact);
+      await this.saveVerifierState(artifact);
     } catch (error) {
       this.logger.warn(
         `Work-ledger verify: error checking pull_request artifact ${artifact.id}: ${String(error)}`,
@@ -392,8 +389,7 @@ export class WorkLedgerVerifyProcessor
     repoKey: string,
     mergeCommitSha: string,
   ): Promise<number> {
-    const repo = this.workLedgerService.getArtifactRepository();
-    const siblings = await repo.find({
+    const siblings = await this.workArtifactsRepository.findBy({
       where: { lifecycle: Not(LANDED), sessionId, type: 'git_commit' },
     });
 
@@ -406,7 +402,11 @@ export class WorkLedgerVerifyProcessor
       sibling.verifiedAt = new Date();
     }
 
-    await repo.save(siblings);
+    await Promise.all(
+      siblings.map((sibling) => {
+        return this.saveVerifierState(sibling);
+      }),
+    );
 
     const firing = siblings.filter((sibling) =>
       shouldFireLifecycleTriggers({
@@ -431,6 +431,19 @@ export class WorkLedgerVerifyProcessor
   }
 
   /**
+   * @description Writes back the four columns the verifier owns (lifecycle, payload,
+   * verification, verifiedAt) from an artifact it has updated in memory.
+   */
+  private async saveVerifierState(artifact: WorkArtifact): Promise<void> {
+    await this.workArtifactsRepository.update(artifact.id, {
+      lifecycle: artifact.lifecycle,
+      payload: artifact.payload,
+      verification: artifact.verification,
+      verifiedAt: artifact.verifiedAt,
+    });
+  }
+
+  /**
    * A PR reaching merged/closed is the strongest evidence a plan run is over. A run that reported
    * its PR at open already settled; this catches the one that did not — an interactive loop that
    * opened the PR and then lost its turn before settling — so it stops reading as live, its
@@ -443,9 +456,9 @@ export class WorkLedgerVerifyProcessor
     outcome: typeof CLOSED | typeof MERGED,
   ): Promise<number> {
     try {
-      const session = await this.workLedgerService
-        .getSessionRepository()
-        .findOne({ where: { id: sessionId } });
+      const session = await this.workSessionsRepository.findOne({
+        where: { id: sessionId },
+      });
       const planRunId = session?.planRunId ?? null;
 
       if (planRunId == null) return 0;
@@ -473,9 +486,9 @@ export class WorkLedgerVerifyProcessor
     repoKey: string,
     landedSha: string,
   ): Promise<void> {
-    const subjects = await this.workLedgerService
-      .getSubjectRepository()
-      .find({ where: { sessionId } });
+    const subjects = await this.workSessionSubjectsRepository.findBy({
+      where: { sessionId },
+    });
     const planIds = [...new Set(subjects.map((subject) => subject.planId))];
 
     for (const planId of planIds) {

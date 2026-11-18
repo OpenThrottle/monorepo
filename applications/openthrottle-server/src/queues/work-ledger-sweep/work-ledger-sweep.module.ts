@@ -1,6 +1,10 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+import {
+  WorkArtifactsModule,
+  WorkSessionsModule,
+} from '@openthrottle/nestjs-repositories-server';
 
 import { WorkLedgerSweepQueueProducerModule } from './producer/producer.module.ts';
 import { WorkLedgerSweepRepeatableService } from './repeatable/repeatable.service.ts';
@@ -17,7 +21,9 @@ import { WorkLedgerSweepProcessor } from './work-ledger-sweep.processor.ts';
   imports: [
     LoggerModule,
     NestjsRepositoriesModule,
+    WorkArtifactsModule,
     WorkLedgerSweepQueueProducerModule,
+    WorkSessionsModule,
   ],
   providers: [WorkLedgerSweepProcessor, WorkLedgerSweepRepeatableService],
 })

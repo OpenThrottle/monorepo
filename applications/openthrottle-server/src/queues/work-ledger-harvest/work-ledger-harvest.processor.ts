@@ -1,5 +1,6 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { OnApplicationShutdown, OnModuleInit } from '@nestjs/common';
+import { InjectDataSource } from '@nestjs/typeorm';
 import { defaultWorkerOptions } from '@openthrottle/nestjs-bullmq';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { Repository as RepositoryEntity } from '@openthrottle/nestjs-repositories';
@@ -7,14 +8,17 @@ import {
   RepositoriesService,
   ServiceAccountsService,
   UsersService,
+} from '@openthrottle/nestjs-repositories';
+import {
+  PlansRepository,
   WORK_ARTIFACT_SOURCE,
   WORK_ARTIFACT_VERIFICATION,
   WorkArtifact,
-  WorkLedgerService,
+  WorkArtifactsRepository,
   WorkSession,
   WorkSessionSubject,
-} from '@openthrottle/nestjs-repositories';
-import { PlansRepository } from '@openthrottle/nestjs-repositories-server';
+} from '@openthrottle/nestjs-repositories-server';
+import { DataSource } from 'typeorm';
 
 import { resolveArtifactForWrite } from '../../graphql/work-ledger/artifact-type-registry/artifact-type-registry.utils.ts';
 import { SettleRunLedgerService } from '../../graphql/work-ledger/settle-run-ledger/settle-run-ledger.service.ts';
@@ -79,7 +83,8 @@ export class WorkLedgerHarvestProcessor
     private readonly settleRunLedgerService: SettleRunLedgerService,
     private readonly sourceControlService: SourceControlService,
     private readonly usersService: UsersService,
-    private readonly workLedgerService: WorkLedgerService,
+    private readonly workArtifactsRepository: WorkArtifactsRepository,
+    @InjectDataSource() private readonly dataSource: DataSource,
   ) {
     super();
   }
@@ -229,14 +234,13 @@ export class WorkLedgerHarvestProcessor
       return;
     }
 
-    const artifactRepo = this.workLedgerService.getArtifactRepository();
     const { externalKey, initialLifecycle, payload } = resolveArtifactForWrite(
       'git_commit',
       { ...repoPayloadFields(remote), sha: commit.sha },
     );
     void initialLifecycle;
 
-    const existing = await artifactRepo.findOne({
+    const existing = await this.workArtifactsRepository.findOne({
       where: { externalKey, type: 'git_commit' },
     });
 
@@ -249,7 +253,7 @@ export class WorkLedgerHarvestProcessor
       commit.authorLogin,
     );
 
-    await artifactRepo.manager.transaction(async (manager) => {
+    await this.dataSource.transaction(async (manager) => {
       const session = await manager.getRepository(WorkSession).save(
         manager.getRepository(WorkSession).create({
           actorServiceAccountId,

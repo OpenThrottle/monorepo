@@ -1,40 +1,19 @@
 /**
- * @description TypeORM entity for the OpenThrottle work_sessions table. Matches databases/openthrottle/migrations/068.
- * Scalar-only (like PlanRun); FK columns are plain uuids — relations are added when a resolver needs them.
+ * @description TypeORM entity for the openthrottle `work_sessions` table: the append-only
+ * work-ledger spine, one row per unit of work. A ledger row is never user-deleted, so it
+ * extends `BaseHardDeleteModel` (no soft delete). Scalar-only: FK columns are plain uuids.
+ * Its only in-place write is closing it, which stamps `ended_at`, so it has no `updated_at`.
+ * Matches databases/openthrottle/migrations (068, 113, 174).
+ * @public
  */
 
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { BaseHardDeleteModel } from '@openthrottle/nestjs-postgres';
+import { Column, Entity } from 'typeorm';
 
-import type { WorkSessionClosedBy } from './work-ledger.types.ts';
-
-/** Column-only shape of WorkSession (no relations). */
-export type WorkSessionData = Pick<
-  WorkSession,
-  | 'actorServiceAccountId'
-  | 'actorUserId'
-  | 'closedBy'
-  | 'conversationId'
-  | 'createdAt'
-  | 'endedAt'
-  | 'externalRef'
-  | 'id'
-  | 'model'
-  | 'onBehalfOfUserId'
-  | 'onBehalfOfVerified'
-  | 'planRunId'
-  | 'startedAt'
-  | 'summary'
-  | 'toolName'
-  | 'toolVersion'
->;
+import type { WorkSessionClosedBy } from './work-sessions.types.ts';
 
 @Entity('work_sessions')
-export class WorkSession {
+export class WorkSession extends BaseHardDeleteModel {
   @Column({ name: 'actor_service_account_id', nullable: true, type: 'uuid' })
   actorServiceAccountId!: string | null;
 
@@ -47,9 +26,6 @@ export class WorkSession {
   @Column({ name: 'conversation_id', nullable: true, type: 'uuid' })
   conversationId!: string | null;
 
-  @CreateDateColumn({ name: 'created_at', type: 'timestamp with time zone' })
-  createdAt!: Date;
-
   @Column({
     name: 'ended_at',
     nullable: true,
@@ -59,9 +35,6 @@ export class WorkSession {
 
   @Column({ name: 'external_ref', nullable: true, type: 'text' })
   externalRef!: string | null;
-
-  @PrimaryGeneratedColumn('uuid')
-  id!: string;
 
   @Column({ name: 'model', nullable: true, type: 'text' })
   model!: string | null;

@@ -1,15 +1,15 @@
 import { createMock } from '@golevelup/ts-vitest';
 import { BadRequestException } from '@nestjs/common';
 import type { GlobalClsService } from '@openthrottle/nestjs-modules';
-import type { WorkArtifact } from '@openthrottle/nestjs-repositories';
+import type { WorkArtifact } from '@openthrottle/nestjs-repositories-server';
 import {
   WorkSession,
   WorkSessionSubject,
-} from '@openthrottle/nestjs-repositories';
+} from '@openthrottle/nestjs-repositories-server';
 import {
   workArtifactsFactory,
   workSessionsFactory,
-} from '@openthrottle/nestjs-repositories/testing';
+} from '@openthrottle/nestjs-repositories-server/testing';
 import type { EntityManager, Repository } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 

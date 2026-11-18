@@ -5,6 +5,8 @@ import {
   PlanOutputStreamModule,
   PlansModule,
   TasksModule,
+  WorkSessionsModule,
+  WorkSessionSubjectsModule,
 } from '@openthrottle/nestjs-repositories-server';
 import { NestjsWorktreesModule } from '@openthrottle/nestjs-worktrees';
 
@@ -61,6 +63,8 @@ import { WorkLedgerRunService } from './work-ledger-run/work-ledger-run.service.
     PlansQueueProducerModule,
     TasksModule,
     WorkLedgerGraphqlModule,
+    WorkSessionSubjectsModule,
+    WorkSessionsModule,
   ],
   providers: [
     PlansProcessor,

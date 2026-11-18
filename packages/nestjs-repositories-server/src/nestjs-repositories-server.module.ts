@@ -17,6 +17,9 @@ import { TasksModule } from './modules/tasks/tasks.module.ts';
 import { TelemetryHeartbeatsModule } from './modules/telemetry-heartbeats/telemetry-heartbeats.module.ts';
 import { UserDisabledAgentClisModule } from './modules/user-disabled-agent-clis/user-disabled-agent-clis.module.ts';
 import { UserFavoriteAgentModelsModule } from './modules/user-favorite-agent-models/user-favorite-agent-models.module.ts';
+import { WorkArtifactsModule } from './modules/work-artifacts/work-artifacts.module.ts';
+import { WorkSessionSubjectsModule } from './modules/work-session-subjects/work-session-subjects.module.ts';
+import { WorkSessionsModule } from './modules/work-sessions/work-sessions.module.ts';
 import { WorktreeRemovalsModule } from './modules/worktree-removals/worktree-removals.module.ts';
 
 /**
@@ -46,6 +49,9 @@ import { WorktreeRemovalsModule } from './modules/worktree-removals/worktree-rem
     TelemetryHeartbeatsModule,
     UserDisabledAgentClisModule,
     UserFavoriteAgentModelsModule,
+    WorkArtifactsModule,
+    WorkSessionSubjectsModule,
+    WorkSessionsModule,
     WorktreeRemovalsModule,
   ],
   imports: [
@@ -66,6 +72,9 @@ import { WorktreeRemovalsModule } from './modules/worktree-removals/worktree-rem
     TelemetryHeartbeatsModule,
     UserDisabledAgentClisModule,
     UserFavoriteAgentModelsModule,
+    WorkArtifactsModule,
+    WorkSessionSubjectsModule,
+    WorkSessionsModule,
     WorktreeRemovalsModule,
   ],
 })

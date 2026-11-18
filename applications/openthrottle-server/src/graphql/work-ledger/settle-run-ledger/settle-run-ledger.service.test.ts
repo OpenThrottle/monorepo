@@ -9,8 +9,12 @@ import type {
   RepositoriesService,
   RepositoryCheckoutsService,
   ServiceAccountsService,
-  WorkLedgerService,
 } from '@openthrottle/nestjs-repositories';
+import type { WorkArtifactsRepository } from '@openthrottle/nestjs-repositories-server';
+import type { WorkArtifactsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import { createWorkArtifactsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import { asMock } from '@openthrottle/nestjs-testing';
+import type { DataSource } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GitHubForgeService } from '../../../services/source-control/github-forge/github-forge.service.ts';
@@ -67,7 +71,7 @@ describe('SettleRunLedgerService', () => {
   let repositoryCheckoutsService: RepositoryCheckoutsService;
   let repositoryInspectionService: RepositoryInspectionService;
   let serviceAccountsService: ServiceAccountsService;
-  let workLedgerService: WorkLedgerService;
+  let workArtifactsRepository: WorkArtifactsRepositoryMock;
   let logger: LoggerService;
   let service: SettleRunLedgerService;
 
@@ -106,11 +110,10 @@ describe('SettleRunLedgerService', () => {
     serviceAccountsService = createMock<ServiceAccountsService>({
       findByName: vi.fn().mockResolvedValue({ id: 'service-account-1' }),
     });
-    workLedgerService = createMock<WorkLedgerService>({
-      getArtifactRepository: vi
-        .fn()
-        .mockReturnValue({ findOne, manager: { transaction } }),
-    });
+    // One findOne backs both the injected repository and the transaction's repositories, so a
+    // test that stubs an existing artifact sees it on either path.
+    workArtifactsRepository = createWorkArtifactsRepositoryMock();
+    workArtifactsRepository.findOne.mockImplementation(findOne);
     githubService = createMock<GitHubService>();
     endedRuns = [];
     const queryBuilder = {
@@ -143,7 +146,8 @@ describe('SettleRunLedgerService', () => {
         new GitHubForgeService(githubService),
         new GitLabForgeService(createMock<ConfigService>()),
       ),
-      workLedgerService,
+      createMock<WorkArtifactsRepository>(workArtifactsRepository),
+      asMock<DataSource>({ transaction }),
     );
   });
 
