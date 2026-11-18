@@ -1,6 +1,16 @@
 import type { ModelConvention } from './model-convention.types.ts';
 
 /**
+ * @description The `BaseHardDeleteModel` convention: a uuidv7 `id` key and no soft delete,
+ * so deletes are real. The `openthrottle` shape for append-only, log and derived rows.
+ * @public
+ */
+export const ID_HARD_DELETE_MODEL_CONVENTION: ModelConvention = {
+  key: 'id',
+  softDelete: { kind: 'none' },
+};
+
+/**
  * @description The `BaseModel` convention: a uuidv7 `id` key and a `deleted_at` timestamp.
  * The shape the `openthrottle` database adopts.
  * @public

@@ -9,8 +9,8 @@ import {
   REMAINING_TASK_STATUSES,
   TASK_STATUS,
   TASK_STATUS_VALUES,
-} from './config.constants.ts';
-import { isPlanStatus, isTaskStatus } from './config.utils.ts';
+} from './plan-task-status.constants.ts';
+import { isPlanStatus, isTaskStatus } from './plan-task-status.utils.ts';
 
 /**
  * Ascends from the working directory to the monorepo root (the first ancestor

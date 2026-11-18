@@ -27,10 +27,21 @@ export interface FlagSoftDelete {
 }
 
 /**
- * @description Which soft-delete mechanism a model uses.
+ * @description No soft delete: the table has no `deleted_at` or `is_deleted`, every row it
+ * holds is live, and `remove` / `removeMany` hard delete. For append-only, log and derived
+ * rows, where a tombstone would only be noise.
  * @public
  */
-export type SoftDeleteConvention = FlagSoftDelete | TimestampSoftDelete;
+export interface NoSoftDelete {
+  readonly kind: 'none';
+}
+
+/**
+ * @description Which soft-delete mechanism a model uses, if any.
+ * @public
+ */
+export type SoftDeleteConvention =
+  FlagSoftDelete | NoSoftDelete | TimestampSoftDelete;
 
 /**
  * @description The key and soft-delete conventions a `BaseRepository` threads through its

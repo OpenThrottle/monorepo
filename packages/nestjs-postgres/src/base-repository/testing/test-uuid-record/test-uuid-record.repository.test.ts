@@ -111,7 +111,7 @@ describe('BaseRepository (uuid key + is_deleted flag)', () => {
     ])('throws for %s', (_name, target) => {
       expect(() => {
         return resolveModelConvention(target);
-      }).toThrow(/BaseModel or BaseUuidModel/);
+      }).toThrow(/BaseModel, BaseUuidModel or BaseHardDeleteModel/);
     });
   });
 

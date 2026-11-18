@@ -2,12 +2,12 @@ import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import { REMAINING_TASK_STATUSES } from '@openthrottle/nestjs-repositories-server';
 import type { EntityManager, Repository } from 'typeorm';
 import { In, IsNull, Not } from 'typeorm';
 import type { IsolationLevel } from 'typeorm/driver/types/IsolationLevel.js';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { REMAINING_TASK_STATUSES } from '../../config/config.constants.ts';
 import { Task } from './task.entity.ts';
 import { TASK_SORT_ORDER_GAP } from './tasks.constants.ts';
 import { tasksFactory } from './tasks.factory.ts';

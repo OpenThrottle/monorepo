@@ -1,4 +1,4 @@
-import type { PlanStatus, TaskStatus } from './config.types.ts';
+import type { PlanStatus, TaskStatus } from './plan-task-status.types.ts';
 
 /**
  * @description Canonical source of truth for the plan/task status vocabulary.
@@ -8,7 +8,7 @@ import type { PlanStatus, TaskStatus } from './config.types.ts';
  * map. Every layer that needs the status vocabulary (entity column typing, the
  * GraphQL `registerEnumType`, resolver input validation) reads from here so the
  * DB enum, the schema, and the MCP tool contract can never silently diverge again.
- * A parity test (config.constants.test.ts) asserts this set equals the
+ * A parity test (plan-task-status.constants.test.ts) asserts this set equals the
  * labels declared by the migrations and fails loudly on drift.
  *
  * Do NOT confuse this with the separate `plan_runs.status` run-lifecycle vocabulary

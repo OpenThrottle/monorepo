@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import { REMAINING_TASK_STATUSES } from '@openthrottle/nestjs-repositories-server';
 import { In, IsNull, Not, Repository } from 'typeorm';
 
-import { REMAINING_TASK_STATUSES } from '../../config/config.constants.ts';
 import { Plan } from '../plans/plan.entity.ts';
 import type { TaskHookScope } from './task.entity.ts';
 import { Task } from './task.entity.ts';

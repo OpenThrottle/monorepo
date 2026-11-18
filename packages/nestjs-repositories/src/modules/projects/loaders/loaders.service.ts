@@ -4,9 +4,9 @@
  */
 
 import { Injectable, Scope } from '@nestjs/common';
+import { createCollectionByColumnLoader } from '@openthrottle/nestjs-postgres';
 import type DataLoader from 'dataloader';
 
-import { createCollectionByColumnLoader } from '../../../entity-loaders/entity-loaders.utils.ts';
 import type { Plan } from '../../plans/plan.entity.ts';
 import { PlansService } from '../../plans/plans.service.ts';
 import type { Task } from '../../tasks/task.entity.ts';

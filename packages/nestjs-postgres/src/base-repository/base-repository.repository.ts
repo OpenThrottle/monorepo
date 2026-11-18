@@ -44,7 +44,8 @@ import {
 
 /**
  * @public
- * @description Typed CRUD over a `BaseModel` or `BaseUuidModel` table: soft deletes,
+ * @description Typed CRUD over a `BaseModel`, `BaseUuidModel` or `BaseHardDeleteModel`
+ * table: soft deletes (hard deletes for `BaseHardDeleteModel`),
  * bounded reads, and bulk writes that respect Postgres statement limits. Extend it per
  * entity, declare `tableName` (used in error messages) and, when the create input differs
  * from the entity shape, override `toEntityInput`. The key and soft-delete convention come
@@ -202,7 +203,8 @@ export abstract class BaseRepository<
 
   /**
    * @description Soft deletes one live row in a single statement and returns it; an
-   * already-deleted row is left untouched and reads as not found.
+   * already-deleted row is left untouched and reads as not found. A model without soft
+   * delete removes the row for real and returns what it held.
    * @throws NotFoundException when no live row has that id (including already deleted).
    */
   @PostgresProfiling()
@@ -211,12 +213,7 @@ export abstract class BaseRepository<
       this.convention,
       buildKeyWhere<TEntity>(this.convention, id),
     );
-    const builder = this.repository.createQueryBuilder();
-    const isTimestamp = this.convention.softDelete.kind === 'timestamp';
-    const deletion = isTimestamp
-      ? builder.softDelete()
-      : builder.update().set(buildFlagSoftDeleteValues<TEntity>());
-    const result = await deletion.where(where).returning('*').execute();
+    const result = await this.removeReturning(where);
     const row: unknown = Array.isArray(result.raw) ? result.raw[0] : undefined;
 
     if (!result.affected || !isRawRow(row)) {
@@ -236,7 +233,8 @@ export abstract class BaseRepository<
 
   /**
    * @description Soft deletes every live row matching `where`. Rows that are already
-   * deleted are left untouched (a timestamp model keeps its original `deletedAt`).
+   * deleted are left untouched (a timestamp model keeps its original `deletedAt`). A model
+   * without soft delete removes the rows for real.
    * @throws BadRequestException when `where` is empty.
    */
   @PostgresProfiling()
@@ -246,7 +244,7 @@ export abstract class BaseRepository<
     this.assertNonEmptyWhere(where, 'removeMany');
 
     const liveWhere = withLiveRows(this.convention, where);
-    const result = await this.softDeleteWhere(liveWhere);
+    const result = await this.removeWhere(liveWhere);
 
     return { removedCount: result.affected ?? 0 };
   }
@@ -345,14 +343,51 @@ export abstract class BaseRepository<
     return { data, updateCount: result.affected ?? data.length };
   }
 
-  private async softDeleteWhere(
-    where: FindOptionsWhere<TEntity>,
-  ): Promise<{ readonly affected?: number | undefined }> {
-    if (this.convention.softDelete.kind === 'timestamp') {
-      return this.repository.softDelete(where);
-    }
+  /**
+   * @description Removes the rows matching `where` in one statement, `RETURNING *`, the
+   * way the convention removes: flip the flag, stamp `deleted_at`, or delete for real.
+   */
+  private async removeReturning(where: FindOptionsWhere<TEntity>): Promise<{
+    readonly affected?: number | null | undefined;
+    readonly raw: unknown;
+  }> {
+    const builder = this.repository.createQueryBuilder();
 
-    return this.repository.update(where, buildFlagSoftDeleteValues<TEntity>());
+    switch (this.convention.softDelete.kind) {
+      case 'flag': {
+        return builder
+          .update()
+          .set(buildFlagSoftDeleteValues<TEntity>())
+          .where(where)
+          .returning('*')
+          .execute();
+      }
+      case 'none': {
+        return builder.delete().where(where).returning('*').execute();
+      }
+      case 'timestamp': {
+        return builder.softDelete().where(where).returning('*').execute();
+      }
+    }
+  }
+
+  private async removeWhere(
+    where: FindOptionsWhere<TEntity>,
+  ): Promise<{ readonly affected?: number | null | undefined }> {
+    switch (this.convention.softDelete.kind) {
+      case 'flag': {
+        return this.repository.update(
+          where,
+          buildFlagSoftDeleteValues<TEntity>(),
+        );
+      }
+      case 'none': {
+        return this.repository.delete(where);
+      }
+      case 'timestamp': {
+        return this.repository.softDelete(where);
+      }
+    }
   }
 
   private assertNonEmptyWhere(

@@ -8,6 +8,7 @@
     "@nestjs/common": "catalog:",
     "@nestjs/typeorm": "catalog:",
     "@openthrottle/nestjs-postgres": "workspace:^",
+    "@openthrottle/nodejs-utils": "workspace:^",
     "fishery": "catalog:",
     "pg": "catalog:",
     "typeorm": "catalog:"

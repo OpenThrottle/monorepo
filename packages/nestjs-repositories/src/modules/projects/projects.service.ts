@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import type { ListPaginationInput } from '@openthrottle/nestjs-postgres';
+import { resolveListPagination } from '@openthrottle/nestjs-postgres';
 import type { DeepPartial } from 'typeorm';
 import { Repository } from 'typeorm';
 
-import type { ListPaginationInput } from '../../list-pagination/list-pagination.types.ts';
-import { resolveListPagination } from '../../list-pagination/list-pagination.utils.ts';
 import { Project } from './project.entity.ts';
 
 @Injectable()

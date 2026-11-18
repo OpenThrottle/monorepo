@@ -3,6 +3,10 @@
  */
 
 import {
+  PLAN_STATUS,
+  PLAN_STATUS_VALUES,
+} from '@openthrottle/nestjs-repositories-server';
+import {
   Column,
   CreateDateColumn,
   Entity,
@@ -13,10 +17,6 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-import {
-  PLAN_STATUS,
-  PLAN_STATUS_VALUES,
-} from '../../config/config.constants.ts';
 import type { Plan } from '../plans/plan.entity.ts';
 import type { Project } from '../projects/project.entity.ts';
 import type { TaskEmbedding } from '../task-embeddings/task-embedding.entity.ts';

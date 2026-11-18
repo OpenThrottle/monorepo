@@ -2,8 +2,9 @@
 
 The TypeORM data-access layer for the `openthrottle` database (`databases/openthrottle/`), being
 moved here table by table from [`nestjs-repositories`](../nestjs-repositories/AGENTS.md) (OT plan
-`052d37b0-f76a-43e1-8a39-4434d0f537d4`). One `BaseModel` entity, one `BaseRepository` subclass,
-one module and one fishery factory per table — the
+`052d37b0-f76a-43e1-8a39-4434d0f537d4`). One entity on a base model (`BaseModel` or
+`BaseHardDeleteModel`), one `BaseRepository` subclass, one module and one fishery factory per
+table — the
 [`nestjs-repositories-cms`](../nestjs-repositories-cms/AGENTS.md) pattern.
 
 **Consumed by:** `openthrottle-server`.
@@ -32,9 +33,24 @@ pull in `NestjsRepositoriesServerModule`. Each area then declares exactly the ta
 
 Moving a table here is these files and edits, every time (`notes` is the reference):
 
-1. **Migration** (if the table lacks a `BaseModel` column): `deleted_at`, `created_at`,
-   `updated_at`, `id`, in `databases/openthrottle/migrations/`.
-2. `<name>.entity.ts` — `extends BaseModel`; JSDoc names every migration it matches.
+0. **Pick the base model.** It decides what `remove()` does, so choose by what a deleted row means:
+
+   | The rows are…                                                            | Base                                                       | Delete |
+   | ------------------------------------------------------------------------ | ---------------------------------------------------------- | ------ |
+   | created and deleted by a user (plans, tasks, notes, repositories, tags)  | `BaseModel`                                                | soft   |
+   | append-only, a log or derived (telemetry, token usage, embeddings, runs) | `BaseHardDeleteModel`                                      | hard   |
+   | keyed by what they describe, with no uuidv7 `id`                         | none: [natural key](#natural-key-tables-the-one-exception) | hard   |
+
+   Each batch plan names its recommended split. When a table fits two rows, pick `BaseModel`:
+   a soft delete can be purged later, but a hard delete cannot be undone.
+
+1. **Migration** (if the table lacks a column its base needs). `BaseModel` needs `id`,
+   `created_at`, `updated_at` and `deleted_at`. `BaseHardDeleteModel` needs `id` and `created_at`;
+   it gets `updated_at` only if the table updates its rows. Put the migration in
+   `databases/openthrottle/migrations/`.
+2. `<name>.entity.ts` — `extends` the base from step 0; JSDoc names every migration it matches.
+   A `BaseHardDeleteModel` table that updates rows declares its own `@UpdateDateColumn`
+   `updatedAt`.
 3. `<folder>.repository.ts` — `extends BaseRepository<Entity, CreateModelInput<Entity>>`,
    `tableName`, `@InjectRepository(Entity)`. Custom methods only for data access the consumers
    need beyond `BaseRepository`.
@@ -55,14 +71,51 @@ Moving a table here is these files and edits, every time (`notes` is the referen
     in its place, never a hand-written object of `vi.fn()`s.
 11. Run `pnpm run database:test:openthrottle` and `graphql-schema:write` (no `schema.gql` diff).
 
+### Natural-key tables (the one exception)
+
+`code_embeddings` (text `id`, a content hash), `code_index_snapshots` (`workspace_root`),
+`user_preferences` and `user_workspace_settings` (`user_id`) are keyed by what they describe, so they
+have no uuidv7 `id`. They do **not** extend a base model or `BaseRepository`. Instead:
+
+- The entity keeps its own columns. Add no `id` or `deleted_at` migration just to fit a base.
+- `<folder>.repository.ts` is a plain `@Injectable()` class that holds
+  `@InjectRepository(Entity) private readonly repository: Repository<Entity>`. It exposes only the
+  methods its consumers use, named for the key (`findByUserId`, `upsertForWorkspace`), with
+  upserts through `repository.upsert(row, ['<key>'])`. Deletes are hard: these rows are settings
+  or caches, and a deleted one is simply recreated.
+- `create<Folder>RepositoryMock()` is hand-rolled, and it lives in the package beside the
+  repository like every other mock. Type it
+  `{ readonly [TMethod in <Folder>RepositoryMethod]: Mock<<Folder>Repository[TMethod]> }`, with
+  one `vi.fn()` per method that behaves like an empty table (`null`, `[]`, or a no-op).
+- Steps 4, 5 and 7–11 apply unchanged.
+
+**Why not a key-column override in `ModelConvention` (decided in batch 1, plan `2246e801`):**
+
+- `ModelKeyProperty` is the literal `'id' | 'uuid'`. Widening it to any column would loosen the
+  typed key builders, the default order and every `*ById` signature for all tables, to serve four.
+- Every base assumes a `created_at`, but `code_index_snapshots` has none and `code_embeddings` has
+  no `updated_at`.
+- What these tables mostly do is upsert by key, which `BaseRepository` does not offer.
+- Any new table gets a uuidv7 `id`, so this list does not grow.
+
 ## Invariants & gotchas
 
-- **Entities extend `BaseModel`** from `@openthrottle/nestjs-postgres` (`ID_TIMESTAMP_MODEL_CONVENTION`:
-  `id`, `created_at`, `updated_at`, `deleted_at`). A table that lacks one of those columns gets a
-  migration first.
-- **Soft delete is `deleted_at IS NULL`.** `BaseRepository` reads only live rows and `remove()`
-  stamps `deleted_at`; raw SQL must filter `deleted_at IS NULL` too. A hard delete moving here
-  becomes a soft delete — call it out in the PR.
+- **Entities extend `BaseModel` or `BaseHardDeleteModel`** from `@openthrottle/nestjs-postgres`.
+  `BaseModel` is `ID_TIMESTAMP_MODEL_CONVENTION`: `id`, `created_at`, `updated_at`, `deleted_at`.
+  `BaseHardDeleteModel` is `ID_HARD_DELETE_MODEL_CONVENTION`: `id`, `created_at`, no soft delete.
+  The four natural-key tables are the only exception. A table that lacks a column its base needs
+  gets a migration first.
+- **Soft delete is `deleted_at IS NULL`.** On a `BaseModel` table, `BaseRepository` reads only live
+  rows and `remove()` stamps `deleted_at`. **Raw SQL against a `BaseModel` table must filter
+  `deleted_at IS NULL` itself**: `query()`, query builders and search SQL get no implicit filter. A
+  hard delete moving onto `BaseModel` becomes a soft delete, so call it out in the PR, along with
+  any unique index that now needs `WHERE deleted_at IS NULL`.
+- **Transactions keep `manager.getRepository(Entity)`.** Code inside `dataSource.transaction(…)`
+  (or anything else handed an `EntityManager`) may keep using the manager's TypeORM repository,
+  importing the entity from this package; `BaseRepository` has no transaction support yet. Writes
+  there bypass the convention, so a delete inside a transaction on a `BaseModel` table must be
+  `manager.softDelete(Entity, …)`, never `manager.delete`. If a batch finds this painful, file
+  transaction support in `BaseRepository` as a follow-up plan rather than working around it.
 - A schema change is **two edits, together**: the SQL migration under
   `databases/openthrottle/migrations/` AND the entity here. Each entity's class JSDoc names the
   migrations it matches. SQL is the source of truth: `synchronize` is off.

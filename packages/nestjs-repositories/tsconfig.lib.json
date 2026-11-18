@@ -35,6 +35,9 @@
       "path": "../nestjs-repositories-server/tsconfig.lib.json"
     },
     {
+      "path": "../nestjs-postgres/tsconfig.lib.json"
+    },
+    {
       "path": "../nestjs-modules/tsconfig.lib.json"
     },
     {

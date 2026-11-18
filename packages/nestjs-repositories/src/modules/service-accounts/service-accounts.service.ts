@@ -6,11 +6,11 @@ import { randomBytes } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import type { ListPaginationInput } from '@openthrottle/nestjs-postgres';
+import { resolveListPagination } from '@openthrottle/nestjs-postgres';
 import bcrypt from 'bcrypt';
 import { IsNull, Repository } from 'typeorm';
 
-import type { ListPaginationInput } from '../../list-pagination/list-pagination.types.ts';
-import { resolveListPagination } from '../../list-pagination/list-pagination.utils.ts';
 import { ServiceAccount } from './service-account.entity.ts';
 import { ServiceAccountCredential } from './service-account-credential.entity.ts';
 import type {
