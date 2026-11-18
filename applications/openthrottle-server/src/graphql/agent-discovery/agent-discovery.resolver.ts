@@ -8,7 +8,10 @@ import { UseGuards } from '@nestjs/common';
 import { Query, Resolver } from '@nestjs/graphql';
 import { type AuthPrincipal, CurrentUser } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
-import { AgentCliPreferencesService } from '@openthrottle/nestjs-repositories';
+import {
+  UserDisabledAgentClisRepository,
+  UserFavoriteAgentModelsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import { DiscoverAgentClisResult } from './agent-discovery.object.ts';
@@ -19,7 +22,8 @@ import { AgentDiscoveryService } from './agent-discovery.service.ts';
 export class AgentDiscoveryResolver {
   constructor(
     private readonly agentDiscovery: AgentDiscoveryService,
-    private readonly preferences: AgentCliPreferencesService,
+    private readonly disabledAgentClis: UserDisabledAgentClisRepository,
+    private readonly favoriteAgentModels: UserFavoriteAgentModelsRepository,
   ) {}
 
   @Query(() => DiscoverAgentClisResult, {
@@ -81,9 +85,9 @@ export class AgentDiscoveryResolver {
       };
     }
     const [disabled, disabledModels, favoriteModels] = await Promise.all([
-      this.preferences.getDisabledBackends(principal.sub),
-      this.preferences.getDisabledModels(principal.sub),
-      this.preferences.getFavoriteModels(principal.sub),
+      this.disabledAgentClis.getDisabledBackends(principal.sub),
+      this.disabledAgentClis.getDisabledModels(principal.sub),
+      this.favoriteAgentModels.getFavoriteModels(principal.sub),
     ]);
     return { disabled, disabledModels, favoriteModels };
   }

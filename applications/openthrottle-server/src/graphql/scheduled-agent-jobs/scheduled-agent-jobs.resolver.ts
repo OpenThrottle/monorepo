@@ -27,10 +27,8 @@ import {
 } from '@openthrottle/nestjs-auth';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
-import {
-  AgentCliPreferencesService,
-  type ScheduledAgentJob,
-} from '@openthrottle/nestjs-repositories';
+import { type ScheduledAgentJob } from '@openthrottle/nestjs-repositories';
+import { UserDisabledAgentClisRepository } from '@openthrottle/nestjs-repositories-server';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import { ScheduledAgentJobsLoaders } from './loaders/loaders.service.ts';
@@ -64,7 +62,7 @@ const ownerUserIdFor = (principal: AuthPrincipal): string | null => {
 @UseGuards(GqlPermissionsGuard)
 export class ScheduledAgentJobsResolver {
   constructor(
-    private readonly agentPreferences: AgentCliPreferencesService,
+    private readonly disabledAgentClis: UserDisabledAgentClisRepository,
     private readonly loaders: ScheduledAgentJobsLoaders,
     private readonly logger: LoggerService,
     private readonly service: ScheduledAgentJobsGraphqlService,
@@ -258,7 +256,7 @@ export class ScheduledAgentJobsResolver {
     if (ownerUserId === null) {
       return;
     }
-    if (!(await this.agentPreferences.isEnabled(ownerUserId, driverId))) {
+    if (!(await this.disabledAgentClis.isEnabled(ownerUserId, driverId))) {
       throw new BadRequestException(
         `The ${driverId} agent is disabled. Re-enable it on Settings › Setup to schedule it.`,
       );
@@ -266,7 +264,7 @@ export class ScheduledAgentJobsResolver {
     const trimmedModel = model?.trim() ?? '';
     if (
       trimmedModel !== '' &&
-      !(await this.agentPreferences.isModelEnabled(
+      !(await this.disabledAgentClis.isModelEnabled(
         ownerUserId,
         driverId,
         trimmedModel,

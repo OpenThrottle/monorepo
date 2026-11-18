@@ -26,7 +26,6 @@ import { NestjsModelDiscoveryService } from '@openthrottle/nestjs-model-discover
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   AGENT_CONVERSATION_MESSAGE_ROLES,
-  AgentCliPreferencesService,
   type AgentConversationMessage,
   type AgentConversationMessageRole,
   AgentConversationsService,
@@ -34,6 +33,7 @@ import {
   CustomPromptsService,
   WorkspaceLocalRepositoriesService,
 } from '@openthrottle/nestjs-repositories';
+import { UserDisabledAgentClisRepository } from '@openthrottle/nestjs-repositories-server';
 import {
   AGENT_CLI_ALLOWLIST,
   backendReplaysFullHistory,
@@ -241,7 +241,7 @@ const resolveApiBaseUrl = (): string => {
 @Resolver()
 export class ConversationStreamResolver {
   constructor(
-    private readonly agentPreferences: AgentCliPreferencesService,
+    private readonly disabledAgentClis: UserDisabledAgentClisRepository,
     private readonly conversations: AgentConversationsService,
     private readonly customPrompts: CustomPromptsService,
     private readonly logger: LoggerService,
@@ -319,7 +319,7 @@ export class ConversationStreamResolver {
     // Per-user gate: a CLI backend the user disabled on /settings/agents cannot be
     // started (the openai HTTP path is not an agent CLI, so it is never gated).
     if (backend !== OPENAI_BACKEND) {
-      if (!(await this.agentPreferences.isEnabled(userId, backend))) {
+      if (!(await this.disabledAgentClis.isEnabled(userId, backend))) {
         return failed(
           `The ${backend} agent is disabled. Re-enable it on Settings › Setup to use it.`,
         );
@@ -332,7 +332,7 @@ export class ConversationStreamResolver {
       const model = input.modelId?.trim() ?? '';
       if (
         model !== '' &&
-        !(await this.agentPreferences.isModelEnabled(userId, backend, model))
+        !(await this.disabledAgentClis.isModelEnabled(userId, backend, model))
       ) {
         return failed(
           `The ${model} model is disabled. Re-enable it on Settings › Setup to use it.`,

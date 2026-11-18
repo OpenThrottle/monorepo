@@ -1,4 +1,4 @@
-import { MCP_CONNECTOR_AUTH_TYPES } from '@openthrottle/nestjs-repositories';
+import { MCP_CONNECTOR_AUTH_TYPES } from '@openthrottle/nestjs-repositories-server';
 import { describe, expect, it } from 'vitest';
 
 import {

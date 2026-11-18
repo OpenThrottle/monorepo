@@ -5,10 +5,15 @@ import {
   type AuthPrincipal,
 } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS } from '@openthrottle/nestjs-rbac';
+import type { RolesService } from '@openthrottle/nestjs-repositories';
 import type {
-  AgentCliPreferencesService,
-  RolesService,
-} from '@openthrottle/nestjs-repositories';
+  UserDisabledAgentClisRepository,
+  UserFavoriteAgentModelsRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import {
+  createUserDisabledAgentClisRepositoryMock,
+  createUserFavoriteAgentModelsRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AGENT_CLI_INSTALL_ENABLED_ENV } from './agent-setup.constants.ts';
@@ -45,15 +50,25 @@ function build(
   const setModelEnabled = vi.fn().mockResolvedValue(undefined);
   const setModelFavorite = vi.fn().mockResolvedValue(undefined);
   const setModelsEnabled = vi.fn().mockResolvedValue(undefined);
-  const preferences = createMock<AgentCliPreferencesService>({
+  const disabledAgentClis = createMock<UserDisabledAgentClisRepository>({
+    ...createUserDisabledAgentClisRepositoryMock(),
     setEnabled: setPreferenceEnabled,
     setModelEnabled,
-    setModelFavorite,
     setModelsEnabled,
+  });
+  const favoriteAgentModels = createMock<UserFavoriteAgentModelsRepository>({
+    ...createUserFavoriteAgentModelsRepositoryMock(),
+    setModelFavorite,
   });
   const setupService = createMock<AgentSetupService>({ start });
   return {
-    resolver: new AgentSetupResolver(config, preferences, roles, setupService),
+    resolver: new AgentSetupResolver(
+      config,
+      disabledAgentClis,
+      favoriteAgentModels,
+      roles,
+      setupService,
+    ),
     setModelEnabled,
     setModelFavorite,
     setModelsEnabled,

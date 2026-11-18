@@ -3,7 +3,7 @@
  */
 
 import { Field, ID, ObjectType } from '@nestjs/graphql';
-import type { McpConnectorConnectionData } from '@openthrottle/nestjs-repositories';
+import type { McpConnectorConnectionData } from '@openthrottle/nestjs-repositories-server';
 
 /** Public connection fields (excludes credentialSecretHash). */
 type PublicMcpConnectorConnectionData = Omit<

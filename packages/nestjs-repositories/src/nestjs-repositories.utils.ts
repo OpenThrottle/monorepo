@@ -7,18 +7,19 @@ import {
   CodeEmbedding,
   CodeIndexSnapshot,
   DailyStat,
+  McpConnectorConnection,
   Note,
   SkillUsageEvent,
   SkillUsageOutcome,
   TelemetryHeartbeat,
+  UserDisabledAgentCli,
+  UserFavoriteAgentModel,
   WorktreeRemoval,
 } from '@openthrottle/nestjs-repositories-server';
 import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
 import type { DataSourceOptions } from 'typeorm';
 
 import { AgentAccount } from './modules/agent-accounts/agent-accounts.entity.ts';
-import { UserDisabledAgentCli } from './modules/agent-cli-preferences/user-disabled-agent-cli.entity.ts';
-import { UserFavoriteAgentModel } from './modules/agent-cli-preferences/user-favorite-agent-model.entity.ts';
 import { AgentConversation } from './modules/agent-conversations/agent-conversation.entity.ts';
 import { AgentConversationMessage } from './modules/agent-conversations/agent-conversation-message.entity.ts';
 import { AgentTokenUsage } from './modules/agent-token-usage/agent-token-usage.entity.ts';
@@ -33,7 +34,6 @@ import { EvalJudgeCalibration } from './modules/eval-judge-calibrations/eval-jud
 import { EvalGrade } from './modules/eval-runs/eval-grade.entity.ts';
 import { EvalRun } from './modules/eval-runs/eval-run.entity.ts';
 import { EvalTrial } from './modules/eval-runs/eval-trial.entity.ts';
-import { McpConnectorConnection } from './modules/mcp-connectors/mcp-connector-connection.entity.ts';
 import { PlanEmbedding } from './modules/plan-embeddings/plan-embedding.entity.ts';
 import { PlanMessage } from './modules/plan-messages/plan-message.entity.ts';
 import { PlanOutputStreamChunk } from './modules/plan-output-stream/plan-output-stream.entity.ts';

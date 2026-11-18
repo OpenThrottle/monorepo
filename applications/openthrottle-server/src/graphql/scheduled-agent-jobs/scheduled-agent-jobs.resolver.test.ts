@@ -11,12 +11,13 @@ import {
   type AuthPrincipal,
 } from '@openthrottle/nestjs-auth';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import type { AgentCliPreferencesService } from '@openthrottle/nestjs-repositories';
 import {
   type RepositoryCheckout,
   type ScheduledAgentJob,
   type ScheduledAgentJobRun,
 } from '@openthrottle/nestjs-repositories';
+import type { UserDisabledAgentClisRepository } from '@openthrottle/nestjs-repositories-server';
+import { createUserDisabledAgentClisRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { ScheduledAgentJobsLoaders } from './loaders/loaders.service.ts';
@@ -52,7 +53,8 @@ function build(
 } {
   const isEnabled = vi.fn().mockResolvedValue(enabled);
   const isModelEnabled = vi.fn().mockResolvedValue(modelEnabled);
-  const agentPreferences = createMock<AgentCliPreferencesService>({
+  const disabledAgentClis = createMock<UserDisabledAgentClisRepository>({
+    ...createUserDisabledAgentClisRepositoryMock(),
     isEnabled,
     isModelEnabled,
   });
@@ -61,7 +63,7 @@ function build(
     .mockResolvedValue(createMock<ScheduledAgentJob>({ id: 'job-1' }));
   const service = createMock<ScheduledAgentJobsGraphqlService>({ create });
   const resolver = new ScheduledAgentJobsResolver(
-    agentPreferences,
+    disabledAgentClis,
     createMock<ScheduledAgentJobsLoaders>(),
     createMock<LoggerService>(),
     service,
@@ -112,7 +114,9 @@ describe('cross-job run reads', () => {
     service: ScheduledAgentJobsGraphqlService,
   ): ScheduledAgentJobsResolver => {
     return new ScheduledAgentJobsResolver(
-      createMock<AgentCliPreferencesService>(),
+      createMock<UserDisabledAgentClisRepository>(
+        createUserDisabledAgentClisRepositoryMock(),
+      ),
       createMock<ScheduledAgentJobsLoaders>(),
       createMock<LoggerService>(),
       service,
@@ -254,7 +258,9 @@ describe('repository resolve-fields', () => {
 
   it('labels a schedule with its targeted checkout', async () => {
     const resolver = new ScheduledAgentJobsResolver(
-      createMock<AgentCliPreferencesService>(),
+      createMock<UserDisabledAgentClisRepository>(
+        createUserDisabledAgentClisRepositoryMock(),
+      ),
       loadersFor(checkout),
       createMock<LoggerService>(),
       createMock<ScheduledAgentJobsGraphqlService>(),
@@ -276,7 +282,9 @@ describe('repository resolve-fields', () => {
   it('resolves null for a schedule that targets no checkout', async () => {
     const loaders = loadersFor(checkout);
     const resolver = new ScheduledAgentJobsResolver(
-      createMock<AgentCliPreferencesService>(),
+      createMock<UserDisabledAgentClisRepository>(
+        createUserDisabledAgentClisRepositoryMock(),
+      ),
       loaders,
       createMock<LoggerService>(),
       createMock<ScheduledAgentJobsGraphqlService>(),

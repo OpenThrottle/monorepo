@@ -2,13 +2,13 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { PlanRunConfigStorage } from '@openthrottle/nestjs-repositories';
 import {
-  AgentCliPreferencesService,
   getDefaultPlanRunConfigStorage,
   parsePlanRunConfigJson,
   Plan,
   PlansService,
   UserPreferencesService,
 } from '@openthrottle/nestjs-repositories';
+import { UserDisabledAgentClisRepository } from '@openthrottle/nestjs-repositories-server';
 
 import type { CreatePlanInput } from '../../graphql/plans/plan.input.ts';
 import { CheckoutPathResolutionService } from '../checkout-path-resolution/checkout-path-resolution.service.ts';
@@ -41,7 +41,7 @@ export class PlanCreationService {
 
   constructor(
     private readonly logger: LoggerService,
-    private readonly agentCliPreferencesService: AgentCliPreferencesService,
+    private readonly disabledAgentClis: UserDisabledAgentClisRepository,
     private readonly checkoutPathResolutionService: CheckoutPathResolutionService,
     private readonly effectiveUserResolutionService: EffectiveUserResolutionService,
     private readonly plansService: PlansService,
@@ -150,11 +150,8 @@ export class PlanCreationService {
       }
 
       const [agentEnabled, modelEnabled] = await Promise.all([
-        this.agentCliPreferencesService.isEnabled(
-          effectiveUserId,
-          defaultAgent.backend,
-        ),
-        this.agentCliPreferencesService.isModelEnabled(
+        this.disabledAgentClis.isEnabled(effectiveUserId, defaultAgent.backend),
+        this.disabledAgentClis.isModelEnabled(
           effectiveUserId,
           defaultAgent.backend,
           defaultAgent.model,

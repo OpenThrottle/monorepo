@@ -32,10 +32,11 @@ import {
   Public,
 } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
+import { RolesService } from '@openthrottle/nestjs-repositories';
 import {
-  AgentCliPreferencesService,
-  RolesService,
-} from '@openthrottle/nestjs-repositories';
+  UserDisabledAgentClisRepository,
+  UserFavoriteAgentModelsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import type { AgentSetupMode } from '@openthrottle/openthrottle-agentic-utils';
 import { isDriverId } from '@openthrottle/openthrottle-drivers';
 
@@ -57,7 +58,8 @@ import { readAgentCliInstallEnabledFromConfig } from './agent-setup.utils.ts';
 export class AgentSetupResolver {
   constructor(
     private readonly config: ConfigService,
-    private readonly preferences: AgentCliPreferencesService,
+    private readonly disabledAgentClis: UserDisabledAgentClisRepository,
+    private readonly favoriteAgentModels: UserFavoriteAgentModelsRepository,
     private readonly roles: RolesService,
     private readonly setupService: AgentSetupService,
   ) {}
@@ -106,7 +108,7 @@ export class AgentSetupResolver {
       throw new BadRequestException(`Unknown agent CLI backend: ${backend}.`);
     }
 
-    await this.preferences.setEnabled(principal.sub, backend, enabled);
+    await this.disabledAgentClis.setEnabled(principal.sub, backend, enabled);
     return { backend, enabled };
   }
 
@@ -129,7 +131,7 @@ export class AgentSetupResolver {
       throw new BadRequestException(`Unknown agent CLI backend: ${backend}.`);
     }
 
-    await this.preferences.setModelEnabled(
+    await this.disabledAgentClis.setModelEnabled(
       principal.sub,
       backend,
       model,
@@ -157,7 +159,7 @@ export class AgentSetupResolver {
       throw new BadRequestException(`Unknown agent CLI backend: ${backend}.`);
     }
 
-    await this.preferences.setModelsEnabled(
+    await this.disabledAgentClis.setModelsEnabled(
       principal.sub,
       backend,
       models,
@@ -185,7 +187,7 @@ export class AgentSetupResolver {
       throw new BadRequestException(`Unknown agent CLI backend: ${backend}.`);
     }
 
-    await this.preferences.setModelFavorite(
+    await this.favoriteAgentModels.setModelFavorite(
       principal.sub,
       backend,
       model,

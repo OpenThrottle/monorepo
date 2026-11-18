@@ -5,6 +5,10 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+import {
+  UserDisabledAgentClisModule,
+  UserFavoriteAgentModelsModule,
+} from '@openthrottle/nestjs-repositories-server';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import { AgentDiscoveryResolver } from './agent-discovery.resolver.ts';
@@ -12,7 +16,12 @@ import { AgentDiscoveryService } from './agent-discovery.service.ts';
 
 @Module({
   exports: [AgentDiscoveryService],
-  imports: [LoggerModule, NestjsRepositoriesModule],
+  imports: [
+    UserDisabledAgentClisModule,
+    UserFavoriteAgentModelsModule,
+    LoggerModule,
+    NestjsRepositoriesModule,
+  ],
   providers: [
     AgentDiscoveryResolver,
     AgentDiscoveryService,

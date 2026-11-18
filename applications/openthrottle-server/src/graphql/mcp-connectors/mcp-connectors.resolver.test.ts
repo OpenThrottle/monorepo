@@ -1,52 +1,45 @@
 import { createMock } from '@golevelup/ts-vitest';
 import { BadRequestException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import type { McpConnectorConnection } from '@openthrottle/nestjs-repositories';
+import { RolesService } from '@openthrottle/nestjs-repositories';
+import { McpConnectorConnectionsRepository } from '@openthrottle/nestjs-repositories-server';
+import type { McpConnectorConnectionsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import {
-  McpConnectorsService,
-  RolesService,
-} from '@openthrottle/nestjs-repositories';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+  createMcpConnectorConnectionsRepositoryMock,
+  mcpConnectorConnectionsFactory,
+} from '@openthrottle/nestjs-repositories-server/testing';
+import { beforeEach, describe, expect, test } from 'vitest';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import { McpConnectorsResolver } from './mcp-connectors.resolver.ts';
 
 const userId = 'user-id';
 
-const mockConnection: McpConnectorConnection = {
+const mockConnection = mcpConnectorConnectionsFactory.build({
   authType: 'api_token',
-  connectedAt: new Date('2026-02-02T10:00:00.000Z'),
   connectorKey: 'stripe',
-  createdAt: new Date('2026-02-02T10:00:00.000Z'),
   credentialLabel: 'prod',
   credentialPrefix: 'sk_l…cdef',
   credentialSecretHash: 'hashed-secret',
-  enabled: true,
-  id: '22222222-2222-4222-8222-222222222222',
-  lastUsedAt: null,
-  updatedAt: new Date('2026-02-02T10:00:00.000Z'),
   userId,
-};
+});
 
 describe('McpConnectorsResolver', () => {
   let resolver: McpConnectorsResolver;
-  let service: McpConnectorsService;
+  let service: McpConnectorConnectionsRepositoryMock;
 
   beforeEach(async () => {
+    service = createMcpConnectorConnectionsRepositoryMock();
     const app = await Test.createTestingModule({
       providers: [
         McpConnectorsResolver,
-        {
-          provide: McpConnectorsService,
-          useValue: createMock<McpConnectorsService>(),
-        },
+        { provide: McpConnectorConnectionsRepository, useValue: service },
         { provide: RolesService, useValue: createMock<RolesService>() },
         GqlPermissionsGuard,
       ],
     }).compile();
 
     resolver = app.get(McpConnectorsResolver);
-    service = app.get(McpConnectorsService);
   });
 
   describe('mcpConnectors', () => {
@@ -59,9 +52,7 @@ describe('McpConnectorsResolver', () => {
 
   describe('mcpConnectorConnections', () => {
     test('maps connections without exposing the secret hash', async () => {
-      vi.mocked(service.findConnectionsForUser).mockResolvedValue([
-        mockConnection,
-      ]);
+      service.findConnectionsForUser.mockResolvedValue([mockConnection]);
 
       const result = await resolver.mcpConnectorConnections(userId);
 
@@ -73,7 +64,7 @@ describe('McpConnectorsResolver', () => {
 
   describe('connectMcpConnector', () => {
     test('derives auth type from the catalog and returns the wrapped connection', async () => {
-      vi.mocked(service.connect).mockResolvedValue(mockConnection);
+      service.connect.mockResolvedValue(mockConnection);
 
       const result = await resolver.connectMcpConnector(userId, {
         apiToken: 'sk_live_0123456789abcdef',
@@ -106,7 +97,7 @@ describe('McpConnectorsResolver', () => {
 
   describe('setMcpConnectorEnabled', () => {
     test('returns null when the user has no connection', async () => {
-      vi.mocked(service.setEnabled).mockResolvedValue(null);
+      service.setEnabled.mockResolvedValue(null);
       await expect(
         resolver.setMcpConnectorEnabled(userId, {
           connectorKey: 'stripe',
@@ -116,7 +107,7 @@ describe('McpConnectorsResolver', () => {
     });
 
     test('wraps the updated connection', async () => {
-      vi.mocked(service.setEnabled).mockResolvedValue({
+      service.setEnabled.mockResolvedValue({
         ...mockConnection,
         enabled: false,
       });
@@ -129,8 +120,8 @@ describe('McpConnectorsResolver', () => {
   });
 
   describe('disconnectMcpConnector', () => {
-    test('delegates to the service', async () => {
-      vi.mocked(service.disconnect).mockResolvedValue(true);
+    test('delegates to the repository', async () => {
+      service.disconnect.mockResolvedValue(true);
       await expect(
         resolver.disconnectMcpConnector(userId, 'stripe'),
       ).resolves.toBe(true);

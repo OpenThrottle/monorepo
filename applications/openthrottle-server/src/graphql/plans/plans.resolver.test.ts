@@ -7,7 +7,6 @@ import { LoggerService } from '@openthrottle/nestjs-modules';
 import { PERMISSIONS, PERMISSIONS_KEY } from '@openthrottle/nestjs-rbac';
 import type { Plan } from '@openthrottle/nestjs-repositories';
 import {
-  AgentCliPreferencesService,
   getDefaultPlanRunConfigStorage,
   PlanRunsService,
   PlansService,
@@ -15,6 +14,8 @@ import {
   TasksService,
 } from '@openthrottle/nestjs-repositories';
 import { Task } from '@openthrottle/nestjs-repositories';
+import { UserDisabledAgentClisRepository } from '@openthrottle/nestjs-repositories-server';
+import { createUserDisabledAgentClisRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import type { Queue } from 'bullmq';
 import type { SelectQueryBuilder } from 'typeorm';
 import {
@@ -235,10 +236,11 @@ describe('PlansResolver', () => {
 
   const mockAgentIsEnabled = vi.fn().mockResolvedValue(true);
   const mockAgentIsModelEnabled = vi.fn().mockResolvedValue(true);
-  const mockAgentPreferences = createMock<AgentCliPreferencesService>({
+  const mockDisabledAgentClis = {
+    ...createUserDisabledAgentClisRepositoryMock(),
     isEnabled: mockAgentIsEnabled,
     isModelEnabled: mockAgentIsModelEnabled,
-  });
+  };
 
   const mockResolveEffectiveUserId = vi.fn().mockResolvedValue(null);
   const mockEffectiveUserResolution =
@@ -302,8 +304,8 @@ describe('PlansResolver', () => {
       providers: [
         PlansResolver,
         {
-          provide: AgentCliPreferencesService,
-          useValue: mockAgentPreferences,
+          provide: UserDisabledAgentClisRepository,
+          useValue: mockDisabledAgentClis,
         },
         {
           provide: EffectiveUserResolutionService,
