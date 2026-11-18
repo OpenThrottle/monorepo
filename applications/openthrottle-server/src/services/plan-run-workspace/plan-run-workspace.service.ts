@@ -8,8 +8,8 @@ import { join } from 'node:path';
 
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { RepositoryCheckoutsService } from '@openthrottle/nestjs-repositories';
 import type { PlanRun } from '@openthrottle/nestjs-repositories-server';
+import { RepositoryCheckoutsRepository } from '@openthrottle/nestjs-repositories-server';
 import { PlanRunsRepository } from '@openthrottle/nestjs-repositories-server';
 import { PlanOutputStreamRepository } from '@openthrottle/nestjs-repositories-server';
 import {
@@ -50,7 +50,7 @@ export class PlanRunWorkspaceService {
     private readonly planRunWorktreeCheckoutService: PlanRunWorktreeCheckoutService,
     private readonly planRunWorkspacePreflightService: PlanRunWorkspacePreflightService,
     private readonly planRunWorktreeProvisionService: PlanRunWorktreeProvisionService,
-    private readonly repositoryCheckoutsService: RepositoryCheckoutsService,
+    private readonly repositoryCheckoutsRepository: RepositoryCheckoutsRepository,
     private readonly worktreeSkillOverlayService: WorktreeSkillOverlayService,
   ) {}
 
@@ -366,10 +366,11 @@ export class PlanRunWorkspaceService {
     }
 
     try {
-      const checkout = await this.repositoryCheckoutsService.findByUserAndPath(
-        actorUserId,
-        configCwd,
-      );
+      const checkout =
+        await this.repositoryCheckoutsRepository.findByUserAndPath(
+          actorUserId,
+          configCwd,
+        );
       if (checkout?.foreignSkillInjectionEnabled !== true) {
         // Unregistered path or explicit opt-out.
         return [];

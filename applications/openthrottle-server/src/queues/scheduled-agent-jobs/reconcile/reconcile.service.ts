@@ -1,9 +1,10 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import { type ScheduledAgentJob } from '@openthrottle/nestjs-repositories';
 import {
-  type ScheduledAgentJob,
-  ScheduledAgentJobsService,
-} from '@openthrottle/nestjs-repositories';
+  ScheduledAgentJobRunsRepository,
+  ScheduledAgentJobsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import { SCHEDULED_RUN_FAILURE_REASONS } from '@openthrottle/openthrottle-notifications';
 
 import { resolveRepeatablesOwner } from '../../repeatable-job/repeatable-job.utils.ts';
@@ -42,7 +43,8 @@ import { ScheduledAgentJobSchedulerService } from '../scheduler/scheduler.servic
 export class ScheduledAgentJobsReconcileService implements OnModuleInit {
   constructor(
     private readonly logger: LoggerService,
-    private readonly jobsService: ScheduledAgentJobsService,
+    private readonly jobsRepository: ScheduledAgentJobsRepository,
+    private readonly runsRepository: ScheduledAgentJobRunsRepository,
     private readonly scheduler: ScheduledAgentJobSchedulerService,
     private readonly failureNotifier: ScheduledAgentJobFailureNotifierService,
   ) {}
@@ -67,7 +69,7 @@ export class ScheduledAgentJobsReconcileService implements OnModuleInit {
    */
   async reconcile(): Promise<void> {
     const bootAt = new Date(Date.now() - process.uptime() * 1_000);
-    const enabled = await this.jobsService.listEnabledJobs();
+    const enabled = await this.jobsRepository.listEnabledJobs();
     const enabledKeys = new Set(enabled.map((job) => job.schedulerKey));
 
     for (const job of enabled) {
@@ -76,7 +78,7 @@ export class ScheduledAgentJobsReconcileService implements OnModuleInit {
       // eslint-disable-next-line no-await-in-loop -- sequential idempotent upserts, small N
       const next = await this.scheduler.upsertScheduler(job);
       // eslint-disable-next-line no-await-in-loop -- sequential idempotent DB writes, small N
-      await this.jobsService.updateNextRunAt(job.id, next);
+      await this.jobsRepository.updateNextRunAt(job.id, next);
     }
 
     const existingIds = await this.scheduler.listOwnedSchedulerIds();
@@ -138,7 +140,7 @@ export class ScheduledAgentJobsReconcileService implements OnModuleInit {
       // is then the outage's one late run, and the planned catch-up is recorded as superseded.
       const catchUpAlreadyRan =
         plan.catchUpSlot !== null &&
-        (await this.jobsService.hasLateRunSince(job.id, bootAt));
+        (await this.runsRepository.hasLateRunSince(job.id, bootAt));
       const catchUpSlot = catchUpAlreadyRan ? null : plan.catchUpSlot;
       let supersededSlots = plan.supersededSlots;
       if (catchUpAlreadyRan && plan.catchUpSlot !== null) {
@@ -153,12 +155,12 @@ export class ScheduledAgentJobsReconcileService implements OnModuleInit {
       // Missed rows go in BEFORE the catch-up is enqueued, so a worker that claims the surviving
       // overdue job from here on finds its slot taken (unless that slot is the catch-up itself).
       const [lateCount, supersededCount] = await Promise.all([
-        this.jobsService.recordMissedRuns({
+        this.runsRepository.recordMissedRuns({
           ...base,
           errorMessage: missedLateMessage(policy),
           slots: plan.lateSlots,
         }),
-        this.jobsService.recordMissedRuns({
+        this.runsRepository.recordMissedRuns({
           ...base,
           errorMessage: missedSupersededMessage(policy),
           slots: supersededSlots,
@@ -207,7 +209,7 @@ export class ScheduledAgentJobsReconcileService implements OnModuleInit {
     job: ScheduledAgentJob,
     bootAt: Date,
   ): Promise<Date> {
-    const latestSlot = await this.jobsService.findLatestScheduledFor(
+    const latestSlot = await this.runsRepository.findLatestScheduledFor(
       job.id,
       bootAt,
     );

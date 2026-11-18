@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { ScheduledAgentJobsService } from '@openthrottle/nestjs-repositories';
+import { ScheduledAgentJobsRepository } from '@openthrottle/nestjs-repositories-server';
 import {
   type NotificationSeverity,
   SCHEDULED_RUN_FAILURE_REASONS,
@@ -40,7 +40,7 @@ const severityFor = (
 export class ScheduledAgentJobFailureNotifierService {
   constructor(
     private readonly logger: LoggerService,
-    private readonly jobsService: ScheduledAgentJobsService,
+    private readonly jobsRepository: ScheduledAgentJobsRepository,
     private readonly notifications: NotificationsService,
     @Inject(SCHEDULED_RUN_FAILURE_CHANNELS)
     private readonly channels: readonly ScheduledRunFailureChannel[],
@@ -67,7 +67,7 @@ export class ScheduledAgentJobFailureNotifierService {
   ): Promise<ScheduledRunFailureNotice | null> {
     if (input.runCount < 1) return null;
 
-    const schedule = await this.jobsService.findJobById(
+    const schedule = await this.jobsRepository.findJobById(
       input.scheduledAgentJobId,
     );
     if (schedule === null) return null;

@@ -1,16 +1,21 @@
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import type {
-  RepositoriesService,
-  RepositoryCheckoutsService,
-} from '@openthrottle/nestjs-repositories';
 import {
   type Repository,
   type RepositoryCheckout,
 } from '@openthrottle/nestjs-repositories';
+import type {
+  RepositoriesRepository,
+  RepositoryCheckoutsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import type { PlanRunsRepository } from '@openthrottle/nestjs-repositories-server';
 import { type PlanRun } from '@openthrottle/nestjs-repositories-server';
+import {
+  createRepositoriesRepositoryMock,
+  createRepositoryCheckoutsRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import { createPlanRunsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import { asMock } from '@openthrottle/nestjs-testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { RepositoryInspectionService } from '../../graphql/repository-inspection/repository-inspection.service.ts';
@@ -117,7 +122,8 @@ describe('PlanRunWorktreeCheckoutService', () => {
     vi.clearAllMocks();
 
     service = new PlanRunWorktreeCheckoutService(
-      createMock<RepositoryCheckoutsService>({
+      asMock<RepositoryCheckoutsRepository>({
+        ...createRepositoryCheckoutsRepositoryMock(),
         upsertWorktreeCheckout: mockUpsertWorktreeCheckout,
       }),
       createMock<RepositoryInspectionService>({
@@ -128,9 +134,10 @@ describe('PlanRunWorktreeCheckoutService', () => {
         warn: mockWarn,
       }),
       createMock<PlanRunsRepository>(planRunsRepository),
-      createMock<RepositoriesService>({
-        findById: mockFindRepositoryById,
+      asMock<RepositoriesRepository>({
+        ...createRepositoriesRepositoryMock(),
         findByNormalizedRemoteUrl: mockFindByNormalizedRemoteUrl,
+        findRepositoryById: mockFindRepositoryById,
       }),
     );
   });

@@ -7,7 +7,7 @@ import { UseGuards } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { CurrentUser } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
-import { UserPreferencesService } from '@openthrottle/nestjs-repositories';
+import { UserPreferencesRepository } from '@openthrottle/nestjs-repositories-server';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import { UpdateUserPreferencesInput } from './user-preferences.input.ts';
@@ -22,7 +22,7 @@ import { UserPreferencesObject } from './user-preferences.object.ts';
 @UseGuards(GqlPermissionsGuard)
 export class UserPreferencesResolver {
   constructor(
-    private readonly userPreferencesService: UserPreferencesService,
+    private readonly userPreferencesRepository: UserPreferencesRepository,
   ) {}
 
   @Query(() => UserPreferencesObject, {
@@ -32,7 +32,7 @@ export class UserPreferencesResolver {
   async userPreferences(
     @CurrentUser('sub') userId: string,
   ): Promise<UserPreferencesObject> {
-    const data = await this.userPreferencesService.getForUser(userId);
+    const data = await this.userPreferencesRepository.getForUser(userId);
     return toUserPreferencesObject(data);
   }
 
@@ -45,7 +45,7 @@ export class UserPreferencesResolver {
     @Args('input', { type: () => UpdateUserPreferencesInput })
     input: UpdateUserPreferencesInput,
   ): Promise<UserPreferencesObject> {
-    const result = await this.userPreferencesService.update(
+    const result = await this.userPreferencesRepository.update(
       userId,
       toUpdateUserPreferencesPatch(input),
     );

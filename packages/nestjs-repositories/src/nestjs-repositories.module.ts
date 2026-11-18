@@ -4,10 +4,16 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import {
   PermissionsModule,
+  RepositoriesModule,
+  RepositoryCheckoutsModule,
   RolesModule,
+  ScheduledAgentJobRunsModule,
+  ScheduledAgentJobsModule,
   ServiceAccountCredentialsModule,
   ServiceAccountsModule,
+  UserPreferencesModule,
   UsersModule,
+  UserWorkspaceSettingsModule,
 } from '@openthrottle/nestjs-repositories-server';
 
 import { AgentConversationsModule } from './modules/agent-conversations/agent-conversations.module.ts';
@@ -19,13 +25,9 @@ import { EvalJudgeCalibrationsModule } from './modules/eval-judge-calibrations/e
 import { EvalRunsModule } from './modules/eval-runs/eval-runs.module.ts';
 import { ProjectSkillsModule } from './modules/project-skills/project-skills.module.ts';
 import { CustomPromptsModule } from './modules/prompts/prompts.module.ts';
-import { RepositoriesModule } from './modules/repositories/repositories.module.ts';
-import { ScheduledAgentJobsModule } from './modules/scheduled-agent-jobs/scheduled-agent-jobs.module.ts';
 import { SkillAvailabilityModule } from './modules/skill-availability/skill-availability.module.ts';
 import { TagActionRulesModule } from './modules/tag-action-rules/tag-action-rules.module.ts';
 import { TagsModule } from './modules/tags/tags.module.ts';
-import { UserPreferencesModule } from './modules/user-preferences/user-preferences.module.ts';
-import { WorkspaceSettingsModule } from './modules/workspace-settings/workspace-settings.module.ts';
 import { getTypeOrmOptions } from './nestjs-repositories.utils.ts';
 
 @Module({
@@ -42,7 +44,9 @@ import { getTypeOrmOptions } from './nestjs-repositories.utils.ts';
     PermissionsModule,
     ProjectSkillsModule,
     RepositoriesModule,
+    RepositoryCheckoutsModule,
     RolesModule,
+    ScheduledAgentJobRunsModule,
     ScheduledAgentJobsModule,
     ServiceAccountCredentialsModule,
     ServiceAccountsModule,
@@ -51,7 +55,7 @@ import { getTypeOrmOptions } from './nestjs-repositories.utils.ts';
     TagsModule,
     UserPreferencesModule,
     UsersModule,
-    WorkspaceSettingsModule,
+    UserWorkspaceSettingsModule,
   ],
   imports: [
     TypeOrmModule.forRootAsync({
@@ -75,7 +79,9 @@ import { getTypeOrmOptions } from './nestjs-repositories.utils.ts';
     PermissionsModule,
     ProjectSkillsModule,
     RepositoriesModule,
+    RepositoryCheckoutsModule,
     RolesModule,
+    ScheduledAgentJobRunsModule,
     ScheduledAgentJobsModule,
     ServiceAccountCredentialsModule,
     ServiceAccountsModule,
@@ -84,7 +90,7 @@ import { getTypeOrmOptions } from './nestjs-repositories.utils.ts';
     TagsModule,
     UserPreferencesModule,
     UsersModule,
-    WorkspaceSettingsModule,
+    UserWorkspaceSettingsModule,
   ],
   providers: [],
 })

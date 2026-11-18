@@ -1730,6 +1730,9 @@ importers:
       '@openthrottle/nestjs-modules':
         specifier: workspace:^
         version: link:../../packages/nestjs-modules
+      '@openthrottle/nestjs-postgres':
+        specifier: workspace:^
+        version: link:../../packages/nestjs-postgres
       '@openthrottle/nestjs-profiling':
         specifier: workspace:^
         version: link:../../packages/nestjs-profiling
@@ -2757,6 +2760,12 @@ importers:
       '@openthrottle/nodejs-utils':
         specifier: workspace:^
         version: link:../nodejs-utils
+      '@openthrottle/openthrottle-agentic-utils':
+        specifier: workspace:^
+        version: link:../openthrottle-agentic-utils
+      '@openthrottle/openthrottle-drivers':
+        specifier: workspace:^
+        version: link:../openthrottle-drivers
       '@openthrottle/openthrottle-plan-config':
         specifier: workspace:^
         version: link:../openthrottle-plan-config
@@ -2788,9 +2797,6 @@ importers:
       '@openthrottle/nestjs-testing':
         specifier: workspace:^
         version: link:../nestjs-testing
-      '@openthrottle/openthrottle-agentic-utils':
-        specifier: workspace:^
-        version: link:../openthrottle-agentic-utils
       '@types/bcrypt':
         specifier: 'catalog:'
         version: 6.0.0

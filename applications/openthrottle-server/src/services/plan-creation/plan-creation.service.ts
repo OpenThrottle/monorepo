@@ -4,8 +4,8 @@ import type { PlanRunConfigStorage } from '@openthrottle/nestjs-repositories';
 import {
   getDefaultPlanRunConfigStorage,
   parsePlanRunConfigJson,
-  UserPreferencesService,
 } from '@openthrottle/nestjs-repositories';
+import { UserPreferencesRepository } from '@openthrottle/nestjs-repositories-server';
 import {
   Plan,
   PlansRepository,
@@ -49,7 +49,7 @@ export class PlanCreationService {
     private readonly checkoutPathResolutionService: CheckoutPathResolutionService,
     private readonly effectiveUserResolutionService: EffectiveUserResolutionService,
     private readonly plansRepository: PlansRepository,
-    private readonly userPreferencesService: UserPreferencesService,
+    private readonly userPreferencesRepository: UserPreferencesRepository,
   ) {
     this.logger.debug(`🧩 ${this.name} 🧩`);
   }
@@ -148,7 +148,7 @@ export class PlanCreationService {
       }
 
       const { defaultAgent } =
-        await this.userPreferencesService.getForUser(effectiveUserId);
+        await this.userPreferencesRepository.getForUser(effectiveUserId);
       if (defaultAgent === null) {
         return defaults;
       }

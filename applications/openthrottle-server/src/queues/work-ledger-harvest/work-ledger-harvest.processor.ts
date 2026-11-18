@@ -4,7 +4,7 @@ import { InjectDataSource } from '@nestjs/typeorm';
 import { defaultWorkerOptions } from '@openthrottle/nestjs-bullmq';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { Repository as RepositoryEntity } from '@openthrottle/nestjs-repositories';
-import { RepositoriesService } from '@openthrottle/nestjs-repositories';
+import { RepositoriesRepository } from '@openthrottle/nestjs-repositories-server';
 import {
   PlansRepository,
   ServiceAccountsRepository,
@@ -76,7 +76,7 @@ export class WorkLedgerHarvestProcessor
   constructor(
     private readonly logger: LoggerService,
     private readonly plansRepository: PlansRepository,
-    private readonly repositoriesService: RepositoriesService,
+    private readonly repositoriesRepository: RepositoriesRepository,
     private readonly serviceAccountsRepository: ServiceAccountsRepository,
     private readonly settleRunLedgerService: SettleRunLedgerService,
     private readonly sourceControlService: SourceControlService,
@@ -127,9 +127,9 @@ export class WorkLedgerHarvestProcessor
       return;
     }
 
-    const repositories = await this.repositoriesService
-      .getRepository()
-      .find({ where: { ledgerHarvestEnabled: true } });
+    const repositories = await this.repositoriesRepository.findBy({
+      where: { ledgerHarvestEnabled: true },
+    });
 
     for (const repository of repositories) {
       // eslint-disable-next-line no-await-in-loop -- sequential to bound forge API pressure
@@ -194,7 +194,7 @@ export class WorkLedgerHarvestProcessor
       const newest = batch[0];
 
       if (newest !== undefined && batch.length === commits.length) {
-        await this.repositoriesService.getRepository().update(
+        await this.repositoriesRepository.updateMany(
           { id: repository.id },
           {
             ledgerHarvestCursor: newest.sha,

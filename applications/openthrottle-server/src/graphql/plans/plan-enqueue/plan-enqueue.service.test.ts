@@ -5,8 +5,8 @@ import { join } from 'node:path';
 import { createMock } from '@golevelup/ts-vitest';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import type { RepositoryCheckoutsService } from '@openthrottle/nestjs-repositories';
 import { type RepositoryCheckout } from '@openthrottle/nestjs-repositories';
+import type { RepositoryCheckoutsRepository } from '@openthrottle/nestjs-repositories-server';
 import type {
   PlanRun,
   PlanRunsRepository,
@@ -21,6 +21,7 @@ import {
 import {
   createPlanRunsRepositoryMock,
   createPlansRepositoryMock,
+  createRepositoryCheckoutsRepositoryMock,
   createTasksRepositoryMock,
   planRunsFactory,
 } from '@openthrottle/nestjs-repositories-server/testing';
@@ -184,12 +185,12 @@ describe('PlanEnqueueService', () => {
 
   const mockFindByIdForUser = vi.fn().mockResolvedValue(null);
   const mockFindByRepositoryIdForUser = vi.fn().mockResolvedValue([]);
-  const mockRepositoryCheckoutsService = createMock<RepositoryCheckoutsService>(
-    {
+  const mockRepositoryCheckoutsRepository =
+    asMock<RepositoryCheckoutsRepository>({
+      ...createRepositoryCheckoutsRepositoryMock(),
       findByIdForUser: mockFindByIdForUser,
       findByRepositoryIdForUser: mockFindByRepositoryIdForUser,
-    },
-  );
+    });
 
   const mockLogger = createMock<LoggerService>();
   const mockRecordStatusChange = vi.fn().mockResolvedValue(undefined);
@@ -207,7 +208,7 @@ describe('PlanEnqueueService', () => {
     asMock<PlansRepository>(mockPlansRepository),
     mockPlanStatusService,
     mockQueuesService,
-    mockRepositoryCheckoutsService,
+    mockRepositoryCheckoutsRepository,
     asMock<TasksRepository>(mockTasksRepository),
     mockWorkLedgerCapture,
     mockPlansQueue,

@@ -1,12 +1,12 @@
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import type {
-  ScheduledAgentJobRun,
-  ScheduledAgentJobsService,
-} from '@openthrottle/nestjs-repositories';
+import type { ScheduledAgentJobRun } from '@openthrottle/nestjs-repositories';
+import type { ScheduledAgentJobRunsRepository } from '@openthrottle/nestjs-repositories-server';
+import type { ScheduledAgentJobRunsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import { createScheduledAgentJobRunsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import { asMock } from '@openthrottle/nestjs-testing';
 import type { Queue } from 'bullmq';
 import type { Redis } from 'ioredis';
-import type { Repository } from 'typeorm';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { ScheduledAgentJobDirectoryLockService } from '../directory-lock/directory-lock.service.ts';
@@ -32,7 +32,7 @@ const run = (
 };
 
 describe('ScheduledAgentJobStuckRunRecoveryService', () => {
-  let runRepository: Repository<ScheduledAgentJobRun>;
+  let runsRepository: ScheduledAgentJobRunsRepositoryMock;
   let redis: Redis;
   let directoryLock: ScheduledAgentJobDirectoryLockService;
   let failureNotifier: ScheduledAgentJobFailureNotifierService;
@@ -42,10 +42,9 @@ describe('ScheduledAgentJobStuckRunRecoveryService', () => {
 
   beforeEach(() => {
     lockedJobIds = new Set();
-    runRepository = createMock<Repository<ScheduledAgentJobRun>>({
-      find: vi.fn().mockResolvedValue([]),
-      update: vi.fn().mockResolvedValue({ affected: 1 }),
-    });
+    runsRepository = createScheduledAgentJobRunsRepositoryMock();
+    runsRepository.findBy.mockResolvedValue([]);
+    runsRepository.updateMany.mockResolvedValue({ updateCount: 1 });
     redis = createMock<Redis>({
       get: vi.fn((key: string) =>
         Promise.resolve(
@@ -68,9 +67,7 @@ describe('ScheduledAgentJobStuckRunRecoveryService', () => {
 
     service = new ScheduledAgentJobStuckRunRecoveryService(
       createMock<LoggerService>(),
-      createMock<ScheduledAgentJobsService>({
-        getRunRepository: () => runRepository,
-      }),
+      asMock<ScheduledAgentJobRunsRepository>(runsRepository),
       directoryLock,
       queue,
       failureNotifier,
@@ -83,11 +80,11 @@ describe('ScheduledAgentJobStuckRunRecoveryService', () => {
 
   describe('when the run has no live BullMQ job', () => {
     it('marks it failed with the server-restarted reason, guarded on running', async () => {
-      vi.mocked(runRepository.find).mockResolvedValue([run('a')]);
+      vi.mocked(runsRepository.findBy).mockResolvedValue([run('a')]);
 
       const summary = await service.recover();
 
-      expect(runRepository.update).toHaveBeenCalledExactlyOnceWith(
+      expect(runsRepository.updateMany).toHaveBeenCalledExactlyOnceWith(
         { id: 'a', status: 'running' },
         expect.objectContaining({
           errorMessage: SCHEDULED_AGENT_JOB_SERVER_RESTARTED_MESSAGE,
@@ -105,7 +102,7 @@ describe('ScheduledAgentJobStuckRunRecoveryService', () => {
     });
 
     it('tells the schedule owner the run failed', async () => {
-      vi.mocked(runRepository.find).mockResolvedValue([run('a')]);
+      vi.mocked(runsRepository.findBy).mockResolvedValue([run('a')]);
 
       await service.recover();
 
@@ -119,11 +116,9 @@ describe('ScheduledAgentJobStuckRunRecoveryService', () => {
     });
 
     it('sends nothing for a run that finished before the update landed', async () => {
-      vi.mocked(runRepository.find).mockResolvedValue([run('a')]);
-      vi.mocked(runRepository.update).mockResolvedValue({
-        affected: 0,
-        generatedMaps: [],
-        raw: [],
+      vi.mocked(runsRepository.findBy).mockResolvedValue([run('a')]);
+      vi.mocked(runsRepository.updateMany).mockResolvedValue({
+        updateCount: 0,
       });
 
       await service.recover();
@@ -132,7 +127,7 @@ describe('ScheduledAgentJobStuckRunRecoveryService', () => {
     });
 
     it('releases the directory lock the run held', async () => {
-      vi.mocked(runRepository.find).mockResolvedValue([run('a')]);
+      vi.mocked(runsRepository.findBy).mockResolvedValue([run('a')]);
 
       await service.recover();
 
@@ -142,7 +137,7 @@ describe('ScheduledAgentJobStuckRunRecoveryService', () => {
     });
 
     it('treats a run with no BullMQ job id as abandoned', async () => {
-      vi.mocked(runRepository.find).mockResolvedValue([
+      vi.mocked(runsRepository.findBy).mockResolvedValue([
         run('a', { bullmqJobId: null }),
       ]);
 
@@ -155,7 +150,7 @@ describe('ScheduledAgentJobStuckRunRecoveryService', () => {
     it('only queries running rows', async () => {
       await service.recover();
 
-      expect(runRepository.find).toHaveBeenCalledWith(
+      expect(runsRepository.findBy).toHaveBeenCalledWith(
         expect.objectContaining({ where: { status: 'running' } }),
       );
     });
@@ -164,18 +159,18 @@ describe('ScheduledAgentJobStuckRunRecoveryService', () => {
   describe('when a worker still holds the BullMQ job lock', () => {
     it('leaves the run running and its directory locked', async () => {
       lockedJobIds.add('job-a');
-      vi.mocked(runRepository.find).mockResolvedValue([run('a')]);
+      vi.mocked(runsRepository.findBy).mockResolvedValue([run('a')]);
 
       const summary = await service.recover();
 
-      expect(runRepository.update).not.toHaveBeenCalled();
+      expect(runsRepository.updateMany).not.toHaveBeenCalled();
       expect(directoryLock.forceRelease).not.toHaveBeenCalled();
       expect(summary.skippedLive).toBe(1);
     });
 
     it('keeps the directory lock when an abandoned run shares the live run directory', async () => {
       lockedJobIds.add('job-live');
-      vi.mocked(runRepository.find).mockResolvedValue([
+      vi.mocked(runsRepository.findBy).mockResolvedValue([
         run('dead', { resolvedCwd: '/repos/shared' }),
         run('live', { resolvedCwd: '/repos/shared/' }),
       ]);
@@ -190,23 +185,21 @@ describe('ScheduledAgentJobStuckRunRecoveryService', () => {
   describe('when the lock check errors', () => {
     it('assumes the run is live rather than failing it', async () => {
       vi.mocked(redis.get).mockRejectedValue(new Error('redis down'));
-      vi.mocked(runRepository.find).mockResolvedValue([run('a')]);
+      vi.mocked(runsRepository.findBy).mockResolvedValue([run('a')]);
 
       const summary = await service.recover();
 
-      expect(runRepository.update).not.toHaveBeenCalled();
+      expect(runsRepository.updateMany).not.toHaveBeenCalled();
       expect(summary.skippedLive).toBe(1);
     });
   });
 
   describe('when the run finished between the read and the write', () => {
     it('does not count it or release its lock', async () => {
-      vi.mocked(runRepository.update).mockResolvedValue({
-        affected: 0,
-        generatedMaps: [],
-        raw: [],
+      vi.mocked(runsRepository.updateMany).mockResolvedValue({
+        updateCount: 0,
       });
-      vi.mocked(runRepository.find).mockResolvedValue([run('a')]);
+      vi.mocked(runsRepository.findBy).mockResolvedValue([run('a')]);
 
       const summary = await service.recover();
 
@@ -217,7 +210,7 @@ describe('ScheduledAgentJobStuckRunRecoveryService', () => {
 
   describe('when the run had no directory lock to hold', () => {
     it('skips the release for a flag-only worktree run', async () => {
-      vi.mocked(runRepository.find).mockResolvedValue([
+      vi.mocked(runsRepository.findBy).mockResolvedValue([
         run('a', {
           settingsSnapshot: { settings: { worktree: { worktree: '' } } },
         }),
@@ -229,7 +222,7 @@ describe('ScheduledAgentJobStuckRunRecoveryService', () => {
     });
 
     it('skips the release when no resolved cwd was recorded', async () => {
-      vi.mocked(runRepository.find).mockResolvedValue([
+      vi.mocked(runsRepository.findBy).mockResolvedValue([
         run('a', { resolvedCwd: null }),
       ]);
 
@@ -239,7 +232,7 @@ describe('ScheduledAgentJobStuckRunRecoveryService', () => {
     });
 
     it('releases the named-worktree key for a named worktree run', async () => {
-      vi.mocked(runRepository.find).mockResolvedValue([
+      vi.mocked(runsRepository.findBy).mockResolvedValue([
         run('a', {
           settingsSnapshot: { settings: { worktree: { worktree: 'nightly' } } },
         }),
@@ -259,7 +252,7 @@ describe('ScheduledAgentJobStuckRunRecoveryService', () => {
 
       await service.onApplicationBootstrap();
 
-      expect(runRepository.find).not.toHaveBeenCalled();
+      expect(runsRepository.findBy).not.toHaveBeenCalled();
     });
 
     it('runs recovery when this checkout owns repeatables', async () => {
@@ -267,12 +260,12 @@ describe('ScheduledAgentJobStuckRunRecoveryService', () => {
 
       await service.onApplicationBootstrap();
 
-      expect(runRepository.find).toHaveBeenCalledOnce();
+      expect(runsRepository.findBy).toHaveBeenCalledOnce();
     });
 
     it('never throws out of boot when recovery fails', async () => {
       vi.stubEnv('OT_SCHEDULED_JOBS_OWNER', 'true');
-      vi.mocked(runRepository.find).mockRejectedValue(new Error('db down'));
+      vi.mocked(runsRepository.findBy).mockRejectedValue(new Error('db down'));
 
       await expect(service.onApplicationBootstrap()).resolves.toBeUndefined();
     });

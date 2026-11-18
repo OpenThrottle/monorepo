@@ -30,6 +30,9 @@
       "path": "../openthrottle-agentic-utils/tsconfig.lib.json"
     },
     {
+      "path": "../openthrottle-drivers/tsconfig.lib.json"
+    },
+    {
       "path": "../nestjs-testing/tsconfig.lib.json"
     },
     {

@@ -7,15 +7,14 @@
 
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import type {
-  RepositoryCheckout,
-  RepositoryCheckoutsService,
-} from '@openthrottle/nestjs-repositories';
+import type { RepositoryCheckout } from '@openthrottle/nestjs-repositories';
+import type { RepositoryCheckoutsRepository } from '@openthrottle/nestjs-repositories-server';
 import type { PlanRunsRepository } from '@openthrottle/nestjs-repositories-server';
 import type {
   Plan,
   PlansRepository,
 } from '@openthrottle/nestjs-repositories-server';
+import { createRepositoryCheckoutsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import {
   createPlanRunsRepositoryMock,
   createPlansRepositoryMock,
@@ -252,7 +251,8 @@ const build = (
 
   const service = new PlanRunWorktreeReaperService(
     createMock<LoggerService>(),
-    createMock<RepositoryCheckoutsService>({
+    asMock<RepositoryCheckoutsRepository>({
+      ...createRepositoryCheckoutsRepositoryMock(),
       findAll: vi
         .fn()
         .mockResolvedValue([

@@ -3,8 +3,20 @@ import type { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   type ScheduledAgentJob,
   type ScheduledAgentJobRun,
-  type ScheduledAgentJobsService,
 } from '@openthrottle/nestjs-repositories';
+import type {
+  ScheduledAgentJobRunsRepository,
+  ScheduledAgentJobsRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import type {
+  ScheduledAgentJobRunsRepositoryMock,
+  ScheduledAgentJobsRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
+import {
+  createScheduledAgentJobRunsRepositoryMock,
+  createScheduledAgentJobsRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
+import { asMock } from '@openthrottle/nestjs-testing';
 import type { Queue } from 'bullmq';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -47,10 +59,10 @@ const jobFixture = (
 };
 
 describe('ScheduledAgentJobUsageLimitResumeService', () => {
-  let jobsService: ScheduledAgentJobsService;
+  let jobsRepository: ScheduledAgentJobsRepositoryMock;
+  let runsRepository: ScheduledAgentJobRunsRepositoryMock;
   let scheduler: ScheduledAgentJobSchedulerService;
   let queue: Queue<ScheduledAgentJobPayload, void>;
-  let runRepoDelete: ReturnType<typeof vi.fn>;
   let service: ScheduledAgentJobUsageLimitResumeService;
 
   const handle = (
@@ -72,24 +84,21 @@ describe('ScheduledAgentJobUsageLimitResumeService', () => {
   };
 
   beforeEach(() => {
-    runRepoDelete = vi.fn().mockResolvedValue({ affected: 1 });
-    jobsService = createMock<ScheduledAgentJobsService>({
-      countUsageLimitedInChain: vi.fn().mockResolvedValue(1),
-      createRun: vi
-        .fn()
-        .mockResolvedValue(
-          createMock<ScheduledAgentJobRun>({ id: 'run-next' }),
-        ),
-      findJobById: vi.fn().mockResolvedValue(jobFixture()),
-      findRunById: vi.fn().mockResolvedValue(
-        createMock<ScheduledAgentJobRun>({
-          errorMessage: 'Usage limit reached (five_hour); resets at later',
-        }),
-      ),
-      findRunResumingFrom: vi.fn().mockResolvedValue(null),
-      getRunRepository: vi.fn().mockReturnValue({ delete: runRepoDelete }),
-      updateRunErrorMessage: vi.fn().mockResolvedValue(undefined),
-    });
+    jobsRepository = createScheduledAgentJobsRepositoryMock();
+    jobsRepository.findJobById.mockResolvedValue(jobFixture());
+    runsRepository = createScheduledAgentJobRunsRepositoryMock();
+    runsRepository.countUsageLimitedInChain.mockResolvedValue(1);
+    runsRepository.createRun.mockResolvedValue(
+      createMock<ScheduledAgentJobRun>({ id: 'run-next' }),
+    );
+    runsRepository.findRunById.mockResolvedValue(
+      createMock<ScheduledAgentJobRun>({
+        errorMessage: 'Usage limit reached (five_hour); resets at later',
+      }),
+    );
+    runsRepository.findRunResumingFrom.mockResolvedValue(null);
+    runsRepository.updateRunErrorMessage.mockResolvedValue(undefined);
+
     scheduler = createMock<ScheduledAgentJobSchedulerService>({
       readNextRunAt: vi.fn().mockResolvedValue(null),
     });
@@ -98,7 +107,8 @@ describe('ScheduledAgentJobUsageLimitResumeService', () => {
     });
     service = new ScheduledAgentJobUsageLimitResumeService(
       createMock<LoggerService>(),
-      jobsService,
+      asMock<ScheduledAgentJobsRepository>(jobsRepository),
+      asMock<ScheduledAgentJobRunsRepository>(runsRepository),
       scheduler,
       queue,
     );
@@ -109,7 +119,7 @@ describe('ScheduledAgentJobUsageLimitResumeService', () => {
       const outcome = await handle();
 
       expect(outcome).toEqual({ outcome: 'resumed', resumeRunId: 'run-next' });
-      expect(jobsService.createRun).toHaveBeenCalledExactlyOnceWith({
+      expect(runsRepository.createRun).toHaveBeenCalledExactlyOnceWith({
         bullmqJobId: 'usage-limit-resume-run-limited',
         driverId: 'claude',
         model: 'opus',
@@ -132,7 +142,7 @@ describe('ScheduledAgentJobUsageLimitResumeService', () => {
           jobId: 'usage-limit-resume-run-limited',
         },
       );
-      expect(jobsService.updateRunErrorMessage).not.toHaveBeenCalled();
+      expect(runsRepository.updateRunErrorMessage).not.toHaveBeenCalled();
     });
 
     it('uses the reset-plus-buffer delay even when the reset has just passed', async () => {
@@ -154,7 +164,7 @@ describe('ScheduledAgentJobUsageLimitResumeService', () => {
     });
 
     it('is idempotent: an existing continuation is reported, not duplicated', async () => {
-      vi.mocked(jobsService.findRunResumingFrom).mockResolvedValue(
+      vi.mocked(runsRepository.findRunResumingFrom).mockResolvedValue(
         createMock<ScheduledAgentJobRun>({ id: 'run-existing' }),
       );
 
@@ -162,15 +172,15 @@ describe('ScheduledAgentJobUsageLimitResumeService', () => {
         outcome: 'resumed',
         resumeRunId: 'run-existing',
       });
-      expect(jobsService.createRun).not.toHaveBeenCalled();
+      expect(runsRepository.createRun).not.toHaveBeenCalled();
       expect(queue.add).not.toHaveBeenCalled();
     });
 
     it('treats a lost unique-index race as already resumed', async () => {
-      vi.mocked(jobsService.createRun).mockRejectedValue(
+      vi.mocked(runsRepository.createRun).mockRejectedValue(
         new Error('duplicate key value violates unique constraint'),
       );
-      vi.mocked(jobsService.findRunResumingFrom)
+      vi.mocked(runsRepository.findRunResumingFrom)
         .mockResolvedValueOnce(null)
         .mockResolvedValueOnce(
           createMock<ScheduledAgentJobRun>({ id: 'run-winner' }),
@@ -189,8 +199,8 @@ describe('ScheduledAgentJobUsageLimitResumeService', () => {
       const outcome = await handle();
 
       expect(outcome.outcome).toBe('held');
-      expect(runRepoDelete).toHaveBeenCalledWith({ id: 'run-next' });
-      expect(jobsService.updateRunErrorMessage).toHaveBeenCalledWith(
+      expect(runsRepository.remove).toHaveBeenCalledWith('run-next');
+      expect(runsRepository.updateRunErrorMessage).toHaveBeenCalledWith(
         'run-limited',
         expect.stringContaining('scheduling the resume failed: redis down'),
       );
@@ -205,9 +215,9 @@ describe('ScheduledAgentJobUsageLimitResumeService', () => {
       const outcome = await handle(overrides);
 
       expect(outcome).toEqual({ outcome: 'held', reason });
-      expect(jobsService.createRun).not.toHaveBeenCalled();
+      expect(runsRepository.createRun).not.toHaveBeenCalled();
       expect(queue.add).not.toHaveBeenCalled();
-      expect(jobsService.updateRunErrorMessage).toHaveBeenCalledWith(
+      expect(runsRepository.updateRunErrorMessage).toHaveBeenCalledWith(
         'run-limited',
         `Usage limit reached (five_hour); resets at later; not resumed automatically (${reason})`,
       );
@@ -224,12 +234,12 @@ describe('ScheduledAgentJobUsageLimitResumeService', () => {
     });
 
     it('holds when the chain has already hit the limit too many times', async () => {
-      vi.mocked(jobsService.countUsageLimitedInChain).mockResolvedValue(
+      vi.mocked(runsRepository.countUsageLimitedInChain).mockResolvedValue(
         USAGE_LIMIT_RESUME_MAX_CHAIN_DEPTH,
       );
 
       await expectHeld('it has already been resumed after 2 usage limits');
-      expect(jobsService.countUsageLimitedInChain).toHaveBeenCalledWith(
+      expect(runsRepository.countUsageLimitedInChain).toHaveBeenCalledWith(
         'run-limited',
         USAGE_LIMIT_RESUME_MAX_CHAIN_DEPTH,
       );
@@ -252,7 +262,7 @@ describe('ScheduledAgentJobUsageLimitResumeService', () => {
     });
 
     it('holds for a disabled schedule', async () => {
-      vi.mocked(jobsService.findJobById).mockResolvedValue(
+      vi.mocked(jobsRepository.findJobById).mockResolvedValue(
         jobFixture({ enabled: false }),
       );
 
@@ -260,7 +270,7 @@ describe('ScheduledAgentJobUsageLimitResumeService', () => {
     });
 
     it('holds for a schedule that no longer exists', async () => {
-      vi.mocked(jobsService.findJobById).mockResolvedValue(null);
+      vi.mocked(jobsRepository.findJobById).mockResolvedValue(null);
 
       await expectHeld('the schedule no longer exists');
     });
@@ -274,7 +284,7 @@ describe('ScheduledAgentJobUsageLimitResumeService', () => {
 
   describe('never throws', () => {
     it('holds when a repository read fails', async () => {
-      vi.mocked(jobsService.findJobById).mockRejectedValue(
+      vi.mocked(jobsRepository.findJobById).mockRejectedValue(
         new Error('db down'),
       );
 
@@ -285,13 +295,13 @@ describe('ScheduledAgentJobUsageLimitResumeService', () => {
     });
 
     it('still holds when even recording the reason fails', async () => {
-      vi.mocked(jobsService.findJobById).mockRejectedValue(
+      vi.mocked(jobsRepository.findJobById).mockRejectedValue(
         new Error('db down'),
       );
-      vi.mocked(jobsService.findRunById).mockRejectedValue(
+      vi.mocked(runsRepository.findRunById).mockRejectedValue(
         new Error('db down'),
       );
-      vi.mocked(jobsService.updateRunErrorMessage).mockRejectedValue(
+      vi.mocked(runsRepository.updateRunErrorMessage).mockRejectedValue(
         new Error('db down'),
       );
 

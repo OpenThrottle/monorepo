@@ -16,15 +16,13 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import {
-  PLAN_STATUS,
-  RepositoryCheckoutsService,
-} from '@openthrottle/nestjs-repositories';
+import { PLAN_STATUS } from '@openthrottle/nestjs-repositories';
 import type {
   PlanRunExecutionBackend,
   PlanRunStatus,
   ScheduledRunRef,
 } from '@openthrottle/nestjs-repositories-server';
+import { RepositoryCheckoutsRepository } from '@openthrottle/nestjs-repositories-server';
 import {
   PLAN_RUN_STATUS,
   PlanRun,
@@ -244,7 +242,7 @@ export class PlanEnqueueService {
     private readonly plansRepository: PlansRepository,
     private readonly planStatusService: PlanStatusService,
     private readonly queuesService: QueuesService,
-    private readonly repositoryCheckoutsService: RepositoryCheckoutsService,
+    private readonly repositoryCheckoutsRepository: RepositoryCheckoutsRepository,
     private readonly tasksRepository: TasksRepository,
     private readonly workLedgerCapture: WorkLedgerCaptureService,
     @InjectQueue(PLANS_QUEUE_NAME)
@@ -793,7 +791,7 @@ export class PlanEnqueueService {
           'checkoutId can only be resolved for an authenticated user',
         );
       }
-      const checkout = await this.repositoryCheckoutsService.findByIdForUser(
+      const checkout = await this.repositoryCheckoutsRepository.findByIdForUser(
         checkoutId,
         input.actorUserId,
       );
@@ -816,7 +814,7 @@ export class PlanEnqueueService {
         );
       }
       const checkouts =
-        await this.repositoryCheckoutsService.findByRepositoryIdForUser(
+        await this.repositoryCheckoutsRepository.findByRepositoryIdForUser(
           repositoryId,
           input.actorUserId,
         );

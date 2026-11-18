@@ -1,10 +1,8 @@
 import { createMock } from '@golevelup/ts-vitest';
 import type { ConfigService } from '@nestjs/config';
 import type { GitHubService } from '@openthrottle/nestjs-github';
-import type {
-  RepositoryCheckout,
-  RepositoryCheckoutsService,
-} from '@openthrottle/nestjs-repositories';
+import type { RepositoryCheckout } from '@openthrottle/nestjs-repositories';
+import type { RepositoryCheckoutsRepository } from '@openthrottle/nestjs-repositories-server';
 import type {
   WorkArtifact,
   WorkArtifactsRepository,
@@ -12,11 +10,12 @@ import type {
   WorkSessionsRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import {
+  createRepositoryCheckoutsRepositoryMock,
   createWorkArtifactsRepositoryMock,
   createWorkSessionsRepositoryMock,
 } from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 import { GitHubForgeService } from '../../../services/source-control/github-forge/github-forge.service.ts';
 import { GitLabForgeService } from '../../../services/source-control/gitlab-forge/gitlab-forge.service.ts';
@@ -46,15 +45,16 @@ const artifact = (
 };
 
 describe('PlanRunObjectResolver', () => {
-  const checkoutFind = vi.fn();
+  const checkoutsRepositoryMock = createRepositoryCheckoutsRepositoryMock();
+  const checkoutFind = checkoutsRepositoryMock.findBy;
   const workArtifactsRepository = createWorkArtifactsRepositoryMock();
   const workSessionsRepository = createWorkSessionsRepositoryMock();
   const sessionFind = workSessionsRepository.findBy;
   const artifactFind = workArtifactsRepository.findBy;
 
-  const checkoutsService = asMock<RepositoryCheckoutsService>({
-    getRepository: () => ({ find: checkoutFind }),
-  });
+  const checkoutsRepository = asMock<RepositoryCheckoutsRepository>(
+    checkoutsRepositoryMock,
+  );
   const sourceControlService = new SourceControlService(
     new GitHubForgeService(createMock<GitHubService>()),
     new GitLabForgeService(createMock<ConfigService>()),
@@ -69,7 +69,7 @@ describe('PlanRunObjectResolver', () => {
     // A fresh loader set per test, as a fresh request would get.
     resolver = new PlanRunObjectResolver(
       new PlanRunLoaders(
-        checkoutsService,
+        checkoutsRepository,
         createMock<WorkArtifactsRepository>(workArtifactsRepository),
         createMock<WorkSessionsRepository>(workSessionsRepository),
       ),

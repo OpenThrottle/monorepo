@@ -1,12 +1,10 @@
 import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable } from '@nestjs/common';
-import {
-  type ScheduledAgentJob,
-  ScheduledAgentJobCheckoutPathService,
-  ScheduledAgentJobsService,
-} from '@openthrottle/nestjs-repositories';
+import { type ScheduledAgentJob } from '@openthrottle/nestjs-repositories';
+import { ScheduledAgentJobRunsRepository } from '@openthrottle/nestjs-repositories-server';
 import type { Queue } from 'bullmq';
 
+import { ScheduledAgentJobCheckoutPathService } from '../../../services/scheduled-agent-job-checkout-path/scheduled-agent-job-checkout-path.service.ts';
 import {
   isSelfScheduledKind,
   nextSelfScheduledSlot,
@@ -35,7 +33,7 @@ export class ScheduledAgentJobSchedulerService {
     private readonly checkoutPaths: ScheduledAgentJobCheckoutPathService,
     @InjectQueue(SCHEDULED_AGENT_JOBS_QUEUE_NAME)
     private readonly queue: Queue<ScheduledAgentJobPayload, void>,
-    private readonly jobsService: ScheduledAgentJobsService,
+    private readonly runsRepository: ScheduledAgentJobRunsRepository,
   ) {}
 
   /**
@@ -136,7 +134,7 @@ export class ScheduledAgentJobSchedulerService {
 
     if (
       job.scheduleKind === 'once' &&
-      (await this.jobsService.hasRunForSlot(job.id, slot))
+      (await this.runsRepository.hasRunForSlot(job.id, slot))
     ) {
       return null;
     }

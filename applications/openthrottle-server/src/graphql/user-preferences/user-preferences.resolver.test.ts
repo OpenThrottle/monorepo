@@ -1,12 +1,11 @@
-import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import type { UserPreferencesData } from '@openthrottle/nestjs-repositories';
-import {
-  USER_PREFERENCES_ERROR_REASONS,
-  UserPreferencesService,
-} from '@openthrottle/nestjs-repositories';
+import { USER_PREFERENCES_ERROR_REASONS } from '@openthrottle/nestjs-repositories';
+import { UserPreferencesRepository } from '@openthrottle/nestjs-repositories-server';
 import { RolesRepository } from '@openthrottle/nestjs-repositories-server';
+import { createUserPreferencesRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import { createRolesRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import { asMock } from '@openthrottle/nestjs-testing';
 import { GraphQLError } from 'graphql';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -29,10 +28,9 @@ describe('UserPreferencesResolver', () => {
     userId,
   };
 
-  const mockUserPreferencesService = createMock<UserPreferencesService>({
-    getForUser: vi.fn(),
-    update: vi.fn(),
-  });
+  const mockUserPreferencesRepository = asMock<UserPreferencesRepository>(
+    createUserPreferencesRepositoryMock(),
+  );
 
   let resolver: UserPreferencesResolver;
 
@@ -42,8 +40,8 @@ describe('UserPreferencesResolver', () => {
         UserPreferencesResolver,
         GqlPermissionsGuard,
         {
-          provide: UserPreferencesService,
-          useValue: mockUserPreferencesService,
+          provide: UserPreferencesRepository,
+          useValue: mockUserPreferencesRepository,
         },
         { provide: RolesRepository, useValue: createRolesRepositoryMock() },
       ],
@@ -53,19 +51,19 @@ describe('UserPreferencesResolver', () => {
   });
 
   beforeEach(() => {
-    vi.mocked(mockUserPreferencesService.getForUser).mockReset();
-    vi.mocked(mockUserPreferencesService.update).mockReset();
+    vi.mocked(mockUserPreferencesRepository.getForUser).mockReset();
+    vi.mocked(mockUserPreferencesRepository.update).mockReset();
   });
 
   describe('userPreferences', () => {
     test('reads the caller own row and maps it to the GraphQL shape', async () => {
-      vi.mocked(mockUserPreferencesService.getForUser).mockResolvedValue(
+      vi.mocked(mockUserPreferencesRepository.getForUser).mockResolvedValue(
         savedPreferences,
       );
 
       const result = await resolver.userPreferences(userId);
 
-      expect(mockUserPreferencesService.getForUser).toHaveBeenCalledWith(
+      expect(mockUserPreferencesRepository.getForUser).toHaveBeenCalledWith(
         userId,
       );
       expect(result).toEqual({
@@ -75,7 +73,7 @@ describe('UserPreferencesResolver', () => {
     });
 
     test('returns all-null fields when the user has no preferences', async () => {
-      vi.mocked(mockUserPreferencesService.getForUser).mockResolvedValue(
+      vi.mocked(mockUserPreferencesRepository.getForUser).mockResolvedValue(
         emptyPreferences,
       );
 
@@ -87,7 +85,7 @@ describe('UserPreferencesResolver', () => {
 
   describe('updateUserPreferences', () => {
     test('passes only provided fields to the service for the caller', async () => {
-      vi.mocked(mockUserPreferencesService.update).mockResolvedValue({
+      vi.mocked(mockUserPreferencesRepository.update).mockResolvedValue({
         ok: true,
         preferences: { ...emptyPreferences, defaultEditor: 'cursor' },
       });
@@ -96,9 +94,12 @@ describe('UserPreferencesResolver', () => {
         defaultEditor: WorkspaceEditorIdEnum.CURSOR,
       });
 
-      expect(mockUserPreferencesService.update).toHaveBeenCalledWith(userId, {
-        defaultEditor: 'cursor',
-      });
+      expect(mockUserPreferencesRepository.update).toHaveBeenCalledWith(
+        userId,
+        {
+          defaultEditor: 'cursor',
+        },
+      );
       expect(result).toEqual({
         defaultAgent: null,
         defaultEditor: WorkspaceEditorIdEnum.CURSOR,
@@ -106,7 +107,7 @@ describe('UserPreferencesResolver', () => {
     });
 
     test('sets a default agent, defaulting an omitted effort to null', async () => {
-      vi.mocked(mockUserPreferencesService.update).mockResolvedValue({
+      vi.mocked(mockUserPreferencesRepository.update).mockResolvedValue({
         ok: true,
         preferences: {
           ...emptyPreferences,
@@ -118,9 +119,12 @@ describe('UserPreferencesResolver', () => {
         defaultAgent: { backend: 'claude', model: 'opus' },
       });
 
-      expect(mockUserPreferencesService.update).toHaveBeenCalledWith(userId, {
-        defaultAgent: { backend: 'claude', effort: null, model: 'opus' },
-      });
+      expect(mockUserPreferencesRepository.update).toHaveBeenCalledWith(
+        userId,
+        {
+          defaultAgent: { backend: 'claude', effort: null, model: 'opus' },
+        },
+      );
       expect(result.defaultAgent).toEqual({
         backend: 'claude',
         effort: null,
@@ -129,7 +133,7 @@ describe('UserPreferencesResolver', () => {
     });
 
     test('forwards explicit nulls so both preferences are cleared', async () => {
-      vi.mocked(mockUserPreferencesService.update).mockResolvedValue({
+      vi.mocked(mockUserPreferencesRepository.update).mockResolvedValue({
         ok: true,
         preferences: emptyPreferences,
       });
@@ -139,29 +143,32 @@ describe('UserPreferencesResolver', () => {
         defaultEditor: null,
       });
 
-      expect(mockUserPreferencesService.update).toHaveBeenCalledWith(userId, {
-        defaultAgent: null,
-        defaultEditor: null,
-      });
+      expect(mockUserPreferencesRepository.update).toHaveBeenCalledWith(
+        userId,
+        {
+          defaultAgent: null,
+          defaultEditor: null,
+        },
+      );
       expect(result).toEqual({ defaultAgent: null, defaultEditor: null });
     });
 
     test('an empty input leaves every preference unchanged', async () => {
-      vi.mocked(mockUserPreferencesService.update).mockResolvedValue({
+      vi.mocked(mockUserPreferencesRepository.update).mockResolvedValue({
         ok: true,
         preferences: savedPreferences,
       });
 
       await resolver.updateUserPreferences(userId, {});
 
-      expect(mockUserPreferencesService.update).toHaveBeenCalledWith(
+      expect(mockUserPreferencesRepository.update).toHaveBeenCalledWith(
         userId,
         {},
       );
     });
 
     test('a rejected patch becomes a BAD_USER_INPUT GraphQL error with its reason', async () => {
-      vi.mocked(mockUserPreferencesService.update).mockResolvedValue({
+      vi.mocked(mockUserPreferencesRepository.update).mockResolvedValue({
         message: 'Unknown agent backend: nope',
         ok: false,
         reason: USER_PREFERENCES_ERROR_REASONS.invalidAgentBackend,

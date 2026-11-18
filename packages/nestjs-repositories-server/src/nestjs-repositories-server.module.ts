@@ -14,7 +14,11 @@ import { PlanOutputStreamModule } from './modules/plan-output-stream/plan-output
 import { PlanRunsModule } from './modules/plan-runs/plan-runs.module.ts';
 import { PlansModule } from './modules/plans/plans.module.ts';
 import { ProjectsModule } from './modules/projects/projects.module.ts';
+import { RepositoriesModule } from './modules/repositories/repositories.module.ts';
+import { RepositoryCheckoutsModule } from './modules/repository-checkouts/repository-checkouts.module.ts';
 import { RolesModule } from './modules/roles/roles.module.ts';
+import { ScheduledAgentJobRunsModule } from './modules/scheduled-agent-job-runs/scheduled-agent-job-runs.module.ts';
+import { ScheduledAgentJobsModule } from './modules/scheduled-agent-jobs/scheduled-agent-jobs.module.ts';
 import { ServiceAccountCredentialsModule } from './modules/service-account-credentials/service-account-credentials.module.ts';
 import { ServiceAccountsModule } from './modules/service-accounts/service-accounts.module.ts';
 import { SkillTagsModule } from './modules/skill-tags/skill-tags.module.ts';
@@ -26,6 +30,8 @@ import { TasksModule } from './modules/tasks/tasks.module.ts';
 import { TelemetryHeartbeatsModule } from './modules/telemetry-heartbeats/telemetry-heartbeats.module.ts';
 import { UserDisabledAgentClisModule } from './modules/user-disabled-agent-clis/user-disabled-agent-clis.module.ts';
 import { UserFavoriteAgentModelsModule } from './modules/user-favorite-agent-models/user-favorite-agent-models.module.ts';
+import { UserPreferencesModule } from './modules/user-preferences/user-preferences.module.ts';
+import { UserWorkspaceSettingsModule } from './modules/user-workspace-settings/user-workspace-settings.module.ts';
 import { UsersModule } from './modules/users/users.module.ts';
 import { WorkArtifactsModule } from './modules/work-artifacts/work-artifacts.module.ts';
 import { WorkSessionSubjectsModule } from './modules/work-session-subjects/work-session-subjects.module.ts';
@@ -56,7 +62,11 @@ import { WorktreeRemovalsModule } from './modules/worktree-removals/worktree-rem
     PlanRunsModule,
     PlansModule,
     ProjectsModule,
+    RepositoriesModule,
+    RepositoryCheckoutsModule,
     RolesModule,
+    ScheduledAgentJobRunsModule,
+    ScheduledAgentJobsModule,
     ServiceAccountCredentialsModule,
     ServiceAccountsModule,
     SkillTagsModule,
@@ -68,6 +78,8 @@ import { WorktreeRemovalsModule } from './modules/worktree-removals/worktree-rem
     TelemetryHeartbeatsModule,
     UserDisabledAgentClisModule,
     UserFavoriteAgentModelsModule,
+    UserPreferencesModule,
+    UserWorkspaceSettingsModule,
     UsersModule,
     WorkArtifactsModule,
     WorkSessionSubjectsModule,
@@ -89,7 +101,11 @@ import { WorktreeRemovalsModule } from './modules/worktree-removals/worktree-rem
     PlanRunsModule,
     PlansModule,
     ProjectsModule,
+    RepositoriesModule,
+    RepositoryCheckoutsModule,
     RolesModule,
+    ScheduledAgentJobRunsModule,
+    ScheduledAgentJobsModule,
     ServiceAccountCredentialsModule,
     ServiceAccountsModule,
     SkillTagsModule,
@@ -101,6 +117,8 @@ import { WorktreeRemovalsModule } from './modules/worktree-removals/worktree-rem
     TelemetryHeartbeatsModule,
     UserDisabledAgentClisModule,
     UserFavoriteAgentModelsModule,
+    UserPreferencesModule,
+    UserWorkspaceSettingsModule,
     UsersModule,
     WorkArtifactsModule,
     WorkSessionSubjectsModule,

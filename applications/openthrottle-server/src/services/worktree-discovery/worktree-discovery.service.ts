@@ -34,9 +34,9 @@ import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { RepositoryCheckout } from '@openthrottle/nestjs-repositories';
 import {
-  RepositoryCheckoutsService,
-  UserWorkspaceSettingsService,
-} from '@openthrottle/nestjs-repositories';
+  RepositoryCheckoutsRepository,
+  UserWorkspaceSettingsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 
 import { parseLinkedWorktrees } from '../../graphql/repository-inspection/repository-inspection.utils.ts';
 import { realPath } from '../paths/real-path/real-path.utils.ts';
@@ -105,8 +105,8 @@ export class WorktreeDiscoveryService {
 
   constructor(
     private readonly logger: LoggerService,
-    private readonly checkoutsService: RepositoryCheckoutsService,
-    private readonly settingsService: UserWorkspaceSettingsService,
+    private readonly checkoutsRepository: RepositoryCheckoutsRepository,
+    private readonly settingsRepository: UserWorkspaceSettingsRepository,
   ) {
     this.logger.debug(`🧩 ${this.name} 🧩`);
   }
@@ -201,7 +201,7 @@ export class WorktreeDiscoveryService {
     problems: WorktreeDiscoveryProblem[],
   ): Promise<RepositoryCheckout[]> {
     try {
-      return await this.checkoutsService.listByUserId(userId, {
+      return await this.checkoutsRepository.listByUserId(userId, {
         limit: CHECKOUT_LIST_LIMIT,
       });
     } catch (error) {

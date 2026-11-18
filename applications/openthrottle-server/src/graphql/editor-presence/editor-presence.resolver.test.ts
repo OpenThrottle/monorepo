@@ -6,10 +6,10 @@
  */
 
 import { Test } from '@nestjs/testing';
-import type { EditorPresenceResult } from '@openthrottle/nestjs-repositories';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import type { EditorPresenceResult } from '../../services/editor-presence/editor-presence.types.ts';
 import { EditorPresenceResolver } from './editor-presence.resolver.ts';
 import { EditorPresenceService } from './editor-presence.service.ts';
 

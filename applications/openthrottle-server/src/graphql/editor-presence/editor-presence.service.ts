@@ -20,9 +20,10 @@
 
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import type { EditorPresenceResult } from '@openthrottle/nestjs-repositories';
-import { detectEditorPresence } from '@openthrottle/nestjs-repositories';
 import { StaleWhileRevalidateCache } from '@openthrottle/openthrottle-agentic-utils';
+
+import type { EditorPresenceResult } from '../../services/editor-presence/editor-presence.types.ts';
+import { detectEditorPresence } from '../../services/editor-presence/editor-presence.utils.ts';
 
 const DEFAULT_CACHE_TTL_MS = 60_000;
 const DEFAULT_HARD_TTL_MS = 600_000;

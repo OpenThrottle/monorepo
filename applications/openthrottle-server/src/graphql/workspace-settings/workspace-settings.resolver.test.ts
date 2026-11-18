@@ -4,15 +4,12 @@ import { Test } from '@nestjs/testing';
 import type {
   Project,
   UserWorkspaceSettings,
-  WorkspaceLocalRepository,
 } from '@openthrottle/nestjs-repositories';
-import {
-  UserWorkspaceSettingsService,
-  WorkspaceEditorConfigService,
-  WorkspaceLocalRepositoriesService,
-} from '@openthrottle/nestjs-repositories';
+import { UserWorkspaceSettingsRepository } from '@openthrottle/nestjs-repositories-server';
 import { RolesRepository } from '@openthrottle/nestjs-repositories-server';
+import { createUserWorkspaceSettingsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import { createRolesRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import { asMock } from '@openthrottle/nestjs-testing';
 import type DataLoader from 'dataloader';
 import { mkdtempSync } from 'fs';
 import { tmpdir } from 'os';
@@ -20,6 +17,9 @@ import { join } from 'path';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { WorkspaceEditorConfigService } from '../../services/workspace-editor-config/workspace-editor-config.service.ts';
+import { WorkspaceLocalRepositoriesService } from '../../services/workspace-local-repositories/workspace-local-repositories.service.ts';
+import type { WorkspaceLocalRepository } from '../../services/workspace-local-repositories/workspace-local-repositories.types.ts';
 import { WorktreeActivityService } from '../../services/worktree-activity/worktree-activity.service.ts';
 import { WorkspaceSettingsLoaders } from './loaders/loaders.service.ts';
 import { toUserWorkspaceProfileObject } from './user-workspace-profile.mapper.ts';
@@ -65,11 +65,9 @@ describe('WorkspaceSettingsResolver', () => {
     });
 
   const mockUserWorkspaceSettingsService =
-    createMock<UserWorkspaceSettingsService>({
-      getOrCreateForUser: vi.fn(),
-      updateContactProfile: vi.fn(),
-      updateProfile: vi.fn(),
-    });
+    asMock<UserWorkspaceSettingsRepository>(
+      createUserWorkspaceSettingsRepositoryMock(),
+    );
 
   const mockProjectLoad = vi.fn().mockResolvedValue(null);
   const mockLoaders = createMock<WorkspaceSettingsLoaders>({
@@ -103,7 +101,7 @@ describe('WorkspaceSettingsResolver', () => {
         WorkspaceSettingsResolver,
         GqlPermissionsGuard,
         {
-          provide: UserWorkspaceSettingsService,
+          provide: UserWorkspaceSettingsRepository,
           useValue: mockUserWorkspaceSettingsService,
         },
         {

@@ -9,11 +9,13 @@ import type { KeyedJsonlWriter } from '@openthrottle/nestjs-logging';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   type ScheduledAgentJob,
-  ScheduledAgentJobCheckoutPathService,
   type ScheduledAgentJobRunSettingsSnapshot,
   type ScheduledAgentJobRunStatus,
-  ScheduledAgentJobsService,
 } from '@openthrottle/nestjs-repositories';
+import {
+  ScheduledAgentJobRunsRepository,
+  ScheduledAgentJobsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import {
   DRIVER_REGISTRY,
   RUN_AGENT_STATUS,
@@ -22,6 +24,7 @@ import {
 } from '@openthrottle/openthrottle-drivers';
 import { SCHEDULED_RUN_FAILURE_REASONS } from '@openthrottle/openthrottle-notifications';
 
+import { ScheduledAgentJobCheckoutPathService } from '../../services/scheduled-agent-job-checkout-path/scheduled-agent-job-checkout-path.service.ts';
 import { closeRunOutputForJob } from '../bullmq-keyed-run-logging/bullmq-keyed-run-logging.utils.ts';
 import { BULLMQ_RUN_OUTPUT_WRITER } from '../bullmq-run-output/bullmq-run-output-writer.token.ts';
 import { BullMqRunOutputRetentionService } from '../bullmq-run-output/retention/retention.service.ts';
@@ -170,7 +173,8 @@ export class ScheduledAgentJobsProcessor
 {
   constructor(
     private readonly logger: LoggerService,
-    private readonly jobsService: ScheduledAgentJobsService,
+    private readonly jobsRepository: ScheduledAgentJobsRepository,
+    private readonly runsRepository: ScheduledAgentJobRunsRepository,
     private readonly checkoutPaths: ScheduledAgentJobCheckoutPathService,
     private readonly runner: ScheduledAgentRunnerService,
     private readonly cancellation: ScheduledAgentJobCancellationService,
@@ -347,7 +351,7 @@ export class ScheduledAgentJobsProcessor
             result.status,
             parseRunOutcome(result.output),
           );
-          await this.jobsService.markRunFinished(runRowId, {
+          await this.runsRepository.markRunFinished(runRowId, {
             errorMessage,
             exitCode: result.exitCode,
             status,
@@ -365,7 +369,7 @@ export class ScheduledAgentJobsProcessor
             });
           }
         } else {
-          await this.jobsService.markRunFinished(runRowId, {
+          await this.runsRepository.markRunFinished(runRowId, {
             errorMessage: errorMessageForUsageLimit(usageLimit),
             exitCode: result.exitCode,
             status: 'usage_limited',
@@ -394,7 +398,7 @@ export class ScheduledAgentJobsProcessor
         `Scheduled agent job ${scheduleId} run ${runRowId} failed: ${message}`,
         ScheduledAgentJobsProcessor.name,
       );
-      await this.jobsService.markRunFinished(runRowId, {
+      await this.runsRepository.markRunFinished(runRowId, {
         errorMessage: message,
         exitCode: null,
         status: 'failed',
@@ -409,9 +413,10 @@ export class ScheduledAgentJobsProcessor
     } finally {
       this.cancellation.detach(runRowId);
       const finishedAt = new Date();
-      await this.jobsService
-        .getJobRepository()
-        .update({ id: scheduleId }, { lastRunAt: finishedAt });
+      await this.jobsRepository.updateMany(
+        { id: scheduleId },
+        { lastRunAt: finishedAt },
+      );
       if (typeof job.data.slotMs === 'number') {
         await this.afterSelfScheduledFire(scheduleId, finishedAt);
       }
@@ -434,7 +439,7 @@ export class ScheduledAgentJobsProcessor
     runRowId: string,
     scheduleId: string,
   ): Promise<boolean> {
-    const run = await this.jobsService.findRunById(runRowId);
+    const run = await this.runsRepository.findRunById(runRowId);
     if (!(run?.cancelRequestedAt instanceof Date)) {
       return false;
     }
@@ -443,7 +448,7 @@ export class ScheduledAgentJobsProcessor
       `Scheduled agent job ${scheduleId}: run ${runRowId} was cancelled before it started; not spawning the agent.`,
       ScheduledAgentJobsProcessor.name,
     );
-    await this.jobsService.markRunFinished(runRowId, {
+    await this.runsRepository.markRunFinished(runRowId, {
       errorMessage: 'Run cancelled',
       exitCode: null,
       status: 'cancelled',
@@ -471,12 +476,12 @@ export class ScheduledAgentJobsProcessor
       return false;
     }
 
-    const existing = await this.jobsService.findRunById(runId);
+    const existing = await this.runsRepository.findRunById(runId);
     if (existing !== null && existing.trigger !== 'resume') {
       return false;
     }
 
-    const schedule = await this.jobsService.findJobById(scheduleId);
+    const schedule = await this.jobsRepository.findJobById(scheduleId);
     if (schedule?.enabled === true) {
       return false;
     }
@@ -491,7 +496,7 @@ export class ScheduledAgentJobsProcessor
     );
 
     if (existing !== null) {
-      await this.jobsService.markRunFinished(existing.id, {
+      await this.runsRepository.markRunFinished(existing.id, {
         errorMessage: reason,
         exitCode: null,
         status: 'cancelled',
@@ -514,7 +519,7 @@ export class ScheduledAgentJobsProcessor
   ): Promise<boolean> {
     if (typeof data.slotMs !== 'number') return false;
 
-    const schedule = await this.jobsService.findJobById(data.scheduleId);
+    const schedule = await this.jobsRepository.findJobById(data.scheduleId);
     const reason = await this.staleSelfScheduledFireReason(
       schedule,
       data.slotMs,
@@ -545,7 +550,7 @@ export class ScheduledAgentJobsProcessor
         : 'the schedule now runs at a different time';
     }
 
-    const isRunning = await this.jobsService.hasLiveScheduledRun({
+    const isRunning = await this.runsRepository.hasLiveScheduledRun({
       createdSince: new Date(Date.now() - process.uptime() * 1_000),
       excludeRunId: null,
       scheduledAgentJobId: schedule.id,
@@ -567,12 +572,12 @@ export class ScheduledAgentJobsProcessor
     finishedAt: Date,
   ): Promise<void> {
     try {
-      const schedule = await this.jobsService.findJobById(scheduleId);
+      const schedule = await this.jobsRepository.findJobById(scheduleId);
       if (schedule === null || !schedule.enabled) return;
 
       if (schedule.scheduleKind === 'once') {
-        await this.jobsService.setJobEnabled(scheduleId, false);
-        await this.jobsService.updateNextRunAt(scheduleId, null);
+        await this.jobsRepository.setJobEnabled(scheduleId, false);
+        await this.jobsRepository.updateNextRunAt(scheduleId, null);
         return;
       }
 
@@ -581,7 +586,7 @@ export class ScheduledAgentJobsProcessor
       const next = await this.scheduler.armSelfScheduledFire(schedule, {
         lastFinishedAt: finishedAt,
       });
-      await this.jobsService.updateNextRunAt(scheduleId, next);
+      await this.jobsRepository.updateNextRunAt(scheduleId, next);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       this.logger.warn(
@@ -637,7 +642,7 @@ export class ScheduledAgentJobsProcessor
       return false;
     }
 
-    const schedule = await this.jobsService.findJobById(data.scheduleId);
+    const schedule = await this.jobsRepository.findJobById(data.scheduleId);
     if (schedule === null) return false;
 
     const policy = {
@@ -647,7 +652,7 @@ export class ScheduledAgentJobsProcessor
     if (shouldRunLateFire({ latenessMs, ...policy })) return false;
 
     const errorMessage = missedOnPickupMessage({ latenessMs, ...policy });
-    const recorded = await this.jobsService.recordMissedRuns({
+    const recorded = await this.runsRepository.recordMissedRuns({
       driverId: data.driverId,
       errorMessage,
       model: data.model ?? null,
@@ -719,7 +724,7 @@ export class ScheduledAgentJobsProcessor
       };
     }
 
-    const schedule = await this.jobsService.findJobById(scheduleId);
+    const schedule = await this.jobsRepository.findJobById(scheduleId);
     const resolved = await this.checkoutPaths.resolve({
       checkoutId,
       ownerUserId: schedule?.ownerUserId ?? null,
@@ -790,20 +795,24 @@ export class ScheduledAgentJobsProcessor
     },
   ): Promise<string | null> {
     if (typeof runId === 'string' && runId.length > 0) {
-      const existing = await this.jobsService.findRunById(runId);
+      const existing = await this.runsRepository.findRunById(runId);
       if (existing !== null) {
         // Run-now row was pre-created by the enqueuer; backfill the snapshot as it starts.
-        await this.jobsService.markRunStarted(existing.id, input.bullmqJobId, {
-          repositoryCheckoutId: input.repositoryCheckoutId,
-          resolvedCwd: input.resolvedCwd,
-          settingsSnapshot: input.settingsSnapshot,
-        });
+        await this.runsRepository.markRunStarted(
+          existing.id,
+          input.bullmqJobId,
+          {
+            repositoryCheckoutId: input.repositoryCheckoutId,
+            resolvedCwd: input.resolvedCwd,
+            settingsSnapshot: input.settingsSnapshot,
+          },
+        );
         return existing.id;
       }
     }
 
     if (input.scheduledFor !== null) {
-      const claimed = await this.jobsService.claimScheduledSlot({
+      const claimed = await this.runsRepository.claimScheduledSlot({
         bullmqJobId: input.bullmqJobId,
         driverId: input.driverId,
         model: input.model,
@@ -815,14 +824,14 @@ export class ScheduledAgentJobsProcessor
       });
       if (claimed === null) return null;
 
-      await this.jobsService.markRunStarted(claimed.id, input.bullmqJobId, {
+      await this.runsRepository.markRunStarted(claimed.id, input.bullmqJobId, {
         settingsSnapshot: input.settingsSnapshot,
       });
       return claimed.id;
     }
 
     // A fire with no readable slot (a job id from before slot accounting) keeps the old path.
-    const created = await this.jobsService.createRun({
+    const created = await this.runsRepository.createRun({
       bullmqJobId: input.bullmqJobId,
       driverId: input.driverId,
       model: input.model,
@@ -833,7 +842,7 @@ export class ScheduledAgentJobsProcessor
       status: 'running',
       trigger: 'schedule',
     });
-    await this.jobsService.markRunStarted(created.id, input.bullmqJobId);
+    await this.runsRepository.markRunStarted(created.id, input.bullmqJobId);
     return created.id;
   }
 
@@ -870,14 +879,12 @@ export class ScheduledAgentJobsProcessor
       return;
     }
 
-    const run = await this.jobsService
-      .getRunRepository()
-      .findOne({ where: { bullmqJobId } });
+    const run = await this.runsRepository.findOne({ where: { bullmqJobId } });
     if (run === null || TERMINAL_RUN_STATUSES.has(run.status)) {
       return;
     }
 
-    await this.jobsService.markRunFinished(run.id, {
+    await this.runsRepository.markRunFinished(run.id, {
       errorMessage: reason,
       exitCode: null,
       status: 'failed',

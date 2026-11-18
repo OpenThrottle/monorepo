@@ -20,7 +20,11 @@ import {
   PlanOutputStreamChunk,
   PlanRun,
   Project,
+  Repository,
+  RepositoryCheckout,
   Role,
+  ScheduledAgentJob,
+  ScheduledAgentJobRun,
   ServiceAccount,
   ServiceAccountCredential,
   SkillUsageEvent,
@@ -32,7 +36,9 @@ import {
   User,
   UserDisabledAgentCli,
   UserFavoriteAgentModel,
+  UserPreferences,
   UserSkillTag,
+  UserWorkspaceSettings,
   WorkArtifact,
   WorkSession,
   WorkSessionSubject,
@@ -54,10 +60,6 @@ import { EvalRun } from './modules/eval-runs/eval-run.entity.ts';
 import { EvalTrial } from './modules/eval-runs/eval-trial.entity.ts';
 import { ProjectSkill } from './modules/project-skills/project-skill.entity.ts';
 import { CustomPrompt } from './modules/prompts/custom-prompt.entity.ts';
-import { Repository } from './modules/repositories/repository.entity.ts';
-import { RepositoryCheckout } from './modules/repositories/repository-checkout.entity.ts';
-import { ScheduledAgentJob } from './modules/scheduled-agent-jobs/scheduled-agent-job.entity.ts';
-import { ScheduledAgentJobRun } from './modules/scheduled-agent-jobs/scheduled-agent-job-run.entity.ts';
 import { SkillAvailabilityRule } from './modules/skill-availability/skill-availability-rule.entity.ts';
 import { SkillAvailabilityRuleSet } from './modules/skill-availability/skill-availability-rule-set.entity.ts';
 import { RuleApplication } from './modules/tag-action-rules/rule-application.entity.ts';
@@ -65,8 +67,6 @@ import { TagActionRule } from './modules/tag-action-rules/tag-action-rule.entity
 import { PlanTag } from './modules/tags/plan-tag.entity.ts';
 import { ProjectTag } from './modules/tags/project-tag.entity.ts';
 import { TaskTag } from './modules/tags/task-tag.entity.ts';
-import { UserPreferences } from './modules/user-preferences/user-preferences.entity.ts';
-import { UserWorkspaceSettings } from './modules/workspace-settings/user-workspace-settings.entity.ts';
 
 /**
  * @description Resolves a positive integer from an env var, or undefined when

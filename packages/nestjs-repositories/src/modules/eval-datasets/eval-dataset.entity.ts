@@ -3,6 +3,7 @@
  * case set). Matches databases/openthrottle/migrations (147).
  */
 
+import type { Repository } from '@openthrottle/nestjs-repositories-server';
 import {
   Column,
   CreateDateColumn,
@@ -14,7 +15,6 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-import type { Repository } from '../repositories/repository.entity.ts';
 import type { EvalCase } from './eval-case.entity.ts';
 import type { EvalDatasetTarget } from './eval-datasets.types.ts';
 

@@ -23,10 +23,12 @@ import { join } from 'node:path';
 
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import type { RepositoryCheckoutsService } from '@openthrottle/nestjs-repositories';
+import type { RepositoryCheckoutsRepository } from '@openthrottle/nestjs-repositories-server';
 import type { PlanRunsRepository } from '@openthrottle/nestjs-repositories-server';
+import { createRepositoryCheckoutsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import { createPlanRunsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { asMock } from '@openthrottle/nestjs-testing';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { PlanRunWorktreeProvisionService } from '../plan-run-worktree-provision/plan-run-worktree-provision.service.ts';
 import { PLAN_RUN_WORKTREE_TEARDOWN_OUTCOME } from './plan-run-worktree-teardown.constants.ts';
@@ -112,11 +114,9 @@ describe('plan-run worktree lifecycle in a foreign repo', () => {
     );
     const teardown = new PlanRunWorktreeTeardownService(
       createMock<LoggerService>(),
-      createMock<RepositoryCheckoutsService>({
-        getRepository: vi.fn().mockReturnValue({
-          find: vi.fn().mockResolvedValue([]),
-        }),
-      }),
+      asMock<RepositoryCheckoutsRepository>(
+        createRepositoryCheckoutsRepositoryMock(),
+      ),
       createMock<PlanRunsRepository>(createPlanRunsRepositoryMock()),
     );
 

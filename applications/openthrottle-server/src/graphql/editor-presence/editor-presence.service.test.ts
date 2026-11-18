@@ -7,17 +7,22 @@
 import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import type { EditorPresenceResult } from '@openthrottle/nestjs-repositories';
-import { detectEditorPresence } from '@openthrottle/nestjs-repositories';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { EditorPresenceResult } from '../../services/editor-presence/editor-presence.types.ts';
+import { detectEditorPresence } from '../../services/editor-presence/editor-presence.utils.ts';
 import { EditorPresenceService } from './editor-presence.service.ts';
 
-vi.mock('@openthrottle/nestjs-repositories', async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import('@openthrottle/nestjs-repositories')>();
-  return { ...actual, detectEditorPresence: vi.fn() };
-});
+vi.mock(
+  '../../services/editor-presence/editor-presence.utils.ts',
+  async (importOriginal) => {
+    const actual =
+      await importOriginal<
+        typeof import('../../services/editor-presence/editor-presence.utils.ts')
+      >();
+    return { ...actual, detectEditorPresence: vi.fn() };
+  },
+);
 
 const detectEditorPresenceMock = vi.mocked(detectEditorPresence);
 

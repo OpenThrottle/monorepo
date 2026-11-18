@@ -35,12 +35,12 @@
 import { Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import {
-  RepositoriesService,
-  RepositoryCheckoutsService,
-} from '@openthrottle/nestjs-repositories';
 import type { PlanRun } from '@openthrottle/nestjs-repositories-server';
 import type { WorkArtifactSource } from '@openthrottle/nestjs-repositories-server';
+import {
+  RepositoriesRepository,
+  RepositoryCheckoutsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import {
   PLAN_RUN_STATUS,
   PlanRunsRepository,
@@ -86,8 +86,8 @@ export class SettleRunLedgerService {
   constructor(
     private readonly logger: LoggerService,
     private readonly planRunsRepository: PlanRunsRepository,
-    private readonly repositoriesService: RepositoriesService,
-    private readonly repositoryCheckoutsService: RepositoryCheckoutsService,
+    private readonly repositoriesRepository: RepositoriesRepository,
+    private readonly repositoryCheckoutsRepository: RepositoryCheckoutsRepository,
     private readonly repositoryInspectionService: RepositoryInspectionService,
     private readonly serviceAccountsRepository: ServiceAccountsRepository,
     private readonly sourceControlService: SourceControlService,
@@ -366,8 +366,9 @@ export class SettleRunLedgerService {
 
     for (const repositoryId of repositoryIds) {
       if (repositoryId == null) continue;
-      // eslint-disable-next-line no-await-in-loop -- deliberate precedence: stop at the first hit
-      const repository = await this.repositoriesService.findById(repositoryId);
+      const repository =
+        // eslint-disable-next-line no-await-in-loop -- deliberate precedence: stop at the first hit
+        await this.repositoriesRepository.findRepositoryById(repositoryId);
       if (repository != null) return this.toRepoRef(repository);
     }
 
@@ -415,7 +416,8 @@ export class SettleRunLedgerService {
   ): Promise<string | null> {
     if (checkoutId == null) return null;
 
-    const checkout = await this.repositoryCheckoutsService.findById(checkoutId);
+    const checkout =
+      await this.repositoryCheckoutsRepository.findCheckoutById(checkoutId);
 
     return checkout?.repositoryId ?? null;
   }
@@ -433,7 +435,7 @@ export class SettleRunLedgerService {
     if (remote == null) return null;
 
     const repository =
-      await this.repositoriesService.findByNormalizedRemoteUrl(remote);
+      await this.repositoriesRepository.findByNormalizedRemoteUrl(remote);
 
     return repository == null ? null : this.toRepoRef(repository);
   }

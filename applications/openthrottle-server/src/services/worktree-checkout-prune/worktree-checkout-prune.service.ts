@@ -14,13 +14,14 @@
  * (guard 4), and holding the row cannot bring the directory back. The fire-time check
  * (`decideScheduledPlanRunFire`'s `workspace_missing`) settles such a run FAILED and tells the user.
  *
- * Referencing rows keep their history: every foreign key to repository_checkouts is ON DELETE SET
- * NULL, so a settled run simply loses its "open in editor" link to a worktree that no longer exists.
+ * Referencing rows keep their history: the delete is a soft delete, so plan runs keep their
+ * `checkout_id`, and a settled run simply loses its "open in editor" link to a worktree that no
+ * longer exists (the checkout reads as not found).
  */
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { RepositoryCheckout } from '@openthrottle/nestjs-repositories';
-import { RepositoryCheckoutsService } from '@openthrottle/nestjs-repositories';
+import { RepositoryCheckoutsRepository } from '@openthrottle/nestjs-repositories-server';
 import { PlanRunsRepository } from '@openthrottle/nestjs-repositories-server';
 import { WorktreeRemovalsRepository } from '@openthrottle/nestjs-repositories-server';
 
@@ -43,7 +44,7 @@ export class WorktreeCheckoutPruneService {
 
   constructor(
     private readonly logger: LoggerService,
-    private readonly checkoutsService: RepositoryCheckoutsService,
+    private readonly checkoutsRepository: RepositoryCheckoutsRepository,
     private readonly planRunsRepository: PlanRunsRepository,
     private readonly worktreeRemovals: WorktreeRemovalsRepository,
   ) {
@@ -65,7 +66,7 @@ export class WorktreeCheckoutPruneService {
       );
     }
     const checkouts = await Promise.all(
-      ids.map((id) => this.checkoutsService.findByIdForUser(id, userId)),
+      ids.map((id) => this.checkoutsRepository.findByIdForUser(id, userId)),
     );
     const found = checkouts.filter(
       (checkout): checkout is RepositoryCheckout => checkout !== null,
@@ -113,7 +114,7 @@ export class WorktreeCheckoutPruneService {
     const candidates = [...new Set([filesystemPath, realPath(filesystemPath)])];
     const matches = await Promise.all(
       candidates.map((path) =>
-        this.checkoutsService.findByUserAndPath(userId, path),
+        this.checkoutsRepository.findByUserAndPath(userId, path),
       ),
     );
     const checkout = matches.find((match) => match !== null) ?? null;
@@ -194,7 +195,7 @@ export class WorktreeCheckoutPruneService {
       return result(PRUNE_WORKTREE_CHECKOUT_OUTCOME.SKIPPED_LIVE);
     }
 
-    const deleted = await this.checkoutsService.deleteWorktreeCheckout(
+    const deleted = await this.checkoutsRepository.deleteWorktreeCheckout(
       userId,
       id,
     );

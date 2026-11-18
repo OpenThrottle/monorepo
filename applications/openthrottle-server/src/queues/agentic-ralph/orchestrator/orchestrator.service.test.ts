@@ -8,11 +8,12 @@
 import { createMock } from '@golevelup/ts-vitest';
 import type { AgenticWorkflowRegistry } from '@openthrottle/nestjs-agentic-workflow';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import type { RepositoryCheckoutsService } from '@openthrottle/nestjs-repositories';
 import { type RepositoryCheckout } from '@openthrottle/nestjs-repositories';
+import type { RepositoryCheckoutsRepository } from '@openthrottle/nestjs-repositories-server';
 import type { PlanRunsRepository } from '@openthrottle/nestjs-repositories-server';
 import type { PlanOutputStreamRepository } from '@openthrottle/nestjs-repositories-server';
 import { type PlanRun } from '@openthrottle/nestjs-repositories-server';
+import { createRepositoryCheckoutsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import {
   createPlanOutputStreamRepositoryMock,
   createPlanRunsRepositoryMock,
@@ -182,7 +183,8 @@ describe('AgenticRalphOrchestratorService worktree checkout registration', () =>
         createMock<PlanRunWorktreeProvisionService>({
           provision: mockProvision,
         }),
-        createMock<RepositoryCheckoutsService>({
+        asMock<RepositoryCheckoutsRepository>({
+          ...createRepositoryCheckoutsRepositoryMock(),
           findByUserAndPath: mockFindByUserAndPath,
         }),
         createMock<WorktreeSkillOverlayService>({
@@ -355,7 +357,8 @@ describe('AgenticRalphOrchestratorService foreign-skill injection gate', () => {
         createMock<PlanRunWorktreeProvisionService>({
           provision: mockProvision,
         }),
-        createMock<RepositoryCheckoutsService>({
+        asMock<RepositoryCheckoutsRepository>({
+          ...createRepositoryCheckoutsRepositoryMock(),
           findByUserAndPath: mockFindByUserAndPath,
         }),
         createMock<WorktreeSkillOverlayService>({
@@ -488,7 +491,8 @@ describe('AgenticRalphOrchestratorService worktree provisioning', () => {
         createMock<PlanRunWorktreeProvisionService>({
           provision: mockProvision,
         }),
-        createMock<RepositoryCheckoutsService>({
+        asMock<RepositoryCheckoutsRepository>({
+          ...createRepositoryCheckoutsRepositoryMock(),
           findByUserAndPath: mockFindByUserAndPath,
         }),
         createMock<WorktreeSkillOverlayService>({
@@ -738,7 +742,8 @@ describe('AgenticRalphOrchestratorService default-path worktree root resolution'
         createMock<PlanRunWorktreeProvisionService>({
           provision: mockProvision,
         }),
-        createMock<RepositoryCheckoutsService>({
+        asMock<RepositoryCheckoutsRepository>({
+          ...createRepositoryCheckoutsRepositoryMock(),
           findByUserAndPath: mockFindByUserAndPath,
         }),
         createMock<WorktreeSkillOverlayService>({

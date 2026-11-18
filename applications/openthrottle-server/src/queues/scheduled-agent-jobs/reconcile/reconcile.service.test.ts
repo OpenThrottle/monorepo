@@ -1,7 +1,19 @@
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import type { ScheduledAgentJobsService } from '@openthrottle/nestjs-repositories';
 import { type ScheduledAgentJob } from '@openthrottle/nestjs-repositories';
+import type {
+  ScheduledAgentJobRunsRepository,
+  ScheduledAgentJobsRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import type {
+  ScheduledAgentJobRunsRepositoryMock,
+  ScheduledAgentJobsRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
+import {
+  createScheduledAgentJobRunsRepositoryMock,
+  createScheduledAgentJobsRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
+import { asMock } from '@openthrottle/nestjs-testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { ScheduledAgentJobFailureNotifierService } from '../failure-notifier/failure-notifier.service.ts';
@@ -16,16 +28,18 @@ const job = (id: string): ScheduledAgentJob => {
 };
 
 describe('ScheduledAgentJobsReconcileService', () => {
-  let jobsService: ScheduledAgentJobsService;
+  let jobsRepository: ScheduledAgentJobsRepositoryMock;
+  let runsRepository: ScheduledAgentJobRunsRepositoryMock;
   let scheduler: ScheduledAgentJobSchedulerService;
   let failureNotifier: ScheduledAgentJobFailureNotifierService;
   let service: ScheduledAgentJobsReconcileService;
 
   beforeEach(() => {
-    jobsService = createMock<ScheduledAgentJobsService>({
-      listEnabledJobs: vi.fn().mockResolvedValue([]),
-      updateNextRunAt: vi.fn().mockResolvedValue(undefined),
-    });
+    jobsRepository = createScheduledAgentJobsRepositoryMock();
+    jobsRepository.listEnabledJobs.mockResolvedValue([]);
+    jobsRepository.updateNextRunAt.mockResolvedValue(undefined);
+    runsRepository = createScheduledAgentJobRunsRepositoryMock();
+
     scheduler = createMock<ScheduledAgentJobSchedulerService>({
       listOwnedSchedulerIds: vi.fn().mockResolvedValue([]),
       removeScheduler: vi.fn().mockResolvedValue(undefined),
@@ -38,7 +52,8 @@ describe('ScheduledAgentJobsReconcileService', () => {
     });
     service = new ScheduledAgentJobsReconcileService(
       createMock<LoggerService>(),
-      jobsService,
+      asMock<ScheduledAgentJobsRepository>(jobsRepository),
+      asMock<ScheduledAgentJobRunsRepository>(runsRepository),
       scheduler,
       failureNotifier,
     );
@@ -49,7 +64,7 @@ describe('ScheduledAgentJobsReconcileService', () => {
   });
 
   it('upserts each enabled schedule, stores next run, and removes orphans', async () => {
-    vi.mocked(jobsService.listEnabledJobs).mockResolvedValue([
+    vi.mocked(jobsRepository.listEnabledJobs).mockResolvedValue([
       job('a'),
       job('b'),
     ]);
@@ -62,7 +77,7 @@ describe('ScheduledAgentJobsReconcileService', () => {
     await service.reconcile();
 
     expect(scheduler.upsertScheduler).toHaveBeenCalledTimes(2);
-    expect(jobsService.updateNextRunAt).toHaveBeenCalledWith(
+    expect(jobsRepository.updateNextRunAt).toHaveBeenCalledWith(
       'a',
       new Date('2026-07-01T00:00:00Z'),
     );
@@ -75,7 +90,7 @@ describe('ScheduledAgentJobsReconcileService', () => {
     // A usage-limit resume is a queued run row whose BullMQ job is DELAYED under its own jobId
     // (usage-limit-resume-<runId>), not a repeatable scheduler. The reconciler lists only
     // `scheduled-job:`-prefixed schedulers and reads no run rows, so a delayed resume survives.
-    vi.mocked(jobsService.listEnabledJobs).mockResolvedValue([job('a')]);
+    vi.mocked(jobsRepository.listEnabledJobs).mockResolvedValue([job('a')]);
     vi.mocked(scheduler.listOwnedSchedulerIds).mockResolvedValue([
       'scheduled-job:a',
     ]);
@@ -83,8 +98,7 @@ describe('ScheduledAgentJobsReconcileService', () => {
     await service.reconcile();
 
     expect(scheduler.removeScheduler).not.toHaveBeenCalled();
-    expect(jobsService.getRunRepository).not.toHaveBeenCalled();
-    expect(jobsService.findRunById).not.toHaveBeenCalled();
+    expect(runsRepository.findRunById).not.toHaveBeenCalled();
   });
 
   it('onModuleInit runs reconcile when this checkout is the boot owner', async () => {
@@ -132,16 +146,16 @@ describe('ScheduledAgentJobsReconcileService', () => {
     };
 
     const missedCall = (index: number): unknown => {
-      return vi.mocked(jobsService.recordMissedRuns).mock.calls[index]?.[0];
+      return vi.mocked(runsRepository.recordMissedRuns).mock.calls[index]?.[0];
     };
 
     beforeEach(() => {
       vi.useFakeTimers({ toFake: ['Date'] });
       vi.setSystemTime(BOOT);
       vi.spyOn(process, 'uptime').mockReturnValue(0);
-      vi.mocked(jobsService.findLatestScheduledFor).mockResolvedValue(null);
-      vi.mocked(jobsService.hasLateRunSince).mockResolvedValue(false);
-      vi.mocked(jobsService.recordMissedRuns).mockImplementation(
+      vi.mocked(runsRepository.findLatestScheduledFor).mockResolvedValue(null);
+      vi.mocked(runsRepository.hasLateRunSince).mockResolvedValue(false);
+      vi.mocked(runsRepository.recordMissedRuns).mockImplementation(
         async (input) => input.slots.length,
       );
       vi.mocked(scheduler.enqueueCatchUp).mockResolvedValue(undefined);
@@ -154,7 +168,7 @@ describe('ScheduledAgentJobsReconcileService', () => {
 
     describe('when the policy is skip', () => {
       it('records every missed slot as late, runs none, then re-registers', async () => {
-        vi.mocked(jobsService.listEnabledJobs).mockResolvedValue([
+        vi.mocked(jobsRepository.listEnabledJobs).mockResolvedValue([
           hourly('skip'),
         ]);
 
@@ -173,7 +187,7 @@ describe('ScheduledAgentJobsReconcileService', () => {
       });
 
       it('sends the owner one missed notice covering every recorded slot', async () => {
-        vi.mocked(jobsService.listEnabledJobs).mockResolvedValue([
+        vi.mocked(jobsRepository.listEnabledJobs).mockResolvedValue([
           hourly('skip'),
         ]);
 
@@ -191,7 +205,7 @@ describe('ScheduledAgentJobsReconcileService', () => {
 
     describe('when the schedule is an interval', () => {
       it('records nothing missed and just re-arms it, so an overdue fire runs once, late', async () => {
-        vi.mocked(jobsService.listEnabledJobs).mockResolvedValue([
+        vi.mocked(jobsRepository.listEnabledJobs).mockResolvedValue([
           createMock<ScheduledAgentJob>({
             cronPattern: null,
             id: 'i',
@@ -203,7 +217,7 @@ describe('ScheduledAgentJobsReconcileService', () => {
 
         await service.reconcile();
 
-        expect(jobsService.recordMissedRuns).not.toHaveBeenCalled();
+        expect(runsRepository.recordMissedRuns).not.toHaveBeenCalled();
         expect(scheduler.enqueueCatchUp).not.toHaveBeenCalled();
         expect(scheduler.upsertScheduler).toHaveBeenCalledTimes(1);
       });
@@ -212,7 +226,7 @@ describe('ScheduledAgentJobsReconcileService', () => {
     describe('when the policy is catch_up_once', () => {
       it('enqueues one catch-up for the latest slot and supersedes the rest, before re-registering', async () => {
         const schedule = hourly('catch_up_once');
-        vi.mocked(jobsService.listEnabledJobs).mockResolvedValue([schedule]);
+        vi.mocked(jobsRepository.listEnabledJobs).mockResolvedValue([schedule]);
 
         await service.reconcile();
 
@@ -229,8 +243,8 @@ describe('ScheduledAgentJobsReconcileService', () => {
         const enqueuedAt =
           vi.mocked(scheduler.enqueueCatchUp).mock.invocationCallOrder[0] ?? 0;
         const recordedAt =
-          vi.mocked(jobsService.recordMissedRuns).mock.invocationCallOrder[1] ??
-          Infinity;
+          vi.mocked(runsRepository.recordMissedRuns).mock
+            .invocationCallOrder[1] ?? Infinity;
         const upsertedAt =
           vi.mocked(scheduler.upsertScheduler).mock.invocationCallOrder[0] ?? 0;
         expect(recordedAt).toBeLessThan(enqueuedAt);
@@ -238,10 +252,10 @@ describe('ScheduledAgentJobsReconcileService', () => {
       });
 
       it('enqueues nothing when the worker already ran the surviving overdue job', async () => {
-        vi.mocked(jobsService.listEnabledJobs).mockResolvedValue([
+        vi.mocked(jobsRepository.listEnabledJobs).mockResolvedValue([
           hourly('catch_up_once'),
         ]);
-        vi.mocked(jobsService.hasLateRunSince).mockResolvedValue(true);
+        vi.mocked(runsRepository.hasLateRunSince).mockResolvedValue(true);
 
         await service.reconcile();
 
@@ -254,16 +268,16 @@ describe('ScheduledAgentJobsReconcileService', () => {
 
     describe('when slots are already on record', () => {
       it('starts the window after the newest recorded slot', async () => {
-        vi.mocked(jobsService.listEnabledJobs).mockResolvedValue([
+        vi.mocked(jobsRepository.listEnabledJobs).mockResolvedValue([
           hourly('skip'),
         ]);
-        vi.mocked(jobsService.findLatestScheduledFor).mockResolvedValue(
+        vi.mocked(runsRepository.findLatestScheduledFor).mockResolvedValue(
           MISSED[1] ?? null,
         );
 
         await service.reconcile();
 
-        expect(jobsService.findLatestScheduledFor).toHaveBeenCalledWith(
+        expect(runsRepository.findLatestScheduledFor).toHaveBeenCalledWith(
           'a',
           BOOT,
         );
@@ -275,13 +289,13 @@ describe('ScheduledAgentJobsReconcileService', () => {
 
     describe('when no fire came due while the server was down', () => {
       it('records nothing', async () => {
-        vi.mocked(jobsService.listEnabledJobs).mockResolvedValue([
+        vi.mocked(jobsRepository.listEnabledJobs).mockResolvedValue([
           hourly('skip', new Date('2026-11-02T11:30:00Z')),
         ]);
 
         await service.reconcile();
 
-        expect(jobsService.recordMissedRuns).not.toHaveBeenCalled();
+        expect(runsRepository.recordMissedRuns).not.toHaveBeenCalled();
         expect(failureNotifier.notify).not.toHaveBeenCalled();
         expect(scheduler.upsertScheduler).toHaveBeenCalledTimes(1);
       });
@@ -289,10 +303,10 @@ describe('ScheduledAgentJobsReconcileService', () => {
 
     describe('when settling fails', () => {
       it('still registers the schedule', async () => {
-        vi.mocked(jobsService.listEnabledJobs).mockResolvedValue([
+        vi.mocked(jobsRepository.listEnabledJobs).mockResolvedValue([
           hourly('skip'),
         ]);
-        vi.mocked(jobsService.findLatestScheduledFor).mockRejectedValue(
+        vi.mocked(runsRepository.findLatestScheduledFor).mockRejectedValue(
           new Error('db down'),
         );
 

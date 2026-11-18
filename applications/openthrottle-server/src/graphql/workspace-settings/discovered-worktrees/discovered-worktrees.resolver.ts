@@ -19,8 +19,8 @@ import { NotFoundException, UseGuards } from '@nestjs/common';
 import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { CurrentUser } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
-import { RepositoryCheckoutsService } from '@openthrottle/nestjs-repositories';
 import type { WorktreeRemoval } from '@openthrottle/nestjs-repositories-server';
+import { RepositoryCheckoutsRepository } from '@openthrottle/nestjs-repositories-server';
 import { WorktreeRemovalsRepository } from '@openthrottle/nestjs-repositories-server';
 
 import { GqlPermissionsGuard } from '../../../guards/gql-permissions.guard.ts';
@@ -39,7 +39,7 @@ import { RemovePlanRunWorktreePayloadObject } from '../remove-plan-run-worktree.
 export class DiscoveredWorktreesResolver {
   constructor(
     private readonly activityService: WorktreeActivityService,
-    private readonly checkoutsService: RepositoryCheckoutsService,
+    private readonly checkoutsRepository: RepositoryCheckoutsRepository,
     private readonly pruneService: WorktreeCheckoutPruneService,
     private readonly teardownService: PlanRunWorktreeTeardownService,
     private readonly removals: WorktreeRemovalsRepository,
@@ -141,7 +141,7 @@ export class DiscoveredWorktreesResolver {
     @CurrentUser('sub') userId: string,
     @Args('checkoutId', { type: () => ID }) checkoutId: string,
   ): Promise<RemovePlanRunWorktreePayloadObject> {
-    const checkout = await this.checkoutsService.findByIdForUser(
+    const checkout = await this.checkoutsRepository.findByIdForUser(
       checkoutId,
       userId,
     );

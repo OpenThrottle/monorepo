@@ -7,11 +7,9 @@
 
 import { Injectable, Scope } from '@nestjs/common';
 import type { RepositoryCheckout } from '@openthrottle/nestjs-repositories';
-import {
-  createEntityByIdLoader,
-  RepositoryCheckoutsService,
-} from '@openthrottle/nestjs-repositories';
+import { createEntityByIdLoader } from '@openthrottle/nestjs-repositories';
 import type { WorkArtifact } from '@openthrottle/nestjs-repositories-server';
+import { RepositoryCheckoutsRepository } from '@openthrottle/nestjs-repositories-server';
 import {
   WorkArtifactsRepository,
   WorkSessionsRepository,
@@ -31,11 +29,11 @@ export class PlanRunLoaders {
   >;
 
   constructor(
-    repositoryCheckoutsService: RepositoryCheckoutsService,
+    repositoryCheckoutsRepository: RepositoryCheckoutsRepository,
     workArtifactsRepository: WorkArtifactsRepository,
     workSessionsRepository: WorkSessionsRepository,
   ) {
-    this.checkoutLoader = createEntityByIdLoader(repositoryCheckoutsService);
+    this.checkoutLoader = createEntityByIdLoader(repositoryCheckoutsRepository);
 
     /*
       Two queries for the whole batch: every session bridged to one of the runs,

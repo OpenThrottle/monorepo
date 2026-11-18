@@ -12,12 +12,16 @@ import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import {
+  RepositoryCheckoutsModule,
   RolesModule,
+  ScheduledAgentJobRunsModule,
+  ScheduledAgentJobsModule,
   UserDisabledAgentClisModule,
 } from '@openthrottle/nestjs-repositories-server';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import { ScheduledAgentJobsQueueProducerModule } from '../../queues/scheduled-agent-jobs/producer/producer.module.ts';
+import { ScheduledAgentJobCheckoutPathModule } from '../../services/scheduled-agent-job-checkout-path/scheduled-agent-job-checkout-path.module.ts';
 import { ScheduledAgentJobsLoaders } from './loaders/loaders.service.ts';
 import { ScheduledAgentJobRunRepositoryResolver } from './scheduled-agent-job-run-repository/scheduled-agent-job-run-repository.resolver.ts';
 import { ScheduledAgentJobsResolver } from './scheduled-agent-jobs.resolver.ts';
@@ -28,6 +32,10 @@ import { ScheduledAgentJobsGraphqlService } from './scheduled-agent-jobs.service
     RolesModule,
     UserDisabledAgentClisModule,
     LoggerModule,
+    RepositoryCheckoutsModule,
+    ScheduledAgentJobRunsModule,
+    ScheduledAgentJobsModule,
+    ScheduledAgentJobCheckoutPathModule,
     NestjsRepositoriesModule,
     ScheduledAgentJobsQueueProducerModule,
   ],
