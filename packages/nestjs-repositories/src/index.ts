@@ -121,43 +121,6 @@ export type {
   UpsertEvalTrialInput,
 } from './modules/eval-runs/eval-runs.types.ts';
 export { EvalTrial } from './modules/eval-runs/eval-trial.entity.ts';
-export { PlanMessage } from './modules/plan-messages/plan-message.entity.ts';
-export {
-  PLAN_MESSAGE_DELIVERABLE_KINDS,
-  PLAN_MESSAGE_KIND,
-  PLAN_MESSAGE_STATUS,
-} from './modules/plan-messages/plan-messages.constants.ts';
-export { PlanMessagesService } from './modules/plan-messages/plan-messages.service.ts';
-export type {
-  ClaimPlanMessagesParams,
-  ClaimPlanMessagesResult,
-  ListPlanMessagesParams,
-  PendingPlanMessageWriteResult,
-  PlanMessageKind,
-  PlanMessageStatus,
-  PostPlanMessageParams,
-  PostPlanMessageResult,
-} from './modules/plan-messages/plan-messages.types.ts';
-export type {
-  PlanRunData,
-  PlanRunExecutionBackend,
-  PlanRunKind,
-} from './modules/plan-runs/plan-run.entity.ts';
-export { PlanRun } from './modules/plan-runs/plan-run.entity.ts';
-export {
-  HEARTBEAT_INTERVAL_MS,
-  PLAN_RUN_SETTLED_REASON,
-  PLAN_RUN_STARTABLE_STATUSES,
-  PLAN_RUN_STATUS,
-  STALE_CUTOFF_MS,
-  UNSUPERVISED_STALE_CUTOFF_MS,
-} from './modules/plan-runs/plan-runs.constants.ts';
-export { PlanRunsService } from './modules/plan-runs/plan-runs.service.ts';
-export type { PlanRunStatus } from './modules/plan-runs/plan-runs.types.ts';
-export type {
-  ScheduledPlanRun,
-  ScheduledRunRef,
-} from './modules/plan-runs/plan-runs.types.ts';
 export type { ProjectSkillData } from './modules/project-skills/project-skill.entity.ts';
 export { ProjectSkill } from './modules/project-skills/project-skill.entity.ts';
 export { ProjectSkillsService } from './modules/project-skills/project-skills.service.ts';
@@ -357,8 +320,16 @@ export type {
   GroupedHooks,
   PlanData,
   PlanEmbeddingSearchRow,
+  PlanMessageKind,
+  PlanMessageStatus,
   PlanOutputStreamKind,
+  PlanRunData,
+  PlanRunExecutionBackend,
+  PlanRunKind,
+  PlanRunStatus,
   ProjectData,
+  ScheduledPlanRun,
+  ScheduledRunRef,
   TaskData,
   TaskEmbeddingSearchRow,
   TaskHookRole,
@@ -412,17 +383,30 @@ export {
   CROSS_PLAN_TASK_LIST_ORDER,
   isPlanOutputStreamKind,
   Plan,
+  PLAN_MESSAGE_DELIVERABLE_KINDS,
+  PLAN_MESSAGE_KIND,
+  PLAN_MESSAGE_STATUS,
   PLAN_OUTPUT_STREAM_KIND,
   PLAN_OUTPUT_STREAM_KINDS,
   PLAN_TASK_LIST_ORDER,
   PlanEmbedding,
+  PlanMessage,
   PlanOutputStreamChunk,
+  PlanRun,
   Project,
   Task,
   TASK_SORT_ORDER_GAP,
   TaskEmbedding,
 } from '@openthrottle/nestjs-repositories-server';
 export { CAPTURE_HEALTH_STREAMS } from '@openthrottle/nestjs-repositories-server';
+export {
+  HEARTBEAT_INTERVAL_MS,
+  PLAN_RUN_SETTLED_REASON,
+  PLAN_RUN_STARTABLE_STATUSES,
+  PLAN_RUN_STATUS,
+  STALE_CUTOFF_MS,
+  UNSUPERVISED_STALE_CUTOFF_MS,
+} from '@openthrottle/nestjs-repositories-server';
 export { type ResolveCompletedAtForStatusChangeInput } from '@openthrottle/nestjs-repositories-server';
 export { resolveCompletedAtForStatusChange } from '@openthrottle/nestjs-repositories-server';
 export {

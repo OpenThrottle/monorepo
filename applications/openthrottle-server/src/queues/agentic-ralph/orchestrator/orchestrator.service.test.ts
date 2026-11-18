@@ -8,17 +8,14 @@
 import { createMock } from '@golevelup/ts-vitest';
 import type { AgenticWorkflowRegistry } from '@openthrottle/nestjs-agentic-workflow';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import type {
-  PlanRunsService,
-  RepositoryCheckoutsService,
-} from '@openthrottle/nestjs-repositories';
-import {
-  type PlanRun,
-  type RepositoryCheckout,
-} from '@openthrottle/nestjs-repositories';
+import type { RepositoryCheckoutsService } from '@openthrottle/nestjs-repositories';
+import { type RepositoryCheckout } from '@openthrottle/nestjs-repositories';
+import type { PlanRunsRepository } from '@openthrottle/nestjs-repositories-server';
 import type { PlanOutputStreamRepository } from '@openthrottle/nestjs-repositories-server';
+import { type PlanRun } from '@openthrottle/nestjs-repositories-server';
 import {
   createPlanOutputStreamRepositoryMock,
+  createPlanRunsRepositoryMock,
   planOutputStreamFactory,
 } from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
@@ -130,8 +127,7 @@ const buildRun = (overrides: Partial<PlanRun> = {}): PlanRun => {
 };
 
 describe('AgenticRalphOrchestratorService worktree checkout registration', () => {
-  const mockFindByQueueNameAndBullmqJobId = vi.fn();
-  const mockReadCancelRequested = vi.fn().mockResolvedValue(null);
+  const planRunsRepository = createPlanRunsRepositoryMock();
   const mockRegister = vi.fn().mockResolvedValue(null);
   const mockFindByUserAndPath = vi.fn();
   const mockDebug = vi.fn();
@@ -144,7 +140,7 @@ describe('AgenticRalphOrchestratorService worktree checkout registration', () =>
     mockExecute.mockResolvedValue({ reason: 'done', status: 'finished' });
     mockCreateOrchestrator.mockClear();
     mockResolve.mockClear();
-    mockFindByQueueNameAndBullmqJobId.mockReset();
+    planRunsRepository.findByQueueNameAndBullmqJobId.mockReset();
     mockRegister.mockReset();
     mockRegister.mockResolvedValue(null);
     mockProvision.mockReset();
@@ -170,18 +166,13 @@ describe('AgenticRalphOrchestratorService worktree checkout registration', () =>
     mockDebug.mockReset();
     mockWarn.mockReset();
 
-    const planRuns = createMock<PlanRunsService>({
-      findByQueueNameAndBullmqJobId: mockFindByQueueNameAndBullmqJobId,
-      readCancelRequested: mockReadCancelRequested,
-    });
-
     service = new AgenticRalphOrchestratorService(
       createMock<AgenticWorkflowRegistry>({ resolve: mockResolve }),
-      planRuns,
+      createMock<PlanRunsRepository>(planRunsRepository),
       new PlanRunWorkspaceService(
         createMock<LoggerService>({ debug: mockDebug, warn: mockWarn }),
         asMock<PlanOutputStreamRepository>(planOutputStreamRepository),
-        planRuns,
+        createMock<PlanRunsRepository>(planRunsRepository),
         createMock<PlanRunWorktreeCheckoutService>({
           register: mockRegister,
         }),
@@ -222,7 +213,9 @@ describe('AgenticRalphOrchestratorService worktree checkout registration', () =>
 
   describe('when checkout_id is NULL', () => {
     it('invokes register once with the resolved path and actor before execute', async () => {
-      mockFindByQueueNameAndBullmqJobId.mockResolvedValueOnce(buildRun());
+      planRunsRepository.findByQueueNameAndBullmqJobId.mockResolvedValueOnce(
+        buildRun(),
+      );
 
       const callOrder: string[] = [];
       mockRegister.mockImplementation(async () => {
@@ -236,11 +229,12 @@ describe('AgenticRalphOrchestratorService worktree checkout registration', () =>
 
       await runWithCorrelation();
 
-      expect(mockFindByQueueNameAndBullmqJobId).toHaveBeenCalledTimes(1);
-      expect(mockFindByQueueNameAndBullmqJobId).toHaveBeenCalledWith(
-        QUEUE_NAME,
-        QUEUE_JOB_ID,
-      );
+      expect(
+        planRunsRepository.findByQueueNameAndBullmqJobId,
+      ).toHaveBeenCalledTimes(1);
+      expect(
+        planRunsRepository.findByQueueNameAndBullmqJobId,
+      ).toHaveBeenCalledWith(QUEUE_NAME, QUEUE_JOB_ID);
       expect(mockRegister).toHaveBeenCalledTimes(1);
       expect(mockRegister).toHaveBeenCalledWith({
         filesystemPath: WORKTREE_PATH,
@@ -254,7 +248,7 @@ describe('AgenticRalphOrchestratorService worktree checkout registration', () =>
 
   describe('when checkout_id already names the scheduling primary', () => {
     it('still registers so the worktree can overwrite checkout + branch', async () => {
-      mockFindByQueueNameAndBullmqJobId.mockResolvedValueOnce(
+      planRunsRepository.findByQueueNameAndBullmqJobId.mockResolvedValueOnce(
         buildRun({ checkoutId: CHECKOUT_ID }),
       );
 
@@ -272,7 +266,9 @@ describe('AgenticRalphOrchestratorService worktree checkout registration', () =>
 
   describe('when register soft-fails', () => {
     it('continues the orchestrator run', async () => {
-      mockFindByQueueNameAndBullmqJobId.mockResolvedValueOnce(buildRun());
+      planRunsRepository.findByQueueNameAndBullmqJobId.mockResolvedValueOnce(
+        buildRun(),
+      );
       mockRegister.mockRejectedValueOnce(new Error('upsert exploded'));
 
       await expect(runWithCorrelation()).resolves.toEqual({
@@ -287,7 +283,7 @@ describe('AgenticRalphOrchestratorService worktree checkout registration', () =>
 
   describe('when actor_user_id is null', () => {
     it('skips register and still executes', async () => {
-      mockFindByQueueNameAndBullmqJobId.mockResolvedValueOnce(
+      planRunsRepository.findByQueueNameAndBullmqJobId.mockResolvedValueOnce(
         buildRun({ actorUserId: null }),
       );
 
@@ -300,8 +296,7 @@ describe('AgenticRalphOrchestratorService worktree checkout registration', () =>
 });
 
 describe('AgenticRalphOrchestratorService foreign-skill injection gate', () => {
-  const mockFindByQueueNameAndBullmqJobId = vi.fn();
-  const mockReadCancelRequested = vi.fn().mockResolvedValue(null);
+  const planRunsRepository = createPlanRunsRepositoryMock();
   const mockRegister = vi.fn().mockResolvedValue(null);
   const mockFindByUserAndPath = vi.fn();
 
@@ -320,8 +315,10 @@ describe('AgenticRalphOrchestratorService foreign-skill injection gate', () => {
     mockExecute.mockResolvedValue({ reason: 'done', status: 'finished' });
     mockCreateOrchestrator.mockClear();
     mockResolve.mockClear();
-    mockFindByQueueNameAndBullmqJobId.mockReset();
-    mockFindByQueueNameAndBullmqJobId.mockResolvedValue(buildRun());
+    planRunsRepository.findByQueueNameAndBullmqJobId.mockReset();
+    planRunsRepository.findByQueueNameAndBullmqJobId.mockResolvedValue(
+      buildRun(),
+    );
     mockRegister.mockReset();
     mockRegister.mockResolvedValue(null);
     mockProvision.mockReset();
@@ -344,18 +341,13 @@ describe('AgenticRalphOrchestratorService foreign-skill injection gate', () => {
       openThrottleRoot: '/ot-root',
     });
 
-    const planRuns = createMock<PlanRunsService>({
-      findByQueueNameAndBullmqJobId: mockFindByQueueNameAndBullmqJobId,
-      readCancelRequested: mockReadCancelRequested,
-    });
-
     service = new AgenticRalphOrchestratorService(
       createMock<AgenticWorkflowRegistry>({ resolve: mockResolve }),
-      planRuns,
+      createMock<PlanRunsRepository>(planRunsRepository),
       new PlanRunWorkspaceService(
         createMock<LoggerService>(),
         asMock<PlanOutputStreamRepository>(planOutputStreamRepository),
-        planRuns,
+        createMock<PlanRunsRepository>(planRunsRepository),
         createMock<PlanRunWorktreeCheckoutService>({ register: mockRegister }),
         createMock<PlanRunWorkspacePreflightService>({
           check: mockPreflightCheck,
@@ -437,7 +429,7 @@ describe('AgenticRalphOrchestratorService foreign-skill injection gate', () => {
   });
 
   it('skips injection when the actor user cannot be resolved', async () => {
-    mockFindByQueueNameAndBullmqJobId.mockResolvedValue(
+    planRunsRepository.findByQueueNameAndBullmqJobId.mockResolvedValue(
       buildRun({ actorUserId: null }),
     );
 
@@ -449,8 +441,7 @@ describe('AgenticRalphOrchestratorService foreign-skill injection gate', () => {
 });
 
 describe('AgenticRalphOrchestratorService worktree provisioning', () => {
-  const mockFindByQueueNameAndBullmqJobId = vi.fn();
-  const mockReadCancelRequested = vi.fn().mockResolvedValue(null);
+  const planRunsRepository = createPlanRunsRepositoryMock();
   const mockRegister = vi.fn().mockResolvedValue(null);
   const mockFindByUserAndPath = vi.fn().mockResolvedValue(null);
   const mockWarn = vi.fn();
@@ -460,8 +451,10 @@ describe('AgenticRalphOrchestratorService worktree provisioning', () => {
   beforeEach(() => {
     mockExecute.mockReset();
     mockExecute.mockResolvedValue({ reason: 'done', status: 'finished' });
-    mockFindByQueueNameAndBullmqJobId.mockReset();
-    mockFindByQueueNameAndBullmqJobId.mockResolvedValue(buildRun());
+    planRunsRepository.findByQueueNameAndBullmqJobId.mockReset();
+    planRunsRepository.findByQueueNameAndBullmqJobId.mockResolvedValue(
+      buildRun(),
+    );
     mockRegister.mockReset();
     mockRegister.mockResolvedValue(null);
     mockFindByUserAndPath.mockReset();
@@ -481,18 +474,13 @@ describe('AgenticRalphOrchestratorService worktree provisioning', () => {
     });
     mockWarn.mockReset();
 
-    const planRuns = createMock<PlanRunsService>({
-      findByQueueNameAndBullmqJobId: mockFindByQueueNameAndBullmqJobId,
-      readCancelRequested: mockReadCancelRequested,
-    });
-
     service = new AgenticRalphOrchestratorService(
       createMock<AgenticWorkflowRegistry>({ resolve: mockResolve }),
-      planRuns,
+      createMock<PlanRunsRepository>(planRunsRepository),
       new PlanRunWorkspaceService(
         createMock<LoggerService>({ warn: mockWarn }),
         asMock<PlanOutputStreamRepository>(planOutputStreamRepository),
-        planRuns,
+        createMock<PlanRunsRepository>(planRunsRepository),
         createMock<PlanRunWorktreeCheckoutService>({ register: mockRegister }),
         createMock<PlanRunWorkspacePreflightService>({
           check: mockPreflightCheck,
@@ -563,7 +551,7 @@ describe('AgenticRalphOrchestratorService worktree provisioning', () => {
   });
 
   it('registers the provisioned worktree even when enqueue stamped a primary checkout_id', async () => {
-    mockFindByQueueNameAndBullmqJobId.mockResolvedValueOnce(
+    planRunsRepository.findByQueueNameAndBullmqJobId.mockResolvedValueOnce(
       buildRun({ checkoutId: CHECKOUT_ID }),
     );
 
@@ -698,8 +686,7 @@ describe('AgenticRalphOrchestratorService worktree provisioning', () => {
 });
 
 describe('AgenticRalphOrchestratorService default-path worktree root resolution', () => {
-  const mockFindByQueueNameAndBullmqJobId = vi.fn();
-  const mockReadCancelRequested = vi.fn().mockResolvedValue(null);
+  const planRunsRepository = createPlanRunsRepositoryMock();
   const mockRegister = vi.fn().mockResolvedValue(null);
   const mockFindByUserAndPath = vi.fn().mockResolvedValue(null);
   const mockWarn = vi.fn();
@@ -709,8 +696,10 @@ describe('AgenticRalphOrchestratorService default-path worktree root resolution'
   beforeEach(() => {
     mockExecute.mockReset();
     mockExecute.mockResolvedValue({ reason: 'done', status: 'finished' });
-    mockFindByQueueNameAndBullmqJobId.mockReset();
-    mockFindByQueueNameAndBullmqJobId.mockResolvedValue(buildRun());
+    planRunsRepository.findByQueueNameAndBullmqJobId.mockReset();
+    planRunsRepository.findByQueueNameAndBullmqJobId.mockResolvedValue(
+      buildRun(),
+    );
     mockRegister.mockReset();
     mockRegister.mockResolvedValue(null);
     mockFindByUserAndPath.mockReset();
@@ -735,18 +724,13 @@ describe('AgenticRalphOrchestratorService default-path worktree root resolution'
     mockGetOpenThrottleRoot.mockClear();
     mockWarn.mockReset();
 
-    const planRuns = createMock<PlanRunsService>({
-      findByQueueNameAndBullmqJobId: mockFindByQueueNameAndBullmqJobId,
-      readCancelRequested: mockReadCancelRequested,
-    });
-
     service = new AgenticRalphOrchestratorService(
       createMock<AgenticWorkflowRegistry>({ resolve: mockResolve }),
-      planRuns,
+      createMock<PlanRunsRepository>(planRunsRepository),
       new PlanRunWorkspaceService(
         createMock<LoggerService>({ warn: mockWarn }),
         asMock<PlanOutputStreamRepository>(planOutputStreamRepository),
-        planRuns,
+        createMock<PlanRunsRepository>(planRunsRepository),
         createMock<PlanRunWorktreeCheckoutService>({ register: mockRegister }),
         createMock<PlanRunWorkspacePreflightService>({
           check: mockPreflightCheck,

@@ -3,11 +3,11 @@
  */
 
 import { Field, ID, Int, ObjectType } from '@nestjs/graphql';
+import type { PlanData } from '@openthrottle/nestjs-repositories';
 import type {
-  PlanData,
   PlanRunData,
   PlanRunExecutionBackend,
-} from '@openthrottle/nestjs-repositories';
+} from '@openthrottle/nestjs-repositories-server';
 
 import { ProjectObject } from '../projects/project.object.ts';
 

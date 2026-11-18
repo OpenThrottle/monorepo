@@ -4,7 +4,7 @@ import {
   AGENTIC_WORKFLOW_RALPH_ID,
   AGENTIC_WORKFLOW_REGISTRY,
 } from '@openthrottle/nestjs-agentic-workflow';
-import { PlanRunsService } from '@openthrottle/nestjs-repositories';
+import { PlanRunsRepository } from '@openthrottle/nestjs-repositories-server';
 import type {
   WorkflowContext,
   WorkflowOrchestrator,
@@ -60,7 +60,7 @@ export class AgenticRalphOrchestratorService {
   constructor(
     @Inject(AGENTIC_WORKFLOW_REGISTRY)
     private readonly workflowRegistry: AgenticWorkflowRegistry,
-    private readonly planRunsService: PlanRunsService,
+    private readonly planRunsRepository: PlanRunsRepository,
     private readonly planRunWorkspaceService: PlanRunWorkspaceService,
   ) {}
 
@@ -139,7 +139,7 @@ export class AgenticRalphOrchestratorService {
       // Channel 1 marker poll: the run loop calls this at each iteration boundary so a durable
       // cancel request (stamped by cancelRun) stops this run even if the pub/sub signal was missed.
       isCancellationRequested: async () =>
-        (await this.planRunsService.readCancelRequested(jobData.planId)) !==
+        (await this.planRunsRepository.readCancelRequested(jobData.planId)) !==
         null,
       ...(signal !== undefined ? { abortSignal: signal } : {}),
       ...(correlation !== undefined ? { correlation } : {}),

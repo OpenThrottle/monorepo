@@ -6,14 +6,17 @@
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
-  PlanRun,
-  PlanRunsService,
   RepositoryCheckout,
   RepositoryCheckoutsService,
 } from '@openthrottle/nestjs-repositories';
+import type {
+  PlanRun,
+  PlanRunsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import type { WorktreeRemovalsRepository } from '@openthrottle/nestjs-repositories-server';
 import type { WorktreeRemovalsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import {
+  createPlanRunsRepositoryMock,
   createWorktreeRemovalsRepositoryMock,
   worktreeRemovalsFactory,
 } from '@openthrottle/nestjs-repositories-server/testing';
@@ -87,6 +90,11 @@ const build = (options: {
     options.checkouts.map((entry) => [entry.filesystemPath, entry]),
   );
 
+  const planRunsRepository = createPlanRunsRepositoryMock();
+  planRunsRepository.findUnsettledRunsByCheckoutIds.mockResolvedValue([
+    ...(options.unsettledRuns ?? []),
+  ]);
+
   const service = new WorktreeCheckoutPruneService(
     createMock<LoggerService>(),
     createMock<RepositoryCheckoutsService>({
@@ -98,11 +106,7 @@ const build = (options: {
         Promise.resolve(byPath.get(path) ?? null),
       ),
     }),
-    createMock<PlanRunsService>({
-      findUnsettledRunsByCheckoutIds: vi
-        .fn()
-        .mockResolvedValue([...(options.unsettledRuns ?? [])]),
-    }),
+    createMock<PlanRunsRepository>(planRunsRepository),
     createMock<WorktreeRemovalsRepository>(removals),
   );
 

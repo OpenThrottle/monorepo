@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
-import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import {
+  PlanRunsModule,
   WorkArtifactsModule,
   WorkSessionsModule,
   WorkSessionSubjectsModule,
@@ -23,13 +23,13 @@ import { WorkLedgerVerifyProcessor } from './work-ledger-verify.processor.ts';
   exports: [WorkLedgerVerifyQueueProducerModule],
   imports: [
     LoggerModule,
-    NestjsRepositoriesModule,
+    PlanRunsModule,
     SourceControlModule,
     TaggingQueueProducerModule,
     WorkArtifactsModule,
     WorkLedgerVerifyQueueProducerModule,
-    WorkSessionSubjectsModule,
     WorkSessionsModule,
+    WorkSessionSubjectsModule,
   ],
   providers: [WorkLedgerVerifyProcessor, WorkLedgerVerifyRepeatableService],
 })

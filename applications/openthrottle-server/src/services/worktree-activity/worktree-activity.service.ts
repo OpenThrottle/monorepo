@@ -26,11 +26,11 @@
  */
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import type { PlanRun } from '@openthrottle/nestjs-repositories';
+import type { PlanRun } from '@openthrottle/nestjs-repositories-server';
 import {
-  PlanRunsService,
+  PlanRunsRepository,
   STALE_CUTOFF_MS,
-} from '@openthrottle/nestjs-repositories';
+} from '@openthrottle/nestjs-repositories-server';
 
 import { WORKTREE_DISCOVERY_PROBLEM } from '../worktree-discovery/worktree-discovery.constants.ts';
 import { WorktreeDiscoveryService } from '../worktree-discovery/worktree-discovery.service.ts';
@@ -61,7 +61,7 @@ export class WorktreeActivityService {
   constructor(
     private readonly logger: LoggerService,
     private readonly discoveryService: WorktreeDiscoveryService,
-    private readonly planRunsService: PlanRunsService,
+    private readonly planRunsRepository: PlanRunsRepository,
   ) {
     this.logger.debug(`🧩 ${this.name} 🧩`);
   }
@@ -195,7 +195,7 @@ export class WorktreeActivityService {
     if (checkoutIds.length === 0) return byCheckoutId;
 
     try {
-      const runs = await this.planRunsService.findLiveRunsByCheckoutIds(
+      const runs = await this.planRunsRepository.findLiveRunsByCheckoutIds(
         checkoutIds,
         new Date(Date.now() - STALE_CUTOFF_MS),
       );

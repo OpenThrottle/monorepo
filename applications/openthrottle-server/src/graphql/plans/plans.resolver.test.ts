@@ -5,11 +5,9 @@ import { Test } from '@nestjs/testing';
 import { AUTH_PRINCIPAL_KIND_USER } from '@openthrottle/nestjs-auth';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { PERMISSIONS, PERMISSIONS_KEY } from '@openthrottle/nestjs-rbac';
-import {
-  getDefaultPlanRunConfigStorage,
-  PlanRunsService,
-} from '@openthrottle/nestjs-repositories';
+import { getDefaultPlanRunConfigStorage } from '@openthrottle/nestjs-repositories';
 import type { Plan } from '@openthrottle/nestjs-repositories-server';
+import { PlanRunsRepository } from '@openthrottle/nestjs-repositories-server';
 import {
   PlansRepository,
   Task,
@@ -17,9 +15,11 @@ import {
   UserDisabledAgentClisRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import {
+  createPlanRunsRepositoryMock,
   createPlansRepositoryMock,
   createTasksRepositoryMock,
   createUserDisabledAgentClisRepositoryMock,
+  planRunsFactory,
 } from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
 import type { Queue } from 'bullmq';
@@ -197,22 +197,7 @@ describe('PlansResolver', () => {
   });
 
   const mockPlanRunCancellationAbort = vi.fn().mockReturnValue(false);
-  const mockRecordQueuedRun = vi.fn().mockResolvedValue({});
-  const mockFindRecentByPlanId = vi.fn().mockResolvedValue([]);
-  const mockFindRunHistoryByPlanId = vi.fn().mockResolvedValue([]);
-  const mockFindById = vi.fn().mockResolvedValue(null);
-  const mockRecordHeartbeatById = vi.fn().mockResolvedValue(1);
-  const mockRegisterCliRun = vi.fn().mockResolvedValue({});
-  const mockSettleCliRun = vi.fn().mockResolvedValue({});
-  const mockPlanRunsService = createMock<PlanRunsService>({
-    findById: mockFindById,
-    findRecentByPlanId: mockFindRecentByPlanId,
-    findRunHistoryByPlanId: mockFindRunHistoryByPlanId,
-    recordHeartbeatById: mockRecordHeartbeatById,
-    recordQueuedRun: mockRecordQueuedRun,
-    registerCliRun: mockRegisterCliRun,
-    settleCliRun: mockSettleCliRun,
-  });
+  const planRunsRepository = createPlanRunsRepositoryMock();
 
   const mockAgentIsEnabled = vi.fn().mockResolvedValue(true);
   const mockAgentIsModelEnabled = vi.fn().mockResolvedValue(true);
@@ -338,7 +323,7 @@ describe('PlansResolver', () => {
         // policy orchestration is exercised end-to-end here; the focused setStatus/cancelRun/policy
         // unit coverage lives in plan-status.service.test.ts.
         PlanStatusService,
-        { provide: PlanRunsService, useValue: mockPlanRunsService },
+        { provide: PlanRunsRepository, useValue: planRunsRepository },
         {
           provide: PlanRunWorktreeCheckoutService,
           useValue: mockPlanRunWorktreeCheckoutService,
@@ -1226,7 +1211,7 @@ describe('PlansResolver', () => {
 
   describe('planRunsByPlanId', () => {
     test('includeAllScheduled reads the history window (limit caps non-SCHEDULED runs, every SCHEDULED run added)', async () => {
-      mockFindRecentByPlanId.mockClear();
+      planRunsRepository.findRecentByPlanId.mockClear();
 
       await resolver.planRunsByPlanId({
         includeAllScheduled: true,
@@ -1234,26 +1219,29 @@ describe('PlansResolver', () => {
         planId: mockPlan.id,
       });
 
-      expect(mockFindRunHistoryByPlanId).toHaveBeenCalledWith(
+      expect(planRunsRepository.findRunHistoryByPlanId).toHaveBeenCalledWith(
         mockPlan.id,
         25,
         100,
       );
-      expect(mockFindRecentByPlanId).not.toHaveBeenCalled();
+      expect(planRunsRepository.findRecentByPlanId).not.toHaveBeenCalled();
     });
 
     test('without includeAllScheduled the newest-N read is unchanged, so [0] stays the newest run', async () => {
-      mockFindRunHistoryByPlanId.mockClear();
+      planRunsRepository.findRunHistoryByPlanId.mockClear();
 
       await resolver.planRunsByPlanId({ limit: 1, planId: mockPlan.id });
 
-      expect(mockFindRecentByPlanId).toHaveBeenCalledWith(mockPlan.id, 1);
-      expect(mockFindRunHistoryByPlanId).not.toHaveBeenCalled();
+      expect(planRunsRepository.findRecentByPlanId).toHaveBeenCalledWith(
+        mockPlan.id,
+        1,
+      );
+      expect(planRunsRepository.findRunHistoryByPlanId).not.toHaveBeenCalled();
     });
 
     test('exposes scheduledFor on a SCHEDULED run and null on an immediate one', async () => {
       const scheduledFor = new Date('2026-11-02T09:00:00.000Z');
-      const baseRow = {
+      const baseRow = planRunsFactory.build({
         createdAt: new Date('2026-11-01T12:00:00.000Z'),
         executionBackend: 'claude',
         heartbeatExpected: true,
@@ -1262,22 +1250,22 @@ describe('PlansResolver', () => {
         runConfigSnapshot: null,
         runKind: 'orchestrator',
         updatedAt: new Date('2026-11-01T12:00:00.000Z'),
-      };
-      mockFindRecentByPlanId.mockResolvedValueOnce([
-        {
+      });
+      planRunsRepository.findRecentByPlanId.mockResolvedValueOnce([
+        planRunsFactory.build({
           ...baseRow,
           bullmqJobId: 'scheduled-plan-run-1',
           id: 'run-scheduled',
           scheduledFor,
           status: 'SCHEDULED',
-        },
-        {
+        }),
+        planRunsFactory.build({
           ...baseRow,
           bullmqJobId: 'job-now',
           id: 'run-now',
           scheduledFor: null,
           status: 'QUEUED',
-        },
+        }),
       ]);
 
       const result = await resolver.planRunsByPlanId({
@@ -1294,8 +1282,8 @@ describe('PlansResolver', () => {
     test('returns recent persisted run audit rows with execution backend', async () => {
       const createdAt = new Date('2026-05-09T12:00:00.000Z');
       const updatedAt = new Date('2026-05-09T12:01:00.000Z');
-      mockFindRecentByPlanId.mockResolvedValueOnce([
-        {
+      planRunsRepository.findRecentByPlanId.mockResolvedValueOnce([
+        planRunsFactory.build({
           bullmqJobId: 'job-claude-1',
           createdAt,
           executionBackend: 'claude',
@@ -1311,7 +1299,7 @@ describe('PlansResolver', () => {
           runKind: 'spawn',
           status: 'QUEUED',
           updatedAt,
-        },
+        }),
       ]);
 
       const result = await resolver.planRunsByPlanId({
@@ -1319,7 +1307,10 @@ describe('PlansResolver', () => {
         planId: mockPlan.id,
       });
 
-      expect(mockFindRecentByPlanId).toHaveBeenCalledWith(mockPlan.id, 5);
+      expect(planRunsRepository.findRecentByPlanId).toHaveBeenCalledWith(
+        mockPlan.id,
+        5,
+      );
       expect(result).toEqual([
         expect.objectContaining({
           bullmqJobId: 'job-claude-1',
@@ -1334,7 +1325,7 @@ describe('PlansResolver', () => {
       vi.useFakeTimers({ toFake: ['Date'] });
       vi.setSystemTime(FIXED_NOW);
       const now = FIXED_NOW.getTime();
-      const baseRow = {
+      const baseRow = planRunsFactory.build({
         bullmqJobId: null,
         executionBackend: 'claude',
         // The column's DEFAULT TRUE is the safety property: every pre-existing row
@@ -1345,51 +1336,51 @@ describe('PlansResolver', () => {
         runConfigSnapshot: null,
         runKind: 'orchestrator',
         updatedAt: new Date(now),
-      };
-      mockFindRecentByPlanId.mockResolvedValueOnce([
+      });
+      planRunsRepository.findRecentByPlanId.mockResolvedValueOnce([
         // fresh IN_PROGRESS: heartbeat just now -> not stale
-        {
+        planRunsFactory.build({
           ...baseRow,
           createdAt: new Date(now - 5_000),
           id: 'run-fresh',
           lastHeartbeatAt: new Date(now - 5_000),
           status: 'IN_PROGRESS',
-        },
+        }),
         // stale IN_PROGRESS: heartbeat well past the 120s cutoff -> stale
-        {
+        planRunsFactory.build({
           ...baseRow,
           createdAt: new Date(now - 600_000),
           id: 'run-stale',
           lastHeartbeatAt: new Date(now - 600_000),
           status: 'IN_PROGRESS',
-        },
+        }),
         // never heartbeated but old created_at -> stale (COALESCE fallback)
-        {
+        planRunsFactory.build({
           ...baseRow,
           createdAt: new Date(now - 600_000),
           id: 'run-nohb',
           lastHeartbeatAt: null,
           status: 'IN_PROGRESS',
-        },
+        }),
         // terminal row with an ancient heartbeat -> never stale (status conveys it)
-        {
+        planRunsFactory.build({
           ...baseRow,
           createdAt: new Date(now - 600_000),
           id: 'run-done',
           lastHeartbeatAt: new Date(now - 600_000),
           status: 'COMPLETED',
-        },
+        }),
         // an owner with no timer: an ancient heartbeat says nothing, so never stale.
         // Its liveness is unknown, and heartbeatExpected is what says so — isStale
         // is deliberately NOT overloaded to carry that third meaning.
-        {
+        planRunsFactory.build({
           ...baseRow,
           createdAt: new Date(now - 600_000),
           heartbeatExpected: false,
           id: 'run-unsupervised',
           lastHeartbeatAt: new Date(now - 600_000),
           status: 'IN_PROGRESS',
-        },
+        }),
       ]);
 
       const result = await resolver.planRunsByPlanId({
@@ -1415,7 +1406,7 @@ describe('PlansResolver', () => {
   });
 
   describe('registerCliPlanRun', () => {
-    const cliRunRow = {
+    const cliRunRow = planRunsFactory.build({
       bullmqJobId: null,
       createdAt: new Date('2026-07-22T00:00:00.000Z'),
       executionBackend: 'claude',
@@ -1429,10 +1420,10 @@ describe('PlansResolver', () => {
       status: 'IN_PROGRESS',
       updatedAt: new Date('2026-07-22T00:00:00.000Z'),
       workerId: 'cli-abc',
-    };
+    });
 
     test('delegates to registerCliRun and maps the null-job-id row', async () => {
-      mockRegisterCliRun.mockResolvedValueOnce(cliRunRow);
+      planRunsRepository.registerCliRun.mockResolvedValueOnce(cliRunRow);
 
       const result = await resolver.registerCliPlanRun({
         executionBackend: 'claude',
@@ -1442,7 +1433,7 @@ describe('PlansResolver', () => {
         workerId: 'cli-abc',
       });
 
-      expect(mockRegisterCliRun).toHaveBeenCalledWith(
+      expect(planRunsRepository.registerCliRun).toHaveBeenCalledWith(
         expect.objectContaining({
           branch: null,
           executionBackend: 'claude',
@@ -1466,7 +1457,7 @@ describe('PlansResolver', () => {
     });
 
     test('forwards a present branch verbatim (no trim/reject)', async () => {
-      mockRegisterCliRun.mockResolvedValueOnce(cliRunRow);
+      planRunsRepository.registerCliRun.mockResolvedValueOnce(cliRunRow);
 
       await resolver.registerCliPlanRun({
         branch: '  capture-branch-name  ',
@@ -1477,13 +1468,13 @@ describe('PlansResolver', () => {
         workerId: 'cli-abc',
       });
 
-      expect(mockRegisterCliRun).toHaveBeenCalledWith(
+      expect(planRunsRepository.registerCliRun).toHaveBeenCalledWith(
         expect.objectContaining({ branch: '  capture-branch-name  ' }),
       );
     });
 
     test('forwards null when branch is omitted', async () => {
-      mockRegisterCliRun.mockResolvedValueOnce(cliRunRow);
+      planRunsRepository.registerCliRun.mockResolvedValueOnce(cliRunRow);
 
       await resolver.registerCliPlanRun({
         executionBackend: 'claude',
@@ -1493,13 +1484,13 @@ describe('PlansResolver', () => {
         workerId: null,
       });
 
-      expect(mockRegisterCliRun).toHaveBeenCalledWith(
+      expect(planRunsRepository.registerCliRun).toHaveBeenCalledWith(
         expect.objectContaining({ branch: null }),
       );
     });
 
     test('forwards null when branch is explicitly null', async () => {
-      mockRegisterCliRun.mockResolvedValueOnce(cliRunRow);
+      planRunsRepository.registerCliRun.mockResolvedValueOnce(cliRunRow);
 
       await resolver.registerCliPlanRun({
         branch: null,
@@ -1510,13 +1501,13 @@ describe('PlansResolver', () => {
         workerId: null,
       });
 
-      expect(mockRegisterCliRun).toHaveBeenCalledWith(
+      expect(planRunsRepository.registerCliRun).toHaveBeenCalledWith(
         expect.objectContaining({ branch: null }),
       );
     });
 
     test('forwards a present model verbatim, and null when omitted', async () => {
-      mockRegisterCliRun.mockResolvedValueOnce(cliRunRow);
+      planRunsRepository.registerCliRun.mockResolvedValueOnce(cliRunRow);
       await resolver.registerCliPlanRun({
         executionBackend: 'claude',
         hostname: null,
@@ -1525,14 +1516,14 @@ describe('PlansResolver', () => {
         planId: mockPlan.id,
         workerId: null,
       });
-      expect(mockRegisterCliRun).toHaveBeenCalledWith(
+      expect(planRunsRepository.registerCliRun).toHaveBeenCalledWith(
         expect.objectContaining({ model: 'claude-opus-5' }),
       );
 
       // Omitted stores null, never an empty string: null is a legible "unknown",
       // an empty string is a value that reads as an answer.
-      mockRegisterCliRun.mockClear();
-      mockRegisterCliRun.mockResolvedValueOnce(cliRunRow);
+      planRunsRepository.registerCliRun.mockClear();
+      planRunsRepository.registerCliRun.mockResolvedValueOnce(cliRunRow);
       await resolver.registerCliPlanRun({
         executionBackend: 'claude',
         hostname: null,
@@ -1540,13 +1531,13 @@ describe('PlansResolver', () => {
         planId: mockPlan.id,
         workerId: null,
       });
-      expect(mockRegisterCliRun).toHaveBeenCalledWith(
+      expect(planRunsRepository.registerCliRun).toHaveBeenCalledWith(
         expect.objectContaining({ model: null }),
       );
     });
 
     test('forwards an explicit heartbeatExpected false', async () => {
-      mockRegisterCliRun.mockResolvedValueOnce(cliRunRow);
+      planRunsRepository.registerCliRun.mockResolvedValueOnce(cliRunRow);
 
       await resolver.registerCliPlanRun({
         executionBackend: 'claude',
@@ -1557,7 +1548,7 @@ describe('PlansResolver', () => {
         workerId: null,
       });
 
-      expect(mockRegisterCliRun).toHaveBeenCalledWith(
+      expect(planRunsRepository.registerCliRun).toHaveBeenCalledWith(
         expect.objectContaining({ heartbeatExpected: false }),
       );
     });
@@ -1565,10 +1556,12 @@ describe('PlansResolver', () => {
     test('accepts antigravity, which migration 106 made a valid backend', async () => {
       // The guard used to reject it and its error message did not mention it, so a
       // valid backend read as invalid. The list is now derived from the union.
-      mockRegisterCliRun.mockResolvedValueOnce({
-        ...cliRunRow,
-        executionBackend: 'antigravity',
-      });
+      planRunsRepository.registerCliRun.mockResolvedValueOnce(
+        planRunsFactory.build({
+          ...cliRunRow,
+          executionBackend: 'antigravity',
+        }),
+      );
 
       const result = await resolver.registerCliPlanRun({
         executionBackend: 'antigravity',
@@ -1582,7 +1575,7 @@ describe('PlansResolver', () => {
     });
 
     test('rejects an invalid executionBackend without touching the service', async () => {
-      mockRegisterCliRun.mockClear();
+      planRunsRepository.registerCliRun.mockClear();
       await expect(
         resolver.registerCliPlanRun({
           executionBackend: 'gpt',
@@ -1592,7 +1585,7 @@ describe('PlansResolver', () => {
           workerId: null,
         }),
       ).rejects.toThrow(/Invalid executionBackend/);
-      expect(mockRegisterCliRun).not.toHaveBeenCalled();
+      expect(planRunsRepository.registerCliRun).not.toHaveBeenCalled();
     });
 
     test('names antigravity in the invalid-backend message', async () => {
@@ -1608,7 +1601,7 @@ describe('PlansResolver', () => {
     });
 
     test('rejects a backend the actor disabled, without touching the service', async () => {
-      mockRegisterCliRun.mockClear();
+      planRunsRepository.registerCliRun.mockClear();
       mockAgentIsEnabled.mockResolvedValueOnce(false);
       await expect(
         resolver.registerCliPlanRun(
@@ -1624,27 +1617,29 @@ describe('PlansResolver', () => {
         ),
       ).rejects.toThrow(/claude agent is disabled/);
       expect(mockAgentIsEnabled).toHaveBeenCalledWith('user-1', 'claude');
-      expect(mockRegisterCliRun).not.toHaveBeenCalled();
+      expect(planRunsRepository.registerCliRun).not.toHaveBeenCalled();
     });
   });
 
   describe('settleCliPlanRun', () => {
     test('normalizes status to uppercase, settles by id, and maps the row', async () => {
-      mockSettleCliRun.mockResolvedValueOnce({
-        bullmqJobId: null,
-        createdAt: new Date('2026-07-22T00:00:00.000Z'),
-        executionBackend: 'claude',
-        hostname: null,
-        id: 'cli-run-1',
-        pid: null,
-        planId: mockPlan.id,
-        queueName: PLANS_QUEUE_NAME,
-        runConfigSnapshot: null,
-        runKind: 'orchestrator',
-        status: 'CANCELLED',
-        updatedAt: new Date('2026-07-22T00:01:00.000Z'),
-        workerId: null,
-      });
+      planRunsRepository.settleCliRun.mockResolvedValueOnce(
+        planRunsFactory.build({
+          bullmqJobId: null,
+          createdAt: new Date('2026-07-22T00:00:00.000Z'),
+          executionBackend: 'claude',
+          hostname: null,
+          id: 'cli-run-1',
+          pid: null,
+          planId: mockPlan.id,
+          queueName: PLANS_QUEUE_NAME,
+          runConfigSnapshot: null,
+          runKind: 'orchestrator',
+          status: 'CANCELLED',
+          updatedAt: new Date('2026-07-22T00:01:00.000Z'),
+          workerId: null,
+        }),
+      );
 
       const result = await resolver.settleCliPlanRun({
         headSha: null,
@@ -1655,7 +1650,7 @@ describe('PlansResolver', () => {
         usageLimitType: null,
       });
 
-      expect(mockSettleCliRun).toHaveBeenCalledWith(
+      expect(planRunsRepository.settleCliRun).toHaveBeenCalledWith(
         'cli-run-1',
         'CANCELLED',
         null,
@@ -1667,23 +1662,25 @@ describe('PlansResolver', () => {
 
     test('settles USAGE_LIMITED with the reported reset time and window', async () => {
       const resetsAt = new Date('2026-07-22T05:00:00.000Z');
-      mockSettleCliRun.mockResolvedValueOnce({
-        bullmqJobId: null,
-        createdAt: new Date('2026-07-22T00:00:00.000Z'),
-        executionBackend: 'claude',
-        hostname: null,
-        id: 'cli-run-1',
-        pid: null,
-        planId: mockPlan.id,
-        queueName: PLANS_QUEUE_NAME,
-        runConfigSnapshot: null,
-        runKind: 'orchestrator',
-        status: 'USAGE_LIMITED',
-        updatedAt: new Date('2026-07-22T00:01:00.000Z'),
-        usageLimitResetsAt: resetsAt,
-        usageLimitType: 'five_hour',
-        workerId: null,
-      });
+      planRunsRepository.settleCliRun.mockResolvedValueOnce(
+        planRunsFactory.build({
+          bullmqJobId: null,
+          createdAt: new Date('2026-07-22T00:00:00.000Z'),
+          executionBackend: 'claude',
+          hostname: null,
+          id: 'cli-run-1',
+          pid: null,
+          planId: mockPlan.id,
+          queueName: PLANS_QUEUE_NAME,
+          runConfigSnapshot: null,
+          runKind: 'orchestrator',
+          status: 'USAGE_LIMITED',
+          updatedAt: new Date('2026-07-22T00:01:00.000Z'),
+          usageLimitResetsAt: resetsAt,
+          usageLimitType: 'five_hour',
+          workerId: null,
+        }),
+      );
 
       const result = await resolver.settleCliPlanRun({
         headSha: null,
@@ -1694,7 +1691,7 @@ describe('PlansResolver', () => {
         usageLimitType: 'five_hour',
       });
 
-      expect(mockSettleCliRun).toHaveBeenCalledWith(
+      expect(planRunsRepository.settleCliRun).toHaveBeenCalledWith(
         'cli-run-1',
         'USAGE_LIMITED',
         { resetsAt, type: 'five_hour' },
@@ -1709,7 +1706,7 @@ describe('PlansResolver', () => {
     });
 
     test('ignores usage-limit fields on any other status', async () => {
-      mockSettleCliRun.mockResolvedValueOnce(null);
+      planRunsRepository.settleCliRun.mockResolvedValueOnce(null);
 
       await resolver.settleCliPlanRun({
         headSha: null,
@@ -1720,7 +1717,7 @@ describe('PlansResolver', () => {
         usageLimitType: 'five_hour',
       });
 
-      expect(mockSettleCliRun).toHaveBeenCalledWith(
+      expect(planRunsRepository.settleCliRun).toHaveBeenCalledWith(
         'cli-run-1',
         'FAILED',
         null,
@@ -1728,7 +1725,7 @@ describe('PlansResolver', () => {
     });
 
     test('rejects a non-terminal status without touching the service', async () => {
-      mockSettleCliRun.mockClear();
+      planRunsRepository.settleCliRun.mockClear();
       await expect(
         resolver.settleCliPlanRun({
           headSha: null,
@@ -1739,11 +1736,11 @@ describe('PlansResolver', () => {
           usageLimitType: null,
         }),
       ).rejects.toThrow(/Invalid settle status/);
-      expect(mockSettleCliRun).not.toHaveBeenCalled();
+      expect(planRunsRepository.settleCliRun).not.toHaveBeenCalled();
     });
 
     test('returns null when the run row no longer exists', async () => {
-      mockSettleCliRun.mockResolvedValueOnce(null);
+      planRunsRepository.settleCliRun.mockResolvedValueOnce(null);
 
       const result = await resolver.settleCliPlanRun({
         headSha: null,
@@ -1759,7 +1756,7 @@ describe('PlansResolver', () => {
 
     test('records both artifacts when a COMPLETED run reports a sha and a PR', async () => {
       mockRecordSettledRunArtifacts.mockClear();
-      const run = {
+      const run = planRunsFactory.build({
         bullmqJobId: null,
         createdAt: new Date('2026-07-22T00:00:00.000Z'),
         executionBackend: 'claude',
@@ -1773,8 +1770,8 @@ describe('PlansResolver', () => {
         status: 'COMPLETED',
         updatedAt: new Date('2026-07-22T00:01:00.000Z'),
         workerId: null,
-      };
-      mockSettleCliRun.mockResolvedValueOnce(run);
+      });
+      planRunsRepository.settleCliRun.mockResolvedValueOnce(run);
 
       await resolver.settleCliPlanRun({
         headSha: 'deadbeef',
@@ -1794,21 +1791,23 @@ describe('PlansResolver', () => {
 
     test('records nothing on a non-COMPLETED exit even when a sha is supplied', async () => {
       mockRecordSettledRunArtifacts.mockClear();
-      mockSettleCliRun.mockResolvedValueOnce({
-        bullmqJobId: null,
-        createdAt: new Date('2026-07-22T00:00:00.000Z'),
-        executionBackend: 'claude',
-        hostname: null,
-        id: 'cli-run-1',
-        pid: null,
-        planId: mockPlan.id,
-        queueName: PLANS_QUEUE_NAME,
-        runConfigSnapshot: null,
-        runKind: 'orchestrator',
-        status: 'FAILED',
-        updatedAt: new Date('2026-07-22T00:01:00.000Z'),
-        workerId: null,
-      });
+      planRunsRepository.settleCliRun.mockResolvedValueOnce(
+        planRunsFactory.build({
+          bullmqJobId: null,
+          createdAt: new Date('2026-07-22T00:00:00.000Z'),
+          executionBackend: 'claude',
+          hostname: null,
+          id: 'cli-run-1',
+          pid: null,
+          planId: mockPlan.id,
+          queueName: PLANS_QUEUE_NAME,
+          runConfigSnapshot: null,
+          runKind: 'orchestrator',
+          status: 'FAILED',
+          updatedAt: new Date('2026-07-22T00:01:00.000Z'),
+          workerId: null,
+        }),
+      );
 
       // A run that died mid-way may still have pushed a branch; that is not a claim
       // the ledger should make on its behalf.
@@ -1827,39 +1826,43 @@ describe('PlansResolver', () => {
 
   describe('recordPlanRunHeartbeat', () => {
     test('bumps the heartbeat by run id and maps the refreshed row', async () => {
-      mockRecordHeartbeatById.mockClear();
+      planRunsRepository.recordHeartbeatById.mockClear();
       vi.useFakeTimers({ toFake: ['Date'] });
       vi.setSystemTime(FIXED_NOW);
       const now = FIXED_NOW.getTime();
-      mockFindById.mockResolvedValueOnce({
-        bullmqJobId: null,
-        createdAt: new Date(now - 5_000),
-        executionBackend: 'claude',
-        hostname: 'laptop-1',
-        id: 'cli-run-1',
-        lastHeartbeatAt: new Date(now),
-        pid: 9999,
-        planId: mockPlan.id,
-        queueName: PLANS_QUEUE_NAME,
-        runConfigSnapshot: null,
-        runKind: 'orchestrator',
-        status: 'IN_PROGRESS',
-        updatedAt: new Date(now),
-        workerId: 'cli-abc',
-      });
+      planRunsRepository.findRunById.mockResolvedValueOnce(
+        planRunsFactory.build({
+          bullmqJobId: null,
+          createdAt: new Date(now - 5_000),
+          executionBackend: 'claude',
+          hostname: 'laptop-1',
+          id: 'cli-run-1',
+          lastHeartbeatAt: new Date(now),
+          pid: 9999,
+          planId: mockPlan.id,
+          queueName: PLANS_QUEUE_NAME,
+          runConfigSnapshot: null,
+          runKind: 'orchestrator',
+          status: 'IN_PROGRESS',
+          updatedAt: new Date(now),
+          workerId: 'cli-abc',
+        }),
+      );
 
       const result = await resolver.recordPlanRunHeartbeat({
         planRunId: 'cli-run-1',
       });
 
-      expect(mockRecordHeartbeatById).toHaveBeenCalledWith('cli-run-1');
+      expect(planRunsRepository.recordHeartbeatById).toHaveBeenCalledWith(
+        'cli-run-1',
+      );
       expect(result).toEqual(
         expect.objectContaining({ id: 'cli-run-1', isStale: false }),
       );
     });
 
     test('returns null when the run row no longer exists', async () => {
-      mockFindById.mockResolvedValueOnce(null);
+      planRunsRepository.findRunById.mockResolvedValueOnce(null);
 
       const result = await resolver.recordPlanRunHeartbeat({
         planRunId: 'missing',
@@ -1877,8 +1880,8 @@ describe('PlansResolver', () => {
       mockResolveEffectiveUserId.mockReset();
       mockResolveEffectiveUserId.mockResolvedValue(userId);
       mockRegisterWorktreeCheckout.mockClear();
-      mockFindById.mockReset();
-      mockFindById.mockResolvedValue(null);
+      planRunsRepository.findRunById.mockReset();
+      planRunsRepository.findRunById.mockResolvedValue(null);
     });
 
     test('delegates to the service with the actor user id and maps the run', async () => {
@@ -1942,23 +1945,25 @@ describe('PlansResolver', () => {
       // soft-fail path on this best-effort mutation, that returns the run untouched
       // rather than throwing.
       mockResolveEffectiveUserId.mockResolvedValue(null);
-      mockFindById.mockResolvedValueOnce({
-        bullmqJobId: null,
-        checkoutId: null,
-        createdAt: new Date('2026-08-02T00:00:00.000Z'),
-        executionBackend: 'claude',
-        heartbeatExpected: false,
-        hostname: null,
-        id: 'cli-run-1',
-        pid: null,
-        planId: mockPlan.id,
-        queueName: PLANS_QUEUE_NAME,
-        runConfigSnapshot: null,
-        runKind: 'orchestrator',
-        status: 'IN_PROGRESS',
-        updatedAt: new Date('2026-08-02T00:00:00.000Z'),
-        workerId: null,
-      });
+      planRunsRepository.findRunById.mockResolvedValueOnce(
+        planRunsFactory.build({
+          bullmqJobId: null,
+          checkoutId: null,
+          createdAt: new Date('2026-08-02T00:00:00.000Z'),
+          executionBackend: 'claude',
+          heartbeatExpected: false,
+          hostname: null,
+          id: 'cli-run-1',
+          pid: null,
+          planId: mockPlan.id,
+          queueName: PLANS_QUEUE_NAME,
+          runConfigSnapshot: null,
+          runKind: 'orchestrator',
+          status: 'IN_PROGRESS',
+          updatedAt: new Date('2026-08-02T00:00:00.000Z'),
+          workerId: null,
+        }),
+      );
 
       const result = await resolver.registerPlanRunWorktreeCheckout(
         { filesystemPath, planRunId: 'cli-run-1' },
@@ -1973,7 +1978,7 @@ describe('PlansResolver', () => {
 
     test('returns null for an unresolvable actor when the run does not exist', async () => {
       mockResolveEffectiveUserId.mockResolvedValue(null);
-      mockFindById.mockResolvedValueOnce(null);
+      planRunsRepository.findRunById.mockResolvedValueOnce(null);
 
       const result = await resolver.registerPlanRunWorktreeCheckout(
         { filesystemPath, planRunId: 'missing' },

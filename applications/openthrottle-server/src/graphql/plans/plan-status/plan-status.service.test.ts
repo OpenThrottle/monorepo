@@ -1,7 +1,7 @@
 import { createMock } from '@golevelup/ts-vitest';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import type { PlanRunsService } from '@openthrottle/nestjs-repositories';
+import type { PlanRunsRepository } from '@openthrottle/nestjs-repositories-server';
 import type {
   Plan,
   PlansRepository,
@@ -9,8 +9,10 @@ import type {
 } from '@openthrottle/nestjs-repositories-server';
 import { Task } from '@openthrottle/nestjs-repositories-server';
 import {
+  createPlanRunsRepositoryMock,
   createPlansRepositoryMock,
   createTasksRepositoryMock,
+  planRunsFactory,
 } from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
 import type { Queue } from 'bullmq';
@@ -91,20 +93,13 @@ describe('PlanStatusService', () => {
 
   const mockPlanRunCancellationAbort = vi.fn().mockReturnValue(false);
   const mockPublishCancel = vi.fn().mockResolvedValue(undefined);
-  const mockStampCancelRequested = vi.fn().mockResolvedValue(null);
   // The stamped run, read back so cancelRun can tell a run that polls the cancel
   // marker from one that has no loop to poll it. Defaults to a supervised run so
   // every pre-existing case keeps asserting today's behaviour.
-  const mockFindById = vi.fn().mockResolvedValue({ heartbeatExpected: true });
   // The plan_runs half of cancelling a SCHEDULED run: number of SCHEDULED rows settled CANCELLED.
-  const mockSettleScheduledRunsCancelled = vi.fn().mockResolvedValue(0);
-  const mockSettleQueuedRunsCancelledByJobIds = vi.fn().mockResolvedValue(0);
   // The plan's SCHEDULED rows (read before the queue removal) and the run-scoped settle.
-  const mockFindScheduledByPlanId = vi.fn().mockResolvedValue([]);
-  const mockSettleScheduledRunCancelled = vi.fn().mockResolvedValue(true);
   // D7: the SCHEDULED runs cancelled when a plan leaves SCHEDULED.
-  const mockCancelScheduledRunsForPlan = vi.fn().mockResolvedValue([]);
-  const mockHasUnsettledRun = vi.fn().mockResolvedValue(false);
+  const planRunsRepository = createPlanRunsRepositoryMock();
   const mockPlansRepository = createPlansRepositoryMock();
   const mockTasksRepository = createTasksRepositoryMock();
   const mockHasRemainingTasks = mockTasksRepository.hasRemainingTasks;
@@ -141,16 +136,7 @@ describe('PlanStatusService', () => {
     createMock<PlanRunCancellationService>({
       abort: mockPlanRunCancellationAbort,
     }),
-    createMock<PlanRunsService>({
-      cancelScheduledRunsForPlan: mockCancelScheduledRunsForPlan,
-      findById: mockFindById,
-      findScheduledByPlanId: mockFindScheduledByPlanId,
-      hasUnsettledRun: mockHasUnsettledRun,
-      settleQueuedRunsCancelledByJobIds: mockSettleQueuedRunsCancelledByJobIds,
-      settleScheduledRunCancelled: mockSettleScheduledRunCancelled,
-      settleScheduledRunsCancelled: mockSettleScheduledRunsCancelled,
-      stampCancelRequested: mockStampCancelRequested,
-    }),
+    createMock<PlanRunsRepository>(planRunsRepository),
     asMock<PlansRepository>(mockPlansRepository),
     asMock<TasksRepository>(mockTasksRepository),
     mockWorkLedgerCapture,
@@ -187,16 +173,26 @@ describe('PlanStatusService', () => {
     mockPlanRunCancellationAbort.mockReturnValue(false);
     mockPublishCancel.mockClear();
     mockPublishCancel.mockResolvedValue(undefined);
-    mockStampCancelRequested.mockClear();
-    mockStampCancelRequested.mockResolvedValue(null);
-    mockFindById.mockClear();
-    mockFindById.mockResolvedValue({ heartbeatExpected: true });
-    mockSettleScheduledRunsCancelled.mockReset().mockResolvedValue(0);
-    mockSettleQueuedRunsCancelledByJobIds.mockReset().mockResolvedValue(0);
-    mockFindScheduledByPlanId.mockReset().mockResolvedValue([]);
-    mockHasUnsettledRun.mockReset().mockResolvedValue(false);
-    mockSettleScheduledRunCancelled.mockReset().mockResolvedValue(true);
-    mockCancelScheduledRunsForPlan.mockReset().mockResolvedValue([]);
+    planRunsRepository.stampCancelRequested.mockClear();
+    planRunsRepository.stampCancelRequested.mockResolvedValue(null);
+    planRunsRepository.findRunById.mockClear();
+    planRunsRepository.findRunById.mockResolvedValue(
+      planRunsFactory.build({ heartbeatExpected: true }),
+    );
+    planRunsRepository.settleScheduledRunsCancelled
+      .mockReset()
+      .mockResolvedValue(0);
+    planRunsRepository.settleQueuedRunsCancelledByJobIds
+      .mockReset()
+      .mockResolvedValue(0);
+    planRunsRepository.findScheduledByPlanId.mockReset().mockResolvedValue([]);
+    planRunsRepository.hasUnsettledRun.mockReset().mockResolvedValue(false);
+    planRunsRepository.settleScheduledRunCancelled
+      .mockReset()
+      .mockResolvedValue(true);
+    planRunsRepository.cancelScheduledRunsForPlan
+      .mockReset()
+      .mockResolvedValue([]);
     mockGetJob.mockReset().mockResolvedValue(undefined);
     mockEmitTaskStatusChanged.mockClear();
     mockTaskSelectGetMany.mockReset().mockResolvedValue([]);
@@ -584,7 +580,7 @@ describe('PlanStatusService', () => {
       async (requestedStatus) => {
         const remove = vi.fn().mockResolvedValue(undefined);
         mockGetJob.mockResolvedValue({ remove });
-        mockCancelScheduledRunsForPlan.mockResolvedValue([
+        planRunsRepository.cancelScheduledRunsForPlan.mockResolvedValue([
           { bullmqJobId: 'scheduled-plan-run-abc', id: 'run-scheduled' },
         ]);
         const entity = { ...mockPlan, completedAt: null, status: 'SCHEDULED' };
@@ -601,10 +597,9 @@ describe('PlanStatusService', () => {
           fromStatus: 'SCHEDULED',
           toStatus: requestedStatus,
         });
-        expect(mockCancelScheduledRunsForPlan).toHaveBeenCalledWith(
-          mockPlan.id,
-          manager,
-        );
+        expect(
+          planRunsRepository.cancelScheduledRunsForPlan,
+        ).toHaveBeenCalledWith(mockPlan.id, manager);
         expect(mockGetJob).toHaveBeenCalledWith('scheduled-plan-run-abc');
         expect(remove).toHaveBeenCalledOnce();
       },
@@ -614,7 +609,7 @@ describe('PlanStatusService', () => {
       mockGetJob.mockResolvedValue({
         remove: vi.fn().mockRejectedValue(new Error('locked')),
       });
-      mockCancelScheduledRunsForPlan.mockResolvedValue([
+      planRunsRepository.cancelScheduledRunsForPlan.mockResolvedValue([
         { bullmqJobId: 'scheduled-plan-run-abc', id: 'run-scheduled' },
       ]);
       const entity = { ...mockPlan, completedAt: null, status: 'SCHEDULED' };
@@ -638,7 +633,9 @@ describe('PlanStatusService', () => {
         requestedStatus: 'BLOCKED',
       });
 
-      expect(mockCancelScheduledRunsForPlan).not.toHaveBeenCalled();
+      expect(
+        planRunsRepository.cancelScheduledRunsForPlan,
+      ).not.toHaveBeenCalled();
     });
   });
 
@@ -1043,7 +1040,7 @@ describe('PlanStatusService', () => {
       'does not complete a %s plan (never resurrected)',
       async (status) => {
         mockHasRemainingTasks.mockResolvedValue(false);
-        mockHasUnsettledRun.mockResolvedValue(false);
+        planRunsRepository.hasUnsettledRun.mockResolvedValue(false);
         repo.findOne.mockResolvedValue({ ...mockPlan, status });
 
         const completed = await service.completeParentPlanIfTasksDone(
@@ -1060,7 +1057,7 @@ describe('PlanStatusService', () => {
       'completes a %s plan with no remaining tasks and no unsettled run',
       async (status) => {
         mockHasRemainingTasks.mockResolvedValue(false);
-        mockHasUnsettledRun.mockResolvedValue(false);
+        planRunsRepository.hasUnsettledRun.mockResolvedValue(false);
         repo.findOne.mockResolvedValue({ ...mockPlan, status });
         repo.save.mockImplementation(async (e) => e);
 
@@ -1084,7 +1081,7 @@ describe('PlanStatusService', () => {
       'does not complete a %s plan that has an active run',
       async (status) => {
         mockHasRemainingTasks.mockResolvedValue(false);
-        mockHasUnsettledRun.mockResolvedValue(true);
+        planRunsRepository.hasUnsettledRun.mockResolvedValue(true);
         repo.findOne.mockResolvedValue({ ...mockPlan, status });
 
         const completed = await service.completeParentPlanIfTasksDone(
@@ -1101,7 +1098,7 @@ describe('PlanStatusService', () => {
       'does not complete a %s plan that has a SCHEDULED run pending',
       async (status) => {
         mockHasRemainingTasks.mockResolvedValue(false);
-        mockHasUnsettledRun.mockResolvedValue(true);
+        planRunsRepository.hasUnsettledRun.mockResolvedValue(true);
         repo.findOne.mockResolvedValue({ ...mockPlan, status });
 
         const completed = await service.completeParentPlanIfTasksDone(
@@ -1116,7 +1113,7 @@ describe('PlanStatusService', () => {
 
     test('still completes an IN_PROGRESS plan that has an active run (interactive loop)', async () => {
       mockHasRemainingTasks.mockResolvedValue(false);
-      mockHasUnsettledRun.mockResolvedValue(true);
+      planRunsRepository.hasUnsettledRun.mockResolvedValue(true);
       repo.findOne.mockResolvedValue({ ...mockPlan, status: 'IN_PROGRESS' });
       repo.save.mockImplementation(async (e) => e);
 
@@ -1167,7 +1164,7 @@ describe('PlanStatusService', () => {
       mockHasRemainingTasks.mockResolvedValue(false);
       repo.findOne.mockResolvedValue({ ...mockPlan, status: 'SCHEDULED' });
       repo.save.mockImplementation(async (e) => e);
-      mockCancelScheduledRunsForPlan.mockResolvedValue([
+      planRunsRepository.cancelScheduledRunsForPlan.mockResolvedValue([
         { bullmqJobId: null, id: 'run-scheduled' },
       ]);
 
@@ -1177,7 +1174,9 @@ describe('PlanStatusService', () => {
       expect(repo.save).toHaveBeenCalledWith(
         expect.objectContaining({ status: 'COMPLETED' }),
       );
-      expect(mockCancelScheduledRunsForPlan).toHaveBeenCalledOnce();
+      expect(
+        planRunsRepository.cancelScheduledRunsForPlan,
+      ).toHaveBeenCalledOnce();
     });
   });
 
@@ -1245,7 +1244,7 @@ describe('PlanStatusService', () => {
       expect(result.cancelRequested).toBe(false);
       expect(result.planStatusAfter).toBeNull();
       expect(result.signaledActiveRunToStop).toBe(false);
-      expect(mockStampCancelRequested).not.toHaveBeenCalled();
+      expect(planRunsRepository.stampCancelRequested).not.toHaveBeenCalled();
       expect(mockPublishCancel).not.toHaveBeenCalled();
     });
 
@@ -1257,11 +1256,11 @@ describe('PlanStatusService', () => {
         .mockResolvedValueOnce({ ...mockPlan, status: 'PENDING' });
       mockGetJobs.mockResolvedValue([]);
       mockPlanRunCancellationAbort.mockReturnValue(false);
-      mockStampCancelRequested.mockResolvedValue('run-1');
+      planRunsRepository.stampCancelRequested.mockResolvedValue('run-1');
 
       const result = await service.cancelRun(mockPlan.id, 'user-42', testActor);
 
-      expect(mockStampCancelRequested).toHaveBeenCalledWith(
+      expect(planRunsRepository.stampCancelRequested).toHaveBeenCalledWith(
         mockPlan.id,
         'user-42',
       );
@@ -1277,7 +1276,7 @@ describe('PlanStatusService', () => {
         .mockResolvedValueOnce({ ...mockPlan, status: 'PENDING' });
       mockGetJobs.mockResolvedValue([]);
       mockPlanRunCancellationAbort.mockReturnValue(true);
-      mockStampCancelRequested.mockResolvedValue('run-1');
+      planRunsRepository.stampCancelRequested.mockResolvedValue('run-1');
 
       const result = await service.cancelRun(mockPlan.id, null, testActor);
 
@@ -1294,12 +1293,18 @@ describe('PlanStatusService', () => {
       repo.findOne.mockResolvedValue({ ...mockPlan, status: 'IN_PROGRESS' });
       mockGetJobs.mockResolvedValue([]);
       mockPlanRunCancellationAbort.mockReturnValue(false);
-      mockStampCancelRequested.mockResolvedValue('run-interactive');
-      mockFindById.mockResolvedValue({ heartbeatExpected: false });
+      planRunsRepository.stampCancelRequested.mockResolvedValue(
+        'run-interactive',
+      );
+      planRunsRepository.findRunById.mockResolvedValue(
+        planRunsFactory.build({
+          heartbeatExpected: false,
+        }),
+      );
 
       const result = await service.cancelRun(mockPlan.id, 'user-42', testActor);
 
-      expect(mockStampCancelRequested).toHaveBeenCalledWith(
+      expect(planRunsRepository.stampCancelRequested).toHaveBeenCalledWith(
         mockPlan.id,
         'user-42',
       );
@@ -1321,8 +1326,14 @@ describe('PlanStatusService', () => {
         .mockResolvedValueOnce({ ...mockPlan, status: 'PENDING' });
       mockGetJobs.mockResolvedValue([]);
       mockPlanRunCancellationAbort.mockReturnValue(true);
-      mockStampCancelRequested.mockResolvedValue('run-interactive');
-      mockFindById.mockResolvedValue({ heartbeatExpected: false });
+      planRunsRepository.stampCancelRequested.mockResolvedValue(
+        'run-interactive',
+      );
+      planRunsRepository.findRunById.mockResolvedValue(
+        planRunsFactory.build({
+          heartbeatExpected: false,
+        }),
+      );
 
       const result = await service.cancelRun(mockPlan.id, null, testActor);
 
@@ -1352,10 +1363,9 @@ describe('PlanStatusService', () => {
       expect(remove).toHaveBeenCalledOnce();
       expect(result.removedJobIds).toEqual(['job-99']);
       // The removed job's QUEUED plan_runs row is settled, keyed on the plans queue + job id.
-      expect(mockSettleQueuedRunsCancelledByJobIds).toHaveBeenCalledWith(
-        PLANS_QUEUE_NAME,
-        ['job-99'],
-      );
+      expect(
+        planRunsRepository.settleQueuedRunsCancelledByJobIds,
+      ).toHaveBeenCalledWith(PLANS_QUEUE_NAME, ['job-99']);
       expect(result.outcome).toBe('RUN_CANCELLED');
       expect(result.planStatusAfter).toBe('PENDING');
       // Routed through the applyStatusChange chokepoint: the row now persists via
@@ -1403,19 +1413,18 @@ describe('PlanStatusService', () => {
 
       expect(result.activeJobIdsCouldNotCancel).toEqual(['job-active']);
       // A started job's row is the worker's to settle: nothing removed, nothing settled here.
-      expect(mockSettleQueuedRunsCancelledByJobIds).toHaveBeenCalledWith(
-        PLANS_QUEUE_NAME,
-        [],
-      );
+      expect(
+        planRunsRepository.settleQueuedRunsCancelledByJobIds,
+      ).toHaveBeenCalledWith(PLANS_QUEUE_NAME, []);
     });
 
     describe('a SCHEDULED run (delayed job + plan_runs row), per-plan cancel', () => {
-      const scheduledRow = {
+      const scheduledRow = planRunsFactory.build({
         bullmqJobId: 'scheduled-plan-run-abc',
         id: 'run-scheduled',
         planId: mockPlan.id,
         status: 'SCHEDULED',
-      };
+      });
       const delayedJob = (
         remove: () => Promise<void>,
         id = 'scheduled-plan-run-abc',
@@ -1434,17 +1443,18 @@ describe('PlanStatusService', () => {
         // a COMPLETED plan with a future scheduled run stays COMPLETED.
         const remove = vi.fn().mockResolvedValue(undefined);
         mockGetJobs.mockResolvedValue([delayedJob(remove)]);
-        mockFindScheduledByPlanId.mockResolvedValue([scheduledRow]);
-        mockSettleScheduledRunsCancelled.mockResolvedValue(1);
+        planRunsRepository.findScheduledByPlanId.mockResolvedValue([
+          scheduledRow,
+        ]);
+        planRunsRepository.settleScheduledRunsCancelled.mockResolvedValue(1);
         repo.findOne.mockResolvedValue({ ...mockPlan, status: 'COMPLETED' });
 
         const result = await service.cancelRun(mockPlan.id, null, testActor);
 
         expect(remove).toHaveBeenCalledOnce();
-        expect(mockSettleScheduledRunsCancelled).toHaveBeenCalledWith(
-          mockPlan.id,
-          [],
-        );
+        expect(
+          planRunsRepository.settleScheduledRunsCancelled,
+        ).toHaveBeenCalledWith(mockPlan.id, []);
         expect(result.removedJobIds).toEqual(['scheduled-plan-run-abc']);
         expect(result.outcome).toBe('RUN_CANCELLED');
         expect(result.planStatusAfter).toBeNull();
@@ -1455,8 +1465,10 @@ describe('PlanStatusService', () => {
       test('returns a SCHEDULED plan to PENDING and leaves its tasks alone (D4)', async () => {
         const remove = vi.fn().mockResolvedValue(undefined);
         mockGetJobs.mockResolvedValue([delayedJob(remove)]);
-        mockFindScheduledByPlanId.mockResolvedValue([scheduledRow]);
-        mockSettleScheduledRunsCancelled.mockResolvedValue(1);
+        planRunsRepository.findScheduledByPlanId.mockResolvedValue([
+          scheduledRow,
+        ]);
+        planRunsRepository.settleScheduledRunsCancelled.mockResolvedValue(1);
         repo.findOne.mockResolvedValue({ ...mockPlan, status: 'SCHEDULED' });
 
         const result = await service.cancelRun(mockPlan.id, null, testActor);
@@ -1468,7 +1480,7 @@ describe('PlanStatusService', () => {
         );
         expect(mockEmitTaskStatusChanged).not.toHaveBeenCalled();
         // A scheduled plan has no live run to stop.
-        expect(mockStampCancelRequested).not.toHaveBeenCalled();
+        expect(planRunsRepository.stampCancelRequested).not.toHaveBeenCalled();
       });
 
       test('still resets the plan when an ordinary queued job is removed alongside the scheduled one', async () => {
@@ -1476,8 +1488,10 @@ describe('PlanStatusService', () => {
           delayedJob(vi.fn().mockResolvedValue(undefined)),
           delayedJob(vi.fn().mockResolvedValue(undefined), 'job-queued-now'),
         ]);
-        mockFindScheduledByPlanId.mockResolvedValue([scheduledRow]);
-        mockSettleScheduledRunsCancelled.mockResolvedValue(1);
+        planRunsRepository.findScheduledByPlanId.mockResolvedValue([
+          scheduledRow,
+        ]);
+        planRunsRepository.settleScheduledRunsCancelled.mockResolvedValue(1);
         repo.findOne
           .mockResolvedValueOnce({ ...mockPlan, status: 'QUEUED' })
           .mockResolvedValueOnce({ ...mockPlan, status: 'PENDING' });
@@ -1493,8 +1507,10 @@ describe('PlanStatusService', () => {
 
       test('re-runs the plan auto-close once the cancelled scheduled run no longer holds a done plan open', async () => {
         mockGetJobs.mockResolvedValue([]);
-        mockFindScheduledByPlanId.mockResolvedValue([scheduledRow]);
-        mockSettleScheduledRunsCancelled.mockResolvedValue(1);
+        planRunsRepository.findScheduledByPlanId.mockResolvedValue([
+          scheduledRow,
+        ]);
+        planRunsRepository.settleScheduledRunsCancelled.mockResolvedValue(1);
         repo.findOne.mockResolvedValue({ ...mockPlan, status: 'PENDING' });
         vi.spyOn(
           service,
@@ -1514,8 +1530,10 @@ describe('PlanStatusService', () => {
         // Redis lost the job (or someone removed it): without this the row would read SCHEDULED
         // forever. No job to remove, but a row was settled, so the cancel is a real cancel.
         mockGetJobs.mockResolvedValue([]);
-        mockFindScheduledByPlanId.mockResolvedValue([scheduledRow]);
-        mockSettleScheduledRunsCancelled.mockResolvedValue(1);
+        planRunsRepository.findScheduledByPlanId.mockResolvedValue([
+          scheduledRow,
+        ]);
+        planRunsRepository.settleScheduledRunsCancelled.mockResolvedValue(1);
         repo.findOne.mockResolvedValue({ ...mockPlan, status: 'PENDING' });
 
         const result = await service.cancelRun(mockPlan.id, null, testActor);
@@ -1541,10 +1559,9 @@ describe('PlanStatusService', () => {
 
         const result = await service.cancelRun(mockPlan.id, null, testActor);
 
-        expect(mockSettleScheduledRunsCancelled).toHaveBeenCalledWith(
-          mockPlan.id,
-          ['scheduled-plan-run-fired'],
-        );
+        expect(
+          planRunsRepository.settleScheduledRunsCancelled,
+        ).toHaveBeenCalledWith(mockPlan.id, ['scheduled-plan-run-fired']);
         expect(result.activeJobIdsCouldNotCancel).toEqual([
           'scheduled-plan-run-fired',
         ]);
@@ -1554,7 +1571,7 @@ describe('PlanStatusService', () => {
         // Nothing queued, no SCHEDULED row left (the guarded settle matches 0 rows), plan not
         // cancelable: the second cancel must not stamp, publish, or touch plan or tasks.
         mockGetJobs.mockResolvedValue([]);
-        mockSettleScheduledRunsCancelled.mockResolvedValue(0);
+        planRunsRepository.settleScheduledRunsCancelled.mockResolvedValue(0);
         repo.findOne.mockResolvedValue({ ...mockPlan, status: 'COMPLETED' });
 
         const result = await service.cancelRun(mockPlan.id, null, testActor);
@@ -1562,7 +1579,7 @@ describe('PlanStatusService', () => {
         expect(result.outcome).toBe('NO_ACTIVE_RUN');
         expect(result.noMatchingJob).toBe(true);
         expect(result.planStatusAfter).toBeNull();
-        expect(mockStampCancelRequested).not.toHaveBeenCalled();
+        expect(planRunsRepository.stampCancelRequested).not.toHaveBeenCalled();
         expect(mockPublishCancel).not.toHaveBeenCalled();
         expect(repo.save).not.toHaveBeenCalled();
         expect(mockEmitTaskStatusChanged).not.toHaveBeenCalled();
@@ -1570,12 +1587,12 @@ describe('PlanStatusService', () => {
     });
 
     describe('run-scoped cancel (planRunId)', () => {
-      const scheduledRun = {
+      const scheduledRun = planRunsFactory.build({
         bullmqJobId: 'scheduled-plan-run-abc',
         id: 'run-scheduled',
         planId: mockPlan.id,
         status: 'SCHEDULED',
-      };
+      });
       beforeEach(() => {
         // The shared mock's call history is not reset between tests; these tests assert no abort.
         mockPlanRunCancellationAbort.mockClear();
@@ -1594,9 +1611,11 @@ describe('PlanStatusService', () => {
         // No per-plan scan, no abort, no cancel marker, no pub/sub: a live run is never signalled.
         expect(mockGetJobs).not.toHaveBeenCalled();
         expect(mockPlanRunCancellationAbort).not.toHaveBeenCalled();
-        expect(mockStampCancelRequested).not.toHaveBeenCalled();
+        expect(planRunsRepository.stampCancelRequested).not.toHaveBeenCalled();
         expect(mockPublishCancel).not.toHaveBeenCalled();
-        expect(mockSettleScheduledRunsCancelled).not.toHaveBeenCalled();
+        expect(
+          planRunsRepository.settleScheduledRunsCancelled,
+        ).not.toHaveBeenCalled();
         // Neither the (non-SCHEDULED) plan status nor the tasks are written.
         expect(repo.save).not.toHaveBeenCalled();
         expect(mockEmitTaskStatusChanged).not.toHaveBeenCalled();
@@ -1605,7 +1624,7 @@ describe('PlanStatusService', () => {
       test('returns a SCHEDULED plan to PENDING once its scheduled run is cancelled (D4)', async () => {
         const remove = vi.fn().mockResolvedValue(undefined);
         mockGetJob.mockResolvedValue({ getState: vi.fn(), remove });
-        mockFindById.mockResolvedValue(scheduledRun);
+        planRunsRepository.findRunById.mockResolvedValue(scheduledRun);
         repo.findOne.mockResolvedValue({ ...mockPlan, status: 'SCHEDULED' });
 
         const result = await cancelScoped();
@@ -1625,8 +1644,8 @@ describe('PlanStatusService', () => {
 
       test('leaves the plan alone when the row was already settled by a fire', async () => {
         mockGetJob.mockResolvedValue(undefined);
-        mockSettleScheduledRunCancelled.mockResolvedValue(false);
-        mockFindById.mockResolvedValue(scheduledRun);
+        planRunsRepository.settleScheduledRunCancelled.mockResolvedValue(false);
+        planRunsRepository.findRunById.mockResolvedValue(scheduledRun);
         repo.findOne.mockResolvedValue({ ...mockPlan, status: 'SCHEDULED' });
 
         const result = await cancelScoped();
@@ -1638,7 +1657,7 @@ describe('PlanStatusService', () => {
       test('cancels only that run: removes its delayed job and settles its row, leaving a live run on the same plan alone', async () => {
         const remove = vi.fn().mockResolvedValue(undefined);
         mockGetJob.mockResolvedValue({ getState: vi.fn(), remove });
-        mockFindById.mockResolvedValue(scheduledRun);
+        planRunsRepository.findRunById.mockResolvedValue(scheduledRun);
         // Another run is live on this very plan.
         repo.findOne.mockResolvedValue({ ...mockPlan, status: 'IN_PROGRESS' });
 
@@ -1646,9 +1665,9 @@ describe('PlanStatusService', () => {
 
         expect(mockGetJob).toHaveBeenCalledWith('scheduled-plan-run-abc');
         expect(remove).toHaveBeenCalledOnce();
-        expect(mockSettleScheduledRunCancelled).toHaveBeenCalledWith(
-          'run-scheduled',
-        );
+        expect(
+          planRunsRepository.settleScheduledRunCancelled,
+        ).toHaveBeenCalledWith('run-scheduled');
         expect(result).toEqual({
           activeJobIdsCouldNotCancel: [],
           cancelRequested: false,
@@ -1664,14 +1683,14 @@ describe('PlanStatusService', () => {
 
       test('still settles the row when its delayed job is already gone from the queue', async () => {
         mockGetJob.mockResolvedValue(undefined);
-        mockFindById.mockResolvedValue(scheduledRun);
+        planRunsRepository.findRunById.mockResolvedValue(scheduledRun);
         repo.findOne.mockResolvedValue({ ...mockPlan, status: 'IN_PROGRESS' });
 
         const result = await cancelScoped();
 
-        expect(mockSettleScheduledRunCancelled).toHaveBeenCalledWith(
-          'run-scheduled',
-        );
+        expect(
+          planRunsRepository.settleScheduledRunCancelled,
+        ).toHaveBeenCalledWith('run-scheduled');
         expect(result.outcome).toBe('RUN_CANCELLED');
         expect(result.removedJobIds).toEqual([]);
         expect(result.noMatchingJob).toBe(true);
@@ -1683,7 +1702,7 @@ describe('PlanStatusService', () => {
           getState: vi.fn().mockResolvedValue('active'),
           remove: vi.fn().mockRejectedValue(new Error('locked')),
         });
-        mockFindById.mockResolvedValue(scheduledRun);
+        planRunsRepository.findRunById.mockResolvedValue(scheduledRun);
         repo.findOne.mockResolvedValue({ ...mockPlan, status: 'IN_PROGRESS' });
 
         const result = await cancelScoped();
@@ -1692,7 +1711,9 @@ describe('PlanStatusService', () => {
           'scheduled-plan-run-abc',
         ]);
         expect(result.outcome).toBe('NO_ACTIVE_RUN');
-        expect(mockSettleScheduledRunCancelled).not.toHaveBeenCalled();
+        expect(
+          planRunsRepository.settleScheduledRunCancelled,
+        ).not.toHaveBeenCalled();
         expectPlanAndLiveRunUntouched();
       });
 
@@ -1701,16 +1722,18 @@ describe('PlanStatusService', () => {
           getState: vi.fn().mockResolvedValue('delayed'),
           remove: vi.fn().mockRejectedValue(new Error('redis down')),
         });
-        mockFindById.mockResolvedValue(scheduledRun);
+        planRunsRepository.findRunById.mockResolvedValue(scheduledRun);
         repo.findOne.mockResolvedValue({ ...mockPlan, status: 'PENDING' });
 
         await expect(cancelScoped()).rejects.toThrow('redis down');
-        expect(mockSettleScheduledRunCancelled).not.toHaveBeenCalled();
+        expect(
+          planRunsRepository.settleScheduledRunCancelled,
+        ).not.toHaveBeenCalled();
       });
 
       test('re-runs the plan auto-close after settling the run', async () => {
         mockGetJob.mockResolvedValue(undefined);
-        mockFindById.mockResolvedValue(scheduledRun);
+        planRunsRepository.findRunById.mockResolvedValue(scheduledRun);
         repo.findOne.mockResolvedValue({ ...mockPlan, status: 'PENDING' });
         vi.spyOn(
           service,
@@ -1727,28 +1750,37 @@ describe('PlanStatusService', () => {
 
       test('rejects a planRunId that names no run, or a run of another plan', async () => {
         repo.findOne.mockResolvedValue({ ...mockPlan, status: 'PENDING' });
-        mockFindById.mockResolvedValueOnce(null);
+        planRunsRepository.findRunById.mockResolvedValueOnce(null);
 
         await expect(cancelScoped()).rejects.toBeInstanceOf(
           BadRequestException,
         );
 
-        mockFindById.mockResolvedValueOnce({
-          ...scheduledRun,
-          planId: 'some-other-plan',
-        });
+        planRunsRepository.findRunById.mockResolvedValueOnce(
+          planRunsFactory.build({
+            ...scheduledRun,
+            planId: 'some-other-plan',
+          }),
+        );
 
         await expect(cancelScoped()).rejects.toBeInstanceOf(
           BadRequestException,
         );
         expect(mockGetJob).not.toHaveBeenCalled();
-        expect(mockSettleScheduledRunCancelled).not.toHaveBeenCalled();
+        expect(
+          planRunsRepository.settleScheduledRunCancelled,
+        ).not.toHaveBeenCalled();
       });
 
       test.each(['CANCELLED', 'COMPLETED', 'FAILED', 'MISSED', 'SUPERSEDED'])(
         'is an idempotent no-op for a run already %s',
         async (status) => {
-          mockFindById.mockResolvedValue({ ...scheduledRun, status });
+          planRunsRepository.findRunById.mockResolvedValue(
+            planRunsFactory.build({
+              ...scheduledRun,
+              status,
+            }),
+          );
           repo.findOne.mockResolvedValue({
             ...mockPlan,
             status: 'IN_PROGRESS',
@@ -1759,7 +1791,9 @@ describe('PlanStatusService', () => {
           expect(result.outcome).toBe('NO_ACTIVE_RUN');
           expect(result.noMatchingJob).toBe(true);
           expect(mockGetJob).not.toHaveBeenCalled();
-          expect(mockSettleScheduledRunCancelled).not.toHaveBeenCalled();
+          expect(
+            planRunsRepository.settleScheduledRunCancelled,
+          ).not.toHaveBeenCalled();
           expectPlanAndLiveRunUntouched();
         },
       );
@@ -1767,7 +1801,12 @@ describe('PlanStatusService', () => {
       test.each(['QUEUED', 'IN_PROGRESS'])(
         'rejects a run that is %s rather than falling through to a per-plan cancel',
         async (status) => {
-          mockFindById.mockResolvedValue({ ...scheduledRun, status });
+          planRunsRepository.findRunById.mockResolvedValue(
+            planRunsFactory.build({
+              ...scheduledRun,
+              status,
+            }),
+          );
           repo.findOne.mockResolvedValue({
             ...mockPlan,
             status: 'IN_PROGRESS',
@@ -1777,7 +1816,9 @@ describe('PlanStatusService', () => {
             new RegExp(`is ${status}, not SCHEDULED`),
           );
           expect(mockGetJob).not.toHaveBeenCalled();
-          expect(mockSettleScheduledRunCancelled).not.toHaveBeenCalled();
+          expect(
+            planRunsRepository.settleScheduledRunCancelled,
+          ).not.toHaveBeenCalled();
           expectPlanAndLiveRunUntouched();
         },
       );

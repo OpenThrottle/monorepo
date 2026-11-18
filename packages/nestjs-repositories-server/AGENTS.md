@@ -53,7 +53,11 @@ Moving a table here is these files and edits, every time (`notes` is the referen
    `updatedAt`.
 3. `<folder>.repository.ts` — `extends BaseRepository<Entity, CreateModelInput<Entity>>`,
    `tableName`, `@InjectRepository(Entity)`. Custom methods only for data access the consumers
-   need beyond `BaseRepository`.
+   need beyond `BaseRepository`. **Watch for an old service method named like an inherited one.**
+   `BaseRepository.findById` throws `NotFoundException` on a miss, so a service's nullable
+   `findById(id): Promise<Entity | null>` must move under a new name (`findRunById` in plan-runs),
+   and every caller must be repointed. Typecheck cannot catch a caller left on `findById`, because
+   both signatures take a string; only the caller's null branch breaks.
 4. `<folder>.module.ts` — `TypeOrmModule.forFeature([Entity])`, provides/exports the repository;
    add it to `NestjsRepositoriesServerModule`.
 5. `<folder>.factory.ts` — fishery factory.

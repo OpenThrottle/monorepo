@@ -2,10 +2,13 @@ import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
   PlanRun,
-  PlanRunsService,
-} from '@openthrottle/nestjs-repositories';
+  PlanRunsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import type { PlansRepository } from '@openthrottle/nestjs-repositories-server';
-import { createPlansRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import {
+  createPlanRunsRepositoryMock,
+  createPlansRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
 import type { DataSource } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -42,9 +45,7 @@ const limitAt = (
 };
 
 describe('UsageLimitResumeService', () => {
-  const settleRunUsageLimited = vi.fn();
-  const countUsageLimitedInChain = vi.fn();
-  const readCancelRequested = vi.fn();
+  const planRunsRepository = createPlanRunsRepositoryMock();
   const findOnePlan = vi.fn();
   const enqueueUsageLimitResume = vi.fn();
   const writeGuardedStatus = vi.fn();
@@ -55,9 +56,9 @@ describe('UsageLimitResumeService', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    settleRunUsageLimited.mockResolvedValue(limitedRun);
-    countUsageLimitedInChain.mockResolvedValue(1);
-    readCancelRequested.mockResolvedValue(null);
+    planRunsRepository.settleRunUsageLimited.mockResolvedValue(limitedRun);
+    planRunsRepository.countUsageLimitedInChain.mockResolvedValue(1);
+    planRunsRepository.readCancelRequested.mockResolvedValue(null);
     findOnePlan.mockResolvedValue({ id: PLAN_ID, status: 'IN_PROGRESS' });
     enqueueUsageLimitResume.mockResolvedValue({
       jobId: `usage-limit-resume-${RUN_ID}`,
@@ -70,11 +71,7 @@ describe('UsageLimitResumeService', () => {
       createMock<LoggerService>(),
       createMock<NotificationsService>({ emitPlanStatusChanged }),
       createMock<PlanEnqueueService>({ enqueueUsageLimitResume }),
-      createMock<PlanRunsService>({
-        countUsageLimitedInChain,
-        readCancelRequested,
-        settleRunUsageLimited,
-      }),
+      createMock<PlanRunsRepository>(planRunsRepository),
       asMock<PlansRepository>({
         ...createPlansRepositoryMock(),
         findOne: findOnePlan,
@@ -106,7 +103,7 @@ describe('UsageLimitResumeService', () => {
 
       const result = await handle(limit);
 
-      expect(settleRunUsageLimited).toHaveBeenCalledWith(
+      expect(planRunsRepository.settleRunUsageLimited).toHaveBeenCalledWith(
         PLANS_QUEUE_NAME,
         'job-1',
         { resetsAt: new Date(limit.resetsAt), type: 'five_hour' },
@@ -132,7 +129,10 @@ describe('UsageLimitResumeService', () => {
     it('bounds the chain walk by the policy depth', async () => {
       await handle(limitAt(HOUR_MS));
 
-      expect(countUsageLimitedInChain).toHaveBeenCalledWith(RUN_ID, 3);
+      expect(planRunsRepository.countUsageLimitedInChain).toHaveBeenCalledWith(
+        RUN_ID,
+        3,
+      );
     });
   });
 
@@ -171,7 +171,7 @@ describe('UsageLimitResumeService', () => {
     });
 
     it('holds once the continuation chain already has 3 limited runs', async () => {
-      countUsageLimitedInChain.mockResolvedValue(3);
+      planRunsRepository.countUsageLimitedInChain.mockResolvedValue(3);
 
       const result = await handle(limitAt(HOUR_MS));
 
@@ -194,7 +194,7 @@ describe('UsageLimitResumeService', () => {
 
   describe('skipped', () => {
     it('leaves everything alone when the run row was already settled elsewhere', async () => {
-      settleRunUsageLimited.mockResolvedValue(null);
+      planRunsRepository.settleRunUsageLimited.mockResolvedValue(null);
 
       const result = await handle(limitAt(HOUR_MS));
 
@@ -214,7 +214,7 @@ describe('UsageLimitResumeService', () => {
     });
 
     it('does not resume when a cancel was requested against the run', async () => {
-      readCancelRequested.mockResolvedValue({
+      planRunsRepository.readCancelRequested.mockResolvedValue({
         cancelRequestedAt: NOW,
         cancelRequestedBy: null,
       });
@@ -228,7 +228,9 @@ describe('UsageLimitResumeService', () => {
 
   describe('never throws', () => {
     it('resolves with a held outcome when the settle write itself throws', async () => {
-      settleRunUsageLimited.mockRejectedValue(new Error('db down'));
+      planRunsRepository.settleRunUsageLimited.mockRejectedValue(
+        new Error('db down'),
+      );
 
       await expect(handle(limitAt(HOUR_MS))).resolves.toMatchObject({
         outcome: 'held',

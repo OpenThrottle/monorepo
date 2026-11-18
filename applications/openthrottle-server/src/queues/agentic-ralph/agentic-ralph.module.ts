@@ -7,7 +7,7 @@ import {
   NestjsAgenticWorkflowModule,
 } from '@openthrottle/nestjs-agentic-workflow';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
-import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+import { PlanRunsModule } from '@openthrottle/nestjs-repositories-server';
 import { executeGraphqlV2 } from '@openthrottle/nodejs-graphql';
 import type { WorkflowRalphOrchestratorDeps } from '@openthrottle/openthrottle-agentic-ralph';
 import { buildWorkflowExecuteGraphqlV2Options } from '@openthrottle/openthrottle-agentic-ralph';
@@ -53,7 +53,7 @@ import { AgenticRalphOrchestratorService } from './orchestrator/orchestrator.ser
         },
       ],
     }),
-    NestjsRepositoriesModule,
+    PlanRunsModule,
     PlanRunWorkspaceModule,
   ],
   providers: [AgenticRalphOrchestratorService],

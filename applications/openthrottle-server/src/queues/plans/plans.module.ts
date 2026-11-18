@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
-import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import {
   PlanOutputStreamModule,
+  PlanRunsModule,
   PlansModule,
   ServiceAccountCredentialsModule,
   ServiceAccountsModule,
@@ -49,26 +49,26 @@ import { WorkLedgerRunService } from './work-ledger-run/work-ledger-run.service.
 @Module({
   exports: [PlansQueueProducerModule],
   imports: [
-    ServiceAccountCredentialsModule,
-    ServiceAccountsModule,
     AgenticRalphModule,
     LoggerModule,
     MetricsModule,
-    NestjsRepositoriesModule,
     NestjsWorktreesModule,
     NotificationsModule,
     OtLoopModule,
     PlanEnqueueModule,
     PlanLifecycleHooksQueueProducerModule,
     PlanOutputStreamModule,
+    PlanRunsModule,
     PlanRunWorktreeCleanupModule,
     PlansModule,
-    PlanStatusModule,
     PlansQueueProducerModule,
+    PlanStatusModule,
+    ServiceAccountCredentialsModule,
+    ServiceAccountsModule,
     TasksModule,
     WorkLedgerGraphqlModule,
-    WorkSessionSubjectsModule,
     WorkSessionsModule,
+    WorkSessionSubjectsModule,
   ],
   providers: [
     PlansProcessor,

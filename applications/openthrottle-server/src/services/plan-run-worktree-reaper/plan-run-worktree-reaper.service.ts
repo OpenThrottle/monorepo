@@ -16,11 +16,9 @@
 
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import {
-  PlanRunsService,
-  RepositoryCheckoutsService,
-} from '@openthrottle/nestjs-repositories';
+import { RepositoryCheckoutsService } from '@openthrottle/nestjs-repositories';
 import type { Plan } from '@openthrottle/nestjs-repositories-server';
+import { PlanRunsRepository } from '@openthrottle/nestjs-repositories-server';
 import { PlansRepository } from '@openthrottle/nestjs-repositories-server';
 import { Raw } from 'typeorm';
 
@@ -70,7 +68,7 @@ export class PlanRunWorktreeReaperService {
     private readonly checkoutsService: RepositoryCheckoutsService,
     private readonly discovery: WorktreeDiscoveryService,
     private readonly notifications: NotificationsService,
-    private readonly planRunsService: PlanRunsService,
+    private readonly planRunsRepository: PlanRunsRepository,
     private readonly plansRepository: PlansRepository,
     private readonly teardownService: PlanRunWorktreeTeardownService,
   ) {
@@ -275,7 +273,7 @@ export class PlanRunWorktreeReaperService {
 
   /** Idle when neither the plan nor its latest run changed within the age floor. */
   private async isIdlePastAgeFloor(plan: Plan, now: Date): Promise<boolean> {
-    const [latestRun] = await this.planRunsService.findRecentByPlanId(
+    const [latestRun] = await this.planRunsRepository.findRecentByPlanId(
       plan.id,
       1,
     );

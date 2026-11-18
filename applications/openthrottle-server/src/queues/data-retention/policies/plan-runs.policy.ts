@@ -23,7 +23,7 @@
  * work ledger and the plan inbox keep their rows and lose only the link.
  */
 
-import { PLAN_RUN_STATUS } from '@openthrottle/nestjs-repositories';
+import { PLAN_RUN_STATUS } from '@openthrottle/nestjs-repositories-server';
 import type { DataSource } from 'typeorm';
 
 import type { RetentionPolicy } from '../data-retention.types.ts';

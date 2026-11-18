@@ -1,15 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { LoggerService } from '@openthrottle/nestjs-modules';
-import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
+import type { CreateModelInput } from '@openthrottle/nestjs-postgres';
+import { BaseRepository } from '@openthrottle/nestjs-postgres';
 import type { PlanRunConfigSnapshot } from '@openthrottle/openthrottle-plan-config';
 import type { EntityManager, SelectQueryBuilder } from 'typeorm';
 import { In, IsNull, Not, Repository } from 'typeorm';
 
-import type {
-  PlanRunExecutionBackend,
-  PlanRunKind,
-} from './plan-run.entity.ts';
 import { PlanRun } from './plan-run.entity.ts';
 import {
   PLAN_RUN_SETTLED_REASON,
@@ -18,8 +14,20 @@ import {
   STALE_CUTOFF_MS,
   UNSUPERVISED_STALE_CUTOFF_MS,
 } from './plan-runs.constants.ts';
-import type { ScheduledPlanRun, ScheduledRunRef } from './plan-runs.types.ts';
-import type { PlanRunStatus } from './plan-runs.types.ts';
+import type {
+  CancelMarker,
+  FindEndedRunsWithoutPullRequestParams,
+  PlanRunCheckoutAndBranch,
+  PlanRunPullRequestOutcome,
+  PlanRunSnapshotWorkspace,
+  PlanRunStatus,
+  RecordQueuedPlanRunInput,
+  RegisterCliPlanRunInput,
+  RunLocation,
+  ScheduledPlanRun,
+  ScheduledRunRef,
+  UsageLimitSettleInput,
+} from './plan-runs.types.ts';
 
 /**
  * Excludes a scheduled run that never started: a `scheduled_for` row that is not QUEUED/IN_PROGRESS
@@ -32,106 +40,25 @@ import type { PlanRunStatus } from './plan-runs.types.ts';
  */
 const STARTED_OR_STARTABLE_RUN_SQL = `NOT (run.scheduled_for IS NOT NULL AND run.last_heartbeat_at IS NULL AND run.status NOT IN (:...startableStatuses))`;
 
-interface RecordQueuedPlanRunInput {
-  /** User who enqueued the run (auth sub for a user principal); null for service-account/system. */
-  readonly actorUserId?: string | null;
-  /** Git branch the run operates on, captured at kickoff. Null until the required-input path supplies it. */
-  readonly branch?: string | null;
-  readonly bullmqJobId: string;
-  /** Worktree/checkout the run runs in (repository_checkouts.id); the durable on-disk home for deep-links. */
-  readonly checkoutId?: string | null;
-  readonly executionBackend: WorkflowConfigRunner;
-  /** Resolved agent model id (queryable projection of run_config_snapshot.ralph.model). */
-  readonly model?: string | null;
-  readonly planId: string;
-  readonly queueName: string;
-  /** The usage-limited run this run continues (migration 138); omit/null for an ordinary run. */
-  readonly resumeOfRunId?: string | null;
-  readonly runConfigSnapshot?: PlanRunConfigSnapshot | null;
-  readonly runKind: PlanRunKind;
-  /** The UTC instant a SCHEDULED run fires at (migration 140); omit/null for a run enqueued to run now. */
-  readonly scheduledFor?: Date | null;
-  /** Initial status; defaults to QUEUED. SCHEDULED for a run created by schedulePlanRun. */
-  readonly status?: PlanRunStatus;
-}
-
-/** The usage limit that stopped a run, as persisted on its row by {@link PlanRunsService.settleRunUsageLimited}. */
-interface UsageLimitSettleInput {
-  /** Reset instant; null when the agent CLI did not report one. */
-  readonly resetsAt: Date | null;
-  /** Raw window name (`five_hour`, `seven_day`, …); null when not reported. */
-  readonly type: string | null;
-}
-
 /**
- * Input for a detached workflow-ralph CLI run row. The CLI carries no BullMQ job
- * and drives its own iteration loop, so the row is inserted with a null
- * bullmqJobId and runKind 'orchestrator'.
+ * @description Data access for the openthrottle `plan_runs` table on the default connection: the
+ * `BaseRepository` CRUD plus the run lifecycle (enqueue, register, start, heartbeat, cancel marker,
+ * settle), the scheduled-run claims and the stale sweeps' queries. A delete is a hard delete, since
+ * runs are history. Methods taking an optional `manager` enlist in a caller-owned transaction.
+ * @public
  */
-interface RegisterCliPlanRunInput {
-  /** User who started the CLI run (auth sub for a user principal); null for service-account/system. */
-  readonly actorUserId?: string | null;
-  /**
-   * OPTIONAL git branch the CLI run operates on. Omit/null → store null; non-empty
-   * strings are stored verbatim (no trim/reject — enqueue remains the REQUIRED boundary).
-   */
-  readonly branch?: string | null;
-  readonly executionBackend: PlanRunExecutionBackend;
-  /**
-   * Whether this run's owner bumps its heartbeat on a timer. Defaults to true so
-   * the detached workflow-ralph CLI (which does, on a ~15s timer) is untouched;
-   * an owner with no timer — an interactive /ot-loop agent turn — passes false to
-   * opt out of every heartbeat-based liveness judgement (migration 110).
-   */
-  readonly heartbeatExpected?: boolean;
-  readonly hostname: string | null;
-  /** Resolved agent model id for this run; null when the caller cannot determine one. */
-  readonly model?: string | null;
-  readonly pid: number | null;
-  readonly planId: string;
-  readonly workerId: string | null;
-}
-
-/** Where a run is executing; stamped at job start, cleared at finish. */
-interface RunLocation {
-  readonly bullmqJobId: string;
-  readonly hostname: string | null;
-  readonly pid: number | null;
-  readonly queueName: string;
-  readonly workerId: string | null;
-}
-
-/** The durable cancel-request marker for a plan's live run. */
-interface CancelMarker {
-  readonly cancelRequestedAt: Date;
-  readonly cancelRequestedBy: string | null;
-}
-
 @Injectable()
-export class PlanRunsService {
+export class PlanRunsRepository extends BaseRepository<
+  PlanRun,
+  CreateModelInput<PlanRun>
+> {
+  protected readonly tableName = 'plan_runs';
+
   constructor(
-    private readonly logger: LoggerService,
     @InjectRepository(PlanRun)
-    private readonly planRunRepository: Repository<PlanRun>,
+    repository: Repository<PlanRun>,
   ) {
-    this.logger.debug('🧩 plan-runs 🧩');
-  }
-
-  /**
-   * @description Returns the TypeORM repository for plan_runs. Use for run audit queries.
-   */
-  getRepository(): Repository<PlanRun> {
-    return this.planRunRepository;
-  }
-
-  /** The caller-owned transaction's plan_runs repository when `manager` is given, else the default one. */
-  private resolveRepository(
-    manager: EntityManager | undefined,
-  ): Repository<PlanRun> {
-    if (manager) {
-      return manager.getRepository(PlanRun);
-    }
-    return this.getRepository();
+    super(repository);
   }
 
   /**
@@ -148,9 +75,7 @@ export class PlanRunsService {
     input: RecordQueuedPlanRunInput,
     manager?: EntityManager,
   ): Promise<PlanRun> {
-    const repo = manager
-      ? manager.getRepository(PlanRun)
-      : this.getRepository();
+    const repo = manager ? manager.getRepository(PlanRun) : this.repository;
     // The snapshot is written to an opaque jsonb column; type it as `object | null`
     // so TypeORM's QueryDeepPartialEntity does not deep-recurse into the snapshot's
     // `readonly unknown[]` members (which it cannot express), keeping the write cast-free.
@@ -189,7 +114,7 @@ export class PlanRunsService {
 
   /**
    * @description Registers a detached workflow-ralph CLI run as a first-class plan_runs row so
-   * {@link PlanRunsService.stampCancelRequested} (via PlanStatusService.cancelRun) has a row to
+   * {@link PlanRunsRepository.stampCancelRequested} (via PlanStatusService.cancelRun) has a row to
    * stamp the durable cancel marker on. Inserts with bullmqJobId NULL (permitted by the partial
    * unique index from migration 076 — see the entity note), runKind 'orchestrator' (the CLI drives
    * its own iteration loop, NOT the dead spawn worker), status 'IN_PROGRESS', and the run-location
@@ -197,7 +122,7 @@ export class PlanRunsService {
    * in-process laptop run, not a queued job. Returns the created run.
    */
   async registerCliRun(input: RegisterCliPlanRunInput): Promise<PlanRun> {
-    const repo = this.getRepository();
+    const repo = this.repository;
 
     // Settle-on-next-register: an unsupervised run has no timer, so nothing settles it
     // promptly when its agent simply goes away. Registering a NEW unsupervised run for the
@@ -245,7 +170,7 @@ export class PlanRunsService {
     status: string,
     limit: UsageLimitSettleInput | null,
   ): Promise<PlanRun | null> {
-    const repo = this.getRepository();
+    const repo = this.repository;
     const location = { hostname: null, pid: null, status, workerId: null };
     const isUsageLimited = status === PLAN_RUN_STATUS.USAGE_LIMITED;
     const withLimit = {
@@ -268,7 +193,7 @@ export class PlanRunsService {
     queueName: string,
     bullmqJobId: string,
   ): Promise<PlanRun | null> {
-    return this.getRepository().findOne({
+    return this.repository.findOne({
       where: { bullmqJobId, queueName },
     });
   }
@@ -276,8 +201,8 @@ export class PlanRunsService {
   /**
    * @description Returns a single run by its id, or null when none matches.
    */
-  async findById(planRunId: string): Promise<PlanRun | null> {
-    return this.getRepository().findOne({ where: { id: planRunId } });
+  async findRunById(planRunId: string): Promise<PlanRun | null> {
+    return this.repository.findOne({ where: { id: planRunId } });
   }
 
   /**
@@ -289,12 +214,12 @@ export class PlanRunsService {
     planRunId: string,
     checkoutId: string,
   ): Promise<PlanRun | null> {
-    await this.getRepository().update(
+    await this.repository.update(
       { checkoutId: IsNull(), id: planRunId },
       { checkoutId },
     );
 
-    return this.findById(planRunId);
+    return this.findRunById(planRunId);
   }
 
   /**
@@ -306,19 +231,16 @@ export class PlanRunsService {
    */
   async setCheckoutAndBranch(
     planRunId: string,
-    params: {
-      readonly branch: string | null | undefined;
-      readonly checkoutId: string;
-    },
+    params: PlanRunCheckoutAndBranch,
   ): Promise<PlanRun | null> {
     const branch = params.branch?.trim() ?? '';
     const checkoutOnlyPatch = { checkoutId: params.checkoutId };
     const branchPatch = { branch, checkoutId: params.checkoutId };
     const patch = branch === '' ? checkoutOnlyPatch : branchPatch;
 
-    await this.getRepository().update({ id: planRunId }, patch);
+    await this.repository.update({ id: planRunId }, patch);
 
-    return this.findById(planRunId);
+    return this.findRunById(planRunId);
   }
 
   /**
@@ -329,12 +251,9 @@ export class PlanRunsService {
    */
   async setRunConfigSnapshotWorkspace(
     planRunId: string,
-    workspace: {
-      readonly checkoutId?: string | null;
-      readonly workingDirectory: string;
-    },
+    workspace: PlanRunSnapshotWorkspace,
   ): Promise<PlanRun | null> {
-    const run = await this.findById(planRunId);
+    const run = await this.findRunById(planRunId);
     if (run === null || run.runConfigSnapshot == null) {
       return run;
     }
@@ -355,16 +274,16 @@ export class PlanRunsService {
     // QueryDeepPartialEntity does not deep-recurse into the snapshot's readonly members.
     const runConfigSnapshot: object = next;
 
-    await this.getRepository().update({ id: planRunId }, { runConfigSnapshot });
+    await this.repository.update({ id: planRunId }, { runConfigSnapshot });
 
-    return this.findById(planRunId);
+    return this.findRunById(planRunId);
   }
 
   /**
    * @description Returns recent plan runs newest first for GraphQL/UI audit views.
    */
   async findRecentByPlanId(planId: string, limit: number): Promise<PlanRun[]> {
-    return this.getRepository().find({
+    return this.repository.find({
       order: { createdAt: 'DESC' },
       take: limit,
       where: { planId },
@@ -383,7 +302,7 @@ export class PlanRunsService {
     limit: number,
     scheduledLimit: number,
   ): Promise<PlanRun[]> {
-    const repo = this.getRepository();
+    const repo = this.repository;
     const [settledOrLive, scheduled] = await Promise.all([
       repo.find({
         order: { createdAt: 'DESC' },
@@ -416,7 +335,7 @@ export class PlanRunsService {
    * whether it found a row first.
    */
   async markRunStarted(location: RunLocation): Promise<number> {
-    const result = await this.getRepository()
+    const result = await this.repository
       .createQueryBuilder()
       .update(PlanRun)
       .set({
@@ -443,8 +362,8 @@ export class PlanRunsService {
   /**
    * @description Settles a queued/worker-owned run on exit, keyed on the (queueName,
    * bullmqJobId) pair — the unique key a BullMQ worker knows at run time, symmetric with
-   * {@link PlanRunsService.markRunStarted} and {@link PlanRunsService.clearRunLocation}. Unlike
-   * {@link PlanRunsService.settleCliRun} (keyed on the run id — the CLI shape, which the worker
+   * {@link PlanRunsRepository.markRunStarted} and {@link PlanRunsRepository.clearRunLocation}. Unlike
+   * {@link PlanRunsRepository.settleCliRun} (keyed on the run id — the CLI shape, which the worker
    * never has a handle on), this addresses the queued-run row by its job key. Sets the terminal
    * status (COMPLETED / CANCELLED / FAILED — never STALE, which is reserved for the stale sweeper)
    * and nulls the run-location columns in one update; leaves the cancel marker and
@@ -455,7 +374,7 @@ export class PlanRunsService {
     bullmqJobId: string,
     status: PlanRunStatus,
   ): Promise<PlanRun | null> {
-    const repo = this.getRepository();
+    const repo = this.repository;
 
     await repo.update(
       { bullmqJobId, queueName },
@@ -466,7 +385,7 @@ export class PlanRunsService {
   }
 
   /**
-   * @description {@link PlanRunsService.settleRunByJob}, guarded: only a row still in
+   * @description {@link PlanRunsRepository.settleRunByJob}, guarded: only a row still in
    * {@link PLAN_RUN_STARTABLE_STATUSES} (QUEUED / IN_PROGRESS) is written, so a row something else
    * already settled — a cancel, the fire-time policy (MISSED / SUPERSEDED), the stale sweeper — or a
    * SCHEDULED row that never claimed is left exactly as it is. Nulls the run-location columns in the
@@ -477,7 +396,7 @@ export class PlanRunsService {
     bullmqJobId: string,
     status: PlanRunStatus,
   ): Promise<boolean> {
-    const result = await this.getRepository()
+    const result = await this.repository
       .createQueryBuilder()
       .update(PlanRun)
       .set({ hostname: null, pid: null, status, workerId: null })
@@ -493,7 +412,7 @@ export class PlanRunsService {
 
   /**
    * @description Settles a worker-owned run to {@link PLAN_RUN_STATUS.USAGE_LIMITED}, keyed on the
-   * (queueName, bullmqJobId) pair like {@link PlanRunsService.settleRunByJob}, and records the limit
+   * (queueName, bullmqJobId) pair like {@link PlanRunsRepository.settleRunByJob}, and records the limit
    * that stopped it (`usage_limit_resets_at` / `usage_limit_type`). Guarded: only a row still
    * QUEUED or IN_PROGRESS is written, so a run the stale sweeper (STALE) or a cancel (CANCELLED)
    * already settled is never overwritten. Nulls the run-location columns in the same update. Returns
@@ -504,7 +423,7 @@ export class PlanRunsService {
     bullmqJobId: string,
     limit: UsageLimitSettleInput,
   ): Promise<PlanRun | null> {
-    const repo = this.getRepository();
+    const repo = this.repository;
     const result = await repo
       .createQueryBuilder()
       .update(PlanRun)
@@ -535,7 +454,7 @@ export class PlanRunsService {
    * tell the jobs it removes for a scheduled run apart from jobs of an ordinary queued run.
    */
   async findScheduledByPlanId(planId: string): Promise<PlanRun[]> {
-    return this.getRepository().find({
+    return this.repository.find({
       where: { planId, status: PLAN_RUN_STATUS.SCHEDULED },
     });
   }
@@ -547,7 +466,7 @@ export class PlanRunsService {
    * of the plan alone, and `scheduled_for` is kept. Returns whether a row was settled.
    */
   async settleScheduledRunCancelled(planRunId: string): Promise<boolean> {
-    const result = await this.getRepository()
+    const result = await this.repository
       .createQueryBuilder()
       .update(PlanRun)
       .set({
@@ -572,7 +491,7 @@ export class PlanRunsService {
     planRunId: string,
     scheduledFor: Date,
   ): Promise<boolean> {
-    const result = await this.getRepository()
+    const result = await this.repository
       .createQueryBuilder()
       .update(PlanRun)
       .set({ scheduledFor })
@@ -595,7 +514,7 @@ export class PlanRunsService {
     planId: string,
     exceptBullmqJobIds: readonly string[] = [],
   ): Promise<number> {
-    const query = this.getRepository()
+    const query = this.repository
       .createQueryBuilder()
       .update(PlanRun)
       .set({
@@ -637,7 +556,7 @@ export class PlanRunsService {
       return 0;
     }
 
-    const result = await this.getRepository()
+    const result = await this.repository
       .createQueryBuilder()
       .update(PlanRun)
       .set({
@@ -669,9 +588,7 @@ export class PlanRunsService {
     planId: string,
     manager?: EntityManager,
   ): Promise<readonly ScheduledRunRef[]> {
-    const repo = manager
-      ? manager.getRepository(PlanRun)
-      : this.getRepository();
+    const repo = manager ? manager.getRepository(PlanRun) : this.repository;
     const scheduled = await repo.find({
       select: { bullmqJobId: true, id: true },
       where: { planId, status: PLAN_RUN_STATUS.SCHEDULED },
@@ -715,9 +632,7 @@ export class PlanRunsService {
     manager?: EntityManager,
     settledReason?: string,
   ): Promise<boolean> {
-    const repo = manager
-      ? manager.getRepository(PlanRun)
-      : this.getRepository();
+    const repo = manager ? manager.getRepository(PlanRun) : this.repository;
     const result = await repo
       .createQueryBuilder()
       .update(PlanRun)
@@ -742,7 +657,7 @@ export class PlanRunsService {
    * Backs the downward reconcile that auto-closes an idle (PENDING/QUEUED) plan.
    */
   async hasUnsettledRun(planId: string): Promise<boolean> {
-    const count = await this.getRepository().count({
+    const count = await this.repository.count({
       where: {
         planId,
         status: In([
@@ -769,9 +684,7 @@ export class PlanRunsService {
     exceptPlanRunId: string,
     manager?: EntityManager,
   ): Promise<boolean> {
-    const repo = manager
-      ? manager.getRepository(PlanRun)
-      : this.getRepository();
+    const repo = manager ? manager.getRepository(PlanRun) : this.repository;
     const count = await repo.count({
       where: {
         id: Not(exceptPlanRunId),
@@ -790,7 +703,7 @@ export class PlanRunsService {
    * `limit`; served by the partial index from migration 140.
    */
   async findScheduledRunsWithJob(limit: number): Promise<PlanRun[]> {
-    return this.getRepository()
+    return this.repository
       .createQueryBuilder('run')
       .where('run.status = :status', { status: PLAN_RUN_STATUS.SCHEDULED })
       .andWhere('run.bullmq_job_id IS NOT NULL')
@@ -814,7 +727,7 @@ export class PlanRunsService {
   ): Promise<Map<string, ScheduledPlanRun>> {
     if (planIds.length === 0) return new Map();
 
-    const rows = await this.getRepository()
+    const rows = await this.repository
       .createQueryBuilder('run')
       .distinctOn(['run.plan_id'])
       .select('run.plan_id', 'plan_id')
@@ -852,7 +765,7 @@ export class PlanRunsService {
     maxDepth: number,
   ): Promise<number> {
     const rows: Array<{ readonly count: number | string }> =
-      await this.getRepository().query(
+      await this.repository.query(
         `WITH RECURSIVE chain AS (
            SELECT id, status, resume_of_run_id, 1 AS depth
              FROM plan_runs
@@ -871,6 +784,32 @@ export class PlanRunsService {
   }
 
   /**
+   * @description The newest runs that ENDED in one of `params.statuses`, carry a branch, were last
+   * written at or after `params.updatedSince`, and whose work sessions record no `pull_request`
+   * artifact — the candidates for the work ledger's branch-to-PR backstop. Newest `updated_at`
+   * first, capped at `params.limit`.
+   */
+  async findEndedRunsWithoutPullRequest(
+    params: FindEndedRunsWithoutPullRequestParams,
+  ): Promise<PlanRun[]> {
+    return this.repository
+      .createQueryBuilder('run')
+      .where('run.status IN (:...statuses)', { statuses: [...params.statuses] })
+      .andWhere(`run.branch IS NOT NULL AND run.branch <> ''`)
+      .andWhere('run.updated_at >= :since', { since: params.updatedSince })
+      .andWhere(
+        `NOT EXISTS (
+          SELECT 1 FROM work_sessions s
+          JOIN work_artifacts a ON a.session_id = s.id
+          WHERE s.plan_run_id = run.id AND a.type = 'pull_request'
+        )`,
+      )
+      .orderBy('run.updated_at', 'DESC')
+      .limit(params.limit)
+      .getMany();
+  }
+
+  /**
    * @description Clears run-location columns in the worker finally (alongside detach). Leaves the
    * cancel marker intact (it is an audit record). Returns the number of rows updated.
    */
@@ -878,7 +817,7 @@ export class PlanRunsService {
     queueName: string,
     bullmqJobId: string,
   ): Promise<number> {
-    const result = await this.getRepository().update(
+    const result = await this.repository.update(
       { bullmqJobId, queueName },
       { hostname: null, pid: null, workerId: null },
     );
@@ -894,7 +833,7 @@ export class PlanRunsService {
     planId: string,
   ): Promise<PlanRun | null> {
     return this.whereStartedOrStartable(
-      this.getRepository()
+      this.repository
         .createQueryBuilder('run')
         .where('run.plan_id = :planId', { planId }),
     )
@@ -933,7 +872,7 @@ export class PlanRunsService {
       return null;
     }
 
-    await this.getRepository().update(
+    await this.repository.update(
       { id: target.id },
       { cancelRequestedAt: new Date(), cancelRequestedBy: requestedByUserId },
     );
@@ -967,7 +906,7 @@ export class PlanRunsService {
    * Best-effort telemetry: returns the number of rows updated (0 for an unknown id).
    */
   async recordHeartbeatById(planRunId: string): Promise<number> {
-    const result = await this.getRepository().update(
+    const result = await this.repository.update(
       { id: planRunId },
       { lastHeartbeatAt: new Date() },
     );
@@ -984,7 +923,7 @@ export class PlanRunsService {
     queueName: string,
     bullmqJobId: string,
   ): Promise<number> {
-    const result = await this.getRepository().update(
+    const result = await this.repository.update(
       { bullmqJobId, queueName },
       { lastHeartbeatAt: new Date() },
     );
@@ -995,11 +934,11 @@ export class PlanRunsService {
   /**
    * @description Settles every OTHER unsupervised (`heartbeat_expected = false`) IN_PROGRESS run
    * on a plan to STALE — the fast path of the unsupervised janitor, called from
-   * {@link PlanRunsService.registerCliRun} just before a new unsupervised row is inserted.
+   * {@link PlanRunsRepository.registerCliRun} just before a new unsupervised row is inserted.
    *
    * Two concurrent interactive loops on one plan is not a supported state, and an older row is
-   * already functionally dead: {@link PlanRunsService.stampCancelRequested} and
-   * {@link PlanRunsService.readCancelRequested} both key on the plan's NEWEST run, so once a newer
+   * already functionally dead: {@link PlanRunsRepository.stampCancelRequested} and
+   * {@link PlanRunsRepository.readCancelRequested} both key on the plan's NEWEST run, so once a newer
    * row exists the older one can no longer even receive a cancel. Leaving it IN_PROGRESS only makes
    * it read as live and hold its worktree busy forever.
    *
@@ -1008,7 +947,7 @@ export class PlanRunsService {
    * its own, is never collateral. Returns the number of rows settled.
    */
   async settleSupersededUnsupervisedRuns(planId: string): Promise<number> {
-    const result = await this.getRepository()
+    const result = await this.repository
       .createQueryBuilder()
       .update(PlanRun)
       .set({
@@ -1028,7 +967,7 @@ export class PlanRunsService {
 
   /**
    * @description Finds UNSUPERVISED (`heartbeat_expected = false`) IN_PROGRESS runs older than
-   * `cutoff` — the exact complement of {@link PlanRunsService.findStaleInProgressRuns}, which
+   * `cutoff` — the exact complement of {@link PlanRunsRepository.findStaleInProgressRuns}, which
    * excludes them. Together the two cover every IN_PROGRESS row, so no run is left with no janitor.
    *
    * The predicate is age, not silence. These rows have no timer, so `last_heartbeat_at` is stamped
@@ -1037,7 +976,7 @@ export class PlanRunsService {
    * the caller must pass {@link UNSUPERVISED_STALE_CUTOFF_MS} rather than the 120s
    * {@link STALE_CUTOFF_MS}. Oldest-first, capped at `limit`.
    *
-   * SCHEDULED carve-out: as in {@link PlanRunsService.findStaleInProgressRuns}, a SCHEDULED run is
+   * SCHEDULED carve-out: as in {@link PlanRunsRepository.findStaleInProgressRuns}, a SCHEDULED run is
    * never swept. The `status = IN_PROGRESS` equality is what keeps a row scheduled days ahead (an old
    * `created_at`, no heartbeat yet) from reading as an abandoned loop.
    */
@@ -1045,7 +984,7 @@ export class PlanRunsService {
     cutoff: Date,
     limit: number,
   ): Promise<PlanRun[]> {
-    return this.getRepository()
+    return this.repository
       .createQueryBuilder('run')
       .where('run.status = :status', { status: PLAN_RUN_STATUS.IN_PROGRESS })
       .andWhere('NOT run.heartbeat_expected')
@@ -1080,7 +1019,7 @@ export class PlanRunsService {
     cutoff: Date,
     limit: number,
   ): Promise<PlanRun[]> {
-    return this.getRepository()
+    return this.repository
       .createQueryBuilder('run')
       .where('run.status = :status', {
         status: PLAN_RUN_STATUS.IN_PROGRESS,
@@ -1116,7 +1055,7 @@ export class PlanRunsService {
   ): Promise<PlanRun[]> {
     if (checkoutIds.length === 0) return [];
 
-    return this.getRepository()
+    return this.repository
       .createQueryBuilder('run')
       .where('run.status = :status', { status: PLAN_RUN_STATUS.IN_PROGRESS })
       .andWhere('run.checkout_id IN (:...checkoutIds)', {
@@ -1141,7 +1080,7 @@ export class PlanRunsService {
    * "Not stale" uses the same two cutoffs as the sweepers, so a row is never live here and dead
    * there: {@link STALE_CUTOFF_MS} since the last heartbeat for a run that heartbeats, and
    * {@link UNSUPERVISED_STALE_CUTOFF_MS} of sheer age for one that does not
-   * (see {@link PlanRunsService.findStaleUnsupervisedRuns}). Only the newest run per plan counts — an
+   * (see {@link PlanRunsRepository.findStaleUnsupervisedRuns}). Only the newest run per plan counts — an
    * older row is superseded, so it says nothing about what is driving the plan now. "Newest" skips
    * scheduled runs that never started ({@link STARTED_OR_STARTABLE_RUN_SQL}): a run scheduled while an
    * interactive loop is live is a newer row that drives nothing, and letting it stand in for the loop
@@ -1157,7 +1096,7 @@ export class PlanRunsService {
     if (planIds.length === 0) return new Set();
 
     const latestRuns = await this.whereStartedOrStartable(
-      this.getRepository()
+      this.repository
         .createQueryBuilder('run')
         .distinctOn(['run.plan_id'])
         .where('run.plan_id IN (:...planIds)', { planIds: [...planIds] }),
@@ -1198,7 +1137,7 @@ export class PlanRunsService {
   ): Promise<PlanRun[]> {
     if (checkoutIds.length === 0) return [];
 
-    return this.getRepository()
+    return this.repository
       .createQueryBuilder('run')
       .where('run.status IN (:...statuses)', {
         statuses: [PLAN_RUN_STATUS.QUEUED, PLAN_RUN_STATUS.IN_PROGRESS],
@@ -1235,7 +1174,7 @@ export class PlanRunsService {
     planRunId: string,
     settledReason: string = PLAN_RUN_SETTLED_REASON.FORCE_SETTLED,
   ): Promise<PlanRun | null> {
-    const repo = this.getRepository();
+    const repo = this.repository;
     const result = await repo
       .createQueryBuilder()
       .update(PlanRun)
@@ -1268,9 +1207,9 @@ export class PlanRunsService {
    */
   async settleUnsupervisedRunForPullRequest(
     planRunId: string,
-    outcome: 'closed' | 'merged',
+    outcome: PlanRunPullRequestOutcome,
   ): Promise<PlanRun | null> {
-    const repo = this.getRepository();
+    const repo = this.repository;
     const isMerged = outcome === 'merged';
     const result = await repo
       .createQueryBuilder()
@@ -1309,7 +1248,7 @@ export class PlanRunsService {
     planRunId: string,
     settledReason: string,
   ): Promise<PlanRun | null> {
-    const repo = this.getRepository();
+    const repo = this.repository;
 
     await repo.update(
       { id: planRunId, status: PLAN_RUN_STATUS.IN_PROGRESS },

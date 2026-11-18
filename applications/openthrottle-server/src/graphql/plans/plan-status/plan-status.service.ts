@@ -12,12 +12,14 @@ import {
 } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
-  PLAN_RUN_STATUS,
   PLAN_STATUS,
-  PlanRunsService,
   REMAINING_TASK_STATUSES,
   resolveCompletedAtForStatusChange,
 } from '@openthrottle/nestjs-repositories';
+import {
+  PLAN_RUN_STATUS,
+  PlanRunsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import {
   Plan,
   PlansRepository,
@@ -125,7 +127,7 @@ export class PlanStatusService {
     private readonly notificationsService: NotificationsService,
     private readonly planCancelChannel: PlanCancelChannelService,
     private readonly planRunCancellation: PlanRunCancellationService,
-    private readonly planRunsService: PlanRunsService,
+    private readonly planRunsRepository: PlanRunsRepository,
     private readonly plansRepository: PlansRepository,
     private readonly tasksRepository: TasksRepository,
     private readonly workLedgerCapture: WorkLedgerCaptureService,
@@ -352,7 +354,7 @@ export class PlanStatusService {
     planId: string,
     nextStatus: string,
   ): Promise<readonly string[]> {
-    const cancelled = await this.planRunsService.cancelScheduledRunsForPlan(
+    const cancelled = await this.planRunsRepository.cancelScheduledRunsForPlan(
       planId,
       manager,
     );
@@ -571,7 +573,7 @@ export class PlanStatusService {
    * - PENDING and QUEUED: yes, so tasks completed straight from PENDING (e.g. via MCP) do not leave
    *   the plan open forever — but only when the plan has no unsettled run: no QUEUED or IN_PROGRESS
    *   plan_runs row and no SCHEDULED run whose fire would find nothing to run
-   *   ({@link PlanRunsService.hasUnsettledRun}).
+   *   ({@link PlanRunsRepository.hasUnsettledRun}).
    * - CANCELED, BACKLOG, BLOCKED and COMPLETED: never (the "do not resurrect" rule).
    *
    * Returns whether the plan was completed.
@@ -597,7 +599,8 @@ export class PlanStatusService {
 
     if (closedFromInProgress) return true;
 
-    const hasUnsettledRun = await this.planRunsService.hasUnsettledRun(planId);
+    const hasUnsettledRun =
+      await this.planRunsRepository.hasUnsettledRun(planId);
 
     if (hasUnsettledRun) return false;
 
@@ -685,7 +688,7 @@ export class PlanStatusService {
 
     // Read BEFORE the removal: which of the jobs about to be removed belong to SCHEDULED rows.
     const scheduledJobIds = new Set(
-      (await this.planRunsService.findScheduledByPlanId(planId)).flatMap(
+      (await this.planRunsRepository.findScheduledByPlanId(planId)).flatMap(
         (run) => (run.bullmqJobId === null ? [] : [run.bullmqJobId]),
       ),
     );
@@ -706,7 +709,7 @@ export class PlanStatusService {
       //    iteration boundary even if the pub/sub message is missed (the guarantee).
       //  - Channel 2: publish plan:<id>:cancel so a run active on another process stops immediately.
       signaledActiveRunToStop = this.planRunCancellation.abort(planId);
-      const markedRunId = await this.planRunsService.stampCancelRequested(
+      const markedRunId = await this.planRunsRepository.stampCancelRequested(
         planId,
         requestedByUserId,
       );
@@ -714,7 +717,8 @@ export class PlanStatusService {
       cancelRequested = markedRunId !== null;
 
       if (markedRunId !== null) {
-        const markedRun = await this.planRunsService.findById(markedRunId);
+        const markedRun =
+          await this.planRunsRepository.findRunById(markedRunId);
         markedRunPollsForCancel = markedRun?.heartbeatExpected ?? true;
       }
     }
@@ -723,7 +727,7 @@ export class PlanStatusService {
     // regardless of plan status, so a row whose job was already lost from Redis is not left
     // SCHEDULED forever. A locked-active job is mid-fire: its row is the worker's to flip.
     const cancelledScheduledRuns =
-      await this.planRunsService.settleScheduledRunsCancelled(
+      await this.planRunsRepository.settleScheduledRunsCancelled(
         planId,
         queueResult.lockedActiveJobIds,
       );
@@ -731,7 +735,7 @@ export class PlanStatusService {
     // Settle the QUEUED rows whose waiting/delayed job was just removed (a usage-limit resume sits
     // delayed for hours), or they read QUEUED forever. Guarded on QUEUED, so a row whose job already
     // started is untouched; SCHEDULED rows were settled just above.
-    await this.planRunsService.settleQueuedRunsCancelledByJobIds(
+    await this.planRunsRepository.settleQueuedRunsCancelledByJobIds(
       PLANS_QUEUE_NAME,
       queueResult.removedJobIds,
     );
@@ -877,7 +881,7 @@ export class PlanStatusService {
     planRunId: string,
     actor: StatusChangeActor,
   ): Promise<CancelRunOutcome> {
-    const run = await this.planRunsService.findById(planRunId);
+    const run = await this.planRunsRepository.findRunById(planRunId);
 
     if (!run || run.planId !== planId) {
       throw new BadRequestException(
@@ -949,7 +953,7 @@ export class PlanStatusService {
 
     // A job already gone from Redis still gets its row settled, so it is not SCHEDULED forever.
     const settled =
-      await this.planRunsService.settleScheduledRunCancelled(planRunId);
+      await this.planRunsRepository.settleScheduledRunCancelled(planRunId);
 
     // Release a SCHEDULED plan to PENDING first (D4), then let the ordinary auto-close complete it
     // if every task is already done.

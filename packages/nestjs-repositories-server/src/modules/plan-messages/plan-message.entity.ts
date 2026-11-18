@@ -1,30 +1,31 @@
 /**
- * @description TypeORM entity for the OpenThrottle plan_messages table (the plan inbox). Matches databases/openthrottle/migrations (144).
+ * @description TypeORM entity for the openthrottle `plan_messages` table (the plan inbox). Extends
+ * `BaseHardDeleteModel`: a message is history and is never user-deleted (withdrawing one is a
+ * status), so a delete is real (the only deletes are FK cascades from a removed plan). Delivery
+ * and edits are written in place, so it declares its own `updated_at`. Matches
+ * databases/openthrottle/migrations (144, 176).
+ * @public
  */
 
-import type { Plan } from '@openthrottle/nestjs-repositories-server';
-import type { Task } from '@openthrottle/nestjs-repositories-server';
+import { BaseHardDeleteModel } from '@openthrottle/nestjs-postgres';
 import {
   Column,
-  CreateDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
-  PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
 import type { PlanRun } from '../plan-runs/plan-run.entity.ts';
+import type { Plan } from '../plans/plan.entity.ts';
+import type { Task } from '../tasks/task.entity.ts';
 import type {
   PlanMessageKind,
   PlanMessageStatus,
 } from './plan-messages.types.ts';
 
 @Entity('plan_messages')
-export class PlanMessage {
-  @PrimaryGeneratedColumn('uuid')
-  id!: string;
-
+export class PlanMessage extends BaseHardDeleteModel {
   @Column({ name: 'plan_id', type: 'uuid' })
   planId!: string;
 
@@ -55,9 +56,6 @@ export class PlanMessage {
 
   @Column({ name: 'delivered_to_task_id', nullable: true, type: 'uuid' })
   deliveredToTaskId!: string | null;
-
-  @CreateDateColumn({ name: 'created_at', type: 'timestamp with time zone' })
-  createdAt!: Date;
 
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamp with time zone' })
   updatedAt!: Date;

@@ -10,7 +10,7 @@ import {
   PLAN_MESSAGE_STATUS,
   type PlanMessageKind as PlanMessageKindValue,
   type PlanMessageStatus as PlanMessageStatusValue,
-} from '@openthrottle/nestjs-repositories';
+} from '@openthrottle/nestjs-repositories-server';
 
 registerEnumType(PLAN_MESSAGE_KIND, {
   description: `What a plan inbox message is for. STEER: a correction that overrides the task description where they conflict, delivered first at the next task boundary. QUEUE: an extra requirement for the upcoming work, delivered after STEERs. FEEDBACK: post-run reflection; recorded, never delivered.`,

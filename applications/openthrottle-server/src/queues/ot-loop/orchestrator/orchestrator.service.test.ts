@@ -7,7 +7,11 @@
 
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import type { PlanRunsService } from '@openthrottle/nestjs-repositories';
+import type {
+  PlanRunsRepository,
+  PlanRunsRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server';
+import { createPlanRunsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
 import type {
   LoopDeps,
@@ -95,7 +99,9 @@ vi.mock('@tools/workflows', () => ({
   mergePlanRunTuningWithWorkflowRalphConfig: mocks.merge,
 }));
 
-type CancelRead = Awaited<ReturnType<PlanRunsService['readCancelRequested']>>;
+type CancelRead = Awaited<
+  ReturnType<PlanRunsRepository['readCancelRequested']>
+>;
 
 const PLAN_ID = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const WORKTREE = `/worktrees/plan-aaaaaaaa`;
@@ -141,9 +147,7 @@ const RESOLVED = {
 describe('OtLoopOrchestratorService', () => {
   const calls: { document: unknown; variables: unknown }[] = [];
   let tasks: LoopTask[];
-  let readCancelRequested: ReturnType<
-    typeof vi.fn<PlanRunsService['readCancelRequested']>
-  >;
+  let planRunsRepository: PlanRunsRepositoryMock;
   let prepare: ReturnType<typeof vi.fn<PlanRunWorkspaceService['prepare']>>;
   let service: OtLoopOrchestratorService;
 
@@ -202,8 +206,8 @@ describe('OtLoopOrchestratorService', () => {
     vi.clearAllMocks();
     calls.length = 0;
     tasks = [task()];
-    readCancelRequested = vi.fn<PlanRunsService['readCancelRequested']>();
-    readCancelRequested.mockResolvedValue(null);
+    planRunsRepository = createPlanRunsRepositoryMock();
+    planRunsRepository.readCancelRequested.mockResolvedValue(null);
     prepare = vi.fn<PlanRunWorkspaceService['prepare']>();
     prepare.mockResolvedValue(
       asMock<PreparedPlanRunWorkspace>({
@@ -236,7 +240,7 @@ describe('OtLoopOrchestratorService', () => {
     service = new OtLoopOrchestratorService(
       asMock<OtLoopExecuteGraphql>(execute),
       createMock<LoggerService>(),
-      createMock<PlanRunsService>({ readCancelRequested }),
+      createMock<PlanRunsRepository>(planRunsRepository),
       createMock<PlanRunWorkspaceService>({ prepare }),
     );
   });
@@ -469,14 +473,18 @@ describe('OtLoopOrchestratorService', () => {
       const { cancel } = capturedDeps();
 
       expect(await cancel.isCancelled()).toBe(false);
-      expect(readCancelRequested).toHaveBeenCalledWith(PLAN_ID);
+      expect(planRunsRepository.readCancelRequested).toHaveBeenCalledWith(
+        PLAN_ID,
+      );
 
-      readCancelRequested.mockResolvedValueOnce(
+      planRunsRepository.readCancelRequested.mockResolvedValueOnce(
         asMock<CancelRead>(new Date('2026-01-15T12:00:00.000Z')),
       );
       expect(await cancel.isCancelled()).toBe(true);
 
-      readCancelRequested.mockRejectedValueOnce(new Error('db blip'));
+      planRunsRepository.readCancelRequested.mockRejectedValueOnce(
+        new Error('db blip'),
+      );
       expect(await cancel.isCancelled()).toBe(false);
 
       controller.abort();
@@ -550,7 +558,7 @@ describe('OtLoopOrchestratorService', () => {
       service = new OtLoopOrchestratorService(
         refuse,
         createMock<LoggerService>(),
-        createMock<PlanRunsService>({ readCancelRequested }),
+        createMock<PlanRunsRepository>(planRunsRepository),
         createMock<PlanRunWorkspaceService>({ prepare }),
       );
 

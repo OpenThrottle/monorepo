@@ -1,14 +1,13 @@
 import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { EntityManager } from 'typeorm';
 import { In, Not } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PlanRun } from './plan-run.entity.ts';
 import { PLAN_RUN_SETTLED_REASON } from './plan-runs.constants.ts';
-import { PlanRunsService } from './plan-runs.service.ts';
+import { PlanRunsRepository } from './plan-runs.repository.ts';
 
 const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
 
@@ -45,8 +44,8 @@ const buildRun = (overrides: Partial<PlanRun> = {}): PlanRun => {
   return { ...run, ...overrides };
 };
 
-describe('PlanRunsService', () => {
-  let service: PlanRunsService;
+describe('PlanRunsRepository', () => {
+  let service: PlanRunsRepository;
   let repo: {
     count: ReturnType<typeof vi.fn>;
     create: ReturnType<typeof vi.fn>;
@@ -55,6 +54,7 @@ describe('PlanRunsService', () => {
     findOne: ReturnType<typeof vi.fn>;
     query: ReturnType<typeof vi.fn>;
     save: ReturnType<typeof vi.fn>;
+    target: typeof PlanRun;
     update: ReturnType<typeof vi.fn>;
   };
   let qbGetMany: ReturnType<typeof vi.fn>;
@@ -73,6 +73,7 @@ describe('PlanRunsService', () => {
       'andWhere',
       'distinctOn',
       'groupBy',
+      'limit',
       'orderBy',
       'select',
       'set',
@@ -98,13 +99,13 @@ describe('PlanRunsService', () => {
       findOne: vi.fn().mockResolvedValue(null),
       query: vi.fn().mockResolvedValue([{ count: 0 }]),
       save: vi.fn((row: PlanRun) => Promise.resolve(row)),
+      target: PlanRun,
       update: vi.fn().mockResolvedValue({ affected: 1 }),
     };
 
     const app = await Test.createTestingModule({
       providers: [
-        PlanRunsService,
-        { provide: LoggerService, useValue: createMock<LoggerService>() },
+        PlanRunsRepository,
         {
           provide: getRepositoryToken(PlanRun),
           useValue: repo,
@@ -112,7 +113,7 @@ describe('PlanRunsService', () => {
       ],
     }).compile();
 
-    service = app.get(PlanRunsService);
+    service = app.get(PlanRunsRepository);
   });
 
   const enqueueInput = {
@@ -884,6 +885,36 @@ describe('PlanRunsService', () => {
     });
   });
 
+  describe('findEndedRunsWithoutPullRequest', () => {
+    it('reads ended branch runs since the cutoff with no pull_request artifact, newest first, capped', async () => {
+      const since = new Date('2026-11-16T00:00:00Z');
+      qbGetMany.mockResolvedValueOnce([buildRun({ branch: 'feat/x' })]);
+
+      const rows = await service.findEndedRunsWithoutPullRequest({
+        limit: 25,
+        statuses: ['COMPLETED', 'FAILED'],
+        updatedSince: since,
+      });
+
+      const qb = repo.createQueryBuilder.mock.results[0]?.value;
+      expect(qb.where).toHaveBeenCalledWith('run.status IN (:...statuses)', {
+        statuses: ['COMPLETED', 'FAILED'],
+      });
+      expect(qb.andWhere).toHaveBeenCalledWith(
+        `run.branch IS NOT NULL AND run.branch <> ''`,
+      );
+      expect(qb.andWhere).toHaveBeenCalledWith('run.updated_at >= :since', {
+        since,
+      });
+      expect(qb.andWhere).toHaveBeenCalledWith(
+        expect.stringContaining(`a.type = 'pull_request'`),
+      );
+      expect(qb.orderBy).toHaveBeenCalledWith('run.updated_at', 'DESC');
+      expect(qb.limit).toHaveBeenCalledWith(25);
+      expect(rows).toHaveLength(1);
+    });
+  });
+
   describe('settleRunUsageLimited', () => {
     const resetsAt = new Date('2026-07-21T05:00:00Z');
 
@@ -1048,13 +1079,13 @@ describe('PlanRunsService', () => {
     });
   });
 
-  describe('findById', () => {
+  describe('findRunById', () => {
     it('returns the run for an id, or null when none matches', async () => {
       repo.findOne.mockResolvedValueOnce(buildRun({ id: 'run-x' }));
-      expect((await service.findById('run-x'))?.id).toBe('run-x');
+      expect((await service.findRunById('run-x'))?.id).toBe('run-x');
 
       repo.findOne.mockResolvedValueOnce(null);
-      expect(await service.findById('missing')).toBeNull();
+      expect(await service.findRunById('missing')).toBeNull();
     });
   });
 

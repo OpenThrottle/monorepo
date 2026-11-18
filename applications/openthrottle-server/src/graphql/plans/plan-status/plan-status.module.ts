@@ -8,8 +8,8 @@
 
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
-import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import {
+  PlanRunsModule,
   PlansModule,
   TasksModule,
 } from '@openthrottle/nestjs-repositories-server';
@@ -23,8 +23,8 @@ import { PlanStatusService } from './plan-status.service.ts';
   exports: [PlanStatusService],
   imports: [
     LoggerModule,
-    NestjsRepositoriesModule,
     NotificationsModule,
+    PlanRunsModule,
     PlansModule,
     PlansQueueProducerModule,
     TasksModule,

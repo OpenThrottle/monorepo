@@ -5,15 +5,13 @@ import { join } from 'node:path';
 import { createMock } from '@golevelup/ts-vitest';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
+import type { RepositoryCheckoutsService } from '@openthrottle/nestjs-repositories';
+import { type RepositoryCheckout } from '@openthrottle/nestjs-repositories';
 import type {
   PlanRun,
-  PlanRunsService,
-  RepositoryCheckoutsService,
-} from '@openthrottle/nestjs-repositories';
-import {
-  PlanRun as PlanRunEntity,
-  type RepositoryCheckout,
-} from '@openthrottle/nestjs-repositories';
+  PlanRunsRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import { PlanRun as PlanRunEntity } from '@openthrottle/nestjs-repositories-server';
 import {
   type Plan,
   type PlansRepository,
@@ -21,8 +19,10 @@ import {
   type TasksRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import {
+  createPlanRunsRepositoryMock,
   createPlansRepositoryMock,
   createTasksRepositoryMock,
+  planRunsFactory,
 } from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
 import { isRecord } from '@openthrottle/nodejs-utils';
@@ -140,22 +140,7 @@ describe('PlanEnqueueService', () => {
     emitTaskStatusChanged: mockEmitTaskStatusChanged,
   });
 
-  const mockRecordQueuedRun = vi.fn().mockResolvedValue({});
-  const mockFindByQueueNameAndBullmqJobId = vi.fn().mockResolvedValue(null);
-  const mockHasActiveRun = vi.fn().mockResolvedValue(false);
-  const mockTransitionScheduledRun = vi.fn().mockResolvedValue(true);
-  const mockFindRunById = vi.fn().mockResolvedValue(null);
-  const mockRescheduleScheduledRun = vi.fn().mockResolvedValue(true);
-  const mockCancelScheduledRunsForPlan = vi.fn().mockResolvedValue([]);
-  const mockPlanRunsService = createMock<PlanRunsService>({
-    cancelScheduledRunsForPlan: mockCancelScheduledRunsForPlan,
-    findById: mockFindRunById,
-    findByQueueNameAndBullmqJobId: mockFindByQueueNameAndBullmqJobId,
-    hasActiveRun: mockHasActiveRun,
-    recordQueuedRun: mockRecordQueuedRun,
-    rescheduleScheduledRun: mockRescheduleScheduledRun,
-    transitionScheduledRun: mockTransitionScheduledRun,
-  });
+  const planRunsRepository = createPlanRunsRepositoryMock();
 
   const mockEnqueuePlanRalphOrchestrator = vi
     .fn()
@@ -218,7 +203,7 @@ describe('PlanEnqueueService', () => {
     mockDataSource,
     mockLogger,
     mockNotificationsService,
-    mockPlanRunsService,
+    createMock<PlanRunsRepository>(planRunsRepository),
     asMock<PlansRepository>(mockPlansRepository),
     mockPlanStatusService,
     mockQueuesService,
@@ -244,8 +229,10 @@ describe('PlanEnqueueService', () => {
     mockAdd.mockResolvedValue({ id: 'job-1', name: 'run-plan' });
     mockGetJobs.mockResolvedValue([{ id: 'job-1', name: 'run-plan' }]);
     mockGetWaitingCount.mockResolvedValue(1);
-    mockRecordQueuedRun.mockClear();
-    mockFindByQueueNameAndBullmqJobId.mockReset().mockResolvedValue(null);
+    planRunsRepository.recordQueuedRun.mockClear();
+    planRunsRepository.findByQueueNameAndBullmqJobId
+      .mockReset()
+      .mockResolvedValue(null);
     mockEnqueuePlanRalphOrchestrator.mockClear();
     mockEnqueuePlanRalphOrchestrator.mockResolvedValue({ jobId: 'job-orch-1' });
     mockEmitTaskStatusChanged.mockClear();
@@ -262,12 +249,16 @@ describe('PlanEnqueueService', () => {
     mockResolveSessionId.mockReset().mockResolvedValue('session-1');
     planRunRepo.findOne.mockReset().mockResolvedValue(null);
     taskRepo.count.mockReset().mockResolvedValue(1);
-    mockHasActiveRun.mockReset().mockResolvedValue(false);
-    mockTransitionScheduledRun.mockReset().mockResolvedValue(true);
+    planRunsRepository.hasActiveRun.mockReset().mockResolvedValue(false);
+    planRunsRepository.transitionScheduledRun
+      .mockReset()
+      .mockResolvedValue(true);
     mockReleaseScheduledPlan.mockReset().mockResolvedValue(true);
     mockReleaseScheduledPlanStandalone.mockReset().mockResolvedValue(true);
     mockRemoveScheduledRunJobs.mockReset().mockResolvedValue(undefined);
-    mockCancelScheduledRunsForPlan.mockReset().mockResolvedValue([]);
+    planRunsRepository.cancelScheduledRunsForPlan
+      .mockReset()
+      .mockResolvedValue([]);
   });
 
   /** Asserts `promise` rejects with a D8 conflict GraphQLError and returns its extensions. */
@@ -332,7 +323,7 @@ describe('PlanEnqueueService', () => {
     });
 
     const snapshotWorkspace = (): Record<string, unknown> => {
-      const call = mockRecordQueuedRun.mock.calls[0]?.[0];
+      const call = planRunsRepository.recordQueuedRun.mock.calls[0]?.[0];
       const snapshot = isRecord(call) ? call.runConfigSnapshot : undefined;
       const workspace = isRecord(snapshot) ? snapshot.workspace : undefined;
       return isRecord(workspace) ? workspace : {};
@@ -500,23 +491,24 @@ describe('PlanEnqueueService', () => {
         planRunId: 'run-scheduled',
         scheduledFor: SCHEDULED_FOR.toISOString(),
       });
-      expect(mockRecordQueuedRun).not.toHaveBeenCalled();
-      expect(mockCancelScheduledRunsForPlan).not.toHaveBeenCalled();
+      expect(planRunsRepository.recordQueuedRun).not.toHaveBeenCalled();
+      expect(
+        planRunsRepository.cancelScheduledRunsForPlan,
+      ).not.toHaveBeenCalled();
       expect(mockEnqueuePlanRalphOrchestrator).not.toHaveBeenCalled();
     });
 
     test('with cancelScheduled: cancels the scheduled run in the commit, removes its job, then enqueues', async () => {
-      mockCancelScheduledRunsForPlan.mockResolvedValue([
+      planRunsRepository.cancelScheduledRunsForPlan.mockResolvedValue([
         { bullmqJobId: 'scheduled-plan-run-x', id: 'run-scheduled' },
       ]);
 
       await runNow(true);
 
-      expect(mockCancelScheduledRunsForPlan).toHaveBeenCalledWith(
-        mockPlan.id,
-        expect.anything(),
-      );
-      expect(mockRecordQueuedRun).toHaveBeenCalledOnce();
+      expect(
+        planRunsRepository.cancelScheduledRunsForPlan,
+      ).toHaveBeenCalledWith(mockPlan.id, expect.anything());
+      expect(planRunsRepository.recordQueuedRun).toHaveBeenCalledOnce();
       expect(mockApplyStatusChange).toHaveBeenCalledWith(
         expect.anything(),
         expect.objectContaining({ requestedStatus: 'QUEUED' }),
@@ -526,7 +518,7 @@ describe('PlanEnqueueService', () => {
       ]);
       // The scheduled run is cancelled (and its job removed) before the new job is added.
       const [cancelOrder] =
-        mockCancelScheduledRunsForPlan.mock.invocationCallOrder;
+        planRunsRepository.cancelScheduledRunsForPlan.mock.invocationCallOrder;
       const [addOrder] =
         mockEnqueuePlanRalphOrchestrator.mock.invocationCallOrder;
       expect(cancelOrder).toBeLessThan(addOrder ?? 0);
@@ -537,7 +529,9 @@ describe('PlanEnqueueService', () => {
 
       await runNow(null);
 
-      expect(mockCancelScheduledRunsForPlan).not.toHaveBeenCalled();
+      expect(
+        planRunsRepository.cancelScheduledRunsForPlan,
+      ).not.toHaveBeenCalled();
       expect(mockEnqueuePlanRalphOrchestrator).toHaveBeenCalledOnce();
     });
   });
@@ -591,7 +585,7 @@ describe('PlanEnqueueService', () => {
             taskId: null,
           }),
         ).rejects.toBeInstanceOf(BadRequestException);
-        expect(mockRecordQueuedRun).not.toHaveBeenCalled();
+        expect(planRunsRepository.recordQueuedRun).not.toHaveBeenCalled();
         expect(mockEnqueuePlanRalphOrchestrator).not.toHaveBeenCalled();
       });
 
@@ -664,7 +658,7 @@ describe('PlanEnqueueService', () => {
         },
         priority: 10,
       });
-      expect(mockRecordQueuedRun).toHaveBeenCalledWith(
+      expect(planRunsRepository.recordQueuedRun).toHaveBeenCalledWith(
         expect.objectContaining({
           bullmqJobId: idempotencyKey,
           planId: mockPlan.id,
@@ -686,7 +680,7 @@ describe('PlanEnqueueService', () => {
         workingDirectory: null,
       });
 
-      const recorded = mockRecordQueuedRun.mock.calls[0]?.[0];
+      const recorded = planRunsRepository.recordQueuedRun.mock.calls[0]?.[0];
       expect(recorded).toMatchObject({
         runConfigSnapshot: {
           ralph: { debug: 'verbose', worktree: 'plan-80864bba' },
@@ -713,7 +707,9 @@ describe('PlanEnqueueService', () => {
           }),
         }),
       );
-      expect(mockRecordQueuedRun.mock.calls[0]?.[0]).toMatchObject({
+      expect(
+        planRunsRepository.recordQueuedRun.mock.calls[0]?.[0],
+      ).toMatchObject({
         runConfigSnapshot: { ralph: { effort: 'extraHigh' } },
       });
     });
@@ -732,7 +728,7 @@ describe('PlanEnqueueService', () => {
         }),
       ).rejects.toThrow(/ralph\.effort must be one of: .*ultra/);
       expect(mockEnqueuePlanRalphOrchestrator).not.toHaveBeenCalled();
-      expect(mockRecordQueuedRun).not.toHaveBeenCalled();
+      expect(planRunsRepository.recordQueuedRun).not.toHaveBeenCalled();
     });
 
     test('passes resolved task mode and taskId into job data', async () => {
@@ -1018,7 +1014,9 @@ describe('PlanEnqueueService', () => {
         runKind: 'orchestrator',
         runner: 'ot-loop',
       });
-      expect(mockRecordQueuedRun.mock.calls[0]?.[0]).toMatchObject({
+      expect(
+        planRunsRepository.recordQueuedRun.mock.calls[0]?.[0],
+      ).toMatchObject({
         runConfigSnapshot: { runner: 'ot-loop' },
       });
     });
@@ -1033,7 +1031,9 @@ describe('PlanEnqueueService', () => {
       await enqueue();
 
       expect(enqueuedJobData()).toMatchObject({ otLoop, runner: 'ot-loop' });
-      expect(mockRecordQueuedRun.mock.calls[0]?.[0]).toMatchObject({
+      expect(
+        planRunsRepository.recordQueuedRun.mock.calls[0]?.[0],
+      ).toMatchObject({
         runConfigSnapshot: { otLoop, runner: 'ot-loop' },
       });
     });
@@ -1079,7 +1079,7 @@ describe('PlanEnqueueService', () => {
         /Invalid runner: turbo \(expected one of: ralph, ot-loop\)/,
       );
       expect(mockEnqueuePlanRalphOrchestrator).not.toHaveBeenCalled();
-      expect(mockRecordQueuedRun).not.toHaveBeenCalled();
+      expect(planRunsRepository.recordQueuedRun).not.toHaveBeenCalled();
     });
 
     test('rejects an OT Loop run that opted out of a worktree, before recording anything', async () => {
@@ -1091,7 +1091,7 @@ describe('PlanEnqueueService', () => {
         enqueue({ ralph: { disableWorktree: true }, runner: 'ot-loop' }),
       ).rejects.toThrow(/OT Loop needs a worktree/);
       expect(mockEnqueuePlanRalphOrchestrator).not.toHaveBeenCalled();
-      expect(mockRecordQueuedRun).not.toHaveBeenCalled();
+      expect(planRunsRepository.recordQueuedRun).not.toHaveBeenCalled();
     });
 
     test('rejects an OT Loop run when no validation command resolves, with the documented message', async () => {
@@ -1099,7 +1099,7 @@ describe('PlanEnqueueService', () => {
         'OT Loop needs a validation command: set otLoop.validationCommands on the plan or add .openthrottle/ot-loop.json',
       );
       expect(mockEnqueuePlanRalphOrchestrator).not.toHaveBeenCalled();
-      expect(mockRecordQueuedRun).not.toHaveBeenCalled();
+      expect(planRunsRepository.recordQueuedRun).not.toHaveBeenCalled();
     });
 
     test('rejects an OT Loop run whose committed config is invalid, naming the problem', async () => {
@@ -1150,7 +1150,11 @@ describe('PlanEnqueueService', () => {
     test('schedulePlanRun applies the same runner and the same rejections', async () => {
       vi.useFakeTimers();
       vi.setSystemTime(new Date('2026-11-01T12:00:00.000Z'));
-      mockRecordQueuedRun.mockResolvedValue({ id: 'run-scheduled-1' });
+      planRunsRepository.recordQueuedRun.mockResolvedValue(
+        planRunsFactory.build({
+          id: 'run-scheduled-1',
+        }),
+      );
 
       try {
         await expect(
@@ -1211,7 +1215,7 @@ describe('PlanEnqueueService', () => {
         limitedRun,
       });
 
-      expect(mockRecordQueuedRun).toHaveBeenCalledWith(
+      expect(planRunsRepository.recordQueuedRun).toHaveBeenCalledWith(
         expect.objectContaining({
           actorUserId: 'user-1',
           branch: 'feature/limited',
@@ -1298,7 +1302,11 @@ describe('PlanEnqueueService', () => {
     beforeEach(() => {
       vi.useFakeTimers();
       vi.setSystemTime(NOW);
-      mockRecordQueuedRun.mockResolvedValue({ id: 'run-scheduled-1' });
+      planRunsRepository.recordQueuedRun.mockResolvedValue(
+        planRunsFactory.build({
+          id: 'run-scheduled-1',
+        }),
+      );
     });
 
     afterEach(() => {
@@ -1314,7 +1322,7 @@ describe('PlanEnqueueService', () => {
           }),
         ).rejects.toThrow('scheduledFor must be in the future');
 
-        expect(mockRecordQueuedRun).not.toHaveBeenCalled();
+        expect(planRunsRepository.recordQueuedRun).not.toHaveBeenCalled();
         expect(mockEnqueuePlanRalphOrchestrator).not.toHaveBeenCalled();
       });
 
@@ -1342,7 +1350,7 @@ describe('PlanEnqueueService', () => {
           /within 30 days from now \(SCHEDULED_PLAN_RUN_MAX_HORIZON_DAYS/,
         );
 
-        expect(mockRecordQueuedRun).not.toHaveBeenCalled();
+        expect(planRunsRepository.recordQueuedRun).not.toHaveBeenCalled();
         expect(mockEnqueuePlanRalphOrchestrator).not.toHaveBeenCalled();
       });
 
@@ -1377,7 +1385,7 @@ describe('PlanEnqueueService', () => {
         ).rejects.toThrow('at most 128 characters');
 
         // Rejected BEFORE the commit: no SCHEDULED row is stranded without a job.
-        expect(mockRecordQueuedRun).not.toHaveBeenCalled();
+        expect(planRunsRepository.recordQueuedRun).not.toHaveBeenCalled();
       });
     });
 
@@ -1391,7 +1399,7 @@ describe('PlanEnqueueService', () => {
             scheduledFor: new Date(NOW.getTime() + HOUR_MS),
           }),
         ).rejects.toBeInstanceOf(BadRequestException);
-        expect(mockRecordQueuedRun).not.toHaveBeenCalled();
+        expect(planRunsRepository.recordQueuedRun).not.toHaveBeenCalled();
         expect(mockEnqueuePlanRalphOrchestrator).not.toHaveBeenCalled();
       });
 
@@ -1416,7 +1424,7 @@ describe('PlanEnqueueService', () => {
         scheduledFor,
       });
 
-      expect(mockRecordQueuedRun).toHaveBeenCalledWith(
+      expect(planRunsRepository.recordQueuedRun).toHaveBeenCalledWith(
         expect.objectContaining({
           actorUserId: 'user-1',
           branch: 'feature/scheduled',
@@ -1456,7 +1464,7 @@ describe('PlanEnqueueService', () => {
         }),
         priority: 5,
       });
-      expect(mockRecordQueuedRun).toHaveBeenCalledWith(
+      expect(planRunsRepository.recordQueuedRun).toHaveBeenCalledWith(
         expect.objectContaining({ bullmqJobId: jobId }),
         expect.anything(),
       );
@@ -1497,7 +1505,7 @@ describe('PlanEnqueueService', () => {
         scheduledFor: new Date(NOW.getTime() + HOUR_MS),
       });
 
-      expect(mockRecordQueuedRun).toHaveBeenCalledOnce();
+      expect(planRunsRepository.recordQueuedRun).toHaveBeenCalledOnce();
       expect(mockApplyStatusChange).toHaveBeenCalledOnce();
       expect(mockApplyStatusChange).toHaveBeenCalledWith(
         expect.anything(),
@@ -1516,7 +1524,7 @@ describe('PlanEnqueueService', () => {
         scheduledFor: new Date(NOW.getTime() + HOUR_MS),
       });
 
-      expect(mockRecordQueuedRun).toHaveBeenCalledOnce();
+      expect(planRunsRepository.recordQueuedRun).toHaveBeenCalledOnce();
       expect(mockEnqueuePlanRalphOrchestrator).toHaveBeenCalledOnce();
     });
 
@@ -1554,7 +1562,7 @@ describe('PlanEnqueueService', () => {
           scheduledFor:
             status === 'SCHEDULED' ? existingScheduledFor.toISOString() : null,
         });
-        expect(mockRecordQueuedRun).not.toHaveBeenCalled();
+        expect(planRunsRepository.recordQueuedRun).not.toHaveBeenCalled();
         expect(mockApplyStatusChange).not.toHaveBeenCalled();
         expect(mockEnqueuePlanRalphOrchestrator).not.toHaveBeenCalled();
       });
@@ -1584,11 +1592,11 @@ describe('PlanEnqueueService', () => {
           planRunId: 'run-old',
           scheduledFor: OLD_FOR.toISOString(),
         });
-        expect(mockRecordQueuedRun).not.toHaveBeenCalled();
+        expect(planRunsRepository.recordQueuedRun).not.toHaveBeenCalled();
       });
 
       test('with it, cancels the old run and records the new one in one transaction; the plan stays SCHEDULED', async () => {
-        mockCancelScheduledRunsForPlan.mockResolvedValue([
+        planRunsRepository.cancelScheduledRunsForPlan.mockResolvedValue([
           { bullmqJobId: 'scheduled-plan-run-old', id: 'run-old' },
         ]);
         repo.manager.transaction.mockClear();
@@ -1601,11 +1609,10 @@ describe('PlanEnqueueService', () => {
 
         expect(result.planRunId).toBe('run-scheduled-1');
         expect(repo.manager.transaction).toHaveBeenCalledOnce();
-        expect(mockCancelScheduledRunsForPlan).toHaveBeenCalledWith(
-          mockPlan.id,
-          expect.anything(),
-        );
-        expect(mockRecordQueuedRun).toHaveBeenCalledOnce();
+        expect(
+          planRunsRepository.cancelScheduledRunsForPlan,
+        ).toHaveBeenCalledWith(mockPlan.id, expect.anything());
+        expect(planRunsRepository.recordQueuedRun).toHaveBeenCalledOnce();
         expect(mockApplyStatusChange).toHaveBeenCalledWith(
           expect.anything(),
           expect.objectContaining({ requestedStatus: 'SCHEDULED' }),
@@ -1619,7 +1626,7 @@ describe('PlanEnqueueService', () => {
 
     test('maps a one-scheduled-run index violation (the race path) to PLAN_ALREADY_SCHEDULED', async () => {
       repo.findOne.mockResolvedValue({ ...mockPlan, status: 'PENDING' });
-      mockRecordQueuedRun.mockRejectedValueOnce(
+      planRunsRepository.recordQueuedRun.mockRejectedValueOnce(
         new QueryFailedError(
           'INSERT',
           [],
@@ -1643,12 +1650,14 @@ describe('PlanEnqueueService', () => {
 
     test('is idempotent: an existing SCHEDULED run for the same job id is returned unchanged', async () => {
       const scheduledFor = new Date(NOW.getTime() + HOUR_MS);
-      mockFindByQueueNameAndBullmqJobId.mockResolvedValue({
-        executionBackend: 'claude',
-        id: 'run-existing',
-        scheduledFor,
-        status: 'SCHEDULED',
-      });
+      planRunsRepository.findByQueueNameAndBullmqJobId.mockResolvedValue(
+        planRunsFactory.build({
+          executionBackend: 'claude',
+          id: 'run-existing',
+          scheduledFor,
+          status: 'SCHEDULED',
+        }),
+      );
 
       const result = await service.schedulePlanRun({
         ...baseParams,
@@ -1663,24 +1672,26 @@ describe('PlanEnqueueService', () => {
         planRunId: 'run-existing',
         scheduledFor,
       });
-      expect(mockRecordQueuedRun).not.toHaveBeenCalled();
+      expect(planRunsRepository.recordQueuedRun).not.toHaveBeenCalled();
       expect(mockEnqueuePlanRalphOrchestrator).not.toHaveBeenCalled();
     });
 
     test('reschedules over a settled run with the same job id (cancel, then schedule again)', async () => {
-      mockFindByQueueNameAndBullmqJobId.mockResolvedValue({
-        executionBackend: 'cursor',
-        id: 'run-cancelled',
-        scheduledFor: new Date(NOW.getTime() + HOUR_MS),
-        status: 'CANCELLED',
-      });
+      planRunsRepository.findByQueueNameAndBullmqJobId.mockResolvedValue(
+        planRunsFactory.build({
+          executionBackend: 'cursor',
+          id: 'run-cancelled',
+          scheduledFor: new Date(NOW.getTime() + HOUR_MS),
+          status: 'CANCELLED',
+        }),
+      );
 
       await service.schedulePlanRun({
         ...baseParams,
         scheduledFor: new Date(NOW.getTime() + HOUR_MS),
       });
 
-      expect(mockRecordQueuedRun).toHaveBeenCalledWith(
+      expect(planRunsRepository.recordQueuedRun).toHaveBeenCalledWith(
         expect.objectContaining({ status: 'SCHEDULED' }),
         expect.anything(),
       );
@@ -1768,7 +1779,7 @@ describe('PlanEnqueueService', () => {
       const outcome = await fire();
 
       expect(outcome).toEqual({ kind: 'fire' });
-      expect(mockTransitionScheduledRun).toHaveBeenCalledWith(
+      expect(planRunsRepository.transitionScheduledRun).toHaveBeenCalledWith(
         'run-scheduled',
         'QUEUED',
         expect.anything(),
@@ -1805,7 +1816,8 @@ describe('PlanEnqueueService', () => {
       });
       expect(mockReleaseScheduledPlan).not.toHaveBeenCalled();
       // The claim is the race point: the plan/task writes happen only after it won.
-      const [claimOrder] = mockTransitionScheduledRun.mock.invocationCallOrder;
+      const [claimOrder] =
+        planRunsRepository.transitionScheduledRun.mock.invocationCallOrder;
       const [planWriteOrder] = mockApplyStatusChange.mock.invocationCallOrder;
       expect(claimOrder).toBeLessThan(planWriteOrder ?? 0);
     });
@@ -1829,7 +1841,7 @@ describe('PlanEnqueueService', () => {
       const outcome = await fire(new Date(NOW.getTime() + HOUR_MS));
 
       expect(outcome.kind).toBe('missed');
-      expect(mockTransitionScheduledRun).toHaveBeenCalledWith(
+      expect(planRunsRepository.transitionScheduledRun).toHaveBeenCalledWith(
         'run-scheduled',
         'MISSED',
         expect.anything(),
@@ -1840,18 +1852,18 @@ describe('PlanEnqueueService', () => {
     });
 
     test('SUPERSEDED: another active run on the plan holds the scheduled run, with no plan or task write', async () => {
-      mockHasActiveRun.mockResolvedValue(true);
+      planRunsRepository.hasActiveRun.mockResolvedValue(true);
 
       const outcome = await fire();
 
       expect(outcome.kind).toBe('superseded');
       // The firing row itself is excluded from "active", inside the same transaction.
-      expect(mockHasActiveRun).toHaveBeenCalledWith(
+      expect(planRunsRepository.hasActiveRun).toHaveBeenCalledWith(
         mockPlan.id,
         'run-scheduled',
         expect.anything(),
       );
-      expect(mockTransitionScheduledRun).toHaveBeenCalledWith(
+      expect(planRunsRepository.transitionScheduledRun).toHaveBeenCalledWith(
         'run-scheduled',
         'SUPERSEDED',
         expect.anything(),
@@ -1862,12 +1874,12 @@ describe('PlanEnqueueService', () => {
     });
 
     test('a run both late and colliding reports MISSED (lateness takes precedence)', async () => {
-      mockHasActiveRun.mockResolvedValue(true);
+      planRunsRepository.hasActiveRun.mockResolvedValue(true);
 
       const outcome = await fire(new Date(NOW.getTime() + 2 * HOUR_MS));
 
       expect(outcome.kind).toBe('missed');
-      expect(mockTransitionScheduledRun).toHaveBeenCalledWith(
+      expect(planRunsRepository.transitionScheduledRun).toHaveBeenCalledWith(
         'run-scheduled',
         'MISSED',
         expect.anything(),
@@ -1896,7 +1908,7 @@ describe('PlanEnqueueService', () => {
           ]),
         },
       });
-      expect(mockTransitionScheduledRun).toHaveBeenCalledWith(
+      expect(planRunsRepository.transitionScheduledRun).toHaveBeenCalledWith(
         'run-scheduled',
         'SKIPPED',
         expect.anything(),
@@ -1938,7 +1950,7 @@ describe('PlanEnqueueService', () => {
         kind: 'workspace_missing',
         reason: 'workingDirectory does not exist: /gone/worktree',
       });
-      expect(mockTransitionScheduledRun).toHaveBeenCalledWith(
+      expect(planRunsRepository.transitionScheduledRun).toHaveBeenCalledWith(
         'run-scheduled',
         'FAILED',
         expect.anything(),
@@ -1965,7 +1977,7 @@ describe('PlanEnqueueService', () => {
     });
 
     test('cancel won the race: the conditional SCHEDULED update matches nothing, so nothing else is written', async () => {
-      mockTransitionScheduledRun.mockResolvedValue(false);
+      planRunsRepository.transitionScheduledRun.mockResolvedValue(false);
 
       const outcome = await fire();
 
@@ -1982,7 +1994,7 @@ describe('PlanEnqueueService', () => {
       const outcome = await fire();
 
       expect(outcome).toEqual({ kind: 'not_scheduled' });
-      expect(mockTransitionScheduledRun).not.toHaveBeenCalled();
+      expect(planRunsRepository.transitionScheduledRun).not.toHaveBeenCalled();
       expectNoPlanOrTaskWrites();
     });
 
@@ -1992,7 +2004,7 @@ describe('PlanEnqueueService', () => {
       const outcome = await fire();
 
       expect(outcome).toEqual({ kind: 'not_scheduled' });
-      expect(mockTransitionScheduledRun).not.toHaveBeenCalled();
+      expect(planRunsRepository.transitionScheduledRun).not.toHaveBeenCalled();
     });
   });
 
@@ -2024,9 +2036,11 @@ describe('PlanEnqueueService', () => {
     beforeEach(() => {
       vi.useFakeTimers();
       vi.setSystemTime(NOW);
-      mockFindRunById.mockReset();
+      planRunsRepository.findRunById.mockReset();
       mockGetJob.mockReset();
-      mockRescheduleScheduledRun.mockReset().mockResolvedValue(true);
+      planRunsRepository.rescheduleScheduledRun
+        .mockReset()
+        .mockResolvedValue(true);
       mockEnqueuePlanRalphOrchestrator.mockClear();
     });
 
@@ -2036,7 +2050,7 @@ describe('PlanEnqueueService', () => {
 
     test('re-delays the job first, then moves the row under the SCHEDULED guard', async () => {
       const changeDelay = vi.fn().mockResolvedValue(undefined);
-      mockFindRunById.mockResolvedValue(scheduledRun());
+      planRunsRepository.findRunById.mockResolvedValue(scheduledRun());
       mockGetJob.mockResolvedValue({
         changeDelay,
         getState: vi.fn().mockResolvedValue('delayed'),
@@ -2045,12 +2059,13 @@ describe('PlanEnqueueService', () => {
       const outcome = await reschedule();
 
       expect(changeDelay).toHaveBeenCalledWith(DELAY_MS);
-      expect(mockRescheduleScheduledRun).toHaveBeenCalledWith(
+      expect(planRunsRepository.rescheduleScheduledRun).toHaveBeenCalledWith(
         'run-scheduled',
         LATER,
       );
       const [delayOrder] = changeDelay.mock.invocationCallOrder;
-      const [rowOrder] = mockRescheduleScheduledRun.mock.invocationCallOrder;
+      const [rowOrder] =
+        planRunsRepository.rescheduleScheduledRun.mock.invocationCallOrder;
       expect(delayOrder).toBeLessThan(rowOrder ?? 0);
       expect(outcome).toEqual({
         executionBackend: 'claude',
@@ -2069,7 +2084,7 @@ describe('PlanEnqueueService', () => {
         taskId: null,
         workingDirectory: null,
       });
-      mockFindRunById.mockResolvedValue(
+      planRunsRepository.findRunById.mockResolvedValue(
         scheduledRun({
           runConfigSnapshot: buildPlanRunConfigSnapshotFromJobData(jobData),
         }),
@@ -2087,12 +2102,14 @@ describe('PlanEnqueueService', () => {
           idempotencyKey: 'scheduled-plan-run-x',
         }),
       );
-      expect(mockRescheduleScheduledRun).toHaveBeenCalledTimes(1);
+      expect(planRunsRepository.rescheduleScheduledRun).toHaveBeenCalledTimes(
+        1,
+      );
     });
 
     test('rejects a job a worker already took, without moving the row', async () => {
       const changeDelay = vi.fn();
-      mockFindRunById.mockResolvedValue(scheduledRun());
+      planRunsRepository.findRunById.mockResolvedValue(scheduledRun());
       mockGetJob.mockResolvedValue({
         changeDelay,
         getState: vi.fn().mockResolvedValue('active'),
@@ -2100,13 +2117,15 @@ describe('PlanEnqueueService', () => {
 
       await expect(reschedule()).rejects.toThrow(/already starting/);
       expect(changeDelay).not.toHaveBeenCalled();
-      expect(mockRescheduleScheduledRun).not.toHaveBeenCalled();
+      expect(planRunsRepository.rescheduleScheduledRun).not.toHaveBeenCalled();
     });
 
     test.each(['QUEUED', 'IN_PROGRESS', 'CANCELLED', 'MISSED'])(
       'rejects a %s run',
       async (status) => {
-        mockFindRunById.mockResolvedValue(scheduledRun({ status }));
+        planRunsRepository.findRunById.mockResolvedValue(
+          scheduledRun({ status }),
+        );
 
         await expect(reschedule()).rejects.toThrow(/not SCHEDULED/);
         expect(mockGetJob).not.toHaveBeenCalled();
@@ -2114,7 +2133,9 @@ describe('PlanEnqueueService', () => {
     );
 
     test('rejects a run of another plan', async () => {
-      mockFindRunById.mockResolvedValue(scheduledRun({ planId: 'other' }));
+      planRunsRepository.findRunById.mockResolvedValue(
+        scheduledRun({ planId: 'other' }),
+      );
 
       await expect(reschedule()).rejects.toThrow(/not found/);
     });
@@ -2126,16 +2147,16 @@ describe('PlanEnqueueService', () => {
       await expect(
         reschedule(new Date(NOW.getTime() + 31 * 24 * 60 * 60 * 1_000)),
       ).rejects.toThrow(/within 30 days/);
-      expect(mockFindRunById).not.toHaveBeenCalled();
+      expect(planRunsRepository.findRunById).not.toHaveBeenCalled();
     });
 
     test('reports a run cancelled while it was being rescheduled', async () => {
-      mockFindRunById.mockResolvedValue(scheduledRun());
+      planRunsRepository.findRunById.mockResolvedValue(scheduledRun());
       mockGetJob.mockResolvedValue({
         changeDelay: vi.fn().mockResolvedValue(undefined),
         getState: vi.fn().mockResolvedValue('delayed'),
       });
-      mockRescheduleScheduledRun.mockResolvedValue(false);
+      planRunsRepository.rescheduleScheduledRun.mockResolvedValue(false);
 
       await expect(reschedule()).rejects.toThrow(/cancelled or started/);
     });
@@ -2176,7 +2197,7 @@ describe('PlanEnqueueService', () => {
       });
       expect(result).toEqual({ jobId: 'scheduled-plan-run-nightly' });
       // Writes nothing: the row is already SCHEDULED.
-      expect(mockRecordQueuedRun).not.toHaveBeenCalled();
+      expect(planRunsRepository.recordQueuedRun).not.toHaveBeenCalled();
       expect(repo.manager.transaction.mock.calls).toHaveLength(
         transactionsBefore,
       );

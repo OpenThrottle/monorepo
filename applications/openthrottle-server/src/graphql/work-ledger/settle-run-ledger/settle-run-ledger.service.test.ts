@@ -3,21 +3,23 @@ import type { ConfigService } from '@nestjs/config';
 import type { GitHubService } from '@openthrottle/nestjs-github';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
-  PlanRun,
   PlanRunConfigSnapshotV1,
-  PlanRunsService,
   RepositoriesService,
   RepositoryCheckoutsService,
 } from '@openthrottle/nestjs-repositories';
 import type {
+  PlanRun,
+  PlanRunsRepository,
   ServiceAccountsRepository,
   WorkArtifactsRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import type {
+  PlanRunsRepositoryMock,
   ServiceAccountsRepositoryMock,
   WorkArtifactsRepositoryMock,
 } from '@openthrottle/nestjs-repositories-server/testing';
 import {
+  createPlanRunsRepositoryMock,
   createServiceAccountsRepositoryMock,
   createWorkArtifactsRepositoryMock,
   serviceAccountsFactory,
@@ -74,7 +76,7 @@ describe('SettleRunLedgerService', () => {
   const findOne = vi.fn();
 
   let githubService: GitHubService;
-  let planRunsService: PlanRunsService;
+  let planRunsRepository: PlanRunsRepositoryMock;
   let endedRuns: PlanRun[];
   let repositoriesService: RepositoriesService;
   let repositoryCheckoutsService: RepositoryCheckoutsService;
@@ -126,18 +128,12 @@ describe('SettleRunLedgerService', () => {
     workArtifactsRepository.findOne.mockImplementation(findOne);
     githubService = createMock<GitHubService>();
     endedRuns = [];
-    const queryBuilder = {
-      andWhere: () => queryBuilder,
-      getMany: async () => endedRuns,
-      limit: () => queryBuilder,
-      orderBy: () => queryBuilder,
-      where: () => queryBuilder,
-    };
-    planRunsService = createMock<PlanRunsService>({
-      getRepository: vi
-        .fn()
-        .mockReturnValue({ createQueryBuilder: () => queryBuilder }),
-    });
+    planRunsRepository = createPlanRunsRepositoryMock();
+    planRunsRepository.findEndedRunsWithoutPullRequest.mockImplementation(
+      async () => {
+        return endedRuns;
+      },
+    );
     repositoryInspectionService = createMock<RepositoryInspectionService>({
       scan: vi.fn().mockResolvedValue({
         git: { normalizedRemoteUrl: 'github.com/openthrottle/monorepo' },
@@ -147,7 +143,7 @@ describe('SettleRunLedgerService', () => {
 
     service = new SettleRunLedgerService(
       logger,
-      planRunsService,
+      createMock<PlanRunsRepository>(planRunsRepository),
       repositoriesService,
       repositoryCheckoutsService,
       repositoryInspectionService,

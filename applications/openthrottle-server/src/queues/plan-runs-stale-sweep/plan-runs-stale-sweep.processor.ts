@@ -6,10 +6,10 @@ import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   PLAN_RUN_SETTLED_REASON,
   PLAN_RUN_STATUS,
-  PlanRunsService,
+  PlanRunsRepository,
   STALE_CUTOFF_MS,
   UNSUPERVISED_STALE_CUTOFF_MS,
-} from '@openthrottle/nestjs-repositories';
+} from '@openthrottle/nestjs-repositories-server';
 import { PlansRepository } from '@openthrottle/nestjs-repositories-server';
 import { DataSource } from 'typeorm';
 
@@ -61,7 +61,7 @@ export class PlanRunsStaleSweepProcessor
     private readonly dataSource: DataSource,
     private readonly logger: LoggerService,
     private readonly notifications: NotificationsService,
-    private readonly planRunsService: PlanRunsService,
+    private readonly planRunsRepository: PlanRunsRepository,
     private readonly plansRepository: PlansRepository,
     private readonly planStatusService: PlanStatusService,
     private readonly statusChangeSystemAccount: StatusChangeSystemAccountService,
@@ -101,7 +101,7 @@ export class PlanRunsStaleSweepProcessor
 
   private async sweepStalePlanRuns(): Promise<PlanRunsStaleSweepSummary> {
     const cutoff = new Date(Date.now() - STALE_CUTOFF_MS);
-    const staleRuns = await this.planRunsService.findStaleInProgressRuns(
+    const staleRuns = await this.planRunsRepository.findStaleInProgressRuns(
       cutoff,
       PLAN_RUNS_STALE_SWEEP_BATCH_SIZE,
     );
@@ -111,7 +111,7 @@ export class PlanRunsStaleSweepProcessor
 
     for (const run of staleRuns) {
       // eslint-disable-next-line no-await-in-loop -- sequential DB writes, one stale run at a time
-      const settled = await this.planRunsService.settleStaleRun(
+      const settled = await this.planRunsRepository.settleStaleRun(
         run.id,
         PLAN_RUN_SETTLED_REASON.HEARTBEAT_LOST,
       );
@@ -158,7 +158,7 @@ export class PlanRunsStaleSweepProcessor
     readonly unsupervisedSwept: number;
   }> {
     const cutoff = new Date(Date.now() - UNSUPERVISED_STALE_CUTOFF_MS);
-    const runs = await this.planRunsService.findStaleUnsupervisedRuns(
+    const runs = await this.planRunsRepository.findStaleUnsupervisedRuns(
       cutoff,
       PLAN_RUNS_STALE_SWEEP_BATCH_SIZE,
     );
@@ -166,7 +166,7 @@ export class PlanRunsStaleSweepProcessor
     let unsupervisedSwept = 0;
     for (const run of runs) {
       // eslint-disable-next-line no-await-in-loop -- sequential DB writes, one stale run at a time
-      const settled = await this.planRunsService.settleStaleRun(
+      const settled = await this.planRunsRepository.settleStaleRun(
         run.id,
         PLAN_RUN_SETTLED_REASON.UNSUPERVISED_AGE,
       );
@@ -199,7 +199,7 @@ export class PlanRunsStaleSweepProcessor
 
     // After settling stale runs above, a still-IN_PROGRESS or QUEUED run means the plan is genuinely
     // live (another worker/CLI owns it) — do not reset it.
-    const recentRuns = await this.planRunsService.findRecentByPlanId(
+    const recentRuns = await this.planRunsRepository.findRecentByPlanId(
       planId,
       RECONCILE_RUN_LOOKBACK,
     );
