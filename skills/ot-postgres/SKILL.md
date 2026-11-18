@@ -50,7 +50,7 @@ Canonical commands and schema overview: **`databases/openthrottle/README.md`**.
 
 - **Never put an inline `REFERENCES` inside a statement guarded by `IF NOT EXISTS`.** The guard skips the whole statement when the table or column exists, so the constraint never lands while the ledger still records the migration as applied. Enforced by `pnpm nx run monorepo:check-migration-hygiene` (in `check:local` and CI).
 - **One migration per `NNN_` prefix.** `check-migration-hygiene` judges collisions against the tip of the base ref, not your merge-base, so pick your number from `main`. `pnpm exec tsx ./scripts/check-migration-hygiene.ts --all` judges the whole tree.
-- **Never renumber a migration that has been applied anywhere.** `schema_migrations` keys on `filename`, so a rename makes the runner re-run the file as unapplied.
+- **Never renumber a migration once merged to `main`.** `schema_migrations` keys on `filename`, so a rename re-runs it wherever it applied and orphans the old row. Before merge, renumber freely: branch migrations belong on a throwaway DB (`pnpm worktree:db isolate`). Orphan on the shared DB: `databases/AGENTS.md` § Ledger orphans.
 - **Editing an applied migration in place** changes its checksum, which the runner reports as drift (warn-only). Add a new numbered file instead.
 - Repairing existing tables: prefer `ADD CONSTRAINT ... NOT VALID` then `VALIDATE CONSTRAINT`, which avoids a blocking scan.
 - Do not switch from numeric to timestamp prefixes on your own initiative; see `databases/openthrottle/README.md` § One migration per numeric prefix.

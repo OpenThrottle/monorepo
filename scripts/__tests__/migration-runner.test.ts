@@ -5,6 +5,7 @@ import {
   createChecksum,
   filterSortSqlFiles,
   findChecksumDrift,
+  findLedgerOrphans,
   isLedgerCutOver,
   type MigrationSource,
   type MigrationStore,
@@ -249,5 +250,58 @@ describe('runMigrations checksum drift', () => {
 
     expect(warnings).toEqual([]);
     expect(store.applyLog).toEqual([]);
+  });
+});
+
+describe('findLedgerOrphans', () => {
+  test('returns ledger filenames with no file on disk, sorted', () => {
+    expect(
+      findLedgerOrphans(
+        ['002_b.sql', '113_old_name.sql', '001_a.sql', '072_seed.sql'],
+        SORTED,
+      ),
+    ).toEqual(['072_seed.sql', '113_old_name.sql']);
+  });
+
+  test('returns nothing when every ledger row has its file', () => {
+    expect(findLedgerOrphans(['001_a.sql'], SORTED)).toEqual([]);
+  });
+});
+
+describe('runMigrations ledger orphans', () => {
+  test('warns once, naming each orphan, and still applies pending files', async () => {
+    const store = new FakeStore({
+      coreTables: true,
+      seeded: ['001_a.sql', '113_renamed_away.sql'],
+    });
+
+    const warnings: string[] = [];
+    await runMigrations(
+      store,
+      source(FILES),
+      () => {},
+      (m) => warnings.push(m),
+    );
+
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toContain('1 filename(s) absent from disk');
+    expect(warnings[0]).toContain('113_renamed_away.sql');
+    expect(store.applyLog).toEqual(['002_b.sql', '003_c.sql']);
+    // Warn-only: the orphan row stays in the ledger.
+    expect(store.ledger.has('113_renamed_away.sql')).toBe(true);
+  });
+
+  test('does not warn when the ledger has no orphans', async () => {
+    const store = new FakeStore({ coreTables: true, seeded: ['001_a.sql'] });
+
+    const warnings: string[] = [];
+    await runMigrations(
+      store,
+      source(FILES),
+      () => {},
+      (m) => warnings.push(m),
+    );
+
+    expect(warnings).toEqual([]);
   });
 });

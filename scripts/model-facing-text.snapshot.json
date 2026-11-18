@@ -185,7 +185,7 @@
     "skill/ot-loop": 20775,
     "skill/ot-onboarding": 19235,
     "skill/ot-plans": 8244,
-    "skill/ot-postgres": 5099,
+    "skill/ot-postgres": 5269,
     "skill/ot-skill-guide": 11206,
     "skill/ot-skill-sync": 9963,
     "skill/ot-stack": 6507,
@@ -218,6 +218,6 @@
     "mcpInstructions": 2069,
     "mcpTools": 36186,
     "prompts": 141004,
-    "skills": 153894
+    "skills": 154064
   }
 }

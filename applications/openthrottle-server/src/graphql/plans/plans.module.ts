@@ -20,6 +20,7 @@ import { QueuesGraphqlModule } from '../queues/queues.module.ts';
 import { WorkLedgerGraphqlModule } from '../work-ledger/work-ledger.module.ts';
 import { PlansLoaders } from './loaders/loaders.service.ts';
 import { PlanEnqueueModule } from './plan-enqueue/plan-enqueue.module.ts';
+import { PlanRunLoaders } from './plan-run-object/loaders/loaders.service.ts';
 import { PlanRunObjectResolver } from './plan-run-object/plan-run-object.resolver.ts';
 import { PlanStatusModule } from './plan-status/plan-status.module.ts';
 import { PlansResolver } from './plans.resolver.ts';
@@ -43,6 +44,11 @@ import { PlansResolver } from './plans.resolver.ts';
     WorkLedgerGraphqlModule,
     WorktreeCheckoutPruneModule,
   ],
-  providers: [PlanRunObjectResolver, PlansLoaders, PlansResolver],
+  providers: [
+    PlanRunLoaders,
+    PlanRunObjectResolver,
+    PlansLoaders,
+    PlansResolver,
+  ],
 })
 export class PlansGraphqlModule {}

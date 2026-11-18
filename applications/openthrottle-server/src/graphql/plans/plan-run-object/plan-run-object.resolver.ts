@@ -2,17 +2,14 @@
  * @description Field resolvers for {@link PlanRunObject} that join other tables:
  * the run's on-disk `checkout` (plan_runs.checkout_id -> repository_checkouts, the
  * home for editor deep-links) and its linked `pullRequest` (over the work-ledger
- * bridge work_sessions.plan_run_id -> work_artifacts type='pull_request'). Kept in
+ * bridge work_sessions.plan_run_id -> work_artifacts type='pull_request'). Both
+ * go through request-scoped {@link PlanRunLoaders}, so a list of runs batches
+ * into a fixed number of queries. Kept in
  * a dedicated resolver so PlansResolver (@Resolver(PlanObject)) stays focused; the
  * scalar provenance fields (branch, model) are plain columns set in mapPlanRunObject.
  */
 
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import {
-  RepositoryCheckoutsService,
-  WorkLedgerService,
-} from '@openthrottle/nestjs-repositories';
-import { In } from 'typeorm';
 
 import { SourceControlService } from '../../../services/source-control/source-control.service.ts';
 import {
@@ -20,20 +17,17 @@ import {
   PlanRunObject,
   PlanRunPullRequestObject,
 } from '../plan.object.ts';
+import { PlanRunLoaders } from './loaders/loaders.service.ts';
 
 // @authz-stance: authenticated-only (Path A — see OT plan 18e16dfc-4f22-43f9-9b77-6fc90309b60a).
 // Field resolvers on a PlanRunObject already fetched by an authenticated parent
 // query (planRunsByPlanId); they only surface provenance visible via that run.
 
-/** work_artifacts.type for a pull-request artifact (see artifact-type-registry). */
-const PULL_REQUEST_ARTIFACT_TYPE = 'pull_request';
-
 @Resolver(() => PlanRunObject)
 export class PlanRunObjectResolver {
   constructor(
-    private readonly repositoryCheckoutsService: RepositoryCheckoutsService,
+    private readonly loaders: PlanRunLoaders,
     private readonly sourceControlService: SourceControlService,
-    private readonly workLedgerService: WorkLedgerService,
   ) {}
 
   /**
@@ -52,9 +46,7 @@ export class PlanRunObjectResolver {
     if (run.checkoutId == null) {
       return null;
     }
-    const checkout = await this.repositoryCheckoutsService.findById(
-      run.checkoutId,
-    );
+    const checkout = await this.loaders.checkoutLoader.load(run.checkoutId);
     if (!checkout) {
       return null;
     }
@@ -79,20 +71,8 @@ export class PlanRunObjectResolver {
   async pullRequest(
     @Parent() run: PlanRunObject,
   ): Promise<PlanRunPullRequestObject | null> {
-    const sessions = await this.workLedgerService
-      .getSessionRepository()
-      .find({ where: { planRunId: run.id } });
-    const sessionIds = [...new Set(sessions.map((session) => session.id))];
-    if (sessionIds.length === 0) {
-      return null;
-    }
-
-    const artifact = await this.workLedgerService
-      .getArtifactRepository()
-      .findOne({
-        order: { producedAt: 'DESC' },
-        where: { sessionId: In(sessionIds), type: PULL_REQUEST_ARTIFACT_TYPE },
-      });
+    const artifact =
+      await this.loaders.pullRequestArtifactByPlanRunIdLoader.load(run.id);
     if (!artifact) {
       return null;
     }

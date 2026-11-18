@@ -160,6 +160,24 @@ export function findChecksumDrift(
 }
 
 /**
+ * Ledger rows naming a file that is not on disk, in sorted order — the inverse
+ * of {@link selectPendingMigrations}.
+ *
+ * The usual cause is a migration renumbered on its branch after a shared
+ * worktree database had already applied it under the old name: the body ran
+ * twice (old name, then new) and the old row stays behind. A checkout that is
+ * behind the branch that migrated its database shows the same thing. Either
+ * way nothing is wrong with the schema, so this only ever feeds a warning.
+ */
+export function findLedgerOrphans(
+  applied: Iterable<string>,
+  sqlFiles: readonly string[],
+): string[] {
+  const present = new Set(sqlFiles);
+  return [...applied].filter((f) => !present.has(f)).sort();
+}
+
+/**
  * A cut-over is an empty ledger on a DB that already carries the core schema:
  * one migrated before the ledger existed, by a runner that re-applied every file
  * on every run (the container image did, until it adopted this ledger).
@@ -210,6 +228,18 @@ export async function runMigrations(
   }
 
   await warnOnChecksumDrift(applied, sqlFiles, source, warn, retiredMigrations);
+
+  const orphans = findLedgerOrphans(
+    applied.map((a) => a.filename),
+    sqlFiles,
+  );
+  if (orphans.length > 0) {
+    warn(
+      `${LEDGER_TABLE} has ${orphans.length} filename(s) absent from disk: ${orphans.join(', ')}. ` +
+        `Usually a migration renumbered after a shared database applied it, or a checkout behind the branch that migrated this database. ` +
+        `Nothing is re-applied or removed; see databases/AGENTS.md § Ledger orphans for the cleanup.`,
+    );
+  }
 
   const pending = selectPendingMigrations(
     sqlFiles,
