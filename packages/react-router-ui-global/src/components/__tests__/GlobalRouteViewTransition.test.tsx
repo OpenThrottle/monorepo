@@ -1,5 +1,5 @@
 import type { RenderResult } from '@testing-library/react';
-import { render, waitFor } from '@testing-library/react';
+import { act, render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { createRoutesStub, Link, Outlet, useLocation } from 'react-router';
@@ -56,6 +56,7 @@ describe('GlobalRouteViewTransition Component', () => {
 
   afterEach(() => {
     Reflect.deleteProperty(document, 'startViewTransition');
+    Reflect.deleteProperty(document, 'visibilityState');
   });
 
   test('renders its children', () => {
@@ -87,6 +88,27 @@ describe('GlobalRouteViewTransition Component', () => {
         expect(component.getByTestId('location')).toHaveTextContent('/other');
       });
       expect(startViewTransition).toHaveBeenCalled();
+    });
+  });
+
+  describe('when the pathname changes while the document is hidden', () => {
+    test('does not start a view transition', async () => {
+      act(() => {
+        Object.defineProperty(document, 'visibilityState', {
+          configurable: true,
+          value: 'hidden',
+        });
+        document.dispatchEvent(new Event('visibilitychange'));
+      });
+
+      await userEvent.click(
+        component.getByRole('link', { name: 'Other route' }),
+      );
+
+      await waitFor(() => {
+        expect(component.getByTestId('location')).toHaveTextContent('/other');
+      });
+      expect(startViewTransition).not.toHaveBeenCalled();
     });
   });
 });
