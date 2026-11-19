@@ -1,4 +1,4 @@
-import type { BackgroundActivityObject } from '@openthrottle/openthrottle-developer-codegen';
+import type { BackgroundActivityFieldsFragment } from '@openthrottle/openthrottle-developer-codegen';
 
 import { GLOBAL_BACKGROUND_ACTIVITY_COPY } from '../data/data.copy';
 
@@ -9,7 +9,7 @@ import { GLOBAL_BACKGROUND_ACTIVITY_COPY } from '../data/data.copy';
  * `backgroundActivities` query.
  */
 export type GlobalBackgroundActivity = Pick<
-  BackgroundActivityObject,
+  BackgroundActivityFieldsFragment,
   'done' | 'etaSeconds' | 'id' | 'label' | 'startedAt' | 'status' | 'total'
 >;
 

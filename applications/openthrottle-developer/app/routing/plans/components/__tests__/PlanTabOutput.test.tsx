@@ -12,12 +12,13 @@ import type { PlanTabOutputProps } from '../PlanTabOutput';
 import { PlanTabOutput } from '../PlanTabOutput';
 
 const chunk: PlanTabOutputProps['chunks'][number] = {
-  __typename: 'PlanOutputStreamChunkObject',
   content: 'Done.',
   createdAt: '2026-01-01T00:00:00.000Z',
   id: 'chunk-1',
   iteration: 1,
+  kind: null,
   planId: 'plan-1',
+  taskId: null,
 };
 
 // This file covers the agent-output stream; the linked-artifacts fieldset has

@@ -6,7 +6,7 @@
 
 import type {
   GetRootMetricsQuery,
-  ServerHealthObject,
+  HealthCardFragment,
 } from '@openthrottle/openthrottle-developer-codegen';
 import type { LinkProps } from 'react-router';
 
@@ -19,7 +19,7 @@ export type HealthStatus = 'ok' | 'unconfigured' | 'unreachable';
 
 /**
  * @description Components folded into the overall health status. Mirrors the
- * non-null fields of {@link ServerHealthObject} so a dead socket layer cannot
+ * non-null fields of {@link HealthCardFragment} so a dead socket layer cannot
  * silently report "online".
  */
 const HEALTH_COMPONENT_KEYS = [
@@ -27,7 +27,7 @@ const HEALTH_COMPONENT_KEYS = [
   'database',
   'redis',
   'websocket',
-] as const satisfies readonly (keyof ServerHealthObject)[];
+] as const satisfies readonly (keyof HealthCardFragment)[];
 
 /**
  * @description Coerces a raw server health value into a {@link HealthStatus}.
@@ -53,7 +53,7 @@ const normalizeHealthStatus = (
  * health payload is present so the UI never claims "online" without data.
  */
 export const deriveOverallHealthStatus = (
-  health: ServerHealthObject | undefined,
+  health: HealthCardFragment | undefined,
 ): HealthStatus => {
   if (health == null) {
     return 'unconfigured';

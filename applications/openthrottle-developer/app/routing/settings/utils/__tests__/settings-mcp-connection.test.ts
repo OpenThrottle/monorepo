@@ -17,7 +17,6 @@ const connector = (
   provider: string,
 ): McpConnectorFieldsFragment => {
   return {
-    __typename: 'McpConnectorObject',
     authType: 'oauth',
     category: 'Development',
     description: 'desc',
@@ -36,7 +35,6 @@ const connection = (
   enabled: boolean,
 ): McpConnectorConnectionFieldsFragment => {
   return {
-    __typename: 'McpConnectorConnectionObject',
     authType: 'oauth',
     connectedAt: '2026-02-02T10:00:00.000Z',
     connectorKey,

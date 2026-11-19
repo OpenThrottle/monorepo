@@ -178,7 +178,7 @@ export class PlanOutputStreamResolver {
       );
     }
 
-    return this.pubSub.asyncIterator<PlanOutputStreamChunk>(
+    return this.pubSub.asyncIterableIterator<PlanOutputStreamChunk>(
       planOutputTopic(planId),
     );
   }

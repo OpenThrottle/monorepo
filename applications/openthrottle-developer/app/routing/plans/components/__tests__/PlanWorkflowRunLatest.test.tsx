@@ -12,13 +12,22 @@ type Row = PlanWorkflowRunLatestProps['planRunAuditRows'][number];
 
 const row = (overrides: Partial<Row> & Pick<Row, 'id' | 'status'>): Row => {
   return {
-    __typename: 'PlanRunObject',
+    branch: null,
+    bullmqJobId: null,
+    checkout: null,
     createdAt: '2026-11-01T00:00:00.000Z',
     executionBackend: 'claude',
     heartbeatExpected: true,
     isStale: false,
+    lastHeartbeatAt: null,
     model: 'claude-opus',
+    pullRequest: null,
+    resumeOfRunId: null,
+    runConfigSnapshotJson: null,
     runKind: 'spawn',
+    scheduledFor: null,
+    settledReason: null,
+    usageLimitResetsAt: null,
     ...overrides,
   };
 };

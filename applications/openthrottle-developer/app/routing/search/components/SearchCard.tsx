@@ -3,13 +3,13 @@ import { PanelRightOpenIcon } from 'lucide-react';
 import * as React from 'react';
 import { Link } from 'react-router';
 
-import type { SearchChunk } from '~/__generated__/graphql';
 import {
   SEARCH_PREVIEW_COPY,
   SEARCH_RESULT_COPY,
 } from '~/routing/search/data/data.copy';
 import { SEARCH_SOURCE_PILL_COLORS } from '~/routing/search/data/data.source-pills';
 import type { SearchResultTarget } from '~/routing/search/types/search-result-view';
+import type { SearchChunk } from '~/routing/search/utils/toSearchResultView';
 import { toSearchResultView } from '~/routing/search/utils/toSearchResultView';
 
 export interface SearchCardProps {

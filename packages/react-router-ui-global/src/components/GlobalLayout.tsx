@@ -1,4 +1,4 @@
-import type { ServerHealthObject } from '@openthrottle/openthrottle-developer-codegen';
+import type { HealthCardFragment } from '@openthrottle/openthrottle-developer-codegen';
 import {
   cn,
   Sidebar,
@@ -25,7 +25,7 @@ export interface GlobalLayoutProps {
   readonly children: React.ReactNode;
   readonly className?: string;
   readonly data?: Record<string, GlobalSidebarContentLinkProps[]>;
-  readonly health?: ServerHealthObject;
+  readonly health?: HealthCardFragment;
 
   readonly overrides?: {
     readonly footer?: boolean;

@@ -27,7 +27,6 @@ describe('GeneratorTabSchema', () => {
     test('shows an empty code block after expanding', async () => {
       const user = userEvent.setup();
       const view = renderTab({
-        __typename: 'GeneratorDetailObject',
         description: 'd',
         name: 'g',
         schemaJson: null,
@@ -45,7 +44,6 @@ describe('GeneratorTabSchema', () => {
     test('pretty-prints JSON inside the collapsible', async () => {
       const user = userEvent.setup();
       const view = renderTab({
-        __typename: 'GeneratorDetailObject',
         description: 'd',
         name: 'g',
         schemaJson: '{"a":1}',
@@ -64,7 +62,6 @@ describe('GeneratorTabSchema', () => {
       const user = userEvent.setup();
       const raw = '{ not json';
       const view = renderTab({
-        __typename: 'GeneratorDetailObject',
         description: 'd',
         name: 'g',
         schemaJson: raw,

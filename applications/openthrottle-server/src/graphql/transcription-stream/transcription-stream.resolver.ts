@@ -72,7 +72,7 @@ export class TranscriptionStreamResolver {
       );
     }
 
-    return this.pubSub.asyncIterator<TranscriptionStreamChunkPayload>(
+    return this.pubSub.asyncIterableIterator<TranscriptionStreamChunkPayload>(
       transcriptionStreamTopic(sessionId),
     );
   }

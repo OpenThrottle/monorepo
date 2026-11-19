@@ -42,8 +42,8 @@ describe('RolePermissionsCard Component', () => {
       availablePermissions: [],
       permissions: [
         {
-          __typename: 'PermissionObject',
-          createdAt: new Date(2025, 0, 1),
+          createdAt: new Date(2025, 0, 1).toISOString(),
+          description: null,
           id: 'p1',
           name: 'users:read',
         },
@@ -58,7 +58,9 @@ describe('RolePermissionsCard Component', () => {
 
   test('renders the add-permission form when permissions are available to add', () => {
     const withAvailable = renderCard({
-      availablePermissions: [{ id: 'p2', name: 'users:write' }],
+      availablePermissions: [
+        { description: null, id: 'p2', name: 'users:write' },
+      ],
       permissions: [],
     });
     expect(withAvailable.getByText('Add permission…')).toBeInTheDocument();

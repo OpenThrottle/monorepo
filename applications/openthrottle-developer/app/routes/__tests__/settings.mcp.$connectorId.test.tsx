@@ -26,7 +26,6 @@ vi.mock('@openthrottle/react-router-graphql', async (importOriginal) => {
 const mockExec = vi.mocked(graphqlWithAuth.executeGraphqlWithAuth);
 
 const stripeConnector: McpConnectorFieldsFragment = {
-  __typename: 'McpConnectorObject',
   authType: 'api_token',
   category: 'Payments',
   description: 'Stripe payments.',
@@ -40,7 +39,6 @@ const stripeConnector: McpConnectorFieldsFragment = {
 };
 
 const stripeConnection: McpConnectorConnectionFieldsFragment = {
-  __typename: 'McpConnectorConnectionObject',
   authType: 'api_token',
   connectedAt: '2026-02-02T10:00:00.000Z',
   connectorKey: 'stripe',

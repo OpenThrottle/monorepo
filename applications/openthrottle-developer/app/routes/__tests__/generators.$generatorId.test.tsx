@@ -8,7 +8,6 @@ import type { GeneratorDetailCardFragment } from '~/__generated__/graphql';
 import GeneratorDetail from '../generators.$generatorId';
 
 const mockGenerator: GeneratorDetailCardFragment = {
-  __typename: 'GeneratorDetailObject',
   description: 'React Router scaffolding',
   name: '@tools/generators',
   schemaJson: null,

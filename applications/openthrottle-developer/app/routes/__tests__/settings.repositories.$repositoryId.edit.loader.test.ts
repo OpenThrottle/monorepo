@@ -29,13 +29,13 @@ const buildArgs = (repositoryId: string): Route.LoaderArgs => {
 };
 
 const mockRepository: WorkspaceRepositoryFieldsFragment = {
-  __typename: 'RepositoryObject',
   checkouts: [],
   createdAt: '2026-07-24T00:00:00.000Z',
   defaultBranch: 'main',
   id: 'repo-1',
   name: 'monorepo',
   normalizedRemoteUrl: 'github.com/openthrottle/monorepo',
+  project: null,
   projectId: null,
   updatedAt: '2026-07-24T00:00:00.000Z',
 };

@@ -1,7 +1,7 @@
 import { WORKFLOW_RUNNER_IDS } from '@openthrottle/openthrottle-agentic-utils';
 import { describe, expect, it } from 'vitest';
 
-import { RalphNestedDebugCli } from '../../__generated__/graphql.ts';
+import { RalphNestedDebugCli } from '../../__generated__/schema-types.ts';
 import {
   DEFAULT_ITERATIONS,
   DEFAULT_MODEL,

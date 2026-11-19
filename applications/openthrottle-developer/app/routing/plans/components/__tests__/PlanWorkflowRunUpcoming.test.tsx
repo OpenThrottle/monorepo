@@ -18,20 +18,27 @@ type Row = PlanWorkflowRunUpcomingProps['planRunAuditRows'][number];
 
 const scheduledRow = (id: string, scheduledFor: string | null): Row => {
   return {
-    __typename: 'PlanRunObject',
+    branch: null,
+    bullmqJobId: null,
+    checkout: null,
     createdAt: '2026-11-01T00:00:00.000Z',
     executionBackend: 'claude',
     heartbeatExpected: true,
     id,
     isStale: false,
+    lastHeartbeatAt: null,
     model: 'claude-opus',
+    pullRequest: null,
+    resumeOfRunId: null,
     runConfigSnapshotJson: JSON.stringify({
       ralph: { effort: 'high' },
       workspace: { workingDirectory: '/tmp/wt' },
     }),
     runKind: 'spawn',
     scheduledFor,
+    settledReason: null,
     status: 'SCHEDULED',
+    usageLimitResetsAt: null,
   };
 };
 

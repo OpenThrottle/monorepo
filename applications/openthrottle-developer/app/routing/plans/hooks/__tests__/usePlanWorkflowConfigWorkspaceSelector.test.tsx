@@ -18,10 +18,10 @@ type Checkout = PlanRunConfigRepositoryFieldsFragment['checkouts'][number];
 
 const checkout = (id: string, displayName: string): Checkout => {
   return {
-    __typename: 'RepositoryCheckoutObject',
     displayName,
     filesystemPath: `/repos/${displayName}`,
     id,
+    inspection: null,
     kind: 'worktree',
     managed: true,
   };
@@ -33,8 +33,8 @@ const repository = (
   projectId?: string | null,
 ): PlanRunConfigRepositoryFieldsFragment => {
   return {
-    __typename: 'RepositoryObject',
     checkouts: [...checkouts],
+    defaultBranch: null,
     id,
     name: id,
     normalizedRemoteUrl: null,

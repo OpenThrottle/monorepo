@@ -15,7 +15,6 @@ function project(
   overrides: Partial<ProjectWithStats> & Pick<ProjectWithStats, 'id' | 'name'>,
 ): ProjectWithStats {
   return {
-    __typename: 'ProjectObject',
     createdAt: '2024-01-01T00:00:00.000Z',
     description: null,
     lastActivityAt: null,

@@ -60,21 +60,27 @@ export interface DefineCodegenOptions {
    * Extra `presetConfig` keys merged onto the shared `{ fragmentMasking: false }`
    * for the `client` preset (e.g. `{ persistedDocuments: true }`).
    *
-   * Not the place for enum handling: `enumsAsConst` is a `typescript`-plugin
-   * option set in the shared `config` block, and `enumsAsTypes` would emit a
-   * string-union type only, breaking every value-position use of a generated
-   * enum name.
+   * Not the place for enum handling: `enumType: 'const'` is set in the shared
+   * `config` block, and the client preset reads no enum option from
+   * `presetConfig` (an `enumsAsTypes` key here is a silent no-op).
    */
   presetConfig?: ClientPresetConfig;
   /**
    * Emit the `typescript-validation-schema` (Zod) block at
-   * `<outputDir>schemas.ts`. Defaults to `true`. Pass `false` for projects
+   * `<outputDir>schemas.ts`, plus the `<outputDir>schema-types.ts` it imports
+   * every input type and enum from. Defaults to `true`. Pass `false` for projects
    * that do not generate Zod schemas.
    */
   withZodSchemas?: boolean;
 }
 
 const SCHEMA_RELATIVE_PATH = `../../applications/openthrottle-server/schema.gql`;
+
+/** TypeScript types for the scalars, shared by the client and schema-types blocks. */
+const SCALARS = {
+  DateTime: 'string',
+  ID: 'string',
+} as const;
 
 /**
  * @description Builds a GraphQL Codegen config from the shared OpenThrottle
@@ -121,12 +127,20 @@ export const defineCodegen = (options: DefineCodegenOptions): CodegenConfig => {
         // non-erasable syntax, so every project whose program included a
         // generated `graphql.ts` needed an `erasableSyntaxOnly: false` opt-out,
         // six of them, including one package that merely *consumes* a
-        // source-first package carrying generated enums. `enumsAsConst` emits an
-        // `as const` object plus a matching type alias, which keeps both value
-        // and type positions working. Note this is a `typescript`-plugin option:
-        // in `presetConfig` the client preset silently ignores it.
-        // See docs/monorepo/source-first-packages-and-strip-only.md.
-        enumsAsConst: true,
+        // source-first package carrying generated enums. `enumType: 'const'`
+        // emits an `as const` object plus a matching type alias, which keeps
+        // both value and type positions working. client-preset 7 forwards
+        // `enumType` and silently drops the older `enumsAsConst`, whose absence
+        // falls back to type-only string unions — so every runtime enum read
+        // (`PlanTaskStatus.Completed`) would vanish. In `presetConfig` the
+        // client preset ignores both. See
+        // docs/monorepo/source-first-packages-and-strip-only.md.
+        enumType: 'const',
+        // client-preset 6 changed the scalar defaults: custom scalars became
+        // `unknown` (were `any`) and `ID` inputs became `string | number`. Both
+        // travel as JSON strings, so pin them to `string` — the type every
+        // consumer already reads them as.
+        scalars: SCALARS,
         // `@graphql-typed-document-node/core` is a TYPES-ONLY package: its
         // package.json has `"main": ""` and it ships nothing but
         // `typings/index.d.ts`. Emitted as a plain value import, the statement
@@ -150,13 +164,34 @@ export const defineCodegen = (options: DefineCodegenOptions): CodegenConfig => {
   };
 
   if (withZodSchemas) {
+    // client-preset 6+ emits only the input types and enums that some
+    // operation actually uses, but the Zod plugin imports EVERY input type and
+    // enum in the schema. This block emits that full set (no object types) for
+    // the Zod schemas to import from. A consumer that needs an input type or
+    // enum no operation uses imports it from here too.
+    generates[`${outputDir}schema-types.ts`] = {
+      config: {
+        // The standalone `typescript` plugin still spells it `enumsAsConst`
+        // (only the client preset moved to `enumType`).
+        enumsAsConst: true,
+        onlyOperationTypes: true,
+        // The Zod plugin emits a `definedNonNullAny` schema for `DateTime`,
+        // whose output type (`{}`) is not assignable to `string`, so the
+        // schema's input types type it `unknown`. Before client-preset 6 the
+        // shared type was `any`, which hid the mismatch.
+        scalars: { ...SCALARS, DateTime: 'unknown' },
+        useTypeImports: true,
+      },
+      overwrite: true,
+      plugins: ['typescript'],
+    };
     generates[`${outputDir}schemas.ts`] = {
       config: {
         // Must follow `importExtension`: a source-first ESM package is consumed
         // as TypeScript, so a `.js` specifier here names a file that does not
         // exist. Defaults to `.js` so configs that leave `importExtension` unset
         // (the React Router apps, whose Vite resolves it) are unaffected.
-        importFrom: `./graphql${importExtension ?? '.js'}`,
+        importFrom: `./schema-types${importExtension ?? '.js'}`,
         // Required (non-null) GraphQL string inputs reject `''` (emitted as
         // `.min(1)`). Only applies to non-null strings — nullable/optional
         // fields stay lenient — so route actions and MCP tools no longer need

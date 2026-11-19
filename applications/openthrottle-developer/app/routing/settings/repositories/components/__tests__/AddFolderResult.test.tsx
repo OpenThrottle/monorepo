@@ -31,6 +31,7 @@ const checkout = {
       linkedWorktrees: [],
       normalizedRemoteUrl: 'https://github.com/OpenThrottle/monorepo',
     },
+    hookTelemetry: null,
     scannedAt: '2026-07-24T00:00:00.000Z',
     stack: {
       languages: ['typescript'],

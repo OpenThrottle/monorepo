@@ -9,15 +9,12 @@ import { RolesTable } from '../RolesTable';
 
 const mockRoles: RolesTableProps['roles'] = [
   {
-    __typename: 'RoleObject',
-    createdAt: new Date('2025-01-01'),
+    createdAt: new Date('2025-01-01').toISOString(),
     description: 'Administrator',
     id: 'role-1',
     name: 'admin',
-    permissions: [
-      { __typename: 'PermissionObject', id: 'p1', name: 'users:read' },
-    ],
-    updatedAt: new Date('2025-01-02'),
+    permissions: [{ id: 'p1', name: 'users:read' }],
+    updatedAt: new Date('2025-01-02').toISOString(),
   },
 ];
 
@@ -65,13 +62,12 @@ describe('RolesTable Component', () => {
       props = {
         roles: [
           {
-            __typename: 'RoleObject',
-            createdAt: new Date('2025-01-01'),
+            createdAt: new Date('2025-01-01').toISOString(),
             description: 'View only',
             id: 'role-empty',
             name: 'viewer',
             permissions: [],
-            updatedAt: new Date('2025-01-01'),
+            updatedAt: new Date('2025-01-01').toISOString(),
           },
         ],
       };
@@ -93,18 +89,17 @@ describe('RolesTable Component', () => {
       props = {
         roles: [
           {
-            __typename: 'RoleObject',
-            createdAt: new Date('2025-01-01'),
+            createdAt: new Date('2025-01-01').toISOString(),
             description: 'Many perms',
             id: 'role-many',
             name: 'super',
             permissions: [
-              { __typename: 'PermissionObject', id: 'p1', name: 'a' },
-              { __typename: 'PermissionObject', id: 'p2', name: 'b' },
-              { __typename: 'PermissionObject', id: 'p3', name: 'c' },
-              { __typename: 'PermissionObject', id: 'p4', name: 'd' },
+              { id: 'p1', name: 'a' },
+              { id: 'p2', name: 'b' },
+              { id: 'p3', name: 'c' },
+              { id: 'p4', name: 'd' },
             ],
-            updatedAt: new Date('2025-01-02'),
+            updatedAt: new Date('2025-01-02').toISOString(),
           },
         ],
       };

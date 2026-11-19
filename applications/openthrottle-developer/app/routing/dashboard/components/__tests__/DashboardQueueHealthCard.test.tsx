@@ -13,7 +13,6 @@ const queue = (
   overrides: Partial<DashboardQueueStatsCardFragment> & { name: string },
 ): DashboardQueueStatsCardFragment => {
   return {
-    __typename: 'QueueStatsObject',
     activeCount: 0,
     completedCount: 0,
     delayedCount: 0,

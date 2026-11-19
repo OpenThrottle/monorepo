@@ -11,7 +11,6 @@ import type { GeneratorDetailCardFragment } from '~/__generated__/graphql';
 import { GeneratorTabDebug } from '../GeneratorTabDebug';
 
 const mockGenerator: GeneratorDetailCardFragment = {
-  __typename: 'GeneratorDetailObject',
   description: 'Test generator',
   name: 'nestjs',
   schemaJson: null,

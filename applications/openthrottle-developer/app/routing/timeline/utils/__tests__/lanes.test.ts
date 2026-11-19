@@ -62,6 +62,7 @@ const marker = (
     taskId: null,
     title: id,
     url: null,
+    userId: null,
     ...overrides,
   };
 };

@@ -11,19 +11,21 @@ import { buildRootMatch } from '~/testing/buildRootMatch';
 import Index from '../plans._index';
 
 const mockPlan: PlanCardFragment = {
-  __typename: 'PlanObject',
+  assignee: null,
   author: 'visormatt',
   category: 'feature',
   createdAt: '2025-01-01T00:00:00Z',
   description: 'Plan description',
   hasCustomRunConfig: false,
   id: 'plan-1',
+  project: null,
   projectRelation: {
-    __typename: 'ProjectObject',
     id: 'proj-1',
     name: 'Test Project',
   },
+  scheduledRunAt: null,
   status: 'IN_PROGRESS',
+  summary: null,
   tags: [],
   taskCount: 0,
   tasksCompletedCount: 0,
@@ -38,9 +40,9 @@ const mockLoaderDataPopulated: Route.ComponentProps['loaderData'] = {
   page: 1,
   plans: [mockPlan],
   statusCounts: [
-    { __typename: 'PlanStatusCountObject', count: 4, status: 'in_progress' },
-    { __typename: 'PlanStatusCountObject', count: 3, status: 'QUEUED' },
-    { __typename: 'PlanStatusCountObject', count: 2, status: 'COMPLETED' },
+    { count: 4, status: 'in_progress' },
+    { count: 3, status: 'QUEUED' },
+    { count: 2, status: 'COMPLETED' },
   ],
   statuses: [],
   totalCount: 1,

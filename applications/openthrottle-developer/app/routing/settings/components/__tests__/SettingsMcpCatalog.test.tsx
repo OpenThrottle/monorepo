@@ -12,7 +12,6 @@ import type { SettingsMcpCatalogProps } from '../SettingsMcpCatalog';
 import { SettingsMcpCatalog } from '../SettingsMcpCatalog';
 
 const connectorA: McpConnectorFieldsFragment = {
-  __typename: 'McpConnectorObject',
   authType: 'oauth',
   category: 'productivity',
   description: 'Official MCP registry entry',
@@ -26,7 +25,6 @@ const connectorA: McpConnectorFieldsFragment = {
 };
 
 const connectorB: McpConnectorFieldsFragment = {
-  __typename: 'McpConnectorObject',
   authType: 'api_token',
   category: 'productivity',
   description: 'Anthropic directory entry',
@@ -40,7 +38,6 @@ const connectorB: McpConnectorFieldsFragment = {
 };
 
 const connection: McpConnectorConnectionFieldsFragment = {
-  __typename: 'McpConnectorConnectionObject',
   authType: 'oauth',
   connectedAt: '2026-01-01T00:00:00Z',
   connectorKey: 'mcp-registry-connector',

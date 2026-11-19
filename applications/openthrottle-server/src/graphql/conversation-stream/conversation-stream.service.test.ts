@@ -117,11 +117,13 @@ function buildService(): {
   });
   const publish = vi.fn().mockResolvedValue(undefined);
   // A live iterator that ends immediately, so subscribe() yields only its
-  // replay buffer in these tests.
-  const asyncIterator = vi.fn(() => ({
+  // replay buffer in these tests. Untyped `vi.fn()`: graphql-subscriptions 3
+  // types the return as the `PubSubAsyncIterableIterator` class, whose private
+  // members no object literal can satisfy.
+  const asyncIterableIterator = vi.fn().mockReturnValue({
     next: () => Promise.resolve({ done: true as const, value: undefined }),
     return: () => Promise.resolve({ done: true as const, value: undefined }),
-  }));
+  });
   const service = new ConversationStreamService(
     createMock<AgentConversationsRepository>(conversations),
     createMock<LoggerService>(),
@@ -129,7 +131,7 @@ function buildService(): {
     createMock<AgentTokenUsageRepository>(tokenUsage),
     accountStamping,
     {
-      asyncIterator,
+      asyncIterableIterator,
       publish,
       subscribe: vi.fn(),
       unsubscribe: vi.fn(),

@@ -11,7 +11,6 @@ type ProjectTaskRow = ProjectTasksTableProps['tasks'][number];
 
 const mockTasks: ProjectTaskRow[] = [
   {
-    __typename: 'TaskObject',
     assignee: 'dev@example.com',
     category: 'feature',
     createdAt: '2025-01-01T00:00:00Z',
@@ -24,7 +23,6 @@ const mockTasks: ProjectTaskRow[] = [
     updatedAt: '2025-01-02T00:00:00Z',
   },
   {
-    __typename: 'TaskObject',
     assignee: null,
     category: null,
     createdAt: '2025-01-02T00:00:00Z',

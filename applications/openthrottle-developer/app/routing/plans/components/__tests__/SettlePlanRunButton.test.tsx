@@ -27,7 +27,6 @@ vi.mock('sonner', () => ({
 }));
 
 const settledPayload: ForceSettlePayload = {
-  __typename: 'PlanRunObject',
   heartbeatExpected: false,
   id: 'run-1',
   isStale: false,

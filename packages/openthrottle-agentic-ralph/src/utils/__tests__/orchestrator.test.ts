@@ -57,7 +57,6 @@ const serverHealthOk = {
 
 const basePlan = (overrides: Partial<PlanRow> = {}): PlanRow => {
   return {
-    __typename: 'PlanObject',
     assignee: null,
     author: 'tester',
     category: 'test',
@@ -84,21 +83,27 @@ const baseTask = (
   overrides: Partial<TaskRow> = {},
 ): TaskRow => {
   return {
-    __typename: 'TaskObject',
     assignee: null,
     category: null,
+    completedAt: null,
     createdAt: ISO,
     description: null,
+    hookRole: null,
+    hookScope: null,
+    hookSource: null,
     id,
+    parentTaskId: null,
     planId: PLAN_ID,
     project: null,
     projectId: null,
     requirementsJson: '[]',
+    skillSlug: null,
     sortOrder: 1000,
     status,
     summary: null,
     title: 'Task',
     updatedAt: ISO,
+    wave: null,
     ...overrides,
   };
 };

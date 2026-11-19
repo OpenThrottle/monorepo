@@ -4,14 +4,13 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
-import type { SearchChunk } from '~/__generated__/graphql';
 import type { SearchRankMeta } from '~/routing/search/types/search-rank-meta';
+import type { SearchChunk } from '~/routing/search/utils/toSearchResultView';
 
 import { SearchWhyThisResult } from '../SearchWhyThisResult';
 
 function mockChunk(overrides: Partial<SearchChunk> = {}): SearchChunk {
   return {
-    __typename: 'SearchChunk',
     content: 'Snippet text',
     id: 'chunk-id-1',
     planId: 'plan-1',

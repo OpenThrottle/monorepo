@@ -24,8 +24,7 @@ function createMockProject(
   });
 
   return {
-    __typename: 'ProjectObject',
-    createdAt: overrides?.createdAt ?? createdAt,
+    createdAt: overrides?.createdAt ?? createdAt.toISOString(),
     description: overrides?.description ?? faker.lorem.sentences(12),
     id: overrides?.id ?? faker.string.uuid(),
     lastActivityAt: overrides?.lastActivityAt ?? lastActivityAt.toISOString(),
@@ -34,7 +33,9 @@ function createMockProject(
       overrides?.nxProjectName ??
       faker.helpers.arrayElement([...NX_PROJECT_NAME_PATTERNS]),
     planCount: overrides?.planCount ?? faker.number.int({ max: 12, min: 0 }),
-    updatedAt: overrides?.updatedAt ?? updatedAt,
+    plans: null,
+    tasks: null,
+    updatedAt: overrides?.updatedAt ?? updatedAt.toISOString(),
   };
 }
 

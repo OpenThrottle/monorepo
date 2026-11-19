@@ -26,7 +26,6 @@ vi.mock('sonner', () => ({
 }));
 
 const plan: PlanCardFragment = {
-  __typename: 'PlanObject',
   assignee: null,
   author: 'author1',
   category: 'feature',
@@ -34,7 +33,9 @@ const plan: PlanCardFragment = {
   description: null,
   hasCustomRunConfig: false,
   id: 'plan-1',
+  project: null,
   projectRelation: null,
+  scheduledRunAt: null,
   status: 'IN_PROGRESS',
   summary: null,
   tags: [],

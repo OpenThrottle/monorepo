@@ -11,13 +11,13 @@ import { renderRouteHarness, renderRoutesStub } from '~/testing/route-fixtures';
 import EditSchedule from '../schedule.$jobId.edit';
 
 const job: ScheduledJobDetailFragment = {
-  __typename: 'ScheduledAgentJobObject',
   createdAt: '2026-07-31T00:00:00.000Z',
   cronPattern: '0 9 * * *',
   cwd: null,
   driverId: 'claude',
   enabled: true,
   id: 'job-1',
+  intervalMs: null,
   lastRunAt: null,
   misfirePolicy: 'skip',
   misfireThresholdMs: 600_000,
@@ -25,6 +25,9 @@ const job: ScheduledJobDetailFragment = {
   name: 'Nightly audit',
   nextRunAt: null,
   prompt: 'Audit dependencies',
+  repository: null,
+  repositoryCheckoutId: null,
+  runAt: null,
   scheduleKind: 'cron',
   settingsJson: '{}',
   timeoutMs: null,

@@ -36,7 +36,9 @@ export const createServiceAccountCredential = async (
       {
         input: {
           expiresAt:
-            parseExpiresAtFromFormData(formData.get('expiresAt')) ?? null,
+            parseExpiresAtFromFormData(
+              formData.get('expiresAt'),
+            )?.toISOString() ?? null,
           label: parsed.data.label ?? null,
           serviceAccountId: parsed.data.serviceAccountId,
         },

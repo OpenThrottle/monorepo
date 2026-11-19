@@ -7,8 +7,8 @@ import { skillUsageScopeCount } from '../skillUsageScopeCount';
 describe('skillUsageScopeCount', () => {
   test('returns the count for a matching scope', () => {
     const byScope: UsageSkillUsageByScopeFragment[] = [
-      { __typename: 'SkillUsageByScopeObject', count: 3, scope: 'user' },
-      { __typename: 'SkillUsageByScopeObject', count: 7, scope: 'project' },
+      { count: 3, scope: 'user' },
+      { count: 7, scope: 'project' },
     ];
 
     expect(skillUsageScopeCount(byScope, 'project')).toBe(7);
@@ -16,7 +16,7 @@ describe('skillUsageScopeCount', () => {
 
   test('returns 0 when the scope has no rows', () => {
     const byScope: UsageSkillUsageByScopeFragment[] = [
-      { __typename: 'SkillUsageByScopeObject', count: 3, scope: 'user' },
+      { count: 3, scope: 'user' },
     ];
 
     expect(skillUsageScopeCount(byScope, 'plugin')).toBe(0);

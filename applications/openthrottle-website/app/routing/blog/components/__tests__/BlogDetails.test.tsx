@@ -60,7 +60,9 @@ describe('BlogDetails Component', () => {
           ...MOCK_BLOG_POST_DETAIL,
           author: null,
           coverImageUrl: null,
-          updatedAt: MOCK_BLOG_POST_DETAIL.publishedAt,
+          updatedAt:
+            MOCK_BLOG_POST_DETAIL.publishedAt ??
+            MOCK_BLOG_POST_DETAIL.updatedAt,
         },
       });
 

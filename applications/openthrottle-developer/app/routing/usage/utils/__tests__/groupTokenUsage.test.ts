@@ -8,6 +8,7 @@ const row = (
   overrides: Partial<UsageTokenUsageRowFragment>,
 ): UsageTokenUsageRowFragment => {
   return {
+    agentAccountId: null,
     cacheReadTokens: null,
     cacheWriteTokens: null,
     costUsd: null,

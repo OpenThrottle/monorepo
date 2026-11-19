@@ -197,13 +197,16 @@ exclude a directory, and nothing can lint a file codegen overwrites — so gener
 the one place the repo's own "no new enums" rule was unenforceable, and a per-project
 opt-out was the only lever left.
 
-`enumsAsConst` in the shared `defineCodegen` preset closed it. Generated enums are now
-`as const` objects with a matching type alias, which keeps both value and type positions
-working, so all six opt-outs are gone. Two details are worth keeping:
+An `as const` enum setting in the shared `defineCodegen` preset closed it. Generated enums
+are now `as const` objects with a matching type alias, which keeps both value and type
+positions working, so all six opt-outs are gone. Three details are worth keeping:
 
-- `enumsAsConst` is a `@graphql-codegen/typescript` **plugin** option. Set in the client
-  preset's `presetConfig` it is silently ignored — no warning, no error, identical output —
-  so it lives in the output entry's `config` block instead.
+- The setting lives in the output entry's `config` block. Set in the client preset's
+  `presetConfig` it is silently ignored — no warning, no error, identical output.
+- Its name depends on the plugin. client-preset 7 reads `enumType: 'const'` and silently
+  drops the older `enumsAsConst`, falling back to type-only string unions; the standalone
+  `@graphql-codegen/typescript` plugin (the `schema-types.ts` block) still reads
+  `enumsAsConst`. `packages/graphql-codegen`'s unit test pins both.
 - The migration was expected to cost 200+ call sites and broke none. All the generated enums
   are string-valued, and a string enum has no reverse mapping to lose; `Object.values` on one
   returns the same array either way. The reverse-mapping hazard is real only for **numeric**

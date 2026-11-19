@@ -12,11 +12,11 @@ import type { DraggablePlanTaskCardProps } from '../DraggablePlanTaskCard';
 import { DraggablePlanTaskCard } from '../DraggablePlanTaskCard';
 
 const mockTask: PlanTaskRowFragment = {
-  __typename: 'TaskObject',
   assignee: null,
   category: 'dev',
   createdAt: '2025-01-01T00:00:00Z',
   description: null,
+  hookRole: null,
   id: 'task-1',
   planId: 'plan-1',
   projectRelation: null,
@@ -26,6 +26,7 @@ const mockTask: PlanTaskRowFragment = {
   summary: null,
   title: 'Draggable task',
   updatedAt: '2025-01-02T00:00:00Z',
+  wave: null,
 };
 
 describe('DraggablePlanTaskCard Component', () => {

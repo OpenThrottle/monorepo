@@ -73,7 +73,7 @@ const loaderDataFor = (post: BlogEditorPost, canWrite: boolean): LoaderData => {
   return {
     authors: MOCK_BLOG_AUTHORS,
     canWrite,
-    post: { ...post, __typename: 'BlogPostAdminObject' },
+    post,
     tags: MOCK_BLOG_TAGS,
   };
 };

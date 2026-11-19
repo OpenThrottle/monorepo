@@ -10,7 +10,6 @@ import type { GeneratorDetailCardFragment } from '~/__generated__/graphql';
 import { GeneratorTabPresets } from '../GeneratorTabPresets';
 
 const mockGenerator: GeneratorDetailCardFragment = {
-  __typename: 'GeneratorDetailObject',
   description: 'd',
   name: 'react-router',
   schemaJson: null,

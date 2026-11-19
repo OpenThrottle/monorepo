@@ -11,7 +11,6 @@ type CancelPayload = PlanDetailCancelPlanRunMutation['cancelPlanRun'];
 
 const basePayload = (overrides: Partial<CancelPayload> = {}): CancelPayload => {
   return {
-    __typename: 'CancelPlanRunResultObject',
     activeJobIdsCouldNotCancel: [],
     cancelRequested: false,
     noMatchingJob: false,

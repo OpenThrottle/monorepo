@@ -20,13 +20,18 @@ const baseWorkflow = getDefaultWorkflowRalphRunOptionsInput({ planId });
 
 const completedRun: PlanWorkflowRunTransparencyProps['planRunAuditRows'][number] =
   {
-    __typename: 'PlanRunObject',
+    branch: null,
     bullmqJobId: 'job-snap-1',
+    checkout: null,
     createdAt: '2024-01-02T03:04:05.000Z',
     executionBackend: 'cursor',
     heartbeatExpected: true,
     id: 'run-1',
     isStale: false,
+    lastHeartbeatAt: null,
+    model: null,
+    pullRequest: null,
+    resumeOfRunId: null,
     runConfigSnapshotJson: JSON.stringify({
       ralph: { executionBackend: 'cursor' },
       target: { mode: 'plan', taskId: '' },
@@ -34,7 +39,10 @@ const completedRun: PlanWorkflowRunTransparencyProps['planRunAuditRows'][number]
       workspace: { workingDirectory: '' },
     }),
     runKind: 'spawn',
+    scheduledFor: null,
+    settledReason: null,
     status: 'COMPLETED',
+    usageLimitResetsAt: null,
   };
 
 function renderTransparency(

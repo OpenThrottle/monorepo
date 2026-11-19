@@ -8,7 +8,6 @@ import * as React from 'react';
 import { redirect, useSearchParams } from 'react-router';
 
 import type { Route } from '@/app/routes/+types/search._index';
-import type { SearchChunk } from '~/__generated__/graphql';
 import { GetSearchResultsDocument } from '~/__generated__/graphql';
 import { GlobalSemanticSearchOffNotice } from '~/global/components/GlobalSemanticSearchOffNotice';
 import { SITE_TITLE } from '~/global/config/settings';
@@ -25,6 +24,7 @@ import {
   buildSearchUrl,
   parseSearchParams,
 } from '~/routing/search/utils/parsers';
+import type { SearchChunk } from '~/routing/search/utils/toSearchResultView';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

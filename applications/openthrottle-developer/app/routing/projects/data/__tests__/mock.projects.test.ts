@@ -9,7 +9,6 @@ describe('MOCK_PROJECTS', () => {
 
   test('each item has required project fields', () => {
     for (const p of MOCK_PROJECTS) {
-      expect(p.__typename).toBe('ProjectObject');
       expect(p.id).toMatch(
         /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
       );

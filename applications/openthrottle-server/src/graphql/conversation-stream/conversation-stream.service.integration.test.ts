@@ -83,7 +83,7 @@ function buildHarness(): Harness {
       stampForRun: vi.fn().mockResolvedValue(null),
     }),
     {
-      asyncIterator: vi.fn(),
+      asyncIterableIterator: vi.fn(),
       publish,
       subscribe: vi.fn(),
       unsubscribe: vi.fn(),

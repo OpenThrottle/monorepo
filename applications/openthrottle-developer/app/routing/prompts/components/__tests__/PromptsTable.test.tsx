@@ -11,7 +11,6 @@ import { PromptsTable } from '../PromptsTable';
 
 const mockPrompts: PromptCardFragment[] = [
   {
-    __typename: 'CustomPromptObject',
     content: '# First',
     createdAt: '2024-01-15T10:00:00Z',
     description: 'First prompt description',
@@ -23,7 +22,6 @@ const mockPrompts: PromptCardFragment[] = [
     updatedAt: '2024-01-20T15:30:00Z',
   },
   {
-    __typename: 'CustomPromptObject',
     content: '# Second',
     createdAt: '2024-02-01T08:00:00Z',
     description: null,

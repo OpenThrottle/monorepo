@@ -16,6 +16,7 @@ const buildRow = (
   overrides: Partial<UsageTokenUsageRowFragment>,
 ): UsageTokenUsageRowFragment => {
   return {
+    agentAccountId: null,
     cacheReadTokens: 0,
     cacheWriteTokens: 0,
     costUsd: 0,

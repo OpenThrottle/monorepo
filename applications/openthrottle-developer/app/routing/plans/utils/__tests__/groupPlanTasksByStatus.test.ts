@@ -11,11 +11,11 @@ import {
 
 const baseTask = (): PlanTaskRowFragment => {
   return {
-    __typename: 'TaskObject',
     assignee: null,
     category: 'dev',
     createdAt: '2025-01-01T00:00:00Z',
     description: null,
+    hookRole: null,
     id: 't1',
     planId: 'p1',
     projectRelation: null,
@@ -25,6 +25,7 @@ const baseTask = (): PlanTaskRowFragment => {
     summary: null,
     title: 'A',
     updatedAt: '2025-01-02T00:00:00Z',
+    wave: null,
   };
 };
 

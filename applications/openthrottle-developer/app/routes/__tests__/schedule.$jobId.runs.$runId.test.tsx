@@ -16,7 +16,6 @@ const run = (
   overrides: Partial<ScheduledJobRunDetailFragment> = {},
 ): ScheduledJobRunDetailFragment => {
   return {
-    __typename: 'ScheduledAgentJobRunObject',
     bullmqJobId: 'run-1',
     cacheReadTokens: 20,
     cacheWriteTokens: 10,
@@ -32,6 +31,9 @@ const run = (
     model: 'opus',
     outputTokens: 50,
     reasoningTokens: null,
+    repository: null,
+    repositoryCheckoutId: null,
+    resolvedCwd: null,
     resumeOfRunId: null,
     scheduledAgentJobId: 'job-1',
     settingsSnapshotJson: JSON.stringify({ driverId: 'claude', model: 'opus' }),

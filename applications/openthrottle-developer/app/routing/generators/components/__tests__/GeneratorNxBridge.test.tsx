@@ -9,7 +9,6 @@ import type { GeneratorDetailCardFragment } from '~/__generated__/graphql';
 import { GeneratorNxBridge } from '../GeneratorNxBridge';
 
 const baseGenerator: GeneratorDetailCardFragment = {
-  __typename: 'GeneratorDetailObject',
   description: 'Desc',
   name: 'react-router',
   schemaJson: '{"a":1}',
@@ -30,7 +29,6 @@ describe('GeneratorNxBridge', () => {
 
   test('when schemaJson is missing, renders only the shell with no schema card', () => {
     const view = renderBridge({
-      __typename: 'GeneratorDetailObject',
       description: 'd',
       name: 'empty',
       schemaJson: null,

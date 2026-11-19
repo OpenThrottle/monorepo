@@ -8,7 +8,6 @@ import type { PullRequestGithubCardProps } from '../PullRequestGithubCard';
 import { PullRequestGithubCard } from '../PullRequestGithubCard';
 
 const mockPull: PullRequestGithubCardProps['pull'] = {
-  __typename: 'PullListItemObject',
   author: 'visormatt',
   baseRef: 'main',
   createdAt: '2026-01-01T00:00:00.000Z',

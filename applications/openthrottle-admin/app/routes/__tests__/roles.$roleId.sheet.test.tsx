@@ -9,13 +9,12 @@ import { describe, expect, test } from 'vitest';
 import RoleDetailComponent from '../roles.$roleId';
 
 const role = {
-  __typename: 'RoleObject' as const,
-  createdAt: new Date('2025-01-01'),
+  createdAt: new Date('2025-01-01').toISOString(),
   description: 'Administrator',
   id: 'role-1',
   name: 'admin',
   permissions: [],
-  updatedAt: new Date('2025-01-02'),
+  updatedAt: new Date('2025-01-02').toISOString(),
 };
 
 type ActionData = { ok: true } | { error: string } | undefined;

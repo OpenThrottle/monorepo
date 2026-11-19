@@ -107,7 +107,6 @@ export function maxSingleSeriesForQueues(
  */
 export const REPRESENTATIVE_SKEWED_QUEUES: ReadonlyArray<QueueCardFragment> = [
   {
-    __typename: 'QueueStatsObject',
     activeCount: 2,
     completedCount: 48_200,
     delayedCount: 0,
@@ -116,7 +115,6 @@ export const REPRESENTATIVE_SKEWED_QUEUES: ReadonlyArray<QueueCardFragment> = [
     waitingCount: 0,
   },
   {
-    __typename: 'QueueStatsObject',
     activeCount: 1,
     completedCount: 340,
     delayedCount: 4,
@@ -125,7 +123,6 @@ export const REPRESENTATIVE_SKEWED_QUEUES: ReadonlyArray<QueueCardFragment> = [
     waitingCount: 22,
   },
   {
-    __typename: 'QueueStatsObject',
     activeCount: 0,
     completedCount: 89,
     delayedCount: 2,

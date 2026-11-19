@@ -42,7 +42,7 @@ import {
 } from 'react-router';
 
 import type { Route } from '@/app/+types/root';
-import type { ServerHealthObject, UserObject } from '~/__generated__/graphql';
+import type { GetMeQuery, HealthCardFragment } from '~/__generated__/graphql';
 import {
   GetMeDocument,
   GetRootHealthDocument,
@@ -80,7 +80,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   const isAuthRoute =
     url.pathname === '/auth' || url.pathname.startsWith('/auth/');
 
-  let user: UserObject | null = null;
+  let user: NonNullable<GetMeQuery['me']> | null = null;
 
   try {
     if (token) {
@@ -112,7 +112,7 @@ export const loader = async (args: Route.LoaderArgs) => {
 
   // Seed an "unreachable" baseline (never all-green): if the health query is
   // skipped or throws, the ops shell must not falsely read as healthy.
-  let serverHealth: ServerHealthObject = {
+  let serverHealth: HealthCardFragment = {
     api: 'unreachable',
     database: 'unreachable',
     redis: 'unreachable',

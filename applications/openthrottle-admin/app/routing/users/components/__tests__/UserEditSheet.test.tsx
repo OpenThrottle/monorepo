@@ -11,13 +11,12 @@ import type { UserEditSheetProps } from '../UserEditSheet';
 import { UserEditSheet } from '../UserEditSheet';
 
 const user: UserEditSheetProps['user'] = {
-  __typename: 'UserObject',
-  createdAt: new Date('2025-01-01'),
+  createdAt: new Date('2025-01-01').toISOString(),
   disabledAt: null,
   email: 'matt@example.com',
   githubUsername: 'visormatt',
   id: 'user-1',
-  updatedAt: new Date('2025-01-02'),
+  updatedAt: new Date('2025-01-02').toISOString(),
 };
 
 const renderSheet = (): RenderResult => {

@@ -28,8 +28,9 @@ interface Chunk {
   createdAt: string;
   id: string;
   iteration: number | null;
+  kind: string | null;
   planId: string;
-  taskId: string;
+  taskId: string | null;
 }
 
 const chunk = (id: string, createdAt: string, taskId: string): Chunk => {
@@ -38,6 +39,7 @@ const chunk = (id: string, createdAt: string, taskId: string): Chunk => {
     createdAt,
     id,
     iteration: null,
+    kind: null,
     planId: 'p1',
     taskId,
   };

@@ -10,7 +10,6 @@ import type { SettingsWorkspaceProfileFormProps } from '../SettingsWorkspaceProf
 import { SettingsWorkspaceProfileForm } from '../SettingsWorkspaceProfileForm';
 
 const profile: UserWorkspaceProfileFieldsFragment = {
-  __typename: 'UserWorkspaceProfileObject',
   contactDisplayName: 'Matt Scholta',
   contactEmail: 'matt@example.com',
   createdAt: '2026-01-01T00:00:00Z',

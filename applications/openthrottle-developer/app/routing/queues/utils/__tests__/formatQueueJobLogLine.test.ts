@@ -5,6 +5,12 @@ import type { QueueJobLogEvent } from '~/routing/queues/types';
 
 import { formatQueueJobLogLine } from '../formatQueueJobLogLine';
 
+/** Coerces a value to a target type without a type assertion (for invalid-input branch coverage). */
+function asMock<T>(value: unknown): T;
+function asMock(value: unknown): unknown {
+  return value;
+}
+
 const baseEvent: QueueJobLogEvent = {
   cursor: 'cursor-1',
   jobId: 'job-1',
@@ -52,7 +58,7 @@ describe('formatQueueJobLogLine', () => {
   test('renders an empty timestamp segment when the timestamp is neither a string nor a number', () => {
     const event: QueueJobLogEvent = {
       ...baseEvent,
-      timestamp: { iso: '2026-08-12T09:00:00.000Z' },
+      timestamp: asMock<string>({ iso: '2026-08-12T09:00:00.000Z' }),
     };
     expect(formatQueueJobLogLine(event)).toBe(
       ' INFO  worker  started processing',
@@ -62,7 +68,7 @@ describe('formatQueueJobLogLine', () => {
   test('accepts a numeric epoch timestamp', () => {
     const event: QueueJobLogEvent = {
       ...baseEvent,
-      timestamp: Date.parse('2026-08-12T09:00:00.000Z'),
+      timestamp: asMock<string>(Date.parse('2026-08-12T09:00:00.000Z')),
     };
     expect(formatQueueJobLogLine(event)).toBe(
       '2026-08-12T09:00:00.000Z INFO  worker  started processing',

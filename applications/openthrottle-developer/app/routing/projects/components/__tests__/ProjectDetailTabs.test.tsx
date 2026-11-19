@@ -9,7 +9,6 @@ import type { ProjectDetailTabsProps } from '../ProjectDetailTabs';
 import { ProjectDetailTabs } from '../ProjectDetailTabs';
 
 const mockProject: ProjectDetailTabsProps['project'] = {
-  __typename: 'ProjectObject',
   createdAt: '2026-01-01T00:00:00.000Z',
   description: 'A test project.',
   id: 'project-1',
@@ -21,7 +20,6 @@ const mockProject: ProjectDetailTabsProps['project'] = {
 
 const mockTasks: ProjectDetailTabsProps['tasks'] = [
   {
-    __typename: 'TaskObject',
     assignee: null,
     category: 'dev',
     createdAt: '2026-01-01T00:00:00.000Z',

@@ -12,7 +12,6 @@ const row = (
   count: number,
 ): UsageSkillUsageBySkillFragment => {
   return {
-    __typename: 'SkillUsageBySkillObject',
     abandonedCount: 0,
     avgDurationMs: null,
     count,

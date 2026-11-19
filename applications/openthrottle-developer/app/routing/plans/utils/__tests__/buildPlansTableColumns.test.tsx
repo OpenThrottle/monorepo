@@ -60,7 +60,6 @@ const buildPlan = (
   overrides: Partial<PlanCardFragment> = {},
 ): PlanCardFragment => {
   return {
-    __typename: 'PlanObject',
     assignee: null,
     author: 'visormatt',
     category: 'general',
@@ -70,6 +69,7 @@ const buildPlan = (
     id: 'plan-1',
     project: null,
     projectRelation: null,
+    scheduledRunAt: null,
     status: 'PENDING',
     summary: null,
     tags: [],

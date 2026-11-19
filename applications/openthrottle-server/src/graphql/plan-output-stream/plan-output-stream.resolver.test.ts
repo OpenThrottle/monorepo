@@ -13,7 +13,7 @@ import { PlanOutputStreamResolver } from './plan-output-stream.resolver.ts';
 
 const mockAsyncIterator = { next: vi.fn(), return: vi.fn(), throw: vi.fn() };
 const mockPubSub = {
-  asyncIterator: vi.fn().mockReturnValue(mockAsyncIterator),
+  asyncIterableIterator: vi.fn().mockReturnValue(mockAsyncIterator),
   publish: vi.fn().mockResolvedValue(undefined),
 };
 
@@ -385,7 +385,7 @@ describe('PlanOutputStreamResolver', () => {
         userId: 'user-1',
       });
 
-      expect(mockPubSub.asyncIterator).toHaveBeenCalledWith(
+      expect(mockPubSub.asyncIterableIterator).toHaveBeenCalledWith(
         `plan:${mockChunk.planId}:output`,
       );
       expect(iterator).toBe(mockAsyncIterator);

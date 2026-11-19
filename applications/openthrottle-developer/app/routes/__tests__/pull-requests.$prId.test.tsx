@@ -59,6 +59,7 @@ describe('routes/pull-requests.$prId.tsx', () => {
               baseRef: 'main',
               createdAt: '2026-01-01T00:00:00.000Z',
               headRef: 'feature-branch',
+              headSha: null,
               htmlUrl: 'https://github.com/OpenThrottle/monorepo/pull/42',
               mergedAt: null,
               number: 42,

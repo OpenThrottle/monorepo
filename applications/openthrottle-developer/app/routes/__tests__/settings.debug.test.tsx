@@ -15,7 +15,6 @@ describe('routes/settings.debug.tsx', () => {
             graphQL={{
               latencyMs: 10,
               serverHealth: {
-                __typename: 'ServerHealthObject',
                 api: 'ok',
                 database: 'ok',
                 redis: 'ok',

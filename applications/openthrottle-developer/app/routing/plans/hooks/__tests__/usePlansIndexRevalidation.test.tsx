@@ -40,6 +40,8 @@ async function renderIndexHook(options: {
   if (options.isSignedIn) {
     store.set(userAtom, {
       createdAt: '2026-01-01T00:00:00Z',
+      disabledAt: null,
+      email: null,
       githubUsername: 'developer',
       id: 'user-1',
       updatedAt: '2026-01-01T00:00:00Z',

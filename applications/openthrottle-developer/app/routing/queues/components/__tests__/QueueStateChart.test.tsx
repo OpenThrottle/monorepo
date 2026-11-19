@@ -12,7 +12,6 @@ import { QueueStateChart } from '../QueueStateChart';
 
 const mockQueues: QueueCardFragment[] = [
   {
-    __typename: 'QueueStatsObject',
     activeCount: 2,
     completedCount: 100,
     delayedCount: 1,
@@ -21,7 +20,6 @@ const mockQueues: QueueCardFragment[] = [
     waitingCount: 5,
   },
   {
-    __typename: 'QueueStatsObject',
     activeCount: 0,
     completedCount: 40,
     delayedCount: 2,

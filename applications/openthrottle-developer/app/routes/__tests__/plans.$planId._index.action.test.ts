@@ -391,7 +391,6 @@ describe('routes/plans.$planId._index action (cancelPlanRun)', () => {
 
   test('calls cancelPlanRun with plan id', async () => {
     const cancelPayload: PlanDetailCancelPlanRunMutation['cancelPlanRun'] = {
-      __typename: 'CancelPlanRunResultObject',
       activeJobIdsCouldNotCancel: [],
       cancelRequested: false,
       noMatchingJob: false,
@@ -514,7 +513,6 @@ describe('routes/plans.$planId._index action (forceSettlePlanRun)', () => {
   test('calls forceSettlePlanRun with the submitted planRunId, not the plan id', async () => {
     const settled: PlanDetailForceSettlePlanRunMutation['forceSettlePlanRun'] =
       {
-        __typename: 'PlanRunObject',
         heartbeatExpected: false,
         id: planRunId,
         isStale: false,
@@ -585,7 +583,6 @@ describe('routes/plans.$planId._index action (cancelPlanRun with planRunId)', ()
 
   test('passes planRunId through so only that scheduled run is cancelled', async () => {
     const cancelPayload: PlanDetailCancelPlanRunMutation['cancelPlanRun'] = {
-      __typename: 'CancelPlanRunResultObject',
       activeJobIdsCouldNotCancel: [],
       cancelRequested: false,
       noMatchingJob: false,

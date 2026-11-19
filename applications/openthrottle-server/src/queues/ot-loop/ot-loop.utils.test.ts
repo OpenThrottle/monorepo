@@ -12,16 +12,27 @@ import {
 
 const row = (overrides: Partial<TaskFragment> = {}): TaskFragment => {
   return {
+    assignee: null,
     category: 'implementation',
+    completedAt: null,
     createdAt: '2026-11-09T00:00:00.000Z',
     description: 'Do the thing',
+    hookRole: null,
+    hookScope: null,
+    hookSource: null,
     id: 'task-1',
+    parentTaskId: null,
     planId: 'plan-1',
+    project: null,
+    projectId: null,
     requirementsJson: JSON.stringify(['it works', '  ']),
+    skillSlug: null,
     sortOrder: 1000,
     status: 'PENDING',
+    summary: null,
     title: 'Thing',
     updatedAt: '2026-11-09T00:00:00.000Z',
+    wave: null,
     ...overrides,
   };
 };

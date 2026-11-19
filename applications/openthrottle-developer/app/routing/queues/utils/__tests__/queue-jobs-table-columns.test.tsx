@@ -62,7 +62,6 @@ const buildJob = (
   overrides: Partial<QueueJobDetailsFragment> = {},
 ): QueueJobDetailsFragment => {
   return {
-    __typename: 'JobObject',
     data: null,
     failedReason: null,
     finishedOn: null,

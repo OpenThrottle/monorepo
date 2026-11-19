@@ -13,7 +13,7 @@ import {
 } from '@openthrottle/openthrottle-agentic-utils';
 import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 
-import type { RalphPlanRunTuningInput } from '../__generated__/graphql.ts';
+import type { RalphPlanRunTuningInput } from '../__generated__/schema-types.ts';
 import {
   DEFAULT_ITERATIONS,
   DEFAULT_MODEL,

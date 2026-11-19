@@ -1,9 +1,9 @@
 import { isAuthError } from '@openthrottle/react-router-graphql';
 
-import type { ServerHealthObject } from '~/__generated__/graphql';
+import type { HealthCardFragment } from '~/__generated__/graphql';
 
 /** Health snapshot when the root loader cannot reach openthrottle-server for serverHealth. */
-export const ROOT_LOADER_UNREACHABLE_HEALTH: ServerHealthObject = {
+export const ROOT_LOADER_UNREACHABLE_HEALTH: HealthCardFragment = {
   api: 'unreachable',
   database: 'unreachable',
   redis: 'unreachable',

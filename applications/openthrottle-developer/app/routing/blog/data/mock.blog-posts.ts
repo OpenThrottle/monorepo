@@ -7,9 +7,7 @@ import type { BlogEditorPost } from '~/routing/blog/types';
 
 /** A draft last written by a person. */
 export const MOCK_HUMAN_DRAFT: BlogPostListRowFragment = {
-  __typename: 'BlogPostAdminObject',
   author: {
-    __typename: 'BlogAuthorObject',
     displayName: 'Ada Lovelace',
     slug: 'ada',
   },
@@ -24,7 +22,6 @@ export const MOCK_HUMAN_DRAFT: BlogPostListRowFragment = {
 
 /** A draft last written by the MCP service account. */
 export const MOCK_AGENT_DRAFT: BlogPostListRowFragment = {
-  __typename: 'BlogPostAdminObject',
   author: null,
   id: 'post-agent',
   lastEditedBy: 'openthrottle-mcp',
@@ -37,9 +34,7 @@ export const MOCK_AGENT_DRAFT: BlogPostListRowFragment = {
 
 /** A post scheduled for a future go-live time. */
 export const MOCK_SCHEDULED_POST: BlogPostListRowFragment = {
-  __typename: 'BlogPostAdminObject',
   author: {
-    __typename: 'BlogAuthorObject',
     displayName: 'Ada Lovelace',
     slug: 'ada',
   },
@@ -54,9 +49,8 @@ export const MOCK_SCHEDULED_POST: BlogPostListRowFragment = {
 
 /** Every author the editor's author select offers. */
 export const MOCK_BLOG_AUTHORS: GetBlogPostEditorQuery['blogAdminAuthors'] = [
-  { __typename: 'BlogAuthorObject', displayName: 'Ada Lovelace', slug: 'ada' },
+  { displayName: 'Ada Lovelace', slug: 'ada' },
   {
-    __typename: 'BlogAuthorObject',
     displayName: 'Grace Hopper',
     slug: 'grace',
   },
@@ -64,15 +58,13 @@ export const MOCK_BLOG_AUTHORS: GetBlogPostEditorQuery['blogAdminAuthors'] = [
 
 /** Every tag the editor's tag multi-select offers. */
 export const MOCK_BLOG_TAGS: GetBlogPostEditorQuery['blogAdminTags'] = [
-  { __typename: 'BlogTagObject', name: 'Engineering', slug: 'engineering' },
-  { __typename: 'BlogTagObject', name: 'Releases', slug: 'releases' },
+  { name: 'Engineering', slug: 'engineering' },
+  { name: 'Releases', slug: 'releases' },
 ];
 
 /** A draft as the `/blog/:postId` loader returns it. */
 export const MOCK_EDITOR_DRAFT: BlogEditorPost = {
-  __typename: 'BlogPostAdminObject',
   author: {
-    __typename: 'BlogAuthorObject',
     displayName: 'Ada Lovelace',
     slug: 'ada',
   },
@@ -87,9 +79,7 @@ export const MOCK_EDITOR_DRAFT: BlogEditorPost = {
   seoTitle: null,
   slug: 'hello-world',
   state: BlogPostState.Draft,
-  tags: [
-    { __typename: 'BlogTagObject', name: 'Engineering', slug: 'engineering' },
-  ],
+  tags: [{ name: 'Engineering', slug: 'engineering' }],
   title: 'Hello world',
   updatedAt: '2026-10-20T15:30:00.000Z',
 };

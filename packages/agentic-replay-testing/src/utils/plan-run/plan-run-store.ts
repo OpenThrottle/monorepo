@@ -106,7 +106,6 @@ function asExecuteGraphqlV2(impl: unknown): unknown {
  */
 export function createPlanRunStore(scenario: PlanRunScenario): PlanRunStore {
   let plan: PlanRow = {
-    __typename: 'PlanObject',
     assignee: null,
     author: 'replay',
     category: 'test',
@@ -125,21 +124,27 @@ export function createPlanRunStore(scenario: PlanRunScenario): PlanRunStore {
     updatedAt: FIXED_TIMESTAMP,
   };
   let tasks: TaskRow[] = scenario.tasks.map((task, index) => ({
-    __typename: 'TaskObject',
     assignee: null,
     category: 'test',
+    completedAt: null,
     createdAt: FIXED_TIMESTAMP,
     description: task.description,
+    hookRole: null,
+    hookScope: null,
+    hookSource: null,
     id: planRunTaskId(index),
+    parentTaskId: null,
     planId: PLAN_RUN_PLAN_ID,
     project: null,
     projectId: null,
     requirementsJson: '[]',
+    skillSlug: null,
     sortOrder: (index + 1) * 1000,
     status: 'PENDING',
     summary: null,
     title: task.title,
     updatedAt: FIXED_TIMESTAMP,
+    wave: null,
   }));
   const output: string[] = [];
   const statusChanges: PlanRunStatusChange[] = [];

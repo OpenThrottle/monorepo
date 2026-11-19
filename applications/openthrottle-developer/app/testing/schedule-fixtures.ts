@@ -15,15 +15,18 @@ export const scheduleJobFixture = (
   overrides: Partial<ScheduledJobCardFragment> = {},
 ): ScheduledJobCardFragment => {
   return {
-    __typename: 'ScheduledAgentJobObject',
     cronPattern: '0 9 * * *',
     driverId: 'claude',
     enabled: true,
     id: 'job-1',
+    intervalMs: null,
     lastRunAt: null,
     model: 'opus',
     name: 'Nightly audit',
     nextRunAt: null,
+    repository: null,
+    repositoryCheckoutId: null,
+    runAt: null,
     scheduleKind: 'cron',
     timezone: null,
     updatedAt: '2026-07-31T00:00:00.000Z',
@@ -35,13 +38,11 @@ export const scheduleInFlightRunFixture = (
   overrides: Partial<ScheduleInFlightRunFragment> = {},
 ): ScheduleInFlightRunFragment => {
   return {
-    __typename: 'ScheduledAgentJobRunObject',
     bullmqJobId: 'bull-1',
     cancelRequestedAt: null,
     driverId: 'claude',
     id: 'run-1',
     job: {
-      __typename: 'ScheduledAgentJobObject',
       id: 'job-1',
       name: 'Nightly audit',
     },
@@ -58,7 +59,6 @@ export const scheduleRunStatsFixture = (
   overrides: Partial<ScheduleRunStatsFragment> = {},
 ): ScheduleRunStatsFragment => {
   return {
-    __typename: 'ScheduledAgentJobRunStatsObject',
     cancelledCount: 0,
     failedCount: 0,
     inFlightCount: 0,

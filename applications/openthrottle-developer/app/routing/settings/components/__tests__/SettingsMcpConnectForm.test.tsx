@@ -10,7 +10,6 @@ import type { SettingsMcpConnectFormProps } from '../SettingsMcpConnectForm';
 import { SettingsMcpConnectForm } from '../SettingsMcpConnectForm';
 
 const stripeConnector: McpConnectorFieldsFragment = {
-  __typename: 'McpConnectorObject',
   authType: 'api_token',
   category: 'Payments',
   description: 'Stripe payments.',

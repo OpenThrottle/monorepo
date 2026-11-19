@@ -1,4 +1,4 @@
-import type { SearchChunk } from '~/__generated__/graphql';
+import type { GetSearchResultsQuery } from '~/__generated__/graphql';
 import { SEARCH_RESULT_COPY } from '~/routing/search/data/data.copy';
 import type {
   SearchResultContext,
@@ -8,6 +8,9 @@ import type {
 import { githubBlobHref } from '~/routing/search/utils/githubBlobHref';
 import { normalizeSource } from '~/routing/search/utils/normalizeSource';
 import { planOrTaskDetailHref } from '~/routing/search/utils/planOrTaskDetailHref';
+
+/** @description One semantic-search hit, as `getSearchResults` selects it. */
+export type SearchChunk = GetSearchResultsQuery['search']['chunks'][number];
 
 const NO_TARGET: SearchResultTarget = { kind: 'none' };
 

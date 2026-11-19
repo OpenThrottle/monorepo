@@ -1,4 +1,4 @@
-import type { ServerHealthObject } from '@openthrottle/openthrottle-developer-codegen';
+import type { HealthCardFragment } from '@openthrottle/openthrottle-developer-codegen';
 import { cn } from '@openthrottle/react-router-shadcn';
 import { ENV_SOURCE } from '@openthrottle/react-router-utils';
 import * as React from 'react';
@@ -7,7 +7,7 @@ import { Link } from 'react-router';
 import { healthValueColorClass } from '../utils/utils.global';
 
 export interface GlobalFooterProps {
-  readonly health?: ServerHealthObject;
+  readonly health?: HealthCardFragment;
 }
 
 export const GlobalFooter = (props: GlobalFooterProps): React.ReactElement => {
@@ -21,7 +21,7 @@ export const GlobalFooter = (props: GlobalFooterProps): React.ReactElement => {
 
   // Markup
   const renderStatus = (
-    key: Exclude<keyof ServerHealthObject, 'embeddings'>,
+    key: Exclude<keyof HealthCardFragment, 'embeddings'>,
   ) => {
     const color = healthValueColorClass(health?.[key]);
 

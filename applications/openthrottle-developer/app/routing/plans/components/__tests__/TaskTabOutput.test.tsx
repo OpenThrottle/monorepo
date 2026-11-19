@@ -13,11 +13,11 @@ type Chunk = TaskOutputStreamChunksQuery['planOutputStreamChunks'][number];
 
 const chunk = (overrides: Partial<Chunk>): Chunk => {
   return {
-    __typename: 'PlanOutputStreamChunkObject',
     content: 'Chunk content',
     createdAt: '2026-02-01T22:00:00.000Z',
     id: 'chunk-1',
     iteration: 1,
+    kind: null,
     planId: 'plan-1',
     taskId: 'task-1',
     ...overrides,

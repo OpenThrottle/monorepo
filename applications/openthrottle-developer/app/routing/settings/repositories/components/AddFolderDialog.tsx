@@ -14,8 +14,8 @@ import * as React from 'react';
 import { Form } from 'react-router';
 
 import type {
-  DiscoveredFolderObject,
-  WorkspacePickerCapabilitiesObject,
+  GetSettingsRepositoriesDiscoveryQuery,
+  GetSettingsRepositoriesQuery,
 } from '~/__generated__/graphql';
 import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
 import { AddFolderCandidate } from '~/routing/settings/repositories/components/AddFolderCandidate';
@@ -25,16 +25,10 @@ import { useAddFolderDialog } from '~/routing/settings/repositories/hooks/useAdd
 
 export interface AddFolderDialogProps {
   actionError?: string | null;
-  discoveredFolders: readonly Pick<
-    DiscoveredFolderObject,
-    'alreadyRegistered' | 'name' | 'path'
-  >[];
+  discoveredFolders: readonly GetSettingsRepositoriesDiscoveryQuery['discoveredFolders'][number][];
   /** The workspace-root scan is still streaming in, so an empty list means "not yet", not "none". */
   isDiscoveringFolders: boolean;
-  pickerCapabilities: Pick<
-    WorkspacePickerCapabilitiesObject,
-    'canUseNativeDialog' | 'defaultBrowsePath' | 'roots'
-  >;
+  pickerCapabilities: GetSettingsRepositoriesQuery['workspacePickerCapabilities'];
 }
 
 export const AddFolderDialog = (

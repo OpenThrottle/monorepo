@@ -186,7 +186,9 @@ export class PlanMessagesResolver {
       );
     }
 
-    return this.pubSub.asyncIterator<PlanMessage>(planMessagesTopic(planId));
+    return this.pubSub.asyncIterableIterator<PlanMessage>(
+      planMessagesTopic(planId),
+    );
   }
 
   /**

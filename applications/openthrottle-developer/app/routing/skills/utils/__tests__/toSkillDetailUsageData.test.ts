@@ -67,10 +67,10 @@ describe('toSkillDetailUsageData', () => {
     expect(result).toEqual({ available: true, byDay: [], skill: null });
   });
 
-  it('coerces a null avgDurationMs to null and a numeric lastUsedAt to a string', () => {
+  it('keeps a null avgDurationMs as null and lastUsedAt as a string', () => {
     const result = toSkillDetailUsageData({
       byDay: [],
-      bySkill: [{ ...row, avgDurationMs: null, lastUsedAt: 1723200000000 }],
+      bySkill: [{ ...row, avgDurationMs: null, lastUsedAt: '1723200000000' }],
     });
 
     expect(result).toMatchObject({

@@ -20,7 +20,6 @@ import Index from '../prompts._index';
 type PromptsIndexLoaderData = Route.ComponentProps['loaderData'];
 
 const mockPrompt: PromptCardFragment = {
-  __typename: 'CustomPromptObject',
   content: '# Test',
   createdAt: '2024-01-15T10:00:00Z',
   description: 'Route test prompt',
