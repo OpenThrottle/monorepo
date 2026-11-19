@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRedisModule } from '@openthrottle/nestjs-redis';
 import {
-  NestjsRepositoriesServerModule,
   ScheduledAgentJobRunsModule,
   ScheduledAgentJobsModule,
 } from '@openthrottle/nestjs-repositories-server';
@@ -39,7 +38,6 @@ import { ScheduledAgentJobUsageLimitResumeService } from './usage-limit-resume/u
     ScheduledAgentJobRunsModule,
     ScheduledAgentJobsModule,
     ScheduledAgentJobCheckoutPathModule,
-    NestjsRepositoriesServerModule,
     NotificationsModule,
     ScheduledAgentJobsQueueProducerModule,
   ],

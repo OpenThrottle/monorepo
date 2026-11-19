@@ -7,15 +7,15 @@ import './user-preferences.input.ts';
 
 import { Module } from '@nestjs/common';
 import {
-  NestjsRepositoriesServerModule,
   RolesModule,
+  UserPreferencesModule,
 } from '@openthrottle/nestjs-repositories-server';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import { UserPreferencesResolver } from './user-preferences.resolver.ts';
 
 @Module({
-  imports: [RolesModule, NestjsRepositoriesServerModule],
+  imports: [RolesModule, UserPreferencesModule],
   providers: [GqlPermissionsGuard, UserPreferencesResolver],
 })
 export class UserPreferencesGraphqlModule {}

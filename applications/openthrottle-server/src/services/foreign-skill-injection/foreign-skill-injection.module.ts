@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
-import { NestjsRepositoriesServerModule } from '@openthrottle/nestjs-repositories-server';
+import { RepositoryCheckoutsModule } from '@openthrottle/nestjs-repositories-server';
 
 import { ForeignSkillInjectionLifecycleService } from './lifecycle/lifecycle.service.ts';
 import { ForeignSkillMaterializationService } from './materialization/materialization.service.ts';
@@ -21,7 +21,7 @@ import { WorktreeSkillOverlayService } from './worktree-skill-overlay/worktree-s
     ForeignSkillMaterializationService,
     WorktreeSkillOverlayService,
   ],
-  imports: [LoggerModule, NestjsRepositoriesServerModule],
+  imports: [LoggerModule, RepositoryCheckoutsModule],
   providers: [
     ForeignSkillInjectionLifecycleService,
     ForeignSkillMaterializationService,

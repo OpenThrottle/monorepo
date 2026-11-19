@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
-import { NestjsRepositoriesServerModule } from '@openthrottle/nestjs-repositories-server';
 import { NestjsVectorSearchModule } from '@openthrottle/nestjs-vector-search';
 
 import { EmbedderModule } from '../../services/embedder/embedder.module.ts';
@@ -13,7 +12,7 @@ import { CodeIndexQueueProducerModule } from './producer/producer.module.ts';
  * @description Processor half of the code-index queue (WorkerHost). Loaded only
  * under PROCESS_ROLE worker/all; enqueue-only consumers import
  * {@link CodeIndexQueueProducerModule} instead. Imports NestjsVectorSearchModule
- * (CodeSearchService, embedding through the server's single EmbedderService) and NestjsRepositoriesServerModule
+ * (CodeSearchService, embedding through the server's single EmbedderService) and WorkspaceLocalRepositoriesModule
  * (WorkspaceLocalRepositoriesService) so the processor can resolve a
  * repository's filesystem path and run the engine index.
  */
@@ -23,7 +22,6 @@ import { CodeIndexQueueProducerModule } from './producer/producer.module.ts';
     CodeIndexQueueProducerModule,
     LoggerModule,
     WorkspaceLocalRepositoriesModule,
-    NestjsRepositoriesServerModule,
     NestjsVectorSearchModule.register({
       embedder: EmbedderService,
       imports: [EmbedderModule],
