@@ -13,13 +13,13 @@ Platform-specific prebuilt binaries (packages that declare `os`/`cpu`, e.g.
 `@rollup/rollup-linux-x64-gnu`, `fsevents`) are omitted: which ones install depends on
 the host OS, and each shares the license of the cross-platform toolchain already listed.
 
-**2150** third-party packages.
+**2139** third-party packages.
 
 ## License summary
 
 | License | Packages |
 | --- | --- |
-| MIT | 1849 |
+| MIT | 1841 |
 | Apache-2.0 | 101 |
 | ISC | 79 |
 | BSD-3-Clause | 57 |
@@ -28,7 +28,6 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | Unlicense | 4 |
 | (WTFPL OR MIT) | 2 |
 | LicenseRef-PolyForm-Shield-1.0.0 | 2 |
-| MIT-0 | 2 |
 | MPL-2.0 | 2 |
 | (AFL-2.1 OR BSD-3-Clause) | 1 |
 | (Apache-2.0 AND BSD-3-Clause) | 1 |
@@ -39,7 +38,6 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | (MPL-2.0 OR Apache-2.0) | 1 |
 | 0BSD | 1 |
 | CC-BY-4.0 | 1 |
-| CC0-1.0 | 1 |
 | MIT AND ISC | 1 |
 | Python-2.0 | 1 |
 | WTFPL | 1 |
@@ -49,7 +47,6 @@ the host OS, and each shares the license of the cross-platform toolchain already
 
 | Package | Version(s) | License | Attribution |
 | --- | --- | --- | --- |
-| `@acemir/cssom` | 0.9.31 | MIT | [Nikita Vasilyev](https://github.com/acemir/CSSOM#readme) |
 | `@adobe/css-tools` | 4.5.0 | MIT | [TJ Holowaychuk](https://github.com/adobe/css-tools#readme) |
 | `@agentclientprotocol/sdk` | 2.2.0 | Apache-2.0 | [Zed Industries](https://github.com/agentclientprotocol/typescript-sdk#readme) |
 | `@angular-devkit/core` | 22.1.5 | MIT | [Angular Authors](https://github.com/angular/angular-cli) |
@@ -81,34 +78,30 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@apollo/utils.withrequired` | 3.0.0 | MIT | [Apollo](https://github.com/apollographql/apollo-utils#readme) |
 | `@ardatan/relay-compiler` | 13.0.2 | MIT | [source](https://relay.dev) |
 | `@as-integrations/express5` | 1.1.2 | MIT | [Apollo](https://github.com/apollo-server-integrations/apollo-server-integration-express5) |
-| `@asamuzakjp/css-color` | 5.1.11 | MIT | [asamuzaK](https://github.com/asamuzaK/cssColor#readme) |
-| `@asamuzakjp/dom-selector` | 6.8.1 | MIT | [asamuzaK](https://github.com/asamuzaK/domSelector#readme) |
-| `@asamuzakjp/generational-cache` | 1.0.1 | MIT | [asamuzaK](https://github.com/asamuzaK/generationalCache) |
-| `@asamuzakjp/nwsapi` | 2.3.9 | MIT | [Diego Perini](http://javascript.nwbox.com/nwsapi/) |
 | `@babel/code-frame` | 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-code-frame) |
 | `@babel/compat-data` | 7.29.7 | MIT | [The Babel Team](https://github.com/babel/babel#readme) |
-| `@babel/core` | 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-core) |
-| `@babel/generator` | 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-generator) |
+| `@babel/core` | 7.29.13, 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-core) |
+| `@babel/generator` | 7.29.14 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-generator) |
 | `@babel/helper-annotate-as-pure` | 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-helper-annotate-as-pure) |
-| `@babel/helper-compilation-targets` | 7.29.7 | MIT | [The Babel Team](https://github.com/babel/babel#readme) |
-| `@babel/helper-create-class-features-plugin` | 7.29.7 | MIT | [The Babel Team](https://github.com/babel/babel#readme) |
+| `@babel/helper-compilation-targets` | 7.29.13 | MIT | [The Babel Team](https://github.com/babel/babel#readme) |
+| `@babel/helper-create-class-features-plugin` | 7.29.13 | MIT | [The Babel Team](https://github.com/babel/babel#readme) |
 | `@babel/helper-create-regexp-features-plugin` | 7.29.7 | MIT | [The Babel Team](https://github.com/babel/babel#readme) |
 | `@babel/helper-define-polyfill-provider` | 0.6.8 | MIT | [source](https://github.com/babel/babel-polyfills#readme) |
 | `@babel/helper-globals` | 7.29.7 | MIT | [The Babel Team](https://github.com/babel/babel#readme) |
-| `@babel/helper-member-expression-to-functions` | 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-helper-member-expression-to-functions) |
+| `@babel/helper-member-expression-to-functions` | 7.29.14 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-helper-member-expression-to-functions) |
 | `@babel/helper-module-imports` | 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-helper-module-imports) |
-| `@babel/helper-module-transforms` | 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-helper-module-transforms) |
+| `@babel/helper-module-transforms` | 7.29.14 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-helper-module-transforms) |
 | `@babel/helper-optimise-call-expression` | 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-helper-optimise-call-expression) |
 | `@babel/helper-plugin-utils` | 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-helper-plugin-utils) |
 | `@babel/helper-remap-async-to-generator` | 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-helper-remap-async-to-generator) |
 | `@babel/helper-replace-supers` | 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-helper-replace-supers) |
-| `@babel/helper-skip-transparent-expression-wrappers` | 7.29.7 | MIT | [The Babel Team](https://github.com/babel/babel#readme) |
-| `@babel/helper-string-parser` | 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-helper-string-parser) |
+| `@babel/helper-skip-transparent-expression-wrappers` | 7.29.13 | MIT | [The Babel Team](https://github.com/babel/babel#readme) |
+| `@babel/helper-string-parser` | 7.29.14, 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-helper-string-parser) |
 | `@babel/helper-validator-identifier` | 7.29.7 | MIT | [The Babel Team](https://github.com/babel/babel#readme) |
 | `@babel/helper-validator-option` | 7.29.7 | MIT | [The Babel Team](https://github.com/babel/babel#readme) |
 | `@babel/helper-wrap-function` | 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-helper-wrap-function) |
-| `@babel/helpers` | 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-helpers) |
-| `@babel/parser` | 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-parser) |
+| `@babel/helpers` | 7.29.14 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-helpers) |
+| `@babel/parser` | 7.29.14, 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-parser) |
 | `@babel/plugin-bugfix-firefox-class-in-computed-class-key` | 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-plugin-bugfix-firefox-class-in-computed-class-key) |
 | `@babel/plugin-bugfix-safari-class-field-initializer-scope` | 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-plugin-bugfix-safari-class-field-initializer-scope) |
 | `@babel/plugin-bugfix-safari-id-destructuring-collision-in-function-expression` | 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-plugin-bugfix-safari-id-destructuring-collision-in-function-expression) |
@@ -161,7 +154,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@babel/plugin-transform-logical-assignment-operators` | 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-plugin-transform-logical-assignment-operators) |
 | `@babel/plugin-transform-member-expression-literals` | 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-plugin-transform-member-expression-literals) |
 | `@babel/plugin-transform-modules-amd` | 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-plugin-transform-modules-amd) |
-| `@babel/plugin-transform-modules-commonjs` | 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-plugin-transform-modules-commonjs) |
+| `@babel/plugin-transform-modules-commonjs` | 7.29.14 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-plugin-transform-modules-commonjs) |
 | `@babel/plugin-transform-modules-systemjs` | 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-plugin-transform-modules-systemjs) |
 | `@babel/plugin-transform-modules-umd` | 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-plugin-transform-modules-umd) |
 | `@babel/plugin-transform-named-capturing-groups-regex` | 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-plugin-transform-named-capturing-groups-regex) |
@@ -189,7 +182,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@babel/plugin-transform-sticky-regex` | 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-plugin-transform-sticky-regex) |
 | `@babel/plugin-transform-template-literals` | 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-plugin-transform-template-literals) |
 | `@babel/plugin-transform-typeof-symbol` | 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-plugin-transform-typeof-symbol) |
-| `@babel/plugin-transform-typescript` | 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-plugin-transform-typescript) |
+| `@babel/plugin-transform-typescript` | 7.29.9 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-plugin-transform-typescript) |
 | `@babel/plugin-transform-unicode-escapes` | 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-plugin-transform-unicode-escapes) |
 | `@babel/plugin-transform-unicode-property-regex` | 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-plugin-transform-unicode-property-regex) |
 | `@babel/plugin-transform-unicode-regex` | 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-plugin-transform-unicode-regex) |
@@ -198,14 +191,13 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@babel/preset-modules` | 0.1.6-no-external-plugins | MIT | [source](https://github.com/babel/preset-modules#readme) |
 | `@babel/preset-react` | 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-preset-react) |
 | `@babel/preset-typescript` | 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-preset-typescript) |
-| `@babel/runtime` | 7.29.7, 8.0.0 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-runtime) |
+| `@babel/runtime` | 7.29.14, 7.29.7, 8.1.2 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-runtime) |
 | `@babel/template` | 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-template) |
-| `@babel/traverse` | 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-traverse) |
-| `@babel/types` | 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-types) |
+| `@babel/traverse` | 7.29.14 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-traverse) |
+| `@babel/types` | 7.29.14, 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-types) |
 | `@bcoe/v8-coverage` | 1.0.2 | MIT | [Charles Samborski](https://github.com/bcoe/v8-coverage#readme) |
 | `@bkrem/react-transition-group` | 1.3.5 | BSD-3-Clause | [source](https://github.com/bkrem/react-transition-group#readme) |
 | `@borewit/text-codec` | 0.2.2 | MIT | [Borewit](https://github.com/Borewit/text-codec#readme) |
-| `@bramus/specificity` | 2.4.2 | MIT | [Bramus Van Damme](https://github.com/bramus/specificity#readme) |
 | `@browserbasehq/sdk` | 2.16.0 | Apache-2.0 | [Browserbase](https://github.com/browserbase/sdk-node#readme) |
 | `@browserbasehq/stagehand` | 1.14.0 | MIT | [Browserbase](https://github.com/browserbase/stagehand#readme) |
 | `@bufbuild/protobuf` | 2.13.0 | (Apache-2.0 AND BSD-3-Clause) | [source](https://protobufes.com/) |
@@ -240,12 +232,6 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@conventional-changelog/git-client` | 3.1.0 | MIT | [Dan Onoshko](https://conventional-changelog.js.org/git-client/) |
 | `@conventional-changelog/template` | 1.2.1 | MIT | [Dan Onoshko](https://conventional-changelog.js.org/template/) |
 | `@cspotcode/source-map-support` | 0.8.1 | MIT | [source](https://github.com/cspotcode/node-source-map-support#readme) |
-| `@csstools/color-helpers` | 6.1.0 | MIT-0 | [source](https://github.com/csstools/postcss-plugins/tree/main/packages/color-helpers#readme) |
-| `@csstools/css-calc` | 3.3.0 | MIT | [source](https://github.com/csstools/postcss-plugins/tree/main/packages/css-calc#readme) |
-| `@csstools/css-color-parser` | 4.1.10 | MIT | [source](https://github.com/csstools/postcss-plugins/tree/main/packages/css-color-parser#readme) |
-| `@csstools/css-parser-algorithms` | 4.0.0 | MIT | [source](https://github.com/csstools/postcss-plugins/tree/main/packages/css-parser-algorithms#readme) |
-| `@csstools/css-syntax-patches-for-csstree` | 1.1.7 | MIT-0 | [source](https://github.com/csstools/postcss-plugins/tree/main/packages/css-syntax-patches-for-csstree#readme) |
-| `@csstools/css-tokenizer` | 4.0.0 | MIT | [source](https://github.com/csstools/postcss-plugins/tree/main/packages/css-tokenizer#readme) |
 | `@dabh/diagnostics` | 2.0.8 | MIT | [Arnout Kazemier](https://github.com/DABH/diagnostics) |
 | `@date-fns/tz` | 1.5.0 | MIT | [Sasha Koss](https://github.com/date-fns/date-fns#readme) |
 | `@electron-internal/extract-zip` | 1.0.8 | MIT | [source](https://github.com/electron/extract-zip#readme) |
@@ -270,7 +256,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@eslint/js` | 10.0.1 | MIT | [source](https://eslint.org) |
 | `@eslint/object-schema` | 3.0.5 | Apache-2.0 | [Nicholas C. Zakas](https://github.com/eslint/rewrite/tree/main/packages/object-schema#readme) |
 | `@eslint/plugin-kit` | 0.7.3 | Apache-2.0 | [Nicholas C. Zakas](https://github.com/eslint/rewrite/tree/main/packages/plugin-kit#readme) |
-| `@exodus/bytes` | 1.15.1 | MIT | [Exodus Movement, Inc.](https://github.com/ExodusOSS/bytes) |
+| `@exodus/bytes` | 1.16.0 | MIT | [Exodus Movement, Inc.](https://github.com/ExodusOSS/bytes) |
 | `@faker-js/faker` | 10.5.0 | MIT | [source](https://fakerjs.dev) |
 | `@fastify/busboy` | 3.2.0 | MIT | [Brian White](https://github.com/fastify/busboy#readme) |
 | `@floating-ui/core` | 1.8.0 | MIT | [atomiks](https://floating-ui.com) |
@@ -458,9 +444,9 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@opentelemetry/sdk-trace` | 2.10.0 | Apache-2.0 | [OpenTelemetry Authors](https://github.com/open-telemetry/opentelemetry-js/tree/main/packages/sdk-trace) |
 | `@opentelemetry/sdk-trace-base` | 2.10.0 | Apache-2.0 | [OpenTelemetry Authors](https://github.com/open-telemetry/opentelemetry-js/tree/main/packages/opentelemetry-sdk-trace-base) |
 | `@opentelemetry/semantic-conventions` | 1.43.0 | Apache-2.0 | [OpenTelemetry Authors](https://github.com/open-telemetry/opentelemetry-js/tree/main/semantic-conventions) |
-| `@oxc-project/types` | 0.127.0, 0.156.0 | MIT | [Boshen and oxc contributors](https://oxc.rs) |
-| `@paper-design/shaders` | 0.0.76 | LicenseRef-PolyForm-Shield-1.0.0 |  |
-| `@paper-design/shaders-react` | 0.0.76 | LicenseRef-PolyForm-Shield-1.0.0 |  |
+| `@oxc-project/types` | 0.121.0, 0.127.0, 0.156.0 | MIT | [Boshen and oxc contributors](https://oxc.rs) |
+| `@paper-design/shaders` | 0.0.82 | LicenseRef-PolyForm-Shield-1.0.0 |  |
+| `@paper-design/shaders-react` | 0.0.82 | LicenseRef-PolyForm-Shield-1.0.0 |  |
 | `@parcel/watcher` | 2.6.0 | MIT | [source](https://github.com/parcel-bundler/watcher#readme) |
 | `@paulirish/trace_engine` | 0.0.65 | BSD-3-Clause |  |
 | `@peculiar/asn1-schema` | 2.11.1 | MIT | [PeculiarVentures, LLC](https://github.com/PeculiarVentures/asn1-schema/tree/master/packages/schema#readme) |
@@ -488,8 +474,8 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@pnpm/text.comments-parser` | 1000.0.0 | MIT | [source](https://github.com/pnpm/pnpm/blob/main/text/comments-parser#readme) |
 | `@pnpm/types` | 1001.3.0 | MIT | [source](https://github.com/pnpm/pnpm/tree/main/packages/types#readme) |
 | `@pnpm/write-project-manifest` | 1000.0.16 | MIT | [source](https://github.com/pnpm/pnpm/tree/main/pkg-manifest/write-project-manifest#readme) |
-| `@preact/signals` | 2.10.0 | MIT | [source](https://preactjs.com) |
-| `@preact/signals-core` | 1.14.4 | MIT | [source](https://preactjs.com) |
+| `@preact/signals` | 2.11.4 | MIT | [source](https://preactjs.com) |
+| `@preact/signals-core` | 1.14.5 | MIT | [source](https://preactjs.com) |
 | `@protobufjs/aspromise` | 1.1.2 | BSD-3-Clause | [Daniel Wirtz](https://github.com/dcodeIO/protobuf.js#readme) |
 | `@protobufjs/base64` | 1.1.2 | BSD-3-Clause | [Daniel Wirtz](https://github.com/dcodeIO/protobuf.js#readme) |
 | `@protobufjs/codegen` | 2.0.5 | BSD-3-Clause | [Daniel Wirtz](https://github.com/dcodeIO/protobuf.js#readme) |
@@ -502,98 +488,99 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@protobufjs/utf8` | 1.1.2 | BSD-3-Clause | [Daniel Wirtz](https://github.com/protobufjs/protobuf.js#readme) |
 | `@puppeteer/browsers` | 3.0.6 | Apache-2.0 | [The Chromium Authors](https://github.com/puppeteer/puppeteer/tree/main#readme) |
 | `@radix-ui/number` | 1.1.3 | MIT | [source](https://radix-ui.com/primitives) |
-| `@radix-ui/primitive` | 1.1.7 | MIT | [source](https://radix-ui.com/primitives) |
-| `@radix-ui/react-accessible-icon` | 1.1.15 | MIT | [source](https://radix-ui.com/primitives) |
-| `@radix-ui/react-accordion` | 1.2.20 | MIT | [source](https://radix-ui.com/primitives) |
-| `@radix-ui/react-alert-dialog` | 1.1.23 | MIT | [source](https://radix-ui.com/primitives) |
-| `@radix-ui/react-arrow` | 1.1.15 | MIT | [source](https://radix-ui.com/primitives) |
-| `@radix-ui/react-aspect-ratio` | 1.1.15 | MIT | [source](https://radix-ui.com/primitives) |
-| `@radix-ui/react-avatar` | 1.2.6 | MIT | [source](https://radix-ui.com/primitives) |
-| `@radix-ui/react-checkbox` | 1.3.11 | MIT | [source](https://radix-ui.com/primitives) |
-| `@radix-ui/react-collapsible` | 1.1.20 | MIT | [source](https://radix-ui.com/primitives) |
-| `@radix-ui/react-collection` | 1.1.15 | MIT | [source](https://radix-ui.com/primitives) |
+| `@radix-ui/primitive` | 1.1.7, 1.2.0 | MIT | [source](https://radix-ui.com/primitives) |
+| `@radix-ui/react-accessible-icon` | 1.2.0 | MIT | [source](https://radix-ui.com/primitives) |
+| `@radix-ui/react-accordion` | 1.2.20, 1.3.1 | MIT | [source](https://radix-ui.com/primitives) |
+| `@radix-ui/react-alert-dialog` | 1.2.1 | MIT | [source](https://radix-ui.com/primitives) |
+| `@radix-ui/react-arrow` | 1.1.17 | MIT | [source](https://radix-ui.com/primitives) |
+| `@radix-ui/react-aspect-ratio` | 1.2.0 | MIT | [source](https://radix-ui.com/primitives) |
+| `@radix-ui/react-avatar` | 1.3.1 | MIT | [source](https://radix-ui.com/primitives) |
+| `@radix-ui/react-checkbox` | 1.4.1 | MIT | [source](https://radix-ui.com/primitives) |
+| `@radix-ui/react-collapsible` | 1.1.20, 1.2.1 | MIT | [source](https://radix-ui.com/primitives) |
+| `@radix-ui/react-collection` | 1.1.15, 1.2.0 | MIT | [source](https://radix-ui.com/primitives) |
 | `@radix-ui/react-compose-refs` | 1.1.5 | MIT | [source](https://radix-ui.com/primitives) |
-| `@radix-ui/react-context` | 1.2.2 | MIT | [source](https://radix-ui.com/primitives) |
-| `@radix-ui/react-context-menu` | 2.3.7 | MIT | [source](https://radix-ui.com/primitives) |
-| `@radix-ui/react-dialog` | 1.1.23 | MIT | [source](https://radix-ui.com/primitives) |
-| `@radix-ui/react-direction` | 1.1.4 | MIT | [source](https://radix-ui.com/primitives) |
-| `@radix-ui/react-dismissable-layer` | 1.1.19 | MIT | [source](https://radix-ui.com/primitives) |
-| `@radix-ui/react-dropdown-menu` | 2.1.24 | MIT | [source](https://radix-ui.com/primitives) |
-| `@radix-ui/react-focus-guards` | 1.1.6 | MIT | [source](https://radix-ui.com/primitives) |
-| `@radix-ui/react-focus-scope` | 1.1.16 | MIT | [source](https://radix-ui.com/primitives) |
-| `@radix-ui/react-form` | 0.1.16 | MIT | [source](https://radix-ui.com/primitives) |
-| `@radix-ui/react-hover-card` | 1.1.23 | MIT | [source](https://radix-ui.com/primitives) |
+| `@radix-ui/react-context` | 1.2.2, 1.3.0 | MIT | [source](https://radix-ui.com/primitives) |
+| `@radix-ui/react-context-menu` | 2.4.1 | MIT | [source](https://radix-ui.com/primitives) |
+| `@radix-ui/react-dialog` | 1.3.1 | MIT | [source](https://radix-ui.com/primitives) |
+| `@radix-ui/react-direction` | 1.1.4, 1.2.0 | MIT | [source](https://radix-ui.com/primitives) |
+| `@radix-ui/react-dismissable-layer` | 1.2.1 | MIT | [source](https://radix-ui.com/primitives) |
+| `@radix-ui/react-dropdown-menu` | 2.2.1 | MIT | [source](https://radix-ui.com/primitives) |
+| `@radix-ui/react-focus-guards` | 1.2.0 | MIT | [source](https://radix-ui.com/primitives) |
+| `@radix-ui/react-focus-scope` | 1.3.1 | MIT | [source](https://radix-ui.com/primitives) |
+| `@radix-ui/react-form` | 0.3.0 | MIT | [source](https://radix-ui.com/primitives) |
+| `@radix-ui/react-hover-card` | 1.2.1 | MIT | [source](https://radix-ui.com/primitives) |
 | `@radix-ui/react-id` | 1.1.4 | MIT | [source](https://radix-ui.com/primitives) |
-| `@radix-ui/react-label` | 2.1.15 | MIT | [source](https://radix-ui.com/primitives) |
-| `@radix-ui/react-menu` | 2.1.24 | MIT | [source](https://radix-ui.com/primitives) |
-| `@radix-ui/react-menubar` | 1.1.24 | MIT | [source](https://radix-ui.com/primitives) |
-| `@radix-ui/react-navigation-menu` | 1.2.22 | MIT | [source](https://radix-ui.com/primitives) |
-| `@radix-ui/react-one-time-password-field` | 0.1.16 | MIT | [source](https://radix-ui.com/primitives) |
-| `@radix-ui/react-password-toggle-field` | 0.1.11 | MIT | [source](https://radix-ui.com/primitives) |
-| `@radix-ui/react-popover` | 1.1.23 | MIT | [source](https://radix-ui.com/primitives) |
-| `@radix-ui/react-popper` | 1.3.7 | MIT | [source](https://radix-ui.com/primitives) |
-| `@radix-ui/react-portal` | 1.1.17 | MIT | [source](https://radix-ui.com/primitives) |
-| `@radix-ui/react-presence` | 1.1.10 | MIT | [source](https://radix-ui.com/primitives) |
-| `@radix-ui/react-primitive` | 2.1.10 | MIT | [source](https://radix-ui.com/primitives) |
-| `@radix-ui/react-progress` | 1.1.16 | MIT | [source](https://radix-ui.com/primitives) |
-| `@radix-ui/react-radio-group` | 1.4.7 | MIT | [source](https://radix-ui.com/primitives) |
-| `@radix-ui/react-roving-focus` | 1.1.19 | MIT | [source](https://radix-ui.com/primitives) |
-| `@radix-ui/react-scroll-area` | 1.2.18 | MIT | [source](https://radix-ui.com/primitives) |
-| `@radix-ui/react-select` | 2.3.7 | MIT | [source](https://radix-ui.com/primitives) |
-| `@radix-ui/react-separator` | 1.1.15 | MIT | [source](https://radix-ui.com/primitives) |
-| `@radix-ui/react-slider` | 1.4.7 | MIT | [source](https://radix-ui.com/primitives) |
-| `@radix-ui/react-slot` | 1.3.3 | MIT | [source](https://radix-ui.com/primitives) |
-| `@radix-ui/react-switch` | 1.3.7 | MIT | [source](https://radix-ui.com/primitives) |
-| `@radix-ui/react-tabs` | 1.1.21 | MIT | [source](https://radix-ui.com/primitives) |
-| `@radix-ui/react-toast` | 1.2.23 | MIT | [source](https://radix-ui.com/primitives) |
-| `@radix-ui/react-toggle` | 1.1.18 | MIT | [source](https://radix-ui.com/primitives) |
-| `@radix-ui/react-toggle-group` | 1.1.19 | MIT | [source](https://radix-ui.com/primitives) |
-| `@radix-ui/react-toolbar` | 1.1.19 | MIT | [source](https://radix-ui.com/primitives) |
-| `@radix-ui/react-tooltip` | 1.2.16 | MIT | [source](https://radix-ui.com/primitives) |
-| `@radix-ui/react-use-callback-ref` | 1.1.4 | MIT | [source](https://radix-ui.com/primitives) |
-| `@radix-ui/react-use-controllable-state` | 1.2.6 | MIT | [source](https://radix-ui.com/primitives) |
+| `@radix-ui/react-label` | 2.1.17 | MIT | [source](https://radix-ui.com/primitives) |
+| `@radix-ui/react-menu` | 2.2.1 | MIT | [source](https://radix-ui.com/primitives) |
+| `@radix-ui/react-menubar` | 1.2.1 | MIT | [source](https://radix-ui.com/primitives) |
+| `@radix-ui/react-navigation-menu` | 1.4.1 | MIT | [source](https://radix-ui.com/primitives) |
+| `@radix-ui/react-one-time-password-field` | 0.2.1 | MIT | [source](https://radix-ui.com/primitives) |
+| `@radix-ui/react-password-toggle-field` | 0.2.1 | MIT | [source](https://radix-ui.com/primitives) |
+| `@radix-ui/react-popover` | 1.3.1 | MIT | [source](https://radix-ui.com/primitives) |
+| `@radix-ui/react-popper` | 1.4.0 | MIT | [source](https://radix-ui.com/primitives) |
+| `@radix-ui/react-portal` | 1.2.0 | MIT | [source](https://radix-ui.com/primitives) |
+| `@radix-ui/react-presence` | 1.1.10, 1.1.11 | MIT | [source](https://radix-ui.com/primitives) |
+| `@radix-ui/react-primitive` | 2.1.10, 2.2.0 | MIT | [source](https://radix-ui.com/primitives) |
+| `@radix-ui/react-progress` | 1.2.1 | MIT | [source](https://radix-ui.com/primitives) |
+| `@radix-ui/react-radio-group` | 1.5.1 | MIT | [source](https://radix-ui.com/primitives) |
+| `@radix-ui/react-roving-focus` | 1.2.1 | MIT | [source](https://radix-ui.com/primitives) |
+| `@radix-ui/react-scroll-area` | 1.4.0 | MIT | [source](https://radix-ui.com/primitives) |
+| `@radix-ui/react-select` | 2.4.1 | MIT | [source](https://radix-ui.com/primitives) |
+| `@radix-ui/react-separator` | 1.2.0 | MIT | [source](https://radix-ui.com/primitives) |
+| `@radix-ui/react-slider` | 1.6.1 | MIT | [source](https://radix-ui.com/primitives) |
+| `@radix-ui/react-slot` | 1.3.3, 1.5.0 | MIT | [source](https://radix-ui.com/primitives) |
+| `@radix-ui/react-switch` | 1.4.1 | MIT | [source](https://radix-ui.com/primitives) |
+| `@radix-ui/react-tabs` | 1.2.1 | MIT | [source](https://radix-ui.com/primitives) |
+| `@radix-ui/react-toast` | 1.3.1 | MIT | [source](https://radix-ui.com/primitives) |
+| `@radix-ui/react-toggle` | 1.2.1 | MIT | [source](https://radix-ui.com/primitives) |
+| `@radix-ui/react-toggle-group` | 1.2.1 | MIT | [source](https://radix-ui.com/primitives) |
+| `@radix-ui/react-toolbar` | 1.2.1 | MIT | [source](https://radix-ui.com/primitives) |
+| `@radix-ui/react-tooltip` | 1.4.1 | MIT | [source](https://radix-ui.com/primitives) |
+| `@radix-ui/react-use-callback-ref` | 1.1.5 | MIT | [source](https://radix-ui.com/primitives) |
+| `@radix-ui/react-use-controllable-state` | 1.2.6, 1.3.0 | MIT | [source](https://radix-ui.com/primitives) |
 | `@radix-ui/react-use-effect-event` | 0.0.5 | MIT | [source](https://radix-ui.com/primitives) |
-| `@radix-ui/react-use-escape-keydown` | 1.1.5 | MIT | [source](https://radix-ui.com/primitives) |
+| `@radix-ui/react-use-escape-keydown` | 1.1.6 | MIT | [source](https://radix-ui.com/primitives) |
 | `@radix-ui/react-use-is-hydrated` | 0.1.3 | MIT | [source](https://radix-ui.com/primitives) |
 | `@radix-ui/react-use-layout-effect` | 1.1.4 | MIT | [source](https://radix-ui.com/primitives) |
 | `@radix-ui/react-use-previous` | 1.1.4 | MIT | [source](https://radix-ui.com/primitives) |
 | `@radix-ui/react-use-rect` | 1.1.4 | MIT | [source](https://radix-ui.com/primitives) |
-| `@radix-ui/react-use-size` | 1.1.4 | MIT | [source](https://radix-ui.com/primitives) |
-| `@radix-ui/react-visually-hidden` | 1.2.11 | MIT | [source](https://radix-ui.com/primitives) |
+| `@radix-ui/react-use-size` | 1.1.5 | MIT | [source](https://radix-ui.com/primitives) |
+| `@radix-ui/react-visually-hidden` | 1.2.13 | MIT | [source](https://radix-ui.com/primitives) |
 | `@radix-ui/rect` | 1.1.3 | MIT | [source](https://radix-ui.com/primitives) |
 | `@react-dnd/asap` | 5.0.2 | MIT | [source](https://github.com/react-dnd/react-dnd#readme) |
 | `@react-dnd/invariant` | 4.0.2 | MIT | [Andres Suarez](https://github.com/react-dnd/react-dnd#readme) |
 | `@react-dnd/shallowequal` | 4.0.2 | MIT | [Alberto Leal](https://github.com/react-dnd/react-dnd#readme) |
-| `@react-router/dev` | 8.0.1 | MIT | [source](https://reactrouter.com) |
-| `@react-router/express` | 8.0.1 | MIT | [source](https://github.com/remix-run/react-router#readme) |
-| `@react-router/fs-routes` | 8.0.1 | MIT | [source](https://github.com/remix-run/react-router#readme) |
-| `@react-router/node` | 8.0.1 | MIT | [source](https://github.com/remix-run/react-router#readme) |
-| `@react-router/serve` | 8.0.1 | MIT | [source](https://github.com/remix-run/react-router#readme) |
+| `@react-router/dev` | 8.5.1 | MIT | [source](https://reactrouter.com) |
+| `@react-router/express` | 8.5.1 | MIT | [source](https://github.com/remix-run/react-router#readme) |
+| `@react-router/fs-routes` | 8.5.1 | MIT | [source](https://github.com/remix-run/react-router#readme) |
+| `@react-router/node` | 8.5.1 | MIT | [source](https://github.com/remix-run/react-router#readme) |
+| `@react-router/serve` | 8.5.1 | MIT | [source](https://github.com/remix-run/react-router#readme) |
 | `@redis/client` | 1.6.1 | MIT | [source](https://github.com/redis/node-redis/tree/master/packages/client) |
 | `@reduxjs/toolkit` | 2.12.0 | MIT | [Mark Erikson](https://redux-toolkit.js.org) |
 | `@rekog/mcp-nest` | 1.9.11 | MIT | [source](https://github.com/rekog-labs/MCP-Nest#readme) |
-| `@remix-run/node-fetch-server` | 0.13.3 | MIT | [Michael Jackson](https://github.com/remix-run/remix/tree/main/packages/node-fetch-server#readme) |
+| `@remix-run/node-fetch-server` | 0.14.2 | MIT | [Michael Jackson](https://github.com/remix-run/remix/tree/main/packages/node-fetch-server#readme) |
+| `@remix-run/route-pattern` | 0.22.1 | MIT | [source](https://github.com/remix-run/remix/tree/main/packages/route-pattern#readme) |
 | `@repeaterjs/repeater` | 3.1.0 | MIT | [source](https://github.com/repeaterjs/repeater#readme) |
-| `@rolldown/pluginutils` | 1.0.1 | MIT | [source](https://github.com/rolldown/plugins/tree/main/packages/pluginutils#readme) |
-| `@rollup/pluginutils` | 5.4.0 | MIT | [Rich Harris](https://github.com/rollup/plugins/tree/master/packages/pluginutils#readme) |
-| `@rrweb/record` | 2.1.1 | MIT | [source](https://github.com/rrweb-io/rrweb/tree/main/packages/@rrweb/record#readme) |
-| `@rrweb/types` | 2.1.1 | MIT | [source](https://github.com/rrweb-io/rrweb/tree/main/packages/@rrweb/types#readme) |
-| `@rrweb/utils` | 2.1.1 | MIT | [source](https://github.com/rrweb-io/rrweb/tree/main/packages/@rrweb/utils#readme) |
+| `@rolldown/pluginutils` | 1.1.0 | MIT | [source](https://github.com/rolldown/plugins/tree/main/packages/pluginutils#readme) |
+| `@rollup/pluginutils` | 5.4.0, 5.5.1 | MIT | [Rich Harris](https://github.com/rollup/plugins/tree/master/packages/pluginutils#readme) |
+| `@rrweb/record` | 2.2.2 | MIT | [source](https://github.com/rrweb-io/rrweb/tree/main/packages/@rrweb/record#readme) |
+| `@rrweb/types` | 2.2.2 | MIT | [source](https://github.com/rrweb-io/rrweb/tree/main/packages/@rrweb/types#readme) |
+| `@rrweb/utils` | 2.2.2 | MIT | [source](https://github.com/rrweb-io/rrweb/tree/main/packages/@rrweb/utils#readme) |
 | `@rushstack/node-core-library` | 5.23.3 | MIT | [source](https://github.com/microsoft/rushstack#readme) |
 | `@rushstack/problem-matcher` | 0.2.1 | MIT | [source](https://github.com/microsoft/rushstack#readme) |
 | `@rushstack/rig-package` | 0.7.3 | MIT | [source](https://github.com/microsoft/rushstack#readme) |
 | `@rushstack/terminal` | 0.24.2 | MIT | [source](https://github.com/microsoft/rushstack#readme) |
 | `@rushstack/ts-command-line` | 5.3.12 | MIT | [source](https://github.com/microsoft/rushstack#readme) |
-| `@schedule-x/calendar` | 4.6.1 | MIT | [Tom Österlund](https://schedule-x.dev) |
-| `@schedule-x/calendar-controls` | 4.6.1 | MIT | [Tom Österlund](https://schedule-x.dev) |
-| `@schedule-x/current-time` | 4.6.1 | MIT | [Tom Österlund](https://schedule-x.dev) |
+| `@schedule-x/calendar` | 4.9.1 | MIT | [Tom Österlund](https://schedule-x.dev) |
+| `@schedule-x/calendar-controls` | 4.9.1 | MIT | [Tom Österlund](https://schedule-x.dev) |
+| `@schedule-x/current-time` | 4.9.1 | MIT | [Tom Österlund](https://schedule-x.dev) |
 | `@schedule-x/drag-and-drop` | 3.7.3 | MIT | [Tom Österlund](https://schedule-x.dev) |
-| `@schedule-x/event-modal` | 4.6.1 | MIT | [Tom Österlund](https://schedule-x.dev) |
-| `@schedule-x/event-recurrence` | 4.6.1 | MIT | [Tom Österlund](https://schedule-x.dev) |
-| `@schedule-x/events-service` | 4.6.1 | MIT | [Tom Österlund](https://schedule-x.dev) |
+| `@schedule-x/event-modal` | 4.9.1 | MIT | [Tom Österlund](https://schedule-x.dev) |
+| `@schedule-x/event-recurrence` | 4.9.1 | MIT | [Tom Österlund](https://schedule-x.dev) |
+| `@schedule-x/events-service` | 4.9.1 | MIT | [Tom Österlund](https://schedule-x.dev) |
 | `@schedule-x/react` | 4.1.0 | MIT | [source](https://schedule-x.dev) |
 | `@schedule-x/resize` | 3.7.3 | MIT | [Tom Österlund](https://schedule-x.dev) |
-| `@schedule-x/theme-shadcn` | 4.6.1 | MIT | [Tom Österlund](https://schedule-x.dev) |
+| `@schedule-x/theme-shadcn` | 4.9.1 | MIT | [Tom Österlund](https://schedule-x.dev) |
 | `@sec-ant/readable-stream` | 0.4.1 | MIT | [Ze-Zheng Wu](https://github.com/Sec-ant/readable-stream) |
 | `@sentry/conventions` | 0.16.0 | MIT | [source](https://github.com/getsentry/sentry-conventions#readme) |
 | `@sentry/core` | 10.69.0 | MIT | [Sentry](https://github.com/getsentry/sentry-javascript/tree/master/packages/core) |
@@ -620,14 +607,13 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@stablelib/base64` | 1.0.1 | MIT | [Dmitry Chestnykh](https://github.com/StableLib/stablelib/tree/master/packages/base64) |
 | `@standard-schema/spec` | 1.1.0 | MIT | [Colin McDonnell](https://standardschema.dev) |
 | `@standard-schema/utils` | 0.3.0 | MIT | [Fabian Hiller](https://github.com/standard-schema/standard-schema#readme) |
-| `@storybook/addon-docs` | 10.5.7 | MIT | [source](https://github.com/storybookjs/storybook/tree/next/code/addons/docs) |
-| `@storybook/builder-vite` | 10.5.7 | MIT | [Eirik Sletteberg](https://github.com/storybookjs/storybook/tree/next/code/builders/builder-vite/#readme) |
-| `@storybook/csf-plugin` | 10.5.7 | MIT | [source](https://github.com/storybookjs/storybook/tree/next/code/lib/csf-plugin) |
+| `@storybook/addon-docs` | 10.6.7 | MIT | [source](https://github.com/storybookjs/storybook/tree/next/code/addons/docs) |
+| `@storybook/builder-vite` | 10.6.7 | MIT | [Eirik Sletteberg](https://github.com/storybookjs/storybook/tree/next/code/builders/builder-vite/#readme) |
 | `@storybook/global` | 5.0.0 | MIT | [Norbert](https://github.com/storybookjs/global) |
-| `@storybook/icons` | 2.1.0 | MIT | [cdedreuille](https://github.com/storybookjs/icons#readme) |
-| `@storybook/react` | 10.5.7 | MIT | [source](https://github.com/storybookjs/storybook/tree/next/code/renderers/react) |
-| `@storybook/react-dom-shim` | 10.5.7 | MIT | [source](https://github.com/storybookjs/storybook/tree/next/code/lib/react-dom-shim) |
-| `@storybook/react-vite` | 10.5.7 | MIT | [source](https://github.com/storybookjs/storybook/tree/next/code/frameworks/react-vite) |
+| `@storybook/icons` | 2.2.0 | MIT | [cdedreuille](https://github.com/storybookjs/icons#readme) |
+| `@storybook/react` | 10.6.7 | MIT | [source](https://github.com/storybookjs/storybook/tree/next/code/renderers/react) |
+| `@storybook/react-dom-shim` | 10.6.7 | MIT | [source](https://github.com/storybookjs/storybook/tree/next/code/lib/react-dom-shim) |
+| `@storybook/react-vite` | 10.6.7 | MIT | [source](https://github.com/storybookjs/storybook/tree/next/code/frameworks/react-vite) |
 | `@swc-node/core` | 1.15.0 | MIT | [LongYinan](https://github.com/swc-project/swc-node) |
 | `@swc-node/register` | 1.11.1 | MIT | [LongYinan](https://github.com/swc-project/swc-node) |
 | `@swc-node/sourcemap-support` | 0.6.1 | MIT | [LongYinan](https://github.com/swc-project/swc-node) |
@@ -637,9 +623,10 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@swc/helpers` | 0.5.23 | Apache-2.0 | [강동윤](https://swc.rs) |
 | `@swc/types` | 0.1.28 | Apache-2.0 | [강동윤](https://swc.rs) |
 | `@szmarczak/http-timer` | 4.0.6 | MIT | [Szymon Marczak](https://github.com/szmarczak/http-timer#readme) |
-| `@tailwindcss/node` | 4.3.3 | MIT | [source](https://tailwindcss.com) |
-| `@tailwindcss/oxide` | 4.3.3 | MIT | [source](https://github.com/tailwindlabs/tailwindcss#readme) |
-| `@tailwindcss/vite` | 4.3.3 | MIT | [source](https://tailwindcss.com) |
+| `@tailwindcss/node` | 4.3.5 | MIT | [source](https://tailwindcss.com) |
+| `@tailwindcss/oxide` | 4.3.5 | MIT | [source](https://github.com/tailwindlabs/tailwindcss#readme) |
+| `@tailwindcss/oxide-wasm32-wasi` | 4.3.5 | MIT | [source](https://github.com/tailwindlabs/tailwindcss#readme) |
+| `@tailwindcss/vite` | 4.3.5 | MIT | [source](https://tailwindcss.com) |
 | `@tanstack/devtools` | 0.10.14 | MIT | [Tanner Linsley](https://tanstack.com/devtools) |
 | `@tanstack/devtools-client` | 0.0.5, 0.0.6 | MIT | [Tanner Linsley](https://tanstack.com/devtools) |
 | `@tanstack/devtools-event-bus` | 0.4.0, 0.4.1 | MIT | [Tanner Linsley](https://tanstack.com/devtools) |
@@ -647,12 +634,14 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@tanstack/devtools-ui` | 0.5.0 | MIT | [Tanner Linsley](https://tanstack.com/devtools) |
 | `@tanstack/devtools-vite` | 0.4.1 | MIT | [Tanner Linsley](https://tanstack.com/devtools) |
 | `@tanstack/react-devtools` | 0.9.13 | MIT | [Tanner Linsley](https://tanstack.com/devtools) |
-| `@tanstack/react-table` | 8.21.3 | MIT | [Tanner Linsley](https://tanstack.com/table) |
-| `@tanstack/table-core` | 8.21.3 | MIT | [Tanner Linsley](https://tanstack.com/table) |
-| `@testing-library/dom` | 10.4.1 | MIT | [Kent C. Dodds](https://github.com/testing-library/dom-testing-library#readme) |
-| `@testing-library/jest-dom` | 6.9.1 | MIT | [Ernesto Garcia](https://github.com/testing-library/jest-dom#readme) |
-| `@testing-library/react` | 16.3.2 | MIT | [Kent C. Dodds](https://github.com/testing-library/react-testing-library#readme) |
-| `@testing-library/user-event` | 14.6.1 | MIT | [Giorgio Polvara](https://github.com/testing-library/user-event#readme) |
+| `@tanstack/react-store` | 0.11.2 | MIT | [Tanner Linsley](https://tanstack.com/store) |
+| `@tanstack/react-table` | 9.3.1 | MIT | [Tanner Linsley](https://tanstack.com/table) |
+| `@tanstack/store` | 0.11.2 | MIT | [Tanner Linsley](https://tanstack.com/store) |
+| `@tanstack/table-core` | 9.3.1 | MIT | [Tanner Linsley](https://tanstack.com/table) |
+| `@testing-library/dom` | 10.4.2 | MIT | [Kent C. Dodds](https://github.com/testing-library/dom-testing-library#readme) |
+| `@testing-library/jest-dom` | 6.9.1, 7.0.1 | MIT | [Ernesto Garcia](https://github.com/testing-library/jest-dom#readme) |
+| `@testing-library/react` | 16.3.3 | MIT | [Kent C. Dodds](https://github.com/testing-library/react-testing-library#readme) |
+| `@testing-library/user-event` | 14.6.9 | MIT | [Giorgio Polvara](https://github.com/testing-library/user-event#readme) |
 | `@tokenizer/inflate` | 0.4.1 | MIT | [Borewit](https://github.com/Borewit/tokenizer-inflate#readme) |
 | `@tokenizer/token` | 0.3.0 | MIT | [Borewit](https://github.com/Borewit/tokenizer-token#readme) |
 | `@tootallnate/once` | 2.0.1 | MIT | [Nathan Rajlich](https://github.com/TooTallNate/once#readme) |
@@ -692,7 +681,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@types/doctrine` | 0.0.9 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/doctrine) |
 | `@types/esquery` | 1.5.4 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/esquery) |
 | `@types/esrecurse` | 4.3.1 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/esrecurse) |
-| `@types/estree` | 1.0.9 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/estree) |
+| `@types/estree` | 1.0.10, 1.0.9 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/estree) |
 | `@types/estree-jsx` | 1.0.5 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/estree-jsx) |
 | `@types/express` | 5.0.6 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/express) |
 | `@types/express-serve-static-core` | 5.1.2 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/express-serve-static-core) |
@@ -728,10 +717,10 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@types/prompts` | 2.4.9 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/prompts) |
 | `@types/qs` | 6.15.1 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/qs) |
 | `@types/range-parser` | 1.2.7 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/range-parser) |
-| `@types/react` | 19.2.7 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/react) |
-| `@types/react-dom` | 19.2.4 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/react-dom) |
+| `@types/react` | 19.3.0 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/react) |
+| `@types/react-dom` | 19.3.0 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/react-dom) |
 | `@types/request` | 2.48.13 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/request) |
-| `@types/resolve` | 1.20.2 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/resolve) |
+| `@types/resolve` | 1.20.6 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/resolve) |
 | `@types/responselike` | 1.0.3 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/responselike) |
 | `@types/sanitize-html` | 2.16.1 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/sanitize-html) |
 | `@types/send` | 1.2.1 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/send) |
@@ -761,10 +750,10 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@typescript/typescript6` | 6.0.2 | Apache-2.0 | [Microsoft Corp.](https://www.typescriptlang.org/) |
 | `@ungap/structured-clone` | 1.3.3 | ISC | [Andrea Giammarchi](https://github.com/ungap/structured-clone#readme) |
 | `@vercel/analytics` | 2.0.1 | MIT | [source](https://github.com/vercel/analytics#readme) |
-| `@vercel/nft` | 1.11.0 | MIT | [source](https://github.com/vercel/nft#readme) |
-| `@vercel/react-router` | 1.3.1 | Apache-2.0 | [source](https://github.com/vercel/vercel#readme) |
-| `@vercel/static-config` | 3.4.0 | Apache-2.0 | [source](https://github.com/vercel/vercel#readme) |
-| `@vitejs/plugin-react` | 6.0.5 | MIT | [Evan You](https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#readme) |
+| `@vercel/nft` | 1.11.1 | MIT | [source](https://github.com/vercel/nft#readme) |
+| `@vercel/react-router` | 1.3.7 | Apache-2.0 | [source](https://github.com/vercel/vercel#readme) |
+| `@vercel/static-config` | 3.4.4 | Apache-2.0 | [source](https://github.com/vercel/vercel#readme) |
+| `@vitejs/plugin-react` | 6.3.0 | MIT | [Evan You](https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#readme) |
 | `@vitest/coverage-v8` | 5.1.0 | MIT | [Anthony Fu](https://vitest.dev/guide/coverage) |
 | `@vitest/expect` | 3.2.4 | MIT | [source](https://github.com/vitest-dev/vitest/tree/main/packages/expect#readme) |
 | `@vitest/istanbul-lib-coverage` | 2.1.0 | MIT | [Vitest Team](https://vitest.dev/) |
@@ -821,7 +810,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `abbrev` | 3.0.1, 4.0.0 | ISC | [GitHub Inc.](https://github.com/npm/abbrev-js#readme) |
 | `abort-controller` | 3.0.0 | MIT | [Toru Nagashima](https://github.com/mysticatea/abort-controller#readme) |
 | `accepts` | 1.3.8, 2.0.0 | MIT | [source](https://github.com/jshttp/accepts#readme) |
-| `acorn` | 8.18.0 | MIT | [source](https://github.com/acornjs/acorn) |
+| `acorn` | 8.18.0, 8.19.0 | MIT | [source](https://github.com/acornjs/acorn) |
 | `acorn-import-attributes` | 1.9.5 | MIT | [Sven Sauleau](https://github.com/xtuc/acorn-import-attributes#readme) |
 | `acorn-jsx` | 5.3.2 | MIT | [source](https://github.com/acornjs/acorn-jsx) |
 | `acorn-walk` | 8.3.5 | MIT | [source](https://github.com/acornjs/acorn) |
@@ -844,7 +833,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `app-builder-lib` | 26.18.0 | MIT | [Vladimir Krivosheev](https://github.com/electron-userland/electron-builder) |
 | `app-root-path` | 3.1.0 | MIT | [Chris Morrell](https://github.com/inxilpro/node-app-root-path) |
 | `append-field` | 1.0.0 | MIT | [Linus Unnebäck](https://github.com/LinusU/node-append-field#readme) |
-| `arg` | 4.1.3, 5.0.2 | MIT | [Josh Junon](https://github.com/vercel/arg#readme) |
+| `arg` | 4.1.3 | MIT | [Josh Junon](https://github.com/zeit/arg#readme) |
 | `argparse` | 1.0.10 | MIT | [source](https://github.com/nodeca/argparse#readme) |
 | `argparse` | 2.0.1 | Python-2.0 | [source](https://github.com/nodeca/argparse#readme) |
 | `argue-cli` | 3.1.0 | MIT | [dangreen](https://github.com/TrigenSoftware/Argue#readme) |
@@ -863,7 +852,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `arrify` | 1.0.1, 2.0.1 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/arrify#readme) |
 | `asn1js` | 3.1.0 | BSD-3-Clause | [Yury Strozhevsky](https://github.com/PeculiarVentures/ASN1.js#readme) |
 | `assertion-error` | 2.0.1 | MIT | [Jake Luer](https://github.com/chaijs/assertion-error#readme) |
-| `ast-types` | 0.16.1 | MIT | [Ben Newman](http://github.com/benjamn/ast-types) |
+| `ast-types` | 0.16.3 | MIT | [Ben Newman](https://github.com/benjamn/ast-types) |
 | `ast-v8-to-istanbul` | 1.0.7 | MIT | [Ari Perkkiö](https://github.com/AriPerkkio/ast-v8-to-istanbul) |
 | `astring` | 1.9.0 | MIT | [David Bonnet](https://github.com/davidbonnet/astring#readme) |
 | `async` | 3.2.6 | MIT | [Caolan McMahon](https://caolan.github.io/async/) |
@@ -894,16 +883,17 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `babel-preset-current-node-syntax` | 1.2.0 | MIT | [Nicolò Ribaudo](https://github.com/nicolo-ribaudo/babel-preset-current-node-syntax#readme) |
 | `babel-preset-jest` | 30.4.0 | MIT | [source](https://github.com/jestjs/jest#readme) |
 | `bail` | 2.0.2 | MIT | [Titus Wormer](https://github.com/wooorm/bail#readme) |
-| `balanced-match` | 1.0.2, 4.0.3 | MIT | [source](https://github.com/juliangruber/balanced-match#readme) |
+| `balanced-match` | 1.0.2, 4.0.3, 4.0.4 | MIT | [source](https://github.com/juliangruber/balanced-match#readme) |
 | `bare-events` | 2.9.1 | Apache-2.0 | [Holepunch](https://github.com/holepunchto/bare-events#readme) |
 | `base64-arraybuffer` | 1.0.2 | MIT | [Niklas von Hertzen](https://github.com/niklasvh/base64-arraybuffer) |
 | `base64-js` | 1.5.1 | MIT | [T. Jameson Little](https://github.com/beatgammit/base64-js) |
 | `base64id` | 2.0.0 | MIT | [Kristian Faeldt](https://github.com/faeldt/base64id#readme) |
 | `base64url` | 3.0.1 | MIT | [Brian J Brennan](https://github.com/brianloveswords/base64url#readme) |
-| `baseline-browser-mapping` | 2.11.8 | Apache-2.0 | [source](https://github.com/web-platform-dx/baseline-browser-mapping#readme) |
+| `baseline-browser-mapping` | 2.11.36 | Apache-2.0 | [source](https://github.com/web-platform-dx/baseline-browser-mapping#readme) |
 | `basic-auth` | 2.0.1 | MIT | [source](https://github.com/jshttp/basic-auth#readme) |
+| `bcp-47` | 2.1.2 | MIT | [Titus Wormer](https://github.com/wooorm/bcp-47#readme) |
+| `bcp-47-match` | 2.0.3 | MIT | [Titus Wormer](https://github.com/wooorm/bcp-47-match#readme) |
 | `bcrypt` | 6.0.0 | MIT | [Nick Campbell](https://github.com/kelektiv/node.bcrypt.js#readme) |
-| `bidi-js` | 1.0.3 | MIT | [Jason Johnston](https://github.com/lojjic/bidi-js#readme) |
 | `bignumber.js` | 9.3.1 | MIT | [Michael Mclaughlin](https://github.com/MikeMcl/bignumber.js#readme) |
 | `binary-extensions` | 2.3.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/binary-extensions#readme) |
 | `binary-version` | 7.1.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/binary-version#readme) |
@@ -915,9 +905,9 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `bole` | 5.0.29 | MIT | [Rod Vagg](https://github.com/rvagg/bole#readme) |
 | `boolbase` | 1.0.0 | ISC | [Felix Boehm](https://github.com/fb55/boolbase) |
 | `boolean` | 3.2.0 | MIT | [source](https://github.com/thenativeweb/boolean#readme) |
-| `brace-expansion` | 1.1.18, 2.1.4, 5.0.12 | MIT | [source](https://github.com/juliangruber/brace-expansion#readme) |
+| `brace-expansion` | 1.1.22, 2.1.8, 5.0.12, 5.0.13 | MIT | [source](https://github.com/juliangruber/brace-expansion#readme) |
 | `braces` | 3.0.3 | MIT | [Jon Schlinkert](https://github.com/micromatch/braces) |
-| `browserslist` | 4.28.7 | MIT | [Andrey Sitnik](https://github.com/browserslist/browserslist#readme) |
+| `browserslist` | 4.29.5 | MIT | [Andrey Sitnik](https://github.com/browserslist/browserslist#readme) |
 | `bser` | 2.1.1 | Apache-2.0 | [Wez Furlong](https://facebook.github.io/watchman/docs/bser.html) |
 | `buffer` | 5.7.1, 6.0.3 | MIT | [Feross Aboukhadijeh](https://github.com/feross/buffer) |
 | `buffer-equal-constant-time` | 1.0.1 | BSD-3-Clause | [GoInstant Inc., a salesforce.com company](https://github.com/goinstant/buffer-equal-constant-time#readme) |
@@ -926,7 +916,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `builder-util` | 26.16.0 | MIT | [Vladimir Krivosheev](https://github.com/electron-userland/electron-builder) |
 | `builder-util-runtime` | 9.7.0 | MIT | [Vladimir Krivosheev](https://github.com/electron-userland/electron-builder) |
 | `bullmq` | 5.81.3 | MIT | [Taskforce.sh Inc.](https://bullmq.io/) |
-| `bundle-name` | 4.1.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/bundle-name#readme) |
+| `bundle-name` | 4.1.1 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/bundle-name#readme) |
 | `busboy` | 1.6.0 | MIT | [Brian White](https://github.com/mscdex/busboy#readme) |
 | `byte-counter` | 0.1.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/byte-counter#readme) |
 | `bytes` | 3.1.2 | MIT | [TJ Holowaychuk](https://github.com/visionmedia/bytes.js#readme) |
@@ -941,7 +931,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `callsites` | 3.1.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/callsites#readme) |
 | `camel-case` | 4.1.2 | MIT | [Blake Embrey](https://github.com/blakeembrey/change-case/tree/master/packages/camel-case#readme) |
 | `camelcase` | 5.3.1, 6.3.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/camelcase#readme) |
-| `caniuse-lite` | 1.0.30001806 | CC-BY-4.0 | [Ben Briggs](https://github.com/browserslist/caniuse-lite#readme) |
+| `caniuse-lite` | 1.0.30001826 | CC-BY-4.0 | [Ben Briggs](https://github.com/browserslist/caniuse-lite#readme) |
 | `capital-case` | 1.0.4 | MIT | [Blake Embrey](https://github.com/blakeembrey/change-case/tree/master/packages/capital-case#readme) |
 | `ccount` | 2.0.1 | MIT | [Titus Wormer](https://github.com/wooorm/ccount#readme) |
 | `chai` | 5.3.3, 6.3.0 | MIT | [Jake Luer](http://chaijs.com) |
@@ -999,10 +989,10 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `compare-version` | 0.1.2 | MIT | [Kevin Mårtensson](https://github.com/kevva/compare-version#readme) |
 | `compare-versions` | 6.1.1 | MIT | [Ole Michelsen](https://github.com/omichelsen/compare-versions#readme) |
 | `compressible` | 2.0.18 | MIT | [source](https://github.com/jshttp/compressible#readme) |
-| `compression` | 1.8.1 | MIT | [source](https://github.com/expressjs/compression#readme) |
+| `compression` | 1.8.2 | MIT | [source](https://github.com/expressjs/compression#readme) |
 | `concat-map` | 0.0.1 | MIT | [James Halliday](https://github.com/substack/node-concat-map#readme) |
 | `concat-stream` | 2.0.0 | MIT | [Max Ogden](https://github.com/maxogden/concat-stream#readme) |
-| `confbox` | 0.1.8, 0.2.4 | MIT | [source](https://github.com/unjs/confbox#readme) |
+| `confbox` | 0.1.8, 0.2.4, 0.3.2 | MIT | [source](https://github.com/unjs/confbox#readme) |
 | `configstore` | 7.1.0 | BSD-2-Clause | [Sindre Sorhus](https://github.com/sindresorhus/configstore#readme) |
 | `confusing-browser-globals` | 1.0.11 | MIT | [source](https://github.com/facebook/create-react-app#readme) |
 | `consola` | 3.4.2 | MIT | [source](https://github.com/unjs/consola#readme) |
@@ -1026,15 +1016,13 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `cosmiconfig-typescript-loader` | 6.3.0 | MIT | [Alex Miller](https://github.com/Codex-/cosmiconfig-typescript-loader#readme) |
 | `create-require` | 1.1.1 | MIT | [source](https://github.com/nuxt-contrib/create-require#readme) |
 | `cron-parser` | 4.9.0 | MIT | [Harri Siirak](https://github.com/harrisiirak/cron-parser#readme) |
-| `cronstrue` | 3.24.0 | MIT | [Brady Holt](https://github.com/bradymholt/cronstrue) |
+| `cronstrue` | 3.39.0 | MIT | [Brady Holt](https://github.com/bradymholt/cronstrue) |
 | `cross-inspect` | 1.0.1 | MIT | [Arda TANRIKULU](https://github.com/ardatan/graphql-tools#readme) |
 | `cross-spawn` | 7.0.6 | MIT | [André Cruz](https://github.com/moxystudio/node-cross-spawn) |
 | `csp_evaluator` | 1.1.8 | Apache-2.0 | [Lukas Weichselbaum](https://csp-evaluator.withgoogle.com/) |
 | `css-select` | 5.2.2 | BSD-2-Clause | [Felix Boehm](https://github.com/fb55/css-select#readme) |
-| `css-tree` | 3.2.1 | MIT | [Roman Dvornov](https://github.com/csstree/csstree#readme) |
 | `css-what` | 6.2.2 | BSD-2-Clause | [Felix Böhm](https://github.com/fb55/css-what#readme) |
 | `css.escape` | 1.5.1 | MIT | [Mathias Bynens](https://mths.be/cssescape) |
-| `cssstyle` | 6.2.0 | MIT | [source](https://github.com/jsdom/cssstyle#readme) |
 | `csstype` | 3.2.3 | MIT | [Fredrik Nicol](https://github.com/frenic/csstype#readme) |
 | `d3-array` | 3.2.4 | ISC | [Mike Bostock](https://d3js.org/d3-array/) |
 | `d3-color` | 3.1.0 | ISC | [Mike Bostock](https://d3js.org/d3-color/) |
@@ -1056,7 +1044,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `d3-transition` | 3.0.1 | ISC | [Mike Bostock](https://d3js.org/d3-transition/) |
 | `d3-zoom` | 3.0.0 | ISC | [Mike Bostock](https://d3js.org/d3-zoom/) |
 | `data-uri-to-buffer` | 4.0.1 | MIT | [Nathan Rajlich](https://github.com/TooTallNate/node-data-uri-to-buffer) |
-| `data-urls` | 7.0.0 | MIT | [Domenic Denicola](https://github.com/jsdom/data-urls#readme) |
+| `data-urls` | 8.0.0 | MIT | [Domenic Denicola](https://github.com/jsdom/data-urls#readme) |
 | `data-view-buffer` | 1.0.2 | MIT | [Jordan Harband](https://github.com/inspect-js/data-view-buffer#readme) |
 | `data-view-byte-length` | 1.0.2 | MIT | [Jordan Harband](https://github.com/inspect-js/data-view-byte-length#readme) |
 | `data-view-byte-offset` | 1.0.1 | MIT | [Jordan Harband](https://github.com/inspect-js/data-view-byte-offset#readme) |
@@ -1074,7 +1062,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `deep-eql` | 5.0.2 | MIT | [Jake Luer](https://github.com/chaijs/deep-eql#readme) |
 | `deep-is` | 0.1.4 | MIT | [Thorsten Lorenz](https://github.com/thlorenz/deep-is#readme) |
 | `deepmerge` | 2.2.1, 4.3.1 | MIT | [source](https://github.com/TehShrike/deepmerge) |
-| `default-browser` | 5.5.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/default-browser#readme) |
+| `default-browser` | 5.5.1 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/default-browser#readme) |
 | `default-browser-id` | 5.0.1 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/default-browser-id#readme) |
 | `defaults` | 1.0.4 | MIT | [Elijah Insua](https://github.com/sindresorhus/node-defaults#readme) |
 | `defer-to-connect` | 2.0.1 | MIT | [Szymon Marczak](https://github.com/szmarczak/defer-to-connect#readme) |
@@ -1086,6 +1074,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `depd` | 2.0.0 | MIT | [Douglas Christopher Wilson](https://github.com/dougwilson/nodejs-depd#readme) |
 | `dependency-graph` | 1.0.0 | MIT | [Jim Riecken](https://github.com/jriecken/dependency-graph#readme) |
 | `dequal` | 2.0.3 | MIT | [Luke Edwards](https://github.com/lukeed/dequal#readme) |
+| `destroy` | 1.2.0 | MIT | [Jonathan Ong](https://github.com/stream-utils/destroy#readme) |
 | `detect-indent` | 6.1.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/detect-indent#readme) |
 | `detect-libc` | 2.1.2 | Apache-2.0 | [Lovell Fuller](https://github.com/lovell/detect-libc#readme) |
 | `detect-newline` | 3.1.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/detect-newline#readme) |
@@ -1105,7 +1094,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `dom-serializer` | 2.0.0 | MIT | [Felix Boehm](https://github.com/cheeriojs/dom-serializer#readme) |
 | `domelementtype` | 2.3.0 | BSD-2-Clause | [Felix Boehm](https://github.com/fb55/domelementtype#readme) |
 | `domhandler` | 5.0.3 | BSD-2-Clause | [Felix Boehm](https://github.com/fb55/domhandler#readme) |
-| `dompurify` | 3.2.7 | (MPL-2.0 OR Apache-2.0) | [Dr.-Ing. Mario Heiderich, Cure53](https://github.com/cure53/DOMPurify) |
+| `dompurify` | 3.4.15 | (MPL-2.0 OR Apache-2.0) | [Dr.-Ing. Mario Heiderich, Cure53](https://github.com/cure53/DOMPurify) |
 | `domutils` | 3.2.2 | BSD-2-Clause | [Felix Boehm](https://github.com/fb55/domutils#readme) |
 | `dot-case` | 3.0.4 | MIT | [Blake Embrey](https://github.com/blakeembrey/change-case/tree/master/packages/dot-case#readme) |
 | `dot-prop` | 5.3.0, 9.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/dot-prop#readme) |
@@ -1118,11 +1107,11 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `ecdsa-sig-formatter` | 1.0.11 | Apache-2.0 | [D2L Corporation](https://github.com/Brightspace/node-ecdsa-sig-formatter#readme) |
 | `ee-first` | 1.1.1 | MIT | [Jonathan Ong](https://github.com/jonathanong/ee-first#readme) |
 | `ejs` | 3.1.10, 5.0.1, 5.0.2 | Apache-2.0 | [Matthew Eernisse](https://github.com/mde/ejs) |
-| `electron` | 45.2.1 | MIT | [Electron Community](https://github.com/electron/electron#readme) |
+| `electron` | 45.3.0 | MIT | [Electron Community](https://github.com/electron/electron#readme) |
 | `electron-builder` | 26.18.0 | MIT | [Vladimir Krivosheev](https://github.com/electron-userland/electron-builder) |
 | `electron-builder-squirrel-windows` | 26.18.0 | MIT | [Vladimir Krivosheev](https://github.com/electron-userland/electron-builder) |
 | `electron-publish` | 26.18.0 | MIT | [Vladimir Krivosheev](https://github.com/electron-userland/electron-builder) |
-| `electron-to-chromium` | 1.5.399 | ISC | [Kilian Valkhof](https://github.com/Kilian/electron-to-chromium#readme) |
+| `electron-to-chromium` | 1.5.481 | ISC | [Kilian Valkhof](https://github.com/Kilian/electron-to-chromium#readme) |
 | `electron-vite` | 6.0.0 | MIT | [Alex Wei](https://electron-vite.org) |
 | `electron-winstaller` | 5.4.0 | MIT | [source](https://github.com/electron/windows-installer#readme) |
 | `embla-carousel` | 8.6.0 | MIT | [David Jerleke](https://www.embla-carousel.com) |
@@ -1131,7 +1120,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `emittery` | 0.13.1 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/emittery#readme) |
 | `emoji-regex` | 10.6.0, 8.0.0, 9.2.2 | MIT | [Mathias Bynens](https://mths.be/emoji-regex) |
 | `emojilib` | 2.4.0 | MIT | [Mu-An Chiou](https://github.com/muan/emojilib#readme) |
-| `empathic` | 2.0.1 | MIT | [Luke Edwards](https://github.com/lukeed/empathic#readme) |
+| `empathic` | 2.1.0 | MIT | [Luke Edwards](https://github.com/lukeed/empathic#readme) |
 | `enabled` | 2.0.0 | MIT | [Arnout Kazemier](https://github.com/3rd-Eden/enabled#readme) |
 | `encodeurl` | 2.0.0 | MIT | [source](https://github.com/pillarjs/encodeurl#readme) |
 | `encoding` | 0.1.13 | MIT | [Andris Reinman](https://github.com/andris9/encoding#readme) |
@@ -1139,9 +1128,9 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `end-of-stream` | 1.4.5 | MIT | [Mathias Buus](https://github.com/mafintosh/end-of-stream) |
 | `engine.io` | 6.6.9 | MIT | [Guillermo Rauch](https://github.com/socketio/socket.io/tree/main/packages/engine.io#readme) |
 | `engine.io-parser` | 5.2.3 | MIT | [source](https://github.com/socketio/socket.io/tree/main/packages/engine.io-parser#readme) |
-| `enhanced-resolve` | 5.24.5 | MIT | [Tobias Koppers @sokra](https://github.com/webpack/enhanced-resolve#readme) |
+| `enhanced-resolve` | 5.26.1 | MIT | [Tobias Koppers @sokra](https://github.com/webpack/enhanced-resolve#readme) |
 | `enquirer` | 2.4.1 | MIT | [Jon Schlinkert](https://github.com/enquirer/enquirer) |
-| `entities` | 4.5.0, 6.0.1, 7.0.1, 8.0.0 | BSD-2-Clause | [Felix Boehm](https://github.com/fb55/entities#readme) |
+| `entities` | 4.5.0, 6.0.1, 7.0.1, 9.0.0 | BSD-2-Clause | [Felix Boehm](https://github.com/fb55/entities#readme) |
 | `env-paths` | 2.2.1, 3.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/env-paths#readme) |
 | `environment` | 1.1.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/environment#readme) |
 | `err-code` | 2.0.3 | MIT | [IndigoUnited](https://github.com/IndigoUnited/js-err-code#readme) |
@@ -1161,7 +1150,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `es6-error` | 4.1.1 | MIT | [Ben Youngblood](https://github.com/bjyoungblood/es6-error) |
 | `esast-util-from-estree` | 2.0.0 | MIT | [Titus Wormer](https://github.com/syntax-tree/esast-util-from-estree#readme) |
 | `esast-util-from-js` | 2.0.1 | MIT | [Titus Wormer](https://github.com/syntax-tree/esast-util-from-js#readme) |
-| `esbuild` | 0.28.1 | MIT | [source](https://github.com/evanw/esbuild#readme) |
+| `esbuild` | 0.28.1, 0.28.2 | MIT | [source](https://github.com/evanw/esbuild#readme) |
 | `escalade` | 3.2.0 | MIT | [Luke Edwards](https://github.com/lukeed/escalade#readme) |
 | `escape-html` | 1.0.3 | MIT | [source](https://github.com/component/escape-html#readme) |
 | `escape-string-regexp` | 1.0.5, 2.0.0, 4.0.0, 5.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/escape-string-regexp#readme) |
@@ -1205,7 +1194,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `express` | 5.2.1, 5.3.0 | MIT | [TJ Holowaychuk](https://expressjs.com/) |
 | `express-basic-auth` | 1.2.1 | MIT | [LionC](https://github.com/LionC/express-basic-auth#readme) |
 | `express-rate-limit` | 8.6.1 | MIT | [Nathan Friedly](https://github.com/express-rate-limit/express-rate-limit) |
-| `exsolve` | 1.1.1 | MIT | [source](https://github.com/unjs/exsolve#readme) |
+| `exsolve` | 1.1.1, 1.2.0 | MIT | [source](https://github.com/unjs/exsolve#readme) |
 | `ext-list` | 2.2.2 | MIT | [Kevin Mårtensson](https://github.com/kevva/ext-list#readme) |
 | `ext-name` | 5.0.0 | MIT | [Kevin Mårtensson](https://github.com/kevva/ext-name#readme) |
 | `extend` | 3.0.2 | MIT | [Stefan Thomas](https://github.com/justmoon/node-extend#readme) |
@@ -1222,7 +1211,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `fast-wrap-ansi` | 0.2.0, 0.2.2 | MIT | [James Garbutt](https://github.com/43081j/fast-wrap-ansi#readme) |
 | `fast-xml-builder` | 1.3.0 | MIT | [Amit Gupta](https://github.com/NaturalIntelligence/fast-xml-builder#readme) |
 | `fast-xml-parser` | 5.10.1 | MIT | [Amit Gupta](https://github.com/NaturalIntelligence/fast-xml-parser#readme) |
-| `fastq` | 1.20.1 | ISC | [Matteo Collina](https://github.com/mcollina/fastq#readme) |
+| `fastq` | 1.20.3 | ISC | [Matteo Collina](https://github.com/mcollina/fastq#readme) |
 | `fb-watchman` | 2.0.2 | Apache-2.0 | [Wez Furlong](https://facebook.github.io/watchman/) |
 | `fd-package-json` | 2.0.0 | MIT | [James Garbutt](https://github.com/es-tooling/fd-package-json#readme) |
 | `fdir` | 6.5.0 | MIT | [thecodrr](https://github.com/thecodrr/fdir#readme) |
@@ -1257,7 +1246,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `formdata-polyfill` | 4.0.10 | MIT | [Jimmy Wärting](https://github.com/jimmywarting/FormData#readme) |
 | `formik` | 2.4.9 | Apache-2.0 | [Jared Palmer](https://formik.org) |
 | `forwarded` | 0.2.0 | MIT | [source](https://github.com/jshttp/forwarded#readme) |
-| `framer-motion` | 12.43.0 | MIT | Matt Perry |
+| `framer-motion` | 12.43.0, 14.12.0 | MIT | Matt Perry |
 | `fresh` | 2.0.0 | MIT | [TJ Holowaychuk](https://github.com/jshttp/fresh#readme) |
 | `fs-constants` | 1.0.0 | MIT | [Mathias Buus](https://github.com/mafintosh/fs-constants) |
 | `fs-extra` | 10.1.0, 11.3.1, 11.3.6, 7.0.1, 8.1.0, 9.1.0 | MIT | [JP Richardson](https://github.com/jprichardson/node-fs-extra) |
@@ -1277,13 +1266,12 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `get-intrinsic` | 1.3.0 | MIT | [Jordan Harband](https://github.com/ljharb/get-intrinsic#readme) |
 | `get-nonce` | 1.0.1 | MIT | [Anton Korzunov](https://github.com/theKashey/get-nonce) |
 | `get-package-type` | 0.1.0 | MIT | [Corey Farrell](https://github.com/cfware/get-package-type#readme) |
-| `get-port` | 7.2.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/get-port#readme) |
 | `get-proto` | 1.0.1 | MIT | [Jordan Harband](https://github.com/ljharb/get-proto#readme) |
 | `get-stream` | 5.2.0, 8.0.1, 9.0.1 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/get-stream#readme) |
 | `get-symbol-description` | 1.1.0 | MIT | [Jordan Harband](https://github.com/inspect-js/get-symbol-description#readme) |
 | `get-tsconfig` | 4.14.3 | MIT | [Hiroki Osame](https://github.com/privatenumber/get-tsconfig#readme) |
 | `glob` | 10.5.0, 7.2.3 | ISC | [Isaac Z. Schlueter](https://github.com/isaacs/node-glob#readme) |
-| `glob` | 13.0.6 | BlueOak-1.0.0 | [Isaac Z. Schlueter](https://github.com/isaacs/node-glob#readme) |
+| `glob` | 13.0.6, 13.0.7 | BlueOak-1.0.0 | [Isaac Z. Schlueter](https://github.com/isaacs/node-glob#readme) |
 | `glob-parent` | 5.1.2, 6.0.2 | ISC | [Gulp Team](https://github.com/gulpjs/glob-parent#readme) |
 | `global-agent` | 3.0.0, 4.1.7 | BSD-3-Clause | [Gajus Kuizinas](https://github.com/gajus/global-agent#readme) |
 | `global-directory` | 5.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/global-directory#readme) |
@@ -1328,7 +1316,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `hono` | 4.12.32 | MIT | [Yusuke Wada](https://hono.dev) |
 | `hookified` | 1.15.1, 2.2.0 | MIT | [Jared Wray](https://github.com/jaredwray/hookified#readme) |
 | `hosted-git-info` | 4.1.0 | ISC | [Rebecca Turner](https://github.com/npm/hosted-git-info) |
-| `html-encoding-sniffer` | 3.0.0, 6.0.0 | MIT | [Domenic Denicola](https://github.com/jsdom/html-encoding-sniffer#readme) |
+| `html-encoding-sniffer` | 3.0.0, 7.0.0 | MIT | [Domenic Denicola](https://github.com/jsdom/html-encoding-sniffer#readme) |
 | `html-entities` | 2.6.0 | MIT | [Marat Dulin](https://github.com/mdevils/html-entities#readme) |
 | `htmlparser2` | 10.1.0 | MIT | [Felix Boehm](https://github.com/fb55/htmlparser2#readme) |
 | `http-cache-semantics` | 4.2.0 | BSD-2-Clause | [Kornel Lesiński](https://github.com/kornelski/http-cache-semantics#readme) |
@@ -1379,7 +1367,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `is-bigint` | 1.1.0 | MIT | [Jordan Harband](https://github.com/inspect-js/is-bigint#readme) |
 | `is-boolean-object` | 1.2.2 | MIT | [Jordan Harband](https://github.com/inspect-js/is-boolean-object#readme) |
 | `is-callable` | 1.2.7 | MIT | [Jordan Harband](https://github.com/inspect-js/is-callable#readme) |
-| `is-core-module` | 2.16.2 | MIT | [Jordan Harband](https://github.com/inspect-js/is-core-module) |
+| `is-core-module` | 2.16.2, 2.18.0 | MIT | [Jordan Harband](https://github.com/inspect-js/is-core-module) |
 | `is-data-view` | 1.0.2 | MIT | [Jordan Harband](https://github.com/inspect-js/is-data-view#readme) |
 | `is-date-object` | 1.1.0 | MIT | [Jordan Harband](https://github.com/inspect-js/is-date-object#readme) |
 | `is-decimal` | 2.0.1 | MIT | [Titus Wormer](https://github.com/wooorm/is-decimal#readme) |
@@ -1422,7 +1410,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `is-wsl` | 2.2.0, 3.1.1 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/is-wsl#readme) |
 | `isarray` | 1.0.0, 2.0.5 | MIT | [Julian Gruber](https://github.com/juliangruber/isarray) |
 | `isbinaryfile` | 4.0.10, 5.0.7 | MIT | [source](https://github.com/gjtorikian/isBinaryFile#readme) |
-| `isbot` | 5.2.1 | Unlicense | [source](https://isbot.js.org) |
+| `isbot` | 5.2.3 | Unlicense | [source](https://isbot.js.org) |
 | `isexe` | 2.0.0 | ISC | [Isaac Z. Schlueter](https://github.com/isaacs/isexe#readme) |
 | `isexe` | 3.1.5, 4.0.0 | BlueOak-1.0.0 | [Isaac Z. Schlueter](https://github.com/isaacs/isexe#readme) |
 | `isomorphic-ws` | 5.0.0 | MIT | [@heineiuo](https://github.com/heineiuo/isomorphic-ws#readme) |
@@ -1460,13 +1448,13 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `jju` | 1.4.0 | MIT | [Alex Kocharin](http://rlidwka.github.io/jju/) |
 | `joi` | 18.2.3 | BSD-3-Clause | [source](https://github.com/hapijs/joi#readme) |
 | `jose` | 6.2.5 | MIT | [Filip Skokan](https://github.com/panva/jose) |
-| `jotai` | 2.20.2 | MIT | [Daishi Kato](https://github.com/pmndrs/jotai) |
+| `jotai` | 3.0.2 | MIT | [Daishi Kato](https://github.com/pmndrs/jotai) |
 | `jpeg-js` | 0.4.4 | BSD-3-Clause | [Eugene Ware](https://github.com/eugeneware/jpeg-js#readme) |
 | `js-library-detector` | 6.7.0 | MIT | [John Michel](https://github.com/johnmichel/Library-Detector-for-Chrome#readme) |
 | `js-tiktoken` | 1.0.21 | MIT | [source](https://github.com/dqbd/tiktoken#readme) |
 | `js-tokens` | 10.0.0, 4.0.0 | MIT | [Simon Lydell](https://github.com/lydell/js-tokens#readme) |
 | `js-yaml` | 3.15.0, 4.3.0, 5.2.2 | MIT | [Vladimir Zapparov](https://github.com/nodeca/js-yaml#readme) |
-| `jsdom` | 28.1.0 | MIT | [source](https://github.com/jsdom/jsdom#readme) |
+| `jsdom` | 31.0.0 | MIT | [source](https://github.com/jsdom/jsdom#readme) |
 | `jsesc` | 3.1.0 | MIT | [Mathias Bynens](https://mths.be/jsesc) |
 | `json-bigint` | 1.0.0 | MIT | [Andrey Sidorov](https://github.com/sidorares/json-bigint#readme) |
 | `json-buffer` | 3.0.1 | MIT | [Dominic Tarr](https://github.com/dominictarr/json-buffer) |
@@ -1502,7 +1490,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `lighthouse` | 13.4.1 | Apache-2.0 | [Google LLC](https://github.com/GoogleChrome/lighthouse#readme) |
 | `lighthouse-logger` | 2.0.2 | Apache-2.0 | [source](https://github.com/GoogleChrome/lighthouse#readme) |
 | `lighthouse-stack-packs` | 1.12.3 | Apache-2.0 | [The Chromium Authors](https://github.com/GoogleChrome/lighthouse-stack-packs#readme) |
-| `lightningcss` | 1.32.0, 1.33.0 | MPL-2.0 | [source](https://github.com/parcel-bundler/lightningcss#readme) |
+| `lightningcss` | 1.33.0 | MPL-2.0 | [source](https://github.com/parcel-bundler/lightningcss#readme) |
 | `lines-and-columns` | 1.2.4, 2.0.3 | MIT | [Brian Donovan](https://github.com/eventualbuddha/lines-and-columns#readme) |
 | `lint-staged` | 17.2.0 | MIT | [Andrey Okonetchnikov](https://github.com/lint-staged/lint-staged#readme) |
 | `listr2` | 9.0.5 | MIT | [Cenk Kilic](https://github.com/listr2/listr2#readme) |
@@ -1538,9 +1526,9 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `lower-case-first` | 2.0.2 | MIT | [Blake Embrey](https://github.com/blakeembrey/change-case/tree/master/packages/lower-case-first#readme) |
 | `lowercase-keys` | 2.0.0, 3.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/lowercase-keys#readme) |
 | `lru-cache` | 10.4.3, 5.1.1, 6.0.0 | ISC | [Isaac Z. Schlueter](https://github.com/isaacs/node-lru-cache#readme) |
-| `lru-cache` | 11.5.2 | BlueOak-1.0.0 | [Isaac Z. Schlueter](https://github.com/isaacs/node-lru-cache#readme) |
+| `lru-cache` | 11.5.2, 11.5.3 | BlueOak-1.0.0 | [Isaac Z. Schlueter](https://github.com/isaacs/node-lru-cache#readme) |
 | `lru-cache` | 2.2.4 | MIT | [Isaac Z. Schlueter](https://github.com/isaacs/node-lru-cache#readme) |
-| `lucide-react` | 1.29.0 | ISC | [Eric Fennis](https://lucide.dev) |
+| `lucide-react` | 1.72.0 | ISC | [Eric Fennis](https://lucide.dev) |
 | `luxon` | 3.7.2 | MIT | [Isaac Cambron](https://github.com/moment/luxon#readme) |
 | `lz-string` | 1.5.0 | MIT | [pieroxy](http://pieroxy.net/blog/pages/lz-string/index.html) |
 | `magic-string` | 0.30.21, 1.0.0, 1.4.5 | MIT | [Rich Harris](https://github.com/Rich-Harris/magic-string#readme) |
@@ -1572,7 +1560,6 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `mdast-util-to-hast` | 13.2.1 | MIT | [Titus Wormer](https://github.com/syntax-tree/mdast-util-to-hast#readme) |
 | `mdast-util-to-markdown` | 2.1.2 | MIT | [Titus Wormer](https://github.com/syntax-tree/mdast-util-to-markdown#readme) |
 | `mdast-util-to-string` | 4.0.0 | MIT | [Titus Wormer](https://github.com/syntax-tree/mdast-util-to-string#readme) |
-| `mdn-data` | 2.27.1 | CC0-1.0 | [Mozilla Developer Network](https://developer.mozilla.org) |
 | `media-typer` | 0.3.0, 1.1.1 | MIT | [Douglas Christopher Wilson](https://github.com/jshttp/media-typer#readme) |
 | `memfs` | 3.5.3 | Unlicense | [source](https://github.com/streamich/memfs#readme) |
 | `merge-descriptors` | 2.0.0 | MIT | [source](https://github.com/sindresorhus/merge-descriptors#readme) |
@@ -1634,10 +1621,11 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `mlly` | 1.8.2 | MIT | [source](https://github.com/unjs/mlly#readme) |
 | `modern-tar` | 0.7.7 | MIT | [Ayuhito](https://github.com/ayuhito/modern-tar) |
 | `module-details-from-path` | 1.0.4 | MIT | [Thomas Watson](https://github.com/watson/module-details-from-path#readme) |
-| `monaco-editor` | 0.55.1 | MIT | [Microsoft Corporation](https://github.com/microsoft/monaco-editor) |
-| `morgan` | 1.11.0 | MIT | [source](https://github.com/expressjs/morgan#readme) |
-| `motion-dom` | 12.43.0 | MIT | [Matt Perry](https://github.com/motiondivision/motion#readme) |
-| `motion-utils` | 12.39.0 | MIT | [Matt Perry](https://github.com/motiondivision/motion#readme) |
+| `monaco-editor` | 0.57.0 | MIT | [Microsoft Corporation](https://github.com/microsoft/monaco-editor) |
+| `morgan` | 1.12.1 | MIT | [source](https://github.com/expressjs/morgan#readme) |
+| `motion` | 14.12.0 | MIT | [Matt Perry](https://github.com/motiondivision/motion#readme) |
+| `motion-dom` | 12.43.0, 14.12.0 | MIT | [Matt Perry](https://github.com/motiondivision/motion#readme) |
+| `motion-utils` | 12.39.0, 14.7.0 | MIT | [Matt Perry](https://github.com/motiondivision/motion#readme) |
 | `ms` | 2.0.0, 2.1.2, 2.1.3 | MIT | [source](https://github.com/vercel/ms#readme) |
 | `msgpackr` | 2.0.5 | MIT | [Kris Zyp](https://github.com/kriszyp/msgpackr#readme) |
 | `msgpackr-extract` | 3.0.4 | MIT | [Kris Zyp](https://github.com/kriszyp/msgpackr-extract#readme) |
@@ -1645,7 +1633,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `multer` | 2.2.0 | MIT | [source](https://github.com/expressjs/multer#readme) |
 | `mustache` | 4.2.0 | MIT | [mustache.js Authors](https://github.com/janl/mustache.js) |
 | `mute-stream` | 2.0.0, 3.0.0 | ISC | [GitHub Inc.](https://github.com/npm/mute-stream#readme) |
-| `nanoid` | 3.3.16 | MIT | [Andrey Sitnik](https://github.com/ai/nanoid#readme) |
+| `nanoid` | 3.3.20 | MIT | [Andrey Sitnik](https://github.com/ai/nanoid#readme) |
 | `napi-postinstall` | 0.3.4 | MIT | [JounQin](https://github.com/un-ts/napi-postinstall#readme) |
 | `natural-compare` | 1.4.0 | MIT | [Lauri Rooden](https://github.com/litejs/natural-compare-lite#readme) |
 | `natural-orderby` | 5.0.0 | MIT | [Olaf Ennen](https://yobacca.github.io/natural-orderby) |
@@ -1666,7 +1654,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `node-gyp-build` | 4.8.4 | MIT | [Mathias Buus](https://github.com/prebuild/node-gyp-build) |
 | `node-gyp-build-optional-packages` | 5.2.2 | MIT | [Mathias Buus](https://github.com/prebuild/node-gyp-build) |
 | `node-int64` | 0.4.0 | MIT | [Robert Kieffer](https://github.com/broofa/node-int64#readme) |
-| `node-releases` | 2.0.51 | MIT | [Sergey Rubanov](https://github.com/chicoxyzzy/node-releases#readme) |
+| `node-releases` | 2.0.63 | MIT | [Sergey Rubanov](https://github.com/chicoxyzzy/node-releases#readme) |
 | `nopt` | 8.1.0, 9.0.0 | ISC | [GitHub Inc.](https://github.com/npm/nopt#readme) |
 | `normalize-path` | 2.1.1, 3.0.0 | MIT | [Jon Schlinkert](https://github.com/jonschlinkert/normalize-path) |
 | `normalize-url` | 6.1.0, 8.1.1 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/normalize-url#readme) |
@@ -1684,7 +1672,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `object.values` | 1.2.1 | MIT | [Jordan Harband](https://github.com/es-shims/Object.values#readme) |
 | `obug` | 2.1.4, 3.0.0 | MIT | [Kevin Deng](https://github.com/sxzz/obug#readme) |
 | `ollama` | 0.6.3 | MIT | [Saul Boyd](https://github.com/ollama/ollama-js) |
-| `on-finished` | 2.4.1 | MIT | [source](https://github.com/jshttp/on-finished#readme) |
+| `on-finished` | 2.4.1, 2.4.2 | MIT | [source](https://github.com/jshttp/on-finished#readme) |
 | `on-headers` | 1.1.0 | MIT | [Douglas Christopher Wilson](https://github.com/jshttp/on-headers#readme) |
 | `once` | 1.4.0 | ISC | [Isaac Z. Schlueter](https://github.com/isaacs/once#readme) |
 | `one-time` | 1.0.0 | MIT | [Arnout Kazemier](https://github.com/3rd-Eden/one-time#readme) |
@@ -1699,14 +1687,14 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `optionator` | 0.9.4 | MIT | [George Zahariev](https://github.com/gkz/optionator) |
 | `ora` | 5.4.1, 9.4.1 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/ora#readme) |
 | `own-keys` | 1.0.2 | MIT | [Jordan Harband](https://github.com/ljharb/own-keys#readme) |
-| `oxc-parser` | 0.127.0 | MIT | [Boshen and oxc contributors](https://oxc.rs/docs/guide/usage/parser) |
-| `oxc-resolver` | 11.24.2 | MIT | [source](https://oxc.rs) |
+| `oxc-parser` | 0.121.0, 0.127.0 | MIT | [Boshen and oxc contributors](https://oxc.rs/docs/guide/usage/parser) |
+| `oxc-resolver` | 11.21.2, 11.24.2 | MIT | [source](https://oxc.rs) |
 | `p-cancelable` | 2.1.1, 4.0.1 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/p-cancelable#readme) |
 | `p-event` | 6.0.1 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/p-event#readme) |
 | `p-finally` | 1.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/p-finally#readme) |
 | `p-limit` | 2.3.0, 3.1.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/p-limit#readme) |
 | `p-locate` | 4.1.0, 5.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/p-locate#readme) |
-| `p-map` | 7.0.6 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/p-map#readme) |
+| `p-map` | 7.1.1 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/p-map#readme) |
 | `p-map-values` | 1.0.0 | MIT | [Zoltan Kochan](https://github.com/zkochan/packages/tree/main/p-map-values#readme) |
 | `p-queue` | 6.6.2 | MIT | [source](https://github.com/sindresorhus/p-queue#readme) |
 | `p-timeout` | 3.2.0, 6.1.4 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/p-timeout#readme) |
@@ -1718,9 +1706,9 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `parse-filepath` | 1.0.2 | MIT | [Jon Schlinkert](https://github.com/jonschlinkert/parse-filepath) |
 | `parse-json` | 5.2.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/parse-json#readme) |
 | `parse-ms` | 4.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/parse-ms#readme) |
-| `parse5` | 7.3.0, 8.0.1 | MIT | [Ivan Nikulin](https://parse5.js.org) |
+| `parse5` | 7.3.0, 8.1.1 | MIT | [Ivan Nikulin](https://parse5.js.org) |
 | `parse5-htmlparser2-tree-adapter` | 7.1.0 | MIT | [Ivan Nikulin](https://parse5.js.org) |
-| `parse5-parser-stream` | 7.1.2 | MIT | [Ivan Nikulin](https://github.com/inikulin/parse5) |
+| `parse5-parser-stream` | 7.1.2, 8.1.1 | MIT | [Ivan Nikulin](https://parse5.js.org) |
 | `parseurl` | 1.3.3 | MIT | [source](https://github.com/pillarjs/parseurl#readme) |
 | `pascal-case` | 3.1.2 | MIT | [Blake Embrey](https://github.com/blakeembrey/change-case/tree/master/packages/pascal-case#readme) |
 | `passport` | 0.7.0 | MIT | [Jared Hanson](https://www.passportjs.org/) |
@@ -1766,7 +1754,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `pirates` | 4.0.7 | MIT | [Ari Porad](https://github.com/danez/pirates#readme) |
 | `piscina` | 4.9.3 | MIT | [James M Snell](https://github.com/piscinajs/piscina#readme) |
 | `pkce-challenge` | 5.0.1 | MIT | [crouchcd](https://github.com/crouchcd/pkce-challenge#readme) |
-| `pkg-types` | 1.3.1, 2.3.1 | MIT | [source](https://github.com/unjs/pkg-types#readme) |
+| `pkg-types` | 1.3.1, 2.3.1, 2.4.0 | MIT | [source](https://github.com/unjs/pkg-types#readme) |
 | `pkijs` | 3.4.3 | BSD-3-Clause | [Yury Strozhevsky](https://github.com/PeculiarVentures/PKI.js#readme) |
 | `platform` | 1.3.6 | MIT | [Benjamin Tan](https://github.com/bestiejs/platform.js#readme) |
 | `playwright` | 1.62.1 | Apache-2.0 | [Microsoft Corporation](https://playwright.dev) |
@@ -1775,7 +1763,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `pluralize` | 8.0.0 | MIT | [Blake Embrey](https://github.com/blakeembrey/pluralize#readme) |
 | `portfinder` | 1.0.38 | MIT | [Charlie Robbins](https://github.com/http-party/node-portfinder#readme) |
 | `possible-typed-array-names` | 1.1.0 | MIT | [Jordan Harband](https://github.com/ljharb/possible-typed-array-names#readme) |
-| `postcss` | 8.5.25 | MIT | [Andrey Sitnik](https://postcss.org/) |
+| `postcss` | 8.5.32 | MIT | [Andrey Sitnik](https://postcss.org/) |
 | `postgres-array` | 2.0.0 | MIT | [Ben Drucker](https://github.com/bendrucker/postgres-array#readme) |
 | `postgres-bytea` | 1.0.1 | MIT | [Ben Drucker](https://github.com/bendrucker/postgres-bytea#readme) |
 | `postgres-date` | 1.0.7 | MIT | [Ben Drucker](https://github.com/bendrucker/postgres-date#readme) |
@@ -1810,17 +1798,17 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `querystringify` | 2.2.0 | MIT | [Arnout Kazemier](https://github.com/unshiftio/querystringify) |
 | `queue-microtask` | 1.2.3 | MIT | [Feross Aboukhadijeh](https://github.com/feross/queue-microtask) |
 | `quick-lru` | 5.1.1 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/quick-lru#readme) |
-| `radix-ui` | 1.6.7 | MIT | [source](https://radix-ui.com/primitives) |
+| `radix-ui` | 1.8.1 | MIT | [source](https://radix-ui.com/primitives) |
 | `range-parser` | 1.3.0 | MIT | [TJ Holowaychuk](https://github.com/jshttp/range-parser#readme) |
 | `raw-body` | 3.0.2 | MIT | [Jonathan Ong](https://github.com/stream-utils/raw-body#readme) |
-| `react` | 19.2.4 | MIT | [source](https://react.dev/) |
+| `react` | 19.3.1 | MIT | [source](https://react.dev/) |
 | `react-d3-tree` | 3.6.6 | MIT | [Ben Kremer](https://github.com/bkrem/react-d3-tree) |
-| `react-day-picker` | 10.0.1 | MIT | [Giampaolo Bellavite](https://daypicker.dev) |
+| `react-day-picker` | 10.0.2 | MIT | [Giampaolo Bellavite](https://daypicker.dev) |
 | `react-dnd` | 16.0.1 | MIT | [source](https://github.com/react-dnd/react-dnd#readme) |
 | `react-dnd-html5-backend` | 16.0.1 | MIT | [source](https://github.com/react-dnd/react-dnd#readme) |
-| `react-docgen` | 8.0.3 | MIT | [Felix Kling (http://github.com/fkling)](https://github.com/reactjs/react-docgen#readme) |
+| `react-docgen` | 8.0.4 | MIT | [Felix Kling (http://github.com/fkling)](https://github.com/reactjs/react-docgen#readme) |
 | `react-docgen-typescript` | 2.4.0 | MIT | [source](https://github.com/styleguidist/react-docgen-typescript/) |
-| `react-dom` | 19.2.4 | MIT | [source](https://react.dev/) |
+| `react-dom` | 19.3.1 | MIT | [source](https://react.dev/) |
 | `react-fast-compare` | 2.0.4 | MIT | [Chris Bolin](https://github.com/FormidableLabs/react-fast-compare) |
 | `react-hotkeys-hook` | 5.3.3 | MIT | [Johannes Klauss](https://react-hotkeys-hook.vercel.app/) |
 | `react-is` | 16.13.1, 17.0.2, 18.3.1, 19.2.8 | MIT | [source](https://react.dev/) |
@@ -1829,15 +1817,15 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `react-refresh` | 0.18.0 | MIT | [source](https://react.dev/) |
 | `react-remove-scroll` | 2.7.2 | MIT | [Anton Korzunov](https://github.com/theKashey/react-remove-scroll#readme) |
 | `react-remove-scroll-bar` | 2.3.8 | MIT | [Anton Korzunov](https://github.com/theKashey/react-remove-scroll-bar#readme) |
-| `react-router` | 8.0.1 | MIT | [Remix Software](https://github.com/remix-run/react-router#readme) |
+| `react-router` | 8.5.1 | MIT | [Remix Software](https://github.com/remix-run/react-router#readme) |
 | `react-router-devtools` | 6.2.3 | MIT | [Alem Tuzlak](https://react-router-devtools.forge42.dev/) |
 | `react-style-singleton` | 2.2.3 | MIT | [Anton Korzunov](https://github.com/theKashey/react-style-singleton#readme) |
 | `react-tooltip` | 5.30.1 | MIT | [ReactTooltip](https://github.com/ReactTooltip/react-tooltip#readme) |
 | `read-binary-file-arch` | 1.0.6 | MIT | [Samuel Maddock](https://github.com/samuelmaddock/read-binary-file-arch#readme) |
 | `read-yaml-file` | 2.1.0 | MIT | [Zoltan Kochan](https://github.com/zkochan/packages/tree/master#readme) |
 | `readable-stream` | 2.3.8, 3.6.2 | MIT | [source](https://github.com/nodejs/readable-stream#readme) |
-| `readdirp` | 4.1.2, 5.0.0 | MIT | [Thorsten Lorenz](https://github.com/paulmillr/readdirp) |
-| `recast` | 0.23.16 | MIT | [Ben Newman](http://github.com/benjamn/recast) |
+| `readdirp` | 4.1.2, 5.1.1 | MIT | [Thorsten Lorenz](https://github.com/paulmillr/readdirp) |
+| `recast` | 0.23.21 | MIT | [Ben Newman](http://github.com/benjamn/recast) |
 | `recharts` | 3.10.1 | MIT | [recharts group](https://github.com/recharts/recharts) |
 | `recma-build-jsx` | 1.0.0 | MIT | [Titus Wormer](https://github.com/mdx-js/recma) |
 | `recma-jsx` | 1.0.1 | MIT | [Titus Wormer](https://github.com/mdx-js/recma) |
@@ -1873,7 +1861,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `requires-port` | 1.0.0 | MIT | [Arnout Kazemier](https://github.com/unshiftio/requires-port) |
 | `resedit` | 1.7.2 | MIT | [jet](https://github.com/jet2jet/resedit-js) |
 | `reselect` | 5.2.0 | MIT | [source](https://github.com/reduxjs/reselect#readme) |
-| `resolve` | 1.22.12, 2.0.0-next.7 | MIT | [James Halliday](https://github.com/browserify/resolve#readme) |
+| `resolve` | 1.22.12, 1.22.14, 2.0.0-next.7 | MIT | [James Halliday](https://github.com/browserify/resolve#readme) |
 | `resolve-alpn` | 1.2.1 | MIT | [Szymon Marczak](https://github.com/szmarczak/resolve-alpn#readme) |
 | `resolve-from` | 4.0.0, 5.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/resolve-from#readme) |
 | `resolve-pkg-maps` | 1.0.0 | MIT | [Hiroki Osame](https://github.com/privatenumber/resolve-pkg-maps#readme) |
@@ -1888,14 +1876,14 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `rimraf` | 2.6.3 | ISC | [Isaac Z. Schlueter](https://github.com/isaacs/rimraf#readme) |
 | `roarr` | 2.15.4 | BSD-3-Clause | [Gajus Kuizinas](https://github.com/gajus/roarr#readme) |
 | `robots-parser` | 3.0.1 | MIT | [Sam Clarke](https://github.com/samclarke/robots-parser) |
-| `rollbar` | 3.1.0 | MIT | [source](https://github.com/rollbar/rollbar.js#readme) |
-| `rolldown` | 1.2.16 | MIT | [source](https://rolldown.rs/) |
+| `rollbar` | 4.2.0 | MIT | [source](https://github.com/rollbar/rollbar.js#readme) |
+| `rolldown` | 1.2.19 | MIT | [source](https://rolldown.rs/) |
 | `rollup` | 4.62.3 | MIT | [Rich Harris](https://rollupjs.org/) |
 | `router` | 2.2.0 | MIT | [Douglas Christopher Wilson](https://github.com/pillarjs/router#readme) |
-| `rrdom` | 2.1.1 | MIT | [source](https://github.com/rrweb-io/rrweb/tree/main/packages/rrdom#readme) |
-| `rrweb` | 2.1.1 | MIT | [rrweb Core Team](https://github.com/rrweb-io/rrweb#readme) |
-| `rrweb-snapshot` | 2.1.1 | MIT | [rrweb Core Team](https://github.com/rrweb-io/rrweb/tree/master/packages/rrweb-snapshot#readme) |
-| `run-applescript` | 7.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/run-applescript#readme) |
+| `rrdom` | 2.2.2 | MIT | [source](https://github.com/rrweb-io/rrweb/tree/main/packages/rrdom#readme) |
+| `rrweb` | 2.2.2 | MIT | [rrweb Core Team](https://github.com/rrweb-io/rrweb#readme) |
+| `rrweb-snapshot` | 2.2.2 | MIT | [rrweb Core Team](https://github.com/rrweb-io/rrweb/tree/main/packages/rrweb-snapshot#readme) |
+| `run-applescript` | 7.1.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/run-applescript#readme) |
 | `run-parallel` | 1.2.0 | MIT | [Feross Aboukhadijeh](https://github.com/feross/run-parallel) |
 | `rxjs` | 7.8.2 | Apache-2.0 | [Ben Lesh](https://rxjs.dev) |
 | `safe-array-concat` | 1.1.4 | MIT | [Jordan Harband](https://github.com/ljharb/safe-array-concat#readme) |
@@ -1907,12 +1895,12 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `sanitize-filename` | 1.6.4 | WTFPL OR ISC | [Parsha Pourkhomami](https://github.com/parshap/node-sanitize-filename#readme) |
 | `sax` | 1.6.1 | BlueOak-1.0.0 | [Isaac Z. Schlueter](https://github.com/isaacs/sax-js#readme) |
 | `saxes` | 6.0.0 | ISC | [Louis-Dominique Dubeau](https://github.com/lddubeau/saxes#readme) |
-| `scheduler` | 0.27.0 | MIT | [source](https://react.dev/) |
+| `scheduler` | 0.28.0 | MIT | [source](https://react.dev/) |
 | `schema-utils` | 3.3.0, 4.3.3 | MIT | [webpack Contrib](https://github.com/webpack/schema-utils) |
 | `secure-compare` | 3.0.1 | MIT | [Vadim Demedes](https://github.com/vdemedes/secure-compare) |
 | `seek-bzip` | 2.0.0 | MIT | [source](https://github.com/cscott/seek-bzip#readme) |
 | `semifies` | 1.0.0 | Apache-2.0 | [Holepunch Inc](https://github.com/holepunchto/semifies) |
-| `semver` | 5.7.2, 6.3.1, 7.7.4, 7.8.5 | ISC | [GitHub Inc.](https://github.com/npm/node-semver#readme) |
+| `semver` | 5.7.3, 6.3.1, 6.3.2, 7.7.4, 7.8.5, 7.8.6 | ISC | [GitHub Inc.](https://github.com/npm/node-semver#readme) |
 | `semver-compare` | 1.0.0 | MIT | [James Halliday](https://github.com/substack/semver-compare) |
 | `semver-regex` | 4.0.5 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/semver-regex#readme) |
 | `semver-truncate` | 3.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/semver-truncate#readme) |
@@ -1947,11 +1935,11 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `socket.io-adapter` | 2.5.8 | MIT | [source](https://github.com/socketio/socket.io/tree/main/packages/socket.io-adapter#readme) |
 | `socket.io-parser` | 4.2.7 | MIT | [source](https://github.com/socketio/socket.io/tree/main/packages/socket.io-client#readme) |
 | `solid-js` | 1.9.14 | MIT | [Ryan Carniato](https://solidjs.com) |
-| `sonner` | 2.0.7 | MIT | [Emil Kowalski](https://sonner.emilkowal.ski/) |
+| `sonner` | 2.0.8 | MIT | [Emil Kowalski](https://sonner.emilkowal.ski/) |
 | `sort-keys` | 1.1.2 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/sort-keys#readme) |
 | `sort-keys-length` | 1.0.1 | MIT | [Kevin Mårtensson](https://github.com/kevva/sort-keys-length#readme) |
 | `source-map` | 0.5.7, 0.6.1, 0.7.6 | BSD-3-Clause | [Nick Fitzgerald](https://github.com/mozilla/source-map) |
-| `source-map-js` | 1.2.1 | BSD-3-Clause | [Valentin 7rulnik Semirulnik](https://github.com/7rulnik/source-map-js) |
+| `source-map-js` | 1.2.2 | BSD-3-Clause | [Valentin 7rulnik Semirulnik](https://github.com/7rulnik/source-map-js) |
 | `source-map-support` | 0.5.13, 0.5.21 | MIT | [source](https://github.com/evanw/node-source-map-support#readme) |
 | `space-separated-tokens` | 2.0.2 | MIT | [Titus Wormer](https://github.com/wooorm/space-separated-tokens#readme) |
 | `speedline-core` | 1.4.3 | MIT | [source](https://github.com/paulirish/speedline#readme) |
@@ -1970,7 +1958,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `std-env` | 4.3.0 | MIT | [source](https://github.com/unjs/std-env#readme) |
 | `stdin-discarder` | 0.3.2 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/stdin-discarder#readme) |
 | `stop-iteration-iterator` | 1.1.0 | MIT | [Jordan Harband](https://github.com/ljharb/stop-iteration-iterator#readme) |
-| `storybook` | 10.5.7 | MIT | [source](https://storybook.js.org) |
+| `storybook` | 10.6.7 | MIT | [source](https://storybook.js.org) |
 | `stream-events` | 1.0.5 | MIT | [Stephen Sawchuk](https://github.com/stephenplusplus/stream-events) |
 | `stream-shift` | 1.0.3 | MIT | [Mathias Buus](https://github.com/mafintosh/stream-shift) |
 | `streamsearch` | 1.1.0 | MIT | [Brian White](https://github.com/mscdex/streamsearch#readme) |
@@ -2006,21 +1994,20 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `supports-color` | 8.1.1 | MIT | [Sindre Sorhus](https://github.com/chalk/supports-color#readme) |
 | `supports-preserve-symlinks-flag` | 1.0.0 | MIT | [Jordan Harband](https://github.com/inspect-js/node-supports-preserve-symlinks-flag#readme) |
 | `swap-case` | 2.0.2 | MIT | [Blake Embrey](https://github.com/blakeembrey/change-case/tree/master/packages/swap-case#readme) |
-| `symbol-tree` | 3.2.4 | MIT | [Joris van der Wel](https://github.com/jsdom/js-symbol-tree#symbol-tree) |
 | `sync-fetch` | 0.6.0 | MIT | [Lars Willighagen](https://github.com/larsgw/sync-fetch#readme) |
 | `synckit` | 0.11.13 | MIT | [JounQin](https://github.com/un-ts/synckit#readme) |
 | `system-architecture` | 1.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/system-architecture#readme) |
-| `tailwind-merge` | 3.5.0 | MIT | [Dany Castillo](https://github.com/dcastil/tailwind-merge) |
-| `tailwindcss` | 4.2.4, 4.3.3 | MIT | [source](https://tailwindcss.com) |
+| `tailwind-merge` | 3.7.0 | MIT | [Dany Castillo](https://github.com/dcastil/tailwind-merge) |
+| `tailwindcss` | 4.3.5 | MIT | [source](https://tailwindcss.com) |
 | `tailwindcss-animate` | 1.0.7 | MIT | Jamie Kyle |
 | `tapable` | 2.3.3 | MIT | [Tobias Koppers @sokra](https://github.com/webpack/tapable) |
-| `tar` | 7.5.22 | BlueOak-1.0.0 | [Isaac Z. Schlueter](https://github.com/isaacs/node-tar#readme) |
+| `tar` | 7.5.23 | BlueOak-1.0.0 | [Isaac Z. Schlueter](https://github.com/isaacs/node-tar#readme) |
 | `tar-stream` | 2.2.0, 3.1.7 | MIT | [Mathias Buus](https://github.com/mafintosh/tar-stream) |
 | `teeny-request` | 9.0.0 | Apache-2.0 | [fhinkel](https://github.com/googleapis/teeny-request#readme) |
 | `temp` | 0.9.4 | MIT | [Bruce Williams](https://github.com/bruce/node-temp#readme) |
 | `temp-file` | 3.4.0 | MIT | [Vladimir Krivosheev](https://github.com/develar/temp-file) |
-| `temporal-polyfill` | 0.3.0 | MIT | [Adam Shaw](https://github.com/fullcalendar/temporal-polyfill#readme) |
-| `temporal-spec` | 0.3.0 | ISC | [Adam Shaw](https://github.com/fullcalendar/temporal-polyfill#readme) |
+| `temporal-polyfill` | 0.3.2 | MIT | [Adam Shaw](https://github.com/fullcalendar/temporal-polyfill#readme) |
+| `temporal-spec` | 0.3.1 | ISC | [Adam Shaw](https://github.com/fullcalendar/temporal-polyfill#readme) |
 | `terser` | 5.49.0 | BSD-2-Clause | [Mihai Bazon](https://terser.org) |
 | `test-exclude` | 6.0.0 | ISC | [Ben Coe](https://istanbul.js.org/) |
 | `text-decoder` | 1.2.7 | Apache-2.0 | [Holepunch](https://github.com/holepunchto/text-decoder#readme) |
@@ -2036,10 +2023,10 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `tinyexec` | 1.3.1 | MIT | [James Garbutt](https://github.com/tinylibs/tinyexec#readme) |
 | `tinyglobby` | 0.2.17 | MIT | [Superchupu](https://superchupu.dev/tinyglobby) |
 | `tinyrainbow` | 2.0.0, 3.2.0 | MIT | [source](https://github.com/tinylibs/tinyrainbow#readme) |
-| `tinyspy` | 4.0.4 | MIT | [source](https://github.com/tinylibs/tinyspy#readme) |
+| `tinyspy` | 4.0.6 | MIT | [source](https://github.com/tinylibs/tinyspy#readme) |
 | `title-case` | 3.0.3 | MIT | [Blake Embrey](https://github.com/blakeembrey/change-case/tree/master/packages/title-case#readme) |
-| `tldts` | 7.4.10 | MIT | [Rémi Berson](https://github.com/remusao/tldts#readme) |
-| `tldts-core` | 7.4.10 | MIT | [Rémi Berson](https://github.com/remusao/tldts#readme) |
+| `tldts` | 7.4.22 | MIT | [Rémi Berson](https://github.com/remusao/tldts#readme) |
+| `tldts-core` | 7.4.10, 7.4.22 | MIT | [Rémi Berson](https://github.com/remusao/tldts#readme) |
 | `tldts-icann` | 7.4.10 | MIT | [Rémi Berson](https://github.com/remusao/tldts#readme) |
 | `tmp` | 0.2.7 | MIT | [KARASZI István](http://github.com/raszi/node-tmp) |
 | `tmp-promise` | 3.0.3 | MIT | [Benjamin Gruenbaum and Collaborators.](https://github.com/benjamingr/tmp-promise#readme) |
@@ -2048,8 +2035,8 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `to-regex-range` | 5.0.1 | MIT | [Jon Schlinkert](https://github.com/micromatch/to-regex-range) |
 | `toidentifier` | 1.0.1 | MIT | [Douglas Christopher Wilson](https://github.com/component/toidentifier#readme) |
 | `token-types` | 6.1.2 | MIT | [Borewit](https://github.com/Borewit/token-types#readme) |
-| `tough-cookie` | 4.1.3, 6.0.2 | BSD-3-Clause | [Jeremy Stashewsky](https://github.com/salesforce/tough-cookie) |
-| `tr46` | 0.0.3, 6.0.0 | MIT | [Sebastian Mayr](https://github.com/jsdom/tr46#readme) |
+| `tough-cookie` | 4.1.3, 6.1.0 | BSD-3-Clause | [Jeremy Stashewsky](https://github.com/salesforce/tough-cookie) |
+| `tr46` | 0.0.3, 7.0.0 | MIT | [Sebastian Mayr](https://github.com/jsdom/tr46#readme) |
 | `trim-lines` | 3.0.1 | MIT | [Titus Wormer](https://github.com/wooorm/trim-lines#readme) |
 | `triple-beam` | 1.4.1 | MIT | [Charlie Robbins](https://github.com/winstonjs/triple-beam#readme) |
 | `trough` | 2.2.0 | MIT | [Titus Wormer](https://github.com/wooorm/trough#readme) |
@@ -2063,7 +2050,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `ts-toolbelt` | 6.15.5 | Apache-2.0 | [Pierre-Antoine Mills](https://github.com/millsp/ts-toolbelt) |
 | `tsconfig-paths` | 4.2.0 | MIT | [Jonas Kello](https://github.com/dividab/tsconfig-paths#readme) |
 | `tsconfig-paths-webpack-plugin` | 4.2.0 | MIT | [Jonas Kello](https://github.com/dividab/tsconfig-paths-webpack-plugin#readme) |
-| `tslib` | 2.6.3, 2.8.1 | 0BSD | [Microsoft Corp.](https://www.typescriptlang.org/) |
+| `tslib` | 2.6.3, 2.8.1, 2.9.1 | 0BSD | [Microsoft Corp.](https://www.typescriptlang.org/) |
 | `tsx` | 4.23.1 | MIT | [Hiroki Osame](https://tsx.hirok.io) |
 | `tw-animate-css` | 1.4.0 | MIT | [Luca Bosin](https://github.com/Wombosvideo/tw-animate-css#readme) |
 | `type-check` | 0.4.0 | MIT | [George Zahariev](https://github.com/gkz/type-check) |
@@ -2088,7 +2075,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `unbox-primitive` | 1.1.0 | MIT | [Jordan Harband](https://github.com/ljharb/unbox-primitive#readme) |
 | `unbzip2-stream` | 1.4.3 | MIT | [Jan Bölsche](https://github.com/regular/unbzip2-stream#readme) |
 | `unc-path-regex` | 0.1.2 | MIT | [Jon Schlinkert](https://github.com/regexhq/unc-path-regex) |
-| `undici` | 6.29.1, 7.30.1 | MIT | [source](https://undici.nodejs.org) |
+| `undici` | 6.29.1, 7.30.1, 7.30.2, 8.12.4 | MIT | [source](https://undici.nodejs.org) |
 | `undici-types` | 5.26.5, 7.24.6 | MIT | [source](https://undici.nodejs.org) |
 | `unicode-canonical-property-names-ecmascript` | 2.0.1 | MIT | [Mathias Bynens](https://github.com/mathiasbynens/unicode-canonical-property-names-ecmascript) |
 | `unicode-emoji-modifier-base` | 1.0.0 | MIT | [Mathias Bynens](https://github.com/mathiasbynens/unicode-emoji-modifier-base) |
@@ -2111,7 +2098,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `unplugin-swc` | 1.5.9 | MIT | [EGOIST](https://github.com/unplugin/unplugin-swc/tree/main/#readme) |
 | `unrs-resolver` | 1.12.2 | MIT | [source](https://github.com/unrs/unrs-resolver) |
 | `unzipper` | 0.12.5 | MIT | [Ziggy Jonsson](https://github.com/ZJONSSON/node-unzipper#readme) |
-| `update-browserslist-db` | 1.2.3 | MIT | [Andrey Sitnik](https://github.com/browserslist/update-db#readme) |
+| `update-browserslist-db` | 1.3.4 | MIT | [Andrey Sitnik](https://github.com/browserslist/update-db#readme) |
 | `upper-case` | 2.0.2 | MIT | [Blake Embrey](https://github.com/blakeembrey/change-case/tree/master/packages/upper-case#readme) |
 | `upper-case-first` | 2.0.2 | MIT | [Blake Embrey](https://github.com/blakeembrey/change-case/tree/master/packages/upper-case-first#readme) |
 | `uri-js` | 4.4.1 | BSD-2-Clause | [Gary Court](https://github.com/garycourt/uri-js) |
@@ -2120,26 +2107,26 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `urlpattern-polyfill` | 10.1.0 | MIT | [source](https://github.com/kenchris/urlpattern-polyfill#readme) |
 | `use-callback-ref` | 1.3.3 | MIT | theKashey |
 | `use-sidecar` | 1.1.3 | MIT | [theKashey](https://github.com/theKashey/use-sidecar) |
-| `use-sync-external-store` | 1.6.0 | MIT | [source](https://github.com/facebook/react#readme) |
+| `use-sync-external-store` | 1.6.0, 1.7.0 | MIT | [source](https://github.com/react/react#readme) |
 | `utf8-byte-length` | 1.0.5 | (WTFPL OR MIT) | [Carl Xiong](https://github.com/parshap/utf8-byte-length#readme) |
 | `util-deprecate` | 1.0.2 | MIT | [Nathan Rajlich](https://github.com/TooTallNate/util-deprecate) |
 | `utils-merge` | 1.0.1 | MIT | [Jared Hanson](https://github.com/jaredhanson/utils-merge#readme) |
-| `uuid` | 11.1.1, 14.0.0, 8.3.2, 9.0.1 | MIT | [source](https://github.com/uuidjs/uuid#readme) |
+| `uuid` | 11.1.1, 14.0.0, 14.0.3, 8.3.2, 9.0.1 | MIT | [source](https://github.com/uuidjs/uuid#readme) |
 | `v8-compile-cache-lib` | 3.0.1 | MIT | [Andrew Bradley](https://github.com/cspotcode/v8-compile-cache-lib#readme) |
-| `valibot` | 1.4.2 | MIT | [Fabian Hiller](https://valibot.dev) |
+| `valibot` | 1.5.0 | MIT | [Fabian Hiller](https://valibot.dev) |
 | `vary` | 1.1.2 | MIT | [Douglas Christopher Wilson](https://github.com/jshttp/vary#readme) |
 | `vaul` | 1.1.2 | MIT | [Emil Kowalski](https://vaul.emilkowal.ski/) |
 | `vfile` | 6.0.3 | MIT | [Titus Wormer](https://github.com/vfile/vfile#readme) |
 | `vfile-message` | 4.0.3 | MIT | [Titus Wormer](https://github.com/vfile/vfile-message#readme) |
 | `victory-vendor` | 37.3.6 | MIT AND ISC | [Formidable](https://commerce.nearform.com/open-source/victory) |
-| `vite` | 8.2.0 | MIT | [Evan You](https://vite.dev) |
+| `vite` | 8.3.8 | MIT | [Evan You](https://vite.dev) |
 | `vite-bundle-analyzer` | 1.3.9 | MIT | [kanno](https://github.com/nonzzz/vite-bundle-analyzer#readme) |
 | `vite-node` | 6.0.0 | MIT | [Anthony Fu](https://github.com/antfu-collective/vite-node#readme) |
-| `vite-plugin-devtools-json` | 1.1.0 | MIT | [Benedikt Meurer](https://github.com/ChromeDevTools/vite-plugin-devtools-json#readme) |
+| `vite-plugin-devtools-json` | 1.1.2 | MIT | [Benedikt Meurer](https://github.com/ChromeDevTools/vite-plugin-devtools-json#readme) |
 | `vite-plugin-dts` | 4.5.4 | MIT | [qmhc](https://github.com/qmhc/vite-plugin-dts#readme) |
 | `vitest` | 5.1.0 | MIT | [Anthony Fu](https://vitest.dev) |
 | `vscode-uri` | 3.1.0 | MIT | [Microsoft](https://github.com/microsoft/vscode-uri#readme) |
-| `w3c-xmlserializer` | 5.0.0 | MIT | [source](https://github.com/jsdom/w3c-xmlserializer#readme) |
+| `w3c-xmlserializer` | 6.0.0 | MIT | [source](https://github.com/jsdom/w3c-xmlserializer#readme) |
 | `walk-up-path` | 4.0.0 | ISC | [Isaac Z. Schlueter](https://github.com/isaacs/walk-up-path#readme) |
 | `walker` | 1.0.8 | Apache-2.0 | [Naitik Shah](https://github.com/daaku/nodejs-walker) |
 | `warning` | 3.0.0 | BSD-3-Clause | [Berkeley Martinez](https://github.com/BerkeleyTrue/warning) |
@@ -2158,7 +2145,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `whatwg-encoding` | 2.0.0, 3.1.1 | MIT | [Domenic Denicola](https://github.com/jsdom/whatwg-encoding#readme) |
 | `whatwg-fetch` | 3.6.20 | MIT | [source](https://github.com/github/fetch#readme) |
 | `whatwg-mimetype` | 3.0.0, 4.0.0, 5.0.0 | MIT | [Domenic Denicola](https://github.com/jsdom/whatwg-mimetype#readme) |
-| `whatwg-url` | 16.0.1, 5.0.0 | MIT | [Sebastian Mayr](https://github.com/jsdom/whatwg-url#readme) |
+| `whatwg-url` | 17.3.0, 5.0.0 | MIT | [Sebastian Mayr](https://github.com/jsdom/whatwg-url#readme) |
 | `when-exit` | 2.1.5 | MIT | [source](https://github.com/fabiospampinato/when-exit#readme) |
 | `which` | 2.0.2, 3.0.1, 5.0.0, 6.0.1 | ISC | [GitHub Inc.](https://github.com/npm/node-which#readme) |
 | `which-boxed-primitive` | 1.1.1 | MIT | [Jordan Harband](https://github.com/inspect-js/which-boxed-primitive#readme) |
@@ -2175,7 +2162,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `wrappy` | 1.0.2 | ISC | [Isaac Z. Schlueter](https://github.com/npm/wrappy) |
 | `write-file-atomic` | 5.0.1 | ISC | [GitHub Inc.](https://github.com/npm/write-file-atomic) |
 | `write-yaml-file` | 5.0.0 | MIT | [Zoltan Kochan](https://github.com/zkochan/packages/tree/main/write-yaml-file#readme) |
-| `ws` | 7.5.13, 8.21.3 | MIT | [Einar Otto Stangvik](https://github.com/websockets/ws) |
+| `ws` | 7.5.13, 8.21.3, 8.22.2 | MIT | [Einar Otto Stangvik](https://github.com/websockets/ws) |
 | `wsl-utils` | 0.1.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/wsl-utils#readme) |
 | `xdg-basedir` | 5.1.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/xdg-basedir#readme) |
 | `xml-name-validator` | 5.0.0 | Apache-2.0 | [Domenic Denicola](https://github.com/jsdom/xml-name-validator#readme) |
@@ -2205,337 +2192,411 @@ the host OS, and each shares the license of the cross-platform toolchain already
 ### @paper-design/shaders — LicenseRef-PolyForm-Shield-1.0.0
 
 ```
-# PolyForm Shield License 1.0.0
+                                 Apache License
+                           Version 2.0, January 2004
+                        http://www.apache.org/licenses/
 
-<https://polyformproject.org/licenses/shield/1.0.0>
+   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
 
-## Acceptance
+   1. Definitions.
 
-In order to get any license under these terms, you must agree
-to them as both strict obligations and conditions to all
-your licenses.
+      "License" shall mean the terms and conditions for use, reproduction,
+      and distribution as defined by Sections 1 through 9 of this document.
 
-## Copyright License
+      "Licensor" shall mean the copyright owner or entity authorized by
+      the copyright owner that is granting the License.
 
-The licensor grants you a copyright license for the
-software to do everything you might do with the software
-that would otherwise infringe the licensor's copyright
-in it for any permitted purpose. However, you may
-only distribute the software according to [Distribution
-License](#distribution-license) and make changes or new works
-based on the software according to [Changes and New Works
-License](#changes-and-new-works-license).
+      "Legal Entity" shall mean the union of the acting entity and all
+      other entities that control, are controlled by, or are under common
+      control with that entity. For the purposes of this definition,
+      "control" means (i) the power, direct or indirect, to cause the
+      direction or management of such entity, whether by contract or
+      otherwise, or (ii) ownership of fifty percent (50%) or more of the
+      outstanding shares, or (iii) beneficial ownership of such entity.
 
-## Distribution License
+      "You" (or "Your") shall mean an individual or Legal Entity
+      exercising permissions granted by this License.
 
-The licensor grants you an additional copyright license
-to distribute copies of the software. Your license
-to distribute covers distributing the software with
-changes and new works permitted by [Changes and New Works
-License](#changes-and-new-works-license).
+      "Source" form shall mean the preferred form for making modifications,
+      including but not limited to software source code, documentation
+      source, and configuration files.
 
-## Notices
+      "Object" form shall mean any form resulting from mechanical
+      transformation or translation of a Source form, including but
+      not limited to compiled object code, generated documentation,
+      and conversions to other media types.
 
-You must ensure that anyone who gets a copy of any part of
-the software from you also gets a copy of these terms or the
-URL for them above, as well as copies of any plain-text lines
-beginning with `Required Notice:` that the licensor provided
-with the software. For example:
+      "Work" shall mean the work of authorship, whether in Source or
+      Object form, made available under the License, as indicated by a
+      copyright notice that is included in or attached to the work
+      (an example is provided in the Appendix below).
 
-> Required Notice: Copyright Yoyodyne, Inc. (http://example.com)
+      "Derivative Works" shall mean any work, whether in Source or Object
+      form, that is based on (or derived from) the Work and for which the
+      editorial revisions, annotations, elaborations, or other modifications
+      represent, as a whole, an original work of authorship. For the purposes
+      of this License, Derivative Works shall not include works that remain
+      separable from, or merely link (or bind by name) to the interfaces of,
+      the Work and Derivative Works thereof.
 
-## Changes and New Works License
+      "Contribution" shall mean any work of authorship, including
+      the original version of the Work and any modifications or additions
+      to that Work or Derivative Works thereof, that is intentionally
+      submitted to Licensor for inclusion in the Work by the copyright owner
+      or by an individual or Legal Entity authorized to submit on behalf of
+      the copyright owner. For the purposes of this definition, "submitted"
+      means any form of electronic, verbal, or written communication sent
+      to the Licensor or its representatives, including but not limited to
+      communication on electronic mailing lists, source code control systems,
+      and issue tracking systems that are managed by, or on behalf of, the
+      Licensor for the purpose of discussing and improving the Work, but
+      excluding communication that is conspicuously marked or otherwise
+      designated in writing by the copyright owner as "Not a Contribution."
 
-The licensor grants you an additional copyright license to
-make changes and new works based on the software for any
-permitted purpose.
+      "Contributor" shall mean Licensor and any individual or Legal Entity
+      on behalf of whom a Contribution has been received by Licensor and
+      subsequently incorporated within the Work.
 
-## Patent License
+   2. Grant of Copyright License. Subject to the terms and conditions of
+      this License, each Contributor hereby grants to You a perpetual,
+      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+      copyright license to reproduce, prepare Derivative Works of,
+      publicly display, publicly perform, sublicense, and distribute the
+      Work and such Derivative Works in Source or Object form.
 
-The licensor grants you a patent license for the software that
-covers patent claims the licensor can license, or becomes able
-to license, that you would infringe by using the software.
+   3. Grant of Patent License. Subject to the terms and conditions of
+      this License, each Contributor hereby grants to You a perpetual,
+      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+      (except as stated in this section) patent license to make, have made,
+      use, offer to sell, sell, import, and otherwise transfer the Work,
+      where such license applies only to those patent claims licensable
+      by such Contributor that are necessarily infringed by their
+      Contribution(s) alone or by combination of their Contribution(s)
+      with the Work to which such Contribution(s) was submitted. If You
+      institute patent litigation against any entity (including a
+      cross-claim or counterclaim in a lawsuit) alleging that the Work
+      or a Contribution incorporated within the Work constitutes direct
+      or contributory patent infringement, then any patent licenses
+      granted to You under this License for that Work shall terminate
+      as of the date such litigation is filed.
 
-## Noncompete
+   4. Redistribution. You may reproduce and distribute copies of the
+      Work or Derivative Works thereof in any medium, with or without
+      modifications, and in Source or Object form, provided that You
+      meet the following conditions:
 
-Any purpose is a permitted purpose, except for providing any
-product that competes with the software or any product the
-licensor or any of its affiliates provides using the software.
+      (a) You must give any other recipients of the Work or
+          Derivative Works a copy of this License; and
 
-## Competition
+      (b) You must cause any modified files to carry prominent notices
+          stating that You changed the files; and
 
-Goods and services compete even when they provide functionality
-through different kinds of interfaces or for different technical
-platforms. Applications can compete with services, libraries
-with plugins, frameworks with development tools, and so on,
-even if they're written in different programming languages
-or for different computer architectures. Goods and services
-compete even when provided free of charge. If you market a
-product as a practical substitute for the software or another
-product, it definitely competes.
+      (c) You must retain, in the Source form of any Derivative Works
+          that You distribute, all copyright, patent, trademark, and
+          attribution notices from the Source form of the Work,
+          excluding those notices that do not pertain to any part of
+          the Derivative Works; and
 
-## New Products
+      (d) If the Work includes a "NOTICE" text file as part of its
+          distribution, then any Derivative Works that You distribute must
+          include a readable copy of the attribution notices contained
+          within such NOTICE file, excluding those notices that do not
+          pertain to any part of the Derivative Works, in at least one
+          of the following places: within a NOTICE text file distributed
+          as part of the Derivative Works; within the Source form or
+          documentation, if provided along with the Derivative Works; or,
+          within a display generated by the Derivative Works, if and
+          wherever such third-party notices normally appear. The contents
+          of the NOTICE file are for informational purposes only and
+          do not modify the License. You may add Your own attribution
+          notices within Derivative Works that You distribute, alongside
+          or as an addendum to the NOTICE text from the Work, provided
+          that such additional attribution notices cannot be construed
+          as modifying the License.
 
-If you are using the software to provide a product that does
-not compete, but the licensor or any of its affiliates brings
-your product into competition by providing a new version of
-the software or another product using the software, you may
-continue using versions of the software available under these
-terms beforehand to provide your competing product, but not
-any later versions.
+      You may add Your own copyright statement to Your modifications and
+      may provide additional or different license terms and conditions
+      for use, reproduction, or distribution of Your modifications, or
+      for any such Derivative Works as a whole, provided Your use,
+      reproduction, and distribution of the Work otherwise complies with
+      the conditions stated in this License.
 
-## Discontinued Products
+   5. Submission of Contributions. Unless You explicitly state otherwise,
+      any Contribution intentionally submitted for inclusion in the Work
+      by You to the Licensor shall be under the terms and conditions of
+      this License, without any additional terms or conditions.
+      Notwithstanding the above, nothing herein shall supersede or modify
+      the terms of any separate license agreement you may have executed
+      with Licensor regarding such Contributions.
 
-You may begin using the software to compete with a product
-or service that the licensor or any of its affiliates has
-stopped providing, unless the licensor includes a plain-text
-line beginning with `Licensor Line of Business:` with the
-software that mentions that line of business. For example:
+   6. Trademarks. This License does not grant permission to use the trade
+      names, trademarks, service marks, or product names of the Licensor,
+      except as required for reasonable and customary use in describing the
+      origin of the Work and reproducing the content of the NOTICE file.
 
-> Licensor Line of Business: YoyodyneCMS Content Management
-> System (http://example.com/cms)
+   7. Disclaimer of Warranty. Unless required by applicable law or
+      agreed to in writing, Licensor provides the Work (and each
+      Contributor provides its Contributions) on an "AS IS" BASIS,
+      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+      implied, including, without limitation, any warranties or conditions
+      of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
+      PARTICULAR PURPOSE. You are solely responsible for determining the
+      appropriateness of using or redistributing the Work and assume any
+      risks associated with Your exercise of permissions under this License.
 
-## Sales of Business
+   8. Limitation of Liability. In no event and under no legal theory,
+      whether in tort (including negligence), contract, or otherwise,
+      unless required by applicable law (such as deliberate and grossly
+      negligent acts) or agreed to in writing, shall any Contributor be
+      liable to You for damages, including any direct, indirect, special,
+      incidental, or consequential damages of any character arising as a
+      result of this License or out of the use or inability to use the
+      Work (including but not limited to damages for loss of goodwill,
+      work stoppage, computer failure or malfunction, or any and all
+      other commercial damages or losses), even if such Contributor
+      has been advised of the possibility of such damages.
 
-If the licensor or any of its affiliates sells a line of
-business developing the software or using the software
-to provide a product, the buyer can also enforce
-[Noncompete](#noncompete) for that product.
+   9. Accepting Warranty or Additional Liability. While redistributing
+      the Work or Derivative Works thereof, You may choose to offer,
+      and charge a fee for, acceptance of support, warranty, indemnity,
+      or other liability obligations and/or rights consistent with this
+      License. However, in accepting such obligations, You may act only
+      on Your own behalf and on Your sole responsibility, not on behalf
+      of any other Contributor, and only if You agree to indemnify,
+      defend, and hold each Contributor harmless for any liability
+      incurred by, or claims asserted against, such Contributor by reason
+      of your accepting any such warranty or additional liability.
 
-## Fair Use
+   END OF TERMS AND CONDITIONS
 
-You may have "fair use" rights for the software under the
-law. These terms do not limit them.
+   APPENDIX: How to apply the Apache License to your work.
 
-## No Other Rights
+      To apply the Apache License to your work, attach the following
+      boilerplate notice, with the fields enclosed by brackets "[]"
+      replaced with your own identifying information. (Don't include
+      the brackets!)  The text should be enclosed in the appropriate
+      comment syntax for the file format. We also recommend that a
+      file or class name and description of purpose be included on the
+      same "printed page" as the copyright notice for easier
+      identification within third-party archives.
 
-These terms do not allow you to sublicense or transfer any of
-your licenses to anyone else, or prevent the licensor from
-granting licenses to anyone else. These terms do not imply
-any other licenses.
+   Copyright [yyyy] [name of copyright owner]
 
-## Patent Defense
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
 
-If you make any written claim that the software infringes or
-contributes to infringement of any patent, your patent license
-for the software granted under these terms ends immediately. If
-your company makes such a claim, your patent license ends
-immediately for work on behalf of your company.
+       http://www.apache.org/licenses/LICENSE-2.0
 
-## Violations
-
-The first time you are notified in writing that you have
-violated any of these terms, or done anything with the software
-not covered by your licenses, your licenses can nonetheless
-continue if you come into full compliance with these terms,
-and take practical steps to correct past violations, within
-32 days of receiving notice. Otherwise, all your licenses
-end immediately.
-
-## No Liability
-
-**_As far as the law allows, the software comes as is, without
-any warranty or condition, and the licensor will not be liable
-to you for any damages arising out of these terms or the use
-or nature of the software, under any kind of legal claim._**
-
-## Definitions
-
-The **licensor** is the individual or entity offering these
-terms, and the **software** is the software the licensor makes
-available under these terms.
-
-A **product** can be a good or service, or a combination
-of them.
-
-**You** refers to the individual or entity agreeing to these
-terms.
-
-**Your company** is any legal entity, sole proprietorship,
-or other kind of organization that you work for, plus all
-its affiliates.
-
-**Affiliates** means the other organizations than an
-organization has control over, is under the control of, or is
-under common control with.
-
-**Control** means ownership of substantially all the assets of
-an entity, or the power to direct its management and policies
-by vote, contract, or otherwise. Control can be direct or
-indirect.
-
-**Your licenses** are all the licenses granted to you for the
-software under these terms.
-
-**Use** means anything you do with the software requiring one
-of your licenses.
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
 ```
 
 ### @paper-design/shaders-react — LicenseRef-PolyForm-Shield-1.0.0
 
 ```
-# PolyForm Shield License 1.0.0
+                                 Apache License
+                           Version 2.0, January 2004
+                        http://www.apache.org/licenses/
 
-<https://polyformproject.org/licenses/shield/1.0.0>
+   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
 
-## Acceptance
+   1. Definitions.
 
-In order to get any license under these terms, you must agree
-to them as both strict obligations and conditions to all
-your licenses.
+      "License" shall mean the terms and conditions for use, reproduction,
+      and distribution as defined by Sections 1 through 9 of this document.
 
-## Copyright License
+      "Licensor" shall mean the copyright owner or entity authorized by
+      the copyright owner that is granting the License.
 
-The licensor grants you a copyright license for the
-software to do everything you might do with the software
-that would otherwise infringe the licensor's copyright
-in it for any permitted purpose.  However, you may
-only distribute the software according to [Distribution
-License](#distribution-license) and make changes or new works
-based on the software according to [Changes and New Works
-License](#changes-and-new-works-license).
+      "Legal Entity" shall mean the union of the acting entity and all
+      other entities that control, are controlled by, or are under common
+      control with that entity. For the purposes of this definition,
+      "control" means (i) the power, direct or indirect, to cause the
+      direction or management of such entity, whether by contract or
+      otherwise, or (ii) ownership of fifty percent (50%) or more of the
+      outstanding shares, or (iii) beneficial ownership of such entity.
 
-## Distribution License
+      "You" (or "Your") shall mean an individual or Legal Entity
+      exercising permissions granted by this License.
 
-The licensor grants you an additional copyright license
-to distribute copies of the software.  Your license
-to distribute covers distributing the software with
-changes and new works permitted by [Changes and New Works
-License](#changes-and-new-works-license).
+      "Source" form shall mean the preferred form for making modifications,
+      including but not limited to software source code, documentation
+      source, and configuration files.
 
-## Notices
+      "Object" form shall mean any form resulting from mechanical
+      transformation or translation of a Source form, including but
+      not limited to compiled object code, generated documentation,
+      and conversions to other media types.
 
-You must ensure that anyone who gets a copy of any part of
-the software from you also gets a copy of these terms or the
-URL for them above, as well as copies of any plain-text lines
-beginning with `Required Notice:` that the licensor provided
-with the software.  For example:
+      "Work" shall mean the work of authorship, whether in Source or
+      Object form, made available under the License, as indicated by a
+      copyright notice that is included in or attached to the work
+      (an example is provided in the Appendix below).
 
-> Required Notice: Copyright Yoyodyne, Inc. (http://example.com)
+      "Derivative Works" shall mean any work, whether in Source or Object
+      form, that is based on (or derived from) the Work and for which the
+      editorial revisions, annotations, elaborations, or other modifications
+      represent, as a whole, an original work of authorship. For the purposes
+      of this License, Derivative Works shall not include works that remain
+      separable from, or merely link (or bind by name) to the interfaces of,
+      the Work and Derivative Works thereof.
 
-## Changes and New Works License
+      "Contribution" shall mean any work of authorship, including
+      the original version of the Work and any modifications or additions
+      to that Work or Derivative Works thereof, that is intentionally
+      submitted to Licensor for inclusion in the Work by the copyright owner
+      or by an individual or Legal Entity authorized to submit on behalf of
+      the copyright owner. For the purposes of this definition, "submitted"
+      means any form of electronic, verbal, or written communication sent
+      to the Licensor or its representatives, including but not limited to
+      communication on electronic mailing lists, source code control systems,
+      and issue tracking systems that are managed by, or on behalf of, the
+      Licensor for the purpose of discussing and improving the Work, but
+      excluding communication that is conspicuously marked or otherwise
+      designated in writing by the copyright owner as "Not a Contribution."
 
-The licensor grants you an additional copyright license to
-make changes and new works based on the software for any
-permitted purpose.
+      "Contributor" shall mean Licensor and any individual or Legal Entity
+      on behalf of whom a Contribution has been received by Licensor and
+      subsequently incorporated within the Work.
 
-## Patent License
+   2. Grant of Copyright License. Subject to the terms and conditions of
+      this License, each Contributor hereby grants to You a perpetual,
+      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+      copyright license to reproduce, prepare Derivative Works of,
+      publicly display, publicly perform, sublicense, and distribute the
+      Work and such Derivative Works in Source or Object form.
 
-The licensor grants you a patent license for the software that
-covers patent claims the licensor can license, or becomes able
-to license, that you would infringe by using the software.
+   3. Grant of Patent License. Subject to the terms and conditions of
+      this License, each Contributor hereby grants to You a perpetual,
+      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+      (except as stated in this section) patent license to make, have made,
+      use, offer to sell, sell, import, and otherwise transfer the Work,
+      where such license applies only to those patent claims licensable
+      by such Contributor that are necessarily infringed by their
+      Contribution(s) alone or by combination of their Contribution(s)
+      with the Work to which such Contribution(s) was submitted. If You
+      institute patent litigation against any entity (including a
+      cross-claim or counterclaim in a lawsuit) alleging that the Work
+      or a Contribution incorporated within the Work constitutes direct
+      or contributory patent infringement, then any patent licenses
+      granted to You under this License for that Work shall terminate
+      as of the date such litigation is filed.
 
-## Noncompete
+   4. Redistribution. You may reproduce and distribute copies of the
+      Work or Derivative Works thereof in any medium, with or without
+      modifications, and in Source or Object form, provided that You
+      meet the following conditions:
 
-Any purpose is a permitted purpose, except for providing any
-product that competes with the software or any product the
-licensor or any of its affiliates provides using the software.
+      (a) You must give any other recipients of the Work or
+          Derivative Works a copy of this License; and
 
-## Competition
+      (b) You must cause any modified files to carry prominent notices
+          stating that You changed the files; and
 
-Goods and services compete even when they provide functionality
-through different kinds of interfaces or for different technical
-platforms.  Applications can compete with services, libraries
-with plugins, frameworks with development tools, and so on,
-even if they're written in different programming languages
-or for different computer architectures.  Goods and services
-compete even when provided free of charge.  If you market a
-product as a practical substitute for the software or another
-product, it definitely competes.
+      (c) You must retain, in the Source form of any Derivative Works
+          that You distribute, all copyright, patent, trademark, and
+          attribution notices from the Source form of the Work,
+          excluding those notices that do not pertain to any part of
+          the Derivative Works; and
 
-## New Products
+      (d) If the Work includes a "NOTICE" text file as part of its
+          distribution, then any Derivative Works that You distribute must
+          include a readable copy of the attribution notices contained
+          within such NOTICE file, excluding those notices that do not
+          pertain to any part of the Derivative Works, in at least one
+          of the following places: within a NOTICE text file distributed
+          as part of the Derivative Works; within the Source form or
+          documentation, if provided along with the Derivative Works; or,
+          within a display generated by the Derivative Works, if and
+          wherever such third-party notices normally appear. The contents
+          of the NOTICE file are for informational purposes only and
+          do not modify the License. You may add Your own attribution
+          notices within Derivative Works that You distribute, alongside
+          or as an addendum to the NOTICE text from the Work, provided
+          that such additional attribution notices cannot be construed
+          as modifying the License.
 
-If you are using the software to provide a product that does
-not compete, but the licensor or any of its affiliates brings
-your product into competition by providing a new version of
-the software or another product using the software, you may
-continue using versions of the software available under these
-terms beforehand to provide your competing product, but not
-any later versions.
+      You may add Your own copyright statement to Your modifications and
+      may provide additional or different license terms and conditions
+      for use, reproduction, or distribution of Your modifications, or
+      for any such Derivative Works as a whole, provided Your use,
+      reproduction, and distribution of the Work otherwise complies with
+      the conditions stated in this License.
 
-## Discontinued Products
+   5. Submission of Contributions. Unless You explicitly state otherwise,
+      any Contribution intentionally submitted for inclusion in the Work
+      by You to the Licensor shall be under the terms and conditions of
+      this License, without any additional terms or conditions.
+      Notwithstanding the above, nothing herein shall supersede or modify
+      the terms of any separate license agreement you may have executed
+      with Licensor regarding such Contributions.
 
-You may begin using the software to compete with a product
-or service that the licensor or any of its affiliates has
-stopped providing, unless the licensor includes a plain-text
-line beginning with `Licensor Line of Business:` with the
-software that mentions that line of business.  For example:
+   6. Trademarks. This License does not grant permission to use the trade
+      names, trademarks, service marks, or product names of the Licensor,
+      except as required for reasonable and customary use in describing the
+      origin of the Work and reproducing the content of the NOTICE file.
 
-> Licensor Line of Business: YoyodyneCMS Content Management
-System (http://example.com/cms)
+   7. Disclaimer of Warranty. Unless required by applicable law or
+      agreed to in writing, Licensor provides the Work (and each
+      Contributor provides its Contributions) on an "AS IS" BASIS,
+      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+      implied, including, without limitation, any warranties or conditions
+      of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
+      PARTICULAR PURPOSE. You are solely responsible for determining the
+      appropriateness of using or redistributing the Work and assume any
+      risks associated with Your exercise of permissions under this License.
 
-## Sales of Business
+   8. Limitation of Liability. In no event and under no legal theory,
+      whether in tort (including negligence), contract, or otherwise,
+      unless required by applicable law (such as deliberate and grossly
+      negligent acts) or agreed to in writing, shall any Contributor be
+      liable to You for damages, including any direct, indirect, special,
+      incidental, or consequential damages of any character arising as a
+      result of this License or out of the use or inability to use the
+      Work (including but not limited to damages for loss of goodwill,
+      work stoppage, computer failure or malfunction, or any and all
+      other commercial damages or losses), even if such Contributor
+      has been advised of the possibility of such damages.
 
-If the licensor or any of its affiliates sells a line of
-business developing the software or using the software
-to provide a product, the buyer can also enforce
-[Noncompete](#noncompete) for that product.
+   9. Accepting Warranty or Additional Liability. While redistributing
+      the Work or Derivative Works thereof, You may choose to offer,
+      and charge a fee for, acceptance of support, warranty, indemnity,
+      or other liability obligations and/or rights consistent with this
+      License. However, in accepting such obligations, You may act only
+      on Your own behalf and on Your sole responsibility, not on behalf
+      of any other Contributor, and only if You agree to indemnify,
+      defend, and hold each Contributor harmless for any liability
+      incurred by, or claims asserted against, such Contributor by reason
+      of your accepting any such warranty or additional liability.
 
-## Fair Use
+   END OF TERMS AND CONDITIONS
 
-You may have "fair use" rights for the software under the
-law. These terms do not limit them.
+   APPENDIX: How to apply the Apache License to your work.
 
-## No Other Rights
+      To apply the Apache License to your work, attach the following
+      boilerplate notice, with the fields enclosed by brackets "[]"
+      replaced with your own identifying information. (Don't include
+      the brackets!)  The text should be enclosed in the appropriate
+      comment syntax for the file format. We also recommend that a
+      file or class name and description of purpose be included on the
+      same "printed page" as the copyright notice for easier
+      identification within third-party archives.
 
-These terms do not allow you to sublicense or transfer any of
-your licenses to anyone else, or prevent the licensor from
-granting licenses to anyone else.  These terms do not imply
-any other licenses.
+   Copyright [yyyy] [name of copyright owner]
 
-## Patent Defense
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
 
-If you make any written claim that the software infringes or
-contributes to infringement of any patent, your patent license
-for the software granted under these terms ends immediately. If
-your company makes such a claim, your patent license ends
-immediately for work on behalf of your company.
+       http://www.apache.org/licenses/LICENSE-2.0
 
-## Violations
-
-The first time you are notified in writing that you have
-violated any of these terms, or done anything with the software
-not covered by your licenses, your licenses can nonetheless
-continue if you come into full compliance with these terms,
-and take practical steps to correct past violations, within
-32 days of receiving notice.  Otherwise, all your licenses
-end immediately.
-
-## No Liability
-
-***As far as the law allows, the software comes as is, without
-any warranty or condition, and the licensor will not be liable
-to you for any damages arising out of these terms or the use
-or nature of the software, under any kind of legal claim.***
-
-## Definitions
-
-The **licensor** is the individual or entity offering these
-terms, and the **software** is the software the licensor makes
-available under these terms.
-
-A **product** can be a good or service, or a combination
-of them.
-
-**You** refers to the individual or entity agreeing to these
-terms.
-
-**Your company** is any legal entity, sole proprietorship,
-or other kind of organization that you work for, plus all
-its affiliates.
-
-**Affiliates** means the other organizations than an
-organization has control over, is under the control of, or is
-under common control with.
-
-**Control** means ownership of substantially all the assets of
-an entity, or the power to direct its management and policies
-by vote, contract, or otherwise.  Control can be direct or
-indirect.
-
-**Your licenses** are all the licenses granted to you for the
-software under these terms.
-
-**Use** means anything you do with the software requiring one
-of your licenses.
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
 ```

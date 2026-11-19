@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import type { ColumnDef } from '@tanstack/react-table';
 
+import type { DataTableColumnDef } from '../utils/dataTableFeatures';
 import { Badge } from './Badge';
 import { DataTable } from './DataTable';
 
@@ -27,7 +27,7 @@ const DATA: Build[] = [
   },
 ];
 
-const COLUMNS: ColumnDef<Build>[] = [
+const COLUMNS: DataTableColumnDef<Build>[] = [
   { accessorKey: 'id', header: 'Build' },
   { accessorKey: 'branch', header: 'Branch' },
   {

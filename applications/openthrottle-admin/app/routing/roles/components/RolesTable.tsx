@@ -1,5 +1,5 @@
+import type { DataTableColumnDef } from '@openthrottle/react-router-shadcn';
 import { Badge, cn, DataTable } from '@openthrottle/react-router-shadcn';
-import type { ColumnDef } from '@tanstack/react-table';
 import { formatDate } from 'date-fns';
 import * as React from 'react';
 import { Link } from 'react-router';
@@ -41,7 +41,7 @@ export const RolesTable = (props: RolesTableProps): React.ReactElement => {
   );
 };
 
-RolesTable.buildTable = (): ColumnDef<
+RolesTable.buildTable = (): DataTableColumnDef<
   RoleRowFragment,
   string | number | null | undefined
 >[] => {

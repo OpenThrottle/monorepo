@@ -18,7 +18,6 @@
     "@react-router/fs-routes": "catalog:",
     "@react-router/node": "catalog:",
     "@react-router/serve": "catalog:",
-    "@tanstack/react-table": "catalog:",
     "@vercel/analytics": "catalog:",
     "@vercel/react-router": "catalog:",
     "date-fns": "catalog:",

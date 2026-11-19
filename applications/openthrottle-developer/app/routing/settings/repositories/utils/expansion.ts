@@ -1,4 +1,4 @@
-import type { ExpandedState } from '@tanstack/react-table';
+import type { ExpandedState } from '@openthrottle/react-router-shadcn';
 
 /**
  * @description Turn the parent row ids reported by `filterRepositoryRows` into

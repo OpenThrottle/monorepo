@@ -58,12 +58,18 @@ describe('DashboardOpenPrsByAuthorCard Component', () => {
 
   test('should configure chart container CSS variables for each series', () => {
     const card = component.getByTestId('DashboardOpenPrsByAuthorCard');
-    const chartRoot = card.querySelector('.recharts-responsive-container');
+    const chartRoot = card.querySelector<HTMLElement>(
+      '.recharts-responsive-container',
+    );
     expect(chartRoot).not.toBeNull();
 
+    // Declared values: jsdom resolves var() in computed custom properties, and
+    // the theme tokens these point at are not loaded in tests.
     for (const seriesKey of PRS_BY_AUTHOR_CHART_SERIES) {
       const color = PRS_BY_AUTHOR_CHART_CONFIG[seriesKey]?.color;
-      expect(chartRoot).toHaveStyle({ [`--color-${seriesKey}`]: color });
+      expect(chartRoot?.style.getPropertyValue(`--color-${seriesKey}`)).toBe(
+        color,
+      );
     }
   });
 
@@ -125,9 +131,15 @@ describe('DashboardOpenPrsByAuthorCard Component partial series', () => {
       },
     });
     const card = result.getByTestId('DashboardOpenPrsByAuthorCard');
-    const chartRoot = card.querySelector('.recharts-responsive-container');
+    const chartRoot = card.querySelector<HTMLElement>(
+      '.recharts-responsive-container',
+    );
     expect(chartRoot).toBeInTheDocument();
-    expect(chartRoot).toHaveStyle({ '--color-closed': 'var(--chart-2)' });
-    expect(chartRoot).toHaveStyle({ '--color-open': 'var(--chart-1)' });
+    expect(chartRoot?.style.getPropertyValue('--color-closed')).toBe(
+      'var(--chart-2)',
+    );
+    expect(chartRoot?.style.getPropertyValue('--color-open')).toBe(
+      'var(--chart-1)',
+    );
   });
 });

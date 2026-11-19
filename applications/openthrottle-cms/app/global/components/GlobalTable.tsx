@@ -1,5 +1,5 @@
+import type { DataTableColumnDef } from '@openthrottle/react-router-shadcn';
 import { cn, DataTable } from '@openthrottle/react-router-shadcn';
-import type { ColumnDef } from '@tanstack/react-table';
 import * as React from 'react';
 import { Link } from 'react-router';
 
@@ -29,7 +29,7 @@ export const GlobalTable = <TRow extends object>(
   const { className, columns, emptyState, getRowHref, getRowId, rows } = props;
 
   // Hooks
-  const columnDefs = React.useMemo<ColumnDef<TRow, unknown>[]>(() => {
+  const columnDefs = React.useMemo<DataTableColumnDef<TRow, unknown>[]>(() => {
     return columns.map((column, index) => ({
       accessorFn: (row) => row[column.key],
       cell: (context) => {

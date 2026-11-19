@@ -1,4 +1,7 @@
-import type { CellContext, HeaderContext } from '@tanstack/react-table';
+import type {
+  DataTableCellContext,
+  DataTableHeaderContext,
+} from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
@@ -14,11 +17,14 @@ function asMock(value: unknown): unknown {
 
 const cellContext = (
   plan: PlanCardFragment,
-): CellContext<PlanCardFragment, string | number | null | undefined> => {
+): DataTableCellContext<
+  PlanCardFragment,
+  string | number | null | undefined
+> => {
   return asMock({ row: { original: plan } });
 };
 
-const headerContext = (): HeaderContext<
+const headerContext = (): DataTableHeaderContext<
   PlanCardFragment,
   string | number | null | undefined
 > => {
@@ -28,12 +34,15 @@ const headerContext = (): HeaderContext<
 interface PlainPlanColumn {
   readonly accessorKey?: string;
   readonly cell?: (
-    ctx: CellContext<PlanCardFragment, string | number | null | undefined>,
+    ctx: DataTableCellContext<
+      PlanCardFragment,
+      string | number | null | undefined
+    >,
   ) => React.ReactNode;
   readonly header?:
     | string
     | ((
-        ctx: HeaderContext<
+        ctx: DataTableHeaderContext<
           PlanCardFragment,
           string | number | null | undefined
         >,

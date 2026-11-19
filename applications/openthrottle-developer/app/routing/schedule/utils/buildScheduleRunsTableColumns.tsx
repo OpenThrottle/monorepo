@@ -1,9 +1,9 @@
+import type { DataTableColumnDef } from '@openthrottle/react-router-shadcn';
 /**
  * @description Column definitions for {@link ScheduleRunsTable}. Hoisted from the
  * component file per component-primitive-shape R4 (module-scope helpers live in
  * the sibling utils/ folder) so the table component stays UI-focused.
  */
-import type { ColumnDef } from '@tanstack/react-table';
 import * as React from 'react';
 import { Link } from 'react-router';
 
@@ -26,7 +26,7 @@ import { formatWhen } from '~/routing/schedule/utils/formatWhen';
 export const buildScheduleRunsTableColumns = (
   jobId: ScheduleRunsTableProps['jobId'],
   resumedRunIds: ReadonlySet<string>,
-): ColumnDef<
+): DataTableColumnDef<
   ScheduledJobRunRowFragment,
   string | number | null | undefined
 >[] => {

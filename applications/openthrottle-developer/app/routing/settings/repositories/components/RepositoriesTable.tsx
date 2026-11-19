@@ -1,9 +1,12 @@
+import type {
+  DataTableColumnDef,
+  ExpandedState,
+} from '@openthrottle/react-router-shadcn';
 import { cn, DataTable } from '@openthrottle/react-router-shadcn';
 import {
   GlobalFeatureOnboarding,
   GlobalPopoverActionsHeader,
 } from '@openthrottle/react-router-ui-global';
-import type { ColumnDef, ExpandedState } from '@tanstack/react-table';
 import * as React from 'react';
 
 import { formatUpdatedAt } from '~/routing/plans/utils/formatters';
@@ -87,7 +90,7 @@ export const RepositoriesTable = (
 
 RepositoriesTable.buildTable = (
   driftByCheckoutId?: Record<string, CheckoutDrift>,
-): ColumnDef<RepositoryCheckoutRow, string | null | undefined>[] => {
+): DataTableColumnDef<RepositoryCheckoutRow, string | null | undefined>[] => {
   return [
     {
       cell: ({ row }) => (

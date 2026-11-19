@@ -1,6 +1,5 @@
 import { isRecord } from '@openthrottle/nodejs-utils';
 import { createJSONStorage } from 'jotai/utils';
-import type { SyncStorage } from 'jotai/vanilla/utils/atomWithStorage';
 
 import type { OnboardingState } from '~/routing/dashboard/data/data.onboarding-state';
 import {
@@ -50,7 +49,9 @@ export function normalizeOnboardingState(raw: unknown): OnboardingState {
  * it is a no-op store, so the atom hydrates to the default and the browser
  * re-reads localStorage on mount.
  */
-export const createOnboardingStorage = (): SyncStorage<OnboardingState> => {
+export const createOnboardingStorage = (): ReturnType<
+  typeof createJSONStorage<OnboardingState>
+> => {
   const jsonStorage = createJSONStorage<OnboardingState>(() => {
     if (typeof window === 'undefined') {
       return {

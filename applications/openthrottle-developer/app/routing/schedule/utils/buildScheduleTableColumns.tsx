@@ -1,3 +1,4 @@
+import type { DataTableColumnDef } from '@openthrottle/react-router-shadcn';
 /**
  * @description Column definitions for {@link ScheduleTable}. Hoisted from the
  * component file per component-primitive-shape R4 (module-scope helpers live in
@@ -8,7 +9,6 @@ import {
   GlobalPopover,
   GlobalPopoverActionsHeader,
 } from '@openthrottle/react-router-ui-global';
-import type { ColumnDef } from '@tanstack/react-table';
 import * as React from 'react';
 import { Link } from 'react-router';
 
@@ -22,7 +22,7 @@ import { describeScheduleCadence } from '~/routing/schedule/utils/describeSchedu
 
 export const buildScheduleTableColumns = (
   inFlightByJob: NonNullable<ScheduleTableProps['inFlightByJob']>,
-): ColumnDef<
+): DataTableColumnDef<
   ScheduledJobCardFragment,
   string | number | null | undefined
 >[] => {

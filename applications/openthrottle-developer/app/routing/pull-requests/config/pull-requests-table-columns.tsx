@@ -3,13 +3,13 @@
  * (badge state, dates like the route cards, compact GlobalPopover actions).
  */
 import type { PullRequestCardFragment } from '@openthrottle/openthrottle-developer-codegen';
+import type { DataTableColumnDef } from '@openthrottle/react-router-shadcn';
 import { Button } from '@openthrottle/react-router-shadcn';
 import type { GlobalPopoverAction } from '@openthrottle/react-router-ui-global';
 import {
   GlobalPopover,
   GlobalPopoverActionsHeader,
 } from '@openthrottle/react-router-ui-global';
-import type { ColumnDef } from '@tanstack/react-table';
 import { formatDate } from 'date-fns';
 import {
   ArrowRightIcon,
@@ -68,7 +68,10 @@ const openExternal = (href: string): void => {
  */
 export const createPullRequestsTableColumns = (
   context: PullRequestsTableColumnsContext,
-): ColumnDef<PullRequestCardFragment, PullRequestsTableColumnValue>[] => {
+): DataTableColumnDef<
+  PullRequestCardFragment,
+  PullRequestsTableColumnValue
+>[] => {
   return [
     {
       accessorKey: 'title',

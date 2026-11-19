@@ -302,10 +302,18 @@ describe('routes/dashboard._index.tsx', () => {
     const card = await component.findByTestId('DashboardOpenPrsByAuthorCard');
     expect(card).toBeInTheDocument();
 
-    const chartRoot = card.querySelector('.recharts-responsive-container');
+    const chartRoot = card.querySelector<HTMLElement>(
+      '.recharts-responsive-container',
+    );
     expect(chartRoot).toBeInTheDocument();
-    expect(chartRoot).toHaveStyle({ '--color-closed': 'var(--chart-2)' });
-    expect(chartRoot).toHaveStyle({ '--color-open': 'var(--chart-1)' });
+    // Declared values: jsdom resolves var() in computed custom properties, and
+    // the theme tokens these point at are not loaded in tests.
+    expect(chartRoot?.style.getPropertyValue('--color-closed')).toBe(
+      'var(--chart-2)',
+    );
+    expect(chartRoot?.style.getPropertyValue('--color-open')).toBe(
+      'var(--chart-1)',
+    );
   });
 
   test('renders PRs by author empty state when both series are empty', async () => {

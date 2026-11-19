@@ -12,8 +12,8 @@ import {
 } from '@openthrottle/react-router-ui';
 import { GlobalScreen } from '@openthrottle/react-router-ui-global';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import { animate, useReducedMotion } from 'framer-motion';
 import { useAtom } from 'jotai';
+import { animate, useReducedMotion } from 'motion/react';
 import * as React from 'react';
 import type { ShouldRevalidateFunction } from 'react-router';
 import { data, redirect, useFetcher, useSearchParams } from 'react-router';
@@ -27,6 +27,7 @@ import { callLoginMutation } from '~/global/utils/utils.auth';
 import { AuthBackground } from '~/routing/auth/components/AuthBackground';
 import {
   FORM_FADE_MS,
+  GRAIN_MIXER_REST,
   GRAIN_REST,
   HOLD_MS,
 } from '~/routing/auth/config/animation';
@@ -77,7 +78,7 @@ export default function Component(
   const [isChaotic, setIsChaotic] = React.useState(false);
   const [isExiting, setIsExiting] = React.useState(false);
   const [_grainOverlay, setGrainOverlay] = React.useState(GRAIN_REST);
-  const [_grainMixer, setGrainMixer] = React.useState(2.5);
+  const [_grainMixer, setGrainMixer] = React.useState(GRAIN_MIXER_REST);
   const [_isMounted, setIsMounted] = React.useState(false);
 
   // Setup
@@ -153,10 +154,10 @@ export default function Component(
       ease,
       onUpdate: setGrainOverlay,
     });
-    const mixer = animate(setGrainMixer, 0, {
+    const mixer = animate(GRAIN_MIXER_REST, 0, {
       duration,
       ease,
-      onUpdate: setGrainOverlay,
+      onUpdate: setGrainMixer,
     });
 
     const timer = setTimeout(() => {

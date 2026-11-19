@@ -1,11 +1,11 @@
 import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
+import type { DataTableColumnDef } from '@openthrottle/react-router-shadcn';
 import {
   Badge,
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
-import type { ColumnDef } from '@tanstack/react-table';
 import * as React from 'react';
 import { Link } from 'react-router';
 
@@ -50,7 +50,7 @@ export const getSkillsTableRowId = (
 
 export const createSkillsTableColumns = (
   options: SkillsTableColumnOptions = {},
-): ColumnDef<RepoSkillEntry, SkillsTableColumnValue>[] => {
+): DataTableColumnDef<RepoSkillEntry, SkillsTableColumnValue>[] => {
   return [
     {
       accessorKey: 'source',

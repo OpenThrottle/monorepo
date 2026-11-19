@@ -1,5 +1,5 @@
+import type { DataTableColumnDef } from '@openthrottle/react-router-shadcn';
 import { Badge, cn, DataTable } from '@openthrottle/react-router-shadcn';
-import type { ColumnDef } from '@tanstack/react-table';
 import * as React from 'react';
 import { Link } from 'react-router';
 
@@ -48,7 +48,7 @@ export const ProjectTasksTable = (
   );
 };
 
-ProjectTasksTable.buildTable = (): ColumnDef<
+ProjectTasksTable.buildTable = (): DataTableColumnDef<
   ProjectTaskRow,
   string | number | null | undefined
 >[] => {

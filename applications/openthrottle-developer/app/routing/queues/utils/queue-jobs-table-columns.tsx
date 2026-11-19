@@ -1,11 +1,10 @@
+import type { DataTableColumnDef } from '@openthrottle/react-router-shadcn';
 /**
  * @description Column definitions (and their row-id / formatting helpers) for
  * the queue-detail jobs table. Hoisted out of QueueJobsTable per
  * component-primitive-shape R4 so the component stays UI-focused.
  */
-
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
-import type { ColumnDef } from '@tanstack/react-table';
 import * as React from 'react';
 import { Link } from 'react-router';
 
@@ -32,7 +31,10 @@ export const queueJobRowId = (job: QueueJobDetailsFragment): string => {
 
 export function buildQueueJobsTableColumns(
   queueName: string,
-): ColumnDef<QueueJobDetailsFragment, string | number | null | undefined>[] {
+): DataTableColumnDef<
+  QueueJobDetailsFragment,
+  string | number | null | undefined
+>[] {
   return [
     {
       accessorKey: 'state',

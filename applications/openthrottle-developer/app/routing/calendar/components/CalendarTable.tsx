@@ -1,6 +1,6 @@
+import type { DataTableColumnDef } from '@openthrottle/react-router-shadcn';
 import { cn, DataTable } from '@openthrottle/react-router-shadcn';
 import { readSearchParam } from '@openthrottle/react-router-ui-global';
-import type { ColumnDef } from '@tanstack/react-table';
 import * as React from 'react';
 import { Link, useSearchParams } from 'react-router';
 
@@ -47,7 +47,7 @@ export const CalendarTable = (
   );
 };
 
-CalendarTable.buildTable = (): ColumnDef<
+CalendarTable.buildTable = (): DataTableColumnDef<
   CalendarListEvent,
   string | number | null | undefined
 >[] => {

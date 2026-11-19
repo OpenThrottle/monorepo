@@ -1,5 +1,5 @@
+import type { DataTableColumnDef } from '@openthrottle/react-router-shadcn';
 import { cn, DataTable } from '@openthrottle/react-router-shadcn';
-import type { ColumnDef } from '@tanstack/react-table';
 import * as React from 'react';
 import { Link } from 'react-router';
 
@@ -41,7 +41,7 @@ export const PermissionsTable = (
   );
 };
 
-PermissionsTable.buildTable = (): ColumnDef<
+PermissionsTable.buildTable = (): DataTableColumnDef<
   PermissionRowFragment,
   string | number | null | undefined
 >[] => {

@@ -1,16 +1,15 @@
+import type { DataTableColumnDef } from '@openthrottle/react-router-shadcn';
 /**
  * @description Column definitions for the queues overview table (name
  * drill-down, health, backlog, in-flight, completed, failed, per-row ops
  * controls). Hoisted out of QueuesTable per component-primitive-shape R4.
  */
-
 import { Badge } from '@openthrottle/react-router-shadcn';
 import type { GlobalPopoverAction } from '@openthrottle/react-router-ui-global';
 import {
   GlobalPopover,
   GlobalPopoverActionsHeader,
 } from '@openthrottle/react-router-ui-global';
-import type { ColumnDef } from '@tanstack/react-table';
 import { PauseIcon, PlayIcon } from 'lucide-react';
 import * as React from 'react';
 import { Link } from 'react-router';
@@ -25,7 +24,7 @@ export type QueueControlIntent = 'pauseQueue' | 'resumeQueue';
 
 export function buildQueuesTableColumns(
   onControl: (queueName: string, intent: QueueControlIntent) => void,
-): ColumnDef<QueueCardFragment, string | number | undefined>[] {
+): DataTableColumnDef<QueueCardFragment, string | number | undefined>[] {
   return [
     {
       accessorKey: 'name',

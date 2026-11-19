@@ -1,17 +1,20 @@
 'use client';
 
+import type { ExpandedState, OnChangeFn, RowData } from '@tanstack/react-table';
 import {
-  type ColumnDef,
-  type ExpandedState,
+  createColumnHelper,
   flexRender,
-  getCoreRowModel,
-  type OnChangeFn,
-  type Row,
-  useReactTable,
+  useTable,
 } from '@tanstack/react-table';
 import clsx from 'clsx';
 import * as React from 'react';
 
+import type {
+  DataTableColumnDef,
+  DataTableFeatures,
+  DataTableRow,
+} from '../utils/dataTableFeatures';
+import { dataTableFeatures } from '../utils/dataTableFeatures';
 import { getExpansionOptions } from '../utils/getExpansionOptions';
 import {
   Table,
@@ -22,9 +25,9 @@ import {
   TableRow,
 } from './Table';
 
-export interface DataTableProps<TData, TValue> {
+export interface DataTableProps<TData extends RowData, TValue> {
   readonly className?: string;
-  readonly columns: ColumnDef<TData, TValue>[];
+  readonly columns: DataTableColumnDef<TData, TValue>[];
   readonly data: TData[];
   readonly emptyState?: string | React.ReactElement;
   /**
@@ -37,7 +40,7 @@ export interface DataTableProps<TData, TValue> {
   readonly getRowId?: (original: TData, index: number) => string;
   /** Optional: props to spread onto each body TableRow (e.g. id for hash links). */
   readonly getRowProps?: (
-    row: Row<TData>,
+    row: DataTableRow<TData>,
   ) => React.HTMLAttributes<HTMLTableRowElement>;
   /**
    * Optional: derive nested child rows from a row's original data. Supplying this
@@ -55,7 +58,7 @@ export interface DataTableProps<TData, TValue> {
 /**
  * @description Generic data table built with TanStack Table and the Table primitive. Renders columns and data with a core row model; supports extension via table options. Passing `getSubRows` additionally enables nested, expandable rows.
  */
-export function DataTable<TData, TValue>(
+export function DataTable<TData extends RowData, TValue>(
   props: DataTableProps<TData, TValue>,
 ): React.ReactElement {
   const {
@@ -90,10 +93,16 @@ export function DataTable<TData, TValue>(
     onExpandedChange?.(next);
   };
 
-  const table = useReactTable({
-    columns,
+  // v9 makes a column's value type invariant; its column helper is the
+  // sanctioned way to hand typed columns to `useTable`.
+  const tableColumns = React.useMemo(() => {
+    return createColumnHelper<DataTableFeatures, TData>().columns([...columns]);
+  }, [columns]);
+
+  const table = useTable({
+    columns: tableColumns,
     data,
-    getCoreRowModel: getCoreRowModel(),
+    features: dataTableFeatures,
     getRowId: getRowId ?? undefined,
     ...getExpansionOptions({
       expandedState,
@@ -110,12 +119,8 @@ export function DataTable<TData, TValue>(
   // Markup
   const hasRows = rows.length > 0;
   const bodyRows = rows.map((row) => (
-    <TableRow
-      data-state={row.getIsSelected() ? 'selected' : undefined}
-      key={row.id}
-      {...getRowProps?.(row)}
-    >
-      {row.getVisibleCells().map((cell) => (
+    <TableRow key={row.id} {...getRowProps?.(row)}>
+      {row.getAllCells().map((cell) => (
         <TableCell key={cell.id}>
           {flexRender(cell.column.columnDef.cell, cell.getContext())}
         </TableCell>

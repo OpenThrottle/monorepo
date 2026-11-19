@@ -194,8 +194,26 @@ export const generateCspNonce = (): string => {
 /**
  * @description Carries the per-request CSP nonce from the server render tree
  * down to the inline `<script>` tags in each app's `root.tsx`. Empty string on
- * the client (no inline scripts are emitted during hydration), so consumers
- * should treat a falsy value as "no nonce attribute".
+ * the client, where `useNonce` recovers the nonce from the document instead.
  * @public
  */
 export const NonceContext = React.createContext<string>('');
+
+/**
+ * @description Read the CSP nonce the server stamped on the document, from the
+ * first nonced `<script>`, `<link>` or `<style>`. Browsers blank the `nonce`
+ * attribute once the page loads but keep the `nonce` property, so the property
+ * is read first. Empty string on the server or when nothing is nonced.
+ * @public
+ */
+export const readDocumentNonce = (): string => {
+  if (typeof document === 'undefined') return '';
+
+  const element = document.querySelector<HTMLElement>(
+    'script[nonce], link[nonce], style[nonce]',
+  );
+
+  if (!element) return '';
+
+  return element.nonce || element.getAttribute('nonce') || '';
+};
