@@ -47,9 +47,7 @@ export const NoteCard = (props: NoteCardProps): React.ReactElement => {
 
       <CardFooter className="flex justify-end p-2 pt-0">
         <Button asChild={true} className="text-xs" variant="outline">
-          <Link to={`/notes/${note.id}`} viewTransition={true}>
-            View Note
-          </Link>
+          <Link to={`/notes/${note.id}`}>View Note</Link>
         </Button>
       </CardFooter>
     </Card>

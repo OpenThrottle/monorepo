@@ -36,7 +36,7 @@ export const NotesToolbar = (props: NotesToolbarProps): React.ReactElement => {
         />
         <div className="min-w-0 flex-1" />
         <Button asChild={true} className="shrink-0" variant="outline">
-          <Link to="/notes/create" viewTransition={true}>
+          <Link to="/notes/create">
             <PlusIcon className="h-4 w-4" /> Create note
           </Link>
         </Button>

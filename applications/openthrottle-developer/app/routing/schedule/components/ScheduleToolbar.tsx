@@ -47,7 +47,7 @@ export const ScheduleToolbar = (
         <div className="min-w-0 flex-1" />
         {showStatsToggle && <GlobalStatsToggleButton />}
         <Button asChild={true} className="shrink-0" variant="outline">
-          <Link to="/schedule/create" viewTransition={true}>
+          <Link to="/schedule/create">
             <PlusIcon className="h-4 w-4" /> {SCHEDULE_COPY.newScheduleAction}
           </Link>
         </Button>

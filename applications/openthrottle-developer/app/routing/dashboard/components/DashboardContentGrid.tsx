@@ -50,7 +50,6 @@ export const DashboardContentGrid = (
         `/dashboard?modal=${DashboardDailyStatsModal.key}&date=${date}`,
         {
           preventScrollReset: true,
-          viewTransition: true,
         },
       );
     },
@@ -98,11 +97,7 @@ export const DashboardContentGrid = (
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
             <h2>This Week's Activity</h2>
             <Button asChild={true} size="sm" variant="outline">
-              <Link
-                preventScrollReset={true}
-                to="/dashboard?modal=daily-stats"
-                viewTransition={true}
-              >
+              <Link preventScrollReset={true} to="/dashboard?modal=daily-stats">
                 Expand chart details
               </Link>
             </Button>

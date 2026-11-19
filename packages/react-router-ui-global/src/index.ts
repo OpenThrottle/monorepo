@@ -20,6 +20,7 @@ export * from './components/GlobalPopover';
 export * from './components/GlobalPopoverActionsHeader';
 export * from './components/GlobalPopoverConfirmDialog';
 export * from './components/GlobalProviders';
+export * from './components/GlobalRouteViewTransition';
 export * from './components/GlobalScreen';
 export * from './components/GlobalSearch';
 export * from './components/GlobalSidebar';

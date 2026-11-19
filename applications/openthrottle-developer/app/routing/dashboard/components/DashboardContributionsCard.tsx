@@ -52,11 +52,7 @@ export const DashboardContributionsCard = (
       <div className="flex items-center justify-between gap-2">
         <h2 className="text-sm font-medium">Contribution activity</h2>
         <Button asChild={true} size="xs" variant="ghost">
-          <Link
-            preventScrollReset={true}
-            to="/dashboard?modal=daily-stats"
-            viewTransition={true}
-          >
+          <Link preventScrollReset={true} to="/dashboard?modal=daily-stats">
             Expand chart details <ArrowRightIcon className="h-3.5 w-3.5" />
           </Link>
         </Button>

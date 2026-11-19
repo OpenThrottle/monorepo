@@ -58,7 +58,6 @@ export const OpenThrottleBreadcrumbs = (
                       link.className,
                     )}
                     to={link.to}
-                    viewTransition={true}
                   >
                     {link.children}
                   </Link>

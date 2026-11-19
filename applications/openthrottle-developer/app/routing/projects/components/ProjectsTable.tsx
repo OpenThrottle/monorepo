@@ -69,7 +69,6 @@ ProjectsTable.buildTable = (): DataTableColumnDef<
               aria-label={`View project: ${name}`}
               className="hover:text-primary underline underline-offset-2"
               to={projectHref}
-              viewTransition={true}
             >
               <h2 className="mb-1 line-clamp-1 text-sm font-medium text-ellipsis">
                 {name}

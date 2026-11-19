@@ -54,7 +54,6 @@ UsersTable.buildTable = (): DataTableColumnDef<
             aria-label={`View user: ${user.githubUsername}`}
             className="hover:text-primary font-medium underline underline-offset-2"
             to={`/users/${user.id}`}
-            viewTransition={true}
           >
             {user.githubUsername}
           </Link>

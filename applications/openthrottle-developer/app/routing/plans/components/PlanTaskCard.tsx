@@ -52,7 +52,6 @@ export const PlanTaskCard = (props: PlanTaskCardProps): React.ReactElement => {
       <Link
         className="text-muted-foreground hover:text-primary underline underline-offset-2"
         to={`/projects/${task.projectRelation.id}`}
-        viewTransition={true}
       >
         {task.projectRelation.name}
       </Link>
@@ -94,7 +93,6 @@ export const PlanTaskCard = (props: PlanTaskCardProps): React.ReactElement => {
             aria-label={`Open task: ${title}`}
             className="hover:text-primary underline underline-offset-2"
             to={taskHref}
-            viewTransition={true}
           >
             {title}
           </Link>

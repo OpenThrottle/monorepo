@@ -100,7 +100,6 @@ RulesTable.buildTable = (
                   aria-label={`${RULES_COPY.editAction}: ${rule.title}`}
                   className="hover:text-primary underline underline-offset-2"
                   to={editHref}
-                  viewTransition={true}
                 >
                   {rule.title}
                 </Link>

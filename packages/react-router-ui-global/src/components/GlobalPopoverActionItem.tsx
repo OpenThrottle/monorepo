@@ -64,7 +64,7 @@ export const GlobalPopoverActionItem = (
 
       {action.kind === 'link' && (
         <DropdownMenuItem asChild={true} disabled={isDisabled}>
-          <Link className="flex gap-2" to={action.to} viewTransition={true}>
+          <Link className="flex gap-2" to={action.to}>
             {icon}
             {label}
           </Link>

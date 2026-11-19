@@ -66,7 +66,6 @@ export const buildScheduleTableColumns = (
             <Link
               className="block font-medium underline-offset-4 hover:underline"
               to={`/schedule/${row.original.id}`}
-              viewTransition={true}
             >
               {row.original.name}
             </Link>

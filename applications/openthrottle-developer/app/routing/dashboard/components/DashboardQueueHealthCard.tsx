@@ -73,7 +73,6 @@ export const DashboardQueueHealthCard = (
           <Link
             className="hover:text-primary min-w-0 flex-1 truncate text-sm font-medium underline-offset-2 hover:underline"
             to={`/queues/${encodeURIComponent(queue.name)}`}
-            viewTransition={true}
           >
             {queue.name}
           </Link>
@@ -108,7 +107,7 @@ export const DashboardQueueHealthCard = (
       <div className="flex items-center justify-between gap-2">
         <h2 className="text-sm font-medium">Queue health</h2>
         <Button asChild={true} size="xs" variant="ghost">
-          <Link to="/queues" viewTransition={true}>
+          <Link to="/queues">
             View all <ArrowRightIcon className="h-3.5 w-3.5" />
           </Link>
         </Button>

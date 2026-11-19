@@ -55,11 +55,7 @@ export const BlogPostRow = (props: BlogPostRowProps): React.ReactElement => {
       data-testid="BlogPostRow"
     >
       <TableCell className="max-w-80">
-        <Link
-          className="font-medium hover:underline"
-          to={`/blog/${post.id}`}
-          viewTransition={true}
-        >
+        <Link className="font-medium hover:underline" to={`/blog/${post.id}`}>
           {post.title}
         </Link>
         <div className="text-muted-foreground truncate font-mono text-xs">

@@ -116,7 +116,6 @@ PromptsTable.buildTable = (): DataTableColumnDef<
                 aria-label={`View prompt: ${title}`}
                 className="hover:text-primary underline underline-offset-2"
                 to={promptHref}
-                viewTransition={true}
               >
                 {title}
               </Link>

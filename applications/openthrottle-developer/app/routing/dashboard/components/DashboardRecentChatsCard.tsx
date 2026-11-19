@@ -66,7 +66,6 @@ export const DashboardRecentChatsCard = (
             <Link
               className="hover:bg-accent/50 -mx-2 flex items-center gap-2 rounded-md px-2 py-2"
               to={conversationHref(conversation.id)}
-              viewTransition={true}
             >
               <span
                 aria-hidden={true}
@@ -103,20 +102,14 @@ export const DashboardRecentChatsCard = (
 
       <div className="border-border flex flex-wrap gap-1.5 border-t pt-3">
         <Button asChild={true} size="xs" variant="ghost">
-          <Link to="/" viewTransition={true}>
-            {copy.viewAll}
-          </Link>
+          <Link to="/">{copy.viewAll}</Link>
         </Button>
         <Button asChild={true} size="xs" variant="ghost">
-          <Link to="/" viewTransition={true}>
-            {copy.newChat}
-          </Link>
+          <Link to="/">{copy.newChat}</Link>
         </Button>
         {FOOTER_DESTINATIONS.map((item) => (
           <Button asChild={true} key={item.to} size="xs" variant="ghost">
-            <Link to={item.to} viewTransition={true}>
-              {item.label}
-            </Link>
+            <Link to={item.to}>{item.label}</Link>
           </Button>
         ))}
       </div>

@@ -33,7 +33,7 @@ export const DashboardGetStartedStep = (
   // Markup
   const ctaButton = (
     <Button asChild={true} className="shrink-0" size="xs" variant="outline">
-      <Link to={href} viewTransition={true}>
+      <Link to={href}>
         {cta} <ArrowRightIcon className="h-3.5 w-3.5" />
       </Link>
     </Button>

@@ -55,7 +55,6 @@ PermissionsTable.buildTable = (): DataTableColumnDef<
             aria-label={`View roles with permission: ${permission.name}`}
             className="hover:text-primary font-medium underline underline-offset-2"
             to="/roles"
-            viewTransition={true}
           >
             {permission.name}
           </Link>

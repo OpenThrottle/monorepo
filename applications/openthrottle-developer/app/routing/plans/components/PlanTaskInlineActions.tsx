@@ -47,7 +47,6 @@ export const PlanTaskInlineActions = (
         aria-label={`View task: ${title}`}
         className="hover:text-primary text-xs underline underline-offset-2"
         to={anchor}
-        viewTransition={true}
       >
         View
       </Link>

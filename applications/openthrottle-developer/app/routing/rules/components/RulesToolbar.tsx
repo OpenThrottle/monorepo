@@ -152,7 +152,7 @@ export const RulesToolbar = (props: RulesToolbarProps): React.ReactElement => {
           data-testid="RulesToolbar-create-button"
           variant="outline"
         >
-          <Link to="/rules/new" viewTransition={true}>
+          <Link to="/rules/new">
             <PlusIcon className="size-4" />
             {RULES_COPY.newRuleAction}
           </Link>

@@ -30,11 +30,7 @@ export const ProjectNotFound = (
   return (
     <GlobalScreen>
       <nav className="text-muted-foreground mb-4 text-sm">
-        <Link
-          className="hover:text-foreground"
-          to="/projects"
-          viewTransition={true}
-        >
+        <Link className="hover:text-foreground" to="/projects">
           Projects
         </Link>
       </nav>

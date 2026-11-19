@@ -116,7 +116,6 @@ export const buildScheduleRunsTableColumns = (
           <Link
             className="text-primary text-sm underline-offset-4 hover:underline"
             to={`/schedule/${jobId}/runs/${row.original.id}`}
-            viewTransition={true}
           >
             View
           </Link>

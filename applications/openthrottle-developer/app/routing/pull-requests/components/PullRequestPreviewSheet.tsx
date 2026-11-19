@@ -84,9 +84,7 @@ export const PullRequestPreviewSheet = (
               the full page to load it from GitHub.
             </p>
             <Button asChild={true} size="sm" variant="default">
-              <Link to={fullPagePath} viewTransition={true}>
-                Open full page
-              </Link>
+              <Link to={fullPagePath}>Open full page</Link>
             </Button>
           </div>
         )}

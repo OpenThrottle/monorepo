@@ -64,7 +64,6 @@ export const GlobalSidebarContentLink = (
             onClick={onNavigate}
             prefetch={subLink.prefetch}
             to={subLink.to}
-            viewTransition={true}
           >
             <span className={cn('', { 'text-accent': isSubActive })}>
               {subLink.children?.toString()}
@@ -107,7 +106,6 @@ export const GlobalSidebarContentLink = (
           onClick={onNavigate}
           prefetch={item.prefetch}
           to={item.to}
-          viewTransition={true}
         >
           <IconComponent
             className={cn('size-4 shrink-0', {

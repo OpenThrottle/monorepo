@@ -68,7 +68,6 @@ NotesTable.buildTable = (): DataTableColumnDef<
                 aria-label={`View note: ${label}`}
                 className="hover:text-primary underline underline-offset-2"
                 to={noteHref}
-                viewTransition={true}
               >
                 {label}
               </Link>

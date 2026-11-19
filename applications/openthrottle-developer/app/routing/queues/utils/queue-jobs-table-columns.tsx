@@ -73,7 +73,6 @@ export function buildQueueJobsTableColumns(
                   data-testid={`job-id-link-${job.id}`}
                   title={job.id}
                   to={detailHref}
-                  viewTransition={true}
                 >
                   {displayId}
                 </Link>
@@ -124,7 +123,6 @@ export function buildQueueJobsTableColumns(
               prefetch="intent"
               title={parsed.planId}
               to={`/plans/${parsed.planId}`}
-              viewTransition={true}
             >
               {truncateText(parsed.planId, JOB_ID_DISPLAY_MAX)}
             </Link>
@@ -134,7 +132,6 @@ export function buildQueueJobsTableColumns(
                 data-testid={`queue-jobs-table-task-${job.id}`}
                 title={parsed.taskId}
                 to={`/plans/${parsed.planId}/tasks/${parsed.taskId}`}
-                viewTransition={true}
               >
                 {truncateText(parsed.taskId, JOB_ID_DISPLAY_MAX)}
               </Link>
