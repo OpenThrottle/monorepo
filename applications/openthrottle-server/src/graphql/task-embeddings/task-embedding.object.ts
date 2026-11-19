@@ -1,5 +1,5 @@
 /**
- * @description GraphQL ObjectType for TaskEmbedding. Mirrors the task_embeddings entity from @openthrottle/nestjs-repositories; embedding vector is not exposed.
+ * @description GraphQL ObjectType for TaskEmbedding. Mirrors the task_embeddings entity from @openthrottle/nestjs-repositories-server; embedding vector is not exposed.
  */
 
 import { Field, ObjectType } from '@nestjs/graphql';

@@ -52,13 +52,13 @@ export const databaseProviders = [
          *
          * That glob was `__dirname + '/../**' + '/*.entity.js'`, resolved
          * against this package's own emitted `dist/`. This package ships **no
-         * entities** — all 45 live in `@openthrottle/nestjs-repositories` and
+         * entities** — all 45 live in `@openthrottle/nestjs-repositories-server` and
          * `@openthrottle/nestjs-rollout` — so it matched nothing, before or
          * after this change. Keeping it under ESM would have preserved dead
          * config while implying it loaded something.
          *
          * Real entity registration is explicit and static, in
-         * `packages/nestjs-repositories/src/nestjs-repositories.utils.ts`
+         * `packages/nestjs-repositories-server/src/data-source/data-source.utils.ts`
          * (`getTypeOrmOptions`), which is the shape this repo wants anyway:
          * typed, and visible to the build graph in a way a runtime glob is not.
          */

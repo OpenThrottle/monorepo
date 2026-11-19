@@ -11,11 +11,11 @@
  * Mirrors the host scripts scripts/bootstrap-default-user.ts and
  * scripts/bootstrap-service-account-credentials.ts (host `setup.sh` /
  * `pnpm run database:bootstrap-service-accounts` still use those). Keep the three
- * in sync; DRY-ing them behind a shared @openthrottle/nestjs-repositories export is
+ * in sync; DRY-ing them behind a shared @openthrottle/nestjs-repositories-server export is
  * a tracked follow-up.
  */
-import { getOpenThrottleTypeOrmOptions } from '@openthrottle/nestjs-repositories';
 import {
+  getOpenThrottleTypeOrmOptions,
   hashPassword,
   Role,
   RolesRepository,

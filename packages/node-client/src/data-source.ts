@@ -9,7 +9,7 @@ import {
   Project,
   Task,
   TaskEmbedding,
-} from '@openthrottle/nestjs-repositories';
+} from '@openthrottle/nestjs-repositories-server';
 import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
 import { DataSource } from 'typeorm';
 

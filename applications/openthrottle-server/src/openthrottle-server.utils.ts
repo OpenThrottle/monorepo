@@ -1,5 +1,7 @@
 import type { DynamicModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import type { TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { NestjsAuthModule } from '@openthrottle/nestjs-auth';
 import { NestjsBullmqModule } from '@openthrottle/nestjs-bullmq';
 import {
@@ -18,9 +20,10 @@ import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { GlobalClsModule } from '@openthrottle/nestjs-modules';
 import { NestjsProfilingModule } from '@openthrottle/nestjs-profiling';
 import { NestjsRbacModule } from '@openthrottle/nestjs-rbac';
-import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import { NestjsRepositoriesCmsModule } from '@openthrottle/nestjs-repositories-cms';
 import {
+  getOpenThrottleTypeOrmOptions,
+  NestjsRepositoriesServerModule,
   RolesModule,
   ServiceAccountCredentialsModule,
   ServiceAccountsModule,
@@ -210,7 +213,16 @@ export const buildImports = (role: ProcessRole): AppModuleImports => {
     // Every role writes plans/tasks, so every role registers the embeddings subscriber.
     EmbeddingsSubscriberModule,
     NestjsRepositoriesCmsModule,
-    NestjsRepositoriesModule,
+    NestjsRepositoriesServerModule,
+    // The default (openthrottle) DataSource. autoLoadEntities lets a package that
+    // owns its own entity register it through TypeOrmModule.forFeature (e.g.
+    // @openthrottle/nestjs-rollout's RolloutFlag) without being in
+    // OPENTHROTTLE_ENTITIES, the explicit list scripts and the drift test use.
+    TypeOrmModule.forRootAsync({
+      useFactory: (): TypeOrmModuleOptions => {
+        return { ...getOpenThrottleTypeOrmOptions(), autoLoadEntities: true };
+      },
+    }),
     NestjsThrottlerModule,
     NotificationsModule,
     PubSubModule,

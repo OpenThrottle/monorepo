@@ -11,18 +11,20 @@ import { BadRequestException, UseGuards } from '@nestjs/common';
 import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { CurrentUser } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
-import { normalizeRemoteUrl } from '@openthrottle/nestjs-repositories';
+import type {
+  SkillUsagePrivacyLevel,
+  SkillUsageScope,
+} from '@openthrottle/nestjs-repositories-server';
 import {
   isSkillUsageOutcome,
   isSkillUsageScope,
+  normalizeRemoteUrl,
   SKILL_USAGE_OUTCOMES,
   SKILL_USAGE_PRIVACY_LEVELS,
   SKILL_USAGE_SCOPE_LIST,
   SKILL_USAGE_SCOPES,
   SkillUsageEventsRepository,
   SkillUsageOutcomesRepository,
-  type SkillUsagePrivacyLevel,
-  type SkillUsageScope,
 } from '@openthrottle/nestjs-repositories-server';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';

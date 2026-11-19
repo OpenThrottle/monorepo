@@ -1,4 +1,4 @@
-import type { ScheduledAgentJobMisfirePolicy } from '@openthrottle/nestjs-repositories';
+import type { ScheduledAgentJobMisfirePolicy } from '@openthrottle/nestjs-repositories-server';
 
 /** Inputs to {@link shouldRunLateFire}. */
 export interface LateFireInput {

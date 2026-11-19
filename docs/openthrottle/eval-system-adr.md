@@ -230,7 +230,7 @@ dependency, and it holds:
 - `chunksToAtif`;
 - the statistics module (Decision 9).
 
-Entities and repositories go in `packages/nestjs-repositories`; resolvers and queue wiring go in
+Entities and repositories go in `packages/nestjs-repositories-server`; resolvers and queue wiring go in
 `openthrottle-server`. The package's export tier follows `packages/AGENTS.md`. It is consumed by the
 server, so check the server-consumed-packages rule before choosing source-first.
 

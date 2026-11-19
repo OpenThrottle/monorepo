@@ -32,7 +32,7 @@ exposes it via GraphQL, so the GraphQL-only `openthrottle-developer` app can pow
   query, `indexCodeRepository` mutation, `codeIndexStatus` query.
 
 The host app must configure a TypeORM root (the default `DataSource` is injected into
-`CodeVectorStore`) — `NestjsRepositoriesModule` does this in `openthrottle-server`.
+`CodeVectorStore`) — `openthrottle-server` registers it from `getOpenThrottleTypeOrmOptions()`.
 
 ## Prerequisites
 

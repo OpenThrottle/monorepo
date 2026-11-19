@@ -9,7 +9,6 @@
     "@nestjs/typeorm": "catalog:",
     "@openthrottle/nestjs-auth": "workspace:^",
     "@openthrottle/nestjs-modules": "workspace:^",
-    "@openthrottle/nestjs-repositories": "workspace:^",
     "typeorm": "catalog:"
   },
   "description": "OpenThrottle rollout: RBAC-aware feature-flagging domain (entity, module, and RolloutService with role-targeted evaluation).",

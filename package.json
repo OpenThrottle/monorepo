@@ -15,7 +15,6 @@
     "@openthrottle/nestjs-application": "workspace:^",
     "@openthrottle/nestjs-modules": "workspace:^",
     "@openthrottle/nestjs-postgres": "workspace:^",
-    "@openthrottle/nestjs-repositories": "workspace:^",
     "@openthrottle/nestjs-repositories-cms": "workspace:^",
     "@openthrottle/nestjs-repositories-server": "workspace:^",
     "@openthrottle/nestjs-testing": "workspace:^",
@@ -205,7 +204,7 @@
           }
         ],
         "metadata": {
-          "description": "Type-check scripts/ (source and tests) with scripts/tsconfig.json: nodenext, noEmit, extending tsconfig.base.json. `^build` is load-bearing: nestjs-modules, nestjs-repositories and nestjs-testing resolve through dist. `^typecheck` is left out on purpose, since the root depends on 18 projects and their typechecks prove nothing about scripts/. The compiler follows the same knob as the inferred typecheck targets (`$OPENTHROTTLE_TSC_BIN`, defaulting to the workspace's `tsc`, which is TypeScript 7). `inputs` MUST be explicit {workspaceRoot} globs — the root `monorepo` project owns 0 files, so the default {projectRoot} input would hash nothing and cache-hit forever."
+          "description": "Type-check scripts/ (source and tests) with scripts/tsconfig.json: nodenext, noEmit, extending tsconfig.base.json. `^build` is load-bearing: nestjs-modules, nestjs-repositories-server and nestjs-testing resolve through dist. `^typecheck` is left out on purpose, since the root depends on 18 projects and their typechecks prove nothing about scripts/. The compiler follows the same knob as the inferred typecheck targets (`$OPENTHROTTLE_TSC_BIN`, defaulting to the workspace's `tsc`, which is TypeScript 7). `inputs` MUST be explicit {workspaceRoot} globs — the root `monorepo` project owns 0 files, so the default {projectRoot} input would hash nothing and cache-hit forever."
         },
         "options": {
           "command": "${OPENTHROTTLE_TSC_BIN:-tsc} -p scripts/tsconfig.json",

@@ -1,9 +1,9 @@
 import { createMock } from '@golevelup/ts-vitest';
 import type { ConfigService } from '@nestjs/config';
 import type { GitHubService } from '@openthrottle/nestjs-github';
-import type { RepositoryCheckout } from '@openthrottle/nestjs-repositories';
-import type { RepositoryCheckoutsRepository } from '@openthrottle/nestjs-repositories-server';
 import type {
+  RepositoryCheckout,
+  RepositoryCheckoutsRepository,
   WorkArtifact,
   WorkArtifactsRepository,
   WorkSession,

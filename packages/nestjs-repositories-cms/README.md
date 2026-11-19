@@ -2,7 +2,7 @@
 
 NestJS TypeORM data access for the OpenThrottle `cms` Postgres database: schemas, fragments, layouts, component libraries, profiles, surveys and tags.
 
-It is the `cms` counterpart of [`@openthrottle/nestjs-repositories`](../nestjs-repositories/README.md), and registers its DataSource under a **named** connection so both can live in one NestJS app.
+It is the `cms` counterpart of [`@openthrottle/nestjs-repositories-server`](../nestjs-repositories-server/README.md), and registers its DataSource under a **named** connection so both can live in one NestJS app.
 
 ## Installation
 
@@ -23,7 +23,7 @@ The tables are created by the SQL migrations in [`databases/cms/migrations`](../
 - Otherwise the primary connection (`OPENTHROTTLE_POSTGRES_URL`, `POSTGRES_URL` or `POSTGRES_*`) with
   its database swapped for `CMS_POSTGRES_DB` (default `cms`).
 - `POSTGRES_SLOW_QUERY_MS` — optional positive integer; logs queries slower than it, as in
-  `@openthrottle/nestjs-repositories`.
+  `@openthrottle/nestjs-repositories-server`.
 
 ### Usage
 

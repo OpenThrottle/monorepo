@@ -1,8 +1,8 @@
+import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 import type {
   PlanRunConfigOtLoop,
   PlanRunConfigRunner,
-} from '@openthrottle/nestjs-repositories';
-import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
+} from '@openthrottle/openthrottle-plan-config';
 import type {
   JobRunHooksConfig,
   RalphNestedRunTuningInput,

@@ -5,10 +5,9 @@ import { Test } from '@nestjs/testing';
 import { AUTH_PRINCIPAL_KIND_USER } from '@openthrottle/nestjs-auth';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { PERMISSIONS, PERMISSIONS_KEY } from '@openthrottle/nestjs-rbac';
-import { getDefaultPlanRunConfigStorage } from '@openthrottle/nestjs-repositories';
 import type { Plan } from '@openthrottle/nestjs-repositories-server';
-import { PlanRunsRepository } from '@openthrottle/nestjs-repositories-server';
 import {
+  PlanRunsRepository,
   PlansRepository,
   Task,
   TasksRepository,
@@ -22,6 +21,7 @@ import {
   planRunsFactory,
 } from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
+import { getDefaultPlanRunConfigStorage } from '@openthrottle/openthrottle-plan-config';
 import type { Queue } from 'bullmq';
 import { DataSource } from 'typeorm';
 import {

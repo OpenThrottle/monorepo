@@ -10,7 +10,7 @@ vi.mock('typeorm', () => ({
   IsNull: () => undefined,
 }));
 
-vi.mock('@openthrottle/nestjs-repositories', () => ({
+vi.mock('@openthrottle/nestjs-repositories-server', () => ({
   ServiceAccount: class {},
   ServiceAccountCredential: class {},
   ServiceAccountCredentialsRepository: class {},

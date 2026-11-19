@@ -4,7 +4,7 @@ NestJS module bundling a Joi-validated `POSTGRES_*` env config with async TypeOR
 `DataSource` providers (`DATA_SOURCE` token).
 
 **Consumed by:** nothing yet — `openthrottle-server` wires its TypeORM root through
-`@openthrottle/nestjs-repositories` instead; no workspace project currently depends on
+`@openthrottle/nestjs-repositories-server` instead; no workspace project currently depends on
 this package.
 
 ## Layout

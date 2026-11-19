@@ -1,5 +1,5 @@
 import { BadRequestException } from '@nestjs/common';
-import type { PlanRunConfigRunner } from '@openthrottle/nestjs-repositories';
+import type { PlanRunConfigRunner } from '@openthrottle/openthrottle-plan-config';
 import { GraphQLError } from 'graphql';
 import { QueryFailedError } from 'typeorm';
 

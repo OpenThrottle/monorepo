@@ -15,7 +15,7 @@ import {
   ServiceAccount,
   User,
   UsersRepository,
-} from '@openthrottle/nestjs-repositories';
+} from '@openthrottle/nestjs-repositories-server';
 import { DataSource } from 'typeorm';
 
 import { upsertLocalSecrets } from './local-secrets-file.ts';

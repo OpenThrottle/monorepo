@@ -2,14 +2,11 @@ import { createMock } from '@golevelup/ts-vitest';
 import type { ConfigService } from '@nestjs/config';
 import type { GitHubService } from '@openthrottle/nestjs-github';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import type { PlanRunConfigSnapshotV1 } from '@openthrottle/nestjs-repositories';
-import type {
-  RepositoriesRepository,
-  RepositoryCheckoutsRepository,
-} from '@openthrottle/nestjs-repositories-server';
 import type {
   PlanRun,
   PlanRunsRepository,
+  RepositoriesRepository,
+  RepositoryCheckoutsRepository,
   ServiceAccountsRepository,
   WorkArtifactsRepository,
 } from '@openthrottle/nestjs-repositories-server';
@@ -19,16 +16,15 @@ import type {
   WorkArtifactsRepositoryMock,
 } from '@openthrottle/nestjs-repositories-server/testing';
 import {
+  createPlanRunsRepositoryMock,
   createRepositoriesRepositoryMock,
   createRepositoryCheckoutsRepositoryMock,
-} from '@openthrottle/nestjs-repositories-server/testing';
-import {
-  createPlanRunsRepositoryMock,
   createServiceAccountsRepositoryMock,
   createWorkArtifactsRepositoryMock,
   serviceAccountsFactory,
 } from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
+import type { PlanRunConfigSnapshotV1 } from '@openthrottle/openthrottle-plan-config';
 import type { DataSource } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 

@@ -1,5 +1,5 @@
 /**
- * @description Resolver for User queries and mutations. Injects UsersRepository from @openthrottle/nestjs-repositories and maps User entities to UserObject.
+ * @description Resolver for User queries and mutations. Injects UsersRepository from @openthrottle/nestjs-repositories-server and maps User entities to UserObject.
  */
 
 import { UseGuards } from '@nestjs/common';

@@ -6,11 +6,13 @@
  */
 
 import { Injectable, Scope } from '@nestjs/common';
-import type { RepositoryCheckout } from '@openthrottle/nestjs-repositories';
-import { createEntityByIdLoader } from '@openthrottle/nestjs-repositories';
-import type { WorkArtifact } from '@openthrottle/nestjs-repositories-server';
-import { RepositoryCheckoutsRepository } from '@openthrottle/nestjs-repositories-server';
+import { createEntityByIdLoader } from '@openthrottle/nestjs-postgres';
+import type {
+  RepositoryCheckout,
+  WorkArtifact,
+} from '@openthrottle/nestjs-repositories-server';
 import {
+  RepositoryCheckoutsRepository,
   WorkArtifactsRepository,
   WorkSessionsRepository,
 } from '@openthrottle/nestjs-repositories-server';

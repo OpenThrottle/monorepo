@@ -39,7 +39,7 @@ Canonical commands and schema overview: **`databases/openthrottle/README.md`**.
 | ---------------- | ---------------------------------------------------------------------------------------------------- |
 | Apply migrations | `pnpm run database:migrate` (every DB; `-- --database <name>` for one)                               |
 | New migration    | Next `NNN_snake_case.sql` in `databases/<db>/migrations/` — check the tip of `main`, not your branch |
-| Entity sync      | `openthrottle` only: update `@openthrottle/nestjs-repositories` entities to match SQL                |
+| Entity sync      | `openthrottle` only: update `@openthrottle/nestjs-repositories-server` entities to match SQL         |
 | Local CI gate    | `pnpm nx run monorepo:check-migration-table-comments` (diff-scoped; also in `pnpm run check:local`)  |
 
 **Enforcement:** Changed migration files that introduce **`CREATE TABLE`** must include matching **`COMMENT ON TABLE`** for each created table in the **same file**. Base ref: `main` (override with `MIGRATION_COMMENT_LINT_BASE`).

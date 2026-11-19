@@ -1,6 +1,6 @@
 /**
  * @description Registers the introspectable GraphQL enum `PlanTaskStatus` from the
- * canonical status SSOT (`PLAN_STATUS` in @openthrottle/nestjs-repositories). The
+ * canonical status SSOT (`PLAN_STATUS` in @openthrottle/nestjs-repositories-server). The
  * enum's members ARE the Postgres `plan_task_status` labels — there is no
  * hand-maintained literal list here; drift is impossible by construction (and the
  * SSOT's own parity test guards it against the DB migrations).
@@ -14,10 +14,8 @@
  */
 
 import { registerEnumType } from '@nestjs/graphql';
-import {
-  PLAN_STATUS,
-  type PlanStatus,
-} from '@openthrottle/nestjs-repositories';
+import type { PlanStatus } from '@openthrottle/nestjs-repositories-server';
+import { PLAN_STATUS } from '@openthrottle/nestjs-repositories-server';
 
 registerEnumType(PLAN_STATUS, {
   description:

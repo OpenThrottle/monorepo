@@ -6,7 +6,7 @@ import { createMock } from '@golevelup/ts-vitest';
 import { PassportModule } from '@nestjs/passport';
 import { Test } from '@nestjs/testing';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { usersFactory } from '@openthrottle/nestjs-repositories/testing';
+import { usersFactory } from '@openthrottle/nestjs-repositories-server/testing';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 
 import { AuthResolver } from './auth.resolver.ts';

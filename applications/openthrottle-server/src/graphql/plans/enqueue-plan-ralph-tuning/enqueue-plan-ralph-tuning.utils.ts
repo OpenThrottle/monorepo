@@ -5,12 +5,6 @@
  */
 
 import {
-  DEFAULT_PLAN_RUN_RALPH_RUNNER,
-  type PlanJobRunHooksStorage,
-  type PlanRunConfigOtLoop,
-  type PlanRunConfigRunner,
-} from '@openthrottle/nestjs-repositories';
-import {
   CONVERSATION_REASONING_EFFORTS,
   type ConversationReasoningEffort,
   getWorkspacePathMapping,
@@ -22,6 +16,12 @@ import type {
   WorkflowConfigDebug,
   WorkflowConfigRunner,
 } from '@openthrottle/openthrottle-agentic-workflow';
+import type {
+  PlanJobRunHooksStorage,
+  PlanRunConfigOtLoop,
+  PlanRunConfigRunner,
+} from '@openthrottle/openthrottle-plan-config';
+import { DEFAULT_PLAN_RUN_RALPH_RUNNER } from '@openthrottle/openthrottle-plan-config';
 import type {
   ChildJobInput,
   JobRunHookEntry,

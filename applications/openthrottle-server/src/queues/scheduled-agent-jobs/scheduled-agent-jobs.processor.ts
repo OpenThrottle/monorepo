@@ -7,11 +7,11 @@ import { type NormalizedTokenUsage } from '@openthrottle/agentic-token-usage';
 import { defaultWorkerOptions } from '@openthrottle/nestjs-bullmq';
 import type { KeyedJsonlWriter } from '@openthrottle/nestjs-logging';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import {
-  type ScheduledAgentJob,
-  type ScheduledAgentJobRunSettingsSnapshot,
-  type ScheduledAgentJobRunStatus,
-} from '@openthrottle/nestjs-repositories';
+import type {
+  ScheduledAgentJob,
+  ScheduledAgentJobRunSettingsSnapshot,
+  ScheduledAgentJobRunStatus,
+} from '@openthrottle/nestjs-repositories-server';
 import {
   ScheduledAgentJobRunsRepository,
   ScheduledAgentJobsRepository,

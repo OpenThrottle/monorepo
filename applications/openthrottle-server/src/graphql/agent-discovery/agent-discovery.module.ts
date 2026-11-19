@@ -4,8 +4,8 @@
  */
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
-import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import {
+  NestjsRepositoriesServerModule,
   RolesModule,
   UserDisabledAgentClisModule,
   UserFavoriteAgentModelsModule,
@@ -22,7 +22,7 @@ import { AgentDiscoveryService } from './agent-discovery.service.ts';
     UserDisabledAgentClisModule,
     UserFavoriteAgentModelsModule,
     LoggerModule,
-    NestjsRepositoriesModule,
+    NestjsRepositoriesServerModule,
   ],
   providers: [
     AgentDiscoveryResolver,

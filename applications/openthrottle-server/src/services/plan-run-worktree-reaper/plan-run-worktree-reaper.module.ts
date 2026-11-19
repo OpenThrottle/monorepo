@@ -4,8 +4,8 @@
 
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
-import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import {
+  NestjsRepositoriesServerModule,
   PlanRunsModule,
   PlansModule,
 } from '@openthrottle/nestjs-repositories-server';
@@ -19,7 +19,7 @@ import { PlanRunWorktreeReaperService } from './plan-run-worktree-reaper.service
   exports: [PlanRunWorktreeReaperService],
   imports: [
     LoggerModule,
-    NestjsRepositoriesModule,
+    NestjsRepositoriesServerModule,
     NotificationsModule,
     PlanRunsModule,
     PlanRunWorktreeTeardownModule,

@@ -28,7 +28,7 @@ import {
   User,
   UsersRepository,
   validatePassword,
-} from '@openthrottle/nestjs-repositories';
+} from '@openthrottle/nestjs-repositories-server';
 import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
 import {
   DEFAULT_DOMAIN_TAG_VOCABULARY,

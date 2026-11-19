@@ -13,7 +13,7 @@ Design for persisted web chat threads in OpenThrottle. Implements plan `4fa6d16c
 
 Migration: `databases/openthrottle/migrations/051_create_agent_conversations_tables.sql`
 
-TypeORM: `packages/nestjs-repositories/src/modules/agent-conversations/`
+TypeORM: `packages/nestjs-repositories-server/src/modules/agent-conversations/`
 
 GraphQL module: `applications/openthrottle-server/src/graphql/agent-conversations/`
 

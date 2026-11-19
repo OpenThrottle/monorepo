@@ -11,12 +11,12 @@ import {
   type AuthPrincipal,
 } from '@openthrottle/nestjs-auth';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import {
-  type RepositoryCheckout,
-  type ScheduledAgentJob,
-  type ScheduledAgentJobRun,
-} from '@openthrottle/nestjs-repositories';
-import type { UserDisabledAgentClisRepository } from '@openthrottle/nestjs-repositories-server';
+import type {
+  RepositoryCheckout,
+  ScheduledAgentJob,
+  ScheduledAgentJobRun,
+  UserDisabledAgentClisRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import { createUserDisabledAgentClisRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 

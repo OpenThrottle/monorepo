@@ -10,7 +10,7 @@
 import {
   buildPlanRunWorktreeName,
   DEFAULT_PLAN_RUN_RALPH_DEBUG_CLI,
-} from '@openthrottle/nestjs-repositories';
+} from '@openthrottle/openthrottle-plan-config';
 import type { RalphNestedRunTuningInput } from '@tools/workflows';
 
 /**

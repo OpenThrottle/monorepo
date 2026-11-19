@@ -834,8 +834,7 @@ export const eslintConfig = tslint.config([
    * The plans/tasks status-write chokepoint (`openthrottle/plan-task-status-
    * chokepoint`, registered above) is enabled with its per-file
    * `allowedFunctionNames` overrides in EACH project's own `eslint.config.ts`
-   * — `applications/openthrottle-server/eslint.config.ts`,
-   * `packages/nestjs-repositories/eslint.config.ts` and
+   * — `applications/openthrottle-server/eslint.config.ts` and
    * `packages/nestjs-repositories-server/eslint.config.ts` — not here. `nx run
    * <project>:lint` runs `eslint -c ./eslint.config.ts` with cwd AT the
    * project, so a shared-config `files` pattern prefixed with

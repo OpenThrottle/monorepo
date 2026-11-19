@@ -15,7 +15,7 @@
  *
  * A unique index on (job, scheduled_for) arbitrates between the two (migration 141).
  */
-import type { ScheduledAgentJobMisfirePolicy } from '@openthrottle/nestjs-repositories';
+import type { ScheduledAgentJobMisfirePolicy } from '@openthrottle/nestjs-repositories-server';
 import { defaultRepeatStrategy } from 'bullmq';
 
 import type {

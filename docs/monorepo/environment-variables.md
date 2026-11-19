@@ -8,7 +8,7 @@ Scope note: names like `OPENTHROTTLE_LEGAL_NOTICE`, `OPENTHROTTLE_GITHUB_URL`,
 `OPENTHROTTLE_PLUGIN_DIR_REL`, `OPENTHROTTLE_REPO_SKILL_PATHS` and
 `OPENTHROTTLE_META_DESCRIPTION` look like env vars but are **exported TypeScript
 constants** (mostly in `@openthrottle/react-router-utils` and
-`@openthrottle/nestjs-repositories`). They are not read from the environment and
+`@openthrottle/nestjs-repositories-server`). They are not read from the environment and
 are excluded below. Likewise `*_ENV` suffixed identifiers
 (`OPENTHROTTLE_POSTGRES_URL_ENV`, `OPENTHROTTLE_PLANS_SPAWN_DIAGNOSTICS_ENV`) are
 constants that _hold_ an env-var name.

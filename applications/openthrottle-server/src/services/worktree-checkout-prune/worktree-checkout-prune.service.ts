@@ -20,10 +20,12 @@
  */
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import type { RepositoryCheckout } from '@openthrottle/nestjs-repositories';
-import { RepositoryCheckoutsRepository } from '@openthrottle/nestjs-repositories-server';
-import { PlanRunsRepository } from '@openthrottle/nestjs-repositories-server';
-import { WorktreeRemovalsRepository } from '@openthrottle/nestjs-repositories-server';
+import type { RepositoryCheckout } from '@openthrottle/nestjs-repositories-server';
+import {
+  PlanRunsRepository,
+  RepositoryCheckoutsRepository,
+  WorktreeRemovalsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 
 import { realPath } from '../paths/real-path/real-path.utils.ts';
 import { isLinkedWorktreeDirectory } from '../worktree-discovery/worktree-discovery.utils.ts';

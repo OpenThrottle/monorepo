@@ -7,14 +7,16 @@
 
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import type { RepositoryCheckout } from '@openthrottle/nestjs-repositories';
-import type { RepositoryCheckoutsRepository } from '@openthrottle/nestjs-repositories-server';
 import type {
   PlanRun,
   PlanRunsRepository,
+  RepositoryCheckout,
+  RepositoryCheckoutsRepository,
 } from '@openthrottle/nestjs-repositories-server';
-import { createRepositoryCheckoutsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
-import { createPlanRunsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import {
+  createPlanRunsRepositoryMock,
+  createRepositoryCheckoutsRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 

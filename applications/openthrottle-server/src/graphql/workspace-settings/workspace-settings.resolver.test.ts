@@ -4,11 +4,15 @@ import { Test } from '@nestjs/testing';
 import type {
   Project,
   UserWorkspaceSettings,
-} from '@openthrottle/nestjs-repositories';
-import { UserWorkspaceSettingsRepository } from '@openthrottle/nestjs-repositories-server';
-import { RolesRepository } from '@openthrottle/nestjs-repositories-server';
-import { createUserWorkspaceSettingsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
-import { createRolesRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+} from '@openthrottle/nestjs-repositories-server';
+import {
+  RolesRepository,
+  UserWorkspaceSettingsRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import {
+  createRolesRepositoryMock,
+  createUserWorkspaceSettingsRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
 import type DataLoader from 'dataloader';
 import { mkdtempSync } from 'fs';

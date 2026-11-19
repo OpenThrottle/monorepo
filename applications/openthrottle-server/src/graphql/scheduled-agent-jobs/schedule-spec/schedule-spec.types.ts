@@ -1,4 +1,4 @@
-import { type ScheduledAgentJobScheduleKind } from '@openthrottle/nestjs-repositories';
+import type { ScheduledAgentJobScheduleKind } from '@openthrottle/nestjs-repositories-server';
 
 /** The validated schedule fields, exactly as persisted. */
 export interface ScheduleSpec {

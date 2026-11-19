@@ -3,9 +3,9 @@
  */
 
 import { Module } from '@nestjs/common';
-import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import {
   McpConnectorConnectionsModule,
+  NestjsRepositoriesServerModule,
   RolesModule,
 } from '@openthrottle/nestjs-repositories-server';
 
@@ -16,7 +16,7 @@ import { McpConnectorsResolver } from './mcp-connectors.resolver.ts';
   imports: [
     RolesModule,
     McpConnectorConnectionsModule,
-    NestjsRepositoriesModule,
+    NestjsRepositoriesServerModule,
   ],
   providers: [GqlPermissionsGuard, McpConnectorsResolver],
 })

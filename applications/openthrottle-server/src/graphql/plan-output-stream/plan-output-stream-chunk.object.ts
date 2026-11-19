@@ -1,5 +1,5 @@
 /**
- * @description GraphQL ObjectType for PlanOutputStreamChunk. Mirrors the plan_output_stream entity from @openthrottle/nestjs-repositories.
+ * @description GraphQL ObjectType for PlanOutputStreamChunk. Mirrors the plan_output_stream entity from @openthrottle/nestjs-repositories-server.
  */
 
 import { Field, Int, ObjectType } from '@nestjs/graphql';

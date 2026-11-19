@@ -1,4 +1,4 @@
-import type { Plan } from '@openthrottle/nestjs-repositories';
+import type { Plan } from '@openthrottle/nestjs-repositories-server';
 
 import type { CANCEL_PLAN_RUN_OUTCOME } from './plan-status.constants.ts';
 export type CancelPlanRunOutcome =

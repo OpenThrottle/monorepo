@@ -897,9 +897,6 @@ importers:
       '@openthrottle/nestjs-postgres':
         specifier: workspace:^
         version: link:packages/nestjs-postgres
-      '@openthrottle/nestjs-repositories':
-        specifier: workspace:^
-        version: link:packages/nestjs-repositories
       '@openthrottle/nestjs-repositories-cms':
         specifier: workspace:^
         version: link:packages/nestjs-repositories-cms
@@ -1733,9 +1730,6 @@ importers:
       '@openthrottle/nestjs-redis':
         specifier: workspace:^
         version: link:../../packages/nestjs-redis
-      '@openthrottle/nestjs-repositories':
-        specifier: workspace:^
-        version: link:../../packages/nestjs-repositories
       '@openthrottle/nestjs-repositories-cms':
         specifier: workspace:^
         version: link:../../packages/nestjs-repositories-cms
@@ -1790,6 +1784,9 @@ importers:
       '@openthrottle/openthrottle-notifications':
         specifier: workspace:^
         version: link:../../packages/openthrottle-notifications
+      '@openthrottle/openthrottle-plan-config':
+        specifier: workspace:^
+        version: link:../../packages/openthrottle-plan-config
       '@openthrottle/openthrottle-skills':
         specifier: workspace:^
         version: link:../../packages/openthrottle-skills
@@ -2609,79 +2606,6 @@ importers:
         specifier: 'catalog:'
         version: 5.1.0(@opentelemetry/api@1.9.1)(@types/node@24.19.2)(@vitest/coverage-v8@5.1.0)(happy-dom@20.11.1)(jsdom@31.0.0(@noble/hashes@1.8.0))(vite@8.3.8(@types/node@24.19.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.49.0)(tsx@4.23.1)(yaml@2.9.0))
 
-  packages/nestjs-repositories:
-    dependencies:
-      '@nestjs/common':
-        specifier: 'catalog:'
-        version: 12.0.1(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1)
-      '@nestjs/typeorm':
-        specifier: 'catalog:'
-        version: 12.0.1(@nestjs/common@12.0.1(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.0.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(typeorm@0.3.31(babel-plugin-macros@3.1.0)(ioredis@5.11.1(supports-color@8.1.1))(pg@8.21.0)(supports-color@8.1.1)(ts-node@10.9.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(@types/node@24.19.2)(@typescript/typescript6@6.0.2)))
-      '@openthrottle/nestjs-modules':
-        specifier: workspace:^
-        version: link:../nestjs-modules
-      '@openthrottle/nestjs-postgres':
-        specifier: workspace:^
-        version: link:../nestjs-postgres
-      '@openthrottle/nestjs-repositories-server':
-        specifier: workspace:^
-        version: link:../nestjs-repositories-server
-      '@openthrottle/nodejs-utils':
-        specifier: workspace:^
-        version: link:../nodejs-utils
-      '@openthrottle/openthrottle-agentic-utils':
-        specifier: workspace:^
-        version: link:../openthrottle-agentic-utils
-      '@openthrottle/openthrottle-agentic-workflow':
-        specifier: workspace:^
-        version: link:../openthrottle-agentic-workflow
-      '@openthrottle/openthrottle-drivers':
-        specifier: workspace:^
-        version: link:../openthrottle-drivers
-      '@openthrottle/openthrottle-plan-config':
-        specifier: workspace:^
-        version: link:../openthrottle-plan-config
-      '@openthrottle/openthrottle-skills':
-        specifier: workspace:^
-        version: link:../openthrottle-skills
-      bcrypt:
-        specifier: 'catalog:'
-        version: 6.0.0
-      dataloader:
-        specifier: 'catalog:'
-        version: 2.2.3
-      fishery:
-        specifier: 'catalog:'
-        version: 2.4.0
-      pg:
-        specifier: 'catalog:'
-        version: 8.21.0
-      typeorm:
-        specifier: 'catalog:'
-        version: 0.3.31(babel-plugin-macros@3.1.0)(ioredis@5.11.1(supports-color@8.1.1))(pg@8.21.0)(supports-color@8.1.1)(ts-node@10.9.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(@types/node@24.19.2)(@typescript/typescript6@6.0.2))
-      zod:
-        specifier: ^4.4.3
-        version: 4.4.3
-    devDependencies:
-      '@faker-js/faker':
-        specifier: 'catalog:'
-        version: 10.5.0
-      '@golevelup/ts-vitest':
-        specifier: 'catalog:'
-        version: 4.0.0
-      '@nestjs/testing':
-        specifier: 'catalog:'
-        version: 12.0.1(@nestjs/common@12.0.1(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.0.1)(@nestjs/platform-express@12.0.1)
-      '@openthrottle/nestjs-testing':
-        specifier: workspace:^
-        version: link:../nestjs-testing
-      '@types/bcrypt':
-        specifier: 'catalog:'
-        version: 6.0.0
-      vitest:
-        specifier: 'catalog:'
-        version: 5.1.0(@opentelemetry/api@1.9.1)(@types/node@24.19.2)(@vitest/coverage-v8@5.1.0)(happy-dom@20.11.1)(jsdom@31.0.0(@noble/hashes@1.8.0))(vite@8.3.8(@types/node@24.19.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.49.0)(tsx@4.23.1)(yaml@2.9.0))
-
   packages/nestjs-repositories-cms:
     dependencies:
       '@nestjs/common':
@@ -2809,9 +2733,6 @@ importers:
       '@openthrottle/nestjs-modules':
         specifier: workspace:^
         version: link:../nestjs-modules
-      '@openthrottle/nestjs-repositories':
-        specifier: workspace:^
-        version: link:../nestjs-repositories
       typeorm:
         specifier: 'catalog:'
         version: 0.3.31(babel-plugin-macros@3.1.0)(ioredis@5.11.1(supports-color@8.1.1))(pg@8.21.0)(supports-color@8.1.1)(ts-node@10.9.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(@types/node@24.19.2)(@typescript/typescript6@6.0.2))
@@ -3047,9 +2968,9 @@ importers:
       '@huggingface/transformers':
         specifier: 'catalog:'
         version: 4.3.2(@types/node@24.19.2)
-      '@openthrottle/nestjs-repositories':
+      '@openthrottle/nestjs-repositories-server':
         specifier: workspace:^
-        version: link:../nestjs-repositories
+        version: link:../nestjs-repositories-server
       '@openthrottle/nodejs-utils':
         specifier: workspace:^
         version: link:../nodejs-utils
@@ -3343,9 +3264,9 @@ importers:
 
   packages/openthrottle-showroom:
     dependencies:
-      '@openthrottle/nestjs-repositories':
+      '@openthrottle/nestjs-repositories-server':
         specifier: workspace:^
-        version: link:../nestjs-repositories
+        version: link:../nestjs-repositories-server
       '@openthrottle/openthrottle-agentic-utils':
         specifier: workspace:*
         version: link:../openthrottle-agentic-utils

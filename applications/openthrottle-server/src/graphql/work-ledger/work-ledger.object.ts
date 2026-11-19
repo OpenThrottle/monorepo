@@ -1,6 +1,6 @@
 /**
  * @description GraphQL ObjectTypes for the work ledger. Mirror the work_sessions / work_session_subjects
- * / work_artifacts entities from @openthrottle/nestjs-repositories. JSONB payload is exposed as a
+ * / work_artifacts entities from @openthrottle/nestjs-repositories-server. JSONB payload is exposed as a
  * JSON-serialized String (payloadJson), per the repo convention (no GraphQLJSON scalar).
  */
 

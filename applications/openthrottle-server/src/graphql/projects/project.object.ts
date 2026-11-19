@@ -1,10 +1,13 @@
 /**
- * @description GraphQL ObjectType for Project. Implements {@link ProjectData} from @openthrottle/nestjs-repositories so the API shape stays in sync with the entity.
+ * @description GraphQL ObjectType for Project. Implements {@link ProjectData} from @openthrottle/nestjs-repositories-server so the API shape stays in sync with the entity.
  */
 
 import { Field, ObjectType } from '@nestjs/graphql';
-import type { Plan, Task } from '@openthrottle/nestjs-repositories';
-import type { ProjectData } from '@openthrottle/nestjs-repositories';
+import type {
+  Plan,
+  ProjectData,
+  Task,
+} from '@openthrottle/nestjs-repositories-server';
 
 // Value imports, not `import type`: the `@Field(() => [...])` thunks below
 // dereference these at schema-build time. ESM hoists the bindings and the

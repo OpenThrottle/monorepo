@@ -13,7 +13,7 @@ import type { NestjsVectorSearchOptions } from './nestjs-vector-search.options.t
  * the {@link CodeSnapshotStore} (incremental-index baseline) and the {@link CodeSearchService}
  * orchestration over the openthrottle-ide engine. It embeds nothing itself: `register` binds
  * the host's embedder to {@link CODE_EMBEDDER}. Requires the host app to configure a TypeORM root
- * (the default DataSource is injected into the stores) — e.g. NestjsRepositoriesModule in
+ * (the default DataSource is injected into the stores) — e.g. the getOpenThrottleTypeOrmOptions() root in
  * openthrottle-server.
  */
 @Module({})

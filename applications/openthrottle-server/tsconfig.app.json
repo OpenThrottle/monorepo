@@ -14,6 +14,9 @@
       "path": "../../packages/openthrottle-skills/tsconfig.lib.json"
     },
     {
+      "path": "../../packages/openthrottle-plan-config/tsconfig.lib.json"
+    },
+    {
       "path": "../../packages/openthrottle-notifications/tsconfig.lib.json"
     },
     {
@@ -66,9 +69,6 @@
     },
     {
       "path": "../../packages/nestjs-repositories-cms/tsconfig.lib.json"
-    },
-    {
-      "path": "../../packages/nestjs-repositories/tsconfig.lib.json"
     },
     {
       "path": "../../packages/nestjs-redis/tsconfig.lib.json"

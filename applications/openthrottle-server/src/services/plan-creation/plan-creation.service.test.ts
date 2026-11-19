@@ -3,16 +3,11 @@ import { BadRequestException } from '@nestjs/common';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import type {
-  PlanData,
-  PlanRunConfigStorage,
-} from '@openthrottle/nestjs-repositories';
-import { getDefaultPlanRunConfigStorage } from '@openthrottle/nestjs-repositories';
-import { UserPreferencesRepository } from '@openthrottle/nestjs-repositories-server';
+import type { Plan, PlanData } from '@openthrottle/nestjs-repositories-server';
 import {
-  type Plan,
   PlansRepository,
   UserDisabledAgentClisRepository,
+  UserPreferencesRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import {
   createPlansRepositoryMock,
@@ -20,6 +15,8 @@ import {
   plansFactory,
 } from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
+import type { PlanRunConfigStorage } from '@openthrottle/openthrottle-plan-config';
+import { getDefaultPlanRunConfigStorage } from '@openthrottle/openthrottle-plan-config';
 import { DataSource } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 

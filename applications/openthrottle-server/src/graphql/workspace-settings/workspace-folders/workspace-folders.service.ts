@@ -22,13 +22,13 @@ import { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
   Repository,
   RepositoryCheckout,
-} from '@openthrottle/nestjs-repositories';
-import { normalizeRemoteUrl } from '@openthrottle/nestjs-repositories';
+} from '@openthrottle/nestjs-repositories-server';
 import {
+  normalizeRemoteUrl,
+  ProjectsRepository,
   RepositoriesRepository,
   RepositoryCheckoutsRepository,
 } from '@openthrottle/nestjs-repositories-server';
-import { ProjectsRepository } from '@openthrottle/nestjs-repositories-server';
 import { isRecord } from '@openthrottle/nodejs-utils';
 import { resolveForeignWorkspaceContext } from '@openthrottle/openthrottle-agentic-utils';
 import {

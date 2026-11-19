@@ -17,7 +17,7 @@ import {
 } from '@nestjs/graphql';
 import { CurrentUser } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
-import type { Project } from '@openthrottle/nestjs-repositories';
+import type { Project } from '@openthrottle/nestjs-repositories-server';
 
 import { GqlPermissionsGuard } from '../../../guards/gql-permissions.guard.ts';
 import { WorktreeActivityService } from '../../../services/worktree-activity/worktree-activity.service.ts';

@@ -15,11 +15,11 @@
 
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { planRunConfigFromPlanStorage } from '@openthrottle/nestjs-repositories';
 import {
   PlanOutputStreamRepository,
   PlansRepository,
 } from '@openthrottle/nestjs-repositories-server';
+import { planRunConfigFromPlanStorage } from '@openthrottle/openthrottle-plan-config';
 
 import { PlanRunWorktreeTeardownService } from '../plan-run-worktree-teardown/plan-run-worktree-teardown.service.ts';
 import { describePlanRunWorktreeTeardown } from '../plan-run-worktree-teardown/plan-run-worktree-teardown.utils.ts';

@@ -7,7 +7,7 @@ import type {
   ScheduledAgentJob,
   ScheduledAgentJobRun,
   ScheduledAgentJobRunStatusCount,
-} from '@openthrottle/nestjs-repositories';
+} from '@openthrottle/nestjs-repositories-server';
 
 import type {
   ScheduledAgentJobObject,

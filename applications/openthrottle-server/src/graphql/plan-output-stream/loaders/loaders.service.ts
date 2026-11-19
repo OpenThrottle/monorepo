@@ -3,11 +3,9 @@
  */
 
 import { Injectable, Scope } from '@nestjs/common';
-import { createEntityByIdLoader } from '@openthrottle/nestjs-repositories';
-import {
-  type Plan,
-  PlansRepository,
-} from '@openthrottle/nestjs-repositories-server';
+import { createEntityByIdLoader } from '@openthrottle/nestjs-postgres';
+import type { Plan } from '@openthrottle/nestjs-repositories-server';
+import { PlansRepository } from '@openthrottle/nestjs-repositories-server';
 import type DataLoader from 'dataloader';
 
 /**

@@ -1,4 +1,4 @@
-import { TASK_STATUS } from '@openthrottle/nestjs-repositories';
+import { TASK_STATUS } from '@openthrottle/nestjs-repositories-server';
 
 /** Queue name for task→plan promotion jobs. */
 export const TASK_PROMOTION_QUEUE_NAME = 'task-promotion';

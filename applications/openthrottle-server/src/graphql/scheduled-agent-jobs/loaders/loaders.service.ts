@@ -5,11 +5,11 @@
  */
 
 import { Injectable, Scope } from '@nestjs/common';
-import {
-  createEntityByIdLoader,
-  type RepositoryCheckout,
-  type ScheduledAgentJob,
-} from '@openthrottle/nestjs-repositories';
+import { createEntityByIdLoader } from '@openthrottle/nestjs-postgres';
+import type {
+  RepositoryCheckout,
+  ScheduledAgentJob,
+} from '@openthrottle/nestjs-repositories-server';
 import {
   RepositoryCheckoutsRepository,
   ScheduledAgentJobsRepository,

@@ -5,18 +5,18 @@ import { join } from 'node:path';
 import { createMock } from '@golevelup/ts-vitest';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import { type RepositoryCheckout } from '@openthrottle/nestjs-repositories';
-import type { RepositoryCheckoutsRepository } from '@openthrottle/nestjs-repositories-server';
 import type {
+  Plan,
   PlanRun,
   PlanRunsRepository,
+  PlansRepository,
+  RepositoryCheckout,
+  RepositoryCheckoutsRepository,
+  TasksRepository,
 } from '@openthrottle/nestjs-repositories-server';
-import { PlanRun as PlanRunEntity } from '@openthrottle/nestjs-repositories-server';
 import {
-  type Plan,
-  type PlansRepository,
+  PlanRun as PlanRunEntity,
   Task,
-  type TasksRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import {
   createPlanRunsRepositoryMock,

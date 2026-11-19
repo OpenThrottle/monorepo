@@ -29,7 +29,7 @@ export const BLOG_STATE_TABS: readonly BlogPostState[] = [
 
 /**
  * Shape of a post slug: lowercase letters, digits and single hyphens. Mirrors
- * `BLOG_SLUG_PATTERN` in `@openthrottle/nestjs-repositories` (a server package
+ * `BLOG_SLUG_PATTERN` in `@openthrottle/nestjs-repositories-server` (a server package
  * the client bundle must not import); the server stays the authority.
  */
 export const BLOG_SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;

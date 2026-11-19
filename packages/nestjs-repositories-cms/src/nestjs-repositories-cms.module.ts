@@ -19,7 +19,7 @@ import { getCmsTypeOrmOptions } from './nestjs-repositories-cms.utils.ts';
 /**
  * @description The TypeORM data-access layer for the `cms` database. Registers
  * the DataSource under {@link CMS_CONNECTION}, never the default, so it
- * coexists with `NestjsRepositoriesModule`'s openthrottle DataSource.
+ * coexists with the default openthrottle DataSource.
  * @public
  */
 @Module({

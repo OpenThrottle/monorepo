@@ -1,10 +1,10 @@
 /**
  * @description GraphQL enum for workspace editor preferences. Values align with
- * {@link WORKSPACE_EDITOR_IDS} in @openthrottle/nestjs-repositories.
+ * {@link WORKSPACE_EDITOR_IDS} in @openthrottle/nestjs-repositories-server.
  */
 
 import { registerEnumType } from '@nestjs/graphql';
-import { WORKSPACE_EDITOR_IDS } from '@openthrottle/nestjs-repositories';
+import { WORKSPACE_EDITOR_IDS } from '@openthrottle/nestjs-repositories-server';
 
 export const WorkspaceEditorIdEnum = {
   CLAUDE: 'claude',

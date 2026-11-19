@@ -1,6 +1,6 @@
 /**
  * Zero-dependency twin of the server's `normalizeRemoteUrl`
- * (`packages/nestjs-repositories/src/modules/repositories/repositories.utils.ts`). The hook bundle
+ * (`packages/nestjs-repositories-server/src/modules/repositories/repositories.utils.ts`). The hook bundle
  * must stay dependency-light, so it cannot import that package; the two are kept identical by a
  * mirrored test (`__tests__/normalizeRemoteUrl.test.ts`). Change them together or not at all.
  *

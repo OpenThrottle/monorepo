@@ -253,7 +253,7 @@ Embedding columns are `vector(768)`; see [Embedding dimension strategy](#embeddi
 We keep **SQL files as the single source of truth** for schema. TypeORM is used only for **runtime** (connection pooling via DataSource, raw SQL in openthrottle-server and scripts; entities for type safety). We do **not** use TypeORM’s migration runner.
 
 - **Applying schema changes:** Add a new numbered `.sql` file in `databases/openthrottle/migrations/`, then run `pnpm run database:migrate`. The script `scripts/openthrottle-database-migrations.ts` applies not-yet-recorded `.sql` files in filename order and records each in the `schema_migrations` ledger (see [Run-once / idempotent](#run-once--idempotent-schema_migrations-ledger)).
-- **Keeping runtime in sync:** After adding or changing a migration, update TypeORM entities in `@openthrottle/nestjs-repositories` (and any scripts that use OpenThrottle Postgres) so they match the SQL schema. Entity JSDoc should reference the migration(s), e.g. “Matches databases/openthrottle/migrations (002, 012).”
+- **Keeping runtime in sync:** After adding or changing a migration, update TypeORM entities in `@openthrottle/nestjs-repositories-server` (and any scripts that use OpenThrottle Postgres) so they match the SQL schema. Entity JSDoc should reference the migration(s), e.g. “Matches databases/openthrottle/migrations (002, 012).”
 - **Why not TypeORM migrations:** We already have a long, ordered history osf SQL migrations and a single command (`database:migrate`) that applies them. Introducing TypeORM migrations would duplicate history or require a one-time conversion and a separate “migrations run” table. Keeping SQL as source of truth avoids two migration systems and keeps one readable, version-controlled history.
 
 ## Data retention
@@ -384,7 +384,7 @@ One row is written per plan execution and none was ever deleted (524 runs in six
 
 Delete a run once it is **no longer in flight** (anything but `queued` / `running`), it finished — or, if it never started, was created — more than **180 days** ago, and it is **not its job's newest run**.
 
-One row per cron fire, run-now or usage-limit resume, each with a settings snapshot and raw usage JSON, and none was ever pruned. The in-flight set comes from `SCHEDULED_AGENT_JOB_RUN_IN_FLIGHT_STATUSES` in `@openthrottle/nestjs-repositories`, the same list the scheduler uses, so the policy and the scheduler cannot disagree about what is live. Keeping each job's newest run means the schedule page always shows a job's latest outcome.
+One row per cron fire, run-now or usage-limit resume, each with a settings snapshot and raw usage JSON, and none was ever pruned. The in-flight set comes from `SCHEDULED_AGENT_JOB_RUN_IN_FLIGHT_STATUSES` in `@openthrottle/nestjs-repositories-server`, the same list the scheduler uses, so the policy and the scheduler cannot disagree about what is live. Keeping each job's newest run means the schedule page always shows a job's latest outcome.
 
 The only reference into the table is the `resume_of_run_id` self-reference, `ON DELETE SET NULL`: a resume run outlives the limited run it continued and loses only the link.
 

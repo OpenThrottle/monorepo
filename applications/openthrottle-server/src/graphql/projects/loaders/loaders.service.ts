@@ -4,7 +4,7 @@
  */
 
 import { Injectable, Scope } from '@nestjs/common';
-import { createCollectionByColumnLoader } from '@openthrottle/nestjs-repositories';
+import { createCollectionByColumnLoader } from '@openthrottle/nestjs-postgres';
 import type { Plan, Task } from '@openthrottle/nestjs-repositories-server';
 import {
   CROSS_PLAN_TASK_LIST_ORDER,

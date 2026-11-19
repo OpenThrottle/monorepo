@@ -23,9 +23,11 @@ import { dirname } from 'node:path';
 
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import type { RepositoryCheckout } from '@openthrottle/nestjs-repositories';
-import { RepositoryCheckoutsRepository } from '@openthrottle/nestjs-repositories-server';
-import { PlanRunsRepository } from '@openthrottle/nestjs-repositories-server';
+import type { RepositoryCheckout } from '@openthrottle/nestjs-repositories-server';
+import {
+  PlanRunsRepository,
+  RepositoryCheckoutsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import { In } from 'typeorm';
 
 import { OT_WORKTREE_ACTION } from '../ot-worktree-script/ot-worktree-script.constants.ts';

@@ -3,7 +3,7 @@
  */
 
 import { Field, ObjectType } from '@nestjs/graphql';
-import type { RoleData } from '@openthrottle/nestjs-repositories';
+import type { RoleData } from '@openthrottle/nestjs-repositories-server';
 
 import { PermissionObject } from './permission.object.ts';
 

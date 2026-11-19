@@ -1,10 +1,10 @@
 /**
- * @description GraphQL ObjectType for Plan. Implements {@link PlanData} from @openthrottle/nestjs-repositories so the API shape stays in sync with the entity.
+ * @description GraphQL ObjectType for Plan. Implements {@link PlanData} from @openthrottle/nestjs-repositories-server so the API shape stays in sync with the entity.
  */
 
 import { Field, ID, Int, ObjectType } from '@nestjs/graphql';
-import type { PlanData } from '@openthrottle/nestjs-repositories';
 import type {
+  PlanData,
   PlanRunData,
   PlanRunExecutionBackend,
 } from '@openthrottle/nestjs-repositories-server';

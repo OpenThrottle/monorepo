@@ -1,6 +1,6 @@
 /**
  * @description GraphQL module for rollout feature flags. Registers RolloutResolver and
- * GqlPermissionsGuard. Imports RolloutFlagsModule (RolloutService) and NestjsRepositoriesModule
+ * GqlPermissionsGuard. Imports RolloutFlagsModule (RolloutService) and RolesModule
  * (RolesRepository, used by both RolloutService evaluation and the guard).
  */
 

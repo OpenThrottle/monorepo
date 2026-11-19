@@ -51,9 +51,6 @@
       "path": "../../packages/nestjs-stripe/tsconfig.lib.json"
     },
     {
-      "path": "../../packages/nestjs-repositories/tsconfig.lib.json"
-    },
-    {
       "path": "../../packages/nestjs-rollout/tsconfig.lib.json"
     },
     {

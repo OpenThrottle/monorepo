@@ -81,7 +81,7 @@ export const TOKEN_USAGE_STATS: readonly TokenUsageStatDefinition[] = [
 
 /**
  * Producer ids of `TokenUsageRowObject.source`, mirroring the server's
- * `AGENT_TOKEN_USAGE_SOURCES` (`@openthrottle/nestjs-repositories`; the client
+ * `AGENT_TOKEN_USAGE_SOURCES` (`@openthrottle/nestjs-repositories-server`; the client
  * cannot import that server package).
  */
 export const TOKEN_USAGE_SOURCES = {

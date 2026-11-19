@@ -3,7 +3,7 @@
 Isomorphic source of truth for `plans.run_config` and `plan_runs.run_config_snapshot`: the canonical
 JSON shapes, their validation, the round-trip between stored config and the developer app's
 Configuration tab, and the **defaults** every programmatic plan run inherits. Consumed by
-`openthrottle-server` (through `@openthrottle/nestjs-repositories`) and by `openthrottle-developer`,
+`openthrottle-server` (through `@openthrottle/nestjs-repositories-server`) and by `openthrottle-developer`,
 so neither can drift from the other.
 
 ## Defaults for programmatic (BullMQ) plan runs

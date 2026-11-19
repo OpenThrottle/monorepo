@@ -73,9 +73,15 @@
               "@openthrottle/nestjs-auth",
               "@openthrottle/nestjs-modules",
               "@openthrottle/nestjs-rbac",
-              "@openthrottle/nestjs-repositories"
+              "@openthrottle/nestjs-repositories-server"
             ],
             "target": "typecheck"
+          },
+          {
+            "projects": [
+              "@openthrottle/nestjs-repositories-server"
+            ],
+            "target": "build"
           }
         ]
       },

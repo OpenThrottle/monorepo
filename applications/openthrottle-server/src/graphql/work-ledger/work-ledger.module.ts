@@ -8,8 +8,8 @@
 
 import { Module } from '@nestjs/common';
 import { GlobalClsModule, LoggerModule } from '@openthrottle/nestjs-modules';
-import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import {
+  NestjsRepositoriesServerModule,
   PlanRunsModule,
   ServiceAccountsModule,
   WorkArtifactsModule,
@@ -33,7 +33,7 @@ import { WorkLedgerCaptureService } from './work-ledger-capture/work-ledger-capt
   imports: [
     GlobalClsModule,
     LoggerModule,
-    NestjsRepositoriesModule,
+    NestjsRepositoriesServerModule,
     PlanRunsModule,
     RepositoryInspectionModule,
     ServiceAccountsModule,

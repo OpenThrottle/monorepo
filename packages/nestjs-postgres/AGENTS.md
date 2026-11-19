@@ -8,7 +8,7 @@ that EXPLAINs the SQL a repository method issues.
 
 **Consumed by:** `@openthrottle/nestjs-repositories-cms` (every cms content table, on
 `BaseUuidModel`, and its DataSource logger) and `@openthrottle/nestjs-repositories-server` (the
-`openthrottle` tables as they move off `@openthrottle/nestjs-repositories`, on `BaseModel`).
+`openthrottle` tables as they move off `@openthrottle/nestjs-repositories-server`, on `BaseModel`).
 
 **Adoption step (done for cms, not yet for openthrottle):** to profile real queries, set that DataSource's `logger` to
 `createPostgresProfilingQueryLogger(<previous logger>, <logging>)`. A table moved onto

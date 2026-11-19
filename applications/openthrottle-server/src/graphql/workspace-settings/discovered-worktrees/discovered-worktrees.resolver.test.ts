@@ -6,14 +6,16 @@
  */
 
 import { createMock } from '@golevelup/ts-vitest';
-import type { RepositoryCheckout } from '@openthrottle/nestjs-repositories';
-import type { RepositoryCheckoutsRepository } from '@openthrottle/nestjs-repositories-server';
 import type {
+  RepositoryCheckout,
+  RepositoryCheckoutsRepository,
   WorktreeRemoval,
   WorktreeRemovalsRepository,
 } from '@openthrottle/nestjs-repositories-server';
-import { createRepositoryCheckoutsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
-import { createWorktreeRemovalsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import {
+  createRepositoryCheckoutsRepositoryMock,
+  createWorktreeRemovalsRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
 import { describe, expect, it, vi } from 'vitest';
 

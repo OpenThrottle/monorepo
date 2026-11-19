@@ -5,7 +5,7 @@
  * The dedupe/count helpers live in `utils/repo-skills-registry.ts`.
  *
  * Keep `OPENTHROTTLE_REPO_SKILL_PATHS` in
- * `packages/nestjs-repositories/.../workspace-settings.constants.ts` aligned
+ * `packages/nestjs-repositories-server/.../workspace-settings.constants.ts` aligned
  * when adding skills that workspace editor apply should write.
  */
 import type { SkillSource } from '@openthrottle/openthrottle-skills';
@@ -32,7 +32,7 @@ export const LAYOUT_PREFERENCE: Readonly<Record<SkillRegistryLayout, number>> =
 
 /**
  * @description OpenThrottle-specific agent skills that must appear in discovery
- * and in `OPENTHROTTLE_REPO_SKILL_PATHS` (nestjs-repositories).
+ * and in `OPENTHROTTLE_REPO_SKILL_PATHS` (nestjs-repositories-server).
  */
 export const REQUIRED_AGENTS_SKILL_SLUGS = [
   'ot-generators',

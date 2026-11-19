@@ -10,8 +10,8 @@ import './scheduled-agent-jobs.input.ts';
 
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
-import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import {
+  NestjsRepositoriesServerModule,
   RepositoryCheckoutsModule,
   RolesModule,
   ScheduledAgentJobRunsModule,
@@ -36,7 +36,7 @@ import { ScheduledAgentJobsGraphqlService } from './scheduled-agent-jobs.service
     ScheduledAgentJobRunsModule,
     ScheduledAgentJobsModule,
     ScheduledAgentJobCheckoutPathModule,
-    NestjsRepositoriesModule,
+    NestjsRepositoriesServerModule,
     ScheduledAgentJobsQueueProducerModule,
   ],
   providers: [

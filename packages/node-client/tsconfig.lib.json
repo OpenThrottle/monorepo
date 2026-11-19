@@ -21,7 +21,7 @@
       "path": "../nodejs-utils/tsconfig.lib.json"
     },
     {
-      "path": "../nestjs-repositories/tsconfig.lib.json"
+      "path": "../nestjs-repositories-server/tsconfig.lib.json"
     },
     {
       "path": "../../tools/dotfiles/tsconfig.lib.json"

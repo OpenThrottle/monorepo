@@ -2,8 +2,10 @@
  * @description Maps persistence {@link UserWorkspaceSettings} to GraphQL profile object.
  */
 
-import type { UserWorkspaceSettings } from '@openthrottle/nestjs-repositories';
-import type { WorkspaceEditorId } from '@openthrottle/nestjs-repositories';
+import type {
+  UserWorkspaceSettings,
+  WorkspaceEditorId,
+} from '@openthrottle/nestjs-repositories-server';
 
 import type { UserWorkspaceProfileObject } from './user-workspace-profile.object.ts';
 import { WorkspaceEditorIdEnum } from './workspace-editor-id.enum.ts';

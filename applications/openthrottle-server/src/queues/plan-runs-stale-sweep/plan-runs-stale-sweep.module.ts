@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
-import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import {
+  NestjsRepositoriesServerModule,
   PlanRunsModule,
   PlansModule,
 } from '@openthrottle/nestjs-repositories-server';
@@ -30,7 +30,7 @@ import { PlanRunsStaleSweepRepeatableService } from './repeatable/repeatable.ser
     ForeignSkillInjectionModule,
     LoggerModule,
     WorkspaceEditorConfigModule,
-    NestjsRepositoriesModule,
+    NestjsRepositoriesServerModule,
     NotificationsModule,
     PlanRunsModule,
     PlanRunsStaleSweepQueueProducerModule,

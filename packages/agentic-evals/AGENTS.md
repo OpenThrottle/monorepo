@@ -2,7 +2,7 @@
 
 Eval core for agent CLIs (ADR: [eval-system-adr.md](../../docs/openthrottle/eval-system-adr.md),
 Decisions 7, 8, 9, 11). Pure TypeScript — no NestJS, no database. Entities, resolvers and queue
-wiring belong in `nestjs-repositories` / `openthrottle-server`, not here.
+wiring belong in `nestjs-repositories-server` / `openthrottle-server`, not here.
 
 **Consumed by:** the MCP tool-selection eval (`openthrottle-mcp-evals`, `src/tool-selection`);
 `openthrottle-server` (via a later task). How suites run:

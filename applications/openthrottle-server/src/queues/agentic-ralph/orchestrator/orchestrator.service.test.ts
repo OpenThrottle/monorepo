@@ -8,15 +8,17 @@
 import { createMock } from '@golevelup/ts-vitest';
 import type { AgenticWorkflowRegistry } from '@openthrottle/nestjs-agentic-workflow';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import { type RepositoryCheckout } from '@openthrottle/nestjs-repositories';
-import type { RepositoryCheckoutsRepository } from '@openthrottle/nestjs-repositories-server';
-import type { PlanRunsRepository } from '@openthrottle/nestjs-repositories-server';
-import type { PlanOutputStreamRepository } from '@openthrottle/nestjs-repositories-server';
-import { type PlanRun } from '@openthrottle/nestjs-repositories-server';
-import { createRepositoryCheckoutsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import type {
+  PlanOutputStreamRepository,
+  PlanRun,
+  PlanRunsRepository,
+  RepositoryCheckout,
+  RepositoryCheckoutsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import {
   createPlanOutputStreamRepositoryMock,
   createPlanRunsRepositoryMock,
+  createRepositoryCheckoutsRepositoryMock,
   planOutputStreamFactory,
 } from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';

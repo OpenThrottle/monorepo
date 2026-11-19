@@ -5,11 +5,11 @@
  * without one the instant would depend on the server's timezone. The fields of the other kinds are
  * cleared, so a row always has exactly the field its kind uses.
  */
-import {
-  SCHEDULED_AGENT_JOB_SCHEDULE_KINDS,
-  type ScheduledAgentJob,
-  type ScheduledAgentJobScheduleKind,
-} from '@openthrottle/nestjs-repositories';
+import type {
+  ScheduledAgentJob,
+  ScheduledAgentJobScheduleKind,
+} from '@openthrottle/nestjs-repositories-server';
+import { SCHEDULED_AGENT_JOB_SCHEDULE_KINDS } from '@openthrottle/nestjs-repositories-server';
 
 import { SCHEDULED_AGENT_JOB_MIN_INTERVAL_MS } from '../../../queues/scheduled-agent-jobs/schedule-kind/schedule-kind.constants.ts';
 import { validateScheduledAgentJobCron } from '../cron/cron.utils.ts';

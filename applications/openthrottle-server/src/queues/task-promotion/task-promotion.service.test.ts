@@ -9,18 +9,20 @@
 
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import { Plan, Task } from '@openthrottle/nestjs-repositories';
-import {
-  plansFactory,
-  tasksFactory,
-} from '@openthrottle/nestjs-repositories/testing';
 import type { WorkArtifact } from '@openthrottle/nestjs-repositories-server';
-import { PlanTag, TaskTag } from '@openthrottle/nestjs-repositories-server';
 import {
+  Plan,
+  PlanTag,
+  Task,
+  TaskTag,
   WorkSession,
   WorkSessionSubject,
 } from '@openthrottle/nestjs-repositories-server';
-import { workSessionsFactory } from '@openthrottle/nestjs-repositories-server/testing';
+import {
+  plansFactory,
+  tasksFactory,
+  workSessionsFactory,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
 import type { DataSource, EntityManager, Repository } from 'typeorm';
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';

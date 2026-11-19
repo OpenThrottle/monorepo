@@ -1,7 +1,7 @@
 /**
  * @description Browser-safe git-remote identity parsing for the composer's
  * repository picker. This is the client twin of `normalizeRemoteUrl` in
- * `@openthrottle/nestjs-repositories` (which itself mirrors the SQL twin in
+ * `@openthrottle/nestjs-repositories-server` (which itself mirrors the SQL twin in
  * `databases/openthrottle/migrations/078_create_repositories_and_checkouts.sql`): the same
  * normalization rules, but returning the SPLIT identity (`host` / `owner` /
  * `name`) the UI needs to group and disambiguate rows rather than a canonical

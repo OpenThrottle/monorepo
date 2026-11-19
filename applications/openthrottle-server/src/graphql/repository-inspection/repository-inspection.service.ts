@@ -15,8 +15,10 @@ import { promisify } from 'node:util';
 import { Injectable } from '@nestjs/common';
 import { describeTelemetryConfig } from '@openthrottle/agentic-hooks';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { normalizeRemoteUrl } from '@openthrottle/nestjs-repositories';
-import { RepositoryCheckoutsRepository } from '@openthrottle/nestjs-repositories-server';
+import {
+  normalizeRemoteUrl,
+  RepositoryCheckoutsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import { isRecord } from '@openthrottle/nodejs-utils';
 import { toHostPath } from '@openthrottle/openthrottle-agentic-utils';
 
