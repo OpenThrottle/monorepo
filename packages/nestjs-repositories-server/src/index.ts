@@ -206,6 +206,7 @@ export * from './modules/skill-availability-rules/skill-availability-rule.entity
 export * from './modules/skill-availability-rules/skill-availability-rules.module.ts';
 export * from './modules/skill-availability-rules/skill-availability-rules.repository.ts';
 export type * from './modules/skill-availability-rules/skill-availability-rules.types.ts';
+export * from './modules/skill-tags/skill-tags.constants.ts';
 export * from './modules/skill-tags/skill-tags.module.ts';
 export * from './modules/skill-tags/skill-tags.repository.ts';
 export type * from './modules/skill-tags/skill-tags.types.ts';

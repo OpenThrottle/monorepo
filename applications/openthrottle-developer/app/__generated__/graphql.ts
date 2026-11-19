@@ -2771,7 +2771,7 @@ export type Mutation = {
   addProjectTag: ProjectTagObject;
   /** Add a rule to a project's rule set (creating the rule set with the default "allow" posture if absent). Tag references are validated against the caller's skill-tag vocabulary. */
   addSkillAvailabilityRule: SkillAvailabilityRuleObject;
-  /** Add a kebab-case tag to the authenticated user's skill-tag vocabulary. */
+  /** Add a kebab-case tag to the authenticated user's skill-tag vocabulary. A duplicate is rejected with extensions.code SKILL_TAG_CONFLICT. */
   addSkillTag: SkillTagObject;
   /** Attach a tag to a task. The tag must be in the caller's skill-tag vocabulary; source is derived from the caller identity. */
   addTaskTag: TaskTagObject;
@@ -3007,7 +3007,7 @@ export type Mutation = {
   removeSkillTag: Scalars['Boolean']['output'];
   /** Remove a tag from a task under the provenance ladder. Returns false when the tag was not present. */
   removeTaskTag: Scalars['Boolean']['output'];
-  /** Rename a tag in the authenticated user's skill-tag vocabulary. */
+  /** Rename a tag in the authenticated user's skill-tag vocabulary. A target the user already has is rejected with extensions.code SKILL_TAG_CONFLICT. */
   renameSkillTag: SkillTagObject;
   /** Reorder a parent's children. childUuids must list exactly the current children. */
   reorderCmsFragmentChildren: Array<CmsFragmentChildObject>;

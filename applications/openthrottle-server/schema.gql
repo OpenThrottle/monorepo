@@ -7794,10 +7794,14 @@ type Mutation {
   """Remove a rule by id. Returns false when the rule was not present."""
   removeSkillAvailabilityRule(ruleId: ID!): Boolean!
 
-  """Add a kebab-case tag to the authenticated user's skill-tag vocabulary."""
+  """
+  Add a kebab-case tag to the authenticated user's skill-tag vocabulary. A duplicate is rejected with extensions.code SKILL_TAG_CONFLICT.
+  """
   addSkillTag(input: AddSkillTagInput!): SkillTagObject!
 
-  """Rename a tag in the authenticated user's skill-tag vocabulary."""
+  """
+  Rename a tag in the authenticated user's skill-tag vocabulary. A target the user already has is rejected with extensions.code SKILL_TAG_CONFLICT.
+  """
   renameSkillTag(input: RenameSkillTagInput!): SkillTagObject!
 
   """

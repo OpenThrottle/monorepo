@@ -18,10 +18,13 @@ describe('createSkillTagsRepositoryMock', () => {
 
     await expect(
       repository.addTag(userId, 'backend', 'phase'),
-    ).resolves.toMatchObject({ dimension: 'phase', tag: 'backend', userId });
+    ).resolves.toMatchObject({
+      kind: 'ok',
+      value: { dimension: 'phase', tag: 'backend', userId },
+    });
     await expect(
       repository.renameTag(userId, 'backend', 'server'),
-    ).resolves.toMatchObject({ tag: 'server', userId });
+    ).resolves.toMatchObject({ kind: 'ok', value: { tag: 'server', userId } });
   });
 
   it('names the user_skill_tags table in inherited not-found errors', async () => {

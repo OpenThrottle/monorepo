@@ -1,8 +1,4 @@
-import {
-  ConflictException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { CreateModelInput } from '@openthrottle/nestjs-postgres';
 import {
@@ -12,6 +8,8 @@ import {
 import { DEFAULT_TAG_VOCABULARY_SEED } from '@openthrottle/openthrottle-skills';
 import { Repository } from 'typeorm';
 
+import { SKILL_TAG_WRITE_RESULT_KIND } from './skill-tags.constants.ts';
+import type { SkillTagWriteResult } from './skill-tags.types.ts';
 import {
   assertKebabCaseTag,
   assertKnownDimension,
@@ -24,7 +22,7 @@ import { UserSkillTag } from './user-skill-tag.entity.ts';
  * connection: the `BaseRepository` CRUD (hard deletes) plus the per-user vocabulary. The
  * vocabulary is DB-authoritative and seeded on first read: {@link SkillTagsRepository.listForUser}
  * seeds the platform defaults for a user with zero rows. Adds and renames validate the tag as a
- * kebab-case slug and turn a duplicate into a `ConflictException`.
+ * kebab-case slug and return a duplicate as a `SkillTagWriteResult` conflict rather than throwing.
  * See docs/monorepo/skill-availability-design.md ("Tags").
  * @public
  */
@@ -62,26 +60,24 @@ export class SkillTagsRepository extends BaseRepository<
   /**
    * @description Adds a tag to the user's vocabulary. `dimension` defaults to `domain`; pass
    * `phase` for lifecycle-stage tags (plans and tasks only).
+   * Returns a `conflict` result when the user already has the tag.
    * @throws BadRequestException for a non-kebab-case tag or an unknown dimension.
-   * @throws ConflictException when the user already has the tag.
    */
   async addTag(
     userId: string,
     tag: string,
     dimension: string = 'domain',
-  ): Promise<UserSkillTag> {
+  ): Promise<SkillTagWriteResult> {
     const normalized = normalizeTag(tag);
     assertKebabCaseTag(normalized);
     assertKnownDimension(dimension);
 
     try {
-      return await this.create({ dimension, tag: normalized, userId });
+      const value = await this.create({ dimension, tag: normalized, userId });
+      return { kind: SKILL_TAG_WRITE_RESULT_KIND.OK, value };
     } catch (error) {
       if (isUniqueViolation(error)) {
-        throw new ConflictException(
-          `Tag "${normalized}" is already in your skill-tag vocabulary.`,
-          { cause: error },
-        );
+        return { kind: SKILL_TAG_WRITE_RESULT_KIND.CONFLICT, tag: normalized };
       }
       throw error;
     }
@@ -89,15 +85,15 @@ export class SkillTagsRepository extends BaseRepository<
 
   /**
    * @description Renames a tag in the user's vocabulary; renaming to the same tag is a no-op.
+   * Returns a `conflict` result when the target tag already exists.
    * @throws BadRequestException for a non-kebab-case target.
    * @throws NotFoundException when the source tag is absent.
-   * @throws ConflictException when the target tag already exists.
    */
   async renameTag(
     userId: string,
     from: string,
     to: string,
-  ): Promise<UserSkillTag> {
+  ): Promise<SkillTagWriteResult> {
     const normalizedTo = normalizeTag(to);
     assertKebabCaseTag(normalizedTo);
 
@@ -109,17 +105,18 @@ export class SkillTagsRepository extends BaseRepository<
     }
 
     if (normalizedTo === existing.tag) {
-      return existing;
+      return { kind: SKILL_TAG_WRITE_RESULT_KIND.OK, value: existing };
     }
 
     try {
-      return await this.update(existing.id, { tag: normalizedTo });
+      const value = await this.update(existing.id, { tag: normalizedTo });
+      return { kind: SKILL_TAG_WRITE_RESULT_KIND.OK, value };
     } catch (error) {
       if (isUniqueViolation(error)) {
-        throw new ConflictException(
-          `Tag "${normalizedTo}" is already in your skill-tag vocabulary.`,
-          { cause: error },
-        );
+        return {
+          kind: SKILL_TAG_WRITE_RESULT_KIND.CONFLICT,
+          tag: normalizedTo,
+        };
       }
       throw error;
     }
