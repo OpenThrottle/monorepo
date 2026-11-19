@@ -7825,7 +7825,7 @@ type Mutation {
   upsertTagActionRule(input: UpsertTagActionRuleInput!): TagActionRuleObject!
 
   """
-  Delete a tag→action rule (its ledger rows CASCADE). Returns false when absent.
+  Soft delete a tag→action rule: it stops evaluating, and its ledger rows are kept but no longer listed by ruleApplications. Returns false when absent.
   """
   deleteTagActionRule(input: DeleteTagActionRuleInput!): Boolean!
 
@@ -9990,7 +9990,7 @@ input UpsertTagActionRuleInput {
 }
 
 input DeleteTagActionRuleInput {
-  """Rule to delete (ledger rows CASCADE)."""
+  """Rule to soft delete (its ledger rows are kept)."""
   id: ID!
 }
 

@@ -57,6 +57,8 @@ export class UpsertTagActionRuleInput {
 
 @InputType()
 export class DeleteTagActionRuleInput {
-  @Field(() => ID, { description: `Rule to delete (ledger rows CASCADE).` })
+  @Field(() => ID, {
+    description: `Rule to soft delete (its ledger rows are kept).`,
+  })
   id!: string;
 }

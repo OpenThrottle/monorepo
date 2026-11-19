@@ -1542,7 +1542,7 @@ export type DeleteProjectInput = {
 };
 
 export type DeleteTagActionRuleInput = {
-  /** Rule to delete (ledger rows CASCADE). */
+  /** Rule to soft delete (its ledger rows are kept). */
   id: Scalars['ID']['input'];
 };
 
@@ -2881,7 +2881,7 @@ export type Mutation = {
   deleteScheduledAgentJob: Scalars['Boolean']['output'];
   /** Delete a project's rule set (cascading its rules). Returns false when the project had no rule set. */
   deleteSkillAvailabilityRuleSet: Scalars['Boolean']['output'];
-  /** Delete a tag→action rule (its ledger rows CASCADE). Returns false when absent. */
+  /** Soft delete a tag→action rule: it stops evaluating, and its ledger rows are kept but no longer listed by ruleApplications. Returns false when absent. */
   deleteTagActionRule: Scalars['Boolean']['output'];
   /** Delete a task by ID */
   deleteTask: Scalars['Boolean']['output'];
