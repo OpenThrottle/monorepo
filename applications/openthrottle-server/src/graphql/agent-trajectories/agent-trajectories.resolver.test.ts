@@ -1,11 +1,11 @@
-import { createMock } from '@golevelup/ts-vitest';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import type { AgentTrajectory } from '@openthrottle/nestjs-repositories';
+import type { AgentTrajectory } from '@openthrottle/nestjs-repositories-server';
 import {
   AGENT_TRAJECTORY_SOURCE,
-  AgentTrajectoriesService,
-} from '@openthrottle/nestjs-repositories';
+  AgentTrajectoriesRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import { createAgentTrajectoriesRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import type { AtifTrajectory } from '@openthrottle/openthrottle-agentic-utils';
 import { QueryFailedError } from 'typeorm';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -95,13 +95,7 @@ const buildInput = (
   };
 };
 
-const mockService = createMock<AgentTrajectoriesService>({
-  create: vi.fn(),
-  findById: vi.fn(),
-  findByPlanRun: vi.fn(),
-  findByTask: vi.fn(),
-  replace: vi.fn(),
-});
+const mockRepository = createAgentTrajectoriesRepositoryMock();
 
 describe('AgentTrajectoriesResolver', () => {
   let resolver: AgentTrajectoriesResolver;
@@ -112,7 +106,7 @@ describe('AgentTrajectoriesResolver', () => {
     const app = await Test.createTestingModule({
       providers: [
         AgentTrajectoriesResolver,
-        { provide: AgentTrajectoriesService, useValue: mockService },
+        { provide: AgentTrajectoriesRepository, useValue: mockRepository },
       ],
     }).compile();
 
@@ -122,11 +116,11 @@ describe('AgentTrajectoriesResolver', () => {
   describe('recordAgentTrajectory', () => {
     test('stores the capped trajectory with derived summary columns', async () => {
       const row = buildRow();
-      vi.mocked(mockService.create).mockResolvedValue(row);
+      vi.mocked(mockRepository.createTrajectory).mockResolvedValue(row);
 
       const result = await resolver.recordAgentTrajectory(buildInput());
 
-      expect(mockService.create).toHaveBeenCalledWith(
+      expect(mockRepository.createTrajectory).toHaveBeenCalledWith(
         expect.objectContaining({
           cachedTokens: 40,
           driver: 'claude',
@@ -157,7 +151,7 @@ describe('AgentTrajectoriesResolver', () => {
       ).rejects.toThrow(
         new BadRequestException('trajectoryJson is not a valid ATIF document'),
       );
-      expect(mockService.create).not.toHaveBeenCalled();
+      expect(mockRepository.createTrajectory).not.toHaveBeenCalled();
     });
 
     test('rejects malformed JSON', async () => {
@@ -170,17 +164,17 @@ describe('AgentTrajectoriesResolver', () => {
       await expect(
         resolver.recordAgentTrajectory(buildInput({ source: 'manual' })),
       ).rejects.toBeInstanceOf(BadRequestException);
-      expect(mockService.create).not.toHaveBeenCalled();
+      expect(mockRepository.createTrajectory).not.toHaveBeenCalled();
     });
 
     test('passes the idempotency key through to the service', async () => {
-      vi.mocked(mockService.create).mockResolvedValue(buildRow());
+      vi.mocked(mockRepository.createTrajectory).mockResolvedValue(buildRow());
 
       await resolver.recordAgentTrajectory(
         buildInput({ idempotencyKey: 'session:s1:toolu_1' }),
       );
 
-      expect(mockService.create).toHaveBeenCalledWith(
+      expect(mockRepository.createTrajectory).toHaveBeenCalledWith(
         expect.objectContaining({ idempotencyKey: 'session:s1:toolu_1' }),
       );
     });
@@ -194,11 +188,11 @@ describe('AgentTrajectoriesResolver', () => {
           buildInput({ idempotencyKey: 'k'.repeat(201) }),
         ),
       ).rejects.toBeInstanceOf(BadRequestException);
-      expect(mockService.create).not.toHaveBeenCalled();
+      expect(mockRepository.createTrajectory).not.toHaveBeenCalled();
     });
 
     test('maps a foreign key violation to NotFound', async () => {
-      vi.mocked(mockService.create).mockRejectedValue(
+      vi.mocked(mockRepository.createTrajectory).mockRejectedValue(
         new QueryFailedError(
           'INSERT',
           [],
@@ -217,7 +211,7 @@ describe('AgentTrajectoriesResolver', () => {
         [],
         Object.assign(new Error('serialization'), { code: '40001' }),
       );
-      vi.mocked(mockService.create).mockRejectedValue(failure);
+      vi.mocked(mockRepository.createTrajectory).mockRejectedValue(failure);
 
       await expect(resolver.recordAgentTrajectory(buildInput())).rejects.toBe(
         failure,
@@ -238,14 +232,14 @@ describe('AgentTrajectoriesResolver', () => {
 
     test('rewrites the document in place and keeps the id', async () => {
       const row = buildRow({ id: 'keep-me' });
-      vi.mocked(mockService.replace).mockResolvedValue(row);
+      vi.mocked(mockRepository.replaceTrajectory).mockResolvedValue(row);
 
       const result = await resolver.replaceAgentTrajectory(
         'keep-me',
         replaceInput,
       );
 
-      expect(mockService.replace).toHaveBeenCalledWith(
+      expect(mockRepository.replaceTrajectory).toHaveBeenCalledWith(
         'keep-me',
         expect.objectContaining({
           idempotencyKey: 'session:s1:toolu_1',
@@ -266,11 +260,11 @@ describe('AgentTrajectoriesResolver', () => {
       ).rejects.toThrow(
         new BadRequestException('trajectoryJson is not a valid ATIF document'),
       );
-      expect(mockService.replace).not.toHaveBeenCalled();
+      expect(mockRepository.replaceTrajectory).not.toHaveBeenCalled();
     });
 
     test('maps a missing row to NotFound', async () => {
-      vi.mocked(mockService.replace).mockResolvedValue(null);
+      vi.mocked(mockRepository.replaceTrajectory).mockResolvedValue(null);
 
       await expect(
         resolver.replaceAgentTrajectory('missing', replaceInput),
@@ -281,7 +275,7 @@ describe('AgentTrajectoriesResolver', () => {
   describe('agentTrajectory', () => {
     test('returns the mapped trajectory', async () => {
       const row = buildRow();
-      vi.mocked(mockService.findById).mockResolvedValue(row);
+      vi.mocked(mockRepository.findTrajectoryById).mockResolvedValue(row);
 
       const result = await resolver.agentTrajectory(row.id);
 
@@ -290,7 +284,7 @@ describe('AgentTrajectoriesResolver', () => {
     });
 
     test('returns null when missing', async () => {
-      vi.mocked(mockService.findById).mockResolvedValue(null);
+      vi.mocked(mockRepository.findTrajectoryById).mockResolvedValue(null);
 
       expect(await resolver.agentTrajectory('missing')).toBeNull();
     });
@@ -298,27 +292,27 @@ describe('AgentTrajectoriesResolver', () => {
 
   describe('agentTrajectoriesByPlanRun', () => {
     test('lists the plan run trajectories', async () => {
-      vi.mocked(mockService.findByPlanRun).mockResolvedValue([
+      vi.mocked(mockRepository.findByPlanRun).mockResolvedValue([
         buildRow(),
         buildRow({ id: 'f1f2f3f4-0000-4000-8000-000000000002' }),
       ]);
 
       const result = await resolver.agentTrajectoriesByPlanRun(planRunId);
 
-      expect(mockService.findByPlanRun).toHaveBeenCalledWith(planRunId);
+      expect(mockRepository.findByPlanRun).toHaveBeenCalledWith(planRunId);
       expect(result).toHaveLength(2);
     });
   });
 
   describe('agentTrajectoriesByTask', () => {
     test('lists the task trajectories', async () => {
-      vi.mocked(mockService.findByTask).mockResolvedValue([
+      vi.mocked(mockRepository.findByTask).mockResolvedValue([
         buildRow({ taskId }),
       ]);
 
       const result = await resolver.agentTrajectoriesByTask(taskId);
 
-      expect(mockService.findByTask).toHaveBeenCalledWith(taskId);
+      expect(mockRepository.findByTask).toHaveBeenCalledWith(taskId);
       expect(result).toHaveLength(1);
     });
   });

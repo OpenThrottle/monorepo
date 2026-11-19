@@ -24,13 +24,15 @@ import {
   EVAL_RUN_STATUS,
   EVAL_TRIAL_STATUS,
   type EvalAuthMode,
-  EvalDatasetsService,
+  EvalDatasetsRepository,
   type EvalGraderKind,
+  EvalGradesRepository,
   type EvalGradeVerdict,
-  EvalRunsService,
+  EvalRunsRepository,
   type EvalRunStatus,
+  EvalTrialsRepository,
   type EvalTrialStatus,
-} from '@openthrottle/nestjs-repositories';
+} from '@openthrottle/nestjs-repositories-server';
 
 import {
   isForeignKeyViolation,
@@ -101,8 +103,10 @@ const trimToNull = (value: string | null | undefined): string | null => {
 @Resolver(() => EvalRunObject)
 export class EvalRunsResolver {
   constructor(
-    private readonly evalDatasetsService: EvalDatasetsService,
-    private readonly evalRunsService: EvalRunsService,
+    private readonly evalDatasetsRepository: EvalDatasetsRepository,
+    private readonly evalGradesRepository: EvalGradesRepository,
+    private readonly evalRunsRepository: EvalRunsRepository,
+    private readonly evalTrialsRepository: EvalTrialsRepository,
     private readonly globalCls: GlobalClsService,
   ) {}
 
@@ -110,7 +114,7 @@ export class EvalRunsResolver {
     description: `The run's trials ordered by attempt.`,
   })
   async trials(@Parent() run: EvalRunObject): Promise<EvalTrialObject[]> {
-    const rows = await this.evalRunsService.findTrialsByRun(run.id);
+    const rows = await this.evalTrialsRepository.findByRun(run.id);
 
     return rows.map(toEvalTrialObject);
   }
@@ -122,7 +126,7 @@ export class EvalRunsResolver {
   async evalRun(
     @Args('id', { type: () => ID }) id: string,
   ): Promise<EvalRunObject | null> {
-    const row = await this.evalRunsService.findRunById(id);
+    const row = await this.evalRunsRepository.findRunById(id);
 
     return row == null ? null : toEvalRunObject(row);
   }
@@ -133,7 +137,7 @@ export class EvalRunsResolver {
   async evalRuns(
     @Args('datasetId', { type: () => ID }) datasetId: string,
   ): Promise<EvalRunObject[]> {
-    const rows = await this.evalRunsService.findRunsByDataset(datasetId);
+    const rows = await this.evalRunsRepository.findRunsByDataset(datasetId);
 
     return rows.map(toEvalRunObject);
   }
@@ -171,13 +175,15 @@ export class EvalRunsResolver {
     }
 
     const createdBy = resolveEvalActor(this.globalCls.get('user'), principal);
-    const dataset = await this.evalDatasetsService.findById(input.datasetId);
+    const dataset = await this.evalDatasetsRepository.findDatasetById(
+      input.datasetId,
+    );
 
     if (dataset == null) {
       throw new NotFoundException('dataset not found');
     }
 
-    const row = await this.evalRunsService.createRun({
+    const row = await this.evalRunsRepository.createRun({
       authMode,
       budgetTokens: input.budgetTokens,
       budgetUsd: input.budgetUsd,
@@ -209,7 +215,7 @@ export class EvalRunsResolver {
       throw new BadRequestException(`status '${status}' is not a run status`);
     }
 
-    const row = await this.evalRunsService.updateRunStatus({
+    const row = await this.evalRunsRepository.updateRunStatus({
       runId: input.runId,
       status,
     });
@@ -241,7 +247,7 @@ export class EvalRunsResolver {
     }
 
     try {
-      const row = await this.evalRunsService.upsertTrial({
+      const row = await this.evalTrialsRepository.upsertTrial({
         attempt: input.attempt,
         caseId: input.caseId,
         costUsd: input.costUsd,
@@ -304,7 +310,7 @@ export class EvalRunsResolver {
       : null;
 
     try {
-      const row = await this.evalRunsService.upsertGrade({
+      const row = await this.evalGradesRepository.upsertGrade({
         cacheKey: trimToNull(input.cacheKey),
         costUsd: input.costUsd,
         errorReason,

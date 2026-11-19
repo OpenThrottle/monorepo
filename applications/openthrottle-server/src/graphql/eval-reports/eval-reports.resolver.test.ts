@@ -1,33 +1,37 @@
-import { createMock } from '@golevelup/ts-vitest';
 import { NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import {
   type EvalCase,
+  EvalCasesRepository,
   type EvalDataset,
-  EvalDatasetsService,
+  EvalDatasetsRepository,
   type EvalGrade,
+  EvalGradesRepository,
   type EvalJudgeCalibration,
-  EvalJudgeCalibrationsService,
+  EvalJudgeCalibrationsRepository,
   type EvalRun,
-  EvalRunsService,
+  EvalRunsRepository,
   type EvalTrial,
-} from '@openthrottle/nestjs-repositories';
+  EvalTrialsRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import {
+  createEvalCasesRepositoryMock,
+  createEvalDatasetsRepositoryMock,
+  createEvalGradesRepositoryMock,
+  createEvalJudgeCalibrationsRepositoryMock,
+  createEvalRunsRepositoryMock,
+  createEvalTrialsRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { EvalReportsResolver } from './eval-reports.resolver.ts';
 
-const mockDatasets = createMock<EvalDatasetsService>({
-  findById: vi.fn(),
-  findCases: vi.fn(),
-});
-const mockCalibrations = createMock<EvalJudgeCalibrationsService>({
-  findByGrader: vi.fn(),
-});
-const mockRuns = createMock<EvalRunsService>({
-  findGradesByTrials: vi.fn(),
-  findRunById: vi.fn(),
-  findTrialsByRun: vi.fn(),
-});
+const mockCases = createEvalCasesRepositoryMock();
+const mockDatasets = createEvalDatasetsRepositoryMock();
+const mockGrades = createEvalGradesRepositoryMock();
+const mockCalibrations = createEvalJudgeCalibrationsRepositoryMock();
+const mockRuns = createEvalRunsRepositoryMock();
+const mockTrials = createEvalTrialsRepositoryMock();
 
 const at = new Date('2026-11-06T08:00:00.000Z');
 
@@ -35,6 +39,7 @@ const dataset = (overrides: Partial<EvalDataset> = {}): EvalDataset => {
   return {
     createdAt: at,
     createdBy: 'visormatt',
+    deletedAt: null,
     description: null,
     id: 'd1',
     name: 'failures',
@@ -50,11 +55,13 @@ const evalCase = (id: string, split: 'dev' | 'test' = 'dev'): EvalCase => {
   return {
     createdAt: at,
     datasetId: 'd1',
+    deletedAt: null,
     gold: {},
     id,
     input: {},
     sourceTrajectoryId: null,
     split,
+    updatedAt: at,
   };
 };
 
@@ -153,8 +160,8 @@ describe('EvalReportsResolver', () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
-    vi.mocked(mockDatasets.findById).mockResolvedValue(dataset());
-    vi.mocked(mockDatasets.findCases).mockResolvedValue([
+    vi.mocked(mockDatasets.findDatasetById).mockResolvedValue(dataset());
+    vi.mocked(mockCases.findByDataset).mockResolvedValue([
       evalCase('c1'),
       evalCase('c2', 'test'),
     ]);
@@ -163,9 +170,15 @@ describe('EvalReportsResolver', () => {
     const app = await Test.createTestingModule({
       providers: [
         EvalReportsResolver,
-        { provide: EvalDatasetsService, useValue: mockDatasets },
-        { provide: EvalJudgeCalibrationsService, useValue: mockCalibrations },
-        { provide: EvalRunsService, useValue: mockRuns },
+        { provide: EvalCasesRepository, useValue: mockCases },
+        { provide: EvalDatasetsRepository, useValue: mockDatasets },
+        { provide: EvalGradesRepository, useValue: mockGrades },
+        {
+          provide: EvalJudgeCalibrationsRepository,
+          useValue: mockCalibrations,
+        },
+        { provide: EvalRunsRepository, useValue: mockRuns },
+        { provide: EvalTrialsRepository, useValue: mockTrials },
       ],
     }).compile();
 
@@ -175,11 +188,11 @@ describe('EvalReportsResolver', () => {
   describe('evalRunReport', () => {
     test('builds the report from stored trials and grades', async () => {
       vi.mocked(mockRuns.findRunById).mockResolvedValue(run());
-      vi.mocked(mockRuns.findTrialsByRun).mockResolvedValue([
+      vi.mocked(mockTrials.findByRun).mockResolvedValue([
         trial('t1', 'c1'),
         trial('t2', 'c2'),
       ]);
-      vi.mocked(mockRuns.findGradesByTrials).mockResolvedValue([
+      vi.mocked(mockGrades.findByTrials).mockResolvedValue([
         grade('t1', 'pass'),
         grade('t2', 'fail'),
       ]);
@@ -210,10 +223,8 @@ describe('EvalReportsResolver', () => {
 
     test('counts a judge only when its latest calibration is gating', async () => {
       vi.mocked(mockRuns.findRunById).mockResolvedValue(run());
-      vi.mocked(mockRuns.findTrialsByRun).mockResolvedValue([
-        trial('t1', 'c1'),
-      ]);
-      vi.mocked(mockRuns.findGradesByTrials).mockResolvedValue([
+      vi.mocked(mockTrials.findByRun).mockResolvedValue([trial('t1', 'c1')]);
+      vi.mocked(mockGrades.findByTrials).mockResolvedValue([
         grade('t1', 'pass'),
         grade('t1', 'fail', {
           graderId: 'judge',
@@ -255,10 +266,10 @@ describe('EvalReportsResolver', () => {
           ? run({ id: 'base' })
           : run({ datasetVersion: 2, id: 'cand' });
       });
-      vi.mocked(mockRuns.findTrialsByRun).mockImplementation(async (id) => {
+      vi.mocked(mockTrials.findByRun).mockImplementation(async (id) => {
         return [trial(`${id}-1`, 'c1', id), trial(`${id}-2`, 'c2', id)];
       });
-      vi.mocked(mockRuns.findGradesByTrials).mockImplementation(async (ids) => {
+      vi.mocked(mockGrades.findByTrials).mockImplementation(async (ids) => {
         const candidate = ids[0]?.startsWith('cand') === true;
 
         return [

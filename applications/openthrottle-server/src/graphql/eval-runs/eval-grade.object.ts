@@ -1,6 +1,6 @@
 /**
  * @description GraphQL ObjectType for an eval grade. Mirrors the eval_grades entity from
- * @openthrottle/nestjs-repositories (migration 147); `evidence` is exposed as a JSON string.
+ * @openthrottle/nestjs-repositories-server (migration 147); `evidence` is exposed as a JSON string.
  */
 
 import { Field, Float, ID, ObjectType } from '@nestjs/graphql';

@@ -1,6 +1,6 @@
 /**
  * @description GraphQL ObjectType for an eval run. Mirrors the eval_runs entity from
- * @openthrottle/nestjs-repositories (migration 147). `trials` is a field resolver.
+ * @openthrottle/nestjs-repositories-server (migration 147). `trials` is a field resolver.
  */
 
 import { Field, Float, ID, Int, ObjectType } from '@nestjs/graphql';

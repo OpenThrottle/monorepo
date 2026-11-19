@@ -8,34 +8,34 @@ import {
   EVAL_RUN_STATUS,
   EVAL_TRIAL_STATUS,
   type EvalDataset,
-  EvalDatasetsService,
+  EvalDatasetsRepository,
   type EvalGrade,
+  EvalGradesRepository,
   type EvalHumanLabel,
-  EvalHumanLabelsService,
+  EvalHumanLabelsRepository,
   type EvalRun,
-  EvalRunsService,
+  EvalRunsRepository,
   type EvalTrial,
-} from '@openthrottle/nestjs-repositories';
+  EvalTrialsRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import {
+  createEvalDatasetsRepositoryMock,
+  createEvalGradesRepositoryMock,
+  createEvalHumanLabelsRepositoryMock,
+  createEvalRunsRepositoryMock,
+  createEvalTrialsRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import { QueryFailedError } from 'typeorm';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { EvalRunsResolver } from './eval-runs.resolver.ts';
 import { EvalTrialsResolver } from './eval-trials/eval-trials.resolver.ts';
 
-const mockRuns = createMock<EvalRunsService>({
-  createRun: vi.fn(),
-  findGradesByTrials: vi.fn(),
-  findRunById: vi.fn(),
-  findRunsByDataset: vi.fn(),
-  findTrialsByRun: vi.fn(),
-  updateRunStatus: vi.fn(),
-  upsertGrade: vi.fn(),
-  upsertTrial: vi.fn(),
-});
-const mockDatasets = createMock<EvalDatasetsService>({ findById: vi.fn() });
-const mockLabels = createMock<EvalHumanLabelsService>({
-  findByTrajectory: vi.fn(),
-});
+const mockRuns = createEvalRunsRepositoryMock();
+const mockTrials = createEvalTrialsRepositoryMock();
+const mockGrades = createEvalGradesRepositoryMock();
+const mockDatasets = createEvalDatasetsRepositoryMock();
+const mockLabels = createEvalHumanLabelsRepositoryMock();
 const mockCls = createMock<GlobalClsService>({ get: vi.fn() });
 
 const at = new Date('2026-11-06T08:00:00.000Z');
@@ -45,6 +45,7 @@ const evalDatasetFactory = {
     return {
       createdAt: at,
       createdBy: 'visormatt',
+      deletedAt: null,
       description: null,
       id: 'd1',
       name: 'failures',
@@ -126,6 +127,7 @@ const evalHumanLabelFactory = {
   build: (overrides: Partial<EvalHumanLabel> = {}): EvalHumanLabel => {
     return {
       createdAt: at,
+      deletedAt: null,
       failureType: null,
       id: 'l1',
       note: null,
@@ -191,8 +193,10 @@ describe('EvalRunsResolver', () => {
     const app = await Test.createTestingModule({
       providers: [
         EvalRunsResolver,
-        { provide: EvalRunsService, useValue: mockRuns },
-        { provide: EvalDatasetsService, useValue: mockDatasets },
+        { provide: EvalDatasetsRepository, useValue: mockDatasets },
+        { provide: EvalGradesRepository, useValue: mockGrades },
+        { provide: EvalRunsRepository, useValue: mockRuns },
+        { provide: EvalTrialsRepository, useValue: mockTrials },
         { provide: GlobalClsService, useValue: mockCls },
       ],
     }).compile();
@@ -202,7 +206,7 @@ describe('EvalRunsResolver', () => {
 
   describe('recordEvalRun', () => {
     test('reads the version from the dataset and stamps the creator', async () => {
-      vi.mocked(mockDatasets.findById).mockResolvedValue(
+      vi.mocked(mockDatasets.findDatasetById).mockResolvedValue(
         evalDatasetFactory.build({ id: 'd1', version: 4 }),
       );
       vi.mocked(mockRuns.createRun).mockResolvedValue(evalRunFactory.build());
@@ -244,7 +248,7 @@ describe('EvalRunsResolver', () => {
     });
 
     test('maps a missing dataset to NotFound', async () => {
-      vi.mocked(mockDatasets.findById).mockResolvedValue(null);
+      vi.mocked(mockDatasets.findDatasetById).mockResolvedValue(null);
 
       await expect(
         resolver.recordEvalRun(runInput, undefined),
@@ -294,7 +298,7 @@ describe('EvalRunsResolver', () => {
     };
 
     test('upserts the trial', async () => {
-      vi.mocked(mockRuns.upsertTrial).mockResolvedValue(
+      vi.mocked(mockTrials.upsertTrial).mockResolvedValue(
         evalTrialFactory.build({ status: EVAL_TRIAL_STATUS.USAGE_LIMITED }),
       );
 
@@ -316,7 +320,7 @@ describe('EvalRunsResolver', () => {
     });
 
     test('maps a foreign-key violation to NotFound', async () => {
-      vi.mocked(mockRuns.upsertTrial).mockRejectedValue(fkError());
+      vi.mocked(mockTrials.upsertTrial).mockRejectedValue(fkError());
 
       await expect(resolver.recordEvalTrial(trialInput)).rejects.toBeInstanceOf(
         NotFoundException,
@@ -325,7 +329,7 @@ describe('EvalRunsResolver', () => {
 
     test('rethrows any other error', async () => {
       const boom = new Error('boom');
-      vi.mocked(mockRuns.upsertTrial).mockRejectedValue(boom);
+      vi.mocked(mockTrials.upsertTrial).mockRejectedValue(boom);
 
       await expect(resolver.recordEvalTrial(trialInput)).rejects.toBe(boom);
     });
@@ -333,13 +337,13 @@ describe('EvalRunsResolver', () => {
 
   describe('recordEvalGrade', () => {
     test('upserts a passing code grade and parses evidence', async () => {
-      vi.mocked(mockRuns.upsertGrade).mockResolvedValue(
+      vi.mocked(mockGrades.upsertGrade).mockResolvedValue(
         evalGradeFactory.build({ evidence: 'quoted' }),
       );
 
       const result = await resolver.recordEvalGrade(gradeInput);
 
-      expect(mockRuns.upsertGrade).toHaveBeenCalledWith(
+      expect(mockGrades.upsertGrade).toHaveBeenCalledWith(
         expect.objectContaining({ evidence: 'quoted', verdict: 'pass' }),
       );
       expect(result.evidenceJson).toBe('"quoted"');
@@ -358,7 +362,7 @@ describe('EvalRunsResolver', () => {
     });
 
     test('accepts an error verdict with a reason and no evidence', async () => {
-      vi.mocked(mockRuns.upsertGrade).mockResolvedValue(
+      vi.mocked(mockGrades.upsertGrade).mockResolvedValue(
         evalGradeFactory.build({
           errorReason: 'timeout',
           evidence: null,
@@ -383,7 +387,7 @@ describe('EvalRunsResolver', () => {
     });
 
     test('records judge identity for a judge grade', async () => {
-      vi.mocked(mockRuns.upsertGrade).mockResolvedValue(
+      vi.mocked(mockGrades.upsertGrade).mockResolvedValue(
         evalGradeFactory.build({ graderKind: EVAL_GRADER_KIND.JUDGE }),
       );
 
@@ -394,7 +398,7 @@ describe('EvalRunsResolver', () => {
         judgeModel: 'claude-sonnet-5-5',
       });
 
-      expect(mockRuns.upsertGrade).toHaveBeenCalledWith(
+      expect(mockGrades.upsertGrade).toHaveBeenCalledWith(
         expect.objectContaining({
           judgeDriver: 'claude',
           judgeModel: 'claude-sonnet-5-5',
@@ -418,7 +422,7 @@ describe('EvalRunsResolver', () => {
     });
 
     test('maps a foreign-key violation to NotFound', async () => {
-      vi.mocked(mockRuns.upsertGrade).mockRejectedValue(fkError());
+      vi.mocked(mockGrades.upsertGrade).mockRejectedValue(fkError());
 
       await expect(resolver.recordEvalGrade(gradeInput)).rejects.toBeInstanceOf(
         NotFoundException,
@@ -442,7 +446,7 @@ describe('EvalRunsResolver', () => {
     });
 
     test('trials maps the run trials', async () => {
-      vi.mocked(mockRuns.findTrialsByRun).mockResolvedValue([
+      vi.mocked(mockTrials.findByRun).mockResolvedValue([
         evalTrialFactory.build(),
       ]);
 
@@ -462,8 +466,8 @@ describe('EvalTrialsResolver', () => {
     const app = await Test.createTestingModule({
       providers: [
         EvalTrialsResolver,
-        { provide: EvalRunsService, useValue: mockRuns },
-        { provide: EvalHumanLabelsService, useValue: mockLabels },
+        { provide: EvalGradesRepository, useValue: mockGrades },
+        { provide: EvalHumanLabelsRepository, useValue: mockLabels },
       ],
     }).compile();
 
@@ -471,13 +475,13 @@ describe('EvalTrialsResolver', () => {
   });
 
   test('grades returns the trial grades', async () => {
-    vi.mocked(mockRuns.findGradesByTrials).mockResolvedValue([
+    vi.mocked(mockGrades.findByTrials).mockResolvedValue([
       evalGradeFactory.build(),
     ]);
 
     const result = await trials.grades(evalTrialFactory.build({ id: 't1' }));
 
-    expect(mockRuns.findGradesByTrials).toHaveBeenCalledWith(['t1']);
+    expect(mockGrades.findByTrials).toHaveBeenCalledWith(['t1']);
     expect(result).toHaveLength(1);
   });
 

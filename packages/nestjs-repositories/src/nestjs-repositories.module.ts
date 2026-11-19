@@ -16,21 +16,11 @@ import {
   UserWorkspaceSettingsModule,
 } from '@openthrottle/nestjs-repositories-server';
 
-import { AgentTrajectoriesModule } from './modules/agent-trajectories/agent-trajectories.module.ts';
-import { EvalDatasetsModule } from './modules/eval-datasets/eval-datasets.module.ts';
-import { EvalHumanLabelsModule } from './modules/eval-human-labels/eval-human-labels.module.ts';
-import { EvalJudgeCalibrationsModule } from './modules/eval-judge-calibrations/eval-judge-calibrations.module.ts';
-import { EvalRunsModule } from './modules/eval-runs/eval-runs.module.ts';
 import { getTypeOrmOptions } from './nestjs-repositories.utils.ts';
 
 @Module({
   controllers: [],
   exports: [
-    AgentTrajectoriesModule,
-    EvalDatasetsModule,
-    EvalHumanLabelsModule,
-    EvalJudgeCalibrationsModule,
-    EvalRunsModule,
     PermissionsModule,
     RepositoriesModule,
     RepositoryCheckoutsModule,
@@ -53,11 +43,6 @@ import { getTypeOrmOptions } from './nestjs-repositories.utils.ts';
         return { ...getTypeOrmOptions(), autoLoadEntities: true };
       },
     }),
-    AgentTrajectoriesModule,
-    EvalDatasetsModule,
-    EvalHumanLabelsModule,
-    EvalJudgeCalibrationsModule,
-    EvalRunsModule,
     LoggerModule,
     PermissionsModule,
     RepositoriesModule,

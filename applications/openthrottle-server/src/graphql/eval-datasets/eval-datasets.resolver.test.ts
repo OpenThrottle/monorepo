@@ -7,13 +7,20 @@ import {
 import { Test } from '@nestjs/testing';
 import { GlobalClsService } from '@openthrottle/nestjs-modules';
 import {
-  AgentTrajectoriesService,
+  AgentTrajectoriesRepository,
   type AgentTrajectory,
   EVAL_DATASET_TARGET,
   EVAL_SPLIT,
+  EvalCasesRepository,
   type EvalDataset,
-  EvalDatasetsService,
-} from '@openthrottle/nestjs-repositories';
+  EvalDatasetsRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import {
+  createAgentTrajectoriesRepositoryMock,
+  createEvalCasesRepositoryMock,
+  createEvalDatasetsRepositoryMock,
+  evalCasesFactory,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import { QueryFailedError } from 'typeorm';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -53,6 +60,7 @@ const trajectory: AgentTrajectory = {
 const dataset: EvalDataset = {
   createdAt: new Date('2026-11-06T08:00:00.000Z'),
   createdBy: 'visormatt',
+  deletedAt: null,
   description: null,
   id: '55555555-5555-4555-8555-555555555555',
   name: 'failures',
@@ -92,15 +100,9 @@ const buildInput = (
   };
 };
 
-const mockDatasets = createMock<EvalDatasetsService>({
-  create: vi.fn(),
-  findById: vi.fn(),
-  findByRepository: vi.fn(),
-  findCases: vi.fn(),
-});
-const mockTrajectories = createMock<AgentTrajectoriesService>({
-  findById: vi.fn(),
-});
+const mockDatasets = createEvalDatasetsRepositoryMock();
+const mockCases = createEvalCasesRepositoryMock();
+const mockTrajectories = createAgentTrajectoriesRepositoryMock();
 const mockCls = createMock<GlobalClsService>({ get: vi.fn() });
 
 describe('EvalDatasetsResolver', () => {
@@ -115,14 +117,17 @@ describe('EvalDatasetsResolver', () => {
       roles: [],
       uuid: 'u1',
     });
-    vi.mocked(mockTrajectories.findById).mockResolvedValue(trajectory);
-    vi.mocked(mockDatasets.create).mockResolvedValue(dataset);
+    vi.mocked(mockTrajectories.findTrajectoryById).mockResolvedValue(
+      trajectory,
+    );
+    vi.mocked(mockDatasets.createDataset).mockResolvedValue(dataset);
 
     const app = await Test.createTestingModule({
       providers: [
         EvalDatasetsResolver,
-        { provide: EvalDatasetsService, useValue: mockDatasets },
-        { provide: AgentTrajectoriesService, useValue: mockTrajectories },
+        { provide: EvalCasesRepository, useValue: mockCases },
+        { provide: EvalDatasetsRepository, useValue: mockDatasets },
+        { provide: AgentTrajectoriesRepository, useValue: mockTrajectories },
         { provide: GlobalClsService, useValue: mockCls },
       ],
     }).compile();
@@ -137,7 +142,7 @@ describe('EvalDatasetsResolver', () => {
         undefined,
       );
 
-      expect(mockDatasets.create).toHaveBeenCalledWith({
+      expect(mockDatasets.createDataset).toHaveBeenCalledWith({
         cases: [
           {
             gold: { passes: true },
@@ -176,7 +181,7 @@ describe('EvalDatasetsResolver', () => {
         undefined,
       );
 
-      expect(mockDatasets.create).toHaveBeenCalledWith(
+      expect(mockDatasets.createDataset).toHaveBeenCalledWith(
         expect.objectContaining({
           cases: [
             expect.objectContaining({
@@ -198,7 +203,7 @@ describe('EvalDatasetsResolver', () => {
         sub: 'sub-1',
       });
 
-      expect(mockDatasets.create).toHaveBeenCalledWith(
+      expect(mockDatasets.createDataset).toHaveBeenCalledWith(
         expect.objectContaining({ createdBy: 'alice@example.com' }),
       );
     });
@@ -265,16 +270,16 @@ describe('EvalDatasetsResolver', () => {
     });
 
     test('maps a missing trajectory to NotFound', async () => {
-      vi.mocked(mockTrajectories.findById).mockResolvedValue(null);
+      vi.mocked(mockTrajectories.findTrajectoryById).mockResolvedValue(null);
 
       await expect(
         resolver.createEvalDatasetFromTrajectories(buildInput(), undefined),
       ).rejects.toBeInstanceOf(NotFoundException);
-      expect(mockDatasets.create).not.toHaveBeenCalled();
+      expect(mockDatasets.createDataset).not.toHaveBeenCalled();
     });
 
     test('maps a foreign-key violation (missing repository) to NotFound', async () => {
-      vi.mocked(mockDatasets.create).mockRejectedValue(
+      vi.mocked(mockDatasets.createDataset).mockRejectedValue(
         new QueryFailedError(
           'INSERT',
           [],
@@ -289,7 +294,7 @@ describe('EvalDatasetsResolver', () => {
 
     test('rethrows any other database error', async () => {
       const boom = new Error('boom');
-      vi.mocked(mockDatasets.create).mockRejectedValue(boom);
+      vi.mocked(mockDatasets.createDataset).mockRejectedValue(boom);
 
       await expect(
         resolver.createEvalDatasetFromTrajectories(buildInput(), undefined),
@@ -299,7 +304,7 @@ describe('EvalDatasetsResolver', () => {
 
   describe('queries', () => {
     test('evalDataset returns null when missing', async () => {
-      vi.mocked(mockDatasets.findById).mockResolvedValue(null);
+      vi.mocked(mockDatasets.findDatasetById).mockResolvedValue(null);
 
       await expect(resolver.evalDataset('x')).resolves.toBeNull();
     });
@@ -314,16 +319,15 @@ describe('EvalDatasetsResolver', () => {
     });
 
     test('cases serializes input and gold to JSON strings', async () => {
-      vi.mocked(mockDatasets.findCases).mockResolvedValue([
-        {
-          createdAt: dataset.createdAt,
+      vi.mocked(mockCases.findByDataset).mockResolvedValue([
+        evalCasesFactory.build({
           datasetId: dataset.id,
           gold: { passes: true },
           id: 'c1',
           input: { prompt: 'x' },
           sourceTrajectoryId: trajectoryId,
           split: EVAL_SPLIT.DEV,
-        },
+        }),
       ]);
 
       const [first] = await resolver.cases(dataset);

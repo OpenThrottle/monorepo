@@ -1,6 +1,6 @@
 /**
  * @description GraphQL ObjectType for an eval trial. Mirrors the eval_trials entity from
- * @openthrottle/nestjs-repositories (migration 147). `grades` and `labels` are field resolvers;
+ * @openthrottle/nestjs-repositories-server (migration 147). `grades` and `labels` are field resolvers;
  * labels are the human labels on the trial's trajectory.
  */
 

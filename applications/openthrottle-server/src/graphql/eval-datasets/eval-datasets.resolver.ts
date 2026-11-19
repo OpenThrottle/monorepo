@@ -18,15 +18,16 @@ import {
 import { type AuthPrincipal, CurrentUser } from '@openthrottle/nestjs-auth';
 import { GlobalClsService } from '@openthrottle/nestjs-modules';
 import {
-  AgentTrajectoriesService,
+  AgentTrajectoriesRepository,
   type AgentTrajectory,
   type CreateEvalCaseInput,
   EVAL_DATASET_TARGET,
   EVAL_SPLIT,
-  EvalDatasetsService,
+  EvalCasesRepository,
+  EvalDatasetsRepository,
   type EvalDatasetTarget,
   type EvalSplit,
-} from '@openthrottle/nestjs-repositories';
+} from '@openthrottle/nestjs-repositories-server';
 
 import { CreateEvalDatasetFromTrajectoriesInput } from './create-eval-dataset-from-trajectories.input.ts';
 import { EvalCaseObject } from './eval-case.object.ts';
@@ -74,8 +75,9 @@ const deriveCaseInput = (trajectory: AgentTrajectory): unknown => {
 @Resolver(() => EvalDatasetObject)
 export class EvalDatasetsResolver {
   constructor(
-    private readonly agentTrajectoriesService: AgentTrajectoriesService,
-    private readonly evalDatasetsService: EvalDatasetsService,
+    private readonly agentTrajectoriesRepository: AgentTrajectoriesRepository,
+    private readonly evalCasesRepository: EvalCasesRepository,
+    private readonly evalDatasetsRepository: EvalDatasetsRepository,
     private readonly globalCls: GlobalClsService,
   ) {}
 
@@ -83,7 +85,7 @@ export class EvalDatasetsResolver {
     description: `The dataset's cases, oldest first.`,
   })
   async cases(@Parent() dataset: EvalDatasetObject): Promise<EvalCaseObject[]> {
-    const rows = await this.evalDatasetsService.findCases(dataset.id);
+    const rows = await this.evalCasesRepository.findByDataset(dataset.id);
 
     return rows.map(toEvalCaseObject);
   }
@@ -95,7 +97,7 @@ export class EvalDatasetsResolver {
   async evalDataset(
     @Args('id', { type: () => ID }) id: string,
   ): Promise<EvalDatasetObject | null> {
-    const row = await this.evalDatasetsService.findById(id);
+    const row = await this.evalDatasetsRepository.findDatasetById(id);
 
     return row == null ? null : toEvalDatasetObject(row);
   }
@@ -106,7 +108,8 @@ export class EvalDatasetsResolver {
   async evalDatasets(
     @Args('repositoryId', { type: () => ID }) repositoryId: string,
   ): Promise<EvalDatasetObject[]> {
-    const rows = await this.evalDatasetsService.findByRepository(repositoryId);
+    const rows =
+      await this.evalDatasetsRepository.findByRepository(repositoryId);
 
     return rows.map(toEvalDatasetObject);
   }
@@ -141,7 +144,9 @@ export class EvalDatasetsResolver {
 
     const trajectories = await Promise.all(
       input.cases.map((evalCase) => {
-        return this.agentTrajectoriesService.findById(evalCase.trajectoryId);
+        return this.agentTrajectoriesRepository.findTrajectoryById(
+          evalCase.trajectoryId,
+        );
       }),
     );
 
@@ -150,7 +155,7 @@ export class EvalDatasetsResolver {
     });
 
     try {
-      const row = await this.evalDatasetsService.create({
+      const row = await this.evalDatasetsRepository.createDataset({
         cases,
         createdBy,
         description: trimToNull(input.description),

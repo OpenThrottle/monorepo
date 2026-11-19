@@ -16,9 +16,9 @@ import { type AuthPrincipal, CurrentUser } from '@openthrottle/nestjs-auth';
 import { GlobalClsService } from '@openthrottle/nestjs-modules';
 import {
   EVAL_LABEL_VERDICT,
-  EvalHumanLabelsService,
+  EvalHumanLabelsRepository,
   type EvalLabelVerdict,
-} from '@openthrottle/nestjs-repositories';
+} from '@openthrottle/nestjs-repositories-server';
 import { QueryFailedError } from 'typeorm';
 
 import { resolveNoteAuthor } from '../notes/notes.utils.ts';
@@ -56,7 +56,7 @@ const trimToNull = (value: string | null | undefined): string | null => {
 @Resolver(() => AgentTrajectoryLabelObject)
 export class EvalHumanLabelsResolver {
   constructor(
-    private readonly evalHumanLabelsService: EvalHumanLabelsService,
+    private readonly evalHumanLabelsRepository: EvalHumanLabelsRepository,
     private readonly globalCls: GlobalClsService,
   ) {}
 
@@ -67,7 +67,7 @@ export class EvalHumanLabelsResolver {
     @Args('trajectoryId', { type: () => ID }) trajectoryId: string,
   ): Promise<AgentTrajectoryLabelObject[]> {
     const rows =
-      await this.evalHumanLabelsService.findByTrajectory(trajectoryId);
+      await this.evalHumanLabelsRepository.findByTrajectory(trajectoryId);
 
     return rows.map(toAgentTrajectoryLabelObject);
   }
@@ -99,7 +99,7 @@ export class EvalHumanLabelsResolver {
     const rater = this.resolveRater(principal);
 
     try {
-      const row = await this.evalHumanLabelsService.upsert({
+      const row = await this.evalHumanLabelsRepository.upsert({
         failureType: trimToNull(input.failureType),
         note,
         rater,
@@ -126,7 +126,7 @@ export class EvalHumanLabelsResolver {
   ): Promise<boolean> {
     const rater = this.resolveRater(principal);
 
-    return this.evalHumanLabelsService.remove({ rater, trajectoryId });
+    return this.evalHumanLabelsRepository.removeLabel({ rater, trajectoryId });
   }
 
   /**

@@ -7,7 +7,7 @@ import type {
   EvalGrade,
   EvalRun,
   EvalTrial,
-} from '@openthrottle/nestjs-repositories';
+} from '@openthrottle/nestjs-repositories-server';
 
 import type { EvalGradeObject } from './eval-grade.object.ts';
 import type { EvalRunObject } from './eval-run.object.ts';

@@ -6,9 +6,9 @@
 
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import {
-  EvalHumanLabelsService,
-  EvalRunsService,
-} from '@openthrottle/nestjs-repositories';
+  EvalGradesRepository,
+  EvalHumanLabelsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 
 import { toAgentTrajectoryLabelObject } from '../../eval-human-labels/agent-trajectory-label.mapper.ts';
 import { AgentTrajectoryLabelObject } from '../../eval-human-labels/agent-trajectory-label.object.ts';
@@ -20,15 +20,15 @@ import { EvalTrialObject } from '../eval-trial.object.ts';
 @Resolver(() => EvalTrialObject)
 export class EvalTrialsResolver {
   constructor(
-    private readonly evalHumanLabelsService: EvalHumanLabelsService,
-    private readonly evalRunsService: EvalRunsService,
+    private readonly evalGradesRepository: EvalGradesRepository,
+    private readonly evalHumanLabelsRepository: EvalHumanLabelsRepository,
   ) {}
 
   @ResolveField(() => [EvalGradeObject], {
     description: `Every grader's verdict on this trial, oldest first.`,
   })
   async grades(@Parent() trial: EvalTrialObject): Promise<EvalGradeObject[]> {
-    const rows = await this.evalRunsService.findGradesByTrials([trial.id]);
+    const rows = await this.evalGradesRepository.findByTrials([trial.id]);
 
     return rows.map(toEvalGradeObject);
   }
@@ -41,7 +41,7 @@ export class EvalTrialsResolver {
   ): Promise<AgentTrajectoryLabelObject[]> {
     if (trial.trajectoryId == null) return [];
 
-    const rows = await this.evalHumanLabelsService.findByTrajectory(
+    const rows = await this.evalHumanLabelsRepository.findByTrajectory(
       trial.trajectoryId,
     );
 
