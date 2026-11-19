@@ -35,12 +35,12 @@ export const episode: VideoEpisode = {
     {
       atLeast: 5,
       describe: 'scheduled jobs on the schedule surface',
-      sql: `SELECT count(*) AS value FROM scheduled_agent_jobs`,
+      sql: `SELECT count(*) AS value FROM scheduled_agent_jobs WHERE deleted_at IS NULL`,
     },
     {
       atLeast: 3,
       describe: `scheduled jobs with run history, so a job detail page has a list`,
-      sql: `SELECT count(*) AS value FROM (SELECT j.id FROM scheduled_agent_jobs j JOIN scheduled_agent_job_runs r ON r.scheduled_agent_job_id = j.id GROUP BY j.id) x`,
+      sql: `SELECT count(*) AS value FROM (SELECT j.id FROM scheduled_agent_jobs j JOIN scheduled_agent_job_runs r ON r.scheduled_agent_job_id = j.id WHERE j.deleted_at IS NULL GROUP BY j.id) x`,
     },
   ],
   format: 'short',
