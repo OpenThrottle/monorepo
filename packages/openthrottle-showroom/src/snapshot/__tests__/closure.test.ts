@@ -64,10 +64,19 @@ const schema: DatabaseSchema = {
     [
       { columns: ['id', 'user_id'], name: 'mcp_connector_connections' },
       { columns: ['id', 'actor_user_id', 'plan_id'], name: 'plan_runs' },
-      { columns: ['id', 'created_at', 'project_id'], name: 'plans' },
-      { columns: ['id'], name: 'projects' },
       {
-        columns: ['id', 'created_at', 'parent_task_id', 'plan_id'],
+        columns: ['id', 'created_at', 'deleted_at', 'project_id'],
+        name: 'plans',
+      },
+      { columns: ['id', 'deleted_at'], name: 'projects' },
+      {
+        columns: [
+          'id',
+          'created_at',
+          'deleted_at',
+          'parent_task_id',
+          'plan_id',
+        ],
         name: 'tasks',
       },
       { columns: ['id'], name: 'users' },
@@ -119,20 +128,71 @@ const rows: Record<string, Record<string, unknown>[]> = {
   users: [{ id: 'u1' }, { id: 'u-unused' }],
 };
 
-const fetcher: RowFetcher = {
-  fetchAll: (table) => Promise.resolve(rows[table] ?? []),
-  fetchByColumn: (table, column, values) => {
-    const wanted = values.map(String);
+const createFetcher = (
+  source: Record<string, Record<string, unknown>[]>,
+): RowFetcher => {
+  return {
+    fetchAll: (table) => Promise.resolve(source[table] ?? []),
+    fetchByColumn: (table, column, values) => {
+      const wanted = values.map(String);
 
-    return Promise.resolve(
-      (rows[table] ?? []).filter((row) => wanted.includes(String(row[column]))),
-    );
-  },
-  fetchSince: (table, column, cutoffIso) =>
-    Promise.resolve(
-      (rows[table] ?? []).filter((row) => String(row[column]) >= cutoffIso),
-    ),
+      return Promise.resolve(
+        (source[table] ?? []).filter((row) =>
+          wanted.includes(String(row[column])),
+        ),
+      );
+    },
+    fetchSince: (table, column, cutoffIso) =>
+      Promise.resolve(
+        (source[table] ?? []).filter((row) => String(row[column]) >= cutoffIso),
+      ),
+  };
 };
+
+const DELETED_AT = '2026-01-20T00:00:00Z';
+
+/**
+ * In the window: a live plan on a soft-deleted project, and a soft-deleted plan
+ * whose tasks were cascade-deleted with it, plus one live task the cascade
+ * missed.
+ */
+const softDeleteRows: Record<string, Record<string, unknown>[]> = {
+  plan_runs: [{ actor_user_id: 'u1', id: 'r-gone', plan_id: 'pl-gone' }],
+  plans: [
+    {
+      created_at: '2026-01-10T00:00:00Z',
+      deleted_at: null,
+      id: 'pl-live',
+      project_id: 'p-gone',
+    },
+    {
+      created_at: '2026-01-11T00:00:00Z',
+      deleted_at: DELETED_AT,
+      id: 'pl-gone',
+      project_id: null,
+    },
+  ],
+  projects: [{ deleted_at: DELETED_AT, id: 'p-gone' }],
+  tasks: [
+    {
+      created_at: '2026-01-12T00:00:00Z',
+      deleted_at: null,
+      id: 't-live',
+      parent_task_id: null,
+      plan_id: 'pl-live',
+    },
+    {
+      created_at: '2026-01-12T00:00:00Z',
+      deleted_at: DELETED_AT,
+      id: 't-gone',
+      parent_task_id: null,
+      plan_id: 'pl-live',
+    },
+  ],
+  users: [{ id: 'u1' }],
+};
+
+const fetcher = createFetcher(rows);
 
 const scope: SnapshotScope = {
   fullRoots: [],
@@ -178,6 +238,38 @@ describe('collectSnapshotRows', () => {
     );
 
     expect(selected.get('mcp_connector_connections')).toBeUndefined();
+  });
+
+  test('leaves soft-deleted roots and children out of the snapshot', async () => {
+    const selected = await collectSnapshotRows(
+      createFetcher(softDeleteRows),
+      schema,
+      scope,
+      '2026-01-01T00:00:00Z',
+    );
+
+    const ids = (table: string): string[] => {
+      return [...(selected.get(table)?.values() ?? [])]
+        .map((row) => String(row.id))
+        .sort();
+    };
+
+    expect(ids('plans')).toEqual(['pl-live']);
+    expect(ids('tasks')).toEqual(['t-live']);
+    expect(ids('plan_runs')).toEqual([]);
+  });
+
+  test('keeps a soft-deleted parent a live row still references', async () => {
+    const selected = await collectSnapshotRows(
+      createFetcher(softDeleteRows),
+      schema,
+      scope,
+      '2026-01-01T00:00:00Z',
+    );
+
+    expect([...(selected.get('projects')?.values() ?? [])]).toEqual([
+      { deleted_at: DELETED_AT, id: 'p-gone' },
+    ]);
   });
 
   test('fails loudly when a root table does not exist', async () => {

@@ -51,7 +51,7 @@ export const episode: VideoEpisode = {
     {
       atLeast: 20,
       describe: 'plans old enough that a hit reads as months old on screen',
-      sql: `SELECT count(*) AS value FROM plans WHERE created_at < now() - interval '14 days'`,
+      sql: `SELECT count(*) AS value FROM plans WHERE deleted_at IS NULL AND created_at < now() - interval '14 days'`,
     },
   ],
   format: 'short',

@@ -34,7 +34,7 @@ export const episode: VideoEpisode = {
     {
       atLeast: 100,
       describe: `plans across the whole tour, the number the dashboard counter shows`,
-      sql: `SELECT count(*) AS value FROM plans`,
+      sql: `SELECT count(*) AS value FROM plans WHERE deleted_at IS NULL`,
     },
     {
       atLeast: 14,
@@ -44,12 +44,12 @@ export const episode: VideoEpisode = {
     {
       atLeast: 50,
       describe: `completed plans, so the status breakdown is dominated by real work`,
-      sql: `SELECT count(*) AS value FROM plans WHERE status = 'COMPLETED'`,
+      sql: `SELECT count(*) AS value FROM plans WHERE deleted_at IS NULL AND status = 'COMPLETED'`,
     },
     {
       atLeast: 500,
       describe: 'tasks behind the plans the tour opens',
-      sql: `SELECT count(*) AS value FROM tasks`,
+      sql: `SELECT count(*) AS value FROM tasks WHERE deleted_at IS NULL`,
     },
     {
       atLeast: 5,
