@@ -83,7 +83,9 @@ export default function Component(
 
   // Setup
   // Decorative background animation runs only when the OS allows it AND the
-  // user has not opted into reduced motion in Settings → Appearance.
+  // user has not opted into reduced motion in Settings → Appearance. Stored, not
+  // hydration-gated: it never reaches markup (AuthBackground test) and the gated
+  // default would animate one render for a user who turned motion off.
   const isMotionEnabled =
     !prefersReducedMotion &&
     config.reducedMotion === REDUCED_MOTION_MODES.system;
