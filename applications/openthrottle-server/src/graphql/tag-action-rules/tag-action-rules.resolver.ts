@@ -159,7 +159,7 @@ export class TagActionRulesResolver {
   }
 
   @Mutation(() => Boolean, {
-    description: `Delete a tag→action rule (its ledger rows CASCADE). Returns false when absent.`,
+    description: `Soft delete a tag→action rule: it stops evaluating, and its ledger rows are kept but no longer listed by ruleApplications. Returns false when absent.`,
   })
   @Permissions(PERMISSIONS.PLANS_WRITE)
   async deleteTagActionRule(

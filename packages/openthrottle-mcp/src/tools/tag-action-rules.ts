@@ -221,7 +221,7 @@ export async function upsertTagActionRuleToolHandler(
 export const deleteTagActionRuleToolParameters =
   DeleteTagActionRuleInputSchema().strict();
 
-export const deleteTagActionRuleToolDescription = `Delete a tag→action rule via the deleteTagActionRule GraphQL mutation (its ledger rows CASCADE). Returns whether a rule was deleted. Requires a USER token.`;
+export const deleteTagActionRuleToolDescription = `Soft delete a tag→action rule via the deleteTagActionRule GraphQL mutation (ledger rows kept). Returns whether a rule was deleted. Requires a USER token.`;
 
 export async function deleteTagActionRuleToolHandler(
   args: z.infer<typeof deleteTagActionRuleToolParameters>,
