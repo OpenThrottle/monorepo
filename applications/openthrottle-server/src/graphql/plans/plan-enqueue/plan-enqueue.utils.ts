@@ -57,10 +57,9 @@ export const decidePlanSchedulability = (
  * It travels as an ordinary GraphQL error (HTTP 200, `errors[]`): an `extensions.http.status` would
  * make Apollo answer with that HTTP status, which GraphQL clients treat as a transport failure.
  *
- * A GraphQLError rather than Nest's ConflictException on purpose: the Apollo driver maps a 409
- * HttpException to `INTERNAL_SERVER_ERROR` (409 is not one of its predefined codes) and tucks the
- * payload under `extensions.originalError`, and the shared `formatError` masks every
- * INTERNAL_SERVER_ERROR message in production. Clients could then never read the code.
+ * A GraphQLError rather than Nest's ConflictException on purpose: the shared `formatError` turns
+ * a ConflictException into the generic code `CONFLICT` and drops everything else it carried, so
+ * the specific conflict code and the run fields here would never reach the client.
  */
 export const createPlanScheduleConflictError = (params: {
   readonly code: PlanScheduleConflictCode;

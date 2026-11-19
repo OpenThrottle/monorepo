@@ -13,8 +13,16 @@
  *    of environment (these are never useful to a client and only leak internals).
  *  - In production, replaces the message of any error Apollo classified as an
  *    unhandled/internal error (code `INTERNAL_SERVER_ERROR`) with a generic
- *    string, while logging the original error via the provided logger so the
- *    detail is preserved server-side.
+ *    string and reduces its `extensions` to `{ code }`, while logging the
+ *    original error via the provided logger so the detail is preserved
+ *    server-side. The reduction is an allowlist on purpose: the Nest Apollo
+ *    driver copies an unmapped HttpException's response body into
+ *    `extensions.originalError` (and its status into `extensions.status`), so
+ *    stripping only the message would still deliver the masked detail.
+ *  - Gives intentional Nest `NotFoundException` / `ConflictException` throws
+ *    the stable codes `NOT_FOUND` / `CONFLICT` with their authored message, in
+ *    every environment. The Nest Apollo driver maps only 400/401/403/422 to
+ *    codes; anything else arrives as `INTERNAL_SERVER_ERROR` and would be masked.
  *  - Leaves intentional errors (`BAD_USER_INPUT`, validation failures, custom
  *    Apollo errors carrying their own code/message) untouched apart from the
  *    stacktrace scrub, so clients still get actionable validation feedback.
@@ -22,6 +30,7 @@
  * It is override-able: `forRoot` callers can pass their own `formatError` and it
  * takes precedence over this default.
  */
+import { HttpException, HttpStatus } from '@nestjs/common';
 import type { GraphQLFormattedError } from 'graphql';
 
 import type {
@@ -34,6 +43,16 @@ const INTERNAL_SERVER_ERROR_CODE = 'INTERNAL_SERVER_ERROR';
 
 /** Generic client-facing message used in place of leaked internal detail. */
 const GENERIC_INTERNAL_ERROR_MESSAGE = 'Internal server error';
+/**
+ * HTTP statuses a resolver throws on purpose for the client to read, and the
+ * stable code each one gets. Statuses the Nest Apollo driver already maps
+ * (400, 401, 403, 422) are not listed.
+ */
+const CLIENT_FACING_HTTP_CODES: ReadonlyMap<number, string> = new Map([
+  [HttpStatus.CONFLICT, 'CONFLICT'],
+  [HttpStatus.NOT_FOUND, 'NOT_FOUND'],
+]);
+
 const isProduction = (): boolean => {
   return process.env.NODE_ENV === 'production';
 };
@@ -69,6 +88,55 @@ function stripSensitiveExtensions(
  */
 function isInternalError(formattedError: GraphQLFormattedError): boolean {
   return formattedError.extensions?.code === INTERNAL_SERVER_ERROR_CODE;
+}
+
+/**
+ * The thrown value behind Apollo's resolver-error wrapper. Reads the
+ * `originalError` field rather than using Apollo's `unwrapResolverError`,
+ * whose `instanceof GraphQLError` check fails whenever Apollo and the caller
+ * load different builds (CJS vs ESM) of `graphql`.
+ */
+function unwrapOriginalError(error: unknown): unknown {
+  if (error instanceof Error && 'originalError' in error) {
+    return error.originalError ?? error;
+  }
+
+  return error;
+}
+
+/**
+ * The stable code for an intentional client-facing HttpException (see
+ * {@link CLIENT_FACING_HTTP_CODES}), or `undefined` for anything else.
+ */
+function getClientFacingCode(error: unknown): string | undefined {
+  const exception = unwrapOriginalError(error);
+
+  if (!(exception instanceof HttpException)) {
+    return undefined;
+  }
+
+  return CLIENT_FACING_HTTP_CODES.get(exception.getStatus());
+}
+
+/**
+ * Drop the keys the Nest Apollo driver adds for an unmapped HttpException
+ * (`originalError`, `status`) and set the stable `code`.
+ */
+function withClientFacingCode(
+  extensions: GraphQLFormattedError['extensions'],
+  code: string,
+): Record<string, unknown> {
+  const sanitized: Record<string, unknown> = { code };
+
+  for (const [key, value] of Object.entries(extensions ?? {})) {
+    if (key === 'code' || key === 'originalError' || key === 'status') {
+      continue;
+    }
+
+    sanitized[key] = value;
+  }
+
+  return sanitized;
 }
 
 /**
@@ -115,10 +183,25 @@ export function createFormatError(
     // emit an empty `extensions: {}` (and never include `exception`/stacktrace).
     const base = attachExtensions(withoutExtensions, extensions);
 
+    const clientFacingCode = isInternalError(formattedError)
+      ? getClientFacingCode(error)
+      : undefined;
+
+    if (clientFacingCode !== undefined) {
+      return {
+        ...withoutExtensions,
+        extensions: withClientFacingCode(extensions, clientFacingCode),
+      };
+    }
+
     if (maskInternalErrors && isInternalError(formattedError)) {
       logger.error('Unhandled GraphQL error', error ?? formattedError);
 
-      return { ...base, message: GENERIC_INTERNAL_ERROR_MESSAGE };
+      return {
+        ...withoutExtensions,
+        extensions: { code: INTERNAL_SERVER_ERROR_CODE },
+        message: GENERIC_INTERNAL_ERROR_MESSAGE,
+      };
     }
 
     return base;
