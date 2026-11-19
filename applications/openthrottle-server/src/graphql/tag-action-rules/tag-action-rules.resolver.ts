@@ -2,8 +2,8 @@
  * @description GraphQL CRUD for tag→action rules + the rule_applications
  * ledger read. Rules are user-owned: v1 requires a USER principal (service
  * accounts get an explanatory error — there is no sensible rule owner for a
- * machine identity yet). Payloads are Zod-validated per action type in the
- * repository service. Mirrored by the openthrottle-mcp
+ * machine identity yet). Payloads are Zod-validated per action type in
+ * TagActionRulesService. Mirrored by the openthrottle-mcp
  * upsert/delete/list_tag_action_rule(s) and list_rule_applications tools.
  */
 
@@ -15,14 +15,17 @@ import {
   CurrentUser,
 } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
+import type {
+  RuleApplication,
+  TagActionRule,
+} from '@openthrottle/nestjs-repositories-server';
 import {
-  type RuleApplication,
-  RuleApplicationsService,
-  type TagActionRule,
-  TagActionRulesService,
-} from '@openthrottle/nestjs-repositories';
+  RuleApplicationsRepository,
+  TagActionRulesRepository,
+} from '@openthrottle/nestjs-repositories-server';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { TagActionRulesService } from '../../services/tag-action-rules/tag-action-rules.service.ts';
 import {
   RuleApplicationObject,
   TagActionRuleObject,
@@ -78,7 +81,8 @@ const toApplicationObject = (
 @UseGuards(GqlPermissionsGuard)
 export class TagActionRulesResolver {
   constructor(
-    private readonly ruleApplicationsService: RuleApplicationsService,
+    private readonly ruleApplicationsRepository: RuleApplicationsRepository,
+    private readonly tagActionRulesRepository: TagActionRulesRepository,
     private readonly tagActionRulesService: TagActionRulesService,
   ) {}
 
@@ -90,7 +94,7 @@ export class TagActionRulesResolver {
     @CurrentUser() principal: AuthPrincipal,
   ): Promise<TagActionRuleObject[]> {
     const userId = requireUserPrincipal(principal);
-    const rules = await this.tagActionRulesService.listForUser(userId);
+    const rules = await this.tagActionRulesRepository.listForUser(userId);
     return rules.map(toRuleObject);
   }
 
@@ -104,7 +108,7 @@ export class TagActionRulesResolver {
     @Args('id', { type: () => ID }) id: string,
   ): Promise<TagActionRuleObject | null> {
     const userId = requireUserPrincipal(principal);
-    const rule = await this.tagActionRulesService.findForUser(userId, id);
+    const rule = await this.tagActionRulesRepository.findForUser(userId, id);
     return rule == null ? null : toRuleObject(rule);
   }
 
@@ -115,7 +119,8 @@ export class TagActionRulesResolver {
   async ruleApplications(
     @Args('planId', { type: () => ID }) planId: string,
   ): Promise<RuleApplicationObject[]> {
-    const applications = await this.ruleApplicationsService.listForPlan(planId);
+    const applications =
+      await this.ruleApplicationsRepository.listForPlan(planId);
     return applications.map(toApplicationObject);
   }
 
@@ -163,6 +168,6 @@ export class TagActionRulesResolver {
     input: DeleteTagActionRuleInput,
   ): Promise<boolean> {
     const userId = requireUserPrincipal(principal);
-    return this.tagActionRulesService.deleteRule(userId, input.id);
+    return this.tagActionRulesRepository.removeForUser(userId, input.id);
   }
 }

@@ -8,7 +8,6 @@ import './skill-availability.input.ts';
 import './skill-availability.object.ts';
 
 import { Module } from '@nestjs/common';
-import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import {
   ProjectsModule,
   RolesModule,
@@ -17,15 +16,18 @@ import {
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import { PlanContextAvailabilityModule } from '../../services/plan-context-availability/plan-context-availability.module.ts';
+import { ProjectSkillsModule } from '../../services/project-skills/project-skills.module.ts';
+import { SkillAvailabilityModule } from '../../services/skill-availability/skill-availability.module.ts';
 import { SkillAvailabilityResolver } from './skill-availability.resolver.ts';
 import { SkillAvailabilityResolutionResolver } from './skill-availability-resolution/skill-availability-resolution.resolver.ts';
 
 @Module({
   imports: [
     RolesModule,
-    NestjsRepositoriesModule,
     PlanContextAvailabilityModule,
+    ProjectSkillsModule,
     ProjectsModule,
+    SkillAvailabilityModule,
     SkillTagsModule,
   ],
   providers: [

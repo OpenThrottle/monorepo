@@ -13,8 +13,10 @@
  */
 import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable } from '@nestjs/common';
-import { TagsService } from '@openthrottle/nestjs-repositories';
-import { TasksRepository } from '@openthrottle/nestjs-repositories-server';
+import {
+  TasksRepository,
+  TaskTagsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import type { Queue } from 'bullmq';
 
 import { normalizeIdempotencyKey } from '../../../graphql/queues/queues-service/queues-service.utils.ts';
@@ -36,8 +38,8 @@ import type {
 @Injectable()
 export class TaskPromotionEnqueueService {
   constructor(
-    private readonly tagsService: TagsService,
     private readonly tasksRepository: TasksRepository,
+    private readonly taskTagsRepository: TaskTagsRepository,
     @InjectQueue(TASK_PROMOTION_QUEUE_NAME)
     private readonly queue: Queue<PromoteTaskJobData, PromoteTaskJobResult>,
   ) {}
@@ -71,9 +73,10 @@ export class TaskPromotionEnqueueService {
     if (task.status === PROMOTED_TASK_STATUS) {
       return { error: 'Task has already been promoted to a plan.' };
     }
-    const promotedTag = await this.tagsService
-      .getTaskTagsRepository()
-      .findOne({ where: { tag: PROMOTED_TAG, taskId } });
+    const promotedTag = await this.taskTagsRepository.findByTaskAndTag(
+      taskId,
+      PROMOTED_TAG,
+    );
     if (promotedTag != null) {
       return { error: 'Task has already been promoted to a plan.' };
     }

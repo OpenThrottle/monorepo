@@ -42,12 +42,10 @@ import { ConfigService } from '@nestjs/config';
 import { AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT } from '@openthrottle/nestjs-auth';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
-  RULE_APPLICATION_STATES,
-  RuleApplicationsService,
-  SOFT_CLOSED_TASK_STATUS,
-} from '@openthrottle/nestjs-repositories';
-import {
   type Plan,
+  RULE_APPLICATION_STATES,
+  RuleApplicationsRepository,
+  SOFT_CLOSED_TASK_STATUS,
   Task,
   TASK_SORT_ORDER_GAP,
   TasksRepository,
@@ -120,7 +118,7 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
     private readonly logger: LoggerService,
     private readonly notifications: NotificationsService,
     private readonly planContextAvailabilityService: PlanContextAvailabilityService,
-    private readonly ruleApplicationsService: RuleApplicationsService,
+    private readonly ruleApplicationsRepository: RuleApplicationsRepository,
     private readonly statusChangeSystemAccount: StatusChangeSystemAccountService,
     private readonly tasksRepository: TasksRepository,
     private readonly workLedgerCapture: WorkLedgerCaptureService,
@@ -140,7 +138,7 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
       payload.skillSlug,
     );
     if (preSatisfying != null) {
-      await this.ruleApplicationsService.record({
+      await this.ruleApplicationsRepository.record({
         details: { matchedTags: action.matchedTags, reason: 'existing-task' },
         planId: plan.id,
         ruleId: rule.id,
@@ -159,7 +157,7 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
         ownerUserId,
       );
     if (gated) {
-      await this.ruleApplicationsService.record({
+      await this.ruleApplicationsRepository.record({
         details: {
           matchedTags: action.matchedTags,
           reason: 'skill-unavailable',
@@ -178,7 +176,7 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
     // 4. Ledger 'applied'. If another evaluation won the fingerprint race,
     //    remove the duplicate task we just created — the ledger row is the
     //    single source of truth for "this rule already acted on this plan".
-    const ledger = await this.ruleApplicationsService.record({
+    const ledger = await this.ruleApplicationsRepository.record({
       details: {
         matchedTags: action.matchedTags,
         skillSlug: payload.skillSlug,
@@ -242,7 +240,7 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
         if (existing.status === SOFT_CLOSED_TASK_STATUS) {
           await this.reviveSoftClosedTask(plan.id, existing);
         }
-        await this.ruleApplicationsService.upsertApplication({
+        await this.ruleApplicationsRepository.upsertApplication({
           details: { matchedTags: action.matchedTags, reason: 'revived' },
           planId: plan.id,
           ruleId: rule.id,
@@ -259,7 +257,7 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
       payload.skillSlug,
     );
     if (preSatisfying != null) {
-      await this.ruleApplicationsService.upsertApplication({
+      await this.ruleApplicationsRepository.upsertApplication({
         details: { matchedTags: action.matchedTags, reason: 'existing-task' },
         planId: plan.id,
         ruleId: rule.id,
@@ -276,7 +274,7 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
         ownerUserId,
       );
     if (gated) {
-      await this.ruleApplicationsService.upsertApplication({
+      await this.ruleApplicationsRepository.upsertApplication({
         details: {
           matchedTags: action.matchedTags,
           reason: 'skill-unavailable',
@@ -290,7 +288,7 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
     }
 
     const task = await this.insertInjectedTask(plan, action, payload);
-    await this.ruleApplicationsService.upsertApplication({
+    await this.ruleApplicationsRepository.upsertApplication({
       details: {
         matchedTags: action.matchedTags,
         skillSlug: payload.skillSlug,
@@ -531,46 +529,11 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
     planId: string,
     placement: 'first' | 'last',
   ): Promise<{ sortOrder: number; taskId: string }[]> {
-    const query = this.ruleApplicationsService
-      .getRepository()
-      .createQueryBuilder('application')
-      .innerJoin('application.rule', 'rule')
-      .innerJoin('application.task', 'task')
-      .select('task.id', 'taskId')
-      .addSelect('task.sortOrder', 'sortOrder')
-      .where('application.planId = :planId', { planId })
-      .andWhere('application.state = :applied', {
-        applied: RULE_APPLICATION_STATES.APPLIED,
-      })
-      .andWhere('rule.actionType = :actionType', {
-        actionType: TAG_ACTION_TYPES.INJECT_TASK,
-      })
-      .andWhere('task.deletedAt IS NULL')
-      .andWhere('task.status NOT IN (:...terminal)', {
-        terminal: TERMINAL_TASK_STATUSES,
-      })
-      .orderBy('rule.createdAt', 'ASC')
-      .addOrderBy('application.createdAt', 'ASC')
-      .addOrderBy('rule.id', 'ASC');
-
-    if (placement === 'first') {
-      query.andWhere(
-        "(rule.action_payload->>'placement' = 'first' OR rule.action_payload->>'placement' IS NULL)",
-      );
-    } else {
-      query.andWhere("rule.action_payload->>'placement' = :placement", {
-        placement,
-      });
-    }
-
-    const rows = await query.getRawMany<{
-      sortOrder: number | string;
-      taskId: string;
-    }>();
-    return rows.map((row) => ({
-      sortOrder: Number(row.sortOrder),
-      taskId: row.taskId,
-    }));
+    return this.ruleApplicationsRepository.listEdgePlacementSiblings(
+      planId,
+      placement,
+      TERMINAL_TASK_STATUSES,
+    );
   }
 
   /**

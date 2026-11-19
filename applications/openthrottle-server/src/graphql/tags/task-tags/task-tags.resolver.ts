@@ -8,7 +8,7 @@ import {
 } from '@nestjs/graphql';
 import { type AuthPrincipal, CurrentUser } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
-import { TagsService, type TaskTag } from '@openthrottle/nestjs-repositories';
+import type { TaskTag } from '@openthrottle/nestjs-repositories-server';
 import {
   ServiceAccountsRepository,
   TasksRepository,
@@ -17,6 +17,7 @@ import {
 import { GqlPermissionsGuard } from '../../../guards/gql-permissions.guard.ts';
 import { PlanRulesEvaluationService } from '../../../queues/plan-rules/evaluation/evaluation.service.ts';
 import { PLAN_RULES_TRIGGER_KINDS } from '../../../queues/plan-rules/plan-rules.constants.ts';
+import { TagsService } from '../../../services/tags/tags.service.ts';
 import { TaskObject } from '../../tasks/task.object.ts';
 import { TagsLoaders } from '../loaders/loaders.service.ts';
 import { TaskTagObject } from '../tag.object.ts';

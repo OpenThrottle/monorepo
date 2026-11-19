@@ -1,14 +1,17 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
-import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import {
   PlansModule,
   ProjectsModule,
   SkillTagsModule,
+  TagActionRulesModule,
   TasksModule,
   UsersModule,
 } from '@openthrottle/nestjs-repositories-server';
 
+import { ProjectSkillsModule } from '../project-skills/project-skills.module.ts';
+import { SkillAvailabilityModule } from '../skill-availability/skill-availability.module.ts';
+import { TagsModule } from '../tags/tags.module.ts';
 import { PlanContextAvailabilityService } from './plan-context-availability.service.ts';
 
 /**
@@ -21,10 +24,13 @@ import { PlanContextAvailabilityService } from './plan-context-availability.serv
   imports: [
     UsersModule,
     LoggerModule,
-    NestjsRepositoriesModule,
     PlansModule,
+    ProjectSkillsModule,
     ProjectsModule,
+    SkillAvailabilityModule,
     SkillTagsModule,
+    TagActionRulesModule,
+    TagsModule,
     TasksModule,
   ],
   providers: [PlanContextAvailabilityService],

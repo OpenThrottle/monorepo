@@ -9,20 +9,23 @@ import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
   OrphanedTaskStatusCaptureParams,
-  RuleApplication,
-  RuleApplicationsService,
-  TagActionRule,
-  TagActionRulesService,
-  TagsService,
-} from '@openthrottle/nestjs-repositories';
-import type {
   Plan,
   PlansRepository,
+  RuleApplication,
+  RuleApplicationsRepository,
+  TagActionRule,
+  TagActionRulesRepository,
   UsersRepository,
 } from '@openthrottle/nestjs-repositories-server';
-import type { UsersRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import type {
+  RuleApplicationsRepositoryMock,
+  TagActionRulesRepositoryMock,
+  UsersRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import {
   createPlansRepositoryMock,
+  createRuleApplicationsRepositoryMock,
+  createTagActionRulesRepositoryMock,
   createUsersRepositoryMock,
   usersFactory,
 } from '@openthrottle/nestjs-repositories-server/testing';
@@ -32,6 +35,7 @@ import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 import type { StatusChangeSystemAccountService } from '../../graphql/work-ledger/status-change-system-account/status-change-system-account.service.ts';
 import type { WorkLedgerCaptureService } from '../../graphql/work-ledger/work-ledger-capture/work-ledger-capture.service.ts';
 import type { NotificationsService } from '../../notifications/notifications.service.ts';
+import type { TagsService } from '../../services/tags/tags.service.ts';
 import { ActionExecutorRegistry } from './action-executor-registry/action-executor-registry.service.ts';
 import type { ActionExecutor } from './action-executor-registry/action-executor-registry.types.ts';
 import { PlanRulesProcessor } from './plan-rules.processor.ts';
@@ -75,8 +79,8 @@ describe('PlanRulesProcessor.process', () => {
   let registry: ActionExecutorRegistry;
   let executor: ActionExecutor;
   let plansFindOne: ReturnType<typeof vi.fn>;
-  let ruleApplicationsService: RuleApplicationsService;
-  let tagActionRulesService: TagActionRulesService;
+  let ruleApplicationsRepository: RuleApplicationsRepositoryMock;
+  let tagActionRulesRepository: TagActionRulesRepositoryMock;
   let tagsService: TagsService;
   let users: UsersRepositoryMock;
   let mockRecordStatusChange: Mock<
@@ -114,14 +118,11 @@ describe('PlanRulesProcessor.process', () => {
         },
       ]),
     });
-    tagActionRulesService = createMock<TagActionRulesService>({
-      listEnabledForUser: vi.fn().mockResolvedValue([buildRule()]),
-    });
-    ruleApplicationsService = createMock<RuleApplicationsService>({
-      findByRuleAndPlan: vi.fn().mockResolvedValue(null),
-      orphanUnmatchedApplications: vi.fn().mockResolvedValue(0),
-      record: vi.fn(),
-    });
+    tagActionRulesRepository = createTagActionRulesRepositoryMock();
+    tagActionRulesRepository.listEnabledForUser.mockResolvedValue([
+      buildRule(),
+    ]);
+    ruleApplicationsRepository = createRuleApplicationsRepositoryMock();
 
     mockRecordStatusChange = vi.fn().mockResolvedValue(undefined);
     resolveStatusChangeSystemAccountId = vi
@@ -135,11 +136,11 @@ describe('PlanRulesProcessor.process', () => {
       createMock<LoggerService>(),
       createMock<NotificationsService>({ emitTaskStatusChanged }),
       plansRepository,
-      ruleApplicationsService,
+      asMock<RuleApplicationsRepository>(ruleApplicationsRepository),
       createMock<StatusChangeSystemAccountService>({
         resolveId: resolveStatusChangeSystemAccountId,
       }),
-      tagActionRulesService,
+      asMock<TagActionRulesRepository>(tagActionRulesRepository),
       tagsService,
       createMock<UsersRepository>(users),
       createMock<WorkLedgerCaptureService>({
@@ -173,7 +174,7 @@ describe('PlanRulesProcessor.process', () => {
 
   it('no-ops on duplicate delivery: an existing ledger row in ANY state blocks dispatch', async () => {
     registry.register(executor);
-    vi.mocked(ruleApplicationsService.findByRuleAndPlan).mockResolvedValue(
+    vi.mocked(ruleApplicationsRepository.findByRuleAndPlan).mockResolvedValue(
       asMock<RuleApplication>({ state: 'flagged' }),
     );
 
@@ -195,7 +196,7 @@ describe('PlanRulesProcessor.process', () => {
       state: 'applied',
       taskId: '00000000-0000-4000-8000-00000000000a',
     });
-    vi.mocked(ruleApplicationsService.findByRuleAndPlan).mockResolvedValue(
+    vi.mocked(ruleApplicationsRepository.findByRuleAndPlan).mockResolvedValue(
       application,
     );
 
@@ -221,7 +222,7 @@ describe('PlanRulesProcessor.process', () => {
       reconcile: vi.fn(),
     };
     registry.register(reconcilingExecutor);
-    vi.mocked(ruleApplicationsService.findByRuleAndPlan).mockResolvedValue(
+    vi.mocked(ruleApplicationsRepository.findByRuleAndPlan).mockResolvedValue(
       asMock<RuleApplication>({ state: 'applied', taskId: null }),
     );
 
@@ -239,7 +240,7 @@ describe('PlanRulesProcessor.process', () => {
       reinject: vi.fn(),
     };
     registry.register(reinjectingExecutor);
-    vi.mocked(ruleApplicationsService.findByRuleAndPlan).mockResolvedValue(
+    vi.mocked(ruleApplicationsRepository.findByRuleAndPlan).mockResolvedValue(
       asMock<RuleApplication>({ state: 'applied', taskId: null }),
     );
 
@@ -258,7 +259,7 @@ describe('PlanRulesProcessor.process', () => {
       reinject: vi.fn(),
     };
     registry.register(reinjectingExecutor);
-    vi.mocked(ruleApplicationsService.findByRuleAndPlan).mockResolvedValue(
+    vi.mocked(ruleApplicationsRepository.findByRuleAndPlan).mockResolvedValue(
       asMock<RuleApplication>({ state: 'orphaned', taskId: 'old-task' }),
     );
 
@@ -272,7 +273,7 @@ describe('PlanRulesProcessor.process', () => {
   it('skips a matched action with no registered executor WITHOUT writing a ledger row', async () => {
     const result = await processor.process(buildJob());
 
-    expect(ruleApplicationsService.record).not.toHaveBeenCalled();
+    expect(ruleApplicationsRepository.record).not.toHaveBeenCalled();
     expect(result.dispatched).toBe(0);
     expect(result.matched).toBe(1);
   });
@@ -280,13 +281,13 @@ describe('PlanRulesProcessor.process', () => {
   it('flips un-matched applied rows to orphaned (matched rule ids are exempt)', async () => {
     registry.register(executor);
     vi.mocked(
-      ruleApplicationsService.orphanUnmatchedApplications,
+      ruleApplicationsRepository.orphanUnmatchedApplications,
     ).mockResolvedValue(2);
 
     const result = await processor.process(buildJob());
 
     expect(
-      ruleApplicationsService.orphanUnmatchedApplications,
+      ruleApplicationsRepository.orphanUnmatchedApplications,
     ).toHaveBeenCalledWith(planId, ['rule-1'], expect.any(Function));
     expect(result.orphaned).toBe(2);
   });
@@ -295,7 +296,7 @@ describe('PlanRulesProcessor.process', () => {
     registry.register(executor);
     const manager = asMock<OrphanedTaskStatusCaptureParams['manager']>({});
     vi.mocked(
-      ruleApplicationsService.orphanUnmatchedApplications,
+      ruleApplicationsRepository.orphanUnmatchedApplications,
     ).mockImplementation(
       async (_planId, _matchedRuleIds, captureOrphanedTaskStatusChange) => {
         await captureOrphanedTaskStatusChange?.({
@@ -341,7 +342,7 @@ describe('PlanRulesProcessor.process', () => {
     mockRecordStatusChange.mockRejectedValueOnce(new Error('ledger down'));
     const manager = asMock<OrphanedTaskStatusCaptureParams['manager']>({});
     vi.mocked(
-      ruleApplicationsService.orphanUnmatchedApplications,
+      ruleApplicationsRepository.orphanUnmatchedApplications,
     ).mockImplementation(
       async (_planId, _matchedRuleIds, captureOrphanedTaskStatusChange) => {
         await captureOrphanedTaskStatusChange?.({
@@ -361,7 +362,7 @@ describe('PlanRulesProcessor.process', () => {
     const flaggingExecutor: ActionExecutor = {
       actionType: 'inject-task',
       execute: vi.fn(async ({ action, plan }) => {
-        await ruleApplicationsService.record({
+        await ruleApplicationsRepository.record({
           details: { reason: 'skill-unavailable' },
           planId: plan.id,
           ruleId: action.ruleId,
@@ -373,7 +374,7 @@ describe('PlanRulesProcessor.process', () => {
 
     await processor.process(buildJob());
 
-    expect(ruleApplicationsService.record).toHaveBeenCalledWith(
+    expect(ruleApplicationsRepository.record).toHaveBeenCalledWith(
       expect.objectContaining({
         details: { reason: 'skill-unavailable' },
         state: 'flagged',

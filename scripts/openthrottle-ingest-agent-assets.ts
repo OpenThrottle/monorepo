@@ -71,14 +71,16 @@ const resolveDogfoodProjectId = async (client: Client): Promise<string> => {
  * @description Refreshes `project_skills` for the dogfood project from the
  * ingest records: upserts every skill on (project_id, slug) without overwriting
  * `tags` (new rows insert `{}`), and marks vanished slugs as orphans instead of
- * deleting them. Idempotent. Returns the upsert count and stale slug list.
+ * deleting them. Only live rows take part: a soft-deleted skill (`deleted_at` set) is skipped
+ * by the conflict target and the orphan update, so re-ingesting its slug inserts a fresh row.
+ * Idempotent. Returns the upsert count and stale slug list.
  *
  * This is the trigger (a) — the monorepo's own skills (dogfood). Trigger (b), a
  * connected workspace repo, is not yet wired: it would `walkAgentAssetFiles`
  * over that checkout, map + `toProjectSkillInputs`, and run this same reconcile
  * against the project its `workspace_local_repositories` row links to. The
- * server-side interface for that is `ProjectSkillsService.reconcileProjectSkills`
- * in `@openthrottle/nestjs-repositories`.
+ * server-side interface for that is `ProjectSkillsRepository.reconcile`
+ * in `@openthrottle/nestjs-repositories-server`.
  */
 const reconcileDogfoodProjectSkills = async (
   client: Client,
@@ -94,7 +96,7 @@ const reconcileDogfoodProjectSkills = async (
          project_id, slug, description, tags, disable_model_invocation, source, source_url, source_path, ingested_at, orphaned_at
        )
        VALUES ($1, $2, $3, '{}'::text[], $4, $5, $6, $7, NOW(), NULL)
-       ON CONFLICT (project_id, slug)
+       ON CONFLICT (project_id, slug) WHERE deleted_at IS NULL
        DO UPDATE SET
          description = EXCLUDED.description,
          disable_model_invocation = EXCLUDED.disable_model_invocation,
@@ -119,13 +121,13 @@ const reconcileDogfoodProjectSkills = async (
   const keepSlugs = inputs.map((input) => input.slug);
   let staleSql = `UPDATE project_skills
            SET orphaned_at = COALESCE(orphaned_at, NOW()), updated_at = NOW()
-           WHERE project_id = $1
+           WHERE project_id = $1 AND deleted_at IS NULL
            RETURNING slug`;
   let staleParams: unknown[] = [projectId];
   if (keepSlugs.length > 0) {
     staleSql = `UPDATE project_skills
            SET orphaned_at = COALESCE(orphaned_at, NOW()), updated_at = NOW()
-           WHERE project_id = $1 AND slug <> ALL($2::text[])
+           WHERE project_id = $1 AND deleted_at IS NULL AND slug <> ALL($2::text[])
            RETURNING slug`;
     staleParams = [projectId, keepSlugs];
   }

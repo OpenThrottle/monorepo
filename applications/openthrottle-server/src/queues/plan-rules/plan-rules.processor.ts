@@ -29,14 +29,11 @@ import { defaultWorkerOptions } from '@openthrottle/nestjs-bullmq';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   type OrphanedTaskStatusCaptureParams,
-  RULE_APPLICATION_STATES,
-  RuleApplicationsService,
-  SOFT_CLOSED_TASK_STATUS,
-  TagActionRulesService,
-  TagsService,
-} from '@openthrottle/nestjs-repositories';
-import {
   PlansRepository,
+  RULE_APPLICATION_STATES,
+  RuleApplicationsRepository,
+  SOFT_CLOSED_TASK_STATUS,
+  TagActionRulesRepository,
   UsersRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import {
@@ -48,6 +45,7 @@ import { StatusChangeSystemAccountService } from '../../graphql/work-ledger/stat
 import { WORK_LEDGER_CAPTURE_FAILED_MARKER } from '../../graphql/work-ledger/work-ledger.constants.ts';
 import { WorkLedgerCaptureService } from '../../graphql/work-ledger/work-ledger-capture/work-ledger-capture.service.ts';
 import { NotificationsService } from '../../notifications/notifications.service.ts';
+import { TagsService } from '../../services/tags/tags.service.ts';
 import { ActionExecutorRegistry } from './action-executor-registry/action-executor-registry.service.ts';
 import {
   PLAN_RULES_QUEUE_NAME,
@@ -71,9 +69,9 @@ export class PlanRulesProcessor
     private readonly logger: LoggerService,
     private readonly notifications: NotificationsService,
     private readonly plansRepository: PlansRepository,
-    private readonly ruleApplicationsService: RuleApplicationsService,
+    private readonly ruleApplicationsRepository: RuleApplicationsRepository,
     private readonly statusChangeSystemAccount: StatusChangeSystemAccountService,
-    private readonly tagActionRulesService: TagActionRulesService,
+    private readonly tagActionRulesRepository: TagActionRulesRepository,
     private readonly tagsService: TagsService,
     private readonly usersRepository: UsersRepository,
     private readonly workLedgerCapture: WorkLedgerCaptureService,
@@ -160,7 +158,7 @@ export class PlanRulesProcessor
 
     const [effectiveTags, rules] = await Promise.all([
       this.tagsService.getEffectiveTagSet(planId),
-      this.tagActionRulesService.listEnabledForUser(owner.id),
+      this.tagActionRulesRepository.listEnabledForUser(owner.id),
     ]);
 
     const ruleInputs: TagActionRuleInput[] = rules.map((rule) => ({
@@ -187,7 +185,10 @@ export class PlanRulesProcessor
     const rulesById = new Map(rules.map((rule) => [rule.id, rule]));
     const fingerprints = await Promise.all(
       matched.map((action) =>
-        this.ruleApplicationsService.findByRuleAndPlan(action.ruleId, planId),
+        this.ruleApplicationsRepository.findByRuleAndPlan(
+          action.ruleId,
+          planId,
+        ),
       ),
     );
 
@@ -300,7 +301,7 @@ export class PlanRulesProcessor
     // publish once it has committed: a rollback must never announce a soft-close.
     const softClosedTaskIds: string[] = [];
     const orphaned =
-      await this.ruleApplicationsService.orphanUnmatchedApplications(
+      await this.ruleApplicationsRepository.orphanUnmatchedApplications(
         planId,
         matched.map((action) => action.ruleId),
         async (capture) => {

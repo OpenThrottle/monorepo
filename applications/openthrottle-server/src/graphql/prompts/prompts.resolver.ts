@@ -24,10 +24,11 @@ import {
   CurrentUser,
 } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS } from '@openthrottle/nestjs-rbac';
-import type { CustomPrompt } from '@openthrottle/nestjs-repositories';
-import { CustomPromptsService } from '@openthrottle/nestjs-repositories';
-import { RolesRepository } from '@openthrottle/nestjs-repositories-server';
-import { IsNull } from 'typeorm';
+import type { CustomPrompt } from '@openthrottle/nestjs-repositories-server';
+import {
+  CustomPromptsRepository,
+  RolesRepository,
+} from '@openthrottle/nestjs-repositories-server';
 
 import {
   CreateCustomPromptInput,
@@ -45,7 +46,7 @@ import { resolveCustomPromptWritePath } from './prompts.utils.ts';
 export class CustomPromptsResolver {
   constructor(
     private readonly configService: ConfigService,
-    private readonly customPromptsService: CustomPromptsService,
+    private readonly customPromptsRepository: CustomPromptsRepository,
     private readonly rolesRepository: RolesRepository,
   ) {}
 
@@ -56,11 +57,7 @@ export class CustomPromptsResolver {
   async customPrompt(
     @Args('id', { type: () => ID }) id: string,
   ): Promise<CustomPrompt | null> {
-    const entity = await this.customPromptsService
-      .getRepository()
-      .findOne({ where: { deletedAt: IsNull(), id } });
-
-    return entity;
+    return this.customPromptsRepository.findOne({ where: { id } });
   }
 
   @Query(() => [CustomPromptObject], {
@@ -70,38 +67,14 @@ export class CustomPromptsResolver {
     @Args('input', { nullable: true, type: () => ListCustomPromptsInput })
     input?: ListCustomPromptsInput,
   ): Promise<CustomPrompt[]> {
-    const repo = this.customPromptsService.getRepository();
-    const qb = repo.createQueryBuilder('cp');
-
-    if (!input?.includeDeleted) {
-      qb.andWhere('cp.deleted_at IS NULL');
-    }
-
-    if (input?.promptType) {
-      qb.andWhere('cp.prompt_type = :promptType', {
-        promptType: input.promptType,
-      });
-    }
-
-    if (input?.labels && input.labels.length > 0) {
-      qb.andWhere('cp.labels ?| :labels', { labels: input.labels });
-    }
-
-    if (input?.search) {
-      qb.andWhere('cp.title ILIKE :search', { search: `%${input.search}%` });
-    }
-
-    if (input?.projectId) {
-      qb.andWhere('cp.project_id = :projectId', { projectId: input.projectId });
-    }
-
-    if (input?.userId) {
-      qb.andWhere('cp.user_id = :userId', { userId: input.userId });
-    }
-
-    qb.orderBy('cp.created_at', 'DESC');
-
-    return qb.getMany();
+    return this.customPromptsRepository.listFiltered({
+      includeDeleted: input?.includeDeleted ?? false,
+      labels: input?.labels ?? null,
+      projectId: input?.projectId || null,
+      promptType: input?.promptType || null,
+      search: input?.search || null,
+      userId: input?.userId || null,
+    });
   }
 
   @Mutation(() => CustomPromptObject, {
@@ -112,26 +85,22 @@ export class CustomPromptsResolver {
     @Args('input', { type: () => CreateCustomPromptInput })
     input: CreateCustomPromptInput,
   ): Promise<CustomPrompt> {
-    const repo = this.customPromptsService.getRepository();
-
     // Gate BEFORE the save so a refused write never persists a row.
     let writeTarget: string | null = null;
     if (input.writeToFileSystem && input.filePath) {
       writeTarget = await this.resolveWriteTarget(principal, input.filePath);
     }
 
-    const entity = repo.create({
+    const saved = await this.customPromptsRepository.create({
       content: input.content,
-      description: input.description,
-      filePath: input.filePath,
+      description: input.description ?? null,
+      filePath: input.filePath ?? null,
       labels: input.labels ?? [],
-      projectId: input.projectId,
+      projectId: input.projectId ?? null,
       promptType: input.promptType,
       title: input.title,
-      userId: input.userId,
+      userId: input.userId ?? null,
     });
-
-    const saved = await repo.save(entity);
 
     if (writeTarget != null) {
       await this.writeToFileSystem(writeTarget, input.content);
@@ -149,9 +118,8 @@ export class CustomPromptsResolver {
     @Args('input', { type: () => UpdateCustomPromptInput })
     input: UpdateCustomPromptInput,
   ): Promise<CustomPrompt | null> {
-    const repo = this.customPromptsService.getRepository();
-    const entity = await repo.findOne({
-      where: { deletedAt: IsNull(), id: input.id },
+    const entity = await this.customPromptsRepository.findOne({
+      where: { id: input.id },
     });
 
     if (!entity) return null;
@@ -163,16 +131,18 @@ export class CustomPromptsResolver {
       writeTarget = await this.resolveWriteTarget(principal, filePathToWrite);
     }
 
-    if (input.title != null) entity.title = input.title;
-    if (input.content != null) entity.content = input.content;
-    if (input.description !== undefined) entity.description = input.description;
-    if (input.promptType != null) entity.promptType = input.promptType;
-    if (input.labels != null) entity.labels = input.labels;
-    if (input.filePath !== undefined) entity.filePath = input.filePath;
-    if (input.userId !== undefined) entity.userId = input.userId;
-    if (input.projectId !== undefined) entity.projectId = input.projectId;
-
-    const saved = await repo.save(entity);
+    const saved = await this.customPromptsRepository.update(entity.id, {
+      ...(input.title != null && { title: input.title }),
+      ...(input.content != null && { content: input.content }),
+      ...(input.description !== undefined && {
+        description: input.description,
+      }),
+      ...(input.promptType != null && { promptType: input.promptType }),
+      ...(input.labels != null && { labels: input.labels }),
+      ...(input.filePath !== undefined && { filePath: input.filePath }),
+      ...(input.userId !== undefined && { userId: input.userId }),
+      ...(input.projectId !== undefined && { projectId: input.projectId }),
+    });
 
     if (writeTarget != null) {
       await this.writeToFileSystem(
@@ -190,17 +160,7 @@ export class CustomPromptsResolver {
   async deleteCustomPrompt(
     @Args('id', { type: () => ID }) id: string,
   ): Promise<boolean> {
-    const repo = this.customPromptsService.getRepository();
-    const entity = await repo.findOne({
-      where: { deletedAt: IsNull(), id },
-    });
-
-    if (!entity) return false;
-
-    entity.deletedAt = new Date();
-    await repo.save(entity);
-
-    return true;
+    return this.customPromptsRepository.softDeleteById(id);
   }
 
   @Mutation(() => Boolean, {
@@ -209,10 +169,7 @@ export class CustomPromptsResolver {
   async hardDeleteCustomPrompt(
     @Args('id', { type: () => ID }) id: string,
   ): Promise<boolean> {
-    const repo = this.customPromptsService.getRepository();
-    const result = await repo.delete({ id });
-
-    return (result.affected ?? 0) > 0;
+    return this.customPromptsRepository.hardDeleteById(id);
   }
 
   @Mutation(() => CustomPromptObject, {
@@ -222,15 +179,7 @@ export class CustomPromptsResolver {
   async restoreCustomPrompt(
     @Args('id', { type: () => ID }) id: string,
   ): Promise<CustomPrompt | null> {
-    const repo = this.customPromptsService.getRepository();
-    const entity = await repo.findOne({ where: { id } });
-
-    if (!entity || !entity.deletedAt) return null;
-
-    entity.deletedAt = null;
-    const saved = await repo.save(entity);
-
-    return saved;
+    return this.customPromptsRepository.restoreById(id);
   }
 
   @Mutation(() => Boolean, {
@@ -240,9 +189,8 @@ export class CustomPromptsResolver {
     @CurrentUser() principal: AuthPrincipal | undefined,
     @Args('id', { type: () => ID }) id: string,
   ): Promise<boolean> {
-    const repo = this.customPromptsService.getRepository();
-    const entity = await repo.findOne({
-      where: { deletedAt: IsNull(), id },
+    const entity = await this.customPromptsRepository.findOne({
+      where: { id },
     });
 
     if (!entity || !entity.filePath) return false;

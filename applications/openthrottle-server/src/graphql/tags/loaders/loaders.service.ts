@@ -5,13 +5,17 @@
  */
 
 import { Injectable, Scope } from '@nestjs/common';
+import { createCollectionByColumnLoader } from '@openthrottle/nestjs-repositories';
+import type {
+  PlanTag,
+  ProjectTag,
+  TaskTag,
+} from '@openthrottle/nestjs-repositories-server';
 import {
-  createCollectionByColumnLoader,
-  type PlanTag,
-  type ProjectTag,
-  TagsService,
-  type TaskTag,
-} from '@openthrottle/nestjs-repositories';
+  PlanTagsRepository,
+  ProjectTagsRepository,
+  TaskTagsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import type DataLoader from 'dataloader';
 
 /**
@@ -25,17 +29,21 @@ export class TagsLoaders {
   readonly projectTagsByProjectIdLoader: DataLoader<string, ProjectTag[]>;
   readonly taskTagsByTaskIdLoader: DataLoader<string, TaskTag[]>;
 
-  constructor(tagsService: TagsService) {
+  constructor(
+    planTagsRepository: PlanTagsRepository,
+    projectTagsRepository: ProjectTagsRepository,
+    taskTagsRepository: TaskTagsRepository,
+  ) {
     this.planTagsByPlanIdLoader = createCollectionByColumnLoader(
-      { getRepository: () => tagsService.getPlanTagsRepository() },
+      planTagsRepository,
       { column: 'planId', order: { tag: 'ASC' } },
     );
     this.projectTagsByProjectIdLoader = createCollectionByColumnLoader(
-      { getRepository: () => tagsService.getProjectTagsRepository() },
+      projectTagsRepository,
       { column: 'projectId', order: { tag: 'ASC' } },
     );
     this.taskTagsByTaskIdLoader = createCollectionByColumnLoader(
-      { getRepository: () => tagsService.getTaskTagsRepository() },
+      taskTagsRepository,
       { column: 'taskId', order: { tag: 'ASC' } },
     );
   }

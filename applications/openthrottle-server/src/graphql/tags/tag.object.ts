@@ -10,7 +10,7 @@ import type {
   ProjectTagData,
   TagSource,
   TaskTagData,
-} from '@openthrottle/nestjs-repositories';
+} from '@openthrottle/nestjs-repositories-server';
 
 @ObjectType({
   description: `A tag attached to a plan. Source is derived from the writing identity (human > agent > server-llm) and never client-supplied.`,

@@ -10,16 +10,18 @@ import { NotFoundException } from '@nestjs/common';
 import type { ConfigService } from '@nestjs/config';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
-  RuleApplication,
-  RuleApplicationsService,
-  TagActionRule,
-} from '@openthrottle/nestjs-repositories';
-import type {
   Plan,
+  RuleApplication,
+  RuleApplicationsRepository,
+  TagActionRule,
   TasksRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import { Task } from '@openthrottle/nestjs-repositories-server';
-import { createTasksRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import type { RuleApplicationsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import {
+  createRuleApplicationsRepositoryMock,
+  createTasksRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
 import type { MatchedTagAction } from '@openthrottle/openthrottle-skills';
 import type { DataSource } from 'typeorm';
@@ -73,7 +75,7 @@ const sortOrderViolation = (): QueryFailedError => {
 
 describe('InjectTaskExecutor', () => {
   let executor: InjectTaskExecutor;
-  let ruleApplicationsService: RuleApplicationsService;
+  let ruleApplicationsRepository: RuleApplicationsRepositoryMock;
   let isSkillUnavailableForPlan: Mock<
     PlanContextAvailabilityService['isSkillUnavailableForPlan']
   >;
@@ -84,7 +86,7 @@ describe('InjectTaskExecutor', () => {
   let taskFindOne: ReturnType<typeof vi.fn>;
   let taskUpdate: ReturnType<typeof vi.fn>;
   let configGet: ReturnType<typeof vi.fn>;
-  let siblingGetRawMany: ReturnType<typeof vi.fn>;
+  let listEdgePlacementSiblings: RuleApplicationsRepositoryMock['listEdgePlacementSiblings'];
   let managerUpdate: ReturnType<typeof vi.fn>;
   let emitTaskStatusChanged: Mock<
     NotificationsService['emitTaskStatusChanged']
@@ -147,46 +149,10 @@ describe('InjectTaskExecutor', () => {
 
     // Same-placement sibling lookup; defaults to a single sibling (the task
     // under reconcile) so the common single-injected path is exercised.
-    siblingGetRawMany = vi
-      .fn()
-      .mockResolvedValue([{ sortOrder: 1000, taskId }]);
-    const siblingQueryBuilder = {
-      addOrderBy: vi.fn(),
-      addSelect: vi.fn(),
-      andWhere: vi.fn(),
-      getRawMany: siblingGetRawMany,
-      innerJoin: vi.fn(),
-      orderBy: vi.fn(),
-      select: vi.fn(),
-      where: vi.fn(),
-    };
-    for (const key of [
-      'addOrderBy',
-      'addSelect',
-      'andWhere',
-      'innerJoin',
-      'orderBy',
-      'select',
-      'where',
-    ] as const) {
-      siblingQueryBuilder[key].mockReturnValue(siblingQueryBuilder);
-    }
-
-    ruleApplicationsService = createMock<RuleApplicationsService>({
-      getRepository: vi.fn(() =>
-        asMock({ createQueryBuilder: vi.fn(() => siblingQueryBuilder) }),
-      ),
-      record: vi.fn((input) =>
-        Promise.resolve(
-          asMock<RuleApplication>({
-            planId: input.planId,
-            ruleId: input.ruleId,
-            state: input.state,
-            taskId: input.taskId ?? null,
-          }),
-        ),
-      ),
-    });
+    ruleApplicationsRepository = createRuleApplicationsRepositoryMock();
+    listEdgePlacementSiblings =
+      ruleApplicationsRepository.listEdgePlacementSiblings;
+    listEdgePlacementSiblings.mockResolvedValue([{ sortOrder: 1000, taskId }]);
 
     resolveStatusChangeSystemAccountId = vi
       .fn()
@@ -210,7 +176,7 @@ describe('InjectTaskExecutor', () => {
       createMock<LoggerService>(),
       createMock<NotificationsService>({ emitTaskStatusChanged }),
       planContextAvailabilityService,
-      ruleApplicationsService,
+      asMock<RuleApplicationsRepository>(ruleApplicationsRepository),
       statusChangeSystemAccount,
       tasksRepository,
       workLedgerCapture,
@@ -229,7 +195,7 @@ describe('InjectTaskExecutor', () => {
       rule: buildRule(),
     });
 
-    expect(ruleApplicationsService.record).toHaveBeenCalledWith(
+    expect(ruleApplicationsRepository.record).toHaveBeenCalledWith(
       expect.objectContaining({
         state: 'pre-satisfied',
         taskId: 'existing-task',
@@ -248,7 +214,7 @@ describe('InjectTaskExecutor', () => {
       rule: buildRule(),
     });
 
-    expect(ruleApplicationsService.record).toHaveBeenCalledWith(
+    expect(ruleApplicationsRepository.record).toHaveBeenCalledWith(
       expect.objectContaining({
         details: expect.objectContaining({ reason: 'skill-unavailable' }),
         state: 'flagged',
@@ -300,7 +266,7 @@ describe('InjectTaskExecutor', () => {
         description: expect.stringContaining('breakdown'),
       }),
     );
-    expect(ruleApplicationsService.record).toHaveBeenCalledWith(
+    expect(ruleApplicationsRepository.record).toHaveBeenCalledWith(
       expect.objectContaining({ state: 'applied', taskId }),
     );
     // The new row is announced so an open plan view shows it without a reload.
@@ -441,7 +407,7 @@ describe('InjectTaskExecutor', () => {
     expect(taskCreate).toHaveBeenLastCalledWith(
       expect.objectContaining({ sortOrder: -1000 }),
     );
-    expect(ruleApplicationsService.record).toHaveBeenCalledWith(
+    expect(ruleApplicationsRepository.record).toHaveBeenCalledWith(
       expect.objectContaining({ state: 'applied' }),
     );
   });
@@ -469,7 +435,7 @@ describe('InjectTaskExecutor', () => {
   });
 
   it('deletes the duplicate task when the apply-once ledger race is lost', async () => {
-    vi.mocked(ruleApplicationsService.record).mockResolvedValue(
+    vi.mocked(ruleApplicationsRepository.record).mockResolvedValue(
       asMock<RuleApplication>({ state: 'applied', taskId: 'winner-task' }),
     );
 
@@ -484,7 +450,7 @@ describe('InjectTaskExecutor', () => {
   });
 
   it('tolerates the duplicate task already being gone when the ledger race is lost', async () => {
-    vi.mocked(ruleApplicationsService.record).mockResolvedValue(
+    vi.mocked(ruleApplicationsRepository.record).mockResolvedValue(
       asMock<RuleApplication>({ state: 'applied', taskId: 'winner-task' }),
     );
     taskRemove.mockRejectedValue(new NotFoundException('already gone'));
@@ -631,7 +597,7 @@ describe('InjectTaskExecutor', () => {
         }),
       );
       // Two 'last' siblings in tiebreak order, both currently below the target band.
-      siblingGetRawMany.mockResolvedValue([
+      listEdgePlacementSiblings.mockResolvedValue([
         { sortOrder: 1000, taskId: siblingA },
         { sortOrder: 2000, taskId: siblingB },
       ]);
@@ -663,7 +629,7 @@ describe('InjectTaskExecutor', () => {
           status: 'PENDING',
         }),
       );
-      siblingGetRawMany.mockResolvedValue([
+      listEdgePlacementSiblings.mockResolvedValue([
         { sortOrder: 6000, taskId: '00000000-0000-4000-8000-0000000000aa' },
         { sortOrder: 7000, taskId: '00000000-0000-4000-8000-0000000000bb' },
       ]);
@@ -713,7 +679,7 @@ describe('InjectTaskExecutor', () => {
           status: 'PENDING',
         }),
       );
-      siblingGetRawMany.mockResolvedValue([
+      listEdgePlacementSiblings.mockResolvedValue([
         { sortOrder: 9000, taskId: siblingA },
         { sortOrder: 9500, taskId: siblingB },
       ]);
@@ -831,7 +797,7 @@ describe('InjectTaskExecutor', () => {
       );
 
       expect(taskCreate).toHaveBeenCalled();
-      expect(ruleApplicationsService.upsertApplication).toHaveBeenCalledWith(
+      expect(ruleApplicationsRepository.upsertApplication).toHaveBeenCalledWith(
         expect.objectContaining({ state: 'applied' }),
       );
     });
@@ -866,7 +832,7 @@ describe('InjectTaskExecutor', () => {
           to: 'PENDING',
         }),
       );
-      expect(ruleApplicationsService.upsertApplication).toHaveBeenCalledWith(
+      expect(ruleApplicationsRepository.upsertApplication).toHaveBeenCalledWith(
         expect.objectContaining({ state: 'applied', taskId: 'old-task' }),
       );
       expect(emitTaskStatusChanged).toHaveBeenCalledWith({
@@ -886,7 +852,7 @@ describe('InjectTaskExecutor', () => {
       );
 
       expect(taskUpdate).not.toHaveBeenCalled();
-      expect(ruleApplicationsService.upsertApplication).toHaveBeenCalledWith(
+      expect(ruleApplicationsRepository.upsertApplication).toHaveBeenCalledWith(
         expect.objectContaining({ state: 'applied', taskId: 'old-task' }),
       );
     });

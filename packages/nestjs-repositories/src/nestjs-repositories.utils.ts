@@ -10,6 +10,7 @@ import {
   BlogTag,
   CodeEmbedding,
   CodeIndexSnapshot,
+  CustomPrompt,
   DailyStat,
   McpConnectorConnection,
   Note,
@@ -19,19 +20,27 @@ import {
   PlanMessage,
   PlanOutputStreamChunk,
   PlanRun,
+  PlanTag,
   Project,
+  ProjectSkill,
+  ProjectTag,
   Repository,
   RepositoryCheckout,
   Role,
+  RuleApplication,
   ScheduledAgentJob,
   ScheduledAgentJobRun,
   ServiceAccount,
   ServiceAccountCredential,
+  SkillAvailabilityRule,
+  SkillAvailabilityRuleSet,
   SkillUsageEvent,
   SkillUsageOutcome,
   Subscription,
+  TagActionRule,
   Task,
   TaskEmbedding,
+  TaskTag,
   TelemetryHeartbeat,
   User,
   UserDisabledAgentCli,
@@ -58,15 +67,6 @@ import { EvalJudgeCalibration } from './modules/eval-judge-calibrations/eval-jud
 import { EvalGrade } from './modules/eval-runs/eval-grade.entity.ts';
 import { EvalRun } from './modules/eval-runs/eval-run.entity.ts';
 import { EvalTrial } from './modules/eval-runs/eval-trial.entity.ts';
-import { ProjectSkill } from './modules/project-skills/project-skill.entity.ts';
-import { CustomPrompt } from './modules/prompts/custom-prompt.entity.ts';
-import { SkillAvailabilityRule } from './modules/skill-availability/skill-availability-rule.entity.ts';
-import { SkillAvailabilityRuleSet } from './modules/skill-availability/skill-availability-rule-set.entity.ts';
-import { RuleApplication } from './modules/tag-action-rules/rule-application.entity.ts';
-import { TagActionRule } from './modules/tag-action-rules/tag-action-rule.entity.ts';
-import { PlanTag } from './modules/tags/plan-tag.entity.ts';
-import { ProjectTag } from './modules/tags/project-tag.entity.ts';
-import { TaskTag } from './modules/tags/task-tag.entity.ts';
 
 /**
  * @description Resolves a positive integer from an env var, or undefined when
@@ -100,7 +100,6 @@ export function getTypeOrmOptions(): DataSourceOptions {
       AgentTrajectory,
       CodeEmbedding,
       CodeIndexSnapshot,
-      CustomPrompt,
       EvalCase,
       EvalDataset,
       EvalGrade,
@@ -113,6 +112,7 @@ export function getTypeOrmOptions(): DataSourceOptions {
       BlogAuthor,
       BlogPost,
       BlogTag,
+      CustomPrompt,
       DailyStat,
       Note,
       Permission,

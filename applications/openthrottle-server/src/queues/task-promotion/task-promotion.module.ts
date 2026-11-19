@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
-import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 
 import { WorkLedgerGraphqlModule } from '../../graphql/work-ledger/work-ledger.module.ts';
 import { NotificationsModule } from '../../notifications/notifications.module.ts';
@@ -21,7 +20,6 @@ import { TaskPromotionService } from './task-promotion.service.ts';
   exports: [TaskPromotionQueueProducerModule, TaskPromotionService],
   imports: [
     LoggerModule,
-    NestjsRepositoriesModule,
     NotificationsModule,
     TaskPromotionQueueProducerModule,
     WorkLedgerGraphqlModule,

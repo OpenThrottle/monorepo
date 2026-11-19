@@ -3,11 +3,7 @@ import { NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import type { AuthPrincipal } from '@openthrottle/nestjs-auth';
 import { AUTH_PRINCIPAL_KIND_USER } from '@openthrottle/nestjs-auth';
-import type {
-  Project,
-  ProjectSkillView,
-} from '@openthrottle/nestjs-repositories';
-import { ProjectSkillsService } from '@openthrottle/nestjs-repositories';
+import type { Project } from '@openthrottle/nestjs-repositories';
 import {
   ProjectsRepository,
   ServiceAccountsRepository,
@@ -19,6 +15,8 @@ import {
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { ProjectSkillsService } from '../../services/project-skills/project-skills.service.ts';
+import type { ProjectSkillView } from '../../services/project-skills/project-skills.types.ts';
 import { ProjectSkillsResolver } from './project-skills.resolver.ts';
 
 describe('ProjectSkillsResolver', () => {
