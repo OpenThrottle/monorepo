@@ -1,4 +1,5 @@
 import { createMock } from '@golevelup/ts-vitest';
+import type { PubSubEngine } from '@openthrottle/nestjs-graphql';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
   AgentConversationMessagesRepository,
@@ -118,7 +119,7 @@ function buildService(): {
   const publish = vi.fn().mockResolvedValue(undefined);
   // A live iterator that ends immediately, so subscribe() yields only its
   // replay buffer in these tests.
-  const asyncIterator = vi.fn(() => ({
+  const asyncIterableIterator = vi.fn(() => ({
     next: () => Promise.resolve({ done: true as const, value: undefined }),
     return: () => Promise.resolve({ done: true as const, value: undefined }),
   }));
@@ -128,12 +129,12 @@ function buildService(): {
     createMock<AgentConversationMessagesRepository>(messages),
     createMock<AgentTokenUsageRepository>(tokenUsage),
     accountStamping,
-    {
-      asyncIterator,
+    createMock<PubSubEngine>({
+      asyncIterableIterator,
       publish,
       subscribe: vi.fn(),
       unsubscribe: vi.fn(),
-    },
+    }),
   );
   return {
     conversations,

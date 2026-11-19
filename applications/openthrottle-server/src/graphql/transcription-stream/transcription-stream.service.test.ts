@@ -87,7 +87,7 @@ function buildService(): {
 } {
   const publish = vi.fn().mockResolvedValue(undefined);
   const service = new TranscriptionStreamService(createMock<LoggerService>(), {
-    asyncIterator: vi.fn(),
+    asyncIterableIterator: vi.fn(),
     publish,
     subscribe: vi.fn(),
     unsubscribe: vi.fn(),

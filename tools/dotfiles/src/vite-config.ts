@@ -116,13 +116,13 @@ export const createViteConfig = (
     cssCodeSplit ??
     (packageType === 'react' && entryPoints.includes('src/index.css'));
 
-  // Determine dts rollupTypes based on package type
-  const rollupTypes = packageType !== 'nestjs';
+  // Bundle the emitted declarations into one file, except for NestJS packages.
+  const bundleTypes = packageType !== 'nestjs';
 
   // Build plugins array
   const plugins: UserConfig['plugins'] = [
     dts({
-      rollupTypes,
+      bundleTypes,
       tsconfigPath: 'tsconfig.lib.json',
     }),
   ];

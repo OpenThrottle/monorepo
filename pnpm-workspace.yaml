@@ -51,16 +51,6 @@ allowBuilds:
 # Single source of truth for every external dependency version in the
 # workspace. All package.json files reference these via the `catalog:`
 # protocol; enforced by `pnpm run check:catalog` (scripts/check-catalog-coverage.ts).
-# `@bull-board/api` requires `bullmq` dynamically from inside its own
-# `queueAdapters/bullMQ.js` but declares it neither as a dependency nor as a
-# peer, so pnpm has nothing to link and the require only ever resolved by
-# walking up to a hoisted root `node_modules`. Declaring the peer here lets the
-# consuming project satisfy it honestly instead of relying on root hoisting.
-packageExtensions:
-  '@bull-board/api':
-    peerDependencies:
-      bullmq: '*'
-
 catalog:
   '@agentclientprotocol/sdk': '^2.6.0'
   '@anthropic-ai/sdk': '^1.8.0'
@@ -69,9 +59,9 @@ catalog:
   '@apollo/utils.keyvadapter': '^4.0.1'
   '@apollo/utils.keyvaluecache': '^4.0.0'
   '@as-integrations/express5': '^1.1.2'
-  '@bull-board/api': '7.0.0'
-  '@bull-board/express': '7.0.0'
-  '@bull-board/nestjs': '7.0.0'
+  '@bull-board/api': '9.13.1'
+  '@bull-board/express': '9.13.1'
+  '@bull-board/nestjs': '9.13.1'
   '@commitlint/cli': '21.2.4'
   '@commitlint/config-conventional': '21.2.4'
   '@commitlint/config-nx-scopes': '21.2.3'
@@ -84,7 +74,7 @@ catalog:
   '@graphql-inspector/core': '^8.0.1'
   '@graphql-typed-document-node/core': '^3.2.0'
   '@headlessui/react': '^2.2.9'
-  '@keyv/redis': '^4.4.0'
+  '@keyv/redis': '^5.1.6'
   # Held at 1.0.57: 1.0.58+ requires js-yaml ^5.5.0, which depends on argparse 3
   # (PSF-2.0, not on the license allowlist). See the matching js-yaml override.
   '@langchain/classic': '1.0.57'
@@ -211,14 +201,14 @@ catalog:
   'bcrypt': '^6.0.0'
   'buffer': '^6.0.3'
   'bullmq': '^5.73.0'
-  'chalk': '^5.6.2'
+  'chalk': '^6.0.1'
   'cheerio': '^1.1.2'
-  'chokidar': '^5.0.0'
+  'chokidar': '^6.0.0'
   'chrome-launcher': '^1.2.3'
   'class-variance-authority': '^0.7.1'
   'clsx': '^2.1.1'
   'cmdk': '^1.1.1'
-  'commander': '^14.0.2'
+  'commander': '^15.1.0'
   'compression': '^1.8.2'
   'concurrently': '10.0.3'
   'cronstrue': '^3.39.0'
@@ -264,13 +254,13 @@ catalog:
   # dependency of @openthrottle/react-router-utils (src/hooks/useForm.ts).
   'focus-formik-error': '^1.1.0'
   'formik': '^2.4.9'
-  'glob': '^13.0.0'
+  'glob': '^14.0.6'
   'globals': '^17.0.0'
   'graphql': '^16.13.2'
   'graphql-codegen-typescript-validation-schema': '^0.19.0'
   'graphql-request': '^7.4.0'
   'graphql-scalars': '^1.25.0'
-  'graphql-subscriptions': '^2.0.0'
+  'graphql-subscriptions': '^3.0.0'
   'graphql-ws': '^6.4.2'
   'happy-dom': '^20.3.1'
   'http-proxy-3': '^2.0.2'
@@ -293,7 +283,7 @@ catalog:
   'json-schema': '^0.4.0'
   'jsonwebtoken': '^9.0.2'
   'keyv': '^5.6.0'
-  'knip': '^5.81.0'
+  'knip': '^6.45.1'
   'langchain': '^1.3.0'
   # Held at 13.5: 13.6 moves to @sentry/node 11, which pulls in the `sentry` CLI
   # package (FSL-1.1-Apache-2.0, not on the license allowlist). Lift once that
@@ -309,13 +299,13 @@ catalog:
   'monaco-editor': '^0.57.0'
   'morgan': '^1.10.1'
   'motion': '^14.12.0'
-  'nestjs-cls': '^6.3.0'
+  'nestjs-cls': '^7.0.2'
   'next-themes': '^0.4.6'
   'normalize.css': '^8.0.1'
   'nullthrows': '^1.1.1'
   'nx': '24.0.6'
   'only-allow': '^1.2.2'
-  'openai': '^6.16.0'
+  'openai': '^7.56.0'
   'passport': '^0.7.0'
   'passport-jwt': '^4.0.1'
   'passport-local': '^1.0.0'
@@ -361,7 +351,7 @@ catalog:
   'socket.io-client': '^4.8.3'
   'sonner': '^2.0.8'
   'storybook': '^10.6.7'
-  'stripe': '^20.3.1'
+  'stripe': '^23.1.0'
   'swc-loader': '^0.2.7'
   'tailwind-merge': '3.7.0'
   'tailwindcss': '4.3.5'
@@ -384,7 +374,7 @@ catalog:
   # TS7 native compiler. Provides the `tsc` bin only - no programmatic API, no tsserver.
   'typescript7': 'npm:typescript@^7.0.2'
   'typescript-eslint': '^8.72.2'
-  'unplugin-swc': '^1.5.9'
+  'unplugin-swc': '^2.0.0'
   'use-latest-callback': '^0.3.3'
   'usehooks-ts': '^3.1.1'
   'uuid': '14.0.0'
@@ -392,7 +382,7 @@ catalog:
   'vite': '^8.3.8'
   'vite-bundle-analyzer': '^1.3.7'
   'vite-plugin-devtools-json': '^1.1.2'
-  'vite-plugin-dts': '^4.5.4'
+  'vite-plugin-dts': '^5.1.2'
   'vitest': '^5.1.0'
   'waait': '^1.0.5'
   'webpack-cli': '^7.0.0'
@@ -401,7 +391,7 @@ catalog:
   'winston-transport': '^4.9.0'
   'yaml': '^2.9.1'
   'yargs': '^18.0.0'
-  'youtubei.js': '^17.0.1'
+  'youtubei.js': '^18.3.0'
   # yup: see the retention note on 'formik' above — generator template only.
   'yup': '^1.7.1'
   'zod': '^4.6.7'
@@ -432,15 +422,13 @@ peerDependencyRules:
 # Migrated out of package.json's `pnpm` field, which pnpm ≥11 no longer reads.
 # `$name` reuses the version declared for that dependency in the root manifest.
 overrides:
-  # @bull-board/nestjs@7 and @rekog/mcp-nest@1.9 cap these Nest peers at ^11, and
+  # @rekog/mcp-nest@1.9 caps these Nest peers at ^11, and
   # their importers don't declare them, so pnpm auto-installs the peer. pnpm 11
   # reused the workspace's Nest 12; pnpm 12 installs a separate in-range Nest 11
   # copy instead — a second @nestjs/core at runtime. Pin the peers to the
   # workspace's Nest 12. (peerDependencyRules.allowedVersions and
   # packageExtensions only change the warning, not what gets installed.) Drop
   # each line once its package widens its peer range to Nest 12.
-  '@bull-board/nestjs>@nestjs/bull-shared': '^12.0.0'
-  '@bull-board/nestjs>@nestjs/core': 'catalog:'
   '@rekog/mcp-nest>@nestjs/jwt': 'catalog:'
   '@rekog/mcp-nest>@nestjs/passport': 'catalog:'
   '@radix-ui/react-slot': 'catalog:'

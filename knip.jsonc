@@ -337,7 +337,9 @@
         "youtubei.js",
         "zod-to-json-schema",
       ],
-      "ignoreBinaries": ["caddy"],
+      // System binaries spawned by scripts, not npm packages (knip 6 reports
+      // unlisted binaries): caddy (local proxy), pg_dump (database:backup).
+      "ignoreBinaries": ["caddy", "pg_dump"],
     },
     "tools/generators": {
       "entry": [
@@ -396,6 +398,8 @@
         "src/main.ts",
         "src/register-workspace-type-stripping.ts",
       ],
+      // macOS Spotlight CLI spawned by editor presence; a system binary, not a dependency.
+      "ignoreBinaries": ["mdfind"],
     },
     // Test support (fixtures, factories, the TestRecord entity) is imported only by
     // *.test.ts files, which the root ignore hides from the import graph.

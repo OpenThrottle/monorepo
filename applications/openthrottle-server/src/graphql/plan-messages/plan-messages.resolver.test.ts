@@ -40,7 +40,7 @@ const buildMessage = (overrides: Partial<PlanMessage> = {}): PlanMessage => {
 };
 
 const mockPubSub = {
-  asyncIterator: vi.fn().mockReturnValue({ next: vi.fn() }),
+  asyncIterableIterator: vi.fn().mockReturnValue({ next: vi.fn() }),
   publish: vi.fn().mockResolvedValue(undefined),
 };
 
@@ -321,7 +321,7 @@ describe('PlanMessagesResolver', () => {
     test('subscribes to the plan messages topic', () => {
       resolver.planMessageChanged(planId, { userId: 'u1' });
 
-      expect(mockPubSub.asyncIterator).toHaveBeenCalledWith(
+      expect(mockPubSub.asyncIterableIterator).toHaveBeenCalledWith(
         `plan:${planId}:messages`,
       );
     });
