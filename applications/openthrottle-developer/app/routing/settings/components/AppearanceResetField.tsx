@@ -10,11 +10,10 @@ import {
   Button,
   Label,
 } from '@openthrottle/react-router-shadcn';
-import { useAtom } from 'jotai';
 import * as React from 'react';
 
 import { DEFAULT_APPEARANCE_CONFIG } from '~/global/data/data.appearance-config';
-import { configAtom } from '~/global/data/data.atom-config';
+import { useHydratedAppearanceConfig } from '~/global/hooks/useHydratedAppearanceConfig';
 import { APPEARANCE_COPY } from '~/routing/settings/data/data.copy';
 import { countNonDefaultAppearanceFields } from '~/routing/settings/utils/countNonDefaultAppearanceFields';
 
@@ -29,7 +28,7 @@ export const AppearanceResetField = (
   _props: AppearanceResetFieldProps,
 ): React.ReactElement => {
   // Hooks
-  const [config, setConfig] = useAtom(configAtom);
+  const { config, setConfig } = useHydratedAppearanceConfig();
   const [isConfirming, setIsConfirming] = React.useState(false);
 
   // Setup

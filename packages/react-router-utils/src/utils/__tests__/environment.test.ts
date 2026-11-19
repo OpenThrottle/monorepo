@@ -139,3 +139,48 @@ describe('getPublicEnv', () => {
     expect(getPublicEnv()).not.toHaveProperty('API_URL_INTERNAL');
   });
 });
+
+describe('getDocumentEnv', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.resetModules();
+  });
+
+  const loadGetDocumentEnv = async (env: Record<string, unknown>) => {
+    vi.resetModules();
+    vi.stubGlobal('window', { env });
+    const mod = await import('../environment');
+    return mod.getDocumentEnv;
+  };
+
+  test('returns the loader env untouched when the root loader ran', async () => {
+    const getDocumentEnv = await loadGetDocumentEnv({});
+    const getPublicEnv = await loadGetPublicEnv(VALID_ENV);
+    const loaderEnv = getPublicEnv();
+
+    expect(getDocumentEnv(loaderEnv)).toBe(loaderEnv);
+  });
+
+  test('falls back to the runtime public tier when there is no loader data (404)', async () => {
+    const getDocumentEnv = await loadGetDocumentEnv(VALID_ENV);
+
+    const env = getDocumentEnv(undefined);
+
+    expect(env.APP_NAME).toBe('OpenThrottle');
+    expect(env.APP_URL).toBe('https://example.com');
+  });
+
+  test('never surfaces the server-only API_URL_INTERNAL in the fallback', async () => {
+    const getDocumentEnv = await loadGetDocumentEnv(VALID_ENV);
+
+    expect(getDocumentEnv(undefined)).not.toHaveProperty('API_URL_INTERNAL');
+  });
+
+  test('does not throw and omits keys missing from the runtime env', async () => {
+    const getDocumentEnv = await loadGetDocumentEnv({
+      APP_NAME: 'OpenThrottle',
+    });
+
+    expect(getDocumentEnv(undefined)).toEqual({ APP_NAME: 'OpenThrottle' });
+  });
+});

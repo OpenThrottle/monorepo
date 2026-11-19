@@ -1,8 +1,8 @@
 import { EditorWindow } from '@openthrottle/react-router-editor';
 import { Skeleton } from '@openthrottle/react-router-shadcn';
+import { useIsHydrated } from '@openthrottle/react-router-utils';
 import * as React from 'react';
 
-import { useIsHydrated } from '~/global/hooks/useIsHydrated';
 import { BLOG_EDITOR_COPY } from '~/routing/blog/data/data.copy';
 import { useBlogEditorTheme } from '~/routing/blog/hooks/useBlogEditorTheme';
 

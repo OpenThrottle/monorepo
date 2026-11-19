@@ -5,10 +5,10 @@ import {
   TableHeader,
   TableRow,
 } from '@openthrottle/react-router-shadcn';
+import { useIsHydrated } from '@openthrottle/react-router-utils';
 import * as React from 'react';
 
 import type { BlogPostListRowFragment } from '~/__generated__/graphql';
-import { useIsHydrated } from '~/global/hooks/useIsHydrated';
 import { BLOG_COPY } from '~/routing/blog/data/data.copy';
 
 import { BlogPostRow } from './BlogPostRow';

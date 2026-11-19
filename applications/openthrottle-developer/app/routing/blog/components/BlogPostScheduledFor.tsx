@@ -1,7 +1,7 @@
+import { useIsHydrated } from '@openthrottle/react-router-utils';
 import { CalendarClockIcon } from 'lucide-react';
 import * as React from 'react';
 
-import { useIsHydrated } from '~/global/hooks/useIsHydrated';
 import { formatBlogScheduledFor } from '~/routing/blog/utils/lifecycle';
 
 export interface BlogPostScheduledForProps {

@@ -1,5 +1,5 @@
 import { toast } from '@openthrottle/react-router-shadcn';
-import { IS_BROWSER } from '@openthrottle/react-router-utils';
+import { IS_BROWSER, useIsHydrated } from '@openthrottle/react-router-utils';
 import * as React from 'react';
 import { isRouteErrorResponse, useRouteError } from 'react-router';
 
@@ -23,7 +23,11 @@ import {
 export interface UseGlobalErrorBoundaryResult {
   readonly classificationSummary: string;
   readonly error: unknown;
-  readonly incidentReferenceId: string;
+  /**
+   * `null` during the server render and the hydration pass: the id is random,
+   * so rendering it before hydration would differ from the server markup.
+   */
+  readonly incidentReferenceId: string | null;
   readonly kind: ClientErrorKind;
   readonly onClickRefresh: () => void;
   readonly onCopyIncidentDetails: () => Promise<void>;
@@ -43,6 +47,7 @@ export const useGlobalErrorBoundary = (): UseGlobalErrorBoundaryResult => {
   const reportedRollbarKeyRef = React.useRef<string | null>(null);
   const reportedHttpRollbarKeyRef = React.useRef<string | null>(null);
   const [incidentReferenceId] = React.useState(createIncidentReferenceId);
+  const isHydrated = useIsHydrated();
 
   // Setup
   const isJsError = error instanceof Error;
@@ -51,7 +56,8 @@ export const useGlobalErrorBoundary = (): UseGlobalErrorBoundaryResult => {
   const kind = classifyClientError(error);
   const jsSubtype = isJsError ? inferJavascriptErrorSubtype(error) : null;
   const classificationSummary = incidentClassificationSummary({ error, kind });
-  const stackToggleEligible = isClientStackToggleEligible();
+  // Reads `window.env`, which the server cannot see: defer it past hydration.
+  const stackToggleEligible = isHydrated && isClientStackToggleEligible();
 
   // Handlers
   const onClickRefresh = () => {
@@ -159,7 +165,7 @@ export const useGlobalErrorBoundary = (): UseGlobalErrorBoundaryResult => {
   return {
     classificationSummary,
     error,
-    incidentReferenceId,
+    incidentReferenceId: isHydrated ? incidentReferenceId : null,
     kind,
     onClickRefresh,
     onCopyIncidentDetails,

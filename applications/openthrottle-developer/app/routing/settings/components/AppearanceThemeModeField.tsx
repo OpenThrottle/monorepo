@@ -1,11 +1,10 @@
 import { Label } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleThemeToggle } from '@openthrottle/react-router-ui';
 import type { ThemeMode } from '@openthrottle/react-router-utils';
-import { useAtom } from 'jotai';
 import * as React from 'react';
 
 import { DEFAULT_APPEARANCE_CONFIG } from '~/global/data/data.appearance-config';
-import { configAtom } from '~/global/data/data.atom-config';
+import { useHydratedAppearanceConfig } from '~/global/hooks/useHydratedAppearanceConfig';
 import { APPEARANCE_COPY } from '~/routing/settings/data/data.copy';
 
 export interface AppearanceThemeModeFieldProps {}
@@ -18,7 +17,7 @@ export const AppearanceThemeModeField = (
   _props: AppearanceThemeModeFieldProps,
 ): React.ReactElement => {
   // Hooks
-  const [config, setConfig] = useAtom(configAtom);
+  const { config, setConfig } = useHydratedAppearanceConfig();
 
   // Setup
 
