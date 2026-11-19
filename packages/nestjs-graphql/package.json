@@ -27,6 +27,7 @@
     "@nestjs/platform-express": "catalog:",
     "@nestjs/testing": "catalog:",
     "@types/jsonwebtoken": "catalog:",
+    "typescript": "catalog:",
     "vitest": "catalog:"
   },
   "exports": {

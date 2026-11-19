@@ -24,7 +24,7 @@ Two ways to hint a field, one code path: the decorator stores the hint in the fi
 discoverLocalModels(): Promise<DiscoverLocalModelsResult> { ... }
 ```
 
-- **Object-typed child fields default to `maxAge: 0`, so each one needs its own hint.** Put `@CacheHint` on the object type's `@Field` property. On a `@ResolveField` whose object type already declares that `@Field`, Nest silently drops the resolver method's hint (it keeps the model field's extensions), so hint the `@Field` instead. Scalar fields inherit their parent's hint and need none.
+- **Object-typed child fields default to `maxAge: 0`, so each one needs its own hint.** Put `@CacheHint` on the object type's `@Field` property or on the `@ResolveField` method that resolves it. Since `@nestjs/graphql` 14.2 a `@ResolveField` hint applies even when the object type also declares that `@Field` (the resolver method's extensions win); earlier versions dropped it. Scalar fields inherit their parent's hint and need none.
 - **Nothing applies without `cachePlugins.cacheControl`.** That option registers both Apollo's cache-control plugin and the plugin that reads `@CacheHint`.
 
 ### ⚠️ One un-hinted field makes a whole operation uncacheable

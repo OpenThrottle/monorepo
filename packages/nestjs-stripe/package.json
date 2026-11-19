@@ -8,8 +8,8 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
-    "@openthrottle/nestjs-auth": "workspace:^",
     "@nestjs/graphql": "catalog:",
+    "@openthrottle/nestjs-auth": "workspace:^",
     "graphql": "catalog:",
     "stripe": "catalog:"
   },
@@ -59,6 +59,7 @@
   },
   "devDependencies": {
     "@nestjs/testing": "catalog:",
+    "typescript": "catalog:",
     "vitest": "catalog:"
   },
   "peerDependencies": {

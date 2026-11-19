@@ -21,6 +21,7 @@
   "devDependencies": {
     "@openthrottle/nestjs-testing": "workspace:^",
     "@types/passport-jwt": "catalog:",
+    "typescript": "catalog:",
     "vitest": "catalog:"
   },
   "exports": {
