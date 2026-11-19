@@ -76,7 +76,12 @@ Moving a table here is these files and edits, every time (`notes` is the referen
 9. Remove the old module from `nestjs-repositories` and import the entity into its
    `getTypeOrmOptions()` list from here.
 10. Consumers inject the repository and their tests provide `create<Folder>RepositoryMock()`
-    in its place, never a hand-written object of `vi.fn()`s.
+    in its place, never a hand-written object of `vi.fn()`s. **A server module that stops
+    importing `NestjsRepositoriesModule` also loses everything that module re-exports**
+    (`RolesModule`, `UsersModule`, `PermissionsModule`, …). Import whatever the module still
+    needs, usually `RolesModule` for `GqlPermissionsGuard`. Unit tests cannot see a missing
+    provider; only booting `AppModule` does, and step 11's `graphql-schema:write` does that
+    (batch 12 lost `RolesRepository` in token-usage and capture-health this way).
 11. Run `pnpm run database:test:openthrottle` and `graphql-schema:write` (no `schema.gql` diff).
 
 ### Natural-key tables (the one exception)
