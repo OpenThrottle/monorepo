@@ -338,6 +338,7 @@
     "@openthrottle/nestjs-testing": "workspace:^",
     "@testing-library/jest-dom": "catalog:",
     "nestjs-cls": "catalog:",
+    "typescript": "catalog:",
     "unplugin-swc": "catalog:",
     "vite": "catalog:",
     "vitest": "catalog:"

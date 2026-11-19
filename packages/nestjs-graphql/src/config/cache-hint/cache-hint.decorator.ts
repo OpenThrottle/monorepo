@@ -14,9 +14,9 @@ export interface CacheHint extends CacheHintShape {}
 
 /**
  * @description Declare a static cache-control hint on a GraphQL field. Put it on
- * a root `@Query` method, or on the `@Field` property of an object type for an
- * object-typed child field (those default to `maxAge: 0`, so each one needs its
- * own hint). The hint is stored in the field's `extensions` and applied at
+ * a root `@Query` method, a `@ResolveField` method, or the `@Field` property of
+ * an object type for an object-typed child field (those default to `maxAge: 0`,
+ * so each one needs its own hint). The hint is stored in the field's `extensions` and applied at
  * resolve time through {@link setCacheHint}, so the two behave identically,
  * including the no-op when the cache-control plugin is not installed.
  *
@@ -25,9 +25,9 @@ export interface CacheHint extends CacheHintShape {}
  * result, or from the user).
  *
  * Takes effect only under `cachePlugins.cacheControl`, which also registers the
- * plugin that reads it. On a `@ResolveField` whose object type already declares
- * an `@Field` of that name, Nest keeps the model field's extensions and drops
- * the resolver method's, so hint the `@Field` instead.
+ * plugin that reads it. Since @nestjs/graphql 14.2, a hint on a `@ResolveField`
+ * applies even when the object type also declares an `@Field` of that name (the
+ * resolver method's extensions win); earlier versions dropped it.
  *
  * @example
  * ```ts

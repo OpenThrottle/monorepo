@@ -21,6 +21,7 @@
     "@nestjs/testing": "catalog:",
     "@openthrottle/nestjs-testing": "workspace:^",
     "graphql": "catalog:",
+    "typescript": "catalog:",
     "vitest": "catalog:"
   },
   "exports": {

@@ -99,7 +99,7 @@ export type ActivityTaskUpdatedRowObject = {
   planId: Scalars['String']['output'];
   planTitle: Scalars['String']['output'];
   status: Scalars['String']['output'];
-  /** Resolved task entity (id is the task id) */
+  /** Resolved task entity (row id is the task id) */
   task?: Maybe<TaskObject>;
   title: Scalars['String']['output'];
   updatedAt: Scalars['DateTime']['output'];
@@ -4025,23 +4025,23 @@ export type PlanObject = {
   project?: Maybe<Scalars['String']['output']>;
   /** Optional. Project UUID (FK to projects table). Null when plan is not linked to a project. */
   projectId?: Maybe<Scalars['String']['output']>;
-  /** Resolved project entity when projectId is set; null when projectId is unset. */
+  /** Resolved project entity when projectId is set */
   projectRelation?: Maybe<ProjectObject>;
   /** Workflow-ralph run configuration stored on the plan (PlanRunConfigStorage v1). */
   runConfigJson: Scalars['String']['output'];
-  /** Number of tasks a whole-plan run would pick up (status PENDING, IN_PROGRESS, BLOCKED, BACKLOG, SKIPPED, CANCELED or QUEUED): the count enqueuePlanRun and schedulePlanRun require to be above zero. Resolved through a batched loader; select it in plan-detail documents rather than list documents. */
+  /** Number of tasks a whole-plan run would pick up (PENDING, IN_PROGRESS, BLOCKED, BACKLOG, SKIPPED, CANCELED or QUEUED). Zero means enqueuePlanRun and schedulePlanRun refuse the plan. Resolved through a batched loader. */
   runnableTaskCount: Scalars['Int']['output'];
-  /** The soonest instant a SCHEDULED run of this plan fires at (plan_runs.scheduled_for of its earliest SCHEDULED run); null when none is waiting. Lets the UI explain why a run is already pending ("a run is scheduled for <local time>; cancel it to run now"). Resolved from plan_runs; a run that fired, was cancelled or was settled MISSED/SUPERSEDED no longer counts. */
+  /** The soonest instant a SCHEDULED run of this plan fires at; null when none is waiting. Resolved from plan_runs through a batched loader. */
   scheduledRunAt?: Maybe<Scalars['DateTime']['output']>;
-  /** The id of the SCHEDULED run behind scheduledRunAt (the same soonest run: earliest scheduled_for, then id); null when none is waiting. Pass it as planRunId to cancelPlanRun to cancel just that run, so the UI can offer Cancel without listing run history. */
+  /** The id of the SCHEDULED run behind scheduledRunAt (the same soonest run: earliest scheduled_for, then id); null when none is waiting. Pass it as planRunId to cancelPlanRun to cancel just that run. */
   scheduledRunId?: Maybe<Scalars['ID']['output']>;
   status: Scalars['String']['output'];
   summary?: Maybe<Scalars['String']['output']>;
   /** Tags attached to this plan, alphabetically by tag. */
   tags: Array<PlanTagObject>;
-  /** Number of tasks belonging to this plan. Resolved from tasks table. */
+  /** Number of tasks belonging to this plan */
   taskCount: Scalars['Int']['output'];
-  /** Number of resolved tasks on this plan (status COMPLETED, SKIPPED or PROMOTED). Mirrors client getResolvedTaskCount; SKIPPED and PROMOTED count as done / won't be worked on here (PROMOTED continued as its own plan). */
+  /** Number of resolved tasks on this plan (status COMPLETED, SKIPPED or PROMOTED). SKIPPED and PROMOTED count as done / won't be worked on here (PROMOTED continued as its own plan). */
   tasksCompletedCount: Scalars['Int']['output'];
   title: Scalars['String']['output'];
   updatedAt: Scalars['DateTime']['output'];
@@ -4351,11 +4351,11 @@ export type ProjectObject = {
   name: Scalars['String']['output'];
   /** NX project name (e.g. applications/openthrottle-server) */
   nxProjectName?: Maybe<Scalars['String']['output']>;
-  /** Plans linked to this project; resolved via ResolveField. */
+  /** Plans linked to this project; ordered by createdAt descending */
   plans?: Maybe<Array<PlanObject>>;
   /** Tags attached to this project, alphabetically by tag. */
   tags: Array<ProjectTagObject>;
-  /** Tasks linked to this project; resolved via ResolveField. */
+  /** Tasks linked to this project; ordered by createdAt ascending */
   tasks?: Maybe<Array<TaskObject>>;
   updatedAt: Scalars['DateTime']['output'];
 };
@@ -6139,6 +6139,7 @@ export type RepositoryObject = {
   name: Scalars['String']['output'];
   /** Canonical https form of the remote; null for provisional local-only repositories. */
   normalizedRemoteUrl?: Maybe<Scalars['String']['output']>;
+  /** OpenThrottle project linked at the repository level. */
   project?: Maybe<ProjectObject>;
   /** OpenThrottle project linked at the repository level. */
   projectId?: Maybe<Scalars['ID']['output']>;
@@ -6406,7 +6407,7 @@ export type ScheduledAgentJobObject = {
   ownerUserId?: Maybe<Scalars['ID']['output']>;
   /** Prompt passed to the agent CLI. */
   prompt: Scalars['String']['output'];
-  /** The targeted checkout resolved for display; null when the schedule targets none or the checkout has been deleted. */
+  /** The repository checkout this schedule targets, resolved for display. */
   repository?: Maybe<ScheduledAgentJobRepositoryObject>;
   /** Registered repository checkout this schedule runs in; the server resolves its cwd from this. Null means the legacy cwd / WORKSPACE_ROOT fallback. */
   repositoryCheckoutId?: Maybe<Scalars['ID']['output']>;
@@ -6463,7 +6464,7 @@ export type ScheduledAgentJobRunObject = {
   outputTokens?: Maybe<Scalars['Float']['output']>;
   /** Reasoning tokens for the run, when accounted separately; null when unreported. */
   reasoningTokens?: Maybe<Scalars['Float']['output']>;
-  /** The targeted checkout resolved for display; null when the run targeted none or the checkout has been deleted. */
+  /** The repository checkout this run targeted at fire time, resolved for display. */
   repository?: Maybe<ScheduledAgentJobRepositoryObject>;
   /** Repository checkout this run targeted at fire time; null for a legacy run, the WORKSPACE_ROOT fallback, or a checkout since deleted. A snapshot — the schedule's current target may differ. */
   repositoryCheckoutId?: Maybe<Scalars['ID']['output']>;
@@ -8073,7 +8074,7 @@ export type WorkArtifactObject = {
   id: Scalars['String']['output'];
   lifecycle?: Maybe<Scalars['String']['output']>;
   message?: Maybe<Scalars['String']['output']>;
-  /** JSON-serialized per-type payload (parse client-side) */
+  /** JSON-serialized per-type payload */
   payloadJson: Scalars['String']['output'];
   producedAt: Scalars['DateTime']['output'];
   sessionId: Scalars['String']['output'];
@@ -8229,6 +8230,7 @@ export type WorkspaceLocalRepositoryObject = {
   id: Scalars['ID']['output'];
   /** Checkout kind: 'primary' (the repository's main clone) or 'worktree' (a linked git worktree). */
   kind: Scalars['String']['output'];
+  /** OpenThrottle project linked to this checkout. */
   project?: Maybe<ProjectObject>;
   /** Optional OpenThrottle project linked to this checkout. */
   projectId?: Maybe<Scalars['ID']['output']>;

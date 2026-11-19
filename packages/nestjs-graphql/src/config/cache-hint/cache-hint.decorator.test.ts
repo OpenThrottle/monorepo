@@ -185,11 +185,12 @@ describe('@CacheHint', () => {
       expect(reply.cacheControl).toBe('no-store');
     });
 
-    // Pins a Nest behavior the docs warn about: when the model already
-    // declares the @Field, Nest keeps the model's (empty) extensions and drops
-    // the resolver method's. If this starts passing as cacheable, Nest changed
-    // and the "hint the @Field instead" guidance can be relaxed.
-    it('is dropped on a @ResolveField whose object type declares the @Field', async () => {
+    // Pins the @nestjs/graphql >= 14.2 behavior: when the model already declares
+    // the @Field, the resolver method's extensions now win over the model's
+    // (empty) ones. Before 14.2 Nest dropped them and this served `no-store`. If
+    // this regresses to `no-store`, restore the "hint the @Field instead"
+    // guidance on CacheHint.
+    it('applies on a @ResolveField whose object type declares the @Field', async () => {
       const { url } = await boot();
 
       const reply = await query(
@@ -197,7 +198,7 @@ describe('@CacheHint', () => {
         '{ cacheHintRoot { shadowed { value } } }',
       );
 
-      expect(reply.cacheControl).toBe('no-store');
+      expect(reply.cacheControl).toBe('max-age=60, private');
     });
   });
 

@@ -476,10 +476,10 @@ type ProjectObject {
   """NX project name (e.g. applications/openthrottle-server)"""
   nxProjectName: String
 
-  """Plans linked to this project; resolved via ResolveField."""
+  """Plans linked to this project; ordered by createdAt descending"""
   plans: [PlanObject!]
 
-  """Tasks linked to this project; resolved via ResolveField."""
+  """Tasks linked to this project; ordered by createdAt ascending"""
   tasks: [TaskObject!]
   updatedAt: DateTime!
 
@@ -511,33 +511,31 @@ type PlanObject {
   """
   projectId: String
 
-  """
-  Resolved project entity when projectId is set; null when projectId is unset.
-  """
+  """Resolved project entity when projectId is set"""
   projectRelation: ProjectObject
 
   """
-  Number of tasks a whole-plan run would pick up (status PENDING, IN_PROGRESS, BLOCKED, BACKLOG, SKIPPED, CANCELED or QUEUED): the count enqueuePlanRun and schedulePlanRun require to be above zero. Resolved through a batched loader; select it in plan-detail documents rather than list documents.
+  Number of tasks a whole-plan run would pick up (PENDING, IN_PROGRESS, BLOCKED, BACKLOG, SKIPPED, CANCELED or QUEUED). Zero means enqueuePlanRun and schedulePlanRun refuse the plan. Resolved through a batched loader.
   """
   runnableTaskCount: Int!
 
   """
-  The soonest instant a SCHEDULED run of this plan fires at (plan_runs.scheduled_for of its earliest SCHEDULED run); null when none is waiting. Lets the UI explain why a run is already pending ("a run is scheduled for <local time>; cancel it to run now"). Resolved from plan_runs; a run that fired, was cancelled or was settled MISSED/SUPERSEDED no longer counts.
+  The soonest instant a SCHEDULED run of this plan fires at; null when none is waiting. Resolved from plan_runs through a batched loader.
   """
   scheduledRunAt: DateTime
 
   """
-  The id of the SCHEDULED run behind scheduledRunAt (the same soonest run: earliest scheduled_for, then id); null when none is waiting. Pass it as planRunId to cancelPlanRun to cancel just that run, so the UI can offer Cancel without listing run history.
+  The id of the SCHEDULED run behind scheduledRunAt (the same soonest run: earliest scheduled_for, then id); null when none is waiting. Pass it as planRunId to cancelPlanRun to cancel just that run.
   """
   scheduledRunId: ID
   status: String!
   summary: String
 
-  """Number of tasks belonging to this plan. Resolved from tasks table."""
+  """Number of tasks belonging to this plan"""
   taskCount: Int!
 
   """
-  Number of resolved tasks on this plan (status COMPLETED, SKIPPED or PROMOTED). Mirrors client getResolvedTaskCount; SKIPPED and PROMOTED count as done / won't be worked on here (PROMOTED continued as its own plan).
+  Number of resolved tasks on this plan (status COMPLETED, SKIPPED or PROMOTED). SKIPPED and PROMOTED count as done / won't be worked on here (PROMOTED continued as its own plan).
   """
   tasksCompletedCount: Int!
   title: String!
@@ -853,7 +851,7 @@ type ActivityTaskUpdatedRowObject {
   planTitle: String!
   status: String!
 
-  """Resolved task entity (id is the task id)"""
+  """Resolved task entity (row id is the task id)"""
   task: TaskObject
   title: String!
   updatedAt: DateTime!
@@ -3433,7 +3431,7 @@ type WorkArtifactObject {
   lifecycle: String
   message: String
 
-  """JSON-serialized per-type payload (parse client-side)"""
+  """JSON-serialized per-type payload"""
   payloadJson: String!
   producedAt: DateTime!
   sessionId: String!
@@ -3910,9 +3908,7 @@ type ScheduledAgentJobObject {
   """
   repositoryCheckoutId: ID
 
-  """
-  The targeted checkout resolved for display; null when the schedule targets none or the checkout has been deleted.
-  """
+  """The repository checkout this schedule targets, resolved for display."""
   repository: ScheduledAgentJobRepositoryObject
 
   """Owning user id; null for system-seeded schedules."""
@@ -4005,7 +4001,7 @@ type ScheduledAgentJobRunObject {
   repositoryCheckoutId: ID
 
   """
-  The targeted checkout resolved for display; null when the run targeted none or the checkout has been deleted.
+  The repository checkout this run targeted at fire time, resolved for display.
   """
   repository: ScheduledAgentJobRepositoryObject
 
@@ -5222,6 +5218,8 @@ type WorkspaceLocalRepositoryObject {
 
   """Optional OpenThrottle project linked to this checkout."""
   projectId: ID
+
+  """OpenThrottle project linked to this checkout."""
   project: ProjectObject
   createdAt: DateTime!
   updatedAt: DateTime!
@@ -5390,6 +5388,8 @@ type RepositoryObject {
 
   """OpenThrottle project linked at the repository level."""
   projectId: ID
+
+  """OpenThrottle project linked at the repository level."""
   project: ProjectObject
 
   """The authenticated user's checkouts of this repository."""
