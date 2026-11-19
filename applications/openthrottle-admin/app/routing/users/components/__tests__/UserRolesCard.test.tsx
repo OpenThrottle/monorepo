@@ -40,7 +40,7 @@ describe('UserRolesCard Component', () => {
   test('links each assigned role to its detail page and offers a remove action', () => {
     const component = renderCard({
       availableRoles: [],
-      rolesForUser: [{ id: 'role-1', name: 'admin' }],
+      rolesForUser: [{ description: null, id: 'role-1', name: 'admin' }],
     });
 
     const link = component.getByRole('link', { name: 'admin' });

@@ -13,7 +13,6 @@ const run = (
   overrides: Partial<ScheduledJobRunDetailFragment> = {},
 ): ScheduledJobRunDetailFragment => {
   return {
-    __typename: 'ScheduledAgentJobRunObject',
     bullmqJobId: 'run-1',
     cacheReadTokens: 20,
     cacheWriteTokens: 10,
@@ -119,7 +118,6 @@ describe('RunDetail Component', () => {
       <RunDetail
         run={run({
           repository: {
-            __typename: 'ScheduledAgentJobRepositoryObject',
             displayName: 'monorepo',
             filesystemPath: '/repos/monorepo',
             id: 'checkout-1',

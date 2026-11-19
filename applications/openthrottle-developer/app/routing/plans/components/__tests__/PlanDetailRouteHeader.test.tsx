@@ -23,7 +23,6 @@ vi.mock('@openthrottle/react-router-utils', async (importOriginal) => {
 });
 
 const basePlan: PlanDetailsFragment = {
-  __typename: 'PlanObject',
   afterHooks: [],
   assignee: 'visormatt',
   author: 'author1',
@@ -38,11 +37,12 @@ const basePlan: PlanDetailsFragment = {
   projectRelation: null,
   runConfigJson: '{}',
   runnableTaskCount: 1,
+  scheduledRunAt: null,
+  scheduledRunId: null,
   status: 'IN_PROGRESS',
   summary: null,
   tags: [
     {
-      __typename: 'PlanTagObject',
       confidence: null,
       dimension: 'phase',
       id: 'tag-1',
@@ -59,7 +59,6 @@ const planWithProject: PlanDetailsFragment = {
   project: 'atlas-api',
   projectId: 'project-1',
   projectRelation: {
-    __typename: 'ProjectObject',
     id: 'project-1',
     name: 'atlas-api',
   },

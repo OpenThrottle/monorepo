@@ -16,7 +16,6 @@ const connector = (
   overrides: Partial<McpConnectorFieldsFragment> = {},
 ): McpConnectorFieldsFragment => {
   return {
-    __typename: 'McpConnectorObject',
     authType: 'oauth',
     category: 'productivity',
     description: 'Manage issues and pull requests.',
@@ -35,7 +34,6 @@ const connection = (
   overrides: Partial<McpConnectorConnectionFieldsFragment> = {},
 ): McpConnectorConnectionFieldsFragment => {
   return {
-    __typename: 'McpConnectorConnectionObject',
     authType: 'oauth',
     connectedAt: '2026-01-01T00:00:00.000Z',
     connectorKey: 'github',

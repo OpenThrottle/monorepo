@@ -8,7 +8,6 @@ import { formatPlanAndTasksForPrompt } from '../index.ts';
 
 const plan = (): PlanFragment => {
   return {
-    __typename: 'PlanObject',
     assignee: null,
     author: 'visormatt',
     category: 'improvement',
@@ -31,20 +30,26 @@ const task = (
   overrides: Partial<TaskFragment> & Pick<TaskFragment, 'id'>,
 ): TaskFragment => {
   return {
-    __typename: 'TaskObject',
     assignee: null,
     category: null,
+    completedAt: null,
     createdAt: '2026-01-01T00:00:00.000Z',
     description: null,
+    hookRole: null,
+    hookScope: null,
+    hookSource: null,
+    parentTaskId: null,
     planId: 'plan-1',
     project: null,
     projectId: null,
     requirementsJson: '[]',
+    skillSlug: null,
     sortOrder: 1000,
     status: 'PENDING',
     summary: null,
     title: overrides.id,
     updatedAt: '2026-01-01T00:00:00.000Z',
+    wave: null,
     ...overrides,
   };
 };

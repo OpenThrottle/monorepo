@@ -12,11 +12,11 @@ import {
 
 const taskWithStatus = (status: string): PlanTaskRowFragment => {
   return {
-    __typename: 'TaskObject',
     assignee: null,
     category: 'dev',
     createdAt: '2025-01-01T00:00:00Z',
     description: null,
+    hookRole: null,
     id: `task-${status}`,
     planId: 'plan-1',
     projectRelation: null,
@@ -26,6 +26,7 @@ const taskWithStatus = (status: string): PlanTaskRowFragment => {
     summary: null,
     title: `Task ${status}`,
     updatedAt: '2025-01-02T00:00:00Z',
+    wave: null,
   };
 };
 

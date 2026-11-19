@@ -34,13 +34,13 @@ vi.mock('@openthrottle/react-router-utils', async (importOriginal) => {
 });
 
 const plan: PlanDetailRouteProps['plan'] = {
-  __typename: 'PlanObject',
   afterHooks: [],
   assignee: null,
   author: 'visormatt',
   beforeHooks: [],
   category: 'feature',
   createdAt: '2026-01-01T00:00:00Z',
+  description: null,
   id: 'plan-1',
   jobRunHooksJson: '{"hooks":[]}',
   project: null,
@@ -48,7 +48,10 @@ const plan: PlanDetailRouteProps['plan'] = {
   projectRelation: null,
   runConfigJson: '{}',
   runnableTaskCount: 1,
+  scheduledRunAt: null,
+  scheduledRunId: null,
   status: 'PENDING',
+  summary: null,
   tags: [],
   title: 'Ship the issue-tracker UX',
   updatedAt: '2026-01-02T00:00:00Z',

@@ -11,11 +11,11 @@ const baseTask = (
   overrides: Partial<PlanTaskRowFragment>,
 ): PlanTaskRowFragment => {
   return {
-    __typename: 'TaskObject',
     assignee: null,
     category: null,
     createdAt: '2025-01-01T00:00:00Z',
     description: null,
+    hookRole: null,
     id: 'task-id',
     planId: 'plan-id',
     projectRelation: null,
@@ -25,6 +25,7 @@ const baseTask = (
     summary: null,
     title: 'Task',
     updatedAt: '2025-01-01T00:00:00Z',
+    wave: null,
     ...overrides,
   };
 };

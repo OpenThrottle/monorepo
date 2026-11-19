@@ -8,11 +8,11 @@ import type { PlanTaskCardProps } from '../PlanTaskCard';
 import { PlanTaskCard } from '../PlanTaskCard';
 
 const mockTask: PlanTaskCardProps['task'] = {
-  __typename: 'TaskObject',
   assignee: null,
   category: 'dev',
   createdAt: '2025-01-01T00:00:00Z',
   description: 'Task description text.',
+  hookRole: null,
   id: 'task-1',
   planId: 'plan-1',
   projectRelation: null,
@@ -22,6 +22,7 @@ const mockTask: PlanTaskCardProps['task'] = {
   summary: 'Task summary.',
   title: 'First task',
   updatedAt: '2025-01-02T00:00:00Z',
+  wave: null,
 };
 
 describe('PlanTaskCard Component', () => {

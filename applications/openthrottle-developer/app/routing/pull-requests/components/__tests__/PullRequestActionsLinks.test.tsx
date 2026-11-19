@@ -10,7 +10,6 @@ import type { PullRequestActionsLinksProps } from '../PullRequestActionsLinks';
 import { PullRequestActionsLinks } from '../PullRequestActionsLinks';
 
 const pull: PullRequestDetailFragment = {
-  __typename: 'PullListItemObject',
   author: 'visormatt',
   baseRef: 'main',
   createdAt: '2026-08-01T00:00:00.000Z',

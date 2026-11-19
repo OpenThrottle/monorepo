@@ -31,7 +31,6 @@ vi.mock('@openthrottle/react-router-utils', async (importOriginal) => {
 });
 
 const mockTask: TaskDetailsFragment = {
-  __typename: 'TaskObject',
   afterHooks: [],
   assignee: 'visormatt',
   beforeHooks: [],
@@ -42,7 +41,6 @@ const mockTask: TaskDetailsFragment = {
   id: 'task-1',
   planId: 'plan-1',
   projectRelation: {
-    __typename: 'ProjectObject',
     id: 'proj-1',
     name: 'Test Project',
   },
@@ -53,11 +51,11 @@ const mockTask: TaskDetailsFragment = {
   tags: [],
   title: 'Test Task',
   updatedAt: '2025-01-02T00:00:00Z',
+  wave: null,
 };
 
 const buildPlan = (status: string): PlanDetailsFragment => {
   return {
-    __typename: 'PlanObject',
     afterHooks: [],
     assignee: null,
     author: 'visormatt',
@@ -69,8 +67,11 @@ const buildPlan = (status: string): PlanDetailsFragment => {
     jobRunHooksJson: '{"hooks":[]}',
     project: null,
     projectId: null,
+    projectRelation: null,
     runConfigJson: '{}',
     runnableTaskCount: 1,
+    scheduledRunAt: null,
+    scheduledRunId: null,
     status,
     summary: null,
     tags: [],

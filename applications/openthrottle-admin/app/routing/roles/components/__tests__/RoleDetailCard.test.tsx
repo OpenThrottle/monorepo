@@ -13,13 +13,12 @@ import { RoleDetailCard } from '../RoleDetailCard';
 // rendered `formatDate` output is stable regardless of the test runner's
 // timezone offset.
 const role: RoleDetailCardProps['role'] = {
-  __typename: 'RoleObject',
-  createdAt: new Date(2025, 0, 1),
+  createdAt: new Date(2025, 0, 1).toISOString(),
   description: 'Administrator',
   id: 'role-1',
   name: 'admin',
   permissions: [],
-  updatedAt: new Date(2025, 1, 3),
+  updatedAt: new Date(2025, 1, 3).toISOString(),
 };
 
 const renderCard = (role: RoleDetailCardProps['role']): RenderResult => {

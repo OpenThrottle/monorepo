@@ -1,4 +1,4 @@
-import type { ServerHealthObject } from '@openthrottle/openthrottle-developer-codegen';
+import type { HealthCardFragment } from '@openthrottle/openthrottle-developer-codegen';
 import {
   authMiddleware,
   buildAuthCookie,
@@ -75,7 +75,7 @@ import {
 } from 'react-router';
 
 import type { Route } from '@/app/+types/root';
-import type { UserObject } from '~/__generated__/graphql';
+import type { GetMyUserQuery } from '~/__generated__/graphql';
 import {
   GetMyUserDocument,
   GetRootHealthDocument,
@@ -201,7 +201,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   /** Long-running server work, read in the same request as health; idle on failure. */
   let backgroundActivities: readonly GlobalBackgroundActivity[] =
     NO_BACKGROUND_ACTIVITIES;
-  let serverHealth: ServerHealthObject = {
+  let serverHealth: HealthCardFragment = {
     api: 'unconfigured',
     database: 'unconfigured',
     redis: 'unconfigured',
@@ -215,7 +215,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   const authToken = getAuthTokenFromCookie(cookieHeader);
   const isTokenNull = authToken === null;
 
-  let user: UserObject | null = null;
+  let user: NonNullable<GetMyUserQuery['me']> | null = null;
   /** When false, the `me` query failed; do not treat as logged out for redirects. */
   let userLoadOk: boolean = isTokenNull;
 

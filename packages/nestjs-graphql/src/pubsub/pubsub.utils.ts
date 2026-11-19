@@ -8,7 +8,7 @@ import { PubSub, type PubSubEngine } from 'graphql-subscriptions';
  * Redis seam: when the server scales horizontally, swap the body for a
  * `RedisPubSub` from graphql-redis-subscriptions (Redis is already present for
  * BullMQ — reuse REDIS_HOST/REDIS_PORT). Both implement {@link PubSubEngine}
- * (`asyncIterator(topics)` / `publish(topic, payload)`), so resolvers injecting
+ * (`asyncIterableIterator(topics)` / `publish(topic, payload)`), so resolvers injecting
  * {@link PUB_SUB} need no change.
  *
  * @public

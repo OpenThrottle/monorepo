@@ -147,6 +147,7 @@ export const TIMELINE_FIXTURE_MARKERS: readonly TimelineMarker[] = [
     taskId: 'task-1',
     title: 'Render spans with real overlap stacking',
     url: null,
+    userId: null,
   },
   {
     at: hoursAgo(19.5),
@@ -159,6 +160,7 @@ export const TIMELINE_FIXTURE_MARKERS: readonly TimelineMarker[] = [
     taskId: 'task-2',
     title: 'Add the timeline GraphQL query',
     url: null,
+    userId: null,
   },
   // A tight cluster: three artifacts within minutes, which must bucket.
   {
@@ -172,6 +174,7 @@ export const TIMELINE_FIXTURE_MARKERS: readonly TimelineMarker[] = [
     taskId: 'task-2',
     title: 'feat: add the workstreamTimeline query',
     url: null,
+    userId: null,
   },
   {
     at: hoursAgo(18.03),
@@ -184,6 +187,7 @@ export const TIMELINE_FIXTURE_MARKERS: readonly TimelineMarker[] = [
     taskId: 'task-2',
     title: 'test: cover the derived-end rule',
     url: null,
+    userId: null,
   },
   {
     at: hoursAgo(18.01),
@@ -196,6 +200,7 @@ export const TIMELINE_FIXTURE_MARKERS: readonly TimelineMarker[] = [
     taskId: null,
     title: 'Beta /timeline',
     url: 'https://github.com/OpenThrottle/monorepo/pull/1',
+    userId: null,
   },
   {
     at: hoursAgo(30),
@@ -208,5 +213,6 @@ export const TIMELINE_FIXTURE_MARKERS: readonly TimelineMarker[] = [
     taskId: null,
     title: 'loop/timeline-beta',
     url: null,
+    userId: null,
   },
 ];

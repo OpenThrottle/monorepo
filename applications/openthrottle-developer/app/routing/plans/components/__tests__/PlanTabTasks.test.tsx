@@ -12,11 +12,11 @@ import {
 import { PlanTabTasks } from '../PlanTabTasks';
 
 const mockTask: PlanTaskRowFragment = {
-  __typename: 'TaskObject',
   assignee: null,
   category: 'dev',
   createdAt: '2025-01-01T00:00:00Z',
   description: 'Task description text.',
+  hookRole: null,
   id: 'task-1',
   planId: '0c2720a9-920f-4b16-865a-f803eb444e18',
   projectRelation: null,
@@ -26,6 +26,7 @@ const mockTask: PlanTaskRowFragment = {
   summary: 'Task summary.',
   title: 'First task',
   updatedAt: '2025-01-02T00:00:00Z',
+  wave: null,
 };
 
 function renderTabTasks(tasks: PlanTaskRowFragment[]) {

@@ -15,7 +15,6 @@ import type { PlanTabDetailsProps } from '../PlanTabDetails';
 import { PlanTabDetails } from '../PlanTabDetails';
 
 const mockPlan: PlanDetailsFragment = {
-  __typename: 'PlanObject',
   afterHooks: [],
   assignee: 'visormatt',
   author: 'visormatt',
@@ -25,14 +24,16 @@ const mockPlan: PlanDetailsFragment = {
   description: 'Plan description',
   id: '0c2720a9-920f-4b16-865a-f803eb444e18',
   jobRunHooksJson: '[]',
+  project: null,
   projectId: '11111111-1111-4111-8111-111111111111',
   projectRelation: {
-    __typename: 'ProjectObject',
     id: '11111111-1111-4111-8111-111111111111',
     name: 'Test Project',
   },
   runConfigJson: '{}',
   runnableTaskCount: 1,
+  scheduledRunAt: null,
+  scheduledRunId: null,
   status: 'IN_PROGRESS',
   summary: 'Plan summary',
   tags: [],

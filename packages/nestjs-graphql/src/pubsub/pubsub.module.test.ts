@@ -8,11 +8,11 @@ describe('createPubSub', () => {
     expect(createPubSub()).toBeInstanceOf(PubSub);
   });
 
-  it('returns an engine exposing the publish/asyncIterator contract', () => {
+  it('returns an engine exposing the publish/asyncIterableIterator contract', () => {
     const engine = createPubSub();
 
     expect(engine.publish).toBeInstanceOf(Function);
-    expect(engine.asyncIterator).toBeInstanceOf(Function);
+    expect(engine.asyncIterableIterator).toBeInstanceOf(Function);
   });
 
   it('builds a fresh instance per call (factory is not a singleton itself)', () => {

@@ -9,22 +9,20 @@ import { UsersTable } from '../UsersTable';
 
 const mockUsers: UsersTableProps['users'] = [
   {
-    __typename: 'UserObject',
-    createdAt: new Date('2025-01-01'),
+    createdAt: new Date('2025-01-01').toISOString(),
     disabledAt: null,
     email: 'matt@example.com',
     githubUsername: 'visormatt',
     id: 'user-1',
-    updatedAt: new Date('2025-01-02'),
+    updatedAt: new Date('2025-01-02').toISOString(),
   },
   {
-    __typename: 'UserObject',
-    createdAt: new Date('2025-01-01'),
-    disabledAt: new Date('2025-02-01'),
+    createdAt: new Date('2025-01-01').toISOString(),
+    disabledAt: new Date('2025-02-01').toISOString(),
     email: null,
     githubUsername: 'disabledUser',
     id: 'user-2',
-    updatedAt: new Date('2025-01-02'),
+    updatedAt: new Date('2025-01-02').toISOString(),
   },
 ];
 

@@ -10,7 +10,7 @@ import type { QueueJobLogsService } from './queue-job-logs.service.ts';
 const iterator = { next: vi.fn(), return: vi.fn(), throw: vi.fn() };
 
 const makeResolver = (): {
-  asyncIterator: ReturnType<typeof vi.fn>;
+  asyncIterableIterator: ReturnType<typeof vi.fn>;
   read: ReturnType<typeof vi.fn>;
   resolver: QueueJobLogsResolver;
 } => {
@@ -19,13 +19,13 @@ const makeResolver = (): {
     hasMore: false,
     nextCursor: null,
   });
-  const asyncIterator = vi.fn().mockReturnValue(iterator);
+  const asyncIterableIterator = vi.fn().mockReturnValue(iterator);
 
   const service = createMock<QueueJobLogsService>({ read });
-  const pubSub = createMock<PubSubEngine>({ asyncIterator });
+  const pubSub = createMock<PubSubEngine>({ asyncIterableIterator });
 
   return {
-    asyncIterator,
+    asyncIterableIterator,
     read,
     resolver: new QueueJobLogsResolver(service, pubSub),
   };
@@ -49,20 +49,20 @@ describe('QueueJobLogsResolver', () => {
   });
 
   it('queueJobLogTail rejects an unauthenticated connection', () => {
-    const { asyncIterator, resolver } = makeResolver();
+    const { asyncIterableIterator, resolver } = makeResolver();
 
     expect(() => resolver.queueJobLogTail('plans-queue', 'job-1', {})).toThrow(
       ForbiddenException,
     );
-    expect(asyncIterator).not.toHaveBeenCalled();
+    expect(asyncIterableIterator).not.toHaveBeenCalled();
   });
 
   it('queueJobLogTail subscribes to the (queue, job) topic when authenticated', () => {
-    const { asyncIterator, resolver } = makeResolver();
+    const { asyncIterableIterator, resolver } = makeResolver();
 
     resolver.queueJobLogTail('plans-queue', 'job-1', { userId: 'user-42' });
 
-    expect(asyncIterator).toHaveBeenCalledWith(
+    expect(asyncIterableIterator).toHaveBeenCalledWith(
       queueJobLogTopic('plans-queue', 'job-1'),
     );
   });

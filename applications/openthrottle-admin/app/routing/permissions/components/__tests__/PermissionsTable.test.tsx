@@ -9,13 +9,11 @@ import { PermissionsTable } from '../PermissionsTable';
 
 const mockPermissions: PermissionsTableProps['permissions'] = [
   {
-    __typename: 'PermissionObject',
     description: 'Read users',
     id: 'perm-1',
     name: 'users:read',
   },
   {
-    __typename: 'PermissionObject',
     description: null,
     id: 'perm-2',
     name: 'users:write',

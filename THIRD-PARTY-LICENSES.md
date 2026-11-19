@@ -13,13 +13,13 @@ Platform-specific prebuilt binaries (packages that declare `os`/`cpu`, e.g.
 `@rollup/rollup-linux-x64-gnu`, `fsevents`) are omitted: which ones install depends on
 the host OS, and each shares the license of the cross-platform toolchain already listed.
 
-**2126** third-party packages.
+**2130** third-party packages.
 
 ## License summary
 
 | License | Packages |
 | --- | --- |
-| MIT | 1835 |
+| MIT | 1839 |
 | Apache-2.0 | 95 |
 | ISC | 79 |
 | BSD-3-Clause | 55 |
@@ -75,16 +75,16 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@apollo/utils.withrequired` | 3.0.0 | MIT | [Apollo](https://github.com/apollographql/apollo-utils#readme) |
 | `@ardatan/relay-compiler` | 13.0.3 | MIT | [source](https://relay.dev) |
 | `@as-integrations/express5` | 1.1.2 | MIT | [Apollo](https://github.com/apollo-server-integrations/apollo-server-integration-express5) |
-| `@babel/code-frame` | 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-code-frame) |
-| `@babel/compat-data` | 7.29.7 | MIT | [The Babel Team](https://github.com/babel/babel#readme) |
-| `@babel/core` | 7.29.13 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-core) |
-| `@babel/generator` | 7.29.14 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-generator) |
+| `@babel/code-frame` | 7.29.7, 8.0.6 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-code-frame) |
+| `@babel/compat-data` | 7.29.7, 8.1.2 | MIT | [The Babel Team](https://github.com/babel/babel#readme) |
+| `@babel/core` | 7.29.13, 8.1.2 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-core) |
+| `@babel/generator` | 7.29.14, 8.1.2 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-generator) |
 | `@babel/helper-annotate-as-pure` | 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-helper-annotate-as-pure) |
-| `@babel/helper-compilation-targets` | 7.29.13 | MIT | [The Babel Team](https://github.com/babel/babel#readme) |
+| `@babel/helper-compilation-targets` | 7.29.13, 8.0.7 | MIT | [The Babel Team](https://github.com/babel/babel#readme) |
 | `@babel/helper-create-class-features-plugin` | 7.29.13 | MIT | [The Babel Team](https://github.com/babel/babel#readme) |
 | `@babel/helper-create-regexp-features-plugin` | 7.29.14 | MIT | [The Babel Team](https://github.com/babel/babel#readme) |
 | `@babel/helper-define-polyfill-provider` | 0.6.8 | MIT | [source](https://github.com/babel/babel-polyfills#readme) |
-| `@babel/helper-globals` | 7.29.7 | MIT | [The Babel Team](https://github.com/babel/babel#readme) |
+| `@babel/helper-globals` | 7.29.7, 8.0.6 | MIT | [The Babel Team](https://github.com/babel/babel#readme) |
 | `@babel/helper-member-expression-to-functions` | 7.29.14 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-helper-member-expression-to-functions) |
 | `@babel/helper-module-imports` | 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-helper-module-imports) |
 | `@babel/helper-module-transforms` | 7.29.14 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-helper-module-transforms) |
@@ -93,12 +93,12 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@babel/helper-remap-async-to-generator` | 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-helper-remap-async-to-generator) |
 | `@babel/helper-replace-supers` | 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-helper-replace-supers) |
 | `@babel/helper-skip-transparent-expression-wrappers` | 7.29.13 | MIT | [The Babel Team](https://github.com/babel/babel#readme) |
-| `@babel/helper-string-parser` | 7.29.14 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-helper-string-parser) |
-| `@babel/helper-validator-identifier` | 7.29.7 | MIT | [The Babel Team](https://github.com/babel/babel#readme) |
-| `@babel/helper-validator-option` | 7.29.7 | MIT | [The Babel Team](https://github.com/babel/babel#readme) |
+| `@babel/helper-string-parser` | 7.29.14, 8.1.2 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-helper-string-parser) |
+| `@babel/helper-validator-identifier` | 7.29.7, 8.0.6 | MIT | [The Babel Team](https://github.com/babel/babel#readme) |
+| `@babel/helper-validator-option` | 7.29.7, 8.0.0 | MIT | [The Babel Team](https://github.com/babel/babel#readme) |
 | `@babel/helper-wrap-function` | 7.29.14 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-helper-wrap-function) |
-| `@babel/helpers` | 7.29.14 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-helpers) |
-| `@babel/parser` | 7.29.14 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-parser) |
+| `@babel/helpers` | 7.29.14, 8.1.2 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-helpers) |
+| `@babel/parser` | 7.29.14, 8.1.2 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-parser) |
 | `@babel/plugin-bugfix-firefox-class-in-computed-class-key` | 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-plugin-bugfix-firefox-class-in-computed-class-key) |
 | `@babel/plugin-bugfix-safari-class-field-initializer-scope` | 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-plugin-bugfix-safari-class-field-initializer-scope) |
 | `@babel/plugin-bugfix-safari-id-destructuring-collision-in-function-expression` | 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-plugin-bugfix-safari-id-destructuring-collision-in-function-expression) |
@@ -189,9 +189,9 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@babel/preset-react` | 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-preset-react) |
 | `@babel/preset-typescript` | 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-preset-typescript) |
 | `@babel/runtime` | 7.29.14, 8.1.2 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-runtime) |
-| `@babel/template` | 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-template) |
-| `@babel/traverse` | 7.29.14 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-traverse) |
-| `@babel/types` | 7.29.14 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-types) |
+| `@babel/template` | 7.29.7, 8.1.2 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-template) |
+| `@babel/traverse` | 7.29.14, 8.1.2 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-traverse) |
+| `@babel/types` | 7.29.14, 8.1.2 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-types) |
 | `@bcoe/v8-coverage` | 1.0.2 | MIT | [Charles Samborski](https://github.com/bcoe/v8-coverage#readme) |
 | `@bkrem/react-transition-group` | 1.3.5 | BSD-3-Clause | [source](https://github.com/bkrem/react-transition-group#readme) |
 | `@borewit/text-codec` | 0.2.3 | MIT | [Borewit](https://github.com/Borewit/text-codec#readme) |
@@ -270,43 +270,44 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@google-cloud/projectify` | 4.0.0 | Apache-2.0 | [Google Inc.](https://github.com/googleapis/nodejs-projectify#readme) |
 | `@google-cloud/promisify` | 4.0.0 | Apache-2.0 | [Google Inc.](https://github.com/googleapis/nodejs-promisify#readme) |
 | `@google-cloud/storage` | 7.19.0 | Apache-2.0 | [Google Inc.](https://github.com/googleapis/nodejs-storage#readme) |
-| `@graphql-codegen/add` | 6.0.1 | MIT | [source](https://github.com/dotansimha/graphql-code-generator#readme) |
-| `@graphql-codegen/cli` | 6.3.1 | MIT | [Dotan Simha](https://github.com/dotansimha/graphql-code-generator#readme) |
-| `@graphql-codegen/client-preset` | 5.3.0 | MIT | [source](https://github.com/dotansimha/graphql-code-generator#readme) |
-| `@graphql-codegen/core` | 5.0.2 | MIT | [Dotan Simha](https://github.com/dotansimha/graphql-codegen#readme) |
-| `@graphql-codegen/gql-tag-operations` | 5.2.0 | MIT | [source](https://github.com/dotansimha/graphql-code-generator#readme) |
-| `@graphql-codegen/plugin-helpers` | 6.3.0 | MIT | [source](https://github.com/dotansimha/graphql-code-generator#readme) |
-| `@graphql-codegen/schema-ast` | 5.0.2 | MIT | [source](https://github.com/dotansimha/graphql-code-generator#readme) |
-| `@graphql-codegen/typed-document-node` | 6.1.8 | MIT | [source](https://github.com/dotansimha/graphql-code-generator#readme) |
-| `@graphql-codegen/typescript` | 5.0.10 | MIT | [source](https://github.com/dotansimha/graphql-code-generator#readme) |
-| `@graphql-codegen/typescript-operations` | 5.1.0 | MIT | [source](https://github.com/dotansimha/graphql-code-generator#readme) |
-| `@graphql-codegen/visitor-plugin-common` | 6.3.0 | MIT | [source](https://github.com/dotansimha/graphql-code-generator#readme) |
+| `@graphql-codegen/add` | 8.0.0 | MIT | [source](https://github.com/dotansimha/graphql-code-generator#readme) |
+| `@graphql-codegen/cli` | 8.0.0 | MIT | [Dotan Simha](https://github.com/dotansimha/graphql-code-generator#readme) |
+| `@graphql-codegen/client-preset` | 7.0.0 | MIT | [source](https://github.com/dotansimha/graphql-code-generator#readme) |
+| `@graphql-codegen/core` | 7.0.0 | MIT | [Dotan Simha](https://github.com/dotansimha/graphql-codegen#readme) |
+| `@graphql-codegen/gql-tag-operations` | 7.0.0 | MIT | [source](https://github.com/dotansimha/graphql-code-generator#readme) |
+| `@graphql-codegen/plugin-helpers` | 6.3.0, 8.0.0 | MIT | [source](https://github.com/dotansimha/graphql-code-generator#readme) |
+| `@graphql-codegen/schema-ast` | 5.0.2, 7.0.0 | MIT | [source](https://github.com/dotansimha/graphql-code-generator#readme) |
+| `@graphql-codegen/typed-document-node` | 8.0.0 | MIT | [source](https://github.com/dotansimha/graphql-code-generator#readme) |
+| `@graphql-codegen/typescript` | 7.0.1 | MIT | [source](https://github.com/dotansimha/graphql-code-generator#readme) |
+| `@graphql-codegen/typescript-operations` | 7.0.1 | MIT | [source](https://github.com/dotansimha/graphql-code-generator#readme) |
+| `@graphql-codegen/visitor-plugin-common` | 6.3.0, 8.0.2 | MIT | [source](https://github.com/dotansimha/graphql-code-generator#readme) |
 | `@graphql-eslint/eslint-plugin` | 4.4.2 | MIT | [Dotan Simha](https://github.com/graphql-hive/graphql-eslint#readme) |
 | `@graphql-hive/signal` | 2.1.0 | MIT | [The Guild](https://github.com/graphql-hive/gateway#readme) |
 | `@graphql-inspector/core` | 8.0.1 | MIT | [Kamil Kisiela](https://github.com/graphql-hive/graphql-inspector#readme) |
-| `@graphql-tools/apollo-engine-loader` | 8.0.34 | MIT | [Dotan Simha](https://github.com/ardatan/graphql-tools#readme) |
+| `@graphql-tools/apollo-engine-loader` | 9.0.9 | MIT | [Dotan Simha](https://github.com/ardatan/graphql-tools#readme) |
 | `@graphql-tools/batch-execute` | 10.3.2 | MIT | [source](https://github.com/graphql-hive/gateway#readme) |
-| `@graphql-tools/code-file-loader` | 8.1.43 | MIT | [Dotan Simha](https://github.com/ardatan/graphql-tools#readme) |
+| `@graphql-tools/code-file-loader` | 8.1.43, 9.1.2 | MIT | [Dotan Simha](https://github.com/ardatan/graphql-tools#readme) |
 | `@graphql-tools/delegate` | 12.3.3 | MIT | [source](https://github.com/graphql-hive/gateway#readme) |
-| `@graphql-tools/documents` | 1.0.1 | MIT | [source](https://github.com/ardatan/graphql-tools#readme) |
+| `@graphql-tools/documents` | 2.0.0 | MIT | [source](https://github.com/ardatan/graphql-tools#readme) |
 | `@graphql-tools/executor` | 2.1.0 | MIT | [Saihajpreet Singh](https://github.com/ardatan/graphql-tools#readme) |
 | `@graphql-tools/executor-common` | 1.1.1 | MIT | [Arda TANRIKULU](https://github.com/graphql-hive/gateway#readme) |
 | `@graphql-tools/executor-graphql-ws` | 3.2.1 | MIT | [Arda TANRIKULU](https://github.com/graphql-hive/gateway#readme) |
 | `@graphql-tools/executor-http` | 3.6.1 | MIT | [Arda TANRIKULU](https://github.com/graphql-hive/gateway#readme) |
-| `@graphql-tools/executor-legacy-ws` | 1.1.39 | MIT | [Arda TANRIKULU](https://github.com/ardatan/graphql-tools#readme) |
-| `@graphql-tools/git-loader` | 8.0.40 | MIT | [Dotan Simha](https://github.com/ardatan/graphql-tools#readme) |
-| `@graphql-tools/github-loader` | 9.1.6 | MIT | [Dotan Simha](https://github.com/ardatan/graphql-tools#readme) |
-| `@graphql-tools/graphql-file-loader` | 8.1.24 | MIT | [Dotan Simha](https://github.com/ardatan/graphql-tools#readme) |
-| `@graphql-tools/graphql-tag-pluck` | 8.3.35, 8.3.41 | MIT | [source](https://github.com/ardatan/graphql-tools#readme) |
-| `@graphql-tools/import` | 7.2.4 | MIT | [Dotan Simha](https://github.com/ardatan/graphql-tools#readme) |
-| `@graphql-tools/json-file-loader` | 8.0.38 | MIT | [Dotan Simha](https://github.com/ardatan/graphql-tools#readme) |
-| `@graphql-tools/load` | 8.1.21 | MIT | [Dotan Simha](https://github.com/ardatan/graphql-tools#readme) |
-| `@graphql-tools/merge` | 9.2.4, 9.2.8 | MIT | [Dotan Simha](https://github.com/ardatan/graphql-tools#readme) |
-| `@graphql-tools/optimize` | 2.0.1 | MIT | [source](https://github.com/ardatan/graphql-tools#readme) |
-| `@graphql-tools/relay-operation-optimizer` | 7.1.14 | MIT | [Laurin Quast](https://github.com/ardatan/graphql-tools#readme) |
-| `@graphql-tools/schema` | 10.1.1, 10.1.5 | MIT | [source](https://github.com/ardatan/graphql-tools#readme) |
-| `@graphql-tools/url-loader` | 9.1.14 | MIT | [Dotan Simha](https://github.com/ardatan/graphql-tools#readme) |
-| `@graphql-tools/utils` | 10.11.0, 11.2.2, 12.0.1, 12.1.0 | MIT | [Dotan Simha](https://github.com/ardatan/graphql-tools#readme) |
+| `@graphql-tools/executor-legacy-ws` | 1.1.39, 2.0.9 | MIT | [Arda TANRIKULU](https://github.com/ardatan/graphql-tools#readme) |
+| `@graphql-tools/git-loader` | 9.0.10 | MIT | [Dotan Simha](https://github.com/ardatan/graphql-tools#readme) |
+| `@graphql-tools/github-loader` | 10.0.10 | MIT | [Dotan Simha](https://github.com/ardatan/graphql-tools#readme) |
+| `@graphql-tools/graphql-file-loader` | 8.1.24, 9.1.2 | MIT | [Dotan Simha](https://github.com/ardatan/graphql-tools#readme) |
+| `@graphql-tools/graphql-tag-pluck` | 8.3.41, 9.0.10 | MIT | [source](https://github.com/ardatan/graphql-tools#readme) |
+| `@graphql-tools/import` | 7.2.4, 8.0.9 | MIT | [Dotan Simha](https://github.com/ardatan/graphql-tools#readme) |
+| `@graphql-tools/json-file-loader` | 8.0.38, 9.0.9 | MIT | [Dotan Simha](https://github.com/ardatan/graphql-tools#readme) |
+| `@graphql-tools/load` | 8.1.21, 9.1.3 | MIT | [Dotan Simha](https://github.com/ardatan/graphql-tools#readme) |
+| `@graphql-tools/load-files` | 8.0.9 | MIT | [Dotan Simha](https://github.com/ardatan/graphql-tools#readme) |
+| `@graphql-tools/merge` | 10.0.9, 9.2.4, 9.2.8 | MIT | [Dotan Simha](https://github.com/ardatan/graphql-tools#readme) |
+| `@graphql-tools/optimize` | 2.0.1, 3.0.0 | MIT | [source](https://github.com/ardatan/graphql-tools#readme) |
+| `@graphql-tools/relay-operation-optimizer` | 7.1.14, 8.0.9 | MIT | [Laurin Quast](https://github.com/ardatan/graphql-tools#readme) |
+| `@graphql-tools/schema` | 10.1.1, 10.1.5, 11.0.9 | MIT | [source](https://github.com/ardatan/graphql-tools#readme) |
+| `@graphql-tools/url-loader` | 10.0.9, 9.1.14 | MIT | [Dotan Simha](https://github.com/ardatan/graphql-tools#readme) |
+| `@graphql-tools/utils` | 10.11.0, 11.2.2, 12.0.1, 12.1.0, 13.2.2 | MIT | [Dotan Simha](https://github.com/ardatan/graphql-tools#readme) |
 | `@graphql-tools/wrap` | 11.2.5 | MIT | [source](https://github.com/graphql-hive/gateway#readme) |
 | `@graphql-typed-document-node/core` | 3.2.0 | MIT | [Dotan Simha](https://github.com/dotansimha/graphql-typed-document-node#readme) |
 | `@gwhitney/detect-indent` | 7.0.1 | MIT | [Sindre Sorhus](https://github.com/gwhitney/detect-indent#readme) |
@@ -327,22 +328,22 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@humanwhocodes/retry` | 0.4.3 | Apache-2.0 | [Nicholas C. Zaks](https://github.com/humanwhocodes/retry#readme) |
 | `@ibm-cloud/watsonx-ai` | 1.7.15 | Apache-2.0 | [IBM Corp.](https://github.com/IBM/watsonx-ai-node-sdk#readme) |
 | `@img/colour` | 1.1.0 | MIT | [source](https://github.com/lovell/colour#readme) |
-| `@inquirer/ansi` | 1.0.2, 2.1.0 | MIT | [Simon Boudrias](https://github.com/SBoudrias/Inquirer.js/blob/HEAD/packages/ansi/README.md) |
-| `@inquirer/checkbox` | 4.3.2, 5.3.0 | MIT | [Simon Boudrias](https://github.com/SBoudrias/Inquirer.js/blob/HEAD/packages/checkbox/README.md) |
-| `@inquirer/confirm` | 5.1.21, 6.4.0 | MIT | [Simon Boudrias](https://github.com/SBoudrias/Inquirer.js/blob/HEAD/packages/confirm/README.md) |
-| `@inquirer/core` | 10.3.2, 12.1.0 | MIT | [Simon Boudrias](https://github.com/SBoudrias/Inquirer.js/blob/HEAD/packages/core/README.md) |
-| `@inquirer/editor` | 4.2.23, 5.4.0 | MIT | [Simon Boudrias](https://github.com/SBoudrias/Inquirer.js/blob/HEAD/packages/editor/README.md) |
-| `@inquirer/expand` | 4.0.23, 5.2.0 | MIT | [Simon Boudrias](https://github.com/SBoudrias/Inquirer.js/blob/HEAD/packages/expand/README.md) |
-| `@inquirer/external-editor` | 1.0.3, 3.1.0 | MIT | [Simon Boudrias](https://github.com/SBoudrias/Inquirer.js/blob/HEAD/packages/external-editor/README.md) |
-| `@inquirer/figures` | 1.0.15, 2.1.0 | MIT | [Simon Boudrias](https://github.com/SBoudrias/Inquirer.js#readme) |
-| `@inquirer/input` | 4.3.1, 5.2.0 | MIT | [Simon Boudrias](https://github.com/SBoudrias/Inquirer.js/blob/HEAD/packages/input/README.md) |
-| `@inquirer/number` | 3.0.23, 4.3.0 | MIT | [Simon Boudrias](https://github.com/SBoudrias/Inquirer.js/blob/HEAD/packages/number/README.md) |
-| `@inquirer/password` | 4.0.23, 5.3.0 | MIT | [Simon Boudrias](https://github.com/SBoudrias/Inquirer.js/blob/HEAD/packages/password/README.md) |
-| `@inquirer/prompts` | 7.10.1, 8.7.2, 8.7.5 | MIT | [Simon Boudrias](https://github.com/SBoudrias/Inquirer.js/blob/HEAD/packages/prompts/README.md) |
-| `@inquirer/rawlist` | 4.1.11, 5.4.0 | MIT | [Simon Boudrias](https://github.com/SBoudrias/Inquirer.js/blob/HEAD/packages/rawlist/README.md) |
-| `@inquirer/search` | 3.2.2, 4.4.0 | MIT | [Simon Boudrias](https://github.com/SBoudrias/Inquirer.js/blob/HEAD/packages/search/README.md) |
-| `@inquirer/select` | 4.4.2, 5.3.0 | MIT | [Simon Boudrias](https://github.com/SBoudrias/Inquirer.js/blob/HEAD/packages/select/README.md) |
-| `@inquirer/type` | 3.0.10, 4.3.0 | MIT | [Simon Boudrias](https://github.com/SBoudrias/Inquirer.js#readme) |
+| `@inquirer/ansi` | 2.1.0 | MIT | [Simon Boudrias](https://github.com/SBoudrias/Inquirer.js/blob/HEAD/packages/ansi/README.md) |
+| `@inquirer/checkbox` | 5.3.0 | MIT | [Simon Boudrias](https://github.com/SBoudrias/Inquirer.js/blob/HEAD/packages/checkbox/README.md) |
+| `@inquirer/confirm` | 6.4.0 | MIT | [Simon Boudrias](https://github.com/SBoudrias/Inquirer.js/blob/HEAD/packages/confirm/README.md) |
+| `@inquirer/core` | 12.1.0 | MIT | [Simon Boudrias](https://github.com/SBoudrias/Inquirer.js/blob/HEAD/packages/core/README.md) |
+| `@inquirer/editor` | 5.4.0 | MIT | [Simon Boudrias](https://github.com/SBoudrias/Inquirer.js/blob/HEAD/packages/editor/README.md) |
+| `@inquirer/expand` | 5.2.0 | MIT | [Simon Boudrias](https://github.com/SBoudrias/Inquirer.js/blob/HEAD/packages/expand/README.md) |
+| `@inquirer/external-editor` | 3.1.0 | MIT | [Simon Boudrias](https://github.com/SBoudrias/Inquirer.js/blob/HEAD/packages/external-editor/README.md) |
+| `@inquirer/figures` | 2.1.0 | MIT | [Simon Boudrias](https://github.com/SBoudrias/Inquirer.js#readme) |
+| `@inquirer/input` | 5.2.0 | MIT | [Simon Boudrias](https://github.com/SBoudrias/Inquirer.js/blob/HEAD/packages/input/README.md) |
+| `@inquirer/number` | 4.3.0 | MIT | [Simon Boudrias](https://github.com/SBoudrias/Inquirer.js/blob/HEAD/packages/number/README.md) |
+| `@inquirer/password` | 5.3.0 | MIT | [Simon Boudrias](https://github.com/SBoudrias/Inquirer.js/blob/HEAD/packages/password/README.md) |
+| `@inquirer/prompts` | 8.7.2, 8.7.5 | MIT | [Simon Boudrias](https://github.com/SBoudrias/Inquirer.js/blob/HEAD/packages/prompts/README.md) |
+| `@inquirer/rawlist` | 5.4.0 | MIT | [Simon Boudrias](https://github.com/SBoudrias/Inquirer.js/blob/HEAD/packages/rawlist/README.md) |
+| `@inquirer/search` | 4.4.0 | MIT | [Simon Boudrias](https://github.com/SBoudrias/Inquirer.js/blob/HEAD/packages/search/README.md) |
+| `@inquirer/select` | 5.3.0 | MIT | [Simon Boudrias](https://github.com/SBoudrias/Inquirer.js/blob/HEAD/packages/select/README.md) |
+| `@inquirer/type` | 4.3.0 | MIT | [Simon Boudrias](https://github.com/SBoudrias/Inquirer.js#readme) |
 | `@ioredis/commands` | 1.10.0 | MIT | [Zihua Li](https://github.com/ioredis/commands) |
 | `@isaacs/cliui` | 8.0.2 | ISC | [Ben Coe](https://github.com/yargs/cliui#readme) |
 | `@isaacs/fs-minipass` | 4.0.1 | ISC | [Isaac Z. Schlueter](https://github.com/npm/fs-minipass#readme) |
@@ -366,7 +367,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@jest/transform` | 30.5.2 | MIT | [source](https://github.com/jestjs/jest#readme) |
 | `@jest/types` | 30.5.1 | MIT | [source](https://github.com/jestjs/jest#readme) |
 | `@joshwooding/vite-plugin-react-docgen-typescript` | 0.7.0 | MIT | [Josh Wooding](https://github.com/joshwooding/vite-plugin-react-docgen-typescript#readme) |
-| `@jridgewell/gen-mapping` | 0.3.13 | MIT | [Justin Ridgewell](https://github.com/jridgewell/sourcemaps/tree/main/packages/gen-mapping) |
+| `@jridgewell/gen-mapping` | 0.3.13, 0.4.0-beta.0 | MIT | [Justin Ridgewell](https://github.com/jridgewell/sourcemaps/tree/main/packages/gen-mapping) |
 | `@jridgewell/remapping` | 2.3.5 | MIT | [Justin Ridgewell](https://github.com/jridgewell/sourcemaps/tree/main/packages/remapping) |
 | `@jridgewell/resolve-uri` | 3.1.2 | MIT | [Justin Ridgewell](https://github.com/jridgewell/resolve-uri#readme) |
 | `@jridgewell/source-map` | 0.3.11 | MIT | [Justin Ridgewell](https://github.com/jridgewell/sourcemaps/tree/main/packages/source-map) |
@@ -684,6 +685,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@types/express` | 5.0.6 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/express) |
 | `@types/express-serve-static-core` | 5.1.2 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/express-serve-static-core) |
 | `@types/fs-extra` | 9.0.13 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/fs-extra) |
+| `@types/gensync` | 1.0.5 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/gensync) |
 | `@types/google.maps` | 3.66.10 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/google.maps) |
 | `@types/gtag.js` | 0.0.20 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/gtag.js) |
 | `@types/hast` | 3.0.5 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/hast) |
@@ -693,6 +695,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@types/istanbul-lib-coverage` | 2.0.6 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/istanbul-lib-coverage) |
 | `@types/istanbul-lib-report` | 3.0.3 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/istanbul-lib-report) |
 | `@types/istanbul-reports` | 3.0.4 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/istanbul-reports) |
+| `@types/jsesc` | 2.5.1 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped#readme) |
 | `@types/json-schema` | 7.0.15 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/json-schema) |
 | `@types/jsonwebtoken` | 9.0.10 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/jsonwebtoken) |
 | `@types/keyv` | 3.1.4 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/keyv) |
@@ -861,7 +864,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `asynckit` | 0.4.0 | MIT | [Alex Indigo](https://github.com/alexindigo/asynckit#readme) |
 | `at-least-node` | 1.0.0 | ISC | [Ryan Zimmerman](https://github.com/RyanZim/at-least-node#readme) |
 | `atomically` | 2.1.1 | MIT | [source](https://github.com/fabiospampinato/atomically#readme) |
-| `auto-bind` | 4.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/auto-bind#readme) |
+| `auto-bind` | 4.0.0, 5.0.1 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/auto-bind#readme) |
 | `available-typed-arrays` | 1.0.7 | MIT | [Jordan Harband](https://github.com/inspect-js/available-typed-arrays#readme) |
 | `aws4` | 1.13.2 | MIT | [Michael Hart](https://github.com/mhart/aws4#readme) |
 | `axe-core` | 4.14.0 | MPL-2.0 | [source](https://www.deque.com/axe/) |
@@ -933,8 +936,8 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `chai` | 5.3.3, 6.3.0 | MIT | [Jake Luer](http://chaijs.com) |
 | `chain-function` | 1.0.1 | MIT | [jquense](https://github.com/jquense/chain-function#readme) |
 | `chalk` | 4.1.2, 5.6.2 | MIT | [source](https://github.com/chalk/chalk#readme) |
-| `change-case` | 4.1.2 | MIT | [Blake Embrey](https://github.com/blakeembrey/change-case/tree/master/packages/camel-case#readme) |
-| `change-case-all` | 1.0.15 | MIT | [Jonas Gnioui](https://github.com/btxtiger/change-case-all#readme) |
+| `change-case` | 4.1.2, 5.4.4 | MIT | [Blake Embrey](https://github.com/blakeembrey/change-case/tree/master/packages/change-case#readme) |
+| `change-case-all` | 1.0.15, 2.2.0 | MIT | [Jonas Gnioui](https://github.com/jonaaix/change-case-all#readme) |
 | `char-regex` | 1.0.2 | MIT | [Richie Bendall](https://github.com/Richienb/char-regex#readme) |
 | `character-entities` | 2.0.2 | MIT | [Titus Wormer](https://github.com/wooorm/character-entities#readme) |
 | `character-entities-html4` | 2.1.0 | MIT | [Titus Wormer](https://github.com/wooorm/character-entities-html4#readme) |
@@ -1045,7 +1048,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `date-fns` | 4.4.0 | MIT | [source](https://github.com/date-fns/date-fns#readme) |
 | `dayjs` | 1.11.21 | MIT | [iamkun](https://day.js.org) |
 | `de-indent` | 1.0.2 | MIT | [Evan You](https://github.com/yyx990803/de-indent#readme) |
-| `debounce` | 2.2.0 | MIT | [source](https://github.com/sindresorhus/debounce#readme) |
+| `debounce` | 3.0.0 | MIT | [source](https://github.com/sindresorhus/debounce#readme) |
 | `debug` | 2.6.9, 3.2.7, 4.3.4, 4.4.3 | MIT | [Josh Junon](https://github.com/debug-js/debug#readme) |
 | `decimal.js` | 10.6.0 | MIT | [Michael Mclaughlin](https://github.com/MikeMcl/decimal.js#readme) |
 | `decimal.js-light` | 2.5.1 | MIT | [Michael Mclaughlin](https://github.com/MikeMcl/decimal.js-light#readme) |
@@ -1068,7 +1071,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `dependency-graph` | 1.0.0 | MIT | [Jim Riecken](https://github.com/jriecken/dependency-graph#readme) |
 | `dequal` | 2.0.3 | MIT | [Luke Edwards](https://github.com/lukeed/dequal#readme) |
 | `destroy` | 1.2.0 | MIT | [Jonathan Ong](https://github.com/stream-utils/destroy#readme) |
-| `detect-indent` | 6.1.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/detect-indent#readme) |
+| `detect-indent` | 7.0.2 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/detect-indent#readme) |
 | `detect-libc` | 2.1.2 | Apache-2.0 | [Lovell Fuller](https://github.com/lovell/detect-libc#readme) |
 | `detect-newline` | 3.1.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/detect-newline#readme) |
 | `detect-node` | 2.1.0 | MIT | [Ilya Kantor](https://github.com/iliakan/detect-node) |
@@ -1227,6 +1230,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `flat-cache` | 6.1.23 | MIT | [Jared Wray](https://github.com/jaredwray/cacheable#readme) |
 | `flatbuffers` | 25.9.23 | Apache-2.0 | [The FlatBuffers project](https://google.github.io/flatbuffers/) |
 | `flatted` | 3.4.4 | ISC | [Andrea Giammarchi](https://github.com/WebReflection/flatted#readme) |
+| `flru` | 1.0.2 | MIT | [Luke Edwards](https://github.com/lukeed/flru#readme) |
 | `fn.name` | 1.1.0 | MIT | [Arnout Kazemier](https://github.com/3rd-Eden/fn.name) |
 | `follow-redirects` | 1.16.3 | MIT | [Ruben Verborgh](https://github.com/follow-redirects/follow-redirects) |
 | `for-each` | 0.3.5 | MIT | [Raynos](https://github.com/Raynos/for-each) |
@@ -1280,9 +1284,9 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `graphlib` | 2.1.8 | MIT | [Chris Pettitt](https://github.com/dagrejs/graphlib#readme) |
 | `graphql` | 16.14.2 | MIT | [source](https://github.com/graphql/graphql-js) |
 | `graphql-codegen-typescript-validation-schema` | 0.19.0 | MIT | codehex |
-| `graphql-config` | 5.1.8 | MIT | [Kamil Kisiela](https://graphql-config.com) |
+| `graphql-config` | 5.1.8, 6.0.0 | MIT | [Kamil Kisiela](https://graphql-config.com) |
 | `graphql-depth-limit` | 1.1.0 | MIT | [Andrew Carlson](https://github.com/stems/graphql-depth-limit#readme) |
-| `graphql-subscriptions` | 2.0.0 | MIT | [source](https://github.com/apollostack/graphql-subscriptions#readme) |
+| `graphql-subscriptions` | 3.0.0 | MIT | [source](https://github.com/apollographql/graphql-subscriptions#readme) |
 | `graphql-tag` | 2.12.7 | MIT | [source](https://github.com/apollographql/graphql-tag#readme) |
 | `graphql-ws` | 6.4.1, 6.4.2 | MIT | [Denis Badurina](https://the-guild.dev/graphql/ws) |
 | `gtoken` | 7.1.0 | MIT | [Google, LLC](https://github.com/google/node-gtoken#readme) |
@@ -1336,6 +1340,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `import-from` | 4.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/import-from#readme) |
 | `import-in-the-middle` | 3.6.0 | Apache-2.0 | [Bryan English](https://github.com/nodejs/import-in-the-middle#readme) |
 | `import-lazy` | 4.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/import-lazy#readme) |
+| `import-meta-resolve` | 4.2.0 | MIT | [Titus Wormer](https://github.com/wooorm/import-meta-resolve#readme) |
 | `imurmurhash` | 0.1.4 | MIT | [Jens Taylor](https://github.com/jensyt/imurmurhash-js) |
 | `indent-string` | 4.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/indent-string#readme) |
 | `individual` | 3.0.0 | MIT | [Raynos](https://github.com/Raynos/individual) |
@@ -1484,7 +1489,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `lightningcss` | 1.33.0 | MPL-2.0 | [source](https://github.com/parcel-bundler/lightningcss#readme) |
 | `lines-and-columns` | 1.2.4, 2.0.3 | MIT | [Brian Donovan](https://github.com/eventualbuddha/lines-and-columns#readme) |
 | `lint-staged` | 17.6.0 | MIT | [Andrey Okonetchnikov](https://github.com/lint-staged/lint-staged#readme) |
-| `listr2` | 9.0.5 | MIT | [Cenk Kilic](https://github.com/listr2/listr2#readme) |
+| `listr2` | 10.2.2 | MIT | [Cenk Kilic](https://github.com/listr2/listr2#readme) |
 | `load-esm` | 1.0.3 | MIT | [Borewit](https://github.com/Borewit/load-esm#readme) |
 | `load-tsconfig` | 0.2.5 | MIT |  |
 | `local-pkg` | 1.2.1 | MIT | [Anthony Fu](https://github.com/antfu-collective/local-pkg#readme) |
@@ -1622,7 +1627,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `muggle-string` | 0.4.1 | MIT | [source](https://github.com/johnsoncodehk/muggle-string#readme) |
 | `multer` | 2.5.0 | MIT | [source](https://github.com/expressjs/multer#readme) |
 | `mustache` | 4.2.0 | MIT | [mustache.js Authors](https://github.com/janl/mustache.js) |
-| `mute-stream` | 2.0.0, 4.0.0 | ISC | [GitHub Inc.](https://github.com/npm/mute-stream#readme) |
+| `mute-stream` | 4.0.0 | ISC | [GitHub Inc.](https://github.com/npm/mute-stream#readme) |
 | `nanoid` | 3.3.20 | MIT | [Andrey Sitnik](https://github.com/ai/nanoid#readme) |
 | `napi-postinstall` | 0.3.8 | MIT | [JounQin](https://github.com/un-ts/napi-postinstall#readme) |
 | `natural-compare` | 1.4.0 | MIT | [Lauri Rooden](https://github.com/litejs/natural-compare-lite#readme) |
@@ -1933,7 +1938,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `space-separated-tokens` | 2.0.2 | MIT | [Titus Wormer](https://github.com/wooorm/space-separated-tokens#readme) |
 | `speedline-core` | 1.4.3 | MIT | [source](https://github.com/paulirish/speedline#readme) |
 | `split2` | 4.2.0 | ISC | [Matteo Collina](https://github.com/mcollina/split2#readme) |
-| `sponge-case` | 1.0.1 | MIT | [Nate Rabins](https://github.com/blakeembrey/change-case/tree/master/packages/sponge-case#readme) |
+| `sponge-case` | 1.0.1, 2.0.3 | MIT | [Nate Rabins](https://github.com/blakeembrey/change-case/tree/master/packages/sponge-case#readme) |
 | `sprintf-js` | 1.0.3, 1.1.3 | BSD-3-Clause | [Alexandru Mărășteanu](https://github.com/alexei/sprintf.js#readme) |
 | `sql-highlight` | 6.1.0 | MIT | [Malcolm Nihlén](https://github.com/scriptcoded/sql-highlight#readme) |
 | `stable-hash-x` | 0.2.0 | MIT | [Shu Ding](https://github.com/un-ts/stable-hash-x#readme) |
@@ -1982,8 +1987,8 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `super-regex` | 1.1.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/super-regex#readme) |
 | `supports-color` | 8.1.1 | MIT | [Sindre Sorhus](https://github.com/chalk/supports-color#readme) |
 | `supports-preserve-symlinks-flag` | 1.0.0 | MIT | [Jordan Harband](https://github.com/inspect-js/node-supports-preserve-symlinks-flag#readme) |
-| `swap-case` | 2.0.2 | MIT | [Blake Embrey](https://github.com/blakeembrey/change-case/tree/master/packages/swap-case#readme) |
-| `sync-fetch` | 0.6.0, 0.7.1 | MIT | [Lars Willighagen](https://github.com/larsgw/sync-fetch#readme) |
+| `swap-case` | 2.0.2, 3.0.3 | MIT | [Blake Embrey](https://github.com/blakeembrey/change-case/tree/master/packages/swap-case#readme) |
+| `sync-fetch` | 0.7.1 | MIT | [Lars Willighagen](https://github.com/larsgw/sync-fetch#readme) |
 | `synckit` | 0.11.13 | MIT | [JounQin](https://github.com/un-ts/synckit#readme) |
 | `system-architecture` | 1.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/system-architecture#readme) |
 | `tailwind-merge` | 3.7.0 | MIT | [Dany Castillo](https://github.com/dcastil/tailwind-merge) |
@@ -2032,7 +2037,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `ts-algebra` | 2.0.0 | MIT | [Thomas Aribart](https://github.com/ThomasAribart/ts-algebra#readme) |
 | `ts-api-utils` | 2.5.0 | MIT | [JoshuaKGoldberg](https://github.com/JoshuaKGoldberg/ts-api-utils#readme) |
 | `ts-dedent` | 2.3.0 | MIT | [Tamino Martinius](https://github.com/tamino-martinius/node-ts-dedent#readme) |
-| `ts-log` | 2.2.7 | MIT | [Stagnation Lab](https://github.com/kallaspriit/ts-log#readme) |
+| `ts-log` | 3.0.3 | MIT | [Stagnation Lab](https://github.com/kallaspriit/ts-log#readme) |
 | `ts-morph` | 12.0.0, 28.0.0 | MIT | [David Sherret](https://github.com/dsherret/ts-morph#readme) |
 | `ts-node` | 10.9.2 | MIT | [Blake Embrey](https://typestrong.org/ts-node) |
 | `ts-toolbelt` | 6.15.5 | Apache-2.0 | [Pierre-Antoine Mills](https://github.com/millsp/ts-toolbelt) |
@@ -2145,7 +2150,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `winston-transport` | 4.9.0 | MIT | [Charlie Robbins](https://github.com/winstonjs/winston-transport#readme) |
 | `word-wrap` | 1.2.5 | MIT | [Jon Schlinkert](https://github.com/jonschlinkert/word-wrap) |
 | `wordwrap` | 1.0.0 | MIT | [James Halliday](https://github.com/substack/node-wordwrap#readme) |
-| `wrap-ansi` | 6.2.0, 7.0.0, 8.1.0, 9.0.2 | MIT | [Sindre Sorhus](https://github.com/chalk/wrap-ansi#readme) |
+| `wrap-ansi` | 10.0.2, 7.0.0, 8.1.0, 9.0.2 | MIT | [Sindre Sorhus](https://github.com/chalk/wrap-ansi#readme) |
 | `wrappy` | 1.0.2 | ISC | [Isaac Z. Schlueter](https://github.com/npm/wrappy) |
 | `write-file-atomic` | 5.0.1 | ISC | [GitHub Inc.](https://github.com/npm/write-file-atomic) |
 | `write-yaml-file` | 5.0.0 | MIT | [Zoltan Kochan](https://github.com/zkochan/packages/tree/main/write-yaml-file#readme) |
@@ -2167,7 +2172,6 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `yn` | 3.1.1 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/yn#readme) |
 | `yocto-queue` | 0.1.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/yocto-queue#readme) |
 | `yoctocolors` | 2.2.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/yoctocolors#readme) |
-| `yoctocolors-cjs` | 2.1.3 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/yoctocolors#readme) |
 | `youtubei.js` | 17.2.0 | MIT | [LuanRT](https://github.com/LuanRT/YouTube.js#readme) |
 | `zod` | 4.6.7 | MIT | [Colin McDonnell](https://zod.dev) |
 | `zod-to-json-schema` | 3.25.2 | ISC | [Stefan Terdell](https://github.com/StefanTerdell/zod-to-json-schema#readme) |

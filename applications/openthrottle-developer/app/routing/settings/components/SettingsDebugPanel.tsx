@@ -11,7 +11,7 @@ import { BadgeInfoIcon, BugIcon } from 'lucide-react';
 import * as React from 'react';
 import { useRevalidator } from 'react-router';
 
-import type { ServerHealthObject } from '~/__generated__/graphql';
+import type { HealthCardFragment } from '~/__generated__/graphql';
 import { SettingsBuildTools } from '~/routing/settings/components/SettingsBuildTools';
 import { SettingsEnvironment } from '~/routing/settings/components/SettingsEnvironment';
 import { SettingsFeatureFlags } from '~/routing/settings/components/SettingsFeatureFlags';
@@ -23,7 +23,7 @@ import { readStorageEntries } from '~/routing/settings/utils/settings.debug';
 export type SettingsDebugGraphQLResult =
   | {
       latencyMs: number;
-      serverHealth: ServerHealthObject;
+      serverHealth: HealthCardFragment;
       status: 'ok';
     }
   | {

@@ -12,25 +12,16 @@ import { ProjectsTable } from '../ProjectsTable';
 
 const mockProjects: ProjectCardFragment[] = [
   {
-    __typename: 'ProjectObject',
     createdAt: '2025-01-01T00:00:00Z',
     description: 'First project description',
     id: 'proj-1',
     name: 'First Project',
     nxProjectName: 'applications/openthrottle-developer',
-    plans: [
-      { __typename: 'PlanObject', title: 'Plan A' },
-      { __typename: 'PlanObject', title: 'Plan B' },
-    ],
-    tasks: [
-      { __typename: 'TaskObject', title: 'Task 1' },
-      { __typename: 'TaskObject', title: 'Task 2' },
-      { __typename: 'TaskObject', title: 'Task 3' },
-    ],
+    plans: [{ title: 'Plan A' }, { title: 'Plan B' }],
+    tasks: [{ title: 'Task 1' }, { title: 'Task 2' }, { title: 'Task 3' }],
     updatedAt: '2025-01-02T00:00:00Z',
   },
   {
-    __typename: 'ProjectObject',
     createdAt: '2025-01-03T00:00:00Z',
     description: null,
     id: 'proj-2',

@@ -45,14 +45,11 @@ describe('QueueJobMetrics Component', () => {
     const component = renderMetrics({
       ...baseJob(),
       taskRunMetrics: {
-        __typename: 'TaskRunMetrics',
         atEnd: {
-          __typename: 'ProcessMetricsSnapshot',
           heapUsedMb: 40,
           rssMb: 120,
         },
         atStart: {
-          __typename: 'ProcessMetricsSnapshot',
           heapUsedMb: 30,
           rssMb: 100,
         },

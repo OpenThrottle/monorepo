@@ -11,7 +11,6 @@ import type {
 import Component from '../settings.mcp._index';
 
 const githubConnector: McpConnectorFieldsFragment = {
-  __typename: 'McpConnectorObject',
   authType: 'oauth',
   category: 'Development',
   description: 'GitHub repositories and pull requests.',
@@ -25,7 +24,6 @@ const githubConnector: McpConnectorFieldsFragment = {
 };
 
 const postgresConnector: McpConnectorFieldsFragment = {
-  __typename: 'McpConnectorObject',
   authType: 'api_token',
   category: 'Database',
   description: 'Read-only SQL over Postgres.',
@@ -39,7 +37,6 @@ const postgresConnector: McpConnectorFieldsFragment = {
 };
 
 const githubConnection: McpConnectorConnectionFieldsFragment = {
-  __typename: 'McpConnectorConnectionObject',
   authType: 'oauth',
   connectedAt: '2026-02-02T10:00:00.000Z',
   connectorKey: 'github',

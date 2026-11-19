@@ -28,7 +28,6 @@ const buildTask = (
   overrides: Partial<PlanTaskRowFragment> = {},
 ): PlanTaskRowFragment => {
   return {
-    __typename: 'TaskObject',
     assignee: null,
     category: null,
     createdAt: '2026-01-01T00:00:00.000Z',
@@ -43,6 +42,7 @@ const buildTask = (
     summary: null,
     title: 'First task',
     updatedAt: '2026-01-02T00:00:00.000Z',
+    wave: null,
     ...overrides,
   };
 };

@@ -63,9 +63,10 @@ export class AgentSetupService {
    * live iterator is attached BEFORE the buffer is snapshotted so no chunk slips through the gap.
    */
   subscribe(runId: string): AsyncGenerator<AgentSetupStreamChunkEnvelope> {
-    const live = this.pubSub.asyncIterator<AgentSetupStreamChunkEnvelope>(
-      agentSetupStreamTopic(runId),
-    );
+    const live =
+      this.pubSub.asyncIterableIterator<AgentSetupStreamChunkEnvelope>(
+        agentSetupStreamTopic(runId),
+      );
     const buffered = [...(this.buffers.get(runId) ?? [])];
     return this.replayThenLive(buffered, live);
   }

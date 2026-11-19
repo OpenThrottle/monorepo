@@ -21,7 +21,7 @@ const checkout = (
     displayName: 'openthrottle',
     filesystemPath: '/Users/matt/Development/openthrottle',
     id: 'checkout-1',
-    inspection: { git: { currentBranch: 'main' } },
+    inspection: { git: { currentBranch: 'main', defaultBranch: null } },
     kind: 'primary',
     managed: false,
     ...overrides,
@@ -33,6 +33,7 @@ const repo = (
 ): PlanRunConfigRepositoryFieldsFragment => {
   return {
     checkouts: [checkout({})],
+    defaultBranch: null,
     id: 'repo-1',
     name: 'OpenThrottle/monorepo',
     normalizedRemoteUrl: 'github.com/openthrottle/monorepo',

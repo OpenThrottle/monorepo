@@ -1,13 +1,12 @@
 import { describe, expect, test } from 'vitest';
 
-import type { SearchChunk } from '~/__generated__/graphql';
 import { SEARCH_RESULT_COPY } from '~/routing/search/data/data.copy';
+import type { SearchChunk } from '~/routing/search/utils/toSearchResultView';
 
 import { toSearchResultView } from '../toSearchResultView';
 
 function chunk(overrides: Partial<SearchChunk> = {}): SearchChunk {
   return {
-    __typename: 'SearchChunk',
     content: 'c',
     id: 'id',
     planId: null,

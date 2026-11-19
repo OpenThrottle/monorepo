@@ -10,7 +10,7 @@ import * as React from 'react';
 
 import type {
   AddWorkspaceFolderMutation,
-  WorkspacePickerCapabilitiesObject,
+  GetSettingsRepositoriesQuery,
 } from '~/__generated__/graphql';
 import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
 import { AddFolderDialog } from '~/routing/settings/repositories/components/AddFolderDialog';
@@ -44,10 +44,7 @@ export interface RepositoriesSectionProps {
   /** Null until the deferred scan has resolved once (or when it failed with nothing to show). */
   discoveredWorktrees: DiscoveredWorktreesResult | null;
   discoveryStatus: RepositoriesDiscoveryStatus;
-  pickerCapabilities: Pick<
-    WorkspacePickerCapabilitiesObject,
-    'canUseNativeDialog' | 'defaultBrowsePath' | 'roots'
-  >;
+  pickerCapabilities: GetSettingsRepositoriesQuery['workspacePickerCapabilities'];
   /** Per-id outcomes from the last `pruneWorktreeCheckouts`, when that was the last action. */
   pruned?: readonly PruneWorktreeCheckoutResult[] | null;
   refreshed?: RefreshedCheckout | null;

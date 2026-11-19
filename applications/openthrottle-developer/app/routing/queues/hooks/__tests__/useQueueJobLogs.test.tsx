@@ -33,7 +33,6 @@ vi.mock('~/services/getGraphqlWsClient', () => ({
 
 const event = (cursor: string, timestamp: string): QueueJobLogEvent => {
   return {
-    __typename: 'QueueJobLogEventObject',
     cursor,
     jobId: 'job-1',
     level: QueueJobLogLevel.Info,

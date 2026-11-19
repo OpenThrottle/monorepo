@@ -13,7 +13,6 @@ import type { SettingsWorkspaceEditorsFormProps } from '../SettingsWorkspaceEdit
 import { SettingsWorkspaceEditorsForm } from '../SettingsWorkspaceEditorsForm';
 
 const profile: UserWorkspaceProfileFieldsFragment = {
-  __typename: 'UserWorkspaceProfileObject',
   contactDisplayName: 'Matt Scholta',
   contactEmail: 'matt@example.com',
   createdAt: '2026-01-01T00:00:00Z',
@@ -80,15 +79,12 @@ describe('SettingsWorkspaceEditorsForm Component', () => {
     component = renderRoutesStub(
       <SettingsWorkspaceEditorsForm
         editorPresence={{
-          __typename: 'EditorPresenceResultObject',
           editors: [
             {
-              __typename: 'EditorPresenceObject',
               editor: WorkspaceEditorId.Cursor,
               presence: EditorPresenceState.Installed,
             },
             {
-              __typename: 'EditorPresenceObject',
               editor: WorkspaceEditorId.Vscode,
               presence: EditorPresenceState.NotFound,
             },
@@ -114,10 +110,8 @@ describe('SettingsWorkspaceEditorsForm Component', () => {
     component = renderRoutesStub(
       <SettingsWorkspaceEditorsForm
         editorPresence={{
-          __typename: 'EditorPresenceResultObject',
           editors: [
             {
-              __typename: 'EditorPresenceObject',
               editor: WorkspaceEditorId.Cursor,
               presence: EditorPresenceState.NotFound,
             },
@@ -147,15 +141,12 @@ describe('SettingsWorkspaceEditorsForm Component', () => {
     component = renderRoutesStub(
       <SettingsWorkspaceEditorsForm
         editorPresence={{
-          __typename: 'EditorPresenceResultObject',
           editors: [
             {
-              __typename: 'EditorPresenceObject',
               editor: WorkspaceEditorId.Cursor,
               presence: EditorPresenceState.Unknown,
             },
             {
-              __typename: 'EditorPresenceObject',
               editor: WorkspaceEditorId.Vscode,
               presence: EditorPresenceState.Unknown,
             },

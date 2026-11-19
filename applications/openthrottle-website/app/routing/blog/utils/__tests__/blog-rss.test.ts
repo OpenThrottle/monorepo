@@ -95,8 +95,8 @@ describe('blog-rss', () => {
         buildBlogRssXml([
           {
             ...POST,
-            publishedAt: new Date('2026-03-04T10:00:00.000Z'),
-            updatedAt: new Date('2026-03-06T10:00:00.000Z'),
+            publishedAt: new Date('2026-03-04T10:00:00.000Z').toISOString(),
+            updatedAt: new Date('2026-03-06T10:00:00.000Z').toISOString(),
           },
         ]),
       ).querySelector('item');

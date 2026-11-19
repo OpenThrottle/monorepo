@@ -25,7 +25,6 @@ const dailyStat = (
   overrides: Partial<DashboardDailyStatsCardFragment> & { date: string },
 ): DashboardDailyStatsCardFragment => {
   return {
-    __typename: 'DailyStatsObject',
     plansCompleted: 0,
     plansCreated: 0,
     plansUpdated: 0,

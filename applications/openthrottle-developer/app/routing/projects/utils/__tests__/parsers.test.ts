@@ -14,7 +14,6 @@ function apiProject(
     Pick<GetProjectsQuery['projects'][number], 'id' | 'name'>,
 ): GetProjectsQuery['projects'][number] {
   return {
-    __typename: 'ProjectObject',
     createdAt: '2024-01-01T00:00:00.000Z',
     description: null,
     nxProjectName: null,
@@ -46,8 +45,7 @@ describe('parseProjectWithStats', () => {
 describe('parseProjectsBySearch', () => {
   const sample: ProjectWithStats[] = [
     {
-      __typename: 'ProjectObject',
-      createdAt: null,
+      createdAt: '2024-01-01T00:00:00.000Z',
       description: 'Contains FOOBAR in description',
       id: '1',
       lastActivityAt: null,
@@ -56,11 +54,10 @@ describe('parseProjectsBySearch', () => {
       planCount: null,
       plans: null,
       tasks: null,
-      updatedAt: null,
+      updatedAt: '2024-02-01T00:00:00.000Z',
     },
     {
-      __typename: 'ProjectObject',
-      createdAt: null,
+      createdAt: '2024-01-01T00:00:00.000Z',
       description: null,
       id: '2',
       lastActivityAt: null,
@@ -69,7 +66,7 @@ describe('parseProjectsBySearch', () => {
       planCount: null,
       plans: null,
       tasks: null,
-      updatedAt: null,
+      updatedAt: '2024-02-01T00:00:00.000Z',
     },
   ];
 

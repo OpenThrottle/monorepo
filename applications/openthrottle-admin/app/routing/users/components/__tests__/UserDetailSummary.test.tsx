@@ -11,13 +11,12 @@ import { UserDetailSummary } from '../UserDetailSummary';
 // rendered `formatDate` output is stable regardless of the test runner's
 // timezone offset.
 const user: UserDetailSummaryProps['user'] = {
-  __typename: 'UserObject',
-  createdAt: new Date(2025, 0, 1),
+  createdAt: new Date(2025, 0, 1).toISOString(),
   disabledAt: null,
   email: 'matt@example.com',
   githubUsername: 'visormatt',
   id: 'user-1',
-  updatedAt: new Date(2025, 0, 5),
+  updatedAt: new Date(2025, 0, 5).toISOString(),
 };
 
 const renderSummary = (props: UserDetailSummaryProps): RenderResult => {
@@ -43,7 +42,7 @@ describe('UserDetailSummary Component', () => {
   test('renders the Disabled badge, disabled-at date, and an em dash for a missing email', () => {
     const disabledUser: UserDetailSummaryProps['user'] = {
       ...user,
-      disabledAt: new Date(2025, 1, 1),
+      disabledAt: new Date(2025, 1, 1).toISOString(),
       email: null,
     };
 

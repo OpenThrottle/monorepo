@@ -153,7 +153,7 @@ describe('routes/settings.keys.tsx', () => {
         expect.any(Object),
         {
           input: {
-            expiresAt: new Date('2026-12-31T00:00:00.000Z'),
+            expiresAt: '2026-12-31T00:00:00.000Z',
             label: 'CI token',
             serviceAccountId: mockServiceAccount.id,
           },

@@ -11,7 +11,6 @@ import type { UseSettingsKeysFormResult } from '../useSettingsKeysForm';
 import { useSettingsKeysForm } from '../useSettingsKeysForm';
 
 const mockCredential: ServiceAccountCredentialFieldsFragment = {
-  __typename: 'ServiceAccountCredentialObject',
   createdAt: '2026-01-01T00:00:00Z',
   expiresAt: null,
   id: 'credential-1',

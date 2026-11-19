@@ -129,13 +129,13 @@ describe('ScheduleForm Component', () => {
 
   describe('update mode', () => {
     const job: ScheduledJobDetailFragment = {
-      __typename: 'ScheduledAgentJobObject',
       createdAt: '2026-08-01T00:00:00.000Z',
       cronPattern: '0 9 * * *',
       cwd: '/repo',
       driverId: 'claude',
       enabled: false,
       id: 'job-1',
+      intervalMs: null,
       lastRunAt: null,
       misfirePolicy: 'catch_up_once',
       misfireThresholdMs: 1_800_000,
@@ -143,6 +143,9 @@ describe('ScheduleForm Component', () => {
       name: 'Nightly audit',
       nextRunAt: null,
       prompt: 'Audit dependencies.',
+      repository: null,
+      repositoryCheckoutId: null,
+      runAt: null,
       scheduleKind: 'cron',
       settingsJson: '{}',
       timeoutMs: 900000,
@@ -227,13 +230,13 @@ describe('ScheduleForm Component', () => {
 
     test('never blocks submission — the submit button stays enabled while warning', () => {
       const codexJob: ScheduledJobDetailFragment = {
-        __typename: 'ScheduledAgentJobObject',
         createdAt: '2026-08-01T00:00:00.000Z',
         cronPattern: '0 9 * * *',
         cwd: null,
         driverId: 'codex',
         enabled: true,
         id: 'job-codex',
+        intervalMs: null,
         lastRunAt: null,
         misfirePolicy: 'skip',
         misfireThresholdMs: 600_000,
@@ -241,6 +244,9 @@ describe('ScheduleForm Component', () => {
         name: 'Codex job',
         nextRunAt: null,
         prompt: 'File findings in OpenThrottle.',
+        repository: null,
+        repositoryCheckoutId: null,
+        runAt: null,
         scheduleKind: 'cron',
         settingsJson: '{}',
         timeoutMs: null,

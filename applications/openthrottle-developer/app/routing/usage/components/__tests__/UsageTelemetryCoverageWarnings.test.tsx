@@ -131,7 +131,11 @@ describe('UsageTelemetryCoverageWarnings Component', () => {
     test('offers the replay command, the count and the doctor line', () => {
       const component = renderWarnings([
         withWarning('DEAD_LETTERED', {
-          buffer: { deadLetterCount: 1300, totalBuffered: 0 },
+          buffer: {
+            deadLetterCount: 1300,
+            oldestBufferedAt: null,
+            totalBuffered: 0,
+          },
         }),
       ]);
       const alert = component.getByTestId('UsageTelemetryCoverageWarning');

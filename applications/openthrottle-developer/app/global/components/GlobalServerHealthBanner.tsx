@@ -2,10 +2,10 @@ import { Button, cn } from '@openthrottle/react-router-shadcn';
 import { X } from 'lucide-react';
 import * as React from 'react';
 
-import type { ServerHealthObject } from '~/__generated__/graphql';
+import type { HealthCardFragment } from '~/__generated__/graphql';
 
 export interface GlobalServerHealthBannerProps {
-  readonly health?: ServerHealthObject;
+  readonly health?: HealthCardFragment;
   /** When true, hide this banner (e.g. root loader already shows a detailed API failure). */
   readonly suppress?: boolean;
 }

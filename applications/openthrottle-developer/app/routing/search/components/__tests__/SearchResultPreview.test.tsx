@@ -5,14 +5,13 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test, vi } from 'vitest';
 
-import type { SearchChunk } from '~/__generated__/graphql';
+import type { SearchChunk } from '~/routing/search/utils/toSearchResultView';
 
 import type { SearchResultPreviewProps } from '../SearchResultPreview';
 import { SearchResultPreview } from '../SearchResultPreview';
 
 function chunk(overrides: Partial<SearchChunk> = {}): SearchChunk {
   return {
-    __typename: 'SearchChunk',
     content: 'Full body of the result',
     id: 'chunk-1',
     planId: 'plan-1',

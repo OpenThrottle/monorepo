@@ -20,16 +20,10 @@ export const notePreviewLabel = (content: string): string => {
   return trimmed.length > 80 ? `${trimmed.slice(0, 80)}…` : trimmed;
 };
 
-/** Formats a note's timestamp as MM/dd/yyyy, or "—" when absent/invalid. */
+/** Formats a note's timestamp as MM/dd/yyyy, or "—" when invalid. */
 export const formatNoteDate = (raw: NoteCardFragment['updatedAt']): string => {
-  if (raw == null) {
-    return '—';
-  }
-
   try {
-    const date = typeof raw === 'string' ? new Date(raw) : raw;
-
-    return formatDate(date, 'MM/dd/yyyy');
+    return formatDate(new Date(raw), 'MM/dd/yyyy');
   } catch {
     return '—';
   }

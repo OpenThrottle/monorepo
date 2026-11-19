@@ -21,7 +21,6 @@ const credential = (
   overrides: Partial<ServiceAccountCredentialFieldsFragment> = {},
 ): ServiceAccountCredentialFieldsFragment => {
   return {
-    __typename: 'ServiceAccountCredentialObject',
     createdAt: '2025-01-01T00:00:00Z',
     expiresAt: null,
     id: 'cred-1',

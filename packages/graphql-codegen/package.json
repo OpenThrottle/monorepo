@@ -10,6 +10,7 @@
   "dependencies": {
     "@graphql-codegen/cli": "catalog:",
     "@graphql-codegen/client-preset": "catalog:",
+    "@graphql-codegen/typescript": "catalog:",
     "dotenv": "catalog:",
     "graphql-codegen-typescript-validation-schema": "catalog:"
   },

@@ -1,4 +1,4 @@
-import type { ServerHealthObject } from '@openthrottle/openthrottle-developer-codegen';
+import type { HealthCardFragment } from '@openthrottle/openthrottle-developer-codegen';
 import type { RenderResult } from '@testing-library/react';
 import { render } from '@testing-library/react';
 import * as React from 'react';
@@ -30,7 +30,7 @@ const getComponentDot = (component: RenderResult, label: RegExp): Element => {
   return dot;
 };
 
-const okHealth: ServerHealthObject = {
+const okHealth: HealthCardFragment = {
   api: 'ok',
   database: 'ok',
   redis: 'ok',

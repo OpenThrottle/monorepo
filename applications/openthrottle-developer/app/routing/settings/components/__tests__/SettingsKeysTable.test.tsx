@@ -18,7 +18,6 @@ const credential = (
     Pick<ServiceAccountCredentialFieldsFragment, 'id' | 'prefix'>,
 ): ServiceAccountCredentialFieldsFragment => {
   return {
-    __typename: 'ServiceAccountCredentialObject',
     createdAt: '2026-01-01T00:00:00.000Z',
     expiresAt: null,
     label: 'CI deploy',

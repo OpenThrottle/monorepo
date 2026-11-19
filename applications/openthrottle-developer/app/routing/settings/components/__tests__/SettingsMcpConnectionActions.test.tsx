@@ -13,7 +13,6 @@ import type { SettingsMcpConnectionActionsProps } from '../SettingsMcpConnection
 import { SettingsMcpConnectionActions } from '../SettingsMcpConnectionActions';
 
 const githubConnector: McpConnectorFieldsFragment = {
-  __typename: 'McpConnectorObject',
   authType: 'oauth',
   category: 'Development',
   description: 'GitHub repositories and pull requests.',
@@ -27,7 +26,6 @@ const githubConnector: McpConnectorFieldsFragment = {
 };
 
 const githubConnection: McpConnectorConnectionFieldsFragment = {
-  __typename: 'McpConnectorConnectionObject',
   authType: 'oauth',
   connectedAt: '2026-02-02T10:00:00.000Z',
   connectorKey: 'github',

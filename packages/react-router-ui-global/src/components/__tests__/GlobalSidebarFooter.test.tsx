@@ -1,4 +1,4 @@
-import type { ServerHealthObject } from '@openthrottle/openthrottle-developer-codegen';
+import type { HealthCardFragment } from '@openthrottle/openthrottle-developer-codegen';
 import {
   SidebarProvider,
   TooltipProvider,
@@ -84,7 +84,7 @@ const getStatusDot = (component: RenderResult): Element => {
   return dot;
 };
 
-const okHealth: ServerHealthObject = {
+const okHealth: HealthCardFragment = {
   api: 'ok',
   database: 'ok',
   redis: 'ok',

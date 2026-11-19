@@ -208,7 +208,7 @@ import {
   WorktreeDiscoveryProblemKind,
   WorktreeRemovalAuditInput,
   WorktreeRootSource,
-} from './graphql.ts';
+} from './schema-types.ts';
 
 type Properties<T> = Required<{
   [K in keyof T]: z.ZodType<T[K]>;

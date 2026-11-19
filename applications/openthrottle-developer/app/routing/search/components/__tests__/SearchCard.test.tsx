@@ -5,14 +5,13 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test, vi } from 'vitest';
 
-import type { SearchChunk } from '~/__generated__/graphql';
 import { SEARCH_SOURCE_PILL_COLORS } from '~/routing/search/data/data.source-pills';
+import type { SearchChunk } from '~/routing/search/utils/toSearchResultView';
 
 import { SearchCard } from '../SearchCard';
 
 function mockSearchChunk(overrides: Partial<SearchChunk> = {}): SearchChunk {
   return {
-    __typename: 'SearchChunk',
     content: 'Chunk content',
     id: 'chunk-1',
     planId: null,

@@ -23,7 +23,7 @@ type HookTelemetry = NonNullable<Inspection['hookTelemetry']>;
  * builds rather than duplicating the whole snapshot here.
  */
 const rowWith = (
-  hookTelemetry: HookTelemetry | undefined,
+  hookTelemetry: HookTelemetry | null,
 ): RepositoryCheckoutRow => {
   const checkout = mockCheckout({ branch: 'main', id: 'primary-1' });
   const inspection = checkout.inspection;
@@ -62,7 +62,7 @@ const telemetry = (overrides: Partial<HookTelemetry>): HookTelemetry => {
 describe('RepositoryHookTelemetryCell Component', () => {
   let component: RenderResult;
 
-  const setup = (hookTelemetry: HookTelemetry | undefined): void => {
+  const setup = (hookTelemetry: HookTelemetry | null): void => {
     component = render(
       <RepositoryHookTelemetryCell row={rowWith(hookTelemetry)} />,
     );
@@ -132,7 +132,7 @@ describe('RepositoryHookTelemetryCell Component', () => {
   });
 
   test('says the answer is unknown on a snapshot that predates the field', () => {
-    setup(undefined);
+    setup(null);
 
     const marker = component.getByText(
       REPOSITORY_HOOK_TELEMETRY_COPY.notInspectedLabel,

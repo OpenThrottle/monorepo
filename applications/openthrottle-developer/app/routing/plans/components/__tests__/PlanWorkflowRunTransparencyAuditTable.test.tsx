@@ -25,18 +25,24 @@ const auditRow = (
   overrides: Partial<PlanRunAuditRow> = {},
 ): PlanRunAuditRow => {
   return {
-    __typename: 'PlanRunObject',
+    branch: null,
     bullmqJobId: 'job-1',
+    checkout: null,
     createdAt: '2026-11-02T03:04:05.000Z',
     executionBackend: 'claude',
     heartbeatExpected: true,
     id: 'run-1',
     isStale: false,
+    lastHeartbeatAt: null,
     model: 'claude-opus',
+    pullRequest: null,
+    resumeOfRunId: null,
     runConfigSnapshotJson: null,
     runKind: 'spawn',
     scheduledFor: null,
+    settledReason: null,
     status: 'COMPLETED',
+    usageLimitResetsAt: null,
     ...overrides,
   };
 };

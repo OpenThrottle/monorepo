@@ -1,10 +1,9 @@
-import type { SearchChunk } from '~/__generated__/graphql';
+import type { SearchChunk } from '~/routing/search/utils/toSearchResultView';
 
 /**
  * @description Stable mock chunk for search route and SearchCard tests; extend or override per case.
  */
 export const searchChunkFixture: SearchChunk = {
-  __typename: 'SearchChunk',
   content: 'A plan or task snippet',
   id: 'chunk-1',
   planId: 'plan-1',

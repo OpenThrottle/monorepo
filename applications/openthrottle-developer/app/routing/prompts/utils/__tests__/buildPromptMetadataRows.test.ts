@@ -9,7 +9,6 @@ const customPrompt = (
   overrides: Partial<PromptDetailsFragment> = {},
 ): PromptDetailsFragment => {
   return {
-    __typename: 'CustomPromptObject',
     content: 'hello world',
     createdAt: '2025-01-01T00:00:00Z',
     description: null,

@@ -13,14 +13,13 @@ import Index, { shouldRevalidate } from '../projects._index';
 
 const mockProjects: ProjectWithStats[] = [
   {
-    __typename: 'ProjectObject',
     createdAt: '2025-01-01T00:00:00Z',
     description: 'First project',
     id: 'proj-1',
     name: 'First Project',
     nxProjectName: 'applications/openthrottle-developer',
-    plans: [{ __typename: 'PlanObject', title: 'Plan A' }],
-    tasks: [{ __typename: 'TaskObject', title: 'Task 1' }],
+    plans: [{ title: 'Plan A' }],
+    tasks: [{ title: 'Task 1' }],
     updatedAt: '2025-01-02T00:00:00Z',
   },
 ];

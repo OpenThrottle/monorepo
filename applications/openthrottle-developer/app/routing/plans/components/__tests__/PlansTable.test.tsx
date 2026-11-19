@@ -14,7 +14,6 @@ import { PlansTable } from '../PlansTable';
 
 const mockPlans: [PlanCardFragment, PlanCardFragment] = [
   {
-    __typename: 'PlanObject',
     assignee: 'assignee1',
     author: 'author1',
     category: 'feature',
@@ -22,16 +21,17 @@ const mockPlans: [PlanCardFragment, PlanCardFragment] = [
     description: null,
     hasCustomRunConfig: false,
     id: 'plan-1',
+    project: null,
     projectRelation: {
-      __typename: 'ProjectObject',
       id: 'proj-1',
       name: 'Project One',
     },
+    scheduledRunAt: null,
     status: 'IN_PROGRESS',
     summary: 'First plan summary',
     tags: [
-      { __typename: 'PlanTagObject', dimension: 'phase', tag: 'discovery' },
-      { __typename: 'PlanTagObject', dimension: 'domain', tag: 'frontend' },
+      { dimension: 'phase', tag: 'discovery' },
+      { dimension: 'domain', tag: 'frontend' },
     ],
     taskCount: 3,
     tasksCompletedCount: 1,
@@ -39,7 +39,6 @@ const mockPlans: [PlanCardFragment, PlanCardFragment] = [
     updatedAt: '2025-01-03T00:00:00Z',
   },
   {
-    __typename: 'PlanObject',
     assignee: null,
     author: 'author2',
     category: 'chore',
@@ -47,11 +46,12 @@ const mockPlans: [PlanCardFragment, PlanCardFragment] = [
     description: null,
     hasCustomRunConfig: true,
     id: 'plan-2',
+    project: null,
     projectRelation: {
-      __typename: 'ProjectObject',
       id: 'proj-2',
       name: 'Project Two',
     },
+    scheduledRunAt: null,
     status: 'PENDING',
     summary: null,
     tags: [],

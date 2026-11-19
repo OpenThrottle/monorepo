@@ -11,15 +11,14 @@ import type { TaskDetailsProps } from '../TaskDetails';
 import { TaskDetails } from '../TaskDetails';
 
 const mockTask: PlanTaskRowFragment = {
-  __typename: 'TaskObject',
   assignee: 'visormatt',
   category: 'implementation',
   createdAt: '2025-01-01T00:00:00Z',
   description: 'Task description',
+  hookRole: null,
   id: 'task-1',
   planId: 'plan-1',
   projectRelation: {
-    __typename: 'ProjectObject',
     id: 'proj-1',
     name: 'Test Project',
   },
@@ -29,6 +28,7 @@ const mockTask: PlanTaskRowFragment = {
   summary: 'Task summary',
   title: 'Test Task',
   updatedAt: '2025-01-02T00:00:00Z',
+  wave: null,
 };
 
 const renderTaskDetails = (props: TaskDetailsProps): RenderResult => {

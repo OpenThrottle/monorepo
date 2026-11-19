@@ -15,7 +15,6 @@ const account = (
     Pick<ServiceAccountListItemFragment, 'id' | 'name'>,
 ): ServiceAccountListItemFragment => {
   return {
-    __typename: 'ServiceAccountObject',
     createdAt: '2026-01-01T00:00:00.000Z',
     description: null,
     disabledAt: null,

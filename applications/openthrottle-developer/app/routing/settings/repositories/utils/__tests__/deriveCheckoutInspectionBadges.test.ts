@@ -22,6 +22,7 @@ const inspection: NonNullable<CheckoutInspection> = {
     linkedWorktrees: [],
     normalizedRemoteUrl: 'https://github.com/acme/monorepo',
   },
+  hookTelemetry: null,
   scannedAt: '2026-07-24T00:00:00.000Z',
   stack: {
     languages: ['typescript'],

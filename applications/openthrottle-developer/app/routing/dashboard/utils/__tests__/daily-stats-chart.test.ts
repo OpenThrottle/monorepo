@@ -22,7 +22,6 @@ describe('mapToChartData', () => {
   test('maps fragment fields onto chart datum shape', () => {
     const items: DashboardDailyStatsCardFragment[] = [
       {
-        __typename: 'DailyStatsObject',
         date: '2026-02-11',
         plansCompleted: 1,
         plansCreated: 2,

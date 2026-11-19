@@ -1,4 +1,4 @@
-import type { ServerHealthObject } from '@openthrottle/openthrottle-developer-codegen';
+import type { HealthCardFragment } from '@openthrottle/openthrottle-developer-codegen';
 import {
   Badge,
   cn,
@@ -30,7 +30,7 @@ export interface GlobalSidebarFooterProps {
    * omitted shows nothing.
    */
   readonly backgroundActivities?: readonly GlobalBackgroundActivity[];
-  readonly health?: ServerHealthObject;
+  readonly health?: HealthCardFragment;
 }
 
 export const GlobalSidebarFooter = (

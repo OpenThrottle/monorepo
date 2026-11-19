@@ -7,9 +7,7 @@ import { deriveHookTelemetry } from '~/routing/settings/repositories/utils/deriv
 type Inspection = NonNullable<RepositoryCheckoutFieldsFragment['inspection']>;
 type HookTelemetry = NonNullable<Inspection['hookTelemetry']>;
 
-const inspectionWith = (
-  hookTelemetry: HookTelemetry | undefined,
-): Inspection => {
+const inspectionWith = (hookTelemetry: HookTelemetry | null): Inspection => {
   return {
     agentConfig: {
       agentsMd: false,
@@ -58,7 +56,7 @@ describe('deriveHookTelemetry', () => {
   });
 
   test('returns null for a snapshot written before telemetry readiness existed', () => {
-    expect(deriveHookTelemetry(inspectionWith(undefined))).toBeNull();
+    expect(deriveHookTelemetry(inspectionWith(null))).toBeNull();
   });
 
   test('recording needs no remediation and names the layer that answered', () => {

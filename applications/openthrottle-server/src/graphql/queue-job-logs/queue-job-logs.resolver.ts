@@ -80,7 +80,7 @@ export class QueueJobLogsResolver {
       );
     }
 
-    return this.pubSub.asyncIterator<QueueJobLogEventObject>(
+    return this.pubSub.asyncIterableIterator<QueueJobLogEventObject>(
       queueJobLogTopic(queueName, jobId),
     );
   }

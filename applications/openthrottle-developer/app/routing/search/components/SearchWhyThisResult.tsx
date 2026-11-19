@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { Link } from 'react-router';
 
-import type { SearchChunk } from '~/__generated__/graphql';
 import type { SearchRankMeta } from '~/routing/search/types/search-rank-meta';
 import { formatRankSummary } from '~/routing/search/utils/formatRankSummary';
 import { githubBlobHref } from '~/routing/search/utils/githubBlobHref';
@@ -12,6 +11,7 @@ import {
   formatDocSourceMeta,
   formatEntityIds,
 } from '~/routing/search/utils/search-why-hints';
+import type { SearchChunk } from '~/routing/search/utils/toSearchResultView';
 
 export interface SearchWhyThisResultProps {
   className?: string;

@@ -12,17 +12,24 @@ type Row = PlanScheduledRunsCardProps['planRunAuditRows'][number];
 
 const run = (id: string, status: string): Row => {
   return {
-    __typename: 'PlanRunObject',
+    branch: null,
+    bullmqJobId: null,
+    checkout: null,
     createdAt: '2026-11-01T00:00:00.000Z',
     executionBackend: 'claude',
     heartbeatExpected: true,
     id,
     isStale: false,
+    lastHeartbeatAt: null,
     model: 'claude-opus',
+    pullRequest: null,
+    resumeOfRunId: null,
     runConfigSnapshotJson: null,
     runKind: 'orchestrator',
     scheduledFor: status === 'SCHEDULED' ? '2026-11-09T09:00:00.000Z' : null,
+    settledReason: null,
     status,
+    usageLimitResetsAt: null,
   };
 };
 

@@ -11,13 +11,12 @@ import type { RoleEditSheetProps } from '../RoleEditSheet';
 import { RoleEditSheet } from '../RoleEditSheet';
 
 const role: RoleEditSheetProps['role'] = {
-  __typename: 'RoleObject',
-  createdAt: new Date('2025-01-01'),
+  createdAt: new Date('2025-01-01').toISOString(),
   description: 'Administrator',
   id: 'role-1',
   name: 'admin',
   permissions: [],
-  updatedAt: new Date('2025-01-02'),
+  updatedAt: new Date('2025-01-02').toISOString(),
 };
 
 const renderSheet = (

@@ -46,21 +46,54 @@ describe('defineCodegen', () => {
     expect(block).toMatchObject({ config: { zodImportPath: 'zod/v3' } });
   });
 
+  const schemaTypesBlock = (config: ReturnType<typeof defineCodegen>) => {
+    return config.generates['./app/__generated__/schema-types.ts'];
+  };
+
   it('emits generated enums as const objects rather than TypeScript enums', () => {
     const block = clientBlock(build());
 
-    expect(block).toMatchObject({ config: { enumsAsConst: true } });
+    expect(block).toMatchObject({ config: { enumType: 'const' } });
   });
 
-  it('keeps enumsAsConst out of reach of a consumer presetConfig override', () => {
-    const block = clientBlock(build({ presetConfig: { enumsAsConst: false } }));
+  it('keeps enumType out of reach of a consumer presetConfig override', () => {
+    const block = clientBlock(build({ presetConfig: { enumType: 'native' } }));
 
-    expect(block).toMatchObject({ config: { enumsAsConst: true } });
+    expect(block).toMatchObject({ config: { enumType: 'const' } });
   });
 
-  it('omits the Zod block when withZodSchemas is false', () => {
+  it('pins the ID and DateTime scalars to string on the client block', () => {
+    const block = clientBlock(build());
+
+    expect(block).toMatchObject({
+      config: { scalars: { DateTime: 'string', ID: 'string' } },
+    });
+  });
+
+  it('emits every input type and enum for the Zod schemas to import', () => {
+    const config = build();
+
+    expect(schemaTypesBlock(config)).toMatchObject({
+      config: { enumsAsConst: true, onlyOperationTypes: true },
+      plugins: ['typescript'],
+    });
+    expect(zodBlock(config)).toMatchObject({
+      config: { importFrom: './schema-types.js' },
+    });
+  });
+
+  it('follows importExtension in the Zod importFrom', () => {
+    const block = zodBlock(build({ importExtension: '.ts' }));
+
+    expect(block).toMatchObject({
+      config: { importFrom: './schema-types.ts' },
+    });
+  });
+
+  it('omits the Zod and schema-types blocks when withZodSchemas is false', () => {
     const config = build({ withZodSchemas: false });
 
     expect(zodBlock(config)).toBeUndefined();
+    expect(schemaTypesBlock(config)).toBeUndefined();
   });
 });

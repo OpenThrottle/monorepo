@@ -15,7 +15,6 @@ const run = (
   overrides: Partial<ScheduledJobRunRowFragment> = {},
 ): ScheduledJobRunRowFragment => {
   return {
-    __typename: 'ScheduledAgentJobRunObject',
     bullmqJobId: 'run-1',
     cacheReadTokens: 20,
     cacheWriteTokens: 10,
@@ -31,6 +30,7 @@ const run = (
     outputTokens: 50,
     reasoningTokens: null,
     resumeOfRunId: null,
+    scheduledFor: null,
     startedAt: '2026-07-31T09:00:00.000Z',
     status: 'succeeded',
     totalTokens: 150,

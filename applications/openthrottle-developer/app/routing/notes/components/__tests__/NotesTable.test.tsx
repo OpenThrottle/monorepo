@@ -14,7 +14,6 @@ import { NotesTable } from '../NotesTable';
 
 const mockNotes: NoteCardFragment[] = [
   {
-    __typename: 'NoteObject',
     author: 'visormatt',
     content: '# First Note\n\nBody text here.',
     createdAt: '2025-01-01T00:00:00Z',
@@ -22,7 +21,6 @@ const mockNotes: NoteCardFragment[] = [
     updatedAt: '2025-01-03T00:00:00Z',
   },
   {
-    __typename: 'NoteObject',
     author: null,
     content: 'Plain second note without heading',
     createdAt: '2025-01-02T00:00:00Z',

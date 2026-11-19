@@ -77,11 +77,11 @@ const mockTask = (
   overrides: Partial<PlanTaskRowFragment>,
 ): PlanTaskRowFragment => {
   return {
-    __typename: 'TaskObject',
     assignee: null,
     category: 'dev',
     createdAt: '2025-01-01T00:00:00Z',
     description: null,
+    hookRole: null,
     id: 'task-1',
     planId: 'plan-1',
     projectRelation: null,
@@ -91,6 +91,7 @@ const mockTask = (
     summary: null,
     title: 'Board task',
     updatedAt: '2025-01-02T00:00:00Z',
+    wave: null,
     ...overrides,
   };
 };
