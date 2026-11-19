@@ -9,7 +9,10 @@ import {
   McpDeveloperMcpSurface,
   withMcpDeveloperAuthTokenAsync,
 } from '@openthrottle/nestjs-mcp-developer';
-import { AgentConversationsService } from '@openthrottle/nestjs-repositories';
+import {
+  AgentConversationMessagesRepository,
+  AgentConversationsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 
 import { AgentsRunChatTurnInput } from './agents.input.ts';
 import { AgentsChatTurnResult } from './agents.object.ts';
@@ -59,7 +62,8 @@ const buildFailedAgentsChatTurn = (input: {
 @Resolver()
 export class AgentsResolver {
   constructor(
-    private readonly agentConversationsService: AgentConversationsService,
+    private readonly agentConversationMessagesRepository: AgentConversationMessagesRepository,
+    private readonly agentConversationsRepository: AgentConversationsRepository,
     private readonly config: ConfigService,
     private readonly mcpRouter: AgentsMcpRouter,
     private readonly mcpRouterLlm: AgentsMcpRouterLlmService,
@@ -107,7 +111,7 @@ export class AgentsResolver {
 
     if (shouldPersist && humanUser != null) {
       const resolvedConversation = await resolvePersistedConversation(
-        this.agentConversationsService,
+        this.agentConversationsRepository,
         {
           conversationId: input.conversationId,
           message,
@@ -204,7 +208,8 @@ export class AgentsResolver {
           turn.errorMessage == null
         ) {
           await persistSuccessfulAgentsChatTurn({
-            agentConversationsService: this.agentConversationsService,
+            agentConversationMessagesRepository:
+              this.agentConversationMessagesRepository,
             conversationId: persistedConversationId,
             llmRouterUsed,
             message,

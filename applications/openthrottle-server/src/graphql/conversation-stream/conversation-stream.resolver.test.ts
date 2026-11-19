@@ -6,17 +6,22 @@ import {
 } from '@openthrottle/nestjs-auth';
 import type { NestjsModelDiscoveryService } from '@openthrottle/nestjs-model-discovery';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import type { AgentConversationsService } from '@openthrottle/nestjs-repositories';
-import {
-  agentConversationMessagesFactory,
-  agentConversationsFactory,
-} from '@openthrottle/nestjs-repositories/testing';
 import type {
+  AgentConversationMessagesRepository,
+  AgentConversationsRepository,
   CustomPrompt,
   CustomPromptsRepository,
   UserDisabledAgentClisRepository,
 } from '@openthrottle/nestjs-repositories-server';
+import type {
+  AgentConversationMessagesRepositoryMock,
+  AgentConversationsRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import {
+  agentConversationMessagesFactory,
+  agentConversationsFactory,
+  createAgentConversationMessagesRepositoryMock,
+  createAgentConversationsRepositoryMock,
   createCustomPromptsRepositoryMock,
   createUserDisabledAgentClisRepositoryMock,
 } from '@openthrottle/nestjs-repositories-server/testing';
@@ -79,7 +84,8 @@ const userMessage = agentConversationMessagesFactory.build({
 function build(): {
   agentIsEnabled: ReturnType<typeof vi.fn>;
   agentModelIsEnabled: ReturnType<typeof vi.fn>;
-  conversations: AgentConversationsService;
+  conversations: AgentConversationsRepositoryMock;
+  messages: AgentConversationMessagesRepositoryMock;
   modelDiscovery: NestjsModelDiscoveryService;
   personaFindOne: ReturnType<typeof vi.fn>;
   repositories: WorkspaceLocalRepositoriesService;
@@ -93,13 +99,13 @@ function build(): {
     isEnabled: agentIsEnabled,
     isModelEnabled: agentModelIsEnabled,
   });
-  const conversations = createMock<AgentConversationsService>({
-    appendMessages: vi.fn().mockResolvedValue([userMessage]),
-    createConversation: vi.fn().mockResolvedValue(conversation),
-    getConversationForUser: vi.fn().mockResolvedValue(conversation),
-    listMessagesForConversation: vi.fn().mockResolvedValue([userMessage]),
-    updateMetadata: vi.fn().mockResolvedValue(conversation),
-  });
+  const conversations = createAgentConversationsRepositoryMock();
+  conversations.createConversation.mockResolvedValue(conversation);
+  conversations.getConversationForUser.mockResolvedValue(conversation);
+  conversations.updateMetadata.mockResolvedValue(conversation);
+  const messages = createAgentConversationMessagesRepositoryMock();
+  messages.appendMessages.mockResolvedValue([userMessage]);
+  messages.listMessagesForConversation.mockResolvedValue([userMessage]);
   const customPromptsMock = createCustomPromptsRepositoryMock();
   const personaFindOne = customPromptsMock.findOne;
   const customPrompts = createMock<CustomPromptsRepository>(customPromptsMock);
@@ -126,9 +132,10 @@ function build(): {
   });
   const resolver = new ConversationStreamResolver(
     disabledAgentClis,
-    conversations,
+    createMock<AgentConversationsRepository>(conversations),
     customPrompts,
     logger,
+    createMock<AgentConversationMessagesRepository>(messages),
     modelDiscovery,
     repositories,
     streamService,
@@ -137,6 +144,7 @@ function build(): {
     agentIsEnabled,
     agentModelIsEnabled,
     conversations,
+    messages,
     modelDiscovery,
     personaFindOne,
     repositories,
@@ -177,7 +185,7 @@ describe('ConversationStreamResolver.startConversationStream', () => {
   });
 
   it('refuses a second turn while one is running, persisting nothing', async () => {
-    const { conversations, resolver, streamService } = build();
+    const { messages, resolver, streamService } = build();
     vi.mocked(streamService.hasActiveTurn).mockReturnValue(true);
 
     const result = await resolver.startConversationStream(human, {
@@ -190,7 +198,7 @@ describe('ConversationStreamResolver.startConversationStream', () => {
     expect(result.errorMessage).toBe(TURN_IN_PROGRESS_ERROR);
     expect(result.assistantMessageId).toBeNull();
     expect(streamService.hasActiveTurn).toHaveBeenCalledWith('conv-1');
-    expect(conversations.appendMessages).not.toHaveBeenCalled();
+    expect(messages.appendMessages).not.toHaveBeenCalled();
     expect(streamService.start).not.toHaveBeenCalled();
   });
 
@@ -345,7 +353,7 @@ describe('ConversationStreamResolver.startConversationStream', () => {
   });
 
   it('Private mode (persist=false): no row, no user-message write, streams a synthetic id', async () => {
-    const { conversations, resolver, streamService } = build();
+    const { conversations, messages, resolver, streamService } = build();
 
     const result = await resolver.startConversationStream(human, {
       baseUrl: 'http://localhost:11434/v1',
@@ -361,8 +369,8 @@ describe('ConversationStreamResolver.startConversationStream', () => {
     expect(result.conversationId).not.toBe('conv-1');
     expect(result.userMessageId).toBeNull();
     expect(conversations.createConversation).not.toHaveBeenCalled();
-    expect(conversations.appendMessages).not.toHaveBeenCalled();
-    expect(conversations.listMessagesForConversation).not.toHaveBeenCalled();
+    expect(messages.appendMessages).not.toHaveBeenCalled();
+    expect(messages.listMessagesForConversation).not.toHaveBeenCalled();
     // The current message is the entire (single-turn) prompt context.
     expect(streamService.start).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -1062,9 +1070,9 @@ describe('ConversationStreamResolver.conversationStreamChunkAdded', () => {
           userId: 'user-1',
         }),
       );
-      vi.mocked(
-        built.conversations.listMessagesForConversation,
-      ).mockResolvedValue(priorRows);
+      vi.mocked(built.messages.listMessagesForConversation).mockResolvedValue(
+        priorRows,
+      );
 
       return built;
     };

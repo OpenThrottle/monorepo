@@ -4,12 +4,17 @@ import {
   AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
   AUTH_PRINCIPAL_KIND_USER,
 } from '@openthrottle/nestjs-auth';
-import type { AgentConversationsService } from '@openthrottle/nestjs-repositories';
+import type {
+  AgentConversationMessagesRepository,
+  AgentConversationsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import {
   agentConversationMessagesFactory,
   agentConversationsFactory,
-} from '@openthrottle/nestjs-repositories/testing';
-import { describe, expect, test, vi } from 'vitest';
+  createAgentConversationMessagesRepositoryMock,
+  createAgentConversationsRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
+import { describe, expect, test } from 'vitest';
 
 import { AgentsChatTurnResult } from '../agents.object.ts';
 import { PERSISTED_CONVERSATION_NOT_FOUND_ERROR } from './chat-persistence.constants.ts';
@@ -43,44 +48,45 @@ describe('agents-chat-persistence', () => {
 
   describe('resolvePersistedConversation', () => {
     test('creates a conversation when conversationId is omitted', async () => {
-      const createConversation = vi
-        .fn()
-        .mockResolvedValue(
-          agentConversationsFactory.build({ id: 'new-conversation-id' }),
-        );
-      const service = createMock<AgentConversationsService>({
-        createConversation,
-        getConversationForUser: vi.fn(),
-      });
+      const repository = createAgentConversationsRepositoryMock();
 
-      const result = await resolvePersistedConversation(service, {
-        conversationId: null,
-        message: 'Hello there',
-        userId: 'user-1',
-      });
+      repository.createConversation.mockResolvedValue(
+        agentConversationsFactory.build({ id: 'new-conversation-id' }),
+      );
+
+      const result = await resolvePersistedConversation(
+        createMock<AgentConversationsRepository>(repository),
+        {
+          conversationId: null,
+          message: 'Hello there',
+          userId: 'user-1',
+        },
+      );
 
       expect(result).toEqual({
         conversationId: 'new-conversation-id',
         ok: true,
       });
-      expect(createConversation).toHaveBeenCalledWith('user-1', {
+      expect(repository.createConversation).toHaveBeenCalledWith('user-1', {
         title: 'Hello there',
       });
     });
 
     test('returns not found when conversation is not owned', async () => {
-      const service = createMock<AgentConversationsService>({
-        createConversation: vi.fn(),
-        getConversationForUser: vi
-          .fn()
-          .mockRejectedValue(new NotFoundException()),
-      });
+      const repository = createAgentConversationsRepositoryMock();
 
-      const result = await resolvePersistedConversation(service, {
-        conversationId: 'missing-id',
-        message: 'Hello',
-        userId: 'user-1',
-      });
+      repository.getConversationForUser.mockRejectedValue(
+        new NotFoundException(),
+      );
+
+      const result = await resolvePersistedConversation(
+        createMock<AgentConversationsRepository>(repository),
+        {
+          conversationId: 'missing-id',
+          message: 'Hello',
+          userId: 'user-1',
+        },
+      );
 
       expect(result).toEqual({
         errorMessage: PERSISTED_CONVERSATION_NOT_FOUND_ERROR,
@@ -103,11 +109,13 @@ describe('agents-chat-persistence', () => {
 
   describe('persistSuccessfulAgentsChatTurn', () => {
     test('appends turn with routing metadata', async () => {
-      const appendTurn = vi.fn().mockResolvedValue({
+      const messagesRepository =
+        createAgentConversationMessagesRepositoryMock();
+
+      messagesRepository.appendTurn.mockResolvedValue({
         assistantMessage: agentConversationMessagesFactory.build(),
         userMessage: agentConversationMessagesFactory.build(),
       });
-      const service = createMock<AgentConversationsService>({ appendTurn });
       const turn = new AgentsChatTurnResult();
 
       turn.assistantText = 'Done';
@@ -115,7 +123,8 @@ describe('agents-chat-persistence', () => {
       turn.toolMetadataJson = JSON.stringify({ tool: 'health' });
 
       await persistSuccessfulAgentsChatTurn({
-        agentConversationsService: service,
+        agentConversationMessagesRepository:
+          createMock<AgentConversationMessagesRepository>(messagesRepository),
         conversationId: 'conv-1',
         llmRouterUsed: true,
         message: 'health',
@@ -133,17 +142,21 @@ describe('agents-chat-persistence', () => {
         userId: 'user-1',
       });
 
-      expect(appendTurn).toHaveBeenCalledWith('user-1', 'conv-1', {
-        assistantContent: 'Done',
-        modelName: 'gpt-4o-mini',
-        modelProvider: 'openai',
-        routingConfidence: 0.9,
-        routingModel: 'gpt-4o-mini',
-        routingReason: 'llm_fallback:mock',
-        routingTier: 'llm',
-        toolMetadata: { tool: 'health' },
-        userContent: 'health',
-      });
+      expect(messagesRepository.appendTurn).toHaveBeenCalledWith(
+        'user-1',
+        'conv-1',
+        {
+          assistantContent: 'Done',
+          modelName: 'gpt-4o-mini',
+          modelProvider: 'openai',
+          routingConfidence: 0.9,
+          routingModel: 'gpt-4o-mini',
+          routingReason: 'llm_fallback:mock',
+          routingTier: 'llm',
+          toolMetadata: { tool: 'health' },
+          userContent: 'health',
+        },
+      );
     });
   });
 });

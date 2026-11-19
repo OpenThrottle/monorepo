@@ -4,14 +4,14 @@ import { describe, expect, it } from 'vitest';
 import {
   AGENT_CONVERSATION_PAYLOAD_TRUNCATED_KEY,
   AGENT_CONVERSATION_TOOL_METADATA_MAX_BYTES,
-} from './agent-conversations.constants.ts';
+} from '../agent-conversations.constants.ts';
 import {
   capAgentConversationContent,
   capAgentConversationToolMetadata,
   clampAgentConversationListLimit,
   clampAgentConversationMessagesLimit,
   deriveConversationTitleFromMessage,
-} from './agent-conversations.utils.ts';
+} from './content-caps.utils.ts';
 
 describe('deriveConversationTitleFromMessage', () => {
   it('returns trimmed content when within 80 characters', () => {

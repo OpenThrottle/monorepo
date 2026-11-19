@@ -8,7 +8,7 @@ import {
   AGENT_CONVERSATION_MESSAGES_MAX_LIMIT,
   AGENT_CONVERSATION_PAYLOAD_TRUNCATED_KEY,
   AGENT_CONVERSATION_TOOL_METADATA_MAX_BYTES,
-} from './agent-conversations.constants.ts';
+} from '../agent-conversations.constants.ts';
 
 /** Marks UTF-8 continuation bytes (0b10xxxxxx) when backing off to a code-point boundary. */
 const UTF8_CONTINUATION_MASK = 0b1100_0000;
@@ -299,16 +299,4 @@ export const clampAgentConversationMessagesLimit = (
 ): number => {
   const resolved = limit ?? AGENT_CONVERSATION_MESSAGES_DEFAULT_LIMIT;
   return Math.min(Math.max(resolved, 1), AGENT_CONVERSATION_MESSAGES_MAX_LIMIT);
-};
-
-/**
- * @description Reads the `MAX(sortOrder)` raw query result as a number; a missing row, `null` or empty string is 0.
- */
-export const resolveCurrentMaxSortOrder = (
-  result: { max: string | null } | undefined,
-): number => {
-  if (result?.max == null || result.max === '') {
-    return 0;
-  }
-  return Number(result.max);
 };

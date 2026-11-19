@@ -1,4 +1,3 @@
-import { createMock } from '@golevelup/ts-vitest';
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import {
@@ -9,13 +8,18 @@ import {
 import type {
   AgentConversation,
   AgentConversationMessage,
-} from '@openthrottle/nestjs-repositories';
+} from '@openthrottle/nestjs-repositories-server';
 import {
   AGENT_CONVERSATION_STATUSES,
-  AgentConversationsService,
-} from '@openthrottle/nestjs-repositories';
-import { RolesRepository } from '@openthrottle/nestjs-repositories-server';
-import { createRolesRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+  AgentConversationMessagesRepository,
+  AgentConversationsRepository,
+  RolesRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import {
+  createAgentConversationMessagesRepositoryMock,
+  createAgentConversationsRepositoryMock,
+  createRolesRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
@@ -23,7 +27,6 @@ import { AgentConversationsResolver } from './agent-conversations.resolver.ts';
 
 describe('AgentConversationsResolver', () => {
   let resolver: AgentConversationsResolver;
-  let agentConversationsService: AgentConversationsService;
 
   const humanPrincipal: AuthPrincipal = {
     kind: AUTH_PRINCIPAL_KIND_USER,
@@ -37,6 +40,7 @@ describe('AgentConversationsResolver', () => {
 
   const mockConversation: AgentConversation = {
     createdAt: new Date('2026-06-07T10:00:00.000Z'),
+    deletedAt: null,
     id: '11111111-1111-4111-8111-111111111111',
     metadata: null,
     modelName: null,
@@ -63,20 +67,9 @@ describe('AgentConversationsResolver', () => {
     toolMetadata: null,
   };
 
-  const mockConversationRepository = {
-    count: vi.fn(),
-  };
-
-  const mockMessageRepository = {
-    count: vi.fn(),
-  };
-
-  const mockAgentConversationsService = createMock<AgentConversationsService>({
-    getConversationRepository: vi
-      .fn()
-      .mockReturnValue(mockConversationRepository),
-    getMessageRepository: vi.fn().mockReturnValue(mockMessageRepository),
-  });
+  const agentConversationsRepository = createAgentConversationsRepositoryMock();
+  const agentConversationMessagesRepository =
+    createAgentConversationMessagesRepositoryMock();
 
   const mockRolesRepository = createRolesRepositoryMock();
   mockRolesRepository.getPermissionsForUser.mockResolvedValue([
@@ -89,8 +82,12 @@ describe('AgentConversationsResolver', () => {
       providers: [
         AgentConversationsResolver,
         {
-          provide: AgentConversationsService,
-          useValue: mockAgentConversationsService,
+          provide: AgentConversationsRepository,
+          useValue: agentConversationsRepository,
+        },
+        {
+          provide: AgentConversationMessagesRepository,
+          useValue: agentConversationMessagesRepository,
         },
         { provide: RolesRepository, useValue: mockRolesRepository },
         GqlPermissionsGuard,
@@ -98,15 +95,16 @@ describe('AgentConversationsResolver', () => {
     }).compile();
 
     resolver = app.get(AgentConversationsResolver);
-    agentConversationsService = app.get(AgentConversationsService);
   });
 
   describe('listAgentConversations', () => {
     test('returns conversations for human principal', async () => {
       vi.mocked(
-        agentConversationsService.listConversationsForUser,
+        agentConversationsRepository.listConversationsForUser,
       ).mockResolvedValue([mockConversation]);
-      mockConversationRepository.count.mockResolvedValue(1);
+      agentConversationsRepository.countConversationsForUser.mockResolvedValue(
+        1,
+      );
 
       const result = await resolver.listAgentConversations(humanPrincipal, {
         limit: 20,
@@ -129,7 +127,7 @@ describe('AgentConversationsResolver', () => {
   describe('getAgentConversation', () => {
     test('returns conversation when owned', async () => {
       vi.mocked(
-        agentConversationsService.getConversationForUser,
+        agentConversationsRepository.getConversationForUser,
       ).mockResolvedValue(mockConversation);
 
       const result = await resolver.getAgentConversation(
@@ -142,7 +140,7 @@ describe('AgentConversationsResolver', () => {
 
     test('returns null when not found', async () => {
       vi.mocked(
-        agentConversationsService.getConversationForUser,
+        agentConversationsRepository.getConversationForUser,
       ).mockRejectedValue(new NotFoundException());
 
       const result = await resolver.getAgentConversation(
@@ -157,9 +155,11 @@ describe('AgentConversationsResolver', () => {
   describe('getAgentConversationMessages', () => {
     test('returns messages and total count', async () => {
       vi.mocked(
-        agentConversationsService.listMessagesForConversation,
+        agentConversationMessagesRepository.listMessagesForConversation,
       ).mockResolvedValue([mockMessage]);
-      mockMessageRepository.count.mockResolvedValue(1);
+      agentConversationMessagesRepository.countMessagesForConversation.mockResolvedValue(
+        1,
+      );
 
       const result = await resolver.getAgentConversationMessages(
         humanPrincipal,
@@ -178,9 +178,9 @@ describe('AgentConversationsResolver', () => {
 
   describe('createAgentConversation', () => {
     test('creates conversation for human principal', async () => {
-      vi.mocked(agentConversationsService.createConversation).mockResolvedValue(
-        mockConversation,
-      );
+      vi.mocked(
+        agentConversationsRepository.createConversation,
+      ).mockResolvedValue(mockConversation);
 
       const result = await resolver.createAgentConversation(humanPrincipal, {
         metadataJson: null,
@@ -190,15 +190,14 @@ describe('AgentConversationsResolver', () => {
       });
 
       expect(result.id).toBe(mockConversation.id);
-      expect(agentConversationsService.createConversation).toHaveBeenCalledWith(
-        humanPrincipal.sub,
-        {
-          metadata: null,
-          planId: null,
-          projectId: null,
-          title: 'Hello world',
-        },
-      );
+      expect(
+        agentConversationsRepository.createConversation,
+      ).toHaveBeenCalledWith(humanPrincipal.sub, {
+        metadata: null,
+        planId: null,
+        projectId: null,
+        title: 'Hello world',
+      });
     });
   });
 
@@ -210,7 +209,7 @@ describe('AgentConversationsResolver', () => {
       };
 
       vi.mocked(
-        agentConversationsService.archiveConversation,
+        agentConversationsRepository.archiveConversation,
       ).mockResolvedValue(archived);
 
       const result = await resolver.archiveAgentConversation(humanPrincipal, {
@@ -229,7 +228,7 @@ describe('AgentConversationsResolver', () => {
       };
 
       vi.mocked(
-        agentConversationsService.softDeleteConversation,
+        agentConversationsRepository.softDeleteConversation,
       ).mockResolvedValue(deleted);
 
       const result = await resolver.deleteAgentConversation(humanPrincipal, {
@@ -238,13 +237,13 @@ describe('AgentConversationsResolver', () => {
 
       expect(result.status).toBe(AGENT_CONVERSATION_STATUSES.deleted);
       expect(
-        agentConversationsService.softDeleteConversation,
+        agentConversationsRepository.softDeleteConversation,
       ).toHaveBeenCalledWith(humanPrincipal.sub, mockConversation.id);
     });
 
     test('propagates when the conversation is not owned', async () => {
       vi.mocked(
-        agentConversationsService.softDeleteConversation,
+        agentConversationsRepository.softDeleteConversation,
       ).mockRejectedValue(new Error('Agent conversation not found'));
 
       await expect(
@@ -260,7 +259,7 @@ describe('AgentConversationsResolver', () => {
       const updated = { ...mockConversation, title: 'Renamed' };
 
       vi.mocked(
-        agentConversationsService.updateConversationTitle,
+        agentConversationsRepository.updateConversationTitle,
       ).mockResolvedValue(updated);
 
       const result = await resolver.updateAgentConversationTitle(

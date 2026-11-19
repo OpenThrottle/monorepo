@@ -7,8 +7,11 @@ import {
   type AuthPrincipal,
   type UserAuthPrincipal,
 } from '@openthrottle/nestjs-auth';
-import type { AgentConversationsService } from '@openthrottle/nestjs-repositories';
-import { deriveConversationTitleFromMessage } from '@openthrottle/nestjs-repositories';
+import type {
+  AgentConversationMessagesRepository,
+  AgentConversationsRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import { deriveConversationTitleFromMessage } from '@openthrottle/nestjs-repositories-server';
 import { isRecord } from '@openthrottle/nodejs-utils';
 
 import type { AgentsChatTurnResult } from '../agents.object.ts';
@@ -40,14 +43,14 @@ interface ResolvePersistedConversationInput {
  * @description Validates an owned conversation id or mints a new conversation row.
  */
 export const resolvePersistedConversation = async (
-  agentConversationsService: AgentConversationsService,
+  agentConversationsRepository: AgentConversationsRepository,
   input: ResolvePersistedConversationInput,
 ): Promise<ResolvePersistedConversationResult> => {
   const trimmedConversationId = input.conversationId?.trim();
 
   if (trimmedConversationId != null && trimmedConversationId.length > 0) {
     try {
-      await agentConversationsService.getConversationForUser(
+      await agentConversationsRepository.getConversationForUser(
         input.userId,
         trimmedConversationId,
       );
@@ -65,7 +68,7 @@ export const resolvePersistedConversation = async (
     }
   }
 
-  const conversation = await agentConversationsService.createConversation(
+  const conversation = await agentConversationsRepository.createConversation(
     input.userId,
     {
       title: deriveConversationTitleFromMessage(input.message),
@@ -76,7 +79,7 @@ export const resolvePersistedConversation = async (
 };
 
 interface PersistSuccessfulAgentsChatTurnInput {
-  readonly agentConversationsService: AgentConversationsService;
+  readonly agentConversationMessagesRepository: AgentConversationMessagesRepository;
   readonly conversationId: string;
   readonly llmRouterUsed: boolean;
   readonly message: string;
@@ -122,7 +125,7 @@ export const persistSuccessfulAgentsChatTurn = async (
   const requestedSnapshot = input.routerModelSnapshot ?? null;
   const routerModelSnapshot = input.llmRouterUsed ? requestedSnapshot : null;
 
-  await input.agentConversationsService.appendTurn(
+  await input.agentConversationMessagesRepository.appendTurn(
     input.userId,
     input.conversationId,
     {

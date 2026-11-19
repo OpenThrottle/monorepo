@@ -7,6 +7,15 @@
 export * from '../modules/agent-accounts/agent-accounts.factory.ts';
 export type * from '../modules/agent-accounts/agent-accounts.types.ts';
 export * from '../modules/agent-accounts/agent-accounts.utils.ts';
+export * from '../modules/agent-conversation-messages/agent-conversation-messages.factory.ts';
+export type * from '../modules/agent-conversation-messages/agent-conversation-messages.types.ts';
+export * from '../modules/agent-conversation-messages/agent-conversation-messages.utils.ts';
+export * from '../modules/agent-conversations/agent-conversations.factory.ts';
+export type * from '../modules/agent-conversations/agent-conversations.types.ts';
+export * from '../modules/agent-conversations/agent-conversations.utils.ts';
+export * from '../modules/agent-token-usage/agent-token-usage.factory.ts';
+export type * from '../modules/agent-token-usage/agent-token-usage.types.ts';
+export * from '../modules/agent-token-usage/agent-token-usage.utils.ts';
 export * from '../modules/blog-authors/blog-authors.factory.ts';
 export type * from '../modules/blog-authors/blog-authors.types.ts';
 export * from '../modules/blog-authors/blog-authors.utils.ts';

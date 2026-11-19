@@ -1,10 +1,21 @@
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
-  AgentConversationsService,
-  AgentTokenUsageService,
-} from '@openthrottle/nestjs-repositories';
-import { agentConversationMessagesFactory } from '@openthrottle/nestjs-repositories/testing';
+  AgentConversationMessagesRepository,
+  AgentConversationsRepository,
+  AgentTokenUsageRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import type {
+  AgentConversationMessagesRepositoryMock,
+  AgentConversationsRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
+import {
+  agentConversationMessagesFactory,
+  agentConversationsFactory,
+  createAgentConversationMessagesRepositoryMock,
+  createAgentConversationsRepositoryMock,
+  createAgentTokenUsageRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { AgentAccountStampingService } from '../../services/agent-account-stamping/agent-account-stamping.service.ts';
@@ -85,18 +96,21 @@ const baseRun: StartConversationStreamRun = {
 };
 
 function buildService(): {
-  conversations: AgentConversationsService;
+  conversations: AgentConversationsRepositoryMock;
+  messages: AgentConversationMessagesRepositoryMock;
   publish: ReturnType<typeof vi.fn>;
   recordTurnUsage: ReturnType<typeof vi.fn>;
   service: ConversationStreamService;
   stampForRun: ReturnType<typeof vi.fn>;
 } {
-  const conversations = createMock<AgentConversationsService>({
-    appendMessages: vi.fn().mockResolvedValue([]),
-    updateModelSnapshot: vi.fn().mockResolvedValue(undefined),
-  });
-  const recordTurnUsage = vi.fn().mockResolvedValue(undefined);
-  const tokenUsage = createMock<AgentTokenUsageService>({ recordTurnUsage });
+  const conversation = agentConversationsFactory.build({ id: 'conv-1' });
+  const conversations = createAgentConversationsRepositoryMock();
+  conversations.updateMetadata.mockResolvedValue(conversation);
+  conversations.updateModelSnapshot.mockResolvedValue(conversation);
+  const messages = createAgentConversationMessagesRepositoryMock();
+  messages.appendMessages.mockResolvedValue([]);
+  const tokenUsage = createAgentTokenUsageRepositoryMock();
+  const recordTurnUsage = tokenUsage.recordTurnUsage;
   const stampForRun = vi.fn().mockResolvedValue('account-1');
   const accountStamping = createMock<AgentAccountStampingService>({
     stampForRun,
@@ -109,9 +123,10 @@ function buildService(): {
     return: () => Promise.resolve({ done: true as const, value: undefined }),
   }));
   const service = new ConversationStreamService(
-    conversations,
+    createMock<AgentConversationsRepository>(conversations),
     createMock<LoggerService>(),
-    tokenUsage,
+    createMock<AgentConversationMessagesRepository>(messages),
+    createMock<AgentTokenUsageRepository>(tokenUsage),
     accountStamping,
     {
       asyncIterator,
@@ -120,7 +135,14 @@ function buildService(): {
       unsubscribe: vi.fn(),
     },
   );
-  return { conversations, publish, recordTurnUsage, service, stampForRun };
+  return {
+    conversations,
+    messages,
+    publish,
+    recordTurnUsage,
+    service,
+    stampForRun,
+  };
 }
 
 beforeEach(() => {
@@ -141,7 +163,7 @@ afterEach(() => {
 describe('ConversationStreamService', () => {
   it('publishes each delta then a terminal done chunk and persists the assistant message', async () => {
     openAiStreamMock.mockReturnValue(fakeStream(['Hel', 'lo']));
-    const { conversations, publish, service } = buildService();
+    const { conversations, messages, publish, service } = buildService();
 
     await service.runStream(baseRun);
 
@@ -158,18 +180,14 @@ describe('ConversationStreamService', () => {
         sortOrder: 2,
       }),
     ]);
-    expect(conversations.appendMessages).toHaveBeenCalledWith(
-      'user-1',
-      'conv-1',
-      [
-        {
-          content: 'Hello',
-          id: 'assistant-msg-1',
-          role: 'assistant',
-          toolMetadata: null,
-        },
-      ],
-    );
+    expect(messages.appendMessages).toHaveBeenCalledWith('user-1', 'conv-1', [
+      {
+        content: 'Hello',
+        id: 'assistant-msg-1',
+        role: 'assistant',
+        toolMetadata: null,
+      },
+    ]);
     expect(conversations.updateModelSnapshot).toHaveBeenCalledWith('conv-1', {
       modelName: 'llama3',
       modelProvider: 'ollama',
@@ -194,26 +212,22 @@ describe('ConversationStreamService', () => {
       yield { delta: '', done: true, kind: 'text' };
     }
     openAiStreamMock.mockReturnValue(mixed());
-    const { conversations, service } = buildService();
+    const { messages, service } = buildService();
 
     await service.runStream(baseRun);
 
-    expect(conversations.appendMessages).toHaveBeenCalledWith(
-      'user-1',
-      'conv-1',
-      [
-        expect.objectContaining({
-          content: 'Answer',
-          toolMetadata: {
-            events: [
-              { delta: 'reasoning…', kind: 'thinking', metadata: null },
-              { delta: '', kind: 'tool_call', metadata: { callId: 'c1' } },
-              { delta: '', kind: 'text', metadata: { bodyOffset: 0 } },
-            ],
-          },
-        }),
-      ],
-    );
+    expect(messages.appendMessages).toHaveBeenCalledWith('user-1', 'conv-1', [
+      expect.objectContaining({
+        content: 'Answer',
+        toolMetadata: {
+          events: [
+            { delta: 'reasoning…', kind: 'thinking', metadata: null },
+            { delta: '', kind: 'tool_call', metadata: { callId: 'c1' } },
+            { delta: '', kind: 'text', metadata: { bodyOffset: 0 } },
+          ],
+        },
+      }),
+    ]);
   });
 
   it('separates text segments split by a tool call and marks where each starts', async () => {
@@ -256,7 +270,7 @@ describe('ConversationStreamService', () => {
       yield { delta: '', done: true, kind: 'text' };
     }
     openAiStreamMock.mockReturnValue(interleaved());
-    const { conversations, publish, service } = buildService();
+    const { messages, publish, service } = buildService();
 
     await service.runStream(baseRun);
 
@@ -265,24 +279,20 @@ describe('ConversationStreamService', () => {
       'Retrying the rejected shells.',
       '1. **shell `pwd`:** rejected',
     ].join('\n\n');
-    expect(conversations.appendMessages).toHaveBeenCalledWith(
-      'user-1',
-      'conv-1',
-      [
-        expect.objectContaining({
-          content: body,
-          toolMetadata: {
-            events: [
-              { delta: '', kind: 'text', metadata: { bodyOffset: 0 } },
-              { delta: '', kind: 'tool_call', metadata: { callId: 'c1' } },
-              { delta: '', kind: 'text', metadata: { bodyOffset: 45 } },
-              { delta: '', kind: 'tool_result', metadata: { callId: 'c1' } },
-              { delta: '', kind: 'text', metadata: { bodyOffset: 76 } },
-            ],
-          },
-        }),
-      ],
-    );
+    expect(messages.appendMessages).toHaveBeenCalledWith('user-1', 'conv-1', [
+      expect.objectContaining({
+        content: body,
+        toolMetadata: {
+          events: [
+            { delta: '', kind: 'text', metadata: { bodyOffset: 0 } },
+            { delta: '', kind: 'tool_call', metadata: { callId: 'c1' } },
+            { delta: '', kind: 'text', metadata: { bodyOffset: 45 } },
+            { delta: '', kind: 'tool_result', metadata: { callId: 'c1' } },
+            { delta: '', kind: 'text', metadata: { bodyOffset: 76 } },
+          ],
+        },
+      }),
+    ]);
     // Each marker sits on the paragraph break that opens its segment.
     expect(body.indexOf('\n\nRetrying')).toBe(45);
     expect(body.indexOf('\n\n1. **shell')).toBe(76);
@@ -318,7 +328,7 @@ describe('ConversationStreamService', () => {
       };
     }
     claudeStreamMock.mockImplementation(claudeWithUsage);
-    const { conversations, publish, recordTurnUsage, service, stampForRun } =
+    const { messages, publish, recordTurnUsage, service, stampForRun } =
       buildService();
 
     await service.runStream({
@@ -348,29 +358,25 @@ describe('ConversationStreamService', () => {
       expect.objectContaining({ done: true, error: null, sortOrder: 2 }),
     ]);
     // The usage event is persisted into tool_metadata for reload.
-    expect(conversations.appendMessages).toHaveBeenCalledWith(
-      'user-1',
-      'conv-1',
-      [
-        expect.objectContaining({
-          content: 'Hello',
-          toolMetadata: {
-            events: [
-              { delta: '', kind: 'text', metadata: { bodyOffset: 0 } },
-              {
-                delta: '',
-                kind: 'usage',
-                metadata: {
-                  result: 'Hello',
-                  totalCostUsd: 0.04,
-                  usage: { input_tokens: 1200, output_tokens: 340 },
-                },
+    expect(messages.appendMessages).toHaveBeenCalledWith('user-1', 'conv-1', [
+      expect.objectContaining({
+        content: 'Hello',
+        toolMetadata: {
+          events: [
+            { delta: '', kind: 'text', metadata: { bodyOffset: 0 } },
+            {
+              delta: '',
+              kind: 'usage',
+              metadata: {
+                result: 'Hello',
+                totalCostUsd: 0.04,
+                usage: { input_tokens: 1200, output_tokens: 340 },
               },
-            ],
-          },
-        }),
-      ],
-    );
+            },
+          ],
+        },
+      }),
+    ]);
     // And a durable normalized usage row is written for the turn, stamped
     // with the account the server-env login resolved to.
     expect(stampForRun).toHaveBeenCalledWith('user-1', 'claude', process.env);
@@ -410,11 +416,11 @@ describe('ConversationStreamService', () => {
       };
     }
     claudeStreamMock.mockImplementation(claudeWithUsage);
-    const { conversations, recordTurnUsage, service } = buildService();
+    const { messages, recordTurnUsage, service } = buildService();
 
     await service.runStream({ ...baseRun, backend: 'claude', persist: false });
 
-    expect(conversations.appendMessages).not.toHaveBeenCalled();
+    expect(messages.appendMessages).not.toHaveBeenCalled();
     expect(recordTurnUsage).not.toHaveBeenCalled();
   });
 
@@ -496,33 +502,29 @@ describe('ConversationStreamService', () => {
       };
     }
     claudeStreamMock.mockImplementation(claudeError);
-    const { conversations, publish, service } = buildService();
+    const { messages, publish, service } = buildService();
 
     await service.runStream({ ...baseRun, backend: 'claude', cwd: '/repo' });
 
     const last = publish.mock.calls.at(-1)?.[1].conversationStreamChunkAdded;
     expect(last).toMatchObject({ done: true, error: 'model_not_found' });
     // The error rides the persisted usage payload, so a reload still shows it.
-    expect(conversations.appendMessages).toHaveBeenCalledWith(
-      'user-1',
-      'conv-1',
-      [
-        expect.objectContaining({
-          toolMetadata: {
-            events: [
-              {
-                delta: '',
-                kind: 'usage',
-                metadata: {
-                  error: 'model_not_found',
-                  result: 'model_not_found',
-                },
+    expect(messages.appendMessages).toHaveBeenCalledWith('user-1', 'conv-1', [
+      expect.objectContaining({
+        toolMetadata: {
+          events: [
+            {
+              delta: '',
+              kind: 'usage',
+              metadata: {
+                error: 'model_not_found',
+                result: 'model_not_found',
               },
-            ],
-          },
-        }),
-      ],
-    );
+            },
+          ],
+        },
+      }),
+    ]);
   });
 
   it('publishes a non-retryable usageLimit terminal marker and keeps usage_limit chunks in the transcript events', async () => {
@@ -552,7 +554,7 @@ describe('ConversationStreamService', () => {
       };
     }
     claudeStreamMock.mockImplementation(claudeLimited);
-    const { conversations, publish, service } = buildService();
+    const { messages, publish, service } = buildService();
 
     await service.runStream({ ...baseRun, backend: 'claude', cwd: '/repo' });
 
@@ -567,19 +569,15 @@ describe('ConversationStreamService', () => {
       error: 'limit reached',
       metadataJson: JSON.stringify({ retryable: false, usageLimit }),
     });
-    expect(conversations.appendMessages).toHaveBeenCalledWith(
-      'user-1',
-      'conv-1',
-      [
-        expect.objectContaining({
-          toolMetadata: {
-            events: expect.arrayContaining([
-              expect.objectContaining({ kind: 'usage_limit' }),
-            ]),
-          },
-        }),
-      ],
-    );
+    expect(messages.appendMessages).toHaveBeenCalledWith('user-1', 'conv-1', [
+      expect.objectContaining({
+        toolMetadata: {
+          events: expect.arrayContaining([
+            expect.objectContaining({ kind: 'usage_limit' }),
+          ]),
+        },
+      }),
+    ]);
   });
 
   it('publishes the topic keyed by conversation id with the resolver field name', async () => {
@@ -606,24 +604,20 @@ describe('ConversationStreamService', () => {
       throw new Error('connection reset');
     }
     openAiStreamMock.mockReturnValue(failing());
-    const { conversations, publish, service } = buildService();
+    const { messages, publish, service } = buildService();
 
     await service.runStream(baseRun);
 
     const last = publish.mock.calls.at(-1)?.[1].conversationStreamChunkAdded;
     expect(last).toMatchObject({ done: true, error: 'connection reset' });
-    expect(conversations.appendMessages).toHaveBeenCalledWith(
-      'user-1',
-      'conv-1',
-      [
-        {
-          content: 'partial',
-          id: 'assistant-msg-1',
-          role: 'assistant',
-          toolMetadata: null,
-        },
-      ],
-    );
+    expect(messages.appendMessages).toHaveBeenCalledWith('user-1', 'conv-1', [
+      {
+        content: 'partial',
+        id: 'assistant-msg-1',
+        role: 'assistant',
+        toolMetadata: null,
+      },
+    ]);
   });
 
   it('times out a stalled backend: retryable terminal chunk, partial persisted, controller cleared', async () => {
@@ -640,7 +634,7 @@ describe('ConversationStreamService', () => {
       await new Promise<never>(() => {});
     }
     openAiStreamMock.mockReturnValue(stalling());
-    const { conversations, publish, service } = buildService();
+    const { messages, publish, service } = buildService();
 
     const done = service.runStream(baseRun);
     await vi.advanceTimersByTimeAsync(5000);
@@ -653,18 +647,14 @@ describe('ConversationStreamService', () => {
     });
     expect(last.error).toContain('timed out');
     // The partial text is persisted so the turn is not lost.
-    expect(conversations.appendMessages).toHaveBeenCalledWith(
-      'user-1',
-      'conv-1',
-      [
-        {
-          content: 'partial',
-          id: 'assistant-msg-1',
-          role: 'assistant',
-          toolMetadata: null,
-        },
-      ],
-    );
+    expect(messages.appendMessages).toHaveBeenCalledWith('user-1', 'conv-1', [
+      {
+        content: 'partial',
+        id: 'assistant-msg-1',
+        role: 'assistant',
+        toolMetadata: null,
+      },
+    ]);
     // The controller is cleared on completion (nothing left to cancel).
     expect(service.cancel('conv-1')).toBe(false);
   });
@@ -701,7 +691,7 @@ describe('ConversationStreamService', () => {
       yield { delta: '', done: true, kind: 'text' };
     }
     openAiStreamMock.mockImplementation(aliveButQuiet);
-    const { conversations, publish, service } = buildService();
+    const { messages, publish, service } = buildService();
 
     const done = service.runStream(baseRun);
     await vi.advanceTimersByTimeAsync(30000);
@@ -739,18 +729,14 @@ describe('ConversationStreamService', () => {
     );
     // The persisted assistant message is the clean text — no keepalive noise in
     // tool_metadata.
-    expect(conversations.appendMessages).toHaveBeenCalledWith(
-      'user-1',
-      'conv-1',
-      [
-        {
-          content: 'Hello',
-          id: 'assistant-msg-1',
-          role: 'assistant',
-          toolMetadata: null,
-        },
-      ],
-    );
+    expect(messages.appendMessages).toHaveBeenCalledWith('user-1', 'conv-1', [
+      {
+        content: 'Hello',
+        id: 'assistant-msg-1',
+        role: 'assistant',
+        toolMetadata: null,
+      },
+    ]);
   });
 
   it('terminates a backend that ignores its abort signal (the race, not abort propagation)', async () => {
@@ -991,7 +977,7 @@ describe('ConversationStreamService', () => {
 
   it('surfaces a cursor mint failure as a terminal error chunk instead of hanging (no spawn)', async () => {
     createCursorAgentSessionMock.mockRejectedValue(new Error('auth expired'));
-    const { service, publish } = buildService();
+    const { publish, service } = buildService();
 
     await service.runStream({
       ...baseRun,
@@ -1130,7 +1116,7 @@ describe('ConversationStreamService', () => {
 
   it('Private mode (persist=false) streams every chunk but writes nothing to the DB', async () => {
     openAiStreamMock.mockReturnValue(fakeStream(['Hel', 'lo']));
-    const { conversations, publish, service } = buildService();
+    const { conversations, messages, publish, service } = buildService();
 
     await service.runStream({ ...baseRun, persist: false });
 
@@ -1144,7 +1130,7 @@ describe('ConversationStreamService', () => {
       expect.objectContaining({ delta: '', done: true, sortOrder: 2 }),
     ]);
     // But nothing is persisted: no assistant message, no model snapshot.
-    expect(conversations.appendMessages).not.toHaveBeenCalled();
+    expect(messages.appendMessages).not.toHaveBeenCalled();
     expect(conversations.updateModelSnapshot).not.toHaveBeenCalled();
   });
 
@@ -1260,7 +1246,7 @@ describe('ConversationStreamService.subscribe (replay buffer)', () => {
 
   describe('seen-through watermark', () => {
     const watermarkCalls = (
-      conversations: AgentConversationsService,
+      conversations: AgentConversationsRepositoryMock,
     ): unknown[] => {
       return vi
         .mocked(conversations.updateMetadata)
@@ -1271,8 +1257,8 @@ describe('ConversationStreamService.subscribe (replay buffer)', () => {
 
     it('records the persisted assistant sortOrder after a successful turn', async () => {
       openAiStreamMock.mockReturnValue(fakeStream(['ok']));
-      const { conversations, service } = buildService();
-      vi.mocked(conversations.appendMessages).mockResolvedValue([
+      const { conversations, messages, service } = buildService();
+      vi.mocked(messages.appendMessages).mockResolvedValue([
         agentConversationMessagesFactory.build({ sortOrder: 7 }),
       ]);
 
@@ -1293,8 +1279,8 @@ describe('ConversationStreamService.subscribe (replay buffer)', () => {
         throw new Error('connection reset');
       }
       openAiStreamMock.mockReturnValue(failing());
-      const { conversations, service } = buildService();
-      vi.mocked(conversations.appendMessages).mockResolvedValue([
+      const { conversations, messages, service } = buildService();
+      vi.mocked(messages.appendMessages).mockResolvedValue([
         agentConversationMessagesFactory.build({ sortOrder: 7 }),
       ]);
 
@@ -1314,8 +1300,8 @@ describe('ConversationStreamService.subscribe (replay buffer)', () => {
 
     it('logs and swallows a watermark write failure', async () => {
       openAiStreamMock.mockReturnValue(fakeStream(['ok']));
-      const { conversations, publish, service } = buildService();
-      vi.mocked(conversations.appendMessages).mockResolvedValue([
+      const { conversations, messages, publish, service } = buildService();
+      vi.mocked(messages.appendMessages).mockResolvedValue([
         agentConversationMessagesFactory.build({ sortOrder: 7 }),
       ]);
       vi.mocked(conversations.updateMetadata).mockRejectedValue(

@@ -4,7 +4,10 @@
 
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+import {
+  AgentConversationMessagesModule,
+  AgentConversationsModule,
+} from '@openthrottle/nestjs-repositories-server';
 
 import { McpDeveloperModule } from '../../modules/mcp-developer/mcp-developer.module.ts';
 import { AgentsResolver } from './agents.resolver.ts';
@@ -12,7 +15,12 @@ import { AgentsMcpRouter } from './mcp-router/mcp-router.service.ts';
 import { AgentsMcpRouterLlmService } from './mcp-router-llm/mcp-router-llm.service.ts';
 
 @Module({
-  imports: [ConfigModule, McpDeveloperModule, NestjsRepositoriesModule],
+  imports: [
+    AgentConversationMessagesModule,
+    AgentConversationsModule,
+    ConfigModule,
+    McpDeveloperModule,
+  ],
   providers: [AgentsMcpRouter, AgentsMcpRouterLlmService, AgentsResolver],
 })
 export class AgentsGraphqlModule {}

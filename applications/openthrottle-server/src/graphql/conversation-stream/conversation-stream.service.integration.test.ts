@@ -19,10 +19,18 @@ import {
 } from '@openthrottle/agentic-replay-testing';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
-  AgentConversationsService,
-  AgentTokenUsageService,
-} from '@openthrottle/nestjs-repositories';
+  AgentConversationMessagesRepository,
+  AgentConversationsRepository,
+  AgentTokenUsageRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import {
+  agentConversationsFactory,
+  createAgentConversationMessagesRepositoryMock,
+  createAgentConversationsRepositoryMock,
+  createAgentTokenUsageRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import { CLAUDE_BIN_ENV } from '@openthrottle/openthrottle-agentic-utils';
+import type { Mock } from 'vitest';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { AgentAccountStampingService } from '../../services/agent-account-stamping/agent-account-stamping.service.ts';
@@ -47,23 +55,30 @@ const seededId = (index: number): string => {
 };
 
 interface Harness {
-  readonly appendMessages: ReturnType<typeof vi.fn>;
+  readonly appendMessages: Mock;
   readonly published: () => Array<Record<string, unknown>>;
-  readonly recordTurnUsage: ReturnType<typeof vi.fn>;
+  readonly recordTurnUsage: Mock;
   readonly service: ConversationStreamService;
 }
 
 function buildHarness(): Harness {
-  const appendMessages = vi.fn().mockResolvedValue([]);
-  const recordTurnUsage = vi.fn().mockResolvedValue(undefined);
+  const conversations = createAgentConversationsRepositoryMock();
+  const conversation = agentConversationsFactory.build({
+    id: 'conversation-1',
+  });
+  conversations.updateMetadata.mockResolvedValue(conversation);
+  conversations.updateModelSnapshot.mockResolvedValue(conversation);
+  const messages = createAgentConversationMessagesRepositoryMock();
+  messages.appendMessages.mockResolvedValue([]);
+  const tokenUsage = createAgentTokenUsageRepositoryMock();
+  const appendMessages = messages.appendMessages;
+  const recordTurnUsage = tokenUsage.recordTurnUsage;
   const publish = vi.fn().mockResolvedValue(undefined);
   const service = new ConversationStreamService(
-    createMock<AgentConversationsService>({
-      appendMessages,
-      updateModelSnapshot: vi.fn().mockResolvedValue(undefined),
-    }),
+    createMock<AgentConversationsRepository>(conversations),
     createMock<LoggerService>(),
-    createMock<AgentTokenUsageService>({ recordTurnUsage }),
+    createMock<AgentConversationMessagesRepository>(messages),
+    createMock<AgentTokenUsageRepository>(tokenUsage),
     createMock<AgentAccountStampingService>({
       stampForRun: vi.fn().mockResolvedValue(null),
     }),

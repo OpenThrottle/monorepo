@@ -11,12 +11,14 @@ import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { type AuthPrincipal, CurrentUser } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 import type {
+  AgentAccount,
   TokenUsageAccountFilter,
   TokenUsageBatchRow,
-} from '@openthrottle/nestjs-repositories';
-import { AgentTokenUsageService } from '@openthrottle/nestjs-repositories';
-import type { AgentAccount } from '@openthrottle/nestjs-repositories-server';
-import { AgentAccountsRepository } from '@openthrottle/nestjs-repositories-server';
+} from '@openthrottle/nestjs-repositories-server';
+import {
+  AgentAccountsRepository,
+  AgentTokenUsageRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import type { IdentifiedAgentAccount } from '@openthrottle/openthrottle-agentic-utils';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
@@ -69,7 +71,7 @@ export class TokenUsageResolver {
     private readonly accountStamping: AgentAccountStampingService,
     private readonly agentAccountsRepository: AgentAccountsRepository,
     private readonly effectiveUserResolutionService: EffectiveUserResolutionService,
-    private readonly tokenUsageService: AgentTokenUsageService,
+    private readonly tokenUsageRepository: AgentTokenUsageRepository,
   ) {}
 
   @Mutation(() => RecordTokenUsageResultObject, {
@@ -98,7 +100,7 @@ export class TokenUsageResolver {
       toTokenUsageBatchRows(input.rows),
     );
     const { inserted, skipped } =
-      await this.tokenUsageService.recordTokenUsageBatch(userId, rows);
+      await this.tokenUsageRepository.recordTokenUsageBatch(userId, rows);
 
     const result = new RecordTokenUsageResultObject();
 
@@ -186,9 +188,9 @@ export class TokenUsageResolver {
     };
 
     const [rows, totals, byAccount] = await Promise.all([
-      this.tokenUsageService.listUsageInRange(query),
-      this.tokenUsageService.getUsageTotalsInRange(query),
-      this.tokenUsageService.getUsageByAccountInRange(query),
+      this.tokenUsageRepository.listUsageInRange(query),
+      this.tokenUsageRepository.getUsageTotalsInRange(query),
+      this.tokenUsageRepository.getUsageByAccountInRange(query),
     ]);
     const accountIds = [
       ...new Set(

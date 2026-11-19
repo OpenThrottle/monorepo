@@ -1,19 +1,17 @@
-import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import { PERMISSIONS, PERMISSIONS_KEY } from '@openthrottle/nestjs-rbac';
 import {
-  AgentTokenUsageService,
+  AgentTokenUsageRepository,
   CAPTURE_HEALTH_STREAMS,
-} from '@openthrottle/nestjs-repositories';
-import {
   RolesRepository,
   SkillUsageEventsRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import {
+  createAgentTokenUsageRepositoryMock,
   createRolesRepositoryMock,
   createSkillUsageEventsRepositoryMock,
 } from '@openthrottle/nestjs-repositories-server/testing';
-import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, test } from 'vitest';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import { CaptureHealthResolver } from './capture-health.resolver.ts';
@@ -23,19 +21,15 @@ describe('CaptureHealthResolver', () => {
 
   const skillUsageEvents = createSkillUsageEventsRepositoryMock();
   const listSkillCaptureHealth = skillUsageEvents.listCaptureHealth;
-  const listTokenCaptureHealth = vi.fn();
+  const tokenUsage = createAgentTokenUsageRepositoryMock();
+  const listTokenCaptureHealth = tokenUsage.listCaptureHealth;
 
   beforeAll(async () => {
     const app = await Test.createTestingModule({
       providers: [
         CaptureHealthResolver,
         { provide: SkillUsageEventsRepository, useValue: skillUsageEvents },
-        {
-          provide: AgentTokenUsageService,
-          useValue: createMock<AgentTokenUsageService>({
-            listCaptureHealth: listTokenCaptureHealth,
-          }),
-        },
+        { provide: AgentTokenUsageRepository, useValue: tokenUsage },
         { provide: RolesRepository, useValue: createRolesRepositoryMock() },
         GqlPermissionsGuard,
       ],

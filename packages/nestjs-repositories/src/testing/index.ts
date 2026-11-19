@@ -5,16 +5,6 @@
  * Re-exported from `.` they made the production server load faker at startup, and the image —
  * which installs production dependencies only — crashed with ERR_MODULE_NOT_FOUND.
  */
-export type {
-  AgentConversationFactoryData,
-  AgentConversationMessageFactoryData,
-} from '../modules/agent-conversations/agent-conversations.factory.ts';
-export {
-  agentConversationMessagesFactory,
-  agentConversationsFactory,
-} from '../modules/agent-conversations/agent-conversations.factory.ts';
-export type { AgentTokenUsageFactoryData } from '../modules/agent-token-usage/agent-token-usage.factory.ts';
-export { agentTokenUsageFactory } from '../modules/agent-token-usage/agent-token-usage.factory.ts';
 // Moved to nestjs-repositories-server (OT plan f89ee499): re-exported under the same names.
 export {
   planEmbeddingsFactory,

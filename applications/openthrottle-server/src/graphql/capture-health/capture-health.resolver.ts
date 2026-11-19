@@ -7,8 +7,10 @@
 import { UseGuards } from '@nestjs/common';
 import { Query, Resolver } from '@nestjs/graphql';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
-import { AgentTokenUsageService } from '@openthrottle/nestjs-repositories';
-import { SkillUsageEventsRepository } from '@openthrottle/nestjs-repositories-server';
+import {
+  AgentTokenUsageRepository,
+  SkillUsageEventsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import { toCaptureHealthRowObject } from './capture-health.mapper.ts';
@@ -21,7 +23,7 @@ import { CaptureHealthRowObject } from './capture-health.object.ts';
 @UseGuards(GqlPermissionsGuard)
 export class CaptureHealthResolver {
   constructor(
-    private readonly agentTokenUsageService: AgentTokenUsageService,
+    private readonly agentTokenUsageRepository: AgentTokenUsageRepository,
     private readonly skillUsageEventsRepository: SkillUsageEventsRepository,
   ) {}
 
@@ -32,7 +34,7 @@ export class CaptureHealthResolver {
   async captureHealth(): Promise<CaptureHealthRowObject[]> {
     const [skillRows, tokenRows] = await Promise.all([
       this.skillUsageEventsRepository.listCaptureHealth(),
-      this.agentTokenUsageService.listCaptureHealth(),
+      this.agentTokenUsageRepository.listCaptureHealth(),
     ]);
 
     return [...skillRows, ...tokenRows].map(toCaptureHealthRowObject);

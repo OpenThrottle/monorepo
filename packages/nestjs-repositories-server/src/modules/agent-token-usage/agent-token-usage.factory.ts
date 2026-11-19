@@ -1,0 +1,50 @@
+/**
+ * @description Fishery factory for {@link AgentTokenUsage}. Use in tests to build mock usage rows.
+ */
+
+import { faker } from '@faker-js/faker';
+import { Factory } from 'fishery';
+
+import { AGENT_TOKEN_USAGE_SOURCES } from './agent-token-usage.constants.ts';
+import type { AgentTokenUsage } from './agent-token-usage.entity.ts';
+
+/**
+ * Builds a chat-turn usage row by default. Override any field via `.build({ ... })`.
+ * @public
+ */
+export const agentTokenUsageFactory = Factory.define<AgentTokenUsage>(() => {
+  const inputTokens = faker.number.int({ max: 20000, min: 100 });
+  const outputTokens = faker.number.int({ max: 4000, min: 1 });
+
+  return {
+    agentAccountId: null,
+    cachedReadTokens: faker.number.int({ max: 5000, min: 0 }),
+    cachedWriteTokens: faker.number.int({ max: 1000, min: 0 }),
+    conversationId: faker.string.uuid(),
+    costUsd: faker.number.float({ fractionDigits: 6, max: 1, min: 0 }),
+    createdAt: faker.date.recent(),
+    cwd: null,
+    gitBranch: null,
+    id: faker.string.uuid(),
+    inputTokens,
+    messageId: faker.string.uuid(),
+    model: faker.helpers.arrayElement(['claude-opus-4-8', 'gpt-5', 'grok-4']),
+    outputTokens,
+    provider: faker.helpers.arrayElement([
+      'claude',
+      'codex',
+      'cursor',
+      'grok',
+      'opencode',
+      'openai',
+    ]),
+    rawUsage: null,
+    reasoningTokens: faker.number.int({ max: 500, min: 0 }),
+    repoIdentity: null,
+    requestId: null,
+    sessionId: null,
+    source: AGENT_TOKEN_USAGE_SOURCES.CHAT,
+    totalTokens: inputTokens + outputTokens,
+    userId: faker.string.uuid(),
+  };
+});

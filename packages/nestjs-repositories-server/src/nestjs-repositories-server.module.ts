@@ -1,6 +1,9 @@
 import { Module } from '@nestjs/common';
 
 import { AgentAccountsModule } from './modules/agent-accounts/agent-accounts.module.ts';
+import { AgentConversationMessagesModule } from './modules/agent-conversation-messages/agent-conversation-messages.module.ts';
+import { AgentConversationsModule } from './modules/agent-conversations/agent-conversations.module.ts';
+import { AgentTokenUsageModule } from './modules/agent-token-usage/agent-token-usage.module.ts';
 import { BlogAuthorsModule } from './modules/blog-authors/blog-authors.module.ts';
 import { BlogPostsModule } from './modules/blog-posts/blog-posts.module.ts';
 import { BlogTagsModule } from './modules/blog-tags/blog-tags.module.ts';
@@ -58,6 +61,9 @@ import { WorktreeRemovalsModule } from './modules/worktree-removals/worktree-rem
 @Module({
   exports: [
     AgentAccountsModule,
+    AgentConversationMessagesModule,
+    AgentConversationsModule,
+    AgentTokenUsageModule,
     BlogAuthorsModule,
     BlogPostsModule,
     BlogTagsModule,
@@ -106,6 +112,9 @@ import { WorktreeRemovalsModule } from './modules/worktree-removals/worktree-rem
   ],
   imports: [
     AgentAccountsModule,
+    AgentConversationMessagesModule,
+    AgentConversationsModule,
+    AgentTokenUsageModule,
     BlogAuthorsModule,
     BlogPostsModule,
     BlogTagsModule,
