@@ -40,7 +40,10 @@ export type {
   UseChatTurnFetcherResult,
 } from './useChatTurnFetcher';
 export { useChatTurnFetcher } from './useChatTurnFetcher';
-export type { UseConversationListResult } from './useConversationList';
+export type {
+  UseConversationListOptions,
+  UseConversationListResult,
+} from './useConversationList';
 export { useConversationList } from './useConversationList';
 export type {
   UseConversationStreamOptions,
