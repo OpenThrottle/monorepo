@@ -8,6 +8,7 @@ import {
   AgentConversation,
   AgentConversationMessage,
   AgentTokenUsage,
+  AgentTrajectory,
   BlogAuthor,
   BlogPost,
   BlogTag,
@@ -15,6 +16,13 @@ import {
   CodeIndexSnapshot,
   CustomPrompt,
   DailyStat,
+  EvalCase,
+  EvalDataset,
+  EvalGrade,
+  EvalHumanLabel,
+  EvalJudgeCalibration,
+  EvalRun,
+  EvalTrial,
   McpConnectorConnection,
   Note,
   Permission,
@@ -58,15 +66,6 @@ import {
 } from '@openthrottle/nestjs-repositories-server';
 import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
 import type { DataSourceOptions } from 'typeorm';
-
-import { AgentTrajectory } from './modules/agent-trajectories/agent-trajectory.entity.ts';
-import { EvalCase } from './modules/eval-datasets/eval-case.entity.ts';
-import { EvalDataset } from './modules/eval-datasets/eval-dataset.entity.ts';
-import { EvalHumanLabel } from './modules/eval-human-labels/eval-human-label.entity.ts';
-import { EvalJudgeCalibration } from './modules/eval-judge-calibrations/eval-judge-calibration.entity.ts';
-import { EvalGrade } from './modules/eval-runs/eval-grade.entity.ts';
-import { EvalRun } from './modules/eval-runs/eval-run.entity.ts';
-import { EvalTrial } from './modules/eval-runs/eval-trial.entity.ts';
 
 /**
  * @description Resolves a positive integer from an env var, or undefined when

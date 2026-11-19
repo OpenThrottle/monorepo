@@ -12,7 +12,7 @@ import {
   type EvalCalibrationStatus,
   type EvalJudgePair,
   type EvalSplit,
-} from '@openthrottle/nestjs-repositories';
+} from '@openthrottle/nestjs-repositories-server';
 
 export const isEvalCalibrationStatus = (
   value: string,

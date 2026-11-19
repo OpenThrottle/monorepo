@@ -17,10 +17,13 @@ import {
   type ReportTrial,
 } from '@openthrottle/agentic-evals';
 import {
-  EvalDatasetsService,
-  EvalJudgeCalibrationsService,
-  EvalRunsService,
-} from '@openthrottle/nestjs-repositories';
+  EvalCasesRepository,
+  EvalDatasetsRepository,
+  EvalGradesRepository,
+  EvalJudgeCalibrationsRepository,
+  EvalRunsRepository,
+  EvalTrialsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 
 import { toEvalRunObject } from '../eval-runs/eval-run.mapper.ts';
 import type { EvalRunObject } from '../eval-runs/eval-run.object.ts';
@@ -50,9 +53,12 @@ const toComparableConfig = (run: EvalRunObject): ComparableConfig => {
 @Resolver(() => EvalRunReportObject)
 export class EvalReportsResolver {
   constructor(
-    private readonly evalDatasetsService: EvalDatasetsService,
-    private readonly evalJudgeCalibrationsService: EvalJudgeCalibrationsService,
-    private readonly evalRunsService: EvalRunsService,
+    private readonly evalCasesRepository: EvalCasesRepository,
+    private readonly evalDatasetsRepository: EvalDatasetsRepository,
+    private readonly evalGradesRepository: EvalGradesRepository,
+    private readonly evalJudgeCalibrationsRepository: EvalJudgeCalibrationsRepository,
+    private readonly evalRunsRepository: EvalRunsRepository,
+    private readonly evalTrialsRepository: EvalTrialsRepository,
   ) {}
 
   @Query(() => EvalRunReportObject, {
@@ -86,18 +92,18 @@ export class EvalReportsResolver {
   }
 
   private async loadReport(runId: string): Promise<LoadedReport> {
-    const runRow = await this.evalRunsService.findRunById(runId);
+    const runRow = await this.evalRunsRepository.findRunById(runId);
 
     if (runRow == null) {
       throw new NotFoundException('eval run not found');
     }
 
     const [dataset, cases, trialRows] = await Promise.all([
-      this.evalDatasetsService.findById(runRow.datasetId),
-      this.evalDatasetsService.findCases(runRow.datasetId),
-      this.evalRunsService.findTrialsByRun(runRow.id),
+      this.evalDatasetsRepository.findDatasetById(runRow.datasetId),
+      this.evalCasesRepository.findByDataset(runRow.datasetId),
+      this.evalTrialsRepository.findByRun(runRow.id),
     ]);
-    const gradeRows = await this.evalRunsService.findGradesByTrials(
+    const gradeRows = await this.evalGradesRepository.findByTrials(
       trialRows.map((trial) => {
         return trial.id;
       }),
@@ -171,7 +177,7 @@ export class EvalReportsResolver {
     ];
     const histories = await Promise.all(
       judgeIds.map((graderId) => {
-        return this.evalJudgeCalibrationsService.findByGrader(graderId);
+        return this.evalJudgeCalibrationsRepository.findByGrader(graderId);
       }),
     );
     const latest = new Map<string, ReportCalibration>();

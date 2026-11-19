@@ -2,7 +2,7 @@
  * @description Maps the EvalJudgeCalibration entity to its GraphQL object.
  */
 
-import type { EvalJudgeCalibration } from '@openthrottle/nestjs-repositories';
+import type { EvalJudgeCalibration } from '@openthrottle/nestjs-repositories-server';
 
 import type { EvalJudgeCalibrationObject } from './eval-judge-calibration.object.ts';
 

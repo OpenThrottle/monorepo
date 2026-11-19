@@ -1,6 +1,6 @@
 /**
  * @description GraphQL ObjectType for a human label on an agent trajectory. Mirrors the
- * eval_human_labels entity from @openthrottle/nestjs-repositories (migration 146).
+ * eval_human_labels entity from @openthrottle/nestjs-repositories-server (migration 146).
  */
 
 import { Field, ID, ObjectType } from '@nestjs/graphql';

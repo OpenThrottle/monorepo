@@ -1,6 +1,6 @@
 /**
  * @description GraphQL ObjectTypes for a judge calibration. Mirrors the eval_judge_calibrations
- * entity from @openthrottle/nestjs-repositories (migration 148).
+ * entity from @openthrottle/nestjs-repositories-server (migration 148).
  */
 
 import { Field, Float, ID, Int, ObjectType } from '@nestjs/graphql';

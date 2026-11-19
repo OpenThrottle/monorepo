@@ -12,9 +12,9 @@ import { calibrateJudge } from '@openthrottle/agentic-evals';
 import { type AuthPrincipal, CurrentUser } from '@openthrottle/nestjs-auth';
 import { GlobalClsService } from '@openthrottle/nestjs-modules';
 import {
-  EvalJudgeCalibrationsService,
-  EvalRunsService,
-} from '@openthrottle/nestjs-repositories';
+  EvalJudgeCalibrationsRepository,
+  EvalRunsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 
 import {
   isForeignKeyViolation,
@@ -44,8 +44,8 @@ const trimToNull = (value: string | null | undefined): string | null => {
 @Resolver(() => EvalJudgeCalibrationObject)
 export class EvalJudgeCalibrationsResolver {
   constructor(
-    private readonly evalJudgeCalibrationsService: EvalJudgeCalibrationsService,
-    private readonly evalRunsService: EvalRunsService,
+    private readonly evalJudgeCalibrationsRepository: EvalJudgeCalibrationsRepository,
+    private readonly evalRunsRepository: EvalRunsRepository,
     private readonly globalCls: GlobalClsService,
   ) {}
 
@@ -55,7 +55,8 @@ export class EvalJudgeCalibrationsResolver {
   async judgeCalibrations(
     @Args('graderId', { type: () => String }) graderId: string,
   ): Promise<EvalJudgeCalibrationObject[]> {
-    const rows = await this.evalJudgeCalibrationsService.findByGrader(graderId);
+    const rows =
+      await this.evalJudgeCalibrationsRepository.findByGrader(graderId);
 
     return rows.map(toEvalJudgeCalibrationObject);
   }
@@ -110,7 +111,7 @@ export class EvalJudgeCalibrationsResolver {
     const createdBy = resolveEvalActor(this.globalCls.get('user'), principal);
 
     try {
-      const row = await this.evalJudgeCalibrationsService.record({
+      const row = await this.evalJudgeCalibrationsRepository.record({
         catchRate: input.catchRate,
         createdBy,
         datasetId: input.datasetId,
@@ -151,13 +152,13 @@ export class EvalJudgeCalibrationsResolver {
   ): Promise<CalibrateJudgeForRunResultObject> {
     const split = parseOptionalSplit(input.split);
     const createdBy = resolveEvalActor(this.globalCls.get('user'), principal);
-    const run = await this.evalRunsService.findRunById(input.runId);
+    const run = await this.evalRunsRepository.findRunById(input.runId);
 
     if (run == null) {
       throw new NotFoundException('eval run not found');
     }
 
-    const found = await this.evalJudgeCalibrationsService.findJudgePairs({
+    const found = await this.evalJudgeCalibrationsRepository.findJudgePairs({
       graderId: input.graderId,
       graderVersion: input.graderVersion,
       runId: run.id,
@@ -186,7 +187,7 @@ export class EvalJudgeCalibrationsResolver {
         };
       }),
     });
-    const row = await this.evalJudgeCalibrationsService.record({
+    const row = await this.evalJudgeCalibrationsRepository.record({
       catchRate: result.catchRate,
       createdBy,
       datasetId: run.datasetId,

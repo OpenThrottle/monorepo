@@ -9,9 +9,9 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
 import {
   AGENT_TRAJECTORY_SOURCE,
-  AgentTrajectoriesService,
+  AgentTrajectoriesRepository,
   type AgentTrajectorySource,
-} from '@openthrottle/nestjs-repositories';
+} from '@openthrottle/nestjs-repositories-server';
 import {
   capTrajectory,
   parseAtifTrajectoryJson,
@@ -55,7 +55,7 @@ const isForeignKeyViolation = (error: unknown): boolean => {
 @Resolver(() => AgentTrajectoryObject)
 export class AgentTrajectoriesResolver {
   constructor(
-    private readonly agentTrajectoriesService: AgentTrajectoriesService,
+    private readonly agentTrajectoriesRepository: AgentTrajectoriesRepository,
   ) {}
 
   @Query(() => AgentTrajectoryObject, {
@@ -65,7 +65,7 @@ export class AgentTrajectoriesResolver {
   async agentTrajectory(
     @Args('id', { type: () => ID }) id: string,
   ): Promise<AgentTrajectoryObject | null> {
-    const row = await this.agentTrajectoriesService.findById(id);
+    const row = await this.agentTrajectoriesRepository.findTrajectoryById(id);
 
     return row == null ? null : toAgentTrajectoryObject(row);
   }
@@ -76,7 +76,8 @@ export class AgentTrajectoriesResolver {
   async agentTrajectoriesByPlanRun(
     @Args('planRunId', { type: () => ID }) planRunId: string,
   ): Promise<AgentTrajectoryObject[]> {
-    const rows = await this.agentTrajectoriesService.findByPlanRun(planRunId);
+    const rows =
+      await this.agentTrajectoriesRepository.findByPlanRun(planRunId);
 
     return rows.map(toAgentTrajectoryObject);
   }
@@ -87,7 +88,7 @@ export class AgentTrajectoriesResolver {
   async agentTrajectoriesByTask(
     @Args('taskId', { type: () => ID }) taskId: string,
   ): Promise<AgentTrajectoryObject[]> {
-    const rows = await this.agentTrajectoriesService.findByTask(taskId);
+    const rows = await this.agentTrajectoriesRepository.findByTask(taskId);
 
     return rows.map(toAgentTrajectoryObject);
   }
@@ -127,7 +128,7 @@ export class AgentTrajectoriesResolver {
     const summary = summarizeTrajectory(capped.trajectory);
 
     try {
-      const row = await this.agentTrajectoriesService.create({
+      const row = await this.agentTrajectoriesRepository.createTrajectory({
         byteSize: capped.byteSize,
         cachedTokens: summary.cachedTokens,
         costUsd: summary.costUsd,
@@ -189,7 +190,7 @@ export class AgentTrajectoriesResolver {
     const summary = summarizeTrajectory(capped.trajectory);
 
     try {
-      const row = await this.agentTrajectoriesService.replace(id, {
+      const row = await this.agentTrajectoriesRepository.replaceTrajectory(id, {
         byteSize: capped.byteSize,
         cachedTokens: summary.cachedTokens,
         costUsd: summary.costUsd,

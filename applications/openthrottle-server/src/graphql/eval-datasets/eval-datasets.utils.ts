@@ -6,7 +6,7 @@
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import type { AuthPrincipal } from '@openthrottle/nestjs-auth';
 import type { GlobalClsUser } from '@openthrottle/nestjs-modules';
-import type { EvalJsonValue } from '@openthrottle/nestjs-repositories';
+import type { EvalJsonValue } from '@openthrottle/nestjs-repositories-server';
 import { QueryFailedError } from 'typeorm';
 
 import { resolveNoteAuthor } from '../notes/notes.utils.ts';

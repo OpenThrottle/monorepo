@@ -3,7 +3,7 @@
  * the stored ATIF document into `trajectoryJson`.
  */
 
-import type { AgentTrajectory } from '@openthrottle/nestjs-repositories';
+import type { AgentTrajectory } from '@openthrottle/nestjs-repositories-server';
 
 import type { AgentTrajectoryObject } from './agent-trajectory.object.ts';
 

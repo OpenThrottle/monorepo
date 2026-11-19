@@ -3,7 +3,10 @@
  * JSONB `input` and `gold` columns into JSON strings.
  */
 
-import type { EvalCase, EvalDataset } from '@openthrottle/nestjs-repositories';
+import type {
+  EvalCase,
+  EvalDataset,
+} from '@openthrottle/nestjs-repositories-server';
 
 import type { EvalCaseObject } from './eval-case.object.ts';
 import type { EvalDatasetObject } from './eval-dataset.object.ts';

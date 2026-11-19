@@ -2,7 +2,7 @@
  * @description Maps the EvalHumanLabel entity to the GraphQL AgentTrajectoryLabelObject.
  */
 
-import type { EvalHumanLabel } from '@openthrottle/nestjs-repositories';
+import type { EvalHumanLabel } from '@openthrottle/nestjs-repositories-server';
 
 import type { AgentTrajectoryLabelObject } from './agent-trajectory-label.object.ts';
 

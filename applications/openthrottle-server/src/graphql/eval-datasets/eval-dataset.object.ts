@@ -1,6 +1,6 @@
 /**
  * @description GraphQL ObjectType for an eval dataset. Mirrors the eval_datasets entity from
- * @openthrottle/nestjs-repositories (migration 147). `cases` is a field resolver.
+ * @openthrottle/nestjs-repositories-server (migration 147). `cases` is a field resolver.
  */
 
 import { Field, ID, Int, ObjectType } from '@nestjs/graphql';

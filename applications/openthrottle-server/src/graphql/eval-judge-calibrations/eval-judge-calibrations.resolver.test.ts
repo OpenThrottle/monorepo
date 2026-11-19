@@ -4,23 +4,23 @@ import { Test } from '@nestjs/testing';
 import { GlobalClsService } from '@openthrottle/nestjs-modules';
 import {
   type EvalJudgeCalibration,
-  EvalJudgeCalibrationsService,
+  EvalJudgeCalibrationsRepository,
   type EvalJudgePair,
   type EvalJudgePairs,
   type EvalRun,
-  EvalRunsService,
-} from '@openthrottle/nestjs-repositories';
+  EvalRunsRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import {
+  createEvalJudgeCalibrationsRepositoryMock,
+  createEvalRunsRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import { QueryFailedError } from 'typeorm';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { EvalJudgeCalibrationsResolver } from './eval-judge-calibrations.resolver.ts';
 
-const mockCalibrations = createMock<EvalJudgeCalibrationsService>({
-  findByGrader: vi.fn(),
-  findJudgePairs: vi.fn(),
-  record: vi.fn(),
-});
-const mockRuns = createMock<EvalRunsService>({ findRunById: vi.fn() });
+const mockCalibrations = createEvalJudgeCalibrationsRepositoryMock();
+const mockRuns = createEvalRunsRepositoryMock();
 const mockCls = createMock<GlobalClsService>({ get: vi.fn() });
 
 const at = new Date('2026-11-06T08:00:00.000Z');
@@ -181,8 +181,11 @@ describe('EvalJudgeCalibrationsResolver', () => {
     const app = await Test.createTestingModule({
       providers: [
         EvalJudgeCalibrationsResolver,
-        { provide: EvalJudgeCalibrationsService, useValue: mockCalibrations },
-        { provide: EvalRunsService, useValue: mockRuns },
+        {
+          provide: EvalJudgeCalibrationsRepository,
+          useValue: mockCalibrations,
+        },
+        { provide: EvalRunsRepository, useValue: mockRuns },
         { provide: GlobalClsService, useValue: mockCls },
       ],
     }).compile();

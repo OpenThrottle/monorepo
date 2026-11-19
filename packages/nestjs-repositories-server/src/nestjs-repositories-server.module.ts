@@ -4,11 +4,19 @@ import { AgentAccountsModule } from './modules/agent-accounts/agent-accounts.mod
 import { AgentConversationMessagesModule } from './modules/agent-conversation-messages/agent-conversation-messages.module.ts';
 import { AgentConversationsModule } from './modules/agent-conversations/agent-conversations.module.ts';
 import { AgentTokenUsageModule } from './modules/agent-token-usage/agent-token-usage.module.ts';
+import { AgentTrajectoriesModule } from './modules/agent-trajectories/agent-trajectories.module.ts';
 import { BlogAuthorsModule } from './modules/blog-authors/blog-authors.module.ts';
 import { BlogPostsModule } from './modules/blog-posts/blog-posts.module.ts';
 import { BlogTagsModule } from './modules/blog-tags/blog-tags.module.ts';
 import { CustomPromptsModule } from './modules/custom-prompts/custom-prompts.module.ts';
 import { DailyStatsModule } from './modules/daily-stats/daily-stats.module.ts';
+import { EvalCasesModule } from './modules/eval-cases/eval-cases.module.ts';
+import { EvalDatasetsModule } from './modules/eval-datasets/eval-datasets.module.ts';
+import { EvalGradesModule } from './modules/eval-grades/eval-grades.module.ts';
+import { EvalHumanLabelsModule } from './modules/eval-human-labels/eval-human-labels.module.ts';
+import { EvalJudgeCalibrationsModule } from './modules/eval-judge-calibrations/eval-judge-calibrations.module.ts';
+import { EvalRunsModule } from './modules/eval-runs/eval-runs.module.ts';
+import { EvalTrialsModule } from './modules/eval-trials/eval-trials.module.ts';
 import { McpConnectorConnectionsModule } from './modules/mcp-connector-connections/mcp-connector-connections.module.ts';
 import { NotesModule } from './modules/notes/notes.module.ts';
 import { PermissionsModule } from './modules/permissions/permissions.module.ts';
@@ -64,11 +72,19 @@ import { WorktreeRemovalsModule } from './modules/worktree-removals/worktree-rem
     AgentConversationMessagesModule,
     AgentConversationsModule,
     AgentTokenUsageModule,
+    AgentTrajectoriesModule,
     BlogAuthorsModule,
     BlogPostsModule,
     BlogTagsModule,
     CustomPromptsModule,
     DailyStatsModule,
+    EvalCasesModule,
+    EvalDatasetsModule,
+    EvalGradesModule,
+    EvalHumanLabelsModule,
+    EvalJudgeCalibrationsModule,
+    EvalRunsModule,
+    EvalTrialsModule,
     McpConnectorConnectionsModule,
     NotesModule,
     PermissionsModule,
@@ -115,11 +131,19 @@ import { WorktreeRemovalsModule } from './modules/worktree-removals/worktree-rem
     AgentConversationMessagesModule,
     AgentConversationsModule,
     AgentTokenUsageModule,
+    AgentTrajectoriesModule,
     BlogAuthorsModule,
     BlogPostsModule,
     BlogTagsModule,
     CustomPromptsModule,
     DailyStatsModule,
+    EvalCasesModule,
+    EvalDatasetsModule,
+    EvalGradesModule,
+    EvalHumanLabelsModule,
+    EvalJudgeCalibrationsModule,
+    EvalRunsModule,
+    EvalTrialsModule,
     McpConnectorConnectionsModule,
     NotesModule,
     PermissionsModule,

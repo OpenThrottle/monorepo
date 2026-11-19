@@ -1,6 +1,6 @@
 /**
  * @description GraphQL ObjectType for an eval case. Mirrors the eval_cases entity from
- * @openthrottle/nestjs-repositories (migration 147); `input` and `gold` are exposed as JSON strings
+ * @openthrottle/nestjs-repositories-server (migration 147); `input` and `gold` are exposed as JSON strings
  * because the schema has no JSON scalar.
  */
 

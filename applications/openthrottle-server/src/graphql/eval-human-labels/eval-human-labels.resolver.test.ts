@@ -6,11 +6,12 @@ import {
 } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { GlobalClsService } from '@openthrottle/nestjs-modules';
-import type { EvalHumanLabel } from '@openthrottle/nestjs-repositories';
+import type { EvalHumanLabel } from '@openthrottle/nestjs-repositories-server';
 import {
   EVAL_LABEL_VERDICT,
-  EvalHumanLabelsService,
-} from '@openthrottle/nestjs-repositories';
+  EvalHumanLabelsRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import { createEvalHumanLabelsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import { QueryFailedError } from 'typeorm';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -23,6 +24,7 @@ const buildLabel = (
 ): EvalHumanLabel => {
   return {
     createdAt: new Date('2026-11-05T08:00:00.000Z'),
+    deletedAt: null,
     failureType: null,
     id: 'f1f2f3f4-0000-4000-8000-000000000001',
     note: null,
@@ -50,11 +52,7 @@ const buildInput = (
   };
 };
 
-const mockService = createMock<EvalHumanLabelsService>({
-  findByTrajectory: vi.fn(),
-  remove: vi.fn(),
-  upsert: vi.fn(),
-});
+const mockService = createEvalHumanLabelsRepositoryMock();
 
 const mockCls = createMock<GlobalClsService>({ get: vi.fn() });
 
@@ -74,7 +72,7 @@ describe('EvalHumanLabelsResolver', () => {
     const app = await Test.createTestingModule({
       providers: [
         EvalHumanLabelsResolver,
-        { provide: EvalHumanLabelsService, useValue: mockService },
+        { provide: EvalHumanLabelsRepository, useValue: mockService },
         { provide: GlobalClsService, useValue: mockCls },
       ],
     }).compile();
@@ -205,14 +203,14 @@ describe('EvalHumanLabelsResolver', () => {
 
   describe('removeAgentTrajectoryLabel', () => {
     test('removes only the caller label', async () => {
-      vi.mocked(mockService.remove).mockResolvedValue(true);
+      vi.mocked(mockService.removeLabel).mockResolvedValue(true);
 
       const result = await resolver.removeAgentTrajectoryLabel(
         trajectoryId,
         undefined,
       );
 
-      expect(mockService.remove).toHaveBeenCalledWith({
+      expect(mockService.removeLabel).toHaveBeenCalledWith({
         rater: 'visormatt',
         trajectoryId,
       });
@@ -220,7 +218,7 @@ describe('EvalHumanLabelsResolver', () => {
     });
 
     test('returns false when the caller had no label', async () => {
-      vi.mocked(mockService.remove).mockResolvedValue(false);
+      vi.mocked(mockService.removeLabel).mockResolvedValue(false);
 
       expect(
         await resolver.removeAgentTrajectoryLabel(trajectoryId, undefined),
@@ -233,7 +231,7 @@ describe('EvalHumanLabelsResolver', () => {
       await expect(
         resolver.removeAgentTrajectoryLabel(trajectoryId, undefined),
       ).rejects.toBeInstanceOf(UnauthorizedException);
-      expect(mockService.remove).not.toHaveBeenCalled();
+      expect(mockService.removeLabel).not.toHaveBeenCalled();
     });
   });
 

@@ -1,17 +1,20 @@
 /**
  * @description GraphQL module for judge calibrations: registers EvalJudgeCalibrationsResolver,
- * importing NestjsRepositoriesModule for the services and GlobalClsModule for the request identity
- * used to stamp the creator.
+ * importing EvalJudgeCalibrationsModule and EvalRunsModule for the repositories and
+ * GlobalClsModule for the request identity used to stamp the creator.
  */
 
 import { Module } from '@nestjs/common';
 import { GlobalClsModule } from '@openthrottle/nestjs-modules';
-import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+import {
+  EvalJudgeCalibrationsModule,
+  EvalRunsModule,
+} from '@openthrottle/nestjs-repositories-server';
 
 import { EvalJudgeCalibrationsResolver } from './eval-judge-calibrations.resolver.ts';
 
 @Module({
-  imports: [GlobalClsModule, NestjsRepositoriesModule],
+  imports: [EvalJudgeCalibrationsModule, EvalRunsModule, GlobalClsModule],
   providers: [EvalJudgeCalibrationsResolver],
 })
 export class EvalJudgeCalibrationsGraphqlModule {}
