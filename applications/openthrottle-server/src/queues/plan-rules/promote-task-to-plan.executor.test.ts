@@ -7,20 +7,23 @@
 
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import {
-  type RuleApplicationsService,
-  type TagActionRule,
-  type TagsService,
-} from '@openthrottle/nestjs-repositories';
 import type {
   Plan,
+  RuleApplicationsRepository,
+  TagActionRule,
   Task,
   TasksRepository,
+  TaskTagsRepository,
 } from '@openthrottle/nestjs-repositories-server';
-import { createTasksRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import type { RuleApplicationsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import {
+  createRuleApplicationsRepositoryMock,
+  createTasksRepositoryMock,
+  createTaskTagsRepositoryMock,
+  taskTagsFactory,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
 import type { MatchedTagAction } from '@openthrottle/openthrottle-skills';
-import type { Repository } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { TaskPromotionService } from '../task-promotion/task-promotion.service.ts';
@@ -33,12 +36,10 @@ const OWNER_ID = '00000000-0000-4000-8000-0000000000b2';
 
 describe('PromoteTaskToPlanExecutor', () => {
   let executor: PromoteTaskToPlanExecutor;
-  let ruleApplicationsService: RuleApplicationsService;
-  let tagsService: TagsService;
+  let ruleApplicationsRepository: RuleApplicationsRepositoryMock;
+  let taskTagsRepository: ReturnType<typeof createTaskTagsRepositoryMock>;
   let tasksRepository: TasksRepository;
   let taskPromotionService: TaskPromotionService;
-  let getRawMany: ReturnType<typeof vi.fn>;
-  let tagFindOne: ReturnType<typeof vi.fn>;
   let taskFindOne: ReturnType<typeof vi.fn>;
 
   const buildContext = (): ActionExecutorContext => {
@@ -58,23 +59,8 @@ describe('PromoteTaskToPlanExecutor', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    getRawMany = vi.fn().mockResolvedValue([{ taskId: 'task-1' }]);
-    const queryBuilder = {
-      andWhere: vi.fn().mockReturnThis(),
-      getRawMany,
-      innerJoin: vi.fn().mockReturnThis(),
-      select: vi.fn().mockReturnThis(),
-      where: vi.fn().mockReturnThis(),
-    };
-    tagFindOne = vi.fn().mockResolvedValue(null);
-    tagsService = createMock<TagsService>({
-      getTaskTagsRepository: vi.fn(() =>
-        asMock<Repository<never>>({
-          createQueryBuilder: vi.fn(() => asMock(queryBuilder)),
-          findOne: tagFindOne,
-        }),
-      ),
-    });
+    taskTagsRepository = createTaskTagsRepositoryMock();
+    taskTagsRepository.listTaskIdsByPlanAndTags.mockResolvedValue(['task-1']);
 
     taskFindOne = vi
       .fn()
@@ -90,17 +76,15 @@ describe('PromoteTaskToPlanExecutor', () => {
         .mockResolvedValue({ newPlanId: 'new-plan-1', skipped: null }),
     });
 
-    ruleApplicationsService = createMock<RuleApplicationsService>({
-      record: vi.fn(),
-    });
+    ruleApplicationsRepository = createRuleApplicationsRepositoryMock();
 
     executor = new PromoteTaskToPlanExecutor(
       createMock<ActionExecutorRegistry>(),
       createMock<LoggerService>(),
-      ruleApplicationsService,
-      tagsService,
+      asMock<RuleApplicationsRepository>(ruleApplicationsRepository),
       taskPromotionService,
       tasksRepository,
+      asMock<TaskTagsRepository>(taskTagsRepository),
     );
   });
 
@@ -110,10 +94,10 @@ describe('PromoteTaskToPlanExecutor', () => {
     const local = new PromoteTaskToPlanExecutor(
       registry,
       createMock<LoggerService>(),
-      ruleApplicationsService,
-      tagsService,
+      asMock<RuleApplicationsRepository>(ruleApplicationsRepository),
       taskPromotionService,
       tasksRepository,
+      asMock<TaskTagsRepository>(taskTagsRepository),
     );
 
     local.onModuleInit();
@@ -131,7 +115,7 @@ describe('PromoteTaskToPlanExecutor', () => {
       captureFailureIsFatal: false,
       taskId: 'task-1',
     });
-    expect(ruleApplicationsService.record).toHaveBeenCalledWith(
+    expect(ruleApplicationsRepository.record).toHaveBeenCalledWith(
       expect.objectContaining({
         details: expect.objectContaining({ promotedTaskIds: ['task-1'] }),
         planId: PLAN_ID,
@@ -142,12 +126,12 @@ describe('PromoteTaskToPlanExecutor', () => {
   });
 
   it('flags with no-eligible-task when no plan task carries a matched tag', async () => {
-    getRawMany.mockResolvedValue([]);
+    taskTagsRepository.listTaskIdsByPlanAndTags.mockResolvedValue([]);
 
     await executor.execute(buildContext());
 
     expect(taskPromotionService.promote).not.toHaveBeenCalled();
-    expect(ruleApplicationsService.record).toHaveBeenCalledWith(
+    expect(ruleApplicationsRepository.record).toHaveBeenCalledWith(
       expect.objectContaining({
         details: expect.objectContaining({ reason: 'no-eligible-task' }),
         state: 'flagged',
@@ -159,13 +143,15 @@ describe('PromoteTaskToPlanExecutor', () => {
     taskFindOne.mockResolvedValue(
       asMock<Task>({ id: 'task-1', status: 'SKIPPED' }),
     );
-    tagFindOne.mockResolvedValue(asMock({ tag: 'promoted' }));
+    taskTagsRepository.findByTaskAndTag.mockResolvedValue(
+      taskTagsFactory.build({ tag: 'promoted' }),
+    );
 
     await executor.execute(buildContext());
 
     // No eligible candidate remains → flagged, promotion not invoked.
     expect(taskPromotionService.promote).not.toHaveBeenCalled();
-    expect(ruleApplicationsService.record).toHaveBeenCalledWith(
+    expect(ruleApplicationsRepository.record).toHaveBeenCalledWith(
       expect.objectContaining({ state: 'flagged' }),
     );
   });
@@ -174,12 +160,12 @@ describe('PromoteTaskToPlanExecutor', () => {
     taskFindOne.mockResolvedValue(
       asMock<Task>({ id: 'task-1', status: 'PROMOTED' }),
     );
-    tagFindOne.mockResolvedValue(null);
+    taskTagsRepository.findByTaskAndTag.mockResolvedValue(null);
 
     await executor.execute(buildContext());
 
     expect(taskPromotionService.promote).not.toHaveBeenCalled();
-    expect(ruleApplicationsService.record).toHaveBeenCalledWith(
+    expect(ruleApplicationsRepository.record).toHaveBeenCalledWith(
       expect.objectContaining({ state: 'flagged' }),
     );
   });

@@ -2,7 +2,7 @@ import type {
   Plan,
   RuleApplication,
   TagActionRule,
-} from '@openthrottle/nestjs-repositories';
+} from '@openthrottle/nestjs-repositories-server';
 import type {
   MatchedTagAction,
   TagActionType,

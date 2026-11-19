@@ -9,10 +9,7 @@ import {
 import { type AuthPrincipal, CurrentUser } from '@openthrottle/nestjs-auth';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
-import {
-  type ProjectTag,
-  TagsService,
-} from '@openthrottle/nestjs-repositories';
+import type { ProjectTag } from '@openthrottle/nestjs-repositories-server';
 import {
   PlansRepository,
   ServiceAccountsRepository,
@@ -21,6 +18,7 @@ import {
 import { GqlPermissionsGuard } from '../../../guards/gql-permissions.guard.ts';
 import { PlanRulesEvaluationService } from '../../../queues/plan-rules/evaluation/evaluation.service.ts';
 import { PLAN_RULES_TRIGGER_KINDS } from '../../../queues/plan-rules/plan-rules.constants.ts';
+import { TagsService } from '../../../services/tags/tags.service.ts';
 import { ProjectObject } from '../../projects/project.object.ts';
 import { TagsLoaders } from '../loaders/loaders.service.ts';
 import { ProjectTagObject } from '../tag.object.ts';

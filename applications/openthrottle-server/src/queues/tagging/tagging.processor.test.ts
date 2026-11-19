@@ -9,17 +9,21 @@ import { createMock } from '@golevelup/ts-vitest';
 import type { ConfigService } from '@nestjs/config';
 import type { GitHubService } from '@openthrottle/nestjs-github';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import type { PlanTag, TagsService } from '@openthrottle/nestjs-repositories';
+import type { PlanTag } from '@openthrottle/nestjs-repositories-server';
 import type {
   Plan,
+  PlanTagsRepository,
   ServiceAccountsRepository,
   SkillTagsRepository,
+  TaskTagsRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import {
   createPlansRepositoryMock,
+  createPlanTagsRepositoryMock,
   createServiceAccountsRepositoryMock,
   createSkillTagsRepositoryMock,
   createTasksRepositoryMock,
+  createTaskTagsRepositoryMock,
 } from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
@@ -27,6 +31,7 @@ import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 import { GitHubForgeService } from '../../services/source-control/github-forge/github-forge.service.ts';
 import { GitLabForgeService } from '../../services/source-control/gitlab-forge/gitlab-forge.service.ts';
 import { SourceControlService } from '../../services/source-control/source-control.service.ts';
+import type { TagsService } from '../../services/tags/tags.service.ts';
 import type { PlanRulesEvaluationService } from '../plan-rules/evaluation/evaluation.service.ts';
 import { StubTaggingModelProvider } from './stub-tagging-model.strategy.ts';
 import { TaggingProcessor } from './tagging.processor.ts';
@@ -53,6 +58,7 @@ describe('TaggingProcessor', () => {
   let provider: TaggingModelProvider;
   let tagsService: TagsService;
   let planTagRows: PlanTag[];
+  let planTagsRepository: ReturnType<typeof createPlanTagsRepositoryMock>;
   let planRulesEvaluationService: PlanRulesEvaluationService;
   let getCommitDetail: Mock<GitHubService['getCommitDetail']>;
 
@@ -83,10 +89,11 @@ describe('TaggingProcessor', () => {
       addPlanTag: vi.fn((_caller, _id, tag) =>
         Promise.resolve(planTagRow(tag, 'server-llm')),
       ),
-      getPlanTagsRepository: vi.fn(() =>
-        asMock({ find: vi.fn(() => Promise.resolve(planTagRows)) }),
-      ),
       removePlanTag: vi.fn().mockResolvedValue(true),
+    });
+    planTagsRepository = createPlanTagsRepositoryMock();
+    planTagsRepository.listByPlanId.mockImplementation(async () => {
+      return planTagRows;
     });
     planRulesEvaluationService = createMock<PlanRulesEvaluationService>();
     getCommitDetail = vi.fn().mockResolvedValue({
@@ -108,6 +115,7 @@ describe('TaggingProcessor', () => {
     processor = new TaggingProcessor(
       createMock<LoggerService>(),
       planRulesEvaluationService,
+      asMock<PlanTagsRepository>(planTagsRepository),
       asMock({
         ...createPlansRepositoryMock(),
         findOne: vi.fn(() =>
@@ -132,6 +140,7 @@ describe('TaggingProcessor', () => {
       provider,
       tagsService,
       asMock(createTasksRepositoryMock()),
+      asMock<TaskTagsRepository>(createTaskTagsRepositoryMock()),
     );
   });
 

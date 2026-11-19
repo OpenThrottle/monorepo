@@ -113,69 +113,6 @@ export type {
   UpsertEvalTrialInput,
 } from './modules/eval-runs/eval-runs.types.ts';
 export { EvalTrial } from './modules/eval-runs/eval-trial.entity.ts';
-export type { ProjectSkillData } from './modules/project-skills/project-skill.entity.ts';
-export { ProjectSkill } from './modules/project-skills/project-skill.entity.ts';
-export { ProjectSkillsService } from './modules/project-skills/project-skills.service.ts';
-export type {
-  ProjectSkillReconciliation,
-  ProjectSkillView,
-} from './modules/project-skills/project-skills.types.ts';
-export type {
-  CustomPromptData,
-  CustomPromptType,
-} from './modules/prompts/custom-prompt.entity.ts';
-export {
-  CUSTOM_PROMPT_TYPES,
-  CustomPrompt,
-} from './modules/prompts/custom-prompt.entity.ts';
-export { CustomPromptsService } from './modules/prompts/prompts.service.ts';
-export {
-  skillAvailabilityPostureSchema,
-  skillAvailabilityRuleInputSchema,
-} from './modules/skill-availability/skill-availability.constants.ts';
-export { SkillAvailabilityService } from './modules/skill-availability/skill-availability.service.ts';
-export type {
-  SkillAvailabilityRuleInput,
-  SkillAvailabilityRuleInputArgs,
-} from './modules/skill-availability/skill-availability.types.ts';
-export type { SkillAvailabilityRuleData } from './modules/skill-availability/skill-availability-rule.entity.ts';
-export { SkillAvailabilityRule } from './modules/skill-availability/skill-availability-rule.entity.ts';
-export type { SkillAvailabilityRuleSetData } from './modules/skill-availability/skill-availability-rule-set.entity.ts';
-export { SkillAvailabilityRuleSet } from './modules/skill-availability/skill-availability-rule-set.entity.ts';
-export type {
-  RuleApplicationData,
-  RuleApplicationState,
-} from './modules/tag-action-rules/rule-application.entity.ts';
-export {
-  RULE_APPLICATION_STATES,
-  RuleApplication,
-} from './modules/tag-action-rules/rule-application.entity.ts';
-export { SOFT_CLOSED_TASK_STATUS } from './modules/tag-action-rules/rule-applications/rule-applications.constants.ts';
-export { RuleApplicationsService } from './modules/tag-action-rules/rule-applications/rule-applications.service.ts';
-export type {
-  OrphanedTaskStatusCapture,
-  OrphanedTaskStatusCaptureParams,
-  RecordRuleApplicationInput,
-} from './modules/tag-action-rules/rule-applications/rule-applications.types.ts';
-export type { TagActionRuleData } from './modules/tag-action-rules/tag-action-rule.entity.ts';
-export { TagActionRule } from './modules/tag-action-rules/tag-action-rule.entity.ts';
-export { TagActionRulesService } from './modules/tag-action-rules/tag-action-rules.service.ts';
-export type { UpsertTagActionRuleInput } from './modules/tag-action-rules/tag-action-rules.types.ts';
-export type { PlanTagData } from './modules/tags/plan-tag.entity.ts';
-export { PlanTag } from './modules/tags/plan-tag.entity.ts';
-export type { ProjectTagData } from './modules/tags/project-tag.entity.ts';
-export { ProjectTag } from './modules/tags/project-tag.entity.ts';
-export {
-  TAG_SOURCE_RANK,
-  TAG_SOURCES,
-  TAGGING_SERVICE_ACCOUNT_NAME,
-} from './modules/tags/tags.constants.ts';
-export { TagsService } from './modules/tags/tags.service.ts';
-export type { TagCaller, TagSource } from './modules/tags/tags.types.ts';
-export type { AddTagOptions, EffectiveTag } from './modules/tags/tags.types.ts';
-export { deriveTagSource } from './modules/tags/tags.utils.ts';
-export type { TaskTagData } from './modules/tags/task-tag.entity.ts';
-export { TaskTag } from './modules/tags/task-tag.entity.ts';
 export { NestjsRepositoriesModule } from './nestjs-repositories.module.ts';
 export { getTypeOrmOptions as getOpenThrottleTypeOrmOptions } from './nestjs-repositories.utils.ts';
 export {

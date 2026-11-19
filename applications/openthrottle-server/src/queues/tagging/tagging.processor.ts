@@ -26,22 +26,24 @@ import { Inject } from '@nestjs/common';
 import { OnApplicationShutdown, OnModuleInit } from '@nestjs/common';
 import { defaultWorkerOptions } from '@openthrottle/nestjs-bullmq';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import {
-  type PlanTag,
-  type TagCaller,
-  TAGGING_SERVICE_ACCOUNT_NAME,
-  TagsService,
-  type TaskTag,
-} from '@openthrottle/nestjs-repositories';
+import type {
+  PlanTag,
+  TaskTag,
+} from '@openthrottle/nestjs-repositories-server';
 import {
   PlansRepository,
+  PlanTagsRepository,
   ServiceAccountsRepository,
   SkillTagsRepository,
   TasksRepository,
+  TaskTagsRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import { DEFAULT_TAG_VOCABULARY_SEED } from '@openthrottle/openthrottle-skills';
 
 import { SourceControlService } from '../../services/source-control/source-control.service.ts';
+import { TAGGING_SERVICE_ACCOUNT_NAME } from '../../services/tags/tags.constants.ts';
+import { TagsService } from '../../services/tags/tags.service.ts';
+import type { TagCaller } from '../../services/tags/tags.types.ts';
 import { PlanRulesEvaluationService } from '../plan-rules/evaluation/evaluation.service.ts';
 import { PLAN_RULES_TRIGGER_KINDS } from '../plan-rules/plan-rules.constants.ts';
 import {
@@ -78,6 +80,7 @@ export class TaggingProcessor
   constructor(
     private readonly logger: LoggerService,
     private readonly planRulesEvaluationService: PlanRulesEvaluationService,
+    private readonly planTagsRepository: PlanTagsRepository,
     private readonly plansRepository: PlansRepository,
     private readonly serviceAccountsRepository: ServiceAccountsRepository,
     private readonly skillTagsRepository: SkillTagsRepository,
@@ -86,6 +89,7 @@ export class TaggingProcessor
     private readonly taggingModelProvider: TaggingModelProvider,
     private readonly tagsService: TagsService,
     private readonly tasksRepository: TasksRepository,
+    private readonly taskTagsRepository: TaskTagsRepository,
   ) {
     super();
   }
@@ -330,13 +334,9 @@ export class TaggingProcessor
 
     const findExisting = async (): Promise<Array<PlanTag | TaskTag>> => {
       if (isPlan) {
-        return this.tagsService
-          .getPlanTagsRepository()
-          .find({ where: { planId: entityId } });
+        return this.planTagsRepository.listByPlanId(entityId);
       }
-      return this.tagsService
-        .getTaskTagsRepository()
-        .find({ where: { taskId: entityId } });
+      return this.taskTagsRepository.findBy({ where: { taskId: entityId } });
     };
     const existing = await findExisting();
     const stale = existing.filter(

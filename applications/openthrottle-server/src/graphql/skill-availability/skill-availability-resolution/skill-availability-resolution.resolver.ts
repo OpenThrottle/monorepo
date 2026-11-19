@@ -19,10 +19,6 @@ import { BadRequestException } from '@nestjs/common';
 import { Args, ID, Query, Resolver } from '@nestjs/graphql';
 import { CurrentUser } from '@openthrottle/nestjs-auth';
 import {
-  ProjectSkillsService,
-  SkillAvailabilityService,
-} from '@openthrottle/nestjs-repositories';
-import {
   ProjectsRepository,
   SkillTagsRepository,
 } from '@openthrottle/nestjs-repositories-server';
@@ -36,6 +32,8 @@ import {
 } from '@openthrottle/openthrottle-skills';
 
 import { PlanContextAvailabilityService } from '../../../services/plan-context-availability/plan-context-availability.service.ts';
+import { ProjectSkillsService } from '../../../services/project-skills/project-skills.service.ts';
+import { SkillAvailabilityService } from '../../../services/skill-availability/skill-availability.service.ts';
 import {
   SkillAvailabilityResolutionResult,
   SkillAvailabilityResolvedSkillObject,

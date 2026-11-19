@@ -15,11 +15,11 @@ import { UseGuards } from '@nestjs/common';
 import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { CurrentUser } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
-import type { SkillAvailabilityRule } from '@openthrottle/nestjs-repositories';
-import { SkillAvailabilityService } from '@openthrottle/nestjs-repositories';
+import type { SkillAvailabilityRule } from '@openthrottle/nestjs-repositories-server';
 import { SkillTagsRepository } from '@openthrottle/nestjs-repositories-server';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { SkillAvailabilityService } from '../../services/skill-availability/skill-availability.service.ts';
 import { SkillAvailabilityRuleInput } from './skill-availability.input.ts';
 import {
   SkillAvailabilityRuleObject,

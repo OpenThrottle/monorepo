@@ -17,14 +17,14 @@ import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
 import type { AuthPrincipal } from '@openthrottle/nestjs-auth';
 import { CurrentUser } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
-import type { ProjectSkillView } from '@openthrottle/nestjs-repositories';
-import { ProjectSkillsService } from '@openthrottle/nestjs-repositories';
 import {
   ProjectsRepository,
   ServiceAccountsRepository,
 } from '@openthrottle/nestjs-repositories-server';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { ProjectSkillsService } from '../../services/project-skills/project-skills.service.ts';
+import type { ProjectSkillView } from '../../services/project-skills/project-skills.types.ts';
 import { resolveTagCaller } from '../tags/tags.utils.ts';
 import {
   ProjectSkillObject,

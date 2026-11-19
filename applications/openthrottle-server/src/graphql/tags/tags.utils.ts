@@ -2,8 +2,9 @@ import {
   AUTH_PRINCIPAL_KIND_USER,
   type AuthPrincipal,
 } from '@openthrottle/nestjs-auth';
-import { type TagCaller } from '@openthrottle/nestjs-repositories';
 import type { ServiceAccountsRepository } from '@openthrottle/nestjs-repositories-server';
+
+import type { TagCaller } from '../../services/tags/tags.types.ts';
 /**
  * @description Builds the {@link TagCaller} from the request principal: user
  * JWTs map directly; service-account principals resolve their account name so

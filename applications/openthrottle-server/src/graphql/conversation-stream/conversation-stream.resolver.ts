@@ -29,9 +29,11 @@ import {
   type AgentConversationMessage,
   type AgentConversationMessageRole,
   AgentConversationsService,
-  CustomPromptsService,
 } from '@openthrottle/nestjs-repositories';
-import { UserDisabledAgentClisRepository } from '@openthrottle/nestjs-repositories-server';
+import {
+  CustomPromptsRepository,
+  UserDisabledAgentClisRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import {
   AGENT_CLI_ALLOWLIST,
   backendReplaysFullHistory,
@@ -243,7 +245,7 @@ export class ConversationStreamResolver {
   constructor(
     private readonly disabledAgentClis: UserDisabledAgentClisRepository,
     private readonly conversations: AgentConversationsService,
-    private readonly customPrompts: CustomPromptsService,
+    private readonly customPrompts: CustomPromptsRepository,
     private readonly logger: LoggerService,
     private readonly modelDiscovery: NestjsModelDiscoveryService,
     private readonly repositories: WorkspaceLocalRepositoriesService,
@@ -825,7 +827,7 @@ export class ConversationStreamResolver {
     }
 
     if (UUID_RE.test(personaId)) {
-      const persona = await this.customPrompts.getRepository().findOne({
+      const persona = await this.customPrompts.findOne({
         where: { id: personaId, promptType: 'personas' },
       });
 

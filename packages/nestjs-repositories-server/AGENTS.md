@@ -128,6 +128,12 @@ have no uuidv7 `id`. They do **not** extend a base model or `BaseRepository`. In
   there bypass the convention, so a delete inside a transaction on a `BaseModel` table must be
   `manager.softDelete(Entity, …)`, never `manager.delete`. If a batch finds this painful, file
   transaction support in `BaseRepository` as a follow-up plan rather than working around it.
+- **A nested `where` on a soft-deleted relation is a no-op.** `findBy({ where: { rule: {
+deletedAt: IsNull() } } })` keeps rows whose `rule` is soft deleted: TypeORM LEFT JOINs a
+  where-only relation with the soft-delete guard in its ON clause, so a deleted parent joins as
+  NULL and matches `IsNull()`. To read rows of live parents only, use a query builder with
+  `innerJoin('child.parent', 'parent')` and `andWhere('parent.deletedAt IS NULL')`. Batch 11
+  shipped this bug in `RuleApplicationsRepository`; only the live check caught it.
 - A schema change is **two edits, together**: the SQL migration under
   `databases/openthrottle/migrations/` AND the entity here. Each entity's class JSDoc names the
   migrations it matches. SQL is the source of truth: `synchronize` is off.

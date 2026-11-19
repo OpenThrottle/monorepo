@@ -2,8 +2,7 @@ import { createMock } from '@golevelup/ts-vitest';
 import type { AuthPrincipal } from '@openthrottle/nestjs-auth';
 import { AUTH_PRINCIPAL_KIND_USER } from '@openthrottle/nestjs-auth';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import type { TagsService } from '@openthrottle/nestjs-repositories';
-import { type ProjectTag } from '@openthrottle/nestjs-repositories';
+import type { ProjectTag } from '@openthrottle/nestjs-repositories-server';
 import type {
   PlansRepository,
   ServiceAccountsRepository,
@@ -18,6 +17,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { PlanRulesEvaluationService } from '../../queues/plan-rules/evaluation/evaluation.service.ts';
 import { PLAN_RULES_TRIGGER_KINDS } from '../../queues/plan-rules/plan-rules.constants.ts';
+import type { TagsService } from '../../services/tags/tags.service.ts';
 import type { TagsLoaders } from './loaders/loaders.service.ts';
 import { ProjectTagsResolver } from './project-tags/project-tags.resolver.ts';
 

@@ -23,11 +23,6 @@ import { EvalDatasetsModule } from './modules/eval-datasets/eval-datasets.module
 import { EvalHumanLabelsModule } from './modules/eval-human-labels/eval-human-labels.module.ts';
 import { EvalJudgeCalibrationsModule } from './modules/eval-judge-calibrations/eval-judge-calibrations.module.ts';
 import { EvalRunsModule } from './modules/eval-runs/eval-runs.module.ts';
-import { ProjectSkillsModule } from './modules/project-skills/project-skills.module.ts';
-import { CustomPromptsModule } from './modules/prompts/prompts.module.ts';
-import { SkillAvailabilityModule } from './modules/skill-availability/skill-availability.module.ts';
-import { TagActionRulesModule } from './modules/tag-action-rules/tag-action-rules.module.ts';
-import { TagsModule } from './modules/tags/tags.module.ts';
 import { getTypeOrmOptions } from './nestjs-repositories.utils.ts';
 
 @Module({
@@ -36,13 +31,11 @@ import { getTypeOrmOptions } from './nestjs-repositories.utils.ts';
     AgentConversationsModule,
     AgentTokenUsageModule,
     AgentTrajectoriesModule,
-    CustomPromptsModule,
     EvalDatasetsModule,
     EvalHumanLabelsModule,
     EvalJudgeCalibrationsModule,
     EvalRunsModule,
     PermissionsModule,
-    ProjectSkillsModule,
     RepositoriesModule,
     RepositoryCheckoutsModule,
     RolesModule,
@@ -50,9 +43,6 @@ import { getTypeOrmOptions } from './nestjs-repositories.utils.ts';
     ScheduledAgentJobsModule,
     ServiceAccountCredentialsModule,
     ServiceAccountsModule,
-    SkillAvailabilityModule,
-    TagActionRulesModule,
-    TagsModule,
     UserPreferencesModule,
     UsersModule,
     UserWorkspaceSettingsModule,
@@ -70,14 +60,12 @@ import { getTypeOrmOptions } from './nestjs-repositories.utils.ts';
     AgentConversationsModule,
     AgentTokenUsageModule,
     AgentTrajectoriesModule,
-    CustomPromptsModule,
     EvalDatasetsModule,
     EvalHumanLabelsModule,
     EvalJudgeCalibrationsModule,
     EvalRunsModule,
     LoggerModule,
     PermissionsModule,
-    ProjectSkillsModule,
     RepositoriesModule,
     RepositoryCheckoutsModule,
     RolesModule,
@@ -85,9 +73,6 @@ import { getTypeOrmOptions } from './nestjs-repositories.utils.ts';
     ScheduledAgentJobsModule,
     ServiceAccountCredentialsModule,
     ServiceAccountsModule,
-    SkillAvailabilityModule,
-    TagActionRulesModule,
-    TagsModule,
     UserPreferencesModule,
     UsersModule,
     UserWorkspaceSettingsModule,

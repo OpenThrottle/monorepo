@@ -1,15 +1,18 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
-import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import {
   PlansModule,
+  RuleApplicationsModule,
+  TagActionRulesModule,
   TasksModule,
+  TaskTagsModule,
   UsersModule,
 } from '@openthrottle/nestjs-repositories-server';
 
 import { WorkLedgerGraphqlModule } from '../../graphql/work-ledger/work-ledger.module.ts';
 import { NotificationsModule } from '../../notifications/notifications.module.ts';
 import { PlanContextAvailabilityModule } from '../../services/plan-context-availability/plan-context-availability.module.ts';
+import { TagsModule } from '../../services/tags/tags.module.ts';
 import { TaskPromotionQueueModule } from '../task-promotion/task-promotion.module.ts';
 import { ActionExecutorRegistry } from './action-executor-registry/action-executor-registry.service.ts';
 import { InjectTaskExecutor } from './inject-task.executor.ts';
@@ -32,13 +35,16 @@ import { PromoteTaskToPlanExecutor } from './promote-task-to-plan.executor.ts';
   imports: [
     UsersModule,
     LoggerModule,
-    NestjsRepositoriesModule,
     NotificationsModule,
     PlanContextAvailabilityModule,
     PlanRulesQueueProducerModule,
     PlansModule,
+    RuleApplicationsModule,
+    TagActionRulesModule,
+    TagsModule,
     TaskPromotionQueueModule,
     TasksModule,
+    TaskTagsModule,
     WorkLedgerGraphqlModule,
   ],
   providers: [

@@ -6,22 +6,24 @@ import {
 } from '@openthrottle/nestjs-auth';
 import type { NestjsModelDiscoveryService } from '@openthrottle/nestjs-model-discovery';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import type {
-  AgentConversationsService,
-  CustomPrompt,
-  CustomPromptsService,
-} from '@openthrottle/nestjs-repositories';
+import type { AgentConversationsService } from '@openthrottle/nestjs-repositories';
 import {
   agentConversationMessagesFactory,
   agentConversationsFactory,
 } from '@openthrottle/nestjs-repositories/testing';
-import type { UserDisabledAgentClisRepository } from '@openthrottle/nestjs-repositories-server';
-import { createUserDisabledAgentClisRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import type {
+  CustomPrompt,
+  CustomPromptsRepository,
+  UserDisabledAgentClisRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import {
+  createCustomPromptsRepositoryMock,
+  createUserDisabledAgentClisRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import type {
   ChatCompletionMessage,
   DiscoveryResult,
 } from '@openthrottle/openthrottle-agentic-utils';
-import type { Repository } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { WorkspaceLocalRepositoriesService } from '../../services/workspace-local-repositories/workspace-local-repositories.service.ts';
@@ -98,11 +100,9 @@ function build(): {
     listMessagesForConversation: vi.fn().mockResolvedValue([userMessage]),
     updateMetadata: vi.fn().mockResolvedValue(conversation),
   });
-  const personaFindOne = vi.fn().mockResolvedValue(null);
-  const customPrompts = createMock<CustomPromptsService>({
-    getRepository: () =>
-      createMock<Repository<CustomPrompt>>({ findOne: personaFindOne }),
-  });
+  const customPromptsMock = createCustomPromptsRepositoryMock();
+  const personaFindOne = customPromptsMock.findOne;
+  const customPrompts = createMock<CustomPromptsRepository>(customPromptsMock);
   const modelDiscovery = createMock<NestjsModelDiscoveryService>({
     discover: vi.fn().mockResolvedValue(discovery),
   });

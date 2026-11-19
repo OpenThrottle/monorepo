@@ -11,17 +11,20 @@ import {
   type UserAuthPrincipal,
 } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS } from '@openthrottle/nestjs-rbac';
-import type { CustomPrompt } from '@openthrottle/nestjs-repositories';
-import { CustomPromptsService } from '@openthrottle/nestjs-repositories';
-import { RolesRepository } from '@openthrottle/nestjs-repositories-server';
-import { createRolesRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import type { CustomPrompt } from '@openthrottle/nestjs-repositories-server';
+import {
+  CustomPromptsRepository,
+  RolesRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import {
+  createCustomPromptsRepositoryMock,
+  createRolesRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { CustomPromptTypeEnum } from './custom-prompt.object.ts';
 import { CUSTOM_PROMPT_WRITE_REFUSAL } from './prompts.constants.ts';
 import { CustomPromptsResolver } from './prompts.resolver.ts';
-
-const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
 
 const workspaceRoot = mkdtempSync(join(tmpdir(), 'custom-prompts-resolver-'));
 
@@ -30,23 +33,7 @@ const principal: UserAuthPrincipal = {
   sub: 'b0d2f1e6-6c3f-4a1e-9c94-8b0f2d0f5a11',
 };
 
-const mockQueryBuilder = {
-  andWhere: vi.fn().mockReturnThis(),
-  getMany: vi.fn(),
-  orderBy: vi.fn().mockReturnThis(),
-};
-
-const customPromptsRepo = {
-  create: vi.fn(),
-  createQueryBuilder: vi.fn().mockReturnValue(mockQueryBuilder),
-  delete: vi.fn(),
-  findOne: vi.fn(),
-  save: vi.fn(),
-};
-
-const mockCustomPromptsService = createMock<CustomPromptsService>({
-  getRepository: vi.fn().mockReturnValue(customPromptsRepo),
-});
+const customPromptsRepository = createCustomPromptsRepositoryMock();
 
 const mockConfigService = createMock<ConfigService>({
   get: vi.fn().mockReturnValue(workspaceRoot),
@@ -60,7 +47,6 @@ mockRolesRepository.getPermissionsForUser.mockResolvedValue([
 
 describe('CustomPromptsResolver', () => {
   let resolver: CustomPromptsResolver;
-  let customPromptsService: CustomPromptsService;
 
   const mockCustomPrompt = {
     content: '# Agent Instructions\n\nBe helpful.',
@@ -88,19 +74,17 @@ describe('CustomPromptsResolver', () => {
       providers: [
         CustomPromptsResolver,
         { provide: ConfigService, useValue: mockConfigService },
-        { provide: CustomPromptsService, useValue: mockCustomPromptsService },
+        { provide: CustomPromptsRepository, useValue: customPromptsRepository },
         { provide: RolesRepository, useValue: mockRolesRepository },
       ],
     }).compile();
 
     resolver = app.get<CustomPromptsResolver>(CustomPromptsResolver);
-    customPromptsService = app.get<CustomPromptsService>(CustomPromptsService);
   });
 
   describe('customPrompt', () => {
     test('returns CustomPromptObject when prompt exists', async () => {
-      const repo = customPromptsService.getRepository();
-      vi.mocked(repo.findOne).mockResolvedValue(mockCustomPrompt);
+      customPromptsRepository.findOne.mockResolvedValue(mockCustomPrompt);
 
       const result = await resolver.customPrompt(mockCustomPrompt.id);
 
@@ -111,8 +95,7 @@ describe('CustomPromptsResolver', () => {
     });
 
     test('returns null when prompt does not exist', async () => {
-      const repo = customPromptsService.getRepository();
-      vi.mocked(repo.findOne).mockResolvedValue(null);
+      customPromptsRepository.findOne.mockResolvedValue(null);
 
       const result = await resolver.customPrompt('non-existent-id');
 
@@ -122,7 +105,9 @@ describe('CustomPromptsResolver', () => {
 
   describe('customPrompts', () => {
     test('returns array of CustomPromptObjects', async () => {
-      mockQueryBuilder.getMany.mockResolvedValue([mockCustomPrompt]);
+      customPromptsRepository.listFiltered.mockResolvedValue([
+        mockCustomPrompt,
+      ]);
 
       const result = await resolver.customPrompts();
 
@@ -131,8 +116,6 @@ describe('CustomPromptsResolver', () => {
     });
 
     test('filters by promptType when provided', async () => {
-      mockQueryBuilder.getMany.mockResolvedValue([mockCustomPrompt]);
-
       await resolver.customPrompts({
         includeDeleted: false,
         labels: null,
@@ -142,15 +125,12 @@ describe('CustomPromptsResolver', () => {
         userId: null,
       });
 
-      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
-        'cp.prompt_type = :promptType',
-        { promptType: CustomPromptTypeEnum.AGENTS },
+      expect(customPromptsRepository.listFiltered).toHaveBeenCalledWith(
+        expect.objectContaining({ promptType: CustomPromptTypeEnum.AGENTS }),
       );
     });
 
     test('filters by search when provided', async () => {
-      mockQueryBuilder.getMany.mockResolvedValue([]);
-
       await resolver.customPrompts({
         includeDeleted: false,
         labels: null,
@@ -160,18 +140,15 @@ describe('CustomPromptsResolver', () => {
         userId: null,
       });
 
-      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
-        'cp.title ILIKE :search',
-        { search: '%agent%' },
+      expect(customPromptsRepository.listFiltered).toHaveBeenCalledWith(
+        expect.objectContaining({ search: 'agent' }),
       );
     });
   });
 
   describe('createCustomPrompt', () => {
     test('creates and returns new CustomPromptObject', async () => {
-      const repo = customPromptsService.getRepository();
-      vi.mocked(repo.create).mockReturnValue(mockCustomPrompt);
-      vi.mocked(repo.save).mockResolvedValue(mockCustomPrompt);
+      customPromptsRepository.create.mockResolvedValue(mockCustomPrompt);
 
       const result = await resolver.createCustomPrompt(principal, {
         content: mockCustomPrompt.content,
@@ -192,10 +169,9 @@ describe('CustomPromptsResolver', () => {
 
   describe('updateCustomPrompt', () => {
     test('updates and returns CustomPromptObject when found', async () => {
-      const repo = customPromptsService.getRepository();
       const updatedPrompt = { ...mockCustomPrompt, title: 'Updated Title' };
-      vi.mocked(repo.findOne).mockResolvedValue(mockCustomPrompt);
-      vi.mocked(repo.save).mockResolvedValue(updatedPrompt);
+      customPromptsRepository.findOne.mockResolvedValue(mockCustomPrompt);
+      customPromptsRepository.update.mockResolvedValue(updatedPrompt);
 
       const result = await resolver.updateCustomPrompt(principal, {
         content: null,
@@ -214,8 +190,7 @@ describe('CustomPromptsResolver', () => {
     });
 
     test('returns null when prompt not found', async () => {
-      const repo = customPromptsService.getRepository();
-      vi.mocked(repo.findOne).mockResolvedValue(null);
+      customPromptsRepository.findOne.mockResolvedValue(null);
 
       const result = await resolver.updateCustomPrompt(principal, {
         content: null,
@@ -236,21 +211,18 @@ describe('CustomPromptsResolver', () => {
 
   describe('deleteCustomPrompt', () => {
     test('soft deletes and returns true when prompt found', async () => {
-      const repo = customPromptsService.getRepository();
-      vi.mocked(repo.findOne).mockResolvedValue(mockCustomPrompt);
-      vi.mocked(repo.save).mockResolvedValue({
-        ...mockCustomPrompt,
-        deletedAt: new Date(FIXED_NOW),
-      });
+      customPromptsRepository.softDeleteById.mockResolvedValue(true);
 
       const result = await resolver.deleteCustomPrompt(mockCustomPrompt.id);
 
       expect(result).toBe(true);
+      expect(customPromptsRepository.softDeleteById).toHaveBeenCalledWith(
+        mockCustomPrompt.id,
+      );
     });
 
     test('returns false when prompt not found', async () => {
-      const repo = customPromptsService.getRepository();
-      vi.mocked(repo.findOne).mockResolvedValue(null);
+      customPromptsRepository.softDeleteById.mockResolvedValue(false);
 
       const result = await resolver.deleteCustomPrompt('non-existent-id');
 
@@ -260,8 +232,7 @@ describe('CustomPromptsResolver', () => {
 
   describe('hardDeleteCustomPrompt', () => {
     test('permanently deletes and returns true when affected > 0', async () => {
-      const repo = customPromptsService.getRepository();
-      vi.mocked(repo.delete).mockResolvedValue({ affected: 1, raw: [] });
+      customPromptsRepository.hardDeleteById.mockResolvedValue(true);
 
       const result = await resolver.hardDeleteCustomPrompt(mockCustomPrompt.id);
 
@@ -269,12 +240,29 @@ describe('CustomPromptsResolver', () => {
     });
 
     test('returns false when no rows affected', async () => {
-      const repo = customPromptsService.getRepository();
-      vi.mocked(repo.delete).mockResolvedValue({ affected: 0, raw: [] });
+      customPromptsRepository.hardDeleteById.mockResolvedValue(false);
 
       const result = await resolver.hardDeleteCustomPrompt('non-existent-id');
 
       expect(result).toBe(false);
+    });
+  });
+
+  describe('restoreCustomPrompt', () => {
+    test('returns the restored prompt', async () => {
+      customPromptsRepository.restoreById.mockResolvedValue(mockCustomPrompt);
+
+      const result = await resolver.restoreCustomPrompt(mockCustomPrompt.id);
+
+      expect(result?.id).toBe(mockCustomPrompt.id);
+    });
+
+    test('returns null when the prompt is absent or not deleted', async () => {
+      customPromptsRepository.restoreById.mockResolvedValue(null);
+
+      await expect(
+        resolver.restoreCustomPrompt('non-existent-id'),
+      ).resolves.toBeNull();
     });
   });
 
@@ -295,9 +283,8 @@ describe('CustomPromptsResolver', () => {
     };
 
     test('writes an ordinary workspace-relative path', async () => {
-      const repo = customPromptsService.getRepository();
-      vi.mocked(repo.findOne).mockResolvedValue(mockCustomPrompt);
-      vi.mocked(repo.save).mockResolvedValue(mockCustomPrompt);
+      customPromptsRepository.findOne.mockResolvedValue(mockCustomPrompt);
+      customPromptsRepository.update.mockResolvedValue(mockCustomPrompt);
 
       await resolver.updateCustomPrompt(
         principal,
@@ -310,9 +297,9 @@ describe('CustomPromptsResolver', () => {
     });
 
     test('refuses a traversal escape without saving the row', async () => {
-      const repo = customPromptsService.getRepository();
-      vi.mocked(repo.findOne).mockResolvedValue(mockCustomPrompt);
-      vi.mocked(repo.save).mockClear();
+      customPromptsRepository.findOne.mockResolvedValue(mockCustomPrompt);
+      customPromptsRepository.update.mockClear();
+      customPromptsRepository.create.mockClear();
 
       await expect(
         resolver.updateCustomPrompt(
@@ -321,15 +308,15 @@ describe('CustomPromptsResolver', () => {
         ),
       ).rejects.toThrow(BadRequestException);
 
-      expect(repo.save).not.toHaveBeenCalled();
+      expect(customPromptsRepository.update).not.toHaveBeenCalled();
+      expect(customPromptsRepository.create).not.toHaveBeenCalled();
     });
 
     test('refuses a SKILL.md target, leaving the file untouched', async () => {
       const skillPath = join(workspaceRoot, 'SKILL.md');
       writeFileSync(skillPath, 'upstream\n');
 
-      const repo = customPromptsService.getRepository();
-      vi.mocked(repo.findOne).mockResolvedValue(mockCustomPrompt);
+      customPromptsRepository.findOne.mockResolvedValue(mockCustomPrompt);
 
       await expect(
         resolver.updateCustomPrompt(principal, writeInput('SKILL.md')),
@@ -341,8 +328,7 @@ describe('CustomPromptsResolver', () => {
     test('refuses the write without the settings:write permission', async () => {
       mockRolesRepository.getPermissionsForUser.mockResolvedValue([]);
 
-      const repo = customPromptsService.getRepository();
-      vi.mocked(repo.findOne).mockResolvedValue(mockCustomPrompt);
+      customPromptsRepository.findOne.mockResolvedValue(mockCustomPrompt);
 
       await expect(
         resolver.updateCustomPrompt(
@@ -353,8 +339,7 @@ describe('CustomPromptsResolver', () => {
     });
 
     test('refuses the write for an unauthenticated principal', async () => {
-      const repo = customPromptsService.getRepository();
-      vi.mocked(repo.findOne).mockResolvedValue(mockCustomPrompt);
+      customPromptsRepository.findOne.mockResolvedValue(mockCustomPrompt);
 
       await expect(
         resolver.updateCustomPrompt(
@@ -365,8 +350,8 @@ describe('CustomPromptsResolver', () => {
     });
 
     test('createCustomPrompt refuses before persisting the row', async () => {
-      const repo = customPromptsService.getRepository();
-      vi.mocked(repo.save).mockClear();
+      customPromptsRepository.update.mockClear();
+      customPromptsRepository.create.mockClear();
 
       await expect(
         resolver.createCustomPrompt(principal, {
@@ -382,12 +367,12 @@ describe('CustomPromptsResolver', () => {
         }),
       ).rejects.toThrow(BadRequestException);
 
-      expect(repo.save).not.toHaveBeenCalled();
+      expect(customPromptsRepository.update).not.toHaveBeenCalled();
+      expect(customPromptsRepository.create).not.toHaveBeenCalled();
     });
 
     test('writeCustomPromptToFileSystem honours the path policy', async () => {
-      const repo = customPromptsService.getRepository();
-      vi.mocked(repo.findOne).mockResolvedValue({
+      customPromptsRepository.findOne.mockResolvedValue({
         ...mockCustomPrompt,
         filePath: '../escaped-stored.md',
       });

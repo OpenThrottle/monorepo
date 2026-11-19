@@ -16,10 +16,10 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   RULE_APPLICATION_STATES,
-  RuleApplicationsService,
-  TagsService,
-} from '@openthrottle/nestjs-repositories';
-import { TasksRepository } from '@openthrottle/nestjs-repositories-server';
+  RuleApplicationsRepository,
+  TasksRepository,
+  TaskTagsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import { TAG_ACTION_TYPES } from '@openthrottle/openthrottle-skills';
 
 import {
@@ -40,10 +40,10 @@ export class PromoteTaskToPlanExecutor implements ActionExecutor, OnModuleInit {
   constructor(
     private readonly executorRegistry: ActionExecutorRegistry,
     private readonly logger: LoggerService,
-    private readonly ruleApplicationsService: RuleApplicationsService,
-    private readonly tagsService: TagsService,
+    private readonly ruleApplicationsRepository: RuleApplicationsRepository,
     private readonly taskPromotionService: TaskPromotionService,
     private readonly tasksRepository: TasksRepository,
+    private readonly taskTagsRepository: TaskTagsRepository,
   ) {}
 
   onModuleInit(): void {
@@ -59,7 +59,7 @@ export class PromoteTaskToPlanExecutor implements ActionExecutor, OnModuleInit {
     );
 
     if (candidateTaskIds.length === 0) {
-      await this.ruleApplicationsService.record({
+      await this.ruleApplicationsRepository.record({
         details: {
           matchedTags: action.matchedTags,
           reason: 'no-eligible-task',
@@ -94,7 +94,7 @@ export class PromoteTaskToPlanExecutor implements ActionExecutor, OnModuleInit {
       PromoteTaskToPlanExecutor.name,
     );
 
-    await this.ruleApplicationsService.record({
+    await this.ruleApplicationsRepository.record({
       details: {
         matchedTags: action.matchedTags,
         promotedTaskIds,
@@ -115,17 +115,14 @@ export class PromoteTaskToPlanExecutor implements ActionExecutor, OnModuleInit {
   ): Promise<string[]> {
     if (matchedTags.length === 0) return [];
 
-    const taggedTaskIds = await this.tagsService
-      .getTaskTagsRepository()
-      .createQueryBuilder('taskTag')
-      .innerJoin('tasks', 'task', 'task.id = taskTag.task_id')
-      .where('task.plan_id = :planId', { planId })
-      .andWhere('taskTag.tag IN (:...tags)', { tags: [...matchedTags] })
-      .select('DISTINCT taskTag.task_id', 'taskId')
-      .getRawMany<{ taskId: string }>();
+    const taggedTaskIds =
+      await this.taskTagsRepository.listTaskIdsByPlanAndTags(
+        planId,
+        matchedTags,
+      );
 
     const checked = await Promise.all(
-      taggedTaskIds.map(({ taskId }) =>
+      taggedTaskIds.map((taskId) =>
         this.isAlreadyPromoted(taskId).then((alreadyPromoted) => ({
           alreadyPromoted,
           taskId,
@@ -146,9 +143,10 @@ export class PromoteTaskToPlanExecutor implements ActionExecutor, OnModuleInit {
     if (task.status === PROMOTED_TASK_STATUS) {
       return true;
     }
-    const promotedTag = await this.tagsService
-      .getTaskTagsRepository()
-      .findOne({ where: { tag: PROMOTED_TAG, taskId } });
+    const promotedTag = await this.taskTagsRepository.findByTaskAndTag(
+      taskId,
+      PROMOTED_TAG,
+    );
     return promotedTag != null;
   }
 }

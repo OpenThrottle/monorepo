@@ -15,8 +15,6 @@ export {
 } from '../modules/agent-conversations/agent-conversations.factory.ts';
 export type { AgentTokenUsageFactoryData } from '../modules/agent-token-usage/agent-token-usage.factory.ts';
 export { agentTokenUsageFactory } from '../modules/agent-token-usage/agent-token-usage.factory.ts';
-export type { CustomPromptFactoryData } from '../modules/prompts/custom-prompts.factory.ts';
-export { customPromptsFactory } from '../modules/prompts/custom-prompts.factory.ts';
 // Moved to nestjs-repositories-server (OT plan f89ee499): re-exported under the same names.
 export {
   planEmbeddingsFactory,

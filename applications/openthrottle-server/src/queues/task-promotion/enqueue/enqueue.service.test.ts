@@ -5,16 +5,18 @@
  */
 
 import { createMock } from '@golevelup/ts-vitest';
-import type { TaskTag } from '@openthrottle/nestjs-repositories';
-import { type TagsService } from '@openthrottle/nestjs-repositories';
 import type {
   Task,
   TasksRepository,
+  TaskTagsRepository,
 } from '@openthrottle/nestjs-repositories-server';
-import { createTasksRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import {
+  createTasksRepositoryMock,
+  createTaskTagsRepositoryMock,
+  taskTagsFactory,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
 import type { Queue } from 'bullmq';
-import type { Repository } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type {
@@ -27,11 +29,10 @@ const TASK_ID = '00000000-0000-4000-8000-000000000001';
 
 describe('TaskPromotionEnqueueService.enqueuePromotion', () => {
   let tasksRepository: TasksRepository;
-  let tagsService: TagsService;
+  let taskTagsRepository: ReturnType<typeof createTaskTagsRepositoryMock>;
   let queue: Queue<PromoteTaskJobData, PromoteTaskJobResult>;
   let service: TaskPromotionEnqueueService;
   let taskFindOne: ReturnType<typeof vi.fn>;
-  let tagFindOne: ReturnType<typeof vi.fn>;
 
   const buildTask = (overrides: Partial<Task> = {}): Task => {
     return asMock<Task>({
@@ -44,24 +45,19 @@ describe('TaskPromotionEnqueueService.enqueuePromotion', () => {
 
   beforeEach(() => {
     taskFindOne = vi.fn().mockResolvedValue(buildTask());
-    tagFindOne = vi.fn().mockResolvedValue(null);
+    taskTagsRepository = createTaskTagsRepositoryMock();
 
     tasksRepository = asMock<TasksRepository>({
       ...createTasksRepositoryMock(),
       findOne: taskFindOne,
-    });
-    tagsService = createMock<TagsService>({
-      getTaskTagsRepository: vi.fn(() =>
-        asMock<Repository<TaskTag>>({ findOne: tagFindOne }),
-      ),
     });
     queue = createMock<Queue<PromoteTaskJobData, PromoteTaskJobResult>>({
       add: vi.fn().mockResolvedValue(asMock({ id: 'promote:job' })),
     });
 
     service = new TaskPromotionEnqueueService(
-      tagsService,
       tasksRepository,
+      asMock<TaskTagsRepository>(taskTagsRepository),
       queue,
     );
   });
@@ -144,7 +140,9 @@ describe('TaskPromotionEnqueueService.enqueuePromotion', () => {
 
   it('rejects a legacy promoted task (SKIPPED + promoted tag, no PROMOTED status)', async () => {
     taskFindOne.mockResolvedValue(buildTask({ status: 'SKIPPED' }));
-    tagFindOne.mockResolvedValue(asMock<TaskTag>({ tag: 'promoted' }));
+    taskTagsRepository.findByTaskAndTag.mockResolvedValue(
+      taskTagsFactory.build({ tag: 'promoted' }),
+    );
 
     const result = await service.enqueuePromotion({
       actorServiceAccountId: null,
@@ -160,7 +158,7 @@ describe('TaskPromotionEnqueueService.enqueuePromotion', () => {
 
   it('rejects a status-PROMOTED task that has no promoted tag', async () => {
     taskFindOne.mockResolvedValue(buildTask({ status: 'PROMOTED' }));
-    tagFindOne.mockResolvedValue(null);
+    taskTagsRepository.findByTaskAndTag.mockResolvedValue(null);
 
     const result = await service.enqueuePromotion({
       actorServiceAccountId: null,

@@ -27,7 +27,7 @@ import {
   AUTH_PRINCIPAL_KIND_USER,
 } from '@openthrottle/nestjs-auth';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { PlanTag, TaskTag } from '@openthrottle/nestjs-repositories';
+import { PlanTag, TaskTag } from '@openthrottle/nestjs-repositories-server';
 import {
   Plan,
   Task,

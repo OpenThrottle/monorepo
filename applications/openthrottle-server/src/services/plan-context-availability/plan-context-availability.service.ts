@@ -23,17 +23,12 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import {
-  ProjectSkillsService,
-  SkillAvailabilityService,
-  TagActionRulesService,
-  TagsService,
-} from '@openthrottle/nestjs-repositories';
 import type { Plan } from '@openthrottle/nestjs-repositories-server';
 import {
   PlansRepository,
   ProjectsRepository,
   SkillTagsRepository,
+  TagActionRulesRepository,
   TasksRepository,
   UsersRepository,
 } from '@openthrottle/nestjs-repositories-server';
@@ -48,6 +43,9 @@ import {
   type TagActionRuleInput,
 } from '@openthrottle/openthrottle-skills';
 
+import { ProjectSkillsService } from '../project-skills/project-skills.service.ts';
+import { SkillAvailabilityService } from '../skill-availability/skill-availability.service.ts';
+import { TagsService } from '../tags/tags.service.ts';
 import type {
   PlanContextAvailability,
   PlanContextResolvedSkill,
@@ -66,7 +64,7 @@ export class PlanContextAvailabilityService {
     private readonly projectsRepository: ProjectsRepository,
     private readonly skillAvailabilityService: SkillAvailabilityService,
     private readonly skillTagsRepository: SkillTagsRepository,
-    private readonly tagActionRulesService: TagActionRulesService,
+    private readonly tagActionRulesRepository: TagActionRulesRepository,
     private readonly tagsService: TagsService,
     private readonly tasksRepository: TasksRepository,
     private readonly usersRepository: UsersRepository,
@@ -217,7 +215,9 @@ export class PlanContextAvailabilityService {
       return [];
     }
 
-    const rules = await this.tagActionRulesService.listEnabledForUser(owner.id);
+    const rules = await this.tagActionRulesRepository.listEnabledForUser(
+      owner.id,
+    );
     const ruleInputs: TagActionRuleInput[] = rules.map((rule) => ({
       actionPayload: rule.actionPayload,
       actionType: rule.actionType,

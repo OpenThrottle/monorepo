@@ -1,14 +1,7 @@
 import { createMock } from '@golevelup/ts-vitest';
 import { BadRequestException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import type {
-  Project,
-  ProjectSkillView,
-} from '@openthrottle/nestjs-repositories';
-import {
-  ProjectSkillsService,
-  SkillAvailabilityService,
-} from '@openthrottle/nestjs-repositories';
+import type { Project } from '@openthrottle/nestjs-repositories';
 import type { UserSkillTag } from '@openthrottle/nestjs-repositories-server';
 import {
   ProjectsRepository,
@@ -22,6 +15,9 @@ import type { SkillAvailabilityRuleSet } from '@openthrottle/openthrottle-skills
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { PlanContextAvailabilityService } from '../../../services/plan-context-availability/plan-context-availability.service.ts';
+import { ProjectSkillsService } from '../../../services/project-skills/project-skills.service.ts';
+import type { ProjectSkillView } from '../../../services/project-skills/project-skills.types.ts';
+import { SkillAvailabilityService } from '../../../services/skill-availability/skill-availability.service.ts';
 import { SkillAvailabilityResolutionResolver } from './skill-availability-resolution.resolver.ts';
 
 describe('SkillAvailabilityResolutionResolver', () => {
