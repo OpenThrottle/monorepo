@@ -1,5 +1,5 @@
+import type { DataTableRow } from '@openthrottle/react-router-shadcn';
 import { Badge, cn } from '@openthrottle/react-router-shadcn';
-import type { Row } from '@tanstack/react-table';
 import * as React from 'react';
 import { Link } from 'react-router';
 
@@ -14,7 +14,7 @@ export interface PlanTasksTableCellTitleProps {
   hasSteerPending?: boolean;
   /** True when a tag→action rule manages this task's placement. */
   isManaged?: boolean;
-  row: Row<PlanTaskRowFragment>;
+  row: DataTableRow<PlanTaskRowFragment>;
 }
 
 export const PlanTasksTableCellTitle = (

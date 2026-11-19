@@ -1,5 +1,5 @@
 import { cn } from '@openthrottle/react-router-shadcn';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import * as React from 'react';
 
 export interface OpenThrottleEntranceProps {

@@ -2,7 +2,6 @@ import { isRecord } from '@openthrottle/nodejs-utils';
 import { isThemeId } from '@openthrottle/react-router-shadcn';
 import type { ThemeMode } from '@openthrottle/react-router-utils';
 import { createJSONStorage } from 'jotai/utils';
-import type { SyncStorage } from 'jotai/vanilla/utils/atomWithStorage';
 
 import type {
   ConfigObject,
@@ -83,7 +82,9 @@ export const normalizeAppearanceConfig = (
 };
 
 /** @description JSON localStorage adapter that normalizes whatever it reads. */
-export const createAppearanceConfigStorage = (): SyncStorage<ConfigObject> => {
+export const createAppearanceConfigStorage = (): ReturnType<
+  typeof createJSONStorage<ConfigObject>
+> => {
   const jsonStorage = createJSONStorage<ConfigObject>(() => {
     if (typeof window === 'undefined') {
       return {

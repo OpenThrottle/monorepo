@@ -1,18 +1,21 @@
 import * as React from 'react';
 
-import { NonceContext } from '../utils/csp';
+import { NonceContext, readDocumentNonce } from '../utils/csp';
 
 /**
- * @description Read the current request's CSP nonce. Returns an empty string
- * when no nonce is in scope (client hydration), in which case no `nonce`
- * attribute should be rendered.
+ * @description Read the current request's CSP nonce. On the server it comes
+ * from `NonceContext`; on the client it is recovered from the document, so
+ * hydration renders the same `nonce` the server did (React 19.3+ treats a
+ * differing `nonce` as a hydration mismatch). Empty string when neither has one.
  * @public
  */
 export const useNonce = (): string => {
   // Hooks
-  const nonce = React.useContext(NonceContext);
+  const contextNonce = React.useContext(NonceContext);
+  const [documentNonce] = React.useState(readDocumentNonce);
 
   // Setup
+  const nonce = contextNonce === '' ? documentNonce : contextNonce;
 
   // Handlers
 

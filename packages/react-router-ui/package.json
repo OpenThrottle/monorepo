@@ -14,8 +14,8 @@
     "@openthrottle/react-router-utils": "workspace:^",
     "@phosphor-icons/react": "catalog:",
     "class-variance-authority": "catalog:",
-    "framer-motion": "catalog:",
     "lucide-react": "catalog:",
+    "motion": "catalog:",
     "react": "catalog:",
     "react-router": "catalog:"
   },

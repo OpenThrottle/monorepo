@@ -1,3 +1,4 @@
+import type { DataTableColumnDef } from '@openthrottle/react-router-shadcn';
 /**
  * @description Column definitions for {@link PlansTable}. Hoisted from the
  * component file per component-primitive-shape R4 (module-scope helpers live in
@@ -9,7 +10,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
-import type { ColumnDef } from '@tanstack/react-table';
 import { SlidersHorizontal } from 'lucide-react';
 import * as React from 'react';
 import { Link } from 'react-router';
@@ -56,7 +56,10 @@ const renderCustomRunConfigIndicator = (
 
 export const buildPlansTableColumns = (
   _statusFilterUrls: PlansTableProps['statusFilterUrls'],
-): ColumnDef<PlanCardFragment, string | number | null | undefined>[] => {
+): DataTableColumnDef<
+  PlanCardFragment,
+  string | number | null | undefined
+>[] => {
   return [
     {
       accessorKey: 'status',

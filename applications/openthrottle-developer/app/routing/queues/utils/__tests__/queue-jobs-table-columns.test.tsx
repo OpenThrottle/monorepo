@@ -1,4 +1,7 @@
-import type { CellContext, HeaderContext } from '@tanstack/react-table';
+import type {
+  DataTableCellContext,
+  DataTableHeaderContext,
+} from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
@@ -17,11 +20,14 @@ function asMock(value: unknown): unknown {
 
 const cellContext = (
   job: QueueJobDetailsFragment,
-): CellContext<QueueJobDetailsFragment, string | number | null | undefined> => {
+): DataTableCellContext<
+  QueueJobDetailsFragment,
+  string | number | null | undefined
+> => {
   return asMock({ row: { original: job } });
 };
 
-const headerContext = (): HeaderContext<
+const headerContext = (): DataTableHeaderContext<
   QueueJobDetailsFragment,
   string | number | null | undefined
 > => {
@@ -30,7 +36,7 @@ const headerContext = (): HeaderContext<
 
 interface PlainJobColumn {
   readonly cell?: (
-    ctx: CellContext<
+    ctx: DataTableCellContext<
       QueueJobDetailsFragment,
       string | number | null | undefined
     >,
@@ -38,7 +44,7 @@ interface PlainJobColumn {
   readonly header?:
     | string
     | ((
-        ctx: HeaderContext<
+        ctx: DataTableHeaderContext<
           QueueJobDetailsFragment,
           string | number | null | undefined
         >,

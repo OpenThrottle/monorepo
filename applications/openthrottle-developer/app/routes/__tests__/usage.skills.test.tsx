@@ -6,6 +6,23 @@ import { loader } from '../usage.skills';
 
 vi.mock('@openthrottle/react-router-graphql');
 
+// The loader walks the checkout for skills on disk; under a busy test pool that
+// walk outran the 15s timeout. Stub it like the /skills loader test does.
+vi.mock('~/routing/agents/utils/discoverRepoSkills.server', () => ({
+  discoverRepoSkills: vi.fn(),
+}));
+
+vi.mock('~/routing/agents/utils/resolve-monorepo-root.server', () => ({
+  getMonorepoRoot: vi.fn(),
+}));
+
+const { discoverRepoSkills } =
+  await import('~/routing/agents/utils/discoverRepoSkills.server');
+const { getMonorepoRoot } =
+  await import('~/routing/agents/utils/resolve-monorepo-root.server');
+
+const mockDiscoverRepoSkills = vi.mocked(discoverRepoSkills);
+const mockGetMonorepoRoot = vi.mocked(getMonorepoRoot);
 const mockExecuteGraphqlWithAuth = vi.mocked(
   graphqlWithAuth.executeGraphqlWithAuth,
 );
@@ -65,6 +82,8 @@ const runLoader = (url: string) => {
 describe('routes/usage.skills.tsx', () => {
   describe('loader', () => {
     beforeEach(() => {
+      mockGetMonorepoRoot.mockReset().mockReturnValue('/repo');
+      mockDiscoverRepoSkills.mockReset().mockReturnValue([]);
       // Two parallel calls: skill usage, then the first page of the branch
       // dropdown.
       mockExecuteGraphqlWithAuth
@@ -88,7 +107,8 @@ describe('routes/usage.skills.tsx', () => {
       );
       expect(result.branchesHaveMore).toBe(true);
       // Disk-discovered slugs the leaderboard may link through to /skills/$slug.
-      expect(Array.isArray(result.presentSkillSlugs)).toBe(true);
+      expect(result.presentSkillSlugs).toEqual([]);
+      expect(mockDiscoverRepoSkills).toHaveBeenCalledWith('/repo');
       expect(mockExecuteGraphqlWithAuth).toHaveBeenCalledTimes(2);
 
       expect(mockExecuteGraphqlWithAuth).toHaveBeenNthCalledWith(

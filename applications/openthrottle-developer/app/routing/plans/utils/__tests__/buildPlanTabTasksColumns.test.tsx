@@ -1,4 +1,7 @@
-import type { CellContext, HeaderContext } from '@tanstack/react-table';
+import type {
+  DataTableCellContext,
+  DataTableHeaderContext,
+} from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
@@ -12,8 +15,14 @@ function asMock(value: unknown): unknown {
   return value;
 }
 
-type Cell = CellContext<PlanTaskRowFragment, string | null | undefined>;
-type Header = HeaderContext<PlanTaskRowFragment, string | null | undefined>;
+type Cell = DataTableCellContext<
+  PlanTaskRowFragment,
+  string | null | undefined
+>;
+type Header = DataTableHeaderContext<
+  PlanTaskRowFragment,
+  string | null | undefined
+>;
 
 const buildTask = (
   overrides: Partial<PlanTaskRowFragment> = {},

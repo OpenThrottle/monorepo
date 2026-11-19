@@ -75,4 +75,5 @@ export * from './themes/index';
 
 // Utilities
 export * from './utils/cn';
+export * from './utils/dataTableFeatures';
 export * from './utils/isRenderableMessage';

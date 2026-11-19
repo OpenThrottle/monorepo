@@ -1,6 +1,6 @@
+import type { DataTableColumnDef } from '@openthrottle/react-router-shadcn';
 import { Badge, cn, DataTable } from '@openthrottle/react-router-shadcn';
 import { GlobalPopoverActionsHeader } from '@openthrottle/react-router-ui-global';
-import type { ColumnDef } from '@tanstack/react-table';
 import * as React from 'react';
 import { Link } from 'react-router';
 
@@ -79,7 +79,10 @@ export const RulesTable = (props: RulesTableProps): React.ReactElement => {
 
 RulesTable.buildTable = (
   options: RulesTableColumnOptions,
-): ColumnDef<TagActionRuleRowData, string | number | null | undefined>[] => {
+): DataTableColumnDef<
+  TagActionRuleRowData,
+  string | number | null | undefined
+>[] => {
   const { onToggleEnabled, pending } = options;
 
   return [

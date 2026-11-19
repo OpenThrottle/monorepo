@@ -1,6 +1,6 @@
+import type { DataTableColumnDef } from '@openthrottle/react-router-shadcn';
 import { Badge, DataTable } from '@openthrottle/react-router-shadcn';
 import { GlobalPopoverActionsHeader } from '@openthrottle/react-router-ui-global';
-import type { ColumnDef } from '@tanstack/react-table';
 import * as React from 'react';
 import { Link } from 'react-router';
 
@@ -30,7 +30,7 @@ export const RolloutFlagsTable = (
 
   // Setup
   const columns = React.useMemo<
-    ColumnDef<RolloutFlagFieldsFragment, unknown>[]
+    DataTableColumnDef<RolloutFlagFieldsFragment, unknown>[]
   >(
     () => [
       {

@@ -9,8 +9,8 @@ import type { Route } from '@/app/routes/+types/_index';
 import { buildRootMatch } from '~/testing/buildRootMatch';
 import { renderWithMemoryRouter } from '~/testing/route-fixtures';
 
-vi.mock('framer-motion', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('framer-motion')>();
+vi.mock('motion/react', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('motion/react')>();
 
   return { ...actual, useReducedMotion: (): boolean => true };
 });

@@ -1,8 +1,10 @@
 import { CustomPromptType } from '@openthrottle/openthrottle-developer-codegen';
-import type { BadgeProps } from '@openthrottle/react-router-shadcn';
+import type {
+  BadgeProps,
+  DataTableColumnDef,
+} from '@openthrottle/react-router-shadcn';
 import { Badge, cn, DataTable } from '@openthrottle/react-router-shadcn';
 import { GlobalPopoverActionsHeader } from '@openthrottle/react-router-ui-global';
-import type { ColumnDef } from '@tanstack/react-table';
 import { Clock, FileText } from 'lucide-react';
 import * as React from 'react';
 import { Link } from 'react-router';
@@ -51,7 +53,7 @@ export const PromptsTable = (props: PromptsTableProps): React.ReactElement => {
   );
 };
 
-PromptsTable.buildTable = (): ColumnDef<
+PromptsTable.buildTable = (): DataTableColumnDef<
   PromptCardFragment,
   string | number | null | undefined
 >[] => {

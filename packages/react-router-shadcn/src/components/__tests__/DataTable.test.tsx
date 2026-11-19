@@ -1,9 +1,9 @@
-import type { ColumnDef } from '@tanstack/react-table';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
+import type { DataTableColumnDef } from '../../utils/dataTableFeatures';
 import { DataTable } from '../DataTable';
 
 type DemoRow = {
@@ -13,12 +13,12 @@ type DemoRow = {
   value: number;
 };
 
-const columns: ColumnDef<DemoRow, unknown>[] = [
+const columns: DataTableColumnDef<DemoRow, unknown>[] = [
   { accessorKey: 'name', header: 'Name' },
   { accessorKey: 'value', header: 'Value' },
 ];
 
-const nestedColumns: ColumnDef<DemoRow, unknown>[] = [
+const nestedColumns: DataTableColumnDef<DemoRow, unknown>[] = [
   {
     cell: ({ row }) => (
       <div style={{ paddingLeft: row.depth * 8 }}>

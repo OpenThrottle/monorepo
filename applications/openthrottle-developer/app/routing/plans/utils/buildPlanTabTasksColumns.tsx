@@ -1,3 +1,4 @@
+import type { DataTableColumnDef } from '@openthrottle/react-router-shadcn';
 /**
  * @description Column definitions for the {@link PlanTabTasks} table view.
  * Hoisted from the component file per component-primitive-shape R4
@@ -5,7 +6,6 @@
  * component stays UI-focused.
  */
 import { GlobalPopoverActionsHeader } from '@openthrottle/react-router-ui-global';
-import type { ColumnDef } from '@tanstack/react-table';
 import * as React from 'react';
 
 import type { PlanTaskRowFragment } from '~/__generated__/graphql';
@@ -17,7 +17,7 @@ import { isPlanStatusKey } from '~/routing/plans/utils/utils.plans';
 export const buildPlanTabTasksColumns = (
   managedTaskIds: ReadonlySet<string>,
   steerPendingTaskIds: ReadonlySet<string>,
-): ColumnDef<PlanTaskRowFragment, string | null | undefined>[] => {
+): DataTableColumnDef<PlanTaskRowFragment, string | null | undefined>[] => {
   return [
     {
       accessorKey: 'status',

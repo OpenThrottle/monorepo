@@ -1,9 +1,9 @@
+import type { DataTableColumnDef } from '@openthrottle/react-router-shadcn';
 import type { GlobalPopoverAction } from '@openthrottle/react-router-ui-global';
 import {
   GlobalPopover,
   GlobalPopoverActionsHeader,
 } from '@openthrottle/react-router-ui-global';
-import type { ColumnDef } from '@tanstack/react-table';
 import * as React from 'react';
 
 import type { RepoPersonaEntry } from '~/routing/agents/data/data.repo-personas-registry';
@@ -38,7 +38,7 @@ const copyPersonaPath = (path: string): void => {
   textArea.remove();
 };
 
-export const personasTableColumns: ColumnDef<
+export const personasTableColumns: DataTableColumnDef<
   RepoPersonaEntry,
   PersonasTableColumnValue
 >[] = [

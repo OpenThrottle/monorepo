@@ -1,6 +1,6 @@
+import type { DataTableRow } from '@openthrottle/react-router-shadcn';
 import type { GlobalPopoverAction } from '@openthrottle/react-router-ui-global';
 import { GlobalPopover } from '@openthrottle/react-router-ui-global';
-import type { Row } from '@tanstack/react-table';
 import { PanelRightIcon } from 'lucide-react';
 import * as React from 'react';
 
@@ -8,7 +8,7 @@ import type { PlanTaskRowFragment } from '~/__generated__/graphql';
 import { PLAN_TASK_ROW_ACTIONS_COPY } from '~/routing/plans/data/data.copy';
 
 export interface PlanTasksTableCellActionsProps {
-  row: Row<PlanTaskRowFragment>;
+  row: DataTableRow<PlanTaskRowFragment>;
 }
 
 /**

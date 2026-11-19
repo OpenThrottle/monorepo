@@ -1,6 +1,6 @@
+import type { DataTableColumnDef } from '@openthrottle/react-router-shadcn';
 import { cn, DataTable } from '@openthrottle/react-router-shadcn';
 import { GlobalPopoverActionsHeader } from '@openthrottle/react-router-ui-global';
-import type { ColumnDef } from '@tanstack/react-table';
 import * as React from 'react';
 
 import type { ServiceAccountCredentialFieldsFragment } from '~/__generated__/graphql';
@@ -83,7 +83,10 @@ export const SettingsKeysTable = (
 
 SettingsKeysTable.buildTable = (
   canRevoke: boolean,
-): ColumnDef<ServiceAccountCredentialFieldsFragment, string | null>[] => {
+): DataTableColumnDef<
+  ServiceAccountCredentialFieldsFragment,
+  string | null
+>[] => {
   return [
     {
       accessorKey: 'label',

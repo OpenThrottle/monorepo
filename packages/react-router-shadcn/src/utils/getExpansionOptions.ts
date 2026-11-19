@@ -1,18 +1,20 @@
-import {
-  type ExpandedState,
-  getExpandedRowModel,
-  type OnChangeFn,
-  type TableOptions,
+import type {
+  ExpandedState,
+  OnChangeFn,
+  RowData,
+  TableOptions,
 } from '@tanstack/react-table';
 
-export type ExpansionOptions<TData> = Partial<
+import type { DataTableFeatures } from './dataTableFeatures';
+
+export type ExpansionOptions<TData extends RowData> = Partial<
   Pick<
-    TableOptions<TData>,
-    'getExpandedRowModel' | 'getSubRows' | 'onExpandedChange' | 'state'
+    TableOptions<DataTableFeatures, TData>,
+    'getSubRows' | 'onExpandedChange' | 'state'
   >
 >;
 
-export interface GetExpansionOptionsInput<TData> {
+export interface GetExpansionOptionsInput<TData extends RowData> {
   readonly expandedState: ExpandedState;
   readonly getSubRows:
     ((original: TData, index: number) => TData[] | undefined) | undefined;
@@ -20,11 +22,11 @@ export interface GetExpansionOptionsInput<TData> {
 }
 
 /**
- * @description Table options that opt a table into the expanded row model.
+ * @description Table options that opt a table into nested, expandable rows.
  * Returns an empty object when no `getSubRows` is supplied, so the table
  * options stay identical to the flat table.
  */
-export const getExpansionOptions = <TData>(
+export const getExpansionOptions = <TData extends RowData>(
   input: GetExpansionOptionsInput<TData>,
 ): ExpansionOptions<TData> => {
   const { expandedState, getSubRows, onExpandedChange } = input;
@@ -32,7 +34,6 @@ export const getExpansionOptions = <TData>(
   if (!getSubRows) return {};
 
   return {
-    getExpandedRowModel: getExpandedRowModel(),
     getSubRows,
     onExpandedChange,
     state: { expanded: expandedState },
