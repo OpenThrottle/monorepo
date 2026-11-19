@@ -22,6 +22,7 @@ import {
 import {
   APP_URL,
   artwork,
+  getDocumentEnv,
   getEnvironment,
   OPENTHROTTLE_BUCKET,
   OPENTHROTTLE_META_DESCRIPTION,
@@ -149,7 +150,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const nonce = useNonce();
 
   // Setup
-  const env = data?.env ?? {};
+  const env = getDocumentEnv(data?.env);
   const envHtml = `window.env = ${JSON.stringify(env)}`;
 
   const favicon = `${OPENTHROTTLE_BUCKET}/branding/icons/yellow/favicon.ico`;

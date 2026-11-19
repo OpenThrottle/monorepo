@@ -10,6 +10,8 @@ export const GLOBAL_ERROR_BOUNDARY_COPY = {
     active: `When crash reporting is configured, this id is attached to the automated report so support can correlate your session.`,
     inactive: `Crash reporting is not active in this environment (no usable client reporter token); the reference id still helps support match logs you send manually.`,
   },
+  /** Shown in place of the reference id until the page hydrates. */
+  pendingReferenceId: `Generating…`,
 } as const;
 
 export const GLOBAL_FEATURE_ONBOARDING_SECTION_COPY = {

@@ -5,12 +5,22 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { GLOBAL_ERROR_BOUNDARY_COPY } from '../../data/data.copy';
 import type { GlobalErrorBoundaryReferencePanelProps } from '../GlobalErrorBoundaryReferencePanel';
 import { GlobalErrorBoundaryReferencePanel } from '../GlobalErrorBoundaryReferencePanel';
 
 describe('GlobalErrorBoundaryReferencePanel Component', () => {
   let component: RenderResult;
   let props: GlobalErrorBoundaryReferencePanelProps;
+
+  // Reads `props` at render time, so a nested beforeEach can swap them first.
+  const Component = () => {
+    return <GlobalErrorBoundaryReferencePanel {...props} />;
+  };
+  const renderPanel = (): RenderResult => {
+    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    return render(<RoutesStub />);
+  };
 
   beforeEach(() => {
     props = {
@@ -20,11 +30,7 @@ describe('GlobalErrorBoundaryReferencePanel Component', () => {
       onCopyReferenceId: vi.fn().mockResolvedValue(undefined),
     };
 
-    const Component = () => {
-      return <GlobalErrorBoundaryReferencePanel {...props} />;
-    };
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    component = render(<RoutesStub />);
+    component = renderPanel();
   });
 
   test('renders the support reference panel with the incident id and classification summary', () => {
@@ -58,5 +64,28 @@ describe('GlobalErrorBoundaryReferencePanel Component', () => {
       component.getByRole('button', { name: 'Copy incident details' }),
     );
     expect(props.onCopyIncidentDetails).toHaveBeenCalledTimes(1);
+  });
+
+  describe('before hydration (no reference id yet)', () => {
+    beforeEach(() => {
+      component.unmount();
+      props = { ...props, incidentReferenceId: null };
+      component = renderPanel();
+    });
+
+    test('shows the pending placeholder instead of an id', () => {
+      expect(
+        component.getByText(GLOBAL_ERROR_BOUNDARY_COPY.pendingReferenceId),
+      ).toBeInTheDocument();
+    });
+
+    test('disables both copy actions', () => {
+      expect(
+        component.getByRole('button', { name: 'Copy reference id' }),
+      ).toBeDisabled();
+      expect(
+        component.getByRole('button', { name: 'Copy incident details' }),
+      ).toBeDisabled();
+    });
   });
 });

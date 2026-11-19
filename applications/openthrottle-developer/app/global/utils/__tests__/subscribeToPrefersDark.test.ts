@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 
-import { subscribeToNothing, subscribeToPrefersDark } from '../external-stores';
+import { subscribeToPrefersDark } from '../subscribeToPrefersDark';
 
 const stubMatchMedia = (
   matches: boolean,
@@ -25,10 +25,6 @@ const stubMatchMedia = (
 describe('external stores', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
-  });
-
-  test('subscribeToNothing returns a callable no-op unsubscribe', () => {
-    expect(subscribeToNothing()()).toBeUndefined();
   });
 
   test('subscribeToPrefersDark adds and removes the change listener', () => {

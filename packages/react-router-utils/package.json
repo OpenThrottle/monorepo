@@ -12,6 +12,7 @@
   },
   "devDependencies": {
     "@testing-library/react": "catalog:",
+    "react-dom": "catalog:",
     "vitest": "catalog:"
   },
   "license": "Apache-2.0",

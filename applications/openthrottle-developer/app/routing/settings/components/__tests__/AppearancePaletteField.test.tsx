@@ -4,6 +4,7 @@ import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createStore, Provider } from 'jotai';
 import * as React from 'react';
+import { renderToString } from 'react-dom/server';
 import { beforeEach, describe, expect, test } from 'vitest';
 
 import type { ConfigObject } from '~/global/data/data.appearance-config';
@@ -91,5 +92,36 @@ describe('AppearancePaletteField Component', () => {
     expect(
       field.getByRole('button', { name: new RegExp(firstTheme.label) }),
     ).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  describe('server render (before hydration)', () => {
+    test('ignores the stored palette and mode so hydration matches', () => {
+      const [firstTheme] = THEMES;
+      if (firstTheme === undefined) {
+        throw new Error('expected a bundled theme');
+      }
+      const store = createStore();
+      store.set(configAtom, {
+        ...DEFAULT_APPEARANCE_CONFIG,
+        theme: 'dark',
+        themeId: firstTheme.id,
+      });
+      const container = document.createElement('div');
+      container.innerHTML = renderToString(
+        <Provider store={store}>
+          <AppearancePaletteField {...props} />
+        </Provider>,
+      );
+
+      const pressed = container.querySelector('[aria-pressed="true"]');
+      const firstChip = container.querySelector(
+        `[data-theme-id="${firstTheme.id}"] span span`,
+      );
+
+      expect(pressed?.getAttribute('data-theme-id')).not.toBe(firstTheme.id);
+      expect(firstChip?.getAttribute('style')).not.toContain(
+        Object.values(firstTheme.dark)[0] ?? '<no dark token>',
+      );
+    });
   });
 });

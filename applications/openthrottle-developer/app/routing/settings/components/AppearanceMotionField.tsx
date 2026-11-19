@@ -3,10 +3,9 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from '@openthrottle/react-router-shadcn';
-import { useAtom } from 'jotai';
 import * as React from 'react';
 
-import { configAtom } from '~/global/data/data.atom-config';
+import { useHydratedAppearanceConfig } from '~/global/hooks/useHydratedAppearanceConfig';
 import { isReducedMotionMode } from '~/global/utils/appearance-config';
 import { APPEARANCE_MOTION_OPTIONS } from '~/routing/settings/data/data.appearance';
 import { APPEARANCE_COPY } from '~/routing/settings/data/data.copy';
@@ -23,7 +22,7 @@ export const AppearanceMotionField = (
   _props: AppearanceMotionFieldProps,
 ): React.ReactElement => {
   // Hooks
-  const [config, setConfig] = useAtom(configAtom);
+  const { config, setConfig } = useHydratedAppearanceConfig();
 
   // Setup
 

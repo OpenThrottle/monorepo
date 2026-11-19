@@ -93,3 +93,67 @@ export const getEnvironment = (): OpenThrottleEnv => {
     ...getServerEnv(),
   };
 };
+
+/**
+ * @description Every key of the public tier, in the order {@link getPublicEnv}
+ * serializes them. {@link getDocumentEnv} reads exactly these, so its fallback
+ * can never surface a server-only key.
+ */
+const PUBLIC_ENV_KEYS = [
+  'API_URL_EXTERNAL',
+  'APP_ENV',
+  'APP_NAME',
+  'APP_NAME_SHORT',
+  'APP_URL',
+  'APP_URL_ADMIN',
+  'APP_URL_CMS',
+  'APP_URL_DEVELOPER',
+  'APP_URL_SERVER',
+  'APP_URL_WEBSITE',
+  'APP_VERSION',
+  'FEATURE_BETA_PREVIEW',
+  'FEATURE_BLOG_ENABLED',
+  'FEATURE_CHARLIE_PREVIEW',
+  'FEATURE_DELTA_PREVIEW',
+  'NODE_ENV',
+  'ROLLBAR_TOKEN',
+  'VERCEL',
+] as const satisfies readonly (keyof OpenThrottlePublicEnv)[];
+
+/**
+ * The public env a root `Layout` serializes into `window.env`. Loose on
+ * purpose: an app root may assemble its own subset (cms does).
+ */
+export type DocumentEnv = Readonly<
+  Partial<Record<keyof OpenThrottlePublicEnv, string | undefined>>
+>;
+
+/**
+ * @description Resolves the public env a root `Layout` serializes into
+ * `window.env`. Prefers the root loader's `env`. When the loader did not run —
+ * an unmatched URL renders the root `ErrorBoundary` with no loader data — it
+ * falls back to the public keys present in this runtime: `process.env` on the
+ * server, the already-serialized `window.env` in the browser. Without the
+ * fallback the server ships `window.env = {}` while its own modules read
+ * `process.env`, so every env-derived value (`APP_NAME`, `APP_URL`, …)
+ * differs between server and client and hydration fails. Never throws: a 404
+ * must still render when a key is missing.
+ * @public
+ */
+export const getDocumentEnv = (
+  loaderEnv: DocumentEnv | undefined,
+): DocumentEnv => {
+  if (loaderEnv) {
+    return loaderEnv;
+  }
+
+  const env: Partial<Record<keyof OpenThrottlePublicEnv, string>> = {};
+  for (const key of PUBLIC_ENV_KEYS) {
+    const value = ENV_SOURCE[key];
+    if (value !== undefined) {
+      env[key] = value;
+    }
+  }
+
+  return env;
+};

@@ -1,6 +1,7 @@
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import {
   APP_URL,
+  getDocumentEnv,
   getEnvironment,
   getPublicEnv,
 } from '@openthrottle/react-router-utils';
@@ -91,7 +92,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const nonce = useNonce();
 
   // Setup
-  const env = data?.env ?? {};
+  const env = getDocumentEnv(data?.env);
   const envHtml = `window.env = ${JSON.stringify(env)}`;
   const favicon = `${OPENTHROTTLE_BUCKET}/branding/icons/red/favicon.ico`;
   const faviconPng = `${OPENTHROTTLE_BUCKET}/branding/icons/red/favicon.png`;

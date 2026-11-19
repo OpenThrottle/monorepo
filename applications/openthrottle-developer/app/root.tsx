@@ -38,6 +38,7 @@ import {
 } from '@openthrottle/react-router-ui-global';
 import {
   APP_URL,
+  getDocumentEnv,
   getEnvironment,
   getPublicEnv,
 } from '@openthrottle/react-router-utils';
@@ -99,6 +100,7 @@ import {
 } from '~/global/data/data.navigation';
 import { useBackgroundActivities } from '~/global/hooks/useBackgroundActivities';
 import { useCommanderOptions } from '~/global/hooks/useCommanderOptions';
+import { useHydratedAppearanceConfig } from '~/global/hooks/useHydratedAppearanceConfig';
 import { usePermissions } from '~/global/hooks/usePermissions';
 import type { CommanderSearchFields } from '~/global/utils/commander-empty-extras';
 import {
@@ -391,6 +393,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const data = useLoaderData();
   const [_user, setUser] = useAtom(userAtom);
   const [config] = useAtom(configAtom);
+  const { config: hydratedConfig } = useHydratedAppearanceConfig();
   const nonce = useNonce();
 
   // Resolve light/dark/system → a concrete mode, applying the `.dark` class and
@@ -398,9 +401,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const isDarkTheme = useResolvedThemeMode(config.theme) === 'dark';
 
   // Setup
-  const appearanceRootCss = buildAppearanceRootCssBlock(config.brand);
+  // The brand comes from localStorage, which the server never sees: build the
+  // `<style>` from the hydration-gated config so the head matches the server
+  // markup (a mismatch here fails hydration for the whole tree). The server
+  // never rendered it, so first paint is unchanged.
+  const appearanceRootCss = buildAppearanceRootCssBlock(hydratedConfig.brand);
   const hasAppearanceCss = Boolean(appearanceRootCss);
-  const env = data?.env ?? {};
+  const env = getDocumentEnv(data?.env);
   const envHtml = `window.env = ${JSON.stringify(env)}`;
   const favicon = `${OPENTHROTTLE_BUCKET}/branding/icons/blue/favicon.ico`;
   const manifest = `/manifest.json`;

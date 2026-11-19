@@ -4,7 +4,11 @@ import {
   GlobalLayout,
   GlobalProviders,
 } from '@openthrottle/react-router-ui-global';
-import { APP_URL, useNonce } from '@openthrottle/react-router-utils';
+import {
+  APP_URL,
+  getDocumentEnv,
+  useNonce,
+} from '@openthrottle/react-router-utils';
 import { PuzzleIcon, SquareIcon, TableIcon } from 'lucide-react';
 import * as React from 'react';
 import type { ShouldRevalidateFunction } from 'react-router';
@@ -79,7 +83,7 @@ export function Layout({
   const nonce = useNonce();
 
   // Setup
-  const env = data?.env ?? {};
+  const env = getDocumentEnv(data?.env);
   const html = `window.env = ${JSON.stringify(env)}`;
 
   const favicon = '/favicon.ico';

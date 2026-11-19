@@ -4,9 +4,9 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
+import { useIsHydrated } from '@openthrottle/react-router-utils';
 import * as React from 'react';
 
-import { useIsHydrated } from '~/global/hooks/useIsHydrated';
 import { formatRunTime } from '~/routing/plans/utils/formatRunTime';
 
 export interface PlanRunTimeProps {
