@@ -34,12 +34,12 @@ export const episode: VideoEpisode = {
     {
       atLeast: 20,
       describe: 'conversations in the chat sidebar',
-      sql: `SELECT count(*) AS value FROM agent_conversations`,
+      sql: `SELECT count(*) AS value FROM agent_conversations WHERE deleted_at IS NULL`,
     },
     {
       atLeast: 10,
       describe: 'conversations long enough to scroll as a real exchange',
-      sql: `SELECT count(*) AS value FROM (SELECT c.id FROM agent_conversations c JOIN agent_conversation_messages m ON m.conversation_id = c.id GROUP BY c.id HAVING count(*) >= 4) x`,
+      sql: `SELECT count(*) AS value FROM (SELECT c.id FROM agent_conversations c JOIN agent_conversation_messages m ON m.conversation_id = c.id WHERE c.deleted_at IS NULL GROUP BY c.id HAVING count(*) >= 4) x`,
     },
   ],
   format: 'short',

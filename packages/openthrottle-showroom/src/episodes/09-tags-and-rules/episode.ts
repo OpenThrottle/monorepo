@@ -43,7 +43,7 @@ export const episode: VideoEpisode = {
     {
       atLeast: 1,
       describe: `a tag rule that has actually fired, so the applications list is not empty`,
-      sql: `SELECT count(*) AS value FROM tag_action_rules r JOIN rule_applications a ON a.rule_id = r.id`,
+      sql: `SELECT count(*) AS value FROM tag_action_rules r JOIN rule_applications a ON a.rule_id = r.id WHERE r.deleted_at IS NULL`,
     },
     {
       atLeast: 5,

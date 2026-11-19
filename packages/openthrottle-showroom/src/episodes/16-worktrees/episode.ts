@@ -36,12 +36,12 @@ export const episode: VideoEpisode = {
     {
       atLeast: 1,
       describe: 'a repository the workspace knows about',
-      sql: `SELECT count(*) AS value FROM repositories`,
+      sql: `SELECT count(*) AS value FROM repositories WHERE deleted_at IS NULL`,
     },
     {
       atLeast: 1,
       describe: 'a checkout to render on the repository detail page',
-      sql: `SELECT count(*) AS value FROM repository_checkouts`,
+      sql: `SELECT count(*) AS value FROM repository_checkouts WHERE deleted_at IS NULL`,
     },
   ],
   format: 'short',

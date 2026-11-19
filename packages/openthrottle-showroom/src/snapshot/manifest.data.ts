@@ -63,6 +63,10 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
         action: 'keep',
         reason: 'structural (timestamp with time zone)',
       },
+      deleted_at: {
+        action: 'keep',
+        reason: 'structural (timestamp with time zone)',
+      },
       id: { action: 'keep', reason: 'structural (uuid)' },
       metadata: {
         action: 'scrub',
@@ -531,6 +535,10 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
         action: 'scrub',
         reason: 'free text — identity/secret pass (text)',
       },
+      deleted_at: {
+        action: 'keep',
+        reason: 'structural (timestamp with time zone)',
+      },
       id: { action: 'keep', reason: 'structural (uuid)' },
       name: { action: 'keep', reason: 'structural (text)' },
       normalized_remote_url: {
@@ -549,6 +557,10 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
     classification: 'exported',
     columns: {
       created_at: {
+        action: 'keep',
+        reason: 'structural (timestamp with time zone)',
+      },
+      deleted_at: {
         action: 'keep',
         reason: 'structural (timestamp with time zone)',
       },
@@ -716,6 +728,10 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
         action: 'scrub',
         reason: 'free text — identity/secret pass (text)',
       },
+      deleted_at: {
+        action: 'keep',
+        reason: 'structural (timestamp with time zone)',
+      },
       driver_id: { action: 'keep', reason: 'structural (text)' },
       enabled: { action: 'keep', reason: 'structural (boolean)' },
       id: { action: 'keep', reason: 'structural (uuid)' },
@@ -778,6 +794,10 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
         action: 'keep',
         reason: 'structural (timestamp with time zone)',
       },
+      deleted_at: {
+        action: 'keep',
+        reason: 'structural (timestamp with time zone)',
+      },
       description: {
         action: 'scrub',
         reason: 'free text — identity/secret pass (text)',
@@ -788,6 +808,10 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
       },
       id: { action: 'keep', reason: 'structural (uuid)' },
       name: { action: 'keep', reason: 'structural (text)' },
+      updated_at: {
+        action: 'keep',
+        reason: 'structural (timestamp with time zone)',
+      },
     },
     reason: 'integrity parent of work_sessions actors',
   },
@@ -863,6 +887,10 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
         reason: 'free text — identity/secret pass (text)',
       },
       created_at: {
+        action: 'keep',
+        reason: 'structural (timestamp with time zone)',
+      },
+      deleted_at: {
         action: 'keep',
         reason: 'structural (timestamp with time zone)',
       },
@@ -1025,6 +1053,10 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
     classification: 'exported',
     columns: {
       created_at: {
+        action: 'keep',
+        reason: 'structural (timestamp with time zone)',
+      },
+      deleted_at: {
         action: 'keep',
         reason: 'structural (timestamp with time zone)',
       },

@@ -54,7 +54,7 @@ export const episode: VideoEpisode = {
     {
       atLeast: 5,
       describe: 'scheduled jobs for the Schedule stop on the tour',
-      sql: `SELECT count(*) AS value FROM scheduled_agent_jobs`,
+      sql: `SELECT count(*) AS value FROM scheduled_agent_jobs WHERE deleted_at IS NULL`,
     },
     {
       atLeast: 8,
