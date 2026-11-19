@@ -4,7 +4,7 @@
 
 import { Module } from '@nestjs/common';
 import {
-  NestjsRepositoriesServerModule,
+  RolesModule,
   TelemetryHeartbeatsModule,
 } from '@openthrottle/nestjs-repositories-server';
 
@@ -14,7 +14,7 @@ import { TelemetryCoverageResolver } from './telemetry-coverage.resolver.ts';
 @Module({
   imports: [
     EffectiveUserResolutionModule,
-    NestjsRepositoriesServerModule,
+    RolesModule,
     TelemetryHeartbeatsModule,
   ],
   providers: [TelemetryCoverageResolver],

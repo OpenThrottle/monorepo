@@ -5,8 +5,8 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import {
-  NestjsRepositoriesServerModule,
   PlanRunsModule,
+  RepositoryCheckoutsModule,
   WorktreeRemovalsModule,
 } from '@openthrottle/nestjs-repositories-server';
 
@@ -16,8 +16,8 @@ import { WorktreeCheckoutPruneService } from './worktree-checkout-prune.service.
   exports: [WorktreeCheckoutPruneService],
   imports: [
     LoggerModule,
-    NestjsRepositoriesServerModule,
     PlanRunsModule,
+    RepositoryCheckoutsModule,
     WorktreeRemovalsModule,
   ],
   providers: [WorktreeCheckoutPruneService],

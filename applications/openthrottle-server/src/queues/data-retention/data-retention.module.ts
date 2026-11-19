@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
-import { NestjsRepositoriesServerModule } from '@openthrottle/nestjs-repositories-server';
 
 import { DataRetentionProcessor } from './data-retention.processor.ts';
 import {
@@ -21,11 +20,7 @@ import { DataRetentionRepeatableService } from './repeatable/repeatable.service.
  */
 @Module({
   exports: [DataRetentionQueueProducerModule],
-  imports: [
-    DataRetentionQueueProducerModule,
-    LoggerModule,
-    NestjsRepositoriesServerModule,
-  ],
+  imports: [DataRetentionQueueProducerModule, LoggerModule],
   providers: [
     DataRetentionProcessor,
     DataRetentionRepeatableService,
