@@ -1,4 +1,5 @@
 import { createMock } from '@golevelup/ts-vitest';
+import type { Provider } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
 import {
@@ -6,7 +7,20 @@ import {
   AUTH_PRINCIPAL_KIND_USER,
 } from '@openthrottle/nestjs-auth';
 import { McpDeveloperMcpSurface } from '@openthrottle/nestjs-mcp-developer';
-import { AgentConversationsService } from '@openthrottle/nestjs-repositories';
+import {
+  AgentConversationMessagesRepository,
+  AgentConversationsRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import type {
+  AgentConversationMessagesRepositoryMock,
+  AgentConversationsRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
+import {
+  agentConversationMessagesFactory,
+  agentConversationsFactory,
+  createAgentConversationMessagesRepositoryMock,
+  createAgentConversationsRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import type { Mock } from 'vitest';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -64,21 +78,45 @@ const createLlmRouterStub = (): {
   };
 };
 
-const createAgentConversationsServiceStub = (): {
-  readonly appendTurn: Mock;
-  readonly createConversation: Mock;
-  readonly getConversationForUser: Mock;
-} => {
-  return {
-    appendTurn: vi.fn(async () => ({
-      assistantMessage: {},
-      userMessage: {},
-    })),
-    createConversation: vi.fn(async () => ({
-      id: '11111111-1111-4111-8111-111111111111',
-    })),
-    getConversationForUser: vi.fn(async () => ({ id: 'c1' })),
+interface AgentConversationRepositoryStubs {
+  readonly conversations: AgentConversationsRepositoryMock;
+  readonly messages: AgentConversationMessagesRepositoryMock;
+}
+
+const createAgentConversationRepositoryStubs =
+  (): AgentConversationRepositoryStubs => {
+    const conversations = createAgentConversationsRepositoryMock();
+    const messages = createAgentConversationMessagesRepositoryMock();
+
+    conversations.createConversation.mockResolvedValue(
+      agentConversationsFactory.build({
+        id: '11111111-1111-4111-8111-111111111111',
+      }),
+    );
+    conversations.getConversationForUser.mockResolvedValue(
+      agentConversationsFactory.build({ id: 'c1' }),
+    );
+    messages.appendTurn.mockResolvedValue({
+      assistantMessage: agentConversationMessagesFactory.build(),
+      userMessage: agentConversationMessagesFactory.build(),
+    });
+
+    return { conversations, messages };
   };
+
+/**
+ * @description Providers for both conversation repositories, backed by `stubs`.
+ */
+const conversationRepositoryProviders = (
+  stubs: AgentConversationRepositoryStubs,
+): Provider[] => {
+  return [
+    { provide: AgentConversationsRepository, useValue: stubs.conversations },
+    {
+      provide: AgentConversationMessagesRepository,
+      useValue: stubs.messages,
+    },
+  ];
 };
 
 describe('AgentsResolver', () => {
@@ -101,19 +139,17 @@ describe('AgentsResolver', () => {
 
   beforeAll(async () => {
     semanticSearch = vi.fn();
-    const agentConversationsStub = createAgentConversationsServiceStub();
-    appendTurn = agentConversationsStub.appendTurn;
-    createConversation = agentConversationsStub.createConversation;
-    getConversationForUser = agentConversationsStub.getConversationForUser;
+    const conversationStubs = createAgentConversationRepositoryStubs();
+    appendTurn = conversationStubs.messages.appendTurn;
+    createConversation = conversationStubs.conversations.createConversation;
+    getConversationForUser =
+      conversationStubs.conversations.getConversationForUser;
 
     const app = await Test.createTestingModule({
       providers: [
         AgentsResolver,
         AgentsMcpRouter,
-        {
-          provide: AgentConversationsService,
-          useValue: agentConversationsStub,
-        },
+        ...conversationRepositoryProviders(conversationStubs),
         {
           provide: ConfigService,
           useValue: createConfigStub(),
@@ -201,10 +237,9 @@ describe('AgentsResolver', () => {
         providers: [
           AgentsResolver,
           AgentsMcpRouter,
-          {
-            provide: AgentConversationsService,
-            useValue: createAgentConversationsServiceStub(),
-          },
+          ...conversationRepositoryProviders(
+            createAgentConversationRepositoryStubs(),
+          ),
           {
             provide: ConfigService,
             useValue: createConfigStub(),
@@ -321,10 +356,9 @@ describe('AgentsResolver', () => {
         providers: [
           AgentsResolver,
           AgentsMcpRouter,
-          {
-            provide: AgentConversationsService,
-            useValue: createAgentConversationsServiceStub(),
-          },
+          ...conversationRepositoryProviders(
+            createAgentConversationRepositoryStubs(),
+          ),
           {
             provide: ConfigService,
             useValue: createConfigStub(),

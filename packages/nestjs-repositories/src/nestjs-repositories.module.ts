@@ -16,8 +16,6 @@ import {
   UserWorkspaceSettingsModule,
 } from '@openthrottle/nestjs-repositories-server';
 
-import { AgentConversationsModule } from './modules/agent-conversations/agent-conversations.module.ts';
-import { AgentTokenUsageModule } from './modules/agent-token-usage/agent-token-usage.module.ts';
 import { AgentTrajectoriesModule } from './modules/agent-trajectories/agent-trajectories.module.ts';
 import { EvalDatasetsModule } from './modules/eval-datasets/eval-datasets.module.ts';
 import { EvalHumanLabelsModule } from './modules/eval-human-labels/eval-human-labels.module.ts';
@@ -28,8 +26,6 @@ import { getTypeOrmOptions } from './nestjs-repositories.utils.ts';
 @Module({
   controllers: [],
   exports: [
-    AgentConversationsModule,
-    AgentTokenUsageModule,
     AgentTrajectoriesModule,
     EvalDatasetsModule,
     EvalHumanLabelsModule,
@@ -57,8 +53,6 @@ import { getTypeOrmOptions } from './nestjs-repositories.utils.ts';
         return { ...getTypeOrmOptions(), autoLoadEntities: true };
       },
     }),
-    AgentConversationsModule,
-    AgentTokenUsageModule,
     AgentTrajectoriesModule,
     EvalDatasetsModule,
     EvalHumanLabelsModule,

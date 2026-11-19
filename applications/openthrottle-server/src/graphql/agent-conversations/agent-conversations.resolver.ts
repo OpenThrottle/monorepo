@@ -6,11 +6,12 @@ import { UseGuards } from '@nestjs/common';
 import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { type AuthPrincipal, CurrentUser } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
+import type { AgentConversationStatus } from '@openthrottle/nestjs-repositories-server';
 import {
   AGENT_CONVERSATION_STATUSES,
-  AgentConversationsService,
-  type AgentConversationStatus,
-} from '@openthrottle/nestjs-repositories';
+  AgentConversationMessagesRepository,
+  AgentConversationsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import { assertHumanAuthPrincipal } from '../service-accounts/service-accounts.utils.ts';
@@ -49,7 +50,8 @@ const resolveConversationStatus = (
 @UseGuards(GqlPermissionsGuard)
 export class AgentConversationsResolver {
   constructor(
-    private readonly agentConversationsService: AgentConversationsService,
+    private readonly agentConversationsRepository: AgentConversationsRepository,
+    private readonly agentConversationMessagesRepository: AgentConversationMessagesRepository,
   ) {}
 
   @Query(() => ListAgentConversationsResultObject, {
@@ -70,14 +72,15 @@ export class AgentConversationsResolver {
     const offset = input?.offset ?? undefined;
 
     const [conversations, totalCount] = await Promise.all([
-      this.agentConversationsService.listConversationsForUser(user.sub, {
+      this.agentConversationsRepository.listConversationsForUser(user.sub, {
         limit,
         offset,
         status,
       }),
-      this.agentConversationsService
-        .getConversationRepository()
-        .count({ where: { status, userId: user.sub } }),
+      this.agentConversationsRepository.countConversationsForUser(
+        user.sub,
+        status,
+      ),
     ]);
 
     const result = new ListAgentConversationsResultObject();
@@ -101,7 +104,7 @@ export class AgentConversationsResolver {
 
     try {
       const conversation =
-        await this.agentConversationsService.getConversationForUser(
+        await this.agentConversationsRepository.getConversationForUser(
           user.sub,
           id,
         );
@@ -124,7 +127,7 @@ export class AgentConversationsResolver {
     const user = assertHumanAuthPrincipal(principal);
 
     const [messages, totalCount] = await Promise.all([
-      this.agentConversationsService.listMessagesForConversation(
+      this.agentConversationMessagesRepository.listMessagesForConversation(
         user.sub,
         input.conversationId,
         {
@@ -132,9 +135,9 @@ export class AgentConversationsResolver {
           offset: input.offset ?? undefined,
         },
       ),
-      this.agentConversationsService
-        .getMessageRepository()
-        .count({ where: { conversationId: input.conversationId } }),
+      this.agentConversationMessagesRepository.countMessagesForConversation(
+        input.conversationId,
+      ),
     ]);
 
     const result = new ListAgentConversationMessagesResultObject();
@@ -160,7 +163,7 @@ export class AgentConversationsResolver {
     const user = assertHumanAuthPrincipal(principal);
 
     const conversation =
-      await this.agentConversationsService.createConversation(user.sub, {
+      await this.agentConversationsRepository.createConversation(user.sub, {
         metadata: parseAgentConversationMetadataJson(input?.metadataJson),
         planId: input?.planId ?? null,
         projectId: input?.projectId ?? null,
@@ -182,7 +185,7 @@ export class AgentConversationsResolver {
     const user = assertHumanAuthPrincipal(principal);
 
     const conversation =
-      await this.agentConversationsService.archiveConversation(
+      await this.agentConversationsRepository.archiveConversation(
         user.sub,
         input.conversationId,
       );
@@ -202,7 +205,7 @@ export class AgentConversationsResolver {
     const user = assertHumanAuthPrincipal(principal);
 
     const conversation =
-      await this.agentConversationsService.softDeleteConversation(
+      await this.agentConversationsRepository.softDeleteConversation(
         user.sub,
         input.conversationId,
       );
@@ -222,7 +225,7 @@ export class AgentConversationsResolver {
     const user = assertHumanAuthPrincipal(principal);
 
     const conversation =
-      await this.agentConversationsService.updateConversationTitle(
+      await this.agentConversationsRepository.updateConversationTitle(
         user.sub,
         input.conversationId,
         input.title,

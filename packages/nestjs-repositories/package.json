@@ -10,7 +10,6 @@
   "dependencies": {
     "@nestjs/common": "catalog:",
     "@nestjs/typeorm": "catalog:",
-    "@openthrottle/agentic-token-usage": "workspace:^",
     "@openthrottle/nestjs-modules": "workspace:^",
     "@openthrottle/nestjs-postgres": "workspace:^",
     "@openthrottle/nestjs-repositories-server": "workspace:^",

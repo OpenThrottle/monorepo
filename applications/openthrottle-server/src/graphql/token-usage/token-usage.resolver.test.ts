@@ -6,18 +6,17 @@ import {
   AUTH_PRINCIPAL_KIND_USER,
   type AuthPrincipal,
 } from '@openthrottle/nestjs-auth';
-import {
-  AgentTokenUsageService,
-  type TokenUsageTotals,
-} from '@openthrottle/nestjs-repositories';
-import { agentTokenUsageFactory } from '@openthrottle/nestjs-repositories/testing';
+import type { TokenUsageTotals } from '@openthrottle/nestjs-repositories-server';
 import {
   AgentAccountsRepository,
+  AgentTokenUsageRepository,
   RolesRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import {
   agentAccountsFactory,
+  agentTokenUsageFactory,
   createAgentAccountsRepositoryMock,
+  createAgentTokenUsageRepositoryMock,
   createRolesRepositoryMock,
 } from '@openthrottle/nestjs-repositories-server/testing';
 import { beforeAll, beforeEach, describe, expect, it, test, vi } from 'vitest';
@@ -41,12 +40,13 @@ describe('TokenUsageResolver', () => {
     sub: 'sa-1',
   };
 
-  const listUsageInRange = vi.fn();
-  const getUsageTotalsInRange = vi.fn();
-  const getUsageByAccountInRange = vi.fn().mockResolvedValue([]);
+  const tokenUsage = createAgentTokenUsageRepositoryMock();
+  const listUsageInRange = tokenUsage.listUsageInRange;
+  const getUsageTotalsInRange = tokenUsage.getUsageTotalsInRange;
+  const getUsageByAccountInRange = tokenUsage.getUsageByAccountInRange;
   const agentAccountsRepository = createAgentAccountsRepositoryMock();
   const listByIds = agentAccountsRepository.listByIds;
-  const recordTokenUsageBatch = vi.fn();
+  const recordTokenUsageBatch = tokenUsage.recordTokenUsageBatch;
   const resolveEffectiveUserId = vi.fn();
   const stampIdentity = vi.fn();
 
@@ -65,15 +65,7 @@ describe('TokenUsageResolver', () => {
     const app = await Test.createTestingModule({
       providers: [
         TokenUsageResolver,
-        {
-          provide: AgentTokenUsageService,
-          useValue: createMock<AgentTokenUsageService>({
-            getUsageByAccountInRange,
-            getUsageTotalsInRange,
-            listUsageInRange,
-            recordTokenUsageBatch,
-          }),
-        },
+        { provide: AgentTokenUsageRepository, useValue: tokenUsage },
         {
           provide: AgentAccountsRepository,
           useValue: agentAccountsRepository,
@@ -380,9 +372,9 @@ describe('TokenUsageResolver', () => {
         );
 
         expect(stampIdentity).not.toHaveBeenCalled();
-        expect(recordTokenUsageBatch.mock.calls[0]?.[1][0].agentAccountId).toBe(
-          null,
-        );
+        expect(
+          recordTokenUsageBatch.mock.calls[0]?.[1][0]?.agentAccountId,
+        ).toBe(null);
       });
 
       it('leaves the row unattributed when the upsert yields no id', async () => {
@@ -393,9 +385,9 @@ describe('TokenUsageResolver', () => {
           'user-1',
         );
 
-        expect(recordTokenUsageBatch.mock.calls[0]?.[1][0].agentAccountId).toBe(
-          null,
-        );
+        expect(
+          recordTokenUsageBatch.mock.calls[0]?.[1][0]?.agentAccountId,
+        ).toBe(null);
       });
     });
 

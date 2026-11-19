@@ -1,9 +1,26 @@
+/**
+ * @description Types for agent_token_usage (migrations 083, 135, 158, 161, 180) shared by
+ * AgentTokenUsageRepository and its callers.
+ */
+
 import type { NormalizedTokenUsage } from '@openthrottle/agentic-token-usage';
+import type { CreateModelInput } from '@openthrottle/nestjs-postgres';
+import type { BaseRepositoryMock } from '@openthrottle/nestjs-postgres/testing';
+import type { Mock } from 'vitest';
+
+import type { AGENT_TOKEN_USAGE_SOURCES } from './agent-token-usage.constants.ts';
+import type { AgentTokenUsage } from './agent-token-usage.entity.ts';
+import type { AgentTokenUsageRepository } from './agent-token-usage.repository.ts';
+
+/** @public */
+export type AgentTokenUsageSource =
+  (typeof AGENT_TOKEN_USAGE_SOURCES)[keyof typeof AGENT_TOKEN_USAGE_SOURCES];
 
 /**
  * A normalized usage row to persist: the folded {@link NormalizedTokenUsage} for
  * a turn plus its identity (owner, source conversation/message, provider, model).
  * Conversation/message are nullable so non-chat sources can write too.
+ * @public
  */
 export interface RecordTokenUsageInput {
   /** agent_accounts row the turn was billed to, stamped at write time; null when unidentified. */
@@ -22,6 +39,7 @@ export interface RecordTokenUsageInput {
  * One hook-ingested usage row (Claude Code transcript line). `occurredAt` is
  * the event time from the transcript and becomes `created_at`, so a late JSONL
  * drain lands on the day the turn actually ran, not the day it was ingested.
+ * @public
  */
 export interface TokenUsageBatchRow {
   /** agent_accounts row the turn was billed to, stamped at write time; null when unidentified. */
@@ -46,7 +64,10 @@ export interface TokenUsageBatchRow {
   readonly totalTokens: number | null;
 }
 
-/** Outcome of a batch ingest: rows written vs rows the unique index skipped. */
+/**
+ * @description Outcome of a batch ingest: rows written vs rows the unique index skipped.
+ * @public
+ */
 export interface TokenUsageBatchResult {
   readonly inserted: number;
   readonly skipped: number;
@@ -55,6 +76,7 @@ export interface TokenUsageBatchResult {
 /**
  * Narrow a range read to one agent account, or to the rows no account was
  * stamped on.
+ * @public
  */
 export type TokenUsageAccountFilter =
   | { readonly id: string; readonly kind: 'account' }
@@ -64,6 +86,7 @@ export type TokenUsageAccountFilter =
  * A user-scoped read over a date range: the caller's usage rows between `start`
  * and `end` (both YYYY-MM-DD, inclusive), optionally narrowed to one `provider`
  * and/or one agent account.
+ * @public
  */
 export interface TokenUsageRangeQuery {
   readonly account?: TokenUsageAccountFilter | null;
@@ -73,7 +96,10 @@ export interface TokenUsageRangeQuery {
   readonly userId: string;
 }
 
-/** Summed usage over a range plus the number of turns contributing. */
+/**
+ * @description Summed usage over a range plus the number of turns contributing.
+ * @public
+ */
 export interface TokenUsageTotals {
   readonly cachedReadTokens: number;
   readonly cachedWriteTokens: number;
@@ -88,8 +114,36 @@ export interface TokenUsageTotals {
 /**
  * Summed usage for one (agent account, provider) pair over a range. A null
  * `agentAccountId` is the unattributed bucket for that provider.
+ * @public
  */
 export interface TokenUsageByAccount extends TokenUsageTotals {
   readonly agentAccountId: string | null;
   readonly provider: string;
+}
+
+/**
+ * @description An {@link AgentTokenUsageRepository} mock: every inherited `BaseRepository`
+ * method plus the usage ones.
+ * @public
+ */
+export interface AgentTokenUsageRepositoryMock extends BaseRepositoryMock<
+  AgentTokenUsage,
+  CreateModelInput<AgentTokenUsage>
+> {
+  readonly getUsageByAccountInRange: Mock<
+    AgentTokenUsageRepository['getUsageByAccountInRange']
+  >;
+  readonly getUsageTotalsInRange: Mock<
+    AgentTokenUsageRepository['getUsageTotalsInRange']
+  >;
+  readonly listCaptureHealth: Mock<
+    AgentTokenUsageRepository['listCaptureHealth']
+  >;
+  readonly listUsageInRange: Mock<
+    AgentTokenUsageRepository['listUsageInRange']
+  >;
+  readonly recordTokenUsageBatch: Mock<
+    AgentTokenUsageRepository['recordTokenUsageBatch']
+  >;
+  readonly recordTurnUsage: Mock<AgentTokenUsageRepository['recordTurnUsage']>;
 }

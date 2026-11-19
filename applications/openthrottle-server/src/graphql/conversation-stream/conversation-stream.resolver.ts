@@ -24,13 +24,14 @@ import {
 } from '@openthrottle/nestjs-auth';
 import { NestjsModelDiscoveryService } from '@openthrottle/nestjs-model-discovery';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import type {
+  AgentConversationMessage,
+  AgentConversationMessageRole,
+} from '@openthrottle/nestjs-repositories-server';
 import {
   AGENT_CONVERSATION_MESSAGE_ROLES,
-  type AgentConversationMessage,
-  type AgentConversationMessageRole,
-  AgentConversationsService,
-} from '@openthrottle/nestjs-repositories';
-import {
+  AgentConversationMessagesRepository,
+  AgentConversationsRepository,
   CustomPromptsRepository,
   UserDisabledAgentClisRepository,
 } from '@openthrottle/nestjs-repositories-server';
@@ -244,9 +245,10 @@ const resolveApiBaseUrl = (): string => {
 export class ConversationStreamResolver {
   constructor(
     private readonly disabledAgentClis: UserDisabledAgentClisRepository,
-    private readonly conversations: AgentConversationsService,
+    private readonly conversations: AgentConversationsRepository,
     private readonly customPrompts: CustomPromptsRepository,
     private readonly logger: LoggerService,
+    private readonly messages: AgentConversationMessagesRepository,
     private readonly modelDiscovery: NestjsModelDiscoveryService,
     private readonly repositories: WorkspaceLocalRepositoriesService,
     private readonly streamService: ConversationStreamService,
@@ -396,14 +398,14 @@ export class ConversationStreamResolver {
     let userMessageId: string | null = null;
     let messages: ChatCompletionMessage[];
     if (persist) {
-      const [userMessage] = await this.conversations.appendMessages(
+      const [userMessage] = await this.messages.appendMessages(
         userId,
         conversationId,
         [{ content: message, role: AGENT_CONVERSATION_MESSAGE_ROLES.user }],
       );
       userMessageId = userMessage?.id ?? null;
 
-      const history = await this.conversations.listMessagesForConversation(
+      const history = await this.messages.listMessagesForConversation(
         userId,
         conversationId,
       );

@@ -3,9 +3,9 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { describe, expect, it, vi } from 'vitest';
 
 import { AgentTokenUsage } from './agent-token-usage.entity.ts';
-import { AgentTokenUsageService } from './agent-token-usage.service.ts';
+import { AgentTokenUsageRepository } from './agent-token-usage.repository.ts';
 
-describe('AgentTokenUsageService', () => {
+describe('AgentTokenUsageRepository', () => {
   // Plain untyped mock repo (provided as `useValue`) so the vi.fn stand-ins for
   // TypeORM's overloaded create/save are not type-checked against those
   // signatures — mirrors the other repository service tests.
@@ -13,15 +13,18 @@ describe('AgentTokenUsageService', () => {
     create: ReturnType<typeof vi.fn>;
     createQueryBuilder?: ReturnType<typeof vi.fn>;
     save: ReturnType<typeof vi.fn>;
-  }): Promise<AgentTokenUsageService> => {
+  }): Promise<AgentTokenUsageRepository> => {
     const app = await Test.createTestingModule({
       providers: [
-        AgentTokenUsageService,
-        { provide: getRepositoryToken(AgentTokenUsage), useValue: mockRepo },
+        AgentTokenUsageRepository,
+        {
+          provide: getRepositoryToken(AgentTokenUsage),
+          useValue: { ...mockRepo, target: AgentTokenUsage },
+        },
       ],
     }).compile();
 
-    return app.get<AgentTokenUsageService>(AgentTokenUsageService);
+    return app.get<AgentTokenUsageRepository>(AgentTokenUsageRepository);
   };
 
   it('maps a full NormalizedTokenUsage + identity to a row, retaining raw_usage', async () => {
@@ -143,7 +146,7 @@ describe('AgentTokenUsageService', () => {
       raw: unknown,
     ): Promise<{
       qb: Record<string, ReturnType<typeof vi.fn>>;
-      service: AgentTokenUsageService;
+      service: AgentTokenUsageRepository;
     }> => {
       const qb: Record<string, ReturnType<typeof vi.fn>> = {
         execute: vi.fn().mockResolvedValue({ raw }),
@@ -287,7 +290,7 @@ describe('AgentTokenUsageService', () => {
       getRawMany: ReturnType<typeof vi.fn>,
     ): Promise<{
       qb: Record<string, ReturnType<typeof vi.fn>>;
-      service: AgentTokenUsageService;
+      service: AgentTokenUsageRepository;
     }> => {
       const qb: Record<string, ReturnType<typeof vi.fn>> = {
         addSelect: vi.fn(),
@@ -355,7 +358,7 @@ describe('AgentTokenUsageService', () => {
       getRawMany: ReturnType<typeof vi.fn>,
     ): Promise<{
       qb: Record<string, ReturnType<typeof vi.fn>>;
-      service: AgentTokenUsageService;
+      service: AgentTokenUsageRepository;
     }> => {
       const qb: Record<string, ReturnType<typeof vi.fn>> = {
         addGroupBy: vi.fn(),

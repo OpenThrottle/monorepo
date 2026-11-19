@@ -1,20 +1,18 @@
 /**
- * @description TypeORM entity for agent_token_usage. Matches databases/openthrottle/migrations/083, 135 and 158.
- * One immutable row per persisted assistant turn (normalized token/cost usage).
+ * @description TypeORM entity for the openthrottle `agent_token_usage` table: one immutable row
+ * per persisted assistant turn (normalized token and cost usage). Extends `BaseHardDeleteModel`:
+ * the table is an append-only log that data retention deletes by age, so a delete is real.
+ * Matches databases/openthrottle/migrations (083, 135, 158, 161, 180).
+ * @public
  */
 
-import { AgentAccount, User } from '@openthrottle/nestjs-repositories-server';
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { BaseHardDeleteModel } from '@openthrottle/nestjs-postgres';
+import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 
-import { AgentConversation } from '../agent-conversations/agent-conversation.entity.ts';
-import { AgentConversationMessage } from '../agent-conversations/agent-conversation-message.entity.ts';
+import type { AgentAccount } from '../agent-accounts/agent-account.entity.ts';
+import type { AgentConversationMessage } from '../agent-conversation-messages/agent-conversation-message.entity.ts';
+import type { AgentConversation } from '../agent-conversations/agent-conversation.entity.ts';
+import type { User } from '../users/user.entity.ts';
 
 /**
  * Postgres returns bigint/numeric as strings (to avoid precision loss). Token
@@ -27,81 +25,38 @@ const nullableNumberColumn = {
   to: (value: number | null): number | null => value,
 };
 
-/**
- * @public
- * Producer ids stored in `agent_token_usage.source` (free text in the database,
- * like skill_usage_events.source). `CHAT` is OpenThrottle's own chat path
- * (ConversationStreamService); `CLAUDE_CODE` is the Claude Code hook ingest.
- */
-export const AGENT_TOKEN_USAGE_SOURCES = {
-  CHAT: 'openthrottle-chat',
-  CLAUDE_CODE: 'claude-code',
-} as const;
-
-/** @public */
-export type AgentTokenUsageSource =
-  (typeof AGENT_TOKEN_USAGE_SOURCES)[keyof typeof AGENT_TOKEN_USAGE_SOURCES];
-
-export interface AgentTokenUsageData {
-  readonly agentAccountId: string | null;
-  readonly cachedReadTokens: number | null;
-  readonly cachedWriteTokens: number | null;
-  readonly conversationId: string | null;
-  readonly costUsd: number | null;
-  readonly createdAt: Date;
-  readonly cwd: string | null;
-  readonly gitBranch: string | null;
-  readonly id: string;
-  readonly inputTokens: number | null;
-  readonly messageId: string | null;
-  readonly model: string | null;
-  readonly outputTokens: number | null;
-  readonly provider: string;
-  readonly rawUsage: Record<string, unknown> | null;
-  readonly reasoningTokens: number | null;
-  readonly repoIdentity: string | null;
-  readonly requestId: string | null;
-  readonly sessionId: string | null;
-  readonly source: string | null;
-  readonly totalTokens: number | null;
-  readonly userId: string;
-}
-
 @Entity('agent_token_usage')
-export class AgentTokenUsage {
-  @PrimaryGeneratedColumn('uuid')
-  id!: string;
-
+export class AgentTokenUsage extends BaseHardDeleteModel {
   @Column({ name: 'user_id', type: 'uuid' })
   userId!: string;
 
-  @ManyToOne(() => User, { onDelete: 'CASCADE' })
+  @ManyToOne('User', { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
   user?: User;
 
   @Column({ name: 'agent_account_id', nullable: true, type: 'uuid' })
   agentAccountId!: string | null;
 
-  @ManyToOne(() => AgentAccount, { nullable: true, onDelete: 'SET NULL' })
+  @ManyToOne('AgentAccount', { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'agent_account_id' })
-  agentAccount?: AgentAccount;
+  agentAccount?: AgentAccount | null;
 
   @Column({ name: 'conversation_id', nullable: true, type: 'uuid' })
   conversationId!: string | null;
 
-  @ManyToOne(() => AgentConversation, { nullable: true, onDelete: 'SET NULL' })
+  @ManyToOne('AgentConversation', { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'conversation_id' })
-  conversation?: AgentConversation;
+  conversation?: AgentConversation | null;
 
   @Column({ name: 'message_id', nullable: true, type: 'uuid' })
   messageId!: string | null;
 
-  @ManyToOne(() => AgentConversationMessage, {
+  @ManyToOne('AgentConversationMessage', {
     nullable: true,
     onDelete: 'SET NULL',
   })
   @JoinColumn({ name: 'message_id' })
-  message?: AgentConversationMessage;
+  message?: AgentConversationMessage | null;
 
   @Column({ name: 'provider', type: 'text' })
   provider!: string;
@@ -191,7 +146,4 @@ export class AgentTokenUsage {
 
   @Column({ name: 'git_branch', nullable: true, type: 'text' })
   gitBranch!: string | null;
-
-  @CreateDateColumn({ name: 'created_at', type: 'timestamp with time zone' })
-  createdAt!: Date;
 }

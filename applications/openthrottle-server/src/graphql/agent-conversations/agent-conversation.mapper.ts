@@ -5,7 +5,7 @@
 import type {
   AgentConversation,
   AgentConversationMessage,
-} from '@openthrottle/nestjs-repositories';
+} from '@openthrottle/nestjs-repositories-server';
 
 import type { AgentConversationMessageObject } from './agent-conversation.object.ts';
 import type { AgentConversationObject } from './agent-conversation.object.ts';

@@ -5,6 +5,9 @@
 
 import {
   AgentAccount,
+  AgentConversation,
+  AgentConversationMessage,
+  AgentTokenUsage,
   BlogAuthor,
   BlogPost,
   BlogTag,
@@ -56,9 +59,6 @@ import {
 import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
 import type { DataSourceOptions } from 'typeorm';
 
-import { AgentConversation } from './modules/agent-conversations/agent-conversation.entity.ts';
-import { AgentConversationMessage } from './modules/agent-conversations/agent-conversation-message.entity.ts';
-import { AgentTokenUsage } from './modules/agent-token-usage/agent-token-usage.entity.ts';
 import { AgentTrajectory } from './modules/agent-trajectories/agent-trajectory.entity.ts';
 import { EvalCase } from './modules/eval-datasets/eval-case.entity.ts';
 import { EvalDataset } from './modules/eval-datasets/eval-dataset.entity.ts';

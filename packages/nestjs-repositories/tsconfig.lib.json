@@ -41,9 +41,6 @@
       "path": "../nestjs-modules/tsconfig.lib.json"
     },
     {
-      "path": "../agentic-token-usage/tsconfig.lib.json"
-    },
-    {
       "path": "../nestjs-testing/tsconfig.lib.json"
     },
     {

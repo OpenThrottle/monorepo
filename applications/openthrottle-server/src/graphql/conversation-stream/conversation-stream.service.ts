@@ -22,9 +22,10 @@ import {
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   AGENT_TOKEN_USAGE_SOURCES,
-  AgentConversationsService,
-  AgentTokenUsageService,
-} from '@openthrottle/nestjs-repositories';
+  AgentConversationMessagesRepository,
+  AgentConversationsRepository,
+  AgentTokenUsageRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import { isRecord } from '@openthrottle/nodejs-utils';
 import {
   classifyCursorFailure,
@@ -199,9 +200,10 @@ export class ConversationStreamService {
   private readonly ephemeralOwners = new Map<string, string>();
 
   constructor(
-    private readonly conversations: AgentConversationsService,
+    private readonly conversations: AgentConversationsRepository,
     private readonly logger: LoggerService,
-    private readonly tokenUsage: AgentTokenUsageService,
+    private readonly messages: AgentConversationMessagesRepository,
+    private readonly tokenUsage: AgentTokenUsageRepository,
     private readonly accountStamping: AgentAccountStampingService,
     @Inject(PUB_SUB) private readonly pubSub: PubSubEngine,
   ) {}
@@ -829,7 +831,7 @@ export class ConversationStreamService {
       );
       const toolMetadata = hasNonTextEvent ? { events: [...toolEvents] } : null;
 
-      const [appended] = await this.conversations.appendMessages(
+      const [appended] = await this.messages.appendMessages(
         run.userId,
         run.conversationId,
         [

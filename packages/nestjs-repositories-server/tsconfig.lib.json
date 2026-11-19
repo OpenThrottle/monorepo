@@ -21,16 +21,19 @@
       "path": "../openthrottle-plan-config/tsconfig.lib.json"
     },
     {
+      "path": "../openthrottle-drivers/tsconfig.lib.json"
+    },
+    {
+      "path": "../openthrottle-agentic-utils/tsconfig.lib.json"
+    },
+    {
       "path": "../nodejs-utils/tsconfig.lib.json"
     },
     {
       "path": "../nestjs-postgres/tsconfig.lib.json"
     },
     {
-      "path": "../openthrottle-agentic-utils/tsconfig.lib.json"
-    },
-    {
-      "path": "../openthrottle-drivers/tsconfig.lib.json"
+      "path": "../agentic-token-usage/tsconfig.lib.json"
     },
     {
       "path": "../nestjs-testing/tsconfig.lib.json"

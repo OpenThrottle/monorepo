@@ -1,18 +1,14 @@
-/**
- * @description Typed persistence for agent_token_usage — the durable, aggregatable
- * per-turn token/cost fact table. Owns writes (one row per persisted assistant
- * turn) from an already-normalized {@link NormalizedTokenUsage} + turn identity.
- * Read/aggregation access for the GraphQL surface is added alongside the query
- * module (OT plan a55b76ba task 5).
- */
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import type { CaptureHealthRow } from '@openthrottle/nestjs-repositories-server';
-import { estimateAnthropicListPriceUsd } from '@openthrottle/nestjs-repositories-server';
-import { CAPTURE_HEALTH_STREAMS } from '@openthrottle/nestjs-repositories-server';
-import { toCaptureHealthRows } from '@openthrottle/nestjs-repositories-server';
-import { Repository, type SelectQueryBuilder } from 'typeorm';
+import type { CreateModelInput } from '@openthrottle/nestjs-postgres';
+import { BaseRepository } from '@openthrottle/nestjs-postgres';
+import type { SelectQueryBuilder } from 'typeorm';
+import { Repository } from 'typeorm';
 
+import { estimateAnthropicListPriceUsd } from '../../anthropic-list-price/anthropic-list-price.utils.ts';
+import { CAPTURE_HEALTH_STREAMS } from '../../capture-health/capture-health.constants.ts';
+import type { CaptureHealthRow } from '../../capture-health/capture-health.types.ts';
+import { toCaptureHealthRows } from '../../capture-health/capture-health.utils.ts';
 import { AgentTokenUsage } from './agent-token-usage.entity.ts';
 import type {
   RecordTokenUsageInput,
@@ -38,16 +34,25 @@ const toNumber = (value: unknown): number => {
   return value == null ? 0 : Number(value);
 };
 
+/**
+ * @description Data access for the openthrottle `agent_token_usage` table on the default
+ * connection: the durable, aggregatable per-turn token and cost log. The `BaseRepository` CRUD
+ * plus the chat-turn write, the idempotent hook batch ingest, the user-scoped range reads and
+ * aggregates behind the usage dashboard, and capture health. A delete is a hard delete.
+ * @public
+ */
 @Injectable()
-export class AgentTokenUsageService {
+export class AgentTokenUsageRepository extends BaseRepository<
+  AgentTokenUsage,
+  CreateModelInput<AgentTokenUsage>
+> {
+  protected readonly tableName = 'agent_token_usage';
+
   constructor(
     @InjectRepository(AgentTokenUsage)
-    private readonly usageRepository: Repository<AgentTokenUsage>,
-  ) {}
-
-  /** The underlying repository, for read/aggregate access by consumers. */
-  getRepository(): Repository<AgentTokenUsage> {
-    return this.usageRepository;
+    repository: Repository<AgentTokenUsage>,
+  ) {
+    super(repository);
   }
 
   /**
@@ -60,7 +65,7 @@ export class AgentTokenUsageService {
   ): Promise<AgentTokenUsage> {
     const { usage } = input;
 
-    const row = this.usageRepository.create({
+    const row = this.repository.create({
       agentAccountId: input.agentAccountId,
       cachedReadTokens: usage.cacheReadTokens ?? null,
       cachedWriteTokens: usage.cacheWriteTokens ?? null,
@@ -78,7 +83,7 @@ export class AgentTokenUsageService {
       userId: input.userId,
     });
 
-    return this.usageRepository.save(row);
+    return this.repository.save(row);
   }
 
   /**
@@ -99,7 +104,7 @@ export class AgentTokenUsageService {
       return { inserted: 0, skipped: 0 };
     }
 
-    const result = await this.usageRepository
+    const result = await this.repository
       .createQueryBuilder()
       .insert()
       .into(AgentTokenUsage)
@@ -227,7 +232,7 @@ export class AgentTokenUsageService {
    * `source`, falling back to `provider` for any row with a NULL or blank source.
    */
   async listCaptureHealth(): Promise<CaptureHealthRow[]> {
-    const rows = await this.usageRepository
+    const rows = await this.repository
       .createQueryBuilder('u')
       .select(CAPTURE_SOURCE_EXPRESSION, 'source')
       .addSelect('MAX(u.created_at)', 'lastCapturedAt')
@@ -242,7 +247,7 @@ export class AgentTokenUsageService {
   private rangeQuery(
     query: TokenUsageRangeQuery,
   ): SelectQueryBuilder<AgentTokenUsage> {
-    const qb = this.usageRepository
+    const qb = this.repository
       .createQueryBuilder('u')
       .where('u.user_id = :userId', { userId: query.userId })
       .andWhere('u.created_at >= :start', { start: query.start })
