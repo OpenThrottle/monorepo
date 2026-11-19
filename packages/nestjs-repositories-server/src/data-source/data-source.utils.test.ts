@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { OPENTHROTTLE_ENTITIES } from './data-source.constants.ts';
 import { getOpenThrottleTypeOrmOptions } from './data-source.utils.ts';
@@ -6,19 +6,8 @@ import { getOpenThrottleTypeOrmOptions } from './data-source.utils.ts';
 const POSTGRES_URL = 'postgresql://user:secret@localhost:5432/openthrottle';
 
 describe('getOpenThrottleTypeOrmOptions', () => {
-  // Pin the connection so the suite never depends on the runner's env: the
-  // highest-precedence variable wins over any POSTGRES_* a local .env sets, and
-  // CI sets none at all.
-  beforeEach(() => {
-    vi.stubEnv('OPENTHROTTLE_POSTGRES_URL', POSTGRES_URL);
-  });
-
-  afterEach(() => {
-    vi.unstubAllEnvs();
-  });
-
   it('registers every openthrottle entity on a postgres DataSource', () => {
-    const options = getOpenThrottleTypeOrmOptions();
+    const options = getOpenThrottleTypeOrmOptions({ POSTGRES_URL });
 
     expect(options.type).toBe('postgres');
     expect(options).toHaveProperty('url', POSTGRES_URL);
@@ -27,23 +16,35 @@ describe('getOpenThrottleTypeOrmOptions', () => {
 
   describe('when POSTGRES_SLOW_QUERY_MS is a positive integer', () => {
     it('sets maxQueryExecutionTime to it', () => {
-      vi.stubEnv('POSTGRES_SLOW_QUERY_MS', '250');
+      const options = getOpenThrottleTypeOrmOptions({
+        POSTGRES_SLOW_QUERY_MS: '250',
+        POSTGRES_URL,
+      });
 
-      expect(getOpenThrottleTypeOrmOptions().maxQueryExecutionTime).toBe(250);
+      expect(options.maxQueryExecutionTime).toBe(250);
     });
   });
 
   describe('when POSTGRES_SLOW_QUERY_MS is unset, blank or invalid', () => {
-    it.each(['', '  ', '0', '-5', '1.5', 'slow'])(
+    it.each([undefined, '', '  ', '0', '-5', '1.5', 'slow'])(
       'leaves maxQueryExecutionTime unset for %j',
       (raw) => {
-        vi.stubEnv('POSTGRES_SLOW_QUERY_MS', raw);
+        const options = getOpenThrottleTypeOrmOptions({
+          POSTGRES_SLOW_QUERY_MS: raw,
+          POSTGRES_URL,
+        });
 
-        expect(getOpenThrottleTypeOrmOptions()).not.toHaveProperty(
-          'maxQueryExecutionTime',
-        );
+        expect(options).not.toHaveProperty('maxQueryExecutionTime');
       },
     );
+  });
+
+  describe('when no connection is configured', () => {
+    it('throws rather than defaulting to a database', () => {
+      expect(() => {
+        return getOpenThrottleTypeOrmOptions({});
+      }).toThrow(/Postgres environment variables are not set/);
+    });
   });
 });
 

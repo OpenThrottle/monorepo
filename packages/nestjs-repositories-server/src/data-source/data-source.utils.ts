@@ -28,10 +28,15 @@ function parsePositiveIntEnv(raw: string | undefined): number | undefined {
  * positive integer sets `maxQueryExecutionTime`, so TypeORM logs a `query is
  * slow` warning for queries over the threshold (emitted independently of the
  * `logging` level): a production-safe hook for latency investigations.
+ *
+ * Reads `env` (default `process.env`), like `getCmsTypeOrmOptions`, so a test
+ * passes its own variables instead of stubbing the process environment.
  * @public
  */
-export function getOpenThrottleTypeOrmOptions(): DataSourceOptions {
-  const slowQueryMs = parsePositiveIntEnv(process.env.POSTGRES_SLOW_QUERY_MS);
+export function getOpenThrottleTypeOrmOptions(
+  env: NodeJS.ProcessEnv = process.env,
+): DataSourceOptions {
+  const slowQueryMs = parsePositiveIntEnv(env.POSTGRES_SLOW_QUERY_MS);
 
   return {
     entities: [...OPENTHROTTLE_ENTITIES],
@@ -39,6 +44,6 @@ export function getOpenThrottleTypeOrmOptions(): DataSourceOptions {
     logging: ['error', 'warn', 'info'],
     ...(slowQueryMs != null && { maxQueryExecutionTime: slowQueryMs }),
     type: 'postgres',
-    url: getPostgresUrl(),
+    url: getPostgresUrl(env),
   };
 }
