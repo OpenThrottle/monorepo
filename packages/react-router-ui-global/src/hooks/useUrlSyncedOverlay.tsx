@@ -52,7 +52,6 @@ export const useUrlSyncedOverlay = (
   const navigateOpts = React.useMemo((): NavigateOptions => {
     const base: NavigateOptions = {
       preventScrollReset: true,
-      viewTransition: true,
     };
 
     if (setSearchParamsOptions === undefined) {

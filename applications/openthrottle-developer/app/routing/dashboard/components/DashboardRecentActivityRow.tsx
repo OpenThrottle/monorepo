@@ -48,7 +48,6 @@ export const DashboardRecentActivityRow = (
         aria-label={LINK_ARIA_LABEL_BY_TYPE[row.type](row)}
         className="line-clamp-2"
         to={href}
-        viewTransition={true}
       >
         {content}
       </Link>

@@ -44,7 +44,6 @@ export const PullRequestDetail = (
                 ? '/pull-requests'
                 : `/pull-requests?${listQuery}`
             }
-            viewTransition={true}
           >
             Back to list
           </Link>

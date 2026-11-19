@@ -66,9 +66,7 @@ export const PullRequestPreviewDetails = (
 
       <div className="flex flex-wrap gap-2">
         <Button asChild={true} size="sm" variant="default">
-          <Link to={fullPagePath} viewTransition={true}>
-            Open full page
-          </Link>
+          <Link to={fullPagePath}>Open full page</Link>
         </Button>
         <Button asChild={true} size="sm" variant="outline">
           <a

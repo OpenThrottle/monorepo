@@ -45,7 +45,6 @@ export const PlanStatusBadge = (
     <Link
       title={scheduledTitle ?? `View plans filtered by status: ${label}`}
       to={to}
-      viewTransition={true}
     >
       {icon}
       {label}

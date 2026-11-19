@@ -271,3 +271,16 @@
     --sx-color-background: var(--sidebar);
   }
 }
+
+/*
+ * Route navigations animate through React's <ViewTransition> boundary around
+ * each app's root <Outlet>. Honor the OS reduced-motion preference by
+ * suppressing every view-transition animation.
+ */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}

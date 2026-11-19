@@ -21,14 +21,15 @@ export interface UseRouteStatsToggleResult {
  * Toggling **replaces** the current history entry rather than pushing one, so
  * opening and closing the stats never piles up back-button entries; reload and
  * shared links still honour the state. Scroll position is preserved, every other
- * search param is kept, and the view transition is off because the panel runs
- * its own height animation. Pair the route with `shouldRevalidateIgnoringParams`
- * so a toggle does not re-run its loader.
+ * search param is kept. A search-only update never starts the root view
+ * transition (see `GlobalRouteViewTransition`), so the panel's own height
+ * animation runs alone. Pair the route with `shouldRevalidateIgnoringParams` so
+ * a toggle does not re-run its loader.
  */
 export const useRouteStatsToggle = (): UseRouteStatsToggleResult => {
   // Hooks
   const setSearchParamsOptions = React.useMemo((): NavigateOptions => {
-    return { replace: true, viewTransition: false };
+    return { replace: true };
   }, []);
 
   const { open, setOpen: setOverlayOpen } = useUrlSyncedOverlay({

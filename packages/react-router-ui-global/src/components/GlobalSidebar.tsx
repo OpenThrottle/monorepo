@@ -43,12 +43,7 @@ export const GlobalSidebar = (
     return (
       <SidebarMenuItem key={toPath} ref={isActive ? activeItemRef : undefined}>
         <SidebarMenuButton tooltip={String(item.children)}>
-          <NavLink
-            className="text-muted-foreground"
-            end={true}
-            to={item.to}
-            viewTransition={true}
-          >
+          <NavLink className="text-muted-foreground" end={true} to={item.to}>
             <Icon className="size-4 shrink-0" />
           </NavLink>
         </SidebarMenuButton>

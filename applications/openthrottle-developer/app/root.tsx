@@ -34,6 +34,7 @@ import {
   GlobalLayoutHeader,
   GlobalMetrics,
   GlobalProviders,
+  GlobalRouteViewTransition,
 } from '@openthrottle/react-router-ui-global';
 import {
   APP_URL,
@@ -727,7 +728,9 @@ export default function App(): React.ReactElement {
 
                   {isHeaderHidden ? null : headerMarkup}
 
-                  <Outlet />
+                  <GlobalRouteViewTransition>
+                    <Outlet />
+                  </GlobalRouteViewTransition>
 
                   {isMetricsHidden ? null : metricsMarkup}
 

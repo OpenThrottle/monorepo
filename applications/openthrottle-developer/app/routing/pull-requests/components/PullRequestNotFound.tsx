@@ -41,7 +41,6 @@ export const PullRequestNotFound = (
                 ? '/pull-requests'
                 : `/pull-requests?${listQuery}`
             }
-            viewTransition={true}
           >
             Back to list
           </Link>

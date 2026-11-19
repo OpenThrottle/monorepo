@@ -40,7 +40,6 @@ export function buildQueuesTableColumns(
                 aria-label={`View queue: ${displayName}`}
                 className="hover:text-primary line-clamp-1 text-ellipsis underline underline-offset-2"
                 to={href}
-                viewTransition={true}
               >
                 {displayName}
               </Link>

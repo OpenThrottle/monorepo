@@ -121,7 +121,6 @@ ProjectTasksTable.buildTable = (): DataTableColumnDef<
             className="hover:text-primary text-xs underline underline-offset-2"
             prefetch="intent"
             to={`/plans/${planId}`}
-            viewTransition={true}
           >
             View plan
           </Link>

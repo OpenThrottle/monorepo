@@ -41,7 +41,6 @@ const renderCustomRunConfigIndicator = (
           className="text-muted-foreground hover:text-foreground inline-flex shrink-0 py-2 pr-2 max-sm:p-0"
           prefetch="intent"
           to={configurationHref}
-          viewTransition={true}
         >
           <SlidersHorizontal aria-hidden={true} className="size-3.5" />
         </Link>
@@ -71,7 +70,7 @@ export const buildPlansTableColumns = (
 
         return (
           <div className="p-2 max-sm:p-0">
-            <Link to={`/plans?status=${status}`} viewTransition={true}>
+            <Link to={`/plans?status=${status}`}>
               <PlanStatusBadge
                 scheduledRunAt={row.original.scheduledRunAt}
                 status={statusKey}
@@ -112,7 +111,6 @@ export const buildPlansTableColumns = (
               data-testid="plan-list-title-link"
               prefetch="intent"
               to={planHref}
-              viewTransition={true}
             >
               <h2
                 className={cn(

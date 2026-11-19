@@ -16,6 +16,7 @@ import {
   GlobalLayoutHeader,
   GlobalMetrics,
   GlobalProviders,
+  GlobalRouteViewTransition,
 } from '@openthrottle/react-router-ui-global';
 // import { Analytics } from '@vercel/analytics/react';
 import {
@@ -260,7 +261,9 @@ export default function App(): React.ReactElement {
           overrides={{ footer: isFooterHidden }}
         >
           {!isHeaderHidden ? <GlobalLayoutHeader /> : null}
-          <Outlet />
+          <GlobalRouteViewTransition>
+            <Outlet />
+          </GlobalRouteViewTransition>
           {!isMetricsHidden ? <GlobalMetrics /> : null}
         </GlobalLayout>
       </GlobalProviders>

@@ -55,7 +55,6 @@ RolesTable.buildTable = (): DataTableColumnDef<
             aria-label={`View role: ${role.name}`}
             className="hover:text-primary font-medium underline underline-offset-2"
             to={`/roles/${role.id}`}
-            viewTransition={true}
           >
             {role.name}
           </Link>

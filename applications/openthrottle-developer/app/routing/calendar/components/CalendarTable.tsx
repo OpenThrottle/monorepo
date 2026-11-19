@@ -65,7 +65,6 @@ CalendarTable.buildTable = (): DataTableColumnDef<
                 aria-label={`View event: ${event.title}`}
                 className="hover:text-primary underline underline-offset-2"
                 to={eventHref}
-                viewTransition={true}
               >
                 {event.title}
               </Link>

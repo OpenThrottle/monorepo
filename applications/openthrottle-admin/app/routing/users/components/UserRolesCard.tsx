@@ -48,7 +48,6 @@ export const UserRolesCard = (
           <Link
             className="hover:text-primary font-medium underline underline-offset-2"
             to={`/roles/${r.id}`}
-            viewTransition={true}
           >
             {r.name}
           </Link>

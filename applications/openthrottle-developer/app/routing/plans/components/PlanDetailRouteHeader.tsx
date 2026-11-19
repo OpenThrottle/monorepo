@@ -85,7 +85,6 @@ export const PlanDetailRouteHeader = (
               <Link
                 aria-label={`Project: ${project.name}`}
                 to={`/projects/${project.id}`}
-                viewTransition={true}
               >
                 <FolderGit2Icon />
                 {project.name}

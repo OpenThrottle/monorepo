@@ -58,7 +58,6 @@ export const PlanTasksTableCellTitle = (
       aria-label={`Scroll to task: ${title}`}
       className="hover:text-primary block space-y-2 overflow-hidden max-sm:contents max-sm:space-y-0"
       to={anchor}
-      viewTransition={true}
     >
       <div className={cn('flex items-center gap-2', MOBILE_CARD_TITLE_CLASS)}>
         <h2 className="line-clamp-2 min-w-0 text-sm font-medium text-ellipsis">

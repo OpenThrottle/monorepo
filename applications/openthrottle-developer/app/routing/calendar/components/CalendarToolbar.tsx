@@ -39,7 +39,7 @@ export const CalendarToolbar = (
         />
         <div className="min-w-0 flex-1" />
         <Button asChild={true} className="shrink-0" variant="outline">
-          <Link to="/calendar/create" viewTransition={true}>
+          <Link to="/calendar/create">
             <PlusIcon className="h-4 w-4" /> Create event
           </Link>
         </Button>
