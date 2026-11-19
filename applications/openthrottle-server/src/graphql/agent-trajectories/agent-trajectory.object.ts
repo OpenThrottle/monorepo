@@ -1,6 +1,6 @@
 /**
  * @description GraphQL ObjectType for a recorded agent trajectory. Mirrors the agent_trajectories
- * entity from @openthrottle/nestjs-repositories (migration 145); the ATIF document is exposed as a
+ * entity from @openthrottle/nestjs-repositories-server (migration 145); the ATIF document is exposed as a
  * JSON string because the schema has no JSON scalar.
  */
 

@@ -1,8 +1,6 @@
-import type {
-  PlanRunConfigStorage,
-  UserPreferencesAgent,
-} from '@openthrottle/nestjs-repositories';
+import type { UserPreferencesAgent } from '@openthrottle/nestjs-repositories-server';
 import { isDriverId } from '@openthrottle/openthrottle-drivers';
+import type { PlanRunConfigStorage } from '@openthrottle/openthrottle-plan-config';
 
 /**
  * @description Stamps a user's default agent onto a new plan's Ralph run config. The backend,

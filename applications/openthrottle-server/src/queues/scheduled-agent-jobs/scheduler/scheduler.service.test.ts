@@ -1,6 +1,8 @@
 import { createMock } from '@golevelup/ts-vitest';
-import { type ScheduledAgentJob } from '@openthrottle/nestjs-repositories';
-import type { ScheduledAgentJobRunsRepository } from '@openthrottle/nestjs-repositories-server';
+import type {
+  ScheduledAgentJob,
+  ScheduledAgentJobRunsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import type { ScheduledAgentJobRunsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import { createScheduledAgentJobRunsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';

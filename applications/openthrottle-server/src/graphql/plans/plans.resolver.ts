@@ -23,34 +23,22 @@ import {
 } from '@openthrottle/nestjs-auth';
 import { ProfileResponseTime } from '@openthrottle/nestjs-profiling';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
-import type { PlanStatus, TaskStatus } from '@openthrottle/nestjs-repositories';
-import type {
-  PlanJobRunHooksStorage,
-  PlanRunConfigStorage,
-} from '@openthrottle/nestjs-repositories';
-import {
-  getDefaultPlanRunConfigStorage,
-  isPlanStatus,
-  parsePlanRunConfigJson,
-  PLAN_STATUS_LIST,
-  PLAN_STATUS_VALUES,
-  planHasCustomRunConfig,
-  planRunConfigFromPlanStorage,
-  serializePlanRunConfigForGraphql,
-  serializePlanRunConfigSnapshotForGraphql,
-  TASK_STATUS_VALUES,
-} from '@openthrottle/nestjs-repositories';
 import type {
   PlanRun,
   PlanRunExecutionBackend,
+  PlanStatus,
+  Project,
+  Task,
+  TaskStatus,
 } from '@openthrottle/nestjs-repositories-server';
-import type { Project, Task } from '@openthrottle/nestjs-repositories-server';
 import {
+  isPlanStatus,
+  PLAN_STATUS_LIST,
+  PLAN_STATUS_VALUES,
   PlanRunsRepository,
-  STALE_CUTOFF_MS,
-} from '@openthrottle/nestjs-repositories-server';
-import {
   PlansRepository,
+  STALE_CUTOFF_MS,
+  TASK_STATUS_VALUES,
   TasksRepository,
   UserDisabledAgentClisRepository,
 } from '@openthrottle/nestjs-repositories-server';
@@ -63,6 +51,18 @@ import {
 } from '@openthrottle/node-client';
 import { isRecord } from '@openthrottle/nodejs-utils';
 import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
+import type {
+  PlanJobRunHooksStorage,
+  PlanRunConfigStorage,
+} from '@openthrottle/openthrottle-plan-config';
+import {
+  getDefaultPlanRunConfigStorage,
+  parsePlanRunConfigJson,
+  planHasCustomRunConfig,
+  planRunConfigFromPlanStorage,
+  serializePlanRunConfigForGraphql,
+  serializePlanRunConfigSnapshotForGraphql,
+} from '@openthrottle/openthrottle-plan-config';
 import { DataSource, In } from 'typeorm';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';

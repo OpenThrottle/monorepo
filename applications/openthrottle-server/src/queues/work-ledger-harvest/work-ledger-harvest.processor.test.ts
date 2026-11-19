@@ -2,23 +2,23 @@ import { createMock } from '@golevelup/ts-vitest';
 import type { ConfigService } from '@nestjs/config';
 import type { GitHubService } from '@openthrottle/nestjs-github';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import type { Repository as RepositoryEntity } from '@openthrottle/nestjs-repositories';
-import type { RepositoriesRepository } from '@openthrottle/nestjs-repositories-server';
 import type {
   Plan,
   PlansRepository,
+  RepositoriesRepository,
+  Repository as RepositoryEntity,
   ServiceAccountsRepository,
   UsersRepository,
   WorkArtifact,
   WorkArtifactsRepository,
 } from '@openthrottle/nestjs-repositories-server';
-import type { WorkArtifactsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
-import {
-  createRepositoriesRepositoryMock,
-  type RepositoriesRepositoryMock,
+import type {
+  RepositoriesRepositoryMock,
+  WorkArtifactsRepositoryMock,
 } from '@openthrottle/nestjs-repositories-server/testing';
 import {
   createPlansRepositoryMock,
+  createRepositoriesRepositoryMock,
   createServiceAccountsRepositoryMock,
   createUsersRepositoryMock,
   createWorkArtifactsRepositoryMock,

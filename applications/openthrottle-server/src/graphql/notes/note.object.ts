@@ -1,5 +1,5 @@
 /**
- * @description GraphQL ObjectType for Note. Mirrors the notes entity from @openthrottle/nestjs-repositories.
+ * @description GraphQL ObjectType for Note. Mirrors the notes entity from @openthrottle/nestjs-repositories-server.
  */
 
 import { Field, ObjectType } from '@nestjs/graphql';

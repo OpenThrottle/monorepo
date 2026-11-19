@@ -2,14 +2,16 @@
  * @description Builds {@link PlanRunConfigSnapshot} from validated BullMQ plan-run job data at enqueue.
  */
 
+import type {
+  PlanJobRunHooksStorage,
+  PlanRunConfigOtLoop,
+  PlanRunConfigRunner,
+  PlanRunConfigSnapshot,
+} from '@openthrottle/openthrottle-plan-config';
 import {
   buildPlanRunConfigSnapshot,
   DEFAULT_PLAN_RUN_RALPH_RUNNER,
-  type PlanJobRunHooksStorage,
-  type PlanRunConfigOtLoop,
-  type PlanRunConfigRunner,
-  type PlanRunConfigSnapshot,
-} from '@openthrottle/nestjs-repositories';
+} from '@openthrottle/openthrottle-plan-config';
 
 import { isRunPlanOrchestratorJobData } from '../../../queues/agentic-ralph/agentic-ralph.utils.ts';
 import type { RunPlanJobData } from '../../../queues/plans/plans.types.ts';

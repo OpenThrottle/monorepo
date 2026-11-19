@@ -26,7 +26,7 @@ through `openthrottle-server` GraphQL ("architecture B" — the client never tou
 - Built package (real `build`/`dev` targets, `exports` → `dist/`; the extra `__build-package`
   key is a placeholder) — see [../AGENTS.md](../AGENTS.md).
 - The host app must configure a TypeORM root: `CodeVectorStore`/`CodeSnapshotStore` inject the
-  default `DataSource` (in `openthrottle-server` that's `NestjsRepositoriesModule`). The module
+  default `DataSource` (in `openthrottle-server`, `TypeOrmModule.forRootAsync` over `getOpenThrottleTypeOrmOptions()`). The module
   fails DI without one.
 - Requires migrations `052` and `164` — `code_embeddings` has a different shape from the
   other embedding tables (content-hash TEXT PK, no FK/metadata) but the same provenance columns.

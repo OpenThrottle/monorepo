@@ -5,7 +5,6 @@
 
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import { getDefaultPlanRunConfigStorage } from '@openthrottle/nestjs-repositories';
 import type {
   Plan,
   PlanOutputStreamRepository,
@@ -18,6 +17,7 @@ import {
   plansFactory,
 } from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
+import { getDefaultPlanRunConfigStorage } from '@openthrottle/openthrottle-plan-config';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PLAN_RUN_WORKTREE_TEARDOWN_OUTCOME } from '../plan-run-worktree-teardown/plan-run-worktree-teardown.constants.ts';

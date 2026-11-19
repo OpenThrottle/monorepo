@@ -1,16 +1,16 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import type { PlanRunConfigStorage } from '@openthrottle/nestjs-repositories';
-import {
-  getDefaultPlanRunConfigStorage,
-  parsePlanRunConfigJson,
-} from '@openthrottle/nestjs-repositories';
-import { UserPreferencesRepository } from '@openthrottle/nestjs-repositories-server';
 import {
   Plan,
   PlansRepository,
   UserDisabledAgentClisRepository,
+  UserPreferencesRepository,
 } from '@openthrottle/nestjs-repositories-server';
+import type { PlanRunConfigStorage } from '@openthrottle/openthrottle-plan-config';
+import {
+  getDefaultPlanRunConfigStorage,
+  parsePlanRunConfigJson,
+} from '@openthrottle/openthrottle-plan-config';
 import { DataSource } from 'typeorm';
 
 import type { CreatePlanInput } from '../../graphql/plans/plan.input.ts';

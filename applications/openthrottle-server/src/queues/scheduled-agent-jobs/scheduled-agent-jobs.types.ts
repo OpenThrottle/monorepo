@@ -1,7 +1,7 @@
 import type {
   ScheduledAgentJobDriverId,
   ScheduledAgentJobSettings,
-} from '@openthrottle/nestjs-repositories';
+} from '@openthrottle/nestjs-repositories-server';
 import type { Job } from 'bullmq';
 
 /**

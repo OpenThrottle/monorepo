@@ -19,7 +19,7 @@ import {
   type AuthPrincipal,
 } from '@openthrottle/nestjs-auth';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { RolesRepository } from '@openthrottle/nestjs-repositories';
+import { RolesRepository } from '@openthrottle/nestjs-repositories-server';
 import { Repository } from 'typeorm';
 
 import { RolloutFlag } from './rollout-flag.entity.ts';

@@ -7,13 +7,13 @@ import type {
   PlanEmbeddingSearchRow,
   TaskData,
   TaskEmbeddingSearchRow,
-} from '@openthrottle/nestjs-repositories';
+} from '@openthrottle/nestjs-repositories-server';
 import {
   Plan,
   PLAN_TASK_LIST_ORDER,
   resolveCompletedAtForStatusChange,
   Task,
-} from '@openthrottle/nestjs-repositories';
+} from '@openthrottle/nestjs-repositories-server';
 import { isRecord } from '@openthrottle/nodejs-utils';
 import { In, IsNull } from 'typeorm';
 

@@ -1,5 +1,5 @@
 /**
- * @description GraphQL module that registers UsersResolver and imports NestjsRepositoriesModule for UsersRepository.
+ * @description GraphQL module that registers UsersResolver and imports UsersModule for UsersRepository and RolesModule for the permissions guard.
  */
 
 import { Module } from '@nestjs/common';

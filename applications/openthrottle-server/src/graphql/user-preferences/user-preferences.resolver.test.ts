@@ -1,10 +1,14 @@
 import { Test } from '@nestjs/testing';
-import type { UserPreferencesData } from '@openthrottle/nestjs-repositories';
-import { USER_PREFERENCES_ERROR_REASONS } from '@openthrottle/nestjs-repositories';
-import { UserPreferencesRepository } from '@openthrottle/nestjs-repositories-server';
-import { RolesRepository } from '@openthrottle/nestjs-repositories-server';
-import { createUserPreferencesRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
-import { createRolesRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import type { UserPreferencesData } from '@openthrottle/nestjs-repositories-server';
+import {
+  RolesRepository,
+  USER_PREFERENCES_ERROR_REASONS,
+  UserPreferencesRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import {
+  createRolesRepositoryMock,
+  createUserPreferencesRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
 import { GraphQLError } from 'graphql';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';

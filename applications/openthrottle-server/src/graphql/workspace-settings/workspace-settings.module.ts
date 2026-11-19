@@ -20,8 +20,8 @@ import './remove-plan-run-worktree.object.ts';
 
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
-import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import {
+  NestjsRepositoriesServerModule,
   ProjectsModule,
   RepositoriesModule,
   RepositoryCheckoutsModule,
@@ -55,7 +55,7 @@ import { WorkspaceSettingsResolver } from './workspace-settings.resolver.ts';
     UserWorkspaceSettingsModule,
     WorkspaceEditorConfigModule,
     WorkspaceLocalRepositoriesModule,
-    NestjsRepositoriesModule,
+    NestjsRepositoriesServerModule,
     PlanRunWorktreeTeardownModule,
     ProjectsModule,
     RepositoryInspectionModule,

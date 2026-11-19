@@ -1,4 +1,4 @@
-import type { CaptureHealthRow } from '@openthrottle/nestjs-repositories';
+import type { CaptureHealthRow } from '@openthrottle/nestjs-repositories-server';
 
 import { CaptureHealthRowObject } from './capture-health.object.ts';
 

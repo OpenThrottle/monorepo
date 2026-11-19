@@ -1,6 +1,6 @@
 # @openthrottle/nestjs-stripe
 
-NestJS-oriented Stripe integration for OpenThrottle: environment-based config, checkout session creation, product catalog helpers (`StripeProductsService`), webhook handling (REST and a code-first GraphQL mutation), and injection tokens so subscription and user persistence stay in the app or `@openthrottle/nestjs-repositories`. The host app merges the GraphQL schema from this package when it registers Nest GraphQL.
+NestJS-oriented Stripe integration for OpenThrottle: environment-based config, checkout session creation, product catalog helpers (`StripeProductsService`), webhook handling (REST and a code-first GraphQL mutation), and injection tokens so subscription and user persistence stay in the app or `@openthrottle/nestjs-repositories-server`. The host app merges the GraphQL schema from this package when it registers Nest GraphQL.
 
 ## Installation
 

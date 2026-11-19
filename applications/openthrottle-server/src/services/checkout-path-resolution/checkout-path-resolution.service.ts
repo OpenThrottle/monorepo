@@ -14,7 +14,7 @@ import { isAbsolute } from 'node:path';
 
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import type { RepositoryCheckout } from '@openthrottle/nestjs-repositories';
+import type { RepositoryCheckout } from '@openthrottle/nestjs-repositories-server';
 import { RepositoryCheckoutsRepository } from '@openthrottle/nestjs-repositories-server';
 
 import {

@@ -18,7 +18,7 @@ import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 import type {
   Project,
   UserWorkspaceSettings,
-} from '@openthrottle/nestjs-repositories';
+} from '@openthrottle/nestjs-repositories-server';
 import { UserWorkspaceSettingsRepository } from '@openthrottle/nestjs-repositories-server';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';

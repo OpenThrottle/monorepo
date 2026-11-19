@@ -109,7 +109,7 @@ CREATE TRIGGER update_repository_checkouts_updated_at
    `github.com`) — out of scope; two different hosts never normalize to the same identity even
    if they mirror the same content.
 
-This is a pure function in `packages/nestjs-repositories` (or a shared util if
+This is a pure function in `packages/nestjs-repositories-server` (or a shared util if
 `openthrottle-agentic-utils` is more appropriate at implementation time — schema task decides),
 unit-tested against the SSH/HTTPS/`.git`-suffix/case matrix directly.
 

@@ -1,10 +1,10 @@
 import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import {
-  type ScheduledAgentJobRun,
-  type ScheduledAgentJobRunSettingsSnapshot,
-} from '@openthrottle/nestjs-repositories';
+import type {
+  ScheduledAgentJobRun,
+  ScheduledAgentJobRunSettingsSnapshot,
+} from '@openthrottle/nestjs-repositories-server';
 import { ScheduledAgentJobRunsRepository } from '@openthrottle/nestjs-repositories-server';
 import { DRIVER_REGISTRY } from '@openthrottle/openthrottle-drivers';
 import { SCHEDULED_RUN_FAILURE_REASONS } from '@openthrottle/openthrottle-notifications';

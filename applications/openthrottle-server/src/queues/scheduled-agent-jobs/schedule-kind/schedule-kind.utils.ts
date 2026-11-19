@@ -13,7 +13,7 @@
 import type {
   ScheduledAgentJob,
   ScheduledAgentJobScheduleKind,
-} from '@openthrottle/nestjs-repositories';
+} from '@openthrottle/nestjs-repositories-server';
 
 import type { NextSelfScheduledSlotInput } from './schedule-kind.types.ts';
 /** The kinds that arm their own delayed job instead of registering a BullMQ job scheduler. */

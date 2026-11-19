@@ -3,8 +3,10 @@ import { Module } from '@nestjs/common';
 import { NestjsBullmqModule } from '@openthrottle/nestjs-bullmq';
 import { NestjsBullmqBoardModule } from '@openthrottle/nestjs-bullmq-board';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
-import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
-import { ScheduledAgentJobRunsModule } from '@openthrottle/nestjs-repositories-server';
+import {
+  NestjsRepositoriesServerModule,
+  ScheduledAgentJobRunsModule,
+} from '@openthrottle/nestjs-repositories-server';
 
 import { ScheduledAgentJobCheckoutPathModule } from '../../../services/scheduled-agent-job-checkout-path/scheduled-agent-job-checkout-path.module.ts';
 import { ScheduledAgentJobCancellationService } from '../cancellation/cancellation.service.ts';
@@ -32,7 +34,7 @@ import { ScheduledAgentJobSchedulerService } from '../scheduler/scheduler.servic
     // checkout to a directory when snapshotting the payload.
     ScheduledAgentJobRunsModule,
     ScheduledAgentJobCheckoutPathModule,
-    NestjsRepositoriesModule,
+    NestjsRepositoriesServerModule,
     NestjsBullmqModule.registerQueue(SCHEDULED_AGENT_JOBS_QUEUE_NAME),
     NestjsBullmqBoardModule.forFeature(SCHEDULED_AGENT_JOBS_QUEUE_NAME),
   ],

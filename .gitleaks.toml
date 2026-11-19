@@ -23,7 +23,7 @@ regexTarget = "match"
 
 regexes = [
   # --- Deliberate fake credentials in unit-test fixtures ---
-  # packages/nestjs-repositories + openthrottle-server mcp-connector / stripe tests.
+  # packages/nestjs-repositories-server + openthrottle-server mcp-connector / stripe tests.
   '''sk_live_0123456789abcdef''',
   '''sk_live_9999888877776666''',
   # queue-job-log redaction test asserts a secret gets redacted from curl output.

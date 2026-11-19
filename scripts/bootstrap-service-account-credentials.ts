@@ -22,7 +22,7 @@ import {
   ServiceAccount,
   ServiceAccountCredential,
   ServiceAccountCredentialsRepository,
-} from '@openthrottle/nestjs-repositories';
+} from '@openthrottle/nestjs-repositories-server';
 import { DataSource, IsNull } from 'typeorm';
 
 import {

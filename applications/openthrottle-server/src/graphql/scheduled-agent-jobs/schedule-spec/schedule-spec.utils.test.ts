@@ -1,5 +1,5 @@
 import { createMock } from '@golevelup/ts-vitest';
-import type { ScheduledAgentJob } from '@openthrottle/nestjs-repositories';
+import type { ScheduledAgentJob } from '@openthrottle/nestjs-repositories-server';
 import { describe, expect, it } from 'vitest';
 
 import {

@@ -1,5 +1,5 @@
 /**
- * @description GraphQL ObjectType for CustomPrompt. Mirrors the custom_prompts entity from @openthrottle/nestjs-repositories.
+ * @description GraphQL ObjectType for CustomPrompt. Mirrors the custom_prompts entity from @openthrottle/nestjs-repositories-server.
  */
 
 import { Field, ObjectType, registerEnumType } from '@nestjs/graphql';

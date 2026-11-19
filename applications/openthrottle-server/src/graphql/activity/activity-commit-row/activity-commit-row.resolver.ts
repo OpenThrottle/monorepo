@@ -1,5 +1,5 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { Plan, Task } from '@openthrottle/nestjs-repositories';
+import { Plan, Task } from '@openthrottle/nestjs-repositories-server';
 
 import { TaskObject } from '../../tasks/task.object.ts';
 import { ActivityCommitRowObject } from '../activity.object.ts';

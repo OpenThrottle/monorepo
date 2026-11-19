@@ -5,13 +5,13 @@
 
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
-import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+import { NestjsRepositoriesServerModule } from '@openthrottle/nestjs-repositories-server';
 
 import { WorktreeDiscoveryService } from './worktree-discovery.service.ts';
 
 @Module({
   exports: [WorktreeDiscoveryService],
-  imports: [LoggerModule, NestjsRepositoriesModule],
+  imports: [LoggerModule, NestjsRepositoriesServerModule],
   providers: [WorktreeDiscoveryService],
 })
 export class WorktreeDiscoveryModule {}

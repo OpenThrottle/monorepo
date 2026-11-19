@@ -59,7 +59,9 @@ apps, `packages/openthrottle-mcp`) consumes its schema through the committed
   field order follows module registration order, and `ApiAppModule` currently orders the
   work-ledger Query fields differently, which is why only this command produces the file.
 - Schema evolution (never remove/change existing fields; `@deprecated(reason)`) — root CLAUDE.md.
-- TypeORM entities live in `packages/nestjs-repositories`, not here; each entity's JSDoc names
+- TypeORM entities live in `packages/nestjs-repositories-server`, not here, and so does the default
+  DataSource config (`getOpenThrottleTypeOrmOptions()`); this app registers that root once, in
+  `src/openthrottle-server.utils.ts`; each entity's JSDoc names
   the `databases/openthrottle/migrations/` files it matches. A schema change means a new SQL migration in
   `databases/openthrottle/migrations/` plus the matching entity edit — this app has no TypeORM migrations.
 - A second, named TypeORM DataSource (`cms`, from `NestjsRepositoriesCmsModule` in

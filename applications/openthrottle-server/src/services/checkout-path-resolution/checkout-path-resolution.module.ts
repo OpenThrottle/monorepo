@@ -5,13 +5,13 @@
 
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
-import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+import { NestjsRepositoriesServerModule } from '@openthrottle/nestjs-repositories-server';
 
 import { CheckoutPathResolutionService } from './checkout-path-resolution.service.ts';
 
 @Module({
   exports: [CheckoutPathResolutionService],
-  imports: [LoggerModule, NestjsRepositoriesModule],
+  imports: [LoggerModule, NestjsRepositoriesServerModule],
   providers: [CheckoutPathResolutionService],
 })
 export class CheckoutPathResolutionModule {}

@@ -1,13 +1,15 @@
 # @openthrottle/nestjs-repositories-server — agent notes
 
-The TypeORM data-access layer for the `openthrottle` database (`databases/openthrottle/`), being
-moved here table by table from [`nestjs-repositories`](../nestjs-repositories/AGENTS.md) (OT plan
-`052d37b0-f76a-43e1-8a39-4434d0f537d4`). One entity on a base model (`BaseModel` or
+The TypeORM data-access layer for the `openthrottle` database (`databases/openthrottle/`), and its
+default DataSource config. Every table moved here from the retired `nestjs-repositories` package
+(OT plan `052d37b0-f76a-43e1-8a39-4434d0f537d4`); the per-table checklist below is now the recipe
+for adding one. One entity on a base model (`BaseModel` or
 `BaseHardDeleteModel`), one `BaseRepository` subclass, one module and one fishery factory per
 table — the
 [`nestjs-repositories-cms`](../nestjs-repositories-cms/AGENTS.md) pattern.
 
-**Consumed by:** `openthrottle-server`.
+**Consumed by:** `openthrottle-server`, `nestjs-rollout`, `node-client`, `openthrottle-showroom`,
+and the root `scripts/` bootstraps.
 
 **GraphQL stays in the server (owner decision).** Unlike `nestjs-repositories-cms`, this package
 carries no resolvers, `@ObjectType`/`@InputType` classes or mappers. Only what the repositories
@@ -23,6 +25,10 @@ pull in `NestjsRepositoriesServerModule`. Each area then declares exactly the ta
 
 - `src/index.ts` — barrel of every entity, repository and module; tag exports `@public`.
 - `src/modules/<table>/` — one folder per table; the files are the per-table checklist below.
+- `src/data-source/` — `getOpenThrottleTypeOrmOptions()` (connection from `POSTGRES_URL` /
+  `POSTGRES_*`, `POSTGRES_SLOW_QUERY_MS` for slow-query warnings) and `OPENTHROTTLE_ENTITIES`,
+  the explicit entity list it registers. The server adds `autoLoadEntities` on top, for
+  entities other packages own (`nestjs-rollout`'s `RolloutFlag`).
 - `src/nestjs-repositories-server.module.ts` — `NestjsRepositoriesServerModule`, which imports and
   re-exports every table module.
 - `src/testing/` — the fishery factories and repository mocks, published as `./testing` and never
@@ -31,7 +37,7 @@ pull in `NestjsRepositoriesServerModule`. Each area then declares exactly the ta
 
 ## Per-table checklist
 
-Moving a table here is these files and edits, every time (`notes` is the reference):
+Adding a table (or moving one in) is these files and edits, every time (`notes` is the reference):
 
 0. **Pick the base model.** It decides what `remove()` does, so choose by what a deleted row means:
 
@@ -73,11 +79,10 @@ Moving a table here is these files and edits, every time (`notes` is the referen
 7. Tests beside the files: `<folder>.repository.test.ts`, `<folder>.utils.test.ts`.
 8. Barrels: entity, repository and module in `src/index.ts`; factory, mock type and mock in
    `src/testing/index.ts`.
-9. Remove the old module from `nestjs-repositories` and import the entity into its
-   `getTypeOrmOptions()` list from here.
+9. Add the entity to `OPENTHROTTLE_ENTITIES` in `src/data-source/data-source.constants.ts`.
 10. Consumers inject the repository and their tests provide `create<Folder>RepositoryMock()`
     in its place, never a hand-written object of `vi.fn()`s. **A server module that stops
-    importing `NestjsRepositoriesModule` also loses everything that module re-exports**
+    importing `NestjsRepositoriesServerModule` also loses every table module it re-exports**
     (`RolesModule`, `UsersModule`, `PermissionsModule`, …). Import whatever the module still
     needs, usually `RolesModule` for `GqlPermissionsGuard`. Unit tests cannot see a missing
     provider; only booting `AppModule` does, and step 11's `graphql-schema:write` does that
@@ -144,15 +149,16 @@ deletedAt: IsNull() } } })` keeps rows whose `rule` is soft deleted: TypeORM LEF
   migrations it matches. SQL is the source of truth: `synchronize` is off.
 - **Default connection, no name.** `forFeature([Entity])` and `@InjectRepository(Entity)` take no
   connection argument; test tokens are `getRepositoryToken(Entity)`.
-- **The DataSource still lives in `nestjs-repositories`** until the last batch:
-  `getTypeOrmOptions()` there lists every entity explicitly and imports moved ones from this
-  package. A moved entity missing from that list fails at query time, not at boot.
+- **Every entity is listed explicitly** in `OPENTHROTTLE_ENTITIES`, which
+  `getOpenThrottleTypeOrmOptions()` registers. In the server, `autoLoadEntities` would paper over a
+  missing one, but scripts that open `new DataSource(getOpenThrottleTypeOrmOptions())` do not load
+  it, and there a missing entity fails at query time, not at boot.
 - Entity/SQL drift is caught only by the opt-in live test (`pnpm run database:test:openthrottle`,
   see `src/nestjs-repositories-server.module.integration.test.ts`), which compares every column
   this package's entities declare with `information_schema` and round-trips a soft delete on
-  `notes`. Run it after moving or touching an entity. It registers its own default DataSource with
-  `autoLoadEntities`, because the app's DataSource lives in `nestjs-repositories`, which depends
-  on this package.
+  `notes`. Run it after adding or touching an entity. It boots on
+  `getOpenThrottleTypeOrmOptions()` without `autoLoadEntities`, so a wired table module whose
+  entity is missing from `OPENTHROTTLE_ENTITIES` fails there too.
 - Built, not source-first: real `build` target, `exports` → `dist`; see [../AGENTS.md](../AGENTS.md).
 
 ## Pointers

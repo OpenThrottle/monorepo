@@ -1,6 +1,6 @@
 import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable } from '@nestjs/common';
-import { type ScheduledAgentJob } from '@openthrottle/nestjs-repositories';
+import type { ScheduledAgentJob } from '@openthrottle/nestjs-repositories-server';
 import { ScheduledAgentJobRunsRepository } from '@openthrottle/nestjs-repositories-server';
 import type { Queue } from 'bullmq';
 

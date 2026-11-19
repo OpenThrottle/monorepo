@@ -1,7 +1,6 @@
 import { createMock } from '@golevelup/ts-vitest';
 import { NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { getDefaultPlanRunConfigStorage } from '@openthrottle/nestjs-repositories';
 import type {
   Plan,
   Project,
@@ -10,6 +9,7 @@ import type {
 import { ProjectsRepository } from '@openthrottle/nestjs-repositories-server';
 import type { ProjectsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import { createProjectsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import { getDefaultPlanRunConfigStorage } from '@openthrottle/openthrottle-plan-config';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 
 import { ProjectsLoaders } from './loaders/loaders.service.ts';

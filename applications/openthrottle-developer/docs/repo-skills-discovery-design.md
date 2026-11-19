@@ -228,4 +228,4 @@ immediately; only the ingested overlay lags until the next ingest.
 
 - UI routes: `app/routes/skills._index.tsx`, `app/routes/skills.$slug.tsx`
 - Detail data: `app/routing/skills/data/{read,write}-skill-file.server.ts`
-- Server paths for workspace editor apply: `packages/nestjs-repositories/.../openthrottle-repo-skill-paths.ts` (separate follow-up to derive from discovery or shared source)
+- Server paths for workspace editor apply: `packages/nestjs-repositories-server/.../openthrottle-repo-skill-paths.ts` (separate follow-up to derive from discovery or shared source)

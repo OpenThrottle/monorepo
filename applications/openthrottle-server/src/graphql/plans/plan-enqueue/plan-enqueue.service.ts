@@ -16,21 +16,19 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { PLAN_STATUS } from '@openthrottle/nestjs-repositories';
 import type {
   PlanRunExecutionBackend,
   PlanRunStatus,
   ScheduledRunRef,
 } from '@openthrottle/nestjs-repositories-server';
-import { RepositoryCheckoutsRepository } from '@openthrottle/nestjs-repositories-server';
-import {
-  PLAN_RUN_STATUS,
-  PlanRun,
-  PlanRunsRepository,
-} from '@openthrottle/nestjs-repositories-server';
 import {
   Plan,
+  PLAN_RUN_STATUS,
+  PLAN_STATUS,
+  PlanRun,
+  PlanRunsRepository,
   PlansRepository,
+  RepositoryCheckoutsRepository,
   TasksRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import {

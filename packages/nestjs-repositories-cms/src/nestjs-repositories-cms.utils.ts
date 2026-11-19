@@ -36,7 +36,7 @@ function parsePositiveIntEnv(raw: string | undefined): number | undefined {
  * an error when no connection is configured. The SQL migrations under
  * `databases/cms/migrations` own the schema, so `synchronize` is off and no
  * TypeORM migrations run. `POSTGRES_SLOW_QUERY_MS` sets
- * `maxQueryExecutionTime`, as in `@openthrottle/nestjs-repositories`. The
+ * `maxQueryExecutionTime`, as in `@openthrottle/nestjs-repositories-server`. The
  * logger is wrapped by `createPostgresProfilingQueryLogger` so repository
  * methods can be EXPLAINed under `POSTGRES_PROFILING=true`.
  * @public

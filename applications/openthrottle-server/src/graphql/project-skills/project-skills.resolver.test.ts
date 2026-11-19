@@ -3,7 +3,7 @@ import { NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import type { AuthPrincipal } from '@openthrottle/nestjs-auth';
 import { AUTH_PRINCIPAL_KIND_USER } from '@openthrottle/nestjs-auth';
-import type { Project } from '@openthrottle/nestjs-repositories';
+import type { Project } from '@openthrottle/nestjs-repositories-server';
 import {
   ProjectsRepository,
   ServiceAccountsRepository,

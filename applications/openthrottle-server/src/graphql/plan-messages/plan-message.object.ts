@@ -1,6 +1,6 @@
 /**
  * @description GraphQL ObjectTypes for the plan inbox. Mirrors the plan_messages entity from
- * @openthrottle/nestjs-repositories (migration 144).
+ * @openthrottle/nestjs-repositories-server (migration 144).
  */
 
 import { Field, ID, ObjectType } from '@nestjs/graphql';

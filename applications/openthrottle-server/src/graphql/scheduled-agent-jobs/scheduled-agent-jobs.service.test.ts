@@ -1,11 +1,9 @@
 import { createMock } from '@golevelup/ts-vitest';
 import { BadRequestException } from '@nestjs/common';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import {
-  type ScheduledAgentJob,
-  type ScheduledAgentJobRun,
-} from '@openthrottle/nestjs-repositories';
 import type {
+  ScheduledAgentJob,
+  ScheduledAgentJobRun,
   ScheduledAgentJobRunsRepository,
   ScheduledAgentJobsRepository,
 } from '@openthrottle/nestjs-repositories-server';

@@ -4,7 +4,7 @@ The **Node-only** OpenThrottle data client: pgvector similarity search over
 `plan_embeddings` / `task_embeddings` / `documentation_embeddings`, plan/task/note
 CRUD, and the single embedder (local nomic-embed-text-v1.5 in a worker thread, or the same
 model via Ollama). It wraps a cached
-TypeORM `DataSource` around the entities owned by `@openthrottle/nestjs-repositories`
+TypeORM `DataSource` around the entities owned by `@openthrottle/nestjs-repositories-server`
 and exposes a small, framework-free surface that both the GraphQL server and the
 agentic tooling call.
 
@@ -59,7 +59,7 @@ agent-asset search, plan-creation) and `@openthrottle/openthrottle-agentic-utils
   is a re-embed, never silent corruption.
 - **Never call `createEmbedder` per request in the server.** `openthrottle-server`'s
   `EmbedderService` owns the one instance (and its worker thread) per process.
-- **Entities are borrowed, not owned.** Schema changes live in `nestjs-repositories` +
+- **Entities are borrowed, not owned.** Schema changes live in `nestjs-repositories-server` +
   the SQL migration under `databases/openthrottle/migrations/`; this package only registers those
   entities on its `DataSource`. If a new entity is needed for a query, add it to the
   `entities` array in `data-source.ts`.
@@ -74,5 +74,5 @@ agent-asset search, plan-creation) and `@openthrottle/openthrottle-agentic-utils
 
 - [README.md](./README.md) — install/consume notes (currently a stub; expand when touched).
 - [../AGENTS.md](../AGENTS.md) — `packages/` family rules (source-first vs built, import rules).
-- [../nestjs-repositories/AGENTS.md](../nestjs-repositories/AGENTS.md) — the entities this client registers.
+- [../nestjs-repositories-server/AGENTS.md](../nestjs-repositories-server/AGENTS.md) — the entities this client registers.
 - [../../databases/AGENTS.md](../../databases/AGENTS.md) — migrations behind the embedding tables.

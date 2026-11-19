@@ -8,7 +8,7 @@ import {
   type AuthPrincipal,
 } from '@openthrottle/nestjs-auth';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { RolesRepository } from '@openthrottle/nestjs-repositories';
+import { RolesRepository } from '@openthrottle/nestjs-repositories-server';
 import type { RolesRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import { createRolesRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';

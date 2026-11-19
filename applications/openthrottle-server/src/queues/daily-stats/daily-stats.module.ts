@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
-import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import {
   DailyStatsModule,
+  NestjsRepositoriesServerModule,
   PlansModule,
   TasksModule,
 } from '@openthrottle/nestjs-repositories-server';
@@ -25,7 +25,7 @@ import { DailyStatsRepeatableService } from './repeatable/repeatable.service.ts'
     DailyStatsModule,
     DailyStatsQueueProducerModule,
     LoggerModule,
-    NestjsRepositoriesModule,
+    NestjsRepositoriesServerModule,
     NotificationsModule,
     PlansModule,
     TasksModule,

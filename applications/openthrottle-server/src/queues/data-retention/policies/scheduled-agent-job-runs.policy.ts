@@ -16,7 +16,7 @@
  * loses only the link.
  */
 
-import { SCHEDULED_AGENT_JOB_RUN_IN_FLIGHT_STATUSES } from '@openthrottle/nestjs-repositories';
+import { SCHEDULED_AGENT_JOB_RUN_IN_FLIGHT_STATUSES } from '@openthrottle/nestjs-repositories-server';
 import type { DataSource } from 'typeorm';
 
 import type { RetentionPolicy } from '../data-retention.types.ts';

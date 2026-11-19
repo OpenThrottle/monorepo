@@ -440,8 +440,8 @@ the intended design: it keeps the check cheap and stops a package drifting into 
 someone flips it to ESM. **Do not loosen the gate to match the rule** — reading the gate's source and
 inferring the stricter form is the real rule is the mistake this paragraph exists to prevent.
 
-**Counting these requires a comment-aware scan.** A naive grep reports 7 extensionless specifiers in
-`packages/nestjs-repositories/src/index.ts`; all 7 are commented-out `export type` lines, and the real
+**Counting these requires a comment-aware scan.** A naive grep reported 7 extensionless specifiers in the
+since-retired `packages/nestjs-repositories/src/index.ts`; all 7 were commented-out `export type` lines, and the real
 count is 0. A scan that does not strip comments manufactures violations and will disagree with
 `check-nodenext-references`, which is green. Likewise, any scan that reads project references must
 read `tsconfig.lib.json` **and** `tsconfig.app.json` — reading only the former misses every

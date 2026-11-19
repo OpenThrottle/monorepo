@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
-import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import {
+  NestjsRepositoriesServerModule,
   PlansModule,
   UserDisabledAgentClisModule,
 } from '@openthrottle/nestjs-repositories-server';
@@ -17,7 +17,7 @@ import { PlanCreationService } from './plan-creation.service.ts';
     CheckoutPathResolutionModule,
     EffectiveUserResolutionModule,
     LoggerModule,
-    NestjsRepositoriesModule,
+    NestjsRepositoriesServerModule,
     PlansModule,
   ],
   providers: [PlanCreationService],

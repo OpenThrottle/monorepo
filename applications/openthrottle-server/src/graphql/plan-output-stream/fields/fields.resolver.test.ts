@@ -1,7 +1,7 @@
 import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
-import type { Plan } from '@openthrottle/nestjs-repositories';
-import { getDefaultPlanRunConfigStorage } from '@openthrottle/nestjs-repositories';
+import type { Plan } from '@openthrottle/nestjs-repositories-server';
+import { getDefaultPlanRunConfigStorage } from '@openthrottle/openthrottle-plan-config';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 
 import { PlanOutputStreamLoaders } from '../loaders/loaders.service.ts';

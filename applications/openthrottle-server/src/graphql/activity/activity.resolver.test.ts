@@ -7,7 +7,7 @@ import { Test } from '@nestjs/testing';
 import {
   plansFactory,
   tasksFactory,
-} from '@openthrottle/nestjs-repositories/testing';
+} from '@openthrottle/nestjs-repositories-server/testing';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import {

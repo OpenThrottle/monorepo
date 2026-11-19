@@ -7,7 +7,7 @@
  */
 
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import type { Plan } from '@openthrottle/nestjs-repositories';
+import type { Plan } from '@openthrottle/nestjs-repositories-server';
 
 import { PlanObject } from '../../plans/plan.object.ts';
 import { PlanOutputStreamLoaders } from '../loaders/loaders.service.ts';

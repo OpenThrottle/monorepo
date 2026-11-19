@@ -383,7 +383,7 @@ export const settleCliPlanRun = async (
 
 /**
  * @description How often the detached CLI loop bumps its plan_runs heartbeat. Mirrors the server's
- * HEARTBEAT_INTERVAL_MS (@openthrottle/nestjs-repositories) — kept as a local constant so this CLI
+ * HEARTBEAT_INTERVAL_MS (@openthrottle/nestjs-repositories-server) — kept as a local constant so this CLI
  * package does not depend on the server package. MUST stay well below the server's STALE_CUTOFF_MS
  * (120s) so a healthy run is never falsely swept.
  */

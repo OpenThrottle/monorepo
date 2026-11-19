@@ -117,7 +117,7 @@ NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:nestjs \
 # NestJS module into a package (use --list=nestjsPackages for valid destinations)
 NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:nestjs \
   --subGenerator=module \
-  --destination=@openthrottle/nestjs-repositories \
+  --destination=@openthrottle/nestjs-repositories-server \
   --name=plans
 ```
 

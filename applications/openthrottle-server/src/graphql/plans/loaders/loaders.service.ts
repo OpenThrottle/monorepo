@@ -3,18 +3,16 @@
  */
 
 import { Injectable, Scope } from '@nestjs/common';
-import {
-  createEntityByIdLoader,
-  TASK_STATUS,
-} from '@openthrottle/nestjs-repositories';
-import {
-  PlanRunsRepository,
-  type ScheduledPlanRun,
+import { createEntityByIdLoader } from '@openthrottle/nestjs-postgres';
+import type {
+  GroupedHooks,
+  Project,
+  ScheduledPlanRun,
 } from '@openthrottle/nestjs-repositories-server';
 import {
-  type GroupedHooks,
-  type Project,
+  PlanRunsRepository,
   ProjectsRepository,
+  TASK_STATUS,
   TasksRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import DataLoader from 'dataloader';

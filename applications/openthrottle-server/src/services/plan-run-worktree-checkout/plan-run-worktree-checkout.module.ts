@@ -5,8 +5,10 @@
 
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
-import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
-import { PlanRunsModule } from '@openthrottle/nestjs-repositories-server';
+import {
+  NestjsRepositoriesServerModule,
+  PlanRunsModule,
+} from '@openthrottle/nestjs-repositories-server';
 
 import { RepositoryInspectionModule } from '../../graphql/repository-inspection/repository-inspection.module.ts';
 import { PlanRunWorktreeCheckoutService } from './plan-run-worktree-checkout.service.ts';
@@ -15,7 +17,7 @@ import { PlanRunWorktreeCheckoutService } from './plan-run-worktree-checkout.ser
   exports: [PlanRunWorktreeCheckoutService],
   imports: [
     LoggerModule,
-    NestjsRepositoriesModule,
+    NestjsRepositoriesServerModule,
     PlanRunsModule,
     RepositoryInspectionModule,
   ],

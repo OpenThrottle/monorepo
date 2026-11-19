@@ -27,7 +27,6 @@
     "@openthrottle/nestjs-profiling": 17239,
     "@openthrottle/nestjs-rbac": 15547,
     "@openthrottle/nestjs-redis": 16256,
-    "@openthrottle/nestjs-repositories": 80183,
     "@openthrottle/nestjs-repositories-cms": 24417,
     "@openthrottle/nestjs-rollout": 28212,
     "@openthrottle/nestjs-slack": 21854,

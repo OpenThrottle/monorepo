@@ -9,7 +9,7 @@ import type {
   UserPreferencesAgentInput as UserPreferencesAgentPatch,
   UserPreferencesData,
   UserPreferencesError,
-} from '@openthrottle/nestjs-repositories';
+} from '@openthrottle/nestjs-repositories-server';
 import { GraphQLError } from 'graphql';
 
 import { toWorkspaceEditorIdEnum } from '../workspace-settings/user-workspace-profile.mapper.ts';

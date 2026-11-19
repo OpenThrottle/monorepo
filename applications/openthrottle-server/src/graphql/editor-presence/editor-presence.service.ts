@@ -1,6 +1,6 @@
 /**
  * @description Stale-while-revalidate-cached wrapper over the editor-presence probe
- * (nestjs-repositories). Sibling of AgentDiscoveryService and deliberately shaped like
+ * (nestjs-repositories-server). Sibling of AgentDiscoveryService and deliberately shaped like
  * it. The probe is far cheaper than a CLI `--version` sweep — a bundle stat sweep is
  * sub-millisecond — but a total miss falls through to one `mdfind` spawn per editor
  * (~70ms measured), so it still should not run on every page load.

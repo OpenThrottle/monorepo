@@ -1,7 +1,7 @@
 /**
  * @description GraphQL module for skill usage ingest. Imports
  * SkillUsageEventsModule and SkillUsageOutcomesModule for their repositories,
- * NestjsRepositoriesModule for the permissions guard's RolesRepository, and
+ * RolesModule for the permissions guard's RolesRepository, and
  * EffectiveUserResolutionModule so ingest can attribute an event to the human
  * user its authenticated principal acts as.
  */

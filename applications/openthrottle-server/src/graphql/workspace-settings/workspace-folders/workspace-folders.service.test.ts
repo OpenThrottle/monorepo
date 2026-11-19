@@ -9,22 +9,18 @@ import { createMock } from '@golevelup/ts-vitest';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
-  Repository,
-  RepositoryCheckout,
-} from '@openthrottle/nestjs-repositories';
-import type {
-  RepositoriesRepository,
-  RepositoryCheckoutsRepository,
-} from '@openthrottle/nestjs-repositories-server';
-import type {
   Project,
   ProjectsRepository,
+  RepositoriesRepository,
+  Repository,
+  RepositoryCheckout,
+  RepositoryCheckoutsRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import {
+  createProjectsRepositoryMock,
   createRepositoriesRepositoryMock,
   createRepositoryCheckoutsRepositoryMock,
 } from '@openthrottle/nestjs-repositories-server/testing';
-import { createProjectsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
 import {
   afterAll,

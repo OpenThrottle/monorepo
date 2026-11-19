@@ -7,8 +7,8 @@
 
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
-import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import {
+  NestjsRepositoriesServerModule,
   RolesModule,
   UserDisabledAgentClisModule,
   UserFavoriteAgentModelsModule,
@@ -26,7 +26,7 @@ import { AgentSetupService } from './agent-setup.service.ts';
     UserFavoriteAgentModelsModule,
     AgentDiscoveryGraphqlModule,
     LoggerModule,
-    NestjsRepositoriesModule,
+    NestjsRepositoriesServerModule,
   ],
   providers: [AgentSetupResolver, AgentSetupService, GqlPermissionsGuard],
 })

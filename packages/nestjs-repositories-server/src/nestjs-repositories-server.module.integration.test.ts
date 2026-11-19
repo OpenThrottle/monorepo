@@ -2,10 +2,10 @@ import { NotFoundException } from '@nestjs/common';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { getDataSourceToken, TypeOrmModule } from '@nestjs/typeorm';
-import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
 import type { DataSource } from 'typeorm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
+import { getOpenThrottleTypeOrmOptions } from './data-source/data-source.utils.ts';
 import { NotesRepository } from './modules/notes/notes.repository.ts';
 import { RolesRepository } from './modules/roles/roles.repository.ts';
 import { ServiceAccountCredentialsRepository } from './modules/service-account-credentials/service-account-credentials.repository.ts';
@@ -28,10 +28,11 @@ import { NestjsRepositoriesServerModule } from './nestjs-repositories-server.mod
  *     pnpm nx run @openthrottle/nestjs-repositories-server:test --skip-nx-cache \
  *     -- src/nestjs-repositories-server.module.integration.test.ts
  *
- * The app's real DataSource still lives in `nestjs-repositories`, which
- * depends on this package, so the suite registers its own default DataSource
- * with `autoLoadEntities`: exactly the entities this package's modules declare.
- * The connection comes from POSTGRES_URL / POSTGRES_*. Nx loads the root
+ * The suite boots on the app's real DataSource options
+ * (`getOpenThrottleTypeOrmOptions`) without `autoLoadEntities`, so it checks
+ * exactly the explicit entity list the server registers: a table module whose
+ * entity is missing from `OPENTHROTTLE_ENTITIES` fails to boot here. The
+ * connection comes from POSTGRES_URL / POSTGRES_*. Nx loads the root
  * `.env`, whose POSTGRES_HOST is `host.docker.internal` and does not resolve on
  * the host, so a host run overrides it.
  */
@@ -103,11 +104,7 @@ describe.skipIf(!ENABLED)(
     beforeAll(async () => {
       app = await Test.createTestingModule({
         imports: [
-          TypeOrmModule.forRoot({
-            autoLoadEntities: true,
-            type: 'postgres',
-            url: getPostgresUrl(),
-          }),
+          TypeOrmModule.forRoot(getOpenThrottleTypeOrmOptions()),
           NestjsRepositoriesServerModule,
         ],
       }).compile();

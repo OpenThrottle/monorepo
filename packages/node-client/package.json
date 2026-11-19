@@ -6,7 +6,7 @@
   },
   "dependencies": {
     "@huggingface/transformers": "catalog:",
-    "@openthrottle/nestjs-repositories": "workspace:^",
+    "@openthrottle/nestjs-repositories-server": "workspace:^",
     "@openthrottle/nodejs-utils": "workspace:^",
     "@openthrottle/openthrottle-agentic-utils": "workspace:^",
     "pg": "catalog:",

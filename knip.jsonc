@@ -405,14 +405,6 @@
       "ignoreDependencies": ["@faker-js/faker", "fishery"],
       "project": ["src/**/*.ts"],
     },
-    "packages/nestjs-repositories": {
-      "entry": [
-        "src/index.ts",
-        "src/nestjs-repositories.module.ts",
-        "src/testing/index.ts",
-      ],
-      "project": ["src/**/*.ts"],
-    },
     "packages/nestjs-typeorm": {
       "entry": ["src/index.ts", "src/nestjs-typeorm.module.ts"],
       "project": ["src/**/*.ts"],

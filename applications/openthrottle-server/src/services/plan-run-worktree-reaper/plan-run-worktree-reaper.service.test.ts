@@ -7,17 +7,17 @@
 
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import type { RepositoryCheckout } from '@openthrottle/nestjs-repositories';
-import type { RepositoryCheckoutsRepository } from '@openthrottle/nestjs-repositories-server';
-import type { PlanRunsRepository } from '@openthrottle/nestjs-repositories-server';
 import type {
   Plan,
+  PlanRunsRepository,
   PlansRepository,
+  RepositoryCheckout,
+  RepositoryCheckoutsRepository,
 } from '@openthrottle/nestjs-repositories-server';
-import { createRepositoryCheckoutsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import {
   createPlanRunsRepositoryMock,
   createPlansRepositoryMock,
+  createRepositoryCheckoutsRepositoryMock,
   plansFactory,
 } from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';

@@ -12,17 +12,13 @@ import {
 } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
+  Plan,
+  PLAN_RUN_STATUS,
   PLAN_STATUS,
+  PlanRunsRepository,
+  PlansRepository,
   REMAINING_TASK_STATUSES,
   resolveCompletedAtForStatusChange,
-} from '@openthrottle/nestjs-repositories';
-import {
-  PLAN_RUN_STATUS,
-  PlanRunsRepository,
-} from '@openthrottle/nestjs-repositories-server';
-import {
-  Plan,
-  PlansRepository,
   Task,
   TasksRepository,
 } from '@openthrottle/nestjs-repositories-server';

@@ -38,7 +38,7 @@ All experiments ran in `scratchpad/task2/`. Tracked tree untouched (`git status 
   - Input over 72 bytes: both truncate at 72 identically.
   - **Real seeded hash** (`users.password_hash` for `developer@openthrottle.ai`, read with `docker exec … psql`): `$2b$10$`, 60 characters. `bcrypt.compareSync(seedPw)` is `true` and `bcryptjs.compareSync(seedPw)` is `true`. The seed password is the default in `scripts/bootstrap-default-user.ts`. The hash was kept in a 0600 scratch file and deleted afterwards.
   - Speed at round 10: native 414 to 446 ms and js 432 to 434 ms per hash. The host was heavily loaded (loadavg 8 to 31), so treat this as parity, not as absolute numbers.
-- **Decision:** keep `bcrypt`. Packaging cost: `node_modules/bcrypt/prebuilds/darwin-arm64/bcrypt.node` is the closure's first native file. It must go in `asarUnpack` and in `EXPECTED_NATIVE_FILES`, and only the target platform's prebuild should be shipped (nft traced only darwin-arm64). Switching to bcryptjs would be a zero-migration fallback if `asarUnpack` ever becomes a problem. Its API is identical for `hash`, `compare` and `hashSync`, but it would need a code change in `nestjs-repositories`.
+- **Decision:** keep `bcrypt`. Packaging cost: `node_modules/bcrypt/prebuilds/darwin-arm64/bcrypt.node` is the closure's first native file. It must go in `asarUnpack` and in `EXPECTED_NATIVE_FILES`, and only the target platform's prebuild should be shipped (nft traced only darwin-arm64). Switching to bcryptjs would be a zero-migration fallback if `asarUnpack` ever becomes a problem. Its API is identical for `hash`, `compare` and `hashSync`, but it would need a code change in `nestjs-repositories-server`.
 
 ## 2. The `spawn('pnpm', …)` calls
 

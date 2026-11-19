@@ -16,7 +16,7 @@ ruleTester.run('plan-task-status-chokepoint', planTaskStatusChokepoint, {
     // — the exact "reintroduce the silent writer" regression this rule exists
     // to catch.
     {
-      code: `import { Plan } from '@openthrottle/nestjs-repositories';
+      code: `import { Plan } from '@openthrottle/nestjs-repositories-server';
 
 async function updatePlanStatus(manager, planId) {
   const repo = manager.getRepository(Plan);
@@ -30,7 +30,7 @@ async function updatePlanStatus(manager, planId) {
     },
     // A bare repo-scoped `.update(criteria, { status })` on a traced Task repo.
     {
-      code: `import { Task } from '@openthrottle/nestjs-repositories';
+      code: `import { Task } from '@openthrottle/nestjs-repositories-server';
 
 async function closeTask(manager, taskId) {
   const repo = manager.getRepository(Task);
@@ -42,7 +42,7 @@ async function closeTask(manager, taskId) {
     },
     // The 3-arg EntityManager form: `manager.update(Task, criteria, { status })`.
     {
-      code: `import { Task } from '@openthrottle/nestjs-repositories';
+      code: `import { Task } from '@openthrottle/nestjs-repositories-server';
 
 async function closeTask(manager, taskId) {
   return manager.update(Task, { id: taskId }, { status: 'COMPLETED' });
@@ -55,7 +55,7 @@ async function closeTask(manager, taskId) {
     // an arbitrarily deep `.where()`/`.andWhere()` chain in between — the
     // chain-passthrough resolution must still trace back to the repo.
     {
-      code: `import { Task } from '@openthrottle/nestjs-repositories';
+      code: `import { Task } from '@openthrottle/nestjs-repositories-server';
 
 async function bulkClose(manager, ids) {
   const taskRepo = manager.getRepository(Task);
@@ -72,7 +72,7 @@ async function bulkClose(manager, ids) {
     },
     // An explicit `.update(Plan)` entity argument on the query-builder chain.
     {
-      code: `import { Plan } from '@openthrottle/nestjs-repositories';
+      code: `import { Plan } from '@openthrottle/nestjs-repositories-server';
 
 async function resetPlans(manager, ids) {
   return manager
@@ -89,7 +89,7 @@ async function resetPlans(manager, ids) {
     // An explicit `: Task` type annotation is enough to trace the entity, even
     // with no repository call in sight.
     {
-      code: `import { Task } from '@openthrottle/nestjs-repositories';
+      code: `import { Task } from '@openthrottle/nestjs-repositories-server';
 
 function touch(entity: Task) {
   entity.status = 'PENDING';
@@ -102,7 +102,7 @@ function touch(entity: Task) {
     // still be flagged — the closure has no name of its own, but the
     // enclosing named function ("notTheChokepoint") isn't on the allow-list.
     {
-      code: `import { Plan } from '@openthrottle/nestjs-repositories';
+      code: `import { Plan } from '@openthrottle/nestjs-repositories-server';
 
 async function notTheChokepoint(manager, planId) {
   await manager.transaction(async (txManager) => {
@@ -119,7 +119,7 @@ async function notTheChokepoint(manager, planId) {
     // `allowedFunctionNames` is per-name: naming a DIFFERENT function does not
     // exempt this one.
     {
-      code: `import { Task } from '@openthrottle/nestjs-repositories';
+      code: `import { Task } from '@openthrottle/nestjs-repositories-server';
 
 async function updateTask(manager, taskId) {
   const repo = manager.getRepository(Task);
@@ -138,7 +138,7 @@ async function updateTask(manager, taskId) {
     // a bare local variable — the realistic "new method added straight to
     // TasksService" silent writer.
     {
-      code: `import { Task } from '@openthrottle/nestjs-repositories';
+      code: `import { Task } from '@openthrottle/nestjs-repositories-server';
 import type { Repository } from 'typeorm';
 
 class TasksService {
@@ -154,7 +154,7 @@ class TasksService {
     },
     // Same injected-field tracing, but a bare assignment + save.
     {
-      code: `import { Plan } from '@openthrottle/nestjs-repositories';
+      code: `import { Plan } from '@openthrottle/nestjs-repositories-server';
 import type { Repository } from 'typeorm';
 
 class PlansService {
@@ -224,7 +224,7 @@ async function closeTask(repository: TasksRepository, taskId) {
     // plain object-literal argument, never an assignment or an
     // `.update()`/`.set()` call, so it is never flagged.
     {
-      code: `import { Task } from '@openthrottle/nestjs-repositories';
+      code: `import { Task } from '@openthrottle/nestjs-repositories-server';
 
 async function createTask(manager, planId) {
   const repo = manager.getRepository(Task);
@@ -251,7 +251,7 @@ async function createTask(manager, planId) {
     // Mapping a loaded row's status onto a plain (non-Task/Plan) DTO/result
     // object is not a database write at all and must never be flagged.
     {
-      code: `import { Plan } from '@openthrottle/nestjs-repositories';
+      code: `import { Plan } from '@openthrottle/nestjs-repositories-server';
 
 function toDto(plan: Plan) {
   const out = new PlanRunObject();
@@ -263,7 +263,7 @@ function toDto(plan: Plan) {
     },
     // The plan chokepoint: `applyStatusChange` assigning `.status` directly.
     {
-      code: `import { Plan } from '@openthrottle/nestjs-repositories';
+      code: `import { Plan } from '@openthrottle/nestjs-repositories-server';
 
 class PlanStatusService {
   async applyStatusChange(manager, entity: Plan, requestedStatus) {
@@ -279,7 +279,7 @@ class PlanStatusService {
     // inside a nested `manager.transaction(...)` closure — the allow-list
     // check must resolve through the anonymous closure to the named method.
     {
-      code: `import { Plan } from '@openthrottle/nestjs-repositories';
+      code: `import { Plan } from '@openthrottle/nestjs-repositories-server';
 
 class PlanStatusService {
   async cancelRun(planId) {
@@ -297,7 +297,7 @@ class PlanStatusService {
     },
     // The bulk task-status chokepoint's query-builder `.set({ status })`.
     {
-      code: `import { Task } from '@openthrottle/nestjs-repositories';
+      code: `import { Task } from '@openthrottle/nestjs-repositories-server';
 
 async function applyBulkTaskStatusChange(manager, ids, toStatus) {
   const taskRepo = manager.getRepository(Task);
@@ -316,7 +316,7 @@ async function applyBulkTaskStatusChange(manager, ids, toStatus) {
     // closeOutSourceTask): a repo-scoped `.update(criteria, { status })`
     // inside the named, allow-listed method.
     {
-      code: `import { Task } from '@openthrottle/nestjs-repositories';
+      code: `import { Task } from '@openthrottle/nestjs-repositories-server';
 
 class InjectTaskExecutor {
   async reviveSoftClosedTask(planId, task) {

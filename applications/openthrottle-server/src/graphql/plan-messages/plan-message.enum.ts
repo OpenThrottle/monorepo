@@ -1,6 +1,6 @@
 /**
  * @description Registers the GraphQL enums `PlanMessageKind` and `PlanMessageStatus` from the
- * `as const` SSOT in @openthrottle/nestjs-repositories, which mirrors the plan_messages CHECKs
+ * `as const` SSOT in @openthrottle/nestjs-repositories-server, which mirrors the plan_messages CHECKs
  * (migration 144). No literal list is maintained here.
  */
 

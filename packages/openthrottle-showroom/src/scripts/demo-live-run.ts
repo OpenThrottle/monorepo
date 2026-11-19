@@ -31,7 +31,7 @@
  *   pnpm exec tsx src/scripts/demo-live-run.ts --run <uuid> [--task <uuid>]
  */
 
-import { getOpenThrottleTypeOrmOptions } from '@openthrottle/nestjs-repositories';
+import { getOpenThrottleTypeOrmOptions } from '@openthrottle/nestjs-repositories-server';
 import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
 import { DataSource } from 'typeorm';
 

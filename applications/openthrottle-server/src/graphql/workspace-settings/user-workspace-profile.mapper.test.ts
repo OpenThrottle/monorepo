@@ -1,4 +1,4 @@
-import type { UserWorkspaceSettings } from '@openthrottle/nestjs-repositories';
+import type { UserWorkspaceSettings } from '@openthrottle/nestjs-repositories-server';
 import { describe, expect, test } from 'vitest';
 
 import { toUserWorkspaceProfileObject } from './user-workspace-profile.mapper.ts';

@@ -82,7 +82,7 @@ class BillingService {
 ```
 
 Import `RolloutFlagsModule` (registers the repository and imports
-`NestjsRepositoriesModule` for `RolesRepository`):
+`RolesModule` for `RolesRepository`):
 
 ```ts
 import { RolloutFlagsModule } from '@openthrottle/nestjs-rollout';

@@ -7,14 +7,14 @@
 
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
-import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+import { NestjsRepositoriesServerModule } from '@openthrottle/nestjs-repositories-server';
 
 import { RepositoryInspectionService } from './repository-inspection.service.ts';
 
 @Module({
   controllers: [],
   exports: [RepositoryInspectionService],
-  imports: [LoggerModule, NestjsRepositoriesModule],
+  imports: [LoggerModule, NestjsRepositoriesServerModule],
   providers: [RepositoryInspectionService],
 })
 export class RepositoryInspectionModule {}

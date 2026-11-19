@@ -14,8 +14,8 @@ import { join } from 'node:path';
 
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import type { RepositoryCheckout } from '@openthrottle/nestjs-repositories';
 import type {
+  RepositoryCheckout,
   RepositoryCheckoutsRepository,
   UserWorkspaceSettingsRepository,
 } from '@openthrottle/nestjs-repositories-server';

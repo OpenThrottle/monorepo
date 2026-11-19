@@ -1,9 +1,9 @@
 /**
- * @description GraphQL ObjectType for User. Public API omits passwordHash; shape otherwise matches {@link UserData} from @openthrottle/nestjs-repositories.
+ * @description GraphQL ObjectType for User. Public API omits passwordHash; shape otherwise matches {@link UserData} from @openthrottle/nestjs-repositories-server.
  */
 
 import { Field, ObjectType } from '@nestjs/graphql';
-import type { UserData } from '@openthrottle/nestjs-repositories';
+import type { UserData } from '@openthrottle/nestjs-repositories-server';
 
 /** Public user fields (excludes passwordHash). */
 type PublicUserData = Omit<UserData, 'passwordHash'>;

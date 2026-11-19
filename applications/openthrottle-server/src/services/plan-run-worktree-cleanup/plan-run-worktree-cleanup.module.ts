@@ -5,8 +5,8 @@
 
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
-import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import {
+  NestjsRepositoriesServerModule,
   PlanOutputStreamModule,
   PlansModule,
 } from '@openthrottle/nestjs-repositories-server';
@@ -18,7 +18,7 @@ import { PlanRunWorktreeCleanupService } from './plan-run-worktree-cleanup.servi
   exports: [PlanRunWorktreeCleanupService],
   imports: [
     LoggerModule,
-    NestjsRepositoriesModule,
+    NestjsRepositoriesServerModule,
     PlanOutputStreamModule,
     PlanRunWorktreeTeardownModule,
     PlansModule,

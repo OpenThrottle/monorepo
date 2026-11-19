@@ -1,4 +1,4 @@
-import { Task } from '@openthrottle/nestjs-repositories';
+import { Task } from '@openthrottle/nestjs-repositories-server';
 
 import { WORK_LEDGER_CAPTURE_FAILED_MARKER } from '../work-ledger.constants.ts';
 import type {

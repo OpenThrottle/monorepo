@@ -3,8 +3,8 @@
  * workspace-settings-graphql-design.md.
  */
 
-import type { WorkspaceEditorId } from '@openthrottle/nestjs-repositories';
-import { isWorkspaceEditorId } from '@openthrottle/nestjs-repositories';
+import type { WorkspaceEditorId } from '@openthrottle/nestjs-repositories-server';
+import { isWorkspaceEditorId } from '@openthrottle/nestjs-repositories-server';
 
 import type { WorkspaceEditorIdEnum } from '../workspace-editor-id.enum.ts';
 

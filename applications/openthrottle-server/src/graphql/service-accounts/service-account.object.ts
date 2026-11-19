@@ -3,7 +3,7 @@
  */
 
 import { Field, ObjectType } from '@nestjs/graphql';
-import type { ServiceAccountData } from '@openthrottle/nestjs-repositories';
+import type { ServiceAccountData } from '@openthrottle/nestjs-repositories-server';
 
 @ObjectType()
 export class ServiceAccountObject implements ServiceAccountData {

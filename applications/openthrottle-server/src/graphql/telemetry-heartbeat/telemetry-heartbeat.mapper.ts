@@ -5,12 +5,14 @@
  */
 
 import { BadRequestException } from '@nestjs/common';
-import { normalizeRemoteUrl } from '@openthrottle/nestjs-repositories';
+import type {
+  TelemetryHeartbeat,
+  UpsertTelemetryHeartbeatInput,
+} from '@openthrottle/nestjs-repositories-server';
 import {
   isTelemetryHeartbeatDeliveryLeg,
+  normalizeRemoteUrl,
   TELEMETRY_HEARTBEAT_DELIVERY_LEG_LIST,
-  type TelemetryHeartbeat,
-  type UpsertTelemetryHeartbeatInput,
 } from '@openthrottle/nestjs-repositories-server';
 
 import type { RecordTelemetryHeartbeatInput } from './telemetry-heartbeat.input.ts';

@@ -1,12 +1,12 @@
 import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
-import { getDefaultPlanRunConfigStorage } from '@openthrottle/nestjs-repositories';
 import type { TaskEmbedding } from '@openthrottle/nestjs-repositories-server';
 import { TaskEmbeddingsRepository } from '@openthrottle/nestjs-repositories-server';
 import {
   createTaskEmbeddingsRepositoryMock,
   tasksFactory,
 } from '@openthrottle/nestjs-repositories-server/testing';
+import { getDefaultPlanRunConfigStorage } from '@openthrottle/openthrottle-plan-config';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 
 import { TaskEmbeddingsLoaders } from './loaders/loaders.service.ts';

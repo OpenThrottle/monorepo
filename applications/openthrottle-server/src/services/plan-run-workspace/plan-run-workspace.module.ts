@@ -6,8 +6,8 @@
 
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
-import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import {
+  NestjsRepositoriesServerModule,
   PlanOutputStreamModule,
   PlanRunsModule,
 } from '@openthrottle/nestjs-repositories-server';
@@ -23,7 +23,7 @@ import { PlanRunWorkspaceService } from './plan-run-workspace.service.ts';
   imports: [
     ForeignSkillInjectionModule,
     LoggerModule,
-    NestjsRepositoriesModule,
+    NestjsRepositoriesServerModule,
     PlanOutputStreamModule,
     PlanRunsModule,
     PlanRunWorkspacePreflightModule,

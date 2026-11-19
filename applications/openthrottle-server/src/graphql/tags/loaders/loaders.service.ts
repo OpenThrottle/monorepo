@@ -5,7 +5,7 @@
  */
 
 import { Injectable, Scope } from '@nestjs/common';
-import { createCollectionByColumnLoader } from '@openthrottle/nestjs-repositories';
+import { createCollectionByColumnLoader } from '@openthrottle/nestjs-postgres';
 import type {
   PlanTag,
   ProjectTag,

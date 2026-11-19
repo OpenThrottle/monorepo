@@ -13,7 +13,7 @@ import { ACTOR_KEY_NAMESPACE } from '../config/index.ts';
  * shared report.
  *
  * `repoSlug` is an `org/repo` slug from the git remote. It is a small, local normalizer kept
- * independent of `@openthrottle/nestjs-repositories`' `normalizeRemoteUrl` (which returns a
+ * independent of `@openthrottle/nestjs-repositories-server`' `normalizeRemoteUrl` (which returns a
  * canonical full URL for stored Repository entities, not a slug, and pulls in a NestJS-oriented
  * dependency graph this read-only tool does not want).
  */

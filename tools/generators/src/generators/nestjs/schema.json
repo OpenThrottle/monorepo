@@ -36,7 +36,7 @@
     "destination": {
       "type": "string",
       "minLength": 1,
-      "description": "Target NestJS package or application by Nx project name (e.g. @openthrottle/nestjs-repositories). Use --list=nestjsPackages to enumerate valid package targets."
+      "description": "Target NestJS package or application by Nx project name (e.g. @openthrottle/nestjs-repositories-server). Use --list=nestjsPackages to enumerate valid package targets."
     },
     "port": {
       "type": "number",

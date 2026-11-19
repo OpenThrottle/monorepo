@@ -61,9 +61,9 @@ import { WorktreeRemovalsModule } from './modules/worktree-removals/worktree-rem
 /**
  * @description The TypeORM data-access layer for the `openthrottle` database:
  * aggregates and re-exports one module per table. Each table module binds to
- * the app's **default** DataSource (no named connection), which
- * `NestjsRepositoriesModule` still registers until the last migration batch
- * moves the DataSource config here.
+ * the app's **default** DataSource (no named connection), which the server
+ * registers from `getOpenThrottleTypeOrmOptions()`. This module registers no
+ * DataSource itself, so a caller can import it beside its own root.
  * @public
  */
 @Module({

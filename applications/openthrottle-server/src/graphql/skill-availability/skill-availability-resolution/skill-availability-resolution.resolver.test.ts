@@ -1,8 +1,10 @@
 import { createMock } from '@golevelup/ts-vitest';
 import { BadRequestException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import type { Project } from '@openthrottle/nestjs-repositories';
-import type { UserSkillTag } from '@openthrottle/nestjs-repositories-server';
+import type {
+  Project,
+  UserSkillTag,
+} from '@openthrottle/nestjs-repositories-server';
 import {
   ProjectsRepository,
   SkillTagsRepository,

@@ -1,12 +1,14 @@
 /**
  * @description GraphQL module for code semantic search. Registers CodeSearchResolver and imports
  * NestjsVectorSearchModule (CodeSearchService over the server's single EmbedderService),
- * NestjsRepositoriesModule (repository resolution), and CodeIndexQueueProducerModule (the code-index BullMQ queue, for @InjectQueue + enqueue).
+ * NestjsRepositoriesServerModule (repository resolution), and CodeIndexQueueProducerModule (the code-index BullMQ queue, for @InjectQueue + enqueue).
  */
 
 import { Module } from '@nestjs/common';
-import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
-import { RolesModule } from '@openthrottle/nestjs-repositories-server';
+import {
+  NestjsRepositoriesServerModule,
+  RolesModule,
+} from '@openthrottle/nestjs-repositories-server';
 import { NestjsVectorSearchModule } from '@openthrottle/nestjs-vector-search';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
@@ -21,7 +23,7 @@ import { CodeSearchResolver } from './code-search.resolver.ts';
     RolesModule,
     CodeIndexQueueProducerModule,
     WorkspaceLocalRepositoriesModule,
-    NestjsRepositoriesModule,
+    NestjsRepositoriesServerModule,
     NestjsVectorSearchModule.register({
       embedder: EmbedderService,
       imports: [EmbedderModule],

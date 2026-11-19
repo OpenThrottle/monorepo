@@ -6,7 +6,7 @@ import { UseGuards } from '@nestjs/common';
 import { Args, Context, Mutation, Resolver } from '@nestjs/graphql';
 import { Public } from '@openthrottle/nestjs-auth';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import type { User } from '@openthrottle/nestjs-repositories';
+import type { User } from '@openthrottle/nestjs-repositories-server';
 
 import { AuthService } from './auth.service.ts';
 import { GqlLocalAuthGuard } from './guards/gql-local-auth.guard.ts';

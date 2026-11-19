@@ -2,7 +2,7 @@
  * @description Parses and resolves job-run lifecycle hooks for plan storage and BullMQ enqueue.
  */
 
-import type { PlanJobRunHooksStorage } from '@openthrottle/nestjs-repositories';
+import type { PlanJobRunHooksStorage } from '@openthrottle/openthrottle-plan-config';
 import type { JobRunHookEntry, JobRunHooksConfig } from '@tools/workflows';
 import { parseJobRunHooksConfig } from '@tools/workflows';
 

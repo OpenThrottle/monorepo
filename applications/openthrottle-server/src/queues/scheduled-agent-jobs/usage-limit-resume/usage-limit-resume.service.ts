@@ -1,10 +1,10 @@
 import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import {
-  type ScheduledAgentJob,
-  type ScheduledAgentJobRun,
-} from '@openthrottle/nestjs-repositories';
+import type {
+  ScheduledAgentJob,
+  ScheduledAgentJobRun,
+} from '@openthrottle/nestjs-repositories-server';
 import {
   ScheduledAgentJobRunsRepository,
   ScheduledAgentJobsRepository,

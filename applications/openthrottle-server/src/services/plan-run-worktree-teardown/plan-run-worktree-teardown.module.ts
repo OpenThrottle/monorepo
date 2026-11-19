@@ -6,14 +6,16 @@
 
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
-import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
-import { PlanRunsModule } from '@openthrottle/nestjs-repositories-server';
+import {
+  NestjsRepositoriesServerModule,
+  PlanRunsModule,
+} from '@openthrottle/nestjs-repositories-server';
 
 import { PlanRunWorktreeTeardownService } from './plan-run-worktree-teardown.service.ts';
 
 @Module({
   exports: [PlanRunWorktreeTeardownService],
-  imports: [LoggerModule, NestjsRepositoriesModule, PlanRunsModule],
+  imports: [LoggerModule, NestjsRepositoriesServerModule, PlanRunsModule],
   providers: [PlanRunWorktreeTeardownService],
 })
 export class PlanRunWorktreeTeardownModule {}

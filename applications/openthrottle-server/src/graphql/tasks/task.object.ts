@@ -1,5 +1,5 @@
 /**
- * @description GraphQL ObjectType for Task. Mirrors {@link TaskData} from @openthrottle/nestjs-repositories; requirements are exposed as a JSON string.
+ * @description GraphQL ObjectType for Task. Mirrors {@link TaskData} from @openthrottle/nestjs-repositories-server; requirements are exposed as a JSON string.
  */
 
 import { Field, Int, ObjectType } from '@nestjs/graphql';

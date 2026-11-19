@@ -1,5 +1,5 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { Plan } from '@openthrottle/nestjs-repositories';
+import { Plan } from '@openthrottle/nestjs-repositories-server';
 
 import { PlanObject } from '../../plans/plan.object.ts';
 import { ActivityOutputChunkRowObject } from '../activity.object.ts';

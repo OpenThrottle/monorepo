@@ -290,7 +290,7 @@ export const parseChunkMetadataRecord = (
 /**
  * Key the server sets to `true` on a persisted event's metadata when it clipped
  * that event's payload to fit the tool_metadata cap. Mirrors
- * `AGENT_CONVERSATION_PAYLOAD_TRUNCATED_KEY` in `@openthrottle/nestjs-repositories`,
+ * `AGENT_CONVERSATION_PAYLOAD_TRUNCATED_KEY` in `@openthrottle/nestjs-repositories-server`,
  * which this client package cannot import.
  */
 const PAYLOAD_TRUNCATED_KEY = 'payloadTruncated';

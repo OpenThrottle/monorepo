@@ -27,7 +27,7 @@ import {
 } from '@openthrottle/nestjs-auth';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
-import { type ScheduledAgentJob } from '@openthrottle/nestjs-repositories';
+import type { ScheduledAgentJob } from '@openthrottle/nestjs-repositories-server';
 import { UserDisabledAgentClisRepository } from '@openthrottle/nestjs-repositories-server';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';

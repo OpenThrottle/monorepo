@@ -3,9 +3,9 @@
 The TypeORM data-access layer for the `cms` database (`databases/cms/`): one entity per table, a
 `BaseRepository` subclass per content table (thin services for the two join tables), fishery
 factories and the DataSource config. The `cms` sibling of
-[`nestjs-repositories`](../nestjs-repositories/AGENTS.md), which owns the `openthrottle` database.
+[`nestjs-repositories-server`](../nestjs-repositories-server/AGENTS.md), which owns the `openthrottle` database.
 
-**Consumed by:** `openthrottle-server`, which imports `NestjsRepositoriesCmsModule` beside `NestjsRepositoriesModule` and reports the connection as `cms` in `serverHealth` / `GET /health` (OT plan `18a3b88f-50fe-4944-97a3-71835d45e393`).
+**Consumed by:** `openthrottle-server`, which imports `NestjsRepositoriesCmsModule` beside the default openthrottle DataSource and reports the connection as `cms` in `serverHealth` / `GET /health` (OT plan `18a3b88f-50fe-4944-97a3-71835d45e393`).
 
 **GraphQL lives here too (owner decision, OT plan `18a3b88f`).** This is a deliberate exception to
 "repositories = thin data access": the cms GraphQL API sits next to the data layer, in

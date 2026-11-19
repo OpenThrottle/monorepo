@@ -1,4 +1,4 @@
-import { type ScheduledAgentJob } from '@openthrottle/nestjs-repositories';
+import type { ScheduledAgentJob } from '@openthrottle/nestjs-repositories-server';
 
 import type { ScheduledAgentJobPayload } from '../scheduled-agent-jobs.types.ts';
 /**
