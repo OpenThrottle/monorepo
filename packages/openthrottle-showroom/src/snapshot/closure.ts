@@ -10,6 +10,14 @@
  *   parent (users, projects, repositories, …), but a parent added for integrity
  *   does NOT expand downward — otherwise pulling one user would pull every row
  *   the user ever touched and the window would be meaningless.
+ *
+ * Soft-deleted rows (a non-null `deleted_at`, on any table that has the
+ * column) never enter as roots or downward children, so a plan deleted in the
+ * app is not in the snapshot and its tasks do not ride along. They are kept
+ * only when a live exported row still points at one as an FK parent — a soft
+ * delete leaves the reference in place (deleteProject keeps `plans.project_id`),
+ * and dropping the parent would make the snapshot fail its FK checks on load.
+ * Such a row keeps its `deleted_at`, so the app still reads it as deleted.
  */
 
 import type { DatabaseSchema, TableSchema } from './schema.ts';
@@ -46,6 +54,27 @@ export interface RowFetcher {
 }
 
 const FETCH_BATCH_SIZE = 1_000;
+
+const SOFT_DELETE_COLUMN = 'deleted_at';
+
+/**
+ * @description Drop soft-deleted rows. A table without the column keeps every
+ * row.
+ */
+const withoutSoftDeleted = (
+  table: TableSchema,
+  rows: Record<string, unknown>[],
+): Record<string, unknown>[] => {
+  if (!table.columns.includes(SOFT_DELETE_COLUMN)) {
+    return rows;
+  }
+
+  return rows.filter((row) => {
+    const deletedAt = row[SOFT_DELETE_COLUMN];
+
+    return deletedAt === null || deletedAt === undefined;
+  });
+};
 
 const rowKey = (table: TableSchema, row: Record<string, unknown>): string => {
   return stableStringify(table.primaryKey.map((column) => row[column]));
@@ -144,7 +173,14 @@ export const collectSnapshotRows = async (
 
   /* eslint-disable no-await-in-loop -- sequential fixpoint over one connection */
   for (const root of scope.fullRoots) {
-    addRows(root, await fetcher.fetchAll(root), true);
+    addRows(
+      root,
+      withoutSoftDeleted(
+        requireTable(schema, root),
+        await fetcher.fetchAll(root),
+      ),
+      true,
+    );
   }
 
   for (const root of scope.windowedRoots) {
@@ -158,7 +194,10 @@ export const collectSnapshotRows = async (
 
     addRows(
       root.table,
-      await fetcher.fetchSince(root.table, root.windowColumn, cutoffIso),
+      withoutSoftDeleted(
+        table,
+        await fetcher.fetchSince(root.table, root.windowColumn, cutoffIso),
+      ),
       true,
     );
   }
@@ -189,13 +228,18 @@ export const collectSnapshotRows = async (
           batch,
         );
 
-        addRows(edge.childTable, children, true);
+        addRows(
+          edge.childTable,
+          withoutSoftDeleted(requireTable(schema, edge.childTable), children),
+          true,
+        );
       }
     }
   }
 
   // Upward fixpoint: every exported row's FK parents, recursively. Parents are
-  // added with expandChildren = false.
+  // added with expandChildren = false, and soft-deleted ones are kept on
+  // purpose — a live row still references them (see the module comment).
   let upwardFrontier: { rows: Record<string, unknown>[]; table: string }[] = [
     ...selected.entries(),
   ].map(([table, bucket]) => ({ rows: [...bucket.values()], table }));

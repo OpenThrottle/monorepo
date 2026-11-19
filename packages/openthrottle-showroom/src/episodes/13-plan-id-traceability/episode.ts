@@ -32,7 +32,7 @@ export const episode: VideoEpisode = {
     {
       atLeast: 100,
       describe: `tasks whose parent plan resolves, so the task-to-plan walk works`,
-      sql: `SELECT count(*) AS value FROM tasks t JOIN plans p ON p.id = t.plan_id`,
+      sql: `SELECT count(*) AS value FROM tasks t JOIN plans p ON p.id = t.plan_id WHERE t.deleted_at IS NULL AND p.deleted_at IS NULL`,
     },
     {
       atLeast: 50,

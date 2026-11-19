@@ -48,7 +48,7 @@ export const episode: VideoEpisode = {
     {
       atLeast: 5,
       describe: `plans carrying at least three tags, so a chip row looks lived-in`,
-      sql: `SELECT count(*) AS value FROM (SELECT p.id FROM plans p JOIN plan_tags pt ON pt.plan_id = p.id GROUP BY p.id HAVING count(DISTINCT pt.tag) >= 3) x`,
+      sql: `SELECT count(*) AS value FROM (SELECT p.id FROM plans p JOIN plan_tags pt ON pt.plan_id = p.id WHERE p.deleted_at IS NULL GROUP BY p.id HAVING count(DISTINCT pt.tag) >= 3) x`,
     },
   ],
   format: 'short',

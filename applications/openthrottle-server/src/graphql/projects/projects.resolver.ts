@@ -124,7 +124,7 @@ export class ProjectsResolver {
 
   // @ProfileResponseTime('ProjectsResolver.deleteProject')
   @Mutation(() => Boolean, {
-    description: `Delete a project by ID. Related plans and tasks remain; their project link is cleared (ON DELETE SET NULL).`,
+    description: `Soft-delete a project by ID. Related plans, tasks and repositories remain and keep their project link, which no longer resolves to a project. Returns false when no live project has the ID.`,
   })
   async deleteProject(
     @Args('input', { type: () => DeleteProjectInput })

@@ -2871,7 +2871,7 @@ export type Mutation = {
   deletePlan: Scalars['Boolean']['output'];
   /** Delete a plan's output chunks. With chunkId, deletes that single chunk (must belong to planId). Without chunkId, clears all chunks for planId, optionally scoped to taskId. */
   deletePlanOutput: DeletePlanOutputResult;
-  /** Delete a project by ID. Related plans and tasks remain; their project link is cleared (ON DELETE SET NULL). */
+  /** Soft-delete a project by ID. Related plans, tasks and repositories remain and keep their project link, which no longer resolves to a project. Returns false when no live project has the ID. */
   deleteProject: Scalars['Boolean']['output'];
   /** Delete a role */
   deleteRole: Scalars['Boolean']['output'];
