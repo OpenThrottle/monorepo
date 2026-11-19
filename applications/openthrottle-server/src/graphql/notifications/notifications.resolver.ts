@@ -39,7 +39,7 @@ export class NotificationsSubscriptionResolver {
   ): AsyncIterator<NotificationEnvelope> {
     this.requireAuthenticatedConnection(context);
 
-    return this.pubSub.asyncIterator(notificationsFirehoseTopic());
+    return this.pubSub.asyncIterableIterator(notificationsFirehoseTopic());
   }
 
   @Subscription(() => NotificationEvent, {
@@ -62,7 +62,7 @@ export class NotificationsSubscriptionResolver {
     // be updated to verify access before returning the async iterator.
     this.requireAuthenticatedConnection(context);
 
-    return this.pubSub.asyncIterator(planLifecycleTopic(planId));
+    return this.pubSub.asyncIterableIterator(planLifecycleTopic(planId));
   }
 
   private requireAuthenticatedConnection(context: { userId?: string }): void {

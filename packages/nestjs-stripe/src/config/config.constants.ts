@@ -4,7 +4,7 @@
  * dashboard default so a Stripe-side default bump cannot silently change payload structure.
  * Matches the version the installed `stripe` SDK types are generated against.
  */
-export const STRIPE_API_VERSION = '2026-02-25.clover' as const;
+export const STRIPE_API_VERSION = '2026-10-28.endive' as const;
 
 /**
  * @description Automatic retries for transient network errors (timeouts, connection resets) on

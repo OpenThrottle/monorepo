@@ -25,7 +25,7 @@ export default defineConfig({
   cacheDir: '../../node_modules/.vite/tools/workflows',
   plugins: [
     dts({
-      rollupTypes: true,
+      bundleTypes: true,
       tsconfigPath: 'tsconfig.lib.json',
     }),
   ],

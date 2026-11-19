@@ -217,9 +217,10 @@ export class ConversationStreamService {
   subscribe(
     conversationId: string,
   ): AsyncGenerator<ConversationStreamChunkEnvelope> {
-    const live = this.pubSub.asyncIterator<ConversationStreamChunkEnvelope>(
-      conversationStreamTopic(conversationId),
-    );
+    const live =
+      this.pubSub.asyncIterableIterator<ConversationStreamChunkEnvelope>(
+        conversationStreamTopic(conversationId),
+      );
     const buffered = [...(this.buffers.get(conversationId) ?? [])];
 
     return this.replayThenLive(buffered, live);

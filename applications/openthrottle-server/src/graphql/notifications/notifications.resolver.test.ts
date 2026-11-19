@@ -6,7 +6,7 @@ import { NotificationsSubscriptionResolver } from './notifications.resolver.ts';
 
 const iterator = { next: vi.fn(), return: vi.fn(), throw: vi.fn() };
 const pubSub = createMock<PubSubEngine>({
-  asyncIterator: vi.fn().mockReturnValue(iterator),
+  asyncIterableIterator: vi.fn().mockReturnValue(iterator),
 });
 
 const resolver = new NotificationsSubscriptionResolver(pubSub);
@@ -15,7 +15,9 @@ describe('NotificationsSubscriptionResolver', () => {
   describe('notifications (firehose)', () => {
     it('subscribes to the firehose topic when authenticated', () => {
       const result = resolver.notifications({ userId: 'u1' });
-      expect(pubSub.asyncIterator).toHaveBeenCalledWith('notifications:all');
+      expect(pubSub.asyncIterableIterator).toHaveBeenCalledWith(
+        'notifications:all',
+      );
       expect(result).toBe(iterator);
     });
 
@@ -29,7 +31,9 @@ describe('NotificationsSubscriptionResolver', () => {
   describe('planNotifications', () => {
     it('subscribes to the per-plan lifecycle topic when authenticated', () => {
       resolver.planNotifications('p1', { userId: 'u1' });
-      expect(pubSub.asyncIterator).toHaveBeenCalledWith('plan:p1:lifecycle');
+      expect(pubSub.asyncIterableIterator).toHaveBeenCalledWith(
+        'plan:p1:lifecycle',
+      );
     });
 
     it('throws without an authenticated connection', () => {
