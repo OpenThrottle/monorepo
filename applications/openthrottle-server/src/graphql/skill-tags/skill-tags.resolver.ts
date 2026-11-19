@@ -21,6 +21,7 @@ import {
   RemoveSkillTagInput,
   RenameSkillTagInput,
 } from './skill-tags.input.ts';
+import { unwrapSkillTagWriteResult } from './skill-tags.utils.ts';
 
 @Resolver(() => SkillTagObject)
 @UseGuards(GqlPermissionsGuard)
@@ -39,22 +40,23 @@ export class SkillTagsResolver {
   }
 
   @Mutation(() => SkillTagObject, {
-    description: `Add a kebab-case tag to the authenticated user's skill-tag vocabulary.`,
+    description: `Add a kebab-case tag to the authenticated user's skill-tag vocabulary. A duplicate is rejected with extensions.code SKILL_TAG_CONFLICT.`,
   })
   @Permissions(PERMISSIONS.SETTINGS_WRITE)
   async addSkillTag(
     @CurrentUser('sub') userId: string,
     @Args('input', { type: () => AddSkillTagInput }) input: AddSkillTagInput,
   ): Promise<UserSkillTag> {
-    return this.skillTagsRepository.addTag(
+    const result = await this.skillTagsRepository.addTag(
       userId,
       input.tag,
       input.dimension ?? 'domain',
     );
+    return unwrapSkillTagWriteResult(result);
   }
 
   @Mutation(() => SkillTagObject, {
-    description: `Rename a tag in the authenticated user's skill-tag vocabulary.`,
+    description: `Rename a tag in the authenticated user's skill-tag vocabulary. A target the user already has is rejected with extensions.code SKILL_TAG_CONFLICT.`,
   })
   @Permissions(PERMISSIONS.SETTINGS_WRITE)
   async renameSkillTag(
@@ -62,7 +64,12 @@ export class SkillTagsResolver {
     @Args('input', { type: () => RenameSkillTagInput })
     input: RenameSkillTagInput,
   ): Promise<UserSkillTag> {
-    return this.skillTagsRepository.renameTag(userId, input.from, input.to);
+    const result = await this.skillTagsRepository.renameTag(
+      userId,
+      input.from,
+      input.to,
+    );
+    return unwrapSkillTagWriteResult(result);
   }
 
   @Mutation(() => Boolean, {

@@ -1,9 +1,5 @@
 import { createMock } from '@golevelup/ts-vitest';
-import {
-  BadRequestException,
-  ConflictException,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import {
@@ -127,9 +123,8 @@ describe('SkillTagsRepository', () => {
         const result = await repository.addTag(userId, '  pr-review  ');
 
         expect(result).toEqual({
-          dimension: 'domain',
-          tag: 'pr-review',
-          userId,
+          kind: 'ok',
+          value: { dimension: 'domain', tag: 'pr-review', userId },
         });
         expect(create).toHaveBeenCalledWith({
           dimension: 'domain',
@@ -157,12 +152,24 @@ describe('SkillTagsRepository', () => {
     });
 
     describe('when the user already has the tag', () => {
-      it('throws ConflictException', async () => {
+      it('returns a conflict result naming the normalized tag', async () => {
         save.mockRejectedValue(uniqueViolation());
 
-        await expect(
-          repository.addTag(userId, 'backend'),
-        ).rejects.toBeInstanceOf(ConflictException);
+        await expect(repository.addTag(userId, '  backend ')).resolves.toEqual({
+          kind: 'conflict',
+          tag: 'backend',
+        });
+      });
+    });
+
+    describe('when the save fails for another reason', () => {
+      it('rethrows the error', async () => {
+        const failure = new Error('connection reset');
+        save.mockRejectedValue(failure);
+
+        await expect(repository.addTag(userId, 'backend')).rejects.toBe(
+          failure,
+        );
       });
     });
   });
@@ -184,7 +191,7 @@ describe('SkillTagsRepository', () => {
 
         const result = await repository.renameTag(userId, 'backend', 'server');
 
-        expect(result.tag).toBe('server');
+        expect(result).toMatchObject({ kind: 'ok', value: { tag: 'server' } });
       });
 
       it('is a no-op when renaming to the same tag', async () => {
@@ -193,11 +200,11 @@ describe('SkillTagsRepository', () => {
 
         await expect(
           repository.renameTag(userId, 'backend', 'backend'),
-        ).resolves.toBe(existing);
+        ).resolves.toEqual({ kind: 'ok', value: existing });
         expect(save).not.toHaveBeenCalled();
       });
 
-      it('throws ConflictException when the target already exists', async () => {
+      it('returns a conflict result when the target already exists', async () => {
         findOne.mockResolvedValue(
           skillTagsFactory.build({ tag: 'backend', userId }),
         );
@@ -205,7 +212,7 @@ describe('SkillTagsRepository', () => {
 
         await expect(
           repository.renameTag(userId, 'backend', 'frontend'),
-        ).rejects.toBeInstanceOf(ConflictException);
+        ).resolves.toEqual({ kind: 'conflict', tag: 'frontend' });
       });
     });
 
