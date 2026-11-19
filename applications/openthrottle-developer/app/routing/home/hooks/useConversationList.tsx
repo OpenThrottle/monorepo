@@ -1,5 +1,6 @@
 import {
   useConversationList as useSharedConversationList,
+  type UseConversationListOptions as SharedConversationListOptions,
   type UseConversationListResult as SharedConversationListResult,
 } from '@openthrottle/react-router-chat';
 
@@ -12,9 +13,11 @@ export type UseConversationListResult = SharedConversationListResult;
  * existing importers (`useHeaderChatController`, `_index`, `HomeComposer`,
  * `useHomeComposer`) and their mocks.
  */
-export function useConversationList(): UseConversationListResult {
+export function useConversationList(
+  options: SharedConversationListOptions,
+): UseConversationListResult {
   // Hooks
-  const conversationList = useSharedConversationList();
+  const conversationList = useSharedConversationList(options);
 
   // Setup
 

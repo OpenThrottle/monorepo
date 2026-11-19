@@ -121,8 +121,9 @@ export default function Component(
   turnRef.current = turn;
 
   // Persisted-conversation list backing the sidebar (list + rename + delete +
-  // refresh); posts to the route-independent resource action.
-  const conversationList = useConversationList();
+  // refresh); posts to the route-independent resource action. `/` sits behind
+  // authMiddleware, so a rendered home route always has a user.
+  const conversationList = useConversationList({ enabled: true });
 
   // Setup
   const isEmptyThread = turn.messages.length === 0;

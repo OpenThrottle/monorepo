@@ -21,11 +21,12 @@ function conversationsPage(
 }
 
 interface HarnessProps {
+  readonly enabled: boolean;
   readonly onRender: (result: UseConversationListResult) => void;
 }
 
-function Harness({ onRender }: HarnessProps): React.ReactElement {
-  const list = useConversationList();
+function Harness({ enabled, onRender }: HarnessProps): React.ReactElement {
+  const list = useConversationList({ enabled });
 
   React.useEffect(() => {
     onRender(list);
@@ -60,6 +61,7 @@ function Harness({ onRender }: HarnessProps): React.ReactElement {
 function renderConversationList(
   action: (args: { request: Request }) => Promise<unknown> | unknown,
   pageLoader: (() => null) | undefined = undefined,
+  enabled = true,
 ): {
   readonly getByTestId: (testId: string) => HTMLElement;
   readonly latest: { current: UseConversationListResult | null };
@@ -73,6 +75,7 @@ function renderConversationList(
       // eslint-disable-next-line react/no-multi-comp -- inline route component composing the module-level Harness
       Component: (): React.ReactElement => (
         <Harness
+          enabled={enabled}
           onRender={(result) => {
             latest.current = result;
           }}
@@ -92,6 +95,29 @@ function renderConversationList(
 }
 
 describe('useConversationList', () => {
+  describe('when disabled (logged out)', () => {
+    test('issues no request to the protected list action', async () => {
+      let calls = 0;
+      const { latest } = renderConversationList(
+        () => {
+          calls += 1;
+          return { conversations: conversationsPage(0, 1), totalCount: 1 };
+        },
+        undefined,
+        false,
+      );
+
+      await waitFor(() => {
+        expect(latest.current).not.toBeNull();
+      });
+      // Mount effects have run by now: a list submit would already have moved
+      // the fetcher out of `idle`, which reads as `isLoading` on an empty list.
+      expect(latest.current?.isLoading).toBe(false);
+      expect(calls).toBe(0);
+      expect(latest.current?.conversations).toEqual([]);
+    });
+  });
+
   test('loads the first page once on mount', async () => {
     const { latest } = renderConversationList(async ({ request }) => {
       const body = await request.formData();

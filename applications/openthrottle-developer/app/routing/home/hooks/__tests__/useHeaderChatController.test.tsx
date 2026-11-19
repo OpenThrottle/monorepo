@@ -5,7 +5,7 @@ import {
 } from '@openthrottle/react-router-chat-state';
 import { GlobalProviders } from '@openthrottle/react-router-ui-global';
 import type { RenderResult } from '@testing-library/react';
-import { render, waitFor } from '@testing-library/react';
+import { act, render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { getDefaultStore } from 'jotai';
 import { createRoutesStub } from 'react-router';
@@ -46,11 +46,25 @@ describe('useHeaderChatController (header chat surface)', () => {
     typeof vi.fn<(entries: Record<string, FormDataEntryValue>) => void>
   >;
   let chatOptionsLoader: ReturnType<typeof vi.fn<() => typeof chatOptions>>;
+  let conversationsAction: ReturnType<
+    typeof vi.fn<
+      () => {
+        conversations: never[];
+        errorMessage: null;
+        totalCount: number;
+      }
+    >
+  >;
 
   beforeEach(() => {
     store.set(chatToolbarStateAtom, DEFAULT_CHAT_TOOLBAR_STATE);
     actionSpy = vi.fn();
     chatOptionsLoader = vi.fn(() => chatOptions);
+    conversationsAction = vi.fn(() => ({
+      conversations: [],
+      errorMessage: null,
+      totalCount: 0,
+    }));
     // Isolate the client-side discovery cache between tests.
     clearChatOptionsCache();
   });
@@ -60,9 +74,9 @@ describe('useHeaderChatController (header chat surface)', () => {
     clearChatOptionsCache();
   });
 
-  const renderHeader = (): RenderResult => {
+  const renderHeader = (enabled = true): RenderResult => {
     const Harness = () => {
-      const chat = useHeaderChatController({ enabled: true });
+      const chat = useHeaderChatController({ enabled });
       return (
         <GlobalProviders chat={chat}>
           <ChatDialog open={true} title="Assistant" triggerLabel="Chat" />
@@ -78,11 +92,7 @@ describe('useHeaderChatController (header chat surface)', () => {
       },
       {
         // The switcher's mount-time list fetch resolves empty here.
-        action: () => ({
-          conversations: [],
-          errorMessage: null,
-          totalCount: 0,
-        }),
+        action: () => conversationsAction(),
         path: '/resources/agent-conversations',
       },
       {
@@ -156,5 +166,27 @@ describe('useHeaderChatController (header chat surface)', () => {
     expect(
       await component.findByTestId('ChatComposerToolbar'),
     ).toBeInTheDocument();
+  });
+
+  describe('when disabled (logged out)', () => {
+    test('fires no protected fetcher', async () => {
+      const component = renderHeader(false);
+
+      expect(
+        await component.findByTestId('ChatComposerToolbar'),
+      ).toBeInTheDocument();
+      // Let any mount-time fetcher reach its route handler before asserting.
+      await act(async () => {
+        await Promise.resolve();
+      });
+      expect(conversationsAction).not.toHaveBeenCalled();
+      expect(chatOptionsLoader).not.toHaveBeenCalled();
+    });
+  });
+
+  test('lists conversations on mount when enabled', async () => {
+    renderHeader();
+
+    await waitFor(() => expect(conversationsAction).toHaveBeenCalledTimes(1));
   });
 });

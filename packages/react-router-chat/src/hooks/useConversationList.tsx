@@ -9,6 +9,15 @@ import type {
 } from '../types';
 
 /** @public */
+export interface UseConversationListOptions {
+  /**
+   * Whether the list may be fetched. The list action is protected, so a
+   * logged-out host passes `false`: no request fires until it turns `true`.
+   */
+  readonly enabled: boolean;
+}
+
+/** @public */
 export interface UseConversationListResult {
   readonly conversations: readonly AgentConversationListItem[];
   /**
@@ -39,10 +48,14 @@ export interface UseConversationListResult {
  * soft-delete, and a refresh used when a new conversation appears server-side.
  * Posts every op to the route-independent `/resources/agent-conversations`
  * action so the home route and the header switcher — across both apps — share
- * one code path.
+ * one code path. Nothing is fetched while `enabled` is false.
  * @public
  */
-export function useConversationList(): UseConversationListResult {
+export function useConversationList(
+  options: UseConversationListOptions,
+): UseConversationListResult {
+  const { enabled } = options;
+
   // Hooks
   const listFetcher = useFetcher<ListAgentConversationsResult>();
   const mutateFetcher = useFetcher<MutateAgentConversationResult>();
@@ -114,14 +127,15 @@ export function useConversationList(): UseConversationListResult {
   // Markup
 
   // Life Cycle
-  // Initial load (once).
+  // Initial load (once), deferred until the host enables it — a logged-out
+  // page must fire no request at the protected list action.
   React.useEffect(() => {
-    if (loadedOnce.current) {
+    if (!enabled || loadedOnce.current) {
       return;
     }
     loadedOnce.current = true;
     fetchPage(0);
-  }, []);
+  }, [enabled]);
 
   // Merge each loaded page into the accumulated list. Append + dedup by id, so
   // a `refresh` (which clears first) replaces, load-more appends, and an

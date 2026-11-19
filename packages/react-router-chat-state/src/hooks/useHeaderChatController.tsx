@@ -100,7 +100,7 @@ export function useHeaderChatController(
     () => optionsCache?.read() ?? null,
   );
   const turn = useAgenticChatTurn({ streamClient, streamDocument });
-  const conversationList = useConversationList();
+  const conversationList = useConversationList({ enabled });
   const [toolbarState, setToolbarState] = useAtom(chatToolbarStateAtom);
   // Dedupes the "new conversation created" refresh to one per conversation id.
   const refreshedForIdRef = React.useRef<string | null>(null);
