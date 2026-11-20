@@ -804,8 +804,8 @@ catalogs:
       specifier: 1.4.0
       version: 1.4.0
     typeorm:
-      specifier: ^0.3.28
-      version: 0.3.31
+      specifier: ^1.1.3
+      version: 1.1.3
     typescript:
       specifier: npm:@typescript/typescript6@^6.0.2
       version: 6.0.2
@@ -865,6 +865,8 @@ overrides:
   nx>yaml: ^2.9.1
   '@langchain/classic': 1.0.57
   js-yaml@^5: ~5.4.2
+  '@langchain/classic>typeorm': '-'
+  '@langchain/community>typeorm': '-'
   zod: ^4.6.7
   zod-to-json-schema: ^3.25.2
 
@@ -958,7 +960,7 @@ importers:
         version: 2.9.1
       typeorm:
         specifier: 'catalog:'
-        version: 0.3.31(babel-plugin-macros@3.1.0)(ioredis@5.11.1(supports-color@8.1.1))(pg@8.23.1)(supports-color@8.1.1)(ts-node@10.9.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(@types/node@24.19.2)(@typescript/typescript6@6.0.2))
+        version: 1.1.3(babel-plugin-macros@3.1.0)(ioredis@5.11.1(supports-color@8.1.1))(pg@8.23.1)(supports-color@8.1.1)(ts-node@10.9.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(@types/node@24.19.2)(@typescript/typescript6@6.0.2))
       typescript:
         specifier: 'catalog:'
         version: '@typescript/typescript6@6.0.2'
@@ -1674,7 +1676,7 @@ importers:
         version: 6.7.1(@nestjs/common@12.4.2(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.4.2)(reflect-metadata@0.2.2)
       '@nestjs/typeorm':
         specifier: 'catalog:'
-        version: 12.0.3(@nestjs/common@12.4.2(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.4.2)(reflect-metadata@0.2.2)(rxjs@7.8.2)(typeorm@0.3.31(babel-plugin-macros@3.1.0)(ioredis@5.11.1(supports-color@8.1.1))(pg@8.23.1)(supports-color@8.1.1)(ts-node@10.9.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(@types/node@24.19.2)(@typescript/typescript6@6.0.2)))
+        version: 12.0.3(@nestjs/common@12.4.2(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.4.2)(reflect-metadata@0.2.2)(rxjs@7.8.2)(typeorm@1.1.3(babel-plugin-macros@3.1.0)(ioredis@5.11.1(supports-color@8.1.1))(pg@8.23.1)(supports-color@8.1.1)(ts-node@10.9.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(@types/node@24.19.2)(@typescript/typescript6@6.0.2)))
       '@openthrottle/agentic-evals':
         specifier: workspace:^
         version: link:../../packages/agentic-evals
@@ -1827,7 +1829,7 @@ importers:
         version: 2.9.1
       typeorm:
         specifier: 'catalog:'
-        version: 0.3.31(babel-plugin-macros@3.1.0)(ioredis@5.11.1(supports-color@8.1.1))(pg@8.23.1)(supports-color@8.1.1)(ts-node@10.9.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(@types/node@24.19.2)(@typescript/typescript6@6.0.2))
+        version: 1.1.3(babel-plugin-macros@3.1.0)(ioredis@5.11.1(supports-color@8.1.1))(pg@8.23.1)(supports-color@8.1.1)(ts-node@10.9.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(@types/node@24.19.2)(@typescript/typescript6@6.0.2))
       zod:
         specifier: ^4.6.7
         version: 4.6.7
@@ -2351,10 +2353,10 @@ importers:
     dependencies:
       '@langchain/classic':
         specifier: 1.0.57
-        version: 1.0.57(@langchain/core@1.4.0(@opentelemetry/api@1.10.0)(openai@7.56.0(google-auth-library@11.3.4(supports-color@8.1.1))(undici@8.12.4)(ws@8.21.3)(zod@4.6.7))(ws@8.21.3))(@opentelemetry/api@1.10.0)(cheerio@1.2.0)(google-auth-library@11.3.4(supports-color@8.1.1))(openai@7.56.0(google-auth-library@11.3.4(supports-color@8.1.1))(undici@8.12.4)(ws@8.21.3)(zod@4.6.7))(typeorm@0.3.31(babel-plugin-macros@3.1.0)(ioredis@5.11.1(supports-color@8.1.1))(pg@8.23.1)(supports-color@8.1.1)(ts-node@10.9.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(@types/node@24.19.2)(@typescript/typescript6@6.0.2)))(undici@8.12.4)(ws@8.21.3)
+        version: 1.0.57(@langchain/core@1.4.0(@opentelemetry/api@1.10.0)(openai@7.56.0(google-auth-library@11.3.4(supports-color@8.1.1))(undici@8.12.4)(ws@8.21.3)(zod@4.6.7))(ws@8.21.3))(@opentelemetry/api@1.10.0)(cheerio@1.2.0)(google-auth-library@11.3.4(supports-color@8.1.1))(openai@7.56.0(google-auth-library@11.3.4(supports-color@8.1.1))(undici@8.12.4)(ws@8.21.3)(zod@4.6.7))(undici@8.12.4)(ws@8.21.3)
       '@langchain/community':
         specifier: 'catalog:'
-        version: 1.1.29(7f6f26784f335ad7e707577afce45883)
+        version: 1.1.29(4378820c62dfab64c9c0e6c16a802846)
       '@langchain/core':
         specifier: 'catalog:'
         version: 1.4.0(@opentelemetry/api@1.10.0)(openai@7.56.0(google-auth-library@11.3.4(supports-color@8.1.1))(undici@8.12.4)(ws@8.21.3)(zod@4.6.7))(ws@8.21.3)
@@ -2527,7 +2529,7 @@ importers:
         version: 2.2.3
       typeorm:
         specifier: 'catalog:'
-        version: 0.3.31(babel-plugin-macros@3.1.0)(ioredis@5.11.1(supports-color@8.1.1))(pg@8.23.1)(supports-color@8.1.1)(ts-node@10.9.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(@types/node@24.19.2)(@typescript/typescript6@6.0.2))
+        version: 1.1.3(babel-plugin-macros@3.1.0)(ioredis@5.11.1(supports-color@8.1.1))(pg@8.23.1)(supports-color@8.1.1)(ts-node@10.9.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(@types/node@24.19.2)(@typescript/typescript6@6.0.2))
     devDependencies:
       '@faker-js/faker':
         specifier: 'catalog:'
@@ -2627,7 +2629,7 @@ importers:
         version: 14.2.0(@nestjs/common@12.4.2(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.4.2)(@typescript/typescript6@6.0.2)(graphql@16.14.2)(reflect-metadata@0.2.2)(ts-morph@28.0.0)
       '@nestjs/typeorm':
         specifier: 'catalog:'
-        version: 12.0.3(@nestjs/common@12.4.2(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.4.2)(reflect-metadata@0.2.2)(rxjs@7.8.2)(typeorm@0.3.31(babel-plugin-macros@3.1.0)(ioredis@5.11.1(supports-color@8.1.1))(pg@8.23.1)(supports-color@8.1.1)(ts-node@10.9.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(@types/node@24.19.2)(@typescript/typescript6@6.0.2)))
+        version: 12.0.3(@nestjs/common@12.4.2(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.4.2)(reflect-metadata@0.2.2)(rxjs@7.8.2)(typeorm@1.1.3(babel-plugin-macros@3.1.0)(ioredis@5.11.1(supports-color@8.1.1))(pg@8.23.1)(supports-color@8.1.1)(ts-node@10.9.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(@types/node@24.19.2)(@typescript/typescript6@6.0.2)))
       '@openthrottle/nestjs-auth':
         specifier: workspace:^
         version: link:../nestjs-auth
@@ -2651,7 +2653,7 @@ importers:
         version: 8.23.1
       typeorm:
         specifier: 'catalog:'
-        version: 0.3.31(babel-plugin-macros@3.1.0)(ioredis@5.11.1(supports-color@8.1.1))(pg@8.23.1)(supports-color@8.1.1)(ts-node@10.9.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(@types/node@24.19.2)(@typescript/typescript6@6.0.2))
+        version: 1.1.3(babel-plugin-macros@3.1.0)(ioredis@5.11.1(supports-color@8.1.1))(pg@8.23.1)(supports-color@8.1.1)(ts-node@10.9.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(@types/node@24.19.2)(@typescript/typescript6@6.0.2))
     devDependencies:
       '@faker-js/faker':
         specifier: 'catalog:'
@@ -2676,7 +2678,7 @@ importers:
         version: 12.4.2(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1)
       '@nestjs/typeorm':
         specifier: 'catalog:'
-        version: 12.0.3(@nestjs/common@12.4.2(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.4.2)(reflect-metadata@0.2.2)(rxjs@7.8.2)(typeorm@0.3.31(babel-plugin-macros@3.1.0)(ioredis@5.11.1(supports-color@8.1.1))(pg@8.23.1)(supports-color@8.1.1)(ts-node@10.9.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(@types/node@24.19.2)(@typescript/typescript6@6.0.2)))
+        version: 12.0.3(@nestjs/common@12.4.2(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.4.2)(reflect-metadata@0.2.2)(rxjs@7.8.2)(typeorm@1.1.3(babel-plugin-macros@3.1.0)(ioredis@5.11.1(supports-color@8.1.1))(pg@8.23.1)(supports-color@8.1.1)(ts-node@10.9.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(@types/node@24.19.2)(@typescript/typescript6@6.0.2)))
       '@openthrottle/agentic-token-usage':
         specifier: workspace:^
         version: link:../agentic-token-usage
@@ -2709,7 +2711,7 @@ importers:
         version: 8.23.1
       typeorm:
         specifier: 'catalog:'
-        version: 0.3.31(babel-plugin-macros@3.1.0)(ioredis@5.11.1(supports-color@8.1.1))(pg@8.23.1)(supports-color@8.1.1)(ts-node@10.9.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(@types/node@24.19.2)(@typescript/typescript6@6.0.2))
+        version: 1.1.3(babel-plugin-macros@3.1.0)(ioredis@5.11.1(supports-color@8.1.1))(pg@8.23.1)(supports-color@8.1.1)(ts-node@10.9.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(@types/node@24.19.2)(@typescript/typescript6@6.0.2))
     devDependencies:
       '@faker-js/faker':
         specifier: 'catalog:'
@@ -2737,7 +2739,7 @@ importers:
         version: 12.4.2(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1)
       '@nestjs/typeorm':
         specifier: 'catalog:'
-        version: 12.0.3(@nestjs/common@12.4.2(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.4.2)(reflect-metadata@0.2.2)(rxjs@7.8.2)(typeorm@0.3.31(babel-plugin-macros@3.1.0)(ioredis@5.11.1(supports-color@8.1.1))(pg@8.23.1)(supports-color@8.1.1)(ts-node@10.9.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(@types/node@24.19.2)(@typescript/typescript6@6.0.2)))
+        version: 12.0.3(@nestjs/common@12.4.2(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.4.2)(reflect-metadata@0.2.2)(rxjs@7.8.2)(typeorm@1.1.3(babel-plugin-macros@3.1.0)(ioredis@5.11.1(supports-color@8.1.1))(pg@8.23.1)(supports-color@8.1.1)(ts-node@10.9.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(@types/node@24.19.2)(@typescript/typescript6@6.0.2)))
       '@openthrottle/nestjs-auth':
         specifier: workspace:^
         version: link:../nestjs-auth
@@ -2746,7 +2748,7 @@ importers:
         version: link:../nestjs-modules
       typeorm:
         specifier: 'catalog:'
-        version: 0.3.31(babel-plugin-macros@3.1.0)(ioredis@5.11.1(supports-color@8.1.1))(pg@8.23.1)(supports-color@8.1.1)(ts-node@10.9.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(@types/node@24.19.2)(@typescript/typescript6@6.0.2))
+        version: 1.1.3(babel-plugin-macros@3.1.0)(ioredis@5.11.1(supports-color@8.1.1))(pg@8.23.1)(supports-color@8.1.1)(ts-node@10.9.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(@types/node@24.19.2)(@typescript/typescript6@6.0.2))
     devDependencies:
       '@golevelup/ts-vitest':
         specifier: 'catalog:'
@@ -2889,7 +2891,7 @@ importers:
         version: 8.23.1
       typeorm:
         specifier: 'catalog:'
-        version: 0.3.31(babel-plugin-macros@3.1.0)(ioredis@5.11.1(supports-color@8.1.1))(pg@8.23.1)(supports-color@8.1.1)(ts-node@10.9.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(@types/node@24.19.2)(@typescript/typescript6@6.0.2))
+        version: 1.1.3(babel-plugin-macros@3.1.0)(ioredis@5.11.1(supports-color@8.1.1))(pg@8.23.1)(supports-color@8.1.1)(ts-node@10.9.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(@types/node@24.19.2)(@typescript/typescript6@6.0.2))
     devDependencies:
       vitest:
         specifier: 'catalog:'
@@ -2912,7 +2914,7 @@ importers:
         version: 12.4.2(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1)
       '@nestjs/typeorm':
         specifier: 'catalog:'
-        version: 12.0.3(@nestjs/common@12.4.2(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.4.2)(reflect-metadata@0.2.2)(rxjs@7.8.2)(typeorm@0.3.31(babel-plugin-macros@3.1.0)(ioredis@5.11.1(supports-color@8.1.1))(pg@8.23.1)(supports-color@8.1.1)(ts-node@10.9.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(@types/node@24.19.2)(@typescript/typescript6@6.0.2)))
+        version: 12.0.3(@nestjs/common@12.4.2(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.4.2)(reflect-metadata@0.2.2)(rxjs@7.8.2)(typeorm@1.1.3(babel-plugin-macros@3.1.0)(ioredis@5.11.1(supports-color@8.1.1))(pg@8.23.1)(supports-color@8.1.1)(ts-node@10.9.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(@types/node@24.19.2)(@typescript/typescript6@6.0.2)))
       '@openthrottle/nestjs-modules':
         specifier: workspace:^
         version: link:../nestjs-modules
@@ -2924,7 +2926,7 @@ importers:
         version: link:../openthrottle-ide
       typeorm:
         specifier: 'catalog:'
-        version: 0.3.31(babel-plugin-macros@3.1.0)(ioredis@5.11.1(supports-color@8.1.1))(pg@8.23.1)(supports-color@8.1.1)(ts-node@10.9.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(@types/node@24.19.2)(@typescript/typescript6@6.0.2))
+        version: 1.1.3(babel-plugin-macros@3.1.0)(ioredis@5.11.1(supports-color@8.1.1))(pg@8.23.1)(supports-color@8.1.1)(ts-node@10.9.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(@types/node@24.19.2)(@typescript/typescript6@6.0.2))
     devDependencies:
       '@golevelup/ts-vitest':
         specifier: 'catalog:'
@@ -2999,7 +3001,7 @@ importers:
         version: 8.23.1
       typeorm:
         specifier: 'catalog:'
-        version: 0.3.31(babel-plugin-macros@3.1.0)(ioredis@5.11.1(supports-color@8.1.1))(pg@8.23.1)(supports-color@8.1.1)(ts-node@10.9.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(@types/node@24.19.2)(@typescript/typescript6@6.0.2))
+        version: 1.1.3(babel-plugin-macros@3.1.0)(ioredis@5.11.1(supports-color@8.1.1))(pg@8.23.1)(supports-color@8.1.1)(ts-node@10.9.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(@types/node@24.19.2)(@typescript/typescript6@6.0.2))
     devDependencies:
       vitest:
         specifier: 'catalog:'
@@ -3199,7 +3201,7 @@ importers:
         version: link:../openthrottle-agentic-utils
       '@rekog/mcp-nest':
         specifier: 'catalog:'
-        version: 1.9.11(5c349b9820fea7f387f93420b78b79e1)
+        version: 1.9.11(535b2b3a1c1edf88b4c93f5f2ddfd988)
       dotenv:
         specifier: 'catalog:'
         version: 18.0.10
@@ -3295,7 +3297,7 @@ importers:
         version: 8.23.1
       typeorm:
         specifier: 'catalog:'
-        version: 0.3.31(babel-plugin-macros@3.1.0)(ioredis@5.11.1(supports-color@8.1.1))(pg@8.23.1)(supports-color@8.1.1)(ts-node@10.9.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(@types/node@24.19.2)(@typescript/typescript6@6.0.2))
+        version: 1.1.3(babel-plugin-macros@3.1.0)(ioredis@5.11.1(supports-color@8.1.1))(pg@8.23.1)(supports-color@8.1.1)(ts-node@10.9.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(@types/node@24.19.2)(@typescript/typescript6@6.0.2))
     devDependencies:
       playwright:
         specifier: 'catalog:'
@@ -6597,13 +6599,10 @@ packages:
       '@langchain/core': ^1.3.1
       cheerio: '*'
       peggy: ^5.1.0
-      typeorm: '*'
     peerDependenciesMeta:
       cheerio:
         optional: true
       peggy:
-        optional: true
-      typeorm:
         optional: true
 
   '@langchain/community@1.1.29':
@@ -6726,7 +6725,6 @@ packages:
       replicate: '*'
       sonix-speech-recognition: ^2.1.1
       srt-parser-2: ^1.2.3
-      typeorm: ^0.3.28
       typesense: ^3.0.1
       usearch: ^1.1.1
       voy-search: 0.6.3
@@ -6954,8 +6952,6 @@ packages:
       sonix-speech-recognition:
         optional: true
       srt-parser-2:
-        optional: true
-      typeorm:
         optional: true
       typesense:
         optional: true
@@ -11323,10 +11319,6 @@ packages:
       dmg-builder: 26.18.0
       electron-builder-squirrel-windows: 26.18.0
 
-  app-root-path@3.1.0:
-    resolution: {integrity: sha512-biN3PwB2gUtjaYy/isrU3aNWI5w+fAfvHkSvCKeQGxhmYpwKFUxudR3Yya+KqVRHBmEDYh+/lTozYCFbmzX4nA==}
-    engines: {node: '>= 6.0.0'}
-
   append-field@1.0.0:
     resolution: {integrity: sha512-klpgFSWLW1ZEs8svjfb7g4qWY0YS5imI82dTg+QahUvJ8YqAY0P10Uk8tTyh9ZGuYEZEMaeJYCF5BFuX552hsw==}
 
@@ -11666,9 +11658,6 @@ packages:
 
   buffer@5.7.1:
     resolution: {integrity: sha512-EHcyIPBQ4BSGlvjB16k5KgAJ27CIsHY/2JBmCRReo48y9rQ3MaUzWX3KVlBa4U7MyX02HdVj0K7C3WaB3ju7FQ==}
-
-  buffer@6.0.3:
-    resolution: {integrity: sha512-FTiCpNxtwiZZHEZbcbTIcZjERVICn9yq/pDFkTl95/AxzD1naBctN7YO68riM/gLSDY7sdrMby8hofADYuuqOA==}
 
   builder-util-runtime@9.7.0:
     resolution: {integrity: sha512-g/kR520giAFYkSXTzcmF3kqQq7wi8F6N6SzeDgZrqTBN+VHdmgWOyTdD1yD7AATDId/yXLvuP34CxW46/BwCdw==}
@@ -12300,6 +12289,9 @@ packages:
 
   dayjs@1.11.21:
     resolution: {integrity: sha512-98IT+HOahAisibz/yjKbzuOBwYcjJ7BCLPzARyHiyEBmRz4fatF+KPJszEHXsGYjUG234aH/cOjW1wwTbKUZlA==}
+
+  dayjs@1.11.23:
+    resolution: {integrity: sha512-QDTCU0M0MxR3hQfnlDJfwekQiaanm1ubOD231u73WBckQ/fsamwRLiE2GBz6D3a/xF1NgfiDLJjXBa1hYOYTtQ==}
 
   debounce@2.2.0:
     resolution: {integrity: sha512-Xks6RUDLZFdz8LIdR6q0MTH44k7FikOmnh5xkSjMig6ch45afc8sjTjRQf3P6ax8dMgcQrYO/AR2RGWURrruqw==}
@@ -17314,27 +17306,26 @@ packages:
   typed-query-selector@2.12.3:
     resolution: {integrity: sha512-/dtuMZyutHLlrxWhhC1uib00ELUr2dZ8C9B8YzZYsJmeE3V56OxRblrSM2UaF142pcMtak7ehZ6+poWGeehNIg==}
 
-  typeorm@0.3.31:
-    resolution: {integrity: sha512-6u9EFtdLBgHjnPm78NStVeM+I/1MolTzKykDDcydzKUkh6E++YS6XViU/fePJbvDvEGU4Xq34KOM/CLeer9I2A==}
-    engines: {node: '>=16.13.0'}
+  typeorm@1.1.3:
+    resolution: {integrity: sha512-zpBWklzlWjoPFKZ5Frf1TWT9OzXqtJaej7HvdGGvx0TQLsKgSoG2HeKVbORXZhJNWhJ8BNFK+WqsogyuMGN2dQ==}
+    engines: {node: ^20.19.0 || ^22.13.0 || >=24.11.0}
     hasBin: true
     peerDependencies:
-      '@google-cloud/spanner': ^5.18.0 || ^6.0.0 || ^7.0.0 || ^8.0.0
+      '@google-cloud/spanner': ^8.0.0
       '@sap/hana-client': ^2.14.22
-      better-sqlite3: ^8.0.0 || ^9.0.0 || ^10.0.0 || ^11.0.0 || ^12.0.0
+      better-sqlite3: ^12.0.0
       ioredis: ^5.0.4
-      mongodb: ^5.8.0 || ^6.0.0
-      mssql: ^9.1.1 || ^10.0.0 || ^11.0.0 || ^12.0.0
-      mysql2: ^2.2.5 || ^3.0.1
+      mongodb: ^7.0.0
+      mssql: ^12.0.0
+      mysql2: ^3.15.3
       oracledb: ^6.3.0 || ^7.0.0
       pg: ^8.5.1
       pg-native: ^3.0.0
       pg-query-stream: ^4.0.0
-      redis: ^3.1.1 || ^4.0.0 || ^5.0.14
+      redis: ^5.0.0 || ^6.0.0
       sql.js: ^1.4.0
-      sqlite3: ^5.0.3 || ^6.0.0
-      ts-node: ^10.7.0
-      typeorm-aurora-data-api-driver: ^2.0.0 || ^3.0.0
+      ts-node: ^10.9.2
+      typeorm-aurora-data-api-driver: ^3.0.0
     peerDependenciesMeta:
       '@google-cloud/spanner':
         optional: true
@@ -17361,8 +17352,6 @@ packages:
       redis:
         optional: true
       sql.js:
-        optional: true
-      sqlite3:
         optional: true
       ts-node:
         optional: true
@@ -17651,10 +17640,6 @@ packages:
   utils-merge@1.0.1:
     resolution: {integrity: sha512-pMZTvIkT1d+TFGvDOqodOclx0QWkkgi6Tdoa8gC8ffGAAqz9pzPTZWAybbsHHoED/ztMtkv/VoYTYyShUn81hA==}
     engines: {node: '>= 0.4.0'}
-
-  uuid@11.1.1:
-    resolution: {integrity: sha512-vIYxrBCC/N/K+Js3qSN88go7kIfNPssr/hHCesKCQNAjmgvYS2oqr69kIufEG+O4+PfezOH4EbIeHCfFov8ZgQ==}
-    hasBin: true
 
   uuid@14.0.3:
     resolution: {integrity: sha512-Sc5u1VVln93y1Xnz4R+CunOZc7R9LUcTmhj7Rc7Eg3HVcf7rVn2FOoa812fe0W8p3jD7xeoGSYbfqCGGH2B6xw==}
@@ -20945,7 +20930,7 @@ snapshots:
 
   '@keyv/serialize@1.1.1': {}
 
-  '@langchain/classic@1.0.57(@langchain/core@1.4.0(@opentelemetry/api@1.10.0)(openai@7.56.0(google-auth-library@11.3.4(supports-color@8.1.1))(undici@8.12.4)(ws@8.21.3)(zod@4.6.7))(ws@8.21.3))(@opentelemetry/api@1.10.0)(cheerio@1.2.0)(google-auth-library@11.3.4(supports-color@8.1.1))(openai@7.56.0(google-auth-library@11.3.4(supports-color@8.1.1))(undici@8.12.4)(ws@8.21.3)(zod@4.6.7))(typeorm@0.3.31(babel-plugin-macros@3.1.0)(ioredis@5.11.1(supports-color@8.1.1))(pg@8.23.1)(supports-color@8.1.1)(ts-node@10.9.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(@types/node@24.19.2)(@typescript/typescript6@6.0.2)))(undici@8.12.4)(ws@8.21.3)':
+  '@langchain/classic@1.0.57(@langchain/core@1.4.0(@opentelemetry/api@1.10.0)(openai@7.56.0(google-auth-library@11.3.4(supports-color@8.1.1))(undici@8.12.4)(ws@8.21.3)(zod@4.6.7))(ws@8.21.3))(@opentelemetry/api@1.10.0)(cheerio@1.2.0)(google-auth-library@11.3.4(supports-color@8.1.1))(openai@7.56.0(google-auth-library@11.3.4(supports-color@8.1.1))(undici@8.12.4)(ws@8.21.3)(zod@4.6.7))(undici@8.12.4)(ws@8.21.3)':
     dependencies:
       '@langchain/core': 1.4.0(@opentelemetry/api@1.10.0)(openai@7.56.0(google-auth-library@11.3.4(supports-color@8.1.1))(undici@8.12.4)(ws@8.21.3)(zod@4.6.7))(ws@8.21.3)
       '@langchain/openai': 1.8.0(@langchain/core@1.4.0(@opentelemetry/api@1.10.0)(openai@7.56.0(google-auth-library@11.3.4(supports-color@8.1.1))(undici@8.12.4)(ws@8.21.3)(zod@4.6.7))(ws@8.21.3))(google-auth-library@11.3.4(supports-color@8.1.1))(undici@8.12.4)(ws@8.21.3)
@@ -20959,7 +20944,6 @@ snapshots:
     optionalDependencies:
       cheerio: 1.2.0
       langsmith: 0.12.0(@opentelemetry/api@1.10.0)(openai@7.56.0(google-auth-library@11.3.4(supports-color@8.1.1))(undici@8.12.4)(ws@8.21.3)(zod@4.6.7))(ws@8.21.3)
-      typeorm: 0.3.31(babel-plugin-macros@3.1.0)(ioredis@5.11.1(supports-color@8.1.1))(pg@8.23.1)(supports-color@8.1.1)(ts-node@10.9.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(@types/node@24.19.2)(@typescript/typescript6@6.0.2))
     transitivePeerDependencies:
       - '@aws-sdk/credential-provider-node'
       - '@opentelemetry/api'
@@ -20972,11 +20956,11 @@ snapshots:
       - undici
       - ws
 
-  '@langchain/community@1.1.29(7f6f26784f335ad7e707577afce45883)':
+  '@langchain/community@1.1.29(4378820c62dfab64c9c0e6c16a802846)':
     dependencies:
       '@browserbasehq/stagehand': 1.14.0(@playwright/test@1.62.1)(deepmerge@4.3.1)(dotenv@16.6.1)(encoding@0.1.13)(openai@7.56.0(google-auth-library@11.3.4(supports-color@8.1.1))(undici@8.12.4)(ws@8.21.3)(zod@4.6.7))(zod@4.6.7)
       '@ibm-cloud/watsonx-ai': 1.7.15(supports-color@8.1.1)
-      '@langchain/classic': 1.0.57(@langchain/core@1.4.0(@opentelemetry/api@1.10.0)(openai@7.56.0(google-auth-library@11.3.4(supports-color@8.1.1))(undici@8.12.4)(ws@8.21.3)(zod@4.6.7))(ws@8.21.3))(@opentelemetry/api@1.10.0)(cheerio@1.2.0)(google-auth-library@11.3.4(supports-color@8.1.1))(openai@7.56.0(google-auth-library@11.3.4(supports-color@8.1.1))(undici@8.12.4)(ws@8.21.3)(zod@4.6.7))(typeorm@0.3.31(babel-plugin-macros@3.1.0)(ioredis@5.11.1(supports-color@8.1.1))(pg@8.23.1)(supports-color@8.1.1)(ts-node@10.9.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(@types/node@24.19.2)(@typescript/typescript6@6.0.2)))(undici@8.12.4)(ws@8.21.3)
+      '@langchain/classic': 1.0.57(@langchain/core@1.4.0(@opentelemetry/api@1.10.0)(openai@7.56.0(google-auth-library@11.3.4(supports-color@8.1.1))(undici@8.12.4)(ws@8.21.3)(zod@4.6.7))(ws@8.21.3))(@opentelemetry/api@1.10.0)(cheerio@1.2.0)(google-auth-library@11.3.4(supports-color@8.1.1))(openai@7.56.0(google-auth-library@11.3.4(supports-color@8.1.1))(undici@8.12.4)(ws@8.21.3)(zod@4.6.7))(undici@8.12.4)(ws@8.21.3)
       '@langchain/core': 1.4.0(@opentelemetry/api@1.10.0)(openai@7.56.0(google-auth-library@11.3.4(supports-color@8.1.1))(undici@8.12.4)(ws@8.21.3)(zod@4.6.7))(ws@8.21.3)
       '@langchain/openai': 1.8.4(@langchain/core@1.4.0(@opentelemetry/api@1.10.0)(openai@7.56.0(google-auth-library@11.3.4(supports-color@8.1.1))(undici@8.12.4)(ws@8.21.3)(zod@4.6.7))(ws@8.21.3))(google-auth-library@11.3.4(supports-color@8.1.1))(undici@8.12.4)(ws@8.21.3)
       binary-extensions: 2.3.0
@@ -21002,7 +20986,6 @@ snapshots:
       pdf-parse: 2.4.5
       pg: 8.23.1
       playwright: 1.62.1
-      typeorm: 0.3.31(babel-plugin-macros@3.1.0)(ioredis@5.11.1(supports-color@8.1.1))(pg@8.23.1)(supports-color@8.1.1)(ts-node@10.9.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(@types/node@24.19.2)(@typescript/typescript6@6.0.2))
       ws: 8.21.3
       youtubei.js: 18.3.0
     transitivePeerDependencies:
@@ -21588,13 +21571,13 @@ snapshots:
       '@nestjs/core': 12.4.2(@nestjs/common@12.4.2(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/platform-express@12.4.2)(@nestjs/websockets@12.4.2)(reflect-metadata@0.2.2)(rxjs@7.8.2)
       reflect-metadata: 0.2.2
 
-  '@nestjs/typeorm@12.0.3(@nestjs/common@12.4.2(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.4.2)(reflect-metadata@0.2.2)(rxjs@7.8.2)(typeorm@0.3.31(babel-plugin-macros@3.1.0)(ioredis@5.11.1(supports-color@8.1.1))(pg@8.23.1)(supports-color@8.1.1)(ts-node@10.9.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(@types/node@24.19.2)(@typescript/typescript6@6.0.2)))':
+  '@nestjs/typeorm@12.0.3(@nestjs/common@12.4.2(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.4.2)(reflect-metadata@0.2.2)(rxjs@7.8.2)(typeorm@1.1.3(babel-plugin-macros@3.1.0)(ioredis@5.11.1(supports-color@8.1.1))(pg@8.23.1)(supports-color@8.1.1)(ts-node@10.9.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(@types/node@24.19.2)(@typescript/typescript6@6.0.2)))':
     dependencies:
       '@nestjs/common': 12.4.2(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1)
       '@nestjs/core': 12.4.2(@nestjs/common@12.4.2(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/platform-express@12.4.2)(@nestjs/websockets@12.4.2)(reflect-metadata@0.2.2)(rxjs@7.8.2)
       reflect-metadata: 0.2.2
       rxjs: 7.8.2
-      typeorm: 0.3.31(babel-plugin-macros@3.1.0)(ioredis@5.11.1(supports-color@8.1.1))(pg@8.23.1)(supports-color@8.1.1)(ts-node@10.9.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(@types/node@24.19.2)(@typescript/typescript6@6.0.2))
+      typeorm: 1.1.3(babel-plugin-macros@3.1.0)(ioredis@5.11.1(supports-color@8.1.1))(pg@8.23.1)(supports-color@8.1.1)(ts-node@10.9.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(@types/node@24.19.2)(@typescript/typescript6@6.0.2))
 
   '@nestjs/websockets@12.4.2(@nestjs/common@12.4.2(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.4.2)(@nestjs/platform-socket.io@12.4.2)(reflect-metadata@0.2.2)(rxjs@7.8.2)':
     dependencies:
@@ -23428,7 +23411,7 @@ snapshots:
       react: 19.3.1
       react-redux: 9.3.0(@types/react@19.3.0)(react@19.3.1)(redux@5.0.1)
 
-  '@rekog/mcp-nest@1.9.11(5c349b9820fea7f387f93420b78b79e1)':
+  '@rekog/mcp-nest@1.9.11(535b2b3a1c1edf88b4c93f5f2ddfd988)':
     dependencies:
       '@modelcontextprotocol/sdk': 1.32.2(@cfworker/json-schema@4.1.6)(supports-color@8.1.1)(zod@4.6.7)
       '@nestjs/common': 12.4.2(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1)
@@ -23448,8 +23431,8 @@ snapshots:
       rxjs: 7.8.2
       zod: 4.6.7
     optionalDependencies:
-      '@nestjs/typeorm': 12.0.3(@nestjs/common@12.4.2(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.4.2)(reflect-metadata@0.2.2)(rxjs@7.8.2)(typeorm@0.3.31(babel-plugin-macros@3.1.0)(ioredis@5.11.1(supports-color@8.1.1))(pg@8.23.1)(supports-color@8.1.1)(ts-node@10.9.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(@types/node@24.19.2)(@typescript/typescript6@6.0.2)))
-      typeorm: 0.3.31(babel-plugin-macros@3.1.0)(ioredis@5.11.1(supports-color@8.1.1))(pg@8.23.1)(supports-color@8.1.1)(ts-node@10.9.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(@types/node@24.19.2)(@typescript/typescript6@6.0.2))
+      '@nestjs/typeorm': 12.0.3(@nestjs/common@12.4.2(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.4.2)(reflect-metadata@0.2.2)(rxjs@7.8.2)(typeorm@1.1.3(babel-plugin-macros@3.1.0)(ioredis@5.11.1(supports-color@8.1.1))(pg@8.23.1)(supports-color@8.1.1)(ts-node@10.9.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(@types/node@24.19.2)(@typescript/typescript6@6.0.2)))
+      typeorm: 1.1.3(babel-plugin-macros@3.1.0)(ioredis@5.11.1(supports-color@8.1.1))(pg@8.23.1)(supports-color@8.1.1)(ts-node@10.9.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(@types/node@24.19.2)(@typescript/typescript6@6.0.2))
 
   '@remix-run/node-fetch-server@0.14.2': {}
 
@@ -25367,8 +25350,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  app-root-path@3.1.0: {}
-
   append-field@1.0.0: {}
 
   arg@4.1.3:
@@ -25773,11 +25754,6 @@ snapshots:
     optional: true
 
   buffer@5.7.1:
-    dependencies:
-      base64-js: 1.5.1
-      ieee754: 1.2.1
-
-  buffer@6.0.3:
     dependencies:
       base64-js: 1.5.1
       ieee754: 1.2.1
@@ -26436,6 +26412,8 @@ snapshots:
   date-fns@4.4.0: {}
 
   dayjs@1.11.21: {}
+
+  dayjs@1.11.23: {}
 
   debounce@2.2.0: {}
 
@@ -32766,23 +32744,18 @@ snapshots:
 
   typed-query-selector@2.12.3: {}
 
-  typeorm@0.3.31(babel-plugin-macros@3.1.0)(ioredis@5.11.1(supports-color@8.1.1))(pg@8.23.1)(supports-color@8.1.1)(ts-node@10.9.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(@types/node@24.19.2)(@typescript/typescript6@6.0.2)):
+  typeorm@1.1.3(babel-plugin-macros@3.1.0)(ioredis@5.11.1(supports-color@8.1.1))(pg@8.23.1)(supports-color@8.1.1)(ts-node@10.9.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(@types/node@24.19.2)(@typescript/typescript6@6.0.2)):
     dependencies:
       '@sqltools/formatter': 1.2.5
       ansis: 4.5.0
-      app-root-path: 3.1.0
-      buffer: 6.0.3
-      dayjs: 1.11.21
+      dayjs: 1.11.23
       debug: 4.4.3(supports-color@8.1.1)
       dedent: 1.7.2(babel-plugin-macros@3.1.0)
-      dotenv: 16.6.1
-      glob: 10.5.0
       reflect-metadata: 0.2.2
-      sha.js: 2.4.12
       sql-highlight: 6.1.0
+      tinyglobby: 0.2.17
       tslib: 2.9.1
-      uuid: 11.1.1
-      yargs: 17.7.3
+      yargs: 18.2.0
     optionalDependencies:
       ioredis: 5.11.1(supports-color@8.1.1)
       pg: 8.23.1
@@ -33082,8 +33055,6 @@ snapshots:
   util-deprecate@1.0.2: {}
 
   utils-merge@1.0.1: {}
-
-  uuid@11.1.1: {}
 
   uuid@14.0.3: {}
 

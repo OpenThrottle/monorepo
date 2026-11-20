@@ -29,7 +29,7 @@ describe('AgentAccountsRepository', () => {
     execute: vi.fn(),
     insert: vi.fn(),
     into: vi.fn(),
-    onConflict: vi.fn(),
+    orUpdate: vi.fn(),
     returning: vi.fn(),
     values: vi.fn(),
   };
@@ -42,7 +42,7 @@ describe('AgentAccountsRepository', () => {
     queryBuilder.execute.mockResolvedValue({ raw: [{ id: 'account-1' }] });
     queryBuilder.insert.mockReturnValue(queryBuilder);
     queryBuilder.into.mockReturnValue(queryBuilder);
-    queryBuilder.onConflict.mockReturnValue(queryBuilder);
+    queryBuilder.orUpdate.mockReturnValue(queryBuilder);
     queryBuilder.returning.mockReturnValue(queryBuilder);
     queryBuilder.values.mockReturnValue(queryBuilder);
 
@@ -69,23 +69,38 @@ describe('AgentAccountsRepository', () => {
     describe('when the database returns the row id', () => {
       it('upserts on the natural key and returns the id', async () => {
         await expect(repository.upsertSeen(input)).resolves.toBe('account-1');
-        expect(queryBuilder.values).toHaveBeenCalledWith(input);
-        expect(queryBuilder.onConflict).toHaveBeenCalledWith(
-          expect.stringContaining('(user_id, provider, external_account_id)'),
-        );
-        expect(queryBuilder.onConflict).toHaveBeenCalledWith(
-          expect.stringContaining('last_seen_at = NOW()'),
+        expect(queryBuilder.values).toHaveBeenCalledWith({
+          ...input,
+          lastSeenAt: expect.any(Function),
+        });
+        expect(queryBuilder.orUpdate).toHaveBeenCalledWith(
+          [
+            'credential_kind',
+            'last_seen_at',
+            'email',
+            'org_id',
+            'org_name',
+            'plan',
+          ],
+          ['user_id', 'provider', 'external_account_id'],
         );
         expect(queryBuilder.returning).toHaveBeenCalledWith('id');
       });
 
-      it('keeps a previously reported field when the CLI stops reporting it', async () => {
-        await repository.upsertSeen({ ...input, email: null });
+      it('stamps last_seen_at with the database clock', async () => {
+        await repository.upsertSeen(input);
 
-        expect(queryBuilder.onConflict).toHaveBeenCalledWith(
-          expect.stringContaining(
-            'email = COALESCE(EXCLUDED.email, agent_accounts.email)',
-          ),
+        const [values] = queryBuilder.values.mock.lastCall ?? [];
+        const lastSeenAt: unknown = Reflect.get(values, 'lastSeenAt');
+        expect(typeof lastSeenAt === 'function' && lastSeenAt()).toBe('NOW()');
+      });
+
+      it('keeps a previously reported field when the CLI stops reporting it', async () => {
+        await repository.upsertSeen({ ...input, email: null, plan: null });
+
+        expect(queryBuilder.orUpdate).toHaveBeenCalledWith(
+          ['credential_kind', 'last_seen_at', 'org_id', 'org_name'],
+          ['user_id', 'provider', 'external_account_id'],
         );
       });
     });

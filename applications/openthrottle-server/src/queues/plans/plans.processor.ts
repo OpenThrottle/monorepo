@@ -376,7 +376,9 @@ export class PlansProcessor
 
       // eslint-disable-next-line no-await-in-loop -- sequential by design: one plan reconciled at a time
       const tasks = await this.tasksRepository.findOne({
-        select: ['id'],
+        select: {
+          id: true,
+        },
         where: { planId: plan.id, status: 'IN_PROGRESS' },
       });
 
@@ -801,7 +803,13 @@ export class PlansProcessor
     }
 
     const tasks = await this.tasksRepository.findBy({
-      select: ['hookRole', 'hookSource', 'parentTaskId', 'planId', 'status'],
+      select: {
+        hookRole: true,
+        hookSource: true,
+        parentTaskId: true,
+        planId: true,
+        status: true,
+      },
       where: { planId: In([...planIds]) },
     });
     const tasksByPlan = new Map<string, PlanTaskOutcomeFields[]>();

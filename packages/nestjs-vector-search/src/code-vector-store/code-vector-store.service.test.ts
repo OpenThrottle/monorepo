@@ -203,7 +203,10 @@ describe('CodeVectorStore', () => {
 
       const call = queryMock().mock.calls[0];
       const sql = call?.[0] ?? '';
-      const params = call?.[1] ?? [];
+      // TypeORM 1.x types query parameters as an array or a named-parameter object.
+      const params: readonly unknown[] = Array.isArray(call?.[1])
+        ? call[1]
+        : [];
       expect(sql).toContain('INSERT INTO code_embeddings');
       expect(sql).toContain('ON CONFLICT (id) DO UPDATE SET');
       expect(sql).toContain('$8::vector');

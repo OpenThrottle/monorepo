@@ -102,7 +102,7 @@ describe('RolesRepository', () => {
       await expect(repository.findAll()).resolves.toEqual([adminRole]);
       expect(roleFind).toHaveBeenCalledWith({
         order: { name: 'ASC' },
-        relations: ['permissions'],
+        relations: { permissions: true },
       });
     });
   });
@@ -113,7 +113,7 @@ describe('RolesRepository', () => {
 
       await expect(repository.findByName('admin')).resolves.toBe(adminRole);
       expect(roleFindOne).toHaveBeenCalledWith({
-        relations: ['permissions'],
+        relations: { permissions: true },
         where: { name: 'admin' },
       });
     });
@@ -136,7 +136,7 @@ describe('RolesRepository', () => {
         'viewer',
       ]);
       expect(userFindOne).toHaveBeenCalledWith({
-        relations: ['roles'],
+        relations: { roles: true },
         where: { id: userId },
       });
     });
@@ -191,7 +191,7 @@ describe('RolesRepository', () => {
         adminRole,
       ]);
       expect(userFindOne).toHaveBeenCalledWith({
-        relations: ['roles', 'roles.permissions'],
+        relations: { roles: { permissions: true } },
         where: { id: userId },
       });
     });
@@ -385,7 +385,7 @@ describe('RolesRepository', () => {
       expect(roles).toHaveLength(1);
       expect(roles[0]?.permissions).toHaveLength(2);
       expect(serviceAccountFindOne).toHaveBeenCalledWith({
-        relations: ['roles', 'roles.permissions'],
+        relations: { roles: { permissions: true } },
         where: { id: serviceAccountId },
       });
     });

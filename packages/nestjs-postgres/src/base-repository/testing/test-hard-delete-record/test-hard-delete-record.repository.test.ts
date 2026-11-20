@@ -51,7 +51,7 @@ const buildHarness = () => {
     findAndCount: vi.fn(),
     findOne: vi.fn(),
     manager: {
-      connection: {
+      dataSource: {
         driver: { prepareHydratedValue: vi.fn((value: unknown) => value) },
       },
     },
@@ -263,7 +263,7 @@ describe('BaseRepository (id key + no soft delete)', () => {
       const idWhere = { id: In(matches.map((match) => match.id)) };
 
       expect(harness.typeorm.find).toHaveBeenNthCalledWith(1, {
-        select: ['id'],
+        select: { id: true },
         take: POSTGRES_MAX_RETURNING_ROWS + 1,
         where: { quantity: 1 },
       });

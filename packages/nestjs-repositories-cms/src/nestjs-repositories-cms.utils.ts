@@ -7,7 +7,6 @@ import { createPostgresProfilingQueryLogger } from '@openthrottle/nestjs-postgre
 import { getCmsPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
 import type { LoggerOptions } from 'typeorm';
 
-import { CMS_CONNECTION } from './config/config.constants.ts';
 import { Fragment } from './modules/fragments/fragment.entity.ts';
 import { FragmentChild } from './modules/fragments-children/fragment-child.entity.ts';
 import { Layout } from './modules/layouts/layout.entity.ts';
@@ -78,7 +77,6 @@ export function getCmsTypeOrmOptions(
       ...(slowQueryMs != null && { maxQueryExecutionTime: slowQueryMs }),
       migrations: [],
       migrationsRun: false,
-      name: CMS_CONNECTION,
       synchronize: false,
       type: 'postgres',
       url: url.url,

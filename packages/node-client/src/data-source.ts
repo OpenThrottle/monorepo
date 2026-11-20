@@ -13,27 +13,31 @@ import {
 import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
 import { DataSource } from 'typeorm';
 
-const cache = new Map<string, DataSource>();
+/**
+ * @description One entry per connection string: the DataSource and the promise of its
+ * initialization. Callers share the promise, so concurrent first calls (hybrid search runs its
+ * lexical and semantic halves in parallel) wait on one `initialize()`. TypeORM 1.x rejects a
+ * second concurrent `initialize()`, and 0.3 opened a second pool.
+ */
+const cache = new Map<
+  string,
+  { readonly dataSource: DataSource; readonly ready: Promise<DataSource> }
+>();
 
 /**
  * @description Returns a TypeORM DataSource for the given config, creating and initializing one per connection string (connection pooling).
  * Registers Plan, Task, PlanEmbedding, TaskEmbedding, Project, and PlanOutputStreamChunk so repository-based CRUD and relation metadata resolve correctly.
+ * A failed initialization is evicted, so the next call retries.
  */
 export async function getOrCreateDataSource(): Promise<DataSource> {
   const url = getPostgresUrl();
-  const key = url;
 
-  let ds = cache.get(key);
-  if (ds?.isInitialized) {
-    return ds;
+  const cached = cache.get(url);
+  if (cached) {
+    return cached.ready;
   }
 
-  if (ds != null) {
-    await ds.initialize();
-    return ds;
-  }
-
-  ds = new DataSource({
+  const dataSource = new DataSource({
     entities: [
       Plan,
       PlanEmbedding,
@@ -45,12 +49,14 @@ export async function getOrCreateDataSource(): Promise<DataSource> {
     type: 'postgres',
     url,
   });
+  const ready = dataSource.initialize().catch((error: unknown) => {
+    cache.delete(url);
+    throw error;
+  });
 
-  cache.set(key, ds);
+  cache.set(url, { dataSource, ready });
 
-  await ds.initialize();
-
-  return ds;
+  return ready;
 }
 
 /**
@@ -59,10 +65,13 @@ export async function getOrCreateDataSource(): Promise<DataSource> {
  * are not held open per connection string for the lifetime of the process.
  */
 export async function destroyDataSources(): Promise<void> {
-  const sources = [...cache.values()];
+  const entries = [...cache.values()];
   cache.clear();
   await Promise.allSettled(
-    sources.map((ds) => (ds.isInitialized ? ds.destroy() : Promise.resolve())),
+    entries.map(async (entry) => {
+      await entry.ready;
+      await entry.dataSource.destroy();
+    }),
   );
 }
 

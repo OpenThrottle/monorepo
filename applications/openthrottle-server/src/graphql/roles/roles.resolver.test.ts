@@ -93,7 +93,7 @@ describe('RolesResolver', () => {
       expect(result).not.toBeNull();
       expect(result?.id).toBe(mockRole.id);
       expect(roles.findOne).toHaveBeenCalledWith({
-        relations: ['permissions'],
+        relations: { permissions: true },
         where: { id: mockRole.id },
       });
     });

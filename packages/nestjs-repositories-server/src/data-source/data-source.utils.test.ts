@@ -14,6 +14,12 @@ describe('getOpenThrottleTypeOrmOptions', () => {
     expect(options.entities).toEqual([...OPENTHROTTLE_ENTITIES]);
   });
 
+  it('leaves invalidWhereValuesBehavior at its default, so a null or undefined where value throws', () => {
+    const options = getOpenThrottleTypeOrmOptions({ POSTGRES_URL });
+
+    expect(options).not.toHaveProperty('invalidWhereValuesBehavior');
+  });
+
   describe('when POSTGRES_SLOW_QUERY_MS is a positive integer', () => {
     it('sets maxQueryExecutionTime to it', () => {
       const options = getOpenThrottleTypeOrmOptions({

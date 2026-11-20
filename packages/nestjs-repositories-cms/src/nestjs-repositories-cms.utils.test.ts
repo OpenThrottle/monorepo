@@ -1,14 +1,13 @@
 import { PostgresProfilingQueryLogger } from '@openthrottle/nestjs-postgres';
 import { describe, expect, it } from 'vitest';
 
-import { CMS_CONNECTION } from './config/config.constants.ts';
 import { getCmsTypeOrmOptions } from './nestjs-repositories-cms.utils.ts';
 
 const PRIMARY_URL = 'postgresql://user:pass@localhost:5432/openthrottle';
 
 describe('getCmsTypeOrmOptions', () => {
   describe('when a connection is configured', () => {
-    it('targets the named cms connection with schema sync off', () => {
+    it('targets the cms database with schema sync off', () => {
       const result = getCmsTypeOrmOptions({ POSTGRES_URL: PRIMARY_URL });
 
       expect(result.ok).toBe(true);
@@ -16,11 +15,18 @@ describe('getCmsTypeOrmOptions', () => {
       expect(result.options).toMatchObject({
         migrations: [],
         migrationsRun: false,
-        name: CMS_CONNECTION,
         synchronize: false,
         type: 'postgres',
         url: 'postgresql://user:pass@localhost:5432/cms',
       });
+    });
+
+    it('leaves invalidWhereValuesBehavior at its default, so a null or undefined where value throws', () => {
+      const result = getCmsTypeOrmOptions({ POSTGRES_URL: PRIMARY_URL });
+
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.options).not.toHaveProperty('invalidWhereValuesBehavior');
     });
 
     it('logs through the postgres profiling query logger', () => {

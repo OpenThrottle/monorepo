@@ -75,7 +75,7 @@ export function buildKeySelect<TEntity extends ObjectLiteral>(
   convention: ModelConvention,
 ): FindManyOptions<TEntity>['select'];
 export function buildKeySelect(convention: ModelConvention): object {
-  return [convention.key];
+  return { [convention.key]: true };
 }
 
 /**
