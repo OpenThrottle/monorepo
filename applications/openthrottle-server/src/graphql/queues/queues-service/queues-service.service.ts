@@ -1,8 +1,9 @@
 /**
  * @description Aggregates BullMQ queue(s) and exposes job counts per queue via getJobCounts(). Supports dynamic queue creation via createQueue().
  */
-import { InjectQueue } from '@nestjs/bullmq';
-import { Injectable, OnModuleDestroy } from '@nestjs/common';
+import { getQueueToken } from '@nestjs/bullmq';
+import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
 import {
   resolveQueuePrefix,
   resolveRedisConnection,
@@ -18,13 +19,8 @@ import {
   AGENTIC_TEST_QUEUE_NAME,
 } from '../../../queues/agentic-test/agentic-test.constants.ts';
 import type { AgenticTestJobPayload } from '../../../queues/agentic-test/agentic-test.types.ts';
-import { CODE_INDEX_QUEUE_NAME } from '../../../queues/code-index/code-index.constants.ts';
-import { DAILY_STATS_QUEUE_NAME } from '../../../queues/daily-stats/daily-stats.constants.ts';
 import type { AggregateDailyStatsJobData } from '../../../queues/daily-stats/daily-stats.types.ts';
-import { DATABASE_BACKUP_QUEUE_NAME } from '../../../queues/database-backup/database-backup.constants.ts';
 import type { DatabaseBackupJobPayload } from '../../../queues/database-backup/database-backup.types.ts';
-import { PLAN_LIFECYCLE_HOOKS_QUEUE_NAME } from '../../../queues/plan-lifecycle-hooks/plan-lifecycle-hooks.constants.ts';
-import { PLAN_RULES_QUEUE_NAME } from '../../../queues/plan-rules/plan-rules.constants.ts';
 import {
   PLANS_QUEUE_NAME,
   RUN_PLAN_SPAWN_JOB_NAME,
@@ -33,10 +29,7 @@ import type {
   RunPlanJobData,
   RunPlanOrchestratorJobData,
 } from '../../../queues/plans/plans.types.ts';
-import { TAGGING_QUEUE_NAME } from '../../../queues/tagging/tagging.constants.ts';
-import { TASK_PROMOTION_QUEUE_NAME } from '../../../queues/task-promotion/task-promotion.constants.ts';
-import { WORK_LEDGER_SWEEP_QUEUE_NAME } from '../../../queues/work-ledger-sweep/work-ledger-sweep.constants.ts';
-import { WORK_LEDGER_VERIFY_QUEUE_NAME } from '../../../queues/work-ledger-verify/work-ledger-verify.constants.ts';
+import { SERVER_QUEUE_NAMES } from '../../../queues/queues.constants.ts';
 import { normalizeIdempotencyKey } from './queues-service.utils.ts';
 
 const DEFAULT_PLAN_RUN_EXECUTION_BACKEND = 'cursor';
@@ -126,49 +119,24 @@ const VALID_JOB_STATES = [
   'waiting-children',
 ] as const;
 
-//
-
-const REGISTERED_QUEUES = [
-  AGENTIC_TEST_QUEUE_NAME,
-  CODE_INDEX_QUEUE_NAME,
-  DAILY_STATS_QUEUE_NAME,
-  DATABASE_BACKUP_QUEUE_NAME,
-  PLAN_LIFECYCLE_HOOKS_QUEUE_NAME,
-  PLAN_RULES_QUEUE_NAME,
-  PLANS_QUEUE_NAME,
-  TAGGING_QUEUE_NAME,
-  TASK_PROMOTION_QUEUE_NAME,
-  WORK_LEDGER_SWEEP_QUEUE_NAME,
-  WORK_LEDGER_VERIFY_QUEUE_NAME,
-] as const;
-
 @Injectable()
-export class QueuesService implements OnModuleDestroy {
+export class QueuesService implements OnModuleDestroy, OnModuleInit {
   private readonly dynamicQueues = new Map<string, Queue<AnyJobData, void>>();
+
+  /** @description Registry queues resolved from DI, built once by {@link QueuesService.resolveRegisteredQueues}. */
+  private registeredQueues: ReadonlyMap<
+    string,
+    Queue<AnyJobData, void>
+  > | null = null;
 
   constructor(
     private readonly logger: LoggerService,
-    @InjectQueue(AGENTIC_TEST_QUEUE_NAME)
-    private readonly agenticTestQueue: Queue<AnyJobData, void>,
-    @InjectQueue(CODE_INDEX_QUEUE_NAME)
-    private readonly codeIndexQueue: Queue<AnyJobData, void>,
-    @InjectQueue(DAILY_STATS_QUEUE_NAME)
-    private readonly dailyStatsQueue: Queue<AnyJobData, void>,
-    @InjectQueue(DATABASE_BACKUP_QUEUE_NAME)
-    private readonly databaseBackupQueue: Queue<AnyJobData, void>,
-    @InjectQueue(PLAN_LIFECYCLE_HOOKS_QUEUE_NAME)
-    private readonly planLifecycleHooksQueue: Queue<AnyJobData, void>,
-    @InjectQueue(PLAN_RULES_QUEUE_NAME)
-    private readonly planRulesQueue: Queue<AnyJobData, void>,
-    @InjectQueue(PLANS_QUEUE_NAME)
-    private readonly plansQueue: Queue<AnyJobData, void>,
-    @InjectQueue(TAGGING_QUEUE_NAME)
-    private readonly taggingQueue: Queue<AnyJobData, void>,
-    @InjectQueue(WORK_LEDGER_SWEEP_QUEUE_NAME)
-    private readonly workLedgerSweepQueue: Queue<AnyJobData, void>,
-    @InjectQueue(WORK_LEDGER_VERIFY_QUEUE_NAME)
-    private readonly workLedgerVerifyQueue: Queue<AnyJobData, void>,
+    private readonly moduleRef: ModuleRef,
   ) {}
+
+  onModuleInit(): void {
+    this.resolveRegisteredQueues();
+  }
 
   async onModuleDestroy(): Promise<void> {
     await Promise.all(
@@ -194,7 +162,7 @@ export class QueuesService implements OnModuleDestroy {
       };
     }
 
-    if (REGISTERED_QUEUES.some((queueName) => queueName === trimmed)) {
+    if (SERVER_QUEUE_NAMES.some((queueName) => queueName === trimmed)) {
       return { error: `Queue name "${trimmed}" is reserved` };
     }
 
@@ -295,47 +263,45 @@ export class QueuesService implements OnModuleDestroy {
    * @description Returns the queue instance for the given name, or null if not registered.
    */
   getQueueByName(name: string): Queue<AnyJobData, void> | null {
-    if (name === AGENTIC_TEST_QUEUE_NAME) {
-      return this.agenticTestQueue;
+    return (
+      this.resolveRegisteredQueues().get(name) ??
+      this.dynamicQueues.get(name) ??
+      null
+    );
+  }
+
+  /**
+   * @description Resolves every {@link SERVER_QUEUE_NAMES} queue from DI once and caches the map.
+   * A name whose queue cannot be resolved (its producer module is not imported by
+   * QueuesServiceModule) is logged as an error and left out, never dropped silently.
+   */
+  private resolveRegisteredQueues(): ReadonlyMap<
+    string,
+    Queue<AnyJobData, void>
+  > {
+    if (this.registeredQueues !== null) {
+      return this.registeredQueues;
     }
 
-    if (name === CODE_INDEX_QUEUE_NAME) {
-      return this.codeIndexQueue;
+    const resolved = new Map<string, Queue<AnyJobData, void>>();
+    for (const name of SERVER_QUEUE_NAMES) {
+      try {
+        resolved.set(
+          name,
+          this.moduleRef.get<Queue<AnyJobData, void>>(getQueueToken(name), {
+            strict: false,
+          }),
+        );
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        this.logger.error(
+          `Queue "${name}" is in SERVER_QUEUE_NAMES but could not be resolved; import its producer module in QueuesServiceModule: ${message}`,
+        );
+      }
     }
+    this.registeredQueues = resolved;
 
-    if (name === DAILY_STATS_QUEUE_NAME) {
-      return this.dailyStatsQueue;
-    }
-
-    if (name === DATABASE_BACKUP_QUEUE_NAME) {
-      return this.databaseBackupQueue;
-    }
-
-    if (name === PLAN_LIFECYCLE_HOOKS_QUEUE_NAME) {
-      return this.planLifecycleHooksQueue;
-    }
-
-    if (name === PLAN_RULES_QUEUE_NAME) {
-      return this.planRulesQueue;
-    }
-
-    if (name === PLANS_QUEUE_NAME) {
-      return this.plansQueue;
-    }
-
-    if (name === TAGGING_QUEUE_NAME) {
-      return this.taggingQueue;
-    }
-
-    if (name === WORK_LEDGER_SWEEP_QUEUE_NAME) {
-      return this.workLedgerSweepQueue;
-    }
-
-    if (name === WORK_LEDGER_VERIFY_QUEUE_NAME) {
-      return this.workLedgerVerifyQueue;
-    }
-
-    return this.dynamicQueues.get(name) ?? null;
+    return resolved;
   }
 
   /**
@@ -581,7 +547,12 @@ export class QueuesService implements OnModuleDestroy {
    * @description Enqueues an agentic-test smoke job (echo timestamps for ~30s). Returns new job id on success.
    */
   async enqueueAgenticTest(): Promise<{ jobId: string } | { error: string }> {
-    const job = await this.agenticTestQueue.add(AGENTIC_TEST_JOB_NAME, {});
+    const queue = this.getQueueByName(AGENTIC_TEST_QUEUE_NAME);
+    if (!queue) {
+      return { error: `Queue not found: ${AGENTIC_TEST_QUEUE_NAME}` };
+    }
+
+    const job = await queue.add(AGENTIC_TEST_JOB_NAME, {});
     if (job.id == null) {
       return { error: 'Failed to get new job id' };
     }
@@ -613,8 +584,13 @@ export class QueuesService implements OnModuleDestroy {
       ...(priority !== undefined ? { priority } : {}),
     };
 
+    const queue = this.getQueueByName(PLANS_QUEUE_NAME);
+    if (!queue) {
+      return { error: `Queue not found: ${PLANS_QUEUE_NAME}` };
+    }
+
     try {
-      const job = await this.plansQueue.add(
+      const job = await queue.add(
         RUN_PLAN_ORCHESTRATOR_JOB_NAME,
         input.jobData,
         opts,
@@ -713,11 +689,10 @@ export class QueuesService implements OnModuleDestroy {
    * @description Returns job counts per registered queue (static and dynamic). Uses BullMQ getJobCounts(). A queue whose counts cannot be read is logged and left out, so one broken connection cannot fail the whole listing.
    */
   async getStats(): Promise<QueueStats[]> {
-    const staticQueues = REGISTERED_QUEUES.flatMap((name) => {
-      const queue = this.getQueueByName(name);
-
-      return queue ? [{ name, queue }] : [];
-    });
+    const staticQueues = Array.from(
+      this.resolveRegisteredQueues(),
+      ([name, queue]) => ({ name, queue }),
+    );
     const dynamicQueues = Array.from(this.dynamicQueues, ([name, queue]) => ({
       name,
       queue,

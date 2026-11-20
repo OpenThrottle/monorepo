@@ -9,4 +9,10 @@ describe('queueJobDetailPath', () => {
       '/queues/Plans/ralph-orch%3Aabc',
     );
   });
+
+  test('encodes spaces in the queue name', () => {
+    expect(queueJobDetailPath('Work Ledger Harvest', 'repeat:abc')).toBe(
+      '/queues/Work%20Ledger%20Harvest/repeat%3Aabc',
+    );
+  });
 });

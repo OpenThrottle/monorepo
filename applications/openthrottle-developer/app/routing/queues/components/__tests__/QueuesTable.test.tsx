@@ -2,7 +2,7 @@ import type { RenderResult } from '@testing-library/react';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
-import { createRoutesStub } from 'react-router';
+import { createRoutesStub, useParams } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 
 import type { QueueCardFragment } from '~/__generated__/graphql';
@@ -218,5 +218,55 @@ describe('QueuesTable Component', () => {
     expect(defaultName).toHaveFocus();
     await user.tab();
     expect(defaultControls).toHaveFocus();
+  });
+
+  describe('when queue names contain spaces or mixed casing', () => {
+    test.each(['Work Ledger Harvest', 'plan-rules', 'Plans'])(
+      'links %s to a detail route whose queueId param decodes back to the name',
+      async (name) => {
+        props = {
+          queues: [
+            {
+              __typename: 'QueueStatsObject',
+              activeCount: 0,
+              completedCount: 0,
+              delayedCount: 0,
+              failedCount: 0,
+              name,
+              waitingCount: 0,
+            },
+          ],
+        };
+        // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
+        const TableComponent = () => {
+          return <QueuesTable {...props} />;
+        };
+        // eslint-disable-next-line react/no-multi-comp -- test-local detail route probe
+        const DetailProbe = () => {
+          const params = useParams();
+          return <p data-testid="QueueIdParam">{params['queueId']}</p>;
+        };
+        const RoutesStub = createRoutesStub([
+          { Component: TableComponent, path: '/' },
+          { Component: DetailProbe, path: '/queues/:queueId' },
+        ]);
+        component.rerender(<RoutesStub />);
+
+        const user = userEvent.setup();
+        const link = component.getByRole('link', {
+          name: `View queue: ${name}`,
+        });
+        expect(link).toHaveAttribute(
+          'href',
+          `/queues/${encodeURIComponent(name)}`,
+        );
+
+        await user.click(link);
+
+        expect(await component.findByTestId('QueueIdParam')).toHaveTextContent(
+          name,
+        );
+      },
+    );
   });
 });

@@ -67,4 +67,14 @@ describe('DashboardQueueHealthCard Component', () => {
 
     expect(component.getByText('40 failed · 0 backlog')).toBeInTheDocument();
   });
+
+  test('encodes a queue name with spaces in its detail link', () => {
+    const component = renderCard({
+      queues: [queue({ name: 'Work Ledger Harvest' })],
+    });
+
+    expect(
+      component.getByRole('link', { name: 'Work Ledger Harvest' }),
+    ).toHaveAttribute('href', '/queues/Work%20Ledger%20Harvest');
+  });
 });

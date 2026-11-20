@@ -21,20 +21,15 @@ import type {
   AgenticTestJobPayload,
   AgenticTestJobResult,
 } from '../../../queues/agentic-test/agentic-test.types.ts';
-import { CODE_INDEX_QUEUE_NAME } from '../../../queues/code-index/code-index.constants.ts';
 import { DAILY_STATS_QUEUE_NAME } from '../../../queues/daily-stats/daily-stats.constants.ts';
 import type { AggregateDailyStatsJobData } from '../../../queues/daily-stats/daily-stats.types.ts';
 import { DATABASE_BACKUP_QUEUE_NAME } from '../../../queues/database-backup/database-backup.constants.ts';
-import { PLAN_LIFECYCLE_HOOKS_QUEUE_NAME } from '../../../queues/plan-lifecycle-hooks/plan-lifecycle-hooks.constants.ts';
-import { PLAN_RULES_QUEUE_NAME } from '../../../queues/plan-rules/plan-rules.constants.ts';
 import { PLANS_QUEUE_NAME } from '../../../queues/plans/plans.constants.ts';
 import type {
   RunPlanJobData,
   RunPlanOrchestratorJobData,
 } from '../../../queues/plans/plans.types.ts';
-import { TAGGING_QUEUE_NAME } from '../../../queues/tagging/tagging.constants.ts';
-import { WORK_LEDGER_SWEEP_QUEUE_NAME } from '../../../queues/work-ledger-sweep/work-ledger-sweep.constants.ts';
-import { WORK_LEDGER_VERIFY_QUEUE_NAME } from '../../../queues/work-ledger-verify/work-ledger-verify.constants.ts';
+import { SERVER_QUEUE_NAMES } from '../../../queues/queues.constants.ts';
 import { QueuesService } from './queues-service.service.ts';
 
 interface MockBullQueueInstance {
@@ -185,50 +180,21 @@ describe('QueuesService', () => {
     savedRedisHost = process.env.REDIS_HOST;
     delete process.env.REDIS_HOST;
 
+    const queuesByName = new Map<string, unknown>([
+      [AGENTIC_TEST_QUEUE_NAME, mockAgenticTestQueue],
+      [DAILY_STATS_QUEUE_NAME, mockDailyStatsQueue],
+      [DATABASE_BACKUP_QUEUE_NAME, mockDatabaseBackupQueue],
+      [PLANS_QUEUE_NAME, mockPlansQueue],
+    ]);
+
     const app = await Test.createTestingModule({
       providers: [
         QueuesService,
         { provide: LoggerService, useValue: mockLogger },
-        {
-          provide: getQueueToken(AGENTIC_TEST_QUEUE_NAME),
-          useValue: mockAgenticTestQueue,
-        },
-        {
-          provide: getQueueToken(CODE_INDEX_QUEUE_NAME),
-          useValue: mockStaticStatsQueue,
-        },
-        {
-          provide: getQueueToken(DAILY_STATS_QUEUE_NAME),
-          useValue: mockDailyStatsQueue,
-        },
-        {
-          provide: getQueueToken(DATABASE_BACKUP_QUEUE_NAME),
-          useValue: mockDatabaseBackupQueue,
-        },
-        {
-          provide: getQueueToken(PLAN_LIFECYCLE_HOOKS_QUEUE_NAME),
-          useValue: mockStaticStatsQueue,
-        },
-        {
-          provide: getQueueToken(PLAN_RULES_QUEUE_NAME),
-          useValue: mockStaticStatsQueue,
-        },
-        {
-          provide: getQueueToken(PLANS_QUEUE_NAME),
-          useValue: mockPlansQueue,
-        },
-        {
-          provide: getQueueToken(TAGGING_QUEUE_NAME),
-          useValue: mockStaticStatsQueue,
-        },
-        {
-          provide: getQueueToken(WORK_LEDGER_SWEEP_QUEUE_NAME),
-          useValue: mockStaticStatsQueue,
-        },
-        {
-          provide: getQueueToken(WORK_LEDGER_VERIFY_QUEUE_NAME),
-          useValue: mockStaticStatsQueue,
-        },
+        ...SERVER_QUEUE_NAMES.map((name) => ({
+          provide: getQueueToken(name),
+          useValue: queuesByName.get(name) ?? mockStaticStatsQueue,
+        })),
       ],
     }).compile();
 
@@ -432,6 +398,14 @@ describe('QueuesService', () => {
     test('returns null for unknown queue name', () => {
       expect(service.getQueueByName('other')).toBeNull();
     });
+
+    test('resolves every queue in SERVER_QUEUE_NAMES', () => {
+      const unresolved = SERVER_QUEUE_NAMES.filter((name) => {
+        return service.getQueueByName(name) === null;
+      });
+
+      expect(unresolved).toEqual([]);
+    });
   });
 
   describe('getStatsForQueue', () => {
@@ -615,46 +589,12 @@ describe('QueuesService', () => {
         providers: [
           QueuesService,
           { provide: LoggerService, useValue: mockLogger },
-          {
-            provide: getQueueToken(AGENTIC_TEST_QUEUE_NAME),
-            useValue: mockAgenticTestQueue,
-          },
-          {
-            provide: getQueueToken(CODE_INDEX_QUEUE_NAME),
+          ...SERVER_QUEUE_NAMES.filter((name) => {
+            return name !== PLANS_QUEUE_NAME;
+          }).map((name) => ({
+            provide: getQueueToken(name),
             useValue: mockStaticStatsQueue,
-          },
-          {
-            provide: getQueueToken(DAILY_STATS_QUEUE_NAME),
-            useValue: mockDailyStatsQueue,
-          },
-          {
-            provide: getQueueToken(DATABASE_BACKUP_QUEUE_NAME),
-            useValue: mockDatabaseBackupQueue,
-          },
-          {
-            provide: getQueueToken(PLAN_LIFECYCLE_HOOKS_QUEUE_NAME),
-            useValue: mockStaticStatsQueue,
-          },
-          {
-            provide: getQueueToken(PLAN_RULES_QUEUE_NAME),
-            useValue: mockStaticStatsQueue,
-          },
-          {
-            provide: getQueueToken(PLANS_QUEUE_NAME),
-            useValue: null,
-          },
-          {
-            provide: getQueueToken(TAGGING_QUEUE_NAME),
-            useValue: mockStaticStatsQueue,
-          },
-          {
-            provide: getQueueToken(WORK_LEDGER_SWEEP_QUEUE_NAME),
-            useValue: mockStaticStatsQueue,
-          },
-          {
-            provide: getQueueToken(WORK_LEDGER_VERIFY_QUEUE_NAME),
-            useValue: mockStaticStatsQueue,
-          },
+          })),
         ],
       }).compile();
 
@@ -728,7 +668,7 @@ describe('QueuesService', () => {
 
       const result = await service.getStats();
 
-      expect(result).toHaveLength(10);
+      expect(result.map((s) => s.name)).toEqual([...SERVER_QUEUE_NAMES]);
       const agenticTestStats = result.find(
         (s) => s.name === AGENTIC_TEST_QUEUE_NAME,
       );
@@ -771,7 +711,9 @@ describe('QueuesService', () => {
         name: DATABASE_BACKUP_QUEUE_NAME,
         waitingCount: 3,
       });
-      expect(mockGetJobCounts).toHaveBeenCalledTimes(9);
+      expect(mockGetJobCounts).toHaveBeenCalledTimes(
+        SERVER_QUEUE_NAMES.length - 1,
+      );
       expect(mockDailyStatsGetJobCounts).toHaveBeenCalledTimes(1);
     });
 
@@ -784,7 +726,7 @@ describe('QueuesService', () => {
 
         const result = await service.getStats();
 
-        expect(result).toHaveLength(9);
+        expect(result).toHaveLength(SERVER_QUEUE_NAMES.length - 1);
         expect(result.map((s) => s.name)).not.toContain(DAILY_STATS_QUEUE_NAME);
         expect(mockLogger.warn).toHaveBeenCalledWith(
           `Queue "${DAILY_STATS_QUEUE_NAME}" stats unavailable: NOAUTH Authentication required.`,
@@ -811,7 +753,7 @@ describe('QueuesService', () => {
 
         const result = await service.getStats();
 
-        expect(result).toHaveLength(10);
+        expect(result).toHaveLength(SERVER_QUEUE_NAMES.length);
         expect(result.map((s) => s.name)).not.toContain('dynamic-broken');
       });
     });
@@ -1221,5 +1163,38 @@ describe('QueuesService', () => {
       expect(result).toEqual({ removedCount: 0 });
       expect(mockPlansQueue.clean).toHaveBeenCalledWith(0, 0, 'failed');
     });
+  });
+});
+
+describe('QueuesService when a registry queue is not provided', () => {
+  test('logs the unresolved queue and lists the rest', async () => {
+    const [missingName, ...providedNames] = SERVER_QUEUE_NAMES;
+    const logger = createMock<LoggerService>();
+    const queue = createMock<Queue>({
+      getJobCounts: vi.fn().mockResolvedValue({}),
+    });
+
+    const app = await Test.createTestingModule({
+      providers: [
+        QueuesService,
+        { provide: LoggerService, useValue: logger },
+        ...providedNames.map((name) => ({
+          provide: getQueueToken(name),
+          useValue: queue,
+        })),
+      ],
+    }).compile();
+    const service = app.get<QueuesService>(QueuesService);
+
+    const result = await service.getStats();
+
+    expect(result.map((s) => s.name)).toEqual(providedNames);
+    expect(service.getQueueByName(missingName)).toBeNull();
+    expect(logger.error).toHaveBeenCalledTimes(1);
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.stringContaining(
+        `Queue "${missingName}" is in SERVER_QUEUE_NAMES`,
+      ),
+    );
   });
 });
