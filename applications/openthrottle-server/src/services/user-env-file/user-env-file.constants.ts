@@ -10,6 +10,9 @@ export const USER_ENV_FILE_SKIP_REASONS = Object.freeze({
   WORKTREE: 'worktree',
 } as const);
 
+/** The service account whose MCP token the telemetry token is derived from. */
+export const USER_ENV_FILE_TOKEN_ACCOUNT = 'openthrottle-mcp';
+
 /** Docker and Podman container marker files. */
 export const USER_ENV_FILE_CONTAINER_MARKERS = Object.freeze([
   '/.dockerenv',

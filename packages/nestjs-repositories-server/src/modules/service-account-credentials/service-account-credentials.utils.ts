@@ -42,6 +42,9 @@ export function createServiceAccountCredentialsRepositoryMock(): ServiceAccountC
     upsertCredentialForToken: vi.fn(async () => {
       return null;
     }),
+    upsertTelemetryIngestCredential: vi.fn(async () => {
+      return null;
+    }),
     verifyBearerToken: vi.fn(async () => {
       return null;
     }),

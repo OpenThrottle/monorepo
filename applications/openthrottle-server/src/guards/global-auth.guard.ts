@@ -1,6 +1,7 @@
 import {
   type CanActivate,
   type ExecutionContext,
+  ForbiddenException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -15,7 +16,10 @@ import { isRecord } from '@openthrottle/nodejs-utils';
 
 import { GlobalClsAuthHook } from '../auth/global-cls-auth-hook/global-cls-auth-hook.service.ts';
 import { ServiceAccountAuthService } from '../auth/service-account-auth/service-account-auth.service.ts';
+import type { ServiceAccountAuthentication } from '../auth/service-account-auth/service-account-auth.types.ts';
 import { GqlJwtAuthGuard } from './gql-jwt-auth.guard.ts';
+import { CREDENTIAL_SCOPES_KEY } from './guards.constants.ts';
+import { isCredentialScopeAllowed } from './guards.utils.ts';
 
 const readAuthorizationHeader = (req: object): string | undefined => {
   const headers = 'headers' in req ? req.headers : undefined;
@@ -40,6 +44,11 @@ const readAuthorizationHeader = (req: object): string | undefined => {
  * `@Public()` never 401s. When `Authorization` is present, soft-auth tries SA then JWT
  * and attaches a principal on success so public handlers (e.g. evaluateFeatureFlags) can
  * enrich targeting; invalid/missing credentials stay anonymous.
+ *
+ * A scoped service-account credential (non-null `scopes`) reaches only handlers that declare
+ * one of its scopes with `@CredentialScope()`: anywhere else it is refused with 403, and on a
+ * `@Public()` handler it stays anonymous. Guards run on root operations only (no
+ * `fieldResolverEnhancers`), so the check gates each Query/Mutation field and REST route.
  */
 @Injectable()
 export class GlobalAuthGuard implements CanActivate {
@@ -80,17 +89,25 @@ export class GlobalAuthGuard implements CanActivate {
         authorization,
       )
     ) {
-      const principal =
+      const authentication =
         await this.serviceAccountAuthService.tryAuthenticateAuthorizationHeader(
           authorization,
         );
 
-      if (principal == null) {
+      if (authentication == null) {
         throw new UnauthorizedException('Unauthorized');
       }
 
-      req.user = principal;
-      await this.globalClsAuthHook.populateFromPrincipal(principal);
+      if (!this.isScopeAllowed(context, authentication)) {
+        throw new ForbiddenException(
+          'This credential is not scoped for this operation',
+        );
+      }
+
+      req.user = authentication.principal;
+      await this.globalClsAuthHook.populateFromPrincipal(
+        authentication.principal,
+      );
       return true;
     }
 
@@ -127,17 +144,22 @@ export class GlobalAuthGuard implements CanActivate {
         authorization,
       )
     ) {
-      const principal =
+      const authentication =
         await this.serviceAccountAuthService.tryAuthenticateAuthorizationHeader(
           authorization,
         );
 
-      if (principal == null) {
+      if (
+        authentication == null ||
+        !this.isScopeAllowed(context, authentication)
+      ) {
         return;
       }
 
-      req.user = principal;
-      await this.globalClsAuthHook.populateFromPrincipal(principal);
+      req.user = authentication.principal;
+      await this.globalClsAuthHook.populateFromPrincipal(
+        authentication.principal,
+      );
       return;
     }
 
@@ -152,5 +174,22 @@ export class GlobalAuthGuard implements CanActivate {
     if (principal != null) {
       await this.globalClsAuthHook.populateFromPrincipal(principal);
     }
+  }
+
+  /**
+   * @description Whether the verified credential's scopes admit this handler (see
+   * {@link isCredentialScopeAllowed}).
+   */
+  private isScopeAllowed(
+    context: ExecutionContext,
+    authentication: ServiceAccountAuthentication,
+  ): boolean {
+    const handlerScopes =
+      this.reflector.getAllAndOverride<readonly string[] | undefined>(
+        CREDENTIAL_SCOPES_KEY,
+        [context.getHandler(), context.getClass()],
+      ) ?? [];
+
+    return isCredentialScopeAllowed(authentication.scopes, handlerScopes);
   }
 }

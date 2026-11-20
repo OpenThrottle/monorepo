@@ -87,8 +87,10 @@ x-server: &server
   OPENTHROTTLE_HOST_WORKSPACES_DIR: ${OPENTHROTTLE_WORKSPACES_DIR:-/tmp/workspaces}
   # Zero-config skill-usage telemetry: on boot the server fills in the HOST's
   # ~/.openthrottle/.env (bind-mounted at /host-openthrottle by the server
-  # service) with http://127.0.0.1:<OPENTHROTTLE_SERVER_PORT>/graphql and this
-  # token, so agent hooks in every checkout on this machine record skill usage.
+  # service) with http://127.0.0.1:<OPENTHROTTLE_SERVER_PORT>/graphql and a
+  # telemetry-only token derived from this one (it reaches the ingest mutations
+  # and nothing else), so agent hooks in every checkout on this machine record
+  # skill usage.
   # Lines it writes carry a `# managed by openthrottle-server` marker; a value
   # you set yourself is never touched. Empty token = nothing written.
   OPENTHROTTLE_MCP_AUTH_TOKEN: ${OPENTHROTTLE_MCP_AUTH_TOKEN}
@@ -226,15 +228,20 @@ services:
     ports:
       - '${OPENTHROTTLE_SERVER_PORT}:${OPENTHROTTLE_SERVER_PORT}'
     restart: always
+    # Default is the image's own distroless `nonroot`. On Linux Docker Engine set
+    # OPENTHROTTLE_SERVER_USER to your `id -u`:`id -g` so the host config file
+    # below is written as you (see .env.default).
+    user: '${OPENTHROTTLE_SERVER_USER:-65532:65532}'
     volumes:
       - '${OPENTHROTTLE_WORKSPACES_DIR:-/tmp/workspaces}:/workspaces'
       # The host's user config dir, so the server can write the telemetry
       # endpoint + token where agent hooks on this machine read them (see
       # OPENTHROTTLE_USER_CONFIG_DIR above). Docker Desktop (macOS/Windows) maps
       # ownership to you. On Linux Docker Engine, `mkdir -p ~/.openthrottle`
-      # BEFORE the first `up` (otherwise Docker creates it root-owned) and make
-      # it writable by the container user; if the write fails the server logs
-      # one warning and boots anyway, and you can paste the two lines yourself.
+      # BEFORE the first `up` (otherwise Docker creates it root-owned) and set
+      # OPENTHROTTLE_SERVER_USER to your uid:gid. Do not chmod the directory open
+      # instead: the default container user would then create a 0600 file only it
+      # can read. If the write fails the server logs one warning and boots anyway.
       - '${OPENTHROTTLE_HOST_CONFIG_DIR:-${HOME}/.openthrottle}:/host-openthrottle'
 
   #############################################################################

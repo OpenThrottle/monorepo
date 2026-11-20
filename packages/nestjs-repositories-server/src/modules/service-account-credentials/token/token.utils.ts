@@ -1,7 +1,7 @@
 /**
  * @description Parsing and formatting for service account bearer tokens (`ot_sa_<prefix>_<secret>`).
  */
-import { timingSafeEqual } from 'node:crypto';
+import { createHmac, timingSafeEqual } from 'node:crypto';
 
 import { SERVICE_ACCOUNT_BEARER_PREFIX } from './token.constants.ts';
 
@@ -72,4 +72,21 @@ export function safeEqualStrings(a: string, b: string): boolean {
     return false;
   }
   return timingSafeEqual(bufA, bufB);
+}
+
+/**
+ * @description Derives a stable child `ot_sa_<prefix>_<secret>` token from a parent token and a
+ * purpose, by HMAC-SHA256 keyed on the parent. Deterministic, so every process holding the
+ * parent agrees on the child without storing it, and one-way, so a leaked child never reveals
+ * the parent. The child only verifies once a credential is upserted for it.
+ * @public
+ */
+export function deriveServiceAccountToken(
+  parentToken: string,
+  purpose: string,
+): string {
+  const digest = createHmac('sha256', parentToken.trim())
+    .update(`openthrottle:${purpose}:v1`)
+    .digest('hex');
+  return formatServiceAccountToken(digest.slice(0, 12), digest.slice(12));
 }

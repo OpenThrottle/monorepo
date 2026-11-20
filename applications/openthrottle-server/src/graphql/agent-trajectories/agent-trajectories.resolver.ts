@@ -11,6 +11,7 @@ import {
   AGENT_TRAJECTORY_SOURCE,
   AgentTrajectoriesRepository,
   type AgentTrajectorySource,
+  SERVICE_ACCOUNT_CREDENTIAL_SCOPES,
 } from '@openthrottle/nestjs-repositories-server';
 import {
   capTrajectory,
@@ -19,6 +20,7 @@ import {
 } from '@openthrottle/openthrottle-agentic-utils';
 import { QueryFailedError } from 'typeorm';
 
+import { CredentialScope } from '../../guards/credential-scope.decorator.ts';
 import {
   RecordAgentTrajectoryInput,
   ReplaceAgentTrajectoryInput,
@@ -93,6 +95,7 @@ export class AgentTrajectoriesResolver {
     return rows.map(toAgentTrajectoryObject);
   }
 
+  @CredentialScope(SERVICE_ACCOUNT_CREDENTIAL_SCOPES.TELEMETRY_INGEST)
   @Mutation(() => AgentTrajectoryObject, {
     description: `Record an ATIF trajectory for a plan run. With an idempotencyKey a duplicate is a successful no-op that returns the stored row. The document is validated, capped at 4 MiB server-side (elided observations set truncated) and summarized into token, cost and tool-call columns.`,
   })

@@ -44,6 +44,7 @@ const toCredentialObject = (
     lastUsedAt: credential.lastUsedAt,
     prefix: credential.prefix,
     revokedAt: credential.revokedAt,
+    scopes: credential.scopes,
     serviceAccountId: credential.serviceAccountId,
   };
 };

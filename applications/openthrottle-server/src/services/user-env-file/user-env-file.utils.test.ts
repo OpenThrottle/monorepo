@@ -1,4 +1,11 @@
+import { createMock } from '@golevelup/ts-vitest';
 import type { EnsureUserEnvEntriesResult } from '@openthrottle/agentic-hooks';
+import type {
+  ServiceAccountCredential,
+  ServiceAccountCredentialsRepository,
+  ServiceAccountsRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import { serviceAccountsFactory } from '@openthrottle/nestjs-repositories-server/testing';
 import { describe, expect, it, vi } from 'vitest';
 
 import {
@@ -8,10 +15,12 @@ import {
 import type { EnsureUserEnvFileOnBootParams } from './user-env-file.types.ts';
 import {
   ensureUserEnvFileOnBoot,
+  provisionTelemetryIngestToken,
   resolveUserEnvFilePlan,
 } from './user-env-file.utils.ts';
 
 const TOKEN = 'ot_sa_abc_secret';
+const SCOPED_TOKEN = 'ot_sa_scoped_child';
 const PRIMARY_ENV = { OPENTHROTTLE_MCP_AUTH_TOKEN: TOKEN };
 
 const noFiles = (): boolean => {
@@ -24,7 +33,7 @@ const dockerFiles = (path: string): boolean => {
 
 describe('resolveUserEnvFilePlan', () => {
   describe('on the primary server', () => {
-    it('writes the loopback URL for its own port and the MCP token', () => {
+    it('plans the loopback URL for its own port with the MCP token as parent', () => {
       const plan = resolveUserEnvFilePlan({
         env: PRIMARY_ENV,
         fileExists: noFiles,
@@ -33,11 +42,9 @@ describe('resolveUserEnvFilePlan', () => {
 
       expect(plan).toEqual({
         configDir: undefined,
-        entries: {
-          authToken: TOKEN,
-          graphqlUrl: 'http://127.0.0.1:6021/graphql',
-        },
+        graphqlUrl: 'http://127.0.0.1:6021/graphql',
         kind: 'write',
+        parentToken: TOKEN,
       });
     });
   });
@@ -118,14 +125,20 @@ describe('ensureUserEnvFileOnBoot', () => {
       return result;
     });
     const logger = { info: vi.fn(), warn: vi.fn() };
+    const provisionTelemetryToken = vi.fn<
+      EnsureUserEnvFileOnBootParams['provisionTelemetryToken']
+    >(async () => {
+      return { kind: 'provisioned', token: SCOPED_TOKEN };
+    });
     const params: EnsureUserEnvFileOnBootParams = {
       ensure,
       env,
       fileExists: noFiles,
       logger,
       port: 6021,
+      provisionTelemetryToken,
     };
-    return { ensure, logger, params };
+    return { ensure, logger, params, provisionTelemetryToken };
   };
 
   const SUCCESS = {
@@ -136,54 +149,79 @@ describe('ensureUserEnvFileOnBoot', () => {
     token: 'refreshed',
   } as const;
 
-  it('calls the writer with the plan and logs one line on a write', () => {
-    const { ensure, logger, params } = setup(SUCCESS);
+  it('writes the provisioned telemetry token, never the MCP token', async () => {
+    const { ensure, logger, params, provisionTelemetryToken } = setup(SUCCESS);
 
-    ensureUserEnvFileOnBoot(params);
+    await ensureUserEnvFileOnBoot(params);
 
+    expect(provisionTelemetryToken).toHaveBeenCalledWith(TOKEN);
     expect(ensure).toHaveBeenCalledWith(
-      { authToken: TOKEN, graphqlUrl: 'http://127.0.0.1:6021/graphql' },
+      { authToken: SCOPED_TOKEN, graphqlUrl: 'http://127.0.0.1:6021/graphql' },
       undefined,
     );
     expect(logger.info).toHaveBeenCalledTimes(1);
     expect(logger.warn).not.toHaveBeenCalled();
   });
 
-  it('stays silent when the file is already current', () => {
+  it('writes nothing and warns once when provisioning fails', async () => {
+    const { ensure, logger, params, provisionTelemetryToken } = setup(SUCCESS);
+    provisionTelemetryToken.mockResolvedValue({
+      kind: 'failed',
+      reason: 'openthrottle-mcp missing',
+    });
+
+    await ensureUserEnvFileOnBoot(params);
+
+    expect(ensure).not.toHaveBeenCalled();
+    expect(logger.warn).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not throw when provisioning rejects', async () => {
+    const { ensure, logger, params, provisionTelemetryToken } = setup(SUCCESS);
+    provisionTelemetryToken.mockRejectedValue(new Error('db down'));
+
+    await expect(ensureUserEnvFileOnBoot(params)).resolves.toBeUndefined();
+
+    expect(ensure).not.toHaveBeenCalled();
+    expect(logger.warn).toHaveBeenCalledTimes(1);
+  });
+
+  it('stays silent when the file is already current', async () => {
     const { logger, params } = setup({ ...SUCCESS, changed: false });
 
-    ensureUserEnvFileOnBoot(params);
+    await ensureUserEnvFileOnBoot(params);
 
     expect(logger.info).not.toHaveBeenCalled();
     expect(logger.warn).not.toHaveBeenCalled();
   });
 
-  it('warns once when the writer fails', () => {
+  it('warns once when the writer fails', async () => {
     const { logger, params } = setup({
       envPath: '/home/u/.openthrottle/.env',
       error: 'EACCES',
       ok: false,
     });
 
-    ensureUserEnvFileOnBoot(params);
+    await ensureUserEnvFileOnBoot(params);
 
     expect(logger.warn).toHaveBeenCalledTimes(1);
     expect(logger.info).not.toHaveBeenCalled();
   });
 
-  it('never calls the writer on a worktree server', () => {
-    const { ensure, logger, params } = setup(SUCCESS, {
+  it('never provisions or writes on a worktree server', async () => {
+    const { ensure, logger, params, provisionTelemetryToken } = setup(SUCCESS, {
       ...PRIMARY_ENV,
       OT_WORKTREE_DB: 'shared',
     });
 
-    ensureUserEnvFileOnBoot(params);
+    await ensureUserEnvFileOnBoot(params);
 
+    expect(provisionTelemetryToken).not.toHaveBeenCalled();
     expect(ensure).not.toHaveBeenCalled();
     expect(logger.warn).not.toHaveBeenCalled();
   });
 
-  it('does not throw when the writer itself throws', () => {
+  it('does not throw when the writer itself throws', async () => {
     const { logger, params } = setup(SUCCESS);
     const throwing = {
       ...params,
@@ -192,9 +230,70 @@ describe('ensureUserEnvFileOnBoot', () => {
       },
     };
 
-    expect(() => {
-      ensureUserEnvFileOnBoot(throwing);
-    }).not.toThrow();
+    await expect(ensureUserEnvFileOnBoot(throwing)).resolves.toBeUndefined();
     expect(logger.warn).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('provisionTelemetryIngestToken', () => {
+  const setup = (accountId: string | null) => {
+    const findByName = vi.fn<ServiceAccountsRepository['findByName']>(
+      async () => {
+        return accountId == null
+          ? null
+          : serviceAccountsFactory.build({ id: accountId });
+      },
+    );
+    const upsertTelemetryIngestCredential = vi.fn<
+      ServiceAccountCredentialsRepository['upsertTelemetryIngestCredential']
+    >(async () => {
+      return {
+        action: 'created',
+        credential: createMock<ServiceAccountCredential>(),
+        token: SCOPED_TOKEN,
+      };
+    });
+    return {
+      findByName,
+      params: {
+        credentials: { upsertTelemetryIngestCredential },
+        parentToken: TOKEN,
+        serviceAccounts: { findByName },
+      },
+      upsertTelemetryIngestCredential,
+    };
+  };
+
+  it('provisions on the openthrottle-mcp account and returns the child token', async () => {
+    const { findByName, params, upsertTelemetryIngestCredential } =
+      setup('sa-1');
+
+    await expect(provisionTelemetryIngestToken(params)).resolves.toEqual({
+      kind: 'provisioned',
+      token: SCOPED_TOKEN,
+    });
+    expect(findByName).toHaveBeenCalledWith('openthrottle-mcp');
+    expect(upsertTelemetryIngestCredential).toHaveBeenCalledWith({
+      parentToken: TOKEN,
+      serviceAccountId: 'sa-1',
+    });
+  });
+
+  it('fails without the openthrottle-mcp account', async () => {
+    const { params, upsertTelemetryIngestCredential } = setup(null);
+
+    await expect(provisionTelemetryIngestToken(params)).resolves.toMatchObject({
+      kind: 'failed',
+    });
+    expect(upsertTelemetryIngestCredential).not.toHaveBeenCalled();
+  });
+
+  it('fails when the account is disabled', async () => {
+    const { params, upsertTelemetryIngestCredential } = setup('sa-1');
+    upsertTelemetryIngestCredential.mockResolvedValue(null);
+
+    await expect(provisionTelemetryIngestToken(params)).resolves.toMatchObject({
+      kind: 'failed',
+    });
   });
 });

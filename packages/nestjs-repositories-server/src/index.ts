@@ -186,6 +186,8 @@ export * from './modules/scheduled-agent-jobs/scheduled-agent-jobs.module.ts';
 export * from './modules/scheduled-agent-jobs/scheduled-agent-jobs.repository.ts';
 export type * from './modules/scheduled-agent-jobs/scheduled-agent-jobs.types.ts';
 export * from './modules/scheduled-agent-jobs/scheduler-key/scheduler-key.utils.ts';
+export * from './modules/service-account-credentials/scope/scope.constants.ts';
+export type * from './modules/service-account-credentials/scope/scope.types.ts';
 export * from './modules/service-account-credentials/secret/secret.constants.ts';
 export * from './modules/service-account-credentials/secret/secret.utils.ts';
 export * from './modules/service-account-credentials/service-account-credential.entity.ts';

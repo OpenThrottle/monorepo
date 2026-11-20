@@ -36,6 +36,12 @@ export class ServiceAccountCredentialObject implements PublicServiceAccountCrede
   @Field(() => Date, { nullable: true })
   revokedAt!: Date | null;
 
+  @Field(() => [String], {
+    description: `Scope allow-list (e.g. telemetry:ingest). Null means unrestricted: the credential reaches whatever its service account can.`,
+    nullable: true,
+  })
+  scopes!: string[] | null;
+
   @Field(() => ID)
   serviceAccountId!: string;
 }

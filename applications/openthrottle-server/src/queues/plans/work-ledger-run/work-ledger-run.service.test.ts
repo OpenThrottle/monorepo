@@ -117,6 +117,7 @@ describe('WorkLedgerRunService', () => {
     );
     credentials.verifyBearerToken.mockResolvedValue({
       credentialId: 'cred-1',
+      scopes: null,
       serviceAccountId: 'principal-sa',
     });
 

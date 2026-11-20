@@ -1,9 +1,13 @@
 /**
  * @description One-shot provisioning entry for the Docker-native install, run from
  * the already-published `openthrottle/server` image (so there is no separate
- * `bootstrap` image to build/publish/pull). Creates the default login user and,
+ * `bootstrap` image to build/publish/pull). Creates the default login user, links
+ * the bootstrap service accounts to it as their acting user (without that, every
+ * user-attributed ingest such as the telemetry heartbeat is refused) and,
  * when OPENTHROTTLE_MCP_AUTH_TOKEN / OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN are set,
- * upserts matching `ot_sa` service-account credentials. Idempotent.
+ * upserts matching `ot_sa` service-account credentials, plus the `telemetry:ingest`-scoped
+ * credential derived from the MCP token (the one the server writes into
+ * `~/.openthrottle/.env`). Idempotent.
  *
  * Compose runs it via a `command` override on the server image:
  *   command: ["-r", "dotenv/config", "build/src/bootstrap.js"]
@@ -74,6 +78,49 @@ async function ensureDefaultUser(
   return existing;
 }
 
+/**
+ * @description Links each bootstrap service account to the default user via acting_user_id,
+ * as scripts/bootstrap-default-user.ts does on the host. Only fills a NULL link; an explicit
+ * link to a different user is respected. Idempotent.
+ */
+async function linkActingUser(
+  dataSource: DataSource,
+  userId: string,
+): Promise<void> {
+  const serviceAccountRepository = dataSource.getRepository(ServiceAccount);
+
+  for (const account of BOOTSTRAP_ACCOUNTS) {
+    // eslint-disable-next-line no-await-in-loop -- two fixed accounts; run in order for stable logs
+    const row = await serviceAccountRepository.findOne({
+      where: { name: account.name },
+    });
+
+    if (row == null) {
+      console.log(
+        `Acting user ${account.name}: service account missing (apply migrations first); skipped.`,
+      );
+      continue;
+    }
+
+    if (row.actingUserId === userId) {
+      console.log(`Acting user ${account.name}: already linked.`);
+      continue;
+    }
+
+    if (row.actingUserId != null) {
+      console.log(
+        `Acting user ${account.name}: linked to a different user; left as-is.`,
+      );
+      continue;
+    }
+
+    row.actingUserId = userId;
+    // eslint-disable-next-line no-await-in-loop -- see above
+    await serviceAccountRepository.save(row);
+    console.log(`Acting user ${account.name}: linked to ${USER_EMAIL}.`);
+  }
+}
+
 async function ensureAllRoles(
   rolesRepository: RolesRepository,
   userId: string,
@@ -134,6 +181,46 @@ async function provisionServiceAccount(
   console.log(`${account.name}: ${detail} from ${account.envVar}.`);
 }
 
+/**
+ * @description Provisions the telemetry-only credential derived from
+ * OPENTHROTTLE_MCP_AUTH_TOKEN on the openthrottle-mcp account. The server also does this at
+ * boot; doing it here means the token verifies before the first boot finishes.
+ */
+async function provisionTelemetryIngestCredential(
+  dataSource: DataSource,
+  serviceAccountCredentialsRepository: ServiceAccountCredentialsRepository,
+): Promise<void> {
+  const parentToken = (process.env.OPENTHROTTLE_MCP_AUTH_TOKEN ?? '').trim();
+  if (parentToken === '') {
+    console.log(
+      'Skip telemetry-ingest credential: OPENTHROTTLE_MCP_AUTH_TOKEN not set.',
+    );
+    return;
+  }
+
+  const row = await dataSource
+    .getRepository(ServiceAccount)
+    .findOne({ where: { name: 'openthrottle-mcp' } });
+  if (row == null) {
+    throw new Error(
+      `Missing service account "openthrottle-mcp". Apply migrations first.`,
+    );
+  }
+
+  const result =
+    await serviceAccountCredentialsRepository.upsertTelemetryIngestCredential({
+      parentToken,
+      serviceAccountId: row.id,
+    });
+  if (result == null) {
+    throw new Error(
+      'Failed to provision the telemetry-ingest credential: openthrottle-mcp is missing or disabled.',
+    );
+  }
+
+  console.log(`telemetry-ingest: ${result.action} credential.`);
+}
+
 async function main(): Promise<void> {
   if (USER_PASSWORD === '') {
     throw new Error(
@@ -161,6 +248,7 @@ async function main(): Promise<void> {
     console.log('🔐 OpenThrottle bootstrap — default user + service accounts');
     const user = await ensureDefaultUser(usersRepository);
     await ensureAllRoles(rolesRepository, user.id);
+    await linkActingUser(dataSource, user.id);
     for (const account of BOOTSTRAP_ACCOUNTS) {
       // eslint-disable-next-line no-await-in-loop -- provision sequentially for readable logs
       await provisionServiceAccount(
@@ -169,6 +257,10 @@ async function main(): Promise<void> {
         account,
       );
     }
+    await provisionTelemetryIngestCredential(
+      dataSource,
+      serviceAccountCredentialsRepository,
+    );
 
     console.log(`✅ bootstrap complete — login: ${USER_EMAIL}`);
   } finally {

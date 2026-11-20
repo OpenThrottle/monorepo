@@ -18,6 +18,7 @@ export type ServiceAccountCredentialData = Pick<
   | 'lastUsedAt'
   | 'prefix'
   | 'revokedAt'
+  | 'scopes'
   | 'secretHash'
   | 'serviceAccountId'
 >;
@@ -32,21 +33,28 @@ export interface ServiceAccountCredentialCreateInput
   extends
     Omit<
       CreateModelInput<ServiceAccountCredential>,
-      'expiresAt' | 'label' | 'lastUsedAt' | 'revokedAt' | 'serviceAccount'
+      | 'expiresAt'
+      | 'label'
+      | 'lastUsedAt'
+      | 'revokedAt'
+      | 'scopes'
+      | 'serviceAccount'
     >,
     Partial<
       Pick<
         CreateModelInput<ServiceAccountCredential>,
-        'expiresAt' | 'label' | 'lastUsedAt' | 'revokedAt'
+        'expiresAt' | 'label' | 'lastUsedAt' | 'revokedAt' | 'scopes'
       >
     > {}
 
 /**
- * @description Result of a successful `verifyBearerToken`.
+ * @description Result of a successful `verifyBearerToken`. `scopes` is the credential's
+ * allow-list, or null when it is unrestricted.
  * @public
  */
 export type VerifiedServiceAccountCredential = {
   readonly credentialId: string;
+  readonly scopes: readonly string[] | null;
   readonly serviceAccountId: string;
 };
 
@@ -69,6 +77,15 @@ export type UpsertServiceAccountCredentialResult = {
   readonly action: 'created' | 'noop' | 'updated';
   readonly credential: ServiceAccountCredential;
 };
+
+/**
+ * @description Outcome of `upsertTelemetryIngestCredential`: the upsert plus the derived
+ * plaintext token it provisioned.
+ * @public
+ */
+export interface UpsertTelemetryIngestCredentialResult extends UpsertServiceAccountCredentialResult {
+  readonly token: string;
+}
 
 /**
  * @description A {@link ServiceAccountCredentialsRepository} mock: every inherited
@@ -99,6 +116,9 @@ export interface ServiceAccountCredentialsRepositoryMock extends BaseRepositoryM
   >;
   readonly upsertCredentialForToken: Mock<
     ServiceAccountCredentialsRepository['upsertCredentialForToken']
+  >;
+  readonly upsertTelemetryIngestCredential: Mock<
+    ServiceAccountCredentialsRepository['upsertTelemetryIngestCredential']
   >;
   readonly verifyBearerToken: Mock<
     ServiceAccountCredentialsRepository['verifyBearerToken']

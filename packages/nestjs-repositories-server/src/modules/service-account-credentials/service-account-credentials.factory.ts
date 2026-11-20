@@ -23,6 +23,7 @@ export const serviceAccountCredentialsFactory = Factory.define<
   lastUsedAt: null,
   prefix: faker.string.alphanumeric(12),
   revokedAt: null,
+  scopes: null,
   secretHash: '$2b$10$dummy.hash.for.tests',
   serviceAccountId: faker.string.uuid(),
 }));

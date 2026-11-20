@@ -4183,6 +4183,11 @@ type ServiceAccountCredentialObject {
   """Lookup prefix embedded in ot_sa_<prefix>_<secret> tokens."""
   prefix: String!
   revokedAt: DateTime
+
+  """
+  Scope allow-list (e.g. telemetry:ingest). Null means unrestricted: the credential reaches whatever its service account can.
+  """
+  scopes: [String!]
   serviceAccountId: ID!
 }
 

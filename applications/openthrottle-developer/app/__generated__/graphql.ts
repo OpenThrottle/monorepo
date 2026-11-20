@@ -6647,6 +6647,8 @@ export type ServiceAccountCredentialObject = {
   /** Lookup prefix embedded in ot_sa_<prefix>_<secret> tokens. */
   prefix: Scalars['String']['output'];
   revokedAt?: Maybe<Scalars['DateTime']['output']>;
+  /** Scope allow-list (e.g. telemetry:ingest). Null means unrestricted: the credential reaches whatever its service account can. */
+  scopes?: Maybe<Array<Scalars['String']['output']>>;
   serviceAccountId: Scalars['ID']['output'];
 };
 

@@ -1,16 +1,16 @@
 /**
- * @description Validates `Bearer ot_sa_<prefix>_<secret>` and returns an {@link AuthPrincipal}.
+ * @description Validates `Bearer ot_sa_<prefix>_<secret>` and returns the {@link AuthPrincipal}
+ * it acts as, with the credential's scope allow-list.
  */
 
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import {
-  authPrincipalFromServiceAccountId,
-  type ServiceAccountAuthPrincipal,
-} from '@openthrottle/nestjs-auth';
+import { authPrincipalFromServiceAccountId } from '@openthrottle/nestjs-auth';
 import {
   normalizeServiceAccountBearerToken,
   ServiceAccountCredentialsRepository,
 } from '@openthrottle/nestjs-repositories-server';
+
+import type { ServiceAccountAuthentication } from './service-account-auth.types.ts';
 
 @Injectable()
 export class ServiceAccountAuthService {
@@ -30,19 +30,19 @@ export class ServiceAccountAuthService {
   }
 
   /**
-   * @description Verifies a service-account bearer and returns the principal, or throws {@link UnauthorizedException}.
+   * @description Verifies a service-account bearer and returns its authentication, or throws {@link UnauthorizedException}.
    */
   async authenticateAuthorizationHeader(
     authorization: string,
-  ): Promise<ServiceAccountAuthPrincipal> {
-    const principal =
+  ): Promise<ServiceAccountAuthentication> {
+    const authentication =
       await this.tryAuthenticateAuthorizationHeader(authorization);
 
-    if (principal == null) {
+    if (authentication == null) {
       throw new UnauthorizedException('Unauthorized');
     }
 
-    return principal;
+    return authentication;
   }
 
   /**
@@ -50,7 +50,7 @@ export class ServiceAccountAuthService {
    */
   async tryAuthenticateAuthorizationHeader(
     authorization: string,
-  ): Promise<ServiceAccountAuthPrincipal | null> {
+  ): Promise<ServiceAccountAuthentication | null> {
     if (!this.isServiceAccountAuthorization(authorization)) {
       return null;
     }
@@ -64,6 +64,9 @@ export class ServiceAccountAuthService {
       return null;
     }
 
-    return authPrincipalFromServiceAccountId(verified.serviceAccountId);
+    return {
+      principal: authPrincipalFromServiceAccountId(verified.serviceAccountId),
+      scopes: verified.scopes,
+    };
   }
 }

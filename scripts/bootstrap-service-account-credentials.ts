@@ -13,6 +13,10 @@
  * - Mint-and-print (host `setup.sh` path): when the env var is unset, mint a
  *   random credential and print it once, skipping accounts that already have an
  *   active credential (unchanged legacy behavior).
+ *
+ * Then, whenever the openthrottle-mcp token is known (env or the local secrets file), it
+ * provisions the `telemetry:ingest`-scoped credential derived from it — the token the server
+ * writes into `~/.openthrottle/.env`. The server repeats this at boot, so it is best-effort here.
  */
 
 import { fileURLToPath } from 'node:url';
@@ -257,6 +261,52 @@ export async function provisionAccount(
   );
 }
 
+/**
+ * Provision the telemetry-only credential derived from the openthrottle-mcp token. Best-effort:
+ * the server does the same at boot, so a failure here only warns.
+ */
+export async function provisionTelemetryIngestCredential(
+  dataSource: DataSource,
+  serviceAccountCredentialsRepository: ServiceAccountCredentialsRepository,
+): Promise<void> {
+  const envVar = 'OPENTHROTTLE_MCP_AUTH_TOKEN';
+  const parentToken = (
+    process.env[envVar] ||
+    (await readLocalSecrets())[envVar] ||
+    ''
+  ).trim();
+  if (parentToken === '') {
+    logger.info(`Skip telemetry-ingest credential: no ${envVar} known.`);
+    return;
+  }
+
+  const row = await dataSource.getRepository(ServiceAccount).findOne({
+    where: { name: 'openthrottle-mcp' },
+  });
+  if (row == null) {
+    logger.info(
+      'Skip telemetry-ingest credential: no openthrottle-mcp account.',
+    );
+    return;
+  }
+
+  try {
+    const result =
+      await serviceAccountCredentialsRepository.upsertTelemetryIngestCredential(
+        { parentToken, serviceAccountId: row.id },
+      );
+    logger.info(
+      `telemetry-ingest: ${result?.action ?? 'skipped (account disabled)'} credential.`,
+    );
+  } catch (error) {
+    logger.info(
+      `telemetry-ingest credential not provisioned (${
+        error instanceof Error ? error.message : String(error)
+      }); the server retries at boot.`,
+    );
+  }
+}
+
 async function main(): Promise<void> {
   const dataSource = new DataSource(getOpenThrottleTypeOrmOptions());
   await dataSource.initialize();
@@ -276,6 +326,11 @@ async function main(): Promise<void> {
           account,
         ),
       ),
+    );
+
+    await provisionTelemetryIngestCredential(
+      dataSource,
+      serviceAccountCredentialsRepository,
     );
 
     if (outcomes.includes('minted') || outcomes.includes('rotated')) {

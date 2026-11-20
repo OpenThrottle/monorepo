@@ -14,11 +14,13 @@ import { Args, Mutation, Resolver } from '@nestjs/graphql';
 import { CurrentUser } from '@openthrottle/nestjs-auth';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
+  SERVICE_ACCOUNT_CREDENTIAL_SCOPES,
   type TelemetryHeartbeat,
   TelemetryHeartbeatsRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import { getOpenThrottleRoot } from '@openthrottle/openthrottle-agentic-utils';
 
+import { CredentialScope } from '../../guards/credential-scope.decorator.ts';
 import { NotificationsService } from '../../notifications/notifications.service.ts';
 import { EffectiveUserResolutionService } from '../../services/effective-user-resolution/effective-user-resolution.service.ts';
 import { TELEMETRY_COVERAGE_DEFAULT_WINDOW_DAYS } from '../telemetry-coverage/telemetry-coverage.constants.ts';
@@ -60,6 +62,7 @@ export class TelemetryHeartbeatResolver {
     private readonly telemetryHeartbeatsRepository: TelemetryHeartbeatsRepository,
   ) {}
 
+  @CredentialScope(SERVICE_ACCOUNT_CREDENTIAL_SCOPES.TELEMETRY_INGEST)
   @Mutation(() => TelemetryHeartbeatObject, {
     description: `Record the per-session coverage heartbeat: which machine, delivery leg and repo, and what sits in the local telemetry buffer. Upserted latest-wins per (machine, repo, leg, source). Attributed to the human user the authenticated principal acts as; a userId is never accepted from the client. A coverage warning this heartbeat newly raises for its machine is pushed once as a system.alert linking to /usage.`,
   })
