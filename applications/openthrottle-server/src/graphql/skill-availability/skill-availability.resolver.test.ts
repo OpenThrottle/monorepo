@@ -1,7 +1,6 @@
 import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import type { SkillAvailabilityRule } from '@openthrottle/nestjs-repositories-server';
-import type { UserSkillTag } from '@openthrottle/nestjs-repositories-server';
 import { SkillTagsRepository } from '@openthrottle/nestjs-repositories-server';
 import { createSkillTagsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
@@ -13,17 +12,6 @@ import { SkillAvailabilityResolver } from './skill-availability.resolver.ts';
 describe('SkillAvailabilityResolver', () => {
   const userId = '11111111-1111-4111-8111-111111111111';
   const projectId = '22222222-2222-4222-8222-222222222222';
-
-  const makeTag = (tag: string): UserSkillTag => {
-    return {
-      createdAt: new Date('2026-07-11T12:00:00.000Z'),
-      dimension: 'domain',
-      id: `id-${tag}`,
-      tag,
-      updatedAt: new Date('2026-07-11T12:00:00.000Z'),
-      userId,
-    };
-  };
 
   const mockSkillAvailabilityService = createMock<SkillAvailabilityService>({
     addRule: vi.fn(),
@@ -134,9 +122,9 @@ describe('SkillAvailabilityResolver', () => {
   });
 
   test('addSkillAvailabilityRule passes the caller vocabulary as knownTags', async () => {
-    mockSkillTagsRepository.listForUser.mockResolvedValue([
-      makeTag('github'),
-      makeTag('infra'),
+    mockSkillTagsRepository.listVocabularyTags.mockResolvedValue([
+      'github',
+      'infra',
     ]);
     const rule: SkillAvailabilityRule = createMock<SkillAvailabilityRule>({
       environment: null,
@@ -148,12 +136,17 @@ describe('SkillAvailabilityResolver', () => {
     });
     vi.mocked(mockSkillAvailabilityService.addRule).mockResolvedValue(rule);
 
-    const result = await resolver.addSkillAvailabilityRule(userId, projectId, {
-      slugAllow: [],
-      slugDeny: [],
-      tagAllow: ['github'],
-      tagDeny: [],
-    });
+    const result = await resolver.addSkillAvailabilityRule(
+      userId,
+      'user',
+      projectId,
+      {
+        slugAllow: [],
+        slugDeny: [],
+        tagAllow: ['github'],
+        tagDeny: [],
+      },
+    );
 
     expect(mockSkillAvailabilityService.addRule).toHaveBeenCalledWith(
       projectId,
@@ -164,7 +157,7 @@ describe('SkillAvailabilityResolver', () => {
   });
 
   test('updateSkillAvailabilityRule passes knownTags and delegates by ruleId', async () => {
-    mockSkillTagsRepository.listForUser.mockResolvedValue([makeTag('infra')]);
+    mockSkillTagsRepository.listVocabularyTags.mockResolvedValue(['infra']);
     const rule: SkillAvailabilityRule = createMock<SkillAvailabilityRule>({
       environment: 'interactive',
       id: 'rule-9',
@@ -177,6 +170,7 @@ describe('SkillAvailabilityResolver', () => {
 
     const result = await resolver.updateSkillAvailabilityRule(
       userId,
+      'user',
       'rule-9',
       { slugAllow: [], slugDeny: [], tagAllow: [], tagDeny: ['infra'] },
     );
@@ -187,6 +181,26 @@ describe('SkillAvailabilityResolver', () => {
       ['infra'],
     );
     expect(result).toMatchObject({ id: 'rule-9', tagDeny: ['infra'] });
+  });
+
+  test('addSkillAvailabilityRule reads a service-account vocabulary without seeding', async () => {
+    mockSkillTagsRepository.listVocabularyTags.mockResolvedValue(['github']);
+    vi.mocked(mockSkillAvailabilityService.addRule).mockResolvedValue(
+      createMock<SkillAvailabilityRule>({ id: 'rule-2' }),
+    );
+
+    await resolver.addSkillAvailabilityRule(
+      userId,
+      'service_account',
+      projectId,
+      { slugAllow: [], slugDeny: [], tagAllow: ['github'], tagDeny: [] },
+    );
+
+    expect(mockSkillTagsRepository.listVocabularyTags).toHaveBeenCalledWith(
+      userId,
+      { seedDefaults: false },
+    );
+    expect(mockSkillTagsRepository.listForUser).not.toHaveBeenCalled();
   });
 
   test('removeSkillAvailabilityRule returns the service boolean', async () => {

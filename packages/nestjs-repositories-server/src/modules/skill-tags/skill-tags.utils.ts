@@ -9,7 +9,7 @@ import type { UserSkillTag } from './user-skill-tag.entity.ts';
 
 /**
  * @description Builds a {@link SkillTagsRepositoryMock} that starts as an empty
- * `user_skill_tags` table (see `createBaseRepositoryMock`): `listForUser` returns no tags,
+ * `user_skill_tags` table (see `createBaseRepositoryMock`): `listForUser` and `listVocabularyTags` return no tags,
  * `addTag` and `renameTag` echo the requested tag back as an `ok` result, and `removeTag` reports
  * nothing removed. Provide it in place of `SkillTagsRepository` and stub per test. Test-only:
  * imports `vitest`.
@@ -27,6 +27,9 @@ export function createSkillTagsRepositoryMock(): SkillTagsRepositoryMock {
       };
     }),
     listForUser: vi.fn(async () => {
+      return [];
+    }),
+    listVocabularyTags: vi.fn(async () => {
       return [];
     }),
     removeTag: vi.fn(async () => {

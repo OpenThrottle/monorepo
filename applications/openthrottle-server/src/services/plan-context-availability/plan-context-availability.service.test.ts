@@ -18,7 +18,6 @@ import type {
   TagActionRulesRepository,
   Task,
   TasksRepository,
-  UserSkillTag,
   UsersRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import type {
@@ -49,14 +48,7 @@ const taskId = '00000000-0000-4000-8000-000000000003';
 const ownerId = '00000000-0000-4000-8000-000000000004';
 const callerId = '00000000-0000-4000-8000-000000000005';
 
-const vocabularyRows = ['backend', 'breakdown', 'github', 'terraform'].map(
-  (tag) => {
-    return asMock<UserSkillTag>({
-      dimension: tag === 'breakdown' ? 'phase' : 'domain',
-      tag,
-    });
-  },
-);
+const vocabularyTags = ['backend', 'breakdown', 'github', 'terraform'];
 
 const availabilityExceptionRule = (
   payload: Record<string, unknown>,
@@ -92,7 +84,7 @@ describe('PlanContextAvailabilityService', () => {
     const tasksRepository = createTasksRepositoryMock();
     const usersRepository = createUsersRepositoryMock();
     const skillTagsRepository = createSkillTagsRepositoryMock();
-    skillTagsRepository.listForUser.mockResolvedValue(vocabularyRows);
+    skillTagsRepository.listVocabularyTags.mockResolvedValue(vocabularyTags);
     usersRepository.findByGithubUsername.mockResolvedValue(
       usersFactory.build({ id: ownerId }),
     );
@@ -153,7 +145,12 @@ describe('PlanContextAvailabilityService', () => {
     );
 
     await expect(
-      service.resolveForPlan({ planId, taskId, vocabularyUserId: callerId }),
+      service.resolveForPlan({
+        planId,
+        taskId,
+        vocabularySeedDefaults: true,
+        vocabularyUserId: callerId,
+      }),
     ).rejects.toBeInstanceOf(BadRequestException);
   });
 
@@ -161,13 +158,18 @@ describe('PlanContextAvailabilityService', () => {
     planFindOne.mockResolvedValue(null);
 
     await expect(
-      service.resolveForPlan({ planId, vocabularyUserId: callerId }),
+      service.resolveForPlan({
+        planId,
+        vocabularySeedDefaults: true,
+        vocabularyUserId: callerId,
+      }),
     ).rejects.toBeInstanceOf(NotFoundException);
   });
 
   it('is annotation-only without matched exception rules: effective flags equal pure passthrough', async () => {
     const result = await service.resolveForPlan({
       planId,
+      vocabularySeedDefaults: true,
       vocabularyUserId: callerId,
     });
 
@@ -180,6 +182,7 @@ describe('PlanContextAvailabilityService', () => {
   it('annotates matchedPlanTags (domain intersection) and planRelevant, with provenance suffixes', async () => {
     const result = await service.resolveForPlan({
       planId,
+      vocabularySeedDefaults: true,
       vocabularyUserId: callerId,
     });
 
@@ -202,6 +205,7 @@ describe('PlanContextAvailabilityService', () => {
   it('the phase tag (breakdown) never appears in matchedPlanTags or the effective domain set', async () => {
     const result = await service.resolveForPlan({
       planId,
+      vocabularySeedDefaults: true,
       vocabularyUserId: callerId,
     });
 
@@ -215,6 +219,7 @@ describe('PlanContextAvailabilityService', () => {
 
     const result = await service.resolveForPlan({
       planId,
+      vocabularySeedDefaults: true,
       vocabularyUserId: callerId,
     });
 
@@ -230,6 +235,7 @@ describe('PlanContextAvailabilityService', () => {
 
     const result = await service.resolveForPlan({
       planId,
+      vocabularySeedDefaults: true,
       vocabularyUserId: callerId,
     });
 
@@ -254,6 +260,7 @@ describe('PlanContextAvailabilityService', () => {
 
     const result = await service.resolveForPlan({
       planId,
+      vocabularySeedDefaults: true,
       vocabularyUserId: callerId,
     });
 

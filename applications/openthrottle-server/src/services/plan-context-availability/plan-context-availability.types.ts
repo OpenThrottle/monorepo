@@ -26,6 +26,11 @@ export interface ResolveForPlanInput {
   readonly projectId?: string | null;
   /** Task context; must belong to the plan. */
   readonly taskId?: string | null;
+  /**
+   * Whether reading the vocabulary may seed the platform defaults. Only a user principal has a
+   * `users` row; pass false for a service account so the read writes nothing.
+   */
+  readonly vocabularySeedDefaults: boolean;
   /** Whose skill-tag vocabulary feeds the resolver (the reading identity). */
   readonly vocabularyUserId: string;
 }

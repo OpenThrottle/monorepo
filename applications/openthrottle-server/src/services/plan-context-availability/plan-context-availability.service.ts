@@ -109,7 +109,9 @@ export class PlanContextAvailabilityService {
 
     const [views, vocabulary, storedRuleSet] = await Promise.all([
       this.projectSkillsService.getSkillsForProject(projectId),
-      this.skillTagsRepository.listForUser(input.vocabularyUserId),
+      this.skillTagsRepository.listVocabularyTags(input.vocabularyUserId, {
+        seedDefaults: input.vocabularySeedDefaults,
+      }),
       this.skillAvailabilityService.getRuleSetForProject(projectId),
     ]);
 
@@ -133,7 +135,7 @@ export class PlanContextAvailabilityService {
       { environment: input.environment },
       skillInputs,
       ruleSet,
-      vocabulary.map((entry) => entry.tag),
+      vocabulary,
     );
 
     const domainTagSet = new Set(effectiveDomainTags);
@@ -170,8 +172,11 @@ export class PlanContextAvailabilityService {
     skillSlug: string,
     vocabularyUserId: string,
   ): Promise<boolean> {
+    // vocabularyUserId is the rule owner, a user principal, so first-read
+    // seeding is safe here.
     const availability = await this.resolveForPlan({
       planId,
+      vocabularySeedDefaults: true,
       vocabularyUserId,
     });
     if (availability.skills.length === 0) {

@@ -17,7 +17,11 @@
 
 import { BadRequestException } from '@nestjs/common';
 import { Args, ID, Query, Resolver } from '@nestjs/graphql';
-import { CurrentUser } from '@openthrottle/nestjs-auth';
+import type { AuthPrincipalKind } from '@openthrottle/nestjs-auth';
+import {
+  AUTH_PRINCIPAL_KIND_USER,
+  CurrentUser,
+} from '@openthrottle/nestjs-auth';
 import {
   ProjectsRepository,
   SkillTagsRepository,
@@ -65,6 +69,7 @@ export class SkillAvailabilityResolutionResolver {
   })
   async skillAvailability(
     @CurrentUser('sub') userId: string,
+    @CurrentUser('kind') principalKind: AuthPrincipalKind,
     @Args('projectId', { nullable: true, type: () => ID })
     projectId?: string,
     @Args('environment', { nullable: true, type: () => String })
@@ -90,6 +95,9 @@ export class SkillAvailabilityResolutionResolver {
     relevantOnly?: boolean,
   ): Promise<SkillAvailabilityResolutionResult> {
     const resolvedEnvironment = this.validateEnvironment(environment);
+    // Only a user principal has a `users` row to seed vocabulary rows under; a
+    // service account reads its rows (or the platform defaults) without writing.
+    const seedVocabulary = principalKind === AUTH_PRINCIPAL_KIND_USER;
 
     if (taskId != null && planId == null) {
       throw new BadRequestException('taskId requires planId.');
@@ -105,6 +113,7 @@ export class SkillAvailabilityResolutionResolver {
           planId,
           projectId: projectId ?? null,
           taskId: taskId ?? null,
+          vocabularySeedDefaults: seedVocabulary,
           vocabularyUserId: userId,
         });
       const skills = availability.skills.filter(
@@ -125,7 +134,9 @@ export class SkillAvailabilityResolutionResolver {
 
     const [views, vocabulary, ruleSet] = await Promise.all([
       this.projectSkillsService.getSkillsForProject(resolvedProjectId),
-      this.skillTagsRepository.listForUser(userId),
+      this.skillTagsRepository.listVocabularyTags(userId, {
+        seedDefaults: seedVocabulary,
+      }),
       this.skillAvailabilityService.getRuleSetForProject(resolvedProjectId),
     ]);
 
@@ -139,7 +150,7 @@ export class SkillAvailabilityResolutionResolver {
       { environment: resolvedEnvironment },
       inputs,
       ruleSet,
-      vocabulary.map((entry) => entry.tag),
+      vocabulary,
     );
 
     const skills: SkillAvailabilityResolvedSkillObject[] = result.skills.map(
