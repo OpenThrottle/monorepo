@@ -692,7 +692,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@types/mdx` | 2.0.14 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/mdx) |
 | `@types/morgan` | 1.9.10 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/morgan) |
 | `@types/ms` | 2.1.0 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/ms) |
-| `@types/node` | 18.19.130, 18.19.80, 24.19.2 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/node) |
+| `@types/node` | 18.19.130, 18.19.80, 24.19.2, 26.6.6 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/node) |
 | `@types/node-fetch` | 2.6.13 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/node-fetch) |
 | `@types/parse-json` | 4.0.2 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/parse-json) |
 | `@types/passport` | 1.0.17 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/passport) |
@@ -2044,7 +2044,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `unbzip2-stream` | 1.4.3 | MIT | [Jan Bölsche](https://github.com/regular/unbzip2-stream#readme) |
 | `unc-path-regex` | 0.1.2 | MIT | [Jon Schlinkert](https://github.com/regexhq/unc-path-regex) |
 | `undici` | 6.29.1, 7.30.1, 7.30.2, 8.12.4 | MIT | [source](https://undici.nodejs.org) |
-| `undici-types` | 5.26.5, 7.24.6 | MIT | [source](https://undici.nodejs.org) |
+| `undici-types` | 5.26.5, 7.24.6, 8.9.0 | MIT | [source](https://undici.nodejs.org) |
 | `unicode-canonical-property-names-ecmascript` | 2.0.1 | MIT | [Mathias Bynens](https://github.com/mathiasbynens/unicode-canonical-property-names-ecmascript) |
 | `unicode-emoji-modifier-base` | 1.0.0 | MIT | [Mathias Bynens](https://github.com/mathiasbynens/unicode-emoji-modifier-base) |
 | `unicode-match-property-ecmascript` | 2.0.0 | MIT | [Mathias Bynens](https://github.com/mathiasbynens/unicode-match-property-ecmascript) |

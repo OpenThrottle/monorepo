@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-OpenThrottle — an Nx + pnpm workspace monorepo (Node >= 22, pnpm only; `preinstall` blocks npm/yarn). It does both **task running** and **package publishing**. See [AGENTS.md](./AGENTS.md), [MONOREPO.md](./MONOREPO.md), and [CONTRIBUTING.md](./CONTRIBUTING.md) for deeper detail. Code style is normative in [AGENTS.md](./AGENTS.md) § Code style, with rationale and examples in [docs/monorepo/code-style.md](docs/monorepo/code-style.md).
+OpenThrottle — an Nx + pnpm workspace monorepo (Node >= 26, pnpm only; `preinstall` blocks npm/yarn). It does both **task running** and **package publishing**. See [AGENTS.md](./AGENTS.md), [MONOREPO.md](./MONOREPO.md), and [CONTRIBUTING.md](./CONTRIBUTING.md) for deeper detail. Code style is normative in [AGENTS.md](./AGENTS.md) § Code style, with rationale and examples in [docs/monorepo/code-style.md](docs/monorepo/code-style.md).
 
 **Agent/editor folders:** [docs/monorepo/agent-editor-folders.md](docs/monorepo/agent-editor-folders.md) — folder layout, Cursor vs Claude vs Ralph paths, duplication strategy, and where to edit. Claude-specific config: `.claude/settings.json`, `.claude/skills/` — a generated fan-out from `.agents/skills/`; Cursor reads `.agents/skills/` directly, so there is no `.cursor/skills` copy. Never hand-edit either generated dir; edit `skills/` and re-sync.
 

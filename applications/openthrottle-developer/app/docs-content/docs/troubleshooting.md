@@ -14,6 +14,7 @@ Fixes for the issues you're most likely to hit running the stack locally.
 This is a **pnpm-only** workspace; a `preinstall` guard rejects other package managers. Use pnpm:
 
 ```bash
+npm install --global corepack # Node 25+ no longer bundles it
 corepack enable
 pnpm install
 ```

@@ -8,7 +8,7 @@ Daily. This job exists because of a chronic, well-documented failure mode in thi
 
 ## Repo context
 
-OpenThrottle is an Nx + pnpm workspace monorepo (Node >= 22, pnpm only). Plans and tasks live in OpenThrottle (OT), reached through the `openthrottle-mcp` MCP server.
+OpenThrottle is an Nx + pnpm workspace monorepo (Node >= 26, pnpm only). Plans and tasks live in OpenThrottle (OT), reached through the `openthrottle-mcp` MCP server.
 
 Commands this job uses:
 

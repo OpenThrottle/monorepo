@@ -7,7 +7,7 @@ title: Architecture overview
 
 # Architecture overview
 
-OpenThrottle is an **Nx + pnpm workspace monorepo** (Node >= 22, pnpm only). It does both **task running** and **package publishing**. Tasks always run through Nx, prefixed with pnpm (`pnpm nx ...`).
+OpenThrottle is an **Nx + pnpm workspace monorepo** (Node >= 26, pnpm only). It does both **task running** and **package publishing**. Tasks always run through Nx, prefixed with pnpm (`pnpm nx ...`).
 
 ## Top-level layout
 

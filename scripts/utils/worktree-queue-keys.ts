@@ -166,7 +166,10 @@ const withRedis = async <T>(
   socket.on('error', fail);
   socket.on('close', () => fail(new Error('Redis connection closed')));
   socket.on('data', (chunk) => {
-    buffered = Buffer.concat([buffered, chunk]);
+    // No setEncoding, so chunks are Buffers; @types/node 26 types them as
+    // `string | Buffer`, so narrow rather than assume.
+    const bytes = typeof chunk === 'string' ? Buffer.from(chunk) : chunk;
+    buffered = Buffer.concat([buffered, bytes]);
     try {
       if (waiting === undefined) return;
       const reply = parseRespReply(buffered, 0);

@@ -8,7 +8,7 @@ Weekly. The registry changes at the speed features land, which is roughly weekly
 
 ## Repo context
 
-OpenThrottle is an Nx + pnpm workspace monorepo (Node >= 22, pnpm only).
+OpenThrottle is an Nx + pnpm workspace monorepo (Node >= 26, pnpm only).
 
 - **`packages/openthrottle-product/`** is the only source of truth for how OpenThrottle describes itself:
   - `src/data/data.positioning.ts` (`PRODUCT_POSITIONING`) is the positioning canon: tagline, lede and four pillars (`memory`, `runners`, `history`, `local`). The owner wrote it and changes it by hand. **Never propose a change to it.**

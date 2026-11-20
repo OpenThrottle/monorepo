@@ -53,5 +53,5 @@ await build({
   outfile: resolve(here, 'dist/bundle/bin-http.mjs'),
   platform: 'node',
   plugins: [workspaceSourceResolver],
-  target: 'node24',
+  target: 'node26',
 });
