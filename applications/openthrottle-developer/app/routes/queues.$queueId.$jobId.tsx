@@ -50,12 +50,11 @@ export const loader = async (args: Route.LoaderArgs) => {
     throw new Response('Queue name required', { status: 400 });
   }
 
-  const jobIdParam = args.params.jobId;
-  if (jobIdParam == null || jobIdParam === '') {
+  const jobId = args.params.jobId;
+  if (jobId == null || jobId === '') {
     throw new Response('Job id required', { status: 400 });
   }
 
-  const jobId = decodeURIComponent(jobIdParam);
   const { job } = await executeGraphqlWithAuth(
     args.request,
     GetQueueJobDetailsDocument,
@@ -109,18 +108,12 @@ export default function Component(
 
 export const action = async (args: Route.ActionArgs) => {
   const queueName = args.params.queueId;
-  const jobIdParam = args.params.jobId;
+  const jobId = args.params.jobId;
 
-  if (
-    queueName == null ||
-    queueName === '' ||
-    jobIdParam == null ||
-    jobIdParam === ''
-  ) {
+  if (queueName == null || queueName === '' || jobId == null || jobId === '') {
     return { retryJobError: 'Missing queue or job id.' };
   }
 
-  const jobId = decodeURIComponent(jobIdParam);
   const formData = await args.request.formData();
   const intent = formData.get('intent');
 
