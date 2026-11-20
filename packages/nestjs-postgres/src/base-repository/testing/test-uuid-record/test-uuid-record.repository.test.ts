@@ -66,7 +66,7 @@ const buildHarness = () => {
     findAndCount: vi.fn(),
     findOne: vi.fn(),
     manager: {
-      connection: {
+      dataSource: {
         driver: { prepareHydratedValue: vi.fn((value: unknown) => value) },
       },
     },
@@ -336,7 +336,7 @@ describe('BaseRepository (uuid key + is_deleted flag)', () => {
       const uuidWhere = { uuid: In(matches.map((match) => match.uuid)) };
 
       expect(harness.typeorm.find).toHaveBeenNthCalledWith(1, {
-        select: ['uuid'],
+        select: { uuid: true },
         take: POSTGRES_MAX_RETURNING_ROWS + 1,
         where: { isDeleted: LIVE_FLAG, quantity: 1 },
       });

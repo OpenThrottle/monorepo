@@ -226,7 +226,7 @@ export abstract class BaseRepository<
       mapRawRowToEntityInput<TEntity>(
         row,
         this.repository.metadata.columns,
-        this.repository.manager.connection.driver,
+        this.repository.manager.dataSource.driver,
       ),
     );
   }

@@ -37,7 +37,9 @@ export class RolesRepository extends BaseRepository<Role, RoleCreateInput> {
   async findAll(): Promise<Role[]> {
     return this.repository.find({
       order: { name: 'ASC' },
-      relations: ['permissions'],
+      relations: {
+        permissions: true,
+      },
     });
   }
 
@@ -46,7 +48,9 @@ export class RolesRepository extends BaseRepository<Role, RoleCreateInput> {
    */
   async findByName(name: string): Promise<Role | null> {
     return this.repository.findOne({
-      relations: ['permissions'],
+      relations: {
+        permissions: true,
+      },
       where: { name },
     });
   }
@@ -56,7 +60,9 @@ export class RolesRepository extends BaseRepository<Role, RoleCreateInput> {
    */
   async findRoleNamesByUserId(userId: string): Promise<string[]> {
     const user = await this.userRepository.findOne({
-      relations: ['roles'],
+      relations: {
+        roles: true,
+      },
       where: { id: userId },
     });
     if (!user?.roles) return [];
@@ -68,7 +74,11 @@ export class RolesRepository extends BaseRepository<Role, RoleCreateInput> {
    */
   async getPermissionsForUser(userId: string): Promise<string[]> {
     const user = await this.userRepository.findOne({
-      relations: ['roles', 'roles.permissions'],
+      relations: {
+        roles: {
+          permissions: true,
+        },
+      },
       where: { id: userId },
     });
 
@@ -91,7 +101,9 @@ export class RolesRepository extends BaseRepository<Role, RoleCreateInput> {
     Readonly<Record<string, readonly string[]>>
   > {
     const roles = await this.repository.find({
-      relations: ['permissions'],
+      relations: {
+        permissions: true,
+      },
     });
     const mapping: Record<string, string[]> = {};
     for (const role of roles) {
@@ -106,7 +118,9 @@ export class RolesRepository extends BaseRepository<Role, RoleCreateInput> {
    */
   async assignRoleToUser(userId: string, roleId: string): Promise<boolean> {
     const user = await this.userRepository.findOne({
-      relations: ['roles'],
+      relations: {
+        roles: true,
+      },
       where: { id: userId },
     });
     const role = await this.repository.findOne({ where: { id: roleId } });
@@ -123,7 +137,9 @@ export class RolesRepository extends BaseRepository<Role, RoleCreateInput> {
    */
   async removeRoleFromUser(userId: string, roleId: string): Promise<boolean> {
     const user = await this.userRepository.findOne({
-      relations: ['roles'],
+      relations: {
+        roles: true,
+      },
       where: { id: userId },
     });
     if (!user) return false;
@@ -141,7 +157,9 @@ export class RolesRepository extends BaseRepository<Role, RoleCreateInput> {
     permissionId: string,
   ): Promise<boolean> {
     const role = await this.repository.findOne({
-      relations: ['permissions'],
+      relations: {
+        permissions: true,
+      },
       where: { id: roleId },
     });
     if (!role) return false;
@@ -163,7 +181,9 @@ export class RolesRepository extends BaseRepository<Role, RoleCreateInput> {
     permissionId: string,
   ): Promise<boolean> {
     const role = await this.repository.findOne({
-      relations: ['permissions'],
+      relations: {
+        permissions: true,
+      },
       where: { id: roleId },
     });
     if (!role) return false;
@@ -179,7 +199,11 @@ export class RolesRepository extends BaseRepository<Role, RoleCreateInput> {
    */
   async findRolesForUser(userId: string): Promise<Role[]> {
     const user = await this.userRepository.findOne({
-      relations: ['roles', 'roles.permissions'],
+      relations: {
+        roles: {
+          permissions: true,
+        },
+      },
       where: { id: userId },
     });
     return user?.roles ?? [];
@@ -192,7 +216,9 @@ export class RolesRepository extends BaseRepository<Role, RoleCreateInput> {
     serviceAccountId: string,
   ): Promise<string[]> {
     const account = await this.serviceAccountRepository.findOne({
-      relations: ['roles'],
+      relations: {
+        roles: true,
+      },
       where: { id: serviceAccountId },
     });
     if (!account?.roles) return [];
@@ -206,7 +232,11 @@ export class RolesRepository extends BaseRepository<Role, RoleCreateInput> {
     serviceAccountId: string,
   ): Promise<string[]> {
     const account = await this.serviceAccountRepository.findOne({
-      relations: ['roles', 'roles.permissions'],
+      relations: {
+        roles: {
+          permissions: true,
+        },
+      },
       where: { id: serviceAccountId },
     });
 
@@ -227,7 +257,11 @@ export class RolesRepository extends BaseRepository<Role, RoleCreateInput> {
    */
   async findRolesForServiceAccount(serviceAccountId: string): Promise<Role[]> {
     const account = await this.serviceAccountRepository.findOne({
-      relations: ['roles', 'roles.permissions'],
+      relations: {
+        roles: {
+          permissions: true,
+        },
+      },
       where: { id: serviceAccountId },
     });
     return account?.roles ?? [];
@@ -242,7 +276,9 @@ export class RolesRepository extends BaseRepository<Role, RoleCreateInput> {
     roleId: string,
   ): Promise<boolean> {
     const account = await this.serviceAccountRepository.findOne({
-      relations: ['roles'],
+      relations: {
+        roles: true,
+      },
       where: { id: serviceAccountId },
     });
     const role = await this.repository.findOne({ where: { id: roleId } });
@@ -263,7 +299,9 @@ export class RolesRepository extends BaseRepository<Role, RoleCreateInput> {
     roleId: string,
   ): Promise<boolean> {
     const account = await this.serviceAccountRepository.findOne({
-      relations: ['roles'],
+      relations: {
+        roles: true,
+      },
       where: { id: serviceAccountId },
     });
     if (!account) return false;

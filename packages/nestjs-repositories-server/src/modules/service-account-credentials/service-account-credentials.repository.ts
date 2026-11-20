@@ -190,7 +190,9 @@ export class ServiceAccountCredentialsRepository extends BaseRepository<
     }
 
     const credential = await this.repository.findOne({
-      relations: ['serviceAccount'],
+      relations: {
+        serviceAccount: true,
+      },
       where: { prefix: parsed.prefix },
     });
 

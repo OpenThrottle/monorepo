@@ -30,10 +30,20 @@ export class AgentAccountsRepository extends BaseRepository<
   /**
    * @description Create the account, or refresh its descriptive fields and `last_seen_at`, in one
    * `INSERT … ON CONFLICT (user_id, provider, external_account_id) DO UPDATE`. A field the CLI
-   * stopped reporting keeps its last known value. Returns the account id, or null when the
-   * database returned none (the caller then writes its usage row unattributed).
+   * stopped reporting (null) is left out of the update, so it keeps its last known value.
+   * Returns the account id, or null when the database returned none (the caller then writes its
+   * usage row unattributed).
    */
   async upsertSeen(input: UpsertAgentAccountInput): Promise<string | null> {
+    const reportedColumns = [
+      input.email === null ? null : 'email',
+      input.orgId === null ? null : 'org_id',
+      input.orgName === null ? null : 'org_name',
+      input.plan === null ? null : 'plan',
+    ].filter((column) => {
+      return column !== null;
+    });
+
     const result = await this.repository
       .createQueryBuilder()
       .insert()
@@ -42,20 +52,18 @@ export class AgentAccountsRepository extends BaseRepository<
         credentialKind: input.credentialKind,
         email: input.email,
         externalAccountId: input.externalAccountId,
+        lastSeenAt: () => {
+          return 'NOW()';
+        },
         orgId: input.orgId,
         orgName: input.orgName,
         plan: input.plan,
         provider: input.provider,
         userId: input.userId,
       })
-      .onConflict(
-        `(user_id, provider, external_account_id) DO UPDATE SET
-          credential_kind = EXCLUDED.credential_kind,
-          email = COALESCE(EXCLUDED.email, agent_accounts.email),
-          org_id = COALESCE(EXCLUDED.org_id, agent_accounts.org_id),
-          org_name = COALESCE(EXCLUDED.org_name, agent_accounts.org_name),
-          plan = COALESCE(EXCLUDED.plan, agent_accounts.plan),
-          last_seen_at = NOW()`,
+      .orUpdate(
+        ['credential_kind', 'last_seen_at', ...reportedColumns],
+        ['user_id', 'provider', 'external_account_id'],
       )
       .returning('id')
       .execute();

@@ -54,7 +54,9 @@ export class RolesResolver {
   @Permissions(PERMISSIONS.USERS_READ)
   async role(@Args('id', { type: () => ID }) id: string): Promise<Role | null> {
     return this.rolesRepository.findOne({
-      relations: ['permissions'],
+      relations: {
+        permissions: true,
+      },
       where: { id },
     });
   }

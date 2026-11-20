@@ -57,7 +57,7 @@ const buildHarness = () => {
   builder.where.mockReturnValue(builder);
 
   const manager = {
-    connection: {
+    dataSource: {
       driver: { prepareHydratedValue: vi.fn((value: unknown) => value) },
     },
     insert: vi.fn(),
@@ -226,10 +226,10 @@ describe('BaseRepository', () => {
       harness.typeorm.findOne.mockResolvedValue(record);
 
       await expect(
-        harness.repository.findById(record.id, { relations: [] }),
+        harness.repository.findById(record.id, { relations: {} }),
       ).resolves.toBe(record);
       expect(harness.typeorm.findOne).toHaveBeenCalledWith({
-        relations: [],
+        relations: {},
         where: { id: record.id },
       });
     });
@@ -420,7 +420,7 @@ describe('BaseRepository', () => {
       });
       expect(harness.builder.returning).toHaveBeenCalledWith('*');
       expect(
-        harness.manager.connection.driver.prepareHydratedValue,
+        harness.manager.dataSource.driver.prepareHydratedValue,
       ).toHaveBeenCalled();
     });
 
@@ -572,7 +572,7 @@ describe('BaseRepository', () => {
         harness.repository.updateManyReturning({ quantity: 1 }, { note: 'x' }),
       ).rejects.toThrow(BadRequestException);
       expect(harness.typeorm.find).toHaveBeenCalledWith({
-        select: ['id'],
+        select: { id: true },
         take: POSTGRES_MAX_RETURNING_ROWS + 1,
         where: { deletedAt: IsNull(), quantity: 1 },
       });

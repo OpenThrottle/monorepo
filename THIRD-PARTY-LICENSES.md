@@ -13,13 +13,13 @@ Platform-specific prebuilt binaries (packages that declare `os`/`cpu`, e.g.
 `@rollup/rollup-linux-x64-gnu`, `fsevents`) are omitted: which ones install depends on
 the host OS, and each shares the license of the cross-platform toolchain already listed.
 
-**2113** third-party packages.
+**2112** third-party packages.
 
 ## License summary
 
 | License | Packages |
 | --- | --- |
-| MIT | 1820 |
+| MIT | 1819 |
 | Apache-2.0 | 95 |
 | ISC | 79 |
 | BSD-3-Clause | 55 |
@@ -813,7 +813,6 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `anymatch` | 3.1.3 | ISC | [Elan Shanker](https://github.com/micromatch/anymatch) |
 | `anynum` | 1.0.1 | MIT | [Amit Gupta](https://github.com/NaturalIntelligence/anynum#readme) |
 | `app-builder-lib` | 26.18.0 | MIT | [Vladimir Krivosheev](https://github.com/electron-userland/electron-builder) |
-| `app-root-path` | 3.1.0 | MIT | [Chris Morrell](https://github.com/inxilpro/node-app-root-path) |
 | `append-field` | 1.0.0 | MIT | [Linus Unnebäck](https://github.com/LinusU/node-append-field#readme) |
 | `arg` | 4.1.3 | MIT | [Josh Junon](https://github.com/zeit/arg#readme) |
 | `argparse` | 1.0.10 | MIT | [source](https://github.com/nodeca/argparse#readme) |
@@ -889,7 +888,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `braces` | 3.0.3 | MIT | [Jon Schlinkert](https://github.com/micromatch/braces) |
 | `browserslist` | 4.29.5 | MIT | [Andrey Sitnik](https://github.com/browserslist/browserslist#readme) |
 | `bser` | 2.1.2 | MIT | [Wez Furlong](https://facebook.github.io/watchman/docs/bser.html) |
-| `buffer` | 5.7.1, 6.0.3 | MIT | [Feross Aboukhadijeh](https://github.com/feross/buffer) |
+| `buffer` | 5.7.1 | MIT | [Feross Aboukhadijeh](https://github.com/feross/buffer) |
 | `buffer-equal-constant-time` | 1.0.1 | BSD-3-Clause | [GoInstant Inc., a salesforce.com company](https://github.com/goinstant/buffer-equal-constant-time#readme) |
 | `buffer-from` | 1.1.2 | MIT | [source](https://github.com/LinusU/buffer-from#readme) |
 | `buffer-image-size` | 0.6.4 | MIT | [netroy](https://github.com/evidentpoint/buffer-image-size#readme) |
@@ -1027,7 +1026,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `data-view-byte-offset` | 1.0.1 | MIT | [Jordan Harband](https://github.com/inspect-js/data-view-byte-offset#readme) |
 | `dataloader` | 2.2.3 | MIT | [source](https://github.com/graphql/dataloader) |
 | `date-fns` | 4.4.0 | MIT | [source](https://github.com/date-fns/date-fns#readme) |
-| `dayjs` | 1.11.21 | MIT | [iamkun](https://day.js.org) |
+| `dayjs` | 1.11.21, 1.11.23 | MIT | [iamkun](https://day.js.org) |
 | `debounce` | 2.2.0 | MIT | [source](https://github.com/sindresorhus/debounce#readme) |
 | `debug` | 2.6.9, 3.2.7, 4.3.4, 4.4.3 | MIT | [Josh Junon](https://github.com/debug-js/debug#readme) |
 | `decimal.js` | 10.6.0 | MIT | [Michael Mclaughlin](https://github.com/MikeMcl/decimal.js#readme) |
@@ -2032,7 +2031,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `typed-array-byte-offset` | 1.0.4 | MIT | [Jordan Harband](https://github.com/inspect-js/typed-array-byte-offset#readme) |
 | `typed-array-length` | 1.0.8 | MIT | [Jordan Harband](https://github.com/inspect-js/typed-array-length#readme) |
 | `typed-query-selector` | 2.12.3 | MIT | [Pig Fang](https://github.com/g-plane/typed-query-selector#readme) |
-| `typeorm` | 0.3.31 | MIT | [TypeORM](https://typeorm.io) |
+| `typeorm` | 1.1.3 | MIT | [TypeORM](https://typeorm.io) |
 | `typescript` | 6.0.3, 7.0.2 | Apache-2.0 | [Microsoft Corp.](https://www.typescriptlang.org/) |
 | `typescript-eslint` | 8.72.2 | MIT | [source](https://typescript-eslint.io/packages/typescript-eslint) |
 | `ufo` | 1.6.4 | MIT | [source](https://github.com/unjs/ufo#readme) |
@@ -2081,7 +2080,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `utf8-byte-length` | 1.0.5 | (WTFPL OR MIT) | [Carl Xiong](https://github.com/parshap/utf8-byte-length#readme) |
 | `util-deprecate` | 1.0.2 | MIT | [Nathan Rajlich](https://github.com/TooTallNate/util-deprecate) |
 | `utils-merge` | 1.0.1 | MIT | [Jared Hanson](https://github.com/jaredhanson/utils-merge#readme) |
-| `uuid` | 11.1.1, 14.0.3, 8.3.2, 9.0.1 | MIT | [source](https://github.com/uuidjs/uuid#readme) |
+| `uuid` | 14.0.3, 8.3.2, 9.0.1 | MIT | [source](https://github.com/uuidjs/uuid#readme) |
 | `v8-compile-cache-lib` | 3.0.1 | MIT | [Andrew Bradley](https://github.com/cspotcode/v8-compile-cache-lib#readme) |
 | `valibot` | 1.5.0 | MIT | [Fabian Hiller](https://valibot.dev) |
 | `vary` | 1.1.2 | MIT | [Douglas Christopher Wilson](https://github.com/jshttp/vary#readme) |

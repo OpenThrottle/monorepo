@@ -244,22 +244,22 @@ export class DailyStatsProcessor
       planRepo.countByDateRange({ column: 'updatedAt', dayEnd, dayStart }),
       planRepo.countByDateRange({ column: 'completedAt', dayEnd, dayStart }),
       planRepo.findBy({
-        select: ['id', 'status'],
+        select: { id: true, status: true },
         where: createdInRange,
       }),
       planRepo.findBy({
-        select: ['id', 'status'],
+        select: { id: true, status: true },
         where: updatedInRange,
       }),
       taskRepo.countByDateRange({ column: 'createdAt', dayEnd, dayStart }),
       taskRepo.countByDateRange({ column: 'updatedAt', dayEnd, dayStart }),
       taskRepo.countByDateRange({ column: 'completedAt', dayEnd, dayStart }),
       taskRepo.findBy({
-        select: ['id', 'status'],
+        select: { id: true, status: true },
         where: createdInRange,
       }),
       taskRepo.findBy({
-        select: ['id', 'status'],
+        select: { id: true, status: true },
         where: updatedInRange,
       }),
     ]);
