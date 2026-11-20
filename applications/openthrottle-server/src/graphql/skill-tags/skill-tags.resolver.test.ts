@@ -1,9 +1,18 @@
+import { ForbiddenException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
+import type {
+  ServiceAccountAuthPrincipal,
+  UserAuthPrincipal,
+} from '@openthrottle/nestjs-auth';
+import {
+  AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
+  AUTH_PRINCIPAL_KIND_USER,
+} from '@openthrottle/nestjs-auth';
 import type { UserSkillTag } from '@openthrottle/nestjs-repositories-server';
 import { SkillTagsRepository } from '@openthrottle/nestjs-repositories-server';
 import { createSkillTagsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import { GraphQLError } from 'graphql';
-import { beforeAll, describe, expect, test } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import { SKILL_TAG_CONFLICT_CODE } from './skill-tags.constants.ts';
@@ -11,6 +20,14 @@ import { SkillTagsResolver } from './skill-tags.resolver.ts';
 
 describe('SkillTagsResolver', () => {
   const userId = '11111111-1111-4111-8111-111111111111';
+  const user: UserAuthPrincipal = {
+    kind: AUTH_PRINCIPAL_KIND_USER,
+    sub: userId,
+  };
+  const serviceAccount: ServiceAccountAuthPrincipal = {
+    kind: AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
+    sub: '22222222-2222-4222-8222-222222222222',
+  };
 
   const makeTag = (tag: string): UserSkillTag => {
     return {
@@ -41,11 +58,15 @@ describe('SkillTagsResolver', () => {
     resolver = app.get(SkillTagsResolver);
   });
 
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   test('skillTagVocabulary returns tags with a totalCount envelope', async () => {
     const tags = [makeTag('backend'), makeTag('frontend')];
     mockSkillTagsRepository.listForUser.mockResolvedValue(tags);
 
-    const result = await resolver.skillTagVocabulary(userId);
+    const result = await resolver.skillTagVocabulary(user);
 
     expect(result).toEqual({ tags, totalCount: 2 });
     expect(mockSkillTagsRepository.listForUser).toHaveBeenCalledWith(userId);
@@ -58,7 +79,7 @@ describe('SkillTagsResolver', () => {
       value: created,
     });
 
-    const result = await resolver.addSkillTag(userId, { tag: 'pr-review' });
+    const result = await resolver.addSkillTag(user, { tag: 'pr-review' });
 
     expect(result).toBe(created);
     expect(mockSkillTagsRepository.addTag).toHaveBeenCalledWith(
@@ -75,7 +96,7 @@ describe('SkillTagsResolver', () => {
       value: renamed,
     });
 
-    const result = await resolver.renameSkillTag(userId, {
+    const result = await resolver.renameSkillTag(user, {
       from: 'backend',
       to: 'server',
     });
@@ -95,7 +116,7 @@ describe('SkillTagsResolver', () => {
     });
 
     const error = await resolver
-      .addSkillTag(userId, { tag: 'backend' })
+      .addSkillTag(user, { tag: 'backend' })
       .catch((caught: unknown) => {
         return caught;
       });
@@ -114,7 +135,7 @@ describe('SkillTagsResolver', () => {
     });
 
     const error = await resolver
-      .renameSkillTag(userId, { from: 'backend', to: 'frontend' })
+      .renameSkillTag(user, { from: 'backend', to: 'frontend' })
       .catch((caught: unknown) => {
         return caught;
       });
@@ -128,12 +149,51 @@ describe('SkillTagsResolver', () => {
   test('removeSkillTag returns the service boolean', async () => {
     mockSkillTagsRepository.removeTag.mockResolvedValue(true);
 
-    const result = await resolver.removeSkillTag(userId, { tag: 'backend' });
+    const result = await resolver.removeSkillTag(user, { tag: 'backend' });
 
     expect(result).toBe(true);
     expect(mockSkillTagsRepository.removeTag).toHaveBeenCalledWith(
       userId,
       'backend',
+    );
+  });
+
+  describe('when the caller is a service account', () => {
+    test('skillTagVocabulary is refused without reading or seeding rows', async () => {
+      await expect(
+        resolver.skillTagVocabulary(serviceAccount),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+      expect(mockSkillTagsRepository.listForUser).not.toHaveBeenCalled();
+    });
+
+    test('addSkillTag is refused without writing', async () => {
+      await expect(
+        resolver.addSkillTag(serviceAccount, { tag: 'pr-review' }),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+      expect(mockSkillTagsRepository.addTag).not.toHaveBeenCalled();
+    });
+
+    test('renameSkillTag is refused without writing', async () => {
+      await expect(
+        resolver.renameSkillTag(serviceAccount, {
+          from: 'backend',
+          to: 'server',
+        }),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+      expect(mockSkillTagsRepository.renameTag).not.toHaveBeenCalled();
+    });
+
+    test('removeSkillTag is refused without writing', async () => {
+      await expect(
+        resolver.removeSkillTag(serviceAccount, { tag: 'backend' }),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+      expect(mockSkillTagsRepository.removeTag).not.toHaveBeenCalled();
+    });
+  });
+
+  test('an unauthenticated caller is refused', async () => {
+    await expect(resolver.skillTagVocabulary(undefined)).rejects.toBeInstanceOf(
+      ForbiddenException,
     );
   });
 });
