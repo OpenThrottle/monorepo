@@ -13,7 +13,11 @@
 
 import { UseGuards } from '@nestjs/common';
 import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { CurrentUser } from '@openthrottle/nestjs-auth';
+import type { AuthPrincipalKind } from '@openthrottle/nestjs-auth';
+import {
+  AUTH_PRINCIPAL_KIND_USER,
+  CurrentUser,
+} from '@openthrottle/nestjs-auth';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 import type { SkillAvailabilityRule } from '@openthrottle/nestjs-repositories-server';
 import { SkillTagsRepository } from '@openthrottle/nestjs-repositories-server';
@@ -106,11 +110,12 @@ export class SkillAvailabilityResolver {
   @Permissions(PERMISSIONS.SETTINGS_WRITE)
   async addSkillAvailabilityRule(
     @CurrentUser('sub') userId: string,
+    @CurrentUser('kind') principalKind: AuthPrincipalKind,
     @Args('projectId', { type: () => ID }) projectId: string,
     @Args('input', { type: () => SkillAvailabilityRuleInput })
     input: SkillAvailabilityRuleInput,
   ): Promise<SkillAvailabilityRuleObject> {
-    const knownTags = await this.resolveKnownTags(userId);
+    const knownTags = await this.resolveKnownTags(userId, principalKind);
     const rule: SkillAvailabilityRule =
       await this.skillAvailabilityService.addRule(
         projectId,
@@ -127,11 +132,12 @@ export class SkillAvailabilityResolver {
   @Permissions(PERMISSIONS.SETTINGS_WRITE)
   async updateSkillAvailabilityRule(
     @CurrentUser('sub') userId: string,
+    @CurrentUser('kind') principalKind: AuthPrincipalKind,
     @Args('ruleId', { type: () => ID }) ruleId: string,
     @Args('input', { type: () => SkillAvailabilityRuleInput })
     input: SkillAvailabilityRuleInput,
   ): Promise<SkillAvailabilityRuleObject> {
-    const knownTags = await this.resolveKnownTags(userId);
+    const knownTags = await this.resolveKnownTags(userId, principalKind);
     const rule: SkillAvailabilityRule =
       await this.skillAvailabilityService.updateRule(
         ruleId,
@@ -152,8 +158,16 @@ export class SkillAvailabilityResolver {
     return this.skillAvailabilityService.removeRule(ruleId);
   }
 
-  private async resolveKnownTags(userId: string): Promise<string[]> {
-    const vocabulary = await this.skillTagsRepository.listForUser(userId);
-    return vocabulary.map((entry) => entry.tag);
+  /**
+   * @description Only a user principal has a `users` row to seed vocabulary rows under; a service
+   * account validates against its own rows, or the platform defaults, without writing.
+   */
+  private async resolveKnownTags(
+    userId: string,
+    principalKind: AuthPrincipalKind,
+  ): Promise<string[]> {
+    return this.skillTagsRepository.listVocabularyTags(userId, {
+      seedDefaults: principalKind === AUTH_PRINCIPAL_KIND_USER,
+    });
   }
 }

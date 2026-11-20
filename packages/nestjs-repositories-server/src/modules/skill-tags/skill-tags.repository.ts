@@ -58,6 +58,33 @@ export class SkillTagsRepository extends BaseRepository<
   }
 
   /**
+   * @description Lists the tag names in a reader's vocabulary. With `seedDefaults` this is
+   * {@link SkillTagsRepository.listForUser}, so a user with zero rows is seeded. Without it the read
+   * writes nothing: the reader's own rows, else the platform defaults. A reader with no `users` row
+   * (a service-account principal) must pass `seedDefaults: false`, because a seeded row's `user_id`
+   * references `users`.
+   */
+  async listVocabularyTags(
+    readerId: string,
+    options: { readonly seedDefaults: boolean },
+  ): Promise<string[]> {
+    if (options.seedDefaults) {
+      const seeded = await this.listForUser(readerId);
+      return seeded.map((entry) => entry.tag);
+    }
+
+    const existing = await this.findBy({
+      order: { tag: 'ASC' },
+      where: { userId: readerId },
+    });
+    const entries: readonly { readonly tag: string }[] =
+      existing.length > 0 ? existing : DEFAULT_TAG_VOCABULARY_SEED;
+    return entries
+      .map((entry) => entry.tag)
+      .sort((left, right) => left.localeCompare(right));
+  }
+
+  /**
    * @description Adds a tag to the user's vocabulary. `dimension` defaults to `domain`; pass
    * `phase` for lifecycle-stage tags (plans and tasks only).
    * Returns a `conflict` result when the user already has the tag.

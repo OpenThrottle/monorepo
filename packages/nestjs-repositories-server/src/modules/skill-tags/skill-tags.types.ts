@@ -51,6 +51,7 @@ export interface SkillTagsRepositoryMock extends BaseRepositoryMock<
 > {
   readonly addTag: Mock<SkillTagsRepository['addTag']>;
   readonly listForUser: Mock<SkillTagsRepository['listForUser']>;
+  readonly listVocabularyTags: Mock<SkillTagsRepository['listVocabularyTags']>;
   readonly removeTag: Mock<SkillTagsRepository['removeTag']>;
   readonly renameTag: Mock<SkillTagsRepository['renameTag']>;
 }

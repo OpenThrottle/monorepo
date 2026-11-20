@@ -117,6 +117,53 @@ describe('SkillTagsRepository', () => {
     });
   });
 
+  describe('listVocabularyTags', () => {
+    describe('when seedDefaults is true', () => {
+      it('seeds a reader with zero tags, then returns the tag names', async () => {
+        const seeded = ['github', 'testing'].map((tag) => {
+          return skillTagsFactory.build({ tag, userId });
+        });
+        find.mockResolvedValueOnce([]).mockResolvedValueOnce(seeded);
+
+        await expect(
+          repository.listVocabularyTags(userId, { seedDefaults: true }),
+        ).resolves.toEqual(['github', 'testing']);
+        expect(insertBuilder.insert).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('when seedDefaults is false and the reader has tags', () => {
+      it('returns its own tag names without writing', async () => {
+        const rows = ['alpha', 'beta'].map((tag) => {
+          return skillTagsFactory.build({ tag, userId });
+        });
+        find.mockResolvedValue(rows);
+
+        await expect(
+          repository.listVocabularyTags(userId, { seedDefaults: false }),
+        ).resolves.toEqual(['alpha', 'beta']);
+        expect(insertBuilder.insert).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when seedDefaults is false and the reader has zero tags', () => {
+      it('returns the platform defaults without writing', async () => {
+        const result = await repository.listVocabularyTags(userId, {
+          seedDefaults: false,
+        });
+
+        expect(new Set(result)).toEqual(
+          new Set(DEFAULT_TAG_VOCABULARY_SEED.map((entry) => entry.tag)),
+        );
+        expect(result).toEqual(
+          [...result].sort((left, right) => left.localeCompare(right)),
+        );
+        expect(insertBuilder.insert).not.toHaveBeenCalled();
+        expect(save).not.toHaveBeenCalled();
+      });
+    });
+  });
+
   describe('addTag', () => {
     describe('when the tag is a kebab-case slug', () => {
       it('persists the trimmed tag as a domain tag', async () => {

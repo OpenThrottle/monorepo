@@ -1,10 +1,7 @@
 import { createMock } from '@golevelup/ts-vitest';
 import { BadRequestException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import type {
-  Project,
-  UserSkillTag,
-} from '@openthrottle/nestjs-repositories-server';
+import type { Project } from '@openthrottle/nestjs-repositories-server';
 import {
   ProjectsRepository,
   SkillTagsRepository,
@@ -61,17 +58,6 @@ describe('SkillAvailabilityResolutionResolver', () => {
     },
   ];
 
-  const makeTag = (tag: string): UserSkillTag => {
-    return {
-      createdAt: new Date('2026-07-11T12:00:00.000Z'),
-      dimension: 'domain',
-      id: `id-${tag}`,
-      tag,
-      updatedAt: new Date('2026-07-11T12:00:00.000Z'),
-      userId,
-    };
-  };
-
   const mockProjectSkillsService = createMock<ProjectSkillsService>({
     getSkillsForProject: vi.fn(),
   });
@@ -80,6 +66,8 @@ describe('SkillAvailabilityResolutionResolver', () => {
     getRuleSetForProject: vi.fn(),
   });
   const mockSkillTagsRepository = createSkillTagsRepositoryMock();
+  const mockPlanContextAvailabilityService =
+    createMock<PlanContextAvailabilityService>({ resolveForPlan: vi.fn() });
 
   let resolver: SkillAvailabilityResolutionResolver;
 
@@ -91,7 +79,7 @@ describe('SkillAvailabilityResolutionResolver', () => {
         SkillAvailabilityResolutionResolver,
         {
           provide: PlanContextAvailabilityService,
-          useValue: createMock<PlanContextAvailabilityService>(),
+          useValue: mockPlanContextAvailabilityService,
         },
         { provide: ProjectSkillsService, useValue: mockProjectSkillsService },
         { provide: ProjectsRepository, useValue: mockProjectsRepository },
@@ -108,7 +96,7 @@ describe('SkillAvailabilityResolutionResolver', () => {
     vi.mocked(mockProjectSkillsService.getSkillsForProject).mockResolvedValue(
       views,
     );
-    mockSkillTagsRepository.listForUser.mockResolvedValue([makeTag('github')]);
+    mockSkillTagsRepository.listVocabularyTags.mockResolvedValue(['github']);
   });
 
   test('no-config passthrough: effective === static ?? false with frontmatter provenance', async () => {
@@ -116,7 +104,7 @@ describe('SkillAvailabilityResolutionResolver', () => {
       mockSkillAvailabilityService.getRuleSetForProject,
     ).mockResolvedValue(undefined);
 
-    const result = await resolver.skillAvailability(userId, projectId);
+    const result = await resolver.skillAvailability(userId, 'user', projectId);
 
     expect(mockProjectsRepository.findByNxProjectName).not.toHaveBeenCalled();
     expect(result.totalCount).toBe(3);
@@ -171,7 +159,7 @@ describe('SkillAvailabilityResolutionResolver', () => {
       mockSkillAvailabilityService.getRuleSetForProject,
     ).mockResolvedValue(ruleSet);
 
-    const result = await resolver.skillAvailability(userId, projectId);
+    const result = await resolver.skillAvailability(userId, 'user', projectId);
 
     const flipped = result.skills.find(
       (skill) => skill.slug === 'github-deep-review',
@@ -202,10 +190,16 @@ describe('SkillAvailabilityResolutionResolver', () => {
 
     const interactive = await resolver.skillAvailability(
       userId,
+      'user',
       projectId,
       'interactive',
     );
-    const ralph = await resolver.skillAvailability(userId, projectId, 'ralph');
+    const ralph = await resolver.skillAvailability(
+      userId,
+      'user',
+      projectId,
+      'ralph',
+    );
 
     // interactive: the ralph-scoped rule does not apply → frontmatter true stays.
     expect(
@@ -225,7 +219,7 @@ describe('SkillAvailabilityResolutionResolver', () => {
 
   test('rejects an unknown environment with an actionable error', async () => {
     await expect(
-      resolver.skillAvailability(userId, projectId, 'production'),
+      resolver.skillAvailability(userId, 'user', projectId, 'production'),
     ).rejects.toBeInstanceOf(BadRequestException);
     expect(mockProjectSkillsService.getSkillsForProject).not.toHaveBeenCalled();
   });
@@ -238,7 +232,7 @@ describe('SkillAvailabilityResolutionResolver', () => {
       mockSkillAvailabilityService.getRuleSetForProject,
     ).mockResolvedValue(undefined);
 
-    const result = await resolver.skillAvailability(userId);
+    const result = await resolver.skillAvailability(userId, 'user');
 
     expect(mockProjectsRepository.findByNxProjectName).toHaveBeenCalledWith(
       'OpenThrottle/monorepo',
@@ -252,7 +246,7 @@ describe('SkillAvailabilityResolutionResolver', () => {
   test('returns an empty result when the dogfood project is absent', async () => {
     mockProjectsRepository.findByNxProjectName.mockResolvedValue(null);
 
-    const result = await resolver.skillAvailability(userId);
+    const result = await resolver.skillAvailability(userId, 'user');
 
     expect(result).toEqual({ skills: [], totalCount: 0, warnings: [] });
     expect(mockProjectSkillsService.getSkillsForProject).not.toHaveBeenCalled();
@@ -274,7 +268,7 @@ describe('SkillAvailabilityResolutionResolver', () => {
       mockSkillAvailabilityService.getRuleSetForProject,
     ).mockResolvedValue({ posture: 'allow', rules: [] });
 
-    const result = await resolver.skillAvailability(userId, projectId);
+    const result = await resolver.skillAvailability(userId, 'user', projectId);
 
     expect(result.warnings).toEqual([
       'unknown-tag:not-a-real-tag@mystery-skill',
@@ -297,10 +291,77 @@ describe('SkillAvailabilityResolutionResolver', () => {
       mockSkillAvailabilityService.getRuleSetForProject,
     ).mockResolvedValue({ posture: 'allow', rules: [] });
 
-    const result = await resolver.skillAvailability(userId, projectId);
+    const result = await resolver.skillAvailability(userId, 'user', projectId);
 
     expect(result.totalCount).toBe(1);
     expect(result.skills[0]?.slug).toBe('deleted-from-disk');
     expect(result.warnings).toEqual([]);
+  });
+
+  describe('when the caller is a service account', () => {
+    const serviceAccountId = '33333333-3333-4333-8333-333333333333';
+
+    test('reads the vocabulary without seeding user rows', async () => {
+      vi.mocked(
+        mockSkillAvailabilityService.getRuleSetForProject,
+      ).mockResolvedValue(undefined);
+
+      const result = await resolver.skillAvailability(
+        serviceAccountId,
+        'service_account',
+        projectId,
+      );
+
+      expect(result.totalCount).toBe(3);
+      expect(mockSkillTagsRepository.listVocabularyTags).toHaveBeenCalledWith(
+        serviceAccountId,
+        { seedDefaults: false },
+      );
+      expect(mockSkillTagsRepository.listForUser).not.toHaveBeenCalled();
+    });
+
+    test('tells the plan-context path not to seed either', async () => {
+      vi.mocked(
+        mockPlanContextAvailabilityService.resolveForPlan,
+      ).mockResolvedValue({
+        effectiveDomainTags: [],
+        skills: [],
+        warnings: [],
+      });
+      const planId = '44444444-4444-4444-8444-444444444444';
+
+      await resolver.skillAvailability(
+        serviceAccountId,
+        'service_account',
+        undefined,
+        undefined,
+        planId,
+      );
+
+      expect(
+        mockPlanContextAvailabilityService.resolveForPlan,
+      ).toHaveBeenCalledWith(
+        expect.objectContaining({
+          planId,
+          vocabularySeedDefaults: false,
+          vocabularyUserId: serviceAccountId,
+        }),
+      );
+    });
+  });
+
+  describe('when the caller is a user', () => {
+    test('reads the vocabulary with first-read seeding', async () => {
+      vi.mocked(
+        mockSkillAvailabilityService.getRuleSetForProject,
+      ).mockResolvedValue(undefined);
+
+      await resolver.skillAvailability(userId, 'user', projectId);
+
+      expect(mockSkillTagsRepository.listVocabularyTags).toHaveBeenCalledWith(
+        userId,
+        { seedDefaults: true },
+      );
+    });
   });
 });
