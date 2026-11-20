@@ -1,8 +1,12 @@
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { createTestRouterContext } from '@openthrottle/react-router-testing';
+import { render, waitFor } from '@testing-library/react';
+import * as React from 'react';
+import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { Route } from '@/app/routes/+types/queues.$queueId.$jobId';
+import { queueJobDetailPath } from '~/routing/queues/utils/queueJobDetailPath';
 
 import { action, loader } from '../queues.$queueId.$jobId';
 
@@ -50,13 +54,13 @@ describe('routes/queues.$queueId.$jobId.tsx', () => {
   });
 
   describe('loader', () => {
-    test('fetches job and decodes job id from the path', async () => {
+    test('fetches job using the job id param as React Router hands it over', async () => {
       mockExecute.mockResolvedValueOnce({ job: mockJob });
 
       const args: Route.LoaderArgs = {
         context: createTestRouterContext(),
         params: {
-          jobId: encodeURIComponent('ralph-orch:abc'),
+          jobId: 'ralph-orch:abc',
           queueId: 'Plans',
         },
         pattern: '/queues/Plans/ralph-orch%3Aabc',
@@ -75,6 +79,42 @@ describe('routes/queues.$queueId.$jobId.tsx', () => {
           jobId: 'ralph-orch:abc',
           queueName: 'Plans',
         },
+      );
+    });
+
+    test('receives a job id containing % and : intact through the router', async () => {
+      mockExecute.mockResolvedValueOnce({ job: mockJob });
+      const jobId = '50%:done';
+
+      const RoutesStub = createRoutesStub([
+        {
+          Component: () => {
+            return <p data-testid="QueueJobLoaded">loaded</p>;
+          },
+          // Forward the params exactly as the router decoded them.
+          loader: (stubArgs) => {
+            return loader({
+              ...stubArgs,
+              params: {
+                jobId: stubArgs.params.jobId ?? '',
+                queueId: stubArgs.params.queueId ?? '',
+              },
+            });
+          },
+          path: '/queues/:queueId/:jobId',
+        },
+      ]);
+      const component = render(
+        <RoutesStub initialEntries={[queueJobDetailPath('Plans', jobId)]} />,
+      );
+
+      await waitFor(() => {
+        expect(component.getByTestId('QueueJobLoaded')).toBeInTheDocument();
+      });
+      expect(mockExecute).toHaveBeenCalledWith(
+        expect.any(Request),
+        expect.any(Object),
+        { jobId, queueName: 'Plans' },
       );
     });
 
@@ -136,7 +176,7 @@ describe('routes/queues.$queueId.$jobId.tsx', () => {
       expect(result).toEqual({ retryJobError: 'Missing queue or job id.' });
     });
 
-    test('calls retryJob with decoded job id and queue name', async () => {
+    test('calls retryJob with the job id param and queue name', async () => {
       const retryPayload = {
         error: null,
         jobId: 'job-1',
@@ -150,7 +190,7 @@ describe('routes/queues.$queueId.$jobId.tsx', () => {
       const args: Route.ActionArgs = {
         context: createTestRouterContext(),
         params: {
-          jobId: encodeURIComponent('ralph-orch:abc'),
+          jobId: 'ralph-orch:abc',
           queueId: 'Plans',
         },
         pattern: '/queues/Plans/ralph-orch%3Aabc',
