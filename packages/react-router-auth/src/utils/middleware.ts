@@ -22,7 +22,18 @@ const GATED_PREFIXES = [
 
 const BETA_ROUTE_PREFIXES = FEATURE_BETA_PREVIEW ? [] : GATED_PREFIXES;
 
-const PUBLIC_ROUTE_PREFIXES = ['/about', '/auth', '/legal'];
+/**
+ * @description Routes reachable without a session. `/resources/rollout-evaluations`
+ * serves feature flags to logged-out pages (the server's `evaluateFeatureFlags`
+ * is `@Public()` and buckets by `anonymousId`), so gating it would redirect the
+ * flag fetch on `/auth` itself.
+ */
+const PUBLIC_ROUTE_PREFIXES = [
+  '/about',
+  '/auth',
+  '/legal',
+  '/resources/rollout-evaluations',
+];
 
 /**
  * Server-side Authentication Middleware
