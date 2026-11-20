@@ -167,7 +167,7 @@ nx show project <target-name>
 
 - Nx plugin worker cannot spawn in sandboxed environments
 - Plugin isolation conflicts with environment restrictions
-- Node version mismatch (requires Node 24+)
+- Node version mismatch (requires Node 26+, see `.nvmrc`)
 - VS Code/Cursor terminal settings not configured
 
 **Solution:**

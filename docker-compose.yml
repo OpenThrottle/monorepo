@@ -55,7 +55,10 @@ x-common: &common
   # production NODE_ENV flips Vite's resolve conditions for tests and dev
   # servers. Compose is the only consumer, so the default lives here.
   NODE_ENV: ${NODE_ENV:-production}
-  NODE_VERSION: ${NODE_VERSION}
+  # No NODE_VERSION here: the Node major is pinned by each Dockerfile's ARG
+  # default, because it must match the distroless runtime (nodejs26) that
+  # the Dockerfiles hardcode. A stale `.env` value would silently build on
+  # the wrong major.
 
 x-developer: &developer
   <<: *common
@@ -264,8 +267,6 @@ services:
   #
   migrations:
     build:
-      args:
-        NODE_VERSION: ${NODE_VERSION}
       context: ./
       dockerfile: Dockerfile.Migrations
     depends_on:

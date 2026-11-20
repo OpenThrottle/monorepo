@@ -8,7 +8,7 @@ Biweekly. Structural drift is invisible day to day and expensive to reverse: eac
 
 ## Repo context
 
-OpenThrottle is an Nx + pnpm workspace monorepo (Node >= 22, pnpm only) that does both task running and package publishing. Run every task through Nx, prefixed with `pnpm` — never the underlying tooling directly.
+OpenThrottle is an Nx + pnpm workspace monorepo (Node >= 26, pnpm only) that does both task running and package publishing. Run every task through Nx, prefixed with `pnpm` — never the underlying tooling directly.
 
 Layout:
 

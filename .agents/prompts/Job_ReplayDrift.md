@@ -8,7 +8,7 @@ Weekly. The agent CLIs ship every few days, and a transcript recorded against an
 
 ## Repo context
 
-OpenThrottle is an Nx + pnpm workspace monorepo (Node >= 22, pnpm only). Run every task through Nx, prefixed with `pnpm`, never the underlying tooling directly.
+OpenThrottle is an Nx + pnpm workspace monorepo (Node >= 26, pnpm only). Run every task through Nx, prefixed with `pnpm`, never the underlying tooling directly.
 
 Commands this job uses:
 

@@ -295,7 +295,7 @@ describe('PlansProcessor', () => {
       // implementation infers `event: 'spawn'` / `listener: () => void`, which breaks
       // both the `=== 'close'` compare and the two-arg listener invocation below.
       stub.on.mockImplementation(
-        (event: string, listener: (...args: unknown[]) => void) => {
+        (event: string | symbol, listener: (...args: unknown[]) => void) => {
           if (event === 'close') {
             setImmediate(() => listener(0, null));
           }

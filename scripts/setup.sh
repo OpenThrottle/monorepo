@@ -46,6 +46,12 @@ fi
 ./skills/ot-skill-sync/scripts/sync.sh
 
 # ─── Package manager + dependencies (the old setup_software.sh) ─────────────
+# Node 25+ no longer bundles corepack; install the pinned copy when it is
+# missing (keep the version in step with .github/actions/node-setup and the
+# Dockerfiles).
+if ! command -v corepack >/dev/null 2>&1; then
+  npm install --global --no-audit --no-fund corepack@0.36.0
+fi
 corepack enable pnpm
 corepack prepare --activate
 pnpm install

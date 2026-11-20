@@ -18,15 +18,15 @@
 # `rm -rf node_modules/.pnpm/...` surgery — that was compensating for an over-broad
 # `--legacy` deploy and is tracked for a real fix (injected strict deploy) in a follow-up plan.
 #
-# Production runtime: gcr.io/distroless/nodejs24-debian13:nonroot (glibc). Build stages use
-# node:24-trixie-slim so pruned native addons match distroless (Alpine/musl would not, and
-# the build Node major must match the runtime's nodejs24 to keep native ABIs compatible).
+# Production runtime: gcr.io/distroless/nodejs26-debian13:nonroot (glibc). Build stages use
+# node:26-trixie-slim so pruned native addons match distroless (Alpine/musl would not, and
+# the build Node major must match the runtime's nodejs26 to keep native ABIs compatible).
 ###########################################################################
 #
 #     👀 https://pnpm.io/docker using NX for the monorepo build
 #
 ###########################################################################
-ARG NODE_VERSION="24"
+ARG NODE_VERSION="26"
 FROM node:${NODE_VERSION}-trixie-slim AS base
 
 WORKDIR /app
@@ -62,10 +62,15 @@ ENV pnpm_config_store_dir="/pnpm/store"
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig*.json ./
 COPY scripts/check-node-engine.mjs ./scripts/check-node-engine.mjs
 
-# Enable pnpm via corepack. A bare `prepare` reads the root package.json
-# `packageManager` field (copied above), so the version + sha512 there is the
-# single pin — `prepare pnpm` would activate npm's `latest` tag instead.
-RUN corepack enable && corepack prepare --activate
+# Enable pnpm via corepack. Node 25+ no longer bundles corepack, so install a
+# pinned copy first (keep COREPACK_VERSION in step with
+# .github/actions/node-setup and scripts/setup.sh). A bare `prepare` reads the
+# root package.json `packageManager` field (copied above), so the version +
+# sha512 there is the single pnpm pin — `prepare pnpm` would activate npm's
+# `latest` tag instead.
+ARG COREPACK_VERSION="0.36.0"
+RUN npm install --global --no-audit --no-fund "corepack@${COREPACK_VERSION}" \
+  && corepack enable && corepack prepare --activate
 
 # Non-root identity for intermediate stages (final image uses distroless `nonroot`).
 RUN groupadd --system --gid 1001 appuser \
@@ -201,7 +206,7 @@ RUN node packages/openthrottle-mcp/esbuild.http.mjs
 ################################################################################
 # Distroless + ONE bundled file — no source, node_modules, tsx, Nx, pnpm, or shell.
 # Clients register { "type": "http", "url": "http://<host>:<port>/mcp" }.
-FROM gcr.io/distroless/nodejs24-debian13:nonroot AS mcp
+FROM gcr.io/distroless/nodejs26-debian13:nonroot AS mcp
 
 WORKDIR /app
 
@@ -312,7 +317,7 @@ CMD ["node", "build/src/main.js"]
 # the health probe (no extra packages). Compose maps PORT from OPENTHROTTLE_SERVER_PORT. If you
 # override the healthcheck in compose, use exec form with /nodejs/bin/node (CMD-SHELL + wget will
 # not run on distroless).
-FROM gcr.io/distroless/nodejs24-debian13:nonroot AS production
+FROM gcr.io/distroless/nodejs26-debian13:nonroot AS production
 
 WORKDIR /app
 

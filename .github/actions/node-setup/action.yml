@@ -89,7 +89,8 @@ runs:
         } >> "$GITHUB_ENV"
       shell: bash
 
-    # Node first so Corepack matches .nvmrc (Corepack ships with Node ≥16.13).
+    # Node first, from .nvmrc. Node 25+ no longer bundles Corepack, so the next
+    # step installs a pinned copy before enabling it.
     - name: '⚙️ Setup NodeJS'
       uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
       with:
@@ -97,8 +98,13 @@ runs:
 
     # Bare `prepare` activates the root package.json "packageManager" version
     # (sha512-verified); `prepare pnpm` would take npm's `latest` tag instead.
+    # Keep COREPACK_VERSION in step with Dockerfile.NestJS, Dockerfile.ReactRouter
+    # and scripts/setup.sh.
     - name: '📦 Enable PNPM (Corepack)'
+      env:
+        COREPACK_VERSION: '0.36.0'
       run: |
+        npm install --global --no-audit --no-fund "corepack@${COREPACK_VERSION}"
         corepack enable
         corepack prepare --activate
       shell: bash

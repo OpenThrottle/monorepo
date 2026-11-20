@@ -11,8 +11,8 @@ This guide takes you from a fresh checkout to the developer app running against 
 
 ## Prerequisites
 
-- **Node.js >= 22.** Older versions are unsupported.
-- **pnpm.** This is a pnpm-only workspace — a `preinstall` guard blocks `npm` and `yarn`. Install pnpm with `corepack enable` (bundled with Node) or per the [pnpm docs](https://pnpm.io/installation).
+- **Node.js >= 26** (pinned in `.nvmrc`). Older versions are unsupported.
+- **pnpm.** This is a pnpm-only workspace — a `preinstall` guard blocks `npm` and `yarn`. Install pnpm with `npm install --global corepack && corepack enable` (Node 25+ no longer bundles Corepack) or per the [pnpm docs](https://pnpm.io/installation).
 - **Docker.** The local Postgres + Redis stack runs via Docker Compose.
 
 ## First-time setup

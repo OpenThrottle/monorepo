@@ -8,7 +8,7 @@ Weekly. Style drift is not urgent individually but compounds fast: each unenforc
 
 ## Repo context
 
-OpenThrottle is an Nx + pnpm workspace monorepo (Node >= 22, pnpm only). Run every task through Nx, prefixed with `pnpm` — never the underlying tooling directly.
+OpenThrottle is an Nx + pnpm workspace monorepo (Node >= 26, pnpm only). Run every task through Nx, prefixed with `pnpm` — never the underlying tooling directly.
 
 The rules live in **`docs/monorepo/code-style.md`** (rationale, examples, and the enforcement label for each), normative one-liners in **`AGENTS.md` § Code style**. Read the relevant section before judging — this job enforces what is written there, not personal preference.
 

@@ -8,7 +8,7 @@ Biweekly. Schema changes land less often than application code, and the failure 
 
 ## Repo context
 
-OpenThrottle is an Nx + pnpm workspace monorepo (Node >= 22, pnpm only). Run every task through Nx, prefixed with `pnpm` — never the underlying tooling directly.
+OpenThrottle is an Nx + pnpm workspace monorepo (Node >= 26, pnpm only). Run every task through Nx, prefixed with `pnpm` — never the underlying tooling directly.
 
 The database layer lives in `databases/` — read `databases/AGENTS.md` (how the databases share one runner) and then `databases/openthrottle/README.md`, the source of truth for schema conventions. Each database has its own migrations: `databases/openthrottle/migrations/` and `databases/cms/migrations/` (see `databases/cms/README.md`). The NestJS server (`applications/openthrottle-server`) reaches Postgres through TypeORM entities and `@openthrottle/nestjs-typeorm`.
 

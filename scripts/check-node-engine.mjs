@@ -5,9 +5,10 @@
  * Why a hand-rolled check instead of pnpm's own: pnpm only *warns* on the
  * current project's `engines` (`engine-strict` governs dependencies, not the
  * workspace root), so nothing actually stops an install on an unsupported
- * Node. NestJS 12 requires v20.19+/v22.12+ at runtime and v22.22.3+/v24.15+/
- * v26+ for its CLI, and the 21.x/23.x/25.x lines are unsupported entirely —
- * an install on one of those fails later, somewhere unrelated and unexplained.
+ * Node. The range is the runtime line: the distroless images and CI run Node
+ * 26 and @types/node types Node 26 APIs, so an install on an older line would
+ * type-check code that fails at runtime — later, somewhere unrelated and
+ * unexplained.
  *
  * Why `.mjs` and not `.ts` like every other file in scripts/: `preinstall` runs
  * before node_modules exists, so there is no `tsx`, and Node's own type
@@ -21,6 +22,19 @@ import { fileURLToPath } from 'node:url';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const MANIFEST = join(HERE, '..', 'package.json');
+
+/**
+ * The `.nvmrc` pin, for the error message only. Docker build stages copy this
+ * script without `.nvmrc`, so a missing file must not turn the explanation
+ * into an ENOENT stack trace.
+ */
+const readPinned = () => {
+  try {
+    return readFileSync(join(HERE, '..', '.nvmrc'), 'utf8').trim();
+  } catch {
+    return 'a Node version';
+  }
+};
 
 /** Parse `major.minor.patch` off the front of a version-ish string. */
 export const parseVersion = (value) => {
@@ -104,14 +118,15 @@ if (
     console.error(`  Required (package.json engines.node): ${range}`);
     console.error('');
     console.error(
-      '  NestJS 12 needs v20.19+/v22.12+ to run and v22.22.3+/v24.15+/v26+ for its CLI.',
+      '  Every runtime (the distroless images and CI) is Node 26, and @types/node',
     );
     console.error(
-      '  The 21.x, 23.x and 25.x lines are unsupported Node releases.',
+      '  types Node 26 APIs, so installing on an older line would type-check code',
     );
+    console.error('  that cannot run there.');
     console.error('');
     console.error(
-      `  This repo pins ${readFileSync(join(HERE, '..', '.nvmrc'), 'utf8').trim()} in .nvmrc — run \`nvm use\` (or \`fnm use\`) and install again.`,
+      `  This repo pins ${readPinned()} in .nvmrc — run \`nvm use\` (or \`fnm use\`) and install again.`,
     );
     console.error('');
     process.exit(1);
