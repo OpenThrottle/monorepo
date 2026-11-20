@@ -147,6 +147,21 @@ describe('authMiddleware', () => {
 
       expect(result).toBeUndefined();
     });
+
+    it('does not redirect the rollout-evaluations resource route', () => {
+      const result = runMiddleware(
+        buildArgs('/resources/rollout-evaluations?applicationKey=developer'),
+      );
+
+      expect(result).toBeUndefined();
+    });
+
+    it('still redirects other resource routes', () => {
+      const result = runMiddleware(buildArgs('/resources/agent-conversations'));
+
+      assertIsRedirectResponse(result);
+      expect(result.status).toBe(302);
+    });
   });
 
   describe('when the auth token is expired', () => {
