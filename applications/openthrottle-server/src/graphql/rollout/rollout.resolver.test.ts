@@ -33,6 +33,8 @@ import { RolloutResolver } from './rollout.resolver.ts';
 
 const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
 
+const ANONYMOUS_ID = '01a1f71f-0a23-7a90-8d99-db6b6c205d95';
+
 const flag: RolloutFlag = {
   createdAt: new Date(FIXED_NOW),
   description: null,
@@ -299,7 +301,7 @@ describe('RolloutResolver', () => {
     test('anonymous call evaluates with anonymousId principal', async () => {
       vi.mocked(rolloutService.evaluateAll).mockClear();
       const result = await resolver.evaluateFeatureFlags(
-        'anon-uuid',
+        ANONYMOUS_ID,
         'openthrottle-developer',
         undefined,
       );
@@ -307,14 +309,14 @@ describe('RolloutResolver', () => {
       expect(result).toHaveLength(2);
       expect(rolloutService.evaluateAll).toHaveBeenCalledWith({
         kind: AUTH_PRINCIPAL_KIND_USER,
-        sub: 'anon-uuid',
+        sub: ANONYMOUS_ID,
       });
       expect(logger.debug).toHaveBeenCalled();
     });
 
     test('authenticated call prefers principal over anonymousId', async () => {
       vi.mocked(rolloutService.evaluateAll).mockClear();
-      await resolver.evaluateFeatureFlags('anon-uuid', null, userPrincipal);
+      await resolver.evaluateFeatureFlags(ANONYMOUS_ID, null, userPrincipal);
 
       expect(rolloutService.evaluateAll).toHaveBeenCalledWith(userPrincipal);
     });
@@ -329,9 +331,19 @@ describe('RolloutResolver', () => {
       });
     });
 
+    test('non-UUID anonymousId degrades to the shared subject instead of reaching the uuid lookup', async () => {
+      vi.mocked(rolloutService.evaluateAll).mockClear();
+      await resolver.evaluateFeatureFlags('verify-anon', null, undefined);
+
+      expect(rolloutService.evaluateAll).toHaveBeenCalledWith({
+        kind: AUTH_PRINCIPAL_KIND_USER,
+        sub: ROLLOUT_DEGRADED_ANONYMOUS_SUB,
+      });
+    });
+
     test('skips applicationKey stub log when blank', async () => {
       vi.mocked(logger.debug).mockClear();
-      await resolver.evaluateFeatureFlags('anon-uuid', '  ', undefined);
+      await resolver.evaluateFeatureFlags(ANONYMOUS_ID, '  ', undefined);
       expect(logger.debug).not.toHaveBeenCalled();
     });
   });
