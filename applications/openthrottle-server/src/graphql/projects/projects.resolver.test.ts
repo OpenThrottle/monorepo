@@ -6,12 +6,27 @@ import type {
   Project,
   Task,
 } from '@openthrottle/nestjs-repositories-server';
-import { ProjectsRepository } from '@openthrottle/nestjs-repositories-server';
-import type { ProjectsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
-import { createProjectsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import {
+  ProjectRepositoriesRepository,
+  ProjectsRepository,
+  RepositoriesRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import type {
+  ProjectRepositoriesRepositoryMock,
+  ProjectsRepositoryMock,
+  RepositoriesRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
+import {
+  createProjectRepositoriesRepositoryMock,
+  createProjectsRepositoryMock,
+  createRepositoriesRepositoryMock,
+  projectRepositoriesFactory,
+  repositoriesFactory,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import { getDefaultPlanRunConfigStorage } from '@openthrottle/openthrottle-plan-config';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 
+import { PlanProjectMembershipService } from '../../services/plan-project-membership/plan-project-membership.service.ts';
 import { ProjectsLoaders } from './loaders/loaders.service.ts';
 import { ProjectsResolver } from './projects.resolver.ts';
 
@@ -31,6 +46,7 @@ const buildMockPlan = (projectId: string): Plan => {
     project: null,
     projectId,
     projectRelation: null,
+    projectSortOrder: 1000,
     runConfig: getDefaultPlanRunConfigStorage(),
     status: 'completed',
     summary: null,
@@ -43,6 +59,8 @@ const buildMockPlan = (projectId: string): Plan => {
 describe('ProjectsResolver', () => {
   let resolver: ProjectsResolver;
   let projectsRepository: ProjectsRepositoryMock;
+  let projectRepositoriesRepository: ProjectRepositoriesRepositoryMock;
+  let repositoriesRepository: RepositoriesRepositoryMock;
   let plansByProjectIdLoader: { load: ReturnType<typeof vi.fn> };
   let tasksByProjectIdLoader: { load: ReturnType<typeof vi.fn> };
 
@@ -58,15 +76,26 @@ describe('ProjectsResolver', () => {
     updatedAt: new Date('2026-02-02T10:00:00.000Z'),
   };
 
+  const membership = {
+    addPlan: vi.fn(),
+    listPlans: vi.fn(),
+    removePlan: vi.fn(),
+    reorderPlans: vi.fn(),
+  };
+
   const plansLoad = vi.fn().mockResolvedValue([]);
   const tasksLoad = vi.fn().mockResolvedValue([]);
+  const repositoriesLoad = vi.fn().mockResolvedValue([]);
   const mockProjectsLoaders: ProjectsLoaders = createMock<ProjectsLoaders>({
     plansByProjectIdLoader: { load: plansLoad },
+    repositoriesByProjectIdLoader: { load: repositoriesLoad },
     tasksByProjectIdLoader: { load: tasksLoad },
   });
 
   beforeAll(async () => {
     projectsRepository = createProjectsRepositoryMock();
+    projectRepositoriesRepository = createProjectRepositoriesRepositoryMock();
+    repositoriesRepository = createRepositoriesRepositoryMock();
     plansByProjectIdLoader = { load: plansLoad };
     tasksByProjectIdLoader = { load: tasksLoad };
 
@@ -77,7 +106,13 @@ describe('ProjectsResolver', () => {
           provide: ProjectsLoaders,
           useValue: mockProjectsLoaders,
         },
+        { provide: PlanProjectMembershipService, useValue: membership },
         { provide: ProjectsRepository, useValue: projectsRepository },
+        {
+          provide: ProjectRepositoriesRepository,
+          useValue: projectRepositoriesRepository,
+        },
+        { provide: RepositoriesRepository, useValue: repositoriesRepository },
       ],
     }).compile();
 
@@ -258,6 +293,138 @@ describe('ProjectsResolver', () => {
       const result = await resolver.tasks(mockProject);
 
       expect(result).toEqual([]);
+    });
+  });
+
+  describe('repositories', () => {
+    test('resolves the linked repositories through the batched loader', async () => {
+      const linked = [repositoriesFactory.build()];
+      repositoriesLoad.mockResolvedValue(linked);
+
+      const result = await resolver.repositories(mockProject);
+
+      expect(result).toBe(linked);
+      expect(repositoriesLoad).toHaveBeenCalledWith(mockProject.id);
+    });
+  });
+
+  describe('linkProjectRepository', () => {
+    const repository = repositoriesFactory.build();
+    const input = { projectId: mockProject.id, repositoryId: repository.id };
+
+    test('links the pair when both exist', async () => {
+      const link = {
+        ...projectRepositoriesFactory.build(input),
+        project: undefined,
+        repository: undefined,
+      };
+      projectsRepository.findOne.mockResolvedValue(mockProject);
+      repositoriesRepository.findRepositoryById.mockResolvedValue(repository);
+      projectRepositoriesRepository.link.mockResolvedValue(link);
+
+      const result = await resolver.linkProjectRepository(input);
+
+      expect(result).toBe(link);
+      expect(projectRepositoriesRepository.link).toHaveBeenCalledWith(
+        mockProject.id,
+        repository.id,
+      );
+    });
+
+    test('rejects with NotFoundException when the project is missing', async () => {
+      projectsRepository.findOne.mockResolvedValue(null);
+      repositoriesRepository.findRepositoryById.mockResolvedValue(repository);
+      projectRepositoriesRepository.link.mockClear();
+
+      await expect(resolver.linkProjectRepository(input)).rejects.toThrow(
+        NotFoundException,
+      );
+      expect(projectRepositoriesRepository.link).not.toHaveBeenCalled();
+    });
+
+    test('rejects with NotFoundException when the repository is missing', async () => {
+      projectsRepository.findOne.mockResolvedValue(mockProject);
+      repositoriesRepository.findRepositoryById.mockResolvedValue(null);
+      projectRepositoriesRepository.link.mockClear();
+
+      await expect(resolver.linkProjectRepository(input)).rejects.toThrow(
+        /Repository not found/,
+      );
+      expect(projectRepositoriesRepository.link).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('unlinkProjectRepository', () => {
+    const input = { projectId: mockProject.id, repositoryId: 'repo-1' };
+
+    test('returns true when a link was removed', async () => {
+      projectRepositoriesRepository.unlink.mockResolvedValue(true);
+
+      await expect(resolver.unlinkProjectRepository(input)).resolves.toBe(true);
+      expect(projectRepositoriesRepository.unlink).toHaveBeenCalledWith(
+        mockProject.id,
+        'repo-1',
+      );
+    });
+
+    test('returns false when the pair was not linked', async () => {
+      projectRepositoriesRepository.unlink.mockResolvedValue(false);
+
+      await expect(resolver.unlinkProjectRepository(input)).resolves.toBe(
+        false,
+      );
+    });
+  });
+
+  describe('plan membership', () => {
+    const plan = buildMockPlan(mockProject.id);
+
+    test('projectPlans lists the project plans in project order', async () => {
+      membership.listPlans.mockResolvedValue([plan]);
+
+      await expect(resolver.projectPlans(mockProject.id)).resolves.toEqual([
+        plan,
+      ]);
+      expect(membership.listPlans).toHaveBeenCalledWith(mockProject.id);
+    });
+
+    test('addPlanToProject adds through the membership service', async () => {
+      membership.addPlan.mockResolvedValue(plan);
+
+      await expect(
+        resolver.addPlanToProject({
+          planId: plan.id,
+          projectId: mockProject.id,
+        }),
+      ).resolves.toBe(plan);
+      expect(membership.addPlan).toHaveBeenCalledWith(plan.id, mockProject.id);
+    });
+
+    test('removePlanFromProject removes through the membership service', async () => {
+      membership.removePlan.mockResolvedValue({
+        ...plan,
+        projectId: null,
+        projectSortOrder: null,
+      });
+
+      const result = await resolver.removePlanFromProject({ planId: plan.id });
+
+      expect(result.projectSortOrder).toBeNull();
+      expect(membership.removePlan).toHaveBeenCalledWith(plan.id);
+    });
+
+    test('reorderProjectPlans passes the project and the ordered ids through', async () => {
+      membership.reorderPlans.mockResolvedValue([plan]);
+
+      await resolver.reorderProjectPlans({
+        planIds: ['b', 'a'],
+        projectId: mockProject.id,
+      });
+
+      expect(membership.reorderPlans).toHaveBeenCalledWith(mockProject.id, [
+        'b',
+        'a',
+      ]);
     });
   });
 });

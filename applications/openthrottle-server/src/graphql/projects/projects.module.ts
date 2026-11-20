@@ -1,19 +1,29 @@
 /**
- * @description GraphQL module that registers ProjectsResolver and imports the plans, projects and tasks table modules for ProjectsRepository. Registers request-scoped ProjectsLoaders for Project.plans and Project.tasks resolution.
+ * @description GraphQL module that registers ProjectsResolver and imports the plans, projects and tasks table modules for ProjectsRepository. Registers request-scoped ProjectsLoaders for Project.plans, Project.tasks and Project.repositories resolution.
  */
 
 import { Module } from '@nestjs/common';
 import {
   PlansModule,
+  ProjectRepositoriesModule,
   ProjectsModule,
+  RepositoriesModule,
   TasksModule,
 } from '@openthrottle/nestjs-repositories-server';
 
+import { PlanProjectMembershipModule } from '../../services/plan-project-membership/plan-project-membership.module.ts';
 import { ProjectsLoaders } from './loaders/loaders.service.ts';
 import { ProjectsResolver } from './projects.resolver.ts';
 
 @Module({
-  imports: [PlansModule, ProjectsModule, TasksModule],
+  imports: [
+    PlanProjectMembershipModule,
+    PlansModule,
+    ProjectRepositoriesModule,
+    ProjectsModule,
+    RepositoriesModule,
+    TasksModule,
+  ],
   providers: [ProjectsLoaders, ProjectsResolver],
 })
 export class ProjectsGraphqlModule {}

@@ -1,7 +1,7 @@
 /**
  * @description TypeORM entity for the openthrottle `plans` table. Extends `BaseModel`, so a
  * delete is a soft delete (`PlansRepository.remove` also soft-deletes the plan's tasks).
- * Matches databases/openthrottle/migrations (002, 012, 014, 022, 055, 173).
+ * Matches databases/openthrottle/migrations (002, 012, 014, 022, 055, 173, 185).
  * @public
  */
 
@@ -61,6 +61,13 @@ export class Plan extends BaseModel {
 
   @Column({ name: 'project_id', nullable: true, type: 'uuid' })
   projectId!: string | null;
+
+  /**
+   * @description Gap-based position within the project (1000, 2000, …); null exactly when
+   * `projectId` is null. Unique per project among live plans (migration 185).
+   */
+  @Column({ name: 'project_sort_order', nullable: true, type: 'int' })
+  projectSortOrder!: number | null;
 
   @Column({
     default: () => '\'{"hooks":[]}\'::jsonb',

@@ -1,5 +1,5 @@
 import type { DataTableColumnDef } from '@openthrottle/react-router-shadcn';
-import { cn, DataTable } from '@openthrottle/react-router-shadcn';
+import { cn, DataTable, Progress } from '@openthrottle/react-router-shadcn';
 // import { formatUpdatedAt } from '~/routing/plans/utils/formatters';
 import type { GlobalPopoverAction } from '@openthrottle/react-router-ui-global';
 import {
@@ -12,6 +12,7 @@ import { Link } from 'react-router';
 import type { ProjectCardFragment } from '~/__generated__/graphql';
 import { ProjectsEmpty } from '~/routing/projects/components/ProjectsEmpty';
 import { PROJECTS_ROW_ACTIONS_COPY } from '~/routing/projects/data/data.copy';
+import { getProjectPlanProgress } from '~/routing/projects/utils/projectPlans';
 
 export interface ProjectsTableProps {
   className?: string;
@@ -83,6 +84,28 @@ ProjectsTable.buildTable = (): DataTableColumnDef<
       header: () => <div className="p-4 py-2">Project Details</div>,
     },
     {
+      accessorKey: 'plans',
+      cell: ({ row }) => {
+        const { completed, total } = getProjectPlanProgress(
+          row.original.plans ?? [],
+        );
+        const percent = total === 0 ? 0 : Math.round((completed / total) * 100);
+
+        return (
+          <div className="flex min-w-32 flex-col gap-1 p-4 py-2">
+            <span className="text-xs tabular-nums">
+              {completed}/{total} plans
+            </span>
+            <Progress
+              aria-label={`${row.original.name} plan progress`}
+              value={percent}
+            />
+          </div>
+        );
+      },
+      header: () => <div className="p-4 py-2">Plans</div>,
+    },
+    {
       accessorKey: 'actions',
       cell: ({ row }) => {
         const project = row.original;
@@ -107,11 +130,6 @@ ProjectsTable.buildTable = (): DataTableColumnDef<
       },
       header: () => <GlobalPopoverActionsHeader />,
     },
-    // {
-    //   accessorKey: 'plans',
-    //   cell: ({ row }) => row.original.plans?.length ?? 0,
-    //   header: () => 'Plans',
-    // },
     // {
     //   accessorKey: 'tasks',
     //   cell: ({ row }) => row.original.tasks?.length ?? 0,

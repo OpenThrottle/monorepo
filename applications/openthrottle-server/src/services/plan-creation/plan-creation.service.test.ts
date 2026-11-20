@@ -23,6 +23,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { CreatePlanInput } from '../../graphql/plans/plan.input.ts';
 import { CheckoutPathResolutionService } from '../checkout-path-resolution/checkout-path-resolution.service.ts';
 import { EffectiveUserResolutionService } from '../effective-user-resolution/effective-user-resolution.service.ts';
+import { PlanProjectMembershipService } from '../plan-project-membership/plan-project-membership.service.ts';
 import { PlanCreationService } from './plan-creation.service.ts';
 
 const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
@@ -35,6 +36,10 @@ describe('PlanCreationService', () => {
   const isEnabled = vi.fn();
   const isModelEnabled = vi.fn();
   const plansRepository = createPlansRepositoryMock();
+  const appendSortOrder = vi.fn();
+  const appendSortOrders = vi.fn();
+  const linkPlanRepository = vi.fn();
+  const linkPlanRepositories = vi.fn();
   // The TypeORM repository a batch create's transaction manager hands out.
   const planRepo = {
     create: vi.fn(),
@@ -63,6 +68,19 @@ describe('PlanCreationService', () => {
     }));
     isEnabled.mockResolvedValue(true);
     isModelEnabled.mockResolvedValue(true);
+    // Default: an empty project, so the first plan lands on 1000 and a batch counts up from there.
+    appendSortOrder.mockImplementation(async (projectId: string | null) => {
+      return projectId === null ? null : 1000;
+    });
+    appendSortOrders.mockImplementation(
+      async (projectIds: readonly (string | null)[]) => {
+        return projectIds.map((projectId, index) => {
+          return projectId === null ? null : (index + 1) * 1000;
+        });
+      },
+    );
+    linkPlanRepository.mockResolvedValue(undefined);
+    linkPlanRepositories.mockResolvedValue(undefined);
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -90,6 +108,15 @@ describe('PlanCreationService', () => {
         {
           provide: UserPreferencesRepository,
           useValue: { getForUser },
+        },
+        {
+          provide: PlanProjectMembershipService,
+          useValue: {
+            appendSortOrder,
+            appendSortOrders,
+            linkPlanRepositories,
+            linkPlanRepository,
+          },
         },
         { provide: PlansRepository, useValue: plansRepository },
         { provide: DataSource, useValue: dataSource },
@@ -434,6 +461,78 @@ describe('PlanCreationService', () => {
 
       expect(planRepo.manager.transaction).not.toHaveBeenCalled();
       expect(planRepo.save).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('project membership', () => {
+    const PROJECT = '7c1f6f0e-2f5e-4b87-9a52-3d9a1d4b6c11';
+    const projectInput = (
+      title: string,
+      projectId: string | null,
+    ): CreatePlanInput => {
+      return {
+        assignee: null,
+        author: 'visormatt',
+        category: 'feature',
+        description: null,
+        project: null,
+        projectId,
+        runConfigJson: null,
+        status: null,
+        summary: null,
+        title,
+      };
+    };
+
+    it('appends a new plan to the end of its project and links its repository', async () => {
+      appendSortOrder.mockResolvedValue(4000);
+      const created = plansFactory.build({ projectId: PROJECT });
+      plansRepository.create.mockResolvedValue(created);
+
+      const plan = await service.createPlanFromInput(
+        projectInput('In project', PROJECT),
+      );
+
+      expect(appendSortOrder).toHaveBeenCalledWith(PROJECT);
+      expect(plansRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({ projectId: PROJECT, projectSortOrder: 4000 }),
+      );
+      expect(linkPlanRepository).toHaveBeenCalledWith(created);
+      expect(plan).toBe(created);
+    });
+
+    it('gives a plan with no project no position', async () => {
+      plansRepository.create.mockResolvedValue(plansFactory.build());
+
+      await service.createPlanFromInput(projectInput('Loose', null));
+
+      expect(plansRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({ projectId: null, projectSortOrder: null }),
+      );
+    });
+
+    it('numbers a batch per plan from one shared read and links their repositories after the save', async () => {
+      planRepo.create.mockImplementation((fields: unknown) => fields);
+      planRepo.save.mockImplementation((entities: unknown) =>
+        Promise.resolve(entities),
+      );
+
+      await service.createPlansFromInput([
+        projectInput('A', PROJECT),
+        projectInput('B', null),
+        projectInput('C', PROJECT),
+      ]);
+
+      expect(appendSortOrders).toHaveBeenCalledWith(
+        [PROJECT, null, PROJECT],
+        expect.anything(),
+      );
+      expect(
+        planRepo.create.mock.calls.map(([fields]) => {
+          return fields.projectSortOrder;
+        }),
+      ).toEqual([1000, null, 3000]);
+      expect(linkPlanRepositories).toHaveBeenCalledTimes(1);
     });
   });
 

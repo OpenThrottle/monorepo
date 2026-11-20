@@ -3,7 +3,9 @@ fragment ProjectPageDetails on ProjectObject {
   description
   id
   name
-  nxProjectName
+  repositories {
+    ...ProjectRepositoryRow
+  }
   tags {
     confidence
     dimension
@@ -14,27 +16,23 @@ fragment ProjectPageDetails on ProjectObject {
   updatedAt
 }
 
-query getProjectById($id: ID!, $limit: Float, $offset: Float) {
+query getProjectById($id: ID!) {
+  # Candidates for the "add existing plan" and "link repository" pickers. The
+  # plans list is bounded; a plan already in this project is filtered out in
+  # the loader.
+  availablePlans: plans(limit: 500) {
+    id
+    projectId
+    status
+    title
+  }
+
   project(id: $id) {
     ...ProjectPageDetails
   }
 
-  projectTasksResult: tasksByProjectId(
-    input: { projectId: $id, limit: $limit, offset: $offset }
-  ) {
-    tasks {
-      assignee
-      category
-      createdAt
-      description
-      id
-      planId
-      requirementsJson
-      summary
-      title
-      updatedAt
-    }
-    totalCount
+  projectPlans(projectId: $id) {
+    ...ProjectPlanRow
   }
 
   skillTagVocabulary {
@@ -44,6 +42,10 @@ query getProjectById($id: ID!, $limit: Float, $offset: Float) {
       tag
     }
     totalCount
+  }
+
+  workspaceRepositories {
+    ...ProjectRepositoryRow
   }
 }
 
@@ -63,4 +65,49 @@ fragment ProjectTagChip on ProjectTagObject {
   id
   source
   tag
+}
+
+fragment ProjectRepositoryRow on RepositoryObject {
+  defaultBranch
+  id
+  name
+  normalizedRemoteUrl
+}
+
+fragment ProjectPlanRow on PlanObject {
+  id
+  projectSortOrder
+  status
+  taskCount
+  tasksCompletedCount
+  title
+}
+
+mutation ProjectDetailLinkRepository($input: LinkProjectRepositoryInput!) {
+  linkProjectRepository(input: $input) {
+    projectId
+    repositoryId
+  }
+}
+
+mutation ProjectDetailUnlinkRepository($input: UnlinkProjectRepositoryInput!) {
+  unlinkProjectRepository(input: $input)
+}
+
+mutation ProjectDetailAddPlan($input: AddPlanToProjectInput!) {
+  addPlanToProject(input: $input) {
+    id
+  }
+}
+
+mutation ProjectDetailRemovePlan($input: RemovePlanFromProjectInput!) {
+  removePlanFromProject(input: $input) {
+    id
+  }
+}
+
+mutation ProjectDetailReorderPlans($input: ReorderProjectPlansInput!) {
+  reorderProjectPlans(input: $input) {
+    id
+  }
 }

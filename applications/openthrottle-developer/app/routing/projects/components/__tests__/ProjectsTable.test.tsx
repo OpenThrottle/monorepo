@@ -19,8 +19,8 @@ const mockProjects: ProjectCardFragment[] = [
     name: 'First Project',
     nxProjectName: 'applications/openthrottle-developer',
     plans: [
-      { __typename: 'PlanObject', title: 'Plan A' },
-      { __typename: 'PlanObject', title: 'Plan B' },
+      { __typename: 'PlanObject', id: 'plan-a', status: 'COMPLETED' },
+      { __typename: 'PlanObject', id: 'plan-b', status: 'PENDING' },
     ],
     tasks: [
       { __typename: 'TaskObject', title: 'Task 1' },
@@ -115,5 +115,21 @@ describe('ProjectsTable Component', () => {
         name: `${PROJECTS_ROW_ACTIONS_COPY.menuAriaLabelPrefix} Second Project`,
       }),
     ).toBeInTheDocument();
+  });
+
+  test('shows completed/total plan progress per project', () => {
+    const propsWithProjects: ProjectsTableProps = { projects: mockProjects };
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
+    const Component = () => {
+      return <ProjectsTable {...propsWithProjects} />;
+    };
+    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    const { getByRole, getByText } = render(<RoutesStub />);
+
+    expect(getByText('1/2 plans')).toBeInTheDocument();
+    expect(getByText('0/0 plans')).toBeInTheDocument();
+    expect(
+      getByRole('progressbar', { name: 'First Project plan progress' }),
+    ).toHaveAttribute('aria-valuenow', '50');
   });
 });

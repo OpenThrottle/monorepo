@@ -63,11 +63,15 @@ export class TaskObject {
   @Field(() => String)
   planId!: string;
 
-  @Field(() => String, { nullable: true })
+  @Field(() => String, {
+    deprecationReason: `Free-text label, unrelated to projects. Read the plan's projectId.`,
+    nullable: true,
+  })
   project!: string | null;
 
   @Field(() => String, {
-    description: `Project UUID (FK to projects table)`,
+    deprecationReason: `A task's project is its plan's project; read the plan's projectId.`,
+    description: `Project UUID (FK to projects table). Read the plan's projectId instead.`,
     nullable: true,
   })
   projectId!: string | null;

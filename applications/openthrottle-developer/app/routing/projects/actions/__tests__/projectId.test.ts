@@ -15,8 +15,13 @@ vi.mock('@openthrottle/react-router-graphql', async (importOriginal) => {
 const { executeGraphqlWithAuth } =
   await import('@openthrottle/react-router-graphql');
 const {
+  ProjectDetailAddPlanDocument,
   ProjectDetailAddProjectTagDocument,
+  ProjectDetailLinkRepositoryDocument,
+  ProjectDetailRemovePlanDocument,
   ProjectDetailRemoveProjectTagDocument,
+  ProjectDetailReorderPlansDocument,
+  ProjectDetailUnlinkRepositoryDocument,
 } = await import('~/__generated__/graphql');
 const { runProjectDetailAction } = await import('../projectId');
 
@@ -99,5 +104,67 @@ describe('projects/actions/projectId tag parser', () => {
 
     expect(result).toEqual({});
     expect(mockExecute).not.toHaveBeenCalled();
+  });
+
+  describe('project structure intents', () => {
+    test.each([
+      [
+        'linkProjectRepository',
+        { repositoryId: 'repo-1' },
+        ProjectDetailLinkRepositoryDocument,
+        { projectId: 'proj-1', repositoryId: 'repo-1' },
+      ],
+      [
+        'unlinkProjectRepository',
+        { repositoryId: 'repo-1' },
+        ProjectDetailUnlinkRepositoryDocument,
+        { projectId: 'proj-1', repositoryId: 'repo-1' },
+      ],
+      [
+        'addPlanToProject',
+        { planId: 'plan-1' },
+        ProjectDetailAddPlanDocument,
+        { planId: 'plan-1', projectId: 'proj-1' },
+      ],
+      [
+        'removePlanFromProject',
+        { planId: 'plan-1' },
+        ProjectDetailRemovePlanDocument,
+        { planId: 'plan-1' },
+      ],
+      [
+        'reorderProjectPlans',
+        { planIds: 'plan-2,plan-1' },
+        ProjectDetailReorderPlansDocument,
+        { planIds: ['plan-2', 'plan-1'], projectId: 'proj-1' },
+      ],
+    ])('%s calls its mutation', async (intent, fields, document, input) => {
+      const result = await runProjectDetailAction(
+        actionArgs(form({ intent, ...fields })),
+      );
+
+      expect(result).toEqual({ projectUpdated: true });
+      expect(mockExecute).toHaveBeenCalledWith(expect.any(Request), document, {
+        input,
+      });
+    });
+
+    test('rejects a structure intent with no ids without calling the server', async () => {
+      const result = await runProjectDetailAction(
+        actionArgs(form({ intent: 'addPlanToProject' })),
+      );
+
+      expect(result).toHaveProperty('projectError');
+      expect(mockExecute).not.toHaveBeenCalled();
+    });
+
+    test('surfaces a server failure as projectError', async () => {
+      mockExecute.mockRejectedValueOnce(new Error('boom'));
+      const result = await runProjectDetailAction(
+        actionArgs(form({ intent: 'removePlanFromProject', planId: 'p' })),
+      );
+
+      expect(result).toEqual({ projectError: 'boom' });
+    });
   });
 });

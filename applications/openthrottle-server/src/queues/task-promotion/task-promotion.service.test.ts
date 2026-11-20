@@ -29,6 +29,7 @@ import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 
 import type { WorkLedgerCaptureService } from '../../graphql/work-ledger/work-ledger-capture/work-ledger-capture.service.ts';
 import type { NotificationsService } from '../../notifications/notifications.service.ts';
+import type { PlanProjectMembershipService } from '../../services/plan-project-membership/plan-project-membership.service.ts';
 import { PROMOTED_TAG } from './task-promotion.constants.ts';
 import { TaskPromotionService } from './task-promotion.service.ts';
 
@@ -148,9 +149,45 @@ describe('TaskPromotionService.promote', () => {
       dataSource,
       createMock<LoggerService>(),
       notifications,
+      createMock<PlanProjectMembershipService>({
+        appendSortOrder: vi.fn(async (projectId: string | null) => {
+          return projectId === null ? null : 7000;
+        }),
+      }),
       createMock<WorkLedgerCaptureService>({
         recordStatusChange: mockRecordStatusChange,
       }),
+    );
+  });
+
+  it('appends the promoted plan to the end of the task project', async () => {
+    getOne.mockResolvedValue(buildTask({ projectId: 'project-1' }));
+
+    await service.promote({
+      actorServiceAccountId: null,
+      actorUserId: 'user-1',
+      captureFailureIsFatal: true,
+      taskId: TASK_ID,
+    });
+
+    expect(planRepo.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        projectId: 'project-1',
+        projectSortOrder: 7000,
+      }),
+    );
+  });
+
+  it('gives the promoted plan no position when neither task nor plan has a project', async () => {
+    await service.promote({
+      actorServiceAccountId: null,
+      actorUserId: 'user-1',
+      captureFailureIsFatal: true,
+      taskId: TASK_ID,
+    });
+
+    expect(planRepo.create).toHaveBeenCalledWith(
+      expect.objectContaining({ projectId: null, projectSortOrder: null }),
     );
   });
 

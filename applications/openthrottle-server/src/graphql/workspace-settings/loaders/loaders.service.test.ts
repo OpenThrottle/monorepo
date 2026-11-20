@@ -1,5 +1,9 @@
-import type { ProjectsRepository } from '@openthrottle/nestjs-repositories-server';
+import type {
+  ProjectRepositoriesRepository,
+  ProjectsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import {
+  createProjectRepositoriesRepositoryMock,
   createProjectsRepositoryMock,
   projectsFactory,
 } from '@openthrottle/nestjs-repositories-server/testing';
@@ -10,6 +14,7 @@ import { WorkspaceSettingsLoaders } from './loaders.service.ts';
 
 describe('WorkspaceSettingsLoaders', () => {
   const projectsRepository = createProjectsRepositoryMock();
+  const projectRepositories = createProjectRepositoriesRepositoryMock();
   const findProjects = projectsRepository.findBy;
 
   let loaders: WorkspaceSettingsLoaders;
@@ -17,6 +22,7 @@ describe('WorkspaceSettingsLoaders', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     loaders = new WorkspaceSettingsLoaders(
+      asMock<ProjectRepositoriesRepository>(projectRepositories),
       asMock<ProjectsRepository>(projectsRepository),
     );
   });
@@ -45,5 +51,30 @@ describe('WorkspaceSettingsLoaders', () => {
     expect(a?.id).toBe('p1');
     expect(b?.id).toBe('p2');
     expect(missing).toBeNull();
+  });
+
+  test('projectsByRepositoryIdLoader batches into one grouped read and defaults to no projects', async () => {
+    const one = {
+      ...projectsFactory.build({ id: 'p1' }),
+      plans: [],
+      tasks: [],
+    };
+    projectRepositories.listProjectsByRepositoryIds.mockResolvedValue(
+      new Map([['r1', [one]]]),
+    );
+
+    const [linked, unlinked] = await Promise.all([
+      loaders.projectsByRepositoryIdLoader.load('r1'),
+      loaders.projectsByRepositoryIdLoader.load('r2'),
+    ]);
+
+    expect(
+      projectRepositories.listProjectsByRepositoryIds,
+    ).toHaveBeenCalledTimes(1);
+    expect(
+      projectRepositories.listProjectsByRepositoryIds,
+    ).toHaveBeenCalledWith(['r1', 'r2']);
+    expect(linked).toEqual([one]);
+    expect(unlinked).toEqual([]);
   });
 });

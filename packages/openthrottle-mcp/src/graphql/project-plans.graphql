@@ -1,0 +1,43 @@
+# MCP-only GraphQL documents: ordered plan membership in a project.
+# Mirrors the projectPlans query and the addPlanToProject / removePlanFromProject /
+# reorderProjectPlans mutations exposed by openthrottle-server. Selection sets are alphabetized.
+
+mutation AddPlanToProject($input: AddPlanToProjectInput!) {
+  addPlanToProject(input: $input) {
+    id
+    projectId
+    projectSortOrder
+    status
+    title
+  }
+}
+
+query ProjectPlans($projectId: ID!) {
+  projectPlans(projectId: $projectId) {
+    id
+    projectId
+    projectSortOrder
+    status
+    title
+  }
+}
+
+mutation RemovePlanFromProject($input: RemovePlanFromProjectInput!) {
+  removePlanFromProject(input: $input) {
+    id
+    projectId
+    projectSortOrder
+    status
+    title
+  }
+}
+
+mutation ReorderProjectPlans($input: ReorderProjectPlansInput!) {
+  reorderProjectPlans(input: $input) {
+    id
+    projectId
+    projectSortOrder
+    status
+    title
+  }
+}

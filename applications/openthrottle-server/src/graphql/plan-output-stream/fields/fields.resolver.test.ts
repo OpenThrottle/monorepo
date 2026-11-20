@@ -31,6 +31,7 @@ describe('PlanOutputStreamFieldsResolver', () => {
     project: null,
     projectId: null,
     projectRelation: null,
+    projectSortOrder: null,
     runConfig: getDefaultPlanRunConfigStorage(),
     status: 'IN_PROGRESS',
     summary: null,

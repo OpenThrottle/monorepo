@@ -138,6 +138,13 @@ export type AddPlanTagInput = {
   tag: Scalars['String']['input'];
 };
 
+export type AddPlanToProjectInput = {
+  /** Plan to add to the project */
+  planId: Scalars['ID']['input'];
+  /** Project to add the plan to */
+  projectId: Scalars['ID']['input'];
+};
+
 export type AddProjectSkillTagInput = {
   /** Project whose skill row to tag. Omit to target the dogfood monorepo project. */
   projectId?: InputMaybe<Scalars['ID']['input']>;
@@ -1244,6 +1251,7 @@ export type CreatePlanInput = {
   description?: InputMaybe<Scalars['String']['input']>;
   /** Optional client-chosen plan id (UUID) that makes the create idempotent. Re-sending a create with the same id and title returns the plan the first call created instead of inserting a second, so a caller whose request timed out can retry safely. A different title under an existing id is refused. */
   id?: InputMaybe<Scalars['ID']['input']>;
+  /** @deprecated Free-text label, unrelated to projects and superseded by projectId. */
   project?: InputMaybe<Scalars['String']['input']>;
   /** Optional. Project UUID (FK to projects table). Omit or pass null when plan is not linked to a project. */
   projectId?: InputMaybe<Scalars['ID']['input']>;
@@ -1270,7 +1278,10 @@ export type CreatePlansResultObject = {
 export type CreateProjectInput = {
   description?: InputMaybe<Scalars['String']['input']>;
   name: Scalars['String']['input'];
-  /** NX project name (e.g. applications/openthrottle-server) */
+  /**
+   * NX project name (e.g. applications/openthrottle-server)
+   * @deprecated Projects are initiatives, not Nx projects
+   */
   nxProjectName?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -1436,8 +1447,12 @@ export type CreateTaskInput = {
   description?: InputMaybe<Scalars['String']['input']>;
   /** Plan id the task belongs to */
   planId: Scalars['ID']['input'];
+  /** @deprecated Free-text label, unrelated to projects. Set the plan's projectId instead. */
   project?: InputMaybe<Scalars['String']['input']>;
-  /** Project UUID (FK to projects table). Omit or pass null when task is not linked to a project. */
+  /**
+   * Project UUID (FK to projects table). Omit or pass null when task is not linked to a project.
+   * @deprecated A task's project is its plan's project; set projectId on the plan.
+   */
   projectId?: InputMaybe<Scalars['ID']['input']>;
   /** JSON string of requirements array */
   requirements?: InputMaybe<Scalars['String']['input']>;
@@ -1461,8 +1476,12 @@ export type CreateTasksItemInput = {
   assignee?: InputMaybe<Scalars['String']['input']>;
   category?: InputMaybe<Scalars['String']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
+  /** @deprecated Free-text label, unrelated to projects. Set the plan's projectId instead. */
   project?: InputMaybe<Scalars['String']['input']>;
-  /** Project UUID (FK to projects table). Omit or pass null when task is not linked to a project. */
+  /**
+   * Project UUID (FK to projects table). Omit or pass null when task is not linked to a project.
+   * @deprecated A task's project is its plan's project; set projectId on the plan.
+   */
   projectId?: InputMaybe<Scalars['ID']['input']>;
   /** JSON string of requirements array */
   requirements?: InputMaybe<Scalars['String']['input']>;
@@ -2565,6 +2584,13 @@ export type LinesAddedDeletedRowObject = {
   prCount: Scalars['Int']['output'];
 };
 
+export type LinkProjectRepositoryInput = {
+  /** Project to link the repository to */
+  projectId: Scalars['ID']['input'];
+  /** Repository to link */
+  repositoryId: Scalars['ID']['input'];
+};
+
 export type ListAgentConversationMessagesResultObject = {
   __typename?: 'ListAgentConversationMessagesResultObject';
   messages: Array<AgentConversationMessageObject>;
@@ -2635,6 +2661,7 @@ export type ListPlansByStatusInput = {
   assignees?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
   limit?: InputMaybe<Scalars['Int']['input']>;
   offset?: InputMaybe<Scalars['Int']['input']>;
+  /** @deprecated Free-text label, unrelated to projects and superseded by projectId. */
   project?: InputMaybe<Scalars['String']['input']>;
   projectId?: InputMaybe<Scalars['ID']['input']>;
   /** Sort by "created" or "updated" */
@@ -2823,6 +2850,8 @@ export type Mutation = {
   addPermissionToRole: Scalars['Boolean']['output'];
   /** Attach a tag to a plan. The tag must be in the caller's skill-tag vocabulary; source is derived from the caller identity. At most one phase tag per plan (equal-or-lower provenance is replaced, higher rejects). */
   addPlanTag: PlanTagObject;
+  /** Add a plan to a project, appended after the project's last plan (a plan in another project moves and lands at the end of this one). Also links the plan's workspace repository to the project when it is set and not yet linked; that link never blocks. Idempotent for a plan already in the project. Fails when the plan or project does not exist. */
+  addPlanToProject: PlanObject;
   /** Attach a domain tag to a project_skills row. The tag must be in the caller's skill-tag vocabulary; phase tags are rejected. Idempotent when the tag is already present. Omit projectId to target the dogfood monorepo project. */
   addProjectSkillTag: ProjectSkillObject;
   /** Attach a tag to a project. The tag must be in the caller's skill-tag vocabulary; source is derived from the caller identity. Multiple tags per project are allowed (no phase-tag limit). Re-runs plan-rules evaluation for every plan in the project. */
@@ -3002,6 +3031,8 @@ export type Mutation = {
   installAgentCli: StartAgentSetupResult;
   /** Record your verdict (pass or fail), optional failure type and note on an agent trajectory. One label per rater per trajectory: re-labelling replaces your own. The rater is taken from your identity, never from input. */
   labelAgentTrajectory: AgentTrajectoryLabel;
+  /** Link a repository to a project (many-to-many). Idempotent: linking an already-linked pair returns the existing link. Fails when the project or repository does not exist. */
+  linkProjectRepository: ProjectRepositoryObject;
   /** Sign in with email and password. Returns JWT access token for Authorization header or cookie. */
   login: LoginResultObject;
   /** Mint a short-lived token (scoped to the current user) for authenticating a graphql-ws subscription connection via connectionParams.authToken. */
@@ -3053,6 +3084,8 @@ export type Mutation = {
   removeCmsFragmentChild: CmsFragmentChildObject;
   /** Remove a permission from a role */
   removePermissionFromRole: Scalars['Boolean']['output'];
+  /** Remove a plan from its project, clearing projectId and projectSortOrder. The project's repository links stay. A plan with no project is returned unchanged. */
+  removePlanFromProject: PlanObject;
   /** Remove one server-provisioned plan-run worktree from disk through the ot-worktree destroy action (destroy.sh, never a pnpm script, so it works in any repo): the repo's teardown hook runs, the directory and its checkout record go, and the branch is kept. Never forced — a primary checkout, a worktree OpenThrottle did not provision, a dirty or unpushed tree, or one an unsettled run still points at is kept and the outcome says why. */
   removePlanRunWorktree: RemovePlanRunWorktreePayloadObject;
   /** Remove a tag from a plan under the provenance ladder (an agent cannot remove a human row; server-llm removes only its own). Returns false when the tag was not present. */
@@ -3081,6 +3114,8 @@ export type Mutation = {
   reorderCmsFragmentChildren: Array<CmsFragmentChildObject>;
   /** Reorder tasks within a plan. Renumbers sortOrder 1000, 2000, … in taskIds order atomically. */
   reorderPlanTasks: Array<TaskObject>;
+  /** Reorder the plans of a project. Renumbers projectSortOrder 1000, 2000, … in planIds order atomically; unlisted plans of the project follow in their existing order. Returns every live plan of the project in the new order. */
+  reorderProjectPlans: Array<PlanObject>;
   /** Replace the ATIF document on an existing trajectory in place, keeping its id so human labels keyed by trajectory id survive. Used by the session re-segment operator when a task's boundaries change. The document is validated and capped the same way as recordAgentTrajectory. */
   replaceAgentTrajectory: AgentTrajectory;
   /** Move a SCHEDULED plan run's fire time in place: the run keeps its id, its frozen run config snapshot and its job; only scheduledFor and the delayed job's delay change. Same rule as schedulePlanRun (future, within 30 days). Rejected when the run is not SCHEDULED or its job is already starting. Never changes the plan or task statuses. */
@@ -3141,6 +3176,8 @@ export type Mutation = {
   triggerDevJsonlLogSample: Scalars['Boolean']['output'];
   /** Trigger a test websocket notification (system.alert). Returns true when the event was emitted. Use from the web app to verify the notification flow end-to-end. */
   triggerWebsocketNotification: Scalars['Boolean']['output'];
+  /** Remove a repository's link to a project. Returns false when the pair was not linked. */
+  unlinkProjectRepository: Scalars['Boolean']['output'];
   /** Return a blog post to DRAFT and clear its publishedAt. It stops being publicly visible immediately. Returns BlogPostNotFoundError for an unknown post. */
   unpublishBlogPost: UnpublishBlogPostResult;
   /** Update an allowlisted agent CLI on the server host by driver id. Gated by SETTINGS_WRITE and the default-off OT_AGENT_CLI_INSTALL_ENABLED flag; returns a runId to stream via agentSetupChunkAdded. */
@@ -3231,6 +3268,10 @@ export type MutationAddPermissionToRoleArgs = {
 
 export type MutationAddPlanTagArgs = {
   input: AddPlanTagInput;
+};
+
+export type MutationAddPlanToProjectArgs = {
+  input: AddPlanToProjectInput;
 };
 
 export type MutationAddProjectSkillTagArgs = {
@@ -3570,6 +3611,10 @@ export type MutationLabelAgentTrajectoryArgs = {
   input: LabelAgentTrajectoryInput;
 };
 
+export type MutationLinkProjectRepositoryArgs = {
+  input: LinkProjectRepositoryInput;
+};
+
 export type MutationLoginArgs = {
   input: LoginInput;
 };
@@ -3667,6 +3712,10 @@ export type MutationRemovePermissionFromRoleArgs = {
   input: RemovePermissionFromRoleInput;
 };
 
+export type MutationRemovePlanFromProjectArgs = {
+  input: RemovePlanFromProjectInput;
+};
+
 export type MutationRemovePlanRunWorktreeArgs = {
   checkoutId: Scalars['ID']['input'];
 };
@@ -3723,6 +3772,10 @@ export type MutationReorderCmsFragmentChildrenArgs = {
 
 export type MutationReorderPlanTasksArgs = {
   input: ReorderPlanTasksInput;
+};
+
+export type MutationReorderProjectPlansArgs = {
+  input: ReorderProjectPlansInput;
 };
 
 export type MutationReplaceAgentTrajectoryArgs = {
@@ -3835,6 +3888,10 @@ export type MutationStartWorkSessionArgs = {
 
 export type MutationStopTranscriptionStreamArgs = {
   sessionId: Scalars['ID']['input'];
+};
+
+export type MutationUnlinkProjectRepositoryArgs = {
+  input: UnlinkProjectRepositoryInput;
 };
 
 export type MutationUnpublishBlogPostArgs = {
@@ -4134,11 +4191,14 @@ export type PlanObject = {
   id: Scalars['String']['output'];
   /** Job-run lifecycle hooks stored on the plan ({ hooks: [...] }). */
   jobRunHooksJson: Scalars['String']['output'];
+  /** @deprecated Free-text label, unrelated to projects and superseded by projectId. */
   project?: Maybe<Scalars['String']['output']>;
   /** Optional. Project UUID (FK to projects table). Null when plan is not linked to a project. */
   projectId?: Maybe<Scalars['String']['output']>;
   /** Resolved project entity when projectId is set */
   projectRelation?: Maybe<ProjectObject>;
+  /** Position within the plan's project, gap-based like task sortOrder (1000, 2000, …) and unique per project among live plans. Null when the plan has no project. */
+  projectSortOrder?: Maybe<Scalars['Int']['output']>;
   /** Workflow-ralph run configuration stored on the plan (PlanRunConfigStorage v1). */
   runConfigJson: Scalars['String']['output'];
   /** Number of tasks a whole-plan run would pick up (PENDING, IN_PROGRESS, BLOCKED, BACKLOG, SKIPPED, CANCELED or QUEUED). Zero means enqueuePlanRun and schedulePlanRun refuse the plan. Resolved through a batched loader. */
@@ -4461,15 +4521,29 @@ export type ProjectObject = {
   description?: Maybe<Scalars['String']['output']>;
   id: Scalars['String']['output'];
   name: Scalars['String']['output'];
-  /** NX project name (e.g. applications/openthrottle-server) */
+  /**
+   * NX project name (e.g. applications/openthrottle-server)
+   * @deprecated Projects are initiatives, not Nx projects
+   */
   nxProjectName?: Maybe<Scalars['String']['output']>;
   /** Plans linked to this project; ordered by createdAt descending */
   plans?: Maybe<Array<PlanObject>>;
+  /** Repositories linked to this project; ordered by link time ascending */
+  repositories: Array<RepositoryObject>;
   /** Tags attached to this project, alphabetically by tag. */
   tags: Array<ProjectTagObject>;
   /** Tasks linked to this project; ordered by createdAt ascending */
   tasks?: Maybe<Array<TaskObject>>;
   updatedAt: Scalars['DateTime']['output'];
+};
+
+/** A link between a project and a repository (many-to-many). */
+export type ProjectRepositoryObject = {
+  __typename?: 'ProjectRepositoryObject';
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['ID']['output'];
+  projectId: Scalars['ID']['output'];
+  repositoryId: Scalars['ID']['output'];
 };
 
 /** A single skill in a project's ingested skill universe, with its static frontmatter tags and tri-state disable-model-invocation flag. */
@@ -4829,6 +4903,8 @@ export type Query = {
   prTimeInStateSummary: Array<PrTimeInStateSummaryObject>;
   /** Get a project by ID */
   project?: Maybe<ProjectObject>;
+  /** The live plans of a project in project order (projectSortOrder ascending) */
+  projectPlans: Array<PlanObject>;
   /** A project's ingested skill universe: slug, static frontmatter tags, and the tri-state static disable-model-invocation flag. Omit projectId to resolve the dogfood monorepo project (nx_project_name = 'monorepo'); returns an empty list when the project or its ingested rows are absent. Display-only in v1 — no per-context effective availability. */
   projectSkills: ProjectSkillsResult;
   /** List all projects, ordered by createdAt descending */
@@ -5252,6 +5328,10 @@ export type QueryPrTimeInStateSummaryArgs = {
 
 export type QueryProjectArgs = {
   id: Scalars['ID']['input'];
+};
+
+export type QueryProjectPlansArgs = {
+  projectId: Scalars['ID']['input'];
 };
 
 export type QueryProjectSkillsArgs = {
@@ -6030,6 +6110,11 @@ export type RemovePermissionFromRoleInput = {
   roleId: Scalars['ID']['input'];
 };
 
+export type RemovePlanFromProjectInput = {
+  /** Plan to remove from its project */
+  planId: Scalars['ID']['input'];
+};
+
 /** Result of removePlanRunWorktree for one worktree checkout. */
 export type RemovePlanRunWorktreePayloadObject = {
   __typename?: 'RemovePlanRunWorktreePayloadObject';
@@ -6117,6 +6202,13 @@ export type ReorderPlanTasksInput = {
   planId: Scalars['ID']['input'];
   /** Task ids in desired order; sortOrder is reassigned 1000, 2000, … atomically */
   taskIds: Array<Scalars['ID']['input']>;
+};
+
+export type ReorderProjectPlansInput = {
+  /** Plan ids in desired order; project_sort_order is reassigned 1000, 2000, … atomically. Plans of the project that are not listed follow in their existing order. */
+  planIds: Array<Scalars['ID']['input']>;
+  /** Project whose plans are being reordered */
+  projectId: Scalars['ID']['input'];
 };
 
 export type RepeatableJobObject = {
@@ -6268,8 +6360,13 @@ export type RepositoryObject = {
   normalizedRemoteUrl?: Maybe<Scalars['String']['output']>;
   /** OpenThrottle project linked at the repository level. */
   project?: Maybe<ProjectObject>;
-  /** OpenThrottle project linked at the repository level. */
+  /**
+   * OpenThrottle project linked at the repository level.
+   * @deprecated A repository can belong to several projects; use projects (backed by project_repositories).
+   */
   projectId?: Maybe<Scalars['ID']['output']>;
+  /** Projects this repository is linked to through the many-to-many project_repositories table, oldest link first. */
+  projects: Array<ProjectObject>;
   updatedAt: Scalars['DateTime']['output'];
 };
 
@@ -7498,8 +7595,12 @@ export type TaskObject = {
   /** Resolved plan entity when planId is set */
   plan?: Maybe<PlanObject>;
   planId: Scalars['String']['output'];
+  /** @deprecated Free-text label, unrelated to projects. Read the plan's projectId. */
   project?: Maybe<Scalars['String']['output']>;
-  /** Project UUID (FK to projects table) */
+  /**
+   * Project UUID (FK to projects table). Read the plan's projectId instead.
+   * @deprecated A task's project is its plan's project; read the plan's projectId.
+   */
   projectId?: Maybe<Scalars['String']['output']>;
   /** Resolved project entity when projectId is set */
   projectRelation?: Maybe<ProjectObject>;
@@ -7881,6 +7982,13 @@ export type TranscriptionStreamChunkObject = {
   transcript: Scalars['String']['output'];
 };
 
+export type UnlinkProjectRepositoryInput = {
+  /** Project to unlink the repository from */
+  projectId: Scalars['ID']['input'];
+  /** Repository to unlink */
+  repositoryId: Scalars['ID']['input'];
+};
+
 /** The post returned to DRAFT, or BlogPostNotFoundError. */
 export type UnpublishBlogPostResult =
   BlogPostAdminObject | BlogPostNotFoundError;
@@ -7996,6 +8104,7 @@ export type UpdatePlanInput = {
   id: Scalars['ID']['input'];
   /** JSON string of job-run lifecycle hooks ({ hooks: [...] }). Pass null to clear; omit to leave unchanged. */
   jobRunHooksJson?: InputMaybe<Scalars['String']['input']>;
+  /** @deprecated Free-text label, unrelated to projects and superseded by projectId. */
   project?: InputMaybe<Scalars['String']['input']>;
   /** Optional. Project UUID (FK to projects table). Pass null to clear; omit to leave unchanged. */
   projectId?: InputMaybe<Scalars['ID']['input']>;
@@ -8018,7 +8127,10 @@ export type UpdateProjectInput = {
   /** Project id to update */
   id: Scalars['ID']['input'];
   name?: InputMaybe<Scalars['String']['input']>;
-  /** NX project name (e.g. applications/openthrottle-server) */
+  /**
+   * NX project name (e.g. applications/openthrottle-server)
+   * @deprecated Projects are initiatives, not Nx projects
+   */
   nxProjectName?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -8163,6 +8275,7 @@ export type UpdateTaskInput = {
   /** Task id to update */
   id: Scalars['ID']['input'];
   planId?: InputMaybe<Scalars['ID']['input']>;
+  /** @deprecated Free-text label, unrelated to projects. Set the plan's projectId instead. */
   project?: InputMaybe<Scalars['String']['input']>;
   /** Optional. Project UUID. Pass null to clear; omit to leave unchanged. */
   projectId?: InputMaybe<Scalars['ID']['input']>;

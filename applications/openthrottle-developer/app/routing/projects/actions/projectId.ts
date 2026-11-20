@@ -5,8 +5,13 @@ import {
 
 import type { Route } from '@/app/routes/+types/projects.$projectId._index';
 import {
+  ProjectDetailAddPlanDocument,
   ProjectDetailAddProjectTagDocument,
+  ProjectDetailLinkRepositoryDocument,
+  ProjectDetailRemovePlanDocument,
   ProjectDetailRemoveProjectTagDocument,
+  ProjectDetailReorderPlansDocument,
+  ProjectDetailUnlinkRepositoryDocument,
 } from '~/__generated__/graphql';
 import {
   AddProjectTagInputSchema,
@@ -29,8 +34,59 @@ const parseProjectTagForm = (
   );
 };
 
+const readField = (formData: FormData, key: string): string => {
+  const value = formData.get(key);
+  return typeof value === 'string' ? value.trim() : '';
+};
+
+const runProjectStructureIntent = async (
+  args: Route.ActionArgs,
+  projectId: string,
+  intent: string,
+  formData: FormData,
+) => {
+  const planId = readField(formData, 'planId');
+  const repositoryId = readField(formData, 'repositoryId');
+  const planIds = readField(formData, 'planIds')
+    .split(',')
+    .filter((id) => id !== '');
+
+  if (intent === 'linkProjectRepository' && repositoryId !== '') {
+    await executeGraphqlWithAuth(
+      args.request,
+      ProjectDetailLinkRepositoryDocument,
+      { input: { projectId, repositoryId } },
+    );
+  } else if (intent === 'unlinkProjectRepository' && repositoryId !== '') {
+    await executeGraphqlWithAuth(
+      args.request,
+      ProjectDetailUnlinkRepositoryDocument,
+      { input: { projectId, repositoryId } },
+    );
+  } else if (intent === 'addPlanToProject' && planId !== '') {
+    await executeGraphqlWithAuth(args.request, ProjectDetailAddPlanDocument, {
+      input: { planId, projectId },
+    });
+  } else if (intent === 'removePlanFromProject' && planId !== '') {
+    await executeGraphqlWithAuth(
+      args.request,
+      ProjectDetailRemovePlanDocument,
+      { input: { planId } },
+    );
+  } else if (intent === 'reorderProjectPlans' && planIds.length > 0) {
+    await executeGraphqlWithAuth(
+      args.request,
+      ProjectDetailReorderPlansDocument,
+      { input: { planIds, projectId } },
+    );
+  } else {
+    return { projectError: 'Missing or unknown project change.' };
+  }
+  return { projectUpdated: true };
+};
+
 /**
- * @description Project detail tag mutations (add / remove), dispatched by
+ * @description Project detail mutations (tags, linked repositories, ordered plans), dispatched by
  * `intent`. Extracted from the route action per route-primitive-shape R4 so the
  * route file stays a thin adapter.
  */
@@ -69,6 +125,21 @@ export const runProjectDetailAction = async (args: Route.ActionArgs) => {
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       return { projectTagError: message };
+    }
+  }
+
+  if (
+    intent === 'linkProjectRepository' ||
+    intent === 'unlinkProjectRepository' ||
+    intent === 'addPlanToProject' ||
+    intent === 'removePlanFromProject' ||
+    intent === 'reorderProjectPlans'
+  ) {
+    try {
+      return await runProjectStructureIntent(args, projectId, intent, formData);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return { projectError: message };
     }
   }
 

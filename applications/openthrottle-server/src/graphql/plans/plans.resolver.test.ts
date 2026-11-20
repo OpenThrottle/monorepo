@@ -46,6 +46,7 @@ import { TaggingEnqueueService } from '../../queues/tagging/enqueue/enqueue.serv
 import { EffectiveUserResolutionService } from '../../services/effective-user-resolution/effective-user-resolution.service.ts';
 import { EmbedderService } from '../../services/embedder/embedder.service.ts';
 import { PlanCreationService } from '../../services/plan-creation/plan-creation.service.ts';
+import { PlanProjectMembershipService } from '../../services/plan-project-membership/plan-project-membership.service.ts';
 import { PlanRunWorktreeCheckoutService } from '../../services/plan-run-worktree-checkout/plan-run-worktree-checkout.service.ts';
 import { PRUNE_WORKTREE_CHECKOUT_OUTCOME } from '../../services/worktree-checkout-prune/worktree-checkout-prune.constants.ts';
 import { WorktreeCheckoutPruneService } from '../../services/worktree-checkout-prune/worktree-checkout-prune.service.ts';
@@ -92,6 +93,7 @@ describe('PlansResolver', () => {
     project: null,
     projectId: null,
     projectRelation: null,
+    projectSortOrder: null,
     runConfig: getDefaultPlanRunConfigStorage({
       planId: '80864bba-630a-451d-bfd2-4b25ec202381',
     }),
@@ -130,6 +132,13 @@ describe('PlansResolver', () => {
 
   const mockPlanCreationService = {
     createPlanFromInput: vi.fn(),
+  };
+
+  // Stands in for the membership service: applyProjectChange mutates the entity like the real
+  // one (project id plus a position, or both cleared).
+  const mockPlanProjectMembership = {
+    applyProjectChange: vi.fn(),
+    linkPlanRepository: vi.fn(),
   };
 
   // `repo` stands in for the transaction manager's TypeORM repository (PlanStatusService and
@@ -297,6 +306,10 @@ describe('PlansResolver', () => {
           useValue: createMock<TaggingEnqueueService>(),
         },
         {
+          provide: PlanProjectMembershipService,
+          useValue: mockPlanProjectMembership,
+        },
+        {
           provide: PlanCreationService,
           useValue: mockPlanCreationService,
         },
@@ -357,6 +370,13 @@ describe('PlansResolver', () => {
   });
 
   beforeEach(() => {
+    mockPlanProjectMembership.applyProjectChange.mockImplementation(
+      async (plan: Plan, nextProjectId: string | null) => {
+        plan.projectId = nextProjectId;
+        plan.projectSortOrder = nextProjectId === null ? null : 2000;
+      },
+    );
+    mockPlanProjectMembership.linkPlanRepository.mockResolvedValue(undefined);
     mockPlansRepository.findOne.mockImplementation(async (options) => {
       return repo.findOne(options);
     });
@@ -2317,6 +2337,91 @@ describe('PlansResolver', () => {
         }),
       );
       expect(result?.projectId).toBeNull();
+    });
+
+    describe('project membership', () => {
+      const NEW_PROJECT = '9a0c3a3e-6c24-4c2b-9d1a-2f8d4f0f7b10';
+      const memberInput = (projectId: string | null): UpdatePlanInput => {
+        return {
+          assignee: undefined,
+          author: undefined,
+          category: undefined,
+          description: undefined,
+          id: mockPlan.id,
+          project: undefined,
+          projectId,
+          status: undefined,
+          summary: undefined,
+          title: undefined,
+        };
+      };
+
+      test('moving to a project assigns its position, saves, then links the plan repository', async () => {
+        const planNoProject: Plan = {
+          ...mockPlan,
+          projectId: null,
+          projectSortOrder: null,
+        };
+        vi.mocked(repo.findOne).mockResolvedValue(planNoProject);
+        vi.mocked(repo.save).mockImplementation(async (entity: Plan) => {
+          return entity;
+        });
+
+        await resolver.updatePlan(memberInput(NEW_PROJECT));
+
+        expect(
+          mockPlanProjectMembership.applyProjectChange,
+        ).toHaveBeenCalledWith(expect.anything(), NEW_PROJECT);
+        expect(repo.save).toHaveBeenCalledWith(
+          expect.objectContaining({
+            projectId: NEW_PROJECT,
+            projectSortOrder: 2000,
+          }),
+        );
+        expect(
+          mockPlanProjectMembership.linkPlanRepository,
+        ).toHaveBeenCalledWith(
+          expect.objectContaining({ projectId: NEW_PROJECT }),
+        );
+      });
+
+      test('clearing the project clears the position and links nothing', async () => {
+        const inProject: Plan = {
+          ...mockPlan,
+          projectId: NEW_PROJECT,
+          projectSortOrder: 3000,
+        };
+        vi.mocked(repo.findOne).mockResolvedValue(inProject);
+        vi.mocked(repo.save).mockImplementation(async (entity: Plan) => {
+          return entity;
+        });
+        mockPlanProjectMembership.linkPlanRepository.mockClear();
+
+        await resolver.updatePlan(memberInput(null));
+
+        expect(repo.save).toHaveBeenCalledWith(
+          expect.objectContaining({ projectId: null, projectSortOrder: null }),
+        );
+        expect(
+          mockPlanProjectMembership.linkPlanRepository,
+        ).not.toHaveBeenCalled();
+      });
+
+      test('an unchanged project id leaves membership alone', async () => {
+        const inProject: Plan = {
+          ...mockPlan,
+          projectId: NEW_PROJECT,
+          projectSortOrder: 3000,
+        };
+        vi.mocked(repo.findOne).mockResolvedValue(inProject);
+        mockPlanProjectMembership.applyProjectChange.mockClear();
+
+        await resolver.updatePlan(memberInput(NEW_PROJECT));
+
+        expect(
+          mockPlanProjectMembership.applyProjectChange,
+        ).not.toHaveBeenCalled();
+      });
     });
 
     describe('IN_PROGRESS transition (openthrottle-ralph parity)', () => {

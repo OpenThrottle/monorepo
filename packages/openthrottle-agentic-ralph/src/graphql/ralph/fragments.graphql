@@ -21,6 +21,7 @@ fragment Plan on PlanObject {
   jobRunHooksJson
   project
   projectId
+  projectSortOrder
   runConfigJson
   status
   summary

@@ -5,13 +5,18 @@
 
 import { Injectable, Scope } from '@nestjs/common';
 import { createCollectionByColumnLoader } from '@openthrottle/nestjs-postgres';
-import type { Plan, Task } from '@openthrottle/nestjs-repositories-server';
+import type {
+  Plan,
+  Repository,
+  Task,
+} from '@openthrottle/nestjs-repositories-server';
 import {
   CROSS_PLAN_TASK_LIST_ORDER,
   PlansRepository,
+  ProjectRepositoriesRepository,
   TasksRepository,
 } from '@openthrottle/nestjs-repositories-server';
-import type DataLoader from 'dataloader';
+import DataLoader from 'dataloader';
 
 /**
  * Holds plansByProjectId and tasksByProjectId DataLoaders for the current request.
@@ -21,13 +26,25 @@ import type DataLoader from 'dataloader';
 export class ProjectsLoaders {
   /** Plans grouped by projectId, each ordered by createdAt DESC. */
   readonly plansByProjectIdLoader: DataLoader<string, Plan[]>;
+  /** Live repositories linked to each project through project_repositories, oldest link first. */
+  readonly repositoriesByProjectIdLoader: DataLoader<string, Repository[]>;
   /** Tasks grouped by projectId, each ordered by planId then sortOrder then createdAt ASC. */
   readonly tasksByProjectIdLoader: DataLoader<string, Task[]>;
 
   constructor(
     plansRepository: PlansRepository,
+    projectRepositoriesRepository: ProjectRepositoriesRepository,
     tasksRepository: TasksRepository,
   ) {
+    this.repositoriesByProjectIdLoader = new DataLoader<string, Repository[]>(
+      async (projectIds) => {
+        const grouped =
+          await projectRepositoriesRepository.listRepositoriesByProjectIds(
+            projectIds,
+          );
+        return projectIds.map((projectId) => grouped.get(projectId) ?? []);
+      },
+    );
     this.plansByProjectIdLoader = createCollectionByColumnLoader(
       plansRepository,
       {

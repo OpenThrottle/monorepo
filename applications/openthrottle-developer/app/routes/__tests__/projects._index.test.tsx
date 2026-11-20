@@ -19,7 +19,7 @@ const mockProjects: ProjectWithStats[] = [
     id: 'proj-1',
     name: 'First Project',
     nxProjectName: 'applications/openthrottle-developer',
-    plans: [{ __typename: 'PlanObject', title: 'Plan A' }],
+    plans: [{ __typename: 'PlanObject', id: 'plan-a', status: 'COMPLETED' }],
     tasks: [{ __typename: 'TaskObject', title: 'Task 1' }],
     updatedAt: '2025-01-02T00:00:00Z',
   },

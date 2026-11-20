@@ -3,6 +3,7 @@ import { LoggerModule } from '@openthrottle/nestjs-modules';
 
 import { WorkLedgerGraphqlModule } from '../../graphql/work-ledger/work-ledger.module.ts';
 import { NotificationsModule } from '../../notifications/notifications.module.ts';
+import { PlanProjectMembershipModule } from '../../services/plan-project-membership/plan-project-membership.module.ts';
 import { TaskPromotionQueueProducerModule } from './producer/producer.module.ts';
 import { TaskPromotionProcessor } from './task-promotion.processor.ts';
 import { TaskPromotionService } from './task-promotion.service.ts';
@@ -21,6 +22,7 @@ import { TaskPromotionService } from './task-promotion.service.ts';
   imports: [
     LoggerModule,
     NotificationsModule,
+    PlanProjectMembershipModule,
     TaskPromotionQueueProducerModule,
     WorkLedgerGraphqlModule,
   ],

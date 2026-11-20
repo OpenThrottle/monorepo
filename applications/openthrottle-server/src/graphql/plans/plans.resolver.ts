@@ -73,6 +73,7 @@ import { TAGGING_ENTITY_TYPES } from '../../queues/tagging/tagging.constants.ts'
 import { EffectiveUserResolutionService } from '../../services/effective-user-resolution/effective-user-resolution.service.ts';
 import { EmbedderService } from '../../services/embedder/embedder.service.ts';
 import { PlanCreationService } from '../../services/plan-creation/plan-creation.service.ts';
+import { PlanProjectMembershipService } from '../../services/plan-project-membership/plan-project-membership.service.ts';
 import { PlanRunWorktreeCheckoutService } from '../../services/plan-run-worktree-checkout/plan-run-worktree-checkout.service.ts';
 import { PRUNE_WORKTREE_CHECKOUT_OUTCOME } from '../../services/worktree-checkout-prune/worktree-checkout-prune.constants.ts';
 import { WorktreeCheckoutPruneService } from '../../services/worktree-checkout-prune/worktree-checkout-prune.service.ts';
@@ -323,6 +324,7 @@ export class PlansResolver {
     private readonly loaders: PlansLoaders,
     private readonly planCreationService: PlanCreationService,
     private readonly planEnqueueService: PlanEnqueueService,
+    private readonly planProjectMembership: PlanProjectMembershipService,
     private readonly planRulesEvaluationService: PlanRulesEvaluationService,
     private readonly planRunsRepository: PlanRunsRepository,
     private readonly planRunWorktreeCheckoutService: PlanRunWorktreeCheckoutService,
@@ -1160,8 +1162,14 @@ export class PlansResolver {
       entity.project = input.project;
       touched = true;
     }
-    if (input.projectId !== undefined && input.projectId !== entity.projectId) {
-      entity.projectId = input.projectId;
+    // Moving between projects (or out of one) assigns/clears the position with the project id.
+    const projectChanged =
+      input.projectId !== undefined && input.projectId !== entity.projectId;
+    if (projectChanged) {
+      await this.planProjectMembership.applyProjectChange(
+        entity,
+        input.projectId ?? null,
+      );
       touched = true;
     }
     if (input.summary !== undefined && input.summary !== entity.summary) {
@@ -1236,6 +1244,11 @@ export class PlansResolver {
 
       return manager.save(entity);
     });
+
+    // Soft repository constraint: a plan that joined a project links its repository to it.
+    if (projectChanged && saved.projectId !== null) {
+      await this.planProjectMembership.linkPlanRepository(saved);
+    }
 
     // Downstream reaction stays outside the transaction (fire-and-forget, as before).
     if (statusChanged) {

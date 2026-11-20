@@ -17,6 +17,8 @@ export * from './tools/plan-messages.ts';
 export * from './tools/plan-runs.ts';
 export * from './tools/plan-task-tags.ts';
 export * from './tools/plans.ts';
+export * from './tools/project-plans.ts';
+export * from './tools/project-repositories.ts';
 export * from './tools/projects.ts';
 export * from './tools/scheduled-jobs.ts';
 export * from './tools/search.ts';

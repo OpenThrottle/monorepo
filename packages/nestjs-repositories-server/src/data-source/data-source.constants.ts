@@ -26,6 +26,7 @@ import { PlanOutputStreamChunk } from '../modules/plan-output-stream/plan-output
 import { PlanRun } from '../modules/plan-runs/plan-run.entity.ts';
 import { PlanTag } from '../modules/plan-tags/plan-tag.entity.ts';
 import { Plan } from '../modules/plans/plan.entity.ts';
+import { ProjectRepository } from '../modules/project-repositories/project-repository.entity.ts';
 import { ProjectSkill } from '../modules/project-skills/project-skill.entity.ts';
 import { ProjectTag } from '../modules/project-tags/project-tag.entity.ts';
 import { Project } from '../modules/projects/project.entity.ts';
@@ -97,6 +98,7 @@ export const OPENTHROTTLE_ENTITIES = [
   PlanRun,
   PlanTag,
   Project,
+  ProjectRepository,
   ProjectSkill,
   ProjectTag,
   Repository,

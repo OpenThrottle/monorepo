@@ -18,7 +18,7 @@ type DeleteProjectResult = GenericResult<{
 
 export const deleteProjectToolParameters = DeleteProjectInputSchema().strict();
 
-export const deleteProjectToolDescription = `Delete a OpenThrottle project by id. Returns whether a row was deleted. Plans and tasks that referenced this project have project_id cleared.`;
+export const deleteProjectToolDescription = `Soft-delete an OpenThrottle project by id. Returns whether a live project was deleted. The row is kept: plans, tasks and repository links keep their project_id and read as no project while the project is deleted.`;
 
 export async function deleteProjectToolHandler(
   args: z.infer<typeof deleteProjectToolParameters>,

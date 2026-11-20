@@ -42,7 +42,10 @@ export class PlanObject implements PlanData {
   @Field(() => String)
   id!: string;
 
-  @Field(() => String, { nullable: true })
+  @Field(() => String, {
+    deprecationReason: `Free-text label, unrelated to projects and superseded by projectId.`,
+    nullable: true,
+  })
   project!: string | null;
 
   @Field(() => String, {
@@ -50,6 +53,12 @@ export class PlanObject implements PlanData {
     nullable: true,
   })
   projectId!: string | null;
+
+  @Field(() => Int, {
+    description: `Position within the plan's project, gap-based like task sortOrder (1000, 2000, …) and unique per project among live plans. Null when the plan has no project.`,
+    nullable: true,
+  })
+  projectSortOrder!: number | null;
 
   @Field(() => ProjectObject, {
     description: `Resolved project entity when projectId is set; null when projectId is unset.`,

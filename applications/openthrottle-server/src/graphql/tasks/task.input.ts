@@ -18,10 +18,14 @@ export class CreateTaskInput {
   @Field(() => ID, { description: `Plan id the task belongs to` })
   planId!: string;
 
-  @Field(() => String, { nullable: true })
+  @Field(() => String, {
+    deprecationReason: `Free-text label, unrelated to projects. Set the plan's projectId instead.`,
+    nullable: true,
+  })
   project!: string | null;
 
   @Field(() => ID, {
+    deprecationReason: `A task's project is its plan's project; set projectId on the plan.`,
     description: `Project UUID (FK to projects table). Omit or pass null when task is not linked to a project.`,
     nullable: true,
   })
@@ -66,10 +70,14 @@ export class CreateTasksItemInput {
   @Field(() => String, { nullable: true })
   description!: string | null;
 
-  @Field(() => String, { nullable: true })
+  @Field(() => String, {
+    deprecationReason: `Free-text label, unrelated to projects. Set the plan's projectId instead.`,
+    nullable: true,
+  })
   project!: string | null;
 
   @Field(() => ID, {
+    deprecationReason: `A task's project is its plan's project; set projectId on the plan.`,
     description: `Project UUID (FK to projects table). Omit or pass null when task is not linked to a project.`,
     nullable: true,
   })
@@ -131,7 +139,10 @@ export class UpdateTaskInput {
   @Field(() => ID, { nullable: true })
   planId?: string | null;
 
-  @Field(() => String, { nullable: true })
+  @Field(() => String, {
+    deprecationReason: `Free-text label, unrelated to projects. Set the plan's projectId instead.`,
+    nullable: true,
+  })
   project?: string | null;
 
   @Field(() => ID, {
