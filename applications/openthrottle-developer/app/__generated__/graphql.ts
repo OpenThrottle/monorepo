@@ -2771,7 +2771,7 @@ export type Mutation = {
   addProjectTag: ProjectTagObject;
   /** Add a rule to a project's rule set (creating the rule set with the default "allow" posture if absent). Tag references are validated against the caller's skill-tag vocabulary. */
   addSkillAvailabilityRule: SkillAvailabilityRuleObject;
-  /** Add a kebab-case tag to the authenticated user's skill-tag vocabulary. A duplicate is rejected with extensions.code SKILL_TAG_CONFLICT. */
+  /** Add a kebab-case tag to the authenticated user's skill-tag vocabulary. A duplicate is rejected with extensions.code SKILL_TAG_CONFLICT. A service-account caller is refused (FORBIDDEN). */
   addSkillTag: SkillTagObject;
   /** Attach a tag to a task. The tag must be in the caller's skill-tag vocabulary; source is derived from the caller identity. */
   addTaskTag: TaskTagObject;
@@ -3003,11 +3003,11 @@ export type Mutation = {
   removeRoleFromUser: Scalars['Boolean']['output'];
   /** Remove a rule by id. Returns false when the rule was not present. */
   removeSkillAvailabilityRule: Scalars['Boolean']['output'];
-  /** Remove a tag from the authenticated user's skill-tag vocabulary. Returns false when the tag was not present. */
+  /** Remove a tag from the authenticated user's skill-tag vocabulary. Returns false when the tag was not present. A service-account caller is refused (FORBIDDEN). */
   removeSkillTag: Scalars['Boolean']['output'];
   /** Remove a tag from a task under the provenance ladder. Returns false when the tag was not present. */
   removeTaskTag: Scalars['Boolean']['output'];
-  /** Rename a tag in the authenticated user's skill-tag vocabulary. A target the user already has is rejected with extensions.code SKILL_TAG_CONFLICT. */
+  /** Rename a tag in the authenticated user's skill-tag vocabulary. A target the user already has is rejected with extensions.code SKILL_TAG_CONFLICT. A service-account caller is refused (FORBIDDEN). */
   renameSkillTag: SkillTagObject;
   /** Reorder a parent's children. childUuids must list exactly the current children. */
   reorderCmsFragmentChildren: Array<CmsFragmentChildObject>;
@@ -4794,7 +4794,7 @@ export type Query = {
   skillAvailability: SkillAvailabilityResolutionResult;
   /** A project's skill-availability rule set (posture + rules), or null when the project has no rules (passthrough). Feeds resolveSkillAvailability. */
   skillAvailabilityRuleSet?: Maybe<SkillAvailabilityRuleSetObject>;
-  /** The authenticated user's skill-tag vocabulary. Seeded from the platform default on first read. */
+  /** The authenticated user's skill-tag vocabulary. Seeded from the platform default on first read. A service-account caller is refused (FORBIDDEN). */
   skillTagVocabulary: SkillTagVocabularyResult;
   /** Aggregated skill usage over [start, end] (inclusive YYYY-MM-DD, UTC): top skills (with opt-in outcome stats), the ours / personal / third-party split, per-day series, and branch/cwd filter options. Optional scope/gitBranch/cwd/skillName narrow the aggregates. */
   skillUsage: SkillUsageResultObject;

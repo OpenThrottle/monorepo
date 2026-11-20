@@ -6461,7 +6461,7 @@ type Query {
   skillAvailabilityRuleSet(projectId: ID!): SkillAvailabilityRuleSetObject
 
   """
-  The authenticated user's skill-tag vocabulary. Seeded from the platform default on first read.
+  The authenticated user's skill-tag vocabulary. Seeded from the platform default on first read. A service-account caller is refused (FORBIDDEN).
   """
   skillTagVocabulary: SkillTagVocabularyResult!
 
@@ -7795,17 +7795,17 @@ type Mutation {
   removeSkillAvailabilityRule(ruleId: ID!): Boolean!
 
   """
-  Add a kebab-case tag to the authenticated user's skill-tag vocabulary. A duplicate is rejected with extensions.code SKILL_TAG_CONFLICT.
+  Add a kebab-case tag to the authenticated user's skill-tag vocabulary. A duplicate is rejected with extensions.code SKILL_TAG_CONFLICT. A service-account caller is refused (FORBIDDEN).
   """
   addSkillTag(input: AddSkillTagInput!): SkillTagObject!
 
   """
-  Rename a tag in the authenticated user's skill-tag vocabulary. A target the user already has is rejected with extensions.code SKILL_TAG_CONFLICT.
+  Rename a tag in the authenticated user's skill-tag vocabulary. A target the user already has is rejected with extensions.code SKILL_TAG_CONFLICT. A service-account caller is refused (FORBIDDEN).
   """
   renameSkillTag(input: RenameSkillTagInput!): SkillTagObject!
 
   """
-  Remove a tag from the authenticated user's skill-tag vocabulary. Returns false when the tag was not present.
+  Remove a tag from the authenticated user's skill-tag vocabulary. Returns false when the tag was not present. A service-account caller is refused (FORBIDDEN).
   """
   removeSkillTag(input: RemoveSkillTagInput!): Boolean!
 
