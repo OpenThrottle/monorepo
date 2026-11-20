@@ -72,14 +72,14 @@
     "access": "restricted",
     "exports": {
       ".": {
+        "types": "./src/index.d.ts",
         "import": "./src/index.js",
-        "require": "./src/index.js",
-        "types": "./src/index.d.ts"
+        "require": "./src/index.js"
       },
       "./*": {
+        "types": "./*.d.ts",
         "import": "./*.js",
-        "require": "./*.js",
-        "types": "./*.d.ts"
+        "require": "./*.js"
       }
     },
     "main": "./src/index.js",

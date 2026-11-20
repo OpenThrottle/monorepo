@@ -37,24 +37,24 @@
       "require": "./dist/src/index.js"
     },
     "./auth": {
+      "types": "./dist/src/auth/index.d.ts",
       "import": "./dist/src/auth/index.js",
-      "require": "./dist/src/auth/index.js",
-      "types": "./dist/src/auth/index.d.ts"
+      "require": "./dist/src/auth/index.js"
     },
     "./nest": {
+      "types": "./dist/src/nest/index.d.ts",
       "import": "./dist/src/nest/index.js",
-      "require": "./dist/src/nest/index.js",
-      "types": "./dist/src/nest/index.d.ts"
+      "require": "./dist/src/nest/index.js"
     },
     "./nest-tool-handlers": {
+      "types": "./dist/src/nest-tool-handlers.d.ts",
       "import": "./dist/src/nest-tool-handlers.js",
-      "require": "./dist/src/nest-tool-handlers.js",
-      "types": "./dist/src/nest-tool-handlers.d.ts"
+      "require": "./dist/src/nest-tool-handlers.js"
     },
     "./tool-surface": {
+      "types": "./dist/src/tool-surface.d.ts",
       "import": "./dist/src/tool-surface.js",
-      "require": "./dist/src/tool-surface.js",
-      "types": "./dist/src/tool-surface.d.ts"
+      "require": "./dist/src/tool-surface.js"
     },
     "./*": {
       "types": "./dist/*.d.ts",

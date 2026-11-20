@@ -35,6 +35,54 @@ describe('package generator', () => {
     );
   });
 
+  describe('exports condition order', () => {
+    // Conditions match in written order, so `types` after `default` is
+    // unreachable (esbuild warns on every bundle). `toEqual` ignores key
+    // order, so the other exports assertions cannot catch this.
+    const cases = [
+      { organization: '@tools', root: 'tools', type: 'tools' },
+      { organization: '@openthrottle', root: 'packages', type: 'node' },
+      { organization: '@openthrottle', root: 'packages', type: 'nestjs' },
+      { organization: '@openthrottle', root: 'packages', type: 'react' },
+    ] as const;
+
+    const conditionKeyLists = (value: unknown): string[][] => {
+      if (typeof value !== 'object' || value === null) {
+        return [];
+      }
+      const entries = Object.entries(value);
+      const keys = entries.map(([key]) => key);
+      const nested = entries.flatMap(([, child]) => conditionKeyLists(child));
+      const isConditionObject = keys.some((key) => !key.startsWith('.'));
+
+      return isConditionObject ? [keys, ...nested] : nested;
+    };
+
+    beforeEach(() => {
+      tree = createTreeWithEmptyWorkspace({ formatter: 'prettier' });
+    });
+
+    test.each(cases)(
+      'lists types first and default last for a $type package',
+      async ({ organization, root, type }) => {
+        const name = 'example-exports-order';
+        await packageGenerator(tree, { name, organization, type });
+        const packageJson = readJson(tree, `${root}/${name}/package.json`);
+        const keyLists = [
+          ...conditionKeyLists(packageJson.exports),
+          ...conditionKeyLists(packageJson.publishConfig?.exports),
+        ];
+
+        expect(keyLists.length).toBeGreaterThan(0);
+        for (const keys of keyLists) {
+          expect(keys.indexOf('types')).toBeLessThanOrEqual(0);
+          const defaultIndex = keys.indexOf('default');
+          expect([-1, keys.length - 1]).toContain(defaultIndex);
+        }
+      },
+    );
+  });
+
   describe('devDependencies', () => {
     // Every template ships a vitest.config.ts, so the first test file a
     // package adds imports `vitest`; undeclared, that fails
