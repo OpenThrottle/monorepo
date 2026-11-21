@@ -1,6 +1,7 @@
 import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import bcrypt from 'bcrypt';
 import type { Repository } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -17,6 +18,8 @@ const serviceAccountId = '11111111-1111-4111-8111-111111111111';
 const credentialId = '22222222-2222-4222-8222-222222222222';
 const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
 const TEST_ROUNDS = 4;
+const SECRET = 'validSecret0123456789abcdefABCDEF';
+const SHORT_SECRET = 'validSecret12';
 
 /** A credential as `verifyBearerToken` loads it: the account is null once soft deleted. */
 interface LoadedCredential extends Omit<
@@ -101,7 +104,7 @@ describe('ServiceAccountCredentialsRepository', () => {
       ).resolves.toBeNull();
     });
 
-    it('returns ot_sa token and saves bcrypt hash', async () => {
+    it('returns ot_sa token and saves a SHA-256 hash', async () => {
       accountFindOne.mockResolvedValue(enabledAccount);
 
       const result = await repository.createCredential({
@@ -120,7 +123,7 @@ describe('ServiceAccountCredentialsRepository', () => {
           expiresAt: null,
           label: 'mcp',
           prefix: expect.any(String),
-          secretHash: expect.stringMatching(/^\$2[aby]\$/),
+          secretHash: expect.stringMatching(/^[a-f0-9]{64}$/),
           serviceAccountId,
         }),
         undefined,
@@ -142,8 +145,9 @@ describe('ServiceAccountCredentialsRepository', () => {
 
   describe('upsertCredentialForToken', () => {
     const prefix = 'knownprefix1';
-    const secret = 'validSecret12';
+    const secret = SECRET;
     const token = `${SERVICE_ACCOUNT_BEARER_PREFIX}${prefix}_${secret}`;
+    const shortToken = `${SERVICE_ACCOUNT_BEARER_PREFIX}${prefix}_${SHORT_SECRET}`;
 
     it('returns null when the service account is missing', async () => {
       accountFindOne.mockResolvedValue(null);
@@ -194,7 +198,7 @@ describe('ServiceAccountCredentialsRepository', () => {
         expect.objectContaining({
           label: 'mcp',
           prefix,
-          secretHash: expect.stringMatching(/^\$2[aby]\$/),
+          secretHash: expect.stringMatching(/^[a-f0-9]{64}$/),
           serviceAccountId,
         }),
       );
@@ -209,7 +213,7 @@ describe('ServiceAccountCredentialsRepository', () => {
         serviceAccountCredentialsFactory.build({
           prefix,
           revokedAt: null,
-          secretHash: await hashSecret(secret, TEST_ROUNDS),
+          secretHash: hashSecret(secret),
           serviceAccountId,
         }),
       );
@@ -223,12 +227,45 @@ describe('ServiceAccountCredentialsRepository', () => {
       expect(save).not.toHaveBeenCalled();
     });
 
+    it('throws rather than store a secret shorter than the minimum', async () => {
+      accountFindOne.mockResolvedValue(enabledAccount);
+      findOne.mockResolvedValue(null);
+
+      await expect(
+        repository.upsertCredentialForToken({
+          serviceAccountId,
+          token: shortToken,
+        }),
+      ).rejects.toThrow(/at least 32/);
+      expect(save).not.toHaveBeenCalled();
+    });
+
+    it('is a no-op for a short secret that already verifies against a legacy hash', async () => {
+      accountFindOne.mockResolvedValue(enabledAccount);
+      findOne.mockResolvedValue(
+        serviceAccountCredentialsFactory.build({
+          prefix,
+          revokedAt: null,
+          secretHash: await bcrypt.hash(SHORT_SECRET, TEST_ROUNDS),
+          serviceAccountId,
+        }),
+      );
+
+      const result = await repository.upsertCredentialForToken({
+        serviceAccountId,
+        token: shortToken,
+      });
+
+      expect(result?.action).toBe('noop');
+      expect(save).not.toHaveBeenCalled();
+    });
+
     it('rehashes and un-revokes in place when an existing credential is stale', async () => {
       accountFindOne.mockResolvedValue(enabledAccount);
       const existing = serviceAccountCredentialsFactory.build({
         prefix,
         revokedAt: new Date(FIXED_NOW),
-        secretHash: await hashSecret('a-different-secret', TEST_ROUNDS),
+        secretHash: hashSecret('a-different-secret'),
         serviceAccountId,
       });
       findOne.mockResolvedValue(existing);
@@ -262,7 +299,7 @@ describe('ServiceAccountCredentialsRepository', () => {
   });
 
   describe('verifyBearerToken', () => {
-    const secret = 'validSecret12';
+    const secret = SECRET;
     const prefix = 'knownprefix1';
     const bearer = `Bearer ${SERVICE_ACCOUNT_BEARER_PREFIX}${prefix}_${secret}`;
 
@@ -273,7 +310,7 @@ describe('ServiceAccountCredentialsRepository', () => {
         ...serviceAccountCredentialsFactory.build({
           id: credentialId,
           prefix,
-          secretHash: await hashSecret(secret, TEST_ROUNDS),
+          secretHash: hashSecret(secret),
           serviceAccountId,
         }),
         serviceAccount: enabledAccount,
@@ -356,8 +393,60 @@ describe('ServiceAccountCredentialsRepository', () => {
       });
       expect(update).toHaveBeenCalledWith(
         expect.objectContaining({ id: credentialId }),
-        expect.objectContaining({ lastUsedAt: expect.any(Date) }),
+        { lastUsedAt: expect.any(Date) },
       );
+    });
+
+    describe('when the stored hash is a legacy bcrypt hash', () => {
+      it('verifies and rewrites it to SHA-256 in place', async () => {
+        findOne.mockResolvedValue(
+          await credentialWith({
+            secretHash: await bcrypt.hash(secret, TEST_ROUNDS),
+          }),
+        );
+
+        await expect(repository.verifyBearerToken(bearer)).resolves.toEqual({
+          credentialId,
+          serviceAccountId,
+        });
+        expect(update).toHaveBeenCalledWith(
+          expect.objectContaining({ id: credentialId }),
+          { lastUsedAt: expect.any(Date), secretHash: hashSecret(secret) },
+        );
+      });
+
+      it('keeps the bcrypt hash for a secret shorter than the minimum', async () => {
+        findOne.mockResolvedValue(
+          await credentialWith({
+            secretHash: await bcrypt.hash(SHORT_SECRET, TEST_ROUNDS),
+          }),
+        );
+
+        await expect(
+          repository.verifyBearerToken(
+            `${SERVICE_ACCOUNT_BEARER_PREFIX}${prefix}_${SHORT_SECRET}`,
+          ),
+        ).resolves.toEqual({ credentialId, serviceAccountId });
+        expect(update).toHaveBeenCalledWith(
+          expect.objectContaining({ id: credentialId }),
+          { lastUsedAt: expect.any(Date) },
+        );
+      });
+
+      it('does not rewrite it when the secret is wrong', async () => {
+        findOne.mockResolvedValue(
+          await credentialWith({
+            secretHash: await bcrypt.hash(secret, TEST_ROUNDS),
+          }),
+        );
+
+        await expect(
+          repository.verifyBearerToken(
+            `${SERVICE_ACCOUNT_BEARER_PREFIX}${prefix}_wrongsecret`,
+          ),
+        ).resolves.toBeNull();
+        expect(update).not.toHaveBeenCalled();
+      });
     });
   });
 

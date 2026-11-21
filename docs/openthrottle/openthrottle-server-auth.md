@@ -129,6 +129,70 @@ All three current `resolveEffectiveUserId` consumers (`registerPlanRunWorktreeCh
 or attribute a row, and each degrades to doing _less_ on `null` — never more. No call site depends
 on it for authorization.
 
+### Machine token hashing: SHA-256, not bcrypt, not HMAC
+
+**Decided 2026-11-20 (OT plan `1eca04ec`).** Every machine-minted bearer secret is stored as the
+plain hex SHA-256 of its secret part and compared in constant time: service-account credentials
+(`ot_sa_<prefix>_<secret>`), and the MCP OAuth access tokens, refresh tokens and authorization
+codes (`ot_oat_`, `ot_ort_`; PR #869). Human passwords stay on bcrypt (`users.password_hash`), and
+so does the stored-only hash of a third-party `api_token` in `mcp_connector_connections`. Those
+inputs are chosen by a person, so their entropy is unknown and a slow KDF is the right tool.
+
+**Why a fast hash is safe here.** A slow KDF exists to make guessing a low-entropy input
+expensive. These secrets are not guessable: an OAuth secret is 256 random bits, and a minted
+`ot_sa_` secret is 32 characters drawn from 62, about 190 bits. bcrypt adds nothing at those sizes.
+That only holds if every secret really is random, so `upsertCredentialForToken` refuses to store
+an `ot_sa_` secret shorter than 32 characters (`SERVICE_ACCOUNT_SECRET_MIN_LENGTH`). Before this
+change an operator could hand it a short, hand-typed secret through `OPENTHROTTLE_MCP_AUTH_TOKEN`.
+A short secret that already verifies keeps working and stays on bcrypt; it is never rehashed.
+
+**What bcrypt cost on `ot_sa_`.** `GlobalAuthGuard` verifies the bearer on every request. It
+caches nothing, so every GraphQL call from the MCP server, the worker and the hooks paid one
+`bcrypt.compare`. An unknown prefix compared against a dummy hash, so a forged token paid it too.
+Measured on an Apple M1 Max, Node 26.13.1, `bcrypt` 6.0.0:
+
+| Verification                    | Per call | Notes                                                                      |
+| ------------------------------- | -------- | -------------------------------------------------------------------------- |
+| `bcrypt.compare`, cost 10       | ~81 ms   | 64 concurrent calls took 2.0 s: about 32 per second through the libuv pool |
+| SHA-256 + `timingSafeEqual`     | ~1.2 µs  | the chosen scheme                                                          |
+| HMAC-SHA256 + `timingSafeEqual` | ~2.6 µs  | the rejected alternative                                                   |
+
+So bcrypt added about 80 ms of latency to every service-account request. Worse, it was a
+cheap way to take the server down. bcrypt runs on libuv's four-thread pool, the same pool `fs`,
+`dns.lookup`, `zlib` and async `crypto` use. About 32 forged `ot_sa_` requests a second, with no
+credential at all, kept that pool full. `@Public()` handlers verify a bearer if one is present, so
+even those requests paid the cost.
+
+**Threat model.**
+
+| Attacker holds                  | Plain SHA-256                                                                                                                                                                  | HMAC-SHA256 (server-held key)                                                       | bcrypt          |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------- | --------------- |
+| A database read (leak, backup)  | Cannot recover a token: inverting SHA-256 on a 190–256-bit preimage is infeasible                                                                                              | Same                                                                                | Same            |
+| A database write                | Can insert a row whose hash it computed and so mint a token. It could already overwrite a `users.password_hash` (bcrypt is just as computable offline) and sign in as an admin | Cannot mint a token, but the `password_hash` route stays open, so nothing is gained | Same as SHA-256 |
+| The database and the server env | Everything is lost under any scheme. The env also holds `JWT_SECRET`, which forges any user                                                                                    | Same: the key leaks with the env                                                    | Same            |
+
+HMAC only helps against an attacker who can write to the database, and that attacker already has a
+better way in. In return it costs a new secret in every environment (`.env`, compose, the GCP and
+Hetzner templates, `SECRETS.md`), a rotation story with a key id on every row, and a migration of
+every stored hash. No row of the table justifies that, so it was rejected. Revisit it if user
+passwords ever leave the `openthrottle` database for an external IdP. Then a database write no
+longer reaches an admin session, and the HMAC column gains a reason to exist.
+
+**Migrating existing rows.** `service_account_credentials.secret_hash` holds a bcrypt hash
+(`$2…`) for rows minted before this change, and SHA-256 hex for rows minted after. Verification
+reads the format. A bcrypt row is checked with bcrypt once, then rewritten to SHA-256 in place, so
+each credential pays bcrypt on its first use after deploy and never again. No token is invalidated
+and nobody re-mints. An unknown prefix now fails without hashing anything. The prefix is public, so
+the database lookup's timing reveals nothing a client did not send.
+
+**CodeQL.** `js/insufficient-password-hash` takes as a source any identifier its password heuristic
+matches. That heuristic includes the substring `oauth` as well as `pass(word|code|phrase)` and
+`api_key`/`api_tok`. Its sink is any `crypto.createHash` _or_ `crypto.createHmac` call, so HMAC
+would not have silenced it. The `ot_sa_` code path names its values `secret` and `token`, which
+fall in the heuristic's `secret` class, not `password`, so it should not be flagged. The OAuth module will be (it was, as alert #19 on PR #869). That
+alert is dismissed as a false positive and points here. If it recurs, dismiss it with a link to this
+section. Do not rename identifiers to dodge the heuristic.
+
 **Optional auth features (not implemented):**
 
 - **Refresh tokens** — Not implemented. To add: issue a long-lived refresh token (stored server-side or signed opaquely), expose a refresh mutation that accepts it and returns a new access token, and have the frontend use it when the access token expires or returns 401.
