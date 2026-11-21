@@ -1,12 +1,10 @@
 import { buildCanonicalUrl } from '@openthrottle/react-router-utils';
 
-import type { BlogFeedQuery } from '~/__generated__/graphql';
+import type { BlogFeedPostFragment } from '~/__generated__/graphql';
 import { BLOG_COPY } from '~/routing/blog/data/data.copy';
 
 import { toBlogIsoDate } from './blog-format';
 import { BLOG_BASE_PATH, BLOG_FEED_PATH, buildBlogPostPath } from './blog-urls';
-
-export type BlogFeedPost = BlogFeedQuery['blogPosts']['items'][number];
 
 const XML_ENTITIES: Readonly<Record<string, string>> = {
   '"': '&quot;',
@@ -39,7 +37,7 @@ const buildTag = (name: string, text: string): string => {
   return `<${name}>${escapeXml(text)}</${name}>`;
 };
 
-const buildItem = (post: BlogFeedPost): string => {
+const buildItem = (post: BlogFeedPostFragment): string => {
   const link = buildCanonicalUrl(buildBlogPostPath(post.slug));
   const description = post.seoDescription || post.excerpt;
   const pubDate = toRfc822(post.publishedAt);
@@ -60,7 +58,9 @@ const buildItem = (post: BlogFeedPost): string => {
 };
 
 /** @description Newest `updatedAt` among the posts as RFC-822, if any parse. */
-const buildLastBuildDate = (posts: readonly BlogFeedPost[]): string | null => {
+const buildLastBuildDate = (
+  posts: readonly BlogFeedPostFragment[],
+): string | null => {
   const times = posts
     .map((post) => toBlogIsoDate(post.updatedAt))
     .filter((iso) => iso !== null)
@@ -75,7 +75,9 @@ const buildLastBuildDate = (posts: readonly BlogFeedPost[]): string | null => {
  * included. Links are absolute canonical URLs. Author names use `dc:creator`
  * because RSS 2.0 `<author>` must be an email address.
  */
-export const buildBlogRssXml = (posts: readonly BlogFeedPost[]): string => {
+export const buildBlogRssXml = (
+  posts: readonly BlogFeedPostFragment[],
+): string => {
   const { description, language, title } = BLOG_COPY.feed;
   const lastBuildDate = buildLastBuildDate(posts);
 

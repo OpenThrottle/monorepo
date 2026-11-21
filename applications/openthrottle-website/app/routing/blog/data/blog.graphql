@@ -3,11 +3,20 @@
 # `@Public()` on openthrottle-server and is executed server-side only, from a
 # route loader, via `fetchPublicGraphql` (`~/services/graphql.server`).
 
+fragment BlogAuthorSummary on BlogAuthorObject {
+  avatarUrl
+  displayName
+  slug
+}
+
+fragment BlogTagChip on BlogTagObject {
+  name
+  slug
+}
+
 fragment BlogPostSummary on BlogPostObject {
   author {
-    avatarUrl
-    displayName
-    slug
+    ...BlogAuthorSummary
   }
   coverImageAlt
   coverImageUrl
@@ -17,8 +26,32 @@ fragment BlogPostSummary on BlogPostObject {
   readingTimeMinutes
   slug
   tags {
-    name
-    slug
+    ...BlogTagChip
   }
   title
+}
+
+fragment BlogPostDetail on BlogPostObject {
+  author {
+    bio
+  }
+  ...BlogPostSummary
+  bodyMarkdown
+  seoDescription
+  seoTitle
+  updatedAt
+}
+
+fragment BlogPostSummaryPage on BlogPostListResult {
+  endCursor
+  hasNextPage
+  items {
+    ...BlogPostSummary
+  }
+}
+
+fragment BlogTagDetail on BlogTagObject {
+  description
+  name
+  slug
 }

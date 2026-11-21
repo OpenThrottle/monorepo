@@ -1,5 +1,5 @@
 import { isRecord } from '@openthrottle/nodejs-utils';
-import type { GetRootMetricsQuery } from '@openthrottle/openthrottle-developer-codegen';
+import type { RootMetricsFragment } from '@openthrottle/openthrottle-developer-codegen';
 import { APP_NAME } from '@openthrottle/react-router-utils';
 
 import {
@@ -7,8 +7,6 @@ import {
   GLOBAL_METRICS_STORAGE_KEY,
   GLOBAL_METRICS_VALID_INTERVALS,
 } from '../config/index';
-
-type ServerMetricsSnapshot = GetRootMetricsQuery['serverMetrics'];
 
 /**
  * @description Namespaced storage key; bump suffix when the on-disk JSON shape changes.
@@ -31,7 +29,7 @@ const GLOBAL_METRICS_CHART_MAX_SAMPLES = 25;
 const GLOBAL_METRICS_CHART_HISTORY_DEFAULT_MAX_AGE_MS = 1000 * 60 * 60 * 24;
 
 /** One sample in the metrics history for the time-series chart. */
-export interface MetricsChartDatum extends ServerMetricsSnapshot {
+export interface MetricsChartDatum extends RootMetricsFragment {
   readonly i: number;
 }
 
@@ -41,7 +39,7 @@ interface StoredMetricsChartHistoryPayload {
   readonly v: typeof GLOBAL_METRICS_CHART_HISTORY_SCHEMA_VERSION;
 }
 
-const METRIC_NUM_KEYS: readonly (keyof ServerMetricsSnapshot)[] = [
+const METRIC_NUM_KEYS: readonly (keyof RootMetricsFragment)[] = [
   'cpuSystemMs',
   'cpuUserMs',
   'externalMb',

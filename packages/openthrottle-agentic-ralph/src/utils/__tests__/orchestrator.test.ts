@@ -9,12 +9,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   AppendPlanOutputDocument,
   GetPlanDocument,
-  type GetPlanQuery,
   GetServerHealthDocument,
   GetTaskDocument,
   GetTasksByPlanIdDocument,
-  type GetTasksByPlanIdQuery,
+  type PlanWithTagsFragment,
   RecordAgentTrajectoryDocument,
+  type TaskFragment,
   UpdatePlanDocument,
   UpdateTaskDocument,
 } from '../../__generated__/graphql.ts';
@@ -44,9 +44,6 @@ const TASK_A = 'a64424d1-4bb0-4b08-ade3-b9822411d05c';
 const TASK_B = 'b64424d1-4bb0-4b08-ade3-b9822411d05c';
 const ISO = '2026-04-01T12:00:00.000Z';
 
-type PlanRow = NonNullable<GetPlanQuery['plan']>;
-type TaskRow = GetTasksByPlanIdQuery['tasksByPlanId'][number];
-
 const serverHealthOk = {
   __typename: 'ServerHealthObject' as const,
   api: 'ok',
@@ -55,7 +52,9 @@ const serverHealthOk = {
   websocket: 'ok',
 };
 
-const basePlan = (overrides: Partial<PlanRow> = {}): PlanRow => {
+const basePlan = (
+  overrides: Partial<PlanWithTagsFragment> = {},
+): PlanWithTagsFragment => {
   return {
     __typename: 'PlanObject',
     assignee: null,
@@ -81,8 +80,8 @@ const basePlan = (overrides: Partial<PlanRow> = {}): PlanRow => {
 const baseTask = (
   id: string,
   status: string,
-  overrides: Partial<TaskRow> = {},
-): TaskRow => {
+  overrides: Partial<TaskFragment> = {},
+): TaskFragment => {
   return {
     __typename: 'TaskObject',
     assignee: null,
@@ -121,7 +120,7 @@ const readUpdateInput = (
 };
 
 const createMockExecute = (opts: {
-  readonly getTasksByPlanId?: () => GetTasksByPlanIdQuery['tasksByPlanId'];
+  readonly getTasksByPlanId?: () => TaskFragment[];
   readonly onRecordTrajectory?: (variables: unknown) => void;
 }): WorkflowExecuteGraphqlV2 => {
   return asExecuteGraphqlV2(async (document, variables) => {
@@ -154,7 +153,7 @@ const FINAL_ITERATION_FLAG = 'OT_FINAL_ITERATION=1';
 const runOnceCapturingPrompt = async (params: {
   readonly mode: 'plan' | 'task';
   readonly taskId: string;
-  readonly tasks: GetTasksByPlanIdQuery['tasksByPlanId'];
+  readonly tasks: TaskFragment[];
 }): Promise<string> => {
   const prompts: string[] = [];
   const run = vi.fn(async ({ agentPrompt }: { agentPrompt: string }) => {
@@ -1621,7 +1620,7 @@ describe('createWorkflowRalphOrchestrator blocked-only plans', () => {
    * Fake GraphQL with mutable task state: records plan status writes and plan-output chunks, and
    * applies task status updates so re-reads see them.
    */
-  const createStatefulExecute = (initial: readonly TaskRow[]) => {
+  const createStatefulExecute = (initial: readonly TaskFragment[]) => {
     const tasks = new Map(initial.map((task) => [task.id, task]));
     const planUpdates: string[] = [];
     const planOutput: string[] = [];

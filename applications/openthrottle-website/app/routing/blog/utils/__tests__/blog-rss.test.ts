@@ -1,9 +1,10 @@
 import { describe, expect, test } from 'vitest';
 
-import type { BlogFeedPost } from '../blog-rss';
+import type { BlogFeedPostFragment } from '~/__generated__/graphql';
+
 import { buildBlogRssXml, escapeXml } from '../blog-rss';
 
-const POST: BlogFeedPost = {
+const POST: BlogFeedPostFragment = {
   author: { displayName: 'Ada Lovelace' },
   excerpt: 'How plans become commits.',
   publishedAt: '2026-03-04T10:00:00.000Z',

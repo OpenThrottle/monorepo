@@ -5,7 +5,10 @@ import {
 } from '@openthrottle/react-router-utils';
 import type { MetaDescriptor } from 'react-router';
 
-import type { BlogPostQuery, BlogTagQuery } from '~/__generated__/graphql';
+import type {
+  BlogPostDetailFragment,
+  BlogTagDetailFragment,
+} from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
 import { BLOG_COPY } from '~/routing/blog/data/data.copy';
 
@@ -16,9 +19,6 @@ import {
   buildBlogPostPath,
   buildBlogTagPath,
 } from './blog-urls';
-
-type BlogPost = NonNullable<BlogPostQuery['blogPost']>;
-type BlogTag = BlogTagQuery['blogTags'][number];
 
 interface BlogPageMetaConfig {
   readonly description: string;
@@ -75,7 +75,9 @@ export const buildBlogIndexMeta = (): MetaDescriptor[] => {
 };
 
 /** @description Meta descriptors for `/blog/tags/<slug>`. */
-export const buildBlogTagMeta = (tag: BlogTag): MetaDescriptor[] => {
+export const buildBlogTagMeta = (
+  tag: BlogTagDetailFragment,
+): MetaDescriptor[] => {
   return buildBlogPageMeta({
     description: tag.description || BLOG_COPY.routes.tag.description(tag.name),
     image: null,
@@ -92,7 +94,9 @@ export const buildBlogTagMeta = (tag: BlogTag): MetaDescriptor[] => {
  * `<title> | <site>`. The description prefers `seoDescription`, then the
  * excerpt, then the blog default.
  */
-export const buildBlogPostMeta = (post: BlogPost): MetaDescriptor[] => {
+export const buildBlogPostMeta = (
+  post: BlogPostDetailFragment,
+): MetaDescriptor[] => {
   return buildBlogPageMeta({
     description:
       post.seoDescription || post.excerpt || BLOG_COPY.routes.index.description,
