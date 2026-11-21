@@ -74,16 +74,28 @@ jobs:
           done < <(find infra -type f -name '*.tf' -exec dirname {} \; | sort -u)
           exit "${status}"
 
+      # Installed from a pinned release download, not aquasecurity/tfsec-action.
+      # The action resolves its release through api.github.com/repos/aquasecurity,
+      # which fails both ways from a hosted runner: unauthenticated it hits the
+      # shared 60/hour IP rate limit, and with a token it is refused by the
+      # aquasecurity org's IP allow list. Release downloads are not API calls.
+      # Bump TFSEC_VERSION and TFSEC_SHA256 together, from the release's
+      # tfsec_checksums.txt; Dependabot does not track this step.
       - name: '🔒 tfsec (static security scan)'
-        uses: aquasecurity/tfsec-action@b466648d6e39e7c75324f25d83891162a721f2d6 # v1.0.3
-        with:
-          # The action looks up the latest tfsec release on the GitHub API before
-          # it scans. Unauthenticated, that call shares a 60/hour limit with every
-          # job on the runner's IP and fails the step with a 403 "rate limit
-          # exceeded"; the job token raises the limit and needs no extra permission.
-          github_token: ${{ github.token }}
-          working_directory: infra
-          soft_fail: false
+        env:
+          TFSEC_SHA256: a32d0799bbefababaa4fcd814da9f4d251cd932789590b99d1d5fcb89ace6f68
+          TFSEC_VERSION: v1.28.14
+        run: |
+          set -euo pipefail
+          curl -sSLf -o "${RUNNER_TEMP}/tfsec" \
+            "https://github.com/aquasecurity/tfsec/releases/download/${TFSEC_VERSION}/tfsec-linux-amd64"
+          echo "${TFSEC_SHA256}  ${RUNNER_TEMP}/tfsec" | sha256sum -c -
+          sudo install "${RUNNER_TEMP}/tfsec" /usr/local/bin/tfsec
+          # --soft-fail keeps the scan report-only, which is what tfsec-action
+          # actually did: it added --soft-fail whenever soft_fail was non-empty,
+          # and the "false" this step passed is non-empty. Drop it to make
+          # findings fail the job.
+          tfsec --format=default --soft-fail infra
 
       - name: '🐚 Install shellcheck'
         run: |
