@@ -78,12 +78,23 @@
  * source, and live `build` *and* `dev` targets — and
  * {@link collectNestjsViolations} enforces it from `package.json` alone. The exit is a single atomic flip of the whole tag
  * once NestJS supports ESM, not 26 independent re-litigations.
+ *
+ * ## Condition order
+ *
+ * Every condition object in `exports` and `publishConfig.exports` lists `types`
+ * first and `default` last. Conditions match in written order, so a key after
+ * `default` is unreachable: esbuild warned on every hook bundle in `build:hooks`
+ * while `nodejs-utils` listed `default` before `types`. Error-mode, no
+ * exemptions. The generator templates are held to the same rule by their own
+ * test, because they sit below the one level this gate scans.
  */
 
 import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
+import type { ConditionOrderViolation } from './utils/findConditionOrderViolations.ts';
+import { findConditionOrderViolations } from './utils/findConditionOrderViolations.ts';
 import { createLogger } from './utils/logger.ts';
 
 const logger = createLogger();
@@ -190,6 +201,7 @@ interface EntryField {
 }
 
 interface PackageInfo {
+  readonly conditionOrderViolations: readonly ConditionOrderViolation[];
   readonly directory: string;
   readonly entryFields: readonly EntryField[];
   readonly exportTargets: readonly ExportTarget[];
@@ -293,7 +305,18 @@ const readPackageInfo = (directory: string): PackageInfo | undefined => {
     return typeof value === 'string' ? [{ field, value }] : [];
   });
 
+  const publishConfigExports = isRecord(parsed.publishConfig)
+    ? parsed.publishConfig.exports
+    : undefined;
+
   return {
+    conditionOrderViolations: [
+      ...findConditionOrderViolations(parsed.exports, 'exports'),
+      ...findConditionOrderViolations(
+        publishConfigExports,
+        'publishConfig.exports',
+      ),
+    ],
     directory,
     entryFields,
     exportTargets: collectExportTargets(parsed.exports, '.', 'default'),
@@ -542,7 +565,16 @@ const run = (): void => {
     logger.warn(`check-package-entrypoints: warning: ${warning}`);
   }
 
-  const allErrors = [...errors, ...nestjs.errors];
+  const conditionOrderErrors = packages.flatMap((info) =>
+    info.conditionOrderViolations.map(
+      ({ keys, location }) =>
+        `${info.name}: ${location} lists [${keys.join(', ')}]. ` +
+        `Conditions match in written order: put "types" first and "default" last, keeping the rest as they are. ` +
+        `A condition after "default" is unreachable, which esbuild reports on every bundle that imports the package.`,
+    ),
+  );
+
+  const allErrors = [...errors, ...nestjs.errors, ...conditionOrderErrors];
 
   if (allErrors.length > 0) {
     for (const error of allErrors) {
@@ -555,7 +587,7 @@ const run = (): void => {
   }
 
   logger.success(
-    `check-package-entrypoints: OK (${packages.length} workspace package(s), 0 mis-pointed condition(s), ${nestjs.scopedCount - NESTJS_BLOCKERS.size}/${nestjs.scopedCount} "${NESTJS_TAG}" package(s) built)`,
+    `check-package-entrypoints: OK (${packages.length} workspace package(s), 0 mis-pointed condition(s), 0 mis-ordered condition(s), ${nestjs.scopedCount - NESTJS_BLOCKERS.size}/${nestjs.scopedCount} "${NESTJS_TAG}" package(s) built)`,
   );
 };
 

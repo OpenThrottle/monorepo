@@ -18,12 +18,19 @@ universal **type guards** — starting with `isRecord`. Consumers span
 
 ## Invariants & gotchas
 
-- **Not source-first — this package has a real `build` target.** `main`/`module`/
-  `types` point at `src/index.ts` (so Vite apps transpile source), but `exports`
-  resolve to `dist/`. That dual mapping is deliberate: `openthrottle-server` and
-  the NestJS Docker image import from `dist/` and would hit
-  `ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING` on raw `.ts`. Always keep the
-  `build` target green and `exports` pointing at `dist/`.
+- **Source-first, no `build` target.** `main`, `module`, `types` and the single
+  `exports["."]` entry all name `./src/index.ts`; `nx.targets` parks `__build`
+  (#540). Vite consumers transpile the source, and Node consumers (including
+  `tools/workflows` through CommonJS `require()`) load it with Node's native
+  type stripping. That rests on the root `engines.node` floor, not on the
+  consumer graph.
+- **Keep it strip-only.** Node's loader rejects `enum`, `namespace`, constructor
+  parameter properties and decorators in raw `.ts`, so a single one here breaks
+  every Node consumer at runtime, in their tests rather than ours. See
+  [source-first-packages-and-strip-only.md](../../docs/monorepo/source-first-packages-and-strip-only.md).
+- **`types` is the first `exports` condition and `default` the last.** Conditions
+  match in written order, so a `types` after `default` is unreachable, and
+  esbuild warned about it on every hook bundle in `build:hooks`.
 - **Zero runtime dependencies, universal code only.** Nothing here may import
   from Node-only, NestJS, or browser/React APIs. Keep it server/client agnostic.
 - **Not a grab-bag.** Only add small, genuinely universal utilities (type guards
