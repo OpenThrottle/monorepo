@@ -306,7 +306,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@graphql-tools/relay-operation-optimizer` | 7.1.14 | MIT | [Laurin Quast](https://github.com/ardatan/graphql-tools#readme) |
 | `@graphql-tools/schema` | 10.1.1, 10.1.5 | MIT | [source](https://github.com/ardatan/graphql-tools#readme) |
 | `@graphql-tools/url-loader` | 9.1.14 | MIT | [Dotan Simha](https://github.com/ardatan/graphql-tools#readme) |
-| `@graphql-tools/utils` | 10.11.0, 11.2.2, 12.0.1, 12.1.0 | MIT | [Dotan Simha](https://github.com/ardatan/graphql-tools#readme) |
+| `@graphql-tools/utils` | 10.11.0, 11.2.2, 12.1.0 | MIT | [Dotan Simha](https://github.com/ardatan/graphql-tools#readme) |
 | `@graphql-tools/wrap` | 11.2.5 | MIT | [source](https://github.com/graphql-hive/gateway#readme) |
 | `@graphql-typed-document-node/core` | 3.2.0 | MIT | [Dotan Simha](https://github.com/dotansimha/graphql-typed-document-node#readme) |
 | `@gwhitney/detect-indent` | 7.0.1 | MIT | [Sindre Sorhus](https://github.com/gwhitney/detect-indent#readme) |
@@ -848,7 +848,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `available-typed-arrays` | 1.0.7 | MIT | [Jordan Harband](https://github.com/inspect-js/available-typed-arrays#readme) |
 | `aws4` | 1.13.2 | MIT | [Michael Hart](https://github.com/mhart/aws4#readme) |
 | `axe-core` | 4.14.0 | MPL-2.0 | [source](https://www.deque.com/axe/) |
-| `axios` | 1.18.0 | MIT | [Matt Zabriskie](https://axios-http.com) |
+| `axios` | 1.21.1 | MIT | [Matt Zabriskie](https://axios-http.com) |
 | `b4a` | 1.8.1 | Apache-2.0 | [Holepunch](https://github.com/holepunchto/b4a#readme) |
 | `babel-dead-code-elimination` | 1.0.12 | MIT | [pcattori](https://github.com/pcattori/babel-dead-code-elimination#readme) |
 | `babel-jest` | 30.5.2 | MIT | [source](https://github.com/jestjs/jest#readme) |
@@ -1454,7 +1454,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `kolorist` | 1.8.0 | MIT | [Marvin Hagemeister](https://github.com/marvinhagemeister/kolorist#readme) |
 | `kuler` | 2.0.0 | MIT | [Arnout Kazemier](https://github.com/3rd-Eden/kuler) |
 | `langsmith` | 0.12.0 | MIT | [LangChain](https://github.com/langchain-ai/langsmith-javascript#readme) |
-| `launch-editor` | 2.14.1 | MIT | [Evan You](https://github.com/vitejs/launch-editor#readme) |
+| `launch-editor` | 2.14.2 | MIT | [Evan You](https://github.com/vitejs/launch-editor#readme) |
 | `lazy-val` | 1.0.5 | MIT | [Vladimir Krivosheev](https://github.com/develar/lazy-val) |
 | `legacy-javascript` | 0.0.4 | Apache-2.0 | [Google LLC](https://github.com/GoogleChrome/lighthouse#readme) |
 | `leven` | 3.1.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/leven#readme) |
@@ -1723,7 +1723,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `picomatch` | 2.3.2, 4.0.7 | MIT | [Jon Schlinkert](https://github.com/micromatch/picomatch) |
 | `pidusage` | 4.1.0 | MIT | [soyuka](https://github.com/soyuka/pidusage) |
 | `pirates` | 4.0.7 | MIT | [Ari Porad](https://github.com/danez/pirates#readme) |
-| `piscina` | 4.9.3 | MIT | [James M Snell](https://github.com/piscinajs/piscina#readme) |
+| `piscina` | 4.9.4 | MIT | [James M Snell](https://github.com/piscinajs/piscina#readme) |
 | `pkce-challenge` | 5.0.1 | MIT | [crouchcd](https://github.com/crouchcd/pkce-challenge#readme) |
 | `pkg-types` | 1.3.1, 2.4.0 | MIT | [source](https://github.com/unjs/pkg-types#readme) |
 | `pkijs` | 3.4.3 | BSD-3-Clause | [Yury Strozhevsky](https://github.com/PeculiarVentures/PKI.js#readme) |
@@ -1888,7 +1888,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `sharp` | 0.35.5 | Apache-2.0 | [Lovell Fuller](https://sharp.pixelplumbing.com) |
 | `shebang-command` | 2.0.0 | MIT | [Kevin Mårtensson](https://github.com/kevva/shebang-command#readme) |
 | `shebang-regex` | 3.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/shebang-regex#readme) |
-| `shell-quote` | 1.10.0 | MIT | [James Halliday](https://github.com/ljharb/shell-quote) |
+| `shell-quote` | 1.12.0 | MIT | [James Halliday](https://github.com/ljharb/shell-quote) |
 | `side-channel` | 1.1.1 | MIT | [Jordan Harband](https://github.com/ljharb/side-channel#readme) |
 | `side-channel-list` | 1.0.1 | MIT | [Jordan Harband](https://github.com/ljharb/side-channel-list#readme) |
 | `side-channel-map` | 1.0.1 | MIT | [Jordan Harband](https://github.com/ljharb/side-channel-map#readme) |
