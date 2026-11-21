@@ -9,7 +9,10 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import type { RuleFormVocabularyOption } from '~/routing/rules/components/RuleForm';
+import type {
+  RuleFormRepositoryOption,
+  RuleFormVocabularyOption,
+} from '~/routing/rules/components/RuleForm';
 import { RULES_COPY } from '~/routing/rules/data/data.copy';
 import {
   ANY,
@@ -20,8 +23,11 @@ import {
 export interface RuleFormMatchSectionProps {
   environment: string;
   onEnvironmentChange: (environment: string) => void;
+  onRepositoryChange: (repositoryId: string) => void;
   onStatusChange: (status: string) => void;
   onToggleTag: (tag: string) => void;
+  repositories: RuleFormRepositoryOption[];
+  repositoryId: string;
   status: string;
   tagAll: string[];
   vocabulary: RuleFormVocabularyOption[];
@@ -38,8 +44,11 @@ export const RuleFormMatchSection = (
   const {
     environment,
     onEnvironmentChange,
+    onRepositoryChange,
     onStatusChange,
     onToggleTag,
+    repositories,
+    repositoryId,
     status,
     tagAll,
     vocabulary,
@@ -109,6 +118,34 @@ export const RuleFormMatchSection = (
         </p>
       )}
 
+      <div className="space-y-1.5">
+        <input
+          name="repositoryId"
+          type="hidden"
+          value={repositoryId === ANY ? '' : repositoryId}
+        />
+        <Label htmlFor="rule-repository">{RULES_COPY.repositoryLabel}</Label>
+        <Select onValueChange={onRepositoryChange} value={repositoryId}>
+          <SelectTrigger
+            aria-label={RULES_COPY.repositoryLabel}
+            id="rule-repository"
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ANY}>{RULES_COPY.anyOption}</SelectItem>
+            {repositories.map((repository) => (
+              <SelectItem key={repository.id} value={repository.id}>
+                {repository.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <p className="text-muted-foreground text-xs">
+          {RULES_COPY.repositoryAnyHint}
+        </p>
+      </div>
+
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
           <Label htmlFor="rule-status">{RULES_COPY.statusLabel}</Label>
@@ -147,6 +184,9 @@ export const RuleFormMatchSection = (
               ))}
             </SelectContent>
           </Select>
+          <p className="text-muted-foreground text-xs">
+            {RULES_COPY.environmentDescription}
+          </p>
         </div>
       </div>
     </section>

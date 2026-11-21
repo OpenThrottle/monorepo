@@ -20,6 +20,15 @@ export interface PlanTagData {
 }
 
 /**
+ * @description One effective tag name of a plan, as `listEffectiveTagNamesForPlans` returns it.
+ * @public
+ */
+export interface PlanEffectiveTagName {
+  readonly planId: string;
+  readonly tag: string;
+}
+
+/**
  * @description A {@link PlanTagsRepository} mock: every inherited `BaseRepository` method plus
  * the plan-tag lookups.
  * @public
@@ -33,4 +42,7 @@ export interface PlanTagsRepositoryMock extends BaseRepositoryMock<
   >;
   readonly findByPlanAndTag: Mock<PlanTagsRepository['findByPlanAndTag']>;
   readonly listByPlanId: Mock<PlanTagsRepository['listByPlanId']>;
+  readonly listEffectiveTagNamesForPlans: Mock<
+    PlanTagsRepository['listEffectiveTagNamesForPlans']
+  >;
 }

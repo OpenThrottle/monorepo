@@ -13,10 +13,17 @@ export class UpsertTagActionRuleInput {
   id?: string | null;
 
   @Field(() => ID, {
-    description: `Optional project scope; null matches every project.`,
+    deprecationReason: `Reserved for cross-repo Projects; use repositoryId`,
+    description: `Reserved for cross-repo Projects; not matched today.`,
     nullable: true,
   })
   projectId?: string | null;
+
+  @Field(() => ID, {
+    description: `Optional repository scope; null matches plans in every repository.`,
+    nullable: true,
+  })
+  repositoryId?: string | null;
 
   @Field(() => String, {
     description: `Human-readable label for the rule (required, non-empty).`,
@@ -42,7 +49,7 @@ export class UpsertTagActionRuleInput {
   environment?: string | null;
 
   @Field(() => String, {
-    description: `Action type: "inject-task" or "availability-exception".`,
+    description: `Action type: "inject-task", "availability-exception", "promote-task-to-plan" or "attach-prompt".`,
   })
   actionType!: string;
 

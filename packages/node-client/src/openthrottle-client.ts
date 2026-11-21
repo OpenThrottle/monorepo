@@ -235,6 +235,25 @@ interface CustomPromptEmbeddingSearchRow {
   title: string;
 }
 
+/**
+ * @description Appends the visibility condition for a prompt search: the viewer's own rows plus
+ * system rows, or system rows only when there is no viewer. Returns the next free parameter index.
+ */
+function pushViewerScope(
+  conditions: string[],
+  params: (string | number | string[])[],
+  paramIndex: number,
+  viewerUserId: string | null,
+): number {
+  if (viewerUserId == null) {
+    conditions.push('cp.user_id IS NULL');
+    return paramIndex;
+  }
+  conditions.push(`(cp.user_id IS NULL OR cp.user_id = $${paramIndex})`);
+  params.push(viewerUserId);
+  return paramIndex + 1;
+}
+
 /** Default max candidate rows fetched before de-duping by custom_prompt_id. */
 const AGENT_ASSET_CANDIDATE_CAP = 200;
 
@@ -248,6 +267,9 @@ const AGENT_ASSET_CANDIDATE_CAP = 200;
  * @param promptTypes Optional prompt_type filter (e.g. ['skills','rules','personas']); empty/undefined = all types.
  * @param projectId Optional project_id filter (multi-repo scoping).
  * @param model The configured embedding model; only rows with this `embedding_model` are searched.
+ * @param viewerUserId Visibility scope: a user id searches that user's prompts plus system prompts
+ * (`user_id IS NULL`); null searches system prompts only. Never omitted, so no caller can search
+ * every user's prompts by accident.
  */
 export async function searchAgentAssets(
   embedding: number[],
@@ -255,6 +277,7 @@ export async function searchAgentAssets(
   promptTypes: readonly string[] | undefined,
   projectId: string | null | undefined,
   model: string,
+  viewerUserId: string | null,
 ): Promise<AgentAssetSearchChunk[]> {
   const vectorStr = `[${embedding.join(',')}]`;
   const ds = await getOrCreateDataSource();
@@ -274,6 +297,7 @@ export async function searchAgentAssets(
     conditions.push(`cp.project_id = $${paramIndex++}`);
     params.push(projectId);
   }
+  paramIndex = pushViewerScope(conditions, params, paramIndex, viewerUserId);
 
   const candidateLimit = Math.min(
     Math.max(limit * 3, limit),
@@ -576,13 +600,14 @@ interface CustomPromptLexicalRow {
 /**
  * @description Full-text fallback for {@link searchAgentAssets}: `custom_prompts.search_tsv`
  * ranked by `ts_rank`, with the same prompt-type and project filters. One row per asset; `id` and
- * `customPromptId` are both the prompt id.
+ * `customPromptId` are both the prompt id. `viewerUserId` scopes visibility as in {@link searchAgentAssets}.
  */
 export async function searchAgentAssetsLexically(
   query: string,
   limit: number,
   promptTypes: readonly string[] | undefined,
   projectId: string | null | undefined,
+  viewerUserId: string | null,
 ): Promise<AgentAssetSearchChunk[]> {
   const ds = await getOrCreateDataSource();
   const conditions: string[] = ['cp.deleted_at IS NULL', 'cp.search_tsv @@ q'];
@@ -597,6 +622,7 @@ export async function searchAgentAssetsLexically(
     conditions.push(`cp.project_id = $${paramIndex++}`);
     params.push(projectId);
   }
+  paramIndex = pushViewerScope(conditions, params, paramIndex, viewerUserId);
 
   params.push(limit);
 
@@ -746,10 +772,10 @@ export interface PlanStatusCount {
   readonly status: string;
 }
 
-/** Plan row returned by listPlansByStatus (all plan columns except description). Aligns with {@link PlanData} but with string timestamps from raw query. */
+/** Plan row returned by listPlansByStatus (all plan columns except description and the trigger-derived repositoryId). Aligns with {@link PlanData} but with string timestamps from raw query. */
 export interface ListPlansByStatusPlan extends Omit<
   PlanData,
-  'completedAt' | 'createdAt' | 'updatedAt' | 'description'
+  'completedAt' | 'createdAt' | 'description' | 'repositoryId' | 'updatedAt'
 > {
   readonly completedAt: string | null;
   readonly createdAt: string;
@@ -873,10 +899,10 @@ export async function listPlansByStatus(
 // Plan and Task CRUD (schema: plans, tasks in OpenThrottle Postgres)
 // ---------------------------------------------------------------------------
 
-/** Plan row with ISO string dates (e.g. from openthrottle-client CRUD). Derived from {@link PlanData}. */
+/** Plan row with ISO string dates (e.g. from openthrottle-client CRUD). Derived from {@link PlanData}, without the trigger-derived repositoryId this client does not read. */
 export type PlanRow = Omit<
   PlanData,
-  'completedAt' | 'createdAt' | 'updatedAt'
+  'completedAt' | 'createdAt' | 'repositoryId' | 'updatedAt'
 > & {
   readonly completedAt: string | null;
   readonly createdAt: string;

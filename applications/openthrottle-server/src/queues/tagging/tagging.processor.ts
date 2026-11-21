@@ -166,6 +166,7 @@ export class TaggingProcessor
       await this.planRulesEvaluationService.enqueueEvaluation(
         planId,
         PLAN_RULES_TRIGGER_KINDS.TAG_CHANGED,
+        null,
       );
     }
     return result;
@@ -239,6 +240,7 @@ export class TaggingProcessor
       await this.planRulesEvaluationService.enqueueEvaluation(
         data.planId,
         PLAN_RULES_TRIGGER_KINDS.TAG_CHANGED,
+        null,
       );
     }
     return result;

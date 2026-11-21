@@ -165,6 +165,7 @@ describe('TaggingProcessor', () => {
     expect(planRulesEvaluationService.enqueueEvaluation).toHaveBeenCalledWith(
       planId,
       'tag-changed',
+      null,
     );
   });
 

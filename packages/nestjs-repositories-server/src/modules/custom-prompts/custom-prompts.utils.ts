@@ -20,6 +20,12 @@ export function createCustomPromptsRepositoryMock(): CustomPromptsRepositoryMock
     findIncludingDeleted: vi.fn(async () => {
       return null;
     }),
+    findVisibleByFilePath: vi.fn(async () => {
+      return null;
+    }),
+    findVisibleById: vi.fn(async () => {
+      return null;
+    }),
     hardDeleteById: vi.fn(async () => {
       return false;
     }),

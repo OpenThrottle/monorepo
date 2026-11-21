@@ -1,8 +1,15 @@
 import * as React from 'react';
 
 import type { TagActionRuleRowData } from '~/routing/rules/components/RulesTable';
-import { ANY } from '~/routing/rules/data/data.rule-form-options';
 import {
+  ANY,
+  ATTACH_PROMPT_ACTION_TYPE,
+  DEFAULT_ATTACH_PROMPT_PLACEMENT,
+  DEFAULT_ATTACH_PROMPT_TYPE,
+} from '~/routing/rules/data/data.rule-form-options';
+import type { RuleFormAttachPromptState } from '~/routing/rules/types';
+import {
+  buildAttachPromptPayloadJson,
   parsePayloadField,
   splitList,
 } from '~/routing/rules/utils/rule-form-payload';
@@ -15,13 +22,16 @@ export interface UseRuleFormOptions {
 export interface UseRuleFormResult {
   readonly actionPayloadJson: string;
   readonly actionType: string;
+  readonly attachPrompt: RuleFormAttachPromptState;
   readonly environment: string;
   readonly handleToggleTag: (tag: string) => void;
   readonly isEdit: boolean;
   readonly placement: string;
+  readonly repositoryId: string;
   readonly setActionType: React.Dispatch<React.SetStateAction<string>>;
   readonly setEnvironment: React.Dispatch<React.SetStateAction<string>>;
   readonly setPlacement: React.Dispatch<React.SetStateAction<string>>;
+  readonly setRepositoryId: React.Dispatch<React.SetStateAction<string>>;
   readonly setSkillSlug: React.Dispatch<React.SetStateAction<string>>;
   readonly setSlugAllow: React.Dispatch<React.SetStateAction<string>>;
   readonly setSlugDeny: React.Dispatch<React.SetStateAction<string>>;
@@ -60,12 +70,24 @@ export const useRuleForm = (options: UseRuleFormOptions): UseRuleFormResult => {
 
     return parsePayloadField(initialRule.actionPayloadJson, field);
   };
+  // `placement` means first/last for inject-task and start/end for
+  // attach-prompt, so a field is only hydrated for the rule's own action type.
+  const readInitialAttachField = (field: string): string => {
+    if (initialRule?.actionType !== ATTACH_PROMPT_ACTION_TYPE) {
+      return '';
+    }
+
+    return readInitialPayloadField(field);
+  };
   const [title, setTitle] = React.useState(initialRule?.title ?? '');
   const [actionType, setActionType] = React.useState(
     initialRule?.actionType ?? 'inject-task',
   );
   const [tagAll, setTagAll] = React.useState<string[]>(
     initialRule?.tagAll ?? [],
+  );
+  const [repositoryId, setRepositoryId] = React.useState(
+    initialRule?.repositoryId ?? ANY,
   );
   const [status, setStatus] = React.useState(initialRule?.status ?? ANY);
   const [environment, setEnvironment] = React.useState(
@@ -75,10 +97,21 @@ export const useRuleForm = (options: UseRuleFormOptions): UseRuleFormResult => {
     readInitialPayloadField('skillSlug'),
   );
   const [placement, setPlacement] = React.useState(
-    readInitialPayloadField('placement') || 'first',
+    (initialRule?.actionType === ATTACH_PROMPT_ACTION_TYPE
+      ? ''
+      : readInitialPayloadField('placement')) || 'first',
   );
   const [titleTemplate, setTitleTemplate] = React.useState(
     readInitialPayloadField('titleTemplate'),
+  );
+  const [promptId, setPromptId] = React.useState(
+    readInitialAttachField('promptId'),
+  );
+  const [promptType, setPromptType] = React.useState(
+    readInitialAttachField('promptType') || DEFAULT_ATTACH_PROMPT_TYPE,
+  );
+  const [attachPlacement, setAttachPlacement] = React.useState(
+    readInitialAttachField('placement') || DEFAULT_ATTACH_PROMPT_PLACEMENT,
   );
   const [tagAllow, setTagAllow] = React.useState(
     readInitialPayloadField('tagAllow'),
@@ -96,6 +129,8 @@ export const useRuleForm = (options: UseRuleFormOptions): UseRuleFormResult => {
   // Setup
   const isEdit = initialRule != null;
   const isInjectTask = actionType === 'inject-task';
+  const isAttachPrompt = actionType === ATTACH_PROMPT_ACTION_TYPE;
+  const attachFilePath = readInitialAttachField('filePath');
 
   // The typed payload is assembled client-side and forwarded to the route
   // action as a single hidden JSON field, preserving the inject-task vs
@@ -111,6 +146,15 @@ export const useRuleForm = (options: UseRuleFormOptions): UseRuleFormResult => {
       });
     }
 
+    if (isAttachPrompt) {
+      return buildAttachPromptPayloadJson({
+        filePath: attachFilePath,
+        placement: attachPlacement,
+        promptId,
+        promptType,
+      });
+    }
+
     return JSON.stringify({
       slugAllow: splitList(slugAllow),
       slugDeny: splitList(slugDeny),
@@ -120,8 +164,25 @@ export const useRuleForm = (options: UseRuleFormOptions): UseRuleFormResult => {
   };
   const actionPayloadJson = buildActionPayloadJson();
 
+  const hasPromptReference = promptId !== '' || attachFilePath !== '';
   const submitDisabled =
-    title.trim() === '' || (isInjectTask && skillSlug === '');
+    title.trim() === '' ||
+    (isInjectTask && skillSlug === '') ||
+    (isAttachPrompt && !hasPromptReference);
+  const handlePromptChange = (
+    nextPromptId: string,
+    nextPromptType: string,
+  ): void => {
+    setPromptId(nextPromptId);
+    setPromptType(nextPromptType);
+  };
+  const attachPrompt: RuleFormAttachPromptState = {
+    filePath: attachFilePath,
+    onPlacementChange: setAttachPlacement,
+    onPromptChange: handlePromptChange,
+    placement: attachPlacement,
+    promptId,
+  };
 
   // Handlers
   const handleToggleTag = (tag: string): void => {
@@ -143,13 +204,16 @@ export const useRuleForm = (options: UseRuleFormOptions): UseRuleFormResult => {
   return {
     actionPayloadJson,
     actionType,
+    attachPrompt,
     environment,
     handleToggleTag,
     isEdit,
     placement,
+    repositoryId,
     setActionType,
     setEnvironment,
     setPlacement,
+    setRepositoryId,
     setSkillSlug,
     setSlugAllow,
     setSlugDeny,

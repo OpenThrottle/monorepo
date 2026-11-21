@@ -41,6 +41,7 @@ export class TaskTagsResolver {
       await this.planRulesEvaluationService.enqueueEvaluation(
         task.planId,
         PLAN_RULES_TRIGGER_KINDS.TAG_CHANGED,
+        null,
       );
     }
   }

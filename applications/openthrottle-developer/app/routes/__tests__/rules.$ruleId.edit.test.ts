@@ -18,6 +18,8 @@ const { action, loader } = await import('../rules.$ruleId.edit');
 
 const mockExecuteGraphqlWithAuth = vi.mocked(executeGraphqlWithAuth);
 
+const REPOSITORY_ID = '11111111-1111-4111-8111-111111111111';
+
 function asMock<T>(value: unknown): T;
 function asMock(value: unknown): unknown {
   return value;
@@ -67,26 +69,80 @@ describe('routes/rules.$ruleId.edit loader', () => {
   test('returns the rule when found', async () => {
     mockExecuteGraphqlWithAuth.mockResolvedValue(
       asMock<Awaited<ReturnType<typeof executeGraphqlWithAuth>>>({
+        personas: [{ id: 'persona-1', title: 'Reviewer', userId: null }],
+        prompts: [{ id: 'prompt-1', title: 'Checklist', userId: 'user-1' }],
         skillAvailability: { skills: [] },
         skillTagVocabulary: { tags: [] },
         tagActionRule: RULE,
+        workspaceRepositories: [{ id: 'repo-1', name: 'monorepo' }],
       }),
     );
 
     const result = await loader(loaderArgs('rule-1'));
 
+    expect(result.repositories).toEqual([{ id: 'repo-1', name: 'monorepo' }]);
+    expect(result.promptOptions).toEqual([
+      {
+        id: 'prompt-1',
+        owner: 'yours',
+        promptType: 'prompts',
+        title: 'Checklist',
+      },
+      {
+        id: 'persona-1',
+        owner: 'system',
+        promptType: 'personas',
+        title: 'Reviewer',
+      },
+    ]);
     expect(result.rule).toMatchObject({
       id: 'rule-1',
       title: 'Grill breakdowns',
     });
   });
 
+  test('returns an attach-prompt rule untouched so the form can pre-select it', async () => {
+    const attachRule = {
+      ...RULE,
+      actionPayloadJson: `{"placement":"start","promptId":"prompt-1","promptType":"prompts"}`,
+      actionType: 'attach-prompt',
+    };
+    mockExecuteGraphqlWithAuth.mockResolvedValue(
+      asMock<Awaited<ReturnType<typeof executeGraphqlWithAuth>>>({
+        personas: [],
+        prompts: [{ id: 'prompt-1', title: 'Checklist', userId: null }],
+        skillAvailability: { skills: [] },
+        skillTagVocabulary: { tags: [] },
+        tagActionRule: attachRule,
+        workspaceRepositories: [],
+      }),
+    );
+
+    const result = await loader(loaderArgs('rule-1'));
+
+    expect(result.rule).toMatchObject({
+      actionPayloadJson: attachRule.actionPayloadJson,
+      actionType: 'attach-prompt',
+    });
+    expect(result.promptOptions).toEqual([
+      {
+        id: 'prompt-1',
+        owner: 'system',
+        promptType: 'prompts',
+        title: 'Checklist',
+      },
+    ]);
+  });
+
   test('returns a null rule (not-found) when the query resolves null', async () => {
     mockExecuteGraphqlWithAuth.mockResolvedValue(
       asMock<Awaited<ReturnType<typeof executeGraphqlWithAuth>>>({
+        personas: [],
+        prompts: [],
         skillAvailability: { skills: [] },
         skillTagVocabulary: { tags: [] },
         tagActionRule: null,
+        workspaceRepositories: [],
       }),
     );
 
@@ -151,11 +207,79 @@ describe('routes/rules.$ruleId.edit action', () => {
           enabled: true,
           environment: null,
           id: 'rule-1',
+          repositoryId: null,
           status: 'PENDING',
           tagAll: ['breakdown'],
           title: 'Grill breakdowns',
         },
       },
     );
+  });
+
+  test('forwards an attach-prompt payload verbatim', async () => {
+    mockExecuteGraphqlWithAuth.mockResolvedValue(
+      asMock<Awaited<ReturnType<typeof executeGraphqlWithAuth>>>({
+        upsertTagActionRule: { id: 'rule-1' },
+      }),
+    );
+    const payload = `{"placement":"start","promptId":"prompt-1","promptType":"personas"}`;
+
+    const formData = new FormData();
+    formData.set('id', 'rule-1');
+    formData.set('title', 'Attach');
+    formData.set('actionType', 'attach-prompt');
+    formData.set('actionPayloadJson', payload);
+
+    await action(actionArgs('rule-1', formData));
+
+    expect(mockExecuteGraphqlWithAuth).toHaveBeenCalledWith(
+      expect.any(Request),
+      RulesUpsertTagActionRuleDocument,
+      {
+        input: expect.objectContaining({
+          actionPayloadJson: payload,
+          actionType: 'attach-prompt',
+        }),
+      },
+    );
+  });
+
+  test('forwards a selected repository id on edit', async () => {
+    mockExecuteGraphqlWithAuth.mockResolvedValue(
+      asMock<Awaited<ReturnType<typeof executeGraphqlWithAuth>>>({
+        upsertTagActionRule: { id: 'rule-1' },
+      }),
+    );
+
+    const formData = new FormData();
+    formData.set('id', 'rule-1');
+    formData.set('title', 'Grill breakdowns');
+    formData.set('actionType', 'inject-task');
+    formData.set('actionPayloadJson', '{}');
+    formData.set('repositoryId', REPOSITORY_ID);
+
+    await action(actionArgs('rule-1', formData));
+
+    expect(mockExecuteGraphqlWithAuth).toHaveBeenCalledWith(
+      expect.any(Request),
+      RulesUpsertTagActionRuleDocument,
+      {
+        input: expect.objectContaining({ repositoryId: REPOSITORY_ID }),
+      },
+    );
+  });
+
+  test('rejects a repository id that is not a UUID', async () => {
+    const formData = new FormData();
+    formData.set('id', 'rule-1');
+    formData.set('title', 'Bad repo');
+    formData.set('actionType', 'inject-task');
+    formData.set('actionPayloadJson', '{}');
+    formData.set('repositoryId', 'not-a-uuid');
+
+    const result = await action(actionArgs('rule-1', formData));
+
+    expect(result).toEqual({ error: 'Repository must be a valid id.' });
+    expect(mockExecuteGraphqlWithAuth).not.toHaveBeenCalled();
   });
 });

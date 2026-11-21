@@ -26,6 +26,8 @@ export interface ComboboxProps {
   readonly emptyText?: string;
   /** Persistent row under the list — e.g. a "keep typing to narrow" hint. */
   readonly footer?: React.ReactNode;
+  /** Id of the trigger button, so a `<label htmlFor>` can name it. */
+  readonly id?: string;
   /** A search is in flight: suppresses the empty state so it cannot flash. */
   readonly loading?: boolean;
   readonly loadingText?: string;
@@ -58,6 +60,7 @@ export const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(
       disabled = false,
       emptyText = 'No results found.',
       footer,
+      id,
       loading = false,
       loadingText = 'Loading…',
       onSearchChange,
@@ -106,6 +109,7 @@ export const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(
               className,
             )}
             disabled={disabled}
+            id={id}
             ref={ref}
             role="combobox"
             variant="outline"

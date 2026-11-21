@@ -4,6 +4,7 @@ import {
   filterRulesList,
   isRulesEnabledFilter,
   parseRulesEnabledFilterFromSearchParams,
+  parseRulesScopeFromSearchParams,
   parseRulesSearchFromSearchParams,
   RULES_ENABLED_FILTERS,
   type RulesListFilterable,
@@ -16,6 +17,7 @@ const rule = (
     actionType: 'inject-task',
     enabled: true,
     environment: null,
+    repositoryId: null,
     status: null,
     tagAll: ['breakdown'],
     ...overrides,
@@ -217,5 +219,64 @@ describe('routing/rules utils parsers', () => {
         ).toEqual([]);
       });
     });
+  });
+});
+
+describe('parseRulesScopeFromSearchParams', () => {
+  test('defaults to all when missing or blank', () => {
+    expect(parseRulesScopeFromSearchParams(new URLSearchParams())).toBe('all');
+    expect(parseRulesScopeFromSearchParams(new URLSearchParams('scope='))).toBe(
+      'all',
+    );
+  });
+
+  test('passes global and repository ids through', () => {
+    expect(
+      parseRulesScopeFromSearchParams(new URLSearchParams('scope=global')),
+    ).toBe('global');
+    expect(
+      parseRulesScopeFromSearchParams(new URLSearchParams('scope=repo-1')),
+    ).toBe('repo-1');
+  });
+});
+
+describe('filterRulesList scope', () => {
+  const scoped = [
+    rule({ title: 'wide' }),
+    rule({ repositoryId: 'repo-1', title: 'mono' }),
+    rule({ repositoryId: 'repo-2', title: 'site' }),
+  ];
+
+  test('all keeps every rule in order', () => {
+    expect(
+      filterRulesList(scoped, { scope: 'all' }).map((r) => r.title),
+    ).toEqual(['wide', 'mono', 'site']);
+  });
+
+  test('global keeps only unscoped rules', () => {
+    expect(
+      filterRulesList(scoped, { scope: 'global' }).map((r) => r.title),
+    ).toEqual(['wide']);
+  });
+
+  test('a repository id keeps only that repository', () => {
+    expect(
+      filterRulesList(scoped, { scope: 'repo-2' }).map((r) => r.title),
+    ).toEqual(['site']);
+  });
+
+  test('composes with the enabled filter and search', () => {
+    const mixed = [
+      rule({ enabled: false, repositoryId: 'repo-1', title: 'off' }),
+      rule({ repositoryId: 'repo-1', title: 'on' }),
+    ];
+
+    expect(
+      filterRulesList(mixed, {
+        enabledFilter: 'enabled',
+        scope: 'repo-1',
+        search: 'on',
+      }).map((r) => r.title),
+    ).toEqual(['on']);
   });
 });

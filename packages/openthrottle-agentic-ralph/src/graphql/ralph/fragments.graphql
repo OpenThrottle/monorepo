@@ -22,6 +22,7 @@ fragment Plan on PlanObject {
   project
   projectId
   projectSortOrder
+  repositoryId
   runConfigJson
   status
   summary

@@ -625,6 +625,7 @@ export class ConversationStreamResolver {
 
     const systemPrompt = await this.resolvePersonaSystemPrompt(
       input.personaId ?? null,
+      userId,
     );
 
     // Build the managed MCP config for this checkout (currently just the OT MCP
@@ -819,21 +820,24 @@ export class ConversationStreamResolver {
   /**
    * Resolve a persona's system prompt: a registry persona (custom_prompts,
    * promptType=personas) by UUID id, else the hardcoded fallback map for the
-   * mock composer ids. Null when no persona is selected or resolvable.
+   * mock composer ids. Null when no persona is selected or resolvable. A registry
+   * persona resolves only when the caller owns it or it is a system persona.
    */
   private async resolvePersonaSystemPrompt(
     personaId: string | null,
+    userId: string,
   ): Promise<string | null> {
     if (personaId == null || personaId === '') {
       return null;
     }
 
     if (UUID_RE.test(personaId)) {
-      const persona = await this.customPrompts.findOne({
-        where: { id: personaId, promptType: 'personas' },
-      });
+      const persona = await this.customPrompts.findVisibleById(
+        personaId,
+        userId,
+      );
 
-      if (persona) {
+      if (persona?.promptType === 'personas') {
         return persona.content;
       }
     }

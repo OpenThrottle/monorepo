@@ -35,7 +35,9 @@ import {
 import {
   availabilityExceptionActionPayloadSchema,
   evaluateTagActionRules,
+  rankMatchedTagActions,
   resolveSkillAvailability,
+  scoreTagActionSpecificity,
   type SkillAvailabilityInput,
   type SkillAvailabilityRule,
   type SkillAvailabilityRuleSet,
@@ -226,10 +228,12 @@ export class PlanContextAvailabilityService {
     const ruleInputs: TagActionRuleInput[] = rules.map((rule) => ({
       actionPayload: rule.actionPayload,
       actionType: rule.actionType,
+      createdAt: rule.createdAt,
       enabled: rule.enabled,
       environment: rule.environment,
       id: rule.id,
       projectId: rule.projectId,
+      repositoryId: rule.repositoryId,
       status: rule.status,
       tagAll: rule.tagAll,
     }));
@@ -240,12 +244,15 @@ export class PlanContextAvailabilityService {
         environment,
         planStatus: plan.status,
         projectId: plan.projectId,
+        repositoryId: plan.repositoryId,
       },
       ruleInputs,
     );
 
     const ephemeral: SkillAvailabilityRule[] = [];
-    for (const action of matched) {
+    // Narrowest first; each ephemeral rule carries its specificity so the
+    // resolver layers them (narrower verdicts override broader opposites).
+    for (const action of rankMatchedTagActions(matched)) {
       if (action.actionType !== TAG_ACTION_TYPES.AVAILABILITY_EXCEPTION) {
         continue;
       }
@@ -264,6 +271,7 @@ export class PlanContextAvailabilityService {
         id: `rule:${action.ruleId} (plan-context)`,
         slugAllow: parsed.data.slugAllow,
         slugDeny: parsed.data.slugDeny,
+        specificity: scoreTagActionSpecificity(action.scope),
         tagAllow: parsed.data.tagAllow,
         tagDeny: parsed.data.tagDeny,
       });

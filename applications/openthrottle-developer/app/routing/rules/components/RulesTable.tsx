@@ -1,14 +1,24 @@
 import type { DataTableColumnDef } from '@openthrottle/react-router-shadcn';
-import { Badge, cn, DataTable } from '@openthrottle/react-router-shadcn';
+import { Badge, cn } from '@openthrottle/react-router-shadcn';
 import { GlobalPopoverActionsHeader } from '@openthrottle/react-router-ui-global';
 import * as React from 'react';
 import { Link } from 'react-router';
 
 import type { TagActionRuleRowFragment } from '~/__generated__/graphql';
 import { RulesEmpty } from '~/routing/rules/components/RulesEmpty';
+import { RulesScopeBadges } from '~/routing/rules/components/RulesScopeBadges';
+import { RulesTableGroup } from '~/routing/rules/components/RulesTableGroup';
 import { RulesTableRowActions } from '~/routing/rules/components/RulesTableRowActions';
 import { RULES_COPY } from '~/routing/rules/data/data.copy';
-import { summarizeRuleAction } from '~/routing/rules/utils/formatters';
+import {
+  buildRuleScopeTrail,
+  summarizeRuleAction,
+} from '~/routing/rules/utils/formatters';
+import type {
+  RankedTagActionRule,
+  RulesRepositoryOption,
+} from '~/routing/rules/utils/rule-groups';
+import { groupRulesByRepository } from '~/routing/rules/utils/rule-groups';
 
 /** Row shape for the rules table — matches the `TagActionRuleRow` GraphQL fragment. */
 export type TagActionRuleRowData = TagActionRuleRowFragment;
@@ -19,18 +29,25 @@ export interface RulesTableProps {
   isFiltered?: boolean;
   onToggleEnabled: (rule: TagActionRuleRowData) => void;
   pending?: boolean;
-  rules: TagActionRuleRowData[];
+  repositories: RulesRepositoryOption[];
+  rules: RankedTagActionRule[];
 }
 
 interface RulesTableColumnOptions {
   onToggleEnabled: (rule: TagActionRuleRowData) => void;
   pending: boolean;
+  repositoryNames: ReadonlyMap<string, string>;
 }
 
+type RulesTableColumns = DataTableColumnDef<
+  RankedTagActionRule,
+  string | number | null | undefined
+>[];
+
 /**
- * @description Tag→action rules list as a sibling-aligned `bg-card` DataTable.
- * Empty UI lives in {@link RulesEmpty}; this table only wires row data and
- * toggle/delete/edit actions.
+ * @description Tag→action rules list as a `bg-card` surface grouped by scope:
+ * Global first, then one group per repository (narrowest rule first). Grouping
+ * lives in `utils/rule-groups`; empty UI lives in {@link RulesEmpty}.
  */
 export const RulesTable = (props: RulesTableProps): React.ReactElement => {
   const {
@@ -38,18 +55,22 @@ export const RulesTable = (props: RulesTableProps): React.ReactElement => {
     isFiltered = false,
     onToggleEnabled,
     pending = false,
+    repositories,
     rules,
   } = props;
 
   // Hooks
-  const columns = React.useMemo(
-    () => RulesTable.buildTable({ onToggleEnabled, pending }),
-    [onToggleEnabled, pending],
+  const repositoryNames = React.useMemo(
+    () => new Map(repositories.map((repo) => [repo.id, repo.name])),
+    [repositories],
   );
-  const data = React.useMemo(() => [...rules], [rules]);
-  const getRowId = React.useCallback(
-    (rule: TagActionRuleRowData) => rule.id,
-    [],
+  const columns = React.useMemo(
+    () => RulesTable.buildTable({ onToggleEnabled, pending, repositoryNames }),
+    [onToggleEnabled, pending, repositoryNames],
+  );
+  const groups = React.useMemo(
+    () => groupRulesByRepository(rules, repositories),
+    [repositories, rules],
   );
 
   // Setup
@@ -57,6 +78,9 @@ export const RulesTable = (props: RulesTableProps): React.ReactElement => {
   // Handlers
 
   // Markup
+  const groupSections = groups.map((group) => (
+    <RulesTableGroup columns={columns} group={group} key={group.id} />
+  ));
 
   // Life Cycle
 
@@ -67,43 +91,36 @@ export const RulesTable = (props: RulesTableProps): React.ReactElement => {
       className={cn('bg-card ui-border rounded-lg border', className)}
       data-testid="RulesTable"
     >
-      <DataTable<TagActionRuleRowData, string | number | null | undefined>
-        columns={columns}
-        data={data}
-        emptyState={<RulesEmpty isFiltered={isFiltered} />}
-        getRowId={getRowId}
-      />
+      {groups.length === 0 ? <RulesEmpty isFiltered={isFiltered} /> : null}
+      {groupSections}
     </div>
   );
 };
 
 RulesTable.buildTable = (
   options: RulesTableColumnOptions,
-): DataTableColumnDef<
-  TagActionRuleRowData,
-  string | number | null | undefined
->[] => {
-  const { onToggleEnabled, pending } = options;
+): RulesTableColumns => {
+  const { onToggleEnabled, pending, repositoryNames } = options;
 
   return [
     {
       accessorKey: 'title',
       cell: ({ row }) => {
         const rule = row.original;
-        const editHref = `/rules/${rule.id}/edit`;
+        const detailHref = `/rules/${rule.id}`;
 
         return (
           <div className="min-w-0 space-y-2 p-2">
             <div className="flex flex-wrap items-center gap-2">
-              <h2 className="line-clamp-1 text-sm font-semibold text-ellipsis">
+              <h3 className="line-clamp-1 text-sm font-semibold text-ellipsis">
                 <Link
-                  aria-label={`${RULES_COPY.editAction}: ${rule.title}`}
+                  aria-label={`${RULES_COPY.viewAction}: ${rule.title}`}
                   className="hover:text-primary underline underline-offset-2"
-                  to={editHref}
+                  to={detailHref}
                 >
                   {rule.title}
                 </Link>
-              </h2>
+              </h3>
               {!rule.enabled && (
                 <Badge className="border-amber-500/60 bg-amber-500/10">
                   {RULES_COPY.filterDisabledLabel}
@@ -116,21 +133,20 @@ RulesTable.buildTable = (
               <span>
                 {summarizeRuleAction(rule.actionType, rule.actionPayloadJson)}
               </span>
-              {rule.status != null && rule.status !== '' && (
-                <span>
-                  {RULES_COPY.statusLabel}: {rule.status}
-                </span>
-              )}
-              {rule.environment != null && rule.environment !== '' && (
-                <span>
-                  {RULES_COPY.environmentLabel}: {rule.environment}
-                </span>
-              )}
             </div>
           </div>
         );
       },
       header: () => <div className="p-2">{RULES_COPY.tableRuleHeader}</div>,
+    },
+    {
+      cell: ({ row }) => {
+        const trail = buildRuleScopeTrail(row.original, repositoryNames);
+
+        return <RulesScopeBadges trail={trail} />;
+      },
+      header: () => <div className="p-2">{RULES_COPY.scopeHeader}</div>,
+      id: 'scope',
     },
     {
       accessorKey: 'tagAll',

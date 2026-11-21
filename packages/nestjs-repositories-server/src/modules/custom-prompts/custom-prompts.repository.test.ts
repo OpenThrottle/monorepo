@@ -18,9 +18,11 @@ const emptyFilter: ListCustomPromptsFilter = {
   promptType: null,
   search: null,
   userId: null,
+  viewerUserId: undefined,
 };
 
 describe('CustomPromptsRepository', () => {
+  const find = vi.fn();
   const findOne = vi.fn();
   const softDelete = vi.fn();
   const restore = vi.fn();
@@ -36,6 +38,7 @@ describe('CustomPromptsRepository', () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
+    find.mockResolvedValue([]);
     findOne.mockResolvedValue(null);
     softDelete.mockResolvedValue({ affected: 0 });
     restore.mockResolvedValue({ affected: 0 });
@@ -50,6 +53,7 @@ describe('CustomPromptsRepository', () => {
           useValue: createMock<Repository<CustomPrompt>>({
             createQueryBuilder: vi.fn(() => queryBuilder),
             delete: deleteRows,
+            find,
             findOne,
             restore,
             softDelete,
@@ -95,6 +99,7 @@ describe('CustomPromptsRepository', () => {
         promptType: 'skills',
         search: 'review',
         userId: 'user-1',
+        viewerUserId: undefined,
       });
 
       expect(queryBuilder.andWhere).toHaveBeenCalledWith(
@@ -120,6 +125,31 @@ describe('CustomPromptsRepository', () => {
     });
   });
 
+  describe('listFiltered visibility scope', () => {
+    it('keeps the viewer rows plus system rows', async () => {
+      await repository.listFiltered({ ...emptyFilter, viewerUserId: 'u1' });
+
+      expect(queryBuilder.andWhere).toHaveBeenCalledWith(
+        '(cp.user_id = :viewerUserId OR cp.user_id IS NULL)',
+        { viewerUserId: 'u1' },
+      );
+    });
+
+    it('keeps system rows only for a viewer with no user identity', async () => {
+      await repository.listFiltered({ ...emptyFilter, viewerUserId: null });
+
+      expect(queryBuilder.andWhere).toHaveBeenCalledWith('cp.user_id IS NULL');
+    });
+
+    it('applies no scope when the viewer is undefined', async () => {
+      await repository.listFiltered(emptyFilter);
+
+      expect(queryBuilder.andWhere).not.toHaveBeenCalledWith(
+        'cp.user_id IS NULL',
+      );
+    });
+  });
+
   describe('findIncludingDeleted', () => {
     it('reads past the soft-delete filter', async () => {
       const row = customPromptsFactory.build({ id: promptId });
@@ -132,6 +162,94 @@ describe('CustomPromptsRepository', () => {
         where: { id: promptId },
         withDeleted: true,
       });
+    });
+  });
+
+  describe('findVisibleById', () => {
+    it('returns an owned prompt', async () => {
+      const row = customPromptsFactory.build({ id: promptId, userId: 'u1' });
+      findOne.mockResolvedValue(row);
+
+      await expect(repository.findVisibleById(promptId, 'u1')).resolves.toBe(
+        row,
+      );
+    });
+
+    it('returns a system prompt', async () => {
+      const row = customPromptsFactory.build({ id: promptId, userId: null });
+      findOne.mockResolvedValue(row);
+
+      await expect(repository.findVisibleById(promptId, 'u1')).resolves.toBe(
+        row,
+      );
+    });
+
+    it('shows a caller with no user identity only system rows', async () => {
+      const system = customPromptsFactory.build({ id: promptId, userId: null });
+      findOne.mockResolvedValue(system);
+      await expect(repository.findVisibleById(promptId, null)).resolves.toBe(
+        system,
+      );
+
+      findOne.mockResolvedValue(
+        customPromptsFactory.build({ id: promptId, userId: 'u1' }),
+      );
+      await expect(
+        repository.findVisibleById(promptId, null),
+      ).resolves.toBeNull();
+    });
+
+    it('hides another owner prompt', async () => {
+      findOne.mockResolvedValue(
+        customPromptsFactory.build({ id: promptId, userId: 'u2' }),
+      );
+
+      await expect(
+        repository.findVisibleById(promptId, 'u1'),
+      ).resolves.toBeNull();
+    });
+
+    it('returns null when missing or soft deleted', async () => {
+      await expect(
+        repository.findVisibleById(promptId, 'u1'),
+      ).resolves.toBeNull();
+    });
+  });
+
+  describe('findVisibleByFilePath', () => {
+    it('prefers the user-owned row over the system row', async () => {
+      const system = customPromptsFactory.build({ userId: null });
+      const owned = customPromptsFactory.build({ userId: 'u1' });
+      find.mockResolvedValue([system, owned]);
+
+      await expect(
+        repository.findVisibleByFilePath('a.md', 'prompts', 'u1'),
+      ).resolves.toBe(owned);
+    });
+
+    it('falls back to the system row', async () => {
+      const system = customPromptsFactory.build({ userId: null });
+      find.mockResolvedValue([system]);
+
+      await expect(
+        repository.findVisibleByFilePath('a.md', 'prompts', 'u1'),
+      ).resolves.toBe(system);
+    });
+
+    it('looks at system rows only for a caller with no user identity', async () => {
+      find.mockResolvedValue([]);
+
+      await repository.findVisibleByFilePath('a.md', 'prompts', null);
+
+      expect(find).toHaveBeenCalledWith({
+        where: [expect.objectContaining({ filePath: 'a.md' })],
+      });
+    });
+
+    it('returns null when nothing is visible', async () => {
+      await expect(
+        repository.findVisibleByFilePath('a.md', 'prompts', 'u1'),
+      ).resolves.toBeNull();
     });
   });
 

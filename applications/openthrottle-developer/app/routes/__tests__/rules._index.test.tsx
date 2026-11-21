@@ -5,19 +5,21 @@ import { createRoutesStub } from 'react-router';
 import { afterEach, describe, expect, test } from 'vitest';
 
 import type { Route } from '@/app/routes/+types/rules._index';
-import type { TagActionRuleRowData } from '~/routing/rules/components/RulesTable';
 import { RULES_COPY, RULES_ONBOARDING } from '~/routing/rules/data/data.copy';
+import type { RankedTagActionRule } from '~/routing/rules/utils/rule-groups';
 import { buildRootMatch } from '~/testing/buildRootMatch';
 
 import Index from '../rules._index';
 
-const enabledRule: TagActionRuleRowData = {
+const enabledRule: RankedTagActionRule = {
   actionPayloadJson: '{"placement":"first","skillSlug":"grilling"}',
   actionType: 'inject-task',
   createdAt: '2026-01-01T00:00:00.000Z',
   enabled: true,
   environment: null,
   id: 'rule-enabled',
+  repositoryId: null,
+  specificity: 2,
   status: 'PENDING',
   tagAll: ['breakdown'],
   title: 'Grill breakdowns',
@@ -25,13 +27,15 @@ const enabledRule: TagActionRuleRowData = {
   userId: 'user-1',
 };
 
-const disabledRule: TagActionRuleRowData = {
+const disabledRule: RankedTagActionRule = {
   actionPayloadJson: '{"skillSlug":"docs"}',
   actionType: 'availability-exception',
   createdAt: '2026-01-02T00:00:00.000Z',
   enabled: false,
   environment: 'staging',
   id: 'rule-disabled',
+  repositoryId: 'repo-1',
+  specificity: 4,
   status: null,
   tagAll: ['docs'],
   title: 'Docs exception',
@@ -39,15 +43,17 @@ const disabledRule: TagActionRuleRowData = {
   userId: 'user-1',
 };
 
+const repositories = [{ id: 'repo-1', name: 'monorepo' }];
+
 const matchesFor = (
-  rules: TagActionRuleRowData[],
+  rules: RankedTagActionRule[],
 ): Route.ComponentProps['matches'] => {
   return [
     buildRootMatch(),
     {
       handle: undefined,
       id: 'routes/rules._index',
-      loaderData: { rules },
+      loaderData: { repositories, rules },
       params: {},
       pathname: '/rules',
     },
@@ -55,7 +61,7 @@ const matchesFor = (
 };
 
 const renderIndex = (
-  rules: TagActionRuleRowData[],
+  rules: RankedTagActionRule[],
   initialEntry = '/rules',
 ): ReturnType<typeof render> => {
   // useFetcher + useSearchParams require a data router.
@@ -64,7 +70,7 @@ const renderIndex = (
       <TooltipProvider>
         <Index
           actionData={undefined}
-          loaderData={{ rules }}
+          loaderData={{ repositories, rules }}
           matches={matchesFor(rules)}
           params={{}}
         />
@@ -164,6 +170,46 @@ describe('routes/rules._index.tsx', () => {
 
     expect(component.queryByText(enabledRule.title)).not.toBeInTheDocument();
     expect(component.getByText(disabledRule.title)).toBeInTheDocument();
+  });
+
+  test('groups rules by scope with Global first, then the repository', () => {
+    const component = renderIndex([disabledRule, enabledRule]);
+    const kinds = component
+      .getAllByTestId('RulesTableGroup')
+      .map((group) => group.getAttribute('data-group-kind'));
+
+    expect(kinds).toEqual(['global', 'repository']);
+    expect(
+      component.getByRole('heading', { level: 2, name: /monorepo/ }),
+    ).toBeInTheDocument();
+  });
+
+  test('filters to Global rules from the scope search param', () => {
+    const component = renderIndex(
+      [enabledRule, disabledRule],
+      '/rules?scope=global',
+    );
+
+    expect(component.getByText(enabledRule.title)).toBeInTheDocument();
+    expect(component.queryByText(disabledRule.title)).not.toBeInTheDocument();
+  });
+
+  test('filters to one repository from the scope search param', () => {
+    const component = renderIndex(
+      [enabledRule, disabledRule],
+      '/rules?scope=repo-1',
+    );
+
+    expect(component.queryByText(enabledRule.title)).not.toBeInTheDocument();
+    expect(component.getByText(disabledRule.title)).toBeInTheDocument();
+  });
+
+  test('shows the scope filter in the toolbar', () => {
+    const component = renderIndex([enabledRule, disabledRule]);
+
+    expect(
+      component.getByRole('combobox', { name: RULES_COPY.scopeFilterLabel }),
+    ).toBeInTheDocument();
   });
 
   test('shows filtered-empty copy when filters match nothing', () => {

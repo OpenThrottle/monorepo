@@ -1,6 +1,10 @@
 import { describe, expect, test } from 'vitest';
 
-import { parsePayloadField, splitList } from '../rule-form-payload';
+import {
+  buildAttachPromptPayloadJson,
+  parsePayloadField,
+  splitList,
+} from '../rule-form-payload';
 
 describe('parsePayloadField', () => {
   test('returns a string field value', () => {
@@ -43,5 +47,33 @@ describe('splitList', () => {
 
   test('returns an empty array for an empty string', () => {
     expect(splitList('')).toEqual([]);
+  });
+});
+
+describe('buildAttachPromptPayloadJson', () => {
+  test('references a chosen prompt by id and drops any file path', () => {
+    expect(
+      JSON.parse(
+        buildAttachPromptPayloadJson({
+          filePath: 'a.md',
+          placement: 'end',
+          promptId: 'p-1',
+          promptType: 'prompts',
+        }),
+      ),
+    ).toEqual({ placement: 'end', promptId: 'p-1', promptType: 'prompts' });
+  });
+
+  test('falls back to the file path when no prompt is chosen', () => {
+    expect(
+      JSON.parse(
+        buildAttachPromptPayloadJson({
+          filePath: 'a.md',
+          placement: 'start',
+          promptId: '',
+          promptType: 'personas',
+        }),
+      ),
+    ).toEqual({ filePath: 'a.md', placement: 'start', promptType: 'personas' });
   });
 });

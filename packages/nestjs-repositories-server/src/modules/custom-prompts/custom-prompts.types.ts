@@ -21,7 +21,9 @@ export type CustomPromptData = Omit<CustomPrompt, 'project' | 'user'>;
 /**
  * @description Filters for {@link CustomPromptsRepository.listFiltered}; every filter is
  * optional (`null` means "do not filter"). Soft-deleted prompts are listed only with
- * `includeDeleted`.
+ * `includeDeleted`. `viewerUserId` is the visibility scope: a user id keeps that user's rows
+ * plus system rows (`user_id IS NULL`), `null` keeps system rows only, and `undefined` applies
+ * no scope (system-level callers only, never a client request).
  * @public
  */
 export interface ListCustomPromptsFilter {
@@ -31,6 +33,7 @@ export interface ListCustomPromptsFilter {
   readonly promptType: CustomPromptType | null;
   readonly search: string | null;
   readonly userId: string | null;
+  readonly viewerUserId: string | null | undefined;
 }
 
 /**
@@ -45,6 +48,10 @@ export interface CustomPromptsRepositoryMock extends BaseRepositoryMock<
   readonly findIncludingDeleted: Mock<
     CustomPromptsRepository['findIncludingDeleted']
   >;
+  readonly findVisibleByFilePath: Mock<
+    CustomPromptsRepository['findVisibleByFilePath']
+  >;
+  readonly findVisibleById: Mock<CustomPromptsRepository['findVisibleById']>;
   readonly hardDeleteById: Mock<CustomPromptsRepository['hardDeleteById']>;
   readonly listFiltered: Mock<CustomPromptsRepository['listFiltered']>;
   readonly restoreById: Mock<CustomPromptsRepository['restoreById']>;

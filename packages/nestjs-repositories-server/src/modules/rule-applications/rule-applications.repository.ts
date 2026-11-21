@@ -94,6 +94,46 @@ export class RuleApplicationsRepository extends BaseRepository<
   }
 
   /**
+   * @description Lists a rule's ledger rows across plans, newest first, each with its `plan`
+   * relation loaded so callers can show the plan title. The rule is not checked here: callers
+   * scope by owner first (see the tag-action-rules resolver).
+   */
+  async listForRule(ruleId: string): Promise<RuleApplication[]> {
+    return this.repository
+      .createQueryBuilder('application')
+      .leftJoinAndSelect('application.plan', 'plan')
+      .where('application.ruleId = :ruleId', { ruleId })
+      .orderBy('application.createdAt', 'DESC')
+      .getMany();
+  }
+
+  /**
+   * @description The first 'applied' ledger row of a LIVE attach-prompt rule on `planId` whose
+   * `details.promptId` is `promptId`, or null. The attach-prompt ledger row is the attachment
+   * record, so this answers "is that prompt already attached to the plan".
+   */
+  async findAppliedAttachPrompt(
+    planId: string,
+    promptId: string,
+  ): Promise<RuleApplication | null> {
+    return this.repository
+      .createQueryBuilder('application')
+      .innerJoin('application.rule', 'rule')
+      .where('application.planId = :planId', { planId })
+      .andWhere('application.state = :applied', {
+        applied: RULE_APPLICATION_STATES.APPLIED,
+      })
+      .andWhere('rule.actionType = :actionType', {
+        actionType: TAG_ACTION_TYPES.ATTACH_PROMPT,
+      })
+      .andWhere('rule.deletedAt IS NULL')
+      .andWhere("application.details->>'promptId' = :promptId", { promptId })
+      .orderBy('application.createdAt', 'ASC')
+      .addOrderBy('rule.id', 'ASC')
+      .getOne();
+  }
+
+  /**
    * @description The fingerprint check: the ledger row for (rule, plan) in any state, or null.
    */
   async findByRuleAndPlan(

@@ -30,6 +30,7 @@ export const plansFactory = Factory.define<Plan>(() => ({
   projectId: null,
   projectRelation: null,
   projectSortOrder: null,
+  repositoryId: null,
   runConfig: getDefaultPlanRunConfigStorage(),
   status: faker.helpers.arrayElement(['PENDING', 'IN_PROGRESS', 'COMPLETED']),
   summary: null,
