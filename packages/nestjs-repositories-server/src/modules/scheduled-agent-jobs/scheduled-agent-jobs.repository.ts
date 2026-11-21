@@ -9,6 +9,7 @@ import { Repository } from 'typeorm';
 import { ScheduledAgentJob } from './scheduled-agent-job.entity.ts';
 import type {
   CreateScheduledAgentJobInput,
+  ScheduledAgentJobCreatedVia,
   UpdateScheduledAgentJobInput,
 } from './scheduled-agent-jobs.types.ts';
 import { schedulerKeyForJob } from './scheduler-key/scheduler-key.utils.ts';
@@ -44,10 +45,17 @@ export class ScheduledAgentJobsRepository extends BaseRepository<
     input: CreateScheduledAgentJobInput,
   ): Promise<ScheduledAgentJob> {
     const draft = this.repository.create({
+      ...(input.approvalState === undefined
+        ? {}
+        : { approvalState: input.approvalState }),
+      ...(input.createdVia === undefined
+        ? {}
+        : { createdVia: input.createdVia }),
       cronPattern: input.cronPattern,
       cwd: input.cwd ?? null,
       driverId: input.driverId,
       enabled: input.enabled ?? true,
+      idempotencyKey: input.idempotencyKey ?? null,
       intervalMs: input.intervalMs ?? null,
       ...(input.misfirePolicy === undefined
         ? {}
@@ -74,6 +82,32 @@ export class ScheduledAgentJobsRepository extends BaseRepository<
     const saved = await this.repository.save(draft);
     saved.schedulerKey = schedulerKeyForJob(saved.id);
     return this.repository.save(saved);
+  }
+
+  /**
+   * @description How many live schedules an owner has, optionally only those created through one
+   * surface. Backs the per-owner caps on the agent path.
+   */
+  async countJobsForOwner(
+    ownerUserId: string,
+    createdVia?: ScheduledAgentJobCreatedVia,
+  ): Promise<number> {
+    return this.repository.count({
+      where: {
+        ownerUserId,
+        ...(createdVia === undefined ? {} : { createdVia }),
+      },
+    });
+  }
+
+  /**
+   * @description The live schedule an owner created under an idempotency key, or null.
+   */
+  async findJobByIdempotencyKey(
+    ownerUserId: string,
+    idempotencyKey: string,
+  ): Promise<ScheduledAgentJob | null> {
+    return this.findOne({ where: { idempotencyKey, ownerUserId } });
   }
 
   /**

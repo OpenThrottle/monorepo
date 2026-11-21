@@ -65,6 +65,7 @@ export const RUN_STATUS_LABEL: Record<string, string> = {
  */
 export const RUN_TRIGGER_LABEL: Record<string, string> = {
   resume: 'resume (after usage limit)',
+  webhook: 'webhook',
 };
 
 /**

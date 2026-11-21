@@ -18,6 +18,7 @@ export * from './tools/plan-runs.ts';
 export * from './tools/plan-task-tags.ts';
 export * from './tools/plans.ts';
 export * from './tools/projects.ts';
+export * from './tools/scheduled-jobs.ts';
 export * from './tools/search.ts';
 export * from './tools/skill-availability.ts';
 export * from './tools/skill-tags.ts';

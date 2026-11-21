@@ -17,15 +17,23 @@ import { Form, Link, redirect } from 'react-router';
 
 import type { Route } from '@/app/routes/+types/schedule.$jobId._index';
 import {
+  ApproveScheduledAgentJobDocument,
   DeleteScheduledAgentJobDocument,
   RunScheduledAgentJobNowDocument,
   ScheduledAgentJobDetailDocument,
   SetScheduledAgentJobEnabledDocument,
 } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
+import { ScheduleApprovalNotice } from '~/routing/schedule/components/ScheduleApprovalNotice';
 import { ScheduleDetailSummary } from '~/routing/schedule/components/ScheduleDetailSummary';
 import { ScheduleDetailTabs } from '~/routing/schedule/components/ScheduleDetailTabs';
 import { ScheduleRunNowButton } from '~/routing/schedule/components/ScheduleRunNowButton';
+import { ScheduleWebhookTab } from '~/routing/schedule/components/ScheduleWebhookTab';
+import { useScheduleWebhookReveal } from '~/routing/schedule/hooks/useScheduleWebhookReveal';
+import {
+  isWebhookIntent,
+  runWebhookIntent,
+} from '~/routing/schedule/utils/runWebhookIntent';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -43,18 +51,25 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
 export const loader = async (args: Route.LoaderArgs) => {
   const { jobId } = args.params;
 
-  const { scheduledAgentJob, scheduledAgentJobRuns } =
-    await executeGraphqlWithAuth(
-      args.request,
-      ScheduledAgentJobDetailDocument,
-      { id: jobId },
-    );
+  const {
+    scheduledAgentJob,
+    scheduledAgentJobRuns,
+    scheduledAgentJobWebhookTrigger,
+  } = await executeGraphqlWithAuth(
+    args.request,
+    ScheduledAgentJobDetailDocument,
+    { id: jobId },
+  );
 
   if (scheduledAgentJob == null) {
     throw new Response('Scheduled job not found', { status: 404 });
   }
 
-  return { job: scheduledAgentJob, runs: scheduledAgentJobRuns };
+  return {
+    job: scheduledAgentJob,
+    runs: scheduledAgentJobRuns,
+    webhookTrigger: scheduledAgentJobWebhookTrigger ?? null,
+  };
 };
 
 export const links: Route.LinksFunction = () => {
@@ -69,16 +84,42 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { actionData, loaderData, matches: _m, params: _p } = props;
-  const { job, runs } = loaderData;
+  const { job, runs, webhookTrigger } = loaderData;
 
   // Hooks
+  const reveal = useScheduleWebhookReveal({ actionData });
 
   // Setup
   const actionError = getActionError(actionData);
+  const hasWebhookError = actionData != null && 'webhookError' in actionData;
+  const webhookError = hasWebhookError ? actionData.webhookError : undefined;
+  const isPendingApproval = job.approvalState === 'pending';
 
   // Handlers
 
   // Markup
+  const enableToggle = (
+    <Form method="post">
+      <input name="intent" type="hidden" value="toggle-enabled" />
+      <input
+        name="enabled"
+        type="hidden"
+        value={job.enabled ? 'false' : 'true'}
+      />
+      <Button size="xs" type="submit" variant="outline">
+        {job.enabled ? 'Disable' : 'Enable'}
+      </Button>
+    </Form>
+  );
+  const webhookTab = (
+    <ScheduleWebhookTab
+      credentials={reveal.credentials}
+      error={webhookError}
+      jobId={job.id}
+      onDismissCredentials={reveal.dismiss}
+      trigger={webhookTrigger}
+    />
+  );
   const errorAlert = (
     <p className="text-destructive text-sm" role="alert">
       {actionError}
@@ -99,17 +140,7 @@ export default function Component(
                 <Link to="./edit">Edit</Link>
               </Button>
               <ScheduleRunNowButton jobId={job.id} />
-              <Form method="post">
-                <input name="intent" type="hidden" value="toggle-enabled" />
-                <input
-                  name="enabled"
-                  type="hidden"
-                  value={job.enabled ? 'false' : 'true'}
-                />
-                <Button size="xs" type="submit" variant="outline">
-                  {job.enabled ? 'Disable' : 'Enable'}
-                </Button>
-              </Form>
+              {isPendingApproval ? null : enableToggle}
               <Form method="post">
                 <input name="intent" type="hidden" value="delete" />
                 <Button size="xs" type="submit" variant="destructive">
@@ -127,10 +158,17 @@ export default function Component(
         <ScheduleDetailSummary job={job} />
       </div>
 
+      <ScheduleApprovalNotice job={job} />
+
       <div className="flex flex-col gap-6" data-testid="ScheduleDetail">
         {actionError ? errorAlert : null}
 
-        <ScheduleDetailTabs jobId={job.id} prompt={job.prompt} runs={runs} />
+        <ScheduleDetailTabs
+          jobId={job.id}
+          prompt={job.prompt}
+          runs={runs}
+          webhook={webhookTab}
+        />
       </div>
     </GlobalScreen>
   );
@@ -151,6 +189,19 @@ export const action = async (args: Route.ActionArgs) => {
         },
       );
       return { ok: true, runId: runScheduledAgentJobNow.id };
+    }
+
+    if (intent === 'approve') {
+      await executeGraphqlWithAuth(
+        args.request,
+        ApproveScheduledAgentJobDocument,
+        { id: jobId },
+      );
+      return { ok: true };
+    }
+
+    if (isWebhookIntent(intent)) {
+      return await runWebhookIntent(args.request, jobId, intent, form);
     }
 
     if (intent === 'toggle-enabled') {
@@ -176,9 +227,12 @@ export const action = async (args: Route.ActionArgs) => {
 
     return { error: 'Unknown action.' };
   } catch (error) {
-    return {
-      error: error instanceof Error ? error.message : 'Action failed.',
-    };
+    const message = error instanceof Error ? error.message : 'Action failed.';
+
+    // A webhook failure shows inside the webhook form, not in the page-level alert.
+    return typeof intent === 'string' && intent.startsWith('webhook-')
+      ? { webhookError: message }
+      : { error: message };
   }
 };
 

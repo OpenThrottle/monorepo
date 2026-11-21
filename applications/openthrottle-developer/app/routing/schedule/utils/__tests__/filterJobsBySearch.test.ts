@@ -8,6 +8,8 @@ const buildJob = (
   overrides: Partial<ScheduledJobCardFragment>,
 ): ScheduledJobCardFragment => {
   return {
+    approvalState: 'not_required',
+    createdVia: 'ui',
     cronPattern: '0 9 * * *',
     driverId: 'claude',
     enabled: true,

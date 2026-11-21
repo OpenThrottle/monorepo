@@ -5,11 +5,12 @@ import {
   TabsTrigger,
 } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleTabs } from '@openthrottle/react-router-ui';
-import { FileTextIcon, HistoryIcon } from 'lucide-react';
+import { FileTextIcon, HistoryIcon, WebhookIcon } from 'lucide-react';
 import * as React from 'react';
 
 import type { ScheduledJobRunRowFragment } from '~/__generated__/graphql';
 import { ScheduleRunsTable } from '~/routing/schedule/components/ScheduleRunsTable';
+import { SCHEDULE_WEBHOOK_COPY } from '~/routing/schedule/data/data.copy';
 import {
   parseScheduleDetailTab,
   SCHEDULE_DETAIL_TAB_SEARCH_PARAM,
@@ -22,19 +23,21 @@ export interface ScheduleDetailTabsProps {
   prompt: string;
   /** Run history for this job; empty renders the no-runs-yet state. */
   runs: ScheduledJobRunRowFragment[];
+  /** The Webhook tab's body; built by the route, which owns the trigger, action state and one-time reveal. */
+  webhook: React.ReactNode;
 }
 
 /**
  * @description Tabbed body for the /schedule/:jobId detail route: a `Prompt`
- * tab (the job's prompt) and a `History` tab (the run-history table, or the
- * empty state). Mirrors the skill detail route's OpenThrottleTabs + urlSync so
+ * tab (the job's prompt), a `History` tab (the run-history table, or the
+ * empty state) and a `Webhook` tab (trigger setup, passed in as `webhook`). Mirrors the skill detail route's OpenThrottleTabs + urlSync so
  * the active tab syncs to the `tab` search param; the shared
  * `useUrlSyncedTabValue` canonicalizes the default (`prompt`) out of the URL.
  */
 export const ScheduleDetailTabs = (
   props: ScheduleDetailTabsProps,
 ): React.ReactElement => {
-  const { jobId, prompt, runs } = props;
+  const { jobId, prompt, runs, webhook } = props;
 
   // Hooks
 
@@ -85,6 +88,14 @@ export const ScheduleDetailTabs = (
           <HistoryIcon />
           History
         </TabsTrigger>
+        <TabsTrigger
+          className="flex-0 cursor-pointer"
+          id="schedule-tab-webhook"
+          value="webhook"
+        >
+          <WebhookIcon />
+          {SCHEDULE_WEBHOOK_COPY.tabLabel}
+        </TabsTrigger>
       </TabsList>
 
       <TabsContent value="prompt">
@@ -99,6 +110,8 @@ export const ScheduleDetailTabs = (
           {hasRuns ? runsTable : noRuns}
         </div>
       </TabsContent>
+
+      <TabsContent value="webhook">{webhook}</TabsContent>
     </OpenThrottleTabs>
   );
 };

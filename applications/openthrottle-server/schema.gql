@@ -3899,6 +3899,16 @@ type ScheduledAgentJobObject {
   enabled: Boolean!
 
   """
+  Which surface created the job: ui (the Developer UI) or mcp (an agent through the MCP scheduling tools). Agent tools may edit or delete only mcp jobs.
+  """
+  createdVia: String!
+
+  """
+  not_required, pending (an agent-created job awaiting human approval; disabled until approved) or approved.
+  """
+  approvalState: String!
+
+  """
   Legacy explicit process cwd for the agent CLI, used only when repositoryCheckoutId is null; null then uses WORKSPACE_ROOT.
   """
   cwd: String @deprecated(reason: "Use repositoryCheckoutId to target a registered repository checkout; cwd is only consulted when no checkout is set.")
@@ -4079,6 +4089,133 @@ type ScheduledAgentJobRunStatsObject {
   Every run created inside the window, whatever its status — the "ran today" total.
   """
   windowTotalCount: Int!
+}
+
+"""
+One payload filter of a webhook trigger. `value` is set for equals, not_equals and prefix; `values` for in; neither for exists and not_exists.
+"""
+type ScheduledAgentJobWebhookFilterObject {
+  """equals | not_equals | in | exists | not_exists | prefix."""
+  op: String!
+
+  """
+  Dot path into the parsed payload (pull_request.base.ref), or header:<name> for an allow-listed header.
+  """
+  path: String!
+  value: String
+  values: [String!]
+}
+
+"""
+The webhook trigger of a scheduled agent job. Never carries the URL token or the HMAC secret.
+"""
+type ScheduledAgentJobWebhookTriggerObject {
+  id: ID!
+  scheduledAgentJobId: ID!
+
+  """
+  First 6 characters of the URL token, to tell tokens apart. The token itself is shown once, on create and rotate.
+  """
+  tokenPrefix: String!
+
+  """generic | github | custom."""
+  signaturePreset: String!
+
+  """Request header carrying the HMAC signature."""
+  signatureHeader: String!
+
+  """hex | base64."""
+  signatureEncoding: String!
+
+  """
+  Header carrying the signed unix-seconds timestamp; null when the preset has none (github).
+  """
+  timestampHeader: String
+
+  """
+  Replay window: a delivery is rejected unless |now - timestamp| is within this many seconds (30 to 900).
+  """
+  timestampToleranceSeconds: Int!
+
+  """
+  Header carrying the sender's delivery id (the dedupe key); null dedupes on the body hash.
+  """
+  deliveryIdHeader: String
+
+  """At most 16 filters, all of which must match."""
+  filters: [ScheduledAgentJobWebhookFilterObject!]!
+
+  """Leading-edge coalesce window in ms (0 = off, max 3600000)."""
+  coalesceWindowMs: Int!
+
+  """Most accepted deliveries per trailing minute (1 to 120)."""
+  rateLimitPerMinute: Int!
+
+  """Most webhook-triggered runs queued or running at once (1 to 10)."""
+  maxInFlight: Int!
+
+  """Gates ingress only; the job's own enabled flag gates its schedule."""
+  enabled: Boolean!
+  rotatedAt: DateTime
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""
+What create and rotate return: the trigger plus the URL path and HMAC secret, shown ONCE. They are not stored in recoverable form (the token is hashed, the secret encrypted) and no query returns them again.
+"""
+type ScheduledAgentJobWebhookTriggerCredentialsObject {
+  trigger: ScheduledAgentJobWebhookTriggerObject!
+
+  """
+  The ingress path including the token, /webhooks/agent-jobs/<token>. Prepend the server origin.
+  """
+  webhookPath: String!
+
+  """
+  The HMAC-SHA256 secret the sender signs with (the string itself is the key).
+  """
+  secret: String!
+}
+
+"""
+One request that matched a webhook trigger, accepted or rejected. Raw bodies are never stored.
+"""
+type ScheduledAgentJobWebhookDeliveryObject {
+  id: ID!
+  triggerId: ID!
+  scheduledAgentJobId: ID!
+
+  """
+  The run this delivery started (accepted) or was folded into (coalesced).
+  """
+  runId: ID
+
+  """
+  accepted | deduplicated | filtered | coalesced | rejected | rate_limited | queue_full.
+  """
+  status: String!
+
+  """
+  For a rejected delivery: bad_signature | stale_timestamp | missing_timestamp | invalid_json | unsupported_media_type | payload_too_large.
+  """
+  rejectReason: String
+
+  """The HTTP status the sender was answered with."""
+  httpStatus: Int!
+  dedupeKey: String
+  bodyBytes: Int!
+  bodySha256: String!
+
+  """JSON-serialized allow-listed request headers (never the signature)."""
+  headersJson: String!
+
+  """The exact prompt the run started with; null when none was rendered."""
+  renderedPrompt: String
+
+  """Zero-based index of the filter that excluded a filtered delivery."""
+  filterIndex: Int
+  receivedAt: DateTime!
 }
 
 type SearchChunk {
@@ -6380,6 +6517,11 @@ type Query {
   """
   myFeatureFlags: [FeatureFlagObject!]! @deprecated(reason: "Use evaluateFeatureFlags (public hydration; no flags:read). Auth remains enrichment for targeting.")
 
+  """
+  The calling user's own scheduled agent jobs, newest first (agent-created and human-created). Agent tools only; a service account lists its acting user's jobs.
+  """
+  scheduledAgentJobsAsAgent: [ScheduledAgentJobObject!]!
+
   """All scheduled agent jobs, newest first."""
   scheduledAgentJobs: [ScheduledAgentJobObject!]!
 
@@ -6401,6 +6543,16 @@ type Query {
   Aggregate run counts across ALL scheduled agent jobs: live in-flight totals plus terminal outcomes since `since` (default: 24h ago). no_op is counted separately and is NOT a failure.
   """
   scheduledAgentJobRunStats(since: DateTime): ScheduledAgentJobRunStatsObject!
+
+  """
+  The webhook trigger of a scheduled agent job, or null. Never returns the URL token or the secret, only tokenPrefix.
+  """
+  scheduledAgentJobWebhookTrigger(scheduledAgentJobId: ID!): ScheduledAgentJobWebhookTriggerObject
+
+  """
+  Recent webhook deliveries for a scheduled agent job, newest first, rejections included. Default 50, at most 200. Rows are kept for 7 days.
+  """
+  scheduledAgentJobWebhookDeliveries(scheduledAgentJobId: ID!, limit: Int): [ScheduledAgentJobWebhookDeliveryObject!]!
 
   """List all service accounts (admin, human only)."""
   serviceAccounts: [ServiceAccountObject!]!
@@ -7718,6 +7870,26 @@ type Mutation {
   deleteRolloutFlag(id: ID!): Boolean!
 
   """
+  Create a scheduled agent job on behalf of an agent. Always owned by the caller and marked created_via=mcp. Requires an idempotencyKey (a retry returns the existing job). Fails when the owner is at SCHEDULED_AGENT_JOBS_MAX_PER_OWNER jobs (default 25) or 10 agent-created jobs. With SCHEDULED_AGENT_JOBS_MCP_REQUIRE_APPROVAL=true the job is stored disabled and pending until a human approves it. A service account acts as its linked user; one with no acting user is refused.
+  """
+  createScheduledAgentJobAsAgent(input: CreateScheduledAgentJobAsAgentInputType!): ScheduledAgentJobObject!
+
+  """
+  Update a scheduled agent job that an agent created and the caller owns; human-created jobs are refused. A job awaiting approval cannot be enabled here.
+  """
+  updateScheduledAgentJobAsAgent(input: UpdateScheduledAgentJobAsAgentInputType!): ScheduledAgentJobObject!
+
+  """
+  Delete a scheduled agent job that an agent created and the caller owns; human-created jobs are refused. Returns whether a row was removed.
+  """
+  deleteScheduledAgentJobAsAgent(id: ID!): Boolean!
+
+  """
+  Enqueue an immediate run of one of the caller's own jobs (agent- or human-created). Refused while the job awaits approval.
+  """
+  runScheduledAgentJobNowAsAgent(id: ID!): ScheduledAgentJobRunObject!
+
+  """
   Create a scheduled agent job. Validates cron, driver id, model/endpoint capability, and settings.
   """
   createScheduledAgentJob(input: CreateScheduledAgentJobInputType!): ScheduledAgentJobObject!
@@ -7738,6 +7910,11 @@ type Mutation {
   setScheduledAgentJobEnabled(input: SetScheduledAgentJobEnabledInputType!): ScheduledAgentJobObject!
 
   """
+  Approve an agent-created scheduled job that is awaiting approval (owner only): marks it approved and enables it. The only way to arm a pending job.
+  """
+  approveScheduledAgentJob(id: ID!): ScheduledAgentJobObject!
+
+  """
   Enqueue an immediate one-off run (owner only); allowed even when the schedule is disabled.
   """
   runScheduledAgentJobNow(id: ID!): ScheduledAgentJobRunObject!
@@ -7746,6 +7923,26 @@ type Mutation {
   Request cancellation of an in-flight run (durable marker + best-effort in-process abort).
   """
   cancelScheduledAgentJobRun(runId: ID!): ScheduledAgentJobRunObject!
+
+  """
+  Create the webhook trigger of a scheduled agent job (owner only; one per job). Returns the URL path and the HMAC secret ONCE. Fails when WEBHOOK_SECRET_ENCRYPTION_KEY is not configured.
+  """
+  createScheduledAgentJobWebhookTrigger(input: CreateScheduledAgentJobWebhookTriggerInputType!): ScheduledAgentJobWebhookTriggerCredentialsObject!
+
+  """
+  Update a webhook trigger's configuration (owner only). The token and secret are untouched; omitted fields keep their value.
+  """
+  updateScheduledAgentJobWebhookTrigger(input: UpdateScheduledAgentJobWebhookTriggerInputType!): ScheduledAgentJobWebhookTriggerObject!
+
+  """
+  Rotate a webhook trigger (owner only): the token and secret are replaced together and the old URL stops working immediately. Returns the new URL path and secret ONCE.
+  """
+  rotateScheduledAgentJobWebhookTrigger(scheduledAgentJobId: ID!): ScheduledAgentJobWebhookTriggerCredentialsObject!
+
+  """
+  Delete a job's webhook trigger and its delivery log (owner only). Returns whether one existed.
+  """
+  deleteScheduledAgentJobWebhookTrigger(scheduledAgentJobId: ID!): Boolean!
 
   """Create a service account (admin, human only)."""
   createServiceAccount(input: CreateServiceAccountInput!): ServiceAccountObject!
@@ -9677,6 +9874,108 @@ input UpdateRolloutFlagInput {
   variations: [RolloutFlagVariationInput!]
 }
 
+input CreateScheduledAgentJobAsAgentInputType {
+  """Human-friendly schedule name."""
+  name: String!
+
+  """Prompt passed to the agent CLI."""
+  prompt: String!
+
+  """
+  Agent driver id (antigravity | claude | codex | cursor | grok | opencode).
+  """
+  driverId: String!
+
+  """Model preset; omit for the driver default."""
+  model: String
+
+  """How the schedule fires: cron (default), interval or once."""
+  scheduleKind: String
+
+  """
+  5- or 6-field cron pattern (may not fire every minute or sub-minute). Required when scheduleKind is cron (the default); ignored otherwise.
+  """
+  cronPattern: String
+
+  """
+  For scheduleKind interval: ms from the end of one run to the start of the next; at least 60000.
+  """
+  intervalMs: Int
+
+  """
+  For scheduleKind once: when to run, as ISO 8601 with an offset (e.g. 2026-11-03T09:00:00-08:00 or ...Z); must be in the future.
+  """
+  runAt: String
+
+  """IANA timezone; omit for UTC."""
+  timezone: String
+
+  """Per-run timeout override in ms; omit for the queue default."""
+  timeoutMs: Int
+
+  """Misfire policy for late fires: skip (default) or catch_up_once."""
+  misfirePolicy: String
+
+  """
+  How late (ms) a fire may start and still run; at least 60000. Omit for 10 minutes.
+  """
+  misfireThresholdMs: Int
+
+  """Whether the schedule starts enabled (default true)."""
+  enabled: Boolean
+
+  """
+  Caller-chosen key (1-200 characters) that makes a retried create safe: a second create with the same key returns the job the first one made instead of a duplicate. Unique per owner.
+  """
+  idempotencyKey: String!
+
+  """Registered repository checkout to run in; must belong to the caller."""
+  repositoryCheckoutId: ID!
+}
+
+input UpdateScheduledAgentJobAsAgentInputType {
+  """Schedule to update."""
+  id: ID!
+  name: String
+  prompt: String
+  driverId: String
+  model: String
+
+  """
+  How the schedule fires: cron, interval or once. Omit to keep the current kind.
+  """
+  scheduleKind: String
+  cronPattern: String
+
+  """
+  For scheduleKind interval: ms from the end of one run to the start of the next; at least 60000.
+  """
+  intervalMs: Int
+
+  """
+  For scheduleKind once: when to run, as ISO 8601 with an offset; a changed time must be in the future.
+  """
+  runAt: String
+  timezone: String
+  timeoutMs: Int
+
+  """Misfire policy for late fires: skip or catch_up_once."""
+  misfirePolicy: String
+
+  """How late (ms) a fire may start and still run; at least 60000."""
+  misfireThresholdMs: Int
+
+  """
+  Registered repository checkout to run in; must belong to the caller. Takes precedence over cwd.
+  """
+  repositoryCheckoutId: ID
+
+  """
+  Enable or disable the job. Cannot enable a job that is still awaiting human approval.
+  """
+  enabled: Boolean
+}
+
 input CreateScheduledAgentJobInputType {
   """Human-friendly schedule name."""
   name: String!
@@ -9788,6 +10087,109 @@ input UpdateScheduledAgentJobInputType {
 input SetScheduledAgentJobEnabledInputType {
   id: ID!
   enabled: Boolean!
+}
+
+input CreateScheduledAgentJobWebhookTriggerInputType {
+  scheduledAgentJobId: ID!
+
+  """
+  generic (default) | github | custom. generic and github fix their own headers; custom uses the ones given here.
+  """
+  signaturePreset: String
+
+  """custom only: the header carrying the signature."""
+  signatureHeader: String
+
+  """custom only: hex (default) | base64."""
+  signatureEncoding: String
+
+  """
+  custom only: the header carrying a signed unix-seconds timestamp; omit for none.
+  """
+  timestampHeader: String
+
+  """
+  custom only: the header carrying the sender's delivery id; omit to dedupe on the body hash.
+  """
+  deliveryIdHeader: String
+
+  """Replay window in seconds, 30 to 900 (default 300)."""
+  timestampToleranceSeconds: Int
+
+  """At most 16 filters, all of which must match."""
+  filters: [ScheduledAgentJobWebhookFilterInputType!]
+
+  """Leading-edge coalesce window in ms, 0 to 3600000 (default 0 = off)."""
+  coalesceWindowMs: Int
+
+  """Most accepted deliveries per minute, 1 to 120 (default 30)."""
+  rateLimitPerMinute: Int
+
+  """Most webhook-triggered runs in flight, 1 to 10 (default 3)."""
+  maxInFlight: Int
+  enabled: Boolean
+}
+
+input ScheduledAgentJobWebhookFilterInputType {
+  """
+  equals | not_equals | in | exists | not_exists | prefix. There is no regex op, by design.
+  """
+  op: String!
+
+  """
+  Dot path into the parsed payload, or header:<name> for an allow-listed header (e.g. header:x-github-event).
+  """
+  path: String!
+
+  """Value for equals, not_equals and prefix."""
+  value: String
+
+  """Values for in (1 to 32)."""
+  values: [String!]
+}
+
+"""
+Config-only update: every field is optional and an omitted field keeps its value. The token and secret are untouched (use rotate).
+"""
+input UpdateScheduledAgentJobWebhookTriggerInputType {
+  scheduledAgentJobId: ID!
+
+  """
+  generic (default) | github | custom. generic and github fix their own headers; custom uses the ones given here.
+  """
+  signaturePreset: String
+
+  """custom only: the header carrying the signature."""
+  signatureHeader: String
+
+  """custom only: hex (default) | base64."""
+  signatureEncoding: String
+
+  """
+  custom only: the header carrying a signed unix-seconds timestamp; omit for none.
+  """
+  timestampHeader: String
+
+  """
+  custom only: the header carrying the sender's delivery id; omit to dedupe on the body hash.
+  """
+  deliveryIdHeader: String
+
+  """Replay window in seconds, 30 to 900 (default 300)."""
+  timestampToleranceSeconds: Int
+
+  """At most 16 filters, all of which must match."""
+  filters: [ScheduledAgentJobWebhookFilterInputType!]
+
+  """Leading-edge coalesce window in ms, 0 to 3600000 (default 0 = off)."""
+  coalesceWindowMs: Int
+
+  """Most accepted deliveries per minute, 1 to 120 (default 30)."""
+  rateLimitPerMinute: Int
+
+  """Most webhook-triggered runs in flight, 1 to 10 (default 3)."""
+  maxInFlight: Int
+  enabled: Boolean
 }
 
 input CreateServiceAccountInput {

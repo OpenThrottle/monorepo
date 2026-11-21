@@ -100,3 +100,143 @@ export const SCHEDULE_ONBOARDING = {
   ],
   whatItIs: `A scheduled job runs an agent prompt automatically on a cron pattern — pick a driver, model, and cadence, and it fires on its own. Every run is recorded so you can review what happened.`,
 } satisfies GlobalFeatureOnboardingContent;
+
+/**
+ * @description The "Agent-created" marker and the approval gate. An `mcp` job came from an agent
+ * through the MCP scheduling tools; with approval required it is stored disabled until a person
+ * approves it, and Enable is refused by the server while it is pending.
+ */
+export const SCHEDULE_APPROVAL_COPY = {
+  agentCreatedBadge: `Agent-created`,
+  agentCreatedHint: `Created by an agent through the MCP scheduling tools.`,
+  approveAction: `Approve`,
+  approveError: `Could not approve the schedule.`,
+  approveSubmitting: `Approving…`,
+  awaitingBadge: `Awaiting approval`,
+  awaitingDescription: `An agent created this schedule. It stays disabled and cannot run until you approve it. Read the prompt first: approving enables it.`,
+  awaitingHeading: `Awaiting approval`,
+} as const;
+
+/**
+ * @description Webhook trigger setup on the schedule detail route, the one-time credential reveal, and
+ * the delivery log. The operator guidance condenses the threat model in
+ * docs/openthrottle/webhook-triggered-agent-jobs.md.
+ */
+export const SCHEDULE_WEBHOOK_COPY = {
+  coalesceHelp: `Leading edge: the first delivery runs and the ones inside the window after it are recorded as coalesced. 0 turns it off.`,
+  coalesceLabel: `Coalesce window (seconds)`,
+  copied: `Copied`,
+  copyAction: `Copy`,
+  createAction: `Create webhook`,
+  createError: `Could not create the webhook.`,
+  customDeliveryIdHeaderHelp: `The sender's unique id per delivery, used to drop duplicates for 7 days. Blank dedupes on the body hash.`,
+  customDeliveryIdHeaderLabel: `Delivery id header (optional)`,
+  customEncodingLabel: `Signature encoding`,
+  customSignatureHeaderLabel: `Signature header`,
+  customTimestampHeaderHelp: `A header carrying a unix-seconds timestamp that is part of the signed string. Blank means no timestamp.`,
+  customTimestampHeaderLabel: `Timestamp header (optional)`,
+  deleteAction: `Delete webhook`,
+  deleteConfirm: `Delete`,
+  deleteDescription: `The URL stops working and the delivery log for this job is deleted. This cannot be undone.`,
+  deleteTitle: `Delete this webhook?`,
+  deliveriesAction: `View delivery log`,
+  deliveriesBack: `Back to job`,
+  deliveriesColumnDedupeKey: `Dedupe key`,
+  deliveriesColumnHttp: `HTTP`,
+  deliveriesColumnPrompt: `Rendered prompt`,
+  deliveriesColumnReason: `Reason`,
+  deliveriesColumnReceived: `Received`,
+  deliveriesColumnRun: `Run`,
+  deliveriesColumnStatus: `Status`,
+  deliveriesDescription: `Every request that matched this job's webhook, accepted or rejected, newest first. Rows are kept for 7 days and raw bodies are never stored.`,
+  deliveriesEmpty: `No deliveries yet. Send a request to the webhook URL and it shows up here.`,
+  deliveriesFilterPrefix: `Filter`,
+  deliveriesHeading: `Webhook deliveries`,
+  deliveriesNoPrompt: `No prompt was rendered for this delivery.`,
+  deliveriesNoReason: `—`,
+  deliveriesPromptHide: `Hide prompt`,
+  deliveriesPromptShow: `Show prompt`,
+  deliveriesViewRun: `View run`,
+  disabledScheduleHint: `The job's own Enabled switch only gates its schedule. A job used only by its webhook can stay disabled.`,
+  enabledLabel: `Accept deliveries`,
+  filterAdd: `Add filter`,
+  filterCountError: `Use at most 16 filters.`,
+  filterExistsNote: `No value needed.`,
+  filterHelp: `All filters must match (AND), up to 16. A path is a dot path into the JSON payload (pull_request.base.ref) or header:<name> for an allowed header (header:x-github-event). There is no regex, by design.`,
+  filterInError: `An "is one of" filter needs 1 to 32 comma-separated values.`,
+  filterOpLabel: `Operator`,
+  filterPathLabel: `Path`,
+  filterRemove: `Remove filter`,
+  filterValueError: `Enter a value for each filter that compares one.`,
+  filterValueInHelp: `Comma-separated values, up to 32.`,
+  filterValueLabel: `Value`,
+  filtersHeading: `Filters`,
+  intro: `Let an outside system (GitHub, CI, a monitor, any HTTP client) fire this job by POSTing JSON to a private URL. The webhook body is rendered into the job's prompt so the agent knows what happened. Every delivery must be signed with HMAC-SHA256.`,
+  maxInFlightHelp: `Most webhook-triggered runs queued or running at once (1 to 10). Over it the sender gets 429 and retries later.`,
+  maxInFlightLabel: `Max in flight`,
+  presetLabel: `Signature preset`,
+  rateLimitHelp: `Most accepted deliveries in a trailing minute (1 to 120).`,
+  rateLimitLabel: `Rate limit (per minute)`,
+  revealCopyHint: `Copy these now.`,
+  revealDismiss: `I have copied them`,
+  revealHeading: `Webhook credentials`,
+  revealSecretLabel: `Signing secret`,
+  revealUrlLabel: `Webhook URL`,
+  revealWarning: `You won't see the URL or the secret again. They are not stored in a form that can be shown. If you lose them, rotate the webhook to get new ones.`,
+  rotateAction: `Rotate URL and secret`,
+  rotateConfirm: `Rotate now`,
+  rotateDescription: `The URL and the secret are replaced together, and the old URL stops working immediately. Update the sender straight away or its deliveries will be refused.`,
+  rotateTitle: `Rotate this webhook?`,
+  rotatedLabel: `Rotated`,
+  saveAction: `Save webhook`,
+  saveError: `Could not save the webhook.`,
+  setupHeading: `Webhook trigger`,
+  signatureHeaderError: `Enter the header that carries the signature.`,
+  statusDisabled: `Webhook off`,
+  statusEnabled: `Webhook on`,
+  tabLabel: `Webhook`,
+  threatHeading: `Before you turn this on`,
+  threatPoints: [
+    `The payload is untrusted text. A genuine, correctly signed GitHub delivery can still carry words a stranger wrote, such as an issue title. Prompt injection is mitigated, not solved.`,
+    `Point the job at a repository the agent may safely modify, and run it with the worktree setting so a bad run is disposable.`,
+    `Use filters to limit which events fire. Prefer prompts that use the payload only to locate work (a PR number, a branch name) over prompts that tell the agent to act on payload text.`,
+  ],
+  tokenPrefixLabel: `URL token starts with`,
+  toleranceHelp: `A delivery is rejected unless its signed timestamp is within this many seconds of now (30 to 900).`,
+  toleranceLabel: `Timestamp tolerance (seconds)`,
+  updateAction: `Save changes`,
+} as const;
+
+/**
+ * @description Signing instructions per preset: which header carries the signature, what is signed,
+ * and how replays are stopped. Shown beside the preset picker so the sender can be configured
+ * without reading the design doc.
+ */
+export const SCHEDULE_WEBHOOK_SIGNING_COPY = {
+  custom: {
+    heading: `Custom signing`,
+    steps: [
+      `Compute HMAC-SHA256 with the secret as the key.`,
+      `Send the digest, encoded as hex or base64, in the signature header you chose.`,
+      `Without a timestamp header, sign the raw request body bytes. With one, sign the timestamp, a dot, then the raw body: <timestamp>.<body>.`,
+      `Replays are stopped by the 7-day dedupe on the delivery id header, or the body hash when there is none.`,
+    ],
+  },
+  generic: {
+    heading: `OpenThrottle signing`,
+    steps: [
+      `Send a unix-seconds timestamp in the X-OT-Timestamp header.`,
+      `Sign the string <timestamp>.<raw body> with HMAC-SHA256, using the secret as the key.`,
+      `Send the lowercase hex digest in the X-OT-Signature header.`,
+      `Send a unique id per delivery in X-OT-Webhook-Id so retries are deduplicated for 7 days.`,
+    ],
+  },
+  github: {
+    heading: `GitHub signing`,
+    steps: [
+      `In the GitHub webhook settings, set the content type to application/json and paste the secret.`,
+      `GitHub signs the raw body with HMAC-SHA256 and sends sha256=<hex> in X-Hub-Signature-256.`,
+      `GitHub sends no timestamp, so replays are stopped by the 7-day dedupe on X-GitHub-Delivery.`,
+    ],
+  },
+} as const;

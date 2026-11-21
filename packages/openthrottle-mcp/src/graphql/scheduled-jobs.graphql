@@ -1,0 +1,59 @@
+# MCP-only GraphQL documents: scheduled agent jobs, through the agent mutations of openthrottle-server
+# (…AsAgent). Those mutations are the server-side guardrails (owner = caller, created_via=mcp, caps,
+# idempotency, optional human approval). See docs/openthrottle/webhook-triggered-agent-jobs.md,
+# "MCP scheduling tools".
+
+fragment ScheduledJob on ScheduledAgentJobObject {
+  approvalState
+  createdAt
+  createdVia
+  cronPattern
+  driverId
+  enabled
+  id
+  intervalMs
+  lastRunAt
+  misfirePolicy
+  model
+  name
+  nextRunAt
+  prompt
+  repositoryCheckoutId
+  runAt
+  scheduleKind
+  timeoutMs
+  timezone
+  updatedAt
+}
+
+query ListScheduledJobs {
+  scheduledAgentJobsAsAgent {
+    ...ScheduledJob
+  }
+}
+
+mutation CreateScheduledJob($input: CreateScheduledAgentJobAsAgentInputType!) {
+  createScheduledAgentJobAsAgent(input: $input) {
+    ...ScheduledJob
+  }
+}
+
+mutation UpdateScheduledJob($input: UpdateScheduledAgentJobAsAgentInputType!) {
+  updateScheduledAgentJobAsAgent(input: $input) {
+    ...ScheduledJob
+  }
+}
+
+mutation DeleteScheduledJob($id: ID!) {
+  deleteScheduledAgentJobAsAgent(id: $id)
+}
+
+mutation RunScheduledJobNow($id: ID!) {
+  runScheduledAgentJobNowAsAgent(id: $id) {
+    createdAt
+    id
+    scheduledAgentJobId
+    status
+    trigger
+  }
+}

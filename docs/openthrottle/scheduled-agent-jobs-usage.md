@@ -125,14 +125,34 @@ above. The run list shows a limited run as **Usage limited** with the reset time
 time and whether it resumes at that time or was not resumed automatically; a continuation's trigger
 reads **resume (after usage limit)**.
 
+## MCP tools
+
+An agent can schedule runs through the opt-in `scheduling` toolset of openthrottle-mcp (see
+[mcp-registration.md § Toolsets](./mcp-registration.md#toolsets)): `create_scheduled_job`,
+`list_scheduled_jobs`, `update_scheduled_job`, `delete_scheduled_job`, `run_scheduled_job_now`. They use
+the `…AsAgent` GraphQL operations, act as the calling user (a service-account token acts as its linked acting user; an unlinked one is
+refused) and target one of the user's own repository checkouts.
+
+- `create_scheduled_job` needs an `idempotencyKey`; retrying with the same key returns the existing job.
+- Each user may have at most `SCHEDULED_AGENT_JOBS_MAX_PER_OWNER` jobs (default 25), 10 of them created
+  by agents. Over the limit the create fails with a clear error.
+- Only jobs an agent created (shown as `createdVia: mcp`) can be updated or deleted by the tools; jobs
+  you made in the UI can only be listed and run.
+- With `SCHEDULED_AGENT_JOBS_MCP_REQUIRE_APPROVAL=true`, an agent-created job stays disabled
+  (`approvalState: pending`) until you approve it (`approveScheduledAgentJob`); it cannot be run before.
+- Agent tools cannot create or change webhook triggers, `cwd`, or custom endpoint settings.
+  Design and threat model: [webhook-triggered-agent-jobs.md](./webhook-triggered-agent-jobs.md#mcp-scheduling-tools-task-4-guardrails).
+
 ## Configuration (env)
 
-| Env                                | Default               | Purpose                                                                                                                                                                                                                                                                     |
-| ---------------------------------- | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `SCHEDULED_AGENT_JOBS_TIMEOUT_MS`  | `900000` (15m)        | Per-run timeout when a schedule sets none.                                                                                                                                                                                                                                  |
-| `SCHEDULED_AGENT_JOBS_CONCURRENCY` | `4`                   | How many **independent directories** may run at once. Runs sharing a directory serialise regardless — see [Concurrency](#concurrency).                                                                                                                                      |
-| `WORKSPACE_ROOT`                   | `process.cwd()`       | Default cwd for the agent CLI when a schedule targets no repository and sets no `cwd`.                                                                                                                                                                                      |
-| `OT_SCHEDULED_JOBS_OWNER`          | non-worktree checkout | Gates **boot** registration of every repeatable (this feature's boot reconcile plus the sweep/stats/ingestion/retention jobs) via one check: `OT_WORKTREE_DB=shared` is a non-owner, `isolated` and an absent marker own. Mutations always apply. `true`/`false` overrides. |
+| Env                                         | Default               | Purpose                                                                                                                                                                                                                                                                     |
+| ------------------------------------------- | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SCHEDULED_AGENT_JOBS_TIMEOUT_MS`           | `900000` (15m)        | Per-run timeout when a schedule sets none.                                                                                                                                                                                                                                  |
+| `SCHEDULED_AGENT_JOBS_CONCURRENCY`          | `4`                   | How many **independent directories** may run at once. Runs sharing a directory serialise regardless — see [Concurrency](#concurrency).                                                                                                                                      |
+| `WORKSPACE_ROOT`                            | `process.cwd()`       | Default cwd for the agent CLI when a schedule targets no repository and sets no `cwd`.                                                                                                                                                                                      |
+| `OT_SCHEDULED_JOBS_OWNER`                   | non-worktree checkout | Gates **boot** registration of every repeatable (this feature's boot reconcile plus the sweep/stats/ingestion/retention jobs) via one check: `OT_WORKTREE_DB=shared` is a non-owner, `isolated` and an absent marker own. Mutations always apply. `true`/`false` overrides. |
+| `SCHEDULED_AGENT_JOBS_MAX_PER_OWNER`        | `25`                  | Most live jobs one user may own, however created; 10 of them may be agent-created ([MCP tools](#mcp-tools)).                                                                                                                                                                |
+| `SCHEDULED_AGENT_JOBS_MCP_REQUIRE_APPROVAL` | `false`               | When `true`, an agent-created job is stored disabled until a person approves it.                                                                                                                                                                                            |
 
 ## Concurrency
 

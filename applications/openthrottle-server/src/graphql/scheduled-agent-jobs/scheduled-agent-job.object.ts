@@ -103,6 +103,16 @@ export class ScheduledAgentJobObject {
   enabled!: boolean;
 
   @Field(() => String, {
+    description: `Which surface created the job: ui (the Developer UI) or mcp (an agent through the MCP scheduling tools). Agent tools may edit or delete only mcp jobs.`,
+  })
+  createdVia!: string;
+
+  @Field(() => String, {
+    description: `not_required, pending (an agent-created job awaiting human approval; disabled until approved) or approved.`,
+  })
+  approvalState!: string;
+
+  @Field(() => String, {
     deprecationReason: `Use repositoryCheckoutId to target a registered repository checkout; cwd is only consulted when no checkout is set.`,
     description: `Legacy explicit process cwd for the agent CLI, used only when repositoryCheckoutId is null; null then uses WORKSPACE_ROOT.`,
     nullable: true,

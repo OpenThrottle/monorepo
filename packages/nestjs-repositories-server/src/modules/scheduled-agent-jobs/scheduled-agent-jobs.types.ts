@@ -8,6 +8,8 @@ import type { Mock } from 'vitest';
 
 import type { ScheduledAgentJob } from './scheduled-agent-job.entity.ts';
 import type {
+  SCHEDULED_AGENT_JOB_APPROVAL_STATES,
+  SCHEDULED_AGENT_JOB_CREATED_VIA,
   SCHEDULED_AGENT_JOB_MISFIRE_POLICIES,
   SCHEDULED_AGENT_JOB_SCHEDULE_KINDS,
 } from './scheduled-agent-jobs.constants.ts';
@@ -63,6 +65,20 @@ export type ScheduledAgentJobMisfirePolicy =
   (typeof SCHEDULED_AGENT_JOB_MISFIRE_POLICIES)[number];
 
 /**
+ * @description See {@link SCHEDULED_AGENT_JOB_CREATED_VIA}.
+ * @public
+ */
+export type ScheduledAgentJobCreatedVia =
+  (typeof SCHEDULED_AGENT_JOB_CREATED_VIA)[number];
+
+/**
+ * @description See {@link SCHEDULED_AGENT_JOB_APPROVAL_STATES}.
+ * @public
+ */
+export type ScheduledAgentJobApprovalState =
+  (typeof SCHEDULED_AGENT_JOB_APPROVAL_STATES)[number];
+
+/**
  * @description See {@link SCHEDULED_AGENT_JOB_SCHEDULE_KINDS}.
  * @public
  */
@@ -75,12 +91,15 @@ export type ScheduledAgentJobScheduleKind =
  */
 export type ScheduledAgentJobData = Pick<
   ScheduledAgentJob,
+  | 'approvalState'
   | 'createdAt'
+  | 'createdVia'
   | 'cronPattern'
   | 'cwd'
   | 'driverId'
   | 'enabled'
   | 'id'
+  | 'idempotencyKey'
   | 'intervalMs'
   | 'lastRunAt'
   | 'misfirePolicy'
@@ -106,11 +125,17 @@ export type ScheduledAgentJobData = Pick<
  * @public
  */
 export interface CreateScheduledAgentJobInput {
+  /** Omitted keeps the column default (`not_required`). */
+  readonly approvalState?: ScheduledAgentJobApprovalState;
+  /** Omitted keeps the column default (`ui`). */
+  readonly createdVia?: ScheduledAgentJobCreatedVia;
   /** Required for a `cron` schedule (the DB CHECK enforces it); null for interval and once. */
   readonly cronPattern: string | null;
   readonly cwd?: string | null;
   readonly driverId: ScheduledAgentJobDriverId;
   readonly enabled?: boolean;
+  /** Agent-path idempotency key; null or omitted for none. */
+  readonly idempotencyKey?: string | null;
   /** Required for an `interval` schedule; null otherwise. */
   readonly intervalMs?: number | null;
   /** Omitted keeps the column default (`skip`). */
@@ -136,7 +161,10 @@ export interface CreateScheduledAgentJobInput {
  * @public
  */
 export type UpdateScheduledAgentJobInput = Partial<
-  Omit<CreateScheduledAgentJobInput, 'ownerUserId'>
+  Omit<
+    CreateScheduledAgentJobInput,
+    'createdVia' | 'idempotencyKey' | 'ownerUserId'
+  >
 >;
 
 /**
@@ -144,8 +172,10 @@ export type UpdateScheduledAgentJobInput = Partial<
  * @public
  */
 export type ScheduledAgentJobsRepositoryMethod =
+  | 'countJobsForOwner'
   | 'createJob'
   | 'deleteJob'
+  | 'findJobByIdempotencyKey'
   | 'findJobById'
   | 'listEnabledJobs'
   | 'listJobs'

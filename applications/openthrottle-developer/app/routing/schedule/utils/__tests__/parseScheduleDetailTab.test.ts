@@ -10,7 +10,7 @@ describe('parseScheduleDetailTab', () => {
     expect(SCHEDULE_DETAIL_TAB_SEARCH_PARAM).toBe('tab');
   });
 
-  test.each(['history', 'prompt'] as const)('accepts %p', (raw) => {
+  test.each(['history', 'prompt', 'webhook'] as const)('accepts %p', (raw) => {
     expect(parseScheduleDetailTab(raw)).toBe(raw);
   });
 

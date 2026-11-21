@@ -39,6 +39,33 @@ fragment ScheduledJobDetail on ScheduledAgentJobObject {
   timeoutMs
 }
 
+# The webhook trigger as the UI shows it after setup. It never carries the URL
+# token or the secret; only `tokenPrefix` identifies the token.
+fragment ScheduleWebhookTrigger on ScheduledAgentJobWebhookTriggerObject {
+  coalesceWindowMs
+  createdAt
+  deliveryIdHeader
+  enabled
+  filters {
+    op
+    path
+    value
+    values
+  }
+  id
+  maxInFlight
+  rateLimitPerMinute
+  rotatedAt
+  scheduledAgentJobId
+  signatureEncoding
+  signatureHeader
+  signaturePreset
+  timestampHeader
+  timestampToleranceSeconds
+  tokenPrefix
+  updatedAt
+}
+
 query scheduledAgentJobDetail($id: ID!) {
   scheduledAgentJob(id: $id) {
     ...ScheduledJobDetail
@@ -46,6 +73,55 @@ query scheduledAgentJobDetail($id: ID!) {
   scheduledAgentJobRuns(scheduledAgentJobId: $id, limit: 50) {
     ...ScheduledJobRunRow
   }
+  scheduledAgentJobWebhookTrigger(scheduledAgentJobId: $id) {
+    ...ScheduleWebhookTrigger
+  }
+}
+
+mutation approveScheduledAgentJob($id: ID!) {
+  approveScheduledAgentJob(id: $id) {
+    ...ScheduledJobCard
+  }
+}
+
+# Create and rotate return the URL path and the secret exactly once. The route
+# action hands them to a one-time reveal; nothing stores them.
+mutation createScheduledAgentJobWebhookTrigger(
+  $input: CreateScheduledAgentJobWebhookTriggerInputType!
+) {
+  createScheduledAgentJobWebhookTrigger(input: $input) {
+    secret
+    trigger {
+      ...ScheduleWebhookTrigger
+    }
+    webhookPath
+  }
+}
+
+mutation rotateScheduledAgentJobWebhookTrigger($scheduledAgentJobId: ID!) {
+  rotateScheduledAgentJobWebhookTrigger(
+    scheduledAgentJobId: $scheduledAgentJobId
+  ) {
+    secret
+    trigger {
+      ...ScheduleWebhookTrigger
+    }
+    webhookPath
+  }
+}
+
+mutation updateScheduledAgentJobWebhookTrigger(
+  $input: UpdateScheduledAgentJobWebhookTriggerInputType!
+) {
+  updateScheduledAgentJobWebhookTrigger(input: $input) {
+    ...ScheduleWebhookTrigger
+  }
+}
+
+mutation deleteScheduledAgentJobWebhookTrigger($scheduledAgentJobId: ID!) {
+  deleteScheduledAgentJobWebhookTrigger(
+    scheduledAgentJobId: $scheduledAgentJobId
+  )
 }
 
 mutation updateScheduledAgentJob($input: UpdateScheduledAgentJobInputType!) {

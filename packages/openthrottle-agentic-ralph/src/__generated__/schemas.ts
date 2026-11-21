@@ -44,7 +44,9 @@ import {
   CreateQueueInput,
   CreateRoleInput,
   CreateRolloutFlagInput,
+  CreateScheduledAgentJobAsAgentInputType,
   CreateScheduledAgentJobInputType,
+  CreateScheduledAgentJobWebhookTriggerInputType,
   CreateServiceAccountCredentialInput,
   CreateServiceAccountInput,
   CreateTaskInput,
@@ -151,6 +153,7 @@ import {
   RolloutFlagKind,
   RolloutFlagVariationInput,
   SchedulePlanRunInput,
+  ScheduledAgentJobWebhookFilterInputType,
   SearchInput,
   SearchPlansInput,
   SetBlogPostTagsInput,
@@ -183,7 +186,9 @@ import {
   UpdateRepositoryInput,
   UpdateRoleInput,
   UpdateRolloutFlagInput,
+  UpdateScheduledAgentJobAsAgentInputType,
   UpdateScheduledAgentJobInputType,
+  UpdateScheduledAgentJobWebhookTriggerInputType,
   UpdateServiceAccountInput,
   UpdateTaskInput,
   UpdateUserInput,
@@ -739,6 +744,28 @@ export function CreateRolloutFlagInputSchema(): z.ZodObject<
   });
 }
 
+export function CreateScheduledAgentJobAsAgentInputTypeSchema(): z.ZodObject<
+  Properties<CreateScheduledAgentJobAsAgentInputType>
+> {
+  return z.object({
+    cronPattern: z.string().nullish(),
+    driverId: z.string().min(1),
+    enabled: z.boolean().nullish(),
+    idempotencyKey: z.string().min(1),
+    intervalMs: z.number().nullish(),
+    misfirePolicy: z.string().nullish(),
+    misfireThresholdMs: z.number().nullish(),
+    model: z.string().nullish(),
+    name: z.string().min(1),
+    prompt: z.string().min(1),
+    repositoryCheckoutId: z.string().min(1),
+    runAt: z.string().nullish(),
+    scheduleKind: z.string().nullish(),
+    timeoutMs: z.number().nullish(),
+    timezone: z.string().nullish(),
+  });
+}
+
 export function CreateScheduledAgentJobInputTypeSchema(): z.ZodObject<
   Properties<CreateScheduledAgentJobInputType>
 > {
@@ -759,6 +786,27 @@ export function CreateScheduledAgentJobInputTypeSchema(): z.ZodObject<
     settingsJson: z.string().nullish(),
     timeoutMs: z.number().nullish(),
     timezone: z.string().nullish(),
+  });
+}
+
+export function CreateScheduledAgentJobWebhookTriggerInputTypeSchema(): z.ZodObject<
+  Properties<CreateScheduledAgentJobWebhookTriggerInputType>
+> {
+  return z.object({
+    coalesceWindowMs: z.number().nullish(),
+    deliveryIdHeader: z.string().nullish(),
+    enabled: z.boolean().nullish(),
+    filters: z
+      .array(z.lazy(() => ScheduledAgentJobWebhookFilterInputTypeSchema()))
+      .nullish(),
+    maxInFlight: z.number().nullish(),
+    rateLimitPerMinute: z.number().nullish(),
+    scheduledAgentJobId: z.string().min(1),
+    signatureEncoding: z.string().nullish(),
+    signatureHeader: z.string().nullish(),
+    signaturePreset: z.string().nullish(),
+    timestampHeader: z.string().nullish(),
+    timestampToleranceSeconds: z.number().nullish(),
   });
 }
 
@@ -1793,6 +1841,17 @@ export function SchedulePlanRunInputSchema(): z.ZodObject<
   });
 }
 
+export function ScheduledAgentJobWebhookFilterInputTypeSchema(): z.ZodObject<
+  Properties<ScheduledAgentJobWebhookFilterInputType>
+> {
+  return z.object({
+    op: z.string().min(1),
+    path: z.string().min(1),
+    value: z.string().nullish(),
+    values: z.array(z.string().min(1)).nullish(),
+  });
+}
+
 export function SearchInputSchema(): z.ZodObject<Properties<SearchInput>> {
   return z.object({
     limit: z.number().nullish(),
@@ -2132,6 +2191,28 @@ export function UpdateRolloutFlagInputSchema(): z.ZodObject<
   });
 }
 
+export function UpdateScheduledAgentJobAsAgentInputTypeSchema(): z.ZodObject<
+  Properties<UpdateScheduledAgentJobAsAgentInputType>
+> {
+  return z.object({
+    cronPattern: z.string().nullish(),
+    driverId: z.string().nullish(),
+    enabled: z.boolean().nullish(),
+    id: z.string().min(1),
+    intervalMs: z.number().nullish(),
+    misfirePolicy: z.string().nullish(),
+    misfireThresholdMs: z.number().nullish(),
+    model: z.string().nullish(),
+    name: z.string().nullish(),
+    prompt: z.string().nullish(),
+    repositoryCheckoutId: z.string().nullish(),
+    runAt: z.string().nullish(),
+    scheduleKind: z.string().nullish(),
+    timeoutMs: z.number().nullish(),
+    timezone: z.string().nullish(),
+  });
+}
+
 export function UpdateScheduledAgentJobInputTypeSchema(): z.ZodObject<
   Properties<UpdateScheduledAgentJobInputType>
 > {
@@ -2152,6 +2233,27 @@ export function UpdateScheduledAgentJobInputTypeSchema(): z.ZodObject<
     settingsJson: z.string().nullish(),
     timeoutMs: z.number().nullish(),
     timezone: z.string().nullish(),
+  });
+}
+
+export function UpdateScheduledAgentJobWebhookTriggerInputTypeSchema(): z.ZodObject<
+  Properties<UpdateScheduledAgentJobWebhookTriggerInputType>
+> {
+  return z.object({
+    coalesceWindowMs: z.number().nullish(),
+    deliveryIdHeader: z.string().nullish(),
+    enabled: z.boolean().nullish(),
+    filters: z
+      .array(z.lazy(() => ScheduledAgentJobWebhookFilterInputTypeSchema()))
+      .nullish(),
+    maxInFlight: z.number().nullish(),
+    rateLimitPerMinute: z.number().nullish(),
+    scheduledAgentJobId: z.string().min(1),
+    signatureEncoding: z.string().nullish(),
+    signatureHeader: z.string().nullish(),
+    signaturePreset: z.string().nullish(),
+    timestampHeader: z.string().nullish(),
+    timestampToleranceSeconds: z.number().nullish(),
   });
 }
 

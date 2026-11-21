@@ -8,6 +8,7 @@ import { ScheduledAgentJobsRepository } from './scheduled-agent-jobs.repository.
 import { schedulerKeyForJob } from './scheduler-key/scheduler-key.utils.ts';
 
 type JobRepo = {
+  count: ReturnType<typeof vi.fn>;
   create: ReturnType<typeof vi.fn>;
   find: ReturnType<typeof vi.fn>;
   findOne: ReturnType<typeof vi.fn>;
@@ -24,6 +25,7 @@ describe('ScheduledAgentJobsRepository', () => {
 
   beforeEach(async () => {
     jobRepo = {
+      count: vi.fn().mockResolvedValue(0),
       create: vi.fn((input: Partial<ScheduledAgentJob>) => ({ ...input })),
       find: vi.fn().mockResolvedValue([]),
       findOne: vi.fn().mockResolvedValue(null),
@@ -49,7 +51,69 @@ describe('ScheduledAgentJobsRepository', () => {
     repository = moduleRef.get(ScheduledAgentJobsRepository);
   });
 
+  describe('countJobsForOwner', () => {
+    it('counts the owner’s live jobs', async () => {
+      jobRepo.count.mockResolvedValue(7);
+
+      await expect(repository.countJobsForOwner('user-1')).resolves.toBe(7);
+      expect(jobRepo.count).toHaveBeenCalledWith({
+        where: { ownerUserId: 'user-1' },
+      });
+    });
+
+    it('narrows to one creating surface', async () => {
+      await repository.countJobsForOwner('user-1', 'mcp');
+
+      expect(jobRepo.count).toHaveBeenCalledWith({
+        where: { createdVia: 'mcp', ownerUserId: 'user-1' },
+      });
+    });
+  });
+
+  describe('findJobByIdempotencyKey', () => {
+    it('looks a job up by owner and key', async () => {
+      await repository.findJobByIdempotencyKey('user-1', 'key-1');
+
+      expect(jobRepo.findOne).toHaveBeenCalledWith({
+        where: { idempotencyKey: 'key-1', ownerUserId: 'user-1' },
+      });
+    });
+  });
+
   describe('createJob', () => {
+    it('persists the agent guardrail columns when supplied', async () => {
+      await repository.createJob({
+        approvalState: 'pending',
+        createdVia: 'mcp',
+        cronPattern: '0 * * * *',
+        driverId: 'claude',
+        idempotencyKey: 'key-1',
+        name: 'n',
+        prompt: 'p',
+      });
+      const draft = jobRepo.create.mock.calls[0]?.[0];
+
+      expect(draft).toMatchObject({
+        approvalState: 'pending',
+        createdVia: 'mcp',
+        idempotencyKey: 'key-1',
+      });
+    });
+
+    it('leaves createdVia and approvalState to the column defaults, with no idempotency key', async () => {
+      await repository.createJob({
+        cronPattern: '0 * * * *',
+        driverId: 'claude',
+        name: 'n',
+        prompt: 'p',
+      });
+      const draft = jobRepo.create.mock.calls[0]?.[0];
+
+      expect('createdVia' in draft).toBe(false);
+      expect('approvalState' in draft).toBe(false);
+      expect(draft.idempotencyKey).toBeNull();
+    });
+
     it('saves the draft, then persists the id-derived scheduler key', async () => {
       const job = await repository.createJob({
         cronPattern: '0 * * * *',

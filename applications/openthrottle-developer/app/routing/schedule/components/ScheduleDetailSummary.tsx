@@ -2,12 +2,15 @@ import { Badge } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import type { ScheduledJobCardFragment } from '~/__generated__/graphql';
+import { ScheduleJobMarkers } from '~/routing/schedule/components/ScheduleJobMarkers';
 import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
 import { describeScheduleCadence } from '~/routing/schedule/utils/describeScheduleCadence';
 
 export interface ScheduleDetailSummaryProps {
   job: Pick<
     ScheduledJobCardFragment,
+    | 'approvalState'
+    | 'createdVia'
     | 'cronPattern'
     | 'driverId'
     | 'intervalMs'
@@ -49,6 +52,7 @@ export const ScheduleDetailSummary = (
         <p className="text-muted-foreground text-sm">
           {describeScheduleCadence(job)}
         </p>
+        <ScheduleJobMarkers job={job} />
       </div>
       <p className="text-muted-foreground text-sm">
         {SCHEDULE_COPY.repositoryColumnLabel}:{' '}

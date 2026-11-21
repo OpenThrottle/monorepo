@@ -34,6 +34,8 @@ import { RepositoryCheckoutsModule } from './modules/repository-checkouts/reposi
 import { RolesModule } from './modules/roles/roles.module.ts';
 import { RuleApplicationsModule } from './modules/rule-applications/rule-applications.module.ts';
 import { ScheduledAgentJobRunsModule } from './modules/scheduled-agent-job-runs/scheduled-agent-job-runs.module.ts';
+import { ScheduledAgentJobWebhookDeliveriesModule } from './modules/scheduled-agent-job-webhook-deliveries/scheduled-agent-job-webhook-deliveries.module.ts';
+import { ScheduledAgentJobWebhookTriggersModule } from './modules/scheduled-agent-job-webhook-triggers/scheduled-agent-job-webhook-triggers.module.ts';
 import { ScheduledAgentJobsModule } from './modules/scheduled-agent-jobs/scheduled-agent-jobs.module.ts';
 import { ServiceAccountCredentialsModule } from './modules/service-account-credentials/service-account-credentials.module.ts';
 import { ServiceAccountsModule } from './modules/service-accounts/service-accounts.module.ts';
@@ -102,6 +104,8 @@ import { WorktreeRemovalsModule } from './modules/worktree-removals/worktree-rem
     RolesModule,
     RuleApplicationsModule,
     ScheduledAgentJobRunsModule,
+    ScheduledAgentJobWebhookDeliveriesModule,
+    ScheduledAgentJobWebhookTriggersModule,
     ScheduledAgentJobsModule,
     ServiceAccountCredentialsModule,
     ServiceAccountsModule,
@@ -161,6 +165,8 @@ import { WorktreeRemovalsModule } from './modules/worktree-removals/worktree-rem
     RolesModule,
     RuleApplicationsModule,
     ScheduledAgentJobRunsModule,
+    ScheduledAgentJobWebhookDeliveriesModule,
+    ScheduledAgentJobWebhookTriggersModule,
     ScheduledAgentJobsModule,
     ServiceAccountCredentialsModule,
     ServiceAccountsModule,

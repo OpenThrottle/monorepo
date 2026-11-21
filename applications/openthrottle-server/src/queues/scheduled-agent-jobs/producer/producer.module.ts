@@ -7,6 +7,7 @@ import { ScheduledAgentJobRunsModule } from '@openthrottle/nestjs-repositories-s
 
 import { ScheduledAgentJobCheckoutPathModule } from '../../../services/scheduled-agent-job-checkout-path/scheduled-agent-job-checkout-path.module.ts';
 import { ScheduledAgentJobCancellationService } from '../cancellation/cancellation.service.ts';
+import { ScheduledAgentJobRunEnqueueService } from '../run-enqueue/run-enqueue.service.ts';
 import { SCHEDULED_AGENT_JOBS_QUEUE_NAME } from '../scheduled-agent-jobs.constants.ts';
 import { ScheduledAgentJobSchedulerService } from '../scheduler/scheduler.service.ts';
 
@@ -23,6 +24,7 @@ import { ScheduledAgentJobSchedulerService } from '../scheduler/scheduler.servic
   exports: [
     BullModule,
     ScheduledAgentJobCancellationService,
+    ScheduledAgentJobRunEnqueueService,
     ScheduledAgentJobSchedulerService,
   ],
   imports: [
@@ -36,6 +38,7 @@ import { ScheduledAgentJobSchedulerService } from '../scheduler/scheduler.servic
   ],
   providers: [
     ScheduledAgentJobCancellationService,
+    ScheduledAgentJobRunEnqueueService,
     ScheduledAgentJobSchedulerService,
   ],
 })

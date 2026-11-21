@@ -7,7 +7,7 @@
  */
 
 /** Valid tab keys for the scheduled-job detail page. */
-export type ScheduleDetailTab = 'history' | 'prompt';
+export type ScheduleDetailTab = 'history' | 'prompt' | 'webhook';
 
 /** Search param for the active tab on schedule detail. Omitted when `prompt`. */
 export const SCHEDULE_DETAIL_TAB_SEARCH_PARAM = 'tab';
@@ -15,6 +15,7 @@ export const SCHEDULE_DETAIL_TAB_SEARCH_PARAM = 'tab';
 const SCHEDULE_DETAIL_TAB_VALUES: readonly ScheduleDetailTab[] = [
   'history',
   'prompt',
+  'webhook',
 ];
 
 const isScheduleDetailTab = (raw: string): raw is ScheduleDetailTab => {

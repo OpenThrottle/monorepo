@@ -99,6 +99,7 @@ import { UsersGraphqlModule } from './graphql/users/users.module.ts';
 import { WorkLedgerGraphqlModule } from './graphql/work-ledger/work-ledger.module.ts';
 import { WorkspaceSettingsGraphqlModule } from './graphql/workspace-settings/workspace-settings.module.ts';
 import { MetricsModule } from './metrics/metrics.module.ts';
+import { AgentJobWebhooksModule } from './modules/agent-job-webhooks/agent-job-webhooks.module.ts';
 import { CspReportsModule } from './modules/csp-reports/csp-reports.module.ts';
 import { DevelopmentModule } from './modules/development/development.module.ts';
 import { isDevelopmentGraphqlEnabled } from './modules/development/development.utils.ts';
@@ -269,7 +270,7 @@ export const buildImports = (role: ProcessRole): AppModuleImports => {
   }
 
   if (isApiLike) {
-    imports.push(GeneratorsModule, McpDeveloperModule);
+    imports.push(AgentJobWebhooksModule, GeneratorsModule, McpDeveloperModule);
   }
 
   if (isWorkerLike) {

@@ -123,6 +123,8 @@ const syncSecretsFromSource = (): void => {
     for (const key of [
       'OPENTHROTTLE_MCP_AUTH_TOKEN',
       'OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN',
+      // Shares the primary's database, so it must share the key that encrypted its webhook secrets.
+      'WEBHOOK_SECRET_ENCRYPTION_KEY',
     ]) {
       // prettier-ignore
       const value = firstEnvMatch(fromContents, key);

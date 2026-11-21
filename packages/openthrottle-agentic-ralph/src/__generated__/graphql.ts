@@ -1314,6 +1314,39 @@ export type CreateRolloutFlagInput = {
   variations?: InputMaybe<Array<RolloutFlagVariationInput>>;
 };
 
+export type CreateScheduledAgentJobAsAgentInputType = {
+  /** 5- or 6-field cron pattern (may not fire every minute or sub-minute). Required when scheduleKind is cron (the default); ignored otherwise. */
+  cronPattern?: InputMaybe<Scalars['String']['input']>;
+  /** Agent driver id (antigravity | claude | codex | cursor | grok | opencode). */
+  driverId: Scalars['String']['input'];
+  /** Whether the schedule starts enabled (default true). */
+  enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Caller-chosen key (1-200 characters) that makes a retried create safe: a second create with the same key returns the job the first one made instead of a duplicate. Unique per owner. */
+  idempotencyKey: Scalars['String']['input'];
+  /** For scheduleKind interval: ms from the end of one run to the start of the next; at least 60000. */
+  intervalMs?: InputMaybe<Scalars['Int']['input']>;
+  /** Misfire policy for late fires: skip (default) or catch_up_once. */
+  misfirePolicy?: InputMaybe<Scalars['String']['input']>;
+  /** How late (ms) a fire may start and still run; at least 60000. Omit for 10 minutes. */
+  misfireThresholdMs?: InputMaybe<Scalars['Int']['input']>;
+  /** Model preset; omit for the driver default. */
+  model?: InputMaybe<Scalars['String']['input']>;
+  /** Human-friendly schedule name. */
+  name: Scalars['String']['input'];
+  /** Prompt passed to the agent CLI. */
+  prompt: Scalars['String']['input'];
+  /** Registered repository checkout to run in; must belong to the caller. */
+  repositoryCheckoutId: Scalars['ID']['input'];
+  /** For scheduleKind once: when to run, as ISO 8601 with an offset (e.g. 2026-11-03T09:00:00-08:00 or ...Z); must be in the future. */
+  runAt?: InputMaybe<Scalars['String']['input']>;
+  /** How the schedule fires: cron (default), interval or once. */
+  scheduleKind?: InputMaybe<Scalars['String']['input']>;
+  /** Per-run timeout override in ms; omit for the queue default. */
+  timeoutMs?: InputMaybe<Scalars['Int']['input']>;
+  /** IANA timezone; omit for UTC. */
+  timezone?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type CreateScheduledAgentJobInputType = {
   /** 5- or 6-field cron pattern (may not fire every minute or sub-minute). Required when scheduleKind is cron (the default); ignored otherwise. */
   cronPattern?: InputMaybe<Scalars['String']['input']>;
@@ -1350,6 +1383,31 @@ export type CreateScheduledAgentJobInputType = {
   timeoutMs?: InputMaybe<Scalars['Int']['input']>;
   /** IANA timezone; omit for UTC. */
   timezone?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type CreateScheduledAgentJobWebhookTriggerInputType = {
+  /** Leading-edge coalesce window in ms, 0 to 3600000 (default 0 = off). */
+  coalesceWindowMs?: InputMaybe<Scalars['Int']['input']>;
+  /** custom only: the header carrying the sender's delivery id; omit to dedupe on the body hash. */
+  deliveryIdHeader?: InputMaybe<Scalars['String']['input']>;
+  enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  /** At most 16 filters, all of which must match. */
+  filters?: InputMaybe<Array<ScheduledAgentJobWebhookFilterInputType>>;
+  /** Most webhook-triggered runs in flight, 1 to 10 (default 3). */
+  maxInFlight?: InputMaybe<Scalars['Int']['input']>;
+  /** Most accepted deliveries per minute, 1 to 120 (default 30). */
+  rateLimitPerMinute?: InputMaybe<Scalars['Int']['input']>;
+  scheduledAgentJobId: Scalars['ID']['input'];
+  /** custom only: hex (default) | base64. */
+  signatureEncoding?: InputMaybe<Scalars['String']['input']>;
+  /** custom only: the header carrying the signature. */
+  signatureHeader?: InputMaybe<Scalars['String']['input']>;
+  /** generic (default) | github | custom. generic and github fix their own headers; custom uses the ones given here. */
+  signaturePreset?: InputMaybe<Scalars['String']['input']>;
+  /** custom only: the header carrying a signed unix-seconds timestamp; omit for none. */
+  timestampHeader?: InputMaybe<Scalars['String']['input']>;
+  /** Replay window in seconds, 30 to 900 (default 300). */
+  timestampToleranceSeconds?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type CreateServiceAccountCredentialInput = {
@@ -2783,6 +2841,8 @@ export type Mutation = {
   appendPlanOutput: PlanOutputStreamChunkObject;
   /** Apply enabled editor configuration (MCP, skills paths, rules dirs) to linked local repositories. */
   applyWorkspaceEditorConfiguration: ApplyWorkspaceEditorConfigurationResultObject;
+  /** Approve an agent-created scheduled job that is awaiting approval (owner only): marks it approved and enables it. The only way to arm a pending job. */
+  approveScheduledAgentJob: ScheduledAgentJobObject;
   /** Archive an owned agent conversation (no hard delete in v1). */
   archiveAgentConversation: AgentConversationObject;
   /** Archive a blog post. It stops being publicly visible; publishedAt is kept. Returns BlogPostNotFoundError for an unknown post. */
@@ -2840,6 +2900,10 @@ export type Mutation = {
   createRolloutFlag: RolloutFlagObject;
   /** Create a scheduled agent job. Validates cron, driver id, model/endpoint capability, and settings. */
   createScheduledAgentJob: ScheduledAgentJobObject;
+  /** Create a scheduled agent job on behalf of an agent. Always owned by the caller and marked created_via=mcp. Requires an idempotencyKey (a retry returns the existing job). Fails when the owner is at SCHEDULED_AGENT_JOBS_MAX_PER_OWNER jobs (default 25) or 10 agent-created jobs. With SCHEDULED_AGENT_JOBS_MCP_REQUIRE_APPROVAL=true the job is stored disabled and pending until a human approves it. A service account acts as its linked user; one with no acting user is refused. */
+  createScheduledAgentJobAsAgent: ScheduledAgentJobObject;
+  /** Create the webhook trigger of a scheduled agent job (owner only; one per job). Returns the URL path and the HMAC secret ONCE. Fails when WEBHOOK_SECRET_ENCRYPTION_KEY is not configured. */
+  createScheduledAgentJobWebhookTrigger: ScheduledAgentJobWebhookTriggerCredentialsObject;
   /** Create a service account (admin, human only). */
   createServiceAccount: ServiceAccountObject;
   /** Create a credential; returns plaintext token once (admin, human only). */
@@ -2879,6 +2943,10 @@ export type Mutation = {
   deleteRolloutFlag: Scalars['Boolean']['output'];
   /** Delete a scheduled agent job and its scheduler (owner only). Returns whether a row was removed. */
   deleteScheduledAgentJob: Scalars['Boolean']['output'];
+  /** Delete a scheduled agent job that an agent created and the caller owns; human-created jobs are refused. Returns whether a row was removed. */
+  deleteScheduledAgentJobAsAgent: Scalars['Boolean']['output'];
+  /** Delete a job's webhook trigger and its delivery log (owner only). Returns whether one existed. */
+  deleteScheduledAgentJobWebhookTrigger: Scalars['Boolean']['output'];
   /** Delete a project's rule set (cascading its rules). Returns false when the project had no rule set. */
   deleteSkillAvailabilityRuleSet: Scalars['Boolean']['output'];
   /** Soft delete a tag→action rule: it stops evaluating, and its ledger rows are kept but no longer listed by ruleApplications. Returns false when absent. */
@@ -3027,8 +3095,12 @@ export type Mutation = {
   retryJob: RetryJobResultObject;
   /** Revoke a service account credential (admin, human only). */
   revokeServiceAccountCredential: Scalars['Boolean']['output'];
+  /** Rotate a webhook trigger (owner only): the token and secret are replaced together and the old URL stops working immediately. Returns the new URL path and secret ONCE. */
+  rotateScheduledAgentJobWebhookTrigger: ScheduledAgentJobWebhookTriggerCredentialsObject;
   /** Enqueue an immediate one-off run (owner only); allowed even when the schedule is disabled. */
   runScheduledAgentJobNow: ScheduledAgentJobRunObject;
+  /** Enqueue an immediate run of one of the caller's own jobs (agent- or human-created). Refused while the job awaits approval. */
+  runScheduledAgentJobNowAsAgent: ScheduledAgentJobRunObject;
   /** Schedule a plan run for a later instant: the enqueuePlanRun input plus scheduledFor. Records a SCHEDULED plan_runs row with a frozen run config snapshot and a delayed job that starts it. scheduledFor must be in the future and within 30 days (SCHEDULED_PLAN_RUN_MAX_HORIZON_DAYS). Does not change the plan or task statuses (the plan stays as it is until the run fires). Cancel with cancelPlanRun (pass planRunId to cancel just this run). */
   schedulePlanRun: SchedulePlanRunResultObject;
   /** Relay one ~250ms chunk of base64-encoded 16kHz mono Int16 PCM to the session's WhisperLive connection. Executed over the same authenticated graphql-ws socket as the subscription. Returns false (no throw) for unauthenticated, unknown, foreign, or already-stopping sessions. */
@@ -3103,6 +3175,10 @@ export type Mutation = {
   updateRolloutFlag?: Maybe<RolloutFlagObject>;
   /** Update a scheduled agent job (owner only). Re-projects the BullMQ scheduler. */
   updateScheduledAgentJob: ScheduledAgentJobObject;
+  /** Update a scheduled agent job that an agent created and the caller owns; human-created jobs are refused. A job awaiting approval cannot be enabled here. */
+  updateScheduledAgentJobAsAgent: ScheduledAgentJobObject;
+  /** Update a webhook trigger's configuration (owner only). The token and secret are untouched; omitted fields keep their value. */
+  updateScheduledAgentJobWebhookTrigger: ScheduledAgentJobWebhookTriggerObject;
   /** Update a service account (admin, human only). */
   updateServiceAccount?: Maybe<ServiceAccountObject>;
   /** Replace a rule's tag/slug lists and environment by rule id. Tag references are validated against the caller's skill-tag vocabulary. */
@@ -3192,6 +3268,10 @@ export type MutationAppendPlanOutputArgs = {
 
 export type MutationApplyWorkspaceEditorConfigurationArgs = {
   input?: InputMaybe<ApplyWorkspaceEditorConfigurationInput>;
+};
+
+export type MutationApproveScheduledAgentJobArgs = {
+  id: Scalars['ID']['input'];
 };
 
 export type MutationArchiveAgentConversationArgs = {
@@ -3310,6 +3390,14 @@ export type MutationCreateScheduledAgentJobArgs = {
   input: CreateScheduledAgentJobInputType;
 };
 
+export type MutationCreateScheduledAgentJobAsAgentArgs = {
+  input: CreateScheduledAgentJobAsAgentInputType;
+};
+
+export type MutationCreateScheduledAgentJobWebhookTriggerArgs = {
+  input: CreateScheduledAgentJobWebhookTriggerInputType;
+};
+
 export type MutationCreateServiceAccountArgs = {
   input: CreateServiceAccountInput;
 };
@@ -3380,6 +3468,14 @@ export type MutationDeleteRolloutFlagArgs = {
 
 export type MutationDeleteScheduledAgentJobArgs = {
   id: Scalars['ID']['input'];
+};
+
+export type MutationDeleteScheduledAgentJobAsAgentArgs = {
+  id: Scalars['ID']['input'];
+};
+
+export type MutationDeleteScheduledAgentJobWebhookTriggerArgs = {
+  scheduledAgentJobId: Scalars['ID']['input'];
 };
 
 export type MutationDeleteSkillAvailabilityRuleSetArgs = {
@@ -3660,7 +3756,15 @@ export type MutationRevokeServiceAccountCredentialArgs = {
   credentialId: Scalars['ID']['input'];
 };
 
+export type MutationRotateScheduledAgentJobWebhookTriggerArgs = {
+  scheduledAgentJobId: Scalars['ID']['input'];
+};
+
 export type MutationRunScheduledAgentJobNowArgs = {
+  id: Scalars['ID']['input'];
+};
+
+export type MutationRunScheduledAgentJobNowAsAgentArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -3799,6 +3903,14 @@ export type MutationUpdateRolloutFlagArgs = {
 
 export type MutationUpdateScheduledAgentJobArgs = {
   input: UpdateScheduledAgentJobInputType;
+};
+
+export type MutationUpdateScheduledAgentJobAsAgentArgs = {
+  input: UpdateScheduledAgentJobAsAgentInputType;
+};
+
+export type MutationUpdateScheduledAgentJobWebhookTriggerArgs = {
+  input: UpdateScheduledAgentJobWebhookTriggerInputType;
 };
 
 export type MutationUpdateServiceAccountArgs = {
@@ -4770,8 +4882,14 @@ export type Query = {
   scheduledAgentJobRuns: Array<ScheduledAgentJobRunObject>;
   /** Every run that has not reached a terminal status yet — queued or running — across ALL scheduled agent jobs, oldest-first so the longest-running reads first. Capped; use scheduledAgentJobRuns for one job's history. */
   scheduledAgentJobRunsInFlight: Array<ScheduledAgentJobRunObject>;
+  /** Recent webhook deliveries for a scheduled agent job, newest first, rejections included. Default 50, at most 200. Rows are kept for 7 days. */
+  scheduledAgentJobWebhookDeliveries: Array<ScheduledAgentJobWebhookDeliveryObject>;
+  /** The webhook trigger of a scheduled agent job, or null. Never returns the URL token or the secret, only tokenPrefix. */
+  scheduledAgentJobWebhookTrigger?: Maybe<ScheduledAgentJobWebhookTriggerObject>;
   /** All scheduled agent jobs, newest first. */
   scheduledAgentJobs: Array<ScheduledAgentJobObject>;
+  /** The calling user's own scheduled agent jobs, newest first (agent-created and human-created). Agent tools only; a service account lists its acting user's jobs. */
+  scheduledAgentJobsAsAgent: Array<ScheduledAgentJobObject>;
   /** Search over plans, tasks and documentation. By default hybrid: vector similarity (the server embedder, local nomic-embed-text-v1.5 by default) and Postgres full-text search run together and merge by reciprocal rank fusion, so exact identifiers still surface. Pass mode "semantic" for the vector ranking alone. When the embedder is unavailable or nothing is embedded yet, answers with full-text search only — see mode and reason. */
   search: SearchResult;
   /** Semantic search over agent-asset (custom_prompt) embeddings. Embeds the query and returns ranked, de-duped assets (skills, rules, personas by default) using the server embedder (local nomic-embed-text-v1.5 by default); when it is unavailable or nothing is embedded yet, answers with Postgres full-text search instead — see mode and reason. */
@@ -5219,6 +5337,15 @@ export type QueryScheduledAgentJobRunsArgs = {
 
 export type QueryScheduledAgentJobRunsInFlightArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type QueryScheduledAgentJobWebhookDeliveriesArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  scheduledAgentJobId: Scalars['ID']['input'];
+};
+
+export type QueryScheduledAgentJobWebhookTriggerArgs = {
+  scheduledAgentJobId: Scalars['ID']['input'];
 };
 
 export type QuerySearchArgs = {
@@ -6376,7 +6503,11 @@ export type SchedulePlanRunResultObject = {
 /** A user-defined scheduled agent job: a prompt run with a driver/model/settings on a cron, interval or run-once schedule via one shared BullMQ queue. */
 export type ScheduledAgentJobObject = {
   __typename?: 'ScheduledAgentJobObject';
+  /** not_required, pending (an agent-created job awaiting human approval; disabled until approved) or approved. */
+  approvalState: Scalars['String']['output'];
   createdAt: Scalars['DateTime']['output'];
+  /** Which surface created the job: ui (the Developer UI) or mcp (an agent through the MCP scheduling tools). Agent tools may edit or delete only mcp jobs. */
+  createdVia: Scalars['String']['output'];
   /** 5- or 6-field cron pattern for a cron schedule; null for interval and once schedules. */
   cronPattern?: Maybe<Scalars['String']['output']>;
   /**
@@ -6513,6 +6644,98 @@ export type ScheduledAgentJobRunStatsObject = {
   usageLimitedCount: Scalars['Int']['output'];
   /** Every run created inside the window, whatever its status — the "ran today" total. */
   windowTotalCount: Scalars['Int']['output'];
+};
+
+/** One request that matched a webhook trigger, accepted or rejected. Raw bodies are never stored. */
+export type ScheduledAgentJobWebhookDeliveryObject = {
+  __typename?: 'ScheduledAgentJobWebhookDeliveryObject';
+  bodyBytes: Scalars['Int']['output'];
+  bodySha256: Scalars['String']['output'];
+  dedupeKey?: Maybe<Scalars['String']['output']>;
+  /** Zero-based index of the filter that excluded a filtered delivery. */
+  filterIndex?: Maybe<Scalars['Int']['output']>;
+  /** JSON-serialized allow-listed request headers (never the signature). */
+  headersJson: Scalars['String']['output'];
+  /** The HTTP status the sender was answered with. */
+  httpStatus: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  receivedAt: Scalars['DateTime']['output'];
+  /** For a rejected delivery: bad_signature | stale_timestamp | missing_timestamp | invalid_json | unsupported_media_type | payload_too_large. */
+  rejectReason?: Maybe<Scalars['String']['output']>;
+  /** The exact prompt the run started with; null when none was rendered. */
+  renderedPrompt?: Maybe<Scalars['String']['output']>;
+  /** The run this delivery started (accepted) or was folded into (coalesced). */
+  runId?: Maybe<Scalars['ID']['output']>;
+  scheduledAgentJobId: Scalars['ID']['output'];
+  /** accepted | deduplicated | filtered | coalesced | rejected | rate_limited | queue_full. */
+  status: Scalars['String']['output'];
+  triggerId: Scalars['ID']['output'];
+};
+
+export type ScheduledAgentJobWebhookFilterInputType = {
+  /** equals | not_equals | in | exists | not_exists | prefix. There is no regex op, by design. */
+  op: Scalars['String']['input'];
+  /** Dot path into the parsed payload, or header:<name> for an allow-listed header (e.g. header:x-github-event). */
+  path: Scalars['String']['input'];
+  /** Value for equals, not_equals and prefix. */
+  value?: InputMaybe<Scalars['String']['input']>;
+  /** Values for in (1 to 32). */
+  values?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+/** One payload filter of a webhook trigger. `value` is set for equals, not_equals and prefix; `values` for in; neither for exists and not_exists. */
+export type ScheduledAgentJobWebhookFilterObject = {
+  __typename?: 'ScheduledAgentJobWebhookFilterObject';
+  /** equals | not_equals | in | exists | not_exists | prefix. */
+  op: Scalars['String']['output'];
+  /** Dot path into the parsed payload (pull_request.base.ref), or header:<name> for an allow-listed header. */
+  path: Scalars['String']['output'];
+  value?: Maybe<Scalars['String']['output']>;
+  values?: Maybe<Array<Scalars['String']['output']>>;
+};
+
+/** What create and rotate return: the trigger plus the URL path and HMAC secret, shown ONCE. They are not stored in recoverable form (the token is hashed, the secret encrypted) and no query returns them again. */
+export type ScheduledAgentJobWebhookTriggerCredentialsObject = {
+  __typename?: 'ScheduledAgentJobWebhookTriggerCredentialsObject';
+  /** The HMAC-SHA256 secret the sender signs with (the string itself is the key). */
+  secret: Scalars['String']['output'];
+  trigger: ScheduledAgentJobWebhookTriggerObject;
+  /** The ingress path including the token, /webhooks/agent-jobs/<token>. Prepend the server origin. */
+  webhookPath: Scalars['String']['output'];
+};
+
+/** The webhook trigger of a scheduled agent job. Never carries the URL token or the HMAC secret. */
+export type ScheduledAgentJobWebhookTriggerObject = {
+  __typename?: 'ScheduledAgentJobWebhookTriggerObject';
+  /** Leading-edge coalesce window in ms (0 = off, max 3600000). */
+  coalesceWindowMs: Scalars['Int']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  /** Header carrying the sender's delivery id (the dedupe key); null dedupes on the body hash. */
+  deliveryIdHeader?: Maybe<Scalars['String']['output']>;
+  /** Gates ingress only; the job's own enabled flag gates its schedule. */
+  enabled: Scalars['Boolean']['output'];
+  /** At most 16 filters, all of which must match. */
+  filters: Array<ScheduledAgentJobWebhookFilterObject>;
+  id: Scalars['ID']['output'];
+  /** Most webhook-triggered runs queued or running at once (1 to 10). */
+  maxInFlight: Scalars['Int']['output'];
+  /** Most accepted deliveries per trailing minute (1 to 120). */
+  rateLimitPerMinute: Scalars['Int']['output'];
+  rotatedAt?: Maybe<Scalars['DateTime']['output']>;
+  scheduledAgentJobId: Scalars['ID']['output'];
+  /** hex | base64. */
+  signatureEncoding: Scalars['String']['output'];
+  /** Request header carrying the HMAC signature. */
+  signatureHeader: Scalars['String']['output'];
+  /** generic | github | custom. */
+  signaturePreset: Scalars['String']['output'];
+  /** Header carrying the signed unix-seconds timestamp; null when the preset has none (github). */
+  timestampHeader?: Maybe<Scalars['String']['output']>;
+  /** Replay window: a delivery is rejected unless |now - timestamp| is within this many seconds (30 to 900). */
+  timestampToleranceSeconds: Scalars['Int']['output'];
+  /** First 6 characters of the URL token, to tell tokens apart. The token itself is shown once, on create and rotate. */
+  tokenPrefix: Scalars['String']['output'];
+  updatedAt: Scalars['DateTime']['output'];
 };
 
 /** A scheduled agent job run failed, timed out, or was recorded missed. Sent to alert the schedule's owner. */
@@ -7844,6 +8067,32 @@ export type UpdateRolloutFlagInput = {
   variations?: InputMaybe<Array<RolloutFlagVariationInput>>;
 };
 
+export type UpdateScheduledAgentJobAsAgentInputType = {
+  cronPattern?: InputMaybe<Scalars['String']['input']>;
+  driverId?: InputMaybe<Scalars['String']['input']>;
+  /** Enable or disable the job. Cannot enable a job that is still awaiting human approval. */
+  enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Schedule to update. */
+  id: Scalars['ID']['input'];
+  /** For scheduleKind interval: ms from the end of one run to the start of the next; at least 60000. */
+  intervalMs?: InputMaybe<Scalars['Int']['input']>;
+  /** Misfire policy for late fires: skip or catch_up_once. */
+  misfirePolicy?: InputMaybe<Scalars['String']['input']>;
+  /** How late (ms) a fire may start and still run; at least 60000. */
+  misfireThresholdMs?: InputMaybe<Scalars['Int']['input']>;
+  model?: InputMaybe<Scalars['String']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  prompt?: InputMaybe<Scalars['String']['input']>;
+  /** Registered repository checkout to run in; must belong to the caller. Takes precedence over cwd. */
+  repositoryCheckoutId?: InputMaybe<Scalars['ID']['input']>;
+  /** For scheduleKind once: when to run, as ISO 8601 with an offset; a changed time must be in the future. */
+  runAt?: InputMaybe<Scalars['String']['input']>;
+  /** How the schedule fires: cron, interval or once. Omit to keep the current kind. */
+  scheduleKind?: InputMaybe<Scalars['String']['input']>;
+  timeoutMs?: InputMaybe<Scalars['Int']['input']>;
+  timezone?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type UpdateScheduledAgentJobInputType = {
   cronPattern?: InputMaybe<Scalars['String']['input']>;
   /** @deprecated Use repositoryCheckoutId to target a registered repository checkout; cwd is only consulted when no checkout is set. */
@@ -7870,6 +8119,32 @@ export type UpdateScheduledAgentJobInputType = {
   settingsJson?: InputMaybe<Scalars['String']['input']>;
   timeoutMs?: InputMaybe<Scalars['Int']['input']>;
   timezone?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** Config-only update: every field is optional and an omitted field keeps its value. The token and secret are untouched (use rotate). */
+export type UpdateScheduledAgentJobWebhookTriggerInputType = {
+  /** Leading-edge coalesce window in ms, 0 to 3600000 (default 0 = off). */
+  coalesceWindowMs?: InputMaybe<Scalars['Int']['input']>;
+  /** custom only: the header carrying the sender's delivery id; omit to dedupe on the body hash. */
+  deliveryIdHeader?: InputMaybe<Scalars['String']['input']>;
+  enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  /** At most 16 filters, all of which must match. */
+  filters?: InputMaybe<Array<ScheduledAgentJobWebhookFilterInputType>>;
+  /** Most webhook-triggered runs in flight, 1 to 10 (default 3). */
+  maxInFlight?: InputMaybe<Scalars['Int']['input']>;
+  /** Most accepted deliveries per minute, 1 to 120 (default 30). */
+  rateLimitPerMinute?: InputMaybe<Scalars['Int']['input']>;
+  scheduledAgentJobId: Scalars['ID']['input'];
+  /** custom only: hex (default) | base64. */
+  signatureEncoding?: InputMaybe<Scalars['String']['input']>;
+  /** custom only: the header carrying the signature. */
+  signatureHeader?: InputMaybe<Scalars['String']['input']>;
+  /** generic (default) | github | custom. generic and github fix their own headers; custom uses the ones given here. */
+  signaturePreset?: InputMaybe<Scalars['String']['input']>;
+  /** custom only: the header carrying a signed unix-seconds timestamp; omit for none. */
+  timestampHeader?: InputMaybe<Scalars['String']['input']>;
+  /** Replay window in seconds, 30 to 900 (default 300). */
+  timestampToleranceSeconds?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type UpdateServiceAccountInput = {

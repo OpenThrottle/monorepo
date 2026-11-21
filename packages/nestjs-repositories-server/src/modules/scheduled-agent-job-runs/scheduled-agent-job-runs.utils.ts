@@ -26,6 +26,9 @@ export function createScheduledAgentJobRunsRepositoryMock(): ScheduledAgentJobRu
     countInFlightRunsByStatus: vi.fn(async () => {
       return [];
     }),
+    countInFlightRunsForTrigger: vi.fn(async () => {
+      return 0;
+    }),
     countRunsByStatusSince: vi.fn(async () => {
       return [];
     }),
