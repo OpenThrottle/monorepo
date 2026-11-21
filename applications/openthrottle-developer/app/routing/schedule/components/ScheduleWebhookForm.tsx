@@ -46,6 +46,9 @@ export const ScheduleWebhookForm = (
   );
 
   // Setup
+  const presetLabel = WEBHOOK_PRESET_OPTIONS.find(
+    (option) => option.value === preset,
+  )?.label;
   const isCreate = trigger === undefined;
   const hasTimestamp = preset !== WEBHOOK_PRESET.github;
   const intent = isCreate ? 'webhook-create' : 'webhook-update';
@@ -105,7 +108,7 @@ export const ScheduleWebhookForm = (
             aria-label={SCHEDULE_WEBHOOK_COPY.presetLabel}
             id="signaturePreset"
           >
-            <SelectValue />
+            <SelectValue>{presetLabel}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             {WEBHOOK_PRESET_OPTIONS.map((option) => (

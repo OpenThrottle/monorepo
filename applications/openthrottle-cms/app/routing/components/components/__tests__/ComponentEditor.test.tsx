@@ -2,7 +2,12 @@ import { getLoginHref } from '@openthrottle/react-router-auth';
 import { render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
-import { createRoutesStub } from 'react-router';
+import { renderToString } from 'react-dom/server';
+import {
+  createMemoryRouter,
+  createRoutesStub,
+  RouterProvider,
+} from 'react-router';
 import { describe, expect, test } from 'vitest';
 
 import type { CmsComponentDetailFragment } from '~/__generated__/graphql';
@@ -55,6 +60,28 @@ const renderEditor = (result: ComponentActionResult | undefined) => {
 };
 
 describe('ComponentEditor', () => {
+  test('renders the selected status label in the server markup', () => {
+    const router = createMemoryRouter(
+      [
+        {
+          element: (
+            <ComponentEditor
+              className={undefined}
+              component={COMPONENT}
+              result={undefined}
+            />
+          ),
+          path: '*',
+        },
+      ],
+      { initialEntries: ['/components/component-1'] },
+    );
+
+    const html = renderToString(<RouterProvider router={router} />);
+
+    expect(html).toContain('>ACTIVE<');
+  });
+
   describe('before any save', () => {
     test('prefills every field from the component', () => {
       const { component } = renderEditor(undefined);

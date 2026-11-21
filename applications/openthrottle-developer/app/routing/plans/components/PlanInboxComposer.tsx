@@ -69,6 +69,10 @@ export const PlanInboxComposer = (
     (task) => task.status === 'IN_PROGRESS',
   )?.id;
   const aboutTaskId = pickedTaskId ?? defaultTaskId;
+  const aboutTask = taskOptions.find((task) => task.id === aboutTaskId);
+  const aboutTaskLabel = aboutTaskId
+    ? (aboutTask?.title ?? 'Untitled')
+    : PLAN_INBOX_COPY.taskNone;
   const canSend = body.trim().length > 0 && !isSubmitting;
 
   // Handlers
@@ -142,7 +146,7 @@ export const PlanInboxComposer = (
           value={aboutTaskId || PLAN_INBOX_NO_TASK_VALUE}
         >
           <SelectTrigger className="h-8 w-64 max-w-full text-xs" id={taskId}>
-            <SelectValue />
+            <SelectValue>{aboutTaskLabel}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value={PLAN_INBOX_NO_TASK_VALUE}>

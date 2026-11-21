@@ -3,7 +3,12 @@ import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createStore, Provider } from 'jotai';
 import * as React from 'react';
-import { createRoutesStub } from 'react-router';
+import { renderToString } from 'react-dom/server';
+import {
+  createMemoryRouter,
+  createRoutesStub,
+  RouterProvider,
+} from 'react-router';
 import { describe, expect, test } from 'vitest';
 
 import type { EditorAtom } from '../../data/data.atom.editor';
@@ -119,5 +124,28 @@ describe('EditorToolbar Component', () => {
     await user.click(component.getByRole('option', { name: 'Skills' }));
 
     expect(store.get(editorAtom).selectedType).toBe('skills');
+  });
+
+  test('renders the selected type label in the server markup', () => {
+    // Radix fills a childless SelectValue only after hydration; the label must be in the SSR HTML.
+    const store = createStore();
+    store.set(editorAtom, { ...editorAtomDefaults, selectedType: 'skills' });
+    const router = createMemoryRouter(
+      [
+        {
+          element: (
+            <Provider store={store}>
+              <EditorToolbar />
+            </Provider>
+          ),
+          path: '/',
+        },
+      ],
+      { initialEntries: ['/'] },
+    );
+
+    const html = renderToString(<RouterProvider router={router} />);
+
+    expect(html).toContain('>Skills<');
   });
 });

@@ -11,7 +11,11 @@ import { useFetcher } from 'react-router';
 
 import type { PromptType } from '../config';
 import { PROMPT_TYPE_OPTIONS, PROMPT_TYPE_VALUES } from '../config';
-import { getFilenameError, validateFilename } from '../utils';
+import {
+  getFilenameError,
+  getPromptTypeLabel,
+  validateFilename,
+} from '../utils';
 
 export interface EditorNewFileFormProps {
   readonly basePath?: string;
@@ -27,9 +31,7 @@ interface FetcherData {
   readonly success: boolean;
 }
 
-/**
- * @description Form component for creating new prompt files.
- */
+/** @description Form component for creating new prompt files. */
 export const EditorNewFileForm = (
   props: EditorNewFileFormProps,
 ): React.ReactElement | null => {
@@ -52,12 +54,12 @@ export const EditorNewFileForm = (
   const filenameValid = validateFilename(filename);
   const isSubmitting = fetcher.state === 'submitting';
   const isDisabled = isSubmitting || !filenameValid;
+  const selectedLabel = getPromptTypeLabel(promptType);
 
   // Handlers
   const handleCreateFile = (): void => {
     if (!filenameValid) {
-      const errorMessage = getFilenameError(filename);
-      setError(errorMessage);
+      setError(getFilenameError(filename));
       return;
     }
 
@@ -165,7 +167,7 @@ export const EditorNewFileForm = (
 
         <Select onValueChange={handleTypeChange} value={promptType}>
           <SelectTrigger className="w-[160px]">
-            <SelectValue />
+            <SelectValue>{selectedLabel}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             {PROMPT_TYPE_OPTIONS.map((option) => (

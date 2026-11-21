@@ -65,7 +65,7 @@ export const OpenThrottlePaginationLimit = (
       <span>{label}</span>
       <Select onValueChange={handleValueChange} value={String(limit)}>
         <SelectTrigger aria-label={label} className="h-8 w-20">
-          <SelectValue />
+          <SelectValue>{limit}</SelectValue>
         </SelectTrigger>
         <SelectContent>
           {choices.map((option) => (

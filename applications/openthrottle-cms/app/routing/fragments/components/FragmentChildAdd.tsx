@@ -43,6 +43,11 @@ export const FragmentChildAdd = (
   const isEmpty = candidates.length === 0;
   const labelId = `${id}-label`;
   const filterId = `${id}-filter`;
+  const selectedTypename = typename ?? FRAGMENT_CHILD_ALL_TYPENAMES;
+  const isAllSelected = selectedTypename === FRAGMENT_CHILD_ALL_TYPENAMES;
+  const selectedLabel = isAllSelected
+    ? FRAGMENT_EDITOR_COPY.allTypenames
+    : selectedTypename;
   const previousSearch = getChildPickerSearch(location.search, {
     page: page - 1,
     typename,
@@ -110,15 +115,12 @@ export const FragmentChildAdd = (
       <p className="text-sm font-bold" id={labelId}>
         {FRAGMENT_EDITOR_COPY.addChildHeading}
       </p>
-      <Select
-        onValueChange={onTypenameChange}
-        value={typename ?? FRAGMENT_CHILD_ALL_TYPENAMES}
-      >
+      <Select onValueChange={onTypenameChange} value={selectedTypename}>
         <SelectTrigger
           aria-label={FRAGMENT_EDITOR_COPY.filterChildrenLabel}
           id={filterId}
         >
-          <SelectValue />
+          <SelectValue>{selectedLabel}</SelectValue>
         </SelectTrigger>
         <SelectContent>
           <SelectItem value={FRAGMENT_CHILD_ALL_TYPENAMES}>

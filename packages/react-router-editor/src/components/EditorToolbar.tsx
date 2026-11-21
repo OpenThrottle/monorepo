@@ -13,6 +13,7 @@ import * as React from 'react';
 
 import { PROMPT_TYPE_OPTIONS, PROMPT_TYPE_VALUES } from '../config';
 import { useEditor } from '../hooks/useEditor';
+import { getPromptTypeLabel } from '../utils';
 import { EditorNewFileForm } from './EditorNewFileForm';
 
 export interface EditorToolbarProps {
@@ -41,6 +42,7 @@ export const EditorToolbar = (
 
   // Setup
   const { searchQuery, selectedType } = editor;
+  const selectedLabel = getPromptTypeLabel(selectedType);
 
   // Handlers
   const handleFileCreated = (filename: string): void => {
@@ -103,7 +105,7 @@ export const EditorToolbar = (
           {/* Type Filter */}
           <Select onValueChange={handleTypeChange} value={selectedType ?? ''}>
             <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="All Types" />
+              <SelectValue placeholder="All Types">{selectedLabel}</SelectValue>
             </SelectTrigger>
             <SelectContent>
               {PROMPT_TYPE_OPTIONS.map((option) => (

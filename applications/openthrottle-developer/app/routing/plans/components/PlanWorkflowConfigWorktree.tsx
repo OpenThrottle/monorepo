@@ -44,6 +44,12 @@ export const PlanWorkflowConfigWorktree = (
   const fallbackLabel = 'a name derived from the plan id';
   const autoNameLabel = hasDerivedName ? derivedWorktreeName : fallbackLabel;
 
+  const modeLabels: Record<WorkflowRalphWorktreeCli, string> = {
+    'flag-only': 'Flag only (--worktree, CLI preview only)',
+    named: 'On (named worktree)',
+    omit: PLAN_CONFIG_WORKTREE_COPY.modeOmitLabel,
+  };
+
   // Handlers
   const handleWorktreeCliChange = (value: WorkflowRalphWorktreeCli): void => {
     setInput((prev) => {
@@ -99,7 +105,9 @@ export const PlanWorkflowConfigWorktree = (
             className="max-w-md"
             id="workflow-run-worktree-cli"
           >
-            <SelectValue placeholder="Agent worktree mode" />
+            <SelectValue placeholder="Agent worktree mode">
+              {modeLabels[input.worktreeCli]}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="omit">

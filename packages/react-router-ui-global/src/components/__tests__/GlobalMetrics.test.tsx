@@ -3,7 +3,12 @@ import type { RenderResult } from '@testing-library/react';
 import { cleanup, render, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
-import { createRoutesStub } from 'react-router';
+import { renderToString } from 'react-dom/server';
+import {
+  createMemoryRouter,
+  createRoutesStub,
+  RouterProvider,
+} from 'react-router';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import {
@@ -465,5 +470,26 @@ describe('GlobalMetrics Component', () => {
         mockUsePollServerMetrics.mockReset();
       }
     });
+  });
+
+  test('renders the poll interval label in the server markup', () => {
+    // Radix fills a childless SelectValue only after hydration; the label must be in the SSR HTML.
+    const router = createMemoryRouter(
+      [
+        {
+          element: (
+            <GlobalProviders>
+              <GlobalMetrics />
+            </GlobalProviders>
+          ),
+          path: '/',
+        },
+      ],
+      { initialEntries: ['/'] },
+    );
+
+    const html = renderToString(<RouterProvider router={router} />);
+
+    expect(html).toContain('>60s<');
   });
 });

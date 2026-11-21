@@ -91,6 +91,9 @@ export const ScheduleWebhookFilterRows = (
 
       {rows.map((row, index) => {
         const hasNoValue = WEBHOOK_FILTER_NO_VALUE_OPS.includes(row.op);
+        const opLabel = WEBHOOK_FILTER_OP_OPTIONS.find(
+          (option) => option.value === row.op,
+        )?.label;
         const isIn = row.op === WEBHOOK_FILTER_OP.in;
         const valuePlaceholder = isIn
           ? SCHEDULE_WEBHOOK_COPY.filterValueInHelp
@@ -118,7 +121,7 @@ export const ScheduleWebhookFilterRows = (
               <SelectTrigger
                 aria-label={`${SCHEDULE_WEBHOOK_COPY.filterOpLabel} ${index + 1}`}
               >
-                <SelectValue />
+                <SelectValue>{opLabel}</SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {WEBHOOK_FILTER_OP_OPTIONS.map((option) => (

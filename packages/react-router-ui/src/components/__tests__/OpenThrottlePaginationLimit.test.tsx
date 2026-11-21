@@ -2,7 +2,13 @@ import type { RenderResult } from '@testing-library/react';
 import { render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
-import { createRoutesStub, useLocation } from 'react-router';
+import { renderToString } from 'react-dom/server';
+import {
+  createMemoryRouter,
+  createRoutesStub,
+  RouterProvider,
+  useLocation,
+} from 'react-router';
 import { describe, expect, test } from 'vitest';
 
 import type { OpenThrottlePaginationLimitProps } from '../OpenThrottlePaginationLimit';
@@ -63,5 +69,29 @@ describe('OpenThrottlePaginationLimit', () => {
         '/list?page=1&limit=50',
       );
     });
+  });
+
+  test('renders the current limit in the server markup', () => {
+    // Radix fills a childless SelectValue only after hydration; the label must be in the SSR HTML.
+    const router = createMemoryRouter(
+      [
+        {
+          element: (
+            <OpenThrottlePaginationLimit
+              buildHref={(limit) => `/list?limit=${limit}`}
+              label="Results per page"
+              limit={50}
+              options={[10, 20, 50]}
+            />
+          ),
+          path: '/list',
+        },
+      ],
+      { initialEntries: ['/list'] },
+    );
+
+    const html = renderToString(<RouterProvider router={router} />);
+
+    expect(html).toContain('>50<');
   });
 });

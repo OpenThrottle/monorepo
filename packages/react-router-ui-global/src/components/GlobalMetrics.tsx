@@ -75,6 +75,10 @@ export const GlobalMetrics = (
   } = useGlobalMetrics({ defaultOpen, pollIntervalMs: propPollIntervalMs });
 
   // Setup
+  const selectedPreset = GLOBAL_METRICS_POLL_INTERVAL_PRESETS.find(
+    (preset) => preset.valueMs === intervalMs,
+  );
+  const selectedLabel = selectedPreset?.label;
 
   // Handlers
 
@@ -150,7 +154,9 @@ export const GlobalMetrics = (
                     data-testid="GlobalMetrics-poll-interval"
                     tabIndex={isOpen ? undefined : -1}
                   >
-                    <SelectValue placeholder="Poll interval…" />
+                    <SelectValue placeholder="Poll interval…">
+                      {selectedLabel}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {GLOBAL_METRICS_POLL_INTERVAL_PRESETS.map((preset) => (

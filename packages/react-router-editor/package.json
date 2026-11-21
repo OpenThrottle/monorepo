@@ -15,6 +15,7 @@
   "devDependencies": {
     "@testing-library/react": "catalog:",
     "@testing-library/user-event": "catalog:",
+    "react-dom": "catalog:",
     "vitest": "catalog:"
   },
   "license": "Apache-2.0",

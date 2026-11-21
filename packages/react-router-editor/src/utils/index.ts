@@ -1,6 +1,7 @@
 import type { EditorLanguage } from '../config';
 import {
   FILE_EXTENSIONS,
+  PROMPT_TYPE_OPTIONS,
   REGEX_KEBAB_CASE,
   REGEX_PASCAL_CASE,
 } from '../config';
@@ -173,4 +174,15 @@ export const getFilenameError = (filename: string): string => {
 export const isHiddenFile = (filename: string): boolean => {
   const name = filename.split('/').pop() ?? filename;
   return name.startsWith('.');
+};
+
+/**
+ * @description The dropdown label for a prompt type, or `undefined` when none is selected, so a
+ * select can pass it to `SelectValue` and show it in the server-rendered markup.
+ */
+export const getPromptTypeLabel = (
+  value: string | null | undefined,
+): string | undefined => {
+  const option = PROMPT_TYPE_OPTIONS.find((entry) => entry.value === value);
+  return option?.name;
 };

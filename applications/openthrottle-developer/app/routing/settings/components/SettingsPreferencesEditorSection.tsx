@@ -65,6 +65,13 @@ export const SettingsPreferencesEditorSection = (
   const showSaved = error === null && saved && !isSubmitting;
   const isEnabled = isDefaultEditorEnabled(editor, enabledEditors);
   const selectValue = editor ?? SYSTEM_DEFAULT_EDITOR_VALUE;
+  const selectedEditorOption = WORKSPACE_EDITOR_OPTIONS.find(
+    (option) => option.value === editor,
+  );
+  const isSystemDefault = editor === null;
+  const selectedLabel = isSystemDefault
+    ? copy.editorSystemDefaultOption
+    : selectedEditorOption?.label;
 
   // Handlers
   const handleValueChange = (value: string): void => {
@@ -131,7 +138,7 @@ export const SettingsPreferencesEditorSection = (
               className="w-full sm:w-72"
               id="settings-preferences-default-editor"
             >
-              <SelectValue />
+              <SelectValue>{selectedLabel}</SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value={SYSTEM_DEFAULT_EDITOR_VALUE}>

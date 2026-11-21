@@ -73,6 +73,7 @@ lint but never had a rule file of their own:
 | [Long strings are template literals](#long-strings-are-template-literals)   | **Enforced** (autofix)                  | `openthrottle/long-string-template-literal`                           |
 | [JSX consts live under `// Markup`](#jsx-consts-live-under-markup)          | **Enforced** (components)               | `openthrottle/component-primitive-shape`                              |
 | [`sideEffects` is declared and true](#sideeffects-is-declared-and-true)     | **Enforced**                            | `monorepo:check-side-effects` (CI + `check:local`)                    |
+| [Select value children](#select-value-children)                             | **Enforced**                            | `openthrottle/select-value-children`                                  |
 
 ## Corrections made in the move
 
@@ -1310,6 +1311,35 @@ its own [conventions](../../packages/react-router-shadcn/README.md#conventions).
    merged result; do not revert to `clsx` to keep the old assertion green.
 4. **Runtime cost is negligible.** tailwind-merge caches parsed class lists in an LRU, and a
    module-scope `cn(...)` constant computes once.
+
+### Select value children
+
+**Enforced.** A `SelectValue` inside a `Select` given a `value` or `defaultValue` renders the
+selected label as its children. Radix fills a childless `SelectValue` from the matching
+`SelectItem`, and the items only mount on the client, so a server-rendered trigger is blank until
+hydration. No Radix hook exposes the current value, so `SelectValue` cannot fix this itself.
+
+Compute the label in `// Setup` from the same data the items render. Leave it `undefined` when
+nothing is selected and the placeholder still shows:
+
+```tsx
+// Setup
+const selectedOption = SORT_OPTIONS.find((option) => option.value === sort);
+const selectedLabel = selectedOption?.label;
+
+// ❌ Blank in the SSR HTML
+<SelectValue placeholder="Sort" />
+
+// ✅ The label ships in the server markup
+<SelectValue placeholder="Sort">{selectedLabel}</SelectValue>
+```
+
+`openthrottle/select-value-children` (in
+[`tools/dotfiles/src/rules/selectValueChildren.ts`](../../tools/dotfiles/src/rules/selectValueChildren.ts))
+reports the childless case. It matches by JSX name, stops at a nested `Select`, and ignores a
+`Select` with neither prop, which is uncontrolled and starts on its placeholder. It has no
+autofix, because the label lookup is a human call. Prove a fix with a `renderToString` test that
+asserts the label is in the HTML.
 
 ## Testing
 

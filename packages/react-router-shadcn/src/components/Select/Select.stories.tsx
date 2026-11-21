@@ -44,7 +44,8 @@ export const Grouped: Story = {
   render: () => (
     <Select defaultValue="us-east-1">
       <SelectTrigger className="w-64">
-        <SelectValue />
+        {/* The selected label as children keeps it in the server-rendered HTML. */}
+        <SelectValue>us-east-1</SelectValue>
       </SelectTrigger>
       <SelectContent>
         <SelectGroup>

@@ -1,6 +1,7 @@
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
+import { renderToString } from 'react-dom/server';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -69,5 +70,12 @@ describe('PromptSortDropdown Component', () => {
     await user.click(component.getByRole('option', { name: 'Title A-Z' }));
 
     expect(props.onChange).toHaveBeenCalledWith('title', 'asc');
+  });
+
+  test('renders the selected label in the server markup', () => {
+    // Radix fills a childless SelectValue only after hydration; the label must be in the SSR HTML.
+    const html = renderToString(<PromptSortDropdown {...props} />);
+
+    expect(html).toContain('>Recently updated<');
   });
 });

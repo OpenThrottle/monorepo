@@ -33,6 +33,9 @@ export const SortDropdown = (props: SortDropdownProps): React.ReactElement => {
   const resolvedValue = PLANS_SORT_BY_OPTIONS.some((o) => o.value === value)
     ? value
     : 'createdAt-desc';
+  const resolvedLabel = PLANS_SORT_BY_OPTIONS.find(
+    (o) => o.value === resolvedValue,
+  )?.label;
 
   // Handlers
   const handleChange = React.useCallback(
@@ -65,7 +68,7 @@ export const SortDropdown = (props: SortDropdownProps): React.ReactElement => {
         className="w-[200px]"
         data-testid="PlansSortDropdown"
       >
-        <SelectValue placeholder="Sort" />
+        <SelectValue placeholder="Sort">{resolvedLabel}</SelectValue>
       </SelectTrigger>
       <SelectContent>
         {PLANS_SORT_BY_OPTIONS.map((opt) => (

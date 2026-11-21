@@ -29,6 +29,8 @@ export const AssignRoleSelectForm = (
 
   // Setup
   const Form = fetcher.Form;
+  const selected = availableRoles.find((role) => role.id === selectedRoleId);
+  const selectedLabel = selected?.name;
 
   // Handlers
 
@@ -48,7 +50,9 @@ export const AssignRoleSelectForm = (
           value={selectedRoleId || undefined}
         >
           <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Assign role…" />
+            <SelectValue placeholder="Assign role…">
+              {selectedLabel}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             {availableRoles.map((r) => (

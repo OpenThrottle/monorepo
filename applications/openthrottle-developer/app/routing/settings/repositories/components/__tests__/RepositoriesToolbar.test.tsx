@@ -2,7 +2,13 @@ import type { RenderResult } from '@testing-library/react';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
-import { createRoutesStub, useLocation } from 'react-router';
+import { renderToString } from 'react-dom/server';
+import {
+  createMemoryRouter,
+  createRoutesStub,
+  RouterProvider,
+  useLocation,
+} from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 
 import { REPOSITORIES_TABLE_COPY } from '~/routing/settings/repositories/data/data.copy';
@@ -87,5 +93,17 @@ describe('RepositoriesToolbar Component', () => {
 
     expect(search).toContain('search=monorepo');
     expect(search).not.toContain('page=');
+  });
+
+  test('renders the selected sort label in the server markup', () => {
+    // Radix fills a childless SelectValue only after hydration; the label must be in the SSR HTML.
+    const router = createMemoryRouter(
+      [{ element: <RepositoriesToolbar {...props} />, path: '/' }],
+      { initialEntries: ['/'] },
+    );
+
+    const html = renderToString(<RouterProvider router={router} />);
+
+    expect(html).toContain('>Name A-Z<');
   });
 });

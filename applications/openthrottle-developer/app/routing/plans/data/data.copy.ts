@@ -462,7 +462,10 @@ export const PLAN_CONFIG_WORKTREE_CLEANUP_COPY = {
  * recorded checkout has since been de-registered.
  */
 export const PLAN_RUN_WORKSPACE_SELECTOR_COPY = {
+  anyCheckoutOption: `Any of my checkouts`,
   createdInDefault: `Defaults to the workspace this plan was created in. Change it here if the run belongs somewhere else.`,
+  customPathOption: `Custom path…`,
+  rootOption: `Monorepo root (default)`,
   staleCheckout: `The workspace recorded on this plan is no longer registered. Choose another one before queuing a run.`,
 } as const;
 

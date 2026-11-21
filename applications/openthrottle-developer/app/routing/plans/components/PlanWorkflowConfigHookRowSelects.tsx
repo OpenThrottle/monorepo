@@ -49,6 +49,12 @@ export const PlanWorkflowConfigHookRowSelects = (
   // Hooks
 
   // Setup
+  const failureLabels: Record<JobRunHookOnFailure | 'default', string> = {
+    block: 'block',
+    default: `Default (${row.phase === 'before_run' ? 'block' : 'warn'})`,
+    ignore: 'ignore',
+    warn: 'warn',
+  };
 
   // Handlers
 
@@ -64,7 +70,7 @@ export const PlanWorkflowConfigHookRowSelects = (
         <Label htmlFor={`hook-phase-${row.draftId}`}>Phase</Label>
         <Select onValueChange={onPhaseChange} value={row.phase}>
           <SelectTrigger id={`hook-phase-${row.draftId}`}>
-            <SelectValue />
+            <SelectValue>{jobRunHookPhaseLabel(row.phase)}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="before_run">
@@ -81,7 +87,7 @@ export const PlanWorkflowConfigHookRowSelects = (
         <Label htmlFor={`hook-kind-${row.draftId}`}>Kind</Label>
         <Select onValueChange={onKindChange} value={kindValue}>
           <SelectTrigger id={`hook-kind-${row.draftId}`}>
-            <SelectValue />
+            <SelectValue>{jobRunHookKindLabel(kindValue)}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="prompt_profile">
@@ -98,12 +104,10 @@ export const PlanWorkflowConfigHookRowSelects = (
         <Label htmlFor={`hook-on-failure-${row.draftId}`}>On failure</Label>
         <Select onValueChange={onFailureChange} value={onFailureValue}>
           <SelectTrigger id={`hook-on-failure-${row.draftId}`}>
-            <SelectValue />
+            <SelectValue>{failureLabels[onFailureValue]}</SelectValue>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="default">
-              Default ({row.phase === 'before_run' ? 'block' : 'warn'})
-            </SelectItem>
+            <SelectItem value="default">{failureLabels.default}</SelectItem>
             <SelectItem value="block">block</SelectItem>
             <SelectItem value="warn">warn</SelectItem>
             <SelectItem value="ignore">ignore</SelectItem>

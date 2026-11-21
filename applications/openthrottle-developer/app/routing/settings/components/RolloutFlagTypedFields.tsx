@@ -110,7 +110,7 @@ export const RolloutFlagTypedFields = (
             aria-label={ROLLOUT_COPY.kindLabel}
             id={`${idPrefix}-kind`}
           >
-            <SelectValue />
+            <SelectValue>{config.kind}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             {ROLLOUT_FLAG_KINDS.map((kind) => (

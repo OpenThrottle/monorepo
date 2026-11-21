@@ -34,6 +34,10 @@ export const ChatComposerPersonaSelect = (
   // Hooks
 
   // Setup
+  const selectedPersona = personas?.find(
+    (persona) => persona.id === selectedPersonaId,
+  );
+  const selectedLabel = selectedPersona?.label;
 
   // Handlers
 
@@ -55,7 +59,7 @@ export const ChatComposerPersonaSelect = (
             className="h-8 w-auto min-w-32 gap-1 pointer-coarse:h-11"
             data-testid="ChatComposerToolbar-persona-select"
           >
-            <SelectValue placeholder="Agent" />
+            <SelectValue placeholder="Agent">{selectedLabel}</SelectValue>
           </SelectTrigger>
         </TooltipTrigger>
         <TooltipContent side="top">Agent</TooltipContent>

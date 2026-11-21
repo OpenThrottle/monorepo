@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { renderToString } from 'react-dom/server';
 import { describe, expect, test, vi } from 'vitest';
 
 import { MOCK_BLOG_AUTHORS } from '~/routing/blog/data/mock.blog-posts';
@@ -36,5 +37,19 @@ describe('BlogPostAuthorField Component', () => {
       component.getByRole('combobox', { name: 'Author' }),
     ).toHaveTextContent('No byline');
     expect(component.getByRole('alert')).toHaveTextContent('Unknown author');
+  });
+
+  test('renders the selected label in the server markup', () => {
+    // Radix fills a childless SelectValue only after hydration; the label must be in the SSR HTML.
+    const html = renderToString(
+      <BlogPostAuthorField
+        authors={MOCK_BLOG_AUTHORS}
+        error={undefined}
+        onChange={vi.fn()}
+        value="grace"
+      />,
+    );
+
+    expect(html).toContain('>Grace Hopper<');
   });
 });

@@ -1,6 +1,7 @@
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
+import { renderToString } from 'react-dom/server';
 import { describe, expect, test, vi } from 'vitest';
 
 import type { PlansSortBy, PlansSortOrder } from '~/routing/plans/config/types';
@@ -41,5 +42,12 @@ describe('SortDropdown', () => {
     );
     const combobox = component.getByRole('combobox', { name: 'Sort plans' });
     expect(combobox).toHaveTextContent('Newest first');
+  });
+
+  test('renders the selected label in the server markup', () => {
+    const html = renderToString(
+      <SortDropdown onChange={() => {}} sortBy="createdAt" sortOrder="desc" />,
+    );
+    expect(html).toContain('>Newest first<');
   });
 });
