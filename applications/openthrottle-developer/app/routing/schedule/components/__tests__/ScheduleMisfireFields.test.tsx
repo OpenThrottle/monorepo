@@ -1,6 +1,7 @@
 import type { RenderResult } from '@testing-library/react';
 import { render } from '@testing-library/react';
 import * as React from 'react';
+import { renderToString } from 'react-dom/server';
 import { describe, expect, test } from 'vitest';
 
 import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
@@ -58,5 +59,17 @@ describe('ScheduleMisfireFields Component', () => {
         component.getByLabelText(SCHEDULE_COPY.misfireThresholdLabel),
       ).toHaveValue(30);
     });
+  });
+
+  test('renders the selected label in the server markup', () => {
+    // Radix fills a childless SelectValue only after hydration; the label must be in the SSR HTML.
+    const html = renderToString(
+      <ScheduleMisfireFields
+        misfirePolicy="catch_up_once"
+        misfireThresholdMs={undefined}
+      />,
+    );
+
+    expect(html).toContain(`>${optionLabel('catch_up_once')}<`);
   });
 });

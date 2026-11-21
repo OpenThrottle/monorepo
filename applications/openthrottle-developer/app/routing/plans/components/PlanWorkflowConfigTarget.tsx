@@ -33,6 +33,8 @@ export const PlanWorkflowConfigTarget = (
   // Hooks
 
   // Setup
+  const targetModeLabel =
+    input.targetMode === 'plan' ? 'Plan (--plan)' : 'Task (--task)';
   const isPlanMode = input.targetMode === 'plan';
   const isTaskMode = input.targetMode === 'task';
 
@@ -81,7 +83,9 @@ export const PlanWorkflowConfigTarget = (
             className="max-w-md"
             id="workflow-config-target-mode"
           >
-            <SelectValue placeholder="Target mode" />
+            <SelectValue placeholder="Target mode">
+              {targetModeLabel}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="plan">Plan (--plan)</SelectItem>

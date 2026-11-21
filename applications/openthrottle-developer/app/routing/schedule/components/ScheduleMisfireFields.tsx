@@ -36,6 +36,10 @@ export const ScheduleMisfireFields = (
   // Hooks
 
   // Setup
+  const selectedPolicy = misfirePolicy ?? SCHEDULE_MISFIRE_DEFAULT_POLICY;
+  const policyLabel = SCHEDULE_MISFIRE_POLICY_OPTIONS.find(
+    (option) => option.value === selectedPolicy,
+  )?.label;
   const storedMinutes =
     misfireThresholdMs === undefined ? undefined : misfireThresholdMs / 60_000;
   const thresholdMinutes =
@@ -56,15 +60,12 @@ export const ScheduleMisfireFields = (
           <Label htmlFor="misfirePolicy">
             {SCHEDULE_COPY.misfirePolicyLabel}
           </Label>
-          <Select
-            defaultValue={misfirePolicy ?? SCHEDULE_MISFIRE_DEFAULT_POLICY}
-            name="misfirePolicy"
-          >
+          <Select defaultValue={selectedPolicy} name="misfirePolicy">
             <SelectTrigger
               aria-label={SCHEDULE_COPY.misfirePolicyLabel}
               id="misfirePolicy"
             >
-              <SelectValue />
+              <SelectValue>{policyLabel}</SelectValue>
             </SelectTrigger>
             <SelectContent>
               {SCHEDULE_MISFIRE_POLICY_OPTIONS.map((option) => (

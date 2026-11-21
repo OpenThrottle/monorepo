@@ -2,7 +2,13 @@ import type { RenderResult } from '@testing-library/react';
 import { cleanup, render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
-import { createRoutesStub, useSearchParams } from 'react-router';
+import { renderToString } from 'react-dom/server';
+import {
+  createMemoryRouter,
+  createRoutesStub,
+  RouterProvider,
+  useSearchParams,
+} from 'react-router';
 import { afterEach, describe, expect, test } from 'vitest';
 
 import type { DashboardToolbarProps } from '../DashboardToolbar';
@@ -113,5 +119,18 @@ describe('DashboardToolbar Component', () => {
       expect(qs.get('owner')).toBe('shiftsmartinc');
       expect(qs.get('repo')).toBe('monorepo');
     });
+  });
+
+  test('renders the selected labels in the server markup', () => {
+    // Radix fills a childless SelectValue only after hydration; the label must be in the SSR HTML.
+    const router = createMemoryRouter(
+      [{ element: <DashboardToolbar />, path: '/' }],
+      { initialEntries: ['/?owner=shiftsmartinc&repo=native-apps'] },
+    );
+
+    const html = renderToString(<RouterProvider router={router} />);
+
+    expect(html).toContain('>shiftsmartinc<');
+    expect(html).toContain('>native-apps<');
   });
 });

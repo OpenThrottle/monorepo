@@ -48,6 +48,9 @@ export const SettingsKeysToolbar = (
   const showAccountPicker = enabledAccounts.length > 1;
   const noAccounts = enabledAccounts.length === 0;
   const createDisabled = !canCreate || noAccounts;
+  const selectedAccountName = enabledAccounts.find(
+    (account) => account.id === selectedServiceAccountId,
+  )?.name;
 
   // Handlers
   const handleAccountChange = (value: string): void => {
@@ -72,7 +75,9 @@ export const SettingsKeysToolbar = (
           data-testid="SettingsKeysToolbar-account-select"
           id="settings-keys-service-account"
         >
-          <SelectValue placeholder="Select service account" />
+          <SelectValue placeholder="Select service account">
+            {selectedAccountName}
+          </SelectValue>
         </SelectTrigger>
         <SelectContent>
           {enabledAccounts.map((account) => (

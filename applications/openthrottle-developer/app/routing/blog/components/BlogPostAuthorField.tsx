@@ -35,6 +35,11 @@ export const BlogPostAuthorField = (
   // Setup
   const id = 'blog-post-authorSlug';
   const errorId = `${id}-error`;
+  const isNoAuthor = value === '';
+  const selectedAuthor = authors.find((author) => author.slug === value);
+  const selectedLabel = isNoAuthor
+    ? BLOG_EDITOR_COPY.noAuthor
+    : selectedAuthor?.displayName;
 
   // Handlers
   const handleValueChange = (next: string): void => {
@@ -65,7 +70,9 @@ export const BlogPostAuthorField = (
           className="w-full"
           id={id}
         >
-          <SelectValue placeholder={BLOG_EDITOR_COPY.noAuthor} />
+          <SelectValue placeholder={BLOG_EDITOR_COPY.noAuthor}>
+            {selectedLabel}
+          </SelectValue>
         </SelectTrigger>
         <SelectContent>
           <SelectItem value={BLOG_NO_AUTHOR_VALUE}>

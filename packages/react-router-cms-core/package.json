@@ -25,6 +25,7 @@
     "@testing-library/user-event": "catalog:",
     "ajv": "catalog:",
     "react-dnd-html5-backend": "catalog:",
+    "react-dom": "catalog:",
     "vitest": "catalog:"
   },
   "main": "./src/index.ts",

@@ -34,6 +34,8 @@ export const ChatComposerModelSelect = (
   // Hooks
 
   // Setup
+  const selectedModel = models.find((model) => model.id === selectedModelId);
+  const selectedLabel = selectedModel?.label;
 
   // Handlers
 
@@ -52,7 +54,7 @@ export const ChatComposerModelSelect = (
             className="h-8 w-auto min-w-32 gap-1 pointer-coarse:h-11"
             data-testid="ChatComposerToolbar-model-select"
           >
-            <SelectValue placeholder="Model" />
+            <SelectValue placeholder="Model">{selectedLabel}</SelectValue>
           </SelectTrigger>
         </TooltipTrigger>
         <TooltipContent side="top">Model</TooltipContent>

@@ -52,6 +52,11 @@ export const PlanWorkflowConfigTuning = (
   const runner = useAtomValue(workflowRunnerAtom);
 
   // Setup
+  const debugLabel = {
+    debug: '--debug',
+    omit: 'Default (no CLI flags; use env if set)',
+    verbose: '--verbose',
+  }[input.debugCli];
   // Iterations only bound a Ralph run; OT Loop runs each task once, with retries.
   const showIterations = runner !== 'ot-loop';
 
@@ -178,7 +183,7 @@ export const PlanWorkflowConfigTuning = (
             className="max-w-md"
             id="workflow-run-debug"
           >
-            <SelectValue placeholder="Shim debug" />
+            <SelectValue placeholder="Shim debug">{debugLabel}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="omit">

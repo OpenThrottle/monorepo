@@ -39,6 +39,10 @@ export const ScheduleWebhookCustomFields = (
   // Hooks
 
   // Setup
+  const selectedEncoding = trigger?.signatureEncoding ?? 'hex';
+  const encodingLabel = WEBHOOK_ENCODING_OPTIONS.find(
+    (option) => option.value === selectedEncoding,
+  )?.label;
 
   // Handlers
 
@@ -70,15 +74,12 @@ export const ScheduleWebhookCustomFields = (
         <Label htmlFor="signatureEncoding">
           {SCHEDULE_WEBHOOK_COPY.customEncodingLabel}
         </Label>
-        <Select
-          defaultValue={trigger?.signatureEncoding ?? 'hex'}
-          name="signatureEncoding"
-        >
+        <Select defaultValue={selectedEncoding} name="signatureEncoding">
           <SelectTrigger
             aria-label={SCHEDULE_WEBHOOK_COPY.customEncodingLabel}
             id="signatureEncoding"
           >
-            <SelectValue />
+            <SelectValue>{encodingLabel}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             {WEBHOOK_ENCODING_OPTIONS.map((option) => (

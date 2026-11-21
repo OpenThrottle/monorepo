@@ -63,7 +63,7 @@ export const DashboardToolbar = (
     >
       <Select onValueChange={onChangeOrg} value={owner}>
         <SelectTrigger>
-          <SelectValue placeholder="Organization" />
+          <SelectValue placeholder="Organization">{owner}</SelectValue>
         </SelectTrigger>
         <SelectContent>
           {GITHUB_ORGS.map((organization) => (
@@ -76,7 +76,7 @@ export const DashboardToolbar = (
 
       <Select onValueChange={onChangeRepo} value={repo}>
         <SelectTrigger>
-          <SelectValue placeholder="Select a repo" />
+          <SelectValue placeholder="Select a repo">{repo}</SelectValue>
         </SelectTrigger>
         <SelectContent>
           {repos.map((repository) => (

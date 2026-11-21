@@ -45,6 +45,10 @@ export const PlanWorkflowConfigPrompt = (
   const runner = useAtomValue(workflowRunnerAtom);
 
   // Setup
+  const isPromptFile = promptLayer === 'file';
+  const promptLayerLabel = isPromptFile
+    ? 'Prompt file (--prompt-file)'
+    : 'Named profile (--prompt)';
 
   // Handlers
   const handlePromptChange = (
@@ -102,7 +106,9 @@ export const PlanWorkflowConfigPrompt = (
               className="max-w-md"
               id="workflow-run-prompt-layer"
             >
-              <SelectValue placeholder="Prompt source" />
+              <SelectValue placeholder="Prompt source">
+                {promptLayerLabel}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="named">Named profile (--prompt)</SelectItem>

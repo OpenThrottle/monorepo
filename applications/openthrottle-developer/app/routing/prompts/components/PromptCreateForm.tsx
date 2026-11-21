@@ -36,6 +36,9 @@ export const PromptCreateForm = (
   // Hooks
 
   // Setup
+  const selectedLabel = PROMPT_TYPE_OPTIONS.find(
+    (option) => option.value === form.promptType,
+  )?.name;
 
   // Handlers
 
@@ -96,7 +99,9 @@ export const PromptCreateForm = (
               value={form.promptType}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Poll interval…" />
+                <SelectValue placeholder="Poll interval…">
+                  {selectedLabel}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {PROMPT_TYPE_OPTIONS.map((option) => (

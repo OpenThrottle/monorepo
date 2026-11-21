@@ -29,6 +29,10 @@ export const AddPermissionSelectForm = (
 
   // Setup
   const Form = fetcher.Form;
+  const selected = availablePermissions.find(
+    (permission) => permission.id === permissionId,
+  );
+  const selectedLabel = selected?.name;
 
   // Handlers
 
@@ -48,7 +52,9 @@ export const AddPermissionSelectForm = (
           value={permissionId || undefined}
         >
           <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Add permission…" />
+            <SelectValue placeholder="Add permission…">
+              {selectedLabel}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             {availablePermissions.map((p) => (

@@ -31,6 +31,7 @@ import { planTaskStatusChokepoint } from './rules/planTaskStatusChokepoint.ts';
 import { preferGraphqlFragment } from './rules/preferGraphqlFragment.ts';
 import { preHooksUnpack } from './rules/preHooksUnpack.ts';
 import { routePrimitiveShape } from './rules/routePrimitiveShape.ts';
+import { selectValueChildren } from './rules/selectValueChildren.ts';
 import { skipRequiresIssue } from './rules/skipRequiresIssue.ts';
 import { threeLineTernary } from './rules/threeLineTernary.ts';
 import { getDirname } from './vite-config.ts';
@@ -299,6 +300,7 @@ export const eslintConfig = tslint.config([
           'pre-hooks-unpack': preHooksUnpack,
           'prefer-graphql-fragment': preferGraphqlFragment,
           'route-primitive-shape': routePrimitiveShape,
+          'select-value-children': selectValueChildren,
           'skip-requires-issue': skipRequiresIssue,
           'three-line-ternary': threeLineTernary,
         },
@@ -394,6 +396,11 @@ export const eslintConfig = tslint.config([
       // conditionals included. A custom rule rather than core
       // `multiline-ternary`, which fights Prettier's width-based wrapping. No
       // autofix — the fix is a human naming the condition or branches.
+      // A SelectValue under a valued Select renders the selected label as
+      // children, so the server HTML is not an empty trigger until hydration
+      // (Radix fills a childless one from the client-mounted SelectItem). The
+      // existing sites were burned down by plan 9f2e653f. No autofix.
+      'openthrottle/select-value-children': 'error',
       'openthrottle/three-line-ternary': 'error',
       // Interface-member and enum alphabetization, replacing
       // eslint-plugin-typescript-sort-keys. That plugin is abandoned (peer range

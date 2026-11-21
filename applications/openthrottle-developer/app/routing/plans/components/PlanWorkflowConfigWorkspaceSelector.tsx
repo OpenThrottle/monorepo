@@ -19,9 +19,10 @@ import { PLAN_RUN_WORKSPACE_SELECTOR_COPY } from '~/routing/plans/data/data.copy
 import { usePlanWorkflowConfigWorkspaceSelector } from '~/routing/plans/hooks/usePlanWorkflowConfigWorkspaceSelector';
 import { resolveDefaultRunBranch } from '~/routing/plans/utils/plan-run-branch';
 import {
-  basename,
   CHECKOUT_PREFIX,
   CUSTOM_VALUE,
+  getWorkspaceCheckoutLabel,
+  getWorkspaceSelectedLabel,
   REPOSITORY_PREFIX,
   ROOT_VALUE,
 } from '~/routing/plans/utils/plan-workflow-config-workspace-selector';
@@ -90,6 +91,10 @@ export const PlanWorkflowConfigWorkspaceSelector = (
   });
 
   // Setup
+  const selectedLabel = getWorkspaceSelectedLabel(
+    selectedValue,
+    selectedCheckout,
+  );
   const selectedCheckoutBranch = resolveDefaultRunBranch({
     checkoutId,
     repositories,
@@ -135,30 +140,35 @@ export const PlanWorkflowConfigWorkspaceSelector = (
             data-testid="workflow-run-workspace-select"
             id="workflow-run-workspace-select"
           >
-            <SelectValue placeholder="Monorepo root (default)" />
+            <SelectValue
+              placeholder={PLAN_RUN_WORKSPACE_SELECTOR_COPY.rootOption}
+            >
+              {selectedLabel}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value={ROOT_VALUE}>Monorepo root (default)</SelectItem>
+            <SelectItem value={ROOT_VALUE}>
+              {PLAN_RUN_WORKSPACE_SELECTOR_COPY.rootOption}
+            </SelectItem>
             {repositories.map((repo) => (
               <SelectGroup key={repo.id}>
                 <SelectLabel>{repo.name}</SelectLabel>
                 <SelectItem value={`${REPOSITORY_PREFIX}${repo.id}`}>
-                  Any of my checkouts
+                  {PLAN_RUN_WORKSPACE_SELECTOR_COPY.anyCheckoutOption}
                 </SelectItem>
                 {repo.checkouts.map((checkout) => (
                   <SelectItem
                     key={checkout.id}
                     value={`${CHECKOUT_PREFIX}${checkout.id}`}
                   >
-                    {checkout.displayName || basename(checkout.filesystemPath)}
-                    {checkout.inspection?.git?.currentBranch
-                      ? ` · ${checkout.inspection.git.currentBranch}`
-                      : ''}
+                    {getWorkspaceCheckoutLabel(checkout)}
                   </SelectItem>
                 ))}
               </SelectGroup>
             ))}
-            <SelectItem value={CUSTOM_VALUE}>Custom path…</SelectItem>
+            <SelectItem value={CUSTOM_VALUE}>
+              {PLAN_RUN_WORKSPACE_SELECTOR_COPY.customPathOption}
+            </SelectItem>
           </SelectContent>
         </Select>
 

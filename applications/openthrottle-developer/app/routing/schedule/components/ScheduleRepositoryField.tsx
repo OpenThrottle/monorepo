@@ -35,20 +35,27 @@ export const ScheduleRepositoryField = (
 
   // Setup
   const hasRepositories = repositories.length > 0;
+  const selectedRepositoryId =
+    repositoryCheckoutId ?? SCHEDULE_REPOSITORY_NONE_VALUE;
+  const selectedRepository = repositories.find(
+    (repository) => repository.id === selectedRepositoryId,
+  );
+  const repositoryLabel =
+    selectedRepository?.displayName ??
+    (selectedRepositoryId === SCHEDULE_REPOSITORY_NONE_VALUE
+      ? SCHEDULE_COPY.repositoryNoneOption
+      : undefined);
 
   // Handlers
 
   // Markup
   const repositorySelect = (
-    <Select
-      defaultValue={repositoryCheckoutId ?? SCHEDULE_REPOSITORY_NONE_VALUE}
-      name="repositoryCheckoutId"
-    >
+    <Select defaultValue={selectedRepositoryId} name="repositoryCheckoutId">
       <SelectTrigger
         aria-label={SCHEDULE_COPY.repositoryLabel}
         id="repositoryCheckoutId"
       >
-        <SelectValue />
+        <SelectValue>{repositoryLabel}</SelectValue>
       </SelectTrigger>
       <SelectContent>
         <SelectItem value={SCHEDULE_REPOSITORY_NONE_VALUE}>

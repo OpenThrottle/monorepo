@@ -55,6 +55,9 @@ export const RepositoriesToolbar = (
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Setup
+  const selectedLabel = REPOSITORIES_SORT_OPTIONS.find(
+    (option) => option.value === selectedValue,
+  )?.label;
 
   // Handlers
   const handleSortChange = React.useCallback(
@@ -104,7 +107,7 @@ export const RepositoriesToolbar = (
             aria-label={REPOSITORIES_TABLE_COPY.sortLabel}
             className="h-9 w-44 shrink-0 px-3"
           >
-            <SelectValue placeholder="Sort" />
+            <SelectValue placeholder="Sort">{selectedLabel}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             {REPOSITORIES_SORT_OPTIONS.map((option) => (

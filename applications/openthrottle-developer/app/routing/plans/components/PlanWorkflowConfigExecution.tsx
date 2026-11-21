@@ -32,6 +32,8 @@ export const PlanWorkflowConfigExecution = (
   // Hooks
 
   // Setup
+  const isCursor = input.executionBackend === 'cursor';
+  const backendLabel = isCursor ? 'Cursor (cursor-agent)' : 'Claude Code CLI';
 
   // Handlers
 
@@ -72,7 +74,7 @@ export const PlanWorkflowConfigExecution = (
             className="max-w-md"
             id="plan-workflow-config-backend"
           >
-            <SelectValue />
+            <SelectValue>{backendLabel}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             {EXECUTION_BACKENDS.map((id) => (

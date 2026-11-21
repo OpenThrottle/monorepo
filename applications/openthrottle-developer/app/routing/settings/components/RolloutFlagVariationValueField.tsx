@@ -36,6 +36,7 @@ export const RolloutFlagVariationValueField = (
   // Setup
   const ariaLabel = `${ROLLOUT_COPY.variationValueLabel} ${index}`;
   const encoded = encodeVariationValueJson(kind, editValue);
+  const selectedBooleanLabel = editValue === 'true' ? 'true' : 'false';
   const parseError = 'error' in encoded ? encoded.error : null;
 
   // Handlers
@@ -52,12 +53,9 @@ export const RolloutFlagVariationValueField = (
   // 🔌 Short Circuit
   if (kind === RolloutFlagKind.Boolean) {
     return (
-      <Select
-        onValueChange={onValueChange}
-        value={editValue === 'true' ? 'true' : 'false'}
-      >
+      <Select onValueChange={onValueChange} value={selectedBooleanLabel}>
         <SelectTrigger aria-label={ariaLabel} id={id}>
-          <SelectValue />
+          <SelectValue>{selectedBooleanLabel}</SelectValue>
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="false">false</SelectItem>

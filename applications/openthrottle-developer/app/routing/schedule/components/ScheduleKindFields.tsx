@@ -56,6 +56,9 @@ export const ScheduleKindFields = (
   const intervalMs = job?.intervalMs;
   const storedMinutes = intervalMs == null ? undefined : intervalMs / 60_000;
   const intervalMinutes = storedMinutes ?? SCHEDULE_INTERVAL_DEFAULT_MINUTES;
+  const kindLabel = SCHEDULE_KIND_OPTIONS.find(
+    (option) => option.value === kind,
+  )?.label;
   const runAt = typeof job?.runAt === 'string' ? job.runAt : '';
 
   // Handlers
@@ -84,7 +87,7 @@ export const ScheduleKindFields = (
               aria-label={SCHEDULE_COPY.kindLabel}
               id="scheduleKind"
             >
-              <SelectValue />
+              <SelectValue>{kindLabel}</SelectValue>
             </SelectTrigger>
             <SelectContent>
               {SCHEDULE_KIND_OPTIONS.map((option) => (

@@ -38,6 +38,9 @@ export const PromptSortDropdown = (
   const resolvedValue = PROMPTS_SORT_OPTIONS.some((o) => o.value === value)
     ? value
     : 'updatedAt-desc';
+  const selectedLabel = PROMPTS_SORT_OPTIONS.find(
+    (o) => o.value === resolvedValue,
+  )?.label;
 
   // Handlers
   const handleChange = React.useCallback(
@@ -70,7 +73,7 @@ export const PromptSortDropdown = (
         className="w-[200px]"
         data-testid="PromptSortDropdown"
       >
-        <SelectValue placeholder="Sort" />
+        <SelectValue placeholder="Sort">{selectedLabel}</SelectValue>
       </SelectTrigger>
       <SelectContent>
         {PROMPTS_SORT_OPTIONS.map((opt) => (

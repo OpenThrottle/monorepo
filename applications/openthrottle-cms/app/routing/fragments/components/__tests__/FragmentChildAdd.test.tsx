@@ -1,7 +1,13 @@
 import { render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
-import { createRoutesStub, useLocation } from 'react-router';
+import { renderToString } from 'react-dom/server';
+import {
+  createMemoryRouter,
+  createRoutesStub,
+  RouterProvider,
+  useLocation,
+} from 'react-router';
 import { describe, expect, test } from 'vitest';
 
 import { FRAGMENT_EDITOR_COPY } from '~/routing/fragments/data/data.copy';
@@ -40,6 +46,28 @@ const renderAdd = (picker: FragmentChildPicker, url = '/') => {
 };
 
 describe('FragmentChildAdd', () => {
+  test('renders the selected typename label in the server markup', () => {
+    const router = createMemoryRouter(
+      [
+        {
+          element: (
+            <FragmentChildAdd
+              className={undefined}
+              id="add-child"
+              picker={MOCK_FRAGMENT_CHILD_PICKER}
+            />
+          ),
+          path: '*',
+        },
+      ],
+      { initialEntries: ['/'] },
+    );
+
+    const html = renderToString(<RouterProvider router={router} />);
+
+    expect(html).toContain(`>${FRAGMENT_EDITOR_COPY.allTypenames}<`);
+  });
+
   describe('with candidates', () => {
     test('posts the chosen fragment with the addChild intent', async () => {
       const { component, submitted } = renderAdd(MOCK_FRAGMENT_CHILD_PICKER);

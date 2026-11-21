@@ -56,6 +56,7 @@ export const ComponentEditor = (
     `${location.pathname}${location.search}`,
     AUTH_ROUTES.signIn,
   );
+  const selectedStatus = component.status ?? CMS_STATUS.DRAFT;
   const statusId = `${component.uuid}-status`;
   const statuses = Object.values(CMS_STATUS);
   const typenameId = `${component.uuid}-typename`;
@@ -124,12 +125,9 @@ export const ComponentEditor = (
           </div>
           <div className="grid gap-2">
             <Label id={statusId}>{COMPONENT_EDITOR_COPY.statusLabel}</Label>
-            <Select
-              defaultValue={component.status ?? CMS_STATUS.DRAFT}
-              name="status"
-            >
+            <Select defaultValue={selectedStatus} name="status">
               <SelectTrigger aria-labelledby={statusId}>
-                <SelectValue />
+                <SelectValue>{selectedStatus}</SelectValue>
               </SelectTrigger>
               <SelectContent>{statusItems}</SelectContent>
             </Select>

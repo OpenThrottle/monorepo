@@ -34,6 +34,8 @@ export const FormSelect = (props: FormSelectProps): React.ReactElement => {
 
   // Setup
   const options = toEnumOptions(property?.enum);
+  const selectedValue = toInputValue(value);
+  const selectedLabel = options.find((option) => option === selectedValue);
 
   // Handlers
   const onValueChange = (next: string): void => {
@@ -62,10 +64,12 @@ export const FormSelect = (props: FormSelectProps): React.ReactElement => {
         name={name}
         onValueChange={onValueChange}
         required={isRequired}
-        value={toInputValue(value)}
+        value={selectedValue}
       >
         <SelectTrigger aria-label={name} id={name}>
-          <SelectValue placeholder={FORM_FIELD_COPY.selectPlaceholder} />
+          <SelectValue placeholder={FORM_FIELD_COPY.selectPlaceholder}>
+            {selectedLabel}
+          </SelectValue>
         </SelectTrigger>
         <SelectContent>
           {options.map((option) => {

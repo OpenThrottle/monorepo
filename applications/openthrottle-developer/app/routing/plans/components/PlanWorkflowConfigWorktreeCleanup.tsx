@@ -34,6 +34,11 @@ export const PlanWorkflowConfigWorktreeCleanup = (
     ? PLAN_CONFIG_WORKTREE_CLEANUP_COPY.disabledHint
     : PLAN_CONFIG_WORKTREE_CLEANUP_COPY.hint;
 
+  const isKeep = input.worktreeCleanup === 'keep';
+  const cleanupLabel = isKeep
+    ? PLAN_CONFIG_WORKTREE_CLEANUP_COPY.keepLabel
+    : PLAN_CONFIG_WORKTREE_CLEANUP_COPY.onPrLabel;
+
   // Handlers
   const handleValueChange = (value: string): void => {
     if (value !== 'keep' && value !== 'on-pr') return;
@@ -62,7 +67,7 @@ export const PlanWorkflowConfigWorktreeCleanup = (
           className="max-w-md"
           id="workflow-run-worktree-cleanup"
         >
-          <SelectValue />
+          <SelectValue>{cleanupLabel}</SelectValue>
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="on-pr">

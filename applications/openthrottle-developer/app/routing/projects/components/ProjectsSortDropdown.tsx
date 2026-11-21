@@ -36,6 +36,9 @@ export const ProjectsSortDropdown = (
   const resolvedValue = PROJECTS_SORT_OPTIONS.some((o) => o.value === value)
     ? value
     : 'createdAt-desc';
+  const selectedLabel = PROJECTS_SORT_OPTIONS.find(
+    (o) => o.value === resolvedValue,
+  )?.label;
 
   // Handlers
   const handleValueChange = React.useCallback(
@@ -62,7 +65,7 @@ export const ProjectsSortDropdown = (
         aria-label="Sort projects"
         className="h-9 w-44 shrink-0 px-3"
       >
-        <SelectValue placeholder="Sort" />
+        <SelectValue placeholder="Sort">{selectedLabel}</SelectValue>
       </SelectTrigger>
       <SelectContent>
         {PROJECTS_SORT_OPTIONS.map((opt) => (

@@ -1,6 +1,7 @@
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
+import { renderToString } from 'react-dom/server';
 import { describe, expect, test, vi } from 'vitest';
 
 import type {
@@ -47,5 +48,18 @@ describe('ProjectsSortDropdown', () => {
     );
     const combobox = component.getByRole('combobox', { name: 'Sort projects' });
     expect(combobox).toHaveTextContent('Newest first');
+  });
+
+  test('renders the selected label in the server markup', () => {
+    // Radix fills a childless SelectValue only after hydration; the label must be in the SSR HTML.
+    const html = renderToString(
+      <ProjectsSortDropdown
+        onChange={() => {}}
+        sortBy="createdAt"
+        sortOrder="desc"
+      />,
+    );
+
+    expect(html).toContain('>Newest first<');
   });
 });
