@@ -6,7 +6,7 @@ import {
 import { GitCompareIcon } from 'lucide-react';
 import * as React from 'react';
 
-import type { EvalRunComparisonRouteQuery } from '~/__generated__/graphql';
+import type { EvalRunComparisonReportFragment } from '~/__generated__/graphql';
 import { EvalCompareHeadline } from '~/routing/evals/components/EvalCompareHeadline';
 import { EvalCompareVerdict } from '~/routing/evals/components/EvalCompareVerdict';
 import { EvalRegressionsTable } from '~/routing/evals/components/EvalRegressionsTable';
@@ -14,7 +14,7 @@ import { EVAL_COMPARE_COPY } from '~/routing/evals/data/data.copy';
 
 export interface EvalCompareRouteProps {
   readonly className?: string;
-  readonly comparison: EvalRunComparisonRouteQuery['evalRunComparison'];
+  readonly comparison: EvalRunComparisonReportFragment;
 }
 
 /**

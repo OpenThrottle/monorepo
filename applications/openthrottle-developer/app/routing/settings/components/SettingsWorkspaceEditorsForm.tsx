@@ -4,10 +4,12 @@ import { ComputerIcon } from 'lucide-react';
 import * as React from 'react';
 import { Form, Link, useNavigation } from 'react-router';
 
-import type { WorkspaceEditorId } from '~/__generated__/graphql';
+import type {
+  EditorPresenceReportFragment,
+  WorkspaceEditorId,
+} from '~/__generated__/graphql';
 import type {
   EditorPresenceState,
-  GetEditorPresenceQuery,
   UserWorkspaceProfileFieldsFragment,
   WorkspaceEditorId as WorkspaceEditorIdType,
 } from '~/__generated__/graphql';
@@ -26,7 +28,7 @@ export interface SettingsWorkspaceEditorsFormProps {
    * Advisory editor-presence hints, or null when the probe query failed. Display-only —
    * it never feeds the submitted selection.
    */
-  editorPresence?: GetEditorPresenceQuery['editorPresence'] | null;
+  editorPresence?: EditorPresenceReportFragment | null;
   /**
    * Presence indexed by editor, built once by the route. Display-only — it never feeds
    * the submitted selection and never gates a control.

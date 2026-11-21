@@ -91,6 +91,42 @@ query getSettingsRepositories {
   }
 }
 
+fragment DiscoveredWorktreesScan on DiscoveredWorktreesObject {
+  droppedCount
+  missingCheckouts {
+    checkoutId
+    lastRemoval {
+      agentSession
+      createdAt
+      id
+      outcome
+      parentCommand
+      removedAt
+      result
+    }
+    path
+    reason
+    repositoryId
+  }
+  problems {
+    detail
+    kind
+    path
+    repositoryId
+  }
+  scannedAt
+  scannedRoots {
+    baseRoot
+    exists
+    path
+    source
+    worktreeCount
+  }
+  worktrees {
+    ...DiscoveredWorktreeFields
+  }
+}
+
 query getSettingsRepositoriesDiscovery {
   discoveredFolders {
     alreadyRegistered
@@ -98,39 +134,7 @@ query getSettingsRepositoriesDiscovery {
     path
   }
   discoveredWorktrees {
-    droppedCount
-    missingCheckouts {
-      checkoutId
-      lastRemoval {
-        agentSession
-        createdAt
-        id
-        outcome
-        parentCommand
-        removedAt
-        result
-      }
-      path
-      reason
-      repositoryId
-    }
-    problems {
-      detail
-      kind
-      path
-      repositoryId
-    }
-    scannedAt
-    scannedRoots {
-      baseRoot
-      exists
-      path
-      source
-      worktreeCount
-    }
-    worktrees {
-      ...DiscoveredWorktreeFields
-    }
+    ...DiscoveredWorktreesScan
   }
 }
 
@@ -154,20 +158,24 @@ mutation pickFolderNative {
   }
 }
 
+fragment AddWorkspaceFolderResult on AddWorkspaceFolderPayloadObject {
+  checkout {
+    ...RepositoryCheckoutFields
+  }
+  project {
+    id
+    name
+  }
+  projectCreated
+  reconciliation
+  repository {
+    ...WorkspaceRepositoryFields
+  }
+}
+
 mutation addWorkspaceFolder($input: AddWorkspaceFolderInput!) {
   addWorkspaceFolder(input: $input) {
-    checkout {
-      ...RepositoryCheckoutFields
-    }
-    project {
-      id
-      name
-    }
-    projectCreated
-    reconciliation
-    repository {
-      ...WorkspaceRepositoryFields
-    }
+    ...AddWorkspaceFolderResult
   }
 }
 
@@ -206,23 +214,31 @@ mutation refreshCheckout($input: RefreshCheckoutInput!) {
   }
 }
 
+fragment PruneWorktreeCheckoutResult on PruneWorktreeCheckoutResultObject {
+  checkoutId
+  outcome
+  path
+}
+
 mutation pruneWorktreeCheckouts($input: PruneWorktreeCheckoutsInput!) {
   pruneWorktreeCheckouts(input: $input) {
     results {
-      checkoutId
-      outcome
-      path
+      ...PruneWorktreeCheckoutResult
     }
   }
 }
 
+fragment RemovePlanRunWorktreeResult on RemovePlanRunWorktreePayloadObject {
+  branch
+  checkoutId
+  detail
+  outcome
+  path
+}
+
 mutation removePlanRunWorktree($checkoutId: ID!) {
   removePlanRunWorktree(checkoutId: $checkoutId) {
-    branch
-    checkoutId
-    detail
-    outcome
-    path
+    ...RemovePlanRunWorktreeResult
   }
 }
 

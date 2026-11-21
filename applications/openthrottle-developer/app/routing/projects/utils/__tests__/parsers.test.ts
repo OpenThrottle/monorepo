@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import type { GetProjectsQuery } from '~/__generated__/graphql';
+import type { ProjectCardFragment } from '~/__generated__/graphql';
 import type { ProjectWithStats } from '~/routing/projects/types';
 
 import {
@@ -10,9 +10,9 @@ import {
 } from '../parsers';
 
 function apiProject(
-  overrides: Partial<GetProjectsQuery['projects'][number]> &
-    Pick<GetProjectsQuery['projects'][number], 'id' | 'name'>,
-): GetProjectsQuery['projects'][number] {
+  overrides: Partial<ProjectCardFragment> &
+    Pick<ProjectCardFragment, 'id' | 'name'>,
+): ProjectCardFragment {
   return {
     __typename: 'ProjectObject',
     createdAt: '2024-01-01T00:00:00.000Z',

@@ -27,25 +27,21 @@ query getQueueJobDetails($jobId: ID!, $queueName: String!) {
     ...JobDetailsCard
   }
 }
+fragment RetryJobResult on RetryJobResultObject {
+  error
+  jobId
+  success
+}
 
 mutation QueueJobDetailRetry($input: RetryJobInput!) {
   retryJob(input: $input) {
-    error
-    jobId
-    success
+    ...RetryJobResult
   }
 }
 
 mutation QueueJobDetailCancelPlanRun($input: CancelPlanRunInput!) {
   cancelPlanRun(input: $input) {
-    activeJobIdsCouldNotCancel
-    cancelRequested
-    noMatchingJob
-    outcome
-    planId
-    planStatusAfter
-    removedJobIds
-    signaledActiveRunToStop
+    ...CancelPlanRunResult
   }
 }
 
@@ -58,14 +54,17 @@ fragment QueueJobLogEvent on QueueJobLogEventObject {
   source
   timestamp
 }
+fragment QueueJobLogsPage on QueueJobLogPageObject {
+  events {
+    ...QueueJobLogEvent
+  }
+  hasMore
+  nextCursor
+}
 
 query QueueJobLogs($input: QueueJobLogsInput!) {
   queueJobLogs(input: $input) {
-    events {
-      ...QueueJobLogEvent
-    }
-    hasMore
-    nextCursor
+    ...QueueJobLogsPage
   }
 }
 

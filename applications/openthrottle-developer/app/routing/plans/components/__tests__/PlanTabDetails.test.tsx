@@ -3,8 +3,9 @@ import * as React from 'react';
 import { describe, expect, test, vi } from 'vitest';
 
 import type {
-  PlanDetailRunHistoryQuery,
   PlanDetailsFragment,
+  PlanRunHistoryEntryFragment,
+  PlanRunJobMetricsEntryFragment,
 } from '~/__generated__/graphql';
 import {
   buildPlanDetailLoaderData,
@@ -40,11 +41,9 @@ const mockPlan: PlanDetailsFragment = {
   updatedAt: '2025-01-02T00:00:00Z',
 };
 
-const defaultRecent: PlanDetailRunHistoryQuery['metrics']['recentPlanRunsMetrics'] =
-  [];
+const defaultRecent: PlanRunJobMetricsEntryFragment[] = [];
 
-const defaultPlanRunAuditRows: PlanDetailRunHistoryQuery['planRunsByPlanId'] =
-  [];
+const defaultPlanRunAuditRows: PlanRunHistoryEntryFragment[] = [];
 
 describe('PlanTabDetails Component', () => {
   test('renders overview tab with workflow transparency', async () => {

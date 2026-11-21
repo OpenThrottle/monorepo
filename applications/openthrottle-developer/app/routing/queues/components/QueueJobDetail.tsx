@@ -3,9 +3,9 @@ import * as React from 'react';
 import { useFetcher, useRevalidator } from 'react-router';
 
 import type {
+  CancelPlanRunResultFragment,
   JobDetailsCardFragment,
-  QueueJobDetailCancelPlanRunMutation,
-  QueueJobDetailRetryMutation,
+  RetryJobResultFragment,
 } from '~/__generated__/graphql';
 import {
   cancelPlanRunToastTone,
@@ -26,8 +26,8 @@ const CANCELLABLE_STATES = new Set(['active', 'delayed', 'waiting']);
 type QueueJobDetailActionData =
   | { cancelPlanRunError: string }
   | { retryJobError: string }
-  | { cancelPlanRun: QueueJobDetailCancelPlanRunMutation['cancelPlanRun'] }
-  | { retryJob: QueueJobDetailRetryMutation['retryJob'] };
+  | { cancelPlanRun: CancelPlanRunResultFragment }
+  | { retryJob: RetryJobResultFragment };
 
 export interface QueueJobDetailProps {
   job: JobDetailsCardFragment;

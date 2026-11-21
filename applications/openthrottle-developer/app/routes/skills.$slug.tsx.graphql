@@ -19,14 +19,17 @@ fragment SkillDetailUsageByDay on SkillUsageByDayObject {
   thirdPartyCount
   totalCount
 }
+fragment SkillDetailUsage on SkillUsageResultObject {
+  byDay {
+    ...SkillDetailUsageByDay
+  }
+  bySkill {
+    ...SkillDetailUsageBySkill
+  }
+}
 
 query getSkillDetailUsage($start: String!, $end: String!, $skillName: String!) {
   skillUsage(start: $start, end: $end, skillName: $skillName) {
-    byDay {
-      ...SkillDetailUsageByDay
-    }
-    bySkill {
-      ...SkillDetailUsageBySkill
-    }
+    ...SkillDetailUsage
   }
 }

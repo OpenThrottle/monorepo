@@ -1,8 +1,8 @@
 import { z } from 'zod/v3';
 
 import type {
-  SetBlogPostEditorTagsMutation,
-  UpdateBlogPostEditorMutation,
+  SetBlogPostTagsOutcomeFragment,
+  UpdateBlogPostOutcomeFragment,
 } from '~/__generated__/graphql';
 import { BlogReferenceEntity } from '~/__generated__/graphql';
 import { UpdateBlogPostInputSchema } from '~/__generated__/schemas';
@@ -164,7 +164,7 @@ export const parseBlogPostSaveRequest = (
  * {@link BlogPostSaveResult}. A written post is `saved`.
  */
 export const toBlogPostUpdateResult = (
-  result: UpdateBlogPostEditorMutation['updateBlogPost'],
+  result: UpdateBlogPostOutcomeFragment,
 ): BlogPostSaveResult => {
   switch (result.__typename) {
     case 'BlogCoverAltRequiredError':
@@ -203,7 +203,7 @@ export const toBlogPostUpdateResult = (
  * publish permission, which the editor shows as its read-only notice.
  */
 export const toBlogPostTagsResult = (
-  result: SetBlogPostEditorTagsMutation['setBlogPostTags'],
+  result: SetBlogPostTagsOutcomeFragment,
 ): BlogPostSaveResult => {
   switch (result.__typename) {
     case 'BlogPostAdminObject':

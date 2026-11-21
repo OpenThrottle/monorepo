@@ -1,6 +1,6 @@
 import type {
-  GetUsageTelemetryCoverageQuery,
   UsageTelemetryCoverageMachineFragment,
+  UsageTelemetryCoverageReportFragment,
 } from '~/__generated__/graphql';
 
 /** Loader clock shared by the telemetry-coverage specs. */
@@ -47,7 +47,7 @@ export const buildTelemetryMachine = (
 
 export const buildTelemetryCoverage = (
   machines: readonly UsageTelemetryCoverageMachineFragment[],
-): GetUsageTelemetryCoverageQuery['telemetryCoverage'] => {
+): UsageTelemetryCoverageReportFragment => {
   return {
     currentPluginVersion: `1.3.0`,
     generatedAt: TELEMETRY_COVERAGE_NOW_ISO,

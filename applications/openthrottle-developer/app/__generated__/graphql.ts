@@ -9298,6 +9298,32 @@ export type NotificationsSubscription = {
       };
 };
 
+export type AgentClisDiscoveryFragment = {
+  __typename?: 'DiscoverAgentClisResult';
+  totalCount: number;
+  agents: Array<{
+    __typename?: 'AgentCliOptionObject';
+    backend: string;
+    chatCapable: boolean;
+    enabled: boolean;
+    label: string;
+    supportsCustomBaseUrl: boolean;
+    version?: string | null;
+    authState: { __typename?: 'AgentCliAuthStateObject'; status: string };
+    capabilities: {
+      __typename?: 'ChatBackendCapabilitiesObject';
+      approvals: boolean;
+      editApprovals: boolean;
+    };
+    modelOptions: Array<{
+      __typename?: 'AgentCliModelOption';
+      enabled: boolean;
+      favorite: boolean;
+      model: string;
+    }>;
+  }>;
+};
+
 export type DiscoverAgentClisQueryVariables = Exact<{ [key: string]: never }>;
 
 export type DiscoverAgentClisQuery = {
@@ -9327,6 +9353,18 @@ export type DiscoverAgentClisQuery = {
       }>;
     }>;
   };
+};
+
+export type LocalModelsDiscoveryFragment = {
+  __typename?: 'DiscoverLocalModelsResult';
+  totalCount: number;
+  endpoints: Array<{
+    __typename?: 'ModelEndpointObject';
+    baseUrl: string;
+    host: string;
+    models: Array<string>;
+    provider?: string | null;
+  }>;
 };
 
 export type DiscoverLocalModelsQueryVariables = Exact<{ [key: string]: never }>;
@@ -9465,6 +9503,15 @@ export type StopTranscriptionStreamMutation = {
   stopTranscriptionStream: boolean;
 };
 
+export type TranscriptionStreamChunkFragment = {
+  __typename?: 'TranscriptionStreamChunkObject';
+  done: boolean;
+  error?: string | null;
+  sessionId: string;
+  sortOrder: number;
+  transcript: string;
+};
+
 export type TranscriptionStreamChunkAddedSubscriptionVariables = Exact<{
   sessionId: Scalars['ID']['input'];
 }>;
@@ -9537,6 +9584,145 @@ export type MintSubscriptionTokenMutation = {
   __typename?: 'Mutation';
   mintSubscriptionToken: string;
 };
+
+export type BlogEditorAuthorFragment = {
+  __typename?: 'BlogAuthorObject';
+  displayName: string;
+  slug: string;
+};
+
+export type BlogEditorTagFragment = {
+  __typename?: 'BlogTagObject';
+  name: string;
+  slug: string;
+};
+
+type UpdateBlogPostOutcome_BlogCoverAltRequiredError_Fragment = {
+  __typename: 'BlogCoverAltRequiredError';
+  message: string;
+};
+
+type UpdateBlogPostOutcome_BlogPostAdminObject_Fragment = {
+  __typename: 'BlogPostAdminObject';
+  id: string;
+  updatedAt: any;
+};
+
+type UpdateBlogPostOutcome_BlogPostNotFoundError_Fragment = {
+  __typename: 'BlogPostNotFoundError';
+  message: string;
+};
+
+type UpdateBlogPostOutcome_BlogPostPublishPermissionRequiredError_Fragment = {
+  __typename: 'BlogPostPublishPermissionRequiredError';
+  message: string;
+};
+
+type UpdateBlogPostOutcome_BlogPostStaleWriteError_Fragment = {
+  __typename: 'BlogPostStaleWriteError';
+  currentUpdatedAt: any;
+  message: string;
+};
+
+type UpdateBlogPostOutcome_BlogReferenceNotFoundError_Fragment = {
+  __typename: 'BlogReferenceNotFoundError';
+  entity: BlogReferenceEntity;
+  key: string;
+  message: string;
+};
+
+type UpdateBlogPostOutcome_BlogSlugConflictError_Fragment = {
+  __typename: 'BlogSlugConflictError';
+  message: string;
+  slug: string;
+};
+
+export type UpdateBlogPostOutcomeFragment =
+  | UpdateBlogPostOutcome_BlogCoverAltRequiredError_Fragment
+  | UpdateBlogPostOutcome_BlogPostAdminObject_Fragment
+  | UpdateBlogPostOutcome_BlogPostNotFoundError_Fragment
+  | UpdateBlogPostOutcome_BlogPostPublishPermissionRequiredError_Fragment
+  | UpdateBlogPostOutcome_BlogPostStaleWriteError_Fragment
+  | UpdateBlogPostOutcome_BlogReferenceNotFoundError_Fragment
+  | UpdateBlogPostOutcome_BlogSlugConflictError_Fragment;
+
+type SetBlogPostTagsOutcome_BlogPostAdminObject_Fragment = {
+  __typename: 'BlogPostAdminObject';
+  id: string;
+  updatedAt: any;
+};
+
+type SetBlogPostTagsOutcome_BlogPostNotFoundError_Fragment = {
+  __typename: 'BlogPostNotFoundError';
+  message: string;
+};
+
+type SetBlogPostTagsOutcome_BlogPostPublishPermissionRequiredError_Fragment = {
+  __typename: 'BlogPostPublishPermissionRequiredError';
+  message: string;
+};
+
+type SetBlogPostTagsOutcome_BlogReferenceNotFoundError_Fragment = {
+  __typename: 'BlogReferenceNotFoundError';
+  entity: BlogReferenceEntity;
+  key: string;
+  message: string;
+};
+
+export type SetBlogPostTagsOutcomeFragment =
+  | SetBlogPostTagsOutcome_BlogPostAdminObject_Fragment
+  | SetBlogPostTagsOutcome_BlogPostNotFoundError_Fragment
+  | SetBlogPostTagsOutcome_BlogPostPublishPermissionRequiredError_Fragment
+  | SetBlogPostTagsOutcome_BlogReferenceNotFoundError_Fragment;
+
+type PublishBlogPostOutcome_BlogPostAdminObject_Fragment = {
+  __typename: 'BlogPostAdminObject';
+  id: string;
+  publishedAt?: any | null;
+  state: BlogPostState;
+  updatedAt: any;
+};
+
+type PublishBlogPostOutcome_BlogPostNotFoundError_Fragment = {
+  __typename: 'BlogPostNotFoundError';
+  message: string;
+};
+
+export type PublishBlogPostOutcomeFragment =
+  | PublishBlogPostOutcome_BlogPostAdminObject_Fragment
+  | PublishBlogPostOutcome_BlogPostNotFoundError_Fragment;
+
+type UnpublishBlogPostOutcome_BlogPostAdminObject_Fragment = {
+  __typename: 'BlogPostAdminObject';
+  id: string;
+  state: BlogPostState;
+  updatedAt: any;
+};
+
+type UnpublishBlogPostOutcome_BlogPostNotFoundError_Fragment = {
+  __typename: 'BlogPostNotFoundError';
+  message: string;
+};
+
+export type UnpublishBlogPostOutcomeFragment =
+  | UnpublishBlogPostOutcome_BlogPostAdminObject_Fragment
+  | UnpublishBlogPostOutcome_BlogPostNotFoundError_Fragment;
+
+type ArchiveBlogPostOutcome_BlogPostAdminObject_Fragment = {
+  __typename: 'BlogPostAdminObject';
+  id: string;
+  state: BlogPostState;
+  updatedAt: any;
+};
+
+type ArchiveBlogPostOutcome_BlogPostNotFoundError_Fragment = {
+  __typename: 'BlogPostNotFoundError';
+  message: string;
+};
+
+export type ArchiveBlogPostOutcomeFragment =
+  | ArchiveBlogPostOutcome_BlogPostAdminObject_Fragment
+  | ArchiveBlogPostOutcome_BlogPostNotFoundError_Fragment;
 
 export type BlogPostEditorPostFragment = {
   __typename?: 'BlogPostAdminObject';
@@ -9746,6 +9932,35 @@ export type GetBlogAdminPostsQuery = {
   };
 };
 
+type CreateBlogPostOutcome_BlogCoverAltRequiredError_Fragment = {
+  __typename: 'BlogCoverAltRequiredError';
+  message: string;
+};
+
+type CreateBlogPostOutcome_BlogPostAdminObject_Fragment = {
+  __typename: 'BlogPostAdminObject';
+  id: string;
+};
+
+type CreateBlogPostOutcome_BlogReferenceNotFoundError_Fragment = {
+  __typename: 'BlogReferenceNotFoundError';
+  entity: BlogReferenceEntity;
+  key: string;
+  message: string;
+};
+
+type CreateBlogPostOutcome_BlogSlugConflictError_Fragment = {
+  __typename: 'BlogSlugConflictError';
+  message: string;
+  slug: string;
+};
+
+export type CreateBlogPostOutcomeFragment =
+  | CreateBlogPostOutcome_BlogCoverAltRequiredError_Fragment
+  | CreateBlogPostOutcome_BlogPostAdminObject_Fragment
+  | CreateBlogPostOutcome_BlogReferenceNotFoundError_Fragment
+  | CreateBlogPostOutcome_BlogSlugConflictError_Fragment;
+
 export type CreateBlogPostDraftMutationVariables = Exact<{
   input: CreateBlogPostInput;
 }>;
@@ -9888,6 +10103,12 @@ export type GetDashboardQuery = {
   }>;
 };
 
+export type PlanStatusCountFragment = {
+  __typename?: 'PlanStatusCountObject';
+  count: number;
+  status: string;
+};
+
 export type GetDashboardOnboardingQueryVariables = Exact<{
   [key: string]: never;
 }>;
@@ -10013,6 +10234,185 @@ export type EvalsIndexRunsQuery = {
     skillSha?: string | null;
     startedAt?: any | null;
     status: string;
+  }>;
+};
+
+export type EvalRunComparisonReportFragment = {
+  __typename?: 'EvalRunComparison';
+  improvedCaseIds: Array<string>;
+  regressedCaseIds: Array<string>;
+  sharedCases: number;
+  base: {
+    __typename?: 'EvalRunReport';
+    datasetName: string;
+    cases: Array<{
+      __typename?: 'EvalReportCase';
+      attemptsCounted: number;
+      attemptsPassed: number;
+      caseId: string;
+      passed?: boolean | null;
+      split: string;
+    }>;
+    graders: Array<{
+      __typename?: 'EvalReportGrader';
+      calibrationStatus?: string | null;
+      counts: boolean;
+      graderId: string;
+      graderKind: string;
+      graderVersion: string;
+      judgeModel?: string | null;
+      judgeModelVersion?: string | null;
+      kappa?: number | null;
+      kappaCiHigh?: number | null;
+      kappaCiLow?: number | null;
+    }>;
+    numbers: {
+      __typename?: 'EvalReportNumbers';
+      casesAtK: number;
+      casesCounted: number;
+      costPerSuccessUsd?: number | null;
+      detectionFloor?: number | null;
+      passAtK?: number | null;
+      passHatK?: number | null;
+      passRate?: number | null;
+      totalCostUsd?: number | null;
+      trialsCounted: number;
+      trialsExcluded: number;
+      trialsPassed: number;
+      excluded: {
+        __typename?: 'EvalReportExclusions';
+        errored: number;
+        gradeError: number;
+        noCountedGrade: number;
+        usageLimited: number;
+      };
+      judgeAgreement?: {
+        __typename?: 'EvalReportJudgeAgreement';
+        graderId: string;
+        graderVersion: string;
+        kappa: number;
+        kappaCiHigh?: number | null;
+        kappaCiLow?: number | null;
+        status: string;
+      } | null;
+      passRateCi?: {
+        __typename?: 'EvalReportInterval';
+        confidence: number;
+        lower: number;
+        upper: number;
+      } | null;
+    };
+    run: {
+      __typename?: 'EvalRun';
+      authMode: string;
+      budgetTokens?: number | null;
+      budgetUsd?: number | null;
+      createdAt: any;
+      datasetId: string;
+      datasetVersion: number;
+      driver: string;
+      effort?: string | null;
+      finishedAt?: any | null;
+      id: string;
+      k: number;
+      model?: string | null;
+      promptSha?: string | null;
+      skillSha?: string | null;
+      startedAt?: any | null;
+      status: string;
+    };
+  };
+  candidate: {
+    __typename?: 'EvalRunReport';
+    datasetName: string;
+    cases: Array<{
+      __typename?: 'EvalReportCase';
+      attemptsCounted: number;
+      attemptsPassed: number;
+      caseId: string;
+      passed?: boolean | null;
+      split: string;
+    }>;
+    graders: Array<{
+      __typename?: 'EvalReportGrader';
+      calibrationStatus?: string | null;
+      counts: boolean;
+      graderId: string;
+      graderKind: string;
+      graderVersion: string;
+      judgeModel?: string | null;
+      judgeModelVersion?: string | null;
+      kappa?: number | null;
+      kappaCiHigh?: number | null;
+      kappaCiLow?: number | null;
+    }>;
+    numbers: {
+      __typename?: 'EvalReportNumbers';
+      casesAtK: number;
+      casesCounted: number;
+      costPerSuccessUsd?: number | null;
+      detectionFloor?: number | null;
+      passAtK?: number | null;
+      passHatK?: number | null;
+      passRate?: number | null;
+      totalCostUsd?: number | null;
+      trialsCounted: number;
+      trialsExcluded: number;
+      trialsPassed: number;
+      excluded: {
+        __typename?: 'EvalReportExclusions';
+        errored: number;
+        gradeError: number;
+        noCountedGrade: number;
+        usageLimited: number;
+      };
+      judgeAgreement?: {
+        __typename?: 'EvalReportJudgeAgreement';
+        graderId: string;
+        graderVersion: string;
+        kappa: number;
+        kappaCiHigh?: number | null;
+        kappaCiLow?: number | null;
+        status: string;
+      } | null;
+      passRateCi?: {
+        __typename?: 'EvalReportInterval';
+        confidence: number;
+        lower: number;
+        upper: number;
+      } | null;
+    };
+    run: {
+      __typename?: 'EvalRun';
+      authMode: string;
+      budgetTokens?: number | null;
+      budgetUsd?: number | null;
+      createdAt: any;
+      datasetId: string;
+      datasetVersion: number;
+      driver: string;
+      effort?: string | null;
+      finishedAt?: any | null;
+      id: string;
+      k: number;
+      model?: string | null;
+      promptSha?: string | null;
+      skillSha?: string | null;
+      startedAt?: any | null;
+      status: string;
+    };
+  };
+  mcnemar?: {
+    __typename?: 'EvalMcNemar';
+    b: number;
+    c: number;
+    method: string;
+    pValue: number;
+  } | null;
+  warnings: Array<{
+    __typename?: 'EvalComparisonWarning';
+    code: string;
+    message: string;
   }>;
 };
 
@@ -10745,6 +11145,99 @@ export type GetTasksByPlanIdQuery = {
       name: string;
     } | null;
   }>;
+};
+
+export type EnqueuePlanRunResultFragment = {
+  __typename?: 'EnqueuePlanRunResultObject';
+  executionBackend: string;
+  jobId: string;
+  planId: string;
+  queuePosition: number;
+  queueTotal: number;
+};
+
+export type SchedulePlanRunResultFragment = {
+  __typename?: 'SchedulePlanRunResultObject';
+  executionBackend: string;
+  jobId: string;
+  planId: string;
+  planRunId: string;
+  scheduledFor: any;
+};
+
+export type CancelPlanRunResultFragment = {
+  __typename?: 'CancelPlanRunResultObject';
+  activeJobIdsCouldNotCancel: Array<string>;
+  cancelRequested: boolean;
+  noMatchingJob: boolean;
+  outcome: string;
+  planId: string;
+  planStatusAfter?: string | null;
+  removedJobIds: Array<string>;
+  signaledActiveRunToStop: boolean;
+};
+
+export type ForceSettledPlanRunFragment = {
+  __typename?: 'PlanRunObject';
+  heartbeatExpected: boolean;
+  id: string;
+  isStale: boolean;
+  status: string;
+};
+
+export type PlanOutputChunkFragment = {
+  __typename?: 'PlanOutputStreamChunkObject';
+  content: string;
+  createdAt: any;
+  id: string;
+  iteration?: number | null;
+  kind?: string | null;
+  planId: string;
+  taskId?: string | null;
+};
+
+export type PlanRunJobMetricsEntryFragment = {
+  __typename?: 'PlanRunMetricsEntry';
+  executionBackend?: string | null;
+  finishedOn?: number | null;
+  jobId: string;
+  taskRunMetrics?: {
+    __typename?: 'TaskRunMetrics';
+    atEnd: { __typename?: 'ProcessMetricsSnapshot'; rssMb: number };
+  } | null;
+};
+
+export type PlanRunHistoryEntryFragment = {
+  __typename?: 'PlanRunObject';
+  branch?: string | null;
+  bullmqJobId?: string | null;
+  createdAt: any;
+  executionBackend: string;
+  heartbeatExpected: boolean;
+  id: string;
+  isStale: boolean;
+  lastHeartbeatAt?: any | null;
+  model?: string | null;
+  resumeOfRunId?: string | null;
+  runConfigSnapshotJson?: string | null;
+  runKind: string;
+  scheduledFor?: any | null;
+  settledReason?: string | null;
+  status: string;
+  usageLimitResetsAt?: any | null;
+  checkout?: {
+    __typename?: 'PlanRunCheckoutObject';
+    displayName: string;
+    filesystemPath: string;
+    kind: string;
+  } | null;
+  pullRequest?: {
+    __typename?: 'PlanRunPullRequestObject';
+    number: number;
+    repo: string;
+    state?: string | null;
+    url: string;
+  } | null;
 };
 
 export type PlanDetailEnqueuePlanRunMutationVariables = Exact<{
@@ -12476,6 +12969,13 @@ export type GetQueueJobDetailsQuery = {
   } | null;
 };
 
+export type RetryJobResultFragment = {
+  __typename?: 'RetryJobResultObject';
+  error?: string | null;
+  jobId?: string | null;
+  success: boolean;
+};
+
 export type QueueJobDetailRetryMutationVariables = Exact<{
   input: RetryJobInput;
 }>;
@@ -12518,6 +13018,22 @@ export type QueueJobLogEventFragment = {
   queueName: string;
   source: string;
   timestamp: any;
+};
+
+export type QueueJobLogsPageFragment = {
+  __typename?: 'QueueJobLogPageObject';
+  hasMore: boolean;
+  nextCursor?: string | null;
+  events: Array<{
+    __typename?: 'QueueJobLogEventObject';
+    cursor: string;
+    jobId: string;
+    level: QueueJobLogLevel;
+    message: string;
+    queueName: string;
+    source: string;
+    timestamp: any;
+  }>;
 };
 
 export type QueueJobLogsQueryVariables = Exact<{
@@ -12797,6 +13313,16 @@ export type GetBackgroundActivitiesQuery = {
     status: string;
     total?: number | null;
   }>;
+};
+
+export type IdRefMatchFragment = {
+  __typename?: 'IdRefObject';
+  id: string;
+  kind: IdRefKind;
+  planId?: string | null;
+  planTitle?: string | null;
+  status: string;
+  title: string;
 };
 
 export type ResolveIdRefQueryVariables = Exact<{
@@ -13894,6 +14420,18 @@ export type SetAgentModelFavoriteMutation = {
   };
 };
 
+export type AgentSetupChunkFragment = {
+  __typename?: 'AgentSetupStreamChunkObject';
+  data: string;
+  done: boolean;
+  error?: string | null;
+  exitCode?: number | null;
+  id: string;
+  runId: string;
+  sortOrder: number;
+  stream: string;
+};
+
 export type AgentSetupChunkAddedSubscriptionVariables = Exact<{
   runId: Scalars['ID']['input'];
 }>;
@@ -14611,6 +15149,58 @@ export type GetSettingsRepositoriesQuery = {
   }>;
 };
 
+export type DiscoveredWorktreesScanFragment = {
+  __typename?: 'DiscoveredWorktreesObject';
+  droppedCount: number;
+  scannedAt: string;
+  missingCheckouts: Array<{
+    __typename?: 'MissingWorktreeCheckoutObject';
+    checkoutId: string;
+    path: string;
+    reason: MissingWorktreeCheckoutReason;
+    repositoryId: string;
+    lastRemoval?: {
+      __typename?: 'WorktreeRemovalObject';
+      agentSession?: string | null;
+      createdAt: any;
+      id: string;
+      outcome: string;
+      parentCommand?: string | null;
+      removedAt?: any | null;
+      result?: string | null;
+    } | null;
+  }>;
+  problems: Array<{
+    __typename?: 'WorktreeDiscoveryProblemObject';
+    detail: string;
+    kind: WorktreeDiscoveryProblemKind;
+    path?: string | null;
+    repositoryId?: string | null;
+  }>;
+  scannedRoots: Array<{
+    __typename?: 'ScannedWorktreeRootObject';
+    baseRoot: string;
+    exists: boolean;
+    path: string;
+    source: WorktreeRootSource;
+    worktreeCount: number;
+  }>;
+  worktrees: Array<{
+    __typename?: 'DiscoveredWorktreeObject';
+    activity: WorktreeActivity;
+    branch?: string | null;
+    checkoutId?: string | null;
+    name: string;
+    path: string;
+    planId?: string | null;
+    planRunId?: string | null;
+    repositoryId?: string | null;
+    runMonitored?: boolean | null;
+    safeToRemove: boolean;
+    unregistered: boolean;
+  }>;
+};
+
 export type GetSettingsRepositoriesDiscoveryQueryVariables = Exact<{
   [key: string]: never;
 }>;
@@ -14704,6 +15294,136 @@ export type PickFolderNativeMutation = {
   pickFolderNative: {
     __typename?: 'PickFolderNativePayloadObject';
     path?: string | null;
+  };
+};
+
+export type AddWorkspaceFolderResultFragment = {
+  __typename?: 'AddWorkspaceFolderPayloadObject';
+  projectCreated: boolean;
+  reconciliation: WorkspaceFolderReconciliation;
+  checkout: {
+    __typename?: 'RepositoryCheckoutObject';
+    createdAt: any;
+    displayName: string;
+    filesystemPath: string;
+    foreignSkillInjectionEnabled: boolean;
+    id: string;
+    isForeign: boolean;
+    kind: string;
+    managed: boolean;
+    repositoryId: string;
+    scannedAt?: any | null;
+    updatedAt: any;
+    userId: string;
+    worktreeSkillOverlayEnabled: boolean;
+    inspection?: {
+      __typename?: 'RepositoryInspectionObject';
+      scannedAt: any;
+      warnings: Array<string>;
+      agentConfig: {
+        __typename?: 'RepositoryInspectionAgentConfigObject';
+        agentsMd: boolean;
+        claudeMd: boolean;
+        cursorRules: boolean;
+        mcpJson: boolean;
+        skillsDir: boolean;
+      };
+      git: {
+        __typename?: 'RepositoryInspectionGitObject';
+        currentBranch?: string | null;
+        defaultBranch?: string | null;
+        dirty?: boolean | null;
+        isRepo: boolean;
+        linkedWorktrees: Array<string>;
+        normalizedRemoteUrl?: string | null;
+      };
+      hookTelemetry?: {
+        __typename?: 'RepositoryInspectionHookTelemetryObject';
+        authTokenConfigured: boolean;
+        endpointConfigured: boolean;
+        endpointSource: string;
+        producers: Array<string>;
+        reason?: string | null;
+        status: string;
+        telemetryDir: string;
+      } | null;
+      stack: {
+        __typename?: 'RepositoryInspectionStackObject';
+        languages: Array<string>;
+        nxWorkspace: boolean;
+        packageManager?: string | null;
+        pnpmWorkspace: boolean;
+        turbo: boolean;
+      };
+    } | null;
+  };
+  project?: { __typename?: 'ProjectObject'; id: string; name: string } | null;
+  repository: {
+    __typename?: 'RepositoryObject';
+    createdAt: any;
+    defaultBranch?: string | null;
+    id: string;
+    name: string;
+    normalizedRemoteUrl?: string | null;
+    projectId?: string | null;
+    updatedAt: any;
+    checkouts: Array<{
+      __typename?: 'RepositoryCheckoutObject';
+      createdAt: any;
+      displayName: string;
+      filesystemPath: string;
+      foreignSkillInjectionEnabled: boolean;
+      id: string;
+      isForeign: boolean;
+      kind: string;
+      managed: boolean;
+      repositoryId: string;
+      scannedAt?: any | null;
+      updatedAt: any;
+      userId: string;
+      worktreeSkillOverlayEnabled: boolean;
+      inspection?: {
+        __typename?: 'RepositoryInspectionObject';
+        scannedAt: any;
+        warnings: Array<string>;
+        agentConfig: {
+          __typename?: 'RepositoryInspectionAgentConfigObject';
+          agentsMd: boolean;
+          claudeMd: boolean;
+          cursorRules: boolean;
+          mcpJson: boolean;
+          skillsDir: boolean;
+        };
+        git: {
+          __typename?: 'RepositoryInspectionGitObject';
+          currentBranch?: string | null;
+          defaultBranch?: string | null;
+          dirty?: boolean | null;
+          isRepo: boolean;
+          linkedWorktrees: Array<string>;
+          normalizedRemoteUrl?: string | null;
+        };
+        hookTelemetry?: {
+          __typename?: 'RepositoryInspectionHookTelemetryObject';
+          authTokenConfigured: boolean;
+          endpointConfigured: boolean;
+          endpointSource: string;
+          producers: Array<string>;
+          reason?: string | null;
+          status: string;
+          telemetryDir: string;
+        } | null;
+        stack: {
+          __typename?: 'RepositoryInspectionStackObject';
+          languages: Array<string>;
+          nxWorkspace: boolean;
+          packageManager?: string | null;
+          pnpmWorkspace: boolean;
+          turbo: boolean;
+        };
+      } | null;
+    }>;
+    project?: { __typename?: 'ProjectObject'; id: string; name: string } | null;
   };
 };
 
@@ -15135,6 +15855,13 @@ export type RefreshCheckoutMutation = {
   };
 };
 
+export type PruneWorktreeCheckoutResultFragment = {
+  __typename?: 'PruneWorktreeCheckoutResultObject';
+  checkoutId: string;
+  outcome: PruneWorktreeCheckoutOutcome;
+  path?: string | null;
+};
+
 export type PruneWorktreeCheckoutsMutationVariables = Exact<{
   input: PruneWorktreeCheckoutsInput;
 }>;
@@ -15150,6 +15877,15 @@ export type PruneWorktreeCheckoutsMutation = {
       path?: string | null;
     }>;
   };
+};
+
+export type RemovePlanRunWorktreeResultFragment = {
+  __typename?: 'RemovePlanRunWorktreePayloadObject';
+  branch?: string | null;
+  checkoutId: string;
+  detail?: string | null;
+  outcome: PlanRunWorktreeTeardownOutcome;
+  path: string;
 };
 
 export type RemovePlanRunWorktreeMutationVariables = Exact<{
@@ -15456,6 +16192,17 @@ export type ApplyWorkspaceEditorConfigurationMutation = {
   };
 };
 
+export type EditorPresenceReportFragment = {
+  __typename?: 'EditorPresenceResultObject';
+  scannedAt: string;
+  trusted: boolean;
+  editors: Array<{
+    __typename?: 'EditorPresenceObject';
+    editor: WorkspaceEditorId;
+    presence: EditorPresenceState;
+  }>;
+};
+
 export type GetEditorPresenceQueryVariables = Exact<{ [key: string]: never }>;
 
 export type GetEditorPresenceQuery = {
@@ -15494,6 +16241,32 @@ export type SkillDetailUsageByDayFragment = {
   personalCount: number;
   thirdPartyCount: number;
   totalCount: number;
+};
+
+export type SkillDetailUsageFragment = {
+  __typename?: 'SkillUsageResultObject';
+  byDay: Array<{
+    __typename?: 'SkillUsageByDayObject';
+    date: string;
+    injectedCount: number;
+    oursCount: number;
+    personalCount: number;
+    thirdPartyCount: number;
+    totalCount: number;
+  }>;
+  bySkill: Array<{
+    __typename?: 'SkillUsageBySkillObject';
+    abandonedCount: number;
+    avgDurationMs?: number | null;
+    count: number;
+    errorCount: number;
+    lastUsedAt?: any | null;
+    outcomeCount: number;
+    scope: string;
+    sessionEndedCount: number;
+    skillName: string;
+    successCount: number;
+  }>;
 };
 
 export type GetSkillDetailUsageQueryVariables = Exact<{
@@ -15993,6 +16766,43 @@ export type UsageSkillUsageFilterOptionsFragment = {
   repoIdentities: Array<string>;
 };
 
+export type UsageSkillUsageReportFragment = {
+  __typename?: 'SkillUsageResultObject';
+  totalCount: number;
+  byDay: Array<{
+    __typename?: 'SkillUsageByDayObject';
+    date: string;
+    injectedCount: number;
+    oursCount: number;
+    personalCount: number;
+    thirdPartyCount: number;
+    totalCount: number;
+  }>;
+  byScope: Array<{
+    __typename?: 'SkillUsageByScopeObject';
+    count: number;
+    scope: string;
+  }>;
+  bySkill: Array<{
+    __typename?: 'SkillUsageBySkillObject';
+    abandonedCount: number;
+    avgDurationMs?: number | null;
+    count: number;
+    errorCount: number;
+    outcomeCount: number;
+    scope: string;
+    sessionEndedCount: number;
+    skillName: string;
+    successCount: number;
+  }>;
+  filterOptions: {
+    __typename?: 'SkillUsageFilterOptionsObject';
+    cwds: Array<string>;
+    gitBranches: Array<string>;
+    repoIdentities: Array<string>;
+  };
+};
+
 export type GetUsageSkillUsageQueryVariables = Exact<{
   start: Scalars['String']['input'];
   end: Scalars['String']['input'];
@@ -16101,6 +16911,43 @@ export type UsageTelemetryCoverageMachineFragment = {
     __typename?: 'TelemetryCoverageWarningObject';
     kind: string;
     message: string;
+  }>;
+};
+
+export type UsageTelemetryCoverageReportFragment = {
+  __typename?: 'TelemetryCoverageObject';
+  currentPluginVersion?: string | null;
+  generatedAt: any;
+  windowDays: number;
+  machines: Array<{
+    __typename?: 'TelemetryMachineCoverageObject';
+    deliveryLegsSeen: Array<string>;
+    lastSeenAt: any;
+    machineId: string;
+    machineLabel?: string | null;
+    marketplacePluginInstalled?: boolean | null;
+    marketplacePluginVersion?: string | null;
+    pluginVersion?: string | null;
+    buffer: {
+      __typename?: 'TelemetryBufferSnapshotObject';
+      deadLetterCount: number;
+      oldestBufferedAt?: any | null;
+      totalBuffered: number;
+    };
+    repos: Array<{
+      __typename?: 'TelemetryRepoCoverageObject';
+      repoIdentity?: string | null;
+      deliveryLegs: Array<{
+        __typename?: 'TelemetryRepoLegObject';
+        deliveryLeg: string;
+        lastSeenAt: any;
+      }>;
+    }>;
+    warnings: Array<{
+      __typename?: 'TelemetryCoverageWarningObject';
+      kind: string;
+      message: string;
+    }>;
   }>;
 };
 
@@ -16476,6 +17323,526 @@ export const RootMetricsFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<RootMetricsFragment, unknown>;
+export const AgentClisDiscoveryFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'AgentClisDiscovery' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'DiscoverAgentClisResult' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'agents' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'authState' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'status' },
+                      },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'backend' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'capabilities' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'approvals' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'editApprovals' },
+                      },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'chatCapable' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'label' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'modelOptions' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'enabled' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'favorite' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'supportsCustomBaseUrl' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'version' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<AgentClisDiscoveryFragment, unknown>;
+export const LocalModelsDiscoveryFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'LocalModelsDiscovery' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'DiscoverLocalModelsResult' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'endpoints' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'baseUrl' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'host' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'models' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'provider' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<LocalModelsDiscoveryFragment, unknown>;
+export const TranscriptionStreamChunkFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'TranscriptionStreamChunk' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TranscriptionStreamChunkObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'done' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'error' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'sessionId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'sortOrder' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'transcript' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<TranscriptionStreamChunkFragment, unknown>;
+export const BlogEditorAuthorFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'BlogEditorAuthor' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'BlogAuthorObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<BlogEditorAuthorFragment, unknown>;
+export const BlogEditorTagFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'BlogEditorTag' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'BlogTagObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<BlogEditorTagFragment, unknown>;
+export const UpdateBlogPostOutcomeFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UpdateBlogPostOutcome' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'UpdateBlogPostResult' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'BlogCoverAltRequiredError' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+              ],
+            },
+          },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'BlogPostAdminObject' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+              ],
+            },
+          },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'BlogPostNotFoundError' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+              ],
+            },
+          },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: {
+                kind: 'Name',
+                value: 'BlogPostPublishPermissionRequiredError',
+              },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+              ],
+            },
+          },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'BlogPostStaleWriteError' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'currentUpdatedAt' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+              ],
+            },
+          },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'BlogReferenceNotFoundError' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'entity' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'key' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+              ],
+            },
+          },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'BlogSlugConflictError' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<UpdateBlogPostOutcomeFragment, unknown>;
+export const SetBlogPostTagsOutcomeFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'SetBlogPostTagsOutcome' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'SetBlogPostTagsResult' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'BlogPostAdminObject' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+              ],
+            },
+          },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'BlogPostNotFoundError' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+              ],
+            },
+          },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: {
+                kind: 'Name',
+                value: 'BlogPostPublishPermissionRequiredError',
+              },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+              ],
+            },
+          },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'BlogReferenceNotFoundError' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'entity' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'key' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<SetBlogPostTagsOutcomeFragment, unknown>;
+export const PublishBlogPostOutcomeFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PublishBlogPostOutcome' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PublishBlogPostResult' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'BlogPostAdminObject' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'publishedAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'state' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+              ],
+            },
+          },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'BlogPostNotFoundError' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<PublishBlogPostOutcomeFragment, unknown>;
+export const UnpublishBlogPostOutcomeFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UnpublishBlogPostOutcome' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'UnpublishBlogPostResult' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'BlogPostAdminObject' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'state' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+              ],
+            },
+          },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'BlogPostNotFoundError' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<UnpublishBlogPostOutcomeFragment, unknown>;
+export const ArchiveBlogPostOutcomeFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'ArchiveBlogPostOutcome' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'ArchiveBlogPostResult' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'BlogPostAdminObject' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'state' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+              ],
+            },
+          },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'BlogPostNotFoundError' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<ArchiveBlogPostOutcomeFragment, unknown>;
 export const BlogPostEditorPostFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -16565,6 +17932,80 @@ export const BlogPostListRowFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<BlogPostListRowFragment, unknown>;
+export const CreateBlogPostOutcomeFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'CreateBlogPostOutcome' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'CreateBlogPostResult' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'BlogCoverAltRequiredError' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+              ],
+            },
+          },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'BlogPostAdminObject' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+              ],
+            },
+          },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'BlogReferenceNotFoundError' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'entity' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'key' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+              ],
+            },
+          },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'BlogSlugConflictError' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<CreateBlogPostOutcomeFragment, unknown>;
 export const DashboardActivityCardFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -16682,6 +18123,26 @@ export const DashboardDailyStatsCardFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<DashboardDailyStatsCardFragment, unknown>;
+export const PlanStatusCountFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PlanStatusCount' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PlanStatusCountObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'count' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<PlanStatusCountFragment, unknown>;
 export const EvalRunListRowFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -16923,6 +18384,281 @@ export const EvalRunReportFieldsFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<EvalRunReportFieldsFragment, unknown>;
+export const EvalRunComparisonReportFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'EvalRunComparisonReport' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'EvalRunComparison' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'base' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'EvalRunReportFields' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'candidate' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'EvalRunReportFields' },
+                },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'improvedCaseIds' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'mcnemar' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'b' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'c' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'method' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'pValue' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'regressedCaseIds' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'sharedCases' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'warnings' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'code' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'EvalRunReportFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'EvalRunReport' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'cases' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'attemptsCounted' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'attemptsPassed' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'caseId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'passed' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'split' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'datasetName' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'graders' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'calibrationStatus' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'counts' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'graderId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'graderKind' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'graderVersion' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'judgeModel' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'judgeModelVersion' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'kappa' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'kappaCiHigh' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'kappaCiLow' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'numbers' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'casesAtK' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'casesCounted' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'costPerSuccessUsd' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'detectionFloor' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'excluded' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'errored' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'gradeError' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'noCountedGrade' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'usageLimited' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'judgeAgreement' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'graderId' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'graderVersion' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'kappa' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'kappaCiHigh' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'kappaCiLow' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'status' },
+                      },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'passAtK' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'passHatK' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'passRate' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'passRateCi' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'confidence' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'lower' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'upper' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'totalCostUsd' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'trialsCounted' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'trialsExcluded' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'trialsPassed' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'run' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'authMode' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'budgetTokens' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'budgetUsd' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'datasetId' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'datasetVersion' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'driver' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'effort' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'finishedAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'k' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'promptSha' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'skillSha' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'startedAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<EvalRunComparisonReportFragment, unknown>;
 export const GeneratorDetailCardFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -17195,6 +18931,239 @@ export const PlanDetailsFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<PlanDetailsFragment, unknown>;
+export const EnqueuePlanRunResultFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'EnqueuePlanRunResult' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'EnqueuePlanRunResultObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'executionBackend' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'jobId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'queuePosition' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'queueTotal' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<EnqueuePlanRunResultFragment, unknown>;
+export const SchedulePlanRunResultFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'SchedulePlanRunResult' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'SchedulePlanRunResultObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'executionBackend' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'jobId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planRunId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scheduledFor' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<SchedulePlanRunResultFragment, unknown>;
+export const CancelPlanRunResultFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'CancelPlanRunResult' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'CancelPlanRunResultObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'activeJobIdsCouldNotCancel' },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'cancelRequested' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'noMatchingJob' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'outcome' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planStatusAfter' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'removedJobIds' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'signaledActiveRunToStop' },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<CancelPlanRunResultFragment, unknown>;
+export const ForceSettledPlanRunFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'ForceSettledPlanRun' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PlanRunObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'heartbeatExpected' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'isStale' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<ForceSettledPlanRunFragment, unknown>;
+export const PlanOutputChunkFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PlanOutputChunk' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PlanOutputStreamChunkObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'iteration' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<PlanOutputChunkFragment, unknown>;
+export const PlanRunJobMetricsEntryFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PlanRunJobMetricsEntry' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PlanRunMetricsEntry' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'executionBackend' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'finishedOn' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'jobId' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'taskRunMetrics' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'atEnd' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'rssMb' } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<PlanRunJobMetricsEntryFragment, unknown>;
+export const PlanRunHistoryEntryFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PlanRunHistoryEntry' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PlanRunObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'branch' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'bullmqJobId' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'checkout' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'filesystemPath' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'executionBackend' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'heartbeatExpected' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'isStale' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'lastHeartbeatAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'pullRequest' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'number' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'repo' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'state' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'url' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'resumeOfRunId' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'runConfigSnapshotJson' },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'runKind' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scheduledFor' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'settledReason' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'usageLimitResetsAt' },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<PlanRunHistoryEntryFragment, unknown>;
 export const PlanRunConfigRepositoryFieldsFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -18037,6 +20006,27 @@ export const JobDetailsCardFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<JobDetailsCardFragment, unknown>;
+export const RetryJobResultFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'RetryJobResult' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'RetryJobResultObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'error' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'jobId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'success' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<RetryJobResultFragment, unknown>;
 export const QueueJobLogEventFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -18062,6 +20052,59 @@ export const QueueJobLogEventFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<QueueJobLogEventFragment, unknown>;
+export const QueueJobLogsPageFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'QueueJobLogsPage' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'QueueJobLogPageObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'events' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'QueueJobLogEvent' },
+                },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'hasMore' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'nextCursor' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'QueueJobLogEvent' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'QueueJobLogEventObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'cursor' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'jobId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'level' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'queueName' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'source' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'timestamp' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<QueueJobLogsPageFragment, unknown>;
 export const QueueJobDetailsFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -18185,6 +20228,30 @@ export const QueueCardFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<QueueCardFragment, unknown>;
+export const IdRefMatchFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'IdRefMatch' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'IdRefObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planTitle' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<IdRefMatchFragment, unknown>;
 export const UsageBranchOptionFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -18630,6 +20697,32 @@ export const ScheduleRunStatsFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<ScheduleRunStatsFragment, unknown>;
+export const AgentSetupChunkFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'AgentSetupChunk' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'AgentSetupStreamChunkObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'data' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'done' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'error' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'exitCode' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'runId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'sortOrder' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'stream' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<AgentSetupChunkFragment, unknown>;
 export const ServiceAccountCredentialFieldsFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -18793,6 +20886,146 @@ export const DiscoveredWorktreeFieldsFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<DiscoveredWorktreeFieldsFragment, unknown>;
+export const DiscoveredWorktreesScanFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'DiscoveredWorktreesScan' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'DiscoveredWorktreesObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'droppedCount' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'missingCheckouts' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'checkoutId' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'lastRemoval' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'agentSession' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'createdAt' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'outcome' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'parentCommand' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'removedAt' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'result' },
+                      },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'path' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'reason' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'repositoryId' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'problems' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'detail' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'path' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'repositoryId' },
+                },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'scannedRoots' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'baseRoot' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'exists' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'path' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'source' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'worktreeCount' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'worktrees' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'DiscoveredWorktreeFields' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'DiscoveredWorktreeFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'DiscoveredWorktreeObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'activity' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'branch' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'checkoutId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'path' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planRunId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'repositoryId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'runMonitored' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'safeToRemove' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'unregistered' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<DiscoveredWorktreesScanFragment, unknown>;
 export const RepositoryCheckoutFieldsFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -19180,6 +21413,319 @@ export const WorkspaceRepositoryFieldsFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<WorkspaceRepositoryFieldsFragment, unknown>;
+export const AddWorkspaceFolderResultFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'AddWorkspaceFolderResult' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'AddWorkspaceFolderPayloadObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'checkout' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'RepositoryCheckoutFields' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'project' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectCreated' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'reconciliation' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'repository' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'WorkspaceRepositoryFields' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'RepositoryCheckoutFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'RepositoryCheckoutObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'filesystemPath' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'foreignSkillInjectionEnabled' },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'inspection' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'agentConfig' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'agentsMd' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'claudeMd' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'cursorRules' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'mcpJson' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'skillsDir' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'git' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'currentBranch' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'defaultBranch' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'dirty' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'isRepo' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'linkedWorktrees' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'normalizedRemoteUrl' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'hookTelemetry' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'authTokenConfigured' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'endpointConfigured' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'endpointSource' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'producers' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'reason' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'status' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'telemetryDir' },
+                      },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'stack' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'languages' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'nxWorkspace' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'packageManager' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'pnpmWorkspace' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'turbo' } },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'warnings' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'isForeign' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'managed' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'repositoryId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'userId' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'worktreeSkillOverlayEnabled' },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'WorkspaceRepositoryFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'RepositoryObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'checkouts' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'RepositoryCheckoutFields' },
+                },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'defaultBranch' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'normalizedRemoteUrl' },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'project' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<AddWorkspaceFolderResultFragment, unknown>;
+export const PruneWorktreeCheckoutResultFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PruneWorktreeCheckoutResult' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PruneWorktreeCheckoutResultObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'checkoutId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'outcome' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'path' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<PruneWorktreeCheckoutResultFragment, unknown>;
+export const RemovePlanRunWorktreeResultFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'RemovePlanRunWorktreeResult' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'RemovePlanRunWorktreePayloadObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'branch' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'checkoutId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'detail' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'outcome' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'path' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<RemovePlanRunWorktreeResultFragment, unknown>;
 export const RolloutFlagFieldsFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -19310,6 +21856,61 @@ export const UserWorkspaceProfileFieldsFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<UserWorkspaceProfileFieldsFragment, unknown>;
+export const EditorPresenceReportFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'EditorPresenceReport' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'EditorPresenceResultObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'editors' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'editor' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'presence' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'trusted' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<EditorPresenceReportFragment, unknown>;
+export const SkillDetailUsageByDayFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'SkillDetailUsageByDay' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'SkillUsageByDayObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'date' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'injectedCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'oursCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'personalCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'thirdPartyCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<SkillDetailUsageByDayFragment, unknown>;
 export const SkillDetailUsageBySkillFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -19338,9 +21939,48 @@ export const SkillDetailUsageBySkillFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<SkillDetailUsageBySkillFragment, unknown>;
-export const SkillDetailUsageByDayFragmentDoc = {
+export const SkillDetailUsageFragmentDoc = {
   kind: 'Document',
   definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'SkillDetailUsage' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'SkillUsageResultObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'byDay' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'SkillDetailUsageByDay' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'bySkill' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'SkillDetailUsageBySkill' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
     {
       kind: 'FragmentDefinition',
       name: { kind: 'Name', value: 'SkillDetailUsageByDay' },
@@ -19360,8 +22000,31 @@ export const SkillDetailUsageByDayFragmentDoc = {
         ],
       },
     },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'SkillDetailUsageBySkill' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'SkillUsageBySkillObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'abandonedCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'avgDurationMs' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'count' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'errorCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'lastUsedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'outcomeCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scope' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'sessionEndedCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'skillName' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'successCount' } },
+        ],
+      },
+    },
   ],
-} as unknown as DocumentNode<SkillDetailUsageByDayFragment, unknown>;
+} as unknown as DocumentNode<SkillDetailUsageFragment, unknown>;
 export const TimelineSpanRowFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -19617,6 +22280,50 @@ export const UsageTokenUsageByAccountFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<UsageTokenUsageByAccountFragment, unknown>;
+export const UsageSkillUsageByDayFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UsageSkillUsageByDay' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'SkillUsageByDayObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'date' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'injectedCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'oursCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'personalCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'thirdPartyCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<UsageSkillUsageByDayFragment, unknown>;
+export const UsageSkillUsageByScopeFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UsageSkillUsageByScope' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'SkillUsageByScopeObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'count' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scope' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<UsageSkillUsageByScopeFragment, unknown>;
 export const UsageSkillUsageBySkillFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -19644,50 +22351,6 @@ export const UsageSkillUsageBySkillFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<UsageSkillUsageBySkillFragment, unknown>;
-export const UsageSkillUsageByScopeFragmentDoc = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'FragmentDefinition',
-      name: { kind: 'Name', value: 'UsageSkillUsageByScope' },
-      typeCondition: {
-        kind: 'NamedType',
-        name: { kind: 'Name', value: 'SkillUsageByScopeObject' },
-      },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'count' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'scope' } },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<UsageSkillUsageByScopeFragment, unknown>;
-export const UsageSkillUsageByDayFragmentDoc = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'FragmentDefinition',
-      name: { kind: 'Name', value: 'UsageSkillUsageByDay' },
-      typeCondition: {
-        kind: 'NamedType',
-        name: { kind: 'Name', value: 'SkillUsageByDayObject' },
-      },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'date' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'injectedCount' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'oursCount' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'personalCount' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'thirdPartyCount' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<UsageSkillUsageByDayFragment, unknown>;
 export const UsageSkillUsageFilterOptionsFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -19709,6 +22372,149 @@ export const UsageSkillUsageFilterOptionsFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<UsageSkillUsageFilterOptionsFragment, unknown>;
+export const UsageSkillUsageReportFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UsageSkillUsageReport' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'SkillUsageResultObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'byDay' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'UsageSkillUsageByDay' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'byScope' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'UsageSkillUsageByScope' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'bySkill' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'UsageSkillUsageBySkill' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'filterOptions' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'UsageSkillUsageFilterOptions' },
+                },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UsageSkillUsageByDay' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'SkillUsageByDayObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'date' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'injectedCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'oursCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'personalCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'thirdPartyCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UsageSkillUsageByScope' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'SkillUsageByScopeObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'count' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scope' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UsageSkillUsageBySkill' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'SkillUsageBySkillObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'abandonedCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'avgDurationMs' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'count' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'errorCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'outcomeCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scope' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'sessionEndedCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'skillName' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'successCount' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UsageSkillUsageFilterOptions' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'SkillUsageFilterOptionsObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'cwds' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'gitBranches' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'repoIdentities' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<UsageSkillUsageReportFragment, unknown>;
 export const UsageCaptureHealthRowFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -19861,6 +22667,142 @@ export const UsageTelemetryCoverageMachineFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<UsageTelemetryCoverageMachineFragment, unknown>;
+export const UsageTelemetryCoverageReportFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UsageTelemetryCoverageReport' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TelemetryCoverageObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'currentPluginVersion' },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'generatedAt' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'machines' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: {
+                    kind: 'Name',
+                    value: 'UsageTelemetryCoverageMachine',
+                  },
+                },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'windowDays' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UsageTelemetryCoverageRepo' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TelemetryRepoCoverageObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'deliveryLegs' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'deliveryLeg' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'lastSeenAt' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'repoIdentity' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UsageTelemetryCoverageMachine' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TelemetryMachineCoverageObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'buffer' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'deadLetterCount' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'oldestBufferedAt' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'totalBuffered' },
+                },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'deliveryLegsSeen' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'lastSeenAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'machineId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'machineLabel' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'marketplacePluginInstalled' },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'marketplacePluginVersion' },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'pluginVersion' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'repos' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'UsageTelemetryCoverageRepo' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'warnings' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<UsageTelemetryCoverageReportFragment, unknown>;
 export const GetMyPermissionsDocument = {
   kind: 'Document',
   definitions: [
@@ -20855,90 +23797,92 @@ export const DiscoverAgentClisDocument = {
               kind: 'SelectionSet',
               selections: [
                 {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'AgentClisDiscovery' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'AgentClisDiscovery' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'DiscoverAgentClisResult' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'agents' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
                   kind: 'Field',
-                  name: { kind: 'Name', value: 'agents' },
+                  name: { kind: 'Name', value: 'authState' },
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
                       {
                         kind: 'Field',
-                        name: { kind: 'Name', value: 'authState' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'status' },
-                            },
-                          ],
-                        },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'backend' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'capabilities' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'approvals' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'editApprovals' },
-                            },
-                          ],
-                        },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'chatCapable' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'enabled' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'label' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'modelOptions' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'enabled' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'favorite' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'model' },
-                            },
-                          ],
-                        },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'supportsCustomBaseUrl' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'version' },
+                        name: { kind: 'Name', value: 'status' },
                       },
                     ],
                   },
                 },
-                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'backend' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'capabilities' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'approvals' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'editApprovals' },
+                      },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'chatCapable' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'label' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'modelOptions' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'enabled' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'favorite' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'supportsCustomBaseUrl' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'version' } },
               ],
             },
           },
+          { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
         ],
       },
     },
@@ -20964,31 +23908,39 @@ export const DiscoverLocalModelsDocument = {
               kind: 'SelectionSet',
               selections: [
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'endpoints' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'baseUrl' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'host' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'models' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'provider' },
-                      },
-                    ],
-                  },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'LocalModelsDiscovery' },
                 },
-                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
               ],
             },
           },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'LocalModelsDiscovery' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'DiscoverLocalModelsResult' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'endpoints' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'baseUrl' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'host' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'models' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'provider' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
         ],
       },
     },
@@ -21560,14 +24512,31 @@ export const TranscriptionStreamChunkAddedDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'done' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'error' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'sessionId' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'sortOrder' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'transcript' } },
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'TranscriptionStreamChunk' },
+                },
               ],
             },
           },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'TranscriptionStreamChunk' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TranscriptionStreamChunkObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'done' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'error' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'sessionId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'sortOrder' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'transcript' } },
         ],
       },
     },
@@ -21792,8 +24761,10 @@ export const GetBlogPostEditorDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'BlogEditorAuthor' },
+                },
               ],
             },
           },
@@ -21855,11 +24826,28 @@ export const GetBlogPostEditorDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'BlogEditorTag' },
+                },
               ],
             },
           },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'BlogEditorAuthor' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'BlogAuthorObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
         ],
       },
     },
@@ -21911,6 +24899,21 @@ export const GetBlogPostEditorDocument = {
         ],
       },
     },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'BlogEditorTag' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'BlogTagObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+        ],
+      },
+    },
   ],
 } as unknown as DocumentNode<
   GetBlogPostEditorQuery,
@@ -21958,133 +24961,126 @@ export const UpdateBlogPostEditorDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
                 {
-                  kind: 'InlineFragment',
-                  typeCondition: {
-                    kind: 'NamedType',
-                    name: { kind: 'Name', value: 'BlogCoverAltRequiredError' },
-                  },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'message' },
-                      },
-                    ],
-                  },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'UpdateBlogPostOutcome' },
                 },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UpdateBlogPostOutcome' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'UpdateBlogPostResult' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'BlogCoverAltRequiredError' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+              ],
+            },
+          },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'BlogPostAdminObject' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+              ],
+            },
+          },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'BlogPostNotFoundError' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+              ],
+            },
+          },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: {
+                kind: 'Name',
+                value: 'BlogPostPublishPermissionRequiredError',
+              },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+              ],
+            },
+          },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'BlogPostStaleWriteError' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
                 {
-                  kind: 'InlineFragment',
-                  typeCondition: {
-                    kind: 'NamedType',
-                    name: { kind: 'Name', value: 'BlogPostAdminObject' },
-                  },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'updatedAt' },
-                      },
-                    ],
-                  },
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'currentUpdatedAt' },
                 },
-                {
-                  kind: 'InlineFragment',
-                  typeCondition: {
-                    kind: 'NamedType',
-                    name: { kind: 'Name', value: 'BlogPostNotFoundError' },
-                  },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'message' },
-                      },
-                    ],
-                  },
-                },
-                {
-                  kind: 'InlineFragment',
-                  typeCondition: {
-                    kind: 'NamedType',
-                    name: {
-                      kind: 'Name',
-                      value: 'BlogPostPublishPermissionRequiredError',
-                    },
-                  },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'message' },
-                      },
-                    ],
-                  },
-                },
-                {
-                  kind: 'InlineFragment',
-                  typeCondition: {
-                    kind: 'NamedType',
-                    name: { kind: 'Name', value: 'BlogPostStaleWriteError' },
-                  },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'currentUpdatedAt' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'message' },
-                      },
-                    ],
-                  },
-                },
-                {
-                  kind: 'InlineFragment',
-                  typeCondition: {
-                    kind: 'NamedType',
-                    name: { kind: 'Name', value: 'BlogReferenceNotFoundError' },
-                  },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'entity' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'key' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'message' },
-                      },
-                    ],
-                  },
-                },
-                {
-                  kind: 'InlineFragment',
-                  typeCondition: {
-                    kind: 'NamedType',
-                    name: { kind: 'Name', value: 'BlogSlugConflictError' },
-                  },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'message' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
-                    ],
-                  },
-                },
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+              ],
+            },
+          },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'BlogReferenceNotFoundError' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'entity' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'key' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+              ],
+            },
+          },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'BlogSlugConflictError' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
               ],
             },
           },
@@ -22138,80 +25134,82 @@ export const SetBlogPostEditorTagsDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
                 {
-                  kind: 'InlineFragment',
-                  typeCondition: {
-                    kind: 'NamedType',
-                    name: { kind: 'Name', value: 'BlogPostAdminObject' },
-                  },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'updatedAt' },
-                      },
-                    ],
-                  },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'SetBlogPostTagsOutcome' },
                 },
-                {
-                  kind: 'InlineFragment',
-                  typeCondition: {
-                    kind: 'NamedType',
-                    name: { kind: 'Name', value: 'BlogPostNotFoundError' },
-                  },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'message' },
-                      },
-                    ],
-                  },
-                },
-                {
-                  kind: 'InlineFragment',
-                  typeCondition: {
-                    kind: 'NamedType',
-                    name: {
-                      kind: 'Name',
-                      value: 'BlogPostPublishPermissionRequiredError',
-                    },
-                  },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'message' },
-                      },
-                    ],
-                  },
-                },
-                {
-                  kind: 'InlineFragment',
-                  typeCondition: {
-                    kind: 'NamedType',
-                    name: { kind: 'Name', value: 'BlogReferenceNotFoundError' },
-                  },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'entity' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'key' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'message' },
-                      },
-                    ],
-                  },
-                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'SetBlogPostTagsOutcome' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'SetBlogPostTagsResult' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'BlogPostAdminObject' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+              ],
+            },
+          },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'BlogPostNotFoundError' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+              ],
+            },
+          },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: {
+                kind: 'Name',
+                value: 'BlogPostPublishPermissionRequiredError',
+              },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+              ],
+            },
+          },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'BlogReferenceNotFoundError' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'entity' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'key' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
               ],
             },
           },
@@ -22265,45 +25263,53 @@ export const PublishBlogPostEditorDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
                 {
-                  kind: 'InlineFragment',
-                  typeCondition: {
-                    kind: 'NamedType',
-                    name: { kind: 'Name', value: 'BlogPostAdminObject' },
-                  },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'publishedAt' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'state' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'updatedAt' },
-                      },
-                    ],
-                  },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'PublishBlogPostOutcome' },
                 },
-                {
-                  kind: 'InlineFragment',
-                  typeCondition: {
-                    kind: 'NamedType',
-                    name: { kind: 'Name', value: 'BlogPostNotFoundError' },
-                  },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'message' },
-                      },
-                    ],
-                  },
-                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PublishBlogPostOutcome' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PublishBlogPostResult' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'BlogPostAdminObject' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'publishedAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'state' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+              ],
+            },
+          },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'BlogPostNotFoundError' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
               ],
             },
           },
@@ -22351,41 +25357,52 @@ export const UnpublishBlogPostEditorDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
                 {
-                  kind: 'InlineFragment',
-                  typeCondition: {
-                    kind: 'NamedType',
-                    name: { kind: 'Name', value: 'BlogPostAdminObject' },
-                  },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'state' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'updatedAt' },
-                      },
-                    ],
-                  },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'UnpublishBlogPostOutcome' },
                 },
-                {
-                  kind: 'InlineFragment',
-                  typeCondition: {
-                    kind: 'NamedType',
-                    name: { kind: 'Name', value: 'BlogPostNotFoundError' },
-                  },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'message' },
-                      },
-                    ],
-                  },
-                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UnpublishBlogPostOutcome' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'UnpublishBlogPostResult' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'BlogPostAdminObject' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'state' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+              ],
+            },
+          },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'BlogPostNotFoundError' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
               ],
             },
           },
@@ -22433,41 +25450,52 @@ export const ArchiveBlogPostEditorDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
                 {
-                  kind: 'InlineFragment',
-                  typeCondition: {
-                    kind: 'NamedType',
-                    name: { kind: 'Name', value: 'BlogPostAdminObject' },
-                  },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'state' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'updatedAt' },
-                      },
-                    ],
-                  },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'ArchiveBlogPostOutcome' },
                 },
-                {
-                  kind: 'InlineFragment',
-                  typeCondition: {
-                    kind: 'NamedType',
-                    name: { kind: 'Name', value: 'BlogPostNotFoundError' },
-                  },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'message' },
-                      },
-                    ],
-                  },
-                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'ArchiveBlogPostOutcome' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'ArchiveBlogPostResult' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'BlogPostAdminObject' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'state' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+              ],
+            },
+          },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'BlogPostNotFoundError' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
               ],
             },
           },
@@ -22674,74 +25702,79 @@ export const CreateBlogPostDraftDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
                 {
-                  kind: 'InlineFragment',
-                  typeCondition: {
-                    kind: 'NamedType',
-                    name: { kind: 'Name', value: 'BlogCoverAltRequiredError' },
-                  },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'message' },
-                      },
-                    ],
-                  },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'CreateBlogPostOutcome' },
                 },
-                {
-                  kind: 'InlineFragment',
-                  typeCondition: {
-                    kind: 'NamedType',
-                    name: { kind: 'Name', value: 'BlogPostAdminObject' },
-                  },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                    ],
-                  },
-                },
-                {
-                  kind: 'InlineFragment',
-                  typeCondition: {
-                    kind: 'NamedType',
-                    name: { kind: 'Name', value: 'BlogReferenceNotFoundError' },
-                  },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'entity' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'key' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'message' },
-                      },
-                    ],
-                  },
-                },
-                {
-                  kind: 'InlineFragment',
-                  typeCondition: {
-                    kind: 'NamedType',
-                    name: { kind: 'Name', value: 'BlogSlugConflictError' },
-                  },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'message' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
-                    ],
-                  },
-                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'CreateBlogPostOutcome' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'CreateBlogPostResult' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'BlogCoverAltRequiredError' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+              ],
+            },
+          },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'BlogPostAdminObject' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+              ],
+            },
+          },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'BlogReferenceNotFoundError' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'entity' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'key' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+              ],
+            },
+          },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'BlogSlugConflictError' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
               ],
             },
           },
@@ -23020,8 +26053,10 @@ export const GetDashboardOnboardingDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'count' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'PlanStatusCount' },
+                },
               ],
             },
           },
@@ -23035,6 +26070,21 @@ export const GetDashboardOnboardingDocument = {
               ],
             },
           },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PlanStatusCount' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PlanStatusCountObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'count' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
         ],
       },
     },
@@ -23478,72 +26528,8 @@ export const EvalRunComparisonRouteDocument = {
               kind: 'SelectionSet',
               selections: [
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'base' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'FragmentSpread',
-                        name: { kind: 'Name', value: 'EvalRunReportFields' },
-                      },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'candidate' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'FragmentSpread',
-                        name: { kind: 'Name', value: 'EvalRunReportFields' },
-                      },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'improvedCaseIds' },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'mcnemar' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'b' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'c' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'method' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'pValue' },
-                      },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'regressedCaseIds' },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'sharedCases' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'warnings' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'code' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'message' },
-                      },
-                    ],
-                  },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'EvalRunComparisonReport' },
                 },
               ],
             },
@@ -23749,6 +26735,72 @@ export const EvalRunComparisonRouteDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'skillSha' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'startedAt' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'EvalRunComparisonReport' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'EvalRunComparison' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'base' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'EvalRunReportFields' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'candidate' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'EvalRunReportFields' },
+                },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'improvedCaseIds' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'mcnemar' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'b' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'c' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'method' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'pValue' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'regressedCaseIds' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'sharedCases' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'warnings' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'code' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
               ],
             },
           },
@@ -24972,19 +28024,30 @@ export const PlanDetailEnqueuePlanRunDocument = {
               kind: 'SelectionSet',
               selections: [
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'executionBackend' },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'EnqueuePlanRunResult' },
                 },
-                { kind: 'Field', name: { kind: 'Name', value: 'jobId' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'queuePosition' },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'queueTotal' } },
               ],
             },
           },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'EnqueuePlanRunResult' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'EnqueuePlanRunResultObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'executionBackend' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'jobId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'queuePosition' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'queueTotal' } },
         ],
       },
     },
@@ -25036,19 +28099,30 @@ export const PlanDetailSchedulePlanRunDocument = {
               kind: 'SelectionSet',
               selections: [
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'executionBackend' },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'jobId' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'planRunId' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'scheduledFor' },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'SchedulePlanRunResult' },
                 },
               ],
             },
           },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'SchedulePlanRunResult' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'SchedulePlanRunResultObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'executionBackend' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'jobId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planRunId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scheduledFor' } },
         ],
       },
     },
@@ -25213,33 +28287,38 @@ export const PlanDetailCancelPlanRunDocument = {
               kind: 'SelectionSet',
               selections: [
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'activeJobIdsCouldNotCancel' },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'cancelRequested' },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'noMatchingJob' },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'outcome' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'planStatusAfter' },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'removedJobIds' },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'signaledActiveRunToStop' },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'CancelPlanRunResult' },
                 },
               ],
             },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'CancelPlanRunResult' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'CancelPlanRunResultObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'activeJobIdsCouldNotCancel' },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'cancelRequested' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'noMatchingJob' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'outcome' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planStatusAfter' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'removedJobIds' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'signaledActiveRunToStop' },
           },
         ],
       },
@@ -25292,15 +28371,29 @@ export const PlanDetailForceSettlePlanRunDocument = {
               kind: 'SelectionSet',
               selections: [
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'heartbeatExpected' },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'ForceSettledPlanRun' },
                 },
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'isStale' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
               ],
             },
           },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'ForceSettledPlanRun' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PlanRunObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'heartbeatExpected' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'isStale' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
         ],
       },
     },
@@ -26081,16 +29174,33 @@ export const PlanDetailOutputChunksDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'content' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'iteration' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'PlanOutputChunk' },
+                },
               ],
             },
           },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PlanOutputChunk' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PlanOutputStreamChunkObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'iteration' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
         ],
       },
     },
@@ -26150,35 +29260,8 @@ export const PlanDetailRunHistoryDocument = {
                     kind: 'SelectionSet',
                     selections: [
                       {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'executionBackend' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'finishedOn' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'jobId' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'taskRunMetrics' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'atEnd' },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'rssMb' },
-                                  },
-                                ],
-                              },
-                            },
-                          ],
-                        },
+                        kind: 'FragmentSpread',
+                        name: { kind: 'Name', value: 'PlanRunJobMetricsEntry' },
                       },
                     ],
                   },
@@ -26221,82 +29304,110 @@ export const PlanDetailRunHistoryDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'branch' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'bullmqJobId' } },
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'checkout' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'displayName' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'filesystemPath' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
-                    ],
-                  },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'executionBackend' },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'heartbeatExpected' },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'isStale' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'lastHeartbeatAt' },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'model' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'pullRequest' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'number' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'repo' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'state' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'url' } },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'resumeOfRunId' },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'runConfigSnapshotJson' },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'runKind' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'scheduledFor' },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'settledReason' },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'usageLimitResetsAt' },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'PlanRunHistoryEntry' },
                 },
               ],
             },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PlanRunJobMetricsEntry' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PlanRunMetricsEntry' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'executionBackend' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'finishedOn' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'jobId' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'taskRunMetrics' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'atEnd' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'rssMb' } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PlanRunHistoryEntry' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PlanRunObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'branch' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'bullmqJobId' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'checkout' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'filesystemPath' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'executionBackend' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'heartbeatExpected' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'isStale' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'lastHeartbeatAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'pullRequest' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'number' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'repo' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'state' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'url' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'resumeOfRunId' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'runConfigSnapshotJson' },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'runKind' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scheduledFor' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'settledReason' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'usageLimitResetsAt' },
           },
         ],
       },
@@ -26512,16 +29623,33 @@ export const PlanOutputChunkAddedDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'content' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'iteration' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'PlanOutputChunk' },
+                },
               ],
             },
           },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PlanOutputChunk' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PlanOutputStreamChunkObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'iteration' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
         ],
       },
     },
@@ -27806,16 +30934,33 @@ export const TaskOutputStreamChunksDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'content' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'iteration' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'PlanOutputChunk' },
+                },
               ],
             },
           },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PlanOutputChunk' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PlanOutputStreamChunkObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'iteration' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
         ],
       },
     },
@@ -30208,12 +33353,29 @@ export const QueueJobDetailRetryDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'error' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'jobId' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'success' } },
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'RetryJobResult' },
+                },
               ],
             },
           },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'RetryJobResult' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'RetryJobResultObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'error' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'jobId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'success' } },
         ],
       },
     },
@@ -30265,33 +33427,38 @@ export const QueueJobDetailCancelPlanRunDocument = {
               kind: 'SelectionSet',
               selections: [
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'activeJobIdsCouldNotCancel' },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'cancelRequested' },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'noMatchingJob' },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'outcome' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'planStatusAfter' },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'removedJobIds' },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'signaledActiveRunToStop' },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'CancelPlanRunResult' },
                 },
               ],
             },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'CancelPlanRunResult' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'CancelPlanRunResultObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'activeJobIdsCouldNotCancel' },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'cancelRequested' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'noMatchingJob' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'outcome' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planStatusAfter' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'removedJobIds' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'signaledActiveRunToStop' },
           },
         ],
       },
@@ -30344,20 +33511,9 @@ export const QueueJobLogsDocument = {
               kind: 'SelectionSet',
               selections: [
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'events' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'FragmentSpread',
-                        name: { kind: 'Name', value: 'QueueJobLogEvent' },
-                      },
-                    ],
-                  },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'QueueJobLogsPage' },
                 },
-                { kind: 'Field', name: { kind: 'Name', value: 'hasMore' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'nextCursor' } },
               ],
             },
           },
@@ -30381,6 +33537,34 @@ export const QueueJobLogsDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'queueName' } },
           { kind: 'Field', name: { kind: 'Name', value: 'source' } },
           { kind: 'Field', name: { kind: 'Name', value: 'timestamp' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'QueueJobLogsPage' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'QueueJobLogPageObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'events' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'QueueJobLogEvent' },
+                },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'hasMore' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'nextCursor' } },
         ],
       },
     },
@@ -31201,15 +34385,32 @@ export const ResolveIdRefDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'planTitle' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'IdRefMatch' },
+                },
               ],
             },
           },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'IdRefMatch' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'IdRefObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planTitle' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
         ],
       },
     },
@@ -34228,17 +37429,34 @@ export const AgentSetupChunkAddedDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'data' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'done' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'error' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'exitCode' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'runId' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'sortOrder' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'stream' } },
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'AgentSetupChunk' },
+                },
               ],
             },
           },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'AgentSetupChunk' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'AgentSetupStreamChunkObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'data' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'done' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'error' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'exitCode' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'runId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'sortOrder' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'stream' } },
         ],
       },
     },
@@ -36090,129 +39308,8 @@ export const GetSettingsRepositoriesDiscoveryDocument = {
               kind: 'SelectionSet',
               selections: [
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'droppedCount' },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'missingCheckouts' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'checkoutId' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'lastRemoval' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'agentSession' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'createdAt' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'outcome' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'parentCommand' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'removedAt' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'result' },
-                            },
-                          ],
-                        },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'path' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'reason' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'repositoryId' },
-                      },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'problems' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'detail' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'path' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'repositoryId' },
-                      },
-                    ],
-                  },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'scannedRoots' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'baseRoot' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'exists' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'path' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'source' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'worktreeCount' },
-                      },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'worktrees' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'FragmentSpread',
-                        name: {
-                          kind: 'Name',
-                          value: 'DiscoveredWorktreeFields',
-                        },
-                      },
-                    ],
-                  },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'DiscoveredWorktreesScan' },
                 },
               ],
             },
@@ -36241,6 +39338,117 @@ export const GetSettingsRepositoriesDiscoveryDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'runMonitored' } },
           { kind: 'Field', name: { kind: 'Name', value: 'safeToRemove' } },
           { kind: 'Field', name: { kind: 'Name', value: 'unregistered' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'DiscoveredWorktreesScan' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'DiscoveredWorktreesObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'droppedCount' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'missingCheckouts' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'checkoutId' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'lastRemoval' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'agentSession' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'createdAt' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'outcome' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'parentCommand' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'removedAt' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'result' },
+                      },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'path' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'reason' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'repositoryId' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'problems' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'detail' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'path' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'repositoryId' },
+                },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'scannedRoots' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'baseRoot' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'exists' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'path' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'source' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'worktreeCount' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'worktrees' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'DiscoveredWorktreeFields' },
+                },
+              ],
+            },
+          },
         ],
       },
     },
@@ -36386,55 +39594,8 @@ export const AddWorkspaceFolderDocument = {
               kind: 'SelectionSet',
               selections: [
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'checkout' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'FragmentSpread',
-                        name: {
-                          kind: 'Name',
-                          value: 'RepositoryCheckoutFields',
-                        },
-                      },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'project' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'projectCreated' },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'reconciliation' },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'repository' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'FragmentSpread',
-                        name: {
-                          kind: 'Name',
-                          value: 'WorkspaceRepositoryFields',
-                        },
-                      },
-                    ],
-                  },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'AddWorkspaceFolderResult' },
                 },
               ],
             },
@@ -36651,6 +39812,58 @@ export const AddWorkspaceFolderDocument = {
           },
           { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'AddWorkspaceFolderResult' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'AddWorkspaceFolderPayloadObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'checkout' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'RepositoryCheckoutFields' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'project' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectCreated' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'reconciliation' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'repository' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'WorkspaceRepositoryFields' },
+                },
+              ],
+            },
+          },
         ],
       },
     },
@@ -37347,20 +40560,34 @@ export const PruneWorktreeCheckoutsDocument = {
                     kind: 'SelectionSet',
                     selections: [
                       {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'checkoutId' },
+                        kind: 'FragmentSpread',
+                        name: {
+                          kind: 'Name',
+                          value: 'PruneWorktreeCheckoutResult',
+                        },
                       },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'outcome' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'path' } },
                     ],
                   },
                 },
               ],
             },
           },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PruneWorktreeCheckoutResult' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PruneWorktreeCheckoutResultObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'checkoutId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'outcome' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'path' } },
         ],
       },
     },
@@ -37408,14 +40635,31 @@ export const RemovePlanRunWorktreeDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'branch' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'checkoutId' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'detail' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'outcome' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'path' } },
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'RemovePlanRunWorktreeResult' },
+                },
               ],
             },
           },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'RemovePlanRunWorktreeResult' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'RemovePlanRunWorktreePayloadObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'branch' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'checkoutId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'detail' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'outcome' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'path' } },
         ],
       },
     },
@@ -38268,27 +41512,38 @@ export const GetEditorPresenceDocument = {
               kind: 'SelectionSet',
               selections: [
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'editors' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'editor' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'presence' },
-                      },
-                    ],
-                  },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'EditorPresenceReport' },
                 },
-                { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'trusted' } },
               ],
             },
           },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'EditorPresenceReport' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'EditorPresenceResultObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'editors' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'editor' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'presence' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'trusted' } },
         ],
       },
     },
@@ -38381,33 +41636,8 @@ export const GetSkillDetailUsageDocument = {
               kind: 'SelectionSet',
               selections: [
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'byDay' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'FragmentSpread',
-                        name: { kind: 'Name', value: 'SkillDetailUsageByDay' },
-                      },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'bySkill' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'FragmentSpread',
-                        name: {
-                          kind: 'Name',
-                          value: 'SkillDetailUsageBySkill',
-                        },
-                      },
-                    ],
-                  },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'SkillDetailUsage' },
                 },
               ],
             },
@@ -38454,6 +41684,45 @@ export const GetSkillDetailUsageDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'sessionEndedCount' } },
           { kind: 'Field', name: { kind: 'Name', value: 'skillName' } },
           { kind: 'Field', name: { kind: 'Name', value: 'successCount' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'SkillDetailUsage' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'SkillUsageResultObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'byDay' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'SkillDetailUsageByDay' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'bySkill' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'SkillDetailUsageBySkill' },
+                },
+              ],
+            },
+          },
         ],
       },
     },
@@ -39884,61 +43153,9 @@ export const GetUsageSkillUsageDocument = {
               kind: 'SelectionSet',
               selections: [
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'byDay' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'FragmentSpread',
-                        name: { kind: 'Name', value: 'UsageSkillUsageByDay' },
-                      },
-                    ],
-                  },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'UsageSkillUsageReport' },
                 },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'byScope' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'FragmentSpread',
-                        name: { kind: 'Name', value: 'UsageSkillUsageByScope' },
-                      },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'bySkill' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'FragmentSpread',
-                        name: { kind: 'Name', value: 'UsageSkillUsageBySkill' },
-                      },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'filterOptions' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'FragmentSpread',
-                        name: {
-                          kind: 'Name',
-                          value: 'UsageSkillUsageFilterOptions',
-                        },
-                      },
-                    ],
-                  },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
               ],
             },
           },
@@ -40017,6 +43234,72 @@ export const GetUsageSkillUsageDocument = {
         ],
       },
     },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UsageSkillUsageReport' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'SkillUsageResultObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'byDay' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'UsageSkillUsageByDay' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'byScope' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'UsageSkillUsageByScope' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'bySkill' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'UsageSkillUsageBySkill' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'filterOptions' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'UsageSkillUsageFilterOptions' },
+                },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+        ],
+      },
+    },
   ],
 } as unknown as DocumentNode<
   GetUsageSkillUsageQuery,
@@ -40086,27 +43369,9 @@ export const GetUsageTelemetryCoverageDocument = {
               kind: 'SelectionSet',
               selections: [
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'currentPluginVersion' },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'UsageTelemetryCoverageReport' },
                 },
-                { kind: 'Field', name: { kind: 'Name', value: 'generatedAt' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'machines' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'FragmentSpread',
-                        name: {
-                          kind: 'Name',
-                          value: 'UsageTelemetryCoverageMachine',
-                        },
-                      },
-                    ],
-                  },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'windowDays' } },
               ],
             },
           },
@@ -40206,6 +43471,41 @@ export const GetUsageTelemetryCoverageDocument = {
               ],
             },
           },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UsageTelemetryCoverageReport' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TelemetryCoverageObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'currentPluginVersion' },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'generatedAt' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'machines' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: {
+                    kind: 'Name',
+                    value: 'UsageTelemetryCoverageMachine',
+                  },
+                },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'windowDays' } },
         ],
       },
     },

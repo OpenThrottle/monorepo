@@ -9,7 +9,7 @@ import {
 import { GlobalPopoverActionsHeader } from '@openthrottle/react-router-ui-global';
 import * as React from 'react';
 
-import type { PlanDetailRunHistoryQuery } from '~/__generated__/graphql';
+import type { PlanRunHistoryEntryFragment } from '~/__generated__/graphql';
 import { collectResumedRunIds } from '~/global/utils/utils.usage-limit';
 import { PlanWorkflowRunHistoryRow } from '~/routing/plans/components/PlanWorkflowRunHistoryRow';
 import { PlanWorkflowRunSection } from '~/routing/plans/components/PlanWorkflowRunSection';
@@ -23,8 +23,7 @@ import type { PlanRunMetricsEntry } from '~/routing/plans/utils/joinPlanRunJobMe
 import { joinPlanRunJobMetrics } from '~/routing/plans/utils/joinPlanRunJobMetrics';
 import { selectHistoryRuns } from '~/routing/plans/utils/plan-run-sections';
 
-export type PlanRunAuditRow =
-  PlanDetailRunHistoryQuery['planRunsByPlanId'][number];
+export type PlanRunAuditRow = PlanRunHistoryEntryFragment;
 
 export interface PlanWorkflowRunTransparencyAuditTableProps {
   readonly planRunAuditRows: readonly PlanRunAuditRow[];

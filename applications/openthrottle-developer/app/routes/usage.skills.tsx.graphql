@@ -29,6 +29,21 @@ fragment UsageSkillUsageFilterOptions on SkillUsageFilterOptionsObject {
   gitBranches
   repoIdentities
 }
+fragment UsageSkillUsageReport on SkillUsageResultObject {
+  byDay {
+    ...UsageSkillUsageByDay
+  }
+  byScope {
+    ...UsageSkillUsageByScope
+  }
+  bySkill {
+    ...UsageSkillUsageBySkill
+  }
+  filterOptions {
+    ...UsageSkillUsageFilterOptions
+  }
+  totalCount
+}
 
 query getUsageSkillUsage(
   $start: String!
@@ -46,18 +61,6 @@ query getUsageSkillUsage(
     cwd: $cwd
     repoIdentity: $repoIdentity
   ) {
-    byDay {
-      ...UsageSkillUsageByDay
-    }
-    byScope {
-      ...UsageSkillUsageByScope
-    }
-    bySkill {
-      ...UsageSkillUsageBySkill
-    }
-    filterOptions {
-      ...UsageSkillUsageFilterOptions
-    }
-    totalCount
+    ...UsageSkillUsageReport
   }
 }

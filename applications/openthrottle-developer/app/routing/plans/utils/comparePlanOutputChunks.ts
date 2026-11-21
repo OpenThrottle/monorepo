@@ -1,6 +1,6 @@
-import type { PlanDetailOutputChunksQuery } from '@openthrottle/openthrottle-developer-codegen';
+import type { PlanOutputChunkFragment } from '@openthrottle/openthrottle-developer-codegen';
 
-type Chunk = PlanDetailOutputChunksQuery['planOutputStreamChunks'][number];
+type Chunk = PlanOutputChunkFragment;
 
 /**
  * Order by iteration, then createdAt, then id, so renders are stable regardless

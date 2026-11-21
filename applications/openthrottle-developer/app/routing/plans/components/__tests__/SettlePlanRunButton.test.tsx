@@ -5,12 +5,11 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import type { PlanDetailForceSettlePlanRunMutation } from '~/__generated__/graphql';
+import type { ForceSettledPlanRunFragment } from '~/__generated__/graphql';
 
 import { SettlePlanRunButton } from '../SettlePlanRunButton';
 
-type ForceSettlePayload =
-  PlanDetailForceSettlePlanRunMutation['forceSettlePlanRun'];
+type ForceSettlePayload = ForceSettledPlanRunFragment;
 
 const { toastError, toastInfo, toastSuccess } = vi.hoisted(() => ({
   toastError: vi.fn(),

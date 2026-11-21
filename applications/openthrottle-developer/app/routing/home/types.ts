@@ -1,8 +1,7 @@
-import type { TranscriptionStreamChunkAddedSubscription } from '~/__generated__/graphql';
+import type { TranscriptionStreamChunkFragment } from '~/__generated__/graphql';
 
 /** One chunk delivered by the `transcriptionStreamChunkAdded` subscription. */
-export type TranscriptionChunk =
-  TranscriptionStreamChunkAddedSubscription['transcriptionStreamChunkAdded'];
+export type TranscriptionChunk = TranscriptionStreamChunkFragment;
 
 export interface TranscriptionSnapshot {
   /** True once the terminal chunk arrived (stop, idle reap, or hard cap). */

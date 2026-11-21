@@ -1,20 +1,24 @@
+fragment CreateBlogPostOutcome on CreateBlogPostResult {
+  __typename
+  ... on BlogCoverAltRequiredError {
+    message
+  }
+  ... on BlogPostAdminObject {
+    id
+  }
+  ... on BlogReferenceNotFoundError {
+    entity
+    key
+    message
+  }
+  ... on BlogSlugConflictError {
+    message
+    slug
+  }
+}
+
 mutation createBlogPostDraft($input: CreateBlogPostInput!) {
   createBlogPost(input: $input) {
-    __typename
-    ... on BlogCoverAltRequiredError {
-      message
-    }
-    ... on BlogPostAdminObject {
-      id
-    }
-    ... on BlogReferenceNotFoundError {
-      entity
-      key
-      message
-    }
-    ... on BlogSlugConflictError {
-      message
-      slug
-    }
+    ...CreateBlogPostOutcome
   }
 }

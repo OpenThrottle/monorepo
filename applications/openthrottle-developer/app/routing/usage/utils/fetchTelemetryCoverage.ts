@@ -1,6 +1,6 @@
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 
-import type { GetUsageTelemetryCoverageQuery } from '~/__generated__/graphql';
+import type { UsageTelemetryCoverageReportFragment } from '~/__generated__/graphql';
 import { GetUsageTelemetryCoverageDocument } from '~/__generated__/graphql';
 
 /**
@@ -10,7 +10,7 @@ import { GetUsageTelemetryCoverageDocument } from '~/__generated__/graphql';
  */
 export const fetchTelemetryCoverage = async (
   request: Request,
-): Promise<GetUsageTelemetryCoverageQuery['telemetryCoverage'] | null> => {
+): Promise<UsageTelemetryCoverageReportFragment | null> => {
   try {
     const result = await executeGraphqlWithAuth(
       request,

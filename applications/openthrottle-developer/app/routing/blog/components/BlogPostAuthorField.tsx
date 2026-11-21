@@ -8,12 +8,12 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import type { GetBlogPostEditorQuery } from '~/__generated__/graphql';
+import type { BlogEditorAuthorFragment } from '~/__generated__/graphql';
 import { BLOG_NO_AUTHOR_VALUE } from '~/routing/blog/config/defaults';
 import { BLOG_EDITOR_COPY } from '~/routing/blog/data/data.copy';
 
 export interface BlogPostAuthorFieldProps {
-  readonly authors: GetBlogPostEditorQuery['blogAdminAuthors'];
+  readonly authors: BlogEditorAuthorFragment[];
   readonly error: string | undefined;
   /** `''` clears the byline. */
   readonly onChange: (authorSlug: string) => void;
