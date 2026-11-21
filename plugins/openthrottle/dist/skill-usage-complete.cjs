@@ -2226,6 +2226,8 @@ var CONVERSATION_STREAM_CHUNK_KINDS = {
   usageLimit: "usage_limit"
 };
 var CONVERSATION_DENIED_ACTIONS_KEY = "deniedActions";
+var CONVERSATION_TOOL_NOT_RUN_KEY = "notRun";
+var CONVERSATION_TOOL_DENIED_ERROR = `Permission denied: the tool call was refused.`;
 
 // packages/openthrottle-agentic-utils/src/utils/conversation-backend/cursor-agent/events.ts
 var asString = (value) => {
@@ -2663,9 +2665,13 @@ var toolErrorOf = (payload) => {
   }
   return TOOL_STEP_FAILED;
 };
+var isPermissionDenial = (message) => {
+  return /permission check failed|user denied permission/i.test(message);
+};
 function createAntigravityEventMapper() {
   let model;
   const toolNameByStep = /* @__PURE__ */ new Map();
+  let refusedPermission = false;
   const mapStepUpdate = (payload) => {
     const stepType = asString2(payload.step_type);
     const state = asString2(payload.state) ?? "";
@@ -2704,6 +2710,12 @@ function createAntigravityEventMapper() {
         ];
       }
       if (state === "ERROR") {
+        const reported = toolErrorOf(payload);
+        const isDenial = isPermissionDenial(reported);
+        if (isDenial) {
+          refusedPermission = true;
+        }
+        const error = isDenial ? CONVERSATION_TOOL_DENIED_ERROR : reported;
         return [
           {
             delta: "",
@@ -2712,7 +2724,24 @@ function createAntigravityEventMapper() {
             metadata: {
               callId,
               isError: true,
-              toolCall: toolErrorOf(payload),
+              toolCall: error,
+              toolName: name
+            }
+          }
+        ];
+      }
+      const output = toolOutputOf(payload.tool_info);
+      if (refusedPermission && output === null) {
+        return [
+          {
+            delta: "",
+            done: false,
+            kind: CONVERSATION_STREAM_CHUNK_KINDS.toolResult,
+            metadata: {
+              [CONVERSATION_TOOL_NOT_RUN_KEY]: true,
+              callId,
+              isError: false,
+              toolCall: null,
               toolName: name
             }
           }
@@ -2728,7 +2757,7 @@ function createAntigravityEventMapper() {
             isError: false,
             // The output alone: the card already shows the status, so a `{error, output, status}`
             // wrapper only buried the one field worth reading.
-            toolCall: toolOutputOf(payload.tool_info),
+            toolCall: output,
             toolName: name
           }
         }
