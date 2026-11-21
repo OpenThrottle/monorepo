@@ -18,7 +18,9 @@ export * from './nestjs-graphql.utils.ts';
 export * from './pubsub/pubsub.constants.ts';
 /** @public */
 export * from './pubsub/pubsub.module.ts';
+export type * from './pubsub/pubsub.types.ts';
 export * from './pubsub/pubsub.utils.ts';
+export * from './pubsub/redis-pubsub-engine.strategy.ts';
 export * from './schema/auto-schema-file/auto-schema-file.constants.ts';
 export * from './schema/auto-schema-file/auto-schema-file.utils.ts';
 export * from './schema/emit-code-first-schema/emit-code-first-schema.utils.ts';

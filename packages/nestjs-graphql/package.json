@@ -21,6 +21,7 @@
     "graphql": "catalog:",
     "graphql-subscriptions": "catalog:",
     "graphql-ws": "catalog:",
+    "ioredis": "catalog:",
     "jsonwebtoken": "catalog:"
   },
   "devDependencies": {
