@@ -1,4 +1,10 @@
-import { eslintConfig } from '@tools/dotfiles';
+import {
+  eslintConfig,
+  preferGraphqlFragmentWarningsEslintConfig,
+} from '@tools/dotfiles';
+import type { TSESLint } from '@typescript-eslint/utils';
+import { Linter } from '@typescript-eslint/utils/ts-eslint';
+import tslint from 'typescript-eslint';
 import { describe, expect, it } from 'vitest';
 
 interface FlatConfigEntry {
@@ -244,5 +250,82 @@ describe('eslintConfig flat config', () => {
     expect(graphqlEntry).toBeDefined();
     expect(graphqlEntry?.ignores).toContain('**/__generated__/**');
     expect(graphqlEntry?.rules?.['@graphql-eslint/alphabetize']).toBeDefined();
+  });
+});
+
+describe('prefer-graphql-fragment', () => {
+  const RULE = 'openthrottle/prefer-graphql-fragment';
+
+  const INDEXED_QUERY = `import type { GetPlanQuery } from '~/__generated__/graphql';
+
+export type Plan = GetPlanQuery['plan'];
+`;
+
+  const pluginEntry = eslintConfig.find(
+    (entry) => entry.plugins?.openthrottle !== undefined,
+  );
+
+  const ruleBlocks = eslintConfig.filter(
+    (entry) => entry.rules !== undefined && RULE in entry.rules,
+  );
+
+  const lint = (
+    filename: string,
+    extra: TSESLint.FlatConfig.ConfigArray = [],
+  ): ReadonlyArray<
+    Pick<TSESLint.Linter.LintMessage, 'ruleId' | 'severity'>
+  > => {
+    const config: TSESLint.FlatConfig.ConfigArray = [
+      {
+        files: ['**/*.ts'],
+        languageOptions: { parser: tslint.parser },
+        plugins: pluginEntry?.plugins,
+      },
+      ...ruleBlocks,
+      ...extra,
+    ];
+
+    return new Linter({ configType: 'flat' })
+      .verify(INDEXED_QUERY, config, filename)
+      .map(({ ruleId, severity }) => ({ ruleId, severity }));
+  };
+
+  it('registers the rule on the openthrottle plugin', () => {
+    expect(pluginEntry?.plugins?.openthrottle?.rules).toHaveProperty(
+      'prefer-graphql-fragment',
+    );
+  });
+
+  it('errors on indexed access into a generated operation type', () => {
+    expect(lint('app/routing/plans/utils/plan.ts')).toEqual([
+      { ruleId: RULE, severity: 2 },
+    ]);
+  });
+
+  it('applies to tests', () => {
+    expect(lint('app/routing/plans/utils/__tests__/plan.test.ts')).toEqual([
+      { ruleId: RULE, severity: 2 },
+    ]);
+  });
+
+  it('skips generated and built output', () => {
+    expect(lint('app/__generated__/graphql.ts')).toEqual([]);
+    expect(lint('dist/src/plan.ts')).toEqual([]);
+  });
+
+  it('drops to warn when the warnings config is spread last', () => {
+    expect(
+      lint('app/routing/plans/utils/plan.ts', [
+        ...preferGraphqlFragmentWarningsEslintConfig,
+      ]),
+    ).toEqual([{ ruleId: RULE, severity: 1 }]);
+  });
+
+  it('still skips generated output under the warnings config', () => {
+    expect(
+      lint('app/__generated__/graphql.ts', [
+        ...preferGraphqlFragmentWarningsEslintConfig,
+      ]),
+    ).toEqual([]);
   });
 });
