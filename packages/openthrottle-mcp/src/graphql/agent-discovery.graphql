@@ -6,37 +6,45 @@
 # login state (claude, cursor probed) and `capabilities` the behavioral
 # capabilities of the backend's chat path.
 
+fragment AgentCliAuthStatus on AgentCliAuthStatusObject {
+  accountEmail
+  activeCredential
+  apiKeyOverridesSubscription
+  authMethod
+  loggedIn
+  organizationName
+  subscriptionType
+  warning
+}
+
+fragment AgentCliOption on AgentCliOptionObject {
+  auth {
+    ...AgentCliAuthStatus
+  }
+  authState {
+    detail
+    status
+  }
+  backend
+  capabilities {
+    approvals
+    editApprovals
+    imageInput
+    mcpInjection
+    replaysFullHistory
+    resume
+    steering
+  }
+  chatCapable
+  label
+  models
+  version
+}
+
 query discoverAgentClis {
   discoverAgentClis {
     agents {
-      auth {
-        accountEmail
-        activeCredential
-        apiKeyOverridesSubscription
-        authMethod
-        loggedIn
-        organizationName
-        subscriptionType
-        warning
-      }
-      authState {
-        detail
-        status
-      }
-      backend
-      capabilities {
-        approvals
-        editApprovals
-        imageInput
-        mcpInjection
-        replaysFullHistory
-        resume
-        steering
-      }
-      chatCapable
-      label
-      models
-      version
+      ...AgentCliOption
     }
     scannedAt
     totalCount

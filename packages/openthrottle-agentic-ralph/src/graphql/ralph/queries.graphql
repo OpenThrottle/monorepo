@@ -30,12 +30,7 @@ query getPlan($id: ID!) {
 query listPlansByStatus($input: ListPlansByStatusInput!) {
   listPlansByStatus(input: $input) {
     items {
-      ...Plan
-      tags {
-        dimension
-        source
-        tag
-      }
+      ...PlanWithTags
     }
     totalCount
   }
@@ -85,124 +80,32 @@ query getWorkArtifactsByPlan($input: WorkArtifactsByPlanInput!) {
 
 query getActivityByDate($input: ActivityByDateInput!) {
   activityByDate(input: $input) {
-    commits {
-      createdAt
-      id
-      message
-      planId
-      planTitle
-      repo
-      sha
-      taskId
-      taskTitle
-    }
-    hasNext
-    outputChunks {
-      content
-      createdAt
-      id
-      iteration
-      planId
-      planTitle
-      taskId
-    }
-    tasksUpdated {
-      id
-      planId
-      planTitle
-      status
-      title
-      updatedAt
-    }
-    totalCount
+    ...ActivityByDate
   }
 }
 
 query getActivityByDateRange($input: ActivityByDateRangeInput!) {
   activityByDateRange(input: $input) {
-    commits {
-      createdAt
-      id
-      message
-      planId
-      planTitle
-      repo
-      sha
-      taskId
-      taskTitle
-    }
-    hasNext
-    outputChunks {
-      content
-      createdAt
-      id
-      iteration
-      planId
-      planTitle
-      taskId
-    }
-    tasksUpdated {
-      id
-      planId
-      planTitle
-      status
-      title
-      updatedAt
-    }
-    totalCount
+    ...ActivityByDate
   }
 }
 
 query getLastActivity($input: LastActivityInput!) {
   lastActivity(input: $input) {
-    at
-    commit {
-      message
-      repo
-      sha
-    }
-    kind
-    outputChunk {
-      content
-      iteration
-      taskId
-    }
-    planId
-    summary
-    taskId
-    taskUpdate {
-      status
-      taskId
-      taskTitle
-    }
+    ...LastActivity
   }
 }
 
 query getPlanOutputStreamChunks($input: ListPlanOutputStreamChunksInput!) {
   planOutputStreamChunks(input: $input) {
-    content
-    createdAt
-    id
-    iteration
-    planId
-    taskId
+    ...PlanOutputStreamChunk
   }
 }
 
 query search($input: SearchInput!) {
   search(input: $input) {
     chunks {
-      content
-      id
-      planId
-      planTitle
-      similarity
-      source
-      sourcePath
-      sourceRepo
-      sourceSha
-      taskId
-      taskTitle
+      ...SearchChunk
     }
     mode
     reason
@@ -211,29 +114,17 @@ query search($input: SearchInput!) {
 
 query getDocument($id: String!) {
   getDocument(id: $id) {
-    content
-    id
-    planId
-    planTitle
-    similarity
-    source
-    sourcePath
-    sourceRepo
-    sourceSha
-    taskId
-    taskTitle
+    ...SearchChunk
   }
 }
 
 query listSources {
   listSources {
     plans {
-      id
-      title
+      ...ListPlanSource
     }
     sources {
-      description
-      name
+      ...ListSourceInfo
     }
   }
 }
@@ -251,12 +142,7 @@ query readPlanRunCancelMarker($input: PlanRunsByPlanIdInput!) {
 # is the CLI's hot iteration-boundary poll and stays deliberately minimal.
 query getPlanRuns($input: PlanRunsByPlanIdInput!) {
   planRunsByPlanId(input: $input) {
-    checkout {
-      displayName
-      filesystemPath
-      kind
-    }
-    ...PlanRun
+    ...PlanRunWithCheckout
   }
 }
 

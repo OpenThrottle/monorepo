@@ -6,8 +6,9 @@ import { executeGraphql } from '@openthrottle/nodejs-graphql';
 import { z } from 'zod';
 
 import {
+  type EmbeddingsHealthFragment,
   GetServerHealthWithEmbeddingsDocument,
-  type GetServerHealthWithEmbeddingsQuery,
+  type ServerHealthWithEmbeddingsFragment,
 } from '../__generated__/graphql.js';
 import type { ToolsetName } from '../config/toolsets.ts';
 import {
@@ -26,10 +27,8 @@ type ToolsetReport = {
   enabled: ToolsetName[];
 };
 
-type ServerHealth = GetServerHealthWithEmbeddingsQuery['serverHealth'];
-
 type HealthStructured = {
-  serverHealth: ServerHealth;
+  serverHealth: ServerHealthWithEmbeddingsFragment;
   toolsets: ToolsetReport;
 };
 
@@ -38,7 +37,7 @@ type HealthStructured = {
  * per table — so "semantic search is down" is visible from `health`, not from an empty search.
  */
 const describeEmbeddings = (
-  embeddings: ServerHealth['embeddings'] | undefined,
+  embeddings: EmbeddingsHealthFragment | null | undefined,
 ): string[] => {
   if (!embeddings) {
     return [];

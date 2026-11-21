@@ -13,9 +13,9 @@ import {
   CreateScheduledJobDocument,
   DeleteScheduledJobDocument,
   ListScheduledJobsDocument,
-  type ListScheduledJobsQuery,
   RunScheduledJobNowDocument,
-  type RunScheduledJobNowMutation,
+  type ScheduledJobFragment,
+  type ScheduledJobRunFragment,
   UpdateScheduledJobDocument,
 } from '../__generated__/graphql.js';
 import {
@@ -27,18 +27,13 @@ import type { GenericResult } from '../types/index.ts';
 import { invalidArgsContent } from '../utils/errors.ts';
 import { runTool } from '../utils/runTool.ts';
 
-type ScheduledJob = ListScheduledJobsQuery['scheduledAgentJobsAsAgent'][number];
-
-type ScheduledJobRun =
-  RunScheduledJobNowMutation['runScheduledAgentJobNowAsAgent'];
-
 /**
  * @description The guardrails every scheduling tool shares, stated once so each description carries
  * them in the same words.
  */
 const GUARDRAILS = `Acts as the calling user (a service-account token acts as its linked acting user; an unlinked one is refused); repositoryCheckoutId must be one of the user's own checkouts. Limits: at most 25 jobs per user (SCHEDULED_AGENT_JOBS_MAX_PER_OWNER) and at most 10 created through these tools. If the operator requires approval, a created job is stored disabled with approvalState "pending" until a person approves it in the Developer UI; it cannot be enabled or run-now'd before that.`;
 
-const describeJob = (job: ScheduledJob): string => {
+const describeJob = (job: ScheduledJobFragment): string => {
   const isCron = job.scheduleKind === 'cron';
   const when = isCron ? `cron "${job.cronPattern ?? ''}"` : job.scheduleKind;
   const state = job.enabled ? 'enabled' : 'disabled';
@@ -55,27 +50,30 @@ export const createScheduledJobToolDescription = `Schedule an agent run: a promp
 
 export async function createScheduledJobToolHandler(
   args: z.infer<typeof createScheduledJobToolParameters>,
-): Promise<GenericResult<{ job: ScheduledJob }>> {
+): Promise<GenericResult<{ job: ScheduledJobFragment }>> {
   const parsed = createScheduledJobToolParameters.safeParse(args);
   if (!parsed.success) return invalidArgsContent(parsed.error);
 
-  return runTool<{ job: ScheduledJob }>('create_scheduled_job', async () => {
-    const result = await executeGraphqlWithAuth(
-      getAuthToken(),
-      CreateScheduledJobDocument,
-      { input: parsed.data },
-    );
+  return runTool<{ job: ScheduledJobFragment }>(
+    'create_scheduled_job',
+    async () => {
+      const result = await executeGraphqlWithAuth(
+        getAuthToken(),
+        CreateScheduledJobDocument,
+        { input: parsed.data },
+      );
 
-    const job = result?.createScheduledAgentJobAsAgent ?? null;
-    if (!job) return null;
+      const job = result?.createScheduledAgentJobAsAgent ?? null;
+      if (!job) return null;
 
-    const isPending = job.approvalState === 'pending';
-    const pending = isPending
-      ? ' It is disabled until a person approves it in the Developer UI.'
-      : '';
-    const text = `Scheduled ${describeJob(job)}.${pending}`;
-    return { structuredContent: { job }, text };
-  });
+      const isPending = job.approvalState === 'pending';
+      const pending = isPending
+        ? ' It is disabled until a person approves it in the Developer UI.'
+        : '';
+      const text = `Scheduled ${describeJob(job)}.${pending}`;
+      return { structuredContent: { job }, text };
+    },
+  );
 }
 
 // ── list_scheduled_jobs ──────────────────────────────────────────────────────
@@ -86,24 +84,27 @@ export const listScheduledJobsToolDescription = `List the signed-in user's own s
 
 export async function listScheduledJobsToolHandler(
   _args: z.infer<typeof listScheduledJobsToolParameters>,
-): Promise<GenericResult<{ jobs: ScheduledJob[] }>> {
-  return runTool<{ jobs: ScheduledJob[] }>('list_scheduled_jobs', async () => {
-    const result = await executeGraphqlWithAuth(
-      getAuthToken(),
-      ListScheduledJobsDocument,
-      {},
-    );
+): Promise<GenericResult<{ jobs: ScheduledJobFragment[] }>> {
+  return runTool<{ jobs: ScheduledJobFragment[] }>(
+    'list_scheduled_jobs',
+    async () => {
+      const result = await executeGraphqlWithAuth(
+        getAuthToken(),
+        ListScheduledJobsDocument,
+        {},
+      );
 
-    const jobs = result?.scheduledAgentJobsAsAgent ?? null;
-    if (!jobs) return null;
+      const jobs = result?.scheduledAgentJobsAsAgent ?? null;
+      if (!jobs) return null;
 
-    const lines = jobs.map(describeJob).join('\n');
-    const isEmpty = jobs.length === 0;
-    const text = isEmpty
-      ? 'No scheduled jobs.'
-      : `${jobs.length} scheduled job(s):\n${lines}`;
-    return { structuredContent: { jobs }, text };
-  });
+      const lines = jobs.map(describeJob).join('\n');
+      const isEmpty = jobs.length === 0;
+      const text = isEmpty
+        ? 'No scheduled jobs.'
+        : `${jobs.length} scheduled job(s):\n${lines}`;
+      return { structuredContent: { jobs }, text };
+    },
+  );
 }
 
 // ── update_scheduled_job ─────────────────────────────────────────────────────
@@ -115,25 +116,28 @@ export const updateScheduledJobToolDescription = `Change a scheduled job by id; 
 
 export async function updateScheduledJobToolHandler(
   args: z.infer<typeof updateScheduledJobToolParameters>,
-): Promise<GenericResult<{ job: ScheduledJob }>> {
+): Promise<GenericResult<{ job: ScheduledJobFragment }>> {
   const parsed = updateScheduledJobToolParameters.safeParse(args);
   if (!parsed.success) return invalidArgsContent(parsed.error);
 
-  return runTool<{ job: ScheduledJob }>('update_scheduled_job', async () => {
-    const result = await executeGraphqlWithAuth(
-      getAuthToken(),
-      UpdateScheduledJobDocument,
-      { input: parsed.data },
-    );
+  return runTool<{ job: ScheduledJobFragment }>(
+    'update_scheduled_job',
+    async () => {
+      const result = await executeGraphqlWithAuth(
+        getAuthToken(),
+        UpdateScheduledJobDocument,
+        { input: parsed.data },
+      );
 
-    const job = result?.updateScheduledAgentJobAsAgent ?? null;
-    if (!job) return null;
+      const job = result?.updateScheduledAgentJobAsAgent ?? null;
+      if (!job) return null;
 
-    return {
-      structuredContent: { job },
-      text: `Updated ${describeJob(job)}.`,
-    };
-  });
+      return {
+        structuredContent: { job },
+        text: `Updated ${describeJob(job)}.`,
+      };
+    },
+  );
 }
 
 // ── delete_scheduled_job ─────────────────────────────────────────────────────
@@ -180,11 +184,11 @@ export const runScheduledJobNowToolDescription = `Start one run of a scheduled j
 
 export async function runScheduledJobNowToolHandler(
   args: z.infer<typeof runScheduledJobNowToolParameters>,
-): Promise<GenericResult<{ run: ScheduledJobRun }>> {
+): Promise<GenericResult<{ run: ScheduledJobRunFragment }>> {
   const parsed = runScheduledJobNowToolParameters.safeParse(args);
   if (!parsed.success) return invalidArgsContent(parsed.error);
 
-  return runTool<{ run: ScheduledJobRun }>(
+  return runTool<{ run: ScheduledJobRunFragment }>(
     'run_scheduled_job_now',
     async () => {
       const result = await executeGraphqlWithAuth(

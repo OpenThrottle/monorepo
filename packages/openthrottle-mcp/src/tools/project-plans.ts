@@ -11,13 +11,10 @@ import { z } from 'zod';
 
 import {
   AddPlanToProjectDocument,
-  type AddPlanToProjectMutation,
+  type ProjectPlanFragment,
   ProjectPlansDocument,
-  type ProjectPlansQuery,
   RemovePlanFromProjectDocument,
-  type RemovePlanFromProjectMutation,
   ReorderProjectPlansDocument,
-  type ReorderProjectPlansMutation,
 } from '../__generated__/graphql.js';
 import {
   AddPlanToProjectInputSchema,
@@ -38,15 +35,13 @@ export const addPlanToProjectToolDescription = `Add a plan to a project via the 
 
 export async function addPlanToProjectToolHandler(
   args: z.infer<typeof addPlanToProjectToolParameters>,
-): Promise<
-  GenericResult<{ plan: AddPlanToProjectMutation['addPlanToProject'] }>
-> {
+): Promise<GenericResult<{ plan: ProjectPlanFragment }>> {
   const parsed = addPlanToProjectToolParameters.safeParse(args);
   if (!parsed.success) {
     return invalidArgsContent(parsed.error);
   }
 
-  return runTool<{ plan: AddPlanToProjectMutation['addPlanToProject'] }>(
+  return runTool<{ plan: ProjectPlanFragment }>(
     'add_plan_to_project',
     async () => {
       const token = getAuthToken();
@@ -79,7 +74,7 @@ export async function removePlanFromProjectToolHandler(
   args: z.infer<typeof removePlanFromProjectToolParameters>,
 ): Promise<
   GenericResult<{
-    plan: RemovePlanFromProjectMutation['removePlanFromProject'];
+    plan: ProjectPlanFragment;
   }>
 > {
   const parsed = removePlanFromProjectToolParameters.safeParse(args);
@@ -88,7 +83,7 @@ export async function removePlanFromProjectToolHandler(
   }
 
   return runTool<{
-    plan: RemovePlanFromProjectMutation['removePlanFromProject'];
+    plan: ProjectPlanFragment;
   }>('remove_plan_from_project', async () => {
     const token = getAuthToken();
     const result = await executeGraphqlWithAuth(
@@ -117,16 +112,14 @@ export const reorderProjectPlansToolDescription = `Reorder the plans of a projec
 
 export async function reorderProjectPlansToolHandler(
   args: z.infer<typeof reorderProjectPlansToolParameters>,
-): Promise<
-  GenericResult<{ plans: ReorderProjectPlansMutation['reorderProjectPlans'] }>
-> {
+): Promise<GenericResult<{ plans: ProjectPlanFragment[] }>> {
   const parsed = reorderProjectPlansToolParameters.safeParse(args);
   if (!parsed.success) {
     return invalidArgsContent(parsed.error);
   }
 
   return runTool<{
-    plans: ReorderProjectPlansMutation['reorderProjectPlans'];
+    plans: ProjectPlanFragment[];
   }>('reorder_project_plans', async () => {
     const token = getAuthToken();
     const result = await executeGraphqlWithAuth(
@@ -155,13 +148,13 @@ export const getProjectPlansToolDescription = `List the plans of a project in pr
 
 export async function getProjectPlansToolHandler(
   args: z.infer<typeof getProjectPlansToolParameters>,
-): Promise<GenericResult<{ plans: ProjectPlansQuery['projectPlans'] }>> {
+): Promise<GenericResult<{ plans: ProjectPlanFragment[] }>> {
   const parsed = getProjectPlansToolParameters.safeParse(args);
   if (!parsed.success) {
     return invalidArgsContent(parsed.error);
   }
 
-  return runTool<{ plans: ProjectPlansQuery['projectPlans'] }>(
+  return runTool<{ plans: ProjectPlanFragment[] }>(
     'get_project_plans',
     async () => {
       const token = getAuthToken();

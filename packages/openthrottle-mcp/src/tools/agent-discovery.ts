@@ -11,7 +11,7 @@
 import { executeGraphql } from '@openthrottle/nodejs-graphql';
 import { z } from 'zod';
 
-import type { DiscoverAgentClisQuery } from '../__generated__/graphql.js';
+import type { AgentCliAuthStatusFragment } from '../__generated__/graphql.js';
 import { DiscoverAgentClisDocument } from '../__generated__/graphql.js';
 import type { GenericResult } from '../types/index.ts';
 import { runTool } from '../utils/runTool.ts';
@@ -59,10 +59,9 @@ type DiscoverAgentClisStructured = {
   totalCount: number;
 };
 
-type DiscoveredAgent =
-  DiscoverAgentClisQuery['discoverAgentClis']['agents'][number];
-
-function toAgentCliAuth(auth: DiscoveredAgent['auth']): AgentCliAuth | null {
+function toAgentCliAuth(
+  auth: AgentCliAuthStatusFragment | null | undefined,
+): AgentCliAuth | null {
   if (auth === null || auth === undefined) {
     return null;
   }

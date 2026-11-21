@@ -26,7 +26,7 @@
 
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 
-import type { EndWorkSessionMutation } from '../__generated__/graphql.js';
+import type { EndedWorkSessionFragment } from '../__generated__/graphql.js';
 import {
   EndWorkSessionDocument,
   StartWorkSessionDocument,
@@ -116,7 +116,7 @@ export async function ensureWorkSession(
 
 /** @description What {@link closeCurrentSession} closed. */
 interface ClosedSession {
-  readonly session: EndWorkSessionMutation['endWorkSession'];
+  readonly session: EndedWorkSessionFragment | null | undefined;
   readonly sessionId: string;
 }
 

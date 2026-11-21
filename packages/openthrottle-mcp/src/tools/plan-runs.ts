@@ -19,10 +19,8 @@ import { hostname as osHostname } from 'os';
 import { z } from 'zod';
 
 import type {
-  GetPlanRunsQuery,
-  RegisterCliPlanRunMutation,
-  RegisterPlanRunWorktreeCheckoutMutation,
-  SettleCliPlanRunMutation,
+  CliPlanRunFragment,
+  PlanRunWithCheckoutFragment,
 } from '../__generated__/graphql.js';
 import {
   GetPlanRunsDocument,
@@ -42,9 +40,7 @@ import { runTool } from '../utils/runTool.ts';
 
 // ── register_plan_run ────────────────────────────────────────────────────────
 
-type PlanRun = NonNullable<RegisterCliPlanRunMutation['registerCliPlanRun']>;
-
-type RegisterPlanRunResult = GenericResult<{ run: PlanRun | null }>;
+type RegisterPlanRunResult = GenericResult<{ run: CliPlanRunFragment | null }>;
 
 export const registerPlanRunToolParameters = z
   .object({
@@ -65,66 +61,67 @@ export async function registerPlanRunToolHandler(
     return invalidArgsContent(parsed.error);
   }
 
-  return runTool<{ run: PlanRun | null }>('register_plan_run', async () => {
-    // Detection wins over the declared value; see config/execution-backend.ts.
-    const executionBackend = resolveExecutionBackend(
-      parsed.data.executionBackend,
-    );
-    if (executionBackend === null) {
-      throw new Error(
-        'Could not determine the execution backend: nothing was detected from the launching harness and none was declared. Pass executionBackend explicitly.',
+  return runTool<{ run: CliPlanRunFragment | null }>(
+    'register_plan_run',
+    async () => {
+      // Detection wins over the declared value; see config/execution-backend.ts.
+      const executionBackend = resolveExecutionBackend(
+        parsed.data.executionBackend,
       );
-    }
+      if (executionBackend === null) {
+        throw new Error(
+          'Could not determine the execution backend: nothing was detected from the launching harness and none was declared. Pass executionBackend explicitly.',
+        );
+      }
 
-    const token = getAuthToken();
-    const result = await executeGraphqlWithAuth(
-      token,
-      RegisterCliPlanRunDocument,
-      {
-        input: {
-          branch: parsed.data.branch ?? null,
-          executionBackend,
-          // The whole point. An agent turn owns no timer, so this row must be exempt
-          // from the stale sweep (which would reset the plan and its IN_PROGRESS tasks
-          // to PENDING underneath live work), from isStale, and from the destructive
-          // RUN_STOPPING cancel path. This is the difference between telemetry and
-          // data loss, so it is hard-coded rather than exposed as an argument.
-          heartbeatExpected: false,
-          // Defaulted from this process rather than asked of the agent, which does not
-          // reliably know either and would guess.
-          hostname: osHostname(),
-          model: parsed.data.model ?? null,
-          pid: process.pid,
-          planId: parsed.data.planId,
-          workerId: null,
+      const token = getAuthToken();
+      const result = await executeGraphqlWithAuth(
+        token,
+        RegisterCliPlanRunDocument,
+        {
+          input: {
+            branch: parsed.data.branch ?? null,
+            executionBackend,
+            // The whole point. An agent turn owns no timer, so this row must be exempt
+            // from the stale sweep (which would reset the plan and its IN_PROGRESS tasks
+            // to PENDING underneath live work), from isStale, and from the destructive
+            // RUN_STOPPING cancel path. This is the difference between telemetry and
+            // data loss, so it is hard-coded rather than exposed as an argument.
+            heartbeatExpected: false,
+            // Defaulted from this process rather than asked of the agent, which does not
+            // reliably know either and would guess.
+            hostname: osHostname(),
+            model: parsed.data.model ?? null,
+            pid: process.pid,
+            planId: parsed.data.planId,
+            workerId: null,
+          },
         },
-      },
-    );
+      );
 
-    const run = result?.registerCliPlanRun ?? null;
-    if (!run) return null;
+      const run = result?.registerCliPlanRun ?? null;
+      if (!run) return null;
 
-    rememberPlanRunForBackstop(parsed.data.planId, run.id);
+      rememberPlanRunForBackstop(parsed.data.planId, run.id);
 
-    // Lead with the id: the agent has to carry it for the rest of the loop, and an id
-    // buried in a JSON blob gets lost.
-    const text = [
-      `Plan run registered. Run id: ${run.id}`,
-      `Carry this id and settle it when the loop stops — nothing else will.`,
-      ``,
-      `backend: ${run.executionBackend}  model: ${run.model ?? '(none declared)'}  branch: ${run.branch ?? '(none)'}`,
-      `heartbeatExpected: ${run.heartbeatExpected} (exempt from the stale sweep, so cancellation reaches you only if you poll cancelRequestedAt)`,
-    ].join('\n');
+      // Lead with the id: the agent has to carry it for the rest of the loop, and an id
+      // buried in a JSON blob gets lost.
+      const text = [
+        `Plan run registered. Run id: ${run.id}`,
+        `Carry this id and settle it when the loop stops — nothing else will.`,
+        ``,
+        `backend: ${run.executionBackend}  model: ${run.model ?? '(none declared)'}  branch: ${run.branch ?? '(none)'}`,
+        `heartbeatExpected: ${run.heartbeatExpected} (exempt from the stale sweep, so cancellation reaches you only if you poll cancelRequestedAt)`,
+      ].join('\n');
 
-    return { structuredContent: { run }, text };
-  });
+      return { structuredContent: { run }, text };
+    },
+  );
 }
 
 // ── settle_plan_run ──────────────────────────────────────────────────────────
 
-type SettledRun = NonNullable<SettleCliPlanRunMutation['settleCliPlanRun']>;
-
-type SettlePlanRunResult = GenericResult<{ run: SettledRun | null }>;
+type SettlePlanRunResult = GenericResult<{ run: CliPlanRunFragment | null }>;
 
 export const settlePlanRunToolParameters = z
   .object({
@@ -145,52 +142,51 @@ export async function settlePlanRunToolHandler(
     return invalidArgsContent(parsed.error);
   }
 
-  return runTool<{ run: SettledRun | null }>('settle_plan_run', async () => {
-    const token = getAuthToken();
-    // The server validates and uppercases the status; surfacing its error is better than
-    // re-validating the same rule in two places that can drift apart.
-    const result = await executeGraphqlWithAuth(
-      token,
-      SettleCliPlanRunDocument,
-      {
-        input: {
-          headSha: parsed.data.headSha ?? null,
-          planRunId: parsed.data.planRunId,
-          prNumber: parsed.data.prNumber ?? null,
-          status: parsed.data.status,
+  return runTool<{ run: CliPlanRunFragment | null }>(
+    'settle_plan_run',
+    async () => {
+      const token = getAuthToken();
+      // The server validates and uppercases the status; surfacing its error is better than
+      // re-validating the same rule in two places that can drift apart.
+      const result = await executeGraphqlWithAuth(
+        token,
+        SettleCliPlanRunDocument,
+        {
+          input: {
+            headSha: parsed.data.headSha ?? null,
+            planRunId: parsed.data.planRunId,
+            prNumber: parsed.data.prNumber ?? null,
+            status: parsed.data.status,
+          },
         },
-      },
-    );
+      );
 
-    // Clear the backstop note whatever the server said: if the row is gone or already
-    // terminal, there is nothing left for the janitor to do either.
-    forgetPlanRunForBackstop();
+      // Clear the backstop note whatever the server said: if the row is gone or already
+      // terminal, there is nothing left for the janitor to do either.
+      forgetPlanRunForBackstop();
 
-    const run = result?.settleCliPlanRun ?? null;
-    if (!run) {
-      // A soft no-op, not an error: the Stop-hook backstop and the loop can both try to
-      // settle the same run, and neither should get an error it will retry in a loop.
+      const run = result?.settleCliPlanRun ?? null;
+      if (!run) {
+        // A soft no-op, not an error: the Stop-hook backstop and the loop can both try to
+        // settle the same run, and neither should get an error it will retry in a loop.
+        return {
+          structuredContent: { run: null },
+          text: `No plan run ${parsed.data.planRunId} to settle (already settled, or never existed). Nothing to do.`,
+        };
+      }
+
       return {
-        structuredContent: { run: null },
-        text: `No plan run ${parsed.data.planRunId} to settle (already settled, or never existed). Nothing to do.`,
+        structuredContent: { run },
+        text: `Settled plan run ${run.id} as ${run.status}.`,
       };
-    }
-
-    return {
-      structuredContent: { run },
-      text: `Settled plan run ${run.id} as ${run.status}.`,
-    };
-  });
+    },
+  );
 }
 
 // ── register_plan_run_worktree_checkout ──────────────────────────────────────
 
-type CheckoutRun = NonNullable<
-  RegisterPlanRunWorktreeCheckoutMutation['registerPlanRunWorktreeCheckout']
->;
-
 type RegisterWorktreeCheckoutResult = GenericResult<{
-  run: CheckoutRun | null;
+  run: PlanRunWithCheckoutFragment | null;
 }>;
 
 export const registerPlanRunWorktreeCheckoutToolParameters = z
@@ -210,7 +206,7 @@ export async function registerPlanRunWorktreeCheckoutToolHandler(
     return invalidArgsContent(parsed.error);
   }
 
-  return runTool<{ run: CheckoutRun | null }>(
+  return runTool<{ run: PlanRunWithCheckoutFragment | null }>(
     'register_plan_run_worktree_checkout',
     async () => {
       const token = getAuthToken();
@@ -250,9 +246,7 @@ export async function registerPlanRunWorktreeCheckoutToolHandler(
 
 // ── get_plan_runs ────────────────────────────────────────────────────────────
 
-type PlanRunRow = GetPlanRunsQuery['planRunsByPlanId'][number];
-
-type GetPlanRunsResult = GenericResult<{ runs: PlanRunRow[] }>;
+type GetPlanRunsResult = GenericResult<{ runs: PlanRunWithCheckoutFragment[] }>;
 
 export const getPlanRunsToolParameters = z
   .object({
@@ -271,24 +265,27 @@ export async function getPlanRunsToolHandler(
     return invalidArgsContent(parsed.error);
   }
 
-  return runTool<{ runs: PlanRunRow[] }>('get_plan_runs', async () => {
-    const token = getAuthToken();
-    // The server owns the clamp (1..max); duplicating it here would give two places to
-    // disagree about the bound.
-    const result = await executeGraphqlWithAuth(token, GetPlanRunsDocument, {
-      input: { limit: parsed.data.limit ?? null, planId: parsed.data.planId },
-    });
+  return runTool<{ runs: PlanRunWithCheckoutFragment[] }>(
+    'get_plan_runs',
+    async () => {
+      const token = getAuthToken();
+      // The server owns the clamp (1..max); duplicating it here would give two places to
+      // disagree about the bound.
+      const result = await executeGraphqlWithAuth(token, GetPlanRunsDocument, {
+        input: { limit: parsed.data.limit ?? null, planId: parsed.data.planId },
+      });
 
-    const runs = result?.planRunsByPlanId ?? null;
-    if (!runs) return null;
+      const runs = result?.planRunsByPlanId ?? null;
+      if (!runs) return null;
 
-    const cancelled = runs.filter((run) => run.cancelRequestedAt != null);
-    const cancelledIds = cancelled.map((run) => run.id).join(', ');
-    const cancelWarning = `\n\n⚠️ Cancel requested on ${cancelledIds}. If one of these is your run, stop and settle it CANCELLED.`;
-    const cancelNote = cancelled.length === 0 ? '' : cancelWarning;
+      const cancelled = runs.filter((run) => run.cancelRequestedAt != null);
+      const cancelledIds = cancelled.map((run) => run.id).join(', ');
+      const cancelWarning = `\n\n⚠️ Cancel requested on ${cancelledIds}. If one of these is your run, stop and settle it CANCELLED.`;
+      const cancelNote = cancelled.length === 0 ? '' : cancelWarning;
 
-    const text = `${runs.length} plan run(s) on plan ${parsed.data.planId}, newest first.${cancelNote}\n${JSON.stringify(runs, null, 2)}`;
+      const text = `${runs.length} plan run(s) on plan ${parsed.data.planId}, newest first.${cancelNote}\n${JSON.stringify(runs, null, 2)}`;
 
-    return { structuredContent: { runs }, text };
-  });
+      return { structuredContent: { runs }, text };
+    },
+  );
 }

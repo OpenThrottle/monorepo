@@ -7,12 +7,11 @@ import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import { z } from 'zod';
 
 import {
+  type AgentConversationFragment,
+  type AgentConversationMessageFragment,
   GetAgentConversationDocument,
   GetAgentConversationMessagesDocument,
-  type GetAgentConversationMessagesQuery,
-  type GetAgentConversationQuery,
   ListAgentConversationsDocument,
-  type ListAgentConversationsQuery,
 } from '../__generated__/graphql.js';
 import {
   GetAgentConversationMessagesInputSchema,
@@ -31,16 +30,16 @@ const MESSAGES_MAX_LIMIT = 500;
 const AGENT_CONVERSATION_BOUNDARY_WARNING = `Web chat threads only — use \`get_plan_output\` for Ralph/plan iteration logs.`;
 
 type ListAgentConversationsResult = GenericResult<{
-  conversations: ListAgentConversationsQuery['listAgentConversations']['items'];
+  conversations: AgentConversationFragment[];
   totalCount: number;
 }>;
 
 type GetAgentConversationResult = GenericResult<{
-  conversation: GetAgentConversationQuery['getAgentConversation'];
+  conversation: AgentConversationFragment | null | undefined;
 }>;
 
 type GetAgentConversationMessagesResult = GenericResult<{
-  messages: GetAgentConversationMessagesQuery['getAgentConversationMessages']['items'];
+  messages: AgentConversationMessageFragment[];
   totalCount: number;
 }>;
 
@@ -92,7 +91,7 @@ export async function listAgentConversationsToolHandler(
   const status = parsed.data.status ?? 'active';
 
   return runTool<{
-    conversations: ListAgentConversationsQuery['listAgentConversations']['items'];
+    conversations: AgentConversationFragment[];
     totalCount: number;
   }>('agent_conversation_list', async () => {
     const token = getAuthToken();
@@ -125,7 +124,7 @@ export async function getAgentConversationToolHandler(
   }
 
   return runTool<{
-    conversation: GetAgentConversationQuery['getAgentConversation'];
+    conversation: AgentConversationFragment | null | undefined;
   }>('agent_conversation_get', async () => {
     const token = getAuthToken();
     const result = await executeGraphqlWithAuth(
@@ -155,7 +154,7 @@ export async function getAgentConversationMessagesToolHandler(
   const offset = Math.max(0, parsed.data.offset ?? 0);
 
   return runTool<{
-    messages: GetAgentConversationMessagesQuery['getAgentConversationMessages']['items'];
+    messages: AgentConversationMessageFragment[];
     totalCount: number;
   }>('agent_conversation_get_messages', async () => {
     const token = getAuthToken();

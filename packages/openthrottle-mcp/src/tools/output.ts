@@ -7,12 +7,10 @@ import type { z } from 'zod';
 
 import {
   AppendPlanOutputDocument,
-  type AppendPlanOutputMutation,
   DeletePlanOutputDocument,
   type DeletePlanOutputInput,
-  type DeletePlanOutputMutation,
   GetPlanOutputStreamChunksDocument,
-  type GetPlanOutputStreamChunksQuery,
+  type PlanOutputStreamChunkFragment,
 } from '../__generated__/graphql.js';
 import {
   AppendPlanOutputInputSchema,
@@ -25,15 +23,15 @@ import { invalidArgsContent } from '../utils/errors.ts';
 import { runTool } from '../utils/runTool.ts';
 
 type AppendPlanOutputResult = GenericResult<{
-  chunk: AppendPlanOutputMutation['appendPlanOutput'];
+  chunk: PlanOutputStreamChunkFragment;
 }>;
 
 type GetPlanOutputResult = GenericResult<{
-  chunks: GetPlanOutputStreamChunksQuery['planOutputStreamChunks'];
+  chunks: PlanOutputStreamChunkFragment[];
 }>;
 
 type DeletePlanOutputResult = GenericResult<{
-  deletedCount: DeletePlanOutputMutation['deletePlanOutput']['deletedCount'];
+  deletedCount: number;
 }>;
 
 /** `kind` is written only by the OT Loop job, never by an agent (docs/workflows/ot-loop-job.md § 10.1). */
@@ -53,7 +51,7 @@ export async function appendPlanOutputToolHandler(
     return invalidArgsContent(parsed.error);
   }
 
-  return runTool<{ chunk: AppendPlanOutputMutation['appendPlanOutput'] }>(
+  return runTool<{ chunk: PlanOutputStreamChunkFragment }>(
     'append_plan_output',
     async () => {
       const token = getAuthToken();
@@ -93,7 +91,7 @@ export async function getPlanOutputToolHandler(
   }
 
   return runTool<{
-    chunks: GetPlanOutputStreamChunksQuery['planOutputStreamChunks'];
+    chunks: PlanOutputStreamChunkFragment[];
   }>('get_plan_output', async () => {
     const token = getAuthToken();
     // Forward every parsed argument: limit/offset were already accepted by the

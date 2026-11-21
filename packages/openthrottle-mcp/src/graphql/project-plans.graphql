@@ -2,42 +2,34 @@
 # Mirrors the projectPlans query and the addPlanToProject / removePlanFromProject /
 # reorderProjectPlans mutations exposed by openthrottle-server. Selection sets are alphabetized.
 
+fragment ProjectPlan on PlanObject {
+  id
+  projectId
+  projectSortOrder
+  status
+  title
+}
+
 mutation AddPlanToProject($input: AddPlanToProjectInput!) {
   addPlanToProject(input: $input) {
-    id
-    projectId
-    projectSortOrder
-    status
-    title
+    ...ProjectPlan
   }
 }
 
 query ProjectPlans($projectId: ID!) {
   projectPlans(projectId: $projectId) {
-    id
-    projectId
-    projectSortOrder
-    status
-    title
+    ...ProjectPlan
   }
 }
 
 mutation RemovePlanFromProject($input: RemovePlanFromProjectInput!) {
   removePlanFromProject(input: $input) {
-    id
-    projectId
-    projectSortOrder
-    status
-    title
+    ...ProjectPlan
   }
 }
 
 mutation ReorderProjectPlans($input: ReorderProjectPlansInput!) {
   reorderProjectPlans(input: $input) {
-    id
-    projectId
-    projectSortOrder
-    status
-    title
+    ...ProjectPlan
   }
 }

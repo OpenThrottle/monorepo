@@ -12,10 +12,8 @@ import { z } from 'zod/v3';
 import type {
   CreatePlanInput,
   CreatePlanMutation,
-  CreatePlansMutation,
-  GetPlanQuery,
-  ListPlansByStatusQuery,
-  UpdatePlanMutation,
+  PlanFragment,
+  PlanWithTagsFragment,
 } from '../__generated__/graphql.js';
 import {
   AddPlanTagDocument,
@@ -56,13 +54,13 @@ interface PlanTagging {
 }
 
 type CreatePlanResult = GenericResult<{
-  plan: CreatePlanMutation['createPlan'];
+  plan: PlanFragment;
   tagFailures: readonly PlanTagFailure[];
   tags: readonly string[];
 }>;
 
 type CreatePlansResult = GenericResult<{
-  plans: CreatePlansMutation['createPlans']['plans'];
+  plans: PlanFragment[];
   totalCount: number;
 }>;
 
@@ -71,16 +69,16 @@ type DeletePlanResult = GenericResult<{
 }>;
 
 type GetPlanResult = GenericResult<{
-  plan: GetPlanQuery['plan'];
+  plan: PlanWithTagsFragment | null | undefined;
 }>;
 
 type ListPlansByStatusResult = GenericResult<{
-  plans: ListPlansByStatusQuery['listPlansByStatus']['items'];
+  plans: PlanWithTagsFragment[];
   totalCount: number;
 }>;
 
 type UpdatePlanResult = GenericResult<{
-  plan: UpdatePlanMutation['updatePlan'];
+  plan: PlanFragment;
 }>;
 
 /**
@@ -136,7 +134,7 @@ export async function listPlansByStatusToolHandler(
   }
 
   return runTool<{
-    plans: ListPlansByStatusQuery['listPlansByStatus']['items'];
+    plans: PlanWithTagsFragment[];
     totalCount: number;
   }>('list_plans_by_status', async () => {
     const token = getAuthToken();
@@ -262,7 +260,7 @@ export async function createPlanToolHandler(
   const { tags = [], ...input } = parsed.data;
 
   return runTool<{
-    plan: CreatePlanMutation['createPlan'];
+    plan: PlanFragment;
     tagFailures: readonly PlanTagFailure[];
     tags: readonly string[];
   }>('create_plan', async () => {
@@ -302,7 +300,7 @@ export async function createPlansToolHandler(
   }
 
   return runTool<{
-    plans: CreatePlansMutation['createPlans']['plans'];
+    plans: PlanFragment[];
     totalCount: number;
   }>('create_plans', async () => {
     const token = getAuthToken();
@@ -335,18 +333,21 @@ export async function getPlanToolHandler(
     return invalidArgsContent(parsed.error);
   }
 
-  return runTool<{ plan: GetPlanQuery['plan'] }>('get_plan', async () => {
-    const token = getAuthToken();
-    const result = await executeGraphqlWithAuth(token, GetPlanDocument, {
-      id: parsed.data.id,
-    });
+  return runTool<{ plan: PlanWithTagsFragment | null | undefined }>(
+    'get_plan',
+    async () => {
+      const token = getAuthToken();
+      const result = await executeGraphqlWithAuth(token, GetPlanDocument, {
+        id: parsed.data.id,
+      });
 
-    const plan = result?.plan;
-    if (!plan) return null;
+      const plan = result?.plan;
+      if (!plan) return null;
 
-    const text = `Plan: ${plan.id}\n${JSON.stringify(plan, null, 2)}`;
-    return { structuredContent: { plan }, text };
-  });
+      const text = `Plan: ${plan.id}\n${JSON.stringify(plan, null, 2)}`;
+      return { structuredContent: { plan }, text };
+    },
+  );
 }
 
 export async function updatePlanToolHandler(
@@ -357,34 +358,28 @@ export async function updatePlanToolHandler(
     return invalidArgsContent(parsed.error);
   }
 
-  return runTool<{ plan: UpdatePlanMutation['updatePlan'] }>(
-    'update_plan',
-    async () => {
-      const token = getAuthToken();
-      const priorStatus = await readStatusBeforeStatusChange(
-        token,
-        parsed.data,
-      );
-      const result = await executeGraphqlWithAuth(
-        token,
-        UpdatePlanDocument,
-        {
-          input: parsed.data,
-        },
-        await ambientSessionOptions(token),
-      );
+  return runTool<{ plan: PlanFragment }>('update_plan', async () => {
+    const token = getAuthToken();
+    const priorStatus = await readStatusBeforeStatusChange(token, parsed.data);
+    const result = await executeGraphqlWithAuth(
+      token,
+      UpdatePlanDocument,
+      {
+        input: parsed.data,
+      },
+      await ambientSessionOptions(token),
+    );
 
-      const plan = result?.updatePlan;
-      if (!plan) return null;
+    const plan = result?.updatePlan;
+    if (!plan) return null;
 
-      const scheduledRunNote = describeCancelledScheduledRun(
-        priorStatus,
-        plan.status,
-      );
-      const text = `Updated plan: ${plan.id}${scheduledRunNote}\n${JSON.stringify(plan, null, 2)}`;
-      return { structuredContent: { plan }, text };
-    },
-  );
+    const scheduledRunNote = describeCancelledScheduledRun(
+      priorStatus,
+      plan.status,
+    );
+    const text = `Updated plan: ${plan.id}${scheduledRunNote}\n${JSON.stringify(plan, null, 2)}`;
+    return { structuredContent: { plan }, text };
+  });
 }
 
 /**

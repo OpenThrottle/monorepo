@@ -105,3 +105,117 @@ fragment PlanRun on PlanRunObject {
   usageLimitResetsAt
   usageLimitType
 }
+
+# A plan run plus the host fields the CLI register/settle mutations return.
+fragment CliPlanRun on PlanRunObject {
+  hostname
+  pid
+  ...PlanRun
+  workerId
+}
+
+# A plan run plus the worktree it ran in: what get_plan_runs and the worktree
+# checkout registration return.
+fragment PlanRunWithCheckout on PlanRunObject {
+  checkout {
+    displayName
+    filesystemPath
+    kind
+  }
+  ...PlanRun
+}
+
+fragment PlanOutputStreamChunk on PlanOutputStreamChunkObject {
+  content
+  createdAt
+  id
+  iteration
+  planId
+  taskId
+}
+
+fragment PromoteTaskToPlanResult on PromoteTaskToPlanResultObject {
+  error
+  jobId
+  success
+}
+
+fragment ActivityByDate on ActivityByDateResultObject {
+  commits {
+    createdAt
+    id
+    message
+    planId
+    planTitle
+    repo
+    sha
+    taskId
+    taskTitle
+  }
+  hasNext
+  outputChunks {
+    content
+    createdAt
+    id
+    iteration
+    planId
+    planTitle
+    taskId
+  }
+  tasksUpdated {
+    id
+    planId
+    planTitle
+    status
+    title
+    updatedAt
+  }
+  totalCount
+}
+
+fragment LastActivity on LastActivityResultObject {
+  at
+  commit {
+    message
+    repo
+    sha
+  }
+  kind
+  outputChunk {
+    content
+    iteration
+    taskId
+  }
+  planId
+  summary
+  taskId
+  taskUpdate {
+    status
+    taskId
+    taskTitle
+  }
+}
+
+fragment SearchChunk on SearchChunk {
+  content
+  id
+  planId
+  planTitle
+  similarity
+  source
+  sourcePath
+  sourceRepo
+  sourceSha
+  taskId
+  taskTitle
+}
+
+fragment ListPlanSource on ListPlanSourceObject {
+  id
+  title
+}
+
+fragment ListSourceInfo on ListSourceInfoObject {
+  description
+  name
+}

@@ -1,8 +1,12 @@
+fragment GitTextDraft on GitTextDraftObject {
+  branchName
+  commitMessage
+  pullRequestBody
+  pullRequestTitle
+}
+
 query gitTextDraft($input: GitTextDraftInput!) {
   gitTextDraft(input: $input) {
-    branchName
-    commitMessage
-    pullRequestBody
-    pullRequestTitle
+    ...GitTextDraft
   }
 }

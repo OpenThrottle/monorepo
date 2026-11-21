@@ -7,10 +7,10 @@ import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import type { z } from 'zod';
 
 import {
+  type ActivityByDateFragment,
   GetActivityByDateDocument,
-  type GetActivityByDateQuery,
   GetLastActivityDocument,
-  type GetLastActivityQuery,
+  type LastActivityFragment,
 } from '../__generated__/graphql.js';
 import {
   ActivityByDateInputSchema,
@@ -22,11 +22,11 @@ import { invalidArgsContent } from '../utils/errors.ts';
 import { runTool } from '../utils/runTool.ts';
 
 type GetActivityByDateResult = GenericResult<{
-  activity: GetActivityByDateQuery['activityByDate'];
+  activity: ActivityByDateFragment;
 }>;
 
 type GetLastActivityResult = GenericResult<{
-  result: GetLastActivityQuery['lastActivity'];
+  result: LastActivityFragment | null | undefined;
 }>;
 
 function toLinesOrNone<TItem>(
@@ -72,7 +72,7 @@ export async function getActivityByDateToolHandler(
     return invalidArgsContent(parsed.error);
   }
 
-  return runTool<{ activity: GetActivityByDateQuery['activityByDate'] }>(
+  return runTool<{ activity: ActivityByDateFragment }>(
     'get_activity_by_date',
     async () => {
       const token = getAuthToken();
@@ -121,7 +121,7 @@ export async function getLastActivityToolHandler(
     return invalidArgsContent(parsed.error);
   }
 
-  return runTool<{ result: GetLastActivityQuery['lastActivity'] }>(
+  return runTool<{ result: LastActivityFragment | null | undefined }>(
     'get_last_activity',
     async () => {
       const token = getAuthToken();

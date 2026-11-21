@@ -26,6 +26,14 @@ fragment ScheduledJob on ScheduledAgentJobObject {
   updatedAt
 }
 
+fragment ScheduledJobRun on ScheduledAgentJobRunObject {
+  createdAt
+  id
+  scheduledAgentJobId
+  status
+  trigger
+}
+
 query ListScheduledJobs {
   scheduledAgentJobsAsAgent {
     ...ScheduledJob
@@ -50,10 +58,6 @@ mutation DeleteScheduledJob($id: ID!) {
 
 mutation RunScheduledJobNow($id: ID!) {
   runScheduledAgentJobNowAsAgent(id: $id) {
-    createdAt
-    id
-    scheduledAgentJobId
-    status
-    trigger
+    ...ScheduledJobRun
   }
 }

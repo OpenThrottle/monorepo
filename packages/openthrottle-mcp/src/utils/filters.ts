@@ -1,12 +1,12 @@
-import { type TaskListItem } from '../tools/tasks.ts';
+import type { TaskFragment } from '../__generated__/graphql.js';
 
 export function filterTasksByCategory(
-  tasks: readonly TaskListItem[],
+  tasks: readonly TaskFragment[],
   category: string,
   planId?: string,
   status?: string,
   limit?: number,
-): TaskListItem[] {
+): TaskFragment[] {
   let out = tasks.filter(
     (t) => (t.category ?? '').toLowerCase() === category.toLowerCase(),
   );

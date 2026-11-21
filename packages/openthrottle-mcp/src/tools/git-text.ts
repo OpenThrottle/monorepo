@@ -6,16 +6,14 @@
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import { z } from 'zod';
 
-import type { GitTextDraftQuery } from '../__generated__/graphql.js';
+import type { GitTextDraftFragment } from '../__generated__/graphql.js';
 import { GitTextDraftDocument } from '../__generated__/graphql.js';
 import { getAuthToken } from '../auth/getAuthToken.ts';
 import type { GenericResult } from '../types/index.ts';
 import { invalidArgsContent } from '../utils/errors.ts';
 import { runTool } from '../utils/runTool.ts';
 
-type GitTextDraft = GitTextDraftQuery['gitTextDraft'];
-
-type DraftGitTextResult = GenericResult<{ draft: GitTextDraft }>;
+type DraftGitTextResult = GenericResult<{ draft: GitTextDraftFragment }>;
 
 export const draftGitTextToolParameters = z
   .object({
@@ -36,29 +34,32 @@ export async function draftGitTextToolHandler(
     return invalidArgsContent(parsed.error);
   }
 
-  return runTool<{ draft: GitTextDraft }>('draft_git_text', async () => {
-    const token = getAuthToken();
-    const result = await executeGraphqlWithAuth(token, GitTextDraftDocument, {
-      input: {
-        planId: parsed.data.planId,
-        pullRequestTemplate: parsed.data.pullRequestTemplate ?? null,
-        scope: parsed.data.scope ?? null,
-        taskId: parsed.data.taskId ?? null,
-      },
-    });
-    const draft = result.gitTextDraft;
-    const sections = [
-      `Branch: ${draft.branchName}`,
-      draft.commitMessage == null
-        ? null
-        : `Commit message:\n${draft.commitMessage}`,
-      `PR title: ${draft.pullRequestTitle}`,
-      `PR body:\n${draft.pullRequestBody}`,
-    ];
+  return runTool<{ draft: GitTextDraftFragment }>(
+    'draft_git_text',
+    async () => {
+      const token = getAuthToken();
+      const result = await executeGraphqlWithAuth(token, GitTextDraftDocument, {
+        input: {
+          planId: parsed.data.planId,
+          pullRequestTemplate: parsed.data.pullRequestTemplate ?? null,
+          scope: parsed.data.scope ?? null,
+          taskId: parsed.data.taskId ?? null,
+        },
+      });
+      const draft = result.gitTextDraft;
+      const sections = [
+        `Branch: ${draft.branchName}`,
+        draft.commitMessage == null
+          ? null
+          : `Commit message:\n${draft.commitMessage}`,
+        `PR title: ${draft.pullRequestTitle}`,
+        `PR body:\n${draft.pullRequestBody}`,
+      ];
 
-    return {
-      structuredContent: { draft },
-      text: sections.filter((section) => section != null).join('\n\n'),
-    };
-  });
+      return {
+        structuredContent: { draft },
+        text: sections.filter((section) => section != null).join('\n\n'),
+      };
+    },
+  );
 }
