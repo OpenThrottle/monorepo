@@ -1,0 +1,34 @@
+{
+  // Emit-only compile for the `build` target: the same split the
+  // openthrottle-server build makes with `--noCheck`. This package compiles
+  // generated GraphQL client code and sits in openthrottle-server's build
+  // graph, so a type-checking build fails on stale generated types whenever a
+  // branch adds a schema field and code that reads it, before
+  // graphql-schema:write can emit the schema that codegen needs (OT plan
+  // 74ecccb1). The `typecheck` target is the type gate; it builds
+  // tsconfig.lib.json, which must not carry noCheck.
+  "extends": "./tsconfig.lib.json",
+  "compilerOptions": {
+    "noCheck": true
+  },
+  "references": [
+    {
+      "path": "../openthrottle-agentic-utils/tsconfig.lib.json"
+    },
+    {
+      "path": "../nodejs-graphql/tsconfig.lib.json"
+    },
+    {
+      "path": "../nestjs-modules/tsconfig.lib.json"
+    },
+    {
+      "path": "../agentic-hooks/tsconfig.lib.json"
+    },
+    {
+      "path": "../../tools/dotfiles/tsconfig.lib.json"
+    },
+    {
+      "path": "../graphql-codegen/tsconfig.lib.json"
+    }
+  ]
+}

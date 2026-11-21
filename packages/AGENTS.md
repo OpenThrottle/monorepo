@@ -1,6 +1,6 @@
 # packages/ — agent notes
 
-Family-shared notes for everything under `packages/`. Per-project deltas live in each package's own `AGENTS.md`; monorepo-wide rules live in the root [AGENTS.md](../AGENTS.md) / [CLAUDE.md](../CLAUDE.md).
+Family-shared notes for everything under `packages/`. Per-project deltas live in each package's own `AGENTS.md`; monorepo-wide rules live in the root [AGENTS.md](../AGENTS.md).
 
 ## Three families
 

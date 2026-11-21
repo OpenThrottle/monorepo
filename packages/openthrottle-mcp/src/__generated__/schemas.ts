@@ -1,0 +1,2533 @@
+import { z } from 'zod/v3';
+import {
+  ActivityByDateInput,
+  ActivityByDateRangeInput,
+  AddHookInput,
+  AddPermissionToRoleInput,
+  AddPlanTagInput,
+  AddPlanToProjectInput,
+  AddProjectSkillTagInput,
+  AddProjectTagInput,
+  AddSkillTagInput,
+  AddTaskTagInput,
+  AddWorkspaceFolderInput,
+  AgentAssetSearchInput,
+  AgentsRunChatTurnInput,
+  AppendPlanOutputInput,
+  ApplyWorkspaceEditorConfigurationInput,
+  ArchiveAgentConversationInput,
+  AssignRoleToServiceAccountInput,
+  AssignRoleToUserInput,
+  AttachWorkSessionSubjectInput,
+  BlogPostState,
+  BlogPostStatus,
+  BlogReferenceEntity,
+  CalibrateJudgeForRunInput,
+  CancelPlanRunInput,
+  ClaimPlanMessagesInput,
+  CleanQueueInput,
+  CloneCmsFragmentInput,
+  CloneRepositoryInput,
+  CodeSemanticSearchInput,
+  CommitsPerPrInput,
+  ConnectMcpConnectorInput,
+  CreateAgentConversationInput,
+  CreateBlogPostInput,
+  CreateCmsFragmentInput,
+  CreateCmsLayoutInput,
+  CreateCmsLibraryComponentInput,
+  CreateCustomPromptInput,
+  CreateEvalDatasetFromTrajectoriesInput,
+  CreateNoteInput,
+  CreatePlanInput,
+  CreatePlansInput,
+  CreateProjectInput,
+  CreateQueueInput,
+  CreateRoleInput,
+  CreateRolloutFlagInput,
+  CreateScheduledAgentJobAsAgentInputType,
+  CreateScheduledAgentJobInputType,
+  CreateScheduledAgentJobWebhookTriggerInputType,
+  CreateServiceAccountCredentialInput,
+  CreateServiceAccountInput,
+  CreateTaskInput,
+  CreateTasksInput,
+  CreateTasksItemInput,
+  CreateUserInput,
+  CreateWorkspaceLocalRepositoryInput,
+  CustomPromptType,
+  DeleteAgentConversationInput,
+  DeletePlanInput,
+  DeletePlanOutputInput,
+  DeleteProjectInput,
+  DeleteTagActionRuleInput,
+  DeleteTaskInput,
+  DeregisterWorktreeCheckoutInput,
+  DetachHookInput,
+  DuplicateJobInput,
+  EditorPresenceState,
+  EndWorkSessionInput,
+  EnqueueDocIngestionInput,
+  EnqueuePlanRalphOrchestratorInput,
+  EnqueuePlanRunInput,
+  EvalCaseFromTrajectoryInput,
+  ForceSettlePlanRunInput,
+  GetAgentConversationMessagesInput,
+  GetGeneratorInput,
+  GetPlanEmbeddingInput,
+  GetPlanOutputStreamChunkInput,
+  GetPullInput,
+  GetTaskEmbeddingInput,
+  GitHubRepoInput,
+  GitTextDraftInput,
+  IdRefKind,
+  LabelAgentTrajectoryInput,
+  LastActivityInput,
+  LinesAddedDeletedInput,
+  LinkProjectRepositoryInput,
+  ListAgentConversationsInput,
+  ListCustomPromptsInput,
+  ListPlanMessagesInput,
+  ListPlanOutputStreamChunksInput,
+  ListPlansByStatusInput,
+  ListPullsInput,
+  LoginInput,
+  MissingWorktreeCheckoutReason,
+  MoveProjectPlanInput,
+  OpenToMergedCycleTimeInput,
+  PlanEmbeddingsByPlanInput,
+  PlanMessageKind,
+  PlanMessageStatus,
+  PlanRalphWorkflowMode,
+  PlanRunWorktreeTeardownOutcome,
+  PlanRunsByPlanIdInput,
+  PlanTaskStatus,
+  PostPlanMessageInput,
+  PrCountByLabelInput,
+  PressureLevel,
+  ProjectPlanMoveDirection,
+  ProjectPlansPageInput,
+  PromoteTaskToPlanInput,
+  PrsMergedPerPeriodInput,
+  PruneWorktreeCheckoutOutcome,
+  PruneWorktreeCheckoutsInput,
+  PublishBlogPostInput,
+  QueueControlInput,
+  QueueDetailsInput,
+  QueueJobLogLevel,
+  QueueJobLogsInput,
+  RalphNestedDebugCli,
+  RalphPlanRunTuningInput,
+  RecordAgentTrajectoryInput,
+  RecordEvalGradeInput,
+  RecordEvalRunInput,
+  RecordEvalTrialInput,
+  RecordJudgeCalibrationInput,
+  RecordPlanRunHeartbeatInput,
+  RecordSkillUsageInput,
+  RecordSkillUsageOutcomeInput,
+  RecordTelemetryHeartbeatInput,
+  RecordTokenUsageAccountInput,
+  RecordTokenUsageInput,
+  RecordTokenUsageRowInput,
+  RecordWorkArtifactInput,
+  RefreshCheckoutInput,
+  RegisterCliPlanRunInput,
+  RegisterInput,
+  RegisterPlanRunWorktreeCheckoutInput,
+  RemainingTasksByPlanIdInput,
+  RemovePermissionFromRoleInput,
+  RemovePlanFromProjectInput,
+  RemovePlanTagInput,
+  RemoveProjectSkillTagInput,
+  RemoveProjectTagInput,
+  RemoveRepeatableJobInput,
+  RemoveRoleFromServiceAccountInput,
+  RemoveRoleFromUserInput,
+  RemoveSkillTagInput,
+  RemoveTaskTagInput,
+  RenameSkillTagInput,
+  ReorderPlanTasksInput,
+  ReorderProjectPlansInput,
+  RepeatableJobsInput,
+  ReplaceAgentTrajectoryInput,
+  ReschedulePlanRunInput,
+  RetryJobInput,
+  ReviewCycleTimeInput,
+  RolloutEvaluationReason,
+  RolloutFallthroughBucketInput,
+  RolloutFallthroughInput,
+  RolloutFlagKind,
+  RolloutFlagVariationInput,
+  SchedulePlanRunInput,
+  ScheduledAgentJobWebhookFilterInputType,
+  SearchInput,
+  SearchPlansInput,
+  SetBlogPostTagsInput,
+  SetMcpConnectorEnabledInput,
+  SetPlanStatusInput,
+  SetScheduledAgentJobEnabledInputType,
+  SetWorkspaceLocalRepositoryProjectInput,
+  SettleCliPlanRunInput,
+  SkillAvailabilityRuleInput,
+  StartConversationStreamInput,
+  StartWorkSessionInput,
+  TaskEmbeddingsByTaskInput,
+  TasksByPlanIdInput,
+  TasksByProjectIdInput,
+  TimelineLaneGrouping,
+  TimelineMarkerKind,
+  TimelineSpanKind,
+  UnlinkProjectRepositoryInput,
+  UnverifiedWorkArtifactsInput,
+  UpdateAgentConversationTitleInput,
+  UpdateBlogPostInput,
+  UpdateCmsFragmentInput,
+  UpdateCmsLayoutInput,
+  UpdateCmsLibraryComponentInput,
+  UpdateCustomPromptInput,
+  UpdateEvalRunStatusInput,
+  UpdateNoteInput,
+  UpdatePlanInput,
+  UpdatePlanMessageInput,
+  UpdateProjectInput,
+  UpdateRepositoryInput,
+  UpdateRoleInput,
+  UpdateRolloutFlagInput,
+  UpdateScheduledAgentJobAsAgentInputType,
+  UpdateScheduledAgentJobInputType,
+  UpdateScheduledAgentJobWebhookTriggerInputType,
+  UpdateServiceAccountInput,
+  UpdateTaskInput,
+  UpdateUserInput,
+  UpdateUserPreferencesInput,
+  UpdateWorkspaceLocalRepositoryInput,
+  UpdateWorkspaceProfileInput,
+  UpsertBlogAuthorInput,
+  UpsertBlogTagInput,
+  UpsertTagActionRuleInput,
+  UserPreferencesAgentInput,
+  WallClockInterpretation,
+  WithdrawPlanMessageInput,
+  WorkArtifactsByPlanInput,
+  WorkArtifactsBySessionInput,
+  WorkArtifactsByTaskInput,
+  WorkLedgerCompletenessInput,
+  WorkSessionsByPlanInput,
+  WorkspaceEditorId,
+  WorkspaceFolderReconciliation,
+  WorkstreamTimelineInput,
+  WorktreeActivity,
+  WorktreeDiscoveryProblemKind,
+  WorktreeRemovalAuditInput,
+  WorktreeRootSource,
+} from './graphql.js';
+
+type Properties<T> = Required<{
+  [K in keyof T]: z.ZodType<T[K]>;
+}>;
+
+type definedNonNullAny = {};
+
+export const isDefinedNonNullAny = (v: any): v is definedNonNullAny =>
+  v !== undefined && v !== null;
+
+export const definedNonNullAnySchema = z
+  .any()
+  .refine((v) => isDefinedNonNullAny(v));
+
+export const BlogPostStateSchema: z.ZodType<BlogPostState> =
+  z.nativeEnum(BlogPostState);
+
+export const BlogPostStatusSchema: z.ZodType<BlogPostStatus> =
+  z.nativeEnum(BlogPostStatus);
+
+export const BlogReferenceEntitySchema: z.ZodType<BlogReferenceEntity> =
+  z.nativeEnum(BlogReferenceEntity);
+
+export const CustomPromptTypeSchema: z.ZodType<CustomPromptType> =
+  z.nativeEnum(CustomPromptType);
+
+export const EditorPresenceStateSchema: z.ZodType<EditorPresenceState> =
+  z.nativeEnum(EditorPresenceState);
+
+export const IdRefKindSchema: z.ZodType<IdRefKind> = z.nativeEnum(IdRefKind);
+
+export const MissingWorktreeCheckoutReasonSchema: z.ZodType<MissingWorktreeCheckoutReason> =
+  z.nativeEnum(MissingWorktreeCheckoutReason);
+
+export const PlanMessageKindSchema: z.ZodType<PlanMessageKind> =
+  z.nativeEnum(PlanMessageKind);
+
+export const PlanMessageStatusSchema: z.ZodType<PlanMessageStatus> =
+  z.nativeEnum(PlanMessageStatus);
+
+export const PlanRalphWorkflowModeSchema: z.ZodType<PlanRalphWorkflowMode> =
+  z.nativeEnum(PlanRalphWorkflowMode);
+
+export const PlanRunWorktreeTeardownOutcomeSchema: z.ZodType<PlanRunWorktreeTeardownOutcome> =
+  z.nativeEnum(PlanRunWorktreeTeardownOutcome);
+
+export const PlanTaskStatusSchema: z.ZodType<PlanTaskStatus> =
+  z.nativeEnum(PlanTaskStatus);
+
+export const PressureLevelSchema: z.ZodType<PressureLevel> =
+  z.nativeEnum(PressureLevel);
+
+export const ProjectPlanMoveDirectionSchema: z.ZodType<ProjectPlanMoveDirection> =
+  z.nativeEnum(ProjectPlanMoveDirection);
+
+export const PruneWorktreeCheckoutOutcomeSchema: z.ZodType<PruneWorktreeCheckoutOutcome> =
+  z.nativeEnum(PruneWorktreeCheckoutOutcome);
+
+export const QueueJobLogLevelSchema: z.ZodType<QueueJobLogLevel> =
+  z.nativeEnum(QueueJobLogLevel);
+
+export const RalphNestedDebugCliSchema: z.ZodType<RalphNestedDebugCli> =
+  z.nativeEnum(RalphNestedDebugCli);
+
+export const RolloutEvaluationReasonSchema: z.ZodType<RolloutEvaluationReason> =
+  z.nativeEnum(RolloutEvaluationReason);
+
+export const RolloutFlagKindSchema: z.ZodType<RolloutFlagKind> =
+  z.nativeEnum(RolloutFlagKind);
+
+export const TimelineLaneGroupingSchema: z.ZodType<TimelineLaneGrouping> =
+  z.nativeEnum(TimelineLaneGrouping);
+
+export const TimelineMarkerKindSchema: z.ZodType<TimelineMarkerKind> =
+  z.nativeEnum(TimelineMarkerKind);
+
+export const TimelineSpanKindSchema: z.ZodType<TimelineSpanKind> =
+  z.nativeEnum(TimelineSpanKind);
+
+export const WallClockInterpretationSchema: z.ZodType<WallClockInterpretation> =
+  z.nativeEnum(WallClockInterpretation);
+
+export const WorkspaceEditorIdSchema: z.ZodType<WorkspaceEditorId> =
+  z.nativeEnum(WorkspaceEditorId);
+
+export const WorkspaceFolderReconciliationSchema: z.ZodType<WorkspaceFolderReconciliation> =
+  z.nativeEnum(WorkspaceFolderReconciliation);
+
+export const WorktreeActivitySchema: z.ZodType<WorktreeActivity> =
+  z.nativeEnum(WorktreeActivity);
+
+export const WorktreeDiscoveryProblemKindSchema: z.ZodType<WorktreeDiscoveryProblemKind> =
+  z.nativeEnum(WorktreeDiscoveryProblemKind);
+
+export const WorktreeRootSourceSchema: z.ZodType<WorktreeRootSource> =
+  z.nativeEnum(WorktreeRootSource);
+
+export function ActivityByDateInputSchema(): z.ZodObject<
+  Properties<ActivityByDateInput>
+> {
+  return z.object({
+    date: z.string().nullish(),
+    daysBack: z.number().nullish(),
+    limit: z.number().nullish(),
+    offset: z.number().nullish(),
+  });
+}
+
+export function ActivityByDateRangeInputSchema(): z.ZodObject<
+  Properties<ActivityByDateRangeInput>
+> {
+  return z.object({
+    endIso: z.string().min(1),
+    limit: z.number().nullish(),
+    offset: z.number().nullish(),
+    startIso: z.string().min(1),
+  });
+}
+
+export function AddHookInputSchema(): z.ZodObject<Properties<AddHookInput>> {
+  return z.object({
+    anchorTaskId: z.string().nullish(),
+    description: z.string().nullish(),
+    planId: z.string().min(1),
+    role: z.string().min(1),
+    scope: z.string().nullish(),
+    skillSlug: z.string().nullish(),
+    source: z.string().min(1),
+    title: z.string().nullish(),
+  });
+}
+
+export function AddPermissionToRoleInputSchema(): z.ZodObject<
+  Properties<AddPermissionToRoleInput>
+> {
+  return z.object({
+    permissionId: z.string().min(1),
+    roleId: z.string().min(1),
+  });
+}
+
+export function AddPlanTagInputSchema(): z.ZodObject<
+  Properties<AddPlanTagInput>
+> {
+  return z.object({
+    planId: z.string().min(1),
+    tag: z.string().min(1),
+  });
+}
+
+export function AddPlanToProjectInputSchema(): z.ZodObject<
+  Properties<AddPlanToProjectInput>
+> {
+  return z.object({
+    planId: z.string().min(1),
+    projectId: z.string().min(1),
+  });
+}
+
+export function AddProjectSkillTagInputSchema(): z.ZodObject<
+  Properties<AddProjectSkillTagInput>
+> {
+  return z.object({
+    projectId: z.string().nullish(),
+    slug: z.string().min(1),
+    tag: z.string().min(1),
+  });
+}
+
+export function AddProjectTagInputSchema(): z.ZodObject<
+  Properties<AddProjectTagInput>
+> {
+  return z.object({
+    projectId: z.string().min(1),
+    tag: z.string().min(1),
+  });
+}
+
+export function AddSkillTagInputSchema(): z.ZodObject<
+  Properties<AddSkillTagInput>
+> {
+  return z.object({
+    dimension: z.string().default('domain').nullish(),
+    tag: z.string().min(1),
+  });
+}
+
+export function AddTaskTagInputSchema(): z.ZodObject<
+  Properties<AddTaskTagInput>
+> {
+  return z.object({
+    tag: z.string().min(1),
+    taskId: z.string().min(1),
+  });
+}
+
+export function AddWorkspaceFolderInputSchema(): z.ZodObject<
+  Properties<AddWorkspaceFolderInput>
+> {
+  return z.object({
+    displayName: z.string().nullish(),
+    path: z.string().min(1),
+  });
+}
+
+export function AgentAssetSearchInputSchema(): z.ZodObject<
+  Properties<AgentAssetSearchInput>
+> {
+  return z.object({
+    limit: z.number().nullish(),
+    projectId: z.string().nullish(),
+    promptTypes: z.array(CustomPromptTypeSchema).nullish(),
+    query: z.string().min(1),
+  });
+}
+
+export function AgentsRunChatTurnInputSchema(): z.ZodObject<
+  Properties<AgentsRunChatTurnInput>
+> {
+  return z.object({
+    conversationId: z.string().nullish(),
+    message: z.string().min(1),
+    persist: z.boolean().default(false).nullish(),
+  });
+}
+
+export function AppendPlanOutputInputSchema(): z.ZodObject<
+  Properties<AppendPlanOutputInput>
+> {
+  return z.object({
+    content: z.string().min(1),
+    iteration: z.number().nullish(),
+    kind: z.string().nullish(),
+    planId: z.string().min(1),
+    taskId: z.string().nullish(),
+  });
+}
+
+export function ApplyWorkspaceEditorConfigurationInputSchema(): z.ZodObject<
+  Properties<ApplyWorkspaceEditorConfigurationInput>
+> {
+  return z.object({
+    repositoryIds: z.array(z.string().min(1)).nullish(),
+  });
+}
+
+export function ArchiveAgentConversationInputSchema(): z.ZodObject<
+  Properties<ArchiveAgentConversationInput>
+> {
+  return z.object({
+    conversationId: z.string().min(1),
+  });
+}
+
+export function AssignRoleToServiceAccountInputSchema(): z.ZodObject<
+  Properties<AssignRoleToServiceAccountInput>
+> {
+  return z.object({
+    roleId: z.string().min(1),
+    serviceAccountId: z.string().min(1),
+  });
+}
+
+export function AssignRoleToUserInputSchema(): z.ZodObject<
+  Properties<AssignRoleToUserInput>
+> {
+  return z.object({
+    roleId: z.string().min(1),
+    userId: z.string().min(1),
+  });
+}
+
+export function AttachWorkSessionSubjectInputSchema(): z.ZodObject<
+  Properties<AttachWorkSessionSubjectInput>
+> {
+  return z.object({
+    planId: z.string().min(1),
+    sessionId: z.string().min(1),
+    taskId: z.string().nullish(),
+  });
+}
+
+export function CalibrateJudgeForRunInputSchema(): z.ZodObject<
+  Properties<CalibrateJudgeForRunInput>
+> {
+  return z.object({
+    graderId: z.string().min(1),
+    graderVersion: z.string().min(1),
+    heldOut: z.boolean().default(false),
+    runId: z.string().min(1),
+    split: z.string().nullish(),
+  });
+}
+
+export function CancelPlanRunInputSchema(): z.ZodObject<
+  Properties<CancelPlanRunInput>
+> {
+  return z.object({
+    planId: z.string().min(1),
+    planRunId: z.string().nullish(),
+  });
+}
+
+export function ClaimPlanMessagesInputSchema(): z.ZodObject<
+  Properties<ClaimPlanMessagesInput>
+> {
+  return z.object({
+    planId: z.string().min(1),
+    planRunId: z.string().nullish(),
+    taskId: z.string().nullish(),
+  });
+}
+
+export function CleanQueueInputSchema(): z.ZodObject<
+  Properties<CleanQueueInput>
+> {
+  return z.object({
+    confirm: z.boolean(),
+    graceMs: z.number().nullish(),
+    limit: z.number().nullish(),
+    queueName: z.string().min(1),
+    state: z.string().min(1),
+  });
+}
+
+export function CloneCmsFragmentInputSchema(): z.ZodObject<
+  Properties<CloneCmsFragmentInput>
+> {
+  return z.object({
+    includeChildren: z.boolean().nullish(),
+    name: z.string().nullish(),
+    uuid: z.string().min(1),
+  });
+}
+
+export function CloneRepositoryInputSchema(): z.ZodObject<
+  Properties<CloneRepositoryInput>
+> {
+  return z.object({
+    gitUrl: z.string().min(1),
+    name: z.string().nullish(),
+  });
+}
+
+export function CodeSemanticSearchInputSchema(): z.ZodObject<
+  Properties<CodeSemanticSearchInput>
+> {
+  return z.object({
+    limit: z.number().nullish(),
+    query: z.string().min(1),
+    repositoryId: z.string().min(1),
+  });
+}
+
+export function CommitsPerPrInputSchema(): z.ZodObject<
+  Properties<CommitsPerPrInput>
+> {
+  return z.object({
+    maxPrs: z.number().nullish(),
+    owner: z.string().min(1),
+    period: z.string().nullish(),
+    repo: z.string().min(1),
+  });
+}
+
+export function ConnectMcpConnectorInputSchema(): z.ZodObject<
+  Properties<ConnectMcpConnectorInput>
+> {
+  return z.object({
+    apiToken: z.string().nullish(),
+    connectorKey: z.string().min(1),
+    label: z.string().nullish(),
+  });
+}
+
+export function CreateAgentConversationInputSchema(): z.ZodObject<
+  Properties<CreateAgentConversationInput>
+> {
+  return z.object({
+    metadataJson: z.string().nullish(),
+    planId: z.string().nullish(),
+    projectId: z.string().nullish(),
+    title: z.string().nullish(),
+  });
+}
+
+export function CreateBlogPostInputSchema(): z.ZodObject<
+  Properties<CreateBlogPostInput>
+> {
+  return z.object({
+    authorSlug: z.string().nullish(),
+    bodyMarkdown: z.string().min(1),
+    coverImageAlt: z.string().nullish(),
+    coverImageUrl: z.string().nullish(),
+    excerpt: z.string().nullish(),
+    seoDescription: z.string().nullish(),
+    seoTitle: z.string().nullish(),
+    slug: z.string().min(1),
+    title: z.string().min(1),
+  });
+}
+
+export function CreateCmsFragmentInputSchema(): z.ZodObject<
+  Properties<CreateCmsFragmentInput>
+> {
+  return z.object({
+    name: z.string().min(1),
+    propertiesJson: z.string().nullish(),
+    typename: z.string().min(1),
+  });
+}
+
+export function CreateCmsLayoutInputSchema(): z.ZodObject<
+  Properties<CreateCmsLayoutInput>
+> {
+  return z.object({
+    name: z.string().min(1),
+    slug: z.string().min(1),
+  });
+}
+
+export function CreateCmsLibraryComponentInputSchema(): z.ZodObject<
+  Properties<CreateCmsLibraryComponentInput>
+> {
+  return z.object({
+    code: z.string().min(1),
+    libraryUuid: z.string().min(1),
+    name: z.string().min(1),
+    propsSchemaJson: z.string().nullish(),
+    status: z.string().nullish(),
+    typename: z.string().min(1),
+  });
+}
+
+export function CreateCustomPromptInputSchema(): z.ZodObject<
+  Properties<CreateCustomPromptInput>
+> {
+  return z.object({
+    content: z.string().min(1),
+    description: z.string().nullish(),
+    filePath: z.string().nullish(),
+    labels: z.array(z.string().min(1)).default([]),
+    projectId: z.string().nullish(),
+    promptType: CustomPromptTypeSchema,
+    title: z.string().min(1),
+    userId: z.string().nullish(),
+    writeToFileSystem: z.boolean().default(false),
+  });
+}
+
+export function CreateEvalDatasetFromTrajectoriesInputSchema(): z.ZodObject<
+  Properties<CreateEvalDatasetFromTrajectoriesInput>
+> {
+  return z.object({
+    cases: z.array(z.lazy(() => EvalCaseFromTrajectoryInputSchema())),
+    description: z.string().nullish(),
+    name: z.string().min(1),
+    repositoryId: z.string().min(1),
+    target: z.string().min(1),
+  });
+}
+
+export function CreateNoteInputSchema(): z.ZodObject<
+  Properties<CreateNoteInput>
+> {
+  return z.object({
+    author: z.string().nullish(),
+    content: z.string().min(1),
+  });
+}
+
+export function CreatePlanInputSchema(): z.ZodObject<
+  Properties<CreatePlanInput>
+> {
+  return z.object({
+    assignee: z.string().nullish(),
+    author: z.string().min(1),
+    category: z.string().min(1),
+    description: z.string().nullish(),
+    id: z.string().nullish(),
+    project: z.string().nullish(),
+    projectId: z.string().nullish(),
+    runConfigJson: z.string().nullish(),
+    status: z.string().nullish(),
+    summary: z.string().nullish(),
+    title: z.string().min(1),
+    workspacePath: z.string().nullish(),
+  });
+}
+
+export function CreatePlansInputSchema(): z.ZodObject<
+  Properties<CreatePlansInput>
+> {
+  return z.object({
+    plans: z.array(z.lazy(() => CreatePlanInputSchema())),
+  });
+}
+
+export function CreateProjectInputSchema(): z.ZodObject<
+  Properties<CreateProjectInput>
+> {
+  return z.object({
+    description: z.string().nullish(),
+    name: z.string().min(1),
+    nxProjectName: z.string().nullish(),
+  });
+}
+
+export function CreateQueueInputSchema(): z.ZodObject<
+  Properties<CreateQueueInput>
+> {
+  return z.object({
+    name: z.string().min(1),
+  });
+}
+
+export function CreateRoleInputSchema(): z.ZodObject<
+  Properties<CreateRoleInput>
+> {
+  return z.object({
+    description: z.string().nullish(),
+    name: z.string().min(1),
+  });
+}
+
+export function CreateRolloutFlagInputSchema(): z.ZodObject<
+  Properties<CreateRolloutFlagInput>
+> {
+  return z.object({
+    description: z.string().nullish(),
+    enabled: z.boolean().default(false),
+    fallthrough: z.lazy(() => RolloutFallthroughInputSchema().nullish()),
+    key: z.string().min(1),
+    kind: RolloutFlagKindSchema.nullish(),
+    offVariation: z.number().nullish(),
+    targetRoles: z.array(z.string().min(1)).default([]),
+    variations: z
+      .array(z.lazy(() => RolloutFlagVariationInputSchema()))
+      .nullish(),
+  });
+}
+
+export function CreateScheduledAgentJobAsAgentInputTypeSchema(): z.ZodObject<
+  Properties<CreateScheduledAgentJobAsAgentInputType>
+> {
+  return z.object({
+    cronPattern: z.string().nullish(),
+    driverId: z.string().min(1),
+    enabled: z.boolean().nullish(),
+    idempotencyKey: z.string().min(1),
+    intervalMs: z.number().nullish(),
+    misfirePolicy: z.string().nullish(),
+    misfireThresholdMs: z.number().nullish(),
+    model: z.string().nullish(),
+    name: z.string().min(1),
+    prompt: z.string().min(1),
+    repositoryCheckoutId: z.string().min(1),
+    runAt: z.string().nullish(),
+    scheduleKind: z.string().nullish(),
+    timeoutMs: z.number().nullish(),
+    timezone: z.string().nullish(),
+  });
+}
+
+export function CreateScheduledAgentJobInputTypeSchema(): z.ZodObject<
+  Properties<CreateScheduledAgentJobInputType>
+> {
+  return z.object({
+    cronPattern: z.string().nullish(),
+    cwd: z.string().nullish(),
+    driverId: z.string().min(1),
+    enabled: z.boolean().nullish(),
+    intervalMs: z.number().nullish(),
+    misfirePolicy: z.string().nullish(),
+    misfireThresholdMs: z.number().nullish(),
+    model: z.string().nullish(),
+    name: z.string().min(1),
+    prompt: z.string().min(1),
+    repositoryCheckoutId: z.string().nullish(),
+    runAt: z.string().nullish(),
+    scheduleKind: z.string().nullish(),
+    settingsJson: z.string().nullish(),
+    timeoutMs: z.number().nullish(),
+    timezone: z.string().nullish(),
+  });
+}
+
+export function CreateScheduledAgentJobWebhookTriggerInputTypeSchema(): z.ZodObject<
+  Properties<CreateScheduledAgentJobWebhookTriggerInputType>
+> {
+  return z.object({
+    coalesceWindowMs: z.number().nullish(),
+    deliveryIdHeader: z.string().nullish(),
+    enabled: z.boolean().nullish(),
+    filters: z
+      .array(z.lazy(() => ScheduledAgentJobWebhookFilterInputTypeSchema()))
+      .nullish(),
+    maxInFlight: z.number().nullish(),
+    rateLimitPerMinute: z.number().nullish(),
+    scheduledAgentJobId: z.string().min(1),
+    signatureEncoding: z.string().nullish(),
+    signatureHeader: z.string().nullish(),
+    signaturePreset: z.string().nullish(),
+    timestampHeader: z.string().nullish(),
+    timestampToleranceSeconds: z.number().nullish(),
+  });
+}
+
+export function CreateServiceAccountCredentialInputSchema(): z.ZodObject<
+  Properties<CreateServiceAccountCredentialInput>
+> {
+  return z.object({
+    expiresAt: definedNonNullAnySchema.nullish(),
+    label: z.string().nullish(),
+    serviceAccountId: z.string().min(1),
+  });
+}
+
+export function CreateServiceAccountInputSchema(): z.ZodObject<
+  Properties<CreateServiceAccountInput>
+> {
+  return z.object({
+    description: z.string().nullish(),
+    name: z.string().min(1),
+  });
+}
+
+export function CreateTaskInputSchema(): z.ZodObject<
+  Properties<CreateTaskInput>
+> {
+  return z.object({
+    assignee: z.string().nullish(),
+    category: z.string().nullish(),
+    description: z.string().nullish(),
+    planId: z.string().min(1),
+    project: z.string().nullish(),
+    projectId: z.string().nullish(),
+    requirements: z.string().nullish(),
+    sortOrder: z.number().nullish(),
+    status: z.string().nullish(),
+    summary: z.string().nullish(),
+    title: z.string().min(1),
+    wave: z.number().nullish(),
+  });
+}
+
+export function CreateTasksInputSchema(): z.ZodObject<
+  Properties<CreateTasksInput>
+> {
+  return z.object({
+    planId: z.string().min(1),
+    tasks: z.array(z.lazy(() => CreateTasksItemInputSchema())),
+  });
+}
+
+export function CreateTasksItemInputSchema(): z.ZodObject<
+  Properties<CreateTasksItemInput>
+> {
+  return z.object({
+    assignee: z.string().nullish(),
+    category: z.string().nullish(),
+    description: z.string().nullish(),
+    project: z.string().nullish(),
+    projectId: z.string().nullish(),
+    requirements: z.string().nullish(),
+    sortOrder: z.number().nullish(),
+    status: z.string().nullish(),
+    summary: z.string().nullish(),
+    title: z.string().min(1),
+    wave: z.number().nullish(),
+  });
+}
+
+export function CreateUserInputSchema(): z.ZodObject<
+  Properties<CreateUserInput>
+> {
+  return z.object({
+    email: z.string().nullish(),
+    githubUsername: z.string().min(1),
+  });
+}
+
+export function CreateWorkspaceLocalRepositoryInputSchema(): z.ZodObject<
+  Properties<CreateWorkspaceLocalRepositoryInput>
+> {
+  return z.object({
+    displayName: z.string().min(1),
+    filesystemPath: z.string().min(1),
+    gitDefaultBranch: z.string().nullish(),
+    gitRemoteUrl: z.string().nullish(),
+    projectId: z.string().nullish(),
+  });
+}
+
+export function DeleteAgentConversationInputSchema(): z.ZodObject<
+  Properties<DeleteAgentConversationInput>
+> {
+  return z.object({
+    conversationId: z.string().min(1),
+  });
+}
+
+export function DeletePlanInputSchema(): z.ZodObject<
+  Properties<DeletePlanInput>
+> {
+  return z.object({
+    id: z.string().min(1),
+  });
+}
+
+export function DeletePlanOutputInputSchema(): z.ZodObject<
+  Properties<DeletePlanOutputInput>
+> {
+  return z.object({
+    chunkId: z.string().nullish(),
+    planId: z.string().min(1),
+    taskId: z.string().nullish(),
+  });
+}
+
+export function DeleteProjectInputSchema(): z.ZodObject<
+  Properties<DeleteProjectInput>
+> {
+  return z.object({
+    id: z.string().min(1),
+  });
+}
+
+export function DeleteTagActionRuleInputSchema(): z.ZodObject<
+  Properties<DeleteTagActionRuleInput>
+> {
+  return z.object({
+    id: z.string().min(1),
+  });
+}
+
+export function DeleteTaskInputSchema(): z.ZodObject<
+  Properties<DeleteTaskInput>
+> {
+  return z.object({
+    id: z.string().min(1),
+  });
+}
+
+export function DeregisterWorktreeCheckoutInputSchema(): z.ZodObject<
+  Properties<DeregisterWorktreeCheckoutInput>
+> {
+  return z.object({
+    audit: z.lazy(() => WorktreeRemovalAuditInputSchema().nullish()),
+    filesystemPath: z.string().min(1),
+  });
+}
+
+export function DetachHookInputSchema(): z.ZodObject<
+  Properties<DetachHookInput>
+> {
+  return z.object({
+    hookTaskId: z.string().min(1),
+  });
+}
+
+export function DuplicateJobInputSchema(): z.ZodObject<
+  Properties<DuplicateJobInput>
+> {
+  return z.object({
+    jobId: z.string().min(1),
+    queueName: z.string().min(1),
+  });
+}
+
+export function EndWorkSessionInputSchema(): z.ZodObject<
+  Properties<EndWorkSessionInput>
+> {
+  return z.object({
+    sessionId: z.string().min(1),
+    summary: z.string().nullish(),
+  });
+}
+
+export function EnqueueDocIngestionInputSchema(): z.ZodObject<
+  Properties<EnqueueDocIngestionInput>
+> {
+  return z.object({
+    directories: z.array(z.string().min(1)).nullish(),
+    files: z.array(z.string().min(1)).nullish(),
+    repo: z.string().nullish(),
+    scope: z.string().nullish(),
+    sha: z.string().nullish(),
+  });
+}
+
+export function EnqueuePlanRalphOrchestratorInputSchema(): z.ZodObject<
+  Properties<EnqueuePlanRalphOrchestratorInput>
+> {
+  return z.object({
+    branch: z.string().min(1),
+    cancelScheduled: z.boolean().nullish(),
+    checkoutId: z.string().nullish(),
+    idempotencyKey: z.string().nullish(),
+    jobRunHooksJson: z.string().nullish(),
+    mode: PlanRalphWorkflowModeSchema.nullish(),
+    planId: z.string().min(1),
+    priority: z.number().nullish(),
+    ralph: z.lazy(() => RalphPlanRunTuningInputSchema().nullish()),
+    repositoryId: z.string().nullish(),
+    runner: z.string().nullish(),
+    taskId: z.string().nullish(),
+    workingDirectory: z.string().nullish(),
+  });
+}
+
+export function EnqueuePlanRunInputSchema(): z.ZodObject<
+  Properties<EnqueuePlanRunInput>
+> {
+  return z.object({
+    branch: z.string().min(1),
+    cancelScheduled: z.boolean().nullish(),
+    checkoutId: z.string().nullish(),
+    idempotencyKey: z.string().nullish(),
+    jobRunHooksJson: z.string().nullish(),
+    planId: z.string().min(1),
+    priority: z.number().nullish(),
+    ralph: z.lazy(() => RalphPlanRunTuningInputSchema().nullish()),
+    repositoryId: z.string().nullish(),
+    runner: z.string().nullish(),
+    workingDirectory: z.string().nullish(),
+  });
+}
+
+export function EvalCaseFromTrajectoryInputSchema(): z.ZodObject<
+  Properties<EvalCaseFromTrajectoryInput>
+> {
+  return z.object({
+    goldJson: z.string().min(1),
+    inputJson: z.string().nullish(),
+    split: z.string().min(1),
+    trajectoryId: z.string().min(1),
+  });
+}
+
+export function ForceSettlePlanRunInputSchema(): z.ZodObject<
+  Properties<ForceSettlePlanRunInput>
+> {
+  return z.object({
+    planRunId: z.string().min(1),
+    reason: z.string().nullish(),
+  });
+}
+
+export function GetAgentConversationMessagesInputSchema(): z.ZodObject<
+  Properties<GetAgentConversationMessagesInput>
+> {
+  return z.object({
+    conversationId: z.string().min(1),
+    limit: z.number().nullish(),
+    offset: z.number().nullish(),
+  });
+}
+
+export function GetGeneratorInputSchema(): z.ZodObject<
+  Properties<GetGeneratorInput>
+> {
+  return z.object({
+    name: z.string().min(1),
+  });
+}
+
+export function GetPlanEmbeddingInputSchema(): z.ZodObject<
+  Properties<GetPlanEmbeddingInput>
+> {
+  return z.object({
+    id: z.string().min(1),
+  });
+}
+
+export function GetPlanOutputStreamChunkInputSchema(): z.ZodObject<
+  Properties<GetPlanOutputStreamChunkInput>
+> {
+  return z.object({
+    id: z.string().min(1),
+  });
+}
+
+export function GetPullInputSchema(): z.ZodObject<Properties<GetPullInput>> {
+  return z.object({
+    number: z.number(),
+    owner: z.string().min(1),
+    repo: z.string().min(1),
+  });
+}
+
+export function GetTaskEmbeddingInputSchema(): z.ZodObject<
+  Properties<GetTaskEmbeddingInput>
+> {
+  return z.object({
+    id: z.string().min(1),
+  });
+}
+
+export function GitHubRepoInputSchema(): z.ZodObject<
+  Properties<GitHubRepoInput>
+> {
+  return z.object({
+    owner: z.string().min(1),
+    repo: z.string().min(1),
+    state: z.string().min(1),
+  });
+}
+
+export function GitTextDraftInputSchema(): z.ZodObject<
+  Properties<GitTextDraftInput>
+> {
+  return z.object({
+    planId: z.string().min(1),
+    pullRequestTemplate: z.string().nullish(),
+    scope: z.string().nullish(),
+    taskId: z.string().nullish(),
+  });
+}
+
+export function LabelAgentTrajectoryInputSchema(): z.ZodObject<
+  Properties<LabelAgentTrajectoryInput>
+> {
+  return z.object({
+    failureType: z.string().nullish(),
+    note: z.string().nullish(),
+    trajectoryId: z.string().min(1),
+    verdict: z.string().min(1),
+  });
+}
+
+export function LastActivityInputSchema(): z.ZodObject<
+  Properties<LastActivityInput>
+> {
+  return z.object({
+    planId: z.string().min(1),
+    taskId: z.string().nullish(),
+  });
+}
+
+export function LinesAddedDeletedInputSchema(): z.ZodObject<
+  Properties<LinesAddedDeletedInput>
+> {
+  return z.object({
+    maxPrs: z.number().nullish(),
+    owner: z.string().min(1),
+    period: z.string().nullish(),
+    repo: z.string().min(1),
+  });
+}
+
+export function LinkProjectRepositoryInputSchema(): z.ZodObject<
+  Properties<LinkProjectRepositoryInput>
+> {
+  return z.object({
+    projectId: z.string().min(1),
+    repositoryId: z.string().min(1),
+  });
+}
+
+export function ListAgentConversationsInputSchema(): z.ZodObject<
+  Properties<ListAgentConversationsInput>
+> {
+  return z.object({
+    limit: z.number().nullish(),
+    offset: z.number().nullish(),
+    status: z.string().default('active').nullish(),
+  });
+}
+
+export function ListCustomPromptsInputSchema(): z.ZodObject<
+  Properties<ListCustomPromptsInput>
+> {
+  return z.object({
+    includeDeleted: z.boolean().default(false),
+    labels: z.array(z.string().min(1)).nullish(),
+    projectId: z.string().nullish(),
+    promptType: CustomPromptTypeSchema.nullish(),
+    search: z.string().nullish(),
+    userId: z.string().nullish(),
+  });
+}
+
+export function ListPlanMessagesInputSchema(): z.ZodObject<
+  Properties<ListPlanMessagesInput>
+> {
+  return z.object({
+    kinds: z.array(PlanMessageKindSchema).nullish(),
+    planId: z.string().min(1),
+    statuses: z.array(PlanMessageStatusSchema).nullish(),
+  });
+}
+
+export function ListPlanOutputStreamChunksInputSchema(): z.ZodObject<
+  Properties<ListPlanOutputStreamChunksInput>
+> {
+  return z.object({
+    limit: z.number().nullish(),
+    offset: z.number().nullish(),
+    planId: z.string().min(1),
+    taskId: z.string().nullish(),
+  });
+}
+
+export function ListPlansByStatusInputSchema(): z.ZodObject<
+  Properties<ListPlansByStatusInput>
+> {
+  return z.object({
+    assignees: z.array(z.string().nullable()).nullish(),
+    limit: z.number().nullish(),
+    offset: z.number().nullish(),
+    project: z.string().nullish(),
+    projectId: z.string().nullish(),
+    sortBy: z.string().nullish(),
+    sortOrder: z.string().nullish(),
+    statuses: z.array(z.string().nullable()).nullish(),
+    statusesEnum: z.array(PlanTaskStatusSchema.nullable()).nullish(),
+    titleSubstring: z.string().nullish(),
+  });
+}
+
+export function ListPullsInputSchema(): z.ZodObject<
+  Properties<ListPullsInput>
+> {
+  return z.object({
+    base: z.string().nullish(),
+    merged: z.boolean().nullish(),
+    owner: z.string().min(1),
+    repo: z.string().min(1),
+    state: z.string().nullish(),
+  });
+}
+
+export function LoginInputSchema(): z.ZodObject<Properties<LoginInput>> {
+  return z.object({
+    email: z.string().min(1),
+    password: z.string().min(1),
+  });
+}
+
+export function MoveProjectPlanInputSchema(): z.ZodObject<
+  Properties<MoveProjectPlanInput>
+> {
+  return z.object({
+    direction: ProjectPlanMoveDirectionSchema,
+    planId: z.string().min(1),
+  });
+}
+
+export function OpenToMergedCycleTimeInputSchema(): z.ZodObject<
+  Properties<OpenToMergedCycleTimeInput>
+> {
+  return z.object({
+    owner: z.string().min(1),
+    period: z.string().nullish(),
+    repo: z.string().min(1),
+  });
+}
+
+export function PlanEmbeddingsByPlanInputSchema(): z.ZodObject<
+  Properties<PlanEmbeddingsByPlanInput>
+> {
+  return z.object({
+    limit: z.number().nullish(),
+    offset: z.number().nullish(),
+    planId: z.string().min(1),
+  });
+}
+
+export function PlanRunsByPlanIdInputSchema(): z.ZodObject<
+  Properties<PlanRunsByPlanIdInput>
+> {
+  return z.object({
+    includeAllScheduled: z.boolean().nullish(),
+    limit: z.number().nullish(),
+    planId: z.string().min(1),
+  });
+}
+
+export function PostPlanMessageInputSchema(): z.ZodObject<
+  Properties<PostPlanMessageInput>
+> {
+  return z.object({
+    author: z.string().nullish(),
+    body: z.string().min(1),
+    kind: PlanMessageKindSchema,
+    planId: z.string().min(1),
+    taskId: z.string().nullish(),
+  });
+}
+
+export function PrCountByLabelInputSchema(): z.ZodObject<
+  Properties<PrCountByLabelInput>
+> {
+  return z.object({
+    owner: z.string().min(1),
+    repo: z.string().min(1),
+    state: z.string().nullish(),
+  });
+}
+
+export function ProjectPlansPageInputSchema(): z.ZodObject<
+  Properties<ProjectPlansPageInput>
+> {
+  return z.object({
+    limit: z.number().nullish(),
+    offset: z.number().nullish(),
+    projectId: z.string().min(1),
+  });
+}
+
+export function PromoteTaskToPlanInputSchema(): z.ZodObject<
+  Properties<PromoteTaskToPlanInput>
+> {
+  return z.object({
+    idempotencyKey: z.string().nullish(),
+    taskId: z.string().min(1),
+  });
+}
+
+export function PrsMergedPerPeriodInputSchema(): z.ZodObject<
+  Properties<PrsMergedPerPeriodInput>
+> {
+  return z.object({
+    owner: z.string().min(1),
+    period: z.string().min(1),
+    repo: z.string().min(1),
+  });
+}
+
+export function PruneWorktreeCheckoutsInputSchema(): z.ZodObject<
+  Properties<PruneWorktreeCheckoutsInput>
+> {
+  return z.object({
+    checkoutIds: z.array(z.string().min(1)),
+  });
+}
+
+export function PublishBlogPostInputSchema(): z.ZodObject<
+  Properties<PublishBlogPostInput>
+> {
+  return z.object({
+    id: z.string().min(1),
+    publishedAt: definedNonNullAnySchema.nullish(),
+  });
+}
+
+export function QueueControlInputSchema(): z.ZodObject<
+  Properties<QueueControlInput>
+> {
+  return z.object({
+    queueName: z.string().min(1),
+  });
+}
+
+export function QueueDetailsInputSchema(): z.ZodObject<
+  Properties<QueueDetailsInput>
+> {
+  return z.object({
+    asc: z.boolean().nullish(),
+    limit: z.number().nullish(),
+    name: z.string().min(1),
+    offset: z.number().nullish(),
+    states: z.array(z.string().min(1)).nullish(),
+  });
+}
+
+export function QueueJobLogsInputSchema(): z.ZodObject<
+  Properties<QueueJobLogsInput>
+> {
+  return z.object({
+    after: z.string().nullish(),
+    jobId: z.string().min(1),
+    levelIn: z.array(QueueJobLogLevelSchema).nullish(),
+    limit: z.number().nullish(),
+    queueName: z.string().min(1),
+    since: definedNonNullAnySchema.nullish(),
+  });
+}
+
+export function RalphPlanRunTuningInputSchema(): z.ZodObject<
+  Properties<RalphPlanRunTuningInput>
+> {
+  return z.object({
+    backend: z.string().nullish(),
+    disableWorktree: z.boolean().nullish(),
+    effort: z.string().nullish(),
+    iterationTimeoutSeconds: z.number().nullish(),
+    iterations: z.number().nullish(),
+    model: z.string().nullish(),
+    project: z.string().nullish(),
+    prompt: z.string().nullish(),
+    promptFile: z.string().nullish(),
+    ralphDebugCli: RalphNestedDebugCliSchema.nullish(),
+    skipWorktreeSetup: z.boolean().nullish(),
+    worktree: z.string().nullish(),
+    worktreeBase: z.string().nullish(),
+  });
+}
+
+export function RecordAgentTrajectoryInputSchema(): z.ZodObject<
+  Properties<RecordAgentTrajectoryInput>
+> {
+  return z.object({
+    driver: z.string().min(1),
+    durationMs: z.number().nullish(),
+    exitCode: z.number().nullish(),
+    idempotencyKey: z.string().nullish(),
+    model: z.string().nullish(),
+    outcome: z.string().nullish(),
+    planRunId: z.string().min(1),
+    source: z.string().min(1),
+    taskId: z.string().nullish(),
+    trajectoryJson: z.string().min(1),
+  });
+}
+
+export function RecordEvalGradeInputSchema(): z.ZodObject<
+  Properties<RecordEvalGradeInput>
+> {
+  return z.object({
+    cacheKey: z.string().nullish(),
+    costUsd: z.number().nullish(),
+    errorReason: z.string().nullish(),
+    evidenceJson: z.string().nullish(),
+    graderId: z.string().min(1),
+    graderKind: z.string().min(1),
+    graderVersion: z.string().min(1),
+    judgeDriver: z.string().nullish(),
+    judgeModel: z.string().nullish(),
+    judgeModelVersion: z.string().nullish(),
+    trialId: z.string().min(1),
+    verdict: z.string().min(1),
+  });
+}
+
+export function RecordEvalRunInputSchema(): z.ZodObject<
+  Properties<RecordEvalRunInput>
+> {
+  return z.object({
+    authMode: z.string().min(1),
+    budgetTokens: z.number().nullish(),
+    budgetUsd: z.number().nullish(),
+    datasetId: z.string().min(1),
+    driver: z.string().min(1),
+    effort: z.string().nullish(),
+    k: z.number(),
+    model: z.string().nullish(),
+    promptSha: z.string().nullish(),
+    skillSha: z.string().nullish(),
+    status: z.string().nullish(),
+  });
+}
+
+export function RecordEvalTrialInputSchema(): z.ZodObject<
+  Properties<RecordEvalTrialInput>
+> {
+  return z.object({
+    attempt: z.number(),
+    caseId: z.string().min(1),
+    costUsd: z.number().nullish(),
+    durationMs: z.number().nullish(),
+    error: z.string().nullish(),
+    runId: z.string().min(1),
+    status: z.string().min(1),
+    trajectoryId: z.string().nullish(),
+  });
+}
+
+export function RecordJudgeCalibrationInputSchema(): z.ZodObject<
+  Properties<RecordJudgeCalibrationInput>
+> {
+  return z.object({
+    catchRate: z.number().nullish(),
+    datasetId: z.string().nullish(),
+    falseFailRate: z.number().nullish(),
+    graderId: z.string().min(1),
+    graderVersion: z.string().min(1),
+    heldOut: z.boolean().default(false),
+    judgeDriver: z.string().nullish(),
+    judgeModel: z.string().min(1),
+    judgeModelVersion: z.string().nullish(),
+    kappa: z.number().nullish(),
+    kappaCiHigh: z.number().nullish(),
+    kappaCiLow: z.number().nullish(),
+    n: z.number(),
+    nExcluded: z.number().default(0),
+    runId: z.string().nullish(),
+    split: z.string().nullish(),
+    status: z.string().min(1),
+  });
+}
+
+export function RecordPlanRunHeartbeatInputSchema(): z.ZodObject<
+  Properties<RecordPlanRunHeartbeatInput>
+> {
+  return z.object({
+    planRunId: z.string().min(1),
+  });
+}
+
+export function RecordSkillUsageInputSchema(): z.ZodObject<
+  Properties<RecordSkillUsageInput>
+> {
+  return z.object({
+    agentId: z.string().nullish(),
+    agentType: z.string().nullish(),
+    args: z.string().nullish(),
+    cwd: z.string().nullish(),
+    gitBranch: z.string().nullish(),
+    hookEventName: z.string().nullish(),
+    invocationPath: z.string().nullish(),
+    occurredAt: definedNonNullAnySchema,
+    privacyLevel: z.string().nullish(),
+    promptId: z.string().nullish(),
+    repoIdentity: z.string().nullish(),
+    scope: z.string().min(1),
+    sessionId: z.string().nullish(),
+    skillName: z.string().min(1),
+    source: z.string().nullish(),
+    toolUseId: z.string().nullish(),
+  });
+}
+
+export function RecordSkillUsageOutcomeInputSchema(): z.ZodObject<
+  Properties<RecordSkillUsageOutcomeInput>
+> {
+  return z.object({
+    cwd: z.string().nullish(),
+    deliberate: z.boolean().nullish(),
+    durationMs: z.number().nullish(),
+    gitBranch: z.string().nullish(),
+    occurredAt: definedNonNullAnySchema,
+    outcome: z.string().min(1),
+    scope: z.string().nullish(),
+    sessionId: z.string().nullish(),
+    skillName: z.string().min(1),
+    source: z.string().nullish(),
+    toolUseId: z.string().nullish(),
+  });
+}
+
+export function RecordTelemetryHeartbeatInputSchema(): z.ZodObject<
+  Properties<RecordTelemetryHeartbeatInput>
+> {
+  return z.object({
+    bufferedEvents: z.number(),
+    bufferedOutcomes: z.number(),
+    bufferedTokenUsage: z.number(),
+    bufferedTrajectories: z.number(),
+    deadLetterCount: z.number(),
+    deliveryLeg: z.string().min(1),
+    machineId: z.string().min(1),
+    machineLabel: z.string().nullish(),
+    marketplacePluginInstalled: z.boolean().nullish(),
+    marketplacePluginVersion: z.string().nullish(),
+    occurredAt: definedNonNullAnySchema,
+    oldestBufferedAt: definedNonNullAnySchema.nullish(),
+    pluginVersion: z.string().nullish(),
+    repoIdentity: z.string().nullish(),
+    source: z.string().min(1),
+  });
+}
+
+export function RecordTokenUsageAccountInputSchema(): z.ZodObject<
+  Properties<RecordTokenUsageAccountInput>
+> {
+  return z.object({
+    credentialKind: z.string().min(1),
+    email: z.string().nullish(),
+    externalAccountId: z.string().min(1),
+    orgId: z.string().nullish(),
+    orgName: z.string().nullish(),
+    plan: z.string().nullish(),
+  });
+}
+
+export function RecordTokenUsageInputSchema(): z.ZodObject<
+  Properties<RecordTokenUsageInput>
+> {
+  return z.object({
+    rows: z.array(z.lazy(() => RecordTokenUsageRowInputSchema())),
+  });
+}
+
+export function RecordTokenUsageRowInputSchema(): z.ZodObject<
+  Properties<RecordTokenUsageRowInput>
+> {
+  return z.object({
+    account: z.lazy(() => RecordTokenUsageAccountInputSchema().nullish()),
+    cacheReadTokens: z.number().nullish(),
+    cacheWriteTokens: z.number().nullish(),
+    costUsd: z.number().nullish(),
+    cwd: z.string().nullish(),
+    gitBranch: z.string().nullish(),
+    inputTokens: z.number().nullish(),
+    model: z.string().min(1),
+    occurredAt: z.string().min(1),
+    outputTokens: z.number().nullish(),
+    provider: z.string().min(1),
+    rawUsageJson: z.string().nullish(),
+    reasoningTokens: z.number().nullish(),
+    repoIdentity: z.string().nullish(),
+    requestId: z.string().nullish(),
+    sessionId: z.string().nullish(),
+    source: z.string().min(1),
+    totalTokens: z.number().nullish(),
+  });
+}
+
+export function RecordWorkArtifactInputSchema(): z.ZodObject<
+  Properties<RecordWorkArtifactInput>
+> {
+  return z.object({
+    message: z.string().nullish(),
+    payloadJson: z.string().min(1),
+    sessionId: z.string().min(1),
+    type: z.string().min(1),
+  });
+}
+
+export function RefreshCheckoutInputSchema(): z.ZodObject<
+  Properties<RefreshCheckoutInput>
+> {
+  return z.object({
+    id: z.string().min(1),
+  });
+}
+
+export function RegisterCliPlanRunInputSchema(): z.ZodObject<
+  Properties<RegisterCliPlanRunInput>
+> {
+  return z.object({
+    branch: z.string().nullish(),
+    executionBackend: z.string().min(1),
+    heartbeatExpected: z.boolean().nullish(),
+    hostname: z.string().nullish(),
+    model: z.string().nullish(),
+    pid: z.number().nullish(),
+    planId: z.string().min(1),
+    workerId: z.string().nullish(),
+  });
+}
+
+export function RegisterInputSchema(): z.ZodObject<Properties<RegisterInput>> {
+  return z.object({
+    email: z.string().min(1),
+    githubUsername: z.string().nullish(),
+    password: z.string().min(1),
+  });
+}
+
+export function RegisterPlanRunWorktreeCheckoutInputSchema(): z.ZodObject<
+  Properties<RegisterPlanRunWorktreeCheckoutInput>
+> {
+  return z.object({
+    filesystemPath: z.string().min(1),
+    planRunId: z.string().min(1),
+  });
+}
+
+export function RemainingTasksByPlanIdInputSchema(): z.ZodObject<
+  Properties<RemainingTasksByPlanIdInput>
+> {
+  return z.object({
+    planId: z.string().min(1),
+  });
+}
+
+export function RemovePermissionFromRoleInputSchema(): z.ZodObject<
+  Properties<RemovePermissionFromRoleInput>
+> {
+  return z.object({
+    permissionId: z.string().min(1),
+    roleId: z.string().min(1),
+  });
+}
+
+export function RemovePlanFromProjectInputSchema(): z.ZodObject<
+  Properties<RemovePlanFromProjectInput>
+> {
+  return z.object({
+    planId: z.string().min(1),
+  });
+}
+
+export function RemovePlanTagInputSchema(): z.ZodObject<
+  Properties<RemovePlanTagInput>
+> {
+  return z.object({
+    planId: z.string().min(1),
+    tag: z.string().min(1),
+  });
+}
+
+export function RemoveProjectSkillTagInputSchema(): z.ZodObject<
+  Properties<RemoveProjectSkillTagInput>
+> {
+  return z.object({
+    projectId: z.string().nullish(),
+    slug: z.string().min(1),
+    tag: z.string().min(1),
+  });
+}
+
+export function RemoveProjectTagInputSchema(): z.ZodObject<
+  Properties<RemoveProjectTagInput>
+> {
+  return z.object({
+    projectId: z.string().min(1),
+    tag: z.string().min(1),
+  });
+}
+
+export function RemoveRepeatableJobInputSchema(): z.ZodObject<
+  Properties<RemoveRepeatableJobInput>
+> {
+  return z.object({
+    key: z.string().min(1),
+    queueName: z.string().min(1),
+  });
+}
+
+export function RemoveRoleFromServiceAccountInputSchema(): z.ZodObject<
+  Properties<RemoveRoleFromServiceAccountInput>
+> {
+  return z.object({
+    roleId: z.string().min(1),
+    serviceAccountId: z.string().min(1),
+  });
+}
+
+export function RemoveRoleFromUserInputSchema(): z.ZodObject<
+  Properties<RemoveRoleFromUserInput>
+> {
+  return z.object({
+    roleId: z.string().min(1),
+    userId: z.string().min(1),
+  });
+}
+
+export function RemoveSkillTagInputSchema(): z.ZodObject<
+  Properties<RemoveSkillTagInput>
+> {
+  return z.object({
+    tag: z.string().min(1),
+  });
+}
+
+export function RemoveTaskTagInputSchema(): z.ZodObject<
+  Properties<RemoveTaskTagInput>
+> {
+  return z.object({
+    tag: z.string().min(1),
+    taskId: z.string().min(1),
+  });
+}
+
+export function RenameSkillTagInputSchema(): z.ZodObject<
+  Properties<RenameSkillTagInput>
+> {
+  return z.object({
+    from: z.string().min(1),
+    to: z.string().min(1),
+  });
+}
+
+export function ReorderPlanTasksInputSchema(): z.ZodObject<
+  Properties<ReorderPlanTasksInput>
+> {
+  return z.object({
+    planId: z.string().min(1),
+    taskIds: z.array(z.string().min(1)),
+  });
+}
+
+export function ReorderProjectPlansInputSchema(): z.ZodObject<
+  Properties<ReorderProjectPlansInput>
+> {
+  return z.object({
+    planIds: z.array(z.string().min(1)),
+    projectId: z.string().min(1),
+  });
+}
+
+export function RepeatableJobsInputSchema(): z.ZodObject<
+  Properties<RepeatableJobsInput>
+> {
+  return z.object({
+    asc: z.boolean().nullish(),
+    end: z.number().nullish(),
+    queueName: z.string().min(1),
+    start: z.number().nullish(),
+  });
+}
+
+export function ReplaceAgentTrajectoryInputSchema(): z.ZodObject<
+  Properties<ReplaceAgentTrajectoryInput>
+> {
+  return z.object({
+    durationMs: z.number().nullish(),
+    exitCode: z.number().nullish(),
+    idempotencyKey: z.string().nullish(),
+    model: z.string().nullish(),
+    outcome: z.string().nullish(),
+    planRunId: z.string().min(1),
+    trajectoryJson: z.string().min(1),
+  });
+}
+
+export function ReschedulePlanRunInputSchema(): z.ZodObject<
+  Properties<ReschedulePlanRunInput>
+> {
+  return z.object({
+    planId: z.string().min(1),
+    planRunId: z.string().min(1),
+    scheduledFor: definedNonNullAnySchema,
+  });
+}
+
+export function RetryJobInputSchema(): z.ZodObject<Properties<RetryJobInput>> {
+  return z.object({
+    jobId: z.string().min(1),
+    queueName: z.string().min(1),
+  });
+}
+
+export function ReviewCycleTimeInputSchema(): z.ZodObject<
+  Properties<ReviewCycleTimeInput>
+> {
+  return z.object({
+    maxPrs: z.number().nullish(),
+    owner: z.string().min(1),
+    period: z.string().nullish(),
+    repo: z.string().min(1),
+  });
+}
+
+export function RolloutFallthroughBucketInputSchema(): z.ZodObject<
+  Properties<RolloutFallthroughBucketInput>
+> {
+  return z.object({
+    variation: z.number(),
+    weight: z.number(),
+  });
+}
+
+export function RolloutFallthroughInputSchema(): z.ZodObject<
+  Properties<RolloutFallthroughInput>
+> {
+  return z.object({
+    variations: z.array(z.lazy(() => RolloutFallthroughBucketInputSchema())),
+  });
+}
+
+export function RolloutFlagVariationInputSchema(): z.ZodObject<
+  Properties<RolloutFlagVariationInput>
+> {
+  return z.object({
+    description: z.string().nullish(),
+    name: z.string().nullish(),
+    valueJson: z.string().min(1),
+  });
+}
+
+export function SchedulePlanRunInputSchema(): z.ZodObject<
+  Properties<SchedulePlanRunInput>
+> {
+  return z.object({
+    branch: z.string().min(1),
+    checkoutId: z.string().nullish(),
+    idempotencyKey: z.string().nullish(),
+    jobRunHooksJson: z.string().nullish(),
+    planId: z.string().min(1),
+    priority: z.number().nullish(),
+    ralph: z.lazy(() => RalphPlanRunTuningInputSchema().nullish()),
+    replaceScheduled: z.boolean().nullish(),
+    repositoryId: z.string().nullish(),
+    runner: z.string().nullish(),
+    scheduledFor: definedNonNullAnySchema,
+    workingDirectory: z.string().nullish(),
+  });
+}
+
+export function ScheduledAgentJobWebhookFilterInputTypeSchema(): z.ZodObject<
+  Properties<ScheduledAgentJobWebhookFilterInputType>
+> {
+  return z.object({
+    op: z.string().min(1),
+    path: z.string().min(1),
+    value: z.string().nullish(),
+    values: z.array(z.string().min(1)).nullish(),
+  });
+}
+
+export function SearchInputSchema(): z.ZodObject<Properties<SearchInput>> {
+  return z.object({
+    limit: z.number().nullish(),
+    mode: z.string().nullish(),
+    offset: z.number().nullish(),
+    query: z.string().min(1),
+  });
+}
+
+export function SearchPlansInputSchema(): z.ZodObject<
+  Properties<SearchPlansInput>
+> {
+  return z.object({
+    limit: z.number().nullish(),
+    query: z.string().min(1),
+  });
+}
+
+export function SetBlogPostTagsInputSchema(): z.ZodObject<
+  Properties<SetBlogPostTagsInput>
+> {
+  return z.object({
+    postId: z.string().min(1),
+    tagSlugs: z.array(z.string().min(1)),
+  });
+}
+
+export function SetMcpConnectorEnabledInputSchema(): z.ZodObject<
+  Properties<SetMcpConnectorEnabledInput>
+> {
+  return z.object({
+    connectorKey: z.string().min(1),
+    enabled: z.boolean(),
+  });
+}
+
+export function SetPlanStatusInputSchema(): z.ZodObject<
+  Properties<SetPlanStatusInput>
+> {
+  return z.object({
+    planId: z.string().min(1),
+    status: z.string().nullish(),
+    statusEnum: PlanTaskStatusSchema.nullish(),
+  });
+}
+
+export function SetScheduledAgentJobEnabledInputTypeSchema(): z.ZodObject<
+  Properties<SetScheduledAgentJobEnabledInputType>
+> {
+  return z.object({
+    enabled: z.boolean(),
+    id: z.string().min(1),
+  });
+}
+
+export function SetWorkspaceLocalRepositoryProjectInputSchema(): z.ZodObject<
+  Properties<SetWorkspaceLocalRepositoryProjectInput>
+> {
+  return z.object({
+    id: z.string().min(1),
+    projectId: z.string().nullish(),
+  });
+}
+
+export function SettleCliPlanRunInputSchema(): z.ZodObject<
+  Properties<SettleCliPlanRunInput>
+> {
+  return z.object({
+    headSha: z.string().nullish(),
+    planRunId: z.string().min(1),
+    prNumber: z.number().nullish(),
+    status: z.string().min(1),
+    usageLimitResetsAt: definedNonNullAnySchema.nullish(),
+    usageLimitType: z.string().nullish(),
+  });
+}
+
+export function SkillAvailabilityRuleInputSchema(): z.ZodObject<
+  Properties<SkillAvailabilityRuleInput>
+> {
+  return z.object({
+    environment: z.string().nullish(),
+    slugAllow: z.array(z.string().min(1)).default([]),
+    slugDeny: z.array(z.string().min(1)).default([]),
+    tagAllow: z.array(z.string().min(1)).default([]),
+    tagDeny: z.array(z.string().min(1)).default([]),
+  });
+}
+
+export function StartConversationStreamInputSchema(): z.ZodObject<
+  Properties<StartConversationStreamInput>
+> {
+  return z.object({
+    backend: z.string().nullish(),
+    baseUrl: z.string().nullish(),
+    conversationId: z.string().nullish(),
+    fileMentions: z.array(z.string().min(1)).nullish(),
+    message: z.string().min(1),
+    modelId: z.string().nullish(),
+    permissionMode: z.string().nullish(),
+    persist: z.boolean().nullish(),
+    personaId: z.string().nullish(),
+    reasoning: z.string().nullish(),
+    repositoryId: z.string().nullish(),
+    repositoryIds: z.array(z.string().min(1)).nullish(),
+    serviceTier: z.string().nullish(),
+  });
+}
+
+export function StartWorkSessionInputSchema(): z.ZodObject<
+  Properties<StartWorkSessionInput>
+> {
+  return z.object({
+    conversationId: z.string().nullish(),
+    externalRef: z.string().nullish(),
+    model: z.string().nullish(),
+    onBehalfOfUserId: z.string().nullish(),
+    planRunId: z.string().nullish(),
+    toolName: z.string().min(1),
+    toolVersion: z.string().nullish(),
+  });
+}
+
+export function TaskEmbeddingsByTaskInputSchema(): z.ZodObject<
+  Properties<TaskEmbeddingsByTaskInput>
+> {
+  return z.object({
+    limit: z.number().nullish(),
+    offset: z.number().nullish(),
+    taskId: z.string().min(1),
+  });
+}
+
+export function TasksByPlanIdInputSchema(): z.ZodObject<
+  Properties<TasksByPlanIdInput>
+> {
+  return z.object({
+    planId: z.string().min(1),
+  });
+}
+
+export function TasksByProjectIdInputSchema(): z.ZodObject<
+  Properties<TasksByProjectIdInput>
+> {
+  return z.object({
+    limit: z.number().nullish(),
+    offset: z.number().nullish(),
+    projectId: z.string().min(1),
+  });
+}
+
+export function UnlinkProjectRepositoryInputSchema(): z.ZodObject<
+  Properties<UnlinkProjectRepositoryInput>
+> {
+  return z.object({
+    projectId: z.string().min(1),
+    repositoryId: z.string().min(1),
+  });
+}
+
+export function UnverifiedWorkArtifactsInputSchema(): z.ZodObject<
+  Properties<UnverifiedWorkArtifactsInput>
+> {
+  return z.object({
+    limit: z.number().nullish(),
+    type: z.string().nullish(),
+  });
+}
+
+export function UpdateAgentConversationTitleInputSchema(): z.ZodObject<
+  Properties<UpdateAgentConversationTitleInput>
+> {
+  return z.object({
+    conversationId: z.string().min(1),
+    title: z.string().min(1),
+  });
+}
+
+export function UpdateBlogPostInputSchema(): z.ZodObject<
+  Properties<UpdateBlogPostInput>
+> {
+  return z.object({
+    authorSlug: z.string().nullish(),
+    bodyMarkdown: z.string().nullish(),
+    coverImageAlt: z.string().nullish(),
+    coverImageUrl: z.string().nullish(),
+    excerpt: z.string().nullish(),
+    expectedUpdatedAt: definedNonNullAnySchema.nullish(),
+    id: z.string().min(1),
+    seoDescription: z.string().nullish(),
+    seoTitle: z.string().nullish(),
+    slug: z.string().nullish(),
+    title: z.string().nullish(),
+  });
+}
+
+export function UpdateCmsFragmentInputSchema(): z.ZodObject<
+  Properties<UpdateCmsFragmentInput>
+> {
+  return z.object({
+    name: z.string().nullish(),
+    propertiesJson: z.string().nullish(),
+    uuid: z.string().min(1),
+  });
+}
+
+export function UpdateCmsLayoutInputSchema(): z.ZodObject<
+  Properties<UpdateCmsLayoutInput>
+> {
+  return z.object({
+    metadataJson: z.string().nullish(),
+    name: z.string().nullish(),
+    slug: z.string().nullish(),
+    status: z.string().nullish(),
+    tags: z.array(z.string().min(1)).nullish(),
+    uuid: z.string().min(1),
+  });
+}
+
+export function UpdateCmsLibraryComponentInputSchema(): z.ZodObject<
+  Properties<UpdateCmsLibraryComponentInput>
+> {
+  return z.object({
+    code: z.string().nullish(),
+    name: z.string().nullish(),
+    propsSchemaJson: z.string().nullish(),
+    status: z.string().nullish(),
+    typename: z.string().nullish(),
+    uuid: z.string().min(1),
+  });
+}
+
+export function UpdateCustomPromptInputSchema(): z.ZodObject<
+  Properties<UpdateCustomPromptInput>
+> {
+  return z.object({
+    content: z.string().nullish(),
+    description: z.string().nullish(),
+    filePath: z.string().nullish(),
+    id: z.string().min(1),
+    labels: z.array(z.string().min(1)).nullish(),
+    projectId: z.string().nullish(),
+    promptType: CustomPromptTypeSchema.nullish(),
+    title: z.string().nullish(),
+    userId: z.string().nullish(),
+    writeToFileSystem: z.boolean().default(false),
+  });
+}
+
+export function UpdateEvalRunStatusInputSchema(): z.ZodObject<
+  Properties<UpdateEvalRunStatusInput>
+> {
+  return z.object({
+    runId: z.string().min(1),
+    status: z.string().min(1),
+  });
+}
+
+export function UpdateNoteInputSchema(): z.ZodObject<
+  Properties<UpdateNoteInput>
+> {
+  return z.object({
+    author: z.string().nullish(),
+    content: z.string().nullish(),
+    id: z.string().min(1),
+  });
+}
+
+export function UpdatePlanInputSchema(): z.ZodObject<
+  Properties<UpdatePlanInput>
+> {
+  return z.object({
+    assignee: z.string().nullish(),
+    author: z.string().nullish(),
+    category: z.string().nullish(),
+    description: z.string().nullish(),
+    id: z.string().min(1),
+    jobRunHooksJson: z.string().nullish(),
+    project: z.string().nullish(),
+    projectId: z.string().nullish(),
+    runConfigJson: z.string().nullish(),
+    status: z.string().nullish(),
+    summary: z.string().nullish(),
+    title: z.string().nullish(),
+  });
+}
+
+export function UpdatePlanMessageInputSchema(): z.ZodObject<
+  Properties<UpdatePlanMessageInput>
+> {
+  return z.object({
+    body: z.string().min(1),
+    id: z.string().min(1),
+  });
+}
+
+export function UpdateProjectInputSchema(): z.ZodObject<
+  Properties<UpdateProjectInput>
+> {
+  return z.object({
+    description: z.string().nullish(),
+    id: z.string().min(1),
+    name: z.string().nullish(),
+    nxProjectName: z.string().nullish(),
+  });
+}
+
+export function UpdateRepositoryInputSchema(): z.ZodObject<
+  Properties<UpdateRepositoryInput>
+> {
+  return z.object({
+    defaultBranch: z.string().nullish(),
+    foreignSkillInjectionEnabled: z.boolean().nullish(),
+    id: z.string().min(1),
+    name: z.string().nullish(),
+    projectId: z.string().nullish(),
+    worktreeSkillOverlayEnabled: z.boolean().nullish(),
+  });
+}
+
+export function UpdateRoleInputSchema(): z.ZodObject<
+  Properties<UpdateRoleInput>
+> {
+  return z.object({
+    description: z.string().nullish(),
+    id: z.string().min(1),
+    name: z.string().nullish(),
+  });
+}
+
+export function UpdateRolloutFlagInputSchema(): z.ZodObject<
+  Properties<UpdateRolloutFlagInput>
+> {
+  return z.object({
+    description: z.string().nullish(),
+    enabled: z.boolean().nullish(),
+    fallthrough: z.lazy(() => RolloutFallthroughInputSchema().nullish()),
+    id: z.string().min(1),
+    key: z.string().nullish(),
+    kind: RolloutFlagKindSchema.nullish(),
+    offVariation: z.number().nullish(),
+    targetRoles: z.array(z.string().min(1)).nullish(),
+    variations: z
+      .array(z.lazy(() => RolloutFlagVariationInputSchema()))
+      .nullish(),
+  });
+}
+
+export function UpdateScheduledAgentJobAsAgentInputTypeSchema(): z.ZodObject<
+  Properties<UpdateScheduledAgentJobAsAgentInputType>
+> {
+  return z.object({
+    cronPattern: z.string().nullish(),
+    driverId: z.string().nullish(),
+    enabled: z.boolean().nullish(),
+    id: z.string().min(1),
+    intervalMs: z.number().nullish(),
+    misfirePolicy: z.string().nullish(),
+    misfireThresholdMs: z.number().nullish(),
+    model: z.string().nullish(),
+    name: z.string().nullish(),
+    prompt: z.string().nullish(),
+    repositoryCheckoutId: z.string().nullish(),
+    runAt: z.string().nullish(),
+    scheduleKind: z.string().nullish(),
+    timeoutMs: z.number().nullish(),
+    timezone: z.string().nullish(),
+  });
+}
+
+export function UpdateScheduledAgentJobInputTypeSchema(): z.ZodObject<
+  Properties<UpdateScheduledAgentJobInputType>
+> {
+  return z.object({
+    cronPattern: z.string().nullish(),
+    cwd: z.string().nullish(),
+    driverId: z.string().nullish(),
+    id: z.string().min(1),
+    intervalMs: z.number().nullish(),
+    misfirePolicy: z.string().nullish(),
+    misfireThresholdMs: z.number().nullish(),
+    model: z.string().nullish(),
+    name: z.string().nullish(),
+    prompt: z.string().nullish(),
+    repositoryCheckoutId: z.string().nullish(),
+    runAt: z.string().nullish(),
+    scheduleKind: z.string().nullish(),
+    settingsJson: z.string().nullish(),
+    timeoutMs: z.number().nullish(),
+    timezone: z.string().nullish(),
+  });
+}
+
+export function UpdateScheduledAgentJobWebhookTriggerInputTypeSchema(): z.ZodObject<
+  Properties<UpdateScheduledAgentJobWebhookTriggerInputType>
+> {
+  return z.object({
+    coalesceWindowMs: z.number().nullish(),
+    deliveryIdHeader: z.string().nullish(),
+    enabled: z.boolean().nullish(),
+    filters: z
+      .array(z.lazy(() => ScheduledAgentJobWebhookFilterInputTypeSchema()))
+      .nullish(),
+    maxInFlight: z.number().nullish(),
+    rateLimitPerMinute: z.number().nullish(),
+    scheduledAgentJobId: z.string().min(1),
+    signatureEncoding: z.string().nullish(),
+    signatureHeader: z.string().nullish(),
+    signaturePreset: z.string().nullish(),
+    timestampHeader: z.string().nullish(),
+    timestampToleranceSeconds: z.number().nullish(),
+  });
+}
+
+export function UpdateServiceAccountInputSchema(): z.ZodObject<
+  Properties<UpdateServiceAccountInput>
+> {
+  return z.object({
+    actingUserId: z.string().nullish(),
+    description: z.string().nullish(),
+    id: z.string().min(1),
+    name: z.string().nullish(),
+  });
+}
+
+export function UpdateTaskInputSchema(): z.ZodObject<
+  Properties<UpdateTaskInput>
+> {
+  return z.object({
+    assignee: z.string().nullish(),
+    category: z.string().nullish(),
+    description: z.string().nullish(),
+    id: z.string().min(1),
+    planId: z.string().nullish(),
+    project: z.string().nullish(),
+    projectId: z.string().nullish(),
+    requirements: z.string().nullish(),
+    sortOrder: z.number().nullish(),
+    status: z.string().nullish(),
+    summary: z.string().nullish(),
+    title: z.string().nullish(),
+    wave: z.number().nullish(),
+  });
+}
+
+export function UpdateUserInputSchema(): z.ZodObject<
+  Properties<UpdateUserInput>
+> {
+  return z.object({
+    disabledAt: definedNonNullAnySchema.nullish(),
+    email: z.string().nullish(),
+    githubUsername: z.string().nullish(),
+    id: z.string().min(1),
+  });
+}
+
+export function UpdateUserPreferencesInputSchema(): z.ZodObject<
+  Properties<UpdateUserPreferencesInput>
+> {
+  return z.object({
+    defaultAgent: z.lazy(() => UserPreferencesAgentInputSchema().nullish()),
+    defaultEditor: WorkspaceEditorIdSchema.nullish(),
+  });
+}
+
+export function UpdateWorkspaceLocalRepositoryInputSchema(): z.ZodObject<
+  Properties<UpdateWorkspaceLocalRepositoryInput>
+> {
+  return z.object({
+    displayName: z.string().nullish(),
+    gitDefaultBranch: z.string().nullish(),
+    gitRemoteUrl: z.string().nullish(),
+    id: z.string().min(1),
+    projectId: z.string().nullish(),
+  });
+}
+
+export function UpdateWorkspaceProfileInputSchema(): z.ZodObject<
+  Properties<UpdateWorkspaceProfileInput>
+> {
+  return z.object({
+    contactDisplayName: z.string().nullish(),
+    contactEmail: z.string().nullish(),
+    enabledEditors: z.array(WorkspaceEditorIdSchema).nullish(),
+  });
+}
+
+export function UpsertBlogAuthorInputSchema(): z.ZodObject<
+  Properties<UpsertBlogAuthorInput>
+> {
+  return z.object({
+    avatarUrl: z.string().nullish(),
+    bio: z.string().nullish(),
+    displayName: z.string().min(1),
+    slug: z.string().min(1),
+  });
+}
+
+export function UpsertBlogTagInputSchema(): z.ZodObject<
+  Properties<UpsertBlogTagInput>
+> {
+  return z.object({
+    description: z.string().nullish(),
+    name: z.string().min(1),
+    slug: z.string().min(1),
+  });
+}
+
+export function UpsertTagActionRuleInputSchema(): z.ZodObject<
+  Properties<UpsertTagActionRuleInput>
+> {
+  return z.object({
+    actionPayloadJson: z.string().min(1),
+    actionType: z.string().min(1),
+    enabled: z.boolean().default(true).nullish(),
+    environment: z.string().nullish(),
+    id: z.string().nullish(),
+    projectId: z.string().nullish(),
+    repositoryId: z.string().nullish(),
+    status: z.string().nullish(),
+    tagAll: z.array(z.string().min(1)).default([]),
+    title: z.string().min(1),
+  });
+}
+
+export function UserPreferencesAgentInputSchema(): z.ZodObject<
+  Properties<UserPreferencesAgentInput>
+> {
+  return z.object({
+    backend: z.string().min(1),
+    effort: z.string().nullish(),
+    model: z.string().min(1),
+  });
+}
+
+export function WithdrawPlanMessageInputSchema(): z.ZodObject<
+  Properties<WithdrawPlanMessageInput>
+> {
+  return z.object({
+    id: z.string().min(1),
+  });
+}
+
+export function WorkArtifactsByPlanInputSchema(): z.ZodObject<
+  Properties<WorkArtifactsByPlanInput>
+> {
+  return z.object({
+    planId: z.string().min(1),
+  });
+}
+
+export function WorkArtifactsBySessionInputSchema(): z.ZodObject<
+  Properties<WorkArtifactsBySessionInput>
+> {
+  return z.object({
+    sessionId: z.string().min(1),
+  });
+}
+
+export function WorkArtifactsByTaskInputSchema(): z.ZodObject<
+  Properties<WorkArtifactsByTaskInput>
+> {
+  return z.object({
+    taskId: z.string().min(1),
+  });
+}
+
+export function WorkLedgerCompletenessInputSchema(): z.ZodObject<
+  Properties<WorkLedgerCompletenessInput>
+> {
+  return z.object({
+    limit: z.number().nullish(),
+  });
+}
+
+export function WorkSessionsByPlanInputSchema(): z.ZodObject<
+  Properties<WorkSessionsByPlanInput>
+> {
+  return z.object({
+    planId: z.string().min(1),
+  });
+}
+
+export function WorkstreamTimelineInputSchema(): z.ZodObject<
+  Properties<WorkstreamTimelineInput>
+> {
+  return z.object({
+    backend: z.string().nullish(),
+    checkoutId: z.string().nullish(),
+    from: definedNonNullAnySchema,
+    gitBranch: z.string().nullish(),
+    grouping: TimelineLaneGroupingSchema.nullish(),
+    markerKinds: z.array(TimelineMarkerKindSchema).nullish(),
+    planId: z.string().nullish(),
+    spanKinds: z.array(TimelineSpanKindSchema).nullish(),
+    to: definedNonNullAnySchema,
+  });
+}
+
+export function WorktreeRemovalAuditInputSchema(): z.ZodObject<
+  Properties<WorktreeRemovalAuditInput>
+> {
+  return z.object({
+    agentSession: z.string().nullish(),
+    ancestry: z.string().nullish(),
+    branch: z.string().nullish(),
+    parent: z.string().nullish(),
+    pid: z.number().nullish(),
+    ppid: z.number().nullish(),
+    probe: z.string().nullish(),
+    result: z.string().nullish(),
+    ts: z.string().nullish(),
+  });
+}

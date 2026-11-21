@@ -77,6 +77,9 @@
         "executor": "@nx/js:tsc",
         "metadata": {
           "description": "Compile @tools/workflows to dist with @nx/js:tsc."
+        },
+        "options": {
+          "tsConfig": "{projectRoot}/tsconfig.build.json"
         }
       },
       "dev": {

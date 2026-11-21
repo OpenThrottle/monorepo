@@ -6,14 +6,14 @@ Single entry point for **where agent- and editor-specific config lives** in the 
 - **Personas / prompts** live under `.agents/` as their source of truth.
 - **Code style** is no longer a per-editor rules tree: it is normative in [`AGENTS.md`](../../AGENTS.md) § Code style, with rationale in [code-style.md](./code-style.md).
 
-> **SSOT in one paragraph.** Skill **bodies** are authored under [`skills/`](../../skills/) and generated into `.agents/skills/`; `.claude/skills/` is the per-agent fan-out. Cursor 2.4+ reads `.agents/skills/` directly — there is no `.cursor/skills` fan-out. Edit `skills/` in git PRs and re-run `sync.sh`; never hand-edit a generated skill directory. **Code style has no generated view at all** — it is plain Markdown that every agent reads natively: normative in [`AGENTS.md`](../../AGENTS.md) § Code style (and `CLAUDE.md`), with rationale and examples in [code-style.md](./code-style.md).
+> **SSOT in one paragraph.** Skill **bodies** are authored under [`skills/`](../../skills/) and generated into `.agents/skills/`; `.claude/skills/` is the per-agent fan-out. Cursor 2.4+ reads `.agents/skills/` directly — there is no `.cursor/skills` fan-out. Edit `skills/` in git PRs and re-run `sync.sh`; never hand-edit a generated skill directory. **Code style has no generated view at all** — it is plain Markdown that every agent reads natively: normative in [`AGENTS.md`](../../AGENTS.md) § Code style, with rationale and examples in [code-style.md](./code-style.md).
 
 **Related entry points (link, don't fork):**
 
 | Document                                                             | Scope                                                                              |
 | -------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
 | [AGENTS.md](../../AGENTS.md)                                         | Cross-editor handbook: Nx, OT skills index, workflow-ralph CLI, code-style pointer |
-| [CLAUDE.md](../../CLAUDE.md)                                         | Claude Code project entry; defers shared facts to `AGENTS.md`                      |
+| [CLAUDE.md](../../CLAUDE.md)                                         | Claude Code only: model picking, `.claude/` config; all else is in `AGENTS.md`     |
 | [docs/Skills.md](../Skills.md)                                       | Skill adoption policy, installed set, skip-list                                    |
 | [skills/ot-skill-sync/SKILL.md](../../skills/ot-skill-sync/SKILL.md) | The ot-skill-sync architecture + `sync.sh` / `--check` commands                    |
 | [code-style.md](./code-style.md)                                     | The coding rules: rationale, examples, and each rule's enforcement label           |
@@ -139,7 +139,7 @@ Claude Code reads `CLAUDE.md` natively but only loads a sibling `AGENTS.md` when
 | Try a **private skill** of your own    | `bash skills/ot-skill-sync/scripts/personal.sh new <slug>` — lands outside the repo, uncommittable; `promote <slug>` graduates it into `skills/` |
 | Install an **external skill**          | `npx skills add <owner>/<repo> --skill <name> --agent universal`, run `sync.sh` (keep it 1:1)                                                    |
 | **Customize** an external skill        | Author a companion skill/rule that references it — don't edit the vendored copy (see §2)                                                         |
-| Change **TypeScript / JS style**       | `docs/monorepo/code-style.md` for the rationale, and `AGENTS.md` § Code style + `CLAUDE.md` for the normative line                               |
+| Change **TypeScript / JS style**       | `docs/monorepo/code-style.md` for the rationale, and `AGENTS.md` § Code style for the normative line                                             |
 | Change **OT / GitHub / Ralph rules**   | the skill that owns it: `skills/ot-plans/`, `skills/github-*/`, `skills/agents-ralph/`                                                           |
 | Change **Ralph loop** behavior         | `skills/agents-ralph/SKILL.md`                                                                                                                   |
 | Change **Ralph CLI** flags / queue     | `skills/workflow-ralph/`, `tools/workflows/`                                                                                                     |

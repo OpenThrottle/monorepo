@@ -395,7 +395,7 @@ pnpm run audit:component-shape:strict
 ```
 
 When it fails, **fix the R4/R5/R6 violation** it lists — do not bypass the hook
-with `git commit --no-verify` (CLAUDE.md prohibits `--no-verify` and bypassing
+with `git commit --no-verify` (AGENTS.md prohibits `--no-verify` and bypassing
 Husky). The autofix/scaffolding notes above and the rule references (R1–R7) tell
 you how to reshape the offending file.
 

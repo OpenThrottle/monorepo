@@ -39,7 +39,7 @@ Suggested slice order, lowest-risk → highest: `duplicates` → `binaries` (unl
 
 **For each finding, decide:** genuinely dead → remove it (or stop exporting it); false positive the static graph can't see (codegen output, dynamic import, deliberate public API, entry point) → suppress it properly (see [Preserving intentional exports](#preserving-intentional-exports) and the `knip.jsonc` `ignore` / `ignoreExportsUsedInFile` / `ignoreUnresolved` lists). Land each slice as its own small PR and re-run the scoped command to confirm the count dropped.
 
-**If you use auto-fix at all**, keep it scoped and reviewed: `--fix-type <one-type> --workspace <one-project>` in a dedicated PR, read the diff, never a blanket `--fix`. Per [CLAUDE.md](../../CLAUDE.md), **never run `knip --fix` on app UI**; `--allow-remove-files` is opt-in only.
+**If you use auto-fix at all**, keep it scoped and reviewed: `--fix-type <one-type> --workspace <one-project>` in a dedicated PR, read the diff, never a blanket `--fix`. Per [AGENTS.md](../../AGENTS.md), **never run `knip --fix` on app UI**; `--allow-remove-files` is opt-in only.
 
 ## Audit: where `--fix` runs (2026-05-19)
 

@@ -50,7 +50,10 @@
         "executor": "@nx/js:tsc"
       },
       "build": {
-        "executor": "@nx/js:tsc"
+        "executor": "@nx/js:tsc",
+        "options": {
+          "tsConfig": "{projectRoot}/tsconfig.build.json"
+        }
       },
       "dev": {
         "cache": false,
