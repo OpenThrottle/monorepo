@@ -155,7 +155,7 @@ export const ATTACH_PROMPT_PLACEMENTS = ['end', 'start'] as const;
 /**
  * @description Payload for `attach-prompt`: the custom_prompts row to attach,
  * referenced by exactly one of `promptId` or `filePath` (the
- * `(file_path, prompt_type)` natural key from migration 048 keeps a path
+ * `(file_path, prompt_type)` natural key — per owner since migration 190 — keeps a path
  * reference portable across databases), its `promptType`, and where it lands
  * in the composed context.
  * @public

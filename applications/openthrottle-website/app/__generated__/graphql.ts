@@ -4154,6 +4154,25 @@ export type PickFolderNativePayloadObject = {
   path?: Maybe<Scalars['String']['output']>;
 };
 
+/** A custom prompt an attach-prompt rule attached to the plan, re-checked on read (rule live and qualified for the read's environment; prompt live and visible to the plan owner). */
+export type PlanContextAttachedPromptObject = {
+  __typename?: 'PlanContextAttachedPromptObject';
+  /** The prompt's current content. */
+  content: Scalars['String']['output'];
+  /** The prompt's repo-relative file path; null for a prompt with no file. */
+  filePath?: Maybe<Scalars['String']['output']>;
+  /** Where an agent composes it: start (before the plan context) or end (after it). */
+  placement: Scalars['String']['output'];
+  /** The attached custom_prompts row. */
+  promptId: Scalars['ID']['output'];
+  /** personas or prompts. */
+  promptType: Scalars['String']['output'];
+  /** The attach-prompt rule whose ledger row is the attachment. */
+  ruleId: Scalars['ID']['output'];
+  /** The prompt's title. */
+  title: Scalars['String']['output'];
+};
+
 export type PlanEmbeddingObject = {
   __typename?: 'PlanEmbeddingObject';
   content: Scalars['String']['output'];
@@ -4991,7 +5010,7 @@ export type Query = {
   prCountByLabel: Array<PrCountByLabelObject>;
   /** PR time-in-state summary (count and avg days per state: open, closed, merged). Paginates PRs up to 1000 (10 pages); repos with more PRs are truncated to the most recent window. */
   prTimeInStateSummary: Array<PrTimeInStateSummaryObject>;
-  /** Dry run: which of the caller's plans a rule would match, and why the rest do not, by the same evaluator the worker uses. Read-only: writes no ledger row and dispatches nothing. Only the match fields (repositoryId, status, environment, tagAll, actionType) are read, so a half-written actionPayloadJson never blocks it; the rule is evaluated as enabled. `environment` is the environment to evaluate plans in (ci | interactive | ralph); omit it for none, which is what the worker does today, so an environment-qualified rule then matches nothing. At most the newest 500 plans are evaluated; truncated says so. */
+  /** Dry run: which of the caller's plans a rule would match, and why the rest do not, by the same evaluator the worker uses. Read-only: writes no ledger row and dispatches nothing. Only the match fields (repositoryId, status, environment, tagAll, actionType) are read, so a half-written actionPayloadJson never blocks it; the rule is evaluated as enabled. `environment` is the environment to evaluate plans in (ci | interactive | ralph); omit it for none — a pass triggered by a developer-app edit or a background job — so an environment-qualified rule then matches nothing. At most the newest 500 plans are evaluated; truncated says so. */
   previewTagActionRule: TagActionRulePreviewObject;
   /** Get a project by ID */
   project?: Maybe<ProjectObject>;
@@ -7205,6 +7224,8 @@ export type SignoutResultObject = {
 /** A project's resolved skill-availability universe for a given context (environment), plus resolve-time warnings. */
 export type SkillAvailabilityResolutionResult = {
   __typename?: 'SkillAvailabilityResolutionResult';
+  /** Prompts attach-prompt rules attached to the plan, in composition order: every start prompt, then every end prompt, each in attach order. Empty when the query has no planId. */
+  attachedPrompts: Array<PlanContextAttachedPromptObject>;
   /** Resolved skills, in the project's ingested order (alphabetical by slug). */
   skills: Array<SkillAvailabilityResolvedSkillObject>;
   /** Number of skills in the resolved universe. */
@@ -7692,7 +7713,7 @@ export type TagActionRulePreviewObject = {
   __typename?: 'TagActionRulePreviewObject';
   /** The most plans evaluated (newest-updated first); see truncated. */
   cap: Scalars['Int']['output'];
-  /** The environment the plans were evaluated against; null for a pass that carries none (what the worker does today). */
+  /** The environment the plans were evaluated against; null for a pass that carries none (a developer-app edit or a background trigger). */
   environment?: Maybe<Scalars['String']['output']>;
   evaluated: Scalars['Int']['output'];
   matched: Array<TagActionRulePreviewPlanObject>;

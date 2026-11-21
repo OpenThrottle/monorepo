@@ -108,6 +108,29 @@ export class RuleApplicationsRepository extends BaseRepository<
   }
 
   /**
+   * @description Every 'applied' ledger row of a LIVE attach-prompt rule on `planId`, oldest
+   * first (ties by rule id) — the plan's prompt attachments, in the order they were made. The
+   * rows' `details` carry `{placement, promptId, promptType}` and `rule` is loaded, so the caller
+   * can re-check the rule's environment and each prompt's visibility: a row outlives both.
+   */
+  async listAppliedAttachPrompts(planId: string): Promise<RuleApplication[]> {
+    return this.repository
+      .createQueryBuilder('application')
+      .innerJoinAndSelect('application.rule', 'rule')
+      .where('application.planId = :planId', { planId })
+      .andWhere('application.state = :applied', {
+        applied: RULE_APPLICATION_STATES.APPLIED,
+      })
+      .andWhere('rule.actionType = :actionType', {
+        actionType: TAG_ACTION_TYPES.ATTACH_PROMPT,
+      })
+      .andWhere('rule.deletedAt IS NULL')
+      .orderBy('application.createdAt', 'ASC')
+      .addOrderBy('rule.id', 'ASC')
+      .getMany();
+  }
+
+  /**
    * @description The first 'applied' ledger row of a LIVE attach-prompt rule on `planId` whose
    * `details.promptId` is `promptId`, or null. The attach-prompt ledger row is the attachment
    * record, so this answers "is that prompt already attached to the plan".

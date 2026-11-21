@@ -13,6 +13,12 @@
  * effectiveDisableModelInvocation unless an availability-exception rule
  * matched — annotation is otherwise read-only.
  *
+ * It also composes the prompts attach-prompt rules attached to the plan: the
+ * 'applied' ledger rows ARE the attachments, so each is re-checked on read —
+ * the rule still live and qualified for this read's environment, the prompt
+ * still live, still the recorded type and still visible to the plan owner (own
+ * or system) — and returned `start` first, then `end`, in attach order.
+ *
  * Consumed by the skillAvailability GraphQL query (planId/taskId args) and by
  * the inject-task executor's candidate-set gating.
  * See docs/monorepo/plan-task-tags-rules-design.md ("Action type 1").
@@ -23,10 +29,12 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import type { Plan } from '@openthrottle/nestjs-repositories-server';
+import type { Plan, User } from '@openthrottle/nestjs-repositories-server';
 import {
+  CustomPromptsRepository,
   PlansRepository,
   ProjectsRepository,
+  RuleApplicationsRepository,
   SkillTagsRepository,
   TagActionRulesRepository,
   TasksRepository,
@@ -49,10 +57,15 @@ import { ProjectSkillsService } from '../project-skills/project-skills.service.t
 import { SkillAvailabilityService } from '../skill-availability/skill-availability.service.ts';
 import { TagsService } from '../tags/tags.service.ts';
 import type {
+  PlanContextAttachedPrompt,
   PlanContextAvailability,
   PlanContextResolvedSkill,
   ResolveForPlanInput,
 } from './plan-context-availability.types.ts';
+import {
+  orderAttachedPrompts,
+  parseAttachedPromptDetails,
+} from './plan-context-availability.utils.ts';
 
 /** nx_project_name of the dogfood project (the projectSkills anchor). */
 const DOGFOOD_NX_PROJECT_NAME = 'OpenThrottle/monorepo';
@@ -60,10 +73,12 @@ const DOGFOOD_NX_PROJECT_NAME = 'OpenThrottle/monorepo';
 @Injectable()
 export class PlanContextAvailabilityService {
   constructor(
+    private readonly customPromptsRepository: CustomPromptsRepository,
     private readonly logger: LoggerService,
     private readonly plansRepository: PlansRepository,
     private readonly projectSkillsService: ProjectSkillsService,
     private readonly projectsRepository: ProjectsRepository,
+    private readonly ruleApplicationsRepository: RuleApplicationsRepository,
     private readonly skillAvailabilityService: SkillAvailabilityService,
     private readonly skillTagsRepository: SkillTagsRepository,
     private readonly tagActionRulesRepository: TagActionRulesRepository,
@@ -95,18 +110,23 @@ export class PlanContextAvailabilityService {
       .filter((tag) => tag.dimension === 'domain')
       .map((tag) => tag.tag);
 
-    const ephemeralRules = await this.materializeExceptionRules(
-      plan,
-      effective.map((tag) => tag.tag),
-      input.environment ?? null,
-    );
+    const owner = await this.usersRepository.findByGithubUsername(plan.author);
+    const [ephemeralRules, attachedPrompts] = await Promise.all([
+      this.materializeExceptionRules(
+        plan,
+        owner,
+        effective.map((tag) => tag.tag),
+        input.environment ?? null,
+      ),
+      this.loadAttachedPrompts(plan.id, owner, input.environment ?? null),
+    ]);
 
     const projectId =
       input.projectId ??
       plan.projectId ??
       (await this.resolveDogfoodProjectId());
     if (projectId == null) {
-      return { effectiveDomainTags, skills: [], warnings: [] };
+      return { attachedPrompts, effectiveDomainTags, skills: [], warnings: [] };
     }
 
     const [views, vocabulary, storedRuleSet] = await Promise.all([
@@ -161,7 +181,12 @@ export class PlanContextAvailabilityService {
       };
     });
 
-    return { effectiveDomainTags, skills, warnings: [...result.warnings] };
+    return {
+      attachedPrompts,
+      effectiveDomainTags,
+      skills,
+      warnings: [...result.warnings],
+    };
   }
 
   /**
@@ -214,10 +239,10 @@ export class PlanContextAvailabilityService {
    */
   private async materializeExceptionRules(
     plan: Plan,
+    owner: User | null,
     effectiveTags: readonly string[],
     environment: string | null,
   ): Promise<SkillAvailabilityRule[]> {
-    const owner = await this.usersRepository.findByGithubUsername(plan.author);
     if (owner == null) {
       return [];
     }
@@ -277,6 +302,63 @@ export class PlanContextAvailabilityService {
       });
     }
     return ephemeral;
+  }
+
+  /**
+   * @description The prompts attach-prompt rules attached to the plan, re-checked on read. A
+   * ledger row outlives what it names, so a row is dropped — never an error — when its rule is
+   * qualified on a different environment than this read's (a null read takes unqualified rules
+   * only, the same rule as availability exceptions), its details do not parse, or its prompt is
+   * gone, soft-deleted, retyped, or no longer visible to the plan owner. A plan whose author has
+   * no user row has no rules, so it has no attachments either.
+   */
+  private async loadAttachedPrompts(
+    planId: string,
+    owner: User | null,
+    environment: string | null,
+  ): Promise<PlanContextAttachedPrompt[]> {
+    if (owner == null) {
+      return [];
+    }
+
+    const applications =
+      await this.ruleApplicationsRepository.listAppliedAttachPrompts(planId);
+    const resolved = await Promise.all(
+      applications.map(
+        async (application): Promise<PlanContextAttachedPrompt | null> => {
+          const ruleEnvironment = application.rule?.environment ?? null;
+          if (ruleEnvironment != null && ruleEnvironment !== environment) {
+            return null;
+          }
+          const details = parseAttachedPromptDetails(application.details);
+          if (details == null) {
+            return null;
+          }
+          const prompt = await this.customPromptsRepository.findVisibleById(
+            details.promptId,
+            owner.id,
+          );
+          if (prompt == null || prompt.promptType !== details.promptType) {
+            return null;
+          }
+          return {
+            content: prompt.content,
+            filePath: prompt.filePath,
+            placement: details.placement,
+            promptId: prompt.id,
+            promptType: details.promptType,
+            ruleId: application.ruleId,
+            title: prompt.title,
+          };
+        },
+      ),
+    );
+
+    return orderAttachedPrompts(
+      resolved.filter(
+        (prompt): prompt is PlanContextAttachedPrompt => prompt !== null,
+      ),
+    );
   }
 
   private async resolveDogfoodProjectId(): Promise<string | null> {

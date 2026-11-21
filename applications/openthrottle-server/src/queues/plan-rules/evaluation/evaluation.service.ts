@@ -10,7 +10,7 @@
 
 import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable } from '@nestjs/common';
-import { LoggerService } from '@openthrottle/nestjs-modules';
+import { GlobalClsService, LoggerService } from '@openthrottle/nestjs-modules';
 import { Queue } from 'bullmq';
 
 import {
@@ -22,15 +22,34 @@ import type {
   PlanRulesEvaluateJobData,
   PlanRulesTriggerKind,
 } from '../plan-rules.types.ts';
-import { planRulesEvaluationDedupId } from '../plan-rules.utils.ts';
+import {
+  parsePlanRulesEnvironment,
+  planRulesEvaluationDedupId,
+} from '../plan-rules.utils.ts';
 
 @Injectable()
 export class PlanRulesEvaluationService {
   constructor(
+    private readonly globalCls: GlobalClsService,
     private readonly logger: LoggerService,
     @InjectQueue(PLAN_RULES_QUEUE_NAME)
     private readonly queue: Queue<PlanRulesEvaluateJobData>,
   ) {}
+
+  /**
+   * @description The environment the current GraphQL request claims to run in, from the
+   * `x-ot-environment` header the openthrottle-mcp stdio server sets from its launch environment
+   * (`ci` under CI, `ralph` when an orchestrator spawned the agent, `interactive` for an agent
+   * harness with neither). Null outside a request context, without the header, or for a value
+   * outside `ci | interactive | ralph`. The developer UI sends no header, so a human's edit is a
+   * null pass. A claim, not a proof: it only selects which of the plan OWNER's own rules apply, so
+   * a caller that misstates it misconfigures nothing but its own pass.
+   */
+  requestEnvironment(): PlanRulesEnvironment {
+    if (!this.globalCls.isActive()) return null;
+
+    return parsePlanRulesEnvironment(this.globalCls.get('environment'));
+  }
 
   /**
    * @description Enqueues one full-evaluation pass for the plan. Fire-and-forget
@@ -39,7 +58,8 @@ export class PlanRulesEvaluationService {
    * `environment` is the caller's environment (`ci | interactive | ralph`) when
    * the trigger genuinely knows it, else null; the worker evaluates with it, so
    * environment-qualified rules match only for a matching environment. Every
-   * caller states it explicitly.
+   * caller states it explicitly: request-scoped callers (resolvers) pass
+   * {@link requestEnvironment}; a background trigger with no request passes null.
    *
    * Passes are deduplicated per plan AND environment (`keepLastIfActive: true`):
    * a burst of triggers for one plan in one environment collapses into at most
@@ -47,7 +67,8 @@ export class PlanRulesEvaluationService {
    * environments of the same plan do not collapse, because rules are apply-once
    * per (rule, plan) and a null pass replacing a pending `ralph` one would drop
    * the ralph-only matches; they can therefore overlap on the same plan, which
-   * the ledger fingerprint check and reconcile writes must tolerate.
+   * the ledger fingerprint check, the deterministic reconcile targets and the
+   * worker's out-of-environment orphan exclusion make safe.
    * Distinct plans keep distinct dedup ids, so they still evaluate in parallel.
    *
    * We deliberately use `deduplication` rather than a fixed `jobId`: BullMQ

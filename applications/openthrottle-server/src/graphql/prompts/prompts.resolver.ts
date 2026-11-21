@@ -23,7 +23,11 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 
-import { BadRequestException, ForbiddenException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
 import {
@@ -31,6 +35,7 @@ import {
   type AuthPrincipal,
   CurrentUser,
 } from '@openthrottle/nestjs-auth';
+import { isUniqueViolation } from '@openthrottle/nestjs-postgres';
 import { PERMISSIONS } from '@openthrottle/nestjs-rbac';
 import type { CustomPrompt } from '@openthrottle/nestjs-repositories-server';
 import {
@@ -110,16 +115,18 @@ export class CustomPromptsResolver {
       writeTarget = await this.resolveWriteTarget(principal, input.filePath);
     }
 
-    const saved = await this.customPromptsRepository.create({
-      content: input.content,
-      description: input.description ?? null,
-      filePath: input.filePath ?? null,
-      labels: input.labels ?? [],
-      projectId: input.projectId ?? null,
-      promptType: input.promptType,
-      title: input.title,
-      userId: ownerUserId,
-    });
+    const saved = await this.rethrowDuplicatePath(
+      this.customPromptsRepository.create({
+        content: input.content,
+        description: input.description ?? null,
+        filePath: input.filePath ?? null,
+        labels: input.labels ?? [],
+        projectId: input.projectId ?? null,
+        promptType: input.promptType,
+        title: input.title,
+        userId: ownerUserId,
+      }),
+    );
 
     if (writeTarget != null) {
       await this.writeToFileSystem(writeTarget, input.content);
@@ -149,17 +156,19 @@ export class CustomPromptsResolver {
       writeTarget = await this.resolveWriteTarget(principal, filePathToWrite);
     }
 
-    const saved = await this.customPromptsRepository.update(entity.id, {
-      ...(input.title != null && { title: input.title }),
-      ...(input.content != null && { content: input.content }),
-      ...(input.description !== undefined && {
-        description: input.description,
+    const saved = await this.rethrowDuplicatePath(
+      this.customPromptsRepository.update(entity.id, {
+        ...(input.title != null && { title: input.title }),
+        ...(input.content != null && { content: input.content }),
+        ...(input.description !== undefined && {
+          description: input.description,
+        }),
+        ...(input.promptType != null && { promptType: input.promptType }),
+        ...(input.labels != null && { labels: input.labels }),
+        ...(input.filePath !== undefined && { filePath: input.filePath }),
+        ...(input.projectId !== undefined && { projectId: input.projectId }),
       }),
-      ...(input.promptType != null && { promptType: input.promptType }),
-      ...(input.labels != null && { labels: input.labels }),
-      ...(input.filePath !== undefined && { filePath: input.filePath }),
-      ...(input.projectId !== undefined && { projectId: input.projectId }),
-    });
+    );
 
     if (writeTarget != null) {
       await this.writeToFileSystem(
@@ -297,6 +306,25 @@ export class CustomPromptsResolver {
       return null;
     }
     return prompt;
+  }
+
+  /**
+   * @description Awaits a prompt write, turning the per-owner `(file_path, prompt_type)` unique
+   * violation into a Conflict the caller can act on. Since migration 190 that index is scoped
+   * per owner, so it fires only when the caller already owns a prompt at the path — a system
+   * prompt at the same path no longer collides, it is overridden.
+   */
+  private async rethrowDuplicatePath<TResult>(
+    write: Promise<TResult>,
+  ): Promise<TResult> {
+    try {
+      return await write;
+    } catch (error) {
+      if (isUniqueViolation(error)) {
+        throw new ConflictException(CUSTOM_PROMPT_ACCESS_REFUSAL.duplicatePath);
+      }
+      throw error;
+    }
   }
 
   /**

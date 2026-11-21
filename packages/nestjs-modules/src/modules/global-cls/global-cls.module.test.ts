@@ -34,6 +34,14 @@ describe('setupGlobalCls', () => {
     });
   };
 
+  const runSetupEnvironment = (headers: Record<string, string | undefined>) => {
+    return cls.runWith(asStore<GlobalClsStore>({}), () => {
+      setupGlobalCls(cls, { headers });
+
+      return cls.get('environment');
+    });
+  };
+
   it('stores app name and version from present headers', () => {
     const app = runSetup({
       'x-app-name': 'openthrottle-server',
@@ -85,5 +93,17 @@ describe('setupGlobalCls', () => {
   it('leaves sessionId undefined when the header is absent or empty', () => {
     expect(runSetupSessionId({})).toBeUndefined();
     expect(runSetupSessionId({ 'x-ot-session-id': '' })).toBeUndefined();
+  });
+
+  it('captures x-ot-environment trimmed and unvalidated', () => {
+    expect(runSetupEnvironment({ 'x-ot-environment': ' ralph ' })).toBe(
+      'ralph',
+    );
+    expect(runSetupEnvironment({ 'x-ot-environment': 'bogus' })).toBe('bogus');
+  });
+
+  it('leaves environment undefined when the header is absent or blank', () => {
+    expect(runSetupEnvironment({})).toBeUndefined();
+    expect(runSetupEnvironment({ 'x-ot-environment': '  ' })).toBeUndefined();
   });
 });

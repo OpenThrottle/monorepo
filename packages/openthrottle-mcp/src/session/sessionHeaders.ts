@@ -11,12 +11,17 @@
  * sessions against 1 with a span. The session existed the whole time; nobody told the
  * server about it. These helpers are how a mutating tool tells it.
  *
+ * Both helpers also carry `X-OT-Environment` when stdio startup captured an agent environment
+ * (see ../config/agent-environment.ts), so the plan-rules evaluation a mutation triggers knows
+ * which environment's rules apply.
+ *
  * Reads deliberately do not use this: a query should never manufacture a session, and a
  * session that exists only because something was read is not a unit of work.
  *
  * @see docs/monorepo/work-ledger-sessions.md
  */
 
+import { agentEnvironmentHeaders } from '../config/agent-environment.ts';
 import { ensureWorkSession } from './current-session.ts';
 
 interface SessionHeaderOptions {
@@ -25,7 +30,9 @@ interface SessionHeaderOptions {
 
 /** @description GraphQL call options carrying an explicit session id. */
 export function sessionHeaders(sessionId: string): SessionHeaderOptions {
-  return { headers: { 'X-OT-Session-Id': sessionId } };
+  return {
+    headers: { ...agentEnvironmentHeaders(), 'X-OT-Session-Id': sessionId },
+  };
 }
 
 /**
@@ -40,5 +47,7 @@ export async function ambientSessionOptions(
   token: string,
 ): Promise<SessionHeaderOptions> {
   const sessionId = await ensureWorkSession(token);
-  return sessionId == null ? {} : sessionHeaders(sessionId);
+  return sessionId == null
+    ? { headers: agentEnvironmentHeaders() }
+    : sessionHeaders(sessionId);
 }

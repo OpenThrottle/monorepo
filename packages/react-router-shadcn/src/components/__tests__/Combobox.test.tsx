@@ -23,6 +23,27 @@ describe('Combobox', () => {
     expect(trigger).toHaveTextContent('Remix');
   });
 
+  it('merges contentClassName onto the popover panel', async () => {
+    const user = userEvent.setup();
+    const component = render(
+      <Combobox
+        contentClassName="w-auto"
+        options={options}
+        placeholder="Select"
+      />,
+    );
+
+    await user.click(component.getByRole('combobox'));
+
+    await waitFor(() => {
+      const panel = component.baseElement.querySelector(
+        '[data-radix-popper-content-wrapper] > *',
+      );
+      expect(panel).toHaveClass('w-auto', 'p-0');
+      expect(panel).not.toHaveClass('w-(--radix-popover-trigger-width)');
+    });
+  });
+
   it('opens popover when trigger is clicked', async () => {
     const user = userEvent.setup();
     const { container } = render(

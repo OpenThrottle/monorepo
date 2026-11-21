@@ -125,7 +125,18 @@ type ResolvedSkillAvailability = {
   staticDisableModelInvocation: boolean | null;
 };
 
+type AttachedPrompt = {
+  content: string;
+  filePath: string | null;
+  placement: string;
+  promptId: string;
+  promptType: string;
+  ruleId: string;
+  title: string;
+};
+
 type SkillAvailabilityResolution = {
+  attachedPrompts: AttachedPrompt[];
   skills: ResolvedSkillAvailability[];
   totalCount: number;
   warnings: string[];
@@ -141,7 +152,7 @@ export const getSkillAvailabilityToolParameters = z
   })
   .strict();
 
-export const getSkillAvailabilityToolDescription = `Resolve every skill's effective disable-model-invocation for a project and environment via the skillAvailability GraphQL query. Omit projectId to resolve the dogfood monorepo project; environment defaults to "interactive" (ci | interactive | ralph). Optional plan context: planId (and taskId within it) annotates each skill with matchedPlanTags (skill tags ∩ the plan's effective domain tag set) and planRelevant, applies matched availability-exception rules ephemerally, and relevantOnly=true filters to plan-relevant skills. Returns each skill's static (tri-state) and effective flags plus the decisive rung's provenance, and deduped resolve-time warnings. Concerns model auto-invocation only — human /skill invocation is never gated.`;
+export const getSkillAvailabilityToolDescription = `Resolve every skill's effective disable-model-invocation for a project and environment via the skillAvailability GraphQL query. Omit projectId to resolve the dogfood monorepo project; environment defaults to "interactive" (ci | interactive | ralph). Optional plan context: planId (and taskId within it) annotates each skill with matchedPlanTags (skill tags ∩ the plan's effective domain tag set) and planRelevant, applies matched availability-exception rules ephemerally, and relevantOnly=true filters to plan-relevant skills. With planId it also returns attachedPrompts (rule-attached prompts, with content): put "start" ones before the plan context, "end" ones after. Returns each skill's static (tri-state) and effective flags plus the decisive rung's provenance, and deduped resolve-time warnings. Concerns model auto-invocation only — human /skill invocation is never gated.`;
 
 export async function getSkillAvailabilityToolHandler(
   args: z.infer<typeof getSkillAvailabilityToolParameters>,
@@ -172,6 +183,15 @@ export async function getSkillAvailabilityToolHandler(
       }
 
       const resolution: SkillAvailabilityResolution = {
+        attachedPrompts: found.attachedPrompts.map((prompt) => ({
+          content: prompt.content,
+          filePath: prompt.filePath ?? null,
+          placement: prompt.placement,
+          promptId: prompt.promptId,
+          promptType: prompt.promptType,
+          ruleId: prompt.ruleId,
+          title: prompt.title,
+        })),
         skills: found.skills.map((skill) => ({
           effectiveDisableModelInvocation:
             skill.effectiveDisableModelInvocation,
@@ -187,7 +207,7 @@ export async function getSkillAvailabilityToolHandler(
       };
       return {
         structuredContent: resolution,
-        text: `Resolved ${resolution.totalCount} skill(s); ${resolution.warnings.length} warning(s).`,
+        text: `Resolved ${resolution.totalCount} skill(s); ${resolution.attachedPrompts.length} attached prompt(s); ${resolution.warnings.length} warning(s).`,
       };
     },
   );

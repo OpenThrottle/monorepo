@@ -11,7 +11,10 @@ import * as React from 'react';
 
 import { RuleFormAttachPromptFields } from '~/routing/rules/components/RuleFormAttachPromptFields';
 import { RULES_COPY } from '~/routing/rules/data/data.copy';
-import { ATTACH_PROMPT_ACTION_TYPE } from '~/routing/rules/data/data.rule-form-options';
+import {
+  ACTION_TYPE_LABELS,
+  ATTACH_PROMPT_ACTION_TYPE,
+} from '~/routing/rules/data/data.rule-form-options';
 import type { RuleFormAttachPromptState } from '~/routing/rules/types';
 import type { RuleFormPromptOption } from '~/routing/rules/utils/rule-prompt-options';
 
@@ -38,10 +41,8 @@ export interface RuleFormActionSectionProps {
 }
 
 /**
- * @description The "Action" fieldset of the rules form: the action-type select
- * plus the inject-task (skill/placement/title template) or
- * availability-exception (allow/deny lists) payload fields. Split out of
- * RuleForm to keep that component under the R6 size cap.
+ * @description The rules form's "Action" fieldset: the action-type select plus
+ * the inject-task, attach-prompt or availability-exception payload fields.
  */
 export const RuleFormActionSection = (
   props: RuleFormActionSectionProps,
@@ -87,7 +88,9 @@ export const RuleFormActionSection = (
             aria-label={RULES_COPY.skillLabel}
             id="rule-skill-slug"
           >
-            <SelectValue placeholder={RULES_COPY.skillPlaceholder} />
+            <SelectValue placeholder={RULES_COPY.skillPlaceholder}>
+              {skillSlug}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             {skillSlugs.map((slug) => (
@@ -106,7 +109,7 @@ export const RuleFormActionSection = (
             aria-label={RULES_COPY.placementLabel}
             id="rule-placement"
           >
-            <SelectValue />
+            <SelectValue>{placement}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="first">first</SelectItem>
@@ -177,7 +180,7 @@ export const RuleFormActionSection = (
             className="w-fit"
             id="rule-action-type"
           >
-            <SelectValue />
+            <SelectValue>{ACTION_TYPE_LABELS[actionType]}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="inject-task">

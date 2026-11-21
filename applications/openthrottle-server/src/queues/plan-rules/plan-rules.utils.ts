@@ -3,6 +3,7 @@ import {
   injectTaskActionPayloadSchema,
   type MatchedTagAction,
   rankMatchedTagActions,
+  SKILL_AVAILABILITY_ENVIRONMENTS,
   TAG_ACTION_TYPES,
 } from '@openthrottle/openthrottle-skills';
 
@@ -25,6 +26,43 @@ export const planRulesEvaluationDedupId = (
   environment: PlanRulesEnvironment,
 ): string => {
   return `plan:${planId}:env:${environment ?? PLAN_RULES_NULL_ENVIRONMENT_TOKEN}`;
+};
+
+/**
+ * @description Parses a caller-supplied environment claim (the raw `x-ot-environment` request
+ * header) into a {@link PlanRulesEnvironment}. Anything outside `ci | interactive | ralph` —
+ * absent, blank, misspelled — is null, which is the safe answer: a null pass skips every
+ * environment-qualified rule rather than matching the wrong environment's.
+ */
+export const parsePlanRulesEnvironment = (
+  raw: string | undefined,
+): PlanRulesEnvironment => {
+  const value = raw?.trim().toLowerCase() ?? '';
+
+  return (
+    SKILL_AVAILABILITY_ENVIRONMENTS.find((known) => known === value) ?? null
+  );
+};
+
+/**
+ * @description Rule ids whose ledger rows an evaluation pass must leave alone because the pass
+ * never evaluated them: rules qualified on an environment other than the pass's own. Without this
+ * a null pass (a trigger that does not know its environment) would see a `ralph`-only rule as
+ * un-matched and orphan the task a `ralph` pass injected, and the next `ralph` pass would
+ * re-inject it — a soft-close / re-inject thrash between overlapping passes. Pure.
+ */
+export const outOfEnvironmentRuleIds = (
+  rules: readonly {
+    readonly environment: string | null;
+    readonly id: string;
+  }[],
+  environment: PlanRulesEnvironment,
+): string[] => {
+  return rules
+    .filter(
+      (rule) => rule.environment != null && rule.environment !== environment,
+    )
+    .map((rule) => rule.id);
 };
 
 /**

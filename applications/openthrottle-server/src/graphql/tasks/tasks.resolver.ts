@@ -383,7 +383,7 @@ export class TasksResolver {
     await this.planRulesEvaluationService.enqueueEvaluation(
       saved.planId,
       PLAN_RULES_TRIGGER_KINDS.TASK_CREATED,
-      null,
+      this.planRulesEvaluationService.requestEnvironment(),
     );
     await this.taggingEnqueueService.enqueuePredict(
       TAGGING_ENTITY_TYPES.TASK,
@@ -454,7 +454,7 @@ export class TasksResolver {
     await this.planRulesEvaluationService.enqueueEvaluation(
       input.planId,
       PLAN_RULES_TRIGGER_KINDS.TASK_CREATED,
-      null,
+      this.planRulesEvaluationService.requestEnvironment(),
     );
     await Promise.all(
       saved.map((task) =>
@@ -618,7 +618,7 @@ export class TasksResolver {
       await this.planRulesEvaluationService.enqueueEvaluation(
         saved.planId,
         PLAN_RULES_TRIGGER_KINDS.STATUS_CHANGED,
-        null,
+        this.planRulesEvaluationService.requestEnvironment(),
       );
     }
 

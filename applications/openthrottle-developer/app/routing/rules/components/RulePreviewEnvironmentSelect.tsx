@@ -24,7 +24,7 @@ const NONE = 'none';
 /**
  * @description Environment to preview a rule in (None / ci / interactive / ralph), kept in the
  * `previewEnvironment` search param so a preview is linkable and the loader re-runs it. "None" is
- * what the worker does today. Param-only updates replace history and keep the scroll position.
+ * what a developer-app edit evaluates in. Param-only updates replace history and keep the scroll position.
  */
 export const RulePreviewEnvironmentSelect = (
   props: RulePreviewEnvironmentSelectProps,
@@ -39,6 +39,8 @@ export const RulePreviewEnvironmentSelect = (
     parseRulePreviewEnvironment(
       searchParams.get(RULE_PREVIEW_ENVIRONMENT_PARAM),
     ) ?? NONE;
+  const selectedLabel =
+    selected === NONE ? RULE_PREVIEW_COPY.environmentNone : selected;
 
   // Handlers
   const handleValueChange = (value: string): void => {
@@ -64,7 +66,7 @@ export const RulePreviewEnvironmentSelect = (
       </Label>
       <Select onValueChange={handleValueChange} value={selected}>
         <SelectTrigger id="rule-preview-environment">
-          <SelectValue />
+          <SelectValue>{selectedLabel}</SelectValue>
         </SelectTrigger>
         <SelectContent>
           <SelectItem value={NONE}>

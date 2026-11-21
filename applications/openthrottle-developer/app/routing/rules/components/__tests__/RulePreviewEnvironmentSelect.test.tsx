@@ -1,7 +1,13 @@
 import { cleanup, render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
-import { createRoutesStub, useLocation } from 'react-router';
+import { renderToString } from 'react-dom/server';
+import {
+  createMemoryRouter,
+  createRoutesStub,
+  RouterProvider,
+  useLocation,
+} from 'react-router';
 import { afterEach, describe, expect, test } from 'vitest';
 
 import { RULE_PREVIEW_ENVIRONMENT_PARAM } from '~/routing/rules/config/rule-preview';
@@ -40,6 +46,20 @@ describe('RulePreviewEnvironmentSelect', () => {
         name: RULE_PREVIEW_COPY.environmentLabel,
       }),
     ).toHaveTextContent('ci');
+  });
+
+  test('renders the selected label in the server markup', () => {
+    // Radix fills a childless SelectValue only after hydration; the label must be in the SSR HTML.
+    const router = createMemoryRouter(
+      [{ element: <RulePreviewEnvironmentSelect />, path: '/rules/:ruleId' }],
+      {
+        initialEntries: [`/rules/r1?${RULE_PREVIEW_ENVIRONMENT_PARAM}=ralph`],
+      },
+    );
+
+    const html = renderToString(<RouterProvider router={router} />);
+
+    expect(html).toContain('>ralph<');
   });
 
   test('defaults to None when the URL has no environment', async () => {

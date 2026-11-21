@@ -248,7 +248,12 @@ describe('SkillAvailabilityResolutionResolver', () => {
 
     const result = await resolver.skillAvailability(userId, 'user');
 
-    expect(result).toEqual({ skills: [], totalCount: 0, warnings: [] });
+    expect(result).toEqual({
+      attachedPrompts: [],
+      skills: [],
+      totalCount: 0,
+      warnings: [],
+    });
     expect(mockProjectSkillsService.getSkillsForProject).not.toHaveBeenCalled();
   });
 
@@ -324,6 +329,7 @@ describe('SkillAvailabilityResolutionResolver', () => {
       vi.mocked(
         mockPlanContextAvailabilityService.resolveForPlan,
       ).mockResolvedValue({
+        attachedPrompts: [],
         effectiveDomainTags: [],
         skills: [],
         warnings: [],
@@ -348,6 +354,38 @@ describe('SkillAvailabilityResolutionResolver', () => {
         }),
       );
     });
+  });
+
+  test('passes the plan context attached prompts through in order', async () => {
+    const attachedPrompts = [
+      {
+        content: 'persona body',
+        filePath: null,
+        placement: 'start' as const,
+        promptId: 'prompt-1',
+        promptType: 'personas' as const,
+        ruleId: 'rule-1',
+        title: 'Reviewer',
+      },
+    ];
+    vi.mocked(
+      mockPlanContextAvailabilityService.resolveForPlan,
+    ).mockResolvedValue({
+      attachedPrompts,
+      effectiveDomainTags: [],
+      skills: [],
+      warnings: [],
+    });
+
+    const result = await resolver.skillAvailability(
+      userId,
+      'user',
+      undefined,
+      undefined,
+      '44444444-4444-4444-8444-444444444444',
+    );
+
+    expect(result.attachedPrompts).toEqual(attachedPrompts);
   });
 
   describe('when the caller is a user', () => {

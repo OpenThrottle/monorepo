@@ -120,6 +120,7 @@ export class SkillAvailabilityResolutionResolver {
         (skill) => relevantOnly !== true || skill.planRelevant,
       );
       return {
+        attachedPrompts: availability.attachedPrompts,
         skills,
         totalCount: skills.length,
         warnings: availability.warnings,
@@ -129,7 +130,7 @@ export class SkillAvailabilityResolutionResolver {
     const resolvedProjectId =
       projectId ?? (await this.resolveDogfoodProjectId());
     if (resolvedProjectId == null) {
-      return { skills: [], totalCount: 0, warnings: [] };
+      return { attachedPrompts: [], skills: [], totalCount: 0, warnings: [] };
     }
 
     const [views, vocabulary, ruleSet] = await Promise.all([
@@ -166,6 +167,7 @@ export class SkillAvailabilityResolutionResolver {
     );
 
     return {
+      attachedPrompts: [],
       skills,
       totalCount: skills.length,
       warnings: [...result.warnings],

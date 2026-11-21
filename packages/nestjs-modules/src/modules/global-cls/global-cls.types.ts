@@ -13,6 +13,13 @@ export interface GlobalClsStore extends ClsStore {
   };
 
   /**
+   * @description Raw, trimmed `x-ot-environment` request header, if present: the agent
+   * environment the caller claims to run in. UNVALIDATED — the consumer owns the vocabulary
+   * (`ci | interactive | ralph` for plan rules) and must treat an unknown value as absent.
+   */
+  environment?: string;
+
+  /**
    * @description Raw `x-ot-session-id` request header, if present. An UNVALIDATED
    * client claim — consumers must verify the session's actor matches the request
    * principal before attributing work to it (work-ledger ambient attribution; G11 in

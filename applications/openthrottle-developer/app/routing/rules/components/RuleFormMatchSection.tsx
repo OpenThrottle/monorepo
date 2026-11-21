@@ -63,6 +63,17 @@ export const RuleFormMatchSection = (
   const phaseOptions = vocabulary.filter(
     (option) => option.dimension === 'phase',
   );
+  // Select labels render as SelectValue children, so they are present in the SSR markup.
+  const isAnyRepository = repositoryId === ANY;
+  const selectedRepository = repositories.find(
+    (repository) => repository.id === repositoryId,
+  );
+  const repositoryLabel = isAnyRepository
+    ? RULES_COPY.anyOption
+    : selectedRepository?.name;
+  const statusLabel = status === ANY ? RULES_COPY.anyOption : status;
+  const environmentLabel =
+    environment === ANY ? RULES_COPY.anyOption : environment;
 
   // Handlers
 
@@ -130,7 +141,7 @@ export const RuleFormMatchSection = (
             aria-label={RULES_COPY.repositoryLabel}
             id="rule-repository"
           >
-            <SelectValue />
+            <SelectValue>{repositoryLabel}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value={ANY}>{RULES_COPY.anyOption}</SelectItem>
@@ -151,7 +162,7 @@ export const RuleFormMatchSection = (
           <Label htmlFor="rule-status">{RULES_COPY.statusLabel}</Label>
           <Select onValueChange={onStatusChange} value={status}>
             <SelectTrigger aria-label={RULES_COPY.statusLabel} id="rule-status">
-              <SelectValue />
+              <SelectValue>{statusLabel}</SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value={ANY}>{RULES_COPY.anyOption}</SelectItem>
@@ -173,7 +184,7 @@ export const RuleFormMatchSection = (
               aria-label={RULES_COPY.environmentLabel}
               id="rule-environment"
             >
-              <SelectValue />
+              <SelectValue>{environmentLabel}</SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value={ANY}>{RULES_COPY.anyOption}</SelectItem>

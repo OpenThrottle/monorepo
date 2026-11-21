@@ -24,6 +24,9 @@ export function createRuleApplicationsRepositoryMock(): RuleApplicationsReposito
     findByRuleAndPlan: vi.fn(async () => {
       return null;
     }),
+    listAppliedAttachPrompts: vi.fn(async () => {
+      return [];
+    }),
     listEdgePlacementSiblings: vi.fn(async () => {
       return [];
     }),

@@ -85,7 +85,7 @@ export class TagActionRulePreviewObject {
   cap!: number;
 
   @Field(() => String, {
-    description: `The environment the plans were evaluated against; null for a pass that carries none (what the worker does today).`,
+    description: `The environment the plans were evaluated against; null for a pass that carries none (a developer-app edit or a background trigger).`,
     nullable: true,
   })
   environment!: string | null;

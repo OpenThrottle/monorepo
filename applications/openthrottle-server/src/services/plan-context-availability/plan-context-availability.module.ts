@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import {
+  CustomPromptsModule,
   PlansModule,
   ProjectsModule,
+  RuleApplicationsModule,
   SkillTagsModule,
   TagActionRulesModule,
   TasksModule,
@@ -22,11 +24,13 @@ import { PlanContextAvailabilityService } from './plan-context-availability.serv
 @Module({
   exports: [PlanContextAvailabilityService],
   imports: [
+    CustomPromptsModule,
     UsersModule,
     LoggerModule,
     PlansModule,
     ProjectSkillsModule,
     ProjectsModule,
+    RuleApplicationsModule,
     SkillAvailabilityModule,
     SkillTagsModule,
     TagActionRulesModule,

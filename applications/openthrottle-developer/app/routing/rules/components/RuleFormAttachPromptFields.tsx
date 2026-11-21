@@ -61,6 +61,8 @@ export const RuleFormAttachPromptFields = (
   );
   const isFilePathReference = filePath !== '' && promptId === '';
   const isNotAvailable = hasReference && !isReferenceVisible;
+  const placementLabel =
+    placement === 'start' ? PLACEMENT_LABELS.start : PLACEMENT_LABELS.end;
   const pickerOptions: ComboboxOption[] = promptOptions.map((option) => {
     const owner = OWNER_LABELS[option.owner];
 
@@ -92,6 +94,7 @@ export const RuleFormAttachPromptFields = (
   );
   const picker = (
     <Combobox
+      contentClassName="w-auto max-w-xl min-w-(--radix-popover-trigger-width)"
       id="rule-prompt"
       onValueChange={handleValueChange}
       options={pickerOptions}
@@ -135,7 +138,7 @@ export const RuleFormAttachPromptFields = (
             aria-label={RULES_COPY.attachPromptPlacementLabel}
             id="rule-attach-placement"
           >
-            <SelectValue />
+            <SelectValue>{placementLabel}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             {ATTACH_PROMPT_PLACEMENTS.map((value) => (
