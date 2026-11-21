@@ -13,6 +13,7 @@ import { NotificationsModule } from '../../notifications/notifications.module.ts
 import { PlanRulesQueueProducerModule } from '../../queues/plan-rules/producer/producer.module.ts';
 import { TaggingQueueProducerModule } from '../../queues/tagging/producer/producer.module.ts';
 import { TaskPromotionQueueProducerModule } from '../../queues/task-promotion/producer/producer.module.ts';
+import { PlanTaskOrderModule } from '../../services/plan-task-order/plan-task-order.module.ts';
 import { PlanStatusModule } from '../plans/plan-status/plan-status.module.ts';
 import { WorkLedgerGraphqlModule } from '../work-ledger/work-ledger.module.ts';
 import { TasksLoaders } from './loaders/loaders.service.ts';
@@ -24,6 +25,7 @@ import { TasksResolver } from './tasks.resolver.ts';
     PlanRulesQueueProducerModule,
     PlansModule,
     PlanStatusModule,
+    PlanTaskOrderModule,
     ProjectsModule,
     TaggingQueueProducerModule,
     TaskPromotionQueueProducerModule,

@@ -20,14 +20,14 @@ export const readChildPickerQuery = (
 };
 
 /**
- * @description The `skip`/`take` for one picker page.
+ * @description The `limit`/`offset` for one picker page.
  */
 export const toChildPickerPaging = (
   query: FragmentChildPickerQuery,
-): { readonly skip: number; readonly take: number } => {
+): { readonly limit: number; readonly offset: number } => {
   return {
-    skip: query.page * FRAGMENT_CHILD_PAGE_SIZE,
-    take: FRAGMENT_CHILD_PAGE_SIZE,
+    limit: FRAGMENT_CHILD_PAGE_SIZE,
+    offset: query.page * FRAGMENT_CHILD_PAGE_SIZE,
   };
 };
 

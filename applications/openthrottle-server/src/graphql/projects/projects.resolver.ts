@@ -2,7 +2,7 @@
  * @description Resolver for Project queries and mutations. Injects ProjectsRepository from @openthrottle/nestjs-repositories-server and ProjectsLoaders. ResolveField for plans and tasks use ProjectsLoaders to avoid N+1.
  */
 
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
 import {
   Args,
   ID,
@@ -12,6 +12,12 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
+import { assertPagination } from '@openthrottle/nestjs-graphql';
+import {
+  hasNextPage,
+  PAGINATION_DEFAULT_LIMIT,
+  PAGINATION_MAX_LIMIT,
+} from '@openthrottle/nestjs-postgres';
 import type {
   Plan,
   Project,
@@ -45,7 +51,6 @@ import {
 import { ProjectObject } from './project.object.ts';
 import { ProjectPlansPageResultObject } from './project-plans-page.object.ts';
 import { ProjectRepositoryObject } from './project-repository.object.ts';
-import { PROJECT_PLANS_PAGE_MAX_LIMIT } from './projects.constants.ts';
 
 // @authz-stance: authenticated-only (Path A — see OT plan 18e16dfc-4f22-43f9-9b77-6fc90309b60a)
 @Resolver(() => ProjectObject)
@@ -226,33 +231,30 @@ export class ProjectsResolver {
 
   // @ProfileResponseTime('ProjectsResolver.projectPlansPage')
   @Query(() => ProjectPlansPageResultObject, {
-    description: `One page of a project's live plans in project order (projectSortOrder ascending), plus the project's total live plan count. limit is 1 to ${PROJECT_PLANS_PAGE_MAX_LIMIT}; offset is 0 or more.`,
+    description: `One page of a project's live plans in project order (projectSortOrder ascending), plus the project's total live plan count. limit is 1 to ${PAGINATION_MAX_LIMIT} (default ${PAGINATION_DEFAULT_LIMIT}); offset is 0 or more.`,
   })
   async projectPlansPage(
     @Args('input', { type: () => ProjectPlansPageInput })
     input: ProjectPlansPageInput,
   ): Promise<ProjectPlansPageResultObject> {
-    const isLimitInRange =
-      input.limit >= 1 && input.limit <= PROJECT_PLANS_PAGE_MAX_LIMIT;
+    assertPagination(input, { max: PAGINATION_MAX_LIMIT });
 
-    if (!isLimitInRange) {
-      throw new BadRequestException(
-        `limit must be between 1 and ${PROJECT_PLANS_PAGE_MAX_LIMIT}`,
-      );
-    }
-    if (input.offset < 0) {
-      throw new BadRequestException('offset must be 0 or more');
-    }
-
-    return this.planProjectMembership.pagePlans(input.projectId, {
+    const page = await this.planProjectMembership.pagePlans(input.projectId, {
       limit: input.limit,
       offset: input.offset,
     });
+
+    return {
+      hasNextPage: hasNextPage(page, input.offset ?? 0),
+      items: page.items,
+      plans: page.items,
+      totalCount: page.totalCount,
+    };
   }
 
   // @ProfileResponseTime('ProjectsResolver.moveProjectPlan')
   @Mutation(() => [PlanObject], {
-    description: `Swap a plan with its neighbour in its project's full order (UP = earlier, DOWN = later), so a move works across any page boundary. A plan already at that end stays put. Returns every live plan of the project in the resulting order. Fails when the plan does not exist or is in no project.`,
+    description: `Swap a plan's projectSortOrder with its neighbour's in its project's full order (UP = earlier, DOWN = later), touching only those two plans, so a move works across any page boundary. A plan already at that end stays put. Returns every live plan of the project in the resulting order. Fails when the plan does not exist or is in no project.`,
   })
   async moveProjectPlan(
     @Args('input', { type: () => MoveProjectPlanInput })
@@ -285,7 +287,7 @@ export class ProjectsResolver {
 
   // @ProfileResponseTime('ProjectsResolver.reorderProjectPlans')
   @Mutation(() => [PlanObject], {
-    description: `Reorder the plans of a project. Renumbers projectSortOrder 1000, 2000, … in planIds order atomically; unlisted plans of the project follow in their existing order. Returns every live plan of the project in the new order.`,
+    description: `Reorder the plans of a project. The listed plans take the projectSortOrder values they already hold, in planIds order; plans not listed keep their place. A full list reorders the whole project; a partial list (e.g. one page) reorders only itself, in place. Atomic. Returns every live plan of the project in the new order.`,
   })
   async reorderProjectPlans(
     @Args('input', { type: () => ReorderProjectPlansInput })

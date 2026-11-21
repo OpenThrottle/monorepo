@@ -30,8 +30,8 @@ describe('readChildPickerQuery', () => {
 describe('toChildPickerPaging', () => {
   it('skips whole pages', () => {
     expect(toChildPickerPaging({ page: 4, typename: null })).toEqual({
-      skip: 100,
-      take: 25,
+      limit: 25,
+      offset: 100,
     });
   });
 });

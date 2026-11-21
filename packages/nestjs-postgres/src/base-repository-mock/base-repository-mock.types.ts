@@ -1,4 +1,5 @@
-import type { DeepPartial } from 'typeorm';
+import type { DeepMocked } from '@golevelup/ts-vitest';
+import type { DeepPartial, ObjectLiteral, SelectQueryBuilder } from 'typeorm';
 import type { Mock } from 'vitest';
 
 import type {
@@ -39,3 +40,29 @@ export type BaseRepositoryMock<
     BaseRepository<TEntity, TCreateInput, TUpdateInput>[TMethod]
   >;
 };
+
+/**
+ * @description A `SelectQueryBuilder<TEntity>` whose methods are all `vi.fn`
+ * mocks typed with the real signatures, so the value can be handed to code
+ * that expects a query builder and still be asserted with
+ * `toHaveBeenCalledWith` or re-stubbed with `mockResolvedValue`.
+ * @public
+ */
+export type QueryBuilderMock<TEntity extends ObjectLiteral> = DeepMocked<
+  SelectQueryBuilder<TEntity>
+>;
+
+/**
+ * @description Initial results for the terminal methods of a
+ * {@link QueryBuilderMock}; anything left out keeps its empty default.
+ * @public
+ */
+export interface QueryBuilderMockOptions<TEntity extends ObjectLiteral> {
+  readonly count?: number;
+  readonly execute?: unknown;
+  readonly many?: readonly TEntity[];
+  readonly manyAndCount?: readonly [readonly TEntity[], number];
+  readonly one?: TEntity | null;
+  readonly rawMany?: readonly unknown[];
+  readonly rawOne?: unknown;
+}

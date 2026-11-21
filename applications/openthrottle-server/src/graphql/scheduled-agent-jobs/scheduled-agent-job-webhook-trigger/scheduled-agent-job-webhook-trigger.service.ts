@@ -5,7 +5,10 @@ import {
   NotFoundException,
   ServiceUnavailableException,
 } from '@nestjs/common';
-import { isUniqueViolation } from '@openthrottle/nestjs-postgres';
+import {
+  isUniqueViolation,
+  resolvePagination,
+} from '@openthrottle/nestjs-postgres';
 import type {
   ScheduledAgentJobWebhookDelivery,
   ScheduledAgentJobWebhookTrigger,
@@ -55,9 +58,12 @@ export class ScheduledAgentJobWebhookTriggerService {
     scheduledAgentJobId: string,
     limit: number | null | undefined,
   ): Promise<ScheduledAgentJobWebhookDelivery[]> {
-    const bounded = Math.min(
-      Math.max(limit ?? WEBHOOK_DELIVERIES_DEFAULT_LIMIT, 1),
-      WEBHOOK_DELIVERIES_MAX_LIMIT,
+    const { take: bounded } = resolvePagination(
+      { limit },
+      {
+        defaultLimit: WEBHOOK_DELIVERIES_DEFAULT_LIMIT,
+        max: WEBHOOK_DELIVERIES_MAX_LIMIT,
+      },
     );
 
     return this.deliveries.listDeliveriesForJob(scheduledAgentJobId, bounded);

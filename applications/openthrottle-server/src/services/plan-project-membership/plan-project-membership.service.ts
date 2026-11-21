@@ -17,20 +17,19 @@ import {
 } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
-  Plan,
-  ProjectPlansPage,
-  ProjectPlansPageResult,
-} from '@openthrottle/nestjs-repositories-server';
+  OffsetPage,
+  PaginationInput,
+} from '@openthrottle/nestjs-postgres';
+import type { Plan } from '@openthrottle/nestjs-repositories-server';
 import {
+  PLANS_PROJECT_SORT_ORDER_SCOPE,
   PlansRepository,
-  PROJECT_PLAN_SORT_ORDER_GAP,
   ProjectRepositoriesRepository,
   ProjectsRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import { planRunConfigFromPlanStorage } from '@openthrottle/openthrottle-plan-config';
 import type { EntityManager } from 'typeorm';
 
-import { PROJECT_PLAN_MOVE_DIRECTION } from './plan-project-membership.constants.ts';
 import type { ProjectPlanMoveDirection } from './plan-project-membership.types.ts';
 
 @Injectable()
@@ -57,12 +56,7 @@ export class PlanProjectMembershipService {
       return null;
     }
 
-    const maxByProject = await this.plansRepository.maxProjectSortOrders(
-      [projectId],
-      manager,
-    );
-
-    return (maxByProject.get(projectId) ?? 0) + PROJECT_PLAN_SORT_ORDER_GAP;
+    return this.plansRepository.appendProjectSortOrder(projectId, manager);
   }
 
   /**
@@ -92,7 +86,8 @@ export class PlanProjectMembershipService {
         return null;
       }
       const next =
-        (lastByProject.get(projectId) ?? 0) + PROJECT_PLAN_SORT_ORDER_GAP;
+        (lastByProject.get(projectId) ?? 0) +
+        PLANS_PROJECT_SORT_ORDER_SCOPE.gap;
       lastByProject.set(projectId, next);
 
       return next;
@@ -175,15 +170,16 @@ export class PlanProjectMembershipService {
    */
   async pagePlans(
     projectId: string,
-    page: ProjectPlansPage,
-  ): Promise<ProjectPlansPageResult> {
+    page: PaginationInput,
+  ): Promise<OffsetPage<Plan>> {
     return this.plansRepository.pageInProject(projectId, page);
   }
 
   /**
-   * @description Swaps a plan with its neighbour in the project's full order (`UP` = earlier),
-   * so a move works across any page boundary the caller renders. A plan already at that end is
-   * left in place. Returns every live plan of the project in the resulting order.
+   * @description Swaps a plan's position with its neighbour in its project (`UP` = earlier),
+   * touching only those two plans, so a move works across any page boundary the caller
+   * renders. A plan already at that end is left in place. Returns every live plan of the
+   * project in the resulting order.
    * @throws BadRequestException when the plan is in no project.
    * @throws NotFoundException when the plan does not exist.
    */
@@ -191,32 +187,16 @@ export class PlanProjectMembershipService {
     planId: string,
     direction: ProjectPlanMoveDirection,
   ): Promise<Plan[]> {
-    const plan = await this.plansRepository.findOne({ where: { id: planId } });
+    const result = await this.plansRepository.moveInProject(planId, direction);
 
-    if (!plan) {
+    if (result.kind === 'not-found') {
       throw new NotFoundException(`Plan not found: ${planId}`);
     }
-    if (plan.projectId === null) {
+    if (result.kind === 'not-in-scope') {
       throw new BadRequestException(`Plan is not in a project: ${planId}`);
     }
 
-    const current = await this.plansRepository.listInProject(plan.projectId);
-    const ids = current.map((row) => {
-      return row.id;
-    });
-    const index = ids.indexOf(planId);
-    const target =
-      direction === PROJECT_PLAN_MOVE_DIRECTION.UP ? index - 1 : index + 1;
-    const neighbour = ids[target];
-
-    if (index === -1 || neighbour === undefined) {
-      return current;
-    }
-
-    ids[target] = planId;
-    ids[index] = neighbour;
-
-    return this.plansRepository.renumberProjectPlans(plan.projectId, ids);
+    return this.plansRepository.listInProject(result.scopeId);
   }
 
   /**
@@ -280,10 +260,10 @@ export class PlanProjectMembershipService {
   }
 
   /**
-   * @description Reorders the plans of a project. `planIds` must be unique live plans of the
-   * project; they are renumbered 1000, 2000, … in that order, atomically. Plans of the project
-   * that are not listed follow them in their existing relative order, so the project is always
-   * left fully and uniquely numbered. Returns every live plan of the project in the new order.
+   * @description Reorders the listed plans of a project among the positions they already
+   * hold: they take those positions in list order, and every unlisted plan keeps its place.
+   * A full list is a full reorder; one page of ids reorders that page in place. Returns every
+   * live plan of the project in the new order.
    * @throws BadRequestException on a duplicate id or an id that is not a plan of the project.
    * @throws NotFoundException when the project does not exist.
    */
@@ -299,39 +279,20 @@ export class PlanProjectMembershipService {
       throw new NotFoundException(`Project not found: ${projectId}`);
     }
 
-    if (new Set(planIds).size !== planIds.length) {
-      throw new BadRequestException('planIds must not contain duplicates');
-    }
-
-    const current = await this.plansRepository.listInProject(projectId);
-    const currentIds = new Set(
-      current.map((plan) => {
-        return plan.id;
-      }),
+    const result = await this.plansRepository.reorderInProject(
+      projectId,
+      planIds,
     );
 
-    if (
-      !planIds.every((id) => {
-        return currentIds.has(id);
-      })
-    ) {
+    if (result.kind === 'duplicate-ids') {
+      throw new BadRequestException('planIds must not contain duplicates');
+    }
+    if (result.kind === 'ids-not-in-scope') {
       throw new BadRequestException(
         'One or more planIds do not belong to the project',
       );
     }
 
-    const listed = new Set(planIds);
-    const unlisted = current
-      .filter((plan) => {
-        return !listed.has(plan.id);
-      })
-      .map((plan) => {
-        return plan.id;
-      });
-
-    return this.plansRepository.renumberProjectPlans(projectId, [
-      ...planIds,
-      ...unlisted,
-    ]);
+    return this.plansRepository.listInProject(projectId);
   }
 }

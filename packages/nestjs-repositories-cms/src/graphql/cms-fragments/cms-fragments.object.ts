@@ -2,7 +2,8 @@
  * @description GraphQL shape of one stored cms fragment, as returned by the fragment mutations.
  */
 
-import { Field, Int, ObjectType } from '@nestjs/graphql';
+import { Field, ObjectType } from '@nestjs/graphql';
+import { OffsetPageObject } from '@openthrottle/nestjs-graphql';
 
 @ObjectType({
   description: `A stored cms fragment: a named, typed piece of content whose properties conform to its pinned schema.`,
@@ -38,13 +39,7 @@ export class CmsFragmentObject {
 }
 
 @ObjectType({ description: `One page of live cms fragments, oldest first.` })
-export class CmsFragmentListResult {
-  @Field(() => Boolean)
-  hasNextPage!: boolean;
-
+export class CmsFragmentListResult extends OffsetPageObject {
   @Field(() => [CmsFragmentObject])
   items!: CmsFragmentObject[];
-
-  @Field(() => Int)
-  totalCount!: number;
 }

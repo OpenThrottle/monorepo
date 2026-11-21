@@ -15,6 +15,10 @@ export * from './config/response-cache-session/response-cache-session.utils.ts';
 export * from './nestjs-graphql.module.ts';
 export * from './nestjs-graphql.types.ts';
 export * from './nestjs-graphql.utils.ts';
+export * from './offset-pagination/offset-pagination.input.ts';
+export * from './offset-pagination/offset-pagination.object.ts';
+export type * from './offset-pagination/offset-pagination.types.ts';
+export * from './offset-pagination/offset-pagination.utils.ts';
 export * from './pubsub/pubsub.constants.ts';
 /** @public */
 export * from './pubsub/pubsub.module.ts';

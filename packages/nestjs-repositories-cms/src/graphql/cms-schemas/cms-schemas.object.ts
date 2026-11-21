@@ -3,7 +3,8 @@
  * properties validate against.
  */
 
-import { Field, Int, ObjectType } from '@nestjs/graphql';
+import { Field, ObjectType } from '@nestjs/graphql';
+import { OffsetPageObject } from '@openthrottle/nestjs-graphql';
 
 @ObjectType({
   description: `One version of the JSON Schema for a cms fragment typename.`,
@@ -41,13 +42,7 @@ export class CmsSchemaObject {
 @ObjectType({
   description: `One page of live cms schemas, newest first, then by typename.`,
 })
-export class CmsSchemaListResult {
-  @Field(() => Boolean)
-  hasNextPage!: boolean;
-
+export class CmsSchemaListResult extends OffsetPageObject {
   @Field(() => [CmsSchemaObject])
   items!: CmsSchemaObject[];
-
-  @Field(() => Int)
-  totalCount!: number;
 }

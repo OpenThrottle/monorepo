@@ -2,6 +2,14 @@ import { createMock } from '@golevelup/ts-vitest';
 import { NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import {
+  appendSortOrder,
+  edgeSortOrder,
+  insertBeside,
+  rebalanceScope,
+  reorderInScope,
+  SORT_ORDER_GAP,
+} from '@openthrottle/nestjs-postgres';
 import type { EntityManager, Repository } from 'typeorm';
 import { And, In, IsNull, LessThan, MoreThanOrEqual, Not } from 'typeorm';
 import type { IsolationLevel } from 'typeorm/driver/types/IsolationLevel.js';
@@ -9,10 +17,23 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { REMAINING_TASK_STATUSES } from '../../plan-task-status/plan-task-status.constants.ts';
 import { Task } from './task.entity.ts';
-import { TASK_SORT_ORDER_GAP } from './tasks.constants.ts';
+import { TASKS_SORT_ORDER_SCOPE } from './tasks.constants.ts';
 import { tasksFactory } from './tasks.factory.ts';
 import { TasksRepository } from './tasks.repository.ts';
 import type { CreateTaskBatchItem } from './tasks.types.ts';
+
+vi.mock('@openthrottle/nestjs-postgres', async (importOriginal) => {
+  const actual = await importOriginal<Record<string, unknown>>();
+
+  return {
+    ...actual,
+    appendSortOrder: vi.fn(),
+    edgeSortOrder: vi.fn(),
+    insertBeside: vi.fn(),
+    rebalanceScope: vi.fn(),
+    reorderInScope: vi.fn(),
+  };
+});
 
 describe('TasksRepository', () => {
   const mockQueryBuilder = {
@@ -66,32 +87,15 @@ describe('TasksRepository', () => {
   });
 
   describe('resolveNextSortOrder', () => {
-    const planId = '44444444-4444-4444-4444-444444444444';
+    it('appends past the last live task of the plan through the shared helper', async () => {
+      vi.mocked(appendSortOrder).mockResolvedValue(6000);
 
-    it('returns 1000 when plan has no tasks', async () => {
-      vi.mocked(mockQueryBuilder.getRawOne).mockResolvedValue({ max: null });
-
-      const next = await service.resolveNextSortOrder(planId);
-
-      expect(next).toBe(TASK_SORT_ORDER_GAP);
-    });
-
-    it('reads the maximum over live tasks only', async () => {
-      vi.mocked(mockQueryBuilder.getRawOne).mockResolvedValue({ max: null });
-
-      await service.resolveNextSortOrder(planId);
-
-      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
-        'task.deletedAt IS NULL',
+      await expect(service.resolveNextSortOrder('plan-1')).resolves.toBe(6000);
+      expect(appendSortOrder).toHaveBeenCalledWith(
+        mockTaskRepo.manager,
+        TASKS_SORT_ORDER_SCOPE,
+        'plan-1',
       );
-    });
-
-    it('returns MAX(sort_order) + gap when plan has tasks', async () => {
-      vi.mocked(mockQueryBuilder.getRawOne).mockResolvedValue({ max: '5000' });
-
-      const next = await service.resolveNextSortOrder(planId);
-
-      expect(next).toBe(5000 + TASK_SORT_ORDER_GAP);
     });
   });
 
@@ -153,8 +157,8 @@ describe('TasksRepository', () => {
       expect(mockTaskRepo.manager.transaction).not.toHaveBeenCalled();
     });
 
-    it('appends MAX+gap stepping in array order when sortOrder is omitted', async () => {
-      vi.mocked(txQueryBuilder.getRawOne).mockResolvedValue({ max: '2000' });
+    it('appends past the last task, stepping in array order when sortOrder is omitted', async () => {
+      vi.mocked(appendSortOrder).mockResolvedValue(2000 + SORT_ORDER_GAP);
 
       const created = await service.createTasksBatch(planId, [
         { ...baseItem, sortOrder: null, title: 'a' },
@@ -162,13 +166,13 @@ describe('TasksRepository', () => {
       ]);
 
       expect(created.map((task) => task.sortOrder)).toEqual([
-        2000 + TASK_SORT_ORDER_GAP,
-        2000 + 2 * TASK_SORT_ORDER_GAP,
+        2000 + SORT_ORDER_GAP,
+        2000 + 2 * SORT_ORDER_GAP,
       ]);
     });
 
     it('respects explicit per-item sortOrder and only steps auto items', async () => {
-      vi.mocked(txQueryBuilder.getRawOne).mockResolvedValue({ max: null });
+      vi.mocked(appendSortOrder).mockResolvedValue(SORT_ORDER_GAP);
 
       const created = await service.createTasksBatch(planId, [
         { ...baseItem, sortOrder: 500, title: 'explicit' },
@@ -177,25 +181,25 @@ describe('TasksRepository', () => {
 
       expect(created.map((task) => task.sortOrder)).toEqual([
         500,
-        TASK_SORT_ORDER_GAP,
+        SORT_ORDER_GAP,
       ]);
     });
 
-    // Guards the race-safety claim in the createTasksBatch JSDoc: the parent
-    // plan must be row-locked with pessimistic_write before MAX(sort_order) is
-    // read, so concurrent batch creates serialize instead of computing the same
-    // existingMax and colliding on the (plan_id, sort_order) unique index.
-    it('row-locks the parent plan with pessimistic_write before computing sort_order', async () => {
-      vi.mocked(txQueryBuilder.getRawOne).mockResolvedValue({ max: '1000' });
+    // Guards the race-safety claim in the createTasksBatch JSDoc: the append read runs on
+    // the batch's own transaction manager, so the plan's sort-order lock it takes covers the
+    // inserts and concurrent batch creates serialize.
+    it('reads the next sort order inside the batch transaction', async () => {
+      vi.mocked(appendSortOrder).mockResolvedValue(SORT_ORDER_GAP);
 
       await service.createTasksBatch(planId, [
         { ...baseItem, sortOrder: null, title: 'a' },
       ]);
 
-      expect(txQueryBuilder.setLock).toHaveBeenCalledWith('pessimistic_write');
-      expect(txQueryBuilder.where).toHaveBeenCalledWith('plan.id = :planId', {
+      expect(appendSortOrder).toHaveBeenCalledWith(
+        txManager,
+        TASKS_SORT_ORDER_SCOPE,
         planId,
-      });
+      );
     });
   });
 
@@ -234,182 +238,62 @@ describe('TasksRepository', () => {
     });
   });
 
-  describe('midpointBesideAnchor', () => {
-    const planId = '77777777-7777-7777-7777-777777777777';
-
-    // A repository whose neighbor lookup (createQueryBuilder→clone→…→getRawOne)
-    // resolves to the given value ('4000', or null for "no neighbor").
-    const repoWithNeighbor = (
-      neighborValue: string | null,
-    ): Repository<Task> => {
-      const cloned = {
-        andWhere: vi.fn().mockReturnThis(),
-        getRawOne: vi
-          .fn()
-          .mockResolvedValue(
-            neighborValue == null ? undefined : { value: neighborValue },
-          ),
-        orderBy: vi.fn().mockReturnThis(),
-      };
-      const builder = {
-        andWhere: vi.fn().mockReturnThis(),
-        clone: vi.fn().mockReturnValue(cloned),
-        select: vi.fn().mockReturnThis(),
-        where: vi.fn().mockReturnThis(),
-      };
-      return createMock<Repository<Task>>({
-        createQueryBuilder: vi.fn().mockReturnValue(builder),
-        target: Task,
-      });
-    };
-
-    it('after: midpoint between anchor and its next neighbor', async () => {
-      const slot = await service.midpointBesideAnchor(
-        planId,
-        2000,
-        'after',
-        repoWithNeighbor('4000'),
-      );
-      expect(slot).toBe(3000);
-    });
-
-    it('before: midpoint between anchor and its previous neighbor', async () => {
-      const slot = await service.midpointBesideAnchor(
-        planId,
-        2000,
-        'before',
-        repoWithNeighbor('1000'),
-      );
-      expect(slot).toBe(1500);
-    });
-
-    it('steps out one gap when the anchor is the plan edge (no neighbor)', async () => {
-      await expect(
-        service.midpointBesideAnchor(
-          planId,
-          2000,
-          'after',
-          repoWithNeighbor(null),
-        ),
-      ).resolves.toBe(2000 + TASK_SORT_ORDER_GAP);
-      await expect(
-        service.midpointBesideAnchor(
-          planId,
-          2000,
-          'before',
-          repoWithNeighbor(null),
-        ),
-      ).resolves.toBe(2000 - TASK_SORT_ORDER_GAP);
-    });
-
-    it('returns null when the integer gap to the neighbor is exhausted', async () => {
-      await expect(
-        service.midpointBesideAnchor(
-          planId,
-          2000,
-          'after',
-          repoWithNeighbor('2001'),
-        ),
-      ).resolves.toBeNull();
-      await expect(
-        service.midpointBesideAnchor(
-          planId,
-          2000,
-          'before',
-          repoWithNeighbor('1999'),
-        ),
-      ).resolves.toBeNull();
-    });
-  });
-
   describe('allocateSortOrderBesideAnchor', () => {
     const planId = '88888888-8888-8888-8888-888888888888';
     const anchorId = '99999999-9999-9999-9999-999999999999';
 
-    const txPlanBuilder = {
-      getOne: vi.fn().mockResolvedValue(null),
-      setLock: vi.fn().mockReturnThis(),
-      where: vi.fn().mockReturnThis(),
-    };
-    const txFindOne = vi.fn();
-    const txRepo = createMock<Repository<Task>>({
-      createQueryBuilder: vi.fn().mockReturnValue(txPlanBuilder),
-      findOne: txFindOne,
-    });
-    const txManager = createMock<EntityManager>({
-      getRepository: () => txRepo,
-    });
+    it('returns the slot the shared helper finds beside the anchor', async () => {
+      vi.mocked(insertBeside).mockResolvedValue({
+        kind: 'slot',
+        sortOrder: 2500,
+      });
 
-    beforeEach(() => {
-      txFindOne.mockReset();
-      vi.mocked(txPlanBuilder.setLock).mockClear();
-      vi.mocked(mockTaskRepo.manager.transaction).mockImplementation(
-        (
-          isolationOrRun:
-            IsolationLevel | ((manager: EntityManager) => Promise<unknown>),
-        ) => {
-          if (typeof isolationOrRun === 'function') {
-            return isolationOrRun(txManager);
-          }
-          return Promise.resolve(undefined);
-        },
-      );
-    });
-
-    it('locks the plan and returns the midpoint slot on the happy path', async () => {
-      txFindOne.mockResolvedValue(
-        tasksFactory.build({ id: anchorId, sortOrder: 2000 }),
-      );
-      const midpoint = vi
-        .spyOn(service, 'midpointBesideAnchor')
-        .mockResolvedValue(2500);
-      const rebalance = vi
-        .spyOn(service, 'rebalancePlanSortOrders')
-        .mockResolvedValue();
-
-      const slot = await service.allocateSortOrderBesideAnchor(
+      await expect(
+        service.allocateSortOrderBesideAnchor(planId, anchorId, 'after'),
+      ).resolves.toBe(2500);
+      expect(insertBeside).toHaveBeenCalledWith(
+        mockTaskRepo.manager,
+        TASKS_SORT_ORDER_SCOPE,
         planId,
         anchorId,
         'after',
       );
-
-      expect(slot).toBe(2500);
-      expect(txPlanBuilder.setLock).toHaveBeenCalledWith('pessimistic_write');
-      expect(rebalance).not.toHaveBeenCalled();
-      midpoint.mockRestore();
-      rebalance.mockRestore();
-    });
-
-    it('rebalances and retries once when the gap is exhausted', async () => {
-      txFindOne.mockResolvedValue(
-        tasksFactory.build({ id: anchorId, sortOrder: 2000 }),
-      );
-      const midpoint = vi
-        .spyOn(service, 'midpointBesideAnchor')
-        .mockResolvedValueOnce(null)
-        .mockResolvedValueOnce(3000);
-      const rebalance = vi
-        .spyOn(service, 'rebalancePlanSortOrders')
-        .mockResolvedValue();
-
-      const slot = await service.allocateSortOrderBesideAnchor(
-        planId,
-        anchorId,
-        'before',
-      );
-
-      expect(slot).toBe(3000);
-      expect(rebalance).toHaveBeenCalledTimes(1);
-      midpoint.mockRestore();
-      rebalance.mockRestore();
     });
 
     it('throws when the anchor is not in the plan', async () => {
-      txFindOne.mockResolvedValue(null);
+      vi.mocked(insertBeside).mockResolvedValue({ kind: 'anchor-not-found' });
 
       await expect(
         service.allocateSortOrderBesideAnchor(planId, anchorId, 'after'),
       ).rejects.toThrow(/anchor task/);
+    });
+
+    it('throws when no slot exists even after a rebalance', async () => {
+      vi.mocked(insertBeside).mockResolvedValue({ kind: 'no-room' });
+
+      await expect(
+        service.allocateSortOrderBesideAnchor(planId, anchorId, 'before'),
+      ).rejects.toThrow(/no sort_order slot/);
+    });
+  });
+
+  describe('reorderInPlan', () => {
+    it('reorders through the shared helper and passes its result back', async () => {
+      vi.mocked(reorderInScope).mockResolvedValue({
+        assignments: [],
+        kind: 'reordered',
+      });
+
+      await expect(service.reorderInPlan('plan-1', ['a'])).resolves.toEqual({
+        assignments: [],
+        kind: 'reordered',
+      });
+      expect(reorderInScope).toHaveBeenCalledWith(
+        mockTaskRepo.manager,
+        TASKS_SORT_ORDER_SCOPE,
+        'plan-1',
+        ['a'],
+      );
     });
   });
 
@@ -424,9 +308,7 @@ describe('TasksRepository', () => {
     });
 
     it('addAfterHook plan-level lands at the tail band with scope=once (template)', async () => {
-      vi.mocked(mockQueryBuilder.getRawOne).mockResolvedValue({
-        value: '3000',
-      });
+      vi.mocked(edgeSortOrder).mockResolvedValue(4000);
 
       await service.addAfterHook(planId, null, { source: 'template' });
 
@@ -445,9 +327,7 @@ describe('TasksRepository', () => {
     });
 
     it('addBeforeHook plan-level supports scope=each and a skill source', async () => {
-      vi.mocked(mockQueryBuilder.getRawOne).mockResolvedValue({
-        value: '1000',
-      });
+      vi.mocked(edgeSortOrder).mockResolvedValue(0);
 
       await service.addBeforeHook(planId, null, {
         scope: 'each',
@@ -723,42 +603,31 @@ describe('TasksRepository', () => {
   });
 
   describe('rebalancePlanSortOrders', () => {
-    const planId = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+    it('rebalances the plan through the shared helper', async () => {
+      vi.mocked(rebalanceScope).mockResolvedValue({
+        kind: 'rebalanced',
+        rowCount: 3,
+      });
 
-    it('ranks and restamps live tasks only, in one transaction', async () => {
-      const query = vi.fn().mockResolvedValue([]);
-      const txManager = createMock<EntityManager>({ query });
-      vi.mocked(mockTaskRepo.manager.transaction).mockImplementation(
-        (
-          isolationOrRun:
-            IsolationLevel | ((manager: EntityManager) => Promise<unknown>),
-        ) => {
-          if (typeof isolationOrRun === 'function') {
-            return isolationOrRun(txManager);
-          }
-          return Promise.resolve(undefined);
-        },
+      await service.rebalancePlanSortOrders('plan-1');
+
+      expect(rebalanceScope).toHaveBeenCalledWith(
+        mockTaskRepo.manager,
+        TASKS_SORT_ORDER_SCOPE,
+        'plan-1',
       );
-
-      await service.rebalancePlanSortOrders(planId);
-
-      expect(mockTaskRepo.manager.transaction).toHaveBeenCalledTimes(1);
-      expect(query).toHaveBeenCalledTimes(2);
-      for (const [sql, params] of query.mock.calls) {
-        expect(sql).toContain('plan_id = $1 AND deleted_at IS NULL');
-        expect(params[0]).toBe(planId);
-      }
     });
 
     it('joins the caller transaction when handed a manager', async () => {
-      const query = vi.fn().mockResolvedValue([]);
-      const callerManager = createMock<EntityManager>({ query });
-      vi.mocked(mockTaskRepo.manager.transaction).mockClear();
+      const callerManager = createMock<EntityManager>();
 
-      await service.rebalancePlanSortOrders(planId, callerManager);
+      await service.rebalancePlanSortOrders('plan-1', callerManager);
 
-      expect(mockTaskRepo.manager.transaction).not.toHaveBeenCalled();
-      expect(query).toHaveBeenCalledTimes(2);
+      expect(rebalanceScope).toHaveBeenCalledWith(
+        callerManager,
+        TASKS_SORT_ORDER_SCOPE,
+        'plan-1',
+      );
     });
   });
 

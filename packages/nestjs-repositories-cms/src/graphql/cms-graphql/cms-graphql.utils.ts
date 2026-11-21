@@ -1,9 +1,13 @@
-import { POSTGRES_DEFAULT_PAGE_SIZE } from '@openthrottle/nestjs-postgres';
+import { assertPagination } from '@openthrottle/nestjs-graphql';
+import {
+  PAGINATION_DEFAULT_LIMIT,
+  PAGINATION_MAX_LIMIT,
+} from '@openthrottle/nestjs-postgres';
 import { GraphQLError } from 'graphql';
 
 import { CMS_STATUS_VALUES } from '../../config/config.constants.ts';
 import type { CmsStatus } from '../../config/config.types.ts';
-import type { CmsGraphqlErrorCode } from './cms-graphql.types.ts';
+import type { CmsGraphqlErrorCode, CmsPageArgs } from './cms-graphql.types.ts';
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -24,7 +28,25 @@ export function toCmsPageOptions(
   skip: number | null | undefined,
   take: number | null | undefined,
 ): { readonly skip: number; readonly take: number } {
-  return { skip: skip ?? 0, take: take ?? POSTGRES_DEFAULT_PAGE_SIZE };
+  return { skip: skip ?? 0, take: take ?? PAGINATION_DEFAULT_LIMIT };
+}
+
+/**
+ * @description Reads a cms list query's paging arguments: `limit` wins over the deprecated
+ * `take`, `offset` over the deprecated `skip`.
+ * @throws GraphQLError BAD_USER_INPUT when the value sent is outside 1..{@link PAGINATION_MAX_LIMIT}
+ * (limit) or negative (offset).
+ */
+export function resolveCmsPageOptions(args: CmsPageArgs): {
+  readonly skip: number;
+  readonly take: number;
+} {
+  const limit = args.limit ?? args.take;
+  const offset = args.offset ?? args.skip;
+
+  assertPagination({ limit, offset }, { max: PAGINATION_MAX_LIMIT });
+
+  return toCmsPageOptions(offset, limit);
 }
 
 /**

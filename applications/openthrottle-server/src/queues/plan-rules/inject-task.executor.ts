@@ -41,13 +41,13 @@ import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT } from '@openthrottle/nestjs-auth';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import { SORT_ORDER_GAP } from '@openthrottle/nestjs-postgres';
 import {
   type Plan,
   RULE_APPLICATION_STATES,
   RuleApplicationsRepository,
   SOFT_CLOSED_TASK_STATUS,
   Task,
-  TASK_SORT_ORDER_GAP,
   TasksRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import {
@@ -423,7 +423,7 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
       } else if (currentSortOrder > extent) {
         return;
       }
-      const gap = TASK_SORT_ORDER_GAP;
+      const gap = SORT_ORDER_GAP;
       const target = placement === 'first' ? extent - gap : extent + gap;
       await this.tasksRepository.updateMany(
         { id: task.id },
@@ -448,7 +448,12 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
   }
 
   /**
-   * @description Deterministically place a group of same-placement injected
+   * @description Not on the shared `@openthrottle/nestjs-postgres` sort-order helpers on
+   * purpose: the slots exclude the sibling group and must converge across repeated passes,
+   * which `insertBeside` / `reorderInScope` do not model. Anchored placement does use them,
+   * through `TasksRepository.allocateSortOrderBesideAnchor`.
+   *
+   * Deterministically place a group of same-placement injected
    * tasks (given in tiebreak order) so repeated passes converge to the same
    * order with no thrash. Each sibling gets a fixed slot beyond the MIN/MAX of
    * all non-sibling tasks: 'last' → base + rank·GAP (ascending), 'first' → base
@@ -472,8 +477,8 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
     const base = extent ?? 0;
     const count = siblings.length;
     const slotTarget = (rank: number): number => {
-      if (placement === 'last') return base + (rank + 1) * TASK_SORT_ORDER_GAP;
-      return base - (count - rank) * TASK_SORT_ORDER_GAP;
+      if (placement === 'last') return base + (rank + 1) * SORT_ORDER_GAP;
+      return base - (count - rank) * SORT_ORDER_GAP;
     };
     const planned = siblings.map((sibling, rank) => ({
       current: sibling.sortOrder,
@@ -684,11 +689,11 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
     const aggregate = placement === 'first' ? 'MIN' : 'MAX';
     const value = await this.planSortOrderExtent(planId, aggregate);
     if (value == null) {
-      return TASK_SORT_ORDER_GAP;
+      return SORT_ORDER_GAP;
     }
     return placement === 'first'
-      ? value - TASK_SORT_ORDER_GAP
-      : value + TASK_SORT_ORDER_GAP;
+      ? value - SORT_ORDER_GAP
+      : value + SORT_ORDER_GAP;
   }
 
   /**

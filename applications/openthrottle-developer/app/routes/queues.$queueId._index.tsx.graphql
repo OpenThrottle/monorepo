@@ -17,11 +17,11 @@ fragment QueueDetails on QueueDetailsObject {
   delayedCount
   failedCount
   jobs {
-    hasNext
-    jobs {
+    hasNextPage
+    items {
       ...QueueJobDetails
     }
-    total
+    totalCount
   }
   name
   waitingCount

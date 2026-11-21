@@ -4,6 +4,7 @@
  */
 
 import { Injectable } from '@nestjs/common';
+import type { PaginationInput } from '@openthrottle/nestjs-postgres';
 
 import type {
   <%= singularPascal %>ListResult,
@@ -12,8 +13,14 @@ import type {
 
 @Injectable()
 export class <%= namePascal %>Service {
-  findAll(): Promise<<%= singularPascal %>ListResult> {
+  /**
+   * @description One page of <%= plural %>. Page a query builder with `paginate(qb, pagination)`
+   * from `@openthrottle/nestjs-postgres` and map `hasNextPage(page, skip)`.
+   */
+  findAll(pagination: PaginationInput): Promise<<%= singularPascal %>ListResult> {
+    void pagination;
     return Promise.resolve({
+      hasNextPage: false,
       items: [],
       totalCount: 0,
     });

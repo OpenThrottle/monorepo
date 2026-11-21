@@ -1,5 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import type { QueryBuilderMock } from '@openthrottle/nestjs-postgres/testing';
+import { createQueryBuilderMock } from '@openthrottle/nestjs-postgres/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ScheduledAgentJob } from '../scheduled-agent-jobs/scheduled-agent-job.entity.ts';
@@ -8,21 +10,6 @@ import { SCHEDULED_AGENT_JOB_RUN_IN_FLIGHT_STATUSES } from './scheduled-agent-jo
 import { ScheduledAgentJobRunsRepository } from './scheduled-agent-job-runs.repository.ts';
 
 const LIVE_JOB_JOIN = `job.id = run.scheduled_agent_job_id AND job.deleted_at IS NULL`;
-
-interface QueryBuilderMock {
-  readonly addSelect: ReturnType<typeof vi.fn>;
-  readonly andWhere: ReturnType<typeof vi.fn>;
-  readonly getCount: ReturnType<typeof vi.fn>;
-  readonly getMany: ReturnType<typeof vi.fn>;
-  readonly getRawMany: ReturnType<typeof vi.fn>;
-  readonly getRawOne: ReturnType<typeof vi.fn>;
-  readonly groupBy: ReturnType<typeof vi.fn>;
-  readonly innerJoin: ReturnType<typeof vi.fn>;
-  readonly limit: ReturnType<typeof vi.fn>;
-  readonly orderBy: ReturnType<typeof vi.fn>;
-  readonly select: ReturnType<typeof vi.fn>;
-  readonly where: ReturnType<typeof vi.fn>;
-}
 
 type RunRepo = {
   create: ReturnType<typeof vi.fn>;
@@ -37,30 +24,11 @@ type RunRepo = {
 
 describe('ScheduledAgentJobRunsRepository', () => {
   let repository: ScheduledAgentJobRunsRepository;
-  let queryBuilder: QueryBuilderMock;
+  let queryBuilder: QueryBuilderMock<ScheduledAgentJobRun>;
   let runRepo: RunRepo;
 
   beforeEach(async () => {
-    // Chainable QueryBuilder stub: every builder method returns the same object.
-    const chain = (): ReturnType<typeof vi.fn> => {
-      return vi.fn(() => {
-        return queryBuilder;
-      });
-    };
-    queryBuilder = {
-      addSelect: chain(),
-      andWhere: chain(),
-      getCount: vi.fn().mockResolvedValue(0),
-      getMany: vi.fn().mockResolvedValue([]),
-      getRawMany: vi.fn().mockResolvedValue([]),
-      getRawOne: vi.fn().mockResolvedValue(undefined),
-      groupBy: chain(),
-      innerJoin: chain(),
-      limit: chain(),
-      orderBy: chain(),
-      select: chain(),
-      where: chain(),
-    };
+    queryBuilder = createQueryBuilderMock<ScheduledAgentJobRun>();
 
     runRepo = {
       create: vi.fn((input: Partial<ScheduledAgentJobRun>) => ({ ...input })),

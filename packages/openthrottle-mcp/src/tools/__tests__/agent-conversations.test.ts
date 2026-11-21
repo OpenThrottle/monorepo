@@ -101,7 +101,7 @@ describe('listAgentConversationsToolHandler', () => {
       process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = humanJwtToken;
       vi.mocked(executeGraphqlWithAuth).mockResolvedValue({
         listAgentConversations: {
-          conversations: [conversation],
+          items: [conversation],
           totalCount: 1,
         },
       });
@@ -126,7 +126,7 @@ describe('listAgentConversationsToolHandler', () => {
     it('returns empty list without isError', async () => {
       process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = humanJwtToken;
       vi.mocked(executeGraphqlWithAuth).mockResolvedValue({
-        listAgentConversations: { conversations: [], totalCount: 0 },
+        listAgentConversations: { items: [], totalCount: 0 },
       });
 
       const result = await listAgentConversationsToolHandler({});
@@ -142,7 +142,7 @@ describe('listAgentConversationsToolHandler', () => {
     it('caps limit at 100', async () => {
       process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = humanJwtToken;
       vi.mocked(executeGraphqlWithAuth).mockResolvedValue({
-        listAgentConversations: { conversations: [], totalCount: 0 },
+        listAgentConversations: { items: [], totalCount: 0 },
       });
 
       await listAgentConversationsToolHandler({ limit: 500 });
@@ -244,7 +244,7 @@ describe('getAgentConversationMessagesToolHandler', () => {
     it('returns full message rows including routing metadata', async () => {
       vi.mocked(executeGraphqlWithAuth).mockResolvedValue({
         getAgentConversationMessages: {
-          messages: [userMessage, assistantMessage],
+          items: [userMessage, assistantMessage],
           totalCount: 2,
         },
       });
@@ -276,7 +276,7 @@ describe('getAgentConversationMessagesToolHandler', () => {
   describe('when limit exceeds max', () => {
     it('caps limit at 500', async () => {
       vi.mocked(executeGraphqlWithAuth).mockResolvedValue({
-        getAgentConversationMessages: { messages: [], totalCount: 0 },
+        getAgentConversationMessages: { items: [], totalCount: 0 },
       });
 
       await getAgentConversationMessagesToolHandler({

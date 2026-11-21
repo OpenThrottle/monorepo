@@ -65,7 +65,7 @@ const mockOnboardingQuery = {
 // via callListAgentConversations, which maps `data.listAgentConversations`).
 const mockConversationsQuery = {
   listAgentConversations: {
-    conversations: [
+    items: [
       {
         id: 'c1',
         status: 'active',
@@ -85,7 +85,7 @@ const mockLoaderData = {
   githubStats: Promise.resolve(mockGithubStatsLoaded),
   onboarding: Promise.resolve(mockOnboardingQuery),
   recentChats: Promise.resolve({
-    conversations: mockConversationsQuery.listAgentConversations.conversations,
+    conversations: mockConversationsQuery.listAgentConversations.items,
     errorMessage: null,
     totalCount: 1,
   }),

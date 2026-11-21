@@ -11,10 +11,8 @@ import {
   ID_TIMESTAMP_MODEL_CONVENTION,
   UUID_FLAG_MODEL_CONVENTION,
 } from '../../../model-convention/model-convention.constants.ts';
-import {
-  POSTGRES_DEFAULT_PAGE_SIZE,
-  POSTGRES_MAX_RETURNING_ROWS,
-} from '../../base-repository.constants.ts';
+import { PAGINATION_DEFAULT_LIMIT } from '../../../pagination/pagination.constants.ts';
+import { POSTGRES_MAX_RETURNING_ROWS } from '../../base-repository.constants.ts';
 import {
   resolveModelConvention,
   withLiveRows,
@@ -204,7 +202,7 @@ describe('BaseRepository (uuid key + is_deleted flag)', () => {
       expect(harness.typeorm.findAndCount).toHaveBeenCalledWith({
         order: { createdAt: 'ASC', uuid: 'ASC' },
         skip: 0,
-        take: POSTGRES_DEFAULT_PAGE_SIZE,
+        take: PAGINATION_DEFAULT_LIMIT,
         where: { isDeleted: LIVE_FLAG, quantity: 5 },
       });
     });

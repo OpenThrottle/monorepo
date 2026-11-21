@@ -23,7 +23,7 @@ describe('CmsLibraryComponentsResolver', () => {
     it('passes default paging to the service when skip and take are omitted', async () => {
       const { resolver, service } = buildResolver();
 
-      await resolver.cmsLibraryComponents(null, null);
+      await resolver.cmsLibraryComponents(null, null, null, null);
 
       expect(service.findPage).toHaveBeenCalledWith({ skip: 0, take: 25 });
     });
@@ -31,9 +31,27 @@ describe('CmsLibraryComponentsResolver', () => {
     it('passes explicit paging through', async () => {
       const { resolver, service } = buildResolver();
 
-      await resolver.cmsLibraryComponents(50, 10);
+      await resolver.cmsLibraryComponents(null, null, 50, 10);
 
       expect(service.findPage).toHaveBeenCalledWith({ skip: 50, take: 10 });
+    });
+
+    it('prefers limit and offset over the deprecated take and skip', async () => {
+      const { resolver, service } = buildResolver();
+
+      await resolver.cmsLibraryComponents(5, 15, 50, 10);
+
+      expect(service.findPage).toHaveBeenCalledWith({ skip: 15, take: 5 });
+    });
+
+    it('rejects a negative offset as BAD_USER_INPUT', async () => {
+      const { resolver, service } = buildResolver();
+      const read = resolver.cmsLibraryComponents(null, -1, null, null);
+
+      await expect(read).rejects.toMatchObject({
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+      expect(service.findPage).not.toHaveBeenCalled();
     });
   });
 

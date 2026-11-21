@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { hasNextPage } from '@openthrottle/nestjs-postgres';
 
 import { CMS_STATUS } from '../../config/config.constants.ts';
 import { LibrariesRepository } from '../../modules/libraries/libraries.repository.ts';
@@ -49,9 +50,9 @@ export class CmsLibraryComponentsService {
     });
 
     return {
-      hasNextPage: page.pageInfo.hasNextPage,
-      items: page.data.map(toCmsLibraryComponentObject),
-      totalCount: page.pageInfo.totalCount,
+      hasNextPage: hasNextPage(page, options.skip),
+      items: page.items.map(toCmsLibraryComponentObject),
+      totalCount: page.totalCount,
     };
   }
 

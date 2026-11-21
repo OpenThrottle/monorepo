@@ -2537,12 +2537,18 @@ importers:
       '@faker-js/faker':
         specifier: 'catalog:'
         version: 10.6.0
+      '@golevelup/ts-vitest':
+        specifier: 'catalog:'
+        version: 4.0.1(vitest@5.1.0)
       '@openthrottle/nestjs-testing':
         specifier: workspace:^
         version: link:../nestjs-testing
       fishery:
         specifier: 'catalog:'
         version: 2.4.0
+      pg:
+        specifier: 'catalog:'
+        version: 8.23.1
       reflect-metadata:
         specifier: 'catalog:'
         version: 0.2.2
@@ -2636,6 +2642,9 @@ importers:
       '@openthrottle/nestjs-auth':
         specifier: workspace:^
         version: link:../nestjs-auth
+      '@openthrottle/nestjs-graphql':
+        specifier: workspace:^
+        version: link:../nestjs-graphql
       '@openthrottle/nestjs-postgres':
         specifier: workspace:^
         version: link:../nestjs-postgres

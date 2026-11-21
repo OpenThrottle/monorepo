@@ -693,31 +693,32 @@ describe('PlansResolver', () => {
 
     test('returns plans and totalCount from the repository (no filters)', async () => {
       mockPlansRepository.listFiltered.mockResolvedValue({
-        plans: [mockPlan],
+        items: [mockPlan],
         totalCount: 1,
       });
 
       const result = await resolver.listPlansByStatus(baseInput());
 
-      expect(result.plans).toHaveLength(1);
-      expect(result.plans[0]?.id).toBe(mockPlan.id);
+      expect(result.items).toHaveLength(1);
+      expect(result.plans).toEqual(result.items);
+      expect(result.items[0]?.id).toBe(mockPlan.id);
       expect(result.totalCount).toBe(1);
+      expect(result.hasNextPage).toBe(false);
       expect(mockPlansRepository.listFiltered).toHaveBeenCalledWith({
         assignees: [],
         orderColumn: 'createdAt',
         orderDirection: 'DESC',
+        pagination: { limit: 20, offset: 0 },
         project: null,
         projectId: null,
-        skip: 0,
         statuses: [],
-        take: 20,
         titleSubstring: null,
       });
     });
 
     test('passes the status filter when statuses passed', async () => {
       mockPlansRepository.listFiltered.mockResolvedValue({
-        plans: [mockPlan],
+        items: [mockPlan],
         totalCount: 1,
       });
 
@@ -734,7 +735,7 @@ describe('PlansResolver', () => {
 
     test('passes the assignee filter when assignees passed', async () => {
       mockPlansRepository.listFiltered.mockResolvedValue({
-        plans: [],
+        items: [],
         totalCount: 0,
       });
 
@@ -747,7 +748,7 @@ describe('PlansResolver', () => {
 
     test('passes the titleSubstring and project filters when passed', async () => {
       mockPlansRepository.listFiltered.mockResolvedValue({
-        plans: [],
+        items: [],
         totalCount: 0,
       });
 
@@ -779,7 +780,7 @@ describe('PlansResolver', () => {
 
     test('treats "all" as no status filter (no validation, no status clause)', async () => {
       mockPlansRepository.listFiltered.mockResolvedValue({
-        plans: [mockPlan],
+        items: [mockPlan],
         totalCount: 1,
       });
 
@@ -796,7 +797,7 @@ describe('PlansResolver', () => {
 
     test('accepts the typed statusesEnum arg and passes it as the status filter', async () => {
       mockPlansRepository.listFiltered.mockResolvedValue({
-        plans: [mockPlan],
+        items: [mockPlan],
         totalCount: 1,
       });
 

@@ -85,7 +85,7 @@ export const loader = async (args: Route.LoaderArgs) => {
     assignees,
     limit,
     page,
-    plans: result.listPlansByStatus.plans,
+    plans: result.listPlansByStatus.items,
     statusCounts: statusCountsResult?.planCountsByStatus ?? [],
     statuses,
     totalCount: result.listPlansByStatus.totalCount,

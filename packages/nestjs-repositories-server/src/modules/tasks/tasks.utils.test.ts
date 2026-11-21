@@ -1,7 +1,7 @@
 import { NotFoundException } from '@nestjs/common';
+import { SORT_ORDER_GAP } from '@openthrottle/nestjs-postgres';
 import { describe, expect, it } from 'vitest';
 
-import { TASK_SORT_ORDER_GAP } from './tasks.constants.ts';
 import { createTasksRepositoryMock } from './tasks.utils.ts';
 
 describe('createTasksRepositoryMock', () => {
@@ -30,14 +30,11 @@ describe('createTasksRepositoryMock', () => {
     const repository = createTasksRepositoryMock();
 
     await expect(repository.resolveNextSortOrder('p')).resolves.toBe(
-      TASK_SORT_ORDER_GAP,
+      SORT_ORDER_GAP,
     );
     await expect(
       repository.allocateSortOrderBesideAnchor('p', 'a', 'after'),
-    ).resolves.toBe(TASK_SORT_ORDER_GAP);
-    await expect(
-      repository.midpointBesideAnchor('p', 2000, 'after'),
-    ).resolves.toBe(TASK_SORT_ORDER_GAP);
+    ).resolves.toBe(SORT_ORDER_GAP);
     await expect(
       repository.rebalancePlanSortOrders('p'),
     ).resolves.toBeUndefined();

@@ -2,24 +2,11 @@
  * @description GraphQL input types for agent conversation queries and mutations.
  */
 
-import { Field, ID, InputType, Int } from '@nestjs/graphql';
+import { Field, ID, InputType } from '@nestjs/graphql';
+import { OffsetPaginationInput } from '@openthrottle/nestjs-graphql';
 
 @InputType()
-export class ListAgentConversationsInput {
-  @Field(() => Int, {
-    defaultValue: 20,
-    description: `Page size (default 20, max 100)`,
-    nullable: true,
-  })
-  limit!: number | null;
-
-  @Field(() => Int, {
-    defaultValue: 0,
-    description: `Offset for pagination`,
-    nullable: true,
-  })
-  offset!: number | null;
-
+export class ListAgentConversationsInput extends OffsetPaginationInput {
   @Field(() => String, {
     defaultValue: 'active',
     description: `Filter by status: active or archived (default active)`,
@@ -29,23 +16,9 @@ export class ListAgentConversationsInput {
 }
 
 @InputType()
-export class GetAgentConversationMessagesInput {
+export class GetAgentConversationMessagesInput extends OffsetPaginationInput {
   @Field(() => ID)
   conversationId!: string;
-
-  @Field(() => Int, {
-    defaultValue: 100,
-    description: `Page size (default 100, max 500)`,
-    nullable: true,
-  })
-  limit!: number | null;
-
-  @Field(() => Int, {
-    defaultValue: 0,
-    description: `Offset for pagination`,
-    nullable: true,
-  })
-  offset!: number | null;
 }
 
 @InputType()

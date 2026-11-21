@@ -21,6 +21,8 @@ import {
   AUTH_PRINCIPAL_KIND_USER,
   CurrentUser,
 } from '@openthrottle/nestjs-auth';
+import { assertPagination } from '@openthrottle/nestjs-graphql';
+import { hasNextPage, resolvePagination } from '@openthrottle/nestjs-postgres';
 import { ProfileResponseTime } from '@openthrottle/nestjs-profiling';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 import type {
@@ -33,6 +35,7 @@ import type {
 } from '@openthrottle/nestjs-repositories-server';
 import {
   isPlanStatus,
+  LIST_PLANS_FILTERED_MAX_LIMIT,
   PLAN_STATUS_LIST,
   PLAN_STATUS_VALUES,
   PlanRunsRepository,
@@ -541,10 +544,10 @@ export class PlansResolver {
     @Args('input', { type: () => PlanRunsByPlanIdInput })
     input: PlanRunsByPlanIdInput,
   ): Promise<PlanRunObject[]> {
-    const effectiveLimit = Math.min(
-      Math.max(1, input.limit ?? DEFAULT_PLAN_RUNS_LIMIT),
-      MAX_PLAN_RUNS_LIMIT,
-    );
+    const { take: effectiveLimit } = resolvePagination(input, {
+      defaultLimit: DEFAULT_PLAN_RUNS_LIMIT,
+      max: MAX_PLAN_RUNS_LIMIT,
+    });
     if (input.includeAllScheduled) {
       const history = await this.planRunsRepository.findRunHistoryByPlanId(
         input.planId,
@@ -799,9 +802,9 @@ export class PlansResolver {
     @Args('limit', { nullable: true, type: () => Int })
     limit?: number | null,
   ): Promise<PlanObject[]> {
-    const effectiveLimit = Math.min(
-      Math.max(1, limit ?? DEFAULT_PLANS_LIMIT),
-      MAX_PLANS_LIMIT,
+    const { take: effectiveLimit } = resolvePagination(
+      { limit },
+      { defaultLimit: DEFAULT_PLANS_LIMIT, max: MAX_PLANS_LIMIT },
     );
     const entities = await this.plansRepository.findBy({
       order: { createdAt: 'DESC' },
@@ -819,10 +822,10 @@ export class PlansResolver {
     @Args('input', { type: () => ListPlansByStatusInput })
     input: ListPlansByStatusInput,
   ): Promise<ListPlansByStatusResultObject> {
+    assertPagination(input, { max: LIST_PLANS_FILTERED_MAX_LIMIT });
+
     const orderColumn = input.sortBy === 'updated' ? 'updatedAt' : 'createdAt';
     const orderDir = input.sortOrder === 'asc' ? 'ASC' : 'DESC';
-    const take = input.limit ?? 20;
-    const skip = input.offset ?? 0;
     // Merge the typed `statusesEnum` (already canonical) with the deprecated
     // free-string `statuses` (normalized to uppercase). Dedupe so the IN (...)
     // clause carries each status once.
@@ -854,23 +857,24 @@ export class PlansResolver {
       });
     }
 
-    const { plans, totalCount } = await this.plansRepository.listFiltered({
+    const page = await this.plansRepository.listFiltered({
       assignees: assigneeList,
       orderColumn,
       orderDirection: orderDir,
+      pagination: { limit: input.limit, offset: input.offset },
       project: input.project?.trim() ? input.project.trim() : null,
       projectId: input.projectId?.trim() ? input.projectId.trim() : null,
-      skip,
       statuses,
-      take,
       titleSubstring: input.titleSubstring?.trim()
         ? input.titleSubstring.trim()
         : null,
     });
     const result = new ListPlansByStatusResultObject();
 
-    result.plans = plans;
-    result.totalCount = totalCount;
+    result.hasNextPage = hasNextPage(page, input.offset ?? 0);
+    result.items = page.items;
+    result.plans = page.items;
+    result.totalCount = page.totalCount;
 
     return result;
   }
@@ -903,6 +907,8 @@ export class PlansResolver {
     if (!config) {
       const result = new ListPlansByStatusResultObject();
 
+      result.hasNextPage = false;
+      result.items = [];
       result.plans = [];
       result.totalCount = 0;
 
@@ -943,12 +949,16 @@ export class PlansResolver {
       }),
     );
 
-    result.plans = found.chunks.flatMap((id) => {
+    const plans = found.chunks.flatMap((id) => {
       const plan = byId.get(id);
 
       return plan ? [plan] : [];
     });
-    result.totalCount = result.plans.length;
+
+    result.hasNextPage = false;
+    result.items = plans;
+    result.plans = plans;
+    result.totalCount = plans.length;
 
     return result;
   }

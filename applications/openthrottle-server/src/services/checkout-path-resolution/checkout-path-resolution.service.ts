@@ -83,9 +83,11 @@ export class CheckoutPathResolutionService {
   /** A database failure is a miss, not an error — callers degrade to their existing default. */
   private async listCheckouts(userId: string): Promise<RepositoryCheckout[]> {
     try {
-      return await this.checkoutsRepository.listByUserId(userId, {
-        limit: CHECKOUT_LIST_LIMIT,
-      });
+      return await this.checkoutsRepository.listByUserId(
+        userId,
+        { limit: CHECKOUT_LIST_LIMIT },
+        { max: CHECKOUT_LIST_LIMIT }, // above the 100 default cap
+      );
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       this.logger.warn(

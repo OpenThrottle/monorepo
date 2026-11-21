@@ -43,7 +43,7 @@ describe('utils.agents-chat handlers', () => {
     test('loads and maps persisted messages', async () => {
       mockGraphql.mockResolvedValue({
         getAgentConversationMessages: {
-          messages: [
+          items: [
             {
               content: 'hi',
               createdAt: '2025-01-01T00:00:00.000Z',
@@ -91,7 +91,7 @@ describe('utils.agents-chat handlers', () => {
     test('lists conversations mapped to the sidebar shape', async () => {
       mockGraphql.mockResolvedValue({
         listAgentConversations: {
-          conversations: [
+          items: [
             {
               id: 'c1',
               status: 'active',

@@ -38,12 +38,12 @@ describe('PlanProjectMembershipService', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     plansRepository.maxProjectSortOrders.mockResolvedValue(new Map());
+    plansRepository.appendProjectSortOrder.mockResolvedValue(1000);
     plansRepository.findOne.mockResolvedValue(null);
     plansRepository.update.mockImplementation(async (id, data) => {
       return plansFactory.build({ ...data, id });
     });
     plansRepository.listInProject.mockResolvedValue([]);
-    plansRepository.renumberProjectPlans.mockResolvedValue([]);
     findProject.mockResolvedValue(projectsFactory.build({ id: PROJECT_A }));
     link.mockResolvedValue({});
 
@@ -66,7 +66,7 @@ describe('PlanProjectMembershipService', () => {
   describe('appendSortOrder', () => {
     it('is null for a plan with no project and reads nothing', async () => {
       expect(await service.appendSortOrder(null)).toBeNull();
-      expect(plansRepository.maxProjectSortOrders).not.toHaveBeenCalled();
+      expect(plansRepository.appendProjectSortOrder).not.toHaveBeenCalled();
     });
 
     it('takes the first slot (1000) in an empty project', async () => {
@@ -74,11 +74,13 @@ describe('PlanProjectMembershipService', () => {
     });
 
     it('goes one gap after the highest live position', async () => {
-      plansRepository.maxProjectSortOrders.mockResolvedValue(
-        new Map([[PROJECT_A, 3000]]),
-      );
+      plansRepository.appendProjectSortOrder.mockResolvedValue(4000);
 
       expect(await service.appendSortOrder(PROJECT_A)).toBe(4000);
+      expect(plansRepository.appendProjectSortOrder).toHaveBeenCalledWith(
+        PROJECT_A,
+        undefined,
+      );
     });
   });
 
@@ -110,9 +112,7 @@ describe('PlanProjectMembershipService', () => {
         projectId: PROJECT_A,
         projectSortOrder: 1000,
       });
-      plansRepository.maxProjectSortOrders.mockResolvedValue(
-        new Map([[PROJECT_B, 5000]]),
-      );
+      plansRepository.appendProjectSortOrder.mockResolvedValue(6000);
 
       await service.applyProjectChange(plan, PROJECT_B);
 
@@ -204,9 +204,7 @@ describe('PlanProjectMembershipService', () => {
         runConfig: runConfigWithRepository(REPOSITORY_ID),
       });
       plansRepository.findOne.mockResolvedValue(plan);
-      plansRepository.maxProjectSortOrders.mockResolvedValue(
-        new Map([[PROJECT_A, 2000]]),
-      );
+      plansRepository.appendProjectSortOrder.mockResolvedValue(3000);
 
       const result = await service.addPlan(plan.id, PROJECT_A);
 
@@ -315,13 +313,13 @@ describe('PlanProjectMembershipService', () => {
     it('reads the page from the repository', async () => {
       const plans = plansFactory.buildList(2, { projectId: PROJECT_A });
       plansRepository.pageInProject.mockResolvedValue({
-        plans,
+        items: plans,
         totalCount: 94,
       });
 
       await expect(
         service.pagePlans(PROJECT_A, { limit: 50, offset: 50 }),
-      ).resolves.toEqual({ plans, totalCount: 94 });
+      ).resolves.toEqual({ items: plans, totalCount: 94 });
       expect(plansRepository.pageInProject).toHaveBeenCalledWith(PROJECT_A, {
         limit: 50,
         offset: 50,
@@ -331,61 +329,45 @@ describe('PlanProjectMembershipService', () => {
 
   describe('movePlan', () => {
     const inProject = plansFactory.buildList(3, { projectId: PROJECT_A });
-    const [first, second, third] = inProject.map((plan) => plan.id);
+    const [, second] = inProject.map((plan) => plan.id);
 
     beforeEach(() => {
       plansRepository.listInProject.mockResolvedValue(inProject);
-      plansRepository.findOne.mockImplementation(async (options) => {
-        const where = options.where;
-        const id = !Array.isArray(where) && where ? where.id : undefined;
+    });
 
-        return (
-          inProject.find((plan) => {
-            return plan.id === id;
-          }) ?? null
-        );
+    it('swaps through the repository and returns the project in its new order', async () => {
+      plansRepository.moveInProject.mockResolvedValue({
+        kind: 'moved',
+        neighbourId: 'neighbour',
+        scopeId: PROJECT_A,
       });
+
+      await expect(service.movePlan(second!, 'UP')).resolves.toBe(inProject);
+      expect(plansRepository.moveInProject).toHaveBeenCalledWith(second, 'UP');
+      expect(plansRepository.listInProject).toHaveBeenCalledWith(PROJECT_A);
     });
 
-    it('swaps with the earlier plan on UP', async () => {
-      await service.movePlan(second!, 'UP');
+    it('returns the project unchanged when the plan is already at that end', async () => {
+      plansRepository.moveInProject.mockResolvedValue({
+        kind: 'at-edge',
+        scopeId: PROJECT_A,
+      });
 
-      expect(plansRepository.renumberProjectPlans).toHaveBeenCalledWith(
-        PROJECT_A,
-        [second, first, third],
-      );
-    });
-
-    it('swaps with the later plan on DOWN', async () => {
-      await service.movePlan(second!, 'DOWN');
-
-      expect(plansRepository.renumberProjectPlans).toHaveBeenCalledWith(
-        PROJECT_A,
-        [first, third, second],
-      );
-    });
-
-    it('leaves the first plan in place on UP', async () => {
-      await expect(service.movePlan(first!, 'UP')).resolves.toBe(inProject);
-      expect(plansRepository.renumberProjectPlans).not.toHaveBeenCalled();
-    });
-
-    it('leaves the last plan in place on DOWN', async () => {
-      await expect(service.movePlan(third!, 'DOWN')).resolves.toBe(inProject);
-      expect(plansRepository.renumberProjectPlans).not.toHaveBeenCalled();
+      await expect(service.movePlan(second!, 'DOWN')).resolves.toBe(inProject);
     });
 
     it('rejects a plan that does not exist', async () => {
+      plansRepository.moveInProject.mockResolvedValue({ kind: 'not-found' });
+
       await expect(service.movePlan('missing', 'UP')).rejects.toThrow(
         NotFoundException,
       );
     });
 
     it('rejects a plan in no project', async () => {
-      const loose = plansFactory.build({ projectId: null });
-      plansRepository.findOne.mockResolvedValue(loose);
+      plansRepository.moveInProject.mockResolvedValue({ kind: 'not-in-scope' });
 
-      await expect(service.movePlan(loose.id, 'UP')).rejects.toThrow(
+      await expect(service.movePlan('loose', 'UP')).rejects.toThrow(
         BadRequestException,
       );
     });
@@ -399,36 +381,42 @@ describe('PlanProjectMembershipService', () => {
       plansRepository.listInProject.mockResolvedValue(inProject);
     });
 
-    it('renumbers in the given order', async () => {
-      await service.reorderPlans(PROJECT_A, [third!, first!, second!]);
+    it('reorders the listed plans in place and returns the project in its new order', async () => {
+      plansRepository.reorderInProject.mockResolvedValue({
+        assignments: [],
+        kind: 'reordered',
+      });
 
-      expect(plansRepository.renumberProjectPlans).toHaveBeenCalledWith(
-        PROJECT_A,
-        [third, first, second],
-      );
-    });
-
-    it('keeps plans that are not listed after the listed ones, in their existing order', async () => {
-      await service.reorderPlans(PROJECT_A, [third!]);
-
-      expect(plansRepository.renumberProjectPlans).toHaveBeenCalledWith(
-        PROJECT_A,
-        [third, first, second],
-      );
+      await expect(
+        service.reorderPlans(PROJECT_A, [third!, first!, second!]),
+      ).resolves.toBe(inProject);
+      expect(plansRepository.reorderInProject).toHaveBeenCalledWith(PROJECT_A, [
+        third,
+        first,
+        second,
+      ]);
     });
 
     it('rejects duplicate ids', async () => {
+      plansRepository.reorderInProject.mockResolvedValue({
+        duplicateIds: [first!],
+        kind: 'duplicate-ids',
+      });
+
       await expect(
         service.reorderPlans(PROJECT_A, [first!, first!]),
       ).rejects.toThrow(BadRequestException);
-      expect(plansRepository.renumberProjectPlans).not.toHaveBeenCalled();
     });
 
     it('rejects an id that does not belong to the project', async () => {
+      plansRepository.reorderInProject.mockResolvedValue({
+        kind: 'ids-not-in-scope',
+        missingIds: ['someone-elses'],
+      });
+
       await expect(
         service.reorderPlans(PROJECT_A, [first!, 'someone-elses']),
       ).rejects.toThrow('do not belong to the project');
-      expect(plansRepository.renumberProjectPlans).not.toHaveBeenCalled();
     });
 
     it('rejects an unknown project', async () => {

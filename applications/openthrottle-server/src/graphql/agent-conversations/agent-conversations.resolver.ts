@@ -5,9 +5,13 @@
 import { UseGuards } from '@nestjs/common';
 import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { type AuthPrincipal, CurrentUser } from '@openthrottle/nestjs-auth';
+import { assertPagination } from '@openthrottle/nestjs-graphql';
+import { hasNextPage } from '@openthrottle/nestjs-postgres';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 import type { AgentConversationStatus } from '@openthrottle/nestjs-repositories-server';
 import {
+  AGENT_CONVERSATION_LIST_MAX_LIMIT,
+  AGENT_CONVERSATION_MESSAGES_MAX_LIMIT,
   AGENT_CONVERSATION_STATUSES,
   AgentConversationMessagesRepository,
   AgentConversationsRepository,
@@ -67,6 +71,9 @@ export class AgentConversationsResolver {
     input: ListAgentConversationsInput | null,
   ): Promise<ListAgentConversationsResultObject> {
     const user = assertHumanAuthPrincipal(principal);
+
+    assertPagination(input ?? {}, { max: AGENT_CONVERSATION_LIST_MAX_LIMIT });
+
     const status = resolveConversationStatus(input?.status);
     const limit = input?.limit ?? undefined;
     const offset = input?.offset ?? undefined;
@@ -85,7 +92,11 @@ export class AgentConversationsResolver {
 
     const result = new ListAgentConversationsResultObject();
 
-    result.conversations = conversations.map(toAgentConversationObject);
+    const items = conversations.map(toAgentConversationObject);
+
+    result.conversations = items;
+    result.hasNextPage = hasNextPage({ items, totalCount }, offset ?? 0);
+    result.items = items;
     result.totalCount = totalCount;
 
     return result;
@@ -126,6 +137,8 @@ export class AgentConversationsResolver {
   ): Promise<ListAgentConversationMessagesResultObject> {
     const user = assertHumanAuthPrincipal(principal);
 
+    assertPagination(input, { max: AGENT_CONVERSATION_MESSAGES_MAX_LIMIT });
+
     const [messages, totalCount] = await Promise.all([
       this.agentConversationMessagesRepository.listMessagesForConversation(
         user.sub,
@@ -142,7 +155,11 @@ export class AgentConversationsResolver {
 
     const result = new ListAgentConversationMessagesResultObject();
 
-    result.messages = messages.map(toAgentConversationMessageObject);
+    const items = messages.map(toAgentConversationMessageObject);
+
+    result.hasNextPage = hasNextPage({ items, totalCount }, input.offset ?? 0);
+    result.items = items;
+    result.messages = items;
     result.totalCount = totalCount;
 
     return result;

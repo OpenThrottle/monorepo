@@ -88,9 +88,25 @@ describe('RepositoryCheckoutsRepository', () => {
         order: { createdAt: 'DESC' },
         relations: { repository: true },
         skip: 0,
-        take: 50,
+        take: 25,
         where: { userId },
       });
+    });
+
+    it('honors a per-call default and max for callers that pin the old page size', async () => {
+      find.mockResolvedValue([]);
+
+      await repository.listByUserId(userId, undefined, { defaultLimit: 50 });
+      await repository.listByUserId(userId, { limit: 500 }, { max: 200 });
+
+      expect(find).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({ skip: 0, take: 50 }),
+      );
+      expect(find).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({ skip: 0, take: 200 }),
+      );
     });
   });
 

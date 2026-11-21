@@ -113,7 +113,7 @@ export async function removePlanFromProjectToolHandler(
 export const reorderProjectPlansToolParameters =
   ReorderProjectPlansInputSchema().strict();
 
-export const reorderProjectPlansToolDescription = `Reorder the plans of a project via the reorderProjectPlans GraphQL mutation. Requires projectId and planIds (plan UUIDs in desired order, no duplicates, all in the project). Renumbers projectSortOrder to 1000, 2000, … atomically; plans of the project that are not listed follow in their existing order. Returns every plan of the project in the new order. Prefer this over removing and re-adding plans.`;
+export const reorderProjectPlansToolDescription = `Reorder the plans of a project via the reorderProjectPlans GraphQL mutation. Requires projectId and planIds (plan UUIDs in desired order, no duplicates, all in the project). Listed plans reorder among their own positions; unlisted plans stay put. Atomic. Returns every plan of the project in the new order. Prefer this over removing and re-adding plans.`;
 
 export async function reorderProjectPlansToolHandler(
   args: z.infer<typeof reorderProjectPlansToolParameters>,

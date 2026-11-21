@@ -29,7 +29,7 @@ query getPlan($id: ID!) {
 
 query listPlansByStatus($input: ListPlansByStatusInput!) {
   listPlansByStatus(input: $input) {
-    plans {
+    items {
       ...Plan
       tags {
         dimension

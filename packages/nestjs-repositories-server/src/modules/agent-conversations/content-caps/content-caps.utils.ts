@@ -1,3 +1,4 @@
+import { resolvePagination } from '@openthrottle/nestjs-postgres';
 import { isRecord } from '@openthrottle/nodejs-utils';
 
 import {
@@ -287,8 +288,13 @@ export const capAgentConversationToolMetadata = (
 export const clampAgentConversationListLimit = (
   limit: number | undefined,
 ): number => {
-  const resolved = limit ?? AGENT_CONVERSATION_LIST_DEFAULT_LIMIT;
-  return Math.min(Math.max(resolved, 1), AGENT_CONVERSATION_LIST_MAX_LIMIT);
+  return resolvePagination(
+    { limit },
+    {
+      defaultLimit: AGENT_CONVERSATION_LIST_DEFAULT_LIMIT,
+      max: AGENT_CONVERSATION_LIST_MAX_LIMIT,
+    },
+  ).take;
 };
 
 /**
@@ -297,6 +303,11 @@ export const clampAgentConversationListLimit = (
 export const clampAgentConversationMessagesLimit = (
   limit: number | undefined,
 ): number => {
-  const resolved = limit ?? AGENT_CONVERSATION_MESSAGES_DEFAULT_LIMIT;
-  return Math.min(Math.max(resolved, 1), AGENT_CONVERSATION_MESSAGES_MAX_LIMIT);
+  return resolvePagination(
+    { limit },
+    {
+      defaultLimit: AGENT_CONVERSATION_MESSAGES_DEFAULT_LIMIT,
+      max: AGENT_CONVERSATION_MESSAGES_MAX_LIMIT,
+    },
+  ).take;
 };

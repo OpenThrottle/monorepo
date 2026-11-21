@@ -391,7 +391,7 @@ describe('ProjectsResolver', () => {
     });
 
     test('projectPlansPage reads one page through the membership service', async () => {
-      membership.pagePlans.mockResolvedValue({ plans: [plan], totalCount: 94 });
+      membership.pagePlans.mockResolvedValue({ items: [plan], totalCount: 94 });
 
       await expect(
         resolver.projectPlansPage({
@@ -399,7 +399,12 @@ describe('ProjectsResolver', () => {
           offset: 50,
           projectId: mockProject.id,
         }),
-      ).resolves.toEqual({ plans: [plan], totalCount: 94 });
+      ).resolves.toEqual({
+        hasNextPage: true,
+        items: [plan],
+        plans: [plan],
+        totalCount: 94,
+      });
       expect(membership.pagePlans).toHaveBeenCalledWith(mockProject.id, {
         limit: 50,
         offset: 50,
@@ -413,14 +418,14 @@ describe('ProjectsResolver', () => {
           offset: 0,
           projectId: mockProject.id,
         }),
-      ).rejects.toThrow('limit must be between 1 and 200');
+      ).rejects.toThrow('limit must be between 1 and 100');
       await expect(
         resolver.projectPlansPage({
-          limit: 201,
+          limit: 101,
           offset: 0,
           projectId: mockProject.id,
         }),
-      ).rejects.toThrow('limit must be between 1 and 200');
+      ).rejects.toThrow('limit must be between 1 and 100');
       expect(membership.pagePlans).not.toHaveBeenCalled();
     });
 

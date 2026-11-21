@@ -17,3 +17,10 @@ export const BLOG_POST_STATUS = {
  */
 export const BLOG_POST_STATUS_VALUES: readonly BlogPostStatus[] =
   Object.values(BLOG_POST_STATUS);
+
+/**
+ * @description Largest page `findPublished` serves: 200, so the website sitemap walk stays at
+ * one request per 200 posts instead of the global `PAGINATION_MAX_LIMIT` of 100.
+ * @public
+ */
+export const BLOG_POSTS_PUBLISHED_MAX_LIMIT = 200;

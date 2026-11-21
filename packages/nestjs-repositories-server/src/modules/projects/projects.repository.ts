@@ -1,9 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import type { ListPaginationInput } from '@openthrottle/nestjs-postgres';
+import type {
+  PaginationInput,
+  PaginationOptions,
+} from '@openthrottle/nestjs-postgres';
 import {
   BaseRepository,
-  resolveListPagination,
+  resolvePagination,
 } from '@openthrottle/nestjs-postgres';
 import { Repository } from 'typeorm';
 
@@ -43,8 +46,11 @@ export class ProjectsRepository extends BaseRepository<
    * @description Returns live projects ordered by created_at descending. Accepts an optional
    * clamped `{ limit, offset }` so the result set stays bounded.
    */
-  async findAll(pagination?: ListPaginationInput): Promise<Project[]> {
-    const { skip, take } = resolveListPagination(pagination);
+  async findAll(
+    pagination?: PaginationInput,
+    options?: PaginationOptions,
+  ): Promise<Project[]> {
+    const { skip, take } = resolvePagination(pagination, options);
     return this.repository.find({
       order: { createdAt: 'DESC' },
       skip,

@@ -3,6 +3,7 @@
  */
 
 import { Args, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
+import { resolvePagination } from '@openthrottle/nestjs-postgres';
 import type {
   Task,
   TaskEmbedding,
@@ -61,11 +62,10 @@ export class TaskEmbeddingsResolver {
     @Args('input', { type: () => TaskEmbeddingsByTaskInput })
     input: TaskEmbeddingsByTaskInput,
   ): Promise<TaskEmbedding[]> {
-    const take = Math.min(
-      Math.max(1, input.limit ?? DEFAULT_LIST_LIMIT),
-      MAX_LIST_LIMIT,
-    );
-    const skip = Math.max(0, input.offset ?? 0);
+    const { skip, take } = resolvePagination(input, {
+      defaultLimit: DEFAULT_LIST_LIMIT,
+      max: MAX_LIST_LIMIT,
+    });
 
     const entities = await this.taskEmbeddingsRepository.findBy({
       order: { createdAt: 'ASC' },

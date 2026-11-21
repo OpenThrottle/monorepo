@@ -22,7 +22,7 @@ describe('CmsSchemasResolver', () => {
     it('passes a known status and default paging to the service', async () => {
       const { resolver, service } = buildResolver();
 
-      await resolver.cmsSchemas(null, 'ACTIVE', null, 'Hero');
+      await resolver.cmsSchemas(null, null, null, 'ACTIVE', null, 'Hero');
 
       expect(service.findPage).toHaveBeenCalledWith({
         skip: 0,
@@ -34,7 +34,7 @@ describe('CmsSchemasResolver', () => {
 
     it('rejects an unknown status as BAD_USER_INPUT', async () => {
       const { resolver, service } = buildResolver();
-      const read = resolver.cmsSchemas(null, 'LIVE', null, null);
+      const read = resolver.cmsSchemas(null, null, null, 'LIVE', null, null);
 
       await expect(read).rejects.toBeInstanceOf(GraphQLError);
       await expect(read).rejects.toMatchObject({

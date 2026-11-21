@@ -27,11 +27,11 @@ import {
   AUTH_PRINCIPAL_KIND_USER,
 } from '@openthrottle/nestjs-auth';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import { SORT_ORDER_GAP } from '@openthrottle/nestjs-postgres';
 import { PlanTag, TaskTag } from '@openthrottle/nestjs-repositories-server';
 import {
   Plan,
   Task,
-  TASK_SORT_ORDER_GAP,
   WORK_ARTIFACT_SOURCE,
   WORK_ARTIFACT_VERIFICATION,
   WORK_SESSION_CLOSED_BY,
@@ -244,7 +244,7 @@ export class TaskPromotionService {
         category: task.category ?? 'feature',
         description: `This plan was promoted from a task. Break the brief above into concrete, scoped tasks before running it.`,
         planId,
-        sortOrder: TASK_SORT_ORDER_GAP,
+        sortOrder: SORT_ORDER_GAP,
         status: 'PENDING',
         title: SEED_TASK_TITLE,
       }),

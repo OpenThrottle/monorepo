@@ -198,25 +198,24 @@ export class TasksByPlanIdInput {
   planId!: string;
 }
 
+/**
+ * @description Does not extend `OffsetPaginationInput` from `@openthrottle/nestjs-graphql`: this input shipped `limit` and
+ * `offset` as `Float`, and narrowing an input field to `Int` breaks any client whose
+ * variables are typed `Float`. Same validation (`assertPagination`), legacy wire type.
+ */
 @InputType()
 export class TasksByProjectIdInput {
-  /**
-   * Optional limit for pagination. When omitted, all tasks are returned.
-   */
   @Field(() => Number, {
-    description: `Max number of tasks to return. Omit for no limit.`,
+    description: `Page size. Omitted means the list's default; out of range is rejected`,
     nullable: true,
   })
-  limit!: number | null;
+  limit?: number | null;
 
-  /**
-   * Optional offset for pagination. Used with limit; ignored when limit is omitted.
-   */
   @Field(() => Number, {
-    description: `Number of tasks to skip. Omit or 0 for first page.`,
+    description: `Rows to skip, 0 or more. Omitted means 0`,
     nullable: true,
   })
-  offset!: number | null;
+  offset?: number | null;
 
   @Field(() => ID, { description: `Project id (FK) to list tasks for` })
   projectId!: string;

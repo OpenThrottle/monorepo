@@ -5,8 +5,9 @@ sanitization, query-depth limiting, CSRF prevention, graphql-ws connection auth,
 page, and opt-in Apollo cache plugins. Also home to `PubSubModule` (subscriptions PubSub engine)
 and the subscription topic-name helpers.
 
-**Consumed by:** `openthrottle-server` only (`forRoot` in `app.module.ts`; it overrides
-`buildSchemaOptions`, `cachePlugins`, and `context` but not `autoSchemaFile`).
+**Consumed by:** `openthrottle-server` (`forRoot` in `app.module.ts`; it overrides
+`buildSchemaOptions`, `cachePlugins`, and `context` but not `autoSchemaFile`), and
+`@openthrottle/nestjs-repositories-cms` for the offset-pagination classes only.
 
 ## Layout
 
@@ -18,6 +19,11 @@ and the subscription topic-name helpers.
   names here, the in-memory PubSub matches exact strings only.
 - `src/pubsub/pubsub.module.ts` — global module providing the `PUB_SUB` singleton (in-memory
   `PubSub`; Redis swap seam documented in its JSDoc).
+- `src/offset-pagination/` — the shared offset-paged list contract: `OffsetPaginationInput`
+  (abstract input, `limit` / `offset`), `OffsetPageObject` (abstract object, `totalCount` /
+  `hasNextPage`; a feature page extends it and declares its own `items`) and
+  `assertPagination(args, { max })` (BAD_USER_INPUT for a sent value out of range). Abstract,
+  so neither adds a type to the schema. Policy and exceptions: the `ot-stack` skill.
 - `src/config/` — `format-error` (leak-safe `formatError`), cache plugins, depth-limit rule,
   response-cache session id.
 - `src/schema/emit-code-first-schema/emit-code-first-schema.utils.ts` — `emitCodeFirstSchema`: writes a root module's

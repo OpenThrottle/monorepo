@@ -8,10 +8,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { BaseHardDeleteModel } from '../../../base-hard-delete-model/base-hard-delete-model.entity.ts';
 import { ID_HARD_DELETE_MODEL_CONVENTION } from '../../../model-convention/model-convention.constants.ts';
-import {
-  POSTGRES_DEFAULT_PAGE_SIZE,
-  POSTGRES_MAX_RETURNING_ROWS,
-} from '../../base-repository.constants.ts';
+import { PAGINATION_DEFAULT_LIMIT } from '../../../pagination/pagination.constants.ts';
+import { POSTGRES_MAX_RETURNING_ROWS } from '../../base-repository.constants.ts';
 import {
   resolveModelConvention,
   scopeReadWhere,
@@ -151,7 +149,7 @@ describe('BaseRepository (id key + no soft delete)', () => {
       expect(harness.typeorm.findAndCount).toHaveBeenCalledWith({
         order: { id: 'ASC' },
         skip: 0,
-        take: POSTGRES_DEFAULT_PAGE_SIZE,
+        take: PAGINATION_DEFAULT_LIMIT,
         where: { quantity: 5 },
       });
     });

@@ -40,7 +40,7 @@ query getAgentConversation($id: ID!) {
 
 query getAgentConversationMessages($input: GetAgentConversationMessagesInput!) {
   getAgentConversationMessages(input: $input) {
-    messages {
+    items {
       ...AgentConversationMessage
     }
     totalCount
@@ -49,7 +49,7 @@ query getAgentConversationMessages($input: GetAgentConversationMessagesInput!) {
 
 query listAgentConversations($input: ListAgentConversationsInput) {
   listAgentConversations(input: $input) {
-    conversations {
+    items {
       ...AgentConversation
     }
     totalCount

@@ -6,6 +6,7 @@
  */
 
 import { Field, Int, ObjectType } from '@nestjs/graphql';
+import { OffsetPageObject } from '@openthrottle/nestjs-graphql';
 
 @ObjectType({
   description: `One occurrence of a cms fragment in a layout tree. A fragment shared by two parents appears twice, with different keys.`,
@@ -140,13 +141,7 @@ export class CmsLayoutSummaryObject {
 }
 
 @ObjectType({ description: `One page of live cms layouts, oldest first.` })
-export class CmsLayoutListResult {
-  @Field(() => Boolean)
-  hasNextPage!: boolean;
-
+export class CmsLayoutListResult extends OffsetPageObject {
   @Field(() => [CmsLayoutSummaryObject])
   items!: CmsLayoutSummaryObject[];
-
-  @Field(() => Int)
-  totalCount!: number;
 }

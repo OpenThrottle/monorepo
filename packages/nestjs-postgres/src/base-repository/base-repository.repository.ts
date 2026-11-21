@@ -13,16 +13,15 @@ import type {
   UpdateModelInput,
 } from '../base-model/base-model.types.ts';
 import type { ModelConvention } from '../model-convention/model-convention.types.ts';
+import type { OffsetPage } from '../pagination/pagination.types.ts';
+import { resolvePagination } from '../pagination/pagination.utils.ts';
 import { PostgresProfiling } from '../postgres-profiling/postgres-profiling.decorator.ts';
 import {
-  POSTGRES_DEFAULT_PAGE_SIZE,
   POSTGRES_MAX_BIND_PARAMS,
   POSTGRES_MAX_INSERT_ROWS,
-  POSTGRES_MAX_PAGE_SIZE,
   POSTGRES_MAX_RETURNING_ROWS,
 } from './base-repository.constants.ts';
 import type {
-  FindByPaginatedResults,
   RemoveManyResults,
   UpdateManyResults,
 } from './base-repository.types.ts';
@@ -173,32 +172,25 @@ export abstract class BaseRepository<
   }
 
   /**
-   * @description One bounded page. `take` is clamped to 1..`POSTGRES_MAX_PAGE_SIZE`
-   * (default `POSTGRES_DEFAULT_PAGE_SIZE`), `skip` is floored at 0, and rows are ordered by
-   * the convention's default (`id`, or `created_at` then `uuid`) unless `order` is given.
+   * @description One bounded page plus the total live row count. `take` / `skip` go through
+   * `resolvePagination` (default `PAGINATION_DEFAULT_LIMIT`, clamped to 1..`PAGINATION_MAX_LIMIT`,
+   * `skip` floored at 0), and rows are ordered by the convention's default (`id`, or
+   * `created_at` then `uuid`) unless `order` is given. A custom query belongs in `paginate`.
    */
   @PostgresProfiling()
   async findByPaginated(
     options?: FindManyOptions<TEntity>,
-  ): Promise<FindByPaginatedResults<TEntity>> {
-    const take = Math.min(
-      POSTGRES_MAX_PAGE_SIZE,
-      Math.max(1, options?.take ?? POSTGRES_DEFAULT_PAGE_SIZE),
-    );
-    const skip = Math.max(0, options?.skip ?? 0);
+  ): Promise<OffsetPage<TEntity>> {
+    const { skip, take } = resolvePagination({
+      limit: options?.take,
+      offset: options?.skip,
+    });
     const order = options?.order ?? buildDefaultOrder<TEntity>(this.convention);
-    const [data, totalCount] = await this.repository.findAndCount(
+    const [items, totalCount] = await this.repository.findAndCount(
       scopeReadOptions(this.convention, { ...options, order, skip, take }),
     );
 
-    return {
-      data,
-      pageInfo: {
-        currentPage: Math.floor(skip / take) + 1,
-        hasNextPage: skip + data.length < totalCount,
-        totalCount,
-      },
-    };
+    return { items, totalCount };
   }
 
   /**

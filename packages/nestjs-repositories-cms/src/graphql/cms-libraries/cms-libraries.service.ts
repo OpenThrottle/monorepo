@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { hasNextPage } from '@openthrottle/nestjs-postgres';
 import { In } from 'typeorm';
 
 import { LibrariesRepository } from '../../modules/libraries/libraries.repository.ts';
@@ -31,7 +32,7 @@ export class CmsLibrariesService {
     readonly take: number;
   }): Promise<CmsLibraryListResult> {
     const page = await this.librariesRepository.findByPaginated(options);
-    const libraryUuids = page.data.map((library) => library.uuid);
+    const libraryUuids = page.items.map((library) => library.uuid);
     const components = await this.findComponents(libraryUuids);
     const byLibrary = new Map<string, LibraryComponent[]>();
 
@@ -43,11 +44,11 @@ export class CmsLibrariesService {
     }
 
     return {
-      hasNextPage: page.pageInfo.hasNextPage,
-      items: page.data.map((library) => {
+      hasNextPage: hasNextPage(page, options.skip),
+      items: page.items.map((library) => {
         return toCmsLibraryObject(library, byLibrary.get(library.uuid) ?? []);
       }),
-      totalCount: page.pageInfo.totalCount,
+      totalCount: page.totalCount,
     };
   }
 

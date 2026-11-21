@@ -53,14 +53,14 @@ mutation UpdateCmsFragment($input: UpdateCmsFragmentInput!) {
 
 query CmsFragmentChildCandidates(
   $childCandidatesOf: String!
-  $skip: Int
-  $take: Int
+  $limit: Int
+  $offset: Int
   $typename: String
 ) {
   cmsFragments(
     childCandidatesOf: $childCandidatesOf
-    skip: $skip
-    take: $take
+    limit: $limit
+    offset: $offset
     typename: $typename
   ) {
     hasNextPage
@@ -70,7 +70,7 @@ query CmsFragmentChildCandidates(
       uuid
     }
   }
-  cmsSchemas(status: "ACTIVE", take: 100) {
+  cmsSchemas(limit: 100, status: "ACTIVE") {
     items {
       typename
       uuid

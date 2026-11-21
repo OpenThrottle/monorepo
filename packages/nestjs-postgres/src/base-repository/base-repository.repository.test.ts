@@ -6,6 +6,10 @@ import type { EntityMetadata, Repository } from 'typeorm';
 import { In, IsNull } from 'typeorm';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import {
+  PAGINATION_DEFAULT_LIMIT,
+  PAGINATION_MAX_LIMIT,
+} from '../pagination/pagination.constants.ts';
 import { resetPostgresProfilingDedupe } from '../postgres-profiling/explain-dedupe/explain-dedupe.utils.ts';
 import { USERS_INDEX_SCAN_EXPLAIN_RESULT } from '../postgres-profiling/explain-plan/explain-outputs.factory.ts';
 import { flushPostgresProfiling } from '../postgres-profiling/explain-tracking/explain-tracking.utils.ts';
@@ -13,10 +17,8 @@ import { POSTGRES_PROFILING_LOGGER } from '../postgres-profiling/postgres-profil
 import { captureQuery } from '../postgres-profiling/query-capture/query-capture.utils.ts';
 import { resetPostgresProfilingStartupLog } from '../postgres-profiling/startup-log/startup-log.utils.ts';
 import {
-  POSTGRES_DEFAULT_PAGE_SIZE,
   POSTGRES_MAX_BIND_PARAMS,
   POSTGRES_MAX_INSERT_ROWS,
-  POSTGRES_MAX_PAGE_SIZE,
   POSTGRES_MAX_RETURNING_ROWS,
 } from './base-repository.constants.ts';
 import { TestRecord } from './testing/test-record/test-record.entity.ts';
@@ -286,15 +288,12 @@ describe('BaseRepository', () => {
       expect(harness.typeorm.findAndCount).toHaveBeenCalledWith({
         order: { id: 'ASC' },
         skip: 0,
-        take: POSTGRES_DEFAULT_PAGE_SIZE,
+        take: PAGINATION_DEFAULT_LIMIT,
       });
-      expect(page).toEqual({
-        data: records,
-        pageInfo: { currentPage: 1, hasNextPage: false, totalCount: 3 },
-      });
+      expect(page).toEqual({ items: records, totalCount: 3 });
     });
 
-    it('uses the given take and skip and computes pageInfo from them', async () => {
+    it('uses the given take and skip and returns the total', async () => {
       harness.typeorm.findAndCount.mockResolvedValue([records, 30]);
 
       const page = await harness.repository.findByPaginated({
@@ -305,19 +304,7 @@ describe('BaseRepository', () => {
       expect(harness.typeorm.findAndCount).toHaveBeenCalledWith(
         expect.objectContaining({ skip: 20, take: 10 }),
       );
-      expect(page.pageInfo).toEqual({
-        currentPage: 3,
-        hasNextPage: true,
-        totalCount: 30,
-      });
-    });
-
-    it('reports a next page when more rows remain', async () => {
-      harness.typeorm.findAndCount.mockResolvedValue([records, 100]);
-
-      const page = await harness.repository.findByPaginated({ take: 3 });
-
-      expect(page.pageInfo.hasNextPage).toBe(true);
+      expect(page).toEqual({ items: records, totalCount: 30 });
     });
 
     it('uses the given order', async () => {
@@ -350,26 +337,22 @@ describe('BaseRepository', () => {
     it.each([0, -5])('clamps take %i up to 1', async (take) => {
       harness.typeorm.findAndCount.mockResolvedValue([records.slice(0, 1), 5]);
 
-      const page = await harness.repository.findByPaginated({ skip: 3, take });
+      await harness.repository.findByPaginated({ skip: 3, take });
 
       expect(harness.typeorm.findAndCount).toHaveBeenCalledWith(
-        expect.objectContaining({ take: 1 }),
+        expect.objectContaining({ skip: 3, take: 1 }),
       );
-      expect(page.pageInfo.currentPage).toBe(4);
     });
 
-    it('clamps take above the maximum and computes pageInfo from the clamped take', async () => {
-      harness.typeorm.findAndCount.mockResolvedValue([records, 1_000]);
-
-      const page = await harness.repository.findByPaginated({
-        skip: POSTGRES_MAX_PAGE_SIZE,
-        take: POSTGRES_MAX_PAGE_SIZE * 5,
+    it('clamps take above the maximum', async () => {
+      await harness.repository.findByPaginated({
+        skip: PAGINATION_MAX_LIMIT,
+        take: PAGINATION_MAX_LIMIT * 5,
       });
 
       expect(harness.typeorm.findAndCount).toHaveBeenCalledWith(
-        expect.objectContaining({ take: POSTGRES_MAX_PAGE_SIZE }),
+        expect.objectContaining({ take: PAGINATION_MAX_LIMIT }),
       );
-      expect(page.pageInfo.currentPage).toBe(2);
     });
 
     it('floors a negative skip at 0', async () => {
@@ -384,8 +367,8 @@ describe('BaseRepository', () => {
       harness.typeorm.findAndCount.mockResolvedValue([[], 0]);
 
       await expect(harness.repository.findByPaginated()).resolves.toEqual({
-        data: [],
-        pageInfo: { currentPage: 1, hasNextPage: false, totalCount: 0 },
+        items: [],
+        totalCount: 0,
       });
     });
   });

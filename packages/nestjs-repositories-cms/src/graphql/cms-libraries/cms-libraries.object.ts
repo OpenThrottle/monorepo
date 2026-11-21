@@ -2,7 +2,8 @@
  * @description GraphQL shapes for cms component libraries and their components.
  */
 
-import { Field, Int, ObjectType } from '@nestjs/graphql';
+import { Field, ObjectType } from '@nestjs/graphql';
+import { OffsetPageObject } from '@openthrottle/nestjs-graphql';
 
 @ObjectType({
   description: `The component that renders one fragment typename within a cms library.`,
@@ -65,27 +66,15 @@ export class CmsLibraryObject {
 }
 
 @ObjectType({ description: `One page of live cms libraries, oldest first.` })
-export class CmsLibraryListResult {
-  @Field(() => Boolean)
-  hasNextPage!: boolean;
-
+export class CmsLibraryListResult extends OffsetPageObject {
   @Field(() => [CmsLibraryObject])
   items!: CmsLibraryObject[];
-
-  @Field(() => Int)
-  totalCount!: number;
 }
 
 @ObjectType({
   description: `One page of live cms library components, across every library, by typename.`,
 })
-export class CmsLibraryComponentListResult {
-  @Field(() => Boolean)
-  hasNextPage!: boolean;
-
+export class CmsLibraryComponentListResult extends OffsetPageObject {
   @Field(() => [CmsLibraryComponentObject])
   items!: CmsLibraryComponentObject[];
-
-  @Field(() => Int)
-  totalCount!: number;
 }

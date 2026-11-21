@@ -1,8 +1,8 @@
+import { SORT_ORDER_GAP } from '@openthrottle/nestjs-postgres';
 import { createBaseRepositoryMock } from '@openthrottle/nestjs-postgres/testing';
 import { vi } from 'vitest';
 
 import type { Task } from './task.entity.ts';
-import { TASK_SORT_ORDER_GAP } from './tasks.constants.ts';
 import type { TaskCreateInput, TasksRepositoryMock } from './tasks.types.ts';
 
 /**
@@ -29,7 +29,7 @@ export function createTasksRepositoryMock(): TasksRepositoryMock {
       return notStubbed('addBeforeHook');
     }),
     allocateSortOrderBesideAnchor: vi.fn(async () => {
-      return TASK_SORT_ORDER_GAP;
+      return SORT_ORDER_GAP;
     }),
     countByDateRange: vi.fn(async () => {
       return 0;
@@ -73,14 +73,14 @@ export function createTasksRepositoryMock(): TasksRepositoryMock {
     hasRemainingTasks: vi.fn(async () => {
       return false;
     }),
-    midpointBesideAnchor: vi.fn(async () => {
-      return TASK_SORT_ORDER_GAP;
-    }),
     rebalancePlanSortOrders: vi.fn(async () => {
       return undefined;
     }),
+    reorderInPlan: vi.fn(async () => {
+      return { assignments: [], kind: 'reordered' as const };
+    }),
     resolveNextSortOrder: vi.fn(async () => {
-      return TASK_SORT_ORDER_GAP;
+      return SORT_ORDER_GAP;
     }),
   };
 }

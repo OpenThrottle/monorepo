@@ -1,8 +1,12 @@
 import { UseGuards } from '@nestjs/common';
 import { Args, Context, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { Public } from '@openthrottle/nestjs-auth';
+import {
+  PAGINATION_DEFAULT_LIMIT,
+  PAGINATION_MAX_LIMIT,
+} from '@openthrottle/nestjs-postgres';
 
-import { toCmsPageOptions } from '../cms-graphql/cms-graphql.utils.ts';
+import { resolveCmsPageOptions } from '../cms-graphql/cms-graphql.utils.ts';
 import { CmsWriteGuard } from '../cms-write-access/cms-write-access.guard.ts';
 import { CmsWriteAccessService } from '../cms-write-access/cms-write-access.service.ts';
 import {
@@ -34,15 +38,37 @@ export class CmsLayoutsResolver {
 
   @Public()
   @Query(() => CmsLayoutListResult, {
-    description: `One page of live cms layouts, without their trees: ACTIVE ones only, unless the caller may write cms content. take is clamped to 1–100 (default 25).`,
+    description: `One page of live cms layouts, without their trees: ACTIVE ones only, unless the caller may write cms content. limit is 1 to 100 (default 25); take and skip are deprecated aliases of limit and offset.`,
   })
   async cmsLayouts(
-    @Args('skip', { nullable: true, type: () => Int }) skip: number | null,
-    @Args('take', { nullable: true, type: () => Int }) take: number | null,
+    @Args('limit', {
+      description: `Page size, 1 to ${PAGINATION_MAX_LIMIT} (default ${PAGINATION_DEFAULT_LIMIT}). Replaces take.`,
+      nullable: true,
+      type: () => Int,
+    })
+    limit: number | null,
+    @Args('offset', {
+      description: `Rows to skip, 0 or more. Replaces skip.`,
+      nullable: true,
+      type: () => Int,
+    })
+    offset: number | null,
+    @Args('skip', {
+      deprecationReason: `Use offset`,
+      nullable: true,
+      type: () => Int,
+    })
+    skip: number | null,
+    @Args('take', {
+      deprecationReason: `Use limit`,
+      nullable: true,
+      type: () => Int,
+    })
+    take: number | null,
     @Context('req') request: unknown,
   ): Promise<CmsLayoutListResult> {
     return this.cmsLayoutsService.findPage(
-      toCmsPageOptions(skip, take),
+      resolveCmsPageOptions({ limit, offset, skip, take }),
       await this.toAudience(request),
     );
   }

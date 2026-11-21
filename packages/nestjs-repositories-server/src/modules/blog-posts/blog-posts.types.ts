@@ -41,7 +41,7 @@ export type BlogPostData = Pick<
 export interface FindPublishedBlogPostsInput {
   /** Opaque cursor from a previous page's `endCursor`; omit for the first page. */
   readonly after?: string | null;
-  /** Page size, clamped to `[1, LIST_PAGINATION_MAX_LIMIT]`. */
+  /** Page size, clamped to `[1, BLOG_POSTS_PUBLISHED_MAX_LIMIT]`. */
   readonly first: number;
   /** Only posts carrying the tag with this slug. */
   readonly tagSlug?: string | null;
@@ -102,7 +102,7 @@ export interface BlogPostPatch {
 export interface FindAdminBlogPostsInput {
   /** Opaque cursor from a previous page's `endCursor`; omit for the first page. */
   readonly after?: string | null;
-  /** Page size, clamped to `[1, LIST_PAGINATION_MAX_LIMIT]`. */
+  /** Page size, clamped to `[1, PAGINATION_MAX_LIMIT]`. */
   readonly first: number;
   /** Case-insensitive substring match on title OR slug; blank means no search. */
   readonly search?: string | null;

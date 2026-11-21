@@ -3,6 +3,7 @@
  */
 
 import { Field, ID, Int, ObjectType } from '@nestjs/graphql';
+import { OffsetPageObject } from '@openthrottle/nestjs-graphql';
 import type {
   PlanData,
   PlanRunData,
@@ -310,14 +311,14 @@ export class PlanRunPullRequestObject {
   url!: string;
 }
 
-/** Result of listPlansByStatus: plans and total count. */
+/** Result of listPlansByStatus and searchPlans: one page of plans plus the total count. */
 @ObjectType()
-export class ListPlansByStatusResultObject {
+export class ListPlansByStatusResultObject extends OffsetPageObject {
   @Field(() => [PlanObject])
-  plans!: PlanObject[];
+  items!: PlanObject[];
 
-  @Field(() => Int)
-  totalCount!: number;
+  @Field(() => [PlanObject], { deprecationReason: `Use items` })
+  plans!: PlanObject[];
 }
 
 /** Result of createPlans: the plans created in the batch and how many. */

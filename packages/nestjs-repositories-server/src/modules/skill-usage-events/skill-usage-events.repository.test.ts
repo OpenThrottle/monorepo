@@ -1,5 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import type { QueryBuilderMock } from '@openthrottle/nestjs-postgres/testing';
+import { createQueryBuilderMock } from '@openthrottle/nestjs-postgres/testing';
 import { describe, expect, it, vi } from 'vitest';
 
 import { SkillUsageEvent } from './skill-usage-event.entity.ts';
@@ -11,60 +13,6 @@ import {
 import { SkillUsageEventsRepository } from './skill-usage-events.repository.ts';
 
 const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
-
-type QueryBuilderMock = {
-  addGroupBy: ReturnType<typeof vi.fn>;
-  addOrderBy: ReturnType<typeof vi.fn>;
-  addSelect: ReturnType<typeof vi.fn>;
-  andWhere: ReturnType<typeof vi.fn>;
-  getRawMany: ReturnType<typeof vi.fn>;
-  getRawOne: ReturnType<typeof vi.fn>;
-  groupBy: ReturnType<typeof vi.fn>;
-  limit: ReturnType<typeof vi.fn>;
-  orderBy: ReturnType<typeof vi.fn>;
-  select: ReturnType<typeof vi.fn>;
-  setParameters: ReturnType<typeof vi.fn>;
-  where: ReturnType<typeof vi.fn>;
-};
-
-const createQueryBuilderMock = (
-  overrides: Partial<QueryBuilderMock> = {},
-): QueryBuilderMock => {
-  const qb: QueryBuilderMock = {
-    addGroupBy: vi.fn(),
-    addOrderBy: vi.fn(),
-    addSelect: vi.fn(),
-    andWhere: vi.fn(),
-    getRawMany: vi.fn().mockResolvedValue([]),
-    getRawOne: vi.fn().mockResolvedValue({ count: 0 }),
-    groupBy: vi.fn(),
-    limit: vi.fn(),
-    orderBy: vi.fn(),
-    select: vi.fn(),
-    setParameters: vi.fn(),
-    where: vi.fn(),
-    ...overrides,
-  };
-
-  // Chainable — every builder method returns the same qb.
-  const chainKeys: ReadonlyArray<keyof QueryBuilderMock> = [
-    'addGroupBy',
-    'addOrderBy',
-    'addSelect',
-    'andWhere',
-    'groupBy',
-    'limit',
-    'orderBy',
-    'select',
-    'setParameters',
-    'where',
-  ];
-  for (const key of chainKeys) {
-    qb[key].mockReturnValue(qb);
-  }
-
-  return qb;
-};
 
 /** INSERT … ON CONFLICT DO NOTHING RETURNING id; `raw` is what Postgres returns. */
 const insertBuilderMock = (raw: unknown[]) => {
@@ -102,7 +50,9 @@ describe('SkillUsageEventsRepository', () => {
     // The outcomes table is reached through the events repository's entity
     // manager, so the outcomes mock hangs off `manager.getRepository`.
     const outcomesRepository = {
-      createQueryBuilder: vi.fn().mockReturnValue(createQueryBuilderMock()),
+      createQueryBuilder: vi
+        .fn()
+        .mockReturnValue(createQueryBuilderMock<SkillUsageEvent>()),
       ...mockRepos.outcomes,
     };
     const app = await Test.createTestingModule({
@@ -114,7 +64,7 @@ describe('SkillUsageEventsRepository', () => {
             create: vi.fn(),
             createQueryBuilder: vi
               .fn()
-              .mockReturnValue(createQueryBuilderMock()),
+              .mockReturnValue(createQueryBuilderMock<SkillUsageEvent>()),
             manager: { getRepository: vi.fn(() => outcomesRepository) },
             save: vi.fn(),
             target: SkillUsageEvent,
@@ -295,8 +245,8 @@ describe('SkillUsageEventsRepository', () => {
 
   describe('listBySkill', () => {
     it('groups starts by skill_name + scope and merges outcome stats', async () => {
-      const eventsQb = createQueryBuilderMock({
-        getRawMany: vi.fn().mockResolvedValue([
+      const eventsQb = createQueryBuilderMock<SkillUsageEvent>({
+        rawMany: [
           {
             count: '12',
             lastUsedAt: '2026-07-30T09:00:00.000Z',
@@ -309,10 +259,10 @@ describe('SkillUsageEventsRepository', () => {
             scope: SKILL_USAGE_SCOPES.THIRD_PARTY,
             skillName: 'vercel:deploy',
           },
-        ]),
+        ],
       });
-      const outcomesQb = createQueryBuilderMock({
-        getRawMany: vi.fn().mockResolvedValue([
+      const outcomesQb = createQueryBuilderMock<SkillUsageEvent>({
+        rawMany: [
           {
             abandonedCount: '1',
             avgDurationMs: '1500.4',
@@ -323,7 +273,7 @@ describe('SkillUsageEventsRepository', () => {
             skillName: 'ot-plans',
             successCount: '7',
           },
-        ]),
+        ],
       });
       const repository = await buildRepository({
         events: { createQueryBuilder: vi.fn().mockReturnValue(eventsQb) },
@@ -379,8 +329,8 @@ describe('SkillUsageEventsRepository', () => {
       // third-party starts and 1 new personal start, with outcomes recorded
       // only against the third-party half. Keying outcomes by skill_name alone
       // gave BOTH rows all 31 outcomes, rendering the impossible cell "31/1".
-      const eventsQb = createQueryBuilderMock({
-        getRawMany: vi.fn().mockResolvedValue([
+      const eventsQb = createQueryBuilderMock<SkillUsageEvent>({
+        rawMany: [
           {
             count: '34',
             lastUsedAt: '2026-09-16T01:39:07.600Z',
@@ -393,10 +343,10 @@ describe('SkillUsageEventsRepository', () => {
             scope: SKILL_USAGE_SCOPES.PERSONAL,
             skillName: 'ot-beta-loop',
           },
-        ]),
+        ],
       });
-      const outcomesQb = createQueryBuilderMock({
-        getRawMany: vi.fn().mockResolvedValue([
+      const outcomesQb = createQueryBuilderMock<SkillUsageEvent>({
+        rawMany: [
           {
             abandonedCount: '4',
             avgDurationMs: '3830200',
@@ -406,7 +356,7 @@ describe('SkillUsageEventsRepository', () => {
             skillName: 'ot-beta-loop',
             successCount: '27',
           },
-        ]),
+        ],
       });
       const repository = await buildRepository({
         events: { createQueryBuilder: vi.fn().mockReturnValue(eventsQb) },
@@ -434,8 +384,8 @@ describe('SkillUsageEventsRepository', () => {
     });
 
     it('groups outcomes by skill_name and scope so the join matches starts', async () => {
-      const eventsQb = createQueryBuilderMock();
-      const outcomesQb = createQueryBuilderMock();
+      const eventsQb = createQueryBuilderMock<SkillUsageEvent>();
+      const outcomesQb = createQueryBuilderMock<SkillUsageEvent>();
       const repository = await buildRepository({
         events: { createQueryBuilder: vi.fn().mockReturnValue(eventsQb) },
         outcomes: { createQueryBuilder: vi.fn().mockReturnValue(outcomesQb) },
@@ -452,18 +402,18 @@ describe('SkillUsageEventsRepository', () => {
       // (success + abandoned, abandoned having null duration) with an opt-in
       // `error`. Postgres AVG(duration_ms) ignores the null-duration abandoned
       // row, so avgDurationMs reflects only the timed outcomes.
-      const eventsQb = createQueryBuilderMock({
-        getRawMany: vi.fn().mockResolvedValue([
+      const eventsQb = createQueryBuilderMock<SkillUsageEvent>({
+        rawMany: [
           {
             count: '20',
             lastUsedAt: '2026-07-31T00:00:00.000Z',
             scope: SKILL_USAGE_SCOPES.OURS,
             skillName: 'ot-plans',
           },
-        ]),
+        ],
       });
-      const outcomesQb = createQueryBuilderMock({
-        getRawMany: vi.fn().mockResolvedValue([
+      const outcomesQb = createQueryBuilderMock<SkillUsageEvent>({
+        rawMany: [
           {
             abandonedCount: '3',
             avgDurationMs: '2000', // AVG over the 6 success + 1 error timed rows
@@ -474,7 +424,7 @@ describe('SkillUsageEventsRepository', () => {
             skillName: 'ot-plans',
             successCount: '6',
           },
-        ]),
+        ],
       });
       const repository = await buildRepository({
         events: { createQueryBuilder: vi.fn().mockReturnValue(eventsQb) },
@@ -509,8 +459,8 @@ describe('SkillUsageEventsRepository', () => {
 
     describe('when the scope filter is set', () => {
       it('applies o.scope on the outcome query so the new feed is filtered', async () => {
-        const eventsQb = createQueryBuilderMock();
-        const outcomesQb = createQueryBuilderMock();
+        const eventsQb = createQueryBuilderMock<SkillUsageEvent>();
+        const outcomesQb = createQueryBuilderMock<SkillUsageEvent>();
         const repository = await buildRepository({
           events: { createQueryBuilder: vi.fn().mockReturnValue(eventsQb) },
           outcomes: {
@@ -532,8 +482,8 @@ describe('SkillUsageEventsRepository', () => {
 
     describe('when gitBranch and cwd filters are set', () => {
       it('adds equality predicates on both start and outcome queries', async () => {
-        const eventsQb = createQueryBuilderMock();
-        const outcomesQb = createQueryBuilderMock();
+        const eventsQb = createQueryBuilderMock<SkillUsageEvent>();
+        const outcomesQb = createQueryBuilderMock<SkillUsageEvent>();
         const repository = await buildRepository({
           events: { createQueryBuilder: vi.fn().mockReturnValue(eventsQb) },
           outcomes: {
@@ -568,8 +518,8 @@ describe('SkillUsageEventsRepository', () => {
 
   describe('when a repoIdentity filter is set', () => {
     it('matches starts directly and outcomes through their correlated start', async () => {
-      const eventsQb = createQueryBuilderMock();
-      const outcomesQb = createQueryBuilderMock();
+      const eventsQb = createQueryBuilderMock<SkillUsageEvent>();
+      const outcomesQb = createQueryBuilderMock<SkillUsageEvent>();
       const repository = await buildRepository({
         events: { createQueryBuilder: vi.fn().mockReturnValue(eventsQb) },
         outcomes: { createQueryBuilder: vi.fn().mockReturnValue(outcomesQb) },
@@ -594,8 +544,8 @@ describe('SkillUsageEventsRepository', () => {
 
   describe('when a skillName filter is set', () => {
     it('applies e.skill_name to starts and o.skill_name to outcomes', async () => {
-      const eventsQb = createQueryBuilderMock();
-      const outcomesQb = createQueryBuilderMock();
+      const eventsQb = createQueryBuilderMock<SkillUsageEvent>();
+      const outcomesQb = createQueryBuilderMock<SkillUsageEvent>();
       const repository = await buildRepository({
         events: { createQueryBuilder: vi.fn().mockReturnValue(eventsQb) },
         outcomes: { createQueryBuilder: vi.fn().mockReturnValue(outcomesQb) },
@@ -618,18 +568,18 @@ describe('SkillUsageEventsRepository', () => {
     });
 
     it('computes lastUsedAt from the filtered window as a Date', async () => {
-      const eventsQb = createQueryBuilderMock({
-        getRawMany: vi.fn().mockResolvedValue([
+      const eventsQb = createQueryBuilderMock<SkillUsageEvent>({
+        rawMany: [
           {
             count: '4',
             lastUsedAt: '2026-07-29T18:30:00.000Z',
             scope: SKILL_USAGE_SCOPES.OURS,
             skillName: 'ot-plans',
           },
-        ]),
+        ],
       });
-      const outcomesQb = createQueryBuilderMock({
-        getRawMany: vi.fn().mockResolvedValue([]),
+      const outcomesQb = createQueryBuilderMock<SkillUsageEvent>({
+        rawMany: [],
       });
       const repository = await buildRepository({
         events: { createQueryBuilder: vi.fn().mockReturnValue(eventsQb) },
@@ -673,8 +623,8 @@ describe('SkillUsageEventsRepository', () => {
 
   describe('when skillName is omitted', () => {
     it('adds no skill_name predicate on the start query', async () => {
-      const eventsQb = createQueryBuilderMock();
-      const outcomesQb = createQueryBuilderMock();
+      const eventsQb = createQueryBuilderMock<SkillUsageEvent>();
+      const outcomesQb = createQueryBuilderMock<SkillUsageEvent>();
       const repository = await buildRepository({
         events: { createQueryBuilder: vi.fn().mockReturnValue(eventsQb) },
         outcomes: { createQueryBuilder: vi.fn().mockReturnValue(outcomesQb) },
@@ -693,12 +643,12 @@ describe('SkillUsageEventsRepository', () => {
     it('returns ours vs personal vs third-party counts', async () => {
       // Grouping is by the column itself, so a new scope member needs no
       // widening here — it simply arrives as another row.
-      const qb = createQueryBuilderMock({
-        getRawMany: vi.fn().mockResolvedValue([
+      const qb = createQueryBuilderMock<SkillUsageEvent>({
+        rawMany: [
           { count: '10', scope: SKILL_USAGE_SCOPES.OURS },
           { count: '7', scope: SKILL_USAGE_SCOPES.PERSONAL },
           { count: '4', scope: SKILL_USAGE_SCOPES.THIRD_PARTY },
-        ]),
+        ],
       });
       const repository = await buildRepository({
         events: { createQueryBuilder: vi.fn().mockReturnValue(qb) },
@@ -720,10 +670,8 @@ describe('SkillUsageEventsRepository', () => {
       // Falling back to ours would inflate the count of skills we authored —
       // the number people actually act on. third-party matches how capture
       // itself fails open.
-      const qb = createQueryBuilderMock({
-        getRawMany: vi
-          .fn()
-          .mockResolvedValue([{ count: '3', scope: 'not-a-real-scope' }]),
+      const qb = createQueryBuilderMock<SkillUsageEvent>({
+        rawMany: [{ count: '3', scope: 'not-a-real-scope' }],
       });
       const repository = await buildRepository({
         events: { createQueryBuilder: vi.fn().mockReturnValue(qb) },
@@ -742,22 +690,22 @@ describe('SkillUsageEventsRepository', () => {
 
   describe('listCaptureHealth', () => {
     it('maps event and outcome sources to stream-tagged rows', async () => {
-      const eventsQb = createQueryBuilderMock({
-        getRawMany: vi.fn().mockResolvedValue([
+      const eventsQb = createQueryBuilderMock<SkillUsageEvent>({
+        rawMany: [
           {
             lastCapturedAt: new Date('2026-10-29T10:00:00.000Z'),
             source: 'claude-code',
           },
           { lastCapturedAt: '2026-10-28T08:00:00.000Z', source: 'unknown' },
-        ]),
+        ],
       });
-      const outcomesQb = createQueryBuilderMock({
-        getRawMany: vi.fn().mockResolvedValue([
+      const outcomesQb = createQueryBuilderMock<SkillUsageEvent>({
+        rawMany: [
           {
             lastCapturedAt: new Date('2026-10-27T09:00:00.000Z'),
             source: 'cursor',
           },
-        ]),
+        ],
       });
       const repository = await buildRepository({
         events: { createQueryBuilder: vi.fn().mockReturnValue(eventsQb) },
@@ -786,8 +734,8 @@ describe('SkillUsageEventsRepository', () => {
     });
 
     it('takes MAX(received_at) grouped by a NULL-safe source and excludes fixtures', async () => {
-      const eventsQb = createQueryBuilderMock();
-      const outcomesQb = createQueryBuilderMock();
+      const eventsQb = createQueryBuilderMock<SkillUsageEvent>();
+      const outcomesQb = createQueryBuilderMock<SkillUsageEvent>();
       const repository = await buildRepository({
         events: { createQueryBuilder: vi.fn().mockReturnValue(eventsQb) },
         outcomes: { createQueryBuilder: vi.fn().mockReturnValue(outcomesQb) },
@@ -827,8 +775,8 @@ describe('SkillUsageEventsRepository', () => {
 
   describe('listByDay', () => {
     it('maps per-day ours/personal/third-party/total counts', async () => {
-      const qb = createQueryBuilderMock({
-        getRawMany: vi.fn().mockResolvedValue([
+      const qb = createQueryBuilderMock<SkillUsageEvent>({
+        rawMany: [
           {
             date: '2026-07-15',
             injectedCount: '3',
@@ -837,7 +785,7 @@ describe('SkillUsageEventsRepository', () => {
             thirdPartyCount: '1',
             totalCount: '7',
           },
-        ]),
+        ],
       });
       const repository = await buildRepository({
         events: { createQueryBuilder: vi.fn().mockReturnValue(qb) },
@@ -861,14 +809,16 @@ describe('SkillUsageEventsRepository', () => {
     });
 
     it('selects one COUNT FILTER per scope member', async () => {
-      const qb = createQueryBuilderMock();
+      const qb = createQueryBuilderMock<SkillUsageEvent>();
       const repository = await buildRepository({
         events: { createQueryBuilder: vi.fn().mockReturnValue(qb) },
       });
 
       await repository.listByDay({ end: '2026-07-31', start: '2026-07-01' });
 
-      const aliases = qb.addSelect.mock.calls.map((call) => call[1]);
+      const aliases = qb.addSelect.mock.calls.flatMap((call) => {
+        return call.slice(1);
+      });
       expect(aliases).toEqual(
         expect.arrayContaining([
           'injectedCount',
@@ -880,15 +830,15 @@ describe('SkillUsageEventsRepository', () => {
     });
 
     it('reports a zero count for a scope absent from the window', async () => {
-      const qb = createQueryBuilderMock({
-        getRawMany: vi.fn().mockResolvedValue([
+      const qb = createQueryBuilderMock<SkillUsageEvent>({
+        rawMany: [
           {
             date: '2026-07-15',
             oursCount: '2',
             thirdPartyCount: '1',
             totalCount: '3',
           },
-        ]),
+        ],
       });
       const repository = await buildRepository({
         events: { createQueryBuilder: vi.fn().mockReturnValue(qb) },
@@ -906,25 +856,23 @@ describe('SkillUsageEventsRepository', () => {
 
   describe('getUsageAggregation', () => {
     it('composes bySkill/byScope/byDay/totalCount/filterOptions', async () => {
-      const skillQb = createQueryBuilderMock({
-        getRawMany: vi.fn().mockResolvedValue([
+      const skillQb = createQueryBuilderMock<SkillUsageEvent>({
+        rawMany: [
           {
             count: '5',
             scope: SKILL_USAGE_SCOPES.OURS,
             skillName: 'ot-plans',
           },
-        ]),
+        ],
       });
-      const outcomeQb = createQueryBuilderMock({
-        getRawMany: vi.fn().mockResolvedValue([]),
+      const outcomeQb = createQueryBuilderMock<SkillUsageEvent>({
+        rawMany: [],
       });
-      const scopeQb = createQueryBuilderMock({
-        getRawMany: vi
-          .fn()
-          .mockResolvedValue([{ count: '5', scope: SKILL_USAGE_SCOPES.OURS }]),
+      const scopeQb = createQueryBuilderMock<SkillUsageEvent>({
+        rawMany: [{ count: '5', scope: SKILL_USAGE_SCOPES.OURS }],
       });
-      const dayQb = createQueryBuilderMock({
-        getRawMany: vi.fn().mockResolvedValue([
+      const dayQb = createQueryBuilderMock<SkillUsageEvent>({
+        rawMany: [
           {
             date: '2026-07-15',
             injectedCount: '1',
@@ -933,21 +881,19 @@ describe('SkillUsageEventsRepository', () => {
             thirdPartyCount: '0',
             totalCount: '7',
           },
-        ]),
+        ],
       });
-      const countQb = createQueryBuilderMock({
-        getRawOne: vi.fn().mockResolvedValue({ count: '5' }),
+      const countQb = createQueryBuilderMock<SkillUsageEvent>({
+        rawOne: { count: '5' },
       });
-      const branchQb = createQueryBuilderMock({
-        getRawMany: vi.fn().mockResolvedValue([{ value: 'main' }]),
+      const branchQb = createQueryBuilderMock<SkillUsageEvent>({
+        rawMany: [{ value: 'main' }],
       });
-      const cwdQb = createQueryBuilderMock({
-        getRawMany: vi.fn().mockResolvedValue([{ value: '/repo' }]),
+      const cwdQb = createQueryBuilderMock<SkillUsageEvent>({
+        rawMany: [{ value: '/repo' }],
       });
-      const repoQb = createQueryBuilderMock({
-        getRawMany: vi
-          .fn()
-          .mockResolvedValue([{ value: 'https://github.com/org/repo' }]),
+      const repoQb = createQueryBuilderMock<SkillUsageEvent>({
+        rawMany: [{ value: 'https://github.com/org/repo' }],
       });
 
       const eventsCreateQueryBuilder = vi
@@ -1008,14 +954,14 @@ describe('SkillUsageEventsRepository', () => {
   });
   describe('listFilterOptions', () => {
     it('caps every option list so the deprecated fields stay bounded', async () => {
-      const branchQb = createQueryBuilderMock({
-        getRawMany: vi.fn().mockResolvedValue([{ value: 'main' }]),
+      const branchQb = createQueryBuilderMock<SkillUsageEvent>({
+        rawMany: [{ value: 'main' }],
       });
-      const cwdQb = createQueryBuilderMock({
-        getRawMany: vi.fn().mockResolvedValue([{ value: '/repo' }]),
+      const cwdQb = createQueryBuilderMock<SkillUsageEvent>({
+        rawMany: [{ value: '/repo' }],
       });
-      const repoQb = createQueryBuilderMock({
-        getRawMany: vi.fn().mockResolvedValue([]),
+      const repoQb = createQueryBuilderMock<SkillUsageEvent>({
+        rawMany: [],
       });
       const repository = await buildRepository({
         events: {
@@ -1042,11 +988,11 @@ describe('SkillUsageEventsRepository', () => {
     const buildBranchRepository = async (
       rows: ReadonlyArray<Record<string, unknown>>,
     ): Promise<{
-      qb: QueryBuilderMock;
+      qb: QueryBuilderMock<SkillUsageEvent>;
       repository: SkillUsageEventsRepository;
     }> => {
-      const qb = createQueryBuilderMock({
-        getRawMany: vi.fn().mockResolvedValue(rows),
+      const qb = createQueryBuilderMock<SkillUsageEvent>({
+        rawMany: rows,
       });
       const repository = await buildRepository({
         events: { createQueryBuilder: vi.fn().mockReturnValue(qb) },

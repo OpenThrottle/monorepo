@@ -15,6 +15,7 @@
 
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { readKeyedJsonlRun } from '@openthrottle/nestjs-logging';
+import { resolvePagination } from '@openthrottle/nestjs-postgres';
 
 import { getBullMqRunOutputBaseDirectory } from '../../config/config.utils.ts';
 import {
@@ -31,11 +32,10 @@ const DEFAULT_LIMIT = 200;
 const MAX_LIMIT = 1000;
 
 const clampLimit = (limit: number | null | undefined): number => {
-  if (limit == null) {
-    return DEFAULT_LIMIT;
-  }
-
-  return Math.min(MAX_LIMIT, Math.max(1, Math.trunc(limit)));
+  return resolvePagination(
+    { limit },
+    { defaultLimit: DEFAULT_LIMIT, max: MAX_LIMIT },
+  ).take;
 };
 
 @Injectable()

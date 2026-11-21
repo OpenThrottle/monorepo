@@ -18,6 +18,13 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { CurrentUser } from '@openthrottle/nestjs-auth';
+import { assertPagination } from '@openthrottle/nestjs-graphql';
+import {
+  hasNextPage,
+  PAGINATION_DEFAULT_LIMIT,
+  PAGINATION_MAX_LIMIT,
+  resolvePagination,
+} from '@openthrottle/nestjs-postgres';
 import type {
   CreateTaskBatchItem,
   Plan,
@@ -28,7 +35,6 @@ import {
   PLAN_TASK_LIST_ORDER,
   resolveCompletedAtForStatusChange,
   Task,
-  TASK_SORT_ORDER_GAP,
   TasksRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import { EmitNotification } from '@openthrottle/nestjs-websockets';
@@ -41,6 +47,7 @@ import { PLAN_RULES_TRIGGER_KINDS } from '../../queues/plan-rules/plan-rules.con
 import { TaggingEnqueueService } from '../../queues/tagging/enqueue/enqueue.service.ts';
 import { TAGGING_ENTITY_TYPES } from '../../queues/tagging/tagging.constants.ts';
 import { TaskPromotionEnqueueService } from '../../queues/task-promotion/enqueue/enqueue.service.ts';
+import { PlanTaskOrderService } from '../../services/plan-task-order/plan-task-order.service.ts';
 import { PlanObject } from '../plans/plan.object.ts';
 import { PlanStatusService } from '../plans/plan-status/plan-status.service.ts';
 import { ProjectObject } from '../projects/project.object.ts';
@@ -143,6 +150,7 @@ export class TasksResolver {
     private readonly notificationsService: NotificationsService,
     private readonly planRulesEvaluationService: PlanRulesEvaluationService,
     private readonly planStatusService: PlanStatusService,
+    private readonly planTaskOrder: PlanTaskOrderService,
     private readonly taggingEnqueueService: TaggingEnqueueService,
     private readonly taskPromotionEnqueueService: TaskPromotionEnqueueService,
     private readonly tasksRepository: TasksRepository,
@@ -225,9 +233,9 @@ export class TasksResolver {
     @Args('limit', { nullable: true, type: () => Int })
     limit?: number | null,
   ): Promise<Task[]> {
-    const effectiveLimit = Math.min(
-      Math.max(1, limit ?? DEFAULT_TASKS_LIMIT),
-      MAX_TASKS_LIMIT,
+    const { take: effectiveLimit } = resolvePagination(
+      { limit },
+      { defaultLimit: DEFAULT_TASKS_LIMIT, max: MAX_TASKS_LIMIT },
     );
     const entities = await this.tasksRepository.findBy({
       order: { ...CROSS_PLAN_TASK_LIST_ORDER },
@@ -253,52 +261,38 @@ export class TasksResolver {
   }
 
   @Query(() => TasksByProjectIdResultObject, {
-    description: `List tasks for a project by project ID (FK). Optional limit/offset for pagination; when omitted returns all tasks and totalCount.`,
+    description: `List tasks for a project by project ID (FK), ordered by planId then sortOrder then createdAt ascending. limit is 1 to ${PAGINATION_MAX_LIMIT} (default ${PAGINATION_DEFAULT_LIMIT}); offset is 0 or more.`,
   })
   async tasksByProjectId(
     @Args('input', { type: () => TasksByProjectIdInput })
     input: TasksByProjectIdInput,
   ): Promise<TasksByProjectIdResultObject> {
-    const repo = this.tasksRepository;
-    const where = { projectId: input.projectId };
+    assertPagination(input, { max: PAGINATION_MAX_LIMIT });
 
-    const usePagination = input.limit != null && input.limit > 0;
-    const take = usePagination ? input.limit : undefined;
-    const skip = usePagination ? (input.offset ?? 0) : undefined;
-
-    if (usePagination && take != null) {
-      const [entities, totalCount] = await Promise.all([
-        repo.findBy({
-          order: { ...CROSS_PLAN_TASK_LIST_ORDER },
-          skip,
-          take,
-          where,
-        }),
-        repo.countByProjectId(input.projectId),
-      ]);
+    const { skip, take } = resolvePagination(input);
+    const [entities, totalCount] = await Promise.all([
+      this.tasksRepository.findBy({
+        order: { ...CROSS_PLAN_TASK_LIST_ORDER },
+        skip,
+        take,
+        where: { projectId: input.projectId },
+      }),
+      this.tasksRepository.countByProjectId(input.projectId),
+    ]);
+    const items = entities.map((t): TaskObject => {
       return {
-        tasks: entities.map((t): TaskObject => ({
-          ...t,
-          plan: null,
-          projectRelation: null,
-          requirementsJson: JSON.stringify(t.requirements ?? []),
-        })),
-        totalCount,
-      };
-    }
-
-    const entities = await repo.findBy({
-      order: { ...CROSS_PLAN_TASK_LIST_ORDER },
-      where,
-    });
-    return {
-      tasks: entities.map((t): TaskObject => ({
         ...t,
         plan: null,
         projectRelation: null,
         requirementsJson: JSON.stringify(t.requirements ?? []),
-      })),
-      totalCount: entities.length,
+      };
+    });
+
+    return {
+      hasNextPage: hasNextPage({ items, totalCount }, skip),
+      items,
+      tasks: items,
+      totalCount,
     };
   }
 
@@ -629,61 +623,13 @@ export class TasksResolver {
   }
 
   @Mutation(() => [TaskObject], {
-    description: `Reorder tasks within a plan. Renumbers sortOrder 1000, 2000, … in taskIds order atomically.`,
+    description: `Reorder tasks within a plan. The listed tasks take the sortOrder values they already hold, in taskIds order; tasks not listed keep their place. A full list reorders the whole plan; a partial list reorders only itself, in place. Atomic. Fails on a duplicate id or an id that is not a task of the plan.`,
   })
   async reorderPlanTasks(
     @Args('input', { type: () => ReorderPlanTasksInput })
     input: ReorderPlanTasksInput,
   ): Promise<Task[]> {
-    const { planId, taskIds } = input;
-
-    if (taskIds.length === 0) {
-      return [];
-    }
-
-    const uniqueTaskIds = [...new Set(taskIds)];
-
-    if (uniqueTaskIds.length !== taskIds.length) {
-      throw new BadRequestException('taskIds must not contain duplicates');
-    }
-
-    const tasks = await this.tasksRepository.findBy({
-      where: { id: In(taskIds), planId },
-    });
-
-    if (tasks.length !== taskIds.length) {
-      throw new BadRequestException(
-        'One or more taskIds do not belong to the plan',
-      );
-    }
-
-    const taskById = new Map(tasks.map((task) => [task.id, task]));
-    const orderedTasks = taskIds.map((id) => taskById.get(id)!);
-    const temporarySortOrderBase = 1_000_000;
-
-    return this.dataSource.transaction(async (manager) => {
-      const taskRepo = manager.getRepository(Task);
-
-      await Promise.all(
-        orderedTasks.map((task, index) =>
-          taskRepo.update(task.id, {
-            sortOrder: temporarySortOrderBase + index,
-          }),
-        ),
-      );
-
-      const results: Task[] = [];
-
-      await Promise.all(
-        orderedTasks.map(async (task, index) => {
-          const sortOrder = (index + 1) * TASK_SORT_ORDER_GAP;
-          await taskRepo.update(task.id, { sortOrder });
-          results[index] = { ...task, sortOrder };
-        }),
-      );
-
-      return results;
-    });
+    return this.planTaskOrder.reorderTasks(input.planId, input.taskIds);
   }
 
   @Mutation(() => Boolean, {

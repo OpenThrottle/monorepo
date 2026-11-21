@@ -13,8 +13,10 @@
   "description": "Postgres building blocks for NestJS + TypeORM: a generic BaseRepository and BaseModel, plus an opt-in @PostgresProfiling decorator that EXPLAINs the SQL a repository method issues.",
   "devDependencies": {
     "@faker-js/faker": "catalog:",
+    "@golevelup/ts-vitest": "catalog:",
     "@openthrottle/nestjs-testing": "workspace:^",
     "fishery": "catalog:",
+    "pg": "catalog:",
     "reflect-metadata": "catalog:",
     "vitest": "catalog:"
   },

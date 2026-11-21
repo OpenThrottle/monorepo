@@ -32,7 +32,7 @@ query getProjectById($id: ID!, $limit: Int!, $offset: Int!) {
   }
 
   projectPlansPage(input: { limit: $limit, offset: $offset, projectId: $id }) {
-    plans {
+    items {
       ...ProjectPlanRow
     }
     totalCount

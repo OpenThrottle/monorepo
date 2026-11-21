@@ -166,7 +166,7 @@ describe('callLoadAgentConversationMessages', () => {
   test('maps persisted messages into chat thread rows', async () => {
     mockExecute.mockResolvedValueOnce({
       getAgentConversationMessages: {
-        messages: [
+        items: [
           {
             content: 'Question',
             createdAt: '2026-06-07T00:00:00.000Z',
@@ -347,7 +347,7 @@ describe('handleLoadAgentConversationMessagesIntent', () => {
   test('loads messages for the stored conversation id', async () => {
     mockExecute.mockResolvedValueOnce({
       getAgentConversationMessages: {
-        messages: [
+        items: [
           {
             content: 'Hello',
             createdAt: '2026-06-07T00:00:00.000Z',

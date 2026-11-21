@@ -8,7 +8,7 @@ fragment CmsSchemaRow on CmsSchemaObject {
 }
 
 query CmsSchemas {
-  cmsSchemas(take: 100) {
+  cmsSchemas(limit: 100) {
     hasNextPage
     items {
       ...CmsSchemaRow
