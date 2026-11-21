@@ -1,3 +1,30 @@
+# 2.0.0 (2026-11-21)
+
+### 🚀 Features
+
+- **openthrottle-developer:** paginate project plans server-side at 50 ([#941](https://github.com/OpenThrottle/monorepo/pull/941))
+- **openthrottle-server:** make projects ordered, cross-repo initiatives ([#930](https://github.com/OpenThrottle/monorepo/pull/930))
+- **openthrottle-server:** add webhook-triggered agent jobs and MCP scheduling ([#938](https://github.com/OpenThrottle/monorepo/pull/938))
+
+### 🩹 Fixes
+
+- **openthrottle-server:** refuse service-account callers of the skill-tag vocabulary ([#927](https://github.com/OpenThrottle/monorepo/pull/927))
+- **openthrottle-showroom:** leave soft-deleted rows out of the snapshot ([#915](https://github.com/OpenThrottle/monorepo/pull/915))
+- **react-router-utils:** remove dev hydration mismatches on 404 and appearance ([#910](https://github.com/OpenThrottle/monorepo/pull/910))
+- **openthrottle-server:** give duplicate skill tags a SKILL_TAG_CONFLICT code ([#912](https://github.com/OpenThrottle/monorepo/pull/912))
+
+### 📖 Documentation
+
+- **openthrottle-server:** describe deleteTagActionRule as a soft delete ([#911](https://github.com/OpenThrottle/monorepo/pull/911))
+
+### 🏡 Chore
+
+- **monorepo:** phase 2 server and node package updates ([#917](https://github.com/OpenThrottle/monorepo/pull/917))
+
+### ❤️ Thank You
+
+- Matthew Scholta @visormatt
+
 ## 1.1.0 (2026-11-16)
 
 ### 🚀 Features
