@@ -31,9 +31,7 @@ query getProjectById($id: ID!, $limit: Int!, $offset: Int!) {
     ...ProjectPageDetails
   }
 
-  projectPlansPage(
-    input: { limit: $limit, offset: $offset, projectId: $id }
-  ) {
+  projectPlansPage(input: { limit: $limit, offset: $offset, projectId: $id }) {
     plans {
       ...ProjectPlanRow
     }
