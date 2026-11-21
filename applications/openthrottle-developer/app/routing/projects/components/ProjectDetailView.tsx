@@ -6,7 +6,10 @@ import {
   CardHeader,
   Separator,
 } from '@openthrottle/react-router-shadcn';
-import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
+import {
+  OpenThrottleClipboard,
+  OpenThrottlePagination,
+} from '@openthrottle/react-router-ui';
 import * as React from 'react';
 import { Link, useFetcher } from 'react-router';
 
@@ -16,6 +19,7 @@ import { PlanTagChips } from '~/routing/plans/components/PlanTagChips';
 import { ProjectPlanAdd } from '~/routing/projects/components/ProjectPlanAdd';
 import { ProjectPlansList } from '~/routing/projects/components/ProjectPlansList';
 import { ProjectRepositories } from '~/routing/projects/components/ProjectRepositories';
+import { PROJECT_PLANS_PAGE_LIMIT } from '~/routing/projects/config/projects.defaults';
 import { PROJECT_PLANS_COPY } from '~/routing/projects/data/data.copy';
 import { formatProjectDate } from '~/routing/projects/utils/format';
 
@@ -24,14 +28,17 @@ type ProjectDetailLoaderData = Route.ComponentProps['loaderData'];
 export interface ProjectDetailViewProps {
   availablePlans: ProjectDetailLoaderData['availablePlans'];
   availableRepositories: ProjectDetailLoaderData['availableRepositories'];
+  page: number;
+  pageOffset: number;
   plans: ProjectDetailLoaderData['projectPlans'];
+  plansTotal: number;
   project: ProjectPageDetailsFragment;
   tagVocabulary: ProjectDetailLoaderData['tagVocabulary'];
 }
 
 /**
  * @description Project detail page body: overview card with tag chips, linked
- * repositories and the ordered plan list. Owns the tag add/remove fetcher.
+ * repositories and one page of the ordered plan list with its pager. Owns the tag add/remove fetcher.
  * Extracted from the route Component per route-primitive-shape R4.
  */
 export const ProjectDetailView = (
@@ -40,7 +47,10 @@ export const ProjectDetailView = (
   const {
     availablePlans,
     availableRepositories,
+    page,
+    pageOffset,
     plans,
+    plansTotal,
     project,
     tagVocabulary,
   } = props;
@@ -139,7 +149,19 @@ export const ProjectDetailView = (
           </h2>
           <ProjectPlanAdd plans={availablePlans} />
         </div>
-        <ProjectPlansList plans={plans} />
+        <ProjectPlansList
+          offset={pageOffset}
+          plans={plans}
+          totalCount={plansTotal}
+        />
+        <OpenThrottlePagination
+          basePath={`/projects/${project.id}`}
+          className="mt-4"
+          limit={PROJECT_PLANS_PAGE_LIMIT}
+          page={page}
+          resultLabel="plans"
+          total={plansTotal}
+        />
       </section>
     </div>
   );

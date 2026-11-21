@@ -79,6 +79,8 @@ describe('ProjectsResolver', () => {
   const membership = {
     addPlan: vi.fn(),
     listPlans: vi.fn(),
+    movePlan: vi.fn(),
+    pagePlans: vi.fn(),
     removePlan: vi.fn(),
     reorderPlans: vi.fn(),
   };
@@ -386,6 +388,59 @@ describe('ProjectsResolver', () => {
         plan,
       ]);
       expect(membership.listPlans).toHaveBeenCalledWith(mockProject.id);
+    });
+
+    test('projectPlansPage reads one page through the membership service', async () => {
+      membership.pagePlans.mockResolvedValue({ plans: [plan], totalCount: 94 });
+
+      await expect(
+        resolver.projectPlansPage({
+          limit: 50,
+          offset: 50,
+          projectId: mockProject.id,
+        }),
+      ).resolves.toEqual({ plans: [plan], totalCount: 94 });
+      expect(membership.pagePlans).toHaveBeenCalledWith(mockProject.id, {
+        limit: 50,
+        offset: 50,
+      });
+    });
+
+    test('projectPlansPage rejects a limit out of range', async () => {
+      await expect(
+        resolver.projectPlansPage({
+          limit: 0,
+          offset: 0,
+          projectId: mockProject.id,
+        }),
+      ).rejects.toThrow('limit must be between 1 and 200');
+      await expect(
+        resolver.projectPlansPage({
+          limit: 201,
+          offset: 0,
+          projectId: mockProject.id,
+        }),
+      ).rejects.toThrow('limit must be between 1 and 200');
+      expect(membership.pagePlans).not.toHaveBeenCalled();
+    });
+
+    test('projectPlansPage rejects a negative offset', async () => {
+      await expect(
+        resolver.projectPlansPage({
+          limit: 50,
+          offset: -1,
+          projectId: mockProject.id,
+        }),
+      ).rejects.toThrow('offset must be 0 or more');
+    });
+
+    test('moveProjectPlan moves through the membership service', async () => {
+      membership.movePlan.mockResolvedValue([plan]);
+
+      await expect(
+        resolver.moveProjectPlan({ direction: 'UP', planId: plan.id }),
+      ).resolves.toEqual([plan]);
+      expect(membership.movePlan).toHaveBeenCalledWith(plan.id, 'UP');
     });
 
     test('addPlanToProject adds through the membership service', async () => {

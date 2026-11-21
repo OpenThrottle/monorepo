@@ -324,6 +324,31 @@ describe('PlansRepository', () => {
     });
   });
 
+  describe('pageInProject', () => {
+    it('reads one window of the project order with the total count', async () => {
+      const plans = plansFactory.buildList(2);
+      queryBuilder.getManyAndCount.mockResolvedValue([plans, 94]);
+
+      const result = await repository.pageInProject('project-1', {
+        limit: 50,
+        offset: 50,
+      });
+
+      expect(result).toEqual({ plans, totalCount: 94 });
+      expect(queryBuilder.where).toHaveBeenCalledWith(
+        'plan.projectId = :projectId',
+        { projectId: 'project-1' },
+      );
+      expect(queryBuilder.orderBy).toHaveBeenCalledWith(
+        'plan.projectSortOrder',
+        'ASC',
+        'NULLS LAST',
+      );
+      expect(queryBuilder.skip).toHaveBeenCalledWith(50);
+      expect(queryBuilder.take).toHaveBeenCalledWith(50);
+    });
+  });
+
   describe('maxProjectSortOrders', () => {
     it('skips the query when no project is asked about', async () => {
       const result = await repository.maxProjectSortOrders([]);

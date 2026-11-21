@@ -20,6 +20,8 @@ import type {
   ListPlansFilteredResult,
   PlanCreateInput,
   PlanStatusCountRow,
+  ProjectPlansPage,
+  ProjectPlansPageResult,
 } from './plans.types.ts';
 
 /**
@@ -262,6 +264,26 @@ export class PlansRepository extends BaseRepository<Plan, PlanCreateInput> {
       .orderBy('plan.projectSortOrder', 'ASC', 'NULLS LAST')
       .addOrderBy('plan.createdAt', 'ASC')
       .getMany();
+  }
+
+  /**
+   * @description One page of {@link PlansRepository.listInProject}: the same order, `limit`
+   * rows from `offset`, plus the project's total live plan count.
+   */
+  async pageInProject(
+    projectId: string,
+    page: ProjectPlansPage,
+  ): Promise<ProjectPlansPageResult> {
+    const [plans, totalCount] = await this.repository
+      .createQueryBuilder('plan')
+      .where('plan.projectId = :projectId', { projectId })
+      .orderBy('plan.projectSortOrder', 'ASC', 'NULLS LAST')
+      .addOrderBy('plan.createdAt', 'ASC')
+      .skip(page.offset)
+      .take(page.limit)
+      .getManyAndCount();
+
+    return { plans, totalCount };
   }
 
   /**

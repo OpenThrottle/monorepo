@@ -2840,6 +2840,13 @@ export type ModelEndpointObject = {
   provider?: Maybe<Scalars['String']['output']>;
 };
 
+export type MoveProjectPlanInput = {
+  /** UP swaps with the earlier plan in project order, DOWN with the later one */
+  direction: ProjectPlanMoveDirection;
+  /** Plan to move within its project */
+  planId: Scalars['ID']['input'];
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
   /** Add a child under a parent fragment, at sortOrder or last. BAD_USER_INPUT for a cycle or a tree deeper than 10; CONFLICT if the edge exists. */
@@ -3037,6 +3044,8 @@ export type Mutation = {
   login: LoginResultObject;
   /** Mint a short-lived token (scoped to the current user) for authenticating a graphql-ws subscription connection via connectionParams.authToken. */
   mintSubscriptionToken: Scalars['String']['output'];
+  /** Swap a plan with its neighbour in its project's full order (UP = earlier, DOWN = later), so a move works across any page boundary. A plan already at that end stays put. Returns every live plan of the project in the resulting order. Fails when the plan does not exist or is in no project. */
+  moveProjectPlan: Array<PlanObject>;
   /** Pause a queue: workers stop picking up new jobs while in-flight jobs finish. Reversible via resumeQueue. */
   pauseQueue: QueueControlResultObject;
   /** Open the host OS folder dialog and return the chosen absolute server-host path, or null on user-cancel. Guarded by the same same-machine predicate as workspacePickerCapabilities (re-checked before spawning) and bounded by a kill timeout. Does not register anything — the client confirms and calls addWorkspaceFolder. */
@@ -3617,6 +3626,10 @@ export type MutationLinkProjectRepositoryArgs = {
 
 export type MutationLoginArgs = {
   input: LoginInput;
+};
+
+export type MutationMoveProjectPlanArgs = {
+  input: MoveProjectPlanInput;
 };
 
 export type MutationPauseQueueArgs = {
@@ -4537,6 +4550,30 @@ export type ProjectObject = {
   updatedAt: Scalars['DateTime']['output'];
 };
 
+/** Which neighbour a plan swaps with in project order: UP is the earlier plan, DOWN the later one. */
+export const ProjectPlanMoveDirection = {
+  Down: 'DOWN',
+  Up: 'UP',
+} as const;
+
+export type ProjectPlanMoveDirection =
+  (typeof ProjectPlanMoveDirection)[keyof typeof ProjectPlanMoveDirection];
+export type ProjectPlansPageInput = {
+  /** Page size, 1 to 200 */
+  limit: Scalars['Int']['input'];
+  /** Rows to skip; 0 or more */
+  offset: Scalars['Int']['input'];
+  /** Project whose plans are listed */
+  projectId: Scalars['ID']['input'];
+};
+
+export type ProjectPlansPageResultObject = {
+  __typename?: 'ProjectPlansPageResultObject';
+  plans: Array<PlanObject>;
+  /** Live plans in the project, across every page */
+  totalCount: Scalars['Int']['output'];
+};
+
 /** A link between a project and a repository (many-to-many). */
 export type ProjectRepositoryObject = {
   __typename?: 'ProjectRepositoryObject';
@@ -4905,6 +4942,8 @@ export type Query = {
   project?: Maybe<ProjectObject>;
   /** The live plans of a project in project order (projectSortOrder ascending) */
   projectPlans: Array<PlanObject>;
+  /** One page of a project's live plans in project order (projectSortOrder ascending), plus the project's total live plan count. limit is 1 to 200; offset is 0 or more. */
+  projectPlansPage: ProjectPlansPageResultObject;
   /** A project's ingested skill universe: slug, static frontmatter tags, and the tri-state static disable-model-invocation flag. Omit projectId to resolve the dogfood monorepo project (nx_project_name = 'monorepo'); returns an empty list when the project or its ingested rows are absent. Display-only in v1 — no per-context effective availability. */
   projectSkills: ProjectSkillsResult;
   /** List all projects, ordered by createdAt descending */
@@ -5332,6 +5371,10 @@ export type QueryProjectArgs = {
 
 export type QueryProjectPlansArgs = {
   projectId: Scalars['ID']['input'];
+};
+
+export type QueryProjectPlansPageArgs = {
+  input: ProjectPlansPageInput;
 };
 
 export type QueryProjectSkillsArgs = {

@@ -2,7 +2,10 @@ import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import { GlobalScreen } from '@openthrottle/react-router-ui-global';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import {
+  mergeRouteModuleMeta,
+  parsePaginationPage,
+} from '@openthrottle/react-router-utils';
 import * as React from 'react';
 
 import type { Route } from '@/app/routes/+types/projects.$projectId._index';
@@ -11,6 +14,7 @@ import { SITE_TITLE } from '~/global/config/settings';
 import { runProjectDetailAction } from '~/routing/projects/actions/projectId';
 import { ProjectDetailView } from '~/routing/projects/components/ProjectDetailView';
 import { ProjectNotFound } from '~/routing/projects/components/ProjectNotFound';
+import { PROJECT_PLANS_PAGE_LIMIT } from '~/routing/projects/config/projects.defaults';
 import {
   getAvailablePlans,
   getUnlinkedRepositories,
@@ -25,15 +29,21 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
 
 export const loader = async (args: Route.LoaderArgs) => {
   const projectId = args.params.projectId;
+  // The page size is fixed: only `?page=` is read, so a hand-edited `?limit=`
+  // cannot pull the whole project back into one response.
+  const page = parsePaginationPage(args.url.searchParams.get('page'));
+  const offset = (page - 1) * PROJECT_PLANS_PAGE_LIMIT;
 
   const {
     availablePlans,
     project,
-    projectPlans,
+    projectPlansPage,
     skillTagVocabulary,
     workspaceRepositories,
   } = await executeGraphqlWithAuth(args.request, GetProjectByIdDocument, {
     id: projectId,
+    limit: PROJECT_PLANS_PAGE_LIMIT,
+    offset,
   });
 
   return {
@@ -42,8 +52,11 @@ export const loader = async (args: Route.LoaderArgs) => {
       workspaceRepositories,
       project?.repositories ?? [],
     ),
+    page,
+    pageOffset: offset,
     project,
-    projectPlans,
+    projectPlans: projectPlansPage.plans,
+    projectPlansTotal: projectPlansPage.totalCount,
     tagVocabulary: skillTagVocabulary.tags ?? [],
   };
 };
@@ -68,8 +81,11 @@ export default function Component(
   const {
     availablePlans,
     availableRepositories,
+    page,
+    pageOffset,
     project,
     projectPlans,
+    projectPlansTotal,
     tagVocabulary,
   } = loaderData;
 
@@ -93,7 +109,10 @@ export default function Component(
       <ProjectDetailView
         availablePlans={availablePlans}
         availableRepositories={availableRepositories}
+        page={page}
+        pageOffset={pageOffset}
         plans={projectPlans}
+        plansTotal={projectPlansTotal}
         project={project}
         tagVocabulary={tagVocabulary}
       />

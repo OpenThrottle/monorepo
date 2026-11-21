@@ -3750,6 +3750,13 @@ type ProjectSkillsResult {
   orphanSlugs: [String!]!
 }
 
+type ProjectPlansPageResultObject {
+  plans: [PlanObject!]!
+
+  """Live plans in the project, across every page"""
+  totalCount: Int!
+}
+
 """A link between a project and a repository (many-to-many)."""
 type ProjectRepositoryObject {
   createdAt: DateTime!
@@ -6505,6 +6512,11 @@ type Query {
   projectPlans(projectId: ID!): [PlanObject!]!
 
   """
+  One page of a project's live plans in project order (projectSortOrder ascending), plus the project's total live plan count. limit is 1 to 200; offset is 0 or more.
+  """
+  projectPlansPage(input: ProjectPlansPageInput!): ProjectPlansPageResultObject!
+
+  """
   Historical / catch-up read of a job's keyed BullMQ run transcript, paged by opaque cursor.
   """
   queueJobLogs(input: QueueJobLogsInput!): QueueJobLogPageObject!
@@ -7269,6 +7281,17 @@ input SearchPlansInput {
   query: String!
 }
 
+input ProjectPlansPageInput {
+  """Page size, 1 to 200"""
+  limit: Int!
+
+  """Rows to skip; 0 or more"""
+  offset: Int!
+
+  """Project whose plans are listed"""
+  projectId: ID!
+}
+
 input QueueJobLogsInput {
   """Opaque cursor from a prior page. Mutually exclusive with `since`."""
   after: String
@@ -7876,6 +7899,11 @@ type Mutation {
   Remove a repository's link to a project. Returns false when the pair was not linked.
   """
   unlinkProjectRepository(input: UnlinkProjectRepositoryInput!): Boolean!
+
+  """
+  Swap a plan with its neighbour in its project's full order (UP = earlier, DOWN = later), so a move works across any page boundary. A plan already at that end stays put. Returns every live plan of the project in the resulting order. Fails when the plan does not exist or is in no project.
+  """
+  moveProjectPlan(input: MoveProjectPlanInput!): [PlanObject!]!
 
   """
   Add a plan to a project, appended after the project's last plan (a plan in another project moves and lands at the end of this one). Also links the plan's workspace repository to the project when it is set and not yet linked; that link never blocks. Idempotent for a plan already in the project. Fails when the plan or project does not exist.
@@ -9804,6 +9832,24 @@ input UnlinkProjectRepositoryInput {
 
   """Repository to unlink"""
   repositoryId: ID!
+}
+
+input MoveProjectPlanInput {
+  """
+  UP swaps with the earlier plan in project order, DOWN with the later one
+  """
+  direction: ProjectPlanMoveDirection!
+
+  """Plan to move within its project"""
+  planId: ID!
+}
+
+"""
+Which neighbour a plan swaps with in project order: UP is the earlier plan, DOWN the later one.
+"""
+enum ProjectPlanMoveDirection {
+  DOWN
+  UP
 }
 
 input AddPlanToProjectInput {

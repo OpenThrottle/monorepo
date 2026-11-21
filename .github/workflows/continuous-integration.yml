@@ -1152,18 +1152,19 @@ jobs:
             exit 0
           fi
 
-          # Keep in sync with the glob in nx.json's format:check target.
-          formattable="$(echo "$changed" | grep -E '\.(cjs|css|html|js|json|jsx|less|md|mdx|mjs|sass|scss|ts|tsx|yaml|yml)$' || true)"
-
-          if [ -z "$formattable" ]; then
-            echo "→ no formattable files changed; nothing to check"
+          if [ -z "$changed" ]; then
+            echo "→ no files changed; nothing to check"
             exit 0
           fi
 
-          echo "→ checking $(echo "$formattable" | wc -l | tr -d ' ') changed file(s)"
+          # No extension allowlist: Prettier decides what it formats, exactly as
+          # the full-tree `prettier --check .` sweep does. A hand-kept list here
+          # once omitted .graphql, so an unformatted document passed every PR
+          # check and only failed in the merge queue.
+          echo "→ checking $(echo "$changed" | wc -l | tr -d ' ') changed file(s)"
           # NUL-delimited so paths containing spaces survive. --ignore-unknown so
           # an ignored or unsupported path cannot fail the step.
-          printf '%s\n' "$formattable" | tr '\n' '\0' \
+          printf '%s\n' "$changed" | tr '\n' '\0' \
             | xargs -0 pnpm exec prettier --ignore-unknown --check
 
       # Runs every `audit:*:strict` script except test-coverage, via the glob in

@@ -292,6 +292,7 @@
     "./src/graphql/plans/plan.input.ts",
     "./src/graphql/project-skills/project-skill.object.ts",
     "./src/graphql/project-skills/project-skills.input.ts",
+    "./src/graphql/projects/project-plan-move-direction.enum.ts",
     "./src/graphql/prompts/custom-prompt.object.ts",
     "./src/graphql/queue-job-logs/queue-job-log-level.enum.ts",
     "./src/graphql/rollout/rollout-evaluation-reason.enum.ts",

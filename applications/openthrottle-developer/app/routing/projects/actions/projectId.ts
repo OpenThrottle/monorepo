@@ -8,13 +8,14 @@ import {
   ProjectDetailAddPlanDocument,
   ProjectDetailAddProjectTagDocument,
   ProjectDetailLinkRepositoryDocument,
+  ProjectDetailMovePlanDocument,
   ProjectDetailRemovePlanDocument,
   ProjectDetailRemoveProjectTagDocument,
-  ProjectDetailReorderPlansDocument,
   ProjectDetailUnlinkRepositoryDocument,
 } from '~/__generated__/graphql';
 import {
   AddProjectTagInputSchema,
+  MoveProjectPlanInputSchema,
   RemoveProjectTagInputSchema,
 } from '~/__generated__/schemas';
 
@@ -47,9 +48,6 @@ const runProjectStructureIntent = async (
 ) => {
   const planId = readField(formData, 'planId');
   const repositoryId = readField(formData, 'repositoryId');
-  const planIds = readField(formData, 'planIds')
-    .split(',')
-    .filter((id) => id !== '');
 
   if (intent === 'linkProjectRepository' && repositoryId !== '') {
     await executeGraphqlWithAuth(
@@ -73,12 +71,16 @@ const runProjectStructureIntent = async (
       ProjectDetailRemovePlanDocument,
       { input: { planId } },
     );
-  } else if (intent === 'reorderProjectPlans' && planIds.length > 0) {
-    await executeGraphqlWithAuth(
-      args.request,
-      ProjectDetailReorderPlansDocument,
-      { input: { planIds, projectId } },
-    );
+  } else if (intent === 'moveProjectPlan') {
+    // Swaps with the neighbour in the project's full order, so a move works
+    // across a page boundary the client cannot see.
+    const parsed = parseFormData(formData, MoveProjectPlanInputSchema());
+    if (!parsed.success) {
+      return { projectError: parsed.error };
+    }
+    await executeGraphqlWithAuth(args.request, ProjectDetailMovePlanDocument, {
+      input: parsed.data,
+    });
   } else {
     return { projectError: 'Missing or unknown project change.' };
   }
@@ -133,7 +135,7 @@ export const runProjectDetailAction = async (args: Route.ActionArgs) => {
     intent === 'unlinkProjectRepository' ||
     intent === 'addPlanToProject' ||
     intent === 'removePlanFromProject' ||
-    intent === 'reorderProjectPlans'
+    intent === 'moveProjectPlan'
   ) {
     try {
       return await runProjectStructureIntent(args, projectId, intent, formData);

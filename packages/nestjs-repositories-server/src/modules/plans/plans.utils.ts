@@ -40,6 +40,9 @@ export function createPlansRepositoryMock(): PlansRepositoryMock {
     maxProjectSortOrders: vi.fn(async () => {
       return new Map<string, number>();
     }),
+    pageInProject: vi.fn(async () => {
+      return { plans: [], totalCount: 0 };
+    }),
     renumberProjectPlans: vi.fn(async () => {
       return [];
     }),
