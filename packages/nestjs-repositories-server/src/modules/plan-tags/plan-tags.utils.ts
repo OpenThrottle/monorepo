@@ -25,5 +25,8 @@ export function createPlanTagsRepositoryMock(): PlanTagsRepositoryMock {
     listByPlanId: vi.fn(async () => {
       return [];
     }),
+    listEffectiveTagNamesForPlans: vi.fn(async () => {
+      return [];
+    }),
   };
 }

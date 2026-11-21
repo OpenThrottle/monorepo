@@ -12,6 +12,7 @@ query TagActionRules {
     environment
     id
     projectId
+    repositoryId
     status
     tagAll
     title
@@ -33,6 +34,53 @@ query RuleApplications($planId: ID!) {
   }
 }
 
+query RuleApplicationsForRule($ruleId: ID!) {
+  ruleApplicationsForRule(ruleId: $ruleId) {
+    createdAt
+    detailsJson
+    id
+    planId
+    ruleId
+    state
+    taskId
+    updatedAt
+  }
+}
+
+query PreviewTagActionRule(
+  $environment: String
+  $input: UpsertTagActionRuleInput!
+) {
+  previewTagActionRule(environment: $environment, input: $input) {
+    cap
+    environment
+    evaluated
+    matched {
+      id
+      repositoryId
+      status
+      title
+    }
+    matchedCount
+    nonMatching {
+      conditions {
+        actual
+        condition
+        expected
+        passed
+      }
+      failedOnlyOnEnvironment
+      id
+      missingTags
+      repositoryId
+      status
+      title
+    }
+    specificity
+    truncated
+  }
+}
+
 mutation UpsertTagActionRule($input: UpsertTagActionRuleInput!) {
   upsertTagActionRule(input: $input) {
     actionPayloadJson
@@ -42,6 +90,7 @@ mutation UpsertTagActionRule($input: UpsertTagActionRuleInput!) {
     environment
     id
     projectId
+    repositoryId
     status
     tagAll
     title

@@ -353,6 +353,29 @@ export class TagsService {
   }
 
   /**
+   * @description The effective tag NAMES of many plans in one query (see
+   * `getEffectiveTagSet` for the per-plan union: plan ∪ live tasks ∪ project). Provenance is not
+   * needed by callers that only match on tag presence, e.g. the rule preview. Every requested
+   * plan has a key; a plan with no tags maps to an empty list.
+   */
+  async getEffectiveTagNamesForPlans(
+    planIds: readonly string[],
+  ): Promise<Map<string, string[]>> {
+    const rows =
+      await this.planTagsRepository.listEffectiveTagNamesForPlans(planIds);
+    const byPlan = new Map<string, string[]>(
+      planIds.map((planId) => [planId, []]),
+    );
+    for (const row of rows) {
+      byPlan.get(row.planId)?.push(row.tag);
+    }
+    for (const tags of byPlan.values()) {
+      tags.sort((a, b) => a.localeCompare(b));
+    }
+    return byPlan;
+  }
+
+  /**
    * @description Resolves the tag's dimension from the caller's vocabulary.
    * User callers get seed-on-first-read semantics; service accounts read their
    * own rows and fall back to the committed platform default while they have

@@ -15,6 +15,8 @@ import { z } from 'zod/v3';
 
 import type { Route } from '@/app/routes/+types/rules.new';
 import {
+  RuleNewPromptsDocument,
+  RuleNewRepositoriesDocument,
   RulesIndexLoaderDocument,
   RulesUpsertTagActionRuleDocument,
 } from '~/__generated__/graphql';
@@ -22,6 +24,7 @@ import { UpsertTagActionRuleInputSchema } from '~/__generated__/schemas';
 import { SITE_TITLE } from '~/global/config/settings';
 import { RuleForm } from '~/routing/rules/components/RuleForm';
 import { RULES_COPY } from '~/routing/rules/data/data.copy';
+import { buildRulePromptOptions } from '~/routing/rules/utils/rule-prompt-options';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -31,13 +34,17 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
 };
 
 export const loader = async (args: Route.LoaderArgs) => {
-  const page = await executeGraphqlWithAuth(
-    args.request,
-    RulesIndexLoaderDocument,
-    {},
-  );
+  const [page, workspace, prompts] = await Promise.all([
+    executeGraphqlWithAuth(args.request, RulesIndexLoaderDocument, {}),
+    executeGraphqlWithAuth(args.request, RuleNewRepositoriesDocument, {}),
+    executeGraphqlWithAuth(args.request, RuleNewPromptsDocument, {}),
+  ]);
 
   return {
+    promptOptions: buildRulePromptOptions(prompts.personas, prompts.prompts),
+    repositories: workspace.workspaceRepositories.map((repository) => {
+      return { id: repository.id, name: repository.name };
+    }),
     skillSlugs: (page.skillAvailability.skills ?? [])
       .filter((skill) => !skill.effectiveDisableModelInvocation)
       .map((skill) => skill.slug),
@@ -53,7 +60,7 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { actionData, loaderData } = props;
-  const { skillSlugs, vocabulary } = loaderData;
+  const { promptOptions, repositories, skillSlugs, vocabulary } = loaderData;
 
   // Hooks
 
@@ -71,6 +78,8 @@ export default function Component(
     <GlobalScreen>
       <RuleForm
         actionData={actionData}
+        promptOptions={promptOptions}
+        repositories={repositories}
         skillSlugs={skillSlugs}
         vocabulary={vocabulary}
       />
@@ -89,6 +98,8 @@ export const action = async (args: Route.ActionArgs) => {
         enabled: coerceBoolean(z.boolean().default(true)),
         // Absent `tagAll` (a rule with no tags) is valid — default to `[]` so it
         // does not fail the generated required-array field.
+        // Blank (all repositories) is dropped by parseFormData; a value must be a UUID.
+        repositoryId: z.string().uuid().nullish(),
         tagAll: z.array(z.string().min(1)).default([]),
       }),
     { lists: ['tagAll'], strict: false },
@@ -97,6 +108,9 @@ export const action = async (args: Route.ActionArgs) => {
     if (parsed.fieldErrors.title) return { error: 'Title is required.' };
     if (parsed.fieldErrors.actionType) {
       return { error: 'Action type is required.' };
+    }
+    if (parsed.fieldErrors.repositoryId) {
+      return { error: 'Repository must be a valid id.' };
     }
     if (parsed.fieldErrors.actionPayloadJson) {
       return { error: 'Action payload is required.' };
@@ -109,6 +123,7 @@ export const action = async (args: Route.ActionArgs) => {
     actionType: parsed.data.actionType,
     enabled: parsed.data.enabled,
     environment: parsed.data.environment ?? null,
+    repositoryId: parsed.data.repositoryId ?? null,
     status: parsed.data.status ?? null,
     tagAll: parsed.data.tagAll,
     title: parsed.data.title,

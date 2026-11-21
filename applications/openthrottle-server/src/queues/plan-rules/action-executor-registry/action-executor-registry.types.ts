@@ -25,6 +25,24 @@ export interface ActionReconcileContext extends ActionExecutorContext {
   readonly application: RuleApplication;
 }
 
+/**
+ * @description An action type's dispatch contract. Precedence between rules is arbitrated by the
+ * worker (`PlanRulesProcessor`) using `rankMatchedTagActions` (narrowest scope first; ties: oldest
+ * rule, then rule id), per action type:
+ *
+ * - `availability-exception`: not dispatched here. The plan-context read path layers matched
+ *   exceptions by specificity, broadest to narrowest; a narrower layer's allow/deny overrides a
+ *   broader layer's opposite verdict for the same slug/tag, and deny still wins within one layer.
+ * - `inject-task`: when matches inject the same `skillSlug` at the same placement (and anchor), only
+ *   the narrowest is dispatched. Each loser without a ledger row gets a `flagged` row with
+ *   `details = {reason: 'superseded-by', ruleId: <winner>}`. An already-applied narrower winner
+ *   still supersedes a fresh broader duplicate. Losers are never reconciled or re-injected.
+ * - `promote-task-to-plan`: unranked. Promotions are additive and idempotent per task.
+ * - `attach-prompt`: unranked. Attachments are additive; a prompt already attached to the plan by
+ *   another rule is ledgered 'pre-satisfied' by the executor, never superseded.
+ *
+ * Executors therefore never see a superseded match and need no arbitration of their own.
+ */
 export interface ActionExecutor {
   readonly actionType: TagActionType;
   execute(context: ActionExecutorContext): Promise<void>;

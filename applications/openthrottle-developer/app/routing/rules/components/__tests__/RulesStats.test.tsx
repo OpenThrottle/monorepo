@@ -17,6 +17,8 @@ describe('RulesStats Component', () => {
       props = {
         disabledCount: 2,
         enabledCount: 5,
+        globalCount: 4,
+        repositoryCount: 3,
         totalCount: 7,
       };
 
@@ -42,15 +44,34 @@ describe('RulesStats Component', () => {
       expect(component.getByText(/^7$/)).toBeInTheDocument();
       expect(component.getByText(/^5$/)).toBeInTheDocument();
       expect(component.getByText(/^2$/)).toBeInTheDocument();
-      expect(component.getAllByTestId('OpenThrottleStatCard')).toHaveLength(3);
+      expect(component.getAllByTestId('OpenThrottleStatCard')).toHaveLength(5);
+    });
+
+    test('should break the total down into global and repository-scoped', () => {
+      expect(
+        component.getByText(RULES_COPY.statsGlobalLabel),
+      ).toBeInTheDocument();
+      expect(
+        component.getByText(RULES_COPY.statsRepositoryLabel),
+      ).toBeInTheDocument();
+      expect(component.getByText(/^4$/)).toBeInTheDocument();
+      expect(component.getByText(/^3$/)).toBeInTheDocument();
     });
   });
 
   describe('when all counts are zero', () => {
-    test('should still render three cards with zero values', () => {
+    test('should still render five cards with zero values', () => {
       // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
       const ZeroStats = () => {
-        return <RulesStats disabledCount={0} enabledCount={0} totalCount={0} />;
+        return (
+          <RulesStats
+            disabledCount={0}
+            enabledCount={0}
+            globalCount={0}
+            repositoryCount={0}
+            totalCount={0}
+          />
+        );
       };
       const RoutesStub = createRoutesStub([
         { Component: ZeroStats, path: '/' },
@@ -58,9 +79,9 @@ describe('RulesStats Component', () => {
       const zeroComponent = render(<RoutesStub />);
 
       expect(zeroComponent.getByTestId('RulesStats')).toBeInTheDocument();
-      expect(zeroComponent.getAllByText(/^0$/)).toHaveLength(3);
+      expect(zeroComponent.getAllByText(/^0$/)).toHaveLength(5);
       expect(zeroComponent.getAllByTestId('OpenThrottleStatCard')).toHaveLength(
-        3,
+        5,
       );
     });
   });

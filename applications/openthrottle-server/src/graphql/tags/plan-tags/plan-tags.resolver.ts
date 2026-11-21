@@ -58,6 +58,7 @@ export class PlanTagsResolver {
     await this.planRulesEvaluationService.enqueueEvaluation(
       input.planId,
       PLAN_RULES_TRIGGER_KINDS.TAG_CHANGED,
+      null,
     );
     return tag;
   }
@@ -84,6 +85,7 @@ export class PlanTagsResolver {
       await this.planRulesEvaluationService.enqueueEvaluation(
         input.planId,
         PLAN_RULES_TRIGGER_KINDS.TAG_CHANGED,
+        null,
       );
     }
     return removed;

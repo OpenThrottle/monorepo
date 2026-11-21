@@ -5,6 +5,7 @@ import {
 } from '@openthrottle/node-client';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { EffectiveUserResolutionService } from '../../../services/effective-user-resolution/effective-user-resolution.service.ts';
 import { EmbedderService } from '../../../services/embedder/embedder.service.ts';
 import { CustomPromptTypeEnum } from '../custom-prompt.object.ts';
 import { AgentAssetSearchResolver } from './agent-asset-search.resolver.ts';
@@ -15,6 +16,7 @@ vi.mock('@openthrottle/node-client', () => ({
 }));
 
 const embed = vi.fn();
+const resolveEffectiveUserId = vi.fn();
 
 function embedded(vector: number[]): unknown {
   return {
@@ -32,6 +34,10 @@ describe('AgentAssetSearchResolver', () => {
     const app = await Test.createTestingModule({
       providers: [
         AgentAssetSearchResolver,
+        {
+          provide: EffectiveUserResolutionService,
+          useValue: { resolveEffectiveUserId },
+        },
         { provide: EmbedderService, useValue: { embed } },
       ],
     }).compile();
@@ -41,6 +47,7 @@ describe('AgentAssetSearchResolver', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    resolveEffectiveUserId.mockResolvedValue('user-1');
   });
 
   test('returns empty chunks when query is empty after trim', async () => {
@@ -81,6 +88,7 @@ describe('AgentAssetSearchResolver', () => {
       expect.any(Number),
       expect.any(Array),
       null,
+      'user-1',
     );
     expect(searchAgentAssets).not.toHaveBeenCalled();
   });
@@ -106,6 +114,7 @@ describe('AgentAssetSearchResolver', () => {
       ],
       null,
       'nomic-embed-text-v1.5',
+      'user-1',
     );
   });
 
@@ -126,6 +135,48 @@ describe('AgentAssetSearchResolver', () => {
       [CustomPromptTypeEnum.SKILLS],
       'project-uuid',
       'nomic-embed-text-v1.5',
+      'user-1',
+    );
+  });
+
+  test('scopes the search to the user the principal resolves to', async () => {
+    resolveEffectiveUserId.mockResolvedValue('acting-user');
+    embed.mockResolvedValue(embedded([0.1]));
+    vi.mocked(searchAgentAssets).mockResolvedValue([]);
+
+    await resolver.searchAgentAssets(
+      { limit: 5, projectId: null, promptTypes: null, query: 'ralph' },
+      'service-account-sub',
+    );
+
+    expect(resolveEffectiveUserId).toHaveBeenCalledWith('service-account-sub');
+    expect(searchAgentAssets).toHaveBeenCalledWith(
+      [0.1],
+      5,
+      expect.any(Array),
+      null,
+      'nomic-embed-text-v1.5',
+      'acting-user',
+    );
+  });
+
+  test('searches system rows only when the principal resolves to no user', async () => {
+    resolveEffectiveUserId.mockResolvedValue(null);
+    embed.mockResolvedValue(embedded([0.1]));
+    vi.mocked(searchAgentAssets).mockResolvedValue([]);
+
+    await resolver.searchAgentAssets(
+      { limit: 5, projectId: null, promptTypes: null, query: 'ralph' },
+      'unlinked-service-account',
+    );
+
+    expect(searchAgentAssets).toHaveBeenCalledWith(
+      [0.1],
+      5,
+      expect.any(Array),
+      null,
+      'nomic-embed-text-v1.5',
+      null,
     );
   });
 

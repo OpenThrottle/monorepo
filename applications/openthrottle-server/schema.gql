@@ -699,6 +699,11 @@ type PlanObject {
   projectRelation: ProjectObject
 
   """
+  The repository this plan runs in (repositories.id), derived server-side from runConfigJson's workspace.repositoryId; null when it names none or a repository that does not exist. Read-only: set it by updating runConfigJson.
+  """
+  repositoryId: String
+
+  """
   Number of tasks a whole-plan run would pick up (PENDING, IN_PROGRESS, BLOCKED, BACKLOG, SKIPPED, CANCELED or QUEUED). Zero means enqueuePlanRun and schedulePlanRun refuse the plan. Resolved through a batched loader.
   """
   runnableTaskCount: Int!
@@ -4938,8 +4943,11 @@ type TagActionRuleObject {
   id: ID!
   userId: ID!
 
-  """Optional project scope; null matches every project."""
-  projectId: ID
+  """Reserved for cross-repo Projects; not matched today."""
+  projectId: ID @deprecated(reason: "Reserved for cross-repo Projects; use repositoryId")
+
+  """Optional repository scope; null matches plans in every repository."""
+  repositoryId: ID
 
   """Human-readable label for the rule (required, non-empty)."""
   title: String!
@@ -4957,7 +4965,9 @@ type TagActionRuleObject {
   """
   environment: String
 
-  """Action type: "inject-task" or "availability-exception"."""
+  """
+  Action type: "inject-task", "availability-exception", "promote-task-to-plan" or "attach-prompt".
+  """
   actionType: String!
 
   """JSON-encoded action payload, validated per action type at write time."""
@@ -4976,6 +4986,11 @@ type RuleApplicationObject {
   planId: ID!
 
   """
+  Title of the plan; only populated by ruleApplicationsForRule, null elsewhere.
+  """
+  planTitle: String
+
+  """
   The injected (or pre-satisfying) task; null when not applicable or after a human deleted the task.
   """
   taskId: ID
@@ -4989,6 +5004,81 @@ type RuleApplicationObject {
   detailsJson: String
   createdAt: DateTime!
   updatedAt: DateTime!
+}
+
+"""
+One match condition of a rule against one plan: what the rule requires and what the plan offered.
+"""
+type TagActionConditionObject {
+  """
+  What the plan offered (null when it has no value; for tags, the subset of the rule's tags the plan has).
+  """
+  actual: String
+
+  """repository | environment | status | tags | project."""
+  condition: String!
+
+  """
+  What the rule requires; null when the rule does not qualify on this condition.
+  """
+  expected: String
+  passed: Boolean!
+}
+
+"""A plan a previewed rule would match."""
+type TagActionRulePreviewPlanObject {
+  id: ID!
+  repositoryId: ID
+  status: String!
+  title: String!
+}
+
+"""
+A plan a previewed rule would NOT match, with the per-condition reason.
+"""
+type TagActionRulePreviewNonMatchObject {
+  conditions: [TagActionConditionObject!]!
+
+  """
+  True when every condition passes except the environment: the rule would apply on a pass carrying its environment.
+  """
+  failedOnlyOnEnvironment: Boolean!
+  id: ID!
+
+  """The rule's tags the plan's effective tag set lacks."""
+  missingTags: [String!]!
+  repositoryId: ID
+  status: String!
+  title: String!
+}
+
+"""
+What a rule would match among the caller's plans, computed by the real evaluator without dispatching anything.
+"""
+type TagActionRulePreviewObject {
+  """The most plans evaluated (newest-updated first); see truncated."""
+  cap: Int!
+
+  """
+  The environment the plans were evaluated against; null for a pass that carries none (what the worker does today).
+  """
+  environment: String
+  evaluated: Int!
+  matched: [TagActionRulePreviewPlanObject!]!
+  matchedCount: Int!
+
+  """A sample (newest-updated first) of plans the rule does not match."""
+  nonMatching: [TagActionRulePreviewNonMatchObject!]!
+
+  """
+  How narrowly the rule is scoped (higher is narrower), the same score the engine ranks by.
+  """
+  specificity: Int!
+
+  """
+  True when the caller has more plans than the cap, so evaluated covers only the newest.
+  """
+  truncated: Boolean!
 }
 
 """
@@ -6346,10 +6436,14 @@ type Query {
   """
   searchAgentAssets(input: AgentAssetSearchInput!): AgentAssetSearchResult!
 
-  """Get a custom prompt by ID"""
+  """
+  Get a custom prompt by ID. Null when it does not exist or belongs to another user; system prompts are visible to everyone.
+  """
   customPrompt(id: ID!): CustomPromptObject
 
-  """List custom prompts with optional filters"""
+  """
+  List the caller's custom prompts plus system prompts, with optional filters.
+  """
   customPrompts(input: ListCustomPromptsInput): [CustomPromptObject!]!
 
   """
@@ -6816,6 +6910,16 @@ type Query {
   ruleApplications(planId: ID!): [RuleApplicationObject!]!
 
   """
+  The apply-once ledger rows of one of the caller's own rules across plans, newest first. Empty when the rule is absent, deleted or owned by someone else.
+  """
+  ruleApplicationsForRule(ruleId: ID!): [RuleApplicationObject!]!
+
+  """
+  Dry run: which of the caller's plans a rule would match, and why the rest do not, by the same evaluator the worker uses. Read-only: writes no ledger row and dispatches nothing. Only the match fields (repositoryId, status, environment, tagAll, actionType) are read, so a half-written actionPayloadJson never blocks it; the rule is evaluated as enabled. `environment` is the environment to evaluate plans in (ci | interactive | ralph); omit it for none, which is what the worker does today, so an environment-qualified rule then matches nothing. At most the newest 500 plans are evaluated; truncated says so.
+  """
+  previewTagActionRule(input: UpsertTagActionRuleInput!, environment: String): TagActionRulePreviewObject!
+
+  """
   Telemetry coverage for the requesting user: per machine, the repos and delivery legs seen in the window, the newest buffer snapshot, and coverage warnings. Machines are ordered by lastSeenAt descending.
   """
   telemetryCoverage(windowDays: Int! = 14): TelemetryCoverageObject!
@@ -7066,7 +7170,7 @@ input ListCustomPromptsInput {
   projectId: ID
 
   """Filter by user ID"""
-  userId: ID
+  userId: ID @deprecated(reason: "Prompts are always scoped to the authenticated user plus system prompts; this only narrows within that set.")
 
   """Include soft-deleted prompts"""
   includeDeleted: Boolean! = false
@@ -7416,6 +7520,38 @@ input SearchInput {
 
   """Text query to search for."""
   query: String!
+}
+
+input UpsertTagActionRuleInput {
+  """When present, updates the existing rule (must belong to the caller)."""
+  id: ID
+
+  """Reserved for cross-repo Projects; not matched today."""
+  projectId: ID @deprecated(reason: "Reserved for cross-repo Projects; use repositoryId")
+
+  """Optional repository scope; null matches plans in every repository."""
+  repositoryId: ID
+
+  """Human-readable label for the rule (required, non-empty)."""
+  title: String!
+
+  """Tags that must ALL be present (AND); empty matches every plan."""
+  tagAll: [String!]! = []
+
+  """Optional plan-status qualifier (e.g. PENDING)."""
+  status: String
+
+  """Optional environment qualifier: ci | interactive | ralph."""
+  environment: String
+
+  """
+  Action type: "inject-task", "availability-exception", "promote-task-to-plan" or "attach-prompt".
+  """
+  actionType: String!
+
+  """JSON-encoded action payload (validated per action type)."""
+  actionPayloadJson: String!
+  enabled: Boolean = true
 }
 
 input GetTaskEmbeddingInput {
@@ -8890,7 +9026,7 @@ input CreateCustomPromptInput {
 
   """File path relative to workspace root for file system persistence"""
   filePath: String
-  userId: ID
+  userId: ID @deprecated(reason: "Ignored: the owner is always the authenticated user.")
   projectId: ID
 
   """Write content to the file system at filePath if provided"""
@@ -8907,7 +9043,7 @@ input UpdateCustomPromptInput {
   promptType: CustomPromptType
   labels: [String!]
   filePath: String
-  userId: ID
+  userId: ID @deprecated(reason: "Ignored: the owner is always the authenticated user.")
   projectId: ID
 
   """Write content to the file system at filePath if provided"""
@@ -10592,33 +10728,6 @@ input RecordSkillUsageOutcomeInput {
 
   """Optional tool_use_id for tighter start↔outcome correlation."""
   toolUseId: String
-}
-
-input UpsertTagActionRuleInput {
-  """When present, updates the existing rule (must belong to the caller)."""
-  id: ID
-
-  """Optional project scope; null matches every project."""
-  projectId: ID
-
-  """Human-readable label for the rule (required, non-empty)."""
-  title: String!
-
-  """Tags that must ALL be present (AND); empty matches every plan."""
-  tagAll: [String!]! = []
-
-  """Optional plan-status qualifier (e.g. PENDING)."""
-  status: String
-
-  """Optional environment qualifier: ci | interactive | ralph."""
-  environment: String
-
-  """Action type: "inject-task" or "availability-exception"."""
-  actionType: String!
-
-  """JSON-encoded action payload (validated per action type)."""
-  actionPayloadJson: String!
-  enabled: Boolean = true
 }
 
 input DeleteTagActionRuleInput {

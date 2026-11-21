@@ -18,23 +18,24 @@ import { useFetcher, useSearchParams } from 'react-router';
 
 import type { Route } from '@/app/routes/+types/rules._index';
 import type { TagActionRuleRowFragment } from '~/__generated__/graphql';
-import {
-  RulesDeleteTagActionRuleDocument,
-  RulesIndexLoaderDocument,
-  RulesUpsertTagActionRuleDocument,
-} from '~/__generated__/graphql';
+import { RulesIndexLoaderDocument } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
 import { RulesIntroduction } from '~/routing/rules/components/RulesIntroduction';
 import { RulesStats } from '~/routing/rules/components/RulesStats';
 import { RulesTable } from '~/routing/rules/components/RulesTable';
 import { RulesToolbar } from '~/routing/rules/components/RulesToolbar';
 import { RULES_COPY, RULES_ONBOARDING } from '~/routing/rules/data/data.copy';
+import { attachRuleSpecificity } from '~/routing/rules/utils/attachRuleSpecificity.server';
 import {
   filterRulesList,
   parseRulesEnabledFilterFromSearchParams,
+  parseRulesScopeFromSearchParams,
   parseRulesSearchFromSearchParams,
+  RULES_SCOPE_ALL,
 } from '~/routing/rules/utils/parsers';
+import { countRulesByScope } from '~/routing/rules/utils/rule-groups';
 import { RulesActionFormSchema } from '~/routing/rules/utils/RulesActionFormSchema';
+import { runRulesAction } from '~/routing/rules/utils/runRulesAction.server';
 
 export const handle: GlobalLayoutBreadcrumbsHandle = {
   breadcrumb: () => 'Rules',
@@ -48,7 +49,8 @@ export const loader = async (args: Route.LoaderArgs) => {
   );
 
   return {
-    rules: page.tagActionRules ?? [],
+    repositories: page.workspaceRepositories ?? [],
+    rules: attachRuleSpecificity(page.tagActionRules ?? []),
   };
 };
 
@@ -60,7 +62,7 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { loaderData } = props;
-  const { rules } = loaderData;
+  const { repositories, rules } = loaderData;
 
   // Hooks
   const fetcher = useFetcher<typeof action>();
@@ -68,9 +70,18 @@ export default function Component(
 
   // Setup
   const enabledFilter = parseRulesEnabledFilterFromSearchParams(searchParams);
+  const scope = parseRulesScopeFromSearchParams(searchParams);
   const search = parseRulesSearchFromSearchParams(searchParams);
-  const isFiltered = search.trim().length > 0 || enabledFilter !== 'all';
-  const filteredRules = filterRulesList(rules, { enabledFilter, search });
+  const isFiltered =
+    search.trim().length > 0 ||
+    enabledFilter !== 'all' ||
+    scope !== RULES_SCOPE_ALL;
+  const filteredRules = filterRulesList(rules, {
+    enabledFilter,
+    scope,
+    search,
+  });
+  const scopeCounts = countRulesByScope(rules);
   const pending = fetcher.state !== 'idle';
   const fetcherData = fetcher.data;
   const hasRuleError = fetcherData != null && 'ruleError' in fetcherData;
@@ -104,6 +115,8 @@ export default function Component(
         <RulesStats
           disabledCount={disabledCount}
           enabledCount={enabledCount}
+          globalCount={scopeCounts.global}
+          repositoryCount={scopeCounts.repository}
           totalCount={totalCount}
         />
       </GlobalStatsPanel>
@@ -111,11 +124,12 @@ export default function Component(
       {ruleError != null ? errorAlert : null}
 
       <div className="flex flex-col gap-4">
-        <RulesToolbar />
+        <RulesToolbar repositories={repositories} />
         <RulesTable
           isFiltered={isFiltered}
           onToggleEnabled={handleToggleEnabled}
           pending={pending}
+          repositories={repositories}
           rules={filteredRules}
         />
       </div>
@@ -152,38 +166,7 @@ export const action = async (args: Route.ActionArgs) => {
     return { ruleError: parsed.error };
   }
 
-  try {
-    if (parsed.data.intent === 'deleteRule') {
-      await executeGraphqlWithAuth(
-        args.request,
-        RulesDeleteTagActionRuleDocument,
-        { input: { id: parsed.data.id } },
-      );
-      return { ruleSaved: true };
-    }
-
-    const value = parsed.data.rule;
-    await executeGraphqlWithAuth(
-      args.request,
-      RulesUpsertTagActionRuleDocument,
-      {
-        input: {
-          actionPayloadJson: value.actionPayloadJson,
-          actionType: value.actionType,
-          enabled: !value.enabled,
-          environment: value.environment,
-          id: value.id,
-          status: value.status,
-          tagAll: value.tagAll,
-          title: value.title,
-        },
-      },
-    );
-    return { ruleSaved: true };
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    return { ruleError: message };
-  }
+  return runRulesAction(args.request, parsed.data);
 };
 
 export const ErrorBoundary = GlobalErrorBoundary;

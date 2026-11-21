@@ -412,13 +412,42 @@ describe('searchAgentAssetsLexically', () => {
   test('applies prompt-type and project filters', async () => {
     query.mockResolvedValueOnce([]);
 
-    await searchAgentAssetsLexically('commit', 5, ['skills'], 'project-1');
+    await searchAgentAssetsLexically(
+      'commit',
+      5,
+      ['skills'],
+      'project-1',
+      null,
+    );
 
     const [sql, params] = query.mock.calls[0] ?? [];
 
     expect(sql).toContain('cp.prompt_type = ANY($2)');
     expect(sql).toContain('cp.project_id = $3');
     expect(params).toEqual(['commit', ['skills'], 'project-1', 5]);
+  });
+
+  test('scopes to system rows when there is no viewer', async () => {
+    query.mockResolvedValueOnce([]);
+
+    await searchAgentAssetsLexically('commit', 5, undefined, undefined, null);
+
+    const [sql, params] = query.mock.calls[0] ?? [];
+
+    expect(sql).toContain('cp.user_id IS NULL');
+    expect(sql).not.toContain('cp.user_id = $');
+    expect(params).toEqual(['commit', 5]);
+  });
+
+  test('scopes to the viewer plus system rows', async () => {
+    query.mockResolvedValueOnce([]);
+
+    await searchAgentAssetsLexically('commit', 5, ['skills'], undefined, 'u-1');
+
+    const [sql, params] = query.mock.calls[0] ?? [];
+
+    expect(sql).toContain('(cp.user_id IS NULL OR cp.user_id = $3)');
+    expect(params).toEqual(['commit', ['skills'], 'u-1', 5]);
   });
 });
 
@@ -474,6 +503,7 @@ describe('searchAgentAssets', () => {
       undefined,
       undefined,
       MODEL,
+      null,
     );
 
     expect(result.map((c) => c.customPromptId)).toEqual(['cp-1', 'cp-2']);
@@ -481,6 +511,41 @@ describe('searchAgentAssets', () => {
     // similarity coerced to a number.
     expect(result[0]?.similarity).toBe(0.95);
     expect(result.every((c) => typeof c.similarity === 'number')).toBe(true);
+  });
+
+  test('scopes the vector search to the viewer plus system rows', async () => {
+    query.mockResolvedValueOnce([]);
+
+    await searchAgentAssets(
+      AGENT_EMBEDDING,
+      10,
+      undefined,
+      undefined,
+      MODEL,
+      'u-1',
+    );
+
+    const [sql, params] = query.mock.calls[0] ?? [];
+
+    expect(sql).toContain('(cp.user_id IS NULL OR cp.user_id = $3)');
+    expect(params).toContain('u-1');
+  });
+
+  test('scopes the vector search to system rows without a viewer', async () => {
+    query.mockResolvedValueOnce([]);
+
+    await searchAgentAssets(
+      AGENT_EMBEDDING,
+      10,
+      undefined,
+      undefined,
+      MODEL,
+      null,
+    );
+
+    const [sql] = query.mock.calls[0] ?? [];
+
+    expect(sql).toContain('cp.user_id IS NULL');
   });
 
   test('stops collecting once the distinct-asset limit is reached', async () => {
@@ -496,6 +561,7 @@ describe('searchAgentAssets', () => {
       undefined,
       undefined,
       MODEL,
+      null,
     );
 
     expect(result).toHaveLength(2);
@@ -514,6 +580,7 @@ describe('searchAgentAssets', () => {
       undefined,
       undefined,
       MODEL,
+      null,
     );
 
     expect(result).toHaveLength(1);

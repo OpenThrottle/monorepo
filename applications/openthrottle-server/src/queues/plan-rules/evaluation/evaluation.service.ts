@@ -18,6 +18,7 @@ import {
   PLAN_RULES_QUEUE_NAME,
 } from '../plan-rules.constants.ts';
 import type {
+  PlanRulesEnvironment,
   PlanRulesEvaluateJobData,
   PlanRulesTriggerKind,
 } from '../plan-rules.types.ts';
@@ -35,10 +36,18 @@ export class PlanRulesEvaluationService {
    * @description Enqueues one full-evaluation pass for the plan. Fire-and-forget
    * from mutation paths; never throws.
    *
-   * Passes are deduplicated per plan (`keepLastIfActive: true`): a burst of
-   * triggers for one plan collapses into at most one active + one waiting pass,
-   * so two passes for the same plan never run concurrently and the reconcile
-   * step's `UNIQUE(plan_id, sort_order)` writes cannot race a sibling pass.
+   * `environment` is the caller's environment (`ci | interactive | ralph`) when
+   * the trigger genuinely knows it, else null; the worker evaluates with it, so
+   * environment-qualified rules match only for a matching environment. Every
+   * caller states it explicitly.
+   *
+   * Passes are deduplicated per plan AND environment (`keepLastIfActive: true`):
+   * a burst of triggers for one plan in one environment collapses into at most
+   * one active + one waiting pass (last write wins). Passes for different
+   * environments of the same plan do not collapse, because rules are apply-once
+   * per (rule, plan) and a null pass replacing a pending `ralph` one would drop
+   * the ralph-only matches; they can therefore overlap on the same plan, which
+   * the ledger fingerprint check and reconcile writes must tolerate.
    * Distinct plans keep distinct dedup ids, so they still evaluate in parallel.
    *
    * We deliberately use `deduplication` rather than a fixed `jobId`: BullMQ
@@ -50,17 +59,19 @@ export class PlanRulesEvaluationService {
   async enqueueEvaluation(
     planId: string,
     triggerKind: PlanRulesTriggerKind,
+    environment: PlanRulesEnvironment,
   ): Promise<void> {
     try {
       await this.queue.add(
         PLAN_RULES_EVALUATE_JOB_NAME,
         {
+          environment,
           planId,
           triggerKind,
         },
         {
           deduplication: {
-            id: planRulesEvaluationDedupId(planId),
+            id: planRulesEvaluationDedupId(planId, environment),
             keepLastIfActive: true,
           },
         },

@@ -1231,6 +1231,7 @@ export type CreateCustomPromptInput = {
   projectId?: InputMaybe<Scalars['ID']['input']>;
   promptType: CustomPromptType;
   title: Scalars['String']['input'];
+  /** @deprecated Ignored: the owner is always the authenticated user. */
   userId?: InputMaybe<Scalars['ID']['input']>;
   /** Write content to the file system at filePath if provided */
   writeToFileSystem?: Scalars['Boolean']['input'];
@@ -2659,7 +2660,10 @@ export type ListCustomPromptsInput = {
   promptType?: InputMaybe<CustomPromptType>;
   /** Search by title (case-insensitive partial match) */
   search?: InputMaybe<Scalars['String']['input']>;
-  /** Filter by user ID */
+  /**
+   * Filter by user ID
+   * @deprecated Prompts are always scoped to the authenticated user plus system prompts; this only narrows within that set.
+   */
   userId?: InputMaybe<Scalars['ID']['input']>;
 };
 
@@ -4254,6 +4258,8 @@ export type PlanObject = {
   projectRelation?: Maybe<ProjectObject>;
   /** Position within the plan's project, gap-based like task sortOrder (1000, 2000, …) and unique per project among live plans. Null when the plan has no project. */
   projectSortOrder?: Maybe<Scalars['Int']['output']>;
+  /** The repository this plan runs in (repositories.id), derived server-side from runConfigJson's workspace.repositoryId; null when it names none or a repository that does not exist. Read-only: set it by updating runConfigJson. */
+  repositoryId?: Maybe<Scalars['String']['output']>;
   /** Workflow-ralph run configuration stored on the plan (PlanRunConfigStorage v1). */
   runConfigJson: Scalars['String']['output'];
   /** Number of tasks a whole-plan run would pick up (PENDING, IN_PROGRESS, BLOCKED, BACKLOG, SKIPPED, CANCELED or QUEUED). Zero means enqueuePlanRun and schedulePlanRun refuse the plan. Resolved through a batched loader. */
@@ -4862,9 +4868,9 @@ export type Query = {
   codeSemanticSearch: CodeSemanticSearchResult;
   /** Commits per PR (PR size in commits) for merged PRs. Lists merged PRs across pages up to 1000 (10 pages) and paginates commits per PR; maxPrs caps the per-PR commit-count requests. Optional period bucket (week/month UTC). */
   commitsPerPr: Array<CommitsPerPrRowObject>;
-  /** Get a custom prompt by ID */
+  /** Get a custom prompt by ID. Null when it does not exist or belongs to another user; system prompts are visible to everyone. */
   customPrompt?: Maybe<CustomPromptObject>;
-  /** List custom prompts with optional filters */
+  /** List the caller's custom prompts plus system prompts, with optional filters. */
   customPrompts: Array<CustomPromptObject>;
   /** Aggregated plan and task stats for a single date (YYYY-MM-DD). Returns null if no row for that date. */
   dailyStats?: Maybe<DailyStatsObject>;
@@ -4985,6 +4991,8 @@ export type Query = {
   prCountByLabel: Array<PrCountByLabelObject>;
   /** PR time-in-state summary (count and avg days per state: open, closed, merged). Paginates PRs up to 1000 (10 pages); repos with more PRs are truncated to the most recent window. */
   prTimeInStateSummary: Array<PrTimeInStateSummaryObject>;
+  /** Dry run: which of the caller's plans a rule would match, and why the rest do not, by the same evaluator the worker uses. Read-only: writes no ledger row and dispatches nothing. Only the match fields (repositoryId, status, environment, tagAll, actionType) are read, so a half-written actionPayloadJson never blocks it; the rule is evaluated as enabled. `environment` is the environment to evaluate plans in (ci | interactive | ralph); omit it for none, which is what the worker does today, so an environment-qualified rule then matches nothing. At most the newest 500 plans are evaluated; truncated says so. */
+  previewTagActionRule: TagActionRulePreviewObject;
   /** Get a project by ID */
   project?: Maybe<ProjectObject>;
   /** The live plans of a project in project order (projectSortOrder ascending) */
@@ -5034,6 +5042,8 @@ export type Query = {
   rolloutFlags: Array<RolloutFlagObject>;
   /** The apply-once ledger rows for a plan, oldest first. Surfaces flagged/orphaned applications. */
   ruleApplications: Array<RuleApplicationObject>;
+  /** The apply-once ledger rows of one of the caller's own rules across plans, newest first. Empty when the rule is absent, deleted or owned by someone else. */
+  ruleApplicationsForRule: Array<RuleApplicationObject>;
   /** One scheduled agent job by id, or null. */
   scheduledAgentJob?: Maybe<ScheduledAgentJobObject>;
   /** One run of a scheduled agent job by run id, or null. */
@@ -5422,6 +5432,11 @@ export type QueryPrTimeInStateSummaryArgs = {
   input: GitHubRepoInput;
 };
 
+export type QueryPreviewTagActionRuleArgs = {
+  environment?: InputMaybe<Scalars['String']['input']>;
+  input: UpsertTagActionRuleInput;
+};
+
 export type QueryProjectArgs = {
   id: Scalars['ID']['input'];
 };
@@ -5496,6 +5511,10 @@ export type QueryRolloutFlagArgs = {
 
 export type QueryRuleApplicationsArgs = {
   planId: Scalars['ID']['input'];
+};
+
+export type QueryRuleApplicationsForRuleArgs = {
+  ruleId: Scalars['ID']['input'];
 };
 
 export type QueryScheduledAgentJobArgs = {
@@ -6633,6 +6652,8 @@ export type RuleApplicationObject = {
   detailsJson?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   planId: Scalars['ID']['output'];
+  /** Title of the plan; only populated by ruleApplicationsForRule, null elsewhere. */
+  planTitle?: Maybe<Scalars['String']['output']>;
   ruleId: Scalars['ID']['output'];
   /** applied | pre-satisfied | flagged | orphaned. */
   state: Scalars['String']['output'];
@@ -7611,20 +7632,37 @@ export type SystemCpuSnapshot = {
   timestamp: Scalars['Float']['output'];
 };
 
+/** One match condition of a rule against one plan: what the rule requires and what the plan offered. */
+export type TagActionConditionObject = {
+  __typename?: 'TagActionConditionObject';
+  /** What the plan offered (null when it has no value; for tags, the subset of the rule's tags the plan has). */
+  actual?: Maybe<Scalars['String']['output']>;
+  /** repository | environment | status | tags | project. */
+  condition: Scalars['String']['output'];
+  /** What the rule requires; null when the rule does not qualify on this condition. */
+  expected?: Maybe<Scalars['String']['output']>;
+  passed: Scalars['Boolean']['output'];
+};
+
 /** A declarative tag→action rule: when a plan's effective tag set satisfies tagAll (AND) plus the optional qualifiers, the action dispatches. Owned by the authenticated user. */
 export type TagActionRuleObject = {
   __typename?: 'TagActionRuleObject';
   /** JSON-encoded action payload, validated per action type at write time. */
   actionPayloadJson: Scalars['String']['output'];
-  /** Action type: "inject-task" or "availability-exception". */
+  /** Action type: "inject-task", "availability-exception", "promote-task-to-plan" or "attach-prompt". */
   actionType: Scalars['String']['output'];
   createdAt: Scalars['DateTime']['output'];
   enabled: Scalars['Boolean']['output'];
   /** Optional environment qualifier (ci | interactive | ralph); null applies everywhere. */
   environment?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
-  /** Optional project scope; null matches every project. */
+  /**
+   * Reserved for cross-repo Projects; not matched today.
+   * @deprecated Reserved for cross-repo Projects; use repositoryId
+   */
   projectId?: Maybe<Scalars['ID']['output']>;
+  /** Optional repository scope; null matches plans in every repository. */
+  repositoryId?: Maybe<Scalars['ID']['output']>;
   /** Optional plan-status qualifier; null matches any status. */
   status?: Maybe<Scalars['String']['output']>;
   /** Tags that must ALL be present in the plan's effective tag set; empty matches every plan. */
@@ -7633,6 +7671,47 @@ export type TagActionRuleObject = {
   title: Scalars['String']['output'];
   updatedAt: Scalars['DateTime']['output'];
   userId: Scalars['ID']['output'];
+};
+
+/** A plan a previewed rule would NOT match, with the per-condition reason. */
+export type TagActionRulePreviewNonMatchObject = {
+  __typename?: 'TagActionRulePreviewNonMatchObject';
+  conditions: Array<TagActionConditionObject>;
+  /** True when every condition passes except the environment: the rule would apply on a pass carrying its environment. */
+  failedOnlyOnEnvironment: Scalars['Boolean']['output'];
+  id: Scalars['ID']['output'];
+  /** The rule's tags the plan's effective tag set lacks. */
+  missingTags: Array<Scalars['String']['output']>;
+  repositoryId?: Maybe<Scalars['ID']['output']>;
+  status: Scalars['String']['output'];
+  title: Scalars['String']['output'];
+};
+
+/** What a rule would match among the caller's plans, computed by the real evaluator without dispatching anything. */
+export type TagActionRulePreviewObject = {
+  __typename?: 'TagActionRulePreviewObject';
+  /** The most plans evaluated (newest-updated first); see truncated. */
+  cap: Scalars['Int']['output'];
+  /** The environment the plans were evaluated against; null for a pass that carries none (what the worker does today). */
+  environment?: Maybe<Scalars['String']['output']>;
+  evaluated: Scalars['Int']['output'];
+  matched: Array<TagActionRulePreviewPlanObject>;
+  matchedCount: Scalars['Int']['output'];
+  /** A sample (newest-updated first) of plans the rule does not match. */
+  nonMatching: Array<TagActionRulePreviewNonMatchObject>;
+  /** How narrowly the rule is scoped (higher is narrower), the same score the engine ranks by. */
+  specificity: Scalars['Int']['output'];
+  /** True when the caller has more plans than the cap, so evaluated covers only the newest. */
+  truncated: Scalars['Boolean']['output'];
+};
+
+/** A plan a previewed rule would match. */
+export type TagActionRulePreviewPlanObject = {
+  __typename?: 'TagActionRulePreviewPlanObject';
+  id: Scalars['ID']['output'];
+  repositoryId?: Maybe<Scalars['ID']['output']>;
+  status: Scalars['String']['output'];
+  title: Scalars['String']['output'];
 };
 
 export type TaskCompletedNotification = NotificationEvent & {
@@ -8181,6 +8260,7 @@ export type UpdateCustomPromptInput = {
   projectId?: InputMaybe<Scalars['ID']['input']>;
   promptType?: InputMaybe<CustomPromptType>;
   title?: InputMaybe<Scalars['String']['input']>;
+  /** @deprecated Ignored: the owner is always the authenticated user. */
   userId?: InputMaybe<Scalars['ID']['input']>;
   /** Write content to the file system at filePath if provided */
   writeToFileSystem?: Scalars['Boolean']['input'];
@@ -8445,15 +8525,20 @@ export type UpsertBlogTagInput = {
 export type UpsertTagActionRuleInput = {
   /** JSON-encoded action payload (validated per action type). */
   actionPayloadJson: Scalars['String']['input'];
-  /** Action type: "inject-task" or "availability-exception". */
+  /** Action type: "inject-task", "availability-exception", "promote-task-to-plan" or "attach-prompt". */
   actionType: Scalars['String']['input'];
   enabled?: InputMaybe<Scalars['Boolean']['input']>;
   /** Optional environment qualifier: ci | interactive | ralph. */
   environment?: InputMaybe<Scalars['String']['input']>;
   /** When present, updates the existing rule (must belong to the caller). */
   id?: InputMaybe<Scalars['ID']['input']>;
-  /** Optional project scope; null matches every project. */
+  /**
+   * Reserved for cross-repo Projects; not matched today.
+   * @deprecated Reserved for cross-repo Projects; use repositoryId
+   */
   projectId?: InputMaybe<Scalars['ID']['input']>;
+  /** Optional repository scope; null matches plans in every repository. */
+  repositoryId?: InputMaybe<Scalars['ID']['input']>;
   /** Optional plan-status qualifier (e.g. PENDING). */
   status?: InputMaybe<Scalars['String']['input']>;
   /** Tags that must ALL be present (AND); empty matches every plan. */
@@ -8907,6 +8992,7 @@ export type PlanFragment = {
   project?: string | null;
   projectId?: string | null;
   projectSortOrder?: number | null;
+  repositoryId?: string | null;
   runConfigJson: string;
   status: string;
   summary?: string | null;
@@ -8927,6 +9013,7 @@ export type PlanWithTagsFragment = {
   project?: string | null;
   projectId?: string | null;
   projectSortOrder?: number | null;
+  repositoryId?: string | null;
   runConfigJson: string;
   status: string;
   summary?: string | null;
@@ -9072,6 +9159,7 @@ export type CreatePlanMutation = {
     project?: string | null;
     projectId?: string | null;
     projectSortOrder?: number | null;
+    repositoryId?: string | null;
     runConfigJson: string;
     status: string;
     summary?: string | null;
@@ -9099,6 +9187,7 @@ export type UpdatePlanMutation = {
     project?: string | null;
     projectId?: string | null;
     projectSortOrder?: number | null;
+    repositoryId?: string | null;
     runConfigJson: string;
     status: string;
     summary?: string | null;
@@ -9206,6 +9295,7 @@ export type CreatePlansMutation = {
       project?: string | null;
       projectId?: string | null;
       projectSortOrder?: number | null;
+      repositoryId?: string | null;
       runConfigJson: string;
       status: string;
       summary?: string | null;
@@ -9600,6 +9690,7 @@ export type GetPlanQuery = {
     project?: string | null;
     projectId?: string | null;
     projectSortOrder?: number | null;
+    repositoryId?: string | null;
     runConfigJson: string;
     status: string;
     summary?: string | null;
@@ -9636,6 +9727,7 @@ export type ListPlansByStatusQuery = {
       project?: string | null;
       projectId?: string | null;
       projectSortOrder?: number | null;
+      repositoryId?: string | null;
       runConfigJson: string;
       status: string;
       summary?: string | null;
@@ -10155,6 +10247,7 @@ export const PlanFragmentDoc = {
           { kind: 'Field', name: { kind: 'Name', value: 'project' } },
           { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'projectSortOrder' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'repositoryId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'runConfigJson' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
@@ -10215,6 +10308,7 @@ export const PlanWithTagsFragmentDoc = {
           { kind: 'Field', name: { kind: 'Name', value: 'project' } },
           { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'projectSortOrder' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'repositoryId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'runConfigJson' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
@@ -10637,6 +10731,7 @@ export const CreatePlanDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'project' } },
           { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'projectSortOrder' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'repositoryId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'runConfigJson' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
@@ -10720,6 +10815,7 @@ export const UpdatePlanDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'project' } },
           { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'projectSortOrder' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'repositoryId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'runConfigJson' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
@@ -11044,6 +11140,7 @@ export const CreatePlansDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'project' } },
           { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'projectSortOrder' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'repositoryId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'runConfigJson' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
@@ -12433,6 +12530,7 @@ export const GetPlanDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'project' } },
           { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'projectSortOrder' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'repositoryId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'runConfigJson' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
@@ -12573,6 +12671,7 @@ export const ListPlansByStatusDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'project' } },
           { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'projectSortOrder' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'repositoryId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'runConfigJson' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },

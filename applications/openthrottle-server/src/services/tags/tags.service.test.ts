@@ -462,6 +462,26 @@ describe('TagsService', () => {
     });
   });
 
+  describe('getEffectiveTagNamesForPlans', () => {
+    it('groups the batched rows per plan, sorted, with an empty list for an untagged plan', async () => {
+      planTagsRepository.listEffectiveTagNamesForPlans.mockResolvedValue([
+        { planId, tag: 'github' },
+        { planId, tag: 'backend' },
+      ]);
+
+      const result = await service.getEffectiveTagNamesForPlans([
+        planId,
+        'untagged',
+      ]);
+
+      expect(result.get(planId)).toEqual(['backend', 'github']);
+      expect(result.get('untagged')).toEqual([]);
+      expect(
+        planTagsRepository.listEffectiveTagNamesForPlans,
+      ).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe('getEffectiveTagSet', () => {
     it('unions plan and task tags, deduped with highest provenance winning', async () => {
       planTagsRepository.listByPlanId.mockResolvedValue([

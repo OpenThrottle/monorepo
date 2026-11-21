@@ -17,3 +17,6 @@ export const PLAN_RULES_TRIGGER_KINDS = {
   TAG_CHANGED: 'tag-changed',
   TASK_CREATED: 'task-created',
 } as const;
+
+/** Token standing in for a null environment inside a dedup id. */
+export const PLAN_RULES_NULL_ENVIRONMENT_TOKEN = 'none';

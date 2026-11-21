@@ -26,3 +26,28 @@ export const splitList = (value: string): string[] => {
     .map((entry) => entry.trim())
     .filter((entry) => entry.length > 0);
 };
+
+export interface AttachPromptPayloadInput {
+  /** Kept only for a rule that referenced a file path and was not re-pointed. */
+  readonly filePath: string;
+  readonly placement: string;
+  readonly promptId: string;
+  readonly promptType: string;
+}
+
+/**
+ * @description Serializes the `attach-prompt` action payload. A chosen prompt
+ * is referenced by `promptId`; the legacy `filePath` reference is written only
+ * when no prompt was chosen, because the server schema accepts exactly one.
+ */
+export const buildAttachPromptPayloadJson = (
+  input: AttachPromptPayloadInput,
+): string => {
+  const { filePath, placement, promptId, promptType } = input;
+
+  if (promptId !== '') {
+    return JSON.stringify({ placement, promptId, promptType });
+  }
+
+  return JSON.stringify({ filePath, placement, promptType });
+};

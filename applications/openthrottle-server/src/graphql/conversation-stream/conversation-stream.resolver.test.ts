@@ -107,7 +107,7 @@ function build(): {
   messages.appendMessages.mockResolvedValue([userMessage]);
   messages.listMessagesForConversation.mockResolvedValue([userMessage]);
   const customPromptsMock = createCustomPromptsRepositoryMock();
-  const personaFindOne = customPromptsMock.findOne;
+  const personaFindOne = customPromptsMock.findVisibleById;
   const customPrompts = createMock<CustomPromptsRepository>(customPromptsMock);
   const modelDiscovery = createMock<NestjsModelDiscoveryService>({
     discover: vi.fn().mockResolvedValue(discovery),
@@ -491,7 +491,10 @@ describe('ConversationStreamResolver.startConversationStream', () => {
     );
     createCursorAgentSessionMock.mockResolvedValue('cursor-sess-1');
     personaFindOne.mockResolvedValue(
-      createMock<CustomPrompt>({ content: 'You are the registry persona.' }),
+      createMock<CustomPrompt>({
+        content: 'You are the registry persona.',
+        promptType: 'personas',
+      }),
     );
     const personaId = '11111111-1111-4111-8111-111111111111';
 
@@ -505,13 +508,50 @@ describe('ConversationStreamResolver.startConversationStream', () => {
       repositoryId: 'repo-1',
     });
 
-    expect(personaFindOne).toHaveBeenCalledWith({
-      where: { id: personaId, promptType: 'personas' },
-    });
+    expect(personaFindOne).toHaveBeenCalledWith(personaId, 'user-1');
     expect(streamService.start).toHaveBeenCalledWith(
       expect.objectContaining({
         systemPrompt: 'You are the registry persona.',
       }),
+    );
+  });
+
+  it('ignores a persona id the caller cannot see or that is not a persona', async () => {
+    const { personaFindOne, repositories, resolver, streamService } = build();
+    vi.mocked(repositories.findByIdForUser).mockResolvedValue(
+      createMock<WorkspaceLocalRepository>({
+        filesystemPath: '/repo/checkout',
+      }),
+    );
+    createCursorAgentSessionMock.mockResolvedValue('cursor-sess-1');
+    const personaId = '22222222-2222-4222-8222-222222222222';
+    const request: Parameters<typeof resolver.startConversationStream>[1] = {
+      backend: 'cursor',
+      baseUrl: null,
+      conversationId: null,
+      message: 'hi',
+      modelId: null,
+      personaId,
+      repositoryId: 'repo-1',
+    };
+
+    // Another user's persona is invisible: the lookup returns null.
+    personaFindOne.mockResolvedValue(null);
+    await resolver.startConversationStream(human, request);
+    expect(streamService.start).toHaveBeenLastCalledWith(
+      expect.objectContaining({ systemPrompt: null }),
+    );
+
+    // A visible row of another prompt type is not a persona.
+    personaFindOne.mockResolvedValue(
+      createMock<CustomPrompt>({
+        content: 'A skill, not a persona.',
+        promptType: 'skills',
+      }),
+    );
+    await resolver.startConversationStream(human, request);
+    expect(streamService.start).toHaveBeenLastCalledWith(
+      expect.objectContaining({ systemPrompt: null }),
     );
   });
 

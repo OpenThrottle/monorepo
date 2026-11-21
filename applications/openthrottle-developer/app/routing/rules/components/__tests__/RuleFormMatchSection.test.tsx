@@ -24,8 +24,14 @@ describe('RuleFormMatchSection Component', () => {
     props = {
       environment: ANY,
       onEnvironmentChange: vi.fn(),
+      onRepositoryChange: vi.fn(),
       onStatusChange: vi.fn(),
       onToggleTag: vi.fn(),
+      repositories: [
+        { id: 'repo-1', name: 'monorepo' },
+        { id: 'repo-2', name: 'website' },
+      ],
+      repositoryId: ANY,
       status: ANY,
       tagAll: [],
       vocabulary,
@@ -71,5 +77,51 @@ describe('RuleFormMatchSection Component', () => {
     expect(
       component.getByLabelText(RULES_COPY.environmentLabel),
     ).toBeInTheDocument();
+  });
+
+  test('renders the environment hint explaining when a qualified rule applies', () => {
+    expect(
+      component.getByText(RULES_COPY.environmentDescription),
+    ).toBeInTheDocument();
+  });
+
+  test('renders the repository select with the blank-matches-all hint', () => {
+    expect(
+      component.getByLabelText(RULES_COPY.repositoryLabel),
+    ).toBeInTheDocument();
+    expect(
+      component.getByText(RULES_COPY.repositoryAnyHint),
+    ).toBeInTheDocument();
+  });
+
+  test('shows the selected repository name and lists the registered ones', async () => {
+    const user = userEvent.setup();
+    component.unmount();
+    component = render(
+      <RuleFormMatchSection {...props} repositoryId="repo-2" />,
+    );
+
+    expect(
+      component.getByRole('combobox', { name: RULES_COPY.repositoryLabel }),
+    ).toHaveTextContent('website');
+
+    await user.click(
+      component.getByRole('combobox', { name: RULES_COPY.repositoryLabel }),
+    );
+
+    expect(
+      component.getByRole('option', { name: 'monorepo' }),
+    ).toBeInTheDocument();
+  });
+
+  test('invokes onRepositoryChange when a repository is picked', async () => {
+    const user = userEvent.setup();
+
+    await user.click(
+      component.getByRole('combobox', { name: RULES_COPY.repositoryLabel }),
+    );
+    await user.click(component.getByRole('option', { name: 'monorepo' }));
+
+    expect(props.onRepositoryChange).toHaveBeenCalledWith('repo-1');
   });
 });

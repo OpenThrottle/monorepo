@@ -9,7 +9,7 @@ import {
 } from '@openthrottle/nestjs-postgres';
 import { createQueryBuilderMock } from '@openthrottle/nestjs-postgres/testing';
 import type { EntityManager, Repository } from 'typeorm';
-import { And, IsNull, LessThan, MoreThanOrEqual } from 'typeorm';
+import { And, In, IsNull, LessThan, MoreThanOrEqual } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Task } from '../tasks/task.entity.ts';
@@ -78,6 +78,36 @@ describe('PlansRepository', () => {
     }).compile();
 
     repository = app.get<PlansRepository>(PlansRepository);
+  });
+
+  describe('loadRepositoryIds', () => {
+    it('writes the stored repositoryId onto each plan with one query', async () => {
+      const linked = plansFactory.build({ repositoryId: null });
+      const unlinked = plansFactory.build({ repositoryId: null });
+      const repositoryId = '33333333-3333-4333-8333-333333333333';
+      find.mockResolvedValue([
+        { id: linked.id, repositoryId },
+        { id: unlinked.id, repositoryId: null },
+      ]);
+
+      const result = await repository.loadRepositoryIds([linked, unlinked]);
+
+      expect(find).toHaveBeenCalledTimes(1);
+      expect(find).toHaveBeenCalledWith({
+        select: { id: true, repositoryId: true },
+        where: { id: In([linked.id, unlinked.id]) },
+        withDeleted: true,
+      });
+      expect(result.map((plan) => plan.repositoryId)).toEqual([
+        repositoryId,
+        null,
+      ]);
+    });
+
+    it('skips the query for an empty batch', async () => {
+      await expect(repository.loadRepositoryIds([])).resolves.toEqual([]);
+      expect(find).not.toHaveBeenCalled();
+    });
   });
 
   describe('remove', () => {
@@ -418,6 +448,23 @@ describe('PlansRepository', () => {
         PLANS_PROJECT_SORT_ORDER_SCOPE,
         'a',
         'UP',
+      );
+    });
+  });
+  describe('listRecentForAuthor', () => {
+    it('loads the authors plans newest updated first, capped', async () => {
+      const plans = plansFactory.buildList(2);
+      find.mockResolvedValue(plans);
+
+      await expect(repository.listRecentForAuthor('octocat', 5)).resolves.toBe(
+        plans,
+      );
+      expect(find).toHaveBeenCalledWith(
+        expect.objectContaining({
+          order: { updatedAt: 'DESC' },
+          take: 5,
+          where: { author: 'octocat' },
+        }),
       );
     });
   });

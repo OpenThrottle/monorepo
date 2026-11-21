@@ -793,6 +793,17 @@ export class McpDeveloperMcpSurface {
   }
 
   @Tool({
+    description: Th.previewTagActionRuleToolDescription,
+    name: 'preview_tag_action_rule',
+    parameters: asMcpParameters(Th.previewTagActionRuleToolParameters),
+  })
+  previewTagActionRule(
+    args: Parameters<typeof Th.previewTagActionRuleToolHandler>[0],
+  ): ReturnType<typeof Th.previewTagActionRuleToolHandler> {
+    return Th.previewTagActionRuleToolHandler(args);
+  }
+
+  @Tool({
     description: Th.upsertTagActionRuleToolDescription,
     name: 'upsert_tag_action_rule',
     parameters: asMcpParameters(Th.upsertTagActionRuleToolParameters),

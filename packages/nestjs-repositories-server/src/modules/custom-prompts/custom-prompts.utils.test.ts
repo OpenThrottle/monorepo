@@ -16,6 +16,7 @@ describe('createCustomPromptsRepositoryMock', () => {
         promptType: null,
         search: null,
         userId: null,
+        viewerUserId: null,
       }),
     ).resolves.toEqual([]);
     await expect(repository.findIncludingDeleted('a')).resolves.toBeNull();

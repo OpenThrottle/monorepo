@@ -6,8 +6,6 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-  Input,
-  Label,
 } from '@openthrottle/react-router-shadcn';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { WandSparklesIcon } from 'lucide-react';
@@ -16,10 +14,13 @@ import { Form, Link } from 'react-router';
 
 import type { TagActionRuleRowFragment } from '~/__generated__/graphql';
 import { RuleFormActionSection } from '~/routing/rules/components/RuleFormActionSection';
+import { RuleFormIdentitySection } from '~/routing/rules/components/RuleFormIdentitySection';
 import { RuleFormMatchSection } from '~/routing/rules/components/RuleFormMatchSection';
+import { RuleFormPreview } from '~/routing/rules/components/RuleFormPreview';
 import { RULES_COPY } from '~/routing/rules/data/data.copy';
 import { ANY } from '~/routing/rules/data/data.rule-form-options';
 import { useRuleForm } from '~/routing/rules/hooks/useRuleForm';
+import type { RuleFormPromptOption } from '~/routing/rules/utils/rule-prompt-options';
 
 export interface RuleFormVocabularyOption {
   dimension: string;
@@ -37,15 +38,29 @@ export interface RuleFormValue {
   title: string;
 }
 
+export interface RuleFormRepositoryOption {
+  id: string;
+  name: string;
+}
+
 export interface RuleFormProps {
   actionData?: { error?: string } | null;
   initialRule?: TagActionRuleRowFragment | null;
+  promptOptions: RuleFormPromptOption[];
+  repositories: RuleFormRepositoryOption[];
   skillSlugs: string[];
   vocabulary: RuleFormVocabularyOption[];
 }
 
 export const RuleForm = (props: RuleFormProps): React.ReactElement => {
-  const { actionData, initialRule, skillSlugs, vocabulary } = props;
+  const {
+    actionData,
+    initialRule,
+    promptOptions,
+    repositories,
+    skillSlugs,
+    vocabulary,
+  } = props;
 
   // Hooks
   const form = useRuleForm({ initialRule });
@@ -119,42 +134,32 @@ export const RuleForm = (props: RuleFormProps): React.ReactElement => {
             ))}
 
             {/* Identity */}
-            <section className="space-y-3">
-              <div>
-                <h3 className="text-sm font-semibold">
-                  {RULES_COPY.identityLegend}
-                </h3>
-                <p className="text-muted-foreground text-xs">
-                  {RULES_COPY.identityDescription}
-                </p>
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="rule-title">{RULES_COPY.titleLabel}</Label>
-                <Input
-                  id="rule-title"
-                  name="title"
-                  onChange={(event) => form.setTitle(event.target.value)}
-                  placeholder={RULES_COPY.titlePlaceholder}
-                  required={true}
-                  value={form.title}
-                />
-              </div>
-            </section>
+            <RuleFormIdentitySection
+              onTitleChange={form.setTitle}
+              title={form.title}
+            />
 
             {/* Match */}
             <RuleFormMatchSection
               environment={form.environment}
               onEnvironmentChange={form.setEnvironment}
+              onRepositoryChange={form.setRepositoryId}
               onStatusChange={form.setStatus}
               onToggleTag={form.handleToggleTag}
+              repositories={repositories}
+              repositoryId={form.repositoryId}
               status={form.status}
               tagAll={form.tagAll}
               vocabulary={vocabulary}
             />
 
+            {/* Live dry run of the match fields above */}
+            <RuleFormPreview form={form} />
+
             {/* Action */}
             <RuleFormActionSection
               actionType={form.actionType}
+              attachPrompt={form.attachPrompt}
               onActionTypeChange={form.setActionType}
               onPlacementChange={form.setPlacement}
               onSkillSlugChange={form.setSkillSlug}
@@ -164,6 +169,7 @@ export const RuleForm = (props: RuleFormProps): React.ReactElement => {
               onTagDenyChange={form.setTagDeny}
               onTitleTemplateChange={form.setTitleTemplate}
               placement={form.placement}
+              promptOptions={promptOptions}
               skillSlug={form.skillSlug}
               skillSlugs={skillSlugs}
               slugAllow={form.slugAllow}

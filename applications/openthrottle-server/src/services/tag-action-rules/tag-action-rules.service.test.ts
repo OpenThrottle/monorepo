@@ -78,6 +78,7 @@ describe('TagActionRulesService', () => {
           enabled: true,
           environment: null,
           projectId: null,
+          repositoryId: null,
           status: null,
           tagAll: ['backend'],
           title: 'Review',

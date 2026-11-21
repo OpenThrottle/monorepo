@@ -13,6 +13,7 @@ const planId = '22222222-2222-4222-8222-222222222222';
 describe('PlanTagsRepository', () => {
   const find = vi.fn();
   const findOne = vi.fn();
+  const query = vi.fn();
   let repository: PlanTagsRepository;
 
   beforeEach(async () => {
@@ -28,6 +29,7 @@ describe('PlanTagsRepository', () => {
           useValue: createMock<Repository<PlanTag>>({
             find,
             findOne,
+            query,
             target: PlanTag,
           }),
         },
@@ -78,6 +80,28 @@ describe('PlanTagsRepository', () => {
 
       await expect(repository.listByPlanId(planId)).resolves.toEqual(rows);
       expect(find).toHaveBeenCalledWith({ where: { planId } });
+    });
+  });
+
+  describe('listEffectiveTagNamesForPlans', () => {
+    it('reads every plan in ONE query and returns the pairs', async () => {
+      const rows = [{ planId, tag: 'backend' }];
+      query.mockResolvedValue(rows);
+
+      await expect(
+        repository.listEffectiveTagNamesForPlans([planId, 'other']),
+      ).resolves.toEqual(rows);
+      expect(query).toHaveBeenCalledTimes(1);
+      expect(query).toHaveBeenCalledWith(expect.stringContaining('UNION'), [
+        [planId, 'other'],
+      ]);
+    });
+
+    it('skips the query for no plans', async () => {
+      await expect(
+        repository.listEffectiveTagNamesForPlans([]),
+      ).resolves.toEqual([]);
+      expect(query).not.toHaveBeenCalled();
     });
   });
 });

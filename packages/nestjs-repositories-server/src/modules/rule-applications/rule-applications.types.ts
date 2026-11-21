@@ -82,6 +82,9 @@ export interface RuleApplicationsRepositoryMock extends BaseRepositoryMock<
   RuleApplication,
   CreateModelInput<RuleApplication>
 > {
+  readonly findAppliedAttachPrompt: Mock<
+    RuleApplicationsRepository['findAppliedAttachPrompt']
+  >;
   readonly findByRuleAndPlan: Mock<
     RuleApplicationsRepository['findByRuleAndPlan']
   >;
@@ -89,6 +92,7 @@ export interface RuleApplicationsRepositoryMock extends BaseRepositoryMock<
     RuleApplicationsRepository['listEdgePlacementSiblings']
   >;
   readonly listForPlan: Mock<RuleApplicationsRepository['listForPlan']>;
+  readonly listForRule: Mock<RuleApplicationsRepository['listForRule']>;
   readonly orphanUnmatchedApplications: Mock<
     RuleApplicationsRepository['orphanUnmatchedApplications']
   >;

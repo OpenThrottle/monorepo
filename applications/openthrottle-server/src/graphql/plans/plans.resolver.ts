@@ -1033,6 +1033,7 @@ export class PlansResolver {
     await this.planRulesEvaluationService.enqueueEvaluation(
       plan.id,
       PLAN_RULES_TRIGGER_KINDS.PLAN_CREATED,
+      null,
     );
     await this.taggingEnqueueService.enqueuePredict(
       TAGGING_ENTITY_TYPES.PLAN,
@@ -1057,6 +1058,7 @@ export class PlansResolver {
         this.planRulesEvaluationService.enqueueEvaluation(
           plan.id,
           PLAN_RULES_TRIGGER_KINDS.PLAN_CREATED,
+          null,
         ),
       ),
     );
@@ -1140,6 +1142,7 @@ export class PlansResolver {
     const statusChanged = statusChange != null;
 
     let touched = false;
+    let runConfigChanged = false;
 
     if (input.author != null && input.author !== entity.author) {
       entity.author = input.author;
@@ -1219,6 +1222,7 @@ export class PlansResolver {
         const nextJson = JSON.stringify(resolved);
         if (prevJson !== nextJson) {
           entity.runConfig = resolved;
+          runConfigChanged = true;
           touched = true;
         }
       }
@@ -1260,11 +1264,18 @@ export class PlansResolver {
       await this.planProjectMembership.linkPlanRepository(saved);
     }
 
+    // repositoryId is derived from runConfig by a database trigger, so re-read it after a
+    // runConfig change rather than echoing the stale value.
+    if (runConfigChanged) {
+      await this.plansRepository.loadRepositoryIds([saved]);
+    }
+
     // Downstream reaction stays outside the transaction (fire-and-forget, as before).
     if (statusChanged) {
       await this.planRulesEvaluationService.enqueueEvaluation(
         saved.id,
         PLAN_RULES_TRIGGER_KINDS.STATUS_CHANGED,
+        null,
       );
     }
     return saved;
@@ -1325,6 +1336,7 @@ export class PlansResolver {
       await this.planRulesEvaluationService.enqueueEvaluation(
         plan.id,
         PLAN_RULES_TRIGGER_KINDS.STATUS_CHANGED,
+        null,
       );
     }
     return plan;
@@ -1366,6 +1378,7 @@ export class PlansResolver {
     await this.planRulesEvaluationService.enqueueEvaluation(
       planId,
       PLAN_RULES_TRIGGER_KINDS.MANUAL,
+      null,
     );
 
     const result = new EvaluatePlanRulesResultObject();

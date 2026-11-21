@@ -5,13 +5,11 @@ import {
 } from '@nestjs/common';
 import type { TagActionRule } from '@openthrottle/nestjs-repositories-server';
 import { TagActionRulesRepository } from '@openthrottle/nestjs-repositories-server';
-import {
-  isTagActionType,
-  parseTagActionPayload,
-} from '@openthrottle/openthrottle-skills';
+import { parseTagActionPayload } from '@openthrottle/openthrottle-skills';
 import { ZodError } from 'zod';
 
 import type { UpsertTagActionRuleInput } from './tag-action-rules.types.ts';
+import { assertTagActionType } from './tag-action-rules.utils.ts';
 
 /**
  * @description Validated writes for tag_action_rules (user-owned declarative tag to action
@@ -33,11 +31,7 @@ export class TagActionRulesService {
     userId: string,
     input: UpsertTagActionRuleInput,
   ): Promise<TagActionRule> {
-    if (!isTagActionType(input.actionType)) {
-      throw new BadRequestException(
-        `Unknown action type "${input.actionType}": expected "inject-task" or "availability-exception".`,
-      );
-    }
+    const actionType = assertTagActionType(input.actionType);
 
     const title = input.title?.trim() ?? '';
     if (title === '') {
@@ -46,10 +40,7 @@ export class TagActionRulesService {
 
     let parsedPayload: unknown;
     try {
-      parsedPayload = parseTagActionPayload(
-        input.actionType,
-        input.actionPayload,
-      );
+      parsedPayload = parseTagActionPayload(actionType, input.actionPayload);
     } catch (error) {
       if (error instanceof ZodError) {
         throw new BadRequestException(
@@ -71,10 +62,11 @@ export class TagActionRulesService {
 
       return this.repository.update(existing.id, {
         actionPayload: parsedPayload,
-        actionType: input.actionType,
+        actionType,
         enabled: input.enabled ?? existing.enabled,
         environment: input.environment ?? null,
         projectId: input.projectId ?? null,
+        repositoryId: input.repositoryId ?? null,
         status: input.status ?? null,
         tagAll: [...(input.tagAll ?? [])],
         title,
@@ -83,10 +75,11 @@ export class TagActionRulesService {
 
     return this.repository.create({
       actionPayload: parsedPayload,
-      actionType: input.actionType,
+      actionType,
       enabled: input.enabled ?? true,
       environment: input.environment ?? null,
       projectId: input.projectId ?? null,
+      repositoryId: input.repositoryId ?? null,
       status: input.status ?? null,
       tagAll: [...(input.tagAll ?? [])],
       title,

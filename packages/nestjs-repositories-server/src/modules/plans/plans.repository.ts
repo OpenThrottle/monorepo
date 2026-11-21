@@ -15,7 +15,14 @@ import {
   reorderInScope,
 } from '@openthrottle/nestjs-postgres';
 import type { EntityManager } from 'typeorm';
-import { And, IsNull, LessThan, MoreThanOrEqual, Repository } from 'typeorm';
+import {
+  And,
+  In,
+  IsNull,
+  LessThan,
+  MoreThanOrEqual,
+  Repository,
+} from 'typeorm';
 
 import { Task } from '../tasks/task.entity.ts';
 import { Plan } from './plan.entity.ts';
@@ -69,6 +76,53 @@ export class PlansRepository extends BaseRepository<Plan, PlanCreateInput> {
       }
       await manager.softDelete(Task, { deletedAt: IsNull(), planId: id });
       return manager.findOneOrFail(Plan, { where: { id }, withDeleted: true });
+    });
+  }
+
+  /**
+   * @description Re-reads `repositoryId` for saved plans and writes it onto them in place, then
+   * returns them. The column is derived by a database trigger (migration 188) and mapped
+   * read-only, so a just-inserted or just-updated entity still carries no value (or the old one);
+   * call this after a save whose response must show it. One query for the whole batch.
+   */
+  async loadRepositoryIds(plans: Plan[]): Promise<Plan[]> {
+    if (plans.length === 0) return plans;
+
+    const rows = await this.repository.find({
+      select: { id: true, repositoryId: true },
+      where: { id: In(plans.map((plan) => plan.id)) },
+      withDeleted: true,
+    });
+    const byId = new Map(
+      rows.map((row) => {
+        return [row.id, row.repositoryId] as const;
+      }),
+    );
+    for (const plan of plans) {
+      plan.repositoryId = byId.get(plan.id) ?? null;
+    }
+
+    return plans;
+  }
+
+  /**
+   * @description Live plans written by `author` (the plan owner's GitHub username), newest
+   * updated first, capped at `limit`. Loads only what rule matching reads (`id`, `projectId`,
+   * `repositoryId`, `status`, `title`, `updatedAt`).
+   */
+  async listRecentForAuthor(author: string, limit: number): Promise<Plan[]> {
+    return this.repository.find({
+      order: { updatedAt: 'DESC' },
+      select: {
+        id: true,
+        projectId: true,
+        repositoryId: true,
+        status: true,
+        title: true,
+        updatedAt: true,
+      },
+      take: limit,
+      where: { author },
     });
   }
 

@@ -279,7 +279,9 @@ export class PlanCreationService {
     };
 
     if (clientId.id === undefined) {
-      return this.linkRepositoryOf(await this.plansRepository.create(fields));
+      return this.withRepositoryId(
+        await this.linkRepositoryOf(await this.plansRepository.create(fields)),
+      );
     }
 
     // Idempotent create (OT plan ca13e543): a caller that timed out re-sends the same id, and
@@ -292,8 +294,10 @@ export class PlanCreationService {
     }
 
     try {
-      return await this.linkRepositoryOf(
-        await this.plansRepository.create({ ...fields, id }),
+      return await this.withRepositoryId(
+        await this.linkRepositoryOf(
+          await this.plansRepository.create({ ...fields, id }),
+        ),
       );
     } catch (error: unknown) {
       const winner = isUniqueViolation(error)
@@ -379,6 +383,15 @@ export class PlanCreationService {
 
     await this.planProjectMembership.linkPlanRepositories(saved);
 
-    return saved;
+    return this.plansRepository.loadRepositoryIds(saved);
+  }
+
+  /**
+   * @description Reads back the trigger-derived `repositoryId` (migration 188) onto a just-created
+   * plan, so the create response shows the repository its run config names.
+   */
+  private async withRepositoryId(plan: Plan): Promise<Plan> {
+    const [loaded] = await this.plansRepository.loadRepositoryIds([plan]);
+    return loaded ?? plan;
   }
 }
