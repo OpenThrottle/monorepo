@@ -34,6 +34,10 @@ plan creation.
 worth knowing, because setting it looks like it should.
 [Detail](https://github.com/openthrottle/monorepo/blob/main/docs/openthrottle/authoring-plans-via-mcp.md#the-plan-remembers-the-workspace-it-was-created-in).
 
+**Filing a plan under a project by name:** `list_projects({ name })` (case-insensitive substring)
+gives the id; pass it as `projectId` to `create_plan`, or use `add_plan_to_project` for an existing
+plan. No match means ask before creating one (`create_project`, admin toolset) — names are not unique.
+
 `author` / `assignee` come from `GITHUB_USER` when set — why they are already right unprompted.
 
 ## Task sortOrder (execution order)
