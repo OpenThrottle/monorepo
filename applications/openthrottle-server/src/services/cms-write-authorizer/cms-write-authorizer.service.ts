@@ -3,6 +3,12 @@
  * principal may write cms content when its database-backed permissions include `cms:write`
  * (the same lookup `GqlPermissionsGuard` uses, never the JWT's role claim). A user writer carries
  * their email so the cms package can resolve their profile.
+ *
+ * A user must also still be live: a soft-deleted (`deletedAt`) or disabled (`disabledAt`) user is
+ * refused even while their JWT is unexpired, so a removed account can never create or restore a
+ * cms profile. Their existing profile is left linked (a soft link, not an orphan sweep): user ids
+ * are never reissued, so the link stays truthful and keeps their content attributable. See
+ * databases/cms/README.md § profile identity.
  */
 
 import { Injectable } from '@nestjs/common';
@@ -47,14 +53,29 @@ export class CmsWriteAuthorizerService implements CmsWriteAuthorizer {
       };
     }
 
+    // A soft-deleted row is excluded by TypeORM's `@DeleteDateColumn`, so it reads as missing.
     const user = await this.usersRepository.findOne({
       where: { id: principal.sub },
     });
 
+    if (!user) {
+      return {
+        ok: false,
+        reason: `This account no longer exists, so it cannot change cms content`,
+      };
+    }
+
+    if (user.disabledAt != null) {
+      return {
+        ok: false,
+        reason: `This account is disabled, so it cannot change cms content`,
+      };
+    }
+
     return {
       ok: true,
       writer: {
-        email: user?.email ?? principal.email ?? null,
+        email: user.email ?? principal.email ?? null,
         kind: 'user',
         userId: principal.sub,
       },
