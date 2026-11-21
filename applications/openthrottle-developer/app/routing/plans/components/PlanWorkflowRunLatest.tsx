@@ -1,13 +1,13 @@
 import { TriangleAlertIcon } from 'lucide-react';
 import * as React from 'react';
 
+import type { PlanRunHistoryEntryFragment } from '~/__generated__/graphql';
 import { collectResumedRunIds } from '~/global/utils/utils.usage-limit';
 import { PlanRunMetaList } from '~/routing/plans/components/PlanRunMetaList';
 import { PlanRunProvenanceCell } from '~/routing/plans/components/PlanRunProvenanceCell';
 import { PlanRunStatusCell } from '~/routing/plans/components/PlanRunStatusCell';
 import { PlanRunTime } from '~/routing/plans/components/PlanRunTime';
 import { PlanWorkflowRunSection } from '~/routing/plans/components/PlanWorkflowRunSection';
-import type { PlanRunAuditRow } from '~/routing/plans/components/PlanWorkflowRunTransparencyAuditTable';
 import { PLAN_RUN_TRANSPARENCY_COPY } from '~/routing/plans/data/data.copy';
 import { PLAN_RUN_LATEST_META_FIELDS } from '~/routing/plans/data/data.plan-run-history';
 import {
@@ -17,7 +17,7 @@ import {
 } from '~/routing/plans/utils/plan-run-sections';
 
 export interface PlanWorkflowRunLatestProps {
-  readonly planRunAuditRows: readonly PlanRunAuditRow[];
+  readonly planRunAuditRows: readonly PlanRunHistoryEntryFragment[];
 }
 
 /**

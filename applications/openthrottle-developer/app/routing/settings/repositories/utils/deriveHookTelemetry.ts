@@ -1,8 +1,5 @@
-import type { RepositoryCheckoutFieldsFragment } from '~/__generated__/graphql';
+import type { RepositoryCheckoutInspectionFragment } from '~/__generated__/graphql';
 import { REPOSITORY_HOOK_TELEMETRY_COPY } from '~/routing/settings/repositories/data/data.copy';
-
-/** The inspection payload carried by a repository checkout, or null. */
-type CheckoutInspection = RepositoryCheckoutFieldsFragment['inspection'];
 
 /**
  * Badge tone per status. `not_wired` is `outline` rather than `destructive`:
@@ -51,7 +48,7 @@ const readEndpointSource = (source: string): string => {
  * that case gets its own state instead of being reported as a failure.
  */
 export const deriveHookTelemetry = (
-  inspection: CheckoutInspection,
+  inspection: RepositoryCheckoutInspectionFragment | null | undefined,
 ): HookTelemetryPresentation | null => {
   const telemetry = inspection?.hookTelemetry;
   if (telemetry == null) {

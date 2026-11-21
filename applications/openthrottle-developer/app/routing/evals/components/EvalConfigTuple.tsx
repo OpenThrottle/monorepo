@@ -1,14 +1,14 @@
 import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import type { EvalRunReportFieldsFragment } from '~/__generated__/graphql';
+import type { EvalRunReportRunFragment } from '~/__generated__/graphql';
 import { EVAL_REPORT_COPY } from '~/routing/evals/data/data.copy';
 import { formatEvalTimestamp } from '~/routing/evals/utils/report-format';
 
 export interface EvalConfigTupleProps {
   readonly className?: string;
   readonly datasetName: string;
-  readonly run: EvalRunReportFieldsFragment['run'];
+  readonly run: EvalRunReportRunFragment;
 }
 
 /**

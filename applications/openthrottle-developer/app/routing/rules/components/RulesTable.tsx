@@ -10,20 +10,17 @@ import { RulesTableRowActions } from '~/routing/rules/components/RulesTableRowAc
 import { RULES_COPY } from '~/routing/rules/data/data.copy';
 import { summarizeRuleAction } from '~/routing/rules/utils/formatters';
 
-/** Row shape for the rules table — matches the `TagActionRuleRow` GraphQL fragment. */
-export type TagActionRuleRowData = TagActionRuleRowFragment;
-
 export interface RulesTableProps {
   className?: string;
   /** When true and `rules` is empty, show filtered-empty copy via RulesEmpty. */
   isFiltered?: boolean;
-  onToggleEnabled: (rule: TagActionRuleRowData) => void;
+  onToggleEnabled: (rule: TagActionRuleRowFragment) => void;
   pending?: boolean;
-  rules: TagActionRuleRowData[];
+  rules: TagActionRuleRowFragment[];
 }
 
 interface RulesTableColumnOptions {
-  onToggleEnabled: (rule: TagActionRuleRowData) => void;
+  onToggleEnabled: (rule: TagActionRuleRowFragment) => void;
   pending: boolean;
 }
 
@@ -48,7 +45,7 @@ export const RulesTable = (props: RulesTableProps): React.ReactElement => {
   );
   const data = React.useMemo(() => [...rules], [rules]);
   const getRowId = React.useCallback(
-    (rule: TagActionRuleRowData) => rule.id,
+    (rule: TagActionRuleRowFragment) => rule.id,
     [],
   );
 
@@ -67,7 +64,7 @@ export const RulesTable = (props: RulesTableProps): React.ReactElement => {
       className={cn('bg-card ui-border rounded-lg border', className)}
       data-testid="RulesTable"
     >
-      <DataTable<TagActionRuleRowData, string | number | null | undefined>
+      <DataTable<TagActionRuleRowFragment, string | number | null | undefined>
         columns={columns}
         data={data}
         emptyState={<RulesEmpty isFiltered={isFiltered} />}
@@ -80,7 +77,7 @@ export const RulesTable = (props: RulesTableProps): React.ReactElement => {
 RulesTable.buildTable = (
   options: RulesTableColumnOptions,
 ): DataTableColumnDef<
-  TagActionRuleRowData,
+  TagActionRuleRowFragment,
   string | number | null | undefined
 >[] => {
   const { onToggleEnabled, pending } = options;

@@ -57,11 +57,14 @@ mutation applyWorkspaceEditorConfiguration(
     }
   }
 }
+fragment EditorPresenceEditor on EditorPresenceObject {
+  editor
+  presence
+}
 
 fragment EditorPresenceReport on EditorPresenceResultObject {
   editors {
-    editor
-    presence
+    ...EditorPresenceEditor
   }
   scannedAt
   trusted

@@ -1,77 +1,93 @@
 # evals.runs.$runId
 
+fragment EvalRunReportCase on EvalReportCase {
+  attemptsCounted
+  attemptsPassed
+  caseId
+  passed
+  split
+}
+
+fragment EvalRunReportGrader on EvalReportGrader {
+  calibrationStatus
+  counts
+  graderId
+  graderKind
+  graderVersion
+  judgeModel
+  judgeModelVersion
+  kappa
+  kappaCiHigh
+  kappaCiLow
+}
+
+fragment EvalRunReportNumbers on EvalReportNumbers {
+  casesAtK
+  casesCounted
+  costPerSuccessUsd
+  detectionFloor
+  excluded {
+    errored
+    gradeError
+    noCountedGrade
+    usageLimited
+  }
+  judgeAgreement {
+    graderId
+    graderVersion
+    kappa
+    kappaCiHigh
+    kappaCiLow
+    status
+  }
+  passAtK
+  passHatK
+  passRate
+  passRateCi {
+    confidence
+    lower
+    upper
+  }
+  totalCostUsd
+  trialsCounted
+  trialsExcluded
+  trialsPassed
+}
+
+fragment EvalRunReportRun on EvalRun {
+  authMode
+  budgetTokens
+  budgetUsd
+  createdAt
+  datasetId
+  datasetVersion
+  driver
+  effort
+  finishedAt
+  id
+  k
+  model
+  promptSha
+  skillSha
+  startedAt
+  status
+}
+
 # One run's report. The numbers are computed server-side (evalRunReport); the
 # client only formats them. The fragment is shared with the compare route.
 fragment EvalRunReportFields on EvalRunReport {
   cases {
-    attemptsCounted
-    attemptsPassed
-    caseId
-    passed
-    split
+    ...EvalRunReportCase
   }
   datasetName
   graders {
-    calibrationStatus
-    counts
-    graderId
-    graderKind
-    graderVersion
-    judgeModel
-    judgeModelVersion
-    kappa
-    kappaCiHigh
-    kappaCiLow
+    ...EvalRunReportGrader
   }
   numbers {
-    casesAtK
-    casesCounted
-    costPerSuccessUsd
-    detectionFloor
-    excluded {
-      errored
-      gradeError
-      noCountedGrade
-      usageLimited
-    }
-    judgeAgreement {
-      graderId
-      graderVersion
-      kappa
-      kappaCiHigh
-      kappaCiLow
-      status
-    }
-    passAtK
-    passHatK
-    passRate
-    passRateCi {
-      confidence
-      lower
-      upper
-    }
-    totalCostUsd
-    trialsCounted
-    trialsExcluded
-    trialsPassed
+    ...EvalRunReportNumbers
   }
   run {
-    authMode
-    budgetTokens
-    budgetUsd
-    createdAt
-    datasetId
-    datasetVersion
-    driver
-    effort
-    finishedAt
-    id
-    k
-    model
-    promptSha
-    skillSha
-    startedAt
-    status
+    ...EvalRunReportRun
   }
 }
 

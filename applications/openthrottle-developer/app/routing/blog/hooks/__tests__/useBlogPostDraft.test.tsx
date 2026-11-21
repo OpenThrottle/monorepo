@@ -1,8 +1,8 @@
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 
+import type { BlogPostEditorPostFragment } from '~/__generated__/graphql';
 import { MOCK_EDITOR_DRAFT } from '~/routing/blog/data/mock.blog-posts';
-import type { BlogEditorPost } from '~/routing/blog/types';
 
 import { useBlogPostDraft } from '../useBlogPostDraft';
 
@@ -31,7 +31,7 @@ describe('useBlogPostDraft', () => {
 
   test('a newly loaded post (new updatedAt) replaces local state', () => {
     const { rerender, result } = renderHook(
-      (post: BlogEditorPost) => useBlogPostDraft(post),
+      (post: BlogPostEditorPostFragment) => useBlogPostDraft(post),
       { initialProps: MOCK_EDITOR_DRAFT },
     );
 

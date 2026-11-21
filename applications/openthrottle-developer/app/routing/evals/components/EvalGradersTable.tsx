@@ -10,7 +10,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import type { EvalRunReportFieldsFragment } from '~/__generated__/graphql';
+import type { EvalRunReportGraderFragment } from '~/__generated__/graphql';
 import { EVAL_REPORT_COPY } from '~/routing/evals/data/data.copy';
 import {
   formatKappa,
@@ -19,7 +19,7 @@ import {
 
 export interface EvalGradersTableProps {
   readonly className?: string;
-  readonly graders: EvalRunReportFieldsFragment['graders'];
+  readonly graders: EvalRunReportGraderFragment[];
 }
 
 /**

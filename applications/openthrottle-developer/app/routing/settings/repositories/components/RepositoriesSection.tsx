@@ -10,6 +10,9 @@ import * as React from 'react';
 
 import type {
   AddWorkspaceFolderResultFragment,
+  DiscoveredWorktreesScanFragment,
+  PruneWorktreeCheckoutResultFragment,
+  RemovePlanRunWorktreeResultFragment,
   WorkspacePickerCapabilitiesObject,
 } from '~/__generated__/graphql';
 import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
@@ -27,10 +30,7 @@ import { WorktreeRemovalOutcome } from '~/routing/settings/repositories/componen
 import { REPOSITORIES_ONBOARDING } from '~/routing/settings/repositories/data/data.copy';
 import type {
   DiscoveredFolder,
-  DiscoveredWorktreesResult,
-  PruneWorktreeCheckoutResult,
   RefreshedCheckout,
-  RemovePlanRunWorktreeResult,
   RepositoriesDiscoveryStatus,
   RepositoriesView,
 } from '~/routing/settings/repositories/types';
@@ -42,16 +42,16 @@ export interface RepositoriesSectionProps {
   /** Empty until the deferred scan resolves; see {@link discoveryStatus}. */
   discoveredFolders: readonly DiscoveredFolder[];
   /** Null until the deferred scan has resolved once (or when it failed with nothing to show). */
-  discoveredWorktrees: DiscoveredWorktreesResult | null;
+  discoveredWorktrees: DiscoveredWorktreesScanFragment | null;
   discoveryStatus: RepositoriesDiscoveryStatus;
   pickerCapabilities: Pick<
     WorkspacePickerCapabilitiesObject,
     'canUseNativeDialog' | 'defaultBrowsePath' | 'roots'
   >;
   /** Per-id outcomes from the last `pruneWorktreeCheckouts`, when that was the last action. */
-  pruned?: readonly PruneWorktreeCheckoutResult[] | null;
+  pruned?: readonly PruneWorktreeCheckoutResultFragment[] | null;
   refreshed?: RefreshedCheckout | null;
-  removal?: RemovePlanRunWorktreeResult | null;
+  removal?: RemovePlanRunWorktreeResultFragment | null;
   /** The rows and URL params for this page — see `buildRepositoriesView`. */
   view: RepositoriesView;
 }

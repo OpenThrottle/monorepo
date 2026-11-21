@@ -1,9 +1,9 @@
 import * as React from 'react';
 import { useFetcher } from 'react-router';
 
+import type { BlogPostEditorPostFragment } from '~/__generated__/graphql';
 import { BLOG_POST_SAVE_INTENT } from '~/routing/blog/config/defaults';
 import type {
-  BlogEditorPost,
   BlogPostEditorValues,
   BlogPostSaveIntent,
   BlogPostSaveRequest,
@@ -15,7 +15,7 @@ import {
 } from '~/routing/blog/utils/editor';
 
 export interface UseBlogPostSaveOptions {
-  readonly post: BlogEditorPost;
+  readonly post: BlogPostEditorPostFragment;
   readonly values: BlogPostEditorValues;
 }
 

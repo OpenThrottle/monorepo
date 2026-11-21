@@ -2,10 +2,10 @@ import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 import { Link } from 'react-router';
 
+import type { PlanRunHistoryEntryFragment } from '~/__generated__/graphql';
 import { PlanRunMetaList } from '~/routing/plans/components/PlanRunMetaList';
 import { PlanRunProvenanceCell } from '~/routing/plans/components/PlanRunProvenanceCell';
 import { PlanRunTime } from '~/routing/plans/components/PlanRunTime';
-import type { PlanRunAuditRow } from '~/routing/plans/components/PlanWorkflowRunTransparencyAuditTable';
 import { PLAN_RUN_TRANSPARENCY_COPY } from '~/routing/plans/data/data.copy';
 import { PLAN_RUN_HISTORY_META_FIELDS } from '~/routing/plans/data/data.plan-run-history';
 import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
@@ -21,7 +21,7 @@ import { buildPlanRunMetaItems } from '~/routing/plans/utils/plan-run-sections';
 export interface PlanWorkflowRunHistoryDetailProps {
   /** The run's completed-job metrics; null for runs with no job or no metrics yet. */
   readonly metrics: PlanRunJobMetrics | null;
-  readonly row: PlanRunAuditRow;
+  readonly row: PlanRunHistoryEntryFragment;
   readonly workflowInput: WorkflowRalphRunOptionsInput;
   readonly workingDirectory: string;
 }
@@ -64,7 +64,7 @@ export const PlanWorkflowRunHistoryDetail = (
 
   // Markup
   const renderJobValue = (
-    jobId: PlanRunAuditRow['bullmqJobId'],
+    jobId: string | null | undefined,
   ): React.ReactNode => {
     if (jobId == null) {
       return <span className="text-muted-foreground">{copy.noJob}</span>;

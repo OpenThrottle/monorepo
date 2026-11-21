@@ -2,18 +2,16 @@ import { Button, cn, Skeleton } from '@openthrottle/react-router-shadcn';
 import { RefreshCwIcon } from 'lucide-react';
 import * as React from 'react';
 
+import type { DiscoveredWorktreesScanFragment } from '~/__generated__/graphql';
 import { WorktreeDiscoveryNotice } from '~/routing/settings/repositories/components/WorktreeDiscoveryNotice';
 import { WORKTREE_DISCOVERY_COPY } from '~/routing/settings/repositories/data/data.copy';
 import { useRescanWorktrees } from '~/routing/settings/repositories/hooks/useRescanWorktrees';
-import type {
-  DiscoveredWorktreesResult,
-  RepositoriesDiscoveryStatus,
-} from '~/routing/settings/repositories/types';
+import type { RepositoriesDiscoveryStatus } from '~/routing/settings/repositories/types';
 
 export interface WorktreeDiscoveryStatusProps {
   className?: string;
   /** The scan, once it has resolved; null while pending or after a first-load failure. */
-  discoveredWorktrees: DiscoveredWorktreesResult | null;
+  discoveredWorktrees: DiscoveredWorktreesScanFragment | null;
   status: RepositoriesDiscoveryStatus;
 }
 

@@ -15,10 +15,8 @@ import {
 } from '~/routing/plans/data/data.copy';
 import { usePlanDetailRouteData } from '~/routing/plans/hooks/usePlanDetailRouteData';
 
-type Chunk = PlanOutputChunkFragment;
-
 export interface PlanTabOutputProps {
-  chunks: Chunk[];
+  chunks: PlanOutputChunkFragment[];
   className?: string;
 }
 

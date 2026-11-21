@@ -1,10 +1,10 @@
 import type {
   BlogEditorAuthorFragment,
   BlogEditorTagFragment,
+  BlogPostEditorPostFragment,
   BlogPostListRowFragment,
 } from '~/__generated__/graphql';
 import { BlogPostState } from '~/__generated__/graphql';
-import type { BlogEditorPost } from '~/routing/blog/types';
 
 /** A draft last written by a person. */
 export const MOCK_HUMAN_DRAFT: BlogPostListRowFragment = {
@@ -70,7 +70,7 @@ export const MOCK_BLOG_TAGS: BlogEditorTagFragment[] = [
 ];
 
 /** A draft as the `/blog/:postId` loader returns it. */
-export const MOCK_EDITOR_DRAFT: BlogEditorPost = {
+export const MOCK_EDITOR_DRAFT: BlogPostEditorPostFragment = {
   __typename: 'BlogPostAdminObject',
   author: {
     __typename: 'BlogAuthorObject',
@@ -96,7 +96,7 @@ export const MOCK_EDITOR_DRAFT: BlogEditorPost = {
 };
 
 /** The same post after it went live. */
-export const MOCK_EDITOR_LIVE: BlogEditorPost = {
+export const MOCK_EDITOR_LIVE: BlogPostEditorPostFragment = {
   ...MOCK_EDITOR_DRAFT,
   id: 'post-live',
   publishedAt: '2026-10-21T09:00:00.000Z',
@@ -105,7 +105,7 @@ export const MOCK_EDITOR_LIVE: BlogEditorPost = {
 };
 
 /** The same post scheduled to go live at a future time. */
-export const MOCK_EDITOR_SCHEDULED: BlogEditorPost = {
+export const MOCK_EDITOR_SCHEDULED: BlogPostEditorPostFragment = {
   ...MOCK_EDITOR_DRAFT,
   id: 'post-scheduled',
   publishedAt: '2026-11-01T17:00:00.000Z',
@@ -114,7 +114,7 @@ export const MOCK_EDITOR_SCHEDULED: BlogEditorPost = {
 };
 
 /** The same post after it was archived (its `publishedAt` is kept). */
-export const MOCK_EDITOR_ARCHIVED: BlogEditorPost = {
+export const MOCK_EDITOR_ARCHIVED: BlogPostEditorPostFragment = {
   ...MOCK_EDITOR_LIVE,
   id: 'post-archived',
   state: BlogPostState.Archived,

@@ -1,14 +1,14 @@
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 
-import type { TagActionRuleRowData } from '~/routing/rules/components/RulesTable';
+import type { TagActionRuleRowFragment } from '~/__generated__/graphql';
 import { ANY } from '~/routing/rules/data/data.rule-form-options';
 
 import { useRuleForm } from '../useRuleForm';
 
 const buildInitialRule = (
-  overrides: Partial<TagActionRuleRowData> = {},
-): TagActionRuleRowData => {
+  overrides: Partial<TagActionRuleRowFragment> = {},
+): TagActionRuleRowFragment => {
   return {
     actionPayloadJson: JSON.stringify({
       placement: 'first',

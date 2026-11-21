@@ -7,12 +7,13 @@
  * too narrow to click, is exactly the kind of bug a screenshot does not catch.
  */
 
+import type { TimelineSpanRowFragment } from '~/__generated__/graphql';
+
 import {
   TIMELINE_LANE_ROW_HEIGHT,
   TIMELINE_MIN_SPAN_WIDTH,
   TIMELINE_SPAN_HEIGHT,
 } from '../config/layout';
-import type { TimelineSpan } from '../types';
 import type { TimelineScale } from './scale';
 
 export type TimelineSpanRect = {
@@ -38,7 +39,7 @@ export type TimelineSpanRect = {
  */
 export function spanRect(args: {
   readonly scale: TimelineScale;
-  readonly span: TimelineSpan;
+  readonly span: TimelineSpanRowFragment;
   readonly subRow: number;
 }): TimelineSpanRect {
   const { scale, span, subRow } = args;

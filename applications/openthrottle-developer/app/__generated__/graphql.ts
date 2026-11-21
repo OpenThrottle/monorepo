@@ -10603,6 +10603,86 @@ export type EvalRunComparisonRouteQuery = {
   };
 };
 
+export type EvalRunReportCaseFragment = {
+  __typename?: 'EvalReportCase';
+  attemptsCounted: number;
+  attemptsPassed: number;
+  caseId: string;
+  passed?: boolean | null;
+  split: string;
+};
+
+export type EvalRunReportGraderFragment = {
+  __typename?: 'EvalReportGrader';
+  calibrationStatus?: string | null;
+  counts: boolean;
+  graderId: string;
+  graderKind: string;
+  graderVersion: string;
+  judgeModel?: string | null;
+  judgeModelVersion?: string | null;
+  kappa?: number | null;
+  kappaCiHigh?: number | null;
+  kappaCiLow?: number | null;
+};
+
+export type EvalRunReportNumbersFragment = {
+  __typename?: 'EvalReportNumbers';
+  casesAtK: number;
+  casesCounted: number;
+  costPerSuccessUsd?: number | null;
+  detectionFloor?: number | null;
+  passAtK?: number | null;
+  passHatK?: number | null;
+  passRate?: number | null;
+  totalCostUsd?: number | null;
+  trialsCounted: number;
+  trialsExcluded: number;
+  trialsPassed: number;
+  excluded: {
+    __typename?: 'EvalReportExclusions';
+    errored: number;
+    gradeError: number;
+    noCountedGrade: number;
+    usageLimited: number;
+  };
+  judgeAgreement?: {
+    __typename?: 'EvalReportJudgeAgreement';
+    graderId: string;
+    graderVersion: string;
+    kappa: number;
+    kappaCiHigh?: number | null;
+    kappaCiLow?: number | null;
+    status: string;
+  } | null;
+  passRateCi?: {
+    __typename?: 'EvalReportInterval';
+    confidence: number;
+    lower: number;
+    upper: number;
+  } | null;
+};
+
+export type EvalRunReportRunFragment = {
+  __typename?: 'EvalRun';
+  authMode: string;
+  budgetTokens?: number | null;
+  budgetUsd?: number | null;
+  createdAt: any;
+  datasetId: string;
+  datasetVersion: number;
+  driver: string;
+  effort?: string | null;
+  finishedAt?: any | null;
+  id: string;
+  k: number;
+  model?: string | null;
+  promptSha?: string | null;
+  skillSha?: string | null;
+  startedAt?: any | null;
+  status: string;
+};
+
 export type EvalRunReportFieldsFragment = {
   __typename?: 'EvalRunReport';
   datasetName: string;
@@ -11418,6 +11498,23 @@ export type PlanDetailUpdatePlanRunConfigMutation = {
     id: string;
     runConfigJson: string;
     updatedAt: any;
+  } | null;
+};
+
+export type PlanRunConfigCheckoutFragment = {
+  __typename?: 'RepositoryCheckoutObject';
+  displayName: string;
+  filesystemPath: string;
+  id: string;
+  kind: string;
+  managed: boolean;
+  inspection?: {
+    __typename?: 'RepositoryInspectionObject';
+    git: {
+      __typename?: 'RepositoryInspectionGitObject';
+      currentBranch?: string | null;
+      defaultBranch?: string | null;
+    };
   } | null;
 };
 
@@ -13558,6 +13655,14 @@ export type ScheduledJobDetailFragment = {
   } | null;
 };
 
+export type ScheduleWebhookFilterFragment = {
+  __typename?: 'ScheduledAgentJobWebhookFilterObject';
+  op: string;
+  path: string;
+  value?: string | null;
+  values?: Array<string> | null;
+};
+
 export type ScheduleWebhookTriggerFragment = {
   __typename?: 'ScheduledAgentJobWebhookTriggerObject';
   coalesceWindowMs: number;
@@ -14640,6 +14745,13 @@ export type GetSettingsMcpQuery = {
   }>;
 };
 
+export type UserPreferencesDefaultAgentFragment = {
+  __typename?: 'UserPreferencesAgentObject';
+  backend: string;
+  effort?: string | null;
+  model: string;
+};
+
 export type UserPreferencesFieldsFragment = {
   __typename?: 'UserPreferencesObject';
   defaultEditor?: WorkspaceEditorId | null;
@@ -14928,6 +15040,58 @@ export type UpdateRepositoryMutation = {
   };
 };
 
+export type RepositoryHookTelemetryFragment = {
+  __typename?: 'RepositoryInspectionHookTelemetryObject';
+  authTokenConfigured: boolean;
+  endpointConfigured: boolean;
+  endpointSource: string;
+  producers: Array<string>;
+  reason?: string | null;
+  status: string;
+  telemetryDir: string;
+};
+
+export type RepositoryCheckoutInspectionFragment = {
+  __typename?: 'RepositoryInspectionObject';
+  scannedAt: any;
+  warnings: Array<string>;
+  agentConfig: {
+    __typename?: 'RepositoryInspectionAgentConfigObject';
+    agentsMd: boolean;
+    claudeMd: boolean;
+    cursorRules: boolean;
+    mcpJson: boolean;
+    skillsDir: boolean;
+  };
+  git: {
+    __typename?: 'RepositoryInspectionGitObject';
+    currentBranch?: string | null;
+    defaultBranch?: string | null;
+    dirty?: boolean | null;
+    isRepo: boolean;
+    linkedWorktrees: Array<string>;
+    normalizedRemoteUrl?: string | null;
+  };
+  hookTelemetry?: {
+    __typename?: 'RepositoryInspectionHookTelemetryObject';
+    authTokenConfigured: boolean;
+    endpointConfigured: boolean;
+    endpointSource: string;
+    producers: Array<string>;
+    reason?: string | null;
+    status: string;
+    telemetryDir: string;
+  } | null;
+  stack: {
+    __typename?: 'RepositoryInspectionStackObject';
+    languages: Array<string>;
+    nxWorkspace: boolean;
+    packageManager?: string | null;
+    pnpmWorkspace: boolean;
+    turbo: boolean;
+  };
+};
+
 export type RepositoryCheckoutFieldsFragment = {
   __typename?: 'RepositoryCheckoutObject';
   createdAt: any;
@@ -15147,6 +15311,52 @@ export type GetSettingsRepositoriesQuery = {
     }>;
     project?: { __typename?: 'ProjectObject'; id: string; name: string } | null;
   }>;
+};
+
+export type DiscoveredWorktreeRemovalFragment = {
+  __typename?: 'WorktreeRemovalObject';
+  agentSession?: string | null;
+  createdAt: any;
+  id: string;
+  outcome: string;
+  parentCommand?: string | null;
+  removedAt?: any | null;
+  result?: string | null;
+};
+
+export type DiscoveredWorktreeMissingCheckoutFragment = {
+  __typename?: 'MissingWorktreeCheckoutObject';
+  checkoutId: string;
+  path: string;
+  reason: MissingWorktreeCheckoutReason;
+  repositoryId: string;
+  lastRemoval?: {
+    __typename?: 'WorktreeRemovalObject';
+    agentSession?: string | null;
+    createdAt: any;
+    id: string;
+    outcome: string;
+    parentCommand?: string | null;
+    removedAt?: any | null;
+    result?: string | null;
+  } | null;
+};
+
+export type DiscoveredWorktreeProblemFragment = {
+  __typename?: 'WorktreeDiscoveryProblemObject';
+  detail: string;
+  kind: WorktreeDiscoveryProblemKind;
+  path?: string | null;
+  repositoryId?: string | null;
+};
+
+export type DiscoveredWorktreeScannedRootFragment = {
+  __typename?: 'ScannedWorktreeRootObject';
+  baseRoot: string;
+  exists: boolean;
+  path: string;
+  source: WorktreeRootSource;
+  worktreeCount: number;
 };
 
 export type DiscoveredWorktreesScanFragment = {
@@ -16190,6 +16400,12 @@ export type ApplyWorkspaceEditorConfigurationMutation = {
       warnings: Array<string>;
     }>;
   };
+};
+
+export type EditorPresenceEditorFragment = {
+  __typename?: 'EditorPresenceObject';
+  editor: WorkspaceEditorId;
+  presence: EditorPresenceState;
 };
 
 export type EditorPresenceReportFragment = {
@@ -18175,6 +18391,169 @@ export const EvalRunListRowFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<EvalRunListRowFragment, unknown>;
+export const EvalRunReportCaseFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'EvalRunReportCase' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'EvalReportCase' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'attemptsCounted' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'attemptsPassed' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'caseId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'passed' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'split' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<EvalRunReportCaseFragment, unknown>;
+export const EvalRunReportGraderFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'EvalRunReportGrader' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'EvalReportGrader' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'calibrationStatus' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'counts' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'graderId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'graderKind' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'graderVersion' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'judgeModel' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'judgeModelVersion' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'kappa' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'kappaCiHigh' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'kappaCiLow' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<EvalRunReportGraderFragment, unknown>;
+export const EvalRunReportNumbersFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'EvalRunReportNumbers' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'EvalReportNumbers' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'casesAtK' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'casesCounted' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'costPerSuccessUsd' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'detectionFloor' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'excluded' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'errored' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'gradeError' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'noCountedGrade' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'usageLimited' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'judgeAgreement' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'graderId' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'graderVersion' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'kappa' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'kappaCiHigh' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'kappaCiLow' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'passAtK' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'passHatK' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'passRate' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'passRateCi' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'confidence' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'lower' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'upper' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'totalCostUsd' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'trialsCounted' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'trialsExcluded' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'trialsPassed' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<EvalRunReportNumbersFragment, unknown>;
+export const EvalRunReportRunFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'EvalRunReportRun' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'EvalRun' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'authMode' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'budgetTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'budgetUsd' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'datasetId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'datasetVersion' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'driver' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'effort' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'finishedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'k' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'promptSha' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'skillSha' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'startedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<EvalRunReportRunFragment, unknown>;
 export const EvalRunReportFieldsFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -18195,16 +18574,9 @@ export const EvalRunReportFieldsFragmentDoc = {
               kind: 'SelectionSet',
               selections: [
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'attemptsCounted' },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'EvalRunReportCase' },
                 },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'attemptsPassed' },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'caseId' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'passed' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'split' } },
               ],
             },
           },
@@ -18216,24 +18588,9 @@ export const EvalRunReportFieldsFragmentDoc = {
               kind: 'SelectionSet',
               selections: [
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'calibrationStatus' },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'EvalRunReportGrader' },
                 },
-                { kind: 'Field', name: { kind: 'Name', value: 'counts' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'graderId' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'graderKind' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'graderVersion' },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'judgeModel' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'judgeModelVersion' },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'kappa' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'kappaCiHigh' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'kappaCiLow' } },
               ],
             },
           },
@@ -18243,107 +18600,9 @@ export const EvalRunReportFieldsFragmentDoc = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'casesAtK' } },
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'casesCounted' },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'costPerSuccessUsd' },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'detectionFloor' },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'excluded' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'errored' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'gradeError' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'noCountedGrade' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'usageLimited' },
-                      },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'judgeAgreement' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'graderId' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'graderVersion' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'kappa' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'kappaCiHigh' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'kappaCiLow' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'status' },
-                      },
-                    ],
-                  },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'passAtK' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'passHatK' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'passRate' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'passRateCi' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'confidence' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'lower' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'upper' } },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'totalCostUsd' },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'trialsCounted' },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'trialsExcluded' },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'trialsPassed' },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'EvalRunReportNumbers' },
                 },
               ],
             },
@@ -18354,31 +18613,156 @@ export const EvalRunReportFieldsFragmentDoc = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'authMode' } },
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'EvalRunReportRun' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'EvalRunReportCase' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'EvalReportCase' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'attemptsCounted' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'attemptsPassed' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'caseId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'passed' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'split' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'EvalRunReportGrader' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'EvalReportGrader' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'calibrationStatus' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'counts' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'graderId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'graderKind' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'graderVersion' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'judgeModel' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'judgeModelVersion' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'kappa' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'kappaCiHigh' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'kappaCiLow' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'EvalRunReportNumbers' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'EvalReportNumbers' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'casesAtK' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'casesCounted' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'costPerSuccessUsd' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'detectionFloor' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'excluded' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'errored' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'gradeError' } },
                 {
                   kind: 'Field',
-                  name: { kind: 'Name', value: 'budgetTokens' },
+                  name: { kind: 'Name', value: 'noCountedGrade' },
                 },
-                { kind: 'Field', name: { kind: 'Name', value: 'budgetUsd' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'datasetId' } },
                 {
                   kind: 'Field',
-                  name: { kind: 'Name', value: 'datasetVersion' },
+                  name: { kind: 'Name', value: 'usageLimited' },
                 },
-                { kind: 'Field', name: { kind: 'Name', value: 'driver' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'effort' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'finishedAt' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'k' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'model' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'promptSha' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'skillSha' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'startedAt' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'judgeAgreement' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'graderId' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'graderVersion' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'kappa' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'kappaCiHigh' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'kappaCiLow' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'status' } },
               ],
             },
           },
+          { kind: 'Field', name: { kind: 'Name', value: 'passAtK' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'passHatK' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'passRate' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'passRateCi' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'confidence' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'lower' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'upper' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'totalCostUsd' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'trialsCounted' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'trialsExcluded' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'trialsPassed' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'EvalRunReportRun' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'EvalRun' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'authMode' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'budgetTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'budgetUsd' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'datasetId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'datasetVersion' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'driver' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'effort' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'finishedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'k' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'promptSha' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'skillSha' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'startedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
         ],
       },
     },
@@ -18455,6 +18839,149 @@ export const EvalRunComparisonReportFragmentDoc = {
     },
     {
       kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'EvalRunReportCase' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'EvalReportCase' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'attemptsCounted' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'attemptsPassed' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'caseId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'passed' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'split' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'EvalRunReportGrader' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'EvalReportGrader' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'calibrationStatus' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'counts' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'graderId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'graderKind' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'graderVersion' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'judgeModel' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'judgeModelVersion' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'kappa' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'kappaCiHigh' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'kappaCiLow' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'EvalRunReportNumbers' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'EvalReportNumbers' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'casesAtK' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'casesCounted' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'costPerSuccessUsd' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'detectionFloor' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'excluded' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'errored' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'gradeError' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'noCountedGrade' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'usageLimited' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'judgeAgreement' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'graderId' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'graderVersion' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'kappa' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'kappaCiHigh' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'kappaCiLow' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'passAtK' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'passHatK' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'passRate' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'passRateCi' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'confidence' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'lower' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'upper' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'totalCostUsd' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'trialsCounted' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'trialsExcluded' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'trialsPassed' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'EvalRunReportRun' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'EvalRun' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'authMode' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'budgetTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'budgetUsd' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'datasetId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'datasetVersion' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'driver' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'effort' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'finishedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'k' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'promptSha' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'skillSha' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'startedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
       name: { kind: 'Name', value: 'EvalRunReportFields' },
       typeCondition: {
         kind: 'NamedType',
@@ -18470,16 +18997,9 @@ export const EvalRunComparisonReportFragmentDoc = {
               kind: 'SelectionSet',
               selections: [
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'attemptsCounted' },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'EvalRunReportCase' },
                 },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'attemptsPassed' },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'caseId' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'passed' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'split' } },
               ],
             },
           },
@@ -18491,24 +19011,9 @@ export const EvalRunComparisonReportFragmentDoc = {
               kind: 'SelectionSet',
               selections: [
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'calibrationStatus' },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'EvalRunReportGrader' },
                 },
-                { kind: 'Field', name: { kind: 'Name', value: 'counts' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'graderId' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'graderKind' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'graderVersion' },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'judgeModel' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'judgeModelVersion' },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'kappa' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'kappaCiHigh' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'kappaCiLow' } },
               ],
             },
           },
@@ -18518,107 +19023,9 @@ export const EvalRunComparisonReportFragmentDoc = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'casesAtK' } },
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'casesCounted' },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'costPerSuccessUsd' },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'detectionFloor' },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'excluded' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'errored' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'gradeError' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'noCountedGrade' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'usageLimited' },
-                      },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'judgeAgreement' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'graderId' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'graderVersion' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'kappa' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'kappaCiHigh' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'kappaCiLow' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'status' },
-                      },
-                    ],
-                  },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'passAtK' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'passHatK' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'passRate' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'passRateCi' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'confidence' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'lower' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'upper' } },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'totalCostUsd' },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'trialsCounted' },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'trialsExcluded' },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'trialsPassed' },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'EvalRunReportNumbers' },
                 },
               ],
             },
@@ -18629,28 +19036,10 @@ export const EvalRunComparisonReportFragmentDoc = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'authMode' } },
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'budgetTokens' },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'EvalRunReportRun' },
                 },
-                { kind: 'Field', name: { kind: 'Name', value: 'budgetUsd' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'datasetId' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'datasetVersion' },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'driver' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'effort' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'finishedAt' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'k' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'model' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'promptSha' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'skillSha' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'startedAt' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
               ],
             },
           },
@@ -19164,6 +19553,55 @@ export const PlanRunHistoryEntryFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<PlanRunHistoryEntryFragment, unknown>;
+export const PlanRunConfigCheckoutFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PlanRunConfigCheckout' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'RepositoryCheckoutObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'filesystemPath' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'inspection' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'git' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'currentBranch' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'defaultBranch' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'managed' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<PlanRunConfigCheckoutFragment, unknown>;
 export const PlanRunConfigRepositoryFieldsFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -19183,40 +19621,10 @@ export const PlanRunConfigRepositoryFieldsFragmentDoc = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'filesystemPath' },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'PlanRunConfigCheckout' },
                 },
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'inspection' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'git' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'currentBranch' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'defaultBranch' },
-                            },
-                          ],
-                        },
-                      },
-                    ],
-                  },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'managed' } },
               ],
             },
           },
@@ -19228,6 +19636,50 @@ export const PlanRunConfigRepositoryFieldsFragmentDoc = {
             name: { kind: 'Name', value: 'normalizedRemoteUrl' },
           },
           { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PlanRunConfigCheckout' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'RepositoryCheckoutObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'filesystemPath' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'inspection' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'git' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'currentBranch' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'defaultBranch' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'managed' } },
         ],
       },
     },
@@ -20475,6 +20927,28 @@ export const ScheduledJobDetailFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<ScheduledJobDetailFragment, unknown>;
+export const ScheduleWebhookFilterFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'ScheduleWebhookFilter' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'ScheduledAgentJobWebhookFilterObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'op' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'path' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'value' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'values' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<ScheduleWebhookFilterFragment, unknown>;
 export const ScheduleWebhookTriggerFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -20498,10 +20972,10 @@ export const ScheduleWebhookTriggerFragmentDoc = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'op' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'path' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'value' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'values' } },
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'ScheduleWebhookFilter' },
+                },
               ],
             },
           },
@@ -20526,6 +21000,23 @@ export const ScheduleWebhookTriggerFragmentDoc = {
           },
           { kind: 'Field', name: { kind: 'Name', value: 'tokenPrefix' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'ScheduleWebhookFilter' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'ScheduledAgentJobWebhookFilterObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'op' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'path' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'value' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'values' } },
         ],
       },
     },
@@ -20826,6 +21317,27 @@ export const McpConnectorConnectionFieldsFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<McpConnectorConnectionFieldsFragment, unknown>;
+export const UserPreferencesDefaultAgentFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UserPreferencesDefaultAgent' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'UserPreferencesAgentObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'backend' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'effort' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<UserPreferencesDefaultAgentFragment, unknown>;
 export const UserPreferencesFieldsFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -20845,9 +21357,10 @@ export const UserPreferencesFieldsFragmentDoc = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'backend' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'effort' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'UserPreferencesDefaultAgent' },
+                },
               ],
             },
           },
@@ -20855,8 +21368,152 @@ export const UserPreferencesFieldsFragmentDoc = {
         ],
       },
     },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UserPreferencesDefaultAgent' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'UserPreferencesAgentObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'backend' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'effort' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+        ],
+      },
+    },
   ],
 } as unknown as DocumentNode<UserPreferencesFieldsFragment, unknown>;
+export const DiscoveredWorktreeRemovalFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'DiscoveredWorktreeRemoval' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'WorktreeRemovalObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'agentSession' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'outcome' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'parentCommand' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'removedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'result' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<DiscoveredWorktreeRemovalFragment, unknown>;
+export const DiscoveredWorktreeMissingCheckoutFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'DiscoveredWorktreeMissingCheckout' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'MissingWorktreeCheckoutObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'checkoutId' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'lastRemoval' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'DiscoveredWorktreeRemoval' },
+                },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'path' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'reason' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'repositoryId' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'DiscoveredWorktreeRemoval' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'WorktreeRemovalObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'agentSession' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'outcome' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'parentCommand' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'removedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'result' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  DiscoveredWorktreeMissingCheckoutFragment,
+  unknown
+>;
+export const DiscoveredWorktreeProblemFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'DiscoveredWorktreeProblem' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'WorktreeDiscoveryProblemObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'detail' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'path' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'repositoryId' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<DiscoveredWorktreeProblemFragment, unknown>;
+export const DiscoveredWorktreeScannedRootFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'DiscoveredWorktreeScannedRoot' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'ScannedWorktreeRootObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'baseRoot' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'exists' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'path' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'source' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'worktreeCount' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<DiscoveredWorktreeScannedRootFragment, unknown>;
 export const DiscoveredWorktreeFieldsFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -20906,46 +21563,12 @@ export const DiscoveredWorktreesScanFragmentDoc = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'checkoutId' } },
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'lastRemoval' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'agentSession' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'createdAt' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'outcome' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'parentCommand' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'removedAt' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'result' },
-                      },
-                    ],
+                  kind: 'FragmentSpread',
+                  name: {
+                    kind: 'Name',
+                    value: 'DiscoveredWorktreeMissingCheckout',
                   },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'path' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'reason' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'repositoryId' },
                 },
               ],
             },
@@ -20956,12 +21579,9 @@ export const DiscoveredWorktreesScanFragmentDoc = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'detail' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'path' } },
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'repositoryId' },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'DiscoveredWorktreeProblem' },
                 },
               ],
             },
@@ -20973,13 +21593,12 @@ export const DiscoveredWorktreesScanFragmentDoc = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'baseRoot' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'exists' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'path' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'source' } },
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'worktreeCount' },
+                  kind: 'FragmentSpread',
+                  name: {
+                    kind: 'Name',
+                    value: 'DiscoveredWorktreeScannedRoot',
+                  },
                 },
               ],
             },
@@ -20997,6 +21616,91 @@ export const DiscoveredWorktreesScanFragmentDoc = {
               ],
             },
           },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'DiscoveredWorktreeRemoval' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'WorktreeRemovalObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'agentSession' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'outcome' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'parentCommand' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'removedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'result' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'DiscoveredWorktreeMissingCheckout' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'MissingWorktreeCheckoutObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'checkoutId' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'lastRemoval' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'DiscoveredWorktreeRemoval' },
+                },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'path' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'reason' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'repositoryId' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'DiscoveredWorktreeProblem' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'WorktreeDiscoveryProblemObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'detail' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'path' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'repositoryId' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'DiscoveredWorktreeScannedRoot' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'ScannedWorktreeRootObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'baseRoot' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'exists' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'path' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'source' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'worktreeCount' } },
         ],
       },
     },
@@ -21026,6 +21730,163 @@ export const DiscoveredWorktreesScanFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<DiscoveredWorktreesScanFragment, unknown>;
+export const RepositoryHookTelemetryFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'RepositoryHookTelemetry' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: {
+          kind: 'Name',
+          value: 'RepositoryInspectionHookTelemetryObject',
+        },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'authTokenConfigured' },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'endpointConfigured' },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'endpointSource' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'producers' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'reason' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'telemetryDir' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<RepositoryHookTelemetryFragment, unknown>;
+export const RepositoryCheckoutInspectionFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'RepositoryCheckoutInspection' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'RepositoryInspectionObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'agentConfig' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'agentsMd' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'claudeMd' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'cursorRules' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'mcpJson' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'skillsDir' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'git' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'currentBranch' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'defaultBranch' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'dirty' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'isRepo' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'linkedWorktrees' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'normalizedRemoteUrl' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'hookTelemetry' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'RepositoryHookTelemetry' },
+                },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'stack' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'languages' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'nxWorkspace' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'packageManager' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'pnpmWorkspace' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'turbo' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'warnings' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'RepositoryHookTelemetry' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: {
+          kind: 'Name',
+          value: 'RepositoryInspectionHookTelemetryObject',
+        },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'authTokenConfigured' },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'endpointConfigured' },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'endpointSource' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'producers' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'reason' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'telemetryDir' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<RepositoryCheckoutInspectionFragment, unknown>;
 export const RepositoryCheckoutFieldsFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -21054,129 +21915,9 @@ export const RepositoryCheckoutFieldsFragmentDoc = {
               kind: 'SelectionSet',
               selections: [
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'agentConfig' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'agentsMd' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'claudeMd' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'cursorRules' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'mcpJson' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'skillsDir' },
-                      },
-                    ],
-                  },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'RepositoryCheckoutInspection' },
                 },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'git' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'currentBranch' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'defaultBranch' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'dirty' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'isRepo' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'linkedWorktrees' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'normalizedRemoteUrl' },
-                      },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'hookTelemetry' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'authTokenConfigured' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'endpointConfigured' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'endpointSource' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'producers' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'reason' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'status' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'telemetryDir' },
-                      },
-                    ],
-                  },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'stack' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'languages' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'nxWorkspace' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'packageManager' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'pnpmWorkspace' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'turbo' } },
-                    ],
-                  },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'warnings' } },
               ],
             },
           },
@@ -21191,6 +21932,124 @@ export const RepositoryCheckoutFieldsFragmentDoc = {
             kind: 'Field',
             name: { kind: 'Name', value: 'worktreeSkillOverlayEnabled' },
           },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'RepositoryHookTelemetry' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: {
+          kind: 'Name',
+          value: 'RepositoryInspectionHookTelemetryObject',
+        },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'authTokenConfigured' },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'endpointConfigured' },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'endpointSource' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'producers' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'reason' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'telemetryDir' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'RepositoryCheckoutInspection' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'RepositoryInspectionObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'agentConfig' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'agentsMd' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'claudeMd' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'cursorRules' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'mcpJson' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'skillsDir' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'git' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'currentBranch' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'defaultBranch' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'dirty' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'isRepo' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'linkedWorktrees' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'normalizedRemoteUrl' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'hookTelemetry' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'RepositoryHookTelemetry' },
+                },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'stack' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'languages' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'nxWorkspace' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'packageManager' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'pnpmWorkspace' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'turbo' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'warnings' } },
         ],
       },
     },
@@ -21248,6 +22107,124 @@ export const WorkspaceRepositoryFieldsFragmentDoc = {
     },
     {
       kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'RepositoryHookTelemetry' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: {
+          kind: 'Name',
+          value: 'RepositoryInspectionHookTelemetryObject',
+        },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'authTokenConfigured' },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'endpointConfigured' },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'endpointSource' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'producers' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'reason' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'telemetryDir' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'RepositoryCheckoutInspection' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'RepositoryInspectionObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'agentConfig' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'agentsMd' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'claudeMd' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'cursorRules' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'mcpJson' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'skillsDir' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'git' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'currentBranch' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'defaultBranch' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'dirty' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'isRepo' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'linkedWorktrees' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'normalizedRemoteUrl' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'hookTelemetry' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'RepositoryHookTelemetry' },
+                },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'stack' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'languages' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'nxWorkspace' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'packageManager' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'pnpmWorkspace' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'turbo' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'warnings' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
       name: { kind: 'Name', value: 'RepositoryCheckoutFields' },
       typeCondition: {
         kind: 'NamedType',
@@ -21271,129 +22248,9 @@ export const WorkspaceRepositoryFieldsFragmentDoc = {
               kind: 'SelectionSet',
               selections: [
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'agentConfig' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'agentsMd' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'claudeMd' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'cursorRules' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'mcpJson' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'skillsDir' },
-                      },
-                    ],
-                  },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'RepositoryCheckoutInspection' },
                 },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'git' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'currentBranch' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'defaultBranch' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'dirty' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'isRepo' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'linkedWorktrees' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'normalizedRemoteUrl' },
-                      },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'hookTelemetry' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'authTokenConfigured' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'endpointConfigured' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'endpointSource' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'producers' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'reason' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'status' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'telemetryDir' },
-                      },
-                    ],
-                  },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'stack' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'languages' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'nxWorkspace' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'packageManager' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'pnpmWorkspace' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'turbo' } },
-                    ],
-                  },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'warnings' } },
               ],
             },
           },
@@ -21470,6 +22327,124 @@ export const AddWorkspaceFolderResultFragmentDoc = {
     },
     {
       kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'RepositoryHookTelemetry' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: {
+          kind: 'Name',
+          value: 'RepositoryInspectionHookTelemetryObject',
+        },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'authTokenConfigured' },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'endpointConfigured' },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'endpointSource' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'producers' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'reason' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'telemetryDir' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'RepositoryCheckoutInspection' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'RepositoryInspectionObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'agentConfig' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'agentsMd' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'claudeMd' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'cursorRules' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'mcpJson' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'skillsDir' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'git' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'currentBranch' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'defaultBranch' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'dirty' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'isRepo' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'linkedWorktrees' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'normalizedRemoteUrl' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'hookTelemetry' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'RepositoryHookTelemetry' },
+                },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'stack' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'languages' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'nxWorkspace' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'packageManager' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'pnpmWorkspace' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'turbo' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'warnings' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
       name: { kind: 'Name', value: 'RepositoryCheckoutFields' },
       typeCondition: {
         kind: 'NamedType',
@@ -21493,129 +22468,9 @@ export const AddWorkspaceFolderResultFragmentDoc = {
               kind: 'SelectionSet',
               selections: [
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'agentConfig' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'agentsMd' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'claudeMd' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'cursorRules' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'mcpJson' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'skillsDir' },
-                      },
-                    ],
-                  },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'RepositoryCheckoutInspection' },
                 },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'git' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'currentBranch' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'defaultBranch' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'dirty' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'isRepo' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'linkedWorktrees' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'normalizedRemoteUrl' },
-                      },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'hookTelemetry' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'authTokenConfigured' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'endpointConfigured' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'endpointSource' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'producers' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'reason' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'status' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'telemetryDir' },
-                      },
-                    ],
-                  },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'stack' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'languages' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'nxWorkspace' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'packageManager' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'pnpmWorkspace' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'turbo' } },
-                    ],
-                  },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'warnings' } },
               ],
             },
           },
@@ -21856,6 +22711,26 @@ export const UserWorkspaceProfileFieldsFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<UserWorkspaceProfileFieldsFragment, unknown>;
+export const EditorPresenceEditorFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'EditorPresenceEditor' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'EditorPresenceObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'editor' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'presence' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<EditorPresenceEditorFragment, unknown>;
 export const EditorPresenceReportFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -21875,13 +22750,30 @@ export const EditorPresenceReportFragmentDoc = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'editor' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'presence' } },
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'EditorPresenceEditor' },
+                },
               ],
             },
           },
           { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'trusted' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'EditorPresenceEditor' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'EditorPresenceObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'editor' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'presence' } },
         ],
       },
     },
@@ -26539,6 +27431,149 @@ export const EvalRunComparisonRouteDocument = {
     },
     {
       kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'EvalRunReportCase' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'EvalReportCase' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'attemptsCounted' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'attemptsPassed' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'caseId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'passed' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'split' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'EvalRunReportGrader' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'EvalReportGrader' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'calibrationStatus' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'counts' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'graderId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'graderKind' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'graderVersion' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'judgeModel' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'judgeModelVersion' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'kappa' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'kappaCiHigh' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'kappaCiLow' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'EvalRunReportNumbers' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'EvalReportNumbers' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'casesAtK' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'casesCounted' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'costPerSuccessUsd' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'detectionFloor' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'excluded' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'errored' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'gradeError' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'noCountedGrade' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'usageLimited' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'judgeAgreement' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'graderId' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'graderVersion' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'kappa' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'kappaCiHigh' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'kappaCiLow' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'passAtK' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'passHatK' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'passRate' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'passRateCi' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'confidence' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'lower' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'upper' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'totalCostUsd' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'trialsCounted' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'trialsExcluded' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'trialsPassed' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'EvalRunReportRun' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'EvalRun' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'authMode' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'budgetTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'budgetUsd' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'datasetId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'datasetVersion' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'driver' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'effort' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'finishedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'k' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'promptSha' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'skillSha' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'startedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
       name: { kind: 'Name', value: 'EvalRunReportFields' },
       typeCondition: {
         kind: 'NamedType',
@@ -26554,16 +27589,9 @@ export const EvalRunComparisonRouteDocument = {
               kind: 'SelectionSet',
               selections: [
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'attemptsCounted' },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'EvalRunReportCase' },
                 },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'attemptsPassed' },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'caseId' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'passed' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'split' } },
               ],
             },
           },
@@ -26575,24 +27603,9 @@ export const EvalRunComparisonRouteDocument = {
               kind: 'SelectionSet',
               selections: [
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'calibrationStatus' },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'EvalRunReportGrader' },
                 },
-                { kind: 'Field', name: { kind: 'Name', value: 'counts' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'graderId' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'graderKind' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'graderVersion' },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'judgeModel' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'judgeModelVersion' },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'kappa' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'kappaCiHigh' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'kappaCiLow' } },
               ],
             },
           },
@@ -26602,107 +27615,9 @@ export const EvalRunComparisonRouteDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'casesAtK' } },
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'casesCounted' },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'costPerSuccessUsd' },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'detectionFloor' },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'excluded' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'errored' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'gradeError' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'noCountedGrade' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'usageLimited' },
-                      },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'judgeAgreement' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'graderId' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'graderVersion' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'kappa' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'kappaCiHigh' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'kappaCiLow' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'status' },
-                      },
-                    ],
-                  },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'passAtK' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'passHatK' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'passRate' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'passRateCi' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'confidence' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'lower' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'upper' } },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'totalCostUsd' },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'trialsCounted' },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'trialsExcluded' },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'trialsPassed' },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'EvalRunReportNumbers' },
                 },
               ],
             },
@@ -26713,28 +27628,10 @@ export const EvalRunComparisonRouteDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'authMode' } },
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'budgetTokens' },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'EvalRunReportRun' },
                 },
-                { kind: 'Field', name: { kind: 'Name', value: 'budgetUsd' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'datasetId' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'datasetVersion' },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'driver' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'effort' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'finishedAt' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'k' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'model' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'promptSha' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'skillSha' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'startedAt' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
               ],
             },
           },
@@ -26863,6 +27760,149 @@ export const EvalRunReportRouteDocument = {
     },
     {
       kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'EvalRunReportCase' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'EvalReportCase' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'attemptsCounted' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'attemptsPassed' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'caseId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'passed' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'split' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'EvalRunReportGrader' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'EvalReportGrader' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'calibrationStatus' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'counts' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'graderId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'graderKind' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'graderVersion' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'judgeModel' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'judgeModelVersion' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'kappa' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'kappaCiHigh' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'kappaCiLow' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'EvalRunReportNumbers' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'EvalReportNumbers' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'casesAtK' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'casesCounted' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'costPerSuccessUsd' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'detectionFloor' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'excluded' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'errored' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'gradeError' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'noCountedGrade' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'usageLimited' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'judgeAgreement' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'graderId' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'graderVersion' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'kappa' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'kappaCiHigh' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'kappaCiLow' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'passAtK' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'passHatK' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'passRate' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'passRateCi' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'confidence' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'lower' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'upper' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'totalCostUsd' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'trialsCounted' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'trialsExcluded' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'trialsPassed' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'EvalRunReportRun' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'EvalRun' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'authMode' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'budgetTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'budgetUsd' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'datasetId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'datasetVersion' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'driver' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'effort' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'finishedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'k' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'promptSha' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'skillSha' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'startedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
       name: { kind: 'Name', value: 'EvalRunReportFields' },
       typeCondition: {
         kind: 'NamedType',
@@ -26878,16 +27918,9 @@ export const EvalRunReportRouteDocument = {
               kind: 'SelectionSet',
               selections: [
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'attemptsCounted' },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'EvalRunReportCase' },
                 },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'attemptsPassed' },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'caseId' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'passed' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'split' } },
               ],
             },
           },
@@ -26899,24 +27932,9 @@ export const EvalRunReportRouteDocument = {
               kind: 'SelectionSet',
               selections: [
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'calibrationStatus' },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'EvalRunReportGrader' },
                 },
-                { kind: 'Field', name: { kind: 'Name', value: 'counts' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'graderId' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'graderKind' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'graderVersion' },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'judgeModel' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'judgeModelVersion' },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'kappa' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'kappaCiHigh' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'kappaCiLow' } },
               ],
             },
           },
@@ -26926,107 +27944,9 @@ export const EvalRunReportRouteDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'casesAtK' } },
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'casesCounted' },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'costPerSuccessUsd' },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'detectionFloor' },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'excluded' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'errored' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'gradeError' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'noCountedGrade' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'usageLimited' },
-                      },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'judgeAgreement' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'graderId' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'graderVersion' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'kappa' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'kappaCiHigh' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'kappaCiLow' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'status' },
-                      },
-                    ],
-                  },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'passAtK' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'passHatK' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'passRate' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'passRateCi' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'confidence' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'lower' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'upper' } },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'totalCostUsd' },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'trialsCounted' },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'trialsExcluded' },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'trialsPassed' },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'EvalRunReportNumbers' },
                 },
               ],
             },
@@ -27037,28 +27957,10 @@ export const EvalRunReportRouteDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'authMode' } },
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'budgetTokens' },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'EvalRunReportRun' },
                 },
-                { kind: 'Field', name: { kind: 'Name', value: 'budgetUsd' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'datasetId' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'datasetVersion' },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'driver' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'effort' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'finishedAt' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'k' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'model' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'promptSha' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'skillSha' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'startedAt' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
               ],
             },
           },
@@ -29054,6 +29956,50 @@ export const PlanDetailWorkspaceRepositoriesDocument = {
     },
     {
       kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PlanRunConfigCheckout' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'RepositoryCheckoutObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'filesystemPath' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'inspection' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'git' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'currentBranch' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'defaultBranch' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'managed' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
       name: { kind: 'Name', value: 'PlanRunConfigRepositoryFields' },
       typeCondition: {
         kind: 'NamedType',
@@ -29068,40 +30014,10 @@ export const PlanDetailWorkspaceRepositoriesDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'filesystemPath' },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'PlanRunConfigCheckout' },
                 },
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'inspection' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'git' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'currentBranch' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'defaultBranch' },
-                            },
-                          ],
-                        },
-                      },
-                    ],
-                  },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'managed' } },
               ],
             },
           },
@@ -35060,6 +35976,23 @@ export const ScheduledAgentJobDetailDocument = {
     },
     {
       kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'ScheduleWebhookFilter' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'ScheduledAgentJobWebhookFilterObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'op' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'path' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'value' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'values' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
       name: { kind: 'Name', value: 'ScheduledJobDetail' },
       typeCondition: {
         kind: 'NamedType',
@@ -35142,10 +36075,10 @@ export const ScheduledAgentJobDetailDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'op' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'path' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'value' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'values' } },
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'ScheduleWebhookFilter' },
+                },
               ],
             },
           },
@@ -35347,6 +36280,23 @@ export const CreateScheduledAgentJobWebhookTriggerDocument = {
     },
     {
       kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'ScheduleWebhookFilter' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'ScheduledAgentJobWebhookFilterObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'op' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'path' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'value' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'values' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
       name: { kind: 'Name', value: 'ScheduleWebhookTrigger' },
       typeCondition: {
         kind: 'NamedType',
@@ -35365,10 +36315,10 @@ export const CreateScheduledAgentJobWebhookTriggerDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'op' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'path' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'value' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'values' } },
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'ScheduleWebhookFilter' },
+                },
               ],
             },
           },
@@ -35466,6 +36416,23 @@ export const RotateScheduledAgentJobWebhookTriggerDocument = {
     },
     {
       kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'ScheduleWebhookFilter' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'ScheduledAgentJobWebhookFilterObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'op' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'path' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'value' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'values' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
       name: { kind: 'Name', value: 'ScheduleWebhookTrigger' },
       typeCondition: {
         kind: 'NamedType',
@@ -35484,10 +36451,10 @@ export const RotateScheduledAgentJobWebhookTriggerDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'op' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'path' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'value' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'values' } },
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'ScheduleWebhookFilter' },
+                },
               ],
             },
           },
@@ -35580,6 +36547,23 @@ export const UpdateScheduledAgentJobWebhookTriggerDocument = {
     },
     {
       kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'ScheduleWebhookFilter' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'ScheduledAgentJobWebhookFilterObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'op' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'path' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'value' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'values' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
       name: { kind: 'Name', value: 'ScheduleWebhookTrigger' },
       typeCondition: {
         kind: 'NamedType',
@@ -35598,10 +36582,10 @@ export const UpdateScheduledAgentJobWebhookTriggerDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'op' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'path' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'value' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'values' } },
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'ScheduleWebhookFilter' },
+                },
               ],
             },
           },
@@ -38051,6 +39035,22 @@ export const SettingsUserPreferencesDocument = {
     },
     {
       kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UserPreferencesDefaultAgent' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'UserPreferencesAgentObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'backend' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'effort' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
       name: { kind: 'Name', value: 'UserPreferencesFields' },
       typeCondition: {
         kind: 'NamedType',
@@ -38065,9 +39065,10 @@ export const SettingsUserPreferencesDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'backend' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'effort' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'UserPreferencesDefaultAgent' },
+                },
               ],
             },
           },
@@ -38174,6 +39175,22 @@ export const UpdateUserPreferencesDocument = {
     },
     {
       kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UserPreferencesDefaultAgent' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'UserPreferencesAgentObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'backend' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'effort' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
       name: { kind: 'Name', value: 'UserPreferencesFields' },
       typeCondition: {
         kind: 'NamedType',
@@ -38188,9 +39205,10 @@ export const UpdateUserPreferencesDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'backend' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'effort' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'UserPreferencesDefaultAgent' },
+                },
               ],
             },
           },
@@ -38254,6 +39272,124 @@ export const GetWorkspaceRepositoryDocument = {
     },
     {
       kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'RepositoryHookTelemetry' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: {
+          kind: 'Name',
+          value: 'RepositoryInspectionHookTelemetryObject',
+        },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'authTokenConfigured' },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'endpointConfigured' },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'endpointSource' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'producers' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'reason' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'telemetryDir' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'RepositoryCheckoutInspection' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'RepositoryInspectionObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'agentConfig' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'agentsMd' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'claudeMd' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'cursorRules' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'mcpJson' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'skillsDir' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'git' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'currentBranch' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'defaultBranch' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'dirty' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'isRepo' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'linkedWorktrees' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'normalizedRemoteUrl' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'hookTelemetry' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'RepositoryHookTelemetry' },
+                },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'stack' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'languages' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'nxWorkspace' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'packageManager' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'pnpmWorkspace' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'turbo' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'warnings' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
       name: { kind: 'Name', value: 'RepositoryCheckoutFields' },
       typeCondition: {
         kind: 'NamedType',
@@ -38277,129 +39413,9 @@ export const GetWorkspaceRepositoryDocument = {
               kind: 'SelectionSet',
               selections: [
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'agentConfig' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'agentsMd' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'claudeMd' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'cursorRules' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'mcpJson' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'skillsDir' },
-                      },
-                    ],
-                  },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'RepositoryCheckoutInspection' },
                 },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'git' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'currentBranch' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'defaultBranch' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'dirty' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'isRepo' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'linkedWorktrees' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'normalizedRemoteUrl' },
-                      },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'hookTelemetry' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'authTokenConfigured' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'endpointConfigured' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'endpointSource' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'producers' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'reason' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'status' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'telemetryDir' },
-                      },
-                    ],
-                  },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'stack' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'languages' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'nxWorkspace' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'packageManager' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'pnpmWorkspace' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'turbo' } },
-                    ],
-                  },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'warnings' } },
               ],
             },
           },
@@ -38531,6 +39547,124 @@ export const GetWorkspaceRepositoryForEditDocument = {
     },
     {
       kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'RepositoryHookTelemetry' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: {
+          kind: 'Name',
+          value: 'RepositoryInspectionHookTelemetryObject',
+        },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'authTokenConfigured' },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'endpointConfigured' },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'endpointSource' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'producers' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'reason' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'telemetryDir' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'RepositoryCheckoutInspection' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'RepositoryInspectionObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'agentConfig' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'agentsMd' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'claudeMd' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'cursorRules' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'mcpJson' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'skillsDir' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'git' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'currentBranch' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'defaultBranch' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'dirty' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'isRepo' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'linkedWorktrees' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'normalizedRemoteUrl' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'hookTelemetry' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'RepositoryHookTelemetry' },
+                },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'stack' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'languages' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'nxWorkspace' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'packageManager' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'pnpmWorkspace' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'turbo' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'warnings' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
       name: { kind: 'Name', value: 'RepositoryCheckoutFields' },
       typeCondition: {
         kind: 'NamedType',
@@ -38554,129 +39688,9 @@ export const GetWorkspaceRepositoryForEditDocument = {
               kind: 'SelectionSet',
               selections: [
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'agentConfig' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'agentsMd' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'claudeMd' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'cursorRules' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'mcpJson' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'skillsDir' },
-                      },
-                    ],
-                  },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'RepositoryCheckoutInspection' },
                 },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'git' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'currentBranch' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'defaultBranch' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'dirty' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'isRepo' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'linkedWorktrees' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'normalizedRemoteUrl' },
-                      },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'hookTelemetry' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'authTokenConfigured' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'endpointConfigured' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'endpointSource' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'producers' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'reason' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'status' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'telemetryDir' },
-                      },
-                    ],
-                  },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'stack' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'languages' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'nxWorkspace' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'packageManager' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'pnpmWorkspace' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'turbo' } },
-                    ],
-                  },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'warnings' } },
               ],
             },
           },
@@ -38800,6 +39814,124 @@ export const UpdateRepositoryDocument = {
     },
     {
       kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'RepositoryHookTelemetry' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: {
+          kind: 'Name',
+          value: 'RepositoryInspectionHookTelemetryObject',
+        },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'authTokenConfigured' },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'endpointConfigured' },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'endpointSource' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'producers' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'reason' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'telemetryDir' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'RepositoryCheckoutInspection' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'RepositoryInspectionObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'agentConfig' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'agentsMd' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'claudeMd' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'cursorRules' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'mcpJson' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'skillsDir' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'git' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'currentBranch' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'defaultBranch' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'dirty' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'isRepo' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'linkedWorktrees' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'normalizedRemoteUrl' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'hookTelemetry' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'RepositoryHookTelemetry' },
+                },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'stack' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'languages' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'nxWorkspace' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'packageManager' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'pnpmWorkspace' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'turbo' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'warnings' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
       name: { kind: 'Name', value: 'RepositoryCheckoutFields' },
       typeCondition: {
         kind: 'NamedType',
@@ -38823,129 +39955,9 @@ export const UpdateRepositoryDocument = {
               kind: 'SelectionSet',
               selections: [
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'agentConfig' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'agentsMd' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'claudeMd' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'cursorRules' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'mcpJson' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'skillsDir' },
-                      },
-                    ],
-                  },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'RepositoryCheckoutInspection' },
                 },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'git' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'currentBranch' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'defaultBranch' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'dirty' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'isRepo' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'linkedWorktrees' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'normalizedRemoteUrl' },
-                      },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'hookTelemetry' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'authTokenConfigured' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'endpointConfigured' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'endpointSource' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'producers' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'reason' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'status' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'telemetryDir' },
-                      },
-                    ],
-                  },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'stack' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'languages' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'nxWorkspace' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'packageManager' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'pnpmWorkspace' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'turbo' } },
-                    ],
-                  },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'warnings' } },
               ],
             },
           },
@@ -39061,6 +40073,124 @@ export const GetSettingsRepositoriesDocument = {
     },
     {
       kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'RepositoryHookTelemetry' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: {
+          kind: 'Name',
+          value: 'RepositoryInspectionHookTelemetryObject',
+        },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'authTokenConfigured' },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'endpointConfigured' },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'endpointSource' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'producers' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'reason' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'telemetryDir' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'RepositoryCheckoutInspection' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'RepositoryInspectionObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'agentConfig' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'agentsMd' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'claudeMd' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'cursorRules' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'mcpJson' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'skillsDir' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'git' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'currentBranch' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'defaultBranch' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'dirty' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'isRepo' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'linkedWorktrees' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'normalizedRemoteUrl' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'hookTelemetry' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'RepositoryHookTelemetry' },
+                },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'stack' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'languages' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'nxWorkspace' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'packageManager' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'pnpmWorkspace' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'turbo' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'warnings' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
       name: { kind: 'Name', value: 'RepositoryCheckoutFields' },
       typeCondition: {
         kind: 'NamedType',
@@ -39084,129 +40214,9 @@ export const GetSettingsRepositoriesDocument = {
               kind: 'SelectionSet',
               selections: [
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'agentConfig' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'agentsMd' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'claudeMd' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'cursorRules' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'mcpJson' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'skillsDir' },
-                      },
-                    ],
-                  },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'RepositoryCheckoutInspection' },
                 },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'git' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'currentBranch' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'defaultBranch' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'dirty' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'isRepo' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'linkedWorktrees' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'normalizedRemoteUrl' },
-                      },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'hookTelemetry' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'authTokenConfigured' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'endpointConfigured' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'endpointSource' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'producers' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'reason' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'status' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'telemetryDir' },
-                      },
-                    ],
-                  },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'stack' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'languages' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'nxWorkspace' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'packageManager' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'pnpmWorkspace' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'turbo' } },
-                    ],
-                  },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'warnings' } },
               ],
             },
           },
@@ -39319,6 +40329,91 @@ export const GetSettingsRepositoriesDiscoveryDocument = {
     },
     {
       kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'DiscoveredWorktreeRemoval' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'WorktreeRemovalObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'agentSession' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'outcome' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'parentCommand' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'removedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'result' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'DiscoveredWorktreeMissingCheckout' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'MissingWorktreeCheckoutObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'checkoutId' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'lastRemoval' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'DiscoveredWorktreeRemoval' },
+                },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'path' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'reason' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'repositoryId' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'DiscoveredWorktreeProblem' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'WorktreeDiscoveryProblemObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'detail' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'path' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'repositoryId' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'DiscoveredWorktreeScannedRoot' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'ScannedWorktreeRootObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'baseRoot' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'exists' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'path' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'source' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'worktreeCount' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
       name: { kind: 'Name', value: 'DiscoveredWorktreeFields' },
       typeCondition: {
         kind: 'NamedType',
@@ -39358,46 +40453,12 @@ export const GetSettingsRepositoriesDiscoveryDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'checkoutId' } },
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'lastRemoval' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'agentSession' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'createdAt' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'outcome' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'parentCommand' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'removedAt' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'result' },
-                      },
-                    ],
+                  kind: 'FragmentSpread',
+                  name: {
+                    kind: 'Name',
+                    value: 'DiscoveredWorktreeMissingCheckout',
                   },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'path' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'reason' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'repositoryId' },
                 },
               ],
             },
@@ -39408,12 +40469,9 @@ export const GetSettingsRepositoriesDiscoveryDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'detail' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'path' } },
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'repositoryId' },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'DiscoveredWorktreeProblem' },
                 },
               ],
             },
@@ -39425,13 +40483,12 @@ export const GetSettingsRepositoriesDiscoveryDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'baseRoot' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'exists' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'path' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'source' } },
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'worktreeCount' },
+                  kind: 'FragmentSpread',
+                  name: {
+                    kind: 'Name',
+                    value: 'DiscoveredWorktreeScannedRoot',
+                  },
                 },
               ],
             },
@@ -39605,6 +40662,124 @@ export const AddWorkspaceFolderDocument = {
     },
     {
       kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'RepositoryHookTelemetry' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: {
+          kind: 'Name',
+          value: 'RepositoryInspectionHookTelemetryObject',
+        },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'authTokenConfigured' },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'endpointConfigured' },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'endpointSource' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'producers' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'reason' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'telemetryDir' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'RepositoryCheckoutInspection' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'RepositoryInspectionObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'agentConfig' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'agentsMd' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'claudeMd' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'cursorRules' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'mcpJson' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'skillsDir' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'git' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'currentBranch' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'defaultBranch' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'dirty' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'isRepo' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'linkedWorktrees' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'normalizedRemoteUrl' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'hookTelemetry' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'RepositoryHookTelemetry' },
+                },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'stack' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'languages' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'nxWorkspace' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'packageManager' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'pnpmWorkspace' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'turbo' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'warnings' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
       name: { kind: 'Name', value: 'RepositoryCheckoutFields' },
       typeCondition: {
         kind: 'NamedType',
@@ -39628,129 +40803,9 @@ export const AddWorkspaceFolderDocument = {
               kind: 'SelectionSet',
               selections: [
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'agentConfig' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'agentsMd' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'claudeMd' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'cursorRules' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'mcpJson' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'skillsDir' },
-                      },
-                    ],
-                  },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'RepositoryCheckoutInspection' },
                 },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'git' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'currentBranch' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'defaultBranch' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'dirty' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'isRepo' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'linkedWorktrees' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'normalizedRemoteUrl' },
-                      },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'hookTelemetry' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'authTokenConfigured' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'endpointConfigured' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'endpointSource' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'producers' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'reason' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'status' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'telemetryDir' },
-                      },
-                    ],
-                  },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'stack' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'languages' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'nxWorkspace' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'packageManager' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'pnpmWorkspace' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'turbo' } },
-                    ],
-                  },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'warnings' } },
               ],
             },
           },
@@ -39973,6 +41028,124 @@ export const CloneRepositoryDocument = {
     },
     {
       kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'RepositoryHookTelemetry' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: {
+          kind: 'Name',
+          value: 'RepositoryInspectionHookTelemetryObject',
+        },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'authTokenConfigured' },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'endpointConfigured' },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'endpointSource' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'producers' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'reason' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'telemetryDir' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'RepositoryCheckoutInspection' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'RepositoryInspectionObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'agentConfig' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'agentsMd' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'claudeMd' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'cursorRules' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'mcpJson' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'skillsDir' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'git' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'currentBranch' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'defaultBranch' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'dirty' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'isRepo' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'linkedWorktrees' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'normalizedRemoteUrl' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'hookTelemetry' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'RepositoryHookTelemetry' },
+                },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'stack' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'languages' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'nxWorkspace' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'packageManager' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'pnpmWorkspace' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'turbo' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'warnings' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
       name: { kind: 'Name', value: 'RepositoryCheckoutFields' },
       typeCondition: {
         kind: 'NamedType',
@@ -39996,129 +41169,9 @@ export const CloneRepositoryDocument = {
               kind: 'SelectionSet',
               selections: [
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'agentConfig' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'agentsMd' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'claudeMd' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'cursorRules' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'mcpJson' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'skillsDir' },
-                      },
-                    ],
-                  },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'RepositoryCheckoutInspection' },
                 },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'git' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'currentBranch' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'defaultBranch' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'dirty' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'isRepo' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'linkedWorktrees' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'normalizedRemoteUrl' },
-                      },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'hookTelemetry' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'authTokenConfigured' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'endpointConfigured' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'endpointSource' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'producers' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'reason' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'status' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'telemetryDir' },
-                      },
-                    ],
-                  },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'stack' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'languages' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'nxWorkspace' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'packageManager' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'pnpmWorkspace' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'turbo' } },
-                    ],
-                  },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'warnings' } },
               ],
             },
           },
@@ -40296,6 +41349,124 @@ export const RefreshCheckoutDocument = {
     },
     {
       kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'RepositoryHookTelemetry' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: {
+          kind: 'Name',
+          value: 'RepositoryInspectionHookTelemetryObject',
+        },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'authTokenConfigured' },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'endpointConfigured' },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'endpointSource' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'producers' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'reason' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'telemetryDir' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'RepositoryCheckoutInspection' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'RepositoryInspectionObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'agentConfig' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'agentsMd' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'claudeMd' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'cursorRules' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'mcpJson' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'skillsDir' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'git' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'currentBranch' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'defaultBranch' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'dirty' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'isRepo' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'linkedWorktrees' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'normalizedRemoteUrl' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'hookTelemetry' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'RepositoryHookTelemetry' },
+                },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'stack' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'languages' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'nxWorkspace' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'packageManager' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'pnpmWorkspace' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'turbo' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'warnings' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
       name: { kind: 'Name', value: 'RepositoryCheckoutFields' },
       typeCondition: {
         kind: 'NamedType',
@@ -40319,129 +41490,9 @@ export const RefreshCheckoutDocument = {
               kind: 'SelectionSet',
               selections: [
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'agentConfig' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'agentsMd' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'claudeMd' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'cursorRules' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'mcpJson' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'skillsDir' },
-                      },
-                    ],
-                  },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'RepositoryCheckoutInspection' },
                 },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'git' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'currentBranch' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'defaultBranch' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'dirty' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'isRepo' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'linkedWorktrees' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'normalizedRemoteUrl' },
-                      },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'hookTelemetry' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'authTokenConfigured' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'endpointConfigured' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'endpointSource' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'producers' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'reason' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'status' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'telemetryDir' },
-                      },
-                    ],
-                  },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'stack' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'languages' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'nxWorkspace' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'packageManager' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'pnpmWorkspace' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'turbo' } },
-                    ],
-                  },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'warnings' } },
               ],
             },
           },
@@ -41523,6 +42574,21 @@ export const GetEditorPresenceDocument = {
     },
     {
       kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'EditorPresenceEditor' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'EditorPresenceObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'editor' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'presence' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
       name: { kind: 'Name', value: 'EditorPresenceReport' },
       typeCondition: {
         kind: 'NamedType',
@@ -41537,8 +42603,10 @@ export const GetEditorPresenceDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'editor' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'presence' } },
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'EditorPresenceEditor' },
+                },
               ],
             },
           },

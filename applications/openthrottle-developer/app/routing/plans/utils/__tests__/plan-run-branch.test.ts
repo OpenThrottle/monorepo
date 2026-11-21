@@ -1,6 +1,9 @@
 import { describe, expect, test } from 'vitest';
 
-import type { PlanRunConfigRepositoryFieldsFragment } from '~/__generated__/graphql';
+import type {
+  PlanRunConfigCheckoutFragment,
+  PlanRunConfigRepositoryFieldsFragment,
+} from '~/__generated__/graphql';
 
 import {
   FALLBACK_RUN_BRANCH,
@@ -24,7 +27,7 @@ const buildRepository = (
 const buildCheckout = (
   currentBranch: string | null,
   gitDefaultBranch: string | null = null,
-): PlanRunConfigRepositoryFieldsFragment['checkouts'][number] => {
+): PlanRunConfigCheckoutFragment => {
   return {
     displayName: 'monorepo',
     filesystemPath: '/Users/me/monorepo',

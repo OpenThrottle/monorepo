@@ -9,15 +9,13 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import type { EvalRunReportFieldsFragment } from '~/__generated__/graphql';
+import type { EvalRunReportCaseFragment } from '~/__generated__/graphql';
 import { EVAL_COMPARE_COPY } from '~/routing/evals/data/data.copy';
 import { shortId } from '~/routing/evals/utils/report-format';
 
-type EvalCaseRows = EvalRunReportFieldsFragment['cases'];
-
 export interface EvalRegressionsTableProps {
-  readonly baseCases: EvalCaseRows;
-  readonly candidateCases: EvalCaseRows;
+  readonly baseCases: EvalRunReportCaseFragment[];
+  readonly candidateCases: EvalRunReportCaseFragment[];
   readonly caseIds: readonly string[];
   readonly className?: string;
   readonly emptyText: string;
@@ -39,7 +37,10 @@ export const EvalRegressionsTable = (
 
   // Setup
   const columns = EVAL_COMPARE_COPY.regressionColumns;
-  const attemptsFor = (cases: EvalCaseRows, caseId: string): string => {
+  const attemptsFor = (
+    cases: EvalRunReportCaseFragment[],
+    caseId: string,
+  ): string => {
     const found = cases.find((row) => {
       return row.caseId === caseId;
     });

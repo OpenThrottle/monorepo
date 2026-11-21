@@ -9,8 +9,6 @@ import type { ForceSettledPlanRunFragment } from '~/__generated__/graphql';
 
 import { SettlePlanRunButton } from '../SettlePlanRunButton';
 
-type ForceSettlePayload = ForceSettledPlanRunFragment;
-
 const { toastError, toastInfo, toastSuccess } = vi.hoisted(() => ({
   toastError: vi.fn(),
   toastInfo: vi.fn(),
@@ -25,7 +23,7 @@ vi.mock('sonner', () => ({
   }),
 }));
 
-const settledPayload: ForceSettlePayload = {
+const settledPayload: ForceSettledPlanRunFragment = {
   __typename: 'PlanRunObject',
   heartbeatExpected: false,
   id: 'run-1',

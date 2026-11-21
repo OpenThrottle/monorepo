@@ -2,13 +2,13 @@ import type { GlobalPopoverAction } from '@openthrottle/react-router-ui-global';
 import { GlobalPopover } from '@openthrottle/react-router-ui-global';
 import * as React from 'react';
 
-import type { TagActionRuleRowData } from '~/routing/rules/components/RulesTable';
+import type { TagActionRuleRowFragment } from '~/__generated__/graphql';
 import { RULES_COPY } from '~/routing/rules/data/data.copy';
 
 export interface RulesTableRowActionsProps {
-  readonly onToggleEnabled: (rule: TagActionRuleRowData) => void;
+  readonly onToggleEnabled: (rule: TagActionRuleRowFragment) => void;
   readonly pending: boolean;
-  readonly rule: TagActionRuleRowData;
+  readonly rule: TagActionRuleRowFragment;
 }
 
 /**

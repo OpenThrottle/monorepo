@@ -1,15 +1,13 @@
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 
 import type { Route } from '@/app/routes/+types/resources.queue-job-logs';
+import type { QueueJobLogsPageFragment } from '~/__generated__/graphql';
 import { QueueJobLogsDocument } from '~/__generated__/graphql';
 import {
   DEFAULT_LIMIT,
   MAX_LIMIT,
 } from '~/routing/queues/config/queue-job-logs';
-import {
-  EMPTY_PAGE,
-  type QueueJobLogsPage,
-} from '~/routing/queues/data/data.queue-job-logs-page';
+import { EMPTY_PAGE } from '~/routing/queues/data/data.queue-job-logs-page';
 
 /**
  * Resource loader backing the live job-log console's history backfill —
@@ -20,7 +18,7 @@ import {
  */
 export const loader = async (
   args: Route.LoaderArgs,
-): Promise<QueueJobLogsPage> => {
+): Promise<QueueJobLogsPageFragment> => {
   const url = new URL(args.request.url);
   const jobId = url.searchParams.get('jobId') ?? '';
   const queueName = url.searchParams.get('queueName') ?? '';

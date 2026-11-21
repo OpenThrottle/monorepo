@@ -5,6 +5,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test, vi } from 'vitest';
 
+import type { DiscoveredWorktreesScanFragment } from '~/__generated__/graphql';
 import {
   WorktreeDiscoveryProblemKind,
   WorktreeRootSource,
@@ -14,12 +15,11 @@ import {
   mockDiscoveredWorktrees,
   mockScannedRoot,
 } from '~/routing/settings/repositories/testing/mock-repositories';
-import type { DiscoveredWorktreesResult } from '~/routing/settings/repositories/types';
 
 import { WorktreeDiscoveryNotice } from '../WorktreeDiscoveryNotice';
 
 const renderNotice = (
-  discoveredWorktrees: DiscoveredWorktreesResult,
+  discoveredWorktrees: DiscoveredWorktreesScanFragment,
   loader?: () => unknown,
   action?: (args: { request: Request }) => Promise<unknown>,
 ): RenderResult => {

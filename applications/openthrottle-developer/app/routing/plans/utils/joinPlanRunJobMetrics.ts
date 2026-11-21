@@ -1,8 +1,5 @@
 import type { PlanRunJobMetricsEntryFragment } from '~/__generated__/graphql';
 
-/** One completed BullMQ job's metrics, as `metrics.recentPlanRunsMetrics` returns it. */
-export type PlanRunMetricsEntry = PlanRunJobMetricsEntryFragment;
-
 /** The completed-job metrics a Run history row shows in its expanded detail. */
 export interface PlanRunJobMetrics {
   /** ISO timestamp of BullMQ `finishedOn`; null when absent or not a finite epoch. */
@@ -32,7 +29,7 @@ const toFinishedOnIso = (
  */
 export const joinPlanRunJobMetrics = (
   rows: readonly PlanRunJobRow[],
-  metrics: readonly PlanRunMetricsEntry[],
+  metrics: readonly PlanRunJobMetricsEntryFragment[],
 ): ReadonlyMap<string, PlanRunJobMetrics> => {
   const byJobId = new Map(metrics.map((entry) => [entry.jobId, entry]));
   const joined = new Map<string, PlanRunJobMetrics>();

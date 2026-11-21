@@ -264,20 +264,23 @@ mutation PlanDetailUpdatePlanRunConfig($input: UpdatePlanInput!) {
     updatedAt
   }
 }
+fragment PlanRunConfigCheckout on RepositoryCheckoutObject {
+  displayName
+  filesystemPath
+  id
+  inspection {
+    git {
+      currentBranch
+      defaultBranch
+    }
+  }
+  kind
+  managed
+}
 
 fragment PlanRunConfigRepositoryFields on RepositoryObject {
   checkouts {
-    displayName
-    filesystemPath
-    id
-    inspection {
-      git {
-        currentBranch
-        defaultBranch
-      }
-    }
-    kind
-    managed
+    ...PlanRunConfigCheckout
   }
   defaultBranch
   id

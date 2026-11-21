@@ -1,7 +1,8 @@
 import * as React from 'react';
 
+import type { TimelineSpanRowFragment } from '~/__generated__/graphql';
 import { TIMELINE_LANE_ROW_HEIGHT } from '~/routing/timeline/config/layout';
-import type { TimelineLane, TimelineSpan } from '~/routing/timeline/types';
+import type { TimelineLane } from '~/routing/timeline/types';
 import type { TimelineScale } from '~/routing/timeline/utils/scale';
 import { spanRect } from '~/routing/timeline/utils/span-geometry';
 
@@ -12,7 +13,7 @@ import {
 
 export interface TimelineSpanLayerProps {
   readonly lane: TimelineLane;
-  readonly onSelectSpan?: (span: TimelineSpan) => void;
+  readonly onSelectSpan?: (span: TimelineSpanRowFragment) => void;
   readonly scale: TimelineScale;
 }
 

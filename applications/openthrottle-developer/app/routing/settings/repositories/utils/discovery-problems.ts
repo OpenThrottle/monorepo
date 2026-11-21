@@ -1,8 +1,9 @@
+import type {
+  DiscoveredWorktreeProblemFragment,
+  DiscoveredWorktreesScanFragment,
+} from '~/__generated__/graphql';
 import { WorktreeDiscoveryProblemKind } from '~/__generated__/graphql';
 import { WORKTREE_DISCOVERY_COPY } from '~/routing/settings/repositories/data/data.copy';
-import type { DiscoveredWorktreesResult } from '~/routing/settings/repositories/types';
-
-type WorktreeDiscoveryProblem = DiscoveredWorktreesResult['problems'][number];
 
 /**
  * @description Identity of a rendered group. Several kinds collapse into
@@ -62,7 +63,7 @@ const counted = (count: number, one: string, other: string): string => {
  * whole point of classifying, and the notice renders no alert at all in that case.
  */
 export const summarizeDiscovery = (
-  discoveredWorktrees: DiscoveredWorktreesResult,
+  discoveredWorktrees: DiscoveredWorktreesScanFragment,
 ): WorktreeDiscoverySummary => {
   const { problems, scannedRoots } = discoveredWorktrees;
 
@@ -122,7 +123,7 @@ export const summarizeDiscovery = (
 };
 
 /** One raw line: the path it is about, then the underlying message. */
-const describe = (problem: WorktreeDiscoveryProblem): string => {
+const describe = (problem: DiscoveredWorktreeProblemFragment): string => {
   return problem.path === null
     ? problem.detail
     : `${problem.path} — ${problem.detail}`;

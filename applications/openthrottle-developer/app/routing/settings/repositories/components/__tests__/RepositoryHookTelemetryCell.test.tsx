@@ -3,7 +3,7 @@ import { render } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
-import type { RepositoryCheckoutFieldsFragment } from '~/__generated__/graphql';
+import type { RepositoryHookTelemetryFragment } from '~/__generated__/graphql';
 import { REPOSITORY_HOOK_TELEMETRY_COPY } from '~/routing/settings/repositories/data/data.copy';
 import {
   mockCheckout,
@@ -14,16 +14,13 @@ import { buildRepositoryRows } from '~/routing/settings/repositories/utils/rows'
 
 import { RepositoryHookTelemetryCell } from '../RepositoryHookTelemetryCell';
 
-type Inspection = NonNullable<RepositoryCheckoutFieldsFragment['inspection']>;
-type HookTelemetry = NonNullable<Inspection['hookTelemetry']>;
-
 /**
  * A row whose checkout carries `hookTelemetry`. The shared mock factory
  * predates the field, so the telemetry is layered onto the inspection it
  * builds rather than duplicating the whole snapshot here.
  */
 const rowWith = (
-  hookTelemetry: HookTelemetry | undefined,
+  hookTelemetry: RepositoryHookTelemetryFragment | undefined,
 ): RepositoryCheckoutRow => {
   const checkout = mockCheckout({ branch: 'main', id: 'primary-1' });
   const inspection = checkout.inspection;
@@ -46,7 +43,9 @@ const rowWith = (
   return row;
 };
 
-const telemetry = (overrides: Partial<HookTelemetry>): HookTelemetry => {
+const telemetry = (
+  overrides: Partial<RepositoryHookTelemetryFragment>,
+): RepositoryHookTelemetryFragment => {
   return {
     authTokenConfigured: false,
     endpointConfigured: false,
@@ -62,7 +61,9 @@ const telemetry = (overrides: Partial<HookTelemetry>): HookTelemetry => {
 describe('RepositoryHookTelemetryCell Component', () => {
   let component: RenderResult;
 
-  const setup = (hookTelemetry: HookTelemetry | undefined): void => {
+  const setup = (
+    hookTelemetry: RepositoryHookTelemetryFragment | undefined,
+  ): void => {
     component = render(
       <RepositoryHookTelemetryCell row={rowWith(hookTelemetry)} />,
     );

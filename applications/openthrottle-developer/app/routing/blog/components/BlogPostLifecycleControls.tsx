@@ -2,14 +2,12 @@ import { Button } from '@openthrottle/react-router-shadcn';
 import { ArchiveIcon, EyeOffIcon, FileEditIcon } from 'lucide-react';
 import * as React from 'react';
 
+import type { BlogPostEditorPostFragment } from '~/__generated__/graphql';
 import { BlogPostState } from '~/__generated__/graphql';
 import { BLOG_LIFECYCLE_COPY } from '~/routing/blog/data/data.copy';
 import { BLOG_LIFECYCLE_ACTIONS } from '~/routing/blog/data/data.lifecycle';
 import { useBlogPostLifecycle } from '~/routing/blog/hooks/useBlogPostLifecycle';
-import type {
-  BlogEditorPost,
-  BlogPostLifecycleAction,
-} from '~/routing/blog/types';
+import type { BlogPostLifecycleAction } from '~/routing/blog/types';
 
 import { BlogPostLifecycleConfirmDialog } from './BlogPostLifecycleConfirmDialog';
 import { BlogPostPublishPopover } from './BlogPostPublishPopover';
@@ -25,7 +23,7 @@ export interface BlogPostLifecycleControlsProps {
   readonly canWrite: boolean;
   /** Unsaved edits: publishing would send the last SAVED version. */
   readonly isDirty: boolean;
-  readonly post: Pick<BlogEditorPost, 'publishedAt' | 'state'>;
+  readonly post: Pick<BlogPostEditorPostFragment, 'publishedAt' | 'state'>;
 }
 
 /**

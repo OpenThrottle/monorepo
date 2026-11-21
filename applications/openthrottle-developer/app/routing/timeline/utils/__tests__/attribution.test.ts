@@ -1,14 +1,15 @@
 import { describe, expect, test } from 'vitest';
 
+import type { TimelineMarkerRowFragment } from '~/__generated__/graphql';
+
 import { TimelineMarkerKind } from '../../config/kinds';
-import type { TimelineMarker } from '../../types';
 import { hasUnattributedGrilling } from '../attribution';
 
 const marker = (
   id: string,
   kind: TimelineMarkerKind,
   userId: string | null,
-): TimelineMarker => {
+): TimelineMarkerRowFragment => {
   return {
     at: '2026-09-02T00:00:00.000Z',
     branch: 'feat/x',

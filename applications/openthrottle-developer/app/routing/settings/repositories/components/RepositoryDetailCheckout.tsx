@@ -1,7 +1,7 @@
 import { Badge, Card } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import type { WorkspaceRepositoryFieldsFragment } from '~/__generated__/graphql';
+import type { RepositoryCheckoutFieldsFragment } from '~/__generated__/graphql';
 import {
   WORKSPACE_FOLDERS_COPY,
   WORKSPACE_REPOSITORY_DETAIL_COPY,
@@ -10,7 +10,7 @@ import { RepositoryHookTelemetry } from '~/routing/settings/repositories/compone
 import { deriveCheckoutInspectionBadges } from '~/routing/settings/repositories/utils/deriveCheckoutInspectionBadges';
 
 export interface RepositoryDetailCheckoutProps {
-  checkout: NonNullable<WorkspaceRepositoryFieldsFragment['checkouts']>[number];
+  checkout: RepositoryCheckoutFieldsFragment;
   defaultBranch: string | null | undefined;
 }
 

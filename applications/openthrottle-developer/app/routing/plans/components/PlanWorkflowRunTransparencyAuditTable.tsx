@@ -9,7 +9,10 @@ import {
 import { GlobalPopoverActionsHeader } from '@openthrottle/react-router-ui-global';
 import * as React from 'react';
 
-import type { PlanRunHistoryEntryFragment } from '~/__generated__/graphql';
+import type {
+  PlanRunHistoryEntryFragment,
+  PlanRunJobMetricsEntryFragment,
+} from '~/__generated__/graphql';
 import { collectResumedRunIds } from '~/global/utils/utils.usage-limit';
 import { PlanWorkflowRunHistoryRow } from '~/routing/plans/components/PlanWorkflowRunHistoryRow';
 import { PlanWorkflowRunSection } from '~/routing/plans/components/PlanWorkflowRunSection';
@@ -19,16 +22,13 @@ import {
   PLAN_RUN_HISTORY_INITIAL_ROWS,
 } from '~/routing/plans/data/data.plan-run-history';
 import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
-import type { PlanRunMetricsEntry } from '~/routing/plans/utils/joinPlanRunJobMetrics';
 import { joinPlanRunJobMetrics } from '~/routing/plans/utils/joinPlanRunJobMetrics';
 import { selectHistoryRuns } from '~/routing/plans/utils/plan-run-sections';
 
-export type PlanRunAuditRow = PlanRunHistoryEntryFragment;
-
 export interface PlanWorkflowRunTransparencyAuditTableProps {
-  readonly planRunAuditRows: readonly PlanRunAuditRow[];
+  readonly planRunAuditRows: readonly PlanRunHistoryEntryFragment[];
   /** Completed-job metrics (`metrics.recentPlanRunsMetrics`), joined onto rows by job id. */
-  readonly planRunMetrics: readonly PlanRunMetricsEntry[];
+  readonly planRunMetrics: readonly PlanRunJobMetricsEntryFragment[];
   readonly workflowInput: WorkflowRalphRunOptionsInput;
   readonly workingDirectory: string;
 }

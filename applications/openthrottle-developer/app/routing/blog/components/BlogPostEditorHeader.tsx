@@ -2,15 +2,18 @@ import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { PenLineIcon } from 'lucide-react';
 import * as React from 'react';
 
+import type { BlogPostEditorPostFragment } from '~/__generated__/graphql';
 import { BlogEditorBadge } from '~/routing/blog/components/BlogEditorBadge';
 import { BlogPostStateBadge } from '~/routing/blog/components/BlogPostStateBadge';
 import { BLOG_EDITOR_COPY } from '~/routing/blog/data/data.copy';
-import type { BlogEditorPost } from '~/routing/blog/types';
 
 export interface BlogPostEditorHeaderProps {
   /** The action area (save and the lifecycle controls); `null` when read-only. */
   readonly actions: React.ReactNode;
-  readonly post: Pick<BlogEditorPost, 'lastEditedBy' | 'slug' | 'state'>;
+  readonly post: Pick<
+    BlogPostEditorPostFragment,
+    'lastEditedBy' | 'slug' | 'state'
+  >;
   /** The title as currently edited, so the heading tracks the form. */
   readonly title: string;
 }

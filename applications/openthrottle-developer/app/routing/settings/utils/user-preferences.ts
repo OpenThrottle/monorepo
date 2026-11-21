@@ -10,7 +10,7 @@ import type { ChatToolbarState } from '@openthrottle/react-router-chat-state';
 import { capabilitiesForChatOption } from '@openthrottle/react-router-chat-state';
 
 import type {
-  UserPreferencesFieldsFragment,
+  UserPreferencesDefaultAgentFragment,
   WorkspaceEditorId,
 } from '~/__generated__/graphql';
 import type { PlanRunModelSelection } from '~/routing/plans/utils/plan-run-model-effort';
@@ -20,10 +20,6 @@ import {
 } from '~/routing/plans/utils/plan-run-model-effort';
 import { isExecutionBackend } from '~/routing/plans/utils/plan-workflow-config-execution';
 import type { PreferencesActionResult } from '~/routing/settings/data/data.preferences';
-
-type StoredDefaultAgent = NonNullable<
-  UserPreferencesFieldsFragment['defaultAgent']
->;
 
 /**
  * @description A saved default agent the user can still run: the picker option it
@@ -40,7 +36,12 @@ export interface DefaultAgentDraft extends PlanRunModelSelection {
  */
 export type ResolvedDefaultAgent =
   | { readonly kind: 'none' }
-  | { readonly kind: 'stale'; readonly stored: StoredDefaultAgent }
+  | {
+      readonly kind: 'stale';
+      readonly stored: NonNullable<
+        UserPreferencesDefaultAgentFragment | null | undefined
+      >;
+    }
   | {
       readonly draft: DefaultAgentDraft;
       readonly kind: 'valid';
@@ -54,7 +55,7 @@ export type ResolvedDefaultAgent =
  * excludes disabled agents and models.
  */
 export const resolveDefaultAgent = (
-  stored: UserPreferencesFieldsFragment['defaultAgent'],
+  stored: UserPreferencesDefaultAgentFragment | null | undefined,
   models: readonly ChatModelOption[],
 ): ResolvedDefaultAgent => {
   if (stored == null) {

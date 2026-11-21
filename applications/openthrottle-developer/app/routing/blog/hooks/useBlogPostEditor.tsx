@@ -2,12 +2,12 @@ import * as React from 'react';
 import type { Blocker } from 'react-router';
 import { useRevalidator } from 'react-router';
 
+import type { BlogPostEditorPostFragment } from '~/__generated__/graphql';
 import { BlogPostState } from '~/__generated__/graphql';
 import { useUnsavedChangesGuard } from '~/global/hooks/useUnsavedChangesGuard';
 import { useBlogPostDraft } from '~/routing/blog/hooks/useBlogPostDraft';
 import { useBlogPostSave } from '~/routing/blog/hooks/useBlogPostSave';
 import type {
-  BlogEditorPost,
   BlogPostEditorValues,
   BlogPostFieldChangeHandler,
   BlogPostFieldErrors,
@@ -23,7 +23,7 @@ import { resolveSaveError } from '~/routing/blog/utils/resolveSaveError';
 export interface UseBlogPostEditorOptions {
   /** The caller holds `blog:write` (may edit posts that are not drafts). */
   readonly canWrite: boolean;
-  readonly post: BlogEditorPost;
+  readonly post: BlogPostEditorPostFragment;
 }
 
 export interface UseBlogPostEditorResult {

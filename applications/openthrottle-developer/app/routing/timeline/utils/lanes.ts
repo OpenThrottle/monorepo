@@ -6,15 +6,17 @@
  * jsdom would let none of it be verified through rendering.
  */
 
+import type {
+  TimelineMarkerRowFragment,
+  TimelineSpanRowFragment,
+} from '~/__generated__/graphql';
 import { TimelineMarkerKind } from '~/__generated__/graphql';
 
 import { TIMELINE_MARKER_COLLISION_PX } from '../config/layout';
 import type {
   PlacedTimelineSpan,
   TimelineLane,
-  TimelineMarker,
   TimelineMarkerCluster,
-  TimelineSpan,
 } from '../types';
 import type { TimelineScale } from './scale';
 
@@ -31,7 +33,7 @@ const toMillis = (value: Date | number | string): number => {
  * — the sub-row count simply grows to fit the deepest overlap.
  */
 export function packSpansIntoSubRows(
-  spans: readonly TimelineSpan[],
+  spans: readonly TimelineSpanRowFragment[],
 ): PlacedTimelineSpan[] {
   const ordered = [...spans].sort(
     (a, b) => toMillis(a.startsAt) - toMillis(b.startsAt),
@@ -71,10 +73,10 @@ export function packSpansIntoSubRows(
  * nodes for a busy month.
  */
 export function clusterMarkers(
-  markers: readonly TimelineMarker[],
+  markers: readonly TimelineMarkerRowFragment[],
   scale: TimelineScale,
 ): TimelineMarkerCluster[] {
-  const byKind = new Map<string, TimelineMarker[]>();
+  const byKind = new Map<string, TimelineMarkerRowFragment[]>();
 
   for (const marker of markers) {
     const bucket = byKind.get(marker.kind);
@@ -92,7 +94,7 @@ export function clusterMarkers(
       (a, b) => toMillis(a.at) - toMillis(b.at),
     );
 
-    let current: TimelineMarker[] = [];
+    let current: TimelineMarkerRowFragment[] = [];
     let anchorX = 0;
 
     for (const marker of ordered) {
@@ -120,7 +122,9 @@ export function clusterMarkers(
   return clusters.sort((a, b) => toMillis(a.at) - toMillis(b.at));
 }
 
-const toCluster = (markers: TimelineMarker[]): TimelineMarkerCluster => {
+const toCluster = (
+  markers: TimelineMarkerRowFragment[],
+): TimelineMarkerCluster => {
   const first = markers[0];
 
   return {
@@ -139,14 +143,14 @@ const toCluster = (markers: TimelineMarker[]): TimelineMarkerCluster => {
  * the page rather than in whatever order Postgres happened to return.
  */
 export function buildTimelineLanes(args: {
-  readonly markers: readonly TimelineMarker[];
+  readonly markers: readonly TimelineMarkerRowFragment[];
   readonly scale: TimelineScale;
-  readonly spans: readonly TimelineSpan[];
+  readonly spans: readonly TimelineSpanRowFragment[];
 }): TimelineLane[] {
   const { markers, scale, spans } = args;
 
-  const laneSpans = new Map<string, TimelineSpan[]>();
-  const laneMarkers = new Map<string, TimelineMarker[]>();
+  const laneSpans = new Map<string, TimelineSpanRowFragment[]>();
+  const laneMarkers = new Map<string, TimelineMarkerRowFragment[]>();
   const laneLabels = new Map<string, string>();
 
   for (const span of spans) {

@@ -1,3 +1,43 @@
+fragment RepositoryHookTelemetry on RepositoryInspectionHookTelemetryObject {
+  authTokenConfigured
+  endpointConfigured
+  endpointSource
+  producers
+  reason
+  status
+  telemetryDir
+}
+
+fragment RepositoryCheckoutInspection on RepositoryInspectionObject {
+  agentConfig {
+    agentsMd
+    claudeMd
+    cursorRules
+    mcpJson
+    skillsDir
+  }
+  git {
+    currentBranch
+    defaultBranch
+    dirty
+    isRepo
+    linkedWorktrees
+    normalizedRemoteUrl
+  }
+  hookTelemetry {
+    ...RepositoryHookTelemetry
+  }
+  scannedAt
+  stack {
+    languages
+    nxWorkspace
+    packageManager
+    pnpmWorkspace
+    turbo
+  }
+  warnings
+}
+
 fragment RepositoryCheckoutFields on RepositoryCheckoutObject {
   createdAt
   displayName
@@ -5,39 +45,7 @@ fragment RepositoryCheckoutFields on RepositoryCheckoutObject {
   foreignSkillInjectionEnabled
   id
   inspection {
-    agentConfig {
-      agentsMd
-      claudeMd
-      cursorRules
-      mcpJson
-      skillsDir
-    }
-    git {
-      currentBranch
-      defaultBranch
-      dirty
-      isRepo
-      linkedWorktrees
-      normalizedRemoteUrl
-    }
-    hookTelemetry {
-      authTokenConfigured
-      endpointConfigured
-      endpointSource
-      producers
-      reason
-      status
-      telemetryDir
-    }
-    scannedAt
-    stack {
-      languages
-      nxWorkspace
-      packageManager
-      pnpmWorkspace
-      turbo
-    }
-    warnings
+    ...RepositoryCheckoutInspection
   }
   isForeign
   kind
@@ -90,37 +98,50 @@ query getSettingsRepositories {
     ...WorkspaceRepositoryFields
   }
 }
+fragment DiscoveredWorktreeRemoval on WorktreeRemovalObject {
+  agentSession
+  createdAt
+  id
+  outcome
+  parentCommand
+  removedAt
+  result
+}
+
+fragment DiscoveredWorktreeMissingCheckout on MissingWorktreeCheckoutObject {
+  checkoutId
+  lastRemoval {
+    ...DiscoveredWorktreeRemoval
+  }
+  path
+  reason
+  repositoryId
+}
+fragment DiscoveredWorktreeProblem on WorktreeDiscoveryProblemObject {
+  detail
+  kind
+  path
+  repositoryId
+}
+fragment DiscoveredWorktreeScannedRoot on ScannedWorktreeRootObject {
+  baseRoot
+  exists
+  path
+  source
+  worktreeCount
+}
 
 fragment DiscoveredWorktreesScan on DiscoveredWorktreesObject {
   droppedCount
   missingCheckouts {
-    checkoutId
-    lastRemoval {
-      agentSession
-      createdAt
-      id
-      outcome
-      parentCommand
-      removedAt
-      result
-    }
-    path
-    reason
-    repositoryId
+    ...DiscoveredWorktreeMissingCheckout
   }
   problems {
-    detail
-    kind
-    path
-    repositoryId
+    ...DiscoveredWorktreeProblem
   }
   scannedAt
   scannedRoots {
-    baseRoot
-    exists
-    path
-    source
-    worktreeCount
+    ...DiscoveredWorktreeScannedRoot
   }
   worktrees {
     ...DiscoveredWorktreeFields

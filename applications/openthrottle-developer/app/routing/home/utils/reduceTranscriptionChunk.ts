@@ -1,7 +1,5 @@
-import type {
-  TranscriptionChunk,
-  TranscriptionSnapshot,
-} from '~/routing/home/types';
+import type { TranscriptionStreamChunkFragment } from '~/__generated__/graphql';
+import type { TranscriptionSnapshot } from '~/routing/home/types';
 
 /**
  * Pure reducer: keep the highest-sortOrder snapshot (replace, never append).
@@ -9,7 +7,7 @@ import type {
  */
 export function reduceTranscriptionChunk(
   state: TranscriptionSnapshot,
-  chunk: TranscriptionChunk,
+  chunk: TranscriptionStreamChunkFragment,
 ): TranscriptionSnapshot {
   if (chunk.sortOrder <= state.sortOrder) {
     return state;

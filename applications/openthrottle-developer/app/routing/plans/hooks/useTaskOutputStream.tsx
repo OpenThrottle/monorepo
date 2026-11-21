@@ -21,17 +21,15 @@ import { PlanOutputChunkAddedDocument } from '~/__generated__/graphql';
 import { compareTaskOutputChunks } from '~/routing/plans/utils/compareTaskOutputChunks';
 import { getGraphqlWsClient } from '~/services/getGraphqlWsClient';
 
-type Chunk = PlanOutputChunkFragment;
-
 export function useTaskOutputStream(
   planId: string,
   taskId: string,
-  seedChunks: Chunk[],
-): Chunk[] {
+  seedChunks: PlanOutputChunkFragment[],
+): PlanOutputChunkFragment[] {
   // Hooks
-  const [byId, setById] = React.useState<ReadonlyMap<string, Chunk>>(
-    () => new Map(seedChunks.map((chunk) => [chunk.id, chunk])),
-  );
+  const [byId, setById] = React.useState<
+    ReadonlyMap<string, PlanOutputChunkFragment>
+  >(() => new Map(seedChunks.map((chunk) => [chunk.id, chunk])));
   const seededTaskId = React.useRef(taskId);
 
   // Setup
@@ -59,8 +57,10 @@ export function useTaskOutputStream(
     // Reset when the task changes (so one task's chunks never leak into another),
     // otherwise merge the fresh snapshot so a live delta not yet in it survives.
     setById((previous) => {
-      const base =
-        seededTaskId.current === taskId ? previous : new Map<string, Chunk>();
+      const isSameTask = seededTaskId.current === taskId;
+      const base = isSameTask
+        ? previous
+        : new Map<string, PlanOutputChunkFragment>();
       seededTaskId.current = taskId;
 
       const next = new Map(base);

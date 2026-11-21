@@ -5,10 +5,8 @@ import * as React from 'react';
 
 import { OutputStream } from '~/routing/plans/components/OutputStream';
 
-type Chunk = PlanOutputChunkFragment;
-
 export interface TaskTabOutputProps {
-  chunks: Chunk[];
+  chunks: PlanOutputChunkFragment[];
 }
 
 /**

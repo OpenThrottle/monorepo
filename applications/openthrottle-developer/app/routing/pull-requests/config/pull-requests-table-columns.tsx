@@ -28,18 +28,7 @@ import {
   githubPullConversationUrl,
 } from '~/routing/pull-requests/utils/github-pr-links';
 
-export type PullRequestsTableColumnValue =
-  | PullRequestCardFragment['author']
-  | PullRequestCardFragment['baseRef']
-  | PullRequestCardFragment['createdAt']
-  | PullRequestCardFragment['headRef']
-  | PullRequestCardFragment['headSha']
-  | PullRequestCardFragment['htmlUrl']
-  | PullRequestCardFragment['mergedAt']
-  | PullRequestCardFragment['number']
-  | PullRequestCardFragment['state']
-  | PullRequestCardFragment['title']
-  | PullRequestCardFragment['updatedAt'];
+export type PullRequestsTableColumnValue = string | number | null | undefined;
 
 /**
  * @description Context for PR table columns that build portal routes and GitHub URLs (aligned with pull-requests cards).

@@ -4,7 +4,10 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
-import type { EditorPresenceReportFragment } from '~/__generated__/graphql';
+import type {
+  EditorPresenceEditorFragment,
+  EditorPresenceReportFragment,
+} from '~/__generated__/graphql';
 import {
   EditorPresenceState,
   WorkspaceEditorId,
@@ -13,10 +16,8 @@ import {
 import type { WorkspaceEditorPresenceHintsProps } from '../WorkspaceEditorPresenceHints';
 import { WorkspaceEditorPresenceHints } from '../WorkspaceEditorPresenceHints';
 
-type PresenceEntry = EditorPresenceReportFragment['editors'][number];
-
 const buildPresence = (
-  editors: readonly PresenceEntry[],
+  editors: readonly EditorPresenceEditorFragment[],
   trusted = true,
 ): EditorPresenceReportFragment => {
   return {

@@ -37,21 +37,19 @@ import { PlanOutputChunkAddedDocument } from '~/__generated__/graphql';
 import { comparePlanOutputChunks } from '~/routing/plans/utils/comparePlanOutputChunks';
 import { getGraphqlWsClient } from '~/services/getGraphqlWsClient';
 
-type Chunk = PlanOutputChunkFragment;
-
 export function usePlanOutputStream(
   planId: string,
-  seedChunks: readonly Chunk[] | undefined,
-): Chunk[] {
+  seedChunks: readonly PlanOutputChunkFragment[] | undefined,
+): PlanOutputChunkFragment[] {
   // Hooks
   // 🚨 `undefined` means "the snapshot has not resolved yet", which is different
   // from "there are no chunks". Accepting it here rather than making callers
   // pass a placeholder array is what keeps the seed's identity stable across
   // renders — an inline `?? []` at the call site would allocate a fresh array
   // every render and the re-seed effect below would loop forever on it.
-  const [byId, setById] = React.useState<ReadonlyMap<string, Chunk>>(
-    () => new Map((seedChunks ?? []).map((chunk) => [chunk.id, chunk])),
-  );
+  const [byId, setById] = React.useState<
+    ReadonlyMap<string, PlanOutputChunkFragment>
+  >(() => new Map((seedChunks ?? []).map((chunk) => [chunk.id, chunk])));
 
   // Setup
   const client = React.useMemo(() => getGraphqlWsClient(), []);

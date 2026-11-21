@@ -10,19 +10,15 @@ import * as React from 'react';
 import { useFetcher } from 'react-router';
 
 import type {
+  QueueJobLogEventFragment,
   QueueJobLogsPageFragment,
   QueueJobLogTailSubscription,
 } from '~/__generated__/graphql';
 import { QueueJobLogTailDocument } from '~/__generated__/graphql';
 import { BACKFILL_LIMIT } from '~/routing/queues/config/queue-job-logs';
-import type {
-  QueueJobLogEvent,
-  QueueJobLogStreamStatus,
-} from '~/routing/queues/types';
+import type { QueueJobLogStreamStatus } from '~/routing/queues/types';
 import { compareQueueJobLogEvents } from '~/routing/queues/utils/compareQueueJobLogEvents';
 import { getGraphqlWsClient } from '~/services/getGraphqlWsClient';
-
-type QueueJobLogsPage = QueueJobLogsPageFragment;
 
 export interface UseQueueJobLogsOptions {
   enabled?: boolean;
@@ -31,7 +27,7 @@ export interface UseQueueJobLogsOptions {
 }
 
 export interface UseQueueJobLogsResult {
-  events: QueueJobLogEvent[];
+  events: QueueJobLogEventFragment[];
   hasMore: boolean;
   isBackfilling: boolean;
   loadOlder: () => void;
@@ -44,15 +40,15 @@ export const useQueueJobLogs = (
   const { enabled = true, jobId, queueName } = options;
 
   // Hooks
-  const fetcher = useFetcher<QueueJobLogsPage>();
+  const fetcher = useFetcher<QueueJobLogsPageFragment>();
   const [byCursor, setByCursor] = React.useState<
-    ReadonlyMap<string, QueueJobLogEvent>
+    ReadonlyMap<string, QueueJobLogEventFragment>
   >(() => new Map());
   const [hasMore, setHasMore] = React.useState(false);
   const [nextCursor, setNextCursor] = React.useState<string | null>(null);
   const [status, setStatus] = React.useState<QueueJobLogStreamStatus>('idle');
   const loadedKeyRef = React.useRef<string | null>(null);
-  const handledPageRef = React.useRef<QueueJobLogsPage | null>(null);
+  const handledPageRef = React.useRef<QueueJobLogsPageFragment | null>(null);
 
   // Setup
   const client = React.useMemo(() => getGraphqlWsClient(), []);
@@ -64,7 +60,7 @@ export const useQueueJobLogs = (
 
   // Handlers
   const mergeEvents = React.useCallback(
-    (incoming: readonly QueueJobLogEvent[]) => {
+    (incoming: readonly QueueJobLogEventFragment[]) => {
       if (incoming.length === 0) {
         return;
       }

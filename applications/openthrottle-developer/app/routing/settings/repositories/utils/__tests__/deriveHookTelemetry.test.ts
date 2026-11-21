@@ -1,15 +1,15 @@
 import { describe, expect, test } from 'vitest';
 
-import type { RepositoryCheckoutFieldsFragment } from '~/__generated__/graphql';
+import type {
+  RepositoryCheckoutInspectionFragment,
+  RepositoryHookTelemetryFragment,
+} from '~/__generated__/graphql';
 import { REPOSITORY_HOOK_TELEMETRY_COPY } from '~/routing/settings/repositories/data/data.copy';
 import { deriveHookTelemetry } from '~/routing/settings/repositories/utils/deriveHookTelemetry';
 
-type Inspection = NonNullable<RepositoryCheckoutFieldsFragment['inspection']>;
-type HookTelemetry = NonNullable<Inspection['hookTelemetry']>;
-
 const inspectionWith = (
-  hookTelemetry: HookTelemetry | undefined,
-): Inspection => {
+  hookTelemetry: RepositoryHookTelemetryFragment | undefined,
+): RepositoryCheckoutInspectionFragment => {
   return {
     agentConfig: {
       agentsMd: false,
@@ -39,7 +39,9 @@ const inspectionWith = (
   };
 };
 
-const telemetry = (overrides: Partial<HookTelemetry>): HookTelemetry => {
+const telemetry = (
+  overrides: Partial<RepositoryHookTelemetryFragment>,
+): RepositoryHookTelemetryFragment => {
   return {
     authTokenConfigured: false,
     endpointConfigured: false,

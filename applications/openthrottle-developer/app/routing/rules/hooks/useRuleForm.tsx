@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-import type { TagActionRuleRowData } from '~/routing/rules/components/RulesTable';
+import type { TagActionRuleRowFragment } from '~/__generated__/graphql';
 import { ANY } from '~/routing/rules/data/data.rule-form-options';
 import {
   parsePayloadField,
@@ -9,7 +9,7 @@ import {
 
 export interface UseRuleFormOptions {
   /** Existing rule when editing; null/undefined when creating. */
-  initialRule?: TagActionRuleRowData | null;
+  initialRule?: TagActionRuleRowFragment | null;
 }
 
 export interface UseRuleFormResult {

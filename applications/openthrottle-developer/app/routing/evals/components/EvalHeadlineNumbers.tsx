@@ -1,7 +1,7 @@
 import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import type { EvalRunReportFieldsFragment } from '~/__generated__/graphql';
+import type { EvalRunReportNumbersFragment } from '~/__generated__/graphql';
 import { EvalStat } from '~/routing/evals/components/EvalStat';
 import {
   EVAL_REPORT_COPY,
@@ -18,7 +18,7 @@ import {
 
 export interface EvalHeadlineNumbersProps {
   readonly className?: string;
-  readonly numbers: EvalRunReportFieldsFragment['numbers'];
+  readonly numbers: EvalRunReportNumbersFragment;
 }
 
 /**

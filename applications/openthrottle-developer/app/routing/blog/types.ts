@@ -8,15 +8,12 @@ import type {
 } from '~/__generated__/graphql';
 import type { BLOG_POST_SAVE_INTENT } from '~/routing/blog/config/defaults';
 
-/** The post as the `/blog/:postId` loader returns it. */
-export type BlogEditorPost = BlogPostEditorPostFragment;
-
 /** What the `/blog/:postId` loader returns. */
 export interface BlogPostEditorLoaderData {
   readonly authors: BlogEditorAuthorFragment[];
   /** The caller holds `blog:write`, so may edit posts that are not drafts. */
   readonly canWrite: boolean;
-  readonly post: BlogEditorPost;
+  readonly post: BlogPostEditorPostFragment;
   readonly tags: BlogEditorTagFragment[];
 }
 

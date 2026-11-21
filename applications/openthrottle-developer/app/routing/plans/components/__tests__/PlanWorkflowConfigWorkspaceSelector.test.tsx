@@ -4,7 +4,10 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test, vi } from 'vitest';
 
-import type { PlanRunConfigRepositoryFieldsFragment } from '~/__generated__/graphql';
+import type {
+  PlanRunConfigCheckoutFragment,
+  PlanRunConfigRepositoryFieldsFragment,
+} from '~/__generated__/graphql';
 import { PLAN_RUN_WORKSPACE_SELECTOR_COPY } from '~/routing/plans/data/data.copy';
 
 import {
@@ -13,10 +16,8 @@ import {
 } from '../PlanWorkflowConfigWorkspaceSelector';
 
 const checkout = (
-  overrides: Partial<
-    PlanRunConfigRepositoryFieldsFragment['checkouts'][number]
-  >,
-): PlanRunConfigRepositoryFieldsFragment['checkouts'][number] => {
+  overrides: Partial<PlanRunConfigCheckoutFragment>,
+): PlanRunConfigCheckoutFragment => {
   return {
     displayName: 'openthrottle',
     filesystemPath: '/Users/matt/Development/openthrottle',

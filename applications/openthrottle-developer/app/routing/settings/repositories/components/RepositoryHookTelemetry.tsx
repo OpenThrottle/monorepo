@@ -1,12 +1,12 @@
 import * as React from 'react';
 
-import type { RepositoryCheckoutFieldsFragment } from '~/__generated__/graphql';
+import type { RepositoryCheckoutInspectionFragment } from '~/__generated__/graphql';
 import { RepositoryHookTelemetryDetails } from '~/routing/settings/repositories/components/RepositoryHookTelemetryDetails';
 import { REPOSITORY_HOOK_TELEMETRY_COPY } from '~/routing/settings/repositories/data/data.copy';
 import { deriveHookTelemetry } from '~/routing/settings/repositories/utils/deriveHookTelemetry';
 
 export interface RepositoryHookTelemetryProps {
-  inspection: RepositoryCheckoutFieldsFragment['inspection'];
+  inspection: RepositoryCheckoutInspectionFragment | null | undefined;
 }
 
 export const RepositoryHookTelemetry = (

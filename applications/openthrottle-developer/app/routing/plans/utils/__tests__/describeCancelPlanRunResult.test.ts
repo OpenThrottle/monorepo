@@ -7,9 +7,9 @@ import {
   describeCancelPlanRunResult,
 } from '../describeCancelPlanRunResult';
 
-type CancelPayload = CancelPlanRunResultFragment;
-
-const basePayload = (overrides: Partial<CancelPayload> = {}): CancelPayload => {
+const basePayload = (
+  overrides: Partial<CancelPlanRunResultFragment> = {},
+): CancelPlanRunResultFragment => {
   return {
     __typename: 'CancelPlanRunResultObject',
     activeJobIdsCouldNotCancel: [],
