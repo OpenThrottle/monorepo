@@ -13,10 +13,19 @@ import { AST_NODE_TYPES, ESLintUtils } from '@typescript-eslint/utils';
  * reshaped; an indexed type has no name of its own and silently follows the
  * query.
  *
+ * It also keeps a fragment type the call site's own type:
+ *
+ * - **No indexing into a fragment** (`XFragment['items'][number]`). A child
+ *   structure gets its own fragment, spread inside the parent's; a scalar or
+ *   enum field uses its generated scalar or enum type.
+ * - **No aliasing a fragment** — neither `type X = XFragment` (also wrapped
+ *   in `NonNullable` / `Exclude` / arrays / `readonly` / `| null`) nor
+ *   `import { XFragment as X }`. The call site names the fragment it uses.
+ *
  * Only identifiers whose imported name ends in `Query` / `Mutation` /
- * `Subscription`, imported from a `*-codegen` package or a `__generated__`
- * path, count — so an aliased import still does, and a local `SearchQuery`
- * does not. `NonNullable<…>` and `Exclude<…>` do not hide a chain, and each
+ * `Subscription` (or `Fragment`), imported from a `*-codegen` package or a
+ * `__generated__` path, count — so an aliased import still does, and a local
+ * `SearchQuery` does not. `NonNullable<…>` and `Exclude<…>` do not hide a chain, and each
  * chain is reported once, at its outermost access. Syntax-only, so lint needs
  * no type information.
  *
@@ -25,15 +34,28 @@ import { AST_NODE_TYPES, ESLintUtils } from '@typescript-eslint/utils';
  * Ported from Shiftsmart's `shiftsmart/prefer-graphql-fragment`.
  */
 
-type MessageIds = 'preferFragment';
+type MessageIds = 'noFragmentAlias' | 'noFragmentIndexing' | 'preferFragment';
 
 const OPERATION_NAME = /(Query|Mutation|Subscription)$/;
+
+const FRAGMENT_NAME = /Fragment$/;
 
 const CODEGEN_SOURCE = /(-codegen$|__generated__)/;
 
 const UNWRAPPED_UTILITIES: ReadonlySet<string> = new Set([
   'Exclude',
   'NonNullable',
+]);
+
+/**
+ * @description Wrappers a type alias may put around a fragment and still be
+ * nothing but a rename of it.
+ */
+const ALIAS_WRAPPERS: ReadonlySet<string> = new Set([
+  'Array',
+  'Exclude',
+  'NonNullable',
+  'ReadonlyArray',
 ]);
 
 const createRule = ESLintUtils.RuleCreator(() => {
@@ -100,22 +122,96 @@ const isInnerLink = (node: TSESTree.Node): boolean => {
   return false;
 };
 
+/**
+ * @description The name of the codegen fragment `node` is a pure rename of —
+ * the fragment itself, or it wrapped in {@link ALIAS_WRAPPERS}, an array,
+ * `readonly`, or a union with `null` / `undefined` — or `undefined` when the
+ * type says anything more than that.
+ */
+const findAliasedFragment = (
+  node: TSESTree.TypeNode,
+  fragments: ReadonlySet<string>,
+): string | undefined => {
+  if (node.type === AST_NODE_TYPES.TSTypeReference) {
+    if (node.typeName.type !== AST_NODE_TYPES.Identifier) return undefined;
+
+    const { name } = node.typeName;
+    const params = node.typeArguments?.params ?? [];
+
+    if (params.length === 0) {
+      return fragments.has(name) ? name : undefined;
+    }
+
+    const [inner] = params;
+
+    if (!ALIAS_WRAPPERS.has(name) || inner === undefined) return undefined;
+
+    return findAliasedFragment(inner, fragments);
+  }
+
+  if (node.type === AST_NODE_TYPES.TSArrayType) {
+    return findAliasedFragment(node.elementType, fragments);
+  }
+
+  if (
+    node.type === AST_NODE_TYPES.TSTypeOperator &&
+    node.operator === 'readonly' &&
+    node.typeAnnotation !== undefined
+  ) {
+    return findAliasedFragment(node.typeAnnotation, fragments);
+  }
+
+  if (node.type === AST_NODE_TYPES.TSUnionType) {
+    const members = node.types.filter((member) => {
+      return (
+        member.type !== AST_NODE_TYPES.TSNullKeyword &&
+        member.type !== AST_NODE_TYPES.TSUndefinedKeyword
+      );
+    });
+    const [only] = members;
+
+    return members.length === 1 && only !== undefined
+      ? findAliasedFragment(only, fragments)
+      : undefined;
+  }
+
+  return undefined;
+};
+
 export const preferGraphqlFragment = createRule<[], MessageIds>({
   create(context) {
     const codegenOperations = new Set<string>();
+    const codegenFragments = new Set<string>();
 
     return {
       ImportDeclaration(node): void {
         if (!CODEGEN_SOURCE.test(node.source.value)) return;
 
         for (const specifier of node.specifiers) {
-          // Match the exported name, so `import { XQuery as X }` still counts.
           if (
-            specifier.type === AST_NODE_TYPES.ImportSpecifier &&
-            specifier.imported.type === AST_NODE_TYPES.Identifier &&
-            OPERATION_NAME.test(specifier.imported.name)
+            specifier.type !== AST_NODE_TYPES.ImportSpecifier ||
+            specifier.imported.type !== AST_NODE_TYPES.Identifier
           ) {
+            continue;
+          }
+
+          const imported = specifier.imported.name;
+
+          // Match the exported name, so `import { XQuery as X }` still counts.
+          if (OPERATION_NAME.test(imported)) {
             codegenOperations.add(specifier.local.name);
+          }
+
+          if (FRAGMENT_NAME.test(imported)) {
+            codegenFragments.add(specifier.local.name);
+
+            if (specifier.local.name !== imported) {
+              context.report({
+                data: { name: imported },
+                messageId: 'noFragmentAlias',
+                node: specifier,
+              });
+            }
           }
         }
       },
@@ -127,26 +223,41 @@ export const preferGraphqlFragment = createRule<[], MessageIds>({
 
         if (
           root.type !== AST_NODE_TYPES.TSTypeReference ||
-          root.typeName.type !== AST_NODE_TYPES.Identifier ||
-          !codegenOperations.has(root.typeName.name)
+          root.typeName.type !== AST_NODE_TYPES.Identifier
         ) {
           return;
         }
 
-        context.report({
-          data: { name: root.typeName.name },
-          messageId: 'preferFragment',
-          node,
-        });
+        const { name } = root.typeName;
+
+        if (codegenOperations.has(name)) {
+          context.report({ data: { name }, messageId: 'preferFragment', node });
+        } else if (codegenFragments.has(name)) {
+          context.report({
+            data: { name },
+            messageId: 'noFragmentIndexing',
+            node,
+          });
+        }
+      },
+
+      TSTypeAliasDeclaration(node): void {
+        const name = findAliasedFragment(node.typeAnnotation, codegenFragments);
+
+        if (name === undefined) return;
+
+        context.report({ data: { name }, messageId: 'noFragmentAlias', node });
       },
     };
   },
   defaultOptions: [],
   meta: {
     docs: {
-      description: `Type GraphQL data with generated fragment types instead of indexing into generated operation types.`,
+      description: `Type GraphQL data with generated fragment types, used directly: no indexing into generated operation or fragment types, and no aliasing a fragment type.`,
     },
     messages: {
+      noFragmentAlias: `Don't alias \`{{name}}\`. Import the generated fragment type under its own name and use it directly at the call site.`,
+      noFragmentIndexing: `Don't reach into \`{{name}}\` for a child type. Add a fragment on the child type, spread it inside the parent fragment, run codegen, and import its generated \`<Name>Fragment\` type (for a scalar or enum field, use its generated scalar or enum type).`,
       preferFragment: `Don't derive a type by indexing into \`{{name}}\`. Add a fragment on the selected type in the \`.graphql\` document, run codegen, and import its generated \`<Name>Fragment\` type.`,
     },
     schema: [],

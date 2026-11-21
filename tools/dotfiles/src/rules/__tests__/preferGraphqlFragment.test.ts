@@ -22,6 +22,14 @@ const error: { readonly messageId: 'preferFragment' } = {
   messageId: 'preferFragment',
 };
 
+const indexingError: { readonly messageId: 'noFragmentIndexing' } = {
+  messageId: 'noFragmentIndexing',
+};
+
+const aliasError: { readonly messageId: 'noFragmentAlias' } = {
+  messageId: 'noFragmentAlias',
+};
+
 ruleTester.run('prefer-graphql-fragment', preferGraphqlFragment, {
   invalid: [
     {
@@ -84,15 +92,72 @@ type A = GetPlanQuery['a'];
 type B = CreatePlanMutation['b'][number];`,
       errors: [error, error],
     },
+    {
+      // Reaching into a fragment for a child structure.
+      code: `${CODEGEN_IMPORT}
+type Task = PlanCardFragment['tasks'][number];`,
+      errors: [{ ...indexingError, data: { name: 'PlanCardFragment' } }],
+    },
+    {
+      // Reaching into a fragment for a scalar field.
+      code: `${CODEGEN_IMPORT}
+type Title = PlanCardFragment['title'];`,
+      errors: [indexingError],
+    },
+    {
+      code: `${CODEGEN_IMPORT}
+interface Props {
+  readonly tasks: NonNullable<PlanCardFragment['tasks']>;
+}`,
+      errors: [indexingError],
+    },
+    {
+      code: `${CODEGEN_IMPORT}
+type Plan = PlanCardFragment;`,
+      errors: [{ ...aliasError, data: { name: 'PlanCardFragment' } }],
+    },
+    {
+      code: `${CODEGEN_IMPORT}
+type Plans = readonly PlanCardFragment[];`,
+      errors: [aliasError],
+    },
+    {
+      code: `${CODEGEN_IMPORT}
+type Plans = ReadonlyArray<PlanCardFragment>;`,
+      errors: [aliasError],
+    },
+    {
+      code: `${CODEGEN_IMPORT}
+type MaybePlan = NonNullable<PlanCardFragment> | null | undefined;`,
+      errors: [aliasError],
+    },
+    {
+      // Renaming the fragment on import is an alias too.
+      code: `import type { PlanCardFragment as Plan } from '~/__generated__/graphql';
+interface Props {
+  readonly plan: Plan;
+}`,
+      errors: [{ ...aliasError, data: { name: 'PlanCardFragment' } }],
+    },
   ],
   valid: [
     `${CODEGEN_IMPORT}
 interface Props {
   readonly plan: PlanCardFragment;
 }`,
-    // Indexing into a fragment is fine.
     `${CODEGEN_IMPORT}
-type Title = PlanCardFragment['title'];`,
+interface Props {
+  readonly plans: readonly PlanCardFragment[];
+}`,
+    // A type that says more than the fragment is not a rename of it.
+    `${CODEGEN_IMPORT}
+type PlanOrStatus = PlanCardFragment | PlanStatus;`,
+    `${CODEGEN_IMPORT}
+type ById = Record<string, PlanCardFragment>;`,
+    // A local type whose name ends in Fragment.
+    `interface CodeFragment { readonly lines: readonly string[] }
+type Line = CodeFragment['lines'][number];
+type Alias = CodeFragment;`,
     `${CODEGEN_IMPORT}
 type Status = PlanStatus['Pending'];`,
     // The whole operation type is fine.
